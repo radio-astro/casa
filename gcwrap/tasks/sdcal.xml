@@ -6,14 +6,14 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<!-- This is the param set for tsdcal -->
+<!-- This is the param set for sdcal -->
 
-<task type="function" name="tsdcal" category="single dish" visibility="experimental">
+<task type="function" name="sdcal" category="single dish">
 
   <shortdescription> MS SD calibration task</shortdescription>
 
   <description>
-Task tsdcal implements a single-dish data calibration scheme similar to that of 
+Task sdcal implements a single-dish data calibration scheme similar to that of 
 interferometry, i.e., generate calibration tables (caltables) and apply them. 
 Available calibration modes are:
     'ps', 'otfraster', 'otf' for sky calibration
@@ -349,7 +349,7 @@ overwrite -- overwrite the output file if already exists
 
 DESCRIPTION:
 
-Task tsdcal is an implementation of a calibration scheme like as 
+Task sdcal is an implementation of a calibration scheme like as 
 interferometry, i.e., generate caltables and apply them. Available 
 calibration modes are 'ps', 'otfraster', and 'tsys'. Those 
 modes generates caltables for sky or Tsys calibration. The 
@@ -418,7 +418,7 @@ There are several control parameters for sky/Tsys calibration and
 application of caltables. See the above parameter description.
 
 In ALMA, Tsys measurement is usually done using different spectral
-setup from spectral windows for science target. In this case, tsdcal
+setup from spectral windows for science target. In this case, sdcal
 transfers Tsys values to science spectral windows in the application
 stage. To do that, the user has to give a list of spectral windows for
 Tsys measurement as well as mapping between spectral windows for Tsys
@@ -434,14 +434,14 @@ In this case, tsysspw and spwmap should be specified as follows:
 Below is an example of full specification of task parameters for calmode
 of 'ps,tsys,apply':
 
-    default(tsdcal)
+    default(sdcal)
     infile = 'foo.asap'
     calmode = 'ps,tsys,apply'
     spw = ''
     tsysspw = '9,11,13,15'
     spwmap = {9:[17],11:[19],13:[21],15:[23]}
     outfile = 'bar.asap'
-    tsdcal()
+    sdcal()
 
 Note that, in contrast to applycal task, spwmap must be a dictionary
 with Tsys spectral window as key and a list of corresponding science

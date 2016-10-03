@@ -5,22 +5,22 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<!-- This is the param set for tsdbaseline -->
+<!-- This is the param set for sdbaseline -->
 
-<task type="function" name="tsdbaseline" category="single dish" visibility="experimental">
+<task type="function" name="sdbaseline" category="single dish">
 
   <shortdescription>Fit/subtract a spectral baseline </shortdescription>
 
   <description>
-Task tsdbaseline fits and/or subtracts baseline from single-dish spectra.
-Given baseline parameters (baseline type, order, etc.), tsdbaseline 
+Task sdbaseline fits and/or subtracts baseline from single-dish spectra.
+Given baseline parameters (baseline type, order, etc.), sdbaseline 
 computes the best-fit baseline for each spectrum by least-square fitting 
 method and, if you want, subtracts it. The best-fit baseline parameters 
 (including baseline type, coefficients of basis functions, etc.) and 
 other values such as residual rms can be saved in various formats 
 including ascii text (in human-readable format or CSV format) or baseline 
 table (a CASA table).
-Tsdbaseline has another mode to 'apply' a baseline table to a MS data; 
+Sdbaseline has another mode to 'apply' a baseline table to a MS data; 
 for each spectrum in MS, the best-fit baseline is reproduced from the 
 baseline parameters stored in the given baseline table and subtracted. 
 Putting 'fit' and 'subtract' into separate processes can be useful for 
@@ -557,7 +557,7 @@ overwrite -- overwrite the output file if already exists
 DESCRIPTION
 -----------
 
-Task tsdbaseline performs baseline fitting/subtraction for single-dish spectra.
+Task sdbaseline performs baseline fitting/subtraction for single-dish spectra.
 The fit parameters, terms and rms of baseline can be saved into an ascii file 
 or baseline table. Subtracting baseline from data in input MS using existing 
 baseline table is also possible.

@@ -161,13 +161,13 @@ scripts/task_polcal.py
 scripts/task_predictcomp.py
 scripts/task_rmfit.py
 scripts/task_rmtables.py
-scripts/task_tsdbaseline.py
-scripts/task_tsdcal.py
-scripts/task_tsdfit.py
+scripts/task_sdbaseline.py
+scripts/task_sdcal.py
+scripts/task_sdfit.py
 scripts/task_sdgaincal.py
 scripts/task_sdimaging.py
 scripts/task_sdimprocess.py
-scripts/task_tsdsmooth.py
+scripts/task_sdsmooth.py
 ### ASAP tasks ###
 scripts/task_sdaverageold.py
 scripts/task_sdbaselineold.py

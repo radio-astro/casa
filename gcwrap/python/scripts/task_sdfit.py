@@ -10,11 +10,11 @@ from numpy import ma, array, logical_not, logical_and
 
 
 @sdutil.sdtask_decorator
-def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None,
+def sdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None,
            timerange=None, scan=None, pol=None, intent=None,
            fitfunc=None, fitmode=None, nfit=None, thresh=None, avg_limit=None,
            minwidth=None, edge=None, outfile=None, overwrite=None):
-    casalog.origin('tsdfit')
+    casalog.origin('sdfit')
 
     try:
         if os.path.exists(outfile):
@@ -35,7 +35,7 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None,
                            antenna=antenna, timerange=timerange, 
                            scan=scan, polarization=pol, intent=intent)
 
-        tempfile = 'temp_tsdfit_'+str(datetime.datetime.fromtimestamp(time.time())).replace('-','').replace(' ','').replace(':','')
+        tempfile = 'temp_sdfit_'+str(datetime.datetime.fromtimestamp(time.time())).replace('-','').replace(' ','').replace(':','')
         if os.path.exists(tempfile):
             tempfile += str(datetime.datetime.fromtimestamp(time.time())).replace('-','').replace(' ','').replace(':','')
             if os.path.exists(tempfile):

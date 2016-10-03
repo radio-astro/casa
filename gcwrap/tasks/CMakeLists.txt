@@ -93,13 +93,13 @@ predictcomp.xml
 impv.xml
 rmfit.xml
 rmtables.xml
-tsdbaseline.xml
-tsdcal.xml
-tsdfit.xml
+sdbaseline.xml
+sdcal.xml
+sdfit.xml
 sdgaincal.xml
 sdimaging.xml
 sdimprocess.xml
-tsdsmooth.xml
+sdsmooth.xml
 ### ASAP tasks ###
 sdaverageold.xml
 sdbaselineold.xml

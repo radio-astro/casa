@@ -5,9 +5,9 @@ import sdutil
 from collections import Counter
 ms,sdms,tb,msmd = gentools(['ms','sdms','tb', 'msmd'])
 
-def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, intent=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
+def sdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, intent=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
 
-    casalog.origin('tsdbaseline')
+    casalog.origin('sdbaseline')
     try:
         if (outfile == '') or not isinstance(outfile, str):
             print("type=%s, value=%s" % (type(outfile), str(outfile)))

@@ -169,6 +169,14 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_rg_selectedchannels.py
   test_rg_frombcs.py
   test_rg_fromtextfile.py
+  test_tsdbaseline.py	
+  test_tsdcal.py
+  test_tsdfit.py
+  test_sdgaincal.py
+  test_sdimaging.py
+  test_sdimprocess.py
+  test_tsdsmooth.py
+  ### ASAP tasks ###
   test_sdaverage.py
   test_sdbaseline.py
   test_sdbaseline2.py
@@ -178,10 +186,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdfit.py
   test_sdflag.py
   test_sdflagmanager.py
-  test_sdgaincal.py
   test_sdgrid.py
-  test_sdimaging.py
-  test_sdimprocess.py
   test_sdlist.py
   test_sdmath.py
   test_sdplot.py
@@ -189,6 +194,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdsave.py
   test_sdscale.py
   test_sdstat.py
+  ###
   test_setjy.py
   test_simobserve.py
   test_slsearch.py
@@ -201,10 +207,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_spxfit.py
   test_statwt.py
   test_testconcat.py
-  test_tsdbaseline.py	
-  test_tsdcal.py
-  test_tsdfit.py
-  test_tsdsmooth.py
   test_uvcontsub.py
   test_uvcontsub3.py
   test_uvfits.py

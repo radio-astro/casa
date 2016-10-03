@@ -14,7 +14,7 @@ import unittest
 import listing
 import sdutil
 
-from tsdsmooth import tsdsmooth
+from sdsmooth import sdsmooth
 #from test.test_funcattrs import StaticMethodAttrsTest
 
 try:
@@ -31,9 +31,9 @@ def gaussian_kernel(nchan, kwidth):
     g[-1] = g0
     return g
 
-class tsdsmooth_test_base(unittest.TestCase):
+class sdsmooth_test_base(unittest.TestCase):
     """
-    Base class for tsdsmooth unit test.
+    Base class for sdsmooth unit test.
     The following attributes/functions are defined here.
 
         datapath
@@ -116,7 +116,7 @@ class tsdsmooth_test_base(unittest.TestCase):
         else:
             kwidth = 5
         
-        self.result = tsdsmooth(infile=self.infile, outfile=self.outfile, kernel='gaussian', datacolumn=self.datacolumn, **kwargs)
+        self.result = sdsmooth(infile=self.infile, outfile=self.outfile, kernel='gaussian', datacolumn=self.datacolumn, **kwargs)
 
         # sanity check
         self.assertIsNone(self.result, msg='The task must complete without error')
@@ -222,168 +222,168 @@ class tsdsmooth_test_base(unittest.TestCase):
                 shutil.rmtree(f)
                 
     def setUp(self):
-        self._setUp([self.infile], tsdsmooth)
+        self._setUp([self.infile], sdsmooth)
 
     def tearDown(self):
         self._tearDown([self.infile, self.outfile])
 
-class tsdsmooth_test_fail(tsdsmooth_test_base):   
+class sdsmooth_test_fail(sdsmooth_test_base):   
     """
-    Unit test for task tsdsmooth.
+    Unit test for task sdsmooth.
 
     The list of tests:
-    test_tsdsmooth_fail01 --- default parameters (raises an error)
-    test_tsdsmooth_fail02 --- invalid kernel type
-    test_tsdsmooth_fail03 --- invalid selection (empty selection result)
-    test_tsdsmooth_fail04 --- outfile exists (overwrite=False)
-    test_tsdsmooth_fail05 --- empty outfile
-    test_tsdsmooth_fail06 --- invalid data column name
+    test_sdsmooth_fail01 --- default parameters (raises an error)
+    test_sdsmooth_fail02 --- invalid kernel type
+    test_sdsmooth_fail03 --- invalid selection (empty selection result)
+    test_sdsmooth_fail04 --- outfile exists (overwrite=False)
+    test_sdsmooth_fail05 --- empty outfile
+    test_sdsmooth_fail06 --- invalid data column name
     """
-    invalid_argument_case = tsdsmooth_test_base.invalid_argument_case
-    exception_case = tsdsmooth_test_base.exception_case
+    invalid_argument_case = sdsmooth_test_base.invalid_argument_case
+    exception_case = sdsmooth_test_base.exception_case
     
-    infile = tsdsmooth_test_base.infile_data
+    infile = sdsmooth_test_base.infile_data
     
     @invalid_argument_case
-    def test_tsdsmooth_fail01(self):
-        """test_tsdsmooth_fail01 --- default parameters (raises an error)"""
-        self.result = tsdsmooth()
+    def test_sdsmooth_fail01(self):
+        """test_sdsmooth_fail01 --- default parameters (raises an error)"""
+        self.result = sdsmooth()
         
     @invalid_argument_case
-    def test_tsdsmooth_fail02(self):
-        """test_tsdsmooth_fail02 --- invalid kernel type"""
-        self.result = tsdsmooth(infile=self.infile, kernel='normal', outfile=self.outfile)
+    def test_sdsmooth_fail02(self):
+        """test_sdsmooth_fail02 --- invalid kernel type"""
+        self.result = sdsmooth(infile=self.infile, kernel='normal', outfile=self.outfile)
         
     @exception_case(RuntimeError, 'Spw Expression: No match found for 3')
-    def test_tsdsmooth_fail03(self):
-        """test_tsdsmooth_fail03 --- invalid selection (empty selection result)"""
-        self.result = tsdsmooth(infile=self.infile, kernel='gaussian', outfile=self.outfile, spw='3')
+    def test_sdsmooth_fail03(self):
+        """test_sdsmooth_fail03 --- invalid selection (empty selection result)"""
+        self.result = sdsmooth(infile=self.infile, kernel='gaussian', outfile=self.outfile, spw='3')
         
-    @exception_case(Exception, 'tsdsmooth_test\.ms_out exists\.')
-    def test_tsdsmooth_fail04(self):
-        """test_tsdsmooth_fail04 --- outfile exists (overwrite=False)"""
+    @exception_case(Exception, 'sdsmooth_test\.ms_out exists\.')
+    def test_sdsmooth_fail04(self):
+        """test_sdsmooth_fail04 --- outfile exists (overwrite=False)"""
         shutil.copytree(self.infile, self.outfile)
-        self.result = tsdsmooth(infile=self.infile, kernel='gaussian', outfile=self.outfile, overwrite=False)
+        self.result = sdsmooth(infile=self.infile, kernel='gaussian', outfile=self.outfile, overwrite=False)
 
     @exception_case(Exception, 'outfile is empty\.')
-    def test_tsdsmooth_fail05(self):
-        """test_tsdsmooth_fail05 --- empty outfile"""
-        self.result = tsdsmooth(infile=self.infile, kernel='gaussian', outfile='')
+    def test_sdsmooth_fail05(self):
+        """test_sdsmooth_fail05 --- empty outfile"""
+        self.result = sdsmooth(infile=self.infile, kernel='gaussian', outfile='')
         
     @invalid_argument_case
-    def test_tsdsmooth_fail06(self):
-        """test_tsdsmooth_fail06 --- invalid data column name"""
-        self.result = tsdsmooth(infile=self.infile, outfile=self.outfile, kernel='gaussian', datacolumn='spectra')
+    def test_sdsmooth_fail06(self):
+        """test_sdsmooth_fail06 --- invalid data column name"""
+        self.result = sdsmooth(infile=self.infile, outfile=self.outfile, kernel='gaussian', datacolumn='spectra')
 
 
-class tsdsmooth_test_complex(tsdsmooth_test_base):   
+class sdsmooth_test_complex(sdsmooth_test_base):   
     """
-    Unit test for task tsdsmooth. Process MS having DATA column.
+    Unit test for task sdsmooth. Process MS having DATA column.
 
     The list of tests:
-    test_tsdsmooth_complex_fail01 --- non-existing data column (FLOAT_DATA)
-    test_tsdsmooth_complex_gauss01 --- gaussian smoothing (kwidth 5)
-    test_tsdsmooth_complex_gauss02 --- gaussian smoothing (kwidth 3)
-    test_tsdsmooth_complex_select --- data selection (spw)
-    test_tsdsmooth_complex_overwrite --- overwrite existing outfile (overwrite=True)
+    test_sdsmooth_complex_fail01 --- non-existing data column (FLOAT_DATA)
+    test_sdsmooth_complex_gauss01 --- gaussian smoothing (kwidth 5)
+    test_sdsmooth_complex_gauss02 --- gaussian smoothing (kwidth 3)
+    test_sdsmooth_complex_select --- data selection (spw)
+    test_sdsmooth_complex_overwrite --- overwrite existing outfile (overwrite=True)
     """
-    exception_case = tsdsmooth_test_base.exception_case
-    infile = tsdsmooth_test_base.infile_data
+    exception_case = sdsmooth_test_base.exception_case
+    infile = sdsmooth_test_base.infile_data
     datacolumn = 'data'
 
     @exception_case(RuntimeError, 'Desired column \(FLOAT_DATA\) not found in the input MS')
-    def test_tsdsmooth_complex_fail01(self):
-        """test_tsdsmooth_complex_fail01 --- non-existing data column (FLOAT_DATA)"""
-        self.result = tsdsmooth(infile=self.infile, outfile=self.outfile, kernel='gaussian', datacolumn='float_data')
+    def test_sdsmooth_complex_fail01(self):
+        """test_sdsmooth_complex_fail01 --- non-existing data column (FLOAT_DATA)"""
+        self.result = sdsmooth(infile=self.infile, outfile=self.outfile, kernel='gaussian', datacolumn='float_data')
  
-    def test_tsdsmooth_complex_gauss01(self):
-        """test_tsdsmooth_complex_gauss01 --- gaussian smoothing (kwidth 5)"""
+    def test_sdsmooth_complex_gauss01(self):
+        """test_sdsmooth_complex_gauss01 --- gaussian smoothing (kwidth 5)"""
         self.run_test(kwidth=5)
         
-    def test_tsdsmooth_complex_gauss02(self):
-        """test_tsdsmooth_complex_gauss02 --- gaussian smoothing (kwidth 3)"""
+    def test_sdsmooth_complex_gauss02(self):
+        """test_sdsmooth_complex_gauss02 --- gaussian smoothing (kwidth 3)"""
         self.run_test(kwidth=3)
 
-    def test_tsdsmooth_complex_select(self):
-        """test_tsdsmooth_complex_select --- data selection (spw)"""
+    def test_sdsmooth_complex_select(self):
+        """test_sdsmooth_complex_select --- data selection (spw)"""
         self.run_test(kwidth=5, spw='1')
 
-    def test_tsdsmooth_complex_overwrite(self):
-        """test_tsdsmooth_complex_overwrite --- overwrite existing outfile (overwrite=True)"""
+    def test_sdsmooth_complex_overwrite(self):
+        """test_sdsmooth_complex_overwrite --- overwrite existing outfile (overwrite=True)"""
         shutil.copytree(self.infile, self.outfile)
         self.run_test(kwidth=5, overwrite=True)
  
-class tsdsmooth_test_float(tsdsmooth_test_base):   
+class sdsmooth_test_float(sdsmooth_test_base):   
     """
-    Unit test for task tsdsmooth. Process MS having FLOAT_DATA column.
+    Unit test for task sdsmooth. Process MS having FLOAT_DATA column.
 
     The list of tests:
-    test_tsdsmooth_float_fail01 --- non-existing data column (DATA)
-    test_tsdsmooth_float_gauss01 --- gaussian smoothing (kwidth 5)
-    test_tsdsmooth_float_gauss02 --- gaussian smoothing (kwidth 3)
-    test_tsdsmooth_float_select --- data selection (spw)
-    test_tsdsmooth_float_overwrite --- overwrite existing outfile (overwrite=True)
+    test_sdsmooth_float_fail01 --- non-existing data column (DATA)
+    test_sdsmooth_float_gauss01 --- gaussian smoothing (kwidth 5)
+    test_sdsmooth_float_gauss02 --- gaussian smoothing (kwidth 3)
+    test_sdsmooth_float_select --- data selection (spw)
+    test_sdsmooth_float_overwrite --- overwrite existing outfile (overwrite=True)
     """
-    exception_case = tsdsmooth_test_base.exception_case
-    infile = tsdsmooth_test_base.infile_float
+    exception_case = sdsmooth_test_base.exception_case
+    infile = sdsmooth_test_base.infile_float
     datacolumn = 'float_data'
     
     @exception_case(RuntimeError, 'Desired column \(DATA\) not found in the input MS')
-    def test_tsdsmooth_float_fail01(self):
-        """test_tsdsmooth_complex_fail01 --- non-existing data column (DATA)"""
-        self.result = tsdsmooth(infile=self.infile, outfile=self.outfile, kernel='gaussian', datacolumn='data')
+    def test_sdsmooth_float_fail01(self):
+        """test_sdsmooth_complex_fail01 --- non-existing data column (DATA)"""
+        self.result = sdsmooth(infile=self.infile, outfile=self.outfile, kernel='gaussian', datacolumn='data')
     
-    def test_tsdsmooth_float_gauss01(self):
-        """test_tsdsmooth_float_gauss01 --- gaussian smoothing (kwidth 5)"""
+    def test_sdsmooth_float_gauss01(self):
+        """test_sdsmooth_float_gauss01 --- gaussian smoothing (kwidth 5)"""
         self.run_test(kwidth=5)
         
-    def test_tsdsmooth_float_gauss02(self):
-        """test_tsdsmooth_float_gauss02 --- gaussian smoothing (kwidth 3)"""
+    def test_sdsmooth_float_gauss02(self):
+        """test_sdsmooth_float_gauss02 --- gaussian smoothing (kwidth 3)"""
         self.run_test(kwidth=3)
 
-    def test_tsdsmooth_float_select(self):
-        """test_tsdsmooth_float_select --- data selection (spw)"""
+    def test_sdsmooth_float_select(self):
+        """test_sdsmooth_float_select --- data selection (spw)"""
         self.run_test(kwidth=5, spw='1')
 
-    def test_tsdsmooth_float_overwrite(self):
-        """test_tsdsmooth_float_overwrite --- overwrite existing outfile (overwrite=True)"""
+    def test_sdsmooth_float_overwrite(self):
+        """test_sdsmooth_float_overwrite --- overwrite existing outfile (overwrite=True)"""
         shutil.copytree(self.infile, self.outfile)
         self.run_test(kwidth=5, overwrite=True)
 
-class tsdsmooth_test_weight(tsdsmooth_test_base):   
+class sdsmooth_test_weight(sdsmooth_test_base):   
     """
-    Unit test for task tsdsmooth. Verify weight propagation.
+    Unit test for task sdsmooth. Verify weight propagation.
 
     The list of tests:
-    test_tsdsmooth_weight_gauss01 --- gaussian smoothing (kwidth 5)
-    test_tsdsmooth_weight_gauss02 --- gaussian smoothing (kwidth 3)
+    test_sdsmooth_weight_gauss01 --- gaussian smoothing (kwidth 5)
+    test_sdsmooth_weight_gauss02 --- gaussian smoothing (kwidth 3)
     """
-    weight_case = tsdsmooth_test_base.weight_case
-    infile = tsdsmooth_test_base.infile_data
+    weight_case = sdsmooth_test_base.weight_case
+    infile = sdsmooth_test_base.infile_data
     datacolumn = 'data'
     
     def setUp(self):
-        super(tsdsmooth_test_weight, self).setUp()
+        super(sdsmooth_test_weight, self).setUp()
         
         # initialize WEIGHT_SPECTRUM
         with sdutil.cbmanager(self.infile) as cb:
             cb.initweights()
         
     @weight_case
-    def test_tsdsmooth_weight_gauss01(self):
-        """test_tsdsmooth_weight_gauss01 --- gaussian smoothing (kwidth 5)"""
+    def test_sdsmooth_weight_gauss01(self):
+        """test_sdsmooth_weight_gauss01 --- gaussian smoothing (kwidth 5)"""
         self.run_test(kwidth=5)
         
     @weight_case
-    def test_tsdsmooth_weight_gauss02(self):
-        """test_tsdsmooth_weight_gauss02 --- gaussian smoothing (kwidth 3)"""
+    def test_sdsmooth_weight_gauss02(self):
+        """test_sdsmooth_weight_gauss02 --- gaussian smoothing (kwidth 3)"""
         self.run_test(kwidth=3)
 
-class tsdsmooth_test_boxcar(tsdsmooth_test_base):
+class sdsmooth_test_boxcar(sdsmooth_test_base):
     """
     Unit test for checking boxcar smoothing.
 
-    The input data (tsdsmooth_delta.ms) has data with the following features:
+    The input data (sdsmooth_delta.ms) has data with the following features:
       in row0, pol0: 1 at index 100, 0 elsewhere,
       in row0, pol1: 1 at index 0 and 2047(i.e., at both ends), 0 elsewhere,
       in row1, pol0: 1 at index 10 and 11, 0 elsewhere,
@@ -424,12 +424,12 @@ class tsdsmooth_test_boxcar(tsdsmooth_test_base):
         sys.stdout.write('OK.\n')
     
     def setUp(self):
-        super(tsdsmooth_test_boxcar, self).setUp()
+        super(sdsmooth_test_boxcar, self).setUp()
         
     def test000(self):
         # testing kwidth from 1 to 5.
         for kwidth in range(1,6):
-            result = tsdsmooth(infile=self.infile, outfile=self.outfile,
+            result = sdsmooth(infile=self.infile, outfile=self.outfile,
                                datacolumn=self.datacolumn, overwrite=True,
                                kernel='boxcar', kwidth = kwidth)
             with sdutil.tbmanager(self.outfile) as tb:
@@ -440,7 +440,7 @@ class tsdsmooth_test_boxcar(tsdsmooth_test_base):
                         self._checkResult(spec[ipol], kwidth, center)
 
 
-class tsdsmooth_selection(tsdsmooth_test_base, unittest.TestCase):
+class sdsmooth_selection(sdsmooth_test_base, unittest.TestCase):
     infile = "analytic_type1.sm.ms"
     outfile = "smoothed.ms"
     common_param = dict(infile=infile, outfile=outfile,
@@ -486,7 +486,7 @@ class tsdsmooth_selection(tsdsmooth_test_base, unittest.TestCase):
     def run_test(self, sel_param, datacolumn):
         inparams = self._get_selection_string(sel_param)
         inparams.update(self.common_param)
-        tsdsmooth(datacolumn=datacolumn, **inparams)
+        sdsmooth(datacolumn=datacolumn, **inparams)
         self._test_result(inparams["outfile"], sel_param, datacolumn)
         
     def _test_result(self, msname, sel_param, dcol, atol=1.e-5, rtol=1.e-5):
@@ -574,8 +574,8 @@ class tsdsmooth_selection(tsdsmooth_test_base, unittest.TestCase):
         self.run_test("pol", "corrected")
 
 def suite():
-    return [tsdsmooth_test_fail, tsdsmooth_test_complex,
-            tsdsmooth_test_float, tsdsmooth_test_weight,
-            tsdsmooth_test_boxcar, tsdsmooth_selection]
+    return [sdsmooth_test_fail, sdsmooth_test_complex,
+            sdsmooth_test_float, sdsmooth_test_weight,
+            sdsmooth_test_boxcar, sdsmooth_selection]
 
 

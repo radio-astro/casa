@@ -12,7 +12,7 @@ import sdutil
 # Calibrator tool
 (cb,) = gentools(['cb'])
 
-def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
+def sdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
            width=0.5, elongated=False, applytable='',interp='', spwmap={},
            outfile='', overwrite=False, field='', spw='', scan='',intent=''): 
        
@@ -172,7 +172,7 @@ def to_numeric_fraction(fraction):
         else:
             fraction_numeric = float(fraction)
     except Exception, e:
-        casalog.post(str(e), priority='SEVERE', origin='tsdcal')
+        casalog.post(str(e), priority='SEVERE', origin='sdcal')
         raise RuntimeError('Invalid fraction value (original error message: "%s")'%(str(e)))
 
     return fraction_numeric
@@ -181,7 +181,7 @@ def temporary_name(calmode):
     num_trial = 100
     for i in xrange(num_trial):
         number = random.random_integers(num_trial)
-        name = ('__tsdcal_composite_mode_%s_%3s.tab'%(calmode,number)).replace(' ','0')
+        name = ('__sdcal_composite_mode_%s_%3s.tab'%(calmode,number)).replace(' ','0')
         if not os.path.exists(name):
             return name
     raise RuntimeError, 'Failed to configure temporary caltable name.'
@@ -194,11 +194,11 @@ def temporary_calibration(calmode, arg_template, **kwargs):
     # try to keep the existing file although
     # outfile should never point to existing file
     myargs['overwrite'] = False
-    # optional argument for tsdcal
+    # optional argument for sdcal
     for (k,v) in kwargs.items():
         if myargs.has_key(k):
             myargs[k] = v
-    tsdcal(**myargs)
+    sdcal(**myargs)
     if not os.path.exists(caltable):
         raise RuntimeError, 'Failed to create temporary caltable.'
     return caltable
@@ -247,7 +247,7 @@ def handle_composite_mode(args):
             myargs = kwargs.copy()
             myargs['calmode'] = 'apply'
             myargs['applytable'] = precalibrations + applytable_list
-            tsdcal(**myargs)
+            sdcal(**myargs)
 
     finally:
         # clean up temporary tables

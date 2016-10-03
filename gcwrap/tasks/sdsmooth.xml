@@ -7,12 +7,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
 <!-- This is the param set for tsdbaseline -->
 
-<task type="function" name="tsdsmooth" category="single dish" visibility="experimental">
+<task type="function" name="sdsmooth" category="single dish">
 
   <shortdescription>Smooth spectral data </shortdescription>
 
   <description>
-  Task tsdsmooth performs smoothing along spectral axis using user-specified 
+  Task sdsmooth performs smoothing along spectral axis using user-specified 
   smoothing kernel. Currently gaussian and boxcar kernels are supported.
   </description>
 
@@ -175,7 +175,7 @@ overwrite -- overwrite the output file if already exists
 -----------
 DESCRIPTION
 -----------
-Task tsdsmooth performs smoothing along spectral axis using user-specified 
+Task sdsmooth performs smoothing along spectral axis using user-specified 
 smoothing kernel. Currently gaussian and boxcar kernels are supported.
 
 

@@ -217,9 +217,10 @@ from split import  split
 #from split2 import split2
 from tclean import tclean
 from tclean2 import tclean2
-from tsdbaseline import tsdbaseline
-from tsdcal import tsdcal
-from tsdfit import tsdfit
+from sdbaseline import sdbaseline
+from sdcal import sdcal
+from sdgaincal import sdgaincal
+from sdfit import sdfit
 from uvcontsub import  uvcontsub
 from uvmodelfit import  uvmodelfit
 from uvsub import  uvsub

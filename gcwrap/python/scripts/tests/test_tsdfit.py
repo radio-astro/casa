@@ -12,7 +12,7 @@ import unittest
 import listing
 from numpy import array
 
-from tsdfit import tsdfit
+from sdfit import sdfit
 from sdutil import tbmanager
 
 
@@ -134,14 +134,14 @@ def parseRms(txt):
     t = txt.lstrip().rstrip('\n')[6:]
     return float(t)
 
-class tsdfit_unittest_base(unittest.TestCase):
+class sdfit_unittest_base(unittest.TestCase):
     """
-    Base class for tsdfit unit test
+    Base class for sdfit unit test
     """
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
               '/data/regression/unittest/tsdfit/'
-    taskname = "tsdfit"
+    taskname = "sdfit"
     verboselog = False
 
     #complist = ['max','min','rms','median','stddev']
@@ -543,9 +543,9 @@ class tsdfit_unittest_base(unittest.TestCase):
 #                         %(out,reference))
 
 
-class tsdfit_basicTest(tsdfit_unittest_base):
+class sdfit_basicTest(sdfit_unittest_base):
     """
-    Basic unit tests for task tsdfit. No interactive testing.
+    Basic unit tests for task sdfit. No interactive testing.
 
     List of tests:
     test000 --- default values for all parameters (nfit=[0] : no fitting)
@@ -576,8 +576,8 @@ class tsdfit_basicTest(tsdfit_unittest_base):
     """
     # Input and output names
     infiles = ['gaussian.ms', 'lorentzian.ms']
-    outroot = tsdfit_unittest_base.taskname+'_basictest'
-    blrefroot = tsdfit_unittest_base.datapath+'refblparam'
+    outroot = sdfit_unittest_base.taskname+'_basictest'
+    blrefroot = sdfit_unittest_base.datapath+'refblparam'
     tid = None
 
     answer012 = {'cent': [[4000.0], [5000.0], [3000.0], [2000.0], [4500.0], [5500.0]],
@@ -608,7 +608,7 @@ class tsdfit_basicTest(tsdfit_unittest_base):
             if os.path.exists(infile):
                 shutil.rmtree(infile)
             shutil.copytree(self.datapath+infile, infile)
-        default(tsdfit)
+        default(sdfit)
 
     def tearDown(self):
         for infile in self.infiles:
@@ -621,7 +621,7 @@ class tsdfit_basicTest(tsdfit_unittest_base):
         tid = '000'
         for infile in self.infiles:
             datacolumn = 'float_data'
-            result = tsdfit(infile=infile, datacolumn=datacolumn)
+            result = sdfit(infile=infile, datacolumn=datacolumn)
 
             npol = 2
             with tbmanager(infile) as tb:
@@ -645,7 +645,7 @@ class tsdfit_basicTest(tsdfit_unittest_base):
             nfit = [1]
             fitfunc = infile.split('.')[0]
             print "testing " + fitfunc + " profile..."
-            result = tsdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
+            result = sdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
             npol = 2
             nrow = len(spw.split(','))
             answer = self.answer012
@@ -674,7 +674,7 @@ class tsdfit_basicTest(tsdfit_unittest_base):
             nfit = [1,1]
             fitfunc = infile.split('.')[0]
             print "testing " + fitfunc + " profile..."
-            result = tsdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
+            result = sdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
             npol = 2
             nrow = 1
             answer = self.answer3
@@ -705,7 +705,7 @@ class tsdfit_basicTest(tsdfit_unittest_base):
             nfit = [2]
             fitfunc = infile.split('.')[0]
             print "testing " + fitfunc + " profile..."
-            result = tsdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
+            result = sdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
             npol = 2
             nrow = 1
             answer = self.answer3
@@ -736,7 +736,7 @@ class tsdfit_basicTest(tsdfit_unittest_base):
             nfit = [1]
             fitfunc = infile.split('.')[0]
             print "testing " + fitfunc + " profile..."
-            result = tsdfit(infile=infile_negative, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
+            result = sdfit(infile=infile_negative, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
             shutil.rmtree(infile_negative)
             npol = 2
             nrow = len(spw.split(','))
@@ -769,7 +769,7 @@ class tsdfit_basicTest(tsdfit_unittest_base):
             nfit = [1,1]
             fitfunc = infile.split('.')[0]
             print "testing " + fitfunc + " profile..."
-            result = tsdfit(infile=infile_negative, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
+            result = sdfit(infile=infile_negative, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
             shutil.rmtree(infile_negative)
             npol = 2
             nrow = 1
@@ -804,7 +804,7 @@ class tsdfit_basicTest(tsdfit_unittest_base):
             nfit = [2]
             fitfunc = infile.split('.')[0]
             print "testing " + fitfunc + " profile..."
-            result = tsdfit(infile=infile_negative, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
+            result = sdfit(infile=infile_negative, datacolumn=datacolumn, spw=spw, nfit=nfit, fitfunc=fitfunc)
             shutil.rmtree(infile_negative)
             npol = 2
             nrow = 1
@@ -828,7 +828,7 @@ class tsdfit_basicTest(tsdfit_unittest_base):
                             self.assertTrue(((result_lower <= answer[key][i][j]) and (answer[key][i][j] <= result_upper)),
                                             msg="row%s, comp%s result inconsistent with answer"%(i, j))
 
-class tsdfit_selection(tsdfit_unittest_base,unittest.TestCase):
+class sdfit_selection(sdfit_unittest_base,unittest.TestCase):
     """
     This class tests data selection parameters,
     i.e.,
@@ -860,7 +860,7 @@ class tsdfit_selection(tsdfit_unittest_base,unittest.TestCase):
     def setUp(self):
         self._remove(self.templist)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdfit)
+        default(sdfit)
 
     def tearDown(self):
         self._remove(self.templist)
@@ -902,7 +902,7 @@ class tsdfit_selection(tsdfit_unittest_base,unittest.TestCase):
     def run_test(self, sel_param, datacolumn):
         inparams = self._get_selection_string(sel_param)
         inparams.update(self.common_param)
-        fit_val = tsdfit(datacolumn=datacolumn, **inparams)
+        fit_val = sdfit(datacolumn=datacolumn, **inparams)
         self._test_result(fit_val, sel_param, datacolumn)
         
     def _test_result(self, fit_val, sel_param, dcol, atol=1.e-5, rtol=1.e-5):
@@ -987,7 +987,7 @@ class tsdfit_selection(tsdfit_unittest_base,unittest.TestCase):
         """Test selection by pol (corrected)"""
         self.run_test("pol", "corrected")
 
-class tsdfit_auto(tsdfit_unittest_base,unittest.TestCase):
+class sdfit_auto(sdfit_unittest_base,unittest.TestCase):
     """
     This class tests fitmode='auto'
     """
@@ -1009,7 +1009,7 @@ class tsdfit_auto(tsdfit_unittest_base,unittest.TestCase):
     def setUp(self):
         self._remove([self.infile])
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdfit)
+        default(sdfit)
 
     def tearDown(self):
         self._remove([self.infile])
@@ -1037,7 +1037,7 @@ class tsdfit_auto(tsdfit_unittest_base,unittest.TestCase):
     def run_test(self, is_center, reference=None, **kwarg):
         param = dict(**self.common_param)
         param.update(kwarg)
-        fit_val = tsdfit(**param)
+        fit_val = sdfit(**param)
         #print("Return:",fit_val)
         if reference is None:
             reference = self.get_reference_from_base(is_center)
@@ -1087,4 +1087,4 @@ class tsdfit_auto(tsdfit_unittest_base,unittest.TestCase):
         self.run_test(True, None, spw='', edge=[0])
 
 def suite():
-    return [tsdfit_basicTest, tsdfit_selection, tsdfit_auto]
+    return [sdfit_basicTest, sdfit_selection, sdfit_auto]

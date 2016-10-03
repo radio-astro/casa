@@ -71,12 +71,13 @@ from tclean2_pg import tclean2_pg as tclean2
 from impbcor_pg import impbcor_pg as impbcor
 
 # single dish tasks
-from tsdbaseline_pg import  tsdbaseline_pg as tsdbaseline
-from tsdcal_pg import  tsdcal_pg as tsdcal
-from tsdfit_pg import  tsdfit_pg as tsdfit
-from tsdsmooth_pg import  tsdsmooth_pg as tsdsmooth
+from sdbaseline_pg import  sdbaseline_pg as sdbaseline
+from sdcal_pg import  sdcal_pg as sdcal
+from sdgaincal_pg import  sdgaincal_pg as sdgaincal
+from sdfit_pg import  sdfit_pg as sdfit
 from sdimaging_pg import sdimaging_pg as sdimaging
 from sdimprocess_pg import sdimprocess_pg as sdimprocess
+from sdsmooth_pg import  sdsmooth_pg as sdsmooth
 ### ASAP tasks ###
 from sdaverageold_pg import sdaverageold_pg as sdaverageold
 from sdbaselineold_pg import sdbaselineold_pg as sdbaselineold

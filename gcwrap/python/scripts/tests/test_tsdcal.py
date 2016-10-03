@@ -13,17 +13,17 @@ import unittest
 import listing
 import sdutil
 
-from tsdcal import tsdcal
+from sdcal import sdcal
 
 try:
     from testutils import copytree_ignore_subversion
 except:
     from tests.testutils import copytree_ignore_subversion
 
-class tsdcal_test(unittest.TestCase):
+class sdcal_test(unittest.TestCase):
 
     """
-    Unit test for task tsdcal.
+    Unit test for task sdcal.
 
     The list of tests:
     test00	--- default parameters (raises an error)
@@ -46,7 +46,7 @@ class tsdcal_test(unittest.TestCase):
             if os.path.exists(infile):
                 shutil.rmtree(infile)
             shutil.copytree(self.datapath+infile, infile)		
-        default(tsdcal)
+        default(sdcal)
 
     def tearDown(self):
         for infile in self.infiles:
@@ -63,7 +63,7 @@ class tsdcal_test(unittest.TestCase):
 
         tid = "00"
         infile = self.infile1
-        tsdcal(infile=infile, calmode='tsys', outfile='out.cal')
+        sdcal(infile=infile, calmode='tsys', outfile='out.cal')
         compfile1=infile+'/SYSCAL'
         compfile2='out.cal'
 
@@ -84,12 +84,12 @@ class tsdcal_test(unittest.TestCase):
         if (tsys1 == tsys2).all():
             print ''
             print 'The shape of the MS/SYSCAL/TSYS_SPECTRUM', tsys1.shape
-            print 'The shape of the FPARAM extracted with tsdcal', tsys2.shape  
+            print 'The shape of the FPARAM extracted with sdcal', tsys2.shape  
             print 'Both tables are identical.'
         else:
             print ''
             print 'The shape of the MS/SYSCAL/TSYS_SPECTRUM', tsys1.shape
-            print 'The shape of the FPARAM of the extraction with tsdcal', tsys2.shape
+            print 'The shape of the FPARAM of the extraction with sdcal', tsys2.shape
             print 'Both tables are not identical.'
 
         if flag.all()==0:
@@ -104,13 +104,13 @@ class tsdcal_test(unittest.TestCase):
         
         tid = "01"
         infile = self.infile1
-        tsdcal(infile=infile, calmode='tsys', outfile='tsys.cal')
+        sdcal(infile=infile, calmode='tsys', outfile='tsys.cal')
         initweights(vis=infile, wtmode='nyq', dowtsp=True)        
         #spwmap_list=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         #spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
         
         spwmap_dict={1:[1],3:[3],5:[5],7:[7]}        
-        tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
+        sdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
         
                 
         tb.open(infile)
@@ -153,13 +153,13 @@ class tsdcal_test(unittest.TestCase):
         
         tid = "02"
         infile = self.infile1
-        tsdcal(infile=infile, calmode='tsys', outfile='tsys2.cal')
+        sdcal(infile=infile, calmode='tsys', outfile='tsys2.cal')
         initweights(vis=infile, wtmode='nyq', dowtsp=True)        
         spwmap_list=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
         #spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
         
         #spwmap_dict={1:[1],3:[3],5:[5],7:[7]}        
-        tsdcal(infile=infile, calmode='apply', spwmap=spwmap_list, applytable='tsys2.cal', outfile='')
+        sdcal(infile=infile, calmode='apply', spwmap=spwmap_list, applytable='tsys2.cal', outfile='')
         
                 
         tb.open(infile)
@@ -226,7 +226,7 @@ class tsdcal_test(unittest.TestCase):
         #tb.close()
         #subt_dict.close()
 
-        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
+        #sdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
         #tb.open(infile)
         #subt_list=tb.query('', sortlist='ANTENNA1, TIME, SPECTRAL_WINDOW_ID', columns='WEIGHT, CORRECTED_DATA')
         #weight_list = subt_list.getcol('WEIGHT')
@@ -234,7 +234,7 @@ class tsdcal_test(unittest.TestCase):
         #tb.close()
         #subt_list.close()
 
-        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap_list, applytable='tsys.cal', outfile='')
+        #sdcal(infile=infile, calmode='apply', spwmap=spwmap_list, applytable='tsys.cal', outfile='')
 
 
         #print 'dict:', spwmap
@@ -253,14 +253,14 @@ class tsdcal_test(unittest.TestCase):
         
         
         #tsys table is produced 
-        tsdcal(infile=infile, calmode='tsys', outfile=tsysfile)
+        sdcal(infile=infile, calmode='tsys', outfile=tsysfile)
         #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         spwmap={1:[1],3:[3],5:[5],7:[7]}
         initweights(vis=infile, wtmode='nyq', dowtsp=True)
-        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')
+        #sdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')
     
        
-        tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)
+        sdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)
        
                 
         tb.open(infile)
@@ -293,12 +293,12 @@ class tsdcal_test(unittest.TestCase):
         tsysfile='tsys4.cal'
     
         #tsys table is produced 
-        tsdcal(infile=infile, calmode='tsys', outfile=tsysfile)
+        sdcal(infile=infile, calmode='tsys', outfile=tsysfile)
         #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         spwmap={1:[9],3:[11],5:[13],7:[15]}
         initweights(vis=infile, wtmode='nyq', dowtsp=True)
-        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')       
-        tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)       
+        #sdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')       
+        sdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)       
              
         tb.open(infile)
         corrected_data=tb.getvarcol('CORRECTED_DATA')['r2'][0][0][0]
@@ -334,12 +334,12 @@ class tsdcal_test(unittest.TestCase):
         tsysfile='tsys5.cal'
     
         #tsys table is produced 
-        tsdcal(infile=infile, calmode='tsys', outfile=tsysfile)
+        sdcal(infile=infile, calmode='tsys', outfile=tsysfile)
         #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         spwmap={1:[9],3:[11],5:[13],7:[15]}
         initweights(vis=infile, wtmode='nyq', dowtsp=True)
-        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')       
-        tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)       
+        #sdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')       
+        sdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)       
              
         tb.open(infile)
         corrected_data=tb.getvarcol('CORRECTED_DATA')['r2'][0][0][0]
@@ -367,13 +367,13 @@ class tsdcal_test(unittest.TestCase):
         
         tid = "06"
         infile = self.infile1
-        tsdcal(infile=infile, calmode='tsys', outfile='tsys6.cal')
+        sdcal(infile=infile, calmode='tsys', outfile='tsys6.cal')
         initweights(vis=infile, wtmode='nyq', dowtsp=True)        
         #spwmap_list=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         #spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
         
         spwmap_dict={1:[1],3:[3],5:[5],7:[7]}        
-        tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys6.cal', interp='nearest', outfile='')
+        sdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys6.cal', interp='nearest', outfile='')
         
         row=0
         eps = 1.0e-1
@@ -412,9 +412,9 @@ class tsdcal_test(unittest.TestCase):
 
 
 
-class tsdcal_test_base(unittest.TestCase):
+class sdcal_test_base(unittest.TestCase):
     """
-    Base class for tsdcal unit test.
+    Base class for sdcal unit test.
     The following attributes/functions are defined here.
 
         datapath
@@ -481,9 +481,9 @@ class tsdcal_test_base(unittest.TestCase):
             if os.path.exists(f):
                 shutil.rmtree(f)
                 
-class tsdcal_test_ps(tsdcal_test_base):   
+class sdcal_test_ps(sdcal_test_base):   
     """
-    Unit test for task tsdcal (position switchsky calibration).
+    Unit test for task sdcal (position switchsky calibration).
 
     The list of tests:
     test_ps00 --- default parameters (raises an error)
@@ -496,15 +496,15 @@ class tsdcal_test_ps(tsdcal_test_base):
     test_ps07 --- outfile exists (overwrite=True)
     test_ps08 --- inappropriate calmode ('otfraster')
     """
-    invalid_argument_case = tsdcal_test_base.invalid_argument_case
-    exception_case = tsdcal_test_base.exception_case
+    invalid_argument_case = sdcal_test_base.invalid_argument_case
+    exception_case = sdcal_test_base.exception_case
     
     @property
     def outfile(self):
         return self.applytable
 
     def setUp(self):
-        self._setUp([self.infile], tsdcal)
+        self._setUp([self.infile], sdcal)
 
     def tearDown(self):
         self._tearDown([self.infile, self.outfile])
@@ -602,21 +602,21 @@ class tsdcal_test_ps(tsdcal_test_base):
         """
         test_ps00 --- default parameters (raises an error)
         """
-        self.result = tsdcal()
+        self.result = sdcal()
 
     @invalid_argument_case
     def test_ps01(self):
         """
         test_ps01 --- invalid calibration type
         """
-        self.result = tsdcal(infile=self.infile, calmode='invalid_type', outfile=self.outfile)
+        self.result = sdcal(infile=self.infile, calmode='invalid_type', outfile=self.outfile)
 
     @exception_case(RuntimeError, 'Spw Expression: No match found for 99,')
     def test_ps02(self):
         """
         test_ps02 --- invalid selection (invalid spw selection)
         """
-        self.result = tsdcal(infile=self.infile, calmode='ps', spw='99', outfile=self.outfile)
+        self.result = sdcal(infile=self.infile, calmode='ps', spw='99', outfile=self.outfile)
 
     @exception_case(RuntimeError, '^overwrite is False and output file exists:')
     def test_ps03(self):
@@ -625,28 +625,28 @@ class tsdcal_test_ps(tsdcal_test_base):
         """
         # copy input to output
         shutil.copytree(self.infile, self.outfile)
-        self.result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=False)
+        self.result = sdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=False)
 
     @exception_case(RuntimeError, 'Output file name must be specified\.')
     def test_ps04(self):
         """
         test_ps04 --- empty outfile 
         """
-        self.result = tsdcal(infile=self.infile, calmode='ps', outfile='', overwrite=False)
+        self.result = sdcal(infile=self.infile, calmode='ps', outfile='', overwrite=False)
 
     @normal_case()
     def test_ps05(self):
         """
         test_ps05 --- position switch calibration ('ps')
         """
-        self.result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile)
+        self.result = sdcal(infile=self.infile, calmode='ps', outfile=self.outfile)
 
     @normal_case(spw='9')
     def test_ps06(self):
         """
         test_ps06 --- position switch calibration ('ps') with data selection
         """
-        self.result = tsdcal(infile=self.infile, calmode='ps', spw='9', outfile=self.outfile)
+        self.result = sdcal(infile=self.infile, calmode='ps', spw='9', outfile=self.outfile)
 
     @normal_case()
     def test_ps07(self):
@@ -655,7 +655,7 @@ class tsdcal_test_ps(tsdcal_test_base):
         """
         # copy input to output
         shutil.copytree(self.infile, self.outfile)
-        self.result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=True)
+        self.result = sdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=True)
 
     @exception_case(RuntimeError, "Error in Calibrater::solve")
     def test_ps08(self):
@@ -667,13 +667,13 @@ class tsdcal_test_ps(tsdcal_test_base):
         # in this case, gap detection detects the row having only one integration
         # due to irregular time stamp distribution and causes the "Too many edge
         # points" error
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile, calmode='otfraster')
+        self.result = sdcal(infile=self.infile, outfile=self.outfile, calmode='otfraster')
 
 
-class tsdcal_test_otfraster(tsdcal_test_base):   
+class sdcal_test_otfraster(sdcal_test_base):   
     """
-    Unit test for task tsdcal (OTF raster sky calibration).
-    Since basic test case is covered by tsdcal_test_ps, only
+    Unit test for task sdcal (OTF raster sky calibration).
+    Since basic test case is covered by sdcal_test_ps, only
     tests specific to otfraster calibration are defined here.
 
     The list of tests:
@@ -692,8 +692,8 @@ class tsdcal_test_otfraster(tsdcal_test_base):
     test_otfraster12 --- OTF raster calibration ('otfraster') with custom noff
     test_otfraster13 --- check if noff takes priority over fraction
     """
-    invalid_argument_case = tsdcal_test_base.invalid_argument_case
-    exception_case = tsdcal_test_base.exception_case
+    invalid_argument_case = sdcal_test_base.invalid_argument_case
+    exception_case = sdcal_test_base.exception_case
     infile = 'uid___A002_X6218fb_X264.ms.sel.otfraster'
     
     @staticmethod
@@ -748,7 +748,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         return self.applytable
 
     def setUp(self):
-        self._setUp([self.infile], tsdcal)
+        self._setUp([self.infile], sdcal)
 
     def tearDown(self):
         self._tearDown([self.infile, self.outfile])
@@ -798,7 +798,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
 
                 # verifying resulting sky spectra
                 eps = 1.0e-6
-                expected_value = tsdcal_test_otfraster.calculate_expected_value(self.infile, numedge)
+                expected_value = sdcal_test_otfraster.calculate_expected_value(self.infile, numedge)
                 for (ant,d) in expected_value.items():
                     if antenna1_selection is not None and ant not in antenna1_selection:
                         continue
@@ -842,7 +842,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
 
     @exception_case(RuntimeError, '^Invalid fraction value \(.+\)$')
     def test_otfraster00(self):
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction='auto')
 
     @exception_case(ValueError, '^Too many edge points\. fraction must be < 0.5\.$')
@@ -850,7 +850,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster01 --- too many edge points (fraction 0.5)
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction=0.5)
 
     @exception_case(ValueError, '^Too many edge points\. fraction must be < 0.5\.$')
@@ -858,7 +858,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster02 --- too many edge points (fraction 50%)
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction='50%')
 
     @exception_case(RuntimeError, 'Error in Calibrater::solve')
@@ -866,7 +866,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster03 --- too many edge points (noff 100000)
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', noff=10000)
 
     #@exception_case(RuntimeError, 'Error in Calibrater::solve')
@@ -874,7 +874,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
     #    """
     #    test_otfraster04 --- negative edge points
     #    """
-    #    self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+    #    self.result = sdcal(infile=self.infile, outfile=self.outfile,
     #                         calmode='otfraster', noff=-3)
 
     #@exception_case(RuntimeError, 'Error in Calibrater::solve')
@@ -882,7 +882,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
     #    """
     #    test_otfraster05 --- zero edge points
     #    """
-    #    self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+    #    self.result = sdcal(infile=self.infile, outfile=self.outfile,
     #                         calmode='otfraster', noff=0)
 
     @exception_case(RuntimeError, 'Error in Calibrater::solve')
@@ -890,14 +890,14 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster06 --- inappropriate calibration mode ('ps')
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='ps')
     @normal_case(numedge=1)
     def test_otfraster07(self):
         """
         test_otfraster07 --- OTF raster calibration ('otfraster') with default setting
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster')
 
     @normal_case(numedge=2)
@@ -905,7 +905,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster08 --- OTF raster calibration ('otfraster') with string fraction (numeric value)
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction='0.3')
 
     @normal_case(numedge=2)
@@ -913,7 +913,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster09 --- OTF raster calibration ('otfraster') with string fraction (percentage)
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction='30%')
 
     @normal_case(numedge=2)
@@ -921,7 +921,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster10 --- OTF raster calibration ('otfraster') with numeric fraction
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction=0.3)
 
     @normal_case(numedge=2)
@@ -929,7 +929,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster11 --- OTF raster calibration ('otfraster') with auto detection
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction=0, noff=0)
 
     @normal_case(numedge=3)
@@ -937,7 +937,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster12 --- OTF raster calibration ('otfraster') with custom noff
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', noff=3)
 
     @normal_case(numedge=3)
@@ -945,7 +945,7 @@ class tsdcal_test_otfraster(tsdcal_test_base):
         """
         test_otfraster13 --- check if noff takes priority over fraction
         """
-        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+        self.result = sdcal(infile=self.infile, outfile=self.outfile,
                              calmode='otfraster', fraction='90%', noff=3)
 
 def assert_true(condition,err_msg):
@@ -1007,9 +1007,9 @@ class MsCorrectedDataChecker(CasaTableChecker):
         CasaTableChecker.__del__(self)
           
         
-class tsdcal_test_otf(unittest.TestCase):   
+class sdcal_test_otf(unittest.TestCase):   
     """
-    Unit tests for task tsdcal,
+    Unit tests for task sdcal,
     sky calibration mode = 'otf' : On-The-Fly (OTF) *non-raster* 
 
     The list of tests:
@@ -1030,18 +1030,18 @@ class tsdcal_test_otf(unittest.TestCase):
     # - compare 2 corrected data
     datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
     ref_datapath=os.path.join(datapath,'otf_reference_data')
-    tsdcal_params = {}
+    sdcal_params = {}
     current_test_params = {}
         
     def setup(self):
         # Copy input MS into current directory
-        infile = self.tsdcal_params['infile']
+        infile = self.sdcal_params['infile']
         if os.path.exists(infile):
             shutil.rmtree(infile)
         copytree_ignore_subversion(self.datapath, infile)
         # Delete output calibration table if any
-        if 'outfile' in self.tsdcal_params :
-            outfile = self.tsdcal_params['outfile']
+        if 'outfile' in self.sdcal_params :
+            outfile = self.sdcal_params['outfile']
             if os.path.exists(outfile):
                 shutil.rmtree(outfile)
         # Compute reference calibrated ms if required
@@ -1052,17 +1052,17 @@ class tsdcal_test_otf(unittest.TestCase):
                 shutil.rmtree(ref_ms_name)
             shutil.copytree(src=infile,dst=ref_ms_name)
             # Calibrate it using current test caltable
-            tsdcal(infile=ref_ms_name,calmode='apply',applytable=self.ref_caltable())
+            sdcal(infile=ref_ms_name,calmode='apply',applytable=self.ref_caltable())
             # Update test params
             self.current_test_params['ref_calibrated_ms'] = ref_ms_name
             
     def tearDown(self):
         casalog.post("tearDown")
-        infile = self.tsdcal_params['infile']
+        infile = self.sdcal_params['infile']
         if os.path.exists(infile):
             shutil.rmtree(infile)
-        if 'outfile' in self.tsdcal_params:
-            outfile = self.tsdcal_params['outfile']
+        if 'outfile' in self.sdcal_params:
+            outfile = self.sdcal_params['outfile']
             if os.path.exists(outfile):
                 shutil.rmtree(outfile)
         if 'compute_ref_ms' in self.current_test_params:
@@ -1071,16 +1071,16 @@ class tsdcal_test_otf(unittest.TestCase):
                 shutil.rmtree(ref_ms_name)
             
             
-    def run_tsdcal(self):
+    def run_sdcal(self):
         self.setup()
-        tsdcal(**self.tsdcal_params)
+        sdcal(**self.sdcal_params)
         
     def ref_caltable(self):
-        assert_true('ref_caltable' in self.current_test_params,'tsdcal_test_otf internal error')
+        assert_true('ref_caltable' in self.current_test_params,'sdcal_test_otf internal error')
         return os.path.join(self.ref_datapath,self.current_test_params['ref_caltable'])
     
     def ref_calibrated_ms(self):
-        assert_true('ref_calibrated_ms' in self.current_test_params,'tsdcal_test_otf internal error')
+        assert_true('ref_calibrated_ms' in self.current_test_params,'sdcal_test_otf internal error')
         ref_ms_name = self.current_test_params['ref_calibrated_ms']
         if 'compute_ref_ms' in self.current_test_params:
             return ref_ms_name
@@ -1091,7 +1091,7 @@ class tsdcal_test_otf(unittest.TestCase):
         """
         test_otf01 --- Compute calibration table. calmode='otf' ms=squares.dec60_cs.ms
         """
-        self.tsdcal_params = {
+        self.sdcal_params = {
             'infile':'squares.dec60_cs.ms',
             'calmode':'otf',
             'outfile':'test_otf01.ms_caltable'
@@ -1100,15 +1100,15 @@ class tsdcal_test_otf(unittest.TestCase):
             'ref_caltable':'squares.dec60_cs.edges_fraction_0.1.ms_caltable'
         }
         expected_result = MsCalTableChecker(self.ref_caltable())
-        self.run_tsdcal()
-        tsdcal_result = MsCalTableChecker(self.tsdcal_params['outfile'])
-        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
+        self.run_sdcal()
+        sdcal_result = MsCalTableChecker(self.sdcal_params['outfile'])
+        self.assertEqual(sdcal_result,expected_result) # AlmostEqual semantics
         
     def test_otf02(self):
         """
         test_otf02 --- Compute calibration table. calmode='otf' ms=squares.dec60_cs.ms edges_fraction=20%
         """
-        self.tsdcal_params = {
+        self.sdcal_params = {
             'infile':'squares.dec60_cs.ms',
             'calmode':'otf',
             'outfile':'test_otf02.ms_caltable',
@@ -1118,15 +1118,15 @@ class tsdcal_test_otf(unittest.TestCase):
             'ref_caltable':'squares.dec60_cs.edges_fraction_0.2.ms_caltable'
         }
         expected_result = MsCalTableChecker(self.ref_caltable())
-        self.run_tsdcal()
-        tsdcal_result = MsCalTableChecker(self.tsdcal_params['outfile'])
-        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
+        self.run_sdcal()
+        sdcal_result = MsCalTableChecker(self.sdcal_params['outfile'])
+        self.assertEqual(sdcal_result,expected_result) # AlmostEqual semantics
 
     def test_otf03(self):
         """
         test_otf03 --- Compute calibration table. calmode='otf' ms=lissajous.ms
         """
-        self.tsdcal_params = {
+        self.sdcal_params = {
             'infile':'lissajous.ms',
             'calmode':'otf',
             'outfile':'test_otf03.ms_caltable'
@@ -1135,15 +1135,15 @@ class tsdcal_test_otf(unittest.TestCase):
             'ref_caltable':'lissajous.edges_new_fraction_0.1.ms_caltable'
         }
         expected_result = MsCalTableChecker(self.ref_caltable())
-        self.run_tsdcal()
-        tsdcal_result = MsCalTableChecker(self.tsdcal_params['outfile'])
-        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
+        self.run_sdcal()
+        sdcal_result = MsCalTableChecker(self.sdcal_params['outfile'])
+        self.assertEqual(sdcal_result,expected_result) # AlmostEqual semantics
 
     def test_otf04(self):
         """
         test_otf04 --- Compute calibration table. calmode='otf' ms=lissajous.ms edges_fraction=20%
         """
-        self.tsdcal_params = {
+        self.sdcal_params = {
             'infile':'lissajous.ms',
             'calmode':'otf',
             'outfile':'test_otf04.ms_caltable',
@@ -1153,15 +1153,15 @@ class tsdcal_test_otf(unittest.TestCase):
             'ref_caltable':'lissajous.edges_new_fraction_0.2.ms_caltable'
         }
         expected_result = MsCalTableChecker(self.ref_caltable())
-        self.run_tsdcal()
-        tsdcal_result = MsCalTableChecker(self.tsdcal_params['outfile'])
-        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics 
+        self.run_sdcal()
+        sdcal_result = MsCalTableChecker(self.sdcal_params['outfile'])
+        self.assertEqual(sdcal_result,expected_result) # AlmostEqual semantics 
         
     def test_otf05(self):
         """
         test_otf05 --- Sky calibration. calmode='otf,apply' ms=squares.dec60_cs.ms
         """
-        self.tsdcal_params = {
+        self.sdcal_params = {
             'infile':'squares.dec60_cs.ms',
             'calmode':'otf,apply'
         }
@@ -1169,16 +1169,16 @@ class tsdcal_test_otf(unittest.TestCase):
             'ref_caltable':'squares.dec60_cs.edges_fraction_0.1.ms_caltable',
             'compute_ref_ms':True
         }
-        self.run_tsdcal()
+        self.run_sdcal()
         expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms())
-        tsdcal_result = MsCorrectedDataChecker(self.tsdcal_params['infile'])
-        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
+        sdcal_result = MsCorrectedDataChecker(self.sdcal_params['infile'])
+        self.assertEqual(sdcal_result,expected_result) # AlmostEqual semantics
         
     def test_otf06(self):
         """
         test_otf06 --- Sky calibration reusing caltable pre-computed with calmode='otf'. calmode='apply' ms=lissajous.ms
         """
-        self.tsdcal_params = {
+        self.sdcal_params = {
             'infile':'lissajous.ms',
             'calmode':'apply',
             'applytable':os.path.join(self.ref_datapath,'lissajous.edges_new_fraction_0.1.ms_caltable')
@@ -1187,15 +1187,15 @@ class tsdcal_test_otf(unittest.TestCase):
             'ref_calibrated_ms':'lissajous.edges_new_fraction_0.1.sky.ms'
         }
         expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms())
-        self.run_tsdcal()
-        tsdcal_result = MsCorrectedDataChecker(self.tsdcal_params['infile'])
-        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics
+        self.run_sdcal()
+        sdcal_result = MsCorrectedDataChecker(self.sdcal_params['infile'])
+        self.assertEqual(sdcal_result,expected_result) # AlmostEqual semantics
 
     def test_otf07(self):
         """
         test_otf07 --- Sky calibration + Tsys conversion, composite calmode='otf,tsys,apply'. ms=lissajous.ms
         """
-        self.tsdcal_params = {
+        self.sdcal_params = {
             'infile':'lissajous.ms',
             'calmode':'otf,tsys,apply',
         }
@@ -1203,14 +1203,14 @@ class tsdcal_test_otf(unittest.TestCase):
             'ref_calibrated_ms':'lissajous.edges_new_fraction_0.1.sky.ms'
         }
         expected_result = MsCorrectedDataChecker(self.ref_calibrated_ms(),convert_to_kelvin=True)
-        self.run_tsdcal()
-        tsdcal_result = MsCorrectedDataChecker(self.tsdcal_params['infile'])
-        self.assertEqual(tsdcal_result,expected_result) # AlmostEqual semantics            
+        self.run_sdcal()
+        sdcal_result = MsCorrectedDataChecker(self.sdcal_params['infile'])
+        self.assertEqual(sdcal_result,expected_result) # AlmostEqual semantics            
     
 
-class tsdcal_test_otf_ephem(unittest.TestCase):
+class sdcal_test_otf_ephem(unittest.TestCase):
     """
-    Unit tests for task tsdcal,
+    Unit tests for task sdcal,
     sky calibration mode = 'otf' : On-The-Fly (OTF) *non-raster* 
     
     Test cases for ephemeris objects are defined in this class.
@@ -1232,7 +1232,7 @@ class tsdcal_test_otf_ephem(unittest.TestCase):
             shutil.rmtree(self.infile)
         copytree_ignore_subversion(self.datapath, self.infile)
 
-        default(tsdcal)
+        default(sdcal)
 
     def tearDown(self):
         to_be_removed = [self.infile, self.outfile]
@@ -1284,14 +1284,14 @@ class tsdcal_test_otf_ephem(unittest.TestCase):
         """test_otfephem01: Sky calibration of 'otf' mode for ephemeris object"""
         self.check_ephem(self.infile)
         self.assertFalse(os.path.exists(self.outfile))
-        tsdcal(infile=self.infile, outfile=self.outfile, calmode='otf')
+        sdcal(infile=self.infile, outfile=self.outfile, calmode='otf')
         self.check_caltable(self.outfile)
         
     def test_otfephem02(self):
         """test_otfephem02: On-the-fly application of 'otf' calibration mode for ephemeris object"""
         self.check_ephem(self.infile)
         self.check_fresh_ms(self.infile)
-        tsdcal(infile=self.infile, calmode='otf,apply')
+        sdcal(infile=self.infile, calmode='otf,apply')
         self.check_corrected(self.infile)
        
     
@@ -1477,10 +1477,10 @@ class NearestInterpolator(Interpolator):
         return ref, refflag, weightscale
 
     
-class tsdcal_test_apply(tsdcal_test_base):
+class sdcal_test_apply(sdcal_test_base):
     
     """
-    Unit test for task tsdcal (apply tables).
+    Unit test for task sdcal (apply tables).
 
     The list of tests:
     test_apply_sky00 --- empty applytable
@@ -1505,8 +1505,8 @@ class tsdcal_test_apply(tsdcal_test_base):
     test_apply_composite02 --- on-the-fly application of sky and tsys tables ('ps,tsys,apply')
     test_apply_composite03 --- on-the-fly application of sky table ('otfraster,apply')
     """
-    invalid_argument_case = tsdcal_test_base.invalid_argument_case
-    exception_case = tsdcal_test_base.exception_case
+    invalid_argument_case = sdcal_test_base.invalid_argument_case
+    exception_case = sdcal_test_base.exception_case
     
     @property
     def nrow_per_chunk(self):
@@ -1519,7 +1519,7 @@ class tsdcal_test_apply(tsdcal_test_base):
         return 3.0e-4
     
     def setUp(self):
-        self._setUp([self.infile, self.applytable], tsdcal)
+        self._setUp([self.infile, self.applytable], sdcal)
 
 
     def tearDown(self):
@@ -1690,42 +1690,42 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         test_apply_sky00 --- empty applytable
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable='')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable='')
 
     @exception_case(Exception, 'Applytable name must be specified.')
     def test_apply_sky01(self):
         """
         test_apply_sky01 --- empty applytable (list ver.)
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[''])
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=[''])
 
     @exception_case(Exception, 'Applytable name must be specified.')
     def test_apply_sky02(self):
         """
         test_apply_sky02 --- empty applytable list
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[])
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=[])
 
     @exception_case(Exception, "^Table doesn't exist:")
     def test_apply_sky03(self):
         """
         test_apply_sky03 --- unexisting applytable
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable='notexist.sky')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable='notexist.sky')
 
     @exception_case(Exception, "^Table doesn't exist:")
     def test_apply_sky04(self):
         """
         test_apply_sky04 --- unexisting applytable (list ver.)
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=['notexist.sky'])
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=['notexist.sky'])
 
     @exception_case(RuntimeError, 'Spw Expression: No match found for 99')
     def test_apply_sky05(self):
         """
         test_apply_sky05 --- invalid selection (empty selection result)
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', spw='99', applytable=[self.applytable])
+        self.result = sdcal(infile=self.infile, calmode='apply', spw='99', applytable=[self.applytable])
     
     #@exception_case(RuntimeError, '^Unknown interptype: \'.+\'!! Check inputs and try again\.$')
     @exception_case(RuntimeError, 'Error in Calibrater::setapply.')
@@ -1734,63 +1734,63 @@ class tsdcal_test_apply(tsdcal_test_base):
         test_apply_sky06 --- invalid interp value
         """
         # 'cubic' interpolation along time axis is not supported yet
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='cubic')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='cubic')
     
     @exception_case(RuntimeError, '^Applytable \'.+\' is not a caltable format$')
     def test_apply_sky07(self):
         """
         test_apply_sky07 --- invalid applytable (not caltable)
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.infile], interp='linear')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=[self.infile], interp='linear')
 
     @normal_case()
     def test_apply_sky08(self):
         """
         test_apply_sky08 --- apply data (linear)
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear')
 
     @normal_case(spw='9')
     def test_apply_sky09(self):
         """
         test_apply_sky09 --- apply selected data
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], spw='9', interp='linear')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], spw='9', interp='linear')
 
     @normal_case(interp='nearest')
     def test_apply_sky10(self):
         """
         test_apply_sky10 --- apply data (nearest)
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='nearest')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='nearest')
 
     @normal_case(interp='linear,linearflag')
     def test_apply_sky11(self):
         """
         test_apply_sky11 --- apply data (linearflag for frequency interpolation)
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear,linearflag')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear,linearflag')
         
     @normal_case(interp='linear,nearestflag')
     def test_apply_sky12(self):
         """
         test_apply_sky12 --- apply data (nearestflag for frequency interpolation)
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear,nearestflag')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear,nearestflag')
         
     @normal_case(interp='linear')
     def test_apply_sky13(self):
         """
         test_apply_sky13 --- apply data (string applytable input)
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='linear')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='linear')
 
     @normal_case(interp='')
     def test_apply_sky14(self):
         """
         test_apply_sky14 --- apply data (interp='')
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='')
 
     def fill_weightspectrum(func):
         import functools
@@ -1815,7 +1815,7 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         test_apply_sky15 --- check if WEIGHT_SPECTRUM is updated properly when it exists
         """
-        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='linear')
+        self.result = sdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='linear')
 
     def modify_tsys(func):
         import functools
@@ -1841,7 +1841,7 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         test_apply_composite00 --- on-the-fly application of sky table ('ps,apply')
         """
-        tsdcal(infile=self.infile, calmode='ps,apply')
+        sdcal(infile=self.infile, calmode='ps,apply')
 
     @modify_tsys
     @normal_case(tsys=100.0)
@@ -1854,10 +1854,10 @@ class tsdcal_test_apply(tsdcal_test_base):
 
         try:
             # generate Tsys table
-            tsdcal(infile=self.infile, calmode='tsys', outfile=tsystable)
+            sdcal(infile=self.infile, calmode='tsys', outfile=tsystable)
             
             # apply
-            tsdcal(infile=self.infile, calmode='ps,apply', applytable=tsystable,
+            sdcal(infile=self.infile, calmode='ps,apply', applytable=tsystable,
                    spwmap={1:[9], 3:[11]})
         finally:
             if os.path.exists(tsystable):
@@ -1869,7 +1869,7 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         test_apply_composite02 --- on-the-fly application of sky and tsys tables ('ps,tsys,apply')
         """
-        tsdcal(infile=self.infile, calmode='ps,tsys,apply',
+        sdcal(infile=self.infile, calmode='ps,tsys,apply',
                spwmap={1:[9], 3:[11]})
 
     @modify_tsys
@@ -1878,15 +1878,15 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         test_apply_composite03 --- on-the-fly application of sky table ('otfraster,apply')
         """
-        tsdcal(infile=self.infile, calmode='tsys,apply', applytable=self.applytable,
+        sdcal(infile=self.infile, calmode='tsys,apply', applytable=self.applytable,
                spwmap={1:[9], 3:[11]})
 
 def suite():
-    return [  tsdcal_test
-            , tsdcal_test_ps
-            , tsdcal_test_otfraster
-            , tsdcal_test_otf
-            , tsdcal_test_apply
-            , tsdcal_test_otf_ephem]
+    return [  sdcal_test
+            , sdcal_test_ps
+            , sdcal_test_otfraster
+            , sdcal_test_otf
+            , sdcal_test_apply
+            , sdcal_test_otf_ephem]
 
 

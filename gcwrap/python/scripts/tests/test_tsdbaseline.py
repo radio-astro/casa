@@ -11,7 +11,7 @@ import unittest
 import listing
 from numpy import array
 
-from tsdbaseline import tsdbaseline
+from sdbaseline import sdbaseline
 from sdutil import tbmanager
 
 
@@ -133,14 +133,14 @@ def parseRms(txt):
     t = txt.lstrip().rstrip('\n')[6:]
     return float(t)
 
-class tsdbaseline_unittest_base(unittest.TestCase):
+class sdbaseline_unittest_base(unittest.TestCase):
     """
-    Base class for tsdbaseline unit test
+    Base class for sdbaseline unit test
     """
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
               '/data/regression/unittest/tsdbaseline/'
-    taskname = "tsdbaseline"
+    taskname = "sdbaseline"
     verboselog = False
 
     #complist = ['max','min','rms','median','stddev']
@@ -543,9 +543,9 @@ class tsdbaseline_unittest_base(unittest.TestCase):
 
 
 
-class tsdbaseline_basicTest(tsdbaseline_unittest_base):
+class sdbaseline_basicTest(sdbaseline_unittest_base):
     """
-    Basic unit tests for task tsdbaseline. No interactive testing.
+    Basic unit tests for task sdbaseline. No interactive testing.
 
     List of tests:
     test000 --- default values for all parameters
@@ -570,8 +570,8 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_calave.ms'
-    outroot = tsdbaseline_unittest_base.taskname+'_basictest'
-    blrefroot = tsdbaseline_unittest_base.datapath+'refblparam'
+    outroot = sdbaseline_unittest_base.taskname+'_basictest'
+    blrefroot = sdbaseline_unittest_base.datapath+'refblparam'
     tid = None
 
     def setUp(self):
@@ -579,7 +579,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(tsdbaseline)
+        default(sdbaseline)
 
 
         if os.path.exists(self.infile+'_blparam.txt'):
@@ -600,9 +600,9 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
-        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+        result = sdbaseline(infile=infile, datacolumn=datacolumn,
                              outfile=outfile)
-        # tsdbaseline returns None if it runs successfully
+        # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # uncomment the next line once blparam file can be output
@@ -633,11 +633,11 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         spw = '3'
         pol = 'LL'
         overwrite = True
-        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+        result = sdbaseline(infile=infile, datacolumn=datacolumn,
                              maskmode=maskmode, blfunc=blfunc, 
                              spw=spw, pol=pol, outfile=outfile,
                              overwrite=overwrite)
-        # tsdbaseline returns None if it runs successfully
+        # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # uncomment the next line once blparam file can be output
@@ -668,11 +668,11 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         spw = '3'
         pol = 'LL'
         overwrite = True
-        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+        result = sdbaseline(infile=infile, datacolumn=datacolumn,
                              maskmode=maskmode, blfunc=blfunc, 
                              spw=spw, pol=pol, outfile=outfile,
                              overwrite=overwrite)
-        # tsdbaseline returns None if it runs successfully
+        # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # uncomment the next line once blparam file can be output
@@ -707,7 +707,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         npiece = 3
         spw='3'
         pol='LL'
-        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+        result = sdbaseline(infile=infile, datacolumn=datacolumn,
                              maskmode=maskmode, blfunc=blfunc, 
                              npiece=npiece,spw=spw, 
                              pol=pol,
@@ -747,7 +747,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         tb.close()
         variance_orig_pol1 = numpy.var(orig_pol1_value)
         
-        #open the MS after tsdbaseline
+        #open the MS after sdbaseline
         tb.open(outfile)
         pol1_value = numpy.array(tb.getcell('FLOAT_DATA', 0)[out_pol,:])
         tb.close()
@@ -770,7 +770,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         mode = 'list'
         os.mkdir(outfile)
         try:
-            result = tsdbaseline(infile=infile, outfile=outfile, overwrite=False, maskmode=mode)
+            result = sdbaseline(infile=infile, outfile=outfile, overwrite=False, maskmode=mode)
         except Exception, e:
             pos = str(e).find(outfile+' exists.')
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
@@ -785,12 +785,12 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         spw = '10' # non-existent IF value
         mode = 'list'
         try:
-            tsdbaseline(infile=infile, outfile=outfile, spw=spw, maskmode=mode)
+            sdbaseline(infile=infile, outfile=outfile, spw=spw, maskmode=mode)
         except Exception, e:
             self.assertIn('Spw Expression: No match found for 10,', str(e))
 
 
-class tsdbaseline_maskTest(tsdbaseline_unittest_base):
+class sdbaseline_maskTest(sdbaseline_unittest_base):
     """
     Tests for various mask selections. No interactive testing.
 
@@ -811,8 +811,8 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_calave.ms'
-    outroot = tsdbaseline_unittest_base.taskname+'_masktest'
-    blrefroot = tsdbaseline_unittest_base.datapath+'refblparam_mask'
+    outroot = sdbaseline_unittest_base.taskname+'_masktest'
+    blrefroot = sdbaseline_unittest_base.datapath+'refblparam_mask'
     tid = None
 
     # Channel range excluding bad edge
@@ -837,7 +837,7 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
+        default(sdbaseline)
 
 
         if os.path.exists(self.infile+'_blparam.txt'):
@@ -867,10 +867,10 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
         blfunc = 'cspline'
         npiece = 4
 
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,maskmode=mode,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,maskmode=mode,
                              spw=spw,pol=pol,blfunc=blfunc,npiece=npiece,
                              outfile=outfile)
-        # tsdbaseline returns None if it runs successfully
+        # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -896,9 +896,9 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
 
         print 'spw =', spw
 
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,maskmode=mode,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,maskmode=mode,
                             outfile=outfile,spw=spw,pol=pol)
-        # tsdbaseline returns None if it runs successfully
+        # sdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         # Compare IF2
@@ -914,7 +914,7 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base):
             return False
 
 
-class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
+class sdbaseline_sinusoidTest(sdbaseline_unittest_base):
     """
     Tests for sinusoidal baseline fitting. No interactive testing.
 
@@ -991,7 +991,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
     """
     # Input and output names
     infile = 'sinusoidal.ms'
-    outroot = tsdbaseline_unittest_base.taskname + '_sinusoidtest'
+    outroot = sdbaseline_unittest_base.taskname + '_sinusoidtest'
     tid = None
 
     def setUp(self):
@@ -999,7 +999,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
-        default(tsdbaseline)
+        default(sdbaseline)
 
         if os.path.exists(self.infile+'_blparam.txt'):
             os.remove(self.infile+ '_blparam.txt')
@@ -1021,7 +1021,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = 0
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1033,7 +1033,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = [0]
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1045,7 +1045,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = [0,1]
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1057,7 +1057,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = (0)
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1069,7 +1069,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = (0,1)
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1081,7 +1081,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '0'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1093,7 +1093,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '0,1'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1105,7 +1105,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '0-2'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1117,7 +1117,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '0~2'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1129,7 +1129,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '<=2'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1141,7 +1141,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '=<2'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1153,7 +1153,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '2>='
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1165,7 +1165,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '2=>'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1177,7 +1177,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '<2'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1189,7 +1189,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '2>'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1201,7 +1201,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '4090<='
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1213,7 +1213,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '4090=<'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1225,7 +1225,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '>=4090'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1237,7 +1237,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '=>4090'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1249,7 +1249,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '4090<'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1261,7 +1261,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
         addwn = '>4090'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=False)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1275,7 +1275,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = '0'
         fftthresh = '3.0sigma'
         torr = 1.0e-6
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh=fftthresh)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1291,7 +1291,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = '0'
         fftthresh = 'top4'
         torr = 1.0e-6
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',addwn=addwn,applyfft=True,fftthresh=fftthresh)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1304,7 +1304,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         infile = self.infile
         outfile = self.outroot + tid + '.ms'
         datacolumn = 'float_data'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid')
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1318,7 +1318,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         applyfft = False
         addwn = [0,10000]
         rejwn = '4000<'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                              blfunc='sinusoid',applyfft=applyfft,addwn=addwn,rejwn=rejwn)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -1332,7 +1332,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         addwn = []
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=False)
         except Exception as e:
             self.assertEqual(e.message, 'addwn must contain at least one element.')
@@ -1345,7 +1345,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         addwn = []
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'addwn must contain at least one element.')
@@ -1358,7 +1358,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         addwn = ()
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=False)
         except Exception as e:
             self.assertEqual(e.message, 'addwn must contain at least one element.')
@@ -1371,7 +1371,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         addwn = ()
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'addwn must contain at least one element.')
@@ -1384,7 +1384,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         addwn = ''
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=False)
         except Exception as e:
             self.assertEqual(e.message, 'string index out of range')
@@ -1397,7 +1397,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         addwn = ''
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'string index out of range')
@@ -1411,7 +1411,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = [0,1,2]
         rejwn = [0,1,2]
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=False)
         except Exception as e:
             self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
@@ -1425,7 +1425,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = [0,1,2]
         rejwn = [0,1,2]
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
@@ -1439,7 +1439,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = '<5'
         rejwn = '<10'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=False)
         except Exception as e:
             self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
@@ -1453,7 +1453,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = '<5'
         rejwn = '<10'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
@@ -1467,7 +1467,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = '5000<'
         rejwn = '<5100'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
@@ -1481,7 +1481,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = [5000,5500]
         rejwn = []
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'No effective wave number given for sinusoidal fitting.')
@@ -1495,7 +1495,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = [-10,5]
         rejwn = []
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'wrong value given for addwn/rejwn')
@@ -1509,7 +1509,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = [-10,5000]
         rejwn = []
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'wrong value given for addwn/rejwn')
@@ -1523,7 +1523,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         addwn = [-10,5000]
         rejwn = [-10,5500]
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',addwn=addwn,rejwn=rejwn,applyfft=True)
         except Exception as e:
             self.assertEqual(e.message, 'wrong value given for addwn/rejwn')
@@ -1536,7 +1536,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = [3.0]
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'fftthresh must be float or integer or string.')
@@ -1549,7 +1549,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = 'asigma'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'fftthresh has a wrong format.')
@@ -1562,7 +1562,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = 'topa'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'fftthresh has a wrong format.')
@@ -1575,7 +1575,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = 'top3sigma'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'fftthresh has a wrong format.')
@@ -1588,7 +1588,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = 'a123'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'fftthresh has a wrong format.')
@@ -1601,7 +1601,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = ''
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'fftthresh has a wrong format.')
@@ -1614,7 +1614,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = '-3.0'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1627,7 +1627,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = '0.0'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1640,7 +1640,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = '-3'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1653,7 +1653,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = '0'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1666,7 +1666,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = '-3.0sigma'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1679,7 +1679,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = '0.0sigma'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1692,7 +1692,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = '-3sigma'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1705,7 +1705,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = '0sigma'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1718,7 +1718,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = 'top-3'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1731,7 +1731,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = 'top0'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1744,7 +1744,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = 'top1.5'
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'fftthresh has a wrong format.')
@@ -1757,7 +1757,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = -3.0
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1770,7 +1770,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = 0.0
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1783,7 +1783,7 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = -3
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
@@ -1796,17 +1796,17 @@ class tsdbaseline_sinusoidTest(tsdbaseline_unittest_base):
         datacolumn = 'float_data'
         fftthresh = 0
         try:
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,outfile=outfile,
                                  blfunc='sinusoid',applyfft=True,fftthresh=fftthresh)
         except Exception as e:
             self.assertEqual(e.message, 'threshold given to fftthresh must be positive.')
 
 
-class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base):
+class sdbaseline_multi_IF_test(sdbaseline_unittest_base):
     """
-    Unit tests for task tsdbaseline. No interactive testing.
+    Unit tests for task sdbaseline. No interactive testing.
 
-    This test intends to check whether tsdbaseline task works fine
+    This test intends to check whether sdbaseline task works fine
     for data that has multiple IFs whose nchan differ each other. 
 
     List of tests:
@@ -1815,14 +1815,14 @@ class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base):
     # Input and output names
     infile = 'testMultiIF.asap'
     blparamfile_suffix = '_blparam.txt'
-    outroot = tsdbaseline_unittest_base.taskname+'_multi'
+    outroot = sdbaseline_unittest_base.taskname+'_multi'
     refblparamfile = 'refblparam_multiIF'
 
     def setUp(self):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
+        default(sdbaseline)
 
 
         if os.path.exists(self.infile+'_blparam.txt'):
@@ -1847,7 +1847,7 @@ class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base):
         outfile = self.outroot+".asap"
         blparamfile = outfile+self.blparamfile_suffix
         
-        result = tsdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc=blfunc,order=order)
+        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc=blfunc,order=order)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._compareBLparam(blparamfile,self.datapath+self.refblparamfile)
         reference = {5: {'rms': 1.4250789880752563,
@@ -1873,7 +1873,7 @@ class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base):
             self._compareStats(currstat,reference[ifno])
 
 
-class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
+class sdbaseline_outbltableTest(sdbaseline_unittest_base):
     """
     Tests for outputting baseline table
 
@@ -1908,7 +1908,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_calave.ms'
-    outroot = tsdbaseline_unittest_base.taskname+'_bltabletest'
+    outroot = sdbaseline_unittest_base.taskname+'_bltabletest'
     tid = None
     ftype = {'poly': 0, 'chebyshev': 1, 'cspline': 2, 'sinusoid': 3}
 
@@ -1916,7 +1916,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
+        default(sdbaseline)
 
 
         if os.path.exists(self.infile+'_blparam.txt'):
@@ -2017,7 +2017,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
         bloutput=''
         dosubtract=False
 
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+        result = sdbaseline(infile=infile,datacolumn=datacolumn,
                              blmode=blmode,bloutput=bloutput,dosubtract=dosubtract,
                              outfile=outfile)
         self.assertEqual(result,None,
@@ -2062,7 +2062,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
             print 'testing blfunc='+blfunc[i]+'...'
             outfile = self.outroot+self.tid+blfunc[i]+'.ms'
             bloutput= self.outroot+self.tid+blfunc[i]+'.bltable'
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,
                                  blmode=blmode,blformat=blformat,bloutput=bloutput,
                                  spw=spw,blfunc=blfunc[i],order=order,npiece=npiece,
                                  dosubtract=dosubtract,outfile=outfile)
@@ -2089,7 +2089,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
             outfile = self.outroot+self.tid+option+'.ms'
             blparam = self.outroot+self.tid+option+'.blparam'
             self._createBlparamFile(blparam, self.blparam_order, self.blparam_dic, option)
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,
                                  blmode=blmode,blformat=blformat,bloutput=bloutput,
                                  blfunc=blfunc,blparam=blparam,
                                  dosubtract=dosubtract,outfile=outfile)
@@ -2133,7 +2133,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
 
                 outfile = self.outroot+self.tid+blfunc[i]+testmode[j]+'.ms'
                 bloutput= self.outroot+self.tid+blfunc[i]+testmode[j]+'.bltable'
-                result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+                result = sdbaseline(infile=infile,datacolumn=datacolumn,
                                      blmode=blmode,blformat=blformat,bloutput=bloutput,
                                      spw=spw,pol=pol,blfunc=blfunc[i],order=order,npiece=npiece,
                                      dosubtract=dosubtract,outfile=outfile)
@@ -2184,7 +2184,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
 
             outfile = self.outroot+self.tid+blfunc+'.ms'
             bloutput= self.outroot+self.tid+blfunc+'.bltable'
-            result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+            result = sdbaseline(infile=infile,datacolumn=datacolumn,
                                  blmode=blmode,blformat=blformat,bloutput=bloutput,
                                  spw=spw,pol=pol,blfunc=blfunc,blparam=blparam,
                                  dosubtract=dosubtract,outfile=outfile)
@@ -2197,7 +2197,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
                 shutil.rmtree(self.infile)
             os.system('rm -rf '+self.outroot+'*')
     
-class tsdbaseline_applybltableTest(tsdbaseline_unittest_base):
+class sdbaseline_applybltableTest(sdbaseline_unittest_base):
     """
     Tests for applying baseline table
     (blmode='apply' mode)
@@ -2213,7 +2213,7 @@ class tsdbaseline_applybltableTest(tsdbaseline_unittest_base):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_calave.ms'
-    outroot = tsdbaseline_unittest_base.taskname+'_bltabletest'
+    outroot = sdbaseline_unittest_base.taskname+'_bltabletest'
     reffile = outroot+'.ms'
     blmode = 'apply'
     bltable = outroot+'.bltable'
@@ -2223,7 +2223,7 @@ class tsdbaseline_applybltableTest(tsdbaseline_unittest_base):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
+        default(sdbaseline)
         
        
         if os.path.exists(self.infile+'_blparam.txt'):
@@ -2237,13 +2237,13 @@ class tsdbaseline_applybltableTest(tsdbaseline_unittest_base):
         #create baseline table
         blparam = self.outroot+'.blparam'
         self._createBlparamFile(blparam, self.blparam_order, self.blparam_dic, '')
-        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+        result = sdbaseline(infile=self.infile,datacolumn='float_data',
                              blmode='fit',blformat='table',bloutput=self.bltable,
                              blfunc='variable',blparam=blparam,
                              dosubtract=True,outfile=self.reffile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        default(tsdbaseline)
+        default(sdbaseline)
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -2286,7 +2286,7 @@ class tsdbaseline_applybltableTest(tsdbaseline_unittest_base):
         """test400: apply baseline table. all bltable entries applied to all MS data."""
         self.tid = '400'
         outfile = self.outroot+self.tid+'.ms'
-        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+        result = sdbaseline(infile=self.infile,datacolumn='float_data',
                              blmode=self.blmode,bltable=self.bltable,
                              outfile=outfile)
         self.assertEqual(result,None,
@@ -2306,7 +2306,7 @@ class tsdbaseline_applybltableTest(tsdbaseline_unittest_base):
         finally:
             tb.close()
         
-        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+        result = sdbaseline(infile=self.infile,datacolumn='float_data',
                              blmode=self.blmode,bltable=self.bltable,
                              outfile=outfile)
         self.assertEqual(result,None,
@@ -2326,7 +2326,7 @@ class tsdbaseline_applybltableTest(tsdbaseline_unittest_base):
         finally:
             tb.close()
         
-        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+        result = sdbaseline(infile=self.infile,datacolumn='float_data',
                              blmode=self.blmode,bltable=self.bltable,
                              outfile=outfile)
         self.assertEqual(result,None,
@@ -2345,14 +2345,14 @@ class tsdbaseline_applybltableTest(tsdbaseline_unittest_base):
         finally:
             tb.close()
         
-        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+        result = sdbaseline(infile=self.infile,datacolumn='float_data',
                              blmode=self.blmode,bltable=self.bltable,
                              outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(outfile, 'r2p1bltinexist')
 
-class tsdbaseline_variableTest(tsdbaseline_unittest_base):
+class sdbaseline_variableTest(sdbaseline_unittest_base):
     """
     Tests for blfunc='variable'
 
@@ -2379,7 +2379,7 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base):
         if hasattr(self, 'infile'):
             self.__refetch_files(self.infile)
 
-        default(tsdbaseline)
+        default(sdbaseline)
 
 
     def tearDown(self):
@@ -2403,7 +2403,7 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base):
 
     def _run_test(self, infile, reference, mask=None, rtol=1.e-5, atol=1.e-6, flag_spec=(), **task_param):
         """
-        Run tsdbaseline with mode='variable' and test output MS.
+        Run sdbaseline with mode='variable' and test output MS.
 
         infile    : input ms name
         reference : reference statistic values in form {'key': [value0, value1, ...], ...}
@@ -2413,7 +2413,7 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base):
         **task_param : additional parameters to invoke task. blfunc and outfile are predefined.
         """
         self.infile = infile
-        tsdbaseline(infile=self.infile,blfunc='variable',outfile=self.outfile,**task_param)
+        sdbaseline(infile=self.infile,blfunc='variable',outfile=self.outfile,**task_param)
         colname = (task_param['datacolumn'] if task_param.has_key('datacolumn') else 'data').upper()
 
         # calculate statistics of valid spectrum. Test flagged spectrum.
@@ -2561,9 +2561,9 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base):
 
 
 
-class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
+class sdbaseline_bloutputTest(sdbaseline_unittest_base):
     """
-Basic unit tests for task tsdbaseline. No interactive testing.
+Basic unit tests for task sdbaseline. No interactive testing.
 
     List of tests:
     #'poly'
@@ -2641,7 +2641,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
     """
 
     infile = 'OrionS_rawACSmod_calave.ms'
-    outroot = tsdbaseline_unittest_base.taskname+'_bloutputtest'
+    outroot = sdbaseline_unittest_base.taskname+'_bloutputtest'
     outfile = "test.ms"
     bloutput = "test.txt"
     blparam = 'analytic_variable_blparam.txt'
@@ -2701,7 +2701,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
         shutil.copyfile(self.datapath+self.bloutput_sinusoid_addwnGt4000_rejwn4005_txt, self.bloutput_sinusoid_addwnGt4000_rejwn4005_txt)
 
-        default(tsdbaseline)
+        default(sdbaseline)
 
 
         if os.path.exists(self.infile+'_blparam.txt'):
@@ -2732,7 +2732,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         task_param=self.base_param.copy()
         for key, value in kwargs.items():
             task_param[key] = value
-        result = tsdbaseline(**task_param)
+        result = sdbaseline(**task_param)
 
 
     def check_bloutput(self,bloutput):
@@ -4427,7 +4427,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
 
 
 
-class tsdbaseline_autoTest(tsdbaseline_unittest_base):
+class sdbaseline_autoTest(sdbaseline_unittest_base):
     """
     A class that tests maskmode='auto'.
     
@@ -4449,7 +4449,7 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
     testAutoSinuChanFlag : sinusoidal fitting of all channels with channel flag in both edge
     """
     infile = 'OrionS_rawACSmod_calave.ms'
-    outroot = tsdbaseline_unittest_base.taskname+'_lftest'
+    outroot = sdbaseline_unittest_base.taskname+'_lftest'
     outfile = outroot+".ms"
     bloutput = outroot+"_blout"
     base_param = dict(infile=infile,
@@ -4486,7 +4486,7 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
+        default(sdbaseline)
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -4517,7 +4517,7 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
         task_param = self.base_param.copy()
         for key, val in kwargs.items():
             task_param[key] = val
-        tsdbaseline(**task_param)
+        sdbaseline(**task_param)
         outfile = task_param['outfile']
         polid = 0 if task_param['pol'] in ['RR', 'LL'] else None
         currstat = self._getStats(outfile, spw='0', pol=polid,
@@ -4595,7 +4595,7 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
 #         self.flag(self.infile,edge=self.edge)
 #         self.run_test(self.sinustat, spw=self.spw, edge=self.noedge, blfunc='sinusoid')
 
-class tsdbaseline_selection(unittest.TestCase):
+class sdbaseline_selection(unittest.TestCase):
     datapath = os.environ.get('CASAPATH').split()[0] + \
               '/data/regression/unittest/tsdbaseline/'
     infile = "analytic_type1.bl.ms"
@@ -4632,7 +4632,7 @@ class tsdbaseline_selection(unittest.TestCase):
     def setUp(self):
         self._clearup()
         shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
+        default(sdbaseline)
 
     def tearDown(self):
         self._clearup()
@@ -4681,7 +4681,7 @@ class tsdbaseline_selection(unittest.TestCase):
         inparams['spw'] = self._format_spw_mask(datacolumn, sel_param)
         inparams.update(self.common_param)
         print("task param: %s" % str(inparams))
-        tsdbaseline(datacolumn=datacolumn, **inparams)
+        sdbaseline(datacolumn=datacolumn, **inparams)
         self._test_result(inparams["outfile"], sel_param, datacolumn)
         
     def _test_result(self, msname, sel_param, dcol, atol=1.e-5, rtol=1.e-5):
@@ -4771,13 +4771,13 @@ class tsdbaseline_selection(unittest.TestCase):
         self.run_test("pol", "corrected")
 
 def suite():
-    return [tsdbaseline_basicTest, 
-            tsdbaseline_maskTest,
-            tsdbaseline_sinusoidTest,
-            tsdbaseline_outbltableTest,
-            tsdbaseline_applybltableTest,
-            tsdbaseline_variableTest,
-            tsdbaseline_bloutputTest,
-            tsdbaseline_autoTest,
-            tsdbaseline_selection
+    return [sdbaseline_basicTest, 
+            sdbaseline_maskTest,
+            sdbaseline_sinusoidTest,
+            sdbaseline_outbltableTest,
+            sdbaseline_applybltableTest,
+            sdbaseline_variableTest,
+            sdbaseline_bloutputTest,
+            sdbaseline_autoTest,
+            sdbaseline_selection
             ]

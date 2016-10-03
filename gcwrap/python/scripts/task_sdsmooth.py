@@ -4,12 +4,12 @@ from taskinit import *
 import sdutil
 ms,sdms,tb = gentools(['ms','sdms','tb'])
 
-def tsdsmooth(infile=None, datacolumn=None, antenna=None, 
+def sdsmooth(infile=None, datacolumn=None, antenna=None, 
               field=None, spw=None, timerange=None, scan=None, 
               pol=None, intent=None, kernel=None, kwidth=None,
               outfile=None, overwrite=None):
 
-    casalog.origin('tsdsmooth')
+    casalog.origin('sdsmooth')
 
     try:
         if len(outfile) == 0:

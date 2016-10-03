@@ -6,14 +6,14 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
-<!-- This is the param set for tsdfit -->
+<!-- This is the param set for sdfit -->
 
-<task type="function" name="tsdfit" category="single dish" visibility="experimental">
+<task type="function" name="sdfit" category="single dish">
 
   <shortdescription>Fit a spectral line</shortdescription>
 
   <description>
-Task tsdfit is a basic line-fitter for single-dish spectra.
+Task sdfit is a basic line-fitter for single-dish spectra.
 It assumes that the spectra have been calibrated in tsdcal
 or sdreduce.
   </description>
@@ -264,7 +264,7 @@ a Python dictionary of line statistics
 -----------
 DESCRIPTION
 -----------
-Task tsdfit is a basic line-fitter for single-dish spectra.
+Task sdfit is a basic line-fitter for single-dish spectra.
 It assumes that the spectra have been calibrated in tsdcal
 or sdreduce.
 
@@ -275,7 +275,7 @@ to give a single selection for each fit.
 -------
 FITMODE
 -------
-As described in the parameter description section, tsdfit implements 
+As described in the parameter description section, sdfit implements 
 fitting modes 'list' and 'auto' so far. 
 The 'list' mode allows users to set  initial guess manually. The only
 controllable parameter for the guess is  range of the line region and

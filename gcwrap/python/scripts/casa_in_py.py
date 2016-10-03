@@ -240,9 +240,11 @@ from calstat_pg import calstat_pg as calstat
 from partition_pg import partition_pg as partition
 from mstransform_pg import mstransform_pg as mstransform
 from cvel2_pg import cvel2_pg as cvel2
-from tsdbaseline_pg import tsdbaseline_pg as tsdbaseline
-from tsdcal_pg import tsdcal_pg as tsdcal
-from tsdfit_pg import tsdfit_pg as tsdfit
+from sdbaseline_pg import sdbaseline_pg as sdbaseline
+from sdcal_pg import sdcal_pg as sdcal
+from sdgaincal_pg import sdgaincal_pg as sdgaincal
+from sdfit_pg import sdfit_pg as sdfit
+from sdsmooth_pg import sdsmooth_pg as sdsmooth
 from tclean_pg import tclean_pg as tclean
 from tclean2_pg import tclean2_pg as tclean2
 
