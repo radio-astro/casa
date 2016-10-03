@@ -286,6 +286,7 @@ private:
   Float minWeight_p;
 
   Int lastIndex_p;
+  Vector<Int> lastIndexPerAnt_p;
   Bool useImagingWeight_p;
   Int lastAntID_p;
   Int msId_p;

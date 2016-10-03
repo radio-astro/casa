@@ -87,7 +87,7 @@ SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
-    minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
+    minWeight_p(0.), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
     isSplineInterpolationReady(False), interpolator(0), clipminmax_(False)
 {
   lastIndex_p=0;
@@ -100,7 +100,7 @@ SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0),  jwidth_p(0.0),
-    minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
+    minWeight_p(minweight), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
     isSplineInterpolationReady(False), interpolator(0), clipminmax_(clipminmax)
 {
   mLocation_p=mLocation;
@@ -114,7 +114,7 @@ SDGrid::SDGrid(Int icachesize, Int itilesize,
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
-    minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
+    minWeight_p(0.), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
     isSplineInterpolationReady(False), interpolator(0), clipminmax_(False)
 {
   lastIndex_p=0;
@@ -127,7 +127,7 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
-    minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1),
+    minWeight_p(minweight), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1),
     msId_p(-1),
     isSplineInterpolationReady(False), interpolator(0), clipminmax_(clipminmax)
 {
@@ -143,7 +143,7 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(-1),
     truncate_p(truncate), gwidth_p(gwidth), jwidth_p(jwidth),
-    minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
+    minWeight_p(minweight), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
     isSplineInterpolationReady(False), interpolator(0), clipminmax_(clipminmax)
 {
   mLocation_p=mLocation;
@@ -185,6 +185,7 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     convSupport=other.convSupport;
     userSetSupport_p=other.userSetSupport_p;
     lastIndex_p=0;
+    lastIndexPerAnt_p=0;
     lastAntID_p=-1;
     msId_p=-1;
     useImagingWeight_p=other.useImagingWeight_p;
@@ -443,6 +444,10 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
       //if(vb.newMS()) This thing is buggy...using msId change
       if(vb.msId() != msId_p){
 	lastIndex_p=0;
+  if(lastIndexPerAnt_p.nelements() < (size_t)vb.numberAnt()) {
+    lastIndexPerAnt_p.resize(vb.numberAnt());
+  }
+	lastIndexPerAnt_p=0;
 	msId_p=vb.msId();
       }
       pointIndex=getIndex(act_mspc, vb.time()(row), -1.0, vb.antenna1()(row));
@@ -852,6 +857,10 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   if(vb.newMS()){
     matchAllSpwChans(vb);
     lastIndex_p=0;
+    if (lastIndexPerAnt_p.nelements() < (size_t)vb.numberAnt()) {
+      lastIndexPerAnt_p.resize(vb.numberAnt());
+    }
+    lastIndexPerAnt_p=0;
   }
   //Here we redo the match or use previous match
   
@@ -1086,6 +1095,10 @@ void SDGrid::get(VisBuffer& vb, Int row)
   if(vb.newMS()){
     matchAllSpwChans(vb);
     lastIndex_p=0;
+    if (lastIndexPerAnt_p.nelements() < (size_t)vb.numberAnt()) {
+      lastIndexPerAnt_p.resize(vb.numberAnt());
+    }
+    lastIndexPerAnt_p=0;
   }
 
   //Here we redo the match or use previous match
@@ -1453,49 +1466,57 @@ void SDGrid::ok() {
 // costlier.
 Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
 		     const Double& interval, const Int& antid) {
-  Int start=lastIndex_p;
+  //Int start=lastIndex_p;
+  Int start=lastIndexPerAnt_p[antid];
   Double tol=interval < 0.0 ? time*C::dbl_epsilon : interval/2.0;
   // Search forwards
   Int nrows=mspc.time().nrow();
   for (Int i=start;i<nrows;i++) {
+    // Check for ANTENNA_ID. When antid<0 (default) ANTENNA_ID in POINTING table < 0 is ignored.
+    // MS v2 definition indicates ANTENNA_ID in POINING >= 0.
+    if (antid >= 0 && mspc.antennaId()(i) != antid) {
+      continue;
+    }
+
     Double midpoint = mspc.time()(i); // time in POINTING table is midpoint
     // If the interval in the pointing table is negative, use the last
     // entry. Note that this may be invalid (-1) but in that case 
     // the calling routine will generate an error
+    Double mspc_interval = mspc.interval()(i);
 
-    // Check for ANTENNA_ID. When antid<0 (default) ANTENNA_ID in POINTING table < 0 is ignored.
-    // MS v2 definition indicates ANTENNA_ID in POINING >= 0.
-    if (antid >= 0 && mspc.antennaId()(i) != antid) {
-    	continue;
-    }
-    if(mspc.interval()(i)<0.0) {
-      return lastIndex_p;
+    if(mspc_interval<0.0) {
+      //return lastIndex_p;
+      return lastIndexPerAnt_p[antid];
     }
     // Pointing table interval is specified so we have to do a match
     else {
       // Is the midpoint of this pointing table entry within the specified
       // tolerance of the main table entry?
-      if(abs(midpoint-time) <= (mspc.interval()(i)/2.0+tol)) {
-      	lastIndex_p=i;
+      if(abs(midpoint-time) <= (mspc_interval/2.0+tol)) {
+      	//lastIndex_p=i;
+      	lastIndexPerAnt_p[antid]=i;
 	return i;
       }
     }
   }
   // Search backwards
   for (Int i=start;i>=0;i--) {
-    Double midpoint = mspc.time()(i); // time in POINTING table is midpoint
     if (antid >= 0 && mspc.antennaId()(i) != antid) {
-    	continue;
+      continue;
     }
-    if(mspc.interval()(i)<0.0) {
-      return lastIndex_p;
+    Double midpoint = mspc.time()(i); // time in POINTING table is midpoint
+    Double mspc_interval = mspc.interval()(i);
+    if(mspc_interval<0.0) {
+      //return lastIndex_p;
+      return lastIndexPerAnt_p[antid];
     }
     // Pointing table interval is specified so we have to do a match
     else {
       // Is the midpoint of this pointing table entry within the specified
       // tolerance of the main table entry?
-      if(abs(midpoint-time) <= (mspc.interval()(i)/2.0+tol)) {
-	lastIndex_p=i;
+      if(abs(midpoint-time) <= (mspc_interval/2.0+tol)) {
+	//lastIndex_p=i;
+  lastIndexPerAnt_p[antid]=i;
 	return i;
       }
     }
@@ -1515,6 +1536,10 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     ///if(vb.newMS())  vb.newMS does not work well using msid 
     if (vb.msId() != msId_p) {
       lastIndex_p = 0;
+      if (lastIndexPerAnt_p.nelements() < (size_t)vb.numberAnt()) {
+        lastIndexPerAnt_p.resize(vb.numberAnt());
+      }
+      lastIndexPerAnt_p = 0;
       msId_p = vb.msId();
     }
     pointIndex = getIndex(act_mspc, vb.time()(row), -1.0, vb.antenna1()(row));
