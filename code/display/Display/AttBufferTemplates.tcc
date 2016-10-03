@@ -35,20 +35,20 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	Bool AttributeBuffer::getValue(const String &name, T &value) const {
-		Vector<T> tmp;
+	casacore::Bool AttributeBuffer::getValue(const casacore::String &name, T &value) const {
+		casacore::Vector<T> tmp;
 		if (getValue(name, tmp)) {
 			value = tmp(0);
-			return True;
+			return true;
 		} else {
-			return False;
+			return false;
 		}
 	}
 
 	template <class T>
-	Bool AttributeBuffer::getValue(const String &name, Vector<T> &value) const {
-		Vector<T>* tmp = NULL;
-		DataType dtype = whatType(tmp);
+	casacore::Bool AttributeBuffer::getValue(const casacore::String &name, casacore::Vector<T> &value) const {
+		casacore::Vector<T>* tmp = NULL;
+		casacore::DataType dtype = whatType(tmp);
 		/*AttValue::ValueType valType;
 		switch(dtype) {
 		case TpArrayUInt:
@@ -73,26 +73,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			valType = AttValue::AtQuantity;
 			break;
 		default:
-			throw(AipsError("Invalid template for AttributeBuffer::getValue"));
+			throw(casacore::AipsError("Invalid template for AttributeBuffer::getValue"));
 		}*/
-		if ( dtype != TpArrayUInt && dtype != TpArrayInt && dtype != TpArrayBool &&
-			 dtype != TpArrayFloat && dtype != TpArrayDouble &&
-			dtype != TpArrayString && dtype != TpArrayQuantity ){
-			throw(AipsError("Invalid template for AttributeBuffer::getValue"));			
+		if ( dtype != casacore::TpArrayUInt && dtype != casacore::TpArrayInt &&
+		     dtype != casacore::TpArrayBool &&
+			 dtype != casacore::TpArrayFloat && dtype != casacore::TpArrayDouble &&
+			dtype != casacore::TpArrayString && dtype != casacore::TpArrayQuantity ){
+			throw(casacore::AipsError("Invalid template for AttributeBuffer::getValue"));			
 		}
-		for (uInt i = 0; i < attributes.nelements(); i++) {
+		for (casacore::uInt i = 0; i < attributes.nelements(); i++) {
 			if (name == (attributes[i])->getName()) {
 				AttributeValue<T>* tmp =
 				    dynamic_cast<AttributeValue<T>* >(attributes[i]->getAttributeValue());
 				if (tmp) {
 					value = tmp->getValue();
-					return True;
+					return true;
 				} else {
-					return False;
+					return false;
 				}
 			}
 		}
-		return False;
+		return false;
 	}
 
 

@@ -43,6 +43,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/ImageInterface.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -140,7 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsLatticeStatisticsPtr = 0;
 		}
 		itsLatticeStatisticsPtr =
-		    new LatticeStatistics<Float>(*itsMaskedLatticePtr, False);
+		    new LatticeStatistics<Float>(*itsMaskedLatticePtr, false);
 	}
 	template <> void LatticePADisplayData<Complex>::updateLatticeStatistics() {
 
@@ -154,19 +155,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		switch (itsComplexToRealMethod) {
 		case Display::Phase:
 			itsLatticeStatisticsPtr = new LatticeStatistics<Float>
-			(LatticeExpr<Float>(arg(*itsMaskedLatticePtr)), False);
+			(LatticeExpr<Float>(arg(*itsMaskedLatticePtr)), false);
 			break;
 		case Display::Real:
 			itsLatticeStatisticsPtr = new LatticeStatistics<Float>
-			(LatticeExpr<Float>(real(*itsMaskedLatticePtr)), False);
+			(LatticeExpr<Float>(real(*itsMaskedLatticePtr)), false);
 			break;
 		case Display::Imaginary:
 			itsLatticeStatisticsPtr = new LatticeStatistics<Float>
-			(LatticeExpr<Float>(imag(*itsMaskedLatticePtr)), False);
+			(LatticeExpr<Float>(imag(*itsMaskedLatticePtr)), false);
 			break;
 		default:
 			itsLatticeStatisticsPtr = new LatticeStatistics<Float>
-			(LatticeExpr<Float>(abs(*itsMaskedLatticePtr)), False);
+			(LatticeExpr<Float>(abs(*itsMaskedLatticePtr)), false);
 			break;
 		}
 	}
@@ -177,7 +178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool LatticePADisplayData<Float>::updateHistogram(Record &rec,
 	        ImageInterface<Float> &pImage) {
 
-		if (!calcHist) return False;
+		if (!calcHist) return false;
 
 		ImageInterface<Float>* histImage = &pImage;
 
@@ -201,7 +202,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		LatticeHistograms<Float>* histogram =
-		    new LatticeHistograms<Float>(*histImage, False);
+		    new LatticeHistograms<Float>(*histImage, false);
 
 		histogram->setNBins(1000);
 
@@ -233,7 +234,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				histSubRecord = rec.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
 			} else histSubRecord = getOptions().subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
 
-			histSubRecord.define("newdata", True);	// alerts autogui
+			histSubRecord.define("newdata", true);	// alerts autogui
 			histSubRecord.defineRecord("histarray", newHist);
 			// Append new hist array
 			rec.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, histSubRecord);
@@ -251,7 +252,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool LatticePADisplayData<Complex>::updateHistogram(Record &rec,
 	        const Array<Complex>* theArray) {
 
-		Bool error = False;
+		Bool error = false;
 
 		if (calcHist) {
 			LatticeHistograms<Float>* histP = 0;
@@ -261,19 +262,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			switch (itsComplexToRealMethod) {
 			case Display::Phase:
-				histP = new LatticeHistograms<Float> (LatticeExpr<Float>(arg(tempSL)), False);
+				histP = new LatticeHistograms<Float> (LatticeExpr<Float>(arg(tempSL)), false);
 				break;
 			case Display::Real:
-				histP = new LatticeHistograms<Float> (LatticeExpr<Float>(real(tempSL)), False);
+				histP = new LatticeHistograms<Float> (LatticeExpr<Float>(real(tempSL)), false);
 				break;
 			case Display::Imaginary:
-				histP = new LatticeHistograms<Float> (LatticeExpr<Float>(imag(tempSL)), False);
+				histP = new LatticeHistograms<Float> (LatticeExpr<Float>(imag(tempSL)), false);
 				break;
 			default:
 				try {
-					histP = new LatticeHistograms<Float> (LatticeExpr<Float>(abs(tempSL)), False);
+					histP = new LatticeHistograms<Float> (LatticeExpr<Float>(abs(tempSL)), false);
 				} catch (...) {
-					error = True;
+					error = true;
 				}
 				break;
 
@@ -296,27 +297,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					newHist.define("counts", counts);
 					imageHistogram = newHist;
 
-					histSubRecord.define("newdata", True);       // Flag for autogui
+					histSubRecord.define("newdata", true);       // Flag for autogui
 					histSubRecord.defineRecord("histarray", newHist); // Append new hist array
 					rec.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, histSubRecord);
 					// clean up pointer !!!
 					delete histP;
 					histP=0;
-					return True;
+					return true;
 				} else {
 					// clean up pointer !!!
 					delete histP;
 					histP=0;
-					return False;   // Oh-ow.
+					return false;   // Oh-ow.
 				}
 			} else {
 				// clean up pointer !!!
 				delete histP;
 				histP=0;
-				return False;
+				return false;
 			}
 		}
-		return False;
+		return false;
 	}
 
 	template <>
@@ -334,7 +335,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 
-			LatticeHistograms<Float> newHistogram(tempSL, False);
+			LatticeHistograms<Float> newHistogram(tempSL, false);
 
 			newHistogram.setNBins(1000);
 			Vector<Float> vals;
@@ -346,15 +347,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				newHist.define("counts", counts);
 				imageHistogram = newHist;
 
-				histSubRecord.define("newdata", True);  // Flag for autogui
+				histSubRecord.define("newdata", true);  // Flag for autogui
 				histSubRecord.defineRecord("histarray", newHist);  // Append new hist array
 				rec.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, histSubRecord);
-				return True;
+				return true;
 			} else {
-				return False;   // Oh-ow.
+				return false;   // Oh-ow.
 			}
 		} else {
-			return False;
+			return false;
 		}
 
 	}
@@ -364,7 +365,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	template<>
 	Bool LatticePADisplayData<Complex>::updateHistogram(Record &rec,
 	        MaskedLattice<Complex> &pImage) {
-		if(!calcHist) return False;
+		if(!calcHist) return false;
 
 		MaskedLattice<Float>* floatLattice = 0;
 
@@ -403,7 +404,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		LatticeHistograms<Float>* hist =
-		    new LatticeHistograms<Float>(*histLattice, False);
+		    new LatticeHistograms<Float>(*histLattice, false);
 
 
 		hist->setNBins(1000);
@@ -423,7 +424,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				histSubRecord = rec.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
 			} else histSubRecord = getOptions().subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
 
-			histSubRecord.define("newdata", True);	// alerts autogui
+			histSubRecord.define("newdata", true);	// alerts autogui
 			histSubRecord.defineRecord("histarray", newHist);
 			// Append new hist array
 

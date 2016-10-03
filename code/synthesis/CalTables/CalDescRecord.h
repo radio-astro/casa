@@ -43,7 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> <linkto class="Record">Record</linkto> module
+//   <li> <linkto class="casacore::Record">casacore::Record</linkto> module
 //   <li> <linkto class="CalMainRecord">CalMainRecord</linkto> module
 // </prerequisite>
 //
@@ -77,44 +77,44 @@ class CalDescRecord
    ~CalDescRecord() {};
 
    // Construct from an existing record
-   CalDescRecord (const Record& inpRec);
+   CalDescRecord (const casacore::Record& inpRec);
 
    // Return as record
-   const Record& record();
+   const casacore::Record& record();
 
    // Field accessors
    // a) define
-   void defineNumSpw (const Int& numSpw);
-   void defineNumChan (const Array <Int>& numChan);
-   void defineNumReceptors (const Int& numReceptors);
-   void defineNJones (const Int& nJones);
-   void defineSpwId (const Array <Int>& spwId);
-   void defineChanFreq (const Array <Double>& chanFreq);
-   void defineChanWidth (const Array <Double>& chanWidth);
-   void defineChanRange (const Array <Int>& chanRange);
-   void definePolznType (const Array <String>& polznType);
-   void defineJonesType (const String& jonesType);
-   void defineMSName (const String& msName);
+   void defineNumSpw (const casacore::Int& numSpw);
+   void defineNumChan (const casacore::Array <casacore::Int>& numChan);
+   void defineNumReceptors (const casacore::Int& numReceptors);
+   void defineNJones (const casacore::Int& nJones);
+   void defineSpwId (const casacore::Array <casacore::Int>& spwId);
+   void defineChanFreq (const casacore::Array <casacore::Double>& chanFreq);
+   void defineChanWidth (const casacore::Array <casacore::Double>& chanWidth);
+   void defineChanRange (const casacore::Array <casacore::Int>& chanRange);
+   void definePolznType (const casacore::Array <casacore::String>& polznType);
+   void defineJonesType (const casacore::String& jonesType);
+   void defineMSName (const casacore::String& msName);
      
    // b) get
-   void getNumSpw (Int& numSpw);
-   void getNumChan (Array <Int>& numChan);
-   void getNumReceptors (Int& numReceptors);
-   void getNJones (Int& nJones);
-   void getSpwId (Array <Int>& spwId);
-   void getChanFreq (Array <Double>& chanFreq);
-   void getChanWidth (Array <Double>& chanWidth);
-   void getChanRange (Array <Int>& chanRange);
-   void getPolznType (Array <String>& polznType);
-   void getJonesType (String& jonesType);
-   void getMSName (String& msName);
+   void getNumSpw (casacore::Int& numSpw);
+   void getNumChan (casacore::Array <casacore::Int>& numChan);
+   void getNumReceptors (casacore::Int& numReceptors);
+   void getNJones (casacore::Int& nJones);
+   void getSpwId (casacore::Array <casacore::Int>& spwId);
+   void getChanFreq (casacore::Array <casacore::Double>& chanFreq);
+   void getChanWidth (casacore::Array <casacore::Double>& chanWidth);
+   void getChanRange (casacore::Array <casacore::Int>& chanRange);
+   void getPolznType (casacore::Array <casacore::String>& polznType);
+   void getJonesType (casacore::String& jonesType);
+   void getMSName (casacore::String& msName);
 
  protected:
    // Add to itsRecord
-   void addRec (const Record& newRec);
+   void addRec (const casacore::Record& newRec);
 
  private:
-   Record itsRecord;
+   casacore::Record itsRecord;
 
 };
 

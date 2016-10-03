@@ -31,9 +31,13 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <casa/namespace.h>
 
-namespace casa {
+namespace casacore{
 
 template <class T> class ImageConcat;
+}
+
+namespace casa {
+
 
 template <class T>  class ImageConcatenator : public ImageTask<T> {
 	// <summary>
@@ -59,52 +63,52 @@ public:
 	// <src>image</src> should be the first image in the list of images to be concatenated.
 	ImageConcatenator(
 		SPCIIT image,
-		const String& outname, Bool overwrite
+		const casacore::String& outname, casacore::Bool overwrite
 	);
 
 	// destructor
 	~ImageConcatenator();
 
 	// Perform the concatenation.
-	SPIIT concatenate(const vector<String>& imageNames);
+	SPIIT concatenate(const vector<casacore::String>& imageNames);
 
 	// Set the axis along which to do the concatenation. A negative value
 	// of <src>axis</src> means use the spectral axis. An exception is thrown
 	// if <src>axis</src> is negative and the image has no spectral axis.
-	void setAxis(Int axis);
+	void setAxis(casacore::Int axis);
 
-	void setTempClose(Bool b) { _tempClose = b; }
+	void setTempClose(casacore::Bool b) { _tempClose = b; }
 
-	void setRelax(Bool b) { _relax = b; }
+	void setRelax(casacore::Bool b) { _relax = b; }
 
-	void setReorder(Bool b) { _reorder = b; }
+	void setReorder(casacore::Bool b) { _reorder = b; }
 
-	String getClass() const;
+	casacore::String getClass() const;
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return vector<Coordinate::Type>(0);
+	inline vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<casacore::Coordinate::Type>(0);
  	}
 
 private:
-	Int _axis;
-	Bool _tempClose, _relax, _reorder;
-	static const String _class;
+	casacore::Int _axis;
+	casacore::Bool _tempClose, _relax, _reorder;
+	static const casacore::String _class;
 
 	// disallow default constructor
 	ImageConcatenator();
 
-	// returns True if world coordinate values increase with pixel coordinate values
-	Bool _minMaxAxisValues(
-		Double& min, Double& max, uInt ndim,
-		const CoordinateSystem& csys, const IPosition& shape
+	// returns true if world coordinate values increase with pixel coordinate values
+	casacore::Bool _minMaxAxisValues(
+		casacore::Double& min, casacore::Double& max, casacore::uInt ndim,
+		const casacore::CoordinateSystem& csys, const casacore::IPosition& shape
 	) const;
 
-	void _addImage(std::unique_ptr<ImageConcat<T> >& pConcat, const String& name) const;
+	void _addImage(std::unique_ptr<casacore::ImageConcat<T> >& pConcat, const casacore::String& name) const;
 
 };
 }

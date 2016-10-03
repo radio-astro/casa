@@ -31,7 +31,7 @@
 
 namespace casa {
 	namespace viewer {
-		// Why not use MDirection? It's limited by valid astronomical coordinates on the sky Hz vs arcsec does not fly.
+		// Why not use casacore::MDirection? It's limited by valid astronomical coordinates on the sky Hz vs arcsec does not fly.
 		// The idea here is to represent a point, line, plane, etc. (depending on the dimensions of the coordinate
 		// system and the coordinate contained here) and eventually have positions which can convert themselves to
 		// match different coordinate systems used in other images; removing some of the tangle of linToWorld(...)
@@ -42,12 +42,12 @@ namespace casa {
 		public:
 			Position( ) { }
 			// Later this could check for consistency between the coordinate and the system...
-			Position( const DisplayCoordinateSystem &cs, const Quantity &x, const Quantity &y ) : csys_(cs), coord_(2) {
+			Position( const DisplayCoordinateSystem &cs, const casacore::Quantity &x, const casacore::Quantity &y ) : csys_(cs), coord_(2) {
 				coord_(0) = x;
 				coord_(1) = y;
 			}
 			// Later this could check for consistency between the coordinate and the system...
-			Position( const DisplayCoordinateSystem &cs, const Quantity &x, const Quantity &y, const Quantity &z ) : csys_(cs), coord_(3) {
+			Position( const DisplayCoordinateSystem &cs, const casacore::Quantity &x, const casacore::Quantity &y, const casacore::Quantity &z ) : csys_(cs), coord_(3) {
 				coord_(0) = x;
 				coord_(1) = y;
 				coord_(2) = z;
@@ -57,7 +57,7 @@ namespace casa {
 			const DisplayCoordinateSystem &csys( ) const {
 				return csys_;
 			}
-			const Vector<Quantity> &coord( ) const {
+			const casacore::Vector<casacore::Quantity> &coord( ) const {
 				return coord_;
 			}
 
@@ -65,7 +65,7 @@ namespace casa {
 
 		protected:
 			DisplayCoordinateSystem csys_;
-			Vector<Quantity> coord_;
+			casacore::Vector<casacore::Quantity> coord_;
 		};
 
 		inline std::ostream &operator<<( std::ostream &out, const casa::viewer::Position &pos ) {

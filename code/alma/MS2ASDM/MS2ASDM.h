@@ -75,25 +75,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <synopsis>
 // </synopsis>
 
-  class MS2ASDM : public ROMSColumns
+  class MS2ASDM : public casacore::ROMSColumns
 {
 
  public:
   
   // construct from an MS
-  MS2ASDM(MeasurementSet& ms);
+  MS2ASDM(casacore::MeasurementSet& ms);
   
   ~MS2ASDM();
   
-  const String& showversion();
+  const casacore::String& showversion();
 
   // set verbosity of the write methods
-  void setVerbosity(const uInt verbosity = 2){ // 0 = only warnings, 1 = most, 2 = everything
+  void setVerbosity(const casacore::uInt verbosity = 2){ // 0 = only warnings, 1 = most, 2 = everything
     verbosity_p = verbosity; }
   
-  void setBaseUid(const String& baseuid);
+  void setBaseUid(const casacore::String& baseuid);
   
-  const String& getBaseUid();
+  const casacore::String& getBaseUid();
   
   const std::string& getCurrentUid();
   
@@ -101,228 +101,228 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   const std::string& getCurrentUidAsFileName();
 
   // set maximum duration of a subscan in seconds, 0. == no time limit
-  void setSubScanDuration(const Double subscanDuration = 24.*3600.){
+  void setSubScanDuration(const casacore::Double subscanDuration = 24.*3600.){
     subscanDuration_p = subscanDuration; }
 
   // get maximum duration of a subscan in seconds
-  Double getSubScanDuration(){ return subscanDuration_p; }
+  casacore::Double getSubScanDuration(){ return subscanDuration_p; }
 
-  // set maximum duration of a Scheduling Block in seconds
-  void setSBDuration(const Double sBDuration = 2700.){ // 45 minutes
+  // set maximum duration of a Scheduling casacore::Block in seconds
+  void setSBDuration(const casacore::Double sBDuration = 2700.){ // 45 minutes
     schedBlockDuration_p = sBDuration; }
 
-  // get maximum duration of a Scheduling Block in seconds
-  Double getSBDuration(){ return schedBlockDuration_p; }
+  // get maximum duration of a Scheduling casacore::Block in seconds
+  casacore::Double getSBDuration(){ return schedBlockDuration_p; }
 
-  void setDataAPCorrected(const Bool isCorrected = True){
+  void setDataAPCorrected(const casacore::Bool isCorrected = true){
     dataIsAPCorrected_p = isCorrected; }
 
-  Bool dataIsAPCorrected(){ return dataIsAPCorrected_p; }
+  casacore::Bool dataIsAPCorrected(){ return dataIsAPCorrected_p; }
 
-  void setObservatoryName(const String& telName){
+  void setObservatoryName(const casacore::String& telName){
     telName_p = telName; }
 
-  void getObservatoryName( String& telName ){
+  void getObservatoryName( casacore::String& telName ){
     telName = telName_p; }
 
-  // convert CASA Stokes to ASDM Stokes
-  StokesParameterMod::StokesParameter ASDMStokesParameter( Stokes::StokesTypes s);
+  // convert CASA casacore::Stokes to ASDM Stokes
+  StokesParameterMod::StokesParameter ASDMStokesParameter( casacore::Stokes::StokesTypes s);
 
   // convert CASA antenna type string to ASDM antenna type enum
-  AntennaTypeMod::AntennaType ASDMAntennaType( const String& type ); 
+  AntennaTypeMod::AntennaType ASDMAntennaType( const casacore::String& type ); 
 
   // convert time in seconds to an array time
-  ArrayTime ASDMArrayTime( const Double seconds ){ 
+  ArrayTime ASDMArrayTime( const casacore::Double seconds ){ 
     return ArrayTime((int64_t) (floor(seconds*ArrayTime::unitsInASecond))); }
 
   // convert array time to time in seconds
-  Double MSTimeSecs( const ArrayTime atime ){ 
-    return (Double) atime.get() / (Double)ArrayTime::unitsInASecond; }
+  casacore::Double MSTimeSecs( const ArrayTime atime ){ 
+    return (casacore::Double) atime.get() / (casacore::Double)ArrayTime::unitsInASecond; }
 
-  asdm::Interval ASDMInterval( const Double seconds ){ 
+  asdm::Interval ASDMInterval( const casacore::Double seconds ){ 
     return asdm::Interval((int64_t) (floor(seconds*ArrayTime::unitsInASecond))); }
 
-  // convert MS style time interval to ASDM ArrayTimeInterval
-  asdm::ArrayTimeInterval ASDMTimeInterval( const Quantity midpoint, const Quantity interval);
+  // convert casacore::MS style time interval to ASDM ArrayTimeInterval
+  asdm::ArrayTimeInterval ASDMTimeInterval( const casacore::Quantity midpoint, const casacore::Quantity interval);
 
-  // return start of MS main table timestamp (seconds)
-  Double timestampStartSecs(const uInt mainTabRow){
+  // return start of casacore::MS main table timestamp (seconds)
+  casacore::Double timestampStartSecs(const casacore::uInt mainTabRow){
     return timeQuant()(mainTabRow).getValue("s") - intervalQuant()(mainTabRow).getValue("s")/2.; }
 
-  // return end of MS main table timestamp (seconds)
-  Double timestampEndSecs(const uInt mainTabRow){
+  // return end of casacore::MS main table timestamp (seconds)
+  casacore::Double timestampEndSecs(const casacore::uInt mainTabRow){
     return timeQuant()(mainTabRow).getValue("s") + intervalQuant()(mainTabRow).getValue("s")/2.; }
 
-  // convert MDirection to a vector of Angles
-  vector< asdm::Angle > ASDMAngleV(const MDirection mDir);
+  // convert casacore::MDirection to a vector of Angles
+  vector< asdm::Angle > ASDMAngleV(const casacore::MDirection mDir);
 
-  // convert MDirection type to ASDM DirectionReferenceCode
-  DirectionReferenceCodeMod::DirectionReferenceCode ASDMDirRefCode(const MDirection::Types type);
+  // convert casacore::MDirection type to ASDM DirectionReferenceCode
+  DirectionReferenceCodeMod::DirectionReferenceCode ASDMDirRefCode(const casacore::MDirection::Types type);
 
   // convert a base band converter number to an ASDM base band name
-  BasebandNameMod::BasebandName ASDMBBName( const Int bbcNo );
+  BasebandNameMod::BasebandName ASDMBBName( const casacore::Int bbcNo );
 
-  // convert a MS net sideband no. to an ASDM enum
-  NetSidebandMod::NetSideband ASDMNetSideBand( const Int netSideband );
+  // convert a casacore::MS net sideband no. to an ASDM enum
+  NetSidebandMod::NetSideband ASDMNetSideBand( const casacore::Int netSideband );
 
   // set a representative frequency, the receiver band and receiver sideband based on a frequency refFreq
-  //   and the previously set observatory name telName_p, return the band id as an Int (1 to 10),
+  //   and the previously set observatory name telName_p, return the band id as an casacore::Int (1 to 10),
   //   -1 if refFreq is outside ALMA bands but observatory is ALMA, 0 if observatory not ALMA
-  Int setRecBands( const asdm::Frequency refFreq,
-		   Double& frequency,
+  casacore::Int setRecBands( const asdm::Frequency refFreq,
+		   casacore::Double& frequency,
 		   ReceiverBandMod::ReceiverBand& frequencyBand,
 		   ReceiverSidebandMod::ReceiverSideband& receiverSideband);
 
-  FrequencyReferenceCodeMod::FrequencyReferenceCode ASDMFreqRefCode( const MFrequency::Types refFrame ); 
+  FrequencyReferenceCodeMod::FrequencyReferenceCode ASDMFreqRefCode( const casacore::MFrequency::Types refFrame ); 
 
-  Unit unitASDMFreq(){ return Unit(String(asdm::Frequency::unit())); }
+  casacore::Unit unitASDMFreq(){ return casacore::Unit(casacore::String(asdm::Frequency::unit())); }
 
-  Unit unitASDMAngle(){ return Unit(String(asdm::Angle::unit())); }
+  casacore::Unit unitASDMAngle(){ return casacore::Unit(casacore::String(asdm::Angle::unit())); }
 
-  Unit unitASDMAngularRate(){ return Unit(String(asdm::AngularRate::unit())); }
+  casacore::Unit unitASDMAngularRate(){ return casacore::Unit(casacore::String(asdm::AngularRate::unit())); }
 
-  Unit unitASDMLength(){ return Unit(String(asdm::Length::unit())); }
+  casacore::Unit unitASDMLength(){ return casacore::Unit(casacore::String(asdm::Length::unit())); }
 
-  Unit unitASDMTemp(){ return Unit(String(asdm::Temperature::unit())); }
+  casacore::Unit unitASDMTemp(){ return casacore::Unit(casacore::String(asdm::Temperature::unit())); }
 
-  asdm::Complex ASDMComplex( casa::Complex x ){ return asdm::Complex(x.real(), x.imag()); }
+  asdm::Complex ASDMComplex( casacore::Complex x ){ return asdm::Complex(x.real(), x.imag()); }
 
   // write the entire ASDM from scratch
-  Bool writeASDM(const String& asdmfile="", 
-		 const String& datacolumn="data", 
-		 const String& archiveid="S0", 
-		 const String& rangeid="X1", 
-		 const Bool verbose=True,
-		 const Double maxSubscanDuration = 24.*3600.,
-		 const Double maxSchedBlockDuration = 2700.,
-		 const Bool msDataIsAPCorrected=True
+  casacore::Bool writeASDM(const casacore::String& asdmfile="", 
+		 const casacore::String& datacolumn="data", 
+		 const casacore::String& archiveid="S0", 
+		 const casacore::String& rangeid="X1", 
+		 const casacore::Bool verbose=true,
+		 const casacore::Double maxSubscanDuration = 24.*3600.,
+		 const casacore::Double maxSchedBlockDuration = 2700.,
+		 const casacore::Bool msDataIsAPCorrected=true
 		 );
 
  private:
   // *** Private member functions ***
 
-  Bool incrementUid(); // returns true if successful
+  casacore::Bool incrementUid(); // returns true if successful
 
-  Bool setDirectory(const String& asdmfile);
+  casacore::Bool setDirectory(const casacore::String& asdmfile);
 
 
-  Bool writeStation();
+  casacore::Bool writeStation();
 
-  Bool writeAntenna();
+  casacore::Bool writeAntenna();
 
-  Bool writeSpectralWindow();
+  casacore::Bool writeSpectralWindow();
 
-  Bool writeSource();
+  casacore::Bool writeSource();
 
-  Bool writePolarization();
+  casacore::Bool writePolarization();
 
-  Bool writeCorrelatorMode(); // not called directly but optionally called by writeProcessor()
-  Bool writeAlmaRadiometer(); // optionally called by writeProcessor()
-  Bool writeHolography(); // optionally called by writeProcessor()
+  casacore::Bool writeCorrelatorMode(); // not called directly but optionally called by writeProcessor()
+  casacore::Bool writeAlmaRadiometer(); // optionally called by writeProcessor()
+  casacore::Bool writeHolography(); // optionally called by writeProcessor()
 
-  Bool writeProcessor();
+  casacore::Bool writeProcessor();
 
-  Bool writeField();
+  casacore::Bool writeField();
 
-  Bool writeReceiver();
+  casacore::Bool writeReceiver();
 
-  Bool writeFeed();
+  casacore::Bool writeFeed();
 
-  Bool writeDataDescription();
+  casacore::Bool writeDataDescription();
 
-  Bool writeSwitchCycle(); // not yet fully implemented
+  casacore::Bool writeSwitchCycle(); // not yet fully implemented
 
-  Bool writeState();
+  casacore::Bool writeState();
 
-  Bool writeSysCal();
+  casacore::Bool writeSysCal();
 
-  Bool writeConfigDescription();
+  casacore::Bool writeConfigDescription();
 
   // Scheme
-  // 1) We regard one MS Observation as a set of ASDM ExecBlocks modelled on 
+  // 1) We regard one casacore::MS Observation as a set of ASDM ExecBlocks modelled on 
   //    a single ASDM Scheduling Block
   // 2) ALMA ExecBlocks are at most 30 minutes long.
-  //    If an MS Observation is more than 30 Minutes long, it is split up into 
+  //    If an casacore::MS Observation is more than 30 Minutes long, it is split up into 
   //    several ASDM ExecBlocks each referring to the same Scheduling Block.
-  // 3) Each ASDM ExecBlock contains one or more ASDM Scans based on the MS scans 
+  // 3) Each ASDM ExecBlock contains one or more ASDM Scans based on the casacore::MS scans 
   // 4) Each ASDM Scan contains one or more ASDM Subscans
   // 5) Each ASDM Subscan is at most subscanduration long. (external parameter)
-  // 6) If an MS Scan is longer than subscanduration, it is split up into 
+  // 6) If an casacore::MS Scan is longer than subscanduration, it is split up into 
   //    several ASDM subscans.
 
-  Bool writeSBSummaryAndExecBlockStubs(); // "stubs" because these tables will be completed later
+  casacore::Bool writeSBSummaryAndExecBlockStubs(); // "stubs" because these tables will be completed later
                                           //  with information from the APDM
-  Bool writeMainAndScanAndSubScan(const String& datacolumn);
+  casacore::Bool writeMainAndScanAndSubScan(const casacore::String& datacolumn);
 
   // write the Main binary data for one DataDescId/FieldId pair and one SubScan
   // (return number of integrations written and set the last three parameters in the list)
-  Int writeMainBinSubScanForOneDDIdFIdPair(const Int theDDId, const Int theFieldId, 
-					   const String& datacolumn, 
-					   const uInt theScan, const uInt theSubScan,
-					   const uInt startRow, const uInt endRow,
+  casacore::Int writeMainBinSubScanForOneDDIdFIdPair(const casacore::Int theDDId, const casacore::Int theFieldId, 
+					   const casacore::String& datacolumn, 
+					   const casacore::uInt theScan, const casacore::uInt theSubScan,
+					   const casacore::uInt startRow, const casacore::uInt endRow,
 					   const asdm::Tag eBlockId,
 					   int& datasize, asdm::EntityRef& dataOid, 
 					   vector< asdm::Tag >& stateId);
 
-  Bool writePointingModel(); // write dummy pointing models
+  casacore::Bool writePointingModel(); // write dummy pointing models
 
-  Bool writePointing();
+  casacore::Bool writePointing();
     
   // *** Aux. methods ***
 
   // check if vector corrT already contains a stokes type equivalent to st
-  Bool stokesTypePresent( const Vector< Int > corrT, const Stokes::StokesTypes st );
+  casacore::Bool stokesTypePresent( const casacore::Vector< casacore::Int > corrT, const casacore::Stokes::StokesTypes st );
 
   // *** Member variables ***
 
   // Initialized* by ctors.  (Maintain order both here and in ctors.)
-  MeasurementSet ms_p; // the measurement set from which the ASDM is filled
+  casacore::MeasurementSet ms_p; // the measurement set from which the ASDM is filled
 
   asdm::ASDM* ASDM_p; // the new ASDM
 
   string asdmVersion_p; // the version of the new ASDM
 
-  uInt verbosity_p; // verbosity of the write methods
+  casacore::uInt verbosity_p; // verbosity of the write methods
 
-  String baseUid_p;  // the part of the UID which is common to all elements of the ASDM,
+  casacore::String baseUid_p;  // the part of the UID which is common to all elements of the ASDM,
                     // i.e. typically "uid://archiveid/rangeid/"
 
-  uInt runningId_p; // counter for the tables written; starts at 1!
+  casacore::uInt runningId_p; // counter for the tables written; starts at 1!
                     // used to construct the UIDs: uid = baseUid_p + (runningId_p converted to unpadded hex string)
 
-  String currentUid_p; // the last used uid
+  casacore::String currentUid_p; // the last used uid
 
-  String telName_p; // the name of the observatory from first row of MS observation table
+  casacore::String telName_p; // the name of the observatory from first row of casacore::MS observation table
 
-  Double subscanDuration_p; // maximum duration of a subscan in seconds
+  casacore::Double subscanDuration_p; // maximum duration of a subscan in seconds
 
-  Double schedBlockDuration_p; // maximum duration of a scheduling or exec block in seconds
+  casacore::Double schedBlockDuration_p; // maximum duration of a scheduling or exec block in seconds
 
-  Bool dataIsAPCorrected_p; // true if the data in the selected MS data column is 
+  casacore::Bool dataIsAPCorrected_p; // true if the data in the selected casacore::MS data column is 
                             // AtmPhaseCorrectionMod::AP_CORRECTED, false if it is
                             // AtmPhaseCorrectionMod::AP_UNCORRECTED
 
   string asdmUID_p; // ASDM UID == container ID of all tables
 
-  String asdmDir_p; // ASDM output directory name
+  casacore::String asdmDir_p; // ASDM output directory name
 
-  SimpleOrderedMap <String, asdm::Tag> asdmStationId_p;  
-  SimpleOrderedMap <Int, asdm::Tag> asdmAntennaId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmSpectralWindowId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmPolarizationId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmProcessorId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmFieldId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmEphemerisId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmDataDescriptionId_p;
-  SimpleOrderedMap <Int, asdm::Tag> asdmStateId_p;
-  SimpleOrderedMap <uInt, asdm::Tag> asdmConfigDescriptionId_p; // maps from MS Main rows
-  SimpleOrderedMap <Int, asdm::Tag> asdmSBSummaryId_p; // maps from MS Observation Id + 10000*SpwId
-  SimpleOrderedMap <Double, asdm::Tag> asdmExecBlockId_p; // maps from MS Main timestamps 
-  SimpleOrderedMap <Int, int> asdmFeedId_p; // ASDM feed id is not a Tag
-  SimpleOrderedMap <Int, int> asdmSourceId_p; // neither is the source id
-  SimpleOrderedMap <asdm::Tag, int> asdmPointingModelId_p; // maps ASDM Antenna Id to dummy pointing model
+  casacore::SimpleOrderedMap <casacore::String, asdm::Tag> asdmStationId_p;  
+  casacore::SimpleOrderedMap <casacore::Int, asdm::Tag> asdmAntennaId_p;
+  casacore::SimpleOrderedMap <casacore::Int, asdm::Tag> asdmSpectralWindowId_p;
+  casacore::SimpleOrderedMap <casacore::Int, asdm::Tag> asdmPolarizationId_p;
+  casacore::SimpleOrderedMap <casacore::Int, asdm::Tag> asdmProcessorId_p;
+  casacore::SimpleOrderedMap <casacore::Int, asdm::Tag> asdmFieldId_p;
+  casacore::SimpleOrderedMap <casacore::Int, asdm::Tag> asdmEphemerisId_p;
+  casacore::SimpleOrderedMap <casacore::Int, asdm::Tag> asdmDataDescriptionId_p;
+  casacore::SimpleOrderedMap <casacore::Int, asdm::Tag> asdmStateId_p;
+  casacore::SimpleOrderedMap <casacore::uInt, asdm::Tag> asdmConfigDescriptionId_p; // maps from casacore::MS Main rows
+  casacore::SimpleOrderedMap <casacore::Int, asdm::Tag> asdmSBSummaryId_p; // maps from casacore::MS Observation Id + 10000*SpwId
+  casacore::SimpleOrderedMap <casacore::Double, asdm::Tag> asdmExecBlockId_p; // maps from casacore::MS Main timestamps 
+  casacore::SimpleOrderedMap <casacore::Int, int> asdmFeedId_p; // ASDM feed id is not a Tag
+  casacore::SimpleOrderedMap <casacore::Int, int> asdmSourceId_p; // neither is the source id
+  casacore::SimpleOrderedMap <asdm::Tag, int> asdmPointingModelId_p; // maps ASDM Antenna Id to dummy pointing model
 
-  vector< vector< Bool > > skipCorr_p; // skipCorr_p[j][PolId] indicates that correlation 
+  vector< vector< casacore::Bool > > skipCorr_p; // skipCorr_p[j][PolId] indicates that correlation 
                                        // product j for POLARIZATION_ID PolId should not 
                                        // be written in the ASDM
 

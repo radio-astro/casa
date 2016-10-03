@@ -3,7 +3,7 @@
 #define CNetSideband_H
 
 /*
- * ALMA - Atacama Large Millimeter Array
+ * ALMA - Atacama Large Millimeter casacore::Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * File CNetSideband.h
+ * casacore::File CNetSideband.h
  */
 
 #ifndef __cplusplus
@@ -67,7 +67,7 @@ namespace NetSidebandMod
      ,
     USB /*!< Upper side band */
      ,
-    DSB /*!< Double side band */
+    DSB /*!< casacore::Double side band */
      
   };
   typedef NetSideband &NetSideband_out;

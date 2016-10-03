@@ -40,35 +40,35 @@ class VisSet;
 class MSMetaInfoForCal;
 
 // Create a specialized VisCal from VisSet
-VisCal* createVisCal(const String& type, VisSet& vs);
+VisCal* createVisCal(const casacore::String& type, VisSet& vs);
 
 // Create a specialized VisCal from msname, nAnt, nSpw
-VisCal* createVisCal(const String& type, String msname, Int MSnAnt, Int MSnSpw);
+VisCal* createVisCal(const casacore::String& type, casacore::String msname, casacore::Int MSnAnt, casacore::Int MSnSpw);
 
 // Create a specialized VisCal from MSMetaInfoForCal
-VisCal* createVisCal(const String& type, const MSMetaInfoForCal& msmc);
+VisCal* createVisCal(const casacore::String& type, const MSMetaInfoForCal& msmc);
 
 // Create a specialized VisCal from nAnt
-VisCal* createVisCal(const String& type, const Int& nAnt);
+VisCal* createVisCal(const casacore::String& type, const casacore::Int& nAnt);
 
 // Create a specialized SolvableVisCal from VisSet
-SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs);
+SolvableVisCal* createSolvableVisCal(const casacore::String& type, VisSet& vs);
 
 // Create a specialized SolvableVisCal from msname, nAnt, nSpw
-SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnAnt, Int MSnSpw);
+SolvableVisCal* createSolvableVisCal(const casacore::String& type, casacore::String msname, casacore::Int MSnAnt, casacore::Int MSnSpw);
 
 // Create a specialized SolvableVisCal from MSMetaInfoForCal
-SolvableVisCal* createSolvableVisCal(const String& type, const MSMetaInfoForCal& msmc);
+SolvableVisCal* createSolvableVisCal(const casacore::String& type, const MSMetaInfoForCal& msmc);
 
 // Create a specialized SolvableVisCal from nAnt
-SolvableVisCal* createSolvableVisCal(const String& type, const Int& nAnt);
+SolvableVisCal* createSolvableVisCal(const casacore::String& type, const casacore::Int& nAnt);
 
 // Parameter axis slicer for caltables
 //   (experimental)
 
  namespace viscal {
-   Slice calParSlice(String caltabname, String what, String pol);
-   Slice calParSliceByType(String type, String what, String pol);
+   casacore::Slice calParSlice(casacore::String caltabname, casacore::String what, casacore::String pol);
+   casacore::Slice calParSliceByType(casacore::String type, casacore::String what, casacore::String pol);
  }
 
 } //# NAMESPACE CASA - END

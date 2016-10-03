@@ -43,13 +43,13 @@ public:
     // Static //
     
     // Convenient access to class name (QPBarPlot).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
     
     // Constructor which takes the data and an optional title.
-    QPBarPlot(PlotPointDataPtr data, const String& title = "Qwt Bar Plot");
+    QPBarPlot(PlotPointDataPtr data, const casacore::String& title = "Qwt Bar Plot");
     
     // Copy constructor for generic BarPlot.
     QPBarPlot(const BarPlot& copy);
@@ -117,7 +117,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
 #if QWT_VERSION >= 0x060000

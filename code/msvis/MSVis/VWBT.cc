@@ -22,6 +22,7 @@
 
 #include <msvis/MSVis/VWBT.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 VWBT::VWBT(VisibilityIterator *visibilityIterator,

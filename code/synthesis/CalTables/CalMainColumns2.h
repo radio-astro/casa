@@ -55,67 +55,67 @@ class CalMainColumns2 {
     virtual ~CalMainColumns2() {};
     
     // Read-write column accessors
-    ScalarColumn<Double>& time() {return time_p;};
-    ScalarMeasColumn<MEpoch>& timeMeas() {return timeMeas_p;};
-    ScalarColumn<Double>& timeEP() {return timeEP_p;};
-    ScalarQuantColumn<Double>& timeEPQuant() {return timeEPQuant_p;};
-    ScalarColumn<Double>& interval() {return interval_p;};
-    ScalarQuantColumn<Double>& intervalQuant() {return intervalQuant_p;};
-    ScalarColumn<Int>& antenna1() {return antenna1_p;};
-    ScalarColumn<Int>& feed1() {return feed1_p;};
-    ScalarColumn<Int>& fieldId() {return fieldId_p;};
-    ScalarColumn<Int>& arrayId() {return arrayId_p;};
-    ScalarColumn<Int>& obsId() {return obsId_p;};
-    ScalarColumn<Int>& scanNo() {return scanNo_p;};
-    ScalarColumn<Int>& processorId() {return processorId_p;};
-    ScalarColumn<Int>& stateId() {return stateId_p;};
-    ScalarColumn<Int>& phaseId() {return phaseId_p;};
-    ScalarColumn<Int>& pulsarBin() {return pulsarBin_p;};
-    ScalarColumn<Int>& pulsarGateId() {return pulsarGateId_p;};
-    ScalarColumn<Int>& freqGrp() {return freqGrp_p;};
-    ScalarColumn<String>& freqGrpName() {return freqGrpName_p;};
-    ScalarColumn<String>& fieldName() {return fieldName_p;};
-    ScalarColumn<String>& fieldCode() {return fieldCode_p;};
-    ScalarColumn<String>& sourceName() {return sourceName_p;};
-    ScalarColumn<String>& sourceCode() {return sourceCode_p;};
-    ScalarColumn<Int>& calGrp() {return calGrp_p;};
-    //ArrayColumn<Complex>& gain() {return gain_p;};
-    ArrayColumn<T>& gain() {return gain_p;};
-    ArrayColumn<T>& solvePar() {return solvePar_p;};
-    ArrayColumn<Int>& refAnt() {return refAnt_p;};
-    ArrayColumn<Int>& refFeed() {return refFeed_p;};
-    ArrayColumn<Int>& refReceptor() {return refReceptor_p;};
-    ArrayColumn<Double>& refFreq() {return refFreq_p;};
-    ArrayMeasColumn<MFrequency>& refFreqMeas() {return refFreqMeas_p;};
-    ScalarColumn<Int>& measFreqRef() {return measFreqRef_p;};
-    ArrayColumn<Double>& refDir() {return refDir_p;};
-    ArrayMeasColumn<MDirection>& refDirMeas() {return refDirMeas_p;};
-    ScalarColumn<Int>& measDirRef() {return measDirRef_p;};
-    ScalarColumn<Int>& calDescId() {return calDescId_p;};
-    ScalarColumn<Int>& calHistoryId() {return calHistoryId_p;}; 
+    casacore::ScalarColumn<casacore::Double>& time() {return time_p;};
+    casacore::ScalarMeasColumn<casacore::MEpoch>& timeMeas() {return timeMeas_p;};
+    casacore::ScalarColumn<casacore::Double>& timeEP() {return timeEP_p;};
+    casacore::ScalarQuantColumn<casacore::Double>& timeEPQuant() {return timeEPQuant_p;};
+    casacore::ScalarColumn<casacore::Double>& interval() {return interval_p;};
+    casacore::ScalarQuantColumn<casacore::Double>& intervalQuant() {return intervalQuant_p;};
+    casacore::ScalarColumn<casacore::Int>& antenna1() {return antenna1_p;};
+    casacore::ScalarColumn<casacore::Int>& feed1() {return feed1_p;};
+    casacore::ScalarColumn<casacore::Int>& fieldId() {return fieldId_p;};
+    casacore::ScalarColumn<casacore::Int>& arrayId() {return arrayId_p;};
+    casacore::ScalarColumn<casacore::Int>& obsId() {return obsId_p;};
+    casacore::ScalarColumn<casacore::Int>& scanNo() {return scanNo_p;};
+    casacore::ScalarColumn<casacore::Int>& processorId() {return processorId_p;};
+    casacore::ScalarColumn<casacore::Int>& stateId() {return stateId_p;};
+    casacore::ScalarColumn<casacore::Int>& phaseId() {return phaseId_p;};
+    casacore::ScalarColumn<casacore::Int>& pulsarBin() {return pulsarBin_p;};
+    casacore::ScalarColumn<casacore::Int>& pulsarGateId() {return pulsarGateId_p;};
+    casacore::ScalarColumn<casacore::Int>& freqGrp() {return freqGrp_p;};
+    casacore::ScalarColumn<casacore::String>& freqGrpName() {return freqGrpName_p;};
+    casacore::ScalarColumn<casacore::String>& fieldName() {return fieldName_p;};
+    casacore::ScalarColumn<casacore::String>& fieldCode() {return fieldCode_p;};
+    casacore::ScalarColumn<casacore::String>& sourceName() {return sourceName_p;};
+    casacore::ScalarColumn<casacore::String>& sourceCode() {return sourceCode_p;};
+    casacore::ScalarColumn<casacore::Int>& calGrp() {return calGrp_p;};
+    //casacore::ArrayColumn<casacore::Complex>& gain() {return gain_p;};
+    casacore::ArrayColumn<T>& gain() {return gain_p;};
+    casacore::ArrayColumn<T>& solvePar() {return solvePar_p;};
+    casacore::ArrayColumn<casacore::Int>& refAnt() {return refAnt_p;};
+    casacore::ArrayColumn<casacore::Int>& refFeed() {return refFeed_p;};
+    casacore::ArrayColumn<casacore::Int>& refReceptor() {return refReceptor_p;};
+    casacore::ArrayColumn<casacore::Double>& refFreq() {return refFreq_p;};
+    casacore::ArrayMeasColumn<casacore::MFrequency>& refFreqMeas() {return refFreqMeas_p;};
+    casacore::ScalarColumn<casacore::Int>& measFreqRef() {return measFreqRef_p;};
+    casacore::ArrayColumn<casacore::Double>& refDir() {return refDir_p;};
+    casacore::ArrayMeasColumn<casacore::MDirection>& refDirMeas() {return refDirMeas_p;};
+    casacore::ScalarColumn<casacore::Int>& measDirRef() {return measDirRef_p;};
+    casacore::ScalarColumn<casacore::Int>& calDescId() {return calDescId_p;};
+    casacore::ScalarColumn<casacore::Int>& calHistoryId() {return calHistoryId_p;}; 
     
   protected:
     // Prohibit public use of the null constructor, which
     // does not produce a usable object.
     CalMainColumns2() {};
     
-    // Return a CalTable as a Table reference. Utilizes friendship
+    // Return a CalTable as a casacore::Table reference. Utilizes friendship
     // relationship with class CalTable.
-    Table& asTable(CalTable2& calTable) {return calTable.calMainAsTable();}
+    casacore::Table& asTable(CalTable2& calTable) {return calTable.calMainAsTable();}
     
     // Attach a table column accessor
-    void attach (CalTable2& calTable, TableColumn& tabCol, 
-		 MSCalEnums::colDef colEnum, const Bool& optional = False);
-    void attach (CalTable2& calTable, ArrayMeasColumn<MEpoch>& tabCol, 
-		 MSCalEnums::colDef colEnum, const Bool& optional = False);
-    void attach (CalTable2& calTable, ArrayMeasColumn<MFrequency>& tabCol, 
-		 MSCalEnums::colDef colEnum, const Bool& optional = False);
-    void attach (CalTable2& calTable, ArrayMeasColumn<MDirection>& tabCol, 
-		 MSCalEnums::colDef colEnum, const Bool& optional = False);
-    void attach (CalTable2& calTable, ScalarMeasColumn<MEpoch>& tabCol, 
-		 MSCalEnums::colDef colEnum, const Bool& optional = False);
-    void attach (CalTable2& calTable, ScalarQuantColumn<Double>& tabCol, 
-		 MSCalEnums::colDef colEnum, const Bool& optional = False);
+    void attach (CalTable2& calTable, casacore::TableColumn& tabCol, 
+		 MSCalEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (CalTable2& calTable, casacore::ArrayMeasColumn<casacore::MEpoch>& tabCol, 
+		 MSCalEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (CalTable2& calTable, casacore::ArrayMeasColumn<casacore::MFrequency>& tabCol, 
+		 MSCalEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (CalTable2& calTable, casacore::ArrayMeasColumn<casacore::MDirection>& tabCol, 
+		 MSCalEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (CalTable2& calTable, casacore::ScalarMeasColumn<casacore::MEpoch>& tabCol, 
+		 MSCalEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (CalTable2& calTable, casacore::ScalarQuantColumn<casacore::Double>& tabCol, 
+		 MSCalEnums::colDef colEnum, const casacore::Bool& optional = false);
     
   private:
     // Prohibit copy constructor and assignment operator 
@@ -123,44 +123,44 @@ class CalMainColumns2 {
     CalMainColumns2& operator= (const CalMainColumns2&);
     
     // Private column accessors
-    ScalarColumn<Double> time_p;
-    ScalarMeasColumn<MEpoch> timeMeas_p;
-    ScalarColumn<Double> timeEP_p;
-    ScalarQuantColumn<Double> timeEPQuant_p;
-    ScalarColumn<Double> interval_p;
-    ScalarQuantColumn<Double> intervalQuant_p;
-    ScalarColumn<Int> antenna1_p;
-    ScalarColumn<Int> feed1_p;
-    ScalarColumn<Int> fieldId_p;
-    ScalarColumn<Int> arrayId_p;
-    ScalarColumn<Int> obsId_p;
-    ScalarColumn<Int> scanNo_p;
-    ScalarColumn<Int> processorId_p;
-    ScalarColumn<Int> stateId_p;
-    ScalarColumn<Int> phaseId_p;
-    ScalarColumn<Int> pulsarBin_p;
-    ScalarColumn<Int> pulsarGateId_p;
-    ScalarColumn<Int> freqGrp_p;
-    ScalarColumn<String> freqGrpName_p;
-    ScalarColumn<String> fieldName_p;
-    ScalarColumn<String> fieldCode_p;
-    ScalarColumn<String> sourceName_p;
-    ScalarColumn<String> sourceCode_p;
-    ScalarColumn<Int> calGrp_p;
-    //ArrayColumn<Complex> gain_p;
-    ArrayColumn<T> gain_p;
-    ArrayColumn<T> solvePar_p;
-    ArrayColumn<Int> refAnt_p;
-    ArrayColumn<Int> refFeed_p;
-    ArrayColumn<Int> refReceptor_p;
-    ArrayColumn<Double> refFreq_p;
-    ArrayMeasColumn<MFrequency> refFreqMeas_p;
-    ScalarColumn<Int> measFreqRef_p;
-    ArrayColumn<Double> refDir_p;
-    ArrayMeasColumn<MDirection> refDirMeas_p;
-    ScalarColumn<Int> measDirRef_p;
-    ScalarColumn<Int> calDescId_p;
-    ScalarColumn<Int> calHistoryId_p;
+    casacore::ScalarColumn<casacore::Double> time_p;
+    casacore::ScalarMeasColumn<casacore::MEpoch> timeMeas_p;
+    casacore::ScalarColumn<casacore::Double> timeEP_p;
+    casacore::ScalarQuantColumn<casacore::Double> timeEPQuant_p;
+    casacore::ScalarColumn<casacore::Double> interval_p;
+    casacore::ScalarQuantColumn<casacore::Double> intervalQuant_p;
+    casacore::ScalarColumn<casacore::Int> antenna1_p;
+    casacore::ScalarColumn<casacore::Int> feed1_p;
+    casacore::ScalarColumn<casacore::Int> fieldId_p;
+    casacore::ScalarColumn<casacore::Int> arrayId_p;
+    casacore::ScalarColumn<casacore::Int> obsId_p;
+    casacore::ScalarColumn<casacore::Int> scanNo_p;
+    casacore::ScalarColumn<casacore::Int> processorId_p;
+    casacore::ScalarColumn<casacore::Int> stateId_p;
+    casacore::ScalarColumn<casacore::Int> phaseId_p;
+    casacore::ScalarColumn<casacore::Int> pulsarBin_p;
+    casacore::ScalarColumn<casacore::Int> pulsarGateId_p;
+    casacore::ScalarColumn<casacore::Int> freqGrp_p;
+    casacore::ScalarColumn<casacore::String> freqGrpName_p;
+    casacore::ScalarColumn<casacore::String> fieldName_p;
+    casacore::ScalarColumn<casacore::String> fieldCode_p;
+    casacore::ScalarColumn<casacore::String> sourceName_p;
+    casacore::ScalarColumn<casacore::String> sourceCode_p;
+    casacore::ScalarColumn<casacore::Int> calGrp_p;
+    //casacore::ArrayColumn<casacore::Complex> gain_p;
+    casacore::ArrayColumn<T> gain_p;
+    casacore::ArrayColumn<T> solvePar_p;
+    casacore::ArrayColumn<casacore::Int> refAnt_p;
+    casacore::ArrayColumn<casacore::Int> refFeed_p;
+    casacore::ArrayColumn<casacore::Int> refReceptor_p;
+    casacore::ArrayColumn<casacore::Double> refFreq_p;
+    casacore::ArrayMeasColumn<casacore::MFrequency> refFreqMeas_p;
+    casacore::ScalarColumn<casacore::Int> measFreqRef_p;
+    casacore::ArrayColumn<casacore::Double> refDir_p;
+    casacore::ArrayMeasColumn<casacore::MDirection> refDirMeas_p;
+    casacore::ScalarColumn<casacore::Int> measDirRef_p;
+    casacore::ScalarColumn<casacore::Int> calDescId_p;
+    casacore::ScalarColumn<casacore::Int> calHistoryId_p;
   };
 } //# NAMESPACE CASA - END
 

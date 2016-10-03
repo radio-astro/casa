@@ -85,7 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Constructor
 		MultiPolylineTool( viewer::RegionSourceFactory *rsf, PanelDisplay* pd,
-		                   Display::KeySym keysym = Display::K_Pointer_Button1, const Bool persistent = False );
+		                   Display::KeySym keysym = Display::K_Pointer_Button1, const casacore::Bool persistent = false );
 
 		// Destructor
 		virtual ~MultiPolylineTool();
@@ -95,12 +95,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void disable();
 
 		// reset to non-existent, non-active polyline.
-		// Refreshes if necessary to erase (unless skipRefresh==True).
+		// Refreshes if necessary to erase (unless skipRefresh==true).
 		// (Does not unregister from WCs or disable future event handling).
-		virtual void reset(Bool skipRefresh=False);
+		virtual void reset(casacore::Bool skipRefresh=false);
 
 		// Is a polyline currently defined?
-		virtual Bool polylineDefined() {
+		virtual casacore::Bool polylineDefined() {
 			return itsMode>=Ready;
 		}
 
@@ -152,7 +152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void doubleOutside() { };
 		// </group>
 
-		// Function called when a polyline is ready and not being
+		// casacore::Function called when a polyline is ready and not being
 		// edited.  (Unused so far on the glish level (12/01)).
 		virtual void polylineReady() { };
 
@@ -160,8 +160,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Valid results during the callback functions; to be used by them,
 		// as well as internally.
 		// <group>
-		virtual void get(Vector<Int> &x, Vector<Int> &y) const;
-		virtual void get(Int &x, Int &y, const Int pt) const;
+		virtual void get(casacore::Vector<casacore::Int> &x, casacore::Vector<casacore::Int> &y) const;
+		virtual void get(casacore::Int &x, casacore::Int &y, const casacore::Int pt) const;
 		// </group>
 
 		virtual bool checkType( viewer::region::RegionTypes t ) {
@@ -174,29 +174,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Set the polyline vertices. itsNPoints should already be set, and
 		// x and y must contain (at least) this many points.
-		virtual void set(const Vector<Int> &x, const Vector<Int> &y);
+		virtual void set(const casacore::Vector<casacore::Int> &x, const casacore::Vector<casacore::Int> &y);
 
 		// replace a single vertex.
-		virtual void set(const Int x, const Int y, const Int pt);
+		virtual void set(const casacore::Int x, const casacore::Int y, const casacore::Int pt);
 
 		SHARED_PTR<viewer::Polyline> resizing_region;
 		SHARED_PTR<viewer::Polyline> creating_region;
 
 		// push/pop last vertex
 		// <group>
-		void pushPoint(Int x1, Int y1);
+		void pushPoint(casacore::Int x1, casacore::Int y1);
 		void popPoint();
 		// </group>
 
 		// are we inside the polyline?
-		Bool inPolyline(const Int &x, const Int &y) const;
+		casacore::Bool inPolyline(const casacore::Int &x, const casacore::Int &y) const;
 
 		// are we within the specified handle?
-		Bool inHandle(const Int &pt, const Int &x, const Int &y) const;
+		casacore::Bool inHandle(const casacore::Int &pt, const casacore::Int &x, const casacore::Int &y) const;
 
 
 		// should the polyline remain on screen after double clicks?
-		Bool itsPolylinePersistent;
+		casacore::Bool itsPolylinePersistent;
 
 		// state of the polyline tool
 		enum AdjustMode {
@@ -208,31 +208,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		};	// moving single vertex whose handle was pressed
 		MultiPolylineTool::AdjustMode itsMode;
 
-		// set True on double-click, if the polyline is persistent.
-		// set False when the polyline is moved, resized or reset.
-		// If True, a click outside the polyline will erase it and begin
+		// set true on double-click, if the polyline is persistent.
+		// set false when the polyline is moved, resized or reset.
+		// If true, a click outside the polyline will erase it and begin
 		// definition of a new one.
-		Bool itsEmitted;
+		casacore::Bool itsEmitted;
 
 		// Number of points
-		Int itsNPoints;
+		casacore::Int itsNPoints;
 
 		// Polyline points (linear).  Not to be used directly.
 		// use get, set, push, pop instead, which take pixel coordinate arguments.
 		// It's done this way so that zooms work on the figures.
-		Vector<Double> itsX, itsY;
+		casacore::Vector<casacore::Double> itsX, itsY;
 		// pixel coordinates of the pan vector.  1 = anchor, 2 = new position.
-		Int itsX1, itsY1, itsX2, itsY2, itsX3, itsY3;
+		casacore::Int itsX1, itsY1, itsX2, itsY2, itsX3, itsY3;
 
 
 		// size in pixels of the handles
-		Int itsHandleSize;
+		casacore::Int itsHandleSize;
 
 		// vertex being moved
-		Int itsSelectedHandle;
+		casacore::Int itsSelectedHandle;
 
 		// position that move started from
-		Int itsBaseMoveX, itsBaseMoveY;
+		casacore::Int itsBaseMoveX, itsBaseMoveY;
 
 		// may not be needed...
 		int resizing_region_handle;

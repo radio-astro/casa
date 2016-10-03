@@ -37,11 +37,15 @@
 #include <images/Images/ImageInterface.h>
 #include <scimath/Mathematics/VectorKernel.h>
 
+namespace casacore{
+
+template <class T> class Quantum;
+class String;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-template <class T> class Quantum;
-class String;
 
 
 
@@ -55,8 +59,8 @@ class String;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="ImageInterface">ImageInterface</linkto>
-//   <li> <linkto class="Convolver">Convolver</linkto>
+//   <li> <linkto class="casacore::ImageInterface">casacore::ImageInterface</linkto>
+//   <li> <linkto class="casacore::Convolver">casacore::Convolver</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -72,7 +76,7 @@ class String;
 // convolution kernel is straightforward.
 //
 // Although this class is templated, it will only work
-// for Float and Double types.
+// for casacore::Float and casacore::Double types.
 // </synopsis>
 
 // <example>
@@ -95,7 +99,7 @@ public:
 
 
 	// Constructor
-	SepImageConvolver (const ImageInterface<T>& image, LogIO &os, Bool showProgress);
+	SepImageConvolver (const casacore::ImageInterface<T>& image, casacore::LogIO &os, casacore::Bool showProgress);
 
 	// Copy constructor.  Uses reference semantics.
 	SepImageConvolver(const SepImageConvolver<T> &other);
@@ -108,32 +112,32 @@ public:
 
 	// Set convolution kernel vector.  The specified axis is convolved
 	// by the given kernel.
-	void setKernel(uInt axis, const Vector<T>& kernel);
+	void setKernel(casacore::uInt axis, const casacore::Vector<T>& kernel);
 
 	// Set convolution kernel.  The specified axis is convolved
-	// by the given kernel.  If autoScale is True then kernel volume is unity,
-	// else kernel peak is 1 * scale. If useImageShapeExactly is True, the kernel
+	// by the given kernel.  If autoScale is true then kernel volume is unity,
+	// else kernel peak is 1 * scale. If useImageShapeExactly is true, the kernel
 	// will be the shape of the axis, else it will be big enough
 	// to accomodate the kernel width (e.g. +/- 5sigma for Gaussian)
 	// <group>
 	void setKernel(
-		uInt axis, VectorKernel::KernelTypes kernelType,
-		const Quantum<Double>& width, Bool autoScale,
-		Bool useImageShapeExactly=True, Double scale=1.0
+		casacore::uInt axis, casacore::VectorKernel::KernelTypes kernelType,
+		const casacore::Quantum<casacore::Double>& width, casacore::Bool autoScale,
+		casacore::Bool useImageShapeExactly=true, casacore::Double scale=1.0
 	);
 
 	void setKernel(
-		uInt axis, VectorKernel::KernelTypes kernelType,
-		Double width, Bool autoScale,
-		Bool useImageShapeExactly=True, Double scale=1.0
+		casacore::uInt axis, casacore::VectorKernel::KernelTypes kernelType,
+		casacore::Double width, casacore::Bool autoScale,
+		casacore::Bool useImageShapeExactly=true, casacore::Double scale=1.0
 	);
 	// </group>
 
 	// Get the convolution kernel for the specified axis
-	Vector<T> getKernel(uInt axis);
+	casacore::Vector<T> getKernel(casacore::uInt axis);
 
 	// Get the convolution kernel shape for the specified axis
-	uInt  getKernelShape(uInt axis);
+	casacore::uInt  getKernelShape(casacore::uInt axis);
 
 	// Perform the convolution either outputting to a new image
 	// or in-situ.    The error checking for the
@@ -142,21 +146,21 @@ public:
 	// the it will be given one if possible and the input
 	// mask will be transferred to the output.  Masked pixels
 	// are zeroed before convolving
-	void convolve(ImageInterface<T>& imageOut);
+	void convolve(casacore::ImageInterface<T>& imageOut);
 
 
 private:
-	ImageInterface<T>* itsImagePtr;
-	LogIO itsOs;
-	Vector<uInt> itsAxes;
-	PtrBlock<Vector<T>* > itsVectorKernels;
-	Bool itsShowProgress;
+	casacore::ImageInterface<T>* itsImagePtr;
+	casacore::LogIO itsOs;
+	casacore::Vector<casacore::uInt> itsAxes;
+	casacore::PtrBlock<casacore::Vector<T>* > itsVectorKernels;
+	casacore::Bool itsShowProgress;
 
-	void _checkAxis(uInt axis);
+	void _checkAxis(casacore::uInt axis);
 	void _zero();
 	void _smoothProfiles(
-		ImageInterface<T>& in, const Int& axis,
-		const Vector<T>& psf
+		casacore::ImageInterface<T>& in, const casacore::Int& axis,
+		const casacore::Vector<T>& psf
 	);
 };
 

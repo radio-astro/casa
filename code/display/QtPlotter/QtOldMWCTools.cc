@@ -37,6 +37,7 @@
 //#include <display/Display/WorldCanvas.h>
 //#include <display/Display/WorldCanvasHolder.h>
 
+using namespace casacore;
 namespace casa {
 
 //////////////poly tool//////////////////

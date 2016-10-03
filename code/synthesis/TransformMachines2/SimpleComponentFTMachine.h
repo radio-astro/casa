@@ -89,26 +89,26 @@ class SimpleComponentFTMachine : public ComponentFTMachine {
 public:
 
   // Get actual coherence 
-  virtual void get(vi::VisBuffer2& vb, const ComponentList& compList, Int row=-1);
+  virtual void get(vi::VisBuffer2& vb, const ComponentList& compList, casacore::Int row=-1);
   // Get actual coherence 
-  virtual void get(vi::VisBuffer2& vb, SkyComponent& skycomponent, Int row=-1);
+  virtual void get(vi::VisBuffer2& vb, SkyComponent& skycomponent, casacore::Int row=-1);
 
 protected:
-  void applyPhasor(const Int part, const Block<Int>& startrow, 
-		   const Vector<uInt>& nRowp,  
-		   const Vector<Double>& dphase,  const Vector<Double>& invLambda, 
-		   const Int npol, const Int nchan, 
-		   const Vector<Int>& corrType, 
-		   const Cube<DComplex>& dVis, Complex*& modData);
+  void applyPhasor(const casacore::Int part, const casacore::Block<casacore::Int>& startrow, 
+		   const casacore::Vector<casacore::uInt>& nRowp,  
+		   const casacore::Vector<casacore::Double>& dphase,  const casacore::Vector<casacore::Double>& invLambda, 
+		   const casacore::Int npol, const casacore::Int nchan, 
+		   const casacore::Vector<casacore::Int>& corrType, 
+		   const casacore::Cube<casacore::DComplex>& dVis, casacore::Complex*& modData);
   
-  void predictVis(Complex*& modData, const Vector<Double>& invLambda, 
-		  const Vector<Double>& frequency, 
+  void predictVis(casacore::Complex*& modData, const casacore::Vector<casacore::Double>& invLambda, 
+		  const casacore::Vector<casacore::Double>& frequency, 
 		  const ComponentList& compList, 
-		  ComponentType::Polarisation poltype, const Vector<Int>& corrType, 
-		  const uInt startrow, const uInt nrows, 
-		  const uInt nchan, const uInt npol, 
-		  const Block<Matrix<Double> > & uvwcomp, 
-		  const Block<Vector<Double> > & dphasecomp);
+		  ComponentType::Polarisation poltype, const casacore::Vector<casacore::Int>& corrType, 
+		  const casacore::uInt startrow, const casacore::uInt nrows, 
+		  const casacore::uInt nchan, const casacore::uInt npol, 
+		  const casacore::Block<casacore::Matrix<casacore::Double> > & uvwcomp, 
+		  const casacore::Block<casacore::Vector<casacore::Double> > & dphasecomp);
 
 };
 

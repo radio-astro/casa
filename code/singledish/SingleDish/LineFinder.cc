@@ -42,6 +42,13 @@ using namespace std;
 #define _ORIGIN LogOrigin("LineFinder", __func__, WHERE)
 //#define KS_DEBUG
 
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace linefinder {//# NAMESPACE LINEFINDER - BEGIN

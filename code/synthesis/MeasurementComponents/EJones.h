@@ -47,9 +47,8 @@ public:
 
   // Constructor
   EGainCurve(VisSet& vs);
-  EGainCurve(String msname,Int MSnAnt,Int MSnSpw);
+  EGainCurve(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
   EGainCurve(const MSMetaInfoForCal& msmc);
-  //  EGainCurve(const Int& nAnt);  // NYI
 
   virtual ~EGainCurve();
 
@@ -57,41 +56,41 @@ public:
   virtual Type type() { return VisCal::E; };
 
   // Return type name as string
-  virtual String typeName()     { return "EGainCurve"; };
-  virtual String longTypeName() { return "EGainCurve (Gain(elev) corrections)"; };
+  virtual casacore::String typeName()     { return "EGainCurve"; };
+  virtual casacore::String longTypeName() { return "EGainCurve (Gain(elev) corrections)"; };
 
-  // Gain curve coeffs are Float parameters
+  // Gain curve coeffs are casacore::Float parameters
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
   // Type of Jones matrix (
   Jones::JonesType jonesType() { return Jones::Diagonal; };
 
   // Local specialization of setApply to extract gain curves from table
-  void setApply(const Record& applypar);
+  void setApply(const casacore::Record& applypar);
 
   // Cal Library version
-  void setCallib(const Record& applypar,const MeasurementSet& selms);
+  void setCallib(const casacore::Record& applypar,const casacore::MeasurementSet& selms);
 
   // Generate gain curves caltable via specify
-  void setSpecify(const Record& specify);
-  void specify(const Record& specify);
+  void setSpecify(const casacore::Record& specify);
+  void specify(const casacore::Record& specify);
 
   // Guess (throws error because we don't yet solve for this)
   virtual void guessPar(VisBuffer& vb);
 
   // Local implementation of spwOK()
-  virtual Vector<Bool> spwOK() { return spwOK_; };
+  virtual casacore::Vector<casacore::Bool> spwOK() { return spwOK_; };
 
 protected:
 
-  // EGainCurve has eight Float pars per ant (4 per pol)
-  virtual Int nPar() { return 8; };
+  // EGainCurve has eight casacore::Float pars per ant (4 per pol)
+  virtual casacore::Int nPar() { return 8; };
 
   // Jones matrix elements are NOT trivial
-  virtual Bool trivialJonesElem() { return False; };
+  virtual casacore::Bool trivialJonesElem() { return false; };
 
   // Access to z.a. data
-  Vector<Double>& za() { return za_; };
+  casacore::Vector<casacore::Double>& za() { return za_; };
 
   // Detect zenith angle for this vb
   virtual void syncMeta(const VisBuffer& vb);
@@ -109,28 +108,28 @@ private:
   using SolvableVisJones::setApply;  
 
   // Name of the gain curve source table
-  String gainCurveSrc_;
+  casacore::String gainCurveSrc_;
 
   // The observation start time (for selecting gain curves)
-  Double obstime_;
+  casacore::Double obstime_;
 
   // The ant name list (for selecting gain curves)
-  Vector<String> antnames_;
+  casacore::Vector<casacore::String> antnames_;
 
   // The spw ref frequencies (for selecting gain curves)
-  Vector<Double> spwfreqs_;
+  casacore::Vector<casacore::Double> spwfreqs_;
 
   // The spw band names (for selecting gain curves)
-  Vector<String> spwbands_;
+  casacore::Vector<casacore::String> spwbands_;
 
   // Zenith angles
-  Vector<Double> za_;
+  casacore::Vector<casacore::Double> za_;
 
   // Effeciency samples
-  Vector<Double> eff_;
+  casacore::Vector<casacore::Double> eff_;
 
   // Local spwOK_
-  Vector<Bool> spwOK_;
+  casacore::Vector<casacore::Bool> spwOK_;
   
 };
 

@@ -26,11 +26,12 @@
 using std::max;
 using std::min;
 
-using namespace casa;
+using namespace casacore;
 using namespace std;
 
 #include "UtilJ.h"
 
+using namespace casacore;
 namespace casa {
 
 namespace utilj {
@@ -87,14 +88,14 @@ getEnv (const String & name, const Bool & defaultValue)
 	else{
 		String stringValue = value;
 		stringValue.downcase();
-		Bool truthValue = True;
+		Bool truthValue = true;
 
 		if (stringValue == "false" ||
 			stringValue == "f" ||
 			stringValue == "0" ||
 			stringValue == "no"){
 
-			truthValue = False;
+			truthValue = false;
 		}
 
 		return truthValue;
@@ -232,7 +233,7 @@ split (const String & string, const String & splitter, Bool ignoreConsecutiveSpl
 
     Int start = 0;
 
-    while (True){
+    while (true){
 
         Int matchStart = string.find (splitter, start);
 
@@ -708,4 +709,5 @@ RUsage::toString () const
 
 } // end namespace utilj
 
+using namespace casacore;
 } // end namespace casa

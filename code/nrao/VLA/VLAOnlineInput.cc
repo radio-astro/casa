@@ -89,7 +89,7 @@ VLAOnlineInput::VLAOnlineInput(String &onlineFlag, Int afiles)
                                    // afile < 0 previous days upto 14
                                    // afile == 0, start of current day
 				   // afile > 0, now
-      onlineFill = True;
+      onlineFill = true;
    } else {
       throw(AipsError("Invalid online specifier " + onlineFlag));
    }
@@ -101,7 +101,7 @@ VLAOnlineInput::~VLAOnlineInput() {
 }
 
 Bool VLAOnlineInput::read() {
-	Bool rstatus(True);
+	Bool rstatus(true);
   itsMemIO.clear();
   Long logicalRecordSize(MAX_LOGICAL_RECORD_SIZE);
   Char* recordPtr = (Char *)itsMemIO.setBuffer(logicalRecordSize);
@@ -109,7 +109,7 @@ Bool VLAOnlineInput::read() {
   itsMemIO.setUsed(logicalRecordSize);
   itsRecord.seek(0);
   if(!logicalRecordSize)
-	  rstatus = False;
+	  rstatus = false;
   return rstatus;
 }
 

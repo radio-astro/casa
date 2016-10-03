@@ -24,14 +24,14 @@ template <class T> class ImageMaxFitter: public ImageTask<T> {
 
 public:
 
-	ImageMaxFitter(SPCIIT image, const Record *const &region);
+	ImageMaxFitter(SPCIIT image, const casacore::Record *const &region);
 
 	// destructor
 	~ImageMaxFitter() {}
 
-	String getClass() const { const static String s = "ImageMaxFitter"; return s; }
+	casacore::String getClass() const { const static casacore::String s = "ImageMaxFitter"; return s; }
 
-	Record fit(Bool point, Int width=5, Bool negfind=False, Bool list=True) const;
+	casacore::Record fit(casacore::Bool point, casacore::Int width=5, casacore::Bool negfind=false, casacore::Bool list=true) const;
 
 protected:
 
@@ -39,11 +39,11 @@ protected:
 		return CasacRegionManager::USE_FIRST_STOKES;
 	}
 
-	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return std::vector<Coordinate::Type>(1, Coordinate::DIRECTION);
+	inline std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return std::vector<casacore::Coordinate::Type>(1, casacore::Coordinate::DIRECTION);
 	}
 
-    inline Bool _supportsMultipleBeams() const {return True;}
+    inline casacore::Bool _supportsMultipleBeams() const {return true;}
 
 
 };

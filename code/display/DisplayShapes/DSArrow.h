@@ -76,18 +76,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-// Vector<Float> startPoint(2); startPoint[0] = 100; startPoint[1] = 100;
-// Vector<Float> endPoint(2);   endPoint[0] = 200;   endPoint[1] = 200;
+// casacore::Vector<casacore::Float> startPoint(2); startPoint[0] = 100; startPoint[1] = 100;
+// casacore::Vector<casacore::Float> endPoint(2);   endPoint[0] = 200;   endPoint[1] = 200;
 //
 // DSArrow* myArrow =
 // new DSArrow(startPoint, endPoint, DSArrow::Filled_Triangle, 10);
 //
 // myArrow->move(10,10);
 //
-// Vector<Float> newStart(2); newStart[0] = 50; newStart[1] = 50;
+// casacore::Vector<casacore::Float> newStart(2); newStart[0] = 50; newStart[1] = 50;
 // myArrow->setStartPoint(newStart);
 //
-// Record newArrow;
+// casacore::Record newArrow;
 // newArrow.define("arrowheadsize", 6);
 //
 // myArrow->setOptions(newArrow);
@@ -112,9 +112,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DSArrow();
 
 		// The start and end point are in pixel co-ordinates.
-		DSArrow(const Vector<Float> &startPoint, const Vector<Float> &endPoint,
+		DSArrow(const casacore::Vector<casacore::Float> &startPoint, const casacore::Vector<casacore::Float> &endPoint,
 		        DSArrow::ArrowHead style = DSArrow::Cool_Triangle,
-		        const Int arrowHeadSize = 8);
+		        const casacore::Int arrowHeadSize = 8);
 
 		// Copy constructor
 		DSArrow(const DSArrow& other);
@@ -125,45 +125,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Standard Display Shape functions
 		// <group>
 		virtual void draw(PixelCanvas *pc);
-		virtual void move(const Float& dX, const Float& dY);
-		virtual void rotate(const Float& angle);
-		virtual void scale(const Float& scaleFactor);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void rotate(const casacore::Float& angle);
+		virtual void scale(const casacore::Float& scaleFactor);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
 		// </group>
 
 		// Does nothing currently
-		virtual void rotateAbout(const Float& angle, const Float& aboutX,
-		                         const Float& aboutY);
+		virtual void rotateAbout(const casacore::Float& angle, const casacore::Float& aboutX,
+		                         const casacore::Float& aboutY);
 
 		// Standard (changePoint) and specific funtions for altering the arrow. the
 		// changePoint method with only one argument will move the closest point to
 		// the specified new point. When speciffyin 'n', in this case only 0 or
 		// 1 are valid. The 'startpoint' is the one with the arrow head on it.
 		// <group>
-		virtual void setStartPoint(const Vector<Float>& startPoint);
-		virtual void setEndPoint(const Vector<Float>& endPoint);
-		virtual void changePoint(const Vector<Float>&pos, const Int n);
-		virtual void changePoint(const Vector<Float>& pos);
+		virtual void setStartPoint(const casacore::Vector<casacore::Float>& startPoint);
+		virtual void setEndPoint(const casacore::Vector<casacore::Float>& endPoint);
+		virtual void changePoint(const casacore::Vector<casacore::Float>&pos, const casacore::Int n);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& pos);
 		// </group>
 
 		// These are to enable the use of arrows more easily in vector plots
 		// <group>
-		virtual void setLength(const Float& pixelLength);
-		virtual void setAngle(const Float& angle);
+		virtual void setLength(const casacore::Float& pixelLength);
+		virtual void setAngle(const casacore::Float& angle);
 		// </group>
 
 		// Return an option record describing the shape
-		virtual Record getOptions();
+		virtual casacore::Record getOptions();
 
 		// Set options.
-		virtual Bool setOptions(const Record& newSettings);
+		virtual casacore::Bool setOptions(const casacore::Record& newSettings);
 
 	protected:
 
 	private:
 		// If someone calls "setLength" before "setCenter", we can store our
 		// length until they DO call setLength;
-		Float itsLength;
+		casacore::Float itsLength;
 
 		// Make a new arrow head (which is simply a DSPoly)
 		virtual void buildArrowHead();
@@ -178,28 +178,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// valid start / end points
 		virtual void make();
 
-		DParameterRange<Int>* itsHeadSize;
+		DParameterRange<casacore::Int>* itsHeadSize;
 
 		DSPoly* itsArrowHead;
 
 		// Temp storage while I am being set up
 		// <group>
-		Vector<Float> itsStartPoint;
-		Vector<Float> itsEndPoint;
+		casacore::Vector<casacore::Float> itsStartPoint;
+		casacore::Vector<casacore::Float> itsEndPoint;
 		// </group>
 
-		// A Matrix of the unRotated arrow head
-		Matrix<Float> itsUnrotatedHead;
+		// A casacore::Matrix of the unRotated arrow head
+		casacore::Matrix<casacore::Float> itsUnrotatedHead;
 
 		// Offset needed to make sure the tip of the arrow is at the end of
 		// the line.
-		Float itsOffset;
+		casacore::Float itsOffset;
 
 		// Style of arrow head
 		DSArrow::ArrowHead itsArrowHeadStyle;
 
 		// Have I been supplied with valid points yet
-		Bool itsValidStart,itsValidEnd;
+		casacore::Bool itsValidStart,itsValidEnd;
 	};
 
 

@@ -84,12 +84,12 @@ class VLACalibratorFilter: public VLAFilter
 public:
 
   // The default constructor creats a filter that does not filter
-  // anything. ie., the passThru() function always returns True;
+  // anything. ie., the passThru() function always returns true;
   VLACalibratorFilter();
 
   // Creates a filter that filters all records except those with a calibrator
   // number that matches the specified value.
-  VLACalibratorFilter(const Char calcode);
+  VLACalibratorFilter(const casacore::Char calcode);
 
   // The copy constructor uses copy semantics.
   VLACalibratorFilter(const VLACalibratorFilter& other);
@@ -100,9 +100,9 @@ public:
   // The assignment operator uses copy semantics.
   VLACalibratorFilter& operator=(const VLACalibratorFilter& other);
 
-  // returns True if the supplied record has an calibrator id that matches 
+  // returns true if the supplied record has an calibrator id that matches 
   // the calibrator id specified in the constructor.
-  virtual Bool passThru(const VLALogicalRecord& record) const;
+  virtual casacore::Bool passThru(const VLALogicalRecord& record) const;
 
   // Return a pointer to a copy of the VLACalibratorFilter object upcast to a
   // VLAFilter object. The class that uses this function is responsible for
@@ -110,13 +110,13 @@ public:
   // constructor.
   virtual VLAFilter* clone() const;
 
-  // Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns True if everything is fine
-  // otherwise returns False.
-  virtual Bool ok() const;
+  // casacore::Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns true if everything is fine
+  // otherwise returns false.
+  virtual casacore::Bool ok() const;
 
 private:
-  Char itsCode;
+  casacore::Char itsCode;
 };
 #endif
 

@@ -38,7 +38,7 @@
 // </summary>
 
 // Control verbosity
-#define KJONES_TEST_VERBOSE False
+#define KJONES_TEST_VERBOSE false
 
 
 Vector<Complex> appdel(Int nchan,Float f0,Float df,Float tau, Float ftau) {
@@ -58,7 +58,7 @@ Vector<Complex> appdel(Int nchan,Float f0,Float df,Float tau, Float ftau) {
 }
 
 
-void testDelayFFT (Bool verbose=False) {
+void testDelayFFT (Bool verbose=false) {
 
   {
 

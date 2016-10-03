@@ -80,8 +80,8 @@ class VisJonesTable : public CalTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   VisJonesTable (const String& tableName,
-		  Table::TableOption access = Table::Old);
+   VisJonesTable (const casacore::String& tableName,
+		  casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    VisJonesDesc itsVisJonesDesc;

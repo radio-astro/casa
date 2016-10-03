@@ -138,7 +138,7 @@ int main() {
 		}
 		{
 			SpectralEstimate est(rms, cutoff, minsig);
-			est.setWindowing(True);
+			est.setWindowing(true);
 			const SpectralList &slist = est.estimate(xy, y);
 			r = slist.nelements();
 			cout << "Window (using rms, cutoff, minsig, q): (" <<
@@ -291,7 +291,7 @@ int main() {
 				cout << ">>>" << endl;
 				cout << "Number of iterations: " << fitter.nIterations() << endl;
 				cout << "<<<" << endl;
-				el[3].fixAmpl(False);
+				el[3].fixAmpl(false);
 			}
 			cout << "---------------------------------------------------" << endl;
 

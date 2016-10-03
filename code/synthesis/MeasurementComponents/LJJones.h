@@ -58,9 +58,9 @@ public:
 
   // Constructor
   LJJones(VisSet& vs);
-	 //  {throw(AipsError("Use the constructor LJJones(VisSet&, MeasurementSet&) instead"));};
-  LJJones(VisSet& vs, MeasurementSet& ms);
-  //   LJJones(const Int& nAnt);  // NYI
+	 //  {throw(casacore::AipsError("Use the constructor LJJones(VisSet&, casacore::MeasurementSet&) instead"));};
+  LJJones(VisSet& vs, casacore::MeasurementSet& ms);
+  //   LJJones(const casacore::Int& nAnt);  // NYI
 
   virtual ~LJJones();
 
@@ -68,10 +68,10 @@ public:
   virtual Type type() { return VisCal::E; };
 
   // Return type name as string
-  virtual String typeName()     { return "LJ Jones"; };
-  virtual String longTypeName() { return "LeakyJ Jones"; };
+  virtual casacore::String typeName()     { return "LJ Jones"; };
+  virtual casacore::String longTypeName() { return "LeakyJ Jones"; };
   // Frequency-dependent Parameters?  Nominally not.
-  virtual Bool freqDepPar() { return False; };
+  virtual casacore::Bool freqDepPar() { return false; };
 
   // Type of Jones matrix according to nPar()
   Jones::JonesType jonesType() { return Jones::General; };
@@ -79,23 +79,23 @@ public:
   virtual VisCalEnum::VCParType parType() { return setParType(VisCalEnum::COMPLEX);};
 
   // Specialized access to pointing parameters (no chan axis)
-  Cube<Complex>& loadPar();
+  casacore::Cube<casacore::Complex>& loadPar();
 
-  virtual void setModel(const String& modelImage);
+  virtual void setModel(const casacore::String& modelImage);
   // Set the solving parameters
   virtual void setSolve();
-  virtual void setSolve(const Record& solve);
-  virtual void setNiter(const Int& niter) {niter_p=niter;}
-  virtual void setTolerance(const Float& tol) {tolerance_p = tol;}
-  virtual void setGain(const Float& gain) {gain_p = gain;}
+  virtual void setSolve(const casacore::Record& solve);
+  virtual void setNiter(const casacore::Int& niter) {niter_p=niter;}
+  virtual void setTolerance(const casacore::Float& tol) {tolerance_p = tol;}
+  virtual void setGain(const casacore::Float& gain) {gain_p = gain;}
 
   // Arrange to apply (corrupt only)
   using SolvableVisCal::setApply;
-  virtual void setApply(const Record& applypar);
+  virtual void setApply(const casacore::Record& applypar);
 
   // Apply calibration to a VisBuffer 
   virtual void applyCal(VisBuffer& vb, 
-			Cube<Complex>& Mout);
+			casacore::Cube<casacore::Complex>& Mout);
 
   // Differentiate a VisBuffer w.r.t. pointng parameters
   //
@@ -103,14 +103,14 @@ public:
   // a time-averaged VisBuffer
   //
   virtual void differentiate(VisBuffer& vb,
-			     Cube<Complex>& Mout,
-			     Array<Complex>& dMout,
-			     Matrix<Bool>& Mflg);
+			     casacore::Cube<casacore::Complex>& Mout,
+			     casacore::Array<casacore::Complex>& dMout,
+			     casacore::Matrix<casacore::Bool>& Mflg);
   // Differentiate a VisBuffer w.r.t. pointng parameters
   virtual void differentiate(VisBuffer& vb,
 			     VisBuffer& dvb0,
 			     VisBuffer& dvb1,
-			     Matrix<Bool>& Mflg);
+			     casacore::Matrix<casacore::Bool>& Mflg);
   //
   // This one averages the residuals and the derivatives in time.
   //
@@ -118,79 +118,79 @@ public:
 			    VisBuffer& residuals, 
 			    VisBuffer& dVr1, 
 			    VisBuffer& dVr2, 
-			    Matrix<Bool>& flags);  
+			    casacore::Matrix<casacore::Bool>& flags);  
   // Guess (throws error because we don't yet solve for this)
   virtual void guessPar(VisBuffer& vb);
   virtual void guessPar() {pointPar_=0;}
   
-  virtual Cube<Complex>& solvePar() {return pointPar_;}
-  virtual void setRPar(Cube<Complex>& val) {pointPar_.resize(val.shape());pointPar_=val;}
-  virtual void setRPar(Double val) {pointPar_=val;}
+  virtual casacore::Cube<casacore::Complex>& solvePar() {return pointPar_;}
+  virtual void setRPar(casacore::Cube<casacore::Complex>& val) {pointPar_.resize(val.shape());pointPar_=val;}
+  virtual void setRPar(casacore::Double val) {pointPar_=val;}
   
-  //  virtual void keep(const Int& slot);
+  //  virtual void keep(const casacore::Int& slot);
 
-  virtual Bool normalizable() { return False; };
+  virtual casacore::Bool normalizable() { return false; };
 
   //  virtual BaseCalSet& cs() {return *cs_;};
-  virtual void keep(const Int& slot);
+  virtual void keep(const casacore::Int& slot);
   
-  inline virtual CalSet<Complex>& cs() {return *cs_;};
+  inline virtual CalSet<casacore::Complex>& cs() {return *cs_;};
 
-  virtual void inflate(const Vector<Int>& nChan,
-		       const Vector<Int>& startChan,
-		       const Vector<Int>& nSlot);
+  virtual void inflate(const casacore::Vector<casacore::Int>& nChan,
+		       const casacore::Vector<casacore::Int>& startChan,
+		       const casacore::Vector<casacore::Int>& nSlot);
   void initSolve(VisSet& vs);
   void initSolvePar();
   void store();
-  void store(const String& table,const Bool& append);
-  Bool verifyForSolve(VisBuffer& vb);
+  void store(const casacore::String& table,const casacore::Bool& append);
+  casacore::Bool verifyForSolve(VisBuffer& vb);
   virtual void postSolveMassage(const VisBuffer&);
   virtual void selfGatherAndSolve(VisSet& vs,VisEquation& ve);
-  virtual Bool useGenericGatherForSolve() { return False; };
-  virtual Float printFraction(const Int& /*nSlots*/) {return 0.1;};
-  Array<Complex> getOffsets(const Int& spw) {return cs().par(spw);}
-  Array<Double> getTime(const Int& spw) {return cs().time(spw);}
-  void nearest(const Double time, Array<Complex>& vals);
+  virtual casacore::Bool useGenericGatherForSolve() { return false; };
+  virtual casacore::Float printFraction(const casacore::Int& /*nSlots*/) {return 0.1;};
+  casacore::Array<casacore::Complex> getOffsets(const casacore::Int& spw) {return cs().par(spw);}
+  casacore::Array<casacore::Double> getTime(const casacore::Int& spw) {return cs().time(spw);}
+  void nearest(const casacore::Double time, casacore::Array<casacore::Complex>& vals);
   void printRPar();  
 
-  void setByPassMode(Int& b) {byPass_p = b;}
+  void setByPassMode(casacore::Int& b) {byPass_p = b;}
   void getAvgVB(VisIter& vi, VisEquation& ve, VisBuffer& vb);
 protected:
 
   // EP has a pair of real parameters per feed
-  virtual Int nPar() { return 4; };
+  virtual casacore::Int nPar() { return 4; };
 
   // Jones matrix elements are NOT trivial
-  virtual Bool trivialJonesElem() { return False; };
+  virtual casacore::Bool trivialJonesElem() { return false; };
 
   // Fill-in a complex grid with the image values in prepration for 
   // computing it's FT
-  virtual void makeComplexGrid(TempImage<Complex>& Grid, 
-					PagedImage<Float>& ModelImage,
+  virtual void makeComplexGrid(casacore::TempImage<casacore::Complex>& Grid, 
+					casacore::PagedImage<casacore::Float>& ModelImage,
 					VisBuffer& vb);
-  void printActivity(const Int slotNo, const Int fieldId, const Int spw, const Int nSolutions);
-  //  inline virtual CalSet<Float> cs() {return *cs_;}
+  void printActivity(const casacore::Int slotNo, const casacore::Int fieldId, const casacore::Int spw, const casacore::Int nSolutions);
+  //  inline virtual CalSet<casacore::Float> cs() {return *cs_;}
 
-  void reformVisibilities(const VisBuffer& vb, const Int whichChan, const Int whichPol,
-			  Array<Complex>& visArray, Array<Float>& visWts);
+  void reformVisibilities(const VisBuffer& vb, const casacore::Int whichChan, const casacore::Int whichPol,
+			  casacore::Array<casacore::Complex>& visArray, casacore::Array<casacore::Float>& visWts);
 
-  Int getRefAnt(const Array<Float>& visWts);
+  casacore::Int getRefAnt(const casacore::Array<casacore::Float>& visWts);
 private:
 
-  // Local Matrix for referencing pointing pars in a convenient way
-  Cube<Complex>  pointPar_;
+  // Local casacore::Matrix for referencing pointing pars in a convenient way
+  casacore::Cube<casacore::Complex>  pointPar_;
   GridFT *pbwp_p;
-  MeasurementSet *ms_p;
+  casacore::MeasurementSet *ms_p;
   VisSet *vs_p;
-  //  Array<Float> azOff, elOff;
-  TempImage<Complex> targetVisModel_;
-  CalSet<Complex> *cs_;
-  Double maxTimePerSolution, minTimePerSolution, avgTimePerSolution;
-  Timer timer;
-  Vector<Int> polMap_p;
-  Float tolerance_p, gain_p;
-  Int niter_p,byPass_p;
-  String modelImageName_p;
+  //  casacore::Array<casacore::Float> azOff, elOff;
+  casacore::TempImage<casacore::Complex> targetVisModel_;
+  CalSet<casacore::Complex> *cs_;
+  casacore::Double maxTimePerSolution, minTimePerSolution, avgTimePerSolution;
+  casacore::Timer timer;
+  casacore::Vector<casacore::Int> polMap_p;
+  casacore::Float tolerance_p, gain_p;
+  casacore::Int niter_p,byPass_p;
+  casacore::String modelImageName_p;
 };
 
 

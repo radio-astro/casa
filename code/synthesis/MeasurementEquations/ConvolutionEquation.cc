@@ -29,6 +29,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Vector.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ConvolutionEquation::ConvolutionEquation(){
@@ -58,15 +59,15 @@ ConvolutionEquation::~ConvolutionEquation(){
 Bool ConvolutionEquation::evaluate(Array<Float> & result, 
 				   const LinearModel<Array<Float> > & model){
   const Array<Float> modelArray = model.getModel();
-  theConv.linearConv(result, modelArray, False); 
-  return True;
+  theConv.linearConv(result, modelArray, false); 
+  return true;
 };
 
 Bool ConvolutionEquation::evaluate(Array<Float> & result, 
 				   const LinearModel< MaskedArray<Float> > & model) {
   const MaskedArray<Float> modelArray = model.getModel();
-  theConv.linearConv(result, modelArray.getArray(), False); 
-  return True;
+  theConv.linearConv(result, modelArray.getArray(), false); 
+  return true;
 }
 
 Bool ConvolutionEquation::evaluate(Array<Float> & result, 
@@ -74,7 +75,7 @@ Bool ConvolutionEquation::evaluate(Array<Float> & result,
 				   const Float amplitude,
 				   const IPosition & modelSize){
   if (thePsf.nelements() == 0){
-    thePsf = theConv.getPsf(False);
+    thePsf = theConv.getPsf(false);
     thePsfOrigin = thePsf.shape()/2;
   }
   IPosition psfSize = thePsf.shape();
@@ -110,13 +111,13 @@ Bool ConvolutionEquation::evaluate(Array<Float> & result,
       result = thePsf(blc+newblc, trc+newblc);
       if (!nearAbs(Double(amplitude),1.0))
 	result = thePsf(blc+newblc, trc+newblc)*amplitude;
-      return True;
+      return true;
     }
   else {
     result = thePsf(blc, trc);
     if (!nearAbs(Double(amplitude),1.0))
       result = result * amplitude;
-    return True;
+    return true;
   }
 };
 
@@ -126,10 +127,10 @@ residual(Array<Float> & result,
 	 const LinearModel< Array<Float> > & model) {
   if (residual(result, model)) {
     chisq = sum(result*result);
-    return True;
+    return true;
   }
   else
-    return False;
+    return false;
 }
 
 
@@ -141,10 +142,10 @@ residual(Array<Float> & result,
   if (residual(result, model)) {
     result = result * mask;
     chisq = sum(result*result);
-    return True;
+    return true;
   }
   else
-    return False;
+    return false;
 }
 
 
@@ -153,10 +154,10 @@ residual(Array<Float> & result,
 	 const LinearModel< Array<Float> > & model) {
   if (evaluate(result, model)) {
     result = theMeas - result;
-    return True;
+    return true;
   }
   else
-    return False;
+    return false;
 }
 
 
@@ -166,10 +167,10 @@ Bool ConvolutionEquation::residual(Array<Float> & result,
 				   const LinearModel< MaskedArray<Float> > & model) {
   if (evaluate(result, model)) {
     result = theMeas - result;
-    return True;
+    return true;
   }
   else
-    return False;
+    return false;
 }
 
 Bool ConvolutionEquation::residual(MaskedArray<Float> & result, 
@@ -177,10 +178,10 @@ Bool ConvolutionEquation::residual(MaskedArray<Float> & result,
   Array<Float> farray;
   if (residual(farray, model)) {
     result.setData(farray, model.getModel().getMask());
-    return True;
+    return true;
   }
   else
-    return False;
+    return false;
 }
 
 IPosition ConvolutionEquation::psfSize(){

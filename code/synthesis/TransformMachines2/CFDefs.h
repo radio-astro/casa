@@ -35,13 +35,13 @@ namespace casa
 {
   namespace refim {
     namespace CFDefs { //# NAMESPACE CASA - BEGIN
-      typedef Array<Complex> CFType ;
-      typedef Array<Double> CFTypeReal ;
+      typedef casacore::Array<casacore::Complex> CFType ;
+      typedef casacore::Array<casacore::Double> CFTypeReal ;
       enum CACHETYPE {NOTCACHED=0,DISKCACHE, MEMCACHE};
       enum CFARRAYSHAPE {NXPOS=0,NYPOS,NWPOS,NPOLPOS,NBASEPOS,CFNDIM};
-      typedef RigidVector<Int,2> MuellerElementType ;
-      typedef Matrix<Int> MuellerMatrixType ;
-      typedef Vector<Vector<Int> > PolMapType;
+      typedef casacore::RigidVector<casacore::Int,2> MuellerElementType ;
+      typedef casacore::Matrix<casacore::Int> MuellerMatrixType ;
+      typedef casacore::Vector<casacore::Vector<casacore::Int> > PolMapType;
     } //# NAMESPACE CASA - END
   }
 }

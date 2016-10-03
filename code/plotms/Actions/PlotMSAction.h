@@ -43,7 +43,7 @@ class BackgroundThread;
 // Class that implements actions that operate on PlotMS.  Actions get their
 // type from the Type enum and their parameters (if needed) from mappings from
 // Strings to values.  Current parameter value types are: PlotMSPlot*, bool,
-// String, int, and vector<PMS::Axis>.
+// casacore::String, int, and vector<PMS::Axis>.
 class PlotMSAction {
 public:
     // Static //
@@ -146,7 +146,7 @@ public:
 			TRACKER_ENABLE_DISPLAY,
 
 
-			// Stack actions //
+			// casacore::Stack actions //
 
 			// Goes back in the zoom/pan stack.  Operates on all visible canvases
 			// AT THE TIME of the call to doAction().
@@ -178,7 +178,7 @@ public:
 
 			// Plot actions //
 
-			// Display MS summary info for a specific file.
+			// Display casacore::MS summary info for a specific file.
 			// Required parameters: P_PLOT.
 			MS_SUMMARY,
 
@@ -234,11 +234,11 @@ public:
 
     void setUseThreading( bool useThread );
 
-    virtual bool doActionWithResponse(PlotMSApp* plotms, Record &retval);
+    virtual bool doActionWithResponse(PlotMSApp* plotms, casacore::Record &retval);
 
     // Returns the result of doAction(), if applicable.  Usually this is used
     // to return the error/reason why the action failed.
-	const String& doActionResult() const;
+	const casacore::String& doActionResult() const;
 
 protected:
 	 bool useThreading;
@@ -251,7 +251,7 @@ protected:
 	 Type itsType_;
 
 	 // Result of doAction, if applicable.
-	 String itsDoActionResult_;
+	 casacore::String itsDoActionResult_;
 	 ThreadController* threadController;
 
 	 vector<PlotMSPlot*> postThreadObject;

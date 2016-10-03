@@ -44,6 +44,7 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SpectralModel::SpectralModel()
@@ -160,32 +161,32 @@ Bool SpectralModel::fromRecord(String& errorMessage,
   const String freqString("frequency");
   if (!record.isDefined(freqString)) {
     errorMessage += "The 'frequency' field does not exist\n";
-    return False;
+    return false;
   }
   const RecordFieldId frequency(freqString);
   if (record.dataType(frequency) != TpRecord) {
     if ((record.dataType(frequency) == TpString) && 
 	(record.shape(frequency) == IPosition(1,1)) &&
 	(record.asString(frequency) == String("current"))) {
-      return True;
+      return true;
     } else {
       errorMessage += "The 'frequency' field must be a record\n";
       errorMessage += "or the string 'current' (to use the current value)\n";
-      return False;
+      return false;
     }
   }
   const Record& freqRecord = record.asRecord(frequency);
   MeasureHolder mh;
   if (!mh.fromRecord(errorMessage, freqRecord)) {
     errorMessage += "Could not parse the reference frequency\n";
-    return False;
+    return false;
   }
   if (!mh.isMFrequency()) {
     errorMessage += "The reference frequency is not a frequency measure\n";
-    return False;
+    return false;
   }
   SpectralModel::setRefFrequency(mh.asMFrequency());
-  return True;
+  return true;
 }
 
 Bool SpectralModel::toRecord(String& errorMessage,
@@ -196,7 +197,7 @@ Bool SpectralModel::toRecord(String& errorMessage,
   const MeasureHolder mh(refFrequency());
   if (!mh.toRecord(errorMessage, freqRecord)) {
     errorMessage += "Could not convert the reference frequency to a record\n";
-    return False;
+    return false;
   }
   const String m0String("m0");
   if (freqRecord.isDefined(m0String)) {
@@ -216,7 +217,7 @@ Bool SpectralModel::toRecord(String& errorMessage,
     }
   }
   record.defineRecord(RecordFieldId("frequency"), freqRecord);
-  return True;
+  return true;
 }
 
 ComponentType::SpectralShape SpectralModel::
@@ -248,9 +249,9 @@ Bool SpectralModel::ok() const {
     logErr << LogIO::SEVERE << "The reference frequency has units with " 
 	   << endl << " different dimensions than the Hz."
            << LogIO::POST;
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
 Bool SpectralModel::badError(const Quantum<Double>& quantum) {

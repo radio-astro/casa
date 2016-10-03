@@ -49,9 +49,9 @@ public:
   // size of the tile used in gridding (cannot be less than
   // 12, 16 works in most cases). 
   // <group>
-  MosaicFTNew(SkyJones* sj, MPosition mloc, String stokes,
-	    Long cachesize, Int tilesize=16, 
-	      Bool usezero=True, Bool useDoublePrec=False):
+  MosaicFTNew(SkyJones* sj, casacore::MPosition mloc, casacore::String stokes,
+	    casacore::Long cachesize, casacore::Int tilesize=16, 
+	      casacore::Bool usezero=true, casacore::Bool useDoublePrec=false):
     MosaicFT(sj,mloc,stokes,cachesize,tilesize,usezero,useDoublePrec){}
 
     refim::FTMachine* cloneFTM();
@@ -61,12 +61,12 @@ public:
 
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
-  ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
+  casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>&, casacore::Bool normalize=true);
  
   // Get the final weights image
-  void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
+  void getWeightImage(casacore::ImageInterface<casacore::Float>&, casacore::Matrix<casacore::Float>&);
 
-  virtual String name() const {return "MosaicFTNew";};
+  virtual casacore::String name() const {return "MosaicFTNew";};
 
 protected:        
 

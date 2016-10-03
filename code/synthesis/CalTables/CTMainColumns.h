@@ -57,65 +57,65 @@ class ROCTMainColumns
   virtual ~ROCTMainColumns() {};
   
   // Read-only column accessors
-  const ROScalarColumn<Double>& time() const {return time_p;};
-  const ROScalarQuantColumn<Double>& timeQuant() const {return timeQuant_p;};
-  const ROScalarMeasColumn<MEpoch>& timeMeas() const {return timeMeas_p;};
-  const ROScalarColumn<Double>& timeEP() const {return timeEP_p;};
-  const ROScalarQuantColumn<Double>& timeEPQuant() const 
+  const casacore::ROScalarColumn<casacore::Double>& time() const {return time_p;};
+  const casacore::ROScalarQuantColumn<casacore::Double>& timeQuant() const {return timeQuant_p;};
+  const casacore::ROScalarMeasColumn<casacore::MEpoch>& timeMeas() const {return timeMeas_p;};
+  const casacore::ROScalarColumn<casacore::Double>& timeEP() const {return timeEP_p;};
+  const casacore::ROScalarQuantColumn<casacore::Double>& timeEPQuant() const
   {return timeEPQuant_p;};
-  const ROScalarColumn<Double>& interval() const {return interval_p;};
-  const ROScalarQuantColumn<Double>& intervalQuant() const
+  const casacore::ROScalarColumn<casacore::Double>& interval() const {return interval_p;};
+  const casacore::ROScalarQuantColumn<casacore::Double>& intervalQuant() const
   {return intervalQuant_p;};
-  const ROScalarColumn<Int>& antenna1() const {return antenna1_p;};
-  const ROScalarColumn<Int>& antenna2() const {return antenna2_p;};
-  const ROScalarColumn<Int>& fieldId() const {return fieldId_p;};
-  const ROScalarColumn<Int>& spwId() const {return spwId_p;};
-  const ROScalarColumn<Int>& scanNo() const {return scanNo_p;};
-  const ROScalarColumn<Int>& obsId() const {return obsId_p;};
-  const ROArrayColumn<Complex>& cparam() const {return cparam_p;};
-  const ROArrayColumn<Float>& fparam() const {return fparam_p;};
-  const ROArrayColumn<Float>& paramerr() const {return paramerr_p;};
-  const ROArrayColumn<Bool>& flag() const {return flag_p;};
-  const ROArrayColumn<Float>& snr() const {return snr_p;};
-  const ROArrayColumn<Float>& weight() const {return weight_p;};
+  const casacore::ROScalarColumn<casacore::Int>& antenna1() const {return antenna1_p;};
+  const casacore::ROScalarColumn<casacore::Int>& antenna2() const {return antenna2_p;};
+  const casacore::ROScalarColumn<casacore::Int>& fieldId() const {return fieldId_p;};
+  const casacore::ROScalarColumn<casacore::Int>& spwId() const {return spwId_p;};
+  const casacore::ROScalarColumn<casacore::Int>& scanNo() const {return scanNo_p;};
+  const casacore::ROScalarColumn<casacore::Int>& obsId() const {return obsId_p;};
+  const casacore::ROArrayColumn<casacore::Complex>& cparam() const {return cparam_p;};
+  const casacore::ROArrayColumn<casacore::Float>& fparam() const {return fparam_p;};
+  const casacore::ROArrayColumn<casacore::Float>& paramerr() const {return paramerr_p;};
+  const casacore::ROArrayColumn<casacore::Bool>& flag() const {return flag_p;};
+  const casacore::ROArrayColumn<casacore::Float>& snr() const {return snr_p;};
+  const casacore::ROArrayColumn<casacore::Float>& weight() const {return weight_p;};
 
-  // Some additional methods to extract cparam into Array<Float>
+  // Some additional methods to extract cparam into casacore::Array<casacore::Float>
   //   what can be: "","AP"
-  Array<Float> fparamArray(String what="",const Vector<uInt>& rows=Vector<uInt>());
-  void fparamArray(Array<Float>& arr,String what="",const Vector<uInt>& rows=Vector<uInt>());
+  casacore::Array<casacore::Float> fparamArray(casacore::String what="",const casacore::Vector<casacore::uInt>& rows=casacore::Vector<casacore::uInt>());
+  void fparamArray(casacore::Array<casacore::Float>& arr,casacore::String what="",const casacore::Vector<casacore::uInt>& rows=casacore::Vector<casacore::uInt>());
 
   // Some additional methods to extract phase-like info
-  Array<Float> phase();
-  void phase(Array<Float>& ph);
-  Array<Float> cycles();
-  void cycles(Array<Float>& cy);
+  casacore::Array<casacore::Float> phase();
+  void phase(casacore::Array<casacore::Float>& ph);
+  casacore::Array<casacore::Float> cycles();
+  void cycles(casacore::Array<casacore::Float>& cy);
   
  protected:
   // Prohibit public use of the null constructor, which
   // does not produce a usable object.
   ROCTMainColumns() {};
   
-  // Return a CalTable as a Table reference. Utilizes friendship
+  // Return a CalTable as a casacore::Table reference. Utilizes friendship
   // relationship with class CalTable.
-  //const Table& asTable(const CalTable2& calTable) 
+  //const casacore::Table& asTable(const CalTable2& calTable) 
   //{return calTable.calMainAsTable();}
   
   // Attach a table column accessor
-  void attach (const NewCalTable& calTable, ROTableColumn& tabCol, 
-	       CTEnums::colDef colEnum, const Bool& optional = False);
+  void attach (const NewCalTable& calTable, casacore::ROTableColumn& tabCol, 
+	       CTEnums::colDef colEnum, const casacore::Bool& optional = false);
   void attach (const NewCalTable& calTable, 
-	       ROArrayMeasColumn<MEpoch>& tabCol, 
-	       CTEnums::colDef colEnum, const Bool& optional = False);
+	       casacore::ROArrayMeasColumn<casacore::MEpoch>& tabCol,
+	       CTEnums::colDef colEnum, const casacore::Bool& optional = false);
   void attach (const NewCalTable& calTable, 
-	       ROArrayMeasColumn<MFrequency>& tabCol, 
-	       CTEnums::colDef colEnum, const Bool& optional = False);
+	       casacore::ROArrayMeasColumn<casacore::MFrequency>& tabCol,
+	       CTEnums::colDef colEnum, const casacore::Bool& optional = false);
   void attach (const NewCalTable& calTable, 
-	       ROArrayMeasColumn<MDirection>& tabCol, 
-	       CTEnums::colDef colEnum, const Bool& optional = False);
-  void attach (const NewCalTable& calTable, ROScalarMeasColumn<MEpoch>& tabCol, 
-	       CTEnums::colDef colEnum, const Bool& optional = False);
-  void attach (const NewCalTable& calTable, ROScalarQuantColumn<Double>& tabCol, 
-	       CTEnums::colDef colEnum, const Bool& optional = False);
+	       casacore::ROArrayMeasColumn<casacore::MDirection>& tabCol,
+	       CTEnums::colDef colEnum, const casacore::Bool& optional = false);
+  void attach (const NewCalTable& calTable, casacore::ROScalarMeasColumn<casacore::MEpoch>& tabCol,
+	       CTEnums::colDef colEnum, const casacore::Bool& optional = false);
+  void attach (const NewCalTable& calTable, casacore::ROScalarQuantColumn<casacore::Double>& tabCol,
+	       CTEnums::colDef colEnum, const casacore::Bool& optional = false);
   
  private:
   // Prohibit copy constructor and assignment operator 
@@ -123,25 +123,25 @@ class ROCTMainColumns
   ROCTMainColumns& operator= (const ROCTMainColumns&);
   
   // Private column accessors
-  ROScalarColumn<Double> time_p;
-  ROScalarQuantColumn<Double> timeQuant_p;
-  ROScalarMeasColumn<MEpoch> timeMeas_p;
-  ROScalarColumn<Double> timeEP_p;
-  ROScalarQuantColumn<Double> timeEPQuant_p;
-  ROScalarColumn<Double> interval_p;
-  ROScalarQuantColumn<Double> intervalQuant_p;
-  ROScalarColumn<Int> antenna1_p;
-  ROScalarColumn<Int> antenna2_p;
-  ROScalarColumn<Int> fieldId_p;
-  ROScalarColumn<Int> spwId_p;
-  ROScalarColumn<Int> scanNo_p;
-  ROScalarColumn<Int> obsId_p;
-  ROArrayColumn<Complex> cparam_p;
-  ROArrayColumn<Float> fparam_p;
-  ROArrayColumn<Float> paramerr_p;
-  ROArrayColumn<Bool> flag_p;
-  ROArrayColumn<Float> snr_p;
-  ROArrayColumn<Float> weight_p;
+  casacore::ROScalarColumn<casacore::Double> time_p;
+  casacore::ROScalarQuantColumn<casacore::Double> timeQuant_p;
+  casacore::ROScalarMeasColumn<casacore::MEpoch> timeMeas_p;
+  casacore::ROScalarColumn<casacore::Double> timeEP_p;
+  casacore::ROScalarQuantColumn<casacore::Double> timeEPQuant_p;
+  casacore::ROScalarColumn<casacore::Double> interval_p;
+  casacore::ROScalarQuantColumn<casacore::Double> intervalQuant_p;
+  casacore::ROScalarColumn<casacore::Int> antenna1_p;
+  casacore::ROScalarColumn<casacore::Int> antenna2_p;
+  casacore::ROScalarColumn<casacore::Int> fieldId_p;
+  casacore::ROScalarColumn<casacore::Int> spwId_p;
+  casacore::ROScalarColumn<casacore::Int> scanNo_p;
+  casacore::ROScalarColumn<casacore::Int> obsId_p;
+  casacore::ROArrayColumn<casacore::Complex> cparam_p;
+  casacore::ROArrayColumn<casacore::Float> fparam_p;
+  casacore::ROArrayColumn<casacore::Float> paramerr_p;
+  casacore::ROArrayColumn<casacore::Bool> flag_p;
+  casacore::ROArrayColumn<casacore::Float> snr_p;
+  casacore::ROArrayColumn<casacore::Float> weight_p;
 };
 
 class CTMainColumns
@@ -154,48 +154,48 @@ class CTMainColumns
     virtual ~CTMainColumns() {};
     
     // Read-write column accessors
-    ScalarColumn<Double>& time() {return time_p;};
-    ScalarQuantColumn<Double>& timeQuant() {return timeQuant_p;};
-    ScalarMeasColumn<MEpoch>& timeMeas() {return timeMeas_p;};
-    ScalarColumn<Double>& timeEP() {return timeEP_p;};
-    ScalarQuantColumn<Double>& timeEPQuant() {return timeEPQuant_p;};
-    ScalarColumn<Double>& interval() {return interval_p;};
-    ScalarQuantColumn<Double>& intervalQuant() {return intervalQuant_p;};
-    ScalarColumn<Int>& fieldId() {return fieldId_p;};
-    ScalarColumn<Int>& spwId() {return spwId_p;};
-    ScalarColumn<Int>& antenna1() {return antenna1_p;};
-    ScalarColumn<Int>& antenna2() {return antenna2_p;};
-    ScalarColumn<Int>& scanNo() {return scanNo_p;};
-    ScalarColumn<Int>& obsId() {return obsId_p;};
-    ArrayColumn<Complex>& cparam() {return cparam_p;};
-    ArrayColumn<Float>& fparam() {return fparam_p;};
-    ArrayColumn<Float>& paramerr() {return paramerr_p;};
-    ArrayColumn<Bool>& flag() {return flag_p;};
-    ArrayColumn<Float>& snr() {return snr_p;};
-    ArrayColumn<Float>& weight() {return weight_p;};
+    casacore::ScalarColumn<casacore::Double>& time() {return time_p;};
+    casacore::ScalarQuantColumn<casacore::Double>& timeQuant() {return timeQuant_p;};
+    casacore::ScalarMeasColumn<casacore::MEpoch>& timeMeas() {return timeMeas_p;};
+    casacore::ScalarColumn<casacore::Double>& timeEP() {return timeEP_p;};
+    casacore::ScalarQuantColumn<casacore::Double>& timeEPQuant() {return timeEPQuant_p;};
+    casacore::ScalarColumn<casacore::Double>& interval() {return interval_p;};
+    casacore::ScalarQuantColumn<casacore::Double>& intervalQuant() {return intervalQuant_p;};
+    casacore::ScalarColumn<casacore::Int>& fieldId() {return fieldId_p;};
+    casacore::ScalarColumn<casacore::Int>& spwId() {return spwId_p;};
+    casacore::ScalarColumn<casacore::Int>& antenna1() {return antenna1_p;};
+    casacore::ScalarColumn<casacore::Int>& antenna2() {return antenna2_p;};
+    casacore::ScalarColumn<casacore::Int>& scanNo() {return scanNo_p;};
+    casacore::ScalarColumn<casacore::Int>& obsId() {return obsId_p;};
+    casacore::ArrayColumn<casacore::Complex>& cparam() {return cparam_p;};
+    casacore::ArrayColumn<casacore::Float>& fparam() {return fparam_p;};
+    casacore::ArrayColumn<casacore::Float>& paramerr() {return paramerr_p;};
+    casacore::ArrayColumn<casacore::Bool>& flag() {return flag_p;};
+    casacore::ArrayColumn<casacore::Float>& snr() {return snr_p;};
+    casacore::ArrayColumn<casacore::Float>& weight() {return weight_p;};
     
   protected:
     // Prohibit public use of the null constructor, which
     // does not produce a usable object.
     CTMainColumns() {};
     
-    // Return a CalTable as a Table reference. Utilizes friendship
+    // Return a CalTable as a casacore::Table reference. Utilizes friendship
     // relationship with class CalTable.
-    //Table& asTable(CalTable2& calTable) {return calTable.calMainAsTable();}
+    //casacore::Table& asTable(CalTable2& calTable) {return calTable.calMainAsTable();}
     
     // Attach a table column accessor
-    void attach (NewCalTable& calTable, TableColumn& tabCol, 
-		 CTEnums::colDef colEnum, const Bool& optional = False);
-    void attach (NewCalTable& calTable, ArrayMeasColumn<MEpoch>& tabCol, 
-		 CTEnums::colDef colEnum, const Bool& optional = False);
-    void attach (NewCalTable& calTable, ArrayMeasColumn<MFrequency>& tabCol, 
-		 CTEnums::colDef colEnum, const Bool& optional = False);
-    void attach (NewCalTable& calTable, ArrayMeasColumn<MDirection>& tabCol, 
-		 CTEnums::colDef colEnum, const Bool& optional = False);
-    void attach (NewCalTable& calTable, ScalarMeasColumn<MEpoch>& tabCol, 
-		 CTEnums::colDef colEnum, const Bool& optional = False);
-    void attach (NewCalTable& calTable, ScalarQuantColumn<Double>& tabCol, 
-		 CTEnums::colDef colEnum, const Bool& optional = False);
+    void attach (NewCalTable& calTable, casacore::TableColumn& tabCol, 
+		 CTEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (NewCalTable& calTable, casacore::ArrayMeasColumn<casacore::MEpoch>& tabCol, 
+		 CTEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (NewCalTable& calTable, casacore::ArrayMeasColumn<casacore::MFrequency>& tabCol, 
+		 CTEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (NewCalTable& calTable, casacore::ArrayMeasColumn<casacore::MDirection>& tabCol, 
+		 CTEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (NewCalTable& calTable, casacore::ScalarMeasColumn<casacore::MEpoch>& tabCol, 
+		 CTEnums::colDef colEnum, const casacore::Bool& optional = false);
+    void attach (NewCalTable& calTable, casacore::ScalarQuantColumn<casacore::Double>& tabCol, 
+		 CTEnums::colDef colEnum, const casacore::Bool& optional = false);
     
   private:
     // Prohibit copy constructor and assignment operator 
@@ -203,25 +203,25 @@ class CTMainColumns
     CTMainColumns& operator= (const CTMainColumns&);
     
     // Private column accessors
-    ScalarColumn<Double> time_p;
-    ScalarQuantColumn<Double> timeQuant_p;
-    ScalarMeasColumn<MEpoch> timeMeas_p;
-    ScalarColumn<Double> timeEP_p;
-    ScalarQuantColumn<Double> timeEPQuant_p;
-    ScalarColumn<Double> interval_p;
-    ScalarQuantColumn<Double> intervalQuant_p;
-    ScalarColumn<Int> fieldId_p;
-    ScalarColumn<Int> spwId_p;
-    ScalarColumn<Int> antenna1_p;
-    ScalarColumn<Int> antenna2_p;
-    ScalarColumn<Int> scanNo_p;
-    ScalarColumn<Int> obsId_p;
-    ArrayColumn<Complex> cparam_p;
-    ArrayColumn<Float> fparam_p;
-    ArrayColumn<Float> paramerr_p;
-    ArrayColumn<Bool> flag_p;
-    ArrayColumn<Float> snr_p;
-    ArrayColumn<Float> weight_p;
+    casacore::ScalarColumn<casacore::Double> time_p;
+    casacore::ScalarQuantColumn<casacore::Double> timeQuant_p;
+    casacore::ScalarMeasColumn<casacore::MEpoch> timeMeas_p;
+    casacore::ScalarColumn<casacore::Double> timeEP_p;
+    casacore::ScalarQuantColumn<casacore::Double> timeEPQuant_p;
+    casacore::ScalarColumn<casacore::Double> interval_p;
+    casacore::ScalarQuantColumn<casacore::Double> intervalQuant_p;
+    casacore::ScalarColumn<casacore::Int> fieldId_p;
+    casacore::ScalarColumn<casacore::Int> spwId_p;
+    casacore::ScalarColumn<casacore::Int> antenna1_p;
+    casacore::ScalarColumn<casacore::Int> antenna2_p;
+    casacore::ScalarColumn<casacore::Int> scanNo_p;
+    casacore::ScalarColumn<casacore::Int> obsId_p;
+    casacore::ArrayColumn<casacore::Complex> cparam_p;
+    casacore::ArrayColumn<casacore::Float> fparam_p;
+    casacore::ArrayColumn<casacore::Float> paramerr_p;
+    casacore::ArrayColumn<casacore::Bool> flag_p;
+    casacore::ArrayColumn<casacore::Float> snr_p;
+    casacore::ArrayColumn<casacore::Float> weight_p;
   };
 } //# NAMESPACE CASA - END
 #endif

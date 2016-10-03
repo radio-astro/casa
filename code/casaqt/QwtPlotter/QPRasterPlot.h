@@ -72,7 +72,7 @@ public:
     // Static //
     
     // Convenient access to class name (QPRasterPlot).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
@@ -80,7 +80,7 @@ public:
     // Constructor which takes the data, optional format and title.
     QPRasterPlot(PlotRasterDataPtr data,
                  PlotRasterData::Format format = PlotRasterData::RGB32,
-                 const String& title = "Qwt Raster Plot");
+                 const casacore::String& title = "Qwt Raster Plot");
     
     // Copy constructor for generic RasterPlot.
     QPRasterPlot(const RasterPlot& copy);
@@ -172,7 +172,7 @@ protected:
     // QPPlotItem Methods //
     
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
 #if QWT_VERSION >= 0x060000
@@ -188,7 +188,7 @@ protected:
 private:
 
     QPRasterData m_data;                   // Data
-    PlotRasterData::Format m_format;       // Data format
+    PlotRasterData::Format m_format;       // casacore::Data format
 #if QWT_VERSION >= 0x060000
     QwtLinearColorMap* m_spectMap;          // Spectrogram color map
     QPRasterMap* m_rasterMap;               // Raster color map

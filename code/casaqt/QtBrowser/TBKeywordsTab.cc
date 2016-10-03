@@ -38,6 +38,7 @@
 
 #include <vector>
 
+using namespace casacore;
 namespace casa {
 
 //////////////////////////////

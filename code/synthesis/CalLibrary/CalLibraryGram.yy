@@ -28,6 +28,7 @@
 %{
 #include <errno.h>
 using namespace casacore;
+using namespace casa;
 %}
 
 %pure-parser                /* make parser re-entrant */

@@ -12,6 +12,7 @@
 #include <display3d/3DViewer/3DDisplayData.qo.h>
 #include <display3d/3DViewer/tqlayout.h>
 
+using namespace casacore;
 namespace casa {
 
 

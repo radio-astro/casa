@@ -51,92 +51,92 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		};
 
 		// Constructor
-		Galaxy(Vector<Double>& position, Vector<Double>& velocity, Double mass,
-		       Double size, uInt numStars, uInt numRings, Double inclination,
-		       Double positionAngle, Int xSize, Int ySize);
+		Galaxy(casacore::Vector<casacore::Double>& position, casacore::Vector<casacore::Double>& velocity, casacore::Double mass,
+		       casacore::Double size, casacore::uInt numStars, casacore::uInt numRings, casacore::Double inclination,
+		       casacore::Double positionAngle, casacore::Int xSize, casacore::Int ySize);
 
 		// Destructor
 		~Galaxy();
 
 		// Compute a new position, applying the force of the Galaxies in the List
 		// but do not update current position and velocity
-		void computeStep(List<void *>& galaxyList, Double timeStep,
-		                 Double dampingFactor = 1.0);
+		void computeStep(casacore::List<void *>& galaxyList, casacore::Double timeStep,
+		                 casacore::Double dampingFactor = 1.0);
 
 		// update position and velocity to new value
 		void update();
 
 		// Compute a new position for the Stars in this Galaxy
-		void applyForceToStars(List<void *>& galaxyList, Double timeStep,
-		                       Double dampingFactor);
+		void applyForceToStars(casacore::List<void *>& galaxyList, casacore::Double timeStep,
+		                       casacore::Double dampingFactor);
 
 		// Rotate position and velocity
-		void rotate(Matrix<Double>& rotMatrix);
+		void rotate(casacore::Matrix<casacore::Double>& rotMatrix);
 
 		// Draw the Galaxy on the PixelCanvas
 		void draw(PixelCanvas *pixelCanvas);
 
 		// magnitude of the force for this galaxy
-		Double force(Double distance);
+		casacore::Double force(casacore::Double distance);
 
 		// Return the Mass of the Galaxy
-		Double getMass();
+		casacore::Double getMass();
 
 		// Return the position of the Galaxy
-		Vector<Double>& getPosition();
+		casacore::Vector<casacore::Double>& getPosition();
 
 		// Return the Velocity of the Galaxy
-		Vector<Double>& getVelocity();
+		casacore::Vector<casacore::Double>& getVelocity();
 
 		// Set the plot mode
 		void setPlotMode(Galaxy::PLOT_MODE plotMode);
 
-		void setScale(Int xSize, Int ySize)   ;
+		void setScale(casacore::Int xSize, casacore::Int ySize)   ;
 
 	private:
 
 		// The mass of the Galaxy
-		Double itsMass;
+		casacore::Double itsMass;
 
 		// its size
-		Double itsSize;
+		casacore::Double itsSize;
 
 		// The position of the Galaxy
-		Vector<Double> itsPosition;
+		casacore::Vector<casacore::Double> itsPosition;
 
 		// The velocity of the Galaxy
-		Vector<Double> itsVelocity;
+		casacore::Vector<casacore::Double> itsVelocity;
 
 
 		// The new computed position of the Galaxy
-		Vector<Double> newPosition;
+		casacore::Vector<casacore::Double> newPosition;
 
 		// The new computed velocity of the Galaxy
-		Vector<Double> newVelocity;
+		casacore::Vector<casacore::Double> newVelocity;
 
 		// The list of Stars in this Galaxy
-		List<void *>   itsStarList;
+		casacore::List<void *>   itsStarList;
 		// and an iterator for this List
 
-		ListIter<void *> *itsStarListIter;
+		casacore::ListIter<void *> *itsStarListIter;
 
-		Vector<Int> oldPosition;
+		casacore::Vector<casacore::Int> oldPosition;
 		// Last offset applied to itsPosition
-		Vector<Int> itsOffset;
+		casacore::Vector<casacore::Int> itsOffset;
 		// Last offset applied to itsPosition
-		Vector<Int> itsPlotPosition;
+		casacore::Vector<casacore::Int> itsPlotPosition;
 
-		Int itsXSize;
-		Int itsYSize;
+		casacore::Int itsXSize;
+		casacore::Int itsYSize;
 
 		// Number of the draw list for the current PixelCanvas
-		uInt           itsDrawList;
+		casacore::uInt           itsDrawList;
 
 		PixelCanvas    *itsPixelCanvas;
 
 		Galaxy::PLOT_MODE plotMode;
 
-		Bool changedPlotMode;
+		casacore::Bool changedPlotMode;
 	};
 
 // <summary>
@@ -148,8 +148,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		// Constructor
-		Star(Vector<Double>& position, Vector<Double>& velocity,
-		     Int xSize, Int ySize);
+		Star(casacore::Vector<casacore::Double>& position, casacore::Vector<casacore::Double>& velocity,
+		     casacore::Int xSize, casacore::Int ySize);
 
 		// Destructor
 		~Star();
@@ -158,43 +158,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void draw(PixelCanvas *pixelCanvas);
 
 		// Compute new position by applying the forces of the Galaxies in the List
-		void applyForce(List<void *>& galaxyList, Double timeStep,
-		                Double dampingFactor);
+		void applyForce(casacore::List<void *>& galaxyList, casacore::Double timeStep,
+		                casacore::Double dampingFactor);
 
 		// Rotate position and velocity
-		void rotate(Matrix<Double>& rotMatrix);
+		void rotate(casacore::Matrix<casacore::Double>& rotMatrix);
 
 		// Set the plot mode
 		void setPlotMode(Galaxy::PLOT_MODE newPlotMode);
 
-		void setScale(Int xSize, Int ySize)   ;
+		void setScale(casacore::Int xSize, casacore::Int ySize)   ;
 
 	private:
 
 		// Position of the Star
-		Vector<Double> itsPosition;
+		casacore::Vector<casacore::Double> itsPosition;
 		// The last drawn position of the Star
-		Vector<Int> oldPosition;
+		casacore::Vector<casacore::Int> oldPosition;
 		// Last offset applied to itsPosition
-		Vector<Int> itsOffset;
+		casacore::Vector<casacore::Int> itsOffset;
 		// Last offset applied to itsPosition
-		Vector<Int> itsPlotPosition;
+		casacore::Vector<casacore::Int> itsPlotPosition;
 
 		// Velocity of the Star
-		Vector<Double> itsVelocity;
+		casacore::Vector<casacore::Double> itsVelocity;
 
-		Int itsXSize;
-		Int itsYSize;
+		casacore::Int itsXSize;
+		casacore::Int itsYSize;
 
 		// Number of the draw list for the current PixelCanvas
-		uInt           itsDrawList;
+		casacore::uInt           itsDrawList;
 
 		// Temp to check if we are drawing on a new PixelCanvas
 		PixelCanvas    *itsPixelCanvas;
 
 		Galaxy::PLOT_MODE plotMode;
 
-		Bool changedPlotMode;
+		casacore::Bool changedPlotMode;
 	};
 
 

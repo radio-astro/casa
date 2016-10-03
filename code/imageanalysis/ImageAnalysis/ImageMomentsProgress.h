@@ -43,7 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 // 
 // <prerequisite>
-//   <li> <linkto module=Lattices>LatticeProgress</linkto> 
+//   <li> <linkto module=Lattices>casacore::LatticeProgress</linkto> 
 // </prerequisite>
 //
 // <etymology>
@@ -51,11 +51,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-//   Progress meters can be displayed by the LatticeApply class 
+//   Progress meters can be displayed by the casacore::LatticeApply class 
 //   which is used by ImageMoments in order to optimally iterate
 //   through the image by lines.  To do this,  one must derive a 
-//   class from LatticeProgress. LatticeApply calls methods declared 
-//   in LatticeProgress and  implemented in the derived class.
+//   class from LatticeProgress. casacore::LatticeApply calls methods declared 
+//   in casacore::LatticeProgress and  implemented in the derived class.
 // </synopsis>
 //
 // <motivation>
@@ -66,14 +66,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </todo>
 class ImageMomentsProgressMonitor;
 
-class ImageMomentsProgress : public LatticeProgress
+class ImageMomentsProgress : public casacore::LatticeProgress
 {
 public:
 
 // Constructor makes a null object
     ImageMomentsProgress() : itsMeter(0), progressMonitor(0) {};
 
-// Destructor deletes the ProgressMeter pointer
+// Destructor deletes the casacore::ProgressMeter pointer
     virtual ~ImageMomentsProgress();
 
 // Initialize this object.  Here we create the ProgressMeter
@@ -81,7 +81,7 @@ public:
     virtual void initDerived();
 
 // Tell the number of steps done so far.
-    virtual void nstepsDone (uInt nsteps);
+    virtual void nstepsDone (casacore::uInt nsteps);
 
 // The process has ended so clean things up.
     virtual void done();
@@ -91,7 +91,7 @@ public:
     void setProgressMonitor( ImageMomentsProgressMonitor* monitor );
 
 private:
-    ProgressMeter* itsMeter;
+    casacore::ProgressMeter* itsMeter;
     ImageMomentsProgressMonitor* progressMonitor;
     bool maxReported;
 };

@@ -36,6 +36,7 @@
 #include <images/Images/MIRIADImage.h>
 #include <tables/Tables/Table.h>
 
+using namespace casacore;
 namespace casa{
 
 ImageOpener::ImageTypes CasaImageOpener::imageType (const String& name){
@@ -135,13 +136,13 @@ LatticeBase* CasaImageOpener::openImage (
     return retval;
 }
 
-Bool CasaImageOpener::_openFuncsRegistered = False;
+Bool CasaImageOpener::_openFuncsRegistered = false;
 
 void CasaImageOpener::_registerOpenFuncs() {
 	if (! _openFuncsRegistered) {
 		FITSImage::registerOpenFunction();
 		MIRIADImage::registerOpenFunction();
-		_openFuncsRegistered = True;
+		_openFuncsRegistered = true;
 	}
 }
 

@@ -35,6 +35,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <msvis/MSVis/MSCalEnums.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------

@@ -61,98 +61,98 @@ namespace casa{
     NoOpATerm (): ATerm() {};
     virtual ~NoOpATerm () {};
 
-    virtual String name() {return String("NoOpATerm");}
+    virtual casacore::String name() {return casacore::String("NoOpATerm");}
 
-    virtual void makeFullJones(ImageInterface<Complex>&,// pbImage,
+    virtual void makeFullJones(casacore::ImageInterface<casacore::Complex>&,// pbImage,
 			       const VisBuffer&,// vb,
-			       Bool,// doSquint, 
-			       Int&,// bandID, 
-			       Double// freqVal
+			       casacore::Bool,// doSquint, 
+			       casacore::Int&,// bandID, 
+			       casacore::Double// freqVal
 			       ) 
     {};
 
-    virtual void applySky(ImageInterface<Float>& ,//outputImages,
+    virtual void applySky(casacore::ImageInterface<casacore::Float>& ,//outputImages,
 			  const VisBuffer& ,//vb, 
-			  const Bool ,//doSquint=True,
-			  const Int& ,//cfKey=0,
-			  const Int& ,//muellerTerm=0,
-			  const Double // freqVal=-1
+			  const casacore::Bool ,//doSquint=true,
+			  const casacore::Int& ,//cfKey=0,
+			  const casacore::Int& ,//muellerTerm=0,
+			  const casacore::Double // freqVal=-1
 			  ) 
     {};
-    virtual void applySky(ImageInterface<Complex>& ,//outputImages,
+    virtual void applySky(casacore::ImageInterface<casacore::Complex>& ,//outputImages,
 			  const VisBuffer& ,//vb, 
-			  const Bool ,//doSquint=True,
-			  const Int& ,//cfKey=0,
-			  const Int& ,//muellerTerm=0,
-			  const Double // freqVal=-1
+			  const casacore::Bool ,//doSquint=true,
+			  const casacore::Int& ,//cfKey=0,
+			  const casacore::Int& ,//muellerTerm=0,
+			  const casacore::Double // freqVal=-1
 			  ) 
     {};
 
-    virtual void applySky(ImageInterface<Complex>&,// outImages,
-			  const Double&,// pa,
-			  const Bool,// doSquint,
-			  const Int&,// cfKey,
-			  const Int&,// muellerTerm,
-			  const Double// freqVal=-1.0
+    virtual void applySky(casacore::ImageInterface<casacore::Complex>&,// outImages,
+			  const casacore::Double&,// pa,
+			  const casacore::Bool,// doSquint,
+			  const casacore::Int&,// cfKey,
+			  const casacore::Int&,// muellerTerm,
+			  const casacore::Double// freqVal=-1.0
 			  )
     {};
 
-    Int getBandID(const Double&, //freq 
-		  const String& //telescopeName
+    casacore::Int getBandID(const casacore::Double&, //freq 
+		  const casacore::String& //telescopeName
 		  )
     {return 0;};
 
-    void cacheVBInfo(const String& /*telescopeName*/, const Float& /*diameter*/) {};
+    void cacheVBInfo(const casacore::String& /*telescopeName*/, const casacore::Float& /*diameter*/) {};
     void cacheVBInfo(const VisBuffer& )    {};
 
-    virtual void normalizeImage(Lattice<Complex>& ,//skyImage,
-				const Matrix<Float>& // weights
+    virtual void normalizeImage(casacore::Lattice<casacore::Complex>& ,//skyImage,
+				const casacore::Matrix<casacore::Float>& // weights
 				) 
     {};
 
     virtual int getVisParams(const VisBuffer& ,// vb
-			     const CoordinateSystem& // skyCoord=CoordinateSystem()
+			     const casacore::CoordinateSystem& // skyCoord=casacore::CoordinateSystem()
 			     ) 
     {return 0;};
     
     virtual void rotate(const VisBuffer& ,//vb, 
 			CFCell&, // cfs
-			const Double& // rotAngle
+			const casacore::Double& // rotAngle
 			) 
     {};
     virtual void rotate2(const VisBuffer& ,//vb, 
 			CFCell&, // basecfs
 			CFCell&, // cfs
-			const Double& // rotAngle
+			const casacore::Double& // rotAngle
 			) 
     {};
     //
-    // As the name indicates, this class should always return True
+    // As the name indicates, this class should always return true
     //
-    virtual Bool isNoOp() {return True;};
+    virtual casacore::Bool isNoOp() {return true;};
 
     //
     // Method used in the framework for other CFTerms as well.  These are now all in the base class.
     //
-    // virtual Int getConvSize() {};
-    // virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) 
-    //     {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
+    // virtual casacore::Int getConvSize() {};
+    // virtual casacore::Vector<casacore::Int> vbRow2CFKeyMap(const VisBuffer& vb, casacore::Int& nUnique) 
+    //     {casacore::Vector<casacore::Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
 
-    // virtual Int makePBPolnCoords(const VisBuffer& vb,
-    // 				 const Int& convSize,
-    // 				 const Int& convSampling,
-    // 				 const CoordinateSystem& skyCoord,
-    // 				 const Int& skyNx, const Int& skyNy,
-    // 				 CoordinateSystem& feedCoord) {throw(AipsError("NoOpATerm::makePBPolnCoords() called"));};
+    // virtual casacore::Int makePBPolnCoords(const VisBuffer& vb,
+    // 				 const casacore::Int& convSize,
+    // 				 const casacore::Int& convSampling,
+    // 				 const casacore::CoordinateSystem& skyCoord,
+    // 				 const casacore::Int& skyNx, const casacore::Int& skyNy,
+    // 				 casacore::CoordinateSystem& feedCoord) {throw(casacore::AipsError("NoOpATerm::makePBPolnCoords() called"));};
 
-    // virtual Float getConvWeightSizeFactor()           {return 1.0;};
-    // virtual Int getOversampling()                     {return 20;};
-    virtual Float getSupportThreshold()               {return 1e-3;};
-    // virtual Int mapAntIDToAntType(const Int& /*ant*/) {return 0;};
-    // virtual void setPolMap(const Vector<Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
-    // virtual void getPolMap(Vector<Int>& polMap)       {polMap.resize(0); polMap = polMap_p_base;};
-    // virtual Vector<Int> getAntTypeList()              {Vector<Int> tt(1); tt=0;return tt;};
-    virtual Bool rotationallySymmetric() {return False;};
+    // virtual casacore::Float getConvWeightSizeFactor()           {return 1.0;};
+    // virtual casacore::Int getOversampling()                     {return 20;};
+    virtual casacore::Float getSupportThreshold()               {return 1e-3;};
+    // virtual casacore::Int mapAntIDToAntType(const casacore::Int& /*ant*/) {return 0;};
+    // virtual void setPolMap(const casacore::Vector<casacore::Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
+    // virtual void getPolMap(casacore::Vector<casacore::Int>& polMap)       {polMap.resize(0); polMap = polMap_p_base;};
+    // virtual casacore::Vector<casacore::Int> getAntTypeList()              {casacore::Vector<casacore::Int> tt(1); tt=0;return tt;};
+    virtual casacore::Bool rotationallySymmetric() {return false;};
   };
 
 };

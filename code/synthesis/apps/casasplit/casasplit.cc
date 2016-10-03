@@ -29,6 +29,7 @@
 #include <casa/BasicSL/String.h>
 #include <msvis/MSVis/SubMS.h>
 
+using namespace casacore;
 using namespace casa;
 
 int main(int argc, char* argv[]) {
@@ -130,8 +131,8 @@ int main(int argc, char* argv[]) {
 	 << "\n\t-a: Antenna/baseline selection."
 	 << "\n\t-c: Channel averaging width (default 1)."
 	 << "\n\t\t-S: Only use every width channel instead of averaging."
-         << "\n\t\t    (Default False)"
-	 << "\n\t-d: Drop completely flagged rows.  Default False."
+         << "\n\t\t    (Default false)"
+	 << "\n\t-d: Drop completely flagged rows.  Default false."
          << "\n\t    Has no effect when time averaging!"
 	 << "\n\t-f: Field selection."
          << "\n\t-m: Merge (combine) timebins regardless of changes in these columns."
@@ -158,7 +159,7 @@ int main(int argc, char* argv[]) {
   if(argc - opts_processed > 2)
     timebin = atof(args[2]);
     
-  Bool rstat(False);
+  Bool rstat(false);
   
   SubMS splitter(inms);
 

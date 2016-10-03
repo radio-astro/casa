@@ -30,6 +30,7 @@
 #include <display/Display/DParameterFontChoice.h>
 #include <display/Display/DLFont.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor
@@ -59,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			setValue(fontNames(0));
 		}
 		setContext(context);
-		setEditable(False);
+		setEditable(false);
 
 	}
 

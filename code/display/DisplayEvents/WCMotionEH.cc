@@ -28,6 +28,7 @@
 #include <casa/aips.h>
 #include <display/DisplayEvents/WCMotionEH.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required

@@ -29,10 +29,14 @@
 #include <guitools/Histogram/ZoomWidget.ui.h>
 #include <casa/Utilities/CountedPtr.h>
 
-namespace casa {
+namespace casacore{
 
 template <class T> class ImageInterface;
 class ImageRegion;
+}
+
+namespace casa {
+
 
 class ZoomWidget : public QWidget
 {
@@ -40,8 +44,8 @@ class ZoomWidget : public QWidget
 
 public:
     ZoomWidget(bool rangeControls, QWidget *parent = 0);
-    void setImage( const SHARED_PTR<const ImageInterface<float> > image );
-    void setRegion( ImageRegion* region );
+    void setImage( const SHARED_PTR<const casacore::ImageInterface<float> > image );
+    void setRegion( casacore::ImageRegion* region );
     void copyState( ZoomWidget* other );
 
     ~ZoomWidget();
@@ -66,8 +70,8 @@ private:
 
     Ui::ZoomWidgetClass ui;
     QStringList zoomList;
-    SHARED_PTR<const ImageInterface<float> > image;
-    ImageRegion* region;
+    SHARED_PTR<const casacore::ImageInterface<float> > image;
+    casacore::ImageRegion* region;
 };
 
 }

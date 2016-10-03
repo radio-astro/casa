@@ -52,9 +52,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // functions to convert arrays from/to arrays of StokesVectors and some
 // miscellaneous mathematical operations. 
 
-// The {un,re}packStokes functions convert between an Array of StokesVector
-// or CStokesvector into an Array of Float/Double or Complex/DComplex. The
-// Float/Double array has one more dimension than the corresponding
+// The {un,re}packStokes functions convert between an casacore::Array of StokesVector
+// or CStokesvector into an casacore::Array of casacore::Float/casacore::Double or casacore::Complex/DComplex. The
+// casacore::Float/casacore::Double array has one more dimension than the corresponding
 // StokesVector array, and this extra dimension (always the slowest moving
 // or last one) has a length of 4. The output array is always resized to the
 // appropriate size.
@@ -93,30 +93,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <group name="StokesVector ancillary Functions">
 // <group>
-// Convert an Array of StokesVectors to an array of Floats or Doubles
+// Convert an casacore::Array of StokesVectors to an array of Floats or Doubles
 // (depending on the templates). The same function can be used to convert an
-// array of CStokesVectors to a Complex or DComplex  Array. I have not
+// array of CStokesVectors to a casacore::Complex or casacore::DComplex  Array. I have not
 // tested if this works for other template types.
 template<class T, class U> void 
-unpackStokes(Array<U>& output, const Array<T>& input);
+unpackStokes(casacore::Array<U>& output, const casacore::Array<T>& input);
 
-// Convert an Array of Floats or Doubles to an Array of StokesVectors. The
-// same function can be used to convert a Complex/DComplex array to an array
+// Convert an casacore::Array of Floats or Doubles to an casacore::Array of StokesVectors. The
+// same function can be used to convert a casacore::Complex/casacore::DComplex array to an array
 // of CStokesVector. The last non-degenerate axis on the input array MUST be
 // of length 4
 template<class T, class U> void 
-repackStokes(Array<U>& output, const Array<T>& input);
+repackStokes(casacore::Array<U>& output, const casacore::Array<T>& input);
 // </group>
 
-// These Functions to multiply a StokesVector by an Array of Floats. The
-// result is an Array of StokesVectors that is the same size as the Array of
-// Floats with each polarization being the Array of floats multiplied by the
+// These Functions to multiply a StokesVector by an casacore::Array of Floats. The
+// result is an casacore::Array of StokesVectors that is the same size as the casacore::Array of
+// Floats with each polarization being the casacore::Array of floats multiplied by the
 // corresponding component in the supplied StokesVector.  
 // <group>
-Array<StokesVector> operator* (const Array<Float> & farray, 
+casacore::Array<StokesVector> operator* (const casacore::Array<casacore::Float> & farray,
 			       const StokesVector & sv);
-inline Array<StokesVector> operator* (const StokesVector & sv,
-			       const Array<Float> & farray){
+inline casacore::Array<StokesVector> operator* (const StokesVector & sv,
+			       const casacore::Array<casacore::Float> & farray){
   return farray*sv;
 }
 // </group>
@@ -124,13 +124,13 @@ inline Array<StokesVector> operator* (const StokesVector & sv,
 // Functions to compare stokesVectors with each other. They are all based on
 // the norm derived using the "length" of the vector in 4-space.
 // <group>
-inline Float abs(const StokesVector& sv){
+inline casacore::Float abs(const StokesVector& sv){
   return sqrt(innerProduct(sv,sv));
 }
 
-Bool operator>(const StokesVector& left,const StokesVector& right); 
+casacore::Bool operator>(const StokesVector& left,const StokesVector& right);
 
-inline Bool operator<(const StokesVector& left, const StokesVector& right){
+inline casacore::Bool operator<(const StokesVector& left, const StokesVector& right){
   return !(left>right);
 }
 
@@ -138,11 +138,11 @@ inline Bool operator<(const StokesVector& left, const StokesVector& right){
 
 // Functions to determine if  one StokesVector is near another
 // <group>
-Bool nearAbs(const StokesVector& val1, const StokesVector& val2, 
-	      Double tol = 1.0e-5);
+casacore::Bool nearAbs(const StokesVector& val1, const StokesVector& val2,
+	      casacore::Double tol = 1.0e-5);
 
-Bool near(const StokesVector& val1, const StokesVector& val2, 
-	  Double tol = 1.0e-5);
+casacore::Bool near(const StokesVector& val1, const StokesVector& val2,
+	  casacore::Double tol = 1.0e-5);
 // </group>
 
 

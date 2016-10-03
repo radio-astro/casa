@@ -55,6 +55,7 @@
 #include <images/Images/PagedImage.h>
 #include <unistd.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   VPManager* VPManager::instance_p = 0;
@@ -136,12 +137,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Int ifield = vplistdefaults_p(telName);
 	    if(ifield>=0){
 	      Record rrec = vplist_p.rwSubRecord(ifield);
-	      rrec.define("dopb", False);
+	      rrec.define("dopb", false);
 	    }
 	    vplistdefaults_p.remove(telName);	    
 	  }
 	  vplistdefaults_p.define(telName,vplist_p.nfields()); 
-	  rec.define("dopb", True);
+	  rec.define("dopb", true);
 	  
 	  vplist_p.defineRecord(vplist_p.nfields(), rec);
 	}
@@ -194,7 +195,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     tb2.flush();
     tb.flush();
-    return True;
+    return true;
   }
 
 
@@ -215,7 +216,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else{
       os << "Format error: table " << tablename 
 	 << " does not contain a VPLIST_DEFAULTS subtable." << LogIO::POST;
-      return False;
+      return false;
     }
 
     ROScalarColumn<String> telcol2(tb2, "tel_and_anttype");
@@ -235,7 +236,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   << tablename << endl
 	   << "Valid value range is -1 to " << (Int)tempvplist.nfields()-1 
 	   << LogIO::POST;
-	return False;
+	return false;
       }
       tempvplistdefaults.define(telcol2(k), vplistnum);
     }
@@ -247,7 +248,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Loaded " << tb.nrow() << " VP definitions and " << tb2.nrow() 
        << " VP default settings from table " << tablename << LogIO:: POST;
 
-    return True;
+    return true;
 
   }
 
@@ -339,7 +340,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       os << "\tNone" << LogIO::POST;
     }
 
-    return True;
+    return true;
   }
 
   Bool VPManager::setcannedpb(const String& tel, 
@@ -376,7 +377,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec);
 
-    return True;
+    return true;
   }
 
   Bool VPManager::setpbairy(const String& tel, 
@@ -420,7 +421,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       QuantumHolder(reffreq).toRecord(error, tempholder);
       rec.defineRecord("reffreq", tempholder);
     }
-    rec.define("isthisvp", False);
+    rec.define("isthisvp", false);
     {Record tempholder; 
       MeasureHolder(squintdir).toRecord(error, tempholder);
       rec.defineRecord("squintdir", tempholder);
@@ -442,7 +443,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
-    return True;
+    return true;
 
   }
 
@@ -484,10 +485,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.defineRecord("reffreq", tempholder);
     }
     if(isthispb=="PB" || isthispb=="pb"){
-      rec.define("isthisvp", False);
+      rec.define("isthisvp", false);
     }
     else{
-      rec.define("isthisvp", True);
+      rec.define("isthisvp", true);
     }
     {Record tempholder; 
       MeasureHolder(squintdir).toRecord(error, tempholder);
@@ -510,7 +511,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
-    return True;
+    return true;
 
   }
 
@@ -556,10 +557,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.defineRecord("reffreq", tempholder);
     }
     if(isthispb=="PB" || isthispb=="pb"){
-      rec.define("isthisvp", False);
+      rec.define("isthisvp", false);
     }
     else{
-      rec.define("isthisvp", True);
+      rec.define("isthisvp", true);
     }
     {Record tempholder; 
       MeasureHolder(squintdir).toRecord(error, tempholder);
@@ -582,7 +583,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
-    return True;
+    return true;
 
   }
 
@@ -622,10 +623,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.defineRecord("reffreq", tempholder);
     }
     if(isthispb=="PB" || isthispb=="pb"){
-      rec.define("isthisvp", False);
+      rec.define("isthisvp", false);
     }
     else{
-      rec.define("isthisvp", True);
+      rec.define("isthisvp", true);
     }
     {Record tempholder; 
       MeasureHolder(squintdir).toRecord(error, tempholder);
@@ -648,7 +649,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
-    return True;
+    return true;
 
 
   }
@@ -690,10 +691,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.defineRecord("reffreq", tempholder);
     }
     if(isthispb=="PB" || isthispb=="pb"){
-      rec.define("isthisvp", False);
+      rec.define("isthisvp", false);
     }
     else{
-      rec.define("isthisvp", True);
+      rec.define("isthisvp", true);
     }
     {Record tempholder; 
       MeasureHolder(squintdir).toRecord(error, tempholder);
@@ -716,7 +717,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
-    return True;
+    return true;
 
 
   }
@@ -757,10 +758,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.defineRecord("reffreq", tempholder);
     }
     if(isthispb=="PB" || isthispb=="pb"){
-      rec.define("isthisvp", False);
+      rec.define("isthisvp", false);
     }
     else{
-      rec.define("isthisvp", True);
+      rec.define("isthisvp", true);
     }
     {Record tempholder; 
       MeasureHolder(squintdir).toRecord(error, tempholder);
@@ -783,7 +784,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
-    return True;
+    return true;
 
   }
 
@@ -808,7 +809,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.define("telescope", tel);
     }
     rec.define("dopb", dopb);
-    rec.define("isthisvp", True);
+    rec.define("isthisvp", true);
     if(compleximage==""){
       rec.define("realimage", realimage);
       rec.define("imagimage", imagimage);
@@ -824,7 +825,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
     
-    return True;
+    return true;
     
   }
 
@@ -832,20 +833,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     ScopedMutexLock locker(mutex_p);
     Int nRec=vplist_p.nfields();
-    Bool retval=False;
+    Bool retval=false;
     names=Vector<Vector<String> >(0);
     imagebeams=Vector<Record>(0);
     for(Int k=0; k< nRec; ++k){
       Record elrec=vplist_p.asRecord(k);
       
       if(elrec.isDefined("name") && elrec.asString("name")== String("IMAGE")){
-	names.resize(names.nelements()+1, True);
-	imagebeams.resize(names.nelements(), True);
+	names.resize(names.nelements()+1, true);
+	imagebeams.resize(names.nelements(), true);
 	Vector<String> localstr;
 	elrec.get("antennanames", localstr);
 	names(names.nelements()-1)=localstr;
 	imagebeams[names.nelements()-1]=elrec;
-	retval=True;
+	retval=true;
       }
     }
 
@@ -890,10 +891,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.defineRecord("reffreq", tempholder);
     }
     if(isthispb=="PB" || isthispb=="pb"){
-      rec.define("isthisvp", False);
+      rec.define("isthisvp", false);
     }
     else{
-      rec.define("isthisvp", True);
+      rec.define("isthisvp", true);
     }
     {Record tempholder;
       MeasureHolder(squintdir).toRecord(error, tempholder);
@@ -916,7 +917,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
-    return True;
+    return true;
 
   }
 
@@ -943,7 +944,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
-    return True;
+    return true;
 
   }
   
@@ -961,7 +962,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       os << LogIO::SEVERE << "Vplist number " << vplistfield << " invalid." << endl
 	 << "Valid entries are -2 (none), -1 (default), up to " << vplist_p.nfields()-1
 	 << LogIO::POST;
-      return False;
+      return false;
     }
 
     String antennaDesc = antennaDescription(telescope, antennatype);
@@ -976,11 +977,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if(telFromAntDesc(telName)!=telescope){
 	  os << LogIO::SEVERE << " entry " << vplistfield << " does not point ot a valid VP for " << telescope
 	     << LogIO::POST;
-	  return False;
+	  return false;
 	}
       }
       Record srec = vplist_p.rwSubRecord(vplistfield);
-      srec.define("dopb", True);
+      srec.define("dopb", true);
     }
     // unset set an existing default 
     if(vplistdefaults_p.isDefined(antennaDesc)){ 
@@ -990,7 +991,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       vplistdefaults_p.define(antennaDesc,vplistfield);
     }
 
-    return True;
+    return true;
 
   }
 
@@ -1010,10 +1011,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else{
       vplistfield = -2;
-      return False;
+      return false;
     }
 
-    return True;
+    return true;
 
   }
 
@@ -1032,12 +1033,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os;
     os << LogOrigin("VPManager", "getanttypes");
 
-    Bool rval=False;
+    Bool rval=false;
 
     anttypes.resize(0);
 
     Int ifield = -2;
-    Bool isReference = True;
+    Bool isReference = true;
 
     // check for global response
     getuserdefault(ifield,telescope,""); 
@@ -1045,7 +1046,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(ifield==-1){ // internally defined PB does not distinguish antenna types
       anttypes.resize(1);
       anttypes(0) = "";
-      rval = True;
+      rval = true;
     }
     else if(ifield>=0){ // externally defined PB 
       TableRecord antRec(vplist_p.asRecord(ifield));
@@ -1071,7 +1072,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if(!MeasTable::Observatory(obsPos,telescope)){
 	      os << LogIO::SEVERE << "\"" << telescope << "\" is not listed in the Observatories table."
 		 << LogIO::POST;
-	      return False;
+	      return false;
 	    }
 	    fromFrame = MFrequency::Ref(fromFrameType, MeasFrame(obsdirection, obsPos, obstime));
 	    mFreq = MFrequency(freq.get(Unit("Hz")), fromFrame);
@@ -1083,12 +1084,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  mFreq,
 				  AntennaResponses::ANY, // the requested function type
 				  obsdirection)){ // success
-	    rval = True;
+	    rval = true;
 	  }
 	}
       }
       else{ // we don't have a reference response
-	isReference = False;
+	isReference = false;
       }
     }
 
@@ -1098,17 +1099,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	String aDesc = vplistdefaults_p.getKey(i);
 	if(telescope == telFromAntDesc(aDesc)){
 	  String aType = antTypeFromAntDesc(aDesc);
-	  Bool tFound = False;
+	  Bool tFound = false;
 	  for(uInt j=0; j<anttypes.size(); j++){
 	    if(aType==anttypes(j)){ // already in list?
-	      tFound = True;
+	      tFound = true;
 	      break;
 	    }
 	  }
 	  if(!tFound){
-	    rval = True;
+	    rval = true;
 	    count++;
-	    anttypes.resize(count, True);
+	    anttypes.resize(count, true);
 	    anttypes(count-1) = aType;
 	  }
 	}
@@ -1156,11 +1157,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int ifield = -2;
     if(!getuserdefault(ifield,telescope,antennatype)){
-      return False;
+      return false;
     }
 
     rec = Record();
-    Int rval=False;
+    Int rval=false;
 
     String antDesc = antennaDescription(telescope, antennatype);
 
@@ -1169,16 +1170,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.define("name", "COMMONPB");
       rec.define("isVP", PBMathInterface::COMMONPB);
       rec.define("telescope", telescope);
-      rec.define("dopb", True);
+      rec.define("dopb", true);
       rec.define("commonpb", telescope);
-      rec.define("dosquint", False);
+      rec.define("dosquint", false);
       String error;
       Record tempholder;
       QuantumHolder(Quantity(10.,"deg")).toRecord(error, tempholder);
       rec.defineRecord("paincrement", tempholder);
-      rec.define("usesymmetricbeam", False);
+      rec.define("usesymmetricbeam", false);
 	
-      rval = True;
+      rval = true;
 	
     }
     else if(ifield>=0){ // externally defined PB
@@ -1193,7 +1194,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     << "Invalid path defined in vpmanager for \"" << telescope << "\":" << endl
 	     << antRespPath << endl
 	     << LogIO::POST;
-	  return False;
+	  return false;
 	}
 	// init successful
 	String functionImageName;
@@ -1214,7 +1215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if(!MeasTable::Observatory(obsPos,telescope)){
 	    os << LogIO::SEVERE << "\"" << telescope << "\" is not listed in the Observatories table."
 	       << LogIO::POST;
-	    return False;
+	    return false;
 	  }
 	  fromFrame = MFrequency::Ref(fromFrameType, MeasFrame(obsdirection, obsPos, obstime));
 	  mFreq = MFrequency(freq.get(Unit("Hz")), fromFrame);
@@ -1236,7 +1237,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      obsdirection)
 	   ){
 	  rec = Record();
-	  return False;
+	  return false;
 	}
 	
 	// getImageName was successful
@@ -1250,51 +1251,51 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     << antRespPath << endl
 	     << " not yet supported."
 	     << LogIO::POST;
-	  rval = False;
+	  rval = false;
 	  break;
 	case AntennaResponses::EFP: // complex electric field pattern
 	  rec.define("name", "IMAGE");
 	  rec.define("isVP", PBMathInterface::IMAGE);
 	  rec.define("telescope", telescope);
-	  rec.define("dopb", True);
-	  rec.define("isthisvp", True);
+	  rec.define("dopb", true);
+	  rec.define("isthisvp", true);
 	  rec.define("compleximage", functionImageName);
 	  rec.define("channel", funcChannel);
 	  rec.define("reffreq", nomFreq.get(uHz).getValue());
 	  rec.define("minvalidfreq", loFreq.get(uHz).getValue());
 	  rec.define("maxvalidfreq", hiFreq.get(uHz).getValue());
-	  rval = True;
+	  rval = true;
 	  break;
 	case AntennaResponses::VP: // real voltage pattern
 	  rec.define("name", "IMAGE");
 	  rec.define("isVP", PBMathInterface::IMAGE);
 	  rec.define("telescope", telescope);
-	  rec.define("dopb", True);
-	  rec.define("isthisvp", True);
+	  rec.define("dopb", true);
+	  rec.define("isthisvp", true);
 	  rec.define("realimage", functionImageName);
 	  rec.define("channel", funcChannel);
 	  rec.define("reffreq", nomFreq.get(uHz).getValue());
 	  rec.define("minvalidfreq", loFreq.get(uHz).getValue());
 	  rec.define("maxvalidfreq", hiFreq.get(uHz).getValue());
-	  rval = True;
+	  rval = true;
 	  break;
 	case AntennaResponses::VPMAN: // the function is available in casa via the vp manager, i.e. use COMMONPB
 	  // same as if ifield == -1
 	  rec.define("name", "COMMONPB");
 	  rec.define("isVP", PBMathInterface::COMMONPB);
 	  rec.define("telescope", telescope);
-	  rec.define("dopb", True);
-	  rec.define("isthisvp", False);
+	  rec.define("dopb", true);
+	  rec.define("isthisvp", false);
 	  rec.define("commonpb", telescope);
-	  rec.define("dosquint", False);
+	  rec.define("dosquint", false);
 	  {
 	    String error;
 	    Record tempholder;
 	    QuantumHolder(Quantity(10.,"deg")).toRecord(error, tempholder);
 	    rec.defineRecord("paincrement", tempholder);
 	  }
-	  rec.define("usesymmetricbeam", False);
-	  rval = True;
+	  rec.define("usesymmetricbeam", false);
+	  rval = true;
 	  break;
 	case AntennaResponses::INTERNAL: // the function is generated using the BeamCalc class
 	  {
@@ -1323,7 +1324,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 << antRespPath << endl
 		 << " not yet supported."
 		 << LogIO::POST;
-	      rval = False;
+	      rval = false;
 	    }
 	    else{ // telescope=="ALMA" || telescope=="ACA" || telescope =="OSF"
 	      try{
@@ -1388,48 +1389,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  
 		  // perform the ray tracing
 		  ALMACalcIlluminationConvFunc almaPB;
-		  Long cachesize=(HostInfo::memoryTotal(True)/8)*1024;
+		  Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 		  almaPB.setMaximumCacheSize(cachesize);
 		  almaPB.setAntRayPath(antRayPath);
 		  almaPB.applyVP(im, telescope, obstime, antennatype, antennatype, 
 				 MVFrequency(refFreqHz), 
 				 rotAngOffset.radian(), // the parallactic angle offset
-				 True); // doSquint
+				 true); // doSquint
 		} // endif exists
 	      } catch (AipsError x) {
 		os << LogIO::SEVERE
 		   << "BeamCalc failed with message " << endl
 		   << "   " << x.getMesg()
 		   << LogIO::POST;
-		return False;
+		return false;
 	      }
 	    
 	      // construct record
 	      rec.define("name", "IMAGE");
 	      rec.define("isVP", PBMathInterface::IMAGE);
-	      rec.define("isthisvp", True);
+	      rec.define("isthisvp", true);
 	      rec.define("telescope", telescope);
-	      rec.define("dopb", True);
+	      rec.define("dopb", true);
 	      rec.define("compleximage", beamCalcedImagePath);
 	      rec.define("channel", 0);
 	      rec.define("antennatype", antennatype);
 	      rec.define("reffreq", refFreqHz);
 	      rec.define("minvalidfreq", refFreqHz-refFreqHz/10.*5.);
 	      rec.define("maxvalidfreq", refFreqHz+refFreqHz/10.*5.);
-	      rval = True;
+	      rval = true;
 	    }
 	  }
 	  break;
 	case AntennaResponses::NA: // not available
 	default:
-	  rval = False;
+	  rval = false;
 	  break;
 	} // end switch(ftype)
       } 
       else{ // we have a PBMath response
       
 	rec = vplist_p.subRecord(ifield);
-	rval = True;
+	rval = true;
 	
       } // end if internally defined
     }
@@ -1455,11 +1456,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int ifield = -2;
     if(!getuserdefault(ifield,telescope,antennatype)){
-      return False;
+      return false;
     }
 
     rec = Record();
-    Int rval=False;
+    Int rval=false;
 
     if(ifield==-1){ // internally defined PB, obs parameters ignored 
       rval = getvp(rec, telescope, obstime, freq, antennatype, obsdirection);
@@ -1471,11 +1472,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << LogIO::SEVERE
 	   << "Need to provide observation parameters time, frequency, and direction to access AntennaResponses table."
 	   << LogIO::POST;
-	return False;
+	return false;
       }
       else{ // we have a PBMath response
 	rec = vplist_p.subRecord(ifield);
-	rval = True;
+	rval = true;
       } 
     }// end if internally defined
     
@@ -1494,25 +1495,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os;
     os << LogOrigin("VPManager", "getvp3");
 
-    Bool rval=True;
+    Bool rval=true;
 
     if (inpTimeRange.size()==0){
       os << LogIO::WARN	 << "No observation time provided." << LogIO::POST;
-      return False;
+      return false;
     }
     if (inpFreqRange.size()==0){
       os << LogIO::WARN	 << "No observation frequency provided." << LogIO::POST;
-      return False;
+      return false;
     }
     if (AntennaNames.size()==0){
       os << LogIO::WARN	 << "No antenna names provided." << LogIO::POST;
-      return False;
+      return false;
     }
 
-    Bool checkTimeDep = False;
+    Bool checkTimeDep = false;
     Unit uS("s");
     if(inpTimeRange.size()>1 && (inpTimeRange[0].get(uS) < inpTimeRange[1].get(uS))){
-      checkTimeDep = True;
+      checkTimeDep = true;
     }
 
     unique_out_rec_list.resize(0);
@@ -1550,16 +1551,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if (getvp(recOther, telescope, inpTimeRange[1], freq, antennatype, obsdirection)){
 	      if(!vpRecIsIdentical(rec0,recOther)){
 		os << LogIO::WARN << "Primary beam changes during observation time range." << LogIO::POST;
-		return False;
+		return false;
 	      }
 	    }
 	  }
 
-	  Bool notPresent=True;
+	  Bool notPresent=true;
 	  for(uInt j=0; j<recList.size(); j++){ // check if we already have this PB in our collection
 	    if(vpRecIsIdentical(rec0,recList[j])){
 	      index.push_back(j);
-	      notPresent=False;
+	      notPresent=false;
 	      break;
 	    }
 	  }
@@ -1570,7 +1571,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	}
 	else{
-	  rval=False;
+	  rval=false;
 	  break;
 	}
 	
@@ -1596,7 +1597,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool VPManager::vpRecIsIdentical(const Record& rec0, const Record& rec1){
     
-    Bool rval = False;
+    Bool rval = false;
     if( (rec0.nfields() == rec1.nfields()) &&
 	rec0.asString("name") == rec1.asString("name")
 	){
@@ -1605,18 +1606,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if(rec1.isDefined("compleximage") &&
 	   rec0.asString("compleximage") == rec1.asString("compleximage") &&
 	   rec0.asDouble("reffreq") == rec1.asDouble("reffreq")){
-	  rval = True;
+	  rval = true;
 	}
       }
       else if(rec0.isDefined("realimage")){
 	if(rec1.isDefined("realimage") &&
 	   rec0.asString("realimage") == rec1.asString("realimage") &&
 	   rec0.asDouble("reffreq") == rec1.asDouble("reffreq")){
-	  rval = True;
+	  rval = true;
 	}
       }
       else{
-	rval=True;
+	rval=true;
       }
 
       Vector<String> fnames(5);
@@ -1627,11 +1628,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       fnames[4]="dopb";
       for(uInt i=0; i<fnames.size(); i++){
 	if( rval && rec0.isDefined(fnames[i])){
-	  rval=False;
+	  rval=false;
 	  if(rec1.isDefined(fnames[i]) &&
 	     (rec0.asBool(fnames[i]) == rec1.asBool(fnames[i]))
 	     ){
-	    rval = True;
+	    rval = true;
 	  }
 	}
       }

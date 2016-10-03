@@ -42,16 +42,16 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  const Bool dbg3 = False;
+  const casacore::Bool dbg3 = false;
   
   // -----------------------------------------------------------------------
   // RFAFlagExaminer constructor
   // -----------------------------------------------------------------------
-  RFAFlagExaminer::RFAFlagExaminer ( RFChunkStats &ch,const RecordInterface &parm ) : 
+  RFAFlagExaminer::RFAFlagExaminer ( RFChunkStats &ch,const casacore::RecordInterface &parm ) : 
     RFASelector(ch, parm)//,RFDataMapper(parm.asArrayString(RF_EXPR),parm.asString(RF_COLUMN))
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
-    //desc_str = String("flagexaminer");
+    //desc_str = casacore::String("flagexaminer");
     if(dbg3) cout<<"FlagExaminer constructor "<<endl;
 
     totalflags    = accumTotalFlags    = 0;
@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     totalrowcount = accumTotalRowCount = 0;
     //parseParm(parm);
 
-    os = LogIO(LogOrigin("RFAFlagExaminer", "RFAFlagExaminer", WHERE));
+    os = casacore::LogIO(casacore::LogOrigin("RFAFlagExaminer", "RFAFlagExaminer", WHERE));
 
     accumflags.clear();
     accumtotal.clear();
@@ -73,30 +73,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // parse input arguments: channels
     if( parseRange(sel_chan,parm,RF_CHANS)) 
       {
-        String sch;
-        for( uInt i=0; i<sel_chan.ncolumn(); i++) 
+        casacore::String sch;
+        for( casacore::uInt i=0; i<sel_chan.ncolumn(); i++) 
           {
             sprintf(s,"%d:%d",sel_chan(0,i),sel_chan(1,i));
             addString(sch,s,",");
           }
-        addString(desc_str, String(RF_CHANS) + "=" +sch);
-        sel_chan(sel_chan>=0) += -(Int)indexingBase();
+        addString(desc_str, casacore::String(RF_CHANS) + "=" +sch);
+        sel_chan(sel_chan>=0) += -(casacore::Int)indexingBase();
       }
 
     // parse input arguments: correlations
-    if( fieldType(parm,RF_CORR,TpString,TpArrayString))
+    if( fieldType(parm,RF_CORR,casacore::TpString,casacore::TpArrayString))
       {
-        String ss;
-        Vector<String> scorr( parm.asArrayString(RF_CORR)) ;
+        casacore::String ss;
+        casacore::Vector<casacore::String> scorr( parm.asArrayString(RF_CORR)) ;
         sel_corr.resize( scorr.nelements()) ;
-        for( uInt i=0; i<scorr.nelements(); i++) 
+        for( casacore::uInt i=0; i<scorr.nelements(); i++) 
           {
-            sel_corr(i) = Stokes::type( scorr(i)) ;
-            if( sel_corr(i) == Stokes::Undefined) 
-              os<<"Illegal correlation "<<scorr(i)<<endl<<LogIO::EXCEPTION;
+            sel_corr(i) = casacore::Stokes::type( scorr(i)) ;
+            if( sel_corr(i) == casacore::Stokes::Undefined) 
+              os<<"Illegal correlation "<<scorr(i)<<endl<<casacore::LogIO::EXCEPTION;
             addString(ss,scorr(i),",");
           }
-        addString(desc_str,String(RF_CORR)+"="+ss);
+        addString(desc_str,casacore::String(RF_CORR)+"="+ss);
       }
   }
   
@@ -106,15 +106,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(dbg3)  cout << "FlagExaminer destructor " << endl;    
   }
 
-  Bool RFAFlagExaminer::newChunk(Int &maxmem)
+  casacore::Bool RFAFlagExaminer::newChunk(casacore::Int &maxmem)
     {
       /* For efficiency reasons, use arrays to collect 
          histogram data for in-row selections
       */
-      accumflags_channel = vector<uInt64>(chunk.num(CHAN), 0);
-      accumtotal_channel = vector<uInt64>(chunk.num(CHAN), 0);
-      accumflags_correlation = vector<uInt64>(chunk.num(CORR), 0);
-      accumtotal_correlation = vector<uInt64>(chunk.num(CORR), 0);
+      accumflags_channel = vector<casacore::uInt64>(chunk.num(CHAN), 0);
+      accumtotal_channel = vector<casacore::uInt64>(chunk.num(CHAN), 0);
+      accumflags_correlation = vector<casacore::uInt64>(chunk.num(CORR), 0);
+      accumtotal_correlation = vector<casacore::uInt64>(chunk.num(CORR), 0);
           
       return RFASelector::newChunk(maxmem);
     }
@@ -148,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // processRow
   // Raises/clears flags for a single row, depending on current selection
   // -----------------------------------------------------------------------
-  void RFAFlagExaminer::processRow(uInt, uInt)
+  void RFAFlagExaminer::processRow(casacore::uInt, casacore::uInt)
   {
       // called often... if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;      
       return;
@@ -176,7 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return;
   }
   
-  void RFAFlagExaminer::initializeIter (uInt) 
+  void RFAFlagExaminer::initializeIter (casacore::uInt) 
   {
       if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
@@ -189,17 +189,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       inTotalRowCount += chunk.visBuf().flagRow().nelements();
       
-      for(Int ii=0;
+      for(casacore::Int ii=0;
 	  ii<chunk.visBuf().flag().shape()(0);
 	  ii++)
-	  for(Int jj=0;
+	  for(casacore::Int jj=0;
 	      jj<chunk.visBuf().flag().shape()(1);
 	      jj++)
 	      if (chunk.visBuf().flag()(ii,jj)) inTotalFlags++;
   }
 
   // Is not called if this is the only agent
-  void RFAFlagExaminer::finalizeIter (uInt) 
+  void RFAFlagExaminer::finalizeIter (casacore::uInt) 
   {
     //cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
@@ -212,13 +212,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    outTotalRowFlags++;
 	}
 
-    for (Int ii=0;
+    for (casacore::Int ii=0;
 	 ii<chunk.visBuf().flag().shape()(0);
 	 ii++) {
 
 	outTotalCount += chunk.visBuf().flag().shape()(1);
 	
-	for (Int jj=0;
+	for (casacore::Int jj=0;
 	     jj<chunk.visBuf().flag().shape()(1);
 	     jj++) {
 	    if (chunk.visBuf().flag()(ii,jj)) outTotalFlags++;
@@ -227,10 +227,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   //also need to call RFFlagCube::setMSFlags, which
-  // updates some statistics   void RFAFlagExaminer::endRows(uInt it)
+  // updates some statistics   void RFAFlagExaminer::endRows(casacore::uInt it)
 
   // it: time index
-  void RFAFlagExaminer::iterFlag(uInt it)
+  void RFAFlagExaminer::iterFlag(casacore::uInt it)
   {
     if(dbg3)  cout << __FILE__ << ":" << __func__ << "():" << __LINE__ << endl;
 
@@ -238,51 +238,51 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     RFASelector::iterFlag(it);
     
     // count if within specific timeslots
-    const Vector<Double> &times( chunk.visBuf().time() );
-    Double t0 = times(it);
+    const casacore::Vector<casacore::Double> &times( chunk.visBuf().time() );
+    casacore::Double t0 = times(it);
     
-    Bool within_time_slot = True;
+    casacore::Bool within_time_slot = true;
     
     if (sel_time.ncolumn()) {
 
 	if( anyEQ(sel_timerng.row(0) <= t0 && 
-		  sel_timerng.row(1) >= t0, True) )
-	    within_time_slot = True;
-	else within_time_slot = False;
+		  sel_timerng.row(1) >= t0, true) )
+	    within_time_slot = true;
+	else within_time_slot = false;
     }
     
     if (within_time_slot) {
 
 	// More counting and fill up final display variables.
-	const Vector<Int> &ifrs( chunk.ifrNums() );
-	const Vector<Int> &feeds( chunk.feedNums() );
-	const Vector<casa::RigidVector<casa::Double, 3> >&uvw( chunk.visBuf().uvw() );
+	const casacore::Vector<casacore::Int> &ifrs( chunk.ifrNums() );
+	const casacore::Vector<casacore::Int> &feeds( chunk.feedNums() );
+	const casacore::Vector<casacore::RigidVector<casacore::Double, 3> >&uvw( chunk.visBuf().uvw() );
 
         unsigned spw = chunk.visBuf().spectralWindow();
         unsigned field = chunk.visBuf().fieldId();
-        const Vector<Int> &antenna1( chunk.visBuf().antenna1() );
-        const Vector<Int> &antenna2( chunk.visBuf().antenna2() );
-        const Vector<Int> &scan    ( chunk.visBuf().scan() );
-        const Vector<Int> &observation    ( chunk.visBuf().observationId() );
-        Int array    ( chunk.visBuf().arrayId() );
+        const casacore::Vector<casacore::Int> &antenna1( chunk.visBuf().antenna1() );
+        const casacore::Vector<casacore::Int> &antenna2( chunk.visBuf().antenna2() );
+        const casacore::Vector<casacore::Int> &scan    ( chunk.visBuf().scan() );
+        const casacore::Vector<casacore::Int> &observation    ( chunk.visBuf().observationId() );
+        casacore::Int array    ( chunk.visBuf().arrayId() );
 
-        const Vector<String> &antenna_names( chunk.antNames()) ;
+        const casacore::Vector<casacore::String> &antenna_names( chunk.antNames()) ;
 
-	// Vector<Vector<Double> > &uvw=NULL;//( chunk.visIter.uvw(uvw) );
+	// casacore::Vector<Vector<casacore::Double> > &uvw=NULL;//( chunk.visIter.uvw(uvw) );
 	//chunk.visIter().uvw(uvw);
-	Double uvdist=0.0;
+	casacore::Double uvdist=0.0;
 	
 	// loop over rows
-	for (uInt i=0; i < ifrs.nelements(); i++) {
-	    Bool inrange=False;
+	for (casacore::uInt i=0; i < ifrs.nelements(); i++) {
+	    casacore::Bool inrange=false;
 	    
 	    uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
 	    
-	    for( uInt j=0; j<sel_uvrange.ncolumn(); j++) {
+	    for( casacore::uInt j=0; j<sel_uvrange.ncolumn(); j++) {
 		if( uvdist >= sel_uvrange(0, j) &&
 		    uvdist <= sel_uvrange(1, j) ) 
 		    
-		    inrange |= True;
+		    inrange |= true;
 	    }
 
 	    if( (!sel_ifr.nelements() || sel_ifr(ifrs(i))) && 
@@ -299,8 +299,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
                 totalrowcount++;
 
-                uInt64 f = chunk.nfIfrTime(ifrs(i), it);
-                uInt64 c = chunk.num(CORR) * chunk.num(CHAN);
+                casacore::uInt64 f = chunk.nfIfrTime(ifrs(i), it);
+                casacore::uInt64 c = chunk.num(CORR) * chunk.num(CHAN);
 
                 // need nfIfrTimeCorr
                 // need nfIfrTimeChan
@@ -380,11 +380,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      This cannot happen in iterFlag(), which is called once per chunk,
      because the "flag" cursor needs to be updated once per row.
   */
-  RFA::IterMode RFAFlagExaminer::iterRow(uInt irow)
+  RFA::IterMode RFAFlagExaminer::iterRow(casacore::uInt irow)
     {
       unsigned ifr = chunk.ifrNum(irow);
       
-      for( uInt ich = 0;
+      for( casacore::uInt ich = 0;
            ich < chunk.num(CHAN); 
            ich++ ) {
 
@@ -393,7 +393,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           RFlagWord corrs = flag.getFlag(ich, ifr);
           unsigned n_flags = 0;
 
-          for (uInt icorr = 0; icorr < chunk.num(CORR); icorr++) {
+          for (casacore::uInt icorr = 0; icorr < chunk.num(CORR); icorr++) {
               if (corrs & 1) {
                   accumflags_correlation[icorr] += 1;
                   n_flags += 1;
@@ -444,8 +444,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             chunk.visIter().fieldName().chars(),
             chunk.visIter().fieldId(),
             chunk.visIter().spectralWindow());
-    os << "---------------------------------------------------------------------" << LogIO::POST;
-    os<<s<<LogIO::POST;
+    os << "---------------------------------------------------------------------" << casacore::LogIO::POST;
+    os<<s<<casacore::LogIO::POST;
     
     sprintf(s, "%s, %d channel%s, %d time slots, %d baselines, %d rows\n",
      	    chunk.getCorrString().chars(),
@@ -454,30 +454,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    chunk.num(TIME),
      	    chunk.num(IFR),
 	    chunk.num(ROW));
-    os << s << LogIO::POST;
+    os << s << casacore::LogIO::POST;
     
     os << "\n\n\nData Selection to examine : " << desc_str ;
     if(flag_everything) os << " all " ;
-    os << LogIO::POST;
+    os << casacore::LogIO::POST;
     
-    Double ffrac=0.0,rffrac=0.0;
+    casacore::Double ffrac=0.0,rffrac=0.0;
     if(totalcount) ffrac = totalflags*100.0/totalcount;
     if(totalrowcount) rffrac = totalrowflags*100.0/totalrowcount;
 
-    // LogSink cannot handle uInt64...
+    // casacore::LogSink cannot handle uInt64...
     std::stringstream ss;
     ss << totalrowflags << " out of " << totalrowcount <<
 	" (" << rffrac << "%) rows are flagged.";
-    os << ss.str() << LogIO::POST;
+    os << ss.str() << casacore::LogIO::POST;
 
     ss.str("");
 
     ss << totalflags << " out of " << totalcount <<
 	" (" << ffrac << "%) data points are flagged.\n\n";
 
-    os << ss.str() << LogIO::POST;
+    os << ss.str() << casacore::LogIO::POST;
     
-    os << "---------------------------------------------------------------------" << LogIO::POST;
+    os << "---------------------------------------------------------------------" << casacore::LogIO::POST;
     
     accumTotalFlags    += totalflags;
     accumTotalCount    += totalcount;
@@ -491,29 +491,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Return results of this run over all chunks:
     How many flags were set / unset
    */
-  Record RFAFlagExaminer::getResult()
+  casacore::Record RFAFlagExaminer::getResult()
     {
-      Record r;
+      casacore::Record r;
 
-      r.define("flagged", (Double) accumTotalFlags);
-      r.define("total"  , (Double) accumTotalCount);
+      r.define("flagged", (casacore::Double) accumTotalFlags);
+      r.define("total"  , (casacore::Double) accumTotalCount);
 
 
-      for (map<string, map<string, uInt64> >::iterator j = accumtotal.begin();
+      for (map<string, map<string, casacore::uInt64> >::iterator j = accumtotal.begin();
            j != accumtotal.end();
            j++) {
         /* Note here: loop over the keys of accumtotal, not accumflags,
            because accumflags may not have all channel keys */
         
-          Record prop;
-          for (map<string, uInt64>::const_iterator i = j->second.begin();
+          casacore::Record prop;
+          for (map<string, casacore::uInt64>::const_iterator i = j->second.begin();
                i != j->second.end();
                i++) {
             
-              Record t;
+              casacore::Record t;
 
-              t.define("flagged", (Double) accumflags[j->first][i->first]);
-              t.define("total", (Double) i->second);
+              t.define("flagged", (casacore::Double) accumflags[j->first][i->first]);
+              t.define("total", (casacore::Double) i->second);
               
               prop.defineRecord(i->first, t);
           }

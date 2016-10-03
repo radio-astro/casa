@@ -115,7 +115,7 @@ using namespace boost::gregorian;
  * @section low-level Low level classes.
  * All those classess are grouped under the same namespace asdmbinaries.
  * ALMA binary data are kept on storage media in files whose content is formally
- * described by <b>the Science Data Model Binary Data Format</b> (BDF). The so called low level classes documented here
+ * described by <b>the Science casacore::Data Model Binary casacore::Data casacore::Format</b> (BDF). The so called low level classes documented here
  * provide their users with an in-memory representation of those ALMA binary data and tools to write BDF files from
  * such representations and conversely to build in-memory representations from BDF files in a given number of use cases.
  *
@@ -320,7 +320,7 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
    * <li>title() : the general title for these binary data.</li>
    * <li>startTime() : Epoch when started the observation for the data collected in this SDMDataObject. This must be equal to the mid-point interval minus half the interval of the first data dump.
    * <li>numTime() : number of (sub)integrations stored in this SDMDataObject. </li>
-   * <li>dataOID() : Data object identifier given to this SDMDataObject once it's been converted into a MIME message and archived in the bulkstore.
+   * <li>dataOID() : casacore::Data object identifier given to this SDMDataObject once it's been converted into a MIME message and archived in the bulkstore.
    * <li>execBlockUID() : the archive UID of the exec block.
    * <li>execBlockNum() : the execblock number (one-based). </li>
    * <li>scanNum() : the scan number (one-based). </li>

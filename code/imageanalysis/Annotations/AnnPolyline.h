@@ -47,18 +47,18 @@ class AnnPolyline: public AnnRegion {
 public:
 
 	AnnPolyline(
-		const Vector<Quantity>& xPositions,
-		const Vector<Quantity>& yPositions,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrameString,
-		const String& dopplerString,
-		const Quantity& restfreq,
-		const Vector<Stokes::StokesTypes> stokes,
-		const Bool annotationOnly
+		const casacore::Vector<casacore::Quantity>& xPositions,
+		const casacore::Vector<casacore::Quantity>& yPositions,
+		const casacore::String& dirRefFrameString,
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrameString,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq,
+		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
+		const casacore::Bool annotationOnly
 	);
 
 	// Simplified constructor.
@@ -68,11 +68,11 @@ public:
 	// is a region (not just an annotation), although this value can be changed after
 	// construction.
 	AnnPolyline(
-		const Vector<Quantity>& xPositions,
-		const Vector<Quantity>& yPositions,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Vector<casacore::Quantity>& xPositions,
+		const casacore::Vector<casacore::Quantity>& yPositions,
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
@@ -80,19 +80,19 @@ public:
 	AnnPolyline& operator=(const AnnPolyline& other);
 
 	// get the vertices converted to the coordinate system used at construction.
-	Vector<MDirection> getCorners() const;
+	casacore::Vector<casacore::MDirection> getCorners() const;
 
 	// get the world coordinates of the polygon vertices
-	void worldVertices(vector<Quantity>& x, vector<Quantity>& y) const;
+	void worldVertices(vector<casacore::Quantity>& x, vector<casacore::Quantity>& y) const;
 
 	// get the pixel coordinates of the polygon vertices
-	void pixelVertices(vector<Double>& x, vector<Double>& y) const;
+	void pixelVertices(vector<casacore::Double>& x, vector<casacore::Double>& y) const;
 
 
-	virtual ostream& print(ostream &os) const;
+	virtual std::ostream& print(std::ostream &os) const;
 
 private:
-	Vector<Quantity> _origXPos, _origYPos;
+	casacore::Vector<casacore::Quantity> _origXPos, _origYPos;
 
 	void _init();
 };

@@ -32,6 +32,7 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/String.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ImageMomentsProgress::~ImageMomentsProgress()
@@ -44,7 +45,7 @@ void ImageMomentsProgress::initDerived()
     delete itsMeter;
     itsMeter = new ProgressMeter(0.0, Double(expectedNsteps()), String("Compute Moments"),
                                  String("Vectors extracted"), String(""), String(""),
-                                 True, max(1,Int(expectedNsteps()/20)));
+                                 true, max(1,Int(expectedNsteps()/20)));
     maxReported = false;
 }
 

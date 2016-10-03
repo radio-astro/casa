@@ -72,12 +72,12 @@ public:
     return 0;
   }
 
-  virtual Bool isFloatData() const {
-    return False;
+  virtual casacore::Bool isFloatData() const {
+    return false;
   }
 
-  virtual MDirection::Types getDirectionFrame() const {
-    return MDirection::J2000;
+  virtual casacore::MDirection::Types getDirectionFrame() const {
+    return casacore::MDirection::J2000;
   }
 
   void initialize() {
@@ -94,37 +94,37 @@ public:
   virtual size_t getNumberOfRows() = 0;
 
   // to get OBSERVATION table
-  // The method should return True if row entry is available.
-  // If it return False, row will be invalid so it should not be used.
-  virtual Bool getObservationRow(sdfiller::ObservationRecord &record) = 0;
+  // The method should return true if row entry is available.
+  // If it return false, row will be invalid so it should not be used.
+  virtual casacore::Bool getObservationRow(sdfiller::ObservationRecord &record) = 0;
 
   // to get ANTENNA table
-  // The method should return True if row entry is available.
-  // If it return False, row will be invalid so it should not be used.
-  virtual Bool getAntennaRow(sdfiller::AntennaRecord &record) = 0;
+  // The method should return true if row entry is available.
+  // If it return false, row will be invalid so it should not be used.
+  virtual casacore::Bool getAntennaRow(sdfiller::AntennaRecord &record) = 0;
 
   // to get PROCESSOR table
-  // The method should return True if row entry is available.
-  // If it return False, row will be invalid so it should not be used.
-  virtual Bool getProcessorRow(sdfiller::ProcessorRecord &record) = 0;
+  // The method should return true if row entry is available.
+  // If it return false, row will be invalid so it should not be used.
+  virtual casacore::Bool getProcessorRow(sdfiller::ProcessorRecord &record) = 0;
 
   // to get SOURCE table
-  // The method should return True if row entry is available.
-  // If it return False, row will be invalid so it should not be used.
-  virtual Bool getSourceRow(sdfiller::SourceRecord &row) = 0;
+  // The method should return true if row entry is available.
+  // If it return false, row will be invalid so it should not be used.
+  virtual casacore::Bool getSourceRow(sdfiller::SourceRecord &row) = 0;
 
   // to get FIELD table
-  // The method should return True if row entry is available.
-  // If it return False, row will be invalid so it should not be used.
-  virtual Bool getFieldRow(sdfiller::FieldRecord &row) = 0;
+  // The method should return true if row entry is available.
+  // If it return false, row will be invalid so it should not be used.
+  virtual casacore::Bool getFieldRow(sdfiller::FieldRecord &row) = 0;
 
   // to get SPECTRAL WINDOW table
-  // The method should return True if row entry is available.
-  // If it return False, row will be invalid so it should not be used.
-  virtual Bool getSpectralWindowRow(sdfiller::SpectralWindowRecord &row) = 0;
+  // The method should return true if row entry is available.
+  // If it return false, row will be invalid so it should not be used.
+  virtual casacore::Bool getSpectralWindowRow(sdfiller::SpectralWindowRecord &row) = 0;
 
   // for DataAccumulator
-  virtual Bool getData(size_t irow, sdfiller::DataRecord &record) = 0;
+  virtual casacore::Bool getData(size_t irow, sdfiller::DataRecord &record) = 0;
 
 protected:
   virtual void initializeSpecific() = 0;

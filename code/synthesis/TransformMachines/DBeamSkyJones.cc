@@ -54,6 +54,7 @@
 #include <synthesis/TransformMachines/DBeamSkyJones.h>
 #include <casa/Utilities/Assert.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 DBeamSkyJones::DBeamSkyJones(MeasurementSet& ms,

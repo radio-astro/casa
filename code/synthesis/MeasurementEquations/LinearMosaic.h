@@ -35,49 +35,53 @@
 #ifndef SYNTHESIS_LINEARMOSAIC_H
 #define SYNTHESIS_LINEARMOSAIC_H
 
-namespace casa { //# NAMESPACE CASA - BEGIN
-  //Forward declaration
+namespace casacore{
+
   template<class T> class ImageInterface;
   template<class T> class Vector;
   class CoordinateSystem;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+  //Forward declaration
   // <summary> Class that contains functions needed for feathering</summary>
 
   class LinearMosaic{
 
   public:
 	  LinearMosaic();
-	  LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
-			  const Quantity cellx=Quantity(0.0, "arcsec"), const Quantity celly=Quantity(0.0, "arcsec"), const Int linmostype=2);
-	  //Coordinate System of output image along with the different pointing images and weight images
+	  LinearMosaic(const casacore::String outim, const casacore::String outwgt, const casacore::MDirection& imcen, const casacore::Int nx, const casacore::Int ny,
+			  const casacore::Quantity cellx=casacore::Quantity(0.0, "arcsec"), const casacore::Quantity celly=casacore::Quantity(0.0, "arcsec"), const casacore::Int linmostype=2);
+	  //casacore::Coordinate System of output image along with the different pointing images and weight images
 	  // linmostype 1 or 2.. ie. mosaic in PB or PB^2
-	  LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
-			  	  Vector<CountedPtr<ImageInterface<Float> > >& ims,
-			  	  Vector<CountedPtr<ImageInterface<Float> > >& wgtims, const Int linmostype=2);
-	  Bool makeMosaic(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt,
-			  Vector<CountedPtr<ImageInterface<Float> > >& ims,
-			  Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
-	  Bool makeMosaic(Vector<CountedPtr<ImageInterface<Float> > >& ims,
-		  	   Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
+	  LinearMosaic(const casacore::String outim, const casacore::String outwgt, const casacore::MDirection& imcen, const casacore::Int nx, const casacore::Int ny,
+			  	  casacore::Vector<casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > >& ims,
+			  	  casacore::Vector<casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > >& wgtims, const casacore::Int linmostype=2);
+	  casacore::Bool makeMosaic(casacore::ImageInterface<casacore::Float>& outim, casacore::ImageInterface<casacore::Float>& outwgt,
+			  casacore::Vector<casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > >& ims,
+			  casacore::Vector<casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > >& wgtims);
+	  casacore::Bool makeMosaic(casacore::Vector<casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > >& ims,
+		  	   casacore::Vector<casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > >& wgtims);
 
 	  // outim is weighted 0: flux correct, 1: flat noise, 2: noise optimal
-	  void setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const Int imageWeightType=1, const Int weightType=2);
+	  void setOutImages(casacore::ImageInterface<casacore::Float>& outim, casacore::ImageInterface<casacore::Float>& outwgt, const casacore::Int imageWeightType=1, const casacore::Int weightType=2);
 	  // Disk based image of the above
-	  void setlinmostype(const Int linmostype);
-	  void saultWeightImage(const String& outimname, const Float& fracPeakWgt);
-	  void setOutImages(const String& outim, const String& outwgt, const Int imageWeightType=1, const Int weightType=2);
+	  void setlinmostype(const casacore::Int linmostype);
+	  void saultWeightImage(const casacore::String& outimname, const casacore::Float& fracPeakWgt);
+	  void setOutImages(const casacore::String& outim, const casacore::String& outwgt, const casacore::Int imageWeightType=1, const casacore::Int weightType=2);
   private:
-	  Bool addOnToImage(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const ImageInterface<Float>& inIm,
-			  const ImageInterface<Float>& inWgt, Bool unWeightOutImage=True);
-	  void makeEmptyImage(const String imagename, const CoordinateSystem& cs, const MDirection& imcen, const Int nx, const Int ny, const Int npol, const Int nchan);
-	  void createOutImages(const CoordinateSystem& cs, const Int npol, const Int nchan );
-	  CountedPtr<ImageInterface<Float> > outImage_p, outWgt_p;
-	  String outImName_p, outWgtName_p;
-	  Int nx_p, ny_p;
-	  MDirection imcen_p;
-	  Quantity cellx_p, celly_p;
+	  casacore::Bool addOnToImage(casacore::ImageInterface<casacore::Float>& outim, casacore::ImageInterface<casacore::Float>& outwgt, const casacore::ImageInterface<casacore::Float>& inIm,
+			  const casacore::ImageInterface<casacore::Float>& inWgt, casacore::Bool unWeightOutImage=true);
+	  void makeEmptyImage(const casacore::String imagename, const casacore::CoordinateSystem& cs, const casacore::MDirection& imcen, const casacore::Int nx, const casacore::Int ny, const casacore::Int npol, const casacore::Int nchan);
+	  void createOutImages(const casacore::CoordinateSystem& cs, const casacore::Int npol, const casacore::Int nchan );
+	  casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > outImage_p, outWgt_p;
+	  casacore::String outImName_p, outWgtName_p;
+	  casacore::Int nx_p, ny_p;
+	  casacore::MDirection imcen_p;
+	  casacore::Quantity cellx_p, celly_p;
 
-	  Int imageWeightType_p, weightType_p;
-	  Int linmosType_p;
+	  casacore::Int imageWeightType_p, weightType_p;
+	  casacore::Int linmosType_p;
 };
 
 

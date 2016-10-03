@@ -77,8 +77,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 // <group name="Global functions to attach to existing WorldCanvases">
 	void pgplot_queueWorldCanvas(WorldCanvas * wc);
-	WorldCanvas * pgplot_queryWorldCanvas(Int selectID);
-	void pgplot_setWorldCanvas(Int selectID, WorldCanvas * wc);
+	WorldCanvas * pgplot_queryWorldCanvas(casacore::Int selectID);
+	void pgplot_setWorldCanvas(casacore::Int selectID, WorldCanvas * wc);
 // </group>
 
 

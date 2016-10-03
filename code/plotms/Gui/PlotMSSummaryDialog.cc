@@ -27,6 +27,7 @@
 #include <QDebug>
 
 
+using namespace casacore;
 namespace casa {
 PlotMSSummaryDialog::PlotMSSummaryDialog(QDialog *parent)
     : QDialog(parent){

@@ -42,12 +42,16 @@
 
 #include <thread>
 
+namespace casacore{
+
+class MeasurementSet;
+template<class T> class ImageInterface;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
-class MeasurementSet;
 class ViewerProxy;
-template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -65,36 +69,36 @@ public:
 	void openDBus();
 
 	// make all pure-inputs const
-	void setupIteration(Record iterpars);
+	void setupIteration(casacore::Record iterpars);
 
-	void setInteractiveMode(Bool interactiveMode);
-	virtual void   setIterationDetails(Record iterpars);
-	Record getIterationDetails();
-	Record getIterationSummary();
+	void setInteractiveMode(casacore::Bool interactiveMode);
+	virtual void   setIterationDetails(casacore::Record iterpars);
+	casacore::Record getIterationDetails();
+	casacore::Record getIterationSummary();
 
 	int cleanComplete();
 
-	Record getSubIterBot();
+	casacore::Record getSubIterBot();
 
-	void startMinorCycle(const Vector<Record> &initializationRecords);
+	void startMinorCycle(const casacore::Vector<casacore::Record> &initializationRecords);
 
-	void startMinorCycle(const Record &initializationRecord) {
-		Vector<Record> v(1);
+	void startMinorCycle(const casacore::Record &initializationRecord) {
+		casacore::Vector<casacore::Record> v(1);
 		v[0] = initializationRecord;
 		startMinorCycle(v);
 	};
 
-	void endMinorCycle(const Vector<Record> &executionRecords);
+	void endMinorCycle(const casacore::Vector<casacore::Record> &executionRecords);
 
-	void endMinorCycle(const Record &executionRecord) {
-		Vector<Record> v(1);
+	void endMinorCycle(const casacore::Record &executionRecord) {
+		casacore::Vector<casacore::Record> v(1);
 		v[0] = executionRecord;
 		endMinorCycle(v);
 	};
 
 	void endMajorCycle();
 
-	void changeStopFlag( Bool stopflag );
+	void changeStopFlag( casacore::Bool stopflag );
 
 	virtual void pauseForUserInteraction();
 
@@ -111,10 +115,10 @@ private:
 	void dbus_thread_launch_pad( );
 
 	/// Parameters to control the old interactive GUI. Can be moved somewhere more appropriate...
-	/*  Vector<String> itsImageList;
-	    Vector<Int> itsNTermList;
-	    Vector<Int> itsActionCodes;
-	    CountedPtr<InteractiveMasking> itsInteractiveMasker;
+	/*  casacore::Vector<casacore::String> itsImageList;
+	    casacore::Vector<casacore::Int> itsNTermList;
+	    casacore::Vector<casacore::Int> itsActionCodes;
+	    casacore::CountedPtr<InteractiveMasking> itsInteractiveMasker;
 	*/
 };
 
@@ -127,14 +131,14 @@ public:
 
 	DistributedSynthesisIterBotWithOldGUI(MPI_Comm comm);
 
-	void setIterationDetails(Record iterpars);
+	void setIterationDetails(casacore::Record iterpars);
 	void pauseForUserInteraction();
 
 private:
-	Vector<String> itsImageList;
-	Vector<Bool> itsMultiTermList;
-	Vector<Int> itsActionCodes;
-	CountedPtr<InteractiveMasking> itsInteractiveMasker;
+	casacore::Vector<casacore::String> itsImageList;
+	casacore::Vector<casacore::Bool> itsMultiTermList;
+	casacore::Vector<casacore::Int> itsActionCodes;
+	casacore::CountedPtr<InteractiveMasking> itsInteractiveMasker;
 
 	bool is_root;
 };

@@ -33,6 +33,7 @@
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayDatas/DisplayMethod.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DisplayMethod::DisplayMethod(DisplayData *parentDisplayData) :

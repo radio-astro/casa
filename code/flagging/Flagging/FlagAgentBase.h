@@ -58,17 +58,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // - Iteration approach methods:
 //
-//   - computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+//   - computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, casacore::uInt row)
 //     - For agents that only depend on meta-data for their flagging operations (for FlagAgentManual,FlagAgentElevation,FlagAgentShadow,FlagAgentQuack)
 //     - This iteration method can also be used by agents that have to inspect the already existing flags (for FlagAgentSummary, FlagAgentExtension)
 //
-//   - computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
+//   - computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, casacore::uInt row);
 //     - For agents that have to look into the visibility points, but regardless of their source baseline, like FlagAgentDisplay
 //
-//   - computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+//   - computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMapper &flags,casacore::Int antenna1,casacore::Int antenna2,vector<casacore::uInt> &rows);
 //     - For agents that have to look into the visibility points grouped by baseline (FlagAgentTimeFreqCrop,FlagAgentRFlag)
 //
-//   - computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+//   - computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,casacore::Int antenna1,casacore::Int antenna2,vector<casacore::uInt> &rows)
 //     - For agents that have to look into the visibility points grouped by baseline, allowing user-driven navigation (FlagAgentDisplay)
 //     - NOTE: This method has to be used in combination with iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
 //
@@ -85,7 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //         - FlagAgentBase::ANTENNA_PAIRS_FLAGS: Iterate per baselines accessing the individual flag points (for  FlagAgentExtension)
 //         - FlagAgentBase::ANTENNA_PAIRS_INTERACTIVE: Iterate per baselines interactively accessing the data column (for FlagAgentDisplay)
 //
-//   - setAgentParameters(Record config)
+//   - setAgentParameters(casacore::Record config)
 //     - To parse the agent-specific parameters, although there is also an implementation of
 //       this method in the base class which has to be called to handle the following parameters:
 //        - datacolumn: To specify the column in which the agent has to operate (see FlagAgentBase::datacolumn enumeration)
@@ -129,9 +129,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // FlagDataHandler *dh = new FlagMSHandler(inputFile,iterationMode);
 //
 // // First of all define a configuration record (e.g.: quack)
-// Record agentConfig;
+// casacore::Record agentConfig;
 // agentConfig.define("mode","quack");
-// agentConfig.define("quackinterval",(Double)20);
+// agentConfig.define("quackinterval",(casacore::Double)20);
 //
 // // Use the factory method to create the agent, and put it into a FlagAgentList
 // FlagAgentList agentList;
@@ -196,9 +196,9 @@ public:
 		ANTENNA_PAIRS_PREPROCESS_BUFFER
 	};
 
-	FlagAgentBase(FlagDataHandler *dh, Record config, uShort iterationApproach, Bool writePrivateFlagCube = false, Bool flag = true);
+	FlagAgentBase(FlagDataHandler *dh, casacore::Record config, casacore::uShort iterationApproach, casacore::Bool writePrivateFlagCube = false, casacore::Bool flag = true);
 	virtual ~FlagAgentBase ();
-	static FlagAgentBase *create (FlagDataHandler *dh,Record config);
+	static FlagAgentBase *create (FlagDataHandler *dh,casacore::Record config);
 
 	void start();
 	void terminate ();
@@ -215,12 +215,12 @@ public:
 	void setCheckMode(bool enable) {checkFlags_p = enable;}
 
 	// Externally visible configuration
-	Bool backgroundMode_p;
-	LogIO::Command logLevel_p;
-	Bool apply_p;
-	Bool flag_p;
+	casacore::Bool backgroundMode_p;
+	casacore::LogIO::Command logLevel_p;
+	casacore::Bool apply_p;
+	casacore::Bool flag_p;
 
-        // Get a report Record from the agent, at the end of the run
+        // Get a report casacore::Record from the agent, at the end of the run
         // The report returned by getReport() can be of multiple types
         //   -- a single report of type "none"  : FlagReport("none",agentName_p)
         //   -- a single report of type "plot" : FlagReport("plot",agentName_p)
@@ -237,40 +237,40 @@ protected:
 	// Convenience function to be shared by parallel/non-parallel mode
 	void runCore();
 
-	void setDataSelection(Record config);
+	void setDataSelection(casacore::Record config);
 	// TODO: This class must be re-implemented in the derived classes
-	virtual void setAgentParameters(Record config);
+	virtual void setAgentParameters(casacore::Record config);
 	// Method to sanitize correlation expression and keep going
-	String sanitizeCorrExpression(String corrExpression, std::vector<String> *corrProducts);
+	casacore::String sanitizeCorrExpression(casacore::String corrExpression, std::vector<casacore::String> *corrProducts);
 
 	void generateAllIndex();
-	void generateRowsIndex(uInt nRows);
-	void generateChannelIndex(uInt nChannels);
-	void generatePolarizationIndex(uInt nPolarizations);
-	std::vector<uInt> * generateAntennaPairRowsIndex(Int antenna1, Int antenna2);
+	void generateRowsIndex(casacore::uInt nRows);
+	void generateChannelIndex(casacore::uInt nChannels);
+	void generatePolarizationIndex(casacore::uInt nPolarizations);
+	std::vector<casacore::uInt> * generateAntennaPairRowsIndex(casacore::Int antenna1, casacore::Int antenna2);
 
 	// Generate index for all rows
-	void indigen(vector<uInt> &index, uInt size);
+	void indigen(vector<casacore::uInt> &index, casacore::uInt size);
 
 	// For checking ids
-	bool find(Vector<Int> &validRange, Int element);
+	bool find(casacore::Vector<casacore::Int> &validRange, casacore::Int element);
 
 	// For checking ranges
-	bool find(Matrix<Double> &validRange, Double element);
+	bool find(casacore::Matrix<casacore::Double> &validRange, casacore::Double element);
 
 	// For checking pairs
-	bool find(Matrix<Int> &validPairs, Int element1, Int element2);
+	bool find(casacore::Matrix<casacore::Int> &validPairs, casacore::Int element1, casacore::Int element2);
 
 	// For checking columns
-	bool find(Block<int> &columns, int col);
+	bool find(casacore::Block<int> &columns, int col);
 
 	// Check if a given number is nan (for visibilities,gains and Tsys primarily)
-	bool isNaN(Double number);
-	bool isNaN(Float number);
-	bool isZero(Double number);
-	bool isZero(Float number);
-	bool isNaNOrZero(Float number);
-	bool isNaNOrZero(Double number);
+	bool isNaN(casacore::Double number);
+	bool isNaN(casacore::Float number);
+	bool isZero(casacore::Double number);
+	bool isZero(casacore::Float number);
+	bool isNaNOrZero(casacore::Float number);
+	bool isNaNOrZero(casacore::Double number);
 
 	// Check if buffer has to be processed
 	bool checkIfProcessBuffer();
@@ -291,7 +291,7 @@ protected:
 	void iterateAntennaPairsFlags();
 
 	// Methods to interactively iterate trough list of antenna pairs
-	void processAntennaPair(Int antenna1,Int antenna2);
+	void processAntennaPair(casacore::Int antenna1,casacore::Int antenna2);
 	virtual void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);
 
 	// Iter-passes method
@@ -299,127 +299,127 @@ protected:
 	virtual void passFinal(const vi::VisBuffer2 &visBuffer);
 
 	// Mapping functions as requested by Urvashi
-	void setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap);
-	void setFlagsMap(std::vector<uInt> *rows, FlagMapper *flagMap);
-	Bool checkVisExpression(polarizationMap *polMap);
+	void setVisibilitiesMap(std::vector<casacore::uInt> *rows,VisMapper *visMap);
+	void setFlagsMap(std::vector<casacore::uInt> *rows, FlagMapper *flagMap);
+	casacore::Bool checkVisExpression(polarizationMap *polMap);
 
 	// Compute flags for a given visibilities point
-	virtual bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row);
+	virtual bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, casacore::uInt row);
 
 	// Compute flags for a given visibilities point
-	virtual bool computeInRowFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
+	virtual bool computeInRowFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags, casacore::uInt row);
 
 	// Compute flags for a given (time,freq) antenna pair map
-	virtual bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+	virtual bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags,casacore::Int antenna1,casacore::Int antenna2,vector<casacore::uInt> &rows);
 
 	// Compute flags for a given (time,freq) antenna pair map w/o using visibilities
-	virtual bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+	virtual bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer,FlagMapper &flags,casacore::Int antenna1,casacore::Int antenna2,vector<casacore::uInt> &rows);
 
 	// Common used members that must be accessible to derived classes
 	FlagDataHandler *flagDataHandler_p;
-	casa::LogIO *logger_p;
-	String agentName_p;
-	String summaryName_p;
-	String mode_p;
+	casacore::LogIO *logger_p;
+	casacore::String agentName_p;
+	casacore::String summaryName_p;
+	casacore::String mode_p;
 
 	// Flag counters
-	uInt64 chunkFlags_p;
-	uInt64 chunkNaNs_p;
-	uInt64 tableFlags_p;
-	uInt64 tableNaNs_p;
-	uInt64 visBufferFlags_p;
+	casacore::uInt64 chunkFlags_p;
+	casacore::uInt64 chunkNaNs_p;
+	casacore::uInt64 tableFlags_p;
+	casacore::uInt64 tableNaNs_p;
+	casacore::uInt64 visBufferFlags_p;
 	bool flagRow_p;
 
 	// Multithreading configuration and agent id
-	Bool multiThreading_p;
-	Int nThreads_p;
-	Int threadId_p;
+	casacore::Bool multiThreading_p;
+	casacore::Int nThreads_p;
+	casacore::Int threadId_p;
 
 	// Running configuration
-	Bool prepass_p;
+	casacore::Bool prepass_p;
 
 private:
 	
 	vi::VisBuffer2 *visibilityBuffer_p;
 
-	// MS-related objects
-	Cube<Bool> *commonFlagCube_p;
-	Cube<Bool> *originalFlagCube_p;
-	Cube<Bool> *privateFlagCube_p;
+	// casacore::MS-related objects
+	casacore::Cube<casacore::Bool> *commonFlagCube_p;
+	casacore::Cube<casacore::Bool> *originalFlagCube_p;
+	casacore::Cube<casacore::Bool> *privateFlagCube_p;
 
-	Vector<Bool> *commonFlagRow_p;
-	Vector<Bool> *originalFlagRow_p;
-	Vector<Bool> *privateFlagRow_p;
+	casacore::Vector<casacore::Bool> *commonFlagRow_p;
+	casacore::Vector<casacore::Bool> *originalFlagRow_p;
+	casacore::Vector<casacore::Bool> *privateFlagRow_p;
 
 	// Own data selection ranges
-	casa::String arraySelection_p;
-	casa::String fieldSelection_p;
-	casa::String scanSelection_p;
-	casa::String timeSelection_p;
-	casa::String spwSelection_p;
-	casa::String channelSelection_p;
-	casa::String baselineSelection_p;
-	casa::String uvwSelection_p;
-	casa::String polarizationSelection_p;
-	casa::String observationSelection_p;
-	casa::String scanIntentSelection_p;
+	casacore::String arraySelection_p;
+	casacore::String fieldSelection_p;
+	casacore::String scanSelection_p;
+	casacore::String timeSelection_p;
+	casacore::String spwSelection_p;
+	casacore::String channelSelection_p;
+	casacore::String baselineSelection_p;
+	casacore::String uvwSelection_p;
+	casacore::String polarizationSelection_p;
+	casacore::String observationSelection_p;
+	casacore::String scanIntentSelection_p;
 	bool filterRows_p;
 	bool filterPols_p;
 	bool filterChannels_p;
 	bool flagAutoCorrelations_p;
-	Bool antennaNegation_p;
+	casacore::Bool antennaNegation_p;
 
 	// Own data selection indexes
-	Vector<Int> arrayList_p;
-	Vector<Int> fieldList_p;
-	Vector<Int> scanList_p;
-	Matrix<Double> timeList_p;
-	Vector<Int> spwList_p;
-	Matrix<Int> channelList_p;
-	Vector<Int> antenna1List_p;
-	Vector<Int> antenna2List_p;
-	Matrix<Int> baselineList_p;
-	Matrix<Double> uvwList_p;
-	Bool uvwUnits_p;
-	OrderedMap<Int, Vector<Int> > polarizationList_p;
-	Vector<Int> observationList_p;
-	Vector<Int> scanIntentList_p;
+	casacore::Vector<casacore::Int> arrayList_p;
+	casacore::Vector<casacore::Int> fieldList_p;
+	casacore::Vector<casacore::Int> scanList_p;
+	casacore::Matrix<casacore::Double> timeList_p;
+	casacore::Vector<casacore::Int> spwList_p;
+	casacore::Matrix<casacore::Int> channelList_p;
+	casacore::Vector<casacore::Int> antenna1List_p;
+	casacore::Vector<casacore::Int> antenna2List_p;
+	casacore::Matrix<casacore::Int> baselineList_p;
+	casacore::Matrix<casacore::Double> uvwList_p;
+	casacore::Bool uvwUnits_p;
+	casacore::OrderedMap<casacore::Int, casacore::Vector<casacore::Int> > polarizationList_p;
+	casacore::Vector<casacore::Int> observationList_p;
+	casacore::Vector<casacore::Int> scanIntentList_p;
 
 	// Thread state parameters
-	volatile Bool terminationRequested_p;
-	volatile Bool threadTerminated_p;
-	volatile Bool processing_p;
+	volatile casacore::Bool terminationRequested_p;
+	volatile casacore::Bool threadTerminated_p;
+	volatile casacore::Bool processing_p;
 
-	// Data source configuration
-	String expression_p;
-	uShort dataReference_p;
+	// casacore::Data source configuration
+	casacore::String expression_p;
+	casacore::uShort dataReference_p;
 
 	// Debugging configuration
-	Bool profiling_p;
-	Bool checkFlags_p;
+	casacore::Bool profiling_p;
+	casacore::Bool checkFlags_p;
 
 	// Running mode configuration
-	uShort iterationApproach_p;
+	casacore::uShort iterationApproach_p;
 
 	// Flagging mode configuration
-	Bool writePrivateFlagCube_p;
+	casacore::Bool writePrivateFlagCube_p;
 
 protected:
 	// Lists of elements to process
 	// jagonzal (CAS-4312): We need channelIndex_p available for the Rflag agent,
 	// in order to take into account channel selection for the frequency mapping
-	vector<uInt> rowsIndex_p;
-	vector<uInt> channelIndex_p;
-	vector<uInt> polarizationIndex_p;
+	vector<casacore::uInt> rowsIndex_p;
+	vector<casacore::uInt> channelIndex_p;
+	vector<casacore::uInt> polarizationIndex_p;
 
 	// Needed to be protected for timeavg in clip
-    String dataColumn_p;
+    casacore::String dataColumn_p;
 
 	// Pre-averaging parameters
-	Bool timeavg_p;
-	Double timebin_p;
-	Bool channelavg_p;
-	Vector<Int> chanbin_p;
+	casacore::Bool timeavg_p;
+	casacore::Double timebin_p;
+	casacore::Bool channelavg_p;
+	casacore::Vector<casacore::Int> chanbin_p;
 
 
 };

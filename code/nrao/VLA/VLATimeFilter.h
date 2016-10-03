@@ -84,13 +84,13 @@ class VLATimeFilter: public VLAFilter
 {
 public:
   // The default constructor creats a filter that does not filter
-  // anything. ie., the passThru() function always returns True;
+  // anything. ie., the passThru() function always returns true;
   VLATimeFilter();
 
   // Creates a filter that filters all records except those with a observation
   // time that is between the specified start and end times. The reference
   // frame is always assumed to be TAI.
-  VLATimeFilter(const MVEpoch& startTime, const MVEpoch& stopTime);
+  VLATimeFilter(const casacore::MVEpoch& startTime, const casacore::MVEpoch& stopTime);
 
   // The copy constructor uses copy semantics.
   VLATimeFilter(const VLATimeFilter& other);
@@ -102,14 +102,14 @@ public:
   VLATimeFilter& operator=(const VLATimeFilter& other);
 
   // Reset the start time.
-  void startTime(const MVEpoch& startTime);
+  void startTime(const casacore::MVEpoch& startTime);
 
   // Reset the stop time.
-  void stopTime(const MVEpoch& startTime);
+  void stopTime(const casacore::MVEpoch& startTime);
 
-  // returns True if the supplied record has an observation time
+  // returns true if the supplied record has an observation time
   // that is between the specified start and end times.
-  virtual Bool passThru(const VLALogicalRecord& record) const;
+  virtual casacore::Bool passThru(const VLALogicalRecord& record) const;
 
   // Return a pointer to a copy of the VLATimeFilter object upcast to a
   // VLAFilter object. The class that uses this function is responsible for
@@ -117,14 +117,14 @@ public:
   // constructor.
   virtual VLAFilter* clone() const;
 
-  // Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns True if everything is fine
-  // otherwise returns False.
-  virtual Bool ok() const;
+  // casacore::Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns true if everything is fine
+  // otherwise returns false.
+  virtual casacore::Bool ok() const;
 
 private:
-  MVEpoch itsStart;
-  MVEpoch itsStop;
+  casacore::MVEpoch itsStart;
+  casacore::MVEpoch itsStop;
 };
 #endif
 

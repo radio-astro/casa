@@ -64,25 +64,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 		// </group>
 
-		// Function called when a position is ready
+		// casacore::Function called when a position is ready
 		virtual void positionReady() { };
 
 		// Retrieve the position in linear WorldCanvas coordinates
-		virtual void get(Double &x, Double &y) const;
+		virtual void get(casacore::Double &x, casacore::Double &y) const;
 
 		// Retrieve the position in fractional linear WorldCanvas coordinates
-		virtual void getFractional(Double &x, Double &y) const;
+		virtual void getFractional(casacore::Double &x, casacore::Double &y) const;
 
 	private:
 
 		// are we actively marking positions?
-		Bool itsActive;
+		casacore::Bool itsActive;
 
 		// have we moved
-		Bool itsMoved;
+		casacore::Bool itsMoved;
 
 		// linear coordinates of the position
-		Double itsX, itsY;
+		casacore::Double itsX, itsY;
 
 	};
 

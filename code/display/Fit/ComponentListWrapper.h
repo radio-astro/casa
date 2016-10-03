@@ -29,9 +29,13 @@
 #include <casa/BasicSL/String.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <QTextStream>
-namespace casa {
+namespace casacore{
 
 	template <class T> class ImageInterface;
+}
+
+namespace casa {
+
 	class RegionShape;
 	class RegionBox;
 
@@ -47,39 +51,40 @@ namespace casa {
 		string getDEC( int i ) const;
 		string getType( int i ) const;
 		const ComponentShape* getShape( int i ) const;
-		Quantity getMajorAxis( int i ) const;
-		Quantity getMinorAxis( int i ) const;
-		Quantity getAngle( int i ) const;
-		Quantum< Vector<double> > getLatLong( int i ) const;
-		Quantity getFlux( int i ) const;
+		casacore::Quantity getMajorAxis( int i ) const;
+		casacore::Quantity getMinorAxis( int i ) const;
+		casacore::Quantity getAngle( int i ) const;
+		casacore::Quantum< casacore::Vector<double> > getLatLong( int i ) const;
+		casacore::Quantity getFlux( int i ) const;
 		//QString getEstimateFixed( int index ) const;
 		void clear();
 		void remove( QVector<int> indices );
 		void fromComponentList( ComponentList list );
-		bool fromRecord( String& errorMsg, Record& record );
+		bool fromRecord( casacore::String& errorMsg, casacore::Record& record );
 		bool toEstimateFile( QTextStream& stream,
-		                     const ImageInterface<Float>*const image, QString& errorMsg,
+		                     const casacore::ImageInterface<casacore::Float>*const image, QString& errorMsg,
 		                     bool screenEstimates = false, RegionBox* screenBox = NULL) const;
-		QList<RegionShape*> toDrawingDisplay(const ImageInterface<Float>* image, const QString& colorName) const;
-		bool toRegionFile(const ImageInterface<float>* image, int channelIndex, const QString& filePath ) const;
+		QList<RegionShape*> toDrawingDisplay(const casacore::ImageInterface<casacore::Float>* image, const QString& colorName) const;
+		bool toRegionFile(const casacore::ImageInterface<float>* image, int channelIndex, const QString& filePath ) const;
 		virtual ~ComponentListWrapper();
 
 	private:
-		void toRecord( Record& record, const Quantity& quantity ) const;
-		double getRAValue( int i, const String& unit ) const;
-		double getDECValue( int i, const String& unit ) const;
+		void toRecord( casacore::Record& record, const casacore::Quantity& quantity ) const;
+		double getRAValue( int i, const casacore::String& unit ) const;
+		double getDECValue( int i, const casacore::String& unit ) const;
 		double radiansToDegrees( double value ) const;
 		double degreesToArcSecs( double Value ) const;
-		Quantity getAxis( int listIndex, int shapeIndex, bool toArcSecs ) const;
+		casacore::Quantity getAxis( int listIndex, int shapeIndex, bool toArcSecs ) const;
 		double rotateAngle( double value ) const;
-		void deconvolve(const ImageInterface<float>* image, int channel,
-		                Quantity& majorAxis, Quantity& minorAxis, Quantity& positionAngle) const;
+		void deconvolve(const casacore::ImageInterface<float>* image, int channel,
+		                casacore::Quantity& majorAxis, casacore::Quantity& minorAxis, casacore::Quantity& positionAngle) const;
 
 		ComponentList skyList;
-		const String RAD;
-		const String DEG;
-		const String ARC_SEC;
+		const casacore::String RAD;
+		const casacore::String DEG;
+		const casacore::String ARC_SEC;
 	};
 
-} /* namespace casa */
+} // end namespace casa
+
 #endif /* COMPONENTLISTWRAPPER_H_ */

@@ -54,7 +54,7 @@ int main() {
       const PointShape defPoint;
       AlwaysAssert(defPoint.type() == ComponentType::POINT, AipsError);
       AlwaysAssert(defPoint.ident() == "Point", AipsError);
-      AlwaysAssert(defPoint.isSymmetric() == True, AipsError);
+      AlwaysAssert(defPoint.isSymmetric() == true, AipsError);
       
       const MVDirection defMVdir;
       const MDirection dirJ2000(defMVdir);
@@ -242,7 +242,7 @@ int main() {
       AlwaysAssert(ComponentShape::getType(errorMsg, emptyRec) ==
 		   ComponentType::POINT, AipsError);
       AlwaysAssert(errorMsg.length() == 0, AipsError);
-      AlwaysAssert(shapePtr->fromRecord(errorMsg, emptyRec) == True,
+      AlwaysAssert(shapePtr->fromRecord(errorMsg, emptyRec) == true,
 		   AipsError);
       AlwaysAssert(errorMsg.length() == 0, AipsError);
       emptyRec.defineRecord(RecordFieldId("direction"), dirRec);

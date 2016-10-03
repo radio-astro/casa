@@ -28,14 +28,14 @@ class AntennasFiller : SubtableFiller <Antennas> {
 
 public:
 
-    AntennasFiller (Table & table, Antennas & antennas);
+    AntennasFiller (casacore::Table & table, Antennas & antennas);
 
     void fill ();
 
 private:
 
     Antennas & antennas_p;
-    Table & table_p;
+    casacore::Table & table_p;
 
 };
 

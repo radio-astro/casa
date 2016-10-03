@@ -30,6 +30,7 @@
 #include <QDebug>
 #include <limits>
 
+using namespace casacore;
 namespace casa {
 
 	SliceStatistics::SliceStatistics(SliceStatisticsFactory::AxisXUnits units) {
@@ -145,4 +146,5 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
+using namespace casacore;
 } /* namespace casa */

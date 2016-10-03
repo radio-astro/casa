@@ -3,7 +3,7 @@
 #define CACAPolarization_H
 
 /*
- * ALMA - Atacama Large Millimeter Array
+ * ALMA - Atacama Large Millimeter casacore::Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * File CACAPolarization.h
+ * casacore::File CACAPolarization.h
  */
 
 #ifndef __cplusplus
@@ -61,7 +61,7 @@ namespace ACAPolarizationMod
   
   enum ACAPolarization
   { 
-    ACA_STANDARD /*!< Data product is the standard way (it is a standard observed Stokes parameter) */
+    ACA_STANDARD /*!< casacore::Data product is the standard way (it is a standard observed casacore::Stokes parameter) */
      ,
     ACA_XX_YY_SUM /*!< ACA has calculated I by averaging XX and YY */
      ,

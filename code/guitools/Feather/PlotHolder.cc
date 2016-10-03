@@ -31,6 +31,7 @@
 #include <guitools/Feather/ExternalAxisControlLeft.h>
 
 
+using namespace casacore;
 namespace casa {
 
 PlotHolder::PlotHolder(QWidget *parent)

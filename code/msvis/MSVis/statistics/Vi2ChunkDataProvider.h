@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// Base class of data providers based on StatsDataProvider, backed by a
+// Base class of data providers based on casacore::StatsDataProvider, backed by a
 // VisibilityIterator2 instances.
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_DATA_PROVIDER_H_
@@ -46,8 +46,8 @@
 namespace casa {
 
 //
-// Data provider template class backed by VisibilityIterator2 instances. These
-// data providers operate on a single MS column over all vi2 sub-chunks in the
+// casacore::Data provider template class backed by VisibilityIterator2 instances. These
+// data providers operate on a single casacore::MS column over all vi2 sub-chunks in the
 // chunk selected when the data provider is instantiated. In other words, the
 // data sample for statistics generated with a Vi2ChunkDataProvider instance is
 // the data from a single column in a single vi2 chunk. It is intended that the
@@ -58,7 +58,7 @@ namespace casa {
 // call to compute statistics for that chunk's data. In outline:
 //
 // Vi2ChunkDataProvider *dp; // given
-// StatisticsAlgorithm statistics; // given
+// casacore::StatisticsAlgorithm statistics; // given
 // for (dp->vi2->originChunks(); dp->vi2->moreChunks(); dp->vi2->nextChunk()) {
 //  // Prepare the data provider
 //  dp->vi2->origin();
@@ -74,23 +74,23 @@ namespace casa {
 // follows (but with template parameters where needed):
 //
 // Vi2ChunkDataProvider *dp; // given
-// StatisticsAlgorithm statistics; // given
+// casacore::StatisticsAlgorithm statistics; // given
 // class DoStuff : public Vi2ChunkStatisticsIteratee {
 //   ... // constructor, probably needs some sort of accumulator
-//   void nextChunk(StatisticsAlgorithm stats, const * VisBuffer2 vb) {
+//   void nextChunk(casacore::StatisticsAlgorithm stats, const * VisBuffer2 vb) {
 //     stats.getStatistics()...;
 //   }
 // }
 // DoStuff doStuff;
 // dp->foreachChunk(statistics, doStuff);
 //
-// Note that the AccumType template parameter value of StatsDataProvider is
+// Note that the AccumType template parameter value of casacore::StatsDataProvider is
 // derived from the DataIterator parameter value of this template, imposing a
 // constraint on the classes that can be used for DataIterator.
 //
 template <class DataIterator, class MaskIterator, class WeightsIterator>
 class Vi2ChunkDataProvider
-	: public StatsDataProvider<typename DataIterator::AccumType,
+	: public casacore::StatsDataProvider<typename DataIterator::AccumType,
 	                           DataIterator,
 	                           MaskIterator,
 	                           WeightsIterator> {
@@ -108,19 +108,19 @@ public:
 	Vi2ChunkDataProvider(
 		vi::VisibilityIterator2 *vi2,
 		vi::VisBufferComponent2 component,
-		Bool omit_flagged_data,
-		Bool use_data_weights)
+		casacore::Bool omit_flagged_data,
+		casacore::Bool use_data_weights)
 		: vi2(vi2)
 		, component(component)
 		, use_data_weights(use_data_weights)
 		, omit_flagged_data(omit_flagged_data) {
 
-		// Attach the MS columns to vi2 by calling originChunks(). Not the most
+		// Attach the casacore::MS columns to vi2 by calling originChunks(). Not the most
 		// direct method, but attaching the columns is required in many cases to
 		// pass existsColumn() test.
 		vi2->originChunks();
 		if (!vi2->existsColumn(component))
-			throw AipsError("Column is not present");
+			throw casacore::AipsError("Column is not present");
 	}
 
 	Vi2ChunkDataProvider(Vi2ChunkDataProvider&& other)
@@ -153,15 +153,15 @@ public:
 	}
 
 	// Are there any sub-chunks left to provide?
-	Bool atEnd() const {
+	casacore::Bool atEnd() const {
 		return !vi2->more();
 	}
 
 	// Take any actions necessary to finalize the provider. This will be called
-	// when atEnd() returns True.
+	// when atEnd() returns true.
 	void finalize() {};
 
-	uInt64 getCount() {
+	casacore::uInt64 getCount() {
 		return getData().getCount();
 	}
 
@@ -173,16 +173,16 @@ public:
 		return *data_iterator;
 	}
 
-	uInt getStride() {
+	casacore::uInt getStride() {
 		return 1;
 	};
 
-	Bool hasMask() const {
+	casacore::Bool hasMask() const {
 		return omit_flagged_data;
 	};
 
 	// Get the associated mask of the current sub-chunk. Only called if
-	// hasMask() returns True.
+	// hasMask() returns true.
 	MaskIterator getMask() {
 		if (!mask_iterator)
 			mask_iterator = std::unique_ptr<MaskIterator>(
@@ -191,17 +191,17 @@ public:
 	};
 
 	// Get the stride for the current mask (only called if hasMask() returns
-	// True). Will always return 1 in this implementation.
-	uInt getMaskStride() {
+	// true). Will always return 1 in this implementation.
+	casacore::uInt getMaskStride() {
 		return 1;
 	};
 
-	Bool hasWeights() const {
+	casacore::Bool hasWeights() const {
 		return use_data_weights;
 	};
 
 	// Get the associated weights of the current sub-chunk. Only called if
-	// hasWeights() returns True;
+	// hasWeights() returns true;
 	WeightsIterator getWeights() {
 		if (!weights_iterator)
 			weights_iterator = std::unique_ptr<WeightsIterator>(
@@ -209,12 +209,12 @@ public:
 		return *weights_iterator;
 	};
 
-	Bool hasRanges() const {
+	casacore::Bool hasRanges() const {
 		return false; // TODO: is this correct in all cases?
 	};
 
 	// Get the associated range(s) of the current sub-chunk. Only called if
-	// hasRanges() returns True, which will never be the case in this
+	// hasRanges() returns true, which will never be the case in this
 	// implementation.
 	DataRanges
 	getRanges() {
@@ -222,9 +222,9 @@ public:
 		return result;
 	};
 
-	// If the associated data set has ranges, are these include (return True) or
-	// exclude (return False) ranges?
-	Bool isInclude() const {
+	// If the associated data set has ranges, are these include (return true) or
+	// exclude (return false) ranges?
+	casacore::Bool isInclude() const {
 		return false;
 	};
 
@@ -237,7 +237,7 @@ public:
 	std::unique_ptr<vi::VisibilityIterator2> vi2;
 
 	void foreachChunk(
-		StatisticsAlgorithm<AccumType,DataIteratorType,MaskIteratorType,WeightsIteratorType>& statistics,
+		casacore::StatisticsAlgorithm<AccumType,DataIteratorType,MaskIteratorType,WeightsIteratorType>& statistics,
 		Vi2ChunkStatisticsIteratee<DataIterator,WeightsIterator,MaskIterator>& iteratee) {
 
 		for (vi2->originChunks(); vi2->moreChunks(); vi2->nextChunk()) {
@@ -253,11 +253,11 @@ protected:
 
 	std::unique_ptr<const DataIterator> data_iterator;
 
-	const Bool use_data_weights;
+	const casacore::Bool use_data_weights;
 
 	std::unique_ptr<const WeightsIterator> weights_iterator;
 
-	const Bool omit_flagged_data;
+	const casacore::Bool omit_flagged_data;
 
 	std::unique_ptr<const MaskIterator> mask_iterator;
 
@@ -269,10 +269,10 @@ private:
 		mask_iterator.reset();
 	}
 
-	virtual const Array<typename DataIterator::DataType>& dataArray() = 0;
+	virtual const casacore::Array<typename DataIterator::DataType>& dataArray() = 0;
 };
 
-// Data provider template for row-based MS columns (i.e, not visibilities) using
+// casacore::Data provider template for row-based casacore::MS columns (i.e, not visibilities) using
 // the 'weights' column for data weights. In most instances, you would not
 // weight the data in these columns, but the Vi2ChunkDataProvider template
 // requires that a WeightsIterator be provided.
@@ -281,7 +281,7 @@ using Vi2ChunkWeightsRowDataProvider =
 	Vi2ChunkDataProvider<
 	DataIterator,Vi2StatsFlagsRowIterator,Vi2StatsWeightsRowIterator>;
 
-// Data provider template for row-based MS columns (i.e, not visibilities) using
+// casacore::Data provider template for row-based casacore::MS columns (i.e, not visibilities) using
 // the 'sigma' column for data weights (appropriately transformed). In most
 // instances, you would not weight the data in these columns, but the
 // Vi2ChunkDataProvider template requires that a WeightsIterator be provided.
@@ -290,14 +290,14 @@ using Vi2ChunkSigmasRowDataProvider =
 	Vi2ChunkDataProvider<
 	DataIterator,Vi2StatsFlagsRowIterator,Vi2StatsSigmasRowIterator>;
 
-// Data provider template for cube-based MS columns (i.e, the visibilities)
+// casacore::Data provider template for cube-based casacore::MS columns (i.e, the visibilities)
 // using the 'weights' column for data weights.
 template<class DataIterator>
 using Vi2ChunkWeightsCubeDataProvider =
 	Vi2ChunkDataProvider<
 	DataIterator,Vi2StatsFlagsCubeIterator,Vi2StatsWeightsCubeIterator>;
 
-// Data provider template for cube-based MS columns (i.e, the visibilities)
+// casacore::Data provider template for cube-based casacore::MS columns (i.e, the visibilities)
 // using the 'sigma' column for data weights (appropriately transformed).
 template<class DataIterator>
 using Vi2ChunkSigmasCubeDataProvider =

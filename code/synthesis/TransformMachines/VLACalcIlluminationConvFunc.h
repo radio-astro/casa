@@ -42,94 +42,94 @@
 #include <synthesis/TransformMachines/Utils.h>
 namespace casa{
 
-  //  Int getVLABandID(Double& freq,String&telescopeName);
+  //  casacore::Int getVLABandID(casacore::Double& freq,casacore::String&telescopeName);
   class VLACalcIlluminationConvFunc: public IlluminationConvFunc
   {
   public:
 
     VLACalcIlluminationConvFunc();
-    VLACalcIlluminationConvFunc(Int n):
+    VLACalcIlluminationConvFunc(casacore::Int n):
       IlluminationConvFunc(n),
-      convFunc_p(),resolution(),pbRead_p(False),freq_p(0),lastPA(0),ap()
-    {pbRead_p=False;};
+      convFunc_p(),resolution(),pbRead_p(false),freq_p(0),lastPA(0),ap()
+    {pbRead_p=false;};
     ~VLACalcIlluminationConvFunc() {delete ap.aperture;};
 
-    void setBandID(Int bandID) {ap.band=bandID;}
-    // void storeImg(String &fileName,ImageInterface<Complex>& img);
-    // void storeImg(String &fileName,ImageInterface<Float>& img);
-    // void store(String &fileName);
-    void loadFromImage(String &fileName);
-    void getIdealConvFunc(Array<Complex>& buf);
-    //void ftAperture(TempImage<Complex>& uvgrid);
-    void ftAperture(TempImage<Complex>& uvgrid, Bool makeMueller);
-    void ftAperture(TempImage<Complex>& uvgrid, Int makeMuerller=0);
-    void ftAperture() {ftAperture(convFunc_p); pbRead_p=True;};
-    void storePB(String& fileName);
+    void setBandID(casacore::Int bandID) {ap.band=bandID;}
+    // void storeImg(casacore::String &fileName,casacore::ImageInterface<casacore::Complex>& img);
+    // void storeImg(casacore::String &fileName,casacore::ImageInterface<casacore::Float>& img);
+    // void store(casacore::String &fileName);
+    void loadFromImage(casacore::String &fileName);
+    void getIdealConvFunc(casacore::Array<casacore::Complex>& buf);
+    //void ftAperture(casacore::TempImage<casacore::Complex>& uvgrid);
+    void ftAperture(casacore::TempImage<casacore::Complex>& uvgrid, casacore::Bool makeMueller);
+    void ftAperture(casacore::TempImage<casacore::Complex>& uvgrid, casacore::Int makeMuerller=0);
+    void ftAperture() {ftAperture(convFunc_p); pbRead_p=true;};
+    void storePB(casacore::String& fileName);
 
-    Bool pbReady() {return pbRead_p;}
+    casacore::Bool pbReady() {return pbRead_p;}
 
-    CoordinateSystem makeUVCoords(CoordinateSystem& imageCoordSys,
-				  IPosition& shape, Double refFreq=-1.0);
-    void regridAperture(CoordinateSystem& skyCS, 
-			IPosition& skyShape, 
-			TempImage<Complex>& uvGrid, 
+    casacore::CoordinateSystem makeUVCoords(casacore::CoordinateSystem& imageCoordSys,
+				  casacore::IPosition& shape, casacore::Double refFreq=-1.0);
+    void regridAperture(casacore::CoordinateSystem& skyCS, 
+			casacore::IPosition& skyShape, 
+			casacore::TempImage<casacore::Complex>& uvGrid, 
 			//const VisBuffer& vb,
-			Double& pa,
-			Bool doSquint=True,Int bandID=-1,Int muellerTerm=0 ,Double freqVal=-1.0);
-    void regridAperture(CoordinateSystem& skyCS,
-			IPosition& skyShape,
-			TempImage<Complex>& uvGrid,
+			casacore::Double& pa,
+			casacore::Bool doSquint=true,casacore::Int bandID=-1,casacore::Int muellerTerm=0 ,casacore::Double freqVal=-1.0);
+    void regridAperture(casacore::CoordinateSystem& skyCS,
+			casacore::IPosition& skyShape,
+			casacore::TempImage<casacore::Complex>& uvGrid,
 			const VisBuffer &vb,
-			const Vector<Float>& paList,
-			Bool doSquint, Int bandID);
+			const casacore::Vector<casacore::Float>& paList,
+			casacore::Bool doSquint, casacore::Int bandID);
     void regridApertureEngine(ApertureCalcParams& ap,
-			      const Int& inStokes);
+			      const casacore::Int& inStokes);
     void setApertureParams(ApertureCalcParams& ap,
-			   const Float& Freq, const Float& pa, 
-			   const Int& bandID,
-			   const Int& inStokes,
-			   const IPosition& skyShape,
-			   const Vector<Double>& uvIncr);
+			   const casacore::Float& Freq, const casacore::Float& pa, 
+			   const casacore::Int& bandID,
+			   const casacore::Int& inStokes,
+			   const casacore::IPosition& skyShape,
+			   const casacore::Vector<casacore::Double>& uvIncr);
 
 
-    void applyPB(ImageInterface<Float>& pbImage, Double& pa,//const VisBuffer& vb, 
-		 const Vector<Float>& paList, Int bandID, Bool doSquint=False);
-    void applyPB(ImageInterface<Float>& pbImage, Double& pa,//const VisBuffer& vb, 
-		 Int bandID=-1, Bool doSquint=False, Double freqVal=-1.0);
-    void applyPB(ImageInterface<Complex>& pbImage, Double& pa,//const VisBuffer& vb, 
-		 Bool doSquint=True,Int bandID=-1, Int muellerTerm=0, Double freqVal=-1.0);
-    void applyPBSq(ImageInterface<Float>& pbImage, Double& pa,//const VisBuffer& vb, 
-		   const Vector<Float>& paList, Int bandID, Bool doSquint=False);
-    void applyPBSq(ImageInterface<Float>& pbImage, Double& pa,//const VisBuffer& vb, 
-		   Int bandID=-1, Bool doSquint=False);
-    void applyPBSq(ImageInterface<Complex>& pbImage, Double& pa,//const VisBuffer& vb, 
-		   Int bandID=-1,  Bool doSquint=True);
-    void makeFullJones(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Bool doSquint, 
-	       Int bandID, Double freqVal=-1.0);
-    void skyMuller(ImageInterface<Complex>& skyJones);
-    void skyMuller(ImageInterface<Complex>& skyJones, Int muellerTerm=0);
-    void skyMuller(Array<Complex>& skyJones, const IPosition& shape, const Int& inStokes);
+    void applyPB(casacore::ImageInterface<casacore::Float>& pbImage, casacore::Double& pa,//const VisBuffer& vb, 
+		 const casacore::Vector<casacore::Float>& paList, casacore::Int bandID, casacore::Bool doSquint=false);
+    void applyPB(casacore::ImageInterface<casacore::Float>& pbImage, casacore::Double& pa,//const VisBuffer& vb, 
+		 casacore::Int bandID=-1, casacore::Bool doSquint=false, casacore::Double freqVal=-1.0);
+    void applyPB(casacore::ImageInterface<casacore::Complex>& pbImage, casacore::Double& pa,//const VisBuffer& vb, 
+		 casacore::Bool doSquint=true,casacore::Int bandID=-1, casacore::Int muellerTerm=0, casacore::Double freqVal=-1.0);
+    void applyPBSq(casacore::ImageInterface<casacore::Float>& pbImage, casacore::Double& pa,//const VisBuffer& vb, 
+		   const casacore::Vector<casacore::Float>& paList, casacore::Int bandID, casacore::Bool doSquint=false);
+    void applyPBSq(casacore::ImageInterface<casacore::Float>& pbImage, casacore::Double& pa,//const VisBuffer& vb, 
+		   casacore::Int bandID=-1, casacore::Bool doSquint=false);
+    void applyPBSq(casacore::ImageInterface<casacore::Complex>& pbImage, casacore::Double& pa,//const VisBuffer& vb, 
+		   casacore::Int bandID=-1,  casacore::Bool doSquint=true);
+    void makeFullJones(casacore::ImageInterface<casacore::Complex>& pbImage, const VisBuffer& vb, casacore::Bool doSquint, 
+	       casacore::Int bandID, casacore::Double freqVal=-1.0);
+    void skyMuller(casacore::ImageInterface<casacore::Complex>& skyJones);
+    void skyMuller(casacore::ImageInterface<casacore::Complex>& skyJones, casacore::Int muellerTerm=0);
+    void skyMuller(casacore::Array<casacore::Complex>& skyJones, const casacore::IPosition& shape, const casacore::Int& inStokes);
 
-    Bool findSupport(Array<Complex>& /*func*/, Float& /*threshold*/,Int& /*origin*/, Int& /*R*/)
-    {throw(AipsError("VLACalcIlluminationConvFunc::findSupport() not implemented"));};
-    virtual Bool makeAverageResponse(const VisBuffer& /*vb*/,
-				     const ImageInterface<Complex>& /*image*/,
-				     //				     TempImage<Float>& theavgPB,
-				     ImageInterface<Float>& /*theavgPB*/,
-				     Bool /*reset*/=True)
-    {throw(AipsError("VLACalc::makeAverageRes() called"));};
+    casacore::Bool findSupport(casacore::Array<casacore::Complex>& /*func*/, casacore::Float& /*threshold*/,casacore::Int& /*origin*/, casacore::Int& /*R*/)
+    {throw(casacore::AipsError("VLACalcIlluminationConvFunc::findSupport() not implemented"));};
+    virtual casacore::Bool makeAverageResponse(const VisBuffer& /*vb*/,
+				     const casacore::ImageInterface<casacore::Complex>& /*image*/,
+				     //				     casacore::TempImage<casacore::Float>& theavgPB,
+				     casacore::ImageInterface<casacore::Float>& /*theavgPB*/,
+				     casacore::Bool /*reset*/=true)
+    {throw(casacore::AipsError("VLACalc::makeAverageRes() called"));};
 
 
   private:
     
-    void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Float>& outImg, Bool Square=False);
-    void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Complex>& outImg, Bool Square=False);
+    void fillPB(casacore::ImageInterface<casacore::Complex>& inImg, casacore::ImageInterface<casacore::Float>& outImg, casacore::Bool Square=false);
+    void fillPB(casacore::ImageInterface<casacore::Complex>& inImg, casacore::ImageInterface<casacore::Complex>& outImg, casacore::Bool Square=false);
 
-    TempImage<Complex> convFunc_p;
-    //    TempImage<Float> reAperture_p, imAperture_p;
-    Vector<Double> resolution;
-    Bool pbRead_p;
-    Float freq_p,lastPA;
+    casacore::TempImage<casacore::Complex> convFunc_p;
+    //    casacore::TempImage<casacore::Float> reAperture_p, imAperture_p;
+    casacore::Vector<casacore::Double> resolution;
+    casacore::Bool pbRead_p;
+    casacore::Float freq_p,lastPA;
     ApertureCalcParams ap;
   };
 

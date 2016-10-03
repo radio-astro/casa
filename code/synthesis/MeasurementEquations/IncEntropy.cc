@@ -35,6 +35,7 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------
@@ -766,7 +767,7 @@ void IncEntropyI::infoPerIteration(uInt iteration){
     Lattice<Float> &model = *(cemem_ptr->itsModel_ptr);
     // Note:  posMaximumResidual is not valid! (  IPosition(4,0,0,0,0)  )
     cemem_ptr->itsProgressPtr->
-      info(False, iteration, cemem_ptr->itsNumberIterations, model, resid, 
+      info(false, iteration, cemem_ptr->itsNumberIterations, model, resid, 
 	   maxResid, IPosition(4,0,0,0,0),
 	   cemem_ptr->itsFlux, cemem_ptr->itsFit, cemem_ptr->itsNormGrad,
 	   cemem_ptr->itsEntropy);
@@ -1334,7 +1335,7 @@ void IncEntropyEmptiness::infoPerIteration(uInt iteration){
     Lattice<Float> &model = *(cemem_ptr->itsModel_ptr);
     // Note:  posMaximumResidual is not valid! (  IPosition(4,0,0,0,0)  )
     cemem_ptr->itsProgressPtr->
-      info(False, iteration, cemem_ptr->itsNumberIterations, model, resid, 
+      info(false, iteration, cemem_ptr->itsNumberIterations, model, resid, 
 	   maxResid, IPosition(4,0,0,0,0),
 	   cemem_ptr->itsFlux, cemem_ptr->itsFit, cemem_ptr->itsNormGrad,
 	   cemem_ptr->itsEntropy);

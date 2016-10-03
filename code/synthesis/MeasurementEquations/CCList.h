@@ -88,10 +88,10 @@ public:
   CCList();
 
   // more controlling constructor:
-  // How many Stokes per flux Block?
+  // How many casacore::Stokes per flux casacore::Block?
   // How many spatial dimensions per position?
   // How many total components to allocate for?
-  CCList(const uInt nPol, const uInt nDim=2, const uInt nComp=0);
+  CCList(const casacore::uInt nPol, const casacore::uInt nDim=2, const casacore::uInt nComp=0);
 
   // copy constructor
   CCList(const CCList & other);
@@ -102,77 +102,77 @@ public:
   // operator=
   CCList & operator=(const CCList & other);
 
-  // get pointer to the Block<Int> which holds the CC's positions in pixel 
-  // coordinates.  Block[nDim()*i] holds ith x, Block[nDim()*i+1] holds ith y
+  // get pointer to the casacore::Block<casacore::Int> which holds the CC's positions in pixel 
+  // coordinates.  casacore::Block[nDim()*i] holds ith x, casacore::Block[nDim()*i+1] holds ith y
   // <group>
-  Int * positionPtr();
-  const Int * positionPtr() const;
+  casacore::Int * positionPtr();
+  const casacore::Int * positionPtr() const;
   // </group>
 
   // get pointer to the whichCC'th component's position
-  Int * pixelPosition(const uInt whichCC);
+  casacore::Int * pixelPosition(const casacore::uInt whichCC);
 
-  // Get a pointer into the Position Block for the next free
+  // Get a pointer into the Position casacore::Block for the next free
   // clean component.
   // <group>
-  Int * freePositionPtr();
-  const Int * freePositionPtr() const;
+  casacore::Int * freePositionPtr();
+  const casacore::Int * freePositionPtr() const;
   // </group>
 
-  // get pointer to the Block<Float> which holds the CC's Flux.
-  // The flux itself is a Block, as it may be 1, 2, or 4 Stokes.
-  // Block[nPol()*i + iPol] holds the ith component's iPol Stokes.
+  // get pointer to the casacore::Block<casacore::Float> which holds the CC's Flux.
+  // The flux itself is a casacore::Block, as it may be 1, 2, or 4 Stokes.
+  // casacore::Block[nPol()*i + iPol] holds the ith component's iPol Stokes.
   // <group>
-  Float * fluxPtr();
-  const Float * fluxPtr() const;
+  casacore::Float * fluxPtr();
+  const casacore::Float * fluxPtr() const;
   // </group>
 
   // get pointer to the whichCC'th component's flux
-  Float * pixelFlux(const uInt whichCC);
+  casacore::Float * pixelFlux(const casacore::uInt whichCC);
 
-  // Get a pointer into the Flux Block for the next free
+  // Get a pointer into the Flux casacore::Block for the next free
   // clean component.
   // <group>
-  Float * freeFluxPtr();
-  const Float * freeFluxPtr() const;
+  casacore::Float * freeFluxPtr();
+  const casacore::Float * freeFluxPtr() const;
   // </group>
 
   // How many polarizations?
-  uInt nPol() const;
+  casacore::uInt nPol() const;
 
   // How many dimentions?
-  uInt nDim() const;
+  casacore::uInt nDim() const;
 
   // How many components have been filled into the list?
   // <group>
-  uInt nComp() const;
-  uInt & nComp();
+  casacore::uInt nComp() const;
+  casacore::uInt & nComp();
   // </group>
 
   // How many components have been allocated for this list?
-  uInt maxComp() const;
+  casacore::uInt maxComp() const;
 
   // We have free space for how many more components?
-  uInt freeComp() const;
+  casacore::uInt freeComp() const;
 
   // Make the list bigger or smaller
-  void resize(const uInt nComp);
+  void resize(const casacore::uInt nComp);
 
   // add a Component; if not enough space, resize the storage blocks
   // to 2*maxComp()+1
-  void addComp(const Block<Float> & flux, const Block<Int> & position);
+  void addComp(const casacore::Block<casacore::Float> & flux, const casacore::Block<casacore::Int> & position);
 
-  // Sort components to be organized by tile number.
+  // casacore::Sort components to be organized by tile number.
   // If the position and Flux blocks have free space at the end, it gets cut off.
-  void tiledSort(const IPosition & tileShape);
+  void tiledSort(const casacore::IPosition & tileShape);
 
   // ok() is called to check for an internally consistent state
   // by most everything, often behind the scenes;  sometimes, 
   // the internal state is in flux
   // after a partial operation, and ok() fails; to turn off ok() checking,
-  // set  itsSuspendOKCheck = True and remember to reset it to False
+  // set  itsSuspendOKCheck = true and remember to reset it to false
   // when the state-changing operation is complete.
-  Bool ok() const;
+  casacore::Bool ok() const;
 private:
 
   // turn OFF error checking via "ok()"
@@ -181,32 +181,32 @@ private:
   // turn ON error checking vua "ok()"
   void reactivateOKCheck();
 
-  uInt itsPol;
-  uInt itsDim;
-  uInt itsComp; 
-  Block<Float> itsFlux;
-  Block<Int> itsPos;
-  Bool itsSuspendOKCheck;
+  casacore::uInt itsPol;
+  casacore::uInt itsDim;
+  casacore::uInt itsComp; 
+  casacore::Block<casacore::Float> itsFlux;
+  casacore::Block<casacore::Int> itsPos;
+  casacore::Bool itsSuspendOKCheck;
 };
 
 
-inline uInt CCList::nPol() const {
-  DebugAssert(ok(), AipsError);
+inline casacore::uInt CCList::nPol() const {
+  DebugAssert(ok(), casacore::AipsError);
   return itsPol;
 };
 
-inline uInt CCList::nDim() const {
-  DebugAssert(ok(), AipsError);
+inline casacore::uInt CCList::nDim() const {
+  DebugAssert(ok(), casacore::AipsError);
   return itsDim;
 };
 
-inline uInt CCList::nComp() const {
-  DebugAssert(ok(), AipsError);
+inline casacore::uInt CCList::nComp() const {
+  DebugAssert(ok(), casacore::AipsError);
   return itsComp;
 };
 
-inline uInt & CCList::nComp() {
-  DebugAssert(ok(), AipsError);
+inline casacore::uInt & CCList::nComp() {
+  DebugAssert(ok(), casacore::AipsError);
   return itsComp;
 };
 

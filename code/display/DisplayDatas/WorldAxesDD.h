@@ -69,13 +69,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>True</src> means a refresh is needed.
+		// return value of <src>true</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual Bool setOptions(Record& rec, Record& recOut);
+		virtual casacore::Bool setOptions(casacore::Record& rec, casacore::Record& recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual casacore::Record getOptions( bool scrub=false ) const;
 
 		// Create a new AxesDisplayMethod for drawing on the given
 		// WorldCanvas when the AttributeBuffers are suitably matched to the
@@ -91,20 +91,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// AttributeBuffer.
 		virtual AttributeBuffer optionsAsAttributes();
 
-		virtual String spectralUnit() const {
+		virtual casacore::String spectralUnit() const {
 			return itsParamSpectralUnit->value();
 		}
 
-		virtual String velocityType() const {
+		virtual casacore::String velocityType() const {
 			return itsParamVelocityType->value();
 		}
 
-		virtual String axisText(const WorldCanvas* wc, const uInt axisNo) const;
-		virtual String xAxisText(const WorldCanvas* wc=0) const;
-		virtual String yAxisText(const WorldCanvas* wc=0) const;
+		virtual casacore::String axisText(const WorldCanvas* wc, const casacore::uInt axisNo) const;
+		virtual casacore::String xAxisText(const WorldCanvas* wc=0) const;
+		virtual casacore::String yAxisText(const WorldCanvas* wc=0) const;
 
 		// Pure virtual function from DisplayData...
-		String dataType() const {
+		casacore::String dataType() const {
 			return "label";
 		}
 

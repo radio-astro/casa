@@ -38,11 +38,12 @@
 // this include:
 #include <display/DisplayEvents/WCPTRegion.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCPTRegion::WCPTRegion(WorldCanvas *wcanvas,
 	                       Display::KeySym keysym) :
-		WCPolyTool(wcanvas, keysym, True) {
+		WCPolyTool(wcanvas, keysym, true) {
 	}
 
 	WCPTRegion::~WCPTRegion() {

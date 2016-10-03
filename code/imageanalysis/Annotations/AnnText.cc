@@ -26,6 +26,7 @@
 
 #include <imageanalysis/Annotations/AnnText.h>
 
+using namespace casacore;
 namespace casa {
 
 AnnText::AnnText(

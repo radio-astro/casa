@@ -49,9 +49,11 @@
 #include <map>
 
 using std::make_pair;
+using namespace casacore;
 using namespace casa::vi;
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi {
@@ -331,7 +333,7 @@ VisibilityIteratorImplAsync2::getFrequencies (Double time, Int frameOfReference)
 
     // Get the converter from the observed to the requested frame.
 
-    MFrequency::Convert fromObserved = makeFrequencyConverter (time, frameOfReference, False);
+    MFrequency::Convert fromObserved = makeFrequencyConverter (time, frameOfReference, false);
 
     // For each selected channel, get its observed frequency and convert it into
     // the frequency in the requested frame.  Put the result into the
@@ -589,7 +591,7 @@ VisibilityIteratorImplAsync2::existsColumn (VisBufferComponent2 id) const
     //     It's not true that all the other columns are required.
     //     existsFlagCategory uses caching anyway.
     // case FlagCategory:
-    //   result = False;
+    //   result = false;
     //   if(!columns_p.flagCategory().isNull() &&
     //      columns_p.flagCategory().isDefined(0)){
     //     IPosition fcshape(columns_p.flagCategory().shape(0));
@@ -599,7 +601,7 @@ VisibilityIteratorImplAsync2::existsColumn (VisBufferComponent2 id) const
     //   }
 
     default:
-        result = True; // required columns
+        result = true; // required columns
         break;
     }
 
@@ -621,7 +623,7 @@ VisibilityIteratorImplAsync2::origin ()
     throwIfPendingChanges ();
 
     rowBounds_p.subchunkBegin_p = 0; // begin at the beginning
-    more_p = True;
+    more_p = true;
     subchunk_p.resetSubChunk ();
 
     configureNewSubchunk ();
@@ -630,7 +632,7 @@ VisibilityIteratorImplAsync2::origin ()
 void
 VisibilityIteratorImplAsync2::originChunks ()
 {
-    originChunks (False);
+    originChunks (false);
 }
 
 void
@@ -766,7 +768,7 @@ VisibilityIteratorImplAsync2::nextChunk ()
 //            doChannelSelection ();
 //        }
 
-        msIterAtOrigin_p = False;
+        msIterAtOrigin_p = false;
     }
 
     // If the MS Iterator was successfully advanced then
@@ -984,7 +986,7 @@ VisibilityIteratorImplAsync2::makeChannelSelectorF (const FrequencySelection & s
     // measured frequency
 
     MFrequency::Convert convertToObservedFrame =
-        makeFrequencyConverter (time, selection.getFrameOfReference(), True);
+        makeFrequencyConverter (time, selection.getFrameOfReference(), true);
 
     // Convert each frequency selection into a Slice (interval) of channels.
 
@@ -1172,11 +1174,11 @@ VisibilityIteratorImplAsync2::getSpectralWindowChannels (Int msId, Int spectralW
 
     const ROArrayColumn<Double>& frequenciesColumn = spectralWindow.chanFreq();
     Vector<Double> frequencies;
-    frequenciesColumn.get (spectralWindowId, frequencies, True);
+    frequenciesColumn.get (spectralWindowId, frequencies, true);
 
     const ROArrayColumn<Double>& widthsColumn = spectralWindow.chanWidth();
     Vector<Double> widths;
-    widthsColumn.get (spectralWindowId, widths, True);
+    widthsColumn.get (spectralWindowId, widths, true);
 
     Assert (! frequencies.empty());
     Assert (frequencies.size() == widths.size());
@@ -1276,7 +1278,7 @@ VisibilityIteratorImplAsync2::setTileCache ()
 
     if (tileCacheIsSet_p.nelements () != 8) {
         tileCacheIsSet_p.resize (8);
-        tileCacheIsSet_p.set (False);
+        tileCacheIsSet_p.set (false);
     }
 
     Vector<String> columns (8);
@@ -1305,27 +1307,27 @@ VisibilityIteratorImplAsync2::setTileCache ()
                 msIterAtOrigin_p &&
                 ! tileCacheIsSet_p[k]) {
 
-                Block<String> refTables = theMs.getPartNames (True);
+                Block<String> refTables = theMs.getPartNames (true);
 
                 for (uInt kk = 0; kk < refTables.nelements (); ++kk) {
 
                     MeasurementSet elms (refTables[kk]);
-                    ROTiledStManAccessor tacc (elms, columns[k], True);
+                    ROTiledStManAccessor tacc (elms, columns[k], true);
                     tacc.setCacheSize (0, 1);
-                    tileCacheIsSet_p[k] = True;
+                    tileCacheIsSet_p[k] = true;
                     //cerr << "set cache on kk " << kk << " vol " << columns[k] << "  " << refTables[kk] << endl;
                 }
             }
             else {
 
-                ROTiledStManAccessor tacc (theMs, columns[k], True);
+                ROTiledStManAccessor tacc (theMs, columns[k], true);
                 tacc.clearCaches (); //One tile only for now ...seems to work faster
 
-                Bool setCache = True;
+                Bool setCache = true;
 
                 for (uInt jj = 0 ; jj <  tacc.nhypercubes (); ++jj) {
                     if (tacc.getBucketSize (jj) == 0) {
-                        setCache = False;
+                        setCache = false;
                     }
                 }
 
@@ -1459,7 +1461,7 @@ VisibilityIteratorImplAsync2::corrType (Vector<Int> & corrTypes) const
 #warning "Check this"
     Int polId = getMsIterInfo().polarizationId ();
 
-    subtableColumns_p->polarization ().corrType ().get (polId, corrTypes, True);
+    subtableColumns_p->polarization ().corrType ().get (polId, corrTypes, true);
 }
 
 void
@@ -1483,7 +1485,7 @@ VisibilityIteratorImplAsync2::existsFlagCategory() const
       cache_p.msHasFC_p = columns_p.flagCategory_p.hasContent();
     }
     catch (AipsError &){
-      cache_p.msHasFC_p = False;
+      cache_p.msHasFC_p = false;
     }
   }
   return cache_p.msHasFC_p;
@@ -1665,7 +1667,7 @@ VisibilityIteratorImplAsync2::getVisibilityAsStokes (Matrix<CStokesVector> & vis
 
     }
     else{
-        ThrowIf (True, String::format ("Unexpected number of polarizations: %d; should be 1, 2 or 4",
+        ThrowIf (true, String::format ("Unexpected number of polarizations: %d; should be 1, 2 or 4",
                                        nPolarizations_p));
     }
 }
@@ -1853,7 +1855,7 @@ VisibilityIteratorImplAsync2::existsWeightSpectrum () const
             //        << ", " << channelGroupSize () << endl;
             // }
         } catch (AipsError x) {
-            cache_p.msHasWtSp_p = False;
+            cache_p.msHasWtSp_p = false;
         }
     }
     return cache_p.msHasWtSp_p;
@@ -2014,7 +2016,7 @@ VisibilityIteratorImplAsync2::slurp () const
                     String dm_type;
                     dmInfo.subRecord (i).get ("TYPE", dm_type);
 
-                    Bool can_exceed_nr_buckets = False;
+                    Bool can_exceed_nr_buckets = false;
                     uInt num_buckets = getMsIterInfo().ms ().nrow ();
                         // One bucket is at least one row, so this is enough
 
@@ -2346,7 +2348,7 @@ VisibilityIteratorImplAsync2::putModel(const RecordInterface& rec, Bool iscompon
 //
 //  // Make sure  we have the right size
 //
-//  fields.resize(nfields, True);
+//  fields.resize(nfields, true);
 //  Int msid = msId();
 //
 //  Vector<Int> spws =  subtableColumns().spw_p[msid];
@@ -2444,7 +2446,7 @@ VisibilityIteratorImplAsync2::Columns::operator= (const VisibilityIteratorImplAs
 
 VisibilityIteratorImplAsync2::PendingChanges::PendingChanges ()
 : frequencySelections_p (0),
-  frequencySelectionsPending_p (False),
+  frequencySelectionsPending_p (false),
   interval_p (Empty),
   nRowBlocking_p (Empty)
 {}
@@ -2485,7 +2487,7 @@ VisibilityIteratorImplAsync2::PendingChanges::popFrequencySelections () // yield
     Bool wasPending = frequencySelectionsPending_p;
 
     frequencySelections_p = 0;
-    frequencySelectionsPending_p = False;
+    frequencySelectionsPending_p = false;
 
     return make_pair (wasPending, result);
 }
@@ -2516,7 +2518,7 @@ VisibilityIteratorImplAsync2::PendingChanges::setFrequencySelections (FrequencyS
     Assert (! frequencySelectionsPending_p);
 
     frequencySelections_p = fs;
-    frequencySelectionsPending_p = True;
+    frequencySelectionsPending_p = true;
 }
 
 void

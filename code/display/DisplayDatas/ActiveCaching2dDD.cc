@@ -38,6 +38,7 @@
 #include <casa/stdio.h>
 #include <casa/sstream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	ActiveCaching2dDD::ActiveCaching2dDD(const DisplayCoordinateSystem &coordsys,
@@ -50,9 +51,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsOptionsAspect("flexible"),
 		itsSpectralUnit("km/s"),
 		itsVelocityType("radio"),
-		itsAbsolute(True),
-		itsShowWorldCoordinate(True),
-		itsFractionalPixels(False) {
+		itsAbsolute(true),
+		itsShowWorldCoordinate(true),
+		itsFractionalPixels(false) {
 
 		setCoordinateSystem(coordsys, pixblc, pixtrc);
 	}
@@ -62,9 +63,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsOptionsAspect("flexible"),
 		itsSpectralUnit("km/s"),
 		itsVelocityType("radio"),
-		itsAbsolute(True),
-		itsShowWorldCoordinate(True),
-		itsFractionalPixels(False) {
+		itsAbsolute(true),
+		itsShowWorldCoordinate(true),
+		itsFractionalPixels(false) {
 		// MUST IMPLEMENT
 	}
 
@@ -101,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					retval = retval + String(" ");
 				}
 				retval += itsCoordinateSystem.format(units, Coordinate::DEFAULT,
-				                                     world(i), i, True, itsAbsolute);
+				                                     world(i), i, true, itsAbsolute);
 				if ((units != String("")) && (units != String(" "))) {
 					retval = retval + String(" ") + units;
 				}
@@ -193,7 +194,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		aspect.define("popt", vaspect);
 		aspect.define("default", vaspect(1));
 		aspect.define("value", itsOptionsAspect);
-		aspect.define("allowunset", False);
+		aspect.define("allowunset", false);
 		rec.defineRecord("aspect", aspect);
 //
 //
@@ -212,7 +213,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			absrel.define("value", "relative");
 		}
-		absrel.define("allowunset", False);
+		absrel.define("allowunset", false);
 		rec.defineRecord("absrel", absrel);
 //
 		Record pixworld;
@@ -230,7 +231,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			pixworld.define("value", "pixel");
 		}
-		pixworld.define("allowunset", False);
+		pixworld.define("allowunset", false);
 		rec.defineRecord("pixelworld", pixworld);
 //
 		Record fracpix;
@@ -248,7 +249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			fracpix.define("value", "integral");
 		}
-		fracpix.define("allowunset", False);
+		fracpix.define("allowunset", false);
 		rec.defineRecord("fracpix", fracpix);
 //
 		Int after = -1;
@@ -267,7 +268,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			spectralunit.define("popt", vunits);
 			spectralunit.define("default", "km/s");
 			spectralunit.define("value", itsSpectralUnit);
-			spectralunit.define("allowunset", False);
+			spectralunit.define("allowunset", false);
 			rec.defineRecord("spectralunit", spectralunit);
 //
 			Record veltype;
@@ -282,7 +283,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			veltype.define("popt", vunits);
 			veltype.define("default", "radio");
 			veltype.define("value", itsVelocityType);
-			veltype.define("allowunset", False);
+			veltype.define("allowunset", false);
 			rec.defineRecord("veltype", veltype);
 		}
 //
@@ -298,11 +299,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Return if another DD has already done size control.
 
-		if(!wch.isCSmaster(this)) return False;
+		if(!wch.isCSmaster(this)) return false;
 
-		if(itsCoordinateSystem.nPixelAxes()<2u) return False;
+		if(itsCoordinateSystem.nPixelAxes()<2u) return false;
 		// (the AC2dDD constructors and methods should have assured
-		// that this is invariantly True after construction themselves
+		// that this is invariantly true after construction themselves
 		// for internal object consistency, but so far they do not...)
 
 		// Otherwise, assume 'CSMaster' role: take charge of setting the
@@ -328,7 +329,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// a DD in most cases to decide whether it is compatible with the WC's
 		// current world coordinates (although if necessary a DD can look at
 		// WC CS info directly as well).   If the DD is not compatible, it should
-		// return False from conformsToCS(), and should not draw.
+		// return false from conformsToCS(), and should not draw.
 		// Ideally, axis codes would not be limited to two world coordinates as
 		// they are now.  (In the example above, world space is 3-dimensional, and
 		// axis codes should include a Declination world coordinate as well).
@@ -385,7 +386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static String unZoom = "resetCoordinates",
 		              zoomB = "manualZoomBlc", zoomT = "manualZoomTrc";
 
-		Bool unzoom = False;
+		Bool unzoom = false;
 		if(!reset && wCanvas->existsAttribute(unZoom)) {
 			wCanvas->getAttributeValue(unZoom, unzoom);
 		}
@@ -523,7 +524,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		holderBuf.add("linYMaxLimit", itsPixelTrc[1]);
 
 
-		return True;
+		return true;
 	}
 
 

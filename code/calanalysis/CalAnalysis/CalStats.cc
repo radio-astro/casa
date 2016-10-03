@@ -32,6 +32,7 @@ Modification history:
 // Start of casa namespace
 // -----------------------------------------------------------------------------
 
+using namespace casacore;
 namespace casa {
 
 // -----------------------------------------------------------------------------
@@ -319,13 +320,13 @@ CalStats::CalStats( const Cube<Double>& oValue, const Cube<Double>& oValueErr,
 
   // Initialize the input parameter cube iterators and reset them
 
-  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, False );
+  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, false );
   poValueIter->reset();
 
-  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, False );
+  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, false );
   poValueErrIter->reset();
 
-  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
+  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, false );
   poFlagIter->reset();
 
 
@@ -382,13 +383,13 @@ CalStats::CalStats( const CalStats& oCalStats ) {
   poValueErr = new Cube<Double>( oCalStats.valueErr().copy() );
   poFlag = new Cube<Bool>( oCalStats.flag().copy() );
 
-  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, False );
+  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, false );
   poValueIter->reset();
 
-  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, False );
+  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, false );
   poValueErrIter->reset();
 
-  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
+  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, false );
   poFlagIter->reset();
 
 
@@ -456,15 +457,15 @@ CalStats& CalStats::operator=( const CalStats& oCalStats ) {
   poFlag = new Cube<Bool>( oCalStats.flag().copy() );
 
   delete poValueIter;
-  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, False );
+  poValueIter = new ArrayIterator<Double>( *poValue, oAxisIterID, false );
   poValueIter->reset();
 
   delete poValueErrIter;
-  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, False );
+  poValueErrIter = new ArrayIterator<Double>( *poValueErr, oAxisIterID, false );
   poValueErrIter->reset();
 
   delete poFlagIter;
-  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, False );
+  poFlagIter = new ArrayIterator<Bool>( *poFlag, oAxisIterID, false );
   poFlagIter->reset();
 
 

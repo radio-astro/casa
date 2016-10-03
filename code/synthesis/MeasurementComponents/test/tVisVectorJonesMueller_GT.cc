@@ -41,6 +41,7 @@
 #include <gtest/gtest.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
 #define NCHAN 8
@@ -52,47 +53,47 @@ public:
 
   virtual void setupV1() {
     v1=Vector<Complex>(1,cOne);
-    f1=Vector<Bool>(1,False);
+    f1=Vector<Bool>(1,false);
     V1=Cube<Complex>(1,NCHAN,nBsln,cOne);
-    F1=Cube<Bool>(1,NCHAN,nBsln,False);
+    F1=Cube<Bool>(1,NCHAN,nBsln,false);
   }
   virtual void setupV2() {
     v2=Vector<Complex>(2,cOne);
-    f2=Vector<Bool>(2,False);
+    f2=Vector<Bool>(2,false);
     V2=Cube<Complex>(2,NCHAN,nBsln,cOne);
-    F2=Cube<Bool>(2,NCHAN,nBsln,False);
+    F2=Cube<Bool>(2,NCHAN,nBsln,false);
 
   }
   virtual void setupV4() {
     v4=Vector<Complex>(4,cOne);
-    f4=Vector<Bool>(4,False);
+    f4=Vector<Bool>(4,false);
     V4=Cube<Complex>(4,NCHAN,nBsln,cOne);
-    F4=Cube<Bool>(4,NCHAN,nBsln,False);
+    F4=Cube<Bool>(4,NCHAN,nBsln,false);
   }
   virtual void setupV4b() {
     v4=Vector<Complex>(4,cOne);
     v4(1)=v4(2)=Complex(0.0);
-    f4=Vector<Bool>(4,False);
+    f4=Vector<Bool>(4,false);
     //V4=Cube<Complex>(4,NCHAN,nBsln,cOne);
-    //F4=Cube<Bool>(4,NCHAN,nBsln,False);
+    //F4=Cube<Bool>(4,NCHAN,nBsln,false);
   }
   virtual void setupScalar() {
     js=Vector<Complex>(1,iTwo);
-    jsok=Vector<Bool>(1,True);
+    jsok=Vector<Bool>(1,true);
   }
 
   virtual void setupDiag() {
     jd=Vector<Complex>(2);
     jd(0)=iTwo;
     jd(1)=iFour;
-    jdok=Vector<Bool>(2,True);
+    jdok=Vector<Bool>(2,true);
   }
 
   virtual void setupGenLin() {
     jgl=Vector<Complex>(2);
     jgl(0)=iTwo;
     jgl(1)=iThree;
-    jglok=Vector<Bool>(2,True);
+    jglok=Vector<Bool>(2,true);
   }
   virtual void setupGen() {
     jg=Vector<Complex>(4);
@@ -100,13 +101,13 @@ public:
     jg(1)=iTwo;
     jg(2)=iThree;
     jg(3)=cOne;
-    jgok=Vector<Bool>(4,True);
+    jgok=Vector<Bool>(4,true);
   }
 
   virtual void setupB() {
     B=Cube<Complex>(2,NCHAN,NANT);
     Bok=Cube<Bool>(2,NCHAN,NANT);
-    Bok=True;
+    Bok=true;
     for (Int iant=0;iant<NANT;++iant) {
       Float A=1.0+Float(iant+33.0)/100.0;
       Float sg( ((iant+1)%2)*2-1 );
@@ -127,7 +128,7 @@ public:
     V4(Slice(1,1,1),Slice(),Slice())=Complex(Q,U);
     V4(Slice(2,1,1),Slice(),Slice())=Complex(Q,-U);
     V4(Slice(3,1,1),Slice(),Slice())=Complex(I-V);
-    F4=Cube<Bool>(4,NCHAN,nBsln,False);
+    F4=Cube<Bool>(4,NCHAN,nBsln,false);
   }
 
   virtual void setupV4B(Float I,Float Q,Float U,Float V) {
@@ -186,11 +187,11 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorTest1 ) {
   setupV1();
 
   // nCorr=1  *******************************************
-  VisVector VV1(visType(1),False);
+  VisVector VV1(visType(1),false);
   VV1.sync(V1(0,0,0),F1(0,0,0));
   ASSERT_EQ(1,VV1.type());
 
-  VisVector VV2(visType(2),False);
+  VisVector VV2(visType(2),false);
   ASSERT_EQ(2,VV2.type());
   VV2.setType(visType(1));  // reset the type
   ASSERT_EQ(1,VV2.type());
@@ -199,19 +200,19 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorTest1 ) {
   // zero (and flag)
   VV1.zero();
   ASSERT_TRUE(allEQ(V1(Slice(),Slice(0,1,1),Slice(0,1,1)),cZero));
-  ASSERT_TRUE(allEQ(F1(Slice(),Slice(0,1,1),Slice(0,1,1)),True));
+  ASSERT_TRUE(allEQ(F1(Slice(),Slice(0,1,1),Slice(0,1,1)),true));
 
   // assign
   VV1=VV2;
   ASSERT_TRUE(allEQ(V1(Slice(),Slice(0,1,1),Slice(0,1,1)),cOne));
-  ASSERT_TRUE(allEQ(F1(Slice(),Slice(0,1,1),Slice(0,1,1)),False));
+  ASSERT_TRUE(allEQ(F1(Slice(),Slice(0,1,1),Slice(0,1,1)),false));
 
   // Advance and zero
   Int adv(NANT*NCHAN/2);
   VV1.advance(adv);
   VV1.zero();
   ASSERT_TRUE(allEQ(V1(Slice(),Slice(adv%NCHAN,1,1),Slice(adv/NCHAN,1,1)),cZero));
-  ASSERT_TRUE(allEQ(F1(Slice(),Slice(adv%NCHAN,1,1),Slice(adv/NCHAN,1,1)),True));
+  ASSERT_TRUE(allEQ(F1(Slice(),Slice(adv%NCHAN,1,1),Slice(adv/NCHAN,1,1)),true));
 
 }
 
@@ -220,11 +221,11 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorTest2 ) {
   setupV2();
 
   // nCorr=2  *******************************************
-  VisVector VV1(visType(2),False);
+  VisVector VV1(visType(2),false);
   VV1.sync(V2(0,0,0),F2(0,0,0));
   ASSERT_EQ(2,VV1.type());
 
-  VisVector VV2(visType(1),False);
+  VisVector VV2(visType(1),false);
   ASSERT_EQ(1,VV2.type());
   VV2.setType(visType(2));  // reset the type
   ASSERT_EQ(2,VV2.type());
@@ -233,19 +234,19 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorTest2 ) {
   // zero (and flag)
   VV1.zero();
   ASSERT_TRUE(allEQ(V2(Slice(),Slice(0,1,1),Slice(0,1,1)),cZero));
-  ASSERT_TRUE(allEQ(F2(Slice(),Slice(0,1,1),Slice(0,1,1)),True));
+  ASSERT_TRUE(allEQ(F2(Slice(),Slice(0,1,1),Slice(0,1,1)),true));
 
   // assign
   VV1=VV2;
   ASSERT_TRUE(allEQ(V2(Slice(),Slice(0,1,1),Slice(0,1,1)),cOne));
-  ASSERT_TRUE(allEQ(F2(Slice(),Slice(0,1,1),Slice(0,1,1)),False));
+  ASSERT_TRUE(allEQ(F2(Slice(),Slice(0,1,1),Slice(0,1,1)),false));
 
   // Advance and zero
   Int adv(NANT*NCHAN/2);
   VV1.advance(adv);
   VV1.zero();
   ASSERT_TRUE(allEQ(V2(Slice(),Slice(adv%NCHAN,1,1),Slice(adv/NCHAN,1,1)),cZero));
-  ASSERT_TRUE(allEQ(F2(Slice(),Slice(adv%NCHAN,1,1),Slice(adv/NCHAN,1,1)),True));
+  ASSERT_TRUE(allEQ(F2(Slice(),Slice(adv%NCHAN,1,1),Slice(adv/NCHAN,1,1)),true));
 
 }
 
@@ -254,11 +255,11 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorTest4 ) {
   setupV4();
 
   // nCorr=4  *******************************************
-  VisVector VV1(visType(4),False);
+  VisVector VV1(visType(4),false);
   VV1.sync(V4(0,0,0),F4(0,0,0));
   ASSERT_EQ(4,VV1.type());
 
-  VisVector VV2(visType(2),False);
+  VisVector VV2(visType(2),false);
   ASSERT_EQ(2,VV2.type());
   VV2.setType(visType(4));  // reset the type
   ASSERT_EQ(4,VV2.type());
@@ -267,12 +268,12 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorTest4 ) {
   // zero (and flag)
   VV1.zero();
   ASSERT_TRUE(allEQ(V4(Slice(),Slice(0,1,1),Slice(0,1,1)),cZero));
-  ASSERT_TRUE(allEQ(F4(Slice(),Slice(0,1,1),Slice(0,1,1)),True));
+  ASSERT_TRUE(allEQ(F4(Slice(),Slice(0,1,1),Slice(0,1,1)),true));
 
   // assign
   VV1=VV2;
   ASSERT_TRUE(allEQ(V4(Slice(),Slice(0,1,1),Slice(0,1,1)),cOne));
-  ASSERT_TRUE(allEQ(F4(Slice(),Slice(0,1,1),Slice(0,1,1)),False));
+  ASSERT_TRUE(allEQ(F4(Slice(),Slice(0,1,1),Slice(0,1,1)),false));
 
   // Advance and zero
   Int adv(NANT*NCHAN/2);
@@ -280,7 +281,7 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorTest4 ) {
   VV1.zero();
 
   ASSERT_TRUE(allEQ(V4(Slice(),Slice(adv%NCHAN,1,1),Slice(adv/NCHAN,1,1)),cZero));
-  ASSERT_TRUE(allEQ(F4(Slice(),Slice(adv%NCHAN,1,1),Slice(adv/NCHAN,1,1)),True));
+  ASSERT_TRUE(allEQ(F4(Slice(),Slice(adv%NCHAN,1,1),Slice(adv/NCHAN,1,1)),true));
 
 }
 
@@ -289,7 +290,7 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorIterTest1 ) {
   setupV1();
 
   // nCorr=1 *******************************************
-  VisVector V(visType(1),False);
+  VisVector V(visType(1),false);
   ASSERT_EQ(1,V.type());
 
   // Iterate, zeroing all
@@ -301,9 +302,9 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorIterTest1 ) {
 
   // All zeroed and flagged
   ASSERT_TRUE(allEQ(V1,cZero));
-  ASSERT_TRUE(allEQ(F1,True));
+  ASSERT_TRUE(allEQ(F1,true));
 
-  VisVector v(visType(1),False);
+  VisVector v(visType(1),false);
   v.sync(v1(0),f1(0));
 
   // Iterate, assigining all
@@ -314,7 +315,7 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorIterTest1 ) {
   }
 
   ASSERT_TRUE(allEQ(V1,cOne));
-  ASSERT_TRUE(allEQ(F1,False));
+  ASSERT_TRUE(allEQ(F1,false));
 
 }
 
@@ -323,7 +324,7 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorIterTest2 ) {
   setupV2();
 
   // nCorr=2 *******************************************
-  VisVector V(visType(2),False);
+  VisVector V(visType(2),false);
   ASSERT_EQ(2,V.type());
 
   // Iterate, zeroing all
@@ -335,9 +336,9 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorIterTest2 ) {
 
   // All zeroed and flagged
   ASSERT_TRUE(allEQ(V2,cZero));
-  ASSERT_TRUE(allEQ(F2,True));
+  ASSERT_TRUE(allEQ(F2,true));
 
-  VisVector v(visType(2),False);
+  VisVector v(visType(2),false);
   v.sync(v2(0),f2(0));
 
   // Iterate, assigining all
@@ -348,7 +349,7 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorIterTest2 ) {
   }
 
   ASSERT_TRUE(allEQ(V2,cOne));
-  ASSERT_TRUE(allEQ(F2,False));
+  ASSERT_TRUE(allEQ(F2,false));
 
 }
 
@@ -357,7 +358,7 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorIterTest4 ) {
   setupV4();
 
   // nCorr=4 *******************************************
-  VisVector V(visType(4),False);
+  VisVector V(visType(4),false);
   ASSERT_EQ(4,V.type());
 
   // Iterate, zeroing all
@@ -369,9 +370,9 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorIterTest4 ) {
 
   // All zeroed and flagged
   ASSERT_TRUE(allEQ(V4,cZero));
-  ASSERT_TRUE(allEQ(F4,True));
+  ASSERT_TRUE(allEQ(F4,true));
 
-  VisVector v(visType(4),False);
+  VisVector v(visType(4),false);
   v.sync(v4(0),f4(0));
 
   // Iterate, assigining all
@@ -382,7 +383,7 @@ TEST_F( VisVectorJonesMuellerTest, VisVectorIterTest4 ) {
   }
 
   ASSERT_TRUE(allEQ(V4,cOne));
-  ASSERT_TRUE(allEQ(F4,False));
+  ASSERT_TRUE(allEQ(F4,false));
 
 }
 
@@ -408,7 +409,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesScalTest ) {
     setupV1();
     setupScalar();
 
-    VisVector V(visType(1),False);
+    VisVector V(visType(1),false);
     V.sync(v1(0),f1(0));
     
     S.applyRight(V);
@@ -423,12 +424,12 @@ TEST_F( VisVectorJonesMuellerTest, JonesScalTest ) {
     S.applyLeft(V);
     ASSERT_TRUE(allEQ(v1,cOne));
     
-    jsok(0)=False;  // flag the solution
+    jsok(0)=false;  // flag the solution
     S.applyRight(V);
-    ASSERT_TRUE(allEQ(f1,True));  // now flagged
-    f1(0)=False;                  // unflag V
+    ASSERT_TRUE(allEQ(f1,true));  // now flagged
+    f1(0)=false;                  // unflag V
     S.applyLeft(V);
-    ASSERT_TRUE(allEQ(f1,True));  // now flagged
+    ASSERT_TRUE(allEQ(f1,true));  // now flagged
     
   }
 
@@ -437,7 +438,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesScalTest ) {
     setupV2();
     setupScalar();
 
-    VisVector V(visType(2),False);
+    VisVector V(visType(2),false);
     V.sync(v2(0),f2(0));
     
     S.applyRight(V);
@@ -452,12 +453,12 @@ TEST_F( VisVectorJonesMuellerTest, JonesScalTest ) {
     S.applyLeft(V);
     ASSERT_TRUE(allEQ(v2,cOne));
     
-    jsok(0)=False;  // flag the solution
+    jsok(0)=false;  // flag the solution
     S.applyRight(V);
-    ASSERT_TRUE(allEQ(f2,True));  // now flagged
-    f2(0)=False;                  // unflag V
+    ASSERT_TRUE(allEQ(f2,true));  // now flagged
+    f2(0)=false;                  // unflag V
     S.applyLeft(V);
-    ASSERT_TRUE(allEQ(f2,True));  // now flagged
+    ASSERT_TRUE(allEQ(f2,true));  // now flagged
     
   }
 
@@ -466,7 +467,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesScalTest ) {
     setupV4();
     setupScalar();
 
-    VisVector V(visType(4),False);
+    VisVector V(visType(4),false);
     V.sync(v4(0),f4(0));
     
     S.applyRight(V);
@@ -481,12 +482,12 @@ TEST_F( VisVectorJonesMuellerTest, JonesScalTest ) {
     S.applyLeft(V);
     ASSERT_TRUE(allEQ(v4,cOne));
     
-    jsok(0)=False;  // flag the solution
+    jsok(0)=false;  // flag the solution
     S.applyRight(V);
-    ASSERT_TRUE(allEQ(f4,True));  // now flagged
-    f4(0)=False;                  // unflag V
+    ASSERT_TRUE(allEQ(f4,true));  // now flagged
+    f4(0)=false;                  // unflag V
     S.applyLeft(V);
-    ASSERT_TRUE(allEQ(f4,True));  // now flagged
+    ASSERT_TRUE(allEQ(f4,true));  // now flagged
     
   }
 
@@ -518,7 +519,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesDiagTest ) {
     setupV2();
     setupDiag();
 
-    VisVector V(visType(2),False);
+    VisVector V(visType(2),false);
     V.sync(v2(0),f2(0));
     
     D.applyRight(V);
@@ -538,21 +539,21 @@ TEST_F( VisVectorJonesMuellerTest, JonesDiagTest ) {
 
     setupDiag();
     setupV2();
-    jdok(0)=False;        // flag first solution
+    jdok(0)=false;        // flag first solution
     D.applyRight(V);
     ASSERT_TRUE(f2(0));   // now flagged
     ASSERT_FALSE(f2(1));  // not flagged
-    jdok(1)=False;        // flag second solution
+    jdok(1)=false;        // flag second solution
     D.applyRight(V);
     ASSERT_TRUE(f2(1));   // now flagged
 
     setupDiag();
     setupV2();
-    jdok(0)=False;        // flag first solution
+    jdok(0)=false;        // flag first solution
     D.applyLeft(V);
     ASSERT_TRUE(f2(0));   // now flagged
     ASSERT_FALSE(f2(1));  // not flagged
-    jdok(1)=False;        // flag second solution
+    jdok(1)=false;        // flag second solution
     D.applyLeft(V);
     ASSERT_TRUE(f2(1));   // now flagged
   }
@@ -562,7 +563,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesDiagTest ) {
     setupV4();
     setupDiag();
 
-    VisVector V(visType(4),False);
+    VisVector V(visType(4),false);
     V.sync(v4(0),f4(0));
     
     D.applyRight(V);
@@ -588,26 +589,26 @@ TEST_F( VisVectorJonesMuellerTest, JonesDiagTest ) {
 
     setupDiag();
     setupV4();
-    jdok(0)=False;        // flag first solution
+    jdok(0)=false;        // flag first solution
     D.applyRight(V);
     ASSERT_TRUE(f4(0));   // now flagged
     ASSERT_TRUE(f4(1));   // now flagged
     ASSERT_FALSE(f4(2));  // not flagged
     ASSERT_FALSE(f4(3));  // not flagged
-    jdok(1)=False;        // flag second solution
+    jdok(1)=false;        // flag second solution
     D.applyRight(V);
     ASSERT_TRUE(f4(2));   // now flagged
     ASSERT_TRUE(f4(3));   // now flagged
 
     setupDiag();
     setupV4();
-    jdok(0)=False;        // flag first solution
+    jdok(0)=false;        // flag first solution
     D.applyLeft(V);
     ASSERT_TRUE(f4(0));   // now flagged
     ASSERT_FALSE(f4(1));  // not flagged
     ASSERT_TRUE(f4(2));   // now flagged
     ASSERT_FALSE(f4(3));  // not flagged
-    jdok(1)=False;        // flag second solution
+    jdok(1)=false;        // flag second solution
     D.applyLeft(V);
     ASSERT_TRUE(f4(1));   // now flagged
     ASSERT_TRUE(f4(3));   // now flagged
@@ -643,7 +644,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenLinTest ) {
     setupV4b();
     setupGenLin();
 
-    VisVector V(visType(4),False);
+    VisVector V(visType(4),false);
     V.sync(v4(0),f4(0));
     
     GL.applyRight(V);
@@ -676,13 +677,13 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenLinTest ) {
 
     setupGenLin();
     setupV4b();
-    jglok(0)=False;        // flag first solution
+    jglok(0)=false;        // flag first solution
     GL.applyRight(V);
     ASSERT_FALSE(f4(0));  // not flagged
     ASSERT_TRUE(f4(1));   // now flagged
     ASSERT_FALSE(f4(2));  // not flagged
     ASSERT_FALSE(f4(3));  // not flagged
-    jglok(1)=False;        // flag second solution
+    jglok(1)=false;        // flag second solution
     GL.applyRight(V);
     ASSERT_FALSE(f4(0));  // not flagged
     ASSERT_TRUE(f4(1));   // now flagged
@@ -691,13 +692,13 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenLinTest ) {
 
     setupGenLin();
     setupV4b();
-    jglok(0)=False;        // flag first solution
+    jglok(0)=false;        // flag first solution
     GL.applyLeft(V);
     ASSERT_FALSE(f4(0));  // not flagged
     ASSERT_FALSE(f4(1));  // not flagged
     ASSERT_TRUE(f4(2));   // now flagged
     ASSERT_FALSE(f4(3));  // not flagged
-    jglok(1)=False;       // flag second solution
+    jglok(1)=false;       // flag second solution
     GL.applyLeft(V);
     ASSERT_FALSE(f4(0));  // not flagged
     ASSERT_TRUE(f4(1));   // now flagged
@@ -737,7 +738,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenTest ) {
     setupV4b();
     setupGenLin();
 
-    VisVector V(visType(4),False);
+    VisVector V(visType(4),false);
     V.sync(v4(0),f4(0));
     
     J.applyRight(V);
@@ -768,7 +769,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenTest ) {
 
     setupGen();
     setupV4b();
-    jgok(0)=False;        // flag first diag solution
+    jgok(0)=false;        // flag first diag solution
     J.applyRight(V);
     ASSERT_TRUE(f4(0)); 
     ASSERT_TRUE(f4(1)); 
@@ -777,7 +778,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenTest ) {
 
     setupGen();
     setupV4b();
-    jgok(1)=False;        // flag first off-diag solution
+    jgok(1)=false;        // flag first off-diag solution
     J.applyRight(V);
     ASSERT_TRUE(f4(0)); 
     ASSERT_TRUE(f4(1)); 
@@ -786,7 +787,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenTest ) {
 
     setupGen();
     setupV4b();
-    jgok(2)=False;        // flag second off-diag solution
+    jgok(2)=false;        // flag second off-diag solution
     J.applyRight(V);
     ASSERT_FALSE(f4(0));
     ASSERT_FALSE(f4(1));
@@ -795,7 +796,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenTest ) {
 
     setupGen();
     setupV4b();
-    jgok(3)=False;        // flag second diag solution
+    jgok(3)=false;        // flag second diag solution
     J.applyRight(V);
     ASSERT_FALSE(f4(0));
     ASSERT_FALSE(f4(1));
@@ -805,7 +806,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenTest ) {
 
     setupGen();
     setupV4b();
-    jgok(0)=False;        // flag first diag solution
+    jgok(0)=false;        // flag first diag solution
     J.applyLeft(V);
     ASSERT_TRUE(f4(0));   
     ASSERT_FALSE(f4(1));  
@@ -814,7 +815,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenTest ) {
 
     setupGen();
     setupV4b();
-    jgok(1)=False;        // flag first off-diag solution
+    jgok(1)=false;        // flag first off-diag solution
     J.applyLeft(V);
     ASSERT_TRUE(f4(0));   
     ASSERT_FALSE(f4(1));  
@@ -823,7 +824,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenTest ) {
 
     setupGen();
     setupV4b();
-    jgok(2)=False;        // flag second off-diag solution
+    jgok(2)=false;        // flag second off-diag solution
     J.applyLeft(V);
     ASSERT_FALSE(f4(0)); 
     ASSERT_TRUE(f4(1));  
@@ -832,7 +833,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesGenTest ) {
 
     setupGen();
     setupV4b();
-    jgok(3)=False;        // flag second diag solution
+    jgok(3)=false;        // flag second diag solution
     J.applyLeft(V);
     ASSERT_FALSE(f4(0)); 
     ASSERT_TRUE(f4(1));  
@@ -851,7 +852,7 @@ TEST_F( VisVectorJonesMuellerTest, JonesDiagIterTest ) {
 
   setupV4B(I,Q,U,sV);
 
-  VisVector V(visType(4),False);
+  VisVector V(visType(4),false);
   JonesDiag B1,B2;
 
   // Invert the Bs

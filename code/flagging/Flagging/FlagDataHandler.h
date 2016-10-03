@@ -51,7 +51,7 @@
 #include <casa/OS/HostInfo.h>
 #include <sys/time.h>
 
-// Data mapping
+// casacore::Data mapping
 #include <algorithm>
 #include <map>
 
@@ -60,24 +60,24 @@
 	{\
 		gettimeofday(&stop,0);\
 		elapsedTime = (stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0;\
-		*logger_p << LogIO::DEBUG2 << "FlagDataHandler::" << __FUNCTION__ << " Executed in: " << elapsedTime << " ms, Memory free: " << HostInfo::memoryFree( )/1024.0 << " MB" << LogIO::POST;\
+		*logger_p << casacore::LogIO::DEBUG2 << "FlagDataHandler::" << __FUNCTION__ << " Executed in: " << elapsedTime << " ms, casacore::Memory free: " << casacore::HostInfo::memoryFree( )/1024.0 << " MB" << casacore::LogIO::POST;\
 	}
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Type definitions
-typedef std::map< std::pair<Int,Int>,std::vector<uInt> >::iterator antennaPairMapIterator;
-typedef std::map< Double,std::vector<uInt> >::iterator subIntegrationMapIterator;
-typedef std::map< uShort,uShort >::iterator polartizationMapIterator;
-typedef std::map< std::pair<Int,Int>,std::vector<uInt> > antennaPairMap;
-typedef std::map< Double,std::vector<uInt> > subIntegrationMap;
-typedef std::map< uShort,uShort > polarizationMap;
-typedef std::map< uInt,String > polarizationIndexMap;
-typedef std::vector< vector<Double> > antennaPointingMap;
-typedef std::map< Int,vector<Double> > scanStartStopMap;
-typedef std::map< Int,Double > lambdaMap;
+typedef std::map< std::pair<casacore::Int,casacore::Int>,std::vector<casacore::uInt> >::iterator antennaPairMapIterator;
+typedef std::map< casacore::Double,std::vector<casacore::uInt> >::iterator subIntegrationMapIterator;
+typedef std::map< casacore::uShort,casacore::uShort >::iterator polartizationMapIterator;
+typedef std::map< std::pair<casacore::Int,casacore::Int>,std::vector<casacore::uInt> > antennaPairMap;
+typedef std::map< casacore::Double,std::vector<casacore::uInt> > subIntegrationMap;
+typedef std::map< casacore::uShort,casacore::uShort > polarizationMap;
+typedef std::map< casacore::uInt,casacore::String > polarizationIndexMap;
+typedef std::vector< vector<casacore::Double> > antennaPointingMap;
+typedef std::map< casacore::Int,vector<casacore::Double> > scanStartStopMap;
+typedef std::map< casacore::Int,casacore::Double > lambdaMap;
 
-const Complex ImaginaryUnit = Complex(0,1);
+const casacore::Complex ImaginaryUnit = casacore::Complex(0,1);
 
 // We need to have the CubeView definition here because its type is used by FlagDataHandler class
 template<class T> class CubeView
@@ -85,11 +85,11 @@ template<class T> class CubeView
 
 public:
 
-	CubeView(Cube<T> *parentCube, std::vector<uInt> *rows = NULL, std::vector<uInt> *channels = NULL, std::vector<uInt> *polarizations = NULL)
+	CubeView(casacore::Cube<T> *parentCube, std::vector<casacore::uInt> *rows = NULL, std::vector<casacore::uInt> *channels = NULL, std::vector<casacore::uInt> *polarizations = NULL)
 	{
 		parentCube_p = parentCube;
-		IPosition baseCubeShape = parentCube_p->shape();
-		reducedLength_p = IPosition(3);
+		casacore::IPosition baseCubeShape = parentCube_p->shape();
+		reducedLength_p = casacore::IPosition(3);
 
 		if (((polarizations != NULL) and (polarizations->size() > 0)) and
 			((channels != NULL) and (channels->size() > 0)) and
@@ -163,17 +163,17 @@ public:
 		}
 	}
 
-    T &operator()(uInt i1, uInt i2, uInt i3)
+    T &operator()(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3)
     {
     	return (*this.*access_p)(i1,i2,i3);
     }
 
-    const IPosition &shape() const
+    const casacore::IPosition &shape() const
     {
     	return reducedLength_p;
     }
 
-    void shape(Int &s1, Int &s2, Int &s3) const
+    void shape(casacore::Int &s1, casacore::Int &s2, casacore::Int &s3) const
     {
     	s1 = reducedLength_p(0);
     	s2 = reducedLength_p(1);
@@ -183,87 +183,87 @@ public:
 
 protected:
 
-    vector<uInt> *createIndex(uInt size)
+    vector<casacore::uInt> *createIndex(casacore::uInt size)
     {
-    	vector<uInt> *index = new vector<uInt>(size);
+    	vector<casacore::uInt> *index = new vector<casacore::uInt>(size);
     	index->clear();
-    	for (uInt i=0; i<size; i++ )
+    	for (casacore::uInt i=0; i<size; i++ )
     	{
     		index->push_back(i);
     	}
     	return index;
     }
 
-    T &accessUnmapped(uInt i1, uInt i2, uInt i3)
+    T &accessUnmapped(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3)
     {
     	return parentCube_p->at(i1,i2,i3);
     }
 
-    T &accessMapped(uInt i1, uInt i2, uInt i3)
+    T &accessMapped(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3)
     {
-    	uInt i1_index = polarizations_p->at(i1);
-    	uInt i2_index = channels_p->at(i2);
-    	uInt i3_index = rows_p->at(i3);
+    	casacore::uInt i1_index = polarizations_p->at(i1);
+    	casacore::uInt i2_index = channels_p->at(i2);
+    	casacore::uInt i3_index = rows_p->at(i3);
     	return parentCube_p->at(i1_index,i2_index,i3_index);
     }
 
-    T &accessIndex1Mapped(uInt i1, uInt i2, uInt i3)
+    T &accessIndex1Mapped(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3)
     {
-    	uInt i1_index = polarizations_p->at(i1);
+    	casacore::uInt i1_index = polarizations_p->at(i1);
     	return parentCube_p->at(i1_index,i2,i3);
     }
 
-    T &accessIndex2Mapped(uInt i1, uInt i2, uInt i3)
+    T &accessIndex2Mapped(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3)
     {
-    	uInt i2_index = channels_p->at(i2);
+    	casacore::uInt i2_index = channels_p->at(i2);
     	return parentCube_p->at(i1,i2_index,i3);
     }
 
-    T &accessIndex3Mapped(uInt i1, uInt i2, uInt i3)
+    T &accessIndex3Mapped(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3)
     {
-    	uInt i3_index = rows_p->at(i3);
+    	casacore::uInt i3_index = rows_p->at(i3);
     	return parentCube_p->at(i1,i2,i3_index);
     }
 
-    T &accessIndex12Mapped(uInt i1, uInt i2, uInt i3)
+    T &accessIndex12Mapped(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3)
     {
-    	uInt i1_index = polarizations_p->at(i1);
-    	uInt i2_index = channels_p->at(i2);
+    	casacore::uInt i1_index = polarizations_p->at(i1);
+    	casacore::uInt i2_index = channels_p->at(i2);
     	return parentCube_p->at(i1_index,i2_index,i3);
     }
 
-    T &accessIndex13Mapped(uInt i1, uInt i2, uInt i3)
+    T &accessIndex13Mapped(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3)
     {
-    	uInt i1_index = polarizations_p->at(i1);
-    	uInt i3_index = rows_p->at(i3);
+    	casacore::uInt i1_index = polarizations_p->at(i1);
+    	casacore::uInt i3_index = rows_p->at(i3);
     	return parentCube_p->at(i1_index,i2,i3_index);
     }
 
-    T &accessIndex23Mapped(uInt i1, uInt i2, uInt i3)
+    T &accessIndex23Mapped(casacore::uInt i1, casacore::uInt i2, casacore::uInt i3)
     {
-    	uInt i2_index = channels_p->at(i2);
-    	uInt i3_index = rows_p->at(i3);
+    	casacore::uInt i2_index = channels_p->at(i2);
+    	casacore::uInt i3_index = rows_p->at(i3);
     	return parentCube_p->at(i1,i2_index,i3_index);
     }
 
 private:
-    Cube<T> *parentCube_p;
-	std::vector<uInt> *rows_p;
-	std::vector<uInt> *channels_p;
-	std::vector<uInt> *polarizations_p;
-	IPosition reducedLength_p;
-	T &(casa::CubeView<T>::*access_p)(uInt,uInt,uInt);
+    casacore::Cube<T> *parentCube_p;
+	std::vector<casacore::uInt> *rows_p;
+	std::vector<casacore::uInt> *channels_p;
+	std::vector<casacore::uInt> *polarizations_p;
+	casacore::IPosition reducedLength_p;
+	T &(casa::CubeView<T>::*access_p)(casacore::uInt,casacore::uInt,casacore::uInt);
 };
 
 template<class T> class VectorView
 {
 
 public:
-	VectorView(Vector<T> *parentVector, std::vector<uInt> *rows = NULL)
+	VectorView(casacore::Vector<T> *parentVector, std::vector<casacore::uInt> *rows = NULL)
 	{
-		IPosition parentVectorShape = parentVector->shape();
+		casacore::IPosition parentVectorShape = parentVector->shape();
 		parentVector_p = parentVector;
-		reducedLength_p = IPosition(1);
+		reducedLength_p = casacore::IPosition(1);
 
 		if ((rows != NULL) and (rows->size() > 0))
 		{
@@ -286,17 +286,17 @@ public:
 		}
 	}
 
-    T &operator()(uInt i1)
+    T &operator()(casacore::uInt i1)
     {
     	return (*this.*access_p)(i1);
     }
 
-    const IPosition &shape() const
+    const casacore::IPosition &shape() const
     {
     	return reducedLength_p;
     }
 
-    void shape(Int &s1) const
+    void shape(casacore::Int &s1) const
     {
     	s1 = reducedLength_p(0);
     	return;
@@ -304,78 +304,78 @@ public:
 
 protected:
 
-    vector<uInt> *createIndex(uInt size)
+    vector<casacore::uInt> *createIndex(casacore::uInt size)
     {
-    	vector<uInt> *index = new vector<uInt>(size);
+    	vector<casacore::uInt> *index = new vector<casacore::uInt>(size);
     	index->clear();
-    	for (uInt i=0; i<size; i++ )
+    	for (casacore::uInt i=0; i<size; i++ )
     	{
     		index->push_back(i);
     	}
     	return index;
     }
 
-    T &accessUnmapped(uInt i1)
+    T &accessUnmapped(casacore::uInt i1)
     {
     	return parentVector_p->operator()(i1);
     }
 
-    T &accessMapped(uInt i1)
+    T &accessMapped(casacore::uInt i1)
     {
-    	uInt i1_index = rows_p->at(i1);
+    	casacore::uInt i1_index = rows_p->at(i1);
     	return parentVector_p->operator()(i1_index);
     }
 
 private:
-    Vector<T> *parentVector_p;
-	std::vector<uInt> *rows_p;
-	IPosition reducedLength_p;
-	T &(casa::VectorView<T>::*access_p)(uInt);
+    casacore::Vector<T> *parentVector_p;
+	std::vector<casacore::uInt> *rows_p;
+	casacore::IPosition reducedLength_p;
+	T &(casa::VectorView<T>::*access_p)(casacore::uInt);
 };
 
 class VisMapper
 {
-	typedef Complex (casa::VisMapper::*corrProduct)(uInt,uInt);
+	typedef casacore::Complex (casa::VisMapper::*corrProduct)(casacore::uInt,casacore::uInt);
 
 public:
 
 	enum calsolutions {
 
-		CALSOL1=Stokes::NumberOfTypes,
+		CALSOL1=casacore::Stokes::NumberOfTypes,
 		CALSOL2,
 		CALSOL3,
 		CALSOL4
 	};
 
-	VisMapper(String expression,polarizationMap *polMap,CubeView<Complex> *leftVis,CubeView<Complex> *rightVis=NULL);
-	VisMapper(String expression,polarizationMap *polMap);
+	VisMapper(casacore::String expression,polarizationMap *polMap,CubeView<casacore::Complex> *leftVis,CubeView<casacore::Complex> *rightVis=NULL);
+	VisMapper(casacore::String expression,polarizationMap *polMap);
 	~VisMapper();
 
-    void setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis=NULL);
+    void setParentCubes(CubeView<casacore::Complex> *leftVis,CubeView<casacore::Complex> *rightVis=NULL);
 
-    vector< vector<uInt> > getSelectedCorrelations() { return selectedCorrelations_p;}
+    vector< vector<casacore::uInt> > getSelectedCorrelations() { return selectedCorrelations_p;}
     vector< string > getSelectedCorrelationStrings() { return selectedCorrelationStrings_p;}
 
-	Float operator()(uInt chan, uInt row);
-	Float operator()(uInt pol, uInt chan, uInt row);
+	casacore::Float operator()(casacore::uInt chan, casacore::uInt row);
+	casacore::Float operator()(casacore::uInt pol, casacore::uInt chan, casacore::uInt row);
 
 	// Direct access to the complex correlation product
-	Complex correlationProduct(uInt pol, uInt chan, uInt row);
+	casacore::Complex correlationProduct(casacore::uInt pol, casacore::uInt chan, casacore::uInt row);
 
     // NOTE: reducedLength_p is defined as [chan,row,pol]
-    const IPosition &shape() const
+    const casacore::IPosition &shape() const
     {
     	return reducedLength_p;
     }
 
-    void shape(Int &chan, Int &row) const
+    void shape(casacore::Int &chan, casacore::Int &row) const
     {
     	chan = reducedLength_p(0);
     	row = reducedLength_p(1);
     	return;
     }
 
-    void shape(Int &pol, Int &chan, Int &row) const
+    void shape(casacore::Int &pol, casacore::Int &chan, casacore::Int &row) const
     {
     	chan = reducedLength_p(0);
     	row = reducedLength_p(1);
@@ -385,52 +385,52 @@ public:
 
 
 protected:
-    void setExpressionMapping(String expression,polarizationMap *polMap);
-	Float real(Complex val) {return val.real();}
-	Float imag(Complex val) {return val.imag();}
-	Float abs(Complex val) {return std::abs(val);}
-	Float arg(Complex val) {return std::arg(val);}
-	Float norm(Complex val) {return std::norm(val);}
-	Complex leftVis(uInt pol, uInt chan, uInt row);
-	Complex diffVis(uInt pol, uInt chan, uInt row);
-	Complex stokes_i(uInt pol, uInt chan);
-	Complex stokes_q(uInt pol, uInt chan);
-	Complex stokes_u(uInt pol, uInt chan);
-	Complex stokes_v(uInt pol, uInt chan);
-	Complex linear_xx(uInt pol, uInt chan);
-	Complex linear_yy(uInt pol, uInt chan);
-	Complex linear_xy(uInt pol, uInt chan);
-	Complex linear_yx(uInt pol, uInt chan);
-	Complex circular_rr(uInt pol, uInt chan);
-	Complex circular_ll(uInt pol, uInt chan);
-	Complex circular_rl(uInt pol, uInt chan);
-	Complex circular_lr(uInt pol, uInt chan);
-	Complex stokes_i_from_linear(uInt chan, uInt row);
-	Complex stokes_q_from_linear(uInt chan, uInt row);
-	Complex stokes_u_from_linear(uInt chan, uInt row);
-	Complex stokes_v_from_linear(uInt chan, uInt row);
-	Complex stokes_i_from_circular(uInt chan, uInt row);
-	Complex stokes_q_from_circular(uInt chan, uInt row);
-	Complex stokes_u_from_circular(uInt chan, uInt row);
-	Complex stokes_v_from_circular(uInt chan, uInt row);
-	Complex calsol1(uInt chan, uInt row);
-	Complex calsol2(uInt chan, uInt row);
-	Complex calsol3(uInt chan, uInt row);
-	Complex calsol4(uInt chan, uInt row);
+    void setExpressionMapping(casacore::String expression,polarizationMap *polMap);
+	casacore::Float real(casacore::Complex val) {return val.real();}
+	casacore::Float imag(casacore::Complex val) {return val.imag();}
+	casacore::Float abs(casacore::Complex val) {return std::abs(val);}
+	casacore::Float arg(casacore::Complex val) {return std::arg(val);}
+	casacore::Float norm(casacore::Complex val) {return std::norm(val);}
+	casacore::Complex leftVis(casacore::uInt pol, casacore::uInt chan, casacore::uInt row);
+	casacore::Complex diffVis(casacore::uInt pol, casacore::uInt chan, casacore::uInt row);
+	casacore::Complex stokes_i(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex stokes_q(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex stokes_u(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex stokes_v(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex linear_xx(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex linear_yy(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex linear_xy(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex linear_yx(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex circular_rr(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex circular_ll(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex circular_rl(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex circular_lr(casacore::uInt pol, casacore::uInt chan);
+	casacore::Complex stokes_i_from_linear(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex stokes_q_from_linear(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex stokes_u_from_linear(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex stokes_v_from_linear(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex stokes_i_from_circular(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex stokes_q_from_circular(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex stokes_u_from_circular(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex stokes_v_from_circular(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex calsol1(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex calsol2(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex calsol3(casacore::uInt chan, casacore::uInt row);
+	casacore::Complex calsol4(casacore::uInt chan, casacore::uInt row);
 
 
 private:
-	Float (casa::VisMapper::*applyVisExpr_p)(Complex);
-	Complex (casa::VisMapper::*getVis_p)(uInt,uInt,uInt);
-	Complex (casa::VisMapper::*getCorr_p)(uInt,uInt);
+	casacore::Float (casa::VisMapper::*applyVisExpr_p)(casacore::Complex);
+	casacore::Complex (casa::VisMapper::*getVis_p)(casacore::uInt,casacore::uInt,casacore::uInt);
+	casacore::Complex (casa::VisMapper::*getCorr_p)(casacore::uInt,casacore::uInt);
 	vector<corrProduct> selectedCorrelationProducts_p;
-	vector< vector<uInt> > selectedCorrelations_p;
+	vector< vector<casacore::uInt> > selectedCorrelations_p;
 	vector<string> selectedCorrelationStrings_p;
-	CubeView<Complex> *leftVis_p;
-	CubeView<Complex> *rightVis_p;
-	IPosition reducedLength_p;
+	CubeView<casacore::Complex> *leftVis_p;
+	CubeView<casacore::Complex> *rightVis_p;
+	casacore::IPosition reducedLength_p;
 	polarizationMap *polMap_p;
-	String expression_p;
+	casacore::String expression_p;
 };
 
 class FlagMapper
@@ -438,53 +438,53 @@ class FlagMapper
 
 public:
 
-	FlagMapper(Bool flag,	vector < vector<uInt> > selectedCorrelations,
-							CubeView<Bool> *commonFlagsView,
-							CubeView<Bool> *originalFlagsView,
-							CubeView<Bool> *privateFlagsView=NULL,
-							VectorView<Bool> *commonFlagRowView=NULL,
-							VectorView<Bool> *originalFlagRowView=NULL,
-							VectorView<Bool> *privateFlagRowView=NULL);
-	FlagMapper(Bool flag,vector< vector<uInt> > selectedCorrelations);
+	FlagMapper(casacore::Bool flag,	vector < vector<casacore::uInt> > selectedCorrelations,
+							CubeView<casacore::Bool> *commonFlagsView,
+							CubeView<casacore::Bool> *originalFlagsView,
+							CubeView<casacore::Bool> *privateFlagsView=NULL,
+							VectorView<casacore::Bool> *commonFlagRowView=NULL,
+							VectorView<casacore::Bool> *originalFlagRowView=NULL,
+							VectorView<casacore::Bool> *privateFlagRowView=NULL);
+	FlagMapper(casacore::Bool flag,vector< vector<casacore::uInt> > selectedCorrelations);
 	~FlagMapper();
 
-	void setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView=NULL);
-	void setParentFlagRow(VectorView<Bool> *commonFlagRowView,VectorView<Bool> *originalFlagRowView,VectorView<Bool> *privateFlagRowView=NULL);
+	void setParentCubes(CubeView<casacore::Bool> *commonFlagsView,CubeView<casacore::Bool> *originalFlagsView,CubeView<casacore::Bool> *privateFlagsView=NULL);
+	void setParentFlagRow(VectorView<casacore::Bool> *commonFlagRowView,VectorView<casacore::Bool> *originalFlagRowView,VectorView<casacore::Bool> *privateFlagRowView=NULL);
 
-	void applyFlag(uInt chan, uInt row);
-	void applyFlag(uInt pol, uInt channel, uInt row);
-	void applyFlagRow(uInt row);
-	void applyFlagInRow(uInt row);
+	void applyFlag(casacore::uInt chan, casacore::uInt row);
+	void applyFlag(casacore::uInt pol, casacore::uInt channel, casacore::uInt row);
+	void applyFlagRow(casacore::uInt row);
+	void applyFlagInRow(casacore::uInt row);
 
-	Bool getOriginalFlags(uInt chan, uInt row);
-	Bool getModifiedFlags(uInt chan, uInt row);
-	Bool getPrivateFlags(uInt chan, uInt row);
+	casacore::Bool getOriginalFlags(casacore::uInt chan, casacore::uInt row);
+	casacore::Bool getModifiedFlags(casacore::uInt chan, casacore::uInt row);
+	casacore::Bool getPrivateFlags(casacore::uInt chan, casacore::uInt row);
 
-	Bool getOriginalFlags(uInt pol, uInt channel, uInt row);
-	Bool getModifiedFlags(uInt pol, uInt channel, uInt row);
-	Bool getPrivateFlags(uInt pol, uInt channel, uInt row);
+	casacore::Bool getOriginalFlags(casacore::uInt pol, casacore::uInt channel, casacore::uInt row);
+	casacore::Bool getModifiedFlags(casacore::uInt pol, casacore::uInt channel, casacore::uInt row);
+	casacore::Bool getPrivateFlags(casacore::uInt pol, casacore::uInt channel, casacore::uInt row);
 
 	// These methods are needed for flag extension
-	void setModifiedFlags(uInt pol, uInt channel, uInt row);
-	void setPrivateFlags(uInt pol, uInt channel, uInt row);
+	void setModifiedFlags(casacore::uInt pol, casacore::uInt channel, casacore::uInt row);
+	void setPrivateFlags(casacore::uInt pol, casacore::uInt channel, casacore::uInt row);
 
-	Bool getOriginalFlagRow(uInt row);
-	Bool getModifiedFlagRow(uInt row);
-	Bool getPrivateFlagRow(uInt row);
+	casacore::Bool getOriginalFlagRow(casacore::uInt row);
+	casacore::Bool getModifiedFlagRow(casacore::uInt row);
+	casacore::Bool getPrivateFlagRow(casacore::uInt row);
 
-    const IPosition &shape() const
+    const casacore::IPosition &shape() const
     {
     	return reducedLength_p;
     }
 
-    void shape(Int &chan, Int &row) const
+    void shape(casacore::Int &chan, casacore::Int &row) const
     {
     	chan = reducedLength_p(0);
     	row = reducedLength_p(1);
     	return;
     }
 
-    void shape(Int &pol, Int &chan, Int &row) const
+    void shape(casacore::Int &pol, casacore::Int &chan, casacore::Int &row) const
     {
     	chan = reducedLength_p(0);
     	row = reducedLength_p(1);
@@ -492,44 +492,44 @@ public:
     	return;
     }
 
-	vector< vector<uInt> > getSelectedCorrelations() {return selectedCorrelations_p;}
+	vector< vector<casacore::uInt> > getSelectedCorrelations() {return selectedCorrelations_p;}
 
     void activateCheckMode() {applyFlag_p = &FlagMapper::checkCommonFlags;}
 
-    uInt nSelectedCorrelations() {return nSelectedCorrelations_p;}
-    uInt flagsPerRow() {return flagsPerRow_p;}
+    casacore::uInt nSelectedCorrelations() {return nSelectedCorrelations_p;}
+    casacore::uInt flagsPerRow() {return flagsPerRow_p;}
 
 protected:
 
-	void setExpressionMapping(vector< vector<uInt> > selectedCorrelations);
+	void setExpressionMapping(vector< vector<casacore::uInt> > selectedCorrelations);
 
 	// Apply flags to common flag cube
-	void applyCommonFlags(uInt pol, uInt channel, uInt row);
+	void applyCommonFlags(casacore::uInt pol, casacore::uInt channel, casacore::uInt row);
 	// Apply flags to common and private flag cubes
-	void applyPrivateFlags(uInt pol, uInt channel, uInt row);
+	void applyPrivateFlags(casacore::uInt pol, casacore::uInt channel, casacore::uInt row);
 	// Apply flags to common and private flag cubes
-	void checkCommonFlags(uInt pol, uInt channel, uInt row);
+	void checkCommonFlags(casacore::uInt pol, casacore::uInt channel, casacore::uInt row);
 
 	// Apply flags to common flag rows
-	void applyCommonFlagRow(uInt row);
+	void applyCommonFlagRow(casacore::uInt row);
 	// Apply flags to common and private flag rows
-	void applyPrivateFlagRow(uInt row);
+	void applyPrivateFlagRow(casacore::uInt row);
 
 private:
 
-	Bool flag_p;
-    IPosition reducedLength_p;
-	CubeView<Bool> *commonFlagsView_p;
-	CubeView<Bool> *originalFlagsView_p;
-	CubeView<Bool> *privateFlagsView_p;
-	VectorView<Bool> *commonFlagRowView_p;
-	VectorView<Bool> *originalFlagRowView_p;
-	VectorView<Bool> *privateFlagRowView_p;
-	vector< vector<uInt> > selectedCorrelations_p;
-	uInt nSelectedCorrelations_p;
-	uInt flagsPerRow_p;
-	void (casa::FlagMapper::*applyFlag_p)(uInt,uInt,uInt);
-	void (casa::FlagMapper::*applyFlagRow_p)(uInt);
+	casacore::Bool flag_p;
+    casacore::IPosition reducedLength_p;
+	CubeView<casacore::Bool> *commonFlagsView_p;
+	CubeView<casacore::Bool> *originalFlagsView_p;
+	CubeView<casacore::Bool> *privateFlagsView_p;
+	VectorView<casacore::Bool> *commonFlagRowView_p;
+	VectorView<casacore::Bool> *originalFlagRowView_p;
+	VectorView<casacore::Bool> *privateFlagRowView_p;
+	vector< vector<casacore::uInt> > selectedCorrelations_p;
+	casacore::uInt nSelectedCorrelations_p;
+	casacore::uInt flagsPerRow_p;
+	void (casa::FlagMapper::*applyFlag_p)(casacore::uInt,casacore::uInt,casacore::uInt);
+	void (casa::FlagMapper::*applyFlagRow_p)(casacore::uInt);
 };
 
 // <summary>
@@ -554,9 +554,9 @@ private:
 // There are various methods (virtual) that must be re-implemented by the specific derived
 // classes (e.g. FlagMSHandler, FlagCalTableHandler). These methods essentially cover:
 //
-// - Table access (i.e. open/close/iteration/rw)
+// - casacore::Table access (i.e. open/close/iteration/rw)
 //
-// - Table selection (i.e. expression parsing, sub-table selection)
+// - casacore::Table selection (i.e. expression parsing, sub-table selection)
 //
 // Additionally there are public non-virtual methods to:
 //
@@ -570,7 +570,7 @@ private:
 //
 // - VisBuffer (for accessing the data and meta data columns)
 //
-// - Chunk and Table flag counters (for statistics)
+// - Chunk and casacore::Table flag counters (for statistics)
 //
 // </synopsis>
 //
@@ -583,7 +583,7 @@ private:
 // <example>
 // <srcblock>
 //
-// // The following code sets up a FlagDataHandler with either CalTable or MS implementation and
+// // The following code sets up a FlagDataHandler with either CalTable or casacore::MS implementation and
 // // iterates through the table applying a clip agent, flushing the flags, and extracting summaries.
 //
 // // IMPORTANT NOTE:
@@ -593,18 +593,18 @@ private:
 // // which columns have to be pre-fetched (async i/o or parallel mode), and what mapping options are necessary.
 //
 // // NOTE ON ASYNC I/O:
-// // Asyncnronous I/O is only enabled for MS-type tables, but not for CalTables, and it is necessary to switch
+// // Asyncnronous I/O is only enabled for casacore::MS-type tables, but not for CalTables, and it is necessary to switch
 // // it on before generating the iterators. Something else to take into account, is that there are 2 global
 // // switches at .casarc level which invalidate the application code selection:
 // //
 // // VisibilityIterator.async.enabled rules over
 // // |-> FlagDataHandler.asyncio, and in turns rules over
-// //     |-> FlagDataHandler.enableAsyncIO(True)
+// //     |-> FlagDataHandler.enableAsyncIO(true)
 //
 // // Identify table type
-// Table table(msname_p,TableLock(TableLock::AutoNoReadLocking));
-// TableInfo& info = table.tableInfo();
-// String type=info.type();
+// casacore::Table table(msname_p,casacore::TableLock(TableLock::AutoNoReadLocking));
+// casacore::TableInfo& info = table.tableInfo();
+// casacore::String type=info.type();
 //
 // // Create derived FlagDataHandler object with corresponding implementation
 // FlagDataHandler *fdh_p = NULL;
@@ -621,57 +621,57 @@ private:
 // //       method which accepts the following modes, defined in the FlagDataHandler iteration enumeration
 // //
 // //       COMPLETE_SCAN_MAPPED:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Group all time steps together, so that there is no sub-chunk iteration
 // //       - Generate baseline maps (to iterate trough rows with the same antenna1, antenna2)
 // //       - Generate sub-integration maps (to iterate trough rows with the same timestamp)
 // //       COMPLETE_SCAN_MAP_SUB_INTEGRATIONS_ONLY:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Group all time steps together, so that there is no sub-chunk iteration
 // //       * Don't generate baseline maps
 // //       - Generate sub-integration maps (to iterate trough rows with the same timestamp)
 // //       COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Group all time steps together, so that there is no sub-chunk iteration
 // //       - Generate baseline maps (to iterate trough rows with the same antenna1, antenna2)
 // //       * Don't generate sub-integration maps
 // //       COMPLETE_SCAN_UNMAPPED:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Group all time steps together, so that there is no sub-chunk iteration
 // //       * Don't generate baseline maps
 // //       * Don't generate sub-integration maps
 // //       COMBINE_SCANS_MAPPED:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Group all time steps together, so that there is no sub-chunk iteration
 // //       - Generate baseline maps (to iterate trough rows with the same antenna1, antenna2)
 // //       - Generate sub-integration maps (to iterate trough rows with the same timestamp)
 // //       COMBINE_SCANS_MAP_SUB_INTEGRATIONS_ONLY:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Group all time steps together, so that there is no sub-chunk iteration
 // //       * Don't generate baseline maps
 // //       - Generate sub-integration maps (to iterate trough rows with the same timestamp)
 // //       COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Group all time steps together, so that there is no sub-chunk iteration
 // //       - Generate baseline maps (to iterate trough rows with the same antenna1, antenna2)
 // //       * Don't generate sub-integration maps
 // //       COMBINE_SCANS_UNMAPPED:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Group all time steps together, so that there is no sub-chunk iteration
 // //       * Don't generate baseline maps
 // //       * Don't generate sub-integration maps
 // //       ANTENNA_PAIR:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, ANTENNA1, ANTENNA2, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, ANTENNA1, ANTENNA2, DATA_DESC_ID and TIME
 // //       - Group all time steps together, so that there is no sub-chunk iteration
 // //       * Don't generate baseline maps (they are not necessary because the chunks have constant ANTENNA1,ANTENNA2)
 // //       * Don't generate sub-integration maps
 // //       SUB_INTEGRATION:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, SCAN_NUMBER, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Don't group all time steps together, so it is necessary to add an inner sub-chunk iteration loop
 // //       * Don't generate baseline maps (it is not possible because not all the rows corresponding to a given baseline are available)
 // //       * Don't generate sub-integration maps (they are not necessary because the sub-chunks have constant TIME)
 // //       ARRAY_FIELD:
-// //       - Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
+// //       - casacore::Sort by OBSERVATION_ID, ARRAY_ID, FIELD_ID, DATA_DESC_ID and TIME
 // //       - Don't group all time steps together, so it is necessary to add an inner sub-chunk iteration loop
 // //       * Don't generate baseline maps (it is not possible because not all the rows corresponding to a given baseline are available)
 // //       * Don't generate sub-integration maps (they are not necessary because the sub-chunks have constant TIME)
@@ -680,14 +680,14 @@ private:
 // // Open table
 // fdh_p->open();
 //
-// // Parse data selection to Flag Data Handler
+// // Parse data selection to Flag casacore::Data Handler
 // fdh_p->setDataSelection(dataSelection);
 //
 // // Select data (thus creating selected table)
 // fdh_p->selectData();
 //
 // // Create flagging agent and list
-// Record agentConfig;
+// casacore::Record agentConfig;
 // agentConfig.define("mode","clip")
 // FlagAgentBase *agent = FlagAgentBase::create(fdh_p,agentConfig);
 // FlagAgentList agentList;
@@ -766,7 +766,7 @@ private:
 //
 // // The sorting columns used for the iteration are also accessible to optimize the selection engine:
 // // (e.g.: If scan is constant check only 1st row)
-// if ( (scanList_p.size()>0) and (find(flagDataHandler_p->sortOrder_p,MS::SCAN_NUMBER)==true) )
+// if ( (scanList_p.size()>0) and (find(flagDataHandler_p->sortOrder_p,casacore::MS::SCAN_NUMBER)==true) )
 // {
 //    if (!find(scanList_p,visibilityBuffer_p->get()->scan()[0])) return false;
 // }
@@ -779,10 +779,10 @@ private:
 //      myAntennaPairMapIterator != flagDataHandler_p->getAntennaPairMap()->end();
 //      ++myAntennaPairMapIterator)
 // {
-//    // NOTE: The following code is also encapsulated in the FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2) code
+//    // NOTE: The following code is also encapsulated in the FlagAgentBase::processAntennaPair(casacore::Int antenna1,casacore::Int antenna2) code
 //
 //    // From the antenna map we can retrieve the rows corresponding to the baseline defined by the antenna pair
-//    vector<uInt> baselineRows = (*flagDataHandler_p->getAntennaPairMap())[std::make_pair(antennaPair.first,antennaPair.second)];
+//    vector<casacore::uInt> baselineRows = (*flagDataHandler_p->getAntennaPairMap())[std::make_pair(antennaPair.first,antennaPair.second)];
 //
 //    // This rows can be now inserted in the mapper classes (VisMapper and FlagMapper using the CubeView<T> template class)
 //    VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
@@ -831,13 +831,13 @@ public:
 	};
 
 	// Default constructor
-	// NOTE: Time interval 0 groups all time steps together in one chunk.
-	FlagDataHandler(string msname, uShort iterationApproach = SUB_INTEGRATION, Double timeInterval = 0);
+	// NOTE: casacore::Time interval 0 groups all time steps together in one chunk.
+	FlagDataHandler(string msname, casacore::uShort iterationApproach = SUB_INTEGRATION, casacore::Double timeInterval = 0);
 
 	// Default destructor
 	virtual ~FlagDataHandler();
 
-	// Common MS/CalTables public interface
+	// Common casacore::MS/CalTables public interface
 	virtual bool open() {return false;}
 	virtual bool close() {return false;}
 	virtual bool selectData() {return false;}
@@ -845,22 +845,22 @@ public:
 	virtual bool nextChunk() {return false;}
 	virtual bool nextBuffer() {return false;}
 	virtual bool flushFlags() {return false;}
-	virtual String getTableName() {return String("none");}
-	virtual bool parseExpression(MSSelection &/*parser*/) {return true;}
-	virtual bool checkIfColumnExists(String /*column*/) {return true;}
+	virtual casacore::String getTableName() {return casacore::String("none");}
+	virtual bool parseExpression(casacore::MSSelection &/*parser*/) {return true;}
+	virtual bool checkIfColumnExists(casacore::String /*column*/) {return true;}
 	virtual bool summarySignal() {return true;}
 
 	// Set the iteration approach
-	void setIterationApproach(uShort iterationApproach);
+	void setIterationApproach(casacore::uShort iterationApproach);
 
-	// Set Data Selection parameters
-	bool setDataSelection(Record record);
+	// Set casacore::Data Selection parameters
+	bool setDataSelection(casacore::Record record);
 
 	// Set time interval (also known as ntime)
-	void setTimeInterval(Double timeInterval);
+	void setTimeInterval(casacore::Double timeInterval);
 
 	// Methods to switch on/off async i/o
-	void enableAsyncIO(Bool enable);
+	void enableAsyncIO(casacore::Bool enable);
 
 	// Pre-Load columns (in order to avoid parallelism problems when not using
 	// async i/o, and also to know what columns to pre-fetch in async i/o mode)
@@ -871,10 +871,10 @@ public:
 	void stopIteration() {stopIteration_p = true;};
 
 	// As requested by Urvashi R.V. provide access to the original and modified flag cubes
-	Cube<Bool> * getModifiedFlagCube() {return &modifiedFlagCube_p;}
-	Cube<Bool> * getOriginalFlagCube() {return &originalFlagCube_p;}
-	Vector<Bool> * getModifiedFlagRow() {return &modifiedFlagRow_p;}
-	Vector<Bool> * getOriginalFlagRow() {return &originalFlagRow_p;}
+	casacore::Cube<casacore::Bool> * getModifiedFlagCube() {return &modifiedFlagCube_p;}
+	casacore::Cube<casacore::Bool> * getOriginalFlagCube() {return &originalFlagCube_p;}
+	casacore::Vector<casacore::Bool> * getModifiedFlagRow() {return &modifiedFlagRow_p;}
+	casacore::Vector<casacore::Bool> * getOriginalFlagRow() {return &originalFlagRow_p;}
 
 	// Functions to switch on/off mapping functions
 	void setMapAntennaPairs(bool activated);
@@ -884,7 +884,7 @@ public:
 	void setScanStartStopMap(bool activated);
 	void setScanStartStopFlaggedMap(bool activated);
     void setTimeAverageIter(bool activated);
-    void setChanAverageIter(Vector<Int> chanbin);
+    void setChanAverageIter(casacore::Vector<casacore::Int> chanbin);
 
 	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
@@ -895,46 +895,46 @@ public:
 	scanStartStopMap * getMapScanStartStop() {return scanStartStopMap_p;}
 	lambdaMap * getLambdaMap() {return lambdaMap_p;}
 
-	void setProfiling(Bool value) {profiling_p=value;}
+	void setProfiling(casacore::Bool value) {profiling_p=value;}
 
-	// Get a Float visCube and return a Complex one
-	Cube<Complex>& weightVisCube();
-	Cube<Complex> weight_spectrum_p;
+	// Get a casacore::Float visCube and return a casacore::Complex one
+	casacore::Cube<casacore::Complex>& weightVisCube();
+	casacore::Cube<casacore::Complex> weight_spectrum_p;
 
 	// Make the logger public to that we can use it from FlagAgentBase::create
-	casa::LogIO *logger_p;
+	casacore::LogIO *logger_p;
 
 	// Measurement set section
-	String tablename_p;
-	MSSelection *measurementSetSelection_p;
-	Vector<String> *antennaNames_p;
-	std::map< string, std::pair<Int,Int> > baselineToAnt1Ant2_p;
-	std::map< std::pair<Int,Int>, string > Ant1Ant2ToBaseline_p;
-	ROScalarMeasColumn<MPosition> *antennaPositions_p;
-	Vector<Double> *antennaDiameters_p;
-	Vector<String> *fieldNames_p;
-	std::vector<String> *corrProducts_p;
+	casacore::String tablename_p;
+	casacore::MSSelection *measurementSetSelection_p;
+	casacore::Vector<casacore::String> *antennaNames_p;
+	std::map< string, std::pair<casacore::Int,casacore::Int> > baselineToAnt1Ant2_p;
+	std::map< std::pair<casacore::Int,casacore::Int>, string > Ant1Ant2ToBaseline_p;
+	casacore::ROScalarMeasColumn<casacore::MPosition> *antennaPositions_p;
+	casacore::Vector<casacore::Double> *antennaDiameters_p;
+	casacore::Vector<casacore::String> *fieldNames_p;
+	std::vector<casacore::String> *corrProducts_p;
 
 	// RO Visibility Iterator
 	VisBufferComponents2 *prefetchColumns_p;
 	// Iteration counters
-	uLong processedRows;
-	uShort chunkNo;
-	uShort bufferNo;
+	casacore::uLong processedRows;
+	casacore::uShort chunkNo;
+	casacore::uShort bufferNo;
 
 	// FlagDataHanler-FlagAgents interaction
 	bool flushFlags_p;
 	bool flushFlagRow_p;
-	uInt64 chunkCounts_p;
-	uInt64 progressCounts_p;
-	uInt64 msCounts_p;
-	uShort summaryThreshold_p;
+	casacore::uInt64 chunkCounts_p;
+	casacore::uInt64 progressCounts_p;
+	casacore::uInt64 msCounts_p;
+	casacore::uShort summaryThreshold_p;
 	bool printChunkSummary_p;
-	uShort tableTye_p;
-	Bool loadProcessorTable_p;
+	casacore::uShort tableTye_p;
+	casacore::Bool loadProcessorTable_p;
 
 	// PROCESSOR sub-table section
-	Vector<Bool> isCorrelatorType_p;
+	casacore::Vector<bool> isCorrelatorType_p;
 	bool processorTableExist_p;
 
 
@@ -947,39 +947,39 @@ public:
 
 	// Vis buffer characteristics (constant values)
 	bool groupTimeSteps_p;
-	Block<int> sortOrder_p;
+	casacore::Block<int> sortOrder_p;
 
-    // Time average iterator parameters
-    Bool enableTimeAvg_p;
-    Bool enableChanAvg_p;
-    Double timeAverageBin_p;
-    Vector <Int> chanAverageBin_p;
-    String dataColumnType_p;
+    // casacore::Time average iterator parameters
+    casacore::Bool enableTimeAvg_p;
+    casacore::Bool enableChanAvg_p;
+    casacore::Double timeAverageBin_p;
+    casacore::Vector <casacore::Int> chanAverageBin_p;
+    casacore::String dataColumnType_p;
     vi::AveragingOptions timeAvgOptions_p;
-    Record chanAvgOptions_p;
+    casacore::Record chanAvgOptions_p;
 
 protected:
 
-	// Common MS/CalTables private interface
+	// Common casacore::MS/CalTables private interface
 	virtual void generateAntennaPairMap();
 	virtual void generateSubIntegrationMap();
 	virtual void generatePolarizationsMap();
 	virtual void generateAntennaPointingMap();
 	virtual void generateScanStartStopMap();
 
-	// Data Selection ranges
+	// casacore::Data Selection ranges
 	bool anySelection_p;
 	bool inrowSelection_p;
-	casa::String arraySelection_p;
-	casa::String fieldSelection_p;
-	casa::String scanSelection_p;
-	casa::String timeSelection_p;
-	casa::String spwSelection_p;
-	casa::String baselineSelection_p;
-	casa::String uvwSelection_p;
-	casa::String polarizationSelection_p;
-	casa::String scanIntentSelection_p;
-	casa::String observationSelection_p;
+	casacore::String arraySelection_p;
+	casacore::String fieldSelection_p;
+	casacore::String scanSelection_p;
+	casacore::String timeSelection_p;
+	casacore::String spwSelection_p;
+	casacore::String baselineSelection_p;
+	casacore::String uvwSelection_p;
+	casacore::String polarizationSelection_p;
+	casacore::String scanIntentSelection_p;
+	casacore::String observationSelection_p;
 
 	// Async I/O stuff
 	bool asyncio_enabled_p;
@@ -988,8 +988,8 @@ protected:
 	vector<VisBufferComponent2> preLoadColumns_p;
 
 	// Iteration parameters
-	uShort iterationApproach_p;
-	Double timeInterval_p;
+	casacore::uShort iterationApproach_p;
+	casacore::Double timeInterval_p;
 	// Slurp flag
 	bool slurp_p;
 	// Iteration initialization parameters
@@ -999,12 +999,12 @@ protected:
 	bool stopIteration_p;
 
 	// Flag Cubes
-	Cube<Bool> originalFlagCube_p;
-	Cube<Bool> modifiedFlagCube_p;
+	casacore::Cube<casacore::Bool> originalFlagCube_p;
+	casacore::Cube<casacore::Bool> modifiedFlagCube_p;
 
 	// FlagRows
-	Vector<Bool> originalFlagRow_p;
-	Vector<Bool> modifiedFlagRow_p;
+	casacore::Vector<casacore::Bool> originalFlagRow_p;
+	casacore::Vector<casacore::Bool> modifiedFlagRow_p;
 
 	// Mapping members
 	antennaPairMap *antennaPairMap_p;
@@ -1023,9 +1023,9 @@ protected:
 
 	// Stats members
 	bool stats_p;
-	uLong cubeAccessCounter_p;
+	casacore::uLong cubeAccessCounter_p;
 	double cubeAccessTime_p;
-	uLong cubeAccessCounterTotal_p;
+	casacore::uLong cubeAccessCounterTotal_p;
 	double cubeAccessTimeTotal_p;
 
 	// Profiling

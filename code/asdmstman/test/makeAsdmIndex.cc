@@ -20,6 +20,7 @@
 #include <casa/Exceptions/Error.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
 // Write the index file in the same way as read by AsdmStMan.
@@ -150,7 +151,7 @@ void createIndex (const String& msName, const string& fileName,
     // The name of the file is table.f<i>index, where <i> is the seqnr
     // of the new data manager.
     ostringstream oss;
-    oss << RODataManAccessor(tab, "DATA", True).dataManagerSeqNr();
+    oss << RODataManAccessor(tab, "DATA", true).dataManagerSeqNr();
     // Now write the index file.
     Block<String> bdfNames(fileNames.size());
     for (uInt i=0; i<fileNames.size(); ++i) {
@@ -174,7 +175,7 @@ int main(int argc, char* argv[])
     // Register AsdmStMan to be able to use it.
     AsdmStMan::registerClass();
     String msName(argv[1]);
-    bool docheck = True;
+    bool docheck = true;
     if (argc > 2) {
       string infile(argv[2]);
       string dataPath(argv[3]);

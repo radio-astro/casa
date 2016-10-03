@@ -36,6 +36,7 @@
 #include <scimath/Mathematics/MedianSlider.h>
 #include <casa/stdio.h>
     
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 RFRowClipper::RFRowClipper( RFChunkStats &ch,RFFlagCube &fl,Float clip,uInt hw,uInt maxp ) :
@@ -47,7 +48,7 @@ void RFRowClipper::init( uInt ni,uInt nt )
 {
   sig = Matrix<Float>(ntime=nt,nifr=ni,-1);
   sig0 = Matrix<Float>(nt,ni,-1);
-  sigupdated = Vector<Bool>(ni,False);
+  sigupdated = Vector<Bool>(ni,false);
 }
         
 void RFRowClipper::cleanup ()
@@ -59,7 +60,7 @@ void RFRowClipper::cleanup ()
 
 void RFRowClipper::reset ()
 {
-  sigupdated = False;
+  sigupdated = false;
 }
 
 Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows, bool clear_flags )
@@ -79,16 +80,16 @@ Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows, bool c
       Bool fl;
       Float d;
       Vector<Float> sigma( sig.column(ifr) );
-      Bool recalc=True;
+      Bool recalc=true;
       for( uInt ipass=0; ipass<maxpass && recalc; ipass++ ) // loop while some rows are being flagged
       {
         uInt idiff=0;
-        recalc=False;
+        recalc=false;
         // Precompute mask of valid sigmas: existing and not flagged
-        LogicalVector valid(ntime,True);
+        LogicalVector valid(ntime,true);
         for( uInt i=0; i<ntime; i++ )
           if( sigma(i)<=0 || flag.getRowFlag(ifr,i)&fm )
-            valid(i) = False;
+            valid(i) = false;
         
         // If we have a valid half-window specified, then compute diff WRT
         // to a sliding median. 
@@ -142,7 +143,7 @@ Float RFRowClipper::updateSigma (uInt &ifrmax,uInt &itmax,Bool flag_rows, bool c
             // update stats and clear flags, if needed
             if( !flag_rows || goodsigma(it) ) 
             {
-              Bool res = False;
+              Bool res = false;
               if( flag_rows && clear_flags ) // clear row flag
               {
                 recalc |= ( res = flag.clearRowFlag(ifr,it) );

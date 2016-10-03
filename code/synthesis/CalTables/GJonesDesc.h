@@ -56,8 +56,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // GJonesPolyDesc defines the format of GJonesPoly calibration tables 
-// in terms of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. GJonesPoly matrices represent electronic
+// in terms of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. GJonesPoly matrices represent electronic
 // gain corrections in the Measurement Equation formalism expressed as
 // polynomials over time.
 // </synopsis>
@@ -83,7 +83,7 @@ class GJonesPolyDesc : public GJonesDesc
    virtual ~GJonesPolyDesc() {};
 
    // Return the table descriptor for the main calibration table
-   virtual TableDesc calMainDesc();
+   virtual casacore::TableDesc calMainDesc();
 };
 
 // <summary> 
@@ -110,8 +110,8 @@ class GJonesPolyDesc : public GJonesDesc
 //
 // <synopsis>
 // GJonesSplineDesc defines the format of GJonesSpline calibration tables 
-// in terms of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. GJonesSpline matrices represent electronic
+// in terms of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. GJonesSpline matrices represent electronic
 // gain corrections in the Measurement Equation formalism expressed as
 // spline polynomials over time.
 // </synopsis>
@@ -137,7 +137,7 @@ class GJonesSplineDesc : public GJonesPolyDesc
    virtual ~GJonesSplineDesc() {};
 
    // Return the table descriptor for the main calibration table
-   virtual TableDesc calMainDesc();
+   virtual casacore::TableDesc calMainDesc();
 };
 
 

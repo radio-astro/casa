@@ -50,16 +50,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSPixelPolyLine();
-		DSPixelPolyLine(const Record& settings);
+		DSPixelPolyLine(const casacore::Record& settings);
 		DSPixelPolyLine(DSScreenPolyLine& other);
 		DSPixelPolyLine(DSWorldPolyLine& other);
 
 		virtual ~DSPixelPolyLine();
 
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSPolyLine::getOptions();
 		}
 

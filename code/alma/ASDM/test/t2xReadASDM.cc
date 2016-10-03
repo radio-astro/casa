@@ -10,6 +10,7 @@
 
 using namespace std;
 using namespace asdm;
+using namespace casacore;
 using namespace casa;
 
 ostringstream errstream;

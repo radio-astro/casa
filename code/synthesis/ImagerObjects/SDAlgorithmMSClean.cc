@@ -59,6 +59,7 @@
 #include <msvis/MSVis/StokesVector.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -73,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSmallScaleBias(smallscalebias),
     //    itsStopLargeNegatives(stoplargenegatives),
     itsStopPointMode(stoppointmode),
-    itsMCsetup(False)
+    itsMCsetup(false)
  {
    itsAlgorithmName=String("multiscale");
    if( itsScaleSizes.nelements()==0 ){ itsScaleSizes.resize(1); itsScaleSizes[0]=0.0; }
@@ -92,27 +93,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     AlwaysAssert( (bool) itsImages, AipsError );
 
-    (itsImages->residual())->get( itsMatResidual , True );
-    (itsImages->model())->get( itsMatModel , True );
-    (itsImages->psf())->get( itsMatPsf , True );
-    itsImages->mask()->get( itsMatMask, True );
+    (itsImages->residual())->get( itsMatResidual , true );
+    (itsImages->model())->get( itsMatModel , true );
+    (itsImages->psf())->get( itsMatPsf , true );
+    itsImages->mask()->get( itsMatMask, true );
 
     //// Initialize the MatrixCleaner.
     ///  ----------- do once ----------
-    if( itsMCsetup == False)
+    if( itsMCsetup == false)
       {
 	itsCleaner.defineScales( itsScaleSizes );
 	itsCleaner.setSmallScaleBias( itsSmallScaleBias );
 	//itsCleaner.stopAtLargeScaleNegative( itsStopLargeNegatives );// In MFMSCleanImageSkyModel.cc, this is only for the first two major cycles...
 	itsCleaner.stopPointMode( itsStopPointMode );
-	itsCleaner.ignoreCenterBox( True ); // Clean full image
+	itsCleaner.ignoreCenterBox( true ); // Clean full image
 
 	Matrix<Float> tempMat;
 	tempMat.reference( itsMatPsf );
 	itsCleaner.setPsf(  tempMat );
 	itsCleaner.makePsfScales();
 
-	itsMCsetup=True;
+	itsMCsetup=true;
       }
     /// -----------------------------------------
 

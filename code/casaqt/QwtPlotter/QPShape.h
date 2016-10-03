@@ -116,7 +116,7 @@ public:
     // Static //
     
     // Convenient access to class name (QPRectangle).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
@@ -158,7 +158,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
 #if QWT_VERSION >= 0x060000
@@ -187,7 +187,7 @@ public:
     // Static //
     
     // Convenient access to class name (QPEllipse).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
@@ -240,7 +240,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
 #if QWT_VERSION >= 0x060000
@@ -268,7 +268,7 @@ public:
     // Static //
     
     // Convenient access to class name (QPPolygon).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
@@ -302,7 +302,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
 #if QWT_VERSION >= 0x060000
@@ -329,7 +329,7 @@ public:
     // Static //
     
     // Convenient access to class name (QPLineShape).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
@@ -372,7 +372,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
 #if QWT_VERSION >= 0x060000
@@ -400,7 +400,7 @@ public:
     // Static //
     
     // Convenient access to class name (QPArrow).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     // Returns the two points necessary to make an arrow shape from the given
     // point to the given point, with the given length.  The two arrow points
@@ -471,7 +471,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
 #if QWT_VERSION >= 0x060000
@@ -510,7 +510,7 @@ public:
     // Static //
     
     // Convenient access to class name (QPPath).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
@@ -544,7 +544,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().
 #if QWT_VERSION >= 0x060000
@@ -571,7 +571,7 @@ public:
     // Static //
     
     // Convenient access to class name (QPArc).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
@@ -641,7 +641,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
 #if QWT_VERSION >= 0x060000
@@ -672,7 +672,7 @@ public:
     // Static //
     
     // Convenient access to class name (QPPoint).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
@@ -725,7 +725,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
 #if QWT_VERSION >= 0x060000

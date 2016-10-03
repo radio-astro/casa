@@ -29,23 +29,23 @@ public:
 	ImageDecomposerTask() = delete;
 
 	ImageDecomposerTask(
-		SPCIIT image, const Record *const region, const String& mask
+		SPCIIT image, const casacore::Record *const region, const casacore::String& mask
 	);
 
 	// destructor
 	~ImageDecomposerTask() {}
 
-	Matrix<T> decompose(Matrix<Int>& blcs, Matrix<Int>& trcs);
+	casacore::Matrix<T> decompose(casacore::Matrix<casacore::Int>& blcs, casacore::Matrix<casacore::Int>& trcs);
 
-	String getClass() const { const static String s = "ImageDecomposerTask"; return s; }
+	casacore::String getClass() const { const static casacore::String s = "ImageDecomposerTask"; return s; }
 
-	void setSimple(Bool b) { _simple = b; }
+	void setSimple(casacore::Bool b) { _simple = b; }
 
-	void setDeblendOptions(Double threshold, Int nContour, Int minRange, Int nAxis);
+	void setDeblendOptions(casacore::Double threshold, casacore::Int nContour, casacore::Int minRange, casacore::Int nAxis);
 
-	void setFit(Bool b) { _fit = b; }
+	void setFit(casacore::Bool b) { _fit = b; }
 
-	void setFitOptions(Double maxrms, Int maxRetry, Int maxIter, Double convCriteria);
+	void setFitOptions(casacore::Double maxrms, casacore::Int maxRetry, casacore::Int maxIter, casacore::Double convCriteria);
 
 protected:
 
@@ -53,23 +53,23 @@ protected:
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return std::vector<Coordinate::Type>();
+	inline std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return std::vector<casacore::Coordinate::Type>();
 	}
 
-    inline Bool _supportsMultipleBeams() const {return True;}
+    inline casacore::Bool _supportsMultipleBeams() const {return true;}
 
 private:
-    Bool _simple = False;
-    Double _threshold = -1;
-    Int _ncontour = 11;
-    Int _minrange = 1;
-    Int _naxis = 2;
-    Bool _fit = True;
-    Double _maxrms = -1;
-    Int _maxretry = -1;
-    Int _maxiter = 256;
-    Double _convcriteria = 0.0001;
+    casacore::Bool _simple = false;
+    casacore::Double _threshold = -1;
+    casacore::Int _ncontour = 11;
+    casacore::Int _minrange = 1;
+    casacore::Int _naxis = 2;
+    casacore::Bool _fit = true;
+    casacore::Double _maxrms = -1;
+    casacore::Int _maxretry = -1;
+    casacore::Int _maxiter = 256;
+    casacore::Double _convcriteria = 0.0001;
 };
 }
 

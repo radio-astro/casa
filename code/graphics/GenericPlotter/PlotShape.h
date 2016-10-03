@@ -92,7 +92,7 @@ public:
         if(!l.null()) setLine(*l);
         else          setLineShown(false);
     }
-    virtual void setLine(const String& color,
+    virtual void setLine(const casacore::String& color,
             PlotLine::Style style = PlotLine::SOLID, double width = 1.0) {
         PlotLinePtr l = line();
         l->setColor(color);
@@ -108,7 +108,7 @@ public:
         if(!f.null()) setAreaFill(*f);
         else          setAreaFilled(false);
     }
-    virtual void setAreaFill(const String& color,
+    virtual void setAreaFill(const casacore::String& color,
             PlotAreaFill::Pattern pattern = PlotAreaFill::FILL) {
         PlotAreaFillPtr f = areaFill();
         f->setColor(color);

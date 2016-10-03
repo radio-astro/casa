@@ -60,7 +60,7 @@ public:
     void setGridSize( int rowCount, int colCount );
 
     //Return the row and column location for this plot.
-    void getLocation( Int& rowIndex, Int& colIndex );
+    void getLocation( casacore::Int& rowIndex, casacore::Int& colIndex );
 
     //Plot parameters have changed.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,
@@ -110,7 +110,7 @@ public:
     void clearData();
 
     //Return the ms that was loaded or an empty string.
-    String getFile() const;
+    casacore::String getFile() const;
 
 signals:
 	void close( PlotMSDataCollapsible*);

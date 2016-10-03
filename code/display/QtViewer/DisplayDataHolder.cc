@@ -28,6 +28,7 @@
 #include <display/QtViewer/ImageManager/ImageTracker.h>
 #include <algorithm>
 
+using namespace casacore;
 namespace casa {
 
 	DisplayDataHolder::DisplayDataHolder()
@@ -269,4 +270,5 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
+using namespace casacore;
 } /* namespace casa */

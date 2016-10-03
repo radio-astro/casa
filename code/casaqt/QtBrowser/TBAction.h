@@ -76,7 +76,7 @@ public:
     // name() must be implemented by any subclass.  This method returns the
     // name of the action.  The name should be human-readable and does not have
     // to be any specific format.
-    virtual String name() = 0;
+    virtual casacore::String name() = 0;
 
     // isAssociatedWith() must be implemented by any subclass.  This method
     // returns true if this action is associated with the given origin object,
@@ -123,11 +123,11 @@ public:
 
     // Returns the name() value of the last performed action, or blank if
     // there is none.
-    String lastActionName();
+    casacore::String lastActionName();
 
     // Returns the name() value of the last undone action, or blank if there
     // is none.
-    String lastUndoneActionName();
+    casacore::String lastUndoneActionName();
 
     // Returns the performed action at the designated index, or NULL if the
     // index is invalid.
@@ -200,7 +200,7 @@ public:
 
     // Implements TBAction::name().
     // Returns "edit [table name]([row],[col])".
-    String name();
+    casacore::String name();
 
     // Implements TBAction::isAssociatedWith().
     // Returns true if o is equal to the TBTableTabs object given in the
@@ -224,7 +224,7 @@ private:
     TBData* oldVal;
     
     // This action's name.
-    String actionName;
+    casacore::String actionName;
 
     
     // Updates the underlying table with the given value.
@@ -265,7 +265,7 @@ public:
 
     // Implements TBAction::name().
     // Returns "edit [table name]([row],[col])[coords]".
-    String name();
+    casacore::String name();
 
     // Implements TBAction::isAssociatedWith().
     // Returns true if o is the TBTableTabs object or the TBViewArray object
@@ -282,7 +282,7 @@ private:
     // Column of the edit data.
     int col;
 
-    // Array coordinates of the edit data.
+    // casacore::Array coordinates of the edit data.
     std::vector<int> coords;
     
     // New value.
@@ -292,7 +292,7 @@ private:
     TBData* oldVal;
 
     // This action's name.
-    String actionName;
+    casacore::String actionName;
 
     // Indicates whether the array is one-dimensional or not.
     bool oneDim;

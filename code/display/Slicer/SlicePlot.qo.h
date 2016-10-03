@@ -35,9 +35,13 @@
 class QwtPlotCurve;
 
 
-namespace casa {
+namespace casacore{
 
 	template <class T> class ImageInterface;
+}
+
+namespace casa {
+
 	class ImageAnalysis;
 
 	class SlicePlot : public QwtPlot {
@@ -48,7 +52,7 @@ namespace casa {
 		SlicePlot(QWidget *parent = NULL, bool fullVersion = false );
 
 		//Data
-		void setImage( SHARED_PTR<ImageInterface<float> > img );
+		void setImage( SHARED_PTR<casacore::ImageInterface<float> > img );
 		void updateChannel( int channel );
 		bool setRegionSelected( int regionId, bool selected );
 
@@ -61,7 +65,7 @@ namespace casa {
 
 		//Setting slice parameters.
 		void setSampleCount( int sampleCount );
-		void setInterpolationMethod( const String& method );
+		void setInterpolationMethod( const casacore::String& method );
 		void setAccumulateSlices( bool accumulate );
 
 		//Wipe out only the curves that shouldn't be displayed under
@@ -76,7 +80,7 @@ namespace casa {
 		void removeStatistics( );
 		void removeStatistic( int regionId);
 		void setStatisticsLayout( QLayout* layout );
-		void updatePositionInformation( int id, const QVector<String>& info );
+		void updatePositionInformation( int id, const QVector<casacore::String>& info );
 		void markPositionChanged(int regionId,int segmentIndex,float percentage);
 		void markVisibilityChanged(int regionId,bool showMarker);
 		bool isFullVersion() const;
@@ -126,11 +130,11 @@ namespace casa {
 		void resetExistingCurveColors();
 
 		QList<QColor> curveColors;
-		SHARED_PTR<ImageInterface<float> > image;
+		SHARED_PTR<casacore::ImageInterface<float> > image;
 		ImageAnalysis* imageAnalysis;
 		QMap<int, ImageSlice*> sliceMap;
 
-		Vector<Int> coords;
+		casacore::Vector<casacore::Int> coords;
 		int curveWidth;
 		int markerSize;
 		bool accumulateSlices;
@@ -141,13 +145,14 @@ namespace casa {
 		int sampleCount;
 		int currentRegionId;
 		const int AXIS_FONT_SIZE;
-		String interpolationMethod;
+		casacore::String interpolationMethod;
 		QString xAxis;
 		QString xAxisUnits;
-		Vector<Int> axes;
+		casacore::Vector<casacore::Int> axes;
 		QLayout* statLayout;
 		SliceStatisticsFactory* factory;
 	};
 
-} /* namespace casa */
+} // end namespace casa
+
 #endif /* SLICEPLOT_H_ */

@@ -46,10 +46,10 @@ protected:
     virtual void TearDown();
     //
     // box mask cube image generator (only create mask for stoke I) 
-    void generateBoxMaskImage(String imagename, Int imsize, Int nchan, IPosition blc, IPosition trc);
+    void generateBoxMaskImage(casacore::String imagename, casacore::Int imsize, casacore::Int nchan, casacore::IPosition blc, casacore::IPosition trc);
 
-    String outMaskName;
-    CoordinateSystem csys;
+    casacore::String outMaskName;
+    casacore::CoordinateSystem csys;
 };
 
 //Test methods that involve ImageInterface

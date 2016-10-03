@@ -80,46 +80,46 @@ class CEMemImageSkyModel : public CleanImageSkyModel {
 public:
 
   // constructor
-  CEMemImageSkyModel(Float sigma, 
-		     Float targetFlux,
-		     Bool constrainFlux,
-		     const Vector<String>& priors,
-		     const String& entropy);
+  CEMemImageSkyModel(casacore::Float sigma, 
+		     casacore::Float targetFlux,
+		     casacore::Bool constrainFlux,
+		     const casacore::Vector<casacore::String>& priors,
+		     const casacore::String& entropy);
 
   // destructor
   ~CEMemImageSkyModel();
 
   // Solve for this SkyModel
-  virtual Bool solve (SkyEquation& me);
+  virtual casacore::Bool solve (SkyEquation& me);
 
   // Set control parameters which are different from Clean:
   //<group>
-  void setSigma(const Float targetSigma) {itsSigma = targetSigma; }
-  void setTargetFlux(const Float targetFlux) {itsTargetFlux = targetFlux; }
-  void setConstrainTargetFlux(const Bool constrainFlux) { itsConstrainFlux = constrainFlux; }
-  void setPrior(const Vector<String>& prior) { itsPrior = prior; }
-  void setEntropy(const String& ent) { itsEntropy = ent; }
+  void setSigma(const casacore::Float targetSigma) {itsSigma = targetSigma; }
+  void setTargetFlux(const casacore::Float targetFlux) {itsTargetFlux = targetFlux; }
+  void setConstrainTargetFlux(const casacore::Bool constrainFlux) { itsConstrainFlux = constrainFlux; }
+  void setPrior(const casacore::Vector<casacore::String>& prior) { itsPrior = prior; }
+  void setEntropy(const casacore::String& ent) { itsEntropy = ent; }
   //</group>
 
   // Get the various control parameters which are different from Clean:
   //<group>
-  Float sigma() { return itsSigma; }
-  Float targetFlux() { return itsTargetFlux; }
-  Bool constrainFlux() { return itsConstrainFlux; }
-  Vector<String> prior() { return itsPrior; }
-  String entropy() { return itsEntropy; }
+  casacore::Float sigma() { return itsSigma; }
+  casacore::Float targetFlux() { return itsTargetFlux; }
+  casacore::Bool constrainFlux() { return itsConstrainFlux; }
+  casacore::Vector<casacore::String> prior() { return itsPrior; }
+  casacore::String entropy() { return itsEntropy; }
   //</group>
 
 protected:
 
-  Bool initializeModel() { return itsInitializeModel; }
+  casacore::Bool initializeModel() { return itsInitializeModel; }
   
-  Float itsSigma;
-  Float itsTargetFlux;
-  Bool itsConstrainFlux;
-  Vector<String> itsPrior;
-  String itsEntropy;
-  Bool itsInitializeModel;
+  casacore::Float itsSigma;
+  casacore::Float itsTargetFlux;
+  casacore::Bool itsConstrainFlux;
+  casacore::Vector<casacore::String> itsPrior;
+  casacore::String itsEntropy;
+  casacore::Bool itsInitializeModel;
 
   CEMemProgress *itsProgress;
 

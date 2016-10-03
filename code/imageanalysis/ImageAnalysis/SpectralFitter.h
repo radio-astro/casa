@@ -33,13 +33,17 @@
 
 #include <casa/namespace.h>
 
+namespace casacore{
+
+//class SpectralCoordinate;
+class LogIO;
+}
+
 namespace casa {
 
 template <class T> class ProfileFit1D;
 
-//class SpectralCoordinate;
 class SpectralList;
-class LogIO;
 
 class SpectralFitter {
 	// <summary>
@@ -86,61 +90,61 @@ public:
 	// <src>fitPoly</src>  - fit polynomial
 	// <src>nPoly</src>    - order of polynomial to be fitted
 	// <src>msg</src>      - message back to the calling routine
-	virtual Bool fit(const Vector<Float> &spcVals, const Vector<Float> &yVals, const Vector<Float> &eVals,
-			const Float startVal, const Float endVal, const Bool fitGauss, const Bool fitPoly, const uInt nPoly, String &msg);
+	virtual casacore::Bool fit(const casacore::Vector<casacore::Float> &spcVals, const casacore::Vector<casacore::Float> &yVals, const casacore::Vector<casacore::Float> &eVals,
+			const casacore::Float startVal, const casacore::Float endVal, const casacore::Bool fitGauss, const casacore::Bool fitPoly, const casacore::uInt nPoly, casacore::String &msg);
 
 	// get the status of the last fit
 	const SpectralFitter::FitStatus &getStatus(){return _fitStatus;};
 
 	// get Chi Squared of the last fit
-	Double getChiSquared () const {return _fit.getChiSquared();}
+	casacore::Double getChiSquared () const {return _fit.getChiSquared();}
 
 	// get number of iterations for the last fit
-	Double getNumberIterations() const {return _fit.getNumberIterations();}
+	casacore::Double getNumberIterations() const {return _fit.getNumberIterations();}
 
 	const SpectralList &getList() const {return _fit.getList();};
 
 	// get all values for the last fit
-	Vector<Double> getFit() const {return _fit.getFit();};
+	casacore::Vector<casacore::Double> getFit() const {return _fit.getFit();};
 
 	// get the values in the specified data range for the last fit
-	void getFit(const Vector<Float> &spcVals, Vector<Float> &spcFit, Vector<Float> &yFit) const;
+	void getFit(const casacore::Vector<casacore::Float> &spcVals, casacore::Vector<casacore::Float> &spcFit, casacore::Vector<casacore::Float> &yFit) const;
 
 	// get all residuals for the last fit
-	Vector<Double> getResidual() const {return _fit.getResidual();};
+	casacore::Vector<casacore::Double> getResidual() const {return _fit.getResidual();};
 
 	// report on the last fit to a stream
-	String report(LogIO &os, const String &xUnit="", const String &yUnit="", const String &yPrefixUnit="") const;
+	casacore::String report(casacore::LogIO &os, const casacore::String &xUnit="", const casacore::String &yUnit="", const casacore::String &yPrefixUnit="") const;
 
 private:
-   LogIO *_log;
+   casacore::LogIO *_log;
 
-   ProfileFit1D<Double> _fit;
+   ProfileFit1D<casacore::Double> _fit;
 
 	SpectralFitter::FitStatus _fitStatus;
 
-	Double _startVal;
-	Double _endVal;
-	uInt   _startIndex;
-	uInt   _endIndex;
+	casacore::Double _startVal;
+	casacore::Double _endVal;
+	casacore::uInt   _startIndex;
+	casacore::uInt   _endIndex;
 
-	String _resultMsg;
+	casacore::String _resultMsg;
 
 	// do all necessary setup
    void _setUp();
 
    // prepare the data which means give all data (independent, dependent, weights)
    // to the fitting class
-   Bool _prepareData(const Vector<Float> &xVals, const Vector<Float> &eVals,
-   		const Int &startIndex, const Int &endIndex, Vector<Bool> &maskVals, Vector<Double> &weightVals) const;
+   casacore::Bool _prepareData(const casacore::Vector<casacore::Float> &xVals, const casacore::Vector<casacore::Float> &eVals,
+   		const casacore::Int &startIndex, const casacore::Int &endIndex, casacore::Vector<casacore::Bool> &maskVals, casacore::Vector<casacore::Double> &weightVals) const;
 
    // prepare the components that shall be fitted; this includes the setting
    // of reasonable initial parameters
-   Bool _prepareElems(const Bool fitGauss, const Bool fitPoly, const uInt nPoly, Vector<Double> &xVals,
-   		Vector<Double> &yVals, SpectralList& list);
+   casacore::Bool _prepareElems(const casacore::Bool fitGauss, const casacore::Bool fitPoly, const casacore::uInt nPoly, casacore::Vector<casacore::Double> &xVals,
+   		casacore::Vector<casacore::Double> &yVals, SpectralList& list);
 
    // report on a list of spectral elements to a stream
-   String _report(LogIO &os, const SpectralList &list, const String &xUnit="", const String &yUnit="", const String &yPrefixUnit="") const;
+   casacore::String _report(casacore::LogIO &os, const SpectralList &list, const casacore::String &xUnit="", const casacore::String &yUnit="", const casacore::String &yPrefixUnit="") const;
 };
 }
 

@@ -35,16 +35,16 @@ public:
 //  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; }
 
   // Do not use generic data gathering mechanism for solve
-  virtual Bool useGenericGatherForSolve() {
-    return False;
+  virtual casacore::Bool useGenericGatherForSolve() {
+    return false;
   }
 
   // Set the solving parameters
   virtual void setSolve();
-  virtual void setSolve(const Record& solve);
+  virtual void setSolve(const casacore::Record& solve);
 
   // Report solve info/params, e.g., for logging
-  virtual String solveinfo();
+  virtual casacore::String solveinfo();
 
   // Self- gather and/or solve prototypes
   //  (triggered by useGenericGatherForSolve=F or useGenericSolveOne=F)

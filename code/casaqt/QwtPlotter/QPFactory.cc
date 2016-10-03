@@ -39,6 +39,7 @@
 #include <casaqt/QwtPlotter/QPTool.qo.h>
 #include <display/QtViewer/QtApp.h>
 
+using namespace casacore;
 namespace casa {
 
 ///////////////////////////

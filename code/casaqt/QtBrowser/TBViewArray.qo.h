@@ -71,7 +71,7 @@ public:
     // array view will have a label that says "[table name][first, second] =
     // [type] array of size [size]."  For keyword arrays, row and col are
     // irrelevant and editable should be false.
-    TBViewArray(TBTableTabs* tt, String first, String second, TBArrayData* arr,
+    TBViewArray(TBTableTabs* tt, casacore::String first, casacore::String second, TBArrayData* arr,
                 int row, int col, bool editable);
 
     ~TBViewArray();
@@ -106,25 +106,25 @@ protected:
     void contextMenuEvent(QContextMenuEvent* event);
     
 private:
-    // Table backend.
+    // casacore::Table backend.
     // <group>
     TBTableTabs* tTabs;
     TBTable* t;
     // </group>
     
-    // Array being displayed.    
+    // casacore::Array being displayed.    
     TBArrayData* array;
 
     // Flag to indicate whether GUI-generated events are "genuine."
     bool update;
     
-    // Slicer for arrays with dimensionality greater than two.
+    // casacore::Slicer for arrays with dimensionality greater than two.
     TBSlicer* slicer;
     
     // Current slice for arrays with dimensionality greater than two.
     vector<int> currentSlice;
     
-    // Indicates whether this array is allowed to be edited.  Data arrays
+    // Indicates whether this array is allowed to be edited.  casacore::Data arrays
     // should be true while keyword arrays should be false.
     bool editable;
     
@@ -134,7 +134,7 @@ private:
     // Background for selected cells.
     QBrush selectedBackground;
     
-    // List of cells that are on the same row or column as the currently
+    // casacore::List of cells that are on the same row or column as the currently
     // selected cell.
     vector<QTableWidgetItem*> selectedCells;
     
@@ -153,7 +153,7 @@ private:
 
     
     // Sets up the GUI components with the given parameters for the label.
-    void setup(String first, String second);
+    void setup(casacore::String first, casacore::String second);
 
     // Returns the array-relevant coordinates corresponding to the given
     // indices. 
@@ -229,16 +229,16 @@ signals:
     void allArraysClosed();
     
 private:
-    // Table backend.
+    // casacore::Table backend.
     TBTableTabs* ttabs;
     
-    // List of opened arrays.
+    // casacore::List of opened arrays.
     vector<TBViewArray*> arrays;
     
-    // List of wrapper widgets.
+    // casacore::List of wrapper widgets.
     vector<QCloseableWidget*> widgets;
     
-    // Array indices.
+    // casacore::Array indices.
     vector<int> indices;
     
     // Splitter to hold the opened arrays.
@@ -261,7 +261,7 @@ private slots:
 //
 // <synopsis>
 // A TBViewRecord displays data in a TBDataRecord format, which uses an
-// underlying Record object.  The record is displayed in a table, and the
+// underlying casacore::Record object.  The record is displayed in a table, and the
 // values can also be another table (for arrays or sub-records).
 // </synopsis>
 
@@ -271,20 +271,20 @@ class TBViewRecord : public QWidget, Ui::ViewArray {
 public:
     // Constructor which takes the table parent, the record to display, and the
     // "indices" to display in the label.
-    TBViewRecord(TBTableTabs* tt, TBDataRecord* r, String first,
-                 String second = "");
+    TBViewRecord(TBTableTabs* tt, TBDataRecord* r, casacore::String first,
+                 casacore::String second = "");
     
     ~TBViewRecord();
     
 private:
-    // Table parent.
+    // casacore::Table parent.
     TBTableTabs* tt;
     
     // Displayed record.
-    Record& record;
+    casacore::Record& record;
     
     // Fills the given table with the given parameters.
-    void fill(QTableWidget& table, Record& r, String first, String second);
+    void fill(QTableWidget& table, casacore::Record& r, casacore::String first, casacore::String second);
 };
 
 }

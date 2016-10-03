@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File Merger.h
+ * casacore::File Merger.h
  */
 #ifndef Merger_CLASS
 #define Merger_CLASS

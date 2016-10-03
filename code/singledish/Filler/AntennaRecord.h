@@ -17,29 +17,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct AntennaRecord {
-  typedef MSAntenna AssociatingTable;
-  typedef MSAntennaColumns AssociatingColumns;
+  typedef casacore::MSAntenna AssociatingTable;
+  typedef casacore::MSAntennaColumns AssociatingColumns;
 
   // mandatory
-  String name;
-  MPosition position;
-  String type;
-  String mount;
-  Double dish_diameter;
+  casacore::String name;
+  casacore::MPosition position;
+  casacore::String type;
+  casacore::String mount;
+  casacore::Double dish_diameter;
 
   // optional
-  String station;
-  MPosition offset;
+  casacore::String station;
+  casacore::MPosition offset;
 
   // method
   void clear() {
     name = "";
-    position = MPosition();
+    position = casacore::MPosition();
     type = "";
     mount = "";
     dish_diameter = -1.0;
     station = "";
-    offset = MPosition();
+    offset = casacore::MPosition();
   }
 
   AntennaRecord &operator=(AntennaRecord const &other) {
@@ -54,12 +54,12 @@ struct AntennaRecord {
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {
-    table.addRow(1, True);
+    table.addRow(1, true);
   }
 
-  Bool fill(uInt irow, AssociatingColumns &columns) {
+  casacore::Bool fill(casacore::uInt irow, AssociatingColumns &columns) {
     if (columns.nrow() <= irow) {
-      return False;
+      return false;
     }
 
     columns.name().put(irow, name);
@@ -73,7 +73,7 @@ struct AntennaRecord {
     if (anyNE(offset.getAngle().getValue(), 0.0)) {
       columns.offsetMeas().put(irow, offset);
     }
-    return True;
+    return true;
   }
 };
 

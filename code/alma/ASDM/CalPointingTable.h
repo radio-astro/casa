@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File CalPointingTable.h
+ * casacore::File CalPointingTable.h
  */
  
 #ifndef CalPointingTable_CLASS
@@ -516,7 +516,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a CalPointingTableIDL CORBA structure.
 	 *

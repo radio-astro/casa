@@ -1,4 +1,4 @@
-//# CalCache.h: CalTable-specific Data cache for plotms.
+//# CalCache.h: CalTable-specific casacore::Data cache for plotms.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -63,21 +63,21 @@ public:
   PlotMSCacheBase::Type cacheType() const { return PlotMSCacheBase::CAL; };
 
   // Is the underlying table complex?
-  inline Bool parsAreComplex() { return parsAreComplex_; };
+  inline casacore::Bool parsAreComplex() { return parsAreComplex_; };
 
   // Access to channel averaging bounds
-  Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
+  casacore::Matrix<casacore::Int>& chanAveBounds(casacore::Int spw) { return chanAveBounds_p(spw); };
   
   // ...not yet CAL-specific... (or ever?)
   // Set up indexing for the plot
   //  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
-  //		    Bool globalXRange=False, Bool globalYRange=False);
+  //		    casacore::Bool globalXRange=false, casacore::Bool globalYRange=false);
 
   // Convert poln index->name and name->index
-  virtual String polname(Int ipol);
+  virtual casacore::String polname(casacore::Int ipol);
 
   // given filename, get cal type
-  void setFilename(String filename); 
+  void setFilename(casacore::String filename);
 
 protected:
 
@@ -92,17 +92,17 @@ private:
   CalCache(const CalCache&);
 
   // Setup the CalIter
-  void setUpCalIter(const String& calname,
+  void setUpCalIter(const casacore::String& calname,
 		    PlotMSSelection& selection,
-		    Bool readonly=True,
-		    Bool chanselect=True,
-		    Bool corrselect=True);
+		    casacore::Bool readonly=true,
+		    casacore::Bool chanselect=true,
+		    casacore::Bool corrselect=true);
 
   // Count the chunks required in the cache
   void countChunks(ROCTIter& ci,ThreadCommunication* thread);  // old
 
   // Trap attempt to use to much memory (too many points)
-  //  void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
+  //  void trapExcessVolume(map<PMS::Axis,casacore::Bool> pendingLoadAxes);
 
   // Loop over VisIter, filling the cache
   void loadCalChunks(ROCTIter& ci,
@@ -110,48 +110,48 @@ private:
 		  ThreadCommunication* thread);
 
   // Loads the specific axis/metadata into the cache using the given VisBuffer.
-  void loadCalAxis(ROCTIter& cti, Int chunk, PMS::Axis axis, String pol);
+  void loadCalAxis(ROCTIter& cti, casacore::Int chunk, PMS::Axis axis, casacore::String pol);
 
   // Check axis and slice param column appropriately
-  Slice getParSlice(String axis, String polnSel);
+  casacore::Slice getParSlice(casacore::String axis, casacore::String polnSel);
   // Get axis string for VisCal Slice code
-  String toVisCalAxis(PMS::Axis axis);
+  casacore::String toVisCalAxis(PMS::Axis axis);
 
   // Check for divide-by-zero (=inf); set to 1.0 and flag it
-  void checkRatioArray(Array<Float>& array, Int chunk);
+  void checkRatioArray(casacore::Array<float>& array, int chunk);
 
   // Set flags in the CalTable
   virtual void flagToDisk(const PlotMSFlagging& flagging,
-			  Vector<Int>& chunks, 
-			  Vector<Int>& relids,
-			  Bool flag,
+			  casacore::Vector<casacore::Int>& chunks, 
+			  casacore::Vector<casacore::Int>& relids,
+			  casacore::Bool flag,
 			  PlotMSIndexer* indexer, int index);
   
 
   // A container for channel averaging bounds
-  Vector<Matrix<Int> > chanAveBounds_p;
+  casacore::Vector<casacore::Matrix<casacore::Int> > chanAveBounds_p;
 
   // Provisional flagging helpers
-  Vector<Int> nVBPerAve_;
+  casacore::Vector<casacore::Int> nVBPerAve_;
  
   // The polarization basis
-  String basis_;
+  casacore::String basis_;
   // Had to adjust for divide-by-zero in ratio plot (checkRatioArray)
-  Bool divZero_;
+  bool divZero_;
 
   // VisIterator pointer
   ROCTIter* ci_p;
   CTIter* wci_p;
 
   // Is parameter column complex?
-  Bool parsAreComplex_;
+  casacore::Bool parsAreComplex_;
 
   // Volume meter for volume calculation
   //  PMSCacheVolMeter vm_;
 
     
 };
-typedef CountedPtr<CalCache> CalCachePtr;
+typedef casacore::CountedPtr<CalCache> CalCachePtr;
 
 
 }

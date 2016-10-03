@@ -45,6 +45,7 @@
 #include <casa/sstream.h>
 #include <casa/Utilities/CompositeNumber.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   namespace refim{
   //---------------------------------------------------------------
@@ -63,8 +64,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO log_l(LogOrigin("AWProjectWBFTNew2", "ftWeightImage[R&D]"));
     if (wtImageFTDone_p) return;
 
-    // Bool doSumWtNorm=True;
-    // if (sumWt.shape().nelements()==0) doSumWtNorm=False;
+    // Bool doSumWtNorm=true;
+    // if (sumWt.shape().nelements()==0) doSumWtNorm=false;
 
     if ((sumWt.shape().nelements() < 2) || 
 	(sumWt.shape()(0) != wtImage.shape()(2)) || 
@@ -83,17 +84,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //   String name("wtimg.im");
     //   storeArrayAsImage(name,image->coordinates(),wtImage.get());
     // }
-    LatticeFFT::cfft2d(wtImage,False);
+    LatticeFFT::cfft2d(wtImage,false);
     // {
     //   String name("ftwtimg.im");
     //   storeArrayAsImage(name,image->coordinates(),wtImage.get());
     // }
-    wtImageFTDone_p=True;
+    wtImageFTDone_p=true;
 
     Int sizeX=wtImage.shape()(0), sizeY=wtImage.shape()(1);
 
-    Array<Complex> wtBuf; wtImage.get(wtBuf,False);
-    ArrayLattice<Complex> wtLat(wtBuf,True);
+    Array<Complex> wtBuf; wtImage.get(wtBuf,false);
+    ArrayLattice<Complex> wtLat(wtBuf,true);
     //
     // Copy one 2D plane at a time, normalizing by the sum of weights
     // and possibly 2D FFT.

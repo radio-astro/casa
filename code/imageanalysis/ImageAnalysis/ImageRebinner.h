@@ -30,9 +30,9 @@ public:
 
 
 	ImageRebinner(
-		const SPCIIT image, const Record *const region,
-		const String& maskInp,
-		const String& outname, Bool overwrite
+		const SPCIIT image, const casacore::Record *const region,
+		const casacore::String& maskInp,
+		const casacore::String& outname, casacore::Bool overwrite
 	);
 
 	// destructor
@@ -40,12 +40,12 @@ public:
 
 	SPIIT rebin() const;
 
-	virtual String getClass() const { const static String s = "ImageRebinner"; return s; }
+	virtual casacore::String getClass() const { const static casacore::String s = "ImageRebinner"; return s; }
 
 	// Set the factors (1 for each axis) to rebin by.
-	void setFactors(const Vector<Int>& f);
+	void setFactors(const casacore::Vector<casacore::Int>& f);
 
-	void setCrop(Bool c) { _crop = c; }
+	void setCrop(casacore::Bool c) { _crop = c; }
 
 protected:
 
@@ -53,13 +53,13 @@ protected:
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return std::vector<Coordinate::Type>();
+	std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return std::vector<casacore::Coordinate::Type>();
 	}
 
 private:
-	IPosition _factors;
-	Bool _crop;
+	casacore::IPosition _factors;
+	casacore::Bool _crop;
 
 	// disallow default constructor
 	ImageRebinner();

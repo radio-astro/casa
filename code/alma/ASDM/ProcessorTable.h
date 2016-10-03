@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File ProcessorTable.h
+ * casacore::File ProcessorTable.h
  */
  
 #ifndef ProcessorTable_CLASS
@@ -226,7 +226,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a ProcessorTableIDL CORBA structure.
 	 *

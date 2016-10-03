@@ -4,6 +4,7 @@
 #include <math.h>
 #include <display3d/3DViewer/SlideEditor.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 SlideEditor::SlideEditor(QString name,

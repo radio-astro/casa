@@ -82,7 +82,7 @@ class SimpComponentGridMachine : public ComponentFTMachine {
 public:
 
   // Get actual coherence 
-  virtual void get(VisBuffer& vb, SkyComponent& component, Int row=-1);
+  virtual void get(VisBuffer& vb, SkyComponent& component, casacore::Int row=-1);
 
 protected:
 

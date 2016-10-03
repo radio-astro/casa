@@ -32,6 +32,7 @@
 #include <iterator>
 #include <QDebug>
 #define DEBUG 1
+using namespace casacore;
 namespace casa {
 
 	namespace viewer {

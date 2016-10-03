@@ -36,13 +36,14 @@
 
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  VisImagingWeight::VisImagingWeight() : multiFieldMap_p(-1), wgtType_p("none"), doFilter_p(False), robust_p(0.0), rmode_p("norm"), noise_p(Quantity(0.0, "Jy")) {
+  VisImagingWeight::VisImagingWeight() : multiFieldMap_p(-1), wgtType_p("none"), doFilter_p(false), robust_p(0.0), rmode_p("norm"), noise_p(Quantity(0.0, "Jy")) {
 
     }
 
-  VisImagingWeight::VisImagingWeight(const String& type) : multiFieldMap_p(-1),doFilter_p(False),  robust_p(0.0), rmode_p("norm"), noise_p(Quantity(0.0, "Jy")) {
+  VisImagingWeight::VisImagingWeight(const String& type) : multiFieldMap_p(-1),doFilter_p(false),  robust_p(0.0), rmode_p("norm"), noise_p(Quantity(0.0, "Jy")) {
 
         wgtType_p=type;
         wgtType_p.downcase();
@@ -57,7 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   VisImagingWeight::VisImagingWeight(ROVisibilityIterator& vi, const String& rmode, const Quantity& noise,
                                      const Double robust, const Int nx, const Int ny,
                                      const Quantity& cellx, const Quantity& celly,
-                                     const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False), robust_p(robust), rmode_p(rmode), noise_p(noise) {
+                                     const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(false), robust_p(robust), rmode_p(rmode), noise_p(noise) {
 
       LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
 
@@ -202,13 +203,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   VisImagingWeight::VisImagingWeight(ROVisibilityIterator& vi, Block<Matrix<Float> >& grids, const String& rmode, const Quantity& noise,
                                      const Double robust, const Quantity& cellx, const Quantity& celly,
-                                     const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False), robust_p(robust), rmode_p(rmode), noise_p(noise) {
+                                     const Bool multiField) : multiFieldMap_p(-1), doFilter_p(false), robust_p(robust), rmode_p(rmode), noise_p(noise) {
 
    LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
 
       VisBufferAutoPtr vb (vi);
       wgtType_p="uniform";
-      gwt_p.resize(grids.nelements(), True, False);
+      gwt_p.resize(grids.nelements(), true, false);
       for (uInt k =0; k < gwt_p.nelements(); ++k)
 	gwt_p[k].assign(grids[k]);
       nx_p=gwt_p[0].shape()[0];
@@ -270,7 +271,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     const String& rmode, const Quantity& noise,
                                      const Double robust, const Int nx, const Int ny,
                                      const Quantity& cellx, const Quantity& celly,
-                                     const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False), robust_p(robust), rmode_p(rmode), noise_p(noise) {
+                                     const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(false), robust_p(robust), rmode_p(rmode), noise_p(noise) {
 
       LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
 
@@ -436,10 +437,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if (type=="gaussian") {
       
-      Bool lambdafilt=False;
+      Bool lambdafilt=false;
       
       if( bmaj.getUnit().contains("lambda"))
-	lambdafilt=True;
+	lambdafilt=true;
       if(lambdafilt){
 	os << "Filtering for Gaussian of shape: " 
 	   << bmaj.get("klambda").getValue() << " by " 
@@ -462,7 +463,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Double rbpa  = MVAngle(bpa).get("rad").getValue();
       cospa_p = sin(rbpa);
       sinpa_p = cos(rbpa);
-      doFilter_p=True;
+      doFilter_p=true;
 
     }
     else {
@@ -663,19 +664,19 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
     }
   Bool VisImagingWeight::getWeightDensity (Block<Matrix<Float> >& density){
     if(wgtType_p != "uniform"){
-      density.resize(0, True, False);
-      return False;
+      density.resize(0, true, false);
+      return false;
     }
-    density.resize(gwt_p.nelements(), True, False);
+    density.resize(gwt_p.nelements(), true, false);
     for (uInt k=0; k < gwt_p.nelements(); ++k){
       density[k].resize();
       density[k].assign(gwt_p[k]);
     }
-    return True;
+    return true;
   }
   void VisImagingWeight::setWeightDensity(const Block<Matrix<Float> >& density){
     if(wgtType_p=="uniform"){
-      gwt_p.resize(density.nelements(), True, False);
+      gwt_p.resize(density.nelements(), true, false);
       for (uInt k=0; k < gwt_p.nelements(); ++k){
 	gwt_p[k].resize();
 	gwt_p[k]=density[k];

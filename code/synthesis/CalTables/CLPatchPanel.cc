@@ -39,7 +39,7 @@
 
 #include <casa/aips.h>
 
-#define CTPATCHPANELVERB False
+#define CTPATCHPANELVERB false
 
 //#include <casa/BasicSL/Constants.h>
 //#include <casa/OS/File.h>
@@ -47,6 +47,7 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogIO.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 CalPatchKey::CalPatchKey(IPosition keyids) :
@@ -66,8 +67,8 @@ Bool CalPatchKey::operator<(const CalPatchKey& other) const {
       // both non-negative and not equal, so evaluate element <
       return cpk_[i]<other.cpk_[i];
   }
-  // All apparently equal so "<" is False
-  return False;
+  // All apparently equal so "<" is false
+  return false;
 }
 
 MSCalPatchKey::MSCalPatchKey(Int obs,Int fld,Int ent,Int spw,Int ant) :
@@ -128,22 +129,22 @@ Vector<Int> CalMap::ctids(const Vector<Int>& msids) const {
       (ncalmap==1 && vcalmap_[0]<0))
     return Vector<Int>(1,-1);
 
-  Vector<Bool> calmask(ncalmap,False);
+  Vector<Bool> calmask(ncalmap,false);
   if (msids.nelements()==1 &&
       msids[0]<0)
     // MS ids indefinite, so all are ok
-    calmask.set(True);  
+    calmask.set(true);  
   else {
     // just do the ones that are requested
     for (uInt i=0;i<msids.nelements();++i) {
       const uInt& thismsid=msids(i);
-      calmask(thismsid<ncalmap?thismsid:ncalmap-1)=True;
+      calmask(thismsid<ncalmap?thismsid:ncalmap-1)=true;
     }
   }
   Vector<Int> reqids;
   reqids=vcalmap_(calmask).getCompressedArray();
   Int nsort=genSort(reqids,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-  reqids.resize(nsort,True);
+  reqids.resize(nsort,true);
   return reqids;
 }
 
@@ -165,7 +166,7 @@ Vector<Int> CalMap::msids(Int ctid,const Vector<Int>& superset) const {
   if (superset.nelements()>0 && superset[0]>-1)
     for (Int i=0;i<Int(msidmask.nelements());++i)
       if (!anyEQ(superset,i))
-	msidmask[i]=False;  // exclude if not in superset
+	msidmask[i]=false;  // exclude if not in superset
 
   // Return the ms id list
   return msidlist(msidmask).getCompressedArray();
@@ -221,7 +222,7 @@ void FieldCalMap::setNearestFieldMap(const ROMSFieldColumns& msfc, const ROCTCol
   Vector<Int> ctFlds;
   ctc.fieldId().getColumn(ctFlds);
   Int nAvFlds=genSort(ctFlds,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-  ctFlds.resize(nAvFlds,True);
+  ctFlds.resize(nAvFlds,true);
 
   // If only one CT field, just use it
   if (nAvFlds==1)
@@ -404,7 +405,7 @@ Bool CalLibSlice::validateCLS(const Record& clslice) {
     throw(AipsError(missing));
 
   // Everything is ok if we get here
-  return True;
+  return true;
 }
 
 
@@ -430,11 +431,11 @@ CLPPResult::CLPPResult() :
 
 CLPPResult::CLPPResult(const IPosition& shape) :
   result_(shape,0.0),
-  resultFlag_(shape,True)
+  resultFlag_(shape,true)
 {}
 CLPPResult::CLPPResult(uInt nPar,uInt nFPar,uInt nChan,uInt nElem) :
   result_(nFPar,nChan,nElem,0.0),
-  resultFlag_(nPar,nChan,nElem,True)
+  resultFlag_(nPar,nChan,nElem,true)
 {}
 
 CLPPResult& CLPPResult::operator=(const CLPPResult& other) {
@@ -447,7 +448,7 @@ void CLPPResult::resize(uInt nPar,uInt nFPar,uInt nChan,uInt nElem) {
   result_.resize(nFPar,nChan,nElem);
   result_.set(1.0);
   resultFlag_.resize(nPar,nChan,nElem);
-  resultFlag_.set(True);
+  resultFlag_.set(true);
 }
 
 // (caltable only, mainly for testing)
@@ -459,7 +460,7 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
   ctasms_(NewCalTable::createCT(ctname,Table::Old,Table::Memory)),
   ms_(),
   mtype_(mtype),
-  isCmplx_(False),
+  isCmplx_(false),
   nPar_(nPar),
   nFPar_(nPar),
 
@@ -519,7 +520,7 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
   ctspw.numChan().getColumn(nChanIn_);
   freqIn_.resize(nCTSpw_);
   for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
-    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
+    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),true);
   ctspw.refFrequency().getColumn(refFreqIn_);
  
   // Initialize maps
@@ -726,7 +727,7 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
   ctasms_(), // null, in this context
   ms_(ms),
   mtype_(mtype),
-  isCmplx_(False),
+  isCmplx_(false),
   nPar_(nPar),
   nFPar_(nPar),
 
@@ -786,7 +787,7 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
   ctspw.numChan().getColumn(nChanIn_);
   freqIn_.resize(nCTSpw_);
   for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
-    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
+    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),true);
   ctspw.refFrequency().getColumn(refFreqIn_);
  
   // Initialize maps
@@ -1081,7 +1082,7 @@ Vector<Int> CLPatchPanel::getCLuniqueIds(NewCalTable& ct, String vcol) {
       
   // Reduce to a unique list
   uInt nuniq=genSort(colv,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-  colv.resize(nuniq,True);
+  colv.resize(nuniq,true);
   
   return colv;
 
@@ -1104,7 +1105,7 @@ Vector<Int> CLPatchPanel::getMSuniqueIds(MeasurementSet& ms, String which) {
       
   // Reduce to a unique list
   uInt nuniq=genSort(colv,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-  colv.resize(nuniq,True);
+  colv.resize(nuniq,true);
   
   // In case of spw, translate from ddid
   if (which=="spw") {
@@ -1136,9 +1137,9 @@ Bool CLPatchPanel::interpolate(Cube<Complex>& resultC, Cube<Bool>& resFlag,
 			       Int msobs, Int msfld, Int msent, Int msspw, 
 			       Double time, Double freq) {
 
-  Bool newcal(False);
+  Bool newcal(false);
 
-  // resultC and resFlag will be unchanged if newcal remains False
+  // resultC and resFlag will be unchanged if newcal remains false
   Cube<Float> f; // temporary to reference Float interpolation result
   newcal=interpolate(f,resFlag,msobs,msfld,msent,msspw,time,freq);
   if (newcal) 
@@ -1153,9 +1154,9 @@ Bool CLPatchPanel::interpolate(Cube<Complex>& resultC, Cube<Bool>& resFlag,
 			       Int msobs, Int msfld, Int msent, Int msspw, 
 			       Double time, const Vector<Double>& freq) {
 
-  Bool newcal(False);
+  Bool newcal(false);
 
-  // resultC and resFlag will be unchanged if newcal remains False
+  // resultC and resFlag will be unchanged if newcal remains false
   Cube<Float> f; // temporary to reference Float interpolation result
   newcal=interpolate(f,resFlag,msobs,msfld,msent,msspw,time,freq);
 
@@ -1174,8 +1175,8 @@ Bool CLPatchPanel::interpolate(Cube<Float>& resultR, Cube<Bool>& resFlag,
 
   if (CTPATCHPANELVERB) cout << "CLPatchPanel::interpolate(...)" << endl;
 
-  // NB: resultR and resFlag will be unchanged if newcal remains False
-  Bool newcal(False);
+  // NB: resultR and resFlag will be unchanged if newcal remains false
+  Bool newcal(false);
 
   // Suppled arrays reference the result (if available)
   MSCalPatchKey ires(msobs,msfld,msent,msspw,-1);
@@ -1190,7 +1191,7 @@ Bool CLPatchPanel::interpolate(Cube<Float>& resultR, Cube<Bool>& resFlag,
   // If result_ is at a new address (cf last time, this spw), treat as new
   //  TBD: do this is a less obscure way... (e.g., invent the CLCalGroup(nant))
   if (lastresadd_(msspw)!=msTres_[ires].result_.data())
-    newcal=True;
+    newcal=true;
   lastresadd_(msspw)=msTres_[ires].result_.data();
 
   // Loop over _output_ elements
@@ -1211,7 +1212,7 @@ Bool CLPatchPanel::interpolate(Cube<Float>& resultR, Cube<Bool>& resFlag,
     resFlag.reference(msTres_[ires].resultFlag_);
   }
 
-  return newcal; // If True, calling scope should act
+  return newcal; // If true, calling scope should act
 }
 
 
@@ -1221,8 +1222,8 @@ Bool CLPatchPanel::interpolate(Cube<Float>& resultR, Cube<Bool>& resFlag,
 
   if (CTPATCHPANELVERB) cout << "CLPatchPanel::interpolate(Cube<F>,...,Vector<D>)" << endl;
 
-  // NB: resultR and resFlag will be unchanged if newcal remains False
-  Bool newcal(False);
+  // NB: resultR and resFlag will be unchanged if newcal remains false
+  Bool newcal(false);
 
   // Suppled arrays reference the result (if available)
   MSCalPatchKey ires(msobs,msfld,msent,msspw,-1);
@@ -1239,11 +1240,11 @@ Bool CLPatchPanel::interpolate(Cube<Float>& resultR, Cube<Bool>& resFlag,
   // If result_ is at a new address (cf last time, this msspw), treat as new
   //  TBD: do this is a less obscure way...
   if (lastresadd_(msspw)!=msTres_[ires].result_.data())
-    newcal=True;
+    newcal=true;
   lastresadd_(msspw)=msTres_[ires].result_.data();
 
   // Sometimes we need to force the freq interp, even if the time-interp isn't new
-  Bool forceFinterp=False;
+  Bool forceFinterp=false;
 
   // The number of requested channels
   uInt nMSChan=freq.nelements();
@@ -1274,7 +1275,7 @@ Bool CLPatchPanel::interpolate(Cube<Float>& resultR, Cube<Bool>& resFlag,
 	resampleInFreq(fR,fRflg,freq,tR,tRflg,freqIn_(ctspw_[ires]),finterp_[ires]);
 	
 	// Calibration is new
-	newcal=True;
+	newcal=true;
       }
     }
   }
@@ -1302,7 +1303,7 @@ Bool CLPatchPanel::getTresult(Cube<Float>& resultR, Cube<Bool>& resFlag,
   resultR.reference(msTres_[mskey].result_);
   resFlag.reference(msTres_[mskey].resultFlag_);
 
-  return True;
+  return true;
 
 }
 
@@ -1357,7 +1358,7 @@ void CLPatchPanel::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,const V
 
   // if no good solutions coming in, return flagged
   if (nfalse(tflg)==0) {
-    fflg.set(True);
+    fflg.set(true);
     return;
   }
 
@@ -1382,7 +1383,7 @@ void CLPatchPanel::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,const V
       //   cout << ifpar << " All chans flagged!" << endl;
       // Everything flagged this par
       //  Just flag, zero and go on to the next one
-      fflgi.set(True);
+      fflgi.set(true);
       fresi.set(0.0);
       continue;
     }
@@ -1394,7 +1395,7 @@ void CLPatchPanel::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,const V
     if (fout.nelements()==mfin.nelements() && allNear(fout,mfin,1.e-10)) {
       // Just copy
       fresi=mtresi;
-      fflgi.set(False);  // none are flagged
+      fflgi.set(false);  // none are flagged
       continue;
     }
 
@@ -1411,7 +1412,7 @@ void CLPatchPanel::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,const V
     // TBD: handle flags carefully!
     //      (i.e., flag gaps larger than user's "freach")
     // For now,just unset them
-    fflgi.set(False);
+    fflgi.set(false);
     
 
     // Set flags carefully
@@ -1492,7 +1493,7 @@ void CLPatchPanel::resampleFlagsInFreq(Vector<Bool>& flgout,const Vector<Double>
 
     // Determine implied mode-dep flags indexed by channel registration
     uInt nflg=flgin.nelements();
-    Vector<Bool> flreg(nflg,False);
+    Vector<Bool> flreg(nflg,false);
     switch (interpMeth) {
     case NEAREST: {
       // Just use input flags
@@ -1524,7 +1525,7 @@ void CLPatchPanel::resampleFlagsInFreq(Vector<Bool>& flgout,const Vector<Double>
     for (uInt iflgout=0;iflgout<nflgout;++iflgout) {
 
       // Find nominal registration (the _index_ just left)
-      Bool exact(False);
+      Bool exact(false);
       ireg=binarySearch(exact,finGHz,fout(iflgout),nflg,0);
       if (ireg>0)
         ireg-=1;
@@ -1572,7 +1573,7 @@ void CLPatchPanel::resampleFlagsInFreq(Vector<Bool>& flgout,const Vector<Double>
   }
   else
     // We are interp/extrap-olating gaps absolutely
-    flgout.set(False);
+    flgout.set(false);
 
 }
 

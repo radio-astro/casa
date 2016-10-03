@@ -49,7 +49,7 @@ class PlotMSExportThread : public PlotMSThread, public PlotOperationWatcher {
 public:
     // Constructor which takes the plot to export, the export format
     // parameters, and optional post-thread method parameters.
-    PlotMSExportThread( QtProgressWidget* widget, PlotMSPlotter* plotter, const String& location,
+    PlotMSExportThread( QtProgressWidget* widget, PlotMSPlotter* plotter, const casacore::String& location,
     	/*PlotMSPlot* plot, const PlotExportFormat& format, bool interactive,*/
         PMSPTMethod postThreadMethod = NULL, PMSPTObject postThreadObject = NULL
     );
@@ -79,7 +79,7 @@ private:
     
     // Format.
     //PlotExportFormat itsFormat_;
-    String exportLocation;
+    casacore::String exportLocation;
     
     // Export operations.
     vector<vector<PlotOperationPtr> >itsOperations_;

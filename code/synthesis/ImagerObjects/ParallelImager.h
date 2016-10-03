@@ -35,7 +35,7 @@ namespace casa {
 // returned from ParallelImagerFactory::make.
 class ParallelImager {
 public:
-	virtual Record clean() = 0;
+	virtual casacore::Record clean() = 0;
 };
 
 } // namespace casa

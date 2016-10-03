@@ -39,7 +39,7 @@ namespace casa {
 	public:
 		SearchMoleculesDialog(QWidget *parent = 0);
 		QList<int> getLineIndices() const;
-		bool getLine(int lineIndex, Float& peak, Float& center, QString& molecularName,
+		bool getLine(int lineIndex, casacore::Float& peak, casacore::Float& center, QString& molecularName,
 		             QString& chemicalName, QString& resolvedQNs, QString& frequencyUnit) const;
 		void setRange( float min, float max, QString units );
 		double getRedShiftedValue( bool reverseRedshift, float value, bool* valid ) const;

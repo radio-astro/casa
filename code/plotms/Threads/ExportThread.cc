@@ -26,6 +26,7 @@
 #include "ExportThread.h"
 #include <plotms/Plots/PlotMSPlot.h>
 #include <QDebug>
+using namespace casacore;
 namespace casa {
 
 ExportThread::ExportThread()
@@ -70,4 +71,5 @@ ExportThread::~ExportThread() {
 	// TODO Auto-generated destructor stub
 }
 
+using namespace casacore;
 } /* namespace casa */

@@ -26,6 +26,7 @@
 #include <tableplot/TablePlot/FlagVersion.h>
 #include <iostream>
 
+using namespace casacore;
 using namespace casa;
 
 void unflag(string inputFile,uShort iterationMode)
@@ -41,7 +42,7 @@ void unflag(string inputFile,uShort iterationMode)
 	TableInfo& info = table.tableInfo();
 	String type=info.type();
 	table.flush();
-	table.relinquishAutoLocks(True);
+	table.relinquishAutoLocks(true);
 	table.unlock();
 	FlagDataHandler *dh = NULL;
 	if (type == "Measurement Set")
@@ -127,7 +128,7 @@ void flag(string inputFile,uShort iterationMode,uShort testMode,String flagmode,
 	TableInfo& info = table.tableInfo();
 	String type=info.type();
 	table.flush();
-	table.relinquishAutoLocks(True);
+	table.relinquishAutoLocks(true);
 	table.unlock();
 	FlagDataHandler *dh = NULL;
 	if (type == "Measurement Set")
@@ -239,7 +240,7 @@ void summary(string inputFile,uShort iterationMode)
 	TableInfo& info = table.tableInfo();
 	String type=info.type();
 	table.flush();
-	table.relinquishAutoLocks(True);
+	table.relinquishAutoLocks(true);
 	table.unlock();
 	FlagDataHandler *dh = NULL;
 	if (type == "Measurement Set")
@@ -328,7 +329,7 @@ void display(string inputFile,uShort iterationMode,uShort testMode,Record record
 	TableInfo& info = table.tableInfo();
 	String type=info.type();
 	table.flush();
-	table.relinquishAutoLocks(True);
+	table.relinquishAutoLocks(true);
 	table.unlock();
 	FlagDataHandler *dh = NULL;
 	if (type == "Measurement Set")
@@ -356,7 +357,7 @@ void display(string inputFile,uShort iterationMode,uShort testMode,Record record
 	if (testMode==2) agentConfig = record;
 	agentConfig.define("name","FlagAgent-display");
 	agentConfig.define("mode","display");
-	agentConfig.define("datadisplay",True);
+	agentConfig.define("datadisplay",true);
 	FlagAgentDisplay *dataDisplayAgent = new FlagAgentDisplay(dh,agentConfig);
 	FlagAgentList agentList;
 	agentList.push_back(dataDisplayAgent);
@@ -417,8 +418,8 @@ int main(int argc, char **argv)
 	uShort iterationMode = FlagDataHandler::SUB_INTEGRATION;
 	uShort testMode = 1;
 	String flagMode = "manual";
-	Bool disp=False;
-	Bool unflg=True;
+	Bool disp=false;
+	Bool unflg=true;
 
 
 	// Parse input parameters

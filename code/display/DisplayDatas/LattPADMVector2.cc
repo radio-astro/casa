@@ -30,6 +30,7 @@
 
 #include <display/DisplayDatas/LatticePADMVector.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <>

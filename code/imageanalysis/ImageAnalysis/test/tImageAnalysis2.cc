@@ -37,7 +37,7 @@ void writeTestString(const String& test) {
 
 
 int main() {
-	Bool ok = True;
+	Bool ok = true;
 	try {
             String casapath = EnvironmentVariable::get("CASAPATH");
             if (casapath.empty()) {
@@ -540,7 +540,7 @@ int main() {
 		cout << "ok" << endl;
 	}
     catch (AipsError x) {
-    	ok = False;
+    	ok = false;
         cerr << "Exception caught: " << x.getMesg() << endl;
     }
 	return ok ? 0 : 1;

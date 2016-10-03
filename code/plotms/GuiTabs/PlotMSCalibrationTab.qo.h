@@ -69,7 +69,7 @@ private:
 
     Ui::PlotMSCalibTabClass ui;
 
-    String getCallibFile() const;
+    casacore::String getCallibFile() const;
 };
 
 }

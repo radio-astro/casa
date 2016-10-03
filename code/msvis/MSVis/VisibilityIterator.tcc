@@ -29,22 +29,22 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
   // helper function to swap the y and z axes of a Cube
   template<class T>
-  void ROVisibilityIterator::swapyz(Cube<T>& out, const Cube<T>& in) const
+  void ROVisibilityIterator::swapyz(casacore::Cube<T>& out, const casacore::Cube<T>& in) const
   {
-    IPosition inShape = in.shape();
-    uInt nx = inShape(0), ny = inShape(2), nz = inShape(1);
+    casacore::IPosition inShape = in.shape();
+    casacore::uInt nx = inShape(0), ny = inShape(2), nz = inShape(1);
 
     out.resize(nx, ny, nz);
-    Bool deleteIn, deleteOut;
+    casacore::Bool deleteIn, deleteOut;
     const T* pin = in.getStorage(deleteIn);
     T* pout = out.getStorage(deleteOut);
-    uInt i = 0, zOffset = 0;
+    casacore::uInt i = 0, zOffset = 0;
 
-    for(uInt iz = 0; iz < nz; iz++, zOffset += nx){
-      Int yOffset = zOffset;
+    for(casacore::uInt iz = 0; iz < nz; iz++, zOffset += nx){
+      casacore::Int yOffset = zOffset;
 
-      for(uInt iy = 0; iy < ny; iy++, yOffset += nx * nz){
-        for(uInt ix = 0; ix < nx; ix++)
+      for(casacore::uInt iy = 0; iy < ny; iy++, yOffset += nx * nz){
+        for(casacore::uInt ix = 0; ix < nx; ix++)
           pout[i++] = pin[ix + yOffset];
       }
     }

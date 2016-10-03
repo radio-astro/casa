@@ -40,7 +40,7 @@ namespace casa {
 
 class ProfileFitResults;
 
-class ImageProfileFitter : public ImageTask<Float> {
+class ImageProfileFitter : public ImageTask<casacore::Float> {
 	// <summary>
 	// Top level interface for one-dimensional profile fits.
 	// </summary>
@@ -75,7 +75,7 @@ public:
 	// <src>region</src> - Named region to use for fitting. "" => Don't use a named region
 	// <src>regPtr</src> - Pointer to a region record. 0 => don't use a region record.
 	// <src>chans</src> - Zero-based channel range on which to do the fit.
-	// <src>stokes</src> - Stokes plane on which to do the fit. Only a single Stokes parameter can be
+	// <src>stokes</src> - casacore::Stokes plane on which to do the fit. Only a single casacore::Stokes parameter can be
 	// specified.
 	// Only a maximum of one of region, regionPtr, or box/stokes/chans should be specified.
 	// <src>mask</src> - Mask (as LEL) to use as a way to specify which pixels to use </src>
@@ -92,131 +92,131 @@ public:
 	// constructor and you must set <src>ngauss</src> to zero. After construction,
 	// you must call setPolyOrder().
 	ImageProfileFitter(
-		const SPCIIF image, const String& region,
-		const Record *const &regionPtr, const String& box,
-		const String& chans, const String& stokes, const String& mask,
-		const Int axis, const uInt ngauss, Bool overwrite=False
+		const SPCIIF image, const casacore::String& region,
+		const casacore::Record *const &regionPtr, const casacore::String& box,
+		const casacore::String& chans, const casacore::String& stokes, const casacore::String& mask,
+		const casacore::Int axis, const casacore::uInt ngauss, casacore::Bool overwrite=false
 	);
 
 	// Fit only Gaussian singlets and an optional polynomial. In this case, the number
 	// of Gaussian singlets is deduced from the specified estimates file.
 	ImageProfileFitter(
-		const SPCIIF image, const String& region,
-		const Record *const &regionPtr, const String& box,
-		const String& chans, const String& stokes, const String& mask,
-		const Int axis, const String& estimatesFilename,
-		Bool overwrite=False
+		const SPCIIF image, const casacore::String& region,
+		const casacore::Record *const &regionPtr, const casacore::String& box,
+		const casacore::String& chans, const casacore::String& stokes, const casacore::String& mask,
+		const casacore::Int axis, const casacore::String& estimatesFilename,
+		casacore::Bool overwrite=false
 	);
 
 	// Fit any permitted combination of spectral components and an optional polynomial.
 	// All components to be fit (except a possible polynomial) must be represented
 	// with initial estimates in <src>spectralList</src>.
 	ImageProfileFitter(
-		const SPCIIF image, const String& region,
-		const Record *const &regionPtr, const String& box,
-		const String& chans, const String& stokes, const String& mask,
-		const Int axis, const SpectralList& spectralList, Bool overwrite=False
+		const SPCIIF image, const casacore::String& region,
+		const casacore::Record *const &regionPtr, const casacore::String& box,
+		const casacore::String& chans, const casacore::String& stokes, const casacore::String& mask,
+		const casacore::Int axis, const SpectralList& spectralList, casacore::Bool overwrite=false
 	);
 
 	// destructor
 	~ImageProfileFitter();
 
-	// Do the fit. If doDetailedResults is False, an empty Record is returned.
-	Record fit(Bool doDetailedResults=True);
+	// Do the fit. If doDetailedResults is false, an empty casacore::Record is returned.
+	casacore::Record fit(casacore::Bool doDetailedResults=true);
 
-	// get the fit results. If fit was run with doDetailedResults=False, an empty Record is returned
-	Record getResults() const;
+	// get the fit results. If fit was run with doDetailedResults=false, an empty casacore::Record is returned
+	casacore::Record getResults() const;
 
-    inline String getClass() const { return _class; };
+    inline casacore::String getClass() const { return _class; };
 
     // set the order of a polynomial to be simultaneously fit.
-    void setPolyOrder(Int p);
+    void setPolyOrder(casacore::Int p);
 
     // set whether to do a pixel by pixel fit.
-    inline void setDoMultiFit(const Bool m) { _multiFit = m; }
+    inline void setDoMultiFit(const casacore::Bool m) { _multiFit = m; }
 
     // set if results should be written to the logger
-    inline void setLogResults(const Bool logResults) { _logResults = logResults; }
+    inline void setLogResults(const casacore::Bool logResults) { _logResults = logResults; }
 
     // set minimum number of good points required to attempt a fit
-    inline void setMinGoodPoints(const uInt mgp) {
+    inline void setMinGoodPoints(const casacore::uInt mgp) {
     	ThrowIf(mgp == 0, "Number of good points has to be > 0");
     	_minGoodPoints = mgp;
     }
 
     // <group>
-    // Solution images. Only written if _multifit is True
+    // Solution images. Only written if _multifit is true
     // model image name
-    inline void setModel(const String& model) { _model = model; }
+    inline void setModel(const casacore::String& model) { _model = model; }
     // residual image name
-    inline void setResidual(const String& residual) { _residual = residual; }
+    inline void setResidual(const casacore::String& residual) { _residual = residual; }
     // gaussian amplitude image name
-    inline void setAmpName(const String& s) { _ampName = s; }
+    inline void setAmpName(const casacore::String& s) { _ampName = s; }
     // gaussian amplitude error image name
-    inline void setAmpErrName(const String& s) { _ampErrName = s; }
+    inline void setAmpErrName(const casacore::String& s) { _ampErrName = s; }
     // gaussian center image name
-    inline void setCenterName(const String& s) { _centerName = s; }
+    inline void setCenterName(const casacore::String& s) { _centerName = s; }
     // gaussian center error image name
-    inline void setCenterErrName(const String& s) { _centerErrName = s; }
+    inline void setCenterErrName(const casacore::String& s) { _centerErrName = s; }
     // gaussian fwhm image name
-    inline void setFWHMName(const String& s) { _fwhmName = s; }
+    inline void setFWHMName(const casacore::String& s) { _fwhmName = s; }
     // gaussian fwhm error image name
-    inline void setFWHMErrName(const String& s) { _fwhmErrName = s; }
+    inline void setFWHMErrName(const casacore::String& s) { _fwhmErrName = s; }
     // gaussian integral image name
-    inline void setIntegralName(const String& s) { _integralName = s; }
+    inline void setIntegralName(const casacore::String& s) { _integralName = s; }
     // gaussian integral error image name
-    inline void setIntegralErrName(const String& s) { _integralErrName = s; }
+    inline void setIntegralErrName(const casacore::String& s) { _integralErrName = s; }
     // </group>
 
     // set the name of the power logarithmic polynomial image.
-    inline void setPLPName(const String& s) { _plpName = s; }
+    inline void setPLPName(const casacore::String& s) { _plpName = s; }
 
     // set the name of the power logarithmic polynomial image.
-    inline void setPLPErrName(const String& s) { _plpErrName = s; }
+    inline void setPLPErrName(const casacore::String& s) { _plpErrName = s; }
 
     // set the name of the logarithmic transformed polynomial image.
-    inline void setLTPName(const String& s) { _ltpName = s; }
+    inline void setLTPName(const casacore::String& s) { _ltpName = s; }
 
     // set the name of the logarithmic transformed polynomial image.
-    inline void setLTPErrName(const String& s) { _ltpErrName = s; }
+    inline void setLTPErrName(const casacore::String& s) { _ltpErrName = s; }
 
     // set the range over which PFC amplitude solutions are valid
-    void setGoodAmpRange(const Double min, const Double max);
+    void setGoodAmpRange(const casacore::Double min, const casacore::Double max);
 
     // set the range over which PFC center solutions are valid
-    void setGoodCenterRange(const Double min, const Double max);
+    void setGoodCenterRange(const casacore::Double min, const casacore::Double max);
 
     // set the range over which PFC FWHM solutions are valid
-    void setGoodFWHMRange(const Double min, const Double max);
+    void setGoodFWHMRange(const casacore::Double min, const casacore::Double max);
 
     // <group>
     // set standard deviation image
-    void setSigma(const Array<Float>& sigma);
+    void setSigma(const casacore::Array<casacore::Float>& sigma);
 
-    void setSigma(const ImageInterface<Float> *const &sigma);
+    void setSigma(const casacore::ImageInterface<casacore::Float> *const &sigma);
 
-    inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
+    inline void setOutputSigmaImage(const casacore::String& s) { _sigmaName = s; }
     // </group>
 
-    const Array<SHARED_PTR<ProfileFitResults> >& getFitters() const;
+    const casacore::Array<SHARED_PTR<ProfileFitResults> >& getFitters() const;
 
     //Converts a pixel value into a world value either in velocity, wavelength, or
     //frequency units.  If the tabular index >= 0, it uses the tabular index for conversion
-    //with the specified MFrequency type, otherwise, it uses the spectral axis for
+    //with the specified casacore::MFrequency type, otherwise, it uses the spectral axis for
     //conversion.
-    Double getWorldValue(
-    	Double pixelVal, const IPosition& imPos, const String& units,
-        Bool velocity, Bool wavelength, Int tabularIndex=-1,
-        MFrequency::Types type=MFrequency::DEFAULT
+    casacore::Double getWorldValue(
+    	casacore::Double pixelVal, const casacore::IPosition& imPos, const casacore::String& units,
+        casacore::Bool velocity, casacore::Bool wavelength, casacore::Int tabularIndex=-1,
+        casacore::MFrequency::Types type=casacore::MFrequency::DEFAULT
     ) const;
 
-    void setAbscissaDivisor(Double d);
+    void setAbscissaDivisor(casacore::Double d);
 
-    void setAbscissaDivisor(const Quantity& q);
+    void setAbscissaDivisor(const casacore::Quantity& q);
 
     // for backward compatibility with ia.continuumsub. If no residual
-    // image has been provided, a TempImage is created.
-    void createResidualImage(Bool b) { _createResid = b; }
+    // image has been provided, a casacore::TempImage is created.
+    void createResidualImage(casacore::Bool b) { _createResid = b; }
 
     SPIIF getResidual() const {
     	return _residImage;
@@ -224,7 +224,7 @@ public:
 
     // set the planes along the fit axis that are considered good for performing
     // the fits. An empty vector implies that all planes are considered "good".
-    void setGoodPlanes(const std::set<uInt>& planes) { _goodPlanes = planes; }
+    void setGoodPlanes(const std::set<casacore::uInt>& planes) { _goodPlanes = planes; }
 
 protected:
 
@@ -232,44 +232,44 @@ protected:
    		return CasacRegionManager::USE_FIRST_STOKES;
    	}
 
-    inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<Coordinate::Type>(0);
+    inline vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<casacore::Coordinate::Type>(0);
     }
 
-    Bool _hasLogfileSupport() const { return True; }
+    casacore::Bool _hasLogfileSupport() const { return true; }
 
-    inline Bool _supportsMultipleRegions() const {return True;}
+    inline casacore::Bool _supportsMultipleRegions() const {return true;}
 
 private:
-	String _residual, _model, _xUnit,
+	casacore::String _residual, _model, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
 		_integralName, _integralErrName, _plpName, _plpErrName,
 		_ltpName, _ltpErrName, _sigmaName, _abscissaDivisorForDisplay;
-	Bool  _multiFit, _logResults, _isSpectralIndex,
+	casacore::Bool  _multiFit, _logResults, _isSpectralIndex,
 		_createResid, _overwrite, _storeFits;
-	Int _polyOrder, _fitAxis;
-	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
+	casacore::Int _polyOrder, _fitAxis;
+	casacore::uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs, _minGoodPoints, _nProfiles, _nAttempted,
 		_nSucceeded, _nConverged, _nValid;
-	Array<SHARED_PTR<ProfileFitResults> > _fitters;
+	casacore::Array<SHARED_PTR<ProfileFitResults> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
-	SHARED_PTR<const SubImage<Float> > _subImage;
-	Record _results;
+	SHARED_PTR<const casacore::SubImage<casacore::Float> > _subImage;
+	casacore::Record _results;
 	SpectralList _nonPolyEstimates;
-	PtrHolder<std::pair<Double, Double> > _goodAmpRange, _goodCenterRange, _goodFWHMRange;
-	Matrix<String> _worldCoords;
-	SHARED_PTR<TempImage<Float> > _sigma;
-	Double _abscissaDivisor;
+	casacore::PtrHolder<std::pair<casacore::Double, casacore::Double> > _goodAmpRange, _goodCenterRange, _goodFWHMRange;
+	casacore::Matrix<casacore::String> _worldCoords;
+	SHARED_PTR<casacore::TempImage<casacore::Float> > _sigma;
+	casacore::Double _abscissaDivisor;
 	SPIIF _modelImage, _residImage;
 	// planes along _fitAxis to use in fits, empty => use all planes
 	// originally used to support continuum subtraction
-	std::set<uInt> _goodPlanes;
+	std::set<casacore::uInt> _goodPlanes;
 
-	const static String _class;
+	const static casacore::String _class;
 
-	mutable Bool _haveWarnedAboutGuessingGaussians = False;
+	mutable casacore::Bool _haveWarnedAboutGuessingGaussians = false;
 
     std::vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
@@ -295,40 +295,40 @@ private:
     // in pixel space here and requiring the caller to deal with converting
     // to something astronomer friendly if it so desires.
 
-    void _fitProfiles(const Bool showProgress);
+    void _fitProfiles(const casacore::Bool showProgress);
 
-    //Bool _inVelocitySpace() const;
+    //casacore::Bool _inVelocitySpace() const;
 
-    void _flagFitterIfNecessary(ImageFit1D<Float>& fitter) const;
+    void _flagFitterIfNecessary(ImageFit1D<casacore::Float>& fitter) const;
 
-    Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
+    casacore::Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
 
     void _loopOverFits(
-    	SPCIIF fitData, Bool showProgress,
-    	SHARED_PTR<ProgressMeter> progressMeter, Bool checkMinPts,
-    	const Array<Bool>& fitMask, ImageFit1D<Float>::AbcissaType abcissaType,
-    	const IPosition& fitterShape, const IPosition& sliceShape,
-    	const std::set<uInt> goodPlanes
+    	SPCIIF fitData, casacore::Bool showProgress,
+    	SHARED_PTR<casacore::ProgressMeter> progressMeter, casacore::Bool checkMinPts,
+    	const casacore::Array<casacore::Bool>& fitMask, ImageFit1D<casacore::Float>::AbcissaType abcissaType,
+    	const casacore::IPosition& fitterShape, const casacore::IPosition& sliceShape,
+    	const std::set<casacore::uInt> goodPlanes
     );
 
-    void _setAbscissaDivisorIfNecessary(const Vector<Double>& abscissaValues);
+    void _setAbscissaDivisorIfNecessary(const casacore::Vector<casacore::Double>& abscissaValues);
 
-    Bool _setFitterElements(
-    	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
-    	const PtrHolder<const PolynomialSpectralElement>& polyEl,
-    	const vector<IPosition>& goodPos,
-    	const IPosition& fitterShape, const IPosition& curPos,
-    	uInt nOrigComps
+    casacore::Bool _setFitterElements(
+    	ImageFit1D<casacore::Float>& fitter, SpectralList& newEstimates,
+    	const casacore::PtrHolder<const PolynomialSpectralElement>& polyEl,
+    	const vector<casacore::IPosition>& goodPos,
+    	const casacore::IPosition& fitterShape, const casacore::IPosition& curPos,
+    	casacore::uInt nOrigComps
     ) const;
 
     void _updateModelAndResidual(
-    	Bool fitOK,	const ImageFit1D<Float>& fitter,
-    	const IPosition& sliceShape, const IPosition& curPos,
-    	Lattice<Bool>* const &pFitMask, Lattice<Bool>* const &pResidMask
+    	casacore::Bool fitOK,	const ImageFit1D<casacore::Float>& fitter,
+    	const casacore::IPosition& sliceShape, const casacore::IPosition& curPos,
+    	casacore::Lattice<casacore::Bool>* const &pFitMask, casacore::Lattice<casacore::Bool>* const &pResidMask
     ) const;
 
     // only implemented for the simplest cases so far
-    uInt _nUnknowns() const;
+    casacore::uInt _nUnknowns() const;
 
 };
 }

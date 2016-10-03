@@ -28,6 +28,7 @@
 #include <msvis/MSVis/statistics/Vi2ChunkFlagCubeDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
+using namespace casacore;
 namespace casa {
 
 Vi2ChunkFlagCubeDataProvider::Vi2ChunkFlagCubeDataProvider(
@@ -42,4 +43,5 @@ const Cube<Bool>& Vi2ChunkFlagCubeDataProvider::dataArray() {
 	return vi2->getVisBuffer()->flagCube();
 }
 
+using namespace casacore;
 } // namespace casa

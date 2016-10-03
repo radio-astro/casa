@@ -81,57 +81,57 @@ class FluxCalcLogFreqPolynomial : public virtual FluxCalcVQS {
 public:
   // Some abbreviations, since the classes derived from this have to
   // define many polynomial coefficients.
-  typedef RigidVector<Float, 2> RVF2;
-  typedef RigidVector<Float, 3> RVF3;
-  typedef RigidVector<Float, 4> RVF4;
-  typedef RigidVector<Float, 5> RVF5;
+  typedef casacore::RigidVector<casacore::Float, 2> RVF2;
+  typedef casacore::RigidVector<casacore::Float, 3> RVF3;
+  typedef casacore::RigidVector<casacore::Float, 4> RVF4;
+  typedef casacore::RigidVector<casacore::Float, 5> RVF5;
   
   // Set the log10(frequency) polynomial coefficients for calculating the flux
   // density and its uncertainty, and the unit (typically "MHz" or "GHz") that
   // the coefficients assume.  Note that errcoeffs does not have to have the
   // same number of terms as lfcoeffs, or any terms at all, and that each term
   // in its polynomial is (errcoeff[order] * pow(log10(freq), order))**2.
-  //FluxCalcLogFreqPolynomial(const String& freqUnit, const Vector<Double>& lfcoeffs,
-  //                          const Vector<Double>& errcoeffs);
+  //FluxCalcLogFreqPolynomial(const casacore::String& freqUnit, const casacore::Vector<casacore::Double>& lfcoeffs,
+  //                          const casacore::Vector<casacore::Double>& errcoeffs);
 
   // Set value and error with the expected flux density and its uncertainty
-  // (0.0 if unknown) at mfreq. Set updatecoeffs = True if the source considered to be
+  // (0.0 if unknown) at mfreq. Set updatecoeffs = true if the source considered to be
   //  time variable.
-  virtual Bool operator()(Flux<Double>& value, Flux<Double>& error,
-                          const MFrequency& mfreq, const Bool updatecoeffs=False);
+  virtual casacore::Bool operator()(Flux<casacore::Double>& value, Flux<casacore::Double>& error,
+                          const casacore::MFrequency& mfreq, const casacore::Bool updatecoeffs=false);
 
-  virtual Bool setSource(const String& sourceName, const MDirection& sourceDir);
-  void setFreqUnit(const String& freqUnit);
+  virtual casacore::Bool setSource(const casacore::String& sourceName, const casacore::MDirection& sourceDir);
+  void setFreqUnit(const casacore::String& freqUnit);
 
   // Functions for setting up coeffs_p by taking a bunch of numbers
   // (packaged in RigidVectors) and formatting them into coeffs_p.
 
-  // Takes a RigidVector for the flux density coefficients and
+  // Takes a casacore::RigidVector for the flux density coefficients and
   // second one for the uncertainty coefficients, and fills coeffs_p with them.
-  template<Int lford, Int errord>
-  void fill_coeffs(const RigidVector<Float, lford>& lfrv,
-                   const RigidVector<Float, errord>& errrv);
+  template<casacore::Int lford, casacore::Int errord>
+  void fill_coeffs(const casacore::RigidVector<casacore::Float, lford>& lfrv,
+                   const casacore::RigidVector<casacore::Float, errord>& errrv);
 
   // Like fill_coeffs(lfrv, errrv), but it only takes the flux density
-  // coefficients, and substitutes an empty Vector for the error coefficients.
-  template<Int lford>
-  void fill_coeffs(const RigidVector<Float, lford>& lfrv);
+  // coefficients, and substitutes an empty casacore::Vector for the error coefficients.
+  template<casacore::Int lford>
+  void fill_coeffs(const casacore::RigidVector<casacore::Float, lford>& lfrv);
 
-  void fill_coeffs(const Vector<Float>& lfv);
+  void fill_coeffs(const casacore::Vector<casacore::Float>& lfv);
 
 private:
-  virtual Bool setSourceCoeffs() = 0;
+  virtual casacore::Bool setSourceCoeffs() = 0;
 
-  // The first element of this pair of Vectors is a Vector of coefficients for
+  // The first element of this pair of Vectors is a casacore::Vector of coefficients for
   // the flux density polynomial (of log10(frequency)).  The second element is
   // for estimating the flux density's uncertainty with a similar polynomial,
   // but each term is (coeff * log10(freq))**2.  It does not need to have the
   // same number of coefficients as the first element, or even any
   // coefficients.  Both Vectors start with the 0th order term.
-  RigidVector<Vector<Float>, 2> coeffs_p;
+  casacore::RigidVector<casacore::Vector<casacore::Float>, 2> coeffs_p;
 
   // The frequency unit (e.g. "MHz" or "GHz") assumed by coeffs_p.
-  String freqUnit_p;
+  casacore::String freqUnit_p;
 
 };
 
@@ -175,18 +175,18 @@ class FluxCalcLogFreqBrokenPolynomial : public virtual FluxCalcLogFreqPolynomial
 public:
   FluxCalcLogFreqBrokenPolynomial();
   
-  template <Int lford1, Int lford2>
-  void fill_lohi_coeffs(const RigidVector<Float, lford1>& lorv,
-                        const MFrequency& break_freq,
-                        const RigidVector<Float, lford2>& hirv);
+  template <casacore::Int lford1, casacore::Int lford2>
+  void fill_lohi_coeffs(const casacore::RigidVector<casacore::Float, lford1>& lorv,
+                        const casacore::MFrequency& break_freq,
+                        const casacore::RigidVector<casacore::Float, lford2>& hirv);
 
-  virtual Bool operator()(Flux<Double>& value, Flux<Double>& error,
-                          const MFrequency& mfreq, const Bool updatecoeffs);
+  virtual casacore::Bool operator()(Flux<casacore::Double>& value, Flux<casacore::Double>& error,
+                          const casacore::MFrequency& mfreq, const casacore::Bool updatecoeffs);
 private:
-  MFrequency    break_freq_p;
-  Bool          in_low_state_p;
-  Vector<Float> low_coeffs_p;
-  Vector<Float> high_coeffs_p;
+  casacore::MFrequency    break_freq_p;
+  casacore::Bool          in_low_state_p;
+  casacore::Vector<casacore::Float> low_coeffs_p;
+  casacore::Vector<casacore::Float> high_coeffs_p;
 };
 
 // <summary>
@@ -222,29 +222,29 @@ private:
 // </motivation>
 class FluxCalcLogFreqPolynomialSH : public virtual FluxCalcVQS {
 public:
-  typedef RigidVector<Float, 2> RVF2;
-  typedef RigidVector<Float, 3> RVF3;
-  typedef RigidVector<Float, 4> RVF4;
-  typedef RigidVector<Float, 5> RVF5;
+  typedef casacore::RigidVector<casacore::Float, 2> RVF2;
+  typedef casacore::RigidVector<casacore::Float, 3> RVF3;
+  typedef casacore::RigidVector<casacore::Float, 4> RVF4;
+  typedef casacore::RigidVector<casacore::Float, 5> RVF5;
 
-  //virtual Bool operator()(Flux<Double>& value, Flux<Double>& error,
-  //                        const MFrequency& mfreq);
+  //virtual casacore::Bool operator()(Flux<casacore::Double>& value, Flux<casacore::Double>& error,
+  //                        const casacore::MFrequency& mfreq);
 
-  virtual Bool operator()(Flux<Double>& value, Flux<Double>& error,
-                          const MFrequency& mfreq, const Bool /* updatecoeffs */);
+  virtual casacore::Bool operator()(Flux<casacore::Double>& value, Flux<casacore::Double>& error,
+                          const casacore::MFrequency& mfreq, const casacore::Bool /* updatecoeffs */);
 
-  virtual Bool setSource(const String& sourceName, const MDirection& sourceDir);
+  virtual casacore::Bool setSource(const casacore::String& sourceName, const casacore::MDirection& sourceDir);
 
-  void setFreqUnit(const String& freqUnit);
+  void setFreqUnit(const casacore::String& freqUnit);
 
-  template<Int lford, Int errord>
-  void fill_coeffs(const RigidVector<Float, lford>& lfrv,
-                   const RigidVector<Float, errord>& errrv);
+  template<casacore::Int lford, casacore::Int errord>
+  void fill_coeffs(const casacore::RigidVector<casacore::Float, lford>& lfrv,
+                   const casacore::RigidVector<casacore::Float, errord>& errrv);
 
 private:
-  virtual Bool setSourceCoeffs() = 0;
-  RigidVector<Vector<Float>, 2> coeffs_p;
-  String freqUnit_p;
+  virtual casacore::Bool setSourceCoeffs() = 0;
+  casacore::RigidVector<casacore::Vector<casacore::Float>, 2> coeffs_p;
+  casacore::String freqUnit_p;
 };
 
 

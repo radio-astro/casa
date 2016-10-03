@@ -78,17 +78,18 @@
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 
+using namespace casacore;
 namespace casa {
 
 SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
 	       String iconvType, Int userSupport, Bool useImagingWeight)
   : FTMachine(), sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
-  isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
+  isTiled(false), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
     minWeight_p(0.), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0), clipminmax_(False)
+    isSplineInterpolationReady(false), interpolator(0), clipminmax_(false)
 {
   lastIndex_p=0;
 }
@@ -97,11 +98,11 @@ SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize
 	       String iconvType, Int userSupport, Float minweight, Bool clipminmax, Bool useImagingWeight)
   : FTMachine(),  sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
-  isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
+  isTiled(false), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0),  jwidth_p(0.0),
     minWeight_p(minweight), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0), clipminmax_(clipminmax)
+    isSplineInterpolationReady(false), interpolator(0), clipminmax_(clipminmax)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -111,11 +112,11 @@ SDGrid::SDGrid(Int icachesize, Int itilesize,
 	       String iconvType, Int userSupport, Bool useImagingWeight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
-  isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
+  isTiled(false), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
     minWeight_p(0.), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0), clipminmax_(False)
+    isSplineInterpolationReady(false), interpolator(0), clipminmax_(false)
 {
   lastIndex_p=0;
 }
@@ -124,12 +125,12 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
 	       String iconvType, Int userSupport, Float minweight, Bool clipminmax, Bool useImagingWeight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
-  isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
+  isTiled(false), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
     minWeight_p(minweight), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1),
     msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0), clipminmax_(clipminmax)
+    isSplineInterpolationReady(false), interpolator(0), clipminmax_(clipminmax)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -140,11 +141,11 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
 	       Float minweight, Bool clipminmax, Bool useImagingWeight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
-  isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
+  isTiled(false), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(-1),
     truncate_p(truncate), gwidth_p(gwidth), jwidth_p(jwidth),
     minWeight_p(minweight), lastIndexPerAnt_p(), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1),
-    isSplineInterpolationReady(False), interpolator(0), clipminmax_(clipminmax)
+    isSplineInterpolationReady(false), interpolator(0), clipminmax_(clipminmax)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -201,7 +202,7 @@ String SDGrid::name() const{
 //----------------------------------------------------------------------
 // Odds are that it changed.....
 Bool SDGrid::changed(const VisBuffer& /*vb*/) {
-  return False;
+  return false;
 }
 
 //----------------------------------------------------------------------
@@ -233,12 +234,12 @@ void SDGrid::init() {
   ok();
 
   /*if((image->shape().product())>cachesize) {
-    isTiled=True;
+    isTiled=true;
   }
   else {
-    isTiled=False;
+    isTiled=false;
     }*/
-  isTiled=False;
+  isTiled=false;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
   npol  = image->shape()(2);
@@ -522,7 +523,7 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
   sj_p->apply(onedPB, onedPB, vb, 0);
  
   IPosition pbSlice(4, convSize, 1, 1, 1);
-  Vector<Float> tempConvFunc=real(onedPB.getSlice(start, pbSlice, True));
+  Vector<Float> tempConvFunc=real(onedPB.getSlice(start, pbSlice, true));
   // Find number of significant points
   uInt cfLen=0;
   for(uInt i=0;i<tempConvFunc.nelements();++i) {
@@ -573,12 +574,12 @@ void SDGrid::initializeToVis(ImageInterface<Complex>& iimage,
   AlwaysAssert(directionIndex>=0, AipsError);
   directionCoord=coords.directionCoordinate(directionIndex);
   /*if((image->shape().product())>cachesize) {
-    isTiled=True;
+    isTiled=true;
   }
   else {
-    isTiled=False;
+    isTiled=false;
     }*/
-  isTiled=False;
+  isTiled=false;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
   npol  = image->shape()(2);
@@ -613,7 +614,7 @@ void SDGrid::initializeToVis(ImageInterface<Complex>& iimage,
     IPosition stride(4, 1);
     IPosition trc(blc+image->shape()-stride);
     LCBox gridBox(blc, trc, gridShape);
-    SubLattice<Complex> gridSub(*arrayLattice, gridBox, True); 
+    SubLattice<Complex> gridSub(*arrayLattice, gridBox, true); 
 
     // Do the copy
     gridSub.copyData(*image);
@@ -664,14 +665,14 @@ void SDGrid::initializeToSky(ImageInterface<Complex>& iimage,
   initMaps(vb);
   //cerr << "ToSky cachesize " << cachesize << " im shape " << (image->shape().product()) << endl;
   /*if((image->shape().product())>cachesize) {
-    isTiled=True;
+    isTiled=true;
   }
   else {
-    isTiled=False;
+    isTiled=false;
   }
   */
   //////////////No longer using isTiled
-  isTiled=False;
+  isTiled=false;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
   npol  = image->shape()(2);
@@ -881,7 +882,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   pickWeights(vb, imagingweight);
 
   if(type==FTMachine::PSF || type==FTMachine::COVERAGE)
-    dopsf=True;
+    dopsf=true;
   if(dopsf) type=FTMachine::PSF;
   Cube<Complex> data;
   //Fortran gridder need the flag as ints 
@@ -926,8 +927,8 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
       if(getXYPos(vb, rownr)) {
 	
 	IPosition centerLoc2D(2, Int(xyPos(0)), Int(xyPos(1)));
-	Array<Complex>* dataPtr=getDataPointer(centerLoc2D, False);
-	Array<Float>*  wDataPtr=getWDataPointer(centerLoc2D, False);
+	Array<Complex>* dataPtr=getDataPointer(centerLoc2D, false);
+	Array<Float>*  wDataPtr=getWDataPointer(centerLoc2D, false);
 	Int aNx=dataPtr->shape()(0);
 	Int aNy=dataPtr->shape()(1);
 	Vector<Double> actualPos(2);
@@ -1141,7 +1142,7 @@ void SDGrid::get(VisBuffer& vb, Int row)
 	  
 	  // Get the tile
 	IPosition centerLoc2D(2, Int(xyPos(0)), Int(xyPos(1)));
-	Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
+	Array<Complex>* dataPtr=getDataPointer(centerLoc2D, true);
 	Int aNx=dataPtr->shape()(0);
 	Int aNy=dataPtr->shape()(1);
 	
@@ -1246,9 +1247,9 @@ void SDGrid::get(VisBuffer& vb, Int row)
     Bool useCorrected= !(vi.msColumns().correctedData().isNull());
     if((type==FTMachine::CORRECTED) && (!useCorrected))
       type=FTMachine::OBSERVED;
-    Bool normalize=True;
+    Bool normalize=true;
     if(type==FTMachine::COVERAGE)
-      normalize=False;
+      normalize=false;
 
     Int Nx=theImage.shape()(0);
     Int Ny=theImage.shape()(1);
@@ -1276,7 +1277,7 @@ void SDGrid::get(VisBuffer& vb, Int row)
     weight.resize(Npol, Nchan);
     Matrix<Float> wgtcopy(Npol, Nchan);
     
-    Bool isWgtZero=True;
+    Bool isWgtZero=true;
     for (Int k=0; k < nloop; ++k){
       Int bchan=k*nchanInMem;
       Int echan=(k+1)*nchanInMem < Nchan ?  (k+1)*nchanInMem-1 : Nchan-1;
@@ -1285,7 +1286,7 @@ void SDGrid::get(VisBuffer& vb, Int row)
 	 blc[3]=bchan;
 	 trc[3]=echan;
 	 Slicer sl(blc, trc, Slicer::endIsLast);
-	 imCopy=new SubImage<Complex>(theImage, sl, True);
+	 imCopy=new SubImage<Complex>(theImage, sl, true);
 	 wgtcopy.resize(npol, echan-bchan+1);
       }
       vi.originChunks();
@@ -1309,25 +1310,25 @@ void SDGrid::get(VisBuffer& vb, Int row)
 	  case FTMachine::RESIDUAL:
 	    vb.visCube()=vb.correctedVisCube();
 	    vb.visCube()-=vb.modelVisCube();
-	    put(vb, -1, False);
+	    put(vb, -1, false);
 	    break;
 	  case FTMachine::MODEL:
-	    put(vb, -1, False, FTMachine::MODEL);
+	    put(vb, -1, false, FTMachine::MODEL);
 	    break;
 	  case FTMachine::CORRECTED:
-	    put(vb, -1, False, FTMachine::CORRECTED);
+	    put(vb, -1, false, FTMachine::CORRECTED);
 	    break;
 	  case FTMachine::PSF:
 	    vb.visCube()=Complex(1.0,0.0);
-	    put(vb, -1, True, FTMachine::PSF);
+	    put(vb, -1, true, FTMachine::PSF);
 	    break;
 	  case FTMachine::COVERAGE:
 	    vb.visCube()=Complex(1.0);
-	    put(vb, -1, True, FTMachine::COVERAGE);
+	    put(vb, -1, true, FTMachine::COVERAGE);
 	    break;
 	  case FTMachine::OBSERVED:
 	  default:
-	    put(vb, -1, False, FTMachine::OBSERVED);
+	    put(vb, -1, false, FTMachine::OBSERVED);
 	    break;
 	  }
 	}
@@ -1342,7 +1343,7 @@ void SDGrid::get(VisBuffer& vb, Int row)
 		  << LogIO::POST;
       }
       else
-	isWgtZero=False;
+	isWgtZero=false;
         
       weight(Slice(0, Npol), Slice(bchan, echan-bchan+1))=wgtcopy;
       if(nloop >1) delete imCopy;
@@ -1528,7 +1529,7 @@ Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
 Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
   Bool dointerp;
-  Bool nullPointingTable = False;
+  Bool nullPointingTable = false;
   const ROMSPointingColumns& act_mspc = vb.msColumns().pointing();
   nullPointingTable = (act_mspc.nrow() < 1);
   Int pointIndex = -1;
@@ -1553,15 +1554,15 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
       MVTime(vb.time()(row)/86400.0) << ": Omitting this point";
     logIO_p << LogIO::DEBUGGING << String(o) << LogIO::POST;
     //    logIO_p << String(o) << LogIO::POST;
-    return False;
+    return false;
   }
 
-  dointerp = False;
+  dointerp = false;
   if (!nullPointingTable && (vb.timeInterval()(row) < act_mspc.interval()(pointIndex))) {
-    dointerp = True;
+    dointerp = true;
     if (!isSplineInterpolationReady) {
       interpolator = new SDPosInterpolator(vb, pointingDirCol_p);
-      isSplineInterpolationReady = True;
+      isSplineInterpolationReady = true;
     }
   }
 
@@ -1621,13 +1622,13 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
   if (!result) {
     logIO_p << "Failed to find a pixel for pointing direction of " 
 	    << MVTime(worldPosMeas.getValue().getLong("rad")).string(MVTime::TIME) << ", " << MVAngle(worldPosMeas.getValue().getLat("rad")).string(MVAngle::ANGLE) << LogIO::WARN << LogIO::POST;
-    return False;
+    return false;
   }
 
   if ((pointingDirCol_p == "SOURCE_OFFSET") || (pointingDirCol_p == "POINTING_OFFSET")) {
     //there is no sense to track in offset coordinates...hopefully the 
     //user set the image coords right  
-    fixMovingSource_p = False;
+    fixMovingSource_p = false;
   }
   if (fixMovingSource_p) {
     if (xyPosMovingOrig_p.nelements() < 2) {
@@ -1722,9 +1723,9 @@ MDirection SDGrid::interpolateDirectionMeas(const ROMSPointingColumns& mspc,
   Bool isfirstRefPt;
 
   if (indx1 == index) {
-    isfirstRefPt = True;
+    isfirstRefPt = true;
   } else {
-    isfirstRefPt = False;
+    isfirstRefPt = false;
   }
 
   if (pointingDirCol_p == "TARGET") {

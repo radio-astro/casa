@@ -52,8 +52,8 @@ public:
 	void print( QPainter* painter, QRect imageRect );
 
 	//Date formats
-	void setDateFormat(const String& newFormat);
-	void setRelativeDateFormat(const String& newFormat);
+	void setDateFormat(const casacore::String& newFormat);
+	void setRelativeDateFormat(const casacore::String& newFormat);
 
 	//Axis scale
 	void setAxisScale(PlotAxisScale scale);

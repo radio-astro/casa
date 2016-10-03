@@ -33,7 +33,7 @@
 #include <memory>
 
 namespace casa {
-class ImageTransposer : public ImageTask<Float> {
+class ImageTransposer : public ImageTask<casacore::Float> {
     // <summary>
       // Top level interface for transposing image axes
       // </summary>
@@ -63,27 +63,27 @@ public:
 	// not allow inverting.
 	ImageTransposer(
 			const SPCIIF image,
-		uInt order, const String& outputImage
+		casacore::uInt order, const casacore::String& outputImage
 	);
 
 	// This constructor allows both transposing and inverting of axes
 	ImageTransposer(
 			const SPCIIF image,
-		const String& order, const String& outputImage
+		const casacore::String& order, const casacore::String& outputImage
 	);
 
 	// This constructor allows both transposing and inverting of axes
 	ImageTransposer(
 			const SPCIIF image,
-		const Vector<String> order, const String& outputImage
+		const casacore::Vector<casacore::String> order, const casacore::String& outputImage
 	);
 	// destructor
 	~ImageTransposer();
 
-	// transpose the axes and write the output image. Returns the associated PagedImage object.
+	// transpose the axes and write the output image. Returns the associated casacore::PagedImage object.
 	SPIIF transpose() const;
 
-	inline String getClass() const {
+	inline casacore::String getClass() const {
 		return _class;
 	}
 
@@ -92,18 +92,18 @@ protected:
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return vector<Coordinate::Type>(0);
+	inline vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<casacore::Coordinate::Type>(0);
 	}
 
 private:
-	Vector<Int> _order;
-	IPosition _reverse;
-	static const String _class;
+	casacore::Vector<casacore::Int> _order;
+	casacore::IPosition _reverse;
+	static const casacore::String _class;
 
-	Vector<Int> _getOrder(uInt order) const;
+	casacore::Vector<casacore::Int> _getOrder(casacore::uInt order) const;
 
-	Vector<Int> _getOrder(const String& order);
+	casacore::Vector<casacore::Int> _getOrder(const casacore::String& order);
 };
 }
 

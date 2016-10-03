@@ -46,6 +46,7 @@
 #include <mirlib/maxdimc.h>
 #include <mirlib/miriad.h>
 
+using namespace casa;
 
 // helper functions
 
@@ -172,8 +173,8 @@ void Importmiriad::Warning(char *msg)
 // ==============================================================================================
 Bool Importmiriad::Debug(int level)
 {
-  Bool ok=False;
-  if (level <= debug_p) ok=True;
+  Bool ok=false;
+  if (level <= debug_p) ok=true;
   return ok;
 }
 
@@ -204,12 +205,12 @@ void Importmiriad::checkInput(Block<Int>& spw, Block<Int>& wide)
       // setup the 'keep' array to specify which data we want to keep
       for (Int i=0; i<MAXWIN+MAXWIDE; i++) keep[i]=(spw[0]==-1);
       for (uInt i=0; i<spw.nelements(); i++) {
-        if (spw[i]>=0 && spw[i]<win[0].nspect) keep[spw[i]]=True;
+        if (spw[i]>=0 && spw[i]<win[0].nspect) keep[spw[i]]=true;
       }
       Int n=win[0].nspect;
       for (Int i=0; i<win[0].nwide; i++) keep[n+i]=(wide[0]==-1);
       for (uInt i=0; i<wide.nelements(); i++) {
-        if (wide[i]>0 && wide[i]<win[0].nwide) keep[n+wide[i]]=True;
+        if (wide[i]>0 && wide[i]<win[0].nwide) keep[n+wide[i]]=true;
       }
       //  should store nread + nwread, or handle it as option
       if (win[freqSet_p].nspect > 0) {    // narrow band, with possibly wide band also
@@ -456,7 +457,7 @@ void Importmiriad::setupMeasurementSet(const String& MSFileName, Bool useTSM)
   
   // Set the default Storage Manager to be the Incr one
   IncrementalStMan incrStMan ("ISMData");
-  newtab.bindAll(incrStMan, True);
+  newtab.bindAll(incrStMan, true);
   StandardStMan aipsStMan; 
 
 
@@ -650,7 +651,7 @@ void Importmiriad::fillMSMainTable()
   cat(1)="ORIGINAL";
   cat(2)="USER";
   msc.flagCategory().rwKeywordSet().define("CATEGORY",cat);
-  Cube<Bool> flagCat(nCorr,nChan,nCat,False);  
+  Cube<Bool> flagCat(nCorr,nChan,nCat,false);  
   Matrix<Bool> flag = flagCat.xyPlane(0); // references flagCat's storage
   Vector<Float> w1(nCorr), w2(nCorr);
 
@@ -662,7 +663,7 @@ void Importmiriad::fillMSMainTable()
   receptorAngle_p.resize(1);
   Int group, row=-1;
   Double interval;
-  Bool lastRowFlag = False;
+  Bool lastRowFlag = false;
 
   //os_p << "Found  " << win[0].nspect << " spectral window" << (win[0].nspect>1 ? "s":"") << LogIO::POST;
 
@@ -757,7 +758,7 @@ void Importmiriad::fillMSMainTable()
 
         // miriad uses bl=ant1-ant2, FITS/AIPS/CASA use bl=ant2-ant1
         // apart from using -(UVW)'s, the visib need to be conjugated as well
-        Bool  visFlag =  (flags[count/2] == 0) ? False : True;
+        Bool  visFlag =  (flags[count/2] == 0) ? false : true;
         Float visReal = +data[count]; count++; 
         Float visImag = -data[count]; count++;
         Float wt = 1.0;
@@ -783,8 +784,8 @@ void Importmiriad::fillMSMainTable()
         ifield_old = ifield;
         msc.feed1().put(row,0);
         msc.feed2().put(row,0);
-        msc.flagRow().put(row,False);
-        lastRowFlag = False;
+        msc.flagRow().put(row,false);
+        lastRowFlag = false;
         msc.scanNumber().put(row,iscan);
         msc.processorId().put(row,-1);
         msc.observationId().put(row,0);
@@ -792,7 +793,7 @@ void Importmiriad::fillMSMainTable()
       }
       
       Matrix<Complex> tvis(nCorr,win[freqSet_p].nschan[sno]);
-      Cube<Bool> tflagCat(nCorr,win[freqSet_p].nschan[sno],nCat,False);  
+      Cube<Bool> tflagCat(nCorr,win[freqSet_p].nschan[sno],nCat,false);  
       Matrix<Bool> tflag = tflagCat.xyPlane(0); // references flagCat's storage
       
       Int woffset = win[freqSet_p].ischan[sno]-1;
@@ -809,7 +810,7 @@ void Importmiriad::fillMSMainTable()
       msc.flag().put(row,tflag);
       msc.flagCategory().put(row,tflagCat);
 
-      Bool rowFlag = allEQ(flag,True);
+      Bool rowFlag = allEQ(flag,true);
       if (rowFlag != lastRowFlag) {
         msc.flagRow().put(row,rowFlag);
         lastRowFlag = rowFlag;
@@ -1007,7 +1008,7 @@ void Importmiriad::fillAntennaTable()
       default: mount="UNKNOWN";     break;
     }
     ant.mount().put(row,mount);
-    ant.flagRow().put(row,False);
+    ant.flagRow().put(row,false);
     String antName = "C";
     if (array_p=="ATCA") antName="CA0";
     antName += String::toString(i+1);
@@ -1137,7 +1138,7 @@ void Importmiriad::fillSpectralWindowTable(String vel)
   // Keep previous default, for ATCA leave at TOPO (multi-source data)
   if (array_p!="ATCA" && velsys=="") velsys="LSRK";
   
-  Bool convert=True;
+  Bool convert=true;
   MFrequency::Types freqsys_p;
   if (velsys=="LSRK") {
     freqsys_p = MFrequency::LSRK;        // LSRD vs. LSRK
@@ -1147,7 +1148,7 @@ void Importmiriad::fillSpectralWindowTable(String vel)
     if (Debug(1)) os_p << LogIO::DEBUG1 << "USE_LSRD" << LogIO::POST;
   } else {
     freqsys_p = MFrequency::TOPO;        // use TOPO if unspecified
-    convert=False;
+    convert=false;
   }
 
   MFrequency::Convert tolsr(MFrequency::TOPO, 
@@ -1157,7 +1158,7 @@ void Importmiriad::fillSpectralWindowTable(String vel)
   msPol.numCorr().put(0,nCorr);
   msPol.corrType().put(0,corrType_p);
   msPol.corrProduct().put(0,corrProduct_p);
-  msPol.flagRow().put(0,False);
+  msPol.flagRow().put(0,false);
 
   // fill out doppler table (only 1 entry needed, CARMA data only identify 1 line :-(
   if (array_p=="CARMA") {
@@ -1183,7 +1184,7 @@ void Importmiriad::fillSpectralWindowTable(String vel)
       
       msDD.spectralWindowId().put(ddid,ddid);
       msDD.polarizationId().put(ddid,0);
-      msDD.flagRow().put(ddid,False);
+      msDD.flagRow().put(ddid,false);
 
       msSpW.numChan().put(ddid,win[k].nschan[i]);
       BW = 0.0;
@@ -1618,16 +1619,16 @@ void Importmiriad::Tracking(int record)
     }
     if (j==-1) {
       os_p << "Found new source: " << object_p << LogIO::POST;
-      source_p.resize(source_p.nelements()+1, True);     // need to copy the old values
+      source_p.resize(source_p.nelements()+1, true);     // need to copy the old values
       source_p[source_p.nelements()-1] = object_p;
     
-      ras_p.resize(ras_p.nelements()+1, True);     
-      decs_p.resize(decs_p.nelements()+1, True);   
+      ras_p.resize(ras_p.nelements()+1, true);     
+      decs_p.resize(decs_p.nelements()+1, true);   
       ras_p[ras_p.nelements()-1] = 0.0;                  // if no source at (0,0) offset
       decs_p[decs_p.nelements()-1] = 0.0;                // these would never be initialized  
     }
     uvprobvr_c(uv_handle_p,"purpose",vtype,&vlen,&vupd3);
-    purpose_p.resize(purpose_p.nelements()+1, True);   // need to copy the old values
+    purpose_p.resize(purpose_p.nelements()+1, true);   // need to copy the old values
     purpose_p[purpose_p.nelements()-1] = " ";
     if (vupd3) {
       uvgetvr_c(uv_handle_p,H_BYTE,"purpose",vdata,16);
@@ -1769,7 +1770,7 @@ void Importmiriad::check_window()
   
   if (nspect>0) {
     // Got all the window details, now check if we already have this one
-    Bool found=False;
+    Bool found=false;
     for (Int i=0; i<nFreqSet_p; i++) {
       // compare win[i] and win[next]
       found=compareWindows(win[i],win[next]);
@@ -1812,17 +1813,17 @@ void Importmiriad::check_window()
 Bool Importmiriad::compareWindows(WINDOW& win1,WINDOW& win2)
 {
   // Check if two freq/corr windows are the same (within tolerance)
-  if (win1.nspect!= win2.nspect || win1.nwide!=win2.nwide) return False;
+  if (win1.nspect!= win2.nspect || win1.nwide!=win2.nwide) return false;
   for (Int i=0; i<win1.nspect; i++){
-    if (win1.nschan[i]!=win2.nschan[i]) return False;
+    if (win1.nschan[i]!=win2.nschan[i]) return false;
     Double w = abs(win1.sdf[i]);
-    if (abs(win1.sdf[i]-win2.sdf[i])>0.01*w) return False;
-    if (abs(win1.sfreq[i]-win2.sfreq[i])>0.5*w) return False;
-    if (abs(win1.restfreq[i]-win2.restfreq[i])>0.5*w) return False;
-    if (win1.chain[i]!=win2.chain[i]) return False;
+    if (abs(win1.sdf[i]-win2.sdf[i])>0.01*w) return false;
+    if (abs(win1.sfreq[i]-win2.sfreq[i])>0.5*w) return false;
+    if (abs(win1.restfreq[i]-win2.restfreq[i])>0.5*w) return false;
+    if (win1.chain[i]!=win2.chain[i]) return false;
   }
   // could check wides, but since they are not written..
-  return True;
+  return true;
 }
 
 // ==============================================================================================

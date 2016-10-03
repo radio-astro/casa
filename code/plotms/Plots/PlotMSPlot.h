@@ -49,7 +49,7 @@ class PMS_PP_Display;
 // Class for a single "plot" concept.  Generally speaking this one
 // plot handles one data source across potentially many scatter plots and
 // canvases, separated by whatever criteria the subclasses decide on.  The 
-// class PlotMSPlot handles interfacing with the rest of PlotMS and MS file and
+// class PlotMSPlot handles interfacing with the rest of PlotMS and casacore::MS file and
 // selection, and provides some useful members and methods for subclasses.
 class PlotMSPlot : public PlotMSParametersWatcher {
 public:
@@ -63,7 +63,7 @@ public:
     // class, using the given PlotMS parent.
     static void makeParameters(PlotMSPlotParameters& params, PlotMSApp* plotms);
     
-    void customizeAutoSymbol( const PlotSymbolPtr& baseSymbol, uInt dataSize  );
+    void customizeAutoSymbol( const PlotSymbolPtr& baseSymbol, casacore::uInt dataSize  );
     // Non-Static //
     
     // Constructor which takes the parent PlotMS object.  Starts out with
@@ -73,7 +73,7 @@ public:
     // Destructor.
     ~PlotMSPlot();
 
-    void resize(PlotMSPages&, uInt rows, uInt cols);
+    void resize(PlotMSPages&, casacore::uInt rows, casacore::uInt cols);
 
     // Simple class to hold parameter to resume updating after a threaded
     // cache loading
@@ -102,10 +102,10 @@ public:
     
     // Returns a human-readable name for this plot.  Does not have to be
     // unique.
-    String name() const;
+    casacore::String name() const;
 
     // Returns specialization Id for this plot
-    String spectype() const { return "Unknown";};
+    casacore::String spectype() const { return "Unknown";};
     
     // Returns the plots assigned to this plot.
     vector<MaskedScatterPlotPtr> plots() const;
@@ -117,7 +117,7 @@ public:
     // <group>
     void attachToCanvases();
     void detachFromCanvases();
-    Int iter() { return iter_; }
+    casacore::Int iter() { return iter_; }
     // </group>
     
     //The cache load did not succeed so clear the plot and the cache.
@@ -171,7 +171,7 @@ public:
     bool setIter( int index );
     bool resetIter();
     void recalculateIteration();
-    Int nIter();
+    casacore::Int nIter();
 
     // Implements PlotMSParametersWatcher::parametersHaveChanged().  Updates
     // the data parameters and then calls parametersHaveChanged_().
@@ -198,14 +198,14 @@ public:
     vector<PMS::Axis> getCachedAxes();
     vector<PMS::DataColumn> getCachedData();
 
-    Record locateInfo(int plotIterIndex, const Vector<PlotRegion>& regions,
+    casacore::Record locateInfo(int plotIterIndex, const casacore::Vector<PlotRegion>& regions,
     		bool showUnflagged, bool showFlagged, bool selectAll ) const ;
 
-    PlotLogMessage* locateRange( int plotIterIndex, const Vector<PlotRegion> & regions,
+    PlotLogMessage* locateRange( int plotIterIndex, const casacore::Vector<PlotRegion> & regions,
     		bool showUnflagged, bool showFlagged);
 
     PlotLogMessage* flagRange( int canvasIndex, casa::PlotMSFlagging& flagging,
-    		const Vector<PlotRegion>& regions, bool showFlagged);
+    		const casacore::Vector<PlotRegion>& regions, bool showFlagged);
 
     // Generates and assigns canvases that this plot will be using, with the
     // given PlotMSPages object.  This is called when the plot is first
@@ -226,7 +226,7 @@ public:
     bool updateIndexing();
 
     void logPoints();
-    void logIter(Int iter, Int nIter);
+    void logIter(casacore::Int iter, casacore::Int nIter);
 
     //This was added so that in 'mixed mode', cacheloaded will trigger
     //a redraw of the plot.
@@ -319,7 +319,7 @@ private:
     void clearPlotData();
 
     //Return the dimensions of the plot data that this plot should hold.
-    void getPlotSize( Int& rows, Int& cols );
+    void getPlotSize( casacore::Int& rows, casacore::Int& cols );
 
     //Returns the iteration for the canvas located at row, r, and column, c.
     int getIterationIndex( int r, int c, const PlotMSPage& page );
@@ -330,13 +330,13 @@ private:
     void clearCanvasProperties( int row, int col);
     void setCanvasProperties (int row, int col, PMS_PP_Cache*,
     		PMS_PP_Axes* axes, bool set, PMS_PP_Canvas *canv,
-    		uInt rows, uInt cols, PMS_PP_Iteration *iter,
-    		uInt iteration, PlotMSAveraging averaging );
+    		casacore::uInt rows, casacore::uInt cols, PMS_PP_Iteration *iter,
+    		casacore::uInt iteration, PlotMSAveraging averaging );
     // To modify axis label if needed:
     bool axisIsAveraged(PMS::Axis axis, PlotMSAveraging averaging);
-    String addFreqFrame(String freqLabel);
-    PMS::Axis getCalAxis(String calType, PMS::Axis axis);
-    PMS::Axis getDefaultXAxis(String calType);
+    casacore::String addFreqFrame(casacore::String freqLabel);
+    PMS::Axis getCalAxis(casacore::String calType, PMS::Axis axis);
+    PMS::Axis getDefaultXAxis(casacore::String calType);
 
     //Note:  First index for a plot is the dataCount,
     //second index is the number of iteration.
@@ -351,12 +351,12 @@ private:
     int gridRow;
     int gridCol;
 
-    Int iter_;
-    Int iterStep_;
+    casacore::Int iter_;
+    casacore::Int iterStep_;
 
-    static const uInt PIXEL_THRESHOLD;
-    static const uInt MEDIUM_THRESHOLD;
-    static const uInt LARGE_THRESHOLD;
+    static const casacore::uInt PIXEL_THRESHOLD;
+    static const casacore::uInt MEDIUM_THRESHOLD;
+    static const casacore::uInt LARGE_THRESHOLD;
 };
 
 }

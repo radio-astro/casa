@@ -32,6 +32,7 @@
 #include <tables/DataMan/DataManError.h>
 #include <casa/IO/AipsIO.h>
 
+using namespace casacore;
 namespace casa {
 
   uInt AsdmIndex::dataSize() const

@@ -33,6 +33,7 @@
 #include <display/DisplayEvents/Animator.h>
 #include <display/DisplayEvents/AniPosEH.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	AniPosEH::AniPosEH() {

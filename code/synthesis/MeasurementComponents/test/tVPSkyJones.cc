@@ -75,10 +75,10 @@ int main()
     LogIO os(LogOrigin("tVPSkyJones", "main()"));
 
     //   MSSummary mss(ms);
-    //   mss.list(os, True);
+    //   mss.list(os, true);
 
 
-    VPSkyJones  myVPSJ(ms, True, Quantity(0.1, "deg"), BeamSquint::GOFIGURE);
+    VPSkyJones  myVPSJ(ms, true, Quantity(0.1, "deg"), BeamSquint::GOFIGURE);
     cout << "Using 0.1 deg PA chunks for fun" << endl;
 
 

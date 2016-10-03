@@ -87,7 +87,7 @@ int main() {
 
 			fitter.setData (x,y,m);
 			fitter.setGaussianElements (1);
-			const SpectralElement *firstEl = fitter.getList(False)[0];
+			const SpectralElement *firstEl = fitter.getList(false)[0];
 			AlwaysAssert(
 				firstEl->getType() == SpectralElement::GAUSSIAN, AipsError
 			);
@@ -97,23 +97,23 @@ int main() {
 			// Check ok
 
 			AlwaysAssert(fitter.getDataMask().nelements()==n, AipsError);
-			AlwaysAssert(allEQ(fitter.getDataMask(), True), AipsError);
+			AlwaysAssert(allEQ(fitter.getDataMask(), true), AipsError);
 			AlwaysAssert(fitter.getRangeMask().nelements()==0, AipsError);
 			AlwaysAssert(fitter.getTotalMask().nelements()==n, AipsError);
-			AlwaysAssert(allEQ(fitter.getTotalMask(), True), AipsError);
+			AlwaysAssert(allEQ(fitter.getTotalMask(), true), AipsError);
 			{
-				const SpectralList& fitList = fitter.getList(True);
+				const SpectralList& fitList = fitter.getList(true);
 				check (amp, cen, sig, p0, p1, fitList);
 			}
 			{
 				ProfileFit1D<Double> fitter2(fitter);
-				const SpectralList& fitList = fitter2.getList(True);
+				const SpectralList& fitList = fitter2.getList(true);
 				check (amp, cen, sig, p0, p1, fitList);
 			}
 			{
 				ProfileFit1D<Double> fitter2;
 				fitter2 = fitter;
-				const SpectralList& fitList = fitter2.getList(True);
+				const SpectralList& fitList = fitter2.getList(true);
 				check (amp, cen, sig, p0, p1, fitList);
 			}
 			// Set a range mask via indices
@@ -121,7 +121,7 @@ int main() {
 			{
 				Vector<uInt> start(1), end(1);
 				start(0) = n/2; end(0) = start(0) + n/10;
-				fitter.setRangeMask (start, end, True);
+				fitter.setRangeMask (start, end, true);
 
 				// Check masks
 
@@ -131,7 +131,7 @@ int main() {
 
 				Vector<Double> startF(1), endF(1);
 				startF(0) = x(start(0)); endF(0) = x(end(0));
-				fitter.setRangeMask (startF, endF, True);
+				fitter.setRangeMask (startF, endF, true);
 
 				// Check masks
 
@@ -149,29 +149,29 @@ int main() {
 			sigma[1] = 6;
 			GaussianMultipletSpectralElement gm0 = makeMultiplet (x, y, amp, cen, sigma);
 			ProfileFit1D<Double> fitter;
-			Vector<Bool> m (x.size(), True);
+			Vector<Bool> m (x.size(), true);
 			fitter.setData (x,y,m);
 			fitter.addElement(gm0);
 			AlwaysAssert(
-				fitter.getList(False).nelements() == 1, AipsError
+				fitter.getList(false).nelements() == 1, AipsError
 			);
-			const SpectralElement *firstEl = fitter.getList(False)[0];
+			const SpectralElement *firstEl = fitter.getList(false)[0];
 			AlwaysAssert(
 				firstEl->getType() == SpectralElement::GMULTIPLET, AipsError
 			);
 			AlwaysAssert(fitter.fit(), AipsError);
 			// Check ok
 			AlwaysAssert(fitter.getDataMask().nelements() == x.size(), AipsError);
-			AlwaysAssert(allEQ(fitter.getDataMask(), True), AipsError);
+			AlwaysAssert(allEQ(fitter.getDataMask(), true), AipsError);
 			AlwaysAssert(fitter.getRangeMask().nelements() == 0, AipsError);
 			AlwaysAssert(fitter.getTotalMask().nelements() == x.size(), AipsError);
-			AlwaysAssert(allEQ(fitter.getTotalMask(), True), AipsError);
+			AlwaysAssert(allEQ(fitter.getTotalMask(), true), AipsError);
 			AlwaysAssert(
 				*dynamic_cast<const GaussianMultipletSpectralElement*>(
-					fitter.getList(True)[0]
+					fitter.getList(true)[0]
 				)
 				== *dynamic_cast<const GaussianMultipletSpectralElement*>(
-						fitter.getList(False)[0]
+						fitter.getList(false)[0]
 					),
 				AipsError
 			);
@@ -187,7 +187,7 @@ int main() {
 			fitter.addElement(gm);
 			AlwaysAssert(fitter.fit(), AipsError);
 			cout << *dynamic_cast<const GaussianMultipletSpectralElement *>(
-					fitter.getList(True)[0]
+					fitter.getList(true)[0]
 				)
 				<< endl;
 			cout << "niter " << fitter.getNumberIterations() << endl;
@@ -199,13 +199,13 @@ int main() {
 			r = 0;
 			r(0, 0) = 0.9;
 			gm = GaussianMultipletSpectralElement(gm0.getGaussians(), r);
-			Vector<Bool> fixed(5, False);
-			fixed[2] = True;
+			Vector<Bool> fixed(5, false);
+			fixed[2] = true;
 			gm.fix(fixed);
 			fitter.addElement(gm);
 			AlwaysAssert(fitter.fit(), AipsError);
 			cout << *dynamic_cast<const GaussianMultipletSpectralElement *>(
-					fitter.getList(True)[0]
+					fitter.getList(true)[0]
 				)
 				<< endl;
 			cout << "niter " << fitter.getNumberIterations() << endl;
@@ -220,7 +220,7 @@ int main() {
 			fitter.addElement(gm);
 			AlwaysAssert(fitter.fit(), AipsError);
 			cout << *dynamic_cast<const GaussianMultipletSpectralElement *>(
-					fitter.getList(True)[0]
+					fitter.getList(true)[0]
 				)
 				<< endl;
 			cout << "niter " << fitter.getNumberIterations() << endl;
@@ -235,7 +235,7 @@ int main() {
 			fitter.addElement(gm);
 			AlwaysAssert(fitter.fit(), AipsError);
 			cout << *dynamic_cast<const GaussianMultipletSpectralElement *>(
-					fitter.getList(True)[0]
+					fitter.getList(true)[0]
 				)
 				<< endl;
 			cout << "niter " << fitter.getNumberIterations() << endl;
@@ -252,7 +252,7 @@ int main() {
 			vector<LorentzianSpectralElement> lse = makeLorentzians (x, y, amp, cen, fwhm);
 
 			ProfileFit1D<Double> fitter;
-			Vector<Bool> m (x.size(), True);
+			Vector<Bool> m (x.size(), true);
 			fitter.setData (x,y,m);
 			for (uInt i=0; i<lse.size(); i++) {
 				// perturb the initial estimates
@@ -263,24 +263,24 @@ int main() {
 				fitter.addElement(z);
 			}
 			AlwaysAssert(
-				fitter.getList(False).nelements() == lse.size(), AipsError
+				fitter.getList(false).nelements() == lse.size(), AipsError
 			);
-			const SpectralElement *firstEl = fitter.getList(False)[0];
+			const SpectralElement *firstEl = fitter.getList(false)[0];
 			AlwaysAssert(
 				firstEl->getType() == SpectralElement::LORENTZIAN, AipsError
 			);
 			AlwaysAssert(fitter.fit(), AipsError);
 			// Check ok
 			AlwaysAssert(fitter.getDataMask().nelements() == x.size(), AipsError);
-			AlwaysAssert(allEQ(fitter.getDataMask(), True), AipsError);
+			AlwaysAssert(allEQ(fitter.getDataMask(), true), AipsError);
 			AlwaysAssert(fitter.getRangeMask().nelements() == 0, AipsError);
 			AlwaysAssert(fitter.getTotalMask().nelements() == x.size(), AipsError);
-			AlwaysAssert(allEQ(fitter.getTotalMask(), True), AipsError);
+			AlwaysAssert(allEQ(fitter.getTotalMask(), true), AipsError);
 			for (uInt i=0; i<lse.size(); i++) {
 				const LorentzianSpectralElement *got = dynamic_cast<
 					const LorentzianSpectralElement*
 				>(
-					fitter.getList(True)[i]
+					fitter.getList(true)[i]
 				);
 				LorentzianSpectralElement exp = lse[i];
 				AlwaysAssert(nearAbs(*got, exp, 1e-15), AipsError);
@@ -297,7 +297,7 @@ int main() {
 			estimates[0] = 0.5;
 			estimates[1] = 2;
 			makePowerLogPoly(x, y, estimates);
-			Vector<Bool> mask(x.size(), True);
+			Vector<Bool> mask(x.size(), true);
 			fitter.setData(x, y, mask);
 			SpectralList list;
 			estimates[1] = 1;
@@ -305,7 +305,7 @@ int main() {
 			list.add(PowerLogPolynomialSpectralElement(estimates));
 			fitter.setElements(list);
 			AlwaysAssert(fitter.fit(), AipsError);
-			Vector<Double> parms = fitter.getList(True)[0]->get();
+			Vector<Double> parms = fitter.getList(true)[0]->get();
 			cout << "parms " << parms << endl;
 			AlwaysAssert(near(parms[0], 0.5) && near(parms[1], 2.0), AipsError);
 		}
@@ -317,7 +317,7 @@ int main() {
 			estimates[1] = 2;
 			estimates[2] = 0;
 			makePowerLogPoly(x, y, estimates);
-			Vector<Bool> mask(x.size(), True);
+			Vector<Bool> mask(x.size(), true);
 			fitter.setData(x, y, mask);
 			SpectralList list;
 			estimates[0] = 0.55;
@@ -326,14 +326,14 @@ int main() {
 			list.add(PowerLogPolynomialSpectralElement(estimates));
 			fitter.setElements(list);
 			AlwaysAssert(fitter.fit(), AipsError);
-			Vector<Double> parms = fitter.getList(True)[0]->get();
+			Vector<Double> parms = fitter.getList(true)[0]->get();
 			cout << "parms " << parms << endl;
 			AlwaysAssert(near(parms[0], 0.5) && near(parms[1], 2.0), AipsError);
 		}
 		{
 			ProfileFit1D<Double> fitter;
 			Vector<Double> x, y;
-			Vector<Bool> mask(x.size(), True);
+			Vector<Bool> mask(x.size(), true);
 			Vector<Double> estimates(3);
 			estimates[0] = 0.5;
 			estimates[1] = 2;
@@ -359,7 +359,7 @@ int main() {
 			cout << "*** Fit a polynomial" << endl;
 			ProfileFit1D<Double> fitter;
 			Vector<Double> x, y;
-			Vector<Bool> mask(x.size(), True);
+			Vector<Bool> mask(x.size(), true);
 			Vector<Double> estimates(3);
 			estimates[0] = 0.5;
 			estimates[1] = 2;
@@ -408,7 +408,7 @@ void makeData (Vector<Double>& x, Vector<Double>& y, Vector<Bool>& m,
 	indgen(x);
 	x *= (2.3);
 	x += (1.0);
-	m = True;
+	m = true;
 	//
 	amp = 10.0;
 	cen = x(n/2);
@@ -463,19 +463,19 @@ void checkMasks (uInt n, const ProfileFit1D<Double>& fitter, Int start,
 		iStart(0) = 0;
 		iEnd(0) = start-1;
 		Vector<Bool> tmp = rangeMask(iStart, iEnd);
-		AlwaysAssert(allEQ(tmp, False), AipsError);
+		AlwaysAssert(allEQ(tmp, false), AipsError);
 	}
 	{
 		iStart(0) = start;
 		iEnd(0) = end;
 		Vector<Bool> tmp = rangeMask(iStart, iEnd);
-		AlwaysAssert(allEQ(tmp, True), AipsError);
+		AlwaysAssert(allEQ(tmp, true), AipsError);
 	}
 	{
 		iStart(0) = end+1;
 		iEnd(0) = n-1;
 		Vector<Bool> tmp = rangeMask(iStart, iEnd);
-		AlwaysAssert(allEQ(tmp, False), AipsError);
+		AlwaysAssert(allEQ(tmp, false), AipsError);
 	}
 }
 

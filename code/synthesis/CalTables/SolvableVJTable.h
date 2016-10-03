@@ -79,12 +79,12 @@ class SolvableVisJonesTable : public TimeVarVisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   SolvableVisJonesTable (const String& tableName, 
-			 Table::TableOption access = Table::Old);
+   SolvableVisJonesTable (const casacore::String& tableName, 
+			 casacore::Table::TableOption access = casacore::Table::Old);
 
-   SolvableVisJonesTable (const String& tableName, 
-			  const String& type,
-			 Table::TableOption access = Table::Old);
+   SolvableVisJonesTable (const casacore::String& tableName, 
+			  const casacore::String& type,
+			 casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    SolvableVisJonesDesc itsSolvableVisJonesDesc;
@@ -136,8 +136,8 @@ class GJonesTable : public SolvableVisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   GJonesTable (const String& tableName, 
-		Table::TableOption access = Table::Old);
+   GJonesTable (const casacore::String& tableName, 
+		casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    GJonesDesc itsGJonesDesc;
@@ -189,8 +189,8 @@ class GJonesDelayRateSBTable : public SolvableVisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   GJonesDelayRateSBTable (const String& tableName, 
-			   Table::TableOption access = Table::Old);
+   GJonesDelayRateSBTable (const casacore::String& tableName, 
+			   casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    GJonesDelayRateSBDesc itsGJonesDelayRateSBDesc;
@@ -242,8 +242,8 @@ class DJonesTable : public SolvableVisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   DJonesTable (const String& tableName, 
-		Table::TableOption access = Table::Old);
+   DJonesTable (const casacore::String& tableName, 
+		casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    DJonesDesc itsDJonesDesc;
@@ -295,8 +295,8 @@ class TJonesTable : public SolvableVisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   TJonesTable (const String& tableName, 
-		Table::TableOption access = Table::Old);
+   TJonesTable (const casacore::String& tableName, 
+		casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    TJonesDesc itsTJonesDesc;

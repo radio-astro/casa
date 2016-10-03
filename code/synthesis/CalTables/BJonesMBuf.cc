@@ -30,6 +30,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <tables/Tables/RefRows.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -252,14 +253,14 @@ Bool BJonesPolyMBuf::putAntGain (const Int& antennaId,
 //    sRefAnt             const Int &            Reference antenna id.
 //
   // Initialization
-  Bool retval = False;
+  Bool retval = false;
 
   // Find all calibration buffer rows for the antenna 1 id.
   Vector<Int> matchingRows = matchAntenna1(antennaId);
   Int nMatch = matchingRows.nelements();
 
   if (nMatch > 0) {
-    retval = True;
+    retval = true;
     // Update each matched row
     for (Int i=0; i < nMatch; i++) {
       uInt row = matchingRows(i);
@@ -333,7 +334,7 @@ Vector<String>& BJonesPolyMBuf::polyType()
   if (connectedToIter()) {
     if (!polyTypeOK_p) {
       calMainCol()->polyType().getColumn (polyType_p);
-      polyTypeOK_p = True;
+      polyTypeOK_p = true;
     };
   };
   return polyType_p;
@@ -352,7 +353,7 @@ Vector<String>& BJonesPolyMBuf::polyMode()
   if (connectedToIter()) {
     if (!polyModeOK_p) {
       calMainCol()->polyMode().getColumn (polyMode_p);
-      polyModeOK_p = True;
+      polyModeOK_p = true;
     };
   };
   return polyMode_p;
@@ -371,7 +372,7 @@ Vector<Complex>& BJonesPolyMBuf::scaleFactor()
   if (connectedToIter()) {
     if (!scaleFactorOK_p) {
       calMainCol()->scaleFactor().getColumn (scaleFactor_p);
-      scaleFactorOK_p = True;
+      scaleFactorOK_p = true;
     };
   };
   return scaleFactor_p;
@@ -390,7 +391,7 @@ Array<Double>& BJonesPolyMBuf::validDomain()
   if (connectedToIter()) {
     if (!validDomainOK_p) {
       calMainCol()->validDomain().getColumn (validDomain_p);
-      validDomainOK_p = True;
+      validDomainOK_p = true;
     };
   };
   return validDomain_p;
@@ -409,7 +410,7 @@ Vector<Int>& BJonesPolyMBuf::nPolyAmp()
   if (connectedToIter()) {
     if (!nPolyAmpOK_p) {
       calMainCol()->nPolyAmp().getColumn (nPolyAmp_p);
-      nPolyAmpOK_p = True;
+      nPolyAmpOK_p = true;
     };
   };
   return nPolyAmp_p;
@@ -428,7 +429,7 @@ Vector<Int>& BJonesPolyMBuf::nPolyPhase()
   if (connectedToIter()) {
     if (!nPolyPhaseOK_p) {
       calMainCol()->nPolyPhase().getColumn (nPolyPhase_p);
-      nPolyPhaseOK_p = True;
+      nPolyPhaseOK_p = true;
     };
   };
   return nPolyPhase_p;
@@ -447,7 +448,7 @@ Array<Double>& BJonesPolyMBuf::polyCoeffAmp()
   if (connectedToIter()) {
     if (!polyCoeffAmpOK_p) {
       calMainCol()->polyCoeffAmp().getColumn (polyCoeffAmp_p);
-      polyCoeffAmpOK_p = True;
+      polyCoeffAmpOK_p = true;
     };
   };
   return polyCoeffAmp_p;
@@ -466,7 +467,7 @@ Array<Double>& BJonesPolyMBuf::polyCoeffPhase()
   if (connectedToIter()) {
     if (!polyCoeffPhaseOK_p) {
       calMainCol()->polyCoeffPhase().getColumn (polyCoeffPhase_p);
-      polyCoeffPhaseOK_p = True;
+      polyCoeffPhaseOK_p = true;
     };
   };
   return polyCoeffPhase_p;
@@ -485,7 +486,7 @@ Vector<String>& BJonesPolyMBuf::phaseUnits()
   if (connectedToIter()) {
     if (!phaseUnitsOK_p) {
       calMainCol()->phaseUnits().getColumn (phaseUnits_p);
-      phaseUnitsOK_p = True;
+      phaseUnitsOK_p = true;
     };
   };
   return phaseUnits_p;
@@ -504,7 +505,7 @@ Vector<Complex>& BJonesPolyMBuf::sideBandRef()
   if (connectedToIter()) {
     if (!sideBandRefOK_p) {
       calMainCol()->sideBandRef().getColumn (sideBandRef_p);
-      sideBandRefOK_p = True;
+      sideBandRefOK_p = true;
     };
   };
   return sideBandRef_p;
@@ -531,16 +532,16 @@ void BJonesPolyMBuf::invalidate()
   BJonesMBuf::invalidate();
 
   // Set all cache flags to false
-  polyTypeOK_p = False;
-  polyModeOK_p = False;
-  scaleFactorOK_p = False;
-  validDomainOK_p = False;
-  nPolyAmpOK_p = False;
-  nPolyPhaseOK_p = False;
-  polyCoeffAmpOK_p = False;
-  polyCoeffPhaseOK_p = False;
-  phaseUnitsOK_p = False;
-  sideBandRefOK_p = False;
+  polyTypeOK_p = false;
+  polyModeOK_p = false;
+  scaleFactorOK_p = false;
+  validDomainOK_p = false;
+  nPolyAmpOK_p = false;
+  nPolyPhaseOK_p = false;
+  polyCoeffAmpOK_p = false;
+  polyCoeffPhaseOK_p = false;
+  phaseUnitsOK_p = false;
+  sideBandRefOK_p = false;
 };
 
 //----------------------------------------------------------------------------

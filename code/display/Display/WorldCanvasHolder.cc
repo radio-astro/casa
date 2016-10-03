@@ -50,6 +50,7 @@
 #include <cpgplot.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const String WorldCanvasHolder::BLINK_MODE = "bIndex";
@@ -63,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsWorldCanvas->addPositionEventHandler(*this);
 		itsWorldCanvas->setSizeControlHandler(this);
 		itsWorldCanvas->setCoordinateHandler(this);
-		Attribute unZoom("resetCoordinates", True);	// Will cause unzoom on new
+		Attribute unZoom("resetCoordinates", true);	// Will cause unzoom on new
 		itsWorldCanvas->setAttribute(unZoom);		// canvas (unless someone adds
 		// a zoom order to override).
 		blinkMode = false;
@@ -75,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		worldCanvas()->hold();
 		for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
 		        iter != itsDisplayList.end(); ++iter ) {
-			(*iter)->notifyUnregister(*this, True);
+			(*iter)->notifyUnregister(*this, true);
 		}
 		itsDisplayList.clear( );
 
@@ -287,7 +288,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Only the CS master DD should set the WC CS and corresponding axis codes.
 		// A DD's sizeControl method should determine whether it has permission
 		// to become master by testing 'wch->isCSMaster(this)'.  It
-		// should set all WC coordinate state and return True _only_ if it has
+		// should set all WC coordinate state and return true _only_ if it has
 		// permission and accepts the CS master role.  In that case, it will also
 		// be called upon to perform coordinate transform (WCCoordinateHandler)
 		// chores for the WC[H].
@@ -336,7 +337,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			bool ddSizeControl=(*iter)->sizeControl(*this, sizeControlAtts);
 			if ( ddSizeControl ) {
-				masterFound=True;
+				masterFound=true;
 			}
 			// CS master confirmed.
 		}
@@ -369,7 +370,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		wCanvas->removeAttribute(yAxis);
 
 		if ( clearZoom ){
-			Attribute unZoom("resetCoordinates", True);
+			Attribute unZoom("resetCoordinates", true);
 			itsWorldCanvas->setAttribute(unZoom);	// "zoom-to-extent" order.
 
 			String zoomB = "manualZoomBlc", zoomT = "manualZoomTrc";
@@ -427,11 +428,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				worldCanvas()->csMaster() = *iter;
 				executeSizeControl(worldCanvas());
 				// Makes sure the new master sets up WC state immediately.
-				return True;
+				return true;
 			}
 		}
 
-		return False;
+		return false;
 	}
 
 
@@ -543,7 +544,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// "iteration" five - do axis labelling:
 		// At present we only draw axis labels of first reg'd
-		// DisplayData that responds.  A DD should return False unless
+		// DisplayData that responds.  A DD should return false unless
 		// it is set up to label axes.
 
 		// (12/04 dk note: There remain problems with labelling by (non-CS-master)
@@ -575,7 +576,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 			iter != itsDisplayList.end(); ++iter,++dd ) {
 			if ( ! (*iter)->isDisplayable( ) ) {
-				conforms[dd] = False;
+				conforms[dd] = false;
 			}
 			else {
 				conforms[dd] = (*iter)->conformsTo( wc );
@@ -844,28 +845,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool WorldCanvasHolder::linToWorld(Vector<Double> &world, const Vector<Double> &lin) {
 		if ( worldCanvas( )->csMaster( )  != 0 ) {
 			Bool result = worldCanvas( )->csMaster( )->linToWorld(world, lin);
-			if ( result == False ) {
+			if ( result == false ) {
 				error_string = worldCanvas( )->csMaster( )->errorMessage( );
 			}
 			return result;
 		} else
 			error_string = "no coordinate system";
 
-		return False;
+		return false;
 	}
 
 
 	Bool WorldCanvasHolder::worldToLin(Vector<Double> &lin, const Vector<Double> &world) {
 		if ( worldCanvas( )->csMaster( ) != 0 ) {
 			Bool result = worldCanvas( )->csMaster( )->worldToLin(lin, world);
-			if ( result == False ) {
+			if ( result == false ) {
 				error_string = worldCanvas( )->csMaster( )->errorMessage( );
 			}
 			return result;
 		} else
 			error_string = "no coordinate system";
 
-		return False;
+		return false;
 	}
 
 

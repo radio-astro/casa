@@ -31,6 +31,7 @@
 #include <qwt_scale_widget.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 	ColorTransferWidget::ColorTransferWidget(QWidget *parent)

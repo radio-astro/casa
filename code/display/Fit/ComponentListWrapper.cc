@@ -42,6 +42,7 @@
 #include <iostream>
 #include <fstream>
 
+using namespace casacore;
 namespace casa {
 
 	ComponentListWrapper::ComponentListWrapper():
@@ -431,4 +432,5 @@ namespace casa {
 	ComponentListWrapper::~ComponentListWrapper() {
 	}
 
+using namespace casacore;
 } /* namespace casa */

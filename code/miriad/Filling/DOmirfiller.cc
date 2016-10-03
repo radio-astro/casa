@@ -36,7 +36,7 @@
 mirfiller::mirfiller() : filler_p(String()) { }
 mirfiller::mirfiller(const mirfiller& other) : filler_p(String()) { }
 
-mirfiller::mirfiller(const String& mirfile) : filler_p(mirfile, False) { }
+mirfiller::mirfiller(const String& mirfile) : filler_p(mirfile, false) { }
 
 mirfiller::~mirfiller() { }
 

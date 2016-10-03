@@ -28,6 +28,7 @@
 #include <display/QtPlotter/annotations/AnnotationText.h>
 #include <QMouseEvent>
 
+using namespace casacore;
 namespace casa {
 
 	CanvasModeAnnotation::CanvasModeAnnotation()
@@ -95,4 +96,5 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
+using namespace casacore;
 } /* namespace casa */

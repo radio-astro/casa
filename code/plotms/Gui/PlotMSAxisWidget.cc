@@ -31,6 +31,7 @@
 #include <plotms/GuiTabs/PlotMSTab.qo.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 //////////////////////////////////

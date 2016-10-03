@@ -68,12 +68,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class SpectralElementFactory {
 public:
 
-	// Construct from record.  Must hold fields "type" (String) and
- 	// "parameters" (Vector<Double>).  For type=GAUSSIAN, parameters
+	// Construct from record.  Must hold fields "type" (casacore::String) and
+ 	// "parameters" (casacore::Vector<casacore::Double>).  For type=GAUSSIAN, parameters
 	// holds amplitude, center and sigma. For type=POLYNOMIAL,
 	// parameters(0) holds the degree.
 	static SpectralElement* fromRecord(
-		const RecordInterface &container
+		const casacore::RecordInterface &container
 	);
 
 };

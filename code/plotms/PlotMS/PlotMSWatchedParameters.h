@@ -80,24 +80,24 @@ public:
     
     // Registers an update flag with the given name (if it is not already
     // registered) and returns its flag value.
-    static int REGISTER_UPDATE_FLAG(const String& name);
+    static int REGISTER_UPDATE_FLAG(const casacore::String& name);
     
     // Unregisters the given update flag, if it is registered.
     // <group>
-    static void UNREGISTER_UPDATE_FLAG(const String& name);
+    static void UNREGISTER_UPDATE_FLAG(const casacore::String& name);
     static void UNREGISTER_UPDATE_FLAG(int flag);
     // </group>
     
     // Converts between an update flag's name and value, if valid.
     // <group>
-    static int UPDATE_FLAG(const String& name);
-    static String UPDATE_FLAG(int flag);
+    static int UPDATE_FLAG(const casacore::String& name);
+    static casacore::String UPDATE_FLAG(int flag);
     // </group>
     
     // Returns all registered update flags.
     // <group>
     static std::vector<int> UPDATE_FLAGS();
-    static std::vector<String> UPDATE_FLAG_NAMES();
+    static std::vector<casacore::String> UPDATE_FLAG_NAMES();
     // </group>
     
     // Returns all registered update flags as one or-ed value.
@@ -107,7 +107,7 @@ public:
     // flags value.
     // <group>
     static std::vector<int> UPDATE_FLAGS(int value);
-    static std::vector<String> UPDATE_FLAG_NAMES(int value);
+    static std::vector<casacore::String> UPDATE_FLAG_NAMES(int value);
     // </group>
     
     
@@ -162,7 +162,7 @@ protected:
     // being held, any watchers will immediately be notified of the change.
     // <group>
     void updateFlag(int updateFlag, bool on = true);
-    void updateFlag(const String& updateFlagName, bool on = true);
+    void updateFlag(const casacore::String& updateFlagName, bool on = true);
     // </group>
     
     // Provides access to children to indicate which update flags are on.
@@ -190,7 +190,7 @@ private:
     static std::vector<int> FLAGS;
     
     // Registered flag names.
-    static std::vector<String> NAMES;
+    static std::vector<casacore::String> NAMES;
 };
 
 }

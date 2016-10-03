@@ -97,7 +97,7 @@ namespace asdm {
 	byteOrder = asdm::ByteOrder::Big_Endian;       
 	attributesSeq = T::defaultAttributesNamesInBin();
       }
-      else if (std::string(T::name()+"Table").compare((const char*) root_element->name) == 0) {
+      else if (std::string(T::name()+"casacore::Table").compare((const char*) root_element->name) == 0) {
 	// It's a new (and correct) MIME file for tables.
 	//
 	// 1st )  Look for a BulkStoreRef element with an attribute byteOrder.
@@ -109,7 +109,7 @@ namespace asdm {
 	bulkStoreRef = (child ==  0) ? 0 : ( (child->next) == 0 ? 0 : child->next->next );
       
 	if ( bulkStoreRef == 0 || (bulkStoreRef->type != XML_ELEMENT_NODE)  || (std::string("BulkStoreRef").compare((const char*) bulkStoreRef->name) != 0))
-	  throw asdm::ConversionException ("Could not find the element '/"+T::name()+"Table/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", T::name());
+	  throw asdm::ConversionException ("Could not find the element '/"+T::name()+"casacore::Table/BulkStoreRef'. Invalid XML header '"+ xmlHeader + "'.", T::name());
       	
 	// We found BulkStoreRef, now look for its attribute byteOrder.
 	_xmlAttr* byteOrderAttr = 0;
@@ -120,18 +120,18 @@ namespace asdm {
 	  }
       
 	if (byteOrderAttr == 0) 
-	  throw asdm::ConversionException("Could not find the element '/"+T::name()+"Table/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", T::name());
+	  throw asdm::ConversionException("Could not find the element '/"+T::name()+"casacore::Table/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", T::name());
       
 	string byteOrderValue = std::string((const char*) byteOrderAttr->children->content);
 	if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
-	  throw asdm::ConversionException("No valid value retrieved for the element '/"+T::name()+"Table/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", T::name());
+	  throw asdm::ConversionException("No valid value retrieved for the element '/"+T::name()+"casacore::Table/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", T::name());
 		
 	//
 	// 2nd) Look for the Attributes element and grab the names of the elements it contains.
 	//
 	xmlNode* attributes = bulkStoreRef->next;
 	if ( attributes == 0 || (attributes->type != XML_ELEMENT_NODE)  || (string("Attributes").compare((const char*) attributes->name) != 0))	 
-	  throw asdm::ConversionException ("Could not find the element '/"+T::name()+"Table/Attributes'. Invalid XML header '"+ xmlHeader + "'.", T::name());
+	  throw asdm::ConversionException ("Could not find the element '/"+T::name()+"casacore::Table/Attributes'. Invalid XML header '"+ xmlHeader + "'.", T::name());
  
  	xmlNode* childOfAttributes = attributes->children;
  	

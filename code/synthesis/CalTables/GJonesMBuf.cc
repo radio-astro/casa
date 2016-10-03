@@ -30,6 +30,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <tables/Tables/RefRows.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -123,14 +124,14 @@ void GJonesPolyMBuf::invalidate()
   GJonesMBuf::invalidate();
 
   // Set all cache flags to false
-  polyTypeOK_p = False;
-  polyModeOK_p = False;
-  scaleFactorOK_p = False;
-  nPolyAmpOK_p = False;
-  nPolyPhaseOK_p = False;
-  polyCoeffAmpOK_p = False;
-  polyCoeffPhaseOK_p = False;
-  phaseUnitsOK_p = False;
+  polyTypeOK_p = false;
+  polyModeOK_p = false;
+  scaleFactorOK_p = false;
+  nPolyAmpOK_p = false;
+  nPolyPhaseOK_p = false;
+  polyCoeffAmpOK_p = false;
+  polyCoeffPhaseOK_p = false;
+  phaseUnitsOK_p = false;
 };
 
 //----------------------------------------------------------------------------
@@ -242,11 +243,11 @@ Bool GJonesPolyMBuf::fillMatchingRows (const Vector<Int>& matchingRows,
 //    sRefAnt             const Int &            Reference antenna id.
 //
   // Initialization
-  Bool retval = False;
+  Bool retval = false;
   Int nMatch = matchingRows.nelements();
 
   if (nMatch > 0) {
-    retval = True;
+    retval = true;
 
     // Resize the coefficient arrays
     IPosition ampCoeffShape = polyCoeffAmp().shape();
@@ -350,7 +351,7 @@ Vector<String>& GJonesPolyMBuf::polyType()
   if (connectedToIter()) {
     if (!polyTypeOK_p) {
       calMainCol()->polyType().getColumn (polyType_p);
-      polyTypeOK_p = True;
+      polyTypeOK_p = true;
     };
   };
   return polyType_p;
@@ -369,7 +370,7 @@ Vector<String>& GJonesPolyMBuf::polyMode()
   if (connectedToIter()) {
     if (!polyModeOK_p) {
       calMainCol()->polyMode().getColumn (polyMode_p);
-      polyModeOK_p = True;
+      polyModeOK_p = true;
     };
   };
   return polyMode_p;
@@ -388,7 +389,7 @@ Vector<Complex>& GJonesPolyMBuf::scaleFactor()
   if (connectedToIter()) {
     if (!scaleFactorOK_p) {
       calMainCol()->scaleFactor().getColumn (scaleFactor_p);
-      scaleFactorOK_p = True;
+      scaleFactorOK_p = true;
     };
   };
   return scaleFactor_p;
@@ -407,7 +408,7 @@ Vector<Int>& GJonesPolyMBuf::nPolyAmp()
   if (connectedToIter()) {
     if (!nPolyAmpOK_p) {
       calMainCol()->nPolyAmp().getColumn (nPolyAmp_p);
-      nPolyAmpOK_p = True;
+      nPolyAmpOK_p = true;
     };
   };
   return nPolyAmp_p;
@@ -426,7 +427,7 @@ Vector<Int>& GJonesPolyMBuf::nPolyPhase()
   if (connectedToIter()) {
     if (!nPolyPhaseOK_p) {
       calMainCol()->nPolyPhase().getColumn (nPolyPhase_p);
-      nPolyPhaseOK_p = True;
+      nPolyPhaseOK_p = true;
     };
   };
   return nPolyPhase_p;
@@ -445,7 +446,7 @@ Array<Double>& GJonesPolyMBuf::polyCoeffAmp()
   if (connectedToIter()) {
     if (!polyCoeffAmpOK_p) {
       calMainCol()->polyCoeffAmp().getColumn (polyCoeffAmp_p);
-      polyCoeffAmpOK_p = True;
+      polyCoeffAmpOK_p = true;
     };
   };
   return polyCoeffAmp_p;
@@ -464,7 +465,7 @@ Array<Double>& GJonesPolyMBuf::polyCoeffPhase()
   if (connectedToIter()) {
     if (!polyCoeffPhaseOK_p) {
       calMainCol()->polyCoeffPhase().getColumn (polyCoeffPhase_p);
-      polyCoeffPhaseOK_p = True;
+      polyCoeffPhaseOK_p = true;
     };
   };
   return polyCoeffPhase_p;
@@ -483,7 +484,7 @@ Vector<String>& GJonesPolyMBuf::phaseUnits()
   if (connectedToIter()) {
     if (!phaseUnitsOK_p) {
       calMainCol()->phaseUnits().getColumn (phaseUnits_p);
-      phaseUnitsOK_p = True;
+      phaseUnitsOK_p = true;
     };
   };
   return phaseUnits_p;
@@ -626,10 +627,10 @@ void GJonesSplineMBuf::invalidate()
   GJonesPolyMBuf::invalidate();
 
   // Set all cache flags to false
-  nKnotsAmpOK_p = False;
-  nKnotsPhaseOK_p = False;
-  splineKnotsAmpOK_p = False;
-  splineKnotsPhaseOK_p = False;
+  nKnotsAmpOK_p = false;
+  nKnotsPhaseOK_p = false;
+  splineKnotsAmpOK_p = false;
+  splineKnotsPhaseOK_p = false;
 };
 
 //----------------------------------------------------------------------------
@@ -734,7 +735,7 @@ Bool GJonesSplineMBuf::fillMatchingRows (const Vector<Int>& matchingRows,
 //    sRefAnt             const Int &            Reference antenna id.
 //
   // Initialization
-  Bool retval = False;
+  Bool retval = false;
 
   // Extend parent method
   GJonesPolyMBuf::fillMatchingRows (matchingRows, sFreqGrpName, sPolyType, 
@@ -748,7 +749,7 @@ Bool GJonesSplineMBuf::fillMatchingRows (const Vector<Int>& matchingRows,
   Int nMatch = matchingRows.nelements();
 
   if (nMatch > 0) {
-    retval = True;
+    retval = true;
 
 
     // Resize the spline knot arrays in ampltidue and phase
@@ -812,7 +813,7 @@ Vector<Int>& GJonesSplineMBuf::nKnotsAmp()
   if (connectedToIter()) {
     if (!nKnotsAmpOK_p) {
       calMainCol()->nKnotsAmp().getColumn (nKnotsAmp_p);
-      nKnotsAmpOK_p = True;
+      nKnotsAmpOK_p = true;
     };
   };
   return nKnotsAmp_p;
@@ -831,7 +832,7 @@ Vector<Int>& GJonesSplineMBuf::nKnotsPhase()
   if (connectedToIter()) {
     if (!nKnotsPhaseOK_p) {
       calMainCol()->nKnotsPhase().getColumn (nKnotsPhase_p);
-      nKnotsPhaseOK_p = True;
+      nKnotsPhaseOK_p = true;
     };
   };
   return nKnotsPhase_p;
@@ -850,7 +851,7 @@ Array<Double>& GJonesSplineMBuf::splineKnotsAmp()
   if (connectedToIter()) {
     if (!splineKnotsAmpOK_p) {
       calMainCol()->splineKnotsAmp().getColumn (splineKnotsAmp_p);
-      splineKnotsAmpOK_p = True;
+      splineKnotsAmpOK_p = true;
     };
   };
   return splineKnotsAmp_p;
@@ -869,7 +870,7 @@ Array<Double>& GJonesSplineMBuf::splineKnotsPhase()
   if (connectedToIter()) {
     if (!splineKnotsPhaseOK_p) {
       calMainCol()->splineKnotsPhase().getColumn (splineKnotsPhase_p);
-      splineKnotsPhaseOK_p = True;
+      splineKnotsPhaseOK_p = true;
     };
   };
   return splineKnotsPhase_p;

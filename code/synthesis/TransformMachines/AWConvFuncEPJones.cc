@@ -49,6 +49,7 @@
 
 #define MAX_FREQ 1e30
 
+using namespace casacore;
 namespace casa{
   //
   //----------------------------------------------------------------------

@@ -48,6 +48,7 @@
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 
+using namespace casacore;
 using namespace casa;
 
 // This program tests the class AsdmStMan and related classes.
@@ -209,9 +210,9 @@ void createTable (uInt ntime, uInt nant,
   // The name of the file is table.f<i>index, where <i> is the seqnr
   // of the data manager.
   ostringstream oss;
-  oss << RODataManAccessor(tab, "DATA", True).dataManagerSeqNr();
+  oss << RODataManAccessor(tab, "DATA", true).dataManagerSeqNr();
   writeIndex (tab.tableName() + "/table.f" + String(oss.str()),
-              False, bdfNames, index);
+              false, bdfNames, index);
 }
 
 // Read back all data and check if they are as expected.
@@ -241,8 +242,8 @@ void readTable (uInt ntime, uInt nant,
   Matrix<Complex> expAuto(autonpol, autonchan);
   indgen (expCross, Complex(0,1), Complex(2,2));
   indgen (expAuto, Complex(0,0), Complex(1,0));
-  Matrix<Bool> expCrossFlag(crossnpol, crossnchan, False);
-  Matrix<Bool> expAutoFlag(autonpol, autonchan, False);
+  Matrix<Bool> expCrossFlag(crossnpol, crossnchan, false);
+  Matrix<Bool> expAutoFlag(autonpol, autonchan, false);
   Vector<Float> expCrossWS(crossnpol, 1.);
   Vector<Float> expAutoWS(autonpol, 1.);
   uInt rownr = 0;

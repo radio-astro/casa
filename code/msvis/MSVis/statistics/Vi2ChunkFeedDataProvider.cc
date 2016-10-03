@@ -28,6 +28,7 @@
 #include <msvis/MSVis/statistics/Vi2ChunkFeedDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
+using namespace casacore;
 namespace casa {
 
 Vi2ChunkFeed1DataProvider::Vi2ChunkFeed1DataProvider(
@@ -56,4 +57,5 @@ Vi2ChunkFeed2DataProvider::dataArray() {
 	return vi2->getVisBuffer()->feed2();
 }
 
+using namespace casacore;
 } // namespace casa

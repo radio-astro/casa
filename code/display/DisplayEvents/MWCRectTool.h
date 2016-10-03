@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Constructor
 		MWCRectTool(Display::KeySym keysym = Display::K_Pointer_Button1,
-		            const Bool persistent = False);
+		            const casacore::Bool persistent = false);
 
 		// Destructor
 		virtual ~MWCRectTool();
@@ -97,13 +97,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void disable();
 
 		// reset to non-existent, non-active rectangle.
-		// Refreshes if necessary to erase (unless skipRefresh==True  In
+		// Refreshes if necessary to erase (unless skipRefresh==true  In
 		// that case, the caller should do the refresh itself).
 		// (Does not unregister from WCs or disable future event handling).
-		virtual void reset(Bool skipRefresh=False);
+		virtual void reset(casacore::Bool skipRefresh=false);
 
 		// Is a rectangle currently defined?
-		virtual Bool rectangleDefined() {
+		virtual casacore::Bool rectangleDefined() {
 			return itsRectangleExists;
 		}
 
@@ -142,56 +142,56 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Retrieve the rectangle coordinates, in screen pixels.
 		// Anchor (if applicable) is (x1,y1).  Valid during the output callbacks;
 		// to be used by them, as well as internally.
-		virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
+		virtual void get(casacore::Int &x1, casacore::Int &y1, casacore::Int &x2, casacore::Int &y2) const ;
 
 	private:
 
 		// set the pixel coordinates of the rectangle
-		virtual void set(const Int &x1, const Int &y1,
-		                 const Int &x2, const Int &y2);
+		virtual void set(const casacore::Int &x1, const casacore::Int &y1,
+		                 const casacore::Int &x2, const casacore::Int &y2);
 
 		// get only the anchor point
-		virtual void get(Int &x1, Int &y1) const;
+		virtual void get(casacore::Int &x1, casacore::Int &y1) const;
 
 
 		// does the rectangle persist after double clicks (until a new one
 		// is started)?
-		Bool itsRectanglePersistent;
+		casacore::Bool itsRectanglePersistent;
 
 		// do we have a rectangle yet?
-		// (if True, itsCurrentWC, itsEmitted, P1, and P2 are valid)
-		Bool itsRectangleExists;
+		// (if true, itsCurrentWC, itsEmitted, P1, and P2 are valid)
+		casacore::Bool itsRectangleExists;
 
 		// was the button pressed in the rectangle (or, if none, in an active WC)
 		// and not yet released/reset?
-		Bool itsActive;
+		casacore::Bool itsActive;
 
-		// (valid only if itsActive==True):
-		// True = being moved     False = being resized
-		Bool itsMoving;
+		// (valid only if itsActive==true):
+		// true = being moved     false = being resized
+		casacore::Bool itsMoving;
 
-		// (valid only if itsRectangleExists==True)
+		// (valid only if itsRectangleExists==true)
 		// Has doubleInside/Outside been called for this rectangle?  If so, a
 		// key press outside the rectangle will start a new rectangle, as if
-		// itsRectangleExists were False.
+		// itsRectangleExists were false.
 		// However, a key press inside the rectangle will reset
-		// itsEmitted to False, allowing the rectangle to be reused
+		// itsEmitted to false, allowing the rectangle to be reused
 		// (possibly moved or resized, and emitted again).
-		Bool itsEmitted;
+		casacore::Bool itsEmitted;
 
 		// (Linear) coordinates of the rectangle (invariant over zooms, but not
 		// coordinate system changes.  To do: support the WorldCoordinateChange
 		// refresh reason, and reset this tool when it occurs).
-		Vector<Double> itsP1, itsP2;
+		casacore::Vector<casacore::Double> itsP1, itsP2;
 
 		// storage of the handle (pixel) coordinates
-		Vector<Int> itsHX, itsHY;
+		casacore::Vector<casacore::Int> itsHX, itsHY;
 
 		// position that move started from
-		Int itsBaseMoveX, itsBaseMoveY;
+		casacore::Int itsBaseMoveX, itsBaseMoveY;
 
 		// store the times of the last two presses here:
-		Double itsLastPressTime, its2ndLastPressTime;
+		casacore::Double itsLastPressTime, its2ndLastPressTime;
 
 	};
 

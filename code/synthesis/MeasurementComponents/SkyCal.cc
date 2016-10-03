@@ -32,6 +32,7 @@
 //#include <libsakura/sakura.h>
 #include <synthesis/MeasurementComponents/SkyCal.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template class SkyCal<Float, Float>;

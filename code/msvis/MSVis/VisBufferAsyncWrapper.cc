@@ -1,9 +1,11 @@
 #include <msvis/MSVis/VisBufferAsyncWrapper.h>
 
 #include "AsynchronousTools.h"
+using namespace casacore;
 using namespace casa::async;
 
 #include "UtilJ.h"
+using namespace casacore;
 using namespace casa::utilj;
 
 #include <msvis/MSVis/AsynchronousInterface.h>
@@ -19,6 +21,7 @@ using namespace casa::utilj;
     {if (casa::asyncio::AsynchronousInterface::logThis (level)) \
          Logger::get()->log (__VA_ARGS__);};
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 VisBufferAsyncWrapper::VisBufferAsyncWrapper ()
@@ -55,7 +58,7 @@ VisBufferAsyncWrapper::operator= (const VisBufferAsyncWrapper & other)
 {
     if (this != & other){
 
-        assign (other, True);
+        assign (other, true);
     }
 
     return * this;
@@ -174,7 +177,7 @@ VisBufferAsyncWrapper::attachWrappedVb (ROVisibilityIterator * iter)
 
     if (wrappedVba_p != NULL){
         wrappedVba_p->visIter_p = iter;
-        wrappedVba_p->twoWayConnection_p = False;
+        wrappedVba_p->twoWayConnection_p = false;
     }
 }
 
@@ -1631,5 +1634,6 @@ VisBufferAsyncWrapper::wrap (VisBufferAsync * vba)
     attachWrappedVb (wrappedVisIterAsync_p);
 }
 
+using namespace casacore;
 } // end namespace casa
 

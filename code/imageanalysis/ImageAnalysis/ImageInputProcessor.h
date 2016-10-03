@@ -65,92 +65,92 @@ public:
 
 	// Process the inputs. Output parameters are the pointer to the
 	// opened <src>image</src>, the specified region as a record (<src>
-	// regionRecord</src>, and a <src>diagnostics</src> String describing
+	// regionRecord</src>, and a <src>diagnostics</src> casacore::String describing
 	// how the region was chosen. If provided, <src>regionPtr</src> should
-	// be a pointer to a record created by a RegionManager method.
+	// be a pointer to a record created by a casacore::RegionManager method.
 	// <src>stokesControl</src> indicates default
 	// stokes range to use if <src>stokes</src> is blank. In this case <src>stokes</src>
 	// will be set the the value of stokes that will be used. If
-	// <src>allowMultipleBoxes</src> is False, an exception will be thrown if
+	// <src>allowMultipleBoxes</src> is false, an exception will be thrown if
 	// the inputs specify multiple n-dimensional rectangles. This should usually
 	// be set to false if the caller can only deal with a single n-dimensional
 	// rectangular region.
     /*
     template<class T> void process(
-    	SPIIT image, Record& regionRecord,
-    	String& diagnostics,
+    	SPIIT image, casacore::Record& regionRecord,
+    	casacore::String& diagnostics,
     	std::vector<OutputDestinationChecker::OutputStruct> *const outputStruct,
-    	String& stokes,	const String& imagename,
-    	const Record* regionPtr, const String& regionName,
-    	const String& box, const String& chans,
+    	casacore::String& stokes,	const casacore::String& imagename,
+    	const casacore::Record* regionPtr, const casacore::String& regionName,
+    	const casacore::String& box, const casacore::String& chans,
     	const CasacRegionManager::StokesControl& stokesControl,
-    	const Bool& allowMultipleBoxes,
-    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
-    	Bool verbose=True
+    	const casacore::Bool& allowMultipleBoxes,
+    	const std::vector<casacore::Coordinate::Type> *const &requiredCoordinateTypes,
+    	casacore::Bool verbose=true
     );
 */
 	// Process the inputs. Use this version if the associated image already exists.
     // Output parameters the specified region as a record (<src>
-	// regionRecord</src>, and a <src>diagnostics</src> String describing
+	// regionRecord</src>, and a <src>diagnostics</src> casacore::String describing
 	// how the region was chosen. If provided, <src>regionPtr</src> should
-	// be a pointer to a record created by a RegionManager method.
+	// be a pointer to a record created by a casacore::RegionManager method.
     // <src>stokesControl</src> indicates default
 	// stokes range to use if <src>stokes</src> is blank. In this case <src>stokes</src>
 	// will be set the the value of stokes that will be used. If
-	// <src>allowMultipleBoxes</src> is False, an exception will be thrown if
+	// <src>allowMultipleBoxes</src> is false, an exception will be thrown if
 	// the inputs specify multiple n-dimensional rectangles. This should usually
 	// be set to false if the caller can only deal with a single n-dimensional
 	// rectangular region.
     template<class T> void process(
-    	Record& regionRecord,
-    	String& diagnostics,
+    	casacore::Record& regionRecord,
+    	casacore::String& diagnostics,
     	std::vector<OutputDestinationChecker::OutputStruct> *const outputStruct,
-    	String& stokes,
+    	casacore::String& stokes,
     	SPCIIT image,
-    	const Record* regionPtr,
-    	const String& regionName, const String& box,
-    	const String& chans,
+    	const casacore::Record* regionPtr,
+    	const casacore::String& regionName, const casacore::String& box,
+    	const casacore::String& chans,
     	const CasacRegionManager::StokesControl& stokesControl,
-    	const Bool& allowMultipleBoxes,
-    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
-    	Bool verbose=True
+    	const casacore::Bool& allowMultipleBoxes,
+    	const std::vector<casacore::Coordinate::Type> *const &requiredCoordinateTypes,
+    	casacore::Bool verbose=true
     );
 
     // Get the number of channels that have been selected. The process() method must
     // be called prior to calling this method or an exception is thrown.
-    uInt nSelectedChannels() const;
+    casacore::uInt nSelectedChannels() const;
 
 private:
-    LogIO *_log;
-    Bool _processHasRun;
-    uInt _nSelectedChannels;
+    casacore::LogIO *_log;
+    casacore::Bool _processHasRun;
+    casacore::uInt _nSelectedChannels;
 
     template<class T> void _process(
-    	Record& regionRecord, String& diagnostics,
+    	casacore::Record& regionRecord, casacore::String& diagnostics,
     	std::vector<OutputDestinationChecker::OutputStruct>* outputStruct,
-    	String& stokes, SPCIIT image,
-    	const Record *const &regionPtr,
-    	const String& regionName, const String& box,
-    	const String& chans, const CasacRegionManager::StokesControl& stokesControl,
-        const Bool& allowMultipleBoxes,
-    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes, Bool verbose
+    	casacore::String& stokes, SPCIIT image,
+    	const casacore::Record *const &regionPtr,
+    	const casacore::String& regionName, const casacore::String& box,
+    	const casacore::String& chans, const CasacRegionManager::StokesControl& stokesControl,
+        const casacore::Bool& allowMultipleBoxes,
+    	const std::vector<casacore::Coordinate::Type> *const &requiredCoordinateTypes, casacore::Bool verbose
     );
 
     // set region given a pointer to a region record.
     void _setRegion(
-    	Record& regionRecord, String& diagnostics,
-    	const Record *const regionPtr
+    	casacore::Record& regionRecord, casacore::String& diagnostics,
+    	const casacore::Record *const regionPtr
     ) const;
 
-    template<class T> void _setRegion(Record& regionRecord, String& diagnostics,
-    	const ImageInterface<T> *const image, const String& regionName
+    template<class T> void _setRegion(casacore::Record& regionRecord, casacore::String& diagnostics,
+    	const casacore::ImageInterface<T> *const image, const casacore::String& regionName
     ) const;
 
-    String _stokesFromRecord(
-    	const Record& region, const CoordinateSystem& csys
+    casacore::String _stokesFromRecord(
+    	const casacore::Record& region, const casacore::CoordinateSystem& csys
     ) const;
 
-    String _pairsToString(const std::vector<uInt>& pairs) const;
+    casacore::String _pairsToString(const std::vector<casacore::uInt>& pairs) const;
 
 };
 }

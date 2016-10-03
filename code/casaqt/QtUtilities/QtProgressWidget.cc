@@ -34,6 +34,7 @@
 #include <objc/message.h>
 #endif
 
+using namespace casacore;
 namespace casa {
 
 //////////////////////////////////

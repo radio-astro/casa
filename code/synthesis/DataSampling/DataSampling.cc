@@ -39,6 +39,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/sstream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 DataSampling::DataSampling(){}

@@ -29,6 +29,7 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 	QtCanvasManager::QtCanvasManager( QtDisplayPanelGui *dpg ) : dpg_(dpg) {

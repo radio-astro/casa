@@ -58,29 +58,29 @@ namespace casa {
 // For each column a specific Column class exists.
 // </synopsis>
 
-class AsdmColumn : public StManColumn
+class AsdmColumn : public casacore::StManColumn
 {
 public:
   explicit AsdmColumn (AsdmStMan* parent, int dtype)
-    : StManColumn (dtype),
+    : casacore::StManColumn (dtype),
       itsParent   (parent)
   {}
   virtual ~AsdmColumn();
   // All columns are not writable.
-  // However, we let AsdmColumn::isWritable() return True. If an actual write is done, 
+  // However, we let AsdmColumn::isWritable() return true. If an actual write is done, 
   // an exception will be thrown. This ensures that the StMan will work with MSMainColumns.
-  virtual Bool isWritable() const;
+  virtual casacore::Bool isWritable() const;
   // Set column shape of fixed shape columns; it does nothing.
-  virtual void setShapeColumn (const IPosition& shape);
+  virtual void setShapeColumn (const casacore::IPosition& shape);
   // Prepare the column. By default it does nothing.
   virtual void prepareCol();
 
 protected:
 
   template <typename T>
-  void getSlice (uInt rowNumber,
-                  const Slicer & slicer,
-                  casa::Array<T> * destination);
+  void getSlice (casacore::uInt rowNumber,
+                  const casacore::Slicer & slicer,
+                  casacore::Array<T> * destination);
 
   AsdmStMan* itsParent;
 };
@@ -93,10 +93,10 @@ public:
   explicit AsdmDataColumn (AsdmStMan* parent, int dtype)
     : AsdmColumn(parent, dtype) {}
   virtual ~AsdmDataColumn();
-  virtual IPosition shape (uInt rownr);
-  virtual void getArrayComplexV (uInt rowNr, Array<Complex>* dataPtr);
-  virtual void getSliceComplexV (uInt rowNumber, const Slicer & slicer,
-                                 Array<casa::Complex> * destination);
+  virtual casacore::IPosition shape (casacore::uInt rownr);
+  virtual void getArrayComplexV (casacore::uInt rowNr, casacore::Array<casacore::Complex>* dataPtr);
+  virtual void getSliceComplexV (casacore::uInt rowNumber, const casacore::Slicer & slicer,
+                                 casacore::Array<casacore::Complex> * destination);
 };
 
 // <summary>FLAG column in the ASDM Storage Manager.</summary>
@@ -107,11 +107,11 @@ public:
   explicit AsdmFlagColumn (AsdmStMan* parent, int dtype)
     : AsdmColumn(parent, dtype) {}
   virtual ~AsdmFlagColumn();
-  virtual casa::IPosition shape (casa::uInt rownr);
-  virtual void getArrayBoolV (casa::uInt rowNr,
-                              casa::Array<casa::Bool>* dataPtr);
-  virtual void getSliceBoolV (uInt rowNumber, const Slicer & slicer,
-                              Array<casa::Bool> * destination);
+  virtual casacore::IPosition shape (casacore::uInt rownr);
+  virtual void getArrayBoolV (casacore::uInt rowNr,
+                              casacore::Array<casacore::Bool>* dataPtr);
+  virtual void getSliceBoolV (casacore::uInt rowNumber, const casacore::Slicer & slicer,
+                              casacore::Array<casacore::Bool> * destination);
 };
 
 // <summary>WEIGHT column in the ASDM Storage Manager.</summary>
@@ -122,11 +122,11 @@ public:
   explicit AsdmWeightColumn (AsdmStMan* parent, int dtype)
     : AsdmColumn(parent, dtype) {}
   virtual ~AsdmWeightColumn();
-  virtual casa::IPosition shape (casa::uInt rownr);
-  virtual void getArrayfloatV (casa::uInt rowNr,
-                               casa::Array<casa::Float>* dataPtr);
-  virtual void getSlicefloatV (uInt rowNumber, const Slicer & slicer,
-                               Array<casa::Float> * destination);
+  virtual casacore::IPosition shape (casacore::uInt rownr);
+  virtual void getArrayfloatV (casacore::uInt rowNr,
+                               casacore::Array<casacore::Float>* dataPtr);
+  virtual void getSlicefloatV (casacore::uInt rowNumber, const casacore::Slicer & slicer,
+                               casacore::Array<casacore::Float> * destination);
 };
 
 // <summary>SIGMA column in the ASDM Storage Manager.</summary>
@@ -137,11 +137,11 @@ public:
   explicit AsdmSigmaColumn (AsdmStMan* parent, int dtype)
     : AsdmColumn(parent, dtype) {}
   virtual ~AsdmSigmaColumn();
-  virtual casa::IPosition shape (casa::uInt rownr);
-  virtual void getArrayfloatV (casa::uInt rowNr,
-                               casa::Array<casa::Float>* dataPtr);
-  virtual void getSlicefloatV (uInt rowNumber, const Slicer & slicer,
-                               Array<casa::Float> * destination);
+  virtual casacore::IPosition shape (casacore::uInt rownr);
+  virtual void getArrayfloatV (casacore::uInt rowNr,
+                               casacore::Array<casacore::Float>* dataPtr);
+  virtual void getSlicefloatV (casacore::uInt rowNumber, const casacore::Slicer & slicer,
+                               casacore::Array<casacore::Float> * destination);
 };
 
 

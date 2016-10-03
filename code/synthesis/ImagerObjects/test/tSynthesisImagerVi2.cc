@@ -56,7 +56,9 @@
 int main(int argc, char **argv)
 {
   using namespace std;
+using namespace casacore;
   using namespace casa;
+using namespace casacore;
   using namespace casa::test;
   try{
 
@@ -89,7 +91,7 @@ int main(int argc, char **argv)
 	  SynthesisImager* imgr = new SynthesisImagerVi2();
 	  imgr->selectData(msname, /*spw=*/"0",/*freqBeg*/"", /*freqEnd*/"", /*freqFrame*/MFrequency::LSRK, 
 			   /*field=*/"0",  /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
-			   /*taql*/"", /*usescratch*/False, /*readonly*/False);
+			   /*taql*/"", /*usescratch*/false, /*readonly*/false);
 	  cout <<"--Imager created for MeasurementSet object. " << endl;
 	  MeasurementSet tab(msname);
 	  MDirection phasecenter=MSFieldColumns(tab.field()).phaseDirMeas(0,0.0);
@@ -134,12 +136,12 @@ int main(int argc, char **argv)
 	  if (ftmName != "") gridpars.ftmachine=ftmName;
 	  gridpars.facets=1;
 	  //	  gridpars.imageName=imageName;
-	  gridpars.aTermOn=True;
-	  gridpars.psTermOn=False;
-	  gridpars.mTermOn=True;
-	  gridpars.wbAWP=True;
+	  gridpars.aTermOn=true;
+	  gridpars.psTermOn=false;
+	  gridpars.mTermOn=true;
+	  gridpars.wbAWP=true;
 	  gridpars.cfCache=cfCache;
-	  gridpars.conjBeams=True;
+	  gridpars.conjBeams=true;
 	  if(imtype==String("continuum")){
 	    std::string cmd=string("rm -rf ")+string(imageName)+string(".*");
 	    system(cmd.c_str());
@@ -201,11 +203,11 @@ int main(int argc, char **argv)
 //////#pragma omp for
 
 	  		  for (Int k=0; k < nchan; ++k){
-			    /*    std::shared_ptr<ImageInterface<Float> >subresid=std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*resid, k, k, True));
-			    SHARED_PTR<ImageInterface<Float> >subpsf= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*psf, k, k, True));
-			    SHARED_PTR<ImageInterface<Float> > subwgt= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*wgt, k, k, True));
-			    SHARED_PTR<ImageInterface<Float> > submod=std::make_shared<SubImage<Float> >( SpectralImageUtil::getChannel(*mod, k, k, True));
-			    SHARED_PTR<ImageInterface<Float> > subrestor= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*restor, k, k, True));
+			    /*    std::shared_ptr<ImageInterface<Float> >subresid=std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*resid, k, k, true));
+			    SHARED_PTR<ImageInterface<Float> >subpsf= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*psf, k, k, true));
+			    SHARED_PTR<ImageInterface<Float> > subwgt= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*wgt, k, k, true));
+			    SHARED_PTR<ImageInterface<Float> > submod=std::make_shared<SubImage<Float> >( SpectralImageUtil::getChannel(*mod, k, k, true));
+			    SHARED_PTR<ImageInterface<Float> > subrestor= std::make_shared<SubImage<Float> >(SpectralImageUtil::getChannel(*restor, k, k, true));
 			    String freqBeg=String::toString(SpectralImageUtil::worldFreq(subresid->coordinates(), Double(-0.5)))+"Hz";
 			    String freqEnd=String::toString(SpectralImageUtil::worldFreq(subresid->coordinates(), Double(0.5)))+"Hz";
 			    CountedPtr<SIImageStore> subImStor=new SIImageStore(submod, subresid, subpsf, subwgt, subrestor, nullptr, nullptr, resid->coordinates(), "");
@@ -217,7 +219,7 @@ int main(int argc, char **argv)
 	  			  //can select the right channel to match subimage
 			    subImgr.selectData(msname, /*spw=*/"0", freqBeg, freqEnd, MFrequency::LSRK, /*field=*/"0",  
 					       /*antenna=*/"",  /*timestr*/"", /*scan*/"", /*obs*/"", /*state*/"",/*uvdist*/"", 
-					       /*taql*/"", /*usescratch*/False, /*readonly*/False, /*incrmodel*/True);
+					       /*taql*/"", /*usescratch*/false, /*readonly*/false, /*incrmodel*/true);
 
 			    subImgr.defineImage(subImStor, "gridft");
 			    subImgr.weight("natural");

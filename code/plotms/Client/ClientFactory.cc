@@ -30,6 +30,7 @@
 #include <plotms/Client/Client.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/Client/ClientScript.h>
+using namespace casacore;
 namespace casa {
 
 ClientFactory::ClientFactory() {
@@ -55,4 +56,5 @@ ClientFactory::~ClientFactory() {
 	// TODO Auto-generated destructor stub
 }
 
+using namespace casacore;
 } /* namespace casa */

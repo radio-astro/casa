@@ -39,6 +39,7 @@
 #include <iostream>
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 const String SplatalogueTable::SPECIES = "SPECIES";
@@ -74,19 +75,19 @@ SplatalogueTable::SplatalogueTable(
 	const String& elUnit, const String& euUnit  
 ) : Table(snt, nrow), _freqUnit(freqUnit), _smu2Unit(smu2Unit),
 	 _elUnit(elUnit), _euUnit(euUnit) {
-	_construct(True);
+	_construct(true);
 }
 
 SplatalogueTable::SplatalogueTable(
 	const String& tablename
 ) : Table(tablename) {
-	_construct(False);
+	_construct(false);
 }
 
 SplatalogueTable::SplatalogueTable(
 	const Table& table
 ) : Table(table) {
-	_construct(False);
+	_construct(false);
 }
 
 String SplatalogueTable::getFrequencyUnit() const {
@@ -259,13 +260,13 @@ void SplatalogueTable::_construct(const Bool setup) {
 		Vector<String>::const_iterator riter=reqColNames.begin();
 			riter!=reqColNames.end(); riter++
 	) {
-		Bool found = False;
+		Bool found = false;
 		for (
 			Vector<String>::const_iterator iter=colNames.begin();
 				iter!=colNames.end(); iter++
 			) {
 			if (*iter == *riter) {
-				found = True;
+				found = true;
 				break;
 			}
 		}
@@ -315,7 +316,7 @@ void SplatalogueTable::_addKeywords() {
 	el.rwKeywordSet().define("Unit", _elUnit);
 	ScalarColumn<Float> eu(*this, EU);
 	eu.rwKeywordSet().define("Unit", _euUnit);
-	rwKeywordSet().define(ISSPLAT, True);
+	rwKeywordSet().define(ISSPLAT, true);
 	Time now;
 	MVTime mv(now);
 	mv.setFormat(MVTime::YMD, 3);

@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSWorldRectangle();
-		DSWorldRectangle(const Record& settings, PanelDisplay* pd);
+		DSWorldRectangle(const casacore::Record& settings, PanelDisplay* pd);
 		DSWorldRectangle(DSScreenRectangle& other, PanelDisplay* pd);
 		DSWorldRectangle(DSPixelRectangle& other, PanelDisplay* pd);
 
@@ -62,22 +62,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// So we can update our WCs
 		// <group>
-		virtual void move(const Float& dX, const Float& dY);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
-		virtual void rotate(const Float& angle);
-		virtual void changePoint(const Vector<Float>&pos, const Int n);
-		virtual void changePoint(const Vector<Float>& pos);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
+		virtual void rotate(const casacore::Float& angle);
+		virtual void changePoint(const casacore::Vector<casacore::Float>&pos, const casacore::Int n);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& pos);
 		virtual void draw(PixelCanvas* pc);
 		// </group>
 
 		// PLUS OTHERS!!
 
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 
 
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSRectangle::getOptions();
 		}
 
@@ -88,7 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// Based on a pixel center
-		//  virtual Bool chooseWC(const Float& centerX, const Float& centerY,
+		//  virtual casacore::Bool chooseWC(const casacore::Float& centerX, const casacore::Float& centerY,
 		//		PanelDisplay* pdx,
 		//WorldCanvas* wc);
 
@@ -100,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// The center of the marker in world co-ords.
 		// x, y, major, minor, angle
-		Vector<Quantum<Double> > itsWorldParameters;
+		casacore::Vector<casacore::Quantum<casacore::Double> > itsWorldParameters;
 
 		void updateWCoords();
 	};

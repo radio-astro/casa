@@ -48,16 +48,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSPixelText();
-		DSPixelText(const Record& settings);
+		DSPixelText(const casacore::Record& settings);
 		DSPixelText(DSScreenText& other);
 		DSPixelText(DSWorldText& other);
 
 		virtual ~DSPixelText();
 
-		virtual Record getOptions();
-		virtual Bool setOptions(const Record& settings);
+		virtual casacore::Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSText::getOptions();
 		}
 

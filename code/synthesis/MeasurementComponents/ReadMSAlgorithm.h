@@ -51,16 +51,16 @@ class ReadMSAlgorithm : public Algorithm {
   void put();
 
   // Return the name of the algorithm
-  String &name();
+  casacore::String &name();
 
  private:
   // Local copies of the data and input parameters
-  PagedArray<Float> *model_sl_p;
-  Int          msid;
-  String       myName;
-  String       msName;
-  Int         status;
-  Int cache_p;
+  casacore::PagedArray<casacore::Float> *model_sl_p;
+  casacore::Int          msid;
+  casacore::String       myName;
+  casacore::String       msName;
+  casacore::Int         status;
+  casacore::Int cache_p;
 
   // Read the MSset
   void task();

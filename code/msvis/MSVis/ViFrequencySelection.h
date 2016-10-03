@@ -40,10 +40,14 @@
 using std::set;
 using std::vector;
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class MeasurementSet;
 class MSSelection;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 namespace vi {
 
@@ -53,7 +57,7 @@ namespace vi {
 //
 // A frequency selection is a way to select the channels of interest from the
 // data in a single MeasurementSet.  The user will provide one or more selections
-// for the MS; each selection effectively specify the desired channel data in a
+// for the casacore::MS; each selection effectively specify the desired channel data in a
 // specified spectral window.  If the user uses the FrequencySelectionChannel
 // class then the selection simply selects a range of channels.  The other derived
 // class is FrequencySelectionReferential which specifies a range of frequencies
@@ -61,7 +65,7 @@ namespace vi {
 // the frame-related selection will not necessarily select the same channels across
 // the entire MS.
 //
-// The frame of reference will either be one defined in the MFrequency::Types enum
+// The frame of reference will either be one defined in the casacore::MFrequency::Types enum
 // or one of the special "frames" defined in this class.
 
 class FrequencySelection {
@@ -72,16 +76,16 @@ public:
 
     virtual ~FrequencySelection (){}
 
-    void addCorrelationSlices (const Vector <Vector <Slice> > & slices);
+    void addCorrelationSlices (const casacore::Vector <casacore::Vector <casacore::Slice> > & slices);
     virtual FrequencySelection * clone () const = 0;
-    virtual Bool empty () const = 0;
-    void filterByWindow (Int windowId = -1) const;
-    Vector <Slice> getCorrelationSlices (Int polarizationId) const;
-    Int getFrameOfReference () const;
+    virtual casacore::Bool empty () const = 0;
+    void filterByWindow (casacore::Int windowId = -1) const;
+    casacore::Vector <casacore::Slice> getCorrelationSlices (casacore::Int polarizationId) const;
+    casacore::Int getFrameOfReference () const;
     virtual set<int> getSelectedWindows () const = 0;
-    virtual String toString () const = 0;
+    virtual casacore::String toString () const = 0;
 
-    static String frameName (Int referenceFrame);
+    static casacore::String frameName (casacore::Int referenceFrame);
 
 //**********************************************************************
 // Internal methods below this line
@@ -89,16 +93,16 @@ public:
 
 protected:
 
-    FrequencySelection (Int referenceFrame)
+    FrequencySelection (casacore::Int referenceFrame)
     : filterWindowId_p (-1),
       referenceFrame_p (referenceFrame) {}
-    Int filterWindow() const;
+    casacore::Int filterWindow() const;
 
 private:
 
-    Vector <Vector <Slice> > correlationSlices_p; // outer index is polarization id
-    mutable Int filterWindowId_p;
-    Int referenceFrame_p;
+    casacore::Vector <casacore::Vector <casacore::Slice> > correlationSlices_p; // outer index is polarization id
+    mutable casacore::Int filterWindowId_p;
+    casacore::Int referenceFrame_p;
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -118,19 +122,19 @@ public:
     class Element {
     public:
 
-        Element (Int spectralWindow = -1, Int firstChannel = -1, Int nChannels = -1, Int increment = 1)
+        Element (casacore::Int spectralWindow = -1, casacore::Int firstChannel = -1, casacore::Int nChannels = -1, casacore::Int increment = 1)
         : firstChannel_p (firstChannel),
           increment_p (increment),
           nChannels_p (nChannels),
           spectralWindow_p (spectralWindow)
         {}
 
-        Slice getSlice () const { return Slice (firstChannel_p, nChannels_p, increment_p);}
+        casacore::Slice getSlice () const { return casacore::Slice (firstChannel_p, nChannels_p, increment_p);}
 
-        Int firstChannel_p;
-        Int increment_p;
-        Int nChannels_p;
-        Int spectralWindow_p;
+        casacore::Int firstChannel_p;
+        casacore::Int increment_p;
+        casacore::Int nChannels_p;
+        casacore::Int spectralWindow_p;
     };
 
     typedef std::vector<Element> Elements;
@@ -138,16 +142,16 @@ public:
 
     FrequencySelectionUsingChannels () : FrequencySelection (ByChannel) {}
 
-    void add (Int spectralWindow, Int firstChannel, Int nChannels, Int increment = 1);
-    void add (const MSSelection & msSelection, const MeasurementSet * ms);
+    void add (casacore::Int spectralWindow, casacore::Int firstChannel, casacore::Int nChannels, casacore::Int increment = 1);
+    void add (const casacore::MSSelection & msSelection, const casacore::MeasurementSet * ms);
     const_iterator begin () const;
     FrequencySelection * clone () const;
-    Bool empty () const;
+    casacore::Bool empty () const;
     const_iterator end () const;
-    Int getNChannels (Int spectralWindowId) const;
+    casacore::Int getNChannels (casacore::Int spectralWindowId) const;
     set<int> getSelectedWindows () const;
     size_t size () const;
-    String toString () const;
+    casacore::String toString () const;
 
 //**********************************************************************
 // Internal methods below this line
@@ -178,40 +182,40 @@ public:
     class Element {
     public:
 
-        Element (Int spectralWindow = -1, Double beginFrequency = 0,
-                 Double endFrequency = 0, Double increment = 0)
+        Element (casacore::Int spectralWindow = -1, casacore::Double beginFrequency = 0,
+                 casacore::Double endFrequency = 0, casacore::Double increment = 0)
         : beginFrequency_p (beginFrequency),
           endFrequency_p (endFrequency),
           increment_p (increment),
           spectralWindow_p (spectralWindow)
           {}
 
-        Double getBeginFrequency () const;
-        Double getEndFrequency () const;
+        casacore::Double getBeginFrequency () const;
+        casacore::Double getEndFrequency () const;
 
     private:
 
         friend class FrequencySelectionUsingFrame;
 
-        Double beginFrequency_p;
-        Double endFrequency_p;
-        Double increment_p;
-        Int spectralWindow_p;
+        casacore::Double beginFrequency_p;
+        casacore::Double endFrequency_p;
+        casacore::Double increment_p;
+        casacore::Int spectralWindow_p;
     };
 
     typedef std::vector<Element> Elements;
     typedef Elements::const_iterator const_iterator;
 
-    FrequencySelectionUsingFrame (MFrequency::Types frameOfReference);
+    FrequencySelectionUsingFrame (casacore::MFrequency::Types frameOfReference);
 
-    void add (Int spectralWindow, Double bottomFrequency, Double topFrequency);
-    //void add (Int spectralWindow, Double bottomFrequency, Double topFrequency, Double increment);
+    void add (casacore::Int spectralWindow, casacore::Double bottomFrequency, casacore::Double topFrequency);
+    //void add (casacore::Int spectralWindow, casacore::Double bottomFrequency, casacore::Double topFrequency, casacore::Double increment);
     const_iterator begin () const;
     FrequencySelection * clone () const;
-    Bool empty () const;
+    casacore::Bool empty () const;
     const_iterator end () const;
     set<int> getSelectedWindows () const;
-    String toString () const;
+    casacore::String toString () const;
 
 private:
 
@@ -226,7 +230,7 @@ private:
 //
 //    A FrequenceSelections object is a collection of FrequencySelection objects.
 //    It is intended to allow the user to provide a frequency selection per
-//    MS when the VisibilityIterator is sweeping multiple MSs.  All selections
+//    casacore::MS when the VisibilityIterator is sweeping multiple MSs.  All selections
 //    included in the collection must have the same frame of reference; an
 //    exception will be thrown when attempting to add a frame with a different
 //    frame of reference.
@@ -241,11 +245,11 @@ public:
 
     void add (const FrequencySelection & selection);
     FrequencySelections * clone () const;
-    void filterToSpectralWindow (Int spectralWindowId);
-    const FrequencySelection & get (Int msIndex) const;
-    Int getFrameOfReference () const;
-    Bool isSpectralWindowSelected (Int msIndex, Int spectralWindowId) const;
-    Int size () const;
+    void filterToSpectralWindow (casacore::Int spectralWindowId);
+    const FrequencySelection & get (casacore::Int msIndex) const;
+    casacore::Int getFrameOfReference () const;
+    casacore::Bool isSpectralWindowSelected (casacore::Int msIndex, casacore::Int spectralWindowId) const;
+    casacore::Int size () const;
 
 //**********************************************************************
 // Internal methods below this line
@@ -254,10 +258,10 @@ public:
 
 private:
 
-    typedef std::set<pair<Int, Int> > SelectedWindows; // pair=(msIndex,spwId)
+    typedef std::set<pair<casacore::Int, casacore::Int> > SelectedWindows; // pair=(msIndex,spwId)
 
     const FrequencySelectionUsingChannels defaultSelection_p;
-    mutable Int filterWindow_p;
+    mutable casacore::Int filterWindow_p;
     SelectedWindows selectedWindows_p;
 
     typedef std::vector<FrequencySelection *> Selections;

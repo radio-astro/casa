@@ -65,7 +65,7 @@ public:
 	ITable.resize(Size);RTable.resize(Size);
 
 	Step=PI2/Size;
-	for (Int i=0;i<Size;i++) 
+	for (casacore::Int i=0;i<Size;i++) 
 	  {
 	    ITable(i)=sin(i*Step);
 	    RTable(i)=cos(i*Step);
@@ -106,10 +106,10 @@ public:
 
   inline T imag(T arg) {return ITable[hashFunction(arg)];}
   inline T real(T arg) {return RTable[hashFunction(arg)];}
-  inline void reim(T& arg,T& re, T&im) {Int N=HASH(arg);re=RTable[N];im=ITable[N];}
+  inline void reim(T& arg,T& re, T&im) {casacore::Int N=HASH(arg);re=RTable[N];im=ITable[N];}
 
 private:
-  Vector<T> RTable, ITable;
+  casacore::Vector<T> RTable, ITable;
   T Step;
   int Size;
 };

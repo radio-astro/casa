@@ -49,6 +49,7 @@
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ScalarColumn.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Recommended constructor.
@@ -386,25 +387,25 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   hasEphemInfo_p = found && get_interpolated_value(delta_p, "Rho",
                                                    tab, rowbef, rowclosest,
                                                    rowaft, f, dt, tp1mt0,
-                                                   t0mtm1, True);
+                                                   t0mtm1, true);
 
   // Heliocentric distance, in AU.
   has_r_p = get_interpolated_value(r_p, "r", tab, rowbef, rowclosest, rowaft,
-                                   f, dt, tp1mt0, t0mtm1, False);
+                                   f, dt, tp1mt0, t0mtm1, false);
 
   // Illumination, in %.
   has_illu_p = get_interpolated_value(illu_p, "illu", tab, rowbef, rowclosest,
-                                      rowaft, f, dt, tp1mt0, t0mtm1, False);
+                                      rowaft, f, dt, tp1mt0, t0mtm1, false);
   if(has_illu_p)
     has_illu_p *= 0.01;  // Convert it to a fraction.
 
   // RA, in deg.
   has_ra_p = get_interpolated_value(ra_p, "RA", tab, rowbef, rowclosest,
-                                    rowaft, f, dt, tp1mt0, t0mtm1, False);
+                                    rowaft, f, dt, tp1mt0, t0mtm1, false);
 
   // Declination, in deg.
   has_dec_p = get_interpolated_value(dec_p, "DEC", tab, rowbef, rowclosest,
-                                     rowaft, f, dt, tp1mt0, t0mtm1, False);
+                                     rowaft, f, dt, tp1mt0, t0mtm1, false);
 
   return found;
 }
@@ -421,7 +422,7 @@ Bool FluxCalc_SS_JPL_Butler::get_interpolated_value(Double& val,
                                                     const Double t0mtm1,
                                                     const Bool verbose)
 {
-  Bool foundIt = False;
+  Bool foundIt = false;
   LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "get_interpolated_value"));
 
   if(tab.actualTableDesc().isColumn(colname)){
@@ -451,7 +452,7 @@ Bool FluxCalc_SS_JPL_Butler::get_interpolated_value(Double& val,
       myf = 0.0;
     }
     val = col_0 + myf * (col_p1 - col_m1 + myf * d2y);
-    foundIt = True;
+    foundIt = true;
   }
   else
     os << LogIO::NORMAL

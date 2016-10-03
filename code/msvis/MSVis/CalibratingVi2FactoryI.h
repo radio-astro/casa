@@ -40,11 +40,11 @@ public:
 
   typedef CalibratingVi2FactoryI* (*CalViFacGenerator)();
 
-  typedef CalibratingVi2FactoryI* (*CalViFac_byRec_Generator)(MeasurementSet*,
-							      const Record&,
+  typedef CalibratingVi2FactoryI* (*CalViFac_byRec_Generator)(casacore::MeasurementSet*,
+							      const casacore::Record&,
 							      const IteratingParameters&);
-  static Bool setGenerator(CalViFacGenerator);
-  static Bool set_byRec_Generator(CalViFac_byRec_Generator);
+  static casacore::Bool setGenerator(CalViFacGenerator);
+  static casacore::Bool set_byRec_Generator(CalViFac_byRec_Generator);
 
   CalibratingVi2FactoryI() {}
   virtual ~CalibratingVi2FactoryI() {}
@@ -53,16 +53,16 @@ public:
   static CalibratingVi2FactoryI* generate();
 
   // Public function to generate myself via static byRec_generator_p
-  static CalibratingVi2FactoryI* generate(MeasurementSet* ms,
-					  const Record& calrec,
+  static CalibratingVi2FactoryI* generate(casacore::MeasurementSet* ms,
+					  const casacore::Record& calrec,
 					  const IteratingParameters& iterpar);
 
   // Public functions to initialize a generic CVi2F (pure virtual)
-  virtual void initialize(MeasurementSet* ms,
-			  const Record& calrec,
+  virtual void initialize(casacore::MeasurementSet* ms,
+			  const casacore::Record& calrec,
 			  const IteratingParameters& iterpar=IteratingParameters())=0;
-  virtual void initialize(MeasurementSet* ms,
-			  const String& callib,
+  virtual void initialize(casacore::MeasurementSet* ms,
+			  const casacore::String& callib,
 			  const IteratingParameters& iterpar=IteratingParameters())=0;
 
 protected:

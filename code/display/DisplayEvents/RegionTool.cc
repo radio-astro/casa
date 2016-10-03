@@ -28,6 +28,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/DisplayErrors.h>
 
+using namespace casacore;
 namespace casa {
 	void RegionTool::keyPressed(const WCPositionEvent &/*ev*/) {  }
 	void RegionTool::keyReleased(const WCPositionEvent &) {  }

@@ -95,10 +95,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// to the height of the marker in pixels.
 		// <group>
 		DSMarker();
-		DSMarker(const Float& xPos, const Float& yPos,
+		DSMarker(const casacore::Float& xPos, const casacore::Float& yPos,
 		         const Display::Marker& marker = Display::Square,
-		         const uInt pixelSize = 10);
-		DSMarker(const Record& settings);
+		         const casacore::uInt pixelSize = 10);
+		DSMarker(const casacore::Record& settings);
 
 		DSMarker(const DSPCMarker& other);
 		DSMarker(const DSWCMarker& other);
@@ -109,38 +109,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Standard DisplayShape functions.
 		// <group>
-		virtual void move(const Float& dX, const Float& dY);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
-		virtual Vector<Float> getCenter();
-		virtual void scale(const Float& scaleFactor);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
+		virtual casacore::Vector<casacore::Float> getCenter();
+		virtual void scale(const casacore::Float& scaleFactor);
 		virtual void draw(PixelCanvas* pc);
-		virtual Bool inObject(const Float& xPos, const Float& yPos);
+		virtual casacore::Bool inObject(const casacore::Float& xPos, const casacore::Float& yPos);
 		// </group>
 
-		virtual void setSize(const uInt newSize);
+		virtual void setSize(const casacore::uInt newSize);
 
 		// Get and set options.
 		// <group>
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 		// </group>
 
 		// Overload, since we never want to click on a marker (Well actually
 		// we might, but as yet we have no use, and sometimes people think that
 		// have clicked on a marker when actually they are on a handle. This
 		// makes it appear as though the marker isn't moving.
-		virtual Bool whichHandle(const Float& /*xPos*/, const Float& /*yPos*/,
-		                         Int& /*active*/) {
-			return False;
+		virtual casacore::Bool whichHandle(const casacore::Float& /*xPos*/, const casacore::Float& /*yPos*/,
+		                         casacore::Int& /*active*/) {
+			return false;
 		}
 
 		// These functions do not apply for DSMarkers. They are here to ensure
 		// no strange behavior
 		// <group>
-		virtual void rotate(const Float& /*angle*/) {};
-		virtual void changePoint(const Vector<Float>& /*newPos*/) {};
-		virtual void changePoint(const Vector<Float>& /*newPoint*/,
-		                         const Int /*nPoint*/) {};
+		virtual void rotate(const casacore::Float& /*angle*/) {};
+		virtual void changePoint(const casacore::Vector<casacore::Float>& /*newPos*/) {};
+		virtual void changePoint(const casacore::Vector<casacore::Float>& /*newPoint*/,
+		                         const casacore::Int /*nPoint*/) {};
 		// </group>
 
 		//  virtual void recalculateScreenPosition();
@@ -152,13 +152,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Update location of single handle
 		void updateHandle();
 
-		Vector<Float> itsCenter;
-		Matrix<Float> itsHandle;
-		Bool itsBuiltHandle;
-		DParameterRange<Int>* itsSize;
+		casacore::Vector<casacore::Float> itsCenter;
+		casacore::Matrix<casacore::Float> itsHandle;
+		casacore::Bool itsBuiltHandle;
+		DParameterRange<casacore::Int>* itsSize;
 
 		Display::Marker itsMarkerStyle;
-		Bool itsValid;
+		casacore::Bool itsValid;
 
 	};
 

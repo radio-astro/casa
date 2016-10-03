@@ -85,8 +85,8 @@ class GJonesPolyMBuf : public GJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  GJonesPolyMBuf (const Vector<Int>& calIndices, 
-		  const Block<Vector<Int> >& indexValues);
+  GJonesPolyMBuf (const casacore::Vector<casacore::Int>& calIndices, 
+		  const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
@@ -97,33 +97,33 @@ class GJonesPolyMBuf : public GJonesMBuf
   virtual void invalidate();
 
   // Write the current buffer at the end of a specified cal table
-  virtual Int append (CalTable& calTable);
+  virtual casacore::Int append (CalTable& calTable);
 
   // Maximum number of rows in the calibration buffer
-  virtual Int nRow();
+  virtual casacore::Int nRow();
 
   // Update the parametrized solution in each of a set of buffer rows
-  virtual Bool fillMatchingRows (const Vector<Int>& matchingRows,
-				 const String& sFreqGrpName,
-				 const String& sPolyType, 
-				 const String& sPolyMode,
-				 const Complex& sScaleFactor,
-				 const Int& sNPolyAmp, const Int& sNPolyPhase, 
-				 const Vector<Double>& sPolyCoeffAmp,
-				 const Vector<Double>& sPolyCoeffPhase,
-				 const String& sPhaseUnits, 
-				 const MFrequency& sRefFreq, 
-				 const Int& sRefAnt);
+  virtual casacore::Bool fillMatchingRows (const casacore::Vector<casacore::Int>& matchingRows,
+				 const casacore::String& sFreqGrpName,
+				 const casacore::String& sPolyType, 
+				 const casacore::String& sPolyMode,
+				 const casacore::Complex& sScaleFactor,
+				 const casacore::Int& sNPolyAmp, const casacore::Int& sNPolyPhase, 
+				 const casacore::Vector<casacore::Double>& sPolyCoeffAmp,
+				 const casacore::Vector<casacore::Double>& sPolyCoeffPhase,
+				 const casacore::String& sPhaseUnits, 
+				 const casacore::MFrequency& sRefFreq, 
+				 const casacore::Int& sRefAnt);
 
-  // Data field accessors
-  virtual Vector<String>& polyType();
-  virtual Vector<String>& polyMode();
-  virtual Vector<Complex>& scaleFactor();
-  virtual Vector<Int>& nPolyAmp();
-  virtual Vector<Int>& nPolyPhase();
-  virtual Array<Double>& polyCoeffAmp();
-  virtual Array<Double>& polyCoeffPhase();
-  virtual Vector<String>& phaseUnits();
+  // casacore::Data field accessors
+  virtual casacore::Vector<casacore::String>& polyType();
+  virtual casacore::Vector<casacore::String>& polyMode();
+  virtual casacore::Vector<casacore::Complex>& scaleFactor();
+  virtual casacore::Vector<casacore::Int>& nPolyAmp();
+  virtual casacore::Vector<casacore::Int>& nPolyPhase();
+  virtual casacore::Array<casacore::Double>& polyCoeffAmp();
+  virtual casacore::Array<casacore::Double>& polyCoeffPhase();
+  virtual casacore::Vector<casacore::String>& phaseUnits();
 
  protected:
   // Factory method to create a columns accessor object of the 
@@ -142,33 +142,33 @@ class GJonesPolyMBuf : public GJonesMBuf
   // as non-attribute columns.
   //
   // Use a visibility buffer to define the attribute values (NYI)
-  virtual void fillAttributes(const Vector<Int>& /*calIndices*/,
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& /*calIndices*/,
 			      const VisBuffer& /*vb*/) {};
   //
   // Set default attribute values
-  virtual void fillAttributes(const Vector<Int>& calIndices);
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& calIndices);
   // </group>
 
  private:
   // Buffer fields
-  Vector<String> polyType_p;
-  Vector<String> polyMode_p;
-  Vector<Complex> scaleFactor_p;
-  Vector<Int> nPolyAmp_p;
-  Vector<Int> nPolyPhase_p;
-  Array<Double> polyCoeffAmp_p;
-  Array<Double> polyCoeffPhase_p;
-  Vector<String> phaseUnits_p;
+  casacore::Vector<casacore::String> polyType_p;
+  casacore::Vector<casacore::String> polyMode_p;
+  casacore::Vector<casacore::Complex> scaleFactor_p;
+  casacore::Vector<casacore::Int> nPolyAmp_p;
+  casacore::Vector<casacore::Int> nPolyPhase_p;
+  casacore::Array<casacore::Double> polyCoeffAmp_p;
+  casacore::Array<casacore::Double> polyCoeffPhase_p;
+  casacore::Vector<casacore::String> phaseUnits_p;
 
   // Buffer field status flags
-  Bool polyTypeOK_p;
-  Bool polyModeOK_p;
-  Bool scaleFactorOK_p;
-  Bool nPolyAmpOK_p;
-  Bool nPolyPhaseOK_p;
-  Bool polyCoeffAmpOK_p;
-  Bool polyCoeffPhaseOK_p;
-  Bool phaseUnitsOK_p;
+  casacore::Bool polyTypeOK_p;
+  casacore::Bool polyModeOK_p;
+  casacore::Bool scaleFactorOK_p;
+  casacore::Bool nPolyAmpOK_p;
+  casacore::Bool nPolyPhaseOK_p;
+  casacore::Bool polyCoeffAmpOK_p;
+  casacore::Bool polyCoeffPhaseOK_p;
+  casacore::Bool phaseUnitsOK_p;
 };
 
 // <summary> 
@@ -221,8 +221,8 @@ class GJonesSplineMBuf : public GJonesPolyMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  GJonesSplineMBuf (const Vector<Int>& calIndices, 
-		    const Block<Vector<Int> >& indexValues);
+  GJonesSplineMBuf (const casacore::Vector<casacore::Int>& calIndices, 
+		    const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
@@ -233,33 +233,33 @@ class GJonesSplineMBuf : public GJonesPolyMBuf
   virtual void invalidate();
 
   // Write the current buffer at the end of a specified cal table
-  virtual Int append (CalTable& calTable);
+  virtual casacore::Int append (CalTable& calTable);
 
   // Maximum number of rows in the calibration buffer
-  virtual Int nRow();
+  virtual casacore::Int nRow();
 
   // Update the parametrized solution in each of a set of buffer rows
-  virtual Bool fillMatchingRows (const Vector<Int>& matchingRows,
-				 const String& sFreqGrpName,
-				 const String& sPolyType, 
-				 const String& sPolyMode,
-				 const Complex& sScaleFactor,
-				 const Int& sNPolyAmp, const Int& sNPolyPhase, 
-				 const Vector<Double>& sPolyCoeffAmp,
-				 const Vector<Double>& sPolyCoeffPhase,
-				 const String& sPhaseUnits, 
-				 const Int& sNKnotsAmp, 
-				 const Int& sNKnotsPhase,
-				 const Vector<Double>& sSplineKnotsAmp,
-				 const Vector<Double>& sSplineKnotsPhase,
-				 const MFrequency& sRefFreq, 
-				 const Int& sRefAnt);
+  virtual casacore::Bool fillMatchingRows (const casacore::Vector<casacore::Int>& matchingRows,
+				 const casacore::String& sFreqGrpName,
+				 const casacore::String& sPolyType, 
+				 const casacore::String& sPolyMode,
+				 const casacore::Complex& sScaleFactor,
+				 const casacore::Int& sNPolyAmp, const casacore::Int& sNPolyPhase, 
+				 const casacore::Vector<casacore::Double>& sPolyCoeffAmp,
+				 const casacore::Vector<casacore::Double>& sPolyCoeffPhase,
+				 const casacore::String& sPhaseUnits, 
+				 const casacore::Int& sNKnotsAmp, 
+				 const casacore::Int& sNKnotsPhase,
+				 const casacore::Vector<casacore::Double>& sSplineKnotsAmp,
+				 const casacore::Vector<casacore::Double>& sSplineKnotsPhase,
+				 const casacore::MFrequency& sRefFreq, 
+				 const casacore::Int& sRefAnt);
 
-  // Data field accessors
-  virtual Vector<Int>& nKnotsAmp();
-  virtual Vector<Int>& nKnotsPhase();
-  virtual Array<Double>& splineKnotsAmp();
-  virtual Array<Double>& splineKnotsPhase();
+  // casacore::Data field accessors
+  virtual casacore::Vector<casacore::Int>& nKnotsAmp();
+  virtual casacore::Vector<casacore::Int>& nKnotsPhase();
+  virtual casacore::Array<casacore::Double>& splineKnotsAmp();
+  virtual casacore::Array<casacore::Double>& splineKnotsPhase();
 
  protected:
   // Factory method to create a columns accessor object of the 
@@ -278,25 +278,25 @@ class GJonesSplineMBuf : public GJonesPolyMBuf
   // as non-attribute columns.
   //
   // Use a visibility buffer to define the attribute values (NYI)
-  virtual void fillAttributes(const Vector<Int>& /*calIndices*/,
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& /*calIndices*/,
 			      const VisBuffer& /*vb*/) {};
   //
   // Set default attribute values
-  virtual void fillAttributes(const Vector<Int>& calIndices);
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& calIndices);
   // </group>
 
     private:
   // Buffer fields
-  Vector<Int> nKnotsAmp_p;
-  Vector<Int> nKnotsPhase_p;
-  Array<Double> splineKnotsAmp_p;
-  Array<Double> splineKnotsPhase_p;
+  casacore::Vector<casacore::Int> nKnotsAmp_p;
+  casacore::Vector<casacore::Int> nKnotsPhase_p;
+  casacore::Array<casacore::Double> splineKnotsAmp_p;
+  casacore::Array<casacore::Double> splineKnotsPhase_p;
 
   // Buffer field status flags
-  Bool nKnotsAmpOK_p;
-  Bool nKnotsPhaseOK_p;
-  Bool splineKnotsAmpOK_p;
-  Bool splineKnotsPhaseOK_p;
+  casacore::Bool nKnotsAmpOK_p;
+  casacore::Bool nKnotsPhaseOK_p;
+  casacore::Bool splineKnotsAmpOK_p;
+  casacore::Bool splineKnotsPhaseOK_p;
 };
 
 

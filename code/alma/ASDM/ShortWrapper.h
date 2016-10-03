@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * File Short.h
+ * casacore::File Short.h
  */
 # ifndef Short_CLASS
 # define Short_CLASS
@@ -36,7 +36,8 @@ namespace asdm {
  * A collection of static methods to perform conversions
  * between strings and short integer values.
  */
-class Short {
+
+    class Short {
 
 public:
 	/**

@@ -49,7 +49,7 @@ public:
     QPColor();
 
     // Constructor for the given hex value or name.
-    QPColor(const String& name);
+    QPColor(const casacore::String& name);
     
     // Constructor using a QColor.
     QPColor(const QColor& color);
@@ -74,13 +74,13 @@ public:
     // PlotColor Methods //
     
     // Implements PlotColor::asHexadecimal().
-    String asHexadecimal() const;
+    casacore::String asHexadecimal() const;
        
     // Implements PlotColor::asName().
-    String asName() const;    
+    casacore::String asName() const;    
 
     // Implements PlotColor::asHexadecimalOrName().
-    void setAsHexadecimalOrName(const String& str);
+    void setAsHexadecimalOrName(const casacore::String& str);
     
     // Implements PlotColor::alpha().
     double alpha() const;
@@ -144,10 +144,10 @@ public:
     void setPixelSize(int size);
     
     // Implements PlotFont::fontFamily().
-    String fontFamily() const;
+    casacore::String fontFamily() const;
     
     // Implements PlotFont::setFontFamily().
-    void setFontFamily(const String& font);
+    void setFontFamily(const casacore::String& font);
     
     // Implements PlotFont::color().
     PlotColorPtr color() const;
@@ -574,7 +574,7 @@ public:
     // </group>
     
     // Returns a string to be used in stylesheet css for the given style.
-    static String cssLineStyle(PlotLine::Style style) {
+    static casacore::String cssLineStyle(PlotLine::Style style) {
         switch(style) {
         case PlotLine::SOLID:  return "solid";
         case PlotLine::DASHED: return "dashed";

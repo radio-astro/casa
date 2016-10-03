@@ -70,7 +70,7 @@ class StatWT : public GroupWorker
 {
 public:
   // Construct an object that will set the weights and sigmas of vi's
-  // MeasurementSet, as selected by outspw, according to the scatter of the
+  // casacore::MeasurementSet, as selected by outspw, according to the scatter of the
   // visibilities selected by fitspw.  If dorms is true, assume that the true
   // mean is 0.  Otherwise, use the standard sample variance.
   //
@@ -79,12 +79,12 @@ public:
   // will not be calculated.  minsamp is effectively at least 2.
   //
   StatWT(const ROVisibilityIterator& vi,
-         const MS::PredefinedColumns datacol=MS::DATA,
-         const String& fitspw="*",
-         const String& outspw="*",
-         const Bool dorms=false,
-         const uInt minsamp=2,
-         const vector<uInt> selcorrs=vector<uInt>());
+         const casacore::MS::PredefinedColumns datacol=casacore::MS::DATA,
+         const casacore::String& fitspw="*",
+         const casacore::String& outspw="*",
+         const casacore::Bool dorms=false,
+         const casacore::uInt minsamp=2,
+         const vector<casacore::uInt> selcorrs=vector<casacore::uInt>());
 
   //// Copy construct
   //StatWT(const StatWT& other) {}
@@ -99,28 +99,28 @@ public:
   // virtual asyncio::PrefetchColumns *prefetchColumns() const;
 
   // This is where all the work gets done!
-  virtual Bool process(VisBuffGroup& vbg);
+  virtual casacore::Bool process(VisBuffGroup& vbg);
 
 private:
   // Disable null c'tor.
   StatWT();
 
-  Bool update_variances(std::map<uInt, Vector<uInt> >& ns,
-                        std::map<uInt, Vector<Complex> >& means,
-                        std::map<uInt, Vector<Double> >& variances,
+  casacore::Bool update_variances(std::map<casacore::uInt, casacore::Vector<casacore::uInt> >& ns,
+                        std::map<casacore::uInt, casacore::Vector<casacore::Complex> >& means,
+                        std::map<casacore::uInt, casacore::Vector<casacore::Double> >& variances,
                         const VisBuffer& vb,
-                        const Cube<Bool>& chanmaskedflags, const uInt maxAnt);
+                        const casacore::Cube<casacore::Bool>& chanmaskedflags, const casacore::uInt maxAnt);
 
   // ns and variances are effectively const here, but declaring them that way
   // would take some gymnastics.
-  Bool apply_variances(VisBuffer& vb,
-                       std::map<uInt, Vector<uInt> >& ns,
-                       std::map<uInt, Vector<Double> >& variances,
-                       const uInt maxAnt);
+  casacore::Bool apply_variances(VisBuffer& vb,
+                       std::map<casacore::uInt, casacore::Vector<casacore::uInt> >& ns,
+                       std::map<casacore::uInt, casacore::Vector<casacore::Double> >& variances,
+                       const casacore::uInt maxAnt);
 
   // Compute a baseline (row) index (ant1, ant2).
   // It ASSUMES that ant1 and ant2 are both <= maxAnt.
-  uInt hashFunction(const Int ant1, const Int ant2, const Int maxAnt)
+  casacore::uInt hashFunction(const casacore::Int ant1, const casacore::Int ant2, const casacore::Int maxAnt)
   {
     return (maxAnt + 1) * ant1 - (ant1 * (ant1 - 1)) / 2 + ant2 - ant1;
   }
@@ -131,20 +131,20 @@ private:
   // It will always _write_ to DATA if datacols_p.nelements() == 1, and write
   // to all 3 otherwise.  Thus datacols_p.nelements() should be either 1 or 3.
   // 4 and 2 are right out, and FLOAT_DATA isn't handled by this yet.
-  MS::PredefinedColumns datacol_p;
+  casacore::MS::PredefinedColumns datacol_p;
 
-  String fitspw_p;      // Line-free channels used for the fit.  Can include ;
-  String outspw_p;      // Channels to write out.  Does not yet support ;.
-  Bool   dorms_p;       // If true, assume that the true mean is 0.
-  uInt   rowsdone_p;    // How many rows have been written so far.
-  std::set<Int> outspws_p;  // Spws to reweight.
+  casacore::String fitspw_p;      // Line-free channels used for the fit.  Can include ;
+  casacore::String outspw_p;      // Channels to write out.  Does not yet support ;.
+  casacore::Bool   dorms_p;       // If true, assume that the true mean is 0.
+  casacore::uInt   rowsdone_p;    // How many rows have been written so far.
+  std::set<casacore::Int> outspws_p;  // Spws to reweight.
                                 // Otherwise, use the standard sample variance.
-  uInt   minsamp_p;     // Minimum # of unflagged visibilities for calculating
+  casacore::uInt   minsamp_p;     // Minimum # of unflagged visibilities for calculating
                         // a variance.
-  vector<uInt> selcorrs_p;
+  vector<casacore::uInt> selcorrs_p;
   // Not initialized by c'tor:
-  //std::set<Int> appliedSpWs_p;
-  std::map<Int, Vector<Bool>*> fitmask_p;      // spw -> a list of flags by chan
+  //std::set<casacore::Int> appliedSpWs_p;
+  std::map<casacore::Int, casacore::Vector<casacore::Bool>*> fitmask_p;      // spw -> a list of flags by chan
 };
 
 } //# NAMESPACE CASA - END

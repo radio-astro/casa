@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// Data provider for weight spectrum column.
+// casacore::Data provider for weight spectrum column.
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_WEIGHT_SPECTRUM_DATA_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_WEIGHT_SPECTRUM_DATA_PROVIDER_H_
@@ -43,9 +43,9 @@ class Vi2ChunkWeightSpectrumDataProvider final
 public:
 	Vi2ChunkWeightSpectrumDataProvider(
 		vi::VisibilityIterator2 *vi2,
-		Bool omit_flagged_data);
+		casacore::Bool omit_flagged_data);
 
-	const Cube<Float>& dataArray();
+	const casacore::Cube<casacore::Float>& dataArray();
 };
 
 } // namespace casa

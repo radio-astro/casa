@@ -50,6 +50,7 @@
 #include <lattices/Lattices/SubLattice.h>   
 #include <lattices/Lattices/TiledShape.h>  
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 extern Applicator applicator;
@@ -158,7 +159,7 @@ void PredictAlgorithm::task(){
       getModelVis(vb,model_p,incremental_p);
 	
       vi.setVis(vb.modelVisCube(),VisibilityIterator::Model);
-      ms_p->flush(True);
+      ms_p->flush(true);
       ms_p->unlock(); // this is the unlock for the lock in getModelVis
 
     }

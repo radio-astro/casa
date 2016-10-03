@@ -45,22 +45,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //freqToUse is not necessary ..at apply time 
     // the right polynomial will be used for the frequency applicable
     // This value can be used for example to run summary
-    PBMath1DEVLA(Quantity maxRad, Bool useSymmetricBeam=False, Double freqToUse=1.0e9);
+    PBMath1DEVLA(casacore::Quantity maxRad, bool useSymmetricBeam=false, double freqToUse=1.0e9);
 
     virtual PBMathInterface::PBClass whichPBClass();
 
   protected:
-    virtual void nearestVPArray(Double freq);
+    virtual void nearestVPArray(double freq);
     virtual void fillPBArray();
   private:
-    std::map<Double, std::vector<Double> > coeffmap_p;
-    std::map<String, Double> feedConf_p;
+    std::map<double, std::vector<double> > coeffmap_p;
+    std::map<casacore::String, double> feedConf_p;
     void init();
-    CountedPtr<PBMath1DPoly> pbMathPoly_p;
+    casacore::CountedPtr<PBMath1DPoly> pbMathPoly_p;
     BeamSquint squint_p;
-    Quantity maxRad_p;
-    Bool useSymmetric_p;
-    String feed(const Double freq, const Double freqCenter=0.0);
+    casacore::Quantity maxRad_p;
+    bool useSymmetric_p;
+    casacore::String feed(const double freq, const double freqCenter=0.0);
 
   };
 } //End namespace casa

@@ -58,6 +58,7 @@
 #include <msvis/MSVis/StokesVector.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define NEED_UNDERSCORES
@@ -179,10 +180,10 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
   {
     LogIO os( LogOrigin("SDAlgorithmHogbomClean","initializeDeconvolver",WHERE) );
 
-    itsImages->residual()->get( itsMatResidual, True );
-    itsImages->model()->get( itsMatModel, True );
-    itsImages->psf()->get( itsMatPsf, True );
-    itsImages->mask()->get( itsMatMask, True );
+    itsImages->residual()->get( itsMatResidual, true );
+    itsImages->model()->get( itsMatModel, true );
+    itsImages->psf()->get( itsMatPsf, true );
+    itsImages->mask()->get( itsMatMask, true );
 
     //    cout << "initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
     //	 << itsImages->model()->shape() << " : " << itsMatModel.shape() 

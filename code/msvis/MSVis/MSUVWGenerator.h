@@ -34,15 +34,19 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <measures/Measures/MBaseline.h>
 
-// FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
+// FTMachine::rotateUVW(casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase,
 //                      const VisBuffer& vb)
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class MeasurementSet;
 class LogIO;
+}
 
-// <summary>Generates and inserts the (u, v, w)s of a MS that may or may not
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+
+// <summary>Generates and inserts the (u, v, w)s of a casacore::MS that may or may not
 // already have them.  Includes antenna offsets when known.</summary>
 // <use visibility=export>
 // 
@@ -50,12 +54,12 @@ class LogIO;
 // </reviewed>
 // 
 // <prerequisite>
-//   <li> <linkto class=MeasurementSet>MeasurementSet</linkto>
-//   <li> <linkto class=Measure>Measure</linkto>
+//   <li> <linkto class=casacore::MeasurementSet>MeasurementSet</linkto>
+//   <li> <linkto class=casacore::Measure>Measure</linkto>
 // </prerequisite>
 //
 // <etymology>
-// It generates a UVW column for the MS, whether or not it already has one.
+// It generates a UVW column for the casacore::MS, whether or not it already has one.
 // It is an adaptation of alma/apps/asdm2MS/UvwCoords to work with MSes instead
 // of ASDMs.
 // </etymology>
@@ -72,11 +76,11 @@ class LogIO;
 // </motivation>
 //
 // <todo asof="11/20/2008">
-// It requires as input the MS timeCentroids item which is an output in the
+// It requires as input the casacore::MS timeCentroids item which is an output in the
 // ASDM DAMs.
 //     - the use-case when the timeCentroid is baseline-based and or spectral
 //       window based.
-//     - correlationMode filter (hopefully handled by SDM -> MS import routines).
+//     - correlationMode filter (hopefully handled by SDM -> casacore::MS import routines).
 //       direction item in the field table.
 // @note The current limitations are set by the status of the ASDM
 //     - OTF not supported due to a limitation in the model of the phase
@@ -85,13 +89,13 @@ class MSUVWGenerator
 {
 public:
   // Constructor 
-  //      @param ms_ref Reference to the MS's columns.
+  //      @param ms_ref Reference to the casacore::MS's columns.
   //      @post - The relative positions for all the antennas in the Antenna
   //              table are in bl_an_p.
   //            - timeRes_p has been conservatively calculated using rough
   //              estimates of the maximum baseline length and field of view.
-  MSUVWGenerator(MSColumns& ms_ref, const MBaseline::Types bltype,
-		 const Muvw::Types uvwtype);
+  MSUVWGenerator(casacore::MSColumns& ms_ref, const casacore::MBaseline::Types bltype,
+		 const casacore::Muvw::Types uvwtype);
 
   // Destructor
   ~MSUVWGenerator();
@@ -104,21 +108,21 @@ public:
   //	   @param ant1   Row number in the ANTENNA table of the 2nd antenna.
   //	   @param feed2  Row number in the FEED    table of the 2nd feed.
   //       @param uvw    The returned UVW coordinates.
-  void uvw_bl(const uInt ant1, const uInt feed1,
-              const uInt ant2, const uInt feed2, Array<Double>& uvw);
+  void uvw_bl(const casacore::uInt ant1, const casacore::uInt feed1,
+              const casacore::uInt ant2, const casacore::uInt feed2, casacore::Array<casacore::Double>& uvw);
 
   // Calculate the uvws for the field IDs in flds that are not -1, and set
   // those phase directions according to phaseDirs.
   //       @param flds       A map from row numbers in the FIELD table to
-  //       		     indices in phaseDirs.  For example, if the MS has
+  //       		     indices in phaseDirs.  For example, if the casacore::MS has
   //       		     5 fields, and the user wants to (re)calculate the
   //       		     UVWs of only 0, 2, and 4, phaseDirs will have 3
   //       		     entries and flds will be [0, -1, 1, -1, 2].  
-  Bool make_uvws(const Vector<Int> flds);
+  casacore::Bool make_uvws(const casacore::Vector<casacore::Int> flds);
 private:
   // Sets up the antenna positions as baselines (bl_an_p), the number of
   // antennas (nant_p), and timeRes_p.
-  void fill_bl_an(Vector<MVBaseline>& bl_an_p);
+  void fill_bl_an(casacore::Vector<casacore::MVBaseline>& bl_an_p);
   
   // Determine antUVW_p for every member of the sequence of antennas
   // defining a (sub)array.
@@ -134,19 +138,19 @@ private:
   //     directions, so be prepared to call this function from within a loop
   //     that also takes care of setting timeCentroid and phaseDir.
   //     @warning timeCentroid can be initialized like
-  //       MEpoch timeCentroid(Quantity(<double>, "s"), MEpoch::TAI);
+  //       casacore::MEpoch timeCentroid(casacore::Quantity(<double>, "s"), casacore::MEpoch::TAI);
   //      but the accuracy is limited since there is no extra precision
-  //      attribute (see Main table of MS v2).
-  void uvw_an(const MEpoch& timeCentroid, const Int fldID,
-              const Bool WSRTConvention=false);
+  //      attribute (see Main table of casacore::MS v2).
+  void uvw_an(const casacore::MEpoch& timeCentroid, const casacore::Int fldID,
+              const casacore::Bool WSRTConvention=false);
 
   // (Sub-)array parameters constraining order and size of the output vector 
   // of UVW coords triplets.
   // struct ArrayParam{
 //   public:
-//     Int                   subarrayId;        // (sub)array identifier
+//     casacore::Int                   subarrayId;        // (sub)array identifier
 //     vector<Tag>           v_ant;             //<! sequence of antennas
-//     unsigned int          nrepeat;           //<! number of MS main table rows
+//     unsigned int          nrepeat;           //<! number of casacore::MS main table rows
 // 					     //   per antenna baseline
 //     Enum<CorrelationMode> e_correlationMode; //<! correlation mode (original
 // 					     //   mode passed through the user
@@ -165,19 +169,19 @@ private:
   //**************** here in the same order ******************************
   //**************** as they do in the ctor. ******************************
 
-  MSColumns& msc_p;  // the columns of the measurement set.
+  casacore::MSColumns& msc_p;  // the columns of the measurement set.
 
-  // Coordinate system selectors.
-  MBaseline::Ref bl_csys_p;
-  Muvw::Types    uvw_csys_p;
+  // casacore::Coordinate system selectors.
+  casacore::MBaseline::Ref bl_csys_p;
+  casacore::Muvw::Types    uvw_csys_p;
   
-  const ROMSAntennaColumns& antColumns_p;
+  const casacore::ROMSAntennaColumns& antColumns_p;
 
   // The antenna positions of ms_p in ITRF.  It cannot be const because of the
   // need to update satellite positions.
   // antPositions_p and antOffset_p are references and must therefore be
   // initialized in the initialization list.
-  const ROScalarMeasColumn<MPosition>& antPositions_p;
+  const casacore::ROScalarMeasColumn<casacore::MPosition>& antPositions_p;
 
   // The offsets between the phase reference point (see feed_offsets below for
   // clarification) of each antenna and the closest point which is fixed
@@ -187,44 +191,44 @@ private:
   // toward the north.  (x, y, z) = (east, north, up).
   //
   // This appears to be a required column of the ANTENNA table in version 2.0
-  // of the MeasurementSet definition
+  // of the casacore::MeasurementSet definition
   // (http://aips2.nrao.edu/docs/notes/229/229.html), so it is assumed to be
   // present.  However, it is usually a set of zeroes, based on the common
   // belief that it is only needed for heterogeneous arrays, since the
   // receivers of homogeneous arrays move in concert.  That is not true when
   // there are independent pointing errors.
-  const ROScalarMeasColumn<MPosition>& antOffset_p;
+  const casacore::ROScalarMeasColumn<casacore::MPosition>& antOffset_p;
 
   // The position of the first antenna.
-  MPosition refpos_p;
+  casacore::MPosition refpos_p;
   
   // Ditto for feed.
-  //const ROMSFeedColumns *feedColumns_;
+  //const casacore::ROMSFeedColumns *feedColumns_;
 
   // The offset between the feed and the phase reference point of each antenna
   // in the same frame as ant_offsets.  Therefore the feed position is
   //  ant_positions_p(ant) + [rotation matrix](pointing) (ant_offsets_p[ant] +
   //							feed_offsets_p[ant])
-  const ROScalarMeasColumn<MPosition>& feedOffset_p;
+  const casacore::ROScalarMeasColumn<casacore::MPosition>& feedOffset_p;
 
-  MBaseline::Types refposref_p;  
+  casacore::MBaseline::Types refposref_p;  
 
   // The antenna positions - refpos_p.getValue().
-  Vector<MVBaseline> bl_an_p;
+  casacore::Vector<casacore::MVBaseline> bl_an_p;
 
-  uInt nant_p;  // # of antennas
+  casacore::uInt nant_p;  // # of antennas
 
   // The minimum time difference for forcing an update of the UVWs.  We're not
   // trying to do time averaging here, so it should be small, but not so small
   // that uvw_an() is called for every baseline, even when the times are
   // practically the same.
-  Double timeRes_p;
+  casacore::Double timeRes_p;
 
   //************* Initialized later, if at all. ********************
   
   // Log functions and variables
-  LogIO sink_p;
-  LogIO& logSink() {return sink_p;}
+  casacore::LogIO sink_p;
+  casacore::LogIO& logSink() {return sink_p;}
 
   //map<Tag, ArrayParam>      m_array_p;     // FIX: Tag
 
@@ -234,12 +238,12 @@ private:
   // <todo asof="02/18/2009">
   // Generalize to multifeed systems.
   // </todo>
-  Vector<Vector<Double> > antUVW_p;
+  casacore::Vector<casacore::Vector<casacore::Double> > antUVW_p;
 
   // the 3 fundamental attributes of the state machine
-  Double                timeCentroid_p;
-  ROArrayColumn<Double> phaseDir_p; 
-  //Int                   subarrayId_p;
+  casacore::Double                timeCentroid_p;
+  casacore::ROArrayColumn<casacore::Double> phaseDir_p; 
+  //casacore::Int                   subarrayId_p;
 
   // The number of wavelengths by which a feed may move relative to the
   // corresponding feed in another antenna of the array without requiring the
@@ -278,10 +282,10 @@ private:
   // errors.  The latter effect is often neglected, and the offsets are written
   // as sets of zeroes, even though they really are not.
   //
-  Double offset_tolerance;
+  casacore::Double offset_tolerance;
   
   // 
-  Bool   adj_uvw_for_ptg_err;
+  casacore::Bool   adj_uvw_for_ptg_err;
 };
   
 } //# NAMESPACE CASA - END

@@ -67,6 +67,7 @@
 
 #include <casa/iomanip.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 int FlagID::compare (const void* val1, const void* val2) {
@@ -122,8 +123,8 @@ ExtendFlagger::ExtendFlagger()
    clipexpr = "";
    cliprange.resize(0);
    clipcolumn = "DATA";
-   outside = False;
-   channelavg = False;
+   outside = false;
+   channelavg = false;
    quackinterval = 0.0;
    opmode = "flag";
    extendCorr = "";
@@ -143,8 +144,8 @@ ExtendFlagger::ExtendFlagger(MeasurementSet& ms, const String& exchan,
    clipexpr = "";
    cliprange.resize(0);
    clipcolumn = "DATA";
-   outside = False;
-   channelavg = False;
+   outside = false;
+   channelavg = false;
    quackinterval = 0.0;
    opmode = "flag";
    extendCorr = excorr;
@@ -190,7 +191,7 @@ Bool ExtendFlagger::initdata(const String& field, const String& spw,
    this->time = time;
    this->correlation = correlation;
    this->intent = intent;
-   return True;
+   return true;
 
 }
 
@@ -208,7 +209,7 @@ Bool ExtendFlagger::selectdata(Bool useoriginalms) {
    //     << " scan=" << scan << " baseline=" << baseline
    //     << " uvrange=" << uvrange << " time=" << time
    //     << " correlation=" << correlation << endl;
-   //useoriginalms = False;
+   //useoriginalms = false;
    return flagger.selectdata(useoriginalms, field, spw, array,
          feed, scan, baseline, uvrange, time, correlation, intent); 
 }
@@ -227,7 +228,7 @@ Bool ExtendFlagger::setmanualflags(Bool unflag, Bool autocorr) {
 
 Bool ExtendFlagger::run(Bool trial, Bool reset) {
   flagger.run(trial, reset);
-  return True;
+  return true;
 }
 
 Bool ExtendFlagger::extend2(const Vector<FlagID>& flagids) {
@@ -239,7 +240,7 @@ Bool ExtendFlagger::extend2(const Vector<FlagID>& flagids) {
    //     << endl;
    Int npts = flagids.size();
    if (npts == 0) {
-      return False;
+      return false;
    } 
 
    Vector<FlagIDS> fids(npts);
@@ -321,7 +322,7 @@ Bool ExtendFlagger::extend2(const Vector<FlagID>& flagids) {
           << " unique=" << ur
           << endl;
 
-   Bool ret = True;
+   Bool ret = true;
    for (uInt i = 0; i < ur; i++) {
 
       FlagIDS usFlag = fids[indexV(uniqueV(i))];
@@ -370,10 +371,10 @@ Bool ExtendFlagger::extend(const Vector<FlagID>& flagids) {
    //     << endl;
    Int npts = flagids.size();
    if (npts == 0) {
-      return False;
+      return false;
    } 
 
-   Bool ret = True;
+   Bool ret = true;
    for (Int i = 0; i < npts; i++) {
       String chanstr = flagids(i).chan;
       if (!upcase(extendChan).compare("ALL")) {

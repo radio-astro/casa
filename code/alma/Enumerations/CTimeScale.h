@@ -3,7 +3,7 @@
 #define CTimeScale_H
 
 /*
- * ALMA - Atacama Large Millimeter Array
+ * ALMA - Atacama Large Millimeter casacore::Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * File CTimeScale.h
+ * casacore::File CTimeScale.h
  */
 
 #ifndef __cplusplus
@@ -54,7 +54,7 @@
 namespace TimeScaleMod
 {
   //! TimeScale.
-  //! Time standards.
+  //! casacore::Time standards.
   
   const char *const revision = "-1";
   const int version = 1;

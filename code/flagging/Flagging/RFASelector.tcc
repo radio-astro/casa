@@ -46,22 +46,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // reformRange
 // Reforms an array of 2N elements into a [2,N] matrix
 // -----------------------------------------------------------------------
-template<class T> Bool RFASelector::reformRange( Matrix<T> &rng,const Array<T> &arr )
+template<class T> casacore::Bool RFASelector::reformRange( casacore::Matrix<T> &rng,const casacore::Array<T> &arr )
 {
   if( arr.ndim()>2 || (arr.nelements()%2) !=0 )
-    return False;
-  rng = arr.reform(IPosition(2,2,arr.nelements()/2));
-  return True;
+    return false;
+  rng = arr.reform(casacore::IPosition(2,2,arr.nelements()/2));
+  return true;
 }
 
-template<class T> Array<T> fieldToArray( const RecordInterface &parm,const String &id );
+template<class T> casacore::Array<T> fieldToArray( const casacore::RecordInterface &parm,const casacore::String &id );
 
 /*
-template<> Array<Int> fieldToArray<Int>( const RecordInterface &parm,const String &id )
+template<> casacore::Array<casacore::Int> fieldToArray<casacore::Int>( const casacore::RecordInterface &parm,const casacore::String &id )
 { return parm.toArrayInt(id); }
-template<> Array<Double> fieldToArray<Double>( const RecordInterface &parm,const String &id )
+template<> casacore::Array<casacore::Double> fieldToArray<casacore::Double>( const casacore::RecordInterface &parm,const casacore::String &id )
 { return parm.toArrayDouble(id); }
-template<> Array<String> fieldToArray<String>( const RecordInterface &parm,const String &id )
+template<> casacore::Array<casacore::String> fieldToArray<casacore::String>( const casacore::RecordInterface &parm,const casacore::String &id )
 { return parm.toArrayString(id); }
 */
 
@@ -69,52 +69,52 @@ template<> Array<String> fieldToArray<String>( const RecordInterface &parm,const
 // RFASelector::parseRange
 // Returns a record field of 2N elements as a [2,N] matrix
 // -----------------------------------------------------------------------
-template<class T> Bool RFASelector::parseRange( Matrix<T> &rng,const RecordInterface &parm,const String &id )
+template<class T> casacore::Bool RFASelector::parseRange( casacore::Matrix<T> &rng,const casacore::RecordInterface &parm,const casacore::String &id )
 {
   if( isFieldSet(parm,id) )
   {
     try 
     {
-      Array<T> arr( fieldToArray<T>(parm,id) );
+      casacore::Array<T> arr( fieldToArray<T>(parm,id) );
       if( !reformRange(rng,arr) )
-        throw( AipsError("") );
-      return True;
+        throw( casacore::AipsError("") );
+      return true;
     } 
-    catch( AipsError x ) 
+    catch( casacore::AipsError x ) 
     {
-      os<<"Illegal \""<<id<<"\" array\n"<<LogIO::EXCEPTION;
+      os<<"Illegal \""<<id<<"\" array\n"<<casacore::LogIO::EXCEPTION;
     }
   }
-  return False;
+  return false;
 }
 
 /*
-template Bool RFASelector::reformRange<Int>( Matrix<Int>&,const Array<Int>& );
-template Bool RFASelector::reformRange<Double>( Matrix<Double>&,const Array<Double>& );
-template Bool RFASelector::reformRange<String>( Matrix<String>&,const Array<String>& );
-template Bool RFASelector::parseRange<Int>( Matrix<Int>&,const RecordInterface&,const String&);
-template Bool RFASelector::parseRange<Double>( Matrix<Double>&,const RecordInterface&,const String&);
-template Bool RFASelector::parseRange<String>( Matrix<String>&,const RecordInterface&,const String&);
+template casacore::Bool RFASelector::reformRange<casacore::Int>( casacore::Matrix<casacore::Int>&,const casacore::Array<casacore::Int>& );
+template casacore::Bool RFASelector::reformRange<casacore::Double>( casacore::Matrix<casacore::Double>&,const casacore::Array<casacore::Double>& );
+template casacore::Bool RFASelector::reformRange<casacore::String>( casacore::Matrix<casacore::String>&,const casacore::Array<casacore::String>& );
+template casacore::Bool RFASelector::parseRange<casacore::Int>( casacore::Matrix<casacore::Int>&,const casacore::RecordInterface&,const casacore::String&);
+template casacore::Bool RFASelector::parseRange<casacore::Double>( casacore::Matrix<casacore::Double>&,const casacore::RecordInterface&,const casacore::String&);
+template casacore::Bool RFASelector::parseRange<casacore::String>( casacore::Matrix<casacore::String>&,const casacore::RecordInterface&,const casacore::String&);
 */
 
 // -----------------------------------------------------------------------
 // RFA_selector::find
 // Helper templated method to find an object in an array
 // -----------------------------------------------------------------------
-template<class T> Bool RFASelector::find( uInt &index,const T &obj,const Vector<T> &arr )
+template<class T> casacore::Bool RFASelector::find( casacore::uInt &index,const T &obj,const casacore::Vector<T> &arr )
 {
-  for( uInt i=0; i<arr.nelements(); i++ )
+  for( casacore::uInt i=0; i<arr.nelements(); i++ )
     if( obj == arr(i) )
     {
       index = i;
-      return True;
+      return true;
     }
-  return False;
+  return false;
 }
 /*
-template Bool RFASelector::find<uInt>(uInt&,const uInt&,const Vector<uInt>&);
-template Bool RFASelector::find<Int>(uInt&,const Int&,const Vector<Int>&);
-template Bool RFASelector::find<String>(uInt&,const String&,const Vector<String>&);
+template casacore::Bool RFASelector::find<casacore::uInt>(casacore::uInt&,const casacore::uInt&,const casacore::Vector<casacore::uInt>&);
+template casacore::Bool RFASelector::find<casacore::Int>(casacore::uInt&,const casacore::Int&,const casacore::Vector<casacore::Int>&);
+template casacore::Bool RFASelector::find<casacore::String>(casacore::uInt&,const casacore::String&,const casacore::Vector<casacore::String>&);
 */
 } //# NAMESPACE CASA - END
 

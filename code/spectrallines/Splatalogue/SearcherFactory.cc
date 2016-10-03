@@ -28,6 +28,7 @@
 #include <iostream>
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 String SearcherFactory::getLocation( bool local ){
@@ -75,4 +76,5 @@ SearcherFactory::SearcherFactory(){
 SearcherFactory::~SearcherFactory(){
 }
 
+using namespace casacore;
 } /* namespace casa */

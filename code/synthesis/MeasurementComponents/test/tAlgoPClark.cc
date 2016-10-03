@@ -194,7 +194,7 @@ void master(Int argc, Char *argv[]) {
   ClarkCleanAlgorithm clarkClean;
   OrderedMap<Int, Int> chanNo(0);
   Bool assigned(casa::applicator.nextAvailProcess(clarkClean, rank));
-  Bool allDone(False);
+  Bool allDone(false);
   for (imageStepli.reset(),imageli.reset(),psfli.reset();
        !imageStepli.atEnd();
        imageStepli++,imageli++,psfli++,chan++) {

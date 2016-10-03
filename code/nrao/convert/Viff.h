@@ -53,7 +53,6 @@
 #include <casa/BasicSL/Complex.h>
 
 struct xvimage; // From Khoros
-class String;
 
 class Viff {
 public:
@@ -62,51 +61,51 @@ public:
 
     ~Viff();
 
-    // Put Array (or any class derived from it, Vector, Matrix, Cube...)
+    // Put casacore::Array (or any class derived from it, casacore::Vector, casacore::Matrix, Cube...)
     // into this Viff structure. Non-degenerate arrays of dimension >=4
-    // will cause a "False" to be returned, since Viff images are restricted
-    // to 3 dimensions. When the Viff type and the Array types differ,
-    // a conversion will be done. Complex types are turned into real and
+    // will cause a "false" to be returned, since Viff images are restricted
+    // to 3 dimensions. When the Viff type and the casacore::Array types differ,
+    // a conversion will be done. casacore::Complex types are turned into real and
     // integer by taking the real component.
-    Bool put(const Array<float> &array);
-    Bool put(const Array<Complex> &array);
+    casacore::Bool put(const casacore::Array<float> &array);
+    casacore::Bool put(const casacore::Array<casacore::Complex> &array);
 
-    // Get the Array out of this Viff structre. If the Viff structure isn't 
-    // initialized it will return a 0-sized array and set the flag to False.
-    // This will convert from the internal Viff type to the desired Array<T>
-    // type. Complex types are turned into real
+    // Get the casacore::Array out of this Viff structre. If the Viff structure isn't 
+    // initialized it will return a 0-sized array and set the flag to false.
+    // This will convert from the internal Viff type to the desired casacore::Array<T>
+    // type. casacore::Complex types are turned into real
     // and integer types by taking the real component.
-    Bool get(Array<float> &array);
-    Bool get(Array<Complex> &array);
+    casacore::Bool get(casacore::Array<float> &array);
+    casacore::Bool get(casacore::Array<casacore::Complex> &array);
 
     // Read the Viff file specified by name; return false if it fails
     // (file does not exist, no permissions, etc).
-    Bool read(String name);
+    casacore::Bool read(casacore::String name);
 
     // Write the current Viff structure to a file; create a 0-sized Viff
     // image if this object has not been previously filled (by read or by
-    // put). Return True if this succeeds, False otherwise. Note that this
+    // put). Return true if this succeeds, false otherwise. Note that this
     // will overwrite an existing file.
-    Bool write(String name);
+    casacore::Bool write(casacore::String name);
 
     // Viff can be thought of as always containing a "3D" data structure, and
     // a vector is when only one of the dimentions is non-unity. nx(), ny() and
     // nx() return 0 if the Viff object isn't defined.
-    uInt nx() const;
-    uInt ny() const;
-    uInt nz() const;
+    casacore::uInt nx() const;
+    casacore::uInt ny() const;
+    casacore::uInt nz() const;
 
     // We can assign an N dimensional location to each (x,y) position in
     // the Viff object (yes, this is strange - ask the authors of Viff), 
     // i.e. we can assign nx()*ny() N-dimensional locations. Fundamentally
-    // this is done by giving a Cube<float> of values where the first two
-    // indices in the Cube correspond to the (x,y) in the Viff structure, and
+    // this is done by giving a casacore::Cube<float> of values where the first two
+    // indices in the casacore::Cube correspond to the (x,y) in the Viff structure, and
     // the Z-depth of the cube corresponds to the dimensionality of the
     // positions we want to assign.
-    // Because a Cube can be constructed from a Vector, to create a file which
+    // Because a casacore::Cube can be constructed from a casacore::Vector, to create a file which
     // contains a y vs x vector plot, you merely have to do something like:
     // viff.put(y); viff.putLocations(x);
-    Bool putLocations(const Cube<float> &);
+    casacore::Bool putLocations(const casacore::Cube<float> &);
 
 private:
     // These members are the arguments to create image;

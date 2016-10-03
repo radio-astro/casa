@@ -105,7 +105,7 @@ public:
   VisEquation& operator=(const VisEquation& other);
 
   // Arrange for apply of a VisCal list (i.e., sort them into the correct order)
-  void setapply(PtrBlock<VisCal*>& vcin);
+  void setapply(casacore::PtrBlock<VisCal*>& vcin);
 
   // Arrange for solve of a single SolvableVisCal
   void setsolve(SolvableVisCal& svc);
@@ -117,25 +117,25 @@ public:
   VisCal::Type pivot() const { return pivot_; };
 
   // Arrange the model to use for calibration
-  void setModel(const Vector<Float>& stokes);
-  inline void unSetModel() { useInternalModel_=False; };
+  void setModel(const casacore::Vector<casacore::Float>& stokes);
+  inline void unSetModel() { useInternalModel_=false; };
 
   // How many terms are arranged for apply?
-  inline Int nTerms() const { return napp_; };
+  inline casacore::Int nTerms() const { return napp_; };
 
-  // List the terms
-  Vector<VisCal::Type> listTypes() const;
+  // casacore::List the terms
+  casacore::Vector<VisCal::Type> listTypes() const;
   
   // Report if spw has solutions available from all applied tables
-  Bool spwOK(const Int& spw);
+  casacore::Bool spwOK(const casacore::Int& spw);
 
   // Correct in place the OBSERVED visibilities in a VisBuffer
   //  with the apply-able VisCals
-  void correct(VisBuffer& vb, Bool trial=False);
-  void correct2(vi::VisBuffer2& vb, Bool trial=False, Bool doWtSp=False);
+  void correct(VisBuffer& vb, casacore::Bool trial=false);
+  void correct2(vi::VisBuffer2& vb, casacore::Bool trial=false, casacore::Bool doWtSp=false);
 
   // Report flag-by-cal statistics
-  Record actionRec();
+  casacore::Record actionRec();
 
   // Corrupt in place the MODEL visibilities in a VisBuffer
   //  with the apply-able VisCals
@@ -155,20 +155,20 @@ public:
   // Calculate residuals 
   //   (optionally for specific chan)
   void residuals(VisBuffer& vb, 
-		 Cube<Complex>& R,
-		 const Int chan=-1);
+		 casacore::Cube<casacore::Complex>& R,
+		 const casacore::Int chan=-1);
   
   // Calculate residuals and differentiated residuals
   //   (optionally for specific chan)
   void diffResiduals(CalVisBuffer& cvb);
   void diffResiduals(VisBuffer& vb, 
-		     Cube<Complex>& R, 
-		     Array<Complex>& dR,
-		     Matrix<Bool>& Rflg); 
+		     casacore::Cube<casacore::Complex>& R, 
+		     casacore::Array<casacore::Complex>& dR,
+		     casacore::Matrix<casacore::Bool>& Rflg); 
   void diffResiduals(VisBuffer& R,
                      VisBuffer& dR0,
                      VisBuffer& dR1,
-                     Matrix<Bool>& Rflg);
+                     casacore::Matrix<casacore::Bool>& Rflg);
 
   // SolveDataBuffer version
   void differentiate(SolveDataBuffer& sdb);  // VI2
@@ -177,14 +177,14 @@ public:
   void state();
 
   // Set the print level
-  inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
+  inline void setPrtlev(const casacore::Int& prtlev) { prtlev_=prtlev; };
   
 protected:
 
-  Bool ok();
+  casacore::Bool ok();
 
   // Access to the PB of apply terms 
-  inline PtrBlock<VisCal*>& vc()  { return (*vcpb_); };
+  inline casacore::PtrBlock<VisCal*>& vc()  { return (*vcpb_); };
 
   // Access to SVC
   inline SolvableVisCal&    svc() { return *svc_; };
@@ -199,21 +199,21 @@ protected:
 private:
 
   // Diagnostic print level access
-  inline Int& prtlev() { return prtlev_; };
+  inline casacore::Int& prtlev() { return prtlev_; };
 
   // A local copy of the list of VisCal (pointers) for applying
   //  (No ownership responsibilities)
-  PtrBlock<VisCal*>* vcpb_;
+  casacore::PtrBlock<VisCal*>* vcpb_;
 
   // Number of apply VisCals in vc_
-  Int napp_;
+  casacore::Int napp_;
 
   // Frequency dependence indices
-  Int lfd_;     // Right-most freq-dep term on LEFT  side
-  Int rfd_;     // Left-most  freq-dep term on RIGHT side
+  casacore::Int lfd_;     // Right-most freq-dep term on LEFT  side
+  casacore::Int rfd_;     // Left-most  freq-dep term on RIGHT side
 
   // Trap for frequency averaging in collapse
-  Bool freqAveOK_;
+  casacore::Bool freqAveOK_;
 
   // VisCal with solving interface
   //  (No ownership responsibilities)
@@ -223,11 +223,11 @@ private:
   VisCal::Type pivot_;
 
   // An internal (global) point source model
-  Bool useInternalModel_;
-  Vector<Float> stokesModel_;
+  casacore::Bool useInternalModel_;
+  casacore::Vector<casacore::Float> stokesModel_;
 
   // Diagnostic print level
-  Int prtlev_;
+  casacore::Int prtlev_;
 
 };
 

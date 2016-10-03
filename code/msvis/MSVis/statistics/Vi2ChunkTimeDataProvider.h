@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// Data provider for time column
+// casacore::Data provider for time column
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_TIME_DATA_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_TIME_DATA_PROVIDER_H_
@@ -42,9 +42,9 @@ class Vi2ChunkTimeDataProvider final
 
 public:
 	Vi2ChunkTimeDataProvider(
-		vi::VisibilityIterator2 *vi2, Bool omit_flagged_data);
+		vi::VisibilityIterator2 *vi2, casacore::Bool omit_flagged_data);
 
-	const Vector<Double>& dataArray();
+	const casacore::Vector<casacore::Double>& dataArray();
 };
 
 } // namespace casa

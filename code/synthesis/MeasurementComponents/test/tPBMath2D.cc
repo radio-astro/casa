@@ -110,7 +110,7 @@ int main()
       coordsys.addCoordinate(stokesCoords);
       coordsys.addCoordinate(spectralCoords);
       IPosition latticeShape, tileShape;
-      coordsys.list(os, MDoppler::RADIO, latticeShape, tileShape, False);
+      coordsys.list(os, MDoppler::RADIO, latticeShape, tileShape, false);
      
     }
     
@@ -125,8 +125,8 @@ int main()
       IPosition trc=im1.shape()-1;
       trc(2)=2;
       Slicer sl(blc, trc, Slicer::endIsLast);
-      SubImage<Complex> sub1(im1, sl, True);
-      SubImage<Complex> sub2(im2, sl, True);
+      SubImage<Complex> sub1(im1, sl, true);
+      SubImage<Complex> sub2(im2, sl, true);
       sub1.set(Complex(0.0, 0.0));
       sub2.set(Complex(0.0, 0.0));
     }

@@ -28,6 +28,7 @@
 #include <QDialog>
 #include <QSettings>
 
+using namespace casacore;
 namespace casa {
 
 

@@ -12,11 +12,13 @@
 #include <casa/BasicSL.h>
 #include <vector>
 
-namespace casa {
+namespace casacore{
 
-template<typename T>
-class ArrayColumn;
+template<typename T> class ArrayColumn;
 class MeasurementSet;
+}
+
+namespace casa {
 
 namespace ms {
 
@@ -26,25 +28,25 @@ class SpectralChannel {
 
 public:
 
-    SpectralChannel (Double frequency, Double width,
-                     Double effectiveBandwidth, Double resolution)
+    SpectralChannel (casacore::Double frequency, casacore::Double width,
+                     casacore::Double effectiveBandwidth, casacore::Double resolution)
     : effectiveBandwidth_p (effectiveBandwidth),
       frequency_p (frequency),
       resolution_p (resolution),
       width_p (width)
     {}
 
-    Double effectiveBandwidth () const;
-    Double frequency () const;
-    Double resolution () const;
-    Double width () const;
+    casacore::Double effectiveBandwidth () const;
+    casacore::Double frequency () const;
+    casacore::Double resolution () const;
+    casacore::Double width () const;
 
 private:
 
-    Double effectiveBandwidth_p;
-    Double frequency_p;
-    Double resolution_p;
-    Double width_p;
+    casacore::Double effectiveBandwidth_p;
+    casacore::Double frequency_p;
+    casacore::Double resolution_p;
+    casacore::Double width_p;
 
 };
 
@@ -55,47 +57,47 @@ public:
     typedef std::vector<SpectralChannel> Channels;
     typedef Channels::const_iterator const_iterator;
 
-    SpectralWindow (const ROMSSpWindowColumns & columns, Int spectralWindowId);
+    SpectralWindow (const casacore::ROMSSpWindowColumns & columns, casacore::Int spectralWindowId);
 
     const_iterator begin () const;
     bool empty () const;
     const_iterator end () const;
-    const SpectralChannel & get (Int i) const;
+    const SpectralChannel & get (casacore::Int i) const;
 
-    Int id () const;
-    Bool isFlagged () const;
-    Int frequencyGroup () const;
-    String frequencyGroupName () const;
-    Int frequencyMeasureReference () const;
-    Int ifConversionChain () const;
-    String name () const;
+    casacore::Int id () const;
+    casacore::Bool isFlagged () const;
+    casacore::Int frequencyGroup () const;
+    casacore::String frequencyGroupName () const;
+    casacore::Int frequencyMeasureReference () const;
+    casacore::Int ifConversionChain () const;
+    casacore::String name () const;
     int nChannels () const;
     int netSideband () const;
-    Double totalBandwidth () const;
-    Double referenceFrequency () const;
+    casacore::Double totalBandwidth () const;
+    casacore::Double referenceFrequency () const;
 
 protected:
 
-    void fillArrays(const ROMSSpWindowColumns & columns);
-    Vector<Double> getArray (const ArrayColumn<Double> & arrayColumn);
-    void fillScalars (const ROMSSpWindowColumns & columns);
+    void fillArrays(const casacore::ROMSSpWindowColumns & columns);
+    casacore::Vector<casacore::Double> getArray (const casacore::ArrayColumn<casacore::Double> & arrayColumn);
+    void fillScalars (const casacore::ROMSSpWindowColumns & columns);
     template<typename T>
-    T getScalar (const ScalarColumn<T> & column);
+    T getScalar (const casacore::ScalarColumn<T> & column);
 
 private:
 
     Channels channels_p;
-    Bool flagged_p;
-    Int frequencyGroup_p;
-    String frequencyGroupName_p;
-    Int frequencyMeasureReference_p;
-    Int id_p;
-    Int ifConversionChain_p;
-    String name_p;
+    casacore::Bool flagged_p;
+    casacore::Int frequencyGroup_p;
+    casacore::String frequencyGroupName_p;
+    casacore::Int frequencyMeasureReference_p;
+    casacore::Int id_p;
+    casacore::Int ifConversionChain_p;
+    casacore::String name_p;
     int nChannels_p;
     int netSideband_p;
-    Double totalBandwidth_p;
-    Double referenceFrequency_p;
+    casacore::Double totalBandwidth_p;
+    casacore::Double referenceFrequency_p;
 };
 
 class SpectralWindows {
@@ -105,12 +107,12 @@ public:
     typedef std::vector<SpectralWindow> Windows;
     typedef Windows::const_iterator const_iterator;
 
-    SpectralWindows (const MeasurementSet * ms);
+    SpectralWindows (const casacore::MeasurementSet * ms);
 
     const_iterator begin () const;
     bool empty () const;
     const_iterator end () const;
-    const SpectralWindow & get (Int id) const;
+    const SpectralWindow & get (casacore::Int id) const;
     size_t size () const;
 
 protected:
@@ -121,8 +123,7 @@ private:
 };
 
 } // end namespace vi
+
 } // end namespace casa
-
-
 
 #endif /* SPECTRALWINDOW_H_ */

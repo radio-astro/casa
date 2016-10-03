@@ -32,7 +32,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	void MWCAnimator::setLinearRestriction(const String &name,
+	void MWCAnimator::setLinearRestriction(const casacore::String &name,
 	                                       const T &value, const T &increment,
 	                                       const T& tol) {
 		AttributeBuffer resbuf, incbuf;

@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-  /** \brief Data inputs for coefficient retrieval from absolute
+  /** \brief casacore::Data inputs for coefficient retrieval from absolute
       temperatures
    */
   typedef struct {

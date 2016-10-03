@@ -44,7 +44,7 @@ private:
 
 protected:
 	void
-	setup_iteration_controller(MPI_Comm comm, Record &iter_pars) {
+	setup_iteration_controller(MPI_Comm comm, casacore::Record &iter_pars) {
 		teardown_iteration_controller();
 		// Instantiate an iterbot. Use DistributedSynthesisIterBot when
 		// interaction with new GUI works; for now,
@@ -65,18 +65,18 @@ public:
 		it->endMajorCycle();
 	};
 
-	Record
+	casacore::Record
 	get_minor_cycle_controls() {
 		return it->getSubIterBot();
 	};
 
 	void
-	merge_execution_records(const Vector<Record> &recs) {
+	merge_execution_records(const casacore::Vector<casacore::Record> &recs) {
 		it->endMinorCycle(recs);
 	};
 
 	void
-	merge_initialization_records(const Vector<Record> &recs) {
+	merge_initialization_records(const casacore::Vector<casacore::Record> &recs) {
 		it->startMinorCycle(recs);
 	};
 
@@ -85,7 +85,7 @@ public:
 		return it->cleanComplete() > 0;
 	};
 
-	Record
+	casacore::Record
 	get_summary() {
 		return it->getIterationSummary();
 	};

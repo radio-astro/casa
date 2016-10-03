@@ -56,8 +56,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // TJonesPolyDesc defines the format of TJonesPoly calibration tables 
-// in terms of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. TJonesPoly matrices represent atmospheric
+// in terms of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. TJonesPoly matrices represent atmospheric
 // gain corrections in the Measurement Equation formalism expressed as
 // polynomials over time.
 // </synopsis>
@@ -83,7 +83,7 @@ class TJonesPolyDesc : public TJonesDesc
    virtual ~TJonesPolyDesc() {};
 
    // Return the table descriptor for the main calibration table
-   virtual TableDesc calMainDesc();
+   virtual casacore::TableDesc calMainDesc();
 };
 
 // <summary> 
@@ -110,8 +110,8 @@ class TJonesPolyDesc : public TJonesDesc
 //
 // <synopsis>
 // TJonesSplineDesc defines the format of TJonesSpline calibration tables 
-// in terms of table descriptors <linkto class="TableDesc">TableDesc</linkto>, 
-// as used in the Table system. TJonesSpline matrices represent atmospheric
+// in terms of table descriptors <linkto class="casacore::TableDesc">casacore::TableDesc</linkto>, 
+// as used in the casacore::Table system. TJonesSpline matrices represent atmospheric
 // gain corrections in the Measurement Equation formalism expressed as
 // spline polynomials over time.
 // </synopsis>
@@ -137,7 +137,7 @@ class TJonesSplineDesc : public TJonesPolyDesc
    virtual ~TJonesSplineDesc() {};
 
    // Return the table descriptor for the main calibration table
-   virtual TableDesc calMainDesc();
+   virtual casacore::TableDesc calMainDesc();
 };
 
 

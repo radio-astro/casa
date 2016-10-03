@@ -122,11 +122,11 @@ namespace casa {
 
 
 
-		QtProfile(SHARED_PTR<ImageInterface<Float> > img, const char *name = 0,
+		QtProfile(SHARED_PTR<casacore::ImageInterface<casacore::Float> > img, const char *name = 0,
 		          QWidget *parent = 0, std::string rcstr="prf");
 
 		~QtProfile();
-		MFrequency::Types determineRefFrame(SHARED_PTR<ImageInterface<Float> > img, bool check_native_frame = false );
+		casacore::MFrequency::Types determineRefFrame(SHARED_PTR<casacore::ImageInterface<casacore::Float> > img, bool check_native_frame = false );
 
 		virtual std::string rcid( ) const {
 			return rcid_;
@@ -144,36 +144,36 @@ namespace casa {
 		//profile fitting with initial input values, to inform
 		//this class of status and log messages indicated the result
 		//of a spectral fit, and to perform moments/collapsing.
-		void postStatus( String status );
-		Vector<Float> getXValues() const;
-		Vector<Float> getYValues() const;
-		Vector<Float> getZValues() const;
-		Vector<Double> getRegionXValues() const;
-		Vector<Double> getRegionYValues() const;
+		void postStatus( casacore::String status );
+		casacore::Vector<casacore::Float> getXValues() const;
+		casacore::Vector<casacore::Float> getYValues() const;
+		casacore::Vector<casacore::Float> getZValues() const;
+		casacore::Vector<casacore::Double> getRegionXValues() const;
+		casacore::Vector<casacore::Double> getRegionYValues() const;
 		QString getYUnit() const;
 		QString getYUnitPrefix() const;
-		String getXAxisUnit() const;
+		casacore::String getXAxisUnit() const;
 		QString getFileName() const;
 		QString getImagePath() const;
-		String getRegionShape() const;
-		SHARED_PTR<const ImageInterface<Float> > getImage( const QString& imageName="") const;
-		virtual bool getBeamInfo( const QString& curveName, Double& beamAngle, Double& beamArea ) const;
-		void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
+		casacore::String getRegionShape() const;
+		SHARED_PTR<const casacore::ImageInterface<casacore::Float> > getImage( const QString& imageName="") const;
+		virtual bool getBeamInfo( const QString& curveName, casacore::Double& beamAngle, casacore::Double& beamArea ) const;
+		void getPixelBounds(casacore::Vector<double>& pixelX, casacore::Vector<double>& pixelY) const;
 		void persist( const QString& key, const QString& value );
 		QString read( const QString & key ) const;
-		void imageCollapsed(String path, String dataType, String displayType,
-				Bool autoRegister, Bool tmpData, SHARED_PTR<ImageInterface<Float> > img);
+		void imageCollapsed(casacore::String path, casacore::String dataType, casacore::String displayType,
+				casacore::Bool autoRegister, casacore::Bool tmpData, SHARED_PTR<casacore::ImageInterface<casacore::Float> > img);
 		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
-		void processTrackRecord( const String& dataName, const String& positionInfo );
-		virtual MFrequency::Types getReferenceFrame() const;
-		QString getBrightnessUnit( SHARED_PTR<ImageInterface<Float> > img ) const;
-		typedef std::pair<QString, SHARED_PTR<ImageInterface<float> > > OverplotInterface;
+		void processTrackRecord( const casacore::String& dataName, const casacore::String& positionInfo );
+		virtual casacore::MFrequency::Types getReferenceFrame() const;
+		QString getBrightnessUnit( SHARED_PTR<casacore::ImageInterface<casacore::Float> > img ) const;
+		typedef std::pair<QString, SHARED_PTR<casacore::ImageInterface<float> > > OverplotInterface;
 		//typedef pair<QString,ImageAnalysis*> OverplotAnalysis;
 
-		static const String SHAPE_ELLIPSE;
-		static const String SHAPE_RECTANGLE;
-		static const String SHAPE_POINT;
-		static const String SHAPE_POLY;
+		static const casacore::String SHAPE_ELLIPSE;
+		static const casacore::String SHAPE_RECTANGLE;
+		static const casacore::String SHAPE_POINT;
+		static const casacore::String SHAPE_POLY;
 		static const QString FREQUENCY;
 		static const QString CHANNEL;
 
@@ -208,17 +208,17 @@ namespace casa {
 
 		void changeTopAxisCoordinateType( const QString & text );
 		virtual void closeEvent ( QCloseEvent *);
-		void resetProfile(SHARED_PTR<ImageInterface<Float> > img, const char *name = 0);
-		void wcChanged( const String,
-		                const Vector<Double>, const Vector<Double>,
-		                const Vector<Double>, const Vector<Double>,
+		void resetProfile(SHARED_PTR<casacore::ImageInterface<casacore::Float> > img, const char *name = 0);
+		void wcChanged( const casacore::String,
+		                const casacore::Vector<casacore::Double>, const casacore::Vector<casacore::Double>,
+		                const casacore::Vector<casacore::Double>, const casacore::Vector<casacore::Double>,
 		                const ProfileType);
 		void redraw( );
 		void changePlotType(const QString &text);
 		void changeErrorType(const QString &text);
 
-		void changeAxis(String xa, String ya, String za, std::vector<int>);
-		void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
+		void changeAxis(casacore::String xa, casacore::String ya, casacore::String za, std::vector<int>);
+		void changeSpectrum(casacore::String spcTypeUnit, casacore::String spcRval, casacore::String spcSys);
 
 		void plotMainCurve();
 		void clearPlots();
@@ -240,13 +240,13 @@ namespace casa {
 		/**
 		 * Returns whether or not the image can be profiled.
 		 */
-		bool isImageSupported(SHARED_PTR<ImageInterface<float> > img );
+		bool isImageSupported(SHARED_PTR<casacore::ImageInterface<float> > img );
 
 	signals:
 		void hideProfile();
-		void coordinateChange(const String&);
-		void showCollapsedImg(String path, String dataType, String displayType,
-				Bool autoRegister, Bool tmpData, SHARED_PTR<ImageInterface<Float> > img);
+		void coordinateChange(const casacore::String&);
+		void showCollapsedImg(casacore::String path, casacore::String dataType, casacore::String displayType,
+				casacore::Bool autoRegister, casacore::Bool tmpData, SHARED_PTR<casacore::ImageInterface<casacore::Float> > img);
 		void channelSelect( int channelIndex );
 		void adjustPosition( double tlcx, double tlcy, double brcx, double brcy );
 		void movieChannel( int startChannel, int endChannel );
@@ -255,85 +255,85 @@ namespace casa {
 	private:
 		void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
 		void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
-		void fillPlotTypes(const SHARED_PTR<ImageInterface<Float> > img);
-		void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
+		void fillPlotTypes(const SHARED_PTR<casacore::ImageInterface<casacore::Float> > img);
+		void getcoordTypeUnit(casacore::String &ctypeUnitStr, casacore::String &cTypeStr, casacore::String &unitStr);
 		void printIt(QPrinter*);
 		bool exportASCIISpectrum(QString &fn);
 		bool exportFITSSpectrum(QString &fn);
 		void messageFromProfile(QString &msg);
-		void setUnitsText( String unitStr );
+		void setUnitsText( casacore::String unitStr );
 		void resetYUnits( const QString& units);
-		void outputCurve( int k, QTextStream& ts, Float scaleFactor );
-		int getFreqProfileTabularIndex(SHARED_PTR<const ImageInterface<Float> > img);
-		SpectralCoordinate resetTabularConversion(SHARED_PTR< const ImageInterface<Float> > imagePtr, Bool& valid);
+		void outputCurve( int k, QTextStream& ts, casacore::Float scaleFactor );
+		int getFreqProfileTabularIndex(SHARED_PTR<const casacore::ImageInterface<casacore::Float> > img);
+		casacore::SpectralCoordinate resetTabularConversion(SHARED_PTR< const casacore::ImageInterface<casacore::Float> > imagePtr, casacore::Bool& valid);
 		bool isSpectralAxis() const;
 		void initializeSpectralProperties();
-		SpectralCoordinate getSpectralAxis( SHARED_PTR<const ImageInterface<Float> > imagePtr, Bool& valid );
+		casacore::SpectralCoordinate getSpectralAxis( SHARED_PTR<const casacore::ImageInterface<casacore::Float> > imagePtr, casacore::Bool& valid );
 		void resetXUnits( bool spectralAxis);
 		void updateSpectralReferenceFrame();
 
-		int computeCB( const String& xa, const String& ya, const String& za );
-		void getBeamInfo( SHARED_PTR<const ImageInterface<Float> > imagePtr, Double& beamArea, Double& beamSolidAngle) const;
-		SpectralCoordinate getSpectralCoordinate( SHARED_PTR<const ImageInterface<Float> > imagePtr, Bool& valid );
-		bool parseRestFrequency( const String& restStr, Quantity& result ) const;
+		int computeCB( const casacore::String& xa, const casacore::String& ya, const casacore::String& za );
+		void getBeamInfo( SHARED_PTR<const casacore::ImageInterface<casacore::Float> > imagePtr, casacore::Double& beamArea, casacore::Double& beamSolidAngle) const;
+		casacore::SpectralCoordinate getSpectralCoordinate( SHARED_PTR<const casacore::ImageInterface<casacore::Float> > imagePtr, casacore::Bool& valid );
+		bool parseRestFrequency( const casacore::String& restStr, casacore::Quantity& result ) const;
 
-		bool generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
-					SHARED_PTR<casa::ImageInterface<Float> > imagePtr,
-					const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
-					QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
-					int qualityAxis, String restFreq="", const String& frame="");
+		bool generateProfile( casacore::Vector<casacore::Float>& resultXValues, casacore::Vector<casacore::Float>& resultYValues,
+					SHARED_PTR<casacore::ImageInterface<casacore::Float> > imagePtr,
+					const casacore::Vector<casacore::Double>& regionX, const casacore::Vector<casacore::Double>& regionY, casacore::String shape,
+					QtProfile::ExtrType combineType, casacore::String& unit, const casacore::String& coordinateType,
+					int qualityAxis, casacore::String restFreq="", const casacore::String& frame="");
 
-		pair<Vector<float>, Vector<float> > convertIntensity( const Vector<float>& sourceXVals, const Vector<float>& sourceYVals,
-							SHARED_PTR<ImageInterface<Float> > imagePtr, const QString& xUnits,
+		pair<casacore::Vector<float>, casacore::Vector<float> > convertIntensity( const casacore::Vector<float>& sourceXVals, const casacore::Vector<float>& sourceYVals,
+							SHARED_PTR<casacore::ImageInterface<casacore::Float> > imagePtr, const QString& xUnits,
 							const QString& yUnitsOld, const QString& yUnitsNew );
 		void saveAsPDF( const QString& fileName );
 		/**
 		 * Returns false if first vector value is greater than the last
 		 * vector value; otherwise returns true.
 		 */
-		bool isAxisAscending(const Vector<Float>& axisValues ) const;
+		bool isAxisAscending(const casacore::Vector<casacore::Float>& axisValues ) const;
 		bool isVelocityUnit( const QString& unit ) const;
 		bool isFrequencyUnit( const QString& unit ) const;
 		bool isWavelengthUnit( const QString& unit ) const;
 		void setTitle( const QString& shape );
 		void setTitle(const ProfileType ptype);
-		void copyToLastEvent( const String& c, const Vector<Double> &px,
-		                      const Vector<Double> &py,
-		                      const Vector<Double> &wx,
-		                      const Vector<Double> &wy );
+		void copyToLastEvent( const casacore::String& c, const casacore::Vector<casacore::Double> &px,
+		                      const casacore::Vector<casacore::Double> &py,
+		                      const casacore::Vector<casacore::Double> &wx,
+		                      const casacore::Vector<casacore::Double> &wy );
 		void setPlotType( int wcArraySize );
 		bool checkCube();
-		void assignCoordinate(const String& c);
-		void initializeCoordinateVectors(const Vector<double> &px, const Vector<double> &py,
-		                                 const Vector<double> &wx, const Vector<double> &wy, Vector<double> &pxv,
-		                                 Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
-		void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
-		                       const Vector<double> &wxv, const Vector<double> &wyv );
-		/*bool getFrequencyProfileWrapper( SHARED_PTR<ImageInterface<Float> >& img, const Vector<double> &wxv, const Vector<double> &wyv,
-		                                 Vector<Float> &z_xval, Vector<Float> &z_yval,
-		                                 const String& xytype, const String& specaxis,
-		                                 const Int& whichStokes, const Int& whichTabular,
-		                                 const Int& whichLinear, String& xunits,
-		                                 const String& specFrame, QtProfile::ExtrType combineType,
-		                                 const Int& whichQuality, const String& restValue,
-		                                 const String& shape);*/
-		bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
-		                             const String& coordinateType, String& xAxisUnit,
-		                             Vector<Float> &z_xval, Vector<Float> &z_yval, const String& shape );
-		bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
-		void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
-		                       const Vector<double> wxv, const Vector<double> wyv );
-		void addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
+		void assignCoordinate(const casacore::String& c);
+		void initializeCoordinateVectors(const casacore::Vector<double> &px, const casacore::Vector<double> &py,
+		                                 const casacore::Vector<double> &wx, const casacore::Vector<double> &wy, casacore::Vector<double> &pxv,
+		                                 casacore::Vector<double> &pyv, casacore::Vector<double> &wxv, casacore::Vector<double> &wyv) const;
+		void setPositionStatus(const casacore::Vector<double> &pxv, const casacore::Vector<double> &pyv,
+		                       const casacore::Vector<double> &wxv, const casacore::Vector<double> &wyv );
+		/*bool getFrequencyProfileWrapper( SHARED_PTR<casacore::ImageInterface<casacore::Float> >& img, const casacore::Vector<double> &wxv, const casacore::Vector<double> &wyv,
+		                                 casacore::Vector<casacore::Float> &z_xval, casacore::Vector<casacore::Float> &z_yval,
+		                                 const casacore::String& xytype, const casacore::String& specaxis,
+		                                 const casacore::Int& whichStokes, const casacore::Int& whichTabular,
+		                                 const casacore::Int& whichLinear, casacore::String& xunits,
+		                                 const casacore::String& specFrame, QtProfile::ExtrType combineType,
+		                                 const casacore::Int& whichQuality, const casacore::String& restValue,
+		                                 const casacore::String& shape);*/
+		bool assignFrequencyProfile( const casacore::Vector<double> &wxv, const casacore::Vector<double> &wyv,
+		                             const casacore::String& coordinateType, casacore::String& xAxisUnit,
+		                             casacore::Vector<casacore::Float> &z_xval, casacore::Vector<casacore::Float> &z_yval, const casacore::String& shape );
+		bool setErrorPlotting( const casacore::Vector<double> &wxv, const casacore::Vector<double> &wyv);
+		void storeCoordinates( const casacore::Vector<double> pxv, const casacore::Vector<double> pyv,
+		                       const casacore::Vector<double> wxv, const casacore::Vector<double> wyv );
+		void addCanvasMainCurve( const casacore::Vector<casacore::Float>& xVals, const casacore::Vector<casacore::Float>& yVals,
 		                         const QString& label, double beamAngle, double beamArea,
-		                         SpectralCoordinate coord);
+		                         casacore::SpectralCoordinate coord);
 		bool adjustTopAxisSettings();
 		void initializeXAxisUnits();
 		void setXAxisUnits();
 		void initSmoothing();
 		void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
 		void toggleAction( QAction* action );
-		Int scaleAxis();
-		void addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM );
+		casacore::Int scaleAxis();
+		void addImageAnalysisGraph( const casacore::Vector<double> &wxv, const casacore::Vector<double> &wyv, casacore::Int ordersOfM );
 		void initializeSolidAngle() const;
 		//Conversion
 		QString getRaDec(double x, double y);
@@ -344,7 +344,7 @@ namespace casa {
 		void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
 		void setYUnitConversionVisibility( bool visible );
 		//ImageAnalysis* analysis;
-		SHARED_PTR<ImageInterface<Float> > image;
+		SHARED_PTR<casacore::ImageInterface<casacore::Float> > image;
 
 		//For deciding whether or not it makes sense to show the top axis when
 		//multiple images are loaded.
@@ -352,39 +352,39 @@ namespace casa {
 		bool isFrequencyMatch();
 		bool isVelocityMatch();
 		//int getChannelCount( ImageAnalysis* analysis );
-		int getChannelCount( SHARED_PTR<ImageInterface<float> >& img);
-		SHARED_PTR<ImageInterface<float> > findImageWithMaximumChannels();
+		int getChannelCount( SHARED_PTR<casacore::ImageInterface<float> >& img);
+		SHARED_PTR<casacore::ImageInterface<float> > findImageWithMaximumChannels();
 		void restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits, bool allowFrequency = true,
 				bool allowVelocity=true );
-		double getUnitsPerChannel( SHARED_PTR<ImageInterface<Float> > img , bool* ok, const QString& matchUnits );
+		double getUnitsPerChannel( SHARED_PTR<casacore::ImageInterface<casacore::Float> > img , bool* ok, const QString& matchUnits );
 		QString readTopAxis() const;
 		void persistTopAxis( const QString& units );
-		void assignProfileType( const String& shape, int regionPointCount );
-		void addOverplotToCanvas( SHARED_PTR<ImageInterface<Float> > imagePtr, const Vector<Float>& xVals, const
-					Vector<Float>& yVals, const QString& ky );
-		bool isProfileChanged( const String& c, const Vector<Double> & px, const Vector<Double>& py,
-					const Vector<Double>& wx, const Vector<Double>& wy,
+		void assignProfileType( const casacore::String& shape, int regionPointCount );
+		void addOverplotToCanvas( SHARED_PTR<casacore::ImageInterface<casacore::Float> > imagePtr, const casacore::Vector<casacore::Float>& xVals, const
+					casacore::Vector<casacore::Float>& yVals, const QString& ky );
+		bool isProfileChanged( const casacore::String& c, const casacore::Vector<casacore::Double> & px, const casacore::Vector<casacore::Double>& py,
+					const casacore::Vector<casacore::Double>& wx, const casacore::Vector<casacore::Double>& wy,
 					const ProfileType pType );
 
-		bool _generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
-					SHARED_PTR<const casa::ImageInterface<Float> > imagePtr,
-					const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
-					QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
-					String restFreq, const String& frame);
+		bool _generateProfile( casacore::Vector<casacore::Float>& resultXValues, casacore::Vector<casacore::Float>& resultYValues,
+					SHARED_PTR<const casacore::ImageInterface<casacore::Float> > imagePtr,
+					const casacore::Vector<casacore::Double>& regionX, const casacore::Vector<casacore::Double>& regionY, casacore::String shape,
+					QtProfile::ExtrType combineType, casacore::String& unit, const casacore::String& coordinateType,
+					casacore::String restFreq, const casacore::String& frame);
 
 		//Handle custom spectral reference frames such as REST and Undefined
 		//for which conversions are not possible.
 		bool customizeSpectralReferenceFrame( const QString& specialType );
 		QList<OverplotInterface> *over;
-		const String WORLD_COORDINATES;
-		String coordinate;
-		String coordinateType;
-		String xaxisUnit;
-		String ctypeUnit;
-		String spcRefFrame;
+		const casacore::String WORLD_COORDINATES;
+		casacore::String coordinate;
+		casacore::String coordinateType;
+		casacore::String xaxisUnit;
+		casacore::String ctypeUnit;
+		casacore::String spcRefFrame;
 
 		//Rest frequency quantity and unit.
-		String cSysRval;
+		casacore::String cSysRval;
 
 		QString fileName;
 		QString imagePath;
@@ -403,19 +403,19 @@ namespace casa {
 		int stateMProf;
 		int stateRel;
 
-		Vector<Float> z_xval;
-		Vector<Float> z_yval;
-		Vector<Double> lastPX, lastPY;
-		Vector<Double> lastWX, lastWY;
-		Vector<Float> z_eval;
+		casacore::Vector<casacore::Float> z_xval;
+		casacore::Vector<casacore::Float> z_yval;
+		casacore::Vector<casacore::Double> lastPX, lastPY;
+		casacore::Vector<casacore::Double> lastWX, lastWY;
+		casacore::Vector<casacore::Float> z_eval;
 		QString region;
 
-		String last_event_cs;
-		Vector<Double> last_event_px, last_event_py;
-		Vector<Double> last_event_wx, last_event_wy;
+		casacore::String last_event_cs;
+		casacore::Vector<casacore::Double> last_event_px, last_event_py;
+		casacore::Vector<casacore::Double> last_event_wx, last_event_wy;
 
 		// connection to rc file
-		Casarc &rc;
+		casacore::Casarc &rc;
 		// rc id for this panel type
 		std::string rcid_;
 
@@ -423,9 +423,9 @@ namespace casa {
 		QtProfile::ErrorType itsErrorType;
 
 
-		LogIO *itsLog;
-		Int ordersOfM_;
-		Bool newCollapseVals;
+		casacore::LogIO *itsLog;
+		casacore::Int ordersOfM_;
+		casacore::Bool newCollapseVals;
 		bool showTopAxis;
 		bool showSingleChannelImage;
 		static bool topAxisDefaultSet;
@@ -473,7 +473,7 @@ namespace casa {
 		int current_region_id;
 		SpectraInfoMap spectra_info_map;
 		ProfileType profileType;
-		String lastShape;
+		casacore::String lastShape;
 
 		ColorSummaryWidget* colorSummaryWidget;
 		LegendPreferences* legendPreferencesDialog;

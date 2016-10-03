@@ -83,8 +83,8 @@ class BJonesMBuf : public SolvableVisJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  BJonesMBuf (const Vector<Int>& calIndices, 
-	      const Block<Vector<Int> >& indexValues);
+  BJonesMBuf (const casacore::Vector<casacore::Int>& calIndices, 
+	      const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
@@ -142,42 +142,42 @@ class BJonesPolyMBuf : public BJonesMBuf
   // their specified values. Non-index columns will be set 
   // to default values, and there is no connection to an 
   // underlying calibration table iterator in this case.
-  BJonesPolyMBuf (const Vector<Int>& calIndices, 
-		  const Block<Vector<Int> >& indexValues);
+  BJonesPolyMBuf (const casacore::Vector<casacore::Int>& calIndices, 
+		  const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
   BJonesPolyMBuf (CalIterBase& calIter);
 
   // Write the current buffer at the end of a specified cal table
-  virtual Int append (CalTable& calTable);
+  virtual casacore::Int append (CalTable& calTable);
 
   // Maximum number of rows in the calibration buffer
-  virtual Int nRow();
+  virtual casacore::Int nRow();
 
   // Update the parametrized solution for a given antenna id.
-  virtual Bool putAntGain (const Int& antennaId, const String& sFreqGrpName,
-			   const String& sPolyType, 
-			   const Complex& sScaleFactor, 
-			   const Vector<Double>& sValidDomain,
-			   const Int& sNPolyAmp, const Int& sNPolyPhase, 
-			   const Vector<Double>& sPolyCoeffAmp,
-			   const Vector<Double>& sPolyCoeffPhase,
-			   const String& sPhaseUnits, 
-			   const Complex& sSideBandRef, 
-			   const MFrequency& sRefFreq, const Int& sRefAnt);
+  virtual casacore::Bool putAntGain (const casacore::Int& antennaId, const casacore::String& sFreqGrpName,
+			   const casacore::String& sPolyType, 
+			   const casacore::Complex& sScaleFactor, 
+			   const casacore::Vector<casacore::Double>& sValidDomain,
+			   const casacore::Int& sNPolyAmp, const casacore::Int& sNPolyPhase, 
+			   const casacore::Vector<casacore::Double>& sPolyCoeffAmp,
+			   const casacore::Vector<casacore::Double>& sPolyCoeffPhase,
+			   const casacore::String& sPhaseUnits, 
+			   const casacore::Complex& sSideBandRef, 
+			   const casacore::MFrequency& sRefFreq, const casacore::Int& sRefAnt);
 
-  // Data field accessors
-  Vector<String>& polyType();
-  Vector<String>& polyMode();
-  Vector<Complex>& scaleFactor();
-  Array<Double>& validDomain();
-  Vector<Int>& nPolyAmp();
-  Vector<Int>& nPolyPhase();
-  Array<Double>& polyCoeffAmp();
-  Array<Double>& polyCoeffPhase();
-  Vector<String>& phaseUnits();
-  Vector<Complex>& sideBandRef();
+  // casacore::Data field accessors
+  casacore::Vector<casacore::String>& polyType();
+  casacore::Vector<casacore::String>& polyMode();
+  casacore::Vector<casacore::Complex>& scaleFactor();
+  casacore::Array<casacore::Double>& validDomain();
+  casacore::Vector<casacore::Int>& nPolyAmp();
+  casacore::Vector<casacore::Int>& nPolyPhase();
+  casacore::Array<casacore::Double>& polyCoeffAmp();
+  casacore::Array<casacore::Double>& polyCoeffPhase();
+  casacore::Vector<casacore::String>& phaseUnits();
+  casacore::Vector<casacore::Complex>& sideBandRef();
 
  protected:
   // Factory method to create a columns accessor object of the 
@@ -199,37 +199,37 @@ class BJonesPolyMBuf : public BJonesMBuf
   // as non-attribute columns.
   //
   // Use a visibility buffer to define the attribute values (NYI)
-  virtual void fillAttributes(const Vector<Int>& /*calIndices*/,
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& /*calIndices*/,
 			      const VisBuffer& /*vb*/) {};
   //
   // Set default attribute values
-  virtual void fillAttributes(const Vector<Int>& calIndices);
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& calIndices);
   // </group>
 
  private:
   // Buffer fields
-  Vector<String> polyType_p;
-  Vector<String> polyMode_p;
-  Vector<Complex> scaleFactor_p;
-  Array<Double> validDomain_p;
-  Vector<Int> nPolyAmp_p;
-  Vector<Int> nPolyPhase_p;
-  Array<Double> polyCoeffAmp_p;
-  Array<Double> polyCoeffPhase_p;
-  Vector<String> phaseUnits_p;
-  Vector<Complex> sideBandRef_p;
+  casacore::Vector<casacore::String> polyType_p;
+  casacore::Vector<casacore::String> polyMode_p;
+  casacore::Vector<casacore::Complex> scaleFactor_p;
+  casacore::Array<casacore::Double> validDomain_p;
+  casacore::Vector<casacore::Int> nPolyAmp_p;
+  casacore::Vector<casacore::Int> nPolyPhase_p;
+  casacore::Array<casacore::Double> polyCoeffAmp_p;
+  casacore::Array<casacore::Double> polyCoeffPhase_p;
+  casacore::Vector<casacore::String> phaseUnits_p;
+  casacore::Vector<casacore::Complex> sideBandRef_p;
 
   // Buffer field status flags
-  Bool polyTypeOK_p;
-  Bool polyModeOK_p;
-  Bool scaleFactorOK_p;
-  Bool validDomainOK_p;
-  Bool nPolyAmpOK_p;
-  Bool nPolyPhaseOK_p;
-  Bool polyCoeffAmpOK_p;
-  Bool polyCoeffPhaseOK_p;
-  Bool phaseUnitsOK_p;
-  Bool sideBandRefOK_p;
+  casacore::Bool polyTypeOK_p;
+  casacore::Bool polyModeOK_p;
+  casacore::Bool scaleFactorOK_p;
+  casacore::Bool validDomainOK_p;
+  casacore::Bool nPolyAmpOK_p;
+  casacore::Bool nPolyPhaseOK_p;
+  casacore::Bool polyCoeffAmpOK_p;
+  casacore::Bool polyCoeffPhaseOK_p;
+  casacore::Bool phaseUnitsOK_p;
+  casacore::Bool sideBandRefOK_p;
 };
 
 

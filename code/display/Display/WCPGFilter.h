@@ -30,11 +30,15 @@
 
 #include <casa/aips.h>
 
+namespace casacore{
+
+	template <class T> class Matrix;
+	template <class T> class Vector;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class WorldCanvas;
-	template <class T> class Matrix;
-	template <class T> class Vector;
 
 // <summary>
 // Interface between the WorldCanvas and its PGPLOT driver.
@@ -85,32 +89,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void unref() {
 			itsRefCount--;
 		}
-		virtual Int refCount() const {
+		virtual casacore::Int refCount() const {
 			return itsRefCount;
 		}
 		// </group>
 
 		// Return the PGPLOT device id.
-		virtual Int pgid() const {
-			return Int(itsPgPlotID);
+		virtual casacore::Int pgid() const {
+			return casacore::Int(itsPgPlotID);
 		}
 
 		// Realign the PGPLOT domain to the WorldCanvas domain.  If linear
-		// is False, then the pgplot canvas is setup to match the world
+		// is false, then the pgplot canvas is setup to match the world
 		// coordinates, but of course is only valid where the world
 		// coordinates are linear to first approximation.
-		Bool realign(const Bool &linear = True);
+		casacore::Bool realign(const casacore::Bool &linear = true);
 
 		// Contour using pgcont function.
-		void cont(const Matrix<Float> &m,
-		          const Vector<Float> &levels,
-		          const Matrix<Float> &tr);
+		void cont(const casacore::Matrix<casacore::Float> &m,
+		          const casacore::Vector<casacore::Float> &levels,
+		          const casacore::Matrix<casacore::Float> &tr);
 
 		// Contour using pgconb function. (contour with blanks)
-		void conb(const Matrix<Float> &m,
-		          const Vector<Float> &levels,
-		          const Matrix<Float> &tr,
-		          const Float blank);
+		void conb(const casacore::Matrix<casacore::Float> &m,
+		          const casacore::Vector<casacore::Float> &levels,
+		          const casacore::Matrix<casacore::Float> &tr,
+		          const casacore::Float blank);
 
 	private:
 
@@ -118,14 +122,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WorldCanvas *itsWorldCanvas;
 
 		// Store the PGPLOT device id here.
-		uInt itsPgPlotID;
+		casacore::uInt itsPgPlotID;
 
 		// Reference counting.
-		Int itsRefCount;
+		casacore::Int itsRefCount;
 
 		// Split contours into positive and negative
-		void splitContours (Vector<Float>& neg, Vector<Float>& pos,
-		                    const Vector<Float>& levels);
+		void splitContours (casacore::Vector<casacore::Float>& neg, casacore::Vector<casacore::Float>& pos,
+		                    const casacore::Vector<casacore::Float>& levels);
 
 
 	};

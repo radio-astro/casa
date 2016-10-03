@@ -32,6 +32,7 @@
 
 #include <math.h>
 
+using namespace casacore;
 namespace casa {
 
 #define SIGN(X) (X == 0 ? 0 : (X < 0 ? -1 : 1))

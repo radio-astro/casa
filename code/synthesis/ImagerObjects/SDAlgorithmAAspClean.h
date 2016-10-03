@@ -59,36 +59,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
-    //    virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
+    virtual void takeOneStep( casacore::Float loopgain, casacore::Int cycleNiter, casacore::Float cycleThreshold, casacore::Float &peakresidual, casacore::Float &modelflux, casacore::Int &iterdone );
+    //    virtual void initializeDeconvolver( casacore::Float &peakresidual, casacore::Float &modelflux );
     virtual void initializeDeconvolver();
     virtual void finalizeDeconvolver();
 
     SDAlgorithmHogbomClean hogbom_p;
 
-    ///    virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+    ///    virtual void queryDesiredShape(casacore::Bool &onechan, casacore::Bool &onepol); // , nImageFacets.
     //    virtual void restorePlane();
 
     /*
-    void findNextComponent( Float loopgain );
+    void findNextComponent( casacore::Float loopgain );
     void updateModel();
     void updateResidual();
     */
 
     /*
-    SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
-    Float itsComp;
+    casacore::SubImage<casacore::Float> itsResidual, itsPsf, itsModel, itsImage;
+    casacore::Float itsComp;
     */
-    //SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
+    //casacore::SubImage<casacore::Float> itsResidual, itsPsf, itsModel, itsImage;
 
-    Array<Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
+    casacore::Array<casacore::Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
 
     /*
-    IPosition itsMaxPos;
-    Float itsPeakResidual;
-    Float itsModelFlux;
+    casacore::IPosition itsMaxPos;
+    casacore::Float itsPeakResidual;
+    casacore::Float itsModelFlux;
 
-    Matrix<Float> itsMatMask;
+    casacore::Matrix<casacore::Float> itsMatMask;
     */
 
   };

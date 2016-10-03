@@ -46,9 +46,13 @@
 #include <lattices/Lattices/ArrayLattice.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class UVWMachine;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 // <summary>  An FTMachine for Gridded Fourier transforms </summary>
 
 // <use visibility=export>
@@ -78,7 +82,7 @@ class UVWMachine;
 // Gridding and degridding in rGridFT are performed using a
 // novel sort-less algorithm. In this approach, the gridded plane is
 // divided into small patches, a cache of which is maintained in memory
-// using a general-purpose <linkto class=LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
+// using a general-purpose <linkto class=casacore::LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
 // visibility data move around slowly in the Fourier plane, patches are
 // swapped in and out as necessary. Thus, optimally, one would keep at
 // least one patch per baseline.  
@@ -134,21 +138,21 @@ public:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
-  rGridFT(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
-	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
-  rGridFT(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType,
-	 MPosition mLocation, Float padding=1.0, Bool usezero=True, 
-	 Bool useDoublePrec=False);
-  rGridFT(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
-	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
-	 Bool useDoublePrec=False);
-  rGridFT(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
-	 MPosition mLocation, MDirection mTangent, Float passing=1.0,
-	 Bool usezero=True, Bool useDoublePrec=False);
+  rGridFT(casacore::Long cachesize, casacore::Int tilesize, casacore::CountedPtr<VisibilityResamplerBase>& visResampler,
+	  casacore::String convType="SF", casacore::Float padding=1.0, casacore::Bool usezero=true, casacore::Bool useDoublePrec=false);
+  rGridFT(casacore::Long cachesize, casacore::Int tilesize,  casacore::CountedPtr<VisibilityResamplerBase>& visResampler, casacore::String convType,
+	 casacore::MPosition mLocation, casacore::Float padding=1.0, casacore::Bool usezero=true, 
+	 casacore::Bool useDoublePrec=false);
+  rGridFT(casacore::Long cachesize, casacore::Int tilesize,  casacore::CountedPtr<VisibilityResamplerBase>& visResampler,casacore::String convType,
+	 casacore::MDirection mTangent, casacore::Float padding=1.0, casacore::Bool usezero=true,
+	 casacore::Bool useDoublePrec=false);
+  rGridFT(casacore::Long cachesize, casacore::Int tilesize,  casacore::CountedPtr<VisibilityResamplerBase>& visResampler,casacore::String convType,
+	 casacore::MPosition mLocation, casacore::MDirection mTangent, casacore::Float passing=1.0,
+	 casacore::Bool usezero=true, casacore::Bool useDoublePrec=false);
   // </group>
 
-  // Construct from a Record containing the rGridFT state
-  rGridFT(const RecordInterface& stateRec);
+  // Construct from a casacore::Record containing the rGridFT state
+  rGridFT(const casacore::RecordInterface& stateRec);
 
   // Copy constructor
   rGridFT(const rGridFT &other);
@@ -163,7 +167,7 @@ public:
 
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
-  void initializeToVis(ImageInterface<Complex>& image,
+  void initializeToVis(casacore::ImageInterface<casacore::Complex>& image,
 		       const VisBuffer& vb);
   
   // Finalize transform to Visibility plane: flushes the image
@@ -171,7 +175,7 @@ public:
   void finalizeToVis();
 
   // Initialize transform to Sky plane: initializes the image
-  void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
+  void initializeToSky(casacore::ImageInterface<casacore::Complex>& image,  casacore::Matrix<casacore::Float>& weight,
 		       const VisBuffer& vb);
 
   
@@ -182,54 +186,54 @@ public:
 
 
   // Get actual coherence from grid by degridding
-  void get(VisBuffer& vb, Int row=-1);
+  void get(VisBuffer& vb, casacore::Int row=-1);
 
 
   // Put coherence to grid by gridding.
-  void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
+  void put(const VisBuffer& vb, casacore::Int row=-1, casacore::Bool dopsf=false,
 	   FTMachine::Type type=FTMachine::OBSERVED);
 
   
   // Make the entire image
   void makeImage(FTMachine::Type type,
 		 VisSet& vs,
-		 ImageInterface<Complex>& image,
-		 Matrix<Float>& weight);
+		 casacore::ImageInterface<casacore::Complex>& image,
+		 casacore::Matrix<casacore::Float>& weight);
   
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
-  ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
-  virtual void normalizeImage(Lattice<Complex>& skyImage,
-			      const Matrix<Double>& sumOfWts,
-			      Lattice<Float>& sensitivityImage,
-			      Bool fftNorm)
-    {throw(AipsError("rGridFT::normalizeImage() called"));}
+  casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>&, casacore::Bool normalize=true);
+  virtual void normalizeImage(casacore::Lattice<casacore::Complex>& skyImage,
+			      const casacore::Matrix<casacore::Double>& sumOfWts,
+			      casacore::Lattice<casacore::Float>& sensitivityImage,
+			      casacore::Bool fftNorm)
+    {throw(casacore::AipsError("rGridFT::normalizeImage() called"));}
 
   // Get the final weights image
-  void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
+  void getWeightImage(casacore::ImageInterface<casacore::Float>&, casacore::Matrix<casacore::Float>&);
 
   // Save and restore the rGridFT to and from a record
-  virtual Bool toRecord(String& error, RecordInterface& outRec, 
-			Bool withImage=False);
-  virtual Bool fromRecord(String& error, const RecordInterface& inRec);
+  virtual casacore::Bool toRecord(casacore::String& error, casacore::RecordInterface& outRec, 
+			casacore::Bool withImage=false);
+  virtual casacore::Bool fromRecord(casacore::String& error, const casacore::RecordInterface& inRec);
 
   // Can this FTMachine be represented by Fourier convolutions?
-  virtual Bool isFourier() {return True;}
+  virtual casacore::Bool isFourier() {return true;}
 
-  virtual void setNoPadding(Bool nopad){noPadding_p=nopad;};
+  virtual void setNoPadding(casacore::Bool nopad){noPadding_p=nopad;};
 
-  virtual String name();
-  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
-  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
+  virtual casacore::String name();
+  virtual void setMiscInfo(const casacore::Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&vb, casacore::Bool useCorrected);
 
 protected:
 
 
   // Padding in FFT
-  Float padding_p;
+  casacore::Float padding_p;
 
   // Get the appropriate data pointer
-  Array<Complex>* getDataPointer(const IPosition&, Bool);
+  casacore::Array<casacore::Complex>* getDataPointer(const casacore::IPosition&, casacore::Bool);
 
   void ok();
 
@@ -237,61 +241,61 @@ protected:
 
   // Is this record on Grid? check both ends. This assumes that the
   // ends bracket the middle
-  Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
+  casacore::Bool recordOnGrid(const VisBuffer& vb, casacore::Int rownr) const;
 
   // Image cache
-  LatticeCache<Complex> * imageCache;
+  casacore::LatticeCache<casacore::Complex> * imageCache;
 
   // Sizes
-  Long cachesize;
-  Int  tilesize;
+  casacore::Long cachesize;
+  casacore::Int  tilesize;
 
   // Gridder
-  ConvolveGridder<Double, Complex>* gridder;
+  casacore::ConvolveGridder<casacore::Double, casacore::Complex>* gridder;
 
   // Is this tiled?
-  Bool isTiled;
+  casacore::Bool isTiled;
 
-  // Array lattice
-  CountedPtr<Lattice<Complex> > arrayLattice;
+  // casacore::Array lattice
+  casacore::CountedPtr<casacore::Lattice<casacore::Complex> > arrayLattice;
 
   // Lattice. For non-tiled gridding, this will point to arrayLattice,
   //  whereas for tiled gridding, this points to the image
-  CountedPtr<Lattice<Complex> > lattice;
+  casacore::CountedPtr<casacore::Lattice<casacore::Complex> > lattice;
 
-  String convType;
+  casacore::String convType;
 
-  Float maxAbsData;
+  casacore::Float maxAbsData;
 
   // Useful IPositions
-  IPosition centerLoc, offsetLoc;
+  casacore::IPosition centerLoc, offsetLoc;
 
   // Image Scaling and offset
-  Vector<Double> uvScale, uvOffset;
+  casacore::Vector<casacore::Double> uvScale, uvOffset;
 
-  // Array for non-tiled gridding
-  Array<Complex> griddedData;
-  Array<DComplex> griddedData2;
+  // casacore::Array for non-tiled gridding
+  casacore::Array<casacore::Complex> griddedData;
+  casacore::Array<casacore::DComplex> griddedData2;
 
-  Int priorCacheSize;
+  casacore::Int priorCacheSize;
 
   // Grid/degrid zero spacing points?
 
-  Bool usezero_p;
+  casacore::Bool usezero_p;
 
   //force no padding
-  Bool noPadding_p;
+  casacore::Bool noPadding_p;
 
   //Check if using put that avoids non-necessary reads
-  Bool usePut2_p;
+  casacore::Bool usePut2_p;
 
   //machine name
-  String machineName_p;
+  casacore::String machineName_p;
 
   // VisibilityResampler - a.k.a the "gridder" object
   //  VisibilityResampler visResampler_p;
-  //  CountedPtr<MultiThreadedVisibilityResampler> visResampler_p;
-  CountedPtr<VisibilityResamplerBase> visResampler_p;
+  //  casacore::CountedPtr<MultiThreadedVisibilityResampler> visResampler_p;
+  casacore::CountedPtr<VisibilityResamplerBase> visResampler_p;
 };
 
 } //# NAMESPACE CASA - END

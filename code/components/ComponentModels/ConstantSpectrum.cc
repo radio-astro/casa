@@ -33,6 +33,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ConstantSpectrum::ConstantSpectrum()
@@ -143,7 +144,7 @@ Bool ConstantSpectrum::toRecord(String& errorMessage,
 Bool ConstantSpectrum::convertUnit(String&,
 				   const RecordInterface&) {
   DebugAssert(ok(), AipsError);
-  return True;
+  return true;
 }
  
 Bool ConstantSpectrum::ok() const {

@@ -53,11 +53,11 @@ namespace casa {
 // contents of the file).
 // </synopsis>
 
-// The Record for the specified file is filled in by the parser.
-Record callibSetParams(const String& calLibrary);
+// The casacore::Record for the specified file is filled in by the parser.
+casacore::Record callibSetParams(const casacore::String& calLibrary);
 
 // Declare the bison parser (is implemented by bison command).
-Record calLibraryGramParseCommand(CalLibraryParse* parser, const String& calLibrary);
+casacore::Record calLibraryGramParseCommand(CalLibraryParse* parser, const casacore::String& calLibrary);
 
 // The yyerror function for the parser.
 // It throws an exception with the current token.
@@ -68,10 +68,10 @@ int calLibraryGramInput (char* buf, int max_size);
 void clearBuf(char* buf, int size);
 
 // Current line number in file, for parse errors
-Int& calLibLineNum();
+casacore::Int& calLibLineNum();
 
 // Give the Record
-const Record* calLibraryRecord();
+const casacore::Record* calLibraryRecord();
 }
 
 #endif

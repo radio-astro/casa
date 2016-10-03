@@ -39,7 +39,7 @@ class MSTransformIteratorTest: public FreqAxisTVITest {
 public:
 
 	MSTransformIteratorTest();
-	MSTransformIteratorTest(Record configuration);
+	MSTransformIteratorTest(casacore::Record configuration);
 	~MSTransformIteratorTest();
 
     void TestBody();
@@ -49,8 +49,8 @@ protected:
 
     void generateTestFile();
     void generateReferenceFile();
-    void initTestConfiguration(Record &configuration);
-    void initReferenceConfiguration(Record &configuration);
+    void initTestConfiguration(casacore::Record &configuration);
+    void initReferenceConfiguration(casacore::Record &configuration);
 };
 
 #endif /* MSTransformIteratorTest_H_ */

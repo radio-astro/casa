@@ -1,4 +1,4 @@
-//# PlotMSSelection.h: MS Selection parameters.
+//# PlotMSSelection.h: casacore::MS Selection parameters.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -33,19 +33,23 @@
 
 #include <map>
 
+namespace casacore{
+
+class MeasurementSet;
+}
+
 namespace casa {
 
 //# Forward declarations
-class MeasurementSet;
 class NewCalTable;
 
-// Specifies an MS selection.  See the mssSetData method in
+// Specifies an casacore::MS selection.  See the mssSetData method in
 // ms/MSSel/MSSelectionTools.h for details.
 class PlotMSSelection {
 public:
     // Static //
     
-    // Enum and methods to define the different fields for an MS selection.
+    // Enum and methods to define the different fields for an casacore::MS selection.
     // **If these are changed, also update: convenience methods below,
     // xmlcasa/implement/plotms/plotms*, xmlcasa/tasks/plotms.xml,
     // xmlcasa/scripts/task_plotms.py.**
@@ -59,8 +63,8 @@ public:
     // </group>
               
     // Returns the default value for the given selection field.  Returns an
-    // empty String except for FIELD which returns "2".
-    static String defaultValue(Field f);
+    // empty casacore::String except for FIELD which returns "2".
+    static casacore::String defaultValue(Field f);
     
     
     // Non-Static //
@@ -76,65 +80,65 @@ public:
     
     
     // Converts this object to/from a record.  The record keys are the values
-    // of the Field enum in String form, and the values are the String values.
+    // of the Field enum in casacore::String form, and the values are the casacore::String values.
     // <group>
-    void fromRecord(const RecordInterface& record);
-    Record toRecord() const;
+    void fromRecord(const casacore::RecordInterface& record);
+    casacore::Record toRecord() const;
     // </group>
     
     //Print out an abbreviated summary of the selection.
-    String toStringShort() const;
+    casacore::String toStringShort() const;
 
-    // Applies this selection using the first MS into the second MS.  (See the
+    // Applies this selection using the first casacore::MS into the second MS.  (See the
     // mssSetData method in ms/MSSel/MSSelectionTools.h for details.)
-    void apply(MeasurementSet& ms, MeasurementSet& selectedMS,
-               Vector<Vector<Slice> >& chansel,
-	       Vector<Vector<Slice> >& corrsel);
+    void apply(casacore::MeasurementSet& ms, casacore::MeasurementSet& selectedMS,
+               casacore::Vector<casacore::Vector<casacore::Slice> >& chansel,
+	       casacore::Vector<casacore::Vector<casacore::Slice> >& corrsel);
         
     // Applies this selection to a NewCaltable
     void apply(NewCalTable& ct, NewCalTable& selectedCT,
-               Vector<Vector<Slice> >& chansel,
-    	       Vector<Vector<Slice> >& corrsel);
+               casacore::Vector<casacore::Vector<casacore::Slice> >& chansel,
+    	       casacore::Vector<casacore::Vector<casacore::Slice> >& corrsel);
         
     // Gets/Sets the value for the given selection field.
     // <group>
-    const String& getValue(Field f) const;
-    void getValue(Field f, String& value) const { value = getValue(f); }
-    void setValue(Field f, const String& value);
+    const casacore::String& getValue(Field f) const;
+    void getValue(Field f, casacore::String& value) const { value = getValue(f); }
+    void setValue(Field f, const casacore::String& value);
     // </group>
     
     // Convenience methods for returning the standard selection fields.
     // <group>
-    const String& field() const     { return getValue(FIELD);     }
-    const String& spw() const       { return getValue(SPW);       }
-    const String& timerange() const { return getValue(TIMERANGE); }
-    const String& uvrange() const   { return getValue(UVRANGE);   }
-    const String& antenna() const   { return getValue(ANTENNA);   }
-    const String& scan() const      { return getValue(SCAN);      }
-    const String& corr() const      { return getValue(CORR);      }
-    const String& array() const     { return getValue(ARRAY);     }
-    const String& observation() const {return getValue(OBSERVATION);}
-    const String& intent() const    { return getValue(INTENT);}
-    const String& feed() const      { return getValue(FEED);}
-    const String& msselect() const  { return getValue(MSSELECT);  }
-    const Int& forceNew() const     { return forceNew_; }
+    const casacore::String& field() const     { return getValue(FIELD);     }
+    const casacore::String& spw() const       { return getValue(SPW);       }
+    const casacore::String& timerange() const { return getValue(TIMERANGE); }
+    const casacore::String& uvrange() const   { return getValue(UVRANGE);   }
+    const casacore::String& antenna() const   { return getValue(ANTENNA);   }
+    const casacore::String& scan() const      { return getValue(SCAN);      }
+    const casacore::String& corr() const      { return getValue(CORR);      }
+    const casacore::String& array() const     { return getValue(ARRAY);     }
+    const casacore::String& observation() const {return getValue(OBSERVATION);}
+    const casacore::String& intent() const    { return getValue(INTENT);}
+    const casacore::String& feed() const      { return getValue(FEED);}
+    const casacore::String& msselect() const  { return getValue(MSSELECT);  }
+    const casacore::Int& forceNew() const     { return forceNew_; }
     // </group>
     
     // Convenience methods for setting the standard selection fields.
     // <group>
-    void setField(const String& v)     { setValue(FIELD, v);     }
-    void setSpw(const String& v)       { setValue(SPW, v);       }
-    void setTimerange(const String& v) { setValue(TIMERANGE, v); }
-    void setUvrange(const String& v)   { setValue(UVRANGE, v);   }
-    void setAntenna(const String& v)   { setValue(ANTENNA, v);   }
-    void setScan(const String& v)      { setValue(SCAN, v);      }
-    void setCorr(const String& v)      { setValue(CORR, v);      }
-    void setArray(const String& v)     { setValue(ARRAY, v);     }
-    void setObservation(const String& v) {setValue(OBSERVATION, v); }
-    void setIntent(const String& v)    { setValue(INTENT, v); }
-    void setFeed(const String& v)      { setValue(FEED, v); }
-    void setMsselect(const String& v)  { setValue(MSSELECT, v);  }
-    void setForceNew(const Int& forcenew) { forceNew_ = forcenew; }
+    void setField(const casacore::String& v)     { setValue(FIELD, v);     }
+    void setSpw(const casacore::String& v)       { setValue(SPW, v);       }
+    void setTimerange(const casacore::String& v) { setValue(TIMERANGE, v); }
+    void setUvrange(const casacore::String& v)   { setValue(UVRANGE, v);   }
+    void setAntenna(const casacore::String& v)   { setValue(ANTENNA, v);   }
+    void setScan(const casacore::String& v)      { setValue(SCAN, v);      }
+    void setCorr(const casacore::String& v)      { setValue(CORR, v);      }
+    void setArray(const casacore::String& v)     { setValue(ARRAY, v);     }
+    void setObservation(const casacore::String& v) {setValue(OBSERVATION, v); }
+    void setIntent(const casacore::String& v)    { setValue(INTENT, v); }
+    void setFeed(const casacore::String& v)      { setValue(FEED, v); }
+    void setMsselect(const casacore::String& v)  { setValue(MSSELECT, v);  }
+    void setForceNew(const casacore::Int& forcenew) { forceNew_ = forcenew; }
     // </group>
     
     // Equality operators.
@@ -153,21 +157,21 @@ public:
     PlotMSSelection& operator=(const PlotMSSelection& copy);
     
     //Return lists of antennas that have been selected.
-    Vector<int> getSelectedAntennas1();
-    Vector<int> getSelectedAntennas2();
+    casacore::Vector<int> getSelectedAntennas1();
+    casacore::Vector<int> getSelectedAntennas2();
 
     //Returns whether or not any selections have been made.
     bool isEmpty() const;
 private:    
     // Selection field values.
-    std::map<Field, String> itsValues_;
+    std::map<Field, casacore::String> itsValues_;
 
 
 
     // Force appearance of new selection (even when not new)
-    Int forceNew_;
-	Vector<int> selAnts;
-	Vector<int> selAnts2;
+    casacore::Int forceNew_;
+	casacore::Vector<int> selAnts;
+	casacore::Vector<int> selAnts2;
     
     // Initializes the values to their defaults.
     void initDefaults();

@@ -39,11 +39,11 @@
 // </summary>
 
 // Control verbosity
-#define CTITERTEST_VERBOSE False
+#define CTITERTEST_VERBOSE false
 
-Bool foundError = False;
+Bool foundError = false;
 
-void doTest1 (Bool verbose=False) {
+void doTest1 (Bool verbose=false) {
 
   cout << "****----tCTIter doTest1()----****" << endl;
   
@@ -56,7 +56,7 @@ void doTest1 (Bool verbose=False) {
 		   nAnt,nSpw,nChan,
 		   nFld,
 		   0.0,0.0,   // rtime,tint defaults
-		   disk,False);
+		   disk,false);
 
   // some sanity checks on the test NewCalTable
   if (verbose) cout << "Table::Type: " << tnct.tableType() 
@@ -151,7 +151,7 @@ void doTest1 (Bool verbose=False) {
 
   }
 }
-void doTest2 (Bool verbose=False) {
+void doTest2 (Bool verbose=false) {
   
   cout << "****----tCTIter doTest2()----****" << endl;
 
@@ -168,7 +168,7 @@ void doTest2 (Bool verbose=False) {
 		   nAnt,nSpw,nChan,
 		   nFld,
 		   rtime,tint,
-		   disk,False);
+		   disk,false);
 
 
   if (verbose)
@@ -246,7 +246,7 @@ void doTest2 (Bool verbose=False) {
     Cube<Bool> flag(nctiter.flag());
     //    cout << boolalpha << " flag = " << flag << endl;
     if (thisant==Int(nAnt/2))
-      flag=True;
+      flag=true;
     nctiter.setflag(flag);
 
     nctiter.next();

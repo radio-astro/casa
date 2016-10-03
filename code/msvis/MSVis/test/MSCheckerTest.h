@@ -49,10 +49,10 @@ public:
 
 	virtual void TearDown();
 
-	unique_ptr<MeasurementSet> testMS;
+	unique_ptr<casacore::MeasurementSet> testMS;
 
 private:
-	String _dataPath;
+	casacore::String _dataPath;
 
 };
 

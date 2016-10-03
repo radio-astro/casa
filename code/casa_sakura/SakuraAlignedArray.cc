@@ -7,6 +7,7 @@
 #include <casa/Logging/LogOrigin.h>
 
 #include <casa_sakura/SakuraAlignedArray.h>
+using namespace casacore;
 namespace casa {
   //
 }  // End of casa namespace.

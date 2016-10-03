@@ -86,17 +86,17 @@ private:
 	static int findAxisWidth( vector<QPExportCanvas*> &qcanvases );
 	static int getCanvasCount( vector<QPExportCanvas*> &qcanvases );
     static void getAxesCount(vector<QPExportCanvas*> &qcanvases,
-            Int& externalX, Int& externalY);
+            casacore::Int& externalX, casacore::Int& externalY);
 	static void findGridProperties( QPExportCanvas* grabCanvas, QPPlotter* grabPlotter,
-			Int& width, Int& height, Int& gridRows, Int& gridCols);
-    static void findXAxisLocations(Int numX, Bool vertical, Bool& top, Bool& bottom);
-    static void findYAxisLocations(Int numY, Bool vertical, Bool& left, Bool& right);
-    static void findYAxisSecondRow(Int numY, Bool isLeftAxis, Bool& left, Bool& right);
-    static void findYAxisSecondRow(Int numY, Int nCols, vector<QPExportCanvas*> &qcanvases,
-            Bool& left, Bool& right);
+			casacore::Int& width, casacore::Int& height, casacore::Int& gridRows, casacore::Int& gridCols);
+    static void findXAxisLocations(casacore::Int numX, casacore::Bool vertical, casacore::Bool& top, casacore::Bool& bottom);
+    static void findYAxisLocations(casacore::Int numY, casacore::Bool vertical, casacore::Bool& left, casacore::Bool& right);
+    static void findYAxisSecondRow(casacore::Int numY, casacore::Bool isLeftAxis, casacore::Bool& left, casacore::Bool& right);
+    static void findYAxisSecondRow(casacore::Int numY, casacore::Int nCols, vector<QPExportCanvas*> &qcanvases,
+            casacore::Bool& left, casacore::Bool& right);
 
-	static const String CLASS_NAME;
-	static const String EXPORT_NAME;
+	static const casacore::String CLASS_NAME;
+	static const casacore::String EXPORT_NAME;
 };
 
 } /* namespace casa */

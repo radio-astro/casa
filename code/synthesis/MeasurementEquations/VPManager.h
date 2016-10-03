@@ -30,9 +30,13 @@
 
 #include <imageanalysis/ImageAnalysis/AntennaResponses.h>
 
+namespace casacore{
+
+  class Record;
+}
+
 namespace casa {
   //Forward declarations
-  class Record;
 
   class VPManager
     {
@@ -45,197 +49,197 @@ namespace casa {
       // this is a SINGLETON class
       static VPManager* Instance();
 
-      void reset(Bool verbose=False);
+      void reset(casacore::Bool verbose=false);
 
-      Bool saveastable(const String& tablename);
+      casacore::Bool saveastable(const casacore::String& tablename);
 
-      Bool loadfromtable(const String& tablename);
+      casacore::Bool loadfromtable(const casacore::String& tablename);
 
-      Bool summarizevps(const Bool verbose);
+      casacore::Bool summarizevps(const casacore::Bool verbose);
 
 
-      Bool setcannedpb(const String& tel, 
-		       const String& other, 
-		       const Bool dopb,
-		       const String& commonpb,
-		       const Bool dosquint, 
-		       const Quantity& paincrement, 
-		       const Bool usesymmetricbeam,
-		       Record& rec);
+      casacore::Bool setcannedpb(const casacore::String& tel, 
+		       const casacore::String& other, 
+		       const casacore::Bool dopb,
+		       const casacore::String& commonpb,
+		       const casacore::Bool dosquint, 
+		       const casacore::Quantity& paincrement, 
+		       const casacore::Bool usesymmetricbeam,
+		       casacore::Record& rec);
 
-      Bool setpbairy(const String& telescope, const String& othertelescope, 
-		     const Bool dopb, const Quantity& dishdiam, 
-		     const Quantity& blockagediam, 
-		     const Quantity& maxrad, 
-		     const Quantity& reffreq, 
-		     MDirection& squintdir, 
-		     const Quantity& squintreffreq, const Bool dosquint, 
-		     const Quantity& paincrement, 
-		     const Bool usesymmetricbeam,
-		     Record& rec);
+      casacore::Bool setpbairy(const casacore::String& telescope, const casacore::String& othertelescope, 
+		     const casacore::Bool dopb, const casacore::Quantity& dishdiam, 
+		     const casacore::Quantity& blockagediam, 
+		     const casacore::Quantity& maxrad, 
+		     const casacore::Quantity& reffreq, 
+		     casacore::MDirection& squintdir, 
+		     const casacore::Quantity& squintreffreq, const casacore::Bool dosquint, 
+		     const casacore::Quantity& paincrement, 
+		     const casacore::Bool usesymmetricbeam,
+		     casacore::Record& rec);
 
-      Bool setpbcospoly(const String& telescope, const String& othertelescope,
-			const Bool dopb, const Vector<Double>& coeff,
-			const Vector<Double>& scale,
-			const Quantity& maxrad,
-			const Quantity& reffreq,
-			const String& isthispb,
-			MDirection& squintdir,
-			const Quantity& squintreffreq, const Bool dosquint,
-			const Quantity& paincrement,
-			const Bool usesymmetricbeam,
-			Record& rec);
+      casacore::Bool setpbcospoly(const casacore::String& telescope, const casacore::String& othertelescope,
+			const casacore::Bool dopb, const casacore::Vector<casacore::Double>& coeff,
+			const casacore::Vector<casacore::Double>& scale,
+			const casacore::Quantity& maxrad,
+			const casacore::Quantity& reffreq,
+			const casacore::String& isthispb,
+			casacore::MDirection& squintdir,
+			const casacore::Quantity& squintreffreq, const casacore::Bool dosquint,
+			const casacore::Quantity& paincrement,
+			const casacore::Bool usesymmetricbeam,
+			casacore::Record& rec);
 
-      Bool setpbgauss(const String& tel, const String& other, const Bool dopb,
-		      const Quantity& halfwidth, const Quantity maxrad, 
-		      const Quantity& reffreq, const String& isthispb, 
-		      MDirection& squintdir, const Quantity& squintreffreq,
-		      const Bool dosquint, const Quantity& paincrement, 
-		      const Bool usesymmetricbeam, Record& rec);
+      casacore::Bool setpbgauss(const casacore::String& tel, const casacore::String& other, const casacore::Bool dopb,
+		      const casacore::Quantity& halfwidth, const casacore::Quantity maxrad, 
+		      const casacore::Quantity& reffreq, const casacore::String& isthispb, 
+		      casacore::MDirection& squintdir, const casacore::Quantity& squintreffreq,
+		      const casacore::Bool dosquint, const casacore::Quantity& paincrement, 
+		      const casacore::Bool usesymmetricbeam, casacore::Record& rec);
 
       
      
 
-      Bool setpbinvpoly(const String& telescope, const String& othertelescope,
-			const Bool dopb, const Vector<Double>& coeff,
-			const Quantity& maxrad,
-			const Quantity& reffreq,
-			const String& isthispb,
-			MDirection& squintdir,
-			const Quantity& squintreffreq, const Bool dosquint,
-			const Quantity& paincrement,
-			const Bool usesymmetricbeam,
-			Record& rec);
+      casacore::Bool setpbinvpoly(const casacore::String& telescope, const casacore::String& othertelescope,
+			const casacore::Bool dopb, const casacore::Vector<casacore::Double>& coeff,
+			const casacore::Quantity& maxrad,
+			const casacore::Quantity& reffreq,
+			const casacore::String& isthispb,
+			casacore::MDirection& squintdir,
+			const casacore::Quantity& squintreffreq, const casacore::Bool dosquint,
+			const casacore::Quantity& paincrement,
+			const casacore::Bool usesymmetricbeam,
+			casacore::Record& rec);
 
-      Bool setpbinvpoly(const String& telescope, const String& othertelescope,
-			const Bool dopb, const Matrix<Double>& coeff,
-			const Vector<Double>& freqs,
-			const Quantity& maxrad,
-			const Quantity& reffreq,
-			const String& isthispb,
-			MDirection& squintdir,
-			const Quantity& squintreffreq, const Bool dosquint,
-			const Quantity& paincrement,
-			const Bool usesymmetricbeam,
-			Record& rec);
+      casacore::Bool setpbinvpoly(const casacore::String& telescope, const casacore::String& othertelescope,
+			const casacore::Bool dopb, const casacore::Matrix<casacore::Double>& coeff,
+			const casacore::Vector<casacore::Double>& freqs,
+			const casacore::Quantity& maxrad,
+			const casacore::Quantity& reffreq,
+			const casacore::String& isthispb,
+			casacore::MDirection& squintdir,
+			const casacore::Quantity& squintreffreq, const casacore::Bool dosquint,
+			const casacore::Quantity& paincrement,
+			const casacore::Bool usesymmetricbeam,
+			casacore::Record& rec);
 
-      Bool setpbnumeric(const String& telescope, const String& othertelescope,
-			const Bool dopb, const Vector<Double>& vect,
-			const Quantity& maxrad,
-			const Quantity& reffreq,
-			const String& isthispb,
-			MDirection& squintdir,
-			const Quantity& squintreffreq, const Bool dosquint,
-			const Quantity& paincrement,
-			const Bool usesymmetricbeam,
-			Record &rec);
+      casacore::Bool setpbnumeric(const casacore::String& telescope, const casacore::String& othertelescope,
+			const casacore::Bool dopb, const casacore::Vector<casacore::Double>& vect,
+			const casacore::Quantity& maxrad,
+			const casacore::Quantity& reffreq,
+			const casacore::String& isthispb,
+			casacore::MDirection& squintdir,
+			const casacore::Quantity& squintreffreq, const casacore::Bool dosquint,
+			const casacore::Quantity& paincrement,
+			const casacore::Bool usesymmetricbeam,
+			casacore::Record &rec);
 
       ///antnames => Antenna names for which this PB image applies. "*" is for all 
-      Bool setpbimage(const String& telescope, const String& othertelescope, 
-		      const Bool dopb, const String& realimage, 
-		      const String& imagimage, const String& compleximage, const Vector<String>& antnames,  Record& rec);
+      casacore::Bool setpbimage(const casacore::String& telescope, const casacore::String& othertelescope, 
+		      const casacore::Bool dopb, const casacore::String& realimage, 
+		      const casacore::String& imagimage, const casacore::String& compleximage, const casacore::Vector<casacore::String>& antnames,  casacore::Record& rec);
       ///////Returns the image beam that the vpmananger has in state
       ////// antnames contains the antenna names for which each element of the image beams apply
-      Bool imagepbinfo(Vector<Vector<String> >& antnames, Vector<Record>& imagebeams);
+      casacore::Bool imagepbinfo(casacore::Vector<casacore::Vector<casacore::String> >& antnames, casacore::Vector<casacore::Record>& imagebeams);
 
-      Bool setpbpoly(const String& telescope, const String& othertelescope,
-		     const Bool dopb, const Vector<Double>& coeff,
-		     const Quantity& maxrad,
-		     const Quantity& reffreq,
-		     const String& isthispb,
-		     MDirection& squintdir,
-		     const Quantity& squintreffreq, const Bool dosquint,
-		     const Quantity& paincrement,
-		     const Bool usesymmetricbeam,
-		     Record &rec);
+      casacore::Bool setpbpoly(const casacore::String& telescope, const casacore::String& othertelescope,
+		     const casacore::Bool dopb, const casacore::Vector<casacore::Double>& coeff,
+		     const casacore::Quantity& maxrad,
+		     const casacore::Quantity& reffreq,
+		     const casacore::String& isthispb,
+		     casacore::MDirection& squintdir,
+		     const casacore::Quantity& squintreffreq, const casacore::Bool dosquint,
+		     const casacore::Quantity& paincrement,
+		     const casacore::Bool usesymmetricbeam,
+		     casacore::Record &rec);
       
 
-      Bool setpbantresptable(const String& telescope, const String& othertelescope,
-			     const Bool dopb, const String& tablepath);
+      casacore::Bool setpbantresptable(const casacore::String& telescope, const casacore::String& othertelescope,
+			     const casacore::Bool dopb, const casacore::String& tablepath);
                             // no record filled, need to access via getvp()
 
       // set the default voltage pattern for the given telescope
-      Bool setuserdefault(const Int vplistfield,
-			  const String& telescope,
-			  const String& antennatype="");
+      casacore::Bool setuserdefault(const casacore::Int vplistfield,
+			  const casacore::String& telescope,
+			  const casacore::String& antennatype="");
 
-      Bool getuserdefault(Int& vplistfield,
-			  const String& telescope,
-			  const String& antennatype="");
+      casacore::Bool getuserdefault(casacore::Int& vplistfield,
+			  const casacore::String& telescope,
+			  const casacore::String& antennatype="");
 
-      Bool getanttypes(Vector<String>& anttypes,
-		       const String& telescope,
-		       const MEpoch& obstime,
-		       const MFrequency& freq, 
-		       const MDirection& obsdirection); // default: Zenith
+      casacore::Bool getanttypes(casacore::Vector<casacore::String>& anttypes,
+		       const casacore::String& telescope,
+		       const casacore::MEpoch& obstime,
+		       const casacore::MFrequency& freq, 
+		       const casacore::MDirection& obsdirection); // default: Zenith
 			      
       // return number of voltage patterns satisfying the given constraints
-      Int numvps(const String& telescope,
-		 const MEpoch& obstime,
-		 const MFrequency& freq, 
-		 const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
-							   Quantity(90., "deg"), 
-							   MDirection::AZEL)
+      casacore::Int numvps(const casacore::String& telescope,
+		 const casacore::MEpoch& obstime,
+		 const casacore::MFrequency& freq, 
+		 const casacore::MDirection& obsdirection=casacore::MDirection(casacore::Quantity( 0., "deg"), // default is the Zenith
+							   casacore::Quantity(90., "deg"), 
+							   casacore::MDirection::AZEL)
 		 ); 
 
 
       // get the voltage pattern satisfying the given constraints
-      Bool getvp(Record &rec,
-		 const String& telescope,
-		 const MEpoch& obstime,
-		 const MFrequency& freq, 
-		 const String& antennatype="", 
-		 const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
-							   Quantity(90., "deg"), 
-							   MDirection::AZEL)
+      casacore::Bool getvp(casacore::Record &rec,
+		 const casacore::String& telescope,
+		 const casacore::MEpoch& obstime,
+		 const casacore::MFrequency& freq, 
+		 const casacore::String& antennatype="", 
+		 const casacore::MDirection& obsdirection=casacore::MDirection(casacore::Quantity( 0., "deg"), // default is the Zenith
+							   casacore::Quantity(90., "deg"), 
+							   casacore::MDirection::AZEL)
 		 ); 
 
       // get a general voltage pattern for the given telescope and ant type if available
-      Bool getvp(Record &rec,
-		 const String& telescope,
-		 const String& antennatype=""
+      casacore::Bool getvp(casacore::Record &rec,
+		 const casacore::String& telescope,
+		 const casacore::String& antennatype=""
 		 ); 
 
       // get a set of all necessary beams and their properties for a given antenna list
-      Bool getvps(Vector<Record> & unique_out_rec_list, // the list of unique beam records
-		  Vector<Vector<uInt> >& beam_index, // indices to the above vectors in sync with AntennaNames
-		  const String& telescope,
-		  const Vector<MEpoch>& inpTimeRange, // only elements 0 and 1 are used; if 1 is not present it is assumed to be inf
-		  const Vector<MFrequency>& inpFreqRange, // must contain at least one element; beams will be provided for each element 
-		  const Vector<String>& AntennaNames, // characters 0 and 1 are used for ALMA to determine the antenna type
-		  const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
-							    Quantity(90., "deg"), 
-							    MDirection::AZEL)
+      casacore::Bool getvps(casacore::Vector<casacore::Record> & unique_out_rec_list, // the list of unique beam records
+		  casacore::Vector<casacore::Vector<casacore::uInt> >& beam_index, // indices to the above vectors in sync with AntennaNames
+		  const casacore::String& telescope,
+		  const casacore::Vector<casacore::MEpoch>& inpTimeRange, // only elements 0 and 1 are used; if 1 is not present it is assumed to be inf
+		  const casacore::Vector<casacore::MFrequency>& inpFreqRange, // must contain at least one element; beams will be provided for each element 
+		  const casacore::Vector<casacore::String>& AntennaNames, // characters 0 and 1 are used for ALMA to determine the antenna type
+		  const casacore::MDirection& obsdirection=casacore::MDirection(casacore::Quantity( 0., "deg"), // default is the Zenith
+							    casacore::Quantity(90., "deg"), 
+							    casacore::MDirection::AZEL)
 		  );
 
-      Bool vpRecIsIdentical(const Record& rec0, const Record& rec1);
+      casacore::Bool vpRecIsIdentical(const casacore::Record& rec0, const casacore::Record& rec1);
 
     protected:
-      VPManager(Bool verbose=False);
+      VPManager(casacore::Bool verbose=false);
 
     private:
       static VPManager* instance_p;
 
-      static Mutex mutex_p;
+      static casacore::Mutex mutex_p;
 
-      Record vplist_p; 
-      SimpleOrderedMap<String, Int > vplistdefaults_p; 
+      casacore::Record vplist_p; 
+      casacore::SimpleOrderedMap<casacore::String, casacore::Int > vplistdefaults_p; 
       AntennaResponses aR_p; 
 
-      inline String antennaDescription(const String& telescope,
-				       const String& antennatype){
+      inline casacore::String antennaDescription(const casacore::String& telescope,
+				       const casacore::String& antennatype){
 	if(antennatype.empty()) return telescope;
 	return telescope + " " + antennatype;
       };
 
-      inline String telFromAntDesc(const String& antDesc){
-	String tempstr = antDesc;
+      inline casacore::String telFromAntDesc(const casacore::String& antDesc){
+	casacore::String tempstr = antDesc;
 	if(tempstr.contains(" ")) return tempstr.before(" ");
 	return tempstr;
       };
 
-      inline String antTypeFromAntDesc(const String& antDesc){
-	String tempstr = antDesc;
+      inline casacore::String antTypeFromAntDesc(const casacore::String& antDesc){
+	casacore::String tempstr = antDesc;
 	if(tempstr.contains(" ")) return tempstr.after(" ");
 	tempstr = "";
 	return tempstr;

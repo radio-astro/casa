@@ -35,13 +35,17 @@
 #include <display/DisplayShapes/DisplayShapeWithCoords.h>
 #include <display/DisplayShapes/DSRectangle.h>
 
+namespace casacore{
+
+	class Record;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
 // Implementation of an absolute pixel DSRectangle
 // </summary>
 
-	class Record;
 	class DSWorldRectangle;
 	class DSScreenRectangle;
 
@@ -49,16 +53,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public :
 		DSPixelRectangle();
-		DSPixelRectangle(const Record& settings);
+		DSPixelRectangle(const casacore::Record& settings);
 		DSPixelRectangle(DSScreenRectangle& other);
 		DSPixelRectangle(DSWorldRectangle& other);
 
 		virtual ~DSPixelRectangle();
 
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSRectangle::getOptions();
 		}
 

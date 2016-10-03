@@ -67,6 +67,7 @@ namespace {
 }
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -169,7 +170,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
   MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
   if(!newTab.isWritable())
     return;
-  Vector<String> theParts(newTab.getPartNames(True));
+  Vector<String> theParts(newTab.getPartNames(true));
   if(theParts.nelements() > 1){
     for (uInt k=0; k < theParts.nelements(); ++k){
       MeasurementSet subms(theParts[k], newTab.lockOptions(), Table::Update);
@@ -234,7 +235,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 }
   void VisModelData::clearModel(const MeasurementSet& thems, const String field, const String specwindows){
     MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
-  Vector<String> theParts(newTab.getPartNames(True));
+  Vector<String> theParts(newTab.getPartNames(true));
   if(theParts.nelements() > 1){
     for (uInt k =0; k < theParts.nelements(); ++k){
       MeasurementSet subms(theParts[k], newTab.lockOptions(), Table::Update);
@@ -371,13 +372,13 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     		 Int numrem=0;
     		 for (Int k=0; k < numft; ++k){
     			 RecordInterface& ftrec=therec.asrwRecord(keyval[j]+String::toString(k));
-			 Bool hasField=True;
+			 Bool hasField=true;
 			 if(fields.nelements() >0){
-			   hasField=False;
+			   hasField=false;
 			   Vector<Int> fieldsinrec;
 			   ftrec.get("fields", fieldsinrec);
 			   if(anyEQ(fieldsinrec, fields))
-			      hasField=True;
+			      hasField=true;
 			 }
 			 
     			 if(hasField && !removeSpwFromMachineRec(ftrec, spws)){
@@ -395,8 +396,8 @@ void VisModelData::clearModel(const MeasurementSet& thems){
      if(therec.isDefined("numft")) numft=therec.asInt("numft");
      if(therec.isDefined("numcl")) numcl=therec.asInt("numcl");
      if (numft==0 && numcl==0)
-    	 return False;
-     return True;
+    	 return false;
+     return true;
   }
 
   Bool VisModelData::removeFTFromRec(TableRecord& therec, const String& keyval, const Bool relabel){
@@ -405,7 +406,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     String *splitkey=new String[2];
     Int nsep=split(keyval, splitkey, 2, String("_"));
     if (nsep <1 || !therec.isDefined(keyval)) 
-      return False;
+      return false;
     String eltype=splitkey[0];
     //Int modInd=String::toInt(splitkey[1]);
     Int numcomp= (eltype==String("ft")) ? therec.asInt("numft"): therec.asInt("numcl");
@@ -430,7 +431,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     }
 
     delete [] splitkey;
-    return True;
+    return true;
   } 
 
   Bool VisModelData::removeSpwFromMachineRec(RecordInterface& ftclrec, const Vector<Int>& spws){
@@ -448,7 +449,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     if(defspws.nelements() == uInt(counter)){
       //Now we have to remove this ft or cl model
 
-      return False;
+      return false;
 
     }    
     newdefspw.resize(defspws.nelements()-counter);
@@ -461,14 +462,14 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     }
     
     ftclrec.define("spws", newdefspw);
-    return True;
+    return true;
   }
 
   Bool VisModelData::addToRec(TableRecord& therec, const Vector<Int>& spws){
 
     Int numft=0;
     Int numcl=0;
-    Vector<Bool> hasSpw(spws.nelements(), False);
+    Vector<Bool> hasSpw(spws.nelements(), false);
     if(therec.isDefined("numft")){
       numft=therec.asInt("numft");
       Vector<Int> ft_toremove(numft, 0);
@@ -478,7 +479,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	for (uInt i=0; i<spws.nelements(); ++i){
 	  for (uInt j=0; j<ftspws.nelements(); ++j){
 	    if(spws[i]==ftspws[j]){
-	      hasSpw[i]=True;	   
+	      hasSpw[i]=true;	   
 	      ft_toremove[k]=1;
 	    }
 	  }	
@@ -509,7 +510,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	for (uInt i=0; i<spws.nelements(); ++i){
 	  for (uInt j=0; j<clspws.nelements(); ++j){
 	    if(spws[i]==clspws[j]){
-	      hasSpw[i]=True;	    
+	      hasSpw[i]=true;	    
 	      cl_toremove[k]=1;
 	    }
 	  }	
@@ -551,7 +552,7 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
   }
   if(thekey != "" )
     return VisModelData::isModelDefined(thekey, thems);
-  return False;
+  return false;
   
 }
 
@@ -559,12 +560,12 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
     //Let's try the Source table
     if(Table::isReadable(thems.sourceTableName()) &&thems.source().nrow() > 0 ){
       if(thems.source().keywordSet().isDefined(elkey))
-	return True;      
+	return true;      
     }
     //Let's try the Main table 
     if(thems.keywordSet().isDefined(elkey))
-      return True;
-    return False;
+      return true;
+    return false;
   }
 
   Bool VisModelData::getModelRecord(const String& theKey, TableRecord& theRec, const MeasurementSet& theMs){
@@ -578,14 +579,14 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
 	ROScalarColumn<TableRecord> scol(theMs.source(), "SOURCE_MODEL");
 	scol.get(row, theRec);
       }
-      return True;
+      return true;
     }
     //Let's try the Main table 
     if(theMs.keywordSet().isDefined(theKey)){
       theRec=theMs.keywordSet().asRecord(theKey);
-      return True;
+      return true;
     }
-    return False;
+    return false;
 
 
   }
@@ -595,7 +596,7 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
     if( (sourceRowNum> -1) && Table::isReadable(theMS.sourceTableName()) && Int(theMS.source().nrow()) > sourceRowNum ){
       MSSource& mss=theMS.source();
       if(!mss.isColumn(MSSource::SOURCE_MODEL) ){
-	mss.addColumn(ScalarRecordColumnDesc("SOURCE_MODEL"), True);
+	mss.addColumn(ScalarRecordColumnDesc("SOURCE_MODEL"), true);
       }
       if(mss.rwKeywordSet().isDefined(theKey))
 	mss.rwKeywordSet().removeField(theKey);
@@ -611,9 +612,9 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
   }
 
   Bool VisModelData::putModelRecord(const Vector<Int>& fieldIds, TableRecord& theRec, MeasurementSet& theMS){
-    Vector<String> theParts(theMS.getPartNames(True));
+    Vector<String> theParts(theMS.getPartNames(true));
     if(theParts.nelements() > 1){
-      Bool retval=True;
+      Bool retval=true;
       for (uInt k =0; k < theParts.nelements(); ++k){
     	  MeasurementSet subms(theParts[k], theMS.lockOptions(), Table::Update);
     	  retval= retval && putModelRecord(fieldIds, theRec, subms);
@@ -654,7 +655,7 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
       for (uInt k=0; k < fieldIds.nelements();  ++k){
 	mss.rwKeywordSet().define("definedmodel_field_"+String::toString(fieldIds[k]), elkey);
       }
-      return True;
+      return true;
       
     }
     //Oh well no source table so will add it to the main table
@@ -663,7 +664,7 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
       theMS.rwKeywordSet().define("definedmodel_field_"+String::toString(fieldIds[k]), elkey);	
     }
 
-    return True;
+    return true;
   }
 
 
@@ -690,7 +691,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       elkey=elkey+"_"+String::toString(validfieldids[k]);
     }
     TableRecord outRec; 
-    Bool addtorec=False;
+    Bool addtorec=false;
     MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
     //cerr << elkey << " incr " << incremental << endl;
     if(isModelDefined(elkey, newTab)){ 
@@ -705,7 +706,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       //////model key
       Int hasSourceRecord=firstSourceRowRecord(validfieldids[0], thems, outRec);
       if(hasSourceRecord > -1 && outRec.nfields() > 0)
-	addtorec=True;
+	addtorec=true;
       //cerr << "has Source " << hasSourceRecord << " addToRec " << addtorec << endl;
       ////
     }
@@ -746,10 +747,10 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
  
       /*
       String subName=newTab.tableName()+"/"+elkey;
-      if(Table::isReadable(subName) && !Table::canDeleteTable(subName, True))
+      if(Table::isReadable(subName) && !Table::canDeleteTable(subName, true))
       	throw(AipsError("Cannot save model into MS"));
-      else if ((Table::isReadable(subName) && Table::canDeleteTable(subName, True)))
-	Table::deleteTable(subName, True);
+      else if ((Table::isReadable(subName) && Table::canDeleteTable(subName, true)))
+	Table::deleteTable(subName, true);
       TableDesc td1 ("td1", TableDesc::New);
       //td1.addColumn (ArrayColumnDesc<Int> ("SPECTRAL_WINDOW_ID"));
       //td1.addColumn(ScalarColumnDesc<TableRecord>("MODEL"));
@@ -760,14 +761,14 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       */
       //ArrayColumn<Int> spwCol(tab1, "SPECTRAL_WINDOW_ID");
       //ScalarColumn<TableRecord> modCol(tab1, "MODEL");
-      //newTab.addRow(1,False);
+      //newTab.addRow(1,false);
       //spwCol.put(0,spws);
       //modCol.put(0,outRec);
       //newTab.flush();
     // MSSource& mss=newTab.source();
     //  cerr << "has model_source " << mss.isColumn(MSSource::SOURCE_MODEL) << endl;
     //  if(!mss.isColumn(MSSource::SOURCE_MODEL) ){
-    //mss.addColumn(ScalarRecordColumnDesc("SOURCE_MODEL"), True);
+    //mss.addColumn(ScalarRecordColumnDesc("SOURCE_MODEL"), true);
     //  }
     //  MSSourceColumns srcCol(mss);
     //  srcCol.sourceModel().put(0, outRec);
@@ -798,7 +799,7 @@ void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer& vb){
     String sep = "/";
     uInt nw = split(theDiskImage, subPathname, 20, sep);
     String theposs=(subPathname[nw-1]);
-    String msname=vb.msName(False);
+    String msname=vb.msName(false);
     for (uInt i=nw-2 ; i>0; --i){
       if(File(msname+"/"+theposs).exists()){
 		theDiskImage=msname+"/"+theposs;
@@ -827,7 +828,7 @@ void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer& vb){
 	  ftrec.get("spws", spws);
 	  if(anyEQ(spws, vb.spectralWindow())){
 	    indexft=ftholder_p.nelements();
-	    ftholder_p.resize(indexft+1, False, True);
+	    ftholder_p.resize(indexft+1, false, true);
 	    ftholder_p[indexft].resize(1);
 	    ftholder_p[indexft][0]=NEW_FT(ftrec.asRecord("container"));
 	    if(!( ftholder_p[indexft][0]))
@@ -842,12 +843,12 @@ void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer& vb){
 		 
 		  indx=ftindex_p(spws[spi], fields[fi], vb.msId());
 		  ftindx=ftholder_p[indx].nelements();
-		  Bool alreadyAdded=False;
+		  Bool alreadyAdded=false;
 		  for (Int kk=1; kk < ftindx; ++kk){
 		    alreadyAdded= alreadyAdded || (ftholder_p[indexft][0]==ftholder_p[indx][kk]);
 		  }
 		  if(!alreadyAdded){
-		    ftholder_p[indx].resize(ftindx+1, True);
+		    ftholder_p[indx].resize(ftindx+1, true);
 		    ftholder_p[indx][ftindx]=ftholder_p[indexft][0];
 		  }
 		}
@@ -878,7 +879,7 @@ void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer& vb){
 	  clrec.get("spws", spws);
 	  if(anyEQ(spws, vb.spectralWindow())){
 	    indexcl=clholder_p.nelements();
-	    clholder_p.resize(indexcl+1, False, True);
+	    clholder_p.resize(indexcl+1, false, true);
 	    clholder_p[indexcl].resize(1);
 	    clholder_p[indexcl][0]=new ComponentList();
 	    String err;
@@ -891,12 +892,12 @@ void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer& vb){
 		if(hasModel(vb.msId(), fields[fi], spws[spi]) && (clindex_p(spws[spi], fields[fi], vb.msId()) >= 0 )){
 		  indx=clindex_p(spws[spi], fields[fi], vb.msId());
 		  clindx=clholder_p[indx].nelements();
-		  Bool alreadyAdded=False;
+		  Bool alreadyAdded=false;
 		  for (Int kk=1; kk < clindx; ++kk){
 		    alreadyAdded= alreadyAdded || (clholder_p[indexcl][0]==clholder_p[indx][kk]);
 		  } 
 		  if(!alreadyAdded){
-		    clholder_p[indx].resize(clindx+1, True);
+		    clholder_p[indx].resize(clindx+1, true);
 		    clholder_p[indx][clindx]=clholder_p[indexcl][0];
 		  }
 		}
@@ -988,21 +989,21 @@ void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer& vb){
     //nCorr etc are public..who know who changed these values before reaching here.
     Cube<Complex> mod(vb.nCorr(), vb.nChannel(), vb.nRow(), Complex(0.0));
     vb.setModelVisCube(mod);
-    Bool incremental=False;
+    Bool incremental=false;
     if( cl.nelements()>0){
       //cerr << "In cft " << cl.nelements() << endl;
       for (uInt k=0; k < cl.nelements(); ++k)
 	if(!cl[k].null()){
 	  cft_p->get(vb, *(cl[k]), -1); 
       //cerr << "max " << max(vb.modelVisCube()) << endl;
-	  incremental=True;
+	  incremental=true;
 	}
     }
     if(ft.nelements()>0){
       Cube<Complex> tmpModel;
       if(incremental || ft.nelements() >1)
 	tmpModel.assign(vb.modelVisCube());
-      Bool allnull=True;
+      Bool allnull=true;
       for (uInt k=0; k < ft.nelements(); ++k){
 	if(!ft[k].null()){
 	  if(k >0) vb.setModelVisCube(Cube<Complex> (vb.nCorr(), vb.nChannel(), vb.nRow(), Complex(0.0)));
@@ -1011,14 +1012,14 @@ void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer& vb){
 	  if(ft.nelements()>1 || incremental){
 	    tmpModel+=vb.modelVisCube();
 	  }
-	  allnull=False;
+	  allnull=false;
 	}
       }
       //cerr << "min max after ft " << min(vb.modelVisCube()) << max(vb.modelVisCube()) << endl;
       if(!allnull){
 	if(ft.nelements()>1 || incremental)
 	  vb.modelVisCube()=tmpModel;
-	incremental=True;
+	incremental=true;
       }      
     }
     if(!incremental){
@@ -1036,7 +1037,7 @@ void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer& vb){
       }
     }
     
-    return True;
+    return true;
     
   }
 
@@ -1078,11 +1079,11 @@ Int VisModelData::firstSourceRowRecord(const Int field, const MeasurementSet& th
       if(rows.nelements() > 0) 
 	row=rows[0];
       const TableRecord& keywords=mss.keywordSet();
-      Bool rowIsUsed=False;
+      Bool rowIsUsed=false;
       for (uInt n=0; n< keywords.nfields(); ++n){
 	if(keywords.dataType(n) == TpInt){
 	  if(row==keywords.asInt(n)){
-	     rowIsUsed=True;
+	     rowIsUsed=true;
 	     //cerr << "has record pointed to" << endl;
 	  }
 	}

@@ -1,4 +1,4 @@
-//# StokesImageUtil.h: Definitions for Stokes Image utilities
+//# StokesImageUtil.h: Definitions for casacore::Stokes Image utilities
 //# Copyright (C) 1996,1997,1998,1999
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -73,135 +73,135 @@ public:
   };
   // Make a Gaussian PSF
   //<group>
-  static void MakeGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& beam,
-			      Bool norm=False);
-  static void MakeGaussianPSF(ImageInterface<Float>& psf,
-			      Quantity& bmaj, Quantity& bmin, Quantity& bpa,
-			      Bool norm=False);
+  static void MakeGaussianPSF(casacore::ImageInterface<casacore::Float>& psf, casacore::Vector<casacore::Float>& beam,
+			      casacore::Bool norm=false);
+  static void MakeGaussianPSF(casacore::ImageInterface<casacore::Float>& psf,
+			      casacore::Quantity& bmaj, casacore::Quantity& bmin, casacore::Quantity& bpa,
+			      casacore::Bool norm=false);
   //</group>
   
   // Fit a Gaussian PSF
   //<group>
-  static Bool FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& beam);
-  static Bool FitGaussianPSF(ImageInterface<Float>& psf, GaussianBeam& beam);
-  static Bool FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& beam);
+  static casacore::Bool FitGaussianPSF(casacore::ImageInterface<casacore::Float>& psf, casacore::Vector<casacore::Float>& beam);
+  static casacore::Bool FitGaussianPSF(casacore::ImageInterface<casacore::Float>& psf, casacore::GaussianBeam& beam);
+  static casacore::Bool FitGaussianPSF(casacore::ImageInterface<casacore::Float>& psf, casacore::ImageBeamSet& beam);
   //</group>
   // Locat peak of PSF return pos, peak and first plane that satisfies 
   // peak >0.9
   
-  static void locatePeakPSF(ImageInterface<Float>& psf, Int& xpos, Int& ypos, 
-			    Float& amp, Matrix<Float>& psfplane);
+  static void locatePeakPSF(casacore::ImageInterface<casacore::Float>& psf, casacore::Int& xpos, casacore::Int& ypos, 
+			    casacore::Float& amp, casacore::Matrix<casacore::Float>& psfplane);
 
-  // Convolve a Stokes Image in place
+  // Convolve a casacore::Stokes Image in place
   //<group>
-  static void Convolve(ImageInterface<Float>& image,
-		       ImageInterface<Float>& psf);
-  static void Convolve(ImageInterface<Float>& image, Float bmaj,
-		       Float bmin, Float bpa, Bool normalizeVolume=False);
-  static void Convolve(ImageInterface<Float>& image,
-		       GaussianBeam& beam,
-		       Bool normalizeVolume=False);
-  static void Convolve(ImageInterface<Float>& image,
-		       ImageBeamSet& beams,
-		       Bool normalizeVolume=False);
+  static void Convolve(casacore::ImageInterface<casacore::Float>& image,
+		       casacore::ImageInterface<casacore::Float>& psf);
+  static void Convolve(casacore::ImageInterface<casacore::Float>& image, casacore::Float bmaj,
+		       casacore::Float bmin, casacore::Float bpa, casacore::Bool normalizeVolume=false);
+  static void Convolve(casacore::ImageInterface<casacore::Float>& image,
+		       casacore::GaussianBeam& beam,
+		       casacore::Bool normalizeVolume=false);
+  static void Convolve(casacore::ImageInterface<casacore::Float>& image,
+		       casacore::ImageBeamSet& beams,
+		       casacore::Bool normalizeVolume=false);
   //</group>
   
   
-  // Zero selected planes of a Stokes image
-  static void Zero(ImageInterface<Float>& image, Vector<Bool>& mask);
+  // Zero selected planes of a casacore::Stokes image
+  static void Zero(casacore::ImageInterface<casacore::Float>& image, casacore::Vector<casacore::Bool>& mask);
 
   // Mask mask iif(image > threshhold), where threshhold is in image's units.
-  static void MaskFrom(ImageInterface<Float>& mask,
-		       ImageInterface<Float>& image,
-		       const Double threshhold);
+  static void MaskFrom(casacore::ImageInterface<casacore::Float>& mask,
+		       casacore::ImageInterface<casacore::Float>& image,
+		       const casacore::Double threshhold);
 
   // This version uses threshold.get("Jy").getValue().
-  static void MaskFrom(ImageInterface<Float>& mask,
-		       ImageInterface<Float>& image,
-		       const Quantity& threshold);
+  static void MaskFrom(casacore::ImageInterface<casacore::Float>& mask,
+		       casacore::ImageInterface<casacore::Float>& image,
+		       const casacore::Quantity& threshold);
   
 
-  // Zero pixels where Stokes I < some value
-  static void MaskOnStokesI(ImageInterface<Float>& image, const Quantity& threshold);
+  // Zero pixels where casacore::Stokes I < some value
+  static void MaskOnStokesI(casacore::ImageInterface<casacore::Float>& image, const casacore::Quantity& threshold);
 
   // Make a box mask
-  static void BoxMask(ImageInterface<Float>& mask, const IPosition& blc,
-		      const IPosition& trc, const Float value);
+  static void BoxMask(casacore::ImageInterface<casacore::Float>& mask, const casacore::IPosition& blc,
+		      const casacore::IPosition& trc, const casacore::Float value);
 
-  // Constrain a Stokes Image
-  static void Constrain(ImageInterface<Float>& image);
+  // Constrain a casacore::Stokes Image
+  static void Constrain(casacore::ImageInterface<casacore::Float>& image);
   
-  // Convert from Stokes Image to "correlation" image.
-  static void From(ImageInterface<Complex>& out,
-		   const ImageInterface<Float>& in);
+  // Convert from casacore::Stokes Image to "correlation" image.
+  static void From(casacore::ImageInterface<casacore::Complex>& out,
+		   const casacore::ImageInterface<casacore::Float>& in);
   
-  // Convert to Stokes Image from "correlation" image.
-  static void To(ImageInterface<Float>& out, ImageInterface<Complex>& in);
+  // Convert to casacore::Stokes Image from "correlation" image.
+  static void To(casacore::ImageInterface<casacore::Float>& out, casacore::ImageInterface<casacore::Complex>& in);
 
-  // Direct copy from Float to Complex with 
-  static void directCFromR(ImageInterface<Complex>& out,
-		   const ImageInterface<Float>& in);
+  // Direct copy from casacore::Float to casacore::Complex with 
+  static void directCFromR(casacore::ImageInterface<casacore::Complex>& out,
+		   const casacore::ImageInterface<casacore::Float>& in);
   
   // Direct copy To Float...
-  static void directCToR(ImageInterface<Float>& out, ImageInterface<Complex>& in);
+  static void directCToR(casacore::ImageInterface<casacore::Float>& out, casacore::ImageInterface<casacore::Complex>& in);
 
   
-  // Convert to Stokes PSF
-  static void ToStokesPSF(ImageInterface<Float>& out, ImageInterface<Complex>& in);
+  // Convert to casacore::Stokes PSF
+  static void ToStokesPSF(casacore::ImageInterface<casacore::Float>& out, casacore::ImageInterface<casacore::Complex>& in);
 
-  static void ToStokesSumWt(Matrix<Float> sumwtStokes, Matrix<Float> sumwtCorr);
+  static void ToStokesSumWt(casacore::Matrix<casacore::Float> sumwtStokes, casacore::Matrix<casacore::Float> sumwtCorr);
   
-  // Find the mapping from pixel on the Stokes Axis to I,Q,U,V
-  static Int StokesPolMap(Vector<Int>& map, const CoordinateSystem& coord);
+  // Find the mapping from pixel on the casacore::Stokes Axis to I,Q,U,V
+  static casacore::Int StokesPolMap(casacore::Vector<casacore::Int>& map, const casacore::CoordinateSystem& coord);
   
-  // Find the mapping from pixel on the Stokes Axis to either XX,XY,YX,YY
+  // Find the mapping from pixel on the casacore::Stokes Axis to either XX,XY,YX,YY
   // of LL, LR, RL, RR. Return type as well: Linear:1, Circular 0
-  static Int CStokesPolMap(Vector<Int>& map, StokesImageUtil::PolRep& polframe,
-			   const CoordinateSystem& coord);
+  static casacore::Int CStokesPolMap(casacore::Vector<casacore::Int>& map, StokesImageUtil::PolRep& polframe,
+			   const casacore::CoordinateSystem& coord);
   
   // Find all mappings from coordinate to axis number
-  static Bool StokesMap(Vector<Int>& map, const CoordinateSystem& coord);
+  static casacore::Bool StokesMap(casacore::Vector<casacore::Int>& map, const casacore::CoordinateSystem& coord);
   
-  //Create a CoordinateSystem from a MeasurementSet and other info
-  static CoordinateSystem StokesCoordFromMS(const IPosition& shape,
-					    Vector<Double>& deltas,
-					    MeasurementSet& ms);
+  //Create a casacore::CoordinateSystem from a casacore::MeasurementSet and other info
+  static casacore::CoordinateSystem StokesCoordFromMS(const casacore::IPosition& shape,
+					    casacore::Vector<casacore::Double>& deltas,
+					    casacore::MeasurementSet& ms);
   
-  // Create a CoordinateSystem from a MeasurementSet and other info
-  static CoordinateSystem StokesCoordFromMS(const IPosition& shape,
-					    Vector<Double>& deltas,
-					    MeasurementSet& ms,
-					    Vector<Int>& whichStokes,
-					    Bool doCStokes=False,
-					    Int fieldID=0, Int SPWID=0,
-					    Int feedID=0);
+  // Create a casacore::CoordinateSystem from a casacore::MeasurementSet and other info
+  static casacore::CoordinateSystem StokesCoordFromMS(const casacore::IPosition& shape,
+					    casacore::Vector<casacore::Double>& deltas,
+					    casacore::MeasurementSet& ms,
+					    casacore::Vector<casacore::Int>& whichStokes,
+					    casacore::Bool doCStokes=false,
+					    casacore::Int fieldID=0, casacore::Int SPWID=0,
+					    casacore::Int feedID=0);
   
-  // Create a CoordinateSystem 
-  static CoordinateSystem CStokesCoord(//const IPosition& shape,
-				       const CoordinateSystem& coord, 
-				       Vector<Int>& whichStokes,
+  // Create a casacore::CoordinateSystem 
+  static casacore::CoordinateSystem CStokesCoord(//const casacore::IPosition& shape,
+				       const casacore::CoordinateSystem& coord, 
+				       casacore::Vector<casacore::Int>& whichStokes,
 				       StokesImageUtil::PolRep  polRep=StokesImageUtil::CIRCULAR);
   /*
   static CoordinateSystem
-  CStokesCoordFromImage(const ImageInterface<Complex>& image,
-			Vector<Int>& whichStokes,
+  CStokesCoordFromImage(const casacore::ImageInterface<casacore::Complex>& image,
+			casacore::Vector<casacore::Int>& whichStokes,
 			SkyModel::PolRep polRep);
   */
   // Change the stokes representation (but not the data!)
-  static void changeCStokesRep(ImageInterface<Complex>& image,
+  static void changeCStokesRep(casacore::ImageInterface<casacore::Complex>& image,
 			       StokesImageUtil::PolRep polRep);
 
-  static void changeLabelsStokesToCorrStokes(StokesCoordinate &stokesCoord, 
+  static void changeLabelsStokesToCorrStokes(casacore::StokesCoordinate &stokesCoord, 
 					                             StokesImageUtil::PolRep polRep,
-                                                                     Vector<Int>&whichStokes);
+                                                                     casacore::Vector<casacore::Int>&whichStokes);
 
   // check to see if Image coordinates have the standard order:
-  // Direction, Stokes, Spectral.  Returns false if this is not
+  // Direction, casacore::Stokes, Spectral.  Returns false if this is not
   // the order, or if any are missing
   // <group>
-  static Bool standardImageCoordinates(const CoordinateSystem& coords);
-  static Bool standardImageCoordinates(const ImageInterface<Complex>& image);
-  static Bool standardImageCoordinates(const ImageInterface<Float>& image);
+  static casacore::Bool standardImageCoordinates(const casacore::CoordinateSystem& coords);
+  static casacore::Bool standardImageCoordinates(const casacore::ImageInterface<casacore::Complex>& image);
+  static casacore::Bool standardImageCoordinates(const casacore::ImageInterface<casacore::Float>& image);
   // </group>
 
 };

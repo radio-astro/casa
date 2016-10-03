@@ -63,7 +63,7 @@ private:
     // Displayed row data.
     TBLocatedRows* rows;
 
-    // List of tables.
+    // casacore::List of tables.
     std::vector<TBTableTabs*> tables;
     
 private slots:

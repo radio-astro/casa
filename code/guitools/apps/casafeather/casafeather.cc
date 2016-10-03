@@ -42,6 +42,7 @@
 #include <QDebug>
 #include <casa/namespace.h>
 
+using namespace casa;
 
 int main( int argc, char *argv[] ) {
 	int stat = 0;
@@ -60,7 +61,7 @@ int main( int argc, char *argv[] ) {
 		stat = app.exec();
 		return stat;
 	}
-	catch (const casa::AipsError& err) {
+	catch (const casacore::AipsError& err) {
 		cerr<<"**"<<err.getMesg()<<endl;
 	}
 	catch (...) {

@@ -89,13 +89,13 @@ public:
   virtual const asyncio::PrefetchColumns *prefetchColumns() const;
 
   // This is where all the work gets done!
-  virtual Bool process(VisBuffGroup& vbg) = 0;
+  virtual casacore::Bool process(VisBuffGroup& vbg) = 0;
 
 protected:
   asyncio::PrefetchColumns prefetchColumns_p;
 };
 
-//<summary>ROGroupWorkers process VisBuffGroups without modifying the input MS(es)</summary>
+//<summary>ROGroupWorkers process VisBuffGroups without modifying the input casacore::MS(es)</summary>
 //
 // <use visibility=export>
 //
@@ -107,7 +107,7 @@ protected:
 // </prerequisite>
 //
 // <etymology>
-// ROGroupWorker works on VisBuffGroups and is readonly W.R.T. the input MS(es).
+// ROGroupWorker works on VisBuffGroups and is readonly W.R.T. the input casacore::MS(es).
 // </etymology>
 //
 //<synopsis>
@@ -193,7 +193,7 @@ private:
 class GroupWriteToNewMS : public GroupWorkerBase
 {
 public:
-  GroupWriteToNewMS(MeasurementSet& outms, MSColumns *msc,
+  GroupWriteToNewMS(casacore::MeasurementSet& outms, casacore::MSColumns *msc,
                     const VBRemapper& remapper);
 
   //GroupWriteToNewMS(GroupWriteToNewMS& other);
@@ -205,14 +205,14 @@ public:
   // doFC: do FLAG_CATEGORY?
   // doFloat: do FLOAT_DATA?
   // doSpWeight: do WEIGHT_SPECTRUM?
-  static uInt write(MeasurementSet& outms, MSColumns *msc, VisBuffer& vb,
-                    uInt rowsdone, const VBRemapper& remapper, const Bool doFC,
-                    const Bool doFloat, const Bool doSpWeight);
+  static casacore::uInt write(casacore::MeasurementSet& outms, casacore::MSColumns *msc, VisBuffer& vb,
+                    casacore::uInt rowsdone, const VBRemapper& remapper, const casacore::Bool doFC,
+                    const casacore::Bool doFloat, const casacore::Bool doSpWeight);
 protected:
-  MeasurementSet outms_p;
-  MSColumns      *msc_p;
+  casacore::MeasurementSet outms_p;
+  casacore::MSColumns      *msc_p;
   VBRemapper     remapper_p;
-  uInt           rowsdone_p;  // how many rows have been written.
+  casacore::uInt           rowsdone_p;  // how many rows have been written.
 
 private:
   // Disable default construction.

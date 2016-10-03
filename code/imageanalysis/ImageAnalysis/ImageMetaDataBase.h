@@ -44,7 +44,7 @@ namespace casa {
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=ImageInterface>ImageInterface</linkto>
+//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -65,16 +65,16 @@ class ImageMetaDataBase {
 
 public:
 
-	const static String MASKS;
+	const static casacore::String MASKS;
 
 	virtual ~ImageMetaDataBase() {}
 
-    CoordinateSystem coordsys(const vector<Int>& axes) const;
+    casacore::CoordinateSystem coordsys(const vector<casacore::Int>& axes) const;
 
-	uInt nChannels() const;
+	casacore::uInt nChannels() const;
 
 	// Is the specified channel number valid for this image?
-	Bool isChannelNumberValid(const uInt chan) const;
+	casacore::Bool isChannelNumberValid(const casacore::uInt chan) const;
 
 	// Get the pixel number on the polarization axis of the specified stokes parameter.
 	// If the specified stokes parameter does not exist in the image, the value returned
@@ -82,56 +82,56 @@ public:
 	// inclusive. Return -1 if the specified stokes parameter is not present or
 	// if this image does not have a polarization axis.
  
-	Int stokesPixelNumber(const String& stokesString) const;
+	casacore::Int stokesPixelNumber(const casacore::String& stokesString) const;
 
 	// get the stokes parameter at the specified pixel value on the polarization axis.
 	// returns "" if the specified pixel is out of range or if no polarization axis.
 
-	String stokesAtPixel(const uInt pixel) const;
+	casacore::String stokesAtPixel(const casacore::uInt pixel) const;
 
 	// Get the number of stokes parameters in this image.
-	uInt nStokes() const;
+	casacore::uInt nStokes() const;
 
 	// is the specified stokes parameter present in the image?
-	Bool isStokesValid(const String& stokesString) const;
+	casacore::Bool isStokesValid(const casacore::String& stokesString) const;
 
 	// Get the shape of the direction axes. Returns a two element
-	// Vector if there is a direction coordinate, if not returns a zero element
+	// casacore::Vector if there is a direction coordinate, if not returns a zero element
 	// vector.
 
-	Vector<Int> directionShape() const;
+	casacore::Vector<casacore::Int> directionShape() const;
 
 	// if the specified stokes parameter is valid. A message suitable for
 	// error notification is returned in the form of an in-out parameter
 	//if one or both of these is invalid.
-	Bool areChannelAndStokesValid(
-		String& message, const uInt chan, const String& stokesString
+	casacore::Bool areChannelAndStokesValid(
+		casacore::String& message, const casacore::uInt chan, const casacore::String& stokesString
     ) const;
 
 	// get the bounding box in the image for the specified region.
-	Record* getBoundingBox(const Record& region) const;
+	casacore::Record* getBoundingBox(const casacore::Record& region) const;
 
-	// convert the header info to a Record and list to logger if verbose=True
-	virtual Record toRecord(Bool verbose) const = 0;
+	// convert the header info to a casacore::Record and list to logger if verbose=true
+	virtual casacore::Record toRecord(casacore::Bool verbose) const = 0;
 
-	// get the value of the datum corresponding to the given FITS keyword.
-	ValueHolder getFITSValue(const String& key) const;
+	// get the value of the datum corresponding to the given casacore::FITS keyword.
+	casacore::ValueHolder getFITSValue(const casacore::String& key) const;
 
-	// if doVelocity=True, compute spectral velocities as well as frequencies, if False, only
+	// if doVelocity=true, compute spectral velocities as well as frequencies, if false, only
 	// compute frequencies.
 	// <src>dirFrame</src> and <src>freqFrame</src> are the codes for the
 	// frames for which it is desired that the returned measures should be specified.
 	// In both cases, one can specify "native" for the native coordinate frame,
-	// "cl" for the conversion layer frame, or any valid frame string from MDirection::showType()
-	// or MFrequency::showType().
-	Record toWorld(
-	    const Vector<double>& value, const String& format = "n",
-	    Bool doVelocity=True, const String& dirFrame="cl",
-	    const String& freqFrame="cl"
+	// "cl" for the conversion layer frame, or any valid frame string from casacore::MDirection::showType()
+	// or casacore::MFrequency::showType().
+	casacore::Record toWorld(
+	    const casacore::Vector<double>& value, const casacore::String& format = "n",
+	    casacore::Bool doVelocity=true, const casacore::String& dirFrame="cl",
+	    const casacore::String& freqFrame="cl"
 	) const;
 
 protected:
-	const static String _BEAMMAJOR, _BEAMMINOR, _BEAMPA, _BMAJ, _BMIN, _BPA,
+	const static casacore::String _BEAMMAJOR, _BEAMMINOR, _BEAMPA, _BMAJ, _BMIN, _BPA,
 		_BUNIT, _CDELT, _CRPIX, _CRVAL, _CTYPE, _CUNIT, _DATAMAX, _DATAMIN,
 		_EPOCH, _EQUINOX, _IMTYPE, _MAXPIXPOS, _MAXPOS, _MINPIXPOS,
 		_MINPOS, _OBJECT, _OBSDATE, _OBSERVER, _PROJECTION,
@@ -143,92 +143,92 @@ protected:
 
 	ImageMetaDataBase() : _log() {}
 
-	LogIO& _getLog() { return _log; }
+	casacore::LogIO& _getLog() { return _log; }
 
-	virtual const ImageInfo& _getInfo() const = 0;
+	virtual const casacore::ImageInfo& _getInfo() const = 0;
 
-	virtual const CoordinateSystem& _getCoords() const = 0;
+	virtual const casacore::CoordinateSystem& _getCoords() const = 0;
 
-	virtual Vector<String> _getAxisNames() const = 0;
+	virtual casacore::Vector<casacore::String> _getAxisNames() const = 0;
 
-	virtual Vector<String> _getAxisUnits() const = 0;
+	virtual casacore::Vector<casacore::String> _getAxisUnits() const = 0;
 
-	virtual GaussianBeam _getBeam() const = 0;
+	virtual casacore::GaussianBeam _getBeam() const = 0;
 
-	virtual String _getBrightnessUnit() const = 0;
+	virtual casacore::String _getBrightnessUnit() const = 0;
 
-	virtual String _getImType() const = 0;
+	virtual casacore::String _getImType() const = 0;
 
-	virtual vector<Quantity> _getIncrements() const = 0;
+	virtual vector<casacore::Quantity> _getIncrements() const = 0;
 
-	virtual Vector<String> _getMasks() const = 0;
+	virtual casacore::Vector<casacore::String> _getMasks() const = 0;
 
-	virtual String _getObject() const = 0;
+	virtual casacore::String _getObject() const = 0;
 
-	virtual String _getEquinox() const = 0;
+	virtual casacore::String _getEquinox() const = 0;
 
-	virtual MEpoch _getObsDate() const = 0;
+	virtual casacore::MEpoch _getObsDate() const = 0;
 
-	String _getEpochString() const;
+	casacore::String _getEpochString() const;
 
-	virtual String _getObserver() const = 0;
+	virtual casacore::String _getObserver() const = 0;
 
-	virtual String _getProjection() const;
+	virtual casacore::String _getProjection() const;
 
-	virtual String _getRefFreqType() const = 0;
+	virtual casacore::String _getRefFreqType() const = 0;
 
-	virtual Vector<Double> _getRefPixel() const = 0;
+	virtual casacore::Vector<casacore::Double> _getRefPixel() const = 0;
 
-	virtual Vector<Quantity> _getRefValue() const = 0;
+	virtual casacore::Vector<casacore::Quantity> _getRefValue() const = 0;
 
-	virtual Quantity _getRestFrequency() const = 0;
+	virtual casacore::Quantity _getRestFrequency() const = 0;
 
-	IPosition _getShape() const;
+	casacore::IPosition _getShape() const;
 
-	virtual Record _getStatistics() const = 0;
+	virtual casacore::Record _getStatistics() const = 0;
 
-	virtual String _getTelescope() const = 0;
+	virtual casacore::String _getTelescope() const = 0;
 
-	Record _makeHeader() const;
+	casacore::Record _makeHeader() const;
 
-	void _toLog(const Record& header) const;
+	void _toLog(const casacore::Record& header) const;
 
-	uInt _getAxisNumber(const String& key) const;
+	casacore::uInt _getAxisNumber(const casacore::String& key) const;
 
-	Record _calcStats() const;
+	casacore::Record _calcStats() const;
 
-	const TableRecord _miscInfo() const;
+	const casacore::TableRecord _miscInfo() const;
 
-	uInt _ndim() const;
+	casacore::uInt _ndim() const;
 
-	virtual Vector<String> _getStokes() const = 0;
+	virtual casacore::Vector<casacore::String> _getStokes() const = 0;
 
 private:
 
-	mutable LogIO _log;
+	mutable casacore::LogIO _log;
 
-	mutable IPosition _shape;
+	mutable casacore::IPosition _shape;
 
 	// precision < 0 => use default precision when printing numbers
-	void _fieldToLog(const Record& header, const String& field, Int precision=-1) const;
+	void _fieldToLog(const casacore::Record& header, const casacore::String& field, casacore::Int precision=-1) const;
 
-	String _doStandardFormat(Double value, const String& unit) const;
+	casacore::String _doStandardFormat(casacore::Double value, const casacore::String& unit) const;
 
-	template <class T> Record _calcStatsT(
-		SHARED_PTR<const ImageInterface<T> > image
+	template <class T> casacore::Record _calcStatsT(
+		SHARED_PTR<const casacore::ImageInterface<T> > image
 	) const;
 
-	Record _worldVectorToRecord(
-	    const CoordinateSystem& csys, const Vector<Double>& world, Int c,
-	    const String& format,
-	    Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity,
-	    MDirection::Types dirFrame, MFrequency::Types freqFrame
+	casacore::Record _worldVectorToRecord(
+	    const casacore::CoordinateSystem& csys, const casacore::Vector<casacore::Double>& world, casacore::Int c,
+	    const casacore::String& format,
+	    casacore::Bool isAbsolute, casacore::Bool showAsAbsolute, casacore::Bool doVelocity,
+	    casacore::MDirection::Types dirFrame, casacore::MFrequency::Types freqFrame
 	) const;
 
-	Record _worldVectorToMeasures(
-	    const CoordinateSystem& csys,
-	    const Vector<Double>& world, Int c, Bool abs, Bool doVelocity,
-	    MDirection::Types dirFrame, MFrequency::Types freqFrame
+	casacore::Record _worldVectorToMeasures(
+	    const casacore::CoordinateSystem& csys,
+	    const casacore::Vector<casacore::Double>& world, casacore::Int c, casacore::Bool abs, casacore::Bool doVelocity,
+	    casacore::MDirection::Types dirFrame, casacore::MFrequency::Types freqFrame
 	) const;
 
 };

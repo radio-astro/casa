@@ -8,9 +8,13 @@
 #include <dbus-c++/dbus.h>
 #endif
 
-namespace casa {
+namespace casacore{
 
   class Record;
+}
+
+namespace casa {
+
 
 class DBusThreadedBase
 {
@@ -21,8 +25,8 @@ class DBusThreadedBase
   void stopService();
 
   /* Methods to make translating to/from the map easy */
-  static std::map<std::string,DBus::Variant> fromRecord(Record);
-  static Record toRecord(std::map<std::string,DBus::Variant>);
+  static std::map<std::string,DBus::Variant> fromRecord(casacore::Record);
+  static casacore::Record toRecord(std::map<std::string,DBus::Variant>);
 
  private:
   

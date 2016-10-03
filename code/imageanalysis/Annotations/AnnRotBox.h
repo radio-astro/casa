@@ -53,20 +53,20 @@ public:
 	// <src>positionAngle</src> is measured in the usual astronomical
 	// way; starting at north through east (counterclockwise)
 	AnnRotBox(
-		const Quantity& xcenter,
-		const Quantity& ycenter,
-		const Quantity& xwidth,
-		const Quantity& ywidth, const Quantity& positionAngle,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrameString,
-		const String& dopplerString,
-		const Quantity& restfreq,
-		const Vector<Stokes::StokesTypes> stokes,
-		const Bool annotationOnly
+		const casacore::Quantity& xcenter,
+		const casacore::Quantity& ycenter,
+		const casacore::Quantity& xwidth,
+		const casacore::Quantity& ywidth, const casacore::Quantity& positionAngle,
+		const casacore::String& dirRefFrameString,
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrameString,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq,
+		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
+		const casacore::Bool annotationOnly
 	);
 
 	// Simplified constructor.
@@ -76,25 +76,25 @@ public:
 	// is a region (not just an annotation), although this value can be changed after
 	// construction.
 	AnnRotBox(
-		const Quantity& xcenter,
-		const Quantity& ycenter,
-		const Quantity& xwidth,
-		const Quantity& ywidth, const Quantity& positionAngle,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Quantity& xcenter,
+		const casacore::Quantity& ycenter,
+		const casacore::Quantity& xwidth,
+		const casacore::Quantity& ywidth, const casacore::Quantity& positionAngle,
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine
 
 	AnnRotBox& operator=(const AnnRotBox& other);
 
-	virtual ostream& print(ostream &os) const;
+	virtual std::ostream& print(std::ostream &os) const;
 
 private:
 	AnnotationBase::Direction _inputCenter;
-	Vector<Quantity> _inputWidths;
-	Quantity _positionAngle;
+	casacore::Vector<casacore::Quantity> _inputWidths;
+	casacore::Quantity _positionAngle;
 
 };
 

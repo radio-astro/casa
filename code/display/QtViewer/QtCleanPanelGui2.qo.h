@@ -47,12 +47,16 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 
 
+namespace casacore{
+
+	class ImageRegion;
+}
+
 namespace casa {
 
 	class QtViewer;
 	class QtDisplayPanel;
 	class QtDisplayData;
-	class ImageRegion;
 	class WorldCanvasHolder;
 
 	// <synopsis>
@@ -94,11 +98,11 @@ namespace casa {
 
 		// Connected to the rectangle region mouse tools new rectangle signal.
 		// Accumulates [/ displays] selected boxes.
-		virtual void newMouseRegion(Record mouseRegion, WorldCanvasHolder* wch);
+		virtual void newMouseRegion(casacore::Record mouseRegion, WorldCanvasHolder* wch);
 
-		virtual void changeMaskAxis(String, String, String, std::vector<int> );
-		virtual void changeImageAxis(String, String, String, std::vector<int> );
-		virtual void changeMaskSelectionText( String x, String y, String z );
+		virtual void changeMaskAxis(casacore::String, casacore::String, casacore::String, std::vector<int> );
+		virtual void changeImageAxis(casacore::String, casacore::String, casacore::String, std::vector<int> );
+		virtual void changeMaskSelectionText( casacore::String x, casacore::String y, casacore::String z );
 
 	signals:
 		void interact( QVariant );
@@ -124,7 +128,7 @@ namespace casa {
 		QLineEdit* cycleniterED_;
 		QLineEdit* threshED_;
 		QLineEdit* cyclethreshED_;
-		Record buttonState_;
+		casacore::Record buttonState_;
 
 		// standard palette...
 		QPalette default_palette;
@@ -135,14 +139,14 @@ namespace casa {
 		bool in_interact_mode;
 		int interact_id;
 
-		void writeRegionText(const ImageRegion& imageReg, const String& filename, Float value);
+		void writeRegionText(const casacore::ImageRegion& imageReg, const casacore::String& filename, casacore::Float value);
 
 		QtDisplayData* imagedd_;
 		QtDisplayData* maskdd_;			// later: to display clean region.
 		std::string axis_change;
 
 		DisplayCoordinateSystem csys_p;
-		DirectionCoordinate dirCoord_p;
+		casacore::DirectionCoordinate dirCoord_p;
 
 	};
 

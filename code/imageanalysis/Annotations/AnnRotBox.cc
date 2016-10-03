@@ -16,6 +16,7 @@
 
 #include <imageanalysis/Annotations/AnnRotBox.h>
 
+using namespace casacore;
 namespace casa {
 
 AnnRotBox::AnnRotBox(

@@ -47,29 +47,29 @@ public:
     // Constructor which takes the name, type, and value of the keyword.
     // Optionally, a display value can also be entered.  (For example, array
     // keywords may not want to display their whole value.)
-    // TBKeyword(String name, String type, String value, String dispValue = "");
+    // TBKeyword(casacore::String name, casacore::String type, casacore::String value, casacore::String dispValue = "");
     
-    TBKeyword(String name, TBData& data);
+    TBKeyword(casacore::String name, TBData& data);
 
     ~TBKeyword();
 
     
     // Returns the name of this keyword.
-    String getName();
+    casacore::String getName();
 
     // Returns the type of this keyword.
-    String getType();
+    casacore::String getType();
 
     // Returns the value of this keyword.
     TBData* getValue();
 
     // Returns the display value of this keyword.  If no display value has been
     // defined, the normal value is returned.
-    String getDisplayValue();
+    casacore::String getDisplayValue();
     
 private:
     // Keyword name.
-    String name;
+    casacore::String name;
 
     // Keyword value.
     TBData* data;

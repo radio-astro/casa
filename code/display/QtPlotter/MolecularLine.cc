@@ -30,6 +30,7 @@
 #include <QTextStream>
 #include <qwt_scale_map.h>
 
+using namespace casacore;
 namespace casa {
 
 	QColor MolecularLine::lineColor = "#00957B";
@@ -171,4 +172,5 @@ namespace casa {
 	MolecularLine::~MolecularLine() {
 	}
 
+using namespace casacore;
 } /* namespace casa */

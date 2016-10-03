@@ -60,6 +60,7 @@
 
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PBMath2D::PBMath2D()
@@ -87,7 +88,7 @@ void PBMath2D::summary(Int nValues)
 
 Bool PBMath2D::ok()
 {
-  return True;
+  return true;
 };
 
 

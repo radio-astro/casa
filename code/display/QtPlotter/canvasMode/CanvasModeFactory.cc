@@ -33,6 +33,7 @@
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <QMouseEvent>
 #include <QDebug>
+using namespace casacore;
 namespace casa {
 
 
@@ -87,4 +88,5 @@ namespace casa {
 		}
 	}
 
+using namespace casacore;
 } /* namespace casa */

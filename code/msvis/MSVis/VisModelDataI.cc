@@ -1,6 +1,7 @@
 #include <msvis/MSVis/VisModelDataI.h>
 #include <casa/Exceptions.h>
 
+using namespace casacore;
 namespace casa {
 
 VisModelDataI::Factory VisModelDataI::factory_p = 0;
@@ -37,7 +38,7 @@ VisModelDataI::setFactory (Factory factory, Int whichone)
 		factory_p = factory;
 	else if(whichone==1)
 		factory2_p= factory;
-  return True;
+  return true;
 }
 
 }

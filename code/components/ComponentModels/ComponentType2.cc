@@ -36,6 +36,7 @@
 #include <components/ComponentModels/SpectralModel.h>
 #include <components/ComponentModels/TabularSpectrum.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // The functions declared below are contained in a seperate .cc file to prevent

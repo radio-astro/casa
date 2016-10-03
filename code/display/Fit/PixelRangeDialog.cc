@@ -31,6 +31,7 @@
 #include <QDebug>
 #include <QKeyEvent>
 
+using namespace casacore;
 namespace casa {
 
 	PixelRangeDialog::PixelRangeDialog( QWidget *parent)

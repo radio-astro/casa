@@ -35,6 +35,7 @@
 
 #include <casa/Containers/Record.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSPixelRectangle::DSPixelRectangle() :
@@ -94,7 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool DSPixelRectangle::setOptions(const Record& settings) {
 
-		Bool localChange = False;
+		Bool localChange = false;
 		Record toSet = settings;
 
 		if (settings.isDefined("coords")) {
@@ -110,7 +111,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		floatFromPix(toSet, "minoraxis");
 
 		if (DSRectangle::setOptions(toSet)) {
-			localChange = True;
+			localChange = true;
 		}
 
 		return localChange;

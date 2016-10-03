@@ -90,7 +90,7 @@ public:
     virtual unsigned int itemDrawCount() const = 0;
     
     // See PlotItem::title().
-    virtual String itemTitle() const = 0;
+    virtual casacore::String itemTitle() const = 0;
     
 protected:
     // Like QwtPlotItem::draw() except that the child item should only draw
@@ -119,7 +119,7 @@ public:
     // Static //
     
     // Convenient access to "origin" name for draw method for logging.
-    static const String DRAW_NAME;
+    static const casacore::String DRAW_NAME;
     
     using QPLayerItem::draw;
     // Returns true if the given pointer is a Qwt plotter implementation,
@@ -156,10 +156,10 @@ public:
     PlotCanvas* canvas() const;
     
     // Implements PlotItem::title().
-    String title() const;
+    casacore::String title() const;
     
     // Implements PlotItem::setTitle().
-    void setTitle(const String& newTitle);
+    void setTitle(const casacore::String& newTitle);
     
     // Implements PlotItem::isQWidget().
     virtual bool isQWidget() const { return false; }
@@ -190,7 +190,7 @@ public:
     unsigned int itemDrawCount() const{ return shouldDraw()? drawCount() : 0; }
     
     // Implements QPLayerItem::itemTitle().
-    String itemTitle() const { return title(); }
+    casacore::String itemTitle() const { return title(); }
     
     
     // QPPlotItem methods //
@@ -246,8 +246,8 @@ protected:
     void logDestruction();
     
     // Provides access to log method enter/exit, for children.
-    void logMethod(const String& methodName, bool entering,
-            const String& message = String()) const;
+    void logMethod(const casacore::String& methodName, bool entering,
+            const casacore::String& message = casacore::String()) const;
     
     // Provides access to QPCanvas's draw operation for children.
     PlotOperationPtr drawOperation() const;
@@ -256,7 +256,7 @@ protected:
     // ABSTRACT METHODS //
     
     // Returns the class name for the child, for logging purposes.
-    virtual const String& className() const = 0;
+    virtual const casacore::String& className() const = 0;
 };
 
 
@@ -272,7 +272,7 @@ public:
     // Static //
     
     // Convenient access to class name.
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     // Returns the default segment threshold.
     static const unsigned int DEFAULT_SEGMENT_THRESHOLD;

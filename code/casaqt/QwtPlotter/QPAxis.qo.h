@@ -69,11 +69,11 @@ public:
     static double zOrder;
     
     // Convenient access to class name (QPCanvas).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     // Convenient access to "origin" names for logging.
     // <group>
-    static const String DRAW_NAME;
+    static const casacore::String DRAW_NAME;
 
     // </group>
     
@@ -152,10 +152,10 @@ public:
     }
 
     // Implements PlotCanvas::title().
-    String title() const;
+    casacore::String title() const;
 
     // Implements PlotCanvas::setTitle().
-    void setTitle(const String& title);
+    void setTitle(const casacore::String& title);
     
     // Implements PlotCanvas::titleFont().
     PlotFontPtr titleFont() const;
@@ -216,10 +216,10 @@ public:
             bool show = true, bool hideNormalAxis = true);
     
     // Implements PlotCanvas::axisLabel().
-    String axisLabel(PlotAxis axis) const;
+    casacore::String axisLabel(PlotAxis axis) const;
 
     // Implements PlotCanvas::setAxisLabel().
-    void setAxisLabel(PlotAxis axis, const String& title);
+    void setAxisLabel(PlotAxis axis, const casacore::String& title);
 
     // Implements PlotCanvas::axisFont().
     PlotFontPtr axisFont(PlotAxis axis) const;
@@ -357,27 +357,27 @@ public:
     bool exportToFile(const PlotExportFormat& format);
 
     // Implements PlotCanvas::fileChooserDialog().
-    String fileChooserDialog(const String& title = "File Chooser",
-            const String& directory = "");
+    casacore::String fileChooserDialog(const casacore::String& title = "casacore::File Chooser",
+            const casacore::String& directory = "");
     
     // Implements PlotCanvas::dateFormat().
-    const String& dateFormat() const;
+    const casacore::String& dateFormat() const;
     
     // Implements PlotCanvas::setDateFormat().
-    void setDateFormat(const String& dateFormat);
+    void setDateFormat(const casacore::String& dateFormat);
     
     // Implements PlotCanvas::relativeDateFormat().
-    const String& relativeDateFormat() const;
+    const casacore::String& relativeDateFormat() const;
     
     // Implements PlotCanvas::setRelativeDateFormat().
-    void setRelativeDateFormat(const String& dateFormat);
+    void setRelativeDateFormat(const casacore::String& dateFormat);
 
     // Implements PlotCanvas::convertCoordinate().
     PlotCoordinate convertCoordinate(const PlotCoordinate& coord,
            PlotCoordinate::System newSystem = PlotCoordinate::WORLD) const;
 
     // Implements PlotCanvas::textWidthHeightDescent().
-    std::vector<double> textWidthHeightDescent(const String& text,
+    std::vector<double> textWidthHeightDescent(const casacore::String& text,
             PlotFontPtr font) const;
     
     // Implements PlotCanvas::implementation().
@@ -415,13 +415,13 @@ protected:
     
     // See QPPlotter::logObject().  If called before setQPPlotter() is called,
     // creates a queue that is then posted when setQPPlotter() is called.
-    void logObject(const String& className, void* address, bool creation,
-            const String& message = String());
+    void logObject(const casacore::String& className, void* address, bool creation,
+            const casacore::String& message = casacore::String());
     
     // See QPPlotter::logMethod().  Does NOT queue messages if called before
     // setQPPlotter() is called.
-    void logMethod(const String& className, const String& methodName,
-            bool entering, const String& message = String());
+    void logMethod(const casacore::String& className, const casacore::String& methodName,
+            bool entering, const casacore::String& message = casacore::String());
     
     // Provides access to the cached axes stack.
     // <group>
@@ -449,8 +449,8 @@ private:
 
     // Date formats.
     // <group>
-    String m_dateFormat;
-    String m_relativeDateFormat;
+    casacore::String m_dateFormat;
+    casacore::String m_relativeDateFormat;
     // </group>
     
     //External Axis

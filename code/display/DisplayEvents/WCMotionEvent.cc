@@ -27,6 +27,7 @@
 
 #include <display/DisplayEvents/WCMotionEvent.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.

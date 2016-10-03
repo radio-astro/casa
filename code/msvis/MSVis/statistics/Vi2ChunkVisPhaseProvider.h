@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// Data providers for visibility phases.
+// casacore::Data providers for visibility phases.
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_VIS_PHASE_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_VIS_PHASE_PROVIDER_H_

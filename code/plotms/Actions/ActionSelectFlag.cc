@@ -27,6 +27,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Client/Client.h>
+using namespace casacore;
 namespace casa {
 
 ActionSelectFlag::ActionSelectFlag( Client* client )
@@ -52,4 +53,5 @@ PlotLogMessage* ActionSelectFlag::doFlagOperation( PlotMSPlot* plot,
 ActionSelectFlag::~ActionSelectFlag() {
 }
 
+using namespace casacore;
 } /* namespace casa */

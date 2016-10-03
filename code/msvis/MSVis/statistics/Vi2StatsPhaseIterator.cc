@@ -29,6 +29,7 @@
 #include <msvis/MSVis/statistics/Vi2StatsPhaseIterator.h>
 #include <complex>
 
+using namespace casacore;
 namespace casa {
 
 Double
@@ -36,4 +37,5 @@ Vi2StatsPhaseIterator::operator*() {
 	return std::arg(*array_iter);
 }
 
+using namespace casacore;
 } // namespace casa

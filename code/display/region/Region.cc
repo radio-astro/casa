@@ -59,6 +59,7 @@ extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char
 	fprintf( stderr, "%s:%d pure virtual '%s( )' called...\n", file, line, func );
 }
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -938,7 +939,7 @@ namespace casa {
 			Quantum<double> xq(x,String(xunits));
 			Quantum<double> yq(y,String(yunits));
 			MDirection md = MDirection::Convert(MDirection(xq,yq,original_coordsys), new_coordsys)();
-			casa::Quantum<casa::Vector<double> > result = md.getAngle("rad");
+			casacore::Quantum<casacore::Vector<double> > result = md.getAngle("rad");
 			xq.convert("rad");
 			yq.convert("rad");
 			result.getValue( )(0) = wrap_angle(xq.getValue( ), result.getValue( )(0));
@@ -1108,7 +1109,7 @@ namespace casa {
 				try {
 					double dummy;
 					pixel_to_linear( wc_, atof(x.c_str( )), 0, new_center_x, dummy );
-				} catch( const casa::AipsError &err) {
+				} catch( const casacore::AipsError &err) {
 					status( "coordinate conversion failed: " + err.getMesg( ), "error" );
 					return false;
 				} catch( const std::exception &exc ) {
@@ -1203,7 +1204,7 @@ namespace casa {
 				try {
 					double dummy;
 					pixel_to_linear( wc_, 0, atof(y.c_str( )), dummy, new_center_y );
-				} catch( const casa::AipsError &err) {
+				} catch( const casacore::AipsError &err) {
 					status( "coordinate conversion failed: " + err.getMesg( ), "error" );
 					return false;
 				} catch( const std::exception &exc ) {
@@ -2159,13 +2160,13 @@ namespace casa {
 				if (skyComponent()) {
 					// get a sky estimate via the median
 					SubImage<Float> subImg(*image, imgReg);
-					ImageStatistics<Float> stats(subImg, False);
-					if (!stats.getConvertedStatistic(medVals, LatticeStatsBase::MEDIAN,True)) {
+					ImageStatistics<Float> stats(subImg, false);
+					if (!stats.getConvertedStatistic(medVals, LatticeStatsBase::MEDIAN,true)) {
 						//cout << "no idea" << endl;
 						return 0;
 					}
 					if (medVals.size()>0){
-						fitter.setZeroLevelEstimate(Double(medVals(IPosition(1,0))), False);
+						fitter.setZeroLevelEstimate(Double(medVals(IPosition(1,0))), false);
 					}
 				}
 
@@ -2381,7 +2382,7 @@ namespace casa {
 
 				delete rec;
 				return layercenter;
-			} catch (const casa::AipsError& err) {
+			} catch (const casacore::AipsError& err) {
 				std::string errMsg_ = err.getMesg();
 				//fprintf( stderr, "Region::getLayerCenter( ): %s\n", errMsg_.c_str() );
 				return 0;
@@ -2570,7 +2571,7 @@ namespace casa {
 							region_statistics->push_back(SHARED_PTR<RegionInfo>(new ImageRegionInfo( image->name(true), image->name(false), dd_stats)));
 						}
 					}
-				} catch (const casa::AipsError& err) {
+				} catch (const casacore::AipsError& err) {
 					errMsg_ = err.getMesg();
 					continue;
 				} catch (...) {
@@ -2637,10 +2638,10 @@ namespace casa {
 
 				IPosition pos = padd->fixedPosition();
 
-				ImageStatistics<Float> stats(subImg, False);
+				ImageStatistics<Float> stats(subImg, false);
 				bool cursorAxesSet = stats.setAxes( cursorAxes );
 				if ( ! cursorAxesSet ) return 0;
-				stats.setList(True);
+				stats.setList(true);
 				Vector<String> nm = cs.worldAxisNames();
 
 				Int zPos = -1;
@@ -2758,7 +2759,7 @@ namespace casa {
 					return layerstats;
 				}
 
-			} catch (const casa::AipsError& err) {
+			} catch (const casacore::AipsError& err) {
 				std::string errMsg_ = err.getMesg();
 				//fprintf( stderr, "Region::getLayerStats( ): <AipsError> %s\n", errMsg_.c_str() );
 				return 0;
@@ -2816,7 +2817,7 @@ namespace casa {
 			pts[0] = wx;
 			pts[1] = wy;
 			MDirection direction = MDirection::Convert(MDirection(Quantum<Vector<double> >(pts,"rad"),type),MDirection::J2000)( );
-			casa::Quantum<casa::Vector<double> > newpts = direction.getAngle("rad");
+			casacore::Quantum<casacore::Vector<double> > newpts = direction.getAngle("rad");
 			wx = newpts.getValue( )(0);
 			wy = newpts.getValue( )(1);
 		}
@@ -2832,7 +2833,7 @@ namespace casa {
 			pts[0] = wx1;
 			pts[1] = wy1;
 			MDirection direction = MDirection::Convert(MDirection(Quantum<Vector<double> >(pts,"rad"),type),MDirection::J2000)( );
-			casa::Quantum<casa::Vector<double> > newpts = direction.getAngle("rad");
+			casacore::Quantum<casacore::Vector<double> > newpts = direction.getAngle("rad");
 			wx1 = newpts.getValue( )(0);
 			wy1 = newpts.getValue( )(1);
 
@@ -2855,7 +2856,7 @@ namespace casa {
 				pts[0] = x;
 				pts[1] = y;
 				MDirection direction = MDirection::Convert(MDirection(Quantum<Vector<double> >(pts,"deg"), in_type),type)( );
-				casa::Vector<double> newpts = direction.getAngle("rad").getValue( );
+				casacore::Vector<double> newpts = direction.getAngle("rad").getValue( );
 				world_to_linear( wc, newpts[0], newpts[1], lx, ly );
 			}
 		}
@@ -2871,7 +2872,7 @@ namespace casa {
 				pts[0] = x1;
 				pts[1] = y1;
 				MDirection direction = MDirection::Convert(MDirection(Quantum<Vector<double> >(pts,"deg"), in_type),type)( );
-				casa::Vector<double> newpts = direction.getAngle("rad").getValue( );
+				casacore::Vector<double> newpts = direction.getAngle("rad").getValue( );
 				world_to_linear( wc, newpts[0], newpts[1], lx1, ly1 );
 				pts[0] = x2;
 				pts[1] = y2;
@@ -2898,7 +2899,7 @@ namespace casa {
 			pts[0] = wx;
 			pts[1] = wy;
 			MDirection direction = MDirection::Convert(MDirection(Quantum<Vector<double> >(pts,"rad"),type),MDirection::B1950)( );
-			casa::Quantum<casa::Vector<double> > newpts = direction.getAngle("rad");
+			casacore::Quantum<casacore::Vector<double> > newpts = direction.getAngle("rad");
 			wx = newpts.getValue( )(0);
 			wy = newpts.getValue( )(1);
 		}
@@ -2914,7 +2915,7 @@ namespace casa {
 			pts[0] = wx1;
 			pts[1] = wy1;
 			MDirection direction = MDirection::Convert(MDirection(Quantum<Vector<double> >(pts,"rad"),type),MDirection::B1950)( );
-			casa::Quantum<casa::Vector<double> > newpts = direction.getAngle("rad");
+			casacore::Quantum<casacore::Vector<double> > newpts = direction.getAngle("rad");
 			wx1 = newpts.getValue( )(0);
 			wy1 = newpts.getValue( )(1);
 

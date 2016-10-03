@@ -46,7 +46,7 @@ class TBMain;
 // <b>Important</b>: this is not currently supported, but in the future if a
 // client/server architecture is used then this widget can be used for
 // connecting to a remote table.  Other options include the driver type: direct
-// (using the Table module code for a local table) or XML.  TBConnection
+// (using the casacore::Table module code for a local table) or XML.  TBConnection
 // displays helpful explanation text when the user clicks on the different
 // options.
 // </synopsis>

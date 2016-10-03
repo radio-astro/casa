@@ -42,7 +42,7 @@
 // Test program for NewCalTable class.
 // </summary>
 
-Bool foundError = False;
+Bool foundError = false;
 
 void doTest1 () 
 {
@@ -110,7 +110,7 @@ void doTest2 ()
   cout<<"*** creating caltable in memory from caltable on disk ***"<<endl;
   NewCalTable memcaltab("testDiskCal1.tab",Table::Update, Table::Memory);
   cout<<"Add 5 rows to the memtable "<<endl;
-  memcaltab.addRow(5,True);
+  memcaltab.addRow(5,true);
   cout<<"memtable:memcaltab nrow="<<memcaltab.nrow()<<endl;
   Table tab("testDiskCal1.tab", Table::Old);
   cout<<"check original caltable on disk : nrow="<<tab.nrow()<<endl;

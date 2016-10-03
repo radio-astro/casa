@@ -71,6 +71,7 @@
 
 #include <casa/sstream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Public functions
@@ -147,7 +148,7 @@ ImagePolarimetry::~ImagePolarimetry()
 ImageExpr<Complex> ImagePolarimetry::complexLinearPolarization()
 {
    hasQU();
-   _checkQUBeams(False);
+   _checkQUBeams(false);
    LatticeExprNode node(formComplex(*itsStokesPtr[ImagePolarimetry::Q], 
                         *itsStokesPtr[ImagePolarimetry::U]));
    LatticeExpr<Complex> le(node);
@@ -184,7 +185,7 @@ ImageExpr<Complex> ImagePolarimetry::complexFractionalLinearPolarization()
       os << "This image does not have Stokes I so cannot provide fractional linear polarization" << LogIO::EXCEPTION;
    }
 
-   _checkIQUBeams(False);
+   _checkIQUBeams(false);
    LatticeExprNode nodeQU(formComplex(*itsStokesPtr[ImagePolarimetry::Q], 
                           *itsStokesPtr[ImagePolarimetry::U]));
    LatticeExprNode nodeI(*itsStokesPtr[ImagePolarimetry::I]);
@@ -206,10 +207,10 @@ ImageExpr<Float> ImagePolarimetry::fracLinPol(Bool debias, Float clip, Float sig
    }
    Vector<StokesTypes> types(3);
    types[0] = I; types[1] = Q; types[2] = U;
-   _checkIQUBeams(False);
+   _checkIQUBeams(false);
 // Make nodes
 
-   LatticeExprNode nodePol = makePolIntNode(os, debias, clip, sigma, True, False);
+   LatticeExprNode nodePol = makePolIntNode(os, debias, clip, sigma, true, false);
    LatticeExprNode nodeI(*itsStokesPtr[ImagePolarimetry::I]);
 
 // Make expression
@@ -242,11 +243,11 @@ ImageExpr<Float> ImagePolarimetry::sigmaFracLinPol(Float clip, Float sigma)
    if (itsStokesPtr[ImagePolarimetry::I]==0) {
       os << "This image does not have Stokes I so cannot provide fractional linear polarization" << LogIO::EXCEPTION;
    }
-   _checkIQUBeams(False);
+   _checkIQUBeams(false);
 // Make nodes.  Don't bother debiasing.
 
-   Bool debias = False;
-   LatticeExprNode nodePol = makePolIntNode(os, debias, clip, sigma, True, False);
+   Bool debias = false;
+   LatticeExprNode nodePol = makePolIntNode(os, debias, clip, sigma, true, false);
    LatticeExprNode nodeI(*itsStokesPtr[ImagePolarimetry::I]);
 
 // Make expression.  We assume sigmaI = sigmaQU which is true with
@@ -314,19 +315,19 @@ void ImagePolarimetry::_setDoLinDoCirc(Bool& doLin, Bool& doCirc) const {
 			<< LogIO::EXCEPTION;
 	}
 	if (doLin) {
-		if (! _checkIQUBeams(False, False)) {
+		if (! _checkIQUBeams(false, false)) {
 			os << LogIO::WARN
 				<< "I, Q, and U beams are not the same, cannot do linear portion"
 				<< LogIO::POST;
-			doLin = False;
+			doLin = false;
 		}
 	}
 	if (doCirc) {
-		if (! _checkIVBeams(False, False)) {
+		if (! _checkIVBeams(false, false)) {
 			os << LogIO::WARN
 				<< "I and V beams are not the same, cannot do circular portion"
 				<< LogIO::POST;
-			doCirc = False;
+			doCirc = false;
 		}
 	}
 	if (! doLin && ! doCirc) {
@@ -348,7 +349,7 @@ ImageExpr<Float> ImagePolarimetry::sigmaFracTotPol(Float clip, Float sigma)
 
 // Make nodes.  Don't bother debiasing.
 
-   Bool debias = False;
+   Bool debias = false;
    LatticeExprNode nodePol = makePolIntNode(os, debias, clip, sigma, doLin, doCirc);
    LatticeExprNode nodeI(*itsStokesPtr[ImagePolarimetry::I]);
 
@@ -382,7 +383,7 @@ void ImagePolarimetry::fourierRotationMeasure(ImageInterface<Complex>& cpol,
 {
    LogIO os(LogOrigin("ImagePolarimetry", __FUNCTION__, WHERE));
    hasQU();
-   _checkQUBeams(True, False);
+   _checkQUBeams(true, false);
 // Check image shape
    CoordinateSystem dCS;
    Stokes::StokesTypes dType = Stokes::Plinear;
@@ -403,7 +404,7 @@ void ImagePolarimetry::fourierRotationMeasure(ImageInterface<Complex>& cpol,
       TempImage<Float> tQ(itsStokesPtr[ImagePolarimetry::Q]->shape(), 
                           itsStokesPtr[ImagePolarimetry::Q]->coordinates());
       if (itsStokesPtr[ImagePolarimetry::Q]->isMasked()) {
-        tQ.makeMask(String("mask0"), True, True, False, False);
+        tQ.makeMask(String("mask0"), true, true, false, false);
       }
       copyDataAndMask (tQ, *itsStokesPtr[ImagePolarimetry::Q]);
       subtractProfileMean (tQ, fAxis);
@@ -411,7 +412,7 @@ void ImagePolarimetry::fourierRotationMeasure(ImageInterface<Complex>& cpol,
       TempImage<Float> tU(itsStokesPtr[ImagePolarimetry::U]->shape(), 
                           itsStokesPtr[ImagePolarimetry::U]->coordinates());
       if (itsStokesPtr[ImagePolarimetry::U]->isMasked()) {
-        tU.makeMask(String("mask0"), True, True, False, False);
+        tU.makeMask(String("mask0"), true, true, false, false);
       }
       copyDataAndMask (tU, *itsStokesPtr[ImagePolarimetry::U]);
       subtractProfileMean (tU, fAxis);
@@ -428,8 +429,8 @@ void ImagePolarimetry::fourierRotationMeasure(ImageInterface<Complex>& cpol,
    ImageExpr<Complex> ie(le, String("ComplexLinearPolarization"));
 // Do FFT of spectral coordinate
 
-   Vector<Bool> axes(ie.ndim(),False);
-   axes(fAxis) = True;
+   Vector<Bool> axes(ie.ndim(),false);
+   axes(fAxis) = true;
    ImageFFT fftserver;
    fftserver.fft(ie, axes);
 // Recover Complex result. Coordinates are updated to include Fourier coordinate,
@@ -459,10 +460,10 @@ ImageExpr<Float> ImagePolarimetry::linPolInt(Bool debias, Float clip, Float sigm
    if (itsStokesPtr[ImagePolarimetry::Q]==0 && itsStokesPtr[ImagePolarimetry::U]==0) {
       os << "This image does not have Stokes Q and U so cannot provide linear polarization" << LogIO::EXCEPTION;
    }
-   _checkQUBeams(False);
+   _checkQUBeams(false);
 // Make node.  
 
-   LatticeExprNode node = makePolIntNode(os, debias, clip, sigma, True, False);
+   LatticeExprNode node = makePolIntNode(os, debias, clip, sigma, true, false);
 
 // Make expression
 
@@ -489,7 +490,7 @@ Float ImagePolarimetry::sigmaLinPolInt(Float clip, Float sigma)
    if (itsStokesPtr[ImagePolarimetry::Q]==0 && itsStokesPtr[ImagePolarimetry::U]==0) {
       os << "This image does not have Stokes Q and U so cannot provide linear polarization" << LogIO::EXCEPTION;
    }
-   _checkQUBeams(False);
+   _checkQUBeams(false);
 // Get value
 
    Float sigma2 = 0.0;
@@ -510,7 +511,7 @@ ImageExpr<Float> ImagePolarimetry::linPolPosAng(Bool radians) const
    if (itsStokesPtr[ImagePolarimetry::Q]==0 && itsStokesPtr[ImagePolarimetry::U]==0) {
       os << "This image does not have Stokes Q and U so cannot provide linear polarization" << LogIO::EXCEPTION;
    }
-   _checkQUBeams(False);
+   _checkQUBeams(false);
 
 // Make expression. LEL function "pa" returns degrees
 
@@ -547,7 +548,7 @@ ImageExpr<Float> ImagePolarimetry::sigmaLinPolPosAng(Bool radians, Float clip, F
    if (itsStokesPtr[ImagePolarimetry::Q]==0 && itsStokesPtr[ImagePolarimetry::U]==0) {
       os << "This image does not have Stokes Q and U so cannot provide linear polarization" << LogIO::EXCEPTION;
    }
-   _checkQUBeams(False);
+   _checkQUBeams(false);
 // Make expression 
 
    Float sigma2 = 0.0;
@@ -591,7 +592,7 @@ Float ImagePolarimetry::sigma(Float clip)
    else if (
 		   itsStokesPtr[ImagePolarimetry::Q]!=0
 		   && itsStokesPtr[ImagePolarimetry::U]!=0
-		   && _checkQUBeams(False, False)
+		   && _checkQUBeams(false, false)
    ) {
 	   sigma2 = sigmaLinPolInt(clip);
    }
@@ -622,7 +623,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
 {
    LogIO os(LogOrigin("ImagePolarimetry", __FUNCTION__, WHERE));
    hasQU();
-   _checkQUBeams(False);
+   _checkQUBeams(false);
 // Do we have anything to do ?
 
    if (!rmOutPtr && !rmOutErrorPtr && !pa0OutPtr && !pa0OutErrorPtr) {
@@ -675,7 +676,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
 // Generate linear polarization position angle image expressions
 // and error in radians
 
-   Bool radians = True;
+   Bool radians = true;
    Float clip = 10.0;
    ImageExpr<Float> pa = linPolPosAng(radians);
    ImageExpr<Float> paerr = sigmaLinPolPosAng(radians, clip, sigma);
@@ -779,7 +780,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
 // don't know at this point whether output points will be masked or not
 
    IPosition whereRM;
-   Bool isMaskedRM = False;
+   Bool isMaskedRM = false;
    Lattice<Bool>* outRMMaskPtr = 0;
    if (rmOutPtr) {
       isMaskedRM = dealWithMask (outRMMaskPtr, rmOutPtr, os, String("RM"));
@@ -787,7 +788,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
       whereRM = 0;
    }
 //
-   Bool isMaskedRMErr = False;
+   Bool isMaskedRMErr = false;
    Lattice<Bool>* outRMErrMaskPtr = 0;
    if (rmOutErrorPtr) {
       isMaskedRMErr = dealWithMask (outRMErrMaskPtr, rmOutErrorPtr, os, String("RM error"));
@@ -796,7 +797,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
    }
 //
    IPosition wherePA;
-   Bool isMaskedPa0 = False;
+   Bool isMaskedPa0 = false;
    Lattice<Bool>* outPa0MaskPtr = 0;
    if (pa0OutPtr) {
       isMaskedPa0 = dealWithMask (outPa0MaskPtr, pa0OutPtr, os, String("Position Angle"));
@@ -804,7 +805,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
       wherePA = 0;
    }
 //
-   Bool isMaskedPa0Err = False;
+   Bool isMaskedPa0Err = false;
    Lattice<Bool>* outPa0ErrMaskPtr = 0;
    if (pa0OutErrorPtr) {
       isMaskedPa0Err = dealWithMask (outPa0ErrMaskPtr, pa0OutErrorPtr, os, String("Position Angle error"));
@@ -813,7 +814,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
    }
 //
    IPosition whereNTurns;
-   Bool isMaskedNTurns = False;
+   Bool isMaskedNTurns = false;
    Lattice<Bool>* outNTurnsMaskPtr = 0;
    if (nTurnsOutPtr) {
       isMaskedNTurns = dealWithMask (outNTurnsMaskPtr, nTurnsOutPtr, os, String("nTurns"));
@@ -822,7 +823,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
    }
 //
    IPosition whereChiSq;
-   Bool isMaskedChiSq = False;
+   Bool isMaskedChiSq = false;
    Lattice<Bool>* outChiSqMaskPtr = 0;
    if (chiSqOutPtr) {
       isMaskedChiSq = dealWithMask (outChiSqMaskPtr, chiSqOutPtr, os, String("chi sqared"));
@@ -830,14 +831,14 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
       whereChiSq = 0;
    }
 //
-   Array<Bool> tmpMaskRM(IPosition(shapeRM.nelements(), 1), True);
+   Array<Bool> tmpMaskRM(IPosition(shapeRM.nelements(), 1), true);
    Array<Float> tmpValueRM(IPosition(shapeRM.nelements(), 1), 0.0);
-   Array<Bool> tmpMaskPA(IPosition(shapePA.nelements(), 1), True);
+   Array<Bool> tmpMaskPA(IPosition(shapePA.nelements(), 1), true);
    Array<Float> tmpValuePA(IPosition(shapePA.nelements(), 1), 0.0);
    Array<Float> tmpValueNTurns(IPosition(shapeNTurns.nelements(), 1), 0.0);
-   Array<Bool> tmpMaskNTurns(IPosition(shapeNTurns.nelements(), 1), True);
+   Array<Bool> tmpMaskNTurns(IPosition(shapeNTurns.nelements(), 1), true);
    Array<Float> tmpValueChiSq(IPosition(shapeChiSq.nelements(), 1), 0.0);
-   Array<Bool> tmpMaskChiSq(IPosition(shapeChiSq.nelements(), 1), True);
+   Array<Bool> tmpMaskChiSq(IPosition(shapeChiSq.nelements(), 1), true);
 
 // Iterate
 
@@ -865,7 +866,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
      pProgressMeter = new ProgressMeter(nMin, nMax, String("Profiles fitted"),
                                         String("Fitting"),
                                         String(""), String(""),
-                                        True, max(1,Int(nMax/100)));
+                                        true, max(1,Int(nMax/100)));
    }
 
 // As a (temporary?) workaround the cache of the main image is set up in
@@ -883,7 +884,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
    mainImagePtr->setCacheSizeInTiles (nrtiles);
 //
    String posString;
-   Bool ok = False;
+   Bool ok = false;
    IPosition shp;
    for (it.reset(); !it.atEnd(); it++) {
 
@@ -897,7 +898,7 @@ void ImagePolarimetry::rotationMeasure(ImageInterface<Float>*& rmOutPtr,
       */
       ok = findRotationMeasure (rm, rmErr, pa0, pa0Err, rChiSq, nTurns,
                                 sortidx, wsqsort, it.vectorCursor(),
-                                it.getMask(False),
+                                it.getMask(false),
                                 paerr.getSlice(it.position(),it.cursorShape()),
                                 rmFg, rmMax, maxPaErr, /*plotter,*/ posString);
 
@@ -1305,7 +1306,7 @@ void ImagePolarimetry::copyDataAndMask(ImageInterface<Float>& out,
    if (doMask) {
       pMaskOut = &out.pixelMask();
       if (!pMaskOut->isWritable()) {
-         doMask = False;
+         doMask = false;
       }
    }
 
@@ -1322,7 +1323,7 @@ void ImagePolarimetry::copyDataAndMask(ImageInterface<Float>& out,
    for (iter.reset(); !iter.atEnd(); iter++) {
       out.putSlice (iter.cursor(), iter.position());
       if (doMask) {
-         pMaskOut->putSlice(iter.getMask(False), iter.position());
+         pMaskOut->putSlice(iter.getMask(false), iter.position());
       }
    }
 }
@@ -1353,7 +1354,7 @@ void ImagePolarimetry::findFrequencyAxis (Int& spectralCoord, Int& fAxis,
          os << "Illegal spectral axis " << spectralAxis+1 << " given" << LogIO::EXCEPTION;
       }
    } else {   
-      spectralCoord = findSpectralCoordinate(cSys, os, False);
+      spectralCoord = findSpectralCoordinate(cSys, os, false);
       if (spectralCoord < 0) {
          for (uInt i=0; i<cSys.nCoordinates(); i++) {
             if (cSys.type(i)==Coordinate::TABULAR ||
@@ -1564,7 +1565,7 @@ Bool ImagePolarimetry::findRotationMeasure (Float& rmFitted, Float& rmErrFitted,
 
    uInt n = sortidx.nelements();
    rmFitted = rmErrFitted = pa0Fitted = pa0ErrFitted = rChiSqFitted = 0.0;
-   if (n<2) return False;
+   if (n<2) return false;
 
 // Sort into decreasing frequency order and correct for foreground rotation
 // Remember wsq already sorted.  Discard points that are too noisy or masked
@@ -1585,15 +1586,15 @@ Bool ImagePolarimetry::findRotationMeasure (Float& rmFitted, Float& rmErrFitted,
       }
    }
    n = j;
-   if (n<=1) return False;
+   if (n<=1) return false;
 //
-   pa.resize(n,True);
-   paerr.resize(n,True);
-   wsq.resize(n, True);
+   pa.resize(n,true);
+   paerr.resize(n,true);
+   wsq.resize(n, true);
 
 // Treat supplementary and primary points separately
 
-   Bool ok = False;
+   Bool ok = false;
    if (n==2) {
       ok = rmSupplementaryFit(nTurns, rmFitted, rmErrFitted, pa0Fitted, pa0ErrFitted, 
                               rChiSqFitted, wsq, pa, paerr);
@@ -1786,7 +1787,7 @@ Bool ImagePolarimetry::rmPrimaryFit(Float& nTurns, Float& rmFitted, Float& rmErr
 
 // Do least squares fit
 
-     if (!rmLsqFit (pars, wsq, fitpa, paerr)) return False;
+     if (!rmLsqFit (pars, wsq, fitpa, paerr)) return false;
 
 //
      if (pars(4) < chiSq) {
@@ -1846,7 +1847,7 @@ Bool ImagePolarimetry::rmPrimaryFit(Float& nTurns, Float& rmFitted, Float& rmErr
    }
    */
 //
-   return True;
+   return true;
 }
 
 
@@ -1869,7 +1870,7 @@ Bool ImagePolarimetry::rmSupplementaryFit(Float& nTurns, Float& rmFitted, Float&
 
 // Do least squares fit
 
-     if (!rmLsqFit (pars, wsq, fitpa, paerr)) return False;
+     if (!rmLsqFit (pars, wsq, fitpa, paerr)) return false;
 
 // Save solution  with lowest absolute RM
 
@@ -1887,7 +1888,7 @@ Bool ImagePolarimetry::rmSupplementaryFit(Float& nTurns, Float& rmFitted, Float&
 
    }
 //
-  return True;
+  return true;
 }
 
 
@@ -1903,7 +1904,7 @@ Bool ImagePolarimetry::rmLsqFit (Vector<Float>& pars, const Vector<Float>& wsq,
    try {
      solution = itsFitterPtr->fit(wsq, pa, paerr);
    } catch (AipsError x) {
-     return False;
+     return false;
    } 
 //
    const Vector<Double>& cv = itsFitterPtr->compuCovariance().diagonal();
@@ -1914,7 +1915,7 @@ Bool ImagePolarimetry::rmLsqFit (Vector<Float>& pars, const Vector<Float>& wsq,
    pars(3) = sqrt(cv(0));
    pars(4) = itsFitterPtr->chiSquare();
 // 
-   return True;
+   return true;
 }
 
 
@@ -1969,7 +1970,7 @@ Float ImagePolarimetry::sigma (ImagePolarimetry::StokesTypes index, Float clip)
       LatticeExprNode n2 (n1[abs(n1-mean(n1)) < clip2*stddev(n1)]);
       LatticeExpr<Float> le(n2);
 //
-      itsStokesStatsPtr[index] = new LatticeStatistics<Float>(le, False, False);
+      itsStokesStatsPtr[index] = new LatticeStatistics<Float>(le, false, false);
    }
 //
    Array<Float> sigmaA;
@@ -1997,7 +1998,7 @@ void ImagePolarimetry::subtractProfileMean (ImageInterface<Float>& im, uInt axis
       for (it.reset(); !it.atEnd(); it++) {
          const Array<Float>& p = it.cursor();
          const Array<Bool>& m = mask.getSlice(it.position(), it.cursorShape());
-         const MaskedArray<Float> ma(p, m, True);
+         const MaskedArray<Float> ma(p, m, true);
          dMean = mean(ma);
 //
          it.rwVectorCursor() -= dMean;
@@ -2015,22 +2016,22 @@ void ImagePolarimetry::subtractProfileMean (ImageInterface<Float>& im, uInt axis
 Bool ImagePolarimetry::dealWithMask (Lattice<Bool>*& pMask, ImageInterface<Float>*& pIm, 
                                      LogIO& os, const String& type) const
 {
-   Bool isMasked = False;
+   Bool isMasked = false;
    if (!pIm->isMasked()) {
       if (pIm->canDefineRegion()) {
-         pIm->makeMask("mask0", True, True, True, True);
-         isMasked = True;
+         pIm->makeMask("mask0", true, true, true, true);
+         isMasked = true;
       } else {
          os << LogIO::WARN << "Could not create a mask for the output " << type << " image" << LogIO::POST;
       }
    } else {
-      isMasked = True;
+      isMasked = true;
    }
 //
    if (isMasked) {
       pMask = &(pIm->pixelMask());
       if (!pMask->isWritable()) {
-         isMasked = False;
+         isMasked = false;
          os << LogIO::WARN << "The output " << type << " image has a mask but it's not writable" << LogIO::POST;
       }
    }
@@ -2038,15 +2039,15 @@ Bool ImagePolarimetry::dealWithMask (Lattice<Bool>*& pMask, ImageInterface<Float
 }
 
 void ImagePolarimetry::_createBeamsEqMat() {
-	_beamsEqMat.assign(Matrix<Bool>(4, 4, False));
+	_beamsEqMat.assign(Matrix<Bool>(4, 4, false));
 	Bool hasMultiBeams = itsInImagePtr->imageInfo().hasMultipleBeams();
 	for (uInt i=0; i<4; i++) {
 		for (uInt j=i; j<4; j++) {
 			if (itsStokesPtr[i] == 0 || itsStokesPtr[j] == 0) {
-				_beamsEqMat(i, j) = False;
+				_beamsEqMat(i, j) = false;
 			}
 			else if (i == j) {
-				_beamsEqMat(i, j) = True;
+				_beamsEqMat(i, j) = true;
 			}
 			else if (hasMultiBeams) {
 				_beamsEqMat(i, j) = (
@@ -2055,7 +2056,7 @@ void ImagePolarimetry::_createBeamsEqMat() {
 				);
 			}
 			else {
-				_beamsEqMat(i, j) = True;
+				_beamsEqMat(i, j) = true;
 			}
 			_beamsEqMat(j, i) = _beamsEqMat(i, j);
 
@@ -2085,7 +2086,7 @@ Bool ImagePolarimetry::_checkBeams(
 					);
 				}
 				else {
-					return False;
+					return false;
 				}
 			}
 		}
@@ -2109,12 +2110,12 @@ Bool ImagePolarimetry::_checkBeams(
 					);
 				}
 				else {
-					return False;
+					return false;
 				}
 			}
 		}
 	}
-	return True;
+	return true;
 }
 
 Bool ImagePolarimetry::_checkIQUBeams(

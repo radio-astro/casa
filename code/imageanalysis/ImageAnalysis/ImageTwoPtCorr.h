@@ -32,9 +32,13 @@
 #include <images/Images/ImageInterface.h>
 #include <lattices/LatticeMath/LatticeTwoPtCorr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class IPosition;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>
 // Compute two point correlation functions from images
@@ -46,9 +50,9 @@ class IPosition;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=LatticeTwoPtCorr>LatticeTwoPtCorr</linkto> 
-//   <li> <linkto class=ImageInterface>ImageInterface</linkto> 
-//   <li> <linkto class=TempImage>TempImage</linkto> 
+//   <li> <linkto class=casacore::LatticeTwoPtCorr>LatticeTwoPtCorr</linkto> 
+//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto> 
+//   <li> <linkto class=casacore::TempImage>TempImage</linkto> 
 // </prerequisite>
 
 // <etymology>
@@ -72,7 +76,7 @@ class IPosition;
 
 
 // <motivation>
-// Taking the Structure Function of an image is a basic part of image analysis
+// Taking the Structure casacore::Function of an image is a basic part of image analysis
 // </motivation>
 
 // <todo asof="2003/12/13">
@@ -101,45 +105,45 @@ public:
 // which two axes to compute the structure function over.  If the 
 // axes array is empty (or not an argument), then the Sky plane 
 // is selected if it exists, otherwise 
-// the first two axes are selected.  The CoordinateSystem of the output image 
-// is overwritten.  The miscellaneous items (ImageInfo, MiscInfo, Logger)
+// the first two axes are selected.  The casacore::CoordinateSystem of the output image 
+// is overwritten.  The miscellaneous items (casacore::ImageInfo, MiscInfo, Logger)
 // are copied from the input image to the output.
 // <group>
-   void autoCorrelation (ImageInterface<T>& out,
-                         const ImageInterface<T>& in,
-                         const IPosition& axes, 
-                         typename LatticeTwoPtCorr<T>::Method method,
-                         Bool progress=True) const;
-   void autoCorrelation (ImageInterface<T>& out,
-                         const ImageInterface<T>& in,
-                         typename LatticeTwoPtCorr<T>::Method method,
-                         Bool progress=True) const;
+   void autoCorrelation (casacore::ImageInterface<T>& out,
+                         const casacore::ImageInterface<T>& in,
+                         const casacore::IPosition& axes, 
+                         typename casacore::LatticeTwoPtCorr<T>::Method method,
+                         casacore::Bool progress=true) const;
+   void autoCorrelation (casacore::ImageInterface<T>& out,
+                         const casacore::ImageInterface<T>& in,
+                         typename casacore::LatticeTwoPtCorr<T>::Method method,
+                         casacore::Bool progress=true) const;
 // </group>
 
 // Helper function to set up the axes vector.  If axes is of length 0,
-// it looks for the Sky (DirectionCoordinate). If that's not there,
+// it looks for the Sky (casacore::DirectionCoordinate). If that's not there,
 // you get the first two axes in the image.
-   static IPosition setUpAxes (const IPosition& axes,
-                               const CoordinateSystem& cSys);
+   static casacore::IPosition setUpAxes (const casacore::IPosition& axes,
+                               const casacore::CoordinateSystem& cSys);
 
 // Helper function to provide output image shape given the input shape
 // and the axes to find the structure function over.
-   static IPosition setUpShape (const IPosition& inShape, const IPosition& axes);
+   static casacore::IPosition setUpShape (const casacore::IPosition& inShape, const casacore::IPosition& axes);
 
 private:
 
 
-// Copy MiscInfo, ImageInfo, and logSInk to output
-   void copyMiscellaneous (ImageInterface<T>& out,
-                           const ImageInterface<T>& in) const;
+// Copy MiscInfo, casacore::ImageInfo, and logSInk to output
+   void copyMiscellaneous (casacore::ImageInterface<T>& out,
+                           const casacore::ImageInterface<T>& in) const;
 
 // Overwrite the CoordinateSystem
-   void setCoordinateSystem (ImageInterface<T>& out,
-                             const ImageInterface<T>& in,
-                             const IPosition& axes) const;
+   void setCoordinateSystem (casacore::ImageInterface<T>& out,
+                             const casacore::ImageInterface<T>& in,
+                             const casacore::IPosition& axes) const;
 
 // Set the brightness unit
-   void setUnit (ImageInterface<T>& out) const;
+   void setUnit (casacore::ImageInterface<T>& out) const;
 
 };
 

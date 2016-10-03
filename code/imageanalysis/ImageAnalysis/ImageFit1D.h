@@ -41,16 +41,20 @@
 
 #include <memory>
 
+namespace casacore{
+
+class ImageRegion;
+template<class T> class ImageInterface;
+}
+
 namespace casa {
 
 class SpectralElement;
 class SpectralList;
-class ImageRegion;
-template<class T> class ImageInterface;
 
 
 // <summary>
-// Fit spectral components to a Vector of data from an image
+// Fit spectral components to a casacore::Vector of data from an image
 // </summary>
 
 // <use visibility=export>
@@ -66,15 +70,15 @@ template<class T> class ImageInterface;
 // </prerequisite>
 
 // <synopsis> 
-// Fit lists (held in class SpectralList) of SpectralElements to a Vector of data 
+// Fit lists (held in class SpectralList) of SpectralElements to a casacore::Vector of data 
 // from the image.  Each SpectralElement can  be one from a variety of types.
 // The values of the parameters for each SpectralElement provide the initial 
 // starting guesses for the fitting process.  
 //
 // You specify the domain in which the fit is to be done via the 
-// enum AbcissaType.  The CoordinateSystem in the image is used
+// enum AbcissaType.  The casacore::CoordinateSystem in the image is used
 // to convert the pixel coordinates to the desired abcissa.  
-// You can change the units of the CoordinateSystem if you want
+// You can change the units of the casacore::CoordinateSystem if you want
 // to fit in different units.  If you set an estimate yourself
 // (function setElements or addElement) it is the callers responsibility
 // that the elements are in the correct abcissa domain.  Function
@@ -86,9 +90,9 @@ template<class T> class ImageInterface;
 // fitting is done, a new SpectralList holding SpectralElements with 
 // the fitted parameters is created.  
 //
-// For all the functions that return a status Bool, True is good. If
-// False is returned, an error message can be recovered with function
-// <src>errorMessage</src>,  You should not proceed if False is returned.
+// For all the functions that return a status casacore::Bool, true is good. If
+// false is returned, an error message can be recovered with function
+// <src>errorMessage</src>,  You should not proceed if false is returned.
 // 
 // Exceptions will be thrown if you do not set the Image and axis 
 // via the constructor or <src>setImage</src> function.
@@ -96,11 +100,11 @@ template<class T> class ImageInterface;
 
 // <example>
 // <srcblock>
-// PagedImage<Float> im("myimage");
-// Int axis = 2;
-// ImageFit1D<Float> fitter(image, axis);
-// IPosition pos(in.ndim(),0);
-// fitter.setData(pos, ImageFit1D<Float>::IM_NATIVE);     // Fit in native coordinate space
+// casacore::PagedImage<casacore::Float> im("myimage");
+// casacore::Int axis = 2;
+// ImageFit1D<casacore::Float> fitter(image, axis);
+// casacore::IPosition pos(in.ndim(),0);
+// fitter.setData(pos, ImageFit1D<casacore::Float>::IM_NATIVE);     // Fit in native coordinate space
 // fitter.setGaussianElements(3);                      // FIt 3 Gaussians
 // if (fitter.fit()) {
 //    cerr << fitter.getList() << endl;                // Print result
@@ -117,7 +121,7 @@ template<class T> class ImageInterface;
 template <class T> class ImageFit1D {
 public:
 
-using FitterType = typename NumericTraits<T>::PrecisionType;
+using FitterType = typename casacore::NumericTraits<T>::PrecisionType;
 
     enum AbcissaType {
        PIXEL = 0,
@@ -127,13 +131,13 @@ using FitterType = typename NumericTraits<T>::PrecisionType;
 
 
     // Constructor.  Fitting weights are assumed all unity.
-    ImageFit1D(SHARED_PTR<const ImageInterface<T> > image, uInt axis=0);
+    ImageFit1D(SHARED_PTR<const casacore::ImageInterface<T> > image, casacore::uInt axis=0);
 
     // Constructor with fitting weights image.  The data and weights images must
     // be the same shape.
     ImageFit1D(
-    	SHARED_PTR<const ImageInterface<T> > image,
-    	SHARED_PTR<const ImageInterface<T> > weights, uInt axis=0
+    	SHARED_PTR<const casacore::ImageInterface<T> > image,
+    	SHARED_PTR<const casacore::ImageInterface<T> > weights, casacore::uInt axis=0
     );
 
     // Destructor
@@ -153,7 +157,7 @@ using FitterType = typename NumericTraits<T>::PrecisionType;
     // the values that were passed to that method are used. Use the first
     // form of setData() in this case. The domain of the
     // abscissa values is controlled by <src>AbcissaType</src> and
-    // <src>doAbs</src> (absolute coordinates).  The CoordinateSystem in
+    // <src>doAbs</src> (absolute coordinates).  The casacore::CoordinateSystem in
     // the image is used to convert from pixels to world values.
     // If <src>type</src>=IN_NATIVE and <src>abscissaDivisor</src> is not null,
     // the world abscissa values will be divided by the value pointed to by
@@ -166,23 +170,23 @@ using FitterType = typename NumericTraits<T>::PrecisionType;
     // pass the result of that function into setAbscissaValues.
     // <group>
     void setData (
-    	const IPosition& pos, /*const ImageFit1D<T>::AbcissaType type,
-        const Bool doAbs=True, const Double* const &abscissaDivisor=0,
-        Array<Double> (*xfunc)(const Array<Double>&)=0, */
-        Array<FitterType> (*yfunc)(const Array<FitterType>&)=0
+    	const casacore::IPosition& pos, /*const ImageFit1D<T>::AbcissaType type,
+        const casacore::Bool doAbs=true, const casacore::Double* const &abscissaDivisor=0,
+        casacore::Array<casacore::Double> (*xfunc)(const casacore::Array<casacore::Double>&)=0, */
+        casacore::Array<FitterType> (*yfunc)(const casacore::Array<FitterType>&)=0
     );
 
     void setData (
-    	const IPosition& pos, const ImageFit1D<T>::AbcissaType type,
-    	const Bool doAbs=True, const Double* const &abscissaDivisor=0,
-    	Array<Double> (*xfunc)(const Array<Double>&)=0,
-    	Array<FitterType> (*yfunc)(const Array<FitterType>&)=0
+    	const casacore::IPosition& pos, const ImageFit1D<T>::AbcissaType type,
+    	const casacore::Bool doAbs=true, const casacore::Double* const &abscissaDivisor=0,
+    	casacore::Array<casacore::Double> (*xfunc)(const casacore::Array<casacore::Double>&)=0,
+    	casacore::Array<FitterType> (*yfunc)(const casacore::Array<FitterType>&)=0
     );
 
     /*
-    Bool setData (
-    	const ImageRegion& region, const ImageFit1D<T>::AbcissaType type,
-        Bool doAbs=True
+    casacore::Bool setData (
+    	const casacore::ImageRegion& region, const ImageFit1D<T>::AbcissaType type,
+        casacore::Bool doAbs=true
     );
     */
     // </group>
@@ -210,28 +214,28 @@ using FitterType = typename NumericTraits<T>::PrecisionType;
     // in the correct abcissa domain.
     // All of the parameters created by this function will be solved for
     // by default. You can recover the list of elements with function getList.
-    // Status is returned, if False, error message can be recovered with <src>errorMessage</src>
-    void setGaussianElements (uInt nGauss);
+    // Status is returned, if false, error message can be recovered with <src>errorMessage</src>
+    void setGaussianElements (casacore::uInt nGauss);
 
     // Clear the SpectralList of elements to be fit for
     void clearList () {_fitter.clearList();};
 
     // Do the fit and return convergence status.  Errors in the fitting
-    // process will generate an AipsError exception and you should catch
+    // process will generate an casacore::AipsError exception and you should catch
     // these yourself.
-    Bool fit ();
+    casacore::Bool fit ();
 
     // Get Chi Squared of fit
-    Double getChiSquared () const {return _fitter.getChiSquared();}
+    casacore::Double getChiSquared () const {return _fitter.getChiSquared();}
 
     // Get number of iterations for last fit
-    Double getNumberIterations () const {return _fitter.getNumberIterations();}
+    casacore::Double getNumberIterations () const {return _fitter.getNumberIterations();}
 
     // Recover the list of elements.  You can get the elements
-    // as initially estimated (fit=False), or after fitting 
-    // (fit=True).  In the latter case, the SpectralElements
+    // as initially estimated (fit=false), or after fitting 
+    // (fit=true).  In the latter case, the SpectralElements
     // hold the parameters and errors of the fit.
-    const SpectralList& getList (Bool fit=True) const {return _fitter.getList(fit);};
+    const SpectralList& getList (casacore::Bool fit=true) const {return _fitter.getList(fit);};
 
     // Recover vectors for the estimate, fit and residual.
     // If you don't specify which element, all elements are included
@@ -239,66 +243,66 @@ using FitterType = typename NumericTraits<T>::PrecisionType;
     // condition exists (e.g. asking for fit before you do one). In this
     // case an error message can be recovered with function <src>errorMessage</src>.
     //<group>
-    Vector<T> getEstimate (Int which=-1) const;
-    Vector<T> getFit (Int which=-1) const;
-    Vector<T> getResidual (Int which=-1, Bool fit=True)  const;
+    casacore::Vector<T> getEstimate (casacore::Int which=-1) const;
+    casacore::Vector<T> getFit (casacore::Int which=-1) const;
+    casacore::Vector<T> getResidual (casacore::Int which=-1, casacore::Bool fit=true)  const;
     //</group>
 
-    Bool setXMask(const std::set<uInt>& indices, Bool specifiedPixelsAreGood) {
+    casacore::Bool setXMask(const std::set<casacore::uInt>& indices, casacore::Bool specifiedPixelsAreGood) {
     	return _fitter.setXMask(indices, specifiedPixelsAreGood);
     }
 
     // get data mask
-    Vector<Bool> getDataMask () const {return _fitter.getDataMask();};
+    casacore::Vector<casacore::Bool> getDataMask () const {return _fitter.getDataMask();};
 
     // Get Total Mask (data and range mask)
-    Vector<Bool> getTotalMask () const {return _fitter.getTotalMask();};
+    casacore::Vector<casacore::Bool> getTotalMask () const {return _fitter.getTotalMask();};
 
     // did the fit succeed? should only be called after fit().
-    Bool succeeded() const;
+    casacore::Bool succeeded() const;
 
     // did the fit converge? should only be called after fit().
-    Bool converged() const;
+    casacore::Bool converged() const;
 
-    // Helper function.  Sets up the CoordinateSystem to reflect the choice of
+    // Helper function.  Sets up the casacore::CoordinateSystem to reflect the choice of
     // abcissa unit and the doppler (if the axis is spectral).
-    static Bool setAbcissaState (String& errMsg, ImageFit1D<T>::AbcissaType& type,
-                                 CoordinateSystem& cSys, const String& xUnit,
-                                 const String& doppler, uInt pixelAxis);
+    static casacore::Bool setAbcissaState (casacore::String& errMsg, ImageFit1D<T>::AbcissaType& type,
+                                 casacore::CoordinateSystem& cSys, const casacore::String& xUnit,
+                                 const casacore::String& doppler, casacore::uInt pixelAxis);
 
 
     // flag the solution as invalid based on external criteria.
     void invalidate();
 
-    // is the solution valid? If False, some external logic has
+    // is the solution valid? If false, some external logic has
     // called invalidate()
-    Bool isValid() const;
+    casacore::Bool isValid() const;
 
     // Set the abscissa values prior to running setData. If this is done, then
     // the abscissa values will not be recomputed when setData is called.
     // This can imporove performance if, for example, you are looping over several fitters for
     // which you know the abscissa values do not change.
-    void setAbscissa(const Vector<Double>& x) { _x.assign(x); }
+    void setAbscissa(const casacore::Vector<casacore::Double>& x) { _x.assign(x); }
 
     // make the abscissa values, <src>x</src>. If <src>type</src>=IN_NATIVE
     // and <src>abscissaDivisor is not null, then divide the native values
     // by the value pointed to by <src>abscissaDivisor</src> in making the abscissa
     // values.
-    Vector<Double> makeAbscissa (
+    casacore::Vector<casacore::Double> makeAbscissa (
 		   ImageFit1D<T>::AbcissaType type,
-		   Bool doAbs, const Double* const &abscissaDivisor
+		   casacore::Bool doAbs, const casacore::Double* const &abscissaDivisor
    );
 private:
-   SHARED_PTR<const ImageInterface<T> > _image, _weights;
-   uInt _axis;
+   SHARED_PTR<const casacore::ImageInterface<T> > _image, _weights;
+   casacore::uInt _axis;
 
 // In the future I will be able to template the fitter on T. For now
 // it must be Double.
 
    ProfileFit1D<FitterType> _fitter;
-   Bool _converged, _success, _isValid;
-   Vector<Double> _x, _unityWeights, _weightSlice;
-   IPosition _sliceShape;
+   casacore::Bool _converged, _success, _isValid;
+   casacore::Vector<casacore::Double> _x, _unityWeights, _weightSlice;
+   casacore::IPosition _sliceShape;
    
    // Disallow default constructor
    ImageFit1D() {}
@@ -308,7 +312,7 @@ private:
    void _construct();
    void copy (const ImageFit1D<T>& other);
 
-   //void setWeightsImage (const ImageInterface<T>& im);
+   //void setWeightsImage (const casacore::ImageInterface<T>& im);
 
    // reset the fitter, for example if we've done a fit and want to move
    // to the next position in the image
@@ -317,8 +321,8 @@ private:
 
    // Set Image(s) and axis
    // <group>
-   // void setImage (const ImageInterface<T>& im, const ImageInterface<T>& weights, uInt pixelAxis);
-   // void setImage (const ImageInterface<T>& im, uInt pixelAxis);
+   // void setImage (const casacore::ImageInterface<T>& im, const casacore::ImageInterface<T>& weights, casacore::uInt pixelAxis);
+   // void setImage (const casacore::ImageInterface<T>& im, casacore::uInt pixelAxis);
    // </group>
 
 };

@@ -44,9 +44,13 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogOrigin.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
   template<class T> class ImageInterface;
   template<class T> class Matrix;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
   class VisBuffer;
   //
   //-------------------------------------------------------------------------------------------
@@ -55,22 +59,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class AWConvFunc2 : public AWConvFunc
   {
   public:
-    AWConvFunc2(const CountedPtr<ATerm> ATerm,
-	       const CountedPtr<PSTerm> psTerm,
-	       const CountedPtr<WTerm> wTerm,
-	       const Bool wbAWP=False):
+    AWConvFunc2(const casacore::CountedPtr<ATerm> ATerm,
+	       const casacore::CountedPtr<PSTerm> psTerm,
+	       const casacore::CountedPtr<WTerm> wTerm,
+	       const casacore::Bool wbAWP=false):
       AWConvFunc(ATerm, psTerm, wTerm, wbAWP)
     {}
 
     ~AWConvFunc2() {};
     virtual void fillConvFuncBuffer(CFBuffer& cfb, CFBuffer& cfWtb,
-			  const Int& nx, const Int& ny,
-			  const Vector<Double>& freqValues,
-			  const Vector<Double>& wValues,
-			  const Double& wScale,
+			  const casacore::Int& nx, const casacore::Int& ny,
+			  const casacore::Vector<casacore::Double>& freqValues,
+			  const casacore::Vector<casacore::Double>& wValues,
+			  const casacore::Double& wScale,
 			  const PolMapType& muellerElements,
 			  const PolMapType& muellerElementsIndex,
-			  const VisBuffer& vb, const Float& psScale,
+			  const VisBuffer& vb, const casacore::Float& psScale,
 			  PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm);
   };
   //

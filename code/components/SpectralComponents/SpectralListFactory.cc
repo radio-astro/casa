@@ -33,8 +33,10 @@
 
 #include <stdcasa/StdCasa/CasacSupport.cc>
 
+using namespace casacore;
 using namespace casac;
 
+using namespace casacore;
 namespace casa { 
 
 SpectralList SpectralListFactory::create(
@@ -270,7 +272,7 @@ void SpectralListFactory::_addPowerLogPolynomial(
 	}
 	uInt nfix = myplpfix.size();
 	if (nfix == 0) {
-		myplpfix = vector<bool>(nest, False);
+		myplpfix = vector<bool>(nest, false);
 	}
 	else if (nfix != myplpest.size()) {
 		log << "Number of elements in the power logarithmic polynomial fixed parameter list must "
@@ -295,7 +297,7 @@ void SpectralListFactory::_addLogTransformedPolynomial(
 	);
 	uInt nfix = myltpfix.size();
 	if (nfix == 0) {
-		myltpfix = vector<bool>(nest, False);
+		myltpfix = vector<bool>(nest, false);
 	}
 	else {
 		ThrowIf(
@@ -310,4 +312,5 @@ void SpectralListFactory::_addLogTransformedPolynomial(
 	spectralList.add(ltp);
 }
 
+using namespace casacore;
 } // end namespace casa

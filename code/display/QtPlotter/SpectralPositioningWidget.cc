@@ -9,6 +9,7 @@
 
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 	SpectralPositioningWidget::SpectralPositioningWidget(QWidget *parent)

@@ -43,9 +43,9 @@
 // </summary>
 
 // Control verbosity
-#define CLPATCHPANELTEST_VERBOSE False
+#define CLPATCHPANELTEST_VERBOSE false
 
-void tMSCalPatchKey (Bool verbose=False) {
+void tMSCalPatchKey (Bool verbose=false) {
 
   Bool& v(verbose);
 
@@ -103,7 +103,7 @@ void tMSCalPatchKey (Bool verbose=False) {
 
 }
 
-void tMSCalPatchKey2 (Bool verbose=False) {
+void tMSCalPatchKey2 (Bool verbose=false) {
 
   Bool& v(verbose);
 
@@ -133,7 +133,7 @@ void tMSCalPatchKey2 (Bool verbose=False) {
 }
 
 
-void tCalMap1 (Bool verbose=False) {
+void tCalMap1 (Bool verbose=false) {
 
   Bool& v(verbose);
 
@@ -165,7 +165,7 @@ void tCalMap1 (Bool verbose=False) {
 
 }
 
-void tCalMap2 (Bool verbose=False) {
+void tCalMap2 (Bool verbose=false) {
 
   Bool& v(verbose);
 
@@ -221,7 +221,7 @@ void tCalMap2 (Bool verbose=False) {
 
 }
 
-void tCalLibSlice1 (Bool verbose=False) {
+void tCalLibSlice1 (Bool verbose=false) {
 
   Bool& v(verbose);
 
@@ -272,7 +272,7 @@ void tCalLibSlice1 (Bool verbose=False) {
 
 }
 
-void testCLPPResult (Bool verbose=True) {
+void testCLPPResult (Bool verbose=true) {
 
   Bool& v(verbose);
 
@@ -341,7 +341,7 @@ void testCLPPResult (Bool verbose=True) {
 }
 
 
-void tCLPatchPanel1 (Bool verbose=True) {
+void tCLPatchPanel1 (Bool verbose=true) {
 
   Bool& v(verbose);
 
@@ -355,12 +355,12 @@ void tCLPatchPanel1 (Bool verbose=True) {
     Double refTime(4832568000.0); // 2012 Jan 06 @ noon
     Double tint(60.0);
     
-    Bool disk(True); // verbose);
+    Bool disk(true); // verbose);
     NewCalTable tnct("tCTSelection1.ct","Complex",
 		     nObs,nScan,nTime,
 		     nAnt,nSpw,nChan,
 		     nFld,
-		     refTime,tint,disk,False);
+		     refTime,tint,disk,false);
 
     cout << "Created " << tnct.tableName() << endl;
 
@@ -400,7 +400,7 @@ void tCLPatchPanel1 (Bool verbose=True) {
       Cube<Complex> res;
       Cube<Bool> resfl;
       Double t=refTime+27.0;
-      Bool newcal(False);
+      Bool newcal(false);
       newcal=ctpp.interpolate(res,resfl,0,2,0,ispw,t,-1.0);
       
       if (v) {
@@ -438,7 +438,7 @@ void tCLPatchPanel1 (Bool verbose=True) {
       Cube<Complex> res;
       Cube<Bool> resfl;
       Double t=refTime+27.0;
-      Bool newcal(False);
+      Bool newcal(false);
       Int nChan1(7);
       Vector<Double> freq(nChan1,60.0005e9);
 
@@ -449,7 +449,7 @@ void tCLPatchPanel1 (Bool verbose=True) {
 
       newcal=ctpp.interpolate(res,resfl,0,2,0,ispw,t,freq);
       
-      if (v||True) {
+      if (v||true) {
 	cout << "newcal = " << boolalpha << newcal << endl;
 	cout << "res=" << res << endl;
 	cout << "resfl=" << boolalpha << resfl << endl;

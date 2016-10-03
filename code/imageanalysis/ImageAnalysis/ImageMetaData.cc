@@ -38,6 +38,7 @@
 #include <iostream>
 #include <iomanip>
 
+using namespace casacore;
 namespace casa {
 
 ImageMetaData::ImageMetaData(
@@ -227,7 +228,7 @@ Vector<Quantity> ImageMetaData::_getRefValue() const {
 String ImageMetaData::_getRefFreqType() const {
 	if (_reffreqtype.empty() && _getCoords().hasSpectralAxis()) {
 		_reffreqtype = MFrequency::showType(
-			_getCoords().spectralCoordinate().frequencySystem(False)
+			_getCoords().spectralCoordinate().frequencySystem(false)
 		);
 	}
 	return _reffreqtype;

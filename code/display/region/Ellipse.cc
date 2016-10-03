@@ -38,6 +38,7 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <display/ds9/ds9writer.h>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -127,7 +128,7 @@ namespace casa {
 				return;
 			}
 
-			pc->drawEllipse(cx, cy, cx - x1, cy - y1, 0.0, True, 1.0, 1.0);
+			pc->drawEllipse(cx, cy, cx - x1, cy - y1, 0.0, true, 1.0, 1.0);
 
 			if (getDrawCenter())
 				drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
@@ -278,7 +279,7 @@ namespace casa {
 					IPosition pos = padd->fixedPosition( );
 					Vector<Int> dispAxes = padd->displayAxes( );
 
-					if ( nAxes == 2 ) dispAxes.resize(2,True);
+					if ( nAxes == 2 ) dispAxes.resize(2,true);
 
 					if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
 					        Int(pos.nelements()) != nAxes ||
@@ -288,7 +289,7 @@ namespace casa {
 					if ( dispAxes.nelements() > 2u )
 						pos[dispAxes[2]] = zIndex;
 
-					dispAxes.resize(2,True);
+					dispAxes.resize(2,true);
 
 					// select the visible layer in the third and all
 					// hidden axes with a WCBox and a SubImage
@@ -344,7 +345,7 @@ namespace casa {
 					);
 					delete imgbox;
 					delete imageregion;
-				} catch (const casa::AipsError& err) {
+				} catch (const casacore::AipsError& err) {
 					errMsg_ = err.getMesg();
 					fprintf( stderr, "Ellipse::generate_dds_centers( ): %s\n", errMsg_.c_str() );
 					continue;
@@ -430,7 +431,7 @@ namespace casa {
 
 			SHARED_PTR<ImageInterface<Float> > image( padd->imageinterface( ));
 			Vector<Int> dispAxes = padd->displayAxes( );
-			dispAxes.resize(2,True);
+			dispAxes.resize(2,true);
 
 			std::pair<Vector<Quantity>,Vector<Quantity> > p_r = posAndRadii( );
 			if ( p_r.second.size( ) != 2 ) return 0;

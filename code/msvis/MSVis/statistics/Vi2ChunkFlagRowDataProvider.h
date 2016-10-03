@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// Data provider for flag row column
+// casacore::Data provider for flag row column
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_FLAG_ROW_DATA_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_FLAG_ROW_DATA_PROVIDER_H_
@@ -43,9 +43,9 @@ class Vi2ChunkFlagRowDataProvider final
 public:
 	Vi2ChunkFlagRowDataProvider(
 		vi::VisibilityIterator2 *vi2,
-		Bool omit_flagged_data);
+		casacore::Bool omit_flagged_data);
 
-	const Vector<Bool>& dataArray();
+	const casacore::Vector<casacore::Bool>& dataArray();
 };
 
 } // namespace casa

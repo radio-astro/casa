@@ -25,14 +25,14 @@ namespace LibAIR2 {
 
   /** Channel frequencies for spectral window spw     
    */
-  void spwChannelFreq(const casa::MeasurementSet &ms,
+  void spwChannelFreq(const casacore::MeasurementSet &ms,
 		      size_t spw,
 		      std::vector<double> &fres);
 
 
   /** Retrieve row times, field IDs, and Source IDs
    */
-  void fieldIDs(const casa::MeasurementSet &ms,
+  void fieldIDs(const casacore::MeasurementSet &ms,
 		std::vector<double> &time,
 		std::vector<int> &fieldID,
 		std::vector<int> &sourceID,
@@ -55,32 +55,32 @@ namespace LibAIR2 {
 
   /** \brief Load the map between state ids and scan intents from
       measurement set*/
-  void scanIntents(const casa::MeasurementSet &ms,
+  void scanIntents(const casacore::MeasurementSet &ms,
 		   StateIntentMap &mi);
 
   /** Returns the set of State IDs that are known to have the WVR
       looking at the sky
    */
-  std::set<size_t> skyStateIDs(const casa::MeasurementSet &ms);
+  std::set<size_t> skyStateIDs(const casacore::MeasurementSet &ms);
 
   /// Association between field number and field names
   typedef std::map<size_t, std::string > field_t;
-  field_t getFieldNames(const casa::MeasurementSet &ms);
+  field_t getFieldNames(const casacore::MeasurementSet &ms);
 
 
   /// Association between source IDs and source names
-  field_t getSourceNames(const casa::MeasurementSet &ms);
+  field_t getSourceNames(const casacore::MeasurementSet &ms);
 
   /** Get all fields associated with a particular source name
    */
-  std::set<size_t> getSrcFields(const casa::MeasurementSet &ms,
+  std::set<size_t> getSrcFields(const casacore::MeasurementSet &ms,
 				const std::string &source);
 
   /** Map from field IDs to Source Ids. One way only as multiple
       fields can correspond to one source (thats the way CASA does
       it).
    */
-  std::map<size_t, size_t> getFieldSrcMap(const casa::MeasurementSet &ms);
+  std::map<size_t, size_t> getFieldSrcMap(const casacore::MeasurementSet &ms);
       
 
 

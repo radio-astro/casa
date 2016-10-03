@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File AnnotationRow.h
+ * casacore::File AnnotationRow.h
  */
  
 #ifndef AnnotationRow_CLASS
@@ -147,7 +147,7 @@ public:
 	bool isAdded() const;
 		
 	////////////////////////////////
-	// Intrinsic Table Attributes //
+	// Intrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -671,7 +671,7 @@ public:
 
 
 	////////////////////////////////
-	// Extrinsic Table Attributes //
+	// Extrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -906,7 +906,7 @@ private:
 	 */
 	bool hasBeenAdded;
 
-	// This method is used by the Table class when this row is added to the table.
+	// This method is used by the casacore::Table class when this row is added to the table.
 	void isAdded(bool added);
 
 
@@ -940,7 +940,7 @@ private:
 	 AnnotationRow (AnnotationTable &table, AnnotationRow &row);
 	 	
 	////////////////////////////////
-	// Intrinsic Table Attributes //
+	// Intrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1130,7 +1130,7 @@ private:
  	
 
 	////////////////////////////////
-	// Extrinsic Table Attributes //
+	// Extrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	

@@ -48,6 +48,7 @@
 #include <measures/Measures/MDirection.h>
 
 using namespace casacore;
+using namespace casacore;
 using namespace std;
 
 // Debug Message Handling
@@ -129,6 +130,7 @@ inline void skipMovingSourceCorrection(
 }
 } // anonymous namespace
 
+using namespace casacore;
 namespace casa {
 PointingDirectionCalculator::PointingDirectionCalculator(
         MeasurementSet const &ms) :

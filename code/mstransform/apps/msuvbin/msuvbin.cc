@@ -46,6 +46,7 @@
 #include <casa/namespace.h>
 
 using namespace std;
+using namespace casa;
 
 int main(int argc, char **argv) {
   Input inp;

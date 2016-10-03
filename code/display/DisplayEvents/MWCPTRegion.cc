@@ -36,10 +36,11 @@
 // this include:
 #include <display/DisplayEvents/MWCPTRegion.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MWCPTRegion::MWCPTRegion(Display::KeySym keysym) :
-		MWCPolyTool(keysym, True) {
+		MWCPolyTool(keysym, true) {
 	}
 
 	MWCPTRegion::~MWCPTRegion() {

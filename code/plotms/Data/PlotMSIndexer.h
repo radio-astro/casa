@@ -43,16 +43,16 @@ namespace casa {
 class PlotMSApp;
 class PlotMSIndexer;  // needed for method pointer typedefs
 
-typedef Double(PlotMSCacheBase::*CacheMemPtr)(Int,Int);
-typedef    Int(PlotMSIndexer::*IndexerMethPtr)(Int,Int);
-typedef   void(PlotMSIndexer::*CollapseMethPtr)(Int,Array<Bool>&);
+typedef casacore::Double(PlotMSCacheBase::*CacheMemPtr)(casacore::Int,casacore::Int);
+typedef    casacore::Int(PlotMSIndexer::*IndexerMethPtr)(casacore::Int,casacore::Int);
+typedef   void(PlotMSIndexer::*CollapseMethPtr)(casacore::Int,casacore::Array<casacore::Bool>&);
  
 class PlotMSIndexer : public PlotMaskedPointData, public PlotBinnedData {
 
 public:
 
   // Convenient access to class name.
-  static const String CLASS_NAME;
+  static const casacore::String CLASS_NAME;
   
   // A ctor that makes an empty Indexer (for plot initialization)
   PlotMSIndexer();
@@ -61,7 +61,7 @@ public:
   PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis, int index);
   // Constructor which supports iteration
   PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis,
-                PMS::Axis iterAxis, Int iterValue, int index);
+                PMS::Axis iterAxis, casacore::Int iterValue, int index);
   
   // Destructor
   ~PlotMSIndexer();
@@ -107,38 +107,38 @@ public:
   void setUpIndexing();
 
   // Set global min/max flag
-  void setGlobalMinMax(Bool globalX=False,Bool globalY=False);
+  void setGlobalMinMax(casacore::Bool globalX=false,casacore::Bool globalY=false);
   bool isGlobalXRange() const;
   bool isGlobalYRange() const;
 
   // Report per-chunk point counters
-  Vector<uInt> nPoints() { return nPoints_; };
-  Vector<uInt> nCumulative() { return nCumulative_; };
+  casacore::Vector<casacore::uInt> nPoints() { return nPoints_; };
+  casacore::Vector<casacore::uInt> nCumulative() { return nCumulative_; };
 
   // Return if the indexer is ready (setUpPlot has been run)
-  inline Bool indexerReady() const { return indexerReady_; };
+  inline casacore::Bool indexerReady() const { return indexerReady_; };
 
   // Locate datum nearest to specified x,y
-  Record getPointMetaData(Int i);
-  Record locateInfo(const Vector<PlotRegion>& regions,
-                    Bool showUnflagged, Bool showFlagged,
-                    Bool selectAll = true);
-  PlotLogMessage* locateRange(const Vector<PlotRegion>& regions,
-			      Bool showUnflagged, Bool showFlagged);
+  casacore::Record getPointMetaData(casacore::Int i);
+  casacore::Record locateInfo(const casacore::Vector<PlotRegion>& regions,
+                    casacore::Bool showUnflagged, casacore::Bool showFlagged,
+                    casacore::Bool selectAll = true);
+  PlotLogMessage* locateRange(const casacore::Vector<PlotRegion>& regions,
+			      casacore::Bool showUnflagged, casacore::Bool showFlagged);
   PlotLogMessage* flagRange(const PlotMSFlagging& flagging,
-			    const Vector<PlotRegion>& regions, Bool flag = True);
+			    const casacore::Vector<PlotRegion>& regions, casacore::Bool flag = true);
 
 
   // Report meta info for current value of currChunk_/irel_
-  void reportMeta(Double x, Double y, Bool masked, stringstream& ss);
+  void reportMeta(casacore::Double x, casacore::Double y, casacore::Bool masked, stringstream& ss);
 
   // Set flags in the cache
-  void flagInCache(const PlotMSFlagging& flagging,Bool flag);
+  void flagInCache(const PlotMSFlagging& flagging,casacore::Bool flag);
 
   // Iteration label
-  String iterLabel();
-  String iterValue();
-  String fileLabel();
+  casacore::String iterLabel();
+  casacore::String iterValue();
+  casacore::String fileLabel();
 
   // Access to raw min/max data (no auto-global)
   bool maskedMinsMaxesRaw(double& xMin, double& xMax, double& yMin,double& yMax);
@@ -147,14 +147,14 @@ public:
 
   // Directly implemented index calculators
   //  (generic index methods point to one of these depending upon axis choice)
-  Int getIndex0000(Int ch,Int irel) { return 0;  (void)irel; (void)ch; };
-  Int getIndex1000(Int ch,Int irel) { return irel%icorrmax_(ch);};
-  Int getIndex0100(Int ch,Int irel) { return (irel/nperchan_(ch))%ichanmax_(ch);};
-  Int getIndex0010(Int ch,Int irel) { return (irel/nperbsln_(ch))%ibslnmax_(ch);};
-  Int getIndex0110(Int ch,Int irel) { return (irel/nperchan_(ch))%ichanbslnmax_(ch);};
-  Int getIndex1010(Int ch,Int irel) { return (irel/nperbsln_(ch))*nperchan_(ch) + irel%nperchan_(ch);};
-  Int getIndex1110(Int ch,Int irel) { return irel%idatamax_(ch);};
-  Int getIndex0001(Int ch,Int irel) { return (irel/nperant_(ch))%iantmax_(ch);};
+  casacore::Int getIndex0000(casacore::Int ch,casacore::Int irel) { return 0;  (void)irel; (void)ch; };
+  casacore::Int getIndex1000(casacore::Int ch,casacore::Int irel) { return irel%icorrmax_(ch);};
+  casacore::Int getIndex0100(casacore::Int ch,casacore::Int irel) { return (irel/nperchan_(ch))%ichanmax_(ch);};
+  casacore::Int getIndex0010(casacore::Int ch,casacore::Int irel) { return (irel/nperbsln_(ch))%ibslnmax_(ch);};
+  casacore::Int getIndex0110(casacore::Int ch,casacore::Int irel) { return (irel/nperchan_(ch))%ichanbslnmax_(ch);};
+  casacore::Int getIndex1010(casacore::Int ch,casacore::Int irel) { return (irel/nperbsln_(ch))*nperchan_(ch) + irel%nperchan_(ch);};
+  casacore::Int getIndex1110(casacore::Int ch,casacore::Int irel) { return irel%idatamax_(ch);};
+  casacore::Int getIndex0001(casacore::Int ch,casacore::Int irel) { return (irel/nperant_(ch))%iantmax_(ch);};
 
 
   // 
@@ -174,48 +174,48 @@ private:
 
   // Generate collapsed versions of the plmask 
   /* not needed?  (gmoellen, 2011Mar15)
-  void collapseMask0000(Int ch,Array<Bool>& collmask);
-  void collapseMask1000(Int ch,Array<Bool>& collmask);
-  void collapseMask0100(Int ch,Array<Bool>& collmask);
-  void collapseMask0010(Int ch,Array<Bool>& collmask);
-  void collapseMask0110(Int ch,Array<Bool>& collmask);
-  void collapseMask1010(Int ch,Array<Bool>& collmask);
-  void collapseMask1110(Int ch,Array<Bool>& collmask);
-  void collapseMask0001(Int ch,Array<Bool>& collmask);
+  void collapseMask0000(casacore::Int ch,casacore::Array<casacore::Bool>& collmask);
+  void collapseMask1000(casacore::Int ch,casacore::Array<casacore::Bool>& collmask);
+  void collapseMask0100(casacore::Int ch,casacore::Array<casacore::Bool>& collmask);
+  void collapseMask0010(casacore::Int ch,casacore::Array<casacore::Bool>& collmask);
+  void collapseMask0110(casacore::Int ch,casacore::Array<casacore::Bool>& collmask);
+  void collapseMask1010(casacore::Int ch,casacore::Array<casacore::Bool>& collmask);
+  void collapseMask1110(casacore::Int ch,casacore::Array<casacore::Bool>& collmask);
+  void collapseMask0001(casacore::Int ch,casacore::Array<casacore::Bool>& collmask);
   */
 
   // Report the number of chunks
-  Int nChunk() const { return (plotmscache_ ? plotmscache_->nChunk() : 0); };
+  casacore::Int nChunk() const { return (plotmscache_ ? plotmscache_->nChunk() : 0); };
 
   // Report the reference time for this cache (in seconds)
-  inline Double refTime() { return plotmscache_->refTime(); };
+  inline casacore::Double refTime() { return plotmscache_->refTime(); };
 
   // Set currChunk_ according to a supplied index
-  void setChunk(uInt i) const;
+  void setChunk(casacore::uInt i) const;
 
   // Computes the X and Y limits for the currently set axes.  In the future we
   // may want to cache ALL ranges for all loaded values to avoid recomputation.
   void computeRanges();
 
   // Compute baseline's length in meters between ant1 and ant2
-  Double computeBaselineLength(Int ant1, Int ant2);
+  casacore::Double computeBaselineLength(casacore::Int ant1, casacore::Int ant2);
 
   // Convenience methods that call log() with the given method name and the
   // appropriate event type.
   // <group>
-  void logInfo(const String& method, const String& message) {
+  void logInfo(const casacore::String& method, const casacore::String& message) {
       log(method, message, PlotLogger::MSG_INFO); }
-  void logDebug(const String& method, const String& message) {
+  void logDebug(const casacore::String& method, const casacore::String& message) {
       log(method, message, PlotLogger::MSG_DEBUG); }
-  void logWarn(const String& method, const String& message) {
+  void logWarn(const casacore::String& method, const casacore::String& message) {
       log(method, message, PlotLogger::MSG_WARN); }
-  void logError(const String& method, const String& message) {
+  void logError(const casacore::String& method, const casacore::String& message) {
       log(method, message, PlotLogger::MSG_ERROR); }
   // </group>
   
   // Logs the given message from the given method name as the given event type
   // (see PlotLogger).
-  void log(const String& method, const String& message, int eventType);
+  void log(const casacore::String& method, const casacore::String& message, int eventType);
 
 
 
@@ -230,40 +230,40 @@ private:
   //  CollapseMethPtr collapseXMask_, collapseYMask_;
 
   // The in-focus chunk and relative index offset
-  mutable Int currChunk_, irel_;
-  mutable uInt lasti_;
+  mutable casacore::Int currChunk_, irel_;
+  mutable casacore::uInt lasti_;
 
   // The number of points per chunk
-  Vector<uInt> nPoints_;
+  casacore::Vector<casacore::uInt> nPoints_;
 
   // The cumulative running total of points
-  Vector<uInt> nCumulative_;
+  casacore::Vector<casacore::uInt> nCumulative_;
 
   // Segment point-counting Vectors
-  Int nSegment_;
-  mutable Int currSeg_;
-  Vector<uInt> nSegPoints_,nCumulPoints_,cacheChunk_,cacheOffset_;
+  casacore::Int nSegment_;
+  mutable casacore::Int currSeg_;
+  casacore::Vector<casacore::uInt> nSegPoints_,nCumulPoints_,cacheChunk_,cacheOffset_;
   
   // Current setup/state.
   PMS::Axis currentX_, currentY_;
   bool indexerReady_;
 
   // Indexing parameters
-  Vector<Int> icorrmax_, ichanmax_, ibslnmax_, idatamax_;
-  Vector<Int> nperchan_, nperbsln_, nperant_;
-  Vector<Int> ichanbslnmax_;
-  Vector<Int> iantmax_;
+  casacore::Vector<casacore::Int> icorrmax_, ichanmax_, ibslnmax_, idatamax_;
+  casacore::Vector<casacore::Int> nperchan_, nperbsln_, nperant_;
+  casacore::Vector<casacore::Int> ichanbslnmax_;
+  casacore::Vector<casacore::Int> iantmax_;
 
   // Nominal axes limits
-  Double xmin_,ymin_,xflmin_,yflmin_,xmax_,ymax_,xflmax_,yflmax_;
-  Int sizeMasked_, sizeUnMasked_;
-  Bool globalXMinMax_,globalYMinMax_;
+  casacore::Double xmin_,ymin_,xflmin_,yflmin_,xmax_,ymax_,xflmax_,yflmax_;
+  casacore::Int sizeMasked_, sizeUnMasked_;
+  casacore::Bool globalXMinMax_,globalYMinMax_;
 
   // Iteration
   // <group>
-  Bool iterate_;
+  casacore::Bool iterate_;
   PMS::Axis iterAxis_;
-  Int iterValue_;
+  casacore::Int iterValue_;
   // </group>
 
   // Colorization
@@ -280,7 +280,7 @@ private:
 
 };
 
-typedef CountedPtr<PlotMSIndexer> PlotMSIndexerPtr;
+typedef casacore::CountedPtr<PlotMSIndexer> PlotMSIndexerPtr;
 
 }
 

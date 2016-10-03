@@ -61,12 +61,16 @@
 #define TUPLE std::tr1::tuple
 #endif
 
+namespace casacore{
+
+	template <class T> class ImageInterface;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class QtDisplayPanelGui;
 	class QtDisplayPanel;
 	class QtDisplayData;
-	template <class T> class ImageInterface;
 
 	namespace viewer {
 		class Region;
@@ -97,7 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QtDataManager( QtDisplayPanelGui* panel=0, const char* name=0, QWidget* parent=0 );
 		~QtDataManager();
 
-		/*   String path() const { return dir_.path().toStdString();  } */
+		/*   casacore::String path() const { return dir_.path().toStdString();  } */
 
 		void updateDirectory(const std::string &);
 
@@ -106,7 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	signals:
 
-		void tableReadErrorSignal(String msg);
+		void tableReadErrorSignal(casacore::String msg);
 
 
 	protected:
@@ -117,7 +121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void hideDisplayButtons();
 		QColor getDirColor(int);
 		QStringList analyseFITSImage(QString path);
-		Bool isQualImg(const QString &extexpr);
+		casacore::Bool isQualImg(const QString &extexpr);
 
 
 		std::string guimethod_to_iamethod( const QString & );
@@ -141,7 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public slots:
 
-		void updateDisplayDatas(QtDisplayData* qdd=0, Bool autoRegister=True);
+		void updateDisplayDatas(QtDisplayData* qdd=0, casacore::Bool autoRegister=true);
 
 	protected slots:
 
@@ -167,7 +171,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void restoreTo_(QtDisplayPanel* dp);
 
 
-		void showDDCreateError_(String);
+		void showDDCreateError_(casacore::String);
 
 		void leaveopenButtonClicked( bool checked );
 		void showlelButtonClicked( bool checked );
@@ -329,7 +333,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QString last_region_extension_tweak_string;
 
 		// connection to rc file
-		Casarc &rc;
+		casacore::Casarc &rc;
 
 		typedef std::map<int,tab_state> tab_info_map_t;
 		tab_info_map_t tab_info;
@@ -345,9 +349,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void region_tab_notify( const std::string &value, tab_state & );
 		void region_tab_error( const std::string &value, tab_state & );
 
-		bool export_to_fits(ImageInterface<Float> *img, std::string outFile);
-		bool export_to_casa(ImageInterface<Float> *img, String outFile);
-		void getSpectralCoordFlags(const ImageInterface<Float>* img, Bool &preferVelocity, Bool &opticalVelocity, Bool &preferWavelength, Bool &preferAirWavelength);
+		bool export_to_fits(casacore::ImageInterface<casacore::Float> *img, std::string outFile);
+		bool export_to_casa(casacore::ImageInterface<casacore::Float> *img, casacore::String outFile);
+		void getSpectralCoordFlags(const casacore::ImageInterface<casacore::Float>* img, casacore::Bool &preferVelocity, casacore::Bool &opticalVelocity, casacore::Bool &preferWavelength, casacore::Bool &preferAirWavelength);
 
 		viewer::SlicerGen *slice_gen;
 

@@ -58,8 +58,8 @@ public:
     // Returns the mutex used for this widget.
     QMutex& mutex();
     
-    void initialize( const String& operationName );
-    void setProgress(unsigned int progress, const String& status);
+    void initialize( const casacore::String& operationName );
+    void setProgress(unsigned int progress, const casacore::String& status);
 
 public slots:
     // Initializes the GUI with the given operation name.  Should be called
@@ -100,7 +100,7 @@ private:
     // Mutex.
     QMutex itsMutex_;
     
-    // Normal widget.
+    // casacore::Normal widget.
     Ui::ProgressWidget* itsProgress_;
     
     // Compact widget.

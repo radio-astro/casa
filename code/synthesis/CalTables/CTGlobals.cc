@@ -42,6 +42,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -149,12 +150,12 @@ void smoothCT(NewCalTable ct,
 		newp(i)=mean(p(mask));
 	      }
 	      else if (smtype=="median") {
-		newp(i)= median(p(mask),False);
+		newp(i)= median(p(mask),false);
 	      }
-	      newpOK(i)=True;
+	      newpOK(i)=true;
 	    }
 	    else 
-	      newpOK(i)=False;
+	      newpOK(i)=false;
 	    
 	  } // i
 	  // keep new ok info

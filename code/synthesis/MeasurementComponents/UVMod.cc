@@ -69,6 +69,7 @@
 #include <casa/Logging/LogSink.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -89,7 +90,7 @@ UVMod::UVMod(VisSet& vs) :
   lastChiSq_(0.0),
   sumWt_(0.0),
   nWt_(0),
-  polWt_(4,False),
+  polWt_(4,false),
   par_(), lastPar_(),
   lamb_(0.001),  grad_(), lastGrad_(),
   hess_(), lastHess_(),
@@ -220,13 +221,13 @@ void UVMod::setModel(const ComponentType::Shape type,
   vary().resize(par().shape());
 
   // Assume varying everything
-  vary()=True;
+  vary()=true;
   nVary()=nPar();
 
   // If invary specified, set vary() accordingly
   for (uInt i=0; i<invary.nelements();i++)
     if (!invary(i)) {
-      vary()(i) = False;
+      vary()(i) = false;
       nVary()-=1;
     }
 }
@@ -261,7 +262,7 @@ Bool UVMod::modelfit(const Int& maxiter, const String file) {
   //  Guarantee first pass, which gets initial chi2,
   //  then evaluate convergence by chi2 comparisons
 
-  Bool parOK(True);
+  Bool parOK(true);
   for (Int validiter=0;validiter<=maxiter;iter++,validiter++) {
     
     //    cout << "iter =" << iter << endl;
@@ -382,9 +383,9 @@ Bool UVMod::modelfit(const Int& maxiter, const String file) {
   //  hess()/=A;
 
   lamb()=0.0;
-  solveGradHess(True);
+  solveGradHess(true);
 
-  if (False) {
+  if (false) {
   cout << "chiSq()   = " << chiSq() << endl;
   cout << "sumWt()   = " << sumWt() << endl;
   cout << "nWt()     = " << nWt() << endl;
@@ -437,7 +438,7 @@ Bool UVMod::modelfit(const Int& maxiter, const String file) {
     cout << "p = " << par()(5)*180.0/C::pi << " +/- " << err(5)*180.0/C::pi << " deg" << endl;
   }
 
-  //  }  // (False)
+  //  }  // (false)
 
   // Shift pa back to deg
   if (par().nelements()>3) {
@@ -447,7 +448,7 @@ Bool UVMod::modelfit(const Int& maxiter, const String file) {
   // Shift model to phase center of selected field
   MDirection newdir;
   newdir=pc();
-  newdir.shift(skycomp(0).shape().refDirection().getValue(),True);
+  newdir.shift(skycomp(0).shape().refDirection().getValue(),true);
   skycomp(0).shape().setRefDirection(newdir);
 
   // Export componentlist to file, if specified
@@ -459,7 +460,7 @@ Bool UVMod::modelfit(const Int& maxiter, const String file) {
     cl().rename(path);
   }
 
-  return True;
+  return true;
 
 }
 
@@ -604,7 +605,7 @@ void UVMod::residual() {
 
   // Handle polarization selections (parallel hands only, for now)
   polWt().resize(nCorr);
-  polWt()=False;
+  polWt()=false;
   polWt() = (corridx==0 || corridx==3);
 
   skycomp(0).flux().convertPol(pol);
@@ -812,7 +813,7 @@ void UVMod::solveGradHess(const Bool& doCovar) {
   // Treat diagonal
   for (Int ipar=0; ipar<nPar(); ipar++) {
     // Ensure non-zero diag
-    if (hess()(ipar,ipar)==0.0)   // corresponds to vary()(ipar)=False
+    if (hess()(ipar,ipar)==0.0)   // corresponds to vary()(ipar)=false
       hess()(ipar,ipar)=1.0;
 
     // apply lamb() to diag (if covar matrix not requested)
@@ -913,10 +914,10 @@ Bool UVMod::setCompPar() {
       skycomp(0).shape().setParameters(gpar);
     } catch (AipsError x) {
       cout << " This should never happen now:  " << x.getMesg() << endl;
-      return False;
+      return false;
     }
   }
-  return True;
+  return true;
 }
 
 void UVMod::printPar(const Int& iter) {

@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
 		rec.define("profiledatamin", -0.04);
 		rec.define("profiledatamax", 0.04);
 		rec.define("spectralunit", "Hz");
-		//     rec.define("profileautoscale", True);
+		//     rec.define("profileautoscale", true);
 		pDD->setOptions(rec, recout);
 		cout << "OK!" << endl;
 		// Test getOptions

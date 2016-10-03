@@ -41,27 +41,27 @@ public:
 
   CalibratingParameters();
 
-  CalibratingParameters(const Record& calLibRecord);
-  CalibratingParameters(const String& callib);
-  CalibratingParameters(Float corrFactor); // temporary, for initial testing
+  CalibratingParameters(const casacore::Record& calLibRecord);
+  CalibratingParameters(const casacore::String& callib);
+  CalibratingParameters(casacore::Float corrFactor); // temporary, for initial testing
 
   CalibratingParameters(const CalibratingParameters& other);
   CalibratingParameters& operator=(const CalibratingParameters & other);
 
-  Bool byCalLib() const;
+  casacore::Bool byCalLib() const;
 
-  const Record& getCalLibRecord() const;
-  Float getCorrFactor() const;  
+  const casacore::Record& getCalLibRecord() const;
+  casacore::Float getCorrFactor() const;  
 
-  void setCalLibRecord(const Record& calLibRecord);
-  void setCorrFactor(Float corrFactor);  
+  void setCalLibRecord(const casacore::Record& calLibRecord);
+  void setCorrFactor(casacore::Float corrFactor);  
 
 private:
 
   void validate() const;
-  Bool byCalLib_p;
-  Record calLibRecord_p;
-  Float corrFactor_p;  // temporary, for initial testing
+  casacore::Bool byCalLib_p;
+  casacore::Record calLibRecord_p;
+  casacore::Float corrFactor_p;  // temporary, for initial testing
 };
 
 
@@ -78,7 +78,7 @@ public:
   // From cal pars and an MS (used by OTF calibration outside synthesis)
   CalibratingVi2( vi::ViImplementation2 * inputVii,
                   const CalibratingParameters& calpar,
-                  String msname);
+                  casacore::String msname);
 
   // From a VE pointer (used within synthesis, e.g., for solving)
   CalibratingVi2( vi::ViImplementation2 * inputVii,
@@ -87,7 +87,7 @@ public:
   ~CalibratingVi2();
   
   // Report the the ViImplementation type
-  virtual String ViiType() const { return String("Cal( ")+getVii()->ViiType()+" )"; };
+  virtual casacore::String ViiType() const { return casacore::String("Cal( ")+getVii()->ViiType()+" )"; };
 
 
   // Iterating management
@@ -95,15 +95,15 @@ public:
   virtual void next ();
 
   // Smart corrected data/weights/flags accessors
-  virtual void weight(Matrix<Float>& wt) const;
-  virtual void weightSpectrum(Cube<Float>& wtsp) const;
-  virtual void visibilityCorrected(Cube<Complex>& vis) const;
-  virtual void flag(Cube<Bool>& flagC) const;
-  //  virtual void flag(Matrix<Bool>& flagM) const;  // CORR-INDEP FLAGS DEPRECATED IN VI2/VB2?
+  virtual void weight(casacore::Matrix<casacore::Float>& wt) const;
+  virtual void weightSpectrum(casacore::Cube<casacore::Float>& wtsp) const;
+  virtual void visibilityCorrected(casacore::Cube<casacore::Complex>& vis) const;
+  virtual void flag(casacore::Cube<casacore::Bool>& flagC) const;
+  //  virtual void flag(casacore::Matrix<casacore::Bool>& flagM) const;  // CORR-INDEP FLAGS DEPRECATED IN VI2/VB2?
 
-  // Reports True in case of *Corrected columns
+  // Reports true in case of *Corrected columns
   //  (because this class provides it, even if it doesn't exist physically!)
-  virtual Bool existsColumn (VisBufferComponent2 id) const;
+  virtual casacore::Bool existsColumn (VisBufferComponent2 id) const;
   
 protected:
 
@@ -115,10 +115,10 @@ protected:
   VisEquation *ve_p;   
 
   // A simple factor for testing
-  Float corrFactor_p;  
+  casacore::Float corrFactor_p;  
 
   // signals whether or not correctCurrentVB has been called
-  mutable Bool visCalibrationOK_p;
+  mutable casacore::Bool visCalibrationOK_p;
 
 };
 
@@ -152,7 +152,7 @@ public:
 
   CalSolvingVi2( vi::ViImplementation2 * inputVii,
 		 const CalibratingParameters& calpar,
-		 String msname);
+		 casacore::String msname);
 
   CalSolvingVi2( vi::ViImplementation2 * inputVii,
 		 VisEquation *ve);
@@ -160,10 +160,12 @@ public:
   ~CalSolvingVi2();
 
   // Report the the ViImplementation type
-  virtual String ViiType() const { return String("CalForSolve( ")+getVii()->ViiType()+" )"; };
+  virtual casacore::String ViiType() const {
+      return casacore::String("CalForSolve( ")+getVii()->ViiType()+" )";
+  }
 
   // Cal solving also involve modified model data
-  virtual void visibilityModel(Cube<Complex>& vis) const;
+  virtual void visibilityModel(casacore::Cube<casacore::Complex>& vis) const;
   
 private:
 

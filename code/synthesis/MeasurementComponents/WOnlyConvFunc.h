@@ -39,9 +39,13 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogOrigin.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
   template<class T> class ImageInterface;
   template<class T> class Matrix;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
   class VisBuffer;
   //
   //-------------------------------------------------------------------------------------------
@@ -49,44 +53,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class WOnlyConvFunc : public ConvolutionFunction
   {
   public:
-    WOnlyConvFunc(const CountedPtr<WTerm>& wTerm,
-		  const CountedPtr<PSTerm>& psTerm):
+    WOnlyConvFunc(const casacore::CountedPtr<WTerm>& wTerm,
+		  const casacore::CountedPtr<PSTerm>& psTerm):
       ConvolutionFunction(),wTerm_p(wTerm), psTerm_p(psTerm)
     {};
     ~WOnlyConvFunc() {};
     WOnlyConvFunc& operator=(const WOnlyConvFunc& other);
 
 
-    void makeConvFunction(const ImageInterface<Complex>& image,
+    void makeConvFunction(const casacore::ImageInterface<casacore::Complex>& image,
 			  const VisBuffer& vb,
-			  const Int wConvSize,
-			  const Float pa,
-			  const Float dpa,
+			  const casacore::Int wConvSize,
+			  const casacore::Float pa,
+			  const casacore::Float dpa,
 			  CFStore& cfs,
-			  CFStore& cfwts, Bool fillCF=True);
+			  CFStore& cfwts, casacore::Bool fillCF=true);
 
     virtual int getVisParams(const VisBuffer& vb) {return wTerm_p->getVisParams(vb);};
-    virtual void setPolMap(const Vector<Int>& polMap) {wTerm_p->setPolMap(polMap);};
+    virtual void setPolMap(const casacore::Vector<casacore::Int>& polMap) {wTerm_p->setPolMap(polMap);};
 
-    virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
+    virtual casacore::Bool findSupport(casacore::Array<casacore::Complex>& func, casacore::Float& threshold,casacore::Int& origin, casacore::Int& R);
 
     //
     // Pedgree baggage (NoOps).  
     //
-    Bool makeAverageResponse(const VisBuffer& /*vb*/, 
-			     const ImageInterface<Complex>& /*image*/,
-			     ImageInterface<Float>& /*theavgPB*/,
-			     Bool /*reset*/=True) {};
-    Bool makeAverageResponse(const VisBuffer& /*vb*/, 
-			     const ImageInterface<Complex>& /*image*/,
-			     ImageInterface<Complex>& /*theavgPB*/,
-			     Bool /*reset*/=True) {};
+    casacore::Bool makeAverageResponse(const VisBuffer& /*vb*/, 
+			     const casacore::ImageInterface<casacore::Complex>& /*image*/,
+			     casacore::ImageInterface<casacore::Float>& /*theavgPB*/,
+			     casacore::Bool /*reset*/=true) {};
+    casacore::Bool makeAverageResponse(const VisBuffer& /*vb*/, 
+			     const casacore::ImageInterface<casacore::Complex>& /*image*/,
+			     casacore::ImageInterface<casacore::Complex>& /*theavgPB*/,
+			     casacore::Bool /*reset*/=true) {};
   protected:
-    void setSupport(Array<Complex>& convFunc, CFStore& cfs);
+    void setSupport(casacore::Array<casacore::Complex>& convFunc, CFStore& cfs);
 
   private:
-    CountedPtr<WTerm> wTerm_p;
-    CountedPtr<PSTerm> psTerm_p;
+    casacore::CountedPtr<WTerm> wTerm_p;
+    casacore::CountedPtr<PSTerm> psTerm_p;
   };
   //
   //-------------------------------------------------------------------------------------------

@@ -29,11 +29,15 @@
 #include <display/QtPlotter/SettingsWidget.ui.h>
 #include <casa/Arrays/Vector.h>
 
+namespace casacore{
+
+	class LogIO;
+}
+
 namespace casa {
 
 
 	class QtCanvas;
-	class LogIO;
 	class ProfileTaskMonitor;
 	class ProfileTaskFacilitator;
 
@@ -41,13 +45,13 @@ namespace casa {
 		Q_OBJECT
 
 	public:
-		void setCollapseVals(const Vector<Float> &spcVals);
+		void setCollapseVals(const casacore::Vector<casacore::Float> &spcVals);
 		void setCanvas( QtCanvas* pCanvas );
 		void setTaskMonitor( ProfileTaskMonitor* fitMonitor );
 		void setCurveName( const QString& curveName );
 		void addCurveName( const QString& curveName );
 		void reset( bool taskChanged = false );
-		void setLogger( LogIO* log );
+		void setLogger( casacore::LogIO* log );
 		void setUnits( QString units );
 		void setDisplayYUnits( const QString& units );
 		void setImageYUnits( const QString& units );
@@ -71,7 +75,7 @@ namespace casa {
 		ProfileTaskFacilitator* taskHelper;
 		ProfileTaskFacilitator* taskHelperOptical;
 		ProfileTaskFacilitator* taskHelperRadio;
-		LogIO* logger;
+		casacore::LogIO* logger;
 		ProfileTaskMonitor* taskMonitor;
 		Ui::SettingsWidget ui;
 		static bool optical;

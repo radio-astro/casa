@@ -10,6 +10,7 @@
 #include <algorithm>
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -210,4 +211,5 @@ ViImplementation2::doWeightScaling (Bool hasWeightScaling,
 
 } // end namespace vi
 
+using namespace casacore;
 } // end namespace casa

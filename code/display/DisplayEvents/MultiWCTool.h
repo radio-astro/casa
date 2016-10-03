@@ -131,9 +131,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Derived classes should implement this to return to the non-showing,
 		// non-active state.  It should not unregister the tool from WCs or
 		// disable event handling.  If skipRefresh is false and the tool was showing,
-		// it also calls refresh() to erase.  (The caller should set skipRefresh=True
+		// it also calls refresh() to erase.  (The caller should set skipRefresh=true
 		// (only) if it will handle refresh itself).
-		virtual void reset(Bool /*skipRefresh*/=False) {  }
+		virtual void reset(casacore::Bool /*skipRefresh*/=false) {  }
 
 	protected:
 
@@ -147,8 +147,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void otherKeyReleased(const WCPositionEvent &/*ev*/);
 		virtual void moved(const WCMotionEvent & /*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 		virtual void updateRegion() {}
-		virtual void clicked(Int /*x*/, Int /*y*/) {}
-		virtual void doubleClicked(Int /*x*/, Int /*y*/) {}
+		virtual void clicked(casacore::Int /*x*/, casacore::Int /*y*/) {}
+		virtual void doubleClicked(casacore::Int /*x*/, casacore::Int /*y*/) {}
 		// </group>
 
 		// Draw whatever should be drawn (if anything) on current WC.
@@ -167,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void refresh();
 
 		// An iterator for the WorldCanvases.
-		mutable ListIter<WorldCanvas *> *itsWCListIter;
+		mutable casacore::ListIter<WorldCanvas *> *itsWCListIter;
 
 		// Cause subsequent drawing commands to be clipped to the current WC
 		// (or its drawing area).  Be sure to reset when finished drawing;
@@ -192,10 +192,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// The WorldCanvases to which this tool is connected.
-		List<WorldCanvas *> itsWCList;
+		casacore::List<WorldCanvas *> itsWCList;
 
 		// whether the event handlers are registered
-		Bool itsEventHandlersRegistered;
+		casacore::Bool itsEventHandlersRegistered;
 
 	};
 

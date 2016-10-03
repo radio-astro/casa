@@ -23,6 +23,7 @@
 #include <flagging/Flagging/FlagMSHandler.h>
 #include <mstransform/TVI/ChannelAverageTVI.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ////////////////////////////////////
@@ -237,7 +238,7 @@ FlagMSHandler::close()
 	{
 		// Flush and unlock MS
 		selectedMeasurementSet_p->flush();
-		selectedMeasurementSet_p->relinquishAutoLocks(True);
+		selectedMeasurementSet_p->relinquishAutoLocks(true);
 		selectedMeasurementSet_p->unlock();
 
 		// Post stats
@@ -767,7 +768,7 @@ FlagMSHandler::generateScanStartStopMap()
 		nrows = shape[2];
 
 		// Look for effective scan start
-		stopSearch = False;
+		stopSearch = false;
 		for (uInt row_i=0;row_i<nrows;row_i++)
 		{
 			if (stopSearch) break;
@@ -783,7 +784,7 @@ FlagMSHandler::generateScanStartStopMap()
 					if (!flags(corr_i,channel_i,row_i))
 					{
 						scanStartRow = row_i;
-						stopSearch = True;
+						stopSearch = true;
 					}
 				}
 			}
@@ -795,7 +796,7 @@ FlagMSHandler::generateScanStartStopMap()
 		if (!stopSearch) return;
 
 		// Look for effective scan stop
-		stopSearch = False;
+		stopSearch = false;
 		for (uInt row_i=0;row_i<nrows;row_i++)
 		{
 			if (stopSearch) break;
@@ -811,7 +812,7 @@ FlagMSHandler::generateScanStartStopMap()
 					if (!flags(corr_i,channel_i,nrows-1-row_i))
 					{
 						scanStopRow = nrows-1-row_i;
-						stopSearch = True;
+						stopSearch = true;
 					}
 				}
 			}
@@ -927,11 +928,11 @@ FlagMSHandler::processorTable()
 		processorTableExist_p = true;
 
 		/* Create a look-up boolean column to tell if a row is of type CORRELATOR.
-		   isCorrelatorType_p = True when PROCESSOR_ID is of TYPE CORRELATOR
+		   isCorrelatorType_p = true when PROCESSOR_ID is of TYPE CORRELATOR
 		 */
 		isCorrelatorType_p.resize(msSubtable.nrow(),False);
 
-		// Assign True to row in look-up table that have TYPE==CORRELATOR
+		// Assign true to row in look-up table that have TYPE==CORRELATOR
 		for (uInt pid=0; pid<msSubtable.nrow(); pid++){
 
 			String proc_type = typeCol.asString(pid);

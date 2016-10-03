@@ -32,6 +32,7 @@
 #include <scimath/Mathematics.h>
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSPolyLine::DSPolyLine() :
@@ -53,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		DSBasic() {
 		itsPoints = points;
-		itsValidCenter = False;
+		itsValidCenter = false;
 
 		setHasHandles(handles);
 		setDrawHandles(drawHandles);
@@ -73,13 +74,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool DSPolyLine::setOptions(const Record& newSettings) {
-		Bool localChange = False;
+		Bool localChange = false;
 		if (newSettings.isDefined("polylinepoints")) {
 			itsPoints = newSettings.asArrayFloat("polylinepoints");
 			setHandlePositions(itsPoints);
 		}
 
-		if (DSBasic::setOptions(newSettings)) localChange = True;
+		if (DSBasic::setOptions(newSettings)) localChange = true;
 		return localChange;
 	}
 
@@ -115,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsPoints(n, 0) = pos(0);
 			itsPoints(n,1) = pos(1);
 			setHandlePositions(itsPoints);
-			itsValidCenter = False;
+			itsValidCenter = false;
 		} else {
 			/*
 			cerr << "DSPolyLine.cc - Debug - Can't change points without first setting them." << endl;
@@ -134,7 +135,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsPoints(whichPoint, 0) = pos(0);
 			itsPoints(whichPoint, 1) = pos(1);
 			setHandlePositions(itsPoints);
-			itsValidCenter = False;
+			itsValidCenter = false;
 		}
 	}
 
@@ -142,7 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void DSPolyLine::addPoint(const Vector<Float>& newPos) {
 
 		if (itsPoints.nelements()) {
-			itsValidCenter = False;
+			itsValidCenter = false;
 			Matrix<Float> newPoints(itsPoints.nrow() + 1, itsPoints.ncolumn());
 
 			for (uInt i=0; i<itsPoints.nrow(); i++) {
@@ -173,7 +174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSPolyLine::inObject(const Float& xPos, const Float& yPos) {
-		Bool onLine = False;
+		Bool onLine = false;
 
 		// Calculate distance from point - line
 		// This might be too slow?
@@ -197,7 +198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (distance <= getLineWidth() + 1) {
 					// This should be itsThreshold or something I guess
-					onLine = True;
+					onLine = true;
 					break;
 				}
 			}
@@ -236,7 +237,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				            (0.5 * (itsPoints(nCenter , 1) - itsPoints(nCenter-1, 1)));
 				itsCenter = center;
 			}
-			itsValidCenter = True;
+			itsValidCenter = true;
 		}
 		return itsCenter;
 
@@ -248,7 +249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                            (yPos - currentCenter[1]));
 
 		// New center.
-		itsValidCenter = True;
+		itsValidCenter = true;
 		itsCenter[0] = xPos;
 		itsCenter[1] = yPos;
 
@@ -275,8 +276,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void DSPolyLine::setDefaultOptions() {
-		itsValidCenter = False;
-		setDrawHandles(True);
+		itsValidCenter = false;
+		setDrawHandles(true);
 	}
 
 

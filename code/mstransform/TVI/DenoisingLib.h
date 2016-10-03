@@ -35,8 +35,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace denoising { //# NAMESPACE DENOISING - BEGIN
 
-void GslVectorWrap(Vector<Double> casa_vector, gsl_vector &wrapper);
-void GslMatrixWrap(Matrix<Double> &casa_matrix, gsl_matrix &wrapper, size_t ncols=0);
+void GslVectorWrap(casacore::Vector<casacore::Double> casa_vector, gsl_vector &wrapper);
+void GslMatrixWrap(casacore::Matrix<casacore::Double> &casa_matrix, gsl_matrix &wrapper, size_t ncols=0);
 
 //////////////////////////////////////////////////////////////////////////
 // GslLinearModelBase class
@@ -51,16 +51,16 @@ public:
 	{
 		ndata_p = ndata;
 		ncomponents_p = ncomponents;
-		model_p.resize(ncomponents_p,ndata_p,False);
+		model_p.resize(ncomponents_p,ndata_p,casacore::False);
 	}
 
 	size_t ndata() {return ndata_p;}
 	size_t ncomponents() {return ncomponents_p;}
-	Matrix<Double>& getModelMatrix(){return model_p;}
+	casacore::Matrix<casacore::Double>& getModelMatrix(){return model_p;}
 
 protected:
 
-	Matrix<T> model_p;
+	casacore::Matrix<T> model_p;
 	size_t ndata_p;
 	size_t ncomponents_p;
 };
@@ -86,7 +86,7 @@ public:
 		// Populate linear components
 		if (order > 0)
 		{
-			Vector<T> linearComponent;
+			casacore::Vector<T> linearComponent;
 			linearComponent.reference(model_p.row(1));
 			indgen(linearComponent,-1.0,2.0/(ndata_p-1));
 		}
@@ -101,7 +101,7 @@ public:
 		}
 	}
 
-	GslPolynomialModel(const Vector<T> &data_x, size_t order) :
+	GslPolynomialModel(const casacore::Vector<T> &data_x, size_t order) :
 		GslLinearModelBase<T>(data_x.size(),order+1)
 	{
 		// Calculate scale
@@ -124,7 +124,7 @@ public:
 		}
 	}
 
-	Vector<Float>& getLinearComponentFloat()
+	casacore::Vector<casacore::Float>& getLinearComponentFloat()
 	{
 		if (linear_component_float_p.size() != ndata_p) initLinearComponentFloat();
 		return linear_component_float_p;
@@ -141,7 +141,7 @@ private:
 		}
 	}
 
-	Vector<Float> linear_component_float_p; // Float-compatibility
+	casacore::Vector<casacore::Float> linear_component_float_p; // Float-compatibility
 
 };
 
@@ -155,16 +155,16 @@ class GslMultifitLinearBase
 public:
 
 	GslMultifitLinearBase();
-	GslMultifitLinearBase(GslLinearModelBase<Double> &model);
+	GslMultifitLinearBase(GslLinearModelBase<casacore::Double> &model);
 
 	~GslMultifitLinearBase();
 
-	void resetModel(GslLinearModelBase<Double> &model);
+	void resetModel(GslLinearModelBase<casacore::Double> &model);
 
 	void resetNComponents(size_t ncomponents);
 
-	Vector<Complex> calcFitCoeff(Vector<Complex> &data);
-	template<class T> Vector<T> calcFitCoeff(Vector<T> &data)
+	casacore::Vector<casacore::Complex> calcFitCoeff(casacore::Vector<casacore::Complex> &data);
+	template<class T> casacore::Vector<T> calcFitCoeff(casacore::Vector<T> &data)
 	{
 		// Store input data as double
 		setData(data);
@@ -173,7 +173,7 @@ public:
 		gsl_vector *coeff = calcFitCoeffCore(data_p.column(0));
 
 		// Get coefficients
-		Vector<T> fitCoeff(ncomponents_p);
+		casacore::Vector<T> fitCoeff(ncomponents_p);
 		for (size_t coeff_idx=0;coeff_idx<ncomponents_p;coeff_idx++)
 		{
 			fitCoeff(coeff_idx) = gsl_vector_get(coeff,coeff_idx);
@@ -190,20 +190,20 @@ protected:
 	void allocGslResources();
 	void freeGslResources();
 
-	virtual void setModel(GslLinearModelBase<Double> &model);
+	virtual void setModel(GslLinearModelBase<casacore::Double> &model);
 
-	void setData(Vector<Float> &data);
-	void setData(Vector<Double> &data);
-	void setData(Vector<Complex> &data);
+	void setData(casacore::Vector<casacore::Float> &data);
+	void setData(casacore::Vector<casacore::Double> &data);
+	void setData(casacore::Vector<casacore::Complex> &data);
 
-	virtual gsl_vector* calcFitCoeffCore(Vector<Double> data);
+	virtual gsl_vector* calcFitCoeffCore(casacore::Vector<casacore::Double> data);
 
 	// Model
 	size_t ndata_p;
 	size_t ncomponents_p;
 	size_t max_ncomponents_p;
 	gsl_matrix gsl_model_p;
-	GslLinearModelBase<Double> *model_p;
+	GslLinearModelBase<casacore::Double> *model_p;
 
 	// GSL Resources
 	gsl_vector *gsl_coeff_p;
@@ -211,7 +211,7 @@ protected:
 	gsl_multifit_linear_workspace *gsl_workspace_p;
 
 	// Data
-	Matrix<Double> data_p;
+	casacore::Matrix<casacore::Double> data_p;
 
 	// Fit result
 	int errno_p;
@@ -228,20 +228,20 @@ class GslMultifitWeightedLinear : public GslMultifitLinearBase
 public:
 
 	GslMultifitWeightedLinear();
-	GslMultifitWeightedLinear(GslLinearModelBase<Double> &model);
+	GslMultifitWeightedLinear(GslLinearModelBase<casacore::Double> &model);
 	~GslMultifitWeightedLinear();
 
-	void setWeights(Vector<Float> &weights);
-	void setFlags(Vector<Bool> &flags,Bool goodIsTrue=True);
-	void setWeightsAndFlags(Vector<Float> &weights, Vector<Bool> &flags, Bool goodIsTrue=True);
+	void setWeights(casacore::Vector<casacore::Float> &weights);
+	void setFlags(casacore::Vector<casacore::Bool> &flags,casacore::Bool goodIsTrue=casacore::True);
+	void setWeightsAndFlags(casacore::Vector<casacore::Float> &weights, casacore::Vector<casacore::Bool> &flags, casacore::Bool goodIsTrue=casacore::True);
 
 protected:
 
-	void setModel(GslLinearModelBase<Double> &model);
-	gsl_vector* calcFitCoeffCore(Vector<Double> data);
+	void setModel(GslLinearModelBase<casacore::Double> &model);
+	gsl_vector* calcFitCoeffCore(casacore::Vector<casacore::Double> data);
 
 	// Weights
-	Vector<Double> weights_p;
+	casacore::Vector<casacore::Double> weights_p;
 	gsl_vector gls_weights_p;
 };
 

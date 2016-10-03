@@ -32,12 +32,16 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <guitools/Histogram/FootPrintWidget.qo.h>
 
-namespace casa {
+namespace casacore{
 
 template <class T> class ImageInterface;
-template <class T> class ImageHistograms;
 template <class T> class SubImage;
 class ImageRegion;
+}
+
+namespace casa {
+
+template <class T> class ImageHistograms;
 class HeightSource;
 
 /**
@@ -56,7 +60,7 @@ public:
 	//Completely reset the histogram if the image, region, or channels change
 	bool reset(FootPrintWidget::PlotMode mode );
 
-	void setRegion(ImageRegion* region);
+	void setRegion(casacore::ImageRegion* region);
 	void defineLine( int index, QVector<double>& xVals, QVector<double>& yVals,
 			bool useLogY ) const;
 	void defineStepHorizontal( int index, QVector<double>& xVals, QVector<double>& yVals,
@@ -76,7 +80,7 @@ public:
 	void setIntensityRangeDefault();
 	void setChannelRange( int minChannel, int maxChannel, int spectralIndex=-1 );
 	void setIntensityRange( float minimumIntensity, float maximumIntensity );
-	void setImage( const SHARED_PTR<const ImageInterface<Float> > image );
+	void setImage( const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image );
 	static double computeYValue( double value, bool useLog );
 
 signals:
@@ -85,16 +89,16 @@ signals:
 private:
 	Histogram( const Histogram& other );
 	Histogram operator=( const Histogram& other );
-	ImageHistograms<Float>* filterByChannels( const SHARED_PTR<const ImageInterface<Float> >  image );
+	ImageHistograms<casacore::Float>* filterByChannels( const SHARED_PTR<const casacore::ImageInterface<casacore::Float> >  image );
 	HeightSource* heightSource;
-	vector<Float> xValues;
-	vector<Float> yValues;
-	ImageHistograms<Float>* histogramMaker;
-	ImageRegion* region;
+	vector<casacore::Float> xValues;
+	vector<casacore::Float> yValues;
+	ImageHistograms<casacore::Float>* histogramMaker;
+	casacore::ImageRegion* region;
 
 	const int ALL_CHANNELS;
 	const int ALL_INTENSITIES;
-    SHARED_PTR<const ImageInterface<Float> >  image;
+    SHARED_PTR<const casacore::ImageInterface<casacore::Float> >  image;
 	int channelMin;
 	int channelMax;
 	int specIndex;
@@ -104,5 +108,6 @@ private:
 
 };
 
-} /* namespace casa */
+} // end namespace casa
+
 #endif /* HISTOGRAM_H_ */

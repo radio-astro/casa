@@ -38,6 +38,7 @@
 
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 // TODO PlotMSAction: iteration, release cache.  action for new plots.  update

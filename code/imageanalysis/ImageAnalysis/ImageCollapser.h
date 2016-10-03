@@ -7,10 +7,14 @@
 
 #include <casa/namespace.h>
 
-namespace casa {
+namespace casacore{
 
 template <class T> class TempImage;
 template <class T> class SubImage;
+}
+
+namespace casa {
+
 
 template <class T> class ImageCollapser : public ImageTask<T> {
     // <summary>
@@ -48,18 +52,18 @@ public:
     // <group>
 
     ImageCollapser(
-        const String& aggString, SPCIIT image,
-        const Record *const regionRec,
-        const String& maskInp, const IPosition& axes,
-        Bool invertAxesSelection,
-        const String& outname, Bool overwrite
+        const casacore::String& aggString, SPCIIT image,
+        const casacore::Record *const regionRec,
+        const casacore::String& maskInp, const casacore::IPosition& axes,
+        casacore::Bool invertAxesSelection,
+        const casacore::String& outname, casacore::Bool overwrite
     );
 
     ImageCollapser(
         const SPCIIT image,
-        const IPosition& axes, Bool invertAxesSelection,
+		const casacore::IPosition& axes, casacore::Bool invertAxesSelection,
         const ImageCollapserData::AggregateType aggregateType,
-        const String& outname, Bool overwrite
+		const casacore::String& outname, casacore::Bool overwrite
     );
     // </group>
 
@@ -68,27 +72,27 @@ public:
     // perform the collapse and return the resulting image.
     SPIIT collapse() const;
 
-    static const map<uInt, T (*)(const Array<T>&)>* funcMap();
+	static const map<casacore::uInt, T (*)(const casacore::Array<T>&)>* funcMap();
 
-    String getClass() const { const static String name = "ImageCollapser"; return name; }
+	casacore::String getClass() const { const static casacore::String name = "ImageCollapser"; return name; }
 
 protected:
     inline  CasacRegionManager::StokesControl _getStokesControl() const {
         return CasacRegionManager::USE_ALL_STOKES;
     }
 
-    inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
-        return std::vector<Coordinate::Type>();
+	inline std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return std::vector<casacore::Coordinate::Type>();
     }
 
-    Bool _supportsMultipleRegions() const {return True;}
+	casacore::Bool _supportsMultipleRegions() const {return true;}
 
 private:
-    Bool _invertAxesSelection;
-    IPosition _axes;
+	casacore::Bool _invertAxesSelection;
+	casacore::IPosition _axes;
     ImageCollapserData::AggregateType _aggType;
 
-    static map<uInt, T (*)(const Array<T>&)> _funcMap;
+	static map<casacore::uInt, T (*)(const casacore::Array<T>&)> _funcMap;
 
     // disallow default constructor
     ImageCollapser();
@@ -106,7 +110,7 @@ private:
     // necessary to improve performance
     void _doMedian(
         SPCIIT image,
-        TempImage<T>& outImage
+		casacore::TempImage<T>& outImage
     ) const;
 
     // returns true if miscellaneous info was copied
@@ -123,13 +127,13 @@ private:
     LatticeStatsBase::StatisticsTypes _getStatsType() const;
 
     void _attachOutputMask(
-        TempImage<T>& outImage,
-        const Array<Bool>& outMask
+		casacore::TempImage<T>& outImage,
+		const casacore::Array<casacore::Bool>& outMask
     ) const;
 
-    static void _zeroNegatives(Array<T>& arr);
+	static void _zeroNegatives(casacore::Array<T>& arr);
 
-    static const map<uInt, T (*)(const Array<T>&)>& _getFuncMap();
+	static const map<casacore::uInt, T (*)(const casacore::Array<T>&)>& _getFuncMap();
 };
 }
 

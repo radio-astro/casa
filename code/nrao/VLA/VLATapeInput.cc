@@ -81,7 +81,7 @@ VLATapeInput::~VLATapeInput() {
 }
 
 Bool VLATapeInput::read() {
-  while (nextRecord() == False && nextFile() == True);
+  while (nextRecord() == false && nextFile() == true);
   return hasData();
 }
 
@@ -99,7 +99,7 @@ Bool VLATapeInput::findFirstRecord(Short& m) {
   while (!(n == 1 && m > 0) && (bytesSearched <= maxBytesToSearch)) {
     bytesSearched += bytesRead;
     bytesRead = VLATapeInput::ReadSize;
-    if (fillBuffer(bytesRead) == False) return False;
+    if (fillBuffer(bytesRead) == false) return false;
 // copy just enough bytes into the MemoryIO object to find out what the
 // sequence numbers are
     itsRecord.seek(0);
@@ -110,7 +110,7 @@ Bool VLATapeInput::findFirstRecord(Short& m) {
   }
   if (bytesSearched > maxBytesToSearch) {
     itsMemIO.clear();
-    return False;
+    return false;
   }
   // OK so we have found the beginning of the first record. Copy the rest of
   // the buffer into the record.
@@ -131,28 +131,28 @@ Bool VLATapeInput::findFirstRecord(Short& m) {
 		  itsBuffer.storage() + VLAArchiveInput::HeaderSize);
   DebugAssert(n == 1, AipsError);
   DebugAssert(m > 0, AipsError);
-  return True;
+  return true;
 }
 
 Bool VLATapeInput::fillBuffer(uInt& bytesToRead) {
 //   cerr << "  Trying to read " << bytesToRead << " bytes" << endl;
   DebugAssert(bytesToRead <= VLATapeInput::ReadSize, AipsError);
   DebugAssert(bytesToRead%VLAArchiveInput::BlockSize == 0, AipsError);
-  const Int bytesRead = itsTape.read(bytesToRead, itsBuffer.storage(), False);
+  const Int bytesRead = itsTape.read(bytesToRead, itsBuffer.storage(), false);
 //   cerr << "  Bytes read: " << bytesRead 
 //        << " Position: " << itsInputPtr->seek(0L, ByteIO::Current) 
 //        << " Length: " << itsInputPtr->length() 
 //        << endl;
   if ((bytesRead <= 0) || (bytesRead%VLAArchiveInput::BlockSize != 0)) {
     itsMemIO.clear();
-    return False;
+    return false;
   }
   bytesToRead = bytesRead;
-  return True;
+  return true;
 }
 
 Bool VLATapeInput::nextFile() {
-  if (itsCurFile == static_cast<Int>(itsFiles.nelements()) - 1) return False;
+  if (itsCurFile == static_cast<Int>(itsFiles.nelements()) - 1) return false;
   Int skip;
   if (itsCurFile < 0) {
     itsCurFile = 0;
@@ -175,18 +175,18 @@ Bool VLATapeInput::nextFile() {
   }
   DebugAssert(skip >= 0, AipsError);
   if (skip > 0) itsTape.skip(skip);
-  return True;
+  return true;
 }
 
 Bool VLATapeInput::nextRecord() {
   // Clear the internal buffers and reset the flags as we will try to read some
   // more data.
-  const Bool gotDataPrev = itsMemIO.length() > 0 ? True : False;
+  const Bool gotDataPrev = itsMemIO.length() > 0 ? true : false;
   itsMemIO.clear();
   // Find an initial record. 
   Short n = 1, m;
-  if (findFirstRecord(m) == False) {
-    if (gotDataPrev) return False; // End of file
+  if (findFirstRecord(m) == false) {
+    if (gotDataPrev) return false; // End of file
     throw(AipsError("VLATapeInput::nextRecord - Cannot find the start of the "
 		    "record.\nPossible reasons are:\n"
 		    "* your tape is not in VLA archive format\n"
@@ -217,7 +217,7 @@ Bool VLATapeInput::nextRecord() {
       thisReadSize = VLATapeInput::ReadSize;
     }
     
-    if (fillBuffer(thisReadSize) == False) return False;
+    if (fillBuffer(thisReadSize) == false) return false;
     // Check the sequence numbers
     {
       itsRecord.write(VLAArchiveInput::HeaderSize, itsBuffer.storage());
@@ -230,7 +230,7 @@ Bool VLATapeInput::nextRecord() {
 //       cerr << "   Expected m = " << m << " n = " << n+1 << endl;
       if (newm != m || ++n != newn) {
 	itsMemIO.clear();
-	return False;
+	return false;
       }
       itsRecord.seek(-static_cast<Int64>(VLAArchiveInput::HeaderSize), 
                      ByteIO::End);
@@ -248,7 +248,7 @@ Bool VLATapeInput::nextRecord() {
 // 	 << itsMemIO.length() << " bytes" << endl;
   }
   itsRecord.seek(0);
-  return True;
+  return true;
 }
 // Local Variables: 
 // compile-command: "gmake VLATapeInput; cd test; gmake OPTLIB=1 tVLATapeInput"

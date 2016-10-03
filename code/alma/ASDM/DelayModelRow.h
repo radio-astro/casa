@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File DelayModelRow.h
+ * casacore::File DelayModelRow.h
  */
  
 #ifndef DelayModelRow_CLASS
@@ -183,7 +183,7 @@ public:
 	bool isAdded() const;
 		
 	////////////////////////////////
-	// Intrinsic Table Attributes //
+	// Intrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1271,7 +1271,7 @@ public:
 
 
 	////////////////////////////////
-	// Extrinsic Table Attributes //
+	// Extrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1586,7 +1586,7 @@ private:
 	 */
 	bool hasBeenAdded;
 
-	// This method is used by the Table class when this row is added to the table.
+	// This method is used by the casacore::Table class when this row is added to the table.
 	void isAdded(bool added);
 
 
@@ -1620,7 +1620,7 @@ private:
 	 DelayModelRow (DelayModelTable &table, DelayModelRow &row);
 	 	
 	////////////////////////////////
-	// Intrinsic Table Attributes //
+	// Intrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1976,7 +1976,7 @@ private:
  	
 
 	////////////////////////////////
-	// Extrinsic Table Attributes //
+	// Extrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	

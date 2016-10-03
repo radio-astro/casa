@@ -3,7 +3,7 @@
 #define CBaselineReferenceCode_H
 
 /*
- * ALMA - Atacama Large Millimeter Array
+ * ALMA - Atacama Large Millimeter casacore::Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * File CBaselineReferenceCode.h
+ * casacore::File CBaselineReferenceCode.h
  */
 
 #ifndef __cplusplus

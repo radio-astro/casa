@@ -28,6 +28,7 @@
 #include <QSettings>
 #include <QListWidgetItem>
 
+using namespace casacore;
 namespace casa {
 
 	const QString LegendPreferences::LEGEND_VISIBLE="Legend Visible";

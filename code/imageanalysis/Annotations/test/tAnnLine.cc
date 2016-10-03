@@ -46,7 +46,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "mixed world and pixel coordinates throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity blcx(0.01, "deg");
 			Quantity blcy(0, "deg");
 			Quantity trcx(0, "deg");
@@ -54,7 +54,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -71,7 +71,7 @@ int main () {
 					blcx, blcy, trcx, trcy,
 					csys, Vector<Stokes::StokesTypes>(0)
 				);
-				thrown = False;
+				thrown = false;
 			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
@@ -84,20 +84,20 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test bad quantity for world direction coordinate throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity blcx(0.01, "km/s");
 			Quantity blcy(0, "deg");
 			Quantity trcx(0, "deg");
 			Quantity trcy(0.01, "deg");
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			try {
 				AnnLine line(
 					blcx, blcy, trcx, trcy,
 					csys, Vector<Stokes::StokesTypes>(0)
 				);
-				thrown = False;
+				thrown = false;
 			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 						<< "Exception thrown as expected: "
@@ -114,7 +114,7 @@ int main () {
 			Quantity trcx(0.015, "deg");
 			Quantity trcy(0.01, "deg");
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			AnnLine line(
 				blcx, blcy, trcx, trcy,

@@ -13,6 +13,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 namespace cdo {
@@ -114,7 +115,7 @@ Subtables::stFromString (const String & text)
         }
     }
 
-    ThrowIf (True, String::format ("Unknown subtable type: '%s'", text));
+    ThrowIf (true, String::format ("Unknown subtable type: '%s'", text));
 }
 
 

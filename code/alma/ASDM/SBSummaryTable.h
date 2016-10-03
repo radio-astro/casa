@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File SBSummaryTable.h
+ * casacore::File SBSummaryTable.h
  */
  
 #ifndef SBSummaryTable_CLASS
@@ -134,7 +134,7 @@ class SBSummaryRow;
  * <BR>
  * 
  * \par Role
- * Characteristics of the Scheduling Block that has been executed. Much of the  data here is reproduced from the Scheduling block itself.
+ * Characteristics of the Scheduling casacore::Block that has been executed. Much of the  data here is reproduced from the Scheduling block itself.
  * <BR>
  
  * Generated from model's revision "1.64", branch "HEAD"
@@ -373,7 +373,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a SBSummaryTableIDL CORBA structure.
 	 *

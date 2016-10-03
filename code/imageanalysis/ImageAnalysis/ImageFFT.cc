@@ -51,19 +51,20 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 
+using namespace casacore;
 namespace casa {
 
 ImageFFT::ImageFFT()
 	: _tempImagePtr(),
 	  _floatImage(),
 	  _complexImage(),
-	  _done(False) {}
+	  _done(false) {}
 
 ImageFFT::~ImageFFT() {}
 
 ImageFFT::ImageFFT(const ImageFFT& other)
 	: _tempImagePtr(), _floatImage(),
-	  _complexImage(), _done(False) {
+	  _complexImage(), _done(false) {
 	if (this != &other) {
 		if (other._tempImagePtr) {
 			_tempImagePtr.reset(other._tempImagePtr->cloneII());
@@ -101,7 +102,7 @@ void ImageFFT::fftsky(const ImageInterface<Float>& in) {
 
 	Int dC;
 	Vector<Int> pixelAxes, worldAxes;
-	_findSky(dC, pixelAxes, worldAxes, in.coordinates(), True);
+	_findSky(dC, pixelAxes, worldAxes, in.coordinates(), true);
 
 	// Set pointer for the input image
 
@@ -125,7 +126,7 @@ void ImageFFT::fftsky(const ImageInterface<Float>& in) {
 	// Do complex FFT
   
 	_fftsky2(*_tempImagePtr, *_floatImage, pixelAxes);
-	_done = True;
+	_done = true;
 }
 
 
@@ -136,7 +137,7 @@ void ImageFFT::fftsky(const ImageInterface<Complex>& in) {
 
 	Int dC;
 	Vector<Int> pixelAxes, worldAxes;
-	_findSky(dC, pixelAxes, worldAxes, in.coordinates(), True);
+	_findSky(dC, pixelAxes, worldAxes, in.coordinates(), true);
 
 	// Set pointer for the input image
 
@@ -160,7 +161,7 @@ void ImageFFT::fftsky(const ImageInterface<Complex>& in) {
 	// Do complex FFT
 
 	_fftsky2(*_tempImagePtr, *_complexImage, pixelAxes);
-	_done = True;
+	_done = true;
 }
 
 
@@ -195,7 +196,7 @@ void ImageFFT::fft(const ImageInterface<Float>& in,
   
    fft2(*_tempImagePtr, *_floatImage, axes);
 // 
-   _done = True;
+   _done = true;
 }
 
 void ImageFFT::fft(const ImageInterface<Complex>& in,
@@ -229,7 +230,7 @@ void ImageFFT::fft(const ImageInterface<Complex>& in,
   
    fft3(*_tempImagePtr, *_complexImage, axes);
 // 
-   _done = True;
+   _done = true;
 }
 
 
@@ -344,7 +345,7 @@ void ImageFFT::checkAxes(const CoordinateSystem& cSys, uInt ndim, const Vector<B
 
    Int dC;
    Vector<Int> pixelAxes, worldAxes;
-   Bool haveSky = _findSky(dC, pixelAxes, worldAxes, cSys, False);
+   Bool haveSky = _findSky(dC, pixelAxes, worldAxes, cSys, false);
    if (haveSky) {
       if (axes(pixelAxes(0)) || axes(pixelAxes(1))) {
          if (! (axes(pixelAxes(0)) && axes(pixelAxes(1)))) {
@@ -406,7 +407,7 @@ void ImageFFT::copyMask (ImageInterface<Float>& out,
    RO_MaskedLatticeIterator<Float> iter(in, stepper);
    Lattice<Bool>& outMask = out.pixelMask();
    for (iter.reset(); !iter.atEnd(); iter++) {
-      outMask.putSlice(iter.getMask(False), iter.position());
+      outMask.putSlice(iter.getMask(false), iter.position());
    }
 }
 
@@ -441,7 +442,7 @@ void ImageFFT::copyMask (ImageInterface<Float>& out,
    RO_MaskedLatticeIterator<Complex> iter(in, stepper);   
    Lattice<Bool>& outMask = out.pixelMask();
    for (iter.reset(); !iter.atEnd(); iter++) {
-      outMask.putSlice(iter.getMask(False), iter.position());
+      outMask.putSlice(iter.getMask(false), iter.position());
    }
 }
 
@@ -476,7 +477,7 @@ void ImageFFT::copyMask (ImageInterface<Complex>& out,
    RO_MaskedLatticeIterator<Float> iter(in, stepper);   
    Lattice<Bool>& outMask = out.pixelMask();
    for (iter.reset(); !iter.atEnd(); iter++) {
-      outMask.putSlice(iter.getMask(False), iter.position());
+      outMask.putSlice(iter.getMask(false), iter.position());
    }
 }
 
@@ -511,7 +512,7 @@ void ImageFFT::copyMask (ImageInterface<Complex>& out,
    RO_MaskedLatticeIterator<Complex> iter(in, stepper);   
    Lattice<Bool>& outMask = out.pixelMask();
    for (iter.reset(); !iter.atEnd(); iter++) {
-      outMask.putSlice(iter.getMask(False), iter.position());
+      outMask.putSlice(iter.getMask(false), iter.position());
    }
 }
 
@@ -568,10 +569,10 @@ void ImageFFT::_fftsky2(
 		LatticeExpr<Complex> expr(toComplex(in));
 		out.copyData(expr);
 	}
-	Vector<Bool> whichAxes(in.ndim(), False);
-	whichAxes(pixelAxes(0)) = True;
-	whichAxes(pixelAxes(1)) = True;
-	LatticeFFT::cfft(out, whichAxes, True);
+	Vector<Bool> whichAxes(in.ndim(), false);
+	whichAxes(pixelAxes(0)) = true;
+	whichAxes(pixelAxes(1)) = true;
+	LatticeFFT::cfft(out, whichAxes, true);
 }
 
 void ImageFFT::_fftsky2(
@@ -588,10 +589,10 @@ void ImageFFT::_fftsky2(
 		LatticeExpr<Complex> expr(in);
 		out.copyData(expr);
 	}
-	Vector<Bool> whichAxes(in.ndim(), False);
-	whichAxes(pixelAxes(0)) = True;
-	whichAxes(pixelAxes(1)) = True;
-	LatticeFFT::cfft(out, whichAxes, True);
+	Vector<Bool> whichAxes(in.ndim(), false);
+	whichAxes(pixelAxes(0)) = true;
+	whichAxes(pixelAxes(1)) = true;
+	LatticeFFT::cfft(out, whichAxes, true);
 }
 
 void ImageFFT::fft2(ImageInterface<Complex>& out, 
@@ -607,7 +608,7 @@ void ImageFFT::fft2(ImageInterface<Complex>& out,
    LatticeExpr<Complex> expr(toComplex(replace(in,zero)));
    out.copyData(expr);
 //
-   LatticeFFT::cfft(out, axes, True);
+   LatticeFFT::cfft(out, axes, true);
 }
 
 void ImageFFT::fft3(ImageInterface<Complex>& out, 
@@ -623,7 +624,7 @@ void ImageFFT::fft3(ImageInterface<Complex>& out,
    LatticeExpr<Complex> expr(replace(in,zero));
    out.copyData(expr);
 //
-   LatticeFFT::cfft(out, axes, True);
+   LatticeFFT::cfft(out, axes, true);
 }
 
 
@@ -640,11 +641,11 @@ void ImageFFT::_setSkyCoordinates (
 	Vector<Int> pixelAxes = csys.pixelAxes(dC);
 	AlwaysAssert(pixelAxes.nelements()==2,AipsError);
 
-	// Set the DirectionCoordinate axes to True
+	// Set the DirectionCoordinate axes to true
 
-	Vector<Bool> axes(csys.nPixelAxes(), False);
-	axes(pixelAxes(0)) = True;
-	axes(pixelAxes(1)) = True;
+	Vector<Bool> axes(csys.nPixelAxes(), false);
+	axes(pixelAxes(0)) = true;
+	axes(pixelAxes(1)) = true;
 
 	// FT the CS
 
@@ -690,12 +691,12 @@ Bool ImageFFT::_findSky(
 			throwIt,
 			"Coordinate system does not have a direction coordinate"
 		);
-		return False;
+		return false;
 	}
 	dC = csys.directionCoordinateNumber();
 	pixelAxes = csys.directionAxesNumbers();
 	worldAxes = csys.worldAxes(dC);
-   return True;
+   return true;
 }
 
 } //# NAMESPACE CASA - END

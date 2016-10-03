@@ -18,25 +18,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct SourceRecord {
-  typedef MSSource AssociatingTable;
-  typedef MSSourceColumns AssociatingColumns;
+  typedef casacore::MSSource AssociatingTable;
+  typedef casacore::MSSourceColumns AssociatingColumns;
 
   // mandatory
-  Int source_id;
-  Int spw_id;
-  String name;
-  Double time;
-  Double interval;
-  MDirection direction;
-  Int num_lines;
+  casacore::Int source_id;
+  casacore::Int spw_id;
+  casacore::String name;
+  casacore::Double time;
+  casacore::Double interval;
+  casacore::MDirection direction;
+  casacore::Int num_lines;
 
   // optional
-  String code;
-  Int calibration_group;
-  Vector<String> transition;
-  Vector<Double> rest_frequency;
-  Vector<Double> sysvel;
-  Vector<Double> proper_motion;
+  casacore::String code;
+  casacore::Int calibration_group;
+  casacore::Vector<casacore::String> transition;
+  casacore::Vector<casacore::Double> rest_frequency;
+  casacore::Vector<casacore::Double> sysvel;
+  casacore::Vector<casacore::Double> proper_motion;
 
   // method
   void clear() {
@@ -45,7 +45,7 @@ struct SourceRecord {
     name = "";
     time = -1.0;
     interval = -1.0;
-    direction = MDirection();
+    direction = casacore::MDirection();
     num_lines = 0;
     code = "";
     calibration_group = -1;
@@ -75,18 +75,18 @@ struct SourceRecord {
   void add(AssociatingTable &table, AssociatingColumns &columns) {
     if (columns.nrow() == 0) {
       // set frame info
-      TableRecord &record = columns.direction().rwKeywordSet();
-      Record meas_info = record.asRecord("MEASINFO");
+      casacore::TableRecord &record = columns.direction().rwKeywordSet();
+      casacore::Record meas_info = record.asRecord("MEASINFO");
       meas_info.define("Ref", direction.getRefString());
       record.defineRecord("MEASINFO", meas_info);
     }
 
-    table.addRow(1, True);
+    table.addRow(1, true);
   }
 
-  Bool fill(uInt irow, AssociatingColumns &columns) {
+  casacore::Bool fill(casacore::uInt irow, AssociatingColumns &columns) {
     if (columns.nrow() <= irow) {
-      return False;
+      return false;
     }
 
     columns.sourceId().put(irow, source_id);
@@ -113,7 +113,7 @@ struct SourceRecord {
       columns.properMotion().put(irow, proper_motion);
     }
 
-    return True;
+    return true;
   }
 };
 

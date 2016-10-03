@@ -62,6 +62,7 @@
 #include <synthesis/MeasurementEquations/LatConvEquation.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   SDAlgorithmClarkClean2::SDAlgorithmClarkClean2(String clarktype):
@@ -81,10 +82,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDAlgorithmClarkClean2","initializeDeconvolver",WHERE) );
 
-    itsImages->residual()->get( itsMatResidual, True );
-    itsImages->model()->get( itsMatModel, True );
-    itsImages->psf()->get( itsMatPsf, True );
-    itsImages->mask()->get( itsMatMask, True );
+    itsImages->residual()->get( itsMatResidual, true );
+    itsImages->model()->get( itsMatModel, true );
+    itsImages->psf()->get( itsMatPsf, true );
+    itsImages->mask()->get( itsMatMask, true );
 
     /*
     cout << "Clark : initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
@@ -156,7 +157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
 
     //// Store current model in this matrix.
-    itsImages->model()->get( itsMatDeltaModel, True );
+    itsImages->model()->get( itsMatDeltaModel, true );
     itsMatModel.assign( itsMatDeltaModel ); // This should make an explicit copy
 
     //// Set model to zero
@@ -208,15 +209,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Add delta model to old model
     //Bool ret2 = 
-    itsImages->model()->get( itsMatDeltaModel, True );
+    itsImages->model()->get( itsMatDeltaModel, true );
     itsMatModel += itsMatDeltaModel;
 
     //--------------------------------- DECIDE WHICH PEAK RESIDUAL TO USE HERE.....
 
     //////  Find Peak Residual across the whole image
     /*
-    itsImages->residual()->get( itsMatResidual, True );
-    itsImages->mask()->get( itsMatMask, True );
+    itsImages->residual()->get( itsMatResidual, true );
+    itsImages->mask()->get( itsMatMask, true );
     findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
     */
 

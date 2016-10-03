@@ -28,6 +28,7 @@
 #include <display/Display/PixelCanvasColorTable.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	PixelCanvasColorTable::PixelCanvasColorTable() :

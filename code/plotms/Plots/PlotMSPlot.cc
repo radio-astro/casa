@@ -34,6 +34,7 @@
 #include <QDebug>
 
 
+using namespace casacore;
 namespace casa {
 
 ////////////////////////////
@@ -630,7 +631,7 @@ void PlotMSPlot::setColors() {
 
 bool PlotMSPlot::updateData() {
 	itsCache_->clear();
-	return True;
+	return true;
 };
 
 void PlotMSPlot::clearCanvases() {

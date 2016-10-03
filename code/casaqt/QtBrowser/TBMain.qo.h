@@ -66,13 +66,13 @@ public:
     // driver parameters are NULL, the defaults are used.  If a start and num
     // are provided, those rows are loaded into the new table; otherwise
     // the default number of rows are loaded.
-    void openTable(String filename, DriverParams* dp = NULL, int start = 0,
+    void openTable(casacore::String filename, DriverParams* dp = NULL, int start = 0,
                    int num = TBConstants::DEFAULT_SELECT_NUM);
 
 signals:
     // This signal is emitted when a close menu command is given with
     // a table name.
-    void closeTableTriggered(String name);
+    void closeTableTriggered(casacore::String name);
 
 protected:
     // Catches a close event for the window.  If a background task is running,
@@ -106,7 +106,7 @@ private:
     // Separator added in the Edit menu before the Options command.
     QAction* separator;
 
-    // Format menu that lists the table fields in the currently selected
+    // casacore::Format menu that lists the table fields in the currently selected
     // table.
     QMenu* formatMenu;
 
@@ -149,7 +149,7 @@ private slots:
     
     // Connects with TBBrowser::tableOpened() signal.  Updates dynamic menus
     // as necessary.
-    void tableOpened(String name, String fullpath);
+    void tableOpened(casacore::String name, casacore::String fullpath);
 
     //void openTableWithOptions();
     
@@ -169,7 +169,7 @@ private slots:
 
     // Connects with TBBrowser::tableClosed() signal.  Updates dynamic menus
     // as necessary.
-    void tableClosed(String name);
+    void tableClosed(casacore::String name);
     
     // Slot for when the tab is changed in the browser.  Updates all necessary
     // menus.
@@ -280,8 +280,8 @@ private slots:
     // Clears the current sort.
     void clearSort();
 
-    // Sort the current table with the given order.  See TBBrowser::sort().
-    void sort(std::vector<std::pair<String, bool> >& sort);
+    // casacore::Sort the current table with the given order.  See TBBrowser::sort().
+    void sort(std::vector<std::pair<casacore::String, bool> >& sort);
 
     // Allows the user to edit table options.  See TBOptions.
     void options();

@@ -62,19 +62,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <linkto class=HogbomCleanModel>HogbomCleanModel</linkto> 
 // class.
 //
-// This class makes an internal copy of the Array supplied to it (either
+// This class makes an internal copy of the casacore::Array supplied to it (either
 // when constructed or when using the setModel function). If this is found
 // to significantly affect performance (execution speed or memory
 // requirements) this may be changed to a reference, perhaps using a smart
-// pointer like the <linkto class=COWPtr>COWPtr</linkto>
+// pointer like the <linkto class=casacore::COWPtr>COWPtr</linkto>
 // </synopsis>
 //
 // <example>
 // <srcblock>
-// ArrayModel<Float> currentModel(); // Cannot use the model yet!
+// ArrayModel<casacore::Float> currentModel(); // Cannot use the model yet!
 // {
-//   Matrix<Float> bestGuess(32,32);
-//    ... put your best guess into the Matrix ...
+//   casacore::Matrix<casacore::Float> bestGuess(32,32);
+//    ... put your best guess into the casacore::Matrix ...
 //   currentModel.setModel(bestGuess); // This does a real copy
 // }
 // ConvolutionEquation eqn(psf, dirty); // psf, and dirty are arrays defined
@@ -110,20 +110,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </todo>
 
 template<class T> class ArrayModel: 
-  public LinearModel<Array<T> > {
+  public LinearModel<casacore::Array<T> > {
 public:
 
   ArrayModel();
-  ArrayModel(const Array<T> & model);
-  ArrayModel(Array<T> & model);
+  ArrayModel(const casacore::Array<T> & model);
+  ArrayModel(casacore::Array<T> & model);
 
-  virtual const Array<T> & getModel() const;
-  virtual void getModel(Array<T>& model) const;
-  virtual void setModel(const Array<T>& model);
-  virtual void setModel(Array<T> & model);
+  virtual const casacore::Array<T> & getModel() const;
+  virtual void getModel(casacore::Array<T>& model) const;
+  virtual void setModel(const casacore::Array<T>& model);
+  virtual void setModel(casacore::Array<T> & model);
 
 protected:
-  Array<T> theModel;
+  casacore::Array<T> theModel;
 };
 
 

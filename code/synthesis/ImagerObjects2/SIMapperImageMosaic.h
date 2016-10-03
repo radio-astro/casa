@@ -38,13 +38,17 @@
 #include <synthesis/TransformMachines2/FTMachine.h>
 #include <synthesis/ImagerObjects2/SIMapper.h>
 
+namespace casacore{
+
+template<class T> class ImageInterface;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   namespace refim {
 
 // Forward declarations
   class ComponentFTMachine;
   class SkyJones;
-template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -53,44 +57,44 @@ template<class T> class ImageInterface;
  public:
   // Default constructor
 
-  SIMapperImageMosaic( CountedPtr<SIImageStore>& imagestore,
-            CountedPtr<FTMachine>& ftm, 
-		       CountedPtr<FTMachine>& iftm);
-  //	    CountedPtr<VPSkyJones>& vp);
+  SIMapperImageMosaic( casacore::CountedPtr<SIImageStore>& imagestore,
+            casacore::CountedPtr<FTMachine>& ftm, 
+		       casacore::CountedPtr<FTMachine>& iftm);
+  //	    casacore::CountedPtr<VPSkyJones>& vp);
   SIMapperImageMosaic(const ComponentList& cl, 
-		      String& whichMachine);
-  //	   CountedPtr<VPSkyJones>& vp);
+		      casacore::String& whichMachine);
+  //	   casacore::CountedPtr<VPSkyJones>& vp);
   virtual ~SIMapperImageMosaic();
 
   ///// Major Cycle Functions
 
   /////////////////////// NEW VI/VB versions
-  void initializeGrid( vi::VisBuffer2& vb, Bool dopsf, Bool firstaccess=False);
-  void grid( vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col);
-  void finalizeGrid( vi::VisBuffer2& vb,  Bool dopsf);
-  void initializeDegrid( vi::VisBuffer2& vb, const Int row=-1);
+  void initializeGrid( vi::VisBuffer2& vb, casacore::Bool dopsf, casacore::Bool firstaccess=false);
+  void grid( vi::VisBuffer2& vb, casacore::Bool dopsf, FTMachine::Type col);
+  void finalizeGrid( vi::VisBuffer2& vb,  casacore::Bool dopsf);
+  void initializeDegrid( vi::VisBuffer2& vb, const casacore::Int row=-1);
   void degrid(vi::VisBuffer2& vb);
   //  void finalizeDegrid();
 
-  //////////////the return value is False if no valid record is being returned
-  //  Bool getCLRecord(Record& rec);
-  //  Bool getFTMRecord(Record& rec);
+  //////////////the return value is false if no valid record is being returned
+  //  casacore::Bool getCLRecord(casacore::Record& rec);
+  //  casacore::Bool getFTMRecord(casacore::Record& rec);
 
-  virtual String getImageName(){return itsImages->getName();};
-  virtual CountedPtr<SIImageStore> imageStore(){return itsImages;};
-  virtual Bool releaseImageLocks(){return itsImages->releaseLocks();};
+  virtual casacore::String getImageName(){return itsImages->getName();};
+  virtual casacore::CountedPtr<SIImageStore> imageStore(){return itsImages;};
+  virtual casacore::Bool releaseImageLocks(){return itsImages->releaseLocks();};
 
 protected:
-  //  Bool changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
+  //  casacore::Bool changedSkyJonesLogic(const vi::VisBuffer2& vb, casacore::Bool& firstRow, casacore::Bool& internalRow, const casacore::Bool grid=true);
   //////////////OLD vb version
-  //  Bool changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
+  //  casacore::Bool changedSkyJonesLogic(const VisBuffer& vb, casacore::Bool& firstRow, casacore::Bool& internalRow, const casacore::Bool grid=true);
   ////////////////////////////////////////////
 
   ComponentList clCorrupted_p;
-  //  CountedPtr<VPSkyJones>  ejgrid_p, ejdegrid_p;
-  CountedPtr<vi::VisBuffer2> ovb_p;
+  //  casacore::CountedPtr<VPSkyJones>  ejgrid_p, ejdegrid_p;
+  casacore::CountedPtr<vi::VisBuffer2> ovb_p;
 
-  Bool firstaccess_p;
+  casacore::Bool firstaccess_p;
 
 };
 

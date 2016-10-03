@@ -63,15 +63,15 @@
 // Users can potentially make illegal data selection requests.
 // </motivation>
 //
-class UnavailableMiriadDataSelectionError : public AipsError { 
+class UnavailableMiriadDataSelectionError : public casacore::AipsError { 
 public:
 
     // An exception with a message.  win usually is a window number.
-    UnavailableMiriadDataSelectionError(const String& msg, Int win=0);
+    UnavailableMiriadDataSelectionError(const casacore::String& msg, casacore::Int win=0);
 
     // An exception with a message.  sel is the data selection value (e.g. 
     // requested source name).  
-    UnavailableMiriadDataSelectionError(const String& msg, const String& sel);
+    UnavailableMiriadDataSelectionError(const casacore::String& msg, const casacore::String& sel);
 
     virtual ~UnavailableMiriadDataSelectionError() throw();
 
@@ -82,8 +82,8 @@ protected:
 
     // format a message from a string and the illegal integer selection.
     // This class is used as a convenience for the instantiating the 
-    // parent class, AipsError, which can only take a simple String.
-    static String makeMsg(const String& msg, Int selval=0);
+    // parent class, casacore::AipsError, which can only take a simple String.
+    static casacore::String makeMsg(const casacore::String& msg, casacore::Int selval=0);
 };
 
 //# MiriadFormatError
@@ -107,7 +107,7 @@ protected:
 // <srcblock>
 // uvprobvr_c(mirds_handle, "sfreq", vtype, &vlen, &vupd);
 // if (vlen != nspect) {
-//     throw MiriadFormatError(String("Wrong number of values for variable ") +
+//     throw MiriadFormatError(casacore::String("Wrong number of values for variable ") +
 //                             "sfreq: got " + vlen + "; expected " + nspect);
 // }
 // </srcblock>
@@ -118,10 +118,10 @@ protected:
 // Miriad dataset is encountered.
 // </motivation>
 //
-class MiriadFormatError : public AipsError { 
+class MiriadFormatError : public casacore::AipsError { 
 public:
     // create the exception with a message describing the format error
-    MiriadFormatError(const String &msg);
+    MiriadFormatError(const casacore::String &msg);
 
     virtual ~MiriadFormatError() throw();
 
@@ -159,7 +159,7 @@ protected:
 // <example>
 // <srcblock>
 // if (! supported(feature)) {
-//     throw MiriadUnsupportedFeatureError(String("Feature ") + feature.name()
+//     throw MiriadUnsupportedFeatureError(casacore::String("Feature ") + feature.name()
 //                                         + " not yet supported");
 // }
 // </srcblock>
@@ -170,11 +170,11 @@ protected:
 // with new versions of the filler classes.
 // </motivation>
 //
-class MiriadUnsupportedFeatureError : public AipsError { 
+class MiriadUnsupportedFeatureError : public casacore::AipsError { 
 public:
 
     // An exception with a message indicating the unsupported feature
-    MiriadUnsupportedFeatureError(const String &msg);
+    MiriadUnsupportedFeatureError(const casacore::String &msg);
 
     virtual ~MiriadUnsupportedFeatureError() throw();
 

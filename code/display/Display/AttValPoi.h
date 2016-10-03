@@ -69,10 +69,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // class:
 //
 // <srcBlock>
-// Int varInt = 1;
-// AttributeValuePoi<Int> intAtt(&varInt, False);
+// casacore::Int varInt = 1;
+// AttributeValuePoi<casacore::Int> intAtt(&varInt, false);
 //
-// Vector<Int> bla = intAtt.getValue();
+// casacore::Vector<casacore::Int> bla = intAtt.getValue();
 // // bla(0) is 1;
 //
 // // This wil change also the AttributeValue:
@@ -102,10 +102,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		// Constructor for a pointer to a scalar.
-		AttributeValuePoi(T* value, const Bool strict);
+		AttributeValuePoi(T* value, const casacore::Bool strict);
 
-		// Constructor for a pointer to a <src>Vector</src>.
-		AttributeValuePoi(Vector<T> *value, const Bool strict);
+		// Constructor for a pointer to a <src>casacore::Vector</src>.
+		AttributeValuePoi(casacore::Vector<T> *value, const casacore::Bool strict);
 
 		// Copy constructor.
 		AttributeValuePoi(const AttributeValuePoi<T> &other);
@@ -127,15 +127,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Change the value of the AttributeValue.
 		// <group>
 		virtual void setValue(const T &value);
-		virtual void setValue(const Vector<T> &value);
+		virtual void setValue(const casacore::Vector<T> &value);
 		// </group>
 
 		// Get the DataType of aliased variable.
-		virtual DataType getPointerType() const;
+		virtual casacore::DataType getPointerType() const;
 
 		// Return class name
-		virtual String className() const {
-			return String("AttributeValuePoi");
+		virtual casacore::String className() const {
+			return casacore::String("AttributeValuePoi");
 		};
 
 
@@ -148,12 +148,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// upon how the object was constructed.  The memory allocated to these pointers
 		// does not belong to this object.
 		// <group>
-		Vector<T>* itsVectorPointerPtr;
+		casacore::Vector<T>* itsVectorPointerPtr;
 		T* itsScalarPointerPtr;
 		// </group>
 
 		// The pointer DataType
-		DataType itsPointerType;
+		casacore::DataType itsPointerType;
 
 		// Cast from base class
 		const AttributeValuePoi<T>& myCast (const AttributeValueBase& other) const;

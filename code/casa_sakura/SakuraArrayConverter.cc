@@ -12,12 +12,13 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+using namespace casacore;
 namespace casa {
 
 template<> void SakuraArrayConverter::CASAToSakura<Complex, float>(
 		uInt const index_in, uInt const index_out, const Complex* pin,
 		float *output_data) {
-	output_data[index_out] = casa::real(pin[index_in]);
+	output_data[index_out] = casacore::real(pin[index_in]);
 }
 
 template<> void SakuraArrayConverter::SakuraToCASA<float, Complex>(

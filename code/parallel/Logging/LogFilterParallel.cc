@@ -23,6 +23,7 @@
 #include <parallel/Logging/LogFilterParallel.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -67,24 +68,24 @@ LogFilterParallel* LogFilterParallel::clone() const
 
 Bool LogFilterParallel::pass(const LogMessage& message) const
 {
-	Bool ret = False;
+	Bool ret = false;
 	Bool priorityPass = LogFilter::pass(message);
 
 	if (priorityPass)
 	{
-		ret = True;
+		ret = true;
 		for(std::vector<String>::const_iterator  it = filterOutVector_p.begin(); it != filterOutVector_p.end(); ++it)
 		{
 		    if (message.message().contains(*it))
 		    {
-		    	ret = False;
+		    	ret = false;
 		    	break;
 		    }
 		}
 	}
 	else
 	{
-		ret = False;
+		ret = false;
 	}
 
 	return ret;

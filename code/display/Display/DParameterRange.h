@@ -71,11 +71,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// description, some help text, a minimum value, a maximum value, a
 		// default value, a current value, and flags indicating whether the
 		// parameter is editable.
-		DParameterRange(const String name, const String description,
-		                const String help, const T minimum, const T maximum,
+		DParameterRange(const casacore::String name, const casacore::String description,
+		                const casacore::String help, const T minimum, const T maximum,
 		                const T resolution, const T defaultvalue, const T value,
-		                const String context = "", const Bool editable = True,
-		                const Bool provideentry = False, const Bool onrelease=False );
+		                const casacore::String context = "", const casacore::Bool editable = true,
+		                const casacore::Bool provideentry = false, const casacore::Bool onrelease=false );
 
 		// (Required) default constructor.
 		DParameterRange();
@@ -91,19 +91,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Parse <src>record</src>, and update this parameter if a field
 		// exists whose name matches that of this parameter.  Return
-		// <src>True</src> if the parameter is changed, otherwise return
-		// <src>False</src>.
-		virtual Bool fromRecord(const RecordInterface &record);
+		// <src>true</src> if the parameter is changed, otherwise return
+		// <src>false</src>.
+		virtual casacore::Bool fromRecord(const casacore::RecordInterface &record);
 
 		// Place a record describing this parameter in a sub-field of
 		// <src>record</src> with name matching that of this parameter.  If
-		// <src>overwrite</src> is <src>True</src>, then any existing field
+		// <src>overwrite</src> is <src>true</src>, then any existing field
 		// with matching name will be overwritten.  If <src>fullrecord</src>
-		// is <src>True</src>, then a complete description of the parameter
+		// is <src>true</src>, then a complete description of the parameter
 		// is given, otherwise just its current value is stored in
 		// <src>record</src>.  Presently <src>fullrecord</src> is ignored.
-		virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
-		                      const Bool overwrite = False);
+		virtual void toRecord(casacore::RecordInterface &record, const casacore::Bool fullrecord = true,
+		                      const casacore::Bool overwrite = false);
 
 		// Return the minimum for this parameter.
 		T minimum() {
@@ -132,14 +132,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Return whether there should be a text box beside the slider.
 		// See 'intrange' in the autogui tool documentation for more information.
-		Bool provideEntry() {
+		casacore::Bool provideEntry() {
 			return itsProvideEntry;
 		}
 
 		// Return whether the slider event should occur when the user releases the
 		// slider, i.e. at the end of setting the value, rather than in real time
 		// as the user moves the slider (good for operations which take a long time)
-		Bool onRelease( ) {
+		casacore::Bool onRelease( ) {
 			return itsOnRelease;
 		}
 
@@ -176,12 +176,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// Set or change the provideentry state for this parameter.
-		void setProvideEntry(const Bool provideentry) {
+		void setProvideEntry(const casacore::Bool provideentry) {
 			itsProvideEntry = provideentry;
 		}
 
 		// Set or change the onrelease state for this parameter.
-		void setOnRelease(const Bool onrelease) {
+		void setOnRelease(const casacore::Bool onrelease) {
 			itsOnRelease = onrelease;
 		}
 
@@ -203,10 +203,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		T itsValue;
 
 		// Store for the 'provideentry' state of this parameter.
-		Bool itsProvideEntry;
+		casacore::Bool itsProvideEntry;
 
 		// Store for the 'onrelease' state of this parameter
-		Bool itsOnRelease;
+		casacore::Bool itsOnRelease;
 
 	};
 

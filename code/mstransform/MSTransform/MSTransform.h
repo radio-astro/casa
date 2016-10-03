@@ -62,17 +62,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // MSTransform *mst = new MSTransform();
 // </srcblock>
 //
-// Create a Record with the desired parameters. The parameters are: data selection parameters and any parameters
+// Create a casacore::Record with the desired parameters. The parameters are: data selection parameters and any parameters
 // for the transformations.
 //
 // <srcblock>
-// Record params = Recod();
+// casacore::Record params = Recod();
 // params.define("spw", "0,1,2");
 // params.define("combinespws",true);
 // mst->configure(params);
 // </srcblock>
 //
-// Open the MS, select the data and setup the output MS.
+// Open the casacore::MS, select the data and setup the output MS.
 //
 // <srcblock>
 // mst->open();
@@ -97,30 +97,30 @@ class MSTransform
 {
 protected:
 
-	LogIO log_p;
+	casacore::LogIO log_p;
 
 	// variables used to initialize the MSTransformManager
-	String msname_p;
-	String outputms_p;
+	casacore::String msname_p;
+	casacore::String outputms_p;
 
 
 	// members to parse to selectData
-	String spw_p;
-	String scan_p;
-	String field_p;
-	String antenna_p;
-	String timerange_p;
-	String correlation_p;
-	String intent_p;
-	String feed_p;
-	String array_p;
-	String uvrange_p;
-	String observation_p;
-	Record config_p;
-	String datacolumn_p;
+	casacore::String spw_p;
+	casacore::String scan_p;
+	casacore::String field_p;
+	casacore::String antenna_p;
+	casacore::String timerange_p;
+	casacore::String correlation_p;
+	casacore::String intent_p;
+	casacore::String feed_p;
+	casacore::String array_p;
+	casacore::String uvrange_p;
+	casacore::String observation_p;
+	casacore::Record config_p;
+	casacore::String datacolumn_p;
 
 	// Tells if tool is already configured at least once
-	Bool isconfigured_p;
+	casacore::Bool isconfigured_p;
 
 
 	// variables for initAgents
@@ -137,17 +137,17 @@ public:
 	void done();
 
 	// set the defaults of the parameters
-//	Record & defaultOptions();
+//	casacore::Record & defaultOptions();
 
 
 	// configure the tool and parse the parameters
-	bool configure(Record config);
+	bool configure(casacore::Record config);
 
-	// Open the MS and select the data
+	// Open the casacore::MS and select the data
 	bool open();
 
 	// Run the tool and write the flags to the MS
-	Record run();
+	casacore::Record run();
 
 
 private:
@@ -156,10 +156,10 @@ private:
 
 	MSTransform& operator=(const MSTransform &)  {return *this;};
 
-//	String validateDataColumn(String datacol);
+//	casacore::String validateDataColumn(casacore::String datacol);
 
 	// Sink used to store history
-	LogSink logSink_p;
+	casacore::LogSink logSink_p;
 
 
 };

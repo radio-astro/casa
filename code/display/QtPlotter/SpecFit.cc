@@ -24,6 +24,7 @@
 //#
 #include "SpecFit.h"
 
+using namespace casacore;
 namespace casa {
 
 	SpecFit::SpecFit( QString fileSuffix) : suffix( fileSuffix ) {
@@ -99,4 +100,5 @@ namespace casa {
 	SpecFit::~SpecFit() {
 	}
 
+using namespace casacore;
 } /* namespace casa */

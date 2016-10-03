@@ -55,31 +55,31 @@ public:
     calAntTable(NULL), calFieldTable(NULL), calSpwTable(NULL)  
   {rootName="";};
 
-  CalSetMetaInfo(const String& root);
+  CalSetMetaInfo(const casacore::String& root);
   
   ~CalSetMetaInfo()   {cleanUp();};
 
-  void setRootName(const String& root) {rootName=root;};
-  String fullSubTableName(String& subTableName,const String& base){
-    return Table(base).rwKeywordSet().asTable(subTableName).tableName();};
-  String fullSubTableName(String& subTableName){
+  void setRootName(const casacore::String& root) {rootName=root;};
+  casacore::String fullSubTableName(casacore::String& subTableName,const casacore::String& base){
+    return casacore::Table(base).rwKeywordSet().asTable(subTableName).tableName();};
+  casacore::String fullSubTableName(casacore::String& subTableName){
     return fullSubTableName(subTableName,rootName);};
 
-  void reset(const String& root);
-  String getAntName(Int ant);
-  String getFieldName(Int field);
-  String getSpwName(Int spw);
-  Double  getSpwRefFreq(Int spw);
-  // Vector<Double>  getSpwChanWidth(Int spw);
-  Double  getSpwTotalBandwidth(Int spw);
+  void reset(const casacore::String& root);
+  casacore::String getAntName(casacore::Int ant);
+  casacore::String getFieldName(casacore::Int field);
+  casacore::String getSpwName(casacore::Int spw);
+  casacore::Double  getSpwRefFreq(casacore::Int spw);
+  // casacore::Vector<casacore::Double>  getSpwChanWidth(casacore::Int spw);
+  casacore::Double  getSpwTotalBandwidth(casacore::Int spw);
 
-  Vector<String> getFieldNames();
-  Vector<String> getAntNames();
-  Vector<String> getSpwNames();
-  Vector<Double> getSpwRefFreqs();
-  Bool verify(CalSetMetaInfo& otherCSMI);
+  casacore::Vector<casacore::String> getFieldNames();
+  casacore::Vector<casacore::String> getAntNames();
+  casacore::Vector<casacore::String> getSpwNames();
+  casacore::Vector<casacore::Double> getSpwRefFreqs();
+  casacore::Bool verify(CalSetMetaInfo& otherCSMI);
 
-  void copyMetaTables(const String& target);
+  void copyMetaTables(const casacore::String& target);
 
 protected:
 
@@ -94,13 +94,13 @@ protected:
     if (calSpwTable   != NULL) {delete calSpwTable;   calSpwTable   = NULL;}
   }
 private:
-  String rootName, antTableName, fieldTableName, spwTableName;
-  ROMSAntennaColumns *calTableMSAC;
-  ROMSFieldColumns *calTableMSFC;
-  ROMSSpWindowColumns *calTableMSSpC;
-  MSAntenna *calAntTable;
-  MSField *calFieldTable;
-  MSSpectralWindow *calSpwTable;
+  casacore::String rootName, antTableName, fieldTableName, spwTableName;
+  casacore::ROMSAntennaColumns *calTableMSAC;
+  casacore::ROMSFieldColumns *calTableMSFC;
+  casacore::ROMSSpWindowColumns *calTableMSSpC;
+  casacore::MSAntenna *calAntTable;
+  casacore::MSField *calFieldTable;
+  casacore::MSSpectralWindow *calSpwTable;
 };
 
 

@@ -50,8 +50,8 @@
 // <synopsis>
 // This exception is used to indicate that certain assumptions about the size
 // of primitive types do not hold.  Miriad IO in aips++ assumes that the sizes 
-// of Int, Float, and Double are equal to the corresponding sizes of int, float,
-// and Double; this exception is thrown when these conditions are not met.
+// of casacore::Int, casacore::Float, and casacore::Double are equal to the corresponding sizes of int, float,
+// and casacore::Double; this exception is thrown when these conditions are not met.
 //
 // Normally, applications do not create and throw this exception directly as
 // it has been integrated into the MirTypeAssert class which
@@ -63,11 +63,11 @@
 // See summary above.
 // </motivation>
 //
-class MiriadMemoryAssumptionError : public AipsError { 
+class MiriadMemoryAssumptionError : public casacore::AipsError { 
 public:
 
     // An exception with a message indicating the unsupported feature
-    MiriadMemoryAssumptionError(const String &msg);
+    MiriadMemoryAssumptionError(const casacore::String &msg);
 
     virtual ~MiriadMemoryAssumptionError() throw();
 
@@ -94,8 +94,8 @@ protected:
 // <synopsis>
 // This exception is used to indicate that certain assumptions about the size
 // of primitive types do not hold.  Miriad IO in aips++ assumes that the sizes 
-// of Int, Float, and Double are equal to the corresponding sizes of int, float,
-// and Double; this exception is thrown when these conditions are not met.
+// of casacore::Int, casacore::Float, and casacore::Double are equal to the corresponding sizes of int, float,
+// and casacore::Double; this exception is thrown when these conditions are not met.
 //
 // Normally, applications do not create and throw this exception directly as
 // it has been integrated into the MirTypeAssert class which
@@ -112,7 +112,7 @@ public:
     MirTypeAssert();
 
 protected:
-    static Bool ok;
+    static casacore::Bool ok;
 };
 
 #endif

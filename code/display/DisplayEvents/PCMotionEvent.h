@@ -86,18 +86,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor taking a pointer to the PixelCanvas for which the
 		// event is valid, the position of the event, and the keyboard and
 		// pointer modifiers.
-		PCMotionEvent(PixelCanvas *pc, const Int &x, const Int &y,
-		              const uInt &modifiers);
+		PCMotionEvent(PixelCanvas *pc, const casacore::Int &x, const casacore::Int &y,
+		              const casacore::uInt &modifiers);
 
 		// Destructor.
 		virtual ~PCMotionEvent();
 
 		// The x and y pixel position of the pointer when the event occured.
 		// <group>
-		virtual Int x() const {
+		virtual casacore::Int x() const {
 			return itsX;
 		}
-		virtual Int y() const {
+		virtual casacore::Int y() const {
 			return itsY;
 		}
 		// </group>
@@ -105,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Return the state of the "modifiers": this is made up of mask
 		// bits referring to various keys on the keyboard (eg. Control,
 		// Shift, etc.) and the mouse buttons.
-		virtual uInt modifiers() const {
+		virtual casacore::uInt modifiers() const {
 			return itsModifiers;
 		}
 
@@ -123,10 +123,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Store the position of the event here.
-		Int itsX, itsY;
+		casacore::Int itsX, itsY;
 
 		// Store the button and keyboard modifier masks here.
-		uInt itsModifiers;
+		casacore::uInt itsModifiers;
 
 	};
 

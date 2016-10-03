@@ -41,6 +41,7 @@
 #include <QDebug>
 #include <QTemporaryFile>
 
+using namespace casacore;
 namespace casa {
 
 	MomentCollapseThreadRadio::MomentCollapseThreadRadio( ImageMoments<Float>* imageAnalysis ):
@@ -580,7 +581,7 @@ namespace casa {
 				String outName = results[i].getOutputFileName();
 				bool outputTemporary = results[i].isTemporaryOutput();
 				SHARED_PTR<ImageInterface<Float> > newImage = results[i].getImage();
-				taskMonitor->imageCollapsed(outName, "image", "raster", True, outputTemporary, newImage );
+				taskMonitor->imageCollapsed(outName, "image", "raster", true, outputTemporary, newImage );
 			}
 			taskMonitor->setPurpose(ProfileTaskMonitor::MOMENTS_COLLAPSE );
 		} else {

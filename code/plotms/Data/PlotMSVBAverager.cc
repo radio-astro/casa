@@ -35,6 +35,7 @@
 
 #define PRTLEV_PMSVBA -1
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -45,9 +46,9 @@ PlotMSVBAverager::PlotMSVBAverager(Int nAnt)
     nChan_p(0),
     nBlnMax_p(0),
     blnOK_p(),
-    blnAve_p(False),
-    antAve_p(False),
-    inCoh_p(False),
+    blnAve_p(false),
+    antAve_p(false),
+    inCoh_p(false),
     timeRef_p(0.0),
     minTime_p(0.0),
     maxTime_p(0.0),
@@ -56,13 +57,13 @@ PlotMSVBAverager::PlotMSVBAverager(Int nAnt)
     blnWtSum_p(),
     vbWtSum_p(0.0),
     aveScan_p(0),
-    doVC_p(False),
-    doMVC_p(False),
-    doCVC_p(False),
-    doFC_p(False),
-    doUVW_p(False),
-    doWC_p(False),
-    initialized_p(False),
+    doVC_p(false),
+    doMVC_p(false),
+    doCVC_p(false),
+    doFC_p(false),
+    doUVW_p(false),
+    doWC_p(false),
+    initialized_p(false),
     jcor_p(4,0),
     prtlev_(PRTLEV_PMSVBA)
 {
@@ -173,23 +174,23 @@ void PlotMSVBAverager::finalizeAverage()
       avgAntenna1_.resize(nBln, true);
       avgAntenna2_.resize(nBln, true);
       if (doUVW_p)
-	avgUvw_.resize(3,nBln,True);
+	avgUvw_.resize(3,nBln,true);
       if (doVC_p)
-	avgVisCube_.resize(nCorr_p,nChan_p,nBln,True);
+	avgVisCube_.resize(nCorr_p,nChan_p,nBln,true);
       if (doMVC_p)
-	avgModelCube_.resize(nCorr_p,nChan_p,nBln,True);
+	avgModelCube_.resize(nCorr_p,nChan_p,nBln,true);
       if (doCVC_p)
-	avgCorrectedCube_.resize(nCorr_p,nChan_p,nBln,True);
+	avgCorrectedCube_.resize(nCorr_p,nChan_p,nBln,true);
       if (doFC_p)
-	avgFloatCube_.resize(nCorr_p,nChan_p,nBln,True);
+	avgFloatCube_.resize(nCorr_p,nChan_p,nBln,true);
       if (doWC_p)
-	avgWeight_.resize(nCorr_p,nChan_p,nBln,True);
-      avgFlagRow_.resize(nBln,True);
-      avgFlagCube_.resize(nCorr_p,nChan_p,nBln,True);
-      fieldid_.resize(nBln, True);
-      spw_.resize(nBln, True);
-      obsid_.resize(nBln, True);
-      stateid_.resize(nBln, True);
+	avgWeight_.resize(nCorr_p,nChan_p,nBln,true);
+      avgFlagRow_.resize(nBln,true);
+      avgFlagCube_.resize(nCorr_p,nChan_p,nBln,true);
+      fieldid_.resize(nBln, true);
+      spw_.resize(nBln, true);
+      obsid_.resize(nBln, true);
+      stateid_.resize(nBln, true);
     }
 
     // Time:
@@ -222,7 +223,7 @@ void PlotMSVBAverager::finalizeAverage()
     //    cout << "final flagC = " << boolalpha << avBuf_p->flagCube() << endl;
 
     // We need to be reinitialized to do more accumulating
-    initialized_p = False;
+    initialized_p = false;
 
   }
   else {
@@ -260,7 +261,7 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
   // Assign main meta info
   vi::VisBufferComponents2 components = vi::VisBufferComponents2::these
       ({VisBufferComponent2::FieldId, VisBufferComponent2::ObservationId, VisBufferComponent2::SpectralWindows, VisBufferComponent2::StateId});
-  avBuf_p->copyComponents(vb, components, True, False);
+  avBuf_p->copyComponents(vb, components, true, false);
   fieldid_ = vb.fieldId();
   spw_ = vb.spectralWindows();
   obsid_ = vb.observationId();
@@ -278,7 +279,7 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
     nBlnMax_p = nAnt_p * (nAnt_p + 1)/2;
 
   blnOK_p.resize(nBlnMax_p);
-  blnOK_p = False;
+  blnOK_p = false;
   blnWtSum_p.resize(nBlnMax_p);
   blnWtSum_p = 0.0;
 
@@ -321,53 +322,53 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
 
   // Resize and fill if larger
   Int nRows = vb.nRows();
-  fieldid_.resize(nBlnMax_p, True);
-  spw_.resize(nBlnMax_p, True);
-  obsid_.resize(nBlnMax_p, True);
-  stateid_.resize(nBlnMax_p, True);
+  fieldid_.resize(nBlnMax_p, true);
+  spw_.resize(nBlnMax_p, true);
+  obsid_.resize(nBlnMax_p, true);
+  stateid_.resize(nBlnMax_p, true);
   if (nBlnMax_p > nRows) fillIds(nRows);
   // Resize and initialize everything else
-  avgTime_.resize(nBlnMax_p, False); 
+  avgTime_.resize(nBlnMax_p, false); 
   avgTime_.set(0.0);
-  avgTimeInterval_.resize(nBlnMax_p, False); 
+  avgTimeInterval_.resize(nBlnMax_p, false); 
   avgTimeInterval_.set(0.0);
-  avgScan_.resize(nBlnMax_p, False); 
+  avgScan_.resize(nBlnMax_p, false); 
   aveScan_p = vb.scan()(0);
 
   // All _rows_ assumed UNflagged, to start with
   //  (will refine later, if needed)
-  avgFlagRow_.resize(nBlnMax_p, False); 
-  avgFlagRow_.set(False);
+  avgFlagRow_.resize(nBlnMax_p, false); 
+  avgFlagRow_.set(false);
 
   // all cells assumed flagged to start with
-  avgFlagCube_.resize(nCorr_p,nChan_p, nBlnMax_p,False);
-  avgFlagCube_.set(True);
+  avgFlagCube_.resize(nCorr_p,nChan_p, nBlnMax_p,false);
+  avgFlagCube_.set(true);
 
   if (doUVW_p) {
-    avgUvw_.resize(3,nBlnMax_p, False); 
+    avgUvw_.resize(3,nBlnMax_p, false); 
     avgUvw_.set(0.0);
   }
 
   Complex czero(0.0);
   if (doVC_p) {
-    avgVisCube_.resize(nCorr_p,nChan_p, nBlnMax_p,False);
+    avgVisCube_.resize(nCorr_p,nChan_p, nBlnMax_p,false);
     avgVisCube_.set(czero);
   }
   if (doMVC_p) {
-    avgModelCube_.resize(nCorr_p,nChan_p, nBlnMax_p,False);
+    avgModelCube_.resize(nCorr_p,nChan_p, nBlnMax_p,false);
     avgModelCube_.set(czero);
   }
   if (doCVC_p) {
-    avgCorrectedCube_.resize(nCorr_p,nChan_p, nBlnMax_p,False);
+    avgCorrectedCube_.resize(nCorr_p,nChan_p, nBlnMax_p,false);
     avgCorrectedCube_.set(czero);
   }
   if (doFC_p) {
-    avgFloatCube_.resize(nCorr_p,nChan_p, nBlnMax_p,False);
+    avgFloatCube_.resize(nCorr_p,nChan_p, nBlnMax_p,false);
     avgFloatCube_.set(0.0);
   }
 
   if (doWC_p) {
-    avgWeight_.resize(nCorr_p,nChan_p,nBlnMax_p, False); 
+    avgWeight_.resize(nCorr_p,nChan_p,nBlnMax_p, false); 
     avgWeight_.set(0.0f);
   }
 
@@ -376,7 +377,7 @@ void PlotMSVBAverager::initialize(vi::VisBuffer2& vb)
   timeRef_p = vb.time()(0);
 
   // we are now initialized
-  initialized_p=True;
+  initialized_p=true;
 };
 
 
@@ -433,12 +434,12 @@ void PlotMSVBAverager::simpAccumulate (vi::VisBuffer2& vb)
     Int obln = baseline(ant1, ant2);
 
     // This baseline occurs in input, so preserve in output
-    blnOK_p(obln) = True;
+    blnOK_p(obln) = true;
 
     wt = &vb.weight()(0,ibln);
     Float vbweight = *wt;
     // Ensure weights strictly positive
-    // assumes chanIndepWt_p=True
+    // assumes chanIndepWt_p=true
     if (vbweight < FLT_MIN) vbweight = FLT_MIN;
     Double blnWt(0.0);
 
@@ -447,15 +448,15 @@ void PlotMSVBAverager::simpAccumulate (vi::VisBuffer2& vb)
 	
 	// Assume we won't accumulate anything in this cell
 	//   (output is unflagged, input is flagged)
-	Bool acc(False);
+	Bool acc(false);
 
     IPosition flagPos(3, cor, chn, ibln);
 	if (!vb.flagCube()(flagPos)) { // input UNflagged
 	  // we will accumulate
-	  acc=True;
+	  acc=true;
 	  if (avgFlagCube_(cor,chn,obln)) {  // output flagged
 	    // This cell now NEWLY unflagged in output
-	    avgFlagCube_(cor,chn,obln)=False;
+	    avgFlagCube_(cor,chn,obln)=false;
 	    // ...so zero the accumulators
 	    if (doVC_p) 
 	      avgVisCube_(cor,chn,obln) = 0.0;
@@ -472,7 +473,7 @@ void PlotMSVBAverager::simpAccumulate (vi::VisBuffer2& vb)
 	else  // input cell is flagged
 	  // Only accumulate if output is also flagged
 	  //  (yields average of flagged data if no unflagged data ever found)
-	  if (avgFlagCube_(cor,chn,obln)) acc=True;
+	  if (avgFlagCube_(cor,chn,obln)) acc=true;
 
 	// Accumulate this (cor,chn), if appropriate
 	if (acc) {
@@ -594,8 +595,8 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
     Int& obln_j(oblnij(1));
 
     // These antennas occur (even if flagged) in input, so preserve in output
-    blnOK_p(obln_i) = True;
-    blnOK_p(obln_j) = True;
+    blnOK_p(obln_i) = true;
+    blnOK_p(obln_j) = true;
       
     Double blnWt(0.0);  // will accumulate this baseline's total data weight
     for (Int chn=0; chn<vb.nChannels(); chn++) {
@@ -604,20 +605,20 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
           if (wt < FLT_MIN) wt = FLT_MIN;
 	// Assume we won't accumulate anything in this cell
 	//   (output is unflagged, input is flagged)
-	Bool acc_i(False),acc_j(False);
+	Bool acc_i(false),acc_j(false);
 
 	// Consider accumulation according to state of flags
     IPosition flagPos(3, cor, chn, ibln);
 	if (!vb.flagCube()(flagPos)) { // input UNflagged
 	  // we will accumulate both ants
-	  acc_i = acc_j = True;
+	  acc_i = acc_j = true;
 
 	  // Zero accumulators if output cell currently flagged
 	  for (Int ij=0; ij<2; ++ij) {
 	    Int ia = oblnij(ij);
 	    if (avgFlagCube_(cor,chn,ia)) {  // output flagged
 	      // This cell now NEWLY unflagged in output
-	      avgFlagCube_(cor,chn,ia) = False;
+	      avgFlagCube_(cor,chn,ia) = false;
 	      // ...so zero the accumulators
 	      if (doVC_p) 
 		avgVisCube_(cor,chn,ia) = 0.0;
@@ -635,8 +636,8 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
 	else {        // input cell is flagged
 	  // Only accumulate if output is also flagged:
 	  //  (yields average of flagged data if no unflagged data ever found)
-	  if (avgFlagCube_(cor,chn,obln_i)) acc_i = True;
-	  if (avgFlagCube_(cor,chn,obln_j)) acc_j = True;
+	  if (avgFlagCube_(cor,chn,obln_i)) acc_i = true;
+	  if (avgFlagCube_(cor,chn,obln_j)) acc_j = true;
 	}
 	
 	// Accumulate data, if appropriate

@@ -36,74 +36,74 @@
 
 namespace casa {
 
-template<class T> const String PixelValueManipulator<T>::_className = "PixelValueManipulator";
+template<class T> const casacore::String PixelValueManipulator<T>::_className = "PixelValueManipulator";
 
 template<class T> PixelValueManipulator<T>::PixelValueManipulator(
 	const SPCIIT image,
-	const Record *const regionRec,
-	const String& mask, Bool verboseDuringConstruction
+	const casacore::Record *const regionRec,
+	const casacore::String& mask, casacore::Bool verboseDuringConstruction
 ) : ImageTask<T>(
 	image, "", regionRec, "", "", "",
-	mask, "", False
+	mask, "", false
 ), _axes() {
 	this->_construct(verboseDuringConstruction);
 }
 
 template<class T> void PixelValueManipulator<T>::addNoise(
-	SPIIT image, const String& type, const Record& region, const Vector<Double>& pars,
-	Bool zeroIt, const std::pair<Int, Int> *const &seeds
+	SPIIT image, const casacore::String& type, const casacore::Record& region, const casacore::Vector<casacore::Double>& pars,
+	casacore::Bool zeroIt, const std::pair<casacore::Int, casacore::Int> *const &seeds
 ) {
-	String mask;
+	casacore::String mask;
 	auto subImage = SubImageFactory<T>::createSubImageRW(
 		*image, region, mask, nullptr
 	);
 	if (zeroIt) {
 		subImage->set(0.0);
 	}
-	Random::Types typeNoise = Random::asType(type);
-	SHARED_PTR<LatticeAddNoise> lan(
+	casacore::Random::Types typeNoise = casacore::Random::asType(type);
+	SHARED_PTR<casacore::LatticeAddNoise> lan(
 		seeds
-		? new LatticeAddNoise(typeNoise, pars, seeds->first, seeds->second)
-		: new LatticeAddNoise(typeNoise, pars)
+		? new casacore::LatticeAddNoise(typeNoise, pars, seeds->first, seeds->second)
+		: new casacore::LatticeAddNoise(typeNoise, pars)
 	);
 	lan->add(*subImage);
 }
 
-template<class T> Record* PixelValueManipulator<T>::coordMeasures(
-	Quantum<T>& intensity, Record& direction,
-	Record& frequency, Record& velocity,
-	SPCIIT image, const Vector<Double>& pixel,
-	const String& dirFrame, const String& freqFrame
+template<class T> casacore::Record* PixelValueManipulator<T>::coordMeasures(
+	casacore::Quantum<T>& intensity, casacore::Record& direction,
+	casacore::Record& frequency, casacore::Record& velocity,
+	SPCIIT image, const casacore::Vector<casacore::Double>& pixel,
+	const casacore::String& dirFrame, const casacore::String& freqFrame
 ) {
-	Record *r = nullptr;
+	casacore::Record *r = nullptr;
 
 	const auto& cSys = image->coordinates();
 
-	Vector<Double> vpixel = pixel.empty() ? cSys.referencePixel() : pixel;
+	casacore::Vector<casacore::Double> vpixel = pixel.empty() ? cSys.referencePixel() : pixel;
 
-	String format("m");
+	casacore::String format("m");
 	ImageMetaData imd(image);
-	r = new Record(imd.toWorld(vpixel, format, True, dirFrame, freqFrame));
+	r = new casacore::Record(imd.toWorld(vpixel, format, true, dirFrame, freqFrame));
 
-	Vector<Int> ipixel(vpixel.size());
+	casacore::Vector<casacore::Int> ipixel(vpixel.size());
 	convertArray(ipixel, vpixel);
 
-	Bool offImage;
-	Quantum<Double> value;
-	Bool mask = False;
+	casacore::Bool offImage;
+	casacore::Quantum<casacore::Double> value;
+	casacore::Bool mask = false;
 	PixelValueManipulator<T> pvm(image, nullptr, "");
 	pvm.pixelValue(offImage, intensity, mask, ipixel);
 	if (offImage) {
 		return r;
 	}
 
-	r->define(RecordFieldId("mask"), mask);
+	r->define(casacore::RecordFieldId("mask"), mask);
 
 	if (r->isDefined("direction")) {
 		direction = r->asRecord("direction");
 	}
 	if (r->isDefined("spectral")) {
-		Record specRec = r->asRecord("spectral");
+		casacore::Record specRec = r->asRecord("spectral");
 		if (specRec.isDefined("frequency")) {
 			frequency = specRec.asRecord("frequency");
 		}
@@ -115,99 +115,99 @@ template<class T> Record* PixelValueManipulator<T>::coordMeasures(
 }
 
 template<class T> void PixelValueManipulator<T>::setAxes(
-	const IPosition& axes, Bool invert
+	const casacore::IPosition& axes, casacore::Bool invert
 ) {
-	uInt ndim = this->_getImage()->ndim();
+	casacore::uInt ndim = this->_getImage()->ndim();
 	ThrowIf(
 		axes.nelements() > ndim,
 		"Too many axes, image only has "
-		+ String::toString(ndim)
+		+ casacore::String::toString(ndim)
 		+ " dimensions"
 	);
 	if (! axes.empty()) {
-		Vector<Int> t = axes.asVector();
+		casacore::Vector<casacore::Int> t = axes.asVector();
 		ThrowIf(
-			max(t) >= (Int)ndim,
-			"image does not have axis " + String::toString(max(t))
+			max(t) >= (casacore::Int)ndim,
+			"image does not have axis " + casacore::String::toString(max(t))
 		);
 		ThrowIf(
 			min(t) < 0, "Axis cannot be negative"
 		);
 	}
 	_axes = invert
-		? IPosition::otherAxes(ndim, axes)
+		? casacore::IPosition::otherAxes(ndim, axes)
 		: axes;
 }
 
-template<class T> Record PixelValueManipulator<T>::get() const {
+template<class T> casacore::Record PixelValueManipulator<T>::get() const {
 	SPCIIT subImage = SubImageFactory<T>::createSubImageRO(
 		*this->_getImage(), *this->_getRegion(), this->_getMask(),
 		(this->_getVerbosity() > ImageTask<T>::QUIET ? this->_getLog().get() : 0),
-		AxesSpecifier(), this->_getStretch()
+		casacore::AxesSpecifier(), this->_getStretch()
 	);
     if (! _axes.empty()) {
 		ImageCollapser<T> collapser(
-			subImage, _axes, False, ImageCollapserData::MEAN,
-			"", False
+			subImage, _axes, false, ImageCollapserData::MEAN,
+			"", false
 		);
 		subImage = collapser.collapse();
 	}
-    Array<T> values = subImage->get(this->_getDropDegen());
-    Array<Bool> mask = Array<Bool>(values.shape(), True);
+    casacore::Array<T> values = subImage->get(this->_getDropDegen());
+    casacore::Array<casacore::Bool> mask = casacore::Array<casacore::Bool>(values.shape(), true);
     if (subImage->isMasked()) {
         mask = mask && subImage->getMask(this->_getDropDegen());
     }
-    Record ret;
+    casacore::Record ret;
     ret.define("values", values);
     ret.define("mask", mask);
     return ret;
 }
 
-template<class T> Record PixelValueManipulator<T>::getProfile(
-	uInt axis, ImageCollapserData::AggregateType function,
-	const String& unit, PixelValueManipulatorData::SpectralType specType,
-	const Quantity *const restFreq, const String& frame
+template<class T> casacore::Record PixelValueManipulator<T>::getProfile(
+	casacore::uInt axis, ImageCollapserData::AggregateType function,
+	const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
+	const casacore::Quantity *const restFreq, const casacore::String& frame
 ) {
 	return getProfile(
-		axis, ImageCollapserData::minMatchMap()->find((uInt)function)->second,
+		axis, ImageCollapserData::minMatchMap()->find((casacore::uInt)function)->second,
 		unit,  specType, restFreq,  frame
 	);
 }
 
-template<class T> Record PixelValueManipulator<T>::getProfile(
-	uInt axis, const String& function,
-	const String& unit, PixelValueManipulatorData::SpectralType specType,
-	const Quantity *const restFreq, const String& frame
+template<class T> casacore::Record PixelValueManipulator<T>::getProfile(
+	casacore::uInt axis, const casacore::String& function,
+	const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
+	const casacore::Quantity *const restFreq, const casacore::String& frame
 ) {
 	ImageCollapser<T> collapser(
 		function, this->_getImage(), this->_getRegion(),
-		this->_getMask(), IPosition(1, axis), True, "", ""
+		this->_getMask(), casacore::IPosition(1, axis), true, "", ""
 	);
 	collapser.setStretch(this->_getStretch());
 	SPIIT collapsed = collapser.collapse();
-	Record ret;
-	Array<T> values = collapsed->get(True);
+	casacore::Record ret;
+	casacore::Array<T> values = collapsed->get(true);
 	ret.define("values", values);
-	Array<Bool> mask(values.shape(), True);
+	casacore::Array<casacore::Bool> mask(values.shape(), true);
 	if (collapsed->isMasked()) {
-		mask = mask && collapsed->getMask(True);
+		mask = mask && collapsed->getMask(true);
 	}
 	if (collapsed->hasPixelMask()) {
-		mask = mask && collapsed->pixelMask().get(True);
+		mask = mask && collapsed->pixelMask().get(true);
 	}
 	ret.define("mask", mask);
 	ret.define("yUnit", collapsed->units().getName());
 	ret.define("npix", _npts(axis));
-	String tunit = unit;
+	casacore::String tunit = unit;
 	tunit.downcase();
-	Vector<Double> pix(collapsed->ndim(), 0);
+	casacore::Vector<casacore::Double> pix(collapsed->ndim(), 0);
 	auto outputRef = collapsed->coordinates().toWorld(pix);
 	auto inputRef = this->_getImage()->coordinates().referenceValue();
 	inputRef[axis] = outputRef[axis];
 	auto inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
-	Double count = floor(inputPixel[axis] + 0.5);
+	casacore::Double count = floor(inputPixel[axis] + 0.5);
 	auto length = values.shape()[0];
-	Vector<Double> coords = indgen(length, count, 1.0);
+	casacore::Vector<casacore::Double> coords = indgen(length, count, 1.0);
 	ret.define("planes", coords);
 	if (tunit.startsWith("pix")) {
 		ret.define("coords", coords);
@@ -225,10 +225,10 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 		auto axisName = this->_getImage()->coordinates().worldAxisNames()[axis];
 		auto cAxis = axisName;
 		cAxis.downcase();
-		Quantity xunit(1, ret.asString("xUnit"));
+		casacore::Quantity xunit(1, ret.asString("xUnit"));
 		if (
 			cAxis.startsWith("freq")
-			&& xunit.isConform(Unit("m/s"))
+			&& xunit.isConform(casacore::Unit("m/s"))
 		) {
 			axisName = "Velocity";
 		}
@@ -242,11 +242,11 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 		oss << "#xUnit " << xunit.getUnit() << endl;
 		oss << "#yUnit " << ret.asString("yUnit") << endl;
 		oss << "# " << imageName << endl << endl;
-		Vector<T> data;
+		casacore::Vector<T> data;
 		ret.get("values", data);
-        Vector<Bool> mask;
+        casacore::Vector<casacore::Bool> mask;
 		ret.get("mask", mask);
-		Vector<Double> xvals = ret.asArrayDouble("coords");
+		casacore::Vector<casacore::Double> xvals = ret.asArrayDouble("coords");
 		auto diter = std::begin(data);
 		auto dend = std::end(data);
 		auto citer = xvals.begin();
@@ -262,138 +262,138 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 	return ret;
 }
 
-template<class T> Vector<uInt> PixelValueManipulator<T>::_npts(uInt axis) const {
+template<class T> casacore::Vector<casacore::uInt> PixelValueManipulator<T>::_npts(casacore::uInt axis) const {
     auto subim = SubImageFactory<T>::createSubImageRO(
         *this->_getImage(), *this->_getRegion(), this->_getMask(),
         this->_getLog().get()
     );
     auto shape = subim->shape();
-    uInt nvals = shape[axis];
-    Vector<uInt> counts(nvals);
+    casacore::uInt nvals = shape[axis];
+    casacore::Vector<casacore::uInt> counts(nvals);
     if (subim->hasPixelMask() || subim->isMasked()) {
-        IPosition begin(shape.size(), 0);
+        casacore::IPosition begin(shape.size(), 0);
         auto sliceShape = shape;
         sliceShape[axis] = 1;
-        for (uInt i=0; i<nvals; ++i, ++begin[axis]) {
+        for (casacore::uInt i=0; i<nvals; ++i, ++begin[axis]) {
             counts[i] = ntrue(subim->getMaskSlice(begin, sliceShape));
         }
     }
     else {
         // no mask, just return number of pixels in each plane
-        counts = shape.removeAxes(IPosition(1, axis)).product();
+        counts = shape.removeAxes(casacore::IPosition(1, axis)).product();
     }
     return counts;
 }
 
 
-template<class T> Record* PixelValueManipulator<T>::getSlice(
-	SPCIIT image, const Vector<Double>& x, const Vector<Double>& y,
-	const Vector<Int>& axes, const Vector<Int>& coord, Int npts,
-	const String& method
+template<class T> casacore::Record* PixelValueManipulator<T>::getSlice(
+	SPCIIT image, const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y,
+	const casacore::Vector<casacore::Int>& axes, const casacore::Vector<casacore::Int>& coord, casacore::Int npts,
+	const casacore::String& method
 ) {
-	Vector<Float> xPos;
-	Vector<Float> yPos;
-	Vector<Float> distance;
-	Vector<T> pixels;
-	Vector<Bool> pixelMask;
+	casacore::Vector<casacore::Float> xPos;
+	casacore::Vector<casacore::Float> yPos;
+	casacore::Vector<casacore::Float> distance;
+	casacore::Vector<T> pixels;
+	casacore::Vector<casacore::Bool> pixelMask;
 
 	// Construct PixelCurve.  FIll in defaults for x, y vectors
-	PixelCurve1D curve(x, y, npts);
+	casacore::PixelCurve1D curve(x, y, npts);
 
 	// Set coordinates
-	IPosition iCoord(coord);
-	IPosition iAxes(axes);
+	casacore::IPosition iCoord(coord);
+	casacore::IPosition iAxes(axes);
 
 	// Get the Slice
-	auto method2 = LatticeSlice1D<T>::stringToMethod(method);
-	LatticeSlice1D<T> slicer(*image, method2);
+	auto method2 = casacore::LatticeSlice1D<T>::stringToMethod(method);
+	casacore::LatticeSlice1D<T> slicer(*image, method2);
 	slicer.getSlice(pixels, pixelMask, curve, iAxes(0), iAxes(1), iCoord);
 
 	// Get slice locations
-	uInt axis0, axis1;
+	casacore::uInt axis0, axis1;
 	slicer.getPosition(axis0, axis1, xPos, yPos, distance);
 
-	RecordDesc outRecDesc;
+	casacore::RecordDesc outRecDesc;
 	outRecDesc.addField("pixel", TpArrayFloat);
 	outRecDesc.addField("mask", TpArrayBool);
 	outRecDesc.addField("xpos", TpArrayFloat);
 	outRecDesc.addField("ypos", TpArrayFloat);
 	outRecDesc.addField("distance", TpArrayFloat);
 	outRecDesc.addField("axes", TpArrayInt);
-	Record *outRec = new Record(outRecDesc);
+	casacore::Record *outRec = new casacore::Record(outRecDesc);
 	outRec->define("pixel", pixels);
 	outRec->define("mask", pixelMask);
 	outRec->define("xpos", xPos);
 	outRec->define("ypos", yPos);
 	outRec->define("distance", distance);
-	outRec->define("axes", Vector<Int>(vector<uInt> {axis0, axis1}));
+	outRec->define("axes", casacore::Vector<casacore::Int>(vector<casacore::uInt> {axis0, axis1}));
 	return outRec;
 }
 
 template<class T> void PixelValueManipulator<T>::insert(
-	ImageInterface<T>& target, const ImageInterface<T>& infile, const Record& region,
-	const Vector<double>& locatePixel, Bool verbose
+	casacore::ImageInterface<T>& target, const casacore::ImageInterface<T>& infile, const casacore::Record& region,
+	const casacore::Vector<double>& locatePixel, casacore::Bool verbose
 ) {
 	auto doRef = locatePixel.empty();
-	Int dbg = 0;
+	casacore::Int dbg = 0;
 	auto inSub = SubImageFactory<T>::createSubImageRO(
 		infile, region, "",
-		verbose ? std::unique_ptr<LogIO>(new LogIO()).get() : nullptr
+		verbose ? std::unique_ptr<casacore::LogIO>(new casacore::LogIO()).get() : nullptr
 	);
 
 	// Generate output pixel location
 	const auto inShape = inSub->shape();
 	const auto outShape = target.shape();
 	const auto nDim = target.ndim();
-	Vector<Double> outPix(doRef ? 0 : nDim);
+	casacore::Vector<casacore::Double> outPix(doRef ? 0 : nDim);
 	const auto nDim2 = locatePixel.size();
 
 	if (! doRef) {
-		for (uInt i = 0; i < nDim; ++i) {
+		for (casacore::uInt i = 0; i < nDim; ++i) {
 			outPix[i] = i < nDim2 ? locatePixel[i]
 				: (outShape(i) - inShape(i)) / 2.0; // Centrally located
 		}
 	}
-	ImageRegrid<T> ir;
+	casacore::ImageRegrid<T> ir;
 	ir.showDebugInfo(dbg);
 	ir.insert(target, outPix, *inSub);
 }
 
-template<class T> Record PixelValueManipulator<T>::_doWorld(
-	SPIIT collapsed, const String& unit,
+template<class T> casacore::Record PixelValueManipulator<T>::_doWorld(
+	SPIIT collapsed, const casacore::String& unit,
 	PixelValueManipulatorData::SpectralType specType,
-	const Quantity *const restFreq, const String& frame,
-	uInt axis
+	const casacore::Quantity *const restFreq, const casacore::String& frame,
+	casacore::uInt axis
 ) const {
 	// drop degenerate axes
 	SPIIT tmp = SubImageFactory<T>::createImage(
-		*collapsed, "", Record(), "", AxesSpecifier(IPosition(1, axis)),
-		False, False, False
+		*collapsed, "", casacore::Record(), "", casacore::AxesSpecifier(casacore::IPosition(1, axis)),
+		false, false, false
 	);
-	const CoordinateSystem csys = tmp->coordinates();
-	Quantity t(0, unit);
-	String axisUnit = csys.worldAxisUnits()[0];
+	const casacore::CoordinateSystem csys = tmp->coordinates();
+	casacore::Quantity t(0, unit);
+	casacore::String axisUnit = csys.worldAxisUnits()[0];
 	if (! unit.empty()) {
 		_checkUnit(unit, csys, specType);
 	}
-	uInt length = tmp->shape()[0];
-	Vector<Double> coords(length);
-	Matrix<Double> pixel;
-	Matrix<Double> world;
-	Vector<Bool> failures;
+	casacore::uInt length = tmp->shape()[0];
+	casacore::Vector<casacore::Double> coords(length);
+	casacore::Matrix<casacore::Double> pixel;
+	casacore::Matrix<casacore::Double> world;
+	casacore::Vector<casacore::Bool> failures;
 	if (
 		! frame.empty() && csys.hasSpectralAxis()
-		&& MFrequency::typeFromString(frame)
-		!= csys.spectralCoordinate().frequencySystem(True)
+		&& casacore::MFrequency::typeFromString(frame)
+		!= csys.spectralCoordinate().frequencySystem(true)
 	) {
 		// We need to use the original coordinate system because we need
 		// the direction coordinate to be able to set the spectral
 		// conversion frame
-		CoordinateSystem mycsys(this->_getImage()->coordinates());
-		pixel.resize(IPosition(2, mycsys.nPixelAxes(), length));
+		casacore::CoordinateSystem mycsys(this->_getImage()->coordinates());
+		pixel.resize(casacore::IPosition(2, mycsys.nPixelAxes(), length));
 		pixel.set(0);
 		pixel.row(axis) = indgen(length, 0.0, 1.0);
-		SpectralCoordinate spCoord = mycsys.spectralCoordinate();
+		casacore::SpectralCoordinate spCoord = mycsys.spectralCoordinate();
 		mycsys.setSpectralConversion(frame);
 		ThrowIf (!
 			mycsys.toWorldMany(world, pixel, failures),
@@ -402,7 +402,7 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 		coords = world.row(axis);
 	}
 	else {
-		pixel.resize(IPosition(2, 1, length));
+		pixel.resize(casacore::IPosition(2, 1, length));
 		pixel.set(0);
 		pixel.row(0) = indgen(length, 0.0, 1.0);
 		ThrowIf(
@@ -413,7 +413,7 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 	}
 	if (! unit.empty() && unit != axisUnit) {
 		if (t.isConform(axisUnit)) {
-			Quantum<Vector<Double> > q(coords, axisUnit);
+			casacore::Quantum<casacore::Vector<casacore::Double> > q(coords, axisUnit);
 			coords = q.getValue(unit);
 		}
 		else {
@@ -422,41 +422,41 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 			);
 		}
 	}
-	Record ret;
+	casacore::Record ret;
 	ret.define("coords", coords);
 	ret.define("xUnit", unit.empty() ? axisUnit : unit);
 	return ret;
 }
 
 template<class T> void PixelValueManipulator<T>::_doNoncomformantUnit(
-	Vector<Double>& coords, const CoordinateSystem& csys,
-	const String& unit, PixelValueManipulatorData::SpectralType specType,
-	const Quantity *const restFreq, const String& axisUnit
+	casacore::Vector<casacore::Double>& coords, const casacore::CoordinateSystem& csys,
+	const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
+	const casacore::Quantity *const restFreq, const casacore::String& axisUnit
 ) const {
 	ThrowIf(
 		! csys.hasSpectralAxis(),
 		"Units must be conformant with" + axisUnit
 	);
-	SpectralCoordinate sp = csys.spectralCoordinate();
+	casacore::SpectralCoordinate sp = csys.spectralCoordinate();
 	if (restFreq) {
-		Double value = restFreq->getValue(axisUnit);
-		sp.setRestFrequency(value, False);
+		casacore::Double value = restFreq->getValue(axisUnit);
+		sp.setRestFrequency(value, false);
 		sp.selectRestFrequency(value);
 	}
-	Quantity t(0, unit);
+	casacore::Quantity t(0, unit);
 	if (t.isConform("m/s")) {
-		MDoppler::Types doppler;
+		casacore::MDoppler::Types doppler;
 		if (
 			specType == PixelValueManipulatorData::DEFAULT
 			|| specType == PixelValueManipulatorData::RELATIVISTIC
 		) {
-			doppler = MDoppler::RELATIVISTIC;
+			doppler = casacore::MDoppler::RELATIVISTIC;
 		}
 		else if (specType == PixelValueManipulatorData::RADIO_VELOCITY) {
-			doppler = MDoppler::RADIO;
+			doppler = casacore::MDoppler::RADIO;
 		}
 		else if (specType == PixelValueManipulatorData::OPTICAL_VELOCITY) {
-			doppler = MDoppler::OPTICAL;
+			doppler = casacore::MDoppler::OPTICAL;
 		}
 		else {
 			ThrowCc("Spectral type not compatible with velocity units");
@@ -480,11 +480,11 @@ template<class T> void PixelValueManipulator<T>::_doNoncomformantUnit(
 }
 
 template<class T> void PixelValueManipulator<T>::_checkUnit(
-	const String& unit, const CoordinateSystem& csys,
+	const casacore::String& unit, const casacore::CoordinateSystem& csys,
 	PixelValueManipulatorData::SpectralType specType
 ) const {
-	Quantity t(0, unit);
-	String axisUnit = csys.worldAxisUnits()[0];
+	casacore::Quantity t(0, unit);
+	casacore::String axisUnit = csys.worldAxisUnits()[0];
 	if (! t.isConform(axisUnit)) {
 		if (csys.hasSpectralAxis()) {
 			ThrowIf(
@@ -510,7 +510,7 @@ template<class T> void PixelValueManipulator<T>::_checkUnit(
 		}
 		else {
 			ThrowCc(
-				"Unit " + unit
+				"casacore::Unit " + unit
 				+ " does not conform to corresponding axis unit "
 				+ axisUnit
 			);
@@ -519,52 +519,52 @@ template<class T> void PixelValueManipulator<T>::_checkUnit(
 }
 
 template<class T> void PixelValueManipulator<T>::put(
-	SPIIT image, const Array<T>& pixelsArray, const Vector<Int>& blc,
-	const Vector<Int>& inc, Bool list, Bool locking, Bool replicate
+	SPIIT image, const casacore::Array<T>& pixelsArray, const casacore::Vector<casacore::Int>& blc,
+	const casacore::Vector<casacore::Int>& inc, casacore::Bool list, casacore::Bool locking, casacore::Bool replicate
 ) {
-	IPosition imageShape = image->shape();
-	uInt ndim = imageShape.nelements();
+	casacore::IPosition imageShape = image->shape();
+	casacore::uInt ndim = imageShape.nelements();
 	ThrowIf(
 		pixelsArray.ndim() > ndim,
 		"Pixel array cannot have more dimensions than the image!"
 	);
 
 	// Verify blc value. Fill in values for blc and inc.  trc set to shape-1
-	IPosition iblc = IPosition(blc);
-	IPosition itrc = imageShape - 1;
-	IPosition iinc(inc.size());
-	for (uInt i = 0; i < inc.size(); i++) {
+	casacore::IPosition iblc = casacore::IPosition(blc);
+	casacore::IPosition itrc = imageShape - 1;
+	casacore::IPosition iinc(inc.size());
+	for (casacore::uInt i = 0; i < inc.size(); i++) {
 		iinc(i) = inc[i];
 	}
-	LCBox::verify(iblc, itrc, iinc, imageShape);
+	casacore::LCBox::verify(iblc, itrc, iinc, imageShape);
 
 	// Create two slicers; one describing the region defined by blc + shape-1
 	// with extra axes given length 1. The other we extend with the shape
-	IPosition len = pixelsArray.shape();
-	len.resize(ndim, True);
-	for (uInt i = pixelsArray.shape().nelements(); i < ndim; i++) {
+	casacore::IPosition len = pixelsArray.shape();
+	len.resize(ndim, true);
+	for (casacore::uInt i = pixelsArray.shape().nelements(); i < ndim; i++) {
 		len(i) = 1;
 		itrc(i) = imageShape(i) - 1;
 	}
-	Slicer sl(iblc, len, iinc, Slicer::endIsLength);
+	casacore::Slicer sl(iblc, len, iinc, casacore::Slicer::endIsLength);
 	ThrowIf(
 		sl.end() + 1 > imageShape,
 		"Pixels array, including inc, extends beyond edge of image."
 	);
-	Slicer sl2(iblc, itrc, iinc, Slicer::endIsLast);
+	casacore::Slicer sl2(iblc, itrc, iinc, casacore::Slicer::endIsLast);
 
 	if (list) {
-		LogIO log;
-		log << LogOrigin("PixelValueManipulator", __func__)
-			<< LogIO::NORMAL << "Selected bounding box " << sl.start()
-			<< " to " << sl.end() << LogIO::POST;
+		casacore::LogIO log;
+		log << casacore::LogOrigin("PixelValueManipulator", __func__)
+			<< casacore::LogIO::NORMAL << "Selected bounding box " << sl.start()
+			<< " to " << sl.end() << casacore::LogIO::POST;
 	}
 
 	// Put the pixels
 	if (pixelsArray.ndim() == ndim) {
 		// _setCache(pixelsArray.shape());
 		if (replicate) {
-			LatticeUtilities::replicate(*image, sl2, pixelsArray);
+			casacore::LatticeUtilities::replicate(*image, sl2, pixelsArray);
 		}
 		else {
 			image->putSlice(pixelsArray, iblc, iinc);
@@ -573,14 +573,14 @@ template<class T> void PixelValueManipulator<T>::put(
 	else {
 		// Pad with extra degenerate axes if necessary (since it is somewhat
 		// costly).
-		Array<T> pixelsref(
+		casacore::Array<T> pixelsref(
 			pixelsArray.addDegenerate(
 				ndim - pixelsArray.ndim()
 			)
 		);
 		// _setCache(pixelsref.shape());
 		if (replicate) {
-			LatticeUtilities::replicate(*image, sl2, pixelsref);
+			casacore::LatticeUtilities::replicate(*image, sl2, pixelsref);
 		}
 		else {
 			image->putSlice(pixelsref, iblc, iinc);
@@ -593,10 +593,10 @@ template<class T> void PixelValueManipulator<T>::put(
 	}
 }
 
-template<class T> Bool PixelValueManipulator<T>::putRegion(
-    SPIIT image, const Array<T>& pixels,
-    const Array<Bool>& mask, Record& region, Bool list,
-    Bool usemask, Bool replicateArray
+template<class T> casacore::Bool PixelValueManipulator<T>::putRegion(
+    SPIIT image, const casacore::Array<T>& pixels,
+    const casacore::Array<casacore::Bool>& mask, casacore::Record& region, casacore::Bool list,
+    casacore::Bool usemask, casacore::Bool replicateArray
 ) {
     // used to verify array dimension
     auto imageNDim = image->ndim();
@@ -616,8 +616,8 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     }
 
     // Checks on pixelmask dimensions
-    Vector<Int> maskShape = mask.shape().asVector();
-    uInt maskNDim = mask.ndim();
+    casacore::Vector<casacore::Int> maskShape = mask.shape().asVector();
+    casacore::uInt maskNDim = mask.ndim();
     ThrowIf(
         maskNDim > imageNDim,
         "Mask array has more axes than the image"
@@ -629,10 +629,10 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
         );
     }
 
-    // Warning, an empty Array comes through the Glish tasking system
+    // Warning, an empty casacore::Array comes through the Glish tasking system
     // as shape = [0], ndim = 1, nelements = 0
-    IPosition dataShape;
-    uInt dataDim = 0;
+    casacore::IPosition dataShape;
+    casacore::uInt dataDim = 0;
     auto pixelElements = pixels.size();
     auto maskElements = mask.size();
 
@@ -664,15 +664,15 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
 
     // Make region.  If the region extends beyond the image, it is
     // truncated here.
-    LogIO mylog;
+    casacore::LogIO mylog;
     const auto& csys = image->coordinates();
     const auto imShape = image->shape();
-    std::unique_ptr<const ImageRegion> pRegion(
-        ImageRegion::fromRecord(
+    std::unique_ptr<const casacore::ImageRegion> pRegion(
+        casacore::ImageRegion::fromRecord(
             (list ? &mylog : nullptr), csys, imShape, region
         )
     );
-    LatticeRegion latRegion = pRegion->toLatticeRegion(
+    casacore::LatticeRegion latRegion = pRegion->toLatticeRegion(
         csys, imShape
     );
     // The pixels array must be same shape as the bounding box of the
@@ -683,15 +683,15 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     // We could go to the trouble of fishing out the bit that doesn't
     // fall off the edge.
     auto latRegionShape = latRegion.shape();
-    for (uInt i = 0; i < dataDim; ++i) {
+    for (casacore::uInt i = 0; i < dataDim; ++i) {
         if (dataShape[i] != latRegionShape[i]) {
             if (!(i == dataDim - 1 && dataShape[i] == 1)) {
                 ostringstream oss;
-                oss << "Data array shape (" << dataShape
+                oss << "casacore::Data array shape (" << dataShape
                     << ") including inc, does not"
                     << " match the shape of the region bounding box ("
                     << latRegionShape << ")" << endl;
-                ThrowCc(String(oss));
+                ThrowCc(casacore::String(oss));
             }
         }
     }
@@ -699,21 +699,21 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     // If our image doesn't have a mask, try and make it one.
     if (maskElements > 0) {
         if (! image->hasPixelMask()) {
-            String maskName("");
-            ImageMaskAttacher::makeMask(*image, maskName, True, True, mylog, list);
+            casacore::String maskName("");
+            ImageMaskAttacher::makeMask(*image, maskName, true, true, mylog, list);
         }
     }
     if (! image->isMasked()) {
-        usemask = False;
+        usemask = false;
     }
 
     // Put the mask first
     if (maskElements > 0 && image->hasPixelMask()) {
-        Lattice<Bool>& maskOut = image->pixelMask();
+        casacore::Lattice<casacore::Bool>& maskOut = image->pixelMask();
         if (maskOut.isWritable()) {
             if (dataDim == imageNDim) {
                 if (replicateArray) {
-                    LatticeUtilities::replicate(
+                    casacore::LatticeUtilities::replicate(
                         maskOut, latRegion.slicer(),
                         mask
                     );
@@ -723,12 +723,12 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
                 }
             }
             else {
-                mylog << LogIO::NORMAL
+                mylog << casacore::LogIO::NORMAL
                     << "Padding mask array with degenerate axes"
-                    << LogIO::POST;
-                Array<Bool> maskref(mask.addDegenerate(imageNDim - mask.ndim()));
+                    << casacore::LogIO::POST;
+                casacore::Array<casacore::Bool> maskref(mask.addDegenerate(imageNDim - mask.ndim()));
                 if (replicateArray) {
-                    LatticeUtilities::replicate(
+                    casacore::LatticeUtilities::replicate(
                         maskOut, latRegion.slicer(),
                         maskref
                     );
@@ -739,26 +739,26 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
             }
         }
         else {
-            ThrowCc("The mask is not writable. Probably an ImageExpr or SubImage");
+            ThrowCc("The mask is not writable. Probably an casacore::ImageExpr or casacore::SubImage");
         }
     }
 
     // Get the mask and data from disk if we need it
-    Array<Bool> oldMask;
-    Array<Float> oldData;
-    Bool deleteOldMask, deleteOldData, deleteNewData;
-    const Bool* pOldMask = 0;
-    const Float* pOldData = 0;
-    const Float* pNewData = 0;
+    casacore::Array<casacore::Bool> oldMask;
+    casacore::Array<casacore::Float> oldData;
+    casacore::Bool deleteOldMask, deleteOldData, deleteNewData;
+    const casacore::Bool* pOldMask = 0;
+    const casacore::Float* pOldData = 0;
+    const casacore::Float* pNewData = 0;
     if (pixelElements > 0 && usemask) {
         if (pixelNDim != imageNDim) {
-            pixelShape.append(IPosition(imageNDim - pixelNDim, 1));
+            pixelShape.append(casacore::IPosition(imageNDim - pixelNDim, 1));
         }
         oldData = image->getSlice(
-            latRegion.slicer().start(), pixelShape, False
+            latRegion.slicer().start(), pixelShape, false
         );
         oldMask = image->getMaskSlice(
-            latRegion.slicer().start(), pixelShape, False
+            latRegion.slicer().start(), pixelShape, false
         );
         pOldData = oldData.getStorage(deleteOldData); // From disk
         pOldMask = oldMask.getStorage(deleteOldMask); // From disk
@@ -769,10 +769,10 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     if (dataDim == imageNDim) {
         if (pixelElements > 0) {
             if (usemask) {
-                Bool deleteNewData2;
-                Array<Float> pixels2(pixelShape);
-                Float* pNewData2 = pixels2.getStorage(deleteNewData2);
-                for (uInt i = 0; i < pixels2.nelements(); i++) {
+                casacore::Bool deleteNewData2;
+                casacore::Array<casacore::Float> pixels2(pixelShape);
+                casacore::Float* pNewData2 = pixels2.getStorage(deleteNewData2);
+                for (casacore::uInt i = 0; i < pixels2.nelements(); i++) {
                     pNewData2[i] = pNewData[i]; // Value user gives
                     if (!pOldMask[i]) {
                         pNewData2[i] = pOldData[i]; // Value on disk
@@ -780,7 +780,7 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
                 }
                 pixels2.putStorage(pNewData2, deleteNewData2);
                 if (replicateArray) {
-                    LatticeUtilities::replicate(
+                    casacore::LatticeUtilities::replicate(
                         *image, latRegion.slicer(), pixels2
                     );
                 }
@@ -790,7 +790,7 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
             }
             else {
                 if (replicateArray) {
-                    LatticeUtilities::replicate(
+                    casacore::LatticeUtilities::replicate(
                         *image, latRegion.slicer(),
                         pixels
                     );
@@ -803,15 +803,15 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     }
     else {
         if (pixelElements > 0) {
-            mylog << LogIO::NORMAL
+            mylog << casacore::LogIO::NORMAL
                 << "Padding pixels array with degenerate axes"
-                << LogIO::POST;
+                << casacore::LogIO::POST;
             //
             if (usemask) {
-                Bool deleteNewData2;
-                Array<Float> pixels2(pixelShape);
-                Float* pNewData2 = pixels2.getStorage(deleteNewData2);
-                for (uInt i = 0; i < pixels2.nelements(); i++) {
+                casacore::Bool deleteNewData2;
+                casacore::Array<casacore::Float> pixels2(pixelShape);
+                casacore::Float* pNewData2 = pixels2.getStorage(deleteNewData2);
+                for (casacore::uInt i = 0; i < pixels2.nelements(); i++) {
                     pNewData2[i] = pNewData[i]; // Value user gives
                     if (!pOldMask[i]) {
                         pNewData2[i] = pOldData[i]; // Value on disk
@@ -819,7 +819,7 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
                 }
                 pixels2.putStorage(pNewData2, deleteNewData2);
                 if (replicateArray) {
-                    LatticeUtilities::replicate(
+                    casacore::LatticeUtilities::replicate(
                         *image, latRegion.slicer(), pixels2
                     );
                 }
@@ -828,11 +828,11 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
                 }
             }
             else {
-                Array<Float> pixelsref(
+                casacore::Array<casacore::Float> pixelsref(
                     pixels.addDegenerate(imageNDim - pixels.ndim())
                 );
                 if (replicateArray) {
-                    LatticeUtilities::replicate(
+                    casacore::LatticeUtilities::replicate(
                         *image, latRegion.slicer(), pixelsref
                     );
                 }
@@ -852,59 +852,59 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     if (pNewData != 0) {
         pixels.freeStorage(pNewData, deleteNewData);
     }
-    return True;
+    return true;
 }
 
-template<class T> Bool PixelValueManipulator<T>::set(
-    SPIIF image, const String& lespixels, const Int pixelmask,
-    Record& p_Region, const Bool list
+template<class T> casacore::Bool PixelValueManipulator<T>::set(
+    SPIIF image, const casacore::String& lespixels, const casacore::Int pixelmask,
+    casacore::Record& p_Region, const casacore::Bool list
 ) {
-    LogIO mylog;
-    mylog << LogOrigin(_className, __func__);
+    casacore::LogIO mylog;
+    mylog << casacore::LogOrigin(_className, __func__);
     auto setPixels = ! lespixels.empty();
     auto pixels = setPixels ? lespixels : "0.0";
 
     auto setMask = pixelmask != -1;
-    auto mask = setMask ? pixelmask > 0 : True;
+    auto mask = setMask ? pixelmask > 0 : true;
 
     if (!setPixels && !setMask) {
-        mylog << LogIO::WARN << "Nothing to do" << LogIO::POST;
-        return False;
+        mylog << casacore::LogIO::WARN << "Nothing to do" << casacore::LogIO::POST;
+        return false;
     }
 
-    Record tempRegions;
+    casacore::Record tempRegions;
 
     // Try and make a mask if we need one.
     if (setMask && ! image->isMasked()) {
-        String maskName("");
-        ImageMaskAttacher::makeMask(*image, maskName, True, True, mylog, list);
+        casacore::String maskName("");
+        ImageMaskAttacher::makeMask(*image, maskName, true, true, mylog, list);
     }
 
     // Make region and subimage
-    std::unique_ptr<Record> tmpRegion(new Record(p_Region));
-    std::unique_ptr<const ImageRegion> pRegion(
-        ImageRegion::fromRecord(
+    std::unique_ptr<casacore::Record> tmpRegion(new casacore::Record(p_Region));
+    std::unique_ptr<const casacore::ImageRegion> pRegion(
+        casacore::ImageRegion::fromRecord(
             (list ? &mylog : 0), image->coordinates(), image->shape(),
             *tmpRegion
         )
     );
-    SubImage<Float> subImage(*image, *pRegion, True);
+    casacore::SubImage<casacore::Float> subImage(*image, *pRegion, true);
 
     // Set the pixels
     if (setPixels) {
-        // Get LatticeExprNode (tree) from parser
+        // Get casacore::LatticeExprNode (tree) from parser
         // Convert the GlishRecord containing regions to a
-        // PtrBlock<const ImageRegion*>.
+        // casacore::PtrBlock<const casacore::ImageRegion*>.
         ThrowIf(
             pixels.empty(), "You must specify an expression"
         );
-        Block<LatticeExprNode> temps;
-        String exprName;
-        PtrBlock<const ImageRegion*> tempRegs;
+        casacore::Block<casacore::LatticeExprNode> temps;
+        casacore::String exprName;
+        casacore::PtrBlock<const casacore::ImageRegion*> tempRegs;
         makeRegionBlock(tempRegs, tempRegions);
-        LatticeExprNode node = ImageExprParse::command(pixels, temps, tempRegs);
+        casacore::LatticeExprNode node = casacore::ImageExprParse::command(pixels, temps, tempRegs);
         // Delete the ImageRegions
-        makeRegionBlock(tempRegs, Record());
+        makeRegionBlock(tempRegs, casacore::Record());
         // We must have a scalar expression
         ThrowIf(
             ! node.isScalar(), "The pixels expression must be scalar"
@@ -913,68 +913,68 @@ template<class T> Bool PixelValueManipulator<T>::set(
             node.isInvalidScalar(),
             "The scalar pixels expression is invalid"
         );
-        LatticeExprNode node2 = toFloat(node);
+        casacore::LatticeExprNode node2 = toFloat(node);
         // if region==T (good) set value given by pixel expression, else
         // leave the pixels as they are
-        LatticeRegion region = subImage.region();
-        LatticeExprNode node3(iif(region, node2.getFloat(), subImage));
-        subImage.copyData(LatticeExpr<Float> (node3));
+        casacore::LatticeRegion region = subImage.region();
+        casacore::LatticeExprNode node3(iif(region, node2.getFloat(), subImage));
+        subImage.copyData(casacore::LatticeExpr<casacore::Float> (node3));
     }
     // Set the mask
     if (setMask) {
-        Lattice<Bool>& pixelMask = subImage.pixelMask();
-        LatticeRegion region = subImage.region();
+        casacore::Lattice<casacore::Bool>& pixelMask = subImage.pixelMask();
+        casacore::LatticeRegion region = subImage.region();
         // if region==T (good) set value given by "mask", else
         // leave the pixelMask as it is
-        LatticeExprNode node4(iif(region, mask, pixelMask));
-        pixelMask.copyData(LatticeExpr<Bool> (node4));
+        casacore::LatticeExprNode node4(iif(region, mask, pixelMask));
+        pixelMask.copyData(casacore::LatticeExpr<casacore::Bool> (node4));
     }
-    return True;
+    return true;
 }
 
 template<class T> void PixelValueManipulator<T>::makeRegionBlock(
-    PtrBlock<const ImageRegion*>& regions,
-    const Record& Regions
+    casacore::PtrBlock<const casacore::ImageRegion*>& regions,
+    const casacore::Record& Regions
 ) {
     auto n = regions.size();
-    for (uInt j=0; j<n; ++j) {
+    for (casacore::uInt j=0; j<n; ++j) {
         delete regions[j];
     }
-    regions.resize(0, True, True);
-    uInt nreg = Regions.nfields();
+    regions.resize(0, true, true);
+    casacore::uInt nreg = Regions.nfields();
     if (nreg > 0) {
         regions.resize(nreg);
-        regions.set(static_cast<ImageRegion*> (0));
-        for (uInt i=0; i<nreg; ++i) {
-            regions[i] = ImageRegion::fromRecord(Regions.asRecord(i), "");
+        regions.set(static_cast<casacore::ImageRegion*> (0));
+        for (casacore::uInt i=0; i<nreg; ++i) {
+            regions[i] = casacore::ImageRegion::fromRecord(Regions.asRecord(i), "");
         }
     }
 }
 
-template<class T> Record PixelValueManipulator<T>::pixelValue(
-    const Vector<Int>& pixel
+template<class T> casacore::Record PixelValueManipulator<T>::pixelValue(
+    const casacore::Vector<casacore::Int>& pixel
 ) const {
-    Bool offImage;
-    Quantum<T> value;
-    Bool mask;
-    Vector<Int> pos(pixel);
+    casacore::Bool offImage;
+    casacore::Quantum<T> value;
+    casacore::Bool mask;
+    casacore::Vector<casacore::Int> pos(pixel);
     pixelValue(offImage, value, mask, pos);
     if (offImage) {
-        return Record();
+        return casacore::Record();
     }
 
-    RecordDesc outRecDesc;
+    casacore::RecordDesc outRecDesc;
     outRecDesc.addField("mask", TpBool);
     outRecDesc.addField("value", TpRecord);
     outRecDesc.addField("pixel", TpArrayInt);
-    Record outRec(outRecDesc);
+    casacore::Record outRec(outRecDesc);
     outRec.define("mask", mask);
-    String error;
-    QuantumHolder qh(value);
-    Record qr;
+    casacore::String error;
+    casacore::QuantumHolder qh(value);
+    casacore::Record qr;
     ThrowIf(
         ! qh.toRecord(error, qr),
-        "Unable to convert QuantumHolder to Record " + error
+        "Unable to convert casacore::QuantumHolder to casacore::Record " + error
     );
     outRec.defineRecord("value", qr);
 
@@ -983,8 +983,8 @@ template<class T> Record PixelValueManipulator<T>::pixelValue(
 }
 
 template<class T> void PixelValueManipulator<T>::pixelValue (
-    Bool& offImage, Quantum<T>& value, Bool& mask,
-    Vector<Int>& pos
+    casacore::Bool& offImage, casacore::Quantum<T>& value, casacore::Bool& mask,
+    casacore::Vector<casacore::Int>& pos
 ) const {
    const auto myim = this->_getImage();
     const auto imShape = myim->shape();
@@ -992,30 +992,30 @@ template<class T> void PixelValueManipulator<T>::pixelValue (
     const auto nDim = myim->ndim();
     if (pos.size() == 1 && pos[0] == -1) { // check for default input parameter
         pos.resize(nDim);
-        for (uInt i = 0; i < nDim; ++i) {
-            pos[i] = Int(refPix[i] + 0.5);
+        for (casacore::uInt i = 0; i < nDim; ++i) {
+            pos[i] = casacore::Int(refPix[i] + 0.5);
         }
     }
-    IPosition iPos = IPosition(pos);
-    const uInt nPix = iPos.nelements();
-    iPos.resize(nDim, True);
+    casacore::IPosition iPos = casacore::IPosition(pos);
+    const casacore::uInt nPix = iPos.nelements();
+    iPos.resize(nDim, true);
 
     // Discard extra pixels, add ref pixel for missing ones
-    offImage = False;
-    for (uInt i = 0; i < nDim; ++i) {
+    offImage = false;
+    for (casacore::uInt i = 0; i < nDim; ++i) {
         if ((i + 1) > nPix) {
-            iPos[i] = Int(refPix[i] + 0.5);
+            iPos[i] = casacore::Int(refPix[i] + 0.5);
         }
         else {
             if (iPos(i) < 0 || iPos[i] > (imShape[i] - 1)) {
-                offImage = True;
+                offImage = true;
             }
         }
     }
     if (offImage) {
         return;
     }
-    IPosition shape(myim->ndim(), 1);
+    casacore::IPosition shape(myim->ndim(), 1);
     auto pixel = myim->getSlice(iPos, shape);
     auto maskPixel = myim->getMaskSlice(iPos, shape);
     auto units = myim->units();
@@ -1023,10 +1023,10 @@ template<class T> void PixelValueManipulator<T>::pixelValue (
         pos.resize(iPos.size());
     }
     auto n = pos.size();
-    for (uInt i = 0; i < n; i++) {
+    for (casacore::uInt i = 0; i < n; i++) {
         pos(i) = iPos(i);
     }
-    value = Quantum<T> (pixel(shape - 1), units);
+    value = casacore::Quantum<T> (pixel(shape - 1), units);
     mask = maskPixel(shape - 1);
 }
 

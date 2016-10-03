@@ -32,12 +32,13 @@
 #include <display/region/Polygon.h>
 #include <display/DisplayEvents/MultiPolyTool.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MultiPolyTool::MultiPolyTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd,
 	                              Display::KeySym keysym, const Bool persistent ) :
 		RegionTool(keysym),itsPolygonPersistent(persistent), itsMode(Off),
-		itsEmitted(False), itsNPoints(0), itsHandleSize(7),
+		itsEmitted(false), itsNPoints(0), itsHandleSize(7),
 		rfactory(rcs->newSource(this)), pd_(pd) {
 		reset();
 		itsX.resize(1024);
@@ -238,7 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			updateRegion();
 		}
 
-		itsEmitted = False;  // changed polygon => not yet emitted.
+		itsEmitted = false;  // changed polygon => not yet emitted.
 		refresh();
 	}
 
@@ -255,10 +256,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			moving_regions.clear( );
 		}
 
-		Bool needsHandles=False;
+		Bool needsHandles=false;
 		if(itsMode==Move || itsMode==Resize) {
 			itsMode=Ready;
-			needsHandles=True;
+			needsHandles=true;
 		}
 
 		if ( itsMode==Ready && ev.worldCanvas()==itsCurrentWC &&
@@ -270,7 +271,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (!itsPolygonPersistent) reset();
 				else {
-					itsEmitted = True;
+					itsEmitted = true;
 					if(needsHandles) refresh();
 				}
 				// vertices and WC still remain valid until next
@@ -395,7 +396,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void MultiPolyTool::reset(Bool skipRefresh) {
 		Bool existed = (itsMode!=Off);
 		itsMode = Off;
-		itsEmitted = False;
+		itsEmitted = false;
 		if(existed && !skipRefresh) refresh();
 	}	// erase old drawing if necessary.
 
@@ -456,7 +457,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool MultiPolyTool::inHandle(const Int &pt, const Int &x, const Int &y) const {
-		if (pt<0 || pt >= itsNPoints) return False;
+		if (pt<0 || pt >= itsNPoints) return false;
 
 		Int ptx,pty;
 		get(ptx,pty, pt);
@@ -483,7 +484,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		if ((nabove + nbelow) % 2) return True;
+		if ((nabove + nbelow) % 2) return true;
 		// not even - possibly on a line of the polygon.
 
 		return (nabove % 2);

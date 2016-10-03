@@ -51,6 +51,7 @@
 #include <casa/System/Choice.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define NEED_UNDERSCORES
@@ -190,21 +191,21 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
   
   LogIO os(LogOrigin("HogbomCleanImageSkyModel","solve"));
   
-  Bool converged=False;
+  Bool converged=false;
   if(numberOfModels()>1) {
     os << "Cannot process more than one field" << LogIO::EXCEPTION;
   }
   
   // Make the residual image
   if(modified_p)
-    makeNewtonRaphsonStep(se, False, (numberIterations()<1)?True:False);
+    makeNewtonRaphsonStep(se, false, (numberIterations()<1)?true:False);
   
   //Make the PSF
   if(!donePSF_p)
     makeApproxPSFs(se);
 
   if(numberIterations() < 1){
-    return True;
+    return true;
   }
   
   if(!isSolveable(0)) {
@@ -217,7 +218,7 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
   Int ny=image(0).shape()(1);
   Int npol=image(0).shape()(2);
   Int nchan=image(0).shape()(3);
-  Bool isCubeMask=False; 
+  Bool isCubeMask=false; 
   AlwaysAssert((npol==1)||(npol==2)||(npol==3)||(npol==4), AipsError);
   
   // Loop over all channels
@@ -245,14 +246,14 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
   xend=3*nx/4-1;
   ybeg=ny/4; 
   yend=3*ny/4-1;
-  Bool domask=True;
+  Bool domask=true;
   if(hasMask(0)) {
-    domask=True;
+    domask=true;
     AlwaysAssert(mask(0).shape()(0)==nx, AipsError);
     AlwaysAssert(mask(0).shape()(1)==ny, AipsError);
     if(nchan >1){
       if(mask(0).shape()(3)==nchan){
-	isCubeMask=True;
+	isCubeMask=true;
 	os << "Using multichannel mask" << LogIO::POST;
       }
       else{
@@ -271,7 +272,7 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
 			 xend, ybeg, yend); 
   }
   else {
-    domask=False;
+    domask=false;
   }
   
   //Some variables if we change the image size
@@ -399,7 +400,7 @@ Bool HogbomCleanImageSkyModel::solve(SkyEquation& se) {
   }
    os << LatticeExprNode(sum(image(0))).getFloat() 
 	       << " Jy is the sum of clean components " << LogIO::POST;
-  modified_p=True;
+  modified_p=true;
   setThreshold(maxRes);
   setNumberIterations(iterUsed);
   if (maskli != 0) {
@@ -459,16 +460,16 @@ Matrix<Float>* HogbomCleanImageSkyModel::makeMaskMatrix(const Int& nx,
   }
   // Now have possible BLC. Make sure that we don't go over the
   // edge later
-  Bool larger_quarter=False;
+  Bool larger_quarter=false;
   if((xend - xbeg)>nx/2) {
     //xbeg=nx/4-1; //if larger than quarter take inner of mask
     //os << LogIO::WARN << "Mask span over more than half the x-axis: Considering inner half of the x-axis"  << LogIO::POST;
-    larger_quarter=True;
+    larger_quarter=true;
   } 
   if((yend - ybeg)>ny/2) { 
     //ybeg=ny/4-1;
     //os << LogIO::WARN << "Mask span over more than half the y-axis: Considering inner half of the y-axis" << LogIO::POST;
-    larger_quarter=True;
+    larger_quarter=true;
   }  
   if(larger_quarter){
     newNx=2*nx;

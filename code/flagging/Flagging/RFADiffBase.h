@@ -41,7 +41,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // min number of deviations for which average is considered valid
 const int   RFA_MIN_NAD = 20;
 // significant change in accumulated average
-const Float RFA_AAD_CHANGE = 0.05;
+const casacore::Float RFA_AAD_CHANGE = 0.05;
 
 // <summary>
 // RFADiffBase: abstract class for deviation-based flagging
@@ -79,54 +79,54 @@ const Float RFA_AAD_CHANGE = 0.05;
 class RFADiffBase : public RFAFlagCubeBase
 {
 public:
-  RFADiffBase  ( RFChunkStats &ch,const RecordInterface &parm );
+  RFADiffBase  ( RFChunkStats &ch,const casacore::RecordInterface &parm );
   virtual ~RFADiffBase ();
   
-  virtual uInt estimateMemoryUse ();  
-  virtual Bool newChunk ( Int &maxmem );
+  virtual casacore::uInt estimateMemoryUse ();  
+  virtual casacore::Bool newChunk ( casacore::Int &maxmem );
   virtual void endChunk ();
   virtual void startData (bool verbose);
   virtual void startDry (bool verbose);
-  virtual IterMode iterTime (uInt it);
-  virtual IterMode iterDry  (uInt it);
+  virtual IterMode iterTime (casacore::uInt it);
+  virtual IterMode iterDry  (casacore::uInt it);
   virtual IterMode endData  ();
   virtual IterMode endDry   ();
 
-  virtual String getDesc ();
-  static const RecordInterface & getDefaults ();
+  virtual casacore::String getDesc ();
+  static const casacore::RecordInterface & getDefaults ();
 
 protected:
-  static Bool dummy_Bool;
+  static casacore::Bool dummy_Bool;
 
 // prepares for a pass over one data row
-  void startDataRow (uInt ifr);
+  void startDataRow (casacore::uInt ifr);
 // updates the diff lattice with a value, and performs clipping
-  Float setDiff (uInt ich,uInt ifr,Float d,Bool &flagged = dummy_Bool );
+  casacore::Float setDiff (casacore::uInt ich,casacore::uInt ifr,casacore::Float d,casacore::Bool &flagged = dummy_Bool );
 // ends pass over single data row  
-  void endDataRow   (uInt ifr);
+  void endDataRow   (casacore::uInt ifr);
   
 // updates noise estimates (sih0), returns the max change
-  Float updateSigma ();     
+  casacore::Float updateSigma ();     
   
 // computes a correlations mask. Called once for each chunk (since correlations
 // can change from chunk to chunk)
   virtual RFlagWord newCorrMask () =0;
 
-  Double clip_level;      // clipping level, in AADs
-  Double row_clip_level;  // clipping level for rows (based on noise estimates), <0 for disable
-  Bool   disable_row_clip; // flag: row clipping _disabled_ globally
-  Bool   clipping_rows;    // flag: row clipping active for this chunk
+  casacore::Double clip_level;      // clipping level, in AADs
+  casacore::Double row_clip_level;  // clipping level for rows (based on noise estimates), <0 for disable
+  casacore::Bool   disable_row_clip; // flag: row clipping _disabled_ globally
+  casacore::Bool   clipping_rows;    // flag: row clipping active for this chunk
   
   RFFloatLattice diff;   // (Nchan,Nifr,Nt) cube of deviations
   FlagCubeIterator *     pflagiter; // flag iterator used by setDiff()
   RFRowClipper          rowclipper;
   
-  Vector<Float> diffrow;   // one row of deviations, for noise computations
+  casacore::Vector<casacore::Float> diffrow;   // one row of deviations, for noise computations
   int idiffrow;
 
-  Matrix<Float> sig;       // current noise estimate for (it,ifr)
-  Matrix<Float> sig0;      // reference estimate (boxcar average from previous pass)
-  LogicalVector sigupdated;
+  casacore::Matrix<casacore::Float> sig;       // current noise estimate for (it,ifr)
+  casacore::Matrix<casacore::Float> sig0;      // reference estimate (boxcar average from previous pass)
+  casacore::LogicalVector sigupdated;
 };
 
 // <summary>
@@ -145,7 +145,7 @@ protected:
 // <synopsis>
 // This is another abstract class on top of DiffBase. It is also inherited from
 // RFDataMapper, so it includes functions for mapping visibilities to a single
-// Float value.
+// casacore::Float value.
 // </synopsis>
 //
 // <todo asof="2001/04/16">
@@ -157,15 +157,15 @@ protected:
 class RFADiffMapBase : public RFADiffBase, protected RFDataMapper
 {
 public:
-  RFADiffMapBase  ( RFChunkStats &ch,const RecordInterface &parm );
+  RFADiffMapBase  ( RFChunkStats &ch,const casacore::RecordInterface &parm );
   virtual ~RFADiffMapBase ();
 
-  virtual IterMode iterTime (uInt it);
+  virtual IterMode iterTime (casacore::uInt it);
   
-  virtual String getDesc ();
+  virtual casacore::String getDesc ();
   
-// returns a Record of all available parameters and their default values
-  static const RecordInterface & getDefaults ();
+// returns a casacore::Record of all available parameters and their default values
+  static const casacore::RecordInterface & getDefaults ();
   
 protected:
   virtual RFlagWord newCorrMask () 

@@ -37,6 +37,7 @@
 #include <display/DisplayCanvas/WCAxisLabeller.h>
 #include <casa/System/AipsrcValue.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const float AxesDisplayData::AXIS_LABEL_DEFAULT_CHAR_SIZE = 1.2f;
@@ -149,7 +150,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool AxesDisplayData::setOptions(Record &rec, Record &recOut) {
 		Bool ret = PassiveCachingDD::setOptions(rec, recOut);
 
-		Bool localchange = False;
+		Bool localchange = false;
 
 		// "Basic" context
 		localchange = (itsParamTitleText->fromRecord(rec) || localchange);

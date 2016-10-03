@@ -34,6 +34,7 @@
 #include <flagging/Flagging/FlagAgentRFlag.h>
 #include <flagging/Flagging/FlagAgentDisplay.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ////////////////////////////////////
@@ -187,9 +188,9 @@ FlagAgentBase::initialize()
    visBufferFlags_p = 0;
 
    // Pre-averaging parameters
-   timeavg_p = False;
+   timeavg_p = false;
    timebin_p = 0.0;
-   channelavg_p = False;
+   channelavg_p = false;
    chanbin_p = Vector<Int>(1,0);
 
    //// Initialize configuration ////
@@ -1485,7 +1486,7 @@ FlagAgentBase::setAgentParameters(Record config)
 	}
 	else
 	{
-		channelavg_p = False;
+		channelavg_p = false;
 	}
 
 
@@ -1494,13 +1495,13 @@ FlagAgentBase::setAgentParameters(Record config)
 		exists = config.fieldNumber ("chanbin");
 		if (exists >= 0)
 		{
-			if ( config.type(exists) == casa::TpInt )
+			if ( config.type(exists) == casacore::TpInt )
 			{
 				Int chanbin;
 				config.get (exists, chanbin);
 				chanbin_p = Vector<Int>(1,chanbin);
 			}
-			else if ( config.type(exists) == casa::TpArrayInt)
+			else if ( config.type(exists) == casacore::TpArrayInt)
 			{
 				config.get (exists, chanbin_p);
 			}
@@ -2644,18 +2645,18 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		{
 			*logger_p << LogIO::DEBUG1 <<  " Detected Water Vapor data in spw (" <<
 					visibilityBuffer_p->spectralWindows()(0) << "), will be flagged" << LogIO::POST;
-			return True;
+			return true;
 		}
 		else
 		{
-			return False;
+			return false;
 		}
 	}
 	else if (polMap->find(Stokes::I) != polMap->end())
 	{
 		*logger_p << LogIO::DEBUG1 <<  " Detected Water Vapor data in spw (" <<
 					visibilityBuffer_p->spectralWindows()(0) << "), won't be flagged" << LogIO::POST;
-		return False;
+		return false;
 	}
 
 	// After WVR - I products check we go ahead with the rest of the generic cases
@@ -2663,26 +2664,26 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 	{
 		if (polMap->find(Stokes::XX) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (XX) not available in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("YY") != string::npos)
 	{
 		if (polMap->find(Stokes::YY) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (YY) not available in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 
 	}
@@ -2690,219 +2691,219 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 	{
 		if (polMap->find(Stokes::XY) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (XY) not available in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("YX") != string::npos)
 	{
 		if (polMap->find(Stokes::YX) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (YX) not available in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("RR") != string::npos)
 	{
 		if (polMap->find(Stokes::RR) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (RR) not available in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("LL") != string::npos)
 	{
 		if (polMap->find(Stokes::LL) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (LL) not available in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("LR") != string::npos)
 	{
 		if (polMap->find(Stokes::LR) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (LR) not available in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("RL") != string::npos)
 	{
 		if (polMap->find(Stokes::RL) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (RL) not available in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("I") != string::npos)
 	{
 		if (polMap->find(Stokes::I) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else if ((polMap->find(Stokes::XX) != polMap->end()) and (polMap->find(Stokes::YY) != polMap->end()))
 		{
-			return True;
+			return true;
 		}
 		else if ((polMap->find(Stokes::RR) != polMap->end()) and (polMap->find(Stokes::LL) != polMap->end()))
 		{
 
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (I) cannot be computed from available polarizations in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("Q") != string::npos)
 	{
 		if (polMap->find(Stokes::Q) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else if ((polMap->find(Stokes::XX) != polMap->end()) and (polMap->find(Stokes::YY) != polMap->end()))
 		{
-			return True;
+			return true;
 		}
 		else if ((polMap->find(Stokes::RL) != polMap->end()) and (polMap->find(Stokes::LR) != polMap->end()))
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (Q) cannot be computed from available polarizations in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("U") != string::npos)
 	{
 		if (polMap->find(Stokes::U) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else if ((polMap->find(Stokes::XY) != polMap->end()) and (polMap->find(Stokes::YX) != polMap->end()))
 		{
-			return True;
+			return true;
 		}
 		else if ((polMap->find(Stokes::RL) != polMap->end()) and (polMap->find(Stokes::LR) != polMap->end()))
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (U) cannot be computed from available polarizations in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if ((expression_p.find("V") != string::npos) and (expression_p.find("WVR") == string::npos))
 	{
 		if (polMap->find(Stokes::V) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else if ((polMap->find(Stokes::XY) != polMap->end()) and (polMap->find(Stokes::YX) != polMap->end()))
 		{
-			return True;
+			return true;
 		}
 		else if ((polMap->find(Stokes::RR) != polMap->end()) and (polMap->find(Stokes::LL) != polMap->end()))
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (V) cannot be computed from available polarizations in current spectral window (" <<
 					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("SOL1") != string::npos)
 	{
 		if (polMap->find(VisMapper::CALSOL1) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (SOL1) not available" << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("SOL2") != string::npos)
 	{
 		if (polMap->find(VisMapper::CALSOL2) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (SOL2) not available" << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("SOL3") != string::npos)
 	{
 		if (polMap->find(VisMapper::CALSOL3) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (SOL3) not available" << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else if (expression_p.find("SOL4") != string::npos)
 	{
 		if (polMap->find(VisMapper::CALSOL4) != polMap->end())
 		{
-			return True;
+			return true;
 		}
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Calibration solution element (SOL4) not available" << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else
 	{
 		throw AipsError("Unknown polarization requested, (" + expression_p + ") supported types are: XX,YY,XY,YX,RR,LL,RL,LR,I,Q,U,V");
-		return False;
+		return false;
 	}
-	return False;
+	return false;
 }
 
 bool

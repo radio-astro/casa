@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File AnnotationTable.h
+ * casacore::File AnnotationTable.h
  */
  
 #ifndef AnnotationTable_CLASS
@@ -114,7 +114,7 @@ class AnnotationRow;
  * <BR>
  * 
  * \par Role
- * The Annotation Table is intended to offer space for unexpected data to be  added in the software development process at short notice, without  redefining the data model.
+ * The Annotation casacore::Table is intended to offer space for unexpected data to be  added in the software development process at short notice, without  redefining the data model.
  * <BR>
  
  * Generated from model's revision "1.64", branch "HEAD"
@@ -332,7 +332,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a AnnotationTableIDL CORBA structure.
 	 *

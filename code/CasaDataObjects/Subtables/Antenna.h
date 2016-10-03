@@ -10,10 +10,14 @@
 
 #include "CasaTableRow.h"
 
-namespace casa {
+namespace casacore{
 
 class String;
 template <typename T> class Vector;
+}
+
+namespace casa {
+
 
 namespace cdo {
 
@@ -23,47 +27,47 @@ public:
 
     Antenna ();
     Antenna (const Antenna & other);
-    Antenna (Double dishDiameter_p,
-             Bool flagged_p,
-             const String & mount_p,
-             const String & name_p,
-             const Vector<Float> & offset_p,
-             const Vector<Float> & position_p,
-             const String & station_p,
-             const String & type_p);
+    Antenna (casacore::Double dishDiameter_p,
+             casacore::Bool flagged_p,
+             const casacore::String & mount_p,
+             const casacore::String & name_p,
+             const casacore::Vector<casacore::Float> & offset_p,
+             const casacore::Vector<casacore::Float> & position_p,
+             const casacore::String & station_p,
+             const casacore::String & type_p);
 
     Antenna & operator= (const Antenna & other);
 
-    Double dishDiameter () const;
-    Bool flagged () const;
-    String name () const;
-    String station () const;
-    String type () const;
-    String mount () const;
-    const Vector<Float> & position () const;
-    const Vector<Float> & offset () const;
+    casacore::Double dishDiameter () const;
+    casacore::Bool flagged () const;
+    casacore::String name () const;
+    casacore::String station () const;
+    casacore::String type () const;
+    casacore::String mount () const;
+    const casacore::Vector<casacore::Float> & position () const;
+    const casacore::Vector<casacore::Float> & offset () const;
 
-    void setDishDiameter (Double);
-    void setFlagged (Bool);
-    void setName (const String &);
-    void setStation (const String &);
-    void setType (const String &);
-    void setMount (const String &);
-    void setPosition (const Vector<Float> &);
-    void setOffset (const Vector<Float> &);
+    void setDishDiameter (casacore::Double);
+    void setFlagged (casacore::Bool);
+    void setName (const casacore::String &);
+    void setStation (const casacore::String &);
+    void setType (const casacore::String &);
+    void setMount (const casacore::String &);
+    void setPosition (const casacore::Vector<casacore::Float> &);
+    void setOffset (const casacore::Vector<casacore::Float> &);
 
 protected:
 
 private:
 
-    Double dishDiameter_p;
-    Bool flagged_p;
-    String mount_p;
-    String name_p;
-    Vector<Float> offset_p;
-    Vector<Float> position_p;
-    String station_p;
-    String type_p;
+    casacore::Double dishDiameter_p;
+    casacore::Bool flagged_p;
+    casacore::String mount_p;
+    casacore::String name_p;
+    casacore::Vector<casacore::Float> offset_p;
+    casacore::Vector<casacore::Float> position_p;
+    casacore::String station_p;
+    casacore::String type_p;
 };
 
 }

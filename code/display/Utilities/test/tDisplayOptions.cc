@@ -48,7 +48,7 @@ int main(int, char **) {
 	String vFFieldname("vecFloatField");
 	String vSub("value");
 
-	Bool bTarget = True;
+	Bool bTarget = true;
 	String sTarget = "red";
 	Bool sUnsetTarget, soUnsetTarget;
 	Float fTarget = 4.2;
@@ -65,7 +65,7 @@ int main(int, char **) {
 
 	Record sRecord;
 
-	Bool error = False;
+	Bool error = false;
 
 	// ------------------------------------------------------------
 	// Test return values of unset(), isUnset() functions
@@ -500,7 +500,7 @@ int main(int, char **) {
 	// attempt to read String field matching existing value, not unset.
 	rec.define(sFieldname, sTarget);
 	soTarget = sTarget;
-	sUnsetTarget = False;
+	sUnsetTarget = false;
 	soUnsetTarget = sUnsetTarget;
 	if (dopt.readOptionRecord(sTarget, sUnsetTarget, error, rec, sFieldname)) {
 		localAbort("inconsistent return value for (with unset) String read");
@@ -517,7 +517,7 @@ int main(int, char **) {
 	// attempt to read String field not matching existing value, not unset.
 	rec.define(sFieldname, sTarget + "a");
 	soTarget = sTarget;
-	sUnsetTarget = False;
+	sUnsetTarget = false;
 	soUnsetTarget = sUnsetTarget;
 	if (!dopt.readOptionRecord(sTarget, sUnsetTarget, error, rec, sFieldname)) {
 		localAbort("inconsistent return value for (with unset) String read");
@@ -534,7 +534,7 @@ int main(int, char **) {
 	// attempt to read unset string, not presently unset.
 	rec.defineRecord(sFieldname, dopt.unset());
 	soTarget = sTarget;
-	sUnsetTarget = False;
+	sUnsetTarget = false;
 	soUnsetTarget = sUnsetTarget;
 	if (!dopt.readOptionRecord(sTarget, sUnsetTarget, error, rec, sFieldname)) {
 		localAbort("inconsistent return value for (with unset) String read");
@@ -551,7 +551,7 @@ int main(int, char **) {
 	// attempt to read unset string, presently unset.
 	rec.defineRecord(sFieldname, dopt.unset());
 	soTarget = sTarget;
-	sUnsetTarget = True;
+	sUnsetTarget = true;
 	soUnsetTarget = sUnsetTarget;
 	if (dopt.readOptionRecord(sTarget, sUnsetTarget, error, rec, sFieldname)) {
 		localAbort("inconsistent return value for (with unset) String read");
@@ -569,7 +569,7 @@ int main(int, char **) {
 	sRecord.defineRecord(vSub, dopt.unset());
 	rec.defineRecord(sFieldname, sRecord);
 	soTarget = sTarget;
-	sUnsetTarget = True;
+	sUnsetTarget = true;
 	soUnsetTarget = sUnsetTarget;
 	if (dopt.readOptionRecord(sTarget, sUnsetTarget, error, rec, sFieldname)) {
 		localAbort("inconsistent return value for (with unset) String read");

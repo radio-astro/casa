@@ -34,13 +34,17 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <components/ComponentModels/TwoSidedShape.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class MDirection;
 class MVAngle;
 template <class Qtype> class Quantum;
 template <class T> class Matrix;
 template <class T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>A disk model for the spatial distribution of emission</summary>
 
@@ -66,7 +70,7 @@ template <class T> class Vector;
 // groups of SkyComponent objects.
 
 // The reference direction is defined in celestial co-ordinates, using a
-// <linkto class=MDirection>MDirection</linkto> object. It indicates where the
+// <linkto class=casacore::MDirection>MDirection</linkto> object. It indicates where the
 // centre of the disk is on the sky. The direction can be specified both in
 // the constructor or with the <src>setRefDirection</src> function.
 
@@ -75,7 +79,7 @@ template <class T> class Vector;
 // the position angle is zero. A positive position angle moves the Northern
 // side of the disk to the East.  The axial ratio is the ratio of the
 // minor to major axis widths. The major axis MUST not be smaller than the
-// minor axis otherwise an AipsError is thrown.
+// minor axis otherwise an casacore::AipsError is thrown.
 
 // These parameters of the disk (width, position angle, direction etc.) can be
 // specified at construction time, using the <src>*inRad</src> functions or
@@ -109,18 +113,18 @@ template <class T> class Vector;
 // <src>dTwoSidedShape.cc</src> file. 
 // <srcblock>
 // { // construct a model for Jupiter.
-//   Quantity clk_time; MVTime::read(clk_time, "01-10-2000/12:59");
-//   MEpoch obs_epoch(clk_time, MEpoch::UTC);
-//   MeasFrame obs_frame(obs_epoch);
-//   MDirection jupiter_dir(MVDirection(0), 
-//                          MDirection::Ref(MDirection::JUPITER, obs_frame));
+//   casacore::Quantity clk_time; casacore::MVTime::read(clk_time, "01-10-2000/12:59");
+//   casacore::MEpoch obs_epoch(clk_time, casacore::MEpoch::UTC);
+//   casacore::MeasFrame obs_frame(obs_epoch);
+//   casacore::MDirection jupiter_dir(casacore::MVDirection(0), 
+//                          casacore::MDirection::Ref(casacore::MDirection::JUPITER, obs_frame));
 //   DiskShape jupiter_shape;
 //   jupiter_shape.setRefDirection(jupiter_dir);
-//   jupiter_shape.setWidth(Quantity(4,"arcmin"), Quantity(3.9,"arcmin"),
-//                          Quantity(3, "deg"));
+//   jupiter_shape.setWidth(casacore::Quantity(4,"arcmin"), casacore::Quantity(3.9,"arcmin"),
+//                          casacore::Quantity(3, "deg"));
 //   printShape(jupiter_shape);
-//   MDirection sample_dir(MVDirection(1.218, 0.37), MDirection::J2000);
-//   if (jupiter_shape.sample(sample_dir, MVAngle(0.1)) > 0.0) {
+//   casacore::MDirection sample_dir(casacore::MVDirection(1.218, 0.37), casacore::MDirection::J2000);
+//   if (jupiter_shape.sample(sample_dir, casacore::MVAngle(0.1)) > 0.0) {
 //     cout << "The position in J2000 coordinates is near: " 
 //          << sample_dir.getAngle("deg") << endl;
 //   }
@@ -152,13 +156,13 @@ public:
   // Construct a disk shape centred in the specified direction, specifying
   // the widths & position angle.
   // <group>
-  DiskShape(const MDirection& direction,
-	    const Quantum<Double>& majorAxis,
-	    const Quantum<Double>& minorAxis,
-	    const Quantum<Double>& positionAngle);
-  DiskShape(const MDirection& direction, const Quantum<Double>& width,
-	    const Double axialRatio,
-	    const Quantum<Double>& positionAngle);
+  DiskShape(const casacore::MDirection& direction,
+	    const casacore::Quantum<casacore::Double>& majorAxis,
+	    const casacore::Quantum<casacore::Double>& minorAxis,
+	    const casacore::Quantum<casacore::Double>& positionAngle);
+  DiskShape(const casacore::MDirection& direction, const casacore::Quantum<casacore::Double>& width,
+	    const casacore::Double axialRatio,
+	    const casacore::Quantum<casacore::Double>& positionAngle);
   // </group>
 
   // The copy constructor uses copy semantics.
@@ -178,29 +182,29 @@ public:
   // values are in radians. There are also functions in the base class for
   // doing this with other angular units.
   // <group>
-  virtual void setWidthInRad(const Double majorAxis,
-			     const Double minorAxis, 
-			     const Double positionAngle);
-  virtual Double majorAxisInRad() const;
-  virtual Double minorAxisInRad() const;
-  virtual Double positionAngleInRad() const;
+  virtual void setWidthInRad(const casacore::Double majorAxis,
+			     const casacore::Double minorAxis, 
+			     const casacore::Double positionAngle);
+  virtual casacore::Double majorAxisInRad() const;
+  virtual casacore::Double minorAxisInRad() const;
+  virtual casacore::Double positionAngleInRad() const;
   // </group>
 
   // Calculate the proportion of the flux that is in a pixel of specified size
   // centered in the specified direction. The returned value will always be
   // between zero and one (inclusive).
-  virtual Double sample(const MDirection& direction, 
-			const MVAngle& pixelLatSize,
-			const MVAngle& pixelLongSize) const;
+  virtual casacore::Double sample(const casacore::MDirection& direction, 
+			const casacore::MVAngle& pixelLatSize,
+			const casacore::MVAngle& pixelLongSize) const;
 
   // Same as the previous function except that many directions can be sampled
   // at once. The reference frame and pixel size must be the same for all the
   // specified directions.
-  virtual void sample(Vector<Double>& scale, 
-		      const Vector<MDirection::MVType>& directions, 
-		      const MDirection::Ref& refFrame,
-		      const MVAngle& pixelLatSize,
-		      const MVAngle& pixelLongSize) const;
+  virtual void sample(casacore::Vector<casacore::Double>& scale, 
+		      const casacore::Vector<casacore::MDirection::MVType>& directions, 
+		      const casacore::MDirection::Ref& refFrame,
+		      const casacore::MVAngle& pixelLatSize,
+		      const casacore::MVAngle& pixelLongSize) const;
 
   // Return the Fourier transform of the component at the specified point in
   // the spatial frequency domain. The point is specified by a 3 element vector
@@ -212,50 +216,50 @@ public:
   // The reference position for the transform is the direction of the
   // component. As this component is symmetric about this point the transform
   // is always a real value.
-  virtual DComplex visibility(const Vector<Double>& uvw,
-			      const Double& frequency) const;
+  virtual casacore::DComplex visibility(const casacore::Vector<casacore::Double>& uvw,
+			      const casacore::Double& frequency) const;
 
   // Same as the previous function except that many (u,v,w) points can be
-  // sampled at once. The uvw Matrix must have a first dimension of three, and
+  // sampled at once. The uvw casacore::Matrix must have a first dimension of three, and
   // a second dimension that is the same as the length of the scale
   // Vector. Otherwise and exception is thrown (when compiled in debug mode).
-  virtual void visibility(Vector<DComplex>& scale, const Matrix<Double>& uvw,
-			  const Double& frequency) const;
+  virtual void visibility(casacore::Vector<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
+			  const casacore::Double& frequency) const;
 
   //same as above except with many frequencies
-  virtual void visibility(Matrix<DComplex>& scale, const Matrix<Double>& uvw,
-   			  const Vector<Double>& frequency) const;
+  virtual void visibility(casacore::Matrix<casacore::DComplex>& scale, const casacore::Matrix<casacore::Double>& uvw,
+   			  const casacore::Vector<casacore::Double>& frequency) const;
 
   // Return a pointer to a copy of this object upcast to a ComponentShape
   // object. The class that uses this function is responsible for deleting the
   // pointer. This is used to implement a virtual copy constructor.
   virtual ComponentShape* clone() const;
 
-  // Function which checks the internal data of this class for correct
-  // dimensionality and consistent values. Returns True if everything is fine
-  // otherwise returns False.
-  virtual Bool ok() const;
+  // casacore::Function which checks the internal data of this class for correct
+  // dimensionality and consistent values. Returns true if everything is fine
+  // otherwise returns false.
+  virtual casacore::Bool ok() const;
 
   // return a pointer to this object.
   virtual const ComponentShape* getPtr() const; 
 
-  virtual String sizeToString() const;
+  virtual casacore::String sizeToString() const;
 
 private:
-  Double calcSample(const MDirection::MVType& compDirValue, 
-		    const MDirection::MVType& dirVal, 
-		    const Double majRad, const Double minRad, 
-		    const Double pixValue) const;
-  Double calcVis(Double u, Double v, const Double factor) const;
-  static void rotateVis(Double& u, Double& v, 
-			const Double cpa, const Double spa);
+  casacore::Double calcSample(const casacore::MDirection::MVType& compDirValue, 
+		    const casacore::MDirection::MVType& dirVal, 
+		    const casacore::Double majRad, const casacore::Double minRad, 
+		    const casacore::Double pixValue) const;
+  casacore::Double calcVis(casacore::Double u, casacore::Double v, const casacore::Double factor) const;
+  static void rotateVis(casacore::Double& u, casacore::Double& v, 
+			const casacore::Double cpa, const casacore::Double spa);
 
   //# The parameters of the disk
   // <group>
-  Double itsMajValue;
-  Double itsMinValue;
-  Double itsPaValue;
-  Double itsHeight;
+  casacore::Double itsMajValue;
+  casacore::Double itsMinValue;
+  casacore::Double itsPaValue;
+  casacore::Double itsHeight;
   // </group>
 };
 

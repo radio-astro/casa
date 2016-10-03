@@ -31,9 +31,13 @@
 #include <utility>
 #include <QMainWindow>
 
-namespace casa {
+namespace casacore{
 
 	template <class T> class ImageInterface;
+}
+
+namespace casa {
+
 	class BinPlotWidget;
 
 //This dialog displays a histogram that allows the user
@@ -46,7 +50,7 @@ namespace casa {
 
 	public:
 		ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
-		void setImage( const SHARED_PTR<const ImageInterface<Float> >  img );
+		void setImage( const SHARED_PTR<const casacore::ImageInterface<casacore::Float> >  img );
 		void setInterval( double minValue, double maxValue );
 		std::pair<double,double> getInterval() const;
 		~ThresholdingBinPlotDialog();

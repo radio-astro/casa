@@ -34,9 +34,13 @@
 #include <nrao/VLA/VLAArchiveInput.h>
 
 #include <casa/namespace.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
 class Path;
 class ByteSource;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
 } //# NAMESPACE CASA - END
 
 
@@ -62,7 +66,7 @@ class ByteSource;
 // archive data record from the input. A reference to this data can be
 // obtained using the logicalRecord function.
 //
-// Refer to the "VLA Archive Data Format", VLA Computer Memorandum 186
+// Refer to the "VLA Archive casacore::Data casacore::Format", VLA Computer Memorandum 186
 // by G.C. Hunt, K.P. Sowinski, and T.J. Bottomly; June 1993.
 // (This is also available as AIPS++ note 159)
 //
@@ -77,7 +81,7 @@ class ByteSource;
 //
 // The helper classes VlaDiskInput, VlaTapeInput, and VlaStdInput are
 // designed to deal with the low level input from the devices in an
-// analogous fashion to the ones used for FITS input.
+// analogous fashion to the ones used for casacore::FITS input.
 //
 // Since a read may be issued for an arbitrary number of bytes from a
 // disk, the chunk multiple is arbitrary and may be used to tune the
@@ -127,19 +131,19 @@ class ByteSource;
 // To open and read a VLA archive data file
 // <code>
 //    VLAArchiveInput *in;
-//    Block <Char> *buff;
-//    String fileName = " ";
-//    String fileType = "tape";
+//    casacore::Block <casacore::Char> *buff;
+//    casacore::String fileName = " ";
+//    casacore::String fileType = "tape";
 //
-//    if (fileType == String("tape")) {
+//    if (fileType == casacore::String("tape")) {
 //        in = new VLAArchiveInput(fileName.chars(), VLAArchiveInput::Tape);
 //    } else {
 //        in = new VLAArchiveInput(fileName.chars(), VLAArchiveInput::Disk);
 //    }
 //
-//    uInt record = 0;
-//    for (buff=&(in->next()); in->atEnd()==False; buff=&(in->next()), record++) {
-//        cout << "Record" << record << endl;
+//    casacore::uInt record = 0;
+//    for (buff=&(in->next()); in->atEnd()==false; buff=&(in->next()), record++) {
+//        cout << "casacore::Record" << record << endl;
 //        // process record pointed to by buff
 //    }
 // </code>
@@ -168,7 +172,7 @@ public:
   // containing data (ie ignoring the tape header file) is file 1. An exception
   // is thrown if there is any problem opening (readonly) the tape device or if
   // the tape cannot be positioned to the start of the specified file.
-  VLATapeInput(const Path& device, uInt whichFile=0);
+  VLATapeInput(const casacore::Path& device, casacore::uInt whichFile=0);
     
   // Create an object that reads its data from the specified files on the
   // specified tape device. The tape is rewound and only the specified file is
@@ -178,22 +182,22 @@ public:
   // cannot be positioned to the start of the first specified file. The file
   // numbers should be in increasing order as only one pass through the tape is
   // made.
-  VLATapeInput(const Path& device, const Block<uInt>& whichFiles);
+  VLATapeInput(const casacore::Path& device, const casacore::Block<casacore::uInt>& whichFiles);
     
   // The destructor closes the tape device.
   ~VLATapeInput();
 
-  // Reads the next logical record from specified tape. Returns False if
+  // Reads the next logical record from specified tape. Returns false if
   // there was a problem assembling the next record ie., it returns the value
   // of the hasData() member function.
-  virtual Bool read();
+  virtual casacore::Bool read();
 
 private: 
   //# This is the amount data that is read with every system call. It needs to
   //# be at least as big as the biggest record on tape. However it can bigger
   //# as this code will not complain if less data was read (although all data
   //# read must be in multiples of the BlockSize)
-  static const uInt ReadSize;
+  static const casacore::uInt ReadSize;
 
   //# The default constructor is private and undefined
   VLATapeInput();
@@ -205,41 +209,41 @@ private:
   VLATapeInput& operator=(const VLATapeInput& other);
 
   //# Reads through a VLA archive looking for the first physical record in a
-  //# logical record. Returns False if the first record could not be found. If
+  //# logical record. Returns false if the first record could not be found. If
   //# It was found then this function also returns the number of physical
   //# records in this logical record.
-  Bool findFirstRecord(Short& m);
+  casacore::Bool findFirstRecord(casacore::Short& m);
 
   //# Positions the tape to the beginning of the next file. Uses and
-  //# manipulates the itsFiles and itsCurFile data members. Returns False if
+  //# manipulates the itsFiles and itsCurFile data members. Returns false if
   //# the tape could not be positioned.
-  Bool nextFile();
+  casacore::Bool nextFile();
 
   //# Reads the next record from the tape. Skips over bad data but not
   //# filemarks.  Throws an exception if no valid records could be read.
-  Bool nextRecord();
+  casacore::Bool nextRecord();
 
-  //# Read the specified number of bytes from the current ByteIO. Returns False
+  //# Read the specified number of bytes from the current ByteIO. Returns false
   //# if no data was written, a read error was detected or the data read was
   //# not a multiple of the BlockSize.  Sets the appropriate Flags when
-  //# returning False. Writes the data into an internal buffer.
-  Bool fillBuffer(uInt& bytesToRead);
+  //# returning false. Writes the data into an internal buffer.
+  casacore::Bool fillBuffer(casacore::uInt& bytesToRead);
 
-  //# This object that provides the data input. Usually a Tape, File, Socket
+  //# This object that provides the data input. Usually a Tape, casacore::File, Socket
   //# etc.
-  TapeIO itsTape;
+  casacore::TapeIO itsTape;
 
   //# This object indicates which files we are to read on the tape;
-  Block<uInt> itsFiles;
+  casacore::Block<casacore::uInt> itsFiles;
 
   //# An index into the itsFiles block indicating which file, in tape, we
   //# are currently reading. A negative number indicates that the tape has not
   //# been positioned yet.
-  Int itsCurFile;
+  casacore::Int itsCurFile;
 
   //# A temporary buffer that is used to store the data prior to copying it
-  //# into the MemoryIO object. This is necessary because the MemoryIO object
+  //# into the casacore::MemoryIO object. This is necessary because the casacore::MemoryIO object
   //# does not allow you low level access to its data.
-  Block<uChar> itsBuffer;
+  casacore::Block<casacore::uChar> itsBuffer;
 };
 #endif

@@ -33,11 +33,11 @@ namespace casa {
 	class ConverterFrequency : public Converter {
 	public:
 		ConverterFrequency(const QString& oldUnits, const QString& newUnits);
-		static void convertFrequency( Vector<double> &resultValues,
+		static void convertFrequency( casacore::Vector<double> &resultValues,
 		                              QString& frequencySourceUnits, QString& frequencyDestUnits,
-		                              SpectralCoordinate& spectralCoordinate );
-		virtual double toPixel( double value, SpectralCoordinate spectralCoordinate);
-		virtual Vector<double> convert( const Vector<double>& oldValues, SpectralCoordinate spectralCoordinate);
+		                              casacore::SpectralCoordinate& spectralCoordinate );
+		virtual double toPixel( double value, casacore::SpectralCoordinate spectralCoordinate);
+		virtual casacore::Vector<double> convert( const casacore::Vector<double>& oldValues, casacore::SpectralCoordinate spectralCoordinate);
 		virtual ~ConverterFrequency();
 	};
 

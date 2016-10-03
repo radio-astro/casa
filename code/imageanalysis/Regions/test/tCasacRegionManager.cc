@@ -105,7 +105,7 @@ int main() {
 						  0, datadir + "adfjasfksa", chans, stokesControl, box,
 						  imShape
 				  );
-				  AlwaysAssert(False, AipsError)
+				  AlwaysAssert(false, AipsError)
 			  }
 			  catch (AipsError) {}
 		  }
@@ -123,7 +123,7 @@ int main() {
 						  0, datadir + "bogus.rgn", chans, stokesControl, box,
 						  imShape
 				  );
-				  AlwaysAssert(False, AipsError)
+				  AlwaysAssert(false, AipsError)
 			  }
 			  catch (AipsError x) {}
 		  }
@@ -141,7 +141,7 @@ int main() {
 						  0, datadir + "bogus1.rgn", chans, stokesControl, box,
 						  imShape
 				  );
-				  AlwaysAssert(False, AipsError)
+				  AlwaysAssert(false, AipsError)
 			  }
 			  catch (AipsError) {}
 		  }
@@ -846,15 +846,15 @@ int main() {
 		  {
 			  writeTestString("Test setSpectralRanges throws exception if range is outside image");
 			  uInt nSelChans = 0;
-			  Bool thrown = True;
+			  Bool thrown = true;
 			  try {
 				  vector<uInt> range = rm.setSpectralRanges("range=[300pix, 400pix]", nSelChans, imShape);
-				  thrown = False;
+				  thrown = false;
 			  }
 			  catch (const AipsError& x) {
 				  // caught as expected
 			  }
-			  AlwaysAssert(thrown == True, AipsError);
+			  AlwaysAssert(thrown == true, AipsError);
 
 		  }
 		  {

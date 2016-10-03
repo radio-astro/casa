@@ -38,9 +38,13 @@
 
 #include <casa/namespace.h>
 //# Forward Declarations
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
 class String;
 class AipsError;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
 //class GlishRecord;
 } //# NAMESPACE CASA - END
 
@@ -62,7 +66,7 @@ class MirVarHandler;
 //
 // <motivation>
 // MSes filled from Miriad data feature multiple windows of differing shapes.  
-// Performance during MS reads can be aided by collecting together MS table 
+// Performance during casacore::MS reads can be aided by collecting together casacore::MS table 
 // records of the same shape (e.g. of the same window).  MirFiller accoplishes
 // this by reading all baselines from a single timestamp at once, so that 
 // they written out in order of spectral window.  This class provides a 
@@ -89,53 +93,53 @@ class MirVarHandler;
 // </todo>
 //
 class MirDataRecord : MirTypeAssert {
-    Int np_p, nn_p, nw_p, pol_p;
-    Bool marked_p;
-    Double *preamble_p;
-    Float *narrow_p;
-    Float *wide_p;
-    Int *flags_p;
-    Int *wflags_p;
+    casacore::Int np_p, nn_p, nw_p, pol_p;
+    casacore::Bool marked_p;
+    casacore::Double *preamble_p;
+    casacore::Float *narrow_p;
+    casacore::Float *wide_p;
+    casacore::Int *flags_p;
+    casacore::Int *wflags_p;
 
 public:
-    MirDataRecord(Int nnarrow=0, Int nwide=0, Int npreamble=5);
+    MirDataRecord(casacore::Int nnarrow=0, casacore::Int nwide=0, casacore::Int npreamble=5);
     ~MirDataRecord();
 
     // return the number of preamble elements
-    uInt getPreambleCount() { return np_p; }
+    casacore::uInt getPreambleCount() { return np_p; }
 
     // return the number of narrow band channels
-    uInt getNarrowCount() { return nn_p; }
+    casacore::uInt getNarrowCount() { return nn_p; }
 
     // return the number of wide band channels
-    uInt getWideCount() { return nw_p; }
+    casacore::uInt getWideCount() { return nw_p; }
 
     // return the address of the preamble buffer
-    Double *preamble() { return preamble_p; }
+    casacore::Double *preamble() { return preamble_p; }
 
     // return the address of the narrow channel data buffer
-    Float *narrow() { return narrow_p; }
+    casacore::Float *narrow() { return narrow_p; }
 
     // return the address of the wide channel data buffer
-    Float *wide() { return wide_p; }
+    casacore::Float *wide() { return wide_p; }
 
     // return the address of the flags channel data buffer
-    Int *flags() { return flags_p; }
+    casacore::Int *flags() { return flags_p; }
 
     // return the address of the wflags channel data buffer
-    Int *wflags() { return wflags_p; }
+    casacore::Int *wflags() { return wflags_p; }
 
     // return the polarization code
-    Int pol() { return pol_p; }
+    casacore::Int pol() { return pol_p; }
 
     // set the polarization code
-    void setPol(Int val) { pol_p = val; }
+    void setPol(casacore::Int val) { pol_p = val; }
 
     // return true if this record is marked
-    Bool isMarked() { return marked_p; }
+    casacore::Bool isMarked() { return marked_p; }
 
     // set the mark
-    void setMarked(Bool val) { marked_p = val; }
+    void setMarked(casacore::Bool val) { marked_p = val; }
 
     void copyFrom(const MirDataRecord& other);
 };
@@ -175,13 +179,13 @@ public:
 //
 class MirHisReader {
 private:
-    Int uv_handle_p, eof_p;
-    Char hline[256];
+    casacore::Int uv_handle_p, eof_p;
+    casacore::Char hline[256];
 
 public: 
 
     // create a History reader from a Miriad file handle
-    MirHisReader(Int mirhandle) : uv_handle_p(mirhandle), eof_p(0) {
+    MirHisReader(casacore::Int mirhandle) : uv_handle_p(mirhandle), eof_p(0) {
         hisopen_c(uv_handle_p, "read");
     }
 
@@ -191,16 +195,16 @@ public:
     }
 
     // return true this reader there is no more history to read
-    Bool atEnd() { return (eof_p > 0); }
+    casacore::Bool atEnd() { return (eof_p > 0); }
 
-    // read the next available line into a String.  True is returned 
-    // if line was successfully loaded; False is returned 
+    // read the next available line into a String.  true is returned 
+    // if line was successfully loaded; false is returned 
     // if the last line had already been read.  
-    Bool readLine(String &line) {
-        if (atEnd()) return False;
+    casacore::Bool readLine(casacore::String &line) {
+        if (atEnd()) return false;
         hisread_c(uv_handle_p, hline, 256, &eof_p);
         line = hline;
-        return True;
+        return true;
     }
 };
 
@@ -219,7 +223,7 @@ public:
 //
 // <motivation>
 // MSes filled from Miriad data feature multiple windows of differing shapes.  
-// Performance during MS reads can be aided by collecting together MS table 
+// Performance during casacore::MS reads can be aided by collecting together casacore::MS table 
 // records of the same shape (e.g. of the same window).  MirFiller accomplishes
 // this by reading all baselines from a single timestamp at once, so that 
 // they written out in order of spectral window.  This class provides a 
@@ -250,40 +254,40 @@ public:
 
 private:
     // info that doesn't change during life of filler
-    String inname_p;
-    Int uv_handle_p;                   // miriad file handle
-    uInt debug;
-    LogIO log_p;
+    casacore::String inname_p;
+    casacore::Int uv_handle_p;                   // miriad file handle
+    casacore::uInt debug;
+    casacore::LogIO log_p;
 
     // variable information worth caching
-    List<MirFreqSetup*> fsetups_p;     // the correlator setups found
-    List<MirSource*> sources_p;        // the sources found
-    List<String> telescopes_p;         // the telescopes found
+    casacore::List<MirFreqSetup*> fsetups_p;     // the correlator setups found
+    casacore::List<MirSource*> sources_p;        // the sources found
+    casacore::List<casacore::String> telescopes_p;         // the telescopes found
     MirPolSetup pol_p;
-    Int maxchan_p, maxwide_p, maxspect_p, narray_p, nrec_p;
-    Int nobs_p, nscan_p;               // These are indicative, not invarient
-    Int badnsyst_p, badwsyst_p;        // # of recs with bad system temps
-    Int firstmode_p;                   // first correlator mode encountered
-    Double starttime_p, endtime_p;
+    casacore::Int maxchan_p, maxwide_p, maxspect_p, narray_p, nrec_p;
+    casacore::Int nobs_p, nscan_p;               // These are indicative, not invarient
+    casacore::Int badnsyst_p, badwsyst_p;        // # of recs with bad system temps
+    casacore::Int firstmode_p;                   // first correlator mode encountered
+    casacore::Double starttime_p, endtime_p;
     wideConventions wideconv_p;        // apparent wide-channel convention
 
     // read state
-    Block<MirDataRecord *> buf_p;
-    Int nintrec_p, maxrec_p, nnarr_p, nwide_p;
-    Double time_p;                     // in AIPS++ frame
+    casacore::Block<MirDataRecord *> buf_p;
+    casacore::Int nintrec_p, maxrec_p, nnarr_p, nwide_p;
+    casacore::Double time_p;                     // in AIPS++ frame
     MirVarHandler *varhandler_p;
-    Bool varupd_p, hasmore_p, dowide_p, verbose_p, previewed_p, scanned_p;
+    casacore::Bool varupd_p, hasmore_p, dowide_p, verbose_p, previewed_p, scanned_p;
 
 public:
     // construct a reader.  mirfile is the name of Miriad dataset.  If 
-    // dopreview is False, the previewing of the dataset's contents will 
-    // be delayed.  If doscan is True (and dopreview is True), the entire
+    // dopreview is false, the previewing of the dataset's contents will 
+    // be delayed.  If doscan is true (and dopreview is true), the entire
     // input dataset will be read to take an accounting of its contents; 
-    // set this to False to prevent this for a very large file (see also 
+    // set this to false to prevent this for a very large file (see also 
     // preview()).  dbg is the default debug level to set; this value is 
     // passed to setDebugLevel().  
-    MirVisReader(const String& mirfile, Bool doscan=True, Int dbg=0, 
-                 Bool dopreview=True);
+    MirVisReader(const casacore::String& mirfile, casacore::Bool doscan=true, casacore::Int dbg=0, 
+                 casacore::Bool dopreview=true);
 
     // destroy the reader
     ~MirVisReader();
@@ -292,47 +296,47 @@ public:
     // messages that are printed to the terminal (as opposed to the logger).  
     // A value of zero or less will cause no extra messages to be printed; 
     // increasing values will increase the amount of messages.
-    void setDebugLevel(Int level) { debug = (level < 0) ? 0 : (uInt) level; }
+    void setDebugLevel(casacore::Int level) { debug = (level < 0) ? 0 : (casacore::uInt) level; }
 
     // set the debugging level which controls the amount of debugging 
     // messages that are printed to the terminal.  A value of zero or less 
     // means that no extra messages will be printed; increasing values will 
     // increase the amount of messages.
-    Int getDebugLevel() const { return debug; }
+    casacore::Int getDebugLevel() const { return debug; }
 
     // return true if the debugging level is at least as high as a given 
     // level.
-    Bool Debug(Int level) { return (level <= Int(debug)); }
+    casacore::Bool Debug(casacore::Int level) { return (level <= casacore::Int(debug)); }
 
     // return the Miriad dataset name
-    const String& getName() { return inname_p; }
+    const casacore::String& getName() { return inname_p; }
 
     // rewind the input dataset and prepare for a new reading.  filler is 
     // the object that will handle updates to variables; if NULL, no handler
-    // will be alerted when variables change.  If dowide is True, the 
+    // will be alerted when variables change.  If dowide is true, the 
     // wideband data will be read in, too.  maxrec is the 
     // maximum number of records to read per timestamp; if maxrec<=0, 
     // it will adjust dynamically to the number of baselines being processed.
-    void reset(MirVarHandler *filler=NULL, Bool verbose=False, 
-	       Bool dowide=True, Int maxrec=0);
+    void reset(MirVarHandler *filler=NULL, casacore::Bool verbose=false, 
+	       casacore::Bool dowide=true, casacore::Int maxrec=0);
 
     // read in the data for a single timestamp.  fm is the container
     // to use to store retrieved metadata.
-    Int readIntegration(::FillMetadata &fm);
+    casacore::Int readIntegration(::FillMetadata &fm);
 
     // return the (AIPS++-referenced) timestamp for the current buffered
     // records.  This is only correct after a call to readIntegration().
-    Double getTime() { return time_p; }
+    casacore::Double getTime() { return time_p; }
 
     // return the number of records buffered for the current integration
-    Int getNumRecs() { return nintrec_p; }
+    casacore::Int getNumRecs() { return nintrec_p; }
 
     // return the correlation data for the i-th buffered record.
-    MirDataRecord *getRecord(Int i) { return buf_p[i]; }
+    MirDataRecord *getRecord(casacore::Int i) { return buf_p[i]; }
 
-    // set the marked data item for each MirDataRecord to False
+    // set the marked data item for each MirDataRecord to false
     void clearMarks() {
-	for(Int i=0; i < nintrec_p; i++) buf_p[i]->setMarked(False);
+	for(casacore::Int i=0; i < nintrec_p; i++) buf_p[i]->setMarked(false);
     }
 
     // create and return a new pointer to a history reader.  The caller
@@ -340,54 +344,54 @@ public:
     MirHisReader *openHistory() { return new MirHisReader(uv_handle_p); }
 
     // return the basic characteristics of the input dataset as a Record.  
-    // If scan is True, the entire file will be scanned (if necessary) to 
+    // If scan is true, the entire file will be scanned (if necessary) to 
     // all the information; otherwise, an incomplete description may be given
-    // based on just the first record.  If verbose is True, a summary is 
+    // based on just the first record.  If verbose is true, a summary is 
     // sent to the logger.  Note that this function may force a call to 
     // preview() if it has not already been called.
-    //PJT    GlishRecord summary(Bool verbose=True, Bool scan=True);
+    //PJT    GlishRecord summary(casacore::Bool verbose=true, casacore::Bool scan=true);
 	
     // return the basic characteristics of the input dataset as a Record.  
     // A scanning of the entire file will be forced so that the number of 
     // scans and observations can be counted with the given limits:
     // scanlim is the maximum time gap in seconds allowed between records 
     // of the same scan; obslim is maximum gap in seconds between 
-    // records of the same observation.  If verbose is True, a summary is 
+    // records of the same observation.  If verbose is true, a summary is 
     // sent to the logger.  
-    //PJT GlishRecord summary(Int scanlim, Int obslim, Bool verbose=True);
+    //PJT GlishRecord summary(casacore::Int scanlim, casacore::Int obslim, casacore::Bool verbose=true);
 
     // get the full list of polarization correlation types seen thus far
     ConstMirPolSetup& getDefaultPolSetup() { return pol_p; } 
 
     // return the list of sources
-    const List<MirSource*>& getSourceList() { return sources_p; }
+    const casacore::List<MirSource*>& getSourceList() { return sources_p; }
 	
 protected:
     // peek into the contents of the dataset to cache important information.
     // scanlim and obslim are used for counting the number of observations
     // and scans in the dataset.  scanlim is the maximum time gap in seconds 
     // allowed between records of the same scan; obslim is maximum gap 
-    // in seconds between records of the same observation.  If scan is True
+    // in seconds between records of the same observation.  If scan is true
     // (the default), the dataset will be read through to gather the 
     // information; otherwise, limited information will be gleaned from the
     // first record and scanlim and obslim will be ignored.  One can set 
-    // scan=False for very large datasets to avoid this overhead.
-    void preview(Int scanlim, Int obslim, Bool scan=True);
+    // scan=false for very large datasets to avoid this overhead.
+    void preview(casacore::Int scanlim, casacore::Int obslim, casacore::Bool scan=true);
 
     // peek into the contents of the dataset to cache important 
-    // information.  If scan is True
+    // information.  If scan is true
     // (the default), the dataset will be read through to gather the 
     // information; otherwise, limited information will be gleaned from the
-    // first record.  One can set scan=False for very large datasets to avoid 
+    // first record.  One can set scan=false for very large datasets to avoid 
     // this overhead.  Five minutes and four hours are used for the scan and
-    // observation gap limit (when scan=True).
-    void preview(Bool scan=True) { preview(300, 2400, scan); }
+    // observation gap limit (when scan=true).
+    void preview(casacore::Bool scan=true) { preview(300, 2400, scan); }
 
-    // return True if this dataset has been previewed
-    Bool previewed() { return previewed_p; }
+    // return true if this dataset has been previewed
+    casacore::Bool previewed() { return previewed_p; }
 
     // return the basic characteristics of the input dataset as a Record.  
-    // If verbose is True, a summary is 
+    // If verbose is true, a summary is 
     // sent to the logger.  
     // scan specifies the conditions under which the entire dataset may 
     // get read as a result of this request:  if scan < 0, the dataset
@@ -398,42 +402,42 @@ protected:
     // scanlim is the maximum time gap in seconds 
     // allowed between records of the same scan; obslim is maximum gap 
     // in seconds between records of the same observation.  
-    //GlishRecord summary(Bool verbose, Int scan, Int scanlim, Int obslim);
+    //GlishRecord summary(casacore::Bool verbose, casacore::Int scan, casacore::Int scanlim, casacore::Int obslim);
 
     // return the contents of a MirPolSetup list as a GlishArray
     //static GlishArray toGlishArray(ConstMirPolSetup &pol);
 
-    // return the contents of a String List as a GlishArray
-    //static GlishArray toGlishArray(const List<String>& list);
+    // return the contents of a casacore::String casacore::List as a GlishArray
+    //static GlishArray toGlishArray(const casacore::List<casacore::String>& list);
 
 private:
 
     // return true if this reader should be verbose in its messages.  This
     // will be true if the verbose option is enabled or the debug level is
     // greater than 1.
-    Bool verbose() { return (verbose_p || debug > 1); }
+    casacore::Bool verbose() { return (verbose_p || debug > 1); }
 
     // check to be sure that the given name points to a readable miriad 
     // dataset.  If not, throw an exception.
-    void checkIsMiriadDataset(const String& name) throw(AipsError);
+    void checkIsMiriadDataset(const casacore::String& name) throw(casacore::AipsError);
 
     // resize the data buffer for a new read.  Values less than or equal 
     // to zero mean keep previous value.  
-    void resizeBufferFor(Int nrec=0, Int nnarrow=0, Int nwide=0);
+    void resizeBufferFor(casacore::Int nrec=0, casacore::Int nnarrow=0, casacore::Int nwide=0);
 
     // full and brief scanning of the data--should only be called from preview()
-    void fullscan(Int scanlim, Int obslim);
+    void fullscan(casacore::Int scanlim, casacore::Int obslim);
     void briefscan();
 
     // update the given FillMetadata container with updated variable values.
     // If a VarHandler was provide via reset(), signal the changes to it.
     // fm is the FillMetadata container to update, and time is the current 
     // timestamp.  
-    void handleVarChanges(::FillMetadata &fm, Double time);
+    void handleVarChanges(::FillMetadata &fm, casacore::Double time);
 
     // add to a cached list of telescopes
-    void setTelescope(String name) {
-        ListIter<String> li(telescopes_p);
+    void setTelescope(casacore::String name) {
+        casacore::ListIter<casacore::String> li(telescopes_p);
         for(li.toStart(); ! li.atEnd() && li.getRight() != name; ++li);
         if (li.atEnd()) li.addRight(name);
     }

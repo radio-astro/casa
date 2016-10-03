@@ -28,6 +28,7 @@
 #include <casa/iostream.h>
 #include <display/Display/ColorDistribution.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	static colorDistItem Pow2RGBTable[13] = {
@@ -185,7 +186,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool getRGBDistribution(uInt nCells, Bool pow2,
 	                        uInt & nRed, uInt & nGreen, uInt & nBlue) {
 		// Do a binary search on the table and fill in nRed, nGreen, nBlue
-		if (nCells == 0) return False;
+		if (nCells == 0) return false;
 
 		// Goal is to find cell such that t[i].nCells >= nCells > t[i-1]
 		uInt a = 0;
@@ -210,7 +211,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		nGreen = t[a].nGreen;
 		nBlue = t[a].nBlue;
 
-		return True;
+		return true;
 	}
 
 

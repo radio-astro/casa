@@ -36,6 +36,7 @@
 
 #include <display/Display/DisplayCoordinateSystem.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DSWorldArrow::DSWorldArrow() :
@@ -178,7 +179,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool DSWorldArrow::setOptions(const Record& settings) {
-		Bool localChange = False;
+		Bool localChange = false;
 
 		Record toSet = settings;
 
@@ -192,7 +193,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (settings.isDefined("startpoint")) {
-			localChange = True;
+			localChange = true;
 			if (settings.dataType("startpoint") == TpRecord) {
 
 				Record startField = settings.subRecord("startpoint");
@@ -248,7 +249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (settings.isDefined("endpoint")) {
-			localChange = True;
+			localChange = true;
 			if (settings.dataType("endpoint") == TpRecord) {
 
 				Record endField = settings.subRecord("endpoint");
@@ -317,7 +318,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (DSArrow::setOptions(toSet)) {
-			localChange = True;
+			localChange = true;
 		}
 
 		return localChange;
@@ -389,7 +390,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                    const Float& endYPos,
 	                                    PanelDisplay* pd) {
 
-		Bool success = False;
+		Bool success = false;
 		WorldCanvas* toReturn(0);
 
 		// Look for ones where the point is in WC and in draw area
@@ -409,7 +410,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (test) {
 					toReturn = wcs.getRight();
-					success = True;
+					success = true;
 				} else {
 					wcs.step();
 				}
@@ -430,7 +431,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 					if (test) {
 						toReturn = wcs.getRight();
-						success = True;
+						success = true;
 					} else {
 						wcs.step();
 					}
@@ -531,7 +532,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	/*
 	WorldCanvas* DSWorldArrow::chooseWC(const Record& settings, PanelDisplay* pd) {
 
-	  Bool success = False;
+	  Bool success = false;
 	  WorldCanvas* toReturn;
 
 	  // Look for ones where the point is in WC and in draw area

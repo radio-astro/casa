@@ -31,6 +31,7 @@
 #include <images/Images/TempImage.h>
 #include <images/Images/ImageUtilities.h>
 
+using namespace casacore;
 namespace casa {
 
 const String ImagePadder::_class = "ImagePadder";

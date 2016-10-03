@@ -3,6 +3,9 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <casa/namespace.h>
 
+using namespace casacore;
+using namespace casa;
+
 Int main(Int argc, char *argv[]) {
 	Input input(1);
 	input.version("$ID:$");
@@ -40,11 +43,11 @@ Int main(Int argc, char *argv[]) {
 	uInt nSelectedChannels;
 	Record myreg = rm.fromBCS(
 		diagnostics, nSelectedChannels, stokes, 0, "", chans,
-		CasacRegionManager::USE_ALL_STOKES, "", image->shape(), "", False
+		CasacRegionManager::USE_ALL_STOKES, "", image->shape(), "", false
 	);
     ImageCollapser<Float> imCollapser(
 		function, image, &myreg,
-		mask, axes, False, outname, overwrite
+		mask, axes, false, outname, overwrite
     );
 
 	imCollapser.collapse();

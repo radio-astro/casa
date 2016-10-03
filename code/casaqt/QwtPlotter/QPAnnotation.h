@@ -45,17 +45,17 @@ public:
     // Static //
     
     // Convenient access to class name (QPAnnotation).
-    static const String CLASS_NAME;
+    static const casacore::String CLASS_NAME;
     
     
     // Non-Static //
     
     // Constructor which takes text and location.
-    QPAnnotation(const String& text, const PlotCoordinate& coord);
+    QPAnnotation(const casacore::String& text, const PlotCoordinate& coord);
     
     // Constructor which takes text, location, font, and (optional) orientation
     // in counterclockwise degrees.
-    QPAnnotation(const String& text, const PlotCoordinate& coord,
+    QPAnnotation(const casacore::String& text, const PlotCoordinate& coord,
                  const PlotFont& font, int orientation = 0);
     
     // Constructor which copies the given generic PlotAnnotation.
@@ -89,10 +89,10 @@ public:
     // PlotAnnotation Methods //
     
     // Implements PlotAnnotation::text().
-    String text() const;
+    casacore::String text() const;
     
     // Implements PlotAnnotation::setText().
-    void setText(const String& newText);
+    void setText(const casacore::String& newText);
     
     // Implements PlotAnnotation::font().
     PlotFontPtr font() const;
@@ -141,7 +141,7 @@ public:
     
 protected:
     // Implements QPPlotItem::className().
-    const String& className() const { return CLASS_NAME; }
+    const casacore::String& className() const { return CLASS_NAME; }
     
     // Implements QPLayerItem::draw_().  Ignores draw index and count.
 #if QWT_VERSION >= 0x060000

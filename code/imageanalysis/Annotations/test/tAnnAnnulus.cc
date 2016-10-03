@@ -48,14 +48,14 @@ int main () {
 			log << LogIO::NORMAL
 				<<"Test mixed world and pixel coordinates throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.01, "pix");
 			Quantity inner(30, "arcsec");
 			Quantity outer(40, "arcsec");
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -71,9 +71,9 @@ int main () {
 				AnnAnnulus annulus(
 					centerx, centery, inner, outer, dirTypeString,
 					csys, shape, beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (AipsError x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
@@ -85,7 +85,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test that bad quantity for world direction coordinate throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.01, "cm");
 			Quantity inner(30, "arcsec");
@@ -93,7 +93,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -109,9 +109,9 @@ int main () {
 				AnnAnnulus annulus(
 					centerx, centery, inner, outer, dirTypeString,
 					csys, shape, beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (AipsError x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
@@ -123,7 +123,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test that inner radius larger than outer radius throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity inner(30, "arcsec");
@@ -131,7 +131,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -147,9 +147,9 @@ int main () {
 				AnnAnnulus annulus(
 					centerx, centery, inner, outer, dirTypeString,
 					csys, shape, beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			} catch (AipsError x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
@@ -161,7 +161,7 @@ int main () {
 			log << LogIO::NORMAL
 				<< "Test that shape and coordinate system mismatch throws exception"
 				<< LogIO::POST;
-			Bool thrown = True;
+			Bool thrown = true;
 			Quantity centerx(-0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity inner(30, "arcsec");
@@ -169,7 +169,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -185,9 +185,9 @@ int main () {
 				AnnAnnulus annulus(
 					centerx, centery, inner, outer, dirTypeString,
 					csys, IPosition(3, 40, 40, 2), beginFreq, endFreq, freqRefFrameString,
-					dopplerString, restfreq, stokes, False
+					dopplerString, restfreq, stokes, false
 				);
-				thrown = False;
+				thrown = false;
 			}
 			catch (AipsError x) {
 				log << LogIO::NORMAL
@@ -222,7 +222,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -237,7 +237,7 @@ int main () {
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			MDirection center = annulus.getCenter();
 
@@ -304,7 +304,7 @@ int main () {
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			MDirection center = annulus.getCenter();
 			Double xnew = 0.012055422536187882;
@@ -359,7 +359,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -375,7 +375,7 @@ int main () {
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<Quantity> radq = annulus.getRadii();
@@ -404,7 +404,7 @@ int main () {
 			Quantity endFreq(1450e6, "Hz");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -421,7 +421,7 @@ int main () {
 				centerx, centery, inner, outer,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			annulus[1] = AnnAnnulus(
 				centerx, centery, inner, outer,
@@ -457,7 +457,7 @@ int main () {
 			Quantity endFreq(1450e6, "Hz");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = "GALACTO";
 			String dopplerString = MDoppler::showType(
@@ -472,7 +472,7 @@ int main () {
 				centerx, centery, inner, outer,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			annulus[1] = AnnAnnulus(
 				centerx, centery, inner, outer,
@@ -482,7 +482,7 @@ int main () {
 				beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq
 			);
-			annulus[1].setAnnotationOnly(False);
+			annulus[1].setAnnotationOnly(false);
 			AlwaysAssert(annulus[0] == annulus[1], AipsError);
 			vector<String> s(2);
 			ostringstream os;
@@ -521,7 +521,7 @@ int main () {
 			Quantity endFreq(-250000, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -537,7 +537,7 @@ int main () {
 				centerx, centery, inner, outer,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = annulus.getFrequencyLimits();
@@ -564,7 +564,7 @@ int main () {
 			Quantity endFreq(-20, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -580,7 +580,7 @@ int main () {
 				centerx, centery, inner, outer,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 
 			Vector<MFrequency> freqs = annulus.getFrequencyLimits();
@@ -606,7 +606,7 @@ int main () {
 			Quantity endFreq(-1986.7458583077, "km/s");
 
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -619,7 +619,7 @@ int main () {
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			cout << "annulus " << annulus << endl;
 			Vector<MFrequency> freqs = annulus.getFrequencyLimits();
@@ -644,7 +644,7 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-				csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(false)
 			);
 			String freqRefFrameString = MFrequency::showType(
 				csys.spectralCoordinate().frequencySystem()
@@ -660,33 +660,33 @@ int main () {
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
-				dopplerString, restfreq, stokes, False
+				dopplerString, restfreq, stokes, false
 			);
 			{
 				// we don't support this color name
-				Bool thrown = False;
+				Bool thrown = false;
 				try {
 					annulus.setColor("purple");
-					AlwaysAssert(False, AipsError);
+					AlwaysAssert(false, AipsError);
 				}
 				catch (AipsError x) {
 					log << LogIO::NORMAL << "Exception caught as expected: "
 						<< x.getMesg() << LogIO::POST;
-					thrown = True;
+					thrown = true;
 				}
 				AlwaysAssert(thrown, AipsError);
 			}
 			{
 				// bad hex spec
-				Bool thrown = False;
+				Bool thrown = false;
 				try {
 					annulus.setColor("GG0022");
-					AlwaysAssert(False, AipsError);
+					AlwaysAssert(false, AipsError);
 				}
 				catch (AipsError x) {
 					log << LogIO::NORMAL << "Exception caught as expected: "
 						<< x.getMesg() << LogIO::POST;
-					thrown = True;
+					thrown = true;
 				}
 				AlwaysAssert(thrown, AipsError);
 			}

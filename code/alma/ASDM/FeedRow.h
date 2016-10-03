@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File FeedRow.h
+ * casacore::File FeedRow.h
  */
  
 #ifndef FeedRow_CLASS
@@ -159,7 +159,7 @@ public:
 	bool isAdded() const;
 		
 	////////////////////////////////
-	// Intrinsic Table Attributes //
+	// Intrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -641,7 +641,7 @@ public:
 
 
 	////////////////////////////////
-	// Extrinsic Table Attributes //
+	// Extrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -873,7 +873,7 @@ public:
 	 * @param receiverId
 	    
 	 */ 
-	bool compareRequiredValue(int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId); 
+	bool compareRequiredValue(int numReceptor, vector<vector<double > > beamOffset, vector<vector<Length > > focusReference, vector<PolarizationTypeMod::PolarizationType > polarizationTypes, vector<vector<Complex > > polResponse, vector<Angle > receptorAngle, vector<int>  receiverId);
 		 
 	
 	/**
@@ -980,7 +980,7 @@ private:
 	 */
 	bool hasBeenAdded;
 
-	// This method is used by the Table class when this row is added to the table.
+	// This method is used by the casacore::Table class when this row is added to the table.
 	void isAdded(bool added);
 
 
@@ -1014,7 +1014,7 @@ private:
 	 FeedRow (FeedTable &table, FeedRow &row);
 	 	
 	////////////////////////////////
-	// Intrinsic Table Attributes //
+	// Intrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	
@@ -1196,7 +1196,7 @@ private:
  	
 
 	////////////////////////////////
-	// Extrinsic Table Attributes //
+	// Extrinsic casacore::Table Attributes //
 	////////////////////////////////
 	
 	

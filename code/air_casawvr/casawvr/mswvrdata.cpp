@@ -35,14 +35,14 @@
 namespace LibAIR2 {
 
   SPWSet
-  WVRSPWIDs(const casa::MeasurementSet &ms)
+  WVRSPWIDs(const casacore::MeasurementSet &ms)
   {
-    const casa::MSSpectralWindow & specTable(ms.spectralWindow());
+    const casacore::MSSpectralWindow & specTable(ms.spectralWindow());
     // Not using these in present algorithm
-    //const casa::MSProcessor  & proc(ms.processor());
+    //const casacore::MSProcessor  & proc(ms.processor());
 
-    casa::ROScalarColumn<casa::Int> nc(specTable,
-				       casa::MSSpectralWindow::columnName(casa::MSSpectralWindow::NUM_CHAN));
+    casacore::ROScalarColumn<casacore::Int> nc(specTable,
+				       casacore::MSSpectralWindow::columnName(casacore::MSSpectralWindow::NUM_CHAN));
     
     SPWSet res;
     for(size_t i=0; i<specTable.nrow(); ++i)
@@ -54,7 +54,7 @@ namespace LibAIR2 {
   }
 
   std::set<size_t>
-  WVRDataDescIDs(const casa::MeasurementSet &ms, 
+  WVRDataDescIDs(const casacore::MeasurementSet &ms,
 		 const std::vector<int> &wvrspws)
   {
     SPWSet ssfull=WVRSPWIDs(ms);
@@ -85,14 +85,14 @@ namespace LibAIR2 {
     return res;
   }
 
-  size_t nWVRSPWIDs(const casa::MeasurementSet &ms)
+  size_t nWVRSPWIDs(const casacore::MeasurementSet &ms)
   {
     SPWSet s=WVRSPWIDs(ms);
     return s.size();
   }
 
   AntSet
-  WVRAntennas(const casa::MeasurementSet &ms,
+  WVRAntennas(const casacore::MeasurementSet &ms,
 	      const std::vector<int> &wvrspws)
   {
     AntSet res=WVRAntennasFeedTab(ms, wvrspws);
@@ -104,16 +104,16 @@ namespace LibAIR2 {
   }
   
   AntSet
-  WVRAntennasFeedTab(const casa::MeasurementSet &ms,
+  WVRAntennasFeedTab(const casacore::MeasurementSet &ms,
 		     const std::vector<int> &wvrspws)
   {
-    const casa::MSFeed &feedtable=ms.feed();
+    const casacore::MSFeed &feedtable=ms.feed();
 
-    casa::ROScalarColumn<casa::Int> ant(feedtable,
-					casa::MSFeed::columnName(casa::MSFeed::ANTENNA_ID));
+    casacore::ROScalarColumn<casacore::Int> ant(feedtable,
+					casacore::MSFeed::columnName(casacore::MSFeed::ANTENNA_ID));
 
-    casa::ROScalarColumn<casa::Int> fspw(feedtable,
-					 casa::MSFeed::columnName(casa::MSFeed::SPECTRAL_WINDOW_ID));
+    casacore::ROScalarColumn<casacore::Int> fspw(feedtable,
+					 casacore::MSFeed::columnName(casacore::MSFeed::SPECTRAL_WINDOW_ID));
 
     const size_t nfeeds=feedtable.nrow();
     AntSet res;
@@ -130,15 +130,15 @@ namespace LibAIR2 {
   }
 
   AntSet
-  WVRAntennasMainTab(const casa::MeasurementSet &ms,
+  WVRAntennasMainTab(const casacore::MeasurementSet &ms,
 		     const std::vector<int> &wvrspws)
   {
     std::set<size_t> dsc_ids=WVRDataDescIDs(ms, wvrspws);
 
-    casa::ROScalarColumn<casa::Int> c_desc_id(ms,
-					  casa::MS::columnName(casa::MS::DATA_DESC_ID));    
-    casa::ROScalarColumn<casa::Int> a1(ms,
-				       casa::MS::columnName(casa::MS::ANTENNA1));
+    casacore::ROScalarColumn<casacore::Int> c_desc_id(ms,
+					  casacore::MS::columnName(casacore::MS::DATA_DESC_ID));
+    casacore::ROScalarColumn<casacore::Int> a1(ms,
+				       casacore::MS::columnName(casacore::MS::ANTENNA1));
 
     AntSet res;
     const size_t nrows=c_desc_id.nrow();    
@@ -152,16 +152,16 @@ namespace LibAIR2 {
     return res;
   }
 
-  void WVRAddFlaggedAnts(const casa::MeasurementSet &ms,
+  void WVRAddFlaggedAnts(const casacore::MeasurementSet &ms,
 			 LibAIR2::AntSet &flaggedAnts)
   {
         // add the antennas flagged in the ANTENNA table to the set
-    casa::ROScalarColumn<casa::Bool> antflagrow(ms.antenna(),
-						casa::MSAntenna::columnName(casa::MSAntenna::FLAG_ROW));
+    casacore::ROScalarColumn<casacore::Bool> antflagrow(ms.antenna(),
+						casacore::MSAntenna::columnName(casacore::MSAntenna::FLAG_ROW));
     const size_t nants=ms.antenna().nrow();
     for(size_t i=0; i<nants; i++)
     {
-      if(antflagrow(i)==casa::True) // i.e. flagged
+      if(antflagrow(i)==casacore::True) // i.e. flagged
       {
 	flaggedAnts.insert(i);
       }
@@ -169,7 +169,7 @@ namespace LibAIR2 {
   }
 
 
-  void WVRTimeStatePoints(const casa::MeasurementSet &ms,
+  void WVRTimeStatePoints(const casacore::MeasurementSet &ms,
 			  std::vector<double> &times,
 			  std::vector<size_t> &states,
 			  std::vector<size_t> &field,
@@ -180,20 +180,20 @@ namespace LibAIR2 {
     std::set<size_t> dsc_ids=WVRDataDescIDs(ms, wvrspws);
     size_t dsc_id = *dsc_ids.begin();
 
-    casa::ROScalarColumn<casa::Double> c_times(ms,
-					       casa::MS::columnName(casa::MS::TIME));    
-    casa::ROScalarColumn<casa::Int> c_states(ms,
-					     casa::MS::columnName(casa::MS::STATE_ID));    
-    casa::ROScalarColumn<casa::Int> c_field(ms,
-					    casa::MS::columnName(casa::MS::FIELD_ID));    
+    casacore::ROScalarColumn<casacore::Double> c_times(ms,
+					       casacore::MS::columnName(casacore::MS::TIME));
+    casacore::ROScalarColumn<casacore::Int> c_states(ms,
+					     casacore::MS::columnName(casacore::MS::STATE_ID));
+    casacore::ROScalarColumn<casacore::Int> c_field(ms,
+					    casacore::MS::columnName(casacore::MS::FIELD_ID));
 
-    casa::ROScalarColumn<casa::Int> c_desc_id(ms,
-					      casa::MS::columnName(casa::MS::DATA_DESC_ID));    
-    casa::ROScalarColumn<casa::Int> a1(ms,
-				       casa::MS::columnName(casa::MS::ANTENNA1));
+    casacore::ROScalarColumn<casacore::Int> c_desc_id(ms,
+					      casacore::MS::columnName(casacore::MS::DATA_DESC_ID));
+    casacore::ROScalarColumn<casacore::Int> a1(ms,
+				       casacore::MS::columnName(casacore::MS::ANTENNA1));
 
-    casa::ROArrayColumn<casa::Bool> c_flags(ms,
-					    casa::MS::columnName(casa::MS::FLAG));
+    casacore::ROArrayColumn<casacore::Bool> c_flags(ms,
+					    casacore::MS::columnName(casacore::MS::FLAG));
 
     std::map<size_t, size_t> srcmap=getFieldSrcMap(ms);
 
@@ -220,7 +220,7 @@ namespace LibAIR2 {
 	{
 	  // while in this timestamp, check if there is unflagged WVR data
 	  if(c_desc_id(sortedI[iii])==(int)dsc_id and 
-	     casa::allEQ(casa::False, c_flags(sortedI[iii]))) // i.e. not flagged
+	     casacore::allEQ(casacore::False, c_flags(sortedI[iii]))) // i.e. not flagged
 	  {
 	    haveUnflaggedWvrData=true;
 	    break;
@@ -242,15 +242,15 @@ namespace LibAIR2 {
     }
   }
 
-  void loadPointing(const casa::MeasurementSet &ms,
+  void loadPointing(const casacore::MeasurementSet &ms,
 		    std::vector<double> &time,
 		    std::vector<double> &az,
 		    std::vector<double> &el)
   {
-    const casa::MSPointing &ptable=ms.pointing();
-    const casa::ROMSPointingColumns ptablecols(ptable);
-    const casa::ROArrayColumn<casa::Double> &dir=ptablecols.direction();
-    const casa::ROScalarColumn<casa::Double> &ptime=ptablecols.time();
+    const casacore::MSPointing &ptable=ms.pointing();
+    const casacore::ROMSPointingColumns ptablecols(ptable);
+    const casacore::ROArrayColumn<casacore::Double> &dir=ptablecols.direction();
+    const casacore::ROScalarColumn<casacore::Double> &ptime=ptablecols.time();
 
     const size_t n=ptime.nrow();
     if(n==0){
@@ -263,17 +263,17 @@ namespace LibAIR2 {
     for(size_t i=0; i<n; ++i)
     {
       time[i]=ptime(i);
-      casa::Array<casa::Double> a;
+      casacore::Array<casacore::Double> a;
       dir.get(i, a,
-	      casa::True);
-      az[i]=a(casa::IPosition(2,0,0));
-      el[i]=a(casa::IPosition(2,1,0));
+	      casacore::True);
+      az[i]=a(casacore::IPosition(2,0,0));
+      el[i]=a(casacore::IPosition(2,1,0));
     }
   }
 
   /** Get the nearest pointing record to each WVR observation
    */
-  bool WVRNearestPointing(const casa::MeasurementSet &ms,
+  bool WVRNearestPointing(const casacore::MeasurementSet &ms,
 			  const std::vector<double> &time,
 			  std::vector<double> &az,
 			  std::vector<double> &el)
@@ -317,16 +317,16 @@ namespace LibAIR2 {
 
   /** Calculate the AZ and EL for each WVR observation based on the field table
    */
-  void WVRFieldAZEl(const casa::MeasurementSet &ms,
+  void WVRFieldAZEl(const casacore::MeasurementSet &ms,
 		       const std::vector<double> &time,
 		       const std::vector<size_t> &fields,
 		       std::vector<double> &az,
 		       std::vector<double> &el)
   {
 
-    casa::MSDerivedValues msd;
-    casa::MEpoch etime;
-    casa::MDirection azel;
+    casacore::MSDerivedValues msd;
+    casacore::MEpoch etime;
+    casacore::MDirection azel;
 
 
     msd.setMeasurementSet(ms);
@@ -339,7 +339,7 @@ namespace LibAIR2 {
 
     for (size_t wi=0; wi<wrows; ++wi)
     {
-      etime.set(casa::MVEpoch(casa::Quantity(time[wi], "s")));
+      etime.set(casacore::MVEpoch(casacore::Quantity(time[wi], "s")));
       msd.setEpoch(etime);
       msd.setFieldCenter(fields[wi]);
       azel = msd.azel();
@@ -352,7 +352,7 @@ namespace LibAIR2 {
   }
 			  
 
-  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, const std::vector<int>& wvrspws,
+  InterpArrayData *loadWVRData(const casacore::MeasurementSet &ms, const std::vector<int>& wvrspws,
 			       std::vector<size_t>& sortedI,
 			       std::set<int>& flaggedantsInMain,
 			       double requiredUnflaggedFraction,
@@ -360,19 +360,19 @@ namespace LibAIR2 {
 			       std::string offsetstable)
   {
     bool haveOffsets=false;
-    casa::Vector<casa::Double> offsetTime;
-    casa::Vector<casa::Int> offsetAnts;
-    casa::Matrix<casa::Double> offsets;
+    casacore::Vector<casacore::Double> offsetTime;
+    casacore::Vector<casacore::Int> offsetAnts;
+    casacore::Matrix<casacore::Double> offsets;
     if(offsetstable!=""){
       try{
-	casa::Table offsettab(offsetstable);
-	casa::ScalarColumn<casa::Double> timecol(offsettab, "TIME");
-	casa::ScalarColumn<casa::Int> antcol(offsettab, "ANTENNA");
-	casa::ArrayColumn<casa::Double> offsetcol(offsettab, "OFFSETS");
+	casacore::Table offsettab(offsetstable);
+	casacore::ScalarColumn<casacore::Double> timecol(offsettab, "TIME");
+	casacore::ScalarColumn<casacore::Int> antcol(offsettab, "ANTENNA");
+	casacore::ArrayColumn<casacore::Double> offsetcol(offsettab, "OFFSETS");
 	if(offsettab.nrow()>0){
-	  timecol.getColumn(offsetTime, casa::True);
-	  antcol.getColumn(offsetAnts, casa::True);
-	  offsetcol.getColumn(offsets, casa::True);
+	  timecol.getColumn(offsetTime, casacore::True);
+	  antcol.getColumn(offsetAnts, casacore::True);
+	  offsetcol.getColumn(offsets, casacore::True);
 	  haveOffsets=true;
 	  //for(size_t i=0; i<offsetAnts.size(); i++){
 	  //  std::cout << std::setprecision(15) << offsetTime[i] << " " << offsetAnts[i] << " " << offsets.column(i) << std::endl;
@@ -401,8 +401,8 @@ namespace LibAIR2 {
       requiredUnflaggedFraction=1.;
     }
 
-    casa::ROScalarColumn<casa::Double> maintime(ms, 
-						casa::MS::columnName(casa::MS::TIME)); 
+    casacore::ROScalarColumn<casacore::Double> maintime(ms,
+						casacore::MS::columnName(casacore::MS::TIME));
 
     const size_t nrows=maintime.nrow();
 
@@ -410,10 +410,10 @@ namespace LibAIR2 {
     flaggedantsInMain.clear();
 
     {
-      casa::Vector<casa::uInt> sortedIV(nrows);
-      casa::Vector<casa::Double> mainTimesV = maintime.getColumn();
-      casa::GenSortIndirect<casa::Double>::sort(sortedIV,mainTimesV);
-      for(casa::uInt i=0; i<nrows; i++){ // necessary for type conversion 
+      casacore::Vector<casacore::uInt> sortedIV(nrows);
+      casacore::Vector<casacore::Double> mainTimesV = maintime.getColumn();
+      casacore::GenSortIndirect<casacore::Double>::sort(sortedIV,mainTimesV);
+      for(casacore::uInt i=0; i<nrows; i++){ // necessary for type conversion
 	sortedI[i] = (size_t) sortedIV(i); 
       }
     }
@@ -459,20 +459,20 @@ namespace LibAIR2 {
     std::vector<size_t> nunflagged(nAnts, 0);
     std::vector<size_t> ntotal(nAnts, 0);
 
-    casa::ROArrayColumn<casa::Complex> indata(ms, casa::MS::columnName(casa::MS::DATA));
-    casa::ROScalarColumn<casa::Int> indsc_id(ms, casa::MS::columnName(casa::MS::DATA_DESC_ID));
-    casa::ROScalarColumn<casa::Int> a1(ms, casa::MS::columnName(casa::MS::ANTENNA1));
-    casa::ROScalarColumn<casa::Int> a2(ms, casa::MS::columnName(casa::MS::ANTENNA2));
+    casacore::ROArrayColumn<casacore::Complex> indata(ms, casacore::MS::columnName(casacore::MS::DATA));
+    casacore::ROScalarColumn<casacore::Int> indsc_id(ms, casacore::MS::columnName(casacore::MS::DATA_DESC_ID));
+    casacore::ROScalarColumn<casacore::Int> a1(ms, casacore::MS::columnName(casacore::MS::ANTENNA1));
+    casacore::ROScalarColumn<casacore::Int> a2(ms, casacore::MS::columnName(casacore::MS::ANTENNA2));
 
-    casa::ROArrayColumn<casa::Bool> inflags(ms, casa::MS::columnName(casa::MS::FLAG));
+    casacore::ROArrayColumn<casacore::Bool> inflags(ms, casacore::MS::columnName(casacore::MS::FLAG));
 
-    casa::ROScalarColumn<casa::Double> c_times(ms, casa::MS::columnName(casa::MS::TIME));
+    casacore::ROScalarColumn<casacore::Double> c_times(ms, casacore::MS::columnName(casacore::MS::TIME));
 
     std::vector<size_t> offsetSortedI;
     size_t nOffRows=0;
 
     if(haveOffsets){ // prepare offset application
-      for(casa::uInt i=0; i<nrows; i++){ 
+      for(casacore::uInt i=0; i<nrows; i++){
 	if (a1(i) == a2(i) and 
 	    dsc_ids.count(indsc_id(i)) > 0)
 	  {
@@ -487,9 +487,9 @@ namespace LibAIR2 {
       }
       offsetSortedI.resize(nOffRows);
 
-      casa::Vector<casa::uInt> offsetSortedIV(nOffRows);
-      casa::GenSortIndirect<casa::Double>::sort(offsetSortedIV,offsetTime);
-      for(casa::uInt i=0; i<nOffRows; i++){ // necessary for type conversion 
+      casacore::Vector<casacore::uInt> offsetSortedIV(nOffRows);
+      casacore::GenSortIndirect<casacore::Double>::sort(offsetSortedIV,offsetTime);
+      for(casacore::uInt i=0; i<nOffRows; i++){ // necessary for type conversion
 	offsetSortedI[i] = (size_t) offsetSortedIV(i); 
       }
     }
@@ -529,13 +529,13 @@ namespace LibAIR2 {
 
 	  ++(ntotal[a1(i)]);
 
-	  casa::Array<casa::Bool> fl;
-	  inflags.get(i, fl, ::casa::True);
+	  casacore::Array<casacore::Bool> fl;
+	  inflags.get(i, fl, ::casacore::True);
  
-	  if(casa::allEQ(casa::False, inflags(i))) // i.e. not flagged
+	  if(casacore::allEQ(casacore::False, inflags(i))) // i.e. not flagged
 	  {
-	    casa::Array<std::complex<float> > a;
-	    indata.get(i,a, casa::True);
+	    casacore::Array<std::complex<float> > a;
+	    indata.get(i,a, casacore::True);
 	    bool tobsbad=false;
 	    bool matchingOffset=true;
 	    
@@ -556,7 +556,7 @@ namespace LibAIR2 {
 
 	    for(size_t k=0; k<4; ++k)
             {
-	      casa::Double rdata = a(casa::IPosition(2,k,0)).real();
+	      casacore::Double rdata = a(casacore::IPosition(2,k,0)).real();
 		
 	      if(haveOffsets && matchingOffset){
 		rdata -= offsets(k, offI);

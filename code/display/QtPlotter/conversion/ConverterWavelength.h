@@ -33,10 +33,10 @@ namespace casa {
 	class ConverterWavelength : public Converter {
 	public:
 		ConverterWavelength(const QString& oldUnits,const QString& newUnits);
-		virtual double toPixel( double value, SpectralCoordinate spectralCoordinate );
-		static void convertWavelength( Vector<double> &resultValues,
-		                               QString& sourceUnits, QString& destUnits, SpectralCoordinate& coord);
-		virtual Vector<double> convert( const Vector<double>& oldValues, SpectralCoordinate spectralCoordinate);
+		virtual double toPixel( double value, casacore::SpectralCoordinate spectralCoordinate );
+		static void convertWavelength( casacore::Vector<double> &resultValues,
+		                               QString& sourceUnits, QString& destUnits, casacore::SpectralCoordinate& coord);
+		virtual casacore::Vector<double> convert( const casacore::Vector<double>& oldValues, casacore::SpectralCoordinate spectralCoordinate);
 		virtual ~ConverterWavelength();
 	};
 

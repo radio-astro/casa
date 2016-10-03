@@ -55,7 +55,7 @@ namespace casa {
 		void setEndPointsPixel( int pixelX1, int pixelY1, int pixelX2, int pixelY2 );
 		void setColor( QColor color );
 		void setCurveWidth( int width );
-		void updateEnds( const String& start, const String& end);
+		void updateEnds( const casacore::String& start, const casacore::String& end);
 		QColor getCurveColor() const;
 		void clearCurve();
 		void updateStatistics( SliceStatistics* statistics );
@@ -66,7 +66,7 @@ namespace casa {
 		void statisticsSelected( int index );
 
 	private:
-		QString parseEndInfo( const String& info ) const;
+		QString parseEndInfo( const casacore::String& info ) const;
 		void resetCurveWidth();
 		void setCurveColor();
 		SliceSegment( const SliceSegment& other );

@@ -52,8 +52,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 //
 // <prerequisite>
-//   <li> <linkto class=CoordinateSystem>CoordinateSystem</linkto>   
-//   <li> <linkto class=ImageInterface>ImageInterface</linkto>
+//   <li> <linkto class=casacore::CoordinateSystem>CoordinateSystem</linkto>   
+//   <li> <linkto class=casacore::ImageInterface>ImageInterface</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -86,9 +86,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <example>
 // <srcblock>
-//  TempImage<Double> image;
+//  casacore::TempImage<casacore::Double> image;
 //  //(populate the image with data: see dImageDecomposer.cc)
-//  ImageDecomposer<Double> id(image);
+//  ImageDecomposer<casacore::Double> id(image);
 //  id.setDeblendOptions(0.3, 8);
 //  id.setFitOptions(0.4);
 //  id.decomposeImage();
@@ -105,9 +105,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <todo asof="2002/07/23">
 //   <li> Generalize dimensionality 
-//   <li> Use Lattice iterators in place of IPosition loops wherever possible
+//   <li> Use casacore::Lattice iterators in place of casacore::IPosition loops wherever possible
 //   <li> Speed up fitting by not sending every region pixel to the fitter
-//   <li> Send the completed componentmap to the user as an AIPS++ (Int?) Image
+//   <li> Send the completed componentmap to the user as an AIPS++ (casacore::Int?) Image
 //   <li> Return a ComponentList instead of a Matrix
 //   <li> Enable custom contouring at user level
 //   <li> Add progress meter
@@ -131,7 +131,7 @@ public:
 
    ImageDecomposer() = delete;
 
-   ImageDecomposer(const ImageInterface<T>& image);
+   ImageDecomposer(const casacore::ImageInterface<T>& image);
 
    ImageDecomposer(const ImageDecomposer<T>& other);
 
@@ -141,12 +141,12 @@ public:
 
 // Tell the decomposer what image to decompose ("target image").
 // Also resets the internal component map.
-//   void setImage (ImageInterface<T>& image);
+//   void setImage (casacore::ImageInterface<T>& image);
 
 // Tells the program whether or not to use the contour-based deblender. If not,
 // the program will instead perform a single thresholding followed by a
 // local maximum scan before fitting.
-   void setDeblend(Bool deblendIt=True);
+   void setDeblend(casacore::Bool deblendIt=true);
 
 // Specifies deblending options:
 // <ul>
@@ -160,13 +160,13 @@ public:
 //      of pixels are contiguous - see identifyRegions for details.
 // </ul>
 // See decomposeImage for more information on the deblending process.
-   void setDeblendOptions(T thresholdVal=0.1, uInt nContour=11, 
-                          Int minRange=2, Int nAxis=2);
+   void setDeblendOptions(T thresholdVal=0.1, casacore::uInt nContour=11, 
+                          casacore::Int minRange=2, casacore::Int nAxis=2);
 
 // Tells the program whether or not to perform fitting.  If not, the component
 // list will be dstermined by estimation from the values of the first and 
 // second order moments of each component.
-   void setFit(Bool fitIt=True);
+   void setFit(casacore::Bool fitIt=true);
 
 // Specifies fitting options:
 // <ul>
@@ -181,7 +181,7 @@ public:
 // <li> convCriteria: criterion to establish convergence: see NonLinearFitLM.
 // </ul>
 // Additional information on these parameters can be found in FitGaussian.
-   void setFitOptions(T maximumRMS=0.1, Int maxRetries=-1, uInt maxIter=256,
+   void setFitOptions(T maximumRMS=0.1, casacore::Int maxRetries=-1, casacore::uInt maxIter=256,
                       T convCriteria=0.0001);
 
 
@@ -195,28 +195,28 @@ public:
 // in this code is a subset of the image of contiguous pixels whose values
 // are greater than the threshold value specified in decomposeImage. A region
 // may contain one or more components.
-  uInt numRegions() const;
+  casacore::uInt numRegions() const;
 
 // Returns the number of components found in the image.  A 'component' as
 // defined in this code is a source that can be described as a single Gaussian.
 // This can only be determined after deblending.
-  uInt numComponents() const;
+  casacore::uInt numComponents() const;
 
 // Returns the shape of the component map.
-  IPosition shape() const;                
+  casacore::IPosition shape() const;                
 
 // Returns the length of a specific axis.
-  Int shape(uInt axis) const;            
+  casacore::Int shape(casacore::uInt axis) const;            
 
-// Returns True if the image has been thresholded (split up into regions.)
-  Bool isDerived() const;
+// Returns true if the image has been thresholded (split up into regions.)
+  casacore::Bool isDerived() const;
 
-// Returns True if the image has been decomposed (split up into components.)
-  Bool isDecomposed() const;  
+// Returns true if the image has been decomposed (split up into components.)
+  casacore::Bool isDecomposed() const;  
 
 // Returns the component parameters as a Matrix.  (Ideally, this should be
 // a ComponentList.)
-  Matrix<T> componentList() const;
+  casacore::Matrix<T> componentList() const;
 
 // Currently does nothing; in the future should return the component map
 // in a way that it can be seen by the user in AIPS++, preferably as a
@@ -226,32 +226,32 @@ public:
 // Command-line text output functions.
 // <group>
   void display() const;
-  void displayContourMap(const Vector<T>& clevels) const;
+  void displayContourMap(const casacore::Vector<T>& clevels) const;
   void printComponents() const;
 // </group>
 // Boxes each region in the componentmap:
 // blc is set to the lowest coordinate value in each region;
 // trc is set to one above the highest coordinate value in each region.
-  void boundRegions(Block<IPosition>& blc, Block<IPosition>& trc);
+  void boundRegions(casacore::Block<casacore::IPosition>& blc, casacore::Block<casacore::IPosition>& trc);
 private:
-  ImageInterface<T> *itsImagePtr;// Points to the target image.
-  Lattice<Int> *itsMapPtr;       // The actual component map.  
-  IPosition itsShape;            // Component map shape
-  uInt itsDim;                   // Component map number of dimensions
-  uInt itsNRegions;              // Number of distinct regions in component map
-  uInt itsNComponents;           // Number of components that have been fitted
-  Matrix<T> itsList;             // The component list (Gaussian parameters for
+  casacore::ImageInterface<T> *itsImagePtr;// Points to the target image.
+  casacore::Lattice<casacore::Int> *itsMapPtr;       // The actual component map.  
+  casacore::IPosition itsShape;            // Component map shape
+  casacore::uInt itsDim;                   // Component map number of dimensions
+  casacore::uInt itsNRegions;              // Number of distinct regions in component map
+  casacore::uInt itsNComponents;           // Number of components that have been fitted
+  casacore::Matrix<T> itsList;             // The component list (Gaussian parameters for
                                  // each component.)  
-  Bool itsDeblendIt;
+  casacore::Bool itsDeblendIt;
   T itsThresholdVal;
-  uInt itsNContour;              // Decomposition options
-  Int itsMinRange;               // IMPR: maybe use a struct?
-  Int itsNAxis;
+  casacore::uInt itsNContour;              // Decomposition options
+  casacore::Int itsMinRange;               // IMPR: maybe use a struct?
+  casacore::Int itsNAxis;
   
-  Bool itsFitIt;
+  casacore::Bool itsFitIt;
   T itsMaximumRMS; 
-  Int itsMaxRetries;             // Fitting options
-  uInt itsMaxIter;
+  casacore::Int itsMaxRetries;             // Fitting options
+  casacore::uInt itsMaxIter;
   T itsConvCriteria;
 
 
@@ -260,52 +260,52 @@ private:
 
 // Makes sure a pair of IPositions is in the correct format for blc/trc, and
 // corrects them if they are not.
-  void correctBlcTrc(IPosition& blc, IPosition& trc) const;
+  void correctBlcTrc(casacore::IPosition& blc, casacore::IPosition& trc) const;
 
 // Used as an N-dimensional interator.  This should probably be replaced by
 // LatticeIterators...?
 // <group>
-  Bool increment(IPosition& pos, const IPosition& shape) const;
-  void decrement(IPosition& pos) const;
+  casacore::Bool increment(casacore::IPosition& pos, const casacore::IPosition& shape) const;
+  void decrement(casacore::IPosition& pos) const;
 // </group>
 
 // Returns the component to which the specified cell belongs
 // <group>
-  Int getCell(Int x, Int y) const;             
-  Int getCell(Int x, Int y, Int z) const;    
-  Int getCell(const IPosition& coord) const;
+  casacore::Int getCell(casacore::Int x, casacore::Int y) const;             
+  casacore::Int getCell(casacore::Int x, casacore::Int y, casacore::Int z) const;    
+  casacore::Int getCell(const casacore::IPosition& coord) const;
 // </group>
 
 // Assigns the specified cell to the specified component
 // <group>
-  void setCell(Int x, Int y, Int sval);       
-  void setCell(Int x, Int y, Int z, Int sval); 
-  void setCell(const IPosition& coord, Int sval);
+  void setCell(casacore::Int x, casacore::Int y, casacore::Int sval);       
+  void setCell(casacore::Int x, casacore::Int y, casacore::Int z, casacore::Int sval); 
+  void setCell(const casacore::IPosition& coord, casacore::Int sval);
 // </group>
 
 // Semi-automatic way to set contour levels: at the given increment counting
 // between mincon and maxcon.
-  Vector<T> autoContour(T minCon, T maxCon, T inc) const;
+  casacore::Vector<T> autoContour(T minCon, T maxCon, T inc) const;
 
 // Linearly spaces contours between minvalue and just below the
 // maximum value in the target region of the target image, and returns
 // the contour values as a Vector.
-  Vector<T> autoContour(Int nContours=11, T minValue=0) const;
+  casacore::Vector<T> autoContour(casacore::Int nContours=11, T minValue=0) const;
 
 // Nonlinear spacing option for contouring; spaces contours according to the
 // function given.  The domain of the function is 0 <-> ncontours-1; the
 // range is automatically calibrated to be minvalue <-> maxvalue.  The function
 // should be nondecreasing in the domain such that each contour is greater
 // than the last.
-  Vector<T> autoContour(const Function1D<T>& fn,
-                        Int nContours = 11, T minValue = 0) const;
+  casacore::Vector<T> autoContour(const casacore::Function1D<T>& fn,
+                        casacore::Int nContours = 11, T minValue = 0) const;
 
 
-//Eliminates any regions whose corresponding values in killRegion are True
+//Eliminates any regions whose corresponding values in killRegion are true
 // by setting all pixel values in the componentmap set to that region to
 // zero.  Zero-oriented; there is an offset of one between the index in
 // killRegion and the actual region in the componentmap.
-  void destroyRegions(const Vector<Bool>& killRegion);
+  void destroyRegions(const casacore::Vector<casacore::Bool>& killRegion);
 
 // Eliminates regions with no cells by replacing them with higher-numbered 
 // regions.
@@ -316,7 +316,7 @@ private:
 // The user should exercise caution with this function and synthesize submaps
 // only into regions of the main map that are truly empty (0), as no blending
 // is assumed between different maps.
-  void synthesize(const ImageDecomposer<T>& subdecomposer, IPosition blc);
+  void synthesize(const ImageDecomposer<T>& subdecomposer, casacore::IPosition blc);
 
 // Set all elements in the component map to zero and clear the component list.
   void zero();
@@ -330,39 +330,39 @@ private:
 // Finds the greatest value inside the specified rectangular area of the
 // target image.
 // <group>
-  T findAreaGlobalMax(IPosition blc, IPosition trc) const;
-  void findAreaGlobalMax(T& maxval, IPosition& maxvalpos, 
-                         IPosition blc, IPosition trc) const;
-  Vector<T> findAreaGlobalMax(IPosition blc, IPosition trc, Int naxis) const;
-  void findAreaGlobalMax(Vector<T>& maxvals,
-                         Block<IPosition>& maxvalpos,
-                         IPosition blc, IPosition trc,
-                         Int naxis) const;
+  T findAreaGlobalMax(casacore::IPosition blc, casacore::IPosition trc) const;
+  void findAreaGlobalMax(T& maxval, casacore::IPosition& maxvalpos, 
+                         casacore::IPosition blc, casacore::IPosition trc) const;
+  casacore::Vector<T> findAreaGlobalMax(casacore::IPosition blc, casacore::IPosition trc, casacore::Int naxis) const;
+  void findAreaGlobalMax(casacore::Vector<T>& maxvals,
+                         casacore::Block<casacore::IPosition>& maxvalpos,
+                         casacore::IPosition blc, casacore::IPosition trc,
+                         casacore::Int naxis) const;
 // </group>
 
 // Finds all local maxima inside the specified rectangular area of the
 // target image.
 // <group>
-  Vector<T> findAreaLocalMax(IPosition blc, IPosition trc, Int naxis) const;
-  void findAreaLocalMax(Vector<T>& maxvals,Block<IPosition>& maxvalpos, 
-                        IPosition blc, IPosition trc, Int naxis) const;
+  casacore::Vector<T> findAreaLocalMax(casacore::IPosition blc, casacore::IPosition trc, casacore::Int naxis) const;
+  void findAreaLocalMax(casacore::Vector<T>& maxvals,casacore::Block<casacore::IPosition>& maxvalpos, 
+                        casacore::IPosition blc, casacore::IPosition trc, casacore::Int naxis) const;
 // </group>
 
 // Finds the maximum value of the target image in each region of the
 // componentmap.
 // <group>
-  Vector<T> findAllRegionGlobalMax() const;
-  void findAllRegionGlobalMax(Vector<T>& maxvals, 
-                              Block<IPosition>& maxvalpos) const;
+  casacore::Vector<T> findAllRegionGlobalMax() const;
+  void findAllRegionGlobalMax(casacore::Vector<T>& maxvals, 
+                              casacore::Block<casacore::IPosition>& maxvalpos) const;
 // </group>
 
 
 // Finds all local maxima of the target image inside the specifed region
 // of the componentmap.
 // <group>
-  Vector<T> findRegionLocalMax(Int nregion, Int naxis) const;
-  void findRegionLocalMax(Vector<T>& maxvals, Block<IPosition>& maxvalpos, 
-                          Int nregion, Int naxis) const;
+  casacore::Vector<T> findRegionLocalMax(casacore::Int nregion, casacore::Int naxis) const;
+  void findRegionLocalMax(casacore::Vector<T>& maxvals, casacore::Block<casacore::IPosition>& maxvalpos, 
+                          casacore::Int nregion, casacore::Int naxis) const;
 // </group>
 
 
@@ -376,9 +376,9 @@ private:
 //naxis = 2: compare to 18 adjacent pixels (axes and 2-axis diagonals)
 //naxis = 3: compare to 26 adjacent pixels (axes and 2/3-axis diagonals)
 // <group>
-  Bool isLocalMax(const IPosition& pos, Int naxis) const;
-  Bool isLocalMax(Int x, Int y, Int naxis) const;
-  Bool isLocalMax(Int x, Int y, Int z, Int naxis) const;
+  casacore::Bool isLocalMax(const casacore::IPosition& pos, casacore::Int naxis) const;
+  casacore::Bool isLocalMax(casacore::Int x, casacore::Int y, casacore::Int naxis) const;
+  casacore::Bool isLocalMax(casacore::Int x, casacore::Int y, casacore::Int z, casacore::Int naxis) const;
 // </group>
 
 // Finds a rough estimate of the width of each component by scanning to find
@@ -387,11 +387,11 @@ private:
 // This function is mostly obsolete, and is only used when the contour 
 // deblender is off (since the component map is necessary to determine the
 // moments).
-  void estimateComponentWidths(Matrix<T>& width,
-                               const Block<IPosition>& maxvalpos) const;
+  void estimateComponentWidths(casacore::Matrix<T>& width,
+                               const casacore::Block<casacore::IPosition>& maxvalpos) const;
 
 // Calculates the 0th-2nd order moments of a region.
-  Array<T> calculateMoments(Int region) const;
+  casacore::Array<T> calculateMoments(casacore::Int region) const;
 
 
 // Performs a single threshold scan on the image.  In other words,
@@ -399,33 +399,33 @@ private:
 // threshold value thrval, assigning each unique block to an integer,
 // starting at one.  All pixels with target image values below thrval are set
 // to zero.
-  uInt identifyRegions(T thrval, Int naxis=2);
+  casacore::uInt identifyRegions(T thrval, casacore::Int naxis=2);
 
 // Performs the contour decomposition on a blended image to generate a 
 // component map that can detect components blended above any threshold(s),
 // by performing threshold scans at each contour level and recognizing
 // as individual any components that are distinct above any such level.
-  void deblendRegions(const Vector<T>& contours, Int minRange=1, Int naxis=2);
+  void deblendRegions(const casacore::Vector<T>& contours, casacore::Int minRange=1, casacore::Int naxis=2);
 
 // Retrieves the target image's value at the given location.
 // <group>
-  T getImageVal(IPosition coord) const;
-  T getImageVal(Int x, Int y) const;
-  T getImageVal(Int x, Int y, Int z) const;
+  T getImageVal(casacore::IPosition coord) const;
+  T getImageVal(casacore::Int x, casacore::Int y) const;
+  T getImageVal(casacore::Int x, casacore::Int y, casacore::Int z) const;
 // </group>
 
 // Retrieves the number of the highest contour with a value less then the
 // target image's value at the given location.
 // <group>
-  Int getContourVal(IPosition coord, const Vector<T>& clevels) const;
-  Int getContourVal(Int x, Int y, Int z, const Vector<T>& clevels) const;
-  Int getContourVal(Int x, Int y, const Vector<T>& clevels) const;
-  Int getContourVal(T val, const Vector<T>& clevels) const;
+  casacore::Int getContourVal(casacore::IPosition coord, const casacore::Vector<T>& clevels) const;
+  casacore::Int getContourVal(casacore::Int x, casacore::Int y, casacore::Int z, const casacore::Vector<T>& clevels) const;
+  casacore::Int getContourVal(casacore::Int x, casacore::Int y, const casacore::Vector<T>& clevels) const;
+  casacore::Int getContourVal(T val, const casacore::Vector<T>& clevels) const;
 // </group>
 
 // Fits multiple gaussians to a single region.  First performs a local 
 // maximum scan to estimate the number of components in the region.
-  Matrix<T> fitRegion(Int region);
+  casacore::Matrix<T> fitRegion(casacore::Int region);
 
 // Fits gaussians to an image; multiple gaussians per region in the component
 // map.  The regions are fit sequentially and independently, so this function 
@@ -440,20 +440,20 @@ private:
 // gaussian fit on the main image and will be extremely slow. Every 
 // nonflagged object pixel in the image is used in fitting.
 
-// If the deblended flag is True, the function will treat each region as
+// If the deblended flag is true, the function will treat each region as
 // an individual component and will fit that many gaussians to the image
   void fitComponents();
 
 // Estimate the component parameters based on moments calculated using 
 // the component map.
-  Matrix<T> estimateComponents();
+  casacore::Matrix<T> estimateComponents();
 
 // Fits the specified number of 3D gaussians to the data, and returns 
 // solution in image (world) coordinates.  Essentially just an interface
 // for FitGaussian.
 // <group>
-  Matrix<T> fitGauss(const Matrix<T>& positions, const Vector<T>& dataValues,
-                     const Matrix<T>& initestimate) const;
+  casacore::Matrix<T> fitGauss(const casacore::Matrix<T>& positions, const casacore::Vector<T>& dataValues,
+                     const casacore::Matrix<T>& initestimate) const;
 
 // </group>
 

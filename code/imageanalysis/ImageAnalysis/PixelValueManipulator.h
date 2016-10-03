@@ -39,59 +39,59 @@ public:
 	// mask = "" => No additional mask specification, although image default mask will be used
 	// if one exists.
 	PixelValueManipulator(
-		const SPCIIT image, const Record *const regionRec,
-		const String& mask, Bool verboseDuringConstruction=True
+		const SPCIIT image, const casacore::Record *const regionRec,
+		const casacore::String& mask, casacore::Bool verboseDuringConstruction=true
 	);
 
 	~PixelValueManipulator() {}
 
 	static void addNoise(
-		SPIIT image, const String& type, const Record& region, const Vector<Double>& pars,
-		Bool zero, const std::pair<Int, Int> *const &seeds
+		SPIIT image, const casacore::String& type, const casacore::Record& region, const casacore::Vector<casacore::Double>& pars,
+		casacore::Bool zero, const std::pair<casacore::Int, casacore::Int> *const &seeds
 	);
 
 	// <src>dirFrame</src> and <src>freqFrame</src> are the codes for the
 	// frames for which it is desired that the returned measures should be specified.
 	// In both cases, one can specify "native" for the native coordinate frame,
-	// "cl" for the conversion layer frame, or any valid frame string from MDirection::showType()
-	// or MFrequency::showType().
-	static Record* coordMeasures(
-		Quantum<T>& intensity, Record& direction,
-		Record& frequency, Record& velocity,
-		SPCIIT image, const Vector<Double>& pixel,
-		const String& dirFrame, const String& freqFrame
+	// "cl" for the conversion layer frame, or any valid frame string from casacore::MDirection::showType()
+	// or casacore::MFrequency::showType().
+	static casacore::Record* coordMeasures(
+		casacore::Quantum<T>& intensity, casacore::Record& direction,
+		casacore::Record& frequency, casacore::Record& velocity,
+		SPCIIT image, const casacore::Vector<casacore::Double>& pixel,
+		const casacore::String& dirFrame, const casacore::String& freqFrame
 	);
 
-	// set axes to average over. If invert is True, select all axes other than
+	// set axes to average over. If invert is true, select all axes other than
 	// the specified axes to average over.
-	void setAxes(const IPosition& axes, Bool invert=False);
+	void setAxes(const casacore::IPosition& axes, casacore::Bool invert=false);
 
 	// Get pixel values, pixel mask values, etc.
-	// The return Record has the following fields:
-	// 'values' => Array<T> of pixel values
-	// 'mask'   => Array<Bool> of pixel mask values
-	Record get() const;
+	// The return casacore::Record has the following fields:
+	// 'values' => casacore::Array<T> of pixel values
+	// 'mask'   => casacore::Array<casacore::Bool> of pixel mask values
+	casacore::Record get() const;
 
 	// get a slice through the image. The values are interpolated at regular
 	// intervals to provide samples at npts number of points. x and y are
 	// in pixel coordinates
 
-	static Record* getSlice(
-		SPCIIT image, const Vector<Double>& x, const Vector<Double>& y,
-		const Vector<Int>& axes, const Vector<Int>& coord,
-		Int npts=0, const String& method="linear"
+	static casacore::Record* getSlice(
+		SPCIIT image, const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y,
+		const casacore::Vector<casacore::Int>& axes, const casacore::Vector<casacore::Int>& coord,
+		casacore::Int npts=0, const casacore::String& method="linear"
 	);
 
 	static void put(
-		SPIIT image, const Array<T>& pixelsArray, const Vector<Int>& blc,
-		const Vector<Int>& inc, Bool list,
-		Bool locking, Bool replicate
+		SPIIT image, const casacore::Array<T>& pixelsArray, const casacore::Vector<casacore::Int>& blc,
+		const casacore::Vector<casacore::Int>& inc, casacore::Bool list,
+		casacore::Bool locking, casacore::Bool replicate
 	);
 
-	static Bool putRegion(
-	    SPIIT image, const Array<T>& pixels,
-	    const Array<Bool>& mask, Record& region, Bool list,
-	    Bool usemask, Bool replicateArray
+	static casacore::Bool putRegion(
+	    SPIIT image, const casacore::Array<T>& pixels,
+	    const casacore::Array<casacore::Bool>& mask, casacore::Record& region, casacore::Bool list,
+	    casacore::Bool usemask, casacore::Bool replicateArray
 	);
 
 	// get the aggregated values along the specified pixel axis using the region and mask at construction
@@ -118,92 +118,92 @@ public:
 	// If the selected axis is the spectral axis, and <src>unit</src> is a frequency unit,
 	// <src>frame</src> represents the frame of reference with respect to which the frequency scale should be
 	// calculated. If empty, the reference frame associated with the spectral coordinate is used.
-	// The return Record has the following keys: "values" is a Vector<T> containing the aggregate pixel values,
-	// "mask" is the associated mask values (Vector<Bool>), "coords" is a Vector<Double> of coordinate values,
-	// and "xUnit" is a String containing the coordinate unit, and "yUnit" is a string containing the
+	// The return casacore::Record has the following keys: "values" is a casacore::Vector<T> containing the aggregate pixel values,
+	// "mask" is the associated mask values (casacore::Vector<casacore::Bool>), "coords" is a casacore::Vector<casacore::Double> of coordinate values,
+	// and "xUnit" is a casacore::String containing the coordinate unit, and "yUnit" is a string containing the
 	// ordinate unit.
-	Record getProfile(
-		uInt axis, const String& function, const String& unit,
+	casacore::Record getProfile(
+		casacore::uInt axis, const casacore::String& function, const casacore::String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
-		const Quantity *const restFreq=nullptr, const String& frame=""
+		const casacore::Quantity *const restFreq=nullptr, const casacore::String& frame=""
 	);
 
-	Record getProfile(
-		uInt axis, ImageCollapserData::AggregateType function, const String& unit,
+	casacore::Record getProfile(
+		casacore::uInt axis, ImageCollapserData::AggregateType function, const casacore::String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
-		const Quantity *const restFreq=nullptr, const String& frame=""
+		const casacore::Quantity *const restFreq=nullptr, const casacore::String& frame=""
 	);
 
-	String getClass() const { return _className; }
+	casacore::String getClass() const { return _className; }
 
 	// region refers to the region in the image to be inserted, not the
 	// region that was chosen at object construction
 	static void insert(
-		ImageInterface<T>& target, const ImageInterface<T>& image, const Record& region,
-		const Vector<Double>& locatePixel, Bool verbose
+		casacore::ImageInterface<T>& target, const casacore::ImageInterface<T>& image, const casacore::Record& region,
+		const casacore::Vector<casacore::Double>& locatePixel, casacore::Bool verbose
 	);
 
 	// Make a block of regions from a Record
 	// public so ImageAnalysis can use it, once those methods have been
 	// excised, make private
 	static void makeRegionBlock(
-	    PtrBlock<const ImageRegion*>& regions,
-	    const Record& Regions
+	    casacore::PtrBlock<const casacore::ImageRegion*>& regions,
+	    const casacore::Record& Regions
 	);
 
-	Record pixelValue(const Vector<Int>& pixel) const;
+	casacore::Record pixelValue(const casacore::Vector<casacore::Int>& pixel) const;
 
 	void pixelValue(
-	    Bool& offImage, Quantum<T>& value, Bool& mask,
-	    Vector<Int>& pos
+	    casacore::Bool& offImage, casacore::Quantum<T>& value, casacore::Bool& mask,
+	    casacore::Vector<casacore::Int>& pos
 	) const;
 
 	// set specified pixels or mask equal to provided scalar value
-	static Bool set(
-	    SPIIF image, const String& pixels, const Int pixelmask,
-	    Record& region, const Bool list = false
+	static casacore::Bool set(
+	    SPIIF image, const casacore::String& pixels, const casacore::Int pixelmask,
+	    casacore::Record& region, const casacore::Bool list = false
 	);
 
 	// set region name for logging purposes. Only used if the logfile is set.
-	void setRegionName(const String& rname) { _regionName = rname; }
+	void setRegionName(const casacore::String& rname) { _regionName = rname; }
 
 protected:
 	CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return std::vector<Coordinate::Type>();
+	std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return std::vector<casacore::Coordinate::Type>();
 	}
 
-	Bool _hasLogfileSupport() const { return True; }
+	casacore::Bool _hasLogfileSupport() const { return true; }
 
-    Bool _supportsMultipleRegions() const {return True;}
+    casacore::Bool _supportsMultipleRegions() const {return true;}
 
 private:
-    IPosition _axes, _lastChunkShape;
-    String _regionName;
-    const static String _className;
+    casacore::IPosition _axes, _lastChunkShape;
+    casacore::String _regionName;
+    const static casacore::String _className;
 
 	void _checkUnit(
-		const String& unit, const CoordinateSystem& csys,
+		const casacore::String& unit, const casacore::CoordinateSystem& csys,
 		PixelValueManipulatorData::SpectralType specType
 	) const;
 
-	Record _doWorld(
-		SPIIT collapsed, const String& unit,
+	casacore::Record _doWorld(
+		SPIIT collapsed, const casacore::String& unit,
 		PixelValueManipulatorData::SpectralType specType,
-		const Quantity *const restFreq,	const String& frame,
-		uInt axis
+		const casacore::Quantity *const restFreq,	const casacore::String& frame,
+		casacore::uInt axis
 	) const;
 
 	void _doNoncomformantUnit(
-		Vector<Double>& coords, const CoordinateSystem& csys,
-		const String& unit, PixelValueManipulatorData::SpectralType specType,
-		const Quantity *const restFreq, const String& axisUnit
+		casacore::Vector<casacore::Double>& coords, const casacore::CoordinateSystem& csys,
+		const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
+		const casacore::Quantity *const restFreq, const casacore::String& axisUnit
 	) const;
 
-	Vector<uInt> _npts(uInt axis) const;
+	casacore::Vector<casacore::uInt> _npts(casacore::uInt axis) const;
 };
 
 }

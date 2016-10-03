@@ -43,7 +43,7 @@
                                       // the vector dot/scalar/inner product
 template<class T> T innerProduct (const Vector<T> &A, const Vector<T> &B) {
                                    // check for correct dimensions
-  if (A.conform(B) == False){
+  if (A.conform(B) == false){
     throw(ArrayConformanceError("innerProduct - conform() error."));
   }
   T scalar = 0;   
@@ -363,10 +363,10 @@ template<class T> Matrix<T> solve(const Matrix<T> &A, const Matrix<T> &B,
     Bool badarg;
 
     if(diagnostic < 0){ 
-      badarg = True;
+      badarg = true;
       diagnostic *= -1;
     } else {
-      badarg = False;
+      badarg = false;
     }
     char code[7];
     sprintf(code,"%i",diagnostic);
@@ -459,10 +459,10 @@ template<class T> Matrix<T> solve(const LUdecomp<T> &myLU, const Matrix<T> &B,
     Bool badarg;
 
     if(diagnostic < 0){ 
-      badarg = True;
+      badarg = true;
       diagnostic *= -1;
     } else {
-      badarg = False;
+      badarg = false;
     }
     char code[7];
     sprintf(code,"%i",diagnostic);

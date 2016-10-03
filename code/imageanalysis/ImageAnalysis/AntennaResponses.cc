@@ -69,6 +69,7 @@
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ScalarColumn.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   AntennaResponses::AntennaResponses(const String& path){
@@ -104,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if(path==""){
       paths_p.resize(1, "");
-      return True;
+      return true;
     }
     else{
       // fill members from table on disk
@@ -116,9 +117,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool AntennaResponses::append(const String& path){
 
     if(isInit(path)){
-      // Returns False if the path was already read before.
+      // Returns false if the path was already read before.
       //cout << "Path has been read before." << endl;
-      return False;
+      return false;
     }
     
     // open table
@@ -153,26 +154,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       numRows_p += numRows;
 
-      ObsName_p.resize(numRows_p,True);
-      StartTime_p.resize(numRows_p,True);
-      AntennaType_p.resize(numRows_p,True);
-      ReceiverType_p.resize(numRows_p,True);
-      BeamId_p.resize(numRows_p,True);
-      BeamNumber_p.resize(numRows_p,True);
-      ValidCenter_p.resize(numRows_p,True);
-      ValidCenterMin_p.resize(numRows_p,True);
-      ValidCenterMax_p.resize(numRows_p,True);
-      NumSubbands_p.resize(numRows_p,True);
-      BandName_p.resize(numRows_p,True);
-      SubbandMinFreq_p.resize(numRows_p,True);
-      SubbandMaxFreq_p.resize(numRows_p,True);
-      FuncType_p.resize(numRows_p,True);
-      FuncName_p.resize(numRows_p,True);
-      FuncChannel_p.resize(numRows_p,True);
-      NomFreq_p.resize(numRows_p,True);
-      RotAngOffset_p.resize(numRows_p,True);
+      ObsName_p.resize(numRows_p,true);
+      StartTime_p.resize(numRows_p,true);
+      AntennaType_p.resize(numRows_p,true);
+      ReceiverType_p.resize(numRows_p,true);
+      BeamId_p.resize(numRows_p,true);
+      BeamNumber_p.resize(numRows_p,true);
+      ValidCenter_p.resize(numRows_p,true);
+      ValidCenterMin_p.resize(numRows_p,true);
+      ValidCenterMax_p.resize(numRows_p,true);
+      NumSubbands_p.resize(numRows_p,true);
+      BandName_p.resize(numRows_p,true);
+      SubbandMinFreq_p.resize(numRows_p,true);
+      SubbandMaxFreq_p.resize(numRows_p,true);
+      FuncType_p.resize(numRows_p,true);
+      FuncName_p.resize(numRows_p,true);
+      FuncChannel_p.resize(numRows_p,true);
+      NomFreq_p.resize(numRows_p,true);
+      RotAngOffset_p.resize(numRows_p,true);
 
-      pathIndex_p.resize(numRows_p,True);
+      pathIndex_p.resize(numRows_p,true);
 
       for(uInt i=0; i<numRows; i++){
 	uInt j = i + numRows_p - numRows;
@@ -228,14 +229,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     } // end if
 
-    paths_p.resize(nPaths+1, True);
+    paths_p.resize(nPaths+1, true);
     String tempS = path;
     while(tempS.lastchar()=='/' && tempS.size()>1){ // don't want trailing "/"
       tempS.erase(tempS.size()-1,1);
     }
     paths_p(nPaths) = path;
 
-    return True;
+    return true;
 
   }
 
@@ -245,10 +246,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   Bool AntennaResponses::isInit(const String& path){
-    Bool found = False;
+    Bool found = false;
     for (uInt i=0; i<paths_p.nelements(); i++){
       if(paths_p(i) == path){
-	found = True;
+	found = true;
       }
     }
     return found;
@@ -263,7 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					const MDirection& center,
 					const String& receiverType,
 					const Int& beamNumber){
-    Bool rval = False;
+    Bool rval = false;
     Unit uS("s");
     Unit uHz("Hz");
 
@@ -280,7 +281,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 WHERE));
       os << LogIO::NORMAL << String("Unknown observatory ") << obsName 
 	 << LogIO::POST;
-      return False;
+      return false;
     }
     mp=MPosition::Convert(mp, MPosition::ITRF)();
     MeasFrame frame(mp, obsTime);
@@ -308,18 +309,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 ){
 	// remains to test center and freq and functype
 	// first freq and functype
-	Bool found = False;
+	Bool found = false;
 	for(j=0; j<NumSubbands_p(i); j++){
 	  //cout << "f " << f << " min " << SubbandMinFreq_p(i)(j).get() 
 	  //     << " max " << SubbandMaxFreq_p(i)(j).get() << endl;
 	  if( (FuncType_p(i)(j) == requFType
 	       || requFType == AntennaResponses::ANY)
 	      && (
-		  !matchFreq // if matchFreq is False, any frequency is accepted
+		  !matchFreq // if matchFreq is false, any frequency is accepted
 		  || (SubbandMinFreq_p(i)(j).get() <= f && f <= SubbandMaxFreq_p(i)(j).get())
 		  )
 	      ){
-	    found = True;
+	    found = true;
 	    break;
 	  }
 	}
@@ -346,7 +347,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      || ( 0. <= modAz  && modAz <= modAzMax))
 	     && azelMin(1) <= azel(1) && azel(1) <= azelMax(1)){
 	    // memorize the applicable row, sub band, and time
-	    rval = True;
+	    rval = true;
 	    rowV.push_back(i);
 	    subBandV.push_back(j);
 	    timeV.push_back(StartTime_p(i).get(uS));
@@ -371,7 +372,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					const Int& beamId,
 					const MFrequency& freq){
 
-    Bool rval = False;
+    Bool rval = false;
     Unit uHz("Hz");
 
     // calculate topo frequency
@@ -387,7 +388,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if(SubbandMinFreq_p(i)(j).get() <= f
 	     && f <= SubbandMaxFreq_p(i)(j).get()
 	     ){
-	    rval = True;
+	    rval = true;
 	    break;
 	  }
 	}
@@ -427,7 +428,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		       requFType, antennaType,
 		       center, receiverType,
 		       beamNumber)){
-      return False;
+      return false;
     }
     else{
       functionImageName = FuncName_p(row)(subBand);
@@ -440,7 +441,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       nomFreq = MFrequency(NomFreq_p(row)(subBand),MFrequency::TOPO);
       fType = FuncType_p(row)(subBand);
       rotAngOffset = RotAngOffset_p(row)(subBand);
-      return True;
+      return true;
     }
 
   }
@@ -469,7 +470,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		       requFType, antennaType,
 		       center, receiverType,
 		       beamNumber)){
-      return False;
+      return false;
     }
     else{
       functionImageName = FuncName_p(row)(subBand);
@@ -484,7 +485,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       hiFreq = MFrequency(SubbandMaxFreq_p(row)(subBand),MFrequency::TOPO);
       fType = FuncType_p(row)(subBand);
       rotAngOffset = RotAngOffset_p(row)(subBand);
-      return True;
+      return true;
     }
 
 
@@ -505,7 +506,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if(!getRowAndIndex(row, subBand,
 		       obsName, beamId, freq)){
-      return False;
+      return false;
     }
     else{
 //       cout << "row " << row << " subband " << subBand << endl;
@@ -525,7 +526,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       nomFreq = MFrequency(NomFreq_p(row)(subBand),MFrequency::TOPO);
       fType = FuncType_p(row)(subBand);
       rotAngOffset = RotAngOffset_p(row)(subBand);
-      return True;
+      return true;
     }
   }
 
@@ -537,7 +538,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 const MDirection& center,
 					 const String& receiverType,
 					 const Int& beamNumber){
-    Bool rval = False;
+    Bool rval = false;
     Unit uS("s");
     Unit uHz("Hz");
     
@@ -556,7 +557,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 WHERE));
       os << LogIO::NORMAL << String("Unknown observatory ") << obsName 
 	 << LogIO::POST;
-      return False;
+      return false;
     }
     mp=MPosition::Convert(mp, MPosition::ITRF)();
     MeasFrame frame(mp, obsTime);
@@ -582,18 +583,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 ){
 	// remains to test center and freq and functype
 	// first freq and functype
-	Bool found = False;
+	Bool found = false;
 	for(j=0; j<NumSubbands_p(i); j++){
 	  //cout << "f " << f << " min " << SubbandMinFreq_p(i)(j).get() 
 	  //     << " max " << SubbandMaxFreq_p(i)(j).get() << endl;
 	  if( (FuncType_p(i)(j) == requFType
 	       || requFType == AntennaResponses::ANY)
 	      && (
-		  !matchFreq // if matchFreq is False, any frequency is accepted
+		  !matchFreq // if matchFreq is false, any frequency is accepted
 		  || (SubbandMinFreq_p(i)(j).get() <= f && f <= SubbandMaxFreq_p(i)(j).get())
 		  )
 	      ){
-	    found = True;
+	    found = true;
 	    break;
 	  }
 	}
@@ -616,7 +617,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     && azelMin(1) <= azel(1) && azel(1) <= azelMax(1)){
 	    // memorize the antenna type
 	    if(!antTypeMap.isDefined(AntennaType_p(i))){
-	      rval = True;
+	      rval = true;
 	      antTypeMap.define(AntennaType_p(i),1);
 	    }
 	  }
@@ -665,7 +666,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 WHERE));
       os << LogIO::NORMAL << String("Table not initialized.") << obsName 
 	 << LogIO::POST;
-      return False;
+      return false;
     }
     // Consistency checks: 
     //   - all vectors have same dimension which is then used to set numSubbands
@@ -682,13 +683,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       LogIO os(LogOrigin("AntennaResponses", String("putRow"), WHERE));
       os << LogIO::NORMAL << String("Inconsistent vector dimensions.") << obsName 
 	 << LogIO::POST;
-      return False;
+      return false;
     }
     //   - beamId is unique for the given observatory
-    Bool isUnique = True;
+    Bool isUnique = true;
     for(uInt i=0; i<numRows_p; i++){
       if(ObsName_p(i)==obsName && BeamId_p(i)==beamId && row!=i){
-	isUnique = False;
+	isUnique = false;
 	break;
       }
     }
@@ -696,7 +697,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       LogIO os(LogOrigin("AntennaResponses", String("putRow"), WHERE));
       os << LogIO::WARN << "Beam id " <<  beamId << " not unique." 
 	 << LogIO::POST;
-      return False;
+      return false;
     }
     //   - center, validCenterMin, and validCenterMax have the same MDirection type
     String dirRef = center.getRefString();
@@ -708,7 +709,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 WHERE));
       os << LogIO::WARN << "Inconsistent direction type." 
 	 << LogIO::POST;
-      return False;
+      return false;
     }
     
     uInt theRow = 0;
@@ -722,24 +723,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // actual row that was filled.
       theRow = row = numRows_p;
       numRows_p++;
-      ObsName_p.resize(numRows_p,True);
-      StartTime_p.resize(numRows_p,True);
-      AntennaType_p.resize(numRows_p,True);
-      ReceiverType_p.resize(numRows_p,True);
-      BeamId_p.resize(numRows_p,True);
-      BeamNumber_p.resize(numRows_p,True);
-      ValidCenter_p.resize(numRows_p,True);
-      ValidCenterMin_p.resize(numRows_p,True);
-      ValidCenterMax_p.resize(numRows_p,True);
-      NumSubbands_p.resize(numRows_p,True);
-      BandName_p.resize(numRows_p,True);
-      SubbandMinFreq_p.resize(numRows_p,True);
-      SubbandMaxFreq_p.resize(numRows_p,True);
-      FuncType_p.resize(numRows_p,True);
-      FuncName_p.resize(numRows_p,True);
-      FuncChannel_p.resize(numRows_p,True);
-      NomFreq_p.resize(numRows_p,True);
-      RotAngOffset_p.resize(numRows_p,True);
+      ObsName_p.resize(numRows_p,true);
+      StartTime_p.resize(numRows_p,true);
+      AntennaType_p.resize(numRows_p,true);
+      ReceiverType_p.resize(numRows_p,true);
+      BeamId_p.resize(numRows_p,true);
+      BeamNumber_p.resize(numRows_p,true);
+      ValidCenter_p.resize(numRows_p,true);
+      ValidCenterMin_p.resize(numRows_p,true);
+      ValidCenterMax_p.resize(numRows_p,true);
+      NumSubbands_p.resize(numRows_p,true);
+      BandName_p.resize(numRows_p,true);
+      SubbandMinFreq_p.resize(numRows_p,true);
+      SubbandMaxFreq_p.resize(numRows_p,true);
+      FuncType_p.resize(numRows_p,true);
+      FuncName_p.resize(numRows_p,true);
+      FuncChannel_p.resize(numRows_p,true);
+      NomFreq_p.resize(numRows_p,true);
+      RotAngOffset_p.resize(numRows_p,true);
     }  
 
     ObsName_p(theRow) = obsName;
@@ -761,7 +762,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     NomFreq_p(theRow).assign(nomFreq);
     RotAngOffset_p(theRow).assign(rotAngOffset);
 
-    return True;
+    return true;
 
   }
 
@@ -927,7 +928,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // brute force search
     Quantity f = freq.get();
     bandName = "";
-    Bool rval = False;
+    Bool rval = false;
 
     uInt i, j;
 
@@ -936,7 +937,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for(j=0; j<NumSubbands_p(i); j++){
 	  if(SubbandMinFreq_p(i)(j).get() <= f
 	     && f <= SubbandMaxFreq_p(i)(j).get()){
-	    rval = True;
+	    rval = true;
 	    break;
 	  }
 	}

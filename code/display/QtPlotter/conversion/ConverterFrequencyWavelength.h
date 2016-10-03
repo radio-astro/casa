@@ -34,7 +34,7 @@ namespace casa {
 	public:
 		ConverterFrequencyWavelength(const QString& oldUnits,
 		                             const QString& newUnits);
-		virtual Vector<double> convert( const Vector<double>& oldValues, SpectralCoordinate spectralCoordinate );
+		virtual casacore::Vector<double> convert( const casacore::Vector<double>& oldValues, casacore::SpectralCoordinate spectralCoordinate );
 		virtual ~ConverterFrequencyWavelength();
 	};
 

@@ -53,13 +53,14 @@
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MeasTable.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
 FluxStandard::FluxStandard(const FluxStandard::FluxScale scale) : 
   itsFluxScale(scale),
-  has_direction_p(False),
+  has_direction_p(false),
   interpmethod_p("")
 {
 // Default constructor
@@ -104,7 +105,7 @@ Bool FluxStandard::compute(const String& sourceName,
                            Vector<Vector<Flux<Double> > >& values,
                            Vector<Vector<Flux<Double> > >& errors)
 {
-  Bool success = True;
+  Bool success = true;
   uInt nspws = mfreqs.nelements();
 
   for(uInt spw = 0; spw < nspws; ++spw)
@@ -131,7 +132,7 @@ Bool FluxStandard::compute(const String& sourceName,
 // Output:
 //    values      Computed total flux densities
 //    errors      Flux density uncertainties; 0 => not known.
-//    compute     False if sourceName is not recognized
+//    compute     false if sourceName is not recognized
 //                as a standard reference.
 //
   LogIO os(LogOrigin("FluxStandard", "compute"));
@@ -222,7 +223,7 @@ Bool FluxStandard::compute(const String& sourceName,
   }
   else{
     direction_p = fluxStdPtr->getDirection();
-    has_direction_p = True;
+    has_direction_p = true;
   }
   // Compute the flux density values and their uncertainties, returning whether
   // or not it worked.
@@ -260,7 +261,7 @@ Bool FluxStandard::computeCL(const String& sourceName,
 {
   LogIO os(LogOrigin("FluxStandard", "computeCL"));
   uInt nspws = mfreqs.nelements();
-  Bool success = False;
+  Bool success = false;
 
   if(itsFluxScale < FluxStandard::HAS_RESOLUTION_INFO){
     if(this->compute(sourceName, position, mfreqs, mtime, values, errors)){
@@ -274,7 +275,7 @@ Bool FluxStandard::computeCL(const String& sourceName,
                                          values[spw], point,
 					 prefix + "spw" + String::toString(spw) + "_");
       }
-      success = True;
+      success = true;
     }
   }
   else if(itsFluxScale == FluxStandard::SS_JPL_BUTLER){
@@ -302,7 +303,7 @@ Bool FluxStandard::computeCL(const String& sourceName,
           clpaths[spw] = makeComponentList(sourceName, mfreqs[spw], mtime,
                                            values[spw], disk,
 					   prefix + "spw" + String::toString(spw) + "_");
-          success = True;
+          success = true;
           break;
         }
       default: {
@@ -435,7 +436,7 @@ Bool FluxStandard::matchStandard (const String& name,
 //    stdEnum          FluxStandard::FluxScale   Matching enum
 //    stdName          String                    Standard descriptor for 
 //                                               the matching enum.
-//    matchStandard    Bool                      True if matched; False
+//    matchStandard    Bool                      true if matched; false
 //                                               if default returned.
 //
   // Set default enum
@@ -445,7 +446,7 @@ Bool FluxStandard::matchStandard (const String& name,
   // Local lowercase copy of input string
   String lname = name;
   lname.downcase();
-  Bool matched = True;
+  Bool matched = true;
 
   // Case input string match of:
   //
@@ -492,7 +493,7 @@ Bool FluxStandard::matchStandard (const String& name,
     stdEnum = FluxStandard::SS_JPL_BUTLER;
   }
   else
-    matched = False;
+    matched = false;
 
   // Retrieve standard descriptor
   stdName = standardName (stdEnum);

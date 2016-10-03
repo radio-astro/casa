@@ -148,11 +148,11 @@ private:
 	vector<bool> filters;
 	static vector<string> filterNames;
 
-	//Table Names
+	//casacore::Table Names
 	const static std::string TABLE_MAIN;
 	const static std::string TABLE_SPECIES;
 
-	//Table columns
+	//casacore::Table columns
 	const static std::string FREQUENCY_COLUMN;
 	const static std::string TEMPERATURE_COLUMN;
 	const static std::string SPECIES_ID_COLUMN;

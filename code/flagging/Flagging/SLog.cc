@@ -35,6 +35,7 @@
 //  loglevel{LOG0,      LOG1,   LOG2,   LOG3,    ..., LOG9, LOG10}
 //set LOGLEVEL to 3 to filter out all debug message
   
+using namespace casacore;
 namespace casa {
 
 SLog* SLog::instance = 0;

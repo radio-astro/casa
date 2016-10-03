@@ -210,27 +210,27 @@ namespace sdmbin {
 
     /** Utility to access the validity of an input basebandNum
      * @param basebandNum Baseband number
-     * @return True if not one-based or exceeds the number of basebands in the configuration, else false
+     * @return true if not one-based or exceeds the number of basebands in the configuration, else false
      */
     bool wrongBasebandNum(int basebandNum);
 
     /** Utility method to check that a query is relevant or not for interferometric data
      *  @param interfero
-     *  @return True or false depending on the correlationMode value
+     *  @return true or false depending on the correlationMode value
      */
     bool        notFor(bool interfero);
 
     /** Utility method to check that the input value of antenna index in a query is valid
      * or not.
      *  @param antIndex The antenna index
-     *  @return True or false depending on the upper limit coming from the number of antennas
+     *  @return true or false depending on the upper limit coming from the number of antennas
      */
     bool        wrongAntennaIndex(int antIndex);
 
     /** Utility method to check that the input baseband index value in a query is valid
      * or not.
      *  @param bbIndex The baseband index
-     *  @return True or false depending on the upper limit coming from the number of basebands
+     *  @return true or false depending on the upper limit coming from the number of basebands
      *  set in the configuartion
      */
     bool        wrongBasebandIndex(int bbIndex);
@@ -241,7 +241,7 @@ namespace sdmbin {
      *  @param bbIndex The baseband index
      *  @param antIndex_i The antenna index for antenna i
      *  @param antIndex_j The antenna index for antenna j
-     *  @return True or false depending on the upper limit for each of these items.
+     *  @return true or false depending on the upper limit for each of these items.
      *  Note that ppIndex is a function of the baseband index.
      */
     bool        wrongPolProductIndex(int ppIndex,int bbIndex,int antIndex_i,int antIndex_j);

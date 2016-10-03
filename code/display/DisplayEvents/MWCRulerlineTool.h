@@ -71,15 +71,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 		// Constructor
 		MWCRulerlineTool(Display::KeySym keysym = Display::K_Pointer_Button1,
-		                 Bool scrollingAllowed = True);
+		                 casacore::Bool scrollingAllowed = true);
 
 		// Destructor
 		virtual ~MWCRulerlineTool();
 
 		// Reset to non-showing, non-active.  Refreshes if necessary to erase
-		// (unless skipRefresh==True).
+		// (unless skipRefresh==true).
 		// (Does not unregister from WCs or disable future event handling).
-		virtual void reset(Bool skipRefresh=False);
+		virtual void reset(casacore::Bool skipRefresh=false);
 
 	protected:
 		// Functions called by the base class mouse event handling operators -
@@ -98,16 +98,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 		// Should we respond to mouse movement and button release?  Should
 		// we draw?  Set when the button is pushed in one of the tool's WCs.
-		Bool itsActive;
+		casacore::Bool itsActive;
 
 		// are the units in x and y identical?
-		Bool itsEqualUnits;
+		casacore::Bool itsEqualUnits;
 
 		// pixel coordinates of the pan vector.  1 = anchor, 2 = new position.
-		Int itsX1, itsY1, itsX2, itsY2, itsX3, itsY3;
+		casacore::Int itsX1, itsY1, itsX2, itsY2, itsX3, itsY3;
 
 		// axis index for RA and DEC
-		Int itsRaIndex, itsDecIndex;
+		casacore::Int itsRaIndex, itsDecIndex;
 	};
 
 

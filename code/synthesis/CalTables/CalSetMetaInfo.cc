@@ -52,6 +52,7 @@
 
 #include <fstream>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //----------------------------------------------------------------
@@ -191,7 +192,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   Bool CalSetMetaInfo::verify(CalSetMetaInfo& otherCSMI)
   {
-    Bool spwVerified=False, antennaVerified=False, fieldVerified=False;
+    Bool spwVerified=false, antennaVerified=false, fieldVerified=false;
     ostringstream spwMesg, antMesg, fieldMesg;
     // Verify that the entires in the SPW table are identical
     {
@@ -207,9 +208,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for(i=0;i<n;i++)
 	  {
 	    if (thisSpwNames(i) != otherSpwNames(i))
-	      {spwVerified = False;break;}
+	      {spwVerified = false;break;}
 	    if (thisSpwRefFreq(i) != otherSpwRefFreq(i))
-	      {spwVerified = False;break;}
+	      {spwVerified = false;break;}
 	  }
       if (!spwVerified)
 	spwMesg << "CalSetMetaInfo::verify: "
@@ -226,7 +227,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for(i=0;i<n;i++)
 	  {
 	    if (thisAntNames(i) != otherAntNames(i))
-	      {antennaVerified = False;break;}
+	      {antennaVerified = false;break;}
 	  }
       if (!antennaVerified)
 	  antMesg << "CalSetMetaInfo::verify: "
@@ -243,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for(i=0;i<n;i++)
 	  {
 	    if (thisFieldNames(i) != otherFieldNames(i))
-	      {fieldVerified = False;break;}
+	      {fieldVerified = false;break;}
 	  }
       if (!fieldVerified)
 	  fieldMesg << "CalSetMetaInfo::verify: "

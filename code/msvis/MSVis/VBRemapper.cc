@@ -33,6 +33,7 @@
 #include <casa/Logging/LogIO.h>
 #include <map>
 
+using namespace casacore;
 namespace casa {
 
 VBRemapper::VBRemapper()// :
@@ -55,12 +56,12 @@ VBRemapper::VBRemapper(const std::map<VisBufferComponents::EnumType, std::map<In
 Bool VBRemapper::remap(VisBuffer& vb, const Bool squawk) const
 {
   LogIO os(LogOrigin("VBRemapper", "remap()"));
-  Bool retval = True;
+  Bool retval = true;
 
   for(std::map<VisBufferComponents::EnumType,
         std::map<Int, Int> >::const_iterator c = inToOutMaps_p.begin();
       c != inToOutMaps_p.end(); ++c){
-    Bool colOK = True;
+    Bool colOK = true;
 
     switch(c->first){
     case VisBufferComponents::Ant1:
@@ -107,10 +108,10 @@ Bool VBRemapper::remap(VisBuffer& vb, const Bool squawk) const
            << LogIO::POST;
       }
       // Do NOT set colOK; it would repeat the message.
-      retval = False;
+      retval = false;
     }
     if(!colOK){
-      retval = False;
+      retval = false;
       if(squawk){
         os << LogIO::WARN
            << "Unrecognized value remapping " << asyncio::PrefetchColumns::columnName(c->first)
@@ -123,7 +124,7 @@ Bool VBRemapper::remap(VisBuffer& vb, const Bool squawk) const
 
 Bool VBRemapper::remapScalar(Int& colref, const std::map<Int, Int>& mapper) const
 {
-  Bool retval = True;
+  Bool retval = true;
   const std::map<Int, Int>::const_iterator it(mapper.find(colref));
 
   if(it != mapper.end()){
@@ -132,13 +133,13 @@ Bool VBRemapper::remapScalar(Int& colref, const std::map<Int, Int>& mapper) cons
     colref = middleman;
   }
   else
-    retval = False;
+    retval = false;
   return retval;
 }
 
 Bool VBRemapper::remapVector(Vector<Int>& col, const std::map<Int, Int>& mapper) const
 {
-  Bool retval = True;
+  Bool retval = true;
 
   if(mapper.size() > 0){
     for(Int row = col.nelements(); row--;){
@@ -150,13 +151,14 @@ Bool VBRemapper::remapVector(Vector<Int>& col, const std::map<Int, Int>& mapper)
         col[row] = middleman;
       }
       else
-        retval = False;
+        retval = false;
     }
   }
   else
-    retval = False;
+    retval = false;
 
   return retval;
 }
 
+using namespace casacore;
 } // end namespace casa

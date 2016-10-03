@@ -56,7 +56,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This class contains and manages various _gui_ objects associated with
 // the viewer.  Its base manages the corresponding functional objects.
 //
-//   Functional objects     Related Gui objects
+//   casacore::Functional objects     Related Gui objects
 //   ------------------     -------------------
 //      QtViewerBase        QtViewer, QtDataManager, print dialog
 //      QtDisplayData       QtDataOptionsPanel

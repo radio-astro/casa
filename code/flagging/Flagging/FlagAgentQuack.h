@@ -39,23 +39,23 @@ class FlagAgentQuack : public FlagAgentBase {
 
 public:
 
-	FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
+	FlagAgentQuack(FlagDataHandler *dh, casacore::Record config, casacore::Bool writePrivateFlagCube = false, casacore::Bool flag = true);
 	~FlagAgentQuack();
 
 protected:
 
 	// Compute flags afor a given mapped visibility point
-	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row);
+	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, casacore::uInt row);
 
 	// Parse configuration parameters
-	void setAgentParameters(Record config);
+	void setAgentParameters(casacore::Record config);
 
 private:
 
-	/// Input parameters ///
-	Double quackinterval_p;
-	uShort quackmode_p;
-	Bool quackincrement_p;
+	/// casacore::Input parameters ///
+	casacore::Double quackinterval_p;
+	casacore::uShort quackmode_p;
+	casacore::Bool quackincrement_p;
 };
 
 

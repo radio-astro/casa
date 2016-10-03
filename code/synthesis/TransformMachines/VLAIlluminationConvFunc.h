@@ -40,57 +40,57 @@ namespace casa
   class VLAIlluminationConvFunc: public IlluminationConvFunc
   {
   public:
-    VLAIlluminationConvFunc(String fileName);
+    VLAIlluminationConvFunc(casacore::String fileName);
     VLAIlluminationConvFunc()
       :IlluminationConvFunc(),convFunc_p(),resolution()
-    {pbRead_p=False;};
-    VLAIlluminationConvFunc(Int n):IlluminationConvFunc(n)    {pbRead_p=False;};
+    {pbRead_p=false;};
+    VLAIlluminationConvFunc(casacore::Int n):IlluminationConvFunc(n)    {pbRead_p=false;};
     ~VLAIlluminationConvFunc() {};
 
-    void load(String &fileName,Vector<Int>& whichStokes, 
-	      Float overSampling=20,Bool putCoords=True);
-    void storeImg(String &fileName,ImageInterface<Complex>& img);
-    void storeImg(String &fileName,ImageInterface<Float>& img);
-    void store(String &fileName);
-    void loadFromImage(String &fileName);
-    void getIdealConvFunc(Array<Complex>& buf);
-    void ftAperture(TempImage<Complex>& uvgrid);
-    void ftAperture() {ftAperture(convFunc_p); pbRead_p=True;};
-    void storePB(String& fileName);
+    void load(casacore::String &fileName,casacore::Vector<casacore::Int>& whichStokes, 
+	      casacore::Float overSampling=20,casacore::Bool putCoords=true);
+    void storeImg(casacore::String &fileName,casacore::ImageInterface<casacore::Complex>& img);
+    void storeImg(casacore::String &fileName,casacore::ImageInterface<casacore::Float>& img);
+    void store(casacore::String &fileName);
+    void loadFromImage(casacore::String &fileName);
+    void getIdealConvFunc(casacore::Array<casacore::Complex>& buf);
+    void ftAperture(casacore::TempImage<casacore::Complex>& uvgrid);
+    void ftAperture() {ftAperture(convFunc_p); pbRead_p=true;};
+    void storePB(casacore::String& fileName);
 
-    Bool pbReady() {return pbRead_p;}
+    casacore::Bool pbReady() {return pbRead_p;}
 
-    CoordinateSystem makeUVCoords(CoordinateSystem& imageCoordSys,
-				   IPosition& shape);
-    void regridApeture(CoordinateSystem& skyCS, IPosition& skyShape, TempImage<Complex>& uvGrid, 
-		       const VisBuffer& vb,Bool doSquint=True);
-    void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb);
-    void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb);
-    void ftAperture(String& fileName, Vector<Int>& whichStokes,
-		   Float& overSampling, const CoordinateSystem& coordSys);
+    casacore::CoordinateSystem makeUVCoords(casacore::CoordinateSystem& imageCoordSys,
+				   casacore::IPosition& shape);
+    void regridApeture(casacore::CoordinateSystem& skyCS, casacore::IPosition& skyShape, casacore::TempImage<casacore::Complex>& uvGrid, 
+		       const VisBuffer& vb,casacore::Bool doSquint=true);
+    void applyPB(casacore::ImageInterface<casacore::Float>& pbImage, const VisBuffer& vb);
+    void applyPB(casacore::ImageInterface<casacore::Complex>& pbImage, const VisBuffer& vb);
+    void ftAperture(casacore::String& fileName, casacore::Vector<casacore::Int>& whichStokes,
+		   casacore::Float& overSampling, const casacore::CoordinateSystem& coordSys);
 
     /*
-    virtual CF_TYPE getValue(Double *coord,
-			     Double *raoff1,  Double *raoff2, 
-			     Double *decoff1, Double *decoff2,
-			     Double *area,
-			     Int *doGrad,
-			     Complex& weight,
-			     Complex& dweight1,
-			     Complex& dweight2
-			     //		  ,Double lsigma
+    virtual CF_TYPE getValue(casacore::Double *coord,
+			     casacore::Double *raoff1,  casacore::Double *raoff2, 
+			     casacore::Double *decoff1, casacore::Double *decoff2,
+			     casacore::Double *area,
+			     casacore::Int *doGrad,
+			     casacore::Complex& weight,
+			     casacore::Complex& dweight1,
+			     casacore::Complex& dweight2
+			     //		  ,casacore::Double lsigma
 			     );
     */	  
   private:
     
-    void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Float>& outImg);
-    void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Complex>& outImg);
+    void fillPB(casacore::ImageInterface<casacore::Complex>& inImg, casacore::ImageInterface<casacore::Float>& outImg);
+    void fillPB(casacore::ImageInterface<casacore::Complex>& inImg, casacore::ImageInterface<casacore::Complex>& outImg);
 
-    TempImage<Complex> convFunc_p;
-    //    TempImage<Float> reAperture_p, imAperture_p;
-    Vector<Double> resolution;
-    Bool pbRead_p;
-    Float freq_p;
+    casacore::TempImage<casacore::Complex> convFunc_p;
+    //    casacore::TempImage<casacore::Float> reAperture_p, imAperture_p;
+    casacore::Vector<casacore::Double> resolution;
+    casacore::Bool pbRead_p;
+    casacore::Float freq_p;
   };
 
 };

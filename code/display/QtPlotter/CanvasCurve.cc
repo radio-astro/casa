@@ -33,6 +33,7 @@
 #include <complex>
 #include <limits>
 
+using namespace casacore;
 namespace casa {
 
 
@@ -363,4 +364,5 @@ namespace casa {
 	CanvasCurve::~CanvasCurve() {
 	}
 
+using namespace casacore;
 } /* namespace casa */

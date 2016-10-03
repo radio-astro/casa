@@ -35,6 +35,7 @@
 
 #include <casa/namespace.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor
@@ -47,8 +48,8 @@ Mueller::Mueller() :
   oki_(NULL),
   cOne_(1.0), 
   cZero_(0.0), 
-  scalardata_(False),
-  vtmp_(VisVector::Four,True)
+  scalardata_(false),
+  vtmp_(VisVector::Four,true)
 {}
 
 // Formation from Jones matrix outer product: General version
@@ -173,7 +174,7 @@ void MuellerDiag::invert() {
       (*mi_) = cOne_/(*mi_);
     else {
       (*mi_)=cZero_;
-      (*oki_)=False;
+      (*oki_)=false;
     }
   
 }
@@ -301,7 +302,7 @@ void MuellerDiag2::invert() {
       (*mi_) = cOne_/(*mi_);
     else {
       (*mi_) = cZero_;
-      (*oki_) = False;
+      (*oki_) = false;
     }
   
 }
@@ -417,7 +418,7 @@ void MuellerScal::invert() {
     (*m_) = cOne_/(*m_);
   else {
     zero();
-    (*ok_)=False;
+    (*ok_)=false;
   }
 
 }
@@ -488,7 +489,7 @@ void AddMuellerDiag2::invert() {
       (*mi_)*=-1.0;  // negate
     else {
       (*mi_) = cZero_;
-      (*oki_) = False;
+      (*oki_) = false;
     }
   
 }
@@ -550,7 +551,7 @@ void AddMuellerDiag::invert() {
       (*mi_)*=-1.0;  // negate
     else {
       (*mi_) = cZero_;
-      (*oki_) = False;
+      (*oki_) = false;
     }
   
 }

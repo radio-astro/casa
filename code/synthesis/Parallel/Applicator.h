@@ -98,8 +98,8 @@ class Applicator {
   ~Applicator();
 
   // Initialization (includes parallel transport initialization)
-  void init(Int argc, Char *argv[]);
-  void initThreads(Int argc, Char *argv[]);
+  void init(casacore::Int argc, casacore::Char *argv[]);
+  void initThreads(casacore::Int argc, casacore::Char *argv[]);
   void initThreads();
 
   // define an Algorithm if we need too;
@@ -107,20 +107,20 @@ class Applicator {
 
   // Status functions to indicate whether this Applicator is
   // executing as a controller or worker process
-  Bool isController();
-  Bool isWorker();
+  casacore::Bool isController();
+  casacore::Bool isWorker();
 
-  // True if executing serially
-  Bool isSerial() {return serial;};
+  // true if executing serially
+  casacore::Bool isSerial() {return serial;};
 
   // Return the number of processes
-  Int numProcs() {return nProcs;};
+  casacore::Int numProcs() {return nProcs;};
 
   // Assign the next free worker process to a specified Algorithm
-  Bool nextAvailProcess(Algorithm &a, Int &rank);
+  casacore::Bool nextAvailProcess(Algorithm &a, casacore::Int &rank);
 
   // Return the rank of the next process to complete the specified Algorithm
-  Int nextProcessDone(Algorithm &a, Bool &allDone);
+  casacore::Int nextProcessDone(Algorithm &a, casacore::Bool &allDone);
 
   // Signal that a worker process is done
   void done();
@@ -129,56 +129,56 @@ class Applicator {
   void apply(Algorithm &a);
 
   // Put and get methods to be executed on the parallel transport layer
-  Int put(const Array<Float> &an) {return comm->put(an);};
-  Int put(const Array<Double> &an) {return comm->put(an);};
-  Int put(const Array<Int> &an) {return comm->put(an);};
-  Int put(const Array<Complex> &an) {return comm->put(an);};
-  Int put(const Array<DComplex> &an) {return comm->put(an);};
-  Int put(const Float &n) {return comm->put(n);};
-  Int put(const Complex &n) {return comm->put(n);};
-  Int put(const DComplex &n) {return comm->put(n);};
-  Int put(const Double &n) {return comm->put(n);};
-  Int put(const Int &n) {return comm->put(n);};
-  Int put(const Bool &b) {return comm->put(b);};
-  Int put(const String &s) {return comm->put(s);};
-  Int put(const Record &r) {return comm->put(r);};
+  casacore::Int put(const casacore::Array<casacore::Float> &an) {return comm->put(an);};
+  casacore::Int put(const casacore::Array<casacore::Double> &an) {return comm->put(an);};
+  casacore::Int put(const casacore::Array<casacore::Int> &an) {return comm->put(an);};
+  casacore::Int put(const casacore::Array<casacore::Complex> &an) {return comm->put(an);};
+  casacore::Int put(const casacore::Array<casacore::DComplex> &an) {return comm->put(an);};
+  casacore::Int put(const casacore::Float &n) {return comm->put(n);};
+  casacore::Int put(const casacore::Complex &n) {return comm->put(n);};
+  casacore::Int put(const casacore::DComplex &n) {return comm->put(n);};
+  casacore::Int put(const casacore::Double &n) {return comm->put(n);};
+  casacore::Int put(const casacore::Int &n) {return comm->put(n);};
+  casacore::Int put(const casacore::Bool &b) {return comm->put(b);};
+  casacore::Int put(const casacore::String &s) {return comm->put(s);};
+  casacore::Int put(const casacore::Record &r) {return comm->put(r);};
 
-  Int get(Array<Float> &an) {return comm->get(an);};
-  Int get(Array<Double> &an) {return comm->get(an);};
-  Int get(Array<Complex> &an) {return comm->get(an);};
-  Int get(Array<DComplex> &an) {return comm->get(an);};
-  Int get(Array<Int> &an) {return comm->get(an);};
-  Int get(Float &n) {return comm->get(n);};
-  Int get(Double &n) {return comm->get(n);};
-  Int get(Complex &n) {return comm->get(n);};
-  Int get(DComplex &n) {return comm->get(n);};
-  Int get(Int &n) {return comm->get(n);};
-  Int get(Bool &b) {return comm->get(b);};
-  Int get(String &s) {return comm->get(s);};
-  Int get(Record &r) {return comm->get(r);};
+  casacore::Int get(casacore::Array<casacore::Float> &an) {return comm->get(an);};
+  casacore::Int get(casacore::Array<casacore::Double> &an) {return comm->get(an);};
+  casacore::Int get(casacore::Array<casacore::Complex> &an) {return comm->get(an);};
+  casacore::Int get(casacore::Array<casacore::DComplex> &an) {return comm->get(an);};
+  casacore::Int get(casacore::Array<casacore::Int> &an) {return comm->get(an);};
+  casacore::Int get(casacore::Float &n) {return comm->get(n);};
+  casacore::Int get(casacore::Double &n) {return comm->get(n);};
+  casacore::Int get(casacore::Complex &n) {return comm->get(n);};
+  casacore::Int get(casacore::DComplex &n) {return comm->get(n);};
+  casacore::Int get(casacore::Int &n) {return comm->get(n);};
+  casacore::Int get(casacore::Bool &b) {return comm->get(b);};
+  casacore::Int get(casacore::String &s) {return comm->get(s);};
+  casacore::Int get(casacore::Record &r) {return comm->get(r);};
 
  private:
   // Pointer to the parallel transport
   PTransport *comm;
 
-  // Map of known algorithm names and id.'s
-  OrderedMap<String, Int> algorithmIds;
-  OrderedMap<Int, Algorithm*> knownAlgorithms;
+  // casacore::Map of known algorithm names and id.'s
+  casacore::OrderedMap<casacore::String, casacore::Int> algorithmIds;
+  casacore::OrderedMap<casacore::Int, Algorithm*> knownAlgorithms;
 
   // ID for the last Algorithm defined.
-  Int LastID;
+  casacore::Int LastID;
 
-  // True if no more processes are free
-  Bool usedAllThreads;
+  // true if no more processes are free
+  casacore::Bool usedAllThreads;
 
-  // True if executing in serial
-  Bool serial;
+  // true if executing in serial
+  casacore::Bool serial;
 
   // Number of processes
-  Int nProcs;
+  casacore::Int nProcs;
 
   // Process status list
-  Vector<Int> procStatus;
+  casacore::Vector<casacore::Int> procStatus;
 
   // Executed by worker process waiting for an assigned task
   void loop();
@@ -188,7 +188,7 @@ class Applicator {
 
   // Utility functions for the current list of processes, and their status
   void setupProcStatus();
-  Int findFreeProc(Bool &lastOne);
+  casacore::Int findFreeProc(casacore::Bool &lastOne);
 };
 
 

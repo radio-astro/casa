@@ -27,6 +27,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 
+using namespace casacore;
 namespace casa {
 
 	ResidualHistogramDialog::ResidualHistogramDialog(QWidget *parent)

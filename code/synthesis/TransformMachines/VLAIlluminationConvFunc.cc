@@ -42,6 +42,7 @@
 #include <casa/OS/File.h>
 #include <fstream>
 
+using namespace casacore;
 namespace casa{
   
   //
@@ -57,7 +58,7 @@ namespace casa{
   VLAIlluminationConvFunc::VLAIlluminationConvFunc(String fileName):
     IlluminationConvFunc(),convFunc_p(),resolution()
   {
-    pbRead_p=False;
+    pbRead_p=false;
     String parts="Re"+fileName;
     PagedImage<Float> reApp(parts);
     parts="Im"+fileName;
@@ -216,7 +217,7 @@ namespace casa{
 				  -1*C::pi/180.0, 1*C::pi/180,    
 				  xform,                          
 				  128, 128); 
-    Vector<Bool> diraxes(2); diraxes=True;
+    Vector<Bool> diraxes(2); diraxes=true;
     Vector<Int> dirShape(2); 
     dirShape(0)=convFunc_p.shape()(0);
     dirShape(1)=convFunc_p.shape()(1);
@@ -265,7 +266,7 @@ namespace casa{
     
     Int dirIndex=FTCoords.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=imageCoordSys.directionCoordinate(dirIndex);
-    Vector<Bool> axes(2); axes=True;
+    Vector<Bool> axes(2); axes=true;
     Vector<Int> dirShape(2); dirShape(0)=shape(0);dirShape(1)=shape(1);
     Coordinate* FTdc=dc.makeFourierCoordinate(axes,dirShape);
     FTCoords.replaceCoordinate(*FTdc,dirIndex);
@@ -280,7 +281,7 @@ namespace casa{
     CoordinateSystem skyCS(pbImage.coordinates());
     IPosition skyShape(pbImage.shape());
     TempImage<Complex> uvGrid(skyShape, skyCS);
-    regridApeture(skyCS, skyShape, uvGrid, vb,False);
+    regridApeture(skyCS, skyShape, uvGrid, vb,false);
     fillPB(uvGrid,pbImage);
   }
   
@@ -493,7 +494,7 @@ namespace casa{
 					   Float& overSampling,
 					   const CoordinateSystem& coordSys)
   {
-    load(fileName,whichStokes,overSampling,False);
+    load(fileName,whichStokes,overSampling,false);
     CoordinateSystem pbCoords(coordSys);
     Int dirIndex=pbCoords.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=coordSys.directionCoordinate(dirIndex);

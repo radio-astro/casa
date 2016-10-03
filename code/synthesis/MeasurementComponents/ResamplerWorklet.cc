@@ -36,6 +36,7 @@
 #include <fstream>
 #include <sys/syscall.h>
 
+using namespace casacore;
 namespace casa{
   ResamplerWorklet& ResamplerWorklet::operator=(const ResamplerWorklet& other)
   {
@@ -133,7 +134,7 @@ namespace casa{
 
     //    T t1,t2,t3;
     Int *doDataToGrid;
-    while(True)
+    while(true)
       {
 	//	Timers t1 = Timers::getTime();
 	//	Bool *doDataToGrid;

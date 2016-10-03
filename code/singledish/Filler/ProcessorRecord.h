@@ -16,14 +16,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct ProcessorRecord {
-  typedef MSProcessor AssociatingTable;
-  typedef MSProcessorColumns AssociatingColumns;
+  typedef casacore::MSProcessor AssociatingTable;
+  typedef casacore::MSProcessorColumns AssociatingColumns;
 
   // mandatory
-  String type;
-  String sub_type;
-  Int type_id;
-  Int mode_id;
+  casacore::String type;
+  casacore::String sub_type;
+  casacore::Int type_id;
+  casacore::Int mode_id;
 
   // method
   void clear() {
@@ -42,12 +42,12 @@ struct ProcessorRecord {
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {
-    table.addRow(1, True);
+    table.addRow(1, true);
   }
 
-  Bool fill(uInt irow, AssociatingColumns &columns) {
+  casacore::Bool fill(casacore::uInt irow, AssociatingColumns &columns) {
     if (columns.nrow() <= irow) {
-      return False;
+      return false;
     }
 
     columns.type().put(irow, type);
@@ -55,7 +55,7 @@ struct ProcessorRecord {
     columns.typeId().put(irow, type_id);
     columns.modeId().put(irow, mode_id);
 
-    return True;
+    return true;
   }
 };
 

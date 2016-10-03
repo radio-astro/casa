@@ -34,6 +34,7 @@
 #include <display/DisplayDatas/DrawingDisplayMethod.h>
 #include <display/DisplayDatas/DDDObject.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DrawingDisplayMethod::DrawingDisplayMethod(WorldCanvas *worldCanvas,
@@ -59,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			dddObject->draw(reason, wcHolder.worldCanvas());
 			(*listIter)++;
 		}
-		return True;
+		return true;
 	}
 
 	void DrawingDisplayMethod::cleanup() {

@@ -81,13 +81,13 @@ class VLASubarrayFilter: public VLAFilter
 {
 public:
   // The default constructor creats a filter that does not filter
-  // anything. ie., the passThru() function always returns True;
+  // anything. ie., the passThru() function always returns true;
   VLASubarrayFilter();
 
   // Creates a filter that filters all records except those with a subarray
   // number that matches the specified value. The specified value must be less
   // than 28 otherwise an exception is thrown (in Debug Mode)
-  VLASubarrayFilter(const uInt subArray);
+  VLASubarrayFilter(const casacore::uInt subArray);
 
   // The copy constructor uses copy semantics.
   VLASubarrayFilter(const VLASubarrayFilter& other);
@@ -98,9 +98,9 @@ public:
   // The assignment operator uses copy semantics.
   VLASubarrayFilter& operator=(const VLASubarrayFilter& other);
 
-  // returns True if the supplied record has an subarray id that matches 
+  // returns true if the supplied record has an subarray id that matches 
   // the subarray id specified in the constructor.
-  virtual Bool passThru(const VLALogicalRecord& record) const;
+  virtual casacore::Bool passThru(const VLALogicalRecord& record) const;
 
   // Return a pointer to a copy of the VLASubarrayFilter object upcast to a
   // VLAFilter object. The class that uses this function is responsible for
@@ -108,13 +108,13 @@ public:
   // constructor.
   virtual VLAFilter* clone() const;
 
-  // Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns True if everything is fine
-  // otherwise returns False.
-  virtual Bool ok() const;
+  // casacore::Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns true if everything is fine
+  // otherwise returns false.
+  virtual casacore::Bool ok() const;
 
 private:
-  uInt itsArray;
+  casacore::uInt itsArray;
 };
 #endif
 

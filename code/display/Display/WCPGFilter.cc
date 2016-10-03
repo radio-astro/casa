@@ -34,6 +34,7 @@
 #include <display/Display/WorldCanvasPGPlotDriver.h>
 #include <cpgplot.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class PGArrF {
@@ -134,7 +135,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			cpgswin(wBlc(0), wTrc(0), wBlc(1), wTrc(1));
 		}
 		cpgpage();
-		return True;
+		return true;
 	}
 
 	void WCPGFilter::cont(const Matrix<Float> &m,
@@ -250,8 +251,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				pos[iPos++] = levels[i];
 			}
 		}
-		pos.resize(iPos,True);
-		neg.resize(iNeg,True);
+		pos.resize(iPos,true);
+		neg.resize(iNeg,true);
 	}
 
 

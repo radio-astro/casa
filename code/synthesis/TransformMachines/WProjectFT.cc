@@ -81,18 +81,19 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize, 
 			Bool usezero, Bool useDoublePrec, const Double minW, const Double maxW, const Double rmsW)
   : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
-    gridder(0), isTiled(False), 
+    gridder(0), isTiled(false), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)), usezero_p(usezero), 
     machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW)
 {
   convSize=0;
-  tangentSpecified_p=False;
+  tangentSpecified_p=false;
   lastIndex_p=0;
   useDoubleGrid_p=useDoublePrec;
   wpConvFunc_p=new WPConvFunc(minW, maxW, rmsW);
@@ -104,14 +105,14 @@ WProjectFT::WProjectFT(Int nWPlanes,
 		       Bool usezero, Float padding, Bool useDoublePrec, const Double minW, const Double maxW, const Double rmsW)
   : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
-    gridder(0), isTiled(False),  
+    gridder(0), isTiled(false),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     usezero_p(usezero),  
     machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW)
 {
   convSize=0;
   savedWScale_p=0.0;
-  tangentSpecified_p=False;
+  tangentSpecified_p=false;
   mLocation_p=mLocation;
   lastIndex_p=0;
   wpConvFunc_p=new WPConvFunc(minW, maxW, rmsW);
@@ -124,7 +125,7 @@ WProjectFT::WProjectFT(
 		       Bool usezero, Float padding, Bool useDoublePrec, const Double minW, const Double maxW, const Double rmsW)
   : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
-    gridder(0), isTiled(False),  
+    gridder(0), isTiled(false),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     usezero_p(usezero), 
     machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW)
@@ -132,7 +133,7 @@ WProjectFT::WProjectFT(
   convSize=0;
   savedWScale_p=0.0;
   mTangent_p=mTangent;
-  tangentSpecified_p=True;
+  tangentSpecified_p=true;
   mLocation_p=mLocation;
   lastIndex_p=0;
   wpConvFunc_p=new WPConvFunc(minW, maxW, rmsW);
@@ -209,7 +210,7 @@ FTMachine* WProjectFT::cloneFTM(){
 //----------------------------------------------------------------------
 void WProjectFT::init() {
   /*  if((padding_p*padding_p*image->shape().product())>cachesize) {
-    isTiled=True;
+    isTiled=true;
     nx    = image->shape()(0);
     ny    = image->shape()(1);
     npol  = image->shape()(2);
@@ -217,7 +218,7 @@ void WProjectFT::init() {
   }
   else {*/
     // We are padding.
-    isTiled=False;
+    isTiled=false;
     CompositeNumber cn(uInt(image->shape()(0)*2));    
     nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
     ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
@@ -227,13 +228,13 @@ void WProjectFT::init() {
     //}
   
   //  if(image->shape().product()>cachesize) {
-  //   isTiled=True;
+  //   isTiled=true;
   // }
   // else {
-  // isTiled=False;
+  // isTiled=false;
   // }
   //The Tiled version need some fixing: sof or now
-  isTiled=False;
+  isTiled=false;
 
  
   sumWeight.resize(npol, nchan);
@@ -339,7 +340,7 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
 			       const VisBuffer& vb)
 {
   image=&iimage;
-  toVis_p=True;
+  toVis_p=true;
   ok();
   
   //   if(convSize==0) {
@@ -358,11 +359,11 @@ void WProjectFT::initializeToVis(ImageInterface<Complex>& iimage,
   //  nchan = image->shape()(3);
 
 
-  isTiled=False;
+  isTiled=false;
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
   /*if(isTiled) {
-    lattice=CountedPtr<Lattice<Complex> > (image, False);
+    lattice=CountedPtr<Lattice<Complex> > (image, false);
   }
   else {
    }
@@ -471,7 +472,7 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
 {
   // image always points to the image
   image=&iimage;
-  toVis_p=False;
+  toVis_p=false;
   
   //  if(convSize==0) {
   init();
@@ -489,12 +490,12 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
   //  nchan = image->shape()(3);
 
   //  if(image->shape().product()>cachesize) {
-  //  isTiled=True;
+  //  isTiled=true;
   // }
   // else {
-  //  isTiled=False;
+  //  isTiled=false;
   // }
-  isTiled=False;
+  isTiled=false;
   sumWeight=0.0;
   weight.resize(sumWeight.shape());
   weight=0.0;
@@ -505,7 +506,7 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
   if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
-    lattice=CountedPtr<Lattice<Complex> > (image, False);
+    lattice=CountedPtr<Lattice<Complex> > (image, false);
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
@@ -844,7 +845,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
-  rowFlags(vb.flagRow())=True;
+  rowFlags(vb.flagRow())=true;
   if(!usezero_p) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
@@ -902,7 +903,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   for (irow=startRow; irow<=endRow;irow++){
     //locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
     //	      locstor, 
-    //	      offstor, phasorstor, irow, True);
+    //	      offstor, phasorstor, irow, true);
     locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv);
   }  
 
@@ -1002,7 +1003,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 #pragma omp for schedule(dynamic)      
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       //Int realicounter=icounter%2==0 ? ixsub*iysub/2+icounter/2 :  ixsub*iysub/2-icounter/2-1;
-      findGridSector(nxp, nyp, ixsub, iysub, minx, miny, icounter, x0, y0, nxsub, nysub, True);
+      findGridSector(nxp, nyp, ixsub, iysub, minx, miny, icounter, x0, y0, nxsub, nysub, true);
 
       sectgwgrids(uvwstor,
 	   datStorage,
@@ -1047,7 +1048,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 #pragma omp for schedule(dynamic)    
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       //Int realicounter=icounter%2==0 ? ixsub*iysub/2+icounter/2 :  ixsub*iysub/2-icounter/2-1;
-      findGridSector(nxp, nyp, ixsub, iysub, minx, miny, icounter, x0, y0, nxsub, nysub, True);
+      findGridSector(nxp, nyp, ixsub, iysub, minx, miny, icounter, x0, y0, nxsub, nysub, true);
        sectgwgridd(uvwstor,
 	   datStorage,
 	   &nvp,
@@ -1256,7 +1257,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
 
   Vector<Int> rowFlags(vb.nRow());
   rowFlags=0;
-  rowFlags(vb.flagRow())=True;
+  rowFlags(vb.flagRow())=true;
   if(!usezero_p) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
@@ -1316,7 +1317,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
     for (irow=startRow; irow<=endRow; ++irow){
       /*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
 		locstor, 
-		offstor, phasorstor, irow, True);*/
+		offstor, phasorstor, irow, true);*/
       locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv);
   }  
 
@@ -1407,7 +1408,7 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
     
     if(useDoubleGrid_p){
       ArrayLattice<DComplex> darrayLattice(griddedData2);
-      LatticeFFT::cfft2d(darrayLattice,False);
+      LatticeFFT::cfft2d(darrayLattice,false);
       griddedData.resize(griddedData2.shape());
       convertArray(griddedData, griddedData2);
       SynthesisUtilMethods::getResource("mem peak in getImage");
@@ -1417,7 +1418,7 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
     }else{
       arrayLattice = new ArrayLattice<Complex>(griddedData);
       lattice=arrayLattice;
-      LatticeFFT::cfft2d(*lattice,False);
+      LatticeFFT::cfft2d(*lattice,false);
 
     }
 
@@ -1538,7 +1539,7 @@ Bool WProjectFT::toRecord(String& error,
   */
 
   // Save the current WProjectFT object to an output state record
-  Bool retval = True;
+  Bool retval = true;
   //save the base class variables
   //this is a memory hog and slow on saving and recovering...better to recompute convfunctions
   /* Record wpconvrec;
@@ -1549,7 +1550,7 @@ Bool WProjectFT::toRecord(String& error,
   if(toVis_p && withImage)
     elpadd=1.0;
   if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
-    return False;
+    return false;
 
   outRec.define("uvscale", uvScale);
   outRec.define("uvoffset", uvOffset);
@@ -1588,9 +1589,9 @@ Bool WProjectFT::fromRecord(String& error,
 			    const RecordInterface& inRec)
 {
   if(!FTMachine::fromRecord(error, inRec))
-    return False;
+    return false;
   machineName_p="WProjectFT";
-  Bool retval = True;
+  Bool retval = true;
   imageCache=0; lattice=0; arrayLattice=0;
   inRec.get("uvscale", uvScale);
   inRec.get("uvoffset", uvOffset);
@@ -1686,30 +1687,30 @@ void WProjectFT::makeImage(FTMachine::Type type,
       case FTMachine::RESIDUAL:
 	vb.visCube()=vb.correctedVisCube();
 	vb.visCube()-=vb.modelVisCube();
-        put(vb, -1, False);
+        put(vb, -1, false);
         break;
       case FTMachine::MODEL:
 	vb.visCube()=vb.modelVisCube();
-        put(vb, -1, False);
+        put(vb, -1, false);
         break;
       case FTMachine::CORRECTED:
 	vb.visCube()=vb.correctedVisCube();
-        put(vb, -1, False);
+        put(vb, -1, false);
         break;
       case FTMachine::PSF:
 	vb.visCube()=Complex(1.0,0.0);
-        put(vb, -1, True);
+        put(vb, -1, true);
         break;
       case FTMachine::OBSERVED:
       default:
-        put(vb, -1, False);
+        put(vb, -1, false);
         break;
       }
     }
   }
   finalizeToSky();
   // Normalize by dividing out weights, etc.
-  getImage(weight, True);
+  getImage(weight, true);
 }
 
 

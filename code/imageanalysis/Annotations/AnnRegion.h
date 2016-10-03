@@ -56,41 +56,41 @@ public:
 
 	virtual ~AnnRegion();
 
-	void setAnnotationOnly(const Bool isAnnotationOnly);
+	void setAnnotationOnly(const casacore::Bool isAnnotationOnly);
 
 	// is this region an annotation only? ie just for graphical rendering?
-	Bool isAnnotationOnly() const;
+	casacore::Bool isAnnotationOnly() const;
 
-	virtual TableRecord asRecord() const;
+	virtual casacore::TableRecord asRecord() const;
 
-	virtual ImageRegion asImageRegion() const;
+	virtual casacore::ImageRegion asImageRegion() const;
 
 	// this version is deprecated, use the version that returns
 	// SHARED_PTR instead
-	virtual CountedPtr<const WCRegion> getRegion() const;
+	virtual casacore::CountedPtr<const casacore::WCRegion> getRegion() const;
 
-	virtual SHARED_PTR<const WCRegion> getRegion2() const;
+	virtual SHARED_PTR<const casacore::WCRegion> getRegion2() const;
 
-	// returns True unless overridden.
-	virtual Bool isRegion() const;
+	// returns true unless overridden.
+	virtual casacore::Bool isRegion() const;
 
-	void setDifference(const Bool difference);
+	void setDifference(const casacore::Bool difference);
 
-	Bool isDifference() const;
+	casacore::Bool isDifference() const;
 
 	// get the pixel range included in the spectral selection.
 	// If there is no spectral axis, a zero length vector is returned. Otherwise,
 	// a vector of two values is returned. The zeroth value will always be less
 	// than or equal to the first.
-	vector<Double> getSpectralPixelRange() const;
+	vector<casacore::Double> getSpectralPixelRange() const;
 
 
-	Bool setFrequencyLimits(
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame,
-		const String& dopplerString,
-		const Quantity& restfreq
+	casacore::Bool setFrequencyLimits(
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrame,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq
 	);
 
 protected:
@@ -108,28 +108,28 @@ protected:
 	// and <src>endFreq</src> must conform to the same units.
 	AnnRegion(
 		const Type shape,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame,
-		const String& dopplerString,
-		const Quantity& restfreq,
-		const Vector<Stokes::StokesTypes> stokes,
-		const Bool annotationOnly
+		const casacore::String& dirRefFrameString,
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrame,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq,
+		const casacore::Vector<casacore::Stokes::StokesTypes> stokes,
+		const casacore::Bool annotationOnly
 	);
 
 	// use if all coordinate values will be specified in
 	// the same frames as the input coordinate system. frequencies
 	// and the annotationOnly flag can be set after
 	// construction. By default, all frequencies and all polarizations
-	// are used, and the annotationOnly flag is False
+	// are used, and the annotationOnly flag is false
 	AnnRegion(
 		const Type shape,
-		const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::CoordinateSystem& csys,
+		const casacore::IPosition& imShape,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// copy constructor
@@ -138,40 +138,40 @@ protected:
 	// assignment operator
 	AnnRegion& operator= (const AnnRegion& rhs);
 
-	Bool operator== (const AnnRegion& other) const;
+	casacore::Bool operator== (const AnnRegion& other) const;
 
 
 	// extend the direction plane region over spectral and/or polarization
 	// coordinates
 	void _extend();
 
-	void _toRecord(const ImageRegion& region);
+	void _toRecord(const casacore::ImageRegion& region);
 
 	// convert a length in pixels to an angle.
-	Quantity _lengthToAngle(
-		const Quantity& quantity, const uInt pixelAxis
+	casacore::Quantity _lengthToAngle(
+		const casacore::Quantity& quantity, const casacore::uInt pixelAxis
 	) const;
 
-	virtual void _printPrefix(ostream& os) const;
+	virtual void _printPrefix(std::ostream& os) const;
 
 	// subclasses must call this at construction to set their base region
 	// defined in the direction plane
-	void _setDirectionRegion(const ImageRegion& region);
+	void _setDirectionRegion(const casacore::ImageRegion& region);
 
 private:
 
-	Bool _isAnnotationOnly;
-	Bool _isDifference, _constructing;
-	ImageRegion _imageRegion, _directionRegion;
-	IPosition _imShape;
-	vector<Double> _spectralPixelRange;
+	casacore::Bool _isAnnotationOnly;
+	casacore::Bool _isDifference, _constructing;
+	casacore::ImageRegion _imageRegion, _directionRegion;
+	casacore::IPosition _imShape;
+	vector<casacore::Double> _spectralPixelRange;
 
-	static const String _class;
+	static const casacore::String _class;
 
-	WCBox _makeExtensionBox(
-		const Vector<Quantity>& freqRange,
-		const Vector<Stokes::StokesTypes>& stokesRange,
-		const IPosition& pixelAxes
+	casacore::WCBox _makeExtensionBox(
+		const casacore::Vector<casacore::Quantity>& freqRange,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokesRange,
+		const casacore::IPosition& pixelAxes
 	) const;
 
 	void _init();
@@ -179,9 +179,9 @@ private:
 };
 
 // Just need a identifable expection class, compiler can generate implementation implicitly
-class ToLCRegionConversionError : public AipsError {
+class ToLCRegionConversionError : public casacore::AipsError {
 public:
-	ToLCRegionConversionError(String msg) : AipsError(msg) {}
+	ToLCRegionConversionError(casacore::String msg) : casacore::AipsError(msg) {}
 };
 
 }

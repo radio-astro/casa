@@ -57,12 +57,12 @@ class NewCalTable;
 // </prerequisite>
 //
 // <etymology>
-// ROCTColumns stands for Read-Only NewCalTable Table columns.
+// ROCTColumns stands for Read-Only NewCalTable casacore::Table columns.
 // </etymology>
 //
 // <synopsis>
 // This class provides read-only access to the columns in the NewCalTable, similar
-// to the ROMSColumns for MeasurementSet.
+// to the casacore::ROMSColumns for MeasurementSet.
 // It does the declaration of all the Scalar and ArrayColumns with the
 // correct types, so the application programmer doesn't have to
 // worry about getting those right. There is an access function
@@ -155,7 +155,7 @@ private:
 // <example>
 // <srcblock>
 // // use as follows
-// NewCalTable newcalt("mynewcalt",Table::Update);
+// NewCalTable newcalt("mynewcalt",casacore::Table::Update);
 // CTColumns nctc(newcalt);
 // // show time from row 5
 // cout << nctc.time()(5);
@@ -165,7 +165,7 @@ private:
 // </example>
 //
 // <motivation>
-// Having to type long lists of Scalar and Array column declarations gets
+// Having to type long lists of Scalar and casacore::Array column declarations gets
 // very tedious. This class attempts to relieve some of that tedium, while
 // at the same time concentrating all the declarations in one place,
 // making Type errors in the column declaration (only caught at run-time) less

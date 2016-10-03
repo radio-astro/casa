@@ -36,9 +36,13 @@
 #include <map>
 #include <vector>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 template <typename T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 namespace vi {
 
@@ -48,7 +52,7 @@ class VisBuffer2;
 
 class ChannelSelector;
 class ChannelSelectorCache;
-typedef Vector<Vector <Slice> > ChannelSlicer;
+typedef casacore::Vector<casacore::Vector <casacore::Slice> > ChannelSlicer;
 class SpectralWindowChannelsCache;
 class SpectralWindowChannels;
 class SubtableColumns;
@@ -98,8 +102,8 @@ class FinalTvi2 : public TransformingVi2 {
 public:
 
     FinalTvi2 (ViImplementation2 * inputVi,
-               MeasurementSet & finalMs,
-               Bool isWritable);
+               casacore::MeasurementSet & finalMs,
+               casacore::Bool isWritable);
 
     // Destructor
 
@@ -117,21 +121,21 @@ public:
 
     //   +=========================+
     //   |                         |
-    //   | Subchunk Data Accessors |
+    //   | Subchunk casacore::Data Accessors |
     //   |                         |
     //   +=========================+
 
 
     //   +------------------------+
     //   |                        |
-    //   | Angular Data Providers |
+    //   | Angular casacore::Data Providers |
     //   |                        |
     //   +------------------------+
 
 
     //   +=========================+
     //   |                         |
-    //   | Chunk and MS Level Data |
+    //   | Chunk and casacore::MS Level casacore::Data |
     //   |                         |
     //   +=========================+
 
@@ -152,38 +156,38 @@ public:
     // because the interface requires them but the intended use of FinalTvi2 expects
     // that the data will be output using only the writeBackChanges method.
 
-    virtual void writeFlag (const Matrix<Bool> & flag);
-    virtual void writeFlag (const Cube<Bool> & flag);
-    virtual void writeFlagRow (const Vector<Bool> & rowflags);
-    virtual void writeFlagCategory(const Array<Bool>& fc);
-    virtual void writeVisCorrected (const Cube<Complex> & vis);
-    virtual void writeVisModel (const Cube<Complex> & vis);
-    virtual void writeVisObserved (const Cube<Complex> & vis);
-    virtual void writeWeight (const Matrix<Float> & wt);
-    virtual void writeWeightSpectrum (const Cube<Float> & wtsp);
-    virtual void writeSigma (const Matrix <Float> & sig);
-    virtual void writeModel(const RecordInterface& rec, Bool iscomponentlist=True,
-                            Bool incremental=False);
+    virtual void writeFlag (const casacore::Matrix<casacore::Bool> & flag);
+    virtual void writeFlag (const casacore::Cube<casacore::Bool> & flag);
+    virtual void writeFlagRow (const casacore::Vector<casacore::Bool> & rowflags);
+    virtual void writeFlagCategory(const casacore::Array<casacore::Bool>& fc);
+    virtual void writeVisCorrected (const casacore::Cube<casacore::Complex> & vis);
+    virtual void writeVisModel (const casacore::Cube<casacore::Complex> & vis);
+    virtual void writeVisObserved (const casacore::Cube<casacore::Complex> & vis);
+    virtual void writeWeight (const casacore::Matrix<casacore::Float> & wt);
+    virtual void writeWeightSpectrum (const casacore::Cube<casacore::Float> & wtsp);
+    virtual void writeSigma (const casacore::Matrix <casacore::Float> & sig);
+    virtual void writeModel(const casacore::RecordInterface& rec, casacore::Bool iscomponentlist=true,
+                            casacore::Bool incremental=false);
 
 protected:
 
     //void configureNewSubchunk ();
 
     // These are the methods that actually write the data in the VB2 out to the new
-    // MS when called by writeBackChanges.  The VB's data are handled as four categories:
+    // casacore::MS when called by writeBackChanges.  The VB's data are handled as four categories:
     //    data - the various visibility data and the associated weight, weight spectrum, sigma, etc.
     //    keys - the values of the columns that ID the row (e.g., antennas, DdId, etc.)
     //    misc - the column values that don't fall in the data or key categories.
 
-    void writeDataValues (MeasurementSet & ms, const RefRows & rows);
-    void writeKeyValues (MeasurementSet & ms, const RefRows & rows);
-    void writeMiscellaneousValues (MeasurementSet & ms, const RefRows & rows);
+    void writeDataValues (casacore::MeasurementSet & ms, const casacore::RefRows & rows);
+    void writeKeyValues (casacore::MeasurementSet & ms, const casacore::RefRows & rows);
+    void writeMiscellaneousValues (casacore::MeasurementSet & ms, const casacore::RefRows & rows);
 
 private:
 
     ViColumns2     columns_p;
-    Bool           columnsAttached_p;
-    MeasurementSet ms_p;
+    casacore::Bool           columnsAttached_p;
+    casacore::MeasurementSet ms_p;
 
 };
 

@@ -34,18 +34,22 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Array.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
-//# Forward Declarations
 template <class T> class ImageInterface;
 template <class T> class Lattice;
 class CoordinateSystem;
 class String;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+//# Forward Declarations
 
 
 
 // <summary>
-// This class does convolution of an image by an Array or Lattice
+// This class does convolution of an image by an casacore::Array or Lattice
 // </summary>
 
 // <use visibility=export>
@@ -54,17 +58,17 @@ class String;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="ImageInterface">ImageInterface</linkto>
-//   <li> <linkto class="LatticeConvolver">LatticeConvolver</linkto>
+//   <li> <linkto class="casacore::ImageInterface">casacore::ImageInterface</linkto>
+//   <li> <linkto class="casacore::LatticeConvolver">casacore::LatticeConvolver</linkto>
 // </prerequisite>
 
 // <etymology>
-// This class handles convolution of images by an Array or Lattice
+// This class handles convolution of images by an casacore::Array or Lattice
 // </etymology>
 
 // <synopsis>
-// This class convolves an image by a specified kernel (Array or 
-// Lattice).  If the kernel does not have enough dimensions, degenerate
+// This class convolves an image by a specified kernel (casacore::Array or 
+// casacore::Lattice).  If the kernel does not have enough dimensions, degenerate
 // ones are added.The class object has no state.  The functions could be static.
 // The convolution is done via FFT.  Thus input pixels which
 // are masked are set to 0 before the convolution.  The mask
@@ -118,7 +122,7 @@ enum ScaleTypes {
 // Assignment operator. Uses reference semantics.
    ImageConvolver &operator=(const ImageConvolver<T> &other);
 
-// Convolve by an Image, Lattice or Array.  If convolving by an image
+// Convolve by an Image, casacore::Lattice or Array.  If convolving by an image
 // some rudimentary coordinate checks are made and warnings optionally issued
 // (<src>warnOnly</src>) if things are not commensurate.
 // If the output image needs a mask and doesn't have one,
@@ -126,43 +130,43 @@ enum ScaleTypes {
 // the output. The miscInfo, imageInfo, units and logger will be copied 
 // from the input to the output unless you indicate not 
 // to (copyMiscellaneous).  Any restoring beam is deleted from the
-// output image ImageInfo object.  The input CoordinateSystem
+// output image casacore::ImageInfo object.  The input CoordinateSystem
 // is transferred to the output image.  Degenerate  axes are added 
 // to the kernel if it does not have enough dimensions.   If <src>autoScale</src>
 // is true, the kernel is normalized to have unit sum.  Otherwise,
 // the kernel is scaled (multiplied) by the value <src>scale</src>
 // <group>
-   void convolve(LogIO& os, 
-                 ImageInterface<T>& imageOut, 
-                 const ImageInterface<T>& imageIn,
-                 const ImageInterface<T>& kernel,
-                 const ScaleTypes scaleType, const Double scale,
-                 const Bool copyMiscellaneous, const Bool warnOnly);
-   void convolve(LogIO& os, 
-                 ImageInterface<T>& imageOut, 
-                 const ImageInterface<T>& imageIn,
-                 const Lattice<T>& kernel,
+   void convolve(casacore::LogIO& os, 
+                 casacore::ImageInterface<T>& imageOut, 
+                 const casacore::ImageInterface<T>& imageIn,
+                 const casacore::ImageInterface<T>& kernel,
+                 const ScaleTypes scaleType, const casacore::Double scale,
+                 const casacore::Bool copyMiscellaneous, const casacore::Bool warnOnly);
+   void convolve(casacore::LogIO& os, 
+                 casacore::ImageInterface<T>& imageOut, 
+                 const casacore::ImageInterface<T>& imageIn,
+                 const casacore::Lattice<T>& kernel,
                  const ScaleTypes scaleType,
-                 const Double scale,
-                 const Bool copyMiscellaneous);
-   void convolve(LogIO& os, 
-                 ImageInterface<T>& imageOut, 
-                 const ImageInterface<T>& imageIn,
-                 const Array<T>& kernel,
+                 const casacore::Double scale,
+                 const casacore::Bool copyMiscellaneous);
+   void convolve(casacore::LogIO& os, 
+                 casacore::ImageInterface<T>& imageOut, 
+                 const casacore::ImageInterface<T>& imageIn,
+                 const casacore::Array<T>& kernel,
                  const ScaleTypes scaleType,
-                 const Double scale,
-                 const Bool copyMiscellaneous);
+                 const casacore::Double scale,
+                 const casacore::Bool copyMiscellaneous);
 // </group>
 
 private:
 
 // Make mask for image
-   void makeMask(ImageInterface<T>& out, LogIO& os) const;
+   void makeMask(casacore::ImageInterface<T>& out, casacore::LogIO& os) const;
 
 // Check Coordinates of kernel and image
-   void checkCoordinates (LogIO& os, const CoordinateSystem& cSysImage,
-                          const CoordinateSystem& cSysKernel,
-                          Bool warnOnly) const;
+   void checkCoordinates (casacore::LogIO& os, const casacore::CoordinateSystem& cSysImage,
+                          const casacore::CoordinateSystem& cSysKernel,
+                          casacore::Bool warnOnly) const;
 };
 
 

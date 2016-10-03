@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 
-		Bool isActive() {
+		casacore::Bool isActive() {
 			return active_;
 		}
 
@@ -78,12 +78,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		virtual void  activate() {
 			setPalette(activePalette_);
-			active_ = True;
+			active_ = true;
 		}
 
 		virtual void deactivate() {
 			setPalette(inactivePalette_);
-			active_ = False;
+			active_ = false;
 		}
 
 
@@ -101,7 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QPalette activePalette_;
 		QPalette inactivePalette_;
-		Bool active_;
+		casacore::Bool active_;
 
 	};
 

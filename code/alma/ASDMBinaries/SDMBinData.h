@@ -58,7 +58,7 @@ class SDMBinData{
       - Use also, if desired, the method 'selectDataSubset' for further
       filtering at the level of the individual BLOBs.
       - After setting this filtering consider using the method 'isComplex()' before 
-      scaning the SDM main table rows if the intent is to build a MeasurementSet 
+      scaning the SDM main table rows if the intent is to build a casacore::MeasurementSet 
       MAIN table.
   */ 
   SDMBinData( ASDM* const datasetPtr, string execBlockDir);
@@ -131,7 +131,7 @@ class SDMBinData{
       @post The getData methods will return the data restricted to that selection. 
       For example if es_qapc is a set of 2 enumerators AP_CORRECTED and AP_UNCORRECTED
       then both type of data will be returned.
-      @note Note that the MS filler accepts at most one AtmPhaseCorrection enumerator.
+      @note Note that the casacore::MS filler accepts at most one AtmPhaseCorrection enumerator.
   */ 
   void selectDataSubset( Enum<CorrelationMode>       e_qcm,
 			 EnumSet<AtmPhaseCorrection> es_qapc );
@@ -256,14 +256,14 @@ class SDMBinData{
   const VMSData* getDataCols( Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc );
 
   /**
-   * Returns a pointer to a VMSData structure containing the values require to populate the MS Main table columns
+   * Returns a pointer to a VMSData structure containing the values require to populate the casacore::MS Main table columns
    * from what it has got from the reading of at most n SDMDataSubsets in the current BDF file. 
    * <ul>
    * <li> This method call be called iteratively as long as there are SDMDataSubsets.  </li>
    * <li> A returned VMSData having any of its array empty means that all the SDMDataSubsets have been read.</li>
    * </ul>
    * @param n gives the maximum number of SDMDataSubsets ([sub]integrations) that one wants to read in the current BDF.
-   * @return a pointer to a VMSData containing the values to populate MS rows.
+   * @return a pointer to a VMSData containing the values to populate casacore::MS rows.
    */
   const VMSData* getNextMSMainCols(unsigned int n);
   void getNextMSMainCols(unsigned int n, std::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp);
@@ -326,7 +326,7 @@ class SDMBinData{
    */
   void detachDataObject();
 
-  /** Determine the view of a MS STATE
+  /** Determine the view of a casacore::MS STATE
     @param subscanNum Subscan number (the semantic of this attribute is assumed to be identical
                       in the SDM and the MS
     @param v_stateId  The list of states identifiers in the row of SDM Main table
@@ -336,9 +336,9 @@ class SDMBinData{
     @param na Antenna index for a given antenna in this antenna list
     @param nfe Feed index
     @param nspw DataDescription index
-    @param timeOfDump The epoch to be considered to determine this MS STATE view
+    @param timeOfDump The epoch to be considered to determine this casacore::MS STATE view
   */
-  MSState          getMSState( unsigned int subscanNum, 
+  MSState          getMSState( unsigned int subscanNum,
 			       vector<Tag>  v_stateId, 
 			       vector<Tag>  v_antennaId, vector<int> v_feedId, vector<Tag> v_ddId,
 			       unsigned int na, unsigned int nfe, unsigned int nspw, ArrayTime timeOfDump);
@@ -373,7 +373,7 @@ class SDMBinData{
   const  int64_t*            actualTimesPtr_;  // mutable attribute; actualTimes in a single dump 
   const  int64_t*        actualDurationsPtr_;  // mutable attribute; actualDurations in a single dump
   const  float*                   zeroLagsPtr_;  // mutable attribute; zeroLags in a single dump
-  static MSData*                    msDataPtr_;  // mutable attribute; one MS-MAIN row given
+  static MSData*                    msDataPtr_;  // mutable attribute; one casacore::MS-MAIN row given
   static SDMData*                  sdmDataPtr_;  // mutable attribute; one SDM-Main (v2) row 
   static BaselinesSet*           baselinesSet_;  // mutable attribute
   static vector<MSData*>          v_msDataPtr_;  // mutable attribute

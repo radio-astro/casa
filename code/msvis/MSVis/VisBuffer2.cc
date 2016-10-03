@@ -12,6 +12,7 @@
 #include <msvis/MSVis/ViImplementation2.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 
+using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -59,7 +60,7 @@ VisBuffer2::associateWithVi2 (const VisibilityIterator2 * vi)
 ms::MsRow *
 VisBuffer2::getRow (Int) const
 {
-    ThrowIf (True, "Not implemented by this subclass.");
+    ThrowIf (true, "Not implemented by this subclass.");
 
     return 0;
 }
@@ -67,7 +68,7 @@ VisBuffer2::getRow (Int) const
 ms::MsRow *
 VisBuffer2::getRowMutable (Int)
 {
-    ThrowIf (True, "Not implemented by this subclass.");
+    ThrowIf (true, "Not implemented by this subclass.");
 
     return 0;
 }
@@ -155,6 +156,7 @@ VisBufferUtil2::phaseCenterShift (VisBuffer2 & /*vb*/, Double /*dx*/, Double /*d
 
 } // end namespace vi
 
+using namespace casacore;
 } // end namespace casa
 
 

@@ -46,17 +46,18 @@
 #include <display/DisplayDatas/DrawingDisplayData.h>
 #include <display/DisplayDatas/DDDHandle.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DDDPolygon::DDDPolygon(const Record &description, DrawingDisplayData *owner)
 		: DDDObject(description, owner),
-		  itsOutline(True),
+		  itsOutline(true),
 		  itsNPoints(0),
 		  itsMode(DDDObject::None),
-		  itsRecompute(True),
+		  itsRecompute(true),
 		  itsLogger(LogOrigin("DDDPolygon", "DDDPolygon(...)")),
-		  itsFracX(False),
-		  itsFracY(False) {
+		  itsFracX(false),
+		  itsFracY(false) {
 		if (!(description.isDefined("x") &&
 		        description.isDefined("y"))) {
 			throw(AipsError("Invalid record for constructing DDDPolygon"));
@@ -65,7 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Decode parameters
 
 		try {
-			decode(description, True);
+			decode(description, true);
 		} catch (AipsError x) {
 			itsLogger << LogIO::SEVERE << x.getMesg() << LogIO::POST;
 		}
@@ -159,7 +160,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // new phrase in expression on next line...
 //!(ev.modifiers() & owner()->keyModifier())) {
 
-		        False) {
+		        false) {
 			return;
 		}
 
@@ -169,14 +170,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Double y = (Double)ev.pixY();
 //
 		if (showingHandles()) {
-			if (isFixed()) showHandles(False);
+			if (isFixed()) showHandles(false);
 //
 			if (!inPolygon(itsPixelX, itsPixelY, x,y) && !onHandle(itsHandles, x, y) && ev.keystate()) {
 
 // press button outside rectangle, switch to handles invisible
 
 				clearClickBuffer();
-				showHandles(False);
+				showHandles(false);
 			} else if (ev.keystate()) {      // Press
 
 // inside object
@@ -205,7 +206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			if (inPolygon(itsPixelX, itsPixelY, x, y)) {
 				if (!isFixed()) {
-					showHandles(True);
+					showHandles(true);
 					clearClickBuffer();
 					itsMode = DDDObject::None;
 				}
@@ -218,11 +219,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Even if the object is fixed, we still need to recompute
 // following a zoom event.
 
-		itsRecompute = False;
+		itsRecompute = false;
 		if (!ev.keystate()) {        // Release
 			try {
 				updateWorldValues();
-				itsRecompute = True;
+				itsRecompute = true;
 			} catch (AipsError x) {
 				itsLogger << LogIO::SEVERE << x.getMesg() << LogIO::POST;
 			}
@@ -305,10 +306,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Decode parameters
 
-		decode(description, False);
+		decode(description, false);
 //
-		itsRecompute = True;
-		if (isFixed()) showHandles(False);
+		itsRecompute = true;
+		if (isFixed()) showHandles(false);
 		owner()->refresh();
 	}
 
@@ -321,15 +322,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 		Vector<Double> world(itsCoordinateSystem.referenceValue().copy());
 		Vector<Double> pixel(2);
-		world.resize(min(3, Int(itsCoordinateSystem.nWorldAxes())), True);
+		world.resize(min(3, Int(itsCoordinateSystem.nWorldAxes())), true);
 //
 		const Vector<Double>& x = itsWorldX.getValue();
 		const Vector<Double>& y = itsWorldY.getValue();
 		Quantum<Double> tx(1.0, itsWorldX.getFullUnit());
 		Quantum<Double> ty(1.0, itsWorldY.getFullUnit());
 //
-		itsPixelX.resize(itsNPoints, False);
-		itsPixelY.resize(itsNPoints, False);
+		itsPixelX.resize(itsNPoints, false);
+		itsPixelY.resize(itsNPoints, false);
 //
 		for (uInt i=0; i<itsNPoints; i++) {
 			tx.setValue(x(i));

@@ -27,6 +27,7 @@
 #include <display/QtViewer/QtDisplayDataGui.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 DisplayOptionsDialog::DisplayOptionsDialog(QWidget* parent): QDialog(parent),
@@ -60,4 +61,5 @@ DisplayOptionsDialog::~DisplayOptionsDialog() {
 	delete displayedDataOptions;
 }
 
+using namespace casacore;
 } /* namespace casa */

@@ -58,10 +58,10 @@ int main() {
 		doublet[1] = g2;
 		Matrix<Double> relations(2, 3, 0);
 		relations(0,0) = 4;
-		Bool result = True;
+		Bool result = true;
 		try {
 			GaussianMultipletSpectralElement(doublet, relations);
-			result = False;
+			result = false;
 		}
 		catch (AipsError) {}
 		AlwaysAssert(result, AipsError);
@@ -76,10 +76,10 @@ int main() {
 		doublet[1] = g2;
 		Matrix<Double> relations(1, 4, 0);
 		relations(0,0) = 4;
-		Bool result = True;
+		Bool result = true;
 		try {
 			GaussianMultipletSpectralElement(doublet, relations);
-			result = False;
+			result = false;
 		}
 		catch (AipsError) {}
 		AlwaysAssert(result, AipsError);
@@ -104,10 +104,10 @@ int main() {
 				cout << "g2 " << g2 << endl;
 		Matrix<Double> relations(1, 3, 0);
 		relations(0,0) = 4;
-		Bool result = True;
+		Bool result = true;
 		try {
 			GaussianMultipletSpectralElement(doublet, relations);
-			result = False;
+			result = false;
 		}
 		catch (AipsError x) {}
 		AlwaysAssert(result, AipsError);
@@ -123,10 +123,10 @@ int main() {
 		doublet[1] = g2;
 		Matrix<Double> relations(1, 3, 0);
 		relations(0,1) = 4;
-		Bool result = True;
+		Bool result = true;
 		try {
 			GaussianMultipletSpectralElement(doublet, relations);
-			result = False;
+			result = false;
 		}
 		catch (AipsError x) {}
 		AlwaysAssert(result, AipsError);
@@ -142,10 +142,10 @@ int main() {
 		doublet[1] = g2;
 		Matrix<Double> relations(1, 3, 0);
 		relations(0, 2) = 4;
-		Bool result = True;
+		Bool result = true;
 		try {
 			GaussianMultipletSpectralElement(doublet, relations);
-			result = False;
+			result = false;
 		}
 		catch (AipsError x) {}
 		AlwaysAssert(result, AipsError);
@@ -234,8 +234,8 @@ int main() {
 		errs[1] = 0.2;
 		errs[2] = 0.3;
 		g1.setError(errs);
-		Vector<Bool> fixed(3, False);
-		fixed[1] = True;
+		Vector<Bool> fixed(3, false);
+		fixed[1] = true;
 		g1.fix(fixed);
 
 

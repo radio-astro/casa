@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File DelayModelTable.h
+ * casacore::File DelayModelTable.h
  */
  
 #ifndef DelayModelTable_CLASS
@@ -259,14 +259,14 @@ class DelayModelRow;
  * <TD> geometricDelay </TD> 
  * <TD> double </TD>
  * <TD>  &nbsp; </TD>
- * <TD>&nbsp; Geometric delay. </TD>
+ * <TD>&nbsp; casacore::Geometric delay. </TD>
  * </TR>
 	
  * <TR>
  * <TD> geometricDelayRate </TD> 
  * <TD> double </TD>
  * <TD>  &nbsp; </TD>
- * <TD>&nbsp; Geometric delay. </TD>
+ * <TD>&nbsp; casacore::Geometric delay. </TD>
  * </TR>
 	
  * <TR>
@@ -480,7 +480,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a DelayModelTableIDL CORBA structure.
 	 *

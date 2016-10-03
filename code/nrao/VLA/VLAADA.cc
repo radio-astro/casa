@@ -215,7 +215,7 @@ String VLAADA::padName() const {
   const uInt nPad = 74;
   static Block<Double> padX(nPad);
   static Block<String> padName(nPad);
-  static Bool init = False;
+  static Bool init = false;
   if (!init) { // These are the nominal bx positions of the pads. This table
     // was extracted from the AIPS task FILLM
     padName[0] = "W1";    padX[0] = 77.   ;
@@ -295,7 +295,7 @@ String VLAADA::padName() const {
     for (uInt i = 0; i < nPad; i++) {
       padX[i] *= ns2m;
     }
-    init = True;
+    init = true;
   }
   String name;
   uInt i = 0;
@@ -382,7 +382,7 @@ Bool VLAADA::nomSensApplied(VLAEnum::IF which,const uInt rev) const {
   DebugAssert(ok(), AipsError);
 
   // Prior (exclusive) to rev 25, nominal sensitivity ALWAYS applied
-  if (rev < 25) return True;
+  if (rev < 25) return true;
 
   // Note that VLA Archive Data Format (May 1, 1996) doc has typo 
   // in section 2.3.  The ADA's IF control bits are in words 64-67
@@ -441,24 +441,24 @@ Bool VLAADA::ok() const {
       logErr << LogIO::SEVERE 
 	     << "The VLA logical record is not readable"
 	     << LogIO::POST;
-      return False;
+      return false;
     }
     if (!itsRecord.isSeekable()) {
       LogIO logErr(LogOrigin("VLAADA", "ok()"));
       logErr << LogIO::SEVERE 
 	     << "The VLA logical record is not seekable"
 	     << LogIO::POST;
-      return False;
+      return false;
     }
     if (itsOffset == 0) {
       LogIO logErr(LogOrigin("VLAADA", "ok()"));
       logErr << LogIO::SEVERE 
 	     << "The antenna data area cannot have a zero offset"
 	     << LogIO::POST;
-      return False;
+      return false;
     }
   }
-  return True;
+  return true;
 }
 
 // Local Variables: 

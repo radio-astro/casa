@@ -33,8 +33,6 @@
 #define AIPS_ARRAY_INDEX_CHECK
 
 //# Forward Declarations
-template <class T> class Vector;
-template <class T> class Matrix;
 template <class T> class LUdecomp;
 
 // <thrown> 
@@ -47,24 +45,24 @@ template <class T> class LUdecomp;
 // 
 // The scalar/dot/inner product of two equal length vectors.
 //
-template <class T> T innerProduct (const Vector<T> &x, const Vector<T> &y);
+template <class T> T innerProduct (const casacore::Vector<T> &x, const casacore::Vector<T> &y);
 
 //
 // The magnitude/norm of a vector.
 //
-template <class T> T norm (const Vector<T> &x);
+template <class T> T norm (const casacore::Vector<T> &x);
 
 //
 // Create a 3D rotation matrix (3x3).
 // Axis is 0,1,2 for x,y,z; angle is in radians.
 //
-template <class T> Matrix<T> Rot3D(Int axis, T angle);
+template <class T> casacore::Matrix<T> Rot3D(casacore::Int axis, T angle);
 
 //
 // The vector/cross product of two 3-space vectors.
 //
 template <class T> 
-   Vector<T> crossProduct (const Vector<T> &x, const Vector<T> &y);
+   casacore::Vector<T> crossProduct (const casacore::Vector<T> &x, const casacore::Vector<T> &y);
 
 //
 // The matrix/outer product of a vector and a transposed vector. 
@@ -73,31 +71,31 @@ template <class T>
 // </note>
 //
 template <class T>
-   Matrix<T> product (const Vector<T> &x, const Matrix<T> &yT);
+   casacore::Matrix<T> product (const casacore::Vector<T> &x, const casacore::Matrix<T> &yT);
 template <class T>
-   Matrix<T> outerProduct (const Vector<T> &x, const Matrix<T> &yT);
+   casacore::Matrix<T> outerProduct (const casacore::Vector<T> &x, const casacore::Matrix<T> &yT);
 
 //
 // The vector/outer product of an MxN matrix and an N-length vector.
 //
 template <class T>
-   Vector<T> product (const Matrix<T> &A, const Vector<T> &x);
+   casacore::Vector<T> product (const casacore::Matrix<T> &A, const casacore::Vector<T> &x);
 template <class T>
-   Vector<T> outerProduct (const Matrix<T> &A, const Vector<T> &x);
+   casacore::Vector<T> outerProduct (const casacore::Matrix<T> &A, const casacore::Vector<T> &x);
 
 //
 // The matrix multiplication or cayley product of an MxN matrix and
 // an NxP matrix.
 //
 template <class T> 
-   Matrix<T> product (const Matrix<T> &A, const Matrix<T> &B);
+   casacore::Matrix<T> product (const casacore::Matrix<T> &A, const casacore::Matrix<T> &B);
 template <class T> 
-   Matrix<T> cayleyProduct (const Matrix<T> &A, const Matrix<T> &B);
+   casacore::Matrix<T> cayleyProduct (const casacore::Matrix<T> &A, const casacore::Matrix<T> &B);
 
 //
 // The NxM transpose of an MxN matrix.
 //
-template <class T> Matrix<T> transpose (const Matrix<T> &A);
+template <class T> casacore::Matrix<T> transpose (const casacore::Matrix<T> &A);
 
 //
 //<div> complex space function specifications
@@ -106,22 +104,22 @@ template <class T> Matrix<T> transpose (const Matrix<T> &A);
 //
 // The complex conjugate of the complex matrix A.
 //
-Matrix<Complex> conjugate (const Matrix<Complex> &A);
+Matrix<casacore::Complex> conjugate (const casacore::Matrix<casacore::Complex> &A);
 
 //
 // The complex conjugate of the double precision complex matrix A.
 //
-Matrix<DComplex> conjugate (const Matrix<DComplex> &A);
+Matrix<casacore::DComplex> conjugate (const casacore::Matrix<casacore::DComplex> &A);
 
 //
 // The conjugate/transpose or adjoint of the complex matrix A.
 //
-Matrix<Complex> adjoint (const Matrix<Complex> &A);
+Matrix<casacore::Complex> adjoint (const casacore::Matrix<casacore::Complex> &A);
 
 //
 // The conjugate/transpose or adjoint of the double precision complex matrix A.
 //
-Matrix<DComplex> adjoint (const Matrix<DComplex> &A);
+Matrix<casacore::DComplex> adjoint (const casacore::Matrix<casacore::DComplex> &A);
 
 //</div>
 
@@ -133,19 +131,19 @@ Matrix<DComplex> adjoint (const Matrix<DComplex> &A);
 // The inverse of a matrix.  <note>The LU decomposition of the matrix
 // is a hidden calculation. </note>
 //
-template <class T> Matrix<T> inverse (const Matrix<T> &A);
+template <class T> casacore::Matrix<T> inverse (const casacore::Matrix<T> &A);
 
 //
 // The inverse of an LUdecomp which is the Lower/upper 
 // decomposition of a matrix A.
 //
-template <class T> Matrix<T> inverse (const LUdecomp<T> &LU);
+template <class T> casacore::Matrix<T> inverse (const LUdecomp<T> &LU);
 
 //
 // The determinant of a matrix. <note>The LU decomposition of the matrix
 // is a hidden calculation. </note>
 //
-template <class T> T determinant (const Matrix<T> &A);
+template <class T> T determinant (const casacore::Matrix<T> &A);
 
 //
 // the determinant (A) of an LUdecomp which is the lower/upper 
@@ -160,10 +158,10 @@ template <class T> T determinant (const LUdecomp<T> &LU);
 // returns the computed vector "x". (for further details, see the LAPACK 
 // man page for "sgesvx".)
 //
-// solve(LUdecomp<T>, Vector<T>, ...) arguments are (in order):
-// 1) Matrix<T> -  (input)  the matrix "A" that is being modeled by the 
+// solve(LUdecomp<T>, casacore::Vector<T>, ...) arguments are (in order):
+// 1) casacore::Matrix<T> -  (input)  the matrix "A" that is being modeled by the 
 //                          equation "Ax=y".
-// 2) Vector<T> -  (input)  the vector "y" that is being modeled by the
+// 2) casacore::Vector<T> -  (input)  the vector "y" that is being modeled by the
 //                          equation "Ax=y".
 // 3) double    -  (output) the error bound "forwardError" on the returned 
 //    vector x, i.e
@@ -178,7 +176,7 @@ template <class T> T determinant (const LUdecomp<T> &LU);
 //<note>The LU decomposition of the matrix is a hidden calculation. </note>
 //
 template <class T> 
-   Vector<T> solve (const Matrix<T> &A, const Vector<T> &y, double &ferr,
+   casacore::Vector<T> solve (const casacore::Matrix<T> &A, const casacore::Vector<T> &y, double &ferr,
                     double &berr);
 
 //
@@ -188,10 +186,10 @@ template <class T>
 // computed vector "x". (for further details, see the LAPACK man page for
 // "sgesvx".)
 //
-// solve(LUdecomp<T>, Vector<T>, ...) arguments are (in order):
+// solve(LUdecomp<T>, casacore::Vector<T>, ...) arguments are (in order):
 // 1) LUdecomp<T> - (input) the LU decomposition of the matrix "A" that
 //                          is being modeled by the equation "Ax=y".
-// 2) Vector<T> -  (input)  the vector "y" that is being modeled by the
+// 2) casacore::Vector<T> -  (input)  the vector "y" that is being modeled by the
 //                          equation "Ax=y".
 // 3) double    -  (output) the error bound "forwardError" on the returned 
 //    vector x, i.e
@@ -204,7 +202,7 @@ template <class T>
 //                        backwardError  >    |Ax-y| 
 //
 template <class T> 
-   Vector<T> solve (const LUdecomp<T> &myLU, const Vector<T> &y, double &ferr,
+   casacore::Vector<T> solve (const LUdecomp<T> &myLU, const casacore::Vector<T> &y, double &ferr,
                     double &berr);
 
 //
@@ -216,27 +214,27 @@ template <class T>
 // respective "y". (for further details, see the LAPACK man page for
 // "sgesvx".)
 //
-// solve(LUdecomp<T>, Matrix<T>,...) arguments are (in order):
-// 1) Matrix<T> - (input) the matrix "A" that is being modeled by the 
+// solve(LUdecomp<T>, casacore::Matrix<T>,...) arguments are (in order):
+// 1) casacore::Matrix<T> - (input) the matrix "A" that is being modeled by the 
 //    equation "Ax=y".
-// 2) Matrix<T> - (input)  MxN matrix "B" of N possible M-length 
+// 2) casacore::Matrix<T> - (input)  MxN matrix "B" of N possible M-length 
 //    vectors "y1", "y2",..."yN" stored as columns in a single matrix "B" 
 //    where "A*x1=y1, A*x2=y2,..."A*xN=yN" => "AX=B".
-// 3) Vector<double> - (output) an N-length vector "Ferr" with error bounds 
+// 3) casacore::Vector<double> - (output) an N-length vector "Ferr" with error bounds 
 //    for returned matrix X, i.e. 
 //                                 max(X.column(i)-Xtrue.column(i))
 //                     Ferr(i) >   --------------------------------
 //                                         max(X.column(i)) 
 // 
-// 4) Vector<double> - (output) an N-length vector "Berr" with error bounds 
+// 4) casacore::Vector<double> - (output) an N-length vector "Berr" with error bounds 
 //    for input matrix "B", i.e
 //                              Berr(i) > |max(A*X.column(i)-B.column(i))| 
 //
 //<note>The LU decomposition of the matrix is a hidden calculation. </note>
 //
 template <class T> 
-   Matrix<T> solve (const Matrix<T> &A, const Matrix<T> &B, 
-                    Vector<double> &Ferr, Vector<double> &Berr);
+   casacore::Matrix<T> solve (const casacore::Matrix<T> &A, const casacore::Matrix<T> &B, 
+                    casacore::Vector<double> &Ferr, casacore::Vector<double> &Berr);
 
 //
 // Given an LUdecomp "myLU" which is the LU decomposition of some
@@ -248,25 +246,25 @@ template <class T>
 // respective "y". (for further details, see the LAPACK man page for
 // "sgesvx".)
 //
-// solve(LUdecomp<T>, Matrix<T>,...) arguments are (in order):
+// solve(LUdecomp<T>, casacore::Matrix<T>,...) arguments are (in order):
 // 1) LUdecomp<T> - (input) the LU decomposition of the matrix "A" that
 //                          is being modeled by the equation "Ax=y".
-// 2) Matrix<T>      - (input)  MxN matrix "B" of N possible M-length 
+// 2) casacore::Matrix<T>      - (input)  MxN matrix "B" of N possible M-length 
 //    vectors "y1", "y2",..."yN" stored as columns in a single matrix "B" 
 //    where "A*x1=y1, A*x2=y2,..."A*xN=yN" => "AX=B".
-// 3) Vector<double> - (output) an N-length vector "Ferr" with error bounds 
+// 3) casacore::Vector<double> - (output) an N-length vector "Ferr" with error bounds 
 //    for returned matrix X, i.e. 
 //                                 max(X.column(i)-Xtrue.column(i))
 //                     Ferr(i) >   --------------------------------
 //                                         max(X.column(i)) 
 // 
-// 4) Vector<double> - (output) an N-length vector "Berr" with error bounds 
+// 4) casacore::Vector<double> - (output) an N-length vector "Berr" with error bounds 
 //    for input matrix "B", i.e
 //                              Berr(i) > |max(A*X.column(i)-B.column(i))| 
 //
 template <class T> 
-   Matrix<T> solve (const LUdecomp<T> &myLU, const Matrix<T> &B, 
-                    Vector<double> &Ferr, Vector<double> &Berr);
+   casacore::Matrix<T> solve (const LUdecomp<T> &myLU, const casacore::Matrix<T> &B, 
+                    casacore::Vector<double> &Ferr, casacore::Vector<double> &Berr);
 
 // -grp
 // </div>

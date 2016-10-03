@@ -77,20 +77,20 @@ class CalibratingVi2FactoryI;
 // <srcblock>
 //      IteratingParameters iterpar(60.0);  // 60s chunk interval
 //
-//      Float calfactor(100.0);             // a simple factor with which to multiply the data
-//      Record calrec;                      //   (in leiu of full VisEquation functionality (TBD)
-//      calrec.define("calfactor",calfactor); // in a Record   
+//      casacore::Float calfactor(100.0);             // a simple factor with which to multiply the data
+//      casacore::Record calrec;                      //   (in leiu of full VisEquation functionality (TBD)
+//      calrec.define("calfactor",calfactor); // in a casacore::Record   
 //                                            
 //      AveragingParameters avepar(10.0);   // 10s averaging
 //
 //
 // </srcblock>
 //
-// Then these parameter objects, along with a MeasurementSet pointer, are used to make
+// Then these parameter objects, along with a casacore::MeasurementSet pointer, are used to make
 //  a factory suitable for the generic VisibilityIterator2 ctor, which is then invoked
 //
 // <srcblock>
-//      MeasurementSet *ms(....);   // typically from elsewhere, e.g., selected
+//      casacore::MeasurementSet *ms(....);   // typically from elsewhere, e.g., selected
 //      LayeredVi2Factory factory(ms,&iterpar,calrec,&avepar);
 //      vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2 (factory);
 //      vi::VisBuffer2 *visBuffer = visIter->getVisBuffer();
@@ -107,10 +107,10 @@ class CalibratingVi2FactoryI;
 //              {
 //
 //                      // the following will have been calibrated and averaged to 10s
-//                      Vector<Int> ddi = visBuffer->dataDescriptionIds();
-//                      Vector<Int> antenna1 = visBuffer->antenna1();
-//                      Vector<Int> antenna2 = visBuffer->antenna2();
-//                      Cube<Complex> cvis = visBuffer->visCubeCorrected();
+//                      casacore::Vector<casacore::Int> ddi = visBuffer->dataDescriptionIds();
+//                      casacore::Vector<casacore::Int> antenna1 = visBuffer->antenna1();
+//                      casacore::Vector<casacore::Int> antenna2 = visBuffer->antenna2();
+//                      casacore::Cube<casacore::Complex> cvis = visBuffer->visCubeCorrected();
 //
 //                      visIter->next();
 //              }
@@ -119,7 +119,7 @@ class CalibratingVi2FactoryI;
 //      }
 // </srcblock>
 //
-// Notice that it is the responsibility of the application layer to delete the VisibilityIterator2
+// casacore::Notice that it is the responsibility of the application layer to delete the VisibilityIterator2
 // pointer returned by the factory method. However the life cycle of the VisBuffer2 object is
 // responsibility of the VisibilityIterator2 object.
 //
@@ -137,34 +137,34 @@ class LayeredVi2Factory : public vi::ViFactory
 public:
 
   // Non-calibrating version
-  LayeredVi2Factory(MeasurementSet* ms,
+  LayeredVi2Factory(casacore::MeasurementSet* ms,
 		    IteratingParameters* iterpar,
 		    AveragingParameters* avepar=0);
   // Calibrating version, via CalLib Record
-  LayeredVi2Factory(MeasurementSet* ms,
+  LayeredVi2Factory(casacore::MeasurementSet* ms,
 		    IteratingParameters* iterpar,
-		    const Record& calrec,
+		    const casacore::Record& calrec,
 		    AveragingParameters* avepar=0);
-  // Calibrating version, vis CalLib String (filename or String)
-  LayeredVi2Factory(MeasurementSet* ms,
+  // Calibrating version, vis CalLib casacore::String (filename or casacore::String)
+  LayeredVi2Factory(casacore::MeasurementSet* ms,
 		    IteratingParameters* iterpar,
-		    const String& callib,
+		    const casacore::String& callib,
 		    AveragingParameters* avepar=0);
   ~LayeredVi2Factory();
 
   vi::ViImplementation2 * createVi () const;
-  vi::ViImplementation2 * createVi (vi::ViImplementation2 *) const {throw(AipsError("NYI!"));};  // NYI
+  vi::ViImplementation2 * createVi (vi::ViImplementation2 *) const {throw(casacore::AipsError("NYI!"));};  // NYI
 
 private:
 
-  MeasurementSet* ms_p;
+  casacore::MeasurementSet* ms_p;
 
   vi::IteratingParameters* iterpar_p;
   vi::AveragingParameters* avepar_p;
-  Bool doCal_p;
-  String callib_p;
-  Record calrec_p;
-  Int nlayer_p;
+  casacore::Bool doCal_p;
+  casacore::String callib_p;
+  casacore::Record calrec_p;
+  casacore::Int nlayer_p;
   CalibratingVi2FactoryI* calvi2factory_p;
 
 };
@@ -181,9 +181,9 @@ class VisIterImpl2LayerFactory : public ViiLayerFactory {
 
  public:
   
-  VisIterImpl2LayerFactory(MeasurementSet* ms,
+  VisIterImpl2LayerFactory(casacore::MeasurementSet* ms,
                            const IteratingParameters& pars,
-                           Bool writable);
+                           bool writable);
 
   virtual ~VisIterImpl2LayerFactory () {}
 
@@ -196,13 +196,13 @@ class VisIterImpl2LayerFactory : public ViiLayerFactory {
  private:
 
   // Pointer to _external_ ms  (support only one, for now)
-  MeasurementSet* ms_;
+  casacore::MeasurementSet* ms_;
   
   // Store a copy of the parameters
   const vi::IteratingParameters pars_;
   
   // Should VisibilityIteratorImpl2 be generated w/ write-permission
-  Bool writable_;
+  bool writable_;
   
 };
 

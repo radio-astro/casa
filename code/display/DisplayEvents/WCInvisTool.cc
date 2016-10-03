@@ -29,13 +29,14 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/DisplayEvents/WCInvisTool.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCInvisTool::WCInvisTool(WorldCanvas *wcanvas,
 	                         Display::KeySym keysym) :
 		WCTool(wcanvas, keysym),
-		itsActive(False),
-		itsMoved(False) {
+		itsActive(false),
+		itsMoved(false) {
 	}
 
 	WCInvisTool::~WCInvisTool() {
@@ -44,20 +45,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void WCInvisTool::keyPressed(const WCPositionEvent &ev) {
 		itsX = ev.linX();
 		itsY = ev.linY();
-		itsActive = True;
-		itsMoved = False;
+		itsActive = true;
+		itsMoved = false;
 		positionReady();
 	}
 
 	void WCInvisTool::keyReleased(const WCPositionEvent &) {
-		itsActive = False;
+		itsActive = false;
 	}
 
 	void WCInvisTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
 		if (!itsActive) {
 			return;
 		} else {
-			itsMoved = True;
+			itsMoved = true;
 			itsX = ev.linX();
 			itsY = ev.linY();
 			positionReady();

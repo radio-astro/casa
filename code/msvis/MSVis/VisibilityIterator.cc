@@ -11,6 +11,7 @@
 #define CheckImplementationPointerR() Assert (readImpl_p != NULL);
 #define CheckImplementationPointerW() Assert (writeImpl_p != NULL);
 
+using namespace casacore;
 namespace casa {
 
 namespace asyncio {
@@ -159,8 +160,8 @@ ROVisibilityIterator::ROVisibilityIterator (const MeasurementSet& ms,
                                             Double timeInterval,
                                             const Factory & factory)
 {
-    construct (NULL, Block<MeasurementSet> (1, ms), sortColumns, True,
-               timeInterval, False, factory);
+    construct (NULL, Block<MeasurementSet> (1, ms), sortColumns, true,
+               timeInterval, false, factory);
 }
 
 ROVisibilityIterator::ROVisibilityIterator (const MeasurementSet& ms,
@@ -169,7 +170,7 @@ ROVisibilityIterator::ROVisibilityIterator (const MeasurementSet& ms,
                                             Double timeInterval)
 {
     construct (NULL, Block<MeasurementSet> (1, ms), sortColumns, addDefaultSortCols,
-               timeInterval, False, Factory ());
+               timeInterval, false, Factory ());
 }
 
 
@@ -177,7 +178,7 @@ ROVisibilityIterator::ROVisibilityIterator (const Block<MeasurementSet>& mss,
                                             const Block<Int>& sortColumns,
                                             Double timeInterval)
 {
-    construct (NULL, mss, sortColumns, True, timeInterval, False, Factory ());
+    construct (NULL, mss, sortColumns, true, timeInterval, false, Factory ());
 }
 
 ROVisibilityIterator::ROVisibilityIterator (const Block<MeasurementSet>& mss,
@@ -185,7 +186,7 @@ ROVisibilityIterator::ROVisibilityIterator (const Block<MeasurementSet>& mss,
                                             const Bool addDefaultSortCols,
                                             Double timeInterval)
 {
-    construct (NULL, mss, sortColumns, addDefaultSortCols, timeInterval, False, Factory());
+    construct (NULL, mss, sortColumns, addDefaultSortCols, timeInterval, false, Factory());
 }
 
 ROVisibilityIterator::ROVisibilityIterator(const asyncio::PrefetchColumns * prefetchColumns,
@@ -195,7 +196,7 @@ ROVisibilityIterator::ROVisibilityIterator(const asyncio::PrefetchColumns * pref
                                            Double timeInterval)
 {
     construct (prefetchColumns, Block<MeasurementSet> (1, ms), sortColumns, addDefaultSortCols,
-               timeInterval, False, Factory ());
+               timeInterval, false, Factory ());
 }
 
 ROVisibilityIterator::ROVisibilityIterator (const asyncio::PrefetchColumns * prefetchColumns,
@@ -204,7 +205,7 @@ ROVisibilityIterator::ROVisibilityIterator (const asyncio::PrefetchColumns * pre
                                             const Bool addDefaultSortCols,
                                             Double timeInterval)
 {
-    construct (prefetchColumns, mss, sortColumns, addDefaultSortCols, timeInterval, False, Factory());
+    construct (prefetchColumns, mss, sortColumns, addDefaultSortCols, timeInterval, false, Factory());
 }
 
 
@@ -967,7 +968,7 @@ ROVisibilityIterator::isAsynchronousIoEnabled()
     // expected AipsRc value.  If not found then async i/o is disabled.
 
     Bool isEnabled;
-    AipsrcValue<Bool>::find (isEnabled, getAsyncRcBase () + ".enabled", False);
+    AipsrcValue<Bool>::find (isEnabled, getAsyncRcBase () + ".enabled", false);
 
     return isEnabled;
 }
@@ -1530,7 +1531,7 @@ VisibilityIterator::VisibilityIterator (MeasurementSet & ms,
                                         const Block<Int>& sortColumns,
                                         Double timeInterval)
 : ROVisibilityIterator (NULL, Block<MeasurementSet> (1, ms), sortColumns,
-                        True, timeInterval, True)
+                        true, timeInterval, true)
 
 {
     construct ();
@@ -1541,7 +1542,7 @@ VisibilityIterator::VisibilityIterator (MeasurementSet & ms,
                                         const Bool addDefaultSortCols,
                                         Double timeInterval)
 : ROVisibilityIterator (NULL, Block<MeasurementSet> (1, ms), sortColumns,
-                        addDefaultSortCols, timeInterval, True)
+                        addDefaultSortCols, timeInterval, true)
 {
     construct ();
 }
@@ -1549,7 +1550,7 @@ VisibilityIterator::VisibilityIterator (MeasurementSet & ms,
 VisibilityIterator::VisibilityIterator (const Block<MeasurementSet>& mss,
                                         const Block<Int>& sortColumns,
                                         Double timeInterval)
-: ROVisibilityIterator (NULL, mss, sortColumns, True, timeInterval, True)
+: ROVisibilityIterator (NULL, mss, sortColumns, true, timeInterval, true)
 {
     construct ();
 }
@@ -1558,7 +1559,7 @@ VisibilityIterator::VisibilityIterator (const Block<MeasurementSet>& mss,
                                         const Block<Int>& sortColumns,
                                         const Bool addDefaultSortCols,
                                         Double timeInterval)
-: ROVisibilityIterator (NULL, mss, sortColumns, addDefaultSortCols, timeInterval, True)
+: ROVisibilityIterator (NULL, mss, sortColumns, addDefaultSortCols, timeInterval, true)
 {
     construct ();
 }
@@ -1569,7 +1570,7 @@ VisibilityIterator::VisibilityIterator (const asyncio::PrefetchColumns * prefetc
                                         const Bool addDefaultSortCols,
                                         Double timeInterval)
 : ROVisibilityIterator (prefetchColumns, Block<MeasurementSet> (1, ms), sortColumns,
-                        addDefaultSortCols, timeInterval, True)
+                        addDefaultSortCols, timeInterval, true)
 {
     construct ();
 }
@@ -1581,7 +1582,7 @@ VisibilityIterator::VisibilityIterator (const asyncio::PrefetchColumns * prefetc
                                         const Bool addDefaultSortCols,
                                         Double timeInterval)
 : ROVisibilityIterator (prefetchColumns, mss, sortColumns,
-                        addDefaultSortCols, timeInterval, True)
+                        addDefaultSortCols, timeInterval, true)
 {
     construct ();
 }
@@ -1688,7 +1689,7 @@ VisibilityIterator::getWriteImpl () const
 Bool
 VisibilityIterator::isWritable () const
 {
-    return True;
+    return true;
 }
 
 void
@@ -1789,4 +1790,5 @@ void VisibilityIterator::writeBack (VisBuffer * vb)
     writeImpl_p->writeBack (vb);
 }
 
+using namespace casacore;
 } // end namespace casa

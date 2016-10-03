@@ -79,7 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// apply function called by world canvas
 		// during refresh
-		virtual Bool executeSizeControl(WorldCanvas *wc) = 0;
+		virtual casacore::Bool executeSizeControl(WorldCanvas *wc) = 0;
 
 		// Destructor
 		virtual ~WCSizeControlHandler();

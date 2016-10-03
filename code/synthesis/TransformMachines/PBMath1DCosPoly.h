@@ -36,7 +36,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
-// PBMath1DCosPoly is a 1-D Polynomial Cosine Expansion for a Primary Beam
+// PBMath1DCosPoly is a 1-D casacore::Polynomial Cosine Expansion for a Primary Beam
 // </summary>
 
 // <use visibility=export>
@@ -65,15 +65,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-//    Vector<Double> cosCoef(4);
-//    Vector<Double> cosScale(4);
+//    casacore::Vector<casacore::Double> cosCoef(4);
+//    casacore::Vector<casacore::Double> cosScale(4);
 //    cosCoef.set(0.0);
 //    cosScale.set(0.0);
 //    cosCoef(3) = 1.0;
 //    cosScale(3) = 0.01891; // 0.01891 = 0.065 * 1000(MHz/GHz) /(60(arcm/deg)) * 2pi/180
 //    PBMath1DCosPoly cosPB(cosCoef, cosScale,
-//                          Quantity(1.0, "deg"), 
-//                          Quantity(1.0, "GHz")  );
+//                          casacore::Quantity(1.0, "deg"), 
+//                          casacore::Quantity(1.0, "GHz")  );
 //    cosPB.applyPB( im3, im4, pointingDir);
 // </srcblock>
 // </example>
@@ -87,8 +87,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 //
 // <todo asof="98/10/21">
-// <li> constructor from a MS beam subtable
-// <li> flush to MS beam subtable
+// <li> constructor from a casacore::MS beam subtable
+// <li> flush to casacore::MS beam subtable
 // </todo>
 
  
@@ -98,21 +98,21 @@ public:
   PBMath1DCosPoly();
 
   // Instantiation from arguments; default = no squint
-  // squint is the offset from pointing center if the Stokes R beam
+  // squint is the offset from pointing center if the casacore::Stokes R beam
   // useSymmetricBeam forces a fit to the squinted beam
-  PBMath1DCosPoly(const Vector<Double>& coeff, 
-		  const Vector<Double>& cosScale, Quantity maxRad, 
-		  Quantity refFreq, 
-		  Bool isThisVP=False,
-		  BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
-							  Quantity(0.0, "deg"),
-							  MDirection::Ref(MDirection::AZEL)),
-					       Quantity(1.0, "GHz")),
-		  Bool useSymmetricBeam=False);
+  PBMath1DCosPoly(const casacore::Vector<casacore::Double>& coeff, 
+		  const casacore::Vector<casacore::Double>& cosScale, casacore::Quantity maxRad, 
+		  casacore::Quantity refFreq, 
+		  casacore::Bool isThisVP=false,
+		  BeamSquint squint=BeamSquint(casacore::MDirection(casacore::Quantity(0.0, "deg"),
+							  casacore::Quantity(0.0, "deg"),
+							  casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+					       casacore::Quantity(1.0, "GHz")),
+		  casacore::Bool useSymmetricBeam=false);
 
   // Instantiation from a row in the Beam subTable
-  // PBMath1DCosPoly(const Table& BeamSubTable, Int row,
-  //	  Bool useSymmetricBeam=False);
+  // PBMath1DCosPoly(const casacore::Table& BeamSubTable, casacore::Int row,
+  //	  casacore::Bool useSymmetricBeam=false);
 
   // Copy constructor
   // PBMath1DCosPoly(const PBMath1DCosPoly& other);
@@ -121,7 +121,7 @@ public:
   PBMath1DCosPoly& operator=(const PBMath1DCosPoly& other);
 
   // Clone the object
-  //  CountedPtr<PBMathInterface> clone();
+  //  casacore::CountedPtr<PBMathInterface> clone();
 
   // destructor
   ~PBMath1DCosPoly();
@@ -130,10 +130,10 @@ public:
   PBMathInterface::PBClass whichPBClass() { return PBMathInterface::COSPOLY; }
 
   // Flush the construction parameters to disk
-  // Bool flushToTable(Table& beamSubTable, Int iRow);
+  // casacore::Bool flushToTable(casacore::Table& beamSubTable, casacore::Int iRow);
 
   // Summarize the construction data for this primary beam
-  void summary(Int nValues=0);
+  void summary(casacore::Int nValues=0);
 
 
 protected:
@@ -143,8 +143,8 @@ protected:
 
 private:    
 
-  Vector<Double> coeff_p;
-  Vector<Double> cosScale_p;
+  casacore::Vector<casacore::Double> coeff_p;
+  casacore::Vector<casacore::Double> cosScale_p;
 
 };
 

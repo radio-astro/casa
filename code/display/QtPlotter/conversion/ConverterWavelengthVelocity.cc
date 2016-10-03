@@ -25,6 +25,7 @@
 
 #include "ConverterWavelengthVelocity.h"
 #include <QDebug>
+using namespace casacore;
 namespace casa {
 
 	ConverterWavelengthVelocity::ConverterWavelengthVelocity(const QString& oldUnits,
@@ -57,4 +58,5 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
+using namespace casacore;
 } /* namespace casa */

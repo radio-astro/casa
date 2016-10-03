@@ -32,9 +32,13 @@
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBuffer2.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
 class MeasurementSet;
 template<class T> class ImageInterface;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
 class VisImagingWeight;
  class SynthesisImagerVi2  : public SynthesisImager
 {
@@ -44,122 +48,128 @@ public:
 
   SynthesisImagerVi2();
   virtual ~SynthesisImagerVi2();
-  virtual Bool selectData(const SynthesisParamsSelect& selpars);
-  virtual Bool defineImage(SynthesisParamsImage& impars, const SynthesisParamsGrid& gridpars);
-  virtual Bool weight(const String& type="natural", 
-	      const String& rmode="norm",
-	      const Quantity& noise=Quantity(0.0, "Jy"), 
-	      const Double robust=0.0,
-	      const Quantity& fieldofview=Quantity(0.0, "arcsec"),
-	      const Int npixels=0, 
-	      const Bool multiField=False,
-	      const String& filtertype=String("Gaussian"),
-	      const Quantity& filterbmaj=Quantity(0.0,"deg"),
-	      const Quantity& filterbmin=Quantity(0.0,"deg"),
-	      const Quantity& filterbpa=Quantity(0.0,"deg")  );
+  virtual casacore::Bool selectData(const SynthesisParamsSelect& selpars);
+  virtual casacore::Bool defineImage(SynthesisParamsImage& impars, const SynthesisParamsGrid& gridpars);
+  virtual casacore::Bool weight(const casacore::String& type="natural", 
+	      const casacore::String& rmode="norm",
+	      const casacore::Quantity& noise=casacore::Quantity(0.0, "Jy"), 
+	      const casacore::Double robust=0.0,
+	      const casacore::Quantity& fieldofview=casacore::Quantity(0.0, "arcsec"),
+	      const casacore::Int npixels=0, 
+	      const casacore::Bool multiField=false,
+	      const casacore::String& filtertype=casacore::String("Gaussian"),
+	      const casacore::Quantity& filterbmaj=casacore::Quantity(0.0,"deg"),
+	      const casacore::Quantity& filterbmin=casacore::Quantity(0.0,"deg"),
+	      const casacore::Quantity& filterbpa=casacore::Quantity(0.0,"deg")  );
   
-  Bool setWeightDensity();
+  casacore::Bool setWeightDensity();
   void predictModel();
 
-  void dryGridding(const Vector<String>& cfList);
-  void fillCFCache(const Vector<String>& cfList,
-		   const String& ftmName,
-		   const String& cfcPath,
-		   const Bool& psTermOn,
-		   const Bool& aTermOn,
-		   const Bool& conjBeams);
+  void dryGridding(const casacore::Vector<casacore::String>& cfList);
+  void fillCFCache(const casacore::Vector<casacore::String>& cfList,
+		   const casacore::String& ftmName,
+		   const casacore::String& cfcPath,
+		   const casacore::Bool& psTermOn,
+		   const casacore::Bool& aTermOn,
+		   const casacore::Bool& conjBeams);
   void reloadCFCache();
 
  protected:
-  void appendToMapperList(String imagename, 
-			  CoordinateSystem& csys, 
-			  IPosition imshape,
-			  CountedPtr<refim::FTMachine>& ftm,
-			  CountedPtr<refim::FTMachine>& iftm,
-		  	  Quantity distance=Quantity(0.0, "m"), 
-			  Int facets=1, 
-			  Int chanchunks=1,
-			  const Bool overwrite=False,
-			  String mappertype=String("default"),
-			  Float padding=1.0,
-			  uInt ntaylorterms=1,
-			  Vector<String> startmodel=Vector<String>(0));
+  void appendToMapperList(casacore::String imagename, 
+			  casacore::CoordinateSystem& csys, 
+			  casacore::IPosition imshape,
+			  casacore::CountedPtr<refim::FTMachine>& ftm,
+			  casacore::CountedPtr<refim::FTMachine>& iftm,
+		  	  casacore::Quantity distance=casacore::Quantity(0.0, "m"), 
+			  casacore::Int facets=1, 
+			  casacore::Int chanchunks=1,
+			  const casacore::Bool overwrite=false,
+			  casacore::String mappertype=casacore::String("default"),
+			  casacore::Float padding=1.0,
+			  casacore::uInt ntaylorterms=1,
+			  casacore::Vector<casacore::String> startmodel=casacore::Vector<casacore::String>(0));
   virtual void unlockMSs();
-  virtual void createVisSet(const Bool writeaccess=False);
-  void createFTMachine(CountedPtr<casa::refim::FTMachine>& theFT, 
-		       CountedPtr<casa::refim::FTMachine>& theIFT,  
-		       const String& ftname,
-		       const uInt nTaylorTerms=1, 
-		       const String mType="default",
-		       const Int facets=1,
+  virtual void createVisSet(const casacore::Bool writeaccess=false);
+  void createFTMachine(casacore::CountedPtr<casa::refim::FTMachine>& theFT, 
+		       casacore::CountedPtr<casa::refim::FTMachine>& theIFT,  
+		       const casacore::String& ftname,
+		       const casacore::uInt nTaylorTerms=1, 
+		       const casacore::String mType="default",
+		       const casacore::Int facets=1,
 		       //------------------------------
-		       const Int wprojplane=1,
-		       const Float padding=1.0,
-		       const Bool useAutocorr=False,
-		       const Bool useDoublePrec=True,
-		       const String gridFunction=String("SF"),
+		       const casacore::Int wprojplane=1,
+		       const casacore::Float padding=1.0,
+		       const casacore::Bool useAutocorr=false,
+		       const casacore::Bool useDoublePrec=true,
+		       const casacore::String gridFunction=casacore::String("SF"),
 		       //------------------------------
-		       const Bool aTermOn    = True,
-		       const Bool psTermOn   = True,
-		       const Bool mTermOn    = False,
-		       const Bool wbAWP      = True,
-		       const String cfCache  = "",
-		       const Bool doPointing = False,
-		       const Bool doPBCorr   = True,
-		       const Bool conjBeams  = True,
-		       const Float computePAStep   = 360.0,
-		       const Float rotatePAStep    = 5.0,
-		       const String interpolation = String("linear"),
-		       const Bool freqFrameValid = True,
-		       const Int cache=1000000000,
-		       const Int tile=16,
-		       const String stokes="I",
-		       const String imageNamePrefix="");
+		       const casacore::Bool aTermOn    = true,
+		       const casacore::Bool psTermOn   = true,
+		       const casacore::Bool mTermOn    = false,
+		       const casacore::Bool wbAWP      = true,
+		       const casacore::String cfCache  = "",
+		       const casacore::Bool doPointing = false,
+		       const casacore::Bool doPBCorr   = true,
+		       const casacore::Bool conjBeams  = true,
+		       const casacore::Float computePAStep   = 360.0,
+		       const casacore::Float rotatePAStep    = 5.0,
+		       const casacore::String interpolation = casacore::String("linear"),
+		       const casacore::Bool freqFrameValid = true,
+		       const casacore::Int cache=1000000000,
+		       const casacore::Int tile=16,
+		       const casacore::String stokes="I",
+		       const casacore::String imageNamePrefix="");
 
-  void createAWPFTMachine(CountedPtr<refim::FTMachine>& theFT, CountedPtr<refim::FTMachine>& theIFT, 
-			  const String& ftmName,
-			  const Int facets,          
+  void createAWPFTMachine(casacore::CountedPtr<refim::FTMachine>& theFT, casacore::CountedPtr<refim::FTMachine>& theIFT, 
+			  const casacore::String& ftmName,
+			  const casacore::Int facets,          
 			  //----------------------------
-			  const Int wprojPlane,     
-			  const Float padding,      
-			  const Bool useAutocorr,   
-			  const Bool useDoublePrec, 
-			  const String gridFunction,
+			  const casacore::Int wprojPlane,     
+			  const casacore::Float padding,      
+			  const casacore::Bool useAutocorr,   
+			  const casacore::Bool useDoublePrec, 
+			  const casacore::String gridFunction,
 			  //---------------------------
-			  const Bool aTermOn,      
-			  const Bool psTermOn,     
-			  const Bool mTermOn,      
-			  const Bool wbAWP,        
-			  const String cfCache,    
-			  const Bool doPointing,   
-			  const Bool doPBCorr,     
-			  const Bool conjBeams,    
-			  const Float computePAStep,
-			  const Float rotatePAStep, 
-			  const Int cache,          
-			  const Int tile,
-			  const String imageNamePrefix="");
+			  const casacore::Bool aTermOn,      
+			  const casacore::Bool psTermOn,     
+			  const casacore::Bool mTermOn,      
+			  const casacore::Bool wbAWP,        
+			  const casacore::String cfCache,    
+			  const casacore::Bool doPointing,   
+			  const casacore::Bool doPBCorr,     
+			  const casacore::Bool conjBeams,    
+			  const casacore::Float computePAStep,
+			  const casacore::Float rotatePAStep, 
+			  const casacore::Int cache,          
+			  const casacore::Int tile,
+			  const casacore::String imageNamePrefix="");
  
 // Do the major cycle
-  virtual void runMajorCycle(const Bool dopsf=False, const Bool savemodel=False);
+  virtual void runMajorCycle(const casacore::Bool dopsf=false, const casacore::Bool savemodel=false);
 
   // Version of major cycle code with mappers in a loop outside vi/vb.
-  virtual void runMajorCycle2(const Bool dopsf=False, const Bool savemodel=False);
+  virtual void runMajorCycle2(const casacore::Bool dopsf=false, const casacore::Bool savemodel=false);
  
- void createMosFTMachine(CountedPtr<casa::refim::FTMachine>& theFT, CountedPtr<casa::refim::FTMachine>&  theIFT, const Float  padding, const Bool useAutoCorr, const Bool useDoublePrec, const Float rotatePAStep, const String Stokes="I");
-  CountedPtr<SIMapper> createSIMapper(String mappertype,  
-				      CountedPtr<SIImageStore> imagestore, //// make this inside !!!!!
-				      CountedPtr<refim::FTMachine> ftmachine,
-				      CountedPtr<refim::FTMachine> iftmachine,
-				      uInt ntaylorterms=1);
+ void createMosFTMachine(casacore::CountedPtr<casa::refim::FTMachine>& theFT,
+                         casacore::CountedPtr<casa::refim::FTMachine>&  theIFT,
+                         const casacore::Float  padding,
+                         const casacore::Bool useAutoCorr,
+                         const casacore::Bool useDoublePrec,
+                         const casacore::Float rotatePAStep,
+                         const casacore::String Stokes="I");
+  casacore::CountedPtr<SIMapper> createSIMapper(casacore::String mappertype,  
+				      casacore::CountedPtr<SIImageStore> imagestore, //// make this inside !!!!!
+				      casacore::CountedPtr<refim::FTMachine> ftmachine,
+				      casacore::CountedPtr<refim::FTMachine> iftmachine,
+				      casacore::uInt ntaylorterms=1);
 
-  Bool makePB();
-  Bool makePrimaryBeam(PBMath& pbMath);
+  bool makePB();
+  bool makePrimaryBeam(PBMath& pbMath);
  
    // Other Options
-  Block<const MeasurementSet *> mss_p;
+  casacore::Block<const casacore::MeasurementSet *> mss_p;
   vi::FrequencySelections fselections_p;
-  CountedPtr<vi::VisibilityIterator2>  vi_p;
+  casacore::CountedPtr<vi::VisibilityIterator2>  vi_p;
 
 
 };

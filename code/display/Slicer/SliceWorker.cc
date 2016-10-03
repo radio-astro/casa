@@ -31,6 +31,7 @@
 #include <msvis/MSVis/UtilJ.h>
 #include <QDebug>
 #include <QtCore/qmath.h>
+using namespace casacore;
 namespace casa {
 
 	SliceWorker::SliceWorker( int identifier ) {
@@ -236,4 +237,5 @@ namespace casa {
 		clearResults();
 	}
 
+using namespace casacore;
 } /* namespace casa */

@@ -23,7 +23,9 @@
 #include <mstransform/MSTransform/test/tMSTransformIterator.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casa::vi;
 
 //////////////////////////////////////////////////////////////////////////
@@ -84,7 +86,7 @@ void MSTransformIteratorTest::initTestConfiguration(Record &configuration)
 {
 	testConfiguration_p = configuration;
 	testConfiguration_p.define("inputms", testFile_p);
-	testConfiguration_p.define("reindex", False);
+	testConfiguration_p.define("reindex", false);
 	testConfiguration_p.define("datacolumn", string("ALL"));;
 
 	return;
@@ -98,9 +100,9 @@ void MSTransformIteratorTest::initReferenceConfiguration(Record &configuration)
 	refConfiguration_p = configuration;
 	refConfiguration_p.define("inputms",inpFile_p);
 	refConfiguration_p.define("outputms",referenceFile_p);
-	refConfiguration_p.define("reindex", False);
-	refConfiguration_p.define("realmodelcol",True);
-	refConfiguration_p.define("usewtspectrum",True);
+	refConfiguration_p.define("reindex", false);
+	refConfiguration_p.define("realmodelcol",true);
+	refConfiguration_p.define("usewtspectrum",true);
 	refConfiguration_p.define("datacolumn", string("ALL"));;
 
 	return;
@@ -118,9 +120,9 @@ MSTransformIteratorTest::MSTransformIteratorTest(): FreqAxisTVITest ()
     Record configuration;
 	configuration.define ("spw", "1");
 	configuration.define ("correlation", "RR,LL");
-	configuration.define ("timeaverage", True);
+	configuration.define ("timeaverage", true);
 	configuration.define ("timebin", "4s");
-	configuration.define ("chanaverage", True);
+	configuration.define ("chanaverage", true);
 	configuration.define ("chanbin", 8);
 
 	init(configuration);
@@ -227,7 +229,7 @@ int main(int argc, char **argv)
 	int ret;
 	string parameter,value;
 	Record configuration;
-	Bool autoMode = True;
+	Bool autoMode = true;
 
 	for (unsigned short i=0;i<argc-1;i++)
 	{
@@ -237,7 +239,7 @@ int main(int argc, char **argv)
 		if (parameter == string("-vis"))
 		{
 			configuration.define ("inputms", value);
-			autoMode = False;
+			autoMode = false;
 		}
 		else if (parameter == string("-field"))
 		{

@@ -49,9 +49,9 @@
 // </summary>
 
 // Control verbosity
-#define FJONES_TEST_VERBOSE False
+#define FJONES_TEST_VERBOSE false
 
-void testEMM (Bool verbose=False) {
+void testEMM (Bool verbose=false) {
 
   {
 
@@ -97,7 +97,7 @@ void testEMM (Bool verbose=False) {
   }
 }
 
-void testEMM2 (Bool verbose=False) {
+void testEMM2 (Bool verbose=false) {
 
   // (more like FJones implementation...)
 

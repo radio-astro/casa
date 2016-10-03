@@ -51,6 +51,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
   AsdmStMan::AsdmStMan (const String& dataManName)
@@ -154,23 +155,23 @@ namespace casa {
 
   Bool AsdmStMan::isRegular() const
   {
-    return False;
+    return false;
   }
   Bool AsdmStMan::canAddRow() const
   {
-    return True;
+    return true;
   }
   Bool AsdmStMan::canRemoveRow() const
   {
-    return False;
+    return false;
   }
   Bool AsdmStMan::canAddColumn() const
   {
-    return True;
+    return true;
   }
   Bool AsdmStMan::canRemoveColumn() const
   {
-    return True;
+    return true;
   }
 
   void AsdmStMan::addRow (uInt)
@@ -186,7 +187,7 @@ namespace casa {
 
   Bool AsdmStMan::flush (AipsIO&, Bool)
   {
-    return False;
+    return false;
   }
 
   void AsdmStMan::create (uInt)
@@ -215,7 +216,7 @@ namespace casa {
   {
     closeBDF();
     // Remove index file.
-    DOos::remove (fileName()+"asdmindex", False, False);
+    DOos::remove (fileName()+"asdmindex", false, false);
   }
 
   void AsdmStMan::closeBDF()
@@ -259,7 +260,7 @@ namespace casa {
     if(itsIndex.size()>0){
       // test if the referenced ASDM seems to be present
       try{
-	itsFD  = FiledesIO::open (itsBDFNames[0].c_str(), False);
+	itsFD  = FiledesIO::open (itsBDFNames[0].c_str(), false);
 	itsBDF = new FiledesIO (itsFD, itsBDFNames[0]);
 	itsOpenBDF = 0;
 	closeBDF();
@@ -496,7 +497,7 @@ namespace casa {
     // Open the BDF if needed.
     if (Int(ix.fileNr) != itsOpenBDF) {
       closeBDF();
-      itsFD  = FiledesIO::open (itsBDFNames[ix.fileNr].c_str(), False);
+      itsFD  = FiledesIO::open (itsBDFNames[ix.fileNr].c_str(), false);
       itsBDF = new FiledesIO (itsFD, itsBDFNames[ix.fileNr]);
       itsOpenBDF = ix.fileNr;
       itsFileOffset = ix.fileOffset;
@@ -558,10 +559,10 @@ namespace casa {
   {
     if(bDFNames.size() == itsBDFNames.size()){
       itsBDFNames = bDFNames;
-      return True;
+      return true;
     }
     else{
-      return False;
+      return false;
     }
   }
   

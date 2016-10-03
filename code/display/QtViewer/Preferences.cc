@@ -30,6 +30,7 @@
 #include <QLineEdit>
 #include <QRegExp>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -81,9 +82,9 @@ namespace casa {
 		};
 
 		// validator class declarations...
-		class TrueFalseValidator : public QValidator {
+		class trueFalseValidator : public QValidator {
 		public:
-			TrueFalseValidator( QObject *parent=0 ) : QValidator(parent) { }
+			trueFalseValidator( QObject *parent=0 ) : QValidator(parent) { }
 			State validate( QString &input, int & ) const {
 				QString t("true"), f("false");
 				QString val = input.toLower( );
@@ -162,7 +163,7 @@ namespace casa {
 			int rc_count = 0;
 
 			// for use in setting up validation routines...
-			TrueFalseValidator   *tfval      = new TrueFalseValidator( );
+			trueFalseValidator   *tfval      = new trueFalseValidator( );
 			LRTBValidator        *lrtbval    = new LRTBValidator( );
 			TabValidator         *tabval     = new TabValidator( );
 			IntPairValidator     *intpairval = new IntPairValidator( );

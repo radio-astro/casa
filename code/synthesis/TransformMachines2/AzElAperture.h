@@ -37,20 +37,24 @@
 //---------------------------------------------------------------------
 //
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
   template<class T> class ImageInterface;
   template<class T> class Matrix;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
   namespace refim{
   class AzElAperture : public ATerm
   {
   public:
     AzElAperture(): ATerm(), cachedCFC_p(), cachedCFCPA_p(400.0){};
     ~AzElAperture() {};
-    virtual void rotate(const VisBuffer2& vb, CFCell& cfc, const Double& rotAngleIncrement=5.0);
-    virtual void rotate2(const VisBuffer2& vb, CFCell& baseCFC, CFCell& cfc, const Double& rotAngleIncrement=5.0);
+    virtual void rotate(const VisBuffer2& vb, CFCell& cfc, const casacore::Double& rotAngleIncrement=5.0);
+    virtual void rotate2(const VisBuffer2& vb, CFCell& baseCFC, CFCell& cfc, const casacore::Double& rotAngleIncrement=5.0);
   private:
-    Array<TT> cachedCFC_p;
-    Float cachedCFCPA_p;
+    casacore::Array<TT> cachedCFC_p;
+    casacore::Float cachedCFCPA_p;
   };
 };
 };

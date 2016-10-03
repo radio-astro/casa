@@ -179,7 +179,7 @@ void show_version_info()
   cout << "  27-oct:  ?? IRTF carma position but geodetic/geocentric issue ??\n";
   cout << "  28-oct:  linecal turned off by default, has a problem\n";
   cout << "           SPECTRAL_WINDOW fixes for doppler/lsr/freqref\n";
-  cout << "   6-nov:  linecal fixed,but defaults to False still; data ok\n";
+  cout << "   6-nov:  linecal fixed,but defaults to false still; data ok\n";
   cout << "   2-dec   defaults now not to write out the CARMA wide bands \n";
   cout << "   4-feb   fixed table for mode=channel cleaning\n";
   cout << "  23-feb   LSRK now default\n";
@@ -244,9 +244,9 @@ class CarmaFiller
 public:
   // Create from a miriad (CARMA) dataset (a directory)
   CarmaFiller(String& infile, Int debug=0, 
-	      Bool Qtsys=False,
-	      Bool Qarrays=False,
-	      Bool Qlinecal=False);
+	      Bool Qtsys=false,
+	      Bool Qarrays=false,
+	      Bool Qlinecal=false);
 
   // Standard destructor
   ~CarmaFiller();
@@ -258,7 +258,7 @@ public:
   Bool Debug(int level);
 
   // Set up the MeasurementSet, including StorageManagers and fixed columns.
-  // If useTSM is True, the Tiled Storage Manager will be used to store
+  // If useTSM is true, the Tiled Storage Manager will be used to store
   // DATA, FLAG and WEIGHT_SPECTRUM
   void setupMeasurementSet(const String& MSFileName, Bool useTSM);
 
@@ -275,7 +275,7 @@ public:
   void fillSyscalTable();
 
   // fill Spectralwindow table 
-  void fillSpectralWindowTable(Bool use_lsrk=True);
+  void fillSpectralWindowTable(Bool use_lsrk=true);
 
   // fill Field table 
   void fillFieldTable();
@@ -439,8 +439,8 @@ void CarmaFiller::Warning(char *msg)
 // ==============================================================================================
 Bool CarmaFiller::Debug(int level)
 {
-  Bool ok=False;
-  if (level <= debug_p) ok=True;
+  Bool ok=false;
+  if (level <= debug_p) ok=true;
   return ok;
 }
 
@@ -703,7 +703,7 @@ void CarmaFiller::setupMeasurementSet(const String& MSFileName, Bool useTSM)
   
   // Set the default Storage Manager to be the Incr one
   IncrementalStMan incrStMan ("ISMData");;
-  newtab.bindAll(incrStMan, True);
+  newtab.bindAll(incrStMan, true);
   // StManAipsIO aipsStMan;  // don't use this anymore
   StandardStMan aipsStMan;  // these are more efficient now
 
@@ -890,7 +890,7 @@ void CarmaFiller::fillMSMainTable(Bool /*scan*/)
   cat(1)="ORIGINAL";
   cat(2)="USER";
   msc.flagCategory().rwKeywordSet().define("CATEGORY",cat);
-  Cube<Bool> flagCat(nCorr,nChan,nCat,False);  
+  Cube<Bool> flagCat(nCorr,nChan,nCat,false);  
   Matrix<Bool> flag = flagCat.xyPlane(0); // references flagCat's storage
   Vector<Float> w1(nCorr), w2(nCorr);
 
@@ -902,7 +902,7 @@ void CarmaFiller::fillMSMainTable(Bool /*scan*/)
   receptorAngle_p.resize(1);
   Int group, row=-1;
   Double interval;
-  Bool lastRowFlag = False;
+  Bool lastRowFlag = false;
 
   cout << "CarmaFiller::fillMSMainTable(): using " << nIF_p << " spectral windows" << endl;
 
@@ -1039,7 +1039,7 @@ void CarmaFiller::fillMSMainTable(Bool /*scan*/)
 
 	// miriad uses bl=ant1-ant2, FITS/AIPS/CASA use bl=ant2-ant1
 	// apart from using -(UVW)'s, the visib need to be conjugated as well
-	Bool  visFlag =  (flags[count/2] == 0) ? False : True;
+	Bool  visFlag =  (flags[count/2] == 0) ? false : true;
 	Float visReal = +data[count]; count++; 
 	Float visImag = -data[count]; count++;
 	Float wt = 1.0;
@@ -1064,8 +1064,8 @@ void CarmaFiller::fillMSMainTable(Bool /*scan*/)
 	ifield_old = ifield;
 	msc.feed1().put(row,0);
 	msc.feed2().put(row,0);
-	msc.flagRow().put(row,False);
-	lastRowFlag = False;
+	msc.flagRow().put(row,false);
+	lastRowFlag = false;
 	msc.scanNumber().put(row,iscan);
 	msc.processorId().put(row,-1);
 	msc.observationId().put(row,0);
@@ -1081,7 +1081,7 @@ void CarmaFiller::fillMSMainTable(Bool /*scan*/)
 #if 1
       // the dumb way: e.g. 3" -> 20" for 3c273
       Matrix<Complex> tvis(nCorr,win.nschan[ifno]);
-      Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,False);  
+      Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,false);  
       Matrix<Bool> tflag = tflagCat.xyPlane(0); // references flagCat's storage
       
       Int woffset = win.ischan[ifno]-1;
@@ -1096,7 +1096,7 @@ void CarmaFiller::fillMSMainTable(Bool /*scan*/)
       IPosition trc(2,nCorr-1,win.nschan[ifno]-1);
       IPosition offset(2,0,win.ischan[ifno]-1);
       Matrix<Complex> tvis(nCorr,win.nschan[ifno]);
-      Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,False);  
+      Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,false);  
       Matrix<Bool> tflag = tflagCat.xyPlane(0); // references flagCat's storage
       
       tvis(blc,trc) = vis(blc+offset,trc+offset);
@@ -1106,7 +1106,7 @@ void CarmaFiller::fillMSMainTable(Bool /*scan*/)
       msc.flag().put(row,tflag);
       msc.flagCategory().put(row,tflagCat);
 
-      Bool rowFlag = allEQ(flag,True);
+      Bool rowFlag = allEQ(flag,true);
       if (rowFlag != lastRowFlag) {
 	msc.flagRow().put(row,rowFlag);
 	lastRowFlag = rowFlag;
@@ -1291,7 +1291,7 @@ void CarmaFiller::fillAntennaTable()
       default: mount="UNKNOWN";     break;
     }
     ant.mount().put(row,mount);
-    ant.flagRow().put(row,False);
+    ant.flagRow().put(row,false);
     ant.name().put(row,"C" + String::toString(i+1));
     ant.station().put(row,"ANT" + String::toString(i+1));  // unknown PADs, so for now ANT#
     ant.type().put(row,"GROUND-BASED");
@@ -1426,7 +1426,7 @@ void CarmaFiller::fillSpectralWindowTable(Bool use_lsrk)
   msPol.numCorr().put(0,nCorr);
   msPol.corrType().put(0,corrType_p);
   msPol.corrProduct().put(0,corrProduct_p);
-  msPol.flagRow().put(0,False);
+  msPol.flagRow().put(0,false);
 
   // fill out doppler table (only 1 entry needed, CARMA data only identify 1 line :-(
   cout << "CarmaFiller:: now writing Doppler table " << endl;
@@ -1457,7 +1457,7 @@ void CarmaFiller::fillSpectralWindowTable(Bool use_lsrk)
     
     msDD.spectralWindowId().put(i,i);
     msDD.polarizationId().put(i,0);
-    msDD.flagRow().put(i,False);
+    msDD.flagRow().put(i,false);
 
     msSpW.numChan().put(i,win.nschan[i]);
     BW = 0.0;
@@ -1887,16 +1887,16 @@ void CarmaFiller::Tracking(int record)
     // note: as is, source_p will get repeated values, trim it later  (bug?)
     cout << "new source: " << object_p << endl;
 
-    source_p.resize(source_p.nelements()+1, True);     // need to copy the old values
+    source_p.resize(source_p.nelements()+1, true);     // need to copy the old values
     source_p[source_p.nelements()-1] = object_p;
 
-    ras_p.resize(ras_p.nelements()+1, True);     
-    decs_p.resize(decs_p.nelements()+1, True);   
+    ras_p.resize(ras_p.nelements()+1, true);     
+    decs_p.resize(decs_p.nelements()+1, true);   
     ras_p[ras_p.nelements()-1] = 0.0;                  // if no source at (0,0) offset
     decs_p[decs_p.nelements()-1] = 0.0;                // these would never be initialized  
 
     uvgetvr_c(uv_handle_p,H_BYTE,"purpose",vdata,10);
-    purpose_p.resize(purpose_p.nelements()+1, True);   // need to copy the old values
+    purpose_p.resize(purpose_p.nelements()+1, true);   // need to copy the old values
     purpose_p[purpose_p.nelements()-1] = vdata;
   }
 
@@ -2164,7 +2164,7 @@ void CarmaFiller::close()
 // ==============================================================================================
 int main(int argc, char **argv)
 {
-  Bool show_info = False;
+  Bool show_info = false;
 
   cout << "CarmaFiller::START" << endl;
   try {
@@ -2174,13 +2174,13 @@ int main(int argc, char **argv)
     inp.version("3 - CARMA to MS filler (14-oct-2011) PJT)");
     inp.create("vis",     "",        "Name of CARMA dataset name",         "string");    
     inp.create("ms",      "",        "Name of MeasurementSet",             "string");    
-    inp.create("useTSM",  "True",    "Use the TiledStorageManager",        "bool");        
-    inp.create("linecal", "False",   "Apply CARMA linecal on the fly?",    "bool");
+    inp.create("useTSM",  "true",    "Use the TiledStorageManager",        "bool");        
+    inp.create("linecal", "false",   "Apply CARMA linecal on the fly?",    "bool");
     inp.create("narrow",  "all",     "Which of the narrow band windows",   "string");
     inp.create("win",     "all",     "Which of the window averages",       "string");
-    inp.create("tsys",    "False",   "Fill WEIGHT from Tsys in data?",     "bool");
-    inp.create("arrays",  "False",   "DEBUG: Split multiple arrays?",      "bool");
-    inp.create("lsrk",    "True",    "Use LSRK (instead of LSRD)?",        "bool");
+    inp.create("tsys",    "false",   "Fill WEIGHT from Tsys in data?",     "bool");
+    inp.create("arrays",  "false",   "DEBUG: Split multiple arrays?",      "bool");
+    inp.create("lsrk",    "true",    "Use LSRK (instead of LSRD)?",        "bool");
     inp.readArguments(argc, argv);
 
     String vis(inp.getString("vis"));
@@ -2205,7 +2205,7 @@ int main(int argc, char **argv)
         debug = i-1;
         break;
       }
-    if (debug>1) show_info = True;
+    if (debug>1) show_info = true;
 
     if (!t.isDirectory())
       throw(AipsError("Input file does not appear to be miriad dataset"));
@@ -2231,8 +2231,8 @@ int main(int argc, char **argv)
 
 
     // fill the main table
-    bf.fillMSMainTable(True);        // first scan it
-    //    bf.fillMSMainTable(False);  // then fill it
+    bf.fillMSMainTable(true);        // first scan it
+    //    bf.fillMSMainTable(false);  // then fill it
 
 
     // fill remaining tables

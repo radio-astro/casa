@@ -66,7 +66,7 @@ void testException(
 	ImageInterface<Float> *image = 0;
 	Record region;
 	String diagnostics;
-	Bool fail = True;
+	Bool fail = true;
 	try {
 		writeTestString(test);
 		processor.process(
@@ -76,7 +76,7 @@ void testException(
             allowMultipleBoxes, 0
 		);
 		// should not get here
-		fail = False;
+		fail = false;
 		delete image;
 		AlwaysAssert(false, AipsError);
 	}
@@ -145,106 +145,106 @@ int main() {
     	ImageInterface<Float> *image = 0;
     	Record region;
     	String diagnostics;
-    	Bool fail = True;
+    	Bool fail = true;
         String none = "";
     	testException("Bad image name throws exception",
     		0, "bogus_image", 0, "", "", "", none,
-    		CasacRegionManager::USE_ALL_STOKES, True
+    		CasacRegionManager::USE_ALL_STOKES, true
     	);
     	testException("Bad region name throws exception", 0, goodImage, 0, "bogus.rgn",
-    		"", "", none, CasacRegionManager::USE_ALL_STOKES, True
+    		"", "", none, CasacRegionManager::USE_ALL_STOKES, true
     	);
     	testException("Bad region name in another image throws exception",
     		0, goodImage, 0, "bogus.im:bogus.rgn",
-    		"", "", none, CasacRegionManager::USE_ALL_STOKES, True
+    		"", "", none, CasacRegionManager::USE_ALL_STOKES, true
     	);
     	testException(
     		"Bad box spec #1 throws exception",
     		0, goodImage, 0, "", "-1,0,10,10",
-    		"", none, CasacRegionManager::USE_ALL_STOKES, True
+    		"", none, CasacRegionManager::USE_ALL_STOKES, true
     	);
     	testException(
     		"Bad box spec #2 throws exception",
     		0, goodImage, 0, "", "0,-1,10,10",
-    		"", none, CasacRegionManager::USE_ALL_STOKES, True
+    		"", none, CasacRegionManager::USE_ALL_STOKES, true
     	);
     	testException("Bad box spec #3 throws exception",
     		0, goodImage, 0, "", "0,0,100 ,10",
-    		"", none, CasacRegionManager::USE_ALL_STOKES, True
+    		"", none, CasacRegionManager::USE_ALL_STOKES, true
     	);
     	testException(
     		"Bad box spec #4 throws exception",
     		0, goodImage, 0, "", "0, 0,10 ,100",
-    		"", none, CasacRegionManager::USE_ALL_STOKES, True
+    		"", none, CasacRegionManager::USE_ALL_STOKES, true
     	);
     	testException(
     		"Bad box spec #5 throws exception",
     		0, goodImage, 0, "", "5, 0, 0,10 ,10",
-    		"", none, CasacRegionManager::USE_ALL_STOKES, True
+    		"", none, CasacRegionManager::USE_ALL_STOKES, true
     	);
     	testException(
     		"Bad box spec #6 throws exception",
     		0, goodImage, 0, "", "a, 0,10 ,10",
-    		"", none, CasacRegionManager::USE_ALL_STOKES, True
+    		"", none, CasacRegionManager::USE_ALL_STOKES, true
     	);
     	testException("Bad box spec #7 throws exception",
     		0, goodImage, 0, "", "1a, 0,10 ,10",
-        	"", none, CasacRegionManager::USE_ALL_STOKES, True
+        	"", none, CasacRegionManager::USE_ALL_STOKES, true
         );
     	testException(
     		"Valid box spec with invalid channel spec #1 throws exception",
 			0, goodImage, 0, "", "0, 0,10 ,10",
-        	"1", none, CasacRegionManager::USE_ALL_STOKES, True
+        	"1", none, CasacRegionManager::USE_ALL_STOKES, true
         );
     	testException(
     		"Valid box spec with invalid channel spec #2 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"a", none, CasacRegionManager::USE_ALL_STOKES, True
+        	"a", none, CasacRegionManager::USE_ALL_STOKES, true
         );
     	testException(
     		"Valid box spec with invalid channel spec #3 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"a-b", none, CasacRegionManager::USE_ALL_STOKES, True
+        	"a-b", none, CasacRegionManager::USE_ALL_STOKES, true
         );
     	testException(
     		"Valid box spec with invalid channel spec #4 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"0-b", none, CasacRegionManager::USE_ALL_STOKES, True
+        	"0-b", none, CasacRegionManager::USE_ALL_STOKES, true
         );
     	testException(
     		"Valid box spec with invalid channel spec #5 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	">0", none, CasacRegionManager::USE_ALL_STOKES, True
+        	">0", none, CasacRegionManager::USE_ALL_STOKES, true
         );
     	testException(
     		"Valid box spec with invalid channel spec #6 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"-1", none, CasacRegionManager::USE_ALL_STOKES, True
+        	"-1", none, CasacRegionManager::USE_ALL_STOKES, true
         );
     	testException(
     		"Valid box spec with invalid channel spec #7 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"<5", none, CasacRegionManager::USE_ALL_STOKES, True
+        	"<5", none, CasacRegionManager::USE_ALL_STOKES, true
         );
         String stokes = "b";
     	testException(
     		"Valid box spec with invalid stokes spec #1 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"", stokes, CasacRegionManager::USE_ALL_STOKES, True
+        	"", stokes, CasacRegionManager::USE_ALL_STOKES, true
         );
         stokes = "yy";
     	testException(
     		"Valid box spec with invalid stokes spec #2 throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"", stokes, CasacRegionManager::USE_ALL_STOKES, True
+        	"", stokes, CasacRegionManager::USE_ALL_STOKES, true
         );
     	try {
     		writeTestString("Calling nSelectedChannels() before process() throws an exception");
     		ImageInputProcessor processor;
 		    processor.nSelectedChannels();
         	// should not get here
-        	fail = False;
-        	AlwaysAssert(False, AipsError);
+        	fail = false;
+        	AlwaysAssert(false, AipsError);
         }
         catch (AipsError) {
         	// should get here with fail = true
@@ -255,13 +255,13 @@ int main() {
         	String out = "/cannot_create";
         	output.label = "file";
         	output.outputFile = &out;
-        	output.required = True;
-        	output.replaceable = True;
+        	output.required = true;
+        	output.replaceable = true;
         	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	testException(
         		"Non-createable output file throws exception",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, CasacRegionManager::USE_ALL_STOKES, True
+        		"", none, CasacRegionManager::USE_ALL_STOKES, true
         	);
        	}
        	{
@@ -270,13 +270,13 @@ int main() {
         	String out = "/usr";
         	output.label = "file";
         	output.outputFile = &out;
-        	output.required = True;
-        	output.replaceable = True;
+        	output.required = true;
+        	output.replaceable = true;
         	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	testException(
         		"Non-overwriteable output file throws exception",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, CasacRegionManager::USE_ALL_STOKES, True
+        		"", none, CasacRegionManager::USE_ALL_STOKES, true
         	);
         }
 
@@ -286,38 +286,38 @@ int main() {
         	String out = datadir + "input_image_processor_dont_replace_me";
         	output.label = "file";
         	output.outputFile = &out;
-        	output.required = True;
-        	output.replaceable = False;
+        	output.required = true;
+        	output.replaceable = false;
         	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	testException(
         		"Non-replaceable output file throws exception",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, CasacRegionManager::USE_ALL_STOKES, True
+        		"", none, CasacRegionManager::USE_ALL_STOKES, true
         	);
         }
        	testException(
-       		"Multiple boxes with allowMultipleRegions = False throws exception",
+       		"Multiple boxes with allowMultipleRegions = false throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10, 20,20,30,30",
-        	"", none, CasacRegionManager::USE_ALL_STOKES, False
+        	"", none, CasacRegionManager::USE_ALL_STOKES, false
         );
         stokes = "iu";
        	testException(
-       		"Multiple stokes ranges with allowMultipleRegions = False throws exception",
+       		"Multiple stokes ranges with allowMultipleRegions = false throws exception",
         	0, goodImage, 0, "", "0, 0,10 ,10",
-        	"", stokes, CasacRegionManager::USE_ALL_STOKES, False
+        	"", stokes, CasacRegionManager::USE_ALL_STOKES, false
         );
        	stokes = "";
        	testException(
        		"Bad region name throws exception",
         	0, goodImage, 0, "mybox", "",
-        	"", stokes, CasacRegionManager::USE_ALL_STOKES, False
+        	"", stokes, CasacRegionManager::USE_ALL_STOKES, false
         );
         {
             stokes = "iu";
-        	writeTestString("Multiple stokes ranges with allowMultipleRegions = True succeeds");
+        	writeTestString("Multiple stokes ranges with allowMultipleRegions = true succeeds");
         	processor.process(
         		image, region, diagnostics, 0, stokes, goodImage, 0, "", "0, 0,10 ,10",
-        		none, CasacRegionManager::USE_ALL_STOKES, True, 0
+        		none, CasacRegionManager::USE_ALL_STOKES, true, 0
         	);
         	delete image;
         	// FIXME just checks that no excpetion is thrown at this point, need to
@@ -337,7 +337,7 @@ int main() {
     	testSuccess(
     		"Nothing specified gives entire image as region",
     		0, goodImage, 0, "", "", "", none,
-    		CasacRegionManager::USE_ALL_STOKES, True,
+    		CasacRegionManager::USE_ALL_STOKES, true,
         	expectedBlc, expectedTrc
     	);
     	expectedTrc[0] = 1.24793182e+00;
@@ -347,44 +347,44 @@ int main() {
     	testSuccess(
     		"Valid box specification succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"", none, CasacRegionManager::USE_ALL_STOKES, True,
+        	"", none, CasacRegionManager::USE_ALL_STOKES, true,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #1 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0~0", none, CasacRegionManager::USE_ALL_STOKES, True,
+        	"0~0", none, CasacRegionManager::USE_ALL_STOKES, true,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #2 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0", none, CasacRegionManager::USE_ALL_STOKES, True,
+        	"0", none, CasacRegionManager::USE_ALL_STOKES, true,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #3 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0,0,0", none, CasacRegionManager::USE_ALL_STOKES, True,
+        	"0,0,0", none, CasacRegionManager::USE_ALL_STOKES, true,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #4 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0;0;0", none, CasacRegionManager::USE_ALL_STOKES, True,
+        	"0;0;0", none, CasacRegionManager::USE_ALL_STOKES, true,
         	expectedBlc, expectedTrc
         );
     	testSuccess(
     		"Valid box specification with valid channel specification #5 succeeds",
         	0, goodImage, 0, "", "0, 0,  10,10",
-        	"0,0;0", none, CasacRegionManager::USE_ALL_STOKES, True,
+        	"0,0;0", none, CasacRegionManager::USE_ALL_STOKES, true,
         	expectedBlc, expectedTrc
         );
         stokes = "QVIU";
         testSuccess(
         	"Valid box specification with valid stokes specification #1 succeeds",
         	 0, goodImage, 0, "", "0, 0,  10,10",
-        	"", stokes, CasacRegionManager::USE_ALL_STOKES, True,
+        	"", stokes, CasacRegionManager::USE_ALL_STOKES, true,
         	expectedBlc, expectedTrc
         );
         {
@@ -393,7 +393,7 @@ int main() {
             testSuccess(
         		"Valid box specification with valid stokes specification #2 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10", "",
-        		stokes, CasacRegionManager::USE_ALL_STOKES, True,
+        		stokes, CasacRegionManager::USE_ALL_STOKES, true,
             	expectedBlc, expectedTrc
         	);
         }
@@ -403,7 +403,7 @@ int main() {
         	testSuccess(
         		"Valid box specification with valid stokes specification #3 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10",
-        		"", stokes, CasacRegionManager::USE_ALL_STOKES, True,
+        		"", stokes, CasacRegionManager::USE_ALL_STOKES, true,
             	expectedBlc, expectedTrc
         	);
         }
@@ -414,7 +414,7 @@ int main() {
             testSuccess(
         		"Valid box specification with valid stokes specification #4 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10", "",
-        		stokes, CasacRegionManager::USE_ALL_STOKES, True,
+        		stokes, CasacRegionManager::USE_ALL_STOKES, true,
             	expectedBlc, expectedTrc
         	);
         }
@@ -425,7 +425,7 @@ int main() {
             testSuccess(
         		"Valid box specification with valid stokes specification #5 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10", "",
-        		stokes, CasacRegionManager::USE_ALL_STOKES, True,
+        		stokes, CasacRegionManager::USE_ALL_STOKES, true,
             	expectedBlc, expectedTrc
         	);
         }
@@ -436,7 +436,7 @@ int main() {
             testSuccess(
         		"Valid box specification with valid stokes specification #6 succeeds",
         		0, goodImage, 0, "", "0, 0,  10,10", "",
-        		stokes, CasacRegionManager::USE_ALL_STOKES, True,
+        		stokes, CasacRegionManager::USE_ALL_STOKES, true,
             	expectedBlc, expectedTrc
         	);
         }
@@ -446,7 +446,7 @@ int main() {
         	testSuccess(
         		"Valid box specification using all polarizations for blank stokes",
         		0, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, CasacRegionManager::USE_ALL_STOKES, True,
+        		"", none, CasacRegionManager::USE_ALL_STOKES, true,
             	expectedBlc, expectedTrc
             );
         }
@@ -457,7 +457,7 @@ int main() {
         	testSuccess(
         		"Valid box specification using first polarizations for blank stokes",
         		0, goodImage, 0, "", "0, 0,  10,10",
-        		"", stokes, CasacRegionManager::USE_FIRST_STOKES, True,
+        		"", stokes, CasacRegionManager::USE_FIRST_STOKES, true,
             	expectedBlc, expectedTrc
         	);
         }
@@ -473,7 +473,7 @@ int main() {
         	testSuccess(
         		"Valid region file",
         		0, goodImage, 0, regionFile, "",
-        		"", stokes, CasacRegionManager::USE_FIRST_STOKES, True,
+        		"", stokes, CasacRegionManager::USE_FIRST_STOKES, true,
             	expectedBlc, expectedTrc
         	);
         }
@@ -489,7 +489,7 @@ int main() {
         	testSuccess(
         		"Valid region description from image table",
         		0, goodImage, 0, region, "",
-        		"", stokes, CasacRegionManager::USE_FIRST_STOKES, True,
+        		"", stokes, CasacRegionManager::USE_FIRST_STOKES, true,
             	expectedBlc, expectedTrc
         	);
         }
@@ -499,13 +499,13 @@ int main() {
         	String out = "/usr";
         	output.label = "file";
         	output.outputFile = &out;
-        	output.required = False;
-        	output.replaceable = True;
+        	output.required = false;
+        	output.replaceable = true;
         	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	runProcess(
         		"Non-required, non-overwriteable output file is set to blank",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, CasacRegionManager::USE_ALL_STOKES, True
+        		"", none, CasacRegionManager::USE_ALL_STOKES, true
         	);
         	AlwaysAssert(out.empty(), AipsError);
        	}
@@ -514,29 +514,29 @@ int main() {
         	String out = "/cannot_write_me";
         	output.label = "file";
         	output.outputFile = &out;
-        	output.required = False;
-        	output.replaceable = True;
+        	output.required = false;
+        	output.replaceable = true;
         	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	runProcess(
         		"Non-required, non-createable output file is set to blank",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, CasacRegionManager::USE_ALL_STOKES, True
+        		"", none, CasacRegionManager::USE_ALL_STOKES, true
         	);
         	AlwaysAssert(out.empty(), AipsError);
        	}
        	{
         	OutputDestinationChecker::OutputStruct output;
         	String out = datadir + "input_image_processor_dont_replace_me";
-        	output.required = False;
+        	output.required = false;
         	output.label = "file";
         	output.outputFile = &out;
-        	output.required = False;
-        	output.replaceable = False;
+        	output.required = false;
+        	output.replaceable = false;
         	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	runProcess(
         		"Non-required, non-replaceable output file is set to blank",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, CasacRegionManager::USE_ALL_STOKES, True
+        		"", none, CasacRegionManager::USE_ALL_STOKES, true
         	);
         	AlwaysAssert(out.empty(), AipsError);
        	}
@@ -546,13 +546,13 @@ int main() {
         	String name = "youcanwritemedddslsl";
         	String save = name;
         	output.outputFile = &name;
-        	output.required = True;
-        	output.replaceable = False;
+        	output.required = true;
+        	output.replaceable = false;
         	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	runProcess(
         		"Writeable file is not reset",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
-        		"", none, CasacRegionManager::USE_ALL_STOKES, True
+        		"", none, CasacRegionManager::USE_ALL_STOKES, true
         	);
         	AlwaysAssert(name == save, AipsError);
        	}

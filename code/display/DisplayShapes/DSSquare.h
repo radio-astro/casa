@@ -79,8 +79,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor. Accepts the centre (xPos, yPos), the size (height/width
 		// in pixels), and whether or not it will ever have handles and if
 		// so, whether to draw them now.
-		DSSquare(const Float& xPos, const Float& yPos, const Float& size,
-		         const Bool& handles = False, const Bool& drawHandles = False);
+		DSSquare(const casacore::Float& xPos, const casacore::Float& yPos, const casacore::Float& size,
+		         const casacore::Bool& handles = false, const casacore::Bool& drawHandles = false);
 
 		// Copy cons.
 		DSSquare(const DSSquare& other);
@@ -92,18 +92,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// Set the size of the square in pixels
-		virtual void setSize(const Float& size);
+		virtual void setSize(const casacore::Float& size);
 
 		// Change the points, while maintaining the shape as a square
 		// <group>
-		virtual void changePoint(const Vector<Float>& pos);
-		virtual void changePoint(const Vector<Float>& pos, const Int nPoint);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& pos);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& pos, const casacore::Int nPoint);
 		// </group>
 
 		// Get and set options
 		// <group>
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 		// </group>
 
 	private:

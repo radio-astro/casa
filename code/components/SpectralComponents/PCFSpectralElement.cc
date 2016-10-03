@@ -32,6 +32,7 @@
 #include <scimath/Functionals/Gaussian1D.h>
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -157,13 +158,13 @@ void PCFSpectralElement::fixByString(const String& s) {
 	String fix(s);
 	fix.downcase();
 	if (fix.contains("p")) {
-		fixAmpl(True);
+		fixAmpl(true);
 	}
 	if (fix.contains("c")) {
-		fixCenter(True);
+		fixCenter(true);
 	}
 	if (fix.contains("f")) {
-		fixWidth(True);
+		fixWidth(true);
 	}
 }
 

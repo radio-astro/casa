@@ -27,6 +27,7 @@
 
 #include <math.h> // For FLT_MAX
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   
@@ -200,7 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Reset Counters and summary for the current set of minorcycle iterations */
     itsIterDone = 0;
     itsIterDiff = -1;
-    itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, 0) , True );
+    itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, 0) , true );
 
     return returnRecord;
   }
@@ -243,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       throw(AipsError("Internal error in shape of minor-cycle summary record"));
 
      // Note : itsNSummaryFields is hard-coded to 6 in the SIMinorCycleController constructors.
-     itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, shp[1]+1 ) , True );
+     itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, shp[1]+1 ) , true );
      // iterations done
      itsSummaryMinor( IPosition(2, 0, shp[1] ) ) = itsIterDone;
      // peak residual

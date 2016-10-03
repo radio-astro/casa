@@ -36,6 +36,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -85,7 +86,7 @@ void smooth(CalSet<Complex>& cs,
       if (nFld==0) {
 	selfields=fields;
 	nFld=genSort(selfields,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
-	selfields.resize(nFld,True);
+	selfields.resize(nFld,true);
       }
 
       // Arrange to mask/index each field
@@ -180,14 +181,14 @@ void smooth(CalSet<Complex>& cs,
 		      newpha = mean(pha(mask));
 		    }
 		    else if (smtype=="median") {
-		      newamp = median(amp(mask),False);
-		      newpha = median(pha(mask),False);
+		      newamp = median(amp(mask),false);
+		      newpha = median(pha(mask),false);
 		    }
 		    p(idx(i)) = Complex(cos(newpha),sin(newpha))*newamp;
-		    newpOK(idx(i))=True;
+		    newpOK(idx(i))=true;
 		  }
 		  else 
-		    newpOK(idx(i))=False;
+		    newpOK(idx(i))=false;
 		
 		} // i
 	      } // nidx>1

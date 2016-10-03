@@ -48,7 +48,7 @@ namespace casa {
 		virtual void storeIncrement( double* incr, QVector<double>& values, int index) const;
 		virtual QString getLengthLabel() const;
 		void setXPosition( bool xPosition );
-		virtual QVector<double> fromResults( Record* record  )const;
+		virtual QVector<double> fromResults( casacore::Record* record  )const;
 		virtual QVector<double> interpolate( double start, double end,
 		                                     const QVector<double>& values ) const;
 		virtual ~SliceStatisticsPosition();

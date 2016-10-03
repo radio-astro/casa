@@ -58,79 +58,79 @@ public:
 		USE_FOR_DATA_WEIGHT_SIGMA_FLAG
 	};
 
-	MSTransformDataHandler(	String& theMS, Table::TableOption option,
-							Bool virtualModelCol=False, Bool virtualCorrectedCol=False,
-							Bool reindex=True);
-	MSTransformDataHandler(	MeasurementSet& ms,
-							Bool virtualModelCol=False, Bool virtualCorrectedCol=False,
-							Bool reindex=True);
+	MSTransformDataHandler(	casacore::String& theMS, casacore::Table::TableOption option,
+							casacore::Bool virtualModelCol=false, casacore::Bool virtualCorrectedCol=false,
+							casacore::Bool reindex=true);
+	MSTransformDataHandler(	casacore::MeasurementSet& ms,
+							casacore::Bool virtualModelCol=false, casacore::Bool virtualCorrectedCol=false,
+							casacore::Bool reindex=true);
 	~MSTransformDataHandler();
 
 	// Declared static because it's used in setupMS().
 	// colNameList is internally up-cased, so it is not const or passed by reference.
-	static const Vector<MS::PredefinedColumns>& parseColumnNames(String colNameList);
+	static const casacore::Vector<casacore::MS::PredefinedColumns>& parseColumnNames(casacore::String colNameList);
 
-	// This version uses the MeasurementSet to check what columns are present,
+	// This version uses the casacore::MeasurementSet to check what columns are present,
 	// i.e. it makes col=="all" smarter, and it is not necessary to call
 	// verifyColumns() after calling this.  Unlike the other version, it knows
 	// about FLOAT_DATA and LAG_DATA.  It throws an exception if a
 	// _specifically_ requested column is absent.
-	static const Vector<MS::PredefinedColumns>& parseColumnNames(	String colNameList, const MeasurementSet& ms,
-																	Bool virtualModelCol=False,Bool virtualCorrectedCol=False);
+	static const casacore::Vector<casacore::MS::PredefinedColumns>& parseColumnNames(	casacore::String colNameList, const casacore::MeasurementSet& ms,
+																	casacore::Bool virtualModelCol=false,casacore::Bool virtualCorrectedCol=false);
 
 	// Helper function for parseColumnNames().  Converts col to a list of
-	// MS::PredefinedColumnss, and returns the # of recognized data columns.
+	// casacore::MS::PredefinedColumnss, and returns the # of recognized data columns.
 	// static because parseColumnNames() is static.
-	static uInt dataColStrToEnums(const String& col,Vector<MS::PredefinedColumns>& colvec);
+	static casacore::uInt dataColStrToEnums(const casacore::String& col,casacore::Vector<casacore::MS::PredefinedColumns>& colvec);
 
-	// Selection method using msselection syntax. Time is not handled by this method.
-	Bool setmsselect(	const String& spw = "", const String& field = "",
-						const String& baseline = "", const String& scan = "",
-						const String& uvrange = "", const String& taql = "",
-						const Vector<Int>& step = Vector<Int> (1, 1),
-						const String& subarray = "", const String& correlation = "",
-						const String& intent = "", const String& obs = "",
-                        const String& feed = "");
+	// Selection method using msselection syntax. casacore::Time is not handled by this method.
+	casacore::Bool setmsselect(	const casacore::String& spw = "", const casacore::String& field = "",
+						const casacore::String& baseline = "", const casacore::String& scan = "",
+						const casacore::String& uvrange = "", const casacore::String& taql = "",
+						const casacore::Vector<casacore::Int>& step = casacore::Vector<casacore::Int> (1, 1),
+						const casacore::String& subarray = "", const casacore::String& correlation = "",
+						const casacore::String& intent = "", const casacore::String& obs = "",
+                        const casacore::String& feed = "");
 
 	// Select source or field
-	Bool selectSource(const Vector<Int>& fieldid);
+	casacore::Bool selectSource(const casacore::Vector<casacore::Int>& fieldid);
 
 	// Select spw and channels for each spw.
-	Bool selectSpw(const String& spwstr, const Vector<Int>& steps);
+	casacore::Bool selectSpw(const casacore::String& spwstr, const casacore::Vector<casacore::Int>& steps);
 
 	// Returns the set (possibly empty) of spectral windows that are
 	// in SPW but not listed in ms's DATA_DESCRIPTION sub-table.
 	// (This happens with certain calibration/hardware setups.)
-	static std::set<Int> findBadSpws(MeasurementSet& ms, Vector<Int> spwv);
+	static std::set<casacore::Int> findBadSpws(casacore::MeasurementSet& ms, casacore::Vector<casacore::Int> spwv);
 
 	// Select Antennas to split out
-	void selectAntenna(const Vector<Int>& antennaids,const Vector<String>& antennaSel);
+	void selectAntenna(const casacore::Vector<casacore::Int>& antennaids,const casacore::Vector<casacore::String>& antennaSel);
 
 	// Helper function for selectAntenna()
-	static Bool pickAntennas(	Vector<Int>& selected_antennaids,
-								Vector<String>& selected_antenna_strs,
-								const Vector<Int>& antennaids,
-								const Vector<String>& antennaSel);
+	static casacore::Bool pickAntennas(	casacore::Vector<casacore::Int>& selected_antennaids,
+								casacore::Vector<casacore::String>& selected_antenna_strs,
+								const casacore::Vector<casacore::Int>& antennaids,
+								const casacore::Vector<casacore::String>& antennaSel);
 
 	// Select array IDs to use.
-	void selectArray(const String& subarray);
+	void selectArray(const casacore::String& subarray);
 
-	// Setup polarization selection (for now, only from available correlations - no Stokes transformations.)
-	Bool selectCorrelations(const String& corrstr);
+	// Setup polarization selection (for now, only from available correlations - no casacore::Stokes transformations.)
+	casacore::Bool selectCorrelations(const casacore::String& corrstr);
 
 	// Fills outToIn[pol] with a map from output correlation index to input
 	// correlation index, for each input polID pol.
 	// It does not yet check the appropriateness of the correlation selection
 	// string, so ignore the return value for now.  outToIn[pol] defaults to
-	// an empty Vector if no correlations are selected for pol.
+	// an empty casacore::Vector if no correlations are selected for pol.
 	// That is not the same as the default "select everything in ms".
-	static Bool getCorrMaps(	MSSelection& mssel,
-								const MeasurementSet& ms,
-								Vector<Vector<Int> >& outToIn,
-								const Bool areSelecting = false);
+	static casacore::Bool getCorrMaps(	casacore::MSSelection& mssel,
+								const casacore::MeasurementSet& ms,
+								casacore::Vector<casacore::Vector<casacore::Int> >& outToIn,
+								const casacore::Bool areSelecting = false);
 
 	// Select time parameters
-	void selectTime(Double timeBin=-1.0, String timerng="");
+	void selectTime(casacore::Double timeBin=-1.0, casacore::String timerng="");
 
 	//Method to make the basic structure of the MS
 	//
@@ -141,60 +141,60 @@ public:
 	//
 	// combine sets combine_p.  (Columns to ignore while time averaging.)
 	//
-	Bool makeMSBasicStructure(	String& msname,
-								String& whichDataCol,
-								const Vector<Int>& tileShape = Vector<Int> (1, 0),
-								const String& combine = "",
-								Table::TableOption option=Table::New);
+	casacore::Bool makeMSBasicStructure(	casacore::String& msname,
+								casacore::String& whichDataCol,
+								const casacore::Vector<casacore::Int>& tileShape = casacore::Vector<casacore::Int> (1, 0),
+								const casacore::String& combine = "",
+								casacore::Table::TableOption option=casacore::Table::New);
 
-	Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames);
+	casacore::Bool isAllColumns(const casacore::Vector<casacore::MS::PredefinedColumns>& colNames);
 
 	// Method that returns the selected ms (?! - but it's Boolean - RR)
-	Bool makeSelection();
+	casacore::Bool makeSelection();
 
 	// This sets up a default new ms
 	// Declared static as it can be (and is) called directly from outside
 	// Therefore it is not dependent on any member variable.
-	static MeasurementSet* setupMS(	const String& msname, const Int nchan,
-									const Int npol, const String& telescop,
-									const Vector<MS::PredefinedColumns>& colNamesTok,
-									const Int obstype = 0, const Bool compress = False,
+	static casacore::MeasurementSet* setupMS(	const casacore::String& msname, const casacore::Int nchan,
+									const casacore::Int npol, const casacore::String& telescop,
+									const casacore::Vector<casacore::MS::PredefinedColumns>& colNamesTok,
+									const casacore::Int obstype = 0, const casacore::Bool compress = false,
 									const asdmStManUseAlternatives asdmStManUse = DONT,
-									Table::TableOption option=Table::New);
+									casacore::Table::TableOption option=casacore::Table::New);
 
 	// Same as above except allowing manual tileshapes
-	static MeasurementSet* setupMS(	const String& msname, const Int nchan,
-									const Int npol, const Vector<MS::PredefinedColumns>& colNamesTok,
-									const Vector<Int>& tileShape = Vector<Int> (1, 0),
-									const Bool compress = False,
+	static casacore::MeasurementSet* setupMS(	const casacore::String& msname, const casacore::Int nchan,
+									const casacore::Int npol, const casacore::Vector<casacore::MS::PredefinedColumns>& colNamesTok,
+									const casacore::Vector<casacore::Int>& tileShape = casacore::Vector<casacore::Int> (1, 0),
+									const casacore::Bool compress = false,
 									const asdmStManUseAlternatives asdmStManUse = DONT,
-									Table::TableOption option=Table::New);
+									casacore::Table::TableOption option=casacore::Table::New);
 
 
-	// The output MS must have (at least?) 1 of DATA, FLOAT_DATA, or LAG_DATA.
+	// The output casacore::MS must have (at least?) 1 of DATA, FLOAT_DATA, or LAG_DATA.
 	// MODEL_DATA or CORRECTED_DATA will be converted to DATA if necessary.
 	// jagonzal (CAS-5327): The implementation has to go here because a member function cannot have static linkage
-	static Bool mustConvertToData(	const uInt nTok,const Vector<MS::PredefinedColumns>& datacols)
+	static casacore::Bool mustConvertToData(	const casacore::uInt nTok,const casacore::Vector<casacore::MS::PredefinedColumns>& datacols)
 	{
-		return (nTok == 1) && (datacols[0] != MS::FLOAT_DATA) && (datacols[0] != MS::LAG_DATA);
+		return (nTok == 1) && (datacols[0] != casacore::MS::FLOAT_DATA) && (datacols[0] != casacore::MS::LAG_DATA);
 	}
 
-	// A customized version of MS::createDefaultSubtables().
-	static void createSubtables(MeasurementSet& ms, Table::TableOption option);
+	// A customized version of casacore::MS::createDefaultSubtables().
+	static void createSubtables(casacore::MeasurementSet& ms, casacore::Table::TableOption option);
 
 	// Sub-table fillers.
-	Bool fillSubTables(const Vector<MS::PredefinedColumns>& colNames);
-	Bool fillFieldTable();
-	Bool fillDDTables(); // Includes spw and pol
+	casacore::Bool fillSubTables(const casacore::Vector<casacore::MS::PredefinedColumns>& colNames);
+	casacore::Bool fillFieldTable();
+	casacore::Bool fillDDTables(); // Includes spw and pol
 
-	Bool fillPolTable();
-	Bool fillDDITable();
-	Bool fillSPWTable();
+	casacore::Bool fillPolTable();
+	casacore::Bool fillDDITable();
+	casacore::Bool fillSPWTable();
 
 	// Add optional columns to outTab if present in inTab and possColNames.
 	// beLazy should only be true if outTab is in its default state.
 	// Returns the number of added columns.
-	static uInt addOptionalColumns(const Table& inTab, Table& outTab,const Bool beLazy=false);
+	static casacore::uInt addOptionalColumns(const casacore::Table& inTab, casacore::Table& outTab,const casacore::Bool beLazy=false);
 
 	// Sets up sourceRelabel_p for mapping input SourceIDs (if any) to output
 	// ones.  Must be called after fieldid_p is set and before calling
@@ -205,32 +205,32 @@ public:
 	// tabName is the table "type", i.e. POINTING or SYSPOWER
 	// without the preceding path.
 	//
-	// If noRows is True, the structure will be setup but no
+	// If noRows is true, the structure will be setup but no
 	// rows will be copied  (useful for filtering).
-	void copySubtable(const String& tabName, const Table& inTab,const Bool noRows = False);
+	void copySubtable(const casacore::String& tabName, const casacore::Table& inTab,const casacore::Bool noRows = false);
 
 	// Sets mapper to to a map from the distinct values of inv,
 	// in increasing order, to 0, 1, 2, ..., mapper.size() - 1.
-	static void make_map(std::map<Int, Int>& mapper, const Vector<Int>& inv);
+	static void make_map(std::map<casacore::Int, casacore::Int>& mapper, const casacore::Vector<casacore::Int>& inv);
 
-	Bool copyPointing();
+	casacore::Bool copyPointing();
 	// Sets up the stub of a POINTING, enough to create an MSColumns.
 	void setupNewPointing();
 
-	Bool copySource();
-	Bool copyAntenna();
-	Bool copyFeed();
-	Bool copyFlag_Cmd();
-	Bool copyHistory();
-	Bool copyObservation();
-	Bool copyProcessor();
-	Bool copyState();
-	Bool copySyscal();
-	Bool copyWeather();
-	void copyMainTableKeywords (TableRecord& outKeys,
-			const TableRecord& inKeys);
+	casacore::Bool copySource();
+	casacore::Bool copyAntenna();
+	casacore::Bool copyFeed();
+	casacore::Bool copyFlag_Cmd();
+	casacore::Bool copyHistory();
+	casacore::Bool copyObservation();
+	casacore::Bool copyProcessor();
+	casacore::Bool copyState();
+	casacore::Bool copySyscal();
+	casacore::Bool copyWeather();
+	void copyMainTableKeywords (casacore::TableRecord& outKeys,
+			const casacore::TableRecord& inKeys);
 
-	Int getProcessorId(Int dataDescriptionId, String msname);
+	casacore::Int getProcessorId(casacore::Int dataDescriptionId, casacore::String msname);
 
 	// This falls between copyGenericSubtables() and the copiers for standard
 	// sub-tables like copyFeed().  It is for optional sub-tables like CALDEVICE
@@ -240,34 +240,34 @@ public:
 	//
 	// It must be called BEFORE copyGenericSubtables()!
 	//
-	Bool filterOptSubtable(const String& subtabname);
+	casacore::Bool filterOptSubtable(const casacore::String& subtabname);
 
-	Bool copyGenericSubtables();
+	casacore::Bool copyGenericSubtables();
 
 	// To consolidate several sub-tables when dealing with MMS
-	static Bool mergeSpwSubTables(Vector<String> filenames);
-	static Bool mergeDDISubTables(Vector<String> filenames);
-	static Bool mergeFeedSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
-	static Bool mergeSourceSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
-	static Bool mergeSyscalSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
-	static Bool mergeFreqOffsetTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
-	static Bool mergeCalDeviceSubtables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
-	static Bool mergeSysPowerSubtables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
+	static casacore::Bool mergeSpwSubTables(casacore::Vector<casacore::String> filenames);
+	static casacore::Bool mergeDDISubTables(casacore::Vector<casacore::String> filenames);
+	static casacore::Bool mergeFeedSubTables(casacore::Vector<casacore::String> filenames, casacore::Vector<casacore::uInt> mapSubmsSpwid);
+	static casacore::Bool mergeSourceSubTables(casacore::Vector<casacore::String> filenames, casacore::Vector<casacore::uInt> mapSubmsSpwid);
+	static casacore::Bool mergeSyscalSubTables(casacore::Vector<casacore::String> filenames, casacore::Vector<casacore::uInt> mapSubmsSpwid);
+	static casacore::Bool mergeFreqOffsetTables(casacore::Vector<casacore::String> filenames, casacore::Vector<casacore::uInt> mapSubmsSpwid);
+	static casacore::Bool mergeCalDeviceSubtables(casacore::Vector<casacore::String> filenames, casacore::Vector<casacore::uInt> mapSubmsSpwid);
+	static casacore::Bool mergeSysPowerSubtables(casacore::Vector<casacore::String> filenames, casacore::Vector<casacore::uInt> mapSubmsSpwid);
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-	//template <class T>  Bool MSTransformDataHandler::columnOk (ArrayColumn<T> column)
-	template <class T>  static Bool columnOk(ArrayColumn<T> column)
+	//template <class T>  casacore::Bool MSTransformDataHandler::columnOk (casacore::ArrayColumn<T> column)
+	template <class T>  static casacore::Bool columnOk(casacore::ArrayColumn<T> column)
         {
-	     Bool ret;
+	     casacore::Bool ret;
 	     // jagonzal (CAS-6206): ndimColumn only returns >0 is there is the array column has fixed size
 	     if (column.isNull()==false and column.hasContent()==true and column.ndim(0) > 0)
 	       {
-		 ret = True;
+		 ret = true;
 	       }
 	     else
 	       {
-		 ret = False;
+		 ret = false;
 	       }
 
 	     return ret;
@@ -276,17 +276,17 @@ public:
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-	//  template <class T>  Bool MSTransformDataHandler::columnOk (ScalarColumn<T> column)
-	template <class T>  static Bool columnOk(ScalarColumn<T> column)
+	//  template <class T>  casacore::Bool MSTransformDataHandler::columnOk (casacore::ScalarColumn<T> column)
+	template <class T>  static casacore::Bool columnOk(casacore::ScalarColumn<T> column)
         {
-	      Bool ret;
+	      casacore::Bool ret;
 	      if (column.isNull()==false and column.hasContent()==true)
 		{
-		  ret = True;
+		  ret = true;
 		}
 	      else
 		{
-		  ret = False;
+		  ret = false;
 		}
 	      
 	      return ret;
@@ -294,57 +294,57 @@ public:
 
 
 
-	// Accesors for the MS objects
-	MeasurementSet * getInputMS() {return &ms_p;};
-	MeasurementSet * getSelectedInputMS() {return &mssel_p;};
-	MeasurementSet * getOutputMS() {return &msOut_p;};
-	ROMSColumns * getSelectedInputMSColumns() {return mscIn_p;};
-	MSColumns * getOutputMSColumns() {return msc_p;};
+	// Accesors for the casacore::MS objects
+	casacore::MeasurementSet * getInputMS() {return &ms_p;};
+	casacore::MeasurementSet * getSelectedInputMS() {return &mssel_p;};
+	casacore::MeasurementSet * getOutputMS() {return &msOut_p;};
+	casacore::ROMSColumns * getSelectedInputMSColumns() {return mscIn_p;};
+	casacore::MSColumns * getOutputMSColumns() {return msc_p;};
 
 	// Accesors for the Re-mapper objects
-	map<Int, Int> & getStateRemapper() {return stateRemapper_p;};
-	Vector<Int> & getAntennaRemapper() {return antNewIndex_p;};
-	map<Int, vector<Int>> & getDroppedChannelsMap() {return spwDropChannelMap_p;};
-	map<Int,map < Int, vector<Int> > > & getSelectedChannelsMap() {return spwSelectedChannelMap_p;};
+	map<casacore::Int, casacore::Int> & getStateRemapper() {return stateRemapper_p;};
+	casacore::Vector<casacore::Int> & getAntennaRemapper() {return antNewIndex_p;};
+	map<casacore::Int, vector<casacore::Int>> & getDroppedChannelsMap() {return spwDropChannelMap_p;};
+	map<casacore::Int,map < casacore::Int, vector<casacore::Int> > > & getSelectedChannelsMap() {return spwSelectedChannelMap_p;};
 
 	// Accesors for additional parameters
-	void setVirtualModelCol(Bool virtualModelCol) {virtualModelCol_p = virtualModelCol;};
-	void setVirtualCorrectedCol(Bool virtualCorrectedCol) {virtualCorrectedCol_p = virtualCorrectedCol;};
-	void setReindex(Bool reindex) {reindex_p = reindex;};
+	void setVirtualModelCol(casacore::Bool virtualModelCol) {virtualModelCol_p = virtualModelCol;};
+	void setVirtualCorrectedCol(casacore::Bool virtualCorrectedCol) {virtualCorrectedCol_p = virtualCorrectedCol;};
+	void setReindex(casacore::Bool reindex) {reindex_p = reindex;};
 
 protected:
 	// copy ephemeris table and reindex field table if requested
-	Bool copyEphemerisTable(MSFieldColumns & msField);
+	casacore::Bool copyEphemerisTable(casacore::MSFieldColumns & msField);
 
 	// Initialized* by ctors.  (Maintain order both here and in ctors.)
 	//  * not necessarily to anything useful.
-	MeasurementSet ms_p, mssel_p;
-	MSColumns * msc_p; // columns of msOut_p
-	ROMSColumns * mscIn_p;
-	Bool keepShape_p, // Iff true, each output array has the
+	casacore::MeasurementSet ms_p, mssel_p;
+	casacore::MSColumns * msc_p; // columns of msOut_p
+	casacore::ROMSColumns * mscIn_p;
+	casacore::Bool keepShape_p, // Iff true, each output array has the
 			// same shape as the corresponding input one.
 			// sameShape_p,             // Iff true, the shapes of the arrays do not
 			//  			// vary with row number.
 			antennaSel_p; // Selecting by antenna?
-	Double timeBin_p;
-	String scanString_p, // Selects scans by #number#.  Historically named.
+	casacore::Double timeBin_p;
+	casacore::String scanString_p, // Selects scans by #number#.  Historically named.
 			intentString_p, // Selects scans by string.  scanString_p was taken.
-			obsString_p, // String for observationID selection.
+			obsString_p, // casacore::String for observationID selection.
 			uvrangeString_p, taqlString_p, feedString_p;
-	String timeRange_p, arrayExpr_p, corrString_p;
-	String combine_p; // Should time averaging not split bins by
+	casacore::String timeRange_p, arrayExpr_p, corrString_p;
+	casacore::String combine_p; // Should time averaging not split bins by
 	// scan #, observation, and/or state ID?
 	// Must be lowercase at all times.
-	Int fitorder_p; // The polynomial order for continuum fitting.
+	casacore::Int fitorder_p; // The polynomial order for continuum fitting.
 	// If < 0 (default), continuum subtraction is
 	// not done.
-	String fitspw_p; // Selection string for line-free channels.
-	String fitoutspw_p; // Selection string for output channels if doing
+	casacore::String fitspw_p; // Selection string for line-free channels.
+	casacore::String fitoutspw_p; // Selection string for output channels if doing
 	// continuum subtraction.
 
 	// Uninitialized by ctors.
-	MeasurementSet msOut_p;
-	Vector<Int> spw_p, // The input spw corresponding to each output spw.
+	casacore::MeasurementSet msOut_p;
+	casacore::Vector<casacore::Int> spw_p, // The input spw corresponding to each output spw.
 			spw_uniq_p, // Uniquified version of spw_p.
 			 nchan_p, // The # of output channels for each range.
 			totnchan_p, // The # of output channels for each output spw.
@@ -357,34 +357,34 @@ protected:
 			inNumChan_p, // The # of input channels for each spw.
 			inNumCorr_p; // The # of input correlations for each DDID.
 
-	map<Int,vector<Int> > spwDropChannelMap_p;
-	map<Int,map < Int, vector<Int> > > spwSelectedChannelMap_p;
+	map<casacore::Int,vector<casacore::Int> > spwDropChannelMap_p;
+	map<casacore::Int,map < casacore::Int, vector<casacore::Int> > > spwSelectedChannelMap_p;
 
-	Vector<Int> fieldid_p;
-	Vector<Int> spwRelabel_p, fieldRelabel_p, sourceRelabel_p;
-	Vector<Int> oldDDSpwMatch_p;
-	Vector<String> antennaSelStr_p;
-	Vector<Int> antennaId_p;
-	Vector<Int> antIndexer_p;
-	Vector<Int> antNewIndex_p;
+	casacore::Vector<casacore::Int> fieldid_p;
+	casacore::Vector<casacore::Int> spwRelabel_p, fieldRelabel_p, sourceRelabel_p;
+	casacore::Vector<casacore::Int> oldDDSpwMatch_p;
+	casacore::Vector<casacore::String> antennaSelStr_p;
+	casacore::Vector<casacore::Int> antennaId_p;
+	casacore::Vector<casacore::Int> antIndexer_p;
+	casacore::Vector<casacore::Int> antNewIndex_p;
 
-	Vector<Int> selObsId_p; // List of selected OBSERVATION_IDs.
-	Vector<Int> polID_p; // Map from input DDID to input polID, filled in fillDDTables().
-	Vector<Int> spw2ddid_p;
+	casacore::Vector<casacore::Int> selObsId_p; // casacore::List of selected OBSERVATION_IDs.
+	casacore::Vector<casacore::Int> polID_p; // casacore::Map from input DDID to input polID, filled in fillDDTables().
+	casacore::Vector<casacore::Int> spw2ddid_p;
 
 	// inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
-	Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;
+	casacore::Vector<casacore::Vector<casacore::Int> > inPolOutCorrToInCorrMap_p;
 
-	std::map<Int, Int> stateRemapper_p;
+	std::map<casacore::Int, casacore::Int> stateRemapper_p;
 
-	Vector<Vector<Slice> > chanSlices_p; // Used by VisIterator::selectChannel()
-	Vector<Slice> corrSlice_p;
-	Vector<Vector<Slice> > corrSlices_p; // Used by VisIterator::selectCorrelation()
-	Matrix<Double> selTimeRanges_p;
+	casacore::Vector<casacore::Vector<casacore::Slice> > chanSlices_p; // Used by VisIterator::selectChannel()
+	casacore::Vector<casacore::Slice> corrSlice_p;
+	casacore::Vector<casacore::Vector<casacore::Slice> > corrSlices_p; // Used by VisIterator::selectCorrelation()
+	casacore::Matrix<casacore::Double> selTimeRanges_p;
 
-	Bool virtualModelCol_p; // CAS-5348 (jagonzal): Make virtual MODEL data column real
-	Bool virtualCorrectedCol_p; //CAS-7286 (jagonzal): Make virtual CORRECTED data column real
-	Bool reindex_p; // jagonzal: In order not to re-index asub-tables
+	casacore::Bool virtualModelCol_p; // CAS-5348 (jagonzal): Make virtual MODEL data column real
+	casacore::Bool virtualCorrectedCol_p; //CAS-7286 (jagonzal): Make virtual CORRECTED data column real
+	casacore::Bool reindex_p; // jagonzal: In order not to re-index asub-tables
 
 };
 

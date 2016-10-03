@@ -76,19 +76,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Set & remove restrictions
 		// <group>
-		void addRestriction(Attribute& newAt, Bool permanent);
+		void addRestriction(Attribute& newAt, casacore::Bool permanent);
 		void addRestrictions(AttributeBuffer& newBuf);
 		void setRestriction(Attribute& newAt);
 		void setRestrictions(AttributeBuffer& newBuf);
-		void removeRestriction(const String& name);
-		Bool existRestriction(const String& name);
+		void removeRestriction(const casacore::String& name);
+		casacore::Bool existRestriction(const casacore::String& name);
 		void clearRestrictions();
 		// </group>
 
 		// match restriction
 		// <group>
-		Bool matches(Attribute& at);
-		Bool matches(AttributeBuffer& atBuf);
+		casacore::Bool matches(Attribute& at);
+		casacore::Bool matches(AttributeBuffer& atBuf);
 		// </group>
 
 

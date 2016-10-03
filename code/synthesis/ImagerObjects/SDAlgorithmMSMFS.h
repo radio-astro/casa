@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     
     // Empty constructor
-    SDAlgorithmMSMFS(uInt nTaylorTerms, Vector<Float> scalesizes);
+    SDAlgorithmMSMFS(casacore::uInt nTaylorTerms, casacore::Vector<casacore::Float> scalesizes);
     virtual  ~SDAlgorithmMSMFS();
     
     void restore( SHARED_PTR<SIImageStore> imagestore );
@@ -61,38 +61,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
-    //    void initializeDeconvolver( Float &peakresidual, Float &modelflux );
+    void takeOneStep( casacore::Float loopgain, casacore::Int cycleNiter, casacore::Float cycleThreshold, casacore::Float &peakresidual, casacore::Float &modelflux, casacore::Int &iterdone );
+    //    void initializeDeconvolver( casacore::Float &peakresidual, casacore::Float &modelflux );
     void initializeDeconvolver();
     void finalizeDeconvolver();
     //    void queryDesiredShape(Bool &onechan, Bool &onepol, IPosition imshape); // , nImageFacets.
 
-    uInt getNTaylorTerms(){ return itsNTerms; };
+    casacore::uInt getNTaylorTerms(){ return itsNTerms; };
     
-    //    void initializeSubImages( SHARED_PTR<SIImageStore> &imagestore, uInt subim);
+    //    void initializeSubImages( SHARED_PTR<SIImageStore> &imagestore, casacore::uInt subim);
 
-    Bool createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage);
+    casacore::Bool createMask(casacore::LatticeExpr<casacore::Bool> &lemask, casacore::ImageInterface<casacore::Float> &outimage);
 
     //    SHARED_PTR<SIImageStore> itsImages;
 
-    Vector< Array<Float> > itsMatPsfs, itsMatResiduals, itsMatModels;
-    Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
+    casacore::Vector< casacore::Array<casacore::Float> > itsMatPsfs, itsMatResiduals, itsMatModels;
+    casacore::Array<casacore::Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
 
     /*    
-    IPosition itsMaxPos;
-    Float itsPeakResidual;
-    Float itsModelFlux;
+    casacore::IPosition itsMaxPos;
+    casacore::Float itsPeakResidual;
+    casacore::Float itsModelFlux;
 
-    Matrix<Float> itsMatMask;
+    casacore::Matrix<casacore::Float> itsMatMask;
     */
 
-    uInt itsNTerms;
-    Vector<Float> itsScaleSizes;
+    casacore::uInt itsNTerms;
+    casacore::Vector<casacore::Float> itsScaleSizes;
 
     MultiTermMatrixCleaner itsMTCleaner;
 
   private:
-    Bool itsMTCsetup; 
+    casacore::Bool itsMTCsetup; 
 
   };
 

@@ -1,6 +1,7 @@
 #include <msvis/MSVis/ViColumns2.h>
 #include <ms/MeasurementSets.h>
 
+using namespace casacore;
 namespace casa {
 
 namespace vi {
@@ -33,7 +34,7 @@ ViColumns2::ViColumns2 ()
   weightSpectrum_p (),
   sigmaSpectrum_p (),
   weight_p (),
-  floatDataFound_p (False)
+  floatDataFound_p (false)
 {}
 
 
@@ -58,9 +59,9 @@ ViColumns2::attachColumns (const Table & t, bool attachSpecialColumns)
 
     if (cds.isDefined (MS::columnName (MS::FLOAT_DATA))) {
         floatVis_p.attach (t, MS::columnName (MS::FLOAT_DATA));
-        floatDataFound_p = True;
+        floatDataFound_p = true;
     } else {
-        floatDataFound_p = False;
+        floatDataFound_p = false;
     }
 
     if (cds.isDefined ("MODEL_DATA")) {
@@ -109,4 +110,5 @@ ViColumns2::isFloatDataPresent () const
 
 } // end namespace vi
 
+using namespace casacore;
 } // end namespace casa

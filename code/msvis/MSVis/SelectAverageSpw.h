@@ -101,43 +101,43 @@ typedef SelectAverageSpw SAS;
 class SelectAverageSpw
 {
 public:
-   Int spwid;
-   Int desc;
-   Double rFreq;
-   Int measFreqRef;
+   casacore::Int spwid;
+   casacore::Int desc;
+   casacore::Double rFreq;
+   casacore::Int measFreqRef;
 
    //selected channels
-   Vector<Int> chans;
+   casacore::Vector<casacore::Int> chans;
 
    //averaged channels
-   Vector<Double> aveFreqs;
-   Vector<Int> aveChans;
-   Vector<Int> sxsChans;
-   Vector<String> aveChanNames; 
-   Matrix<Int> aveChanMaps; 
+   casacore::Vector<casacore::Double> aveFreqs;
+   casacore::Vector<casacore::Int> aveChans;
+   casacore::Vector<casacore::Int> sxsChans;
+   casacore::Vector<casacore::String> aveChanNames; 
+   casacore::Matrix<casacore::Int> aveChanMaps; 
 
    //velocity depends on both freq and field and
    //can not be a member of this
 
 
-   static Int nextSelected(Int spw, Int currId, Matrix<Int>& cList);
-   static Int selectAverageChan(MS*, const Matrix<Int>& chanList,
-                                Vector<SAS>& sp, const Int& aveChan = 1);
-   static void averageVelocity(Bool &sorry,
-                               MS*, Vector<SAS>& sp, Vector<Double>& velo,
-                               const Int& spwidx, const Int& filed = 0,
-                               const String& restfreq = "",
-                               const String& frame = "",
-                               const String& doppler = "");
-   static void showSASC(const Vector<SAS>& sp);
-   static void chanMap(Matrix<Int>& cmap, const Vector<SAS>& sp);
+   static casacore::Int nextSelected(casacore::Int spw, casacore::Int currId, casacore::Matrix<casacore::Int>& cList);
+   static casacore::Int selectAverageChan(casacore::MS*, const casacore::Matrix<casacore::Int>& chanList,
+                                casacore::Vector<SAS>& sp, const casacore::Int& aveChan = 1);
+   static void averageVelocity(casacore::Bool &sorry,
+                               casacore::MS*, casacore::Vector<SAS>& sp, casacore::Vector<casacore::Double>& velo,
+                               const casacore::Int& spwidx, const casacore::Int& filed = 0,
+                               const casacore::String& restfreq = "",
+                               const casacore::String& frame = "",
+                               const casacore::String& doppler = "");
+   static void showSASC(const casacore::Vector<SAS>& sp);
+   static void chanMap(casacore::Matrix<casacore::Int>& cmap, const casacore::Vector<SAS>& sp);
    static void showSASC();
-   static Int descBySpw(const Int& spid, const Vector<SAS>& sp);
-   static Int spwByDesc(const Int& desc, const Vector<SAS>& sp);
-   static Int spwIndexByDesc(const Int& desc, const Vector<SAS>& sp);
-   static Int spwIndexBySpw(const Int& spid, const Vector<SAS>& sp);
+   static casacore::Int descBySpw(const casacore::Int& spid, const casacore::Vector<SAS>& sp);
+   static casacore::Int spwByDesc(const casacore::Int& desc, const casacore::Vector<SAS>& sp);
+   static casacore::Int spwIndexByDesc(const casacore::Int& desc, const casacore::Vector<SAS>& sp);
+   static casacore::Int spwIndexBySpw(const casacore::Int& spid, const casacore::Vector<SAS>& sp);
 
-   static const Int maxChan;
+   static const casacore::Int maxChan;
 
   
 };

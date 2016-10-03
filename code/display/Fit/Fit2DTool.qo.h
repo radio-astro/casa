@@ -36,9 +36,13 @@
 #include <display/Fit/Fit2DLogDialog.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
-namespace casa {
+namespace casacore{
 
 	template <class T> class ImageInterface;
+}
+
+namespace casa {
+
 	class Gaussian2DFitter;
 	class ColorComboDelegate;
 	class RegionShape;
@@ -48,18 +52,18 @@ namespace casa {
 
 	public:
 		Fit2DTool(QWidget *parent = 0);
-		void setImage( SHARED_PTR<const ImageInterface<Float> > image);
-		bool setImageRegion( ImageRegion* imageRegion, int id );
+		void setImage( SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image);
+		bool setImageRegion( casacore::ImageRegion* imageRegion, int id );
 		void deleteImageRegion( int id );
 		void imageRegionSelected( int id );
 		~Fit2DTool();
 
 	signals:
-		void showOverlay(String, const QString&);
-		void removeOverlay(String);
+		void showOverlay(casacore::String, const QString&);
+		void removeOverlay(casacore::String);
 		void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
 		void add2DFitOverlay( QList<RegionShape*> fitMarkers );
-		void addResidualFitImage( String );
+		void addResidualFitImage( casacore::String );
 
 	public slots:
 		void frameChanged( int frame );
@@ -94,17 +98,17 @@ namespace casa {
 	private:
 		Fit2DTool( const Fit2DTool& fitTool );
 		Fit2DTool operator=( const Fit2DTool& fitTool );
-		Vector<Float> populateInclude() const;
-		Vector<Float> populateExclude() const;
-		void populateIncludeExclude(Vector<Float>& range ) const;
+		casacore::Vector<casacore::Float> populateInclude() const;
+		casacore::Vector<casacore::Float> populateExclude() const;
+		void populateIncludeExclude(casacore::Vector<casacore::Float>& range ) const;
 
 		void setImageFunctionalityEnabled( bool enable );
 		void resetRegion( const QList<int>& pixelX, const QList<int>& pixelY );
-		bool populateSaveFile( String& saveFile );
-		bool populateResidualFile( String& saveFile );
+		bool populateSaveFile( casacore::String& saveFile );
+		bool populateResidualFile( casacore::String& saveFile );
 		void showFileChooserDialog(const QString& title, QFileDialog::FileMode mode, QLineEdit* destinationLineEdit );
 		bool validateFile( QLineEdit* directoryLineEdit, QLineEdit* fileLineEdit,
-		                   String& saveFile, const QString& purpose );
+		                   casacore::String& saveFile, const QString& purpose );
 		void addViewerFitMarkers();
 		void removeViewerFitMarkers();
 		void clearRegions();
@@ -113,7 +117,7 @@ namespace casa {
 		void updateFrame();
 
 		const QString REGION_LABEL;
-        SHARED_PTR<const ImageInterface<Float> > image;
+        SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image;
 		QList<RegionShape*> fitMarkers;
 		Gaussian2DFitter* fitter;
 		ColorComboDelegate* fitColorDelegate;
@@ -122,7 +126,7 @@ namespace casa {
 		PixelRangeDialog pixelRangeDialog;
 		Fit2DLogDialog logDialog;
 		ResidualHistogramDialog residualHistogramDialog;
-		String residualImagePath;
+		casacore::String residualImagePath;
 
 		Ui::Fit2DToolClass ui;
 	};

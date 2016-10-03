@@ -66,16 +66,16 @@ namespace casa {
 //   <li> 
 // </todo>
 
-class ImageRotator : public ImageTask<Float> {
+class ImageRotator : public ImageTask<casacore::Float> {
 public:
 
-	const static String CLASS_NAME;
+	const static casacore::String CLASS_NAME;
 
 	ImageRotator() = delete;
 
 	ImageRotator(
-	    const SPCIIF image, const Record *const &regionPtr,
-	    const String& mask,const String& outname, Bool overwrite
+	    const SPCIIF image, const casacore::Record *const &regionPtr,
+	    const casacore::String& mask,const casacore::String& outname, casacore::Bool overwrite
 	);
 	
 	ImageRotator(const ImageRotator &other) = delete;
@@ -84,25 +84,25 @@ public:
 
 	ImageRotator &operator=(const ImageRotator &other) = delete;
 
-	String getClass() const { return CLASS_NAME; }
+	casacore::String getClass() const { return CLASS_NAME; }
 
 	SPIIF rotate();
 
 	// set angle through which to rotate the direction or linear coordinate
-	void setAngle(const Quantity& angle) { _angle = angle; }
+	void setAngle(const casacore::Quantity& angle) { _angle = angle; }
 
-	void setDecimate(Int d) { _decimate = d; }
+	void setDecimate(casacore::Int d) { _decimate = d; }
 
 	// set the interpolation method
-	void setInterpolationMethod(const String& method) {
+	void setInterpolationMethod(const casacore::String& method) {
 	    _method = method;
 	    _method.upcase();
 	}
 
-	void setReplicate(Bool b) { _replicate = b; }
+	void setReplicate(casacore::Bool b) { _replicate = b; }
 
 	// set shape of output image
-	void setShape(const IPosition& shape) { _shape = shape; }
+	void setShape(const casacore::IPosition& shape) { _shape = shape; }
 
 
 protected:
@@ -111,18 +111,18 @@ protected:
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-    vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<Coordinate::Type>();
+    vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<casacore::Coordinate::Type>();
     }
 
-    inline Bool _supportsMultipleRegions() const {return False;}
+    inline casacore::Bool _supportsMultipleRegions() const {return false;}
 
 private:
-    IPosition _shape;
-    String _method = "cubic";
-    Quantity _angle = Quantity(0, "deg");
-    Int _decimate = 0;
-    Bool _replicate = False;
+    casacore::IPosition _shape;
+    casacore::String _method = "cubic";
+    casacore::Quantity _angle = casacore::Quantity(0, "deg");
+    casacore::Int _decimate = 0;
+    casacore::Bool _replicate = false;
 
 };
 

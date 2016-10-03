@@ -71,9 +71,10 @@
 #include <display/DisplayShapes/DSWorldPoly.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-//#define SCALE True
+//#define SCALE true
 	Annotations::Annotations(PanelDisplay* panDisp,
 	                         const Display::KeySym& keysym,
 	                         const Bool useEH) :
@@ -92,12 +93,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//
 		itsState(Annotations::Nothing),
 		itsCreation(Annotations::Normal),
-		itsShapeMoved(False),
+		itsShapeMoved(false),
 		itsActiveShape(-1),
 		itsActiveHandle(-1),
 		itsX(0), itsY(0),
-		itsEnabled(True),
-		itsRefreshedYet(False)
+		itsEnabled(true),
+		itsRefreshedYet(false)
 		//
 
 	{
@@ -250,13 +251,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void Annotations::handlePolyLineCreation(const Vector<Float>& createPix) {
-		static Bool firstPoint = True;
+		static Bool firstPoint = true;
 		static Int lastX, lastY;
 
 		if (firstPoint) {
 			lastX = Int(createPix[0]);
 			lastY = Int(createPix[1]);
-			firstPoint = False;
+			firstPoint = false;
 
 			try {
 				itsShapes[itsActiveShape]->addPoint(createPix);
@@ -276,7 +277,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					throw (AipsError("Couldn't create new shape : " + x.getMesg()));
 				}
 			} else {
-				firstPoint = True; // for next time
+				firstPoint = true; // for next time
 
 				itsState = Annotations::Nothing;
 				annotEvent("endchange");
@@ -292,19 +293,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void Annotations::handlePolygonCreation(const Vector<Float>& createPix) {
-		static Bool firstPoint = True;
+		static Bool firstPoint = true;
 		static Int firstX, firstY;
 
 		if (firstPoint) {
 			firstX = Int(createPix[0]);
 			firstY = Int(createPix[1]);
-			firstPoint = False;
+			firstPoint = false;
 			try {
 				itsShapes[itsActiveShape]->addPoint(createPix);
 			} catch (const AipsError& x) {
 				deleteShape(itsActiveShape);
 				annotEvent("endchange");
-				firstPoint = True;
+				firstPoint = true;
 				throw (AipsError("Couldn't create new shape : " + x.getMesg()));
 			}
 		} else {
@@ -314,11 +315,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				} catch (const AipsError& x) {
 					deleteShape(itsActiveShape);
 					annotEvent("endchange");
-					firstPoint = True;
+					firstPoint = true;
 					throw (AipsError("Couldn't create new shape : " + x.getMesg()));
 				}
 			} else {
-				firstPoint = True; // for next time
+				firstPoint = true; // for next time
 
 				polyLineToPolygon(itsActiveShape);
 				annotEvent("endchange");
@@ -350,14 +351,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void Annotations::select(const Int i) {
 		cout << "select" << endl;
 		if (itsActiveShape != -1) {
-			itsShapes[itsActiveShape]->setDrawHandles(False);
+			itsShapes[itsActiveShape]->setDrawHandles(false);
 		}
 
 		if (i < Int(itsShapes.nelements()) && i >= 0) {
 			itsActiveShape = i;
-			itsShapes[itsActiveShape]->setDrawHandles(True);
+			itsShapes[itsActiveShape]->setDrawHandles(true);
 		} else itsActiveShape = -1;
-		itsShapeMoved = False;
+		itsShapeMoved = false;
 	}
 
 	void Annotations::handleCreation(const PCPositionEvent& ev) {
@@ -389,7 +390,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool Annotations::determineState(const PCPositionEvent& ev) {
-		Bool refresh = False;
+		Bool refresh = false;
 		itsActiveHandle = -1;
 		cout << "determineState" << endl;
 		if (itsActiveShape != -1 &&
@@ -404,7 +405,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsY = ev.y();
 
 			if (itsActiveShape != -1 && itsActiveHandle != -1) {
-				return False;
+				return false;
 			}
 		}
 		// Ok we are either starting from scratch, or not on the current shape's
@@ -415,23 +416,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		        ev.y())) {
 			// Current shape no longer valid
 			select(-1);
-			refresh = True;
+			refresh = true;
 		}
 
 		// Find all the objects that we are inside of....
-		Bool foundNew = False;
+		Bool foundNew = false;
 
 		cout << "determineState   -----------2" << endl;
 		for (uInt i=0; i<itsShapes.nelements() ; i++) {
 			if (itsActiveShape == -1 && itsShapes[i]->inObject(ev.x(), ev.y())) {
 				select(i);
-				foundNew = True;
+				foundNew = true;
 				break;
 			} else if (Int(i) > itsActiveShape
 			           && !itsShapeMoved && itsActiveShape != -1 &&
 			           itsShapes[i]->inObject(ev.x(), ev.y())) {
 				select(i);
-				foundNew = True;
+				foundNew = true;
 				break;
 			}
 		}
@@ -447,12 +448,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				        (!itsShapeMoved || itsActiveShape == -1) )  {
 
 					if (Int(i) != itsActiveShape) select(i);
-					refresh = True;
+					refresh = true;
 					break;
 				}
 
 			}
-		} else refresh = True;
+		} else refresh = true;
 
 		cout << "determineState   -----------5" << endl;
 		// Ok, at this point... either itsActiveShape == -1 or
@@ -495,7 +496,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void Annotations::operator()(const PCPositionEvent& ev) {
 		cout << "position------" << endl;
-		Bool refresh(False);
+		Bool refresh(false);
 		cout << "ev.key=" << ev.key() << " itsKey=" << itsKey << endl;
 		cout << "itsEnabled=" << itsEnabled << endl;
 		cout << "ev.keystate()=" << ev.keystate() << endl;
@@ -512,11 +513,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// First check if this is building a shape
 				if (itsState == Annotations::Creation) {
 					handleCreation(ev);
-					refresh = True;
+					refresh = true;
 				} else {
 					// Not creation
-					if (determineState(ev)) refresh = True;
-					itsShapeMoved = False;
+					if (determineState(ev)) refresh = true;
+					itsShapeMoved = false;
 				}
 
 			} // END keydown
@@ -545,13 +546,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void Annotations::setShapeOptions(const uInt& toSet,
 	                                  const Record& newSettings) {
-		Bool updateReq = False;
+		Bool updateReq = false;
 		if (toSet >= itsShapes.nelements()) {
 			throw (AipsError("Bad call to setShapeOptions, bad shape index"));
 		} else {
 			try {
 				if (itsShapes[toSet]->setOptions(newSettings))
-					updateReq = True;
+					updateReq = true;
 			} catch (const AipsError &x) {
 				throw (x);
 			}
@@ -598,7 +599,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for (uInt i=0; i < copy.nfields(); i++) {
 			temp = copy.subRecord(i);
 			try {
-				newShape(temp, False);
+				newShape(temp, false);
 			} catch (const AipsError &x) {
 				throw (x);
 			}
@@ -644,23 +645,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void Annotations::operator()(const PCMotionEvent& ev) {
 //cout << "motion------" << endl;
-		Bool refresh(False);
+		Bool refresh(false);
 
 		if (!itsEnabled) return;
 
 		if (itsState == Annotations::Handle) {
 
-			itsShapeMoved = True;
+			itsShapeMoved = true;
 			Vector<Float> change(2);
 			change[0] = ev.x();
 			change[1] = ev.y();
 
 			itsShapes[itsActiveShape]->changePoint(change, itsActiveHandle);
-			refresh = True;
+			refresh = true;
 
 		} else if (itsState == Annotations::OtherHandle) {
 
-			itsShapeMoved = True;
+			itsShapeMoved = true;
 			Float rot(0);
 			Vector<Float> pixCent(itsShapes[itsActiveShape]->getCenter());
 			if (ev.x() > pixCent[0]) {
@@ -673,23 +674,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			itsX = ev.x();
 			itsY = ev.y();
-			refresh= True;
+			refresh= true;
 
 		} else if (itsState == Annotations::Move) {
 
-			itsShapeMoved = True;
+			itsShapeMoved = true;
 			itsShapes[itsActiveShape]->move(Float(ev.x()) - itsX,
 			                                Float(ev.y()) - itsY);
 			itsX = ev.x();
 			itsY = ev.y();
-			refresh = True;
+			refresh = true;
 
 		} else if (itsState == Annotations::OtherMove) {
 
-			itsShapeMoved = True;
+			itsShapeMoved = true;
 			itsShapes[itsActiveShape]->scale(1 + Float(ev.y() - Int(itsY))/20);
 			itsY = ev.y();
-			refresh = True;
+			refresh = true;
 
 		}
 
@@ -734,7 +735,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void Annotations::operator()(const PCRefreshEvent& ev) {
 		cout << "refresh--------" << endl;
-		itsRefreshedYet = True;
+		itsRefreshedYet = true;
 
 		if (!validateWCs()) {
 			changedWC();
@@ -755,11 +756,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // TODO: Make these nested.
 	void Annotations::enable() {
-		itsEnabled = True;
+		itsEnabled = true;
 	}
 
 	void Annotations::disable() {
-		itsEnabled = False;
+		itsEnabled = false;
 	}
 
 	void Annotations::cancelShapes() {
@@ -776,7 +777,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		for (uInt i=0; i<itsShapes.nelements(); i++) {
-			itsShapes[i]->setDrawHandles(False);
+			itsShapes[i]->setDrawHandles(false);
 		}
 
 		update(itsPC);
@@ -868,17 +869,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Turn off old handles
 		if (itsActiveShape != -1) {
-			itsShapes[itsActiveShape]->setDrawHandles(False);
+			itsShapes[itsActiveShape]->setDrawHandles(false);
 		}
 
 		uInt n = itsShapes.nelements();
-		itsShapes.resize(uInt(n + 1), False, True);
+		itsShapes.resize(uInt(n + 1), false, true);
 
 		itsState = Annotations::Creation;
 
 		// Normal case
 		itsShapes[n] = toCreate;
-		itsShapes[n]->setDrawHandles(True);
+		itsShapes[n]->setDrawHandles(true);
 		itsActiveShape = Int(n);
 	}
 
@@ -892,7 +893,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			delete itsShapes[toDel];
 			itsShapes[toDel] = 0;
 
-			itsShapes.remove(toDel, True);
+			itsShapes.remove(toDel, true);
 
 			if (Int(toDel) == itsActiveShape) {
 				itsActiveShape = -1;
@@ -902,7 +903,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		update(itsPC);
-		return True;
+		return true;
 	}
 
 
@@ -922,7 +923,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		String type = shape.asString("type");
 
 		if (currentCoords == "pix") {
-			return True;
+			return true;
 		}
 
 		return changeCoordSys(whichOne, type, currentCoords, "pix");
@@ -945,7 +946,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		String type = shape.asString("type");
 
 		if (currentCoords == "frac") {
-			return True;
+			return true;
 		}
 
 		return changeCoordSys(whichOne, type, currentCoords, "frac");
@@ -970,7 +971,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		String type = shape.asString("type");
 
 		if (currentCoords == "world") {
-			return True;
+			return true;
 		}
 
 		return changeCoordSys(whichOne, type, currentCoords, "world");
@@ -978,7 +979,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Bool Annotations::validShape(const Record& shape) {
 		String type = shape.asString("type");
-		Bool success = True;
+		Bool success = true;
 
 		if (type == "marker") {
 			success = success && shape.isDefined("center");
@@ -1036,13 +1037,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//Turn off old handles
 		if (itsActiveShape != -1)  {
-			itsShapes[itsActiveShape]->setDrawHandles(False);
+			itsShapes[itsActiveShape]->setDrawHandles(false);
 		}
-		itsShapes.resize(uInt(n + 1), False, True);
+		itsShapes.resize(uInt(n + 1), false, true);
 		itsShapes[n] = newShape;
 
 		if (redraw) {
-			itsShapes[n]->setDrawHandles(True);
+			itsShapes[n]->setDrawHandles(true);
 			update(itsPC);
 			itsActiveShape = n;
 		} else {
@@ -1072,9 +1073,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool Annotations::validateWCs() {
-		Bool conform = True;
+		Bool conform = true;
 		if (itsWCLI->len() != itsPanelDisplay->myWCLI->len()) {
-			return False;
+			return false;
 		} else {
 			itsPanelDisplay->myWCLI->toStart();
 			itsWCLI->toStart();
@@ -1180,7 +1181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void Annotations::draw(PixelCanvas* pc, const Bool noHandles) {
 
 		if (noHandles && itsActiveShape != -1)
-			itsShapes[itsActiveShape]->setDrawHandles(False);
+			itsShapes[itsActiveShape]->setDrawHandles(false);
 
 
 		for (uInt i=0; i<itsShapes.nelements(); i++) {
@@ -1188,7 +1189,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (noHandles && itsActiveShape != -1)
-			itsShapes[itsActiveShape]->setDrawHandles(True);
+			itsShapes[itsActiveShape]->setDrawHandles(true);
 
 	}
 
@@ -1205,7 +1206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		if (toCoords == currentCoords) {
-			return True;
+			return true;
 		}
 
 		DisplayShape* oldShape = itsShapes[shapeIndex];
@@ -1526,7 +1527,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsShapes[shapeIndex] = 0;
 		itsShapes[shapeIndex] = newShape;
 
-		return True;
+		return true;
 	}
 
 	Record Annotations::availableShapes() {

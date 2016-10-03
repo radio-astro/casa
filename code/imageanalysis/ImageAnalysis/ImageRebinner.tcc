@@ -4,18 +4,18 @@ namespace casa {
 
 template<class T> ImageRebinner<T>::ImageRebinner(
 	const SPCIIT image,
-	const Record *const region,
-	const String& maskInp,
-	const String& outname, Bool overwrite
+	const casacore::Record *const region,
+	const casacore::String& maskInp,
+	const casacore::String& outname, casacore::Bool overwrite
 ) : ImageTask<T>(
 		image, "", region, "", "", "",
 		maskInp, outname, overwrite
 	),
-	_factors(), _crop(False) {
+	_factors(), _crop(false) {
         this->_construct();
     }
 
-template<class T> void ImageRebinner<T>::setFactors(const Vector<Int>& f) {
+template<class T> void ImageRebinner<T>::setFactors(const casacore::Vector<casacore::Int>& f) {
 	ThrowIf(
 		f.empty(),
 		"Rebinning factor vector cannot be empty"
@@ -29,26 +29,26 @@ template<class T> void ImageRebinner<T>::setFactors(const Vector<Int>& f) {
 		"All rebinning factors are 1, which "
 		"means rebinning cannot occur"
 	);
-	uInt ndim = this->_getImage()->ndim();
+	casacore::uInt ndim = this->_getImage()->ndim();
 	ThrowIf(
 		f.size() > ndim,
 		"Factor vector length must be less than or "
 		"equal to the number of input image axes"
 	);
-	Vector<Int> fcopy = f.copy();
-	uInt mysize = f.size();
+	casacore::Vector<casacore::Int> fcopy = f.copy();
+	casacore::uInt mysize = f.size();
 	if (mysize < ndim) {
-		fcopy.resize(ndim, True);
-		for (uInt i=mysize; i<ndim; i++) {
+		fcopy.resize(ndim, true);
+		for (casacore::uInt i=mysize; i<ndim; i++) {
 			fcopy[i] = 1;
 		}
-		*this->_getLog() << LogOrigin(getClass(), __func__)
-			<< LogIO::NORMAL << "Not all rebinning factors were specified, "
+		*this->_getLog() << casacore::LogOrigin(getClass(), __func__)
+			<< casacore::LogIO::NORMAL << "Not all rebinning factors were specified, "
 			<< "filling in those not specified with factors of "
 			<< "1, so will rebin according to factor=" << fcopy
-			<< LogIO::POST;
+			<< casacore::LogIO::POST;
 	}
-	const CoordinateSystem& csys = this->_getImage()->coordinates();
+	const casacore::CoordinateSystem& csys = this->_getImage()->coordinates();
 	ThrowIf(
 		csys.hasPolarizationCoordinate() && fcopy[csys.polarizationAxisNumber()] > 1,
 		"A polarization axis cannot be rebinned"
@@ -59,24 +59,24 @@ template<class T> void ImageRebinner<T>::setFactors(const Vector<Int>& f) {
 template<class T> SPIIT ImageRebinner<T>::rebin() const {
 	ThrowIf(_factors.empty(), "Logic Error: factors have not been set");
     SPCIIT image = this->_getImage();
-    uInt ndim = image->ndim();
+    casacore::uInt ndim = image->ndim();
     ThrowIf(
         ndim != _factors.size(),
-        "You have provided " + String::toString(_factors.size())
-        + " factors. You must provide exactly " + String::toString(ndim)
+        "You have provided " + casacore::String::toString(_factors.size())
+        + " factors. You must provide exactly " + casacore::String::toString(ndim)
         + (
             this->_getDropDegen()
                 ? ". If you wish to drop degenerate axes, specify binning factors of 1 for them"
                 : ""
         )
     );
-    IPosition myFactors;
+    casacore::IPosition myFactors;
     if (this->_getDropDegen()) {
-        IPosition shape = image->shape();
-        IPosition degenAxes;
-        for (uInt i=0; i<ndim; i++) {
+        casacore::IPosition shape = image->shape();
+        casacore::IPosition degenAxes;
+        for (casacore::uInt i=0; i<ndim; i++) {
             if (shape[i] == 1) {
-                degenAxes.append(IPosition(1, i));
+                degenAxes.append(casacore::IPosition(1, i));
             }
         }
         myFactors = _factors.removeAxes(degenAxes);
@@ -88,42 +88,42 @@ template<class T> SPIIT ImageRebinner<T>::rebin() const {
 		SubImageFactory<T>::createImage(
 			*this->_getImage(), "", *this->_getRegion(),
 			this->_getMask(), this->_getDropDegen(),
-			False, False, this->_getStretch()
+			false, false, this->_getStretch()
 		)
 	);
 	if (_crop) {
         ndim = subImage->ndim();
-		IPosition shape = subImage->shape();
-		IPosition trc = shape - 1;
-		Vector<Int> mods(ndim);
-		for (uInt i=0; i<ndim; i++) {
+		casacore::IPosition shape = subImage->shape();
+		casacore::IPosition trc = shape - 1;
+		casacore::Vector<casacore::Int> mods(ndim);
+		for (casacore::uInt i=0; i<ndim; i++) {
 			mods[i] = shape[i] % myFactors[i];
 			if (mods[i] > 0) {
 				trc[i] -= mods[i];
 			}
 		}
 		if (anyTrue(mods > 0)) {
-			LCBox box(IPosition(ndim, 0), trc, shape);
+			casacore::LCBox box(casacore::IPosition(ndim, 0), trc, shape);
 			subImage = 	SubImageFactory<T>::createImage(
 				*subImage, "", box.toRecord(""),
-				"", False, False, False, False
+				"", false, false, false, false
 			);
 		}
 	}
-	RebinImage<T> binIm(*subImage, myFactors);
+	casacore::RebinImage<T> binIm(*subImage, myFactors);
 	SPIIT outIm = this->_prepareOutputImage(binIm, this->_getDropDegen());
 	/*
 	// remove any axes that have been binned into a remaining degenerate axis,
 	// CAS-5836
 	if (this->_getDropDegen()) {
-		IPosition outShape = outIm->shape();
-		uInt outDim = outIm->ndim();
-		for (uInt i=0; i<outDim; ++i) {
+		casacore::IPosition outShape = outIm->shape();
+		casacore::uInt outDim = outIm->ndim();
+		for (casacore::uInt i=0; i<outDim; ++i) {
 			if (outShape[i] == 1) {
-				Record empty;
+				casacore::Record empty;
 				outIm = SubImageFactory<T>::createImage(
-					*outIm, this->_getOutname(), Record(),
-					"", True, True, False, False
+					*outIm, this->_getOutname(), casacore::Record(),
+					"", true, true, false, false
 				);
 				break;
 			}

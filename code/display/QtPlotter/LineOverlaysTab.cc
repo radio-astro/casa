@@ -29,6 +29,7 @@
 #include <display/QtPlotter/Util.h>
 #include <QFileDialog>
 #include <QDebug>
+using namespace casacore;
 namespace casa {
 	LineOverlaysTab::LineOverlaysTab(QWidget *parent)
 		: QWidget(parent), pixelCanvas( NULL ), searchResults( this ), searchRedshiftDialog( this ) {

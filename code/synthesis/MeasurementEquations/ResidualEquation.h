@@ -71,14 +71,14 @@ template<class Domain> class LinearModel;
 // betweeen the measured data and a model of the data produced using the
 // current vector. 
 // <srcblock> 
-// SimpleModel< Vector<Float> > simplemodel;
+// SimpleModel< casacore::Vector<casacore::Float> > simplemodel;
 // </srcblock> 
 // 
 // Suppose we also have a big complicated equation that does
 // the forward modelling from vectors to some arbitrary class;
 //
 // <srcblock> 
-// FancyEquation<Vector<Float>, VisibilitySet> eqn;
+// FancyEquation<casacore::Vector<casacore::Float>, VisibilitySet> eqn;
 // </srcblock> 
 //
 // Then Simplemodel class does not need to know anything about the
@@ -86,7 +86,7 @@ template<class Domain> class LinearModel;
 // (via inheritence) a ResidualEquation interface which returns vectors,
 // so that it can use code like:
 // <srcblock> 
-// Vector<Float> error;
+// casacore::Vector<casacore::Float> error;
 // if (eqn.residual(*this, error)){ 
 //   use the error to determine a new model
 // }
@@ -124,24 +124,24 @@ public:
 
   // The canonical member of this class defines a function which 
   // gives the residual when the model is propagated through the
-  // equation and compared with the data. It returns False if the answer
+  // equation and compared with the data. It returns false if the answer
   // could not be computed.
-  virtual Bool residual(Domain & answer,
+  virtual casacore::Bool residual(Domain & answer,
 			const LinearModel<Domain> & model) = 0;
 
   // Same as above, but also calculates Chi^2 (rms of residual image)
-  virtual Bool residual(Domain & answer, Float & chisq,
+  virtual casacore::Bool residual(Domain & answer, casacore::Float & chisq,
                       const LinearModel<Domain> & model) = 0;
 
   // Same as above, but also calculates Chi^2 (rms of residual image)
   // considering a mask image
-  virtual Bool residual(Domain & answer, Float & chisq,
+  virtual casacore::Bool residual(Domain & answer, casacore::Float & chisq,
 			Domain & mask,
 			const LinearModel<Domain> & model) = 0;
 
   // A proposal for another member of this class which returns the
   // derivative of the equation with respect to the current model.
-  //   virtual Bool derivative(const LinearModel<Domain> & model, 
+  //   virtual casacore::Bool derivative(const LinearModel<Domain> & model, 
   // 			Domain & answer) = 0;
 
 

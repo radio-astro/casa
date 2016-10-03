@@ -36,24 +36,24 @@
 namespace casa {
 
 
-class SLog : public casa::LogIO
+class SLog : public casacore::LogIO
 {
 public:
    static SLog *slog();
    ~SLog(); 
     
-   void out(const String &msg, 
-            const String& fnname = "",
-            const String& clname = "", 
-            LogMessage::Priority msglevel=LogMessage::DEBUG1,
-            Bool onconsole = False);
-   void FnEnter(String fnname, String clname);
-   void FnExit(String fnname, String clname);
-   void FnPass(String fnname, String clname);
+   void out(const casacore::String &msg, 
+            const casacore::String& fnname = "",
+            const casacore::String& clname = "", 
+            casacore::LogMessage::Priority msglevel=casacore::LogMessage::DEBUG1,
+            casacore::Bool onconsole = false);
+   void FnEnter(casacore::String fnname, casacore::String clname);
+   void FnExit(casacore::String fnname, casacore::String clname);
+   void FnPass(casacore::String fnname, casacore::String clname);
 
 private:
    static SLog* instance;
-   //static uInt refCount;
+   //static casacore::uInt refCount;
    SLog();
 
 };

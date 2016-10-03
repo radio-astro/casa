@@ -42,7 +42,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// get the current data
 		std::string date( );
 		// get viewer's rc file
-		Casarc &getrc( );
+		casacore::Casarc &getrc( );
 		// set the path for the viewer's casarc file...
 		bool setrcDir( const std::string & );
 

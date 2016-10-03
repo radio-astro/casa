@@ -3,7 +3,7 @@
 #define CWVRMethod_H
 
 /*
- * ALMA - Atacama Large Millimeter Array
+ * ALMA - Atacama Large Millimeter casacore::Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * File CWVRMethod.h
+ * casacore::File CWVRMethod.h
  */
 
 #ifndef __cplusplus
@@ -54,7 +54,7 @@
 namespace WVRMethodMod
 {
   //! WVRMethod.
-  //! [CalDM.CalWVR] Methods for WVR Data processing in TelCal
+  //! [CalDM.CalWVR] Methods for WVR casacore::Data processing in TelCal
   
   const char *const revision = "-1";
   const int version = 1;

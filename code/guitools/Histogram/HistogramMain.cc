@@ -30,6 +30,8 @@
 #include <QMessageBox>
 #include <QCloseEvent>
 
+using namespace casacore;
+
 namespace casa {
 
 HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,

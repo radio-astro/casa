@@ -67,8 +67,8 @@ public:
 
     //Overridden from BackgroundThread in order to update the progress
     //widget on the GUI thread.
-    virtual void initializeProgress(const String& operationName);
-    virtual void setProgress(unsigned int progress, const String& status);
+    virtual void initializeProgress(const casacore::String& operationName);
+    virtual void setProgress(unsigned int progress, const casacore::String& status);
     virtual void finishProgress();
 
     int getId();

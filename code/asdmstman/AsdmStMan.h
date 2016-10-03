@@ -1,4 +1,4 @@
-//# AsdmStMan.h: Storage Manager for the main table of a raw ASDM MS
+//# AsdmStMan.h: Storage Manager for the main table of a raw ASDM casacore::MS
 //# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //# (c) European Southern Observatory, 2012
@@ -43,7 +43,7 @@ namespace casa {
 class AsdmColumn;
 
 // <summary>
-// The Storage Manager for the main table of a raw ASDM MS
+// The Storage Manager for the main table of a raw ASDM casacore::MS
 // </summary>
 
 // <use visibility=export>
@@ -53,7 +53,7 @@ class AsdmColumn;
 
 // <prerequisite>
 //# Classes you should understand before using this one.
-//   <li> The Table Data Managers concept as described in module file
+//   <li> The casacore::Table casacore::Data Managers concept as described in module file
 //        <linkto module="Tables:Data Managers">Tables.h</linkto>
 // </prerequisite>
 
@@ -65,19 +65,19 @@ class AsdmColumn;
 // AsdmStMan is a specific storage manager for the main table of a ASDM MS.
 // For performance purposes the raw data from the correlator is directly
 // written to a disk file. However, to be able to use the data directly as a
-// MeasurementSet, this specific storage manager is created offering access to
+// casacore::MeasurementSet, this specific storage manager is created offering access to
 // all mandatory columns in the main table of the MS.
 //
 // Similar to other storage managers, the AsdmStMan files need to be part of
 // the table directory. There are two files:
 // <ul>
 //  <li> The meta file contains the meta data describing baselines, start time,
-//       integration time, etc. It needs to be written as an AipsIO file.
+//       integration time, etc. It needs to be written as an casacore::AipsIO file.
 //       The meta info should also tell the endianness of the data file.
 //  <li> The data file consists of NSEQ data blocks each containing:
 //   <ul>
 //    <li> 4-byte sequence number defining the time stamp.
-//    <li> Complex data with shape [npol,nchan,nbasel].
+//    <li> casacore::Complex data with shape [npol,nchan,nbasel].
 //    <li> Unsigned short nr of samples used in each data point. It has shape
 //         [nchan,nbasel]. It defines WEIGHT_SPECTRUM and FLAG.
 //    <li> Filler bytes to align the blocks as given in the meta info.
@@ -89,7 +89,7 @@ class AsdmColumn;
 // with equal integration times. A future version might be able to deal with
 // varying integration times (depending on baseline length).
 //
-// Most of the MS columns (like DATA_DESC_ID) are not stored in the data file;
+// Most of the casacore::MS columns (like DATA_DESC_ID) are not stored in the data file;
 // usually they map to the value 0. This is also true for the UVW column, so
 // the UVW coordinates need to be added to the table in a separate step because
 // the online system does not have the resources to do it.
@@ -98,7 +98,7 @@ class AsdmColumn;
 // </synopsis>
 
 // <motivation>
-// The common Table storage managers are too slow for the possibly high
+// The common casacore::Table storage managers are too slow for the possibly high
 // output rate of the ASDM correlator.
 // </motivation>
 
@@ -106,66 +106,66 @@ class AsdmColumn;
 // The following example shows how to create a table and how to attach
 // the storage manager to some columns.
 // <srcblock>
-//   SetupNewTable newtab("name.data", tableDesc, Table::New);
+//   casacore::SetupNewTable newtab("name.data", tableDesc, casacore::Table::New);
 //   AsdmStMan stman;                     // define storage manager
 //   newtab.bindColumn ("DATA", stman);    // bind column to st.man.
 //   newtab.bindColumn ("FLAG", stman);    // bind column to st.man.
-//   Table tab(newtab);                    // actually create table
+//   casacore::Table tab(newtab);                    // actually create table
 // </srcblock>
 // </example>
 
 //# <todo asof="$DATE:$">
-//# A List of bugs, limitations, extensions or planned refinements.
+//# A casacore::List of bugs, limitations, extensions or planned refinements.
 //# </todo>
 
 
-class AsdmStMan : public DataManager
+class AsdmStMan : public casacore::DataManager
 {
 public:
     // Create a Asdm storage manager with the given name.
     // If no name is used, it is set to "AsdmStMan"
-  explicit AsdmStMan (const String& dataManagerName = "AsdmStMan");
+  explicit AsdmStMan (const casacore::String& dataManagerName = "AsdmStMan");
 
   // Create a Asdm storage manager with the given name.
   // The specifications are part of the record (as created by dataManagerSpec).
-  AsdmStMan (const String& dataManagerName, const Record& spec);
+  AsdmStMan (const casacore::String& dataManagerName, const casacore::Record& spec);
   
   ~AsdmStMan();
 
   // Clone this object.
-  virtual DataManager* clone() const;
+  virtual casacore::DataManager* clone() const;
   
   // Get the type name of the data manager (i.e. AsdmStMan).
-  virtual String dataManagerType() const;
+  virtual casacore::String dataManagerType() const;
   
   // Get the name given to the storage manager (in the constructor).
-  virtual String dataManagerName() const;
+  virtual casacore::String dataManagerName() const;
   
-  // Record a record containing data manager specifications.
-  virtual Record dataManagerSpec() const;
+  // casacore::Record a record containing data manager specifications.
+  virtual casacore::Record dataManagerSpec() const;
 
   // Is this a regular storage manager?
   // It is regular if it allows addition of rows and writing dara in them.
-  // <br>We need to return False here.
-  virtual Bool isRegular() const;
+  // <br>We need to return false here.
+  virtual casacore::Bool isRegular() const;
 
   // The storage manager can add rows, but does nothing.
-  virtual Bool canAddRow() const;
+  virtual casacore::Bool canAddRow() const;
   
   // The storage manager cannot delete rows.
-  virtual Bool canRemoveRow() const;
+  virtual casacore::Bool canRemoveRow() const;
   
   // The storage manager can add columns, which does not really do something.
-  virtual Bool canAddColumn() const;
+  virtual casacore::Bool canAddColumn() const;
   
   // Columns can be removed, but it does not do anything at all.
-  virtual Bool canRemoveColumn() const;
+  virtual casacore::Bool canRemoveColumn() const;
   
   // Make the object from the type name string.
-  // This function gets registered in the DataManager "constructor" map.
+  // This function gets registered in the casacore::DataManager "constructor" map.
   // The caller has to delete the object.
-  static DataManager* makeObject (const String& aDataManType,
-                                  const Record& spec);
+  static casacore::DataManager* makeObject (const casacore::String& aDataManType,
+                                  const casacore::Record& spec);
 
   // Register the class name and the static makeObject "constructor".
   // This will make the engine known to the table system.
@@ -173,20 +173,20 @@ public:
 
 
   // Get the data shape.
-  IPosition getShape (uInt rownr);
+  casacore::IPosition getShape (casacore::uInt rownr);
 
   // Get data.
-  void getData (uInt rownr, Complex* buf);
+  void getData (casacore::uInt rownr, casacore::Complex* buf);
 
-  uInt getAsdmStManVersion() const
+  casacore::uInt getAsdmStManVersion() const
     { return itsVersion; }
 
   // access the references to the ASDM BDFs
-  void getBDFNames(Block<String>& bDFNames);
+  void getBDFNames(casacore::Block<casacore::String>& bDFNames);
 
-  // overwrite the BDFNames (Block needs to have same size as original,
-  // returns False otherwise)
-  Bool setBDFNames(Block<String>& bDFNames);
+  // overwrite the BDFNames (casacore::Block needs to have same size as original,
+  // returns false otherwise)
+  casacore::Bool setBDFNames(casacore::Block<casacore::String>& bDFNames);
 
   // overwrite the index with the information presently stored in the
   // data manager
@@ -200,22 +200,22 @@ private:
   AsdmStMan& operator= (const AsdmStMan& that);
   
   // Flush and optionally fsync the data.
-  // It does nothing, and returns False.
-  virtual Bool flush (AipsIO&, Bool doFsync);
+  // It does nothing, and returns false.
+  virtual casacore::Bool flush (casacore::AipsIO&, casacore::Bool doFsync);
   
   // Let the storage manager create files as needed for a new table.
   // This allows a column with an indirect array to create its file.
-  virtual void create (uInt nrrow);
+  virtual void create (casacore::uInt nrrow);
   
   // Open the storage manager file for an existing table.
-  virtual void open (uInt nrrow, AipsIO&); //# should never be called
+  virtual void open (casacore::uInt nrrow, casacore::AipsIO&); //# should never be called
 
   // Prepare the columns (needed for UvwColumn).
   virtual void prepare();
 
   // Resync the storage manager with the new file contents.
   // It does nothing.
-  virtual void resync (casa::uInt nrrow);
+  virtual void resync (casacore::uInt nrrow);
 
   // Reopen the storage manager files for read/write.
   // It does nothing.
@@ -230,35 +230,35 @@ private:
   // It cannot do it, so it does nothing.
   // This function will be called, because this storage manager is not the
   // only one used in an ASDM MS.
-  virtual void addRow (uInt nrrow);
+  virtual void addRow (casacore::uInt nrrow);
   
   // Delete a row from all columns.
   // It cannot do it, so throws an exception.
-  virtual void removeRow (uInt rowNr);
+  virtual void removeRow (casacore::uInt rowNr);
   
   // Do the final addition of a column.
   // It won't do anything.
-  virtual void addColumn (DataManagerColumn*);
+  virtual void addColumn (casacore::DataManagerColumn*);
   
   // Remove a column from the data file.
   // It won't do anything.
-  virtual void removeColumn (DataManagerColumn*);
+  virtual void removeColumn (casacore::DataManagerColumn*);
   
   // Create a column in the storage manager on behalf of a table column.
   // The caller has to delete the newly created object.
   // <group>
   // Create a scalar column.
-  virtual DataManagerColumn* makeScalarColumn (const String& aName,
+  virtual casacore::DataManagerColumn* makeScalarColumn (const casacore::String& aName,
 					       int aDataType,
-					       const String& aDataTypeID);
+					       const casacore::String& aDataTypeID);
   // Create a direct array column.
-  virtual DataManagerColumn* makeDirArrColumn (const String& aName,
+  virtual casacore::DataManagerColumn* makeDirArrColumn (const casacore::String& aName,
 					       int aDataType,
-					       const String& aDataTypeID);
+					       const casacore::String& aDataTypeID);
   // Create an indirect array column.
-  virtual DataManagerColumn* makeIndArrColumn (const String& aName,
+  virtual casacore::DataManagerColumn* makeIndArrColumn (const casacore::String& aName,
 					       int aDataType,
-					       const String& aDataTypeID);
+					       const casacore::String& aDataTypeID);
   // </group>
 
   // Initialize by reading the index file and opening the BDFs.
@@ -268,47 +268,47 @@ private:
   void closeBDF();
 
   // Return the entry number in the index containing the row.
-  uInt searchIndex (Int64 rownr);
+  casacore::uInt searchIndex (casacore::Int64 rownr);
 
   // Return the index block containing the row.
   // It sets itsIndexEntry to that block.
-  const AsdmIndex& findIndex (Int64 rownr);
+  const AsdmIndex& findIndex (casacore::Int64 rownr);
 
   // Get data from the buffer.
   // <group>
-  void getShort (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
-  void getInt   (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
-  void getFloat (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
-  void getAuto  (const AsdmIndex&, Complex* buf, uInt bl);
+  void getShort (const AsdmIndex&, casacore::Complex* buf, casacore::uInt bl, casacore::uInt spw);
+  void getInt   (const AsdmIndex&, casacore::Complex* buf, casacore::uInt bl, casacore::uInt spw);
+  void getFloat (const AsdmIndex&, casacore::Complex* buf, casacore::uInt bl, casacore::uInt spw);
+  void getAuto  (const AsdmIndex&, casacore::Complex* buf, casacore::uInt bl);
   // </group>
 
 
   // set transposeBLNum_v
-  void setTransposeBLNum(uInt nBl);
+  void setTransposeBLNum(casacore::uInt nBl);
 
   //# Declare member variables.
   // Name of data manager.
-  String itsDataManName;
+  casacore::String itsDataManName;
   // The column objects.
   vector<AsdmColumn*>    itsColumns;
-  Block<String>          itsBDFNames;
-  FiledesIO*             itsBDF;
+  casacore::Block<casacore::String>          itsBDFNames;
+  casacore::FiledesIO*             itsBDF;
   int                    itsFD;
   int                    itsOpenBDF;
-  Int64                  itsFileOffset;
-  Bool   itsDoSwap;       //# True = byte-swapping is needed
-  Record itsSpec;         //# Data manager properties
-  uInt   itsVersion;      //# Version of AsdmStMan MeasurementSet
+  casacore::Int64                  itsFileOffset;
+  casacore::Bool   itsDoSwap;       //# true = byte-swapping is needed
+  casacore::Record itsSpec;         //# casacore::Data manager properties
+  casacore::uInt   itsVersion;      //# Version of AsdmStMan casacore::MeasurementSet
   //# Fields to keep track of last block accessed.
-  Int64  itsStartRow;     //# First row of data block
-  Int64  itsEndRow;       //# First row of next data block
-  uInt   itsIndexEntry;   //# Index entry number of current data block
+  casacore::Int64  itsStartRow;     //# First row of data block
+  casacore::Int64  itsEndRow;       //# First row of next data block
+  casacore::uInt   itsIndexEntry;   //# Index entry number of current data block
   vector<char>      itsData;
   vector<AsdmIndex> itsIndex;
-  vector<Int64>     itsIndexRows;
+  vector<casacore::Int64>     itsIndexRows;
 
-  uInt              itsNBl;
-  vector<uInt>      itsTransposeBLNum_v;
+  casacore::uInt              itsNBl;
+  vector<casacore::uInt>      itsTransposeBLNum_v;
 };
 
 

@@ -29,6 +29,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <display/Display/PixelCanvas.h>
 
+using namespace casacore;
 namespace casa {
 
 // RSUTILS DEFINITIONS //

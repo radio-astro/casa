@@ -79,15 +79,15 @@ class FVisJonesMRec : public TimeVarVisJonesMRec
    ~FVisJonesMRec() {};
 
    // Construct from an existing record
-   FVisJonesMRec (const Record& inpRec);
+   FVisJonesMRec (const casacore::Record& inpRec);
 
    // a) define
-   void defineRotMeas    (const Float& rotMeas);
-   void defineRotMeasErr (const Float& rotMeasErr);
+   void defineRotMeas    (const casacore::Float& rotMeas);
+   void defineRotMeasErr (const casacore::Float& rotMeasErr);
 
    // b) get
-   void getRotMeas    (Float& rotMeas);
-   void getRotMeasErr (Float& rotMeasErr);
+   void getRotMeas    (casacore::Float& rotMeas);
+   void getRotMeasErr (casacore::Float& rotMeasErr);
  };
 
 // <summary> 
@@ -134,16 +134,16 @@ class FVisJonesIonoMRec : public FVisJonesMRec
    ~FVisJonesIonoMRec() {};
 
    // Construct from an existing record
-   FVisJonesIonoMRec (const Record& inpRec);
+   FVisJonesIonoMRec (const casacore::Record& inpRec);
 
    // Field accessors
    // a) define
-   void defineTEC    (const Float& tec);
-   void defineTECErr (const Float& tecErr);
+   void defineTEC    (const casacore::Float& tec);
+   void defineTECErr (const casacore::Float& tecErr);
 
    // b) get
-   void getTEC    (Float& tec);
-   void getTECErr (Float& tecErr);
+   void getTEC    (casacore::Float& tec);
+   void getTECErr (casacore::Float& tecErr);
  };
 
 

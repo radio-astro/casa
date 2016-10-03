@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual ~WCAxisLabeller();
 
 		// Draw axis labels for the provided WorldCanvas refresh event
-		virtual Bool draw(const WCRefreshEvent &ev) = 0;
+		virtual casacore::Bool draw(const WCRefreshEvent &ev) = 0;
 
 		// Invalidate any cached drawings
 		virtual void invalidate() { };
@@ -101,35 +101,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// apply options stored in rec to the DisplayData; return value
-		// True means a refresh is needed.  Any fields added to the
+		// true means a refresh is needed.  Any fields added to the
 		// updatedOptions argument are options which have changed in
 		// some way due to the setting of other options - ie. they
 		// are context sensitive.
-		virtual Bool setOptions(const Record &rec, Record &updatedOptions);
+		virtual casacore::Bool setOptions(const casacore::Record &rec, casacore::Record &updatedOptions);
 
 		// retrieve the current and default options and parameter types.
-		virtual Record getOptions() const;
+		virtual casacore::Record getOptions() const;
 
 		// set/return whether labelling is on or off.  This is a global
-		// switch.  If True is returned from the set function, then a
+		// switch.  If true is returned from the set function, then a
 		// refresh is required.
 		// <group>
-		virtual Bool setAxisLabelSwitch(const Bool labelswitch = False);
-		virtual Bool axisLabelSwitch() const {
+		virtual casacore::Bool setAxisLabelSwitch(const casacore::Bool labelswitch = false);
+		virtual casacore::Bool axisLabelSwitch() const {
 			return itsOptionsAxisLabelSwitch;
 		}
 		// </group>
 
-		// set/return the title text.  If True is returned from the set
+		// set/return the title text.  If true is returned from the set
 		// function then a refresh is required.
 		// <group>
-		//virtual Bool setTitleText(const String text = String(""));
-		virtual void setSubstituteTitleText( const String substituteImageName);
-		virtual String titleText() const {
+		//virtual casacore::Bool setTitleText(const casacore::String text = casacore::String(""));
+		virtual void setSubstituteTitleText( const casacore::String substituteImageName);
+		virtual casacore::String titleText() const {
 			return itsOptionsTitleText;
 		}
-		virtual String displayedTitleText() const {
-			String actualText = substituteTitleText;
+		virtual casacore::String displayedTitleText() const {
+			casacore::String actualText = substituteTitleText;
 			if ( actualText.length() == 0 ){
 				actualText = itsOptionsTitleText;
 			}
@@ -137,120 +137,120 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		// </group>
 
-		// set/return the color of the title text.  If True is returned from
+		// set/return the color of the title text.  If true is returned from
 		// the set function, then a refresh should be called.
 		// <group>
-		virtual Bool setTitleTextColor(const String color = String("foreground"));
-		virtual String titleTextColor() const {
+		virtual casacore::Bool setTitleTextColor(const casacore::String color = casacore::String("foreground"));
+		virtual casacore::String titleTextColor() const {
 			return itsOptionsTitleTextColor;
 		}
 		// </group>
 
-		// set/return the X and Y label text.  If True is returned from
+		// set/return the X and Y label text.  If true is returned from
 		// the set functions, then a refresh is needed.
 		// <group>
-		virtual Bool setXAxisText(const String text = String(""));
-		virtual Bool setYAxisText(const String text = String(""));
-		virtual Bool unsetXAxisText();
-		virtual Bool unsetYAxisText();
-		virtual String xAxisText() const;
-		virtual String yAxisText() const;
-		virtual Bool isXAxisTextUnset() const {
+		virtual casacore::Bool setXAxisText(const casacore::String text = casacore::String(""));
+		virtual casacore::Bool setYAxisText(const casacore::String text = casacore::String(""));
+		virtual casacore::Bool unsetXAxisText();
+		virtual casacore::Bool unsetYAxisText();
+		virtual casacore::String xAxisText() const;
+		virtual casacore::String yAxisText() const;
+		virtual casacore::Bool isXAxisTextUnset() const {
 			return itsOptionsXAxisTextUnset;
 		}
-		virtual Bool isYAxisTextUnset() const {
+		virtual casacore::Bool isYAxisTextUnset() const {
 			return itsOptionsYAxisTextUnset;
 		}
 		// </group>
 
-		// set/return the color of the label text.  If True is returned
+		// set/return the color of the label text.  If true is returned
 		// from the set function, then a refresh is needed.
 		// <group>
-		virtual Bool setXAxisTextColor(const String color = String("foreground"));
-		virtual Bool setYAxisTextColor(const String color = String("foreground"));
-		virtual String xAxisTextColor() const {
+		virtual casacore::Bool setXAxisTextColor(const casacore::String color = casacore::String("foreground"));
+		virtual casacore::Bool setYAxisTextColor(const casacore::String color = casacore::String("foreground"));
+		virtual casacore::String xAxisTextColor() const {
 			return itsOptionsXAxisTextColor;
 		}
-		virtual String yAxisTextColor() const {
+		virtual casacore::String yAxisTextColor() const {
 			return itsOptionsYAxisTextColor;
 		}
 		// </group>
 
 		// set/return what type of grid is marked in each direction.
-		// If True is returned from the set functions, a refresh is needed.
+		// If true is returned from the set functions, a refresh is needed.
 		// <group>
-		virtual Bool setXGridType(const String type = String("None"));
-		virtual Bool setYGridType(const String type = String("None"));
-		virtual String xGridType() const {
+		virtual casacore::Bool setXGridType(const casacore::String type = casacore::String("None"));
+		virtual casacore::Bool setYGridType(const casacore::String type = casacore::String("None"));
+		virtual casacore::String xGridType() const {
 			return itsOptionsXGridType;
 		}
-		virtual String yGridType() const {
+		virtual casacore::String yGridType() const {
 			return itsOptionsYGridType;
 		}
 		// </group>
 
-		// set/return the color of the grid lines per direction.  If True
+		// set/return the color of the grid lines per direction.  If true
 		// is returned from the set functions, a refresh is needed.
 		// <group>
-		virtual Bool setXGridColor(const String color = String("foreground"));
-		virtual Bool setYGridColor(const String color = String("foreground"));
-		virtual String xGridColor() const {
+		virtual casacore::Bool setXGridColor(const casacore::String color = casacore::String("foreground"));
+		virtual casacore::Bool setYGridColor(const casacore::String color = casacore::String("foreground"));
+		virtual casacore::String xGridColor() const {
 			return itsOptionsXGridColor;
 		}
-		virtual String yGridColor() const {
+		virtual casacore::String yGridColor() const {
 			return itsOptionsYGridColor;
 		}
 		// </group>
 
-		// set/return the tick length in millimetres.  If True is returned
+		// set/return the tick length in millimetres.  If true is returned
 		// from the set function, then a refresh is probably needed.
 		// <group>
-		virtual Bool setTickLength(const Float length = 4.0);
-		virtual Float tickLength() const {
+		virtual casacore::Bool setTickLength(const casacore::Float length = 4.0);
+		virtual casacore::Float tickLength() const {
 			return itsOptionsTickLength;
 		}
 		// </group>
 
 		// set/return the position of World label strings
 		// <group>
-		virtual Bool setLabelPosition(const String position = String("Auto"));
-		virtual String labelPosition() const {
+		virtual casacore::Bool setLabelPosition(const casacore::String position = casacore::String("Auto"));
+		virtual casacore::String labelPosition() const {
 			return itsOptionsLabelPos;
 		}
 		// </group>
 
 
-		// set/return whether there is a plot outline or not.  If True is
+		// set/return whether there is a plot outline or not.  If true is
 		// returned from the set function, then a refresh is probably needed.
 		// <group>
-		virtual Bool setPlotOutline(const Bool outline = True);
-		virtual Bool plotOutline() const {
+		virtual casacore::Bool setPlotOutline(const casacore::Bool outline = true);
+		virtual casacore::Bool plotOutline() const {
 			return itsOptionsPlotOutline;
 		}
 		// </group>
 
-		// set/return the color used for the plot outline.  If True is
+		// set/return the color used for the plot outline.  If true is
 		// returned from the set function, then a refresh should be
 		// enacted.
 		// <group>
-		virtual Bool setPlotOutlineColor(const String color = String("foreground"));
-		virtual String plotOutlineColor() const {
+		virtual casacore::Bool setPlotOutlineColor(const casacore::String color = casacore::String("foreground"));
+		virtual casacore::String plotOutlineColor() const {
 			return itsOptionsPlotOutlineColor;
 		}
 		// </group>
 
 		// set/return the char size for the plot graphics
 		// <group>
-		virtual Bool setCharSize(const Float size = 1.2);
-		virtual Float charSize() const {
+		virtual casacore::Bool setCharSize(const casacore::Float size = 1.2);
+		virtual casacore::Float charSize() const {
 			return itsOptionsCharSize;
 		}
 		// </group>
 
 		// set/return the char font for the plot graphics
 		// <group>
-		virtual Bool setCharFont(const String font = "normal");
-		virtual String charFont() const {
+		virtual casacore::Bool setCharFont(const casacore::String font = "normal");
+		virtual casacore::String charFont() const {
 			return itsOptionsCharFont;
 		}
 		// </group>
@@ -258,75 +258,75 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// set/return the line width for the plot graphics.
 		// <group>
 		/*
-		virtual Bool setLineWidth(const Int width = 0);
-		virtual Int lineWidth() const
+		virtual casacore::Bool setLineWidth(const casacore::Int width = 0);
+		virtual casacore::Int lineWidth() const
 		  { return itsOptionsLineWidth; }
 		*/
-		virtual Bool setLineWidth(const Float width = 0.0);
-		virtual Float lineWidth() const {
+		virtual casacore::Bool setLineWidth(const casacore::Float width = 0.0);
+		virtual casacore::Float lineWidth() const {
 			return itsOptionsLineWidth;
 		}
 		// </group>
 
-		static const String LABEL_CHAR_SIZE;
-		static const String PLOT_TITLE;
+		static const casacore::String LABEL_CHAR_SIZE;
+		static const casacore::String PLOT_TITLE;
 
 	protected:
-		Bool titleChanged;
+		casacore::Bool titleChanged;
 
 	private:
 
 		// global switch on or off
-		Bool itsOptionsAxisLabelSwitch;
+		casacore::Bool itsOptionsAxisLabelSwitch;
 
 		// display title text
-		String itsOptionsTitleText;
+		casacore::String itsOptionsTitleText;
 
 		// title color
-		String itsOptionsTitleTextColor;
+		casacore::String itsOptionsTitleTextColor;
 
 		// display axes label text
-		String itsOptionsXAxisText, itsOptionsYAxisText;
+		casacore::String itsOptionsXAxisText, itsOptionsYAxisText;
 
 		// are the above unset
-		Bool itsOptionsXAxisTextUnset, itsOptionsYAxisTextUnset;
+		casacore::Bool itsOptionsXAxisTextUnset, itsOptionsYAxisTextUnset;
 
 		// label text color
-		String itsOptionsXAxisTextColor, itsOptionsYAxisTextColor;
+		casacore::String itsOptionsXAxisTextColor, itsOptionsYAxisTextColor;
 
 		// coordinate grid?
-		String itsOptionsXGridType, itsOptionsYGridType;
+		casacore::String itsOptionsXGridType, itsOptionsYGridType;
 
 		// coordinate grid colors
-		String itsOptionsXGridColor, itsOptionsYGridColor;
+		casacore::String itsOptionsXGridColor, itsOptionsYGridColor;
 
 		// tick mark length in mm
-		Float itsOptionsTickLength;
+		casacore::Float itsOptionsTickLength;
 
 		// Label position
-		String itsOptionsLabelPos;
+		casacore::String itsOptionsLabelPos;
 
 		// plot outline?
-		Bool itsOptionsPlotOutline;
+		casacore::Bool itsOptionsPlotOutline;
 
 		// plot outline color
-		String itsOptionsPlotOutlineColor;
+		casacore::String itsOptionsPlotOutlineColor;
 
 		// plot character size
-		Float itsOptionsCharSize;
+		casacore::Float itsOptionsCharSize;
 
 		// plot character font
-		String itsOptionsCharFont;
+		casacore::String itsOptionsCharFont;
 
 		// plot line width
-		//Int itsOptionsLineWidth;
-		Float itsOptionsLineWidth;
+		//casacore::Int itsOptionsLineWidth;
+		casacore::Float itsOptionsLineWidth;
 
 		// defaults for on/off switch and character size
 		// (from .aipsrc, if they exist there).
-		Bool itsDefaultSwitch;
-		Float itsDefaultCharSize;
-		String substituteTitleText;
+		casacore::Bool itsDefaultSwitch;
+		casacore::Float itsDefaultCharSize;
+		casacore::String substituteTitleText;
 
 	};
 

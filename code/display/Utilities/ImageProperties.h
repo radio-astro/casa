@@ -32,9 +32,13 @@
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <images/Images/ImageInterface.h>
 
-namespace casa {
+namespace casacore{
 
     class GaussianBeam;
+}
+
+namespace casa {
+
 
 	namespace viewer {
 
@@ -53,8 +57,8 @@ namespace casa {
 		public:
 			ImageProperties( );
 			ImageProperties( const std::string &/*path*/ );
-			ImageProperties( SHARED_PTR<ImageInterface<Float> > );
-			ImageProperties( SHARED_PTR<ImageInterface<std::complex<float> > > );   /**** throws exception ****/
+			ImageProperties( SHARED_PTR<casacore::ImageInterface<casacore::Float> > );
+			ImageProperties( SHARED_PTR<casacore::ImageInterface<std::complex<float> > > );   /**** throws exception ****/
 			const ImageProperties &operator=( const std::string & );
 
 			bool hasDirectionAxis( ) const {
@@ -66,16 +70,16 @@ namespace casa {
 			bool hasSpectralAxis( ) const {
 				return has_spectral_axis;
 			}
-			const Vector<Int> &shape( ) const {
+			const casacore::Vector<casacore::Int> &shape( ) const {
 				return shape_;
 			}
-			Vector<double> raRange( ) const {
+			casacore::Vector<double> raRange( ) const {
 				return ra_range;
 			}
 			std::vector<std::string> raRangeAsStr( ) const {
 				return ra_range_str;
 			}
-			Vector<double> decRange( ) const {
+			casacore::Vector<double> decRange( ) const {
 				return dec_range;
 			}
 			std::vector<std::string> decRangeAsStr( ) const {
@@ -93,7 +97,7 @@ namespace casa {
 			}
 			std::vector<double> medianRestoringBeam( ) const;
 			std::vector<std::string> medianRestoringBeamAsStr( ) const;
-			Vector<double> freqRange( const std::string &units="" ) const;
+			casacore::Vector<double> freqRange( const std::string &units="" ) const;
 			const std::string &frequencyUnits( ) const {
 				return freq_units;
 			}
@@ -120,15 +124,15 @@ namespace casa {
             const std::vector<double> &velocities( ) const { return velocities_; }
 
 		private:
-			std::vector<double> beam_as_vector( const GaussianBeam &beam ) const;
-			std::vector<std::string> beam_as_string_vector( const GaussianBeam &beam ) const;
+			std::vector<double> beam_as_vector( const casacore::GaussianBeam &beam ) const;
+			std::vector<std::string> beam_as_string_vector( const casacore::GaussianBeam &beam ) const;
 			void clear_state( );
-			void initialize_state( SHARED_PTR<ImageInterface<Float> > image );
-			void reset( SHARED_PTR<ImageInterface<Float> > image );
+			void initialize_state( SHARED_PTR<casacore::ImageInterface<casacore::Float> > image );
+			void reset( SHARED_PTR<casacore::ImageInterface<casacore::Float> > image );
 			void reset( const std::string &path="" );
 			bool status_ok;
 			std::string path_;
-			Vector<Int> shape_;
+			casacore::Vector<casacore::Int> shape_;
 			bool has_direction_axis;
 			std::string direction_type;
 			bool has_spectral_axis;
@@ -136,22 +140,23 @@ namespace casa {
             std::vector<double> velocities_;
 			std::string freq_units;
 			std::string velo_units;
-			Vector<double> ra_range;
+			casacore::Vector<double> ra_range;
 			std::vector<std::string> ra_range_str;
-			Vector<double> dec_range;
+			casacore::Vector<double> dec_range;
 			std::vector<std::string> dec_range_str;
-			std::vector<GaussianBeam> restoring_beams;
+			std::vector<casacore::GaussianBeam> restoring_beams;
 			DisplayCoordinateSystem cs_;
 		};
 	}
 }
 
+namespace casa {
+
 std::ostream &operator<<( std::ostream &os, const casa::DisplayCoordinateSystem &cs );
 
 std::ostream &operator<<( std::ostream &os, const casa::DisplayCoordinateSystem &cs );
-namespace casa {
 	namespace viewer {
-		inline std::ostream &operator<<( std::ostream &os, const casa::DisplayCoordinateSystem &cs ) { return ::operator<<(os,cs); }
+		inline std::ostream &operator<<( std::ostream &os, const casa::DisplayCoordinateSystem &cs ) { return casa::operator<<(os,cs); }
 	}
 }
 

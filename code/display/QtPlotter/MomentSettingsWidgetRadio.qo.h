@@ -35,34 +35,38 @@
 #include <display/QtPlotter/MomentSettingsWidgetRadio.ui.h>
 #include <imageanalysis/ImageAnalysis/ImageMomentsProgressMonitor.h>
 
+namespace casacore{
+
+	template <class T> class ImageInterface;
+}
+
 namespace casa {
 
 	class MomentCollapseThreadRadio;
 	class ThresholdingBinPlotDialog;
 	class Converter;
 	template <class T> class ImageMoments;
-	template <class T> class ImageInterface;
 
 	class CollapseResult {
 
 	public:
-		CollapseResult( const String& outputName, bool tmp, SHARED_PTR<ImageInterface<Float>> img );
+		CollapseResult( const casacore::String& outputName, bool tmp, SHARED_PTR<casacore::ImageInterface<casacore::Float>> img );
 
-		String getOutputFileName() const {
+		casacore::String getOutputFileName() const {
 			return outputFileName;
 		}
 		bool isTemporaryOutput() const {
 			return temporary;
 		}
-		SHARED_PTR<ImageInterface<Float> > getImage() const {
+		SHARED_PTR<casacore::ImageInterface<casacore::Float> > getImage() const {
 			return image;
 		}
 
 	private:
-		String outputFileName;
+		casacore::String outputFileName;
 		bool temporary;
 
-		SHARED_PTR<ImageInterface<Float> > image;
+		SHARED_PTR<casacore::ImageInterface<casacore::Float> > image;
 	};
 
 
@@ -76,22 +80,22 @@ namespace casa {
 	class MomentCollapseThreadRadio : public QThread, public ImageMomentsProgressMonitor {
 		Q_OBJECT
 	public:
-		MomentCollapseThreadRadio( ImageMoments<Float>* imageAnalysis );
+		MomentCollapseThreadRadio( ImageMoments<casacore::Float>* imageAnalysis );
 		bool isSuccess() const;
-		void setChannelStr( String str );
-		void setMomentNames( const Vector<QString>& momentNames );
+		void setChannelStr( casacore::String str );
+		void setMomentNames( const casacore::Vector<QString>& momentNames );
 		void setOutputFileName( QString name );
-		String getErrorMessage() const;
+		casacore::String getErrorMessage() const;
 		std::vector<CollapseResult> getResults() const;
-		void setData(const Vector<Int>& moments, const Int axis,
-		             const Vector<String>& method,
-		             const Vector<Int>& smoothaxes,
-		             const Vector<String>& smoothtypes,
-		             const Vector<Quantity>& smoothwidths,
-		             const Vector<Float>& includepix,
-		             const Vector<Float>& excludepix,
-		             const Double peaksnr, const Double stddev,
-		             const String& doppler = "RADIO", const String& baseName = "");
+		void setData(const casacore::Vector<casacore::Int>& moments, const casacore::Int axis,
+		             const casacore::Vector<casacore::String>& method,
+		             const casacore::Vector<casacore::Int>& smoothaxes,
+		             const casacore::Vector<casacore::String>& smoothtypes,
+		             const casacore::Vector<casacore::Quantity>& smoothwidths,
+		             const casacore::Vector<casacore::Float>& includepix,
+		             const casacore::Vector<casacore::Float>& excludepix,
+		             const casacore::Double peaksnr, const casacore::Double stddev,
+		             const casacore::String& doppler = "RADIO", const casacore::String& baseName = "");
 		void run();
 		void halt();
 		//Methods from the ImageMomentsProgressMonitor interface
@@ -105,27 +109,27 @@ namespace casa {
 		void stepsCompletedChanged( int count );
 
 	private:
-		bool getOutputFileName( String& outName, int moment, const String& channelStr ) const;
+		bool getOutputFileName( casacore::String& outName, int moment, const casacore::String& channelStr ) const;
 
-		ImageMoments<Float>* analysis;
-		Vector<Int> moments;
-		Vector<QString> momentNames;
-		Int axis;
-		String channelStr;
-		Vector<String> method;
-		Vector<Int> smoothaxes;
-		Vector<String> smoothtypes;
-		Vector<Quantity> smoothwidths;
-		Vector<Float> includepix;
-		Vector<Float> excludepix;
-		Double peaksnr;
-		Double stddev;
-		String doppler;
-		String baseName;
+		ImageMoments<casacore::Float>* analysis;
+		casacore::Vector<casacore::Int> moments;
+		casacore::Vector<QString> momentNames;
+		casacore::Int axis;
+		casacore::String channelStr;
+		casacore::Vector<casacore::String> method;
+		casacore::Vector<casacore::Int> smoothaxes;
+		casacore::Vector<casacore::String> smoothtypes;
+		casacore::Vector<casacore::Quantity> smoothwidths;
+		casacore::Vector<casacore::Float> includepix;
+		casacore::Vector<casacore::Float> excludepix;
+		casacore::Double peaksnr;
+		casacore::Double stddev;
+		casacore::String doppler;
+		casacore::String baseName;
 		QString outputFileName;
 		int stepSize;
 		std::vector<CollapseResult> collapseResults;
-		String errorMsg;
+		casacore::String errorMsg;
 		bool collapseError;
 		bool stopImmediately;
 	};
@@ -166,14 +170,14 @@ namespace casa {
 
 	private:
 		void _initAnalysis();
-		Record _makeRegionRecord( );
+		casacore::Record _makeRegionRecord( );
 		enum SummationIndex {MEAN, INTEGRATED, WEIGHTED_MEAN, DISPERSION, MEDIAN,
 		                     MEDIAN_VELOCITY, STDDEV,  RMS, ABS_MEAN_DEV, MAX, MAX_VELOCITY, MIN,
 		                     MIN_VELOCITY, END_INDEX
 		                    };
 		QMap<SummationIndex, int> momentMap;
 		Ui::MomentSettingsWidgetRadio ui;
-		ImageMoments<Float>* imageAnalysis;
+		ImageMoments<casacore::Float>* imageAnalysis;
 		MomentCollapseThreadRadio* collapseThread;
 		ThresholdingBinPlotDialog* thresholdingBinDialog;
 		QString outputFileName;
@@ -192,13 +196,13 @@ namespace casa {
 		void convertChannelRanges( const QString& oldUnits, const QString& newUnits );
 		void convertChannelValue( const QString& channelStr, const QString& channelIdentifier,
 		                          Converter* converter, int row, int col, bool toPixels,
-		                          SpectralCoordinate& coord );
-		String makeChannelInterval( float startChannelIndex,float endChannelIndex ) const;
-		Vector<Int> populateMoments( Vector<QString>& momentNames );
-		Vector<String> populateMethod() const;
-		String populateChannels(uInt * nSelectedChannels, bool * channelOK);
-		bool populateThresholds( Vector<Float>& includeThreshold, Vector<Float>& excludeThreshold );
-		bool populateThreshold( Vector<Float>& threshold );
+		                          casacore::SpectralCoordinate& coord );
+		casacore::String makeChannelInterval( float startChannelIndex,float endChannelIndex ) const;
+		casacore::Vector<casacore::Int> populateMoments( casacore::Vector<QString>& momentNames );
+		casacore::Vector<casacore::String> populateMethod() const;
+		casacore::String populateChannels(casacore::uInt * nSelectedChannels, bool * channelOK);
+		bool populateThresholds( casacore::Vector<casacore::Float>& includeThreshold, casacore::Vector<casacore::Float>& excludeThreshold );
+		bool populateThreshold( casacore::Vector<casacore::Float>& threshold );
 	};
 
 }

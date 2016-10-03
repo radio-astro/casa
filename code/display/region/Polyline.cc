@@ -41,6 +41,7 @@
 
 #include <QtCore/qmath.h>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 
@@ -946,7 +947,7 @@ namespace casa {
 							   std::setiosflags(ios::fixed) << std::setprecision(4) << "(" <<
 							   allDiff << unit <<", "<<angle<<" deg)";
 							String dText(ss.str());
-							wc_->drawText(textPosition, dText, Display::AlignCenter,  False);
+							wc_->drawText(textPosition, dText, Display::AlignCenter,  false);
 						}
 					}
 				} else {
@@ -1230,7 +1231,7 @@ namespace casa {
 
 					RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
 					region_centers->push_back(SHARED_PTR<RegionInfo>(new SliceRegionInfo(name,description,layercenter, this)));
-				} catch (const casa::AipsError& err) {
+				} catch (const casacore::AipsError& err) {
 					errMsg_ = err.getMesg();
 					fprintf( stderr, "Polyline::generate_dds_centers( ): %s\n", errMsg_.c_str() );
 					continue;

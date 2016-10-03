@@ -35,7 +35,7 @@ namespace casa {
 
 template <class T> class ImageRegridderBase : public ImageTask<T> {
 	// <summary>
-	// Data store of ImageRegridder and ComplexImageRegridder
+	// casacore::Data store of ImageRegridder and ComplexImageRegridder
 	// </summary>
 
 	// <reviewed reviewer="" date="" tests="" demos="">
@@ -45,7 +45,7 @@ template <class T> class ImageRegridderBase : public ImageTask<T> {
 	// </prerequisite>
 
 	// <etymology>
-	// Data for image regridder.
+	// casacore::Data for image regridder.
 	// </etymology>
 
 	// <synopsis>
@@ -61,22 +61,22 @@ public:
 	virtual ~ImageRegridderBase();
 
 	// regrid the spectral axis in velocity space rather than frequency space?
-	void setSpecAsVelocity(Bool v) { _specAsVelocity = v; }
+	void setSpecAsVelocity(casacore::Bool v) { _specAsVelocity = v; }
 
 	// Set interpolation method.
-	void setMethod(const String& method) { _method = Interpolate2D::stringToMethod(method); }
-	void setMethod(Interpolate2D::Method method) { _method = method; }
+	void setMethod(const casacore::String& method) { _method = casacore::Interpolate2D::stringToMethod(method); }
+	void setMethod(casacore::Interpolate2D::Method method) { _method = method; }
 
-	void setDoRefChange(Bool d) { _doRefChange = d; }
+	void setDoRefChange(casacore::Bool d) { _doRefChange = d; }
 
-	void setReplicate(Bool r) { _replicate = r; }
+	void setReplicate(casacore::Bool r) { _replicate = r; }
 
 	// throws exception if 3*decimate > length of an axis that will be regridded
-	void setDecimate(Int d);
+	void setDecimate(casacore::Int d);
 
-	void setForceRegrid(Bool f) { _forceRegrid = f; }
+	void setForceRegrid(casacore::Bool f) { _forceRegrid = f; }
 
-	void setShape(const IPosition s) { _shape = s; }
+	void setShape(const casacore::IPosition s) { _shape = s; }
 
 	virtual SPIIT regrid() const = 0;
 
@@ -85,54 +85,54 @@ public:
 protected:
 
 	ImageRegridderBase(
-		const SPCIIT image, const Record *const regionRec,
-		const String& maskInp, const String& outname, Bool overwrite,
-		const CoordinateSystem& csys, const IPosition& axes,
-		const IPosition& shape
+		const SPCIIT image, const casacore::Record *const regionRec,
+		const casacore::String& maskInp, const casacore::String& outname, casacore::Bool overwrite,
+		const casacore::CoordinateSystem& csys, const casacore::IPosition& axes,
+		const casacore::IPosition& shape
 	);
 
-	Interpolate2D::Method _getMethod() const { return _method; }
+	casacore::Interpolate2D::Method _getMethod() const { return _method; }
 
-	Bool _getDoRefChange() const { return _doRefChange; }
+	casacore::Bool _getDoRefChange() const { return _doRefChange; }
 
-	Bool _getReplicate() const { return _replicate; }
+	casacore::Bool _getReplicate() const { return _replicate; }
 
-	Int _getDecimate() const { return _decimate;}
+	casacore::Int _getDecimate() const { return _decimate;}
 
-	Bool _getForceRegrid() const { return _forceRegrid; }
+	casacore::Bool _getForceRegrid() const { return _forceRegrid; }
 
 	inline CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return vector<Coordinate::Type>(0);
+	inline vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<casacore::Coordinate::Type>(0);
 	}
 
-	Bool _getSpecAsVelocity() const { return _specAsVelocity; }
+	casacore::Bool _getSpecAsVelocity() const { return _specAsVelocity; }
 
-	IPosition _getShape() const {return _shape;}
+	casacore::IPosition _getShape() const {return _shape;}
 
-	const CoordinateSystem& _getTemplateCoords() const { return _csysTo; }
+	const casacore::CoordinateSystem& _getTemplateCoords() const { return _csysTo; }
 
-	IPosition _getAxes() const { return _axes; }
+	casacore::IPosition _getAxes() const { return _axes; }
 
-	IPosition _getKludgedShape() const { return _kludgedShape; }
+	casacore::IPosition _getKludgedShape() const { return _kludgedShape; }
 
-	vector<String> _getOutputStokes() const { return _outputStokes; }
+	vector<casacore::String> _getOutputStokes() const { return _outputStokes; }
 
-	uInt _getNReplicatedChans() const { return _nReplicatedChans; }
+	casacore::uInt _getNReplicatedChans() const { return _nReplicatedChans; }
 
-	Bool _regriddingDirectionAxes() const;
+	casacore::Bool _regriddingDirectionAxes() const;
 
 private:
-	const CoordinateSystem _csysTo;
-	IPosition _axes, _shape, _kludgedShape;
-	Bool _specAsVelocity, _doRefChange, _replicate, _forceRegrid;
-	Int _decimate;
-	Interpolate2D::Method _method;
-	vector<String> _outputStokes;
-	uInt _nReplicatedChans;
+	const casacore::CoordinateSystem _csysTo;
+	casacore::IPosition _axes, _shape, _kludgedShape;
+	casacore::Bool _specAsVelocity, _doRefChange, _replicate, _forceRegrid;
+	casacore::Int _decimate;
+	casacore::Interpolate2D::Method _method;
+	vector<casacore::String> _outputStokes;
+	casacore::uInt _nReplicatedChans;
 
 	void _finishConstruction();
 

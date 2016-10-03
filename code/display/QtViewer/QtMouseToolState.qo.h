@@ -79,13 +79,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		// Returns button currently assigned to a tool (0 = no button assigned).
-		Int buttonOf(String tool) {
+		casacore::Int buttonOf(casacore::String tool) {
 			return mousebtns_[QtMouseToolNames::toolIndex(tool)];
 		}
 
 		// Returns name of tool currently assigned to a mouse button (1, 2, or 3).
 		// (Returns NONE if passed mousebtn is 0 or no tool is assigned to it).
-		String toolOnButton(Int mousebtn) {
+		casacore::String toolOnButton(casacore::Int mousebtn) {
 			return QtMouseToolNames::toolName(toolIndexOnButton_(mousebtn));
 		}
 
@@ -97,8 +97,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Request reassignment of a given mouse button to a tool.
 		// NB: _This_ is where guis, etc. should request a button change, so that
 		// all stay on the same page (not directly to tool or displaypanel, e.g.).
-		void chgMouseBtn(String tool, Int mousebtn);
-		void mouseBtnStateChg(String tool, Int state);
+		void chgMouseBtn(casacore::String tool, casacore::Int mousebtn);
+		void mouseBtnStateChg(casacore::String tool, casacore::Int state);
 
 		// Request signalling of the current mouse button setting for every
 		// type of tool.  Call this if you want to assure that everyone's
@@ -109,11 +109,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	signals:
 
 		// Notification of a tool's [new] mouse button.
-		void mouseBtnChg(std::string tool, Int mousebtn);
+		void mouseBtnChg(std::string tool, casacore::Int mousebtn);
 
 
 	protected:
-		Casarc &rc;
+		casacore::Casarc &rc;
 
 		// Only QtviewerBase is intended to create/destroy
 		// a [single] instance of this class.
@@ -123,7 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Returns index of tool currently assigned to a mouse button (1, 2, or 3).
 		// (Returns nTools if passed mousebtn is 0 or no tool is assigned to it).
-		Int toolIndexOnButton_(Int mousebtn);
+		casacore::Int toolIndexOnButton_(casacore::Int mousebtn);
 
 
 		// The button currently assigned to the various types of mouse tool.
@@ -134,7 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// 1:  LeftButton      Display::K_Pointer_Button1
 		// 2:  MidButton       Display::K_Pointer_Button2
 		// 3:  RightButton     Display::K_Pointer_Button3
-		static Int mousebtns_[QtMouseToolNames::nTools+1];
+		static casacore::Int mousebtns_[QtMouseToolNames::nTools+1];
 		//# Initial values; correspond to QtMouseToolNames::tools[], above.
 		//# mousebtns_[nTools] is an entry for an invalid tool.
 		//# At most one of the above will be 1,2,3; the rest will be 0.

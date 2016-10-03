@@ -39,7 +39,7 @@ class PlotMSTransformations {
 public:
   // Static //
   
-  // Enum and methods to define the different fields for an MS averaging.
+  // Enum and methods to define the different fields for an casacore::MS averaging.
   // <group>
   PMS_ENUM1(Field, fields, fieldStrings, field,
 	    FRAME, VELDEF)
@@ -59,13 +59,13 @@ public:
   // Converts this object to/from a record.  Each field will have a key that
   // is its enum name
   // <group>
-  void fromRecord(const RecordInterface& record);
-  Record toRecord() const;
+  void fromRecord(const casacore::RecordInterface& record);
+  casacore::Record toRecord() const;
   // </group>
 
 
-  // If any transformations are specified, return True
-  Bool anyTransform() const { return ((frameStr()!="") ||
+  // If any transformations are specified, return true
+  casacore::Bool anyTransform() const { return ((frameStr()!="") ||
 				(veldefStr()!="RADIO") ||
 				(xpcOffset()!=0.0) ||
 				(ypcOffset()!=0.0) ||
@@ -73,33 +73,33 @@ public:
   
   // Convenience methods for returning the standard field values.
   // <group>
-  MFrequency::Types frame() { return mfreqType_; };
-  MDoppler::Types veldef()  { return mdoppType_; };
-  String frameStr() const   { return (mfreqType_==MFrequency::N_Types ? 
-				      "" : MFrequency::showType(mfreqType_)); };
-  String veldefStr() const  { return MDoppler::showType(mdoppType_); };
-  Double restFreq() const   { return restFreq_; };  // In MHz
-  Double restFreqHz() const   { return restFreq_*1.0e6; };
-  Double xpcOffset() const  { return XpcOffset_; };
-  Double ypcOffset() const  { return YpcOffset_; };
-  Bool formStokes() const   { return formStokes_; };
+  casacore::MFrequency::Types frame() { return mfreqType_; };
+  casacore::MDoppler::Types veldef()  { return mdoppType_; };
+  casacore::String frameStr() const   { return (mfreqType_==casacore::MFrequency::N_Types ? 
+				      "" : casacore::MFrequency::showType(mfreqType_)); };
+  casacore::String veldefStr() const  { return casacore::MDoppler::showType(mdoppType_); };
+  casacore::Double restFreq() const   { return restFreq_; };  // In MHz
+  casacore::Double restFreqHz() const   { return restFreq_*1.0e6; };
+  casacore::Double xpcOffset() const  { return XpcOffset_; };
+  casacore::Double ypcOffset() const  { return YpcOffset_; };
+  casacore::Bool formStokes() const   { return formStokes_; };
 
   // </group>
   
   
   // Convenience methods for setting the standard field values.
   // <group>
-  void setFrame(MFrequency::Types type) { mfreqType_=type; };
-  void setFrame(const String& typeStr)  { 
-    if (typeStr=="") mfreqType_=MFrequency::N_Types;
-    else MFrequency::getType(mfreqType_,typeStr); };
-  void setVelDef(MDoppler::Types type)  { mdoppType_=type; };
-  void setVelDef(const String& typeStr) { MDoppler::getType(mdoppType_,typeStr); };
-  void setRestFreq(Double restfreq)     { restFreq_ = restfreq; };  // in MHz
-  void setRestFreq(Quantity restfreq)   { restFreq_ = restfreq.getValue("MHz"); };
-  void setXpcOffset(Double dx)          { XpcOffset_ = dx; };
-  void setYpcOffset(Double dy)          { YpcOffset_ = dy; };
-  void setFormStokes(Bool formstokes)   { formStokes_ = formstokes; };
+  void setFrame(casacore::MFrequency::Types type) { mfreqType_=type; };
+  void setFrame(const casacore::String& typeStr)  { 
+    if (typeStr=="") mfreqType_=casacore::MFrequency::N_Types;
+    else casacore::MFrequency::getType(mfreqType_,typeStr); };
+  void setVelDef(casacore::MDoppler::Types type)  { mdoppType_=type; };
+  void setVelDef(const casacore::String& typeStr) { casacore::MDoppler::getType(mdoppType_,typeStr); };
+  void setRestFreq(casacore::Double restfreq)     { restFreq_ = restfreq; };  // in MHz
+  void setRestFreq(casacore::Quantity restfreq)   { restFreq_ = restfreq.getValue("MHz"); };
+  void setXpcOffset(casacore::Double dx)          { XpcOffset_ = dx; };
+  void setYpcOffset(casacore::Double dy)          { YpcOffset_ = dy; };
+  void setFormStokes(casacore::Bool formstokes)   { formStokes_ = formstokes; };
   // </group>
   
   
@@ -111,24 +111,24 @@ public:
   // </group>
 
   // Print out a summary
-  String summary() const;
+  casacore::String summary() const;
   
 private:
 
   // The Frequency frame
-  MFrequency::Types mfreqType_;
+  casacore::MFrequency::Types mfreqType_;
   
   // The Velocity Defn
-  MDoppler::Types mdoppType_;
+  casacore::MDoppler::Types mdoppType_;
   
   // The rest frequency (MHz)
-  Double restFreq_;
+  casacore::Double restFreq_;
 
   // Phase center offsets
-  Double XpcOffset_, YpcOffset_;
+  casacore::Double XpcOffset_, YpcOffset_;
 
-  // Form Stokes from correlations
-  Bool formStokes_;
+  // Form casacore::Stokes from correlations
+  casacore::Bool formStokes_;
 
   // Sets the default values.
   void setDefaults();

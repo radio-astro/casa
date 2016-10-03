@@ -44,6 +44,7 @@
 // debug
 #include <casa/OS/PrecTimer.h>
 
+using namespace casacore;
 namespace casa {
 
 const String ImageProfileFitter::_class = "ImageProfileFitter";
@@ -587,7 +588,7 @@ void ImageProfileFitter::_finishConstruction() {
                 << ") as fit axis" << LogIO::POST;
         }
     }
-    //this->_setSupportsLogfile(True);
+    //this->_setSupportsLogfile(true);
 }
 /*
 Bool ImageProfileFitter::_inVelocitySpace() const {
@@ -824,9 +825,9 @@ void ImageProfileFitter::_loopOverFits(
     Bool abscissaSet = ! abscissaValues.empty();
     if (_nLTPCoeffs > 0) {
         if (! abscissaSet) {
-            xfunc = casa::log;
+            xfunc = casacore::log;
         }
-        yfunc = casa::log;
+        yfunc = casacore::log;
     }
     if (abscissaSet) {
         fitter.setAbscissa(abscissaValues);

@@ -3,12 +3,16 @@
 
 #include <ms/MeasurementSets.h>
 
-namespace casa {
+namespace casacore{
 
 class String;
 class MSSelection;
+}
 
-class MeasurementSet2 : public MeasurementSet {
+namespace casa {
+
+
+class MeasurementSet2 : public casacore::MeasurementSet {
 
 public:
 
@@ -17,22 +21,23 @@ public:
     MeasurementSet2 (const MeasurementSet2 & other);
     MeasurementSet2 & operator= (const MeasurementSet2 & other);
 
-    const MSSelection * getMSSelection () const;
-    Bool wasCreatedWithSelection () const;
+    const casacore::MSSelection * getMSSelection () const;
+    casacore::Bool wasCreatedWithSelection () const;
 
-    static MeasurementSet2 create (const String & filename, const MSSelection * msSelection);
+    static MeasurementSet2 create (const casacore::String & filename, const casacore::MSSelection * msSelection);
 
 protected:
 
-    MeasurementSet2 (const Table & table, MSSelection * msSelection);
+    MeasurementSet2 (const casacore::Table & table, casacore::MSSelection * msSelection);
 
 private:
 
-    MSSelection * msSelection_p;     // [own]
-    Bool wasCreatedWithSelection_p;
+    casacore::MSSelection * msSelection_p;     // [own]
+    casacore::Bool wasCreatedWithSelection_p;
 
 };
 
-} // end namespace casa
+}
+
 
 #endif // ! defined (MeasurementSet2_H_121204_1015)

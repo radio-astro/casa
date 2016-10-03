@@ -79,8 +79,8 @@ class BJonesTable : public SolvableVisJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   BJonesTable (const String& tableName, 
-		Table::TableOption access = Table::Old);
+   BJonesTable (const casacore::String& tableName, 
+		casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    BJonesDesc itsBJonesDesc;
@@ -132,8 +132,8 @@ class BJonesPolyTable : public BJonesTable
 
    // Construct from a specified table name and table access option. 
    // Used for creating new tables or opening existing tables.
-   BJonesPolyTable (const String& tableName, 
-		    Table::TableOption access = Table::Old);
+   BJonesPolyTable (const casacore::String& tableName, 
+		    casacore::Table::TableOption access = casacore::Table::Old);
 
  private:
    BJonesPolyDesc itsBJonesPolyDesc;

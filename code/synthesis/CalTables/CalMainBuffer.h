@@ -88,8 +88,8 @@ class CalMainBuffer
   // their specified values. Non-index columns will be set 
   // to default values. There is no connection to an underlying 
   // calibration table iterator in this case.
-  CalMainBuffer (const Vector<Int>& calIndices, 
-		 const Block<Vector<Int> >& indexValues);
+  CalMainBuffer (const casacore::Vector<casacore::Int>& calIndices, 
+		 const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
 
   // Construct from a calibration table iterator. The calibration
   // buffer will remain synchronized with the iterator.
@@ -107,66 +107,66 @@ class CalMainBuffer
 
   // Write the current buffer at the end of a specified cal table;
   // returns the number of rows appended.
-  virtual Int append (CalTable& calTable);
+  virtual casacore::Int append (CalTable& calTable);
 
   // Maximum number of rows in the calibration buffer
-  virtual Int nRow();
+  virtual casacore::Int nRow();
 
   // Accessors for the contained cal_desc and cal_history buffers
   virtual CalDescBuffer& calDescBuffer() {return *calDescBuf_p;};
   virtual CalHistoryBuffer& calHistoryBuffer() {return *calHistBuf_p;};
 
-  // Data field accessors
-  virtual Vector<MEpoch>& timeMeas();
-  virtual Vector<Quantity>& timeEPQuant();
-  virtual Vector<Quantity>& intervalQuant();
-  virtual Vector<Int>& antenna1();
-  virtual Vector<Int>& feed1();
-  virtual Vector<Int>& fieldId();
-  virtual Vector<Int>& arrayId();
-  virtual Vector<Int>& obsId();
-  virtual Vector<Int>& scanNo();
-  virtual Vector<Int>& processorId();
-  virtual Vector<Int>& stateId();
-  virtual Vector<Int>& phaseId();
-  virtual Vector<Int>& pulsarBin();
-  virtual Vector<Int>& pulsarGateId();
-  virtual Vector<Int>& freqGrp();
-  virtual Vector<String>& freqGrpName();
-  virtual Vector<String>& fieldName();
-  virtual Vector<String>& fieldCode();
-  virtual Vector<String>& sourceName();
-  virtual Vector<String>& sourceCode();
-  virtual Vector<Int>& calGrp();
-  virtual Array<Complex>& gain();
-  virtual Array<Int>& refAnt();
-  virtual Array<Int>& refFeed();
-  virtual Array<Int>& refReceptor();
-  virtual Array<MFrequency>& refFreqMeas();
-  virtual Vector<Int>& measFreqRef();
-  virtual Array<MDirection>& refDirMeas();
-  virtual Vector<Int>& measDirRef();
-  virtual Vector<Int>& calDescId();
-  virtual Vector<Int>& calHistoryId(); 
+  // casacore::Data field accessors
+  virtual casacore::Vector<casacore::MEpoch>& timeMeas();
+  virtual casacore::Vector<casacore::Quantity>& timeEPQuant();
+  virtual casacore::Vector<casacore::Quantity>& intervalQuant();
+  virtual casacore::Vector<casacore::Int>& antenna1();
+  virtual casacore::Vector<casacore::Int>& feed1();
+  virtual casacore::Vector<casacore::Int>& fieldId();
+  virtual casacore::Vector<casacore::Int>& arrayId();
+  virtual casacore::Vector<casacore::Int>& obsId();
+  virtual casacore::Vector<casacore::Int>& scanNo();
+  virtual casacore::Vector<casacore::Int>& processorId();
+  virtual casacore::Vector<casacore::Int>& stateId();
+  virtual casacore::Vector<casacore::Int>& phaseId();
+  virtual casacore::Vector<casacore::Int>& pulsarBin();
+  virtual casacore::Vector<casacore::Int>& pulsarGateId();
+  virtual casacore::Vector<casacore::Int>& freqGrp();
+  virtual casacore::Vector<casacore::String>& freqGrpName();
+  virtual casacore::Vector<casacore::String>& fieldName();
+  virtual casacore::Vector<casacore::String>& fieldCode();
+  virtual casacore::Vector<casacore::String>& sourceName();
+  virtual casacore::Vector<casacore::String>& sourceCode();
+  virtual casacore::Vector<casacore::Int>& calGrp();
+  virtual casacore::Array<casacore::Complex>& gain();
+  virtual casacore::Array<casacore::Int>& refAnt();
+  virtual casacore::Array<casacore::Int>& refFeed();
+  virtual casacore::Array<casacore::Int>& refReceptor();
+  virtual casacore::Array<casacore::MFrequency>& refFreqMeas();
+  virtual casacore::Vector<casacore::Int>& measFreqRef();
+  virtual casacore::Array<casacore::MDirection>& refDirMeas();
+  virtual casacore::Vector<casacore::Int>& measDirRef();
+  virtual casacore::Vector<casacore::Int>& calDescId();
+  virtual casacore::Vector<casacore::Int>& calHistoryId(); 
 
   // Generic access to integer columns by MSCalEnums enumeration. Throws
   // an exception if the column is not recognized or is not an integer column.
-  virtual Vector<Int>& asVecInt (const MSCalEnums::colDef& calEnum);
+  virtual casacore::Vector<casacore::Int>& asVecInt (const MSCalEnums::colDef& calEnum);
 
   // Generic access to string columns by MSCalEnums enumeration. Throws
   // an exception if the column is not recognized or is not a string column.
-  virtual Vector<String>& asVecString (const MSCalEnums::colDef& calEnum);
+  virtual casacore::Vector<casacore::String>& asVecString (const MSCalEnums::colDef& calEnum);
 
   // Find the matching rows for a given antenna1 id.
-  virtual Vector<Int> matchAntenna1 (const Int& antennaId);
+  virtual casacore::Vector<casacore::Int> matchAntenna1 (const casacore::Int& antennaId);
 
   // Find the matching rows for a given antenna1 id. and field id. pair
-  virtual Vector<Int> matchAntenna1AndFieldId (const Int& antennaId,
-					       const Int& fldId);
+  virtual casacore::Vector<casacore::Int> matchAntenna1AndFieldId (const casacore::Int& antennaId,
+					       const casacore::Int& fldId);
 
   // Find the matching rows for a given antenna1 id. and freq. group name
-  virtual Vector<Int> matchAntenna1AndFreqGrp (const Int& antennaId,
-					       const String& frqGrpName);
+  virtual casacore::Vector<casacore::Int> matchAntenna1AndFreqGrp (const casacore::Int& antennaId,
+					       const casacore::String& frqGrpName);
 
  protected:
   // Factory method to create a columns accessor object of the appropriate type
@@ -177,7 +177,7 @@ class CalMainBuffer
   virtual CalMainColumns* calMainCol() {return calMainCol_p;};
 
   // Is the buffer connected to an underlying iterator ?
-  Bool connectedToIter() {return connectedToIter_p;};
+  casacore::Bool connectedToIter() {return connectedToIter_p;};
 
   // Invalidate the current cache. 
   virtual void invalidate();
@@ -188,12 +188,12 @@ class CalMainBuffer
   // enums from class MSCalEnums:
   //
   // Use a visibility buffer to define the index values 
-  virtual void fillIndices (const Vector<Int>& calIndices,
+  virtual void fillIndices (const casacore::Vector<casacore::Int>& calIndices,
 			    const VisBuffer& vb);
 
   // Define the index values directly
-  virtual void fillIndices (const Vector<Int>& calIndices,
-			    const Block<Vector<Int> >& indexValues);
+  virtual void fillIndices (const casacore::Vector<casacore::Int>& calIndices,
+			    const casacore::Block<casacore::Vector<casacore::Int> >& indexValues);
   // </group>
 
   // <group>
@@ -203,21 +203,21 @@ class CalMainBuffer
   // as non-attribute columns.
   //
   // Use a visibility buffer to define the attribute values
-  virtual void fillAttributes(const Vector<Int>& calIndices,
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& calIndices,
 			      const VisBuffer& vb);
 
   // Set default attribute values
-  virtual void fillAttributes(const Vector<Int>& calIndices);
+  virtual void fillAttributes(const casacore::Vector<casacore::Int>& calIndices);
 
   // </group>
 
   // Utility function to test for membership in a list of calibration enums
-  Bool excluded(const MSCalEnums::colDef& calEnum, 
-		const Vector<Int>& excludeIndices);
+  casacore::Bool excluded(const MSCalEnums::colDef& calEnum, 
+		const casacore::Vector<casacore::Int>& excludeIndices);
 
  private:
-  // True if connected to underlying iterator
-  Bool connectedToIter_p;
+  // true if connected to underlying iterator
+  casacore::Bool connectedToIter_p;
 
   // Ptr to calibration table iterator
   CalIterBase* calIter_p;
@@ -230,70 +230,70 @@ class CalMainBuffer
   CalHistoryBuffer* calHistBuf_p;
 
   // Buffer fields
-  Vector<MEpoch> timeMeas_p;
-  Vector<Quantity> timeEPQuant_p;
-  Vector<Quantity> intervalQuant_p;
-  Vector<Int> antenna1_p;
-  Vector<Int> feed1_p;
-  Vector<Int> fieldId_p;
-  Vector<Int> arrayId_p;
-  Vector<Int> obsId_p;
-  Vector<Int> scanNo_p;
-  Vector<Int> processorId_p;
-  Vector<Int> stateId_p;
-  Vector<Int> phaseId_p;
-  Vector<Int> pulsarBin_p;
-  Vector<Int> pulsarGateId_p;
-  Vector<Int> freqGrp_p;
-  Vector<String> freqGrpName_p;
-  Vector<String> fieldName_p;
-  Vector<String> fieldCode_p;
-  Vector<String> sourceName_p;
-  Vector<String> sourceCode_p;
-  Vector<Int> calGrp_p;
-  Array<Complex> gain_p;
-  Array<Int> refAnt_p;
-  Array<Int> refFeed_p;
-  Array<Int> refReceptor_p;
-  Array<MFrequency> refFreqMeas_p;
-  Vector<Int> measFreqRef_p;
-  Array<MDirection> refDirMeas_p;
-  Vector<Int> measDirRef_p;
-  Vector<Int> calDescId_p;
-  Vector<Int> calHistoryId_p;
+  casacore::Vector<casacore::MEpoch> timeMeas_p;
+  casacore::Vector<casacore::Quantity> timeEPQuant_p;
+  casacore::Vector<casacore::Quantity> intervalQuant_p;
+  casacore::Vector<casacore::Int> antenna1_p;
+  casacore::Vector<casacore::Int> feed1_p;
+  casacore::Vector<casacore::Int> fieldId_p;
+  casacore::Vector<casacore::Int> arrayId_p;
+  casacore::Vector<casacore::Int> obsId_p;
+  casacore::Vector<casacore::Int> scanNo_p;
+  casacore::Vector<casacore::Int> processorId_p;
+  casacore::Vector<casacore::Int> stateId_p;
+  casacore::Vector<casacore::Int> phaseId_p;
+  casacore::Vector<casacore::Int> pulsarBin_p;
+  casacore::Vector<casacore::Int> pulsarGateId_p;
+  casacore::Vector<casacore::Int> freqGrp_p;
+  casacore::Vector<casacore::String> freqGrpName_p;
+  casacore::Vector<casacore::String> fieldName_p;
+  casacore::Vector<casacore::String> fieldCode_p;
+  casacore::Vector<casacore::String> sourceName_p;
+  casacore::Vector<casacore::String> sourceCode_p;
+  casacore::Vector<casacore::Int> calGrp_p;
+  casacore::Array<casacore::Complex> gain_p;
+  casacore::Array<casacore::Int> refAnt_p;
+  casacore::Array<casacore::Int> refFeed_p;
+  casacore::Array<casacore::Int> refReceptor_p;
+  casacore::Array<casacore::MFrequency> refFreqMeas_p;
+  casacore::Vector<casacore::Int> measFreqRef_p;
+  casacore::Array<casacore::MDirection> refDirMeas_p;
+  casacore::Vector<casacore::Int> measDirRef_p;
+  casacore::Vector<casacore::Int> calDescId_p;
+  casacore::Vector<casacore::Int> calHistoryId_p;
 
   // Buffer field status flags
-  Bool timeMeasOK_p;
-  Bool timeEPQuantOK_p;
-  Bool intervalQuantOK_p;
-  Bool antenna1OK_p;
-  Bool feed1OK_p;
-  Bool fieldIdOK_p;
-  Bool arrayIdOK_p;
-  Bool obsIdOK_p;
-  Bool scanNoOK_p;
-  Bool processorIdOK_p;
-  Bool stateIdOK_p;
-  Bool phaseIdOK_p;
-  Bool pulsarBinOK_p;
-  Bool pulsarGateIdOK_p;
-  Bool freqGrpOK_p;
-  Bool freqGrpNameOK_p;
-  Bool fieldNameOK_p;
-  Bool fieldCodeOK_p;
-  Bool sourceNameOK_p;
-  Bool sourceCodeOK_p;
-  Bool calGrpOK_p;
-  Bool gainOK_p;
-  Bool refAntOK_p;
-  Bool refFeedOK_p;
-  Bool refReceptorOK_p;
-  Bool refFreqMeasOK_p;
-  Bool measFreqRefOK_p;
-  Bool refDirMeasOK_p;
-  Bool measDirRefOK_p;
-  Bool calDescIdOK_p;
-  Bool calHistoryIdOK_p;
+  casacore::Bool timeMeasOK_p;
+  casacore::Bool timeEPQuantOK_p;
+  casacore::Bool intervalQuantOK_p;
+  casacore::Bool antenna1OK_p;
+  casacore::Bool feed1OK_p;
+  casacore::Bool fieldIdOK_p;
+  casacore::Bool arrayIdOK_p;
+  casacore::Bool obsIdOK_p;
+  casacore::Bool scanNoOK_p;
+  casacore::Bool processorIdOK_p;
+  casacore::Bool stateIdOK_p;
+  casacore::Bool phaseIdOK_p;
+  casacore::Bool pulsarBinOK_p;
+  casacore::Bool pulsarGateIdOK_p;
+  casacore::Bool freqGrpOK_p;
+  casacore::Bool freqGrpNameOK_p;
+  casacore::Bool fieldNameOK_p;
+  casacore::Bool fieldCodeOK_p;
+  casacore::Bool sourceNameOK_p;
+  casacore::Bool sourceCodeOK_p;
+  casacore::Bool calGrpOK_p;
+  casacore::Bool gainOK_p;
+  casacore::Bool refAntOK_p;
+  casacore::Bool refFeedOK_p;
+  casacore::Bool refReceptorOK_p;
+  casacore::Bool refFreqMeasOK_p;
+  casacore::Bool measFreqRefOK_p;
+  casacore::Bool refDirMeasOK_p;
+  casacore::Bool measDirRefOK_p;
+  casacore::Bool calDescIdOK_p;
+  casacore::Bool calHistoryIdOK_p;
 };
 
 

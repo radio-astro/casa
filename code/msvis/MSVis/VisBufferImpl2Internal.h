@@ -10,6 +10,7 @@
 
 #include <msvis/MSVis/ViImplementation2.h>
 #include <cassert>
+#include <sstream>
 
 namespace casa {
 
@@ -46,35 +47,35 @@ class VbCacheItemBase {
 public:
 
     VbCacheItemBase (bool isMutable)
-    : isKey_p (False),
+    : isKey_p (false),
       isMutable_p (isMutable),
       vbComponent_p (VisBufferComponent2::Unknown),
       vb_p (0) {}
 
     virtual ~VbCacheItemBase () {}
 
-    virtual void appendRows (Int nRowsToAdd, Bool truncate = False) = 0;
-    virtual void clear (Bool clearStatusOnly = False) = 0;
+    virtual void appendRows (casacore::Int nRowsToAdd, casacore::Bool truncate = false) = 0;
+    virtual void clear (casacore::Bool clearStatusOnly = false) = 0;
     virtual void clearDirty () = 0;
-    virtual void copyRowElement (Int sourceRow, Int destinationRow) = 0;
+    virtual void copyRowElement (casacore::Int sourceRow, casacore::Int destinationRow) = 0;
     virtual void fill () const = 0;
     VisBufferComponent2
     getComponent () const
     {
         return vbComponent_p;
     }
-    virtual Bool isArray () const = 0;
-    virtual Bool isDirty () const = 0;
-    virtual Bool isPresent () const = 0;
-    virtual Bool isShapeOk () const = 0;
-    virtual void resize (Bool /*copyValues*/) {}
-    virtual void resizeRows (Int /*newNRows*/) {}
+    virtual casacore::Bool isArray () const = 0;
+    virtual casacore::Bool isDirty () const = 0;
+    virtual casacore::Bool isPresent () const = 0;
+    virtual casacore::Bool isShapeOk () const = 0;
+    virtual void resize (casacore::Bool /*copyValues*/) {}
+    virtual void resizeRows (casacore::Int /*newNRows*/) {}
     virtual void setDirty () = 0;
-    virtual String shapeErrorMessage () const = 0;
+    virtual casacore::String shapeErrorMessage () const = 0;
 
 protected:
 
-    virtual void copy (const VbCacheItemBase * other, Bool fetchIfNeeded) = 0;
+    virtual void copy (const VbCacheItemBase * other, casacore::Bool fetchIfNeeded) = 0;
 
     VisBufferImpl2 * getVb () const
     {
@@ -82,20 +83,20 @@ protected:
     }
 
     virtual void initialize (VisBufferCache * cache, VisBufferImpl2 * vb, VisBufferComponent2 component,
-                             Bool isKey = True);
+                             casacore::Bool isKey = true);
 
-    Bool isKey () const { return isKey_p;}
+    casacore::Bool isKey () const { return isKey_p;}
     bool isMutable () const { return isMutable_p; }
 
-    virtual void setAsPresent (Bool isPresent = True) const = 0;
-    void setIsKey (Bool isKey)
+    virtual void setAsPresent (casacore::Bool isPresent = true) const = 0;
+    void setIsKey (casacore::Bool isKey)
     {
         isKey_p = isKey;
     }
 
 private:
 
-    Bool isKey_p;
+    casacore::Bool isKey_p;
     const bool isMutable_p;
     VisBufferComponent2 vbComponent_p;
     VisBufferImpl2 * vb_p; // [use]
@@ -104,7 +105,7 @@ private:
 
 typedef std::vector<VbCacheItemBase *> CacheRegistry;
 
-template <typename T, Bool IsComputed = False>
+template <typename T, casacore::Bool IsComputed = false>
 class VbCacheItem : public VbCacheItemBase {
 
     friend class VisBufferImpl2;
@@ -115,33 +116,33 @@ public:
     typedef void (VisBufferImpl2::* Filler) (T &) const;
 
     VbCacheItem (bool isMutable = false)
-    : VbCacheItemBase (isMutable), isPresent_p (False)
+    : VbCacheItemBase (isMutable), isPresent_p (false)
     {}
 
     virtual ~VbCacheItem () {}
 
-    virtual void appendRows (Int, Bool)
+    virtual void appendRows (casacore::Int, casacore::Bool)
     {
         // Noop for scalars
     }
 
     virtual void
-    clear (Bool clearStatusOnly)
+    clear (casacore::Bool clearStatusOnly)
     {
         if (! clearStatusOnly) {
             clearValue (item_p);
         }
-        setAsPresent (False);
+        setAsPresent (false);
         clearDirty ();
     }
 
     virtual void
     clearDirty ()
     {
-        isDirty_p = False;
+        isDirty_p = false;
     }
 
-    virtual void copyRowElement (Int /*sourceRow*/, Int /*destinationRow*/) {} // noop
+    virtual void copyRowElement (casacore::Int /*sourceRow*/, casacore::Int /*destinationRow*/) {} // noop
 
 
     virtual void
@@ -150,11 +151,11 @@ public:
         const VisBufferImpl2 * vb = getVb();
 
         ThrowIf (! vb->isAttached (),
-                 String::format ("Can't fill VisBuffer component %s: Not attached to VisibilityIterator",
+                 casacore::String::format ("Can't fill VisBuffer component %s: Not attached to VisibilityIterator",
                                  VisBufferComponents2::name (getComponent()).c_str()));
 
         ThrowIf (! IsComputed && ! vb->isFillable (),
-                 String::format ("Cannot fill VisBuffer component %s: %s",
+                 casacore::String::format ("Cannot fill VisBuffer component %s: %s",
                                  VisBufferComponents2::name (getComponent()).c_str(),
                                  vb->getFillErrorMessage ().c_str()));
 
@@ -167,14 +168,14 @@ public:
         if (! isPresent()){
             fill ();
             setAsPresent ();
-            isDirty_p = False;
+            isDirty_p = false;
         }
 
         return item_p;
     }
 
     T &
-    getRef (Bool fillIfAbsent = True)
+    getRef (casacore::Bool fillIfAbsent = true)
     {
         if (! isPresent() && fillIfAbsent){
             fill ();
@@ -186,7 +187,7 @@ public:
         // that it will be used to modify the datum and mark
         // it as dirty.
 
-        isDirty_p = True;
+        isDirty_p = true;
 
         return item_p;
     }
@@ -194,33 +195,33 @@ public:
     void
     initialize (VisBufferCache * cache, VisBufferImpl2 * vb, Filler filler,
                 VisBufferComponent2 component = VisBufferComponent2::Unknown,
-                Bool isKey = True)
+                casacore::Bool isKey = true)
     {
         VbCacheItemBase::initialize (cache, vb, component, isKey);
         filler_p = filler;
     }
 
-    Bool isArray () const
+    casacore::Bool isArray () const
     {
-        return False;
+        return false;
     }
 
-    Bool
+    casacore::Bool
     isDirty () const
     {
         return isDirty_p;
     }
 
-    Bool
+    casacore::Bool
     isPresent () const
     {
         return isPresent_p;
     }
 
-    virtual Bool
+    virtual casacore::Bool
     isShapeOk () const
     {
-        return True;
+        return true;
     }
 
     virtual void
@@ -232,7 +233,7 @@ public:
                  "This VisBuffer is does not allow row key values to be changed.");
 
         // Set operations to a rekeyable VB are allowed to change the shapes of the
-        // values.  When T derives from Array, the assign method will use Array::assign
+        // values.  When T derives from casacore::Array, the assign method will use casacore::Array::assign
         // which resizes the destination value to match the source value.  For nonkeyable
         // VBs, the normal operator= method is used which for Arrays will throw an
         // exception when a shape incompatibility exists between the source and destination.
@@ -247,7 +248,7 @@ public:
         ThrowIf (! isShapeOk (), shapeErrorMessage() );
 
         setAsPresent();
-        isDirty_p = True;
+        isDirty_p = true;
     }
 
 
@@ -265,7 +266,7 @@ public:
         ThrowIf (! isShapeOk (), shapeErrorMessage() );
 
         setAsPresent();
-        isDirty_p = True;
+        isDirty_p = true;
     }
 
     template <typename U>
@@ -276,21 +277,21 @@ public:
 
         item_p = newItem;
         setAsPresent();
-        isDirty_p = False;
+        isDirty_p = false;
     }
 
     virtual void
     setDirty ()
     {
-        isDirty_p = True;
+        isDirty_p = true;
     }
 
-    virtual String
+    virtual casacore::String
     shapeErrorMessage () const
     {
-        ThrowIf (True, "Scalar shapes should not have shape errors.");
+        ThrowIf (true, "Scalar shapes should not have shape errors.");
 
-        return String();
+        return casacore::String();
     }
 
 protected:
@@ -302,21 +303,21 @@ protected:
     }
 
     template <typename E>
-    static void clearValue (Array <E> & value){
+    static void clearValue (casacore::Array <E> & value){
         value.resize();
     }
 
-    static void clearValue (Int & value){
+    static void clearValue (casacore::Int & value){
         value = 0;
     }
 
-    static void clearValue (MDirection & value){
-        value = MDirection ();
+    static void clearValue (casacore::MDirection & value){
+        value = casacore::MDirection ();
     }
 
 
 //    virtual void
-//    copy (const VbCacheItemBase * otherRaw, Bool markAsCached)
+//    copy (const VbCacheItemBase * otherRaw, casacore::Bool markAsCached)
 //    {
 //        // Convert generic pointer to one pointint to this
 //        // cache item type.
@@ -338,13 +339,13 @@ protected:
 //            item_p = T ();
 //
 //            if (markAsCached){
-//                isPresent_p = True;
+//                isPresent_p = true;
 //            }
 //        }
 //    }
 
     virtual void
-    copy (const VbCacheItemBase * otherRaw, Bool fetchIfNeeded)
+    copy (const VbCacheItemBase * otherRaw, casacore::Bool fetchIfNeeded)
     {
         const VbCacheItem<T, IsComputed> * other =
             dynamic_cast <const VbCacheItem<T, IsComputed> *> (otherRaw);
@@ -358,15 +359,15 @@ protected:
 
             item_p = other->item_p;
             setAsPresent ();
-            isDirty_p = False;
+            isDirty_p = false;
         }
         else if (fetchIfNeeded){
             set (other->get());
         }
         else {
 
-            setAsPresent (False);
-            isDirty_p = False;
+            setAsPresent (false);
+            isDirty_p = false;
         }
     }
 
@@ -377,7 +378,7 @@ protected:
     }
 
     void
-    setAsPresent (Bool isPresent = True) const
+    setAsPresent (casacore::Bool isPresent = true) const
     {
         isPresent_p = isPresent;
     }
@@ -385,12 +386,12 @@ protected:
 private:
 
     Filler       filler_p;
-    mutable Bool isDirty_p;
-    mutable Bool isPresent_p;
+    mutable casacore::Bool isDirty_p;
+    mutable casacore::Bool isPresent_p;
     mutable T    item_p;
 };
 
-template <typename T, Bool IsComputed = False>
+template <typename T, casacore::Bool IsComputed = false>
 class VbCacheItemArray : public VbCacheItem<T, IsComputed> {
 public:
 
@@ -401,13 +402,13 @@ public:
     : VbCacheItem<T, IsComputed> (isMutable), capacity_p (0), shapePattern_p (NoCheck) {}
     virtual ~VbCacheItemArray () {}
 
-    virtual void appendRows (Int nRows, Bool truncate)
+    virtual void appendRows (casacore::Int nRows, casacore::Bool truncate)
     {
 
         // Only used when time averaging
 
-        IPosition shape = this->getItem().shape();
-        Int nDims = shape.size();
+        casacore::IPosition shape = this->getItem().shape();
+        casacore::Int nDims = shape.size();
 
         if (nDims == 0 || shapePattern_p == NoCheck){
             // This item is empty or unfillable so leave it alone.
@@ -432,16 +433,16 @@ public:
             // the number of rows then we expect the array
 
             this->setAsPresent(); // This VB is being filled manually
-            IPosition desiredShape = this->getVb()->getValidShape (shapePattern_p);
-            IPosition currentShape = getShape();
+            casacore::IPosition desiredShape = this->getVb()->getValidShape (shapePattern_p);
+            casacore::IPosition currentShape = getShape();
 
             // Determine if the existing shape is the same as the desired shape
             // ignoring rows.  If is the same, then the existing data will need
             // to be copied in the event that the array needs to be resized
             // (i.e., reallocated).
 
-            Bool shapeOk = True; // will ignore last dimension
-            for (uInt i = 0; i < currentShape.nelements() - 1; i++){
+            casacore::Bool shapeOk = true; // will ignore last dimension
+            for (casacore::uInt i = 0; i < currentShape.nelements() - 1; i++){
                 shapeOk = shapeOk && desiredShape [i] == currentShape [i];
             }
 
@@ -464,12 +465,12 @@ public:
         }
     }
 
-    virtual void copyRowElement (Int sourceRow, Int destinationRow)
+    virtual void copyRowElement (casacore::Int sourceRow, casacore::Int destinationRow)
     {
         copyRowElementAux (this->getItem(), sourceRow, destinationRow);
     }
 
-    virtual IPosition getShape() const
+    virtual casacore::IPosition getShape() const
     {
         return this->getItem().shape();
     }
@@ -481,37 +482,37 @@ public:
                 Filler filler,
                 VisBufferComponent2 component,
                 ShapePattern shapePattern,
-                Bool isKey)
+                casacore::Bool isKey)
     {
         VbCacheItem<T, IsComputed>::initialize (cache, vb, filler, component, isKey);
         shapePattern_p = shapePattern;
     }
 
 
-    virtual Bool
+    virtual casacore::Bool
     isShapeOk () const
     {
         // Check to see if the shape of this data item is consistent
         // with the expected shape.
 
-        Bool result = shapePattern_p == NoCheck ||
+        casacore::Bool result = shapePattern_p == NoCheck ||
                       this->getItem().shape() == this->getVb()->getValidShape (shapePattern_p);
 
         return result;
     }
 
 
-    Bool isArray () const
+    casacore::Bool isArray () const
     {
-        return True;
+        return true;
     }
 
     void
-    resize (Bool copyValues)
+    resize (casacore::Bool copyValues)
     {
         if (shapePattern_p != NoCheck){
 
-            IPosition desiredShape = this->getVb()->getValidShape (shapePattern_p);
+            casacore::IPosition desiredShape = this->getVb()->getValidShape (shapePattern_p);
 
             this->getItem().resize (desiredShape, copyValues);
             capacity_p = desiredShape.last();
@@ -524,9 +525,9 @@ public:
     }
 
     void
-    resizeRows (Int newNRows)
+    resizeRows (casacore::Int newNRows)
     {
-        IPosition shape = this->getItem().shape();
+        casacore::IPosition shape = this->getItem().shape();
 
         if (shapePattern_p != NoCheck){
 
@@ -535,7 +536,7 @@ public:
 
             shape.last() = newNRows;
 
-            this->getItem().resize (shape, True);
+            this->getItem().resize (shape, true);
 
             this->setDirty();
         }
@@ -551,8 +552,8 @@ public:
 
         // Now check for a conformant shape.
 
-        IPosition itemShape = newItem.shape();
-        Bool parameterShapeOk = shapePattern_p == NoCheck ||
+        casacore::IPosition itemShape = newItem.shape();
+        casacore::Bool parameterShapeOk = shapePattern_p == NoCheck ||
                                 itemShape == this->getVb()->getValidShape (shapePattern_p);
         ThrowIf (! parameterShapeOk,
                  "Invalid parameter shape:: " + shapeErrorMessage (& itemShape));
@@ -571,8 +572,8 @@ public:
         VbCacheItem<T,IsComputed>::set (newItem);
     }
 
-    virtual String
-    shapeErrorMessage (const IPosition * badShape = 0) const
+    virtual casacore::String
+    shapeErrorMessage (const casacore::IPosition * badShape = 0) const
     {
 
         ThrowIf (shapePattern_p == NoCheck,
@@ -581,10 +582,10 @@ public:
         ThrowIf (isShapeOk () && badShape == 0,
                  "Shape is OK so no error message.");
 
-        String badShapeString = (badShape != 0) ? badShape->toString()
+        casacore::String badShapeString = (badShape != 0) ? badShape->toString()
                                                 : this->getItem().shape().toString();
 
-        ostringstream os;
+        std::ostringstream os;
 
         os << "VisBuffer::ShapeError: "
            << VisBufferComponents2::name (this->getComponent())
@@ -605,59 +606,59 @@ protected:
     }
 
     static void
-    copyRowElementAux (Cube<typename T::value_type> & cube, Int sourceRow, Int destinationRow)
+    copyRowElementAux (casacore::Cube<typename T::value_type> & cube, casacore::Int sourceRow, casacore::Int destinationRow)
     {
-        IPosition shape = cube.shape();
-        Int nI = shape(1);
-        Int nJ = shape(0);
+        casacore::IPosition shape = cube.shape();
+        casacore::Int nI = shape(1);
+        casacore::Int nJ = shape(0);
 
-        for (Int i = 0; i < nI; i++){
-            for (Int j = 0; j < nJ; j++){
+        for (casacore::Int i = 0; i < nI; i++){
+            for (casacore::Int j = 0; j < nJ; j++){
                 cube (j, i, destinationRow) = cube (j, i, sourceRow);
             }
         }
     }
 
     static void
-    copyRowElementAux (Matrix<typename T::value_type> & matrix, Int sourceRow, Int destinationRow)
+    copyRowElementAux (casacore::Matrix<typename T::value_type> & matrix, casacore::Int sourceRow, casacore::Int destinationRow)
     {
-        IPosition shape = matrix.shape();
-        Int nJ = shape(0);
+        casacore::IPosition shape = matrix.shape();
+        casacore::Int nJ = shape(0);
 
-        for (Int j = 0; j < nJ; j++){
+        for (casacore::Int j = 0; j < nJ; j++){
             matrix (j, destinationRow) = matrix (j, sourceRow);
         }
     }
 
     static void
-    copyRowElementAux (Array<typename T::value_type> & array, Int sourceRow, Int destinationRow)
+    copyRowElementAux (casacore::Array<typename T::value_type> & array, casacore::Int sourceRow, casacore::Int destinationRow)
     {
-        IPosition shape = array.shape();
+        casacore::IPosition shape = array.shape();
         AssertCc (shape.nelements() == 4);
 
-        Int nH = shape(2);
-        Int nI = shape(1);
-        Int nJ = shape(0);
+        casacore::Int nH = shape(2);
+        casacore::Int nI = shape(1);
+        casacore::Int nJ = shape(0);
 
-        for (Int h = 0; h < nH; h++){
-            for (Int i = 0; i < nI; i++){
-                for (Int j = 0; j < nJ; j++){
-                    array (IPosition (4, j, i, h, destinationRow)) =
-                        array (IPosition (4, j, i, h, sourceRow));
+        for (casacore::Int h = 0; h < nH; h++){
+            for (casacore::Int i = 0; i < nI; i++){
+                for (casacore::Int j = 0; j < nJ; j++){
+                    array (casacore::IPosition (4, j, i, h, destinationRow)) =
+                        array (casacore::IPosition (4, j, i, h, sourceRow));
                 }
             }
         }
     }
 
     static void
-    copyRowElementAux (Vector<typename T::value_type> & vector, Int sourceRow, Int destinationRow)
+    copyRowElementAux (casacore::Vector<typename T::value_type> & vector, casacore::Int sourceRow, casacore::Int destinationRow)
     {
         vector (destinationRow) = vector (sourceRow);
     }
 
 private:
 
-    Int capacity_p;
+    casacore::Int capacity_p;
     ShapePattern shapePattern_p;
 };
 
@@ -670,69 +671,69 @@ public:
     VisBufferCache (VisBufferImpl2 * vb);
 
     void appendComplete ();
-    Int appendRow ();
+    casacore::Int appendRow ();
     void initialize (VisBufferImpl2 * vb);
     void registerItem (VbCacheItemBase * item);
 
     // The values that are potentially cached.
 
-    VbCacheItemArray <Vector<Int> > antenna1_p;
-    VbCacheItemArray <Vector<Int> > antenna2_p;
-    VbCacheItemArray <Vector<Int> > arrayId_p;
-    VbCacheItemArray <Vector<SquareMatrix<Complex, 2> >, True> cjones_p;
-    VbCacheItemArray <Cube<Complex> > correctedVisCube_p;
-//    VbCacheItemArray <Matrix<CStokesVector> > correctedVisibility_p;
-    VbCacheItemArray <Vector<Int> > corrType_p;
-    VbCacheItem <Int> dataDescriptionId_p;
-    VbCacheItemArray <Vector<Int> > dataDescriptionIds_p;
-    VbCacheItemArray <Vector<MDirection> > direction1_p; //where the first antenna/feed is pointed to
-    VbCacheItemArray <Vector<MDirection> > direction2_p; //where the second antenna/feed is pointed to
-    VbCacheItemArray <Vector<Double> > exposure_p;
-    VbCacheItemArray <Vector<Int> > feed1_p;
-    VbCacheItemArray <Vector<Float> > feed1Pa_p;
-    VbCacheItemArray <Vector<Int> > feed2_p;
-    VbCacheItemArray <Vector<Float> > feed2Pa_p;
-    VbCacheItemArray <Vector<Int> > fieldId_p;
-//    VbCacheItemArray <Matrix<Bool> > flag_p;
-    VbCacheItemArray <Array<Bool> > flagCategory_p;
-    VbCacheItemArray <Cube<Bool> > flagCube_p;
-    VbCacheItemArray <Vector<Bool> > flagRow_p;
-    VbCacheItemArray <Cube<Float> > floatDataCube_p;
-    VbCacheItemArray <Matrix<Float> > imagingWeight_p;
-    VbCacheItemArray <Cube<Complex> > modelVisCube_p;
-//    VbCacheItemArray <Matrix<CStokesVector> > modelVisibility_p;
-    VbCacheItem <Int> nAntennas_p;
-    VbCacheItem <Int> nChannels_p;
-    VbCacheItem <Int> nCorrelations_p;
-    VbCacheItem <Int> nRows_p;
-    VbCacheItemArray <Vector<Int> > observationId_p;
-    VbCacheItem <MDirection> phaseCenter_p;
-    VbCacheItem <Int> polFrame_p;
-    VbCacheItem <Int> polarizationId_p;
-    VbCacheItemArray <Vector<Int> > processorId_p;
-    VbCacheItemArray <Vector<uInt> > rowIds_p;
-    VbCacheItemArray <Vector<Int> > scan_p;
-    VbCacheItemArray <Matrix<Float> > sigma_p;
-    //VbCacheItemArray <Matrix<Float> > sigmaMat_p;
-    VbCacheItemArray <Vector<Int> > spectralWindows_p;
-    VbCacheItemArray <Vector<Int> > stateId_p;
-    VbCacheItemArray <Vector<Double> > time_p;
-    VbCacheItemArray <Vector<Double> > timeCentroid_p;
-    VbCacheItemArray <Vector<Double> > timeInterval_p;
-    VbCacheItemArray <Matrix<Double> > uvw_p;
-    VbCacheItemArray <Cube<Complex> > visCube_p;
-//    VbCacheItemArray <Matrix<CStokesVector> > visibility_p;
-    VbCacheItemArray <Matrix<Float> > weight_p;
-    //VbCacheItemArray <Matrix<Float> > weightMat_p;
-    VbCacheItemArray <Cube<Float> > weightSpectrum_p;
-    VbCacheItemArray <Cube<Float> > sigmaSpectrum_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > antenna1_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > antenna2_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > arrayId_p;
+    VbCacheItemArray <casacore::Vector<casacore::SquareMatrix<casacore::Complex, 2> >, true> cjones_p;
+    VbCacheItemArray <casacore::Cube<casacore::Complex> > correctedVisCube_p;
+//    VbCacheItemArray <casacore::Matrix<CStokesVector> > correctedVisibility_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > corrType_p;
+    VbCacheItem <casacore::Int> dataDescriptionId_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > dataDescriptionIds_p;
+    VbCacheItemArray <casacore::Vector<casacore::MDirection> > direction1_p; //where the first antenna/feed is pointed to
+    VbCacheItemArray <casacore::Vector<casacore::MDirection> > direction2_p; //where the second antenna/feed is pointed to
+    VbCacheItemArray <casacore::Vector<casacore::Double> > exposure_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > feed1_p;
+    VbCacheItemArray <casacore::Vector<casacore::Float> > feed1Pa_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > feed2_p;
+    VbCacheItemArray <casacore::Vector<casacore::Float> > feed2Pa_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > fieldId_p;
+//    VbCacheItemArray <casacore::Matrix<casacore::Bool> > flag_p;
+    VbCacheItemArray <casacore::Array<casacore::Bool> > flagCategory_p;
+    VbCacheItemArray <casacore::Cube<casacore::Bool> > flagCube_p;
+    VbCacheItemArray <casacore::Vector<casacore::Bool> > flagRow_p;
+    VbCacheItemArray <casacore::Cube<casacore::Float> > floatDataCube_p;
+    VbCacheItemArray <casacore::Matrix<casacore::Float> > imagingWeight_p;
+    VbCacheItemArray <casacore::Cube<casacore::Complex> > modelVisCube_p;
+//    VbCacheItemArray <casacore::Matrix<CStokesVector> > modelVisibility_p;
+    VbCacheItem <casacore::Int> nAntennas_p;
+    VbCacheItem <casacore::Int> nChannels_p;
+    VbCacheItem <casacore::Int> nCorrelations_p;
+    VbCacheItem <casacore::Int> nRows_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > observationId_p;
+    VbCacheItem <casacore::MDirection> phaseCenter_p;
+    VbCacheItem <casacore::Int> polFrame_p;
+    VbCacheItem <casacore::Int> polarizationId_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > processorId_p;
+    VbCacheItemArray <casacore::Vector<casacore::uInt> > rowIds_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > scan_p;
+    VbCacheItemArray <casacore::Matrix<casacore::Float> > sigma_p;
+    //VbCacheItemArray <casacore::Matrix<casacore::Float> > sigmaMat_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > spectralWindows_p;
+    VbCacheItemArray <casacore::Vector<casacore::Int> > stateId_p;
+    VbCacheItemArray <casacore::Vector<casacore::Double> > time_p;
+    VbCacheItemArray <casacore::Vector<casacore::Double> > timeCentroid_p;
+    VbCacheItemArray <casacore::Vector<casacore::Double> > timeInterval_p;
+    VbCacheItemArray <casacore::Matrix<casacore::Double> > uvw_p;
+    VbCacheItemArray <casacore::Cube<casacore::Complex> > visCube_p;
+//    VbCacheItemArray <casacore::Matrix<CStokesVector> > visibility_p;
+    VbCacheItemArray <casacore::Matrix<casacore::Float> > weight_p;
+    //VbCacheItemArray <casacore::Matrix<casacore::Float> > weightMat_p;
+    VbCacheItemArray <casacore::Cube<casacore::Float> > weightSpectrum_p;
+    VbCacheItemArray <casacore::Cube<casacore::Float> > sigmaSpectrum_p;
 
     CacheRegistry registry_p;
 
     template <typename T, typename U>
     static void
-    sortCorrelationItem (vi::VbCacheItem<T> & dataItem, IPosition & blc, IPosition & trc,
-                         IPosition & mat, U & tmp, Bool sort)
+    sortCorrelationItem (vi::VbCacheItem<T> & dataItem, casacore::IPosition & blc, casacore::IPosition & trc,
+                         casacore::IPosition & mat, U & tmp, casacore::Bool sort)
     {
 
         T & data = dataItem.getRef ();
@@ -749,7 +750,7 @@ public:
             blc(0) = trc(0) = 3;
             p3.reference(data (blc, trc).reform(mat));
 
-            if (sort){ // Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)
+            if (sort){ // casacore::Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)
 
                 tmp = p1;
                 p1 = p2;
@@ -775,7 +776,7 @@ public:
     class FrequencyCache {
     public:
 
-        typedef Vector<T> (ViImplementation2::* Updater) (Double, Int, Int, Int) const;
+        typedef casacore::Vector<T> (ViImplementation2::* Updater) (casacore::Double, casacore::Int, casacore::Int, casacore::Int) const;
 
         FrequencyCache (Updater updater)
         : frame_p (-1),
@@ -785,12 +786,12 @@ public:
           updater_p (updater)
         {}
 
-        Int frame_p;
-        Int msId_p;
-        Int spectralWindowId_p;
-        Double time_p;
+        casacore::Int frame_p;
+        casacore::Int msId_p;
+        casacore::Int spectralWindowId_p;
+        casacore::Double time_p;
         Updater updater_p;
-        Vector<T> values_p;
+        casacore::Vector<T> values_p;
 
         void
         flush ()
@@ -800,13 +801,13 @@ public:
 
         void
         updateCacheIfNeeded (const ViImplementation2 * rovi,
-                             Int rowInBuffer,
-                             Int frame,
+                             casacore::Int rowInBuffer,
+                             casacore::Int frame,
                              const VisBufferImpl2 * vb)
         {
-            Int msId = vb->msId();
-            Int spectralWindowId = vb->spectralWindows()(rowInBuffer);
-            Double time = vb->time()(rowInBuffer);
+            casacore::Int msId = vb->msId();
+            casacore::Int spectralWindowId = vb->spectralWindows()(rowInBuffer);
+            casacore::Double time = vb->time()(rowInBuffer);
 
             if (time == time_p && frame == frame_p && msId == msId_p &&
                 spectralWindowId == spectralWindowId_p){
@@ -825,18 +826,18 @@ public:
     VisBufferState ()
     : appendCapacity_p (0),
       appendSize_p (0),
-      areCorrelationsSorted_p (False),
+      areCorrelationsSorted_p (false),
       channelNumbers_p (& ViImplementation2::getChannels),
       dirtyComponents_p (),
       frequencies_p (& ViImplementation2::getFrequencies),
-      isAttached_p (False),
-      isFillable_p (False),
-      isNewMs_p (False),
-      isNewArrayId_p (False),
-      isNewFieldId_p (False),
-      isNewSpectralWindow_p (False),
-      isRekeyable_p (False),
-      isWritable_p (False),
+      isAttached_p (false),
+      isFillable_p (false),
+      isNewMs_p (false),
+      isNewArrayId_p (false),
+      isNewFieldId_p (false),
+      isNewSpectralWindow_p (false),
+      isRekeyable_p (false),
+      isWritable_p (false),
       msId_p (-1),
       pointingTableLastRow_p (-1),
       validShapes_p (N_ShapePatterns),
@@ -845,32 +846,32 @@ public:
       weightScaling_p ( )
     {}
 
-    Int appendCapacity_p;
-    Int appendSize_p;
-    Bool areCorrelationsSorted_p; // Have correlations been sorted by sortCorr?
-    FrequencyCache<Int> channelNumbers_p;
-    Vector<Int> correlations_p;
-    Vector<Stokes::StokesTypes> correlationsDefined_p;
-    Vector<Stokes::StokesTypes> correlationsSelected_p;
+    casacore::Int appendCapacity_p;
+    casacore::Int appendSize_p;
+    casacore::Bool areCorrelationsSorted_p; // Have correlations been sorted by sortCorr?
+    FrequencyCache<casacore::Int> channelNumbers_p;
+    casacore::Vector<casacore::Int> correlations_p;
+    casacore::Vector<casacore::Stokes::StokesTypes> correlationsDefined_p;
+    casacore::Vector<casacore::Stokes::StokesTypes> correlationsSelected_p;
     VisBufferComponents2 dirtyComponents_p;
-    FrequencyCache<Double> frequencies_p;
-    Bool isAttached_p;
-    Bool isFillable_p;
-    Bool isNewMs_p;
-    Bool isNewArrayId_p;
-    Bool isNewFieldId_p;
-    Bool isNewSpectralWindow_p;
-    Bool isRekeyable_p;
-    Bool isWritable_p;
-    Int msId_p;
-    String msName_p;
-    Bool newMs_p;
-    mutable Int pointingTableLastRow_p;
+    FrequencyCache<casacore::Double> frequencies_p;
+    casacore::Bool isAttached_p;
+    casacore::Bool isFillable_p;
+    casacore::Bool isNewMs_p;
+    casacore::Bool isNewArrayId_p;
+    casacore::Bool isNewFieldId_p;
+    casacore::Bool isNewSpectralWindow_p;
+    casacore::Bool isRekeyable_p;
+    casacore::Bool isWritable_p;
+    casacore::Int msId_p;
+    casacore::String msName_p;
+    casacore::Bool newMs_p;
+    mutable casacore::Int pointingTableLastRow_p;
     Subchunk subchunk_p;
-    Vector<IPosition> validShapes_p;
+    casacore::Vector<casacore::IPosition> validShapes_p;
     ViImplementation2 * vi_p; // [use]
     mutable VisModelDataI * visModelData_p;
-    CountedPtr <WeightScaling> weightScaling_p;
+    casacore::CountedPtr <WeightScaling> weightScaling_p;
 };
 
 

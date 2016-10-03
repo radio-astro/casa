@@ -11,20 +11,20 @@ namespace casa {
 template<typename T>
 inline SakuraAlignedArray<T>::SakuraAlignedArray(size_t num_data) : 
   num_data_(num_data) {
-  LogIO logger(LogOrigin("SakuraAlignedArray", "SakuraAlignedArray", WHERE));
-  logger << LogIO::DEBUGGING << "Constructing SakuraAlignedArray..." << LogIO::POST;
+  casacore::LogIO logger(casacore::LogOrigin("SakuraAlignedArray", "SakuraAlignedArray", WHERE));
+  logger << casacore::LogIO::DEBUGGING << "Constructing SakuraAlignedArray..." << casacore::LogIO::POST;
 
   initialize();
 
-  logger << LogIO::DEBUGGING << "  Initial Address = " << storage_ << LogIO::POST;
-  logger << LogIO::DEBUGGING << "  Aligned Address = " << data << LogIO::POST;
+  logger << casacore::LogIO::DEBUGGING << "  Initial Address = " << storage_ << casacore::LogIO::POST;
+  logger << casacore::LogIO::DEBUGGING << "  Aligned Address = " << data << casacore::LogIO::POST;
 }
 
 template<typename T>
-inline SakuraAlignedArray<T>::SakuraAlignedArray(Vector<T> const &in_vector) : 
+inline SakuraAlignedArray<T>::SakuraAlignedArray(casacore::Vector<T> const &in_vector) : 
   num_data_(in_vector.nelements()) {
-  LogIO logger(LogOrigin("SakuraAlignedArray", "SakuraAlignedArray", WHERE));
-  logger << LogIO::DEBUGGING << "Constructing SakuraAlignedArray..." << LogIO::POST;
+  casacore::LogIO logger(casacore::LogOrigin("SakuraAlignedArray", "SakuraAlignedArray", WHERE));
+  logger << casacore::LogIO::DEBUGGING << "Constructing SakuraAlignedArray..." << casacore::LogIO::POST;
 
   initialize();
 
@@ -33,8 +33,8 @@ inline SakuraAlignedArray<T>::SakuraAlignedArray(Vector<T> const &in_vector) :
     ptr[i] = in_vector(i);
   }
 
-  logger << LogIO::DEBUGGING << "  Initial Address = " << storage_ << LogIO::POST;
-  logger << LogIO::DEBUGGING << "  Aligned Address = " << data << LogIO::POST;
+  logger << casacore::LogIO::DEBUGGING << "  Initial Address = " << storage_ << casacore::LogIO::POST;
+  logger << casacore::LogIO::DEBUGGING << "  Aligned Address = " << data << casacore::LogIO::POST;
 }
 
 template<typename T>
@@ -55,15 +55,16 @@ inline void SakuraAlignedArray<T>::initialize() {
   assert(data != nullptr);
   assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 
-  Vector<T> alignedCasaVector = Vector<T>(IPosition(1, num_data_), data, SHARE);
+  casacore::Vector<T> alignedCasaVector = casacore::Vector<T>(casacore::IPosition(1, num_data_), data,
+                                                              casacore::SHARE);
   assert(data == alignedCasaVector.cbegin());
   casaVector = &alignedCasaVector;
 }
 
 template<typename T>
 inline SakuraAlignedArray<T>::~SakuraAlignedArray() {
-  LogIO logger(LogOrigin("SakuraAlignedArray", "~SakuraAlignedArray", WHERE));
-  logger << LogIO::DEBUGGING << "Destructing SakuraAlignedArray..." << LogIO::POST;
+  casacore::LogIO logger(casacore::LogOrigin("SakuraAlignedArray", "~SakuraAlignedArray", WHERE));
+  logger << casacore::LogIO::DEBUGGING << "Destructing SakuraAlignedArray..." << casacore::LogIO::POST;
 
   free(storage_);
 }

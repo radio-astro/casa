@@ -18,26 +18,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct SpectralWindowRecord {
-  typedef MSSpectralWindow AssociatingTable;
-  typedef MSSpWindowColumns AssociatingColumns;
+  typedef casacore::MSSpectralWindow AssociatingTable;
+  typedef casacore::MSSpWindowColumns AssociatingColumns;
 
   // meta
-  Int spw_id;
+  casacore::Int spw_id;
 
   // mandatory
-  Int num_chan;
-  Int meas_freq_ref;
-  Double refpix;
-  Double refval;
-  Double increment;
+  casacore::Int num_chan;
+  casacore::Int meas_freq_ref;
+  casacore::Double refpix;
+  casacore::Double refval;
+  casacore::Double increment;
 
   // optional
-  String name;
+  casacore::String name;
 
   // for dummy entry
-  Int const d_num_chan = 1;
-  Vector<Double> const d_array = Vector<Double>(1, 0.0);
-  Int const d_freq = 0.0;
+  casacore::Int const d_num_chan = 1;
+  casacore::Vector<casacore::Double> const d_array = casacore::Vector<casacore::Double>(1, 0.0);
+  casacore::Int const d_freq = 0.0;
 
   // method
   void clear() {
@@ -62,12 +62,12 @@ struct SpectralWindowRecord {
   }
 
   void add(AssociatingTable &table, AssociatingColumns &columns) {
-    uInt uspw_id = (uInt) spw_id;
-    uInt nrow = table.nrow();
+    casacore::uInt uspw_id = (casacore::uInt) spw_id;
+    casacore::uInt nrow = table.nrow();
     if (nrow <= uspw_id) {
       table.addRow(uspw_id - nrow + 1);
-      uInt new_nrow = table.nrow();
-      for (uInt i = nrow; i < new_nrow - 1; ++i) {
+      casacore::uInt new_nrow = table.nrow();
+      for (casacore::uInt i = nrow; i < new_nrow - 1; ++i) {
         columns.numChan().put(i, d_num_chan);
         columns.refFrequency().put(i, d_freq);
         columns.totalBandwidth().put(i, d_freq);
@@ -79,24 +79,24 @@ struct SpectralWindowRecord {
     }
   }
 
-  Bool fill(uInt /*irow*/, AssociatingColumns &columns) {
+  casacore::Bool fill(casacore::uInt /*irow*/, AssociatingColumns &columns) {
     if (spw_id < 0) {
-      return False;
+      return false;
     }
 
-    uInt nrow = columns.nrow();
+    casacore::uInt nrow = columns.nrow();
 
-    if (nrow <= (uInt) spw_id) {
-      return False;
+    if (nrow <= (casacore::uInt) spw_id) {
+      return false;
     }
 
     columns.numChan().put(spw_id, num_chan);
     columns.measFreqRef().put(spw_id, meas_freq_ref);
-    Double tot_bw = num_chan * abs(increment);
+    casacore::Double tot_bw = num_chan * abs(increment);
     columns.totalBandwidth().put(spw_id, tot_bw);
-    Double ref_frequency = refval - refpix * increment;
+    casacore::Double ref_frequency = refval - refpix * increment;
     columns.refFrequency().put(spw_id, ref_frequency);
-    Vector<Double> freq(num_chan);
+    casacore::Vector<casacore::Double> freq(num_chan);
     indgen(freq, ref_frequency, increment);
     columns.chanFreq().put(spw_id, freq);
     freq = increment;
@@ -104,7 +104,7 @@ struct SpectralWindowRecord {
     freq = abs(freq);
     columns.effectiveBW().put(spw_id, freq);
     columns.resolution().put(spw_id, freq);
-    Int net_sideband = 0; // USB
+    casacore::Int net_sideband = 0; // USB
     if (increment < 0.0) {
       net_sideband = 1; // LSB
     }
@@ -113,7 +113,7 @@ struct SpectralWindowRecord {
       columns.name().put(spw_id, name);
     }
 
-    return True;
+    return true;
   }
 };
 

@@ -47,21 +47,21 @@ namespace casa {
 		    ArcMin, UNSET
 		};
 
-		static const String FILE_ARCMIN;
-		static const String FILE_ARCSEC;
-		static const String FILE_DEGREES;
-		static const String FILE_DELIMITER;
-		static const String FILE_DMS_D;
-		static const String FILE_DMS_M;
-		static const String FILE_DMS_S;
-		static const String FILE_HMS_H;
-		static const String FILE_HMS_M;
-		static const String FILE_HMS_S;
-		static const String FILE_IMAGE_PIXELS;
-		static const String FILE_PHYSICAL_PIXELS;
-		static const String FILE_RADIANS;
+		static const casacore::String FILE_ARCMIN;
+		static const casacore::String FILE_ARCSEC;
+		static const casacore::String FILE_DEGREES;
+		static const casacore::String FILE_DELIMITER;
+		static const casacore::String FILE_DMS_D;
+		static const casacore::String FILE_DMS_M;
+		static const casacore::String FILE_DMS_S;
+		static const casacore::String FILE_HMS_H;
+		static const casacore::String FILE_HMS_M;
+		static const casacore::String FILE_HMS_S;
+		static const casacore::String FILE_IMAGE_PIXELS;
+		static const casacore::String FILE_PHYSICAL_PIXELS;
+		static const casacore::String FILE_RADIANS;
 
-		static CoordinateUnit coordinateUnit(const String& unit) {
+		static CoordinateUnit coordinateUnit(const casacore::String& unit) {
 			if(unit == FILE_ARCMIN) return ArcMin;
 			else if(unit == FILE_ARCSEC) return ArcSec;
 			else if(unit == FILE_DEGREES) return Degrees;
@@ -79,7 +79,7 @@ namespace casa {
 		// </group>
 
 
-		// Coordinate systems.
+		// casacore::Coordinate systems.
 		// <group>
 		enum CoordinateSystem {
 		    Physical, Image, FK4, FK5, Galactic, Ecliptic, Linear, Amplifier,
@@ -344,8 +344,8 @@ namespace casa {
 		// to fix it.
 		bool isValid() const;
 
-		// Returns a String version for use with DS9Region::toPrintString.
-		String toPrintString() const;
+		// Returns a casacore::String version for use with DS9Region::toPrintString.
+		casacore::String toPrintString() const;
 
 		// Returns the value in degrees.
 		double toDegrees() const;
@@ -361,7 +361,7 @@ namespace casa {
 // Holds information for read DS9 regions.  A DS9Region consists of a type,
 // a list of coordinates, a coordinate system, and a set of properties.
 // Composite regions also have a list of children regions.  For simplicity,
-// properties are either bool properties or String properties.  All properties
+// properties are either bool properties or casacore::String properties.  All properties
 // have defaults which are set during construction.
 	class DS9Region { /*: public RFRegion*/
 		//friend class DS9RegionFileReader;
@@ -371,32 +371,32 @@ namespace casa {
 
 		// Properties.
 		// <group>
-		static const String PROP_BACKGROUND;
-		static const String PROP_COLOR;
-		static const String PROP_COMPASS;
-		static const String PROP_COMPASS_ELABEL;
-		static const String PROP_COMPASS_NLABEL;
-		static const String PROP_COMPOSITE;
-		static const String PROP_DASH;
-		static const String PROP_DASHLIST;
-		static const String PROP_DELETE;
-		static const String PROP_EDIT;
-		static const String PROP_FIXED;
-		static const String PROP_FONT;
-		static const String PROP_HIGHLITE;
-		static const String PROP_INCLUDE;
-		static const String PROP_LINE;
-		static const String PROP_MARKER_SIZE;
-		static const String PROP_MOVE;
-		static const String PROP_ROTATE;
-		static const String PROP_RULER;
-		static const String PROP_SELECT;
-		static const String PROP_SOURCE;
-		static const String PROP_TAG;
-		static const String PROP_TEXT;
-		static const String PROP_TEXTANGLE;
-		static const String PROP_VECTOR;
-		static const String PROP_WIDTH;
+		static const casacore::String PROP_BACKGROUND;
+		static const casacore::String PROP_COLOR;
+		static const casacore::String PROP_COMPASS;
+		static const casacore::String PROP_COMPASS_ELABEL;
+		static const casacore::String PROP_COMPASS_NLABEL;
+		static const casacore::String PROP_COMPOSITE;
+		static const casacore::String PROP_DASH;
+		static const casacore::String PROP_DASHLIST;
+		static const casacore::String PROP_DELETE;
+		static const casacore::String PROP_EDIT;
+		static const casacore::String PROP_FIXED;
+		static const casacore::String PROP_FONT;
+		static const casacore::String PROP_HIGHLITE;
+		static const casacore::String PROP_INCLUDE;
+		static const casacore::String PROP_LINE;
+		static const casacore::String PROP_MARKER_SIZE;
+		static const casacore::String PROP_MOVE;
+		static const casacore::String PROP_ROTATE;
+		static const casacore::String PROP_RULER;
+		static const casacore::String PROP_SELECT;
+		static const casacore::String PROP_SOURCE;
+		static const casacore::String PROP_TAG;
+		static const casacore::String PROP_TEXT;
+		static const casacore::String PROP_TEXTANGLE;
+		static const casacore::String PROP_VECTOR;
+		static const casacore::String PROP_WIDTH;
 		// </group>
 
 		// Note: when adding new properties:
@@ -411,8 +411,8 @@ namespace casa {
 		//    DS9RegionFileReader::readProperties()
 
 		// Returns all valid properties.
-		static vector<String> properties() {
-			static vector<String> v(26);
+		static vector<casacore::String> properties() {
+			static vector<casacore::String> v(26);
 			v[0] = PROP_INCLUDE;
 			v[1] = PROP_TEXT;
 			v[2] = PROP_COLOR;
@@ -442,16 +442,16 @@ namespace casa {
 			return v;
 		}
 
-		// Returns true if the given String is a valid property, false otherwise.
-		static bool isProperty(const String& prp) {
-			static vector<String> v = properties();
+		// Returns true if the given casacore::String is a valid property, false otherwise.
+		static bool isProperty(const casacore::String& prp) {
+			static vector<casacore::String> v = properties();
 			for(unsigned int i = 0; i < v.size(); i++) if(v[i] == prp) return true;
 			return false;
 		}
 
-		// Returns true if the given String is a valid bool property, false
+		// Returns true if the given casacore::String is a valid bool property, false
 		// otherwise.
-		static bool isBoolProperty(const String& property) {
+		static bool isBoolProperty(const casacore::String& property) {
 			if(!isProperty(property)) return false;
 			else return property != PROP_TEXT && property != PROP_COLOR &&
 				            property != PROP_FONT && property != PROP_LINE &&
@@ -463,9 +463,9 @@ namespace casa {
 				            property != PROP_DASHLIST;
 		}
 
-		// Returns true if the given value is valid for the given String property
+		// Returns true if the given value is valid for the given casacore::String property
 		// and region type, false otherwise.
-		static bool valueIsValid(const String& property, const String& value,
+		static bool valueIsValid(const casacore::String& property, const casacore::String& value,
 		                         DS9::RegionType type) {
 			if(property == PROP_COLOR) {
 				if(value == "white"   || value == "black" || value == "red" ||
@@ -526,7 +526,7 @@ namespace casa {
 		}
 
 		// Returns the default value for the given bool property.
-		static bool defaultBoolValue(const String& property) {
+		static bool defaultBoolValue(const casacore::String& property) {
 			if(property == PROP_INCLUDE)         return true;
 			else if(property == PROP_SELECT)     return true;
 			else if(property == PROP_EDIT)       return true;
@@ -543,8 +543,8 @@ namespace casa {
 			else return false;
 		}
 
-		// Returns the default value for the given String property.
-		static String defaultStringValue(const String& property) {
+		// Returns the default value for the given casacore::String property.
+		static casacore::String defaultStringValue(const casacore::String& property) {
 			if(property == PROP_TEXT)                return "";
 			else if(property == PROP_COLOR)          return "green";
 			else if(property == PROP_FONT)           return "helvetica 10 normal";
@@ -553,7 +553,7 @@ namespace casa {
 			else if(property == PROP_TEXTANGLE)      return "0";
 			else if(property == PROP_WIDTH)          return "1";
 			else if(property == PROP_MARKER_SIZE)
-				return String::toString(DS9::MARKER_SIZE);
+				return casacore::String::toString(DS9::MARKER_SIZE);
 			else if(property == PROP_TAG)            return "";
 			else if(property == PROP_COMPASS)        return "image";
 			else if(property == PROP_COMPASS_NLABEL) return "N";
@@ -573,10 +573,10 @@ namespace casa {
 
 
 		// Returns a human-readable representation of this region.
-		String toPrintString() const;
+		casacore::String toPrintString() const;
 
 		// Returns a name.
-		String name() const;
+		casacore::String name() const;
 
 		// Converts this region to a RegionShape.  Not all DS9 region types are
 		// supported and thus this may return NULL.  For unsupported regions, see
@@ -589,24 +589,24 @@ namespace casa {
 
 		// Sets/adds the given properties to this region's.  Returns false if an
 		// error occured.
-		bool setProperties(const RecordInterface& properties);
+		bool setProperties(const casacore::RecordInterface& properties);
 
 		// Defines the given bool property with the given value.  Returns false if
 		// the given property is invalid.
-		bool define(const String& property, bool value);
+		bool define(const casacore::String& property, bool value);
 
-		// Defines the given String property with the given value.  Returns false
+		// Defines the given casacore::String property with the given value.  Returns false
 		// if the given property or value is invalid.
-		bool define(const String& property, const String& value);
+		bool define(const casacore::String& property, const casacore::String& value);
 
 		// Returns true if the given property is defined, false otherwise.
-		bool isDefined(const String& property);
+		bool isDefined(const casacore::String& property);
 
 		// Returns the value for the given bool property.
-		bool boolValue(const String& property);
+		bool boolValue(const casacore::String& property);
 
-		// Returns the String value for the given String property.
-		String stringValue(const String& property);
+		// Returns the casacore::String value for the given casacore::String property.
+		casacore::String stringValue(const casacore::String& property);
 
 		// Adds the given coordinate to the region.
 		void pushCoordinate(const DS9Coordinate& coord);
@@ -634,14 +634,14 @@ namespace casa {
 		DS9::RegionType m_type;               // Region type.
 		DS9::CoordinateSystem m_system;       // Region coordinate system.
 		vector<DS9Coordinate> m_coords;       // Region coordinates.
-		Record m_props;                       // Region properties.
+		casacore::Record m_props;                       // Region properties.
 		vector<DS9Region> m_compositeRegions; // Composite children.
 
 		// Last encountered error during toRegionShape.
 		RFError m_lastError;
 
 		// Convenience method for setting the last error during toRegionShape.
-		void setError(const String& error, bool isFatal = false) const;
+		void setError(const casacore::String& error, bool isFatal = false) const;
 	};
 
 
@@ -668,7 +668,7 @@ namespace casa {
 		vector<DS9Region> m_regions;
 
 		// Current read global properties.
-		Record m_globals;
+		casacore::Record m_globals;
 
 
 		// Processes the given line and returns whether an error occurred or not.
@@ -704,7 +704,7 @@ namespace casa {
 		bool readPointType(QString& comment, DS9::RegionType& type);
 
 		// Reads properties in the given line into the given record.
-		bool readProperties(Record& record, QString& line);
+		bool readProperties(casacore::Record& record, QString& line);
 	};
 
 }

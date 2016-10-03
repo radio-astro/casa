@@ -85,26 +85,26 @@ namespace casa {
 		~QtRTRegion() {  }
 
 		// Retrieve the current rectangular mouse region record and WCH, if any.
-		// (If nothing is ready, returns False -- be sure to check before using
-		// return parameters.  See implementation for mouseRegion Record format).
-		Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+		// (If nothing is ready, returns false -- be sure to check before using
+		// return parameters.  See implementation for mouseRegion casacore::Record format).
+		casacore::Bool getMouseRegion(casacore::Record& mouseRegion, WorldCanvasHolder*& wch);
 
 	signals:
 
 		// See regionReady() implementation for format of the record.  (For some
 		// uses, a connecting slot may be able to do without the WCH* parameter).
-		void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
-		void echoClicked(Record);
+		void mouseRegionReady(casacore::Record mouseRegion, WorldCanvasHolder*);
+		void echoClicked(casacore::Record);
 
 	protected:
 
-		// Signals mouseRegionReady with an appropriate Record, when
+		// Signals mouseRegionReady with an appropriate casacore::Record, when
 		// called by base class in response to user selection with the mouse.
 		// See implementation for format of the record.
 		virtual void regionReady();
 
-		virtual void clicked(Int x, Int y);
-		virtual void doubleClicked(Int x, Int y);
+		virtual void clicked(casacore::Int x, casacore::Int y);
+		virtual void doubleClicked(casacore::Int x, casacore::Int y);
 		//virtual void rectangleReady();
 		//virtual void handleEvent(DisplayEvent& ev);
 		//virtual void keyPressed(const WCPositionEvent &ev);
@@ -131,26 +131,26 @@ namespace casa {
 		~QtPointRegion() {  }
 
 		// Retrieve the current rectangular mouse region record and WCH, if any.
-		// (If nothing is ready, returns False -- be sure to check before using
-		// return parameters.  See implementation for mouseRegion Record format).
-		Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+		// (If nothing is ready, returns false -- be sure to check before using
+		// return parameters.  See implementation for mouseRegion casacore::Record format).
+		casacore::Bool getMouseRegion(casacore::Record& mouseRegion, WorldCanvasHolder*& wch);
 
 	signals:
 
 		// See regionReady() implementation for format of the record.  (For some
 		// uses, a connecting slot may be able to do without the WCH* parameter).
-		void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
-		void echoClicked(Record);
+		void mouseRegionReady(casacore::Record mouseRegion, WorldCanvasHolder*);
+		void echoClicked(casacore::Record);
 
 	protected:
 
-		// Signals mouseRegionReady with an appropriate Record, when
+		// Signals mouseRegionReady with an appropriate casacore::Record, when
 		// called by base class in response to user selection with the mouse.
 		// See implementation for format of the record.
 		virtual void regionReady();
 
-		virtual void clicked(Int x, Int y);
-		virtual void doubleClicked(Int x, Int y);
+		virtual void clicked(casacore::Int x, casacore::Int y);
+		virtual void doubleClicked(casacore::Int x, casacore::Int y);
 		//virtual void rectangleReady();
 		//virtual void handleEvent(DisplayEvent& ev);
 		//virtual void keyPressed(const WCPositionEvent &ev);
@@ -177,26 +177,26 @@ namespace casa {
 		~QtELRegion() {  }
 
 		// Retrieve the current circular mouse region record and WCH, if any.
-		// (If nothing is ready, returns False -- be sure to check before using
-		// return parameters.  See implementation for mouseRegion Record format).
-		Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+		// (If nothing is ready, returns false -- be sure to check before using
+		// return parameters.  See implementation for mouseRegion casacore::Record format).
+		casacore::Bool getMouseRegion(casacore::Record& mouseRegion, WorldCanvasHolder*& wch);
 
 	signals:
 
 		// See regionReady() implementation for format of the record.  (For some
 		// uses, a connecting slot may be able to do without the WCH* parameter).
-		void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
-		void echoClicked(Record);
+		void mouseRegionReady(casacore::Record mouseRegion, WorldCanvasHolder*);
+		void echoClicked(casacore::Record);
 
 	protected:
 
-		// Signals mouseRegionReady with an appropriate Record, when
+		// Signals mouseRegionReady with an appropriate casacore::Record, when
 		// called by base class in response to user selection with the mouse.
 		// See implementation for format of the record.
 		virtual void regionReady();
 
-		virtual void clicked(Int x, Int y);
-		virtual void doubleClicked(Int x, Int y);
+		virtual void clicked(casacore::Int x, casacore::Int y);
+		virtual void doubleClicked(casacore::Int x, casacore::Int y);
 
 		PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
 
@@ -220,27 +220,27 @@ namespace casa {
 		~QtPTRegion() {  }
 
 		// Retrieve the current polygon mouse region record and WCH, if any.
-		// (If nothing is ready, returns False -- be sure to check before using
-		// return parameters.  See implementation for mouseRegion Record format).
-		Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+		// (If nothing is ready, returns false -- be sure to check before using
+		// return parameters.  See implementation for mouseRegion casacore::Record format).
+		casacore::Bool getMouseRegion(casacore::Record& mouseRegion, WorldCanvasHolder*& wch);
 
 	signals:
 
 		// See regionReady() implementation for format of the record.  (For some
 		// uses, a connecting slot may be able to do without the WCH* parameter).
-		void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
-		void echoClicked(Record);
+		void mouseRegionReady(casacore::Record mouseRegion, WorldCanvasHolder*);
+		void echoClicked(casacore::Record);
 
 	protected:
 
 		// This callback is invoked by the base when the user double-clicks
 		// inside a polygon defined previously (but see also polygonReady(),
 		// below).  This implementation emits the Qt signal mouseRegionReady()
-		// with an appropriate Record defining the user's polygon mouse selection.
+		// with an appropriate casacore::Record defining the user's polygon mouse selection.
 		// See implementation for format of the record.
 		virtual void regionReady();
-		virtual void clicked(Int x, Int y);
-		virtual void doubleClicked(Int x, Int y);
+		virtual void clicked(casacore::Int x, casacore::Int y);
+		virtual void doubleClicked(casacore::Int x, casacore::Int y);
 
 		//virtual void handleEvent(DisplayEvent& ev);
 		//virtual void keyPressed(const WCPositionEvent &ev);
@@ -278,27 +278,27 @@ namespace casa {
 		~QtPolylineToolRegion() {  }
 
 		// Retrieve the current polyline mouse region record and WCH, if any.
-		// (If nothing is ready, returns False -- be sure to check before using
-		// return parameters.  See implementation for mouseRegion Record format).
-		Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+		// (If nothing is ready, returns false -- be sure to check before using
+		// return parameters.  See implementation for mouseRegion casacore::Record format).
+		casacore::Bool getMouseRegion(casacore::Record& mouseRegion, WorldCanvasHolder*& wch);
 
 	signals:
 
 		// See regionReady() implementation for format of the record.  (For some
 		// uses, a connecting slot may be able to do without the WCH* parameter).
-		void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
-		void echoClicked(Record);
+		void mouseRegionReady(casacore::Record mouseRegion, WorldCanvasHolder*);
+		void echoClicked(casacore::Record);
 
 	protected:
 
 		// This callback is invoked by the base when the user double-clicks
 		// inside a polygon defined previously (but see also polygonReady(),
 		// below).  This implementation emits the Qt signal mouseRegionReady()
-		// with an appropriate Record defining the user's polygon mouse selection.
+		// with an appropriate casacore::Record defining the user's polygon mouse selection.
 		// See implementation for format of the record.
 		virtual void regionReady();
-		virtual void clicked(Int x, Int y);
-		virtual void doubleClicked(Int x, Int y);
+		virtual void clicked(casacore::Int x, casacore::Int y);
+		virtual void doubleClicked(casacore::Int x, casacore::Int y);
 
 
 
@@ -336,27 +336,27 @@ namespace casa {
 		~QtPVToolRegion() {  }
 
 		// Retrieve the current polygon mouse region record and WCH, if any.
-		// (If nothing is ready, returns False -- be sure to check before using
-		// return parameters.  See implementation for mouseRegion Record format).
-		Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+		// (If nothing is ready, returns false -- be sure to check before using
+		// return parameters.  See implementation for mouseRegion casacore::Record format).
+		casacore::Bool getMouseRegion(casacore::Record& mouseRegion, WorldCanvasHolder*& wch);
 
 	signals:
 
 		// See regionReady() implementation for format of the record.  (For some
 		// uses, a connecting slot may be able to do without the WCH* parameter).
-		void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
-		void echoClicked(Record);
+		void mouseRegionReady(casacore::Record mouseRegion, WorldCanvasHolder*);
+		void echoClicked(casacore::Record);
 
 	protected:
 
 		// This callback is invoked by the base when the user double-clicks
 		// inside a polygon defined previously (but see also polygonReady(),
 		// below).  This implementation emits the Qt signal mouseRegionReady()
-		// with an appropriate Record defining the user's polygon mouse selection.
+		// with an appropriate casacore::Record defining the user's polygon mouse selection.
 		// See implementation for format of the record.
 		virtual void regionReady();
-		virtual void clicked(Int x, Int y);
-		virtual void doubleClicked(Int x, Int y);
+		virtual void clicked(casacore::Int x, casacore::Int y);
+		virtual void doubleClicked(casacore::Int x, casacore::Int y);
 
 		//virtual void handleEvent(DisplayEvent& ev);
 		//virtual void keyPressed(const WCPositionEvent &ev);

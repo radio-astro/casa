@@ -27,6 +27,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Client/Client.h>
 
+using namespace casacore;
 namespace casa {
 
 ActionStack::ActionStack( Client * client)
@@ -50,4 +51,5 @@ bool ActionStack::doActionSpecific(PlotMSApp* /*plotms*/){
 ActionStack::~ActionStack() {
 }
 
+using namespace casacore;
 } /* namespace casa */

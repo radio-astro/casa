@@ -50,7 +50,7 @@
 #define IOCAST(x) reinterpret_cast<char *>(x)
 
 MirDataRecord::MirDataRecord(Int nnarrow, Int nwide, Int npreamble) 
-    : np_p(npreamble), nn_p(nnarrow), nw_p(nwide), pol_p(0), marked_p(False), 
+    : np_p(npreamble), nn_p(nnarrow), nw_p(nwide), pol_p(0), marked_p(false), 
       preamble_p(NULL), narrow_p(NULL), wide_p(NULL), flags_p(NULL), 
       wflags_p(NULL)
 {
@@ -98,8 +98,8 @@ MirVisReader::MirVisReader(const String& mirfile, Bool doscan, Int dbg,
       badnsyst_p(-1), badwsyst_p(-1),
       firstmode_p(0), starttime_p(0), endtime_p(0), wideconv_p(NCONV),
       buf_p(), nintrec_p(0), maxrec_p(0), nnarr_p(0), nwide_p(0), time_p(0),
-      varhandler_p(NULL), varupd_p(False), hasmore_p(False), dowide_p(True), 
-      verbose_p(False), previewed_p(False), scanned_p(False)
+      varhandler_p(NULL), varupd_p(false), hasmore_p(false), dowide_p(true), 
+      verbose_p(false), previewed_p(false), scanned_p(false)
 {
     setDebugLevel(dbg);
 
@@ -225,7 +225,7 @@ Int MirVisReader::readIntegration(FillMetadata &fm) {
     // handle any variable changes
     if (varupd_p) {
         handleVarChanges(fm, time_p);
-        varupd_p = False;
+        varupd_p = false;
     }
 
 //      // load the current system temperatures.  Note that handleVarChanges()
@@ -267,7 +267,7 @@ Int MirVisReader::readIntegration(FillMetadata &fm) {
     Float *corr, *wcorr;
     Int *flags, *wflags;
     Double *preamble;
-    hasmore_p = False;
+    hasmore_p = false;
     Int maxrec = (maxrec_p > 0) ? maxrec_p : buf_p.nelements();
     if (maxrec < 0 || nintrec_p <= maxrec) {
         Int i=0, nread;
@@ -284,7 +284,7 @@ Int MirVisReader::readIntegration(FillMetadata &fm) {
 	    corr = buf_p[i]->narrow();
 	    flags = buf_p[i]->flags();
 	    preamble = buf_p[i]->preamble();
-	    buf_p[i]->setMarked(False);
+	    buf_p[i]->setMarked(false);
 
 	    nread = 0;
 	    uvread_c(uv_handle_p, preamble, corr, flags, nnarr_p, &nread);
@@ -303,7 +303,7 @@ Int MirVisReader::readIntegration(FillMetadata &fm) {
 		(maxrec >= 0 && nintrec_p >= maxrec)   ||
 		varupd_p                                    ) 
 	    {
-		hasmore_p = True;
+		hasmore_p = true;
 		break;
 	    }
 	}
@@ -345,10 +345,10 @@ void MirVisReader::reset(MirVarHandler *filler, Bool verbose, Bool dowide,
         buf_p[0]->setPol(nread);
         
 	nrec_p = 0;
-	hasmore_p = True;
-	varupd_p = True;
+	hasmore_p = true;
+	varupd_p = true;
     }
-    buf_p[0]->setMarked(False);
+    buf_p[0]->setMarked(false);
 }
 
 void MirVisReader::resizeBufferFor(Int nrec, Int nnarrow, Int nwide) {
@@ -421,7 +421,7 @@ void MirVisReader::preview(Int scanlim, Int obslim, Bool scan)
 	      << LogIO::POST;
 
     // rewind the data
-    reset(NULL, 0, False);
+    reset(NULL, 0, false);
 
     if (! hasmore_p) {
 	log_p << LogIO::WARN << "No visibility data found in " << inname_p
@@ -462,7 +462,7 @@ void MirVisReader::preview(Int scanlim, Int obslim, Bool scan)
 	}
     }
 
-    previewed_p = True;
+    previewed_p = true;
 }
 
 void MirVisReader::fullscan(Int scanlim, Int obslim) {
@@ -497,13 +497,13 @@ void MirVisReader::fullscan(Int scanlim, Int obslim) {
     // set to read only one channel for efficiency
     uvset_c(uv_handle_p, "data", "channel", 1, 1.0, 1.0, 1.0);
 
-    Bool varstable = False;
+    Bool varstable = false;
     Bool moredata = hasmore_p;
 
     while (moredata) {
 
         handleVarChanges(fm,time);
-        varstable = True;
+        varstable = true;
 
         while (varstable) {
             nrec++;
@@ -556,7 +556,7 @@ void MirVisReader::fullscan(Int scanlim, Int obslim) {
 	    if (obslim >= 0 && (fm.obsupd || intv < 0 || intv > obslim)) {
                 nobs++;
 	    }
-	    fm.obsupd = False;
+	    fm.obsupd = false;
 
 	    // polarization
 	    uvrdvr_c(uv_handle_p,H_INT, "pol", IOCAST(&vlen), IOCAST(&yy), 1);
@@ -567,7 +567,7 @@ void MirVisReader::fullscan(Int scanlim, Int obslim) {
             uvread_c(uv_handle_p, buf_p[0]->preamble(), buf_p[0]->narrow(), 
 		     &vlen, 1, &nread);
 	    if (nread <= 0) {
-                moredata = False;
+                moredata = false;
                 break;
             }
             varstable = ! uvupdate_c(uv_handle_p);
@@ -604,7 +604,7 @@ void MirVisReader::fullscan(Int scanlim, Int obslim) {
     endtime_p = time;
     nobs_p = nobs;
     nscan_p = nscan;
-    scanned_p = True;
+    scanned_p = true;
     badnsyst_p = badnsyst;
     badwsyst_p = badwsyst;
 }
@@ -690,7 +690,7 @@ void MirVisReader::briefscan() {
     nobs_p = -1;
     nscan_p = -1;
 
-    scanned_p = False;
+    scanned_p = false;
 }
 
 #if 0 
@@ -713,7 +713,7 @@ GlishRecord MirVisReader::summary(Bool verbose, Int scan,
 	preview(scanlim, obslim, (scan >= 0));
     } 
     else if (! previewed_p) {
-	preview(False);
+	preview(false);
     }
 
     GlishRecord out;
@@ -734,10 +734,10 @@ GlishRecord MirVisReader::summary(Bool verbose, Int scan,
         out.add(String("nrec"), GlishArray(nrec_p));
     }
 
-    Bool hasplanet = False;
+    Bool hasplanet = false;
     for(ListIter<MirSource*> li(sources_p); ! li.atEnd(); li++) {
 	if (li.getRight()->isPlanet()) {
-	    hasplanet = True;
+	    hasplanet = true;
 	    break;
 	}
     }
@@ -930,7 +930,7 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
 	if (Debug(2)) cout << "Found telescope=" << telescope << endl;
         if (telescope == fm.HATCREEK) telescope = fm.BIMA;
         if (fm.telescope != telescope) {
-            fm.obsupd = True;
+            fm.obsupd = true;
             fm.setTelescope(telescope);
             setTelescope(telescope);
             uvprobvr_c(uv_handle_p, "project", vtype, &vlen, &vupd);
@@ -1057,7 +1057,7 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
 		    // circumstances: we'll be here only if the epoch has 
 		    // changed (eek!)
                     source->id = found->id;  // new position for old source
-                    srcupd = False;          // do not add a new field
+                    srcupd = false;          // do not add a new field
                 }
                 ListIter<MirSource *> siter(sources_p);
 		siter.toEnd();
@@ -1092,7 +1092,7 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
         uvrdvr_c(uv_handle_p, H_DBLE,"ra", IOCAST(&ra), IOCAST(&zero), vlen);
         uvrdvr_c(uv_handle_p, H_DBLE,"dec",IOCAST(&dec),IOCAST(&zero), vlen);
 	if (fm.source->ra != ra || fm.source->dec != dec) {
-	    fm.movingsrc = True;
+	    fm.movingsrc = true;
 	    fm.source->addPosition(time, ra, dec);
 	}
       }
@@ -1202,22 +1202,22 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
 	} 
     }
 
-    Bool resizentsys = False, resizewtsys = False, tsysupd = False;
-    PtrHolder<Float> tsys(new Float[MAXWIDE*fm.nants], True);
+    Bool resizentsys = false, resizewtsys = false, tsysupd = false;
+    PtrHolder<Float> tsys(new Float[MAXWIDE*fm.nants], true);
     if (fm.nsystemp.shape() != IPosition(2, fm.nants, fm.fsetup->nspect)) {
 	fm.nsystemp.resize(fm.nants, fm.fsetup->nspect);
         fm.nsystemp = -1.0;  // indicates no value read in
-        resizentsys = True;
+        resizentsys = true;
     }
     if (fm.wsystemp.shape() != IPosition(2, fm.nants, fm.fsetup->nwide)) {
 	fm.wsystemp.resize(fm.nants, fm.fsetup->nwide);
         fm.wsystemp = -1.0;  // indicates no value read in
-        resizewtsys = True;
+        resizewtsys = true;
     }
     uvprobvr_c(uv_handle_p, "systemp", vtype, &vlen, &vupd);
     if (vlen > 0 && (resizentsys || vupd)) {
         if (vlen == Int(fm.nsystemp.nelements())) {
-            tsysupd = True;
+            tsysupd = true;
             uvgetvr_c(uv_handle_p, H_REAL, "systemp", IOCAST(tsys.ptr()), 
                       fm.nsystemp.nelements());
             fm.nsystemp.takeStorage(fm.nsystemp.shape(), tsys.ptr());
@@ -1229,7 +1229,7 @@ void MirVisReader::handleVarChanges(FillMetadata &fm, Double time) {
     uvprobvr_c(uv_handle_p, "wsystemp", vtype, &vlen, &vupd);
     if (vlen > 0 && (resizewtsys || vupd)) {
         if (vlen == Int(fm.wsystemp.nelements())) {
-            tsysupd = True;
+            tsysupd = true;
             uvgetvr_c(uv_handle_p, H_REAL, "wsystemp", IOCAST(tsys.ptr()), 
                       fm.wsystemp.nelements());
             fm.wsystemp.takeStorage(fm.wsystemp.shape(), tsys.ptr());

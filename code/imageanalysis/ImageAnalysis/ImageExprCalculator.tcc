@@ -13,51 +13,51 @@
 namespace casa {
 
 template<class T> ImageExprCalculator<T>::ImageExprCalculator(
-	const String& expression, const String& outname, Bool overwrite
+	const casacore::String& expression, const casacore::String& outname, casacore::Bool overwrite
 ) : _expr(expression), _outname(outname),
 	_overwrite(overwrite), _log() {
 	ThrowIf(_expr.empty(), "You must specify an expression");
 	if (! outname.empty() && ! overwrite) {
-		//NewFile validfile;
-		String errmsg;
+		//casacore::NewFile validfile;
+		casacore::String errmsg;
 		ThrowIf(
-			! NewFile().valueOK(outname, errmsg), errmsg
+			! casacore::NewFile().valueOK(outname, errmsg), errmsg
 		);
 	}
 }
 
 template<class T> SPIIT ImageExprCalculator<T>::compute() const {
-	_log << LogOrigin(getClass(), __func__);
-	Record regions;
+	_log << casacore::LogOrigin(getClass(), __func__);
+	casacore::Record regions;
 
-	// Get LatticeExprNode (tree) from parser.  Substitute possible
+	// Get casacore::LatticeExprNode (tree) from parser.  Substitute possible
 	// object-id's by a sequence number, while creating a
-	// LatticeExprNode for it.  Convert the GlishRecord containing
-	// regions to a PtrBlock<const ImageRegion*>.
+	// casacore::LatticeExprNode for it.  Convert the GlishRecord containing
+	// regions to a casacore::PtrBlock<const casacore::ImageRegion*>.
 
-	Block<LatticeExprNode> temps;
-	String exprName;
-	PtrBlock<const ImageRegion*> tempRegs;
+	casacore::Block<casacore::LatticeExprNode> temps;
+	casacore::String exprName;
+	casacore::PtrBlock<const casacore::ImageRegion*> tempRegs;
 	_makeRegionBlock(tempRegs, regions);
-	LatticeExprNode node = ImageExprParse::command(_expr, temps, tempRegs);
-	// Delete the ImageRegions (by using an empty Record).
-	_makeRegionBlock(tempRegs, Record());
+	casacore::LatticeExprNode node = casacore::ImageExprParse::command(_expr, temps, tempRegs);
+	// Delete the ImageRegions (by using an empty casacore::Record).
+	_makeRegionBlock(tempRegs, casacore::Record());
 	_checkImages();
 	// Get the shape of the expression
-	const IPosition shape = node.shape();
+	const casacore::IPosition shape = node.shape();
 
-	// Get the CoordinateSystem of the expression
-	const LELAttribute attr = node.getAttribute();
-	const LELLattCoordBase* lattCoord = &(attr.coordinates().coordinates());
+	// Get the casacore::CoordinateSystem of the expression
+	const casacore::LELAttribute attr = node.getAttribute();
+	const casacore::LELLattCoordBase* lattCoord = &(attr.coordinates().coordinates());
 	ThrowIf(
 		! lattCoord->hasCoordinates()
-		|| lattCoord->classname() != "LELImageCoord",
+		|| lattCoord->classname() != "casacore::LELImageCoord",
 		"Images in expression have no coordinates"
 	);
-	const LELImageCoord* imCoord =
-		dynamic_cast<const LELImageCoord*> (lattCoord);
-	AlwaysAssert (imCoord != 0, AipsError);
-	CoordinateSystem csys = imCoord->coordinates();
+	const casacore::LELImageCoord* imCoord =
+		dynamic_cast<const casacore::LELImageCoord*> (lattCoord);
+	AlwaysAssert (imCoord != 0, casacore::AipsError);
+	casacore::CoordinateSystem csys = imCoord->coordinates();
 	//DataType type = node.dataType();
 	SPIIT computedImage = _imagecalc(
 		node, shape, csys, imCoord
@@ -67,18 +67,18 @@ template<class T> SPIIT ImageExprCalculator<T>::compute() const {
 }
 
 template<class T> void ImageExprCalculator<T>::compute2(
-	SPIIT image, const String& expr, Bool verbose
+	SPIIT image, const casacore::String& expr, casacore::Bool verbose
 ) {
-	LogIO log;
-    log << LogOrigin("ImageExprCalculator", __func__);
+	casacore::LogIO log;
+    log << casacore::LogOrigin("ImageExprCalculator", __func__);
     ThrowIf(expr.empty(), "You must specify an expression");
-    Record regions;
-    Block<LatticeExprNode> temps;
-    PtrBlock<const ImageRegion*> tempRegs;
+    casacore::Record regions;
+    casacore::Block<casacore::LatticeExprNode> temps;
+    casacore::PtrBlock<const casacore::ImageRegion*> tempRegs;
     PixelValueManipulator<T>::makeRegionBlock(tempRegs, regions);
-    auto node = ImageExprParse::command(expr, temps, tempRegs);
+    auto node = casacore::ImageExprParse::command(expr, temps, tempRegs);
     auto type = node.dataType();
-    Bool isReal = casa::isReal(type);
+    casacore::Bool isReal = casacore::isReal(type);
     ostringstream os;
     os << type;
     ThrowIf(
@@ -91,21 +91,21 @@ template<class T> void ImageExprCalculator<T>::compute2(
         "the attached image is complex valued"
     );
     ThrowIf(
-        casa::isReal(image->dataType()) && isComplex(type),
+        casacore::isReal(image->dataType()) && isComplex(type),
         "Resulting image is complex valued but"
         "the attached image is real valued"
     );
     if (verbose) {
-        log << LogIO::WARN << "Overwriting pixel values "
+        log << casacore::LogIO::WARN << "Overwriting pixel values "
             << "of the currently attached image"
-            << LogIO::POST;
+            << casacore::LogIO::POST;
     }
     _calc(image, node);
 }
 
 template<class T> void ImageExprCalculator<T>::_calc(
-    SHARED_PTR<ImageInterface<T> > image,
-    const LatticeExprNode& node
+    SHARED_PTR<casacore::ImageInterface<T> > image,
+    const casacore::LatticeExprNode& node
 ) {
     // Get the shape of the expression and check it matches that
     // of the output image
@@ -117,52 +117,52 @@ template<class T> void ImageExprCalculator<T>::_calc(
                 << "with the shape of the output image"
                 << "Expression shape = " << node.shape()
                 << "Image shape = " << image->shape();
-            throw AipsError(os.str());
+            throw casacore::AipsError(os.str());
         //}
     }
-    // Get the CoordinateSystem of the expression and check it matches
+    // Get the casacore::CoordinateSystem of the expression and check it matches
     // that of the output image
-    LogIO mylog;
+    casacore::LogIO mylog;
     if (! node.isScalar()) {
         const auto attr = node.getAttribute();
         const auto lattCoord = &(attr.coordinates().coordinates());
         if (!lattCoord->hasCoordinates() || lattCoord->classname()
-                != "LELImageCoord") {
+                != "casacore::LELImageCoord") {
             // We assume here that the output coordinates are ok
-            mylog << LogIO::WARN
+            mylog << casacore::LogIO::WARN
                     << "Images in expression have no coordinates"
-                    << LogIO::POST;
+                    << casacore::LogIO::POST;
         }
         else {
             const auto imCoord =
-                    dynamic_cast<const LELImageCoord*> (lattCoord);
-            AlwaysAssert (imCoord != 0, AipsError);
+                    dynamic_cast<const casacore::LELImageCoord*> (lattCoord);
+            AlwaysAssert (imCoord != 0, casacore::AipsError);
             const auto& cSysOut = imCoord->coordinates();
             if (! image->coordinates().near(cSysOut)) {
                 // Since the output image has coordinates, and the shapes
                 // have conformed, just issue a warning
-                mylog << LogIO::WARN
+                mylog << casacore::LogIO::WARN
                         << "The coordinates of the expression do not conform "
                         << endl;
                 mylog << "with the coordinates of the output image" << endl;
                 mylog << "Proceeding with output image coordinates"
-                        << LogIO::POST;
+                        << casacore::LogIO::POST;
             }
         }
     }
-    // Make a LatticeExpr and see if it is masked
-    Bool exprIsMasked = node.isMasked();
+    // Make a casacore::LatticeExpr and see if it is masked
+    casacore::Bool exprIsMasked = node.isMasked();
     if (exprIsMasked) {
         if (! image->isMasked()) {
             // The image does not have a default mask set.  So try and make it one.
-            String maskName = "";
-            ImageMaskAttacher::makeMask(*image, maskName, True, True, mylog, True);
+            casacore::String maskName = "";
+            ImageMaskAttacher::makeMask(*image, maskName, true, true, mylog, true);
         }
     }
 
     // Evaluate the expression and fill the output image and mask
     if (node.isScalar()) {
-        LatticeExprNode node2 = isReal(node.dataType())
+        casacore::LatticeExprNode node2 = isReal(node.dataType())
         	? toFloat(node) : toComplex(node);
         // If the scalar value is masked, there is nothing
         // to do.
@@ -171,12 +171,12 @@ template<class T> void ImageExprCalculator<T>::_calc(
                 // We implement with a LEL expression of the form
                 // iif(mask(image)", value, image)
                 auto node3 = iif(mask(*image), node2, *image);
-                image->copyData(LatticeExpr<T> (node3));
+                image->copyData(casacore::LatticeExpr<T> (node3));
             }
             else {
                 // Just set all values to the scalar. There is no mask to
                 // worry about.
-                image->copyData(LatticeExpr<T> (node2));
+                image->copyData(casacore::LatticeExpr<T> (node2));
             }
         }
     }
@@ -185,38 +185,38 @@ template<class T> void ImageExprCalculator<T>::_calc(
             // We implement with a LEL expression of the form
             // iif(mask(image)", expr, image)
             auto node3 = iif(mask(*image), node, *image);
-            image->copyData(LatticeExpr<T> (node3));
+            image->copyData(casacore::LatticeExpr<T> (node3));
         }
         else {
             // Just copy the pixels from the expression to the output.
             // There is no mask to worry about.
-            image->copyData(LatticeExpr<T> (node));
+            image->copyData(casacore::LatticeExpr<T> (node));
         }
     }
 }
 
 template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
-	const LatticeExprNode& node, const IPosition& shape,
-	const CoordinateSystem& csys, const LELImageCoord* const imCoord
+	const casacore::LatticeExprNode& node, const casacore::IPosition& shape,
+	const casacore::CoordinateSystem& csys, const casacore::LELImageCoord* const imCoord
 ) const {
-	_log << LogOrigin(getClass(), __func__);
+	_log << casacore::LogOrigin(getClass(), __func__);
 
-	// Create LatticeExpr create mask if needed
-	LatticeExpr<T> latEx(node);
+	// Create casacore::LatticeExpr create mask if needed
+	casacore::LatticeExpr<T> latEx(node);
 	SPIIT image;
-	String exprName;
-	// Construct output image - an ImageExpr or a PagedImage
+	casacore::String exprName;
+	// Construct output image - an casacore::ImageExpr or a PagedImage
 	if (_outname.empty()) {
-		image.reset(new ImageExpr<T> (latEx, exprName));
-		ThrowIf(! image, "Failed to create ImageExpr");
+		image.reset(new casacore::ImageExpr<T> (latEx, exprName));
+		ThrowIf(! image, "Failed to create casacore::ImageExpr");
 	}
 	else {
-		_log << LogIO::NORMAL << "Creating image `" << _outname
-			<< "' of shape " << shape << LogIO::POST;
+		_log << casacore::LogIO::NORMAL << "Creating image `" << _outname
+			<< "' of shape " << shape << casacore::LogIO::POST;
 		try {
-			image.reset(new PagedImage<T> (shape, csys, _outname));
+			image.reset(new casacore::PagedImage<T> (shape, csys, _outname));
 		}
-		catch (const TableError& te) {
+		catch (const casacore::TableError& te) {
 			ThrowIf(
 				_overwrite,
 				"Caught TableError. This often means "
@@ -225,23 +225,23 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 				"Try closing it and rerunning"
 			);
 		}
-		ThrowIf(! image, "Failed to create PagedImage");
+		ThrowIf(! image, "Failed to create casacore::PagedImage");
 
 		// Make mask if needed, and copy data and mask
 		if (latEx.isMasked()) {
-			String maskName("");
-			ImageMaskAttacher::makeMask(*image, maskName, False, True, _log, True);
+			casacore::String maskName("");
+			ImageMaskAttacher::makeMask(*image, maskName, false, true, _log, true);
 		}
-		LatticeUtilities::copyDataAndMask(_log, *image, latEx);
+		casacore::LatticeUtilities::copyDataAndMask(_log, *image, latEx);
 	}
 
 	// Copy miscellaneous stuff over
-    auto copied = False;
-    Unit unit;
+    auto copied = false;
+    casacore::Unit unit;
 	if (! _copyMetaDataFromImage.empty()) {
         // do nonexistant file handling here because users want a special message
         ThrowIf(
-            ! File(_copyMetaDataFromImage).isReadable(),
+            ! casacore::File(_copyMetaDataFromImage).isReadable(),
             "Cannot access " + _copyMetaDataFromImage
             + " so cannot copy its metadata to output image"
         );
@@ -259,7 +259,7 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 		        image->setCoordinateInfo(mypair.second->coordinates());
 		        unit = mypair.second->units();
             }
-            copied = True;
+            copied = true;
         }
 	}
     if (! copied) {
@@ -269,13 +269,13 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 	if (_expr.contains("spectralindex")) {
 		image->setUnits("");
 	}
-	else if (_expr.contains(Regex("pa\\(*"))) {
+	else if (_expr.contains(casacore::Regex("pa\\(*"))) {
 		image->setUnits("deg");
-		Vector<Int> newstokes(1);
-		newstokes = Stokes::Pangle;
-		StokesCoordinate scOut(newstokes);
-		CoordinateSystem cSys = image->coordinates();
-		Int iStokes = cSys.findCoordinate(Coordinate::STOKES, -1);
+		casacore::Vector<casacore::Int> newstokes(1);
+		newstokes = casacore::Stokes::Pangle;
+		casacore::StokesCoordinate scOut(newstokes);
+		casacore::CoordinateSystem cSys = image->coordinates();
+		casacore::Int iStokes = cSys.findCoordinate(casacore::Coordinate::STOKES, -1);
 		cSys.replaceCoordinate(scOut, iStokes);
 		image->setCoordinateInfo(cSys);
 	}
@@ -286,90 +286,90 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 }
 
 template<class T> void ImageExprCalculator<T>::_makeRegionBlock(
-	PtrBlock<const ImageRegion*>& regions,
-	const Record& Regions
+	casacore::PtrBlock<const casacore::ImageRegion*>& regions,
+	const casacore::Record& Regions
 ) {
-	for (uInt j = 0; j < regions.nelements(); j++) {
+	for (casacore::uInt j = 0; j < regions.nelements(); j++) {
 		delete regions[j];
 	}
-	regions.resize(0, True, True);
-	uInt nreg = Regions.nfields();
+	regions.resize(0, true, true);
+	casacore::uInt nreg = Regions.nfields();
 	if (nreg > 0) {
 		regions.resize(nreg);
-		regions.set(static_cast<ImageRegion*> (0));
-		for (uInt i = 0; i < nreg; i++) {
-			regions[i] = ImageRegion::fromRecord(Regions.asRecord(i), "");
+		regions.set(static_cast<casacore::ImageRegion*> (0));
+		for (casacore::uInt i = 0; i < nreg; i++) {
+			regions[i] = casacore::ImageRegion::fromRecord(Regions.asRecord(i), "");
 		}
 	}
 }
 
 template<class T> void ImageExprCalculator<T>::_checkImages() const {
-	auto images = ImageExprParse::getImageNames();
+	auto images = casacore::ImageExprParse::getImageNames();
 	if (images.size() <= 1) {
 		return;
 	}
-	unique_ptr<String> unit;
-	unique_ptr<ImageBeamSet> beamSet;
-	unique_ptr<Vector<String>> axisNames;
+	unique_ptr<casacore::String> unit;
+	unique_ptr<casacore::ImageBeamSet> beamSet;
+	unique_ptr<casacore::Vector<casacore::String>> axisNames;
 	for (auto& image: images) {
-		if (File(image).exists()) {
+		if (casacore::File(image).exists()) {
 			try {
-				ImageProxy myImage(image, "", vector<ImageProxy>());
+				casacore::ImageProxy myImage(image, "", vector<casacore::ImageProxy>());
 				if (myImage.getLattice()) {
 					auto myUnit = myImage.unit();
 					if (unit) {
 						if (myUnit != *unit) {
-							_log << LogIO::WARN << "image units are not the same: '"
+							_log << casacore::LogIO::WARN << "image units are not the same: '"
 								<< *unit << "' vs '" << myUnit << "'. Proceed with caution. "
                                 << "Output image metadata will be copied from "
                                 << (
                                     _copyMetaDataFromImage.empty()
                                     ? "one of the input images since imagemd was not specified"
                                     : ("image " + _copyMetaDataFromImage)
-                                ) << LogIO::POST;
+                                ) << casacore::LogIO::POST;
 							break;
 						}
 					}
 					else {
-						unit.reset(new String(myUnit));
+						unit.reset(new casacore::String(myUnit));
 					}
-					ImageBeamSet mybs = myImage.imageInfoObject().getBeamSet();
+					casacore::ImageBeamSet mybs = myImage.imageInfoObject().getBeamSet();
 					if (beamSet) {
 						if (mybs != *beamSet) {
 							ostringstream oss;
 							oss << "image beams are not the same: " << mybs << " vs " << *beamSet;
-							_log << LogIO::WARN << oss.str() << LogIO::POST;
+							_log << casacore::LogIO::WARN << oss.str() << casacore::LogIO::POST;
 							break;
 						}
 					}
 					else {
-						beamSet.reset(new ImageBeamSet(mybs));
+						beamSet.reset(new casacore::ImageBeamSet(mybs));
 					}
 					auto myAxes = myImage.coordSysObject().worldAxisNames();
 					if (axisNames) {
 						if (myAxes.size() != axisNames->size()) {
-							_log << LogIO::WARN << "Number of axes in input images differs"
-								<< LogIO::POST;
+							_log << casacore::LogIO::WARN << "Number of axes in input images differs"
+								<< casacore::LogIO::POST;
 							break;
 						}
 						auto iter = begin(myAxes);
 						for (const auto& axis: *axisNames) {
 							if (axis != *iter) {
-								_log << LogIO::WARN << "Axes ordering and/or axes names "
+								_log << casacore::LogIO::WARN << "Axes ordering and/or axes names "
 									<< "in input images differs:" << *axisNames << " vs "
-									<< myAxes << LogIO::POST;
+									<< myAxes << casacore::LogIO::POST;
 								break;
 							}
 							++iter;
 						}
 					}
 					else {
-						axisNames.reset(new Vector<String>(myAxes));
+						axisNames.reset(new casacore::Vector<casacore::String>(myAxes));
 					}
 
 				}
 			}
-			catch (const AipsError&) {}
+			catch (const casacore::AipsError&) {}
 		}
 	}
 }

@@ -87,49 +87,49 @@ private:
 public:
     // create the filler, attaching it to a Miriad dataset.  <src>mirfile</src>
     // is the dataset filename
-    mirfiller(const String& mirfile);
+    mirfiller(const casacore::String& mirfile);
 
     // destruct this filler
     ~mirfiller();
 
-    // fill the output MS according to the current selections and options.
+    // fill the output casacore::MS according to the current selections and options.
     // msfile is the output name to use; it should not already exist.
-    void fill(const String& msfile) { filler_p.fill(msfile); }
+    void fill(const casacore::String& msfile) { filler_p.fill(msfile); }
 
     // select spectra from the input Miriad dataset.  wideChans is a list of 
     // one-based channel indices.  narrowWins is a list of one-based
     // window indices.  The default is to choose all available wide channels
     // and windows.
-    void selectspectra(const Vector<Int> &wideChans, 
-                       const Vector<Int> &narrowWins) 
+    void selectspectra(const casacore::Vector<casacore::Int> &wideChans, 
+                       const casacore::Vector<casacore::Int> &narrowWins) 
 	throw(UnavailableMiriadDataSelectionError) 
     { 
         filler_p.selectSpectra(wideChans, narrowWins); 
     }
 
     // select polarization setups from the input Miriad dataset.  
-    void selectpols(const Vector<Int> pols);
+    void selectpols(const casacore::Vector<casacore::Int> pols);
 
     // return a description of the input Miriad dataset's contents as a Record
-    // object.  If scan is True, the dataset will be implicitly scanned in 
+    // object.  If scan is true, the dataset will be implicitly scanned in 
     // its entirety to extract all the needed information; otherwise, just the
     // first timestep will be read.
-    GlishRecord summary(Bool verbose=True, Bool scan=True);
+    GlishRecord summary(casacore::Bool verbose=true, casacore::Bool scan=true);
 
-    // set the options for filling.  The options are set via a Record object
+    // set the options for filling.  The options are set via a casacore::Record object
     // for which the following keys are recognized:
     //
-    void setoptions(const Record &opts) { filler_p.setOptions(opts); }
+    void setoptions(const casacore::Record &opts) { filler_p.setOptions(opts); }
 
     // get the current filling options
-    Record getoptions() { return filler_p.getOptions(); }
+    casacore::Record getoptions() { return filler_p.getOptions(); }
 
-    virtual String className() const;
-    virtual Vector<String> methods() const;
-    virtual MethodResult runMethod(uInt which,     
+    virtual casacore::String className() const;
+    virtual casacore::Vector<casacore::String> methods() const;
+    virtual MethodResult runMethod(casacore::uInt which,     
                                    ParameterSet &parameters,
-                                   Bool runMethod);
-    virtual Vector<String> noTraceMethods() const;
+                                   casacore::Bool runMethod);
+    virtual casacore::Vector<casacore::String> noTraceMethods() const;
 };
 
 #endif

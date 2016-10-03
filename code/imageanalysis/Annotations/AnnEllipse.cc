@@ -20,6 +20,7 @@
 #include <casa/Quanta/QLogical.h>
 #include <images/Regions/WCEllipsoid.h>
 
+using namespace casacore;
 namespace casa {
 
 AnnEllipse::AnnEllipse(
@@ -82,7 +83,7 @@ Bool AnnEllipse::operator== (
 	const AnnEllipse& other
 )const {
 	if (this == &other) {
-		return True;
+		return true;
 	}
 	return AnnRegion::operator==(other)
 		&& allTrue(_inputCenter == other._inputCenter)
@@ -132,8 +133,8 @@ void AnnEllipse::_init(
 		_inputSemiMajorAxis.getUnit() == "pix"
 		&& ! getCsys().directionCoordinate().hasSquarePixels()
 		&& (
-			! casa::near(fmod(_inputPositionAngle.getValue("rad"), C::pi), 0.0)
-			&& ! casa::near(fmod(fabs(_inputPositionAngle.getValue("rad")), C::pi), C::pi_2)
+			! casacore::near(fmod(_inputPositionAngle.getValue("rad"), C::pi), 0.0)
+			&& ! casacore::near(fmod(fabs(_inputPositionAngle.getValue("rad")), C::pi), C::pi_2)
 		),
 		"When pixels are not square and units are expressed in "
 		"pixels, position angle must be zero"

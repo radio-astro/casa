@@ -41,6 +41,7 @@
 #include <iostream>
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 SearchEngine::SearchEngine(
@@ -52,8 +53,8 @@ SearchEngine::SearchEngine(
         OutputDestinationChecker::OutputStruct logfile;
         logfile.label = "logfile";
         logfile.outputFile = &_logfile;
-        logfile.required = True;
-        logfile.replaceable = True;
+        logfile.required = true;
+        logfile.replaceable = true;
         vector<OutputDestinationChecker::OutputStruct> output(1);
         output[0] = logfile;
         OutputDestinationChecker::checkOutputs(&output, *_log);
@@ -170,7 +171,7 @@ SplatalogueTable* SearchEngine::search(
 	std::auto_ptr<SplatalogueTable> resSplatTable(new SplatalogueTable(resTable));
 	if (!resultsTableName.empty()) {
 		resSplatTable->rename(resultsTableName, Table::NewNoReplace);
-		resSplatTable->flush(True, True);
+		resSplatTable->flush(true, true);
 	}
 	if (_list) {
 		_logIt(resSplatTable->list());
@@ -223,7 +224,7 @@ String SearchEngine::_getBetweenClause(
 Table SearchEngine::_runQuery(const String& query) const {
 	String tablename = _table->tableName();
 	File file(tablename);
-	Bool dump = False;
+	Bool dump = false;
 	String queryCopy = query;
 	if (! file.exists()) {
 		*_log << LogIO::NORMAL << "Flushing a copy of " << tablename << " to disk so it can be queried" << LogIO::POST;
@@ -231,8 +232,8 @@ Table SearchEngine::_runQuery(const String& query) const {
 		uInt pos = query.find(tablename);
 		uInt length = tablename.length();
 		tablename = newName.absoluteName();
-		_table->deepCopy(tablename, Table::Scratch, True, Table::AipsrcEndian, False);
-		dump = True;
+		_table->deepCopy(tablename, Table::Scratch, true, Table::AipsrcEndian, false);
+		dump = true;
 		cout << "query " << query << endl;
 		cout << "new table " << tablename << endl;
 		String begin = query.substr(0, pos);
@@ -246,7 +247,7 @@ Table SearchEngine::_runQuery(const String& query) const {
 		Table t(tablename);
 		t.markForDelete();
 		//*_log << LogIO::NORMAL << "Removing temporary disk copy " << tablename << LogIO::POST;
-		//Table::deleteTable(tablename, True);
+		//Table::deleteTable(tablename, true);
 	}
 	return resTable;
 }

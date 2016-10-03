@@ -66,34 +66,34 @@
 // track of the mapping:
 // <srcblock>
 //   IDIndex idx(1);   // the first index mapped into is 1
-//   for(Int i=0; i < nspect; i++) {
+//   for(casacore::Int i=0; i < nspect; i++) {
 //       if (windowSelected(i)) idx.add(i)   // 0 -> 1 if selected
 //   }
 //   
 //   // which output window is the second window mapped to? 
-//   Int outwin = idx(2);     // outwin = -1 if not selected
+//   casacore::Int outwin = idx(2);     // outwin = -1 if not selected
 // </srcblock>
 // </example>
 //
 // <motivation>
 // The MirFiller class needs to keep track of which Miriad windows get mapped 
-// into which MS spectral windows.  Since the user can select which windows 
+// into which casacore::MS spectral windows.  Since the user can select which windows 
 // will be loaded, its not easy to predict otherwise how the windows will get 
 // mapped.  Furthermore, Miriad wideband channels are loaded as seperate 
-// windows in the output MS, thus the mapping from channel number to window 
+// windows in the output casacore::MS, thus the mapping from channel number to window 
 // will not necessarily start with 0.  
 // </motivation>
 
 class IDIndex {
 private:
-    Int offset;
-    SimpleOrderedMap<Int, Int> idmap;
+    casacore::Int offset;
+    casacore::SimpleOrderedMap<casacore::Int, casacore::Int> idmap;
 public:    
     // create an ID set.  <src>first</src> is the output index that the first
     // input ID passed to <src>add()</src> will be mapped to.
     //PJT
-    //    explicit IDIndex(Int first=0);
-    IDIndex(Int first=0);
+    //    explicit IDIndex(casacore::Int first=0);
+    IDIndex(casacore::Int first=0);
 
     // create a copy of another IDIndex
     IDIndex(IDIndex& that);
@@ -102,20 +102,20 @@ public:
     ~IDIndex();
 
     // add an ID to the set;
-    void add(Int id) { idmap.define(id, next()); }
+    void add(casacore::Int id) { idmap.define(id, next()); }
 
     // return the ID mapping
-    Int operator()(Int id) { return idmap(id); }
+    casacore::Int operator()(casacore::Int id) { return idmap(id); }
 
     // return the output index that the first input ID is mapped to.  This is the 
     // value returned by operator(0);
-    Int first() { return offset; }
+    casacore::Int first() { return offset; }
 
     // return the next index to be mapped to when add is next called.
-    Int next() { return offset+idmap.ndefined(); }
+    casacore::Int next() { return offset+idmap.ndefined(); }
 
     // return the number of input IDs mapped
-    Int size() { return idmap.ndefined(); }
+    casacore::Int size() { return idmap.ndefined(); }
 
     // remove all ID mappings.  This returns the index to its state just 
     // after construction.

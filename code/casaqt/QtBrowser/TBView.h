@@ -62,7 +62,7 @@ public:
 
     
     // Location of the table.
-    String location;
+    casacore::String location;
     
     // Whether the table is currently selected.
     bool selected;
@@ -86,7 +86,7 @@ public:
     std::vector<TBFormat*> formats;
     
     // The current sort order, or an empty list if there is none.
-    std::vector<std::pair<String, bool> > sort;
+    std::vector<std::pair<casacore::String, bool> > sort;
     
     // Whether this table is from a TaQL command or not.
     bool taql;
@@ -117,10 +117,10 @@ public:
     std::vector<TBTableView*>* getTableViews();
 
     // Sets the last opened directory for this view.
-    void setLastOpenedDirectory(String str);
+    void setLastOpenedDirectory(casacore::String str);
 
     // Returns the last opened directory for this view.
-    String getLastOpenedDirectory();
+    casacore::String getLastOpenedDirectory();
     
     // Gets/Sets the file chooser history limit.
     // <group>
@@ -130,7 +130,7 @@ public:
 
     
     // Saves this view in XML format to the given file.
-    bool saveToFile(String file);
+    bool saveToFile(casacore::String file);
 
     // Equivalent to saveToFile(defaultFile()).
     bool saveToDefaultFile();
@@ -138,23 +138,23 @@ public:
     
     // Loads the view saved in the given file and returns it.  If the file
     // is invalid or there are other problems, NULL is returned.
-    static TBView* loadFromFile(String file);
+    static TBView* loadFromFile(casacore::String file);
 
     // Equivalent to loadFromFile(defaultFile()).
     static TBView* loadFromDefaultFile();
     
     // Returns the default location to save and load a view:
     // TBConstants::dotCasapyDir() + TBConstants::VIEW_SAVE_LOC.
-    static String defaultFile();
+    static casacore::String defaultFile();
 
 private:
     // Last opened directory.
-    String lastOpenedDir;
+    casacore::String lastOpenedDir;
     
-    // File chooser history limit.
+    // casacore::File chooser history limit.
     int histLimit;
     
-    // Table views.
+    // casacore::Table views.
     std::vector<TBTableView*> views;
 
     

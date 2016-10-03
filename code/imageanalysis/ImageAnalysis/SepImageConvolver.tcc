@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T> 
 SepImageConvolver<T>::SepImageConvolver(
-	const ImageInterface<T>& image, LogIO &os, Bool showProgress
+	const casacore::ImageInterface<T>& image, casacore::LogIO &os, casacore::Bool showProgress
 )
 : itsImagePtr(image.cloneII()),
   itsOs(os),
@@ -78,8 +78,8 @@ template <class T>
 SepImageConvolver<T>::~SepImageConvolver () {
    delete itsImagePtr;
    itsImagePtr = 0;
-   const uInt n = itsVectorKernels.nelements();
-   for (uInt i=0; i<n; i++) {
+   const casacore::uInt n = itsVectorKernels.nelements();
+   for (casacore::uInt i=0; i<n; i++) {
       delete itsVectorKernels[i];
       itsVectorKernels[i] = 0;
    }
@@ -97,16 +97,16 @@ SepImageConvolver<T> &SepImageConvolver<T>::operator=(
       itsAxes = other.itsAxes.copy();
       itsShowProgress = other.itsShowProgress;
 
-      const uInt n = itsVectorKernels.nelements();
-      for (uInt i=0; i<n; i++) {
+      const casacore::uInt n = itsVectorKernels.nelements();
+      for (casacore::uInt i=0; i<n; i++) {
          delete itsVectorKernels[i];
          itsVectorKernels[i] = 0;
       }
 
-      const uInt n2 = other.itsVectorKernels.nelements();
+      const casacore::uInt n2 = other.itsVectorKernels.nelements();
       itsVectorKernels.resize(n2);
-      for (uInt i=0; i<n2; i++) {      
-         itsVectorKernels[i] = new Vector<T>((other.itsVectorKernels[i])->copy());
+      for (casacore::uInt i=0; i<n2; i++) {      
+         itsVectorKernels[i] = new casacore::Vector<T>((other.itsVectorKernels[i])->copy());
       }
    }
    return *this;
@@ -116,150 +116,150 @@ SepImageConvolver<T> &SepImageConvolver<T>::operator=(
 
 template <class T>
 void SepImageConvolver<T>::setKernel(
-	uInt axis, const Vector<T>& kernel
+	casacore::uInt axis, const casacore::Vector<T>& kernel
 ) {
    _checkAxis(axis);
 
-   uInt n = itsVectorKernels.nelements() + 1;
-   itsVectorKernels.resize(n, True);
-   itsVectorKernels[n-1] = new Vector<T>(kernel.copy());
-   itsAxes.resize(n, True);
+   casacore::uInt n = itsVectorKernels.nelements() + 1;
+   itsVectorKernels.resize(n, true);
+   itsVectorKernels[n-1] = new casacore::Vector<T>(kernel.copy());
+   itsAxes.resize(n, true);
    itsAxes(n-1) = axis;
 }
 
 template <class T>
 void SepImageConvolver<T>::setKernel(
-	uInt axis, VectorKernel::KernelTypes kernelType,
-    const Quantum<Double>& width, Bool autoScale,
-    Bool useImageShapeExactly, Double scale
+	casacore::uInt axis, casacore::VectorKernel::KernelTypes kernelType,
+    const casacore::Quantum<casacore::Double>& width, casacore::Bool autoScale,
+    casacore::Bool useImageShapeExactly, casacore::Double scale
 ) {
 	// Catch pixel units
 
-   UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
-   String sunit = width.getFullUnit().getName();
-   if (sunit==String("pix")) {
+   casacore::UnitMap::putUser("pix",casacore::UnitVal(1.0), "pixel units");
+   casacore::String sunit = width.getFullUnit().getName();
+   if (sunit==casacore::String("pix")) {
       setKernel (axis, kernelType, width.getValue(), autoScale, useImageShapeExactly, scale);
       itsOs.output() << "Axis " << axis+1<< " : setting width "  << width << endl;
-      itsOs << LogIO::NORMAL;
+      itsOs << casacore::LogIO::NORMAL;
       return;
    }
    _checkAxis(axis);
 
    // Convert width to pixels
 
-   CoordinateSystem cSys = itsImagePtr->coordinates();
-   Int worldAxis = cSys.pixelAxisToWorldAxis(axis);
-   Double inc = cSys.increment()(worldAxis);
+   casacore::CoordinateSystem cSys = itsImagePtr->coordinates();
+   casacore::Int worldAxis = cSys.pixelAxisToWorldAxis(axis);
+   casacore::Double inc = cSys.increment()(worldAxis);
 
-   Unit unit = Unit(cSys.worldAxisUnits()(worldAxis));
+   casacore::Unit unit = casacore::Unit(cSys.worldAxisUnits()(worldAxis));
    if (width.getFullUnit()!=unit) {
       itsOs << "Specified width units (" << width.getUnit() 
             << ") are inconsistent with image axis unit (" 
-            << unit.getName() << LogIO::EXCEPTION;
+            << unit.getName() << casacore::LogIO::EXCEPTION;
    }
-   Double width2 = abs(width.getValue(unit)/inc);
+   casacore::Double width2 = abs(width.getValue(unit)/inc);
 
    itsOs.output() << "Axis " << axis+1<< " : setting width "
          << width << " = " << width2 << " pixels" << endl;
-   itsOs <<  LogIO::NORMAL;
+   itsOs <<  casacore::LogIO::NORMAL;
    setKernel(axis, kernelType, width2, autoScale, useImageShapeExactly, scale);
 }
 
 template <class T>
 void SepImageConvolver<T>::setKernel(
-	uInt axis, VectorKernel::KernelTypes kernelType,
-    Double width, Bool autoScale,
-    Bool useImageShapeExactly, Double scale
+	casacore::uInt axis, casacore::VectorKernel::KernelTypes kernelType,
+    casacore::Double width, casacore::Bool autoScale,
+    casacore::Bool useImageShapeExactly, casacore::Double scale
 ) {
    _checkAxis(axis);
 
-   // T can only be Float or Double
+   // T can only be casacore::Float or Double
 
-   Bool peakIsUnity = !autoScale;
-   uInt shape = itsImagePtr->shape()(axis);
-   Vector<T> x = VectorKernel::make(kernelType, T(width), shape, 
+   casacore::Bool peakIsUnity = !autoScale;
+   casacore::uInt shape = itsImagePtr->shape()(axis);
+   casacore::Vector<T> x = casacore::VectorKernel::make(kernelType, T(width), shape, 
                                     useImageShapeExactly, peakIsUnity);
-   if (!autoScale && !near(scale,1.0)) x *= Float(scale);
-   uInt n = itsVectorKernels.nelements() + 1;
-   itsVectorKernels.resize(n, True);
-   itsVectorKernels[n-1] = new Vector<T>(x.copy());
+   if (!autoScale && !casacore::near(scale,1.0)) x *= casacore::Float(scale);
+   casacore::uInt n = itsVectorKernels.nelements() + 1;
+   itsVectorKernels.resize(n, true);
+   itsVectorKernels[n-1] = new casacore::Vector<T>(x.copy());
 
-   itsAxes.resize(n, True);
+   itsAxes.resize(n, true);
    itsAxes(n-1) = axis;
 }
 
 
 template <class T>
-Vector<T> SepImageConvolver<T>::getKernel(uInt axis) {
-   for (uInt i=0; i<itsAxes.nelements(); i++) {
+Vector<T> SepImageConvolver<T>::getKernel(casacore::uInt axis) {
+   for (casacore::uInt i=0; i<itsAxes.nelements(); i++) {
       if (axis==itsAxes(i)) {
          return *(itsVectorKernels[i]);
       }
    }
-   itsOs << "There is no kernel for the specified axis" << LogIO::EXCEPTION;
-   return Vector<T>(0);
+   itsOs << "There is no kernel for the specified axis" << casacore::LogIO::EXCEPTION;
+   return casacore::Vector<T>(0);
 }
 
 template <class T>
-uInt SepImageConvolver<T>::getKernelShape(uInt axis) {
-   for (uInt i=0; i<itsAxes.nelements(); i++) {
+uInt SepImageConvolver<T>::getKernelShape(casacore::uInt axis) {
+   for (casacore::uInt i=0; i<itsAxes.nelements(); i++) {
       if (axis==itsAxes(i)) {
          return itsVectorKernels[i]->nelements();
       }
    }
-   itsOs << "There is no kernel for the specified axis" << LogIO::EXCEPTION;
+   itsOs << "There is no kernel for the specified axis" << casacore::LogIO::EXCEPTION;
    return 0;
 }
 
 template <class T>
-void SepImageConvolver<T>::convolve(ImageInterface<T>& imageOut) {
-   const uInt nAxes = itsAxes.nelements();
+void SepImageConvolver<T>::convolve(casacore::ImageInterface<T>& imageOut) {
+   const casacore::uInt nAxes = itsAxes.nelements();
    if (nAxes==0) {
-      itsOs << "You haven't specified any axes to convolve" << LogIO::EXCEPTION;
+      itsOs << "You haven't specified any axes to convolve" << casacore::LogIO::EXCEPTION;
    }
 
    // Some checks
 
-   IPosition shape = itsImagePtr->shape();
+   casacore::IPosition shape = itsImagePtr->shape();
    if (!shape.isEqual(imageOut.shape())) {
-      itsOs << "Image shapes are different" << LogIO::EXCEPTION;
+      itsOs << "Image shapes are different" << casacore::LogIO::EXCEPTION;
    }
-   CoordinateSystem cSys = itsImagePtr->coordinates();
+   casacore::CoordinateSystem cSys = itsImagePtr->coordinates();
    if (!cSys.near(imageOut.coordinates())) {
-      itsOs << LogIO::WARN << "Image CoordinateSystems differ - this may be unwise"
-            << LogIO::POST;
+      itsOs << casacore::LogIO::WARN << "Image CoordinateSystems differ - this may be unwise"
+            << casacore::LogIO::POST;
    }
 
    // Give the output image a mask if needed and make it the default
 
    if (itsImagePtr->isMasked() && !imageOut.isMasked()) {
       if (imageOut.canDefineRegion()) {
-         String maskName = imageOut.makeUniqueRegionName (String("mask"), 0);
-         imageOut.makeMask(maskName, True, True);
-         itsOs << LogIO::NORMAL << "Created mask " << maskName 
-               << " and make it the default" << LogIO::POST;
+         casacore::String maskName = imageOut.makeUniqueRegionName (casacore::String("mask"), 0);
+         imageOut.makeMask(maskName, true, true);
+         itsOs << casacore::LogIO::NORMAL << "Created mask " << maskName 
+               << " and make it the default" << casacore::LogIO::POST;
       } else {
-         itsOs << LogIO::NORMAL << "Cannot create a mask for this output image" << LogIO::POST;
+         itsOs << casacore::LogIO::NORMAL << "Cannot create a mask for this output image" << casacore::LogIO::POST;
       }
    }
 
    // First copy input to output. We must replace masked pixels by zeros.  These reflect
    // both the pixel mask and the region mask.  We also set the output mask to the input mask
  
-   LatticeUtilities::copyDataAndMask(itsOs, imageOut, *itsImagePtr, True);
+   casacore::LatticeUtilities::copyDataAndMask(itsOs, imageOut, *itsImagePtr, true);
 
-   // Smooth in situ.
+   // casacore::Smooth in situ.
       
-   IPosition niceShape = imageOut.niceCursorShape();
-   uInt axis = 0;
-   for (uInt i=0; i<nAxes; i++) {
+   casacore::IPosition niceShape = imageOut.niceCursorShape();
+   casacore::uInt axis = 0;
+   for (casacore::uInt i=0; i<nAxes; i++) {
       axis = itsAxes(i);
-      itsOs << LogIO::NORMAL << "Convolving axis " << axis+1 << LogIO::POST;
-      const Int n = shape(axis)/niceShape(axis);
+      itsOs << casacore::LogIO::NORMAL << "Convolving axis " << axis+1 << casacore::LogIO::POST;
+      const casacore::Int n = shape(axis)/niceShape(axis);
       if (n*niceShape(axis)!=shape(axis)) {
-         itsOs << LogIO::WARN 
+         itsOs << casacore::LogIO::WARN 
                << "The tile shape is not integral along this axis, performance may degrade" 
-               << LogIO::POST;
+               << casacore::LogIO::POST;
       }
       _smoothProfiles (imageOut, axis, *(itsVectorKernels[i]));
    }  
@@ -268,13 +268,13 @@ void SepImageConvolver<T>::convolve(ImageInterface<T>& imageOut) {
 template <class T>
 void SepImageConvolver<T>::_zero() {
    if (itsImagePtr->isMasked()) {
-      itsOs << LogIO::NORMAL << "Zero masked pixels" << LogIO::POST;
+      itsOs << casacore::LogIO::NORMAL << "Zero masked pixels" << casacore::LogIO::POST;
 
-      LatticeIterator<T> iter(*itsImagePtr);
-      Bool deleteData, deleteMask;
-      IPosition shape = iter.rwCursor().shape();
-      Array<T> data(shape);
-      Array<Bool> mask(shape);
+      casacore::LatticeIterator<T> iter(*itsImagePtr);
+      casacore::Bool deleteData, deleteMask;
+      casacore::IPosition shape = iter.rwCursor().shape();
+      casacore::Array<T> data(shape);
+      casacore::Array<casacore::Bool> mask(shape);
 
       for (iter.reset(); !iter.atEnd(); iter++) {
          shape = iter.rwCursor().shape();
@@ -285,9 +285,9 @@ void SepImageConvolver<T>::_zero() {
          itsImagePtr->getMaskSlice(mask, iter.position(), shape);
 
          T* pData = data.getStorage(deleteData);
-         const Bool* pMask = mask.getStorage(deleteMask);
+         const casacore::Bool* pMask = mask.getStorage(deleteMask);
 
-         for (Int i=0; i<shape.product(); i++) {
+         for (casacore::Int i=0; i<shape.product(); i++) {
             if (!pMask[i]) pData[i] = 0.0;
          }
 
@@ -299,40 +299,40 @@ void SepImageConvolver<T>::_zero() {
  
 template <class T>
 void SepImageConvolver<T>::_smoothProfiles (
-	ImageInterface<T>& in, const Int& axis,
-	const Vector<T>& psf
+	casacore::ImageInterface<T>& in, const casacore::Int& axis,
+	const casacore::Vector<T>& psf
 ) {
-  ProgressMeter* pProgressMeter = 0;
+  casacore::ProgressMeter* pProgressMeter = 0;
   if (itsShowProgress) {
-     Double nMin = 0.0;
-     Double nMax = 1.0;
-     for (Int i=0; i<Int(in.shape().nelements()); i++) {
+     casacore::Double nMin = 0.0;
+     casacore::Double nMax = 1.0;
+     for (casacore::Int i=0; i<casacore::Int(in.shape().nelements()); i++) {
         if (i!=axis) {
            nMax *= in.shape()(i);
         }
      }
      ostringstream oss;
      oss << "Convolve Image Axis " << axis+1;
-     pProgressMeter = new ProgressMeter(nMin, nMax, String(oss),
-                                        String("Spectrum Convolutions"),
-                                        String(""), String(""),
-                                        True, max(1,Int(nMax/20)));   
+     pProgressMeter = new casacore::ProgressMeter(nMin, nMax, casacore::String(oss),
+                                        casacore::String("Spectrum Convolutions"),
+                                        casacore::String(""), casacore::String(""),
+                                        true, max(1,casacore::Int(nMax/20)));   
   }
 
-  TiledLineStepper navIn(in.shape(),
+  casacore::TiledLineStepper navIn(in.shape(),
                          in.niceCursorShape(),
                          axis);
-  LatticeIterator<T> inIt(in, navIn);
-  Vector<T> result(in.shape()(axis));
-  IPosition shape(1, in.shape()(axis));
-  Convolver<T> conv(psf, shape);
+  casacore::LatticeIterator<T> inIt(in, navIn);
+  casacore::Vector<T> result(in.shape()(axis));
+  casacore::IPosition shape(1, in.shape()(axis));
+  casacore::Convolver<T> conv(psf, shape);
 
-  uInt i = 0;
+  casacore::uInt i = 0;
   while (!inIt.atEnd()) {
     conv.linearConv(result, inIt.vectorCursor());
     inIt.woVectorCursor() = result;
 
-    if (itsShowProgress) pProgressMeter->update(Double(i));
+    if (itsShowProgress) pProgressMeter->update(casacore::Double(i));
     inIt++;
     i++;
   }
@@ -340,15 +340,15 @@ void SepImageConvolver<T>::_smoothProfiles (
 }
 
 template <class T>
-void SepImageConvolver<T>::_checkAxis(uInt axis) {
+void SepImageConvolver<T>::_checkAxis(casacore::uInt axis) {
    if (axis>itsImagePtr->ndim()-1) {
       itsOs << "Given pixel axis " << axis 
-            << " is greater than the number of axes in the image" << LogIO::EXCEPTION;
+            << " is greater than the number of axes in the image" << casacore::LogIO::EXCEPTION;
    }
-   const uInt n = itsAxes.nelements();
-   for (uInt i=0; i<n; i++) {
+   const casacore::uInt n = itsAxes.nelements();
+   for (casacore::uInt i=0; i<n; i++) {
       if (axis==itsAxes(i)) {
-         itsOs << "You have already given this axis to be convolved" << LogIO::EXCEPTION;
+         itsOs << "You have already given this axis to be convolved" << casacore::LogIO::EXCEPTION;
       }
    }
 }

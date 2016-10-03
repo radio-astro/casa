@@ -26,6 +26,7 @@
 //# $Id: $
 #include <plotms/PlotMS/PlotMSFlagging.h>
 
+using namespace casacore;
 namespace casa {
 
 ////////////////////////////////

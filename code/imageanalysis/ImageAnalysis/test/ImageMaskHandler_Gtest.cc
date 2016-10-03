@@ -10,7 +10,9 @@
 using namespace std;
 
 using namespace casacore;
+using namespace casacore;
 
+using namespace casacore;
 using namespace casa;
 
 namespace test {
@@ -31,8 +33,8 @@ TEST_F(ImageMaskHandlerTest, copy) {
     imh.copy(y);
 
     EXPECT_FALSE(tmp->hasPixelMask());
-    Array<Bool> mask(tmp->shape(), True);
-    mask(IPosition(3, 0, 0, 0)) = False;
+    Array<Bool> mask(tmp->shape(), true);
+    mask(IPosition(3, 0, 0, 0)) = false;
     y.attachMask(ArrayLattice<Bool>(mask));
     imh.copy(y);
     mask = tmp->pixelMask().get().copy();
@@ -71,7 +73,7 @@ TEST_F(ImageMaskHandlerTest, copy) {
         EXPECT_TRUE(ntrue(mask) == 6299);
         EXPECT_TRUE(nfalse(mask) == 1701);
     }
-    ImageFactory::remove(paged, False);
+    ImageFactory::remove(paged, false);
 }
 }
 

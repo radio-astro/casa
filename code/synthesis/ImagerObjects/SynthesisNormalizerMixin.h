@@ -52,7 +52,7 @@ private:
 
 protected:
 	void
-	setup_normalizer(MPI_Comm comm, std::vector<Record> &norm_pars) {
+	setup_normalizer(MPI_Comm comm, std::vector<casacore::Record> &norm_pars) {
 		// Create all normalizer components on rank 0 of comm. TODO: Could we
 		// distribute normalizers in a round-robin fashion across processes in
 		// comm?
@@ -69,14 +69,14 @@ protected:
 				//
 				// To ensure restarts work correctly, remove existing files.
 				if (pars.isDefined("partimagenames")) {
-					const std::vector<String> &part_names =
+					const std::vector<casacore::String> &part_names =
 						pars.asArrayString("partimagenames").tovector();
 					for (size_t p = 0; p < part_names.size(); ++p) {
-						File f(part_names[p]);
+						casacore::File f(part_names[p]);
 						if (f.isDirectory(false))
-							Directory(f).removeRecursive();
+							casacore::Directory(f).removeRecursive();
 						else
-							RegularFile(f).remove();
+							casacore::RegularFile(f).remove();
 					}
 				}
 			}

@@ -29,6 +29,7 @@
 #include <casacore/casa/Arrays/Matrix.h>
 #include <cmath>
 
+using namespace casacore;
 namespace casa {
 
 Vi2StatsUVRangeIterator::Vi2StatsUVRangeIterator(const Array<Double>& a)
@@ -91,4 +92,5 @@ Vi2StatsUVRangeIterator::getCount()
 
 const Array<Double> Vi2StatsUVRangeIterator::empty_array;
 
+using namespace casacore;
 } // namespace casa

@@ -44,7 +44,7 @@
 #include <casa/namespace.h>
 int main()
 {
-  Bool Failed = False;
+  Bool Failed = false;
   // Setup the sizes for the model,psf and dirty image.
   const uInt moddims = 2, modSize = 256; 
   const uInt dirtydims = moddims, dirtySize = modSize;
@@ -102,9 +102,9 @@ int main()
     model(zeroIndex) = Float(-10); 
     Array<Float> initialModel;
     myModel.getModel(initialModel);
-    if (allNearAbs(initialModel, Float(0), 1E-6) == False){
+    if (allNearAbs(initialModel, Float(0), 1E-6) == false){
       cout << "Initial model is not set correctly" << endl;
-      Failed = True;
+      Failed = true;
     }
     model(zeroIndex) = firstElement;
   }
@@ -151,7 +151,7 @@ int main()
   // check the Residual is less than the fluxlimit
     if (max(abs(solvedResidual)) > 1.0001*fluxLimit) {
       cout << "Failed ";
-      Failed = True;
+      Failed = true;
     }
     else
       cout << "Passed";
@@ -159,9 +159,9 @@ int main()
   // The sum of the residual and deconvolved model should be close to the
   // actual model used (however there are always pathological cases) 
     solvedModel+=solvedResidual;
-    if (allNearAbs(solvedModel, model, 2*fluxLimit) != True) {
+    if (allNearAbs(solvedModel, model, 2*fluxLimit) != true) {
       cout << "Failed ";
-      Failed = True;
+      Failed = true;
     }
     else
       cout << "Passed";
@@ -169,7 +169,7 @@ int main()
   }
   else {
     cout << "Cannot complete the test. Too few iterations used" << endl;
-    Failed = True;
+    Failed = true;
   }
   if (Failed) {
     cout << "FAIL" << endl;

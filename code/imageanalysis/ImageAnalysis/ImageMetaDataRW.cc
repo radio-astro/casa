@@ -44,6 +44,7 @@
 #define _LOCATEA "ImageMetaDataRW" << __func__ << " "
 #define _ORIGINA LogOrigin("ImageMetaDataRW", __func__)
 
+using namespace casacore;
 namespace casa {
 
 ImageMetaDataRW::ImageMetaDataRW( SPIIF image ) : ImageMetaDataBase(), _floatImage(image), _complexImage() {}
@@ -248,7 +249,7 @@ Bool ImageMetaDataRW::add(const String& key, const ValueHolder& value) {
     }
     // clear cached header
     _header.assign(Record());
-    return True;
+    return true;
 }
 
 
@@ -389,7 +390,7 @@ Bool ImageMetaDataRW::remove(const String& key) {
         }
         else {
             log << LogIO::WARN << "This image has no beam(s) to remove." << LogIO::POST;
-            return False;
+            return false;
         }
     }
     else if (_miscInfo().isDefined(key)) {
@@ -412,7 +413,7 @@ Bool ImageMetaDataRW::remove(const String& key) {
         ThrowCc("Unknown keyword " + c);
     }
     _header.assign(Record());
-    return True;
+    return true;
 }
 
 Bool ImageMetaDataRW::_hasRegion(const String& maskName) const {
@@ -434,7 +435,7 @@ Bool ImageMetaDataRW::removeMask(const String& maskName) {
         if (masks.size() == 0) {
             log << LogIO::WARN << "This image has no masks, so nothing to do."
                 << LogIO::POST;
-            return True;
+            return true;
         }
         else {
             Vector<String>::const_iterator end = masks.end();
@@ -466,7 +467,7 @@ Bool ImageMetaDataRW::removeMask(const String& maskName) {
         _masks.resize(0);
         log << LogIO::NORMAL << "Removed mask named " << maskName << endl;
         _header.assign(Record());
-        return True;
+        return true;
     }
 }
 
@@ -599,12 +600,12 @@ Bool ImageMetaDataRW::set(
         );
         CoordinateSystem csys = _getCoords();
         DirectionCoordinate dircoord = csys.directionCoordinate();
-        if (dircoord.directionType(False) == type) {
+        if (dircoord.directionType(false) == type) {
             // nothing to do
-            return True;
+            return true;
         }
         old = ValueHolder(
-            MDirection::showType(dircoord.directionType(False))
+            MDirection::showType(dircoord.directionType(false))
         );
         dircoord.setReferenceFrame(type);
         csys.replaceCoordinate(dircoord, csys.directionCoordinateNumber());
@@ -686,7 +687,7 @@ Bool ImageMetaDataRW::set(
         Projection curProj = dircoord.projection();
         if (curProj.type() == ptype) {
             // nothing to do
-            return True;
+            return true;
         }
         Vector<Double> curParms = curProj.parameters();
         Projection projection(ptype, curParms);
@@ -711,10 +712,10 @@ Bool ImageMetaDataRW::set(
         );
         CoordinateSystem csys = _getCoords();
         SpectralCoordinate spcoord = csys.spectralCoordinate();
-        if (spcoord.frequencySystem(False) == type) {
-            return True;
+        if (spcoord.frequencySystem(false) == type) {
+            return true;
         }
-        old = ValueHolder(MFrequency::showType(spcoord.frequencySystem(False)));
+        old = ValueHolder(MFrequency::showType(spcoord.frequencySystem(false)));
         spcoord.setFrequencySystem(type);
         csys.replaceCoordinate(spcoord, csys.spectralCoordinateNumber());
         _setCsys(csys);
@@ -795,7 +796,7 @@ Bool ImageMetaDataRW::set(
                 "modify the other and the position angle with put."
             );
             beam = info.getBeamSet()(0, 0);
-            oss << beam.getPA(False);
+            oss << beam.getPA(false);
             old = ValueHolder(oss.str());
             beam.setPA(v);
         }
@@ -846,7 +847,7 @@ Bool ImageMetaDataRW::set(
     }
     // clear the cached header values
     _header.assign(Record());
-    return True;
+    return true;
 }
 
 void ImageMetaDataRW::_setUserDefined(
@@ -913,7 +914,7 @@ void ImageMetaDataRW::_setCoordinateValue(
     uInt n = _getAxisNumber(key);
     ValueHolder old;
     Bool isStokes = csys.hasPolarizationCoordinate()
-        && (Int)n == csys.polarizationAxisNumber(False) + 1;
+        && (Int)n == csys.polarizationAxisNumber(false) + 1;
     if (prefix == ImageMetaDataBase::_CDELT) {
         ThrowIf(
             isStokes,
@@ -942,7 +943,7 @@ void ImageMetaDataRW::_setCoordinateValue(
         DataType t = value.dataType();
         Double x = 0;
         if (t == TpString) {
-            x = String::toDouble(value.asString(), True);
+            x = String::toDouble(value.asString(), true);
         }
         else if (
             t == TpInt || t == TpInt64
@@ -1048,7 +1049,7 @@ void ImageMetaDataRW::_setCoordinateValue(
         Vector<String> units = _getAxisUnits();
         old = ValueHolder(units[n-1]);
         units[n-1] = u;
-        csys.setWorldAxisUnits(units, True);
+        csys.setWorldAxisUnits(units, true);
         if (! _axisUnits.empty()) {
             _axisUnits[n-1] = units[n-1];
         }
@@ -1224,7 +1225,7 @@ Vector<Quantity> ImageMetaDataRW::_getRefValue() const {
 String ImageMetaDataRW::_getRefFreqType() const {
     const CoordinateSystem& csys = _getCoords();
     if (_reffreqtype.empty() && csys.hasSpectralAxis()) {
-        _reffreqtype = MFrequency::showType(csys.spectralCoordinate().frequencySystem(False));
+        _reffreqtype = MFrequency::showType(csys.spectralCoordinate().frequencySystem(false));
     }
     return _reffreqtype;
 }

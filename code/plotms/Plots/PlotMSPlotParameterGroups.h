@@ -45,55 +45,55 @@ class PMS_PP {
 public:
 	// Update flag for redrawing.
 	// <group>
-	static const String UPDATE_REDRAW_NAME;
+	static const casacore::String UPDATE_REDRAW_NAME;
 	static const int UPDATE_REDRAW;
 	// </group>
 
-	// Update flag for MS data group.
+	// Update flag for casacore::MS data group.
 	// <group>
-	static const String UPDATE_MSDATA_NAME;
+	static const casacore::String UPDATE_MSDATA_NAME;
 	static const int UPDATE_MSDATA;
 	// </group>
 
 	// Update flag for cache group.
 	// <group>
-	static const String UPDATE_CACHE_NAME;
+	static const casacore::String UPDATE_CACHE_NAME;
 	static const int UPDATE_CACHE;
 	// </group>
 
 	// Update flag for axes group.
 	// <group>
-	static const String UPDATE_AXES_NAME;
+	static const casacore::String UPDATE_AXES_NAME;
 	static const int UPDATE_AXES;
 	// </group>
 
 	// Update flag for canvas group.
 	// <group>
-	static const String UPDATE_CANVAS_NAME;
+	static const casacore::String UPDATE_CANVAS_NAME;
 	static const int UPDATE_CANVAS;
 	// </group>
 
 	// Update flag for display group.
 	// <group>
-	static const String UPDATE_DISPLAY_NAME;
+	static const casacore::String UPDATE_DISPLAY_NAME;
 	static const int UPDATE_DISPLAY;
 	// </group>
 
 	// Update flag for iteration group.
 	// <group>
-	static const String UPDATE_ITERATION_NAME;
+	static const casacore::String UPDATE_ITERATION_NAME;
 	static const int UPDATE_ITERATION;
 	// </group>
 
 	// Update flag for log group.
 	// <group>
-	static const String UPDATE_LOG_NAME;
+	static const casacore::String UPDATE_LOG_NAME;
 	static const int UPDATE_LOG;
 	// </group>
 	//
 	// Update flag for plotms_options group.
 	// <group>
-	static const String UPDATE_PLOTMS_OPTIONS_NAME;
+	static const casacore::String UPDATE_PLOTMS_OPTIONS_NAME;
 	static const int UPDATE_PLOTMS_OPTIONS;
 	// </group>
 
@@ -106,7 +106,7 @@ private:
 
 
 
-// Subclass of PlotMSPlotParameters::Group to handle subparameters for MS data.
+// Subclass of PlotMSPlotParameters::Group to handle subparameters for casacore::MS data.
 // Currently includes:
 // * filename
 // * selection
@@ -129,16 +129,16 @@ public:
 	}
 
 	/* Implements PlotMSPlotParameters::Group::name(). */
-	const String & name() const {
-		static String groupName = PMS_PP::UPDATE_MSDATA_NAME;
+	const casacore::String & name() const {
+		static casacore::String groupName = PMS_PP::UPDATE_MSDATA_NAME;
 		return groupName;
 	}
 
 	/* Implements PlotMSPlotParameters::Group::toRecord(). */
-	Record toRecord() const;
+	casacore::Record toRecord() const;
 
 	/* Implements PlotMSPlotParameters::Group::fromRecord(). */
-	void fromRecord (const Record & record);
+	void fromRecord (const casacore::Record & record);
 
 	/* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */
 	bool requiresRedrawOnChange() const {
@@ -159,10 +159,10 @@ public:
 		return !itsFilename_.empty();
 	}
 
-	const String & filename() const {
+	const casacore::String & filename() const {
 		return itsFilename_;
 	}
-	void setFilename (const String & value) {
+	void setFilename (const casacore::String & value) {
 		if (itsFilename_ != value) {
 			itsFilename_ = value;
 			updated();
@@ -217,18 +217,18 @@ private:
 	PMS_PP_MSData& assign(const PMS_PP_MSData* other);
 
 	/* Parameters' values */
-	String itsFilename_;
+	casacore::String itsFilename_;
 	PlotMSSelection itsSelection_;
 	PlotMSAveraging itsAveraging_;
 	PlotMSTransformations itsTransformations_;
 	PlotMSCalibration itsCalibration_;
 
-	/* Key strings for Record */
-	static const String REC_FILENAME;
-	static const String REC_SELECTION;
-	static const String REC_AVERAGING;
-	static const String REC_TRANSFORMATIONS;
-	static const String REC_CALIBRATION;
+	/* Key strings for casacore::Record */
+	static const casacore::String REC_FILENAME;
+	static const casacore::String REC_SELECTION;
+	static const casacore::String REC_AVERAGING;
+	static const casacore::String REC_TRANSFORMATIONS;
+	static const casacore::String REC_CALIBRATION;
 
 
 	void setDefaults();
@@ -262,16 +262,16 @@ public:
 	}
 
 	/* Implements PlotMSPlotParameters::Group::name(). */
-	const String & name() const {
-		static String groupName = PMS_PP::UPDATE_CACHE_NAME;
+	const casacore::String & name() const {
+		static casacore::String groupName = PMS_PP::UPDATE_CACHE_NAME;
 		return groupName;
 	}
 
 	/* Implements PlotMSPlotParameters::Group::toRecord(). */
-	Record toRecord() const;
+	casacore::Record toRecord() const;
 
 	/* Implements PlotMSPlotParameters::Group::fromRecord(). */
-	void fromRecord (const Record & record);
+	void fromRecord (const casacore::Record & record);
 
 	/* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */
 	bool requiresRedrawOnChange() const {
@@ -419,11 +419,11 @@ private:
 	vector<PMS::DataColumn> itsXData_;
 	vector<PMS::DataColumn> itsYData_;
 
-	/* Key strings for Record */
-	static const String REC_XAXES;
-	static const String REC_YAXES;
-	static const String REC_XDATACOLS;
-	static const String REC_YDATACOLS;
+	/* Key strings for casacore::Record */
+	static const casacore::String REC_XAXES;
+	static const casacore::String REC_YAXES;
+	static const casacore::String REC_XDATACOLS;
+	static const casacore::String REC_YDATACOLS;
 
 
 	void setDefaults();
@@ -458,16 +458,16 @@ public:
 	}
 
 	/* Implements PlotMSPlotParameters::Group::name(). */
-	const String & name() const {
-		static String groupName = PMS_PP::UPDATE_AXES_NAME;
+	const casacore::String & name() const {
+		static casacore::String groupName = PMS_PP::UPDATE_AXES_NAME;
 		return groupName;
 	}
 
 	/* Implements PlotMSPlotParameters::Group::toRecord(). */
-	Record toRecord() const;
+	casacore::Record toRecord() const;
 
 	/* Implements PlotMSPlotParameters::Group::fromRecord(). */
-	void fromRecord (const Record & record);
+	void fromRecord (const casacore::Record & record);
 
 	/* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */
 	bool requiresRedrawOnChange() const {
@@ -563,7 +563,7 @@ public:
 		}
 	}
 
-	void setYAxis( String& value, unsigned int index = 0 ){
+	void setYAxis( casacore::String& value, unsigned int index = 0 ){
 		PlotAxis axisLocation = Y_LEFT;
 		if ( value == "right"){
 			axisLocation = Y_RIGHT;
@@ -685,13 +685,13 @@ private:
 	vector<prange_t> itsXRanges_;
 	vector<prange_t> itsYRanges_;
 
-	/* Key strings for Record */
-	static const String REC_XAXES;
-	static const String REC_YAXES;
-	static const String REC_XRANGESSET;
-	static const String REC_YRANGESSET;
-	static const String REC_XRANGES;
-	static const String REC_YRANGES;
+	/* Key strings for casacore::Record */
+	static const casacore::String REC_XAXES;
+	static const casacore::String REC_YAXES;
+	static const casacore::String REC_XRANGESSET;
+	static const casacore::String REC_YRANGESSET;
+	static const casacore::String REC_XRANGES;
+	static const casacore::String REC_YRANGES;
 
 
 	void setDefaults();
@@ -727,16 +727,16 @@ public:
 	}
 
 	/* Implements PlotMSPlotParameters::Group::name(). */
-	const String & name() const {
-		static String groupName = PMS_PP::UPDATE_CANVAS_NAME;
+	const casacore::String & name() const {
+		static casacore::String groupName = PMS_PP::UPDATE_CANVAS_NAME;
 		return groupName;
 	}
 
 	/* Implements PlotMSPlotParameters::Group::toRecord(). */
-	Record toRecord() const;
+	casacore::Record toRecord() const;
 
 	/* Implements PlotMSPlotParameters::Group::fromRecord(). */
-	void fromRecord (const Record & record);
+	void fromRecord (const casacore::Record & record);
 
 	/* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */
 	bool requiresRedrawOnChange() const {
@@ -767,7 +767,7 @@ public:
 			const PlotCanvas::LegendPosition & pos,
 			unsigned int index = 0);
 
-	void showLegend( const bool& show, const String& pos, unsigned int index=0);
+	void showLegend( const bool& show, const casacore::String& pos, unsigned int index=0);
 
 	void showGridMajor (const bool & show, const PlotLinePtr & line,
 			unsigned int index = 0) {
@@ -864,38 +864,38 @@ public:
 		}
 	}
 
-    const vector < Int > &xAxisFonts() const {
+    const vector < casacore::Int > &xAxisFonts() const {
 		return itsXAxisFonts_;
 	}
-	void setXAxisFonts (const vector < Int > &value) {
+	void setXAxisFonts (const vector < casacore::Int > &value) {
 		if (itsXAxisFonts_ != value) {
 			itsXAxisFonts_ = value;
 			updated();
 		}
 	}
-	const Int & xAxisFont (unsigned int index = 0) const {
+	const casacore::Int & xAxisFont (unsigned int index = 0) const {
 		return itsXAxisFonts_[index];
 	}
-	void setXAxisFont (const Int value, unsigned int index = 0) {
+	void setXAxisFont (const casacore::Int value, unsigned int index = 0) {
 		if (itsXAxisFonts_[index] != value) {
 			itsXAxisFonts_[index] = value;
 			updated();
 		}
 	}
 
-    const vector < Int > &yAxisFonts() const {
+    const vector < casacore::Int > &yAxisFonts() const {
 		return itsYAxisFonts_;
 	}
-	void setYAxisFonts (const vector < Int > &value) {
+	void setYAxisFonts (const vector < casacore::Int > &value) {
 		if (itsYAxisFonts_ != value) {
 			itsYAxisFonts_ = value;
 			updated();
 		}
 	}
-	const Int & yAxisFont (unsigned int index = 0) const {
+	const casacore::Int & yAxisFont (unsigned int index = 0) const {
 		return itsYAxisFonts_[index];
 	}
-	void setYAxisFont (const Int value, unsigned int index = 0) {
+	void setYAxisFont (const casacore::Int value, unsigned int index = 0) {
 		if (itsYAxisFonts_[index] != value) {
 			itsYAxisFonts_[index] = value;
 			updated();
@@ -1038,19 +1038,19 @@ public:
 			updated();
 		}
 	}
-    const vector < Int > &titleFonts() const {
+    const vector < casacore::Int > &titleFonts() const {
 		return itsTitleFonts_;
 	}
-	void setTitleFonts (const vector < Int > &value) {
+	void setTitleFonts (const vector < casacore::Int > &value) {
 		if (itsTitleFonts_ != value) {
 			itsTitleFonts_ = value;
 			updated();
 		}
 	}
-	const Int & titleFont (unsigned int index = 0) const {
+	const casacore::Int & titleFont (unsigned int index = 0) const {
 		return itsTitleFonts_[index];
 	}
-	void setTitleFont (const Int value, unsigned int index =
+	void setTitleFont (const casacore::Int value, unsigned int index =
 			0) {
 		if (itsTitleFonts_[index] != value) {
 			itsTitleFonts_[index] = value;
@@ -1164,40 +1164,40 @@ private:
 	/* Parameters' values */
 	vector<PlotMSLabelFormat> itsXLabels_;
 	vector<bool> itsXFontsSet_;
-	vector<Int> itsXAxisFonts_;
+	vector<casacore::Int> itsXAxisFonts_;
 	vector<PlotMSLabelFormat> itsYLabels_;
 	vector<bool> itsYFontsSet_;
-	vector<Int> itsYAxisFonts_;
+	vector<casacore::Int> itsYAxisFonts_;
 	vector<bool> itsXAxesShown_;
 	vector<bool> itsYAxesShown_;
 	vector<bool> itsLegendsShown_;
 	vector<PlotCanvas::LegendPosition > itsLegendsPos_;
 	vector<PlotMSLabelFormat> itsTitles_;
 	vector<bool> itsTitleFontsSet_;
-	vector<Int> itsTitleFonts_;
+	vector<casacore::Int> itsTitleFonts_;
 	vector<bool> itsGridMajsShown_;
 	vector<bool> itsGridMinsShown_;
 	vector<PlotLinePtr> itsGridMajLines_;
 	vector<PlotLinePtr> itsGridMinLines_;
 
-	/* Key strings for Record */
-	static const String REC_XLABELS;
-	static const String REC_XFONTSSET;
-	static const String REC_XAXISFONTS;
-	static const String REC_YLABELS;
-	static const String REC_YFONTSSET;
-	static const String REC_YAXISFONTS;
-	static const String REC_SHOWXAXES;
-	static const String REC_SHOWYAXES;
-	static const String REC_SHOWLEGENDS;
-	static const String REC_LEGENDSPOS;
-	static const String REC_TITLES;
-	static const String REC_TITLEFONTSSET;
-	static const String REC_TITLEFONTS;
-	static const String REC_SHOWGRIDMAJS;
-	static const String REC_SHOWGRIDMINS;
-	static const String REC_GRIDMAJLINES;
-	static const String REC_GRIDMINLINES;
+	/* Key strings for casacore::Record */
+	static const casacore::String REC_XLABELS;
+	static const casacore::String REC_XFONTSSET;
+	static const casacore::String REC_XAXISFONTS;
+	static const casacore::String REC_YLABELS;
+	static const casacore::String REC_YFONTSSET;
+	static const casacore::String REC_YAXISFONTS;
+	static const casacore::String REC_SHOWXAXES;
+	static const casacore::String REC_SHOWYAXES;
+	static const casacore::String REC_SHOWLEGENDS;
+	static const casacore::String REC_LEGENDSPOS;
+	static const casacore::String REC_TITLES;
+	static const casacore::String REC_TITLEFONTSSET;
+	static const casacore::String REC_TITLEFONTS;
+	static const casacore::String REC_SHOWGRIDMAJS;
+	static const casacore::String REC_SHOWGRIDMINS;
+	static const casacore::String REC_GRIDMAJLINES;
+	static const casacore::String REC_GRIDMINLINES;
 
 
 	void setDefaults();
@@ -1232,16 +1232,16 @@ public:
 	}
 
 	/* Implements PlotMSPlotParameters::Group::name(). */
-	const String & name() const {
-		static String groupName = PMS_PP::UPDATE_DISPLAY_NAME;
+	const casacore::String & name() const {
+		static casacore::String groupName = PMS_PP::UPDATE_DISPLAY_NAME;
 		return groupName;
 	}
 
 	/* Implements PlotMSPlotParameters::Group::toRecord(). */
-	Record toRecord() const;
+	casacore::Record toRecord() const;
 
 	/* Implements PlotMSPlotParameters::Group::fromRecord(). */
-	void fromRecord (const Record & record);
+	void fromRecord (const casacore::Record & record);
 
 	/* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */
 	bool requiresRedrawOnChange() const {
@@ -1391,12 +1391,12 @@ private:
 	vector<PMS::Axis> itsColorizeAxes_;
 
 
-	/* Key strings for Record */
-	static const String REC_UNFLAGGEDS;
-	static const String REC_FLAGGEDS;
-	static const String REC_TITLES;
-	static const String REC_COLFLAGS;
-	static const String REC_COLAXES;
+	/* Key strings for casacore::Record */
+	static const casacore::String REC_UNFLAGGEDS;
+	static const casacore::String REC_FLAGGEDS;
+	static const casacore::String REC_TITLES;
+	static const casacore::String REC_COLFLAGS;
+	static const casacore::String REC_COLAXES;
 
 	void setDefaults();
 };
@@ -1431,16 +1431,16 @@ public:
 	}
 
 	/* Implements PlotMSPlotParameters::Group::name(). */
-	const String & name() const {
-		static String groupName = PMS_PP::UPDATE_ITERATION_NAME;
+	const casacore::String & name() const {
+		static casacore::String groupName = PMS_PP::UPDATE_ITERATION_NAME;
 		return groupName;
 	}
 
 	/* Implements PlotMSPlotParameters::Group::toRecord(). */
-	Record toRecord() const;
+	casacore::Record toRecord() const;
 
 	/* Implements PlotMSPlotParameters::Group::fromRecord(). */
-	void fromRecord (const Record & record);
+	void fromRecord (const casacore::Record & record);
 
 	/* Implements PlotMSPlotParameters::Group::requiresRedrawOnChanged(). */
 	bool requiresRedrawOnChange() const {
@@ -1501,7 +1501,7 @@ public:
 		}
 	}
 
-	Bool isCommonAxisX() const {
+	casacore::Bool isCommonAxisX() const {
 		return itsIterParam_.isCommonAxisX();
 	}
 	void setCommonAxisX( bool commonAxis ){
@@ -1520,7 +1520,7 @@ public:
 			}
 		}
 	}
-	Bool isCommonAxisY() const {
+	casacore::Bool isCommonAxisY() const {
 		return itsIterParam_.isCommonAxisY();
 	}
 	void setCommonAxisY( bool commonAxis ){
@@ -1538,7 +1538,7 @@ public:
 			}
 		}
 	}
-	Bool isGlobalScaleX() const {
+	casacore::Bool isGlobalScaleX() const {
 			return itsIterParam_.isGlobalAxisX();
 		}
 		void setGlobalScaleX( bool globalAxis ){
@@ -1547,7 +1547,7 @@ public:
 				updated();
 			}
 		}
-		Bool isGlobalScaleY() const {
+		casacore::Bool isGlobalScaleY() const {
 			return itsIterParam_.isGlobalAxisY();
 		}
 		void setGlobalScaleY( bool globalAxis ){

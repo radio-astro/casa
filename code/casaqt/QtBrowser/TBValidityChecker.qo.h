@@ -63,7 +63,7 @@ private:
 	// Browser parent.
     TBBrowser* browser;
     
-    // List of tests that can be run.
+    // casacore::List of tests that can be run.
     std::vector<TBTest*> tests;
 
     
@@ -87,11 +87,11 @@ private slots:
 
     // Slot for when a new table is opened in the browser.  Adds the name to
     // the list of opened tables.
-    void tableOpened(String table);
+    void tableOpened(casacore::String table);
 
     // Slot for when a table is closed in the browser.  Removes the name from
     // the list of opened tables. 
-    void tableClosed(String table);
+    void tableClosed(casacore::String table);
 };
 
 }

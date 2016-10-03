@@ -53,6 +53,7 @@
 #include <casa/Utilities/CountedPtr.h>
 
 
+using namespace casacore;
 namespace casa {
 
 	FileBox::FileBox(QtDisplayPanel* qdp) {
@@ -293,7 +294,7 @@ namespace casa {
 					DisplayCoordinateSystem csys=(qdd->imageInterface())->coordinates();
 					//Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
 					//MDirection::Types dirType=csys.directionCoordinate(dirInd)
-					//                      .directionType(True);
+					//                      .directionType(true);
 					//wx(0) = Quantity(wld(0), units(0)).getValue(RegionShape::UNIT);
 					//wx(1) = Quantity(wld(1), units(1)).getValue(RegionShape::UNIT);
 					wx(0) = Quantity(wld(0), units(0)).getValue("rad");
@@ -336,7 +337,7 @@ namespace casa {
 				//cout << "coords rect " << coords.nCoordinates() << endl;
 				Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
 				//MDirection::Types dirType=coords.
-				//    directionCoordinate(dirInd).directionType(True);
+				//    directionCoordinate(dirInd).directionType(true);
 				//Assuming x, y axes are dirInd and dirInd+1
 				Vector<Double> blc(3);
 				Vector<Double> trc(3);
@@ -394,7 +395,7 @@ namespace casa {
 					//cout << "activate rect:" << blc << " " << trc << endl;
 					if (ok && zIndex >= Int(blc(2)) &&
 					        zIndex <= Int(trc(2))) {
-						unionRegions_p.remove(k, True);
+						unionRegions_p.remove(k, true);
 						break;
 					}
 				}
@@ -408,7 +409,7 @@ namespace casa {
 
 			   //Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
 			   //MDirection::Types dirType=coords.
-			   //        directionCoordinate(dirInd).directionType(True);
+			   //        directionCoordinate(dirInd).directionType(true);
 			   Vector<Double> x;
 			   Vector<Double> y;
 			   const RecordInterface& subRecord0 = polyrec.asRecord("x");
@@ -440,7 +441,7 @@ namespace casa {
 			   if (xc <= wx(0) && wx(0) <= xd &&
 			      yc <= wx(1) && wx(1) <= yd) {
 			      //cout << "activate poly: " << x << " " << y << endl;
-			      unionRegions_p.remove(k, True);
+			      unionRegions_p.remove(k, true);
 			      break;
 			   }
 
@@ -522,7 +523,7 @@ namespace casa {
 						continue;
 
 					uInt nreg = unionRegions_p.nelements();
-					unionRegions_p.resize(nreg + 1, True);
+					unionRegions_p.resize(nreg + 1, true);
 					unionRegions_p[nreg] = new ImageRegion(worldbox);
 					vcount++;
 				} catch(...) {
@@ -669,7 +670,7 @@ namespace casa {
 				delete unionRegions_p[k];
 			}
 		}
-		unionRegions_p.resize(0, True);
+		unionRegions_p.resize(0, true);
 		reDraw();
 	}
 
@@ -725,7 +726,7 @@ namespace casa {
 			Int dirInd =
 			    csys.findCoordinate(Coordinate::DIRECTION);
 			MDirection::Types dirType = csys.
-			                            directionCoordinate(dirInd).directionType(True);
+			                            directionCoordinate(dirInd).directionType(true);
 
 			RSComposite *theShapes= new RSComposite(dirType);
 			addRegionsToShape(theShapes, wcreg);
@@ -802,7 +803,7 @@ namespace casa {
 			DisplayCoordinateSystem coords=DisplayCoordinateSystem::restore(boxrec,"coordinates");
 			//cout << "coords rect " << coords.nCoordinates() << endl;
 			Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
-			MDirection::Types dirType=coords.directionCoordinate(dirInd).directionType(True);
+			MDirection::Types dirType=coords.directionCoordinate(dirInd).directionType(true);
 			//Assuming x, y axes are dirInd and dirInd+1
 			Vector<Double> blc(2);
 			Vector<Double> trc(2);
@@ -918,7 +919,7 @@ namespace casa {
 
 		      Int dirInd=coords.findCoordinate(Coordinate::DIRECTION);
 		      MDirection::Types dirType=coords.
-		          directionCoordinate(dirInd).directionType(True);
+		          directionCoordinate(dirInd).directionType(true);
 		      Vector<Double> x;
 		      Vector<Double> y;
 		      const RecordInterface& subRecord0 = polyrec.asRecord("x");
@@ -1044,7 +1045,7 @@ namespace casa {
 	WCUnion* FileBox::unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg) {
 		PtrBlock<const WCRegion* > outRegPtrs ;
 		unfoldIntoSimpleRegionPtrs(outRegPtrs, wcreg);
-		WCUnion* outputUnion = new WCUnion(True, outRegPtrs);
+		WCUnion* outputUnion = new WCUnion(true, outRegPtrs);
 		return outputUnion;
 	}
 
@@ -1079,8 +1080,8 @@ namespace casa {
 			idx = pIndex;
 		}
 		if (xa <= idx && ya >= idx)
-			return True;
-		return False;
+			return true;
+		return false;
 	}
 
 	bool FileBox::polAllowed(const Double xa, const Double ya) {
@@ -1089,8 +1090,8 @@ namespace casa {
 			ipx = zIndex;
 		}
 		if (xa <= ipx && ya >= ipx)
-			return True;
-		return False;
+			return true;
+		return false;
 	}
 
 	bool FileBox::planeAllowed(String xa, String ya) {

@@ -53,34 +53,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     
     // Empty constructor
-    SDAlgorithmMSClean(Vector<Float> scalesizes,
-		       Float smallscalebias=0.6, 
-		       // Int stoplargenegatives=-2, 
-		       Int stoppointmode=-1 );
+    SDAlgorithmMSClean(casacore::Vector<casacore::Float> scalesizes,
+		       casacore::Float smallscalebias=0.6, 
+		       // casacore::Int stoplargenegatives=-2, 
+		       casacore::Int stoppointmode=-1 );
     virtual  ~SDAlgorithmMSClean();
     
-    //    void restore( CountedPtr<SIImageStore> imagestore );
+    //    void restore( casacore::CountedPtr<SIImageStore> imagestore );
     
   protected:
     
     // Local functions to be overloaded by various algorithm deconvolvers.
-    void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, 
-		      Float &peakresidual, Float &modelflux, Int &iterdone );
-    //    void initializeDeconvolver( Float &peakresidual, Float &modelflux );
+    void takeOneStep( casacore::Float loopgain, casacore::Int cycleNiter, casacore::Float cycleThreshold, 
+		      casacore::Float &peakresidual, casacore::Float &modelflux, casacore::Int &iterdone );
+    //    void initializeDeconvolver( casacore::Float &peakresidual, casacore::Float &modelflux );
     void initializeDeconvolver();
     void finalizeDeconvolver();
 
-    Array<Float> itsMatPsf, itsMatResidual, itsMatModel;
-    Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
+    casacore::Array<casacore::Float> itsMatPsf, itsMatResidual, itsMatModel;
+    casacore::Array<casacore::Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
 
     MatrixCleaner itsCleaner;
-    Vector<Float> itsScaleSizes;
-    Float itsSmallScaleBias;
-    //Int itsStopLargeNegatives;
-    Int itsStopPointMode;
+    casacore::Vector<casacore::Float> itsScaleSizes;
+    casacore::Float itsSmallScaleBias;
+    //casacore::Int itsStopLargeNegatives;
+    casacore::Int itsStopPointMode;
 
   private:
-    Bool itsMCsetup; 
+    casacore::Bool itsMCsetup; 
 
   };
 

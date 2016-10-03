@@ -154,7 +154,7 @@ protected:
     virtual void detach();
 };
 
-typedef CountedPtr<PlotTool> PlotToolPtr;
+typedef casacore::CountedPtr<PlotTool> PlotToolPtr;
 
 
 
@@ -512,9 +512,9 @@ class PlotTrackerTool : public virtual PlotMouseTool {
 public:
     // Static //
     
-    // Returns a String for the given position in the given format, with the
+    // Returns a casacore::String for the given position in the given format, with the
     // given canvas and axes.
-    static String formattedString(const String& format, double x, double y,
+    static casacore::String formattedString(const casacore::String& format, double x, double y,
                        PlotCanvas* canvas, PlotAxis xAxis, PlotAxis yAxis);
     
     
@@ -548,10 +548,10 @@ public:
     // NOTICE: if the x or y value is a date, the date format set on the
     // canvas this tool is attached to will be used to display the value.
     // Default format is "(%%x%%, %%y%%)".
-    virtual void setFormat(const String& format);
+    virtual void setFormat(const casacore::String& format);
     
     // Returns the formatted tracker text for the given position.
-    virtual String formattedString(double x, double y) {
+    virtual casacore::String formattedString(double x, double y) {
         return formattedString(m_format, x, y, m_canvas, m_xAxis, m_yAxis); }
     
     // Returns the annotation used to store the coordinates/text.
@@ -581,7 +581,7 @@ protected:
     bool m_drawText;
     
     // Tracker text format.
-    String m_format;
+    casacore::String m_format;
     
     // Overrides PlotTool::attach().
     virtual void attach(PlotCanvas* canvas);
@@ -595,12 +595,12 @@ protected:
     
     // Static //
     
-    // Format constants.
+    // casacore::Format constants.
     // <group>
-    static const String FORMAT_DIVIDER;
-    static const String FORMAT_X, FORMAT_Y;
-    static const String FORMAT_PRECISION;
-    static const String DEFAULT_FORMAT;
+    static const casacore::String FORMAT_DIVIDER;
+    static const casacore::String FORMAT_X, FORMAT_Y;
+    static const casacore::String FORMAT_PRECISION;
+    static const casacore::String DEFAULT_FORMAT;
     // </group>
 };
 INHERITANCE_POINTER(PlotTrackerTool, PlotTrackerToolPtr, PlotMouseTool,

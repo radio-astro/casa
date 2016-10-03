@@ -46,6 +46,7 @@
 
 #include <iomanip>
 
+using namespace casacore;
 namespace casa {
 
 // DS9FILEWRITER DEFINITIONS //

@@ -49,27 +49,27 @@ class AnnVector: public AnnotationBase {
 public:
 
 	AnnVector(
-		const Quantity& xStart,
-		const Quantity& yStart,
-		const Quantity& xEnd,
-		const Quantity& yEnd,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame,
-		const String& dopplerString,
-		const Quantity& restfreq,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Quantity& xStart,
+		const casacore::Quantity& yStart,
+		const casacore::Quantity& xEnd,
+		const casacore::Quantity& yEnd,
+		const casacore::String& dirRefFrameString,
+		const casacore::CoordinateSystem& csys,
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrame,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	AnnVector(
-		const Quantity& xStart,
-		const Quantity& yStart,
-		const Quantity& xEnd,
-		const Quantity& yEnd,
-		const CoordinateSystem& csys,
-		const Vector<Stokes::StokesTypes>& stokes
+		const casacore::Quantity& xStart,
+		const casacore::Quantity& yStart,
+		const casacore::Quantity& xEnd,
+		const casacore::Quantity& yEnd,
+		const casacore::CoordinateSystem& csys,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 
@@ -81,16 +81,16 @@ public:
 	// the input coordinate system if necessary.
 	// The first element will be the starting point,
 	// the second the ending point.
-	Vector<MDirection> getEndPoints() const;
+	casacore::Vector<casacore::MDirection> getEndPoints() const;
 
-	virtual ostream& print(ostream &os) const;
+	virtual std::ostream& print(std::ostream &os) const;
 
 private:
 	AnnotationBase::Direction _inputPoints;
 
 	void _init(
-		const Quantity& xBegin, const Quantity& yBegin,
-		const Quantity& xEnd, const Quantity& yEnd
+		const casacore::Quantity& xBegin, const casacore::Quantity& yBegin,
+		const casacore::Quantity& xEnd, const casacore::Quantity& yEnd
 	);
 };
 

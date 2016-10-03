@@ -53,28 +53,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual ~ResamplerWorklet(){terminate();}
     ResamplerWorklet& operator=(const ResamplerWorklet& other);
 
-    void setID(const Int& id) {myID_p=id;}
-    void initThread(Int& id, CountedPtr<ThreadCoordinator<Int> >& threadClerk,
+    void setID(const casacore::Int& id) {myID_p=id;}
+    void initThread(casacore::Int& id, casacore::CountedPtr<ThreadCoordinator<casacore::Int> >& threadClerk,
 		    VisibilityResamplerBase* resampler);
-    void initToVis(VBStore* vbs, const Array<Complex>* skyFTGrid) ;
-    void initToSky(VBStore* vbs,Array<DComplex>* griddedData, Matrix<Double>* sumwt) ;
-    void initToSky(VBStore* vbs,Array<Complex>* griddedData, Matrix<Double>* sumwt) ;
+    void initToVis(VBStore* vbs, const casacore::Array<casacore::Complex>* skyFTGrid) ;
+    void initToSky(VBStore* vbs,casacore::Array<casacore::DComplex>* griddedData, casacore::Matrix<casacore::Double>* sumwt) ;
+    void initToSky(VBStore* vbs,casacore::Array<casacore::Complex>* griddedData, casacore::Matrix<casacore::Double>* sumwt) ;
 
-    void init(Int& id, 
-	      CountedPtr<ThreadCoordinator<Int> >& threadClerk,
+    void init(casacore::Int& id, 
+	      casacore::CountedPtr<ThreadCoordinator<casacore::Int> >& threadClerk,
 	      VisibilityResamplerBase* resampler, VBStore* vbs,
-	      Array<DComplex>* griddedData, Matrix<Double>* sumwt,
-	      Array<Complex>* skyFTGrid=NULL);
-    void init(Int& id, 
-	      CountedPtr<ThreadCoordinator<Int> >& threadClerk,
+	      casacore::Array<casacore::DComplex>* griddedData, casacore::Matrix<casacore::Double>* sumwt,
+	      casacore::Array<casacore::Complex>* skyFTGrid=NULL);
+    void init(casacore::Int& id, 
+	      casacore::CountedPtr<ThreadCoordinator<casacore::Int> >& threadClerk,
 	      VisibilityResamplerBase* resampler, VBStore* vbs,
-	      Array<Complex>* griddedData, Matrix<Double>* sumwt,
-	      Array<Complex>* skyFTGrid=NULL);
+	      casacore::Array<casacore::Complex>* griddedData, casacore::Matrix<casacore::Double>* sumwt,
+	      casacore::Array<casacore::Complex>* skyFTGrid=NULL);
     void* run();
     void setPID();
     pid_t getPID() {return myPID_p;}
     pid_t getTID() {return myTID_p;}
-    Int getID () {return myID_p;}
+    casacore::Int getID () {return myID_p;}
 
     //
     //------------------------------------------------------------------------------
@@ -82,15 +82,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //------------------------------------------------------------------------------
     //
   private:
-    Int myID_p;
-    CountedPtr<ThreadCoordinator<Int> > myThreadClerk_p;
+    casacore::Int myID_p;
+    casacore::CountedPtr<ThreadCoordinator<casacore::Int> > myThreadClerk_p;
     VisibilityResamplerBase *myResampler_p;
     VBStore* myVBStore_p;
-    Array<DComplex>* myGriddedDataDouble_p;
-    Array<Complex>* myGriddedDataSingle_p;
-    Matrix<Double>* mySumWt_p;
+    casacore::Array<casacore::DComplex>* myGriddedDataDouble_p;
+    casacore::Array<casacore::Complex>* myGriddedDataSingle_p;
+    casacore::Matrix<casacore::Double>* mySumWt_p;
     pid_t myPID_p, myTID_p;
-    const Array<Complex>* mySkyFTGrid_p;
+    const casacore::Array<casacore::Complex>* mySkyFTGrid_p;
     pid_t gettid_p () {return syscall (SYS_gettid);};
   };
 }; //# NAMESPACE CASA - END

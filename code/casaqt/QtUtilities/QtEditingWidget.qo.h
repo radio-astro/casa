@@ -68,15 +68,15 @@ class QtLabelWidget : public QtEditingWidget, Ui::LabelWidget {
 public:
     // Constructor which takes the label associated with the "default" option,
     // and an optional parent widget.
-    QtLabelWidget(const String& defaultLabel, QWidget* parent = NULL);
+    QtLabelWidget(const casacore::String& defaultLabel, QWidget* parent = NULL);
     
     // Destructor.
     ~QtLabelWidget();
     
     // Gets/Sets the currently set label on the widget.
     // <group>
-    String getValue() const;
-    void setValue(const String& value);
+    casacore::String getValue() const;
+    void setValue(const casacore::String& value);
     // </group>
     
     // Overrides PlotMSWidget::addRadioButtonsToGroup().
@@ -84,10 +84,10 @@ public:
     
 private:
     // Default label.
-    String itsDefault_;
+    casacore::String itsDefault_;
 
     // Last set label.
-    String itsValue_;
+    casacore::String itsValue_;
     
 private slots:
     // Slot for when the set label changes.  The "check" flag can be used to
@@ -113,19 +113,19 @@ public:
     
     // Gets/Sets the currently set file.
     // <group>
-    String getFile() const;
-    void setFile(const String& file);
+    casacore::String getFile() const;
+    void setFile(const casacore::String& file);
     // </group>
     
 private:
-    // File chooser directory flag.
+    // casacore::File chooser directory flag.
     bool isDirectory_;
     
-    // File chooser save file flag.
+    // casacore::File chooser save file flag.
     bool isSave_;
     
     // Last set file.
-    String itsFile_;
+    casacore::String itsFile_;
     
 private slots:
     // Slot to show a file chooser and set the result in the line edit.

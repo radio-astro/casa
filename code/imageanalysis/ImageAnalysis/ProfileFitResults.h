@@ -58,23 +58,23 @@ class ProfileFitResults {
 
 public:
 
-	ProfileFitResults(const ImageFit1D<Float>& fitter);
+	ProfileFitResults(const ImageFit1D<casacore::Float>& fitter);
 
 	~ProfileFitResults() {};
 
 	const SpectralList getList() const {return _spectralList; }
 
-	Bool converged() const {return _converged; }
+	casacore::Bool converged() const {return _converged; }
 
-	uInt getNumberIterations() const { return _iterations; }
+	casacore::uInt getNumberIterations() const { return _iterations; }
 
-	Bool isValid() const { return _isValid; }
+	casacore::Bool isValid() const { return _isValid; }
 
-    Bool succeeded() const { return _succeeded; }
+    casacore::Bool succeeded() const { return _succeeded; }
 private:
 	SpectralList _spectralList;
-	Bool _converged, _isValid, _succeeded;
-	uInt _iterations;
+	casacore::Bool _converged, _isValid, _succeeded;
+	casacore::uInt _iterations;
 
 };
 

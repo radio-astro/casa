@@ -31,6 +31,7 @@
 #include <QBoxLayout>
 #include <QStackedLayout>
 
+using namespace casacore;
 namespace casa {
 
 /////////////////////////////

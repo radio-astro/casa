@@ -30,6 +30,7 @@
 #include <synthesis/Parallel/PTransport.h>
 #include <casa/Containers/Record.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   // OK this is all pretty straight forward.  Just assign the pointers.  
@@ -41,7 +42,7 @@ Int SerialTransport::add2Queue(void *item){
    _data[inQue++] = item;
    outQue = 0;
    if(inQue >= _data.nelements())
-      _data.resize(inQue*2, False, True);
+      _data.resize(inQue*2, false, true);
    lastInQue = inQue;
    return(0);
 }

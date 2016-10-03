@@ -51,17 +51,17 @@ public:
   
   // Return type id
   inline virtual MuellerType type() const { return Mueller::General; };
-  inline virtual uInt typesize() const { return 16; };
+  inline virtual casacore::uInt typesize() const { return 16; };
 
   // Set scalardata_ 
   //  TBD: Handle this better; for now, we need to set this from
   //       an external call so we handle single-corr data properly
   //       when setting non-corr-dep flags
-  inline void setScalarData(Bool scalardata) const { scalardata_=scalardata; };
+  inline void setScalarData(casacore::Bool scalardata) const { scalardata_=scalardata; };
   
   // Synchronize with leading element in external array
-  inline void sync(Complex& mat) { m0_=&mat; origin(); };
-  inline void sync(Complex& mat, Bool& ok) { m0_=&mat; ok0_=&ok; origin(); };
+  inline void sync(casacore::Complex& mat) { m0_=&mat; origin(); };
+  inline void sync(casacore::Complex& mat, casacore::Bool& ok) { m0_=&mat; ok0_=&ok; origin(); };
   
   // Reset to origin
   inline void origin() {m_=m0_;ok_=ok0_;};
@@ -71,7 +71,7 @@ public:
   inline void operator++(int) { m_+=typesize(); if (ok_) ok_+=typesize();};
 
   // Advance step matrices forward (according to len)
-  inline void advance(const Int& step) { m_+=(step*typesize()); if (ok_) ok_+=(step*typesize());};
+  inline void advance(const casacore::Int& step) { m_+=(step*typesize()); if (ok_) ok_+=(step*typesize());};
 
   // Formation from Jones matrix outer product: General version
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
@@ -85,17 +85,17 @@ public:
 
   // In-place multiply onto a VisVector: General version
   virtual void apply(VisVector& v);
-  virtual void apply(VisVector& v, Bool& vflag);
+  virtual void apply(VisVector& v, casacore::Bool& vflag);
 
   // Apply only flags according to cal flags
-  virtual void applyFlag(Bool& vflag);
+  virtual void applyFlag(casacore::Bool& vflag);
   virtual void flag(VisVector& v);
 
   // Multiply onto a vis VisVector, preserving input (copy then in-place apply)
   virtual void apply(VisVector& out, const VisVector& in);
 
   // print it out
-  friend ostream& operator<<(ostream& os, const Mueller& mat);
+  friend std::ostream& operator<<(std::ostream& os, const Mueller& mat);
     
 protected:
   
@@ -103,17 +103,17 @@ protected:
   Mueller(const Mueller& mat);
 
   // Pointer to origin
-  Complex *m0_;
-  Bool *ok0_;
+  casacore::Complex *m0_;
+  casacore::Bool *ok0_;
 
   // Moving pointer
-  Complex *m_, *mi_;
-  Bool *ok_, *oki_;
+  casacore::Complex *m_, *mi_;
+  casacore::Bool *ok_, *oki_;
 
-  // Complex unity, zero (for use in invert and similar methods)
-  const Complex cOne_,cZero_;
+  // casacore::Complex unity, zero (for use in invert and similar methods)
+  const casacore::Complex cOne_,cZero_;
 
-  mutable Bool scalardata_;
+  mutable casacore::Bool scalardata_;
 
 private: 
 
@@ -139,7 +139,7 @@ public:
   
   // Return type id
   inline virtual MuellerType type() const { return Mueller::Diagonal; };
-  inline virtual uInt typesize() const { return 4; };
+  inline virtual casacore::uInt typesize() const { return 4; };
 
   // Formation from Jones matrix outer product: optimized Diagonal version
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
@@ -153,11 +153,11 @@ public:
 
   // In-place multiply onto a VisVector: optimized Diagonal version
   virtual void apply(VisVector& v);
-  virtual void apply(VisVector& v, Bool& vflag);
+  virtual void apply(VisVector& v, casacore::Bool& vflag);
   using Mueller::apply;
 
   // Apply only flags according to cal flags
-  virtual void applyFlag(Bool& vflag);
+  virtual void applyFlag(casacore::Bool& vflag);
   virtual void flag(VisVector& v);
 
 protected:
@@ -184,7 +184,7 @@ public:
   
   // Return type id
   inline virtual MuellerType type() const { return Mueller::Diag2; };
-  inline virtual uInt typesize() const { return 2; };
+  inline virtual casacore::uInt typesize() const { return 2; };
 
   // Formation from Jones matrix outer product: optimized Diag2 version
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
@@ -198,11 +198,11 @@ public:
 
   // In-place multiply onto a VisVector: optimized Diag2 version
   virtual void apply(VisVector& v);
-  virtual void apply(VisVector& v, Bool& vflag);
+  virtual void apply(VisVector& v, casacore::Bool& vflag);
   using MuellerDiag::apply;
 
   // Apply only flags according to cal flags
-  virtual void applyFlag(Bool& vflag);
+  virtual void applyFlag(casacore::Bool& vflag);
   virtual void flag(VisVector& v);
 
 protected:
@@ -230,7 +230,7 @@ public:
 
   // Return type id
   inline virtual MuellerType type() const { return Mueller::Scalar; }
-  inline virtual uInt typesize() const { return 1; };
+  inline virtual casacore::uInt typesize() const { return 1; };
 
   // Formation from Jones matrix outer product: optimized Scalar version
   virtual void fromJones(const Jones& jones1, const Jones& jones2);
@@ -244,11 +244,11 @@ public:
 
   // In-place multiply onto a VisVector: optimized Scalar version
   virtual void apply(VisVector& v);
-  virtual void apply(VisVector& v, Bool& vflag);
+  virtual void apply(VisVector& v, casacore::Bool& vflag);
   using MuellerDiag::apply;
 
   // Apply only flags according to cal flags
-  virtual void applyFlag(Bool& vflag);
+  virtual void applyFlag(casacore::Bool& vflag);
   virtual void flag(VisVector& v);
 
 protected:
@@ -338,10 +338,10 @@ protected:
 Mueller* createMueller(const Mueller::MuellerType& mtype);
 
 // Return Mueller type according to Int
-//Mueller::MuellerType muellerType(const Int& n);
+//Mueller::MuellerType muellerType(const casacore::Int& n);
 
 // Return parameter count according to type
-inline Int muellerNPar(const Mueller::MuellerType& mtype) {
+inline casacore::Int muellerNPar(const Mueller::MuellerType& mtype) {
   switch (mtype) {
   case Mueller::General:
     return 16;

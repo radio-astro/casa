@@ -32,6 +32,7 @@
 #include <casa/BasicMath/Random.h>
 #include <casa/Quanta/MVTime.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi {
@@ -48,13 +49,13 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters() :
   dt_(1.0),
   refFreq_(Vector<Double>(1,100.0e9)),
   df_(Vector<Double>(1,1.0e6)),  // 1 MHz chans
-  doNoise_(False),
+  doNoise_(false),
   stokes_(Matrix<Float>(1,1,1.0)),
   gain_(Matrix<Float>(1,1,1.0)),
   tsys_(Matrix<Float>(1,1,1.0)),
-  doNorm_(False),
+  doNorm_(false),
   polBasis_("circ"),
-  doAC_(False),
+  doAC_(false),
   c0_(Complex(0.0))
 {
   
@@ -437,7 +438,7 @@ void SimpleSimVi2::origin ()
 
 Bool SimpleSimVi2::more () const
 {
-  // True if still more subchunks for this scan's field
+  // true if still more subchunks for this scan's field
   return (iSubChunk_<pars_.nTimePerField_(thisField_));
 }
 
@@ -572,9 +573,9 @@ String SimpleSimVi2::fieldName () const {return "Field"+String(thisField_); }
 void SimpleSimVi2::flag (Cube<Bool> & flags) const {
   // unflagged
   flags.resize(pars_.nCorr_,pars_.nChan_(thisSpw_),nRows());
-  flags.set(False);
+  flags.set(false);
 }
-void SimpleSimVi2::flagRow (Vector<Bool> & rowflags) const { rowflags.resize(nRows()); rowflags.set(False); }
+void SimpleSimVi2::flagRow (Vector<Bool> & rowflags) const { rowflags.resize(nRows()); rowflags.set(false); }
 void SimpleSimVi2::observationId (Vector<Int> & obsids) const { obsids.resize(nRows()); obsids.set(0); }
 Int SimpleSimVi2::polarizationId () const { return 0; }
 void SimpleSimVi2::processorId (Vector<Int> & procids) const { procids.resize(nRows()); procids.set(0); }
@@ -668,8 +669,8 @@ void SimpleSimVi2::weight (Matrix<Float> & wtmat) const {
     }
   }
 }
-Bool SimpleSimVi2::weightSpectrumExists () const { return True; }
-Bool SimpleSimVi2::sigmaSpectrumExists () const { return True; } 
+Bool SimpleSimVi2::weightSpectrumExists () const { return true; }
+Bool SimpleSimVi2::sigmaSpectrumExists () const { return true; } 
 void SimpleSimVi2::weightSpectrum (Cube<Float> & wtsp) const {
   wtsp.resize(pars_.nCorr_,pars_.nChan_(thisSpw_),nRows());
   wtsp.set(wt0_(thisSpw_));
@@ -766,7 +767,7 @@ Int SimpleSimVi2::nSpectralWindows () const { return pars_.nSpw_; }
 void SimpleSimVi2::configureNewSubchunk() {
 
   // Poke the vb to do this
-  vb_->configureNewSubchunk(0,"faked",False,
+  vb_->configureNewSubchunk(0,"faked",false,
 			    isNewArrayId(),isNewFieldId(),
 			    isNewSpectralWindow(),getSubchunkId(),
 			    nRows(),pars_.nChan_(thisSpw_),pars_.nCorr_,

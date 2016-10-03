@@ -44,6 +44,7 @@
 #include <display/Display/ColormapDefinition.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // statics
@@ -199,10 +200,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				itsGreens(1)= 1.0;
 				itsBlues(0)= 0.0;
 				itsBlues(1)= 1.0;
-				return True;
+				return true;
 			}
 		}
-		return False;
+		return false;
 	}
 
 	Bool ColormapDefinition::queryColormapTable(const Table& table,
@@ -217,12 +218,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int rowNumber = -1;
 		Vector<String> synonyms;
 		uInt n = table.nrow();
-		Bool foundMatch = False;
+		Bool foundMatch = false;
 		for (uInt i=0; i < n && !foundMatch; i++) {
 			// found CMAP_NAME
 			if (name == nameCol(i)) {
 				rowNumber = Int(i);
-				foundMatch = True;
+				foundMatch = true;
 				break;
 			}
 			synonyms.resize();
@@ -231,7 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// found SYNONYM
 				if (name == synonyms(k)) {
 					rowNumber = Int(i);
-					foundMatch = True;
+					foundMatch = true;
 					break;
 				}
 			}
@@ -245,13 +246,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsReds = Vector<Float>(rCol(rowNumber));
 			itsGreens = Vector<Float>(gCol(rowNumber));
 			itsBlues = Vector<Float>(bCol(rowNumber));
-			return True;
+			return true;
 		}
-		return False;
+		return false;
 	}
 
 	Bool ColormapDefinition::loadColormap(const String& name) {
-		Bool foundName = False;
+		Bool foundName = false;
 		if (!ourDefaultColormapTable.isNull()) {
 			foundName = queryColormapTable(ourDefaultColormapTable, name);
 		}
@@ -330,7 +331,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		delete tbl;
 		tbl=0;
 
-		return True;
+		return true;
 	}
 
 

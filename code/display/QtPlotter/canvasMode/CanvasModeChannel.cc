@@ -27,6 +27,7 @@
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <QMouseEvent>
 #include <QDebug>
+using namespace casacore;
 namespace casa {
 
 	CanvasModeChannel::CanvasModeChannel():
@@ -62,4 +63,5 @@ namespace casa {
 
 	}
 
+using namespace casacore;
 } /* namespace casa */

@@ -68,7 +68,7 @@ class VisBuffer;
 
 // <prerequisite>
 //   <li> <linkto class="MSIter">MSIter</linkto>
-//   <li> <linkto class="MeasurementSet">MeasurementSet</linkto>
+//   <li> <linkto class="casacore::MeasurementSet">casacore::MeasurementSet</linkto>
 //   <li> <linkto class="VisSet">VisSet</linkto>
 // </prerequisite>
 //
@@ -92,7 +92,7 @@ class VisBuffer;
 // </example>
 //
 // <motivation>
-// For imaging and calibration you need to access an MS in some consistent
+// For imaging and calibration you need to access an casacore::MS in some consistent
 // order (by field, spectralwindow, time interval etc.). This class provides
 // that access.
 //
@@ -108,7 +108,7 @@ class VisBuffer;
 // <todo asof="1997/05/30">
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
-//   <li> Handle the multi-MS case like ROVisibilityIterator does.
+//   <li> Handle the multi-casacore::MS case like ROVisibilityIterator does.
 // </todo>
 
 class ROVisIteratorImpl;
@@ -120,7 +120,7 @@ class ROVisIterator : public ROVisibilityIterator
   // Default constructor - useful only to assign another iterator later
   ROVisIterator();
 
-  // Construct from MS and a Block of MS column enums specifying the iteration
+  // Construct from casacore::MS and a casacore::Block of casacore::MS column enums specifying the iteration
   // order, if none are specified, time iteration is implicit.  An optional
   // timeInterval can be given to iterate through chunks of time.  The default
   // interval of 0 groups all times together.  Every 'chunk' of data contains
@@ -129,12 +129,12 @@ class ROVisIterator : public ROVisibilityIterator
   // Using selectChannel(), a number of groups of channels can be requested.
   // At present the channel group iteration will always occur before the
   // interval iteration.
-  ROVisIterator(const MeasurementSet& ms, 
-		const Block<Int>& sortColumns, 
-		Double timeInterval=0);
+  ROVisIterator(const casacore::MeasurementSet& ms, 
+		const casacore::Block<casacore::Int>& sortColumns, 
+		casacore::Double timeInterval=0);
 
-  ROVisIterator(const MeasurementSet & ms, const Block<Int>& sortColumns,
-                Double timeInterval, const ROVisibilityIterator::Factory & factory);
+  ROVisIterator(const casacore::MeasurementSet & ms, const casacore::Block<casacore::Int>& sortColumns,
+                casacore::Double timeInterval, const ROVisibilityIterator::Factory & factory);
 
 
   // Copy construct. This calls the assignment operator.
@@ -156,39 +156,39 @@ class ROVisIterator : public ROVisibilityIterator
   // (i.e. disregarding possible selection on the iterator, but
   //  including the selection set when creating the VisSet)
 
-  Vector<Int>& chanIds(Vector<Int>& chanids) const;
-  Vector<Int>& chanIds(Vector<Int>& chanids,Int spw) const;
+  casacore::Vector<casacore::Int>& chanIds(casacore::Vector<casacore::Int>& chanids) const;
+  casacore::Vector<casacore::Int>& chanIds(casacore::Vector<casacore::Int>& chanids,casacore::Int spw) const;
 
   // Return selected correlation indices
-  Vector<Int>& corrIds(Vector<Int>& corrids) const;
+  casacore::Vector<casacore::Int>& corrIds(casacore::Vector<casacore::Int>& corrids) const;
 
-  // Return the correlation type (returns Stokes enums)
-  Vector<Int>& corrType(Vector<Int>& corrTypes) const;
+  // Return the correlation type (returns casacore::Stokes enums)
+  casacore::Vector<casacore::Int>& corrType(casacore::Vector<casacore::Int>& corrTypes) const;
 
-  // Set up new chan/corr selection via Vector<Slice>
-  void selectChannel(const Vector<Vector<Slice> >& chansel);
-  void selectCorrelation(const Vector<Vector<Slice> >& corrsel);
+  // Set up new chan/corr selection via casacore::Vector<casacore::Slice>
+  void selectChannel(const casacore::Vector<casacore::Vector<casacore::Slice> >& chansel);
+  void selectCorrelation(const casacore::Vector<casacore::Vector<casacore::Slice> >& corrsel);
 
   // Set up/return channel averaging bounds 
-  Vector<Matrix<Int> >& setChanAveBounds(Float factor, Vector<Matrix<Int> >& bounds);
+  casacore::Vector<casacore::Matrix<casacore::Int> >& setChanAveBounds(casacore::Float factor, casacore::Vector<casacore::Matrix<casacore::Int> >& bounds);
 
   // Get selected spws and channel counts
-  void allSelectedSpectralWindows (Vector<Int> & spws, Vector<Int> & nvischan);
-  void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert, const  Bool ignoreconv=False);
+  void allSelectedSpectralWindows (casacore::Vector<casacore::Int> & spws, casacore::Vector<casacore::Int> & nvischan);
+  void lsrFrequency(const casacore::Int& spw, casacore::Vector<casacore::Double>& freq, casacore::Bool& convert, const  casacore::Bool ignoreconv=false);
 
   // The following throws an exception, because this isn't the
   // language of channel selection in VisIterator
-  void getChannelSelection(Block< Vector<Int> >&,
-                           Block< Vector<Int> >&,
-                           Block< Vector<Int> >&,
-                           Block< Vector<Int> >&,
-                           Block< Vector<Int> >&) 
-  { throw(AipsError("VisIterator::getChannelSelection: you can't do that!")); };
+  void getChannelSelection(casacore::Block< casacore::Vector<casacore::Int> >&,
+                           casacore::Block< casacore::Vector<casacore::Int> >&,
+                           casacore::Block< casacore::Vector<casacore::Int> >&,
+                           casacore::Block< casacore::Vector<casacore::Int> >&,
+                           casacore::Block< casacore::Vector<casacore::Int> >&) 
+  { throw(casacore::AipsError("VisIterator::getChannelSelection: you can't do that!")); };
 
 
   // Return number of chans/corrs per spw/pol
-  Int numberChan(Int spw) const;
-  Int numberCorr(Int pol) const;
+  casacore::Int numberChan(casacore::Int spw) const;
+  casacore::Int numberCorr(casacore::Int pol) const;
 
 protected:
 
@@ -198,17 +198,17 @@ protected:
       Factory (ROVisIterator * vi) : vi_p (vi) {}
       VisibilityIteratorReadImpl *
       operator() (const asyncio::PrefetchColumns * prefetchColumns,
-                  const Block<MeasurementSet>& mss,
-                  const Block<Int>& sortColumns,
-                  const Bool addDefaultSortCols,
-                  Double timeInterval) const;
+                  const casacore::Block<casacore::MeasurementSet>& mss,
+                  const casacore::Block<casacore::Int>& sortColumns,
+                  const casacore::Bool addDefaultSortCols,
+                  casacore::Double timeInterval) const;
   private:
 
       ROVisIterator * vi_p;
 
   };
 
-  void getDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices, Cube<Complex>& data) const;
+  void getDataColumn(DataColumn whichOne, const casacore::Vector<casacore::Vector<casacore::Slice> >& slices, casacore::Cube<casacore::Complex>& data) const;
   virtual ROVisIteratorImpl * getReadImpl () const;
 };
 
@@ -247,7 +247,7 @@ protected:
 // </example>
 //
 // <motivation>
-// For imaging and calibration you need to access an MS in some consistent
+// For imaging and calibration you need to access an casacore::MS in some consistent
 // order (by field, spectralwindow, time interval etc.). This class provides
 // that access.
 //
@@ -262,7 +262,7 @@ protected:
 // <todo asof="1997/05/30">
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
-//   <li> Handle the multi-MS case like VisibilityIterator does.
+//   <li> Handle the multi-casacore::MS case like VisibilityIterator does.
 // </todo>
 
 class VisIteratorImpl;
@@ -275,8 +275,8 @@ public:
   // Note: The VisIterator is not initialized correctly by default, you
   // need to call origin() before using it to iterate.
   VisIterator();
-  VisIterator(MeasurementSet & ms, const Block<Int>& sortColumns, 
-	      Double timeInterval=0);
+  VisIterator(casacore::MeasurementSet & ms, const casacore::Block<casacore::Int>& sortColumns, 
+	      casacore::Double timeInterval=0);
 
   VisIterator(const VisIterator & MSI);
 
@@ -291,28 +291,28 @@ public:
   VisIterator & operator++(int);
   VisIterator & operator++();
 
-  // Set/modify the flag row column; dimension Vector(nrow)
-  void setFlagRow(const Vector<Bool>& rowflags);
+  // Set/modify the flag row column; dimension casacore::Vector(nrow)
+  void setFlagRow(const casacore::Vector<casacore::Bool>& rowflags);
 
   // Set/modify the flags in the data.
-  // This sets the flags as found in the MS, Cube(npol,nchan,nrow),
+  // This sets the flags as found in the casacore::MS, casacore::Cube(npol,nchan,nrow),
   // where nrow is the number of rows in the current iteration (given by
   // nRow()).
-  void setFlag(const Cube<Bool>& flag);
+  void setFlag(const casacore::Cube<casacore::Bool>& flag);
 
   // Set/modify the visibilities
-  // This sets the data as found in the MS, Cube(npol,nchan,nrow).
-  void setVis(const Cube<Complex>& vis, DataColumn whichOne);
+  // This sets the data as found in the casacore::MS, casacore::Cube(npol,nchan,nrow).
+  void setVis(const casacore::Cube<casacore::Complex>& vis, DataColumn whichOne);
 
   // Set the visibility and flags, and interpolate from velocities if needed
-  void setVisAndFlag(const Cube<Complex>& vis, const Cube<Bool>& flag,
+  void setVisAndFlag(const casacore::Cube<casacore::Complex>& vis, const casacore::Cube<casacore::Bool>& flag,
 		     DataColumn whichOne);
 
   // Set/modify the weightMat
-  void setWeightMat(const Matrix<Float>& wtmat);
+  void setWeightMat(const casacore::Matrix<casacore::Float>& wtmat);
 
   // Set/modify the weightSpectrum
-  void setWeightSpectrum(const Cube<Float>& wtsp);
+  void setWeightSpectrum(const casacore::Cube<casacore::Float>& wtsp);
 
 protected:
 
@@ -322,33 +322,33 @@ protected:
       Factory (VisIterator * vi) : vi_p (vi) {}
       VisibilityIteratorReadImpl *
       operator() (const asyncio::PrefetchColumns * prefetchColumns,
-                  const Block<MeasurementSet>& mss,
-                  const Block<Int>& sortColumns,
-                  const Bool addDefaultSortCols,
-                  Double timeInterval) const;
+                  const casacore::Block<casacore::MeasurementSet>& mss,
+                  const casacore::Block<casacore::Int>& sortColumns,
+                  const casacore::Bool addDefaultSortCols,
+                  casacore::Double timeInterval) const;
   private:
 
       VisIterator * vi_p;
 
   };
 
-  virtual void attachColumns(const Table &t);
+  virtual void attachColumns(const casacore::Table &t);
 
-  // deals with Float or Complex observed data (DATA and FLOAT_DATA).
-  void putDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices,
-		     const Cube<Complex>& data);
-  void putDataColumn(DataColumn whichOne, const Cube<Complex>& data);
+  // deals with casacore::Float or casacore::Complex observed data (DATA and FLOAT_DATA).
+  void putDataColumn(DataColumn whichOne, const casacore::Vector<casacore::Vector<casacore::Slice> >& slices,
+		     const casacore::Cube<casacore::Complex>& data);
+  void putDataColumn(DataColumn whichOne, const casacore::Cube<casacore::Complex>& data);
 
   // column access functions
-  virtual void putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array);
+  virtual void putCol(casacore::ScalarColumn<casacore::Bool> &column, const casacore::Vector<casacore::Bool> &array);
 
-  virtual void putCol(ArrayColumn<Bool> &column, const Array<Bool> &array);
-  virtual void putCol(ArrayColumn<Float> &column, const Array<Float> &array);
-  virtual void putCol(ArrayColumn<Complex> &column, const Array<Complex> &array);
+  virtual void putCol(casacore::ArrayColumn<casacore::Bool> &column, const casacore::Array<casacore::Bool> &array);
+  virtual void putCol(casacore::ArrayColumn<casacore::Float> &column, const casacore::Array<casacore::Float> &array);
+  virtual void putCol(casacore::ArrayColumn<casacore::Complex> &column, const casacore::Array<casacore::Complex> &array);
 
-  virtual void putCol(ArrayColumn<Bool> &column, const Slicer &slicer, const Array<Bool> &array);
-  virtual void putCol(ArrayColumn<Float> &column, const Slicer &slicer, const Array<Float> &array);
-  virtual void putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array);
+  virtual void putCol(casacore::ArrayColumn<casacore::Bool> &column, const casacore::Slicer &slicer, const casacore::Array<casacore::Bool> &array);
+  virtual void putCol(casacore::ArrayColumn<casacore::Float> &column, const casacore::Slicer &slicer, const casacore::Array<casacore::Float> &array);
+  virtual void putCol(casacore::ArrayColumn<casacore::Complex> &column, const casacore::Slicer &slicer, const casacore::Array<casacore::Complex> &array);
 
   VisIteratorImpl * getImpl () const;
 };

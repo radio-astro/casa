@@ -39,9 +39,9 @@
 // </summary>
 
 // Control verbosity
-#define RIORAPARRAYTEST_VERBOSE True
+#define RIORAPARRAYTEST_VERBOSE true
 
-void doTest1 (Bool verbose=False) {
+void doTest1 (Bool verbose=false) {
 
   cout << "---doTest1--BEGIN--" << endl;
 
@@ -57,13 +57,13 @@ void doTest1 (Bool verbose=False) {
     RIorAPArray b(a.c());  // convert from a
 
     if (verbose) {
-      a.state(True);
-      b.state(True);
+      a.state(true);
+      b.state(true);
     }
 
 
     Matrix<Float> fl1;
-    fl1=b.f(False);
+    fl1=b.f(false);
 
     if (verbose)
       cout << "new fl=" << fl1 << endl;
@@ -81,7 +81,7 @@ void doTest1 (Bool verbose=False) {
 
 }
 
-void doTest2 (Bool verbose=False) {
+void doTest2 (Bool verbose=false) {
 
   cout << "---doTest2--BEGIN--" << endl;
 
@@ -100,11 +100,11 @@ void doTest2 (Bool verbose=False) {
     RIorAPArray a(gain);   // ctor from Complex
 
     cout << endl << "a.state():" << endl;
-    a.state(True);
+    a.state(true);
 
-    RIorAPArray b(a.f(True));  // ctor from Float
-    cout << "b.state(True):" << endl;
-    b.state(True);
+    RIorAPArray b(a.f(true));  // ctor from Float
+    cout << "b.state(true):" << endl;
+    b.state(true);
 
     Vector<Complex> gain2(b.c());
     cout << "gain2.shape() = " << gain2.shape() << " gain2.data() = " << gain2.data() << endl;

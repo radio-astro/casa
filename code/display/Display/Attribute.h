@@ -31,9 +31,13 @@
 #include <casa/aips.h>
 #include <display/Display/AttValBase.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 	class String;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>
 // Arbitrary name-value pairs used in the display classes.
@@ -57,9 +61,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <synopsis>
 // An Attribute is the combination of a name and a value.  The name is
-// a String, while the value can be of any of the types Int, Float,
-// Double, Bool, String or <linkto class=Quantum>Quantum</linkto>,
-// or a <linkto class=Vector>Vector</linkto> of any of these types.
+// a casacore::String, while the value can be of any of the types casacore::Int, casacore::Float,
+// casacore::Double, casacore::Bool, casacore::String or <linkto class=casacore::Quantum>Quantum</linkto>,
+// or a <linkto class=casacore::Vector>Vector</linkto> of any of these types.
 //
 // Attributes can be compared to see if they match.  They can also be
 // made "fuzzy" by providing a user-specified tolerance, and then
@@ -68,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // values are deemed to match if their values match element-wise.
 // Otherwise, the Attributes match if any one element in one
 // Attribute's value matches any one element in the other Attribute's
-// value.  In the latter case, the Attribute Vector values do not have
+// value.  In the latter case, the Attribute casacore::Vector values do not have
 // to be conformant.
 // </synopsis>
 //
@@ -79,22 +83,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Attribute att("axisname", "Right ascension (J2000)");
 // ...
 //
-// AttributeValue<String>* pAv = dynamic_cast<AttributeValue<String>*>(att.getAttributeValue());
-// String axisname = pAv->getValue()(0);
+// AttributeValue<casacore::String>* pAv = dynamic_cast<AttributeValue<casacore::String>*>(att.getAttributeValue());
+// casacore::String axisname = pAv->getValue()(0);
 // if (axisname == "Right ascension (J2000)") {
 //   ...
 // } else {
-//   throw(AipsError("Doing nothing because axisname Attribute unsuitable"));
+//   throw(casacore::AipsError("Doing nothing because axisname Attribute unsuitable"));
 // }
 // </srcblock>
 //
 // The following example uses the Attribute equality operator to
 // determine some state.
 // <srcblock>
-// /* "itsAxisName" is some private String */
+// /* "itsAxisName" is some private casacore::String */
 // Attribute att("axisname", itsAxisName);
 // ...
-// Attribute currentAtt("axisname", "Stokes");
+// Attribute currentAtt("axisname", "casacore::Stokes");
 // if (currentAtt == att) {
 //   ...
 // } else {
@@ -113,7 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // ...
 // /* somewhere later in the program ... */
 // if (wcanvas.existsAttribute("ColorModel")) {
-//   String colormodel;
+//   casacore::String colormodel;
 //   wcanvas.getAttribute("ColorModel", colormodel);
 //   if (colormodel == "RGB") {
 //     ...
@@ -144,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor taking an AttributeValueBase.  By inheriting from
 		// AttributeValueBase, additional types of Attributes can be
 		// supported.
-		Attribute(const String &name, const AttributeValueBase& value);
+		Attribute(const casacore::String &name, const AttributeValueBase& value);
 
 		// Copy constructor.
 		Attribute(const Attribute& other);
@@ -154,51 +158,51 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// <src>tol</src>, and when the values can be compared to see if
 		// they match, the tolerance is taken into account where it makes
 		// sense.  The parameter <src>strict</src> determines how the
-		// matching is done for the values.  If <src>strict == True</src>,
+		// matching is done for the values.  If <src>strict == true</src>,
 		// the values have to match elementwise (a single value is
-		// considered a Vector of length 1).  If <src>strict == False</src>,
+		// considered a casacore::Vector of length 1).  If <src>strict == false</src>,
 		// the values match if any one element in one value matches any one
 		// elemnt in the other value.
 		// <group>
-		Attribute(const String &name, const uInt value,
-		          const uInt tolerance = 0, const Bool strict = False);
-		Attribute(const String &name, const Int value,
-		          const Int tolerance = 0, const Bool strict = False);
-		Attribute(const String &name, const Float value,
-		          const Float tolerance = 0.0, const Bool strict = False);
-		Attribute(const String &name, const Double value,
-		          const Double tolerance = 0.0, const Bool strict = False);
-		Attribute(const String &name, const Quantity value,
-		          const Bool strict = False);
-		Attribute(const String &name, const Quantity value,
-		          const Quantity tolerance, Bool strict = False);
-		Attribute(const String &name, const Bool value,
-		          const Bool strict = False);
-		Attribute(const String &name, const String value,
-		          const Bool strict = False);
+		Attribute(const casacore::String &name, const casacore::uInt value,
+		          const casacore::uInt tolerance = 0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Int value,
+		          const casacore::Int tolerance = 0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Float value,
+		          const casacore::Float tolerance = 0.0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Double value,
+		          const casacore::Double tolerance = 0.0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Quantity value,
+		          const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Quantity value,
+		          const casacore::Quantity tolerance, casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Bool value,
+		          const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::String value,
+		          const casacore::Bool strict = false);
 		// </group>
 
-		// Contructors that take a <src>Vector</src> of the various
+		// Contructors that take a <src>casacore::Vector</src> of the various
 		// types. Once again, the value stored in an Attribute can be made
 		// fuzzy by specifying <src>tol</src> or strict by putting
-		// <src>strict = True</src>.
+		// <src>strict = true</src>.
 		// <group>
-		Attribute(const String &name, const Vector<uInt> value,
-		          const uInt tolerance = 0, const Bool strict = False);
-		Attribute(const String &name, const Vector<Int> value,
-		          const Int tolerance = 0, const Bool strict = False);
-		Attribute(const String &name, const Vector<Float> value,
-		          const Float tolerance = 0.0, const Bool strict = False);
-		Attribute(const String &name, const Vector<Double> value,
-		          const Double tolerance = 0.0, const Bool strict = False);
-		Attribute(const String &name, const Vector<Quantity> value,
-		          const Bool strict = False);
-		Attribute(const String &name, const Vector<Quantity> value,
-		          const Quantity tolerance, const Bool strict = False);
-		Attribute(const String &name, const Vector<Bool> value,
-		          const Bool strict = False);
-		Attribute(const String &name, const Vector<String> value,
-		          const Bool strict = False);
+		Attribute(const casacore::String &name, const casacore::Vector<casacore::uInt> value,
+		          const casacore::uInt tolerance = 0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Vector<casacore::Int> value,
+		          const casacore::Int tolerance = 0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Vector<casacore::Float> value,
+		          const casacore::Float tolerance = 0.0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Vector<casacore::Double> value,
+		          const casacore::Double tolerance = 0.0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Vector<casacore::Quantity> value,
+		          const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Vector<casacore::Quantity> value,
+		          const casacore::Quantity tolerance, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Vector<casacore::Bool> value,
+		          const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, const casacore::Vector<casacore::String> value,
+		          const casacore::Bool strict = false);
 		//</group>
 
 		// Constructors that take a pointer to a variable. This makes the
@@ -206,45 +210,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// changes the value of the Attribute and vice versa.  Other
 		// functionality the same as for the other constructors.
 // <group>
-		Attribute(const String &name, uInt *value,
-		          const uInt tolerance = 0, const Bool strict = False);
-		Attribute(const String &name, Int *value,
-		          const Int tolerance = 0, const Bool strict = False);
-		Attribute(const String &name, Float *value,
-		          const Float tolerance = 0.0, const Bool strict = False);
-		Attribute(const String &name, Double  *value,
-		          const Double tolerance = 0.0, const Bool strict = False);
-		Attribute(const String &name, Bool *value,
-		          const Bool strict = False);
-		Attribute(const String &name, String *value,
-		          const Bool strict = False);
-		Attribute(const String &name, Quantity *value,
-		          const Bool strict = False);
-		Attribute(const String &name, Quantity *value,
-		          const Quantity tolerance, const Bool strict = False);
+		Attribute(const casacore::String &name, casacore::uInt *value,
+		          const casacore::uInt tolerance = 0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::Int *value,
+		          const casacore::Int tolerance = 0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::Float *value,
+		          const casacore::Float tolerance = 0.0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::Double  *value,
+		          const casacore::Double tolerance = 0.0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::Bool *value,
+		          const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::String *value,
+		          const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::Quantity *value,
+		          const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::Quantity *value,
+		          const casacore::Quantity tolerance, const casacore::Bool strict = false);
 		// </group>
 
 		// Constructors that take a pointer to a Vector.  This again makes
-		// the Attribute an alias for the Vector: changing the Vector
+		// the Attribute an alias for the casacore::Vector: changing the Vector
 		// changes the value of the Attribute, and vice versa.  Other
 		// functionality is the same as for the non-aliasing constructors.
 		// <group>
-		Attribute(const String &name,  Vector<uInt> *value,
-		          const uInt tolerance = 0, const Bool strict = False);
-		Attribute(const String &name,  Vector<Int> *value,
-		          const Int tolerance = 0, const Bool strict = False);
-		Attribute(const String &name,  Vector<Float> *value,
-		          const Float tolerance = 0.0, const Bool strict = False);
-		Attribute(const String &name,  Vector<Double>  *value,
-		          const Double tolerance = 0.0, const Bool strict = False);
-		Attribute(const String &name, Vector<Quantity> *value,
-		          const Bool strict = False);
-		Attribute(const String &name, Vector<Quantity> *value,
-		          const Quantity tolerance, const Bool strict = False);
-		Attribute(const String &name,  Vector<Bool> *value,
-		          const Bool strict = False);
-		Attribute(const String &name, Vector<String> *value,
-		          const Bool strict = False);
+		Attribute(const casacore::String &name,  casacore::Vector<casacore::uInt> *value,
+		          const casacore::uInt tolerance = 0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name,  casacore::Vector<casacore::Int> *value,
+		          const casacore::Int tolerance = 0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name,  casacore::Vector<casacore::Float> *value,
+		          const casacore::Float tolerance = 0.0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name,  casacore::Vector<casacore::Double>  *value,
+		          const casacore::Double tolerance = 0.0, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::Vector<casacore::Quantity> *value,
+		          const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::Vector<casacore::Quantity> *value,
+		          const casacore::Quantity tolerance, const casacore::Bool strict = false);
+		Attribute(const casacore::String &name,  casacore::Vector<casacore::Bool> *value,
+		          const casacore::Bool strict = false);
+		Attribute(const casacore::String &name, casacore::Vector<casacore::String> *value,
+		          const casacore::Bool strict = false);
 		//</group>
 
 		// Destructor.
@@ -254,19 +258,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// copy (virtual constructor).
 		virtual Attribute* clone() const;
 
-		// Attribute matching: returns <src>True</src> if <src>*this</src>
-		// and <src>other</src> match, otherwise returns <src>False</src>.
+		// Attribute matching: returns <src>true</src> if <src>*this</src>
+		// and <src>other</src> match, otherwise returns <src>false</src>.
 		// <note role=caution>Two Attributes match if their names are
 		// different.  If two Attributes have the same name, but the values
 		// stored in the Attributes have different types, they do not match.
-		// An Attribute of a single value and an Attribute of a Vector of
+		// An Attribute of a single value and an Attribute of a casacore::Vector of
 		// values of the same type are considered to have the same type, so
 		// under certain circumstances (based on the strictness of the
 		// Attributes) two such Attributes may match.</note>
-		virtual Bool operator==(const Attribute &other) const;
+		virtual casacore::Bool operator==(const Attribute &other) const;
 
 		// The opposite of the Attribute matching.
-		Bool operator!=(const Attribute &other) const;
+		casacore::Bool operator!=(const Attribute &other) const;
 
 		// Attribute addition ... add the value of <src>other</src> to
 		// the value of <src>*this</src>.
@@ -295,7 +299,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		AttributeValueBase* getAttributeValue() const;
 
 		// Return the name of the Attribute.
-		String getName() const;
+		casacore::String getName() const;
 
 		// Return the DataType of the value of the Attribute.
 		AttValue::ValueType getType() const;
@@ -303,7 +307,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// The name of the Attribute.
-		String itsAttributeName;
+		casacore::String itsAttributeName;
 
 		// Pointer to the attribute base class
 		AttributeValueBase* itsAttributeValue;
@@ -317,7 +321,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	};
 
-	ostream &operator<<(ostream &os, Attribute &a);
+	std::ostream &operator<<(std::ostream &os, Attribute &a);
 
 
 } //# NAMESPACE CASA - END

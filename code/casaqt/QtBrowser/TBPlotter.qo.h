@@ -84,7 +84,7 @@ public:
 };
 
 // <summary>
-// Data for plotting.
+// casacore::Data for plotting.
 // </summary>
 //
 // <synopsis>
@@ -104,7 +104,7 @@ public:
     // Actual data.
     PlotPointDataPtr data;
     
-    // Table this data is from.
+    // casacore::Table this data is from.
     TBTableTabs* table;
     
     // Row numbers that correspond to the given data.  In the future may want
@@ -112,7 +112,7 @@ public:
     vector<int> rows;
     
     // Title for the plot; usually xAxisName vs. yAxisName
-    String title;
+    casacore::String title;
 };
 
 // <summary>
@@ -155,7 +155,7 @@ private:
     // All current spinners.
     std::vector<QSpinBox*> spinners;
 
-    // Complex chooser.
+    // casacore::Complex chooser.
     QComboBox* complexChooser;
 
     // Whether the current slice is for a complex or not.
@@ -194,7 +194,7 @@ public:
     
     // Adds a QProgressPanel to the plotter with the given parameters and
     // returns it.
-    QProgressPanel* addProgressPanel(String label, bool hideable,
+    QProgressPanel* addProgressPanel(casacore::String label, bool hideable,
                                      bool cancelable);
 
     // Removes the given QProgressPanel from the plotter.
@@ -215,7 +215,7 @@ private:
     // For each table the plotter knows about, the dimensions of the fields are
     // kept for fast access.  So, for example, the dimensions of a field can be
     // found with dimensions[tableName][columnIndex].
-    std::map<String, std::vector<std::vector<int>*> > dimensions;
+    std::map<casacore::String, std::vector<std::vector<int>*> > dimensions;
 
     // Since only certain field types are plottable, adjustedIndices allows for
     // translation between the index of the combobox (which contains only
@@ -230,7 +230,7 @@ private:
     PlotSlicer ySlice;
 
     // Types for the displayed plottable fields.
-    std::vector<String> types;
+    std::vector<casacore::String> types;
 
     // Is true if the current selection for the x-axis is valid, false
     // otherwise.  If the axis is invalid, it cannot be used for plotting.
@@ -291,11 +291,11 @@ private slots:
 
     // Slot for when a table is opened in the browser.  Adds the table name
     // to the list of opened tables.
-    void tableOpened(String table, String fullpath);
+    void tableOpened(casacore::String table, casacore::String fullpath);
 
     // Slot for when a table is closed in the browser.  Removes the table
     // name from the list of opened tables.
-    void tableClosed(String table);
+    void tableClosed(casacore::String table);
 
     // Slot for the "Clear" button.  See TBPlotCanvas::clearAndHideAxes().
     void clear();

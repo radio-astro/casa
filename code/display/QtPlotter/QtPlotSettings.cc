@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <QtGui>
 
+using namespace casacore;
 namespace casa {
 
 	const QString QtPlotSettings::RADIO_VELOCITY   = "radio velocity";

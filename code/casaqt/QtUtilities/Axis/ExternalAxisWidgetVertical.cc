@@ -27,6 +27,7 @@
 #include <qwt_scale_div.h>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 ExternalAxisWidgetVertical::ExternalAxisWidgetVertical(QWidget* parent, QwtPlot* plot,
@@ -89,4 +90,5 @@ void ExternalAxisWidgetVertical::drawTicks( QPainter* painter, int tickLength ){
 
 
 
+using namespace casacore;
 } /* namespace casa */

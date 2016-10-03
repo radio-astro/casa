@@ -80,12 +80,12 @@ ByteSource& VLALogicalRecord::logicalRecord() {
 
 Bool VLALogicalRecord::read() {
   DebugAssert(isValid(), AipsError);
-  if (itsRecordPtr->read() == False) return False;
+  if (itsRecordPtr->read() == false) return false;
   ByteSource& itsRecord = itsRecordPtr->logicalRecord();
   itsRCA.attach(itsRecord);
   itsSDA.attach(itsRecord, itsRCA.SDAOffset());
   const uInt nant = itsRCA.nAntennas();
-  itsADA.resize(nant, False, False);
+  itsADA.resize(nant, false, false);
   for (uInt i = 0; i < nant; i++) {
     itsADA[i].attach(itsRecord, itsRCA.ADAOffset(i));
   }
@@ -94,7 +94,7 @@ Bool VLALogicalRecord::read() {
     const uInt size = itsRCA.CDABaselineBytes(i);
     itsCDA[i].attach(itsRecord, itsRCA.CDAOffset(i), size, nant, nchan);
   }
-  return True;
+  return true;
 }
 
 Bool VLALogicalRecord::isValid() const {

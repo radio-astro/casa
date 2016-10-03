@@ -122,9 +122,9 @@ bool checkPars(const boost::program_options::variables_map &vm)
   {
     std::string offsetstable=vm["offsets"].as<std::string>();
     try{
-      casa::Table f(offsetstable);
+      casacore::Table f(offsetstable);
     }
-    catch(const casa::AipsError rE){
+    catch(const casacore::AipsError rE){
       fatalMsg(rE.getMesg());
       fatalMsg("The --offsets option needs to point to an existing CASA Table containing temperature offsets.");
       return true;
@@ -150,7 +150,7 @@ void checkWarnPars(const boost::program_options::variables_map &vm)
    is opened.  Do not put computationally intensive checks otherwise
    feedback to the user will be too slow.
 */
-void checkMSandPars(const casa::MeasurementSet &ms,
+void checkMSandPars(const casacore::MeasurementSet &ms,
 		    const boost::program_options::variables_map &vm)
 {
   if (vm.count("statsource"))
@@ -197,7 +197,7 @@ struct hack02 {
 
 LibAIR2::AntSet getAntPars(const std::string &s,
 			   const boost::program_options::variables_map &vm,
-			   const casa::MeasurementSet &ms)
+			   const casacore::MeasurementSet &ms)
 {
   using namespace LibAIR2;
   aname_t anames=getAName(ms);
@@ -315,7 +315,7 @@ LibAIR2::AntSetWeight limitedNearestAnt(const LibAIR2::antpos_t &pos,
 
 /** \brief Flag and interpolate WVR data
  */
-void flagInterp(const casa::MeasurementSet &ms,
+void flagInterp(const casacore::MeasurementSet &ms,
 		const LibAIR2::AntSet &wvrflag,
 		LibAIR2::InterpArrayData &d,
 		const double maxdist_m,
@@ -444,7 +444,7 @@ void printExpectedPerf(const LibAIR2::ArrayGains &g,
     computed
  */
 
-void statTimeMask(const casa::MeasurementSet &ms,
+void statTimeMask(const casacore::MeasurementSet &ms,
 		  const boost::program_options::variables_map &vm,
 		  std::vector<std::pair<double, double> > &tmask,
 		  const std::vector<size_t> &sortedI,
@@ -599,7 +599,7 @@ std::vector<std::set<std::string> > getTied(const boost::program_options::variab
 
 // Convert tied source names to tied source IDs
 std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> > &tied,
-					const casa::MeasurementSet &ms)
+					const casacore::MeasurementSet &ms)
 {
   std::map<size_t, std::string > srcmap=LibAIR2::getSourceNames(ms);
   std::vector<std::set<size_t> > res;
@@ -678,7 +678,7 @@ void printTied(const std::vector<std::set<std::string> > &tied,
     names.
  */
 std::set<size_t> sourceSet(const std::vector<std::string> &sources,
-			   const casa::MeasurementSet &ms)
+			   const casacore::MeasurementSet &ms)
 {
   std::map<size_t, std::string > snames=LibAIR2::getSourceNames(ms);
   std::set<size_t> sset;
@@ -719,7 +719,7 @@ std::pair<LibAIR2::ALMAAbsInpL,  std::vector<std::pair<double, double> > >
 filterInp(const LibAIR2::ALMAAbsInpL &inp,
 	  const std::vector<std::pair<double, double> > &fb,
 	  const std::vector<std::string> &sourceflag,
-	  const casa::MeasurementSet &ms)
+	  const casacore::MeasurementSet &ms)
 {
 
   std::set<size_t> flagset=sourceSet(sourceflag, ms);
@@ -906,7 +906,7 @@ int main(int argc,  char* argv[])
   std::vector<std::set<std::string> > tied=getTied(vm);
 
   std::string msname(vm["ms"].as<std::vector<std::string> >()[0]);
-  casa::MeasurementSet ms(msname); 
+  casacore::MeasurementSet ms(msname);
 
   checkMSandPars(ms, vm);
 

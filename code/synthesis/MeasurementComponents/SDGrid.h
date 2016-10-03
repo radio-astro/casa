@@ -80,7 +80,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Gridding and degridding in SDGrid are performed using a
 // novel sort-less algorithm. In this approach, the gridded plane is
 // divided into small patches, a cache of which is maintained in memory
-// using a general-purpose <linkto class=LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
+// using a general-purpose <linkto class=casacore::LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
 // visibility data move around slowly in the image plane, patches are
 // swapped in and out as necessary. Thus, optimally, one would keep at
 // least one patch per scan line of data.
@@ -132,25 +132,25 @@ public:
   // USEIMAGINGWEIGHT
   // The parameter useImagingWeight in the constructors is to explicitly  
   // use vb.imagingweight while gridding,
-  // When doing just SD imaging then setting it to False is fine (in fact recommended as vb.imagingweight
+  // When doing just SD imaging then setting it to false is fine (in fact recommended as vb.imagingweight
   // is set to zero if any pol is flagged this may change later .....today being 2014/08/06) 
-  // when using it in conjuction with interferometer gridding then set useImagingWeight to True
+  // when using it in conjuction with interferometer gridding then set useImagingWeight to true
   // this is to allow for proper non natural weighting scheme while imaging
   // <group>
-  SDGrid(SkyJones& sj, Int cachesize, Int tilesize,
-	 String convType="BOX", Int userSupport=-1, Bool useImagingWeight=False);
-  SDGrid(MPosition& ml, SkyJones& sj, Int cachesize,
-	 Int tilesize, String convType="BOX", Int userSupport=-1,
-	 Float minweight=0., Bool clipminmax=False, Bool useImagingWeight=False);
-  SDGrid(Int cachesize, Int tilesize,
-	 String convType="BOX", Int userSupport=-1, Bool useImagingWeight=False);
-  SDGrid(MPosition& ml, Int cachesize, Int tilesize,
-	 String convType="BOX", Int userSupport=-1, Float minweight=0., Bool clipminmax=False,
-	 Bool useImagingWeight=False);
-  SDGrid(MPosition& ml, Int cachesize, Int tilesize,
-	 String convType="TGAUSS", Float truncate=-1.0, 
-	 Float gwidth=0.0, Float jwidth=0.0, Float minweight=0., Bool clipminmax=False,
-	 Bool useImagingWeight=False);
+  SDGrid(SkyJones& sj, casacore::Int cachesize, casacore::Int tilesize,
+	 casacore::String convType="BOX", casacore::Int userSupport=-1, casacore::Bool useImagingWeight=false);
+  SDGrid(casacore::MPosition& ml, SkyJones& sj, casacore::Int cachesize,
+	 casacore::Int tilesize, casacore::String convType="BOX", casacore::Int userSupport=-1,
+	 casacore::Float minweight=0., casacore::Bool clipminmax=false, casacore::Bool useImagingWeight=false);
+  SDGrid(casacore::Int cachesize, casacore::Int tilesize,
+	 casacore::String convType="BOX", casacore::Int userSupport=-1, casacore::Bool useImagingWeight=false);
+  SDGrid(casacore::MPosition& ml, casacore::Int cachesize, casacore::Int tilesize,
+	 casacore::String convType="BOX", casacore::Int userSupport=-1, casacore::Float minweight=0., casacore::Bool clipminmax=false,
+	 casacore::Bool useImagingWeight=false);
+  SDGrid(casacore::MPosition& ml, casacore::Int cachesize, casacore::Int tilesize,
+	 casacore::String convType="TGAUSS", casacore::Float truncate=-1.0, 
+	 casacore::Float gwidth=0.0, casacore::Float jwidth=0.0, casacore::Float minweight=0., casacore::Bool clipminmax=false,
+	 casacore::Bool useImagingWeight=false);
   // </group>
 
   // Copy constructor
@@ -163,7 +163,7 @@ public:
 
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
-  void initializeToVis(ImageInterface<Complex>& image,
+  void initializeToVis(casacore::ImageInterface<casacore::Complex>& image,
 		       const VisBuffer& vb);
 
   // Finalize transform to Visibility plane: flushes the image
@@ -171,7 +171,7 @@ public:
   void finalizeToVis();
 
   // Initialize transform to Sky plane: initializes the image
-  void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
+  void initializeToSky(casacore::ImageInterface<casacore::Complex>& image,  casacore::Matrix<casacore::Float>& weight,
 		       const VisBuffer& vb);
 
   // Finalize transform to Sky plane: flushes the image
@@ -180,10 +180,10 @@ public:
   void finalizeToSky();
 
   // Get actual coherence from grid by degridding
-  void get(VisBuffer& vb, Int row=-1);
+  void get(VisBuffer& vb, casacore::Int row=-1);
 
   // Put coherence to grid by gridding.
-  void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
+  void put(const VisBuffer& vb, casacore::Int row=-1, casacore::Bool dopsf=false,
 	   FTMachine::Type type=FTMachine::OBSERVED);
 
   // Make the entire image using a ROVisIter...
@@ -192,129 +192,129 @@ public:
   // so for large cube ..proceed by slices that fit in memory here.
   virtual void makeImage(FTMachine::Type type,
 			 ROVisibilityIterator& vi,
-			 ImageInterface<Complex>& image,
-			 Matrix<Float>& weight);
+			 casacore::ImageInterface<casacore::Complex>& image,
+			 casacore::Matrix<casacore::Float>& weight);
 
   // Get the final image: 
   //  optionally normalize by the summed weights
-  ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
-  virtual void normalizeImage(Lattice<Complex>& /*skyImage*/,
-			      const Matrix<Double>& /*sumOfWts*/,
-			      Lattice<Float>& /*sensitivityImage*/,
-			      Bool /*fftNorm*/)
-    {throw(AipsError("SDGrid::normalizeImage() called"));}
+  casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>&, casacore::Bool normalize=true);
+  virtual void normalizeImage(casacore::Lattice<casacore::Complex>& /*skyImage*/,
+			      const casacore::Matrix<casacore::Double>& /*sumOfWts*/,
+			      casacore::Lattice<casacore::Float>& /*sensitivityImage*/,
+			      casacore::Bool /*fftNorm*/)
+    {throw(casacore::AipsError("SDGrid::normalizeImage() called"));}
 
   // Get the final weights image
-  void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
+  void getWeightImage(casacore::ImageInterface<casacore::Float>&, casacore::Matrix<casacore::Float>&);
 
   // Has this operator changed since the last application?
-  virtual Bool changed(const VisBuffer& vb);
-  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
-  virtual void ComputeResiduals(VisBuffer& /*vb*/, Bool /*useCorrected*/) {};
+  virtual casacore::Bool changed(const VisBuffer& vb);
+  virtual void setMiscInfo(const casacore::Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer& /*vb*/, casacore::Bool /*useCorrected*/) {};
 
-  virtual String name() const;
+  virtual casacore::String name() const;
 
 private:
 
   // Find the Primary beam and convert it into a convolution buffer
-  void findPBAsConvFunction(const ImageInterface<Complex>& image,
+  void findPBAsConvFunction(const casacore::ImageInterface<casacore::Complex>& image,
 			    const VisBuffer& vb);
 
   SkyJones* sj_p;
 
   // Get the appropriate data pointer
-  Array<Complex>* getDataPointer(const IPosition&, Bool);
-  Array<Float>* getWDataPointer(const IPosition&, Bool);
+  casacore::Array<casacore::Complex>* getDataPointer(const casacore::IPosition&, casacore::Bool);
+  casacore::Array<casacore::Float>* getWDataPointer(const casacore::IPosition&, casacore::Bool);
 
   void ok();
 
   void init();
 
   // Image cache
-  LatticeCache<Complex> * imageCache;
-  LatticeCache<Float> * wImageCache;
+  casacore::LatticeCache<casacore::Complex> * imageCache;
+  casacore::LatticeCache<casacore::Float> * wImageCache;
 
   // Sizes
-  Int cachesize, tilesize;
+  casacore::Int cachesize, tilesize;
 
   // Is this tiled?
-  Bool isTiled;
+  casacore::Bool isTiled;
 
   // Storage for weights
-  ImageInterface<Float>* wImage;
+  casacore::ImageInterface<casacore::Float>* wImage;
 
-  // Array lattice
-  Lattice<Complex> * arrayLattice;
-  Lattice<Float> * wArrayLattice;
+  // casacore::Array lattice
+  casacore::Lattice<casacore::Complex> * arrayLattice;
+  casacore::Lattice<casacore::Float> * wArrayLattice;
 
   // Lattice. For non-tiled gridding, this will point to arrayLattice,
   //  whereas for tiled gridding, this points to the image
-  Lattice<Complex>* lattice;
-  Lattice<Float>* wLattice;
+  casacore::Lattice<casacore::Complex>* lattice;
+  casacore::Lattice<casacore::Float>* wLattice;
 
-  String convType;
+  casacore::String convType;
 
   // Useful IPositions
-  IPosition centerLoc, offsetLoc;
+  casacore::IPosition centerLoc, offsetLoc;
 
-  // Array for non-tiled gridding
-  Array<Float> wGriddedData;
+  // casacore::Array for non-tiled gridding
+  casacore::Array<casacore::Float> wGriddedData;
 
 
-  DirectionCoordinate directionCoord;
+  casacore::DirectionCoordinate directionCoord;
 
-  MDirection::Convert* pointingToImage;
+  casacore::MDirection::Convert* pointingToImage;
 
-  Vector<Double> xyPos;
+  casacore::Vector<casacore::Double> xyPos;
   //Original xypos of moving source
-  Vector<Double> xyPosMovingOrig_p;
+  casacore::Vector<casacore::Double> xyPosMovingOrig_p;
 
-  MDirection worldPosMeas;
+  casacore::MDirection worldPosMeas;
 
-  Cube<Int> flags;
+  casacore::Cube<casacore::Int> flags;
 
-  Vector<Float> convFunc;
-  Int convSampling;
-  Int convSize;
-  Int convSupport;
-  Int userSetSupport_p;
+  casacore::Vector<casacore::Float> convFunc;
+  casacore::Int convSampling;
+  casacore::Int convSize;
+  casacore::Int convSupport;
+  casacore::Int userSetSupport_p;
   
-  Float truncate_p;
-  Float gwidth_p;
-  Float jwidth_p;
+  casacore::Float truncate_p;
+  casacore::Float gwidth_p;
+  casacore::Float jwidth_p;
 
-  Float minWeight_p;
+  casacore::Float minWeight_p;
 
-  Int lastIndex_p;
-  Vector<Int> lastIndexPerAnt_p;
-  Bool useImagingWeight_p;
-  Int lastAntID_p;
-  Int msId_p;
+  casacore::Int lastIndex_p;
+  casacore::Vector<casacore::Int> lastIndexPerAnt_p;
+  casacore::Bool useImagingWeight_p;
+  casacore::Int lastAntID_p;
+  casacore::Int msId_p;
 
-  Bool isSplineInterpolationReady;
+  casacore::Bool isSplineInterpolationReady;
   SDPosInterpolator* interpolator;
 
   // for minmax clipping
-  Bool clipminmax_;
-  Array<Complex> gmin_;
-  Array<Complex> gmax_;
-  Array<Float> wmin_;
-  Array<Float> wmax_;
-  Array<Int> npoints_;
+  casacore::Bool clipminmax_;
+  casacore::Array<casacore::Complex> gmin_;
+  casacore::Array<casacore::Complex> gmax_;
+  casacore::Array<casacore::Float> wmin_;
+  casacore::Array<casacore::Float> wmax_;
+  casacore::Array<casacore::Int> npoints_;
   void clipMinMax();
 
-  Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
-	       const Double& interval=-1.0, const Int& antid=-1);
+  casacore::Int getIndex(const casacore::ROMSPointingColumns& mspc, const casacore::Double& time,
+	       const casacore::Double& interval=-1.0, const casacore::Int& antid=-1);
 
-  Bool getXYPos(const VisBuffer& vb, Int row);
+  casacore::Bool getXYPos(const VisBuffer& vb, casacore::Int row);
 
-  //get the MDirection from a chosen column of pointing table
-  MDirection directionMeas(const ROMSPointingColumns& mspc, const Int& index);
-  MDirection directionMeas(const ROMSPointingColumns& mspc, const Int& index, const Double& time);
-  MDirection interpolateDirectionMeas(const ROMSPointingColumns& mspc, const Double& time,
-                                  const Int& index, const Int& index1, const Int& index2);
+  //get the casacore::MDirection from a chosen column of pointing table
+  casacore::MDirection directionMeas(const casacore::ROMSPointingColumns& mspc, const casacore::Int& index);
+  casacore::MDirection directionMeas(const casacore::ROMSPointingColumns& mspc, const casacore::Int& index, const casacore::Double& time);
+  casacore::MDirection interpolateDirectionMeas(const casacore::ROMSPointingColumns& mspc, const casacore::Double& time,
+                                  const casacore::Int& index, const casacore::Int& index1, const casacore::Int& index2);
 
-  void pickWeights(const VisBuffer&vb, Matrix<Float>& weight);
+  void pickWeights(const VisBuffer&vb, casacore::Matrix<casacore::Float>& weight);
 
   //for debugging
   //FILE *pfile;

@@ -33,29 +33,29 @@ public:
 	// is made.
 	ImageMaskedPixelReplacer(
 		const SPIIT image,
-		const Record *const &region,
-		const String& maskInp
+		const casacore::Record *const &region,
+		const casacore::String& maskInp
 	);
 
 	~ImageMaskedPixelReplacer() {}
 
 	// Perform the substitution. expr is the LEL expression to use for the new pixel values.
-	// If updateMask is True, the False mask values will be changed to True.
-	void replace(const String& expr, Bool updateMask, Bool verbose);
+	// If updateMask is true, the false mask values will be changed to true.
+	void replace(const casacore::String& expr, casacore::Bool updateMask, casacore::Bool verbose);
 
-	String getClass() const;
+	casacore::String getClass() const;
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return vector<Coordinate::Type>(0);
+	inline vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<casacore::Coordinate::Type>(0);
  	}
 
 private:
-	static const String _class;
+	static const casacore::String _class;
 
 	// This class holds a writable image object to write pixel value
 	// changes to.
@@ -65,8 +65,8 @@ private:
 	ImageMaskedPixelReplacer();
 
 	static void _makeRegionBlock(
-    	PtrBlock<const ImageRegion*>& imageRegions,
-    	const Record& regions
+    	casacore::PtrBlock<const casacore::ImageRegion*>& imageRegions,
+    	const casacore::Record& regions
     );
 
 };

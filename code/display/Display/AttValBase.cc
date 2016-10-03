@@ -28,6 +28,7 @@
 #include <casa/aips.h>
 #include <display/Display/AttValBase.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	AttributeValueBase::AttributeValueBase(AttValue::ValueType type, Bool strict)
@@ -70,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool AttributeValueBase::operator==(const AttributeValueBase& other) const {
-		if (!myMatch(other)) return False;
+		if (!myMatch(other)) return false;
 		return ((this->matches(other)) && other.matches(*this));
 	}
 
@@ -80,9 +81,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool AttributeValueBase::myMatch(const AttributeValueBase &other) const {
-		if (getType() != other.getType())  return False;
-		if (getType() == AttValue::AtInvalid) return False;
-		return True;
+		if (getType() != other.getType())  return false;
+		if (getType() == AttValue::AtInvalid) return false;
+		return true;
 	}
 
 	ostream &operator<<(ostream &os, AttributeValueBase &av) {

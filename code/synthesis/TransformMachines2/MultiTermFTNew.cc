@@ -60,14 +60,18 @@
 
 #include<synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace refim { // namespace for refactor
 
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casa::refim;
+using namespace casacore;
 using namespace casa::vi;
 
-#define PSOURCE False
+#define PSOURCE false
 #define psource (IPosition(4,1536,1536,0,0))
 
   //---------------------------------------------------------------------- 
@@ -76,7 +80,7 @@ using namespace casa::vi;
   MultiTermFTNew::MultiTermFTNew(CountedPtr<FTMachine>&subftm,  Int nterms, Bool forward)
     :FTMachine(), nterms_p(nterms), 
      reffreq_p(0.0), imweights_p(Matrix<Float>(0,0)), machineName_p("MultiTermFTNew")
-     //     donePSF_p(False)
+     //     donePSF_p(false)
   {
     
     this->setBasePrivates(*subftm);
@@ -227,7 +231,7 @@ using namespace casa::vi;
        }
        }
     */
-    return True;
+    return true;
   }
   
   void MultiTermFTNew::initMaps(const VisBuffer2& vb){
@@ -271,7 +275,7 @@ using namespace casa::vi;
     // 	 << vb.spectralWindow() << "  --- predicted model before taylor wt mult :" 
     // 	 << thisterm << "  sumvis : " << modcount << endl;
 
-    return True;
+    return true;
   }
   
   
@@ -364,14 +368,14 @@ void MultiTermFTNew::initializeToSkyNew(const Bool dopsf,
   //  AlwaysAssert( !(donePSF_p && dopsf) , AipsError ); 
   
   // The PSF needs to be the first thing made (because of weight images)
-  //  AlwaysAssert( !(dopsf==False && donePSF_p==False) , AipsError); 
+  //  AlwaysAssert( !(dopsf==false && donePSF_p==false) , AipsError); 
   
-  //  if(donePSF_p==True)
-  if(dopsf==False)
+  //  if(donePSF_p==true)
+  if(dopsf==false)
     {
       if( subftms_p.nelements() != nterms_p )  
 	{ 
-	  subftms_p.resize( nterms_p ,True);
+	  subftms_p.resize( nterms_p ,true);
 	  //	  cout << "MTFT::initializeToSky : resizing to " << nterms_p << " terms" << endl;
 	}
     }
@@ -400,7 +404,7 @@ void MultiTermFTNew::initializeToSkyNew(const Bool dopsf,
     if (!dryRun())
       {
 	Int gridnterms=nterms_p;
-	if(dopsf==True) // && donePSF_p==False) 
+	if(dopsf==true) // && donePSF_p==false) 
 	  {
 	    gridnterms=2*nterms_p-1;
 	  }
@@ -431,7 +435,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
       {
 	Matrix<Float> sumWeights;
 	subftms_p[taylor]->finalizeToSky();
-	correlationToStokes( subftms_p[taylor]->getImage(sumWeights, False) , ( dopsf ? *(imstore->psf(taylor)) : *(imstore->residual(taylor)) ), dopsf);
+	correlationToStokes( subftms_p[taylor]->getImage(sumWeights, false) , ( dopsf ? *(imstore->psf(taylor)) : *(imstore->residual(taylor)) ), dopsf);
 
 	if( subftms_p[taylor]->useWeightImage() && dopsf ) {
 	  subftms_p[taylor]->getWeightImage(*(imstore->weight(taylor)), sumWeights);
@@ -450,7 +454,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
 
       }// end for taylor
 
-    //    if( dopsf ) donePSF_p = True;
+    //    if( dopsf ) donePSF_p = true;
     
   }//end of finalizeToSkyNew
 
@@ -473,7 +477,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
   Bool MultiTermFTNew::toRecord(String& error, RecordInterface& outRec, Bool withImage, const String diskimage) 
   {
     //    cout << "MTFTNew :: toRecord for " << subftms_p.nelements() << " subftms" << endl;
-    Bool retval = True;
+    Bool retval = true;
     outRec.define("name", this->name());
     outRec.define("nterms",nterms_p);
     outRec.define("reffreq",reffreq_p);
@@ -501,7 +505,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
   Bool MultiTermFTNew::fromRecord(String& error, const RecordInterface& inRec)
   {
     cout << "MTFTNew :: fromRecord "<< endl;
-    Bool retval = True;
+    Bool retval = true;
     
     inRec.get("nterms",nterms_p);
     inRec.get("reffreq",reffreq_p);
@@ -530,7 +534,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
     PagedImage<Float> tmp(theImg.shape(), theImg.coordinates(), fileName);
     LatticeExpr<Float> le(theImg);
     tmp.copyData(le);
-    return True;
+    return true;
   }
   
   

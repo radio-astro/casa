@@ -26,6 +26,7 @@
 #include "CanvasModeRangeSelection.h"
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <QMouseEvent>
+using namespace casacore;
 namespace casa {
 
 	CanvasModeRangeSelection::CanvasModeRangeSelection():
@@ -59,4 +60,5 @@ namespace casa {
 	CanvasModeRangeSelection::~CanvasModeRangeSelection() {
 	}
 
+using namespace casacore;
 } /* namespace casa */

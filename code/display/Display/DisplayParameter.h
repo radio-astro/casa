@@ -58,24 +58,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // small containers for the various types of parameters used
 // throughout the display classes.  The required interface consists of
 // methods to update the parameter value from an incoming
-// <src>RecordInterface</src>-type object, and to add the description
-// of the parameter to a provided <src>RecordInterface</src> object.
+// <src>casacore::RecordInterface</src>-type object, and to add the description
+// of the parameter to a provided <src>casacore::RecordInterface</src> object.
 //
 // Other than this, all parameters share these common elements:
 //
-// <li> <src>name</src>, a short <src>String</src> uniquely
+// <li> <src>name</src>, a short <src>casacore::String</src> uniquely
 // identifiying the parameter.
 //
-// <li> <src>description</src>, a slightly longer <src>String</src>
+// <li> <src>description</src>, a slightly longer <src>casacore::String</src>
 // which offers a description of the parameter, suitably short for
 // display in a graphical user interface, for example.
 //
-// <li> <src>help</src>, an even longer <src>String</src> (!) which
+// <li> <src>help</src>, an even longer <src>casacore::String</src> (!) which
 // should be filled in with text describing the option in more detail
 // than can be given in <src>description</src>
 //
 // <li> <src>context</src>, which if provided (ie. <src>context !=
-// String("")</src>) gives a category name for this parameter, and is
+// casacore::String("")</src>) gives a category name for this parameter, and is
 // used, for example, by the autogui to place the parameter in an
 // appropriately named roll-up.
 //
@@ -94,7 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // the two virtual methods <src>toRecord</src> and
 // <src>fromRecord</src>, which respectively store a description of
 // the DisplayParameter in a sub-field of the provided
-// RecordInterface, and extract the value of the DisplayParameter from
+// casacore::RecordInterface, and extract the value of the DisplayParameter from
 // a sub-field in the provided record.  The sub-field is identified by
 // the <src>name</src> of the DisplayParameter.
 //
@@ -127,80 +127,80 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Parse <src>record</src>, and update this parameter if a field
 		// exists whose name matches that of this parameter.  Return
-		// <src>True</src> if the parameter is changed, otherwise return
-		// <src>False</src>.
-		virtual Bool fromRecord(const RecordInterface &record) = 0;
+		// <src>true</src> if the parameter is changed, otherwise return
+		// <src>false</src>.
+		virtual casacore::Bool fromRecord(const casacore::RecordInterface &record) = 0;
 
 		// Place a record describing this parameter in a sub-field of
 		// <src>record</src> with name matching that of this parameter.  If
-		// <src>overwrite</src> is <src>True</src>, then any existing field
+		// <src>overwrite</src> is <src>true</src>, then any existing field
 		// with matching name will be overwritten.  If <src>fullrecord</src>
-		// is <src>True</src>, then a complete description of the parameter
+		// is <src>true</src>, then a complete description of the parameter
 		// is given, otherwise just its current value is stored in
 		// <src>record</src>.
-		virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
-		                      const Bool overwrite = False) = 0;
+		virtual void toRecord(casacore::RecordInterface &record, const casacore::Bool fullrecord = true,
+		                      const casacore::Bool overwrite = false) = 0;
 
 		// Return the name of this parameter.
-		String name() const {
+		casacore::String name() const {
 			return itsName;
 		}
 
 		// Return the description of this parameter.
-		String description() const {
+		casacore::String description() const {
 			return itsDescription;
 		}
 
 		// Return the help for this parameter.
-		String help() const {
+		casacore::String help() const {
 			return itsHelp;
 		}
 
 		// Return the context of this parameter.
-		String context() const {
+		casacore::String context() const {
 			return itsContext;
 		}
 
 		// Return whether this parameter can be unset.
-		Bool allowUnset() const {
+		casacore::Bool allowUnset() const {
 			return itsAllowUnset;
 		}
 
 		// Return whether this parameter is editable.
-		Bool editable() const {
+		casacore::Bool editable() const {
 			return itsEditable;
 		}
 
 		// Set or change the name of this parameter to that specified.
-		void setName(const String name) {
+		void setName(const casacore::String name) {
 			itsName = name;
 		}
 
 		// Set or change the description of this parameter to what is
 		// specified.
-		void setDescription(const String description) {
+		void setDescription(const casacore::String description) {
 			itsDescription = description;
 		}
 
 		// Set or change the help for this parameter to what is specified.
-		void setHelp(const String help) {
+		void setHelp(const casacore::String help) {
 			itsHelp = help;
 		}
 
 		// Set or change the context of this parameter to what is specified.
-		void setContext(const String context) {
+		void setContext(const casacore::String context) {
 			itsContext = context;
 		}
 
 		// Set or change whether this parameter may be unset, according to
 		// the function argument value.
-		void setAllowUnset(const Bool allowunset) {
+		void setAllowUnset(const casacore::Bool allowunset) {
 			itsAllowUnset = allowunset;
 		}
 
 		// Set or change whether this parameter is editable according to
 		// the function argument.
-		void setEditable(const Bool editable) {
+		void setEditable(const casacore::Bool editable) {
 			itsEditable = editable;
 		}
 
@@ -209,10 +209,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor taking the name of the parameter, a short
 		// description, some help text, and flags indicating whether the
 		// parameter can be unset and is editable.
-		DisplayParameter(const String name, const String description,
-		                 const String help, const String context = "",
-		                 const Bool allowunset = False,
-		                 const Bool editable = True);
+		DisplayParameter(const casacore::String name, const casacore::String description,
+		                 const casacore::String help, const casacore::String context = "",
+		                 const casacore::Bool allowunset = false,
+		                 const casacore::Bool editable = true);
 
 		// Copy constructor using copy semantics.
 		DisplayParameter(const DisplayParameter &other);
@@ -225,8 +225,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Return a basic description of this parameter; used by virtual
 		// implementations of <src>toRecord</src> method to fill out
-		// a Record describing this DisplayParameter.
-		Record baseDescription();
+		// a casacore::Record describing this DisplayParameter.
+		casacore::Record baseDescription();
 
 		// Return the DisplayOptions to use for parsing Records.
 		const DisplayOptions &displayOptions() const {
@@ -236,22 +236,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Store for the name of this parameter.
-		String itsName;
+		casacore::String itsName;
 
 		// Store for the description of this parameter.
-		String itsDescription;
+		casacore::String itsDescription;
 
 		// Store for the help for this parameter.
-		String itsHelp;
+		casacore::String itsHelp;
 
 		// Store for the context of this parameter.
-		String itsContext;
+		casacore::String itsContext;
 
 		// Store for whether this parameter can be unset.
-		Bool itsAllowUnset;
+		casacore::Bool itsAllowUnset;
 
 		// Store for whether this parameter is editable.
-		Bool itsEditable;
+		casacore::Bool itsEditable;
 
 		// Store for a DisplayOptions object for parsing Records.
 		DisplayOptions itsDisplayOptions;

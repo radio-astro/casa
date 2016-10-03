@@ -32,11 +32,15 @@
 //# Includes
 #include <synthesis/MeasurementEquations/MatrixCleaner.h>
 
+namespace casacore{
+
+template <class T> class Matrix;
+template <class T> class ImageInterface;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-template <class T> class Matrix;
-template <class T> class ImageInterface;
 
 
 
@@ -73,7 +77,7 @@ template <class T> class ImageInterface;
 // </motivation>
 //
 // <thrown>
-// <li> AipsError: if psf has more dimensions than the model. 
+// <li> casacore::AipsError: if psf has more dimensions than the model. 
 // </thrown>
 //
 
@@ -85,7 +89,7 @@ class ImageMSCleaner
   //Default
   ImageMSCleaner();
   // Create a cleaner with a psf and dirty image
-  ImageMSCleaner(ImageInterface<Float>& psf, ImageInterface<Float>& dirty);
+  ImageMSCleaner(casacore::ImageInterface<casacore::Float>& psf, casacore::ImageInterface<casacore::Float>& dirty);
   //assignmemnt constructor
   ImageMSCleaner(const ImageMSCleaner& other);
   //assignment operator
@@ -95,14 +99,14 @@ class ImageMSCleaner
   ~ImageMSCleaner();
   
   // Update the dirty image only
-  void update(ImageInterface<Float> & dirty);
+  void update(casacore::ImageInterface<casacore::Float> & dirty);
   // Change the psf image 
-  void setPsf(ImageInterface<Float> & psf);
+  void setPsf(casacore::ImageInterface<casacore::Float> & psf);
 
   //// Set a number of scale sizes. The units of the scale are pixels.
-  void setscales(const Int nscales, const Float scaleInc=1.0);
+  void setscales(const casacore::Int nscales, const casacore::Float scaleInc=1.0);
   // Set a specific set of scales
-  void  setscales(const Vector<Float> & scales);
+  void  setscales(const casacore::Vector<casacore::Float> & scales);
 
   // Set up control parameters
   // cleanType - type of the cleaning algorithm to use (HOGBOM, MULTISCALE)
@@ -112,21 +116,21 @@ class ImageMSCleaner
   // aThreshold - absolute threshold to stop iterations
   // fThreshold - fractional threshold (i.e. given w.r.t. maximum residual)
   //              to stop iterations. This parameter is specified as
-  //              Quantity so it can be given in per cents. 
-  Bool setcontrol(CleanEnums::CleanType cleanType, const Int niter,
-		  const Float gain, const Quantity& aThreshold,
-		  const Quantity& fThreshold);
+  //              casacore::Quantity so it can be given in per cents. 
+  casacore::Bool setcontrol(casacore::CleanEnums::CleanType cleanType, const casacore::Int niter,
+		  const casacore::Float gain, const casacore::Quantity& aThreshold,
+		  const casacore::Quantity& fThreshold);
   
   // This version of the method disables stopping on fractional threshold
-  Bool setcontrol(CleanEnums::CleanType cleanType, const Int niter,
-		  const Float gain, const Quantity& threshold);
+  casacore::Bool setcontrol(casacore::CleanEnums::CleanType cleanType, const casacore::Int niter,
+		  const casacore::Float gain, const casacore::Quantity& threshold);
   
   // return how many iterations we did do
-  Int iteration() const ;
-  Int numberIterations() const ;
+  casacore::Int iteration() const ;
+  casacore::Int numberIterations() const ;
   
   // what iteration number to start on
-  void startingIteration(const Int starting = 0);
+  void startingIteration(const casacore::Int starting = 0);
 
   // Clean an image. 
   //return value gives you a hint of what's happening
@@ -135,10 +139,10 @@ class ImageMSCleaner
   // -1 = not converged and stopped on cleaning consecutive smallest scale
   // -2 = not converged and either large scale hit negative or diverging 
   // -3 = clean is diverging rather than converging 
-  Int clean(ImageInterface<Float> & model, const String& algorithm, 
-	    const Int niter, const Float gain, const Quantity& threshold, 
-	    const Quantity& fthresh=Quantity(0.0, "%"),
-	    Bool doPlotProgress=False);
+  casacore::Int clean(casacore::ImageInterface<casacore::Float> & model, const casacore::String& algorithm, 
+	    const casacore::Int niter, const casacore::Float gain, const casacore::Quantity& threshold, 
+	    const casacore::Quantity& fthresh=casacore::Quantity(0.0, "%"),
+	    casacore::Bool doPlotProgress=false);
   // Set the mask
   // mask - input mask lattice
   // maskThreshold - if positive, the value is treated as a threshold value to determine
@@ -148,12 +152,12 @@ class ImageMSCleaner
   // to implement cleaning based on the signal-to-noise as opposed to the standard cleaning
   // based on the flux. The default threshold value is 0.9, which ensures the behavior of the
   // code is exactly the same as before this parameter has been introduced.
-  void setMask(ImageInterface<Float> & mask, const Float& maskThreshold = 0.9);
+  void setMask(casacore::ImageInterface<casacore::Float> & mask, const casacore::Float& maskThreshold = 0.9);
   // Tell the algorithm to NOT clean just the inner quarter
   // (This is useful when multiscale clean is being used
   // inside a major cycle for MF or WF algorithms)
-  // if True, the full image deconvolution will be attempted
-  void ignoreCenterBox(Bool ign) ;
+  // if true, the full image deconvolution will be attempted
+  void ignoreCenterBox(casacore::Bool ign) ;
   // Consider the case of a point source: 
   // the flux on all scales is the same, and the first scale will be chosen.
   // Now, consider the case of a point source with a *little* bit of extended structure:
@@ -162,8 +166,8 @@ class ImageMSCleaner
   // an ad hoc manner, multiplying the maxima found at each scale by
   // 1.0 - itsSmallScaleBias * itsScaleSizes(scale)/itsScaleSizes(nScalesToClean-1);
   // Typical bias values range from 0.2 to 1.0.
-  void setSmallScaleBias(const Float x=0.5);
-   // During early iterations of a cycled MS Clean in mosaicing, it common
+  void setSmallScaleBias(const casacore::Float x=0.5);
+   // During early iterations of a cycled casacore::MS Clean in mosaicing, it common
   // to come across an ocsilatory pattern going between positive and
   // negative in the large scale.  If this is set, we stop at the first
   // negative in the largest scale.
@@ -171,10 +175,10 @@ class ImageMSCleaner
   // Some algorithms require that the cycles be terminated when the image
   // is dominated by point sources; if we get nStopPointMode of the
   // smallest scale components in a row, we terminate the cycles
-  void stopPointMode(Int nStopPointMode) ;
+  void stopPointMode(casacore::Int nStopPointMode) ;
    // After completion of cycle, querry this to find out if we stopped because
   // of stopPointMode
-  Bool queryStopPointMode() const ;
+  casacore::Bool queryStopPointMode() const ;
   // speedup() will speed the clean iteration by raising the
   // threshold.  This may be required if the threshold is
   // accidentally set too low (ie, lower than can be achieved
@@ -183,30 +187,30 @@ class ImageMSCleaner
   // threshold(iteration) = threshold(0) 
   //                        * ( exp( (iteration - startingiteration)/Ndouble )/ 2.718 )
   // If speedup() is NOT invoked, no effect on threshold
-  void speedup(const Float Ndouble);
+  void speedup(const casacore::Float Ndouble);
 
   //Max residual after last clean
-  Float maxResidual() {return maxResidual_p;};
+  casacore::Float maxResidual() {return maxResidual_p;};
 
  private:
   //Helper function to setup some param
-  Bool setupMatCleaner(const String& alg, const Int niter, const Float gain, 
-		       const Quantity& threshold, const Quantity& fthresh=Quantity(0.0, "%"));
+  casacore::Bool setupMatCleaner(const casacore::String& alg, const casacore::Int niter, const casacore::Float gain, 
+		       const casacore::Quantity& threshold, const casacore::Quantity& fthresh=casacore::Quantity(0.0, "%"));
   MatrixCleaner matClean_p;
-  ImageInterface<Float>* psf_p;
-  ImageInterface<Float>* dirty_p;
-  ImageInterface<Float>* mask_p;
-  Int nPsfChan_p;
-  Int nImChan_p;
-  Int nPsfPol_p;
-  Int nImPol_p;
-  Int chanAxis_p;
-  Int polAxis_p;
-  Int nMaskChan_p;
-  Int nMaskPol_p;
-  Vector<Float> scales_p;
-  Float maskThresh_p;
-  Float maxResidual_p;
+  casacore::ImageInterface<casacore::Float>* psf_p;
+  casacore::ImageInterface<casacore::Float>* dirty_p;
+  casacore::ImageInterface<casacore::Float>* mask_p;
+  casacore::Int nPsfChan_p;
+  casacore::Int nImChan_p;
+  casacore::Int nPsfPol_p;
+  casacore::Int nImPol_p;
+  casacore::Int chanAxis_p;
+  casacore::Int polAxis_p;
+  casacore::Int nMaskChan_p;
+  casacore::Int nMaskPol_p;
+  casacore::Vector<casacore::Float> scales_p;
+  casacore::Float maskThresh_p;
+  casacore::Float maxResidual_p;
 
 };
 

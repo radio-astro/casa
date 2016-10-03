@@ -48,6 +48,7 @@
 
 #include <unistd.h>
 
+using namespace casacore;
 namespace casa {
 
 const unsigned int PlotMSCacheBase::N_METADATA = 13;
@@ -104,7 +105,7 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
           xmaxG_(0),
           ymaxG_(0),
           calType_(""),
-          polnRatio_(False)
+          polnRatio_(false)
 {
 
 	// Make the empty indexer0 object so we have and empty PlotData object
@@ -116,7 +117,7 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 	netAxesMask_.resize( dataCount );
 	plmask_.resize( dataCount );
 	for ( int i = 0; i < dataCount; i++ ){
-		netAxesMask_[i].resize(4,False);
+		netAxesMask_[i].resize(4,false);
 		indexer_[i].set( NULL );
 		plmask_[i].set( NULL  );
 	}
@@ -447,7 +448,7 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		}
 	}
 
-	if (False) {
+	if (false) {
 		{
 			cout << "Already loaded axes: " << flush;
 			Int nload(0);
@@ -482,7 +483,7 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
             }
         }
 
-		if (False) {
+		if (false) {
 			{
 				cout << "Finally loaded axes: " << flush;
 				Int nload(0);
@@ -505,8 +506,8 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
     // Setup/revis masks that we use to realize axes relationships
     netAxesMask_.resize( dataCount );
     for ( int i = 0; i < dataCount; i++ ){
-        Vector<Bool> xmask(4,False);
-        Vector<Bool> ymask(4,False);
+        Vector<Bool> xmask(4,false);
+        Vector<Bool> ymask(4,false);
         setAxesMask(currentX_[i],xmask);
         setAxesMask(currentY_[i],ymask);
         netAxesMask_[i]=(xmask || ymask);
@@ -539,7 +540,7 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 
 bool PlotMSCacheBase::axisIsValid(PMS::Axis axis, const PlotMSAveraging& averaging) {
 	// Check if axis is valid for the type of averaging requested
-	bool bslnValid(True), spwValid(True);
+	bool bslnValid(true), spwValid(true);
 	if (averaging.baseline()) {
 		switch(axis) {
 		case PMS::UVDIST_L:
@@ -550,7 +551,7 @@ bool PlotMSCacheBase::axisIsValid(PMS::Axis axis, const PlotMSAveraging& averagi
 		case PMS::AZIMUTH:
 		case PMS::ELEVATION:
 		case PMS::PARANG: {
-			bslnValid = False;
+			bslnValid = false;
 			break;
 		}
 		default:
@@ -564,7 +565,7 @@ bool PlotMSCacheBase::axisIsValid(PMS::Axis axis, const PlotMSAveraging& averagi
 		case PMS::UWAVE:
 		case PMS::VWAVE:
 		case PMS::WWAVE: {
-			spwValid = False;
+			spwValid = false;
 			break;
 		}
 		default:
@@ -580,7 +581,7 @@ void PlotMSCacheBase::clear() {
 	deletePlotMask();
 	deleteCache();
 	refTime_p=0.0;
-	dataLoaded_=False;
+	dataLoaded_=false;
 }
 
 #define PMSC_DELETE(VAR)                                                \
@@ -590,7 +591,7 @@ void PlotMSCacheBase::clear() {
 			delete VAR[j];						  \
 		}								  \
 	} \
-	VAR.resize(0,True);				\
+	VAR.resize(0,true);				\
 		}
 
 
@@ -846,7 +847,7 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 
 		// Revise axes mask, etc., to ensure baseline-dependence
 		if (!netAxesMask_[dataIndex](2)) {
-			netAxesMask_[dataIndex](2)=True;
+			netAxesMask_[dataIndex](2)=true;
 			setPlotMask( dataIndex );
 		}
 
@@ -855,7 +856,7 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 
 		// Find the limited list of _occurring_ baseline indices
 		Vector<Int> bslnList(nBslnMax);
-		Vector<Bool> bslnMask(nBslnMax,False);
+		Vector<Bool> bslnMask(nBslnMax,false);
 		indgen(bslnList);
 		/*
     cout << "*baseline_[0] = " << *baseline_[0] << endl;
@@ -867,7 +868,7 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 		for (Int ich=0;ich<nChunk_;++ich)
 			if (goodChunk_(ich))
 				for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl)
-					bslnMask(*(baseline_[ich]->data()+ibl))=True;
+					bslnMask(*(baseline_[ich]->data()+ibl))=true;
 		//    cout << "bslnMask = " << boolalpha << bslnMask << endl;
 
 		// Remember only the occuring baseline indices
@@ -884,12 +885,12 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 
 		// Revise axes mask, etc., to ensure baseline-dependence
 		if (!netAxesMask_[dataIndex](2)) {
-			netAxesMask_[dataIndex](2)=True;
+			netAxesMask_[dataIndex](2)=true;
 			setPlotMask( dataIndex );
 		}
 		// Find the limited list of _occuring_ antenna indices
 		Vector<Int> antList(nAnt_);
-		Vector<Bool> antMask(nAnt_,False);
+		Vector<Bool> antMask(nAnt_,false);
 		indgen(antList);
 		bool selectionEmpty = selection_.isEmpty();
 		Vector<Int> selAnts1;
@@ -969,18 +970,18 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
     case PMS::CORR: {
         // Revise axes mask, etc., to ensure correlation-dependence
         if (!netAxesMask_[dataIndex](0)) {
-            netAxesMask_[dataIndex](0)=True;
+            netAxesMask_[dataIndex](0)=true;
             setPlotMask( dataIndex );
         }
 
         Int nCorrMax = Stokes::NumberOfTypes;
         Vector<Int> corrList(nCorrMax);
-        Vector<Bool> corrMask(nCorrMax,False);
+        Vector<Bool> corrMask(nCorrMax,false);
         indgen(corrList);
         for (Int ich=0;ich<nChunk_;++ich){
             if (goodChunk_(ich)){
                 for (Int icorr=0; icorr<chunkShapes()(0,ich); ++icorr) {
-                    corrMask(*(corr_[ich]->data()+icorr))=True;
+                    corrMask(*(corr_[ich]->data()+icorr))=true;
                 }
             }
         }
@@ -1071,7 +1072,7 @@ void PlotMSCacheBase::_updateAntennaMask( Int a, Vector<Bool>& antMask,
 			}
 		}
 		if ( selected ){
-			antMask(a)=True;
+			antMask(a)=true;
 		}
 	}
 }
@@ -1099,61 +1100,61 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 		nChunk_+=nc;
 
 	// Resize, copying existing contents
-	scan_.resize(nChunk_,True);
-	time_.resize(nChunk_,True);
-	timeIntr_.resize(nChunk_,True);
-	field_.resize(nChunk_,True);
-	spw_.resize(nChunk_,True);
-	chan_.resize(nChunk_,False,True);
-	chansPerBin_.resize(nChunk_,False,True);
-	freq_.resize(nChunk_,False,True);
-	vel_.resize(nChunk_,False,True);
-	corr_.resize(nChunk_,False,True);
-	antenna1_.resize(nChunk_,False,True);
-	antenna2_.resize(nChunk_,False,True);
-	baseline_.resize(nChunk_,False,True);
-	row_.resize(nChunk_,False,True);
-	obsid_.resize(nChunk_,False,True);
-	intent_.resize(nChunk_,False,True);
-	feed1_.resize(nChunk_,False,True);
-	feed2_.resize(nChunk_,False,True);
+	scan_.resize(nChunk_,true);
+	time_.resize(nChunk_,true);
+	timeIntr_.resize(nChunk_,true);
+	field_.resize(nChunk_,true);
+	spw_.resize(nChunk_,true);
+	chan_.resize(nChunk_,false,true);
+	chansPerBin_.resize(nChunk_,false,true);
+	freq_.resize(nChunk_,false,true);
+	vel_.resize(nChunk_,false,true);
+	corr_.resize(nChunk_,false,true);
+	antenna1_.resize(nChunk_,false,true);
+	antenna2_.resize(nChunk_,false,true);
+	baseline_.resize(nChunk_,false,true);
+	row_.resize(nChunk_,false,true);
+	obsid_.resize(nChunk_,false,true);
+	intent_.resize(nChunk_,false,true);
+	feed1_.resize(nChunk_,false,true);
+	feed2_.resize(nChunk_,false,true);
 
-	uvdist_.resize(nChunk_,False,True);
-	uvdistL_.resize(nChunk_,False,True);
-	u_.resize(nChunk_,False,True);
-	v_.resize(nChunk_,False,True);
-	w_.resize(nChunk_,False,True);
-	uwave_.resize(nChunk_,False,True);
-	vwave_.resize(nChunk_,False,True);
-	wwave_.resize(nChunk_,False,True);
+	uvdist_.resize(nChunk_,false,true);
+	uvdistL_.resize(nChunk_,false,true);
+	u_.resize(nChunk_,false,true);
+	v_.resize(nChunk_,false,true);
+	w_.resize(nChunk_,false,true);
+	uwave_.resize(nChunk_,false,true);
+	vwave_.resize(nChunk_,false,true);
+	wwave_.resize(nChunk_,false,true);
 
-	amp_.resize(nChunk_,False,True);
-	pha_.resize(nChunk_,False,True);
-	real_.resize(nChunk_,False,True);
-	imag_.resize(nChunk_,False,True);
-	flag_.resize(nChunk_,False,True);
-	flagrow_.resize(nChunk_,False,True);
+	amp_.resize(nChunk_,false,true);
+	pha_.resize(nChunk_,false,true);
+	real_.resize(nChunk_,false,true);
+	imag_.resize(nChunk_,false,true);
+	flag_.resize(nChunk_,false,true);
+	flagrow_.resize(nChunk_,false,true);
 
-	wt_.resize(nChunk_,False,True);
-	wtxamp_.resize(nChunk_,False,True);
-	wtsp_.resize(nChunk_,False,True);
-	sigma_.resize(nChunk_,False,True);
-	sigmasp_.resize(nChunk_,False,True);
+	wt_.resize(nChunk_,false,true);
+	wtxamp_.resize(nChunk_,false,true);
+	wtsp_.resize(nChunk_,false,true);
+	sigma_.resize(nChunk_,false,true);
+	sigmasp_.resize(nChunk_,false,true);
 
-	az0_.resize(nChunk_,True);
-	el0_.resize(nChunk_,True);
-	radialVelocity_.resize(nChunk_,True);
-	rho_.resize(nChunk_,True);
-	ha0_.resize(nChunk_,True);
-	pa0_.resize(nChunk_,True);
+	az0_.resize(nChunk_,true);
+	el0_.resize(nChunk_,true);
+	radialVelocity_.resize(nChunk_,true);
+	rho_.resize(nChunk_,true);
+	ha0_.resize(nChunk_,true);
+	pa0_.resize(nChunk_,true);
 
-	antenna_.resize(nChunk_,False,True);
-	az_.resize(nChunk_,False,True);
-	el_.resize(nChunk_,False,True);
-	parang_.resize(nChunk_,False,True);
+	antenna_.resize(nChunk_,false,true);
+	az_.resize(nChunk_,false,true);
+	el_.resize(nChunk_,false,true);
+	parang_.resize(nChunk_,false,true);
 
-	par_.resize(nChunk_,False,True);
-	snr_.resize(nChunk_,False,True);
+	par_.resize(nChunk_,false,true);
+	snr_.resize(nChunk_,false,true);
 
 
 	// Construct (empty) pointed-to Vectors/Arrays
@@ -1218,15 +1219,15 @@ void PlotMSCacheBase::deleteIndexer() {
 				delete indexer_[j][i];
 			}
 		}
-		indexer_[j].resize(0,True);
+		indexer_[j].resize(0,true);
 	}
 	indexer_.clear();
 }
 
 void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 
-	// Nominally all False
-	axismask.set(False);
+	// Nominally all false
+	axismask.set(false);
 
 	switch(axis) {
 	case PMS::AMP:
@@ -1247,15 +1248,15 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 	case PMS::WTxAMP:
 	case PMS::WTSP:
 	case PMS::SIGMASP:
-		axismask(Slice(0,3,1))=True;
+		axismask(Slice(0,3,1))=true;
 		break;
 	case PMS::CHANNEL:
 	case PMS::FREQUENCY:
 	case PMS::VELOCITY:
-		axismask(1)=True;
+		axismask(1)=true;
 		break;
 	case PMS::CORR:
-		axismask(0)=True;
+		axismask(0)=true;
 		break;
 	case PMS::ROW:
 	case PMS::ANTENNA1:
@@ -1266,25 +1267,25 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 	case PMS::V:
 	case PMS::W:
 	case PMS::FLAG_ROW:
-		axismask(2)=True;
+		axismask(2)=true;
 		break;
 	case PMS::UVDIST_L:
 	case PMS::UWAVE:
 	case PMS::VWAVE:
 	case PMS::WWAVE:
-		axismask(1)=True;
-		axismask(2)=True;
+		axismask(1)=true;
+		axismask(2)=true;
 		break;
 	case PMS::WT:
 	case PMS::SIGMA:
-		axismask(0)=True;
-		axismask(2)=True;
+		axismask(0)=true;
+		axismask(2)=true;
 		break;
 	case PMS::ANTENNA:
 	case PMS::AZIMUTH:
 	case PMS::ELEVATION:
 	case PMS::PARANG:
-		axismask(3)=True;
+		axismask(3)=true;
 		break;
 	case PMS::TIME:
 	case PMS::TIME_INTERVAL:
@@ -1312,9 +1313,9 @@ Vector<Bool> PlotMSCacheBase::netAxesMask(PMS::Axis xaxis,PMS::Axis yaxis) {
 	if (xaxis==PMS::NONE || yaxis==PMS::NONE)
 		throw(AipsError("Problem in PlotMSCacheBase::netAxesMask()."));
 
-	Vector<Bool> xmask(4,False);
+	Vector<Bool> xmask(4,false);
 	setAxesMask(xaxis,xmask);
-	Vector<Bool> ymask(4,False);
+	Vector<Bool> ymask(4,false);
 	setAxesMask(yaxis,ymask);
 
 	return (xmask || ymask);
@@ -1362,7 +1363,7 @@ void PlotMSCacheBase::setPlotMask(Int dataIndex, Int chunk) {
 
 		plmask_[dataIndex][chunk]->resize(nsh);
 		// TBD: derive antenna flags from baseline flags
-		plmask_[dataIndex][chunk]->set(True);
+		plmask_[dataIndex][chunk]->set(true);
 	}
 	else {
 		plmask_[dataIndex][chunk]->resize(nsh);
@@ -1379,12 +1380,12 @@ void PlotMSCacheBase::deletePlotMask() {
 				delete plmask_[j][i];
 			}
 		}
-		plmask_[j].resize(0,True);
+		plmask_[j].resize(0,true);
 	}
 	plmask_.resize( 0 );
 
 	// This indexer is no longer ready for plotting
-	//dataLoaded_=False;
+	//dataLoaded_=false;
 
 }
 

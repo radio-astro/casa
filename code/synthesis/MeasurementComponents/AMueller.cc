@@ -35,6 +35,7 @@
 #include <synthesis/MeasurementComponents/AMueller.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -111,7 +112,7 @@ void AMueller::init()
   lofreq_p = -1.0;
   hifreq_p = -1.0;
   totnumchan_p = 0;
-  spwApplied_p = False;
+  spwApplied_p = false;
 }
 
 void AMueller::setSolve(const Record& solvepar) {
@@ -230,11 +231,11 @@ void AMueller::storeNCT() {
 	ncc.spectralWindow().chanFreq().setShape(ispw,IPosition(1,2));
 	ncc.spectralWindow().chanFreq().put(ispw,freqrange);
 	ncc.spectralWindow().numChan().put(ispw,fitorder_p+1);
-	ncc.spectralWindow().flagRow().put(ispw,False);
+	ncc.spectralWindow().flagRow().put(ispw,false);
       }
       else
 	// Mark this spw flagged (no solutions in main
-	ncc.spectralWindow().flagRow().put(ispw,True);
+	ncc.spectralWindow().flagRow().put(ispw,true);
     }
   }
 
@@ -346,7 +347,7 @@ void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial)
                    !spwApplied_p[cspw]))
       throw(AipsError("Could not place the continuum-subtracted data in "
                       + MS::columnName(whichcol)));
-    spwApplied_p[cspw] = True;
+    spwApplied_p[cspw] = true;
   }
 }
 
@@ -370,10 +371,10 @@ void AMueller::corrupt(VisBuffer& vb)
     // Ensure weight calibration off internally for corrupt
     //   (corruption doesn't re-scale the data!)
     Bool userCalWt=calWt();
-    calWt()=False;
+    calWt()=false;
 
     // Bring calibration up-to-date with the vb, with inversion turned OFF
-    syncCal(vb,False);
+    syncCal(vb,false);
 
     Int cspw = currSpw();
     VBContinuumSubtractor vbcs;
@@ -389,7 +390,7 @@ void AMueller::corrupt(VisBuffer& vb)
                    !spwApplied_p[cspw]))
       throw(AipsError("Could not place the continuum estimate in "
                       + MS::columnName(whichcol)));
-    spwApplied_p[cspw] = True;
+    spwApplied_p[cspw] = true;
     // Restore user's calWt()
     calWt()=userCalWt; 
   }
@@ -549,7 +550,7 @@ void ANoise::calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
     mat.shape(len);
     for (Int i=0; i<len; i++) {
       mat[i]=acorruptor_p->simPar(); // single complex #
-      mOk[i]=True;
+      mOk[i]=true;
     }    
   }
 }

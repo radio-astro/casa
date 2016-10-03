@@ -45,11 +45,11 @@ int main (int,char *)
       flagger.applyFlags(flagIndices);
   }
   else {
-      flagger.setmanualflags(False,
-			     False, "",
+      flagger.setmanualflags(false,
+			     false, "",
 			     Vector<Double>(2,0.0),
 			     "DATA",
-			     False);
+			     false);
   }
 
   //cerr << __FILE__ << __LINE__ << "defaultAgents = " << flagger.defaultAgents() << endl;
@@ -59,8 +59,8 @@ int main (int,char *)
 
 
   //perform the flagging 
-  Bool trial = False;
-  Bool reset = True;
+  Bool trial = false;
+  Bool reset = true;
   flagger.run(trial, reset);
 
   return 0;

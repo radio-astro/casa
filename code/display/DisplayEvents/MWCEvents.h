@@ -51,15 +51,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class ResetCrosshairEvent : public DisplayEvent {
 
 	public:
-		// caller sets skipRefresh=True iff it is handling refresh itself.
-		ResetCrosshairEvent(Bool skipRefresh=False):
+		// caller sets skipRefresh=true iff it is handling refresh itself.
+		ResetCrosshairEvent(casacore::Bool skipRefresh=false):
 			DisplayEvent(), skipRefresh_(skipRefresh) {  }
-		virtual Bool skipRefresh() const {
+		virtual casacore::Bool skipRefresh() const {
 			return skipRefresh_;
 		}
 
 	private:
-		Bool skipRefresh_;
+		casacore::Bool skipRefresh_;
 	};
 
 
@@ -81,15 +81,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class ResetRTRegionEvent : public DisplayEvent {
 
 	public:
-		// caller sets skipRefresh=True iff it is handling refresh itself.
-		ResetRTRegionEvent(Bool skipRefresh=False):
+		// caller sets skipRefresh=true iff it is handling refresh itself.
+		ResetRTRegionEvent(casacore::Bool skipRefresh=false):
 			DisplayEvent(), skipRefresh_(skipRefresh) {  }
-		virtual Bool skipRefresh() const {
+		virtual casacore::Bool skipRefresh() const {
 			return skipRefresh_;
 		}
 
 	private:
-		Bool skipRefresh_;
+		casacore::Bool skipRefresh_;
 	};
 
 

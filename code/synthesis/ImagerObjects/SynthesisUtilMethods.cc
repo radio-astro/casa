@@ -73,6 +73,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
  
   SynthesisUtilMethods::SynthesisUtilMethods()
@@ -114,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( n%2 !=0 ){ n+= 1; }
 
-    Vector<uInt> fac = primeFactors(n, False);
+    Vector<uInt> fac = primeFactors(n, false);
     Int val, newlarge;
     for( uInt k=0; k< fac.nelements(); k++ )
       {
@@ -153,7 +154,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if( lastresult % c == 0 ) { break; }
 	    c += 1;
 	  }
-	factors.resize( factors.nelements()+1, True );
+	factors.resize( factors.nelements()+1, true );
 	factors[ factors.nelements()-1 ] = c;
 	lastresult /= c;
       }
@@ -283,7 +284,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	Record thisMS= selpars.subRecord(RecordFieldId("ms"+String::toString(msID)));
 	String msName = thisMS.asString("msname");
-	timeSelPerPart[msID].resize(npart,True);
+	timeSelPerPart[msID].resize(npart,true);
 	//
 	// Make a selected MS and extract the time-column information
 	//
@@ -465,7 +466,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       chanshift+=Float(outnChan[k]);      
     }
-     MFrequency::Types eltype=incsys.spectralCoordinate(incsys.findCoordinate(Coordinate::SPECTRAL)).frequencySystem(True);
+     MFrequency::Types eltype=incsys.spectralCoordinate(incsys.findCoordinate(Coordinate::SPECTRAL)).frequencySystem(true);
 
      //os << "freqStart="<<freqStart<<" freqend="<<freqEnd<< "eltype="<<eltype<<LogIO::POST;
      Record rec=cubeDataPartition(selpars, freqStart, freqEnd, eltype);
@@ -768,7 +769,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //String error;
     //    if( qh.fromString( error, instr ) ) { qa = qh.asQuantity(); return String(""); }
     //else { return String("Error in converting " + instr + " to a Quantity : " + error + " \n"); }
-    if ( casa::Quantity::read( qa, instr ) ) { return String(""); }
+    if ( casacore::Quantity::read( qa, instr ) ) { return String(""); }
     else  { return String("Error in converting " + instr + " to a Quantity \n"); }
   }
 
@@ -787,10 +788,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    tmpRA = tmpRF;
 	    tmpRF = String("J2000");
 	  }
-	casa::Quantity tmpQRA;
-	casa::Quantity tmpQDEC;
-	casa::Quantity::read(tmpQRA, tmpRA);
-	casa::Quantity::read(tmpQDEC, tmpDEC);
+	casacore::Quantity tmpQRA;
+	casacore::Quantity tmpQDEC;
+	casacore::Quantity::read(tmpQRA, tmpRA);
+	casacore::Quantity::read(tmpQDEC, tmpDEC);
 
 	if(tmpQDEC.getFullUnit()==Unit("deg") && tmpDEC.contains(":")){
 	  LogIO os( LogOrigin("SynthesisParams","stringToMDirection",WHERE) );
@@ -936,9 +937,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// override with entries from savemodel.
 	String savemodel("");
 	err += readVal( inrec, String("savemodel"), savemodel );
-	if( savemodel=="none" ){usescratch=False; readonly=True;}
-	else if( savemodel=="virtual" ){usescratch=False; readonly=False;}
-	else if ( savemodel=="modelcolumn" ){ usescratch=True; readonly=False; }
+	if( savemodel=="none" ){usescratch=false; readonly=true;}
+	else if( savemodel=="virtual" ){usescratch=false; readonly=false;}
+	else if ( savemodel=="modelcolumn" ){ usescratch=true; readonly=false; }
 
 	err += readVal( inrec, String("incrmodel"), incrmodel );
 
@@ -989,7 +990,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( ! thems.isReadable() )
 	  { err += "MS " + msname + " is not readable.\n"; }
 	// Depending on 'readonly', is the MS writable ? 
-	if( readonly==False && ! thems.isWritable() ) 
+	if( readonly==false && ! thems.isWritable() ) 
 	  { err += "MS " + msname + " is not writable.\n"; }
       }
     else 
@@ -1013,9 +1014,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     state="";
     uvdist="";
     taql="";
-    usescratch=False;
-    readonly=True;
-    incrmodel=False;
+    usescratch=false;
+    readonly=true;
+    incrmodel=false;
     datacolumn="corrected";
   }
 
@@ -1210,7 +1211,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    if( pstr.matches("NCP") )
 		      {
 			pstr ="SIN";
-			useNCP=True;
+			useNCP=true;
 		      }
 		    projection=Projection::type( pstr );
 		  }
@@ -1705,9 +1706,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     phaseCenter=MDirection();
     phaseCenterFieldId=-1;
     projection=Projection::SIN;
-    useNCP=False;
+    useNCP=false;
     startModel=Vector<String>(0);
-    overwrite=False;
+    overwrite=false;
 
     // Spectral coordinates
     nchan=1;
@@ -1957,7 +1958,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Vector<Double> projparams(2); 
     projparams = 0.0;
-    if( useNCP==True ) { projparams[0]=0.0, projparams[1]=1/tan(refCoord(1));   }
+    if( useNCP==true ) { projparams[0]=0.0, projparams[1]=1/tan(refCoord(1));   }
     Projection projTo( projection.type(), projparams );
 
     DirectionCoordinate
@@ -2024,7 +2025,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else 
       {
         //SubMS thems(msobj);
-        //if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+        //if(!thems.combineSpws(spwids,true,dataChanFreq,dataChanWidth))
 	if(!MSTransformRegridder::combineSpwsCore(os,msobj, spwids,dataChanFreq,dataChanWidth,
 											  averageWhichChan,averageWhichSPW,averageChanFrac))
           {
@@ -2188,7 +2189,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for ( uInt k=1 ; k < nrestfreq; ++k ) {
         restfreqval[k-1] = restFreq[k].getValue("Hz");
       }    
-      mySpectral.setRestFrequencies(restfreqval, 0, True);
+      mySpectral.setRestFrequencies(restfreqval, 0, true);
     }
 
     // no longer needed, done inside SIImageStore
@@ -2310,7 +2311,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Vector<Double> projparams(2); 
     projparams = 0.0;
-    if( useNCP==True ) { projparams[0]=0.0, projparams[1]=1/tan(refCoord(1));   }
+    if( useNCP==true ) { projparams[0]=0.0, projparams[1]=1/tan(refCoord(1));   }
     Projection projTo( projection.type(), projparams );
 
     DirectionCoordinate
@@ -2381,7 +2382,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else 
       {
         SubMS thems(msobj);
-        if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+        if(!thems.combineSpws(spwids,true,dataChanFreq,dataChanWidth))
 	  //if(!MSTransformRegridder::combineSpws(os,msobj.tableName(),spwids,dataChanFreq,dataChanWidth))
           {
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
@@ -2528,8 +2529,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisParamsImage","getImFreq",WHERE) );
 
     refPix=0.0; 
-    Bool descendingfreq(False);
-    Bool descendingoutfreq(False);
+    Bool descendingfreq(false);
+    Bool descendingoutfreq(false);
 
     if( mode.contains("cube") )
       { 
@@ -2545,7 +2546,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             inStart = String::toString(chanStart);
             inStep = String::toString(chanStep); 
             // negative step -> descending channel indices 
-            if (inStep.contains(casa::Regex("^-"))) descendingfreq=true;
+            if (inStep.contains(casacore::Regex("^-"))) descendingfreq=true;
             // input frame is the data frame
             //freqframe = MFrequency::showType(dataFrame);
           }
@@ -2559,7 +2560,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             //}
             //step = String::toString( freqStep.getValue(freqStep.getUnit()) )+freqStep.getUnit();  
             // negative freq width -> descending freq ordering
-            if(inStep.contains(casa::Regex("^-"))) descendingfreq=true;
+            if(inStep.contains(casacore::Regex("^-"))) descendingfreq=true;
           }
         else if( specmode=="velocity" ) 
           {
@@ -2572,7 +2573,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             //}
             //step = String::toString( velStep.getValue(velStep.getUnit()) )+velStep.getUnit();  
             // positive velocity width -> descending freq ordering
-            if (!inStep.contains(casa::Regex("^-"))) descendingfreq=true;
+            if (!inStep.contains(casacore::Regex("^-"))) descendingfreq=true;
           }
 
       if (inStep=='0') inStep="";
@@ -2603,7 +2604,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if ( mode=="cubedata" ) 
         {
           freqframe=MFrequency::showType(dataFrame);
-          freqFrameValid=False; // no conversion for vb.lsrfrequency()
+          freqFrameValid=false; // no conversion for vb.lsrfrequency()
         }
       //if ( mode=="cubedata" ) freqframe=MFrequency::REST;
       
@@ -2654,14 +2655,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if (!rst) {
         os << LogIO::SEVERE << "calcChanFreqs failed, check input start and width parameters"
            << LogIO::EXCEPTION;
-        return False;
+        return false;
       }
       os << LogIO::DEBUG1
          <<"chanFreq 0="<<chanFreq[0]<<" chanFreq last="<<chanFreq[chanFreq.nelements()-1]
          << LogIO::POST;
 
       if (chanFreq[0]>chanFreq[chanFreq.nelements()-1]) {
-        descendingoutfreq = True;
+        descendingoutfreq = true;
       }
 
       if (descendingfreq && !descendingoutfreq) {
@@ -2700,9 +2701,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        // unrecognized mode, error
        os << LogIO::SEVERE << "mode="<<mode<<" is unrecognized."
           << LogIO::EXCEPTION;
-       return False;
+       return false;
     }
-    return True;
+    return true;
 
   }//getImFreq
 
@@ -2989,8 +2990,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ftmachine="gridft";
     gridder=ftmachine;
     padding=1.2;
-    useAutoCorr=False;
-    useDoublePrec=True; 
+    useAutoCorr=false;
+    useDoublePrec=true; 
     wprojplanes=1; 
     convFunc="SF"; 
     vpTable="";
@@ -3006,18 +3007,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Moving phase center ?
     distance=Quantity(0,"m");
-    trackSource=False;
+    trackSource=false;
     trackDir=MDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg"));
 
     // The extra params for WB-AWP
-    aTermOn    = True;
-    psTermOn   = True;
-    mTermOn    = False;
-    wbAWP      = True;
+    aTermOn    = true;
+    psTermOn   = true;
+    mTermOn    = false;
+    wbAWP      = true;
     cfCache  = "";
-    doPointing = False;
-    doPBCorr   = True;
-    conjBeams  = True;
+    doPointing = false;
+    doPBCorr   = true;
+    conjBeams  = true;
     computePAStep=360.0;
     rotatePAStep=5.0;
 
@@ -3374,8 +3375,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     maskResolution="";
     fracOfPeak=0.0; 
     nMask=0;
+    interactive=false;
     autoAdjust=False;
-    interactive=False;
   }
 
   Record SynthesisParamsDeconv::toRecord() const

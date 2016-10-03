@@ -30,6 +30,7 @@
 #include <display/DisplayEvents/MultiWCTool.h>
 #include <display/Display/PixelCanvas.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // (Required) default constructor.
@@ -37,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DisplayTool(),
 		itsWCListIter(0),
 		itsCurrentWC(0),
-		itsEventHandlersRegistered(False) {
+		itsEventHandlersRegistered(false) {
 		itsWCListIter = new ListIter<WorldCanvas *>(&itsWCList);
 	}
 
@@ -45,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DisplayTool(keysym),
 		itsWCListIter(0),
 		itsCurrentWC(0),
-		itsEventHandlersRegistered(False) {
+		itsEventHandlersRegistered(false) {
 		itsWCListIter = new ListIter<WorldCanvas *>(&itsWCList);
 		if ( enable_events ) enable();
 	}
@@ -113,12 +114,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		itsWCListIter->toStart();
 		while (!itsWCListIter->atEnd()) {
-			Bool found=False;
+			Bool found=false;
 			pdisp->myWCLI->toStart();
 			while (!pdisp->myWCLI->atEnd()) {
 				WorldCanvas* wcanvas = pdisp->myWCLI->getRight();
 				if (itsWCListIter->getRight() == wcanvas) {
-					found=True;
+					found=true;
 					break;
 				}
 				(*(pdisp->myWCLI))++;
@@ -132,7 +133,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void MultiWCTool::enable() {
 		if (!itsEventHandlersRegistered) {
-			itsEventHandlersRegistered = True;
+			itsEventHandlersRegistered = true;
 			itsWCListIter->toStart();
 			while (!itsWCListIter->atEnd()) {
 				WorldCanvas *wc = itsWCListIter->getRight();
@@ -146,7 +147,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void MultiWCTool::disable() {
 		if (itsEventHandlersRegistered) {
-			itsEventHandlersRegistered = False;
+			itsEventHandlersRegistered = false;
 			itsWCListIter->toStart();
 			while (!itsWCListIter->atEnd()) {
 				WorldCanvas *wc = itsWCListIter->getRight();

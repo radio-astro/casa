@@ -31,6 +31,7 @@
 #include <casa/System/PGPlotterInterface.h>
 
 #include <casa/stdio.h>    
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // -----------------------------------------------------------------------
@@ -69,7 +70,7 @@ const RecordInterface & RFANewMedianClip::getDefaults ()
     rec.define(RF_COLUMN,"DATA");
     rec.define(RF_EXPR,"+ ABS XX YY");
     rec.define(RF_THR,Double(5));    
-    //    rec.define(RF_DEBUG,False);
+    //    rec.define(RF_DEBUG,false);
     rec.setComment(RF_COLUMN,"Use column: [DATA|MODEL|CORRected]");
     rec.setComment(RF_EXPR,"Expression for deriving value (e.g. \"ABS XX\", \"+ ABS XX YY\")");
     rec.setComment(RF_THR,"Probability cut-off");
@@ -82,12 +83,12 @@ const RecordInterface & RFANewMedianClip::getDefaults ()
 Bool RFANewMedianClip::newChunk (Int &maxmem)
 {
   // if disk-based flag cube, reserve 2MB for local iterator
-  // compute correlations mask, return False if fails
+  // compute correlations mask, return false if fails
   corrmask = RFDataMapper::corrMask(chunk.visIter());
   if( !corrmask )
   {
     os<<LogIO::WARN<<"missing selected correlations, ignoring this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
 
   maxmem -= 2; 
@@ -106,20 +107,20 @@ Bool RFANewMedianClip::newChunk (Int &maxmem)
 
   // call parent's newChunk  
   if( !RFAFlagCubeBase::newChunk(maxmem) )
-    return active=False;
+    return active=false;
 
   // create temp lattice for evalues
   evalue.init(num(CHAN),num(IFR),num(TIME), num(CORR), nAgent, 0, mmdiff ,2);
   //init stdev matrix
   stdev.resize(num(CHAN), num(IFR));
   stdev.set(0);
-  stdeved = False;
+  stdeved = false;
   // create local flag iterator
   flag_iter = flag.newCustomIter();
   pflagiter = &flag_iter;
   RFAFlagCubeBase::newChunk(maxmem-=1);
 
-  return active=True;
+  return active=true;
 }
 
 void RFANewMedianClip::endChunk ()
@@ -136,7 +137,7 @@ void RFANewMedianClip::endChunk ()
 void RFANewMedianClip::startData (bool verbose)
 {
   //new added
-  evalue.reset(False,True);
+  evalue.reset(false,true);
 
   RFAFlagCubeBase::startData(verbose);
   flag_iter.reset();
@@ -162,7 +163,7 @@ RFA::IterMode RFANewMedianClip::iterTime ( uInt it )
   // gets pointer to visibilities cube
   RFDataMapper::setVisBuffer(chunk.visBuf());
   // Advance sync flag iterator
-  flag.advance(it,True);
+  flag.advance(it,true);
 
   return RFA::CONT;
 }
@@ -218,7 +219,7 @@ void RFANewMedianClip::startDry (bool verbose)
   if(!stdeved) 
     RFAFlagCubeBase::startDry(verbose);
   // reset lattices to read-only
-  evalue.reset(True,False);
+  evalue.reset(true,false);
   pflagiter = &flag.iterator();
 }
 
@@ -238,7 +239,7 @@ RFA::IterMode RFANewMedianClip::iterDry ( uInt it )
     Float upperdiff = 0;
     Float bottomdiff = 0;
     Float thr = 0;
-    Bool asymmetry = False;
+    Bool asymmetry = false;
     for( uInt ifr=0; ifr<num(IFR); ifr++ ) // outer loop over IFRs
       {
 	for( uInt ich=0; ich<num(CHAN); ich++ ) // loop over channels
@@ -265,7 +266,7 @@ RFA::IterMode RFANewMedianClip::iterDry ( uInt it )
 	  } // for(ich)
       } // for(ifr)
     if(abs(bottomdiff) > 1.2 * upperdiff || upperdiff > 1.2 * abs(bottomdiff))
-      asymmetry = True; 
+      asymmetry = true; 
     if(asymmetry) {
       //      cout << " flag the asymmetry data" << endl;
       for( uInt ifr=0; ifr<num(IFR); ifr++ ) // outer loop over IFRs
@@ -312,8 +313,8 @@ RFA::IterMode RFANewMedianClip::endDry ()
     //    cout << " early return " << endl; 
     return RFA::STOP;
   }
-  Bool dummy = False;
-  stdeved = True;
+  Bool dummy = false;
+  stdeved = true;
   for( uInt ifr=0; ifr<num(IFR); ifr++ ) // outer loop over IFRs
     {
       for( uInt ich=0; ich<num(CHAN); ich++ ) // loop over channels

@@ -100,14 +100,14 @@ namespace casa {
 		//tp > 0, discrete symbols
 		//tp < 0, line and symbols
 		//cl, color value range from 0 up
-		void plotPolyLine(const Vector<Int>&,
-		                  const Vector<Int>&,
+		void plotPolyLine(const casacore::Vector<casacore::Int>&,
+		                  const casacore::Vector<casacore::Int>&,
 		                  int ln = 0, int tp = 0, int cl = 0);
-		void plotPolyLine(const Vector<Float> &x,
-		                  const Vector<Float> &y,
+		void plotPolyLine(const casacore::Vector<casacore::Float> &x,
+		                  const casacore::Vector<casacore::Float> &y,
 		                  int ln = 0, int tp = 0, int cl = 0);
-		void plotPolyLine(const Vector<Double>&,
-		                  const Vector<Double>&,
+		void plotPolyLine(const casacore::Vector<casacore::Double>&,
+		                  const casacore::Vector<casacore::Double>&,
 		                  int ln = 0, int tp = 0, int cl = 0);
 
 		//Each row is a trace
@@ -119,16 +119,16 @@ namespace casa {
 		//tp > 0, different discrete shape for each trace
 		//cl > 0, different color for each trace
 		//cl <= 0, same color for all traces
-		void plotPolyLine(const Matrix<Int> &verts,
+		void plotPolyLine(const casacore::Matrix<casacore::Int> &verts,
 		                  int ln = 0, int tp = 0, int cl = 0);
-		void plotPolyLine(const Matrix<Float> &verts,
+		void plotPolyLine(const casacore::Matrix<casacore::Float> &verts,
 		                  int ln = 0, int tp = 0, int cl = 0);
-		void plotPolyLine(const Matrix<Double> &verts,
+		void plotPolyLine(const casacore::Matrix<casacore::Double> &verts,
 		                  int ln = 0, int tp = 0, int cl = 0);
 
 		// template<class T>
-		void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
-		void drawImage(const Matrix<uInt> &data);
+		void drawImage(const casacore::Matrix<casacore::uInt> &data, casacore::Matrix<casacore::uInt> *mask);
+		void drawImage(const casacore::Matrix<casacore::uInt> &data);
 		//void setMarkMode(bool);
 
 		QColor getLinearColor(double);
@@ -210,7 +210,7 @@ namespace casa {
 
 		QPixmap pixmap;
 		QPixmap backBuffer;
-		Matrix<uInt> *pMask;
+		casacore::Matrix<casacore::uInt> *pMask;
 
 	};
 

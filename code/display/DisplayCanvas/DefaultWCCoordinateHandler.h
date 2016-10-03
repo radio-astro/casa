@@ -39,11 +39,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <prerequisite>
 // <li> <linkto class="WCCoordinateHandler">WCCoordinateHandler</linkto>
-// <li> <linkto class="CoordinateSystem">CoordinateSystem</linkto>
+// <li> <linkto class="casacore::CoordinateSystem">casacore::CoordinateSystem</linkto>
 // </prerequisite>
 //
 // <etymology>
-// DefaultWCCoordinateHandler stands for Default WorldCanvas Coordinate Handler
+// DefaultWCCoordinateHandler stands for Default WorldCanvas casacore::Coordinate Handler
 // </etymology>
 //
 // <synopsis>
@@ -74,25 +74,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// length 2. The output vectors are resized as needed.  The output matrices
 		// must be the correct shape on input.
 		// <group>
-		virtual Bool linToWorld(Vector<Double> & world, const Vector<Double> & lin);
-		virtual Bool linToWorld(Matrix<Double> & world,
-		                        Vector<Bool> & failures,
-		                        const Matrix<Double> & lin);
-		virtual Bool worldToLin(Vector<Double> & lin, const Vector<Double> & world);
-		virtual Bool worldToLin(Matrix<Double> & lin,
-		                        Vector<Bool> & failures,
-		                        const Matrix<Double> & world);
+		virtual casacore::Bool linToWorld(casacore::Vector<casacore::Double> & world, const casacore::Vector<casacore::Double> & lin);
+		virtual casacore::Bool linToWorld(casacore::Matrix<casacore::Double> & world,
+		                        casacore::Vector<casacore::Bool> & failures,
+		                        const casacore::Matrix<casacore::Double> & lin);
+		virtual casacore::Bool worldToLin(casacore::Vector<casacore::Double> & lin, const casacore::Vector<casacore::Double> & world);
+		virtual casacore::Bool worldToLin(casacore::Matrix<casacore::Double> & lin,
+		                        casacore::Vector<casacore::Bool> & failures,
+		                        const casacore::Matrix<casacore::Double> & world);
 		// </group>
 
 		// return the number of world axes. Always 2.
-		virtual uInt nWorldAxes() const {
+		virtual casacore::uInt nWorldAxes() const {
 			return 2;
 		}
 
 		// Routines that give the axes names and the units. Both return "Pixel".
 		// <group>
-		virtual Vector<String> worldAxisNames() const;
-		virtual Vector<String> worldAxisUnits() const;
+		virtual casacore::Vector<casacore::String> worldAxisNames() const;
+		virtual casacore::Vector<casacore::String> worldAxisUnits() const;
 		// </group>
 
 		std::string errorMessage( ) const { return ""; }

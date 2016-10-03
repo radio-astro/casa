@@ -41,37 +41,37 @@ class Iterate {
 public:
   // Constructor
   Iterate() : numberIterations_(100), gain_(1.0),
-       tolerance_(0.000001), threshold_(0.0), free_(False), mode_("") {};
+       tolerance_(0.000001), threshold_(0.0), free_(false), mode_("") {};
 
   virtual ~Iterate() {};
 
   // Is this a free variable?
   void setFree()
-    {free_=True;};
+    {free_=true;};
   void setNotFree()
-    {free_=False;};
-  Bool free()
+    {free_=false;};
+  casacore::Bool free()
     {return(free_);};
 
-  void setNumberIterations(const Int n) {numberIterations_=n;};
-  void setGain(const Float g) {gain_=g;};
-  void setTolerance(const Float t) {tolerance_=t;};
-  void setThreshold(const Float t) {threshold_=t;};
-  void setMode(const String m) {mode_=m;};
+  void setNumberIterations(const casacore::Int n) {numberIterations_=n;};
+  void setGain(const casacore::Float g) {gain_=g;};
+  void setTolerance(const casacore::Float t) {tolerance_=t;};
+  void setThreshold(const casacore::Float t) {threshold_=t;};
+  void setMode(const casacore::String m) {mode_=m;};
 
-  Int numberIterations() {return numberIterations_;};
-  Float gain() {return gain_;};
-  Float tolerance() {return tolerance_;};
-  virtual Float threshold() {return threshold_;};
-  const String mode() {return mode_;};
+  casacore::Int numberIterations() {return numberIterations_;};
+  casacore::Float gain() {return gain_;};
+  casacore::Float tolerance() {return tolerance_;};
+  virtual casacore::Float threshold() {return threshold_;};
+  const casacore::String mode() {return mode_;};
 
 private:    
-  Int numberIterations_;
-  Double gain_;
-  Double tolerance_;
-  Double threshold_;
-  Bool free_;
-  String mode_;
+  casacore::Int numberIterations_;
+  casacore::Double gain_;
+  casacore::Double tolerance_;
+  casacore::Double threshold_;
+  casacore::Bool free_;
+  casacore::String mode_;
 };
 
 

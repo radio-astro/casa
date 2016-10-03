@@ -30,11 +30,12 @@
 #include <images/Images/PagedImage.h>
 #include <tables/Tables/Table.h>
 
+using namespace casacore;
 namespace casa{
   Bool clone(const String& imageName, const String& newImageName)
   {
-    //if(!valid()) return False;
-    // This is not needed if(!assertDefinedImageParameters()) return False;
+    //if(!valid()) return false;
+    // This is not needed if(!assertDefinedImageParameters()) return false;
     LogIO os(LogOrigin("InteractiveMasking", "clone()", WHERE));
     try {
       PagedImage<Float> oldImage(imageName);
@@ -42,12 +43,12 @@ namespace casa{
 					    oldImage.niceCursorShape()), oldImage.coordinates(),
 				 newImageName);
       newImage.set(0.0);
-      newImage.table().flush(True, True);
+      newImage.table().flush(true, true);
     } catch (AipsError x) {
       os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-      return False;
+      return false;
     } 
-    return True;
+    return true;
   }
   
   bool new_interactive_clean_callback::callback( const DBus::Message &msg ) {
@@ -69,7 +70,7 @@ namespace casa{
     if(Table::isReadable(mask)) {
       if (! Table::isWritable(mask)) {
 	os << LogIO::WARN << "Mask image is not modifiable " << LogIO::POST;
-	return False;
+	return false;
       }
       //we should regrid here if image and mask do not match
     }
@@ -85,14 +86,14 @@ namespace casa{
       viewer_p = dbus::launch<ViewerProxy>(args);
       if ( viewer_p == 0 ) {
 	os << LogIO::WARN << "failed to launch viewer gui" << LogIO::POST;
-	return False;
+	return false;
       }
     }
     if ( clean_panel_p == 0) {
       dbus::variant panel_id = viewer_p->panel( "clean" );
       if ( panel_id.type() != dbus::variant::INT ) {
 	os << LogIO::WARN << "failed to create clean panel" << LogIO::POST;
-	return False;
+	return false;
       }
       clean_panel_p = panel_id.getInt( );
     }
@@ -113,14 +114,14 @@ namespace casa{
       dbus::variant image_id = viewer_p->load(image, "raster", clean_panel_p);
       if ( image_id.type() != dbus::variant::INT ) {
 	os << LogIO::WARN << "failed to load image" << LogIO::POST;
-	return False;
+	return false;
       }
       image_id_p = image_id.getInt( );
       
       dbus::variant mask_id = viewer_p->load(mask, "contour", clean_panel_p);
       if ( mask_id.type() != dbus::variant::INT ) {
 	os << "failed to load mask" << LogIO::WARN << LogIO::POST;
-	return False;
+	return false;
       }
       mask_id_p = mask_id.getInt( );
     } else {
@@ -156,7 +157,7 @@ namespace casa{
 	if ( iter->first == "action" ) {
 	  if ( iter->second.type( ) != dbus::variant::STRING ) {
 	    os << "ill-formed action result" << LogIO::WARN << LogIO::POST;
-	    return False;
+	    return false;
 	  } else {
 	    const std::string &action = iter->second.getString( );
 	    if ( action == "stop" )
@@ -167,27 +168,27 @@ namespace casa{
 	      result = 0;
 	    else {
 	      os << "ill-formed action result" << LogIO::WARN << LogIO::POST;
-	      return False;
+	      return false;
 	    }
 	  }
 	} else if ( iter->first == "ncycle" ) {
 	  if ( iter->second.type( ) != dbus::variant::INT ) {
 	    os << "ill-formed ncycle result" << LogIO::WARN << LogIO::POST;
-	    return False;
+	    return false;
 	  } else {
 	    ncycles = iter->second.getInt( );
 	  }
 	} else if ( iter->first == "niter" ) {
 	  if ( iter->second.type( ) != dbus::variant::INT ) {
 	    os << "ill-formed niter result" << LogIO::WARN << LogIO::POST;
-	    return False;
+	    return false;
 	  } else {
 	    niter = iter->second.getInt( );
 	  }
 	} else if ( iter->first == "threshold" ) {
 	  if ( iter->second.type( ) != dbus::variant::STRING ) {
 	    os << "ill-formed threshold result" << LogIO::WARN << LogIO::POST;
-	    return False;
+	    return false;
 	  } else {
 	    thresh = iter->second.getString( );
 	  }
@@ -195,7 +196,7 @@ namespace casa{
       }
     } else {
       os << "failed to get a vaild result for viewer" << LogIO::WARN << LogIO::POST;
-      return False;
+      return false;
     }
     prev_image_id_p=image_id_p;
     prev_mask_id_p=mask_id_p;
@@ -240,7 +241,7 @@ namespace casa{
     if(Table::isReadable(mask)) {
       if (! Table::isWritable(mask)) {
 	os << LogIO::WARN << "Mask image is not modifiable " << LogIO::POST;
-	return False;
+	return false;
       }
       //we should regrid here if image and mask do not match
     }
@@ -256,14 +257,14 @@ namespace casa{
       viewer_p = dbus::launch<ViewerProxy>(args);
       if ( viewer_p == 0 ) {
 	os << LogIO::WARN << "failed to launch viewer gui" << LogIO::POST;
-	return False;
+	return false;
       }
     }
     if ( clean_panel_p == 0) {
       dbus::variant panel_id = viewer_p->panel( "clean2" );
       if ( panel_id.type() != dbus::variant::INT ) {
 	os << LogIO::WARN << "failed to create clean panel" << LogIO::POST;
-	return False;
+	return false;
       }
       clean_panel_p = panel_id.getInt( );
     }
@@ -284,14 +285,14 @@ namespace casa{
       dbus::variant image_id = viewer_p->load(image, "raster", clean_panel_p);
       if ( image_id.type() != dbus::variant::INT ) {
 	os << LogIO::WARN << "failed to load residual image in viewer : " << image << LogIO::POST;
-	return False;
+	return false;
       }
       image_id_p = image_id.getInt( );
       
       dbus::variant mask_id = viewer_p->load(mask, "contour", clean_panel_p);
       if ( mask_id.type() != dbus::variant::INT ) {
 	os << "failed to load mask in viewer : " << mask << LogIO::WARN << LogIO::POST;
-	return False;
+	return false;
       }
       mask_id_p = mask_id.getInt( );
     } else {
@@ -328,7 +329,7 @@ namespace casa{
 	if ( iter->first == "action" ) {
 	  if ( iter->second.type( ) != dbus::variant::STRING ) {
 	    os << "ill-formed action result" << LogIO::WARN << LogIO::POST;
-	    return False;
+	    return false;
 	  } else {
 	    const std::string &action = iter->second.getString( );
 	    if ( action == "stop" )
@@ -339,44 +340,44 @@ namespace casa{
 	      result = 0;
 	    else {
 	      os << "ill-formed action result" << LogIO::WARN << LogIO::POST;
-	      return False;
+	      return false;
 	    }
 	  }
 	} else if ( iter->first == "cycleniter" ) {
 	  if ( iter->second.type( ) != dbus::variant::INT ) {
 	    os << "ill-formed cycleniter result" << LogIO::WARN << LogIO::POST;
-	    return False;
+	    return false;
 	  } else {
 	    cycleniter = iter->second.getInt( );
 	  }
 	} else if ( iter->first == "niter" ) {
 	  if ( iter->second.type( ) != dbus::variant::INT ) {
 	    os << "ill-formed niter result" << LogIO::WARN << LogIO::POST;
-	    return False;
+	    return false;
 	  } else {
 	    niter = iter->second.getInt( );
 	  }
 	} else if ( iter->first == "threshold" ) {
 	  if ( iter->second.type( ) != dbus::variant::STRING ) {
 	    os << "ill-formed threshold result" << LogIO::WARN << LogIO::POST;
-	    return False;
+	    return false;
 	  } else {
 	    thresh = iter->second.getString( );
 	  }
 	} else if ( iter->first == "cyclethreshold" ) {
 	  if ( iter->second.type( ) != dbus::variant::STRING ) {
 	    os << "ill-formed cyclethreshold result" << LogIO::WARN << LogIO::POST;
-	    return False;
+	    return false;
 	  } else {
 	    cyclethresh = iter->second.getString( );
 	  }
 	}
 	//	if( niter<cycleniter ) 
-	// { os << "niter must be >= cycleniter" << LogIO::WARN << LogIO::POST; return False; }
+	// { os << "niter must be >= cycleniter" << LogIO::WARN << LogIO::POST; return false; }
       }
     } else {
       os << "failed to get a vaild result for viewer" << LogIO::WARN << LogIO::POST;
-      return False;
+      return false;
     }
     prev_image_id_p=image_id_p;
     prev_mask_id_p=mask_id_p;

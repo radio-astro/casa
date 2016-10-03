@@ -32,7 +32,7 @@
 // Measurement Set Selection
 #include <ms/MSSel/MSSelection.h>
 
-// Data handling
+// casacore::Data handling
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
 
 // Regridding
@@ -83,12 +83,12 @@ class MSTransformBufferImpl;
 class MSTransformIterator;
 class MSTransformIteratorFactory;
 
-// MS Transform Framework utilities
+// casacore::MS Transform Framework utilities
 namespace MSTransformations
 {
 	// Returns 1/sqrt(wt) or -1, depending on whether wt is positive..
-	Double wtToSigma(Double wt);
-	Double sigmaToWeight(Double wt);
+	casacore::Double wtToSigma(casacore::Double wt);
+	casacore::Double sigmaToWeight(casacore::Double wt);
 
 	enum InterpolationMethod {
 	    // nearest neighbour
@@ -141,26 +141,26 @@ namespace MSTransformations
 struct spwInfo;
 struct channelContribution;
 
-// Map definition
-typedef map<MS::PredefinedColumns,MS::PredefinedColumns> dataColMap;
-typedef map< pair< pair<uInt,uInt> , uInt >,vector<uInt> > baselineMap;
-typedef map<uInt,map<uInt, uInt > > inputSpwChanMap;
-typedef map<uInt,vector < channelContribution > >  inputOutputChanFactorMap;
-typedef map<uInt,pair < spwInfo, spwInfo > > inputOutputSpwMap;
+// casacore::Map definition
+typedef map<casacore::MS::PredefinedColumns,casacore::MS::PredefinedColumns> dataColMap;
+typedef map< pair< pair<casacore::uInt,casacore::uInt> , casacore::uInt >,vector<casacore::uInt> > baselineMap;
+typedef map<casacore::uInt,map<casacore::uInt, casacore::uInt > > inputSpwChanMap;
+typedef map<casacore::uInt,vector < channelContribution > >  inputOutputChanFactorMap;
+typedef map<casacore::uInt,pair < spwInfo, spwInfo > > inputOutputSpwMap;
 
 // Struct definition
 struct channelInfo {
 
-	Int SPW_id;
-	uInt inpChannel;
-	uInt outChannel;
-	Double CHAN_FREQ;
-	Double CHAN_WIDTH;
-	Double EFFECTIVE_BW;
-	Double RESOLUTION;
-	std::vector<Double> contribFrac;
-	std::vector<Int> contribChannel;
-	std::vector<Int> contribSPW_id;
+	casacore::Int SPW_id;
+	casacore::uInt inpChannel;
+	casacore::uInt outChannel;
+	casacore::Double CHAN_FREQ;
+	casacore::Double CHAN_WIDTH;
+	casacore::Double EFFECTIVE_BW;
+	casacore::Double RESOLUTION;
+	std::vector<casacore::Double> contribFrac;
+	std::vector<casacore::Int> contribChannel;
+	std::vector<casacore::Int> contribSPW_id;
 
 	channelInfo()
 	{
@@ -186,17 +186,17 @@ struct channelInfo {
 		}
 	}
 
-	Double upperBound() const
+	casacore::Double upperBound() const
 	{
 		return CHAN_FREQ + 0.5 * std::abs(CHAN_WIDTH);
 	}
 
-	Double lowerBound() const
+	casacore::Double lowerBound() const
 	{
 		return CHAN_FREQ - 0.5 * std::abs(CHAN_WIDTH);
 	}
 
-	Double overlap(const channelInfo& other) const
+	casacore::Double overlap(const channelInfo& other) const
 	{
 
 		// The other channel completely covers this channel
@@ -229,11 +229,11 @@ struct channelInfo {
 
 struct channelContribution {
 
-	Int inpSpw;
-	uInt inpChannel;
-	uInt outChannel;
-	Double weight;
-	Bool flag;
+	casacore::Int inpSpw;
+	casacore::uInt inpChannel;
+	casacore::uInt outChannel;
+	casacore::Double weight;
+	casacore::Bool flag;
 
 	channelContribution()
 	{
@@ -241,16 +241,16 @@ struct channelContribution {
 		inpChannel = 0;
 		outChannel = 0;
 		weight = 0;
-		flag = False;
+		flag = false;
 	}
 
-	channelContribution(Int inputSpw, uInt inputChannel, uInt outputChannel,Double fraction)
+	channelContribution(casacore::Int inputSpw, casacore::uInt inputChannel, casacore::uInt outputChannel,casacore::Double fraction)
 	{
 		inpSpw = inputSpw;
 		inpChannel = inputChannel;
 		outChannel = outputChannel;
 		weight = fraction;
-		flag = True;
+		flag = true;
 	}
 };
 
@@ -261,17 +261,17 @@ struct spwInfo {
 		initialize(0);
 	}
 
-	spwInfo(uInt nChannels)
+	spwInfo(casacore::uInt nChannels)
 	{
 		initialize(nChannels);
 	}
 
-	spwInfo(Vector<Double> &chanFreq,Vector<Double> &chanWidth)
+	spwInfo(casacore::Vector<casacore::Double> &chanFreq,casacore::Vector<casacore::Double> &chanWidth)
 	{
 		reset(chanFreq,chanWidth);
 	}
 
-	void reset(Vector<Double> &chanFreq,Vector<Double> &chanWidth)
+	void reset(casacore::Vector<casacore::Double> &chanFreq,casacore::Vector<casacore::Double> &chanWidth)
 	{
 		initialize(chanFreq.size());
 		CHAN_FREQ = chanFreq;
@@ -279,14 +279,14 @@ struct spwInfo {
 		update();
 	}
 
-	void initialize(uInt nChannels)
+	void initialize(casacore::uInt nChannels)
 	{
 		NUM_CHAN = nChannels;
-		CHAN_FREQ.resize(nChannels,False);
-		CHAN_WIDTH.resize(nChannels,False);
-		EFFECTIVE_BW.resize(nChannels,False);
-		RESOLUTION.resize(nChannels,False);
-		CHAN_FREQ_aux.resize(nChannels,False);
+		CHAN_FREQ.resize(nChannels,false);
+		CHAN_WIDTH.resize(nChannels,false);
+		EFFECTIVE_BW.resize(nChannels,false);
+		RESOLUTION.resize(nChannels,false);
+		CHAN_FREQ_aux.resize(nChannels,false);
 		TOTAL_BANDWIDTH = 0;
 		REF_FREQUENCY = 0;
 		upperBound = 0;
@@ -324,27 +324,27 @@ struct spwInfo {
 		RESOLUTION = CHAN_WIDTH;
 	}
 
-	void resize(uInt nChannels)
+	void resize(casacore::uInt nChannels)
 	{
 		NUM_CHAN = nChannels;
-		CHAN_FREQ.resize(nChannels,True);
-		CHAN_WIDTH.resize(nChannels,True);
-		EFFECTIVE_BW.resize(nChannels,True);
-		RESOLUTION.resize(nChannels,True);
-		CHAN_FREQ_aux.resize(nChannels,True);
+		CHAN_FREQ.resize(nChannels,true);
+		CHAN_WIDTH.resize(nChannels,true);
+		EFFECTIVE_BW.resize(nChannels,true);
+		RESOLUTION.resize(nChannels,true);
+		CHAN_FREQ_aux.resize(nChannels,true);
 		update();
 	}
 
-	uInt NUM_CHAN;
-	Vector<Double> CHAN_FREQ;
-	Vector<Double> CHAN_WIDTH;
-	Vector<Double> EFFECTIVE_BW;
-	Vector<Double> RESOLUTION;
-	Vector<Double> CHAN_FREQ_aux;
-	Double TOTAL_BANDWIDTH;
-	Double REF_FREQUENCY;
-	Double upperBound;
-	Double lowerBound;
+	casacore::uInt NUM_CHAN;
+	casacore::Vector<casacore::Double> CHAN_FREQ;
+	casacore::Vector<casacore::Double> CHAN_WIDTH;
+	casacore::Vector<casacore::Double> EFFECTIVE_BW;
+	casacore::Vector<casacore::Double> RESOLUTION;
+	casacore::Vector<casacore::Double> CHAN_FREQ_aux;
+	casacore::Double TOTAL_BANDWIDTH;
+	casacore::Double REF_FREQUENCY;
+	casacore::Double upperBound;
+	casacore::Double lowerBound;
 };
 
 //  MSTransformManager definition
@@ -358,12 +358,12 @@ class MSTransformManager
 public:
 
 	MSTransformManager();
-	MSTransformManager(Record configuration);
+	MSTransformManager(casacore::Record configuration);
 
 	virtual ~MSTransformManager();
 
 	void initialize();
-	void configure(Record &configuration);
+	void configure(casacore::Record &configuration);
 
 	void open();
 	void setup();
@@ -378,13 +378,13 @@ public:
 	vi::VisibilityIterator2 * getVisIter() {return visibilityIterator_p;}
 
 	// Needed by MSTransformIterator
-	MeasurementSet * getOutputMs () {return outputMs_p;};
-	String getOutputMsName () {return outMsName_p;};
+	casacore::MeasurementSet * getOutputMs () {return outputMs_p;};
+	casacore::String getOutputMsName () {return outMsName_p;};
 
 	// Needed by MSTransformBuffer
 	vi::VisBuffer2 * getVisBuffer() {return visibilityIterator_p->getVisBuffer();}
-	IPosition getShape();
-	IPosition getTransformedShape(vi::VisBuffer2 *inputVisBuffer);
+	casacore::IPosition getShape();
+	casacore::IPosition getTransformedShape(vi::VisBuffer2 *inputVisBuffer);
 
 	// Need by tMSTransformIterator
 	dataColMap getDataColMap() { return dataColMap_p;}
@@ -393,17 +393,17 @@ public:
 
 protected:
 
-	void parseMsSpecParams(Record &configuration);
-	void parseDataSelParams(Record &configuration);
-	void parseFreqTransParams(Record &configuration);
-	void parseChanAvgParams(Record &configuration);
-	void parseRefFrameTransParams(Record &configuration);
-	void parseFreqSpecParams(Record &configuration);
-	void parsePhaseShiftParams(Record &configuration);
-	void parseTimeAvgParams(Record &configuration);
-	void parseCalParams(Record &configuration);
-	void parseUVContSubParams(Record &configuration);
-	void setSpwAvg(Record &configuration);
+	void parseMsSpecParams(casacore::Record &configuration);
+	void parseDataSelParams(casacore::Record &configuration);
+	void parseFreqTransParams(casacore::Record &configuration);
+	void parseChanAvgParams(casacore::Record &configuration);
+	void parseRefFrameTransParams(casacore::Record &configuration);
+	void parseFreqSpecParams(casacore::Record &configuration);
+	void parsePhaseShiftParams(casacore::Record &configuration);
+	void parseTimeAvgParams(casacore::Record &configuration);
+	void parseCalParams(casacore::Record &configuration);
+	void parseUVContSubParams(casacore::Record &configuration);
+	void setSpwAvg(casacore::Record &configuration);
 
 	// From input MS
 	void initDataSelectionParams();
@@ -413,23 +413,23 @@ protected:
 	void initRefFrameTransParams();
 	void regridSpwSubTable();
 	void regridAndCombineSpwSubtable();
-	void regridSpwAux(	Int spwId,
-						MFrequency::Types spwInputRefFrame,
-						Vector<Double> &inputCHAN_FREQ,
-						Vector<Double> &inputCHAN_WIDTH,
-						Vector<Double> &originalCHAN_FREQ,
-						Vector<Double> &originalCHAN_WIDTH,
-						Vector<Double> &regriddedCHAN_FREQ,
-						Vector<Double> &regriddedCHAN_WIDTH,
+	void regridSpwAux(	casacore::Int spwId,
+						casacore::MFrequency::Types spwInputRefFrame,
+						casacore::Vector<casacore::Double> &inputCHAN_FREQ,
+						casacore::Vector<casacore::Double> &inputCHAN_WIDTH,
+						casacore::Vector<casacore::Double> &originalCHAN_FREQ,
+						casacore::Vector<casacore::Double> &originalCHAN_WIDTH,
+						casacore::Vector<casacore::Double> &regriddedCHAN_FREQ,
+						casacore::Vector<casacore::Double> &regriddedCHAN_WIDTH,
 						string msg);
 
-	void reindexColumn(ScalarColumn<Int> &inputCol, Int value);
+	void reindexColumn(casacore::ScalarColumn<casacore::Int> &inputCol, casacore::Int value);
 	void reindexSourceSubTable();
 	void reindexDDISubTable();
 	void reindexFeedSubTable();
 	void reindexSysCalSubTable();
 	void reindexFreqOffsetSubTable();
-	void reindexGenericTimeDependentSubTable(const String& subtabname);
+	void reindexGenericTimeDependentSubTable(const casacore::String& subtabname);
 
 	void separateSpwSubtable();
 	void separateFeedSubtable();
@@ -441,11 +441,11 @@ protected:
 
 
 	// Setters for Weight-based transformation
-	void propagateWeights(Bool on);
-	void setBufferMode(Bool on);
-	void setChannelAverageKernel(uInt mode);
-	void setSmoothingKernel(uInt mode);
-    void setSmoothingFourierKernel(uInt mode);
+	void propagateWeights(casacore::Bool on);
+	void setBufferMode(casacore::Bool on);
+	void setChannelAverageKernel(casacore::uInt mode);
+	void setSmoothingKernel(casacore::uInt mode);
+    void setSmoothingFourierKernel(casacore::uInt mode);
 
 	// Drop channels with non-uniform width when doing channel average
 	void dropNonUniformWidthChannels();
@@ -454,11 +454,11 @@ protected:
 	void getOutputNumberOfChannels();
 
 	// For channel averaging and selection
-	void calculateIntermediateFrequencies(	Int spwId,
-											Vector<Double> &inputChanFreq,
-											Vector<Double> &inputChanWidth,
-											Vector<Double> &intermediateChanFreq,
-											Vector<Double> &intermediateChanWidth);
+	void calculateIntermediateFrequencies(	casacore::Int spwId,
+											casacore::Vector<casacore::Double> &inputChanFreq,
+											casacore::Vector<casacore::Double> &inputChanWidth,
+											casacore::Vector<casacore::Double> &intermediateChanFreq,
+											casacore::Vector<casacore::Double> &intermediateChanWidth);
 	void calculateWeightAndSigmaFactors();
 	void calculateNewWeightAndSigmaFactors();
 
@@ -467,62 +467,62 @@ protected:
 	void checkFillWeightSpectrum();
 	void checkDataColumnsAvailable();
 	void checkDataColumnsToFill();
-	void colCheckInfo(const String& inputColName, const String& outputColName);
+	void colCheckInfo(const casacore::String& inputColName, const casacore::String& outputColName);
 
 	// Iterator set-up
 	virtual void setIterationApproach();
 	void generateIterator();
 
 	void initFrequencyTransGrid(vi::VisBuffer2 *vb);
-	void fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef);
-	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
+	void fillIdCols(vi::VisBuffer2 *vb,casacore::RefRows &rowRef);
+	void fillDataCols(vi::VisBuffer2 *vb,casacore::RefRows &rowRef);
 
-	void fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef);
+	void fillWeightCols(vi::VisBuffer2 *vb,casacore::RefRows &rowRef);
 	void transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
-									RefRows &rowRef,
-									const Cube<Float> &inputSpectrum,
-									ArrayColumn<Float> &outputCubeCol,
-									ArrayColumn<Float> &outputMatrixCol,
+									casacore::RefRows &rowRef,
+									const casacore::Cube<casacore::Float> &inputSpectrum,
+									casacore::ArrayColumn<casacore::Float> &outputCubeCol,
+									casacore::ArrayColumn<casacore::Float> &outputMatrixCol,
 									MSTransformations::weightTransformation weightTransformation,
-									Bool flushSpectrumCube);
+									casacore::Bool flushSpectrumCube);
 
-	template <class T> void setTileShape(RefRows &rowRef,ArrayColumn<T> &outputDataCol);
+	template <class T> void setTileShape(casacore::RefRows &rowRef,casacore::ArrayColumn<T> &outputDataCol);
 
-	const Cube<Float>& getApplicableSpectrum(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
-	ArrayColumn<Float>& getOutputWeightColumn(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
-	const Cube<Float>& getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb);
-	const Cube<Float>& getWeightSpectrumFlat(vi::VisBuffer2 *vb);
+	const casacore::Cube<casacore::Float>& getApplicableSpectrum(vi::VisBuffer2 *vb, casacore::MS::PredefinedColumns datacol);
+	casacore::ArrayColumn<casacore::Float>& getOutputWeightColumn(vi::VisBuffer2 *vb, casacore::MS::PredefinedColumns datacol);
+	const casacore::Cube<casacore::Float>& getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb);
+	const casacore::Cube<casacore::Float>& getWeightSpectrumFlat(vi::VisBuffer2 *vb);
 
 	// Methods to transform and write vectors
 
-	template <class T> void transformAndWriteNotReindexableVector(	const Vector<T> &inputVector,
-																	Vector<T> &outputVector,
-																	Bool constant,
-																	ScalarColumn<T> &outputCol,
-																	RefRows &rowReference);
+	template <class T> void transformAndWriteNotReindexableVector(	const casacore::Vector<T> &inputVector,
+																	casacore::Vector<T> &outputVector,
+																	casacore::Bool constant,
+																	casacore::ScalarColumn<T> &outputCol,
+																	casacore::RefRows &rowReference);
 
-	template <class T> void transformAndWriteReindexableVector(	const Vector<T> &inputVector,
-																Vector<T> &outputVector,
-																Bool constant,
-																map<uInt,uInt> &inputOutputIndexMap,
-																ScalarColumn<T> &outputCol,
-																RefRows &rowReference);
+	template <class T> void transformAndWriteReindexableVector(	const casacore::Vector<T> &inputVector,
+																casacore::Vector<T> &outputVector,
+																casacore::Bool constant,
+																map<casacore::uInt,casacore::uInt> &inputOutputIndexMap,
+																casacore::ScalarColumn<T> &outputCol,
+																casacore::RefRows &rowReference);
 
-	Bool transformDDIVector(const Vector<Int> &inputVector,Vector<Int> &outputVector);
+	casacore::Bool transformDDIVector(const casacore::Vector<casacore::Int> &inputVector,casacore::Vector<casacore::Int> &outputVector);
 
-	void mapAndAverageVector(	const Vector<Double> &inputVector,
-								Vector<Double> &outputVector);
+	void mapAndAverageVector(	const casacore::Vector<casacore::Double> &inputVector,
+								casacore::Vector<casacore::Double> &outputVector);
 
-	void mapAndAverageVector(	const Vector<Bool> &inputVector,
-								Vector<Bool> &outputVector);
+	void mapAndAverageVector(	const casacore::Vector<casacore::Bool> &inputVector,
+								casacore::Vector<casacore::Bool> &outputVector);
 
 	// Templates methods to transform vectors that must be available for MSTransformBuffer
 
-	template <class T> Bool transformNotReindexableVector(	const Vector<T> &inputVector,
-															Vector<T> &outputVector,
-															Bool constant)
+	template <class T> casacore::Bool transformNotReindexableVector(	const casacore::Vector<T> &inputVector,
+															casacore::Vector<T> &outputVector,
+															casacore::Bool constant)
 	{
-		Bool transformed = True;
+		casacore::Bool transformed = true;
 
 		if ((combinespws_p) or (nspws_p >1))
 		{
@@ -537,18 +537,18 @@ protected:
 		}
 		else
 		{
-			transformed = False;
+			transformed = false;
 		}
 
 		return transformed;
 	};
 
-	template <class T> Bool transformReindexableVector(	const Vector<T> &inputVector,
-														Vector<T> &outputVector,
-														Bool constant,
-														map<uInt,uInt> &inputOutputIndexMap)
+	template <class T> casacore::Bool transformReindexableVector(	const casacore::Vector<T> &inputVector,
+														casacore::Vector<T> &outputVector,
+														casacore::Bool constant,
+														map<casacore::uInt,casacore::uInt> &inputOutputIndexMap)
 	{
-		Bool transformed = True;
+		casacore::Bool transformed = true;
 
 		if (inputOutputIndexMap.size() == 0)
 		{
@@ -573,23 +573,23 @@ protected:
 		return transformed;
 	};
 
-	template <class T> void mapAndReindexVector(	const Vector<T> &inputVector,
-													Vector<T> &outputVector,
-													map<uInt,uInt> &inputOutputIndexMap)
+	template <class T> void mapAndReindexVector(	const casacore::Vector<T> &inputVector,
+													casacore::Vector<T> &outputVector,
+													map<casacore::uInt,casacore::uInt> &inputOutputIndexMap)
 	{
 		if (nspws_p <2)
 		{
-			for (uInt index=0; index<rowIndex_p.size();index++)
+			for (casacore::uInt index=0; index<rowIndex_p.size();index++)
 			{
 				outputVector(index) = inputOutputIndexMap[inputVector(rowIndex_p[index])];
 			}
 		}
 		else
 		{
-			uInt absoluteIndex = 0;
-			for (uInt index=0; index<rowIndex_p.size();index++)
+			casacore::uInt absoluteIndex = 0;
+			for (casacore::uInt index=0; index<rowIndex_p.size();index++)
 			{
-				for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+				for (casacore::uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
 				{
 					outputVector(absoluteIndex) = inputOutputIndexMap[inputVector(rowIndex_p[index])];
 					absoluteIndex += 1;
@@ -601,23 +601,23 @@ protected:
 	}
 
 
-	template <class T> void reindexVector(	const Vector<T> &inputVector,
-											Vector<T> &outputVector,
-											map<uInt,uInt> &inputOutputIndexMap)
+	template <class T> void reindexVector(	const casacore::Vector<T> &inputVector,
+											casacore::Vector<T> &outputVector,
+											map<casacore::uInt,casacore::uInt> &inputOutputIndexMap)
 	{
 		if (nspws_p <2)
 		{
-			for (uInt index=0; index<inputVector.shape()[0];index++)
+			for (casacore::uInt index=0; index<inputVector.shape()[0];index++)
 			{
 				outputVector(index) = inputOutputIndexMap[inputVector(index)];
 			}
 		}
 		else
 		{
-			uInt absoluteIndex = 0;
-			for (uInt index=0; index<inputVector.shape()[0];index++)
+			casacore::uInt absoluteIndex = 0;
+			for (casacore::uInt index=0; index<inputVector.shape()[0];index++)
 			{
-				for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+				for (casacore::uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
 				{
 					outputVector(absoluteIndex) = inputOutputIndexMap[inputVector(index)];
 					absoluteIndex += 1;
@@ -628,22 +628,22 @@ protected:
 		return;
 	};
 
-	template <class T> void mapVector(	const Vector<T> &inputVector,
-										Vector<T> &outputVector)
+	template <class T> void mapVector(	const casacore::Vector<T> &inputVector,
+										casacore::Vector<T> &outputVector)
 	{
 		if (nspws_p < 2)
 		{
-			for (uInt index=0; index<rowIndex_p.size();index++)
+			for (casacore::uInt index=0; index<rowIndex_p.size();index++)
 			{
 				outputVector(index) = inputVector(rowIndex_p[index]);
 			}
 		}
 		else
 		{
-			uInt absoluteIndex = 0;
-			for (uInt index=0; index<rowIndex_p.size();index++)
+			casacore::uInt absoluteIndex = 0;
+			for (casacore::uInt index=0; index<rowIndex_p.size();index++)
 			{
-				for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
+				for (casacore::uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
 				{
 					outputVector(absoluteIndex) = inputVector(rowIndex_p[index]);
 					absoluteIndex += 1;
@@ -659,14 +659,14 @@ protected:
 	// Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWsxnScans/nStates]
 	// into an output matrix with shape [nCol,nBaselinesxnScans/nStates]
 	// ------------------------------------------------------------------------------------
-	template <class T> void mapMatrix(	const Matrix<T> &inputMatrix,Matrix<T> &outputMatrix)
+	template <class T> void mapMatrix(	const casacore::Matrix<T> &inputMatrix,casacore::Matrix<T> &outputMatrix)
 	{
 		// Get number of columns
-		uInt nCols = outputMatrix.shape()(0);
+		casacore::uInt nCols = outputMatrix.shape()(0);
 
-		for (uInt index=0; index<rowIndex_p.size();index++)
+		for (casacore::uInt index=0; index<rowIndex_p.size();index++)
 		{
-			for (uInt col = 0; col < nCols; col++)
+			for (casacore::uInt col = 0; col < nCols; col++)
 			{
 				outputMatrix(col,index) = inputMatrix(col,rowIndex_p[index]);
 			}
@@ -676,761 +676,761 @@ protected:
 	}
 
 
-	template <class T> void mapAndAverageMatrix(	const Matrix<T> &inputMatrix,
-													Matrix<T> &outputMatrix,
-													Bool convolveFlags=False,
+	template <class T> void mapAndAverageMatrix(	const casacore::Matrix<T> &inputMatrix,
+													casacore::Matrix<T> &outputMatrix,
+													casacore::Bool convolveFlags=false,
 													vi::VisBuffer2 *vb=NULL);
-	template <class T> void mapAndScaleMatrix(	const Matrix<T> &inputMatrix,
-												Matrix<T> &outputMatrix,
-												map<uInt,T> scaleMap,
-												Vector<Int> spws);
-	template <class T> void writeMatrix(	const Matrix<T> &inputMatrix,
-											ArrayColumn<T> &outputCol,
-											RefRows &rowRef,
-											uInt nBlocks);
+	template <class T> void mapAndScaleMatrix(	const casacore::Matrix<T> &inputMatrix,
+												casacore::Matrix<T> &outputMatrix,
+												map<casacore::uInt,T> scaleMap,
+												casacore::Vector<casacore::Int> spws);
+	template <class T> void writeMatrix(	const casacore::Matrix<T> &inputMatrix,
+											casacore::ArrayColumn<T> &outputCol,
+											casacore::RefRows &rowRef,
+											casacore::uInt nBlocks);
 
 	// Methods to transform and write cubes
 
-	template <class T> void writeCube(	const Cube<T> &inputCube,
-										ArrayColumn<T> &outputCol,
-										RefRows &rowRef);
+	template <class T> void writeCube(	const casacore::Cube<T> &inputCube,
+										casacore::ArrayColumn<T> &outputCol,
+										casacore::RefRows &rowRef);
 
 	void transformCubeOfData(	vi::VisBuffer2 *vb,
-								RefRows &rowRef,
-								const Cube<Complex> &inputDataCube,
-								ArrayColumn<Complex> &outputDataCol,
-								ArrayColumn<Bool> *outputFlagCol,
-								const Cube<Float> &inputWeightCube);
+								casacore::RefRows &rowRef,
+								const casacore::Cube<casacore::Complex> &inputDataCube,
+								casacore::ArrayColumn<casacore::Complex> &outputDataCol,
+								casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+								const casacore::Cube<casacore::Float> &inputWeightCube);
 	void transformCubeOfData(	vi::VisBuffer2 *vb,
-								RefRows &rowRef,
-								const Cube<Float> &inputDataCube,
-								ArrayColumn<Float> &outputDataCol,
-								ArrayColumn<Bool> *outputFlagCol,
-								const Cube<Float> &inputWeightCube);
+								casacore::RefRows &rowRef,
+								const casacore::Cube<casacore::Float> &inputDataCube,
+								casacore::ArrayColumn<casacore::Float> &outputDataCol,
+								casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+								const casacore::Cube<casacore::Float> &inputWeightCube);
 	void (casa::MSTransformManager::*transformCubeOfDataComplex_p)(	vi::VisBuffer2 *vb,
-																		RefRows &rowRef,
-																		const Cube<Complex> &inputDataCube,
-																		ArrayColumn<Complex> &outputDataCol,
-																		ArrayColumn<Bool> *outputFlagCol,
-																		const Cube<Float> &inputWeightCube);
+																		casacore::RefRows &rowRef,
+																		const casacore::Cube<casacore::Complex> &inputDataCube,
+																		casacore::ArrayColumn<casacore::Complex> &outputDataCol,
+																		casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+																		const casacore::Cube<casacore::Float> &inputWeightCube);
 	void (casa::MSTransformManager::*transformCubeOfDataFloat_p)(	vi::VisBuffer2 *vb,
-																		RefRows &rowRef,
-																		const Cube<Float> &inputDataCube,
-																		ArrayColumn<Float> &outputDataCol,
-																		ArrayColumn<Bool> *outputFlagCol,
-																		const Cube<Float> &inputWeightCube);
+																		casacore::RefRows &rowRef,
+																		const casacore::Cube<casacore::Float> &inputDataCube,
+																		casacore::ArrayColumn<casacore::Float> &outputDataCol,
+																		casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+																		const casacore::Cube<casacore::Float> &inputWeightCube);
 
 	template <class T> void copyCubeOfData(	vi::VisBuffer2 *vb,
-											RefRows &rowRef,
-											const Cube<T> &inputDataCube,
-											ArrayColumn<T> &outputDataCol,
-											ArrayColumn<Bool> *outputFlagCol,
-											const Cube<Float> &inputWeightCube);
+											casacore::RefRows &rowRef,
+											const casacore::Cube<T> &inputDataCube,
+											casacore::ArrayColumn<T> &outputDataCol,
+											casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+											const casacore::Cube<casacore::Float> &inputWeightCube);
 
 	template <class T> void combineCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol,
-												const Cube<Float> &inputWeightCube);
+												casacore::RefRows &rowRef,
+												const casacore::Cube<T> &inputDataCube,
+												casacore::ArrayColumn<T> &outputDataCol,
+												casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+												const casacore::Cube<casacore::Float> &inputWeightCube);
 
 	// Methods to transform data in cubes
 
-	void addWeightSpectrumContribution(	Double &weight,
-										uInt &pol,
-										uInt &inputChannel,
-										uInt &row,
-										const Cube<Float> &inputWeightsCube);
-	void dontAddWeightSpectrumContribution(	Double &weight,
-											uInt &pol,
-											uInt &inputChannel,
-											uInt &row,
-											const Cube<Float> &inputWeightsCube);
-	void (casa::MSTransformManager::*addWeightSpectrumContribution_p)(	Double &weight,
-																			uInt &pol,
-																			uInt &inputChannel,
-																			uInt &row,
-																			const Cube<Float> &inputWeightsCube);
+	void addWeightSpectrumContribution(	casacore::Double &weight,
+										casacore::uInt &pol,
+										casacore::uInt &inputChannel,
+										casacore::uInt &row,
+										const casacore::Cube<casacore::Float> &inputWeightsCube);
+	void dontAddWeightSpectrumContribution(	casacore::Double &weight,
+											casacore::uInt &pol,
+											casacore::uInt &inputChannel,
+											casacore::uInt &row,
+											const casacore::Cube<casacore::Float> &inputWeightsCube);
+	void (casa::MSTransformManager::*addWeightSpectrumContribution_p)(	casacore::Double &weight,
+																			casacore::uInt &pol,
+																			casacore::uInt &inputChannel,
+																			casacore::uInt &row,
+																			const casacore::Cube<casacore::Float> &inputWeightsCube);
 
 
-	void fillWeightsPlane(	uInt pol,
-							uInt inputChannel,
-							uInt outputChannel,
-							uInt inputRow,
-							const Cube<Float> &inputWeightsCube,
-							Matrix<Float> &inputWeightsPlane,
-							Double weight);
-	void dontfillWeightsPlane(	uInt ,
-								uInt ,
-								uInt ,
-								uInt ,
-								const Cube<Float> &,
-								Matrix<Float> &,
-								Double ) {return;}
-	void (casa::MSTransformManager::*fillWeightsPlane_p)(	uInt pol,
-																uInt inputChannel,
-																uInt outputChannel,
-																uInt inputRow,
-																const Cube<Float> &inputWeightsCube,
-																Matrix<Float> &inputWeightsPlane,
-																Double weight);
+	void fillWeightsPlane(	casacore::uInt pol,
+							casacore::uInt inputChannel,
+							casacore::uInt outputChannel,
+							casacore::uInt inputRow,
+							const casacore::Cube<casacore::Float> &inputWeightsCube,
+							casacore::Matrix<casacore::Float> &inputWeightsPlane,
+							casacore::Double weight);
+	void dontfillWeightsPlane(	casacore::uInt ,
+								casacore::uInt ,
+								casacore::uInt ,
+								casacore::uInt ,
+								const casacore::Cube<casacore::Float> &,
+								casacore::Matrix<casacore::Float> &,
+								casacore::Double ) {return;}
+	void (casa::MSTransformManager::*fillWeightsPlane_p)(	casacore::uInt pol,
+																casacore::uInt inputChannel,
+																casacore::uInt outputChannel,
+																casacore::uInt inputRow,
+																const casacore::Cube<casacore::Float> &inputWeightsCube,
+																casacore::Matrix<casacore::Float> &inputWeightsPlane,
+																casacore::Double weight);
 
-	void normalizeWeightsPlane(	uInt pol,
-								uInt outputChannel,
-								Matrix<Float> &inputPlaneWeights,
-								Matrix<Double> &normalizingFactorPlane);
-	void dontNormalizeWeightsPlane(	uInt ,
-									uInt ,
-									Matrix<Float> &,
-									Matrix<Double> &) {return;}
-	void (casa::MSTransformManager::*normalizeWeightsPlane_p)(	uInt pol,
-																	uInt outputChannel,
-																	Matrix<Float> &inputPlaneWeights,
-																	Matrix<Double> &normalizingFactorPlane);
+	void normalizeWeightsPlane(	casacore::uInt pol,
+								casacore::uInt outputChannel,
+								casacore::Matrix<casacore::Float> &inputPlaneWeights,
+								casacore::Matrix<casacore::Double> &normalizingFactorPlane);
+	void dontNormalizeWeightsPlane(	casacore::uInt ,
+									casacore::uInt ,
+									casacore::Matrix<casacore::Float> &,
+									casacore::Matrix<casacore::Double> &) {return;}
+	void (casa::MSTransformManager::*normalizeWeightsPlane_p)(	casacore::uInt pol,
+																	casacore::uInt outputChannel,
+																	casacore::Matrix<casacore::Float> &inputPlaneWeights,
+																	casacore::Matrix<casacore::Double> &normalizingFactorPlane);
 
 	template <class T> void averageCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol,
-												const Cube<Float> &inputWeightCube);
+												casacore::RefRows &rowRef,
+												const casacore::Cube<T> &inputDataCube,
+												casacore::ArrayColumn<T> &outputDataCol,
+												casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+												const casacore::Cube<casacore::Float> &inputWeightCube);
 	template <class T> void smoothCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol,
-												const Cube<Float> &inputWeightCube);
+												casacore::RefRows &rowRef,
+												const casacore::Cube<T> &inputDataCube,
+												casacore::ArrayColumn<T> &outputDataCol,
+												casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+												const casacore::Cube<casacore::Float> &inputWeightCube);
 	template <class T> void regridCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol,
-												const Cube<Float> &inputWeightCube);
+												casacore::RefRows &rowRef,
+												const casacore::Cube<T> &inputDataCube,
+												casacore::ArrayColumn<T> &outputDataCol,
+												casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+												const casacore::Cube<casacore::Float> &inputWeightCube);
 	template <class T> void separateCubeOfData(	vi::VisBuffer2 *vb,
-												RefRows &rowRef,
-												const Cube<T> &inputDataCube,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol,
-												const Cube<Float> &inputWeightCube);
+												casacore::RefRows &rowRef,
+												const casacore::Cube<T> &inputDataCube,
+												casacore::ArrayColumn<T> &outputDataCol,
+												casacore::ArrayColumn<casacore::Bool> *outputFlagCol,
+												const casacore::Cube<casacore::Float> &inputWeightCube);
 
-	template <class T> void transformAndWriteCubeOfData(	Int inputSpw,
-															RefRows &rowRef,
-															const Cube<T> &inputDataCube,
-															const Cube<Bool> &inputFlagsCube,
-															const Cube<Float> &inputWeightsCube,
-															IPosition &outputPlaneShape,
-															ArrayColumn<T> &outputDataCol,
-															ArrayColumn<Bool> *outputFlagCol);
-
-
-	void setWeightsPlaneByReference(	uInt inputRow,
-										const Cube<Float> &inputWeightsCube,
-										Matrix<Float> &inputWeightsPlane);
-	void dontsetWeightsPlaneByReference(	uInt ,
-											const Cube<Float> &,
-											Matrix<Float> &) {return;}
-	void (casa::MSTransformManager::*setWeightsPlaneByReference_p)(	uInt inputRow,
-																		const Cube<Float> &inputWeightsCube,
-																		Matrix<Float> &inputWeightsPlane);
-
-	template <class T> void transformAndWritePlaneOfData(	Int inputSpw,
-															uInt row,
-															Matrix<T> &inputDataPlane,
-															Matrix<Bool> &inputFlagsPlane,
-															Matrix<Float> &inputWeightsPlane,
-															Matrix<T> &outputDataPlane,
-															Matrix<Bool> &outputFlagsPlane,
-															ArrayColumn<T> &outputDataCol,
-															ArrayColumn<Bool> *outputFlagCol);
-	void setWeightStripeByReference(	uInt corrIndex,
-										Matrix<Float> &inputWeightsPlane,
-										Vector<Float> &inputWeightsStripe);
-	void dontSetWeightStripeByReference(	uInt ,
-											Matrix<Float> &,
-											Vector<Float> &) {return;}
-	void (casa::MSTransformManager::*setWeightStripeByReference_p)(	uInt corrIndex,
-																		Matrix<Float> &inputWeightsPlane,
-																		Vector<Float> &inputWeightsStripe);
-
-	void setOutputbuffer(Cube<Complex> *& dataBufferPointer,Cube<Bool> *& flagBufferPointer);
-	void setOutputbuffer(Cube<Float> *& dataBufferPointer,Cube<Bool> *& flagBufferPointer);
-
-	template <class T> void bufferOutputPlanes(	uInt row,
-												Matrix<T> &outputDataPlane,
-												Matrix<Bool> &outputFlagsPlane,
-												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> &outputFlagCol);
-	template <class T> void bufferOutputPlanesInSlices(	uInt row,
-														Matrix<T> &outputDataPlane,
-														Matrix<Bool> &outputFlagsPlane,
-														ArrayColumn<T> &outputDataCol,
-														ArrayColumn<Bool> &outputFlagCol);
-
-	void writeOutputPlanes(	uInt row,
-							Matrix<Complex> &outputDataPlane,
-							Matrix<Bool> &outputFlagsPlane,
-							ArrayColumn<Complex> &outputDataCol,
-							ArrayColumn<Bool> &outputFlagCol);
-	void writeOutputPlanes(	uInt row,
-							Matrix<Float> &outputDataPlane,
-							Matrix<Bool> &outputFlagsPlane,
-							ArrayColumn<Float> &outputDataCol,
-							ArrayColumn<Bool> &outputFlagCol);
-	void (casa::MSTransformManager::*writeOutputPlanesComplex_p)(	uInt row,
-																		Matrix<Complex> &outputDataPlane,
-																		Matrix<Bool> &outputFlagsPlane,
-																		ArrayColumn<Complex> &outputDataCol,
-																		ArrayColumn<Bool> &outputFlagCol);
-	void (casa::MSTransformManager::*writeOutputPlanesFloat_p)(	uInt row,
-																	Matrix<Float> &outputDataPlane,
-																	Matrix<Bool> &outputFlagsPlane,
-																	ArrayColumn<Float> &outputDataCol,
-																	ArrayColumn<Bool> &outputFlagCol);
-
-	template <class T> void writeOutputPlanesInBlock(	uInt row,
-														Matrix<T> &outputDataPlane,
-														Matrix<Bool> &outputFlagsPlane,
-														ArrayColumn<T> &outputDataCol,
-														ArrayColumn<Bool> &outputFlagCol);
-	void (casa::MSTransformManager::*writeOutputFlagsPlane_p)(	Matrix<Bool> &outputPlane,
-																	ArrayColumn<Bool> &outputCol,
-																	IPosition &outputPlaneShape,
-																	uInt &outputRow);
-	void writeOutputFlagsPlane(	Matrix<Bool> &outputPlane,
-								ArrayColumn<Bool> &outputCol,
-								IPosition &outputPlaneShape,
-								uInt &outputRow);
-	void dontWriteOutputFlagsPlane(	Matrix<Bool> &,
-									ArrayColumn<Bool> &,
-									IPosition &,
-									uInt &) {return;}
-
-	template <class T> void writeOutputPlanesInSlices(	uInt row,
-														Matrix<T> &outputDataPlane,
-														Matrix<Bool> &outputFlagsPlane,
-														ArrayColumn<T> &outputDataCol,
-														ArrayColumn<Bool> &outputFlagCol);
-	template <class T> void writeOutputPlaneSlices(	Matrix<T> &outputPlane,
-													ArrayColumn<T> &outputDataCol,
-													Slice &sliceX,
-													Slice &sliceY,
-													IPosition &outputPlaneShape,
-													uInt &outputRow);
-	template <class T> void writeOutputPlaneReshapedSlices(	Matrix<T> &outputPlane,
-															ArrayColumn<T> &outputDataCol,
-															Slice &sliceX,
-															Slice &sliceY,
-															IPosition &outputPlaneShape,
-															uInt &outputRow);
-	void (casa::MSTransformManager::*writeOutputFlagsPlaneSlices_p)(	Matrix<Bool> &outputPlane,
-																			ArrayColumn<Bool> &outputCol,
-																			Slice &sliceX,
-																			Slice &sliceY,
-																			IPosition &outputPlaneShape,
-																			uInt &outputRow);
-	void writeOutputFlagsPlaneSlices(	Matrix<Bool> &outputPlane,
-										ArrayColumn<Bool> &outputCol,
-										Slice &sliceX,
-										Slice &sliceY,
-										IPosition &outputPlaneShape,
-										uInt &outputRow);
-	void dontWriteOutputFlagsPlaneSlices(	Matrix<Bool> &,
-											ArrayColumn<Bool> &,
-											Slice &,
-											Slice &,
-											IPosition &,
-											uInt &) {return;}
-	void (casa::MSTransformManager::*writeOutputFlagsPlaneReshapedSlices_p)(	Matrix<Bool> &outputPlane,
-																					ArrayColumn<Bool> &outputCol,
-																					Slice &sliceX,
-																					Slice &sliceY,
-																					IPosition &outputPlaneShape,
-																					uInt &outputRow);
-	void writeOutputFlagsPlaneReshapedSlices(	Matrix<Bool> &outputPlane,
-												ArrayColumn<Bool> &outputCol,
-												Slice &sliceX,
-												Slice &sliceY,
-												IPosition &outputPlaneShape,
-												uInt &outputRow);
-	void dontWriteOutputPlaneReshapedSlices(	Matrix<Bool> &,
-												ArrayColumn<Bool> &,
-												Slice &,
-												Slice &,
-												IPosition &,
-												uInt &) {return;}
-
-	void transformStripeOfData(	Int inputSpw,
-								Vector<Complex> &inputDataStripe,
-								Vector<Bool> &inputFlagsStripe,
-								Vector<Float> &inputWeightsStripe,
-								Vector<Complex> &outputDataStripe,
-								Vector<Bool> &outputFlagsStripe);
-	void transformStripeOfData(	Int inputSpw,
-								Vector<Float> &inputDataStripe,
-								Vector<Bool> &inputFlagsStripe,
-								Vector<Float> &inputWeightsStripe,
-								Vector<Float> &outputDataStripe,
-								Vector<Bool> &outputFlagsStripe);
-	void (casa::MSTransformManager::*transformStripeOfDataComplex_p)(	Int inputSpw,
-																			Vector<Complex> &inputDataStripe,
-																			Vector<Bool> &inputFlagsStripe,
-																			Vector<Float> &inputWeightsStripe,
-																			Vector<Complex> &outputDataStripe,
-																			Vector<Bool> &outputFlagsStripe);
-	void (casa::MSTransformManager::*transformStripeOfDataFloat_p)(	Int inputSpw,
-																		Vector<Float> &inputDataStripe,
-																		Vector<Bool> &inputFlagsStripe,
-																		Vector<Float> &inputWeightsStripe,
-																		Vector<Float> &outputDataStripe,
-																		Vector<Bool> &outputFlagsStripe);
-
-	template <class T> void average(	Int inputSpw,
-										Vector<T> &inputDataStripe,
-										Vector<Bool> &inputFlagsStripe,
-										Vector<Float> &inputWeightsStripe,
-										Vector<T> &outputDataStripe,
-										Vector<Bool> &outputFlagsStripe);
-	template <class T> void simpleAverage(	uInt width,
-											Vector<T> &inputData,
-											Vector<T> &outputData);
-	void averageKernel(	Vector<Complex> &inputData,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Complex> &outputData,
-						Vector<Bool> &outputFlags,
-						uInt startInputPos,
-						uInt outputPos,
-						uInt width);
-	void averageKernel(	Vector<Float> &inputData,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Float> &outputData,
-						Vector<Bool> &outputFlags,
-						uInt startInputPos,
-						uInt outputPos,
-						uInt width);
-	void (casa::MSTransformManager::*averageKernelComplex_p)(	Vector<Complex> &inputData,
-																	Vector<Bool> &inputFlags,
-																	Vector<Float> &inputWeights,
-																	Vector<Complex> &outputData,
-																	Vector<Bool> &outputFlags,
-																	uInt startInputPos,
-																	uInt outputPos,
-																	uInt width);
-	void (casa::MSTransformManager::*averageKernelFloat_p)(		Vector<Float> &inputData,
-																	Vector<Bool> &inputFlags,
-																	Vector<Float> &inputWeights,
-																	Vector<Float> &outputData,
-																	Vector<Bool> &outputFlags,
-																	uInt startInputPos,
-																	uInt outputPos,
-																	uInt width);
-	template <class T> void simpleAverageKernel(	Vector<T> &inputData,
-													Vector<Bool> &,
-													Vector<Float> &,
-													Vector<T> &outputData,
-													Vector<Bool> &,
-													uInt startInputPos,
-													uInt outputPos,
-													uInt width);
-	template <class T> void flagAverageKernel(	Vector<T> &inputData,
-												Vector<Bool> &inputFlags,
-												Vector<Float> &,
-												Vector<T> &outputData,
-												Vector<Bool> &outputFlags,
-												uInt startInputPos,
-												uInt outputPos,
-												uInt width);
-	template <class T> void weightAverageKernel(	Vector<T> &inputData,
-													Vector<Bool> &,
-													Vector<Float> &inputWeights,
-													Vector<T> &outputData,
-													Vector<Bool> &outputFlags,
-													uInt startInputPos,
-													uInt outputPos,
-													uInt width);
-	template <class T> void cumSumKernel(	Vector<T> &inputData,
-											Vector<Bool> &,
-											Vector<Float> &,
-											Vector<T> &outputData,
-											Vector<Bool> &,
-											uInt startInputPos,
-											uInt outputPos,
-											uInt width);
-	template <class T> void flagWeightAverageKernel(	Vector<T> &inputData,
-														Vector<Bool> &inputFlags,
-														Vector<Float> &inputWeights,
-														Vector<T> &outputData,
-														Vector<Bool> &outputFlags,
-														uInt startInputPos,
-														uInt outputPos,
-														uInt width);
-	template <class T> void flagCumSumKernel(	Vector<T> &inputData,
-												Vector<Bool> &inputFlags,
-												Vector<Float> &,
-												Vector<T> &outputData,
-												Vector<Bool> &,
-												uInt startInputPos,
-												uInt outputPos,
-												uInt width);
-
-	template <class T> void flagNonZeroAverageKernel(	Vector<T> &inputData,
-														Vector<Bool> &inputFlags,
-														Vector<Float> &,
-														Vector<T> &outputData,
-														Vector<Bool> &,
-														uInt startInputPos,
-														uInt outputPos,
-														uInt width);
-	template <class T> void flagWeightNonZeroAverageKernel(	Vector<T> &inputData,
-															Vector<Bool> &inputFlags,
-															Vector<Float> &,
-															Vector<T> &outputData,
-															Vector<Bool> &,
-															uInt startInputPos,
-															uInt outputPos,
-															uInt width);
-	template <class T> void flagCumSumNonZeroKernel(	Vector<T> &inputData,
-														Vector<Bool> &inputFlags,
-														Vector<Float> &,
-														Vector<T> &outputData,
-														Vector<Bool> &,
-														uInt startInputPos,
-														uInt outputPos,
-														uInt width);
+	template <class T> void transformAndWriteCubeOfData(	casacore::Int inputSpw,
+															casacore::RefRows &rowRef,
+															const casacore::Cube<T> &inputDataCube,
+															const casacore::Cube<casacore::Bool> &inputFlagsCube,
+															const casacore::Cube<casacore::Float> &inputWeightsCube,
+															casacore::IPosition &outputPlaneShape,
+															casacore::ArrayColumn<T> &outputDataCol,
+															casacore::ArrayColumn<casacore::Bool> *outputFlagCol);
 
 
-	template <class T> void smooth(	Int inputSpw,
-									Vector<T> &inputDataStripe,
-									Vector<Bool> &inputFlagsStripe,
-									Vector<Float> &inputWeightsStripe,
-									Vector<T> &outputDataStripe,
-									Vector<Bool> &outputFlagsStripe);
-	void smoothKernel(	Vector<Complex> &inputData,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Complex> &outputData,
-						Vector<Bool> &outputFlags,
-						uInt outputPos);
-	void smoothKernel(	Vector<Float> &inputData,
-						Vector<Bool> &inputFlags,
-						Vector<Float> &inputWeights,
-						Vector<Float> &outputData,
-						Vector<Bool> &outputFlags,
-						uInt outputPos);
-	void (casa::MSTransformManager::*smoothKernelComplex_p)(	Vector<Complex> &inputData,
-																Vector<Bool> &inputFlags,
-																Vector<Float> &inputWeights,
-																Vector<Complex> &outputData,
-																Vector<Bool> &outputFlags,
-																uInt outputPos);
-	void (casa::MSTransformManager::*smoothKernelFloat_p)(		Vector<Float> &inputData,
-																Vector<Bool> &inputFlags,
-																Vector<Float> &inputWeights,
-																Vector<Float> &outputData,
-																Vector<Bool> &outputFlags,
-																uInt outputPos);
-	template <class T> void plainSmooth(	Vector<T> &inputData,
-											Vector<Bool> &inputFlags,
-											Vector<Float> &inputWeights,
-											Vector<T> &outputData,
-											Vector<Bool> &outputFlags,
-											uInt outputPos);
+	void setWeightsPlaneByReference(	casacore::uInt inputRow,
+										const casacore::Cube<casacore::Float> &inputWeightsCube,
+										casacore::Matrix<casacore::Float> &inputWeightsPlane);
+	void dontsetWeightsPlaneByReference(	casacore::uInt ,
+											const casacore::Cube<casacore::Float> &,
+											casacore::Matrix<casacore::Float> &) {return;}
+	void (casa::MSTransformManager::*setWeightsPlaneByReference_p)(	casacore::uInt inputRow,
+																		const casacore::Cube<casacore::Float> &inputWeightsCube,
+																		casacore::Matrix<casacore::Float> &inputWeightsPlane);
 
-	template <class T> void plainSmoothSpectrum(	Vector<T> &inputData,
-													Vector<Bool> &inputFlags,
-													Vector<Float> &inputWeights,
-													Vector<T> &outputData,
-													Vector<Bool> &outputFlags,
-													uInt outputPos);
+	template <class T> void transformAndWritePlaneOfData(	casacore::Int inputSpw,
+															casacore::uInt row,
+															casacore::Matrix<T> &inputDataPlane,
+															casacore::Matrix<casacore::Bool> &inputFlagsPlane,
+															casacore::Matrix<casacore::Float> &inputWeightsPlane,
+															casacore::Matrix<T> &outputDataPlane,
+															casacore::Matrix<casacore::Bool> &outputFlagsPlane,
+															casacore::ArrayColumn<T> &outputDataCol,
+															casacore::ArrayColumn<casacore::Bool> *outputFlagCol);
+	void setWeightStripeByReference(	casacore::uInt corrIndex,
+										casacore::Matrix<casacore::Float> &inputWeightsPlane,
+										casacore::Vector<casacore::Float> &inputWeightsStripe);
+	void dontSetWeightStripeByReference(	casacore::uInt ,
+											casacore::Matrix<casacore::Float> &,
+											casacore::Vector<casacore::Float> &) {return;}
+	void (casa::MSTransformManager::*setWeightStripeByReference_p)(	casacore::uInt corrIndex,
+																		casacore::Matrix<casacore::Float> &inputWeightsPlane,
+																		casacore::Vector<casacore::Float> &inputWeightsStripe);
+
+	void setOutputbuffer(casacore::Cube<casacore::Complex> *& dataBufferPointer,casacore::Cube<casacore::Bool> *& flagBufferPointer);
+	void setOutputbuffer(casacore::Cube<casacore::Float> *& dataBufferPointer,casacore::Cube<casacore::Bool> *& flagBufferPointer);
+
+	template <class T> void bufferOutputPlanes(	casacore::uInt row,
+												casacore::Matrix<T> &outputDataPlane,
+												casacore::Matrix<casacore::Bool> &outputFlagsPlane,
+												casacore::ArrayColumn<T> &outputDataCol,
+												casacore::ArrayColumn<casacore::Bool> &outputFlagCol);
+	template <class T> void bufferOutputPlanesInSlices(	casacore::uInt row,
+														casacore::Matrix<T> &outputDataPlane,
+														casacore::Matrix<casacore::Bool> &outputFlagsPlane,
+														casacore::ArrayColumn<T> &outputDataCol,
+														casacore::ArrayColumn<casacore::Bool> &outputFlagCol);
+
+	void writeOutputPlanes(	casacore::uInt row,
+							casacore::Matrix<casacore::Complex> &outputDataPlane,
+							casacore::Matrix<casacore::Bool> &outputFlagsPlane,
+							casacore::ArrayColumn<casacore::Complex> &outputDataCol,
+							casacore::ArrayColumn<casacore::Bool> &outputFlagCol);
+	void writeOutputPlanes(	casacore::uInt row,
+							casacore::Matrix<casacore::Float> &outputDataPlane,
+							casacore::Matrix<casacore::Bool> &outputFlagsPlane,
+							casacore::ArrayColumn<casacore::Float> &outputDataCol,
+							casacore::ArrayColumn<casacore::Bool> &outputFlagCol);
+	void (casa::MSTransformManager::*writeOutputPlanesComplex_p)(	casacore::uInt row,
+																		casacore::Matrix<casacore::Complex> &outputDataPlane,
+																		casacore::Matrix<casacore::Bool> &outputFlagsPlane,
+																		casacore::ArrayColumn<casacore::Complex> &outputDataCol,
+																		casacore::ArrayColumn<casacore::Bool> &outputFlagCol);
+	void (casa::MSTransformManager::*writeOutputPlanesFloat_p)(	casacore::uInt row,
+																	casacore::Matrix<casacore::Float> &outputDataPlane,
+																	casacore::Matrix<casacore::Bool> &outputFlagsPlane,
+																	casacore::ArrayColumn<casacore::Float> &outputDataCol,
+																	casacore::ArrayColumn<casacore::Bool> &outputFlagCol);
+
+	template <class T> void writeOutputPlanesInBlock(	casacore::uInt row,
+														casacore::Matrix<T> &outputDataPlane,
+														casacore::Matrix<casacore::Bool> &outputFlagsPlane,
+														casacore::ArrayColumn<T> &outputDataCol,
+														casacore::ArrayColumn<casacore::Bool> &outputFlagCol);
+	void (casa::MSTransformManager::*writeOutputFlagsPlane_p)(	casacore::Matrix<casacore::Bool> &outputPlane,
+																	casacore::ArrayColumn<casacore::Bool> &outputCol,
+																	casacore::IPosition &outputPlaneShape,
+																	casacore::uInt &outputRow);
+	void writeOutputFlagsPlane(	casacore::Matrix<casacore::Bool> &outputPlane,
+								casacore::ArrayColumn<casacore::Bool> &outputCol,
+								casacore::IPosition &outputPlaneShape,
+								casacore::uInt &outputRow);
+	void dontWriteOutputFlagsPlane(	casacore::Matrix<casacore::Bool> &,
+									casacore::ArrayColumn<casacore::Bool> &,
+									casacore::IPosition &,
+									casacore::uInt &) {return;}
+
+	template <class T> void writeOutputPlanesInSlices(	casacore::uInt row,
+														casacore::Matrix<T> &outputDataPlane,
+														casacore::Matrix<casacore::Bool> &outputFlagsPlane,
+														casacore::ArrayColumn<T> &outputDataCol,
+														casacore::ArrayColumn<casacore::Bool> &outputFlagCol);
+	template <class T> void writeOutputPlaneSlices(	casacore::Matrix<T> &outputPlane,
+													casacore::ArrayColumn<T> &outputDataCol,
+													casacore::Slice &sliceX,
+													casacore::Slice &sliceY,
+													casacore::IPosition &outputPlaneShape,
+													casacore::uInt &outputRow);
+	template <class T> void writeOutputPlaneReshapedSlices(	casacore::Matrix<T> &outputPlane,
+															casacore::ArrayColumn<T> &outputDataCol,
+															casacore::Slice &sliceX,
+															casacore::Slice &sliceY,
+															casacore::IPosition &outputPlaneShape,
+															casacore::uInt &outputRow);
+	void (casa::MSTransformManager::*writeOutputFlagsPlaneSlices_p)(	casacore::Matrix<casacore::Bool> &outputPlane,
+																			casacore::ArrayColumn<casacore::Bool> &outputCol,
+																			casacore::Slice &sliceX,
+																			casacore::Slice &sliceY,
+																			casacore::IPosition &outputPlaneShape,
+																			casacore::uInt &outputRow);
+	void writeOutputFlagsPlaneSlices(	casacore::Matrix<casacore::Bool> &outputPlane,
+										casacore::ArrayColumn<casacore::Bool> &outputCol,
+										casacore::Slice &sliceX,
+										casacore::Slice &sliceY,
+										casacore::IPosition &outputPlaneShape,
+										casacore::uInt &outputRow);
+	void dontWriteOutputFlagsPlaneSlices(	casacore::Matrix<casacore::Bool> &,
+											casacore::ArrayColumn<casacore::Bool> &,
+											casacore::Slice &,
+											casacore::Slice &,
+											casacore::IPosition &,
+											casacore::uInt &) {return;}
+	void (casa::MSTransformManager::*writeOutputFlagsPlaneReshapedSlices_p)(	casacore::Matrix<casacore::Bool> &outputPlane,
+																					casacore::ArrayColumn<casacore::Bool> &outputCol,
+																					casacore::Slice &sliceX,
+																					casacore::Slice &sliceY,
+																					casacore::IPosition &outputPlaneShape,
+																					casacore::uInt &outputRow);
+	void writeOutputFlagsPlaneReshapedSlices(	casacore::Matrix<casacore::Bool> &outputPlane,
+												casacore::ArrayColumn<casacore::Bool> &outputCol,
+												casacore::Slice &sliceX,
+												casacore::Slice &sliceY,
+												casacore::IPosition &outputPlaneShape,
+												casacore::uInt &outputRow);
+	void dontWriteOutputPlaneReshapedSlices(	casacore::Matrix<casacore::Bool> &,
+												casacore::ArrayColumn<casacore::Bool> &,
+												casacore::Slice &,
+												casacore::Slice &,
+												casacore::IPosition &,
+												casacore::uInt &) {return;}
+
+	void transformStripeOfData(	casacore::Int inputSpw,
+								casacore::Vector<casacore::Complex> &inputDataStripe,
+								casacore::Vector<casacore::Bool> &inputFlagsStripe,
+								casacore::Vector<casacore::Float> &inputWeightsStripe,
+								casacore::Vector<casacore::Complex> &outputDataStripe,
+								casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	void transformStripeOfData(	casacore::Int inputSpw,
+								casacore::Vector<casacore::Float> &inputDataStripe,
+								casacore::Vector<casacore::Bool> &inputFlagsStripe,
+								casacore::Vector<casacore::Float> &inputWeightsStripe,
+								casacore::Vector<casacore::Float> &outputDataStripe,
+								casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	void (casa::MSTransformManager::*transformStripeOfDataComplex_p)(	casacore::Int inputSpw,
+																			casacore::Vector<casacore::Complex> &inputDataStripe,
+																			casacore::Vector<casacore::Bool> &inputFlagsStripe,
+																			casacore::Vector<casacore::Float> &inputWeightsStripe,
+																			casacore::Vector<casacore::Complex> &outputDataStripe,
+																			casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	void (casa::MSTransformManager::*transformStripeOfDataFloat_p)(	casacore::Int inputSpw,
+																		casacore::Vector<casacore::Float> &inputDataStripe,
+																		casacore::Vector<casacore::Bool> &inputFlagsStripe,
+																		casacore::Vector<casacore::Float> &inputWeightsStripe,
+																		casacore::Vector<casacore::Float> &outputDataStripe,
+																		casacore::Vector<casacore::Bool> &outputFlagsStripe);
+
+	template <class T> void average(	casacore::Int inputSpw,
+										casacore::Vector<T> &inputDataStripe,
+										casacore::Vector<casacore::Bool> &inputFlagsStripe,
+										casacore::Vector<casacore::Float> &inputWeightsStripe,
+										casacore::Vector<T> &outputDataStripe,
+										casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	template <class T> void simpleAverage(	casacore::uInt width,
+											casacore::Vector<T> &inputData,
+											casacore::Vector<T> &outputData);
+	void averageKernel(	casacore::Vector<casacore::Complex> &inputData,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<casacore::Complex> &outputData,
+						casacore::Vector<casacore::Bool> &outputFlags,
+						casacore::uInt startInputPos,
+						casacore::uInt outputPos,
+						casacore::uInt width);
+	void averageKernel(	casacore::Vector<casacore::Float> &inputData,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<casacore::Float> &outputData,
+						casacore::Vector<casacore::Bool> &outputFlags,
+						casacore::uInt startInputPos,
+						casacore::uInt outputPos,
+						casacore::uInt width);
+	void (casa::MSTransformManager::*averageKernelComplex_p)(	casacore::Vector<casacore::Complex> &inputData,
+																	casacore::Vector<casacore::Bool> &inputFlags,
+																	casacore::Vector<casacore::Float> &inputWeights,
+																	casacore::Vector<casacore::Complex> &outputData,
+																	casacore::Vector<casacore::Bool> &outputFlags,
+																	casacore::uInt startInputPos,
+																	casacore::uInt outputPos,
+																	casacore::uInt width);
+	void (casa::MSTransformManager::*averageKernelFloat_p)(		casacore::Vector<casacore::Float> &inputData,
+																	casacore::Vector<casacore::Bool> &inputFlags,
+																	casacore::Vector<casacore::Float> &inputWeights,
+																	casacore::Vector<casacore::Float> &outputData,
+																	casacore::Vector<casacore::Bool> &outputFlags,
+																	casacore::uInt startInputPos,
+																	casacore::uInt outputPos,
+																	casacore::uInt width);
+	template <class T> void simpleAverageKernel(	casacore::Vector<T> &inputData,
+													casacore::Vector<casacore::Bool> &,
+													casacore::Vector<casacore::Float> &,
+													casacore::Vector<T> &outputData,
+													casacore::Vector<casacore::Bool> &,
+													casacore::uInt startInputPos,
+													casacore::uInt outputPos,
+													casacore::uInt width);
+	template <class T> void flagAverageKernel(	casacore::Vector<T> &inputData,
+												casacore::Vector<casacore::Bool> &inputFlags,
+												casacore::Vector<casacore::Float> &,
+												casacore::Vector<T> &outputData,
+												casacore::Vector<casacore::Bool> &outputFlags,
+												casacore::uInt startInputPos,
+												casacore::uInt outputPos,
+												casacore::uInt width);
+	template <class T> void weightAverageKernel(	casacore::Vector<T> &inputData,
+													casacore::Vector<casacore::Bool> &,
+													casacore::Vector<casacore::Float> &inputWeights,
+													casacore::Vector<T> &outputData,
+													casacore::Vector<casacore::Bool> &outputFlags,
+													casacore::uInt startInputPos,
+													casacore::uInt outputPos,
+													casacore::uInt width);
+	template <class T> void cumSumKernel(	casacore::Vector<T> &inputData,
+											casacore::Vector<casacore::Bool> &,
+											casacore::Vector<casacore::Float> &,
+											casacore::Vector<T> &outputData,
+											casacore::Vector<casacore::Bool> &,
+											casacore::uInt startInputPos,
+											casacore::uInt outputPos,
+											casacore::uInt width);
+	template <class T> void flagWeightAverageKernel(	casacore::Vector<T> &inputData,
+														casacore::Vector<casacore::Bool> &inputFlags,
+														casacore::Vector<casacore::Float> &inputWeights,
+														casacore::Vector<T> &outputData,
+														casacore::Vector<casacore::Bool> &outputFlags,
+														casacore::uInt startInputPos,
+														casacore::uInt outputPos,
+														casacore::uInt width);
+	template <class T> void flagCumSumKernel(	casacore::Vector<T> &inputData,
+												casacore::Vector<casacore::Bool> &inputFlags,
+												casacore::Vector<casacore::Float> &,
+												casacore::Vector<T> &outputData,
+												casacore::Vector<casacore::Bool> &,
+												casacore::uInt startInputPos,
+												casacore::uInt outputPos,
+												casacore::uInt width);
+
+	template <class T> void flagNonZeroAverageKernel(	casacore::Vector<T> &inputData,
+														casacore::Vector<casacore::Bool> &inputFlags,
+														casacore::Vector<casacore::Float> &,
+														casacore::Vector<T> &outputData,
+														casacore::Vector<casacore::Bool> &,
+														casacore::uInt startInputPos,
+														casacore::uInt outputPos,
+														casacore::uInt width);
+	template <class T> void flagWeightNonZeroAverageKernel(	casacore::Vector<T> &inputData,
+															casacore::Vector<casacore::Bool> &inputFlags,
+															casacore::Vector<casacore::Float> &,
+															casacore::Vector<T> &outputData,
+															casacore::Vector<casacore::Bool> &,
+															casacore::uInt startInputPos,
+															casacore::uInt outputPos,
+															casacore::uInt width);
+	template <class T> void flagCumSumNonZeroKernel(	casacore::Vector<T> &inputData,
+														casacore::Vector<casacore::Bool> &inputFlags,
+														casacore::Vector<casacore::Float> &,
+														casacore::Vector<T> &outputData,
+														casacore::Vector<casacore::Bool> &,
+														casacore::uInt startInputPos,
+														casacore::uInt outputPos,
+														casacore::uInt width);
 
 
-	template <class T> void regrid(	Int ,
-									Vector<T> &inputDataStripe,
-									Vector<Bool> &inputFlagsStripe,
-									Vector<Float> &,
-									Vector<T> &outputDataStripe,
-									Vector<Bool> &outputFlagsStripe);
+	template <class T> void smooth(	casacore::Int inputSpw,
+									casacore::Vector<T> &inputDataStripe,
+									casacore::Vector<casacore::Bool> &inputFlagsStripe,
+									casacore::Vector<casacore::Float> &inputWeightsStripe,
+									casacore::Vector<T> &outputDataStripe,
+									casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	void smoothKernel(	casacore::Vector<casacore::Complex> &inputData,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<casacore::Complex> &outputData,
+						casacore::Vector<casacore::Bool> &outputFlags,
+						casacore::uInt outputPos);
+	void smoothKernel(	casacore::Vector<casacore::Float> &inputData,
+						casacore::Vector<casacore::Bool> &inputFlags,
+						casacore::Vector<casacore::Float> &inputWeights,
+						casacore::Vector<casacore::Float> &outputData,
+						casacore::Vector<casacore::Bool> &outputFlags,
+						casacore::uInt outputPos);
+	void (casa::MSTransformManager::*smoothKernelComplex_p)(	casacore::Vector<casacore::Complex> &inputData,
+																casacore::Vector<casacore::Bool> &inputFlags,
+																casacore::Vector<casacore::Float> &inputWeights,
+																casacore::Vector<casacore::Complex> &outputData,
+																casacore::Vector<casacore::Bool> &outputFlags,
+																casacore::uInt outputPos);
+	void (casa::MSTransformManager::*smoothKernelFloat_p)(		casacore::Vector<casacore::Float> &inputData,
+																casacore::Vector<casacore::Bool> &inputFlags,
+																casacore::Vector<casacore::Float> &inputWeights,
+																casacore::Vector<casacore::Float> &outputData,
+																casacore::Vector<casacore::Bool> &outputFlags,
+																casacore::uInt outputPos);
+	template <class T> void plainSmooth(	casacore::Vector<T> &inputData,
+											casacore::Vector<casacore::Bool> &inputFlags,
+											casacore::Vector<casacore::Float> &inputWeights,
+											casacore::Vector<T> &outputData,
+											casacore::Vector<casacore::Bool> &outputFlags,
+											casacore::uInt outputPos);
 
-	void regridCore(	Int inputSpw,
-						Vector<Complex> &inputDataStripe,
-						Vector<Bool> &inputFlagsStripe,
-						Vector<Float> &inputWeightsStripe,
-						Vector<Complex> &outputDataStripe,
-						Vector<Bool> &outputFlagsStripe);
-	void regridCore(	Int inputSpw,
-						Vector<Float> &inputDataStripe,
-						Vector<Bool> &inputFlagsStripe,
-						Vector<Float> &inputWeightsStripe,
-						Vector<Float> &outputDataStripe,
-						Vector<Bool> &outputFlagsStripe);
+	template <class T> void plainSmoothSpectrum(	casacore::Vector<T> &inputData,
+													casacore::Vector<casacore::Bool> &inputFlags,
+													casacore::Vector<casacore::Float> &inputWeights,
+													casacore::Vector<T> &outputData,
+													casacore::Vector<casacore::Bool> &outputFlags,
+													casacore::uInt outputPos);
 
-	void (casa::MSTransformManager::*regridCoreComplex_p)(		Int inputSpw,
-																	Vector<Complex> &inputDataStripe,
-																	Vector<Bool> &inputFlagsStripe,
-																	Vector<Float> &inputWeightsStripe,
-																	Vector<Complex> &outputDataStripe,
-																	Vector<Bool> &outputFlagsStripe);
-	void (casa::MSTransformManager::*regridCoreFloat_p)(	Int inputSpw,
-																Vector<Float> &inputDataStripe,
-																Vector<Bool> &inputFlagsStripe,
-																Vector<Float> &inputWeightsStripe,
-																Vector<Float> &outputDataStripe,
-																Vector<Bool> &outputFlagsStripe);
 
-	void fftshift(	Int inputSpw,
-					Vector<Complex> &inputDataStripe,
-					Vector<Bool> &inputFlagsStripe,
-					Vector<Float> &inputWeightsStripe,
-					Vector<Complex> &outputDataStripe,
-					Vector<Bool> &outputFlagsStripe);
-	void fftshift(	Int inputSpw,
-					Vector<Float> &inputDataStripe,
-					Vector<Bool> &inputFlagsStripe,
-					Vector<Float> &inputWeightsStripe,
-					Vector<Float> &outputDataStripe,
-					Vector<Bool> &outputFlagsStripe);
+	template <class T> void regrid(	casacore::Int ,
+									casacore::Vector<T> &inputDataStripe,
+									casacore::Vector<casacore::Bool> &inputFlagsStripe,
+									casacore::Vector<casacore::Float> &,
+									casacore::Vector<T> &outputDataStripe,
+									casacore::Vector<casacore::Bool> &outputFlagsStripe);
 
-	template <class T> void interpol1D(	Int inputSpw,
-										Vector<T> &inputDataStripe,
-										Vector<Bool> &inputFlagsStripe,
-										Vector<Float> &,
-										Vector<T> &outputDataStripe,
-										Vector<Bool> &outputFlagsStripe);
+	void regridCore(	casacore::Int inputSpw,
+						casacore::Vector<casacore::Complex> &inputDataStripe,
+						casacore::Vector<casacore::Bool> &inputFlagsStripe,
+						casacore::Vector<casacore::Float> &inputWeightsStripe,
+						casacore::Vector<casacore::Complex> &outputDataStripe,
+						casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	void regridCore(	casacore::Int inputSpw,
+						casacore::Vector<casacore::Float> &inputDataStripe,
+						casacore::Vector<casacore::Bool> &inputFlagsStripe,
+						casacore::Vector<casacore::Float> &inputWeightsStripe,
+						casacore::Vector<casacore::Float> &outputDataStripe,
+						casacore::Vector<casacore::Bool> &outputFlagsStripe);
 
-	template <class T> void interpol1Dfftshift(	Int inputSpw,
-												Vector<T> &inputDataStripe,
-												Vector<Bool> &inputFlagsStripe,
-												Vector<Float> &inputWeightsStripe,
-												Vector<T> &outputDataStripe,
-												Vector<Bool> &outputFlagsStripe);
+	void (casa::MSTransformManager::*regridCoreComplex_p)(		casacore::Int inputSpw,
+																	casacore::Vector<casacore::Complex> &inputDataStripe,
+																	casacore::Vector<casacore::Bool> &inputFlagsStripe,
+																	casacore::Vector<casacore::Float> &inputWeightsStripe,
+																	casacore::Vector<casacore::Complex> &outputDataStripe,
+																	casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	void (casa::MSTransformManager::*regridCoreFloat_p)(	casacore::Int inputSpw,
+																casacore::Vector<casacore::Float> &inputDataStripe,
+																casacore::Vector<casacore::Bool> &inputFlagsStripe,
+																casacore::Vector<casacore::Float> &inputWeightsStripe,
+																casacore::Vector<casacore::Float> &outputDataStripe,
+																casacore::Vector<casacore::Bool> &outputFlagsStripe);
 
-	template <class T> void averageSmooth(	Int inputSpw,
-											Vector<T> &inputDataStripe,
-											Vector<Bool> &inputFlagsStripe,
-											Vector<Float> &inputWeightsStripe,
-											Vector<T> &outputDataStripe,
-											Vector<Bool> &outputFlagsStripe);
-	template <class T> void averageRegrid(	Int inputSpw,
-											Vector<T> &inputDataStripe,
-											Vector<Bool> &inputFlagsStripe,
-											Vector<Float> &inputWeightsStripe,
-											Vector<T> &outputDataStripe,
-											Vector<Bool> &outputFlagsStripe);
-	template <class T> void smoothRegrid(	Int inputSpw,
-											Vector<T> &inputDataStripe,
-											Vector<Bool> &inputFlagsStripe,
-											Vector<Float> &inputWeightsStripe,
-											Vector<T> &outputDataStripe,
-											Vector<Bool> &outputFlagsStripe);
-	template <class T> void averageSmoothRegrid(	Int inputSpw,
-													Vector<T> &inputDataStripe,
-													Vector<Bool> &inputFlagsStripe,
-													Vector<Float> &inputWeightsStripe,
-													Vector<T> &outputDataStripe,
-													Vector<Bool> &outputFlagsStripe);
+	void fftshift(	casacore::Int inputSpw,
+					casacore::Vector<casacore::Complex> &inputDataStripe,
+					casacore::Vector<casacore::Bool> &inputFlagsStripe,
+					casacore::Vector<casacore::Float> &inputWeightsStripe,
+					casacore::Vector<casacore::Complex> &outputDataStripe,
+					casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	void fftshift(	casacore::Int inputSpw,
+					casacore::Vector<casacore::Float> &inputDataStripe,
+					casacore::Vector<casacore::Bool> &inputFlagsStripe,
+					casacore::Vector<casacore::Float> &inputWeightsStripe,
+					casacore::Vector<casacore::Float> &outputDataStripe,
+					casacore::Vector<casacore::Bool> &outputFlagsStripe);
+
+	template <class T> void interpol1D(	casacore::Int inputSpw,
+										casacore::Vector<T> &inputDataStripe,
+										casacore::Vector<casacore::Bool> &inputFlagsStripe,
+										casacore::Vector<casacore::Float> &,
+										casacore::Vector<T> &outputDataStripe,
+										casacore::Vector<casacore::Bool> &outputFlagsStripe);
+
+	template <class T> void interpol1Dfftshift(	casacore::Int inputSpw,
+												casacore::Vector<T> &inputDataStripe,
+												casacore::Vector<casacore::Bool> &inputFlagsStripe,
+												casacore::Vector<casacore::Float> &inputWeightsStripe,
+												casacore::Vector<T> &outputDataStripe,
+												casacore::Vector<casacore::Bool> &outputFlagsStripe);
+
+	template <class T> void averageSmooth(	casacore::Int inputSpw,
+											casacore::Vector<T> &inputDataStripe,
+											casacore::Vector<casacore::Bool> &inputFlagsStripe,
+											casacore::Vector<casacore::Float> &inputWeightsStripe,
+											casacore::Vector<T> &outputDataStripe,
+											casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	template <class T> void averageRegrid(	casacore::Int inputSpw,
+											casacore::Vector<T> &inputDataStripe,
+											casacore::Vector<casacore::Bool> &inputFlagsStripe,
+											casacore::Vector<casacore::Float> &inputWeightsStripe,
+											casacore::Vector<T> &outputDataStripe,
+											casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	template <class T> void smoothRegrid(	casacore::Int inputSpw,
+											casacore::Vector<T> &inputDataStripe,
+											casacore::Vector<casacore::Bool> &inputFlagsStripe,
+											casacore::Vector<casacore::Float> &inputWeightsStripe,
+											casacore::Vector<T> &outputDataStripe,
+											casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	template <class T> void averageSmoothRegrid(	casacore::Int inputSpw,
+													casacore::Vector<T> &inputDataStripe,
+													casacore::Vector<casacore::Bool> &inputFlagsStripe,
+													casacore::Vector<casacore::Float> &inputWeightsStripe,
+													casacore::Vector<T> &outputDataStripe,
+													casacore::Vector<casacore::Bool> &outputFlagsStripe);
 
 	// The following methods are single dish specific so far
-	void smoothFourierFloat(Int , Vector<Float> &inputDataStripe,
-	          Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightStripe,
-	          Vector<Float> &outputDataStripe, Vector<Bool> &outputFlagsStripe);
-	void smoothFourierComplex(Int , Vector<Complex> &inputDataStripe,
-	          Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightStripe,
-	          Vector<Complex> &outputDataStripe, Vector<Bool> &outputFlagsStripe);
-	Convolver<Float> *getConvolver(Int const numChan);
+	void smoothFourierFloat(casacore::Int , casacore::Vector<casacore::Float> &inputDataStripe,
+	          casacore::Vector<casacore::Bool> &inputFlagsStripe, casacore::Vector<casacore::Float> &inputWeightStripe,
+	          casacore::Vector<casacore::Float> &outputDataStripe, casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	void smoothFourierComplex(casacore::Int , casacore::Vector<casacore::Complex> &inputDataStripe,
+	          casacore::Vector<casacore::Bool> &inputFlagsStripe, casacore::Vector<casacore::Float> &inputWeightStripe,
+	          casacore::Vector<casacore::Complex> &outputDataStripe, casacore::Vector<casacore::Bool> &outputFlagsStripe);
+	casacore::Convolver<casacore::Float> *getConvolver(casacore::Int const numChan);
 
-	// MS specification parameters
-	String inpMsName_p;
-	String outMsName_p;
-	String datacolumn_p;
-	Bool makeVirtualModelColReal_p;
-	Bool makeVirtualCorrectedColReal_p;
-	Vector<Int> tileShape_p;
+	// casacore::MS specification parameters
+	casacore::String inpMsName_p;
+	casacore::String outMsName_p;
+	casacore::String datacolumn_p;
+	casacore::Bool makeVirtualModelColReal_p;
+	casacore::Bool makeVirtualCorrectedColReal_p;
+	casacore::Vector<casacore::Int> tileShape_p;
 
-	// Data selection parameters
-	String arraySelection_p;
-	String fieldSelection_p;
-	String scanSelection_p;
-	String timeSelection_p;
-	String spwSelection_p;
-	String baselineSelection_p;
-	String uvwSelection_p;
-	String polarizationSelection_p;
-	String scanIntentSelection_p;
-	String observationSelection_p;
-	String taqlSelection_p;
-	String feedSelection_p;
+	// casacore::Data selection parameters
+	casacore::String arraySelection_p;
+	casacore::String fieldSelection_p;
+	casacore::String scanSelection_p;
+	casacore::String timeSelection_p;
+	casacore::String spwSelection_p;
+	casacore::String baselineSelection_p;
+	casacore::String uvwSelection_p;
+	casacore::String polarizationSelection_p;
+	casacore::String scanIntentSelection_p;
+	casacore::String observationSelection_p;
+	casacore::String taqlSelection_p;
+	casacore::String feedSelection_p;
 
-	// Input-Output index maps
-	map<uInt,uInt> inputOutputObservationIndexMap_p;
-	map<uInt,uInt> inputOutputArrayIndexMap_p;
-	map<uInt,uInt> inputOutputScanIndexMap_p;
-	map<uInt,uInt> inputOutputScanIntentIndexMap_p;
-	map<uInt,uInt> inputOutputFieldIndexMap_p;
-	map<uInt,uInt> inputOutputSPWIndexMap_p;
-	map<uInt,uInt> inputOutputDDIndexMap_p;
-	map<uInt,uInt> inputOutputAntennaIndexMap_p;
-	map<uInt,uInt> outputInputSPWIndexMap_p;
-	map<Int,vector<Int> > inputOutputChanIndexMap_p;
+	// casacore::Input-Output index maps
+	map<casacore::uInt,casacore::uInt> inputOutputObservationIndexMap_p;
+	map<casacore::uInt,casacore::uInt> inputOutputArrayIndexMap_p;
+	map<casacore::uInt,casacore::uInt> inputOutputScanIndexMap_p;
+	map<casacore::uInt,casacore::uInt> inputOutputScanIntentIndexMap_p;
+	map<casacore::uInt,casacore::uInt> inputOutputFieldIndexMap_p;
+	map<casacore::uInt,casacore::uInt> inputOutputSPWIndexMap_p;
+	map<casacore::uInt,casacore::uInt> inputOutputDDIndexMap_p;
+	map<casacore::uInt,casacore::uInt> inputOutputAntennaIndexMap_p;
+	map<casacore::uInt,casacore::uInt> outputInputSPWIndexMap_p;
+	map<casacore::Int,vector<casacore::Int> > inputOutputChanIndexMap_p;
 
 	// Frequency transformation parameters
-	uInt nspws_p;
-	Int ddiStart_p;
-	Bool combinespws_p;
-	Bool channelAverage_p;
-	Bool hanningSmooth_p;
-	Bool refFrameTransformation_p;
-	Vector<Int> freqbin_p;
-	String useweights_p;
-	uInt weightmode_p;
-	String interpolationMethodPar_p;
+	casacore::uInt nspws_p;
+	casacore::Int ddiStart_p;
+	casacore::Bool combinespws_p;
+	casacore::Bool channelAverage_p;
+	casacore::Bool hanningSmooth_p;
+	casacore::Bool refFrameTransformation_p;
+	casacore::Vector<casacore::Int> freqbin_p;
+	casacore::String useweights_p;
+	casacore::uInt weightmode_p;
+	casacore::String interpolationMethodPar_p;
 	casac::variant *phaseCenterPar_p;
-	String restFrequency_p;
-	String outputReferenceFramePar_p;
-	Bool radialVelocityCorrection_p;
-	Bool regridding_p;
-	uInt smoothBin_p;
-	uInt smoothmode_p;
-	Vector<Float> smoothCoeff_p;
+	casacore::String restFrequency_p;
+	casacore::String outputReferenceFramePar_p;
+	casacore::Bool radialVelocityCorrection_p;
+	casacore::Bool regridding_p;
+	casacore::uInt smoothBin_p;
+	casacore::uInt smoothmode_p;
+	casacore::Vector<casacore::Float> smoothCoeff_p;
 
 	// Frequency specification parameters
-	String mode_p;
-	String start_p;
-	String width_p;
+	casacore::String mode_p;
+	casacore::String start_p;
+	casacore::String width_p;
 	int nChan_p;
-	String velocityType_p;
+	casacore::String velocityType_p;
 
 	// Phase shifting parameters
-	Bool phaseShifting_p;
-	Double dx_p, dy_p;
+	casacore::Bool phaseShifting_p;
+	casacore::Double dx_p, dy_p;
 
-	// Time transformation parameters
-	Bool timeAverage_p;
-	Double timeBin_p;
-	String timespan_p;
+	// casacore::Time transformation parameters
+	casacore::Bool timeAverage_p;
+	casacore::Double timeBin_p;
+	casacore::String timespan_p;
 	vi::AveragingOptions timeAvgOptions_p;
-	Double maxuvwdistance_p;
-	// uInt minbaselines_p;
+	casacore::Double maxuvwdistance_p;
+	// casacore::uInt minbaselines_p;
 
 	// Calibration parameters
-	Bool calibrate_p;
-	String callib_p;
-	Record callibRec_p;
+	casacore::Bool calibrate_p;
+	casacore::String callib_p;
+	casacore::Record callibRec_p;
 
 	// UVContSub parameters
-	Bool uvcontsub_p;
-	Record uvcontsubRec_p;
+	casacore::Bool uvcontsub_p;
+	casacore::Record uvcontsubRec_p;
 
 	// Spw avergain parameters
-	Bool spwAverage_p;
+	casacore::Bool spwAverage_p;
 
 	// Weight Spectrum parameters
-	Bool usewtspectrum_p;
+	casacore::Bool usewtspectrum_p;
 
 	// Buffer handling parameters
-	Bool bufferMode_p;
-	Bool userBufferMode_p;
-	Bool reindex_p;
-	Bool factory_p;
-	Bool interactive_p;
+	casacore::Bool bufferMode_p;
+	casacore::Bool userBufferMode_p;
+	casacore::Bool reindex_p;
+	casacore::Bool factory_p;
+	casacore::Bool interactive_p;
 
-	// MS-related members
+	// casacore::MS-related members
 	MSTransformDataHandler *dataHandler_p;
-	MeasurementSet *inputMs_p;
-	MeasurementSet *selectedInputMs_p;
-	MeasurementSet *outputMs_p;
-	ROMSColumns *selectedInputMsCols_p;
-	MSColumns *outputMsCols_p;
-	MSFieldColumns *inputMSFieldCols_p;
+	casacore::MeasurementSet *inputMs_p;
+	casacore::MeasurementSet *selectedInputMs_p;
+	casacore::MeasurementSet *outputMs_p;
+	casacore::ROMSColumns *selectedInputMsCols_p;
+	casacore::MSColumns *outputMsCols_p;
+	casacore::MSFieldColumns *inputMSFieldCols_p;
 
 	// VI/VB related members
-	Block<Int> sortColumns_p;
+	casacore::Block<casacore::Int> sortColumns_p;
 	vi::VisibilityIterator2 *visibilityIterator_p;
 	vi::FrequencySelectionUsingChannels *channelSelector_p;
 
-	// Output MS structure related members
-	Bool inputFlagCategoryAvailable_p;
-	Bool correctedToData_p;
-	Bool doingData_p;
-	Bool doingCorrected_p;
-	Bool doingModel_p;
+	// Output casacore::MS structure related members
+	casacore::Bool inputFlagCategoryAvailable_p;
+	casacore::Bool correctedToData_p;
+	casacore::Bool doingData_p;
+	casacore::Bool doingCorrected_p;
+	casacore::Bool doingModel_p;
 	dataColMap dataColMap_p;
-	MSMainEnums::PredefinedColumns mainColumn_p;
-	uInt nRowsToAdd_p;
+	casacore::MSMainEnums::PredefinedColumns mainColumn_p;
+	casacore::uInt nRowsToAdd_p;
 
 	// Frequency transformation members
-	uInt chansPerOutputSpw_p;
-	uInt tailOfChansforLastSpw_p;
-	uInt interpolationMethod_p;
+	casacore::uInt chansPerOutputSpw_p;
+	casacore::uInt tailOfChansforLastSpw_p;
+	casacore::uInt interpolationMethod_p;
 	baselineMap baselineMap_p;
-	vector<uInt> rowIndex_p;
+	vector<casacore::uInt> rowIndex_p;
 	inputSpwChanMap spwChannelMap_p;
 	inputOutputSpwMap inputOutputSpwMap_p;
 	inputOutputChanFactorMap inputOutputChanFactorMap_p;
-	map<uInt,uInt> freqbinMap_p;
-	map<uInt,uInt> numOfInpChanMap_p;
-	map<uInt,uInt> numOfSelChanMap_p;
-	map<uInt,uInt> numOfOutChanMap_p;
-	map<uInt,uInt> numOfCombInputChanMap_p;
-	map<uInt,uInt> numOfCombInterChanMap_p;
-	map<uInt,Float> weightFactorMap_p;
-	map<uInt,Float> sigmaFactorMap_p;
-    map<uInt,Float> newWeightFactorMap_p;
-	map<uInt,Float> newSigmaFactorMap_p;
+	map<casacore::uInt,casacore::uInt> freqbinMap_p;
+	map<casacore::uInt,casacore::uInt> numOfInpChanMap_p;
+	map<casacore::uInt,casacore::uInt> numOfSelChanMap_p;
+	map<casacore::uInt,casacore::uInt> numOfOutChanMap_p;
+	map<casacore::uInt,casacore::uInt> numOfCombInputChanMap_p;
+	map<casacore::uInt,casacore::uInt> numOfCombInterChanMap_p;
+	map<casacore::uInt,casacore::Float> weightFactorMap_p;
+	map<casacore::uInt,casacore::Float> sigmaFactorMap_p;
+    map<casacore::uInt,casacore::Float> newWeightFactorMap_p;
+	map<casacore::uInt,casacore::Float> newSigmaFactorMap_p;
 
 	// Reference Frame Transformation members
-	MFrequency::Types inputReferenceFrame_p;
-	MFrequency::Types outputReferenceFrame_p;
-	MPosition observatoryPosition_p;
-	MEpoch referenceTime_p;
-	MDirection phaseCenter_p;
-	MRadialVelocity radialVelocity_p;
-	MFrequency::Convert freqTransEngine_p;
-	MFrequency::Convert refTimeFreqTransEngine_p;
-    FFTServer<Float, Complex> fFFTServer_p;
-    Bool fftShiftEnabled_p;
-	Double fftShift_p;
-	ROScalarMeasColumn<MEpoch> timeMeas_p;
+	casacore::MFrequency::Types inputReferenceFrame_p;
+	casacore::MFrequency::Types outputReferenceFrame_p;
+	casacore::MPosition observatoryPosition_p;
+	casacore::MEpoch referenceTime_p;
+	casacore::MDirection phaseCenter_p;
+	casacore::MRadialVelocity radialVelocity_p;
+	casacore::MFrequency::Convert freqTransEngine_p;
+	casacore::MFrequency::Convert refTimeFreqTransEngine_p;
+    casacore::FFTServer<casacore::Float, casacore::Complex> fFFTServer_p;
+    casacore::Bool fftShiftEnabled_p;
+	casacore::Double fftShift_p;
+	casacore::ROScalarMeasColumn<casacore::MEpoch> timeMeas_p;
 
 	// Weight Spectrum members
-	Bool spectrumTransformation_p;
-	Bool propagateWeights_p;
-	Bool inputWeightSpectrumAvailable_p;
-	Bool flushWeightSpectrum_p;
-	Bool weightSpectrumFlatFilled_p;
-	Bool weightSpectrumFromSigmaFilled_p;
-	Bool combinationOfSPWsWithDifferentExposure_p;
-	Cube<Float> weightSpectrumCube_p;
-	Cube<Float> weightSpectrumCubeFlat_p;
-	Cube<Float> weightSpectrumCubeDummy_p;
+	casacore::Bool spectrumTransformation_p;
+	casacore::Bool propagateWeights_p;
+	casacore::Bool inputWeightSpectrumAvailable_p;
+	casacore::Bool flushWeightSpectrum_p;
+	casacore::Bool weightSpectrumFlatFilled_p;
+	casacore::Bool weightSpectrumFromSigmaFilled_p;
+	casacore::Bool combinationOfSPWsWithDifferentExposure_p;
+	casacore::Cube<casacore::Float> weightSpectrumCube_p;
+	casacore::Cube<casacore::Float> weightSpectrumCubeFlat_p;
+	casacore::Cube<casacore::Float> weightSpectrumCubeDummy_p;
 
 	// Buffer handling members
-	uInt dataBuffer_p;
-	uInt relativeRow_p;
-	Bool spectrumReshape_p;
-	Bool cubeTransformation_p;
-	Bool dataColumnAvailable_p;
-	Bool correctedDataColumnAvailable_p;
-	Bool modelDataColumnAvailable_p;
-	Bool floatDataColumnAvailable_p;
-	Bool lagDataColumnAvailable_p;
-	Cube<Bool> *flagCube_p;
-	Cube<Complex> *visCube_p;
-	Cube<Complex> *visCubeCorrected_p;
-	Cube<Complex> *visCubeModel_p;
-	Cube<Float> *visCubeFloat_p;
-	Cube<Float> *weightSpectrum_p;
-	Cube<Float> *sigmaSpectrum_p;
-	Matrix<Float> *weight_p;
-	Matrix<Float> *sigma_p;
-	ArrayColumn<Float> dummyWeightCol_p;
+	casacore::uInt dataBuffer_p;
+	casacore::uInt relativeRow_p;
+	casacore::Bool spectrumReshape_p;
+	casacore::Bool cubeTransformation_p;
+	casacore::Bool dataColumnAvailable_p;
+	casacore::Bool correctedDataColumnAvailable_p;
+	casacore::Bool modelDataColumnAvailable_p;
+	casacore::Bool floatDataColumnAvailable_p;
+	casacore::Bool lagDataColumnAvailable_p;
+	casacore::Cube<casacore::Bool> *flagCube_p;
+	casacore::Cube<casacore::Complex> *visCube_p;
+	casacore::Cube<casacore::Complex> *visCubeCorrected_p;
+	casacore::Cube<casacore::Complex> *visCubeModel_p;
+	casacore::Cube<casacore::Float> *visCubeFloat_p;
+	casacore::Cube<casacore::Float> *weightSpectrum_p;
+	casacore::Cube<casacore::Float> *sigmaSpectrum_p;
+	casacore::Matrix<casacore::Float> *weight_p;
+	casacore::Matrix<casacore::Float> *sigma_p;
+	casacore::ArrayColumn<casacore::Float> dummyWeightCol_p;
 
 	// single dish specific
-	Bool smoothFourier_p;
-	map<Int, Convolver<Float> > convolverPool_;
+	casacore::Bool smoothFourier_p;
+	map<casacore::Int, casacore::Convolver<casacore::Float> > convolverPool_;
 
 	// Logging
-	LogIO logger_p;
+	casacore::LogIO logger_p;
 };
 
 } //# NAMESPACE CASA - END

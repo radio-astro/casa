@@ -65,6 +65,7 @@
 #include <casa/OS/HostInfo.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 #define TMR(a) "[User: " << a.user() << "] [System: " << a.system() << "] [Real: " << a.real() << "]"
 	
@@ -117,10 +118,10 @@ void WBCleanImageSkyModel::initVars()
   ddbg=1; // output per iteration
   tdbg=0;
   
-  modified_p=True;
+  modified_p=true;
   memoryMB_p = Double(HostInfo::memoryTotal(true)/1024)/(2.0);
-  donePSF_p=False;
-  doneMTMCinit_p=False;
+  donePSF_p=false;
+  doneMTMCinit_p=false;
 
   numbermajorcycles_p=0;
   nfields_p=1;
@@ -195,12 +196,12 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 
 	//------------------------------- For 'active'  ---------------------------------------------------------------///
 	/* Calculate the initial residual image for all models. */
-	if( se.isNewFTM() == False )
+	if( se.isNewFTM() == false )
 	  {
 	    if(!donePSF_p)
 	      {
 		os << "Calculating initial residual images..." << LogIO::POST;
-		solveResiduals(se,(numberIterations()<1)?True:False);
+		solveResiduals(se,(numberIterations()<1)?true:False);
 	      }
 	    else
 	      {
@@ -208,7 +209,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 		if(numbermajorcycles_p>0) 
 		  {
 		    os << "RE-Calculating residual images because previous residuals have been modified in-place during restoration to be 'coefficient residuals'." << LogIO::POST;
-		    solveResiduals(se,(numberIterations()<1)?True:False);
+		    solveResiduals(se,(numberIterations()<1)?true:False);
 		  }
 		*/
 	      }
@@ -227,7 +228,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    {
 	      /* Make the 2N-1 PSFs */
 	      os << "Calculating spectral PSFs..." << LogIO::POST;
-              makeSpectralPSFs(se, numberIterations()<0?True:False);
+              makeSpectralPSFs(se, numberIterations()<0?true:False);
 	    }
 	    catch(AipsError &x)
 	    {
@@ -242,7 +243,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    if(lc_p.nelements()==0 && numberIterations()>=0)
 	      {
 		lc_p.resize(nfields_p);
-                Bool state=True;
+                Bool state=true;
 		/* Initialize the MultiTermMatrixCleaners */
 		for(Int thismodel=0;thismodel<nfields_p;thismodel++)
 		  {
@@ -252,13 +253,13 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 		    ny = image(thismodel).shape()(1);
 		    state &= lc_p[thismodel].initialise(nx,ny); // allocates memory once....
 		  }
-                if( !state ) // initialise will return False if there is any internal inconsistency with settings so far.
+                if( !state ) // initialise will return false if there is any internal inconsistency with settings so far.
 		  {
 		    lc_p.resize(0);
 		    nmodels_p = original_nmodels;
 		    resizeWorkArrays(nmodels_p);
 		    os << LogIO::SEVERE << "Could not initialize MS-MFS minor cycle" << LogIO::EXCEPTION;
-		    return False; // redundant
+		    return false; // redundant
 		  }
 		
 		/* Send all 2N-1 PSFs into the MultiTermLatticeCleaner */
@@ -269,13 +270,13 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 			// This should be doing a reference only. Make sure of this.
 			Matrix<Float> tempMat;
 			Array<Float> tempArr;
-			(PSF(getModelIndex(thismodel,order))).get(tempArr,True);
+			(PSF(getModelIndex(thismodel,order))).get(tempArr,true);
 			tempMat.reference(tempArr);
 			
 			lc_p[thismodel].setpsf( order , tempMat ); 
 		      }
 		  }
-		doneMTMCinit_p = True;
+		doneMTMCinit_p = true;
 	      }
 	    
 	    /* Resize the work arrays to normal size - for residual comps, etc. */
@@ -283,19 +284,19 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    resizeWorkArrays(nmodels_p);
             ///// TODO : Make sure this releases memory as it is supposed to.	   
 
-	    donePSF_p=True;
+	    donePSF_p=true;
 	}
 
 
 	//------------------------------ For new FTMs --------------------------------------------------------------//
 	///// Consider doing lc_p.setmodel and getmodel instead of dividing/multiplying the avgPB in NewMTFT::initializeToVis
-	if( se.isNewFTM() == True )
+	if( se.isNewFTM() == true )
 	  {
 	    /* Calculate the initial residual image for all models. */
 	    if( numbermajorcycles_p==0 )
 	      {
 		os << "Calculating initial residual images..." << LogIO::POST;
-		solveResiduals(se,(numberIterations()<1)?True:False);
+		solveResiduals(se,(numberIterations()<1)?true:False);
 	      }
 
 	  }
@@ -306,11 +307,11 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	if(adbg) cout << "NumberIterations - before any cycles: " << numberIterations() << endl;
 	if(numberIterations() < 1)
 	{
-		return True;
+		return true;
 	}
 
 	/* Check that lc_p's have been initialized by now.. */
-	if(doneMTMCinit_p == False)
+	if(doneMTMCinit_p == false)
 	  {
 	    os << LogIO::SEVERE << "MultiTermMatrixCleaners are un-initialized, perhaps because of a previous im.clean(niter=-1) call. Please close imager, re-open it, and run with niter>=0" << LogIO::POST;
 	  }
@@ -324,7 +325,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 
             Matrix<Float> tempMat;
             Array<Float> tempArr;
-            (mask(getModelIndex(thismodel,0))).get(tempArr,True);
+            (mask(getModelIndex(thismodel,0))).get(tempArr,true);
             tempMat.reference(tempArr);
 
 	    lc_p[thismodel].setmask( tempMat );
@@ -349,7 +350,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    os << "**** Major Cycle " << numbermajorcycles_p << LogIO::POST;
 	    thiscycleniter=0;
 	    /* Compute stopping threshold for this major cycle */
-	    stopflag = static_cast<casa::Int>(computeFluxLimit(fractionOfPsf));
+	    stopflag = static_cast<casacore::Int>(computeFluxLimit(fractionOfPsf));
 	    /* If the peak residual is already less than the user-threshold, stop */
 	    if(stopflag==1) break;
 	    /* If we detect divergence across major cycles, stop */
@@ -378,11 +379,11 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 		    Matrix<Float> tempMat;
 		    Array<Float> tempArr;
 		    
-		    (residual(index)).get(tempArr,True);
+		    (residual(index)).get(tempArr,true);
 		    tempMat.reference(tempArr);
 		    lc_p[thismodel].setresidual(order,tempMat); 
 		    
-		    (image(index)).get(tempArr,True);
+		    (image(index)).get(tempArr,true);
 		    tempMat.reference(tempArr);
 		    lc_p[thismodel].setmodel(order,tempMat); 
 		  }
@@ -434,8 +435,8 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    if( abs(stopflag)==1 || max(iterationcount) >= numberIterations() || itercountmaj==999) 
 	      {
 		os << "Calculating final residual images..." << LogIO::POST;
-		/* Call 'solveResiduals' with modelToMS = True to write the model to the MS */
-		solveResiduals(se,True);
+		/* Call 'solveResiduals' with modelToMS = true to write the model to the MS */
+		solveResiduals(se,true);
 		break;
 	      }
 	    else 
@@ -445,7 +446,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	      }
 
 	    /*	    
-	    if( se.isNewFTM() == True )
+	    if( se.isNewFTM() == true )
 	      {
 		// The model will get PB-corrected in-place before prediction.
 		// This needs to be reset to what the preceeding minor cycle got, 
@@ -465,8 +466,8 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
         /* stopflag=-1 -> stopped because number of iterations was reached */
         /* stopflag=-2 -> stopped because of singular Hessian */
         /* stopflag=0 -> reached maximum number of major-cycle iterations !! */
-	if(stopflag>0) return(True);
-	else return(False);
+	if(stopflag>0) return(true);
+	else return(false);
 } // END OF SOLVE
 
 
@@ -506,7 +507,7 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
     {
       Int index = getModelIndex(field,0);
       Array<Float> tempArr;
-      (residual(index)).get(tempArr,True);
+      (residual(index)).get(tempArr,true);
       IPosition maxpos(tempArr.shape()),minpos(tempArr.shape());
       minMax(minval,maxval, minpos, maxpos,tempArr);
       fmaxres[field]=maxval;
@@ -542,7 +543,7 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
       Int index = getModelIndex(field,0);
       /* abs(min of the PSF) will be treated as the max sidelobe level */
       Array<Float> tempArr;
-      (PSF(index)).get(tempArr,True);
+      (PSF(index)).get(tempArr,true);
       IPosition maxpos(tempArr.shape()),minpos(tempArr.shape());
       minMax(minval,maxval, minpos, maxpos,tempArr);
       maxpsfside = max(maxpsfside, abs(minval));
@@ -567,7 +568,7 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
 {
   LogIO os(LogOrigin("WBCleanImageSkyModel", "calculateAlphaBeta", WHERE));
   //UNUSED: Int index=0;
-  Bool writeerror=True;
+  Bool writeerror=true;
   
 
   for(Int field=0;field<nfields_p;field++)
@@ -619,7 +620,7 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
       imalpha.table().unmarkForDelete();
 
       // Make a mask for the alpha image
-      LatticeExpr<Bool> lemask(iif((imtaylor0 > specthreshold) , True, False));
+      LatticeExpr<Bool> lemask(iif((imtaylor0 > specthreshold) , true, false));
 
       createMask(lemask, imalpha);
       os << "Written Spectral Index Image : " << alphaname << LogIO::POST;
@@ -669,12 +670,12 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
 
 Bool WBCleanImageSkyModel::createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage)
 {
-      ImageRegion outreg = outimage.makeMask("mask0",False,True);
+      ImageRegion outreg = outimage.makeMask("mask0",false,true);
       LCRegion& outmask=outreg.asMask();
       outmask.copyData(lemask);
-      outimage.defineRegion("mask0",outreg, RegionHandler::Masks, True);
+      outimage.defineRegion("mask0",outreg, RegionHandler::Masks, true);
       outimage.setDefaultMask("mask0");
-      return True;
+      return true;
 }
 
 
@@ -692,7 +693,7 @@ Bool WBCleanImageSkyModel::calculateCoeffResiduals()
 	  Int index = getModelIndex(field,order);
 	  Matrix<Float> tempMat;
 	  Array<Float> tempArr;
-	  (residual(index)).get(tempArr,True);
+	  (residual(index)).get(tempArr,true);
 	  tempMat.reference(tempArr);
 	  lc_p[baseindex].setresidual(order,tempMat); 
 	}      
@@ -754,7 +755,7 @@ Bool WBCleanImageSkyModel::calculateCoeffResiduals()
 
     }//end of field loop
   os << "Converting final residuals to 'coefficient residuals', for restoration" << LogIO::POST;
-  return True;
+  return true;
 }//end of calculateCoeffResiduals
 
 /***********************************************************************/
@@ -919,10 +920,10 @@ Int WBCleanImageSkyModel::writeResultsToDisk()
 Bool WBCleanImageSkyModel::solveResiduals(SkyEquation& se, Bool modelToMS) 
 {
   blankOverlappingModels();
-  makeNewtonRaphsonStep(se,False,modelToMS);
+  makeNewtonRaphsonStep(se,false,modelToMS);
   restoreOverlappingModels();
   
-  return True;
+  return true;
 }
 /***********************************************************************/
 
@@ -968,8 +969,8 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
 	  //storeAsImg(String("TstResidual.")+String::toString(thismodel)+String(".")+String::toString(taylor),residual(index));
 	}
     }
-  modified_p=False;
-  return True;
+  modified_p=false;
+  return true;
 }
 
 /*************************************
@@ -1097,13 +1098,13 @@ Bool WBCleanImageSkyModel::resizeWorkArrays(Int length)
 
     }
   
-  psf_p.resize(length,True);
-  image_p.resize(length,True);
-  cimage_p.resize(length,True);
-  gS_p.resize(length,True);
-  ggS_p.resize(length,True);
-  work_p.resize(length,True);
-  fluxScale_p.resize(length,True);
+  psf_p.resize(length,true);
+  image_p.resize(length,true);
+  cimage_p.resize(length,true);
+  gS_p.resize(length,true);
+  ggS_p.resize(length,true);
+  work_p.resize(length,true);
+  fluxScale_p.resize(length,true);
   
   if(length > originallength) // Add extra arrays  // TODO : This part can go - I think !!!
     {
@@ -1126,7 +1127,7 @@ Bool WBCleanImageSkyModel::resizeWorkArrays(Int length)
 
   ///cout << "Memory held by ImageSkyModel : " << 6*length << " float + " << 1*length << " complex images " << endl;
 
-  return True;
+  return true;
 }
 
 /************************************************************************************
@@ -1173,7 +1174,7 @@ Bool WBCleanImageSkyModel::checkParameters()
     }
   
   
-  return True;
+  return true;
 }
 
 // Copied from MFCleanImageSkyModel
@@ -1208,7 +1209,7 @@ void WBCleanImageSkyModel::blankOverlappingModels(){
 	      try{
 		LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
 		ArrayLattice<Bool> pixmask(latReg.get());
-		SubImage<Float> partToMask(image(model), imagreg, True);
+		SubImage<Float> partToMask(image(model), imagreg, true);
 		LatticeExpr<Float> myexpr(iif(pixmask, 0.0, partToMask) );
 		partToMask.copyData(myexpr);
 		
@@ -1263,8 +1264,8 @@ void WBCleanImageSkyModel::restoreOverlappingModels(){
 		LatticeRegion latReg=imagreg.toLatticeRegion(image(model).coordinates(), image(model).shape());
 		ArrayLattice<Bool> pixmask(latReg.get());
 
-		SubImage<Float> partToMerge(image(nextmodel), imagreg0, True);
-		SubImage<Float> partToUnmask(image(model), imagreg, True);
+		SubImage<Float> partToMerge(image(nextmodel), imagreg0, true);
+		SubImage<Float> partToUnmask(image(model), imagreg, true);
 		
 		LatticeExpr<Float> myexpr0(iif(pixmask,partToMerge,partToUnmask));
 		partToUnmask.copyData(myexpr0);
@@ -1342,14 +1343,14 @@ Bool WBCleanImageSkyModel::mergeDataError(ImageInterface<Float> &data, ImageInte
        if (data.hasPixelMask() || error.hasPixelMask()){
                Array<Bool> inMask;
 
-               outMask=Array<Bool>(newShape, True);
+               outMask=Array<Bool>(newShape, true);
 
                // make the mask for the data values
                if (data.hasPixelMask()){
                        inMask  = (data.pixelMask()).get();
                }
                else{
-                       inMask = Array<Bool>(data.shape(), True);
+                       inMask = Array<Bool>(data.shape(), true);
                }
 
                // add the data mask to the output
@@ -1360,7 +1361,7 @@ Bool WBCleanImageSkyModel::mergeDataError(ImageInterface<Float> &data, ImageInte
                        inMask  = (error.pixelMask()).get();
                }
                else{
-                       inMask = Array<Bool>(error.shape(), True);
+                       inMask = Array<Bool>(error.shape(), true);
                }
 
                // add the data mask to the output
@@ -1374,7 +1375,7 @@ Bool WBCleanImageSkyModel::mergeDataError(ImageInterface<Float> &data, ImageInte
        //       delete data;
        //   delete error;
 
-       return True;
+       return true;
 }
 
 } //# NAMESPACE CASA - END

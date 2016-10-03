@@ -36,42 +36,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Member templates
 template <class MT>
-void SpectralList::evaluate(Vector<MT> &y) const {
-  for (uInt j=0; j<y.nelements(); j++) {
+void SpectralList::evaluate(casacore::Vector<MT> &y) const {
+  for (casacore::uInt j=0; j<y.nelements(); j++) {
     if (list_p.nelements() > 0) y(j) = (*list_p[0])(j);
     else y(j) = 0;
   };
-  for (uInt i=1; i<list_p.nelements(); i++) {
-    for (uInt j=0; j<y.nelements(); j++) y(j) += (*list_p[i])(j);
+  for (casacore::uInt i=1; i<list_p.nelements(); i++) {
+    for (casacore::uInt j=0; j<y.nelements(); j++) y(j) += (*list_p[i])(j);
   };
 }
 
 template <class MT>
-void SpectralList::evaluate(Vector<MT> &y, const Vector<MT> &x) const {
+void SpectralList::evaluate(casacore::Vector<MT> &y, const casacore::Vector<MT> &x) const {
   y.resize(x.nelements());
-  for (uInt j=0; j<x.nelements(); j++) {
+  for (casacore::uInt j=0; j<x.nelements(); j++) {
     if (list_p.nelements() > 0) y(j) = (*list_p[0])(x(j));
     else y(j) = 0;
   };
-  for (uInt i=1; i<list_p.nelements(); i++) {
-    for (uInt j=0; j<x.nelements(); j++) y(j) += (*list_p[i])(x(j));
+  for (casacore::uInt i=1; i<list_p.nelements(); i++) {
+    for (casacore::uInt j=0; j<x.nelements(); j++) y(j) += (*list_p[i])(x(j));
   };
 }
 
 template <class MT>
-void SpectralList::residual(Vector<MT> &y) const {
-  for (uInt i=0; i<list_p.nelements(); i++) {
-    for (uInt j=0; j<y.nelements(); j++) y(j) -= (*list_p[i])(j);
+void SpectralList::residual(casacore::Vector<MT> &y) const {
+  for (casacore::uInt i=0; i<list_p.nelements(); i++) {
+    for (casacore::uInt j=0; j<y.nelements(); j++) y(j) -= (*list_p[i])(j);
   };
 }
 
 template <class MT>
-void SpectralList::residual(Vector<MT> &y, const Vector<MT> &x) const {
+void SpectralList::residual(casacore::Vector<MT> &y, const casacore::Vector<MT> &x) const {
   if (x.nelements() != y.nelements()) {
-    throw(AipsError("Unequal lengths in arguments SpectralList::residual"));
+    throw(casacore::AipsError("Unequal lengths in arguments SpectralList::residual"));
   };
-  for (uInt i=0; i<list_p.nelements(); i++) {
-    for (uInt j=0; j<x.nelements(); j++) y(j) -= (*list_p[i])(x(j));
+  for (casacore::uInt i=0; i<list_p.nelements(); i++) {
+    for (casacore::uInt j=0; j<x.nelements(); j++) y(j) -= (*list_p[i])(x(j));
   };
 }
 

@@ -54,6 +54,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -282,7 +283,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	else {
 	  itsMaskHandler.fillMask( itsImages->mask() , itsMaskString );
 	}
-	itsIsMaskLoaded=True;
+	itsIsMaskLoaded=true;
       }
   }
   */
@@ -385,7 +386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /// (1) /// Set up the Deconvolver Slicers.
 
     // Ask the deconvolver what shape it wants.
-    Bool onechan=False, onepol=False;
+    Bool onechan=false, onepol=false;
     queryDesiredShape(onechan, onepol);
 
     uInt nSubImages = ( (onechan)?imshape[3]:1 ) * ( (onepol)?imshape[2]:1 ) ;
@@ -413,9 +414,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /*
   void SDAlgorithmBase::initializeSubImages( SHARED_PTR<SIImageStore> &imagestore, uInt subim)
   {
-    itsResidual = SubImage<Float>( *(imagestore->residual()), itsDecSlices[subim], True );
-    itsPsf = SubImage<Float>( *(imagestore->psf()), itsDecSlices[subim], True );
-    itsModel = SubImage<Float>( *(imagestore->model()), itsDecSlices[subim], True );
+    itsResidual = SubImage<Float>( *(imagestore->residual()), itsDecSlices[subim], true );
+    itsPsf = SubImage<Float>( *(imagestore->psf()), itsDecSlices[subim], true );
+    itsModel = SubImage<Float>( *(imagestore->model()), itsDecSlices[subim], true );
 
     itsImages = imagestore;
 
@@ -439,7 +440,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       maxAbs=abs(minVal);
       posMaxAbs=posmin;
     }
-    return True;
+    return true;
   }
 
   Bool SDAlgorithmBase::findMaxAbsMask(const Array<Float>& lattice,
@@ -460,7 +461,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       maxAbs=abs(minVal);
       posMaxAbs=posmin;
     }
-    return True;
+    return true;
   }
 
   /*
@@ -475,7 +476,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition posmax(lattice.shape().nelements(), 0);
     minMaxMasked(minVal, maxVal, posmin, posmax, lattice,mask);
 
-    return True;
+    return true;
   }
   */
   /*

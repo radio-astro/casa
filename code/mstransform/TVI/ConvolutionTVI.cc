@@ -22,6 +22,7 @@
 
 #include <mstransform/TVI/ConvolutionTVI.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -56,23 +57,23 @@ ConvolutionTVI::ConvolutionTVI(	ViImplementation2 * inputVii,
 Bool ConvolutionTVI::parseConfiguration(const Record &configuration)
 {
 	int exists = -1;
-	Bool ret = True;
+	Bool ret = true;
 
 	// Parse kernel parameter (optional)
 	exists = -1;
 	exists = configuration.fieldNumber ("kernel");
 	if (exists >= 0)
 	{
-		if( configuration.type(exists) == casa::TpArrayFloat )
+		if( configuration.type(exists) == casacore::TpArrayFloat )
 		{
-			convCoeff_p.resize(0,False);
+			convCoeff_p.resize(0,false);
 			convCoeff_p = configuration.asArrayFloat( exists );
 			logger_p << LogIO::NORMAL << LogOrigin("ChannelAverageTVI", __FUNCTION__)
 					<< "Kernel is " << convCoeff_p << LogIO::POST;
 		}
 		else
 		{
-			ret = False;
+			ret = false;
 			logger_p << LogIO::SEVERE << LogOrigin("ChannelAverageTVI", __FUNCTION__)
 					<< "Wrong format of kernel parameter (only float/double/int arrays are supported) "
 					<< LogIO::POST;
@@ -224,7 +225,7 @@ void ConvolutionTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 
 	// Get weightSpectrum from sigmaSpectrum
 	Cube<Float> weightSpFromSigmaSp;
-	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),False);
+	weightSpFromSigmaSp.resize(vb->sigmaSpectrum().shape(),false);
 	weightSpFromSigmaSp = vb->sigmaSpectrum(); // = Operator makes a copy
 	arrayTransformInPlace (weightSpFromSigmaSp,sigmaToWeight);
 
@@ -390,17 +391,17 @@ template<class T> void ConvolutionLogicalORKernel<T>::kernel(	Vector<T> &inputVe
 	// Flag edges
 	if (startInputPos == outputPos)
 	{
-		outputVector(outputPos) = True;
+		outputVector(outputPos) = true;
 		return;
 	}
 
-	Bool outputFlag = False;
+	Bool outputFlag = false;
 	// Output sample is flagged if any of the contributors are flagged
 	for (uInt chanIndex = 0; chanIndex<width_p; chanIndex++)
 	{
 		if (inputVector(startInputPos+chanIndex))
 		{
-			outputFlag = True;
+			outputFlag = true;
 			break;
 		}
 	}

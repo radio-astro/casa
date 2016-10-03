@@ -37,6 +37,7 @@
 
 #include <limits>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -177,7 +178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtSliderBase::updateSlider() {
 		// Sets slider to latest range and value (without
 		// triggering slider signals or slChg slot below).
-		Bool restore = slider_->blockSignals(True);	// Prevent signal recursion.
+		Bool restore = slider_->blockSignals(true);	// Prevent signal recursion.
 		slider_->setMinimum(0);			// (Always at this value).
 		slider_->setMaximum(Int(slMax_));
 		slider_->setSliderPosition(sliderVal(dVal_));
@@ -187,7 +188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtSliderBase::emitVal() {
 		// emit current value -- this is the widget's main output.
-		emit itemValueChanged(itemName, textVal(),    QtAutoGui::Set, True);
+		emit itemValueChanged(itemName, textVal(),    QtAutoGui::Set, true);
 	}
 
 
@@ -467,7 +468,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Does not emit itemValueChanged (even if value is valid) -- caller
 		// will do that if necessary.
 
-		Bool ok = True;
+		Bool ok = true;
 
 
 		if(ptype == "array") {		// numeric vector.
@@ -755,7 +756,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			QString    opt   = allopts_.at(i);
 			QCheckBox* check = checkboxes_.at(i);
 
-			Bool restore = check->blockSignals(True);  // Prevent signal recursion.
+			Bool restore = check->blockSignals(true);  // Prevent signal recursion.
 			check->setCheckState( opts_.contains(opt)? Qt::Checked : Qt::Unchecked );
 			check->blockSignals(restore);
 		}	// signals (presumably) back on.

@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File HistoryTable.h
+ * casacore::File HistoryTable.h
  */
  
 #ifndef HistoryTable_CLASS
@@ -271,7 +271,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a HistoryTableIDL CORBA structure.
 	 *

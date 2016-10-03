@@ -58,13 +58,13 @@ public:
 	// struct for checking output file writability
 	struct OutputStruct {
 		// label used for messages, eg "residual image", "estmates file"
-		String label;
+		casacore::String label;
 		// pointer to the output name
-		String *outputFile;
+		casacore::String *outputFile;
 		// is this file required to be written, or can the task continue if it cannot be?
-		Bool required;
+		casacore::Bool required;
 		// If a file by the same name already exists, will the task allow it to be overwritten?
-		Bool replaceable;
+		casacore::Bool replaceable;
 	};
 
     OutputDestinationChecker();
@@ -72,13 +72,13 @@ public:
 	//Destructor
 	~OutputDestinationChecker();
 
-    static void checkOutputs(std::vector<OutputStruct> *const output, LogIO& log);
+    static void checkOutputs(std::vector<OutputStruct> *const output, casacore::LogIO& log);
 
-    static void checkOutput(OutputStruct& output, LogIO& log);
+    static void checkOutput(OutputStruct& output, casacore::LogIO& log);
 
     // Get the number of channels that have been selected. The process() method must
     // be called prior to calling this method or an exception is thrown.
-    uInt nSelectedChannels() const;
+    casacore::uInt nSelectedChannels() const;
 
 };
 

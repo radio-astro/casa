@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * File Boolean.h
+ * casacore::File Boolean.h
  */
 # ifndef Boolean_CLASS
 # define Boolean_CLASS

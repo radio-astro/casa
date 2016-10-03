@@ -35,8 +35,10 @@
 #define Log(level, ...) \
     {Logger::get()->log (__VA_ARGS__);};
 
+using namespace casacore;
 using namespace casa::async;
 
+using namespace casacore;
 namespace casa {
 
 ThreadCoordinatorBase::ThreadCoordinatorBase (Int nThreads, bool logStates)
@@ -46,10 +48,10 @@ ThreadCoordinatorBase::ThreadCoordinatorBase (Int nThreads, bool logStates)
     mutex_p (new async::Mutex()),
     nThreadsAtBarrier_p (0),
     nThreadsDispatched_p (0),
-    readyForWork_p (False),
+    readyForWork_p (false),
     stateChanged_p (new Condition ()),
-    workCompleted_p (False),
-    workToBeDone_p (False)
+    workCompleted_p (false),
+    workToBeDone_p (false)
 {}
 
 ThreadCoordinatorBase::~ThreadCoordinatorBase ()
@@ -65,8 +67,8 @@ ThreadCoordinatorBase::dispatchWork ()
 
   installWorkInfo (); // have subclass install work info for distribution
 
-  workToBeDone_p = True;
-  workCompleted_p = False;
+  workToBeDone_p = true;
+  workCompleted_p = false;
   stateChanged_p->notify_all ();
 }
 
@@ -114,7 +116,7 @@ ThreadCoordinatorBase::waitForWork (const Thread * thisThread)
       MutexLocker ml (* mutex_p);
       ++ nThreadsAtBarrier_p;
       if (nThreadsAtBarrier_p == nThreads_p){
-          workCompleted_p = True;
+          workCompleted_p = true;
           nThreadsAtBarrier_p = 0;
           stateChanged_p->notify_all ();
       }
@@ -125,7 +127,7 @@ ThreadCoordinatorBase::waitForWork (const Thread * thisThread)
   UniqueLock uniqueLock (* mutex_p);
 
   if (! readyForWork_p){
-      readyForWork_p = True;
+      readyForWork_p = true;
       stateChanged_p->notify_all ();
   }
 
@@ -140,10 +142,10 @@ ThreadCoordinatorBase::waitForWork (const Thread * thisThread)
   ++ nThreadsDispatched_p;
   if (nThreadsDispatched_p == nThreads_p){
       nThreadsDispatched_p = 0;
-      workToBeDone_p = False;
+      workToBeDone_p = false;
   }
 
-  readyForWork_p = False;
+  readyForWork_p = false;
 
   //  logState ("waitForWork (end wait)");
 
@@ -183,4 +185,5 @@ ThreadCoordinatorBase::waitForWorkersToReport ()
   //  logState ("... workers have reported");
 }
 
+using namespace casacore;
 } // end namespace casa

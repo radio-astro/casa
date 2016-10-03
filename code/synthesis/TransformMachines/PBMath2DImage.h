@@ -34,14 +34,18 @@
 #include <images/Images/ImageInterface.h>
 #include <measures/Measures.h>
 
+namespace casacore{
+
+template<class T> class TempImage;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#forward
-template<class T> class TempImage;
 
-typedef SquareMatrix<Complex,2> mjJones2;
-typedef SquareMatrix<Complex,4> mjJones4;
-typedef SquareMatrix<Float,2> mjJones2F;
+typedef casacore::SquareMatrix<casacore::Complex,2> mjJones2;
+typedef casacore::SquareMatrix<casacore::Complex,4> mjJones4;
+typedef casacore::SquareMatrix<casacore::Float,2> mjJones2F;
 
 // <summary> 2-D Image Primary Beam Model </summary>
 
@@ -92,8 +96,8 @@ typedef SquareMatrix<Float,2> mjJones2F;
 // </motivation>
 //
 // <todo asof="98/10/21">
-// <li> constructor from a MS beam subtable
-// <li> flush to MS beam subtable
+// <li> constructor from a casacore::MS beam subtable
+// <li> flush to casacore::MS beam subtable
 // </todo>
 
  
@@ -103,11 +107,11 @@ public:
   PBMath2DImage();
 
   // Instantiation from arguments; only an image is needed
-  PBMath2DImage(ImageInterface<Float>& reJonesImage);
-  PBMath2DImage(ImageInterface<Float>& reJonesImage,
-		ImageInterface<Float>& imJonesImage);
+  PBMath2DImage(casacore::ImageInterface<casacore::Float>& reJonesImage);
+  PBMath2DImage(casacore::ImageInterface<casacore::Float>& reJonesImage,
+		casacore::ImageInterface<casacore::Float>& imJonesImage);
 
-  PBMath2DImage(const ImageInterface<Complex>& jonesImage);
+  PBMath2DImage(const casacore::ImageInterface<casacore::Complex>& jonesImage);
 
   // Copy constructor
   // PBMath2DGImage(const PBMath2DImage& other);
@@ -122,118 +126,118 @@ public:
   PBMathInterface::PBClass whichPBClass() { return PBMathInterface::IMAGE; }  
   
   // Summarize the construction data for this primary beam
-  void summary(Int nValues=0);
+  void summary(casacore::Int nValues=0);
 
 protected:
 
-  virtual ImageInterface<Complex>& apply(const ImageInterface<Complex>& in,
-				 ImageInterface<Complex>& out,
-				 const MDirection& sp,
-				 const Quantity parAngle,	      
+  virtual casacore::ImageInterface<casacore::Complex>& apply(const casacore::ImageInterface<casacore::Complex>& in,
+				 casacore::ImageInterface<casacore::Complex>& out,
+				 const casacore::MDirection& sp,
+				 const casacore::Quantity parAngle,	      
 				 const BeamSquint::SquintType doSquint,
-				 Bool inverse,
-				 Bool conjugate,
-				 Int ipower,  // ie, 1=VP, 2=PB, 4=PB^2
-				 Float cutoff,
-				 Bool forward); 
+				 casacore::Bool inverse,
+				 casacore::Bool conjugate,
+				 casacore::Int ipower,  // ie, 1=VP, 2=PB, 4=PB^2
+				 casacore::Float cutoff,
+				 casacore::Bool forward); 
 
-  virtual ImageInterface<Float>& apply(const ImageInterface<Float>& in,
-			       ImageInterface<Float>& out,
-			       const MDirection& sp,
-			       const Quantity parAngle,	      
+  virtual casacore::ImageInterface<casacore::Float>& apply(const casacore::ImageInterface<casacore::Float>& in,
+			       casacore::ImageInterface<casacore::Float>& out,
+			       const casacore::MDirection& sp,
+			       const casacore::Quantity parAngle,	      
 			       const BeamSquint::SquintType doSquint,
-			       Float cutoff, Int ipower);
+			       casacore::Float cutoff, casacore::Int ipower);
 
   virtual SkyComponent& apply(SkyComponent& in,
 		      SkyComponent& out,
-		      const MDirection& sp,
-		      const Quantity frequency,	      
-		      const Quantity parAngle,	      
+		      const casacore::MDirection& sp,
+		      const casacore::Quantity frequency,	      
+		      const casacore::Quantity parAngle,	      
 		      const BeamSquint::SquintType doSquint,
-		      Bool inverse,
-		      Bool conjugate,
-		      Int ipower,  // ie, 1=VP, 2=PB, 4=PB^2
-		      Float cutoff,
-		      Bool forward); 
+		      casacore::Bool inverse,
+		      casacore::Bool conjugate,
+		      casacore::Int ipower,  // ie, 1=VP, 2=PB, 4=PB^2
+		      casacore::Float cutoff,
+		      casacore::Bool forward); 
 
-  virtual Int support(const CoordinateSystem& cs);
+  virtual casacore::Int support(const casacore::CoordinateSystem& cs);
 
 
 
 private:    
 
   // Check for congruency
-  void checkJonesCongruent(ImageInterface<Float>& reJones,
-			   ImageInterface<Float>& imJones);
-  void checkImageCongruent(ImageInterface<Float>& image);
+  void checkJonesCongruent(casacore::ImageInterface<casacore::Float>& reJones,
+			   casacore::ImageInterface<casacore::Float>& imJones);
+  void checkImageCongruent(casacore::ImageInterface<casacore::Float>& image);
 
 
   // Update the Jones Matrix
-  void updateJones(const CoordinateSystem& coords,
-		   const IPosition& shape,
-		   const MDirection& pc,
-		   const Quantity& paAngle);
+  void updateJones(const casacore::CoordinateSystem& coords,
+		   const casacore::IPosition& shape,
+		   const casacore::MDirection& pc,
+		   const casacore::Quantity& paAngle);
 
-  // Complex to Complex
-  void applyJones(const Array<Float>* reJones,
-		  const Array<Float>* imJones,
-		  const Array<Complex>& in,
-		  Array<Complex>& out,
-		  Vector<Int>& polmap,
-		  Bool inverse,
-		  Bool conjugate,
-		  Int ipower,  // ie, 1=VP, 2=PB
-		  Float cutoff,
-		  Bool circular=True,
-		  Bool forward=True);
+  // casacore::Complex to Complex
+  void applyJones(const casacore::Array<casacore::Float>* reJones,
+		  const casacore::Array<casacore::Float>* imJones,
+		  const casacore::Array<casacore::Complex>& in,
+		  casacore::Array<casacore::Complex>& out,
+		  casacore::Vector<casacore::Int>& polmap,
+		  casacore::Bool inverse,
+		  casacore::Bool conjugate,
+		  casacore::Int ipower,  // ie, 1=VP, 2=PB
+		  casacore::Float cutoff,
+		  casacore::Bool circular=true,
+		  casacore::Bool forward=true);
 
- void applyJonesFast(const Float*& reJones,
-			  const Float*& imJones,
-			  const Array<Complex>& in,
-			  Array<Complex>& out,
-			  Vector<Int>& polmap,
-			  Bool /*inverse*/,
-			  Bool /*conjugate*/,
-			  Int ipower,  // ie, 1=VP, 2=PB
-			  Float /*cutoff*/,
-			  Bool circular,
-		     Bool forward);
- void applyJonesFastX(const Float*& reJones,
-			  const Float*& imJones,
-			  const Complex*& in,
-			  Complex*& outstor,
-			  const Vector<Int>& polmap,
-			  Bool /*inverse*/,
-			  Bool /*conjugate*/,
-			  Int ipower,  // ie, 1=VP, 2=PB
-			  Float /*cutoff*/,
-		      Bool circular,
-		      Bool forward,
-		      const Int ix, const Int nx, const Int ny, const Int npol);
-
-
-  // Float to Float
-  void applyJones(const Array<Float>* reJones,
-		  const Array<Float>* imJones,
-		  const Array<Float>& in,
-		  Array<Float>& out,
-		  Vector<Int>& polmap,
-		  Float cutoff,
-		  Bool circular=True);
+ void applyJonesFast(const casacore::Float*& reJones,
+			  const casacore::Float*& imJones,
+			  const casacore::Array<casacore::Complex>& in,
+			  casacore::Array<casacore::Complex>& out,
+			  casacore::Vector<casacore::Int>& polmap,
+			  casacore::Bool /*inverse*/,
+			  casacore::Bool /*conjugate*/,
+			  casacore::Int ipower,  // ie, 1=VP, 2=PB
+			  casacore::Float /*cutoff*/,
+			  casacore::Bool circular,
+		     casacore::Bool forward);
+ void applyJonesFastX(const casacore::Float*& reJones,
+			  const casacore::Float*& imJones,
+			  const casacore::Complex*& in,
+			  casacore::Complex*& outstor,
+			  const casacore::Vector<casacore::Int>& polmap,
+			  casacore::Bool /*inverse*/,
+			  casacore::Bool /*conjugate*/,
+			  casacore::Int ipower,  // ie, 1=VP, 2=PB
+			  casacore::Float /*cutoff*/,
+		      casacore::Bool circular,
+		      casacore::Bool forward,
+		      const casacore::Int ix, const casacore::Int nx, const casacore::Int ny, const casacore::Int npol);
 
 
-  TempImage<Float>* reJonesImage_p;
-  TempImage<Float>* reRegridJonesImage_p;
-  TempImage<Float>* imJonesImage_p;
-  TempImage<Float>* imRegridJonesImage_p;
+  // casacore::Float to Float
+  void applyJones(const casacore::Array<casacore::Float>* reJones,
+		  const casacore::Array<casacore::Float>* imJones,
+		  const casacore::Array<casacore::Float>& in,
+		  casacore::Array<casacore::Float>& out,
+		  casacore::Vector<casacore::Int>& polmap,
+		  casacore::Float cutoff,
+		  casacore::Bool circular=true);
 
-  Vector<Double>* incrementsReJones_p;
-  Vector<Double>* incrementsImJones_p;
 
-  Vector<Double>* referencePixelReJones_p;
-  Vector<Double>* referencePixelImJones_p;
+  casacore::TempImage<casacore::Float>* reJonesImage_p;
+  casacore::TempImage<casacore::Float>* reRegridJonesImage_p;
+  casacore::TempImage<casacore::Float>* imJonesImage_p;
+  casacore::TempImage<casacore::Float>* imRegridJonesImage_p;
 
-  Float pa_p;
+  casacore::Vector<casacore::Double>* incrementsReJones_p;
+  casacore::Vector<casacore::Double>* incrementsImJones_p;
+
+  casacore::Vector<casacore::Double>* referencePixelReJones_p;
+  casacore::Vector<casacore::Double>* referencePixelImJones_p;
+
+  casacore::Float pa_p;
 };
 
 

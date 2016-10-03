@@ -68,6 +68,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :

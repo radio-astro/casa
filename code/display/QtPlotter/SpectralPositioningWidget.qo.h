@@ -4,10 +4,14 @@
 #include <QtGui/QWidget>
 #include <display/QtPlotter/SpectralPositioningWidget.ui.h>
 #include <casa/Arrays/Vector.h>
+namespace casacore{
+
+	class LogIO;
+}
+
 namespace casa {
 
 	class ProfileTaskMonitor;
-	class LogIO;
 
 	class SpectralPositioningWidget : public QWidget {
 		Q_OBJECT
@@ -15,10 +19,10 @@ namespace casa {
 	public:
 		SpectralPositioningWidget(QWidget *parent = 0);
 		void setTaskMonitor( ProfileTaskMonitor* monitor );
-		void setLogger( LogIO* logger );
+		void setLogger( casacore::LogIO* logger );
 
-		void updateRegion( const Vector<Double> px, const Vector<Double> py,
-		                   const Vector<Double> wx, const Vector<Double> wy );
+		void updateRegion( const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
+		                   const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy );
 		~SpectralPositioningWidget();
 
 	private slots:
@@ -49,15 +53,15 @@ namespace casa {
 		                                   const double* const secondXPix, const double* const secondYPix,
 		                                   double* const blcxPix, double* const blcyPix,
 		                                   double* const trcxPix, double* const trcYPix, bool pixels=true );
-		double toRadians( Bool& valid, QLineEdit * lineEdit );
+		double toRadians( casacore::Bool& valid, QLineEdit * lineEdit );
 		void switchBoxLabels( int index, int pageIndex, QLabel* const x1Label, QLabel* const y1Label,
 		                      QLabel* const x2Label, QLabel* const y2Label );
 		void setPixelLineEdits( double topLeft, double bottomLeft,
 		                        double topRight, double bottomRight );
 		void setWorldEdits( double topLeft, double bottomLeft,
 		                    double topRight, double bottomRight );
-		void adjustPoint( const Vector<Double>& newX, const Vector<Double>& newY,
-		                  Vector<Double>& xValues, Vector<Double>& yValues );
+		void adjustPoint( const casacore::Vector<casacore::Double>& newX, const casacore::Vector<casacore::Double>& newY,
+		                  casacore::Vector<casacore::Double>& xValues, casacore::Vector<casacore::Double>& yValues );
 		Ui::SpectralPositioningWidgetClass ui;
 
 		enum PositionTypeIndex { POINT, BOX, END_POSITION_TYPE };
@@ -69,11 +73,11 @@ namespace casa {
 		                           };
 		QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
 		ProfileTaskMonitor* profileTaskMonitor;
-		LogIO* logger;
-		Vector<Double> pixelXValues;
-		Vector<Double> pixelYValues;
-		Vector<Double> worldXValues;
-		Vector<Double> worldYValues;
+		casacore::LogIO* logger;
+		casacore::Vector<casacore::Double> pixelXValues;
+		casacore::Vector<casacore::Double> pixelYValues;
+		casacore::Vector<casacore::Double> worldXValues;
+		casacore::Vector<casacore::Double> worldYValues;
 	};
 }
 #endif // SPECTRALPOSITIONINGWIDGET_H

@@ -76,7 +76,8 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
-#define DORES True
+#define DORES true
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   rGridFT::rGridFT(Long icachesize, Int itilesize, 
@@ -84,9 +85,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   String iconvType, Float padding,
 		 Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize), tilesize(itilesize),
-  gridder(0), isTiled(False), convType(iconvType),
+  gridder(0), isTiled(false), convType(iconvType),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
-  usezero_p(usezero), noPadding_p(False), usePut2_p(False), 
+  usezero_p(usezero), noPadding_p(false), usePut2_p(false), 
   machineName_p("rGridFT"), visResampler_p(visResampler)//visResampler_p(useDoublePrec)
 
 {
@@ -101,14 +102,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   MPosition mLocation, Float padding, Bool usezero, 
 		   Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("rGridFT"), visResampler_p(visResampler)
+  tilesize(itilesize), gridder(0), isTiled(false), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(false), 
+  usePut2_p(false), machineName_p("rGridFT"), visResampler_p(visResampler)
 {
   logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mLocation_p=mLocation;
-  tangentSpecified_p=False;
+  tangentSpecified_p=false;
   useDoubleGrid_p=useDoublePrec;
   canComputeResiduals_p=DORES;
 }
@@ -118,14 +119,14 @@ rGridFT::rGridFT(Long icachesize, Int itilesize,
 		 String iconvType,
 		 MDirection mTangent, Float padding, Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("rGridFT"), visResampler_p(visResampler)
+  tilesize(itilesize), gridder(0), isTiled(false), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(false), 
+  usePut2_p(false), machineName_p("rGridFT"), visResampler_p(visResampler)
 {
   logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mTangent_p=mTangent;
-  tangentSpecified_p=True;
+  tangentSpecified_p=true;
   useDoubleGrid_p=useDoublePrec;
   canComputeResiduals_p=DORES;
 }
@@ -135,15 +136,15 @@ rGridFT::rGridFT(Long icachesize, Int itilesize,
 		 String iconvType, MPosition mLocation, MDirection mTangent, Float padding,
 		 Bool usezero, Bool useDoublePrec)
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
-  tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
-  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False),machineName_p("rGridFT"), visResampler_p(visResampler)
+  tilesize(itilesize), gridder(0), isTiled(false), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
+  offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(false), 
+  usePut2_p(false),machineName_p("rGridFT"), visResampler_p(visResampler)
 {
   logIO() << LogOrigin("rGridFT", "rGridFT")  << LogIO::NORMAL;
   logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mLocation_p=mLocation;
   mTangent_p=mTangent;
-  tangentSpecified_p=True;
+  tangentSpecified_p=true;
   useDoubleGrid_p=useDoublePrec;
   canComputeResiduals_p=DORES;
 }
@@ -228,10 +229,10 @@ void rGridFT::init() {
   canComputeResiduals_p = DORES;
   ok();
 
-  /* hardwiring isTiled is False
+  /* hardwiring isTiled is false
   // Padding is possible only for non-tiled processing
   if((padding_p*padding_p*image->shape().product())>cachesize) {
-    isTiled=True;
+    isTiled=true;
     nx    = image->shape()(0);
     ny    = image->shape()(1);
     npol  = image->shape()(2);
@@ -240,7 +241,7 @@ void rGridFT::init() {
   else {
   */
     // We are padding.
-    isTiled=False;
+    isTiled=false;
     if(!noPadding_p){
       CompositeNumber cn(uInt(image->shape()(0)*2));    
       nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
@@ -343,7 +344,7 @@ void rGridFT::initializeToVis(ImageInterface<Complex>& iimage,
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
   if(isTiled) {
-    lattice=CountedPtr<Lattice<Complex> >(image, False);
+    lattice=CountedPtr<Lattice<Complex> >(image, false);
   }
   else {
      IPosition gridShape(4, nx, ny, npol, nchan);
@@ -440,7 +441,7 @@ void rGridFT::initializeToSky(ImageInterface<Complex>& iimage,
   if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
-    lattice=CountedPtr<Lattice<Complex> >(image, False);
+    lattice=CountedPtr<Lattice<Complex> >(image, false);
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
@@ -450,7 +451,7 @@ void rGridFT::initializeToSky(ImageInterface<Complex>& iimage,
       griddedData2.resize(gridShape);
       griddedData2=DComplex(0.0);
     }
-    //iimage.get(griddedData, False);
+    //iimage.get(griddedData, false);
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
     lattice=arrayLattice;
@@ -577,15 +578,15 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   //  vbs.rowFlag_p.reference(vb.flagRow());  
   if(!usezero_p) 
     for (Int rownr=startRow; rownr<=endRow; rownr++) 
-      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
+      if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=true;
 
   // Really nice way of converting a Cube<Int> to Cube<Bool>.
   // However the VBS objects should ultimately be references
   // directly to bool cubes.
-  //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
+  //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = false; vbs.rowFlag(rowFlags) = true;
 
   //**************
-  vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
+  vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = false; vbs.flagCube_p(flags!=0) = true;
   //  vbs.flagCube_p.reference(vb.flagCube());
   //**************
 
@@ -640,7 +641,7 @@ void rGridFT::get(VisBuffer& vb, Int row)
 
   // Apparently we don't support "tiled gridding" any more (good! :)).
   if(isTiled) 
-    throw(SynthesisFTMachineError("rGridFT::get(): Internal error.  isTiled is True. "));
+    throw(SynthesisFTMachineError("rGridFT::get(): Internal error.  isTiled is true. "));
   else 
     {
       VBStore vbs;
@@ -655,13 +656,13 @@ void rGridFT::get(VisBuffer& vb, Int row)
       vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();  
       if(!usezero_p) 
 	for (Int rownr=startRow; rownr<=endRow; rownr++) 
-	  if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
+	  if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=true;
 
       // Really nice way of converting a Cube<Int> to Cube<Bool>.
       // However these should ultimately be references directly to bool
       // cubes.
-      vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
-      //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
+      vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = false; vbs.flagCube_p(flags!=0) = true;
+      //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = false; vbs.rowFlag(rowFlags) = true;
       
       visResampler_p->setParams(uvScale,uvOffset,dphase);
       visResampler_p->setMaps(chanMap, polMap);
@@ -708,7 +709,7 @@ ImageInterface<Complex>& rGridFT::getImage(Matrix<Float>& weights, Bool normaliz
     // }
 
     // x and y transforms
-    //    LatticeFFT::cfft2d(*lattice,False);
+    //    LatticeFFT::cfft2d(*lattice,false);
     //
     // Retain the double precision grid for FFT as well.  Convert it
     // to single precision just after (since images are still single
@@ -717,13 +718,13 @@ ImageInterface<Complex>& rGridFT::getImage(Matrix<Float>& weights, Bool normaliz
     if(useDoubleGrid_p)
       {
 	ArrayLattice<DComplex> darrayLattice(griddedData2);
-	LatticeFFT::cfft2d(darrayLattice,False);
+	LatticeFFT::cfft2d(darrayLattice,false);
 	convertArray(griddedData, griddedData2);
 	//Don't need the double-prec grid anymore...
 	griddedData2.resize();
       }
     else
-      LatticeFFT::cfft2d(*lattice,False);
+      LatticeFFT::cfft2d(*lattice,false);
 
     {
       Int inx = lattice->shape()(0);
@@ -800,7 +801,7 @@ Bool rGridFT::toRecord(String&,// error,
 		       RecordInterface& outRec, Bool withImage)
 {
   // Save the current rGridFT object to an output state record
-  Bool retval = True;
+  Bool retval = true;
 
   Double cacheVal=(Double)cachesize;
   outRec.define("cache", cacheVal);
@@ -845,7 +846,7 @@ return retval;
 Bool rGridFT::fromRecord(String&,// error,
 			 const RecordInterface& inRec)
 {
-  Bool retval = True;
+  Bool retval = true;
   gridder=0; imageCache=0; lattice=0; arrayLattice=0;
   Double cacheVal;
   inRec.get("cache", cacheVal);
@@ -864,7 +865,7 @@ Bool rGridFT::fromRecord(String&,// error,
   mTangent_p=phasecenter;
   // This should be passed down too but the tangent plane is 
   // expected to be specified in all meaningful cases.
-  tangentSpecified_p=True;  
+  tangentSpecified_p=true;  
   Vector<Double> dirValue(3);
   String dirUnit;
   inRec.get("dirvalue", dirValue);
@@ -897,7 +898,7 @@ Bool rGridFT::fromRecord(String&,// error,
     init(); 
 
     if(isTiled) {
-      lattice=CountedPtr<Lattice<Complex> >(image, False);
+      lattice=CountedPtr<Lattice<Complex> >(image, false);
     }
     else {
       // Make the grid the correct shape and turn it into an array lattice
@@ -970,30 +971,30 @@ void rGridFT::makeImage(FTMachine::Type type,
       case FTMachine::RESIDUAL:
 	vb.visCube()=vb.correctedVisCube();
 	vb.visCube()-=vb.modelVisCube();
-        put(vb, -1, False);
+        put(vb, -1, false);
         break;
       case FTMachine::MODEL:
 	vb.visCube()=vb.modelVisCube();
-        put(vb, -1, False);
+        put(vb, -1, false);
         break;
       case FTMachine::CORRECTED:
 	vb.visCube()=vb.correctedVisCube();
-        put(vb, -1, False);
+        put(vb, -1, false);
         break;
       case FTMachine::PSF:
 	vb.visCube()=Complex(1.0,0.0);
-        put(vb, -1, True);
+        put(vb, -1, true);
         break;
       case FTMachine::OBSERVED:
       default:
-        put(vb, -1, False);
+        put(vb, -1, false);
         break;
       }
     }
   }
   finalizeToSky();
   // Normalize by dividing out weights, etc.
-  getImage(weight, True);
+  getImage(weight, true);
 }
 
 String rGridFT::name(){

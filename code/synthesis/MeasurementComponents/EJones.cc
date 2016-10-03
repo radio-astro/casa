@@ -47,6 +47,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -211,8 +212,8 @@ void EGainCurve::setSpecify(const Record& specify) {
   //  cout << "spwbands_ = " << spwbands_ << endl;
 
   // Neither applying nor solving in specify context
-  setSolved(False);
-  setApplied(False);
+  setSolved(false);
+  setApplied(false);
 
   // Collect Cal table parameters
   if (specify.isDefined("caltable")) {
@@ -287,8 +288,8 @@ void EGainCurve::specify(const Record& specify) {
 
   LogMessage message;
 
-  Bool doeff(False);
-  Bool dogc(False);
+  Bool doeff(false);
+  Bool dogc(false);
   if (specify.isDefined("caltype")) {
     String caltype=specify.asString("caltype");
     //cout << "caltype=" << caltype  << endl;
@@ -308,7 +309,7 @@ void EGainCurve::specify(const Record& specify) {
 
   // ...for each spw:
   spwOK_.resize(nSpw());  
-  spwOK_.set(False);  // will set True when we find them
+  spwOK_.set(false);  // will set true when we find them
 
   for (Int ispw=0; ispw<nSpw(); ispw++) {
 
@@ -350,7 +351,7 @@ void EGainCurve::specify(const Record& specify) {
 	  }
 	}
 
-	solveAllParOK()=True;
+	solveAllParOK()=true;
 	
 	ArrayIterator<Float> piter(solveAllRPar(),1);
 	
@@ -373,7 +374,7 @@ void EGainCurve::specify(const Record& specify) {
 	  */
 	}
 	
-	spwOK_(currSpw())=True;
+	spwOK_(currSpw())=true;
 	
       }
       else {
@@ -384,7 +385,7 @@ void EGainCurve::specify(const Record& specify) {
 	//throw(AipsError(o.str()));
 	
 	// Use unity
-	solveAllParOK()=True;
+	solveAllParOK()=true;
 	solveAllRPar().set(0.0);
 	solveAllRPar()(Slice(0,1,1),Slice(),Slice()).set(1.0);
 	solveAllRPar()(Slice(4,1,1),Slice(),Slice()).set(1.0);
@@ -393,11 +394,11 @@ void EGainCurve::specify(const Record& specify) {
     }
     else {
       // Use unity, flat
-      solveAllParOK()=True;
+      solveAllParOK()=true;
       solveAllRPar().set(0.0);
       solveAllRPar()(Slice(0,1,1),Slice(),Slice()).set(1.0);
       solveAllRPar()(Slice(4,1,1),Slice(),Slice()).set(1.0);
-      spwOK_(currSpw())=True;
+      spwOK_(currSpw())=true;
     }
 
     // Scale by efficiency factor, if requested
@@ -410,7 +411,7 @@ void EGainCurve::specify(const Record& specify) {
 
   } // ispw
 
-  if (allEQ(spwOK_,False))
+  if (allEQ(spwOK_,false))
     throw(AipsError("Found no gaincurve data for any spw."));
 
 
@@ -483,7 +484,7 @@ void EGainCurve::calcAllJones() {
 
   // Nominally no gain curve effect
   currJElem()=Complex(1.0);
-  currJElemOK()=False;
+  currJElemOK()=false;
 
   /*
   cout << "currSpw() = " << currSpw() << endl;
@@ -508,7 +509,7 @@ void EGainCurve::calcAllJones() {
 	loss+=((*c)*ang);
       }
       (*J) = Complex(loss);
-      (*JOk) = True;
+      (*JOk) = true;
     }
   
 }

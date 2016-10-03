@@ -38,8 +38,15 @@
 //#include <synthesis/MeasurementComponents/EPJones.h>
 
 #include <casa/namespace.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
 class MeasurementSet;
+class MEpoch;
+class NewMSSimulator;
+template<class T> class PagedImage;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
 class VisSet;
 class VisCal;
 class ACoh;
@@ -48,11 +55,8 @@ class ComponentList;
 class CleanImageSkyModel;
 class FTMachine;
 class ComponentFTMachine;
-class MEpoch;
-class NewMSSimulator;
 
 
-template<class T> class PagedImage;
 
 
 
@@ -65,7 +69,7 @@ template<class T> class PagedImage;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="MeasurementSet">MeasurementSet</linkto>
+//   <li> <linkto class="casacore::MeasurementSet">casacore::MeasurementSet</linkto>
 //   <li> <linkto class="SkyEquation">SkyEquation</linkto>
 //   <li> <linkto class="SkyModel">SkyModel</linkto>
 // </prerequisite>
@@ -85,7 +89,7 @@ template<class T> class PagedImage;
 // </motivation>
 //
 // <thrown>
-// <li> AipsError - if an error occurs
+// <li> casacore::AipsError - if an error occurs
 // </thrown>
 //
 // <todo asof="1999/07/22">
@@ -99,13 +103,13 @@ public:
  
   Simulator();
   // Construct from string
-  Simulator(String& msname);
+  Simulator(casacore::String& msname);
 
   // "newsimulator" ctor
-  Simulator(MeasurementSet &thems);
+  Simulator(casacore::MeasurementSet &thems);
   
   // Return the name of the MeasurementSet
-  String name() const;
+  casacore::String name() const;
   
   Simulator(const Simulator &other);
 
@@ -113,225 +117,225 @@ public:
  
   ~Simulator();
   
-  Bool close();
+  casacore::Bool close();
 
 
   // Select the data to be predicted or corrupted
-  Bool setdata(const Vector<Int>& spectralwindowids,
-	       const Vector<Int>& fieldids,
-	       const String& msSelect);
+  casacore::Bool setdata(const casacore::Vector<casacore::Int>& spectralwindowids,
+	       const casacore::Vector<casacore::Int>& fieldids,
+	       const casacore::String& msSelect);
   
-  Bool settimes(const Quantity& integrationTime, 
-		const Bool      useHourAngle,
-		const MEpoch&   refTime);
+  casacore::Bool settimes(const casacore::Quantity& integrationTime, 
+		const casacore::Bool      useHourAngle,
+		const casacore::MEpoch&   refTime);
 
   // set the configuration; NOTE: the telname used
   // here will determine the Voltage Pattern to be used in the
   // simulation
-  Bool setconfig(const String& telname,
-		 const Vector<Double>& x, 
-		 const Vector<Double>& y, 
-		 const Vector<Double>& z,
-		 const Vector<Double>& dishDiameter,
-		 const Vector<Double>& offset,
-		 const Vector<String>& mount,
-		 const Vector<String>& antName,
-		 const Vector<String>& padName,
-		 const String& coordsystem,
-		 const MPosition& referenceLocation);
+  casacore::Bool setconfig(const casacore::String& telname,
+		 const casacore::Vector<casacore::Double>& x, 
+		 const casacore::Vector<casacore::Double>& y, 
+		 const casacore::Vector<casacore::Double>& z,
+		 const casacore::Vector<casacore::Double>& dishDiameter,
+		 const casacore::Vector<casacore::Double>& offset,
+		 const casacore::Vector<casacore::String>& mount,
+		 const casacore::Vector<casacore::String>& antName,
+		 const casacore::Vector<casacore::String>& padName,
+		 const casacore::String& coordsystem,
+		 const casacore::MPosition& referenceLocation);
   // get info back from e.g. loaded ms in newmssimulator
-  Bool getconfig();
+  casacore::Bool getconfig();
 
   // set the observed fields for the simulation
-  Bool setfield(const String& sourceName,           
-		const MDirection& sourceDirection,  
-		const String& calCode,
-		const Quantity& distance);
+  casacore::Bool setfield(const casacore::String& sourceName,           
+		const casacore::MDirection& sourceDirection,  
+		const casacore::String& calCode,
+		const casacore::Quantity& distance);
 
 
   // set automatic fields for a mosaic
-  Bool setmosaicfield(const String& sourcename, const String& calcode, 
-		      const MDirection& fieldcenter, 
-		      const Int xmosp, const Int ymosp, 
-		      const Quantity& mosspacing, const Quantity& distance);
+  casacore::Bool setmosaicfield(const casacore::String& sourcename, const casacore::String& calcode, 
+		      const casacore::MDirection& fieldcenter, 
+		      const casacore::Int xmosp, const casacore::Int ymosp, 
+		      const casacore::Quantity& mosspacing, const casacore::Quantity& distance);
 
 
   // set one or more spectral windows and their characteristics
-  Bool setspwindow(const String& spwName,
-		   const Quantity& freq,
-		   const Quantity& deltafreq,
-		   const Quantity& freqresolution,
-		   const MFrequency::Types& freqType,
-		   const Int nchannels,
-		   const String& stokes);
+  casacore::Bool setspwindow(const casacore::String& spwName,
+		   const casacore::Quantity& freq,
+		   const casacore::Quantity& deltafreq,
+		   const casacore::Quantity& freqresolution,
+		   const casacore::MFrequency::Types& freqType,
+		   const casacore::Int nchannels,
+		   const casacore::String& stokes);
 
   // Set the simulated feed characteristics
-  Bool setfeed(const String& mode,
-	       const Vector<Double>& x,
-	       const Vector<Double>& y,
-	       const Vector<String>& pol);		
+  casacore::Bool setfeed(const casacore::String& mode,
+	       const casacore::Vector<casacore::Double>& x,
+	       const casacore::Vector<casacore::Double>& y,
+	       const casacore::Vector<casacore::String>& pol);		
 
   // Set the voltage pattern
-  Bool setvp(const Bool dovp,
-             const Bool defaultVP,
-             const String& vpTable,
-             const Bool doSquint,
-             const Quantity &parAngleInc,
-	     const Quantity &skyPosThreshold,
-	     const Float &pbLimit);
+  casacore::Bool setvp(const casacore::Bool dovp,
+             const casacore::Bool defaultVP,
+             const casacore::String& vpTable,
+             const casacore::Bool doSquint,
+             const casacore::Quantity &parAngleInc,
+	     const casacore::Quantity &skyPosThreshold,
+	     const casacore::Float &pbLimit);
 
   // Set the random number generator seed for the addition of errors
-  Bool setseed(const Int seed);
+  casacore::Bool setseed(const casacore::Int seed);
 
   // Arrange to corrupt with existing calibration
   //   (cf Calibrater setapply)
-  Bool setapply (const String& type,
-                 const Double& t,
-                 const String& table,
-                 const String& spw,
-                 const String& field,
-                 const String& interp,
-                 const Bool& calwt,
-                 const Vector<Int>& spwmap,
-                 const Float& opacity);
+  casacore::Bool setapply (const casacore::String& type,
+                 const casacore::Double& t,
+                 const casacore::String& table,
+                 const casacore::String& spw,
+                 const casacore::String& field,
+                 const casacore::String& interp,
+                 const casacore::Bool& calwt,
+                 const casacore::Vector<casacore::Int>& spwmap,
+                 const casacore::Float& opacity);
 
   // Apply antenna-based gain errors
-  Bool setgain(const String& mode, 
-	       const String& table,
-	       const Quantity& interval,
-	       const Vector<Double>& amplitude);
+  casacore::Bool setgain(const casacore::String& mode, 
+	       const casacore::String& table,
+	       const casacore::Quantity& interval,
+	       const casacore::Vector<casacore::Double>& amplitude);
 
-  Bool settrop(const String& mode, 
-	       const String& table,
-	       const Float pwv,
-	       const Float deltapwv,
-	       const Float beta,
-	       const Float windspeed);
+  casacore::Bool settrop(const casacore::String& mode, 
+	       const casacore::String& table,
+	       const casacore::Float pwv,
+	       const casacore::Float deltapwv,
+	       const casacore::Float beta,
+	       const casacore::Float windspeed);
 
   // Apply antenna pointing and squint errors
-  Bool setpointingerror(const String& epJTableName,
-			const Bool applyPointingOffsets,
-			const Bool doPBCorrection);
+  casacore::Bool setpointingerror(const casacore::String& epJTableName,
+			const casacore::Bool applyPointingOffsets,
+			const casacore::Bool doPBCorrection);
 
   // Apply polarization leakage errors
-  Bool setleakage(const String& mode, const String& table,
-		  //const Quantity& interval, 
-		  const Vector<Double>& amplitude,
-		  const Vector<Double>& offset);
+  casacore::Bool setleakage(const casacore::String& mode, const casacore::String& table,
+		  //const casacore::Quantity& interval, 
+		  const casacore::Vector<casacore::Double>& amplitude,
+		  const casacore::Vector<casacore::Double>& offset);
 
   // Apply bandpass errors
-  Bool setbandpass(const String& mode, const String& table,
-		   const Quantity& interval, const Vector<Double>& amplitude);
+  casacore::Bool setbandpass(const casacore::String& mode, const casacore::String& table,
+		   const casacore::Quantity& interval, const casacore::Vector<casacore::Double>& amplitude);
 
   // Simulate the parallactic angle phase effect
-  Bool setpa(const String& mode, const String& table,
-	     const Quantity& interval);
+  casacore::Bool setpa(const casacore::String& mode, const casacore::String& table,
+	     const casacore::Quantity& interval);
 
   // Simulate quasi-realistic thermal noise, which can depend upon
   // elevation, bandwidth, antenna diameter, as expected
-  Bool oldsetnoise(const String& mode, 
-		   const String& table,
-		   const Quantity& simplenoise,
-		   const Float antefficiency,
-		   const Float correfficiency,
-		   const Float spillefficiency,
-		   const Float tau,
-		   const Float trx,
-		   const Float tatmos, 
-		   const Float tcmb);
+  casacore::Bool oldsetnoise(const casacore::String& mode, 
+		   const casacore::String& table,
+		   const casacore::Quantity& simplenoise,
+		   const casacore::Float antefficiency,
+		   const casacore::Float correfficiency,
+		   const casacore::Float spillefficiency,
+		   const casacore::Float tau,
+		   const casacore::Float trx,
+		   const casacore::Float tatmos, 
+		   const casacore::Float tcmb);
 
-  Bool setnoise(const String& mode,
-		const String& caltable,
-		const Quantity& simplenoise,
+  casacore::Bool setnoise(const casacore::String& mode,
+		const casacore::String& caltable,
+		const casacore::Quantity& simplenoise,
 		// if blank, not stored
 		// or ATM calculation
-		const Quantity& pground,
-		const Float relhum,
-		const Quantity& altitude,
-		const Quantity& waterheight,
-		const Quantity& pwv,
+		const casacore::Quantity& pground,
+		const casacore::Float relhum,
+		const casacore::Quantity& altitude,
+		const casacore::Quantity& waterheight,
+		const casacore::Quantity& pwv,
 		// user-specified tau and tatmos 
-		const Float tatmos,
-		const Float tau,
+		const casacore::Float tatmos,
+		const casacore::Float tau,
 		//
-		const Float antefficiency,
-		const Float spillefficiency,
-		const Float correfficiency,
-		const Float trx,
-		const Float tground,
-		const Float tcmb,
-		const Bool OTF,
-		const Float senscoeff,
-		const Int rxtype);
+		const casacore::Float antefficiency,
+		const casacore::Float spillefficiency,
+		const casacore::Float correfficiency,
+		const casacore::Float trx,
+		const casacore::Float tground,
+		const casacore::Float tcmb,
+		const casacore::Bool OTF,
+		const casacore::Float senscoeff,
+		const casacore::Int rxtype);
 
   // apply errors to the data in our MS
-  //  Bool corrupt();
-  Bool corrupt();
+  //  casacore::Bool corrupt();
+  casacore::Bool corrupt();
 
   // Set limits
-  Bool setlimits(const Double shadowFraction,
-		 const Quantity& elevationLimit);
+  casacore::Bool setlimits(const casacore::Double shadowFraction,
+		 const casacore::Quantity& elevationLimit);
 
   // Set autocorrelation weight
-  Bool setauto(const Double autocorrwt);
+  casacore::Bool setauto(const casacore::Double autocorrwt);
 
 
   // add new visibilities as described by the set methods to an existing
   // or just created measurement set
-  Bool observe(const String& sourcename, const String& spwname,
-	       const Quantity& startTime, 
-	       const Quantity& stopTime,
-	       const Bool add_observationn=True,
-	       const Bool state_sig=True,
-	       const Bool state_ref=True,
+  casacore::Bool observe(const casacore::String& sourcename, const casacore::String& spwname,
+	       const casacore::Quantity& startTime, 
+	       const casacore::Quantity& stopTime,
+	       const casacore::Bool add_observationn=true,
+	       const casacore::Bool state_sig=true,
+	       const casacore::Bool state_ref=true,
 	       const double& state_cal=0.,
 	       const double& state_load=0.,
 	       const unsigned int state_sub_scan=1,
-	       const String& state_obs_mode="OBSERVE_TARGET#ON_SOURCE",
-	       const String& observername="CASA simulator",
-	       const String& projectname="CASA simulation");
+	       const casacore::String& state_obs_mode="OBSERVE_TARGET#ON_SOURCE",
+	       const casacore::String& observername="CASA simulator",
+	       const casacore::String& projectname="CASA simulation");
 
 
-  Bool observemany(const Vector<String>& sourcenames, const String& spwname,
-		   const Vector<Quantity>& startTimes, 
-		   const Vector<Quantity>& stopTimes,
-		   const Vector<MDirection>& directions,
-		   const Bool add_observation,
-		   const Bool state_sig,
-		   const Bool state_ref,
+  casacore::Bool observemany(const casacore::Vector<casacore::String>& sourcenames, const casacore::String& spwname,
+		   const casacore::Vector<casacore::Quantity>& startTimes, 
+		   const casacore::Vector<casacore::Quantity>& stopTimes,
+		   const casacore::Vector<casacore::MDirection>& directions,
+		   const casacore::Bool add_observation,
+		   const casacore::Bool state_sig,
+		   const casacore::Bool state_ref,
 		   const double& state_cal,
 		   const double& state_load,
 		   const unsigned int state_sub_scan,
-		   const String& state_obs_mode,
-		   const String& observername,
-		   const String& projectname);
+		   const casacore::String& state_obs_mode,
+		   const casacore::String& observername,
+		   const casacore::String& projectname);
     
 
   // Given a model image, predict the visibilities onto the (u,v) coordinates
   // of our MS
-  Bool predict(const Vector<String>& modelImage, 
-	       const String& compList, 
-	       const Bool incremental);
+  casacore::Bool predict(const casacore::Vector<casacore::String>& modelImage, 
+	       const casacore::String& compList, 
+	       const casacore::Bool incremental);
 
-  String state();
+  casacore::String state();
 
-  Bool summary();
+  casacore::Bool summary();
 
-  Bool resetviscal();
-  Bool resetimcal();
-  Bool reset();
+  casacore::Bool resetviscal();
+  casacore::Bool resetimcal();
+  casacore::Bool reset();
 
   // Set the processing options
-  Bool setoptions(const String& ftmachine, const Int cache, const Int tile,
-		  const String& gridfunction, const MPosition& mLocation,
-		  const Float padding, const Int facets,
-		  const Double maxData,const Int wprojPlanes);
+  casacore::Bool setoptions(const casacore::String& ftmachine, const casacore::Int cache, const casacore::Int tile,
+		  const casacore::String& gridfunction, const casacore::MPosition& mLocation,
+		  const casacore::Float padding, const casacore::Int facets,
+		  const casacore::Double maxData,const casacore::Int wprojPlanes);
 
  
   // Set the print level
-  inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
+  inline void setPrtlev(const casacore::Int& prtlev) { prtlev_=prtlev; };
   // Return print (cout) level
-  inline Int& prtlev() { return prtlev_; };
+  inline casacore::Int& prtlev() { return prtlev_; };
 
   
 private:
@@ -339,10 +343,10 @@ private:
   
   // Arrange to corrupt with simulated calibration
   //   (cf Calibrater setapply)
-  Bool create_corrupt(Record& simpar);
+  casacore::Bool create_corrupt(casacore::Record& simpar);
 
-  // Prints an error message if the newsimulator DO is detached and returns True.
-  Bool detached() const;
+  // Prints an error message if the newsimulator DO is detached and returns true.
+  casacore::Bool detached() const;
 
   // set up some defaults
   void defaults();
@@ -351,42 +355,42 @@ private:
   void makeVisSet();
 
   // print out some help about create()
-  // Format direction nicely
-  String formatDirection(const MDirection& direction);
+  // casacore::Format direction nicely
+  casacore::String formatDirection(const casacore::MDirection& direction);
 
-  // Format time nicely
-  String formatTime(const Double time);
+  // casacore::Format time nicely
+  casacore::String formatTime(const casacore::Double time);
   
   // individual summary() functions
   // <group>
-  Bool createSummary(LogIO& os);
-  Bool configSummary(LogIO& os);
-  Bool fieldSummary(LogIO& os);
-  Bool spWindowSummary(LogIO& os);
-  Bool feedSummary(LogIO& os);
-  Bool timeSummary(LogIO& os);
+  casacore::Bool createSummary(casacore::LogIO& os);
+  casacore::Bool configSummary(casacore::LogIO& os);
+  casacore::Bool fieldSummary(casacore::LogIO& os);
+  casacore::Bool spWindowSummary(casacore::LogIO& os);
+  casacore::Bool feedSummary(casacore::LogIO& os);
+  casacore::Bool timeSummary(casacore::LogIO& os);
 
-  Bool predictSummary(LogIO& os);
-  Bool vpSummary(LogIO& os);
-  Bool optionsSummary(LogIO& os);
+  casacore::Bool predictSummary(casacore::LogIO& os);
+  casacore::Bool vpSummary(casacore::LogIO& os);
+  casacore::Bool optionsSummary(casacore::LogIO& os);
 
-  Bool corruptSummary(LogIO& os);
-  Bool noiseSummary(LogIO& os);
+  casacore::Bool corruptSummary(casacore::LogIO& os);
+  casacore::Bool noiseSummary(casacore::LogIO& os);
   // </group>
 
 
   // SkyEquation management
   // <group>
-  Bool createSkyEquation( const Vector<String>& image, const String complist);
+  casacore::Bool createSkyEquation( const casacore::Vector<casacore::String>& image, const casacore::String complist);
   void destroySkyEquation();
   // </group>
 
-  String msname_p;
-  MeasurementSet* ms_p;
-  MeasurementSet* mssel_p;
+  casacore::String msname_p;
+  casacore::MeasurementSet* ms_p;
+  casacore::MeasurementSet* mssel_p;
   VisSet* vs_p;
 
-  Int seed_p;
+  casacore::Int seed_p;
 
   ACoh     *ac_p;
 
@@ -395,50 +399,50 @@ private:
   FTMachine *ft_p;
   ComponentFTMachine *cft_p;
 
-  Int nmodels_p;
-  PtrBlock<PagedImage<Float>* > images_p;
+  casacore::Int nmodels_p;
+  casacore::PtrBlock<casacore::PagedImage<casacore::Float>* > images_p;
   ComponentList *componentList_p;
 
-  String ftmachine_p, gridfunction_p;
-  Int cache_p, tile_p;
-  MPosition mLocation_p;
-  Float padding_p;
-  Bool MSMayBeOK;
-  Int facets_p;
-  Int wprojPlanes_p;
-  Long maxData_p;
+  casacore::String ftmachine_p, gridfunction_p;
+  casacore::Int cache_p, tile_p;
+  casacore::MPosition mLocation_p;
+  casacore::Float padding_p;
+  casacore::Bool MSMayBeOK;
+  casacore::Int facets_p;
+  casacore::Int wprojPlanes_p;
+  casacore::Long maxData_p;
 
 
   // info for coordinates and station locations
   // <group>
-  Bool           areStationCoordsSet_p;
-  String         telescope_p;
-  Vector<Double> x_p;
-  Vector<Double> y_p;
-  Vector<Double> z_p;
-  Vector<Double>  diam_p;
-  Vector<Double>  offset_p;
-  Vector<String> mount_p;
-  Vector<String> antName_p;
-  Vector<String> padName_p;
-  String         coordsystem_p;
-  MPosition      mRefLocation_p;
+  casacore::Bool           areStationCoordsSet_p;
+  casacore::String         telescope_p;
+  casacore::Vector<casacore::Double> x_p;
+  casacore::Vector<casacore::Double> y_p;
+  casacore::Vector<casacore::Double> z_p;
+  casacore::Vector<casacore::Double>  diam_p;
+  casacore::Vector<casacore::Double>  offset_p;
+  casacore::Vector<casacore::String> mount_p;
+  casacore::Vector<casacore::String> antName_p;
+  casacore::Vector<casacore::String> padName_p;
+  casacore::String         coordsystem_p;
+  casacore::MPosition      mRefLocation_p;
   // </group>
 
   // info for observed field parameters
   // <group>
 
-  Int nField;
-  Vector<String> 	sourceName_p;
-  Vector<String>        calCode_p;
-  Vector<MDirection>	sourceDirection_p;
-  Vector<Quantity>      distance_p;
+  casacore::Int nField;
+  casacore::Vector<casacore::String> 	sourceName_p;
+  casacore::Vector<casacore::String>        calCode_p;
+  casacore::Vector<casacore::MDirection>	sourceDirection_p;
+  casacore::Vector<casacore::Quantity>      distance_p;
 
   // </group>
   // VisEquation handles corruption by visibility calibration effects
   VisEquation ve_p;
   // Generic container for any number of calibration effects to corrupt with
-  PtrBlock<VisCal*> vc_p;
+  casacore::PtrBlock<VisCal*> vc_p;
 
   // info for spectral window parameters
   // <group>
@@ -449,40 +453,40 @@ private:
   // we'll at least get some functionality here, but there are probably
   // combinations of pols etc that won't properly report here. 
   // better than now, when it doesn't even report more than one spw.
-  Int nSpw;
-  Vector<String> 	spWindowName_p; 
-  Vector<Int>		nChan_p;
-  Vector<Quantity>     	startFreq_p;
-  Vector<Quantity>     	freqInc_p;
-  Vector<Quantity>     	freqRes_p;
-  Vector<String>     	stokesString_p;   
+  casacore::Int nSpw;
+  casacore::Vector<casacore::String> 	spWindowName_p; 
+  casacore::Vector<casacore::Int>		nChan_p;
+  casacore::Vector<casacore::Quantity>     	startFreq_p;
+  casacore::Vector<casacore::Quantity>     	freqInc_p;
+  casacore::Vector<casacore::Quantity>     	freqRes_p;
+  casacore::Vector<casacore::String>     	stokesString_p;   
   // </group>
   // </group>
 
 
   // Feed information (there will be much more coming,
   // but we are brain dead at this moment).
-  String feedMode_p;
-  Int nFeeds_p;
-  Bool feedsHaveBeenSet;
-  Bool feedsInitialized;
+  casacore::String feedMode_p;
+  casacore::Int nFeeds_p;
+  casacore::Bool feedsHaveBeenSet;
+  casacore::Bool feedsInitialized;
 
   // Some times which are required for settimes
   // <group>
-  Quantity integrationTime_p;
-  Bool     useHourAngle_p;
-  MEpoch   refTime_p;
-  Bool timesHaveBeenSet_p;
+  casacore::Quantity integrationTime_p;
+  casacore::Bool     useHourAngle_p;
+  casacore::MEpoch   refTime_p;
+  casacore::Bool timesHaveBeenSet_p;
   // </group>
 
   // Some parameters for voltage pattern (vp):
   // <group>
-  Bool doVP_p;			// Do we apply VP or not?
-  Bool doDefaultVP_p;		// Do we use the default VP for this telescope?
-  String vpTableStr_p;		// Otherwise, use the VP specified in this Table
-  Quantity  parAngleInc_p;	// Parallactic Angle increment
-  Quantity  skyPosThreshold_p;  // a tolerance in the pointing center position
-  Float pbLimit_p;              // The PB level (in percentage) after which the PB is assumed to be zero
+  casacore::Bool doVP_p;			// Do we apply VP or not?
+  casacore::Bool doDefaultVP_p;		// Do we use the default VP for this telescope?
+  casacore::String vpTableStr_p;		// Otherwise, use the VP specified in this Table
+  casacore::Quantity  parAngleInc_p;	// Parallactic Angle increment
+  casacore::Quantity  skyPosThreshold_p;  // a tolerance in the pointing center position
+  casacore::Float pbLimit_p;              // The PB level (in percentage) after which the PB is assumed to be zero
   BeamSquint::SquintType  squintType_p;	// Control of squint to use
   VPSkyJones* vp_p;		// pointer to VPSkyJones for the sky equation
   VPSkyJones* gvp_p;		// pointer to VPSkyJones for the sky equation
@@ -490,25 +494,25 @@ private:
 
   // Saving some information about the various corrupting terms
   // <group>
-  String noisemode_p;
+  casacore::String noisemode_p;
   // </group>
 
   // Cache the newsimulator
-  NewMSSimulator* sim_p;
+  casacore::NewMSSimulator* sim_p;
 
   // The Jones matrix to hold the antenna pointing offsets and the
-  // associated table name.  if applyPointingOffsets is False, only
+  // associated table name.  if applyPointingOffsets is false, only
   // VLA polarization squint will be included in EPJones.  If
-  // doPBCorrection is True, the model image will be divided by the
+  // doPBCorrection is true, the model image will be divided by the
   // primary beam before being used to predict the visibilities.
   // <group>
   //  EPJones *epJ_p;
-  String epJTableName_p;
-  Bool applyPointingOffsets_p;
-  Bool doPBCorrection_p;
+  casacore::String epJTableName_p;
+  casacore::Bool applyPointingOffsets_p;
+  casacore::Bool doPBCorrection_p;
   // </group>
   
-  Int prtlev_;
+  casacore::Int prtlev_;
 
 };
 

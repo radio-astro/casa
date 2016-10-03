@@ -58,27 +58,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// thrown, and likewise, <src>pixblc</src> and <src>pixtrc</src>
 		// must both be of length two.
 		ActiveCaching2dDD(const DisplayCoordinateSystem &coordsys,
-		                  const Vector<Double> &pixblc,
-		                  const Vector<Double> &pixtrc);
+		                  const casacore::Vector<casacore::Double> &pixblc,
+		                  const casacore::Vector<casacore::Double> &pixtrc);
 
 		// Destructor.
 		virtual ~ActiveCaching2dDD();
 
-		// Coordinate transformation handlers, called by WorldCanvasHolder.
+		// casacore::Coordinate transformation handlers, called by WorldCanvasHolder.
 		// <group>
-		virtual Bool linToWorld(Vector<Double> &world, const Vector<Double> &lin);
-		virtual Bool worldToLin(Vector<Double> &lin, const Vector<Double> &world);
+		virtual casacore::Bool linToWorld(casacore::Vector<casacore::Double> &world, const casacore::Vector<casacore::Double> &lin);
+		virtual casacore::Bool worldToLin(casacore::Vector<casacore::Double> &lin, const casacore::Vector<casacore::Double> &world);
 		// </group>
 
-		// Format a string containing coordinate information at the given
+		// casacore::Format a string containing coordinate information at the given
 		// world coordinate.
-		virtual String showPosition(const Vector<Double> &world,
-		                            const Bool &displayAxesOnly = False);
+		virtual casacore::String showPosition(const casacore::Vector<casacore::Double> &world,
+		                            const casacore::Bool &displayAxesOnly = false);
 
 		// World axis information suppliers.
 		// <group>
-		virtual Vector<String> worldAxisNames() const;
-		virtual Vector<String> worldAxisUnits() const;
+		virtual casacore::Vector<casacore::String> worldAxisNames() const;
+		virtual casacore::Vector<casacore::String> worldAxisUnits() const;
 		// </group>
 
 		// Return the number of display elements (ie. drawable images) in
@@ -86,10 +86,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// two-dimensional DisplayData, and can only have one view.  That
 		// is, there is no third axis to iterate over for multiple views.
 		// <group>
-		virtual uInt nelements(const WorldCanvasHolder &/*wcHolder*/) const {
+		virtual casacore::uInt nelements(const WorldCanvasHolder &/*wcHolder*/) const {
 			return nelements();
 		}
-		virtual uInt nelements() const {
+		virtual casacore::uInt nelements() const {
 			return 1;
 		}
 		// </group>
@@ -98,22 +98,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setDefaultOptions();
 
 		// Apply options stored in <src>rec</src> to the DisplayData.  A
-		// return value of <src>True</src> means a refresh is needed.
+		// return value of <src>true</src> means a refresh is needed.
 		// <src>recOut</src> contains any fields which were implicitly
 		// changed as a result of the call to this function.
-		virtual Bool setOptions(Record &rec, Record &recOut);
+		virtual casacore::Bool setOptions(casacore::Record &rec, casacore::Record &recOut);
 
 		// Retrieve the current and default options and parameter types.
-		virtual Record getOptions( bool scrub=false ) const;
+		virtual casacore::Record getOptions( bool scrub=false ) const;
 
 		// Negotiatiate WorldCanvas linear coordinate system when asked to
 		// do so by the WorldCanvasHolder.
-		virtual Bool sizeControl(WorldCanvasHolder &wcHolder,
+		virtual casacore::Bool sizeControl(WorldCanvasHolder &wcHolder,
 		                         AttributeBuffer &holderBuf);
 
 		// Determine whether DD can draw on the current coordinate system
 		// of the given WC[H].
-		virtual Bool conformsToCS(const WorldCanvas& wc);
+		virtual casacore::Bool conformsToCS(const WorldCanvas& wc);
 
 		// Tidy up the elements of this DisplayData.
 		virtual void cleanup();
@@ -135,23 +135,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Install a DisplayCoordinateSystem and limits.
 		void setCoordinateSystem(const DisplayCoordinateSystem &coordsys,
-		                         const Vector<Double> &pixblc,
-		                         const Vector<Double> &pixtrc);
+		                         const casacore::Vector<casacore::Double> &pixblc,
+		                         const casacore::Vector<casacore::Double> &pixtrc);
 
-		// Identify a specified world axis by its Coordinate type, number,
+		// Identify a specified world axis by its casacore::Coordinate type, number,
 		// and axis in that coordinate.
-		void identifyWorldAxis(Coordinate::Type &type, Int &coordinate,
-		                       Int &axisincoord, const uInt worldaxisnum);
+		void identifyWorldAxis(casacore::Coordinate::Type &type, casacore::Int &coordinate,
+		                       casacore::Int &axisincoord, const casacore::uInt worldaxisnum);
 
-		// Generate a String code for the specified world axis, describing
+		// Generate a casacore::String code for the specified world axis, describing
 		// the coordinate type, number and axis in that coordinate.
-		String codeWorldAxis(const uInt worldaxisnum);
+		casacore::String codeWorldAxis(const casacore::uInt worldaxisnum);
 
 		// Return the world axis increments.
-		Vector<Double> worldAxisIncrements() const;
+		casacore::Vector<casacore::Double> worldAxisIncrements() const;
 
 		// Return whether tracking is currently world (T) or pixel (F) coordinates.
-		virtual Bool worldCoordTracking() const {
+		virtual casacore::Bool worldCoordTracking() const {
 			return itsShowWorldCoordinate;
 		}
 
@@ -159,24 +159,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DisplayCoordinateSystem itsCoordinateSystem;
 
 		// Store the 2d pixel corners here.
-		Vector<Double> itsPixelBlc, itsPixelTrc;
+		casacore::Vector<casacore::Double> itsPixelBlc, itsPixelTrc;
 
 	private:
 
 		// Option: aspect ratio for pixels.
-		String itsOptionsAspect;
+		casacore::String itsOptionsAspect;
 
 		// Position tracking
-		String itsSpectralUnit;
-		String itsVelocityType;
-		Bool itsAbsolute;
-		Bool itsShowWorldCoordinate;
-		Bool itsFractionalPixels;
+		casacore::String itsSpectralUnit;
+		casacore::String itsVelocityType;
+		casacore::Bool itsAbsolute;
+		casacore::Bool itsShowWorldCoordinate;
+		casacore::Bool itsFractionalPixels;
 
 		// Set Spectral formatting
 		void setSpectralFormatting (DisplayCoordinateSystem& cSys,
-		                            const String& velTypeString,
-		                            const String& unitString);
+		                            const casacore::String& velTypeString,
+		                            const casacore::String& unitString);
 
 
 	};

@@ -61,30 +61,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class RFATimeMedian : public RFADiffMapBase
 {
 public:
-  RFATimeMedian  ( RFChunkStats &ch,const RecordInterface &parm );
+  RFATimeMedian  ( RFChunkStats &ch,const casacore::RecordInterface &parm );
   virtual ~RFATimeMedian ();
 
-  virtual Bool newChunk (Int &maxmem);
+  virtual casacore::Bool newChunk (casacore::Int &maxmem);
   virtual void endChunk ();
   virtual void startData (bool verbose);
-  virtual IterMode iterTime (uInt itime);
-  virtual IterMode iterRow  (uInt irow);
+  virtual IterMode iterTime (casacore::uInt itime);
+  virtual IterMode iterRow  (casacore::uInt irow);
   virtual IterMode endData  ();
-  virtual String getDesc ();
-  static const RecordInterface & getDefaults ();
+  virtual casacore::String getDesc ();
+  static const casacore::RecordInterface & getDefaults ();
 
 protected:
-  uInt itime;  
-  MedianSlider & slider (uInt ich,uInt ifr);
+  casacore::uInt itime;  
+  casacore::MedianSlider & slider (casacore::uInt ich,casacore::uInt ifr);
 
   FlagCubeIterator flag_iter;
   
-  uInt halfwin;
-  MedianSlider *msl;
+  casacore::uInt halfwin;
+  casacore::MedianSlider *msl;
   
 };
 
-inline MedianSlider & RFATimeMedian::slider (uInt ich,uInt ifr)
+inline casacore::MedianSlider & RFATimeMedian::slider (casacore::uInt ich,casacore::uInt ifr)
 {
   return msl[ ifr*num(CHAN) + ich ];
 }
@@ -119,16 +119,16 @@ inline MedianSlider & RFATimeMedian::slider (uInt ich,uInt ifr)
 class RFAFreqMedian : public RFADiffMapBase
 {
 public:
-  RFAFreqMedian  ( RFChunkStats &ch,const RecordInterface &parm );
+  RFAFreqMedian  ( RFChunkStats &ch,const casacore::RecordInterface &parm );
   virtual ~RFAFreqMedian () {};
 
-  virtual Bool newChunk (Int &maxmem);
-  virtual RFA::IterMode iterRow (uInt irow);
-  virtual String getDesc ();
-  static const RecordInterface & getDefaults ();
+  virtual casacore::Bool newChunk (casacore::Int &maxmem);
+  virtual RFA::IterMode iterRow (casacore::uInt irow);
+  virtual casacore::String getDesc ();
+  static const casacore::RecordInterface & getDefaults ();
 
 protected:
-  uInt halfwin;
+  casacore::uInt halfwin;
 
 };
 

@@ -35,15 +35,15 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T>
-	AttributeValuePoi<T>::AttributeValuePoi(T* value, const Bool strict)
+	AttributeValuePoi<T>::AttributeValuePoi(T* value, const casacore::Bool strict)
 		: AttributeValue<T>(*value, strict),
 		  itsVectorPointerPtr(0),
 		  itsScalarPointerPtr(value),
-		  itsPointerType(whatType(value))
+		  itsPointerType(casacore::whatType(value))
 	{}
 
 	template <class T>
-	AttributeValuePoi<T>::AttributeValuePoi(Vector<T>* value, const Bool strict)
+	AttributeValuePoi<T>::AttributeValuePoi(casacore::Vector<T>* value, const casacore::Bool strict)
 		: AttributeValue<T>(*value, strict),
 		  itsVectorPointerPtr(value),
 		  itsScalarPointerPtr(0),
@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	template <class T>
-	void AttributeValuePoi<T>::setValue(const Vector<T> &value) {
+	void AttributeValuePoi<T>::setValue(const casacore::Vector<T> &value) {
 		if (itsScalarPointerPtr) {
 
 // We can set only the first element
@@ -105,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void AttributeValuePoi<T>::operator+=(const AttributeValueBase &other) {
 // check that other is an AttributeValuePoi:
 
-		if (other.className() != String("AttributeValuePoi")) return;
+		if (other.className() != casacore::String("AttributeValuePoi")) return;
 
 // check that types are consistent, and not invalid
 
@@ -117,7 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 		AttributeValue<T>::operator+=(other);
 //
-		Vector<T> value = getValue();
+		casacore::Vector<T> value = getValue();
 		updatePointerValue();
 	}
 
@@ -135,11 +135,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (itsScalarPointerPtr != 0) {
 			*itsScalarPointerPtr = getValue()(0);
 			if (getValue().nelements() > 1) {
-				cerr << "AttValPoi::updatePointerValue - discarding vector elements.  This is" << endl;
-				cerr << "AttValPoi::updatePointerValue - a design flaw. Please defect this error" << endl;
+				std::cerr << "AttValPoi::updatePointerValue - discarding vector elements.  This is" << std::endl;
+				std::cerr << "AttValPoi::updatePointerValue - a design flaw. Please defect this error" << std::endl;
 			}
 		} else {
-			const Vector<T>& value = getValue();
+			const casacore::Vector<T>& value = getValue();
 			itsVectorPointerPtr->resize(0);
 			*itsVectorPointerPtr = value;
 		}
@@ -148,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // get the DataType of the aliased variable
 	template <class T>
-	DataType AttributeValuePoi<T>::getPointerType() const {
+	casacore::DataType AttributeValuePoi<T>::getPointerType() const {
 		return itsPointerType;
 	}
 

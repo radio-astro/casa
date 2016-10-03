@@ -111,31 +111,31 @@ public:
   virtual ~ComponentFTMachine();
 
   // Get actual coherence : this is the only virtual method
-  virtual void get(VisBuffer& vb, SkyComponent& component, Int row=-1) = 0;
+  virtual void get(VisBuffer& vb, SkyComponent& component, casacore::Int row=-1) = 0;
   // Get actual coherence : this is the other only virtual method
-  virtual void get(VisBuffer& vb, const ComponentList& componentList, Int row=-1) = 0;
+  virtual void get(VisBuffer& vb, const ComponentList& componentList, casacore::Int row=-1) = 0;
 
   // Rotate the uvw from the observed phase center to the
   // desired phase center.
-  void rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
-		 const VisBuffer& vb, const MDirection& mDesired);
+  void rotateUVW(casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase,
+		 const VisBuffer& vb, const casacore::MDirection& mDesired);
   // A version that use pointers to contigous matrix and vector 
-  void rotateUVW(Double*& uvw, Double*& dphase, const Int nrows,
-		 const VisBuffer& vb, const MDirection& mDesired);
+  void rotateUVW(casacore::Double*& uvw, casacore::Double*& dphase, const casacore::Int nrows,
+		 const VisBuffer& vb, const casacore::MDirection& mDesired);
   // Set number of threads to use when predicting. Setting it to -1 
   // basically tell openmp to use the number it can get
-  void setnumthreads(const Int numthreads);
+  void setnumthreads(const casacore::Int numthreads);
 protected:
 
-  LogIO logIO_p;
+  casacore::LogIO logIO_p;
 
-  LogIO& logIO();
+  casacore::LogIO& logIO();
 
   // Default Position used for phase rotations
-  MPosition mLocation_p;
+  casacore::MPosition mLocation_p;
   
   virtual void ok();
-  Int numthreads_p;
+  casacore::Int numthreads_p;
 
 };
 

@@ -54,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // RFASelector accepts a whole bunch of options to select a subset of the
-// MS (by time, antenna, baseline, channel/frequency, etc.), and to flag/unflag 
+// casacore::MS (by time, antenna, baseline, channel/frequency, etc.), and to flag/unflag 
 // the whole selection, or specific parts of it (autocorrelations, specific 
 // time slots, VLA quacks, etc.)
 // </synopsis>
@@ -69,75 +69,75 @@ class RFASelector : public RFAFlagCubeBase
 {
 public:
 // constructor. 
-  RFASelector ( RFChunkStats &ch,const RecordInterface &parm ); 
+  RFASelector ( RFChunkStats &ch,const casacore::RecordInterface &parm ); 
   virtual ~RFASelector ();
   
-  virtual uInt estimateMemoryUse () { return RFAFlagCubeBase::estimateMemoryUse()+2; }
-  virtual Bool newChunk ( Int &maxmem );
-  virtual IterMode iterTime ( uInt it );
-  virtual void endRows(uInt itime);
-  virtual IterMode iterRow  ( uInt ir );
-  virtual void iterFlag(uInt itime);
+  virtual casacore::uInt estimateMemoryUse () { return RFAFlagCubeBase::estimateMemoryUse()+2; }
+  virtual casacore::Bool newChunk ( casacore::Int &maxmem );
+  virtual IterMode iterTime ( casacore::uInt it );
+  virtual void endRows(casacore::uInt itime);
+  virtual IterMode iterRow  ( casacore::uInt ir );
+  virtual void iterFlag(casacore::uInt itime);
   virtual void startData(bool verbose);
 
-  virtual String getDesc ();
-  static const RecordInterface & getDefaults ();
+  virtual casacore::String getDesc ();
+  static const casacore::RecordInterface & getDefaults ();
 
-  Bool fortestingonly_parseMinMax( Float &vmin,Float &vmax,const RecordInterface &spec,uInt f0 );
-  void fortestingonly_parseClipField( const RecordInterface &spec,Bool clip );
+  casacore::Bool fortestingonly_parseMinMax( casacore::Float &vmin,casacore::Float &vmax,const casacore::RecordInterface &spec,casacore::uInt f0 );
+  void fortestingonly_parseClipField( const casacore::RecordInterface &spec,casacore::Bool clip );
 
 protected:
   typedef struct ClipInfo {
       RFDataMapper *mapper; 
-      Float vmin, vmax; 
-      Bool channel_average; // average data over channels?
-      Bool clip;            // flag outside range if True (otherwise flag inside)
-      Float offset;         // offset added to value (used for angles, etc.)
+      casacore::Float vmin, vmax; 
+      casacore::Bool channel_average; // average data over channels?
+      casacore::Bool clip;            // flag outside range if true (otherwise flag inside)
+      casacore::Float offset;         // offset added to value (used for angles, etc.)
   } ClipInfo;
   
     
-  template<class T> Bool reformRange( Matrix<T> &rng,const Array<T> &arr );
-  template<class T> Bool parseRange( Matrix<T> &rng,const RecordInterface &parm,const String &id );
-  template<class T> Bool find( uInt &index,const T &obj,const Vector<T> &arr );
+  template<class T> casacore::Bool reformRange( casacore::Matrix<T> &rng,const casacore::Array<T> &arr );
+  template<class T> casacore::Bool parseRange( casacore::Matrix<T> &rng,const casacore::RecordInterface &parm,const casacore::String &id );
+  template<class T> casacore::Bool find( casacore::uInt &index,const T &obj,const casacore::Vector<T> &arr );
   
-  Bool parseTimes  ( Array<Double> &times,const RecordInterface &parm,const String &id,Bool secs=False );
-  void addString   ( String &str,const String &s1,const char *sep=" " );
-  virtual void processRow  ( uInt ifr,uInt it );
-  Bool parseMinMax ( Float &vmin,Float &vmax,const RecordInterface &spec,uInt f0 );
-  void addClipInfo ( const Vector<String> &expr,Float vmin,Float vmax,Bool clip, Bool channel_average );
-  void parseClipField  ( const RecordInterface &spec,Bool clip );
-  void addClipInfoDesc ( const Block<ClipInfo> &clip );
+  casacore::Bool parseTimes  ( casacore::Array<casacore::Double> &times,const casacore::RecordInterface &parm,const casacore::String &id,casacore::Bool secs=false );
+  void addString   ( casacore::String &str,const casacore::String &s1,const char *sep=" " );
+  virtual void processRow  ( casacore::uInt ifr,casacore::uInt it );
+  casacore::Bool parseMinMax ( casacore::Float &vmin,casacore::Float &vmax,const casacore::RecordInterface &spec,casacore::uInt f0 );
+  void addClipInfo ( const casacore::Vector<casacore::String> &expr,casacore::Float vmin,casacore::Float vmax,casacore::Bool clip, casacore::Bool channel_average );
+  void parseClipField  ( const casacore::RecordInterface &spec,casacore::Bool clip );
+  void addClipInfoDesc ( const casacore::Block<ClipInfo> &clip );
 
   // shadow mode
-  Double diameter;   /* diameter to use. If negative use 
+  casacore::Double diameter;   /* diameter to use. If negative use 
                         the diameters array (true antenna diameters)
                      */
-  Vector< Double > diameters;
-  ROMSAntennaColumns *ac;
+  casacore::Vector< casacore::Double > diameters;
+  casacore::ROMSAntennaColumns *ac;
 
   // elevation
   double lowerlimit;
   double upperlimit;
 
 // description of agent
-  String desc_str;
+  casacore::String desc_str;
 // selection arguments
-  Matrix<Double> sel_freq,sel_time,sel_timerng,sel_uvrange;
-  Matrix<Int>    sel_chan;
-  Vector<Int>    sel_corr,sel_spwid,sel_fieldid, sel_stateid;
-  Vector<String>  sel_fieldnames;
-  LogicalVector  sel_ifr,flagchan,sel_feed;
-  Bool          sel_autocorr,unflag;
-  Block<ClipInfo> sel_clip,sel_clip_row;
-  LogicalVector  sel_clip_active;
-  Bool            sum_sel_clip_active;
-  Double        quack_si, quack_dt;
-  String        quack_mode;
-  Bool          quack_increment;
-  Vector<Int>   sel_scannumber,sel_arrayid,sel_observation;
-  String        sel_column;
+  casacore::Matrix<casacore::Double> sel_freq,sel_time,sel_timerng,sel_uvrange;
+  casacore::Matrix<casacore::Int>    sel_chan;
+  casacore::Vector<casacore::Int>    sel_corr,sel_spwid,sel_fieldid, sel_stateid;
+  casacore::Vector<casacore::String>  sel_fieldnames;
+  casacore::LogicalVector  sel_ifr,flagchan,sel_feed;
+  casacore::Bool          sel_autocorr,unflag;
+  casacore::Block<ClipInfo> sel_clip,sel_clip_row;
+  casacore::LogicalVector  sel_clip_active;
+  casacore::Bool            sum_sel_clip_active;
+  casacore::Double        quack_si, quack_dt;
+  casacore::String        quack_mode;
+  casacore::Bool          quack_increment;
+  casacore::Vector<casacore::Int>   sel_scannumber,sel_arrayid,sel_observation;
+  casacore::String        sel_column;
 
-  Bool select_fullrow,flag_everything, shadow, elevation;
+  casacore::Bool select_fullrow,flag_everything, shadow, elevation;
 
 };
 

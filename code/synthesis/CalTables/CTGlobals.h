@@ -36,16 +36,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Create a specialized VisCal from VisSet
 void smoothCT(NewCalTable ct,
-	      const String& smtype,
-	      const Double& smtime,
-	      Vector<Int> selfields);
+	      const casacore::String& smtype,
+	      const casacore::Double& smtime,
+	      casacore::Vector<casacore::Int> selfields);
 
-// Extract time-dep scan and field id info from the specified MS,
+// Extract time-dep scan and field id info from the specified casacore::MS,
 //   and assign them to the NewCalTable
-void assignCTScanField(NewCalTable& ct, String msName, 
-		       Bool doField=True, 
-		       Bool doScan=True,
-		       Bool doObs=True);
+void assignCTScanField(NewCalTable& ct, casacore::String msName, 
+		       casacore::Bool doField=true, 
+		       casacore::Bool doScan=true,
+		       casacore::Bool doObs=true);
 
 } //# NAMESPACE CASA - END
 

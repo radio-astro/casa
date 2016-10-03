@@ -33,6 +33,7 @@
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 
+using namespace casacore;
 namespace casa {
 
 	SliceSegment::SliceSegment(int regionId, int index, QWidget *parent)

@@ -24,17 +24,17 @@ public:
     virtual ~CasaTableRow ();
 
 
-    Int getId () const;
-    Bool isDirty () const;
+    casacore::Int getId () const;
+    casacore::Bool isDirty () const;
 
 protected:
 
-    virtual CasaTableRow * clone (Int id = NoId) const;
-    void setDirty (Bool isDirty);
+    virtual CasaTableRow * clone (casacore::Int id = NoId) const;
+    void setDirty (casacore::Bool isDirty);
 
 private:
 
-    Bool dirty_p;
+    casacore::Bool dirty_p;
 
 };
 

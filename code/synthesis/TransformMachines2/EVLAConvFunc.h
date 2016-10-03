@@ -45,53 +45,57 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogOrigin.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
   template<class T> class ImageInterface;
   template<class T> class Matrix;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
   //class VisBuffer2;
   namespace refim{
   class EVLAConvFunc : public ConvolutionFunction
   {
   public:
-    //    EVLAConvFunc(const CountedPtr<IlluminationConvFunc> ATerm):
+    //    EVLAConvFunc(const casacore::CountedPtr<IlluminationConvFunc> ATerm):
     //      ConvolutionFunction(),bandID_p(-1), polMap_p(), feedStokes_p(), ATerm_p(ATerm)
     EVLAConvFunc():     
       ConvolutionFunction(),bandID_p(-1), polMap_p(), feedStokes_p()
     {};
     ~EVLAConvFunc() {};
     EVLAConvFunc& operator=(const EVLAConvFunc& other);
-    Int getVLABandID(Double& freq,String&telescopeName);
-    Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
-    void makeConvFunction(const ImageInterface<Complex>& image,
+    casacore::Int getVLABandID(casacore::Double& freq,casacore::String&telescopeName);
+    casacore::Bool findSupport(casacore::Array<casacore::Complex>& func, casacore::Float& threshold,casacore::Int& origin, casacore::Int& R);
+    void makeConvFunction(const casacore::ImageInterface<casacore::Complex>& image,
 			  const VisBuffer2& vb,
-			  const Int wConvSize,
-			  const Float pa,
-			  const Float dpa,
+			  const casacore::Int wConvSize,
+			  const casacore::Float pa,
+			  const casacore::Float dpa,
 			  CFStore& cfs,
-			  CFStore& cfwts, Bool fillCF=True);
+			  CFStore& cfwts, casacore::Bool fillCF=true);
     int getVisParams(const VisBuffer2& vb);
-    Int makePBPolnCoords(const VisBuffer2 &vb,
-			 const Vector<Int>& polMap,
-			 const Int& convSize,
-			 const Int& convSampling,
-			 const CoordinateSystem& skyCoord,
-			 const Int& skyNx, const Int& skyNy,
-			 CoordinateSystem& feedCoord,
-			 Vector<Int>& cfStokes);
+    casacore::Int makePBPolnCoords(const VisBuffer2 &vb,
+			 const casacore::Vector<casacore::Int>& polMap,
+			 const casacore::Int& convSize,
+			 const casacore::Int& convSampling,
+			 const casacore::CoordinateSystem& skyCoord,
+			 const casacore::Int& skyNx, const casacore::Int& skyNy,
+			 casacore::CoordinateSystem& feedCoord,
+			 casacore::Vector<casacore::Int>& cfStokes);
     //
     // Overloading these functions from ConvolutionFunction class
     //
-    void setPolMap(const Vector<Int>& polMap);
-    void setFeedStokes(const Vector<Int>& feedStokes);
+    void setPolMap(const casacore::Vector<casacore::Int>& polMap);
+    void setFeedStokes(const casacore::Vector<casacore::Int>& feedStokes);
   private:
-    Int bandID_p;
-    Float Diameter_p, Nant_p, HPBW, sigma;
+    casacore::Int bandID_p;
+    casacore::Float Diameter_p, Nant_p, HPBW, sigma;
     
-    LogIO& logIO() {return logIO_p;}
-    LogIO logIO_p;
-    Vector<Int> polMap_p;
-    Vector<Int> feedStokes_p;
-    CountedPtr<IlluminationConvFunc> ATerm_p;
+    casacore::LogIO& logIO() {return logIO_p;}
+    casacore::LogIO logIO_p;
+    casacore::Vector<casacore::Int> polMap_p;
+    casacore::Vector<casacore::Int> feedStokes_p;
+    casacore::CountedPtr<IlluminationConvFunc> ATerm_p;
   };
 };
 };

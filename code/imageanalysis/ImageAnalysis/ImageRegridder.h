@@ -31,12 +31,16 @@
 #include <scimath/Mathematics/Interpolate2D.h>
 #include <casa/namespace.h>
 
-namespace casa {
+namespace casacore{
 
 template <class T> class SubImage;
 template <class T> class TempImage;
+}
 
-class ImageRegridder : public ImageRegridderBase<Float> {
+namespace casa {
+
+
+class ImageRegridder : public ImageRegridderBase<casacore::Float> {
 	// <summary>
 	// Top level interface which regrids an image to a specified coordinate system
 	// </summary>
@@ -63,25 +67,25 @@ public:
 	ImageRegridder() = delete;
 
 	// if <src>outname</src> is empty, no image will be written
-	// if <src>overwrite</src> is True, if image already exists it will be removed
-	// if <src>overwrite</src> is False, if image already exists exception will be thrown
+	// if <src>overwrite</src> is true, if image already exists it will be removed
+	// if <src>overwrite</src> is false, if image already exists exception will be thrown
 	// <group>
 
 	ImageRegridder(
 		const SPCIIF image,
-		const Record *const regionRec,
-		const String& maskInp, const String& outname, Bool overwrite,
-		const CoordinateSystem& csysTo, const IPosition& axes,
-		const IPosition& shape
+		const casacore::Record *const regionRec,
+		const casacore::String& maskInp, const casacore::String& outname, casacore::Bool overwrite,
+		const casacore::CoordinateSystem& csysTo, const casacore::IPosition& axes,
+		const casacore::IPosition& shape
 	);
 
 	// FIXME Add support to allow image and templateIm to be of different data types
 	ImageRegridder(
-		const SPCIIF image, const String& outname,
-		const SPCIIF templateIm, const IPosition& axes=IPosition(),
-		const Record *const regionRec=0,
-		const String& maskInp="", Bool overwrite=False,
-		const IPosition& shape=IPosition()
+		const SPCIIF image, const casacore::String& outname,
+		const SPCIIF templateIm, const casacore::IPosition& axes=casacore::IPosition(),
+		const casacore::Record *const regionRec=0,
+		const casacore::String& maskInp="", casacore::Bool overwrite=false,
+		const casacore::IPosition& shape=casacore::IPosition()
 	);
 	// </group>
 
@@ -91,39 +95,39 @@ public:
 	// perform the regrid.
 	SPIIF regrid() const;
 
-	inline String getClass() const { return _class; }
+	inline casacore::String getClass() const { return _class; }
 
-	void setDebug(Int debug) { _debug = debug; }
+	void setDebug(casacore::Int debug) { _debug = debug; }
 
 private:
 	mutable SPIIF _subimage;
-	Int _debug;
-	static const String _class;
+	casacore::Int _debug;
+	static const casacore::String _class;
 
 	SPIIF _regrid() const;
 
 	SPIIF _regridByVelocity() const;
 
-	Bool _doImagesOverlap(
+	casacore::Bool _doImagesOverlap(
 		SPCIIF image0,
 		SPCIIF image1
 	) const;
 
-	static Vector<std::pair<Double, Double> > _getDirectionCorners(
-		const DirectionCoordinate& dc,
-		const IPosition& directionShape
+	static casacore::Vector<std::pair<casacore::Double, casacore::Double> > _getDirectionCorners(
+		const casacore::DirectionCoordinate& dc,
+		const casacore::IPosition& directionShape
 	);
 
 	void _checkOutputShape(
-		const SubImage<Float>& subImage,
-		const std::set<Coordinate::Type>& coordsToRegrid
+		const casacore::SubImage<casacore::Float>& subImage,
+		const std::set<casacore::Coordinate::Type>& coordsToRegrid
 	) const;
 
 	SPIIF _decimateStokes(SPIIF workIm) const;
 
-	static Bool _doRectanglesIntersect(
-		const Vector<std::pair<Double, Double> >& corners0,
-		const Vector<std::pair<Double, Double> >& corners1
+	static casacore::Bool _doRectanglesIntersect(
+		const casacore::Vector<std::pair<casacore::Double, casacore::Double> >& corners0,
+		const casacore::Vector<std::pair<casacore::Double, casacore::Double> >& corners1
 	);
 
 };

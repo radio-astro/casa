@@ -31,6 +31,7 @@
 #include <casa/Arrays/ArrayMath.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
@@ -65,8 +66,8 @@ CTMainColumns::CTMainColumns(NewCalTable& calTable)
   attach (calTable, time_p, NCT::TIME);
   attach (calTable, timeQuant_p, NCT::TIME);
   attach (calTable, timeMeas_p, NCT::TIME);
-  attach (calTable, timeEP_p, NCT::TIME_EXTRA_PREC, True);
-  attach (calTable, timeEPQuant_p, NCT::TIME_EXTRA_PREC, True);
+  attach (calTable, timeEP_p, NCT::TIME_EXTRA_PREC, true);
+  attach (calTable, timeEPQuant_p, NCT::TIME_EXTRA_PREC, true);
   attach (calTable, interval_p, NCT::INTERVAL);
   attach (calTable, intervalQuant_p, NCT::INTERVAL);
   attach (calTable, fieldId_p, NCT::FIELD_ID);
@@ -74,12 +75,12 @@ CTMainColumns::CTMainColumns(NewCalTable& calTable)
   attach (calTable, antenna1_p, NCT::ANTENNA1);
   attach (calTable, antenna2_p, NCT::ANTENNA2);
   attach (calTable, scanNo_p, NCT::SCAN_NUMBER);
-  attach (calTable, obsId_p, NCT::OBSERVATION_ID,True); // optional for now
+  attach (calTable, obsId_p, NCT::OBSERVATION_ID,true); // optional for now
 
   // {C,F}PARAM columns are optional, exactly one should
   //   be present
-  attach (calTable, cparam_p, NCT::CPARAM, True);
-  attach (calTable, fparam_p, NCT::FPARAM, True);
+  attach (calTable, cparam_p, NCT::CPARAM, true);
+  attach (calTable, fparam_p, NCT::FPARAM, true);
 
   attach (calTable, paramerr_p, NCT::PARAMERR);
   attach (calTable, flag_p, NCT::FLAG);
@@ -113,11 +114,11 @@ void ROCTMainColumns::fparamArray(Array<Float>& arr,String what,const Vector<uIn
       // Get amp/phase (tracked) by default
       if (byrow) {
 	RIorAPArray ap(cparam().getColumnCells(RefRows(rows)));
-	arr=ap.f(True);  // Tracks phase
+	arr=ap.f(true);  // Tracks phase
       }
       else {
 	RIorAPArray ap(cparam().getColumn());
-	arr=ap.f(True);  // Tracks phase
+	arr=ap.f(true);  // Tracks phase
       }
     }
     else
@@ -129,11 +130,11 @@ void ROCTMainColumns::fparamArray(Array<Float>& arr,String what,const Vector<uIn
     // Convert to Amp/Ph, with Ph tracked
     if (byrow) {
       RIorAPArray ap(cparam().getColumnCells(RefRows(rows)));
-      arr=ap.f(True);  // Tracks phase
+      arr=ap.f(true);  // Tracks phase
     }
     else {
       RIorAPArray ap(cparam().getColumn());
-      arr=ap.f(True);  // Tracks phase
+      arr=ap.f(true);  // Tracks phase
     }
     return;
   }
@@ -147,7 +148,7 @@ Array<Float> ROCTMainColumns::phase() {
 
 void ROCTMainColumns::phase(Array<Float>& ph) {
   if (!cparam().isNull()) 
-    ph.assign(casa::phase(cparam().getColumn()));
+    ph.assign(casacore::phase(cparam().getColumn()));
   else
     throw(AipsError("ROCTMainColumns cannot extract phase without CPARAM column."));
 }
@@ -179,7 +180,7 @@ void CTMainColumns::attach (NewCalTable& calTable,
 //    calTable         CalTable&                  Calibration table
 //    tabCol           TableColumn&               Table column accessor
 //    colEnum          CTEnums::colDef   Column enum
-//    optional         const Bool&                True if optional column
+//    optional         const Bool&                true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -208,7 +209,7 @@ void CTMainColumns::attach (NewCalTable& calTable,
 //    tabCol           ArrayMeasColumn<MEpoch>&      Table measures column 
 //                                                   accessor
 //    colEnum          CTEnums::colDef      Column enum
-//    optional         const Bool&                   True if optional column
+//    optional         const Bool&                   true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -237,7 +238,7 @@ void CTMainColumns::attach (NewCalTable& calTable,
 //    tabCol           ArrayMeasColumn<MFrequency>&  Table measures column 
 //                                                   accessor
 //    colEnum          CTEnums::colDef            Column enum
-//    optional         const Bool&                   True if optional column
+//    optional         const Bool&                   true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -266,7 +267,7 @@ void CTMainColumns::attach (NewCalTable& calTable,
 //    tabCol           ArrayMeasColumn<MDirection>&  Table measures column 
 //                                                   accessor
 //    colEnum          CTEnums::colDef            Column enum
-//    optional         const Bool&                   True if optional column
+//    optional         const Bool&                   true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -295,7 +296,7 @@ void CTMainColumns::attach (NewCalTable& calTable,
 //    tabCol           ScalarMeasColumn<MEpoch>&   Table measures column 
 //                                                 accessor
 //    colEnum          CTEnums::colDef          Column enum
-//    optional         const Bool&                 True if optional column
+//    optional         const Bool&                 true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -323,7 +324,7 @@ void CTMainColumns::attach (NewCalTable& calTable,
 //    calTable    CalTable&                    Calibration table
 //    tabCol      ScalarQuantColumn<Double>&   Table measures column accessor
 //    colEnum     CTEnums::colDef           Column enum
-//    optional    const Bool&                  True if optional column
+//    optional    const Bool&                  true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -372,8 +373,8 @@ ROCTMainColumns::ROCTMainColumns(const NewCalTable& calTable)
   attach (calTable, time_p, NCT::TIME);
   attach (calTable, timeQuant_p, NCT::TIME);
   attach (calTable, timeMeas_p, NCT::TIME);
-  attach (calTable, timeEP_p, NCT::TIME_EXTRA_PREC, True);
-  attach (calTable, timeEPQuant_p, NCT::TIME_EXTRA_PREC, True);
+  attach (calTable, timeEP_p, NCT::TIME_EXTRA_PREC, true);
+  attach (calTable, timeEPQuant_p, NCT::TIME_EXTRA_PREC, true);
   attach (calTable, interval_p, NCT::INTERVAL);
   attach (calTable, intervalQuant_p, NCT::INTERVAL);
   attach (calTable, antenna1_p, NCT::ANTENNA1);
@@ -381,12 +382,12 @@ ROCTMainColumns::ROCTMainColumns(const NewCalTable& calTable)
   attach (calTable, fieldId_p, NCT::FIELD_ID);
   attach (calTable, spwId_p, NCT::SPECTRAL_WINDOW_ID);
   attach (calTable, scanNo_p, NCT::SCAN_NUMBER);
-  attach (calTable, obsId_p, NCT::OBSERVATION_ID,True);
+  attach (calTable, obsId_p, NCT::OBSERVATION_ID,true);
 
   // {C,F}PARAM columns are optional, exactly one should
   //   be present
-  attach (calTable, cparam_p, NCT::CPARAM, True);
-  attach (calTable, fparam_p, NCT::FPARAM, True);
+  attach (calTable, cparam_p, NCT::CPARAM, true);
+  attach (calTable, fparam_p, NCT::FPARAM, true);
 
   attach (calTable, paramerr_p, NCT::PARAMERR);
   attach (calTable, flag_p, NCT::FLAG);
@@ -406,7 +407,7 @@ void ROCTMainColumns::attach (const NewCalTable& calTable,
 //    calTable         const NewCalTable&         Calibration table
 //    tabCol           ROTableColumn&             Table column accessor
 //    colEnum          CTEnums::colDef   Column enum
-//    optional         const Bool&                True if optional column
+//    optional         const Bool&                true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -435,7 +436,7 @@ void ROCTMainColumns::attach (const NewCalTable& calTable,
 //    tabCol           ROArrayMeasColumn<MFrequency>&   Table measures 
 //                                                      column accessor
 //    colEnum          CTEnums::colDef         Column enum
-//    optional         const Bool&                      True if optional column
+//    optional         const Bool&                      true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -464,7 +465,7 @@ void ROCTMainColumns::attach (const NewCalTable& calTable,
 //    tabCol           ROArrayMeasColumn<MEpoch>&       Table measures 
 //                                                      column accessor
 //    colEnum          CTEnums::colDef         Column enum
-//    optional         const Bool&                      True if optional column
+//    optional         const Bool&                      true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -493,7 +494,7 @@ void ROCTMainColumns::attach (const NewCalTable& calTable,
 //    tabCol           ROArrayMeasColumn<MDirection>&   Table measures 
 //                                                      column accessor
 //    colEnum          CTEnums::colDef         Column enum
-//    optional         const Bool&                      True if optional column
+//    optional         const Bool&                      true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -522,7 +523,7 @@ void ROCTMainColumns::attach (const NewCalTable& calTable,
 //    tabCol           ROScalarMeasColumn<MEpoch>&  Table measures column 
 //                                                  accessor
 //    colEnum          CTEnums::colDef     Column enum
-//    optional         const Bool&                  True if optional column
+//    optional         const Bool&                  true if optional column
 // Output to private data:
 //
   // Convert to column name
@@ -550,7 +551,7 @@ void ROCTMainColumns::attach (const NewCalTable& calTable,
 //    calTable    const NewCalTable&             Calibration table
 //    tabCol      ROScalarQuantColumn<Double>&   Scalar quantum column accessor
 //    colEnum     CTEnums::colDef       Column enum
-//    optional    const Bool&                    True if optional column
+//    optional    const Bool&                    true if optional column
 // Output to private data:
 //
   // Convert to column name

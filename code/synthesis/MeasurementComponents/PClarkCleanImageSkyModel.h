@@ -80,18 +80,18 @@ class SkyEquation;
 class PClarkCleanImageSkyModel : public CleanImageSkyModel {
 public:
   // Default constructor
-  PClarkCleanImageSkyModel() : displayProgress(False) {}
+  PClarkCleanImageSkyModel() : displayProgress(false) {}
 
   // Solve for this SkyModel
-  virtual Bool solve (SkyEquation& me);
+  virtual casacore::Bool solve (SkyEquation& me);
 
   // Set progress display
-  void setDisplayProgress (const Bool display )
+  void setDisplayProgress (const casacore::Bool display )
     {displayProgress = display;}
 
 private:
   // Progress display flag
-  Bool displayProgress;
+  casacore::Bool displayProgress;
 };
 
 

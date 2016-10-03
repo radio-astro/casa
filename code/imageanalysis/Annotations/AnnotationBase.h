@@ -49,7 +49,7 @@ namespace casa {
 // In order to minimize maintainability, many parameters are not
 // set in the constructor but can be set by mutator methods.
 //
-// Input directions will be converted to the reference frame of the
+// casacore::Input directions will be converted to the reference frame of the
 // input coordinate system upon construction if necessary.
 // </synopsis>
 
@@ -59,7 +59,7 @@ public:
 	using RGB = vector<float>;
     
 	// The pairs have longitude as the first member and latitude as the second
-	using Direction = Vector<std::pair<Quantity,Quantity> >;
+	using Direction = casacore::Vector<std::pair<casacore::Quantity,casacore::Quantity> >;
 
 	enum Type {
 		// annotations only
@@ -127,58 +127,58 @@ public:
     static const RGB WHITE;
     static const RGB YELLOW;
 
-	static const String DEFAULT_LABEL;
+	static const casacore::String DEFAULT_LABEL;
 	static const RGB DEFAULT_COLOR;
 	static const LineStyle DEFAULT_LINESTYLE;
-	static const uInt DEFAULT_LINEWIDTH;
-	static const uInt DEFAULT_SYMBOLSIZE;
-	static const uInt DEFAULT_SYMBOLTHICKNESS;
-	static const String DEFAULT_FONT;
-	static const uInt DEFAULT_FONTSIZE;
+	static const casacore::uInt DEFAULT_LINEWIDTH;
+	static const casacore::uInt DEFAULT_SYMBOLSIZE;
+	static const casacore::uInt DEFAULT_SYMBOLTHICKNESS;
+	static const casacore::String DEFAULT_FONT;
+	static const casacore::uInt DEFAULT_FONTSIZE;
 	static const FontStyle DEFAULT_FONTSTYLE;
-	static const Bool DEFAULT_USETEX;
+	static const casacore::Bool DEFAULT_USETEX;
 	static const RGB DEFAULT_LABELCOLOR;
-	static const String DEFAULT_LABELPOS;
-	static const vector<Int> DEFAULT_LABELOFF;
+	static const casacore::String DEFAULT_LABELPOS;
+	static const vector<casacore::Int> DEFAULT_LABELOFF;
 
-	static const Regex rgbHexRegex;
+	static const casacore::Regex rgbHexRegex;
 
 	virtual ~AnnotationBase();
 
 	Type getType() const;
 
-	static LineStyle lineStyleFromString(const String& ls);
+	static LineStyle lineStyleFromString(const casacore::String& ls);
 
 	// Given a string, return the corresponding annotation type or throw
 	// an error if the string does not correspond to an allowed type.
-	static Type typeFromString(const String& type);
+	static Type typeFromString(const casacore::String& type);
 
-	static String typeToString(const Type type);
+	static casacore::String typeToString(const Type type);
 
-	static String keywordToString(const Keyword key);
+	static casacore::String keywordToString(const Keyword key);
 
-	static String lineStyleToString(const LineStyle linestyle);
+	static casacore::String lineStyleToString(const LineStyle linestyle);
 
-	static FontStyle fontStyleFromString(const String& fs);
+	static FontStyle fontStyleFromString(const casacore::String& fs);
 
-	static String fontStyleToString(const FontStyle fs);
+	static casacore::String fontStyleToString(const FontStyle fs);
 
-	void setLabel(const String& label);
+	void setLabel(const casacore::String& label);
 
-	String getLabel() const;
+	casacore::String getLabel() const;
 
     // <src>color</src> must either be a recognized color name or
     // a valid rgb hex string, else an expection is thrown
-	void setColor(const String& color);
+	void setColor(const casacore::String& color);
 	
     // color must have three elements all with values between 0 and 255 inclusive
     // or an exception is thrown.
     void setColor(const RGB& color);
 
     // returns the color name if it is recognized or its rgb hex string 
-	String getColorString() const;
+	casacore::String getColorString() const;
 
-	static String colorToString(const RGB& color);
+	static casacore::String colorToString(const RGB& color);
 
     // get the color associated with this object
     RGB getColor() const;
@@ -187,40 +187,40 @@ public:
 
 	LineStyle getLineStyle() const;
 
-	void setLineWidth(const uInt linewidth);
+	void setLineWidth(const casacore::uInt linewidth);
 
-	uInt getLineWidth() const;
+	casacore::uInt getLineWidth() const;
 
-	void setSymbolSize(const uInt symbolsize);
+	void setSymbolSize(const casacore::uInt symbolsize);
 
-	uInt getSymbolSize() const;
+	casacore::uInt getSymbolSize() const;
 
-	void setSymbolThickness(const uInt symbolthickness);
+	void setSymbolThickness(const casacore::uInt symbolthickness);
 
-	uInt getSymbolThickness() const;
+	casacore::uInt getSymbolThickness() const;
 
-	void setFont(const String& font);
+	void setFont(const casacore::String& font);
 
-	String getFont() const;
+	casacore::String getFont() const;
 
-	void setFontSize(const uInt fontsize);
+	void setFontSize(const casacore::uInt fontsize);
 
-	uInt getFontSize() const;
+	casacore::uInt getFontSize() const;
 
 	void setFontStyle(const FontStyle& fontstyle);
 
 	FontStyle getFontStyle() const;
 
-	void setUseTex(const Bool usetex);
+	void setUseTex(const casacore::Bool usetex);
 
-	Bool isUseTex() const;
+	casacore::Bool isUseTex() const;
 
 	// is the object a region?
-	virtual Bool isRegion() const;
+	virtual casacore::Bool isRegion() const;
 
 	// is the object only an annotation? Can only be false if the object
 	// is a region
-	inline virtual Bool isAnnotationOnly() const { return True; }
+	inline virtual casacore::Bool isAnnotationOnly() const { return true; }
 
 	// set "pix" as valid unit. This should be called externally
 	// before creating quantities which have pixel units.
@@ -228,7 +228,7 @@ public:
 
     // <src>color</src> must either be a recognized color name or
     // a valid rgb hex string, else an expection is thrown
-	void setLabelColor(const String& color);
+	void setLabelColor(const casacore::String& color);
 
     // color must have three elements all with values between 0 and 255 inclusive
     // or an exception is thrown.
@@ -236,48 +236,48 @@ public:
 
     // returns the color name if it is recognized or its rgb hex string
 
-	String getLabelColorString() const;
+	casacore::String getLabelColorString() const;
 
     // get the color associated with this object's label
     RGB getLabelColor() const;
 
     // returns one of top, bottom, left, or right.
-	String getLabelPosition() const;
+	casacore::String getLabelPosition() const;
 
 	// <src>position</src> must have a value in top, bottom, left, or right.
 	// case is ignored.
-	void setLabelPosition(const String& position);
+	void setLabelPosition(const casacore::String& position);
 
 	// <src>offset</src> must have two elements
-	void setLabelOffset(const vector<Int>& offset);
+	void setLabelOffset(const vector<casacore::Int>& offset);
 
-	vector<Int> getLabelOffset() const;
+	vector<casacore::Int> getLabelOffset() const;
 
-	virtual ostream& print(ostream &os) const = 0;
+	virtual std::ostream& print(std::ostream &os) const = 0;
 
 	// These parameters are included at the global scope. Multiple runs
 	// on the same object are cumulative; if a key exists in the current
 	// settings but not in <src>globalKeys</src> that key will still exist
 	// in the globals after setGlobals has run.
-	void setGlobals(const Vector<Keyword>& globalKeys);
+	void setGlobals(const casacore::Vector<Keyword>& globalKeys);
 
 	// print a set of keyword value pairs
-	static ostream& print(
-		ostream& os, const map<Keyword, String>& params
+	static std::ostream& print(
+		std::ostream& os, const map<Keyword, casacore::String>& params
 	);
 
 	// print a line style representation
-	static ostream& print(
-		ostream& os, const LineStyle ls
+	static std::ostream& print(
+		std::ostream& os, const LineStyle ls
 	);
 
 	// print a font style representation
-	static ostream& print(
-		ostream& os, const FontStyle fs
+	static std::ostream& print(
+		std::ostream& os, const FontStyle fs
 	);
 
-	static ostream& print(
-		ostream& os, const Direction d
+	static std::ostream& print(
+		std::ostream& os, const Direction d
 	);
 
 	// Get a list of the user-friendly color names supported
@@ -286,7 +286,7 @@ public:
 	// get the coordinate system associated with this object.
 	// This is the same coordinates system used to construct the object.
 
-	inline const CoordinateSystem& getCsys() const {
+	inline const casacore::CoordinateSystem& getCsys() const {
 		return _csys;
 	}
 
@@ -297,29 +297,29 @@ public:
 	Direction getDirections() const;
 
 	// get the frequency limits converted to the spectral frame of the coordinate
-	// system of this object. An empty Vector implies all applicable frequencies
+	// system of this object. An empty casacore::Vector implies all applicable frequencies
 	// have been selected.
-	Vector<MFrequency> getFrequencyLimits() const;
+	casacore::Vector<casacore::MFrequency> getFrequencyLimits() const;
 
-	// Get the stokes for which the selection applies. An empty Vector implies
+	// Get the stokes for which the selection applies. An empty casacore::Vector implies
 	// all applicable stokes have been selected.
-	Vector<Stokes::StokesTypes> getStokes() const;
+	casacore::Vector<casacore::Stokes::StokesTypes> getStokes() const;
 
 	// if freqRefFrame=="" -> use the reference frame of the coordinate system
 	// if dopplerString=="" -> use the doppler system associated with the coordinate system
-	// if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
+	// if restfreq=casacore::Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
 	// Tacitly does nothing if the coordinate system has no spectral axis.
-	// Returns True if frequencies actually need to be set and were set.
-	virtual Bool setFrequencyLimits(
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame,
-		const String& dopplerString,
-		const Quantity& restfreq
+	// Returns true if frequencies actually need to be set and were set.
+	virtual casacore::Bool setFrequencyLimits(
+		const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrame,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq
 	);
 
 	// same as getDirections, only returns proper MDirections
-	inline const Vector<MDirection>& getConvertedDirections() const {
+	inline const casacore::Vector<casacore::MDirection>& getConvertedDirections() const {
 		return _convertedDirections;
 	}
 
@@ -327,23 +327,23 @@ protected:
 
 	// if <src>freqRefFrame</src> or <src>dopplerString</src> are empty,
 	// the values from the spectral coordinate of csys will be used, if one
-	// exists. if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
+	// exists. if restfreq=casacore::Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
 	AnnotationBase(
-		const Type type, const String& dirRefFrameString,
-		const CoordinateSystem& csys, const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame,
-		const String& dopplerString,
-		const Quantity& restfreq,
-		const Vector<Stokes::StokesTypes>& stokes
+		const Type type, const casacore::String& dirRefFrameString,
+		const casacore::CoordinateSystem& csys, const casacore::Quantity& beginFreq,
+		const casacore::Quantity& endFreq,
+		const casacore::String& freqRefFrame,
+		const casacore::String& dopplerString,
+		const casacore::Quantity& restfreq,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// use only if the frame of the input directions is the
 	// same as the frame of the coordinate system. All frequencies
 	// are used.
 	AnnotationBase(
-		const Type type, const CoordinateSystem& csys,
-		const Vector<Stokes::StokesTypes>& stokes
+		const Type type, const casacore::CoordinateSystem& csys,
+		const casacore::Vector<casacore::Stokes::StokesTypes>& stokes
 	);
 
 	// the implicitly defined copy constructor is fine
@@ -353,89 +353,89 @@ protected:
 	AnnotationBase& operator= (const AnnotationBase& other);
 
 	static void _checkMixed(
-		const String& origin,
+		const casacore::String& origin,
 		const Direction& dirs
 	);
 
-	MDirection _directionFromQuantities(
-		const Quantity& q0, const Quantity& q1
+	casacore::MDirection _directionFromQuantities(
+		const casacore::Quantity& q0, const casacore::Quantity& q1
 	);
 
 	void _checkAndConvertDirections(
-		const String& origin,
+		const casacore::String& origin,
 		const Direction& dirs
 	);
 
-	virtual void _printPairs(ostream& os) const;
+	virtual void _printPairs(std::ostream& os) const;
 
 
 
-	inline const IPosition& _getDirectionAxes() const {
+	inline const casacore::IPosition& _getDirectionAxes() const {
 		return _directionAxes;
 	}
 
 	// direction to string, precision of 0.1 mas
 	// ra and dec in sexigesimal format, non-equatorial coords in degrees
-	String _printDirection(
-		const Quantity& longitude, const Quantity& latitude
+	casacore::String _printDirection(
+		const casacore::Quantity& longitude, const casacore::Quantity& latitude
 	) const;
 
 	// convert angle to arcsec, precision 0.1 mas
-	static String _toArcsec(const Quantity& angle);
+	static casacore::String _toArcsec(const casacore::Quantity& angle);
 
 	// convert angle to degrees, precision 0.1 mas
-	static String _toDeg(const Quantity& angle);
+	static casacore::String _toDeg(const casacore::Quantity& angle);
 
-	inline void _setParam(const Keyword k, const String& s) {
+	inline void _setParam(const Keyword k, const casacore::String& s) {
 		_params[k] = s;
 	}
 
 	// return a string representing a pixel value, precision 1.
-	static String _printPixel(const Double& d);
+	static casacore::String _printPixel(const casacore::Double& d);
 
-	MDirection::Types _getDirectionRefFrame() const { return _directionRefFrame; }
+	casacore::MDirection::Types _getDirectionRefFrame() const { return _directionRefFrame; }
 
 private:
 	Type _type;
-	MDirection::Types _directionRefFrame;
-	CoordinateSystem _csys;
-	IPosition _directionAxes;
-	String _label, _font, _labelPos;
+	casacore::MDirection::Types _directionRefFrame;
+	casacore::CoordinateSystem _csys;
+	casacore::IPosition _directionAxes;
+	casacore::String _label, _font, _labelPos;
     RGB _color, _labelColor;
 	FontStyle _fontstyle;
 	LineStyle _linestyle;
-	uInt _fontsize, _linewidth, _symbolsize,
+	casacore::uInt _fontsize, _linewidth, _symbolsize,
 		_symbolthickness;
-	Bool _usetex;
-	Vector<MDirection> _convertedDirections;
-	Vector<MFrequency> _convertedFreqLimits;
-	Quantity _beginFreq, _endFreq, _restFreq;
-	Vector<Stokes::StokesTypes> _stokes;
-	MFrequency::Types _freqRefFrame;
-	MDoppler::Types _dopplerType;
+	casacore::Bool _usetex;
+	casacore::Vector<casacore::MDirection> _convertedDirections;
+	casacore::Vector<casacore::MFrequency> _convertedFreqLimits;
+	casacore::Quantity _beginFreq, _endFreq, _restFreq;
+	casacore::Vector<casacore::Stokes::StokesTypes> _stokes;
+	casacore::MFrequency::Types _freqRefFrame;
+	casacore::MDoppler::Types _dopplerType;
 
-	map<Keyword, Bool> _globals;
-	map<Keyword, String> _params;
-	Bool _printGlobals;
-	vector<Int> _labelOff;
+	map<Keyword, casacore::Bool> _globals;
+	map<Keyword, casacore::String> _params;
+	casacore::Bool _printGlobals;
+	vector<casacore::Int> _labelOff;
 
-	static Bool _doneUnitInit, _doneColorInit;
-	static map<String, LineStyle> _lineStyleMap;
-	static map<String, Type> _typeMap;
+	static casacore::Bool _doneUnitInit, _doneColorInit;
+	static map<casacore::String, LineStyle> _lineStyleMap;
+	static map<casacore::String, Type> _typeMap;
 	static map<string, RGB> _colors;
 	static map<RGB, string> _rgbNameMap;
 	static std::list<std::string> _colorNames;
 
-	const static String _class;
+	const static casacore::String _class;
 
 	void _init();
 	void _initParams();
 
 	static void _initColors();
 
-	static RGB _colorStringToRGB(const String& s);
+	static RGB _colorStringToRGB(const casacore::String& s);
 
-	static Bool _isRGB(const RGB& rgb);
+	static casacore::Bool _isRGB(const RGB& rgb);
 
 	void _testConvertToPixel() const;
 
@@ -443,36 +443,36 @@ private:
 
 	void _checkAndConvertFrequencies();
 
-	String _printFreqRange() const;
+	casacore::String _printFreqRange() const;
 
-	static String _printFreq(const Quantity& freq);
+	static casacore::String _printFreq(const casacore::Quantity& freq);
 
 };
 
-inline ostream &operator<<(ostream& os, const AnnotationBase& annotation) {
+inline std::ostream &operator<<(std::ostream& os, const AnnotationBase& annotation) {
 	return annotation.print(os);
 };
 
-inline ostream &operator<<(ostream& os, const AnnotationBase::LineStyle& ls) {
+inline std::ostream &operator<<(std::ostream& os, const AnnotationBase::LineStyle& ls) {
 	return AnnotationBase::print(os, ls);
 };
 
-inline ostream &operator<<(ostream& os, const AnnotationBase::FontStyle& fs) {
+inline std::ostream &operator<<(std::ostream& os, const AnnotationBase::FontStyle& fs) {
 	return AnnotationBase::print(os, fs);
 };
 
-inline ostream &operator<<(ostream& os, const map<AnnotationBase::Keyword, String>& x) {
+inline std::ostream &operator<<(std::ostream& os, const map<AnnotationBase::Keyword, casacore::String>& x) {
 	return AnnotationBase::print(os, x);
 };
 
-inline ostream &operator<<(ostream& os, const AnnotationBase::Direction x) {
+inline std::ostream &operator<<(std::ostream& os, const AnnotationBase::Direction x) {
 	return AnnotationBase::print(os, x);
 };
 
 // Just need a identifiable exception class for exception handling.
-class WorldToPixelConversionError : public AipsError {
+class WorldToPixelConversionError : public casacore::AipsError {
 public:
-	WorldToPixelConversionError(String msg) : AipsError(msg) {}
+	WorldToPixelConversionError(casacore::String msg) : casacore::AipsError(msg) {}
 };
 
 }

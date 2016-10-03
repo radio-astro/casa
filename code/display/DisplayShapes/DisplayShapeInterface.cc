@@ -39,6 +39,7 @@
 #include <display/DisplayShapes/DSMarker.h>
 #include <scimath/Mathematics.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	DisplayShapeInterface::DisplayShapeInterface(const Record& shapeInfo) :
@@ -167,7 +168,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 */
 	Bool DisplayShapeInterface::updateNonPixelPosition() {
 		altCoords = fromPixOpts(itsShape->getOptions());
-		return True;
+		return true;
 	}
 
 	/*
@@ -175,7 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 */
 	Bool DisplayShapeInterface::updatePixelPosition() {
 		itsShape->setOptions(toPixOpts(altCoords));
-		return True;
+		return true;
 	}
 
 
@@ -475,7 +476,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			throw(x);
 		}
 
-		return False;
+		return false;
 	}
 
 	Record DisplayShapeInterface::getOptions() {

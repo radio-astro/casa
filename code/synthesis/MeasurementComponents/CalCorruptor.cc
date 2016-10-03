@@ -31,14 +31,15 @@
 
 #define PRTLEV 3
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 CalCorruptor::CalCorruptor(const Int nSim) : 
   nSim_(nSim),
   curr_slot_(-1),
-  times_initialized_(False),
-  freqdep_(False),
+  times_initialized_(false),
+  freqdep_(false),
   nPar_(0),
   curr_time_(0),starttime_(0),stoptime_(0),curr_freq_(1),
   amp_(0),mode_(""),
@@ -72,10 +73,10 @@ void CalCorruptor::setEvenSlots(const Double& dt) {
   if (dt<=0) throw(AipsError("logic problem Corruptor::setEvenSlots called with bad time interval"));
 
   nSim()=nslots;
-  slot_times().resize(nSim(),False);
+  slot_times().resize(nSim(),false);
   for (uInt i=0;i<nSim();i++) 
     slot_time(i) = startTime() + (Double(i)+0.5) * dt;   
-  times_initialized()=True;
+  times_initialized()=true;
   
   curr_slot()=0;      
   curr_time()=slot_time();  
@@ -165,7 +166,7 @@ AtmosCorruptor::AtmosCorruptor() :
   itsRIP(NULL),
   itsSkyStatus(NULL),
   itsSpecGrid(NULL),
-  airMassValid_(False),
+  airMassValid_(false),
   airMassTime_(-1000)
 {}
 
@@ -173,7 +174,7 @@ AtmosCorruptor::AtmosCorruptor(const Int nSim) :
   CalCorruptor(nSim),  // parent
   mean_pwv_(-1.),
   screen_p(NULL),itsatm(NULL),itsRIP(NULL),itsSkyStatus(NULL),itsSpecGrid(NULL),
-  airMassValid_(False),airMassTime_(-1000){}
+  airMassValid_(false),airMassTime_(-1000){}
 
 AtmosCorruptor::~AtmosCorruptor() {
   if (itsSkyStatus) {
@@ -233,7 +234,7 @@ void AtmosCorruptor::setCurrTime(const Double& time) {
   // for airmass, we want to recalculate if it changes by more than 1%
   // if elevation>5 deg, airmass<10, d(airmass)/d(theta)<100, 
   // recalc if dtheta > .1/100 -> 0.06deg.  1deg=4 min so make tolerance 100s
-  if (dt>100.) airMassValid_=False;
+  if (dt>100.) airMassValid_=false;
 
   curr_time()=time;
   // find new slot if required
@@ -286,7 +287,7 @@ void AtmosCorruptor::setCurrTime(const Double& time) {
 	  else
 	    airMass_(iAnt)= 1000.;
 	}
-	airMassValid_=True;
+	airMassValid_=true;
 	airMassTime_=curr_time();
 
 	if (prtlev()>3) cout <<"done"<<endl;
@@ -579,7 +580,7 @@ void AtmosCorruptor::initialize(const Int rxtype) {
   rxType() = rxtype;
   // RI todo AtmCor:init() test is mean_pwv() ever set?
   if (freqDepPar()) initAtm();
-  pwv_p.resize(nAnt(),False,True);
+  pwv_p.resize(nAnt(),false,true);
   for (uInt ia=0;ia<nAnt();++ia) {
     pwv_p[ia] = new Vector<Float>(nSim());
     // not really pwv, but this is a test mode
@@ -610,7 +611,7 @@ void AtmosCorruptor::initialize(const Int rxtype) {
   if (simpar.isDefined("mode")) mode()=simpar.asString("mode");  
 
   if (mode()=="simple") {
-    freqDepPar()=False; 
+    freqDepPar()=false; 
     if (prtlev()>2) cout << "AtmCorruptor::init [simple scale by " << amp() << "]" << endl;
 
   } else {
@@ -784,7 +785,7 @@ void AtmosCorruptor::initialize(const Int Seed, const Float Beta, const Float sc
     throw(AipsError("logic error in AtmCorr::init(Seed,Beta,scale) - slot times not initialized."));
 
   fBM* myfbm = new fBM(nSim());
-  pwv_p.resize(nAnt(),False,True);
+  pwv_p.resize(nAnt(),false,true);
   for (uInt iant=0;iant<nAnt();++iant){
     pwv_p[iant] = new Vector<Float>(nSim());
     float pmean(0.),rms(0.);
@@ -1013,15 +1014,15 @@ Complex AtmosCorruptor::cphase(const Int ichan) {
 
 
 fBM::fBM(uInt i1) :    
-  initialized_(False)
+  initialized_(false)
 { data_ = new Vector<Float>(i1); };
 
 fBM::fBM(uInt i1, uInt i2) :
-  initialized_(False)
+  initialized_(false)
 { data_ = new Matrix<Float>(i1,i2); };
 
 fBM::fBM(uInt i1, uInt i2, uInt i3) :
-  initialized_(False)
+  initialized_(false)
 { data_ = new Cube<Float>(i1,i2,i3); };
 
 void fBM::initialize(const Int seed, const Float beta) {
@@ -1077,7 +1078,7 @@ void fBM::initialize(const Int seed, const Float beta) {
       F(i)=Complex(amp*cos(phase),amp*sin(phase));
       // F(s(0)-i)=Complex(amp*cos(phase),-amp*sin(phase));
     }
-    server.fft(G,F,False);  // complex to real Xform
+    server.fft(G,F,false);  // complex to real Xform
     // G comes out twice length of F 
     for (uInt i=0; i<s(0); i++)
       data_->operator()(IPosition(1,i)) = G(i); // there has to be a better way with strides or something.
@@ -1133,7 +1134,7 @@ void fBM::initialize(const Int seed, const Float beta) {
     // 	  F2(i,s(1)-j) = Complex(amp*cos(phase),amp*sin(phase));
     // 	  F2(s(0)-i,j) = Complex(amp*cos(phase),-amp*sin(phase));
     // 	}
-    server.fft(G2,F2,False);  // complex to real Xform
+    server.fft(G2,F2,false);  // complex to real Xform
     // G2 comes out sized s(0),s(1)/2 i.e. only doubles the first dim.
     // cout << G2.shape() << endl;  
     // there has to be a better way
@@ -1201,7 +1202,7 @@ void GJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
   if (mode()!="fbm") throw(AipsError("Attempt to use fBM initializer but mode is "+mode()));
 
   fBM* myfbm = new fBM(nSim());
-  drift_p.resize(nAnt(),False,True);
+  drift_p.resize(nAnt(),false,true);
   for (uInt iant=0;iant<nAnt();++iant) {
     drift_p[iant] = new Matrix<Complex>(nPar(),nSim());
     for (uInt icorr=0;icorr<nPar();++icorr){

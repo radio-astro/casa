@@ -29,6 +29,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 
+using namespace casacore;
 namespace casa {
 
 /////////////////////////////////////////////

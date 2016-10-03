@@ -81,29 +81,29 @@ class SolvableVisJonesMRec : public TimeVarVisJonesMRec
    ~SolvableVisJonesMRec() {};
 
    // Construct from an existing record
-   SolvableVisJonesMRec (const Record& inpRec);
+   SolvableVisJonesMRec (const casacore::Record& inpRec);
 
    // Field accessors
    // Note: uses protected functions defined in CalMainRecord,
    // as fit parameters are used elsewhere in the inheritance
    // tree for baseline-based and image plane calibration tables.
    // a) define
-   void defineTotalSolnOk (const Bool& totalSolnOk) 
+   void defineTotalSolnOk (const casacore::Bool& totalSolnOk) 
      {dTotalSolnOk (totalSolnOk);};
-   void defineTotalFit (const Float& totalFit) {dTotalFit (totalFit);};
-   void defineTotalFitWgt (const Float& totalFitWgt) 
+   void defineTotalFit (const casacore::Float& totalFit) {dTotalFit (totalFit);};
+   void defineTotalFitWgt (const casacore::Float& totalFitWgt) 
      {dTotalFitWgt (totalFitWgt);};
-   void defineSolnOk (const Array <Bool>& solnOk) {dSolnOk (solnOk);};
-   void defineFit (const Array <Float>& fit) {dFit (fit);};
-   void defineFitWgt (const Array <Float>& fitWgt) {dFitWgt (fitWgt);};
+   void defineSolnOk (const casacore::Array <casacore::Bool>& solnOk) {dSolnOk (solnOk);};
+   void defineFit (const casacore::Array <casacore::Float>& fit) {dFit (fit);};
+   void defineFitWgt (const casacore::Array <casacore::Float>& fitWgt) {dFitWgt (fitWgt);};
 
    // b) get
-   void getTotalSolnOk (Bool& totalSolnOk) {gTotalSolnOk (totalSolnOk);};
-   void getTotalFit (Float& totalFit) {gTotalFit (totalFit);};
-   void getTotalFitWgt (Float& totalFitWgt) {gTotalFitWgt (totalFitWgt);};
-   void getSolnOk (Array <Bool>& solnOk) {gSolnOk (solnOk);};
-   void getFit (Array <Float>& fit) {gFit (fit);};
-   void getFitWgt (Array <Float>& fitWgt) {gFitWgt (fitWgt);};
+   void getTotalSolnOk (casacore::Bool& totalSolnOk) {gTotalSolnOk (totalSolnOk);};
+   void getTotalFit (casacore::Float& totalFit) {gTotalFit (totalFit);};
+   void getTotalFitWgt (casacore::Float& totalFitWgt) {gTotalFitWgt (totalFitWgt);};
+   void getSolnOk (casacore::Array <casacore::Bool>& solnOk) {gSolnOk (solnOk);};
+   void getFit (casacore::Array <casacore::Float>& fit) {gFit (fit);};
+   void getFitWgt (casacore::Array <casacore::Float>& fitWgt) {gFitWgt (fitWgt);};
  };
 
 // <summary> 
@@ -152,7 +152,7 @@ class GJonesMRec : public SolvableVisJonesMRec
    ~GJonesMRec() {};
 
    // Construct from an existing record
-   GJonesMRec (const Record& inpRec);
+   GJonesMRec (const casacore::Record& inpRec);
 
 };
 
@@ -203,7 +203,7 @@ class DJonesMRec : public SolvableVisJonesMRec
    ~DJonesMRec() {};
 
    // Construct from an existing record
-   DJonesMRec (const Record& inpRec);
+   DJonesMRec (const casacore::Record& inpRec);
 
 };
 
@@ -253,7 +253,7 @@ class TJonesMRec : public SolvableVisJonesMRec
    ~TJonesMRec() {};
 
    // Construct from an existing record
-   TJonesMRec (const Record& inpRec);
+   TJonesMRec (const casacore::Record& inpRec);
 
 };
 

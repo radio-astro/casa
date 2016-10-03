@@ -47,10 +47,17 @@
 
 #define _ORIGIN LogOrigin("SDMSManager", __func__, WHERE)
 
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
+using namespace casacore;
 namespace casa {
 
 SDMSManager::SDMSManager()
-    : doSmoothing_(False)
+    : doSmoothing_(false)
 {
 }
 
@@ -81,11 +88,11 @@ void SDMSManager::fillCubeToOutputMs(vi::VisBuffer2 *vb,Cube<Float> const &data_
 		RefRows rowRef( currentRows, currentRows + nRowsToAdd_p/nspws_p - 1);
 
 		// Add new rows to output MS
-		outputMs_p->addRow(nRowsToAdd_p,False);
+		outputMs_p->addRow(nRowsToAdd_p,false);
 
 		// Fill new rows
-		weightSpectrumFlatFilled_p = False;
-		weightSpectrumFromSigmaFilled_p = False;
+		weightSpectrumFlatFilled_p = false;
+		weightSpectrumFromSigmaFilled_p = false;
 		fillWeightCols(vb,rowRef);
 		fillCubeToDataCols(vb,rowRef,data_cube, flag_cube);
 		fillIdCols(vb,rowRef);
@@ -231,7 +238,7 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
     										transformedCubeShape(2),
     										inputFlagCategoryShape(2),
     										transformedCubeShape(2));
-    		Array<Bool> flagCategory(flagCategoryShape,False);
+    		Array<Bool> flagCategory(flagCategoryShape,false);
 
         	outputMsCols_p->flagCategory().putColumnCells(rowRef, flagCategory);
     	}
@@ -277,7 +284,7 @@ void SDMSManager::setSortColumns(Block<Int> sortColumns,
 	}
       }
       // shrink block
-      sortColumns.resize(num_elem, True, True);
+      sortColumns.resize(num_elem, true, true);
       userSortCols_ = sortColumns;
     } else {
       userSortCols_ = defaultCols;
@@ -426,14 +433,14 @@ void SDMSManager::setSmoothing(string const &kernelType, float const &kernelWidt
     throw AipsError("Zero or negative kernel width is not allowed.");
   }
 
-  doSmoothing_ = True;
+  doSmoothing_ = true;
   kernelType_ = type;
   kernelWidth_ = kernelWidth;
 }
 
 void SDMSManager::unsetSmoothing()
 {
-  doSmoothing_ = False;
+  doSmoothing_ = false;
 }
 
 void SDMSManager::initializeSmoothing()
@@ -446,7 +453,7 @@ void SDMSManager::initializeSmoothing()
   Vector<Int> numChanList = inspectNumChan();
   for (size_t i = 0; i < numChanList.nelements(); ++i) {
     Int numChan = numChanList[i];
-    Vector<Float> theKernel = VectorKernel::make(kernelType_, kernelWidth_, numChan, True, False);
+    Vector<Float> theKernel = VectorKernel::make(kernelType_, kernelWidth_, numChan, true, false);
     //shift 1 channel for boxcar kernel---(for CAS-7442, 2015/11/18 WK)
     if (kernelType_ == VectorKernel::BOXCAR) {
       for (size_t j = theKernel.nelements()-1; j >= 1; --j) {
@@ -473,7 +480,7 @@ void SDMSManager::initializeSmoothing()
   sort.sort(indexArray, numChanMinimum);
   uInt startChan = indexArray[0] - halfWidth;
   uInt endChan = startChan + smoothBin_p;
-  smoothCoeff_p.resize(smoothBin_p, False);
+  smoothCoeff_p.resize(smoothBin_p, false);
   for (uInt i = startChan, j = 0; i < endChan; ++i, ++j) {
     smoothCoeff_p[j] = kernelForMinimumNumChan[i];
   }

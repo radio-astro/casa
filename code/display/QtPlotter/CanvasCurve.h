@@ -47,34 +47,34 @@ namespace casa {
 		CanvasCurve();
 		CanvasCurve( CurveData curveData, ErrorData errorData,
 		             QString legend, QColor curveColor, int curveType,
-		             double beamAngle, double beamArea, SpectralCoordinate coord);
+		             double beamAngle, double beamArea, casacore::SpectralCoordinate coord);
 		QColor getColor() const;
 		void setColor( QColor color );
 		QString getLegend() const;
 		void setLegend( const QString& legend );
 		int getCurveType() const;
 		CurveData getCurveData();
-		Vector<float> getXValues() const;
-		Vector<float> getYValues() const;
+		casacore::Vector<float> getXValues() const;
+		casacore::Vector<float> getYValues() const;
 		CurveData getErrorData();
 
 
 		QString getToolTip( double x, double y , const QString& xUnit, const QString& yUnit ) const;
-		void getMinMax(Double& xmin, Double& xmax, Double& ymin,
-		               Double& ymax, bool plotError ) const;
-		std::pair<double,double> getRangeFor(double xMin, double xMax, Bool& exists );
+		void getMinMax(casacore::Double& xmin, casacore::Double& xmax, casacore::Double& ymin,
+		               casacore::Double& ymax, bool plotError ) const;
+		std::pair<double,double> getRangeFor(double xMin, double xMax, casacore::Bool& exists );
 		void scaleYValues( const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits );
 		double convertValue( double value, double freqValue, const QString& oldDisplayUnits, const QString& yUnitDisplay,
-				const QString& xUnits, SpectralCoordinate& coord);
+				const QString& xUnits, casacore::SpectralCoordinate& coord);
 		virtual ~CanvasCurve();
 
 	private:
-		Vector<float> getErrorValues() const;
+		casacore::Vector<float> getErrorValues() const;
 		double getMaxY() const;
 		double getMaxError() const;
 		void storeData( const QString& oldUnits );
-		void setYValues( const Vector<float>& yValues );
-		void setErrorValues( const Vector<float>& errorValues );
+		void setYValues( const casacore::Vector<float>& yValues );
+		void setErrorValues( const casacore::Vector<float>& errorValues );
 		double calculateRelativeError( double minValue, double maxValue ) const ;
 		void calculateRelativeErrors( double& errorX, double& errorY ) const;
 		QColor curveColor;
@@ -87,7 +87,7 @@ namespace casa {
 		double beamAngle;
 		double beamArea;
 		int curveType;
-		SpectralCoordinate spectralCoordinate;
+		casacore::SpectralCoordinate spectralCoordinate;
 
 	};
 

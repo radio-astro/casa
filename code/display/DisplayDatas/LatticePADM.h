@@ -34,21 +34,25 @@
 //# display library includes:
 #include <display/DisplayDatas/PrincipalAxesDM.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
-//# forwards:
 	template <class T> class Array;
 	template <class T> class MaskedLattice;
 	class IPosition;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+//# forwards:
 	template <class T> class LatticePADisplayData;
 
 // <summary>
-// Partial implementation of PrincipalAxesDM for Lattice-based data.
+// Partial implementation of PrincipalAxesDM for casacore::Lattice-based data.
 // </summary>
 //
 // <synopsis>
 // This class is a partial (ie. base) implementation of PrincipalAxesDM
-// which adds methods particular to handling Lattice-based data.
+// which adds methods particular to handling casacore::Lattice-based data.
 // </synopsis>
 
 	template <class T> class LatticePADisplayMethod : public PrincipalAxesDM {
@@ -58,35 +62,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructor
 		// do I need the default constructor?
 		LatticePADisplayMethod();
-		LatticePADisplayMethod(const uInt xAxis, const uInt yAxis,
-		                       const uInt mAxis, const IPosition fixedPos,
+		LatticePADisplayMethod(const casacore::uInt xAxis, const casacore::uInt yAxis,
+		                       const casacore::uInt mAxis, const casacore::IPosition fixedPos,
 		                       LatticePADisplayData<T> *arDat);
 		// 2d version
-		LatticePADisplayMethod(const uInt xAxis, const uInt yAxis,
+		LatticePADisplayMethod(const casacore::uInt xAxis, const casacore::uInt yAxis,
 		                       LatticePADisplayData<T> *arDat);
 
 		// Destructor
 		virtual ~LatticePADisplayMethod();
 		// Extract data from the lattice: used by draw() in PrincipalAxesDM
 		// this is probably not needed in this class...
-		virtual Bool dataGetSlice(Matrix<T>& datMatrix,
-				Matrix<Bool>& mask,
-				const IPosition& start,
-				const IPosition& sliceShape,
-				const IPosition& stride);
+		virtual casacore::Bool dataGetSlice(casacore::Matrix<T>& datMatrix,
+				casacore::Matrix<casacore::Bool>& mask,
+				const casacore::IPosition& start,
+				const casacore::IPosition& sliceShape,
+				const casacore::IPosition& stride);
 	protected:
 
 		// Query the shape of the lattice: used by draw() in PrincipalAxesDM
-		virtual IPosition dataShape();
+		virtual casacore::IPosition dataShape();
 
 
 
-		virtual Bool dataGetSlice(Matrix<T>& datMatrix,
-		                          Matrix<Bool>& mask,
-		                          const IPosition& start,
-		                          const IPosition& sliceShape,
-		                          const IPosition& stride,
-		                          MaskedLattice<T>& latt);
+		virtual casacore::Bool dataGetSlice(casacore::Matrix<T>& datMatrix,
+		                          casacore::Matrix<casacore::Bool>& mask,
+		                          const casacore::IPosition& start,
+		                          const casacore::IPosition& sliceShape,
+		                          const casacore::IPosition& stride,
+		                          casacore::MaskedLattice<T>& latt);
 
 	private:
 

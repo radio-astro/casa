@@ -43,7 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-//   <li> <linkto class="Record">Record</linkto> module
+//   <li> <linkto class="casacore::Record">casacore::Record</linkto> module
 //   <li> <linkto class="CalMainRecord">CalMainRecord</linkto> module
 // </prerequisite>
 //
@@ -76,30 +76,30 @@ class CalHistoryRecord
    ~CalHistoryRecord() {};
 
    // Construct from an existing record
-   CalHistoryRecord (const Record& inpRec);
+   CalHistoryRecord (const casacore::Record& inpRec);
 
    // Return as record
-   const Record& record();
+   const casacore::Record& record();
 
    // Field accessors
    // a) define
-   void defineCalParms (const String& calParms);
-   void defineCalTables (const String& calTables);
-   void defineCalSelect (const String& calSelect);
-   void defineCalNotes (const String& calNotes);
+   void defineCalParms (const casacore::String& calParms);
+   void defineCalTables (const casacore::String& calTables);
+   void defineCalSelect (const casacore::String& calSelect);
+   void defineCalNotes (const casacore::String& calNotes);
      
    // b) get
-   void getCalParms (String& calParms);
-   void getCalTables (String& calTables);
-   void getCalSelect (String& calSelect);
-   void getCalNotes (String& calNotes);
+   void getCalParms (casacore::String& calParms);
+   void getCalTables (casacore::String& calTables);
+   void getCalSelect (casacore::String& calSelect);
+   void getCalNotes (casacore::String& calNotes);
 
  protected:
    // Add to itsRecord
-   void addRec (const Record& newRec);
+   void addRec (const casacore::Record& newRec);
 
  private:
-   Record itsRecord;
+   casacore::Record itsRecord;
 
 };
 

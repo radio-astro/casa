@@ -30,6 +30,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/DisplayDatas/Profile2dDM.h>
 #include <display/DisplayDatas/Profile2dDD.h>
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#include <cpgplot.h>
@@ -79,12 +80,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							subSection(i,0) = data(start+i, 0);
 							subSection(i,1) = data(start+i, 1);
 						}
-						wc->drawPolyline(subSection, True);
+						wc->drawPolyline(subSection, true);
 					}
 					finish++;
 				}
 			} else {
-				wc->drawPolyline(data, True);
+				wc->drawPolyline(data, true);
 			}
 			Double restFrequency = parent->restFrequency();
 			if (parent->showRestFrequency() && restFrequency != 0) {
@@ -95,13 +96,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				b(0) = a(0);
 				b(1) = parent->profileYMax();
 				wc->setLineStyle(Display::LSDashed);
-				wc->drawLine(a, b, False);
+				wc->drawLine(a, b, false);
 			}
 			wc->clearNonDrawArea();
 			restoreStyles(wc);
 		}
 
-		return True;
+		return true;
 	}
 
 	void Profile2dDM::setStyles(WorldCanvas *wc, Profile2dDD *parent) {

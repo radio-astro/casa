@@ -31,6 +31,7 @@
 #include <synthesis/IDL/IDL.h>
 #include <casa/sstream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 void idl_free_cb(unsigned char* loc) {
@@ -119,10 +120,10 @@ Bool IDL::sendArray(const Array<Float>& a, String aname) {
     os << "Defined IDL float array " <<  aname << " " << a.shape()
        << LogIO::POST;
   }
-  return True;
+  return true;
 #else
   (void) aname; (void)a;
-  return False;
+  return false;
 #endif
 }
 
@@ -217,7 +218,7 @@ Bool IDL::runCommands(const Vector<String>& commands, Bool log) {
 
 #ifdef HAVE_IDL_LIB
   try {
-    Bool result = True;
+    Bool result = true;
     for (uInt i=0; i < commands.nelements(); i++) {
       if(log) os << "IDL : " << commands(i) << LogIO::POST;
       char comm[commands(i).length()+1];
@@ -228,12 +229,12 @@ Bool IDL::runCommands(const Vector<String>& commands, Bool log) {
     return result;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-    return False;
+    return false;
   } 
 #else
   (void)commands;(void)log;    
 #endif
-  return False;
+  return false;
 }
 
 Bool IDL::runCommand(const String& command, Bool log) {
@@ -246,15 +247,15 @@ Bool IDL::runCommand(const String& command, Bool log) {
     command.copy(comm, command.length());
     comm[command.length()]='\0';
     IDL_ExecuteStr(comm);
-    return True;
+    return true;
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-    return False;
+    return false;
   } 
 #else
   (void)command;(void)log;
 #endif
-  return False;
+  return false;
 }
 
 Bool IDL::setPath(const Vector<String>& paths) {
@@ -263,7 +264,7 @@ Bool IDL::setPath(const Vector<String>& paths) {
     IDLCommand += "expand_path('+" + paths(i) + "')+':'+";
   }
   IDLCommand += "!path";
-  return runCommand(IDLCommand, True);
+  return runCommand(IDLCommand, true);
 }
   
 

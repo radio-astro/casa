@@ -48,10 +48,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 
-		// Constructor taking a Record description.  Fields in the record,
+		// Constructor taking a casacore::Record description.  Fields in the record,
 		// on top of what is consumed by the DDDObject constructor, are:
 		// <src>blc</src> and <src>trc</src>.
-		DDDRectangle(const Record &description, DrawingDisplayData *owner);
+		DDDRectangle(const casacore::Record &description, DrawingDisplayData *owner);
 
 		// Destructor.
 		virtual ~DDDRectangle();
@@ -63,11 +63,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                  WorldCanvas *worldcanvas);
 
 		// Return a record describing this object.
-		virtual Record description();
+		virtual casacore::Record description();
 
 		// Update this object based on the information in the provided
 		// Record.
-		virtual void setDescription(const Record &rec);
+		virtual void setDescription(const casacore::Record &rec);
 
 		// Event handlers.  The parent DrawingDisplayData will distribute
 		// events as necessary to the various DDDObjects which comprise it.
@@ -93,19 +93,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Blc and trc of rectangle in world coordinates.
-		Vector<Double> itsBlc, itsTrc;
+		casacore::Vector<casacore::Double> itsBlc, itsTrc;
 
 		// Handle coordinates.
-		Vector<Int> itsHX, itsHY;
+		casacore::Vector<casacore::Int> itsHX, itsHY;
 
 		// Mode.
 		DDDObject::Mode itsMode;
 
 		// Store for movement bases.
-		Int itsBaseMoveX, itsBaseMoveY;
+		casacore::Int itsBaseMoveX, itsBaseMoveY;
 
 		// is it a left handle?  a bottom handle?
-		Bool itsLeftHandle, itsBottomHandle;
+		casacore::Bool itsLeftHandle, itsBottomHandle;
 
 	};
 

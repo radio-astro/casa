@@ -28,6 +28,7 @@
 //
 #include <synthesis/TransformMachines/AzElAperture.h>
 #include <ostream>
+using namespace casacore;
 namespace casa{
   //
   void AzElAperture::rotate(const VisBuffer& vb, CFCell& cfc, const Double& rotAngleIncr) 

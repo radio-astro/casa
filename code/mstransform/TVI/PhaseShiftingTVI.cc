@@ -22,6 +22,7 @@
 
 #include <mstransform/TVI/PhaseShiftingTVI.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -56,7 +57,7 @@ PhaseShiftingTVI::PhaseShiftingTVI(	ViImplementation2 * inputVii,
 Bool PhaseShiftingTVI::parseConfiguration(const Record &configuration)
 {
 	int exists = -1;
-	Bool ret = True;
+	Bool ret = true;
 
 	exists = -1;
 	exists = configuration.fieldNumber ("XpcOffset");
@@ -112,7 +113,7 @@ void PhaseShiftingTVI::visibilityObserved (Cube<Complex> & vis) const
 	Vector<Double> frequencies = vb->getFrequencies(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	vis.resize(getVisBufferConst()->getShape(),False);
+	vis.resize(getVisBufferConst()->getShape(),false);
 
 	// Gather input data
 	DataCubeMap inputData;
@@ -144,7 +145,7 @@ void PhaseShiftingTVI::visibilityCorrected (Cube<Complex> & vis) const
 	Vector<Double> frequencies = vb->getFrequencies(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	vis.resize(getVisBufferConst()->getShape(),False);
+	vis.resize(getVisBufferConst()->getShape(),false);
 
 	// Gather input data
 	DataCubeMap inputData;
@@ -176,7 +177,7 @@ void PhaseShiftingTVI::visibilityModel (Cube<Complex> & vis) const
 	Vector<Double> frequencies = vb->getFrequencies(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
-	vis.resize(getVisBufferConst()->getShape(),False);
+	vis.resize(getVisBufferConst()->getShape(),false);
 
 	// Gather input data
 	DataCubeMap inputData;

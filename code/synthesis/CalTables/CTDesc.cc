@@ -42,12 +42,13 @@
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/IPosition.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
 CTDesc::CTDesc() : 
-  addObsId_(True),
+  addObsId_(true),
   itsCalMainDesc(defaultCalMain())
 {
 // Default null constructor for new calibration table description (v1.0)
@@ -76,7 +77,7 @@ CTDesc::CTDesc (const String& partype,
 		const String& msname,
 		const String& viscal,
 		const String& polbasis) :
-  addObsId_(True),
+  addObsId_(true),
   itsCalMainDesc(defaultCalMain(partype,msname,viscal,polbasis))
 {
 // Constructor for new calibration table description (v1.0)

@@ -50,28 +50,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSScreenMarker();
-		DSScreenMarker(const Record& settings, PixelCanvas* pc);
+		DSScreenMarker(const casacore::Record& settings, PixelCanvas* pc);
 		DSScreenMarker(DSPixelMarker& other, PixelCanvas* pc);
 		DSScreenMarker(DSWorldMarker& other);
 
 		virtual ~DSScreenMarker();
 
 		virtual void recalculateScreenPosition();
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 
 		// These are so we can monitor if the marker is moved and update our
 		// relative position
-		virtual void move(const Float& dX, const Float& dY);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSMarker::getOptions();
 		}
 	private:
 
 		PixelCanvas* itsPC;
-		Vector<Float> itsRelativeCenter;
+		casacore::Vector<casacore::Float> itsRelativeCenter;
 
 
 		virtual void updateRC();

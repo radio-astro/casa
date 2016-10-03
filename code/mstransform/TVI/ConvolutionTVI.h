@@ -41,25 +41,25 @@ class ConvolutionTVI : public FreqAxisTVI
 public:
 
 	ConvolutionTVI(	ViImplementation2 * inputVii,
-					const Record &configuration);
+					const casacore::Record &configuration);
 
-    void flag(Cube<Bool>& flagCube) const;
-    void floatData (Cube<Float> & vis) const;
-    void visibilityObserved (Cube<Complex> & vis) const;
-    void visibilityCorrected (Cube<Complex> & vis) const;
-    void visibilityModel (Cube<Complex> & vis) const;
-    void weightSpectrum(Cube<Float> &weightSp) const;
-    void sigmaSpectrum (Cube<Float> &sigmaSp) const;
+    void flag(casacore::Cube<casacore::Bool>& flagCube) const;
+    void floatData (casacore::Cube<casacore::Float> & vis) const;
+    void visibilityObserved (casacore::Cube<casacore::Complex> & vis) const;
+    void visibilityCorrected (casacore::Cube<casacore::Complex> & vis) const;
+    void visibilityModel (casacore::Cube<casacore::Complex> & vis) const;
+    void weightSpectrum(casacore::Cube<casacore::Float> &weightSp) const;
+    void sigmaSpectrum (casacore::Cube<casacore::Float> &sigmaSp) const;
 
-    Bool weightSpectrumExists () const {return True;}
-    Bool sigmaSpectrumExists () const {return True;}
+    bool weightSpectrumExists () const {return true;}
+    bool sigmaSpectrumExists () const {return true;}
 
 protected:
 
-    Bool parseConfiguration(const Record &configuration);
+    casacore::Bool parseConfiguration(const casacore::Record &configuration);
     void initialize();
 
-    mutable Vector<Float> convCoeff_p;
+    mutable casacore::Vector<casacore::Float> convCoeff_p;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -71,14 +71,14 @@ class ConvolutionTVIFactory : public ViFactory
 
 public:
 
-	ConvolutionTVIFactory(Record &configuration,ViImplementation2 *inputVII);
+	ConvolutionTVIFactory(casacore::Record &configuration,ViImplementation2 *inputVII);
 
 protected:
 
 	vi::ViImplementation2 * createVi (VisibilityIterator2 *) const;
 	vi::ViImplementation2 * createVi () const;
 
-	Record configuration_p;
+	casacore::Record configuration_p;
 	ViImplementation2 *inputVii_p;;
 };
 
@@ -94,13 +94,13 @@ template<class T> class ConvolutionTransformEngine : public FreqAxisTransformEng
 
 public:
 
-	ConvolutionTransformEngine(ConvolutionKernel<T> *kernel, uInt width);
+	ConvolutionTransformEngine(ConvolutionKernel<T> *kernel, casacore::uInt width);
 
-	void transform(Vector<T> &inputVector,Vector<T> &outputVector);
+	void transform(casacore::Vector<T> &inputVector,casacore::Vector<T> &outputVector);
 
 protected:
 
-	uInt width_p;
+	casacore::uInt width_p;
 	// This member has to be a pointer, otherwise there
 	// are compile time problems due to the fact that
 	// it is a pure virtual class.
@@ -116,17 +116,17 @@ template<class T> class ConvolutionKernel
 
 public:
 
-	ConvolutionKernel(Vector<Float> *convCoeff);
+	ConvolutionKernel(casacore::Vector<casacore::Float> *convCoeff);
 
-	virtual void kernel(	Vector<T> &inputVector,
-							Vector<T> &outputVector,
-							uInt startInputPos,
-							uInt outputPos) = 0;
+	virtual void kernel(	casacore::Vector<T> &inputVector,
+							casacore::Vector<T> &outputVector,
+							casacore::uInt startInputPos,
+							casacore::uInt outputPos) = 0;
 
 protected:
 
-	uInt width_p;
-	Vector<Float> *convCoeff_p;
+	casacore::uInt width_p;
+	casacore::Vector<casacore::Float> *convCoeff_p;
 
 };
 
@@ -141,12 +141,12 @@ template<class T> class ConvolutionDataKernel : public ConvolutionKernel<T>
 
 public:
 
-	ConvolutionDataKernel(Vector<Float> *convCoeff);
+	ConvolutionDataKernel(casacore::Vector<casacore::Float> *convCoeff);
 
-	void kernel(	Vector<T> &inputVector,
-					Vector<T> &outputVector,
-					uInt startInputPos,
-					uInt outputPos);
+	void kernel(	casacore::Vector<T> &inputVector,
+					casacore::Vector<T> &outputVector,
+					casacore::uInt startInputPos,
+					casacore::uInt outputPos);
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -161,12 +161,12 @@ template<class T> class ConvolutionLogicalORKernel : public ConvolutionKernel<T>
 
 public:
 
-	ConvolutionLogicalORKernel(Vector<Float> *convCoeff);
+	ConvolutionLogicalORKernel(casacore::Vector<casacore::Float> *convCoeff);
 
-	void kernel(	Vector<T> &inputVector,
-					Vector<T> &outputVector,
-					uInt startInputPos,
-					uInt outputPos);
+	void kernel(	casacore::Vector<T> &inputVector,
+					casacore::Vector<T> &outputVector,
+					casacore::uInt startInputPos,
+					casacore::uInt outputPos);
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -181,12 +181,12 @@ template<class T> class ConvolutionWeightPropagationKernel : public ConvolutionK
 
 public:
 
-	ConvolutionWeightPropagationKernel(Vector<Float> *convCoeff);
+	ConvolutionWeightPropagationKernel(casacore::Vector<casacore::Float> *convCoeff);
 
-	void kernel(	Vector<T> &inputVector,
-					Vector<T> &outputVector,
-					uInt startInputPos,
-					uInt outputPos);
+	void kernel(	casacore::Vector<T> &inputVector,
+					casacore::Vector<T> &outputVector,
+					casacore::uInt startInputPos,
+					casacore::uInt outputPos);
 };
 
 

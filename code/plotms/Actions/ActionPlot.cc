@@ -25,6 +25,7 @@
 
 #include "ActionPlot.h"
 #include <plotms/Client/Client.h>
+using namespace casacore;
 namespace casa {
 
 ActionPlot::ActionPlot( Client* client )
@@ -40,4 +41,5 @@ bool ActionPlot::doActionSpecific(PlotMSApp* /*plotms*/){
 ActionPlot::~ActionPlot() {
 }
 
+using namespace casacore;
 } /* namespace casa */

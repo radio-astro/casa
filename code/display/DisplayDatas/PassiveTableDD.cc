@@ -32,6 +32,7 @@
 #include <tables/TaQL/TableParse.h>
 #include <display/DisplayDatas/PassiveTableDD.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	PassiveTableDD::PassiveTableDD(Table *table) :
@@ -70,12 +71,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool PassiveTableDD::setOptions(Record &rec, Record &recOut) {
 		Bool ret = PassiveCachingDD::setOptions(rec, recOut);
 
-		Bool localchange = False, error, unst;
+		Bool localchange = false, error, unst;
 
 		if (readOptionRecord(itsOptQueryString, unst,
 		                     error, rec, "querystring")) {
 			arrangeQueryTable();
-			localchange = True;
+			localchange = true;
 		}
 
 		return (ret || localchange);
@@ -90,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		querystring.define("ptype", "string");
 		querystring.defineRecord("default", unset());
 		querystring.define("value", itsOptQueryString);
-		querystring.define("allowunset", True);
+		querystring.define("allowunset", true);
 		rec.defineRecord("querystring", querystring);
 
 		return rec;
@@ -114,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				retval(n++) = cnames(i);
 			}
 		}
-		retval.resize(n, True);
+		retval.resize(n, true);
 		return retval;
 	}
 
@@ -168,10 +169,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			if (itsQueryTable) {
-				return True;
+				return true;
 			}
 		}
-		return False;
+		return false;
 	}
 
 

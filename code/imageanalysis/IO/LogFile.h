@@ -60,33 +60,33 @@ public:
 
 	// The constructor does sanity checking such as that the file
 	// is writable.
-	LogFile(const String& filename);
+	LogFile(const casacore::String& filename);
 
     virtual ~LogFile();
 
     // Should file be appended to if it exists?
-    void setAppend(const Bool a);
+    void setAppend(const casacore::Bool a);
 
-    // returns True if file successfully opened
-    Bool open();
+    // returns true if file successfully opened
+    casacore::Bool open();
 
     void close() const;
 
-    // Write output to file. If open is False, it is assumed there is apriori information
-    // that the file is open and no such check will be done before writing. If close is True,
-    // the file will be closed after writing the output, if True it will be left open (which
+    // Write output to file. If open is false, it is assumed there is apriori information
+    // that the file is open and no such check will be done before writing. If close is true,
+    // the file will be closed after writing the output, if true it will be left open (which
     // normally means the caller still have more writing to do).
-    Bool write(
-    	const String& output, const Bool open=True,
-    	const Bool close=True
+    casacore::Bool write(
+    	const casacore::String& output, const casacore::Bool open=true,
+    	const casacore::Bool close=true
     );
 
 private:
 
-    String _filename;
-    Bool _append;
-    Int _fileHandle;
-    std::unique_ptr<FiledesIO> _fileIO;
+    casacore::String _filename;
+    casacore::Bool _append;
+    casacore::Int _fileHandle;
+    std::unique_ptr<casacore::FiledesIO> _fileIO;
 
 };
 }

@@ -30,6 +30,7 @@
 #include <QDoubleValidator>
 #include <QDebug>
 
+using namespace casacore;
 namespace casa {
 
 	ProfileTaskFacilitator::ProfileTaskFacilitator() :
@@ -176,9 +177,9 @@ namespace casa {
 			return;
 		}
 
-		Bool ascending=True;
+		Bool ascending=true;
 		if (specValues(specValues.size()-1)<specValues(0)) {
-			ascending=False;
+			ascending=false;
 		}
 		int startIndex = 0;
 		int endIndex = 0;
@@ -255,9 +256,9 @@ namespace casa {
 		Float valueStart=spcVals(0);
 		Float valueEnd  =spcVals(spcVals.size()-1);
 
-		Bool ascending(True);
+		Bool ascending(true);
 		if (valueStart > valueEnd) {
-			ascending=False;
+			ascending=false;
 		}
 
 		// convert to QString
@@ -317,4 +318,5 @@ namespace casa {
 		delete validator;
 	}
 
+using namespace casacore;
 } /* namespace casa */

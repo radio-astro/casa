@@ -42,10 +42,11 @@
 #include <ostream>
 #include <cassert>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-Bool dbg2 = False;
-Bool verbose2 = False;
+Bool dbg2 = false;
+Bool verbose2 = false;
         
 // -----------------------------------------------------------------------
 // reformRange
@@ -80,13 +81,13 @@ template Bool RFASelector::find<String>(uInt&,const String&,const Vector<String>
 // Converts a field that is an array of Int/Double or Strings into 
 // an array of Doubles. Numeric values are converted as is. Strings 
 // are fed through MVTime::read to convert into MJDs (or MJSs, if 
-// secs is True).
+// secs is true).
 // -----------------------------------------------------------------------
 Bool RFASelector::parseTimes ( Array<Double> &times,const RecordInterface &parm,const String &id,Bool secs )
 {
   LogIO os(LogOrigin("RFASelector", "parseTimes()", WHERE));
   if( !isFieldSet(parm,id) )
-    return False;
+    return false;
   if( fieldType(parm,id,TpString,TpArrayString) ) // String date/times
   {
     Array<String> tt( parm.asArrayString(id) );
@@ -111,8 +112,8 @@ Bool RFASelector::parseTimes ( Array<Double> &times,const RecordInterface &parm,
     times = parm.toArrayDouble(id);
   }
   else                              // else can't parse
-    return False;
-  return True;
+    return false;
+  return true;
 }
 
 
@@ -136,23 +137,23 @@ Bool RFASelector::parseMinMax( Float &vmin,Float &vmax,const RecordInterface &sp
     
   vmin = -C::flt_max; vmax=C::flt_max;
 // Option 1: fields named min/max exist... so use them
-  Bool named = False;
+  Bool named = false;
   if( spec.isDefined(RF_MIN) )
-    { vmin = spec.asFloat(RF_MIN); named = True; }
+    { vmin = spec.asFloat(RF_MIN); named = true; }
   if( spec.isDefined(RF_MAX) )
-    { vmax = spec.asFloat(RF_MAX); named = True; }
+    { vmax = spec.asFloat(RF_MAX); named = true; }
   if( named )
-    return True;
+    return true;
 // Else look at first available field, if a 2-element array, assume
 // [min,max] has been specified
   if (spec.nfields() < f0) {
-      return False;
+      return false;
   }
   if( spec.shape(f0).nelements()==1 && spec.shape(f0)(0) == 2 )
   {
     Vector<Double> mm = spec.toArrayDouble(f0);
     vmin=mm(0); vmax=mm(1);
-    return True;
+    return true;
   }
 // Else assume next two record fields are {min,max}
   if( spec.nfields()-f0 > 2 )
@@ -162,7 +163,7 @@ Bool RFASelector::parseMinMax( Float &vmin,Float &vmax,const RecordInterface &sp
   }
   else
     vmax = spec.asFloat(f0);
-  return True;
+  return true;
 }
 
 Bool RFASelector::fortestingonly_parseMinMax( Float &vmin,Float &vmax,const RecordInterface &spec,uInt f0 )
@@ -226,7 +227,7 @@ void RFASelector::addClipInfo( const Vector<String> &expr,
     // add block to appropriate list  
     Block<ClipInfo> & block( mapper->type()==RFDataMapper::MAPROW ? sel_clip_row : sel_clip );
     uInt ncl = block.nelements();
-    block.resize(ncl+1,False,True);
+    block.resize(ncl+1,false,true);
     block[ncl] = clipinfo;
 }
 
@@ -537,7 +538,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
   }
 
 // parse input arguments: ANT specified by string ID
-  LogicalVector sel_ant(num(ANT),False); 
+  LogicalVector sel_ant(num(ANT),false); 
   if( fieldType(parm,RF_ANT,TpString,TpArrayString)) 
   {
     Vector<String> sant( parm.asArrayString(RF_ANT)) ;
@@ -548,7 +549,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
       uInt iant;
       if( !find( iant,sant(i),names)) 
         os<<"Illegal antenna ID "<<sant(i)<<endl<<LogIO::EXCEPTION;
-      sel_ant(iant)=True;
+      sel_ant(iant)=true;
     }
   }
 // else ANT specified directly by indexes
@@ -556,7 +557,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
   {
     Vector<Int> sant = parm.asArrayInt(RF_ANT);
     for( uInt i=0; i<sant.nelements(); i++) 
-      sel_ant( sant(i) - (Int)indexingBase())  = True;
+      sel_ant( sant(i) - (Int)indexingBase())  = true;
   }
   if( sum(sel_ant)) 
   {
@@ -568,7 +569,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
   }
 
 // parse input: baselines as "X-Y"
-  sel_ifr = LogicalVector(num(IFR),False);
+  sel_ifr = LogicalVector(num(IFR),false);
   String ifrdesc;
   const Vector<String> &names( chunk.antNames()) ;
   if( fieldType(parm, RF_BASELINE, TpString, TpArrayString)) 
@@ -593,18 +594,18 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
         {
           addString(ifrdesc,ants[1]+"-*",",");
           for( uInt a=0; a<num(ANT); a++)  
-            sel_ifr( chunk.antToIfr(a,ant2))  = True;
+            sel_ifr( chunk.antToIfr(a,ant2))  = true;
         }
         else if( wild2) 
         {
           addString(ifrdesc,ants[0]+"-*",",");
           for( uInt a=0; a<num(ANT); a++)  
-            sel_ifr( chunk.antToIfr(ant1,a))  = True;
+            sel_ifr( chunk.antToIfr(ant1,a))  = true;
         }
         else
         {
           addString(ifrdesc,ants[0]+"-"+ants[1],",");
-          sel_ifr( chunk.antToIfr(ant1,ant2))  = True;
+          sel_ifr( chunk.antToIfr(ant1,ant2))  = true;
         }
       }
       else // try to interpret them as numbers instead
@@ -612,7 +613,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
         if( sscanf(ss(i).chars(),"%d-%d",&ant1,&ant2)<2 ||
             ant1>=num(ANT) || ant2>=num(ANT)) 
           os<<"Illegal baseline specification "<<ss(i)<<endl<<LogIO::EXCEPTION;
-        sel_ifr( chunk.antToIfr(ant1-(Int)indexingBase(),ant2-(Int)indexingBase()))  = True;
+        sel_ifr( chunk.antToIfr(ant1-(Int)indexingBase(),ant2-(Int)indexingBase()))  = true;
         addString(ifrdesc,ss(i),",");
       }
     }
@@ -631,13 +632,13 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
           if( ant(1,i)==-1)
             os<<"Illegal baseline specification [-1,-1]"<<LogIO::EXCEPTION<<endl;
           for( uInt a=0; a<num(ANT); a++) 
-            sel_ifr( chunk.antToIfr(a,ant(1,i))) = True;
+            sel_ifr( chunk.antToIfr(a,ant(1,i))) = true;
           addString(ifrdesc,names(ant(1,i))+"-*",",");
         }
         else if( ant(1,i)==-1)
         {
           for( uInt a=0; a<num(ANT); a++) 
-            sel_ifr( chunk.antToIfr(ant(0,i),a)) = True;
+            sel_ifr( chunk.antToIfr(ant(0,i),a)) = true;
           addString(ifrdesc,names(ant(0,i))+"-*",",");
         }
         else
@@ -646,7 +647,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
 
           assert( indx < sel_ifr.nelements() );
 
-          sel_ifr(indx) = True;
+          sel_ifr(indx) = true;
           addString(ifrdesc,names(ant(0,i))+"-"+names(ant(1,i)),",");
         }
       }
@@ -665,7 +666,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
       for( uInt a1=0; a1<num(ANT); a1++)
         if( sel_ant(a1))
           for( uInt a2=0; a2<num(ANT); a2++)
-            sel_ifr(chunk.antToIfr(a1,a2)) = True;
+            sel_ifr(chunk.antToIfr(a1,a2)) = true;
     }
     else // no antennas either? flag everything
       sel_ifr.resize();
@@ -674,7 +675,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
   // parse input: feeds as [[x1,y1],[x2,y2],... etc.
   if( fieldType(parm,RF_FEED,TpInt,TpArrayInt)) 
   {
-    sel_feed = LogicalVector(num(FEEDCORR),False);
+    sel_feed = LogicalVector(num(FEEDCORR),false);
     String feeddesc;
     Matrix<Int> feed;
     if( parseRange(feed,parm,RF_FEED))
@@ -687,18 +688,18 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
           if( feed(1,i)==-1)
             os<<"Illegal feed specification [-1,-1]"<<LogIO::EXCEPTION<<endl;
           for( uInt a=0; a<num(FEED); a++) 
-            sel_feed( chunk.antToIfr(a,feed(1,i))) = True;
+            sel_feed( chunk.antToIfr(a,feed(1,i))) = true;
           addString(feeddesc,names(feed(1,i))+"-*",",");
         }
         else if( feed(1,i)==-1)
         {
           for( uInt a=0; a<num(FEED); a++) 
-            sel_feed( chunk.antToIfr(feed(0,i),a)) = True;
+            sel_feed( chunk.antToIfr(feed(0,i),a)) = true;
           addString(feeddesc,names(feed(0,i))+"-*",",");
         }
         else
         {
-          sel_feed(chunk.antToIfr(feed(0,i),feed(1,i))) = True;
+          sel_feed(chunk.antToIfr(feed(0,i),feed(1,i))) = true;
           addString(feeddesc,names(feed(0,i))+"-"+names(feed(1,i)),",");
         }
       }
@@ -738,7 +739,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     ctimes *= (Double)(24*3600);
     String ss (String(RF_CENTERTIME)+"("+String::toString(ctimes.nelements())+")");
     Vector<Double> dt;
-    if (parseTimes(dt,parm,RF_TIMEDELTA,True))
+    if (parseTimes(dt,parm,RF_TIMEDELTA,true))
     {
       timedelta = dt(0);
       sprintf(s,",dtime=%.1fs",timedelta);
@@ -764,7 +765,7 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
  
       // are specific values given? 
       Vector<Double> qt;
-      if (parseTimes(qt, parm, RF_QUACK, True)) {
+      if (parseTimes(qt, parm, RF_QUACK, true)) {
 
           if (qt.nelements() > 3) {
               os << RF_QUACK << " must be specified as T, <scaninterval> or [scaninterval,dt]"
@@ -798,11 +799,11 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
   // flag a specific range or clip outside of range?
 
   if (isValidRecord(parm,RF_CLIP)) {
-    parseClipField(parm.asRecord(RF_CLIP),True);
+    parseClipField(parm.asRecord(RF_CLIP),true);
   }
 
   if (isValidRecord(parm,RF_FLAGRANGE))
-    parseClipField(parm.asRecord(RF_FLAGRANGE),False);
+    parseClipField(parm.asRecord(RF_FLAGRANGE),false);
 
   // add to description strings, if something was parsed
   if (sel_clip.nelements())
@@ -887,7 +888,7 @@ Bool RFASelector::newChunk (Int &maxmem)
     if( !corrmask )
     {
       if(verbose2) os<<"No matching correlations in this chunk\n"<<LogIO::POST;
-      return active=False;
+      return active=false;
     }
   }
   else // no correlations specified so flag everything
@@ -898,34 +899,34 @@ Bool RFASelector::newChunk (Int &maxmem)
   if( sel_spwid.nelements() && !find(dum,chunk.visBuf().spectralWindow(),sel_spwid) )
   {
     if(verbose2) os<<"Spectral window does not match in this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
   if( sel_fieldid.nelements() && !find(dum,chunk.visIter().fieldId(),sel_fieldid) )
   {
     if(verbose2) os<<"Field ID does not match in this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
   if( sel_fieldnames.nelements() && !find(dum,chunk.visIter().fieldName(),sel_fieldnames) )
   {
     if(verbose2) os<<"Field name does not match in this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
   if( sel_arrayid.nelements() && !find(dum,chunk.visIter().arrayId(),sel_arrayid) )
   {
     if(verbose2) os<<"Array ID does not match in this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
   if( sel_observation.nelements() && !find(dum,chunk.visBuf().observationId()[0],sel_observation) )
   {
     if(verbose2) os<<"Observation ID does not match in this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
   //Vector<Int> tempstateid(0);
   //tempstateid = chunk.visIter().stateId(tempstateid);
   //if( tempstateid.nelements() && sel_stateid.nelements() && !find(dum,tempstateid[0],sel_stateid) )
   //{
   //  if(verbose2) os<<"State ID does not match in this chunk\n"<<LogIO::POST;
-  //  return active=False;
+  //  return active=false;
   //}  
   //
   /*
@@ -934,7 +935,7 @@ Bool RFASelector::newChunk (Int &maxmem)
   if( temp.nelements() &&  sel_scannumber.nelements() && !find(dum,temp[0],sel_scannumber) )
   {
     os<<"Scan Number does not match the FIRST scan number in this chunk\n"<<LogIO::POST;
-    return active=False;
+    return active=false;
   }
   */
   
@@ -959,7 +960,7 @@ Bool RFASelector::newChunk (Int &maxmem)
   flagchan.resize();
   if( sel_freq.ncolumn() || sel_chan.ncolumn() )
   {
-    flagchan = LogicalVector(num(CHAN),False);
+    flagchan = LogicalVector(num(CHAN),false);
     const Vector<Double> & fq( chunk.frequency() );
     for( uInt i=0; i<sel_freq.ncolumn(); i++ )
       flagchan = flagchan || ( fq >= sel_freq(0,i) && fq <= sel_freq(1,i) );
@@ -974,10 +975,10 @@ Bool RFASelector::newChunk (Int &maxmem)
     if( !sum(flagchan) )
     {
      if(verbose2)  os<<"No matching frequencies/channels in this chunk\n"<<LogIO::POST;
-      return active=False;
+      return active=false;
     }
-    if( allEQ(flagchan,True) )
-      flagchan.resize(); // null array = all True
+    if( allEQ(flagchan,true) )
+      flagchan.resize(); // null array = all true
   }
 // init all clipping mappers, and check their correlation masks
   if( sel_clip.nelements() )
@@ -1002,7 +1003,7 @@ Bool RFASelector::newChunk (Int &maxmem)
         if (verbose2) {
           os << "No matching correlations in this chunk\n" << LogIO::POST;
         }
-        return active=False;
+        return active=false;
       }
     }
   }
@@ -1014,7 +1015,7 @@ Bool RFASelector::newChunk (Int &maxmem)
 // and no explicit correlations (or all correlations).
   select_fullrow = (!flagchan.nelements() && 
     (!sel_corr.nelements() || corrmask==chunk.fullCorrMask()) );
-  return active=True;
+  return active=true;
 }
 
 // -----------------------------------------------------------------------
@@ -1094,7 +1095,7 @@ RFA::IterMode RFASelector::iterTime (uInt it)
   if (sel_timerng.ncolumn()) {
       timeselect = false;
       if( anyEQ(sel_timerng.row(0) <= t0 && sel_timerng.row(1) >= t0,
-                True) ) {
+                true) ) {
           timeselect = true;
       }
   }
@@ -1105,7 +1106,7 @@ RFA::IterMode RFASelector::iterTime (uInt it)
   
   const Vector<Int> &ifrs( chunk.ifrNums() );
   const Vector<Int> &feeds( chunk.feedNums() );
-  const Vector<casa::RigidVector<casa::Double, 3> >&uvw( chunk.visBuf().uvw() );
+  const Vector<casacore::RigidVector<casacore::Double, 3> >&uvw( chunk.visBuf().uvw() );
   // Vector<Vector<Double> > &uvw=NULL;//( chunk.visIter.uvw(uvw) );
   //chunk.visIter().uvw(uvw);
   Double uvdist=0.0;
@@ -1127,11 +1128,11 @@ RFA::IterMode RFASelector::iterTime (uInt it)
 	      unsigned a1, a2;
 	      chunk.ifrToAnt(a1, a2, chunk.ifrNum(i));
 
-	      Bool inrange = False;
+	      Bool inrange = false;
 	      uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
 	      for (uInt j = 0; j < sel_uvrange.ncolumn(); j++)
 		  if (uvdist >= sel_uvrange(0, j) && uvdist <= sel_uvrange(1, j))
-		      inrange |= True;
+		      inrange |= true;
 	      
 	      if( (!sel_ifr.nelements() || sel_ifr(ifrs(i))) && 
 		  (!sel_feed.nelements() || sel_feed(feeds(i))) &&
@@ -1160,7 +1161,7 @@ RFA::IterMode RFASelector::iterTime (uInt it)
 	              involving shadowed antennas
 	   */
 	   
-          std::vector<bool> shadowed(diameters.nelements(), False);
+          std::vector<bool> shadowed(diameters.nelements(), false);
 
 	  for (uInt i = 0; i < ifrs.nelements(); i++) {
 	      
@@ -1193,10 +1194,10 @@ RFA::IterMode RFASelector::iterTime (uInt it)
 				 uvw(i)(2) << ")" << endl;
 		      
 		      if (uvw(i)(2) > 0) {
-			  shadowed[a1] = True;
+			  shadowed[a1] = true;
 		      }
 		      else {
-			  shadowed[a2] = True;
+			  shadowed[a2] = true;
 		      }
 		  }
 	      }
@@ -1214,11 +1215,11 @@ RFA::IterMode RFASelector::iterTime (uInt it)
 	      unsigned a1, a2;
 	      chunk.ifrToAnt(a1, a2, chunk.ifrNum(i));
 
-	      Bool inrange = False;
+	      Bool inrange = false;
 	      uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
 	      for (uInt j = 0; j < sel_uvrange.ncolumn(); j++)
 		  if (uvdist >= sel_uvrange(0, j) && uvdist <= sel_uvrange(1, j))
-		      inrange |= True;
+		      inrange |= true;
 	      
 	      if( (!sel_ifr.nelements() || sel_ifr(ifrs(i))) && 
 		  (!sel_feed.nelements() || sel_feed(feeds(i))) &&
@@ -1234,10 +1235,10 @@ RFA::IterMode RFASelector::iterTime (uInt it)
       // flag autocorrelations
       if (sel_autocorr) { 
 	  for (uInt i=0; i < ifrs.nelements(); i++) {
-	      Bool inrange=False;
+	      Bool inrange=false;
 	      uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
 	      for( uInt j=0; j<sel_uvrange.ncolumn(); j++)
-		  if( uvdist >= sel_uvrange(0,j) && uvdist <= sel_uvrange(1,j) ) inrange |= True;
+		  if( uvdist >= sel_uvrange(0,j) && uvdist <= sel_uvrange(1,j) ) inrange |= true;
 	      //    if( inrange ) cout << "x selected : " << i << " : " << uvdist << endl;
 	      if ((!sel_ifr.nelements() || sel_ifr(ifrs(i))) && 
 		  (!sel_feed.nelements() || sel_feed(feeds(i))) &&
@@ -1271,19 +1272,19 @@ RFA::IterMode RFASelector::iterTime (uInt it)
 
         if (quack_mode == "beg") {
           if (scan_start > 0 &&
-              t0 <= (scan_start + quack_si)) flagall = True;
+              t0 <= (scan_start + quack_si)) flagall = true;
         }
         else if (quack_mode == "endb") {
           if (scan_end > 0 &&
-              t0 >= (scan_end - quack_si)) flagall = True;
+              t0 >= (scan_end - quack_si)) flagall = true;
         }
         else if (quack_mode == "end") {
           if (scan_end > 0 &&
-              t0 < (scan_end - quack_si)) flagall = True;
+              t0 < (scan_end - quack_si)) flagall = true;
         }
         else if (quack_mode == "tail") {
           if (scan_start > 0 &&
-              t0 > (scan_start + quack_si)) flagall = True;
+              t0 > (scan_start + quack_si)) flagall = true;
         }
         else {
           throw(AipsError("Illegal quack mode '" + quack_mode + "'"));
@@ -1365,10 +1366,10 @@ RFA::IterMode RFASelector::iterTime (uInt it)
           //        if( sel_stateid(j) == stateid0 )
           for (uInt i = 0; i < stateids.nelements(); i++) {
 
-	      Bool inrange=False;
+	      Bool inrange=false;
 	      uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
 	      for( uInt j=0; j<sel_uvrange.ncolumn(); j++) 
-	           if( uvdist >= sel_uvrange(0,j) && uvdist <= sel_uvrange(1,j) ) inrange |= True;
+	           if( uvdist >= sel_uvrange(0,j) && uvdist <= sel_uvrange(1,j) ) inrange |= true;
 
               for (uInt j = 0; j < sel_stateid.nelements(); j++) {
                   if( stateids(i) == sel_stateid(j) && 
@@ -1387,10 +1388,10 @@ RFA::IterMode RFASelector::iterTime (uInt it)
   {
     for (uInt i=0; i<ifrs.nelements(); i++) // loop over rows
     {
-        Bool inrange=False;
+        Bool inrange=false;
         uvdist = sqrt( uvw(i)(0)*uvw(i)(0) + uvw(i)(1)*uvw(i)(1) );
         for( uInt j=0; j<sel_uvrange.ncolumn(); j++)
-                if( uvdist >= sel_uvrange(0,j) && uvdist <= sel_uvrange(1,j) ) inrange |= True;
+                if( uvdist >= sel_uvrange(0,j) && uvdist <= sel_uvrange(1,j) ) inrange |= true;
         if( (!sel_ifr.nelements() || sel_ifr(ifrs(i))) && 
             (!sel_feed.nelements() || sel_feed(feeds(i))) &&
             (!sel_uvrange.nelements() || inrange ) )
@@ -1522,33 +1523,33 @@ const RecordInterface & RFASelector::getDefaults ()
     rec = RFAFlagCubeBase::getDefaults();
     rec.removeField(RF_FIGNORE); // fignore is meaningless
     rec.define(RF_NAME,"Selector");
-    rec.define(RF_SPWID,False);
-    rec.define(RF_FIELD,False);
-    rec.define(RF_FREQS,False);
-    rec.define(RF_CHANS,False);
-    rec.define(RF_CORR,False);
-    rec.define(RF_ANT,False);
-    rec.define(RF_BASELINE,False);
-    rec.define(RF_TIMERANGE,False);
-    rec.define(RF_AUTOCORR,False);
-    rec.define(RF_CENTERTIME,False);
+    rec.define(RF_SPWID,false);
+    rec.define(RF_FIELD,false);
+    rec.define(RF_FREQS,false);
+    rec.define(RF_CHANS,false);
+    rec.define(RF_CORR,false);
+    rec.define(RF_ANT,false);
+    rec.define(RF_BASELINE,false);
+    rec.define(RF_TIMERANGE,false);
+    rec.define(RF_AUTOCORR,false);
+    rec.define(RF_CENTERTIME,false);
     rec.define(RF_TIMEDELTA,10.0);
-    rec.define(RF_QUACK,False);
-    rec.define(RF_CLIP,False);
-    rec.define(RF_CHANAVG, False);
-    rec.define(RF_FLAGRANGE,False);
-    rec.define(RF_UNFLAG,False);
-    rec.define(RF_SHADOW,False);
-    rec.define(RF_ELEVATION, False);
-    rec.define(RF_SCAN,False);
-    rec.define(RF_INTENT,False);
-    rec.define(RF_ARRAY,False);
-    rec.define(RF_FEED,False);
-    rec.define(RF_UVRANGE,False);
-    rec.define(RF_COLUMN,False);
-    rec.define(RF_DIAMETER, False);
-    rec.define(RF_LOWERLIMIT, False);
-    rec.define(RF_UPPERLIMIT, False);
+    rec.define(RF_QUACK,false);
+    rec.define(RF_CLIP,false);
+    rec.define(RF_CHANAVG, false);
+    rec.define(RF_FLAGRANGE,false);
+    rec.define(RF_UNFLAG,false);
+    rec.define(RF_SHADOW,false);
+    rec.define(RF_ELEVATION, false);
+    rec.define(RF_SCAN,false);
+    rec.define(RF_INTENT,false);
+    rec.define(RF_ARRAY,false);
+    rec.define(RF_FEED,false);
+    rec.define(RF_UVRANGE,false);
+    rec.define(RF_COLUMN,false);
+    rec.define(RF_DIAMETER, false);
+    rec.define(RF_LOWERLIMIT, false);
+    rec.define(RF_UPPERLIMIT, false);
     
     rec.setComment(RF_SPWID,"Restrict flagging to specific spectral windows (integers)");
     rec.setComment(RF_FIELD,"Restrict flagging to specific field IDs or field names (integers/strings)");

@@ -65,22 +65,22 @@ extern "C" {
     void zgetri(int &, void *, int &, const int *, void *, int &, int &);
                
 // Solve AX=B  with errors
-    void ssolvx(Int &, Int &, float *, Int &, const float *, Int &, 
-		const Int *, float *, Int &, float *, Int &, float *, 
-		float *, Int &, float *, float *, float *, Int *);
-    void dsolvx(Int &, Int &, double *, Int &, const double *, Int &, 
-	        const Int *, double *, Int &, double *, Int &, double *, 
-		double *, Int &, double *, double *, double *, Int *);
-    void csolvx(Int &, Int &, void *, Int &, const void *, Int &,
-		const Int *, void *, Int &, void *, Int &, float *, 
-		float *, Int &, float *, float *, void *, float *);
-    void zsolvx(Int &, Int &, void *, Int &, const void *, Int &, 
-		const Int *, void *, Int &, void *, Int &, double *, 
-		double *, Int &, double *, double *, void *, double *);
+    void ssolvx(casacore::Int &, casacore::Int &, float *, casacore::Int &, const float *, casacore::Int &, 
+		const casacore::Int *, float *, casacore::Int &, float *, casacore::Int &, float *, 
+		float *, casacore::Int &, float *, float *, float *, casacore::Int *);
+    void dsolvx(casacore::Int &, casacore::Int &, double *, casacore::Int &, const double *, casacore::Int &, 
+	        const casacore::Int *, double *, casacore::Int &, double *, casacore::Int &, double *, 
+		double *, casacore::Int &, double *, double *, double *, casacore::Int *);
+    void csolvx(casacore::Int &, casacore::Int &, void *, casacore::Int &, const void *, casacore::Int &,
+		const casacore::Int *, void *, casacore::Int &, void *, casacore::Int &, float *, 
+		float *, casacore::Int &, float *, float *, void *, float *);
+    void zsolvx(casacore::Int &, casacore::Int &, void *, casacore::Int &, const void *, casacore::Int &, 
+		const casacore::Int *, void *, casacore::Int &, void *, casacore::Int &, double *, 
+		double *, casacore::Int &, double *, double *, void *, double *);
 
 // test routines from LAPACK rewrapped for easy C++ call
-    void sblda(Int &, Int &, float &, float &, Int &, Int &, float *, int &);
-    void cndnm(Int &, Int &, float *, Int &, float &, float &, int &);
+    void sblda(casacore::Int &, casacore::Int &, float &, float &, casacore::Int &, casacore::Int &, float *, int &);
+    void cndnm(casacore::Int &, casacore::Int &, float *, casacore::Int &, float &, float &, int &);
 
     // called by fortran initialization, may not be needed on all machines,
     // in fact, this might cause problems on some machines.

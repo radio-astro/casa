@@ -32,6 +32,7 @@
 #include <display/Display/GLPCDisplayList.h>
 #include <display/Display/GLSupport.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Each object created has a tag to help debugging.
@@ -44,8 +45,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		char sbuf[32];
 
 		usage_ = 0;
-		enabled_ = True;
-		trace_ = False;
+		enabled_ = true;
+		trace_ = false;
 
 		//# Copy name to buffer. Then append serial number.
 		if(name != NULL)
@@ -62,11 +63,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void GLPCDisplayListElement::disable() {
-		enabled_ = False;
+		enabled_ = false;
 	}
 
 	void GLPCDisplayListElement::enable() {
-		enabled_ = True;
+		enabled_ = true;
 	}
 
 	void GLPCDisplayListElement::ref() {

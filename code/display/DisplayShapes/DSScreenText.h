@@ -34,6 +34,11 @@
 #include <display/DisplayShapes/DSText.h>
 #include <display/DisplayShapes/DisplayShapeWithCoords.h>
 
+namespace casacore{
+
+	class Record;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
@@ -43,38 +48,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class PixelCanvas;
 	class DSWorldText;
 	class DSPixelText;
-	class Record;
 
 	class DSScreenText : public DSText , public DisplayShapeWithCoords {
 
 	public:
 
 		DSScreenText();
-		DSScreenText(const Record& settings, PixelCanvas* pc);
+		DSScreenText(const casacore::Record& settings, PixelCanvas* pc);
 		DSScreenText(DSPixelText& other, PixelCanvas* pc);
 		DSScreenText(DSWorldText& other);
 
 		virtual ~DSScreenText();
 
 		virtual void recalculateScreenPosition();
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 
 		// These are so we can monitor if the text is moved and update our
 		// relative position
-		virtual void move(const Float& dX, const Float& dY);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSText::getOptions();
 		}
 	private:
 
 		PixelCanvas* itsPC;
-		Vector<Float> itsRelativeCenter;
+		casacore::Vector<casacore::Float> itsRelativeCenter;
 
-		virtual Vector<Float> relToScreen(const Vector<Float>& rel);
-		virtual Vector<Float> screenToRel(const Vector<Float>& screen);
+		virtual casacore::Vector<casacore::Float> relToScreen(const casacore::Vector<casacore::Float>& rel);
+		virtual casacore::Vector<casacore::Float> screenToRel(const casacore::Vector<casacore::Float>& screen);
 		virtual void updateRC();
 	};
 

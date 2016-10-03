@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <casa/sstream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
       
 RFChunkStats::RFChunkStats( VisibilityIterator &vi,VisBuffer &vb,Flagger &rf )
@@ -142,8 +143,8 @@ void RFChunkStats::newChunk(bool init_quack)
 
           /* Figure out if anything is flagged in this buffer */
           Bool any_unflagged = false;
-          casa::Bool dataIsAcopy;
-          casa::Bool * flags = visbuf.flagCube().getStorage(dataIsAcopy);
+          casacore::Bool dataIsAcopy;
+          casacore::Bool * flags = visbuf.flagCube().getStorage(dataIsAcopy);
           
           unsigned n = visbuf.flagCube().nelements();
           for (unsigned i = 0; i < n; i++) {

@@ -64,7 +64,7 @@ public:
     // Constructor that takes the browser parent, the location of the table,
     // the driver parameters for opening the table, and whether the table is
     // from a TaQL command or not.
-    TBTableTabs(TBBrowser* b, String filename, DriverParams* dp, bool taql);
+    TBTableTabs(TBBrowser* b, casacore::String filename, DriverParams* dp, bool taql);
 
     ~TBTableTabs();
     
@@ -77,10 +77,10 @@ public:
 
     // Returns the "name" of this table (which is the last part of the
     // filename).
-    String getName();
+    casacore::String getName();
     
     // Returns the location of this table.
-    String getFileName();
+    casacore::String getFileName();
 
     // Returns the browser associated with this table.
     TBBrowser* getBrowser();
@@ -108,7 +108,7 @@ public:
     
     // Returns the current sort on the table data tab, or an empty list
     // if there is none.
-    std::vector<std::pair<String, bool> >* getSortFields();
+    std::vector<std::pair<casacore::String, bool> >* getSortFields();
     
 
     // Loads rows into the table backend and, if successful, updates the three
@@ -134,7 +134,7 @@ public:
 
     // Sorts the table data tab with the given sort order.  See
     // TBDataTab::sortBy().
-    void sort(std::vector<std::pair<String, bool> >& s);
+    void sort(std::vector<std::pair<casacore::String, bool> >& s);
 
     // Selects and highlights the given row in the data tab.  If the given
     // row is not loaded in the table, the user is prompted on whether they
@@ -145,7 +145,7 @@ public slots:
     // Updates the underlying table with the new data and then updates the
     // GUI displays if successful.  The new value is first checked for
     // validity.  If the update fails, an error message is displayed.
-    void dataChanged(int row, int col, String newVal);
+    void dataChanged(int row, int col, casacore::String newVal);
 
     // Sets whether this table is currently in editing mode or not.
     void setEditable(bool e);
@@ -183,18 +183,18 @@ private:
     bool editable;
     
     // This table's location.
-    String filename;
+    casacore::String filename;
     
     // This table's name.
-    String name;
+    casacore::String name;
     
-    // Table backend.
+    // casacore::Table backend.
     TBTable table;
     
-    // Table data tab.
+    // casacore::Table data tab.
     TBDataTab dataTab;
     
-    // Table keywords tab.
+    // casacore::Table keywords tab.
     TBTableKeywordsTab keywordsTab;
     
     // Field keywords tab.

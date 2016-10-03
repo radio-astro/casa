@@ -59,6 +59,7 @@
 
 #include <ctime>
 
+using namespace casacore;
 namespace casa {
 
 MSCache::MSCache(PlotMSApp* parent):
@@ -114,7 +115,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	if ( averaging_.baseline() || averaging_.antenna() || useScalarAve) {
         // Averaging with PlotMSVBAverager
         // Create visibility iterator vi_p
-        setUpVisIter(selection_, calibration_, dataColumn_, False, False);
+        setUpVisIter(selection_, calibration_, dataColumn_, false, false);
         // Set nIterPerAve (number of chunks per average)
 		bool chunksCounted = countChunks(*vi_p, nIterPerAve, thread);
         if (chunksCounted) {
@@ -131,7 +132,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
         // Averaging with TransformingVI2 
 		try {
 			// setUpVisIter also gets the VB shapes and calls trapExcessVolume:
-			setUpVisIter(selection_, calibration_, dataColumn_, False, True, thread);
+			setUpVisIter(selection_, calibration_, dataColumn_, false, true, thread);
 			loadChunks(*vi_p, loadAxes, loadData, thread);
 		} catch(AipsError& log) {
 			loadError(log.getMesg());
@@ -366,8 +367,8 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 	// Add needed fields
 	configuration.define("inputms", filename_);
 	configuration.define("datacolumn", dataColumn);
-	configuration.define("buffermode", True);
-	configuration.define("reindex", False);
+	configuration.define("buffermode", true);
+	configuration.define("reindex", false);
     configuration.define("interactive", interactive);
 
 	// Add transformation selection with expected keywords and string value
@@ -385,7 +386,7 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 
 	// Apply averaging
 	if (averaging_.time()){
-		configuration.define("timeaverage", True);
+		configuration.define("timeaverage", true);
 		configuration.define("timebin", averaging_.timeStr());
 		String timespanStr = "state";
 		if (averaging_.field())
@@ -406,11 +407,11 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
         } else {
             chanBin = static_cast<int>(chanVal);
         }
-		configuration.define("chanaverage", True);
+		configuration.define("chanaverage", true);
 		configuration.define("chanbin", chanBin);
 	}
     if (averaging_.spw()) {
-        configuration.define("spwaverage", True);
+        configuration.define("spwaverage", true);
     }
 
     LogFilter oldFilter(plotms_->getParameters().logPriority());
@@ -470,9 +471,9 @@ vi::VisibilityIterator2* MSCache::setUpVisIter(MeasurementSet& selectedMS,
 	columns[i++]                = MS::TIME;
 	if (combfld) columns[i++]   = MS::FIELD_ID;      // effectively ignore field boundaries
 	if (combspw) columns[i++]   = MS::DATA_DESC_ID;  // effectively ignore spw boundaries
-	vi::SortColumns sortcol(columns, False);
+	vi::SortColumns sortcol(columns, false);
 
-	vi::VisibilityIterator2* vi2 = new vi::VisibilityIterator2(selectedMS, sortcol, False, 0, iterInterval);
+	vi::VisibilityIterator2* vi2 = new vi::VisibilityIterator2(selectedMS, sortcol, false, 0, iterInterval);
 	vi::FrequencySelectionUsingChannels fs;
 	setUpFrequencySelectionChannels(fs, chansel);
 	fs.addCorrelationSlices(corrsel);
@@ -591,7 +592,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 
                 // increase size of nIterPerAve array, if needed
                 if (nIterPerAve.nelements() < uInt(nAveInterval+1))
-                    nIterPerAve.resize(nIterPerAve.nelements()+100, True);
+                    nIterPerAve.resize(nIterPerAve.nelements()+100, true);
                 // initialize next ave interval
                 nIterPerAve(nAveInterval) = 0;
                 avetime1 = thistime;
@@ -623,7 +624,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
     vm_->add(lastddid,maxAveNRows);
 
     Int nAve(nAveInterval+1);
-    nIterPerAve.resize(nAve, True);
+    nIterPerAve.resize(nAve, true);
     if (nChunk_ != nAve) increaseChunks(nAve);  // sets nChunk_
 
     if (verby) {
@@ -640,7 +641,7 @@ void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 		if (visBufferShapes_.size() > 0) {
 			s = vm_->evalVolume(visBufferShapes_, pendingLoadAxes); }
 		else {
-			Vector<Bool> mask(4, False);
+			Vector<Bool> mask(4, false);
 			int dataCount = getDataCount();
 
 			for ( int i = 0; i < dataCount; i++ ){
@@ -706,15 +707,15 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	Int chunk = 0;
 	chshapes_.resize(4,nChunk_);
 	goodChunk_.resize(nChunk_);
-	goodChunk_.set(False);
+	goodChunk_.set(false);
 
 	for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 		for(vi.origin(); vi.more(); vi.next()) {
             if (vb->nRows() > 0) {
                 if (chunk >= nChunk_) {  // nChunk_ was just an estimate
                     increaseChunks(chunk-nChunk_+1);  // updates nChunk_
-                    chshapes_.resize(4, nChunk_, True);
-                    goodChunk_.resize(nChunk_, True);
+                    chshapes_.resize(4, nChunk_, true);
+                    goodChunk_.resize(nChunk_, true);
                 }
 
                 // If a thread is given, update its chunk number and progress bar
@@ -726,13 +727,13 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                 chshapes_(1,chunk) = vb->nChannels();
                 chshapes_(2,chunk) = vb->nRows();
                 chshapes_(3,chunk) = vb->nAntennas();
-                goodChunk_(chunk)  = True;
+                goodChunk_(chunk)  = true;
                 for(unsigned int i = 0; i < loadAxes.size(); i++) {
                     // If a thread is given, check if the user canceled.
                     if(thread != NULL && thread->wasCanceled()) {
                         dataLoaded_ = false;
                         userCanceled_ = true;
-                        goodChunk_(chunk) = False; //only partially loaded
+                        goodChunk_(chunk) = false; //only partially loaded
                         return;
                     }
                     loadAxis(vb, chunk, loadAxes[i], loadData[i]);
@@ -777,15 +778,15 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 
     chshapes_.resize(4, nChunk_);
     goodChunk_.resize(nChunk_);
-    goodChunk_.set(False);
+    goodChunk_.set(false);
     Int nAnts;
     vi::VisBuffer2* vbToUse = NULL;
 
     for (Int chunk=0; chunk<nChunk_; ++chunk) {
         if (chunk >= nChunk_) {               // nChunk_ was just an estimate!
             increaseChunks(chunk-nChunk_+1);  // updates nChunk_
-            chshapes_.resize(4, nChunk_, True);
-            goodChunk_.resize(nChunk_, True);
+            chshapes_.resize(4, nChunk_, true);
+            goodChunk_.resize(nChunk_, true);
         }
 
         // If a thread is given, update it.
@@ -844,14 +845,14 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
             chshapes_(1,chunk) = avb.nChannels();
             chshapes_(2,chunk) = avb.nRows();
             chshapes_(3,chunk) = nAnts;
-            goodChunk_(chunk)  = True;
+            goodChunk_(chunk)  = true;
 
             for(unsigned int i = 0; i < loadAxes.size(); i++) {
                 // If a thread is given, check if the user canceled.
                 if(thread != NULL && thread->wasCanceled()) {
                     dataLoaded_ = false;
                     userCanceled_ = true;
-                    goodChunk_(chunk)  = False;
+                    goodChunk_(chunk)  = false;
                     return;
                 }
                 if (useAveragedVisBuffer(loadAxes[i])) {
@@ -863,7 +864,7 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
             }
         } else {
             // no points in this chunk
-            goodChunk_(chunk) = False;
+            goodChunk_(chunk) = false;
             chshapes_.column(chunk) = 0;
         }
         // Now advance to next chunk
@@ -886,7 +887,7 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 bool MSCache::useAveragedVisBuffer(PMS::Axis axis) {
 	// Some axes should be obtained from the VB2 provided by the VI2
 	// rather than the averaged VB2, which is not attached
-	bool useAvg(True);
+	bool useAvg(true);
 	switch(axis) {
 	case PMS::CHANNEL:
 	case PMS::FREQUENCY:
@@ -904,7 +905,7 @@ bool MSCache::useAveragedVisBuffer(PMS::Axis axis) {
 	case PMS::ELEVATION:
 	case PMS::PARANG:
 	case PMS::ROW: {
-		useAvg = False;
+		useAvg = false;
 		break;
 	}
 	default:
@@ -1214,12 +1215,12 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 				*amp_[vbnum] = amplitude(vb->visCube());
 			}
 			// TEST fft on freq axis to get delay
-			if (False) {
+			if (false) {
 
 				// Only transform frequency axis
 				//   (Should avoid cross-hand data, too?)
-				Vector<Bool> ax(3,False);
-				ax(1) = True;
+				Vector<Bool> ax(3,false);
+				ax(1) = true;
 
 				// Support padding for higher delay resolution
 				Int fact(4);
@@ -1240,13 +1241,13 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 				Vector<Complex> testf(64,Complex(1.0));
 				FFTServer<Float,Complex> ffts;
 				cout << "FFTServer..." << flush;
-				ffts.fft(testf,True);
+				ffts.fft(testf,true);
 				cout << "done." << endl;
 
 				ArrayLattice<Complex> tf(testf);
 				cout << "tf.isWritable() = " << boolalpha << tf.isWritable() << endl;
 
-				LatticeFFT::cfft(tf,False);
+				LatticeFFT::cfft(tf,false);
 				cout << "testf = " << testf << endl;
 
 
@@ -1255,7 +1256,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 				ArrayLattice<Complex> c(vpad);
 				cout << "c.shape() = " << c.shape() << endl;
 				//	  LatticeFFT::cfft(c,ax);
-				LatticeFFT::cfft2d(c,False);
+				LatticeFFT::cfft2d(c,false);
 
 				cout << "done." << endl;
 
@@ -1586,7 +1587,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 	// Establish a scope in which the VisBuffer is properly created/destroyed
 	{
         // CAS-8325: use same datacolumn that was plotted (e.g. Float)
-		setUpVisIter(selection_, calibration_, dataColumn_, True, False);
+		setUpVisIter(selection_, calibration_, dataColumn_, true, false);
 
 		vi_p->originChunks();
 		vi_p->origin();
@@ -1624,7 +1625,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 					Int nchan = vb->nChannels();
 					Int nrow  = vb->nRows();
 
-					if (False) {
+					if (false) {
 						Int currChunk = flchunks(order[iflag]);
 						Double time = getTime(currChunk,0);
 						Int spw = Int(getSpw(currChunk,0));
@@ -1680,7 +1681,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 									if (a1(irow)==thisA1 &&
 											a2(irow)==thisA2) {
 										vbflag(corr,chan,Slice(irow,1,1)) = setFlag;
-										if (!setFlag) vbflagrow(irow) = False;   // unset flag_row when unflagging
+										if (!setFlag) vbflagrow(irow) = false;   // unset flag_row when unflagging
 
 										break;  // found the one baseline, escape from for loop
 									}
@@ -1693,7 +1694,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 									if (a1(irow)==thisA1 ||
 											a2(irow)==thisA1) {
 										vbflag(corr,chan,Slice(irow,1,1)) = setFlag;
-										if (!setFlag) vbflagrow(irow) = False;   // unset flag_row when unflagging
+										if (!setFlag) vbflagrow(irow) = false;   // unset flag_row when unflagging
 									}
 								}
 							}
@@ -1704,7 +1705,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 							//  extension, or we've avaraged over all baselines
 							bsln=Slice(0,nrow,1);
 							vbflag(corr,chan,bsln) = setFlag;
-							if (!setFlag) vbflagrow(bsln) = False;   // unset flag_row when unflagging
+							if (!setFlag) vbflagrow(bsln) = false;   // unset flag_row when unflagging
 						}
 
 						++ifl;

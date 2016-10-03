@@ -49,118 +49,118 @@ namespace casa {
 class BaselineTable {
 public:
   BaselineTable() {;}
-  BaselineTable(const MeasurementSet& parent);
-  BaselineTable(const String &name);
+  BaselineTable(const casacore::MeasurementSet& parent);
+  BaselineTable(const casacore::String &name);
 
   virtual ~BaselineTable();
 
   void setup();
-  const String& name() const {return name_;};
+  const casacore::String& name() const {return name_;};
 
-  const Table& table() const { return table_; }
-  Table table() { return table_; }
+  const casacore::Table& table() const { return table_; }
+  casacore::Table table() { return table_; }
   void attach();
   void attachBaseColumns();
   void attachOptionalColumns();
 
-  uInt nrow() {return table_.nrow();}
+  casacore::uInt nrow() {return table_.nrow();}
 
-  uInt getScan(uInt irow) const {return scanCol_.get(irow);}
-  uInt getBeam(uInt irow) const {return beamCol_.get(irow);}
-  uInt getAntenna(uInt irow) const {return antCol_.get(irow);}
-  uint getSpw(uInt irow) const {return static_cast<uint>(ifCol_.get(irow));}
-  double getTime(uInt irow) const {return static_cast<double>(timeCol_.get(irow));}
+  casacore::uInt getScan(casacore::uInt irow) const {return scanCol_.get(irow);}
+  casacore::uInt getBeam(casacore::uInt irow) const {return beamCol_.get(irow);}
+  casacore::uInt getAntenna(casacore::uInt irow) const {return antCol_.get(irow);}
+  uint getSpw(casacore::uInt irow) const {return static_cast<uint>(ifCol_.get(irow));}
+  double getTime(casacore::uInt irow) const {return static_cast<double>(timeCol_.get(irow));}
 
-  bool getApply(uInt irow, uInt ipol) const;
-  uint getBaselineType(uInt irow, uInt ipol) const;
-  int getFPar(uInt irow, uInt ipol) const;
+  bool getApply(casacore::uInt irow, casacore::uInt ipol) const;
+  uint getBaselineType(casacore::uInt irow, casacore::uInt ipol) const;
+  int getFPar(casacore::uInt irow, casacore::uInt ipol) const;
 
-  void setdata(uInt irow, uInt scanno, uInt beamno, 
-	       uInt antno, uInt ifno, 
-               uInt freqid, Double time, 
-	       Array<Bool> apply,
-               Array<uInt> ftype, 
-	       Array<Int> fpar, 
-	       Array<Float> ffpar, 
-               Array<uInt> mask,
-	       Array<Float> res,
-               Array<Float> rms, 
-               uInt nchan, 
-	       Array<Float> cthres,
-               Array<uInt> citer, 
-	       Array<Bool> uself,
-	       Array<Float> lfthres, 
-	       Array<uInt> lfavg, 
-	       Array<uInt> lfedge);
-  void appenddata(uInt scanno, uInt beamno, 
-		  uInt antno, uInt ifno, 
-                  uInt freqid, Double time, 
-		  Array<Bool> apply,
-		  Array<uInt> ftype, 
-		  Array<Int> fpar, 
-		  Array<Float> ffpar, 
-		  Array<uInt> mask,
-		  Array<Float> res,
-		  Array<Float> rms, 
-		  uInt nchan, 
-		  Array<Float> cthres,
-		  Array<uInt> citer, 
-		  Array<Bool> uself,
-		  Array<Float> lfthres, 
-		  Array<uInt> lfavg, 
-		  Array<uInt> lfedge);
+  void setdata(casacore::uInt irow, casacore::uInt scanno, casacore::uInt beamno, 
+	       casacore::uInt antno, casacore::uInt ifno, 
+               casacore::uInt freqid, casacore::Double time, 
+	       casacore::Array<casacore::Bool> apply,
+               casacore::Array<casacore::uInt> ftype, 
+	       casacore::Array<casacore::Int> fpar, 
+	       casacore::Array<casacore::Float> ffpar, 
+               casacore::Array<casacore::uInt> mask,
+	       casacore::Array<casacore::Float> res,
+               casacore::Array<casacore::Float> rms, 
+               casacore::uInt nchan, 
+	       casacore::Array<casacore::Float> cthres,
+               casacore::Array<casacore::uInt> citer, 
+	       casacore::Array<casacore::Bool> uself,
+	       casacore::Array<casacore::Float> lfthres, 
+	       casacore::Array<casacore::uInt> lfavg, 
+	       casacore::Array<casacore::uInt> lfedge);
+  void appenddata(casacore::uInt scanno, casacore::uInt beamno, 
+		  casacore::uInt antno, casacore::uInt ifno, 
+                  casacore::uInt freqid, casacore::Double time, 
+		  casacore::Array<casacore::Bool> apply,
+		  casacore::Array<casacore::uInt> ftype, 
+		  casacore::Array<casacore::Int> fpar, 
+		  casacore::Array<casacore::Float> ffpar, 
+		  casacore::Array<casacore::uInt> mask,
+		  casacore::Array<casacore::Float> res,
+		  casacore::Array<casacore::Float> rms, 
+		  casacore::uInt nchan, 
+		  casacore::Array<casacore::Float> cthres,
+		  casacore::Array<casacore::uInt> citer, 
+		  casacore::Array<casacore::Bool> uself,
+		  casacore::Array<casacore::Float> lfthres, 
+		  casacore::Array<casacore::uInt> lfavg, 
+		  casacore::Array<casacore::uInt> lfedge);
   void appendbasedata(int scanno, int beamno, int antno, int ifno, 
-		      int freqid, Double time);
-  void setresult(uInt irow, 
-		 Vector<Float> res, 
-		 Array<Float> rms);
+		      int freqid, casacore::Double time);
+  void setresult(casacore::uInt irow, 
+		 casacore::Vector<casacore::Float> res, 
+		 casacore::Array<casacore::Float> rms);
   void save(const std::string &filename);
-  uInt nchan(uInt ifno);
+  casacore::uInt nchan(casacore::uInt ifno);
 
-  Matrix<Bool> getApply() {return applyCol_.getColumn();}
+  casacore::Matrix<casacore::Bool> getApply() {return applyCol_.getColumn();}
   void setApply(int irow, int ipol, bool apply);
-  Matrix<Int> getFuncParam() {return fparCol_.getColumn();}
-  Matrix<Int> getFuncParam(uInt irow) {return fparCol_.get(irow);}
-  Matrix<Float> getFuncFParam() {return ffparCol_.getColumn();}
-  Matrix<Float> getFuncFParam(uInt irow) {return ffparCol_.get(irow);}
-  Matrix<uInt> getMaskList() {return maskCol_.getColumn();}
-  Matrix<Float> getResult() {return resCol_.getColumn();}
-  Matrix<Float> getResult(uInt irow) {return resCol_.get(irow);}
-  Matrix<Float> getRms() {return rmsCol_.getColumn();}
-  Vector<uInt> getNChan() {return nchanCol_.getColumn();}
-  uInt getNChan(int irow);
-  Matrix<Float> getClipThreshold() {return cthresCol_.getColumn();}
-  Matrix<uInt> getClipIteration() {return citerCol_.getColumn();}
-  Matrix<Bool> getUseLineFinder() {return uselfCol_.getColumn();}
-  Matrix<Float> getLineFinderThreshold() {return lfthresCol_.getColumn();}
-  Matrix<uInt> getLineFinderChanAvg() {return lfavgCol_.getColumn();}
-  Matrix<uInt> getLineFinderEdge() {return lfedgeCol_.getColumn();}
+  casacore::Matrix<casacore::Int> getFuncParam() {return fparCol_.getColumn();}
+  casacore::Matrix<casacore::Int> getFuncParam(casacore::uInt irow) {return fparCol_.get(irow);}
+  casacore::Matrix<casacore::Float> getFuncFParam() {return ffparCol_.getColumn();}
+  casacore::Matrix<casacore::Float> getFuncFParam(casacore::uInt irow) {return ffparCol_.get(irow);}
+  casacore::Matrix<casacore::uInt> getMaskList() {return maskCol_.getColumn();}
+  casacore::Matrix<casacore::Float> getResult() {return resCol_.getColumn();}
+  casacore::Matrix<casacore::Float> getResult(casacore::uInt irow) {return resCol_.get(irow);}
+  casacore::Matrix<casacore::Float> getRms() {return rmsCol_.getColumn();}
+  casacore::Vector<casacore::uInt> getNChan() {return nchanCol_.getColumn();}
+  casacore::uInt getNChan(int irow);
+  casacore::Matrix<casacore::Float> getClipThreshold() {return cthresCol_.getColumn();}
+  casacore::Matrix<casacore::uInt> getClipIteration() {return citerCol_.getColumn();}
+  casacore::Matrix<casacore::Bool> getUseLineFinder() {return uselfCol_.getColumn();}
+  casacore::Matrix<casacore::Float> getLineFinderThreshold() {return lfthresCol_.getColumn();}
+  casacore::Matrix<casacore::uInt> getLineFinderChanAvg() {return lfavgCol_.getColumn();}
+  casacore::Matrix<casacore::uInt> getLineFinderEdge() {return lfedgeCol_.getColumn();}
 
-  std::vector<bool> getMaskFromMaskList(uInt const nchan, std::vector<int> const& masklist);
+  std::vector<bool> getMaskFromMaskList(casacore::uInt const nchan, std::vector<int> const& masklist);
 
 private:
-  void setbasedata(uInt irow, uInt scanno, uInt beamno, uInt antno, 
-		   uInt ifno, uInt freqid, Double time);
-  Table table_, originaltable_;
-  ScalarColumn<uInt> scanCol_, beamCol_, antCol_, ifCol_, freqidCol_;
-  ScalarColumn<Double> timeCol_;
-  MEpoch::ScalarColumn timeMeasCol_;
-  static const String name_;
+  void setbasedata(casacore::uInt irow, casacore::uInt scanno, casacore::uInt beamno, casacore::uInt antno, 
+		   casacore::uInt ifno, casacore::uInt freqid, casacore::Double time);
+  casacore::Table table_, originaltable_;
+  casacore::ScalarColumn<casacore::uInt> scanCol_, beamCol_, antCol_, ifCol_, freqidCol_;
+  casacore::ScalarColumn<casacore::Double> timeCol_;
+  casacore::MEpoch::ScalarColumn timeMeasCol_;
+  static const casacore::String name_;
 
-  ArrayColumn<Bool> applyCol_;
-  ArrayColumn<uInt> ftypeCol_;
-  ArrayColumn<Int> fparCol_;
-  ArrayColumn<Float> ffparCol_;
-  ArrayColumn<uInt> maskCol_;
-  ArrayColumn<Float> resCol_;
-  ArrayColumn<Float> rmsCol_;
-  ScalarColumn<uInt> nchanCol_;
-  ArrayColumn<Float> cthresCol_;
-  ArrayColumn<uInt> citerCol_;
-  ArrayColumn<Bool> uselfCol_;
-  ArrayColumn<Float> lfthresCol_;
-  ArrayColumn<uInt> lfavgCol_;
-  ArrayColumn<uInt> lfedgeCol_;
+  casacore::ArrayColumn<casacore::Bool> applyCol_;
+  casacore::ArrayColumn<casacore::uInt> ftypeCol_;
+  casacore::ArrayColumn<casacore::Int> fparCol_;
+  casacore::ArrayColumn<casacore::Float> ffparCol_;
+  casacore::ArrayColumn<casacore::uInt> maskCol_;
+  casacore::ArrayColumn<casacore::Float> resCol_;
+  casacore::ArrayColumn<casacore::Float> rmsCol_;
+  casacore::ScalarColumn<casacore::uInt> nchanCol_;
+  casacore::ArrayColumn<casacore::Float> cthresCol_;
+  casacore::ArrayColumn<casacore::uInt> citerCol_;
+  casacore::ArrayColumn<casacore::Bool> uselfCol_;
+  casacore::ArrayColumn<casacore::Float> lfthresCol_;
+  casacore::ArrayColumn<casacore::uInt> lfavgCol_;
+  casacore::ArrayColumn<casacore::uInt> lfedgeCol_;
 };
 
 }

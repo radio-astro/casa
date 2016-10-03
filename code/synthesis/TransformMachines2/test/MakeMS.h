@@ -26,9 +26,13 @@
 //# $Id$
 
 #include <casa/aips.h>
-namespace casa {
+namespace casacore{
+
   class String;
   class MDirection;
+}
+
+namespace casa {
 
 namespace test {
 
@@ -43,4 +47,3 @@ public:
 };
 
 } // namespace test
-} // namespace casa

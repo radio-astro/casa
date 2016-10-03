@@ -51,6 +51,7 @@
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   ClarkCleanImageSkyModel::ClarkCleanImageSkyModel() : CleanImageSkyModel(), itsProgress(0) {
@@ -70,14 +71,14 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 
   LogIO os(LogOrigin("ClarkCleanImageSkyModel","solve",WHERE));
   
-  Bool converged=False; 
+  Bool converged=false; 
   if(numberOfModels()>1) {
     os << "Cannot process more than one field" << LogIO::EXCEPTION;
   }
 
   // Make the residual image
   if(modified_p)
-    makeNewtonRaphsonStep(se, False, (numberIterations()<1)?True:False);
+    makeNewtonRaphsonStep(se, false, (numberIterations()<1)?true:False);
   
   //Make the PSF
   if(!donePSF_p)
@@ -85,7 +86,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 
   if(numberIterations() < 1){
 
-    return True;
+    return true;
   }
 
   Float maxRes=0.0;
@@ -93,16 +94,16 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
   
   if(hasMask(0))
     converged = clean(image(0), residual(0), PSF(0), mask(0), maxRes, iterused, gain(), numberIterations(),  
-	  threshold(), cycleFactor_p, True, doPolJoint_p);
+	  threshold(), cycleFactor_p, true, doPolJoint_p);
   else{
     ImageInterface<Float> *tmpMask=0;
     converged = clean(image(0), residual(0), PSF(0), *tmpMask, maxRes, iterused, gain(), numberIterations(),  
-	  threshold(), cycleFactor_p, False, doPolJoint_p);
+	  threshold(), cycleFactor_p, false, doPolJoint_p);
   }
   
   setThreshold(maxRes);
   setNumberIterations(iterused);
-  modified_p=True;
+  modified_p=true;
   return(converged);
 };
 
@@ -111,7 +112,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 				      ImageInterface<Float>& psf, ImageInterface<Float>& mask, Float& maxresidual, Int& iterused, Float gain, Int numIter,  
 				      Float thresh, Float cycleFactor, Bool useMask, Bool doPolJoint){
 
-    Bool converged=False;
+    Bool converged=false;
     LogIO os(LogOrigin("ClarkCleanImageSkyModel","clean",WHERE)); 
     Int nx=image.shape()(0);
     Int ny=image.shape()(1);
@@ -140,7 +141,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
     ybeg=ny/4; 
     yend=3*ny/4-1;
 
-    Bool isCubeMask=False; 
+    Bool isCubeMask=false; 
     //AlwaysAssert((npol==1)||(npol==2)||(npol==4), AipsError);
   
     Lattice<Float>* mask_sl = 0;
@@ -154,7 +155,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
       }
       if(nchan >1){
 	if(mask.shape()(3)==nchan){
-	  isCubeMask=True;
+	  isCubeMask=true;
 	  os << "Using multichannel mask" << LogIO::POST;
 	}
 	else{
@@ -203,9 +204,9 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 		     IPosition(4, nx-1, ny-1, 0, ichan),
 		     psf.shape());
 
-	SubLattice<Float> psf_sl(psf, psfbox, False);
-	SubLattice<Float>  residual_sl(residual, imagebox, True);
-	SubLattice<Float>  model_sl=SubLattice<Float>   (image, imagebox, True);
+	SubLattice<Float> psf_sl(psf, psfbox, false);
+	SubLattice<Float>  residual_sl(residual, imagebox, true);
+	SubLattice<Float>  model_sl=SubLattice<Float>   (image, imagebox, true);
     
     
 	ArrayLattice<Float> psftmp;
@@ -216,7 +217,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 	  psftmp.set(0.0);
 	  Array<Float> tmparr=psf_sl.get();
 	  psftmp.putSlice(tmparr, IPosition(4, (newNx-nx)/2, (newNy-ny)/2, 0,0));
-	  psf_sl=SubLattice<Float>(psftmp, True);
+	  psf_sl=SubLattice<Float>(psftmp, true);
  
 	}
       
@@ -259,7 +260,7 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 	  cleaner.setCycleFactor(cycleFactor);
 	  // clean if there is no mask or if it has mask AND mask is not empty 
 	  cleaner.solve(eqn);
-	  cleaner.setChoose(False);
+	  cleaner.setChoose(false);
           if (cleaner.numberIterations()>0) {
 	    os << LogIO::NORMAL // Loglevel INFO
 	       << "Clean used " << cleaner.numberIterations() << " iterations" 
@@ -340,16 +341,16 @@ Lattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx,
   }
   // Now have possible BLC. Make sure that we don't go over the
   // edge later
-  Bool larger_quarter=False;
+  Bool larger_quarter=false;
   if((xend - xbeg)>nx/2) {
     // xbeg=nx/4-1; //if larger than quarter take inner of mask
     //os << LogIO::WARN << "Mask span over more than half the x-axis: Considering inner half of the x-axis"  << LogIO::POST;
-    larger_quarter=True;
+    larger_quarter=true;
   } 
   if((yend - ybeg)>ny/2) { 
     //ybeg=ny/4-1;
     //os << LogIO::WARN << "Mask span over more than half the y-axis: Considering inner half of the y-axis" << LogIO::POST;
-    larger_quarter=True;
+    larger_quarter=true;
   }  
 
   // make sure xend, yend does not go out of bounds
@@ -373,7 +374,7 @@ Lattice<Float>* ClarkCleanImageSkyModel::makeMaskSubLat(const Int& nx,
     		   latshape);
     
     arrayLat.putSlice(mask, IPosition(4,0,0,0,0));
-    mask_sl=new SubLattice<Float> (arrayLat, maskbox, False);
+    mask_sl=new SubLattice<Float> (arrayLat, maskbox, false);
     
 
 

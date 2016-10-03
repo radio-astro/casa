@@ -1,8 +1,12 @@
 #include <iosfwd>
 
-namespace casa {
+namespace casacore{
 
 class String;
+}
+
+namespace casa {
+
 
 namespace cdo {
 
@@ -17,11 +21,11 @@ public:
     ~Subtables ();
 
     void add (Subtable * subtable);
-    const Subtable * get (const String & name) const;
+    const Subtable * get (const casacore::String & name) const;
     Subtable * get (Subtable::ST subtableType);
     bool isPresent (Subtable::ST subtableType) const;
     void set (Subtable::ST subtableType, Subtable * subtable);
-    uInt size () const;
+    casacore::uInt size () const;
 
 
 protected:
@@ -39,3 +43,4 @@ private:
 } // end namespace cdo
 
 } // end namespace casa
+

@@ -44,7 +44,7 @@ namespace casa {
 // edit.  The builder contains GUI components that allow the user to visually
 // put together a TaQL command; once the command is built, the actual comamnd
 // can be generated.  The command can also be manually edited.  When the
-// command is accepted, a signal is emitted with the command in String format;
+// command is accepted, a signal is emitted with the command in casacore::String format;
 // it is the parent/caller's responsibility to collect the command.
 // NOTE: at this time, only the builder for the SELECT command has been
 // implemented (and not a very advanced implementation, at that).
@@ -68,8 +68,8 @@ public:
     Q_DECLARE_FLAGS(Commands, Command);
     // </group>
     
-    // Returns the String representation of the given command.
-    static String command(Command c) {
+    // Returns the casacore::String representation of the given command.
+    static casacore::String command(Command c) {
         switch(c) {
         case SELECT: return "SELECT";
         case UPDATE: return "UPDATE";
@@ -91,7 +91,7 @@ public:
 signals:
     // This signal is emitted whenever the user has accepted the entered TaQL
     // command.
-    void command(String command);
+    void command(casacore::String command);
     
     // This signal is emitted whenever the user presses the "Close" button.
     // NOTE: if this TBTaQL is in dialog mode, it will close itself; if it is

@@ -5,6 +5,7 @@
 #include <cstring>
 #include <iostream>
 
+using namespace casacore;
 namespace casac {
 
 typedef std::string std_string;

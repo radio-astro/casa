@@ -80,16 +80,16 @@ class CalIter : public CalIterBase
   // iteration order and iteration sort option. This returns the 
   // input calibration table in its entirety for each iteration, 
   // sorted on the specified iteration indices.
-  CalIter (CalTable& calTable, const Vector<Int>& iterIndices,
-	   Sort::Order order = Sort::Ascending, 
-	   Sort::Option = Sort::HeapSort);
+  CalIter (CalTable& calTable, const casacore::Vector<casacore::Int>& iterIndices,
+	   casacore::Sort::Order order = casacore::Sort::Ascending, 
+	   casacore::Sort::Option = casacore::Sort::HeapSort);
 
   // Default destructor
   virtual ~CalIter();
 
   // Iterator control
   void origin() {};
-  Bool more() {return True;};
+  casacore::Bool more() {return true;};
 
   // Current iteration sub-table
   virtual CalTable& subTable();

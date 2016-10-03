@@ -25,6 +25,7 @@
 
 #include "ConverterChannel.h"
 #include <QDebug>
+using namespace casacore;
 namespace casa {
 
 	ConverterChannel::ConverterChannel(const QString& oldUnits, const QString& newUnits) :
@@ -75,4 +76,5 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
+using namespace casacore;
 } /* namespace casa */

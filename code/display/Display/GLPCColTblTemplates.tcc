@@ -34,20 +34,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // =====
 
 	template <class T>
-	void GLPixelCanvasColorTable_mapToColor(uLong * table,
-	                                        uInt tableSize,
-	                                        uInt mapOffset,
-	                                        Array<T> & inOutArray,
-	                                        Bool rangeCheck) {
-		VectorIterator<T> vi(inOutArray);
+	void GLPixelCanvasColorTable_mapToColor(casacore::uLong * table,
+	                                        casacore::uInt tableSize,
+	                                        casacore::uInt mapOffset,
+	                                        casacore::Array<T> & inOutArray,
+	                                        casacore::Bool rangeCheck) {
+		casacore::VectorIterator<T> vi(inOutArray);
 
-		uInt n = vi.vector().nelements();
+		casacore::uInt n = vi.vector().nelements();
 		T val;
 
 		if (rangeCheck) {
-			uInt maxc = tableSize-1;
+			casacore::uInt maxc = tableSize-1;
 			while (!vi.pastEnd()) {
-				for (uInt i = 0; i < n; i++) {
+				for (casacore::uInt i = 0; i < n; i++) {
 					val = vi.vector()(i);
 					vi.vector()(i) = table[mapOffset + ((val <= 0) ? 0 : (val >= maxc) ? maxc : val)];
 				}
@@ -55,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		} else {
 			while (!vi.pastEnd()) {
-				for (uInt i = 0; i < n; i++) {
+				for (casacore::uInt i = 0; i < n; i++) {
 					vi.vector()(i) = table[mapOffset + vi.vector()(i)];
 				}
 				vi.next();

@@ -41,6 +41,7 @@
 
 #include <scimath/Mathematics.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void DisplayShapeWithCoords::floatToPix(Record& inHere,
@@ -470,8 +471,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        points,
 	        PanelDisplay* pd) {
 		WorldCanvas* toReturn(0);
-		Bool success = False;
-		Bool pointsuccess = True;
+		Bool success = false;
+		Bool pointsuccess = true;
 
 		ListIter<WorldCanvas* > wcs = pd->wcs();
 		wcs.toStart();
@@ -480,7 +481,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// Test all points.
 			const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 			if (!test) {
-				pointsuccess = False;
+				pointsuccess = false;
 			}
 
 			for (uInt i=0 ; i < points.nrow() ; i ++) {
@@ -495,7 +496,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			if (pointsuccess) {
 				toReturn = wcs.getRight();
-				success = True;
+				success = true;
 			} else {
 				wcs.step();
 			}
@@ -505,12 +506,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// if that returns nothing, look for one just in WC..
 		if (!success) {
 			wcs.toStart();
-			pointsuccess = True;
+			pointsuccess = true;
 
 			while(!wcs.atEnd() && !success) {
 				const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 				if (!test) {
-					pointsuccess = False;
+					pointsuccess = false;
 				}
 
 				for (uInt i=0 ; i < points.nrow() ; i ++) {
@@ -522,7 +523,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (pointsuccess) {
 					toReturn = wcs.getRight();
-					success = True;
+					success = true;
 				} else {
 					wcs.step();
 				}
@@ -538,7 +539,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        const Float& yPos,
 	        PanelDisplay* pd) {
 		WorldCanvas* toReturn(0);
-		Bool success = False;
+		Bool success = false;
 
 		// Look for ones where the point is in WC and in draw area
 		ListIter<WorldCanvas* > wcs = pd->wcs();
@@ -555,7 +556,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if (test) {
 					toReturn = wcs.getRight();
-					success = True;
+					success = true;
 				} else {
 					wcs.step();
 				}
@@ -576,7 +577,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					if (test) {
 						toReturn = wcs.getRight();
-						success = True;
+						success = true;
 					} else {
 						wcs.step();
 					}
@@ -650,18 +651,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		}
 
-		Bool success = False;
+		Bool success = false;
 
 		Vector<Double> pix(2);
 		Vector<Double> wcent(2);
-		Bool currentOK = True;
+		Bool currentOK = true;
 		ListIter<WorldCanvas* > wcs = pd->wcs();
 		wcs.toStart();
 
 		while (!wcs.atEnd() && !success) {
 			const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 			if (!test) {
-				currentOK = False;
+				currentOK = false;
 			}
 
 			// Check all points for current WC.
@@ -671,7 +672,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				wcent(1) = worldPoints(i,1);
 
 				if (!wcs.getRight()->worldToPix(wcent, pix)) {
-					currentOK = False;
+					currentOK = false;
 				}
 
 				if (currentOK) {
@@ -684,7 +685,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// Are all those points OK?
 			if (currentOK) {
 				toReturn = wcs.getRight();
-				success = True;
+				success = true;
 			} else {
 				wcs.step();
 			}
@@ -692,13 +693,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Check for just on WC (not in draw area)
 		if (!success) {
-			currentOK = True;
+			currentOK = true;
 			wcs.toStart();
 
 			while(!wcs.atEnd() && !success) {
 				const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 				if (!test) {
-					currentOK = False;
+					currentOK = false;
 				}
 
 				// Check all points for current WC.
@@ -706,7 +707,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					wcent(0) = worldPoints(i,0);
 					wcent(1) = worldPoints(i,1);
 					if (!wcs.getRight()->worldToPix(wcent, pix)) {
-						currentOK = False;
+						currentOK = false;
 					}
 					if (currentOK) {
 						currentOK = currentOK &&
@@ -717,7 +718,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// Are all those points OK?
 				if (currentOK) {
 					toReturn = wcs.getRight();
-					success = True;
+					success = true;
 				} else {
 					wcs.step();
 				}
@@ -732,7 +733,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        settings,
 	        PanelDisplay* pd) {
 
-		Bool success = False;
+		Bool success = false;
 
 		WorldCanvas* toReturn(0);
 
@@ -794,7 +795,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					const DisplayCoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 					if (test) {
 						toReturn = wcs.getRight();
-						success = True;
+						success = true;
 					} else {
 						wcs.step();
 					}
@@ -816,7 +817,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 						if (test) {
 							toReturn = wcs.getRight();
-							success = True;
+							success = true;
 						} else {
 							wcs.step();
 						}
@@ -875,7 +876,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			throw(AipsError("Invalid worldcanvas passed "
 			                "to inWorldCanvasDrawArea(Matrix)"));
 		}
-		Bool success = True;
+		Bool success = true;
 		for (uInt i = 0 ; i < points.nrow() ; i++) {
 			success = success && wc->inDrawArea(Int(points(i,0)+0.5),
 			                                    Int(points(i,1)+0.5));

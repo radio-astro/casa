@@ -31,6 +31,7 @@ Modification history:
 // Start of casa namespace
 // -----------------------------------------------------------------------------
 
+using namespace casacore;
 namespace casa {
 
 // -----------------------------------------------------------------------------
@@ -96,7 +97,7 @@ CalStatsFitter::FIT::FIT( void ) {
   eOrder = CalStatsFitter::ORDER_INIT;
   eType = CalStatsFitter::TYPE_INIT;
   eWeight = CalStatsFitter::WEIGHT_INIT;
-  bValid = False;
+  bValid = false;
   oPars = Vector<Double>();
   oCovars = Matrix<Double>();
   oModel = Vector<Double>();

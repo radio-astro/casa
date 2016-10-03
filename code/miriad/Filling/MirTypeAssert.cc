@@ -56,5 +56,5 @@ MirTypeAssert::MirTypeAssert() {
     }
 }
 
-Bool MirTypeAssert::ok = False;
+Bool MirTypeAssert::ok = false;
 

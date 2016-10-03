@@ -168,7 +168,7 @@ int main() {
       B1934.flux().convertUnit("Jy");
       String errorMessage("");
       GlishRecord compRec;
-      AlwaysAssert(B1934.toRecord(errorMessage, compRec) == True, AipsError);
+      AlwaysAssert(B1934.toRecord(errorMessage, compRec) == true, AipsError);
       AlwaysAssert(errorMessage == "", AipsError);
       {
  	AlwaysAssert(compRec.exists("flux"), AipsError);
@@ -296,7 +296,7 @@ int main() {
 	AlwaysAssert(type == "point", AipsError);
       }
       PointShape newComp;
-      AlwaysAssert(newComp.fromRecord(errorMessage, compRec) == True,
+      AlwaysAssert(newComp.fromRecord(errorMessage, compRec) == true,
 		   AipsError);
       AlwaysAssert(errorMessage == "", AipsError);
       AlwaysAssert(near(flux1934.value(0).re, newComp.flux().value(0).re,

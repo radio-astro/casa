@@ -42,8 +42,8 @@
 namespace casa {
 
     namespace dbus {
-		Record toRecord( const std::map<std::string,DBus::Variant> &mapIn );
-		std::map<std::string,DBus::Variant> fromRecord( const Record &record );
+		casacore::Record toRecord( const std::map<std::string,DBus::Variant> &mapIn );
+		std::map<std::string,DBus::Variant> fromRecord( const casacore::Record &record );
 
 		variant toVariant( const DBus::Variant &src );
 
@@ -53,7 +53,7 @@ namespace casa {
 		DBus::Variant fromVariant( const variant &src );
 		void show( const variant &v );
 
-		template<class t> std::vector<double> af( const Vector<t> &other ) {
+		template<class t> std::vector<double> af( const casacore::Vector<t> &other ) {
 			std::vector<double> result(other.nelements( ));
 			for (unsigned int x=0; x < result.size(); ++x)
 				result[x] = (double) other[x];

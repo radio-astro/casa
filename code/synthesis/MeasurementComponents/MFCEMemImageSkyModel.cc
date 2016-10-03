@@ -54,6 +54,7 @@
 #include <synthesis/MeasurementEquations/IncCEMemModel.h>
 #include <synthesis/MeasurementEquations/CEMemProgress.h>
 
+using namespace casacore;
 namespace casa {
 
 // Constructor
@@ -114,7 +115,7 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
         blc(3)= k;
 	trc(3)=k;
 	LCBox onePlane(blc, trc, PSF(model).shape());
-	subPSF=SubLattice<Float> ( PSF(model), onePlane, True);
+	subPSF=SubLattice<Float> ( PSF(model), onePlane, true);
 	{
 	  LatticeExprNode node = max(subPSF);
 	  psfmax(model) = node.getFloat();
@@ -153,9 +154,9 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 
   // Loop over major cycles
   Int cycle=0;
-  Bool stop=False;
-  Bool ask=True;
-  Bool modified=False;
+  Bool stop=false;
+  Bool ask=true;
+  Bool modified=false;
 
   if (displayProgress_p) {
     itsProgress = new CEMemProgress( pgplotter_p );
@@ -173,12 +174,12 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
     if (!incremental||(itsSubAlgorithm == "full")) {
       os << "Using visibility-subtraction for residual calculation"
 	 << LogIO::POST;
-      makeNewtonRaphsonStep(se, False);
+      makeNewtonRaphsonStep(se, false);
     }
     else {
       os << "Using XFR-based shortcut for residual calculation"
 	 << LogIO::POST;
-      makeNewtonRaphsonStep(se, True);
+      makeNewtonRaphsonStep(se, true);
     }
     os << "Finished update of residuals"
        << LogIO::POST;
@@ -194,7 +195,7 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
     // Can we stop?
     if(absmax<threshold()) {
       os << "Reached stopping peak residual = " << absmax << LogIO::POST;
-      stop=True;
+      stop=true;
     }
     else {
       
@@ -235,23 +236,23 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 	    
 	    // If mask exists, use it;
             // If not, use the fluxScale image to figure out
-            Bool doMask = False;
+            Bool doMask = false;
             Lattice<Float> *maskPointer = 0;
             if (hasMask(model) &&  mask(model).nelements() > 1 ) {
-              doMask = True;
+              doMask = true;
 	      blcDirty(2)=0; trcDirty(2)=0;
 	      blcDirty(3)=0; trcDirty(3)=0;
 	      LCBox onePlane(blcDirty, trcDirty, mask(model).shape());
 		  
-	      maskPointer = new SubLattice<Float>( mask(model), onePlane, False);
+	      maskPointer = new SubLattice<Float>( mask(model), onePlane, false);
 
             } else if (doFluxScale(model)) {
-              doMask = True;
+              doMask = true;
 	      blcDirty(2)=0; trcDirty(2)=0;
 	      blcDirty(3)=0; trcDirty(3)=0;
 	      LCBox onePlane(blcDirty, trcDirty, fluxScale(model).shape());
               maskPointer = new SubLattice<Float> ( fluxScale(model), onePlane,
-						    True);
+						    true);
               maskPointer->copyData( (LatticeExpr<Float>)
                                      (iif( (*maskPointer > 0.0), 1.0, 0.0) ));
             }
@@ -273,10 +274,10 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
  
 		  LCBox onePlane(blcDirty, trcDirty, image(model).shape());
 		  
-		  SubLattice<Float> subImage( image(model), onePlane, True);
+		  SubLattice<Float> subImage( image(model), onePlane, true);
 		  SubLattice<Float> subResid( residual(model), onePlane);
 		  SubLattice<Float> subPSF( PSF(model), onePlane);
-		  SubLattice<Float> subDeltaImage( deltaImage(model), onePlane, True);
+		  SubLattice<Float> subDeltaImage( deltaImage(model), onePlane, true);
 		  
 		  // Now make a convolution equation for this
 		  // residual image and psf and then deconvolve it
@@ -299,7 +300,7 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 		  else {
 		    os << " Known MEM entropies: entropy | emptiness " << LogIO::POST;
 		    os << LogIO::SEVERE << "Unknown MEM entropy: " << entString << LogIO::POST;
-		    return False;
+		    return false;
 		  }
 		  
 		  subDeltaImage.set(0.0);
@@ -310,16 +311,16 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 					       subDeltaImage,
 					       *priorImagePtr, *maskPointer,
 					       numberIterations(), itsSigma,
-					       abs(itsTargetFlux), False,
-					       True,  False );
+					       abs(itsTargetFlux), false,
+					       true,  false );
 		    }
 		    else {
 		      memer=new IncCEMemModel(*myEnt_p, subImage,
 					      subDeltaImage,
 					      *priorImagePtr, 
 					      numberIterations(), itsSigma,
-					      abs(itsTargetFlux), False,
-					      True,  False );
+					      abs(itsTargetFlux), false,
+					      true,  false );
 		    }
 		  }
 		  else {
@@ -329,15 +330,15 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 					       numberIterations(),
 					       *maskPointer,
 					       itsSigma,
-					       abs(itsTargetFlux), False,
-					       True,  False );
+					       abs(itsTargetFlux), false,
+					       true,  false );
 		    }
 		    else {
 		      memer=new IncCEMemModel(*myEnt_p, subImage,
 					      subDeltaImage,
 					      numberIterations(), itsSigma,
-					      abs(itsTargetFlux), False,
-					      True,  False );
+					      abs(itsTargetFlux), false,
+					      true,  false );
 		    }
 		  }
 		  if (displayProgress_p) {
@@ -362,7 +363,7 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 		  iterations[model](pol, chan)=memer->numberIterations();
 		  maxIterations=(iterations[model](pol, chan)>maxIterations) ?
 		    iterations[model](pol, chan) : maxIterations;
-		  modified=True;
+		  modified=true;
 		  
 		  if(memer) delete memer; memer=0;
 
@@ -385,7 +386,7 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
       // For now if it has converged withing 20% of maxiter we'll stop
 
       if((maxIterations+Int(numberIterations()/20)) >=numberIterations())
-	 stop=True;
+	 stop=true;
       //===
       if(maxIterations<numberIterations()&&ask) {
 	Vector<String> choices(3);
@@ -397,17 +398,17 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 					 choices);
 	if (choice==choices(1)) {
 	  os << "Multi-field MEM stopped at user request" << LogIO::POST;
-	  stop=True;
+	  stop=true;
 	}
 	else if (choice==choices(2)) {
 	  os << "Continuing: won't ask again" << LogIO::POST;
-	  ask=False;
+	  ask=false;
 	}
 	
       }
       if(!modified) {
 	os << "Nothing happened: stopping" << LogIO::POST;
-	stop=True;
+	stop=true;
       }
     }
   }
@@ -418,7 +419,7 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 
   if(modified) {
     os << "Finalizing residual images for all fields" << LogIO::POST;
-    makeNewtonRaphsonStep(se, False);
+    makeNewtonRaphsonStep(se, false);
     Float finalabsmax=maxField(resmax, resmin);
     
     os << "Final maximum residual = " << finalabsmax << LogIO::POST;
@@ -434,7 +435,7 @@ Bool MFCEMemImageSkyModel::solve(SkyEquation& se) {
 
   os << LogIO::POST;
 
-  return(True);
+  return(true);
 };
   
   

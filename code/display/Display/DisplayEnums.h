@@ -225,7 +225,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// various combinations of dst = F(src, dest), where src is the current
 		// color and dest is the existing color in the framebuffer.
 		enum DrawFunction {
-		    // Normal operation, overwrite with src
+		    // casacore::Normal operation, overwrite with src
 		    DFCopy,
 		    // Invert operation
 		    DFCopyInverted,
@@ -306,9 +306,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    ServerMemoryThreshold
 		};
 
-		// List of markers for use as annotations. These can also be drawn
+		// casacore::List of markers for use as annotations. These can also be drawn
 		// as primitives on a pixelcanvas.
-		const static Int nMarkers = 15;
+		const static casacore::Int nMarkers = 15;
 		enum Marker {
 
 		    // Basic, Unfilled shapes;
@@ -355,7 +355,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		enum DisplayDataType {
 		    // Rastered data - should go first
 		    Raster,
-		    // Vector data - can go next
+		    // casacore::Vector data - can go next
 		    Vector,
 		    // Annotation
 		    Annotation,
@@ -398,7 +398,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    KM_Pointer_Button_4 = 0x0800,
 		    // Mouse button 5 bit
 		    KM_Pointer_Button_5 = 0x1000,
-		    // Double click bit
+		    // casacore::Double click bit
 		    KM_Double_Click = 0x2000
 		};
 
@@ -1549,27 +1549,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // in debugging.  Printed name is identical to source code
 // constant name.
 // <group name="DisplayEnums to string functions">
-	ostream & operator << (ostream & os, Display::ColorModel dmt);
-	ostream & operator << (ostream & os, Display::Strategy dmt);
-	ostream & operator << (ostream & os, Display::SpecialMap dmt);
-	ostream & operator << (ostream & os, Display::LineStyle dmt);
-	ostream & operator << (ostream & os, Display::CapStyle dmt);
-	ostream & operator << (ostream & os, Display::JoinStyle dmt);
-	ostream & operator << (ostream & os, Display::FillStyle dmt);
-	ostream & operator << (ostream & os, Display::FillRule dmt);
-	ostream & operator << (ostream & os, Display::ArcMode dmt);
-	ostream & operator << (ostream & os, Display::TextAlign dmt);
-	ostream & operator << (ostream & os, Display::DrawMode dmt);
-	ostream & operator << (ostream & os, Display::DrawBuffer dmt);
-	ostream & operator << (ostream & os, Display::DrawFunction dmt);
-	ostream & operator << (ostream & os, Display::RefreshReason drr);
-	ostream & operator << (ostream & os, Display::Option dopt);
-	ostream & operator << (ostream & os, Display::ImageCacheStrategy ics);
-	ostream & operator << (ostream & os, Display::ComplexToRealMethod ctrm);
-	ostream & operator << (ostream & os, Display::DisplayDataType dtype);
-	ostream & operator << (ostream & os, Display::KeyModifier dmt);
-	ostream & operator << (ostream & os, Display::KeySym dmt);
-	ostream & operator << (ostream & os, Display::Marker mrk);
+	std::ostream & operator << (std::ostream & os, Display::ColorModel dmt);
+	std::ostream & operator << (std::ostream & os, Display::Strategy dmt);
+	std::ostream & operator << (std::ostream & os, Display::SpecialMap dmt);
+	std::ostream & operator << (std::ostream & os, Display::LineStyle dmt);
+	std::ostream & operator << (std::ostream & os, Display::CapStyle dmt);
+	std::ostream & operator << (std::ostream & os, Display::JoinStyle dmt);
+	std::ostream & operator << (std::ostream & os, Display::FillStyle dmt);
+	std::ostream & operator << (std::ostream & os, Display::FillRule dmt);
+	std::ostream & operator << (std::ostream & os, Display::ArcMode dmt);
+	std::ostream & operator << (std::ostream & os, Display::TextAlign dmt);
+	std::ostream & operator << (std::ostream & os, Display::DrawMode dmt);
+	std::ostream & operator << (std::ostream & os, Display::DrawBuffer dmt);
+	std::ostream & operator << (std::ostream & os, Display::DrawFunction dmt);
+	std::ostream & operator << (std::ostream & os, Display::RefreshReason drr);
+	std::ostream & operator << (std::ostream & os, Display::Option dopt);
+	std::ostream & operator << (std::ostream & os, Display::ImageCacheStrategy ics);
+	std::ostream & operator << (std::ostream & os, Display::ComplexToRealMethod ctrm);
+	std::ostream & operator << (std::ostream & os, Display::DisplayDataType dtype);
+	std::ostream & operator << (std::ostream & os, Display::KeyModifier dmt);
+	std::ostream & operator << (std::ostream & os, Display::KeySym dmt);
+	std::ostream & operator << (std::ostream & os, Display::Marker mrk);
 // </group>
 
 

@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * File DelayModelFixedParametersTable.h
+ * casacore::File DelayModelFixedParametersTable.h
  */
  
 #ifndef DelayModelFixedParametersTable_CLASS
@@ -380,7 +380,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// Conversion Methods
+	// casacore::Conversion Methods
 	/**
 	 * Convert this table into a DelayModelFixedParametersTableIDL CORBA structure.
 	 *

@@ -32,9 +32,13 @@
 
 #include <casa/namespace.h>
 
-namespace casa {
+namespace casacore{
 
 template <class T> class SubImage;
+}
+
+namespace casa {
+
 
 class SpectralCollapser {
 	// <summary>
@@ -80,7 +84,7 @@ public:
 	SpectralCollapser(const SPCIIF image);
 
 	// Constructor
-	SpectralCollapser(const SPCIIF image, const String storePath);
+	SpectralCollapser(const SPCIIF image, const casacore::String storePath);
 
 	// Destructor
 	virtual ~SpectralCollapser();
@@ -94,52 +98,52 @@ public:
 	// <src>collError</src> - information on what the error
 	// <src>outname</src>   - name of the collapsed image (output)
 	// <src>msg</src>       - message string (output)
-	virtual Bool collapse(const Vector<Float> &specVals, const Float startVal, const Float endVal,
-			const String &unit, const SpectralCollapser::CollapseType &collType, const SpectralCollapser::CollapseError &collError, String &outname, String &msg);
+	virtual casacore::Bool collapse(const casacore::Vector<casacore::Float> &specVals, const casacore::Float startVal, const casacore::Float endVal,
+			const casacore::String &unit, const SpectralCollapser::CollapseType &collType, const SpectralCollapser::CollapseError &collError, casacore::String &outname, casacore::String &msg);
 
-	String summaryHeader() const;
+	casacore::String summaryHeader() const;
 
-   void collapseTypeToVector(const SpectralCollapser::CollapseType &collType, Vector<Int> &momentVec);
+   void collapseTypeToVector(const SpectralCollapser::CollapseType &collType, casacore::Vector<casacore::Int> &momentVec);
 
    // Convert from string to collapse type
-	static void stringToCollapseType(const String &text,  SpectralCollapser::CollapseType &collType);
+	static void stringToCollapseType(const casacore::String &text,  SpectralCollapser::CollapseType &collType);
 
 	// Convert from string to error type
-	static void stringToCollapseError(const String &text, SpectralCollapser::CollapseError &collError);
+	static void stringToCollapseError(const casacore::String &text, SpectralCollapser::CollapseError &collError);
 
 	// Convert from collapse type to string
-   static void collapseTypeToString(const SpectralCollapser::CollapseType &collType, String &strCollType);
+   static void collapseTypeToString(const SpectralCollapser::CollapseType &collType, casacore::String &strCollType);
 
    // Convert from error type to string
-   static void collapseErrorToString(const SpectralCollapser::CollapseError &collError, String &strCollError);
+   static void collapseErrorToString(const SpectralCollapser::CollapseError &collError, casacore::String &strCollError);
 
 private:
    SPCIIF _image;
-   LogIO *_log;
+   casacore::LogIO *_log;
 
-   String _storePath;
-   String _all; // = CasacRegionManager::ALL;
-   IPosition _specAxis;
-   Bool _hasQualAxis;
+   casacore::String _storePath;
+   casacore::String _all; // = CasacRegionManager::ALL;
+   casacore::IPosition _specAxis;
+   casacore::Bool _hasQualAxis;
 
 	// Disallow default constructor
    SpectralCollapser();
 
    void _setUp();
-   Bool _cleanTmpData(const String &tmpFileName) const;
-   Bool _cleanTmpData(const String &tmpData, const String &tmpError) const;
-   Bool _getQualitySubImg(const ImageInterface<Float>* image, const Bool &data, SubImage<Float> &qualitySub);
-   Bool _getQualitySubImgs(SPCIIF image, SHARED_PTR<SubImage<Float> > &subData, SHARED_PTR<SubImage<Float> > &subError) const;
-   Bool _getOutputName(const String &wcsInp, String &outImg, String &outImgData, String &outImgError) const;
-   Bool _collapse(const SPCIIF image, const String &aggString,
-   		const String& chanInp, const String& outname) const;
-   Bool _moments(const ImageInterface<Float> *image, const Vector<Int> &momentVec,
-   		const Int & startIndex, const Int &endIndex, const String& outname);
-   Bool _mergeDataError(const String &outImg, const String &dataImg, const String &errorImg, const Float &normError=1.0) const;
-	void _addMiscInfo(const String &outName, const String &wcsInput, const String &chanInput,
+   casacore::Bool _cleanTmpData(const casacore::String &tmpFileName) const;
+   casacore::Bool _cleanTmpData(const casacore::String &tmpData, const casacore::String &tmpError) const;
+   casacore::Bool _getQualitySubImg(const casacore::ImageInterface<casacore::Float>* image, const casacore::Bool &data, casacore::SubImage<casacore::Float> &qualitySub);
+   casacore::Bool _getQualitySubImgs(SPCIIF image, SHARED_PTR<casacore::SubImage<casacore::Float> > &subData, SHARED_PTR<casacore::SubImage<casacore::Float> > &subError) const;
+   casacore::Bool _getOutputName(const casacore::String &wcsInp, casacore::String &outImg, casacore::String &outImgData, casacore::String &outImgError) const;
+   casacore::Bool _collapse(const SPCIIF image, const casacore::String &aggString,
+   		const casacore::String& chanInp, const casacore::String& outname) const;
+   casacore::Bool _moments(const casacore::ImageInterface<casacore::Float> *image, const casacore::Vector<casacore::Int> &momentVec,
+   		const casacore::Int & startIndex, const casacore::Int &endIndex, const casacore::String& outname);
+   casacore::Bool _mergeDataError(const casacore::String &outImg, const casacore::String &dataImg, const casacore::String &errorImg, const casacore::Float &normError=1.0) const;
+	void _addMiscInfo(const casacore::String &outName, const casacore::String &wcsInput, const casacore::String &chanInput,
 			const SpectralCollapser::CollapseType &collType, const SpectralCollapser::CollapseError &collError) const;
-	void _collTypeToImCollString(const SpectralCollapser::CollapseType &collType, String &colType) const;
-	void _collErrorToImCollString(const SpectralCollapser::CollapseError &collError, String &colError) const ;
+	void _collTypeToImCollString(const SpectralCollapser::CollapseType &collType, casacore::String &colType) const;
+	void _collErrorToImCollString(const SpectralCollapser::CollapseError &collError, casacore::String &colError) const ;
 
 };
 }

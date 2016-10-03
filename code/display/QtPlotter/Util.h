@@ -33,10 +33,14 @@
 
 class QWidget;
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 	template <class T> class ImageInterface;
 	class ImageRegion;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 	class Util {
 
@@ -48,16 +52,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static double degMinSecToRadians( int degrees, int mins, float secs );
 		static double hrMinSecToRadians( int hours, int mins, float secs );
 		static QString toHTML( const QString& baseStr );
-		static int getCenter( const Vector<Double>& values, Double& mean );
+		static int getCenter( const casacore::Vector<casacore::Double>& values, casacore::Double& mean );
 		static void getRa(double radians, int& raHour, int& raMin, double& raSec);
 		static void getDec(double radians, int& decDeg, int& decMin, double& decSec);
-		static void minMax( double& min, double& max, const Vector<Double>& values );
+		static void minMax( double& min, double& max, const casacore::Vector<casacore::Double>& values );
 		static QString toDegreeString( int hrs, int mins, double secs );
 		static QString toDecString( int hrs, int mins, double secs );
 		static void appendSign( double rad, QString& degreeString );
 		static QList<QString> getTitleCaseVariations( QString source );
 		static QString toTitleCase( QString word );
-		static String mainImageName( String path );
+		static casacore::String mainImageName( casacore::String path );
 
 		/**
 		 * Designed to take an input string of the format '[km/s]' and return 'km/s'.
@@ -72,26 +76,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//Support for tabular axes that are frequency.  Returns -1 if there
 		//is no tabular index in the image in frequency units.
-		static int getTabularFrequencyAxisIndex(SHARED_PTR<const ImageInterface<Float> > img);
+		static int getTabularFrequencyAxisIndex(SHARED_PTR<const casacore::ImageInterface<casacore::Float> > img);
 
-		static Record getRegionRecord( String shape, const DisplayCoordinateSystem& cSys,
-					const Vector<Double>& x, const Vector<Double>& y);
+		static casacore::Record getRegionRecord( casacore::String shape, const DisplayCoordinateSystem& cSys,
+					const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y);
 
-		static std::pair<Vector<Float>,Vector<Float> > getProfile(SHARED_PTR<const casa::ImageInterface<Float> >& imagePtr,
-				const Vector<Double>& x, const Vector<Double>& y, const String& shape,
-				int tabularAxis, ImageCollapserData::AggregateType, String unit,
-				const String& coordinateType,
-				const Quantity *const restFreq=0, const String& frame="");
+		static std::pair<casacore::Vector<casacore::Float>,casacore::Vector<casacore::Float> > getProfile(SHARED_PTR<const casacore::ImageInterface<casacore::Float> >& imagePtr,
+				const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y, const casacore::String& shape,
+				int tabularAxis, ImageCollapserData::AggregateType, casacore::String unit,
+				const casacore::String& coordinateType,
+				const casacore::Quantity *const restFreq=0, const casacore::String& frame="");
 		/**
 		 * Returns the record of a 3-dimension region with the base in the shape of
 		 * an ellipse and height given by the channel range.
 		 * @param cSys the image coordinate system.
 		 * @param x the x-coordinates of the ellipse bounding box.
 		 * @param y the y-coordinates of the ellipse bounding box.
-		 * @return a Record describing cylindrical volume with a elliptical base.
+		 * @return a casacore::Record describing cylindrical volume with a elliptical base.
 		 */
-		static Record getEllipticalRegion3D( const DisplayCoordinateSystem& cSys,
-						const Vector<Double>& x, const Vector<Double>& y,
+		static casacore::Record getEllipticalRegion3D( const DisplayCoordinateSystem& cSys,
+						const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y,
 						int channelMin, int channelMax, int spectralAxisNumber);
 
 		/**
@@ -100,11 +104,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 * @param cSys the image coordinate system.
 		 * @param x the x-coordinates of the polygon corner points.
 		 * @param y the y-coordinates of the polygon corner points.
-		 * @return a Record describing cylindrical volume with a polygonal base.
+		 * @return a casacore::Record describing cylindrical volume with a polygonal base.
 		 */
 
-		static Record getPolygonalRegion3D( const DisplayCoordinateSystem& cSys,
-						const Vector<Double>& x, const Vector<Double>& y,
+		static casacore::Record getPolygonalRegion3D( const DisplayCoordinateSystem& cSys,
+						const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y,
 						int channelMin, int channelMax, int spectralAxisNumber);
 
 		/**
@@ -114,8 +118,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 * @param y the y-coordinates of the ellipse bounding box.
 		 * @return the 2D image region of the ellipse.
 		 */
-		static ImageRegion* getEllipsoid(const DisplayCoordinateSystem& cSys,
-							const Vector<Double>& x, const Vector<Double>& y);
+		static casacore::ImageRegion* getEllipsoid(const DisplayCoordinateSystem& cSys,
+							const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y);
 		/**
 		 * Return a 2D region in the shape of a polygon.
 		 * @param cSys the image coordinate system.
@@ -123,20 +127,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 * @param y the y-coordinates of the polygon corner points.
 		 * @return the 2D image region of the polygon.
 		 */
-		static ImageRegion* getPolygon(const DisplayCoordinateSystem& cSys,
-					const Vector<Double>& x, const Vector<Double>& y);
+		static casacore::ImageRegion* getPolygon(const DisplayCoordinateSystem& cSys,
+					const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y);
 
 		/**
 		 * Tests whether the contents of the two arrays are the same.
 		 * Returns true if the arrays have the same size and contents; false otherwise.
 		 */
-		static bool arrayEquals( const Vector<Double>& a, const Vector<Double>& b );
+		static bool arrayEquals( const casacore::Vector<casacore::Double>& a, const casacore::Vector<casacore::Double>& b );
 	private:
 		Util();
 		virtual ~Util();
 		static double toRadians( double degrees );
 		static double toDecimalDegrees( int hrs, int mins, float seconds );
-		static Record make3DRegion( const DisplayCoordinateSystem& cSys, ImageRegion* shape3D,
+		static casacore::Record make3DRegion( const DisplayCoordinateSystem& cSys, casacore::ImageRegion* shape3D,
 					int channelMin, int channelMax, int spectralAxisNumber );
 
 		static const double PI;

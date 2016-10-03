@@ -106,11 +106,11 @@ public:
 
     // Returns the date format if this format applies to a date, a blank string
     // otherwise.  See TBConstants::dateFormatIsValid().
-    String getDateFormat();
+    casacore::String getDateFormat();
 
     // Sets the date format for this format.  See
     // TBConstants::dateFormatIsValid().
-    void setDateFormat(String d);
+    void setDateFormat(casacore::String d);
 
     // Returns the boolean format.  If this format is not for a boolean value,
     // this operation is undefined.
@@ -166,7 +166,7 @@ private:
     tb::BooleanFormat boolFormat;
 
     // The format for displaying dates.  See TBConstants::dateFormatIsValid().
-    String dateFormat;
+    casacore::String dateFormat;
 
     // The vector threshold, or -1 for unlimited.
     int vectorThreshold;
@@ -193,7 +193,7 @@ public:
     // along with the default (unformatted) QFontColor and an optional pointer
     // to the parent widget.  If the parent pointer is NULL, this will be
     // displayed as a dialog; otherwise it can be displayed inside the parent.
-    TBFormatter(String field, String type, int index, QFontColor font,
+    TBFormatter(casacore::String field, casacore::String type, int index, QFontColor font,
                 QWidget* parent = NULL);
 
     ~TBFormatter();
@@ -203,27 +203,27 @@ public:
     void setFormat(TBFormat* f);
 
 signals:
-    // This signal is emitted when the user clicks the "Clear Format"
+    // This signal is emitted when the user clicks the "Clear casacore::Format"
     // button.  The parent/caller should then remove the format for the field
     // with the specified index.
     void clearRequested(int index);
 
     // This signal is emitted when the user enters a format and then clicks
-    // the "Set Format" button.  The parent/caller should then set the format
+    // the "Set casacore::Format" button.  The parent/caller should then set the format
     // for the specified field to the specified format.
     void setRequested(int index, TBFormat* format);
 
 private:
     // Field being formatted.
-    String field;
+    casacore::String field;
 
     // Type of the field being formatted.
-    String type;
+    casacore::String type;
 
     // Index of the field being formatted.
     int index;
 
-    // Vector of QFontColors for value-dependent formats.
+    // casacore::Vector of QFontColors for value-dependent formats.
     std::vector<QFontColor*> fonts;
 
     // Flag indicating whether any GUI-generated events are "genuine."
@@ -241,11 +241,11 @@ private slots:
     // Slot for when the user wants a color chooser.  Opens a QColorDialog.
     void changeColor();
 
-    // Slot for when the user clicks the "Clear Format" button.  Emits the
+    // Slot for when the user clicks the "Clear casacore::Format" button.  Emits the
     // clearFormat() signal and closes the window.
     void clearFormat();
 
-    // Slot for when the user clicks the "Set Format" button.  Collects the
+    // Slot for when the user clicks the "Set casacore::Format" button.  Collects the
     // format information from the widget, emits the setRequested() signal,
     // and closes the window.
     void setFormat();

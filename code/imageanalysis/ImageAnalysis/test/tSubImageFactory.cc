@@ -48,8 +48,8 @@ void testExtend() {
     Record empty;
     String maskExpr = "mask_tmp.pa > 10";
     SubImage<Float> myim2 = SubImageFactory<Float>::createSubImage(
-    	pa, empty, maskExpr, new LogIO(), False,
-    	AxesSpecifier(), True
+    	pa, empty, maskExpr, new LogIO(), false,
+    	AxesSpecifier(), true
     );
     Array<Bool> got = myim2.getMask();
     LatticeExprNode x(ArrayLattice<Float>(maskImage.get()) > 10);

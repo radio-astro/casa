@@ -130,10 +130,10 @@ Bool compareSkyComponent (const SkyComponent& in,
    const MDirection dOut = out.shape().refDirection();
 //
    Flux<Double> fIn0 = in.flux().copy();
-   Quantum<Double> fIn = fIn0.value(Stokes::I, True);
+   Quantum<Double> fIn = fIn0.value(Stokes::I, true);
 //
    Flux<Double> fOut0 = out.flux().copy();
-   Quantum<Double> fOut = fOut0.value(Stokes::I, True);
+   Quantum<Double> fOut = fOut0.value(Stokes::I, true);
 /*
    cerr << "In  = " << fIn << ", " << dIn.getAngle() << endl;
    cerr << "Out =" << fOut << ", " << dOut.getAngle() << endl << endl;
@@ -182,7 +182,7 @@ void test1 (LogIO& os, ImageInterface<Float>& im, const DirectionCoordinate& dC)
    ComponentImager::project(im, listIn);
 //
    ImageSourceFinder<Float> sf(im);
-   ComponentList listOut = sf.findSources(os, 5, 0.05, False, True);
+   ComponentList listOut = sf.findSources(os, 5, 0.05, false, true);
 //
    if (listOut.nelements()!=3) {
       os << "Found wrong number of sources" << LogIO::EXCEPTION;

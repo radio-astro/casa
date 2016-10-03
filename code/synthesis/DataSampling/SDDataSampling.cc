@@ -50,6 +50,7 @@
 #include <casa/System/ProgressMeter.h>
 #include <casa/sstream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SDDataSampling::SDDataSampling(MeasurementSet& ms,
@@ -128,12 +129,12 @@ SDDataSampling::SDDataSampling(MeasurementSet& ms,
 
   sj.applySquare(PB, PB, vb, 0);
   prf_p=PB.getSlice(IPosition(4, 0, 0, 0, 0),
-		    IPosition(4, nx, ny, 1, 1), True);
+		    IPosition(4, nx, ny, 1, 1), true);
 
   // Reset the direction coordinate
   directionCoord=coords.directionCoordinate(directionIndex);
   // Now fill in the data and position columns
-  ProgressMeter pm(1.0, Double(ms.nrow()), "Sampling Data", "", "", "", True);
+  ProgressMeter pm(1.0, Double(ms.nrow()), "Sampling Data", "", "", "", true);
 
   // Loop over all visibilities
   Int cohDone = 0;

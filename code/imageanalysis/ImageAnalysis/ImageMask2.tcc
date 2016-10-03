@@ -30,39 +30,39 @@
 
 namespace casa {
 
-template <class T> Bool ImageMask::isAllMaskFalse(const ImageInterface<T>& image) {
+template <class T> casacore::Bool ImageMask::isAllMaskFalse(const casacore::ImageInterface<T>& image) {
 	if (! image.isMasked() && ! image.hasPixelMask()) {
-		return False;
+		return false;
 	}
 	auto cursorShape = image.niceCursorShape(4096*4096);
-	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
-	RO_MaskedLatticeIterator<T> iter(image, stepper);
+	casacore::LatticeStepper stepper(image.shape(), cursorShape, casacore::LatticeStepper::RESIZE);
+	casacore::RO_MaskedLatticeIterator<T> iter(image, stepper);
 	for (iter.reset(); ! iter.atEnd(); ++iter) {
 		auto cursorShape = iter.cursorShape();
 		auto mymask = iter.getMask();
 		if (anyTrue(mymask)) {
-			return False;
+			return false;
 		}
 	}
-	return True;
+	return true;
 }
 
-template <class T> Bool ImageMask::isAllMaskTrue(
-	const MaskedLattice<T>& image
+template <class T> casacore::Bool ImageMask::isAllMaskTrue(
+	const casacore::MaskedLattice<T>& image
 ) {
 	if (! image.isMasked()) {
-		return True;
+		return true;
 	}
 	auto cursorShape = image.niceCursorShape(4096*4096);
-	LatticeStepper stepper(image.shape(), cursorShape, LatticeStepper::RESIZE);
-	RO_MaskedLatticeIterator<T> iter(image, stepper);
+	casacore::LatticeStepper stepper(image.shape(), cursorShape, casacore::LatticeStepper::RESIZE);
+	casacore::RO_MaskedLatticeIterator<T> iter(image, stepper);
 	for (iter.reset(); ! iter.atEnd(); ++iter) {
 		auto mymask = iter.getMask();
 		if (! allTrue(mymask)) {
-			return False;
+			return false;
 		}
 	}
-	return True;
+	return true;
 }
 
 }

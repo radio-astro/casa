@@ -33,9 +33,13 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/RecordInterface.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 template <class T, class U> class Function;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>
 // Describes (a set of related) spectral lines
@@ -103,77 +107,77 @@ public:
 	virtual SpectralElement* clone() const = 0;
 
 	// Evaluate the value of the element at x
-	virtual Double operator()(const Double x) const;
+	virtual casacore::Double operator()(const casacore::Double x) const;
 
-	Bool operator==(const SpectralElement& other) const;
+	casacore::Bool operator==(const SpectralElement& other) const;
 
 	// Get parameter n
 	// <thrown>
-	//  <li> AipsError if illegal n
+	//  <li> casacore::AipsError if illegal n
 	// </thrown>
-	virtual Double operator[](const uInt n) const;
+	virtual casacore::Double operator[](const casacore::uInt n) const;
 
-	// Get all the types available as String and codes, and number available
-	static const String* allTypes(Int &nall,
+	// Get all the types available as casacore::String and codes, and number available
+	static const casacore::String* allTypes(casacore::Int &nall,
 			const SpectralElement::Types *&typ);
 	// Get a string from the type
-	static const String &fromType(SpectralElement::Types tp);
+	static const casacore::String &fromType(SpectralElement::Types tp);
 	// Get a type from a (non-case sensitive; minimum match) String
-	static Bool toType(SpectralElement::Types &tp,
-			const String &typName);
+	static casacore::Bool toType(SpectralElement::Types &tp,
+			const casacore::String &typName);
 
 	// Get type of this element
 	SpectralElement::Types getType() const { return _type; }
 
 	// Get all parameters
-	void get(Vector<Double>& params) const;
+	void get(casacore::Vector<casacore::Double>& params) const;
 
-	Vector<Double> get() const;
+	casacore::Vector<casacore::Double> get() const;
 
 	// Get error estimates of parameters
-	void getError(Vector<Double> &err) const;
-	Vector<Double> getError() const;
+	void getError(casacore::Vector<casacore::Double> &err) const;
+	casacore::Vector<casacore::Double> getError() const;
 
 	// Get the order (i.e. the number of parameters)
-	uInt getOrder() const { return _params.size(); };
+	casacore::uInt getOrder() const { return _params.size(); };
 
 	// Set the error fields
-	virtual void setError(const Vector<Double> &err);
+	virtual void setError(const casacore::Vector<casacore::Double> &err);
 
-	// Set fixed parameters (True) or unset them (False)
+	// Set fixed parameters (true) or unset them (false)
 	// <thrown>
-	//   <li> AipsError if incorrect number of parameters (e.g. not 3 for GAUSSIAN)
+	//   <li> casacore::AipsError if incorrect number of parameters (e.g. not 3 for GAUSSIAN)
 	// </thrown>
 
 	// Fix/unfix all in one go
-	virtual void fix(const Vector<Bool>& fix);
+	virtual void fix(const casacore::Vector<casacore::Bool>& fix);
 
 	// Get the fix state[s]
-	const Vector<Bool> &fixed() const;
+	const casacore::Vector<casacore::Bool> &fixed() const;
 
 	// Save to a record.
-	virtual Bool toRecord(RecordInterface& out) const;
+	virtual casacore::Bool toRecord(casacore::RecordInterface& out) const;
 
 	// set parameters
-	virtual void set(const Vector<Double>& params);
+	virtual void set(const casacore::Vector<casacore::Double>& params);
 
 protected:
 
 	SpectralElement() {}
 
-	SpectralElement(Types type, const Vector<Double>& parms=Vector<Double>(0));
+	SpectralElement(Types type, const casacore::Vector<casacore::Double>& parms=casacore::Vector<casacore::Double>(0));
 
 	SpectralElement(const SpectralElement& other);
 
 	SpectralElement &operator=(const SpectralElement& other);
 
-	void _set(const Vector<Double>& params);
+	void _set(const casacore::Vector<casacore::Double>& params);
 
 	void _setType(const Types type);
 
-	void _setFunction(const SHARED_PTR<Function<Double, Double> >& f);
+	void _setFunction(const SHARED_PTR<casacore::Function<casacore::Double, casacore::Double> >& f);
 
-	virtual SHARED_PTR<Function<Double, Double> > _getFunction() const {
+	virtual SHARED_PTR<casacore::Function<casacore::Double, casacore::Double> > _getFunction() const {
 		return _function;
 	}
 
@@ -184,22 +188,22 @@ private:
 
 	// The parameters of the function. I.e. the polynomial coefficients;
 	// amplitude, center and sigma of a Gaussian.
-	Vector<Double> _params;
+	casacore::Vector<casacore::Double> _params;
 	// The errors of the parameters
-	Vector<Double> _errors;
-	// The indication if the parameter has to be fixed (True) or solved (False).
+	casacore::Vector<casacore::Double> _errors;
+	// The indication if the parameter has to be fixed (true) or solved (false).
 	// Solved is the default.
-	Vector<Bool> _fixed;
+	casacore::Vector<casacore::Bool> _fixed;
 
-	SHARED_PTR<Function<Double, Double> > _function;
+	SHARED_PTR<casacore::Function<casacore::Double, casacore::Double> > _function;
 
 };
 
-ostream &operator<<(ostream& os, const SpectralElement& elem);
+std::ostream &operator<<(std::ostream& os, const SpectralElement& elem);
 
-Bool near(const SpectralElement& s1, const SpectralElement& s2, const Double tol);
+bool near(const SpectralElement& s1, const SpectralElement& s2, const casacore::Double tol);
 
-Bool nearAbs(const SpectralElement& s1, const SpectralElement& s2, const Double tol);
+bool nearAbs(const SpectralElement& s1, const SpectralElement& s2, const casacore::Double tol);
 
 
 } //# NAMESPACE CASA - END

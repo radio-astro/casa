@@ -34,14 +34,18 @@
 //# display library includes:
 #include <display/DisplayDatas/LatticePADM.h>
 
+namespace casacore{
+
+	class IPosition;
+	template <class T> class Vector;
+	template <class T> class Matrix;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forwards:
-	class IPosition;
 	template <class T> class LatticeAsContour;
 	class WorldCanvas;
-	template <class T> class Vector;
-	template <class T> class Matrix;
 
 // <summary>
 // Class to draw a single contour map of a slice from an AIPS++ Lattice.
@@ -60,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The purpose of this class is to draw "contour" maps of data that
 // is "lattice"-based.  The "PADM" refers to PrincipalAxesDisplayMethod,
 // meaning that one or more instances of this class are used to actually
-// draw slices of a Lattice along its main axes.
+// draw slices of a casacore::Lattice along its main axes.
 // </etymology>
 //
 // <synopsis>
@@ -77,11 +81,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // in, for example, a support function for a constructor:
 // <srcblock>
 // template <class T>
-// void LatticeAsContour<T>::setupElements(IPosition fixedPos) {
+// void LatticeAsContour<T>::setupElements(casacore::IPosition fixedPos) {
 //   if (nPixelAxes > 2) {
 //     nImages = dataLattice()->shape()(zAxisNum);
 //     DDelement.resize(nImages);
-//     for (uInt index = 0; index < nImages; index++) {
+//     for (casacore::uInt index = 0; index < nImages; index++) {
 //       fixedPos(zAxisNum) = index;
 //       DDelement[index] = (LatticePADisplayMethod<T> *)new
 //       LatticePADMContour<T>(dataLattice(), xAxisNum, yAxisNum,
@@ -117,7 +121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		// Constructors: >2d and 2d.  xAxis and yAxis specify which axis in
-		// the Lattice (0-based) should be mapped to X and Y on the display
+		// the casacore::Lattice (0-based) should be mapped to X and Y on the display
 		// device: ie. 2-d slices of the data to be displayed have these as
 		// axes.  mAxis specifies the "movie" axis, which is the axis along
 		// which different slices are taken.  fixedPos is an IPosition
@@ -127,12 +131,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// indicates which pixel value along the movie axis that this
 		// particular object looks after.
 		// <group>
-		LatticePADMContour(const uInt xAxis,
-		                   const uInt yAxis, const uInt mAxis,
-		                   const IPosition fixedPos,
+		LatticePADMContour(const casacore::uInt xAxis,
+		                   const casacore::uInt yAxis, const casacore::uInt mAxis,
+		                   const casacore::IPosition fixedPos,
 		                   LatticeAsContour<T> *arDat);
-		LatticePADMContour(const uInt xAxis,
-		                   const uInt yAxis, LatticeAsContour<T> *arDat);
+		LatticePADMContour(const casacore::uInt xAxis,
+		                   const casacore::uInt yAxis, LatticeAsContour<T> *arDat);
 		// </group>
 
 		// Destructor
@@ -143,13 +147,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// turn determine which of its one or more LatticePADMRaster objects
 		// should draw by matching the movie value on the WorldCanvas.  The
 		// contour is drawn from world coordinate blc to trc.
-		virtual uInt dataDrawSelf(WorldCanvas *wCanvas,
-		                          const Vector<Double> &blc,
-		                          const Vector<Double> &trc,
-		                          const IPosition &start,
-		                          const IPosition &shape,
-		                          const IPosition &stride,
-		                          const Bool usePixelEdges = False);
+		virtual casacore::uInt dataDrawSelf(WorldCanvas *wCanvas,
+		                          const casacore::Vector<casacore::Double> &blc,
+		                          const casacore::Vector<casacore::Double> &trc,
+		                          const casacore::IPosition &start,
+		                          const casacore::IPosition &shape,
+		                          const casacore::IPosition &stride,
+		                          const casacore::Bool usePixelEdges = false);
 
 		//# Make parent members known.
 	protected:

@@ -32,10 +32,14 @@
 #include <casa/aips.h>
 #include <casa/System/PGPlotter.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class String;
 template<class T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 // <summary>
 // Plot to a PGPLOT device "local" to this process.
@@ -47,7 +51,7 @@ template<class T> class Vector;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="PGPlotterInterface">PGPlotterInterface</linkto>
+//   <li> <linkto class="casacore::PGPlotterInterface">casacore::PGPlotterInterface</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -58,17 +62,17 @@ template<class T> class Vector;
 //
 // <synopsis>
 // Generally programmers should not use this class, instead they should use
-// <linkto class="PGPlotter">PGPlotter</linkto> instead.
+// <linkto class="casacore::PGPlotter">casacore::PGPlotter</linkto> instead.
 //
 // This class make a concrete
-// <linkto class="PGPlotterInterface">PGPlotterInterface</linkto> object which
+// <linkto class="casacore::PGPlotterInterface">casacore::PGPlotterInterface</linkto> object which
 // calls PGPLOT directly, i.e. PGPLOT is linked into the current executable.
 // </synopsis>
 //
 // <example>
 // <srcblock>
 //     // plot y = x*x
-//     Vector<Float> x(100), y(100);
+//     casacore::Vector<casacore::Float> x(100), y(100);
 //     indgen(x);
 //     y = x*x;
 
@@ -88,7 +92,7 @@ template<class T> class Vector;
 //   <li> Add more plot calls.
 // </todo>
 
-class PGPlotterLocal : public PGPlotterInterface
+class PGPlotterLocal : public casacore::PGPlotterInterface
 {
 public:
     // Open "device", which must be a valid PGPLOT style device, for example
@@ -96,25 +100,25 @@ public:
     // if you want to name the file), or <src>/xs</src> or <src>/xw</src> for
     // and X-windows display.
     // <thrown>
-    //   <li> An <linkto class="AipsError">AipsError</linkto> will be thrown
+    //   <li> An <linkto class="casacore::AipsError">casacore::AipsError</linkto> will be thrown
     //        if the underlying PGPLOT open fails for some reason.
     // </thrown>
-    PGPlotterLocal(const String &device);
+    PGPlotterLocal(const casacore::String &device);
     // The destructor closes the pgplot device.
     virtual ~PGPlotterLocal();
 
-    // The create function to create a PGPlotter object using a PGPlotterLocal.
+    // The create function to create a casacore::PGPlotter object using a PGPlotterLocal.
     // It only uses the device argument.
-    static PGPlotter createPlotter (const String &device,
-				    uInt, uInt, uInt, uInt);
+    static casacore::PGPlotter createPlotter (const casacore::String &device,
+				    casacore::uInt, casacore::uInt, casacore::uInt, casacore::uInt);
 
     // This is an emulated standard PGPLOT command. It returns a record
     // containing the fields:
     // <srcblock>
-    // [ok=Bool, x=Float, y=Float, ch=String];
+    // [ok=casacore::Bool, x=casacore::Float, y=casacore::Float, ch=casacore::String];
     // If the remote device cannot do cursor feedback, ok==F.
     // </srcblock>
-    virtual Record curs(Float x, Float y);
+    virtual casacore::Record curs(casacore::Float x, casacore::Float y);
 
 
     // Standard PGPLOT commands. Documentation for the individual commands
@@ -124,125 +128,125 @@ public:
     // it exactly (e.g. the array sizes are inferred both here and in Glish,
     // whereas they must be passed into standard PGPLOT).
     // <group>
-    virtual void arro(Float x1, Float y1, Float x2, Float y2);
-    virtual void ask(Bool flag);
+    virtual void arro(casacore::Float x1, casacore::Float y1, casacore::Float x2, casacore::Float y2);
+    virtual void ask(casacore::Bool flag);
     virtual void bbuf();
-    virtual void bin(const Vector<Float> &x, const Vector<Float> &data,
-		     Bool center);
-    virtual void box(const String &xopt, Float xtick, Int nxsub, 
-	     const String &yopt, Float ytick, Int nysub);
-    virtual void circ(Float xcent, Float ycent, Float radius);
-    virtual void conb(const Matrix<Float> &a, const Vector<Float> &c,
-		      const Vector<Float> &tr, Float blank);
-    virtual void conl(const Matrix<Float> &a, Float c,
-		      const Vector<Float> &tr, const String &label,
-		      Int intval, Int minint);
-    virtual void cons(const Matrix<Float> &a, const Vector<Float> &c,
-		      const Vector<Float> &tr);
-    virtual void cont(const Matrix<Float> &a, const Vector<Float> &c,
-		      Bool nc, const Vector<Float> &tr);
-    virtual void ctab(const Vector<Float> &l, const Vector<Float> &r,
-		      const Vector<Float> &g, const Vector<Float> &b,
-		      Float contra, Float bright);
-    virtual void draw(Float x, Float y);
+    virtual void bin(const casacore::Vector<casacore::Float> &x, const casacore::Vector<casacore::Float> &data,
+		     casacore::Bool center);
+    virtual void box(const casacore::String &xopt, casacore::Float xtick, casacore::Int nxsub, 
+	     const casacore::String &yopt, casacore::Float ytick, casacore::Int nysub);
+    virtual void circ(casacore::Float xcent, casacore::Float ycent, casacore::Float radius);
+    virtual void conb(const casacore::Matrix<casacore::Float> &a, const casacore::Vector<casacore::Float> &c,
+		      const casacore::Vector<casacore::Float> &tr, casacore::Float blank);
+    virtual void conl(const casacore::Matrix<casacore::Float> &a, casacore::Float c,
+		      const casacore::Vector<casacore::Float> &tr, const casacore::String &label,
+		      casacore::Int intval, casacore::Int minint);
+    virtual void cons(const casacore::Matrix<casacore::Float> &a, const casacore::Vector<casacore::Float> &c,
+		      const casacore::Vector<casacore::Float> &tr);
+    virtual void cont(const casacore::Matrix<casacore::Float> &a, const casacore::Vector<casacore::Float> &c,
+		      casacore::Bool nc, const casacore::Vector<casacore::Float> &tr);
+    virtual void ctab(const casacore::Vector<casacore::Float> &l, const casacore::Vector<casacore::Float> &r,
+		      const casacore::Vector<casacore::Float> &g, const casacore::Vector<casacore::Float> &b,
+		      casacore::Float contra, casacore::Float bright);
+    virtual void draw(casacore::Float x, casacore::Float y);
     virtual void ebuf();
-    virtual void env(Float xmin, Float xmax, Float ymin, Float ymax, Int just,
-	     Int axis);
+    virtual void env(casacore::Float xmin, casacore::Float xmax, casacore::Float ymin, casacore::Float ymax, casacore::Int just,
+	     casacore::Int axis);
     virtual void eras();
-    virtual void errb(Int dir, const Vector<Float> &x, const Vector<Float> &y,
-	      const Vector<Float> &e, Float t);
-    virtual void errx(const Vector<Float> &x1, const Vector<Float> &x2,
-		      const Vector<Float> &y, Float t);
-    virtual void erry(const Vector<Float> &x, const Vector<Float> &y1,
-	      const Vector<Float> &y2, Float t);
-    virtual void gray(const Matrix<Float> &a, Float fg, Float bg,
-		      const Vector<Float> &tr); 
-    virtual void hi2d(const Matrix<Float> &data, const Vector<Float> &x,
-		      Int ioff, Float bias, Bool center, 
-		      const Vector<Float> &ylims);
-    virtual void hist(const Vector<Float> &data, Float datmin, Float datmax, 
-		    Int nbin, Int pcflag);
+    virtual void errb(casacore::Int dir, const casacore::Vector<casacore::Float> &x, const casacore::Vector<casacore::Float> &y,
+	      const casacore::Vector<casacore::Float> &e, casacore::Float t);
+    virtual void errx(const casacore::Vector<casacore::Float> &x1, const casacore::Vector<casacore::Float> &x2,
+		      const casacore::Vector<casacore::Float> &y, casacore::Float t);
+    virtual void erry(const casacore::Vector<casacore::Float> &x, const casacore::Vector<casacore::Float> &y1,
+	      const casacore::Vector<casacore::Float> &y2, casacore::Float t);
+    virtual void gray(const casacore::Matrix<casacore::Float> &a, casacore::Float fg, casacore::Float bg,
+		      const casacore::Vector<casacore::Float> &tr); 
+    virtual void hi2d(const casacore::Matrix<casacore::Float> &data, const casacore::Vector<casacore::Float> &x,
+		      casacore::Int ioff, casacore::Float bias, casacore::Bool center, 
+		      const casacore::Vector<casacore::Float> &ylims);
+    virtual void hist(const casacore::Vector<casacore::Float> &data, casacore::Float datmin, casacore::Float datmax, 
+		    casacore::Int nbin, casacore::Int pcflag);
     virtual void iden();
-    virtual void imag(const Matrix<Float> &a, Float a1, Float a2,
-		      const Vector<Float> &tr);
-    virtual void lab(const String &xlbl, const String &ylbl, 
-		   const String &toplbl);
+    virtual void imag(const casacore::Matrix<casacore::Float> &a, casacore::Float a1, casacore::Float a2,
+		      const casacore::Vector<casacore::Float> &tr);
+    virtual void lab(const casacore::String &xlbl, const casacore::String &ylbl, 
+		   const casacore::String &toplbl);
     virtual void ldev();
-    virtual Vector<Float> len(Int units, const String &string);
-    virtual void line(const Vector<Float> &xpts, const Vector<Float> &ypts);
-    virtual void move(Float x, Float y);
-    virtual void mtxt(const String &side, Float disp, Float coord, Float fjust,
-		    const String &text);
-    virtual String numb(Int mm, Int pp, Int form);
+    virtual casacore::Vector<casacore::Float> len(casacore::Int units, const casacore::String &string);
+    virtual void line(const casacore::Vector<casacore::Float> &xpts, const casacore::Vector<casacore::Float> &ypts);
+    virtual void move(casacore::Float x, casacore::Float y);
+    virtual void mtxt(const casacore::String &side, casacore::Float disp, casacore::Float coord, casacore::Float fjust,
+		    const casacore::String &text);
+    virtual casacore::String numb(casacore::Int mm, casacore::Int pp, casacore::Int form);
     virtual void page();
-    virtual void panl(Int ix, Int iy);
-    virtual void pap(Float width, Float aspect);
-    virtual void pixl(const Matrix<Int> &ia, Float x1, Float x2,
-		      Float y1, Float y2);
-    virtual void pnts(const Vector<Float> &x, const Vector<Float> &y,
-		      const Vector<Int> symbol);
-    virtual void poly(const Vector<Float> &xpts, const Vector<Float> &ypts);
-    virtual void pt(const Vector<Float> &xpts, const Vector<Float> &ypts, 
-		  Int symbol);
-    virtual void ptxt(Float x, Float y, Float angle, Float fjust, 
-		    const String &text);
-    virtual Vector<Float>  qah();
-    virtual Int qcf();
-    virtual Float qch();
-    virtual Int qci();
-    virtual Vector<Int> qcir();
-    virtual Vector<Int> qcol();
-    virtual Vector<Float> qcr(Int ci);
-    virtual Vector<Float> qcs(Int units);
-    virtual Int qfs();
-    virtual Vector<Float> qhs();
-    virtual Int qid();
-    virtual String qinf(const String &item);
-    virtual Int qitf();
-    virtual Int qls();
-    virtual Int qlw();
-    virtual Vector<Float> qpos();
-    virtual Int qtbg();
-    virtual Vector<Float> qtxt(Float x, Float y, Float angle, Float fjust, 
-		    const String &text);
-    virtual Vector<Float> qvp(Int units);
-    virtual Vector<Float> qvsz(Int units);
-    virtual Vector<Float> qwin();
-    virtual void rect(Float x1, Float x2, Float y1, Float y2);
-    virtual Float rnd(Float x, Int nsub);
-    virtual Vector<Float> rnge(Float x1, Float x2);
-    virtual void sah(Int fs, Float angle, Float vent);
+    virtual void panl(casacore::Int ix, casacore::Int iy);
+    virtual void pap(casacore::Float width, casacore::Float aspect);
+    virtual void pixl(const casacore::Matrix<casacore::Int> &ia, casacore::Float x1, casacore::Float x2,
+		      casacore::Float y1, casacore::Float y2);
+    virtual void pnts(const casacore::Vector<casacore::Float> &x, const casacore::Vector<casacore::Float> &y,
+		      const casacore::Vector<casacore::Int> symbol);
+    virtual void poly(const casacore::Vector<casacore::Float> &xpts, const casacore::Vector<casacore::Float> &ypts);
+    virtual void pt(const casacore::Vector<casacore::Float> &xpts, const casacore::Vector<casacore::Float> &ypts, 
+		  casacore::Int symbol);
+    virtual void ptxt(casacore::Float x, casacore::Float y, casacore::Float angle, casacore::Float fjust, 
+		    const casacore::String &text);
+    virtual casacore::Vector<casacore::Float>  qah();
+    virtual casacore::Int qcf();
+    virtual casacore::Float qch();
+    virtual casacore::Int qci();
+    virtual casacore::Vector<casacore::Int> qcir();
+    virtual casacore::Vector<casacore::Int> qcol();
+    virtual casacore::Vector<casacore::Float> qcr(casacore::Int ci);
+    virtual casacore::Vector<casacore::Float> qcs(casacore::Int units);
+    virtual casacore::Int qfs();
+    virtual casacore::Vector<casacore::Float> qhs();
+    virtual casacore::Int qid();
+    virtual casacore::String qinf(const casacore::String &item);
+    virtual casacore::Int qitf();
+    virtual casacore::Int qls();
+    virtual casacore::Int qlw();
+    virtual casacore::Vector<casacore::Float> qpos();
+    virtual casacore::Int qtbg();
+    virtual casacore::Vector<casacore::Float> qtxt(casacore::Float x, casacore::Float y, casacore::Float angle, casacore::Float fjust, 
+		    const casacore::String &text);
+    virtual casacore::Vector<casacore::Float> qvp(casacore::Int units);
+    virtual casacore::Vector<casacore::Float> qvsz(casacore::Int units);
+    virtual casacore::Vector<casacore::Float> qwin();
+    virtual void rect(casacore::Float x1, casacore::Float x2, casacore::Float y1, casacore::Float y2);
+    virtual casacore::Float rnd(casacore::Float x, casacore::Int nsub);
+    virtual casacore::Vector<casacore::Float> rnge(casacore::Float x1, casacore::Float x2);
+    virtual void sah(casacore::Int fs, casacore::Float angle, casacore::Float vent);
     virtual void save();
-    virtual void scf(Int font);
-    virtual void sch(Float size);
-    virtual void sci(Int ci);
-    virtual void scir(Int icilo, Int icihi);
-    virtual void scr(Int ci, Float cr, Float cg, Float cb);
-    virtual void scrn(Int ci, const String &name);
-    virtual void sfs(Int fs);
-    virtual void shls(Int ci, Float ch, Float cl, Float cs);
-    virtual void shs(Float angle, Float sepn, Float phase);
-    virtual void sitf(Int itf);
-    virtual void sls(Int ls);
-    virtual void slw(Int lw);
-    virtual void stbg(Int tbci);
-    virtual void subp(Int nxsub, Int nysub);
-    virtual void svp(Float xleft, Float xright, Float ybot, Float ytop);
-    virtual void swin(Float x1, Float x2, Float y1, Float y2);
-    virtual void tbox(const String &xopt, Float xtick, Int nxsub,
-		    const String &yopt, Float ytick, Int nysub);
-    virtual void text(Float x, Float y, const String &text);
+    virtual void scf(casacore::Int font);
+    virtual void sch(casacore::Float size);
+    virtual void sci(casacore::Int ci);
+    virtual void scir(casacore::Int icilo, casacore::Int icihi);
+    virtual void scr(casacore::Int ci, casacore::Float cr, casacore::Float cg, casacore::Float cb);
+    virtual void scrn(casacore::Int ci, const casacore::String &name);
+    virtual void sfs(casacore::Int fs);
+    virtual void shls(casacore::Int ci, casacore::Float ch, casacore::Float cl, casacore::Float cs);
+    virtual void shs(casacore::Float angle, casacore::Float sepn, casacore::Float phase);
+    virtual void sitf(casacore::Int itf);
+    virtual void sls(casacore::Int ls);
+    virtual void slw(casacore::Int lw);
+    virtual void stbg(casacore::Int tbci);
+    virtual void subp(casacore::Int nxsub, casacore::Int nysub);
+    virtual void svp(casacore::Float xleft, casacore::Float xright, casacore::Float ybot, casacore::Float ytop);
+    virtual void swin(casacore::Float x1, casacore::Float x2, casacore::Float y1, casacore::Float y2);
+    virtual void tbox(const casacore::String &xopt, casacore::Float xtick, casacore::Int nxsub,
+		    const casacore::String &yopt, casacore::Float ytick, casacore::Int nysub);
+    virtual void text(casacore::Float x, casacore::Float y, const casacore::String &text);
     virtual void unsa();
     virtual void updt();
-    virtual void vect(const Matrix<Float> &a, const Matrix<Float> &b,
-		      Float c, Int nc, 
-		      const Vector<Float> &tr, Float blank);
-    virtual void vsiz(Float xleft, Float xright, Float ybot,
-		      Float ytop);
+    virtual void vect(const casacore::Matrix<casacore::Float> &a, const casacore::Matrix<casacore::Float> &b,
+		      casacore::Float c, casacore::Int nc, 
+		      const casacore::Vector<casacore::Float> &tr, casacore::Float blank);
+    virtual void vsiz(casacore::Float xleft, casacore::Float xright, casacore::Float ybot,
+		      casacore::Float ytop);
     virtual void vstd();
-    virtual void wedg(const String &side, Float disp, Float width,
-		      Float fg, Float bg, const String &label);
-    virtual void wnad(Float x1, Float x2, Float y1, Float y2);
+    virtual void wedg(const casacore::String &side, casacore::Float disp, casacore::Float width,
+		      casacore::Float fg, casacore::Float bg, const casacore::String &label);
+    virtual void wnad(casacore::Float x1, casacore::Float x2, casacore::Float y1, casacore::Float y2);
     // </group>
 
  private:

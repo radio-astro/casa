@@ -32,6 +32,7 @@
 #include <display/DisplayCanvas/WCSimpleResampleHandler.h>
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	WCSimpleResampleHandler::WCSimpleResampleHandler() {
@@ -112,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// output areas outside input extent).
 
 		out = blank;
-		outMask = False;
+		outMask = false;
 
 		Int outNX = out.shape()[0],
 		    outNY = out.shape()[1];

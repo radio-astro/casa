@@ -52,8 +52,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // FVisJonesDesc defines the format of FVisJones calibration 
-// tables in terms of table descriptors <linkto class="TableDesc">TableDesc
-// </linkto>, as used in the Table system. It auguments the TimeVarVisJones
+// tables in terms of table descriptors <linkto class="casacore::TableDesc">TableDesc
+// </linkto>, as used in the casacore::Table system. It auguments the TimeVarVisJones
 // description with additional fields for rotation measures.
 // </etymology>
 //
@@ -78,13 +78,13 @@ class FVisJonesDesc : public TimeVarVisJonesDesc
    virtual ~FVisJonesDesc() {};
 
    // Construct from the Jones table type
-   FVisJonesDesc (const String& type);
+   FVisJonesDesc (const casacore::String& type);
 
    // Return the table descriptors for the main calibration table
-   virtual TableDesc calMainDesc();
+   virtual casacore::TableDesc calMainDesc();
    
  private:
-   TableDesc itsCalDescDesc;
+   casacore::TableDesc itsCalDescDesc;
 
 };
 
@@ -107,8 +107,8 @@ class FVisJonesDesc : public TimeVarVisJonesDesc
 //
 // <synopsis>
 // FVisJonesIonoDesc defines the format of FVisJonesIono calibration 
-// tables in terms of table descriptors <linkto class="TableDesc">TableDesc
-// </linkto>, as used in the Table system. It auguments the FVisJones
+// tables in terms of table descriptors <linkto class="casacore::TableDesc">TableDesc
+// </linkto>, as used in the casacore::Table system. It auguments the FVisJones
 // description with additional fields for TEC, etc.
 // </etymology>
 //
@@ -133,10 +133,10 @@ class FVisJonesIonoDesc : public FVisJonesDesc
    virtual ~FVisJonesIonoDesc() {};
 
    // Construct from the Jones table type
-   FVisJonesIonoDesc (const String& type);
+   FVisJonesIonoDesc (const casacore::String& type);
 
    // Return the table descriptors for the main calibration table
-   virtual TableDesc calMainDesc();
+   virtual casacore::TableDesc calMainDesc();
 
 };
 

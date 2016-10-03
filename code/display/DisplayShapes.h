@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <center>
 // <table>
 // <TR>
-// <h2> <TD> Record Entry </TD> <TD> Allowed Data </TD> <TD> Desc. </TD> </h2>
+// <h2> <TD> casacore::Record Entry </TD> <TD> Allowed casacore::Data </TD> <TD> Desc. </TD> </h2>
 // </TR>
 // <TR>
 //   <TD> hashandles </TD> <TD> Boolean </TD> <TD> Will the object ever have
@@ -127,7 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // currently? </TD>
 // </TR>
 // <TR>
-//   <TD> handlecolor </TD> <TD> String </TD> <TD> Specify the color of the
+//   <TD> handlecolor </TD> <TD> casacore::String </TD> <TD> Specify the color of the
 // handles </TD>
 // </TR>
 // <TR>
@@ -135,11 +135,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // of shape to use for the handles </TD>
 // </TR>
 // <TR>
-//   <TD> handlesize </TD> <TD> Int </TD> <TD> The size of the handles in
+//   <TD> handlesize </TD> <TD> casacore::Int </TD> <TD> The size of the handles in
 // pixels (radius / height) </TD>
 // </TR>
 // <TR>
-//   <TD> color </TD> <TD> String </TD> <TD> The color of the displayshape
+//   <TD> color </TD> <TD> casacore::String </TD> <TD> The color of the displayshape
 // object</TD>
 // </TR>
 // </table>
@@ -148,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 //
 //
-// Record fields specific to individual shapes should be documentented in
+// casacore::Record fields specific to individual shapes should be documentented in
 // their respective header files.
 //
 // <todo asof='2002/05/13'>

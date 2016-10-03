@@ -34,6 +34,7 @@
 
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ostream &operator<<(ostream &os, const SpectralElement &elem) {
@@ -61,40 +62,40 @@ ostream &operator<<(ostream &os, const SpectralElement &elem) {
 	return os;
 }
 
-Bool near(const SpectralElement& s1, const SpectralElement& s2, const Double tol) {
+bool near(const SpectralElement& s1, const SpectralElement& s2, const double tol) {
 	if (s1.getType() != s2.getType()) {
-		return False;
+		return false;
 	}
 	for (uInt j=0; j<s1.get().size(); j++) {
-		if (! near(s1.get()[j], s2.get()[j], tol)) {
-			return False;
+		if (! casacore::near(s1.get()[j], s2.get()[j], tol)) {
+			return false;
 		}
-		if (! near(s1.getError()[j], s2.getError()[j], tol)) {
-			return False;
+		if (! casacore::near(s1.getError()[j], s2.getError()[j], tol)) {
+			return false;
 		}
 		if (s1.fixed()[j] != s2.fixed()[j]) {
-			return False;
+			return false;
 		}
 	}
-	return True;
+	return true;
 }
 
-Bool nearAbs(const SpectralElement& s1, const SpectralElement& s2, const Double tol) {
+bool nearAbs(const SpectralElement& s1, const SpectralElement& s2, const Double tol) {
 	if (s1.getType() != s2.getType()) {
-		return False;
+		return false;
 	}
 	for (uInt j=0; j<s1.get().size(); j++) {
-		if (! nearAbs(s1.get()[j], s2.get()[j], tol)) {
-			return False;
+		if (! casacore::nearAbs(s1.get()[j], s2.get()[j], tol)) {
+			return false;
 		}
-		if (! nearAbs(s1.getError()[j], s2.getError()[j], tol)) {
-			return False;
+		if (! casacore::nearAbs(s1.getError()[j], s2.getError()[j], tol)) {
+			return false;
 		}
 		if (s1.fixed()[j] != s2.fixed()[j]) {
-			return False;
+			return false;
 		}
 	}
-	return True;
+	return true;
 }
 
 

@@ -27,6 +27,7 @@
 
 #include <synthesis/TransformMachines/SynthesisError.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SynthesisError::SynthesisError (Category c)

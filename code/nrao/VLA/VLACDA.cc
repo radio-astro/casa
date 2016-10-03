@@ -128,8 +128,8 @@ void VLACDA::attach(ByteSource& newRecord, uInt newOffset,
   deleteACorr(newNant);
   const uInt newNcorr = (newNant*(newNant-1))/2;
   deleteXCorr(newNcorr);
-  itsACorr.resize(newNant, False, True);
-  itsXCorr.resize(newNcorr, False, True);
+  itsACorr.resize(newNant, false, true);
+  itsXCorr.resize(newNcorr, false, true);
   for (uInt a = itsNant; a < newNant; a++) { // only done if newNant > itsNant
     itsACorr[a] = 0;
   }

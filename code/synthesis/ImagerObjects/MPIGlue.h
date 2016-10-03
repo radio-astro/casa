@@ -1,5 +1,5 @@
 /* -*- mode: c++ -*- */
-//# MPIGlue.h: Smooth out source code differences for MPI vs non-MPI builds
+//# MPIGlue.h: casacore::Smooth out source code differences for MPI vs non-MPI builds
 //# Copyright (C) 2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#

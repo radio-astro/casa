@@ -73,12 +73,13 @@
 
 #include <iomanip>
 
+using namespace casacore;
 namespace casa {
 
 ComponentImager::ComponentImager(
 	const SPIIF image, const Record *const &region,
 	const String& mask
-) : ImageTask<Float>(image, region, mask, "", False),
+) : ImageTask<Float>(image, region, mask, "", false),
 	_image(image) {
 	_construct();
 }
@@ -181,7 +182,7 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	Int freqAxis = -1;
 	Vector<MVFrequency> freqValues(nFreqs);
 	if (coords.hasSpectralAxis()) {
-		freqAxis = coords.spectralAxisNumber(False);
+		freqAxis = coords.spectralAxisNumber(false);
 		nFreqs = (uInt)imageShape[freqAxis];
 		freqValues.resize(nFreqs);
 		SpectralCoordinate specCoord = coords.spectralCoordinate();
@@ -293,10 +294,10 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	// succeeded.  The mask==F on output if the coordinate conversion
 	// fails (usually means a pixel is outside of the valid CoordinateSystem)
 	//
-	Bool doMask = False;
+	Bool doMask = false;
 	if (image.isMasked() && image.hasPixelMask()) {
 		if (image.pixelMask().isWritable()) {
-			doMask = True;
+			doMask = true;
 		}
 		else {
 			os << LogIO::WARN
@@ -307,7 +308,7 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	auto myList = &list;
 	const auto naxis = imageShape.nelements();
 	IPosition pixelPosition(naxis, 0);
-	Int polAxis = coords.polarizationAxisNumber(False);
+	Int polAxis = coords.polarizationAxisNumber(false);
 	auto modifiedList = _doPoints(
 		image, list, longAxis, latAxis, fluxUnits, dirRef,
 		pixelLatSize, pixelLongSize, freqValues, freqRef,
@@ -353,7 +354,7 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 		const IPosition& trc = chunkIter.endPosition();
 		d = 0;
 		pixelDir[1] = blc[latAxis];
-		coordIsGood = True;
+		coordIsGood = true;
 		auto endLat = trc[latAxis];
 		while (pixelDir[1] <= endLat) {
 			pixelDir[0] = blc[longAxis];
@@ -361,7 +362,7 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 			while (pixelDir[0] <= endLong) {
 				if (!dirCoord.toWorld(dirVals[d], pixelDir)) {
 					// These pixels will be masked
-					coordIsGood[d] = False;
+					coordIsGood[d] = false;
 				}
 				++d;
 				++pixelDir[0];
@@ -387,13 +388,13 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 			maskPtr.set(
 				new Array<Bool>(
 					image.getMaskSlice(chunkIter.position(),
-					chunkIter.cursorShape(), False)
+					chunkIter.cursorShape(), false)
 				)
 			);
 		}
 		d = 0;
 		pixelPosition[latAxis] = 0;
-		coordIsGood = True;
+		coordIsGood = true;
 
 		while (pixelPosition[latAxis] < chunkShape[latAxis]) {
 			pixelPosition(longAxis) = 0;
@@ -414,7 +415,7 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 					}
 				}
 				else if (doMask) {
-					(*maskPtr)(pixelPosition) = False;
+					(*maskPtr)(pixelPosition) = false;
 				}
 				d++;
 				pixelPosition(longAxis)++;
@@ -458,7 +459,7 @@ std::unique_ptr<ComponentList> ComponentImager::_doPoints(
 			dirCoord.toWorld(imageWorld, pixel);
 			const auto& point = list.component(i);
 			values = 0;
-			Bool foundPixel = False;
+			Bool foundPixel = false;
 			if (
 				pixelPosition[longAxis] >= 0 && pixelPosition[latAxis] >= 0
 				&& pixelPosition[longAxis] < imageShape[longAxis]

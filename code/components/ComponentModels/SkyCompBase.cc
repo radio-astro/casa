@@ -27,6 +27,7 @@
 
 #include <components/ComponentModels/SkyCompBase.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SkyCompBase::~SkyCompBase() {

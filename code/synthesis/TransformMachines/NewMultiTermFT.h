@@ -45,18 +45,22 @@
 //#include <synthesis/MeasurementComponents/SynthesisPeek.h>
 #include <casa/OS/Timer.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
 
 class UVWMachine;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
 
 class NewMultiTermFT : public FTMachine {
 public:
 
   // Construct using an existing FT-Machine 
-  NewMultiTermFT(FTMachine *subftm, Int nterms=1, Double reffreq=0.0);
+  NewMultiTermFT(FTMachine *subftm, casacore::Int nterms=1, casacore::Double reffreq=0.0);
 
-  // Construct from a Record containing the NewMultiTermFT state
-  NewMultiTermFT(const RecordInterface& stateRec);
+  // Construct from a casacore::Record containing the NewMultiTermFT state
+  NewMultiTermFT(const casacore::RecordInterface& stateRec);
 
   // Copy constructor. 
   // This first calls the default "=" operator, and then instantiates objects for member pointers.
@@ -70,107 +74,107 @@ public:
 
   // Called at the start of de-gridding : subftm->initializeToVis()
   // Note : Pre-de-gridding model-image divisions by PBs will go here.
-  void initializeToVis(ImageInterface<Complex>& /*image*/, 
+  void initializeToVis(casacore::ImageInterface<casacore::Complex>& /*image*/, 
                        const VisBuffer& /*vb*/)
-  {throw(AipsError("NewMultiTermFT::initializeToVis called without vectors !"));};
+  {throw(casacore::AipsError("NewMultiTermFT::initializeToVis called without vectors !"));};
 
    // Vectorized InitializeToVis
-  void initializeToVis(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,PtrBlock<SubImage<Float> *> & modelImageVec, PtrBlock<SubImage<Float> *>& weightImageVec, PtrBlock<SubImage<Float> *>& fluxScaleVec, Block<Matrix<Float> >& weightsVec, const VisBuffer& vb);
+  void initializeToVis(casacore::Block<casacore::CountedPtr<casacore::ImageInterface<casacore::Complex> > > & compImageVec,casacore::PtrBlock<casacore::SubImage<casacore::Float> *> & modelImageVec, casacore::PtrBlock<casacore::SubImage<casacore::Float> *>& weightImageVec, casacore::PtrBlock<casacore::SubImage<casacore::Float> *>& fluxScaleVec, casacore::Block<casacore::Matrix<casacore::Float> >& weightsVec, const VisBuffer& vb);
 
   // Called at the end of de-gridding : subftm->finalizeToVis()
   void finalizeToVis();
 
   // Called at the start of gridding : subftm->initializeToSky()
-  void initializeToSky(ImageInterface<Complex>& /*image*/,  
-                       Matrix<Float>& /*weight*/, const VisBuffer& /*vb*/) 
-   {throw(AipsError("NewMultiTermFT::initializeToSky() called without vectors!"));};
+  void initializeToSky(casacore::ImageInterface<casacore::Complex>& /*image*/,  
+                       casacore::Matrix<casacore::Float>& /*weight*/, const VisBuffer& /*vb*/) 
+   {throw(casacore::AipsError("NewMultiTermFT::initializeToSky() called without vectors!"));};
 
-  void initializeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, Block<Matrix<Float> >& weightsVec, const VisBuffer& vb, const Bool dopsf);
+  void initializeToSky(casacore::Block<casacore::CountedPtr<casacore::ImageInterface<casacore::Complex> > > & compImageVec, casacore::Block<casacore::Matrix<casacore::Float> >& weightsVec, const VisBuffer& vb, const casacore::Bool dopsf);
 
 
   // Called at the end of gridding : subftm->finalizeToSky()
-  void finalizeToSky(){throw(AipsError("NewMultiTermFT::finalizeToSky() called without arguments!"));};
+  void finalizeToSky(){throw(casacore::AipsError("NewMultiTermFT::finalizeToSky() called without arguments!"));};
 
-  void finalizeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& weightImageVec, PtrBlock<SubImage<Float> *>& fluxScaleVec, Bool dopsf, Block<Matrix<Float> >& weightsVec, const VisBuffer& vb);
+  void finalizeToSky(casacore::Block<casacore::CountedPtr<casacore::ImageInterface<casacore::Complex> > > & compImageVec, casacore::PtrBlock<casacore::SubImage<casacore::Float> *> & resImageVec, casacore::PtrBlock<casacore::SubImage<casacore::Float> *>& weightImageVec, casacore::PtrBlock<casacore::SubImage<casacore::Float> *>& fluxScaleVec, casacore::Bool dopsf, casacore::Block<casacore::Matrix<casacore::Float> >& weightsVec, const VisBuffer& vb);
 
-  //  void normalizeToSky(ImageInterface<Complex>& compImage, ImageInterface<Float>& resImage, ImageInterface<Float>& weightImage, Bool dopsf, Matrix<Float>& weights)
-  // {throw(AipsError("NewMultiTermFT::normalizeToSky should not get called !"));};
+  //  void normalizeToSky(casacore::ImageInterface<casacore::Complex>& compImage, casacore::ImageInterface<casacore::Float>& resImage, casacore::ImageInterface<casacore::Float>& weightImage, casacore::Bool dopsf, casacore::Matrix<casacore::Float>& weights)
+  // {throw(casacore::AipsError("NewMultiTermFT::normalizeToSky should not get called !"));};
 
 
   // Do the degridding via subftm->get() and modify model-visibilities by Taylor-weights
-  void get(VisBuffer& vb, Int row=-1);
+  void get(VisBuffer& vb, casacore::Int row=-1);
 
   // Modify imaging weights with Taylor-weights and do gridding via subftm->put()
-  void put(VisBuffer& vb, Int row=-1, Bool dopsf=False,
+  void put(VisBuffer& vb, casacore::Int row=-1, casacore::Bool dopsf=false,
 	   FTMachine::Type type=FTMachine::OBSERVED);
 
   // Have a const version for compatibility with other FTMs.. Throw an exception if called.
-  void put(const VisBuffer& /*vb*/, Int /*row*/=-1, Bool /*dopsf*/=False,
+  void put(const VisBuffer& /*vb*/, casacore::Int /*row*/=-1, casacore::Bool /*dopsf*/=false,
 	   FTMachine::Type /*type*/=FTMachine::OBSERVED)
-  {throw(AipsError("NewMultiTermFT::put called with a const vb. This FTM needs to modify the vb."));};
+  {throw(casacore::AipsError("NewMultiTermFT::put called with a const vb. This FTM needs to modify the vb."));};
 
   // Calculate residual visibilities if possible.
   // The purpose is to allow rGridFT to make this multi-threaded
-  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected); 
+  virtual void ComputeResiduals(VisBuffer&vb, casacore::Bool useCorrected); 
 
   // Make an image : subftm->makeImage()
   void makeImage(FTMachine::Type type,
 		 VisSet& vs,
-		 ImageInterface<Complex>& image,
-		 Matrix<Float>& weight);
+		 casacore::ImageInterface<casacore::Complex>& image,
+		 casacore::Matrix<casacore::Float>& weight);
   
   // Get the final image: do the Fourier transform grid-correct, then 
   // optionally normalize by the summed weights
   // Note : Post-gridding residual-image divisions by PBs will go here.
   //           For now, it just calls subftm->getImage()
-  //  ImageInterface<Complex>& getImage(Matrix<Float>& weights, Bool normalize=True)
+  //  casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>& weights, casacore::Bool normalize=true)
   //{return getImage(weights,normalize,0);};
-  //ImageInterface<Complex>& getImage(Matrix<Float>& weights, Bool normalize=True, 
-  //                                                         const Int taylorindex=0);
-  ImageInterface<Complex>& getImage(Matrix<Float>& /*weights*/, Bool /*normalize*/=True)
-  {throw(AipsError("NewMultiTermFT::getImage() should not be called"));}
+  //casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>& weights, casacore::Bool normalize=true, 
+  //                                                         const casacore::Int taylorindex=0);
+  casacore::ImageInterface<casacore::Complex>& getImage(casacore::Matrix<casacore::Float>& /*weights*/, casacore::Bool /*normalize*/=true)
+  {throw(casacore::AipsError("NewMultiTermFT::getImage() should not be called"));}
  
 
   // Place-holder for possible use with AWProject and AWProjectWB FTMs
   /*
-  virtual void normalizeImage(Lattice<Complex>& skyImage,
-			      const Matrix<Double>& sumOfWts,
-			      Lattice<Float>& sensitivityImage,
-			      Bool fftNorm)
-    {throw(AipsError("NewMultiTermFT::normalizeImage() is not implemented"));}
+  virtual void normalizeImage(casacore::Lattice<casacore::Complex>& skyImage,
+			      const casacore::Matrix<casacore::Double>& sumOfWts,
+			      casacore::Lattice<casacore::Float>& sensitivityImage,
+			      casacore::Bool fftNorm)
+    {throw(casacore::AipsError("NewMultiTermFT::normalizeImage() is not implemented"));}
   */
   // Get the final weights image - this will hold PB2
-  //void getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights)
+  //void getWeightImage(casacore::ImageInterface<casacore::Float>& weightImage, casacore::Matrix<casacore::Float>& weights)
   //{getWeightImage(weightImage, weights, 0);};
-  //void getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights, 
-  //                                const Int taylorindex);
-  void getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights)
+  //void getWeightImage(casacore::ImageInterface<casacore::Float>& weightImage, casacore::Matrix<casacore::Float>& weights, 
+  //                                const casacore::Int taylorindex);
+  void getWeightImage(casacore::ImageInterface<casacore::Float>& weightImage, casacore::Matrix<casacore::Float>& weights)
   {subftms_p[0]->getWeightImage(weightImage, weights);}
-  //  {throw(AipsError("NewMultiTermFT::getWeightImage() should not be called"));}
+  //  {throw(casacore::AipsError("NewMultiTermFT::getWeightImage() should not be called"));}
 
   // Save and restore the NewMultiTermFT to and from a record
-  virtual Bool toRecord(String& error, RecordInterface& outRec, Bool withImage=False,
-			const String diskimage="");
-  virtual Bool fromRecord(String& error, const RecordInterface& inRec);
+  virtual casacore::Bool toRecord(casacore::String& error, casacore::RecordInterface& outRec, casacore::Bool withImage=false,
+			const casacore::String diskimage="");
+  virtual casacore::Bool fromRecord(casacore::String& error, const casacore::RecordInterface& inRec);
 
   // Various small inline functions
-  virtual Bool isFourier() {return True;}
-  virtual void setNoPadding(Bool nopad){subftms_p[0]->setNoPadding(nopad);};
-  virtual String name()const {return machineName_p;};
-  virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual casacore::Bool isFourier() {return true;}
+  virtual void setNoPadding(casacore::Bool nopad){subftms_p[0]->setNoPadding(nopad);};
+  virtual casacore::String name()const {return machineName_p;};
+  virtual void setMiscInfo(const casacore::Int qualifier){(void)qualifier;};
 
   void printFTTypes()
   {
     cout << "** Number of FTs : " << subftms_p.nelements() << " -- " ;
-    for(uInt tix=0; tix<(subftms_p).nelements(); tix++)
+    for(casacore::uInt tix=0; tix<(subftms_p).nelements(); tix++)
       cout << tix << " : " << (subftms_p[tix])->name() << "   " ;
     cout << endl;
   };
 
-  virtual void setDOPBCorrection(Bool doit=True) {doWideBandPBCorrection_p=doit;};
-  virtual Bool getDOPBCorrection() {return doWideBandPBCorrection_p;};
-  virtual void setConjBeams(Bool useit=True) {useConjBeams_p=useit;};
-  virtual Bool getConjBeams() {return useConjBeams_p;};
+  virtual void setDOPBCorrection(casacore::Bool doit=true) {doWideBandPBCorrection_p=doit;};
+  virtual casacore::Bool getDOPBCorrection() {return doWideBandPBCorrection_p;};
+  virtual void setConjBeams(casacore::Bool useit=true) {useConjBeams_p=useit;};
+  virtual casacore::Bool getConjBeams() {return useConjBeams_p;};
 
 
 protected:
@@ -179,53 +183,53 @@ protected:
   FTMachine* getNewFTM(const FTMachine *ftm);
 
   // Multiply Imaging weights by Taylor-function weights - during "put"
-  Bool modifyVisWeights(VisBuffer& vb, uInt thisterm);
+  casacore::Bool modifyVisWeights(VisBuffer& vb, casacore::uInt thisterm);
   // Multiply model visibilities by Taylor-function weights - during "get"
-  Bool modifyModelVis(VisBuffer &vb, uInt thisterm);
+  casacore::Bool modifyModelVis(VisBuffer &vb, casacore::uInt thisterm);
   // Restore vb.imagingweights to the original
   void restoreImagingWeights(VisBuffer &vb);
 
   // Use sumwts to make a Hessian, invert it, apply to weight images, fill in pbcoeffs_p
-  void normAvgPBs(PtrBlock<SubImage<Float> *> & weightImageVec);
-  void calculateTaylorPBs(PtrBlock<SubImage<Float> *> & weightImageVec);
+  void normAvgPBs(casacore::PtrBlock<casacore::SubImage<casacore::Float> *> & weightImageVec);
+  void calculateTaylorPBs(casacore::PtrBlock<casacore::SubImage<casacore::Float> *> & weightImageVec);
   // Make pixel-by-pixel matrices from pbcoeffs, invert, apply to residuals
-  //  void normalizeWideBandPB2(PtrBlock<SubImage<Float> *> & resImageVec);
-  //  void normalizeWideBandPB(PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& scratchImageVec);
-  void applyWideBandPB(String action, PtrBlock<SubImage<Float> *> & imageVec);
+  //  void normalizeWideBandPB2(casacore::PtrBlock<casacore::SubImage<casacore::Float> *> & resImageVec);
+  //  void normalizeWideBandPB(casacore::PtrBlock<casacore::SubImage<casacore::Float> *> & resImageVec, casacore::PtrBlock<casacore::SubImage<casacore::Float> *>& scratchImageVec);
+  void applyWideBandPB(casacore::String action, casacore::PtrBlock<casacore::SubImage<casacore::Float> *> & imageVec);
 
-  void multiplyHMatrix( Matrix<Double> &hmat, PtrBlock<SubImage<Float>* > &invec,
-			PtrBlock<SubImage<Float>* > &outvec, String saveImagePrefix );
+  void multiplyHMatrix( casacore::Matrix<casacore::Double> &hmat, casacore::PtrBlock<casacore::SubImage<casacore::Float>* > &invec,
+			casacore::PtrBlock<casacore::SubImage<casacore::Float>* > &outvec, casacore::String saveImagePrefix );
 
   // Helper function to write ImageInterfaces to disk
-  Bool storeAsImg(String fileName, ImageInterface<Float> & theImg);
+  casacore::Bool storeAsImg(casacore::String fileName, casacore::ImageInterface<casacore::Float> & theImg);
 
 
-  Cube<Complex> modviscube_p;
+  casacore::Cube<casacore::Complex> modviscube_p;
 
   //// New MTFT specific internal parameters and functions
-  uInt nterms_p;
-  Bool donePSF_p, doingPSF_p;
-  Double reffreq_p;
-  Matrix<Float> imweights_p;
-  String machineName_p;
-  Float pblimit_p;
-  Bool doWideBandPBCorrection_p;
-  String cacheDir_p;
-  Bool donePBTaylor_p;
-  Bool useConjBeams_p;
+  casacore::uInt nterms_p;
+  casacore::Bool donePSF_p, doingPSF_p;
+  casacore::Double reffreq_p;
+  casacore::Matrix<casacore::Float> imweights_p;
+  casacore::String machineName_p;
+  casacore::Float pblimit_p;
+  casacore::Bool doWideBandPBCorrection_p;
+  casacore::String cacheDir_p;
+  casacore::Bool donePBTaylor_p;
+  casacore::Bool useConjBeams_p;
 
-  Block< CountedPtr<FTMachine> > subftms_p;
-  Block<Matrix<Float> > sumweights_p;
+  casacore::Block< casacore::CountedPtr<FTMachine> > subftms_p;
+  casacore::Block<casacore::Matrix<casacore::Float> > sumweights_p;
 
-  Double sumwt_p;
-  Matrix<Double> hess_p, invhess_p; // Block is for the pol axis
+  casacore::Double sumwt_p;
+  casacore::Matrix<casacore::Double> hess_p, invhess_p; // casacore::Block is for the pol axis
 
-  Block<CountedPtr<ImageInterface<Float> > > sensitivitymaps_p;
-  PtrBlock<SubImage<Float>* > pbcoeffs_p;
+  casacore::Block<casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > > sensitivitymaps_p;
+  casacore::PtrBlock<casacore::SubImage<casacore::Float>* > pbcoeffs_p;
 
-  Bool dbg_p,dotime_p;
-  Timer tmr_p;
-  Double time_get, time_put, time_res;
+  casacore::Bool dbg_p,dotime_p;
+  casacore::Timer tmr_p;
+  casacore::Double time_get, time_put, time_res;
 };
 
 } //# NAMESPACE CASA - END

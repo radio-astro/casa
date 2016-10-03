@@ -82,12 +82,12 @@ class VLAProjectFilter: public VLAFilter
 {
 public:
   // The default constructor creats a filter that does not filter
-  // anything. ie., the passThru() function always returns True;
+  // anything. ie., the passThru() function always returns true;
   VLAProjectFilter();
 
   // Creates a filter that filters all records except those with an observing
   // id that matches (case insensitive) the specified project name.
-  VLAProjectFilter(const String& projectName);
+  VLAProjectFilter(const casacore::String& projectName);
 
   // The copy constructor uses copy semantics.
   VLAProjectFilter(const VLAProjectFilter& other);
@@ -98,9 +98,9 @@ public:
   // The assignment operator uses copy semantics.
   VLAProjectFilter& operator=(const VLAProjectFilter& other);
 
-  // returns True if the supplied record has an observing id that matches (case
+  // returns true if the supplied record has an observing id that matches (case
   // insensitive) the project name specified in the constructor.
-  virtual Bool passThru(const VLALogicalRecord& record) const;
+  virtual casacore::Bool passThru(const VLALogicalRecord& record) const;
 
   // Return a pointer to a copy of the VLAProjectFilter object upcast to a
   // VLAFilter object. The class that uses this function is responsible for
@@ -108,13 +108,13 @@ public:
   // constructor.
   virtual VLAFilter* clone() const;
 
-  // Function which checks the internal data of this class for correct
-  // dimensionality and consistant values. Returns True if everything is fine
-  // otherwise returns False.
-  virtual Bool ok() const;
+  // casacore::Function which checks the internal data of this class for correct
+  // dimensionality and consistant values. Returns true if everything is fine
+  // otherwise returns false.
+  virtual casacore::Bool ok() const;
 
 private:
-  String itsProject;
+  casacore::String itsProject;
 };
 #endif
 

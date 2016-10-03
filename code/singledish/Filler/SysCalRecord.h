@@ -19,21 +19,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace sdfiller { //# NAMESPACE SDFILLER - BEGIN
 
 struct SysCalRecord {
-  typedef MSSysCal AssociatingTable;
-  typedef MSSysCalColumns AssociatingColumns;
+  typedef casacore::MSSysCal AssociatingTable;
+  typedef casacore::MSSysCalColumns AssociatingColumns;
 
   // mandatory
-  Int antenna_id;
-  Int feed_id;
-  Int spw_id;
-  Double time;
-  Double interval;
+  casacore::Int antenna_id;
+  casacore::Int feed_id;
+  casacore::Int spw_id;
+  casacore::Double time;
+  casacore::Double interval;
 
   // optional
-  Vector<Float> tcal;
-  Matrix<Float> tcal_spectrum;
-  Vector<Float> tsys;
-  Matrix<Float> tsys_spectrum;
+  casacore::Vector<casacore::Float> tcal;
+  casacore::Matrix<casacore::Float> tcal_spectrum;
+  casacore::Vector<casacore::Float> tsys;
+  casacore::Matrix<casacore::Float> tsys_spectrum;
 
   // method
   void clear() {
@@ -62,12 +62,12 @@ struct SysCalRecord {
   }
 
   void add(AssociatingTable &table, AssociatingColumns &/*columns*/) {
-    table.addRow(1, True);
+    table.addRow(1, true);
   }
 
-  Bool fill(uInt irow, AssociatingColumns &columns) {
+  casacore::Bool fill(casacore::uInt irow, AssociatingColumns &columns) {
     if (columns.nrow() <= irow) {
-      return False;
+      return false;
     }
 
     columns.antennaId().put(irow, antenna_id);
@@ -87,7 +87,7 @@ struct SysCalRecord {
     if (tsys_spectrum.size() > 0) {
       columns.tsysSpectrum().put(irow, tsys_spectrum);
     }
-    return True;
+    return true;
   }
 };
 
@@ -95,12 +95,12 @@ struct SysCalTableRecord {
   enum Status {
     Spectral, Scalar, NotDefined
   };
-  SysCalTableRecord(MeasurementSet *ms, uInt irow, SysCalRecord const &record) :
+  SysCalTableRecord(casacore::MeasurementSet *ms, casacore::uInt irow, SysCalRecord const &record) :
       ms_(ms), columns_(ms->sysCal()), irow_(irow) {
     antenna_id = record.antenna_id;
     feed_id = record.feed_id;
     spw_id = record.spw_id;
-    ROScalarColumn<Int> num_chan_column(ms_->spectralWindow(), "NUM_CHAN");
+    casacore::ROScalarColumn<casacore::Int> num_chan_column(ms_->spectralWindow(), "NUM_CHAN");
     num_chan = num_chan_column(spw_id);
     if (record.tsys_spectrum.empty()) {
       num_corr = record.tsys.size();
@@ -141,20 +141,20 @@ struct SysCalTableRecord {
     tsys_nominal = other.tsys_nominal;
     tcal_nominal = other.tcal_nominal;
   }
-  Int antenna_id;
-  Int feed_id;
-  Int spw_id;
-  Int num_chan;
-  Int num_corr;
+  casacore::Int antenna_id;
+  casacore::Int feed_id;
+  casacore::Int spw_id;
+  casacore::Int num_chan;
+  casacore::Int num_corr;
   Status tsys_status;
   Status tcal_status;
-  Float tsys_nominal;
-  Float tcal_nominal;
+  casacore::Float tsys_nominal;
+  casacore::Float tcal_nominal;
 
   // returns true if two SysCalTableRecord objects are exactly same
   bool operator==(SysCalTableRecord const &record) {
-    String ms_name = Path(ms_->tableName()).resolvedName();
-    String ms_name_record = Path(record.ms_->tableName()).resolvedName();
+    casacore::String ms_name = casacore::Path(ms_->tableName()).resolvedName();
+    casacore::String ms_name_record = casacore::Path(record.ms_->tableName()).resolvedName();
     return ms_name == ms_name_record && irow_ == record.irow_
         && antenna_id == record.antenna_id && feed_id == record.feed_id
         && spw_id == record.spw_id && num_chan == record.num_chan
@@ -175,12 +175,12 @@ struct SysCalTableRecord {
     bool is_tsys_same;
     if (tsys_status == Status::Spectral) {
       is_tsys_same = num_chan > 0
-          && (uInt) num_chan == record.tsys_spectrum.ncolumn() && num_corr > 0
-          && (uInt) num_corr == record.tsys_spectrum.nrow()
+          && (casacore::uInt) num_chan == record.tsys_spectrum.ncolumn() && num_corr > 0
+          && (casacore::uInt) num_corr == record.tsys_spectrum.nrow()
           && tsys_nominal == record.tsys_spectrum(0, 0)
           && allEQ(columns_.tsysSpectrum()(irow_), record.tsys_spectrum);
     } else if (tsys_status == Status::Scalar) {
-      is_tsys_same = num_corr > 0 && (uInt) num_corr == record.tsys.size()
+      is_tsys_same = num_corr > 0 && (casacore::uInt) num_corr == record.tsys.size()
           && tsys_nominal == record.tsys[0]
           && allEQ(columns_.tsys()(irow_), record.tsys);
     } else {
@@ -194,12 +194,12 @@ struct SysCalTableRecord {
     bool is_tcal_same;
     if (tcal_status == Status::Spectral) {
       is_tcal_same = num_chan > 0
-          && (uInt) num_chan == record.tcal_spectrum.ncolumn() && num_corr > 0
-          && (uInt) num_corr == record.tcal_spectrum.nrow()
+          && (casacore::uInt) num_chan == record.tcal_spectrum.ncolumn() && num_corr > 0
+          && (casacore::uInt) num_corr == record.tcal_spectrum.nrow()
           && tcal_nominal == record.tcal_spectrum(0, 0)
           && allEQ(columns_.tcalSpectrum()(irow_), record.tcal_spectrum);
     } else if (tcal_status == Status::Scalar) {
-      is_tcal_same = num_corr > 0 && (uInt) num_corr == record.tcal.size()
+      is_tcal_same = num_corr > 0 && (casacore::uInt) num_corr == record.tcal.size()
           && tcal_nominal == record.tcal[0]
           && allEQ(columns_.tcal()(irow_), record.tcal);
     } else {
@@ -214,9 +214,9 @@ struct SysCalTableRecord {
   }
 
 private:
-  MeasurementSet *ms_;
-  MSSysCalColumns columns_;
-  uInt irow_;
+  casacore::MeasurementSet *ms_;
+  casacore::MSSysCalColumns columns_;
+  casacore::uInt irow_;
 };
 
 } //# NAMESPACE SDFILLER - END

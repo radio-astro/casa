@@ -26,6 +26,7 @@
 #include "CanvasModeZoom.h"
 #include <display/QtPlotter/QtCanvas.qo.h>
 #include <QMouseEvent>
+using namespace casacore;
 namespace casa {
 
 	CanvasModeZoom::CanvasModeZoom():CanvasMode(Qt::CrossCursor) {
@@ -61,4 +62,5 @@ namespace casa {
 		// TODO Auto-generated destructor stub
 	}
 
+using namespace casacore;
 } /* namespace casa */

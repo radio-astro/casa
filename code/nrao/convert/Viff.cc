@@ -119,7 +119,7 @@ copyData(long type1, void *p1, long type2, void *p2, unsigned long npts)
 	case VFF_TYP_DCOMPLEX:  while(npts--) {*cp1++=char(*Dp2++); 
 					       Dp2++;} break;
 	default:
-	    return False;
+	    return false;
 	}
 	break;
     case VFF_TYP_2_BYTE:
@@ -135,7 +135,7 @@ copyData(long type1, void *p1, long type2, void *p2, unsigned long npts)
 	case VFF_TYP_DCOMPLEX:  while(npts--) {*sp1++=short(*Dp2++); 
 					       Dp2++;} break;
 	default:
-	    return False;
+	    return false;
 	}
 	break;
     case VFF_TYP_4_BYTE:
@@ -151,7 +151,7 @@ copyData(long type1, void *p1, long type2, void *p2, unsigned long npts)
 	case VFF_TYP_DCOMPLEX:  while(npts--) {*ip1++=int(*Dp2++);
 					       Dp2++;} break;
 	default:
-	    return False;
+	    return false;
 	}
 	break;
     case VFF_TYP_FLOAT:
@@ -165,7 +165,7 @@ copyData(long type1, void *p1, long type2, void *p2, unsigned long npts)
 	case VFF_TYP_COMPLEX:  while(npts--) {*fp1++=*Cp2++; Cp2++;} break;
 	case VFF_TYP_DCOMPLEX:  while(npts--) {*fp1++=*Dp2++; Dp2++;} break;
 	default:
-	    return False;
+	    return false;
 	}
 	break;
     case VFF_TYP_DOUBLE:
@@ -179,7 +179,7 @@ copyData(long type1, void *p1, long type2, void *p2, unsigned long npts)
 	case VFF_TYP_COMPLEX:  while(npts--) {*dp1++=*Cp2++; Cp2++;} break;
 	case VFF_TYP_DCOMPLEX:  while(npts--) {*dp2++=*Dp2++; Dp1++;} break;
 	default:
-	    return False;
+	    return false;
 	}
 	break;
     case VFF_TYP_COMPLEX:
@@ -199,7 +199,7 @@ copyData(long type1, void *p1, long type2, void *p2, unsigned long npts)
 	case VFF_TYP_DCOMPLEX:
 	    while (npts--) {*Cp1++ = Complex(*Dp2, *(Dp2+1)); Dp2 += 2; } break;
 	default:
-	    return False;
+	    return false;
 	}
 	break;
     case VFF_TYP_DCOMPLEX:
@@ -219,13 +219,13 @@ copyData(long type1, void *p1, long type2, void *p2, unsigned long npts)
 	case VFF_TYP_DCOMPLEX:
 	    while (npts--) {*Dp1++ =DComplex(*Dp2, *(Dp2+1)); Dp2 += 2; } break;
 	default:
-	    return False;
+	    return false;
 	}
 	break;
     default:
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 
 // If array is > 3D, it will try to make it nonDegenerate() before giving up.
@@ -238,7 +238,7 @@ Bool Viff::put(const Array<float> &array)
 	image = image.nonDegenerate();
     }
     if (image.ndim() > 3) {
-	return False;   // Could not make into a <=3-D image
+	return false;   // Could not make into a <=3-D image
     }
 
     // If we already have a viff image delete it and create a new one
@@ -275,20 +275,20 @@ Bool Viff::put(const Array<float> &array)
 			 map_row_size, map_col_size, map_scheme,
 			 map_storage_type, location_type, location_dim);
     if (kimage == 0) {
-	return False; // Could not allocate
+	return false; // Could not allocate
     }
 
     // OK, we have an allocated data structure, let's write into it.
     Bool deleteIt;
     float *storage = image.getStorage(deleteIt);  
     if (copyData(kimage->data_storage_type, kimage->imagedata, 
-		 VFF_TYP_FLOAT, storage, image.nelements()) == False) {
+		 VFF_TYP_FLOAT, storage, image.nelements()) == false) {
 	throw(AipsError("Viff::put - unknown type"));
     }
     if (deleteIt) {
 	delete [] storage;
     }
-    return True;
+    return true;
 }
 
 // There's a lot of code duplication here we should try to eliminate.
@@ -302,7 +302,7 @@ Bool Viff::put(const Array<Complex> &array)
 	image = image.nonDegenerate();
     }
     if (image.ndim() > 3) {
-	return False;   // Could not make into a <=3-D image
+	return false;   // Could not make into a <=3-D image
     }
 
     // If we already have a viff image delete it and create a new one
@@ -340,18 +340,18 @@ Bool Viff::put(const Array<Complex> &array)
 			 map_row_size, map_col_size, map_scheme,
 			 map_storage_type, location_type, location_dim);
     if (kimage == 0) {
-	return False; // Could not allocate
+	return false; // Could not allocate
     }
 
     // OK, we have an allocated data structure, let's write into it.
     Bool deleteIt;
     Complex *storage = image.getStorage(deleteIt);  
     if (copyData(kimage->data_storage_type, kimage->imagedata, 
-		 VFF_TYP_COMPLEX, storage, image.nelements()) == False) {
+		 VFF_TYP_COMPLEX, storage, image.nelements()) == false) {
 	throw(AipsError("Viff::put - unknown type"));
     }
     image.freeStorage(storage, deleteIt);
-    return True;
+    return true;
 }
 
 // If "name" starts with a "-" write to stdout, if it begins with a "#" write
@@ -359,13 +359,13 @@ Bool Viff::put(const Array<Complex> &array)
 Bool Viff::write(String name)
 {
     if (kimage == 0) {
-	return False;
+	return false;
     }
 
     if (writeimage(name, kimage)) {
-	return True;
+	return true;
     }
-    return False;
+    return false;
 }
 
 // If "name" begins with a "-" read from stdin.
@@ -377,20 +377,20 @@ Bool Viff::read(String name)
     }
     kimage = readimage(name);
     if (kimage == 0) {
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 
 
-// Leaves array unchanged in the event of an error (False return). Either the
+// Leaves array unchanged in the event of an error (false return). Either the
 // array is 0-sized, in which case it is resized appropriately, or it is
 // conformant in which case it has to "fit", with the exception that only
 // non-degenerate axes are considered.
 Bool Viff::get(Array<float> &array)
 {
     if (kimage == 0) {
-	return False;
+	return false;
     }
 
     Array<float> tmp;
@@ -411,7 +411,7 @@ Bool Viff::get(Array<float> &array)
 		  kimage->imagedata, tmp.nelements());
     tmp.putStorage(storage, deleteIt);
     if (! ok) {
-	return False;
+	return false;
     }
 
     Array<float> tmpNonDegenerate(tmp.nonDegenerate());
@@ -432,17 +432,17 @@ Bool Viff::get(Array<float> &array)
 	array = tmp;
     } else {
 	// We just don't conform
-	return False;
+	return false;
     }
 
-    return True;
+    return true;
 }
 
 // A lot of code duplication
 Bool Viff::get(Array<Complex> &array)
 {
     if (kimage == 0) {
-	return False;
+	return false;
     }
 
     Array<Complex> tmp;
@@ -463,7 +463,7 @@ Bool Viff::get(Array<Complex> &array)
 		  kimage->imagedata, tmp.nelements());
     tmp.putStorage(storage, deleteIt);
     if (! ok) {
-	return False;
+	return false;
     }
 
     Array<Complex> tmpNonDegenerate(tmp.nonDegenerate());
@@ -484,10 +484,10 @@ Bool Viff::get(Array<Complex> &array)
 	array = tmp;
     } else {
 	// We just don't conform
-	return False;
+	return false;
     }
 
-    return True;
+    return true;
 }
 
 uInt Viff::nx() const
@@ -517,7 +517,7 @@ uInt Viff::nz() const
 Bool Viff::putLocations(const Cube<float> &locations)
 {
     if (kimage == 0) {
-	return False;
+	return false;
     }
 
     // We could be smarter than this
@@ -526,7 +526,7 @@ Bool Viff::putLocations(const Cube<float> &locations)
     places.shape(cubex, cubey, cubez);
     // Are the locations conformant with this Viff object?
     if (cubex != nx() || cubey != ny()) {
-	return False;
+	return false;
     }
 
     // If we already have locations, free them.
@@ -540,7 +540,7 @@ Bool Viff::putLocations(const Cube<float> &locations)
     kimage->location = (float *)malloc(sizeof(float)*cubex*cubey);
     if (kimage->location == 0) {
 	kimage->location_type = VFF_LOC_IMPLICIT;
-	return False;
+	return false;
     }
 
     // And set up the location information
@@ -561,5 +561,5 @@ Bool Viff::putLocations(const Cube<float> &locations)
 	delete [] storage;
     }
 
-    return True;
+    return true;
 }

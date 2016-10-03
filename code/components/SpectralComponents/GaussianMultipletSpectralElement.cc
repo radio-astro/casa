@@ -34,6 +34,7 @@
 
 #include <casa/iostream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define _ORIGIN  String("GaussianMultipletSpectralElement::") + __FUNCTION__ + ":" + String::toString(__LINE__) + ": "
@@ -94,7 +95,7 @@ GaussianMultipletSpectralElement::GaussianMultipletSpectralElement(
 	errs[0] = _gaussians[0].getAmplErr();
 	errs[1] = _gaussians[0].getCenterErr();
 	errs[2] = _gaussians[0].getSigmaErr();
-	Vector<Bool> f(parm.size(), True);
+	Vector<Bool> f(parm.size(), true);
 	f[0] = _gaussians[0].fixedAmpl();
 	f[1] = _gaussians[0].fixedCenter();
 	f[2] = _gaussians[0].fixedSigma();
@@ -208,7 +209,7 @@ Bool GaussianMultipletSpectralElement::toRecord(RecordInterface& out) const {
 	}
 	out.defineRecord("gaussians", gaussians);
 	out.define("fixedMatrix", _constraints);
-	return True;
+	return true;
 }
 
 void GaussianMultipletSpectralElement::set(const Vector<Double>& param) {

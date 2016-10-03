@@ -45,7 +45,9 @@
 #include <gtest/gtest.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
+using namespace casacore;
 using namespace casa::vi;
 
 class SolveDataBufferTest : public ::testing::Test {
@@ -126,7 +128,7 @@ TEST_F(SolveDataBufferTest, SolveDataBufferState) {
   // Refer to first SDB in the SDBList
   SolveDataBuffer& sdb(sdbs(0));
   sdbs.enforceAPonData("AP");
-  sdbs.enforceSolveWeights(True); // p-hands only
+  sdbs.enforceSolveWeights(true); // p-hands only
 
   //cout << "sdb.nRows() = " << sdb.nRows() << endl;
   ASSERT_EQ(nRow,sdb.nRows());

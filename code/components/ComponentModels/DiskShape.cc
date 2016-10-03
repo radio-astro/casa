@@ -47,6 +47,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 DiskShape::DiskShape()
@@ -152,12 +153,12 @@ Double DiskShape::sample(const MDirection& direction,
   const MDirection& compDir(refDirection());
   const MDirection::Ref& compDirFrame(compDir.getRef());
   const MDirection::MVType* compDirValue = &(compDir.getValue());
-  Bool deleteValue = False;
+  Bool deleteValue = false;
   // Convert direction to the same frame as the reference direction
   if (ComponentShape::differentRefs(direction.getRef(), compDirFrame)) {
     compDirValue = new MDirection::MVType
       (MDirection::Convert(compDir, direction.getRef())().getValue());
-    deleteValue = True;
+    deleteValue = true;
   }
   Double retVal = calcSample(*compDirValue, direction.getValue(),
 			     itsMajValue/2.0, itsMinValue/2.0, 
@@ -179,12 +180,12 @@ void DiskShape::sample(Vector<Double>& scale,
   const MDirection& compDir(refDirection());
   const MDirection::Ref& compDirFrame(compDir.getRef());
   const MDirection::MVType* compDirValue = &(compDir.getValue());
-  Bool deleteValue = False;
+  Bool deleteValue = false;
   // Convert direction to the same frame as the reference direction
   if (refFrame != compDirFrame) {
     compDirValue = new MDirection::MVType
       (MDirection::Convert(compDir, refFrame)().getValue());
-    deleteValue = True;
+    deleteValue = true;
   }
   const Double majRad = itsMajValue/2.0; 
   const Double minRad = itsMinValue/2.0; 
@@ -233,10 +234,10 @@ void DiskShape::visibility(Vector<DComplex>& scale,
   DebugAssert(uvw.nrow() == 3, AipsError);
   DebugAssert(frequency > 0, AipsError);
   
-  Bool doRotation = False;
+  Bool doRotation = false;
   Double cpa = 1.0, spa = 0.0;
   if (!nearAbs(itsPaValue, 0.0)) {
-    doRotation = True;
+    doRotation = true;
     cpa = cos(itsPaValue);
     spa = sin(itsPaValue);
   }
@@ -271,34 +272,34 @@ Bool DiskShape::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
-  if (!TwoSidedShape::ok()) return False; 
+  if (!TwoSidedShape::ok()) return false; 
   if (itsMajValue <= 0) {
     LogIO logErr(LogOrigin("DiskCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The major axis width is zero or negative"
            << LogIO::POST;
-    return False;
+    return false;
   }
   if (itsMinValue <= 0) {
     LogIO logErr(LogOrigin("DiskCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The minor axis width is zero or negative"
            << LogIO::POST;
-    return False;
+    return false;
   }
   if (itsMinValue > itsMajValue) {
     LogIO logErr(LogOrigin("DiskCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The minor axis width is larger than "
 	   << "the major axis width"
            << LogIO::POST;
-    return False;
+    return false;
   }
   if (!near(itsHeight, 1.0/(C::pi*itsMajValue*itsMinValue), 2*C::dbl_epsilon)) {
     LogIO logErr(LogOrigin("DiskCompRep", "ok()"));
     logErr << LogIO::SEVERE << "The disk shape does not have"
 	   << " unit area"
            << LogIO::POST;
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
 const ComponentShape* DiskShape::getPtr() const {
@@ -343,7 +344,7 @@ String DiskShape::sizeToString() const {
 		Quantity(itsMajValue, "rad"),
 		Quantity(itsMinValue, "rad"),
 		Quantity(itsPaValue, "rad"),
-		False
+		false
 	);
 }
 

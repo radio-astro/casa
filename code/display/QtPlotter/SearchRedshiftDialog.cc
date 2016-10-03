@@ -34,6 +34,7 @@
 #include <cmath>
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 
 	SearchRedshiftDialog::SearchRedshiftDialog(QWidget *parent)

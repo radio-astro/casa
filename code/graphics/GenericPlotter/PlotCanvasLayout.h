@@ -157,7 +157,7 @@ protected:
 // GRID LAYOUT CLASSES //
 /////////////////////////
 
-// Coordinate for a grid layout, which consists of a row and column.
+// casacore::Coordinate for a grid layout, which consists of a row and column.
 class PlotGridCoordinate : public virtual PlotLayoutCoordinate {
 public:
     PlotGridCoordinate(unsigned int r, unsigned int c): row(r), col(c) { }
@@ -222,7 +222,7 @@ protected:
 // SMART POINTER DEFINITIONS //
 ///////////////////////////////
 
-typedef CountedPtr<PlotCanvasLayout> PlotCanvasLayoutPtr;
+typedef casacore::CountedPtr<PlotCanvasLayout> PlotCanvasLayoutPtr;
 INHERITANCE_POINTER2(PlotLayoutSingle, PlotLayoutSinglePtr, PlotCanvasLayout,
                      PlotCanvasLayoutPtr)
 INHERITANCE_POINTER2(PlotLayoutGrid, PlotLayoutGridPtr, PlotCanvasLayout,

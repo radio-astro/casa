@@ -89,26 +89,26 @@ class ResidualAlgorithm : public Algorithm {
   void put();
 
   // Return the name of the algorithm
-  String &name();
+  casacore::String &name();
 
  private:
   // Private data
-  Int model_p;
-  TempImage<Complex> *cImage_p;
-  String myName_p;
-  String msName_p;
-  Bool incremental_p;
-  Matrix<Float> *weight_p;
-  TempImage<Float> psf_p;
+  casacore::Int model_p;
+  casacore::TempImage<casacore::Complex> *cImage_p;
+  casacore::String myName_p;
+  casacore::String msName_p;
+  casacore::Bool incremental_p;
+  casacore::Matrix<casacore::Float> *weight_p;
+  casacore::TempImage<casacore::Float> psf_p;
   FTMachine* ft_p;
-  MeasurementSet *ms_p ; 
+  casacore::MeasurementSet *ms_p ; 
 
   // Form the residual image
   void task();
 
   // Local utility functions
-  void initializePut(const VisBuffer& vb, Int model);
-  void putResidualVis(VisBuffer& vb, Int model);
+  void initializePut(const VisBuffer& vb, casacore::Int model);
+  void putResidualVis(VisBuffer& vb, casacore::Int model);
 
 };
 

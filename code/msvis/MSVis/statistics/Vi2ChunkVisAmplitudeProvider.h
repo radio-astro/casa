@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //
-// Data providers for visibility amplitudes.
+// casacore::Data providers for visibility amplitudes.
 //
 #ifndef MSVIS_STATISTICS_VI2_CHUNK_VIS_AMPLITUDE_PROVIDER_H_
 #define MSVIS_STATISTICS_VI2_CHUNK_VIS_AMPLITUDE_PROVIDER_H_

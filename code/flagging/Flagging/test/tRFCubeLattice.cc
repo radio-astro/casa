@@ -2,6 +2,7 @@
 #include <flagging/Flagging/RFCommon.h>
 #include <iostream>
 
+using namespace casacore;
 using namespace casa;
 using namespace std;
 

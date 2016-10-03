@@ -51,10 +51,10 @@ public:
     // ABSTRACT METHODS //
     
     // Returns the text of the annotation.
-    virtual String text() const = 0;
+    virtual casacore::String text() const = 0;
     
     // Sets the text of the annotation.
-    virtual void setText(const String& newText) = 0;
+    virtual void setText(const casacore::String& newText) = 0;
     
     // Returns a copy of the font used in the annotation.
     virtual PlotFontPtr font() const = 0;
@@ -101,7 +101,7 @@ public:
     // <group>
     virtual void setFont(const PlotFontPtr font) {
         if(!font.null()) setFont(*font); }
-    virtual void setFontColor(const String& color) {
+    virtual void setFontColor(const casacore::String& color) {
         PlotFontPtr f = font();
         f->setColor(color);
         setFont(*f);
@@ -114,7 +114,7 @@ public:
         if(!line.null()) setOutline(*line);
         else             setOutlineShown(false);
     }
-    virtual void setOutline(const String& color,
+    virtual void setOutline(const casacore::String& color,
             PlotLine::Style style = PlotLine::SOLID, double width = 1.0) {
         PlotLinePtr line = outline();
         line->setColor(color);
@@ -128,7 +128,7 @@ public:
     // <group>
     virtual void setBackground(const PlotAreaFillPtr area) {
         if(!area.null()) setBackground(*area); }
-    virtual void setBackground(const String& color,
+    virtual void setBackground(const casacore::String& color,
             PlotAreaFill::Pattern pattern = PlotAreaFill::FILL) {
         PlotAreaFillPtr bg = background();
         bg->setColor(color);

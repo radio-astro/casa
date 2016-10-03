@@ -15,6 +15,7 @@
 // Stubs to allow safely eliminating the breakpad/crash-reporting functionality from
 // CASA by the use of the above build time symbol.
 
+using namespace casacore;
 namespace casa {
 
 std::string
@@ -31,6 +32,7 @@ CrashReporter::initializeFromApplication (const char *)
     return "";
 }
 
+using namespace casacore;
 } // end namespace casa
 
 #else
@@ -156,6 +158,7 @@ google_breakpad::ExceptionHandler * exceptionHandler = nullptr;
 
 } // end unnamed namespace
 
+using namespace casacore;
 namespace casa {
 
 string
@@ -297,6 +300,7 @@ CrashReporter::initializeFromApplication (const char * applicationArg0)
 }
 
 
+using namespace casacore;
 } // end namespace casa
 
 #endif

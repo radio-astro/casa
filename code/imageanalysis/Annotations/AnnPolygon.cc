@@ -21,6 +21,7 @@
 #include <images/Regions/WCPolygon.h>
 #include <scimath/Mathematics/Geometry.h>
 
+using namespace casacore;
 namespace casa {
 
 AnnPolygon::AnnPolygon(
@@ -291,8 +292,8 @@ void AnnPolygon::_initCenterRectCorners(
 		widthx.getUnit() == "pix"
 		&& ! getCsys().directionCoordinate().hasSquarePixels()
 		&& (
-			! casa::near(fmod(positionAngle.getValue("rad"), C::pi), 0.0)
-			&& ! casa::near(fmod(fabs(positionAngle.getValue("rad")), C::pi), C::pi_2)
+			! casacore::near(fmod(positionAngle.getValue("rad"), C::pi), 0.0)
+			&& ! casacore::near(fmod(fabs(positionAngle.getValue("rad")), C::pi), C::pi_2)
 		),
 		"When pixels are not square and units are expressed in "
 		"pixels, position angle must be zero"
@@ -324,7 +325,7 @@ void AnnPolygon::_initCenterRectCorners(
 			x = Quantity(rotated.first, "arcsec");
 			y = Quantity(rotated.second, "arcsec");
 		}
-		corners[i].shift(x, y, True);
+		corners[i].shift(x, y, true);
 	}
 	_initCorners(corners[0], corners[1], corners[2], corners[3]);
 }

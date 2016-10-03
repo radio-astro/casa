@@ -71,7 +71,7 @@ public:
   //Empty Constructor
   VisBufferUtil();
 
-  // Construct from a VisBuffer (sets a MeasFrame)
+  // Construct from a VisBuffer (sets a casacore::MeasFrame)
   VisBufferUtil(const VisBuffer& vb);
 
   // Same as above but with VisBuffer2;
@@ -82,7 +82,7 @@ public:
 
   VisBufferUtil(const vi::VisibilityIterator2& iter);
 
-  VisBufferUtil(const MeasFrame& mframe);
+  VisBufferUtil(const casacore::MeasFrame& mframe);
 
   // Make PSF VisBuffer
   void makePSFVisBuffer(VisBuffer& vb);
@@ -91,82 +91,82 @@ public:
   //Regrid the data on a new frequency grid (defined by outFreqGrid) , on the frequency 
   //frame (defined by freqFrame). It will pass back the interpolated data and flags 
  
-  Bool interpolateFrequency(Cube<Complex>& data, 
-			    Cube<Bool>& flags, 
+  casacore::Bool interpolateFrequency(casacore::Cube<casacore::Complex>& data, 
+			    casacore::Cube<casacore::Bool>& flags, 
 			    const VisBuffer& vb,
-			    const Vector<Float>& outFreqGrid, const MS::PredefinedColumns whichCol=MS::DATA,
-			    const MFrequency::Types freqFrame=MFrequency::LSRK,
-			    const InterpolateArray1D< Float, Complex>::InterpolationMethod interp = 
-			    (InterpolateArray1D<Float,Complex>::nearestNeighbour));
+			    const casacore::Vector<casacore::Float>& outFreqGrid, const casacore::MS::PredefinedColumns whichCol=casacore::MS::DATA,
+			    const casacore::MFrequency::Types freqFrame=casacore::MFrequency::LSRK,
+			    const casacore::InterpolateArray1D< casacore::Float, casacore::Complex>::InterpolationMethod interp = 
+			    (casacore::InterpolateArray1D<casacore::Float,casacore::Complex>::nearestNeighbour));
 
   // Converts the frequency in this visbuffer to the frame requested
-  void convertFrequency(Vector<Double>& outFreq, 
+  void convertFrequency(casacore::Vector<casacore::Double>& outFreq, 
 			const VisBuffer& vb, 
-			const MFrequency::Types freqFrame);
+			const casacore::MFrequency::Types freqFrame);
   //This one is just to test VisBuffer2 internal conversions
-  void convertFrequency(Vector<Double>& outFreq, 
+  void convertFrequency(casacore::Vector<casacore::Double>& outFreq, 
 			const vi::VisBuffer2& vb, 
-			const MFrequency::Types freqFrame);
+			const casacore::MFrequency::Types freqFrame);
   //This is a helper function as vi2 does not have a get Freq range for the data selected
-  static void getFreqRange(Double& freqMin, Double& freqMax,  vi::VisibilityIterator2& vi, MFrequency::Types freqFrame);
+  static void getFreqRange(casacore::Double& freqMin, casacore::Double& freqMax,  vi::VisibilityIterator2& vi, casacore::MFrequency::Types freqFrame);
   
 
   // Converts the frequency in this VisBuffer to velocity in the frame/def requested
-  void toVelocity(Vector<Double>& outVel, 
+  void toVelocity(casacore::Vector<casacore::Double>& outVel, 
 		  const VisBuffer& vb, 
-		  const MFrequency::Types freqFrame,
-		  const MVFrequency restFreq,
-		  const MDoppler::Types veldef);
+		  const casacore::MFrequency::Types freqFrame,
+		  const casacore::MVFrequency restFreq,
+		  const casacore::MDoppler::Types veldef);
 
   // Converts the frequencies on given row of VisBuffer2 to velocity in the frame/def requested
-  void toVelocity(Vector<Double>& outVel,
+  void toVelocity(casacore::Vector<casacore::Double>& outVel,
   		  const vi::VisBuffer2& vb,
-  		  const MFrequency::Types freqFrame,
-  		  const MVFrequency restFreq,
-  		  const MDoppler::Types veldef,
-  		  const Int row=0);
+  		  const casacore::MFrequency::Types freqFrame,
+  		  const casacore::MVFrequency restFreq,
+  		  const casacore::MDoppler::Types veldef,
+  		  const casacore::Int row=0);
 
   /// same as above but can be a detached Visbuffer ...the iterator is used explicitly
   /// to get some info like direction from field table and frame from spectral window table
-  void toVelocity(Vector<Double>& outVel,
+  void toVelocity(casacore::Vector<casacore::Double>& outVel,
     		  const vi::VisBuffer2& vb,
     		  const vi::VisibilityIterator2& iter,
-    		  const MFrequency::Types freqFrame,
-    		  const MVFrequency restFreq,
-    		  const MDoppler::Types veldef,
-    		  const Int row=0);
+    		  const casacore::MFrequency::Types freqFrame,
+    		  const casacore::MVFrequency restFreq,
+    		  const casacore::MDoppler::Types veldef,
+    		  const casacore::Int row=0);
 
 
   ////get the velocity values for the frequencies passed in
   /// for  the epoch and direction.
   /// If rest frequency is -ve then the middle channel is used as the rest value
-  void toVelocity(Vector<Double>& outVel,
-  		  const MFrequency::Types outfreqFrame,
-  		  const Vector<Double>& inFreq,
-  		  const MFrequency::Types inFreqFrame,
-  		  const MEpoch& ep,
-  		  const MDirection& dir,
-  		  const MVFrequency restFreq,
-  		  const MDoppler::Types veldef);
+  void toVelocity(casacore::Vector<casacore::Double>& outVel,
+  		  const casacore::MFrequency::Types outfreqFrame,
+  		  const casacore::Vector<casacore::Double>& inFreq,
+  		  const casacore::MFrequency::Types inFreqFrame,
+  		  const casacore::MEpoch& ep,
+  		  const casacore::MDirection& dir,
+  		  const casacore::MVFrequency restFreq,
+  		  const casacore::MDoppler::Types veldef);
 
   //Rotate the uvw in the vb along with giving the phase needed to convert the visibilities to a new phasecenter
-  // will return a False if it is a NoOP...don't need then to waste time
+  // will return a false if it is a NoOP...don't need then to waste time
   //applying the phasor etc 
-   Bool rotateUVW(const vi::VisBuffer2&vb, const MDirection& desiredDir,
-		  Matrix<Double>& uvw, Vector<Double>& dphase);
+   casacore::Bool rotateUVW(const vi::VisBuffer2&vb, const casacore::MDirection& desiredDir,
+		  casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase);
 
    /// get the pointing direction for a given integration and antenna id
    /// will cache it for large pointing table specially so that it can be reused pronto
-   MDirection getPointingDir(const VisBuffer& vb, const Int antid, const Int row);
+   casacore::MDirection getPointingDir(const VisBuffer& vb, const casacore::Int antid, const casacore::Int row);
  private:
-  void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
-  void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
-  void rejectConsecutive(const Vector<Double>& t, Vector<Double>& retval);
-  // A MeasFrame for conversions
-  MeasFrame mframe_;
-  Int oldMSId_p;
-  Vector<std::map<String, Int> > timeAntIndex_p;
-  Vector<Vector<MDirection> > cachedPointingDir_p;
+  void swapyz(casacore::Cube<casacore::Bool>& out, const casacore::Cube<casacore::Bool>& in);
+  void swapyz(casacore::Cube<casacore::Complex>& out, const casacore::Cube<casacore::Complex>& in);
+  void rejectConsecutive(const casacore::Vector<casacore::Double>& t, casacore::Vector<casacore::Double>& retval);
+  // A casacore::MeasFrame for conversions
+  casacore::MeasFrame mframe_;
+  casacore::Int oldMSId_p;
+  casacore::Vector<std::map<casacore::String, casacore::Int> > timeAntIndex_p;
+  casacore::Vector<casacore::Vector<casacore::MDirection> > cachedPointingDir_p;
 
 };
 

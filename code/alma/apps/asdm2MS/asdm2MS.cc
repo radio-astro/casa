@@ -53,7 +53,7 @@ using namespace asdm;
 
 #include "measures/Measures/Stokes.h"
 #include "measures/Measures/MFrequency.h"
-using namespace casa;
+using namespace casacore;
 #include <tables/Tables/Table.h>
 #include <tables/Tables/PlainTable.h>
 #include <tables/Tables/TableCopy.h>
@@ -157,6 +157,7 @@ void	myTimer( double *cpu_time ,		/* cpu timer */
 }
 
 
+using namespace casacore;
 //using namespace casa;
 
 ASDM2MSFiller* msFiller;
@@ -1152,39 +1153,39 @@ Table *  buildAndAttachEphemeris(const string & name, vector<double> observerLoc
 
   // The table keywords firstly.
   tableDesc.comment() = "An ephemeris table.";
-  tableDesc.rwKeywordSet().define("MJD0", casa::Double(0.0));
-  tableDesc.rwKeywordSet().define("dMJD", casa::Double(0.0));
+  tableDesc.rwKeywordSet().define("MJD0", casacore::Double(0.0));
+  tableDesc.rwKeywordSet().define("dMJD", casacore::Double(0.0));
   tableDesc.rwKeywordSet().define("NAME", "T.B.D");
-  tableDesc.rwKeywordSet().define("GeoLong", casa::Double(observerLocation[0] / 3.14159265 * 180.0));
-  tableDesc.rwKeywordSet().define("GeoLat", casa::Double(observerLocation[1] / 3.14159265 * 180.0));
-  tableDesc.rwKeywordSet().define("GeoDist", casa::Double(observerLocation[2]));
+  tableDesc.rwKeywordSet().define("GeoLong", casacore::Double(observerLocation[0] / 3.14159265 * 180.0));
+  tableDesc.rwKeywordSet().define("GeoLat", casacore::Double(observerLocation[1] / 3.14159265 * 180.0));
+  tableDesc.rwKeywordSet().define("GeoDist", casacore::Double(observerLocation[2]));
   
   // Then the fields definitions and keywords.
-  ScalarColumnDesc<casa::Double> mjdColumn("MJD");
+  ScalarColumnDesc<casacore::Double> mjdColumn("MJD");
   mjdColumn.rwKeywordSet().define("UNIT", "d");
   tableDesc.addColumn(mjdColumn);
 
-  ScalarColumnDesc<casa::Double> raColumn("RA");
+  ScalarColumnDesc<casacore::Double> raColumn("RA");
   raColumn.rwKeywordSet().define("UNIT", "deg");
   tableDesc.addColumn(raColumn);
 
-  ScalarColumnDesc<casa::Double> decColumn("DEC");
+  ScalarColumnDesc<casacore::Double> decColumn("DEC");
   decColumn.rwKeywordSet().define("UNIT", "deg");
   tableDesc.addColumn(decColumn);
   
-  ScalarColumnDesc<casa::Double> rhoColumn("Rho");
+  ScalarColumnDesc<casacore::Double> rhoColumn("Rho");
   rhoColumn.rwKeywordSet().define("UNIT", "AU");
   tableDesc.addColumn(rhoColumn);
 
-  ScalarColumnDesc<casa::Double> radVelColumn("RadVel");
+  ScalarColumnDesc<casacore::Double> radVelColumn("RadVel");
   radVelColumn.rwKeywordSet().define("UNIT", "AU/d");
   tableDesc.addColumn(radVelColumn);
 
-  ScalarColumnDesc<casa::Double> diskLongColumn("diskLong");
+  ScalarColumnDesc<casacore::Double> diskLongColumn("diskLong");
   diskLongColumn.rwKeywordSet().define("UNIT", "deg");
   tableDesc.addColumn(diskLongColumn);
 
-  ScalarColumnDesc<casa::Double> diskLatColumn("diskLat");
+  ScalarColumnDesc<casacore::Double> diskLatColumn("diskLat");
   diskLatColumn.rwKeywordSet().define("UNIT", "deg");
   tableDesc.addColumn(diskLatColumn);
 
@@ -1434,12 +1435,12 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       tableDesc.rwKeywordSet().define("VS_DATE", creationDate);
       tableDesc.rwKeywordSet().define("VS_VERSION", "0001.0001");
       tableDesc.rwKeywordSet().define("VS_TYPE", "Table of comet/planetary positions");
-      tableDesc.rwKeywordSet().define("MJD0", casa::Double(mjd0)); // Actually this value is temporary, it'll be updated when the table will be populated.
-      tableDesc.rwKeywordSet().define("dMJD", casa::Double(dmjd));
+      tableDesc.rwKeywordSet().define("MJD0", casacore::Double(mjd0)); // Actually this value is temporary, it'll be updated when the table will be populated.
+      tableDesc.rwKeywordSet().define("dMJD", casacore::Double(dmjd));
       tableDesc.rwKeywordSet().define("NAME", fieldName);
-      tableDesc.rwKeywordSet().define("GeoLong", casa::Double(geoLong));
-      tableDesc.rwKeywordSet().define("GeoLat", casa::Double(geoLat));
-      tableDesc.rwKeywordSet().define("GeoDist", casa::Double(geoDist));
+      tableDesc.rwKeywordSet().define("GeoLong", casacore::Double(geoLong));
+      tableDesc.rwKeywordSet().define("GeoLat", casacore::Double(geoLat));
+      tableDesc.rwKeywordSet().define("GeoDist", casacore::Double(geoDist));
       if (geoDist == 0.0) 
 	tableDesc.rwKeywordSet().define("obsloc", "GEOCENTRIC");
       else
@@ -1448,31 +1449,31 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       tableDesc.rwKeywordSet().define("posrefsys", posref);
 
       // Then the fields definitions and keywords.
-      ScalarColumnDesc<casa::Double> mjdColumn("MJD");
+      ScalarColumnDesc<casacore::Double> mjdColumn("MJD");
       mjdColumn.rwKeywordSet().define("UNIT", "d");
       tableDesc.addColumn(mjdColumn);
     
-      ScalarColumnDesc<casa::Double> raColumn("RA");
+      ScalarColumnDesc<casacore::Double> raColumn("RA");
       raColumn.rwKeywordSet().define("UNIT", "deg");
       tableDesc.addColumn(raColumn);
     
-      ScalarColumnDesc<casa::Double> decColumn("DEC");
+      ScalarColumnDesc<casacore::Double> decColumn("DEC");
       decColumn.rwKeywordSet().define("UNIT", "deg");
       tableDesc.addColumn(decColumn);
     
-      ScalarColumnDesc<casa::Double> rhoColumn("Rho");
+      ScalarColumnDesc<casacore::Double> rhoColumn("Rho");
       rhoColumn.rwKeywordSet().define("UNIT", "AU");
       tableDesc.addColumn(rhoColumn);
     
-      ScalarColumnDesc<casa::Double> radVelColumn("RadVel");
+      ScalarColumnDesc<casacore::Double> radVelColumn("RadVel");
       radVelColumn.rwKeywordSet().define("UNIT", "AU/d");
       tableDesc.addColumn(radVelColumn);
     
-      ScalarColumnDesc<casa::Double> diskLongColumn("diskLong");
+      ScalarColumnDesc<casacore::Double> diskLongColumn("diskLong");
       diskLongColumn.rwKeywordSet().define("UNIT", "deg");
       tableDesc.addColumn(diskLongColumn);
     
-      ScalarColumnDesc<casa::Double> diskLatColumn("diskLat");
+      ScalarColumnDesc<casacore::Double> diskLatColumn("diskLat");
       diskLatColumn.rwKeywordSet().define("UNIT", "deg");
       tableDesc.addColumn(diskLatColumn);
     
@@ -1505,7 +1506,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	info.readmeAddLine("generated by asdm2ms");
 
 	AlwaysAssert(table_p, AipsError);
-	(const_cast<casa::MeasurementSet*>(iter->second->ms()))->rwKeywordSet().defineTable(tableName, *table_p);
+	(const_cast<casacore::MeasurementSet*>(iter->second->ms()))->rwKeywordSet().defineTable(tableName, *table_p);
 	table_p->flush();
 	apc2EphemTable_m[iter->first] = table_p;
 	LOG("Empty ephemeris table '" + tablePath + "' created");
@@ -1938,39 +1939,39 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	Table * table_p = apc2EphemTable_m[iter->first];
 
 	// Update the MJD0 Keyword to the correct value, i.e. mjdMS_v[0] - dmjd
-	table_p->rwKeywordSet().define("MJD0", casa::Double(mjdMS_v[0] - dmjd));
+	table_p->rwKeywordSet().define("MJD0", casacore::Double(mjdMS_v[0] - dmjd));
 	
 	// Update the dMJD keyword.
-	table_p->rwKeywordSet().define("dMJD", casa::Double(dmjd));
+	table_p->rwKeywordSet().define("dMJD", casacore::Double(dmjd));
 
 	// And fill the table
 	table_p->addRow(numRows);
 	LOG ("Added "+TO_STRING(numRows)+" rows to table "+((string)table_p->tableName()));
       
 	LOG("Filling column MJD");
-	Vector<casa::Double> MJD_V(IPosition(1, numRows), &mjdMS_v[0], SHARE);
-	ScalarColumn<casa::Double> MJD(*table_p, "MJD");
+	Vector<casacore::Double> MJD_V(IPosition(1, numRows), &mjdMS_v[0], SHARE);
+	ScalarColumn<casacore::Double> MJD(*table_p, "MJD");
 	MJD.putColumnRange(slicer, MJD_V);
       
 	LOG("Filling column RA");
-	Vector<casa::Double> RA_V(IPosition(1, numRows), &raMS_v[0], SHARE);
-	ScalarColumn<casa::Double> RA(*table_p,  "RA");
+	Vector<casacore::Double> RA_V(IPosition(1, numRows), &raMS_v[0], SHARE);
+	ScalarColumn<casacore::Double> RA(*table_p,  "RA");
 	RA.putColumnRange(slicer, RA_V);
       
 	LOG("Filling column DEC");
-	Vector<casa::Double> DEC_V(IPosition(1, numRows), &decMS_v[0], SHARE);
-	ScalarColumn<casa::Double> DEC(*table_p, "DEC");
+	Vector<casacore::Double> DEC_V(IPosition(1, numRows), &decMS_v[0], SHARE);
+	ScalarColumn<casacore::Double> DEC(*table_p, "DEC");
 	DEC.putColumnRange(slicer, DEC_V);
       
 	LOG ("Filling column Rho");
-	Vector<casa::Double> Rho_V(IPosition(1, numRows), &distanceMS_v[0], SHARE);
-	ScalarColumn<casa::Double> Rho(*table_p, "Rho");
+	Vector<casacore::Double> Rho_V(IPosition(1, numRows), &distanceMS_v[0], SHARE);
+	ScalarColumn<casacore::Double> Rho(*table_p, "Rho");
 	Rho.putColumnRange(slicer, Rho_V);
       
 	
 	LOG ("Filling column RadVel");
-	Vector<casa::Double> RadVel_V(IPosition(1, numRows), &radVelMS_v[0], SHARE);
-	ScalarColumn<casa::Double> RadVel(*table_p, "RadVel");
+	Vector<casacore::Double> RadVel_V(IPosition(1, numRows), &radVelMS_v[0], SHARE);
+	ScalarColumn<casacore::Double> RadVel(*table_p, "RadVel");
 	RadVel.putColumnRange(slicer, RadVel_V);
       
 	infostream.str("");
@@ -2672,16 +2673,16 @@ void fillMainLazily2(const string& dsName,
   BDF2AsdmStManIndex bdf2AsdmStManIndexC;
   
   if ( bdfNamesUncorrected_v.size() and produceUncorrected ) {
-    const casa::MeasurementSet* ms_p = msFillers.find(AP_UNCORRECTED)->second->ms();
+    const casacore::MeasurementSet* ms_p = msFillers.find(AP_UNCORRECTED)->second->ms();
     oss.str("");
-    oss << RODataManAccessor(*ms_p, "DATA", True).dataManagerSeqNr();
+    oss << RODataManAccessor(*ms_p, "DATA", true).dataManagerSeqNr();
     bdf2AsdmStManIndexU.init(bdfNamesUncorrected_v, isBigEndian, ms_p->tableName() + "/table.f" + String(oss.str()));
   }
   
   if ( bdfNamesCorrected_v.size() and produceCorrected ) {
-    const casa::MeasurementSet* ms_p = msFillers.find(AP_CORRECTED)->second->ms();
+    const casacore::MeasurementSet* ms_p = msFillers.find(AP_CORRECTED)->second->ms();
     oss.str("");
-    oss << RODataManAccessor(*ms_p, "DATA", True).dataManagerSeqNr();
+    oss << RODataManAccessor(*ms_p, "DATA", true).dataManagerSeqNr();
     bdf2AsdmStManIndexC.init(bdfNamesCorrected_v, isBigEndian, ms_p->tableName() + "/table.f" + String(oss.str()));
   } 
   
@@ -3104,7 +3105,7 @@ void fillMainLazily2(const string& dsName,
 #else
 	  pair<bool, bool> dataOrder(false, false);  // 1st: reverse bls NO, 2nd: autotrailing NO
 #endif
-	  vector<Vector<casa::Double> > vv_uvw;
+	  vector<Vector<casacore::Double> > vv_uvw;
 	  vector<double> time_v(dataDescriptionIds.size() * (numberOfBaselines + numberOfAntennas),
 				time);
 
@@ -3400,7 +3401,7 @@ void fillMainLazily2(const string& dsName,
 void fillMainLazily(const string& dsName,
 		    ASDM*  ds_p,
 		    map<int, set<int> >&   selected_eb_scan_m,
-		    const casa::MeasurementSet*  tab_p,
+		    const casacore::MeasurementSet*  tab_p,
 		    std::map<unsigned int, double>& effectiveBwPerDD_m) {
   ostringstream oss;
 
@@ -3437,7 +3438,7 @@ void fillMainLazily(const string& dsName,
   sdosr.close();
   
   // Let's have BDF2AdsmStManIndex to store the indexes to the auto|cross data.
-  oss << RODataManAccessor(*tab_p, "DATA", True).dataManagerSeqNr();
+  oss << RODataManAccessor(*tab_p, "DATA", true).dataManagerSeqNr();
   BDF2AsdmStManIndex bdf2AsdmStManIndex(bdfNames, isBigEndian, tab_p->tableName() + "/table.f" + String(oss.str()));
   
   // Initialize an UVW coordinates engine.
@@ -3791,7 +3792,7 @@ void fillMainLazily(const string& dsName,
 #else
 	  pair<bool, bool> dataOrder(false, false);  // 1st: reverse bls NO, 2nd: autotrailing NO
 #endif
-	  vector<Vector<casa::Double> > vv_uvw;
+	  vector<Vector<casacore::Double> > vv_uvw;
 	  vector<double> time_v(dataDescriptionIds.size() * (numberOfBaselines + numberOfAntennas),
 				time);
 
@@ -4124,7 +4125,7 @@ void fillMain(
   bool attachedEphemeris = r_p->getFieldUsingFieldId()->isEphemerisIdExists();
 
   vector<double> uvw_v(3*vmsData_p->v_time.size());
-  vector<casa::Vector<casa::Double> > vv_uvw(vmsData_p->v_time.size());
+  vector<casacore::Vector<casacore::Double> > vv_uvw(vmsData_p->v_time.size());
 #if DDPRIORITY
   uvwCoords.uvw_bl(r_p, sdmBinData.timeSequence(), e_query_cm, 
 		   sdmbin::SDMBinData::dataOrder(),
@@ -4366,9 +4367,9 @@ void calcUVW(MainRow* r_p,
              SDMBinData& sdmBinData, 
              const VMSData* vmsData_p, 
              UvwCoords& uvwCoords,
-             casa::Matrix< casa::Double >& mat_uvw) {
+             casacore::Matrix< casacore::Double >& mat_uvw) {
 
-  vector< casa::Vector<casa::Double> > vv_uvw;
+  vector< casacore::Vector<casacore::Double> > vv_uvw;
   mat_uvw.resize(3,vmsData_p->v_time.size());
 
 #if DDPRIORITY
@@ -4407,7 +4408,7 @@ void calcUVW(MainRow* r_p,
 #if 0
 void fillMain_mt(MainRow*	r_p,
 		 const VMSData* vmsData_p,
-		 casa::Double*&   puvw,
+		 casacore::Double*&   puvw,
 		 bool		complexData,
 		 int               spwId,
 		 bool           mute) {
@@ -4784,7 +4785,7 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
       else 
 	throw ConversionException ("fillSysPower: no file found for SysPower", "SysPower");
 
-      unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers_m.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
+      unsigned int numMSSysPowers =  (const_cast<casacore::MeasurementSet*>(msFillers_m.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
       if (numMSSysPowers > 0) {
 	infostream.str("");
 	infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
@@ -5014,7 +5015,7 @@ int main(int argc, char *argv[]) {
 #if 0     
       // Replaced the change at the LogSink level ...
       ofs.open(vm["logfile"].as<string>().c_str(), ios_base::app);
-      LogSinkInterface *theSink = new casa::StreamLogSink(&ofs);
+      LogSinkInterface *theSink = new casacore::StreamLogSink(&ofs);
       LogSink::globalSink(theSink);
 #else
       // ... with a change at the cerr (stderr) level since by default global logs are going to cerr (stderr).
@@ -5590,7 +5591,7 @@ int main(int argc, char *argv[]) {
         ***/
       }
       else { // single thread case
-	if (lazy)  AsdmStMan::registerClass();
+	if (lazy)  casa::AsdmStMan::registerClass();
         for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
 	  info("About to create a filler for the measurement set '" + msNames[iter->first] + "'");
 	  msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first],
@@ -5705,43 +5706,43 @@ int main(int argc, char *argv[]) {
        //            earth's oblateness taken account) to geocentric
        //            coordinates.
        //            Use AZELGEO as a coordinate ref to be more precise
-       casa::Vector<casa::Quantity> vq; vq.resize(3);
-       vq[0] = casa::Quantity(antPosition.at(0).get(),"m");
-       vq[1] = casa::Quantity(antPosition.at(1).get(),"m");
-       vq[2] = casa::Quantity(antPosition.at(2).get(),"m");
-       casa::MVPosition mvp(vq);
-       casa::MVBaseline mvb(mvp);
+       casacore::Vector<casacore::Quantity> vq; vq.resize(3);
+       vq[0] = casacore::Quantity(antPosition.at(0).get(),"m");
+       vq[1] = casacore::Quantity(antPosition.at(1).get(),"m");
+       vq[2] = casacore::Quantity(antPosition.at(2).get(),"m");
+       casacore::MVPosition mvp(vq);
+       casacore::MVBaseline mvb(mvp);
 
        // setup conversion template
        double anttime =  ((double) r->getTime().get()) / ArrayTime::unitsInASecond ;
-       casa::MEpoch ep(casa::Quantity(anttime,"s"), casa::MEpoch::UTC);
-       casa::Vector<casa::Quantity> rvq; rvq.resize(3);
+       casacore::MEpoch ep(casacore::Quantity(anttime,"s"), casacore::MEpoch::UTC);
+       casacore::Vector<casacore::Quantity> rvq; rvq.resize(3);
        //station vector in ITRF
-       rvq[0] = casa::Quantity(xStation,"m");
-       rvq[1] = casa::Quantity(yStation,"m");
-       rvq[2] = casa::Quantity(zStation,"m");
-       casa::MVPosition rmvp(rvq);
-       casa::MPosition rmp(rmvp,casa::MPosition::ITRF);
+       rvq[0] = casacore::Quantity(xStation,"m");
+       rvq[1] = casacore::Quantity(yStation,"m");
+       rvq[2] = casacore::Quantity(zStation,"m");
+       casacore::MVPosition rmvp(rvq);
+       casacore::MPosition rmp(rmvp,casacore::MPosition::ITRF);
        // set the direction to the pole
-       casa::MVDirection mvd = casa::MVDirection();
+       casacore::MVDirection mvd = casacore::MVDirection();
        // this approximate the antenna position to be in topocentric, z is parallel
        // to the station vector. 
-       casa::MDirection mdir(mvd,casa::MDirection::AZEL);
+       casacore::MDirection mdir(mvd,casacore::MDirection::AZEL);
        // to be precise set the ref to geodetic local coordinates  
-       //casa::MDirection mdir(mvd,casa::MDirection::AZELGEO);
-       casa::MeasFrame mFrame(rmp,ep,mdir);
+       //casacore::MDirection mdir(mvd,casacore::MDirection::AZELGEO);
+       casacore::MeasFrame mFrame(rmp,ep,mdir);
 
-       casa::MBaseline baseMeas;
-       casa::MVBaseline mantv;
-       casa::MBaseline::Ref baseref(MBaseline::AZEL, mFrame);
+       casacore::MBaseline baseMeas;
+       casacore::MVBaseline mantv;
+       casacore::MBaseline::Ref baseref(MBaseline::AZEL, mFrame);
        // geodetic local coordinates case
-       //casa::MBaseline::Ref baseref(MBaseline::AZELGEO, mFrame);
+       //casacore::MBaseline::Ref baseref(MBaseline::AZELGEO, mFrame);
        baseMeas.set(mantv, baseref);
        baseMeas.getRefPtr()->set(mFrame);
 
-       casa::MBaseline mb(mvb,baseref);
-       casa::MBaseline::Convert antvconv(baseMeas, MBaseline::Ref(MBaseline::ITRF));      
-       casa::MBaseline mbantp = antvconv(mb); 
+       casacore::MBaseline mb(mvb,baseref);
+       casacore::MBaseline::Convert antvconv(baseMeas, MBaseline::Ref(MBaseline::ITRF));
+       casacore::MBaseline mbantp = antvconv(mb);
       
        //compare transformed antenna positions in the two methods
        //for the measure frame with AZEL those two values should be identical
@@ -7080,7 +7081,7 @@ int main(int argc, char *argv[]) {
 	}      
       }
 
-      unsigned int numMSCalDevices = (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("CALDEVICE").nrow();
+      unsigned int numMSCalDevices = (const_cast<casacore::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("CALDEVICE").nrow();
       if (numMSCalDevices > 0) {
 	infostream.str("");
 	infostream << "converted in " << numMSCalDevices << " caldevice(s) in the measurement set.";
@@ -7436,7 +7437,7 @@ int main(int argc, char *argv[]) {
       while (iss>>word)
 	tablenames.push_back(word);
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin(); iter != msFillers.end(); ++iter){   
-	ASDMVerbatimFiller avf(const_cast<casa::MS*>(iter->second->ms()), Name2Table::find(tablenames, verbose));
+	ASDMVerbatimFiller avf(const_cast<casacore::MS*>(iter->second->ms()), Name2Table::find(tablenames, verbose));
 	avf.fill(*ds);
       }
     }

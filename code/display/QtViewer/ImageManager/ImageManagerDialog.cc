@@ -34,6 +34,7 @@
 #include <QDebug>
 #include <QMessageBox>
 
+using namespace casacore;
 namespace casa {
 
 	ImageManagerDialog::ImageManagerDialog(QWidget *parent)
@@ -482,7 +483,7 @@ namespace casa {
 
 	bool ImageManagerDialog::getIntensityMinMax( SHARED_PTR<ImageInterface<float> > img,
 	        double* intensityMin, double* intensityMax ) {
-		ImageStatistics<Float> stats(*img, False);
+		ImageStatistics<Float> stats(*img, false);
 		bool success = true;
 
 		int axisCount = img->ndim();

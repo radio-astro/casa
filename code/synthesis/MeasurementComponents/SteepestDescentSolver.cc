@@ -29,6 +29,7 @@
 #include <synthesis/MeasurementComponents/SteepestDescentSolver.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <casa/Arrays/MatrixMath.h>
+using namespace casacore;
 namespace casa {
 
   SteepestDescentSolver::SteepestDescentSolver(Int nParams,Vector<Int> polMap,
@@ -259,7 +260,7 @@ namespace casa {
 
     timer.mark();
     Int iter;
-    //Bool Converged=False;
+    //Bool Converged=false;
     Vector<Bool> antFlagged;
     antFlagged.resize(nAnt);
     logIO() << LogOrigin("PointingCal","SDS::solve()") 
@@ -277,7 +278,7 @@ namespace casa {
 		dAzVj      = getVj(gradient0_p,nAnt,ant,iPol,sumWt,0,1);// Get an un-weighted list
 		dElVj      = getVj(gradient1_p,nAnt,ant,iPol,sumWt, 0,1);
 
-		antFlagged[ant]=False;
+		antFlagged[ant]=false;
 		if (sumWt > 0)
 		  {
 		    ndx(1)=ant;
@@ -303,7 +304,7 @@ namespace casa {
 //  		      real(innerProduct(ResidualVj,dElVj));
 		  }
 		else
-		  antFlagged[ant]=True;
+		  antFlagged[ant]=true;
 
 	      }
 	    //
@@ -331,7 +332,7 @@ namespace casa {
 	  //	  cout << iter << " " << Chisq0 << " " << Chisq << " " << dChisq << endl;
 	  if ((fabs(dChisq) < tolerance()))
 	    {
-	      //Converged=True;
+	      //Converged=true;
 	      break;
 	    }
 	  if ((dChisq < tolerance()))// && (iter > 0))
@@ -386,7 +387,7 @@ namespace casa {
     Double dChisq, bestChisq, sumWt, /*Time,*/ AzHDiag, ElHDiag,localGain, coVar1, coVar2, 
       stepSize0,stepSize1;
     Int iPol=0, nPol, iter, axis0=0,axis1=0, iCorr;
-    Bool Converged=False;
+    Bool Converged=false;
     Timer timer;
 
     nPol=polMap_p.nelements();
@@ -413,7 +414,7 @@ namespace casa {
       }
     for(Int ip=0;ip<nPol;ip++)
       {
-	Converged=False;
+	Converged=false;
 	localGain = gain();
 
 	iPol=polMap_p[ip];
@@ -461,7 +462,7 @@ namespace casa {
 		    dAzVj      = getVj(gradient0_p,nAnt,ant,iCorr,sumWt,0,1);
 		    dElVj      = getVj(gradient1_p,nAnt,ant,iCorr,sumWt,0,1);
 		    
-		    antFlagged[ant]=False;
+		    antFlagged[ant]=false;
 		    if (sumWt > 0)
 		      {
 			stepSize0 = stepSize1 = coVar1 = coVar2 = 0;
@@ -505,7 +506,7 @@ namespace casa {
 		      }
 		    else
 		      {
-			antFlagged[ant]=True;
+			antFlagged[ant]=true;
 			epj.solveRPar()(axis0,0,ant)=0.0;//0.001;
 			epj.solveRPar()(axis1,0,ant)=0.0;//-0.001;
 		      }
@@ -536,7 +537,7 @@ namespace casa {
 		
 		if ((fabs(dChisq) < tolerance()))
 		  {
-		    Converged=True;
+		    Converged=true;
 		    epj.setRPar(bestSolution);
 		    Chisq = bestChisq;
 		    break;
@@ -602,7 +603,7 @@ namespace casa {
 		    bestSolution = epj.solveRPar();
 		    bestChisq = Chisq;
 		  }
-		if (localGain < 1e-20) {Converged = True; break;};
+		if (localGain < 1e-20) {Converged = true; break;};
 	      }
 	    //         epj.solveRPar() = bestSolution;	
 	    // 	{

@@ -133,7 +133,7 @@ int main() {
         	x.putAt(-20.5, IPosition(4, 1, 3, 2, 20));
         	x.putAt(92.6, IPosition(4, 1, 4, 2, 6));
         	ImageMetaData<Float> header(&x);
-        	Record headRec = header.toRecord(True);
+        	Record headRec = header.toRecord(true);
         	cout << "header looks like:" << endl;
         	headRec.print(cout);
         }

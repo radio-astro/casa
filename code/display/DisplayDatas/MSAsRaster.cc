@@ -61,6 +61,7 @@
 #include <casa/Arrays/ArrayAccessor.h>
 #include <cstdarg>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
     IPosition ipos( int num, ... ) {
@@ -103,18 +104,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		spwIds_(),
 
 		itsMS(0), vs_(0),
-		msValid_(False),
+		msValid_(false),
 		msCols_(0),
 		nFieldIds_(), nSpwIds_(),
 		nChan_(),
-		dish_(False),
+		dish_(false),
 
 		mssel_(0), wvi_p(0),
-		msselValid_(False),
+		msselValid_(false),
 		nAnt_(1),
 		msShape_(NAXES,1),
 		msShapeA_(NAXES,1),
-		antSort_(True),
+		antSort_(true),
 		bLen_(),
 		a1_(), a2_(), a1A_(), a2A_(), a1L_(), a2L_(),
 		len2ant_(), ant2len_(),
@@ -126,7 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		polId_(), polName_(),
 
 		vis_(),
-		visValid_(False),
+		visValid_(false),
 		visShape_(NAXES,0),
 		visStart_(NAXES,0),
 		visShapeA_(NAXES,0),
@@ -138,26 +139,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		disp_(),
 		dispX_(INVALID_AXIS), dispY_(INVALID_AXIS),
 		dispPos_(NAXES,0),
-		dispValid_(False),
+		dispValid_(false),
 		dispNotLoaded_(),
 
 		dispDev_(),
-		dispDevValid_(False),
+		dispDevValid_(false),
 		dispDevType_(INVALID_VD),
 		dispDevNAvg_(),
 
-		visDataChg_(True),
-		postDataRng_(False),
+		visDataChg_(true),
+		postDataRng_(false),
 
 		mspos_(this),
 
 		itsFlagColor(0),
-		flagsInClr_(True),
+		flagsInClr_(true),
 		itsUnflag(0),
-		unflag_(False),
-		flagAll_(NAXES,False),
+		unflag_(false),
+		flagAll_(NAXES,false),
 		itsEntireAnt(0),
-		entireAnt_(False),
+		entireAnt_(false),
 		itsUndoOne(0),
 		itsUndoAll(0),
 		itsEditEntireMS(0),
@@ -199,7 +200,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Initialize private internal colormap with colors for flagged data, etc.
 
-		msValid_ = True;		// (DD will do nothing unless this is true).
+		msValid_ = true;		// (DD will do nothing unless this is true).
 
 		// Initialize private colormap (for flags, etc.).
 
@@ -221,7 +222,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		g[nf] = .76f;
 		b[nf] = .9f;	// (lighter blue)
 		flagCM_.definition()->setValues(r, g, b);
-		flagCM_.setRigid(True);
+		flagCM_.setRigid(true);
 		flagCM_.setRigidSize(r.nelements());
 
 		// Create MSColumns object on (unselected) itsMS, for utility purposes.
@@ -245,7 +246,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		/*if ( Int(nChan_.nelements()) < nSpwIds_ )
 			throw AipsError(chanerr);*/
 		if ( Int(nChan_.nelements()) > nSpwIds_ )
-			nChan_.resize(nSpwIds_, True);
+			nChan_.resize(nSpwIds_, true);
 
         chanFreq_ = msCols_->spectralWindow( ).chanFreq( ).getColumn( );
         if ( chanFreq_.shape( ).size( ) != 2 )
@@ -255,7 +256,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         if ( (size_t) chanFreq_.shape( )(1) < nChan_.size( ) )
              throw AipsError( "frequency spectral window mismatch" );
         if ( (size_t) chanFreq_.shape( )(1) > nChan_.size( ) )
-             chanFreq_.resize(IPosition(chanFreq_.shape( )(0),nChan_.size( )),True);
+             chanFreq_.resize(IPosition(chanFreq_.shape( )(0),nChan_.size( )),true);
 
         // at some point we may need the rest refrequencies for the
         // misc sources...
@@ -331,12 +332,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Axis dax = axisOn_[loc];
 			if(msShape_[dax]==1) {
 				//dax is degenerate
-				Bool replacementFound=False;
+				Bool replacementFound=false;
 				for(AxisLoc rloc=max(loc+1,Z); rloc<NLOCS; rloc++) {
 					Axis ndax = axisOn_[rloc];
 					if(msShape_[ndax]>1) {
 						// ndax is non-degenerate.
-						replacementFound=True;
+						replacementFound=true;
 						axisOn_[loc] = ndax;	// replace with non-degenerate axis.
 						for(AxisLoc sloc=rloc+1; sloc<NLOCS; sloc++) {
 							axisOn_[sloc-1] = axisOn_[sloc];
@@ -372,7 +373,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		itsMS->relinquishAutoLocks(True);	// (just to be sure).
+		itsMS->relinquishAutoLocks(true);	// (just to be sure).
 	}
 
 
@@ -386,21 +387,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Input: valid non-null itsMS (writable)
 		//        MS selections (at present, fieldIds_ and spwIds_)
 
-		Bool printwarning=True;
+		Bool printwarning=true;
 		undoEdits_("all", printwarning);
 		// Any unsaved flagging edits will be meaningless
 		// when ranges/selections change, and must be discarded.
 
 		purgeCache();				// Also invalidate old drawings,...
-		dispValid_=False;			// old display matrices,...
-		visValid_ =False;			// and old vis_, For new selection.
+		dispValid_=false;			// old display matrices,...
+		visValid_ =false;			// and old vis_, For new selection.
 
 		if ( wvi_p != 0 && wvi_p != vs_ )
 			delete wvi_p;
 		wvi_p = 0;				// delete old selected VisibilityIterator and
 
 		if(mssel_!=0 && mssel_!=itsMS) {
-			mssel_->relinquishAutoLocks(True);
+			mssel_->relinquishAutoLocks(true);
 			delete mssel_;			// ...its selected MS.
 		}
 		mssel_=0;
@@ -458,7 +459,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 
-		if( wvi_p == 0 ) {		// (True unless we're using the existing
+		if( wvi_p == 0 ) {		// (true unless we're using the existing
 			// unselected vs_ as vssel_).
 
 			// Create VisSet (vssel_) for selected MS (mssel_).
@@ -472,7 +473,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			wvi_p = new VisibilityIterator( *mssel_, sort );
 
-			mssel_->relinquishAutoLocks(True);
+			mssel_->relinquishAutoLocks(true);
 		}	      // (just to be sure).
 
 		cerr<<"Done."<<endl;
@@ -506,8 +507,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// is the initial one, or that the prior MS selection was empty.  This
 		// affects adjustments to the pos_ variable at the end of the routine.
 
-		Bool wasEmpty=True;
-		for(Axis ax=0; ax<NAXES; ax++) if(msShape_[ax]>1) wasEmpty = False;
+		Bool wasEmpty=true;
+		for(Axis ax=0; ax<NAXES; ax++) if(msShape_[ax]>1) wasEmpty = false;
 
 		if(!wasEmpty) mspos_.set(pos_);
 		// Record the current slice position, in terms of actual MS
@@ -538,9 +539,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			fieldName_.resize(1);
 			fieldName_="";
 			resetFreq_();
-			spwId_.resize(1, True);
+			spwId_.resize(1, true);
 			spwId_=0;
-			freq_.resize(1, True);
+			freq_.resize(1, true);
 			freq_[0] = new Vector<Double>(1, 0.);
 			nPolIds_=1;
 			nPolsIn_.resize(nPolIds_);
@@ -558,7 +559,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		Timer tmr;
 		Double pctDone = 100./max(1., Double(mssel_->nrow()));
-		Bool prgShown=False;
+		Bool prgShown=false;
 		// For progress feedback.
 
 		VisibilityIterator &vi(*wvi_p);
@@ -594,7 +595,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		String polerr = "MSAsRaster: polarization conformance error in MS";
 		String chanerr = "MSAsRaster: channel conformance error in MS";
-		msCols_->polarization().numCorr().getColumn(nPolsIn_, True);
+		msCols_->polarization().numCorr().getColumn(nPolsIn_, true);
 		// retrieve nPolsIn_ vector -- the number of correlations in
 		// each of the polarization setups (polIds).
 
@@ -650,8 +651,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// increase length of our polarization axis by the number
 				// of pols in the newly-encountered polId.
 
-				polId_.resize(nPol,True);
-				polName_.resize(nPol,True);
+				polId_.resize(nPol,true);
+				polName_.resize(nPol,true);
 				for(Int polInId=0; polInId < nPolsIn_[polId]; polInId++) {
 					Int pol = pidBase_[polId] + polInId;
 					polId_[pol] = polId;
@@ -674,8 +675,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				if(spwid<0 || spwid>=nSpwIds_) throw AipsError(chanerr);
 				nSpw++;
-				freq_.resize(nSpw, True);
-				spwId_.resize(nSpw, True);
+				freq_.resize(nSpw, true);
+				spwId_.resize(nSpw, true);
 
 				Int spw=nSpw-1;
 				for(Int sprev=spw-1;  sprev>=0;  spw--,sprev--) {
@@ -712,7 +713,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if(tmr.real()>intvl) {
 						if(!prgShown) {
 							cerr<<endl<<"Gathering MS Ranges: "<<flush;
-							prgShown=True;
+							prgShown=true;
 						}
 						cerr<<Int((iRow+row)*pctDone)<<"%  "<<flush;
 						tmr.mark();
@@ -744,10 +745,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							// Out of room: need to expand timeslot-indexed Vectors.
 
 							szTime=Int(szTime*1.618);
-							time_.resize(szTime, True);
-							field_.resize(szTime, True);
-							fieldName_.resize(szTime, True);
-							scan_.resize(szTime, True);
+							time_.resize(szTime, true);
+							field_.resize(szTime, true);
+							fieldName_.resize(szTime, true);
+							scan_.resize(szTime, true);
 						}
 
 						// Push later times down to make room for this entry.
@@ -779,7 +780,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			iChunk++;
 		}
 
-		mssel_->relinquishAutoLocks(True);	 // (just to be sure).
+		mssel_->relinquishAutoLocks(true);	 // (just to be sure).
 
 
 		// Gather information for either baseline sort, including baseline lengths.
@@ -985,12 +986,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsDataMin = new DParameterRange<Float>(DisplayData::DATA_MIN, "data minimum",
 		                                        "Colors will be mapped between this value and Data max.",
 		                                        dataRngMin_, dataRngMax_, 0.001f, dataRngMin_, dataRngMin_,
-		                                        "", True, True);
+		                                        "", true, true);
 
 		itsDataMax = new DParameterRange<Float>(DisplayData::DATA_MAX, "data maximum",
 		                                        "Colors will be mapped between this value and Data min.",
 		                                        dataRngMin_, dataRngMax_, 0.001f, dataRngMax_, dataRngMax_,
-		                                        "", True, True);
+		                                        "", true, true);
 
 
 		String aipsrcval, defaultval;
@@ -1154,7 +1155,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           pix.resize(2*nAnt_ + 3), wld.resize(2*nAnt_ + 2);
                           for(Int a1=-1; a1<nAnt_+1; a1++) pix[2*a1+2] = bsln_(a1,a1)-.5;
                           for(Int a1=-1; a1<nAnt_; a1++)   pix[2*a1+3] = pix[2*a1+4]-.0001;
-                          pix.resize(2*nAnt_+2, True);
+                          pix.resize(2*nAnt_+2, true);
                           for(Int i=0; i<2*nAnt_+2; i++) wld[i]=a1a2_(pix[i], uiBase());
                     }
                     // (uiBase() indicates whether antenna numbers (in this case),
@@ -1205,7 +1206,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// This causes a zoom-out to the extent of the data on the new display axes,
 		// on all WCs where this DD is active, upon their next refresh.
-		Attribute zoomToExtent("resetCoordinates", True);
+		Attribute zoomToExtent("resetCoordinates", true);
 		setAttributeOnPrimaryWCHs(zoomToExtent);
 
 		if(!msValid_) return cs;	// In this case, the object is useless.
@@ -1219,7 +1220,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		restrctns.set("msar yaxisname", axname(Y));
 		restrctns.set("msar msname", itsMS->tableName());
         restrctns.set("msar spectralunit", itsParamSpectralUnit->value( ));
-		itsMS->relinquishAutoLocks(True);	 // (just to be sure).
+		itsMS->relinquishAutoLocks(true);	 // (just to be sure).
 		itsAxisLabeller.setRestrictions(restrctns);
         return cs;
 	}
@@ -1292,7 +1293,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		indgen(allFieldIds, uiBase());
 		fieldids.define("default",allFieldIds);
 		fieldids.define("value", Vector<Int>(fieldIds_+uiBase()));
-		fieldids.define("allowunset", True);
+		fieldids.define("allowunset", true);
 		fieldids.define("context", "ms_and_visibility_selection");
 		rec.defineRecord("fieldids", fieldids);
 
@@ -1312,7 +1313,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		indgen(allSpwIds, uiBase());
 		spwids.define("default",allSpwIds);
 		spwids.define("value", Vector<Int>(spwIds_+uiBase()));
-		spwids.define("allowunset", True);
+		spwids.define("allowunset", true);
 		spwids.define("context", "ms_and_visibility_selection");
 		rec.defineRecord("spwids", spwids);
 
@@ -1380,7 +1381,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		flgall.define("value", chkdAxes);
 
 
-		flgall.define("allowunset", False);
+		flgall.define("allowunset", false);
 		flgall.define("context", "flagging_options");
 		rec.defineRecord("flgall", flgall);
 
@@ -1394,7 +1395,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// 'Basic settings' rollup.
-		((MSAsRaster*)this)->postDataRng_ = False;    // this seems like a hack that should go away...
+		((MSAsRaster*)this)->postDataRng_ = false;    // this seems like a hack that should go away...
 		                                              // <drs:Thu Dec 19 13:27:39 EST 2013>
 
 		// postDataRng_ is a signal from extract_ to send itsDataMin/Max
@@ -1449,10 +1450,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Most of the MSAsRaster control logic is split between this routine and
 		// draw_().
 
-		if(!msValid_) return False;	// In this case, the object is useless.
+		if(!msValid_) return false;	// In this case, the object is useless.
 		// Protect public methods from crashes.
 
-		static const Bool wholeRecord=True, overwrite=True;
+		static const Bool wholeRecord=true, overwrite=true;
 		// (settings for update of gui from Parameters via recOut)
 
 		// Fetch this parameter before sending out possible changes to its
@@ -1460,7 +1461,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsVisMb->fromRecord(rec);
 
 
-		Bool needsRefresh=False;
+		Bool needsRefresh=false;
 
 
 		// Do any requested AXIS CHANGES first.
@@ -1496,9 +1497,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		Block<Int> uiAxisOn(3);
-		Block<Bool> swapAxes(3, False);
+		Block<Bool> swapAxes(3, false);
 
-		Bool axisChg = False;
+		Bool axisChg = false;
 
 		itsXAxis->fromRecord(rec);
 		itsYAxis->fromRecord(rec);
@@ -1515,21 +1516,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				// An axis has changed.
 
-				swapAxes[loc] = axisChg = True;
+				swapAxes[loc] = axisChg = true;
 				for(AxisLoc prevloc=X; prevloc<loc; prevloc++) {
 					if(swapAxes[prevloc] && uiAxisOn[prevloc]==uiax) {
-						swapAxes[loc] = False;
+						swapAxes[loc] = false;
 						break;
 					}
 				}
 			}
 		}
-		// swapAxes will be True where user has requested a change
+		// swapAxes will be true where user has requested a change
 		// to an axis (unless he has tried to change two locations
 		// to hold the same axis--unlikely).
 
 		if(axisChg) {
-			needsRefresh = True;
+			needsRefresh = true;
 
 			for(AxisLoc newloc=X; newloc<=Z; newloc++) if(swapAxes[newloc]) {
 					Axis oldax=axisOn_[newloc], newax=uiAxisOn[newloc];
@@ -1572,9 +1573,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// MS DATA SELECTION
 
-		Bool newRanges = False;	// will indicate MS selection change.
+		Bool newRanges = false;	// will indicate MS selection change.
 		Bool notfound;
-		Bool fieldIdsChg = False,  spwIdsChg = False;
+		Bool fieldIdsChg = false,  spwIdsChg = false;
 		// indicates user _desired_ a selection change.
 
 
@@ -1619,13 +1620,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				indgen(newFieldIds, uiBase());
 			}
 
-			else newFieldIds.resize(nNewFlds, True);
+			else newFieldIds.resize(nNewFlds, true);
 		}
 
 		else {
 
 			// Must also check separately for fieldids 'unset'  (also dumb).
-			// (if it is unset, notfound will be set False; all fields
+			// (if it is unset, notfound will be set false; all fields
 			// are selected in that case).
 
 			String dummy;
@@ -1646,7 +1647,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if(newFieldIds[i] != fieldIds_[i] + uiBase()) {
 						// newFieldIds (user input) are numbered from uiBase (0 or 1);
 						// fieldIds_ are numbered from 0.
-						fieldIdsChg=True;
+						fieldIdsChg=true;
 						break;
 					}
 				}
@@ -1668,7 +1669,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					fieldIds_.assign(newFieldIds - uiBase());
 					// (user input may be 0- or 1-based, fieldIds_ is 0-based).
-					newRanges = True;
+					newRanges = true;
 				}
 
 				else newFieldIds.assign(fieldIds_+uiBase());
@@ -1717,7 +1718,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if(nNewSpws==0) {
 				newSpwIds.resize(nSpwIds_);
 				indgen(newSpwIds, uiBase());
-			} else newSpwIds.resize(nNewSpws, True);
+			} else newSpwIds.resize(nNewSpws, true);
 		}
 
 		else {
@@ -1734,7 +1735,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if(!spwIdsChg) {
 				for(Int i=0; i<nNewSpws; i++) {
 					if(newSpwIds[i] != spwIds_[i]+uiBase()) {
-						spwIdsChg=True;
+						spwIdsChg=true;
 						break;
 					}
 				}
@@ -1745,7 +1746,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if(flagEdits_.len()==0u) {
 
 					spwIds_.assign(newSpwIds - uiBase());
-					newRanges = True;
+					newRanges = true;
 				}
 
 				else newSpwIds.assign(spwIds_+uiBase());
@@ -1775,7 +1776,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// reSortVis_()) or retrieving its visibilities afresh from disk (via
 		// extract_()).
 
-		Bool bslSortChg = False;	// change both requested _and_ allowed.
+		Bool bslSortChg = false;	// change both requested _and_ allowed.
 		String oldsort = itsBslnSort->value();
 
 		itsBslnSort->fromRecord(rec);
@@ -1797,7 +1798,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			else {
 				antSort_ = newsort;	// Register change (will be acted on below).
-				bslSortChg = True;
+				bslSortChg = true;
 			}
 		}
 
@@ -1853,7 +1854,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// This posts total MS visibility size to this slider's description.
 			itsVisMb->toRecord(recOut, wholeRecord, overwrite);
-			needsRefresh = True;
+			needsRefresh = true;
 		}
 
 
@@ -1863,7 +1864,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// Just adjust the new baseline order information, and msShape_ and pos_
 			// on the baseline axis.
 
-			needsRefresh = True;
+			needsRefresh = true;
 
 			mspos_.setb(pos_[BASELN]);	// Save current baseline position (still
 			// in terms of old sort) in mspos_
@@ -1934,7 +1935,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// of animator frames being set to nelements() (==msShape_[axZ]).
 
 
-		if(pos_[axSL0]!=oldPosSL0 || pos_[axSL1]!=oldPosSL1) needsRefresh = True;
+		if(pos_[axSL0]!=oldPosSL0 || pos_[axSL1]!=oldPosSL1) needsRefresh = true;
 		// Refresh if pos_ differs from its original value on slider axes.
 
 		// If the final values for the slider's label, range or value differ
@@ -1977,7 +1978,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Parse GUI choice box (itsVisComp) into visComp_ and visDev_.
 
-		bool avgrf = False;
+		bool avgrf = false;
 		switch(visComp_) {
 		case AMPDIFF: {
 			visComp_ = AMPLITUDE;
@@ -2029,18 +2030,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				nDAvg_ = max(2, itsNAvg->value());	// (min. of 2 just for safety)
 				if(visValid_) {
 					computeTimeBoxcars_();
-					needsRefresh = True;
+					needsRefresh = true;
 				}
 				if ( ! wasDev && nPAvg_ > 1 ) {
 					computeTimeBoxcars_();
-					needsRefresh = True;
-					dispValid_ = False;
+					needsRefresh = true;
+					dispValid_ = false;
 					purgeCache( );
 				}
 			} else {
 				nPAvg_ = itsNAvg->value( );
-				needsRefresh = True;
-				dispValid_ = False;
+				needsRefresh = true;
+				dispValid_ = false;
 				purgeCache( );
 			}
 		}
@@ -2054,7 +2055,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// To do: create a separate button specifically for loading
 		// the data (unconditionally).
 
-		if(applyPressed) needsRefresh = True;
+		if(applyPressed) needsRefresh = true;
 		// be sure of refresh on 'apply'--some option
 		// changes might have occurred in prior setOptions calls which were
 		// not drawn, because of invalid vis_ (and no 'apply').
@@ -2140,7 +2141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							// current vis_ already shows as many frames as possible--
 							// no need to call extract_.
 
-							shouldExtract = False;
+							shouldExtract = false;
 						}
 					}
 				}
@@ -2199,8 +2200,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			recOut.define("dataunit", dataUnit().getName());
 			// ("dataunit" is not part of the UI; this assures that (esp.)
 			// the color bar DD gets the latest data unit for its labelling).
-			needsRefresh = True;
-			postDataRng_ = False;
+			needsRefresh = true;
+			postDataRng_ = false;
 		}	// (msg. flag has been acted on)
 
 		else {
@@ -2256,16 +2257,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(itsFlagColor->fromRecord(rec)) {
 			flagsInClr_ = itsFlagColor->value()=="In Color";
-			needsRefresh = True;
+			needsRefresh = true;
 		}
 
 		if(itsUnflag->fromRecord(rec)) unflag_ = itsUnflag->value()=="Unflag";
 		if(itsEntireAnt->fromRecord(rec)) entireAnt_ = itsEntireAnt->value()=="Yes";
 
-		if(itsUndoOne->fromRecord(rec)) if(undoEdits_("one")) needsRefresh = True;
-		if(itsUndoAll->fromRecord(rec)) if(undoEdits_("all")) needsRefresh = True;
+		if(itsUndoOne->fromRecord(rec)) if(undoEdits_("one")) needsRefresh = true;
+		if(itsUndoAll->fromRecord(rec)) if(undoEdits_("all")) needsRefresh = true;
 		itsEditEntireMS->fromRecord(rec);	// (no refresh effect).
-		if(itsSaveEdits->fromRecord(rec)) if(saveEdits_()) needsRefresh = True;
+		if(itsSaveEdits->fromRecord(rec)) if(saveEdits_()) needsRefresh = true;
 
 		// Flagging extent checkboxes.  The return value (inconveniently)
 		// may be either a String or a Vector of Strings--handle both cases.
@@ -2316,7 +2317,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		needsRefresh = itsAxisLabelling->fromRecord(rec) || needsRefresh;
 		needsRefresh = itsAxisLabeller.setOptions(rec,recOut) || needsRefresh;
 
-		// A True return value means caller should call refresh() on this DD,
+		// A true return value means caller should call refresh() on this DD,
 		// which eventually leads to a redraw.
 		return needsRefresh;
 	}
@@ -2335,7 +2336,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// MSAsRasterDM which in turn is owned by this DD.
 
 		// Input:
-		// If msselValid_ is False, we cannot draw (no data).  Otherwise,
+		// If msselValid_ is false, we cannot draw (no data).  Otherwise,
 		// at this point the VisSet (vssel_), ranges (msShape_), coordinate system,
 		// axis settings (axisOn_) and slice positions (pos_) are set up according
 		// to user options (except that pos_[axisOn_(Z)], the animator position,
@@ -2356,11 +2357,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// are not loaded will be masked or displayed as dark grey.  The user
 		// can cause the missing data to be loaded by pressing 'Apply'.
 
-		// The return value indicates whether the DD was able to draw (False if
+		// The return value indicates whether the DD was able to draw (false if
 		// the chosen position was out of range of the selected MS--can happen
 		// in the final frames of multipanel display, e.g.).
 
-		if(!msselValid_) return False;	// No data in [selected] MS.
+		if(!msselValid_) return false;	// No data in [selected] MS.
 
 		// The color wedge is no longer displayed for DisplayDatas whose
 		// state is something other than DISPLAYED...
@@ -2392,7 +2393,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
              }
         }
 		pos_[axZ] = max(0, min(msShape_[axZ]-1,  pos_[axZ]  ));
-		if(zIndexExists && zIndex != pos_[axZ] ) return False;
+		if(zIndexExists && zIndex != pos_[axZ] ) return false;
 		// Do not draw if the animator position value
 		// on the WCH is out of range.
 		// Trim pos_[axZ] anyway for the sake of robustness:
@@ -2417,16 +2418,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			for(AxisLoc loc=Z; loc<=SL1; loc++) {
 				Axis ax=axisOn_(loc);
-				if(pos_[ax]!=dispPos_[ax]) dispOK=False;
+				if(pos_[ax]!=dispPos_[ax]) dispOK=false;
 			}
 			// Disp_ must also have been created for the position settings
 			// on other axes.
 
-			if(dispNEdits_ > flagEdits_.len()) dispOK=False;
+			if(dispNEdits_ > flagEdits_.len()) dispOK=false;
 			// Undo of an edit: easiest to re-create
 			// display matrices from scratch here too...
 
-			if(!dispFlagsInClr_ && flagsInClr_) dispOK=False;
+			if(!dispFlagsInClr_ && flagsInClr_) dispOK=false;
 		}
 		// ...and here, to create the color flag matrix (dispFlags_).
 
@@ -2446,7 +2447,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					dispMask_(ix,iy) = !dispMask_(ix,iy);
 				}
 			}
-			dispFlagsInClr_ = False;
+			dispFlagsInClr_ = false;
 		}
 
 		postEditsToDisp_();	// Make sure all flagging edits are also
@@ -2495,7 +2496,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		linToWorld(wblc, lblc);
 		linToWorld(wtrc, ltrc);
 
-		Bool edge=True; 	// We pass the coordinates of the corner pixel
+		Bool edge=true; 	// We pass the coordinates of the corner pixel
 		// outer edges to drawImage.
 
 		if(!flagsInClr_) {
@@ -2554,7 +2555,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// wedge apply to the map last set onto the wc (pc).
 
 
-		return True;
+		return true;
 	}
 
 
@@ -2579,7 +2580,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//	     requested visType_ and visComp_, and includes the requested
 		//         display slice(s).
 		//	     dataRngMin/Max_ -- actual min/max of the data encountered.
-		//	     postDataRng_ is returned True if gui data ranges should be
+		//	     postDataRng_ is returned true if gui data ranges should be
 		//	     reset to dataRngMin/Max_.
 
 		// (10/02) *The canvases themselves are now polled for the slices
@@ -2623,7 +2624,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// chunks not in sp.win. range won't need to be read.
 		// Inaccurate progress values may still result, however,
 		// when the various sp.wins have uneven amounts of data...
-		Bool prgShown=False;
+		Bool prgShown=false;
 		Int iRow=0, iIter=0, iChunk=0;
 		Double intvl=3.;
 
@@ -2726,11 +2727,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 
 			Int iRowChunk=iRow;		// # rows processed prior to this chunk
-			Bool doneChunk=False;	// signals that we're finished (early)
+			Bool doneChunk=false;	// signals that we're finished (early)
 			// with this chunk.
 
 			Int spw = spw_(vi.spectralWindow());	  // Sp. Win. axis index.
-			if(spw<vsSpw || spw>=veSpw) doneChunk=True;   // not in spw range of vis_.
+			if(spw<vsSpw || spw>=veSpw) doneChunk=true;   // not in spw range of vis_.
 			else slot(SP_W)=spw-vsSpw;
 
 			Int polId = vi.polarizationId();
@@ -2742,12 +2743,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			Int frstPol = max(vsPol, pidBase);
 			Int lstPol =  min(vePol, pidBase + nPolsInDataCell);
-			if(frstPol>=lstPol) doneChunk=True;		// not in pol. range.
+			if(frstPol>=lstPol) doneChunk=true;		// not in pol. range.
 
 			Int nChan=vi.visibilityShape()(1);
 			Int frstChan=   vsChan;
 			Int lstChan=min(veChan,nChan);
-			if(frstChan>=lstChan) doneChunk=True;	// not in channel range.
+			if(frstChan>=lstChan) doneChunk=true;	// not in channel range.
 
 
 			if(doneChunk) {
@@ -2784,7 +2785,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int iTime = vsTime;
 			Double searchTime = time_[iTime];
 			Int tsOffset=0;
-			Bool newTime=True;
+			Bool newTime=true;
 
 
 			for (vi.origin(); vi.more(); vi++) {
@@ -2817,7 +2818,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if(tmr.real()>intvl) {
 						if(!prgShown) {
 							cerr<<endl<<"Loading MS vis. data:  "<<flush;
-							prgShown=True;
+							prgShown=true;
 						}
 						Int pct = Int((iRow+row)*pctDone);
 						if(pct>0 && pct<100) cerr<<pct<<"%  "<<flush;
@@ -2833,10 +2834,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					while(time!=searchTime) {	// we should find an exact match...
 						iTime++;
 						if(iTime>=veTime) {		// ... unless we're beyond time
-							doneChunk=True;		// range of vis_, in which case
+							doneChunk=true;		// range of vis_, in which case
 							break;
 						}			// we're done with the whole chunk.
-						newTime=True;		// record first encounter of time in chunk.
+						newTime=true;		// record first encounter of time in chunk.
 						searchTime=time_[iTime];
 					}
 
@@ -2853,12 +2854,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					// form in setFlag_(slot), which could have been used instead.
 					if(newTime) {
 						tsOffset = vnBslnA*(vnSpw*(iTime-vsTime) + spw-vsSpw);
-						newTime=False;
+						newTime=false;
 					}
 
 
 					Int bsl;
-					Bool calcRange=True;
+					Bool calcRange=true;
 
 					if(nAnt_==1) bsl=vb.feed1()(row);
 					// single antenna: 'bsl' is feed number.
@@ -2923,9 +2924,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}		// for(vi Chunk iterations)
 
 
-		mssel_->relinquishAutoLocks(True);	 	// (just to be sure).
+		mssel_->relinquishAutoLocks(true);	 	// (just to be sure).
 
-		visValid_=True;		// validate vis_, and set its current
+		visValid_=true;		// validate vis_, and set its current
 		curVisType_=visType_;		// type and component to reflect the extract_
 		curVisComp_=visComp_;		// just completed according to user input.
 
@@ -2958,13 +2959,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(visDataChg_) {
 			resetMinMax_();	// Set newly-computed data range onto the DParams.
-			postDataRng_=True;
+			postDataRng_=true;
 		}
 		// Signals getOptions or setOptions (whichever is called first)
 		// to pass data range on to the gui unaltered.
 
-		visDataChg_=False;	// vis_ now in sync with user data selection.
-		dispValid_=False;	// Forces call to createDisplaySlice_ in draw_.
+		visDataChg_=false;	// vis_ now in sync with user data selection.
+		dispValid_=false;	// Forces call to createDisplaySlice_ in draw_.
 		purgeCache();
 	}	// Assures that displayed data corresponds to
 	// data in memory, to avoid confusion.
@@ -3000,14 +3001,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(flagsInClr_) dispFlags_.resize(nx,ny);
 
 
-		dispNotLoaded_=False;
+		dispNotLoaded_=false;
 
-		if(!visValid_) dispNotLoaded_=True;
+		if(!visValid_) dispNotLoaded_=true;
 		// (may occur during init, if vis_ is not loaded immediately).
 		else for(AxisLoc loc=Z; loc<=SL1; loc++) {
 				Axis ax=axisOn_(loc);
 				if(pos_[ax]<visStart_[ax] || pos_[ax]>=visStart_[ax]+visShape_[ax]) {
-					dispNotLoaded_=True;
+					dispNotLoaded_=true;
 					break;
 				}
 			}
@@ -3018,9 +3019,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			disp_ = NOT_LOADED;
 			if(flagsInClr_) {
-				dispMask_ = True;
+				dispMask_ = true;
 				dispFlags_ = NOTLOADED;
-			} else dispMask_ = False;
+			} else dispMask_ = false;
 		}
 
 		else {
@@ -3041,11 +3042,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// fill display Matrices along display axes.
 
 			// The user can choose to display flags in color or simply masked
-			// to background.  In the latter case, dispMask_ is set to False for
+			// to background.  In the latter case, dispMask_ is set to false for
 			// flagged data so that the data pixel is masked out.  In the color case,
 			// the data matrix is drawn first without a mask, then the color-coded
 			// and masked flag matrix is drawn on top of that. In that case, the
-			// mask matrix has the opposite 'polarity'--i.e. False to show good data
+			// mask matrix has the opposite 'polarity'--i.e. false to show good data
 			// underneath.
 			//
 			// dispFlags_ (and flagCM_) are used for the flagsInClr_ option (only).
@@ -3074,9 +3075,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					for(Int iy=0; iy<ny; iy++) {
 						disp_(ix,iy) = NOT_LOADED;
 						if(flagsInClr_) {
-							dispMask_(ix,iy) = True;
+							dispMask_(ix,iy) = true;
 							dispFlags_(ix,iy) = NOTLOADED;
-						} else dispMask_(ix,iy) = False;
+						} else dispMask_(ix,iy) = false;
 					}
 				}
 
@@ -3084,17 +3085,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					for(Int iy=0;  iy<vsY; iy++) {
 						disp_(ix,iy) = NOT_LOADED;
 						if(flagsInClr_) {
-							dispMask_(ix,iy) = True;
+							dispMask_(ix,iy) = true;
 							dispFlags_(ix,iy) = NOTLOADED;
-						} else dispMask_(ix,iy) = False;
+						} else dispMask_(ix,iy) = false;
 					}
 
 					for(Int iy=veY; iy<ny; iy++) {
 						disp_(ix,iy) = NOT_LOADED;
 						if(flagsInClr_) {
-							dispMask_(ix,iy) = True;
+							dispMask_(ix,iy) = true;
 							dispFlags_(ix,iy) = NOTLOADED;
-						} else dispMask_(ix,iy) = False;
+						} else dispMask_(ix,iy) = false;
 					}
 
 					// 'Core' rectangle where data has been loaded into vis_:
@@ -3109,7 +3110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							IPosition slotb = slot;
 							slotb(dispZ_) = min( (Int) (slotb(dispZ_)+nPAvg_-1), (Int) (vis_.shape( )(dispZ_)-1) ) ;
 							const Array<Float> avga = vis_(slot,slotb);
-							Bool delstor = False;
+							Bool delstor = false;
 							const Float *stor = avga.getStorage(delstor);
 							int num = 0;
 							Double sum = 0;
@@ -3127,16 +3128,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 						if(d == NO_DATA) {
 							if(flagsInClr_) {
-								dispMask_(ix,iy) = True;
+								dispMask_(ix,iy) = true;
 								dispFlags_(ix,iy) = NODATA;
-							} else dispMask_(ix,iy) = False;
+							} else dispMask_(ix,iy) = false;
 						}
 
 						else if(flag_(slot)) {
 							if(flagsInClr_) {
-								dispMask_(ix,iy) = True;
+								dispMask_(ix,iy) = true;
 								dispFlags_(ix,iy) = OLDFLAG;
-							} else dispMask_(ix,iy) = False;
+							} else dispMask_(ix,iy) = false;
 						}
 					}
 				}
@@ -3149,8 +3150,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// are reflected in dispFlags_ or dispMask_ yet.
 		// (postEditsToDisp_ will be called to do that).
 		dispPos_ = pos_;	// Save record of which slice disp_ represents.
-		dispValid_ = True;	// Record that disp_ was created since last extract_.
-		dispDevValid_ = False;
+		dispValid_ = true;	// Record that disp_ was created since last extract_.
+		dispDevValid_ = false;
 	}	// deviation Matrix is _not_ yet up-to-date.
 
 
@@ -3181,7 +3182,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// anyway).  Whenever draw_ is called MSAR assumes the following reflect
 		// the current state of the entire canvas.  It might not behave well if it
 		// were not in charge of canvas coordinate state.  This is why it
-		// returns False to conformsToCS() if it is not CS master, which effectively
+		// returns false to conformsToCS() if it is not CS master, which effectively
 		// disables it from responding to canvas events (drawing, labelling,
 		// tracking, flagging) in this case.
 		// In summary: if this DD (and its axis labeller) are drawing on the
@@ -3204,7 +3205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// restrictions anyway, but it's not really necessary at present...
 
 		restrctns.set("msar msname", itsMS->tableName());
-		itsMS->relinquishAutoLocks(True);	 // (just to be sure of unlock).
+		itsMS->relinquishAutoLocks(true);	 // (just to be sure of unlock).
 
 
 
@@ -3351,7 +3352,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int iy1 = min( msShape_[axisOn_[Y]], ifloor(lint(1)+.5)+1 );
 
 			if(ix0<ix1 && iy0<iy1) {
-				ResetRTRegionEvent ev = ResetRTRegionEvent(True);
+				ResetRTRegionEvent ev = ResetRTRegionEvent(true);
 				wc->handleEvent(ev);	// (erase rectangle; I'll refresh).
 
 				addEdit_(wc, ix0,ix1-ix0, iy0,iy1-iy0);
@@ -3490,11 +3491,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// First check whether the edit applies to the current display slice
 			// (chosen via animator and sliders).
 
-			Bool applies=True;
+			Bool applies=true;
 			for(Axis ax=0; ax<NAXES; ax++) {
 				if(ax==dispX_ || ax==dispY_) continue;	// (don't check display axes)
 				if(!edit.appliesTo(ax, dispPos_[ax])) {
-					applies=False;
+					applies=false;
 					break;
 				}
 			}  // edit doesn't apply to this display
@@ -3518,18 +3519,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// (ifs are outside the loops for efficiency).
 
 			// The user can choose to display flags in color or simply masked
-			// to background.  In the latter case, dispMask_ is set to False for
+			// to background.  In the latter case, dispMask_ is set to false for
 			// flagged data so that the data pixel is masked out.  In the color case,
 			// the data matrix is drawn first without a mask, then the color-coded
 			// (and masked) flag matrix is drawn on top of that. In that case, the
-			// mask matrix has the opposite 'polarity'--False to show the good data
+			// mask matrix has the opposite 'polarity'--false to show the good data
 			// underneath.
 
 			if(!edit.unflag) {      			// flag the region:
 				if(!dispFlagsInClr_) {
 					for(Int ix=startX; ix<endX; ix++) if(edit.applies2(dispX_, ix)) {
 							for(Int iy=startY; iy<endY; iy++) if(edit.applies2(dispY_, iy)) {
-									dispMask_(ix,iy) = False;
+									dispMask_(ix,iy) = false;
 								}
 						}
 				}	// mask out the pixel...
@@ -3538,7 +3539,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							for(Int iy=startY; iy<endY; iy++) if(edit.applies2(dispY_, iy)) {
 									if (disp_(ix,iy)!=NO_DATA) {
 										dispFlags_(ix,iy) = NEWFLAG;	// or show in 'newflag' color
-										dispMask_(ix,iy) = True;
+										dispMask_(ix,iy) = true;
 									}
 								}
 						}
@@ -3561,12 +3562,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 									Float d = disp_(ix,iy);
 									if (d==NO_DATA) {
 										dispFlags_(ix,iy) = NODATA;
-										dispMask_(ix,iy) = True;
+										dispMask_(ix,iy) = true;
 									} else if (d==NOT_LOADED) {
 										dispFlags_(ix,iy) = NOTLOADED;
-										dispMask_(ix,iy) = True;
+										dispMask_(ix,iy) = true;
 									} else {
-										dispMask_(ix,iy) = False;
+										dispMask_(ix,iy) = false;
 									}
 								}
 						}
@@ -3574,7 +3575,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		if(dispX_==TIME || dispY_==TIME) dispDevValid_=False;
+		if(dispX_==TIME || dispY_==TIME) dispDevValid_=false;
 		// New edits invalidate the deviation Matrix if Time is on display.
 
 		dispNEdits_ = flagEdits_.len();
@@ -3590,7 +3591,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		ListIter<void*> edits(flagEdits_);
 		Int nEdits=edits.len();
-		if(nEdits==0 || !msselValid_) return False;
+		if(nEdits==0 || !msselValid_) return false;
 
 
 		Bool entireMS = (itsEditEntireMS->value() == "Yes" && mssel_!=itsMS);
@@ -3615,32 +3616,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// to save time iterating through the (time-ordered) chunks.
 
 		Int nTime=msShape_[TIME], nBsl=msShape_[BASELN];
-		Vector<Bool> tused(nTime, False);
-		Matrix<Bool> tbused(nTime, nBsl, False);
-		Bool alltused = False;	// whether some edit applies to all times.
-		Vector<Bool> usedallt(nBsl, False);
+		Vector<Bool> tused(nTime, false);
+		Matrix<Bool> tbused(nTime, nBsl, false);
+		Bool alltused = false;	// whether some edit applies to all times.
+		Vector<Bool> usedallt(nBsl, false);
 		// indicates baselines applicable to some edit in which
 		// _all_ times apply.
 
 		for(edits.toStart(); !edits.atEnd(); edits++) {
 			FlagEdit_& edit = *static_cast<FlagEdit_*>(edits.getRight());
 			if(edit.all[TIME]) {
-				if(!alltused) tused=True;  // Set tused all True just for consistency
-				alltused=True;		 // (it won't be needed in this case).
+				if(!alltused) tused=true;  // Set tused all true just for consistency
+				alltused=true;		 // (it won't be needed in this case).
 				Int bs, be;
 				edit.getLoopRange(BASELN, bs,be);
-				for(Int b=bs; b<be; b++) if(edit.appliesTo(b)) usedallt[b]=True;
+				for(Int b=bs; b<be; b++) if(edit.appliesTo(b)) usedallt[b]=true;
 			}
 
 			else {
 				Int ts, te;
 				edit.getSureRange(TIME, ts,te);
-				if(!alltused) for(Int t=ts; t<te; t++) tused[t] = True;
+				if(!alltused) for(Int t=ts; t<te; t++) tused[t] = true;
 
 				Int bs, be;
 				edit.getLoopRange(BASELN, bs,be);
 				for(Int b=bs; b<be; b++) if(edit.appliesTo(b)) {
-						for(Int t=ts; t<te; t++) tbused(t,b)=True;
+						for(Int t=ts; t<te; t++) tbused(t,b)=true;
 					}
 			}
 		}
@@ -3651,7 +3652,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			for(tmax=nTime-1; tmax>=0; tmax--) if(tused[tmax]) break;
 			if(tmax<0) {
 				undoEdits_("all");    // (shouldn't happen)
-				return False;
+				return false;
 			}
 			maxTime=time_[tmax];
 		}
@@ -3679,7 +3680,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// in the edits indicating which do apply to this chunk, and to which
 			// pol and channel ranges within the MS's FLAG column cells.
 
-			Bool doneChunk=True;	// signals that we're finished (early)
+			Bool doneChunk=true;	// signals that we're finished (early)
 			// with this chunk.
 
 			Int pol0  = mpos.p0(vi.polarizationId());
@@ -3690,7 +3691,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			for(edits.toStart();  !edits.atEnd();  edits++) {
 				FlagEdit_& edit = *static_cast<FlagEdit_*>(edits.getRight());
 
-				if(edit.appliesToChunk(pol0,nPol, spw,nChan)) doneChunk=False;
+				if(edit.appliesToChunk(pol0,nPol, spw,nChan)) doneChunk=false;
 			}
 			// This edit will apply within the chunk, to any rows with
 			// appropriate times/baselines; it applies to the chunk's
@@ -3734,7 +3735,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Int nRow=vb.nRow();
 				iRow += nRow;
 
-				Bool flgsRetrieved=False, writeFlgs=False;
+				Bool flgsRetrieved=false, writeFlgs=false;
 
 
 				for (Int row=0; row<nRow; row++) {
@@ -3754,7 +3755,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					Double time = vb.time()[row];
 					if(!alltused && time>maxTime) {
-						doneChunk=True;
+						doneChunk=true;
 						break;
 					}
 					// Beyond times used in any edit: break out of
@@ -3806,7 +3807,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						if(!flgsRetrieved) {
 							vi.flag(flg);
 							vi.flagRow(flgRow);
-							flgsRetrieved = True;
+							flgsRetrieved = true;
 						}
 
 						// Write any flag changes into flag cube.  (Note: pol and chan
@@ -3817,7 +3818,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						for (Int pol=edit.sPol; pol<edit.ePol; pol++) {
 							for (Int chan=edit.sChan; chan<edit.eChan; chan++) {
 								if(newflag != flg(pol,chan,row)) {   // flag has changed.
-									writeFlgs = True;
+									writeFlgs = true;
 
 									flg(pol,chan,row) = newflag;
 								}
@@ -3838,11 +3839,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 					for (Int row=0; row<nRow; row++) {
 
-						Bool fr=True;
+						Bool fr=true;
 						for (Int pol=0; pol<nPol; pol++) {
 							for (Int chan=0; chan<nChan; chan++) {
 								if(!flg(pol,chan,row)) {
-									fr=False;
+									fr=false;
 									break;
 								}
 							}
@@ -3863,8 +3864,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 //vs->flush();				// VisibilityIterator/VisBuffer have no flush( )
-		mssel_->relinquishAutoLocks(True);	// (just to be sure).
-		itsMS->relinquishAutoLocks(True);	// (just to be sure).
+		mssel_->relinquishAutoLocks(true);	// (just to be sure).
+		itsMS->relinquishAutoLocks(true);	// (just to be sure).
 
 		// Post new edits to internal Flags_ too--avoids having
 		// to call extract_ again.
@@ -3920,7 +3921,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// return value advises caller to refresh all canvases on which this DD
 		// is active, in order to show all flags in the 'saved' color.
 
-		return True;
+		return true;
 	}
 
 
@@ -3979,8 +3980,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Float MSAsRaster::v_(Int t) {
 		// return a single visibility point from vis_ or disp_, as a function
 		// of time slot only.  The row of times was predetermined by setting
-		// useVis_, dPos_ and axlTm_.  goodData_ is set True if the data exists,
-		// is loaded and is not flagged (set False otherwise).
+		// useVis_, dPos_ and axlTm_.  goodData_ is set true if the data exists,
+		// is loaded and is not flagged (set false otherwise).
 
 		dPos_[axlTm_] = t;
 
@@ -4038,7 +4039,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// (Note that we always have st>=sT_ && et>=eT_ here, because
 			// this routine is to be called with increasing t, after sT_ is
 			// initialized to -1).
-			// Such reuse occurs only when flgdDev_==False; no flagged
+			// Such reuse occurs only when flgdDev_==false; no flagged
 			// points will be included in these incrementally-modified sums.
 
 			for(Int it=sT_; it<st; it++) {
@@ -4076,7 +4077,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// Recompute sums from scratch instead, discarding old ones.
 			// The sums are always initialized with vt (even though vt itself
-			// _might_ be flagged, if flgdDev_ is True);
+			// _might_ be flagged, if flgdDev_ is true);
 
 			nValid_ = 1;
 			sumv_=vt;
@@ -4163,8 +4164,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Initialize the input to the dev_() routine, which calculates the
 		// individual deviations.
 
-		useVis_ = True;
-		flgdDev_ = False;
+		useVis_ = true;
+		flgdDev_ = false;
 		dPos_.resize(NAXES);
 		axlTm_ = TIME;
 
@@ -4303,7 +4304,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// to do the deviation calculations are in disp_ and dispMask_.
 
 				dPos_.resize(2);	// dPos_ will index 2D disp_ Matrix in this case.
-				flgdDev_=False;	// No need to calculate flagged values
+				flgdDev_=false;	// No need to calculate flagged values
 
 				AxisLoc axlOther;
 				Int vsTime,veTime, vsOth,veOth;
@@ -4349,7 +4350,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// because they are never computed for the entire vis_ Array.
 
 				dPos_.resize(NAXES);
-				flgdDev_ = True;	// This keeps the color of a newly-unflagged
+				flgdDev_ = true;	// This keeps the color of a newly-unflagged
 				// point in synch with its position-tracking
 				// value even before the edit is saved, by
 				// assuring that its deviation is calculated.
@@ -4377,7 +4378,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 
-		dispDevValid_ = True;		// Indicate that dispDev_ is valid, for
+		dispDevValid_ = true;		// Indicate that dispDev_ is valid, for
 		dispDevType_ = visDev_;	// the currently requested deviation type
 		dispDevNAvg_ = nDAvg_;
 	}	// and size of moving average boxcars.
@@ -4444,7 +4445,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			IPosition vpos_end(vpos);
 			vpos_end[axisOn_[Z]] = min( (Int) (vpos[axisOn_[Z]] + nPAvg_-1), (Int) (vis_.shape( )(axisOn_(Z))-1) );
 			const Array<Float> avga = vis_(vpos,vpos_end);
-			Bool delstor = False;
+			Bool delstor = false;
 			const Float *stor = avga.getStorage(delstor);
 			int num = 0;
 			Double sum = 0;
@@ -4665,7 +4666,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(validt) {
 			MVTime mtm(time_[pt]/C::day);	// (convert seconds to days)
-			if(mtm.year()<1000 || mtm.year()>=10000) validt=False;  // (Y10K bug :-)
+			if(mtm.year()<1000 || mtm.year()>=10000) validt=false;  // (Y10K bug :-)
 			else {
 				String tstr = mtm.string(MVTime::YMD);
 				os<<tstr.substr(8,2)<<"-"<<mtm.monthName()<<"-"<<
@@ -4743,7 +4744,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if( validc && pc<Int(fr.nelements()) ) {
 				os<<setw(9)<<right<<setprecision(7)<<  fr[pc]/1.e9<<" GHz"  <<
 				  setprecision(5);
-			} else validc=False;
+			} else validc=false;
 		}
 		if(!valids || !validc) os<<" Invalid ";
 		os<<" (ch "<<setw(1)<<avgPos(axisName_[CHAN],pc+uiBase())<<")  ";
@@ -4832,7 +4833,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			MVTime mtm(time_[pt]/C::day);		// (convert seconds to days)
 			if(mtm.year()<1000 || mtm.year()>=10000) {
 				stat_list.push_back(viewer::RegionInfo::stats_t::value_type("time","invalid"));
-				validt=False;  // (Y10K bug :-)
+				validt=false;  // (Y10K bug :-)
 			} else {
 				String tstr = mtm.string(MVTime::YMD);
 				String time_val = tstr.substr(8,2) + "-" + mtm.monthName() + "-" + tstr.substr(0,4) + " " + tstr.substr(11,8);
@@ -4937,7 +4938,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					sprintf( ptr, " %.5g GHz", fr[pc]/1.e9 );
 					ptr += strlen(ptr);
 				} else {
-					validc=False;
+					validc=false;
 				}
 			}
 		}
@@ -5030,7 +5031,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		visShpA = msShapeA_;	// Try trimming from here first.
 
-		while(True) {		// (Will execute either once or twice).
+		while(true) {		// (Will execute either once or twice).
 
 			Double kbNeeded=sizeof(Float)/1024.;
 			for(Axis ax=0; ax<NAXES; ax++) kbNeeded *= visShpA[ax];
@@ -5073,11 +5074,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool MSAsRaster::undoEdits_(String extent, Bool feedback) {
 		// Remove edit[s] from end of list.  Return value indicates whether
 		// there were any edits to undo.  extent=="all" means undo all, else
-		// just the last one.  If feedback==True, print a warning message
+		// just the last one.  If feedback==true, print a warning message
 		// about discarded edits.
 
 		Int ndeleted=flagEdits_.len();
-		if(ndeleted==0) return False;
+		if(ndeleted==0) return false;
 
 		ListIter<void*> edits(flagEdits_);
 		edits.toEnd();
@@ -5095,13 +5096,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// because we don't try to distinguish the
 		// flagging state of the cached drawings.
 
-		if(feedback==True) {
+		if(feedback==true) {
 			cerr<<"(Discarded "<<ndeleted<<" unsaved flagging edit";
 			if(ndeleted>1) cerr<<"s";
 			cerr<<")"<<endl;
 		}
 
-		return True;
+		return true;
 	}
 
 
@@ -5112,7 +5113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// to be registered on a new DisplayPanel.  It uses the minimum
 		// setting on the DD's other WCHs (if any), or a default initial value.
 
-		if(!msselValid_) return False;	// No data.
+		if(!msselValid_) return false;	// No data.
 
 		if(!getFirstZIndex(preferredZIndex)) {
 			// use existing animator setting (unless there aren't any)...
@@ -5135,8 +5136,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// First non-autocorrelation is a better baseline choice
 		// for interoferometric data.
 
-		if(preferredZIndex >= Int(nelements())) return False;  // (unlikely)
-		return True;
+		if(preferredZIndex >= Int(nelements())) return false;  // (unlikely)
+		return true;
 	}
 
 
@@ -5174,7 +5175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		strtfrm=-1;
 		Int maxframes=-1;  // (Will be immediately overridden...)
-		Bool multiple=False;
+		Bool multiple=false;
 		Int margin=-1;
 		Int lstpfrm=max(0,Int(nelements())-nfrms);
 		// last _possible_ interval start frame,
@@ -5300,7 +5301,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(b2-ac4<0) a1 = nAnt_ - 1;	      // (shouldn't happen--next statement
 		else a1=floor((b-sqrt(b2-ac4))/2);  // should always solve for a1 exactly).
 		Int bsl0;
-		while(True) {
+		while(true) {
 			bsl0 = bsln_(Int(a1),Int(a1));
 			if(bsl0<=bsln) break;
 			a1--;
@@ -5397,10 +5398,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// strt<=bsln && bsln<fin.  This saves time calling this method
 		// within loops.  In particular:
 
-		if(!entireAnt) /* we can simply */ return True;
-		// ...because we know edit.inSureRange is True for the bsln.
+		if(!entireAnt) /* we can simply */ return true;
+		// ...because we know edit.inSureRange is true for the bsln.
 
-		if(msar->nAnt_==1) return True;
+		if(msar->nAnt_==1) return true;
 		// (edit applies to entire single antenna).
 
 		// Otherwise, do antenna-based baseline testing.  Does the given baseline
@@ -5425,12 +5426,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool MSAsRaster::FlagEdit_::operator==(FlagEdit_& other) {
 		// compare two flag edit commands for equality.
 		uInt n=all.nelements();
-		if(n!=other.all.nelements()) return False;
+		if(n!=other.all.nelements()) return false;
 		for(uInt i=0; i<n; i++)
 			if(all[i]!=other.all[i] || start[i]!=other.start[i] ||
-			        shape[i]!=other.shape[i] ) return False;
-		if(unflag!=other.unflag || entireAnt!=other.entireAnt) return False;
-		return True;
+			        shape[i]!=other.shape[i] ) return false;
+		if(unflag!=other.unflag || entireAnt!=other.entireAnt) return false;
+		return true;
 	}
 
 
@@ -5462,7 +5463,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the beginning of each chunk and stored with the edit, rather than
 		// recalculating these same ranges for every row of the chunk.
 
-		appChunk = False;
+		appChunk = false;
 		sPol=ePol=sChan=eChan=0;
 		// (default, until shown otherwise).
 
@@ -5471,7 +5472,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			ePol=nPol;
 		}	// Edit applies to all pols in MS row.
 		else {
-			if(pol0==INVALID) return False;	// polId N/A to edit.
+			if(pol0==INVALID) return false;	// polId N/A to edit.
 			getSureRange(POL, sPol, ePol);
 			sPol = max(0,    sPol-pol0);	// Adjust edit range for polId
 			ePol = min(nPol, ePol-pol0);
@@ -5502,7 +5503,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// chosen, regardless of whether a timeslot index for it exists within the
 		// currently-selected fields.  Hence the need to compare raw times here.
 
-		if(all[TIME]) return True;
+		if(all[TIME]) return true;
 		Int st, et;
 		getSureRange(TIME, st, et);
 		// Edit bracket in terms of timeslot indices.
@@ -5875,24 +5876,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		Timer tmr;
 		Double pctDone = 100. / max(1., Double(nt*nc*np));
-		Bool prgShown = False;
+		Bool prgShown = false;
 		Double intvl=2.;
 		Double iPlanes=0.;
 
 
-		// (NB: struct casa::Axis, defined in ArrayAccessor.h,
+		// (NB: struct casacore::Axis, defined in ArrayAccessor.h,
 		// vs.  typedef Int Axis,  defined in MSAsRaster.h...).
 
-		ArrayAccessor<Float, casa::Axis<TIME> >  t(vis_);
+		ArrayAccessor<Float, casacore::Axis<TIME> >  t(vis_);
 		for(Int to=0;   t!=t.end();   ++t, to+=ti) {
-			ArrayAccessor<Float, casa::Axis<CHAN> >  c(t);
+			ArrayAccessor<Float, casacore::Axis<CHAN> >  c(t);
 			for(Int co=to;   c!=c.end();   ++c, co+=ci) {
-				ArrayAccessor<Float, casa::Axis<POL> >  p(c);
+				ArrayAccessor<Float, casacore::Axis<POL> >  p(c);
 				for(Int po=co;   p!=p.end();   ++p, po+=pi) {
-					ArrayAccessor<Float, casa::Axis<SP_W> >  s(p);
+					ArrayAccessor<Float, casacore::Axis<SP_W> >  s(p);
 					for(Int so=po;   s!=s.end();   ++s, so+=si) {
 						Int* o2np=o2n;
-						ArrayAccessor<Float, casa::Axis<BASELN> >  b(s);
+						ArrayAccessor<Float, casacore::Axis<BASELN> >  b(s);
 						for(Int bo=so;   b!=b.end();   ++b, bo+=bi, o2np++) {
 
 
@@ -5940,7 +5941,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if(tmr.real()>intvl) {
 						if(!prgShown) {
 							cerr<<endl<<"Resorting MS vis. data:  "<<flush;
-							prgShown=True;
+							prgShown=true;
 						}
 						Int pct = Int(iPlanes*pctDone +.5);
 						if(pct>0 && pct<100) cerr<<pct<<"%  "<<flush;
@@ -5958,7 +5959,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		flags_ = flgs;
 
 
-		dispValid_ = False;   // Forces call to createDisplaySlice_ in draw_.
+		dispValid_ = false;   // Forces call to createDisplaySlice_ in draw_.
 
 		if(prgShown) cerr<<"Done."<<endl<<endl;
 	}	// progress feedback.
@@ -5976,7 +5977,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		removeColormap();
 		resetFreq_();
 
-		Bool printwarning=True;
+		Bool printwarning=true;
 		undoEdits_("all", printwarning);		// delete any leftover flagging edits--user will lose them.
 
 
@@ -5986,7 +5987,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			delete vs_;
 
 		if( mssel_ != itsMS && mssel_ != 0 ) {
-			mssel_->relinquishAutoLocks(True);
+			mssel_->relinquishAutoLocks(true);
 			delete mssel_;				// selected MS,...
 		}
 
@@ -5994,7 +5995,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			delete msCols_;
 
 		if(itsMS!=0) {
-			itsMS->relinquishAutoLocks(True);
+			itsMS->relinquishAutoLocks(true);
 			delete itsMS;				// and original unselected MS.
 		}
 	}

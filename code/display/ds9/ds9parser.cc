@@ -3,6 +3,7 @@
 
 #include <display/ds9/ds9parser.h>
 
+using namespace casacore;
 namespace casa {
 	namespace viewer {
 

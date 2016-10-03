@@ -36,10 +36,11 @@
 // this include:
 #include <display/DisplayEvents/MultiPolyToolImpl.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	MultiPolyToolImpl::MultiPolyToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) :
-		MultiPolyTool( rf, pd, keysym, True) {
+		MultiPolyTool( rf, pd, keysym, true) {
 	}
 
 	MultiPolyToolImpl::~MultiPolyToolImpl() {

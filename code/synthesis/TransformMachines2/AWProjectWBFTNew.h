@@ -40,44 +40,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class AWProjectWBFTNew : public AWProjectWBFT {
 
   public:
-    AWProjectWBFTNew(Int nFacets, Long cachesize,
-		     CountedPtr<CFCache>& cfcache,
-		     CountedPtr<ConvolutionFunction>& cf,
-		     CountedPtr<VisibilityResamplerBase>& visResampler,
-		     Bool applyPointingOffset=True,
-		     Bool doPBCorr=True,
-		     Int tilesize=16, 
-		     Float paSteps=5.0, 
-		     Float pbLimit=5e-4,
-		     Bool usezero=False,
-		     Bool conjBeams_p=True,
-		     Bool doublePrecGrid=False):
+    AWProjectWBFTNew(casacore::Int nFacets, casacore::Long cachesize,
+		     casacore::CountedPtr<CFCache>& cfcache,
+		     casacore::CountedPtr<ConvolutionFunction>& cf,
+		     casacore::CountedPtr<VisibilityResamplerBase>& visResampler,
+		     casacore::Bool applyPointingOffset=true,
+		     casacore::Bool doPBCorr=true,
+		     casacore::Int tilesize=16, 
+		     casacore::Float paSteps=5.0, 
+		     casacore::Float pbLimit=5e-4,
+		     casacore::Bool usezero=false,
+		     casacore::Bool conjBeams_p=true,
+		     casacore::Bool doublePrecGrid=false):
       AWProjectWBFT(nFacets, cachesize, cfcache, cf, visResampler, applyPointingOffset, 
 		    doPBCorr, tilesize, paSteps, pbLimit, usezero, conjBeams_p, doublePrecGrid){}
 
-    // Construct from a Record containing the AWProjectWBFT state
-    AWProjectWBFTNew(const RecordInterface& stateRec):AWProjectWBFT(stateRec){};
+    // Construct from a casacore::Record containing the AWProjectWBFT state
+    AWProjectWBFTNew(const casacore::RecordInterface& stateRec):AWProjectWBFT(stateRec){};
     
     // Copy constructor
     //AWProjectWBFTNew(const AWProjectWBFTNew &other):AWProjectWBFT() {operator=(other);};
 
-    virtual String name() const {return "AWProjectWBFTNew";};
+    virtual casacore::String name() const {return "AWProjectWBFTNew";};
     
     ~AWProjectWBFTNew(){};
 
     FTMachine* cloneFTM();
 
-    virtual Bool useWeightImage(){return True;};
-    virtual void setDryRun(Bool val)
+    virtual casacore::Bool useWeightImage(){return true;};
+    virtual void setDryRun(casacore::Bool val)
     {
       isDryRun=val;
       //cerr << "###### " << isDryRun << endl;
     };
 
   protected:
-    void ftWeightImage(Lattice<Complex>& wtImage, 
-		       const Matrix<Float>& sumWt,
-		       const Bool& doFFTNorm);
+    void ftWeightImage(casacore::Lattice<casacore::Complex>& wtImage, 
+		       const casacore::Matrix<casacore::Float>& sumWt,
+		       const casacore::Bool& doFFTNorm);
 
   private:
 

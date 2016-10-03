@@ -37,7 +37,7 @@ void writeTestString(const String& test) {
 
 
 int main() {
-	Bool ok = True;
+	Bool ok = true;
 	try {
          String casapath = EnvironmentVariable::get("CASAPATH");
          if (casapath.empty()) {
@@ -54,7 +54,7 @@ int main() {
 		Vector<Int> axes(2);
 		axes[0] = 0;
 		axes[1] = 1;
-		ImageStatsCalculator calculator(fits, 0, "", False);
+		ImageStatsCalculator calculator(fits, 0, "", false);
 		calculator.setAxes(axes);
 		Record statsOut = calculator.statistics();
 		Vector<Int> got;
@@ -77,7 +77,7 @@ int main() {
         cout << "ok" << endl;
 	}
     catch (AipsError x) {
-    	ok = False;
+    	ok = false;
         cerr << "Exception caught: " << x.getMesg() << endl;
     }
 	return ok ? 0 : 1;

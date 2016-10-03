@@ -30,10 +30,13 @@
 #include <casacore/casa/Utilities/BinarySearch.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <casa/Utilities/Assert.h>
+using namespace casacore;
+
+template class casacore::Array<casacore::CountedPtr<casa::CFBuffer> >;
+
 namespace casa{
 
   // Instantiate a commonly used extern template
-  template class casa::Array<casa::CountedPtr<casa::CFBuffer> >;
 
   //
   //---------------------------------------------------------------
@@ -131,7 +134,7 @@ namespace casa{
     // Resize the storage.  Retain the value of the existing pixels.
     // New pixels due to resize, if any, are assigned a new Array<T>
     // pointer.
-    cfCells_p.resize(nChan_p, nW_p, nPol_p, True);
+    cfCells_p.resize(nChan_p, nW_p, nPol_p, true);
 
     for (uInt i=0;i<cfCells_p.shape()(0);i++)      // nChan_p
       for (uInt j=0;j<cfCells_p.shape()(1);j++)    // nW_p
@@ -376,7 +379,7 @@ namespace casa{
 			   const Double& /*incr*/)
   {
     Int n=valList.nelements();
-    if (n==1) {found=True;return valList[0];}
+    if (n==1) {found=true;return valList[0];}
     Int where = binarySearch(found, valList, val, n);
     if (found) return valList(where);
     else return -1.0;

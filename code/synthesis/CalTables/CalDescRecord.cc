@@ -30,6 +30,7 @@
 #include <msvis/MSVis/MSCalEnums.h>
 #include <casa/Arrays.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------

@@ -33,12 +33,13 @@
 
 
 
+using namespace casacore;
 namespace casa { 
-  bool SigHandler::killOn_p = False;
+  bool SigHandler::killOn_p = false;
   SigHandler::SigHandler()
   {
     setupSignalHandlers();
-    setStopSignal(False);
+    setStopSignal(false);
   }
 
   SigHandler::~SigHandler()
@@ -55,7 +56,7 @@ namespace casa {
   void SigHandler::resetSignalHandlers(){
     signal(SIGABRT, SIG_DFL);
     signal(SIGINT, SIG_DFL);
-    killOn_p=False;
+    killOn_p=false;
   }
 
   Bool SigHandler::gotStopSignal(){
@@ -66,7 +67,7 @@ namespace casa {
     String smoke="n ABORT ";
     if(sig==SIGINT) smoke="n INTERRUPT ";
     cerr << ("Caught a"+smoke+ " signal. Please wait ...");
-    killOn_p=True;
+    killOn_p=true;
   }
 
   void SigHandler::setStopSignal(Bool lala){

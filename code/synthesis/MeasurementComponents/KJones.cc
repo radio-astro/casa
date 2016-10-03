@@ -53,6 +53,7 @@
 
 
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -189,13 +190,13 @@ void DelayFFT::FFT() {
   //  cout << "DelayFFT::FFT()..." << endl;
 
   // We always transform only the chan axis (1)
-  Vector<Bool> ax(3,False);
-  ax(1)=True;
+  Vector<Bool> ax(3,false);
+  ax(1)=true;
 
   // Transform
   //  TBD: can Vpad_ be an ArrayLattice?
   ArrayLattice<Complex> c(Vpad_);
-  LatticeFFT::cfft0(c,ax,True);
+  LatticeFFT::cfft0(c,ax,true);
 
   //  cout << "...end DelayFFT::FFT()" << endl;
 
@@ -267,7 +268,7 @@ void DelayFFT::searchPeak() {
   delay_.resize(nCorr_,nElem_);
   delay_.set(0.0);
   flag_.resize(nCorr_,nElem_);
-  flag_.set(True);  // all flagged
+  flag_.set(true);  // all flagged
   Vector<Float> amp;
   Int ipk;
   Float alo,amax,ahi,fpk;
@@ -294,7 +295,7 @@ void DelayFFT::searchPeak() {
 	delay/=df_;                        // nsec
 
 	delay_(icorr,ielem)=delay;     
-	flag_(icorr,ielem)=False;
+	flag_(icorr,ielem)=false;
       }
     }
   }
@@ -307,7 +308,7 @@ void DelayFFT::searchPeak() {
 
   // refant (if specified) is unflagged
   if (refant_>-1)
-    flag_(Slice(),Slice(refant_,1,1))=False;
+    flag_(Slice(),Slice(refant_,1,1))=false;
 
   //  cout << "...end DelayFFT::searchPeak()" << endl;
 
@@ -349,7 +350,7 @@ KJones::KJones(VisSet& vs) :
   //  TBD: these should be in the caltable!!                                                                                                                    
   MSSpectralWindow msSpw(vs.spectralWindowTableName());
   ROMSSpWindowColumns msCol(msSpw);
-  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  msCol.refFrequency().getColumn(KrefFreqs_,true);
   KrefFreqs_/=1.0e9;  // in GHz
 
 }
@@ -370,7 +371,7 @@ KJones::KJones(String msname,Int MSnAnt,Int MSnSpw) :
 
   MSSpectralWindow msSpw(vs.spectralWindowTableName());
   ROMSSpWindowColumns msCol(msSpw);
-  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  msCol.refFrequency().getColumn(KrefFreqs_,true);
   KrefFreqs_/=1.0e9;  // in GHz
   */
 
@@ -403,16 +404,16 @@ void KJones::setApply(const Record& apply) {
   GJones::setApply(apply);
 
   if (calWt()) 
-    logSink() << " (" << this->typeName() << ": Enforcing calWt()=False for phase/delay-like terms)" << LogIO::POST;
+    logSink() << " (" << this->typeName() << ": Enforcing calWt()=false for phase/delay-like terms)" << LogIO::POST;
 
-  // Enforce calWt() = False for delays
-  calWt()=False;
+  // Enforce calWt() = false for delays
+  calWt()=false;
 
   // Extract per-spw ref Freq for phase(delay) calculation
   //  from the CalTable
   MSSpectralWindow msSpw(ct_->spectralWindow());
   ROMSSpWindowColumns msCol(msSpw);
-  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  msCol.refFrequency().getColumn(KrefFreqs_,true);
   KrefFreqs_/=1.0e9;  // in GHz
 
   /// Re-assign KrefFreq_ according spwmap (if any)
@@ -434,10 +435,10 @@ void KJones::setCallib(const Record& callib,
   SolvableVisCal::setCallib(callib,selms);
 
   if (calWt()) 
-    logSink() << " (" << this->typeName() << ": Enforcing calWt()=False for phase/delay-like terms)" << LogIO::POST;
+    logSink() << " (" << this->typeName() << ": Enforcing calWt()=false for phase/delay-like terms)" << LogIO::POST;
 
-  // Enforce calWt() = False for delays
-  calWt()=False;
+  // Enforce calWt() = false for delays
+  calWt()=false;
 
   // Extract per-spw ref Freq for phase(delay) calculation
   //  from the CalTable
@@ -505,7 +506,7 @@ void KJones::calcAllJones() {
 	if (onePOK(ipar)) { 
 	  phase=2.0*C::pi*onePar(ipar)*(currFreq()(ich)-KrefFreqs_(currSpw()));
 	  oneJones(ipar)=Complex(cos(phase),sin(phase));
-	  oneJOK(ipar)=True;
+	  oneJOK(ipar)=true;
 	}
       }
       
@@ -595,7 +596,7 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   Int nChan=vb.nChannel();
 
   solveRPar()=0.0;
-  solveParOK()=False;
+  solveParOK()=false;
 
   //  cout << "solveRPar().shape() = " << solveRPar().shape() << endl;
   //  cout << "vb.nCorr() = " << vb.nCorr() << endl;
@@ -627,8 +628,8 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   vpad(sl1)=slvis(sl0);
 
   // We will only transform frequency axis of 3D array
-  Vector<Bool> ax(3,False);
-  ax(1)=True;
+  Vector<Bool> ax(3,false);
+  ax(1)=true;
   
   // Do the FFT
   ArrayLattice<Complex> c(vpad);
@@ -689,13 +690,13 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 	    //	    cout << vb.antenna2()(irow) 
 	    //		 << ", pol=" << icor << " delay(nsec)="<< -delay; 
 	    solveRPar()(icor,0,vb.antenna2()(irow))=-delay;
-	    solveParOK()(icor,0,vb.antenna2()(irow))=True;
+	    solveParOK()(icor,0,vb.antenna2()(irow))=true;
 	  }
 	  else if (vb.antenna2()(irow)==refant()) {
 	    //	    cout << vb.antenna1()(irow) 
 	    //		 << ", pol=" << icor << " delay(nsec)="<< delay;
 	    solveRPar()(icor,0,vb.antenna1()(irow))=delay;
-	    solveParOK()(icor,0,vb.antenna1()(irow))=True;
+	    solveParOK()(icor,0,vb.antenna1()(irow))=true;
 	  }
 	  //	  cout << " (refant ID=" << refant() << ")" << endl;
 
@@ -728,7 +729,7 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 
   // Ensure refant has zero delay and is NOT flagged
   solveRPar()(Slice(),Slice(),Slice(refant(),1,1)) = 0.0;
-  solveParOK()(Slice(),Slice(),Slice(refant(),1,1)) = True;
+  solveParOK()(Slice(),Slice(),Slice(refant(),1,1)) = true;
 
   /*  
   if (nfalse(solveParOK())>0) {
@@ -758,7 +759,7 @@ KcrossJones::KcrossJones(VisSet& vs) :
   //  TBD: these should be in the caltable!!
   MSSpectralWindow msSpw(vs.spectralWindowTableName());
   ROMSSpWindowColumns msCol(msSpw);
-  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  msCol.refFrequency().getColumn(KrefFreqs_,true);
   KrefFreqs_/=1.0e9;  // in GHz
 
 }
@@ -775,7 +776,7 @@ KcrossJones::KcrossJones(String msname,Int MSnAnt,Int MSnSpw) :
   /*  DEPRECATED, because we get it from ct_?
   MSSpectralWindow msSpw(vs.spectralWindowTableName());
   ROMSSpWindowColumns msCol(msSpw);
-  msCol.refFrequency().getColumn(KrefFreqs_,True);
+  msCol.refFrequency().getColumn(KrefFreqs_,true);
   KrefFreqs_/=1.0e9;  // in GHz
   */
 }
@@ -827,7 +828,7 @@ void KcrossJones::selfSolveOne(VisBuffGroupAcc& vbga) {
 void KcrossJones::solveOneVB(const VisBuffer& vb) {
 
   solveRPar()=0.0;
-  solveParOK()=False;
+  solveParOK()=false;
 
   Int fact(8);
   Int nChan=vb.nChannel();
@@ -865,7 +866,7 @@ void KcrossJones::solveOneVB(const VisBuffer& vb) {
   
   // Do the FFT
   ArrayLattice<Complex> c(sumvis);
-  LatticeFFT::cfft(c,True);        
+  LatticeFFT::cfft(c,true);        
       
   // Find peak in each FFT
   Vector<Float> amp=amplitude(sumvis);
@@ -898,7 +899,7 @@ void KcrossJones::solveOneVB(const VisBuffer& vb) {
   delay/=1.0e-9;
 
   solveRPar()(Slice(0,1,1),Slice(),Slice())=delay;
-  solveParOK()=True;
+  solveParOK()=true;
 
   logSink() << " Time="<< MVTime(refTime()/C::day).string(MVTime::YMD,7)
 	    << " Spw=" << currSpw()
@@ -1058,10 +1059,10 @@ void KAntPosJones::setCallib(const Record& callib,
   SolvableVisCal::setCallib(callib,selms);
 
   if (calWt()) 
-    logSink() << " (" << this->typeName() << ": Enforcing calWt()=False for phase/delay-like terms)" << LogIO::POST;
+    logSink() << " (" << this->typeName() << ": Enforcing calWt()=false for phase/delay-like terms)" << LogIO::POST;
 
-  // Enforce calWt() = False for delays
-  calWt()=False;
+  // Enforce calWt() = false for delays
+  calWt()=false;
 
 
   // Force spwmap to all 0  (antpos is not spw-dep)
@@ -1100,12 +1101,12 @@ void KAntPosJones::specify(const Record& specify) {
   Int Nant(0);
 
   // Handle old VLA rotation, if necessary
-  Bool doVLARot(False);
+  Bool doVLARot(false);
   Matrix<Double> vlaRot=Rot3D(0,0.0);
   if (specify.isDefined("caltype") ) {
     String caltype=upcase(specify.asString("caltype"));
     if (upcase(caltype).contains("VLA")) {
-      doVLARot=True;
+      doVLARot=true;
       MPosition vlaCenter;
       AlwaysAssert(MeasTable::Observatory(vlaCenter,"VLA"),AipsError);
       Double vlalong=vlaCenter.getValue().getLong();
@@ -1282,14 +1283,14 @@ void KAntPosJones::calcAllJones() {
 	// NB: currFreq() is in GHz
 	phase=2.0*C::pi*dw*currFreq()(ich);
 	currJElem()(0,ich,iant)=Complex(cos(phase),sin(phase));
-	currJElemOK()(0,ich,iant)=True;
+	currJElemOK()(0,ich,iant)=true;
 	
       }
     }
     else {
       // No correction
       currJElem().xyPlane(iant)=Complex(1.0);
-      currJElemOK().xyPlane(iant)=True;
+      currJElemOK().xyPlane(iant)=true;
     }
 
   }

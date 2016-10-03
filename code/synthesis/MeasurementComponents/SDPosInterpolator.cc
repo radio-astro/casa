@@ -27,6 +27,7 @@
 
 #include <synthesis/MeasurementComponents/SDPosInterpolator.h>
 
+using namespace casacore;
 namespace casa {
 
 SDPosInterpolator::SDPosInterpolator(const VisBuffer& vb, const String& pointingDirCol_p) {
@@ -53,11 +54,11 @@ void SDPosInterpolator::setup(const Vector<Vector<Double> >& time,
   dirPointing.resize(nant);
   splineCoeff.resize(nant);
   doSplineInterpolation.resize(nant);
-  doSplineInterpolation = False;
+  doSplineInterpolation = false;
   for (Int i = 0; i < nant; ++i) {
     if (nPointingData(i) < 4) continue;
     
-    doSplineInterpolation(i) = True;
+    doSplineInterpolation(i) = true;
     timePointing(i).resize(nPointingData(i));
     dirPointing(i).resize(nPointingData(i));
     splineCoeff(i).resize(nPointingData(i) - 1);
@@ -137,11 +138,11 @@ void SDPosInterpolator::setup(const VisBuffer& vb, const String& pointingDirCol_
   dirPointing.resize(nant);
   splineCoeff.resize(nant);
   doSplineInterpolation.resize(nant);
-  doSplineInterpolation = False;
+  doSplineInterpolation = false;
   for (Int i = 0; i < nant; ++i) {
     if (nPointingData(i) < 4) continue;
     
-    doSplineInterpolation(i) = True;
+    doSplineInterpolation(i) = true;
     timePointing(i).resize(nPointingData(i));
     dirPointing(i).resize(nPointingData(i));
     splineCoeff(i).resize(nPointingData(i) - 1);

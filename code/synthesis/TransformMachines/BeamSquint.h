@@ -43,7 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <reviewed reviewer="" date="" tests="" demos="">
 
 // <prerequisite>
-// <li> <linkto class="MDirection">MDirection</linkto> class
+// <li> <linkto class="casacore::MDirection">casacore::MDirection</linkto> class
 // </prerequisite>
 //
 // <etymology>
@@ -58,7 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // no beam squint.  The nominal pointing position is taken to be
 // right in between the RR and LL beam centers/
 //
-// BeamSquint has an MDirection which represents the angular offset from the nominal
+// BeamSquint has an casacore::MDirection which represents the angular offset from the nominal
 // pointing position at Parallactic angle = 0 (ie, observing a source south of zenith
 // at transit) and the actual RR beam.  BeamSquint also has a reference frequency,
 // and the magnitude of the squint angular offset is inversely proportional with
@@ -74,13 +74,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-//    MDirection oldPointing;
-//    MDirection newPointing;
-//    Quantity parallacticAngle(C::pi/2, "rad");
-//    Quantity observingFreq(1.4142, "GHz");
-//    BeamSquint oneBS( MDirection( Quantity(1.0, "'"), Quantity(1.0, "'"),
-//                                  MDirection::Ref(MDirection::AZEL)),
-//                      Quantity(1.0, "GHz") );
+//    casacore::MDirection oldPointing;
+//    casacore::MDirection newPointing;
+//    casacore::Quantity parallacticAngle(C::pi/2, "rad");
+//    casacore::Quantity observingFreq(1.4142, "GHz");
+//    BeamSquint oneBS( casacore::MDirection( casacore::Quantity(1.0, "'"), casacore::Quantity(1.0, "'"),
+//                                  casacore::MDirection::Ref(casacore::MDirection::AZEL)),
+//                      casacore::Quantity(1.0, "GHz") );
 //    oneBS.getPointingDirection(oldPointing, parallacticAngle,
 //                               observingFreq, BeamSquint::RR, newPointing);
 //
@@ -111,8 +111,8 @@ public:
   // Default constructor initializes to zero
   BeamSquint();
 
-  //Smart constructor to initialize the MDirection and reference freq
-  BeamSquint(const MDirection& squint, const Quantity& refFreq);
+  //Smart constructor to initialize the casacore::MDirection and reference freq
+  BeamSquint(const casacore::MDirection& squint, const casacore::Quantity& refFreq);
 
   //Copy constructor
   BeamSquint(const BeamSquint& other);
@@ -127,23 +127,23 @@ public:
   void show();
 
   //Is BeamSquint nonNull?
-  Bool isNonNull();
+  casacore::Bool isNonNull();
 
-  //Return the squint's MDirection scaled to a particular frequency
-  MDirection& scale(const Quantity& refFreq);
+  //Return the squint's casacore::MDirection scaled to a particular frequency
+  casacore::MDirection& scale(const casacore::Quantity& refFreq);
 
   //Return the squinted pointing position
-  void getPointingDirection (const MDirection& pointDir,
-			     const Quantity parAngle,
-			     const Quantity obsFreq,
+  void getPointingDirection (const casacore::MDirection& pointDir,
+			     const casacore::Quantity parAngle,
+			     const casacore::Quantity obsFreq,
 			     const SquintType doSquint,
-			     MDirection& newPointingDir);
+			     casacore::MDirection& newPointingDir);
 
 protected:
 
-  MDirection squint_p;
+  casacore::MDirection squint_p;
 
-  Quantity refFreq_p;
+  casacore::Quantity refFreq_p;
 
 };
   

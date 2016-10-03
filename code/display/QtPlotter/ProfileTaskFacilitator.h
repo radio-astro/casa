@@ -39,13 +39,17 @@
 
 class QDoubleValidator;
 
+namespace casacore{
+
+	class LogIO;
+	template <class T> class ImageInterface;
+}
+
 namespace casa {
 
 	class QtCanvas;
 	class ProfileTaskMonitor;
-	class LogIO;
 
-	template <class T> class ImageInterface;
 
 	class ProfileTaskFacilitator {
 	public:
@@ -62,44 +66,45 @@ namespace casa {
 		virtual void addCurveName( const QString& curveName );
 		virtual void setDisplayYUnits( const QString& units );
 		virtual void setImageYUnits( const QString& units );
-		virtual void setLogger( LogIO* log );
+		virtual void setLogger( casacore::LogIO* log );
 		virtual void plotMainCurve();
 
 		virtual QString getFileName();
-		virtual void logWarning(String msg, bool opticalSource = false );
-		virtual void postStatus( String status, bool opticalSource = false );
-		virtual Vector<Float> getXValues() const;
-		virtual Vector<Float> getYValues() const;
-		virtual Vector<Float> getZValues() const;
-		virtual Vector<Double> getRegionXValues() const;
-		virtual Vector<Double> getRegionYValues() const;
+		virtual void logWarning(casacore::String msg, bool opticalSource = false );
+		virtual void postStatus( casacore::String status, bool opticalSource = false );
+		virtual casacore::Vector<casacore::Float> getXValues() const;
+		virtual casacore::Vector<casacore::Float> getYValues() const;
+		virtual casacore::Vector<casacore::Float> getZValues() const;
+		virtual casacore::Vector<casacore::Double> getRegionXValues() const;
+		virtual casacore::Vector<casacore::Double> getRegionYValues() const;
 		virtual QString getYUnit() const;
 		virtual QString getYUnitPrefix() const;
-		virtual String getXAxisUnit() const;
-		virtual const SHARED_PTR<const ImageInterface<Float> > getImage( const QString& name="") const;
-		virtual const String getPixelBox() const;
-		virtual const String getRegionShape() const;
+		virtual casacore::String getXAxisUnit() const;
+		virtual const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > getImage( const QString& name="") const;
+		virtual const casacore::String getPixelBox() const;
+		virtual const casacore::String getRegionShape() const;
 
 		bool isOptical();
 		void setOptical( bool optical );
 
 		virtual void clear();
-		void setCollapseVals(const Vector<Float> &spcVals);
+		void setCollapseVals(const casacore::Vector<casacore::Float> &spcVals);
 
 		virtual void pixelsChanged(int pixX, int pixY );
 
 	protected:
 		bool isValidChannelRangeValue( QString str, const QString& endStr );
 		void findChannelRange( float startVal, float endVal,
-		                       const Vector<Float>& specValues, Int& channelStartIndex, Int& channelEndIndex );
+		                       const casacore::Vector<casacore::Float>& specValues, casacore::Int& channelStartIndex, casacore::Int& channelEndIndex );
 		QtCanvas* pixelCanvas;
 		ProfileTaskMonitor* taskMonitor;
-		LogIO* logger;
+		casacore::LogIO* logger;
 
 	private:
 		bool optical;
 		QDoubleValidator *validator;
 	};
 
-} /* namespace casa */
+} // end namespace casa
+
 #endif /* SPECFITTER_H_ */

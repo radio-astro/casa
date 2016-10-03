@@ -135,9 +135,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void init()
     {freqList.resize(0); wList.resize(0); muellerList.resize(0); cfNameList.resize(0);}
 
-    vector<Double> freqList, wList;
-    vector<Int> muellerList;
-    vector<String> cfNameList;
+    vector<casacore::Double> freqList, wList;
+    vector<casacore::Int> muellerList;
+    vector<casacore::String> cfNameList;
   };
   //
   //----------------------------------------------------------------------
@@ -145,42 +145,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class CFCache
   {
   public:
-    typedef Vector< CFStore > CFStoreCacheType;
-    typedef Vector< CFStore2 > CFStoreCacheType2;
+    typedef casacore::Vector< CFStore > CFStoreCacheType;
+    typedef casacore::Vector< CFStore2 > CFStoreCacheType2;
     typedef vector<CFCacheTable> CFCacheTableType;
     CFCache(const char *cfDir="CF"):
       memCache2_p(), memCacheWt2_p(),memCache_p(), memCacheWt_p(), 
       cfCacheTable_p(), XSup(), YSup(), paList(), 
       paList_p(), key2IndexMap(),
-      Dir(""), WtImagePrefix(""), cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False),
-      avgPBReadyQualifier_p(""), OTODone_p(False)
+      Dir(""), WtImagePrefix(""), cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(false),
+      avgPBReadyQualifier_p(""), OTODone_p(false)
     {};
     CFCache& operator=(const CFCache& other);
     ~CFCache();
     //
     // Method to set the disk cache directory name
     //
-    void setCacheDir(const char *dir) {Dir = String(dir);}
-    String getCacheDir() {return Dir;};
+    void setCacheDir(const char *dir) {Dir = casacore::String(dir);}
+    casacore::String getCacheDir() {return Dir;};
 
     void setWtImagePrefix(const char *prefix) {WtImagePrefix = prefix;}
-    String getWtImagePrefix() {return WtImagePrefix;};
+    casacore::String getWtImagePrefix() {return WtImagePrefix;};
     //
     // Method to initialize the internal memory cache.
     //
     void initCache();
-    void initCache2(Bool verbose=False, Float selectedPA=400.0, Float dPA=-1.0);
-    void initCacheFromList2(const String& path, 
-			    const Vector<String>& cfFileNames, 
-			    const Vector<String>& cfWtFileNames, 
-			    Float selectedPA, Float dPA,
-			    const Int verbose=1);
+    void initCache2(casacore::Bool verbose=false, casacore::Float selectedPA=400.0, casacore::Float dPA=-1.0);
+    void initCacheFromList2(const casacore::String& path, 
+			    const casacore::Vector<casacore::String>& cfFileNames, 
+			    const casacore::Vector<casacore::String>& cfWtFileNames, 
+			    casacore::Float selectedPA, casacore::Float dPA,
+			    const casacore::Int verbose=1);
     void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
-    inline Bool OTODone() {return OTODone_p;}
+    inline casacore::Bool OTODone() {return OTODone_p;}
     //
     // Compute the size of the memory cache in bytes
     //
-    Long size();
+    casacore::Long size();
     //
     // Method to set the class to caluclate the differential
     // Parallactic Angle.  The ParAngleChangeDetector also holds the
@@ -193,40 +193,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Top level method interfacing with the CFStore object
     //-------------------------------------------------------------------
     void cacheConvFunction(CFStore& cfs, 
-			   String nameQualifier="",Bool savePA=True)
+			   casacore::String nameQualifier="",casacore::Bool savePA=true)
     {cacheConvFunction(cfs.pa, cfs,nameQualifier,savePA);}
     //-------------------------------------------------------------------
     // One level lower - the Parallactic angle can be separately
     // provided.
-    void cacheConvFunction(const Quantity pa, CFStore& cfs,
-			   String nameQualifier="",Bool savePA=True)
+    void cacheConvFunction(const casacore::Quantity pa, CFStore& cfs,
+			   casacore::String nameQualifier="",casacore::Bool savePA=true)
     {cacheConvFunction(pa.getValue("rad"), cfs, nameQualifier,savePA);}
     //-------------------------------------------------------------------
     // The Parallactic angle as a floating point number in radians.
-    void cacheConvFunction(const Float pa, CFStore& cfs, 
-			   String nameQualifier="",Bool savePA=True);
+    void cacheConvFunction(const casacore::Float pa, CFStore& cfs, 
+			   casacore::String nameQualifier="",casacore::Bool savePA=true);
     //-------------------------------------------------------------------
     // Lowest level - all information about CFStore is explicitly
     // provided as basic types
-    Int cacheConvFunction(Int which, const Float& pa, CFType& cf, 
-			  CoordinateSystem& coords, CoordinateSystem& ftcoords, 
-			  Int& convSize, 
-			  Vector<Int>& xConvSupport, Vector<Int>& yConvSupport, 
-			  Float convSampling, String nameQualifier="",Bool savePA=True);
+    casacore::Int cacheConvFunction(casacore::Int which, const casacore::Float& pa, CFType& cf, 
+			  casacore::CoordinateSystem& coords, casacore::CoordinateSystem& ftcoords, 
+			  casacore::Int& convSize, 
+			  casacore::Vector<casacore::Int>& xConvSupport, casacore::Vector<casacore::Int>& yConvSupport, 
+			  casacore::Float convSampling, casacore::String nameQualifier="",casacore::Bool savePA=true);
     //-------------------------------------------------------------------
     // Methods to sarch for a convolution function in the caches (disk
     // or memory) for the give Parallactic Angle value.
     //
-    Bool searchConvFunction(Int& which, const Quantity pa, const Quantity dPA )
+    casacore::Bool searchConvFunction(casacore::Int& which, const casacore::Quantity pa, const casacore::Quantity dPA )
     {return searchConvFunction(which, pa.getValue("rad"), dPA.getValue("rad"));};
 
-    Bool searchConvFunction(Int& which, const Float pa, const Float dPA );
+    casacore::Bool searchConvFunction(casacore::Int& which, const casacore::Float pa, const casacore::Float dPA );
     //
     // Lower level method to load a convolution function from the disk.
     //
-    Int loadFromDisk(Int where, Float pa, Float dPA,
-		     Int Nx, CFStoreCacheType & convFuncCache,
-		     CFStore& cfs, String nameQualifier="");
+    casacore::Int loadFromDisk(casacore::Int where, casacore::Float pa, casacore::Float dPA,
+		     casacore::Int Nx, CFStoreCacheType & convFuncCache,
+		     CFStore& cfs, casacore::String nameQualifier="");
     //
     // Method to locate a convolution function for the given w-term
     // index and PA value.  This is the top level function that must
@@ -238,34 +238,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // found in the cache, CFDefs::MEMCACHE or CFDefs::DISKCACHE if
     // the function was found in memory or disk cache respectively.
     //
-    Int locateConvFunction(CFStore& cfs, CFStore& cftws, const Int Nw, 
-			   const Quantity pa, const Quantity dPA, 
-			   const Int mosXPos=0, const Int mosYPos=0)
+    casacore::Int locateConvFunction(CFStore& cfs, CFStore& cftws, const casacore::Int Nw, 
+			   const casacore::Quantity pa, const casacore::Quantity dPA, 
+			   const casacore::Int mosXPos=0, const casacore::Int mosYPos=0)
     {return locateConvFunction(cfs, cftws, Nw,pa.getValue("rad"), dPA.getValue("rad"),mosXPos,mosYPos);};
 
-    Int locateConvFunction(CFStore& cfs, const Int Nw, 
-			   const Quantity pa, const Quantity dPA, 
-			   const String& nameQualifier="",
-			   const Int mosXPos=0, const Int mosYPos=0)
+    casacore::Int locateConvFunction(CFStore& cfs, const casacore::Int Nw, 
+			   const casacore::Quantity pa, const casacore::Quantity dPA, 
+			   const casacore::String& nameQualifier="",
+			   const casacore::Int mosXPos=0, const casacore::Int mosYPos=0)
     {return locateConvFunction(cfs, Nw,pa.getValue("rad"), dPA.getValue("rad"),nameQualifier, mosXPos,mosYPos);};
 
-    Int locateConvFunction(CFStore& cfs, CFStore& cfwts,
-			   const Int Nw, const Float pa, const Float dPA,
-			   const Int mosXPos=0, const Int mosYPos=0);
+    casacore::Int locateConvFunction(CFStore& cfs, CFStore& cfwts,
+			   const casacore::Int Nw, const casacore::Float pa, const casacore::Float dPA,
+			   const casacore::Int mosXPos=0, const casacore::Int mosYPos=0);
 
-    Int locateConvFunction(CFStore& cfs, const Int Nw, const Float pa, const Float dPA, 
-			   const String& nameQualifier="",
-			   const Int mosXPos=0, const Int mosYPos=0);
+    casacore::Int locateConvFunction(CFStore& cfs, const casacore::Int Nw, const casacore::Float pa, const casacore::Float dPA, 
+			   const casacore::String& nameQualifier="",
+			   const casacore::Int mosXPos=0, const casacore::Int mosYPos=0);
 
-    TableRecord getCFParams(const String& fileName,
-		     Array<Complex>& pixelBuffer,
-		     CoordinateSystem& coordSys, 
-		     Double& sampling,
-		     Double& paVal,
-		     Int& xSupport, Int& ySupport,
-		     Double& fVal, Double& wVal, Int& mVal,
-		     Double& conjFreq, Int& conjPoln,
-		     Bool loadPixels=True);
+    casacore::TableRecord getCFParams(const casacore::String& fileName,
+		     casacore::Array<casacore::Complex>& pixelBuffer,
+		     casacore::CoordinateSystem& coordSys, 
+		     casacore::Double& sampling,
+		     casacore::Double& paVal,
+		     casacore::Int& xSupport, casacore::Int& ySupport,
+		     casacore::Double& fVal, casacore::Double& wVal, casacore::Int& mVal,
+		     casacore::Double& conjFreq, casacore::Int& conjPoln,
+		     casacore::Bool loadPixels=true);
     //
     // Methods to write the auxillary information from the memory
     // cache to the disk cache.  Without this call, the disk cache
@@ -273,18 +273,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // anytime during the life of this object.
     //
     void flush();
-    void flush(ImageInterface<Float>& avgPB, String qualifier=String(""));
-    Int loadAvgPB(ImageInterface<Float>& avgPB, String qualifier=String(""));
-    Int loadAvgPB(CountedPtr<ImageInterface<Float> > & avgPB, String qualifier=String(""))
-    {if (avgPB.null()) avgPB = new TempImage<Float>(); return loadAvgPB(*avgPB,qualifier);};
+    void flush(casacore::ImageInterface<casacore::Float>& avgPB, casacore::String qualifier=casacore::String(""));
+    casacore::Int loadAvgPB(casacore::ImageInterface<casacore::Float>& avgPB, casacore::String qualifier=casacore::String(""));
+    casacore::Int loadAvgPB(casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > & avgPB, casacore::String qualifier=casacore::String(""))
+    {if (avgPB.null()) avgPB = new casacore::TempImage<casacore::Float>(); return loadAvgPB(*avgPB,qualifier);};
 
     // loadAvgPB calls the method below if WtImgPrefix was set.
-    Int loadWtImage(ImageInterface<Float>& avgPB, String qualifier);
+    casacore::Int loadWtImage(casacore::ImageInterface<casacore::Float>& avgPB, casacore::String qualifier);
 
-    Bool avgPBReady(const String& qualifier=String("")) 
+    casacore::Bool avgPBReady(const casacore::String& qualifier=casacore::String("")) 
     {return (avgPBReady_p && (avgPBReadyQualifier_p == qualifier));};
 
-    void summarize(CFStoreCacheType2& memCache, const String& message, const Bool cfsInfo=True);
+    void summarize(CFStoreCacheType2& memCache, const casacore::String& message, const casacore::Bool cfsInfo=true);
 
     CFStoreCacheType2 memCache2_p, memCacheWt2_p;
 
@@ -292,43 +292,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFStoreCacheType memCache_p, memCacheWt_p;
     CFCacheTableType cfCacheTable_p;
 
-    Matrix<Int> XSup, YSup;
-    Vector<Float> paList, Sampling;
-    vector<Float> paList_p;
-    Matrix<Float> key2IndexMap; // Nx2 [PAVal, Freq]
-    String Dir, WtImagePrefix, cfPrefix, aux;
+    casacore::Matrix<casacore::Int> XSup, YSup;
+    casacore::Vector<casacore::Float> paList, Sampling;
+    vector<casacore::Float> paList_p;
+    casacore::Matrix<casacore::Float> key2IndexMap; // Nx2 [PAVal, Freq]
+    casacore::String Dir, WtImagePrefix, cfPrefix, aux;
     ParAngleChangeDetector paCD_p;
     //
     // Internal method to convert the direction co-ordinates of the
-    // given CoordinateSystem to its Fourier conjuguate co-ordinates.
+    // given casacore::CoordinateSystem to its Fourier conjuguate co-ordinates.
     //
-    void makeFTCoordSys(const CoordinateSystem& coords,
-			const Int& convSize,
-			const Vector<Double>& ftRef,
-			CoordinateSystem& ftCoords);
+    void makeFTCoordSys(const casacore::CoordinateSystem& coords,
+			const casacore::Int& convSize,
+			const casacore::Vector<casacore::Double>& ftRef,
+			casacore::CoordinateSystem& ftCoords);
     //
     // Internal method to add the given convolution function to the
     // memory cache.
     //
-    Int addToMemCache(CFStoreCacheType& cfCache, 
-		      Float pa, CFType* cf, CoordinateSystem& coords,
-		      Vector<Int>& xConvSupport,
-		      Vector<Int>& yConvSupport,
-		      Float convSampling);
-    CFStoreCacheType& getMEMCacheObj(const String& nameQualifier);
+    casacore::Int addToMemCache(CFStoreCacheType& cfCache, 
+		      casacore::Float pa, CFType* cf, casacore::CoordinateSystem& coords,
+		      casacore::Vector<casacore::Int>& xConvSupport,
+		      casacore::Vector<casacore::Int>& yConvSupport,
+		      casacore::Float convSampling);
+    CFStoreCacheType& getMEMCacheObj(const casacore::String& nameQualifier);
 
-    void fillCFSFromDisk(const Directory dirObj, const String& pattern, 
-			 CFStoreCacheType2& memStore, Bool showInfo=False, 
-			 Float selectPAVal=400.0, Float dPA=-1.0,
-			 const Int verbose=1);
-    void fillCFListFromDisk(const Vector<String>& fileNames, const String& CFCDir,
+    void fillCFSFromDisk(const casacore::Directory dirObj, const casacore::String& pattern, 
+			 CFStoreCacheType2& memStore, casacore::Bool showInfo=false, 
+			 casacore::Float selectPAVal=400.0, casacore::Float dPA=-1.0,
+			 const casacore::Int verbose=1);
+    void fillCFListFromDisk(const casacore::Vector<casacore::String>& fileNames, const casacore::String& CFCDir,
 			    CFStoreCacheType2& memStore,
-			    Bool showInfo, Float selectPAVal, Float dPA,
-			    const Int verbose=1);
+			    casacore::Bool showInfo, casacore::Float selectPAVal, casacore::Float dPA,
+			    const casacore::Int verbose=1);
 
-    Bool avgPBReady_p;
-    String avgPBReadyQualifier_p;
-    Bool OTODone_p;
+    casacore::Bool avgPBReady_p;
+    casacore::String avgPBReadyQualifier_p;
+    casacore::Bool OTODone_p;
   };
 }
 

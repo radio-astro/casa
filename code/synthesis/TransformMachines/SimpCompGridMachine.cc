@@ -42,6 +42,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 void SimpleComponentGridMachine::get(VisBuffer& vb,  SkyComponent& component,
@@ -82,13 +83,13 @@ void SimpleComponentGridMachine::get(VisBuffer& vb,  SkyComponent& component,
     offPol=startPol;
   }
 
-  Bool constantSpectrum = False;
+  Bool constantSpectrum = false;
   if (component.spectrum().type() == ComponentType::CONSTANT_SPECTRUM) {
-    constantSpectrum = True;
+    constantSpectrum = true;
   }
-  Bool pointShape = False;
+  Bool pointShape = false;
   if (component.shape().type() == ComponentType::POINT) {
-    pointShape = True;
+    pointShape = true;
   }
 
   // Loop over all rows

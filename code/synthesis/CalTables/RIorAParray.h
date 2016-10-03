@@ -43,27 +43,27 @@ public:
   // Construct empty
   RIorAPArray();
 
-  // Construct from external Complex Array
-  RIorAPArray(const Array<Complex>& c);
+  // Construct from external casacore::Complex Array
+  RIorAPArray(const casacore::Array<casacore::Complex>& c);
 
-  // Construct from external Float Array
-  RIorAPArray(const Array<Float>& f);
+  // Construct from external casacore::Float Array
+  RIorAPArray(const casacore::Array<casacore::Float>& f);
 
   // Destructor
   ~RIorAPArray();
 
   // Set data
-  void setData(const Array<Complex>& c);
-  void setData(const Array<Float>& f);
+  void setData(const casacore::Array<casacore::Complex>& c);
+  void setData(const casacore::Array<casacore::Float>& f);
 
   // State
-  void state(Bool verbose=False);
+  void state(casacore::Bool verbose=false);
 
-  // Render Complex version (calc from Float, if necessary)
-  Array<Complex> c();
+  // Render casacore::Complex version (calc from casacore::Float, if necessary)
+  casacore::Array<casacore::Complex> c();
 
-  // Render Float version (calc from Complex, if necessary)
-  Array<Float> f(Bool trackphase);
+  // Render casacore::Float version (calc from casacore::Complex, if necessary)
+  casacore::Array<casacore::Float> f(casacore::Bool trackphase);
 
 private:
 
@@ -73,19 +73,19 @@ private:
 
   // Perform the actual calculation
   void calc_c();
-  void calc_f(Bool trackphase);
+  void calc_f(casacore::Bool trackphase);
 
   // Unwind phase
-  void trackPhase(Array<Float>& ph);
+  void trackPhase(casacore::Array<casacore::Float>& ph);
 
-  // State of Complex and Float versions
-  Bool c_ok_, f_ok_;
+  // State of casacore::Complex and casacore::Float versions
+  casacore::Bool c_ok_, f_ok_;
 
-  Bool phaseTracked_;
+  casacore::Bool phaseTracked_;
 
-  // Internal Arrays for Complex and Float versions
-  Array<Complex> c_;
-  Array<Float> f_;
+  // Internal Arrays for casacore::Complex and casacore::Float versions
+  casacore::Array<casacore::Complex> c_;
+  casacore::Array<casacore::Float> f_;
 
 };
 

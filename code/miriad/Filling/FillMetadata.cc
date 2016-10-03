@@ -105,13 +105,13 @@ Bool ConstMirPolSetup::find(Int poltype, ConstListIter<MirPolCorr>& li) {
     uInt cur = li.pos();
     while (1) {
 	if (! li.atEnd()) {
-	    if (li.getRight() == poltype) return True;
+	    if (li.getRight() == poltype) return true;
 	    ++li;
 	}
 	if (li.atEnd()) li.toStart();
 	if (li.pos() == cur) break;
     }
-    return False;
+    return false;
 }
 
 MirPolSetup::MirPolSetup() : ConstMirPolSetup() { } 
@@ -244,47 +244,47 @@ Bool MirFreqSetup::operator==(MirFreqSetup &that) {
     // != as soon as possible
     Int i;
     if (mode != that.mode || nspect != that.nspect || nwide != that.nwide)
-        return False;
+        return false;
 
     if (corf != NULL && that.corf != NULL) {
 	for(i=0; i<4; i++) {
-	    if (! near(corf[i], that.corf[i])) return False;
+	    if (! near(corf[i], that.corf[i])) return false;
 	}
     } 
     else if (corf != that.corf) {
-	return False;
+	return false;
     }
 
     if (corbw != NULL && that.corbw != NULL) {
 	for(i=0; i<4; i++) {
-	    if (! near(corbw[i], that.corbw[i])) return False;
+	    if (! near(corbw[i], that.corbw[i])) return false;
 	}
     } 
     else if (corbw != that.corbw) {
-	return False;
+	return false;
     }
 
 //      if (nspect > 0) {
 //          for(i=0; i < nspect; i++) {
 //              if (sfreq[i]  != that.sfreq[i] ||
-//                  sdf[i]    != that.sdf[i])     return False;
+//                  sdf[i]    != that.sdf[i])     return false;
 //          }
 //          if (rfreq != that.rfreq) {   // both are non-null
 //              for(i=0; i < nspect; i++) {
-//                  if (rfreq[i]  != that.rfreq[i]) return False;
+//                  if (rfreq[i]  != that.rfreq[i]) return false;
 //              }
 //          }
 //          for(i=0; i < nspect; i++) {
-//              if (ischan[i]  != that.ischan[i]) return False;
+//              if (ischan[i]  != that.ischan[i]) return false;
 //          }
 //      }
 //      if (nwide > 0) {
 //          for(i=0; i < nwide; i++) {
 //              if (wfreq[i]  != that.wfreq[i] ||
-//                  wwidth[i] != that.wwidth[i])  return False;
+//                  wwidth[i] != that.wwidth[i])  return false;
 //          }
 //      }
-    return True;
+    return true;
 }
 
 uInt hashFunc(const DataDescComponents& key) { 
@@ -293,12 +293,12 @@ uInt hashFunc(const DataDescComponents& key) {
 
 FillMetadata::FillMetadata(const String &msname)
     : ms(NULL), msc(NULL), outname(msname), obsid(0),
-      inttime(-1), jyperk(1), telescope(), project(), obsupd(True), 
+      inttime(-1), jyperk(1), telescope(), project(), obsupd(true), 
       nants(0), narrays(0), arrayAnt(0),
       antpos(), arrayXYZ(3,0.0), mount(NULL), diam(NULL), 
       starttime(-1), obstime(-1), feedtime(-1), modeltime(-1), lasttime(-1),
-      fsetup(NULL), source(NULL), movingsrc(False), field(NULL), 
-      pol(NULL), polrecp(NULL), polotf(False),
+      fsetup(NULL), source(NULL), movingsrc(false), field(NULL), 
+      pol(NULL), polrecp(NULL), polotf(false),
 #if 0
       ddids(-1), 
 #endif

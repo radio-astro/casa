@@ -45,8 +45,8 @@ namespace sdmbin{
    */
   typedef struct {
     public:
-    bool         sig;         //!< True if the source signal is being observed
-    bool         ref;         //!< True for a reference phase
+    bool         sig;         //!< true if the source signal is being observed
+    bool         ref;         //!< true for a reference phase
     double       cal;         //!< Noise calibration temperature (zero if not added)
     double       load;        //!< Load temperature (zero if no load)
     unsigned int subscanNum;  //!< Subscan number
@@ -54,7 +54,7 @@ namespace sdmbin{
   } MSState;
 
   /**
-   * A structure containing a block of data for a single MS Main table row.
+   * A structure containing a block of data for a single casacore::MS Main table row.
    */
   typedef struct {
     public:   
@@ -79,7 +79,7 @@ namespace sdmbin{
     float*                      mData;                //!< actual mixed float complex data or NULL
     vector<vector<asdm::Angle> >      phaseDir;             //!< the reference phase direction to be used to determine the UVW
     int                         stateId;              //!< State identifier
-    MSState                     msState;              //!< State information using the MS view
+    MSState                     msState;              //!< State information using the casacore::MS view
     unsigned int                flag;                 //!< flag
   } MSData;
   
@@ -102,7 +102,7 @@ namespace sdmbin{
 
     vector<double>                  v_interval;           //!< from BINARIES Requested exposure time when observations ordered
     vector<AtmPhaseCorrectionMod::AtmPhaseCorrection>      v_atmPhaseCorrection; //!< from QUERY    data filtering
-    int                             binNum;               //!< from QUERY    data filtering (a MS row cannot have data for more than one step)
+    int                             binNum;               //!< from QUERY    data filtering (a casacore::MS row cannot have data for more than one step)
 
     vector<unsigned int>            v_projectPath;        //!< from BINARIES the rel. project-path URI for evry fragment of data it belongs to 
     vector<int>                     v_antennaId1;         //!< from SDM      antenna 1 identifiers 
@@ -114,10 +114,10 @@ namespace sdmbin{
     vector<double>                  v_exposure;           //!< from BINARIES actual duration for the observations
     vector<int>                     v_numData;            //!< from SDM      number of auto-correlations or cross-correlation
     vector<vector<unsigned int> >   vv_dataShape;         //!< from SDM      numPol,numChan,numApc=1
-    vector<map<AtmPhaseCorrectionMod::AtmPhaseCorrection,float*> > v_m_data;     //!< from BINARIES vector of maps (size num MS rows), map size=v_atmPhaseCorrection.size()
+    vector<map<AtmPhaseCorrectionMod::AtmPhaseCorrection,float*> > v_m_data;     //!< from BINARIES vector of maps (size num casacore::MS rows), map size=v_atmPhaseCorrection.size()
     vector<vector<vector<asdm::Angle> > > v_phaseDir;           //!< from SDM      the ref phase directions at the epochs (v_timeCentroid) to use for uvw 
     vector<int>                     v_stateId;            //!< from SDM      need to be redefined when numBin>1 & checked when baseline>0
-    vector<MSState>                 v_msState;            //!< from SDM      MS state tuples
+    vector<MSState>                 v_msState;            //!< from SDM      casacore::MS state tuples
     vector<unsigned int>            v_flag;               //!< from BINARIES  
   } VMSData;
   
@@ -142,7 +142,7 @@ namespace sdmbin{
 
     vector<double>                  v_interval;           //!< from BINARIES Requested exposure time when observations ordered
     vector<AtmPhaseCorrectionMod::AtmPhaseCorrection>      v_atmPhaseCorrection; //!< from QUERY    data filtering
-    int                             binNum;               //!< from QUERY    data filtering (a MS row cannot have data for more than one step)
+    int                             binNum;               //!< from QUERY    data filtering (a casacore::MS row cannot have data for more than one step)
 
     vector<unsigned int>            v_projectPath;        //!< from BINARIES the rel. project-path URI for evry fragment of data it belongs to 
     vector<int>                     v_antennaId1;         //!< from SDM      antenna 1 identifiers 
@@ -154,10 +154,10 @@ namespace sdmbin{
     vector<double>                  v_exposure;           //!< from BINARIES actual duration for the observations
     vector<int>                     v_numData;            //!< from SDM      number of auto-correlations or cross-correlation
     vector<vector<unsigned int> >   vv_dataShape;         //!< from SDM      numPol,numChan,numApc=1
-    vector<map<AtmPhaseCorrectionMod::AtmPhaseCorrection,std::shared_ptr<float> > > v_m_data;     //!< from BINARIES vector of maps (size num MS rows), map size=v_atmPhaseCorrection.size()
+    vector<map<AtmPhaseCorrectionMod::AtmPhaseCorrection,std::shared_ptr<float> > > v_m_data;     //!< from BINARIES vector of maps (size num casacore::MS rows), map size=v_atmPhaseCorrection.size()
     vector<vector<vector<asdm::Angle> > > v_phaseDir;           //!< from SDM      the ref phase directions at the epochs (v_timeCentroid) to use for uvw 
     vector<int>                     v_stateId;            //!< from SDM      need to be redefined when numBin>1 & checked when baseline>0
-    vector<MSState>                 v_msState;            //!< from SDM      MS state tuples
+    vector<MSState>                 v_msState;            //!< from SDM      casacore::MS state tuples
     vector<unsigned int>            v_flag;               //!< from BINARIES  
   } VMSDataWithSharedPtr;
 }

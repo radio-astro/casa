@@ -63,8 +63,8 @@ void checkImage(
 	PagedImage<Float> expectedImage(expectedName);
 	AlwaysAssert(gotImage->shape() == expectedImage.shape(), AipsError);
 
-	Array<Bool> gotmask = gotImage->getMask(False);
-	Array<Bool> expmask = expectedImage.getMask(False);
+	Array<Bool> gotmask = gotImage->getMask(false);
+	Array<Bool> expmask = expectedImage.getMask(false);
 	AlwaysAssert(allTrue(gotmask == expmask), AipsError);
 
 	Array<Float> gotchunk = gotImage->get();
@@ -203,7 +203,7 @@ int main() {
     				0, "", SpectralList()
     			);
     			fitter.fit();
-    			exceptionThrown = False;
+    			exceptionThrown = false;
     		}
     		catch (AipsError x) {}
     		AlwaysAssert(exceptionThrown, AipsError);
@@ -273,7 +273,7 @@ int main() {
     				&goodImage, "", 0, "", "", "", "", 2,
     				2, "", SpectralList()
     		);
-    		fitter.setDoMultiFit(True);
+    		fitter.setDoMultiFit(true);
     		Record results = fitter.fit();
 
     		writeTestString("-- test correct number of fits performed");
@@ -318,7 +318,7 @@ int main() {
     			&goodImage, "", 0, "", "", "", "", 2,
     			2, "", SpectralList()
     		);
-    		fitter.setDoMultiFit(True);
+    		fitter.setDoMultiFit(true);
     		fitter.setAmpName(amp);
     		fitter.setAmpErrName(ampErr);
     		fitter.setCenterName(center);
@@ -351,7 +351,7 @@ int main() {
     			2, "", SpectralList()
     		);
     		fitter.setPolyOrder(3);
-    		fitter.setDoMultiFit(True);
+    		fitter.setDoMultiFit(true);
     		Record results = fitter.fit();
 
     		writeTestString(" -- test correct number of fits attempted");
@@ -387,7 +387,7 @@ int main() {
     			2, datadir + "poly+2gauss_estimates.txt", SpectralList()
     		);
     		fitter.setPolyOrder(3);
-    		fitter.setDoMultiFit(True);
+    		fitter.setDoMultiFit(true);
     		Record results = fitter.fit();
 
     		writeTestString(" -- test correct number of fits attempted");
@@ -438,7 +438,7 @@ int main() {
     			2, "", sl
     		);
     		fitter.setPolyOrder(3);
-    		fitter.setDoMultiFit(True);
+    		fitter.setDoMultiFit(true);
     		Record results = fitter.fit();
 
     		writeTestString(" -- test converged array");
@@ -662,7 +662,7 @@ int main() {
     	    	&gaussTripletImage, "", 0, "", "", "", "", 2,
     	        1, "", triplet
     	    );
-    	    fitter.setDoMultiFit(True);
+    	    fitter.setDoMultiFit(true);
             Vector<String> names(8);
             String s = dirName + "/";
             names[0] = "center";
@@ -674,7 +674,7 @@ int main() {
     		names[6] = "integral";
     		names[7] = "integralErr";
 
-    		fitter.setDoMultiFit(True);
+    		fitter.setDoMultiFit(true);
     		fitter.setCenterName(s + names[0]);
     		fitter.setCenterErrName(s + names[1]);
     		fitter.setFWHMName(s + names[2]);
@@ -708,7 +708,7 @@ int main() {
     			&twoLorentziansImage, "", 0, "", "", "", "", 2,
     			1, "", myList
     		);
-			fitter.setDoMultiFit(True);
+			fitter.setDoMultiFit(true);
 			Vector<String> names(8);
 			String s = dirName + "/";
 			names[0] = "center";
@@ -720,7 +720,7 @@ int main() {
 			names[6] = "integral";
 			names[7] = "integralErr";
 
-			fitter.setDoMultiFit(True);
+			fitter.setDoMultiFit(true);
 			fitter.setCenterName(s + names[0]);
 			fitter.setCenterErrName(s + names[1]);
 			fitter.setFWHMName(s + names[2]);

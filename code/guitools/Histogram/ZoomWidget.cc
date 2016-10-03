@@ -29,6 +29,8 @@
 #include <QDebug>
 #include <QMessageBox>
 
+using namespace casacore;
+
 namespace casa {
 
 ZoomWidget::ZoomWidget(bool rangeControls, QWidget *parent)

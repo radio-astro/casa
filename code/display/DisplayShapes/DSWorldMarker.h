@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
 
 		DSWorldMarker();
-		DSWorldMarker(const Record& settings, PanelDisplay* pd);
+		DSWorldMarker(const casacore::Record& settings, PanelDisplay* pd);
 		DSWorldMarker(DSScreenMarker& other, PanelDisplay* pd);
 		DSWorldMarker(DSPixelMarker& other, PanelDisplay* pd);
 
@@ -61,14 +61,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		virtual void recalculateScreenPosition();
 
-		virtual void move(const Float& dX, const Float& dY);
-		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void move(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
 		virtual void draw(PixelCanvas* pc);
 
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 
-		virtual Record getRawOptions() {
+		virtual casacore::Record getRawOptions() {
 			return DSMarker::getOptions();
 		}
 
@@ -78,11 +78,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// Based on a WC option record
-		//  virtual Bool chooseWC(const Record& settings, PanelDisplay* pd,
+		//  virtual casacore::Bool chooseWC(const casacore::Record& settings, PanelDisplay* pd,
 		//		WorldCanvas* wc);
 
 		// Based on a pixel center
-		//  virtual Bool chooseWC(const Float& xPos, const Float& yPos,
+		//  virtual casacore::Bool chooseWC(const casacore::Float& xPos, const casacore::Float& yPos,
 		//		PanelDisplay* pd,
 		//		WorldCanvas* wc);
 
@@ -93,7 +93,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		WorldCanvas* itsWC;
 
 		// The center of the marker in world co-ords.
-		Vector<Quantum<Double> > itsWorldCenter;
+		casacore::Vector<casacore::Quantum<casacore::Double> > itsWorldCenter;
 
 		void updateWCent();
 	};

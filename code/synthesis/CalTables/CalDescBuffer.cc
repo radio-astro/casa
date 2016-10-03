@@ -28,16 +28,17 @@
 
 #include <synthesis/CalTables/CalDescBuffer.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
 CalDescBuffer::CalDescBuffer() :
-  connectedToIter_p(False), calDescCol_p(NULL)
+  connectedToIter_p(false), calDescCol_p(NULL)
 {
 // Null constructor
 // Output to private data:
-//    connectedToIter_p  Bool               True if connected to iterator
+//    connectedToIter_p  Bool               true if connected to iterator
 //    calDescCol_p       CalDescColumns*    Ptr to cal_desc col accessor
 //    numSpw_p           Vector<Int>        No. spw
 //    numChan_p          Vector<Int>        No. chan
@@ -71,13 +72,13 @@ CalDescBuffer::CalDescBuffer() :
 //----------------------------------------------------------------------------
 
 CalDescBuffer::CalDescBuffer (CalIterBase& calIter) :
-  connectedToIter_p(True), calDescCol_p(NULL)
+  connectedToIter_p(true), calDescCol_p(NULL)
 {
 // Construct from a calibration table iterator
 // Input:
 //    calIter            CalIterBase&         Calibration table iterator
 // Output to private data:
-//    connectedToIter_p  Bool               True if connected to iterator
+//    connectedToIter_p  Bool               true if connected to iterator
 //    calDescCol_p       CalDescColumns*    Ptr to cal_desc col accessor
 //    numSpw_p           Vector<Int>        No. spw
 //    numChan_p          Vector<Int>        No. chan
@@ -142,18 +143,18 @@ void CalDescBuffer::invalidate()
 //    msNameOK_p         Bool               MeasurementSet name cache ok
 //
   // Set all cache flags to false
-  numSpwOK_p = False;
-  numChanOK_p = False;
-  numReceptorsOK_p = False;
-  nJonesOK_p = False;
-  spwIdOK_p = False;
-  chanFreqMeasOK_p = False;
-  measFreqRefOK_p = False;
-  chanWidthQuantOK_p = False;
-  chanRangeOK_p = False;
-  polznTypeOK_p = False;
-  jonesTypeOK_p = False;
-  msNameOK_p = False;
+  numSpwOK_p = false;
+  numChanOK_p = false;
+  numReceptorsOK_p = false;
+  nJonesOK_p = false;
+  spwIdOK_p = false;
+  chanFreqMeasOK_p = false;
+  measFreqRefOK_p = false;
+  chanWidthQuantOK_p = false;
+  chanRangeOK_p = false;
+  polznTypeOK_p = false;
+  jonesTypeOK_p = false;
+  msNameOK_p = false;
 };
 
 //----------------------------------------------------------------------------
@@ -162,14 +163,14 @@ Vector<Int>& CalDescBuffer::numSpw()
 {
 // NUM_SPW data field accessor
 // Input from private data:
-//    connectedToIter_p   Bool                 True if connected to iterator
+//    connectedToIter_p   Bool                 true if connected to iterator
 //    numSpw_p            Vector<Int>          No. spw
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!numSpwOK_p) {
       calDescCol()->numSpw().getColumn (numSpw_p);
-      numSpwOK_p = True;
+      numSpwOK_p = true;
     };
   };
   return numSpw_p;
@@ -181,14 +182,14 @@ Vector<Int>& CalDescBuffer::numChan()
 {
 // NUM_CHAN data field accessor
 // Input from private data:
-//    connectedToIter_p   Bool                 True if connected to iterator
+//    connectedToIter_p   Bool                 true if connected to iterator
 //    numChan_p           Vector<Int>          No. chan
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!numChanOK_p) {
       calDescCol()->numChan().getColumn (numChan_p);
-      numChanOK_p = True;
+      numChanOK_p = true;
     };
   };
   return numChan_p;
@@ -200,14 +201,14 @@ Vector<Int>& CalDescBuffer::numReceptors()
 {
 // NUM_RECEPTORS data field accessor
 // Input from private data:
-//    connectedToIter_p    Bool                 True if connected to iterator
+//    connectedToIter_p    Bool                 true if connected to iterator
 //    numReceptors_p       Vector<Int>          No. receptors
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!numReceptorsOK_p) {
       calDescCol()->numReceptors().getColumn (numReceptors_p);
-      numReceptorsOK_p = True;
+      numReceptorsOK_p = true;
     };
   };
   return numReceptors_p;
@@ -219,14 +220,14 @@ Vector<Int>& CalDescBuffer::nJones()
 {
 // N_JONES data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 True if connected to iterator
+//    connectedToIter_p  Bool                 true if connected to iterator
 //    nJones_p           Vector<Int>          No. spw
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!nJonesOK_p) {
       calDescCol()->nJones().getColumn (nJones_p);
-      nJonesOK_p = True;
+      nJonesOK_p = true;
     };
   };
   return nJones_p;
@@ -238,14 +239,14 @@ Matrix<Int>& CalDescBuffer::spwId()
 {
 // NUM_SPW data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 True if connected to iterator
+//    connectedToIter_p  Bool                 true if connected to iterator
 //    spwId_p            Vector<Int>          Spw. id.'s
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!spwIdOK_p) {
       calDescCol()->spwId().getColumn (spwId_p);
-      spwIdOK_p = True;
+      spwIdOK_p = true;
     };
   };
   return spwId_p;
@@ -257,7 +258,7 @@ Array<MFrequency>& CalDescBuffer::chanFreqMeas()
 {
 // CHAN_FREQ data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 True if connected to iterator
+//    connectedToIter_p  Bool                 true if connected to iterator
 //    chanFreqMeas_p     Array<MFrequency>    Chan. freq. as Measure
 //
   // Fill local cache for this column if cache not valid
@@ -278,7 +279,7 @@ Array<MFrequency>& CalDescBuffer::chanFreqMeas()
 	calDescCol()->chanFreqMeas().get (row, rowChanFreq);
 	chanFreqMeas_p(start,rowShape) = rowChanFreq.copy();
       };
-      chanFreqMeasOK_p = True;
+      chanFreqMeasOK_p = true;
     };
   };
   return chanFreqMeas_p;
@@ -290,14 +291,14 @@ Vector<Int>& CalDescBuffer::measFreqRef()
 {
 // MEAS_FREQ_REF data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 True if connected to iterator
+//    connectedToIter_p  Bool                 true if connected to iterator
 //    measFreqRef_p      Vector<Int>          Measures freq. ref.
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!measFreqRefOK_p) {
       calDescCol()->measFreqRef().getColumn (measFreqRef_p);
-      measFreqRefOK_p = True;
+      measFreqRefOK_p = true;
     };
   };
   return measFreqRef_p;
@@ -309,7 +310,7 @@ Array<Quantity>& CalDescBuffer::chanWidthQuant()
 {
 // CHAN_WIDTH data field accessor (as Quanta)
 // Input from private data:
-//    connectedToIter_p  Bool                 True if connected to iterator
+//    connectedToIter_p  Bool                 true if connected to iterator
 //    chanWidthQuant_p   Array<Quantity>      Channel width as Quanta
 //
   // Fill local cache for this column if cache not valid
@@ -330,7 +331,7 @@ Array<Quantity>& CalDescBuffer::chanWidthQuant()
 	calDescCol()->chanWidthQuant().get (row, rowChanWidth);
 	chanWidthQuant_p(start,rowShape) = rowChanWidth.copy();
       };
-      chanWidthQuantOK_p = True;
+      chanWidthQuantOK_p = true;
     };
   };
   return chanWidthQuant_p;
@@ -342,14 +343,14 @@ Array<Int>& CalDescBuffer::chanRange()
 {
 // CHAN_RANGE data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 True if connected to iterator
+//    connectedToIter_p  Bool                 true if connected to iterator
 //    chanRange_p        Array<Int>           Chan. range
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!chanRangeOK_p) {
       calDescCol()->chanRange().getColumn (chanRange_p);
-      chanRangeOK_p = True;
+      chanRangeOK_p = true;
     };
   };
   return chanRange_p;
@@ -361,14 +362,14 @@ Matrix<String>& CalDescBuffer::polznType()
 {
 // POLARIZATION_TYPE data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 True if connected to iterator
+//    connectedToIter_p  Bool                 true if connected to iterator
 //    polznType_p        Vector<String>       Polzn. type
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!polznTypeOK_p) {
       calDescCol()->polznType().getColumn (polznType_p);
-      polznTypeOK_p = True;
+      polznTypeOK_p = true;
     };
   };
   return polznType_p;
@@ -380,14 +381,14 @@ Vector<String>& CalDescBuffer::jonesType()
 {
 // JONES_TYPE data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 True if connected to iterator
+//    connectedToIter_p  Bool                 true if connected to iterator
 //    jonesType_p           Vector<String>    Jones matrix type
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!jonesTypeOK_p) {
       calDescCol()->jonesType().getColumn (jonesType_p);
-      jonesTypeOK_p = True;
+      jonesTypeOK_p = true;
     };
   };
   return jonesType_p;
@@ -399,14 +400,14 @@ Vector<String>& CalDescBuffer::msName()
 {
 // MS_NAME data field accessor
 // Input from private data:
-//    connectedToIter_p  Bool                 True if connected to iterator
+//    connectedToIter_p  Bool                 true if connected to iterator
 //    msName_p           Vector<String>       MeasurementSet name
 //
   // Fill local cache for this column if cache not valid
   if (connectedToIter()) {
     if (!msNameOK_p) {
       calDescCol()->msName().getColumn (msName_p);
-      msNameOK_p = True;
+      msNameOK_p = true;
     };
   };
   return msName_p;

@@ -28,21 +28,21 @@ namespace casa {
 
 		//# only-vaguely-informative boilerplate...
 
-		virtual Bool staticSize() {
-			return True;
+		virtual casacore::Bool staticSize() {
+			return true;
 		}
 
-		virtual Bool resize(uInt /*nReds*/, uInt /*nGreens*/, uInt /*nBlues*/) {
-			return False;
+		virtual casacore::Bool resize(casacore::uInt /*nReds*/, casacore::uInt /*nGreens*/, casacore::uInt /*nBlues*/) {
+			return false;
 		}
 
-		virtual void nColors(uInt &n1, uInt &n2, uInt &n3) const {
+		virtual void nColors(casacore::uInt &n1, casacore::uInt &n2, casacore::uInt &n3) const {
 			n1 = 256;
 			n2 = 256;
 			n3 = 256;
 		}
 
-		virtual uInt depth() const {
+		virtual casacore::uInt depth() const {
 			return 32;
 		}
 		// The non-indexed 'true' color depth that Qt supports, and
@@ -63,114 +63,114 @@ namespace casa {
 # define INITIAL_QTPCCT_SIZE 256u
 		// Initial size of the colortable.
 
-		virtual uInt nColors() const {
+		virtual casacore::uInt nColors() const {
 			return size_;
 		}
 		// Current number of slots usable by colormaps.
 		// can be expanded at runtime up to MAX_QTPCCT_SIZE.
 
-		virtual uInt nSpareColors() const {
+		virtual casacore::uInt nSpareColors() const {
 			return MAX_QTPCCT_SIZE - size_;
 		}
 
-		virtual Bool resize(uInt newSize);
+		virtual casacore::Bool resize(casacore::uInt newSize);
 
 		// Called by corresp. ColormapManager to actually fill color slots
 		// for the Colormaps.  r,g,b ahould be in range [0,1].
-		virtual Bool installRGBColors(const Vector<Float> & r,
-		                              const Vector<Float> & g,
-		                              const Vector<Float> & b,
-		                              const Vector<Float> & alpha,
-		                              uInt offset = 0);
+		virtual casacore::Bool installRGBColors(const casacore::Vector<casacore::Float> & r,
+		                              const casacore::Vector<casacore::Float> & g,
+		                              const casacore::Vector<casacore::Float> & b,
+		                              const casacore::Vector<casacore::Float> & alpha,
+		                              casacore::uInt offset = 0);
 
-		// Translate Array of colormap indices into graphics platform's colors.
+		// Translate casacore::Array of colormap indices into graphics platform's colors.
 
 		//# The version actually used...
 		virtual void mapToColor(const Colormap * map,
-		                        Array<uInt> & outArray,
-		                        const Array<uInt> & inArray,
-		                        Bool rangeCheck = True) const;
+		                        casacore::Array<casacore::uInt> & outArray,
+		                        const casacore::Array<casacore::uInt> & inArray,
+		                        casacore::Bool rangeCheck = true) const;
 
 
 		//# The one of these really needed when/if non-Index (3-channel)
 		//  ColorModels are implemented for QtPixelCanvas.
-		virtual void mapToColor3(Array<uLong> & /*out*/,
-		                         const Array<uInt> & /*chan1in*/,
-		                         const Array<uInt> & /*chan2in*/,
-		                         const Array<uInt> & /*chan3in*/) {  }
+		virtual void mapToColor3(casacore::Array<casacore::uLong> & /*out*/,
+		                         const casacore::Array<casacore::uInt> & /*chan1in*/,
+		                         const casacore::Array<casacore::uInt> & /*chan2in*/,
+		                         const casacore::Array<casacore::uInt> & /*chan3in*/) {  }
 
 
 		//# irrelevant, unused versions:
 		virtual void mapToColor(const Colormap * /*map*/,
-		                        Array<uChar> & /*outArray*/,
-		                        const Array<uChar> & /*inArray*/,
-		                        Bool /*rangeCheck*/ = True) const {  }
+		                        casacore::Array<casacore::uChar> & /*outArray*/,
+		                        const casacore::Array<casacore::uChar> & /*inArray*/,
+		                        casacore::Bool /*rangeCheck*/ = true) const {  }
 
 		virtual void mapToColor(const Colormap * /*map*/,
-		                        Array<uShort> & /*outArray*/,
-		                        const Array<uShort> & /*inArray*/,
-		                        Bool /*rangeCheck*/ = True) const {  }
+		                        casacore::Array<casacore::uShort> & /*outArray*/,
+		                        const casacore::Array<casacore::uShort> & /*inArray*/,
+		                        casacore::Bool /*rangeCheck*/ = true) const {  }
 
 		virtual void mapToColor(const Colormap * /*map*/,
-		                        Array<uLong> & /*outArray*/,
-		                        const Array<uLong> & /*inArray*/,
-		                        Bool /*rangeCheck*/ = True) const {  }
+		                        casacore::Array<casacore::uLong> & /*outArray*/,
+		                        const casacore::Array<casacore::uLong> & /*inArray*/,
+		                        casacore::Bool /*rangeCheck*/ = true) const {  }
 
 		virtual void mapToColor(const Colormap * /*map*/,
-		                        Array<uChar> & /*inOutArray*/,
-		                        Bool /*rangeCheck*/ = True) const {  }
+		                        casacore::Array<casacore::uChar> & /*inOutArray*/,
+		                        casacore::Bool /*rangeCheck*/ = true) const {  }
 
 		virtual void mapToColor(const Colormap * /*map*/,
-		                        Array<uShort> & /*inOutArray*/,
-		                        Bool /*rangeCheck*/ = True) const {  }
+		                        casacore::Array<casacore::uShort> & /*inOutArray*/,
+		                        casacore::Bool /*rangeCheck*/ = true) const {  }
 
 		virtual void mapToColor(const Colormap * /*map*/,
-		                        Array<uInt> & /*inOutArray*/,
-		                        Bool /*rangeCheck*/ = True) const {  }
+		                        casacore::Array<casacore::uInt> & /*inOutArray*/,
+		                        casacore::Bool /*rangeCheck*/ = true) const {  }
 
 		virtual void mapToColor(const Colormap * /*map*/,
-		                        Array<uLong> & /*inOutArray*/,
-		                        Bool /*rangeCheck*/ = True) const {  }
+		                        casacore::Array<casacore::uLong> & /*inOutArray*/,
+		                        casacore::Bool /*rangeCheck*/ = true) const {  }
 
-		virtual void mapToColor3(Array<uLong> & /*out*/,
-		                         const Array<Float> & /*chan1in*/,
-		                         const Array<Float> & /*chan2in*/,
-		                         const Array<Float> & /*chan3in*/) {  }
-		virtual void mapToColor3(Array<uLong> & /*out*/,
-		                         const Array<Double> & /*chan1in*/,
-		                         const Array<Double> & /*chan2in*/,
-		                         const Array<Double> & /*chan3in*/) {  }
+		virtual void mapToColor3(casacore::Array<casacore::uLong> & /*out*/,
+		                         const casacore::Array<casacore::Float> & /*chan1in*/,
+		                         const casacore::Array<casacore::Float> & /*chan2in*/,
+		                         const casacore::Array<casacore::Float> & /*chan3in*/) {  }
+		virtual void mapToColor3(casacore::Array<casacore::uLong> & /*out*/,
+		                         const casacore::Array<casacore::Double> & /*chan1in*/,
+		                         const casacore::Array<casacore::Double> & /*chan2in*/,
+		                         const casacore::Array<casacore::Double> & /*chan3in*/) {  }
 
-		virtual void mapToColor3(Array<uLong> & /*out*/,
-		                         const Array<uShort> & /*chan1in*/,
-		                         const Array<uShort> & /*chan2in*/,
-		                         const Array<uShort> & /*chan3in*/) {  }
+		virtual void mapToColor3(casacore::Array<casacore::uLong> & /*out*/,
+		                         const casacore::Array<casacore::uShort> & /*chan1in*/,
+		                         const casacore::Array<casacore::uShort> & /*chan2in*/,
+		                         const casacore::Array<casacore::uShort> & /*chan3in*/) {  }
 
-		virtual Bool colorSpaceMap(Display::ColorModel,
-		                           const Array<Float> & /*chan1in*/,
-		                           const Array<Float> & /*chan2in*/,
-		                           const Array<Float> & /*chan3in*/,
-		                           Array<Float> & /*chan1out*/,
-		                           Array<Float> & /*chan2out*/,
-		                           Array<Float> & /*chan3out*/) {
-			return False;
+		virtual casacore::Bool colorSpaceMap(Display::ColorModel,
+		                           const casacore::Array<casacore::Float> & /*chan1in*/,
+		                           const casacore::Array<casacore::Float> & /*chan2in*/,
+		                           const casacore::Array<casacore::Float> & /*chan3in*/,
+		                           casacore::Array<casacore::Float> & /*chan1out*/,
+		                           casacore::Array<casacore::Float> & /*chan2out*/,
+		                           casacore::Array<casacore::Float> & /*chan3out*/) {
+			return false;
 		}
 		// (could move X11 version down to base class and use
 		// that -- it has no X11 dependencies...)
 
 	protected:
 
-		Int clrByte(Float f) {
-			return Int(min( max(0.f,f)*256.f, 255.f ));
+		casacore::Int clrByte(casacore::Float f) {
+			return casacore::Int(casacore::min( casacore::max(0.f,f)*256.f, 255.f ));
 		}
 		// translate color component in the range [0., 1.]
 		// to clrByte, with 0 <= clrByte < 256
 
 	private:
 
-		Vector<uInt> maps_;
+		casacore::Vector<casacore::uInt> maps_;
 		// actual storage for the color slots.
-		uInt size_;
+		casacore::uInt size_;
 		// Current size of the colortable; number of slots usable by colormaps.
 		// can be expanded at runtime, up to MAX_QTPCCT_SIZE.
 

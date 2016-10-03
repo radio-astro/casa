@@ -17,42 +17,42 @@ public:
     ViColumns2 ();
     ViColumns2 & operator= (const ViColumns2 & other);
 
-    void attachColumns (const Table & t, bool attachSpecialColumns = True);
+    void attachColumns (const casacore::Table & t, bool attachSpecialColumns = true);
 
 
-    ScalarColumn<Int>    antenna1_p;
-    ScalarColumn<Int>    antenna2_p;
-    ScalarColumn<Int>    array_p;
-    ArrayColumn<Complex> corrVis_p;
-    ScalarColumn<Int>    dataDescription_p;
-    ScalarColumn<Double> exposure_p;
-    ScalarColumn<Int>    feed1_p;
-    ScalarColumn<Int>    feed2_p;
-    ScalarColumn<Int>    field_p;
-    ArrayColumn<Bool>    flagCategory_p;
-    ScalarColumn<Bool>   flagRow_p;
-    ArrayColumn<Bool>    flag_p;
-    ArrayColumn<Float>   floatVis_p;
-    ArrayColumn<Complex> modelVis_p;
-    ScalarColumn<Int>    observation_p;
-    ScalarColumn<Int>    processor_p;
-    ScalarColumn<Int>    scan_p;
-    ArrayColumn<Float>   sigma_p;
-    ScalarColumn<Int>    state_p;
-    ScalarColumn<Double> timeCentroid_p;
-    ScalarColumn<Double> timeInterval_p;
-    ScalarColumn<Double> time_p;
-    ArrayColumn<Double>  uvw_p;
-    ArrayColumn<Complex> vis_p;
-    ArrayColumn<Float>   weightSpectrum_p;
-    ArrayColumn<Float>   sigmaSpectrum_p;
-    ArrayColumn<Float>   weight_p;
+    casacore::ScalarColumn<casacore::Int>    antenna1_p;
+    casacore::ScalarColumn<casacore::Int>    antenna2_p;
+    casacore::ScalarColumn<casacore::Int>    array_p;
+    casacore::ArrayColumn<casacore::Complex> corrVis_p;
+    casacore::ScalarColumn<casacore::Int>    dataDescription_p;
+    casacore::ScalarColumn<casacore::Double> exposure_p;
+    casacore::ScalarColumn<casacore::Int>    feed1_p;
+    casacore::ScalarColumn<casacore::Int>    feed2_p;
+    casacore::ScalarColumn<casacore::Int>    field_p;
+    casacore::ArrayColumn<casacore::Bool>    flagCategory_p;
+    casacore::ScalarColumn<casacore::Bool>   flagRow_p;
+    casacore::ArrayColumn<casacore::Bool>    flag_p;
+    casacore::ArrayColumn<casacore::Float>   floatVis_p;
+    casacore::ArrayColumn<casacore::Complex> modelVis_p;
+    casacore::ScalarColumn<casacore::Int>    observation_p;
+    casacore::ScalarColumn<casacore::Int>    processor_p;
+    casacore::ScalarColumn<casacore::Int>    scan_p;
+    casacore::ArrayColumn<casacore::Float>   sigma_p;
+    casacore::ScalarColumn<casacore::Int>    state_p;
+    casacore::ScalarColumn<casacore::Double> timeCentroid_p;
+    casacore::ScalarColumn<casacore::Double> timeInterval_p;
+    casacore::ScalarColumn<casacore::Double> time_p;
+    casacore::ArrayColumn<casacore::Double>  uvw_p;
+    casacore::ArrayColumn<casacore::Complex> vis_p;
+    casacore::ArrayColumn<casacore::Float>   weightSpectrum_p;
+    casacore::ArrayColumn<casacore::Float>   sigmaSpectrum_p;
+    casacore::ArrayColumn<casacore::Float>   weight_p;
 
-    Bool isFloatDataPresent () const;
+    casacore::Bool isFloatDataPresent () const;
 
 private:
 
-    Bool floatDataFound_p;
+    casacore::Bool floatDataFound_p;
 
 };
 

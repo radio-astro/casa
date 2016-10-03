@@ -45,11 +45,11 @@ typedef RFCubeLatticeIterator<RFlagWord> FlagCubeIterator;
 // RowAbsent for absent rows
 const RFlagWord RowFlagged=1,RowAbsent=2;
 
-// Function for working with bitmasks. Does a bitwise-AND
-// on every element, returns True if !=0 or False if ==0
-template<class T> Array<T> operator & ( const Array<T> &,const T &);
-// returns a LogicalArray corresponding to (ARR&MASK)!=0
-template<class T> LogicalArray  maskBits  ( const Array<T> &,const T &);
+// casacore::Function for working with bitmasks. Does a bitwise-AND
+// on every element, returns true if !=0 or false if ==0
+template<class T> casacore::Array<T> operator & ( const casacore::Array<T> &,const T &);
+// returns a casacore::LogicalArray corresponding to (ARR&MASK)!=0
+template<class T> casacore::LogicalArray  maskBits  ( const casacore::Array<T> &,const T &);
 
 // <summary>
 // RFFlagCube: a cube of flags
@@ -66,7 +66,7 @@ template<class T> LogicalArray  maskBits  ( const Array<T> &,const T &);
 //
 // <synopsis>
 // RFFlagCube implements an [NCHAN,NIFR,NTIME] cube of flags, stored in
-// a TempLattice that is iterated alog the TIME axis.  One static
+// a casacore::TempLattice that is iterated alog the TIME axis.  One static
 // (i.e. global) cube is used to hold the actual flags. Individual
 // instances (instantiated by flagging agents) have individual unique
 // bitmasks and, possibly, individual iterators.
@@ -92,27 +92,27 @@ class RFFlagCube : public FlaggerEnums
 {
 public:
   // default log sink
-  static LogIO default_sink;
+  static casacore::LogIO default_sink;
     
   // constructor
-  RFFlagCube ( RFChunkStats &ch,Bool ignore=False,Bool reset=False,LogIO &os=default_sink );
+  RFFlagCube ( RFChunkStats &ch,casacore::Bool ignore=false,casacore::Bool reset=false,casacore::LogIO &os=default_sink );
   ~RFFlagCube ();
 
   // returns reference to logsink
-  LogIO & logSink ();
+  casacore::LogIO & logSink ();
 
   // returns estimated size of flag cube for a given chunk.
-  static uInt estimateMemoryUse ( const RFChunkStats &ch );
+  static casacore::uInt estimateMemoryUse ( const RFChunkStats &ch );
 
   // creates flag cube for current chunk. name is name of agent.
   // nAgent is total number of agents
-  void init ( RFlagWord polmsk, uInt nAgent, bool is_selector, const String &name = "" );
+  void init ( RFlagWord polmsk, casacore::uInt nAgent, bool is_selector, const casacore::String &name = "" );
 
   // cleans up at end of chunk
   void cleanup ();
 
   // returns summary of stats in text form
-  String getSummary ();
+  casacore::String getSummary ();
 
   // prints flagging stats to stderr
   void printStats ();
@@ -123,13 +123,13 @@ public:
   // advances global flag iterator to time slot it (if required), sets
   // the flag cursor from the iterator (see below). If getflags is true,
   // also calls getDataFlags().
-  void advance   ( uInt it,Bool getFlags=False );
+  void advance   ( casacore::uInt it,casacore::Bool getFlags=false );
 
   // fills global flag lattice with apriori flags from a VisBuffer (if required)
-  void getMSFlags  (uInt it);
+  void getMSFlags  (casacore::uInt it);
 
   // transfers all flags from lattice into VisBuffer
-  void setMSFlags  (uInt itime);
+  void setMSFlags  (casacore::uInt itime);
 
   // creates a custom iterator
   FlagCubeIterator newCustomIter ();
@@ -138,41 +138,41 @@ public:
   const FlagMatrix & flagMatrix ();
   
   // sets or clears a flag at the given flag cursor
-  Bool setFlag      ( uInt ich,uInt ifr,FlagCubeIterator &iter );
-  Bool clearFlag    ( uInt ich,uInt ifr,FlagCubeIterator &iter );
+  casacore::Bool setFlag      ( casacore::uInt ich,casacore::uInt ifr,FlagCubeIterator &iter );
+  casacore::Bool clearFlag    ( casacore::uInt ich,casacore::uInt ifr,FlagCubeIterator &iter );
 
   // Gets full flag word at the given flag cursor.
-  RFlagWord getFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter );
+  RFlagWord getFlag ( casacore::uInt ich,casacore::uInt ifr,FlagCubeIterator &iter );
 
   // Versions of above that use global flag cursor
-  Bool setFlag      ( uInt ich,uInt ifr );
-  Bool clearFlag    ( uInt ich,uInt ifr );
-  RFlagWord getFlag ( uInt ich,uInt ifr );
+  casacore::Bool setFlag      ( casacore::uInt ich,casacore::uInt ifr );
+  casacore::Bool clearFlag    ( casacore::uInt ich,casacore::uInt ifr );
+  RFlagWord getFlag ( casacore::uInt ich,casacore::uInt ifr );
   
   // the preFlagged() function uses the corr-mask to tell if any of this
   // agent's correlations are pre-flagged. Uses internal cursor.
-  Bool preFlagged   ( uInt ich,uInt ifr );
+  casacore::Bool preFlagged   ( casacore::uInt ich,casacore::uInt ifr );
 
   // The anyFlagged() uses the corr-flagmask to tell if any of my
   // correlations are flagged either by any agent or pre-flagged
   // Uses internal cursor.
-  Bool anyFlagged   ( uInt ich,uInt ifr );
+  casacore::Bool anyFlagged   ( casacore::uInt ich,casacore::uInt ifr );
   
   // Sets or clears a row flag
-  Bool setRowFlag      ( uInt ifr,uInt itime );
-  Bool clearRowFlag    ( uInt ifr,uInt itime );
+  casacore::Bool setRowFlag      ( casacore::uInt ifr,casacore::uInt itime );
+  casacore::Bool clearRowFlag    ( casacore::uInt ifr,casacore::uInt itime );
 
   // Gets full row flag word
-  RFlagWord getRowFlag ( uInt ifr,uInt itime );
+  RFlagWord getRowFlag ( casacore::uInt ifr,casacore::uInt itime );
   
-  // tells if a row is pre-flagged in the MS (or does not exist)
-  Bool rowPreFlagged   ( uInt ifr,uInt itime );  
+  // tells if a row is pre-flagged in the casacore::MS (or does not exist)
+  casacore::Bool rowPreFlagged   ( casacore::uInt ifr,casacore::uInt itime );  
 
   // tells if a row is flagged by any agent
-  Bool rowAgentFlagged ( uInt ifr,uInt itime );  
+  casacore::Bool rowAgentFlagged ( casacore::uInt ifr,casacore::uInt itime );  
 
   // preFlagged OR agentFlagged  
-  Bool rowFlagged      ( uInt ifr,uInt itime );
+  casacore::Bool rowFlagged      ( casacore::uInt ifr,casacore::uInt itime );
   
   // returns reference to internal iterator
   FlagCubeIterator &  iterator ();
@@ -191,10 +191,10 @@ public:
   static RFlagWord fullCorrMask ();
 
   // returns the number of instances of the flag cube
-  static Int numInstances ();
+  static casacore::Int numInstances ();
 
   // sets the maximum memory usage for the flag cube  
-  static void setMaxMem ( Int maxmem );
+  static void setMaxMem ( casacore::Int maxmem );
   // returns the current maximum memory usage
   static int  getMaxMem ();
       
@@ -204,27 +204,27 @@ public:
   bool kiss;  // do things simpler (faster) if there is nothing but RFAselector agents
   bool kiss_flagrow;
 
-  static Cube<Bool> in_flags;
+  static casacore::Cube<casacore::Bool> in_flags;
   static int in_flags_time;  //time stamp that in_flags has reached
   static bool in_flags_flushed; // do we need to write the flags back for this time stamp?
 
   // shortcut to RFChunkStats::num
-  uInt num ( StatEnums which ) { return chunk.num(which); }
+  casacore::uInt num ( StatEnums which ) { return chunk.num(which); }
       
   static RFCubeLattice<RFlagWord> flag; // global flag lattice
   static FlagMatrix flagrow;             // (nIfr,nTime) matrix of row flags
-  static Matrix<std::vector<bool> > flagrow_kiss;
-  static Int pos_get_flag,pos_set_flag; 
+  static casacore::Matrix<std::vector<bool> > flagrow_kiss;
+  static casacore::Int pos_get_flag,pos_set_flag; 
 
-  static Bool reset_preflags; // flag: RESET policy specified for at least one instance
+  static casacore::Bool reset_preflags; // flag: RESET policy specified for at least one instance
   
-  static uInt npol,nchan;
+  static casacore::uInt npol,nchan;
   
   // Flag mask used by this instance. Each instance has a unique 1-bit mask.
   // This is assigned automatically in the constructor, by updating the 
   // instance count and the nextmask member.
   // Note that the low N bits of a mask are assigned to pre-flags (one per
-  // each correlation in the MS); so the agents start at bit N+1.
+  // each correlation in the casacore::MS); so the agents start at bit N+1.
   RFlagWord flagmask,       // flagmask of this instance
     corrmask,        // corrmask of this instance (corrs used/flagged by it)
     check_corrmask,  // mask checked by preFlagged() & co. Set to 0 for
@@ -233,32 +233,32 @@ public:
     my_corrflagmask; // see above
   unsigned long flagmask_kiss; // represents a bitmask with only bit number <n> set where 
                           // <n> is the value of this variable
-  static Int agent_count;    // # of agents instantiated
+  static casacore::Int agent_count;    // # of agents instantiated
   static RFlagWord base_flagmask, // flagmask of first agent instance
-    full_corrmask;          // bitmask for all correlations in MS (low N bits)
+    full_corrmask;          // bitmask for all correlations in casacore::MS (low N bits)
 
   // corr_flagmask is a mapping from corrmasks into masks of agents that flag the
   // given corrmask
-  static Vector<RFlagWord> corr_flagmask;
+  static casacore::Vector<RFlagWord> corr_flagmask;
   
   // log sink
-  LogIO os;
+  casacore::LogIO os;
 
   // pre-flag policy (can be set on a per-instance basis)
   PreFlagPolicy pfpolicy;
   
   // flagging stats for this instance
-  uInt tot_fl_raised,fl_raised,fl_cleared,
+  casacore::uInt tot_fl_raised,fl_raised,fl_cleared,
     tot_row_fl_raised,row_fl_raised,row_fl_cleared;
     
   // local flag cursor used by this instance (setFlag and clearFlag). 
   // Normally, set to flag.cursor() in advance(), but can be overridden
   // by setFlagCursor();
   FlagMatrix * flag_curs;
-  uInt flag_itime;
+  casacore::uInt flag_itime;
   
   // number of instances in use
-  static Int num_inst;
+  static casacore::Int num_inst;
 };
 
 inline RFlagWord RFFlagCube::flagMask ()
@@ -280,15 +280,15 @@ inline RFlagWord RFFlagCube::checkCorrMask ()
 inline RFlagWord RFFlagCube::fullCorrMask ()
    { return full_corrmask; }
 
-inline RFlagWord RFFlagCube::getFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter )
+inline RFlagWord RFFlagCube::getFlag ( casacore::uInt ich,casacore::uInt ifr,FlagCubeIterator &iter )
    { 
      if (kiss) {
        /* Create the bitmap (integer) from the correlation flags
           relevant for this agent */
        RFlagWord f = 0;
-       uInt c = 1;
+       casacore::uInt c = 1;
 
-       for (uInt icorr = 0; icorr < num(CORR); icorr++, c<<=1) {
+       for (casacore::uInt icorr = 0; icorr < num(CORR); icorr++, c<<=1) {
          if ((c & corrmask) && 
              in_flags(icorr, ich, ifr)) {
            f |= c;
@@ -301,13 +301,13 @@ inline RFlagWord RFFlagCube::getFlag ( uInt ich,uInt ifr,FlagCubeIterator &iter 
      }
    }
 
-inline Bool RFFlagCube::setFlag ( uInt ich,uInt ifr ) 
+inline casacore::Bool RFFlagCube::setFlag ( casacore::uInt ich,casacore::uInt ifr ) 
    { return setFlag(ich,ifr,flag.iterator()); } 
 
-inline Bool RFFlagCube::clearFlag ( uInt ich,uInt ifr ) 
+inline casacore::Bool RFFlagCube::clearFlag ( casacore::uInt ich,casacore::uInt ifr ) 
    { return clearFlag(ich,ifr,flag.iterator()); } 
 
-inline RFlagWord RFFlagCube::getFlag ( uInt ich,uInt ifr ) 
+inline RFlagWord RFFlagCube::getFlag ( casacore::uInt ich,casacore::uInt ifr ) 
    { return getFlag(ich,ifr,flag.iterator()); } 
 
 inline FlagCubeIterator RFFlagCube::newCustomIter ()
@@ -316,10 +316,10 @@ inline FlagCubeIterator RFFlagCube::newCustomIter ()
 inline const FlagMatrix & RFFlagCube::flagMatrix ()
    { return *flag_curs; }
 
-inline Bool RFFlagCube::preFlagged ( uInt ich,uInt ifr )
+inline casacore::Bool RFFlagCube::preFlagged ( casacore::uInt ich,casacore::uInt ifr )
    { return (getFlag(ich,ifr)&check_corrmask) != 0; }
 
-inline Bool RFFlagCube::anyFlagged ( uInt ich,uInt ifr )
+inline casacore::Bool RFFlagCube::anyFlagged ( casacore::uInt ich,casacore::uInt ifr )
    { 
      if (kiss) {
        throw std::logic_error("Cannot do this in kiss mode (program bug, please report)");
@@ -328,7 +328,7 @@ inline Bool RFFlagCube::anyFlagged ( uInt ich,uInt ifr )
    }
 
 // Gets full row flag word
-inline RFlagWord RFFlagCube::getRowFlag ( uInt ifr,uInt itime )
+inline RFlagWord RFFlagCube::getRowFlag ( casacore::uInt ifr,casacore::uInt itime )
   {
     if (kiss) {
       throw std::logic_error("Cannot do this in kiss mode (program bug, please report)");
@@ -336,16 +336,16 @@ inline RFlagWord RFFlagCube::getRowFlag ( uInt ifr,uInt itime )
     return flagrow(ifr,itime); 
   }
 
-// tells if a row is pre-flagged in the MS (or does not exist)
-inline Bool RFFlagCube::rowPreFlagged   ( uInt ifr,uInt itime )
+// tells if a row is pre-flagged in the casacore::MS (or does not exist)
+inline casacore::Bool RFFlagCube::rowPreFlagged   ( casacore::uInt ifr,casacore::uInt itime )
    { return getRowFlag(ifr,itime)&check_rowmask; }
 
 // tells if a row is flagged by any agent
-inline Bool RFFlagCube::rowAgentFlagged ( uInt ifr,uInt itime )
+inline casacore::Bool RFFlagCube::rowAgentFlagged ( casacore::uInt ifr,casacore::uInt itime )
    { return getRowFlag(ifr,itime)&~(RowFlagged|RowAbsent); }
 
 // preFlagged OR agentFlagged  
-inline Bool RFFlagCube::rowFlagged      ( uInt ifr,uInt itime )
+inline casacore::Bool RFFlagCube::rowFlagged      ( casacore::uInt ifr,casacore::uInt itime )
    { return getRowFlag(ifr,itime)&(check_rowmask?~0:~RowFlagged); }
 
 inline FlagCubeIterator & RFFlagCube::iterator ()
@@ -354,7 +354,7 @@ inline FlagCubeIterator & RFFlagCube::iterator ()
 inline int RFFlagCube::numInstances ()
    { return num_inst; }
 
-inline LogIO & RFFlagCube::logSink ()
+inline casacore::LogIO & RFFlagCube::logSink ()
    { return os; }
 
 

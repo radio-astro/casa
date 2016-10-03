@@ -32,6 +32,7 @@
 #include <plotms/Actions/PlotMSAction.h>
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <QDebug>
+using namespace casacore;
 namespace casa {
 
 /////////////////////////////////

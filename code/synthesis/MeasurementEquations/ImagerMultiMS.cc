@@ -62,11 +62,12 @@
 
 #include <casa/sstream.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   ImagerMultiMS::ImagerMultiMS() 
     : Imager(), blockNChan_p(0), blockStart_p(0), blockStep_p(0), blockSpw_p(0),
-      blockMSSel_p(0), dataSet_p(False)
+      blockMSSel_p(0), dataSet_p(false)
   {
     
     lockCounter_p=0;
@@ -98,13 +99,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      const String& scan,
                                       const String& intent,
                                       const String& obs){
-    useModelCol_p=False;
+    useModelCol_p=false;
     LogIO os(LogOrigin("imager", "setDataToMemory()"), logSink_p);
     if(!Table::isReadable(msname)){
       os << LogIO::SEVERE << "MeasurementSet " 
 	 << msname << " does not exist  " 
 	 << LogIO::POST;
-      return False;
+      return false;
     }
     if(intent != ""){
        os << LogIO::WARN << "does not support INTENT selection here " 
@@ -121,8 +122,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MS::PredefinedColumns whichCol=MS::DATA;
     if(thisms.tableDesc().isColumn("CORRECTED_DATA"))
       whichCol=MS::CORRECTED_DATA;
-    CountedPtr<MeasurementSet> subMS(splitter.makeMemSubMS(whichCol), True);
-    //CountedPtr<MeasurementSet> subMS(splitter.makeScratchSubMS(Vector<MS::PredefinedColumns>(1,whichCol), True), True);
+    CountedPtr<MeasurementSet> subMS(splitter.makeMemSubMS(whichCol), true);
+    //CountedPtr<MeasurementSet> subMS(splitter.makeScratchSubMS(Vector<MS::PredefinedColumns>(1,whichCol), true), true);
     return setDataOnThisMS(*subMS);
 
   }
@@ -150,12 +151,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    Bool rd=readonly;
     LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
     //    if(useModel) 
-    //      rd=True;
+    //      rd=true;
     if(!Table::isReadable(msname)){
       os << LogIO::SEVERE << "MeasurementSet " 
 	 << msname << " does not exist  " 
 	 << LogIO::POST;
-      return False;
+      return false;
     }
     else{
       MeasurementSet thisms;
@@ -259,7 +260,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       //if you want to use scratch col...make sure they are there
       if(useModelCol_p){
-	VisSetUtil::addScrCols(thisms, True, False, True, False);
+	VisSetUtil::addScrCols(thisms, true, false, true, false);
 	VisModelData::clearModel(thisms);
       }
       //MeasurementSet sorted=thisms.keywordSet().asTable("SORTED_TABLE");
@@ -331,13 +332,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	indgen(datafieldids_p);
       }
       if((numMS_p > 1) || datafieldids_p.nelements() > 1)
-	multiFields_p= True;
+	multiFields_p= true;
       //Now lets see what was selected as spw and match it with datadesc
       //dataspectralwindowids_p.resize();
       //dataspectralwindowids_p=thisSelection.getSpwList();
-      Matrix<Int> chansels=thisSelection.getChanList(NULL, 1, True);
+      Matrix<Int> chansels=thisSelection.getChanList(NULL, 1, true);
       mssFreqSel_p.resize();
-      mssFreqSel_p=thisSelection.getChanFreqList(NULL, True);
+      mssFreqSel_p=thisSelection.getChanFreqList(NULL, true);
      
       uInt nms = numMS_p;
       uInt nrow = chansels.nrow(); 
@@ -363,7 +364,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
         maxnspw=max(nspw,maxnspw);
       }
-      spwchansels_p.resize(nms,maxnspw,maxnchan,True);
+      spwchansels_p.resize(nms,maxnspw,maxnchan,true);
       //cout<<"After resize: spwchansels_p.shape()="<<spwchansels_p.shape()<<endl;
       uInt nselspw=0;
       if (nrow==0) {
@@ -382,7 +383,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    throw(AipsError("Unexpected selection  in spw selection of spwid "+String::toString(spwid)));
 	  if (spwid != prvspwid){
 	    nselspw++;
-	    selspw.resize(nselspw,True);
+	    selspw.resize(nselspw,true);
 	    selspw[nselspw-1]=spwid;
 	  }
 	  uInt minc= sel[1];
@@ -419,7 +420,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       datadescids_p.resize(0);
       datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
       
-      freqrange_p.resize(nms,2,True);
+      freqrange_p.resize(nms,2,true);
       if(mode=="none"){
 	//check if we can find channel selection in the spw string
 	//if(nselspw==dataspectralwindowids_p.nelements()){
@@ -451,14 +452,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  dataNchan_p[k]=nchanvec(curspwid);
 	  //cout<<"SetDataOnThisMS: initial setting dataNchan_p["<<k<<"]="<<dataNchan_p[k]<<endl;
 	  //find start
-	  Bool first = True;
+	  Bool first = true;
 	  uInt nchn = 0;
 	  uInt lastchan = 0;
 	  for (Int j=0 ; j < nchanvec(curspwid); j++) {
 	    if (spwchansels_p(numMS_p-1,curspwid,j)==1) {
 	      if(first) {
 		dataStart_p[k]=j;
-		first = False;
+		first = false;
 	      }
 	      lastchan=j;
 	      nchn++;
@@ -581,18 +582,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //rvi_p->slurp();
       
       selectDataChannel();
-      dataSet_p=True;
+      dataSet_p=true;
       
       return dataSet_p;
     }
     catch(AipsError x){
       //Ayeee...lets back out of this one
       --numMS_p;
-      blockMSSel_p.resize(numMS_p, True);
-      blockNChan_p.resize(numMS_p, True);
-      blockStart_p.resize(numMS_p, True);
-      blockStep_p.resize(numMS_p, True);
-      blockSpw_p.resize(numMS_p, True);
+      blockMSSel_p.resize(numMS_p, true);
+      blockNChan_p.resize(numMS_p, true);
+      blockStart_p.resize(numMS_p, true);
+      blockStep_p.resize(numMS_p, true);
+      blockSpw_p.resize(numMS_p, true);
       //point it back to the previous ms
       if(numMS_p >0){
 	mssel_p=new MeasurementSet(blockMSSel_p[numMS_p-1]);
@@ -624,7 +625,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
     os << LogIO::SEVERE 
        << "Please use setdata before setimage as imager need one ms at least " 
        << LogIO::POST;
-    return False;
+    return false;
 
   }
 
@@ -641,15 +642,15 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
     //Do nothing for now as its Autolocked..but a better scheme is necessary
     //for parallel access to same data for modification
 
-    return True;
+    return true;
   }
 
   Bool ImagerMultiMS::unlock(){
 
     for (uInt k=0; k < blockMSSel_p.nelements(); ++k){
-      blockMSSel_p[k].relinquishAutoLocks(True);
+      blockMSSel_p[k].relinquishAutoLocks(true);
     }
-    return True;
+    return true;
 
   }
 
@@ -681,7 +682,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 
       if (dataNchan_p.nelements() != dataspectralwindowids_p.nelements()){
 	if(dataNchan_p.nelements()==1){
-	  dataNchan_p.resize(dataspectralwindowids_p.nelements(), True);
+	  dataNchan_p.resize(dataspectralwindowids_p.nelements(), true);
 	  for(uInt k=1; k < dataspectralwindowids_p.nelements(); ++k){
 	    dataNchan_p[k]=dataNchan_p[0];
 	  }
@@ -690,12 +691,12 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	  os << LogIO::SEVERE 
 	     << "Vector of nchan has to be of size 1 or be of the same shape as spw " 
 	     << LogIO::POST;
-	  return False; 
+	  return false; 
 	}
       }
       if (dataStart_p.nelements() != dataspectralwindowids_p.nelements()){
 	if(dataStart_p.nelements()==1){
-	  dataStart_p.resize(dataspectralwindowids_p.nelements(), True);
+	  dataStart_p.resize(dataspectralwindowids_p.nelements(), true);
 	  for(uInt k=1; k < dataspectralwindowids_p.nelements(); ++k){
 	    dataStart_p[k]=dataStart_p[0];
 	  }
@@ -704,12 +705,12 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	  os << LogIO::SEVERE 
 	     << "Vector of start has to be of size 1 or be of the same shape as spw " 
 	     << LogIO::POST;
-	  return False; 
+	  return false; 
 	}
       }
       if (dataStep_p.nelements() != dataspectralwindowids_p.nelements()){
 	if(dataStep_p.nelements()==1){
-	  dataStep_p.resize(dataspectralwindowids_p.nelements(), True);
+	  dataStep_p.resize(dataspectralwindowids_p.nelements(), true);
 	  for(uInt k=1; k < dataspectralwindowids_p.nelements(); ++k){
 	    dataStep_p[k]=dataStep_p[0];
 	  }
@@ -718,7 +719,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	  os << LogIO::SEVERE 
 	     << "Vector of step has to be of size 1 or be of the same shape as spw " 
 	     << LogIO::POST;
-	  return False; 
+	  return false; 
 	}
       }
 
@@ -730,7 +731,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	    os << LogIO::SEVERE << "Illegal start pixel = " 
 	       << dataStart_p[i]  << " for spw " << spwid
 	       << LogIO::POST;
-	    return False;
+	    return false;
 	  }
 	 
 	  if(dataNchan_p[i]<=0){
@@ -753,7 +754,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	       << (blockNChan_p[numMS_p-1](i)-1)
 
 	       << LogIO::POST;
-	    return False;
+	    return false;
 	  }
 	  os << LogIO::DEBUG1 << "Selecting "<< nch
 	     << " channels, starting at visibility channel "
@@ -776,7 +777,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 
      rvi_p->selectChannel(blockGroup, blockStart_p, blockNChan_p, 
 			  blockStep_p, blockSpw_p);
-     return True;
+     return true;
   }
 
   Bool ImagerMultiMS::openSubTables(){
@@ -824,7 +825,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
           }
       }
 
-      return True;
+      return true;
   }
 
 #define INITIALIZE_DIRECTION_VECTOR(name) \
@@ -833,7 +834,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
             name.resize(2); \
             name = 0.0; \
         } \
-    } while (False)
+    } while (false)
  Bool ImagerMultiMS::mapExtent(const String &referenceFrame, const String &movingSource,
           const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
           Vector<Double> &trc, Vector<Double> &extent) {
@@ -844,7 +845,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
       INITIALIZE_DIRECTION_VECTOR(extent);
 
       try {
-          Bool isValueSet = False;
+          Bool isValueSet = false;
           for (size_t i = 0; i < blockMSSel_p.nelements(); ++i) {
               //cout << "start MS " << i << endl;
               MeasurementSet ms = blockMSSel_p[i];
@@ -862,7 +863,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
                       blc = wblc;
                       trc = wtrc;
                       extent = wextent;
-                      isValueSet = True;
+                      isValueSet = true;
                   }
                   else {
                       blc[0] = min(blc[0], wblc[0]);
@@ -877,7 +878,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
               LogIO os(LogOrigin("ImagerMultiMS", "mapExtent", WHERE));
               os << LogIO::SEVERE << "No valid data found. Failed." << LogIO::POST;
 
-              return False;
+              return false;
           }
 
           // extent is re-evaluated using true trc and blc
@@ -890,7 +891,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
           // and moving source name
           MDirection::Types refType;
           Bool status = MDirection::getType(refType, movingSource);
-          Bool doMovingSourceCorrection = (status == True &&
+          Bool doMovingSourceCorrection = (status == true &&
                   MDirection::N_Types < refType &&
                   refType < MDirection::N_Planets);
           Bool isOffsetColumn = (pointingColumn.contains("OFFSET")
@@ -903,7 +904,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
           }
           else if (!doMovingSourceCorrection) {
               // initial center value should be kept
-              // if doMovingSourceCorrection is True.
+              // if doMovingSourceCorrection is true.
               // otherwise, center should be re-evaluated
               // using true trc and blc
               center = (blc + trc) / 2.0;
@@ -919,8 +920,8 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
       catch (...) {
           LogIO os(LogOrigin("ImagerMultiMS", "mapExtent", WHERE));
           os << LogIO::SEVERE << "Failed due to unknown error" << LogIO::POST;
-          return False;
+          return false;
       }
-      return True;
+      return true;
   }
 } //# NAMESPACE CASA - END

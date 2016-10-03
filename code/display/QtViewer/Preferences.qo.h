@@ -87,7 +87,7 @@ namespace casa {
 			const int validate_offset;
 
 			// connection to rc file
-			Casarc &rc;
+			casacore::Casarc &rc;
 		};
 
 	}

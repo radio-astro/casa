@@ -35,24 +35,26 @@
 #include <RPFITS.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
 
+using namespace casa;
+
 Int myround(Double x) { return Int(floor(x+0.5));}
 
 ATCAFiller::ATCAFiller():
-appendMode_p(False),
-storedHeader_p(False),
-skipScan_p(False),
-skipData_p(False),
-firstHeader_p(False),
-listHeader_p(False),
+appendMode_p(false),
+storedHeader_p(false),
+skipScan_p(false),
+skipData_p(false),
+firstHeader_p(false),
+listHeader_p(false),
 fileSize_p(0),
-birdie_p(False),
-reweight_p(False),
-noxycorr_p(False),
+birdie_p(false),
+reweight_p(false),
+noxycorr_p(false),
 obsType_p(0),
-init_p(False),
+init_p(false),
 shadow_p(0),
-autoFlag_p(True),
-flagScanType_p(False),
+autoFlag_p(true),
+flagScanType_p(false),
 flagCount_p(NFLAG,0)
 {}
 
@@ -67,7 +69,7 @@ Bool ATCAFiller::open(const String& msName, const Vector<String>& rpfitsFiles,
 
   LogOrigin orig("ATCAFiller", "open()", WHERE);
   os_p = LogIO(orig);  
-  rpfitsFiles_p = Directory::shellExpand(rpfitsFiles, False);
+  rpfitsFiles_p = Directory::shellExpand(rpfitsFiles, false);
   if (rpfitsFiles_p.nelements() > 0) {
      os_p << LogIO::NORMAL << "Expanded file names are : " << endl;
      for (uInt i=0; i<rpfitsFiles_p.nelements(); i++) {
@@ -88,32 +90,32 @@ Bool ATCAFiller::open(const String& msName, const Vector<String>& rpfitsFiles,
   }
   opcor_p=opcor;
   
-  Bool compress=False;
+  Bool compress=false;
   // cerr<<"options="<<opts<<endl;
   for (opt=0; opt<Int(opts.nelements()); opt++) {
     if (downcase(opts(opt)) == "birdie") {
-      birdie_p = True;
+      birdie_p = true;
     }
     if (downcase(opts(opt)) == "reweight") {
-      reweight_p = True;
+      reweight_p = true;
     }
     if (downcase(opts(opt)) == "noxycorr") {
-      noxycorr_p = True;
+      noxycorr_p = true;
     }
     if (downcase(opts(opt)) == "compress") {
-      compress = True;
+      compress = true;
     }
     if (downcase(opts(opt)) == "fastmosaic") {
       obsType_p=1;
     }
     if (downcase(opts(opt)) == "noautoflag") {
-      autoFlag_p=False;
+      autoFlag_p=false;
     }
     if (downcase(opts(opt)) == "hires") {
-      hires_p=True;
+      hires_p=true;
     }
     if (downcase(opts(opt)) == "noac") {
-      noac_p = True;
+      noac_p = true;
     }
   }
   // Check if this is CABB data or old ATCA data by checking the 
@@ -135,8 +137,8 @@ Bool ATCAFiller::open(const String& msName, const Vector<String>& rpfitsFiles,
   lastWeatherUT_p=0;
   errCount_p=0;
   init();
-  init_p=True;
-  return True;
+  init_p=true;
+  return true;
 }
 
 
@@ -208,7 +210,7 @@ MeasurementSet ATCAFiller::makeTable(const String& tableName, Bool compress,
   
   // Set the default Storage Manager to be the incremental one
   IncrementalStMan incrStMan ("IncrementalData");
-  newtab.bindAll(incrStMan, True);
+  newtab.bindAll(incrStMan, true);
   // Make an exception for fast varying data
   StandardStMan stStMan ("StandardData");
   newtab.bindColumn(MS::columnName(MS::UVW),stStMan);
@@ -226,7 +228,7 @@ MeasurementSet ATCAFiller::makeTable(const String& tableName, Bool compress,
   newtab.bindColumn("DATA_HYPERCUBE_ID",tiledStMan1);
   if (compress) {;
     CompressComplex ccData(colData,colData+"_COMPRESSED",
-      colData+"_SCALE",colData+"_OFFSET", True);
+      colData+"_SCALE",colData+"_OFFSET", true);
     newtab.bindColumn(MS::columnName(MS::DATA),ccData);
   }
   
@@ -315,7 +317,7 @@ void ATCAFiller::makeSubTables(MS& ms, Table::TableOption option, Bool cabb)
   // Pointing table can be large, set some sensible defaults for storageMgrs
   IncrementalStMan ismPointing ("ISMPointing");
   StandardStMan ssmPointing("SSMPointing",32768);
-  pointingSetup.bindAll(ismPointing,True);
+  pointingSetup.bindAll(ismPointing,true);
   pointingSetup.bindColumn(MSPointing::columnName(MSPointing::ANTENNA_ID),
                            ssmPointing);
   ms.rwKeywordSet().defineTable(MS::keywordName(MS::POINTING), 
@@ -499,7 +501,7 @@ void ATCAFiller::makeSubTables(MS& ms, Table::TableOption option, Bool cabb)
   atsiTD.addColumn(ScalarColumnDesc<String>("POINTING_INFO",
                                             "Pointing info - details of last point scan"));
   atsiTD.addColumn(ScalarColumnDesc<Bool>("LINE_MODE",
-                                         "Line Mode: True=spectrum, False=mfs"));
+                                         "Line Mode: true=spectrum, false=mfs"));
   atsiTD.addColumn(ScalarColumnDesc<Int>("CACAL_CNT",
                                          "Online calibration counter"));
   
@@ -569,7 +571,7 @@ void ATCAFiller::init()
   colWeatherSeeMonFlag.attach(atms_p.weather(),"ATCA_SEEMON_FLAG");
  
   nScan_p=nSpW_p=nField_p=scanNo_p=0;
-  gotAN_p=False;
+  gotAN_p=false;
 }
 
 // list the current scan and return the current day in mjd
@@ -589,11 +591,11 @@ void ATCAFiller::listScan(Double & mjd, Int scan, Double ut)
 
 
 Bool ATCAFiller::fill() {
-  if (!init_p) return False;
+  if (!init_p) return false;
   if (!appendMode_p) {
-    firstHeader_p = True;
-    skipScan_p=False;
-    skipData_p=False;
+    firstHeader_p = true;
+    skipScan_p=false;
+    skipData_p=false;
 
     nScan_p=1; // we've seen the 1st header
     scanNo_p=-1; // make zero based for storage in MS
@@ -602,7 +604,7 @@ Bool ATCAFiller::fill() {
     Int offset=0;
 
     for (fileno=0; fileno<Int(rpfitsFiles_p.nelements())-offset; fileno++) {
-      listHeader_p = True;
+      listHeader_p = true;
       currentFile_p = rpfitsFiles_p(fileno);
       fill1(currentFile_p);
     }
@@ -652,12 +654,12 @@ Bool ATCAFiller::fill() {
         DirectoryIterator dirIter(dir, regexp);
         
         String entry;
-        Bool found = False;
+        Bool found = false;
         while (!dirIter.pastEnd()) {
           entry = rpfitsDir_p+dirIter.name();
           os_p << LogIO::DEBUGGING << " file: "<< entry << LogIO::POST;
           if (found) break;
-          if (entry == currentFile_p) found = True;
+          if (entry == currentFile_p) found = true;
           dirIter++;
         }
         
@@ -675,7 +677,7 @@ Bool ATCAFiller::fill() {
             os_p << LogIO::NORMAL << " Project changed..."<< LogIO::POST;
           } else {
             currentFile_p = entry;
-            listHeader_p = True;
+            listHeader_p = true;
             fill1(currentFile_p);
           }
         }
@@ -683,7 +685,7 @@ Bool ATCAFiller::fill() {
     }
   }
   // flag the last integration for shadowing
-  if (shadow_p>0) shadow(0,True);
+  if (shadow_p>0) shadow(0,true);
 
   // flush the table and unlock it
   // NOTE: this still keeps a reference to the table which causes problems
@@ -691,7 +693,7 @@ Bool ATCAFiller::fill() {
   flush();
   unlock();
 
-  return True;
+  return true;
 }
 
 Bool ATCAFiller::checkCABB(const String& rpfitsFile)
@@ -709,7 +711,7 @@ Bool ATCAFiller::checkCABB(const String& rpfitsFile)
   if (jstat==-1) {
     os_p << LogIO::SEVERE << " Error opening RPFits file: "<<file
          << LogIO::POST;
-    return False;
+    return false;
   }
   // read INSTRUMENT keyword
   String instrument = String(names_.instrument,16).before(trailing);
@@ -719,9 +721,9 @@ Bool ATCAFiller::checkCABB(const String& rpfitsFile)
             &if_no, &sourceno); 
   if (instrument=="ATCABB") {
     os_p<< LogIO::NORMAL<<"CABB data detected"<<LogIO::POST;
-    return True;
+    return true;
   }
-  else return False;  
+  else return false;  
 }
 
 Bool ATCAFiller::fill1(const String& rpfitsFile)
@@ -730,7 +732,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
   Regex trailing(" *$"); // trailing blanks
 
   String file = rpfitsFile;
-  if (listHeader_p == True) {
+  if (listHeader_p == true) {
     os_p << LogIO::NORMAL <<"Reading file "<<file<< LogIO::POST;
     strcpy(names_.file,file.chars());
     jstat=-2; // open rpfits file and read first header
@@ -740,7 +742,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
     if (jstat==-1) {
       os_p << LogIO::SEVERE << " Error opening RPFits file: "<<file
            << LogIO::POST;
-      return False;
+      return false;
     }
   }
   // Otherwise we enter fill1 for the second time with the same file name
@@ -763,13 +765,13 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
       jstat=0;
       break;
     case 0: // found data: store header (incl Tables) and data
-      if (listHeader_p) { listScan(mjd0_p,nScan_p,ut); listHeader_p=False;}
+      if (listHeader_p) { listScan(mjd0_p,nScan_p,ut); listHeader_p=false;}
 
       // do we want this scan?
       if (skipScan_p ||  nScan_p<firstScan_p || 
           (lastScan_p>0 && nScan_p>lastScan_p)) {
           //if (!skipScan_p) cerr<<"ss1=T"<<endl;
-        skipScan_p=True;
+        skipScan_p=true;
       } else {
         // if_no and sourceno are not (always) set properly
         //   for syscal records
@@ -778,7 +780,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
         // check if if_no valid
         if (!if_.if_found|| if_no>if_.n_if) {
           //if (!skipScan_p)cerr<<"ss2=T"<<endl; 
-          skipScan_p=True; 
+          skipScan_p=true; 
           // assume not wanted or ^  garbled data
         } else {
           // check if we want this field
@@ -788,7 +790,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
                 !(anyEQ(fieldSelection_p,field))) {
                 //cerr<< "Field:"<<field<<"-"<<fieldSelection_p.nelements()<<endl;
                 //if (!skipScan_p) cerr<<"ss3=T"<<endl;
-                skipScan_p=True; 
+                skipScan_p=true; 
             }
           }
           if (!skipScan_p) {
@@ -806,7 +808,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
         nAnt_p=anten_.nant;
         Int NChan=if_.if_nfreq[if_no];
         Int NPol=if_.if_nstok[if_no];
-        firstHeader_p=False;
+        firstHeader_p=false;
         os_p << LogIO::NORMAL << " First data/header has NAnt="<<nAnt_p<<
           ", NChan="<<NChan<<", NPol="<<NPol<< LogIO::POST;
       } 
@@ -815,13 +817,13 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
           os_p << LogIO::WARN << "#antennas changed from "<< nAnt_p <<
             " to "<<anten_.nant<<", skipping scan"<< LogIO::POST;
           //if (!skipScan_p)cerr<<"ss4=T"<<endl;
-          skipScan_p=True; 
+          skipScan_p=true; 
         }
       }
       if (!skipScan_p && !skipData_p && !storedHeader_p) {
         storeHeader();
         scanNo_p++; 
-        storedHeader_p=True;
+        storedHeader_p=true;
       }
       if (!skipScan_p) {
         if (baseline==-1) {
@@ -838,7 +840,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
           storeData();
         }
       }
-      skipData_p=False;
+      skipData_p=false;
       break;
     case 1:
       if (skipScan_p || scanNo_p==lastScanNo) {
@@ -858,9 +860,9 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
       jstat=0;
         
       listScan(mjd0_p,nScan_p,ut);
-      storedHeader_p=False;
-      skipScan_p=False; //cerr<<"ss=F"<<endl;
-      eof_p = False;
+      storedHeader_p=false;
+      skipScan_p=false; //cerr<<"ss=F"<<endl;
+      eof_p = false;
       if (!appendMode_p) break;
         // suppress this break to return after each end of scan
         // (actually each beginning of a new scan) in on line mode
@@ -870,10 +872,10 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
         if (!skipScan_p && !skipData_p && !storedHeader_p) {
           storeHeader(); // store sole header at end of file
           scanNo_p++;    // to capture last commands & log messages
-          storedHeader_p=True;
+          storedHeader_p=true;
         }
         os_p << LogIO::NORMAL << "End of File" << LogIO::POST;
-        eof_p = True;
+        eof_p = true;
         nScan_p++; // increment for next scan
         // print flagging stats for last scan
         if (flagCount_p(COUNT)>0) {
@@ -930,7 +932,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
   // uncomment this if things take unexpectedly long
   // dataAccessor_p.showCacheStatistics(cout);
   // sigmaAccessor_p.showCacheStatistics(cout);
-  return True;
+  return true;
 }
 
 
@@ -1027,13 +1029,13 @@ ATCAFiller & ATCAFiller::edge(float edge)
 }
 
 void ATCAFiller::storeHeader() {
-  //  Bool skip=False;
+  //  Bool skip=false;
   Regex trailing(" *$"); // trailing blanks
 
   // First check antenna Table and store any new stations encountered
   if (!gotAN_p && anten_.nant>0) {
     if (anten_.an_found) {
-      gotAN_p=True;
+      gotAN_p=true;
       
       for (Int i=0; i<nAnt_p; i++) {
         Int ant=Int(anten_.ant_num[i]); // 1-based !
@@ -1041,7 +1043,7 @@ void ATCAFiller::storeHeader() {
           os_p << LogIO::SEVERE 
                << "AN table corrupt, will try next one " << ant <<":"<<i<<":"<<nAnt_p
                << LogIO::POST;
-          gotAN_p=False;
+          gotAN_p=false;
           break;
         }
         atms_p.antenna().addRow();
@@ -1136,13 +1138,13 @@ void ATCAFiller::storeATCAHeader() {
   Matrix<Int> mmAtt(nIF,nAnt,0);
   Vector<Float> subrPos(nAnt,0),subrTilt(nAnt,0);
   Matrix<Float> pointCorr(2,nAnt,0);
-  newPointingCorr_p=False;
-  flagScanType_p=False;
+  newPointingCorr_p=false;
+  flagScanType_p=false;
   String scanType,coordType,pointInfo;
   Vector<Bool> lineMode(nIF);
   Int cacalCnt=0;
   const Regex trailing(" *$"); // trailing blanks
-  Bool foundAny = False;
+  Bool foundAny = false;
   String::size_type pos=cards.find("EPHEM12"); // last 'standard' card
   //cout << "pos="<<pos<<" String::npos=="<<String::npos<<endl;
   if (pos==String::npos) return;
@@ -1159,7 +1161,7 @@ void ATCAFiller::storeATCAHeader() {
     if (ant>=nAnt) ant = -1;
     for (Int j=0; j<nTypes; j++) {
       if (card.find(types[j])==0) {
-        foundAny=True;
+        foundAny=true;
         //cout << "Found card :"<<types[j]<<", ant="<<ant<<endl;
         switch (j) {
         case 0: obsLog+=card.substr(8,72).before(trailing);
@@ -1212,7 +1214,7 @@ void ATCAFiller::storeATCAHeader() {
                    }
                    if (scanType=="PADDLE"||scanType=="POINT"||scanType=="XPOINT"
                        ||scanType=="EARLY") {
-                     flagScanType_p=True;
+                     flagScanType_p=true;
                    }
                 }
                 break;
@@ -1242,12 +1244,12 @@ void ATCAFiller::storeATCAHeader() {
                   String::size_type pos=card.find("Az=");
                   if (pos!=String::npos && ant>=0) {
                     istringstream(card.substr(pos+3,6))>>pointCorr(0,ant);
-                    newPointingCorr_p=True;
+                    newPointingCorr_p=true;
                   }
                   pos=card.find("El=");
                   if (pos!=String::npos && ant>=0) {
                     istringstream(card.substr(pos+3,6))>>pointCorr(1,ant);
-                    newPointingCorr_p=True;
+                    newPointingCorr_p=true;
                   }
                 }
                 break;
@@ -1437,7 +1439,7 @@ Int ATCAFiller::checkSpW(Int ifNumber,Bool log) {
         corrIndex_p.resize(64,4);
       }
       if (Int(corrIndex_p.nrow())<=spWId_p) {
-        corrIndex_p.resize(nSpW_p,4,True);
+        corrIndex_p.resize(nSpW_p,4,true);
       }
       // Get the sort indices to rearrange the data to standard order
       for (Int i=0;i<npol;i++) {
@@ -1477,12 +1479,12 @@ Int ATCAFiller::checkSpW(Int ifNumber,Bool log) {
         msc_p->polarization().numCorr().put(polRow,Int(if_.if_nstok[ifNumber]));
         msc_p->polarization().corrType().put(polRow,corrType);
         msc_p->polarization().corrProduct().put(polRow,corrProduct);
-        msc_p->polarization().flagRow().put(polRow, False);
+        msc_p->polarization().flagRow().put(polRow, false);
       }         
       atms_p.dataDescription().addRow();
       msc_p->dataDescription().spectralWindowId().put(n, spWId_p);
       msc_p->dataDescription().polarizationId().put(n, polRow);
-      msc_p->dataDescription().flagRow().put(n, False);
+      msc_p->dataDescription().flagRow().put(n, false);
 
       msc_p->spectralWindow().ifConvChain().put(n,Int(if_.if_chain[ifNumber])-1);
       if (!cabb_p) colSamplerBits.put(n,Int(if_.if_sampl[ifNumber]));
@@ -1558,7 +1560,7 @@ void ATCAFiller::checkField() {
 
   if (su_.su_found) {
     fieldId_p=-1;
-    Bool seenSource = False;
+    Bool seenSource = false;
     Int numPol;
     String name;
     String su_name=String(&names_.su_name[sourceno*16],16).before(trailing);
@@ -1721,7 +1723,7 @@ void ATCAFiller::storeSysCal()
   //  15: Tracking error Max (arcsec)
   //  16: Tracking error RMS (arcsec)
   Int last_if_no=-2; // if_no can come out to be -1 if syscal rec is blank
-  Bool skip=False;
+  Bool skip=false;
   sourceno=sc_.sc_srcno-1; // 0-based source number for this syscal record
   Int scq=sc_.sc_q, scif=sc_.sc_if;
   for (Int i=0; i<scif; i++) {
@@ -1812,8 +1814,8 @@ void ATCAFiller::storeSysCal()
               msc_p->sysCal().tsysFlag().
                 put(n,(sc_.sc_cal[scq*(i+scif*ant)+12]!=0));
               colXYAmplitude.put(n,sc_.sc_cal[scq*(i+scif*ant)+13]);
-              msc_p->sysCal().tcalFlag().put(n,True);
-              msc_p->sysCal().trxFlag().put(n,True);
+              msc_p->sysCal().tcalFlag().put(n,true);
+              msc_p->sysCal().trxFlag().put(n,true);
              colTrackErrMax.put(n,Float(sc_.sc_cal[scq*(i+scif*ant)+14]));
              colTrackErrRMS.put(n,Float(sc_.sc_cal[scq*(i+scif*ant)+15]));
       }
@@ -1896,7 +1898,7 @@ void ATCAFiller::storeData()
   Record values4, values5, values6; 
 
   Int n=atms_p.nrow()-1;
-  if (n==0) gotSysCalId_p=False;
+  if (n==0) gotSysCalId_p=false;
     
   Int npol =if_.if_nstok[if_no];
   Int nfreq=if_.if_nfreq[if_no];
@@ -1912,7 +1914,7 @@ void ATCAFiller::storeData()
   msc_p->antenna2().put(n,ant2);
   Bool flagData=flg;
   if (flagData) { flagCount_p(ONLINE)++;}
-  if (autoFlag_p && flagScanType_p) { flagData=True; flagCount_p(SCANTYPE)++;}
+  if (autoFlag_p && flagScanType_p) { flagData=true; flagCount_p(SCANTYPE)++;}
   Double exposure=Double(param_.intbase);
   // averaging = number of integration periods averaged by correlator: 1,2 or 3
   Int averaging = 1;
@@ -1976,7 +1978,7 @@ void ATCAFiller::storeData()
     lastSpWId_p=spWId_p;
     // we need to get the new syscal info
     // search backwards from last syscal row
-    Bool done=False;
+    Bool done=false;
     Int nsc=atms_p.sysCal().nrow();
     //# os_p << LogIO::NORMAL << " Current number of syscal rows="<<nsc<<LogIO::POST;
     sysCalId_p.resize(nAnt_p); sysCalId_p=-1;
@@ -2003,7 +2005,7 @@ void ATCAFiller::storeData()
   
   // Check for bad sampler stats now that we've found the syscal data
   if (!flagData && autoFlag_p && (!atlba && !cabb_p && samplerFlag(n))) {
-    flagData=True; flagCount_p(SYSCAL)++;
+    flagData=true; flagCount_p(SYSCAL)++;
   }
   flagCount_p(COUNT)++;
   if (flagData) flagCount_p(FLAG)++;
@@ -2047,14 +2049,14 @@ void ATCAFiller::storeData()
   Bool band3mm  = (refFreq>75.e9);
       
   Matrix<Complex> VIS(npol,nfreq);
-  Cube<Bool> flagCat(npol,nfreq,nCat,False);  
+  Cube<Bool> flagCat(npol,nfreq,nCat,false);  
   Matrix<Bool> flags= flagCat.xyPlane(1); // references flagCat's storage
   
   
   if (birdie_p) {
     if (bchan >= 0 && bchan < nfreq) {
       for (Int i=0; i<npol; i++) {
-        flags(i, bchan) = True;       
+        flags(i, bchan) = true;       
       }
     }
   }
@@ -2192,20 +2194,20 @@ void ATCAFiller::rfiFlag(Matrix<Bool> & flags) {
     if (nfreq==2049) {
       // CABB 2049 chan * 1 MHz continuum mode
       for (Int i=0; i<nb1; i++) {
-        flags.column(b1[i])=True;
+        flags.column(b1[i])=true;
       }
     } else if (nfreq==33) {
       // CABB 33 chan * 64 MHz continuum mode
       for (Int i=0; i<nb2; i++) {
-         flags.column(b2[i])=True;
+         flags.column(b2[i])=true;
       }
     }
   } else if (bw<1.e9 && nfreq>=2049) {
     // CABB zoom mode, 2049 or more channels (combined zooms)
     chn = 2049*edge_p/200;
   }  
-  for (Int i=0; i<chn; i++) flags.column(i)=True;
-  for (Int i=nfreq-chn; i<nfreq; i++) flags.column(i)=True;  
+  for (Int i=0; i<chn; i++) flags.column(i)=true;
+  for (Int i=nfreq-chn; i<nfreq; i++) flags.column(i)=true;  
 }
 
 void ATCAFiller::fillFeedTable() {
@@ -2314,27 +2316,27 @@ void ATCAFiller::unlock()
 
 Bool ATCAFiller::selected(Int ifNum)
 {
-  Bool select=True;
+  Bool select=true;
   // check if we want this frequency
   //if (spws_p.nelements()>0 && spws_p(0)>=0 && !anyEQ(spws_p,if_.if_chain[ifNum]))
   if (spws_p.nelements()>0 && spws_p(0)>=0 && !anyEQ(spws_p,ifNum)) {
-    select=False;
+    select=false;
   } else {
     // check if we want this frequency
     if (lowFreq_p>0 && (doubles_.if_freq[ifNum]-lowFreq_p)<0) 
-      select=False;
+      select=false;
     else {
       if (highFreq_p>0 && (highFreq_p-doubles_.if_freq[ifNum])<0) 
-        select=False;
+        select=false;
       else {
         // check if we want this bandwidth on the first IF
         if (bandWidth1_p>0 && 
         (bandWidth1_p != myround(doubles_.if_bw[ifNum]/1.e6))) 
-          select=False;
+          select=false;
         else {
           // check if we want this number of channels on the first IF
           if (numChan1_p>0 && numChan1_p != if_.if_nfreq[ifNum])
-            select=False;
+            select=false;
         }
       }
     }
@@ -2351,7 +2353,7 @@ void ATCAFiller::shadow(Int row, Bool last)
   if (last || msc_p->time()(row)!=prevTime_p) {
     // flag previous rows if needed
     if (nRowCache_p>0) {
-      Vector<Bool> flag(nAnt_p); flag=False;
+      Vector<Bool> flag(nAnt_p); flag=false;
       Vector<Double> uvw;
       for (Int i=0; i< nRowCache_p; i++) {
         Int k=rowCache_p[i];
@@ -2363,11 +2365,11 @@ void ATCAFiller::shadow(Int row, Bool last)
           if (shadowed) {
             // w term decides which antenna is being shadowed
             if (uvw(2)>0) {
-              flag(msc_p->antenna2()(k))=True;
+              flag(msc_p->antenna2()(k))=true;
               //            cout << " Shadowed: antenna2="<<msc_p->antenna2()(k)<<" for row "
               //                 <<k<<" time="<< msc_p->timeMeas()(k) <<endl;
             } else {
-              flag(msc_p->antenna1()(k))=True;
+              flag(msc_p->antenna1()(k))=true;
               //            cout << " Shadowed: antenna1="<<msc_p->antenna1()(k)<<" for row "
               //                 <<k<<" time="<<msc_p->timeMeas()(k) <<endl;
             }
@@ -2381,7 +2383,7 @@ void ATCAFiller::shadow(Int row, Bool last)
         Int ant2 = msc_p->antenna2()(k);
         if (flag(ant1) || flag(ant2)) {
           flagCount_p(SHADOW)++;
-          msc_p->flagRow().put(k,True);
+          msc_p->flagRow().put(k,true);
         }
       }
     }
@@ -2393,7 +2395,7 @@ void ATCAFiller::shadow(Int row, Bool last)
   }
   if (!last) {
     if (Int(rowCache_p.nelements())<=nRowCache_p) {
-      rowCache_p.resize(2*(nRowCache_p+1),True);
+      rowCache_p.resize(2*(nRowCache_p+1),true);
     }
     rowCache_p[nRowCache_p++]=row;
   }
@@ -2401,7 +2403,7 @@ void ATCAFiller::shadow(Int row, Bool last)
 
 Bool ATCAFiller::samplerFlag(Int row, Double posNegTolerance, 
                              Double zeroTolerance) {
-  // check the sampler stats for the current row, return False if data needs to
+  // check the sampler stats for the current row, return false if data needs to
   // be flagged
 
   const Float posNegRef = 17.3;

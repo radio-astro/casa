@@ -1,4 +1,5 @@
 #include "AnnotationEditorText.qo.h"
+
 namespace casa {
 	AnnotationEditorText::AnnotationEditorText(QWidget *parent)
 		: QWidget(parent) {

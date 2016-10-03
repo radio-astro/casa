@@ -80,7 +80,7 @@ public:
 			float mad[/*num_data*/]);
 
 	/*
-	 * Count the number of True elements in a boolean array.
+	 * Count the number of true elements in a boolean array.
 	 *
 	 * @param[in] num_data : the number of elements in @a data
 	 * @param[in] data : a boolean array
@@ -309,11 +309,12 @@ public:
 	/* 			     std::list<std::pair<size_t,size_t>>& out_range); */
 
 	inline static string FormatLineString(std::list<std::pair<size_t,size_t>> &line_list) {
-	  ostringstream oss;
-	  oss << "number of Lines = " << line_list.size() << endl;
+	  std::ostringstream oss;
+	  oss << "number of Lines = " << line_list.size() << std::endl;
 	  for (std::list<std::pair<size_t,size_t>>::iterator iter = line_list.begin();
 	       iter!=line_list.end(); ++iter) {
-	    oss << "- [ " << (*iter).first << ", " << (*iter).second << " ] (width: " << (*iter).second-(*iter).first+1 << ")" << endl;
+	    oss << "- [ " << (*iter).first << ", " << (*iter).second << " ] (width: "
+	        << (*iter).second-(*iter).first+1 << ")" << std::endl;
 	  }
 	  return oss.str();
 	};

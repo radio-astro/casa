@@ -9,6 +9,7 @@ double rgauss( void );
 #include <calanalysis/CalAnalysis/CalStats.h>
 #include <calanalysis/CalAnalysis/CalStatsDerived.h>
 
+using namespace casacore;
 using namespace casa;
 
 // -----------------------------------------------------------------------------
@@ -54,7 +55,7 @@ int main( void ) {
 
   // Initialize the input flag cube
 
-  Cube<Bool> oFlag( oShape, False );
+  Cube<Bool> oFlag( oShape, false );
 
 
   // Initialize the polarization (feed) abscissa
@@ -86,7 +87,7 @@ int main( void ) {
   // polarization and time axes
 
   CalStatsPhase oCSP( oData, oDataErr, oFlag, oFeed, oFreq, oTime, eAxis,
-      False );
+      false );
 
   CalStats::ARG<CalStats::NONE> oArg;
   Matrix<CalStats::OUT<CalStats::NONE> >

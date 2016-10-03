@@ -3,6 +3,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 
+using namespace casacore;
 namespace casa {
 
 std::map<uInt, String> *ImageCollapserData::_funcNameMap = 0;

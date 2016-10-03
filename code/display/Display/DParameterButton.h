@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // It holds the meta-information neccessary to define a button widget,
 // packaging it into the 'parameter record' field required by autogui.g.
 // It can determine whether the button was pressed.
-// The 'value' has no meaning here (it will be True).
+// The 'value' has no meaning here (it will be true).
 // </synopsis>
 
 // <example>
@@ -68,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // DParameterButton pbtn("unique_btn_id", "Label Beside Button",
 //			 "Text on Button", "Help Message for Button");
 //
-// Record rec;			// (usually within 'getoptions()')
+// casacore::Record rec;			// (usually within 'getoptions()')
 // pstring.toRecord(rec);	// rec is returned to autogui.g
 //				// to define the button.
 //
@@ -99,9 +99,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// whether the button is enabled (disable is not fully supported yet).
 		// The context string determines which autogui rollup the button will
 		// appear in (replace spaces with underscores in this string).
-		DParameterButton(const String name, const String description,
-		                 const String text, const String help="",
-		                 const String context="", const Bool editable=True);
+		DParameterButton(const casacore::String name, const casacore::String description,
+		                 const casacore::String text, const casacore::String help="",
+		                 const casacore::String context="", const casacore::Bool editable=true);
 
 		// copy constructor.
 		DParameterButton(const DParameterButton &other);
@@ -114,18 +114,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Determine whether the record (passed originally from autogui.g)
 		// indicates that the button was pressed.
-		virtual Bool fromRecord(const RecordInterface &record);
+		virtual casacore::Bool fromRecord(const casacore::RecordInterface &record);
 
 		// Place a record describing this button in a sub-field of
 		// <src>record</src> with name matching that of this parameter.  If
-		// <src>overwrite</src> is <src>True</src>, then any existing field
+		// <src>overwrite</src> is <src>true</src>, then any existing field
 		// with matching name will be overwritten.  If <src>fullrecord</src>
-		// is <src>True</src>, then a complete description of the parameter
+		// is <src>true</src>, then a complete description of the parameter
 		// is given, otherwise just its current value is stored in
 		// <src>record</src>.  (At present, <src>fullrecord</src> is ignored;
 		// the full record is always returned).
-		virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
-		                      const Bool overwrite = False);
+		virtual void toRecord(casacore::RecordInterface &record, const casacore::Bool fullrecord = true,
+		                      const casacore::Bool overwrite = false);
 
 	private:
 
@@ -133,7 +133,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DParameterButton() : DisplayParameter(), itsText("") {  }
 
 		// Store for the text on the button.
-		String itsText;
+		casacore::String itsText;
 
 	};
 

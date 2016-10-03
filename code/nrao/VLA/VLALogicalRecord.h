@@ -39,8 +39,12 @@
 #include <nrao/VLA/VLASDA.h>
 
 #include <casa/namespace.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore{
+
 template <class T> class Vector;
+}
+
+namespace casa { //# NAMESPACE CASA - BEGIN
 } //# NAMESPACE CASA - END
 
 // <summary>This class interprets a VLA logical record.</summary>
@@ -65,7 +69,7 @@ template <class T> class Vector;
 // archive data record from the input. A reference to this data can be
 // obtained using the logicalRecord function.
 //
-// Refer to the "VLA Archive Data Format", VLA Computer Memorandum 186
+// Refer to the "VLA Archive casacore::Data casacore::Format", VLA Computer Memorandum 186
 // by G.C. Hunt, K.P. Sowinski, and T.J. Bottomly; June 1993.
 // (This is also available as AIPS++ note 159)
 //
@@ -80,7 +84,7 @@ template <class T> class Vector;
 //
 // The helper classes VlaDiskInput, VlaTapeInput, and VlaStdInput are
 // designed to deal with the low level input from the devices in an
-// analogous fashion to the ones used for FITS input.
+// analogous fashion to the ones used for casacore::FITS input.
 //
 // Since a read may be issued for an arbitrary number of bytes from a
 // disk, the chunk multiple is arbitrary and may be used to tune the
@@ -130,19 +134,19 @@ template <class T> class Vector;
 // To open and read a VLA archive data file
 // <code>
 //    VLAArchiveInput *in;
-//    Block <Char> *buff;
-//    String fileName = " ";
-//    String fileType = "tape";
+//    casacore::Block <casacore::Char> *buff;
+//    casacore::String fileName = " ";
+//    casacore::String fileType = "tape";
 //
-//    if (fileType == String("tape")) {
+//    if (fileType == casacore::String("tape")) {
 //        in = new VLAArchiveInput(fileName.chars(), VLAArchiveInput::Tape);
 //    } else {
 //        in = new VLAArchiveInput(fileName.chars(), VLAArchiveInput::Disk);
 //    }
 //
-//    uInt record = 0;
-//    for (buff=&(in->next()); in->atEnd()==False; buff=&(in->next()), record++) {
-//        cout << "Record" << record << endl;
+//    casacore::uInt record = 0;
+//    for (buff=&(in->next()); in->atEnd()==false; buff=&(in->next()), record++) {
+//        cout << "casacore::Record" << record << endl;
 //        // process record pointed to by buff
 //    }
 // </code>
@@ -184,67 +188,67 @@ public:
   VLALogicalRecord& operator=(const VLALogicalRecord& other);
 
   // This returns the reconstructed VLA archive record from the input
-  // stream. This ByteSource has the data stored in memory, and hence is
-  // seekable. Data read from this ByteSource will have the ModComp numeric
+  // stream. This casacore::ByteSource has the data stored in memory, and hence is
+  // seekable. casacore::Data read from this casacore::ByteSource will have the ModComp numeric
   // conversions applied.
-  ByteSource& logicalRecord();
+  casacore::ByteSource& logicalRecord();
 
-  // Reads the next logical record from the ByteSource. Returns False if there
+  // Reads the next logical record from the ByteSource. Returns false if there
   // was a problem assembling the next record.
-  Bool read();
+  casacore::Bool read();
 
-  // Returns True if this class is attached to a VLAArchiveInput object.
-  Bool isValid() const;
+  // Returns true if this class is attached to a VLAArchiveInput object.
+  casacore::Bool isValid() const;
 
   // returns a reference to a class which can be used to interpret the data in
-  // the Record Control Area of the current logical record.
+  // the casacore::Record Control Area of the current logical record.
   const VLARCA& RCA() const;
 
   // returns a reference to a class which can be used to interpret the data in
-  // the Subarray Data Area of the current logical record.
+  // the Subarray casacore::Data Area of the current logical record.
   const VLASDA& SDA() const;
 
   // returns a reference to a class which can be used to interpret the data in
-  // the Correlator Data Area of the current logical record. A logical record
+  // the Correlator casacore::Data Area of the current logical record. A logical record
   // can have have up to four correlator data areas and the argument is used to
   // specify which one you are interested in. And exception is thrown if the
   // input argument is greater than three.
-  const VLACDA& CDA(uInt which) const;
+  const VLACDA& CDA(casacore::uInt which) const;
 
   // returns a reference to a class which can be used to interpret the data in
-  // the Antenna Data Area (ADA) of the current logical record. A logical
+  // the Antenna casacore::Data Area (ADA) of the current logical record. A logical
   // record has one ADA for each antenna that contributed to the data in this
   // record and the argument is used to specify which one you are interested
   // in. And exception is thrown if the input argument is not less than the
   // number of antennas in this subarray.
-  const VLAADA& ADA(uInt which) const;
+  const VLAADA& ADA(casacore::uInt which) const;
 
   // Return the polarisations of the data in the specified CDA. This
   // information is obtained from knowing what the correlator modes represent
   // and checking the IF transfer switch for the specified antennas.
-  Vector<Stokes::StokesTypes> polarisations(VLAEnum::CDA cda, 
-					    uInt ant1=0, uInt ant2=0) const;
+  casacore::Vector<casacore::Stokes::StokesTypes> polarisations(VLAEnum::CDA cda, 
+					    casacore::uInt ant1=0, casacore::uInt ant2=0) const;
 
 private: 
   //# A pointer to a class which can read VLA Archives from a variety of
   //# sources
-  CountedPtr<VLAArchiveInput> itsRecordPtr;
+  casacore::CountedPtr<VLAArchiveInput> itsRecordPtr;
 
-  //# The class which can interpret the Record Control Area portion of the
+  //# The class which can interpret the casacore::Record Control Area portion of the
   //# logical record.
   VLARCA itsRCA;
 
-  //# The class which can interpret the Subarray Data Area portion of the
+  //# The class which can interpret the Subarray casacore::Data Area portion of the
   //# logical record.
   VLASDA itsSDA;
 
-  //# The class which can interpret the Array Data Area portions of the
+  //# The class which can interpret the casacore::Array casacore::Data Area portions of the
   //# logical record.
-  Block<VLAADA> itsADA;
+  casacore::Block<VLAADA> itsADA;
 
-  //# The class which can interpret the Correlator Data Area portions of the
+  //# The class which can interpret the Correlator casacore::Data Area portions of the
   //# logical record.
-  Block<VLACDA> itsCDA;
+  casacore::Block<VLACDA> itsCDA;
 
 };
 #endif

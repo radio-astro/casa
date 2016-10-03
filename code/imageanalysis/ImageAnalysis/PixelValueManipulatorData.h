@@ -3,9 +3,13 @@
 
 #include <casa/typeinfo.h>
 
-namespace casa {
+namespace casacore{
 
 class String;
+}
+
+namespace casa {
+
 
 class PixelValueManipulatorData {
 	// <summary>
@@ -19,7 +23,7 @@ class PixelValueManipulatorData {
 	// </prerequisite>
 
 	// <etymology>
-	// Data for PixelValueManipulator.
+	// casacore::Data for PixelValueManipulator.
 	// </etymology>
 
 	// <synopsis>
@@ -47,7 +51,7 @@ public:
 	// convert a string to a spectral type. Acceptable values are (case insensitive,
 	// minimum match supported): "default", "optical velocity", "radio velocity",
 	// "wavelength", "air wavelength", and "" (which returns DEFAULT)
-	static SpectralType spectralType(const String& specString);
+	static SpectralType spectralType(const casacore::String& specString);
 
 };
 }

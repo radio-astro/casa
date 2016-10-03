@@ -15,6 +15,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casa {
 namespace vi {
 
@@ -24,7 +25,7 @@ AveragingParameters::AveragingParameters ()
   chunkInterval_p (0),
   sortColumns_p (SortColumns ()),
   weightScaling_p (0),
-  isWritable_p(False)
+  isWritable_p(false)
 {}
 
 AveragingParameters::AveragingParameters (Double averagingInterval,
@@ -383,4 +384,5 @@ AveragingVi2LayerFactory::createInstance (ViImplementation2* vii0) const
 
 
 } // end namesapce vi
+using namespace casacore;
 } // end namespace casa

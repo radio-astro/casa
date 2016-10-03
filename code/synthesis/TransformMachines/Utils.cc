@@ -45,6 +45,7 @@
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <casa/System/Aipsrc.h>
 
+using namespace casacore;
 namespace casa{
   //
   //--------------------------------------------------------------------------------------------
@@ -264,9 +265,9 @@ namespace casa{
 	  os << ndx(2) << " " << vb.antenna1()(ndx(2)) << "-" << vb.antenna2()(ndx(2)) << " "
 	     << vb.flagCube()(ndx) << " " << vb.flag()(0,ndx(2)) << " " << vb.weight()(ndx(2));
 	  mesg = os.str().c_str();
-	  return True;
+	  return true;
 	}
-    return False;
+    return false;
   }
   //
   //--------------------------------------------------------------------------------------------
@@ -277,15 +278,15 @@ namespace casa{
   //     Exact meaning of the "change" is defined in the derived classes
   //     (e.g. a change in the parallactic angle)
   
-  // return True if a change occurs somewhere in the buffer
+  // return true if a change occurs somewhere in the buffer
   Bool IChangeDetector::changed(const VisBuffer &vb) const
   {
      for (Int i=0;i<vb.nRow();++i)
-          if (changed(vb,i)) return True;
-     return False;
+          if (changed(vb,i)) return true;
+     return false;
   }
 
-  // return True if a change occurs somewhere in the buffer starting from row1
+  // return true if a change occurs somewhere in the buffer starting from row1
   // up to row2 (row2=-1 means up to the end of the buffer). The row number,
   // where the change occurs is returned in the row2 parameter
   Bool IChangeDetector::changedBuffer(const VisBuffer &vb, Int row1, 
@@ -306,9 +307,9 @@ namespace casa{
     for (Int ii=row1;ii<=jrow;++ii)
          if (changed(vb,ii)) {
              row2 = ii;
-             return True;
+             return true;
          }
-    return False;
+    return false;
   }
   
   // a virtual destructor to make the compiler happy
@@ -347,7 +348,7 @@ namespace casa{
       return Quantity(pa_tolerance_p,"rad");
   }
   
-  // return True if a change occurs in the given row since the last call 
+  // return true if a change occurs in the given row since the last call 
   // of update
   Bool ParAngleChangeDetector::changed(const VisBuffer &vb, Int row) const
   {
@@ -357,7 +358,7 @@ namespace casa{
      if (abs(feed1_pa-last_pa_p) > pa_tolerance_p) 
        {
 //  	 cout << "Utils: " << feed1_pa*57.295 << " " << last_pa_p*57.295 << " " << abs(feed1_pa-last_pa_p)*57.295 << " " << ttt*57.295 << " " << vb.time()(0)-4.51738e+09 << endl;
-	 return True;
+	 return true;
        }
      //     const Double feed2_pa=vb.feed2_pa()[row];
      Double feed2_pa = getPA(vb);
@@ -366,9 +367,9 @@ namespace casa{
 //  	 cout << "Utils: " << feed2_pa*57.295 << " " 
 //  	      << last_pa_p*57.295 << " " 
 //  	      << abs(feed2_pa-last_pa_p)*57.295 << " " << ttt*57.295 << vb.time()(0)-4.51738e+09 <<endl;
-	 return True;
+	 return true;
        }
-     return False;
+     return false;
   }
   
   // start looking for a change from the given row of the VisBuffer
@@ -465,7 +466,7 @@ namespace casa{
 	}
     }
 
-    return True;
+    return true;
   };
   //
   //------------------------------------------------------------------
@@ -512,7 +513,7 @@ namespace casa{
 	}
     }
 
-    return True;
+    return true;
   }
   //
   //---------------------------------------------------------------
@@ -564,11 +565,11 @@ namespace casa{
     }
 
     coordInd = inCS.findCoordinate(Coordinate::LINEAR);
-    Bool haveLinear = True;
+    Bool haveLinear = true;
 
     if(coordInd == -1){ // no linear coordinate found, look for DIRECTION instead
       coordInd = inCS.findCoordinate(Coordinate::DIRECTION);
-      haveLinear = False;
+      haveLinear = false;
     }
 
     pixelAxes=inCS.pixelAxes(coordInd);
@@ -847,7 +848,7 @@ namespace casa{
     DirectionCoordinate dc;//=coords.directionCoordinate(directionIndex);
     //	AlwaysAssert(directionIndex>=0, AipsError);
     dc=coords.directionCoordinate(directionIndex);
-    Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
+    Vector<Bool> axes(2); axes(0)=axes(1)=true;//axes(2)=true;
     Vector<Int> shape(2,convSize);
 
     Vector<Double>ref(4);
@@ -913,15 +914,15 @@ namespace casa{
     c2tmp.assign(c2);
 
     if (c1.shape().product() > c2tmp.shape().product())
-      c2tmp.resize(c1.shape(),True);
+      c2tmp.resize(c1.shape(),true);
     else
-      c1.resize(c2tmp.shape(),True);
+      c1.resize(c2tmp.shape(),true);
 
 
     ArrayLattice<T> c2tmp_lat(c2tmp), c1_lat(c1);
 
-    LatticeFFT::cfft2d(c1_lat,False);
-    LatticeFFT::cfft2d(c2tmp_lat,False);
+    LatticeFFT::cfft2d(c1_lat,false);
+    LatticeFFT::cfft2d(c2tmp_lat,false);
     //cerr << "########## " << c1.shape() << " " << c2tmp.shape() << endl;
     c1 = sqrt(c1);
     c2tmp=sqrt(c2tmp);
@@ -983,7 +984,7 @@ namespace casa{
     
     Int dirIndex=FTCoords.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=imageCoordSys.directionCoordinate(dirIndex);
-    Vector<Bool> axes(2); axes=True;
+    Vector<Bool> axes(2); axes=true;
     Vector<Int> dirShape(2); dirShape(0)=shape(0);dirShape(1)=shape(1);
     Coordinate* FTdc=dc.makeFourierCoordinate(axes,dirShape);
     FTCoords.replaceCoordinate(*FTdc,dirIndex);
@@ -1001,7 +1002,7 @@ namespace casa{
 	if(vb.msColumns().dataDescription().spectralWindowId().get(i) == spwID)
 	  {
 	    Int n=ddidList.nelements();
-	    ddidList.resize(n+1,True);
+	    ddidList.resize(n+1,true);
 	    ddidList(n) = i;
 	  }
       }
@@ -1068,14 +1069,14 @@ namespace casa{
     // trc2[2] = {xmax2, ymax2};
 
     if ((blc1[0] > trc2[0]) || (trc1[0] < blc2[0]) || (blc1[1] > trc2[1]) || (trc1[1] < blc2[1])) 
-      return False;
+      return false;
     else
-      return True;
+      return true;
 // def checkintersect(  xmin1, ymin1, xmax1, ymax1,   xmin2, ymin2, xmax2, ymax2 ):
 //     if  xmin1 > xmax2  or xmax1 < xmin2 or ymin1 > ymax2 or ymax1 < ymin2 :
-//         return False
+//         return false
 //     else : 
-//         return True
+//         return true
   }
 
   // template<class Iterator>
@@ -1145,4 +1146,5 @@ namespace casa{
   Int SynthesisUtils::stdNearestValue(const vector<Int>& list, const Int& val, Int& index);
 
 
+using namespace casacore;
 } // namespace casa

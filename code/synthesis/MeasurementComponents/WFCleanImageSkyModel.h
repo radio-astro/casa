@@ -30,11 +30,15 @@
 #define SYNTHESIS_WFCLEANIMAGESKYMODEL_H
 
 #include <synthesis/MeasurementComponents/MFCleanImageSkyModel.h>
+namespace casacore{
+
+template <class T> class SubImage;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //forward
 class SkyEquation;
-template <class T> class SubImage;
 
 // <summary> 
 // WF Image Sky Model: Image Sky Model implementing the WF Clean algorithm
@@ -89,53 +93,53 @@ public:
 
   virtual ~WFCleanImageSkyModel();
 
-  WFCleanImageSkyModel(const Int nfacets, Bool largeMemory=False);
+  WFCleanImageSkyModel(const casacore::Int nfacets, casacore::Bool largeMemory=false);
 
-  virtual Int add(ImageInterface<Float>& image, const Int maxNumXfr=100);
+  virtual casacore::Int add(casacore::ImageInterface<casacore::Float>& image, const casacore::Int maxNumXfr=100);
 
-  virtual Bool addResidual(Int image, ImageInterface<Float>& residual);
+  virtual casacore::Bool addResidual(casacore::Int image, casacore::ImageInterface<casacore::Float>& residual);
 
-  virtual Bool addMask(Int image, ImageInterface<Float>& mask);
+  virtual casacore::Bool addMask(casacore::Int image, casacore::ImageInterface<casacore::Float>& mask);
 
   // Solve for this SkyModel
-  virtual Bool solve (SkyEquation& me);
+  virtual casacore::Bool solve (SkyEquation& me);
 
   //This will return for model 0 the main residual image i.e nxn facets
-  virtual ImageInterface<Float>& getResidual(Int physImageID);
+  virtual casacore::ImageInterface<casacore::Float>& getResidual(casacore::Int physImageID);
 
   //void makeApproxPSFs(SkyEquation& se);
   
   /*
-  PtrBlock<TempImage<Complex> *>& cimageBlkPtr() { return cimage_p;};
-  PtrBlock<Matrix<Float> * >& weightBlkPtr(){return weight_p; } ;
+  casacore::PtrBlock<casacore::TempImage<casacore::Complex> *>& cimageBlkPtr() { return cimage_p;};
+  casacore::PtrBlock<casacore::Matrix<casacore::Float> * >& weightBlkPtr(){return weight_p; } ;
   */
 protected:
 
   // Make a facet
-  SubImage<Float>* makeFacet(Int facet, ImageInterface<Float>& image);
+  casacore::SubImage<casacore::Float>* makeFacet(casacore::Int facet, casacore::ImageInterface<casacore::Float>& image);
 
   // Make the slicers
-  Bool makeSlicers(const Int facet, const IPosition& imageShape, 
-		   IPosition& facetShape,
-		   Slicer& imageSlicer);
+  casacore::Bool makeSlicers(const casacore::Int facet, const casacore::IPosition& imageShape, 
+		   casacore::IPosition& facetShape,
+		   casacore::Slicer& imageSlicer);
   // Number of facets
-  Int nfacets_p;
+  casacore::Int nfacets_p;
 
 
 private:
 
-  CountedPtr<ImageInterface<Float> > imageImage_p;
-  CountedPtr<ImageInterface<Float> > residualImage_p;
-  CountedPtr<ImageInterface<Float> > maskImage_p;
+  casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > imageImage_p;
+  casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > residualImage_p;
+  casacore::CountedPtr<casacore::ImageInterface<casacore::Float> > maskImage_p;
 
-  Int facets_p;
-  Bool largeMem_p;
+  casacore::Int facets_p;
+  casacore::Bool largeMem_p;
 
   // Here we store the facets for the various images: Model, Mask
   // and Residual
-  Block<CountedPtr<SubImage<Float> > > facetImages_p;
-  Block<CountedPtr<SubImage<Float> > > facetMaskImages_p;
-  Block<CountedPtr<SubImage<Float> > > facetResidualImages_p;
+  casacore::Block<casacore::CountedPtr<casacore::SubImage<casacore::Float> > > facetImages_p;
+  casacore::Block<casacore::CountedPtr<casacore::SubImage<casacore::Float> > > facetMaskImages_p;
+  casacore::Block<casacore::CountedPtr<casacore::SubImage<casacore::Float> > > facetResidualImages_p;
   
 };
 

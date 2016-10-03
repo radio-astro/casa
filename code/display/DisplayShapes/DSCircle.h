@@ -81,36 +81,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Constructors and destructors.
 		// <group>
 		DSCircle();
-		DSCircle(const Float& xPos, const Float& yPos, const Float& radius,
-		         const Bool& hasHandles, const Bool& drawHandles);
+		DSCircle(const casacore::Float& xPos, const casacore::Float& yPos, const casacore::Float& radius,
+		         const casacore::Bool& hasHandles, const casacore::Bool& drawHandles);
 		DSCircle(const DSCircle& other);
 		virtual ~DSCircle();
 		// </group>
 
 		// General DisplayShape functionality
 		// <group>
-		virtual void rotate(const Float& /*angle*/) {};
-		virtual void setCenter(const Float& xPos, const Float& yPos);
-		virtual Bool inObject(const Float& dX, const Float& dY);
-		virtual void changePoint(const Vector<Float>& newPos);
-		virtual void changePoint(const Vector<Float>& newPos, const Int nPoint);
+		virtual void rotate(const casacore::Float& /*angle*/) {};
+		virtual void setCenter(const casacore::Float& xPos, const casacore::Float& yPos);
+		virtual casacore::Bool inObject(const casacore::Float& dX, const casacore::Float& dY);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& newPos);
+		virtual void changePoint(const casacore::Vector<casacore::Float>& newPos, const casacore::Int nPoint);
 		// </group>
 
 		// Circle specific functionality
 		// <group>
-		virtual void setRadius(const Float& radius);
-		virtual void setMajorAxis(const Float& /*major*/) {};
-		virtual void setMinorAxis(const Float& /*minor*/) {};
+		virtual void setRadius(const casacore::Float& radius);
+		virtual void setMajorAxis(const casacore::Float& /*major*/) {};
+		virtual void setMinorAxis(const casacore::Float& /*minor*/) {};
 		// </group>
 
 		// Get and set options
 		// <group>
-		virtual Bool setOptions(const Record& settings);
-		virtual Record getOptions();
+		virtual casacore::Bool setOptions(const casacore::Record& settings);
+		virtual casacore::Record getOptions();
 		// </group>
 
 	private:
-		// Function to set defaults when default constructor called
+		// casacore::Function to set defaults when default constructor called
 		virtual void setDefaultOptions();
 
 	};

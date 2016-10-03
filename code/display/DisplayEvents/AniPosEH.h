@@ -75,8 +75,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the Animator we control
 		Animator animator;
 
-		// List of WorldCanvasHolders
-		List<void *> holderList;
+		// casacore::List of WorldCanvasHolders
+		casacore::List<void *> holderList;
 
 		// set a restriction on the WorldCanvasHolders
 		void setRestriction(Attribute& att);

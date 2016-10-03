@@ -59,12 +59,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //      nelements_p=DEFAULTNOOFCORES;
     };
 
-    MultiThreadedVisibilityResampler(const Bool& doublePrecision, 
-				     const Int& n=DEFAULTNOOFCORES);
+    MultiThreadedVisibilityResampler(const casacore::Bool& doublePrecision, 
+				     const casacore::Int& n=DEFAULTNOOFCORES);
 
-    MultiThreadedVisibilityResampler(const Bool& doublePrecision, 
-				     CountedPtr<VisibilityResamplerBase>& visResampler, 
-				     const Int& n=DEFAULTNOOFCORES);
+    MultiThreadedVisibilityResampler(const casacore::Bool& doublePrecision, 
+				     casacore::CountedPtr<VisibilityResamplerBase>& visResampler, 
+				     const casacore::Int& n=DEFAULTNOOFCORES);
     virtual ~MultiThreadedVisibilityResampler()
     {
       cleanup();
@@ -93,16 +93,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void copy(const MultiThreadedVisibilityResampler& other);
 
-    virtual Int nelements() {return nelements_p;};
-    virtual void setParams(const Vector<Double>& uvwScale, const Vector<Double>& offset,
-			   const Vector<Double>& dphase);
+    virtual casacore::Int nelements() {return nelements_p;};
+    virtual void setParams(const casacore::Vector<casacore::Double>& uvwScale, const casacore::Vector<casacore::Double>& offset,
+			   const casacore::Vector<casacore::Double>& dphase);
 
-    virtual void setMaps(const Vector<Int>& chanMap, const Vector<Int>& polMap);
-    virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap);
-    virtual void setFreqMaps(const Matrix<Double>& spwChanFreqs, const Matrix<Double>& spwChanConjFreqs);
+    virtual void setMaps(const casacore::Vector<casacore::Int>& chanMap, const casacore::Vector<casacore::Int>& polMap);
+    virtual void setCFMaps(const casacore::Vector<casacore::Int>& cfMap, const casacore::Vector<casacore::Int>& conjCFMap);
+    virtual void setFreqMaps(const casacore::Matrix<casacore::Double>& spwChanFreqs, const casacore::Matrix<casacore::Double>& spwChanConjFreqs);
 
     virtual void setConvFunc(const CFStore& cfs);
-    void init(const Bool& doublePrecision);
+    void init(const casacore::Bool& doublePrecision);
     //
     //------------------------------------------------------------------------------
     //
@@ -112,16 +112,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // The first variant grids onto a double precision grid while the
     // second one does it on a single precision grid.
     //
-    virtual void DataToGrid(Array<DComplex>& griddedData,  
+    virtual void DataToGrid(casacore::Array<casacore::DComplex>& griddedData,  
 			    VBStore& vbs, 
-			    Matrix<Double>& sumwt,
-			    const Bool& dopsf,Bool /*useConjFreqCF*/=False)
+			    casacore::Matrix<casacore::Double>& sumwt,
+			    const casacore::Bool& dopsf,casacore::Bool /*useConjFreqCF*/=false)
     {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf);}
 
-    virtual void DataToGrid(Array<Complex>& griddedData, 
+    virtual void DataToGrid(casacore::Array<casacore::Complex>& griddedData, 
 			    VBStore& vbs, 
-    			    Matrix<Double>& sumwt,
-			    const Bool& dopsf,Bool /*useConjFreqCF*/=False)
+    			    casacore::Matrix<casacore::Double>& sumwt,
+			    const casacore::Bool& dopsf,casacore::Bool /*useConjFreqCF*/=false)
     {
       DataToGridImpl_p(griddedData, vbs, sumwt,dopsf);
     }
@@ -129,12 +129,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // This is the gather operation on griddedData for nelements > 1
     //
-    void GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt);
-    void GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt);
-    void initializePutBuffers(const Array<DComplex>& griddedData,
-			      const Matrix<Double>& sumwt);
-    void initializePutBuffers(const Array<Complex>& griddedData,
-			      const Matrix<Double>& sumwt);
+    void GatherGrids(casacore::Array<casacore::DComplex>& griddedData, casacore::Matrix<casacore::Double>& sumwt);
+    void GatherGrids(casacore::Array<casacore::Complex>& griddedData, casacore::Matrix<casacore::Double>& sumwt);
+    void initializePutBuffers(const casacore::Array<casacore::DComplex>& griddedData,
+			      const casacore::Matrix<casacore::Double>& sumwt);
+    void initializePutBuffers(const casacore::Array<casacore::Complex>& griddedData,
+			      const casacore::Matrix<casacore::Double>& sumwt);
     void initializeDataBuffers(VBStore& /*vbs*/) {};
 
     //
@@ -142,8 +142,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Re-sample VisBuffer to a regular grid (griddedData) (a.k.a. de-gridding)
     //
-    virtual void GridToData(VBStore& vbs, const Array<Complex>& griddedData); 
-    //    virtual void GridToData(VBStore& vbs, Array<Complex>& griddedData); 
+    virtual void GridToData(VBStore& vbs, const casacore::Array<casacore::Complex>& griddedData); 
+    //    virtual void GridToData(VBStore& vbs, casacore::Array<casacore::Complex>& griddedData); 
 
     virtual void ComputeResiduals(VBStore& vbs);
     //
@@ -153,41 +153,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
   private:
     template <class T>
-    void DataToGridImpl_p(Array<T>& griddedData, VBStore& vb,  
-			  Matrix<Double>& sumwt,const Bool& dopsf,Bool useConjFreqCF=False);
+    void DataToGridImpl_p(casacore::Array<T>& griddedData, VBStore& vb,  
+			  casacore::Matrix<casacore::Double>& sumwt,const casacore::Bool& dopsf,casacore::Bool useConjFreqCF=false);
     // template <class T>
-    // void GatherGrids_p(const Array<T>& griddedData, 
-    // 		       const Matrix<Double>& sumwt);
+    // void GatherGrids_p(const casacore::Array<T>& griddedData, 
+    // 		       const casacore::Matrix<casacore::Double>& sumwt);
 
     // template <class T>
-    // void initializeBuffers(const Array<T>& griddedData,
-    // 			   const Matrix<Double>& sumwt);
+    // void initializeBuffers(const casacore::Array<T>& griddedData,
+    // 			   const casacore::Matrix<casacore::Double>& sumwt);
 
-    void allocateBuffers(Bool newDataBuffers=True);
+    void allocateBuffers(casacore::Bool newDataBuffers=true);
     void makeInfrastructureContainers();
-    Double allocateDataBuffers();
+    casacore::Double allocateDataBuffers();
     void startThreads();
-    void scatter(Matrix<VBStore>& vbsStores,const VBStore& vbs);
+    void scatter(casacore::Matrix<VBStore>& vbsStores,const VBStore& vbs);
 
-    Int nelements_p;
-    Bool doublePrecision_p;
-    Vector<CountedPtr<VisibilityResamplerBase> > resamplers_p;
-    Vector<CountedPtr<Array<DComplex> > > doubleGriddedData_p;
-    Vector<CountedPtr<Array<Complex> > > singleGriddedData_p;
-    Vector<CountedPtr<Matrix<Double> > > sumwt_p;
-    Vector<CountedPtr<ResamplerWorklet> > gridderWorklets_p;
-    //    Vector<VBStore> vbsVec_p;
-    Matrix<VBStore> vbsVec_p;
+    casacore::Int nelements_p;
+    casacore::Bool doublePrecision_p;
+    casacore::Vector<casacore::CountedPtr<VisibilityResamplerBase> > resamplers_p;
+    casacore::Vector<casacore::CountedPtr<casacore::Array<casacore::DComplex> > > doubleGriddedData_p;
+    casacore::Vector<casacore::CountedPtr<casacore::Array<casacore::Complex> > > singleGriddedData_p;
+    casacore::Vector<casacore::CountedPtr<casacore::Matrix<casacore::Double> > > sumwt_p;
+    casacore::Vector<casacore::CountedPtr<ResamplerWorklet> > gridderWorklets_p;
+    //    casacore::Vector<VBStore> vbsVec_p;
+    casacore::Matrix<VBStore> vbsVec_p;
 
-    CountedPtr<ThreadCoordinator<Int> > threadClerk_p;
-    Bool threadStarted_p;
+    casacore::CountedPtr<ThreadCoordinator<casacore::Int> > threadClerk_p;
+    casacore::Bool threadStarted_p;
     casa::utilj::DeltaThreadTimes tSetupG, tSendDataG, tWaitForWorkG, tOutsideG;
     casa::utilj::DeltaThreadTimes tSetupDG, tSendDataDG, tWaitForWorkDG, tOutsideDG;
     casa::utilj::ThreadTimes t4G_p,t4DG_p;
     //    async::Mutex *mutexForResamplers_p;
-    CountedPtr<VisibilityResamplerBase> visResamplerCtor_p;
-    Int whoLoadedVB_p;
-    Int currentVBS_p;
+    casacore::CountedPtr<VisibilityResamplerBase> visResamplerCtor_p;
+    casacore::Int whoLoadedVB_p;
+    casacore::Int currentVBS_p;
  };
 }; //# NAMESPACE CASA - END
 
