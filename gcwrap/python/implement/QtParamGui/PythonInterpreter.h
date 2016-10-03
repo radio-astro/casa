@@ -52,7 +52,7 @@ public:
     bool init(bool showLogger = true);
     
     // Run the given command in python.
-    void command(String command);
+    void command(casacore::String command);
     
 private:
     // Whether the connection is initialized.
@@ -65,13 +65,13 @@ private:
     PyObject* m_shell;
     
     // Returns the aips path.
-    static String aipsPath() {
+    static casacore::String aipsPath() {
 #ifndef AIPSROOT
         char* ap = getenv("CASAPATH");
-        if(ap == NULL) return String();
-        String path(ap);
+        if(ap == NULL) return casacore::String();
+        casacore::String path(ap);
         unsigned int i = path.find(' ');
-        if(i >= path.size()) return String();
+        if(i >= path.size()) return casacore::String();
         else return path.substr(0, i);
 #else
         return AIPSROOT;
@@ -79,7 +79,7 @@ private:
     }
     
     // Returns the casapy python path.
-    static String casapyPath() {
+    static casacore::String casapyPath() {
 #ifdef AIPSROOT
 #ifdef AIPSARCH
 #ifdef PYTHONVER
@@ -87,28 +87,28 @@ private:
         ss << AIPSROOT << '/' << AIPSARCH << "/python/" << PYTHONVER;
         return ss.str();
 #else
-        return String();
+        return casacore::String();
 #endif
 #else
-        return String();
+        return casacore::String();
 #endif
 #else
-        return String();
+        return casacore::String();
 #endif
     }
     
     // Returns the python path.
-    static String pythonPath() {
+    static casacore::String pythonPath() {
 #ifdef PYTHONROOT
-        return String(PYTHONROOT);
+        return casacore::String(PYTHONROOT);
 #else
-        return String();
+        return casacore::String();
 #endif
     }
     
     // Returns the location of the casapy.py script.
-    static String casapyLoc() {
-        String p = casapyPath();
+    static casacore::String casapyLoc() {
+        casacore::String p = casapyPath();
         if(!p.empty()) p += "/casapy.py";
         return p;
     }

@@ -33,6 +33,9 @@
 
 using namespace std;
 
+using namespace casacore;
+using namespace casa;
+
 namespace casac {
 
 miriadfiller::miriadfiller()
@@ -69,7 +72,7 @@ miriadfiller::fill(const std::string& vis,
     if (!t.isDirectory())
       throw(AipsError("Input file does not appear to be a miriad dataset"));
   try {
-    Importmiriad bf(infile,debug,tsys,False,linecal);
+    Importmiriad bf(infile,debug,tsys,false,linecal);
 
     bf.checkInput(spws,wides);
     bf.setupMeasurementSet(visfile);

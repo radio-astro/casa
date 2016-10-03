@@ -9,10 +9,12 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 
+using namespace casacore;
 using namespace casa;
 using namespace std;
 using namespace xercesc;
 
+using namespace casacore;
 namespace casa {
 
 asdmCasaXMLUtil::asdmCasaXMLUtil()
@@ -58,7 +60,7 @@ Bool asdmCasaXMLUtil::readXMLFile(Table &outTab, const String &fileName, const S
    parser->setErrorHandler(theHandler);
    try {
       parser->parse(xmlFile);
-      rstat = True;
+      rstat = true;
    }
    catch (const XMLException& toCatch) {
       char* message = XMLString::transcode(toCatch.getMessage());
@@ -89,4 +91,5 @@ Bool asdmCasaXMLUtil::writeXMLFile(const String &/*fileName*/, const Record & /*
    return rstat;
 }
 
+using namespace casacore;
 }  //End of namespace casa

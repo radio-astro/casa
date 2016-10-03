@@ -2,7 +2,11 @@
 #include <coordinates/Coordinates/Coordinate.h>
 #include <casa/Utilities/PtrHolder.h>
 
-namespace casa {
+namespace casacore{
+
 	class LogIO;
 	class CoordinateSystem;
+}
+
+namespace casa {
 }

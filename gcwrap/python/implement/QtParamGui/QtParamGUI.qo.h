@@ -59,51 +59,51 @@ public:
         DEFAULT, GLOBAL, LAST
     };
     
-    // String constants used in parsing the parameter records.
+    // casacore::String constants used in parsing the parameter records.
     // <group>
-    static const String ALLOWED;
-    static const String ANY;
-    static const String CONSTRAINTS;
-    static const String DEFAULTS;
-    static const String DESCRIPTION;
-    static const String EXAMPLE;
-    static const String KIND;
-    static const String KIND_FILE;
-    static const String KIND_MS;
-    static const String KIND_TABLE;
-    static const String LIMITTYPES;
-    static const String MUSTEXIST;
-    static const String PARAMETERS;
-    static const String PARAMETER_ORDER;
-    static const String RANGE;
-    static const String RANGE_MIN;
-    static const String RANGE_MAX;
-    static const String SHORT_DESCRIPTION;
-    static const String SUBPARAMETERS;
-    static const String TYPE;
-    static const String UNITS;
-    static const String VALUE;
+    static const casacore::String ALLOWED;
+    static const casacore::String ANY;
+    static const casacore::String CONSTRAINTS;
+    static const casacore::String DEFAULTS;
+    static const casacore::String DESCRIPTION;
+    static const casacore::String EXAMPLE;
+    static const casacore::String KIND;
+    static const casacore::String KIND_FILE;
+    static const casacore::String KIND_MS;
+    static const casacore::String KIND_TABLE;
+    static const casacore::String LIMITTYPES;
+    static const casacore::String MUSTEXIST;
+    static const casacore::String PARAMETERS;
+    static const casacore::String PARAMETER_ORDER;
+    static const casacore::String RANGE;
+    static const casacore::String RANGE_MIN;
+    static const casacore::String RANGE_MAX;
+    static const casacore::String SHORT_DESCRIPTION;
+    static const casacore::String SUBPARAMETERS;
+    static const casacore::String TYPE;
+    static const casacore::String UNITS;
+    static const casacore::String VALUE;
     // </group>
     
     // Returns the type for the given type name.
-    static DataType type(String typeName);
+    static DataType type(casacore::String typeName);
     
     // Returns the name for the given type.
-    static String type(DataType type);
+    static casacore::String type(DataType type);
     
     // Converts the given record into a Python-like string representation.
-    static String recordToString(const Record& record, String separator);
+    static casacore::String recordToString(const casacore::Record& record, casacore::String separator);
     
     // Converts the task name and parameter record into a Python command.
-    static String pythonCommand(String taskName, const Record& params);
+    static casacore::String pythonCommand(casacore::String taskName, const casacore::Record& params);
     
     // Sets up the given dialog to have the given name and given text.
-    static void setupDialog(QDialog* dialog, String taskName, String textName,
-                            const String& text);
+    static void setupDialog(QDialog* dialog, casacore::String taskName, casacore::String textName,
+                            const casacore::String& text);
     
     // Replaces all instances of \' and \" in the given string with ' and ",
     // respectively.
-    static void replaceSlashQuotes(String& string);
+    static void replaceSlashQuotes(casacore::String& string);
 
     
     // NON-STATIC //
@@ -117,31 +117,31 @@ public:
     // If the tasksRecord contains more than one entry, a QComboBox is
     // displayed at the top of the widget to choose between the different
     // possible tasks.
-    QtParamGUI(const Record& tasksRecord, Mode mode = PYTHON,
-               PyObject* ipythonShell = NULL, const Record* globals = NULL,
+    QtParamGUI(const casacore::Record& tasksRecord, Mode mode = PYTHON,
+               PyObject* ipythonShell = NULL, const casacore::Record* globals = NULL,
                QWidget* parent = NULL);
     
     // Destructor.
     ~QtParamGUI();
     
     // Returns the name of the currently displayed task.
-    String taskName() const;
+    casacore::String taskName() const;
     
     // Returns a copy of the parameter attributes record for this task.
-    Record taskParameters() const;
+    casacore::Record taskParameters() const;
     
     // Returns a copy of the constraints record for this task.
-    Record taskConstraints() const;
+    casacore::Record taskConstraints() const;
     
     // Returns the currently entered parameter names/values in a Record.
-    Record enteredParameters() const;
+    casacore::Record enteredParameters() const;
     
 signals:
     // In SIGNAL mode, this is emitted when the user clicks "run".  The name
     // of the task and a copy of the entered parameter names/values are given.
     // It is the responsibility of the parent/caller to close the QtParamGUI
     // widget as desired.
-    void runRequested(String taskName, Record parameters);
+    void runRequested(casacore::String taskName, casacore::Record parameters);
     
     // In SIGNAL mode, this is emitted when the user clicks "cancel".
     // It is the responsibility of the parent/caller to close the QtParamGUI
@@ -150,13 +150,13 @@ signals:
     
 private:
     // All tasks and their parameters/attributes.
-    Record m_tasks;
+    casacore::Record m_tasks;
     
     // Global parameter values.
-    Record m_globals;
+    casacore::Record m_globals;
     
     // Last parameter values.
-    Record m_last;
+    casacore::Record m_last;
     
     // When the user clicks "reset", indicates whether to reset to globals
     // or defaults or last.
@@ -181,24 +181,24 @@ private:
     std::vector<ParamPanel*> m_panels;
     
     // Currently displayed task.
-    String m_taskName;
+    casacore::String m_taskName;
 
     
     // Sets the tasks record to the given, and then displays the task with
     // the given RecordFieldId.
-    void setRecord(const Record& record, RecordFieldId id = 0);
+    void setRecord(const casacore::Record& record, casacore::RecordFieldId id = 0);
     
-    // Checks the value in the record at the given RecordFieldId for
+    // Checks the value in the record at the given casacore::RecordFieldId for
     // validity.  If invalid, the second value in the pair holds the reason(s)
     // why.
-    std::pair<bool, String> recordIsValid(const Record& record, RecordFieldId id);
+    std::pair<bool, casacore::String> recordIsValid(const casacore::Record& record, casacore::RecordFieldId id);
     
     // Once the displayed task has been chosen, set up the panels.  If an
     // order is given, use that instead of the record's natural order.
-    void setupRecord(std::vector<String> order);
+    void setupRecord(std::vector<casacore::String> order);
     
     // Returns the text for the constraints dialog for the given param panel.
-    String constraintsString(const String& id);
+    casacore::String constraintsString(const casacore::String& id);
     
     // Show/hide the frame and radio buttons for the different reset modes.
     void showHideResets(bool globals, bool last);
@@ -210,33 +210,33 @@ private:
     // of one.
     static const unsigned int MAX_SHORTDESC_LENGTH;
     
-    // Trims the given String of leading and trailing whitespace, where
+    // Trims the given casacore::String of leading and trailing whitespace, where
     // whitespace is ' ', '\t', '\n', and '\r'.
-    static String strTrim(const String& str);
+    static casacore::String strTrim(const casacore::String& str);
     
-    // Trims the given String of leading newlines and trailing whitespace,
+    // Trims the given casacore::String of leading newlines and trailing whitespace,
     // where newlines are '\n' or '\r' and whitespace is ' ', '\t', '\n', or
     // '\r'.
-    static String strNLtrim(const String& str);
+    static casacore::String strNLtrim(const casacore::String& str);
     
     // Returns true if the value at r1[id1] is equal to the value at
-    // r2[id2].  If allowStrings is false, String values can be compared
-    // to non-String values.
-    static bool valuesEqual(const RecordInterface& r1, RecordFieldId id1,
-                            const RecordInterface& r2, RecordFieldId id2,
+    // r2[id2].  If allowStrings is false, casacore::String values can be compared
+    // to non-casacore::String values.
+    static bool valuesEqual(const casacore::RecordInterface& r1, casacore::RecordFieldId id1,
+                            const casacore::RecordInterface& r2, casacore::RecordFieldId id2,
                             bool allowStrings = false);
     
     // Returns true if the two records are equal or not.
-    static bool recordEqual(const RecordInterface& r1,
-                            const RecordInterface& r2);
+    static bool recordEqual(const casacore::RecordInterface& r1,
+                            const casacore::RecordInterface& r2);
     
     // Returns true if the two arrays are equals or not.
     template <class T>
-    static bool arrayEqual(const Array<T>& a1, const Array<T>& a2);
+    static bool arrayEqual(const casacore::Array<T>& a1, const casacore::Array<T>& a2);
     
     // Reads the python commands from the given file into the given record.
     // The stringstream is used to note any errors during read.
-    static bool readLastFile(Record& rec, QFile& file, stringstream& ss);
+    static bool readLastFile(casacore::Record& rec, QFile& file, stringstream& ss);
     
 private slots:
     // When the user clicks "run".
@@ -250,7 +250,7 @@ private slots:
     
     // When the value for the given parameter changes.  If constraints are
     // given, check against those.
-    void valueChanged(String paramName);
+    void valueChanged(casacore::String paramName);
     
     // Show/hide the description dialog.
     void showHideDesc(bool checked);

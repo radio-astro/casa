@@ -34,6 +34,7 @@
 
 #define LOG0 0
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PlotOptions::PlotOptions()
@@ -157,29 +158,29 @@ PlotOptions& PlotOptions::operator= (PlotOptions &inplop)
 /* Reset params to defaults */
 Bool PlotOptions::reset()
 {
-   PanelMap.resize(3,True); 
+   PanelMap.resize(3,true); 
    for(Int i=0;i<3;i++) 
       PanelMap[i]=1;
    PlotRange.resize(4); 
       PlotRange.set(0);
    PlotRangesSet.resize(4); 
-      PlotRangesSet.set(False);
+      PlotRangesSet.set(false);
    
    MultiColour=String("none");
-   TableMultiColour=True;
-   ColumnsXaxis=True;
-   OverPlot=False;
-   ReplaceTopPlot=False;
-   RemoveOldPanels=True;
+   TableMultiColour=true;
+   ColumnsXaxis=true;
+   OverPlot=false;
+   ReplaceTopPlot=false;
+   RemoveOldPanels=true;
    FontSize = 11.0;
    
    XLabel = "";
    YLabel = "";
    Title = "";
 
-   DoScalingCorrection = False;
+   DoScalingCorrection = false;
    SeparateIter = String("none");
-   HonourXFlags = False;
+   HonourXFlags = false;
    
    PlotSymbol = String("");
    ColourString = String("");
@@ -187,7 +188,7 @@ Bool PlotOptions::reset()
    LocateColumns.resize(0);
    MarkerSize = 10.0;
    LineWidth = 2.0;
-   ShowFlags = False;
+   ShowFlags = false;
    FlagExt = "";
    FlagVersion = String("main");
    SkipNRows = 1;
@@ -202,7 +203,7 @@ Bool PlotOptions::reset()
    PyPlotSymbol_p = ',';
 
    Convert = NULL;
-   ConvertIsLocal_p = False;
+   ConvertIsLocal_p = false;
    CallBackHooks = NULL;
 
    TimePlotChar = String("o");
@@ -214,7 +215,7 @@ Bool PlotOptions::reset()
    Char delim = ',';
    string res[200];
    NColours = split( pylabcolourstring, res, 200, delim ) + 1;
-   useLayerColor = True;
+   useLayerColor = true;
    ColourList.resize(NColours);
    for( Int i=0;i<NColours-1;i++ ) {
       ColourList[i] = String("'") + String(res[i]) + String("'");
@@ -223,13 +224,13 @@ Bool PlotOptions::reset()
    }
    ColourList[NColours-1] = String("(1.0,1.0,1.0)");
    
-   doAverage = False;
+   doAverage = false;
    ChanMap.resize(0, 0);
    RowMap.resize(0, 0);
    MSName = "";
    spwExpr = "";
 
-   return True;
+   return true;
 }
 
 /* Return String to print */
@@ -379,13 +380,13 @@ Vector<String> PlotOptions::validateParams()
       }
       else {
          /* Check for validity of remaining symbol string */
-         Bool valid=True;
+         Bool valid=true;
          String mplib("-.:.,o^v<>s+xDd1234hH|_");
          for(Int s=0;s<len;s++)
          {
             if(!mplib.contains(symstr[s]))
             {
-               valid=False;
+               valid=false;
                break;
             }
             if (symstr[s]=='-')
@@ -411,7 +412,7 @@ Vector<String> PlotOptions::validateParams()
           (ColourString.chars())[ColourString.length()-1] == ')' &&
           ColourString.freq(",")==2 )
       {
-         Bool ok = True;
+         Bool ok = true;
          Char delim = ',';
          string res[50];
          Double col=0.0;
@@ -422,7 +423,7 @@ Vector<String> PlotOptions::validateParams()
          for( Int i=0;i<nvals;i++ ) 
          {
             col = atof((res[i]).data());
-            if(col<0.0 || col>1.0) ok = False;
+            if(col<0.0 || col>1.0) ok = false;
             //cout << col << endl;
          }
 
@@ -440,12 +441,12 @@ Vector<String> PlotOptions::validateParams()
       /* Check if the string is a valid Html hex string */
       else if( (ColourString.chars())[0] == '#' && ColourString.length()==7 )
       {
-         Bool ok = True;
+         Bool ok = true;
          String hex("0123456789AaBbCcDdEeFf");
          for( Int i=1; i<(Int)ColourString.length(); i++ )
          {
             if( ! hex.contains((ColourString.chars())[i]) )
-               ok = False;   
+               ok = false;   
          }
          if(ok)
          {
@@ -498,9 +499,9 @@ Vector<String> PlotOptions::validateParams()
       if(Convert == NULL) 
       {
          Convert = new TPConvertBase();
-         ConvertIsLocal_p = True;
+         ConvertIsLocal_p = true;
       }
-      else ConvertIsLocal_p = False;
+      else ConvertIsLocal_p = false;
 
    /* Check the shape of PlotRange and PlotRangesSet*/
     if( PlotRange.nelements() != 4 )
@@ -995,7 +996,7 @@ Bool PanelParams::reset()
 {
    Plop.reset();
 
-   PanelZrange.resize(4,True);
+   PanelZrange.resize(4,true);
    for(Int i=0;i<4;i++) PanelZrange[i]=0;
    
    FlagList.resize(0);
@@ -1023,28 +1024,28 @@ Bool PanelParams::reset()
    LayerMultiColours.resize(nBP);
 
 
-   return True;
+   return true;
 }
 
 Int PanelParams::changeNlayers(Int nlayers)
 {
    nBP = nlayers;
-   LayerNumbers.resize(nBP,True);
-   LayerColours.resize(nBP,True);
-   //LayerColourStrings.resize(nBP,True);
-   LayerSymbols.resize(nBP,True);
-   LayerPointLabels.resize(nBP,True);
-   LayerLocateColumns.resize(nBP,True);
-   LayerXYTaqls.resize(nBP,True);
-   LayerMarkerSizes.resize(nBP,True);
-   LayerLineWidths.resize(nBP,True);
-   LayerShowFlags.resize(nBP,True);
-   LayerFlagExt.resize(nBP,True);
-   LayerFlagVersions.resize(nBP,True);
-   LayerSkipNRows.resize(nBP,True);
-   LayerAverageNRows.resize(nBP,True);
-   LayerConnects.resize(nBP,True);
-   LayerMultiColours.resize(nBP,True);
+   LayerNumbers.resize(nBP,true);
+   LayerColours.resize(nBP,true);
+   //LayerColourStrings.resize(nBP,true);
+   LayerSymbols.resize(nBP,true);
+   LayerPointLabels.resize(nBP,true);
+   LayerLocateColumns.resize(nBP,true);
+   LayerXYTaqls.resize(nBP,true);
+   LayerMarkerSizes.resize(nBP,true);
+   LayerLineWidths.resize(nBP,true);
+   LayerShowFlags.resize(nBP,true);
+   LayerFlagExt.resize(nBP,true);
+   LayerFlagVersions.resize(nBP,true);
+   LayerSkipNRows.resize(nBP,true);
+   LayerAverageNRows.resize(nBP,true);
+   LayerConnects.resize(nBP,true);
+   LayerMultiColours.resize(nBP,true);
    
    return 0;
 }
@@ -1090,7 +1091,7 @@ Int PanelParams::updateLayerParams()
 
    pcol = PlotColour%Plop.NColours;
 
-   //if(nBP>1 && pcol == LayerColours[prev] && Plop.OverPlot==True)
+   //if(nBP>1 && pcol == LayerColours[prev] && Plop.OverPlot==true)
    //   cout << "WARNING : Plotting new layer in the same colour as the previous plot" << endl;
    
    Int ccc=0;

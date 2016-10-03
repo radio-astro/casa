@@ -1,4 +1,4 @@
-//# MsPlot.h: this defines a message logger for the MS plotting classes.
+//# MsPlot.h: this defines a message logger for the casacore::MS plotting classes.
 //# Copyright (C) 2007
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -41,7 +41,7 @@
   
 #define LOG0 0
 // <summary>
-// A wrapper around the CASA logging facilities for the MS Plotter
+// A wrapper around the CASA logging facilities for the casacore::MS Plotter
 // </summary>
 
 // <use visibility=local>   or   <use visibility=export>
@@ -60,7 +60,7 @@
 // </prerequisite>
 //
 // <etymology>
-// This class simplifies some of the typing needed in the MS Plot classes
+// This class simplifies some of the typing needed in the casacore::MS Plot classes
 // to make the code more readable.
 // </etymology>
 //
@@ -87,15 +87,15 @@
 // log->setFnName( "myFunction" );
 //
 // // Log an error, standard, and debug message
-// log->logMessage( "Error: incorrect input", "LogMessage::ERROR", True );
-// log->logMessage( "Some earth shattering results", LogMessage::NORMAL );
+// log->logMessage( "Error: incorrect input", "casacore::LogMessage::ERROR", true );
+// log->logMessage( "Some earth shattering results", casacore::LogMessage::NORMAL );
 // log->debugMessage( "Cool we've found a result!" );
 //
 // Use the << operator to log a INFO3 message.
-// *log << LogOrigin( "myClass", "myMethod" )
-//      << LogMessage::NORMAL3
-//      << "Created Table Query Strings: " << tblQueryStrs
-//      << LogIO::POST;
+// *log << casacore::LogOrigin( "myClass", "myMethod" )
+//      << casacore::LogMessage::NORMAL3
+//      << "Created casacore::Table Query Strings: " << tblQueryStrs
+//      << casacore::LogIO::POST;
 // </srcblock>
 // </example>
 //
@@ -103,7 +103,7 @@
 // I got tired of typing the same things over and over again.
 //
 // Also wanted to add some consistency to the messaging, for example to
-// make sure the LogOrigin was set.    
+// make sure the casacore::LogOrigin was set.    
 // </motivation>
 //
 // <templating arg=T>
@@ -128,13 +128,13 @@ class MsPlotLogger : public casa::LogIO
     //#! Constructors
     // Simple constructor, assumes there is no Class to be added to the
     // message origin.
-    MsPlotLogger( const String& classNm, const String FnName )
+    MsPlotLogger( const casacore::String& classNm, const casacore::String FnName )
     {
 	itsClassNm=classNm;
 	itsFnName=FnName;
 #if LOG0
-	origin( LogOrigin( "MsPlotLogger", "constructor" ) );
-	priority( LogMessage::DEBUG1 );
+	origin( casacore::LogOrigin( "MsPlotLogger", "constructor" ) );
+	priority( casacore::LogMessage::DEBUG1 );
 	output() << "Created MsPlotLogger for class: " << itsClassNm;
 	post();
 #endif
@@ -142,13 +142,13 @@ class MsPlotLogger : public casa::LogIO
 
     // Constructor. The Class name is given, which will be used for
     // all messages created.
-    MsPlotLogger( const String& classNm )
+    MsPlotLogger( const casacore::String& classNm )
     {
 	itsClassNm=classNm;
 	itsFnName="";
 #if LOG0
-	origin( LogOrigin( "MsPlotLogger", "constructor" ) );
-	priority( LogMessage::DEBUG1 );
+	origin( casacore::LogOrigin( "MsPlotLogger", "constructor" ) );
+	priority( casacore::LogMessage::DEBUG1 );
 	output() << "Created MsPlotLogger for class: " << itsClassNm;
 	post();
 #endif
@@ -161,8 +161,8 @@ class MsPlotLogger : public casa::LogIO
 	itsClassNm="";
 	itsFnName="";
 #if LOG0
-	origin( LogOrigin( "MsPlotLogger", "constructor" ) );
-	priority( LogMessage::DEBUG1 );
+	origin( casacore::LogOrigin( "MsPlotLogger", "constructor" ) );
+	priority( casacore::LogMessage::DEBUG1 );
 	output() << "Created MsPlotLogger";
 	post();
 #endif
@@ -172,8 +172,8 @@ class MsPlotLogger : public casa::LogIO
     ~MsPlotLogger()
     {
 #if LOG0
-	origin( LogOrigin( "MsPlotLogger", "constructor" ) );
-	priority( LogMessage::DEBUG1 );
+	origin( casacore::LogOrigin( "MsPlotLogger", "constructor" ) );
+	priority( casacore::LogMessage::DEBUG1 );
 	output() << "Destroying MSLogger for class " << itsClassNm;
 	post();
 #endif
@@ -182,28 +182,28 @@ class MsPlotLogger : public casa::LogIO
     //#!//////////////////////////////////////////////////////////////////////
     // <group>
     // Methods to set and get the class name used with this logger.
-    void setClassName( String classNm ) { itsClassNm=classNm; };
-    String getClassName() { return itsClassNm; };
+    void setClassName( casacore::String classNm ) { itsClassNm=classNm; };
+    casacore::String getClassName() { return itsClassNm; };
     //</group>
 
 
     //#!//////////////////////////////////////////////////////////////////////
     // <group>
     // Methods to set and get the function name associated with logged messages.
-    void setFnName( String fnName ) { itsFnName=fnName; };
-    String getFnName() { return itsFnName; };
+    void setFnName( casacore::String fnName ) { itsFnName=fnName; };
+    casacore::String getFnName() { return itsFnName; };
     //</group>
 
 
     //#  ///////////////////////////////////////////////////////////////////
     // Generic debug message added to log when entering a function
     void
-    fnEnter( String fnName, String fnCall )
+    fnEnter( casacore::String fnName, casacore::String fnCall )
     {
 	itsFnName = fnName;
-	origin( LogOrigin( itsClassNm, fnName ) );
-	priority( LogMessage::DEBUG1 );
-	output() << "Entered Function: ";
+	origin( casacore::LogOrigin( itsClassNm, fnName ) );
+	priority( casacore::LogMessage::DEBUG1 );
+	output() << "Entered casacore::Function: ";
 	output() << (const char*)fnCall.c_str();
 	post();
     };
@@ -212,11 +212,11 @@ class MsPlotLogger : public casa::LogIO
     // <group>
     // Generic debug message added to log when exiting a function
     void
-    fnExit( String fnName)
+    fnExit( casacore::String fnName)
     {
-	origin( LogOrigin( itsClassNm, fnName ) );
-	priority( LogMessage::DEBUG1 );
-	output() << "Exiting Function: ";
+	origin( casacore::LogOrigin( itsClassNm, fnName ) );
+	priority( casacore::LogMessage::DEBUG1 );
+	output() << "Exiting casacore::Function: ";
 	output() << (const char*)fnName.c_str();
 	post();
 	itsFnName="";
@@ -234,18 +234,18 @@ class MsPlotLogger : public casa::LogIO
     //<group>  
     // Log a message to the CASA logging facilities.
     void
-    logMessage( const String &msg, const String& classname, const String& fnname,
-	    LogMessage::Priority msglevel=LogMessage::NORMAL2,
-	    Bool onconsole=False,
-	    Bool throwexcep=False )
+    logMessage( const casacore::String &msg, const casacore::String& classname, const casacore::String& fnname,
+	    casacore::LogMessage::Priority msglevel=casacore::LogMessage::NORMAL2,
+	    casacore::Bool onconsole=false,
+	    casacore::Bool throwexcep=false )
     {
 	itsClassNm=classname;
 	itsFnName=fnname;
-	origin( LogOrigin( classname, fnname ) );
+	origin( casacore::LogOrigin( classname, fnname ) );
 	priority( msglevel );
 	output() << (const char *)msg.c_str();
 	if ( onconsole )
-	    localSink().cerrToo( True );
+	    localSink().cerrToo( true );
 	
 	if ( throwexcep  )
 	    postThenThrow();
@@ -253,23 +253,23 @@ class MsPlotLogger : public casa::LogIO
 	    post();
 
 	if ( onconsole )
-	    localSink().cerrToo( False );
+	    localSink().cerrToo( false );
     };
 
     void
-    logMessage( const String &msg, const String& fnname,
-	    LogMessage::Priority msglevel=LogMessage::NORMAL2,
-	    Bool onconsole=False,
-	    Bool throwexcep=False )
+    logMessage( const casacore::String &msg, const casacore::String& fnname,
+	    casacore::LogMessage::Priority msglevel=casacore::LogMessage::NORMAL2,
+	    casacore::Bool onconsole=false,
+	    casacore::Bool throwexcep=false )
     {
 	logMessage( msg, itsClassNm, fnname, msglevel, onconsole, throwexcep );
     };
 
     void
-    logMessage( const String &msg,
-	    LogMessage::Priority msglevel=LogMessage::NORMAL2,
-	    Bool onconsole=False,
-	    Bool throwexcep=False )
+    logMessage( const casacore::String &msg,
+	    casacore::LogMessage::Priority msglevel=casacore::LogMessage::NORMAL2,
+	    casacore::Bool onconsole=false,
+	    casacore::Bool throwexcep=false )
     {
 	logMessage( msg, itsClassNm, itsFnName, msglevel, onconsole, throwexcep );
     };
@@ -279,38 +279,38 @@ class MsPlotLogger : public casa::LogIO
     // <group>
     // Log a debugging message to the CASA logging facilities.
     void
-    debugMessage( const String &msg, const String& classname,
-	    const String& fnname,
-	    LogMessage::Priority msglevel=LogMessage::DEBUGGING )
+    debugMessage( const casacore::String &msg, const casacore::String& classname,
+	    const casacore::String& fnname,
+	    casacore::LogMessage::Priority msglevel=casacore::LogMessage::DEBUGGING )
     {
 	itsClassNm=classname;
 	itsFnName=fnname;
 
-	logMessage( msg, classname, fnname, msglevel, False, False );
+	logMessage( msg, classname, fnname, msglevel, false, false );
     };
 
     void
-    debugMessage( const String &msg, const String& fnname,
-	    LogMessage::Priority msglevel=LogMessage::DEBUGGING )
+    debugMessage( const casacore::String &msg, const casacore::String& fnname,
+	    casacore::LogMessage::Priority msglevel=casacore::LogMessage::DEBUGGING )
     {
 	debugMessage( msg, itsClassNm, fnname, msglevel );
     };
     
     void
-    debugMessage( const String &msg,
-	    LogMessage::Priority msglevel=LogMessage::DEBUGGING )
+    debugMessage( const casacore::String &msg,
+	    casacore::LogMessage::Priority msglevel=casacore::LogMessage::DEBUGGING )
     {
 	debugMessage( msg, itsClassNm, itsFnName, msglevel );
     };
     // </group>
     
  private:
-    //#! Data Members
+    //#! casacore::Data Members
     // Name of the class the msgs. belong to.
-    String itsClassNm;
+    casacore::String itsClassNm;
 
     // Name of the function/method the msgs. belong to.
-    String itsFnName;
+    casacore::String itsFnName;
 
     
 };  // class MsPlotLogger;

@@ -2,6 +2,7 @@
 #include <xmlcasa/value_variant.h>
 #include <assert.h>
 
+using namespace casacore;
 namespace casac {
 
 LTA_MEMDEF(VariantType, 1, "$Id$");

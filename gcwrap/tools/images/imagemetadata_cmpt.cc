@@ -12,6 +12,9 @@
 
 using namespace std;
 
+using namespace casacore;
+using namespace casa;
+
 namespace casac {
 
 const String imagemetadata::_class = "imagemetadata";
@@ -23,13 +26,13 @@ imagemetadata::~imagemetadata() {}
 
 bool imagemetadata::close() {
 	_header.reset(0);
-	return True;
+	return true;
 }
 
 bool imagemetadata::add(const string& key, const variant& value) {
 	try {
 		_exceptIfDetached();
-		std::auto_ptr<const ValueHolder> vh(toValueHolder(value));
+		std::auto_ptr<const ValueHolder> vh(casa::toValueHolder(value));
 		return _header->add(key, *vh);
 	}
 	catch (const AipsError& x) {
@@ -46,7 +49,7 @@ bool imagemetadata::done() {
 variant* imagemetadata::get(const string& key) {
 	try {
 		_exceptIfDetached();
-		return fromValueHolder(
+		return casa::fromValueHolder(
 			_header->getFITSValue(key)
 		);
 	}
@@ -60,7 +63,7 @@ variant* imagemetadata::get(const string& key) {
 record* imagemetadata::list(bool verbose) {
 	try {
 		_exceptIfDetached();
-		return fromRecord(_header->toRecord(verbose));
+		return casa::fromRecord(_header->toRecord(verbose));
 	}
 	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
@@ -81,7 +84,7 @@ bool imagemetadata::open(const std::string& infile) {
 		else {
 			_header.reset(new ImageMetaDataRW(mypair.second));
 		}
-		return True;
+		return true;
 	}
 	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "

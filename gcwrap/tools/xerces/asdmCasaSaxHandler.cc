@@ -32,6 +32,7 @@
 
 
 
+using namespace casacore;
 namespace casa {
 
 //The value for nStringmember is totaly arbitrary

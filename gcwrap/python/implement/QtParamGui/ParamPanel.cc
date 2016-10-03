@@ -27,6 +27,7 @@
 #include <casaqt/QtParamGui/QtParamGUI.qo.h>
 #include <casaqt/QtParamGui/ParamPanel.qo.h>
 
+using namespace casacore;
 namespace casa {
 
 // PARAMPANEL DEFINITIONS //

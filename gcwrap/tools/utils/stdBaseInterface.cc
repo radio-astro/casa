@@ -20,6 +20,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casac {
 
 extern "C" char **casactl_completion __P((const char *, int , int));
@@ -262,7 +263,7 @@ void dumpRecord(ostream &oss, const record &theRec, string spaces){
       }
    }
 }
-bool stdBaseInterface::verifyOne(record &inputs, record &constraints, casa::LogIO &itsLog, bool silent){
+bool stdBaseInterface::verifyOne(record &inputs, record &constraints, casacore::LogIO &itsLog, bool silent){
    bool rstat(true);
    rec_map::iterator data = inputs.begin();
    record& params = constraints["parameters"].asRecord();
@@ -287,11 +288,11 @@ bool stdBaseInterface::verifyOne(record &inputs, record &constraints, casa::LogI
    return rstat;
 }
 
-bool stdBaseInterface::checkQuanta(const string &param, variant &user, record &constraintsRec, casa::LogIO &itsLog, bool silent){
+bool stdBaseInterface::checkQuanta(const string &param, variant &user, record &constraintsRec, casacore::LogIO &itsLog, bool silent){
 	bool rstat(true);
 	/*
 	cerr << "***********" << endl;
-	itsLog << casa::LogIO::NORMAL << "Checking Quanta" << casa::LogIO::POST;
+	itsLog << casacore::LogIO::NORMAL << "Checking Quanta" << casacore::LogIO::POST;
 	cerr << "User type is: " << user.type() << endl;
 	cerr << "***********" << endl;
 	*/
@@ -299,36 +300,36 @@ bool stdBaseInterface::checkQuanta(const string &param, variant &user, record &c
 	switch(user.type()){
 		case variant::STRING :
 			{
-			casa::Quantity uqa;
+			casacore::Quantity uqa;
 			if(uqa.read(uqa, user.asString())){
-			   if(!silent && !uqa.isConform(casa::Unit(dflt.asString()))){
-			      itsLog << casa::LogIO::NORMAL << "checkQuanta failed! Units don't conform for "
-				     << param << " needs to be " << dflt.asString() << "." << casa::LogIO::POST;
+			   if(!silent && !uqa.isConform(casacore::Unit(dflt.asString()))){
+			      itsLog << casacore::LogIO::NORMAL << "checkQuanta failed! Units don't conform for "
+				     << param << " needs to be " << dflt.asString() << "." << casacore::LogIO::POST;
 			      rstat = false;
 		           }
 			} else {
 				if(!silent)
-			      itsLog << casa::LogIO::NORMAL << param << " checkQuanta failed! Unable to form quantum from "
-				     << user.asString() << "." << casa::LogIO::POST;
+			      itsLog << casacore::LogIO::NORMAL << param << " checkQuanta failed! Unable to form quantum from "
+				     << user.asString() << "." << casacore::LogIO::POST;
 			      rstat = false;
 			}
 			} 
 			break;
 		case variant::STRINGVEC :
 			{
-			casa::Quantity uqa;
+			casacore::Quantity uqa;
 			vector<string> userVec = user.asStringVec();
 			for(unsigned int i=0;i<userVec.size();i++){
 		            if(uqa.read(uqa, userVec[i])){
-			       if(!silent && !uqa.isConform(casa::Unit(dflt.asString()))){
-			          itsLog << casa::LogIO::NORMAL << "checkQuanta failed! Units don't conform for "
-				         << param << " needs to be " << dflt.asString() << "." << casa::LogIO::POST;
+			       if(!silent && !uqa.isConform(casacore::Unit(dflt.asString()))){
+			          itsLog << casacore::LogIO::NORMAL << "checkQuanta failed! Units don't conform for "
+				         << param << " needs to be " << dflt.asString() << "." << casacore::LogIO::POST;
 			          rstat = false;
 		               }
 			    } else {
 			      if(!silent)
-			      itsLog << casa::LogIO::NORMAL << param << " checkQuanta failed! Unable to form quantum from "
-				     << userVec[i] << "." << casa::LogIO::POST;
+			      itsLog << casacore::LogIO::NORMAL << param << " checkQuanta failed! Unable to form quantum from "
+				     << userVec[i] << "." << casacore::LogIO::POST;
 			      rstat = false;
 			    }
 			}
@@ -336,23 +337,23 @@ bool stdBaseInterface::checkQuanta(const string &param, variant &user, record &c
 			break;
 		case variant::INT :
 			      if(!silent)
-			itsLog << casa::LogIO::NORMAL << "checkQuanta assuming " << param << " units are "
-			       << dflt.asString() << "." << casa::LogIO::POST;
+			itsLog << casacore::LogIO::NORMAL << "checkQuanta assuming " << param << " units are "
+			       << dflt.asString() << "." << casacore::LogIO::POST;
 			break;
 		case variant::INTVEC :
 			      if(!silent)
-			itsLog << casa::LogIO::NORMAL << "checkQuanta assuming " << param << " units are "
-			       << dflt.asString() << "." << casa::LogIO::POST;
+			itsLog << casacore::LogIO::NORMAL << "checkQuanta assuming " << param << " units are "
+			       << dflt.asString() << "." << casacore::LogIO::POST;
 			break;
 		case variant::DOUBLE :
 			      if(!silent)
-			itsLog << casa::LogIO::NORMAL << "checkQuanta assuming " << param << "  units are "
-			       << dflt.asString() << "." << casa::LogIO::POST;
+			itsLog << casacore::LogIO::NORMAL << "checkQuanta assuming " << param << "  units are "
+			       << dflt.asString() << "." << casacore::LogIO::POST;
 			break;
 		case variant::DOUBLEVEC :
 			      if(!silent)
-			itsLog << casa::LogIO::NORMAL << "checkQuanta assuming " << param << " units are "
-			       << dflt.asString() << "." << casa::LogIO::POST;
+			itsLog << casacore::LogIO::NORMAL << "checkQuanta assuming " << param << " units are "
+			       << dflt.asString() << "." << casacore::LogIO::POST;
 			break;
 		case variant::RECORD :
 			// as long as the record has a value and unit fields things are fine.
@@ -361,16 +362,16 @@ bool stdBaseInterface::checkQuanta(const string &param, variant &user, record &c
                         if((qRec.find("value") == qRec.end()) || (qRec.find("unit") == qRec.end())){
 			   rstat = false;
 			      if(!silent)
-			   itsLog << casa::LogIO::NORMAL << param << " checkQuanta failed! Record does not contain value and units fields"
-				   << casa::LogIO::POST;
+			   itsLog << casacore::LogIO::NORMAL << param << " checkQuanta failed! Record does not contain value and units fields"
+				   << casacore::LogIO::POST;
 			   //dumpRecord(cerr, qRec);
 			}
 			}
 			break;
 		default :
 			      if(!silent)
-			itsLog << casa::LogIO::NORMAL << param << " checkQuanta failed! Conversion from type "
-				<< user.type() << casa::LogIO::POST;
+			itsLog << casacore::LogIO::NORMAL << param << " checkQuanta failed! Conversion from type "
+				<< user.type() << casacore::LogIO::POST;
 			cerr << param << " checkQuanta failed! Conversion from type " << user.type() << endl;
 			//rstat = false;
 			break;
@@ -378,7 +379,7 @@ bool stdBaseInterface::checkQuanta(const string &param, variant &user, record &c
 	return rstat;
 }
 
-variant *stdBaseInterface::expandEnum(variant &allowed, const variant &value, casa::LogIO &itsLog, bool silent){
+variant *stdBaseInterface::expandEnum(variant &allowed, const variant &value, casacore::LogIO &itsLog, bool silent){
    variant *rstat(0);
    bool ambiguous = false;
    int count = 0;
@@ -408,8 +409,8 @@ variant *stdBaseInterface::expandEnum(variant &allowed, const variant &value, ca
    }
    if(ambiguous && !silent){
       rstat = new variant(value);
-      itsLog << casa::LogIO::NORMAL << value.getString() << " is ambiguous, please supply more characters!"
-				<< casa::LogIO::POST;
+      itsLog << casacore::LogIO::NORMAL << value.getString() << " is ambiguous, please supply more characters!"
+				<< casacore::LogIO::POST;
       cerr << "******* " << value.getString() << " is ambiguous, please supply more characters! *******" << endl;
    }
    if(!rstat)
@@ -417,7 +418,7 @@ variant *stdBaseInterface::expandEnum(variant &allowed, const variant &value, ca
    return rstat;
 }
 
-bool stdBaseInterface::checkme(const string &param, variant &user, record &constraintsRec, casa::LogIO &itsLog, bool silent){
+bool stdBaseInterface::checkme(const string &param, variant &user, record &constraintsRec, casacore::LogIO &itsLog, bool silent){
 	bool rstat(true);
 	//
 	//Ah but if we're an any type then we don't want to check against the default value type
@@ -487,8 +488,8 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		 }
 	   }
 	   if(!silent && !rstat && (user.type() != dflt.type())){
-	         itsLog << casa::LogIO::NORMAL << param << " has wrong type, expected " << dflt.typeString()
-	              << " got " << user.typeString() << casa::LogIO::POST;
+	         itsLog << casacore::LogIO::NORMAL << param << " has wrong type, expected " << dflt.typeString()
+	              << " got " << user.typeString() << casacore::LogIO::POST;
 	         cerr << param << " has wrong type, expected " << dflt.typeString()
 	              << " got " << user.typeString() << endl;
 		
@@ -609,7 +610,7 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		      unsigned int i=0;
 		      bool ignorecase(false);
 		      if(constraintsRec.count("ignorecase")){
-		         casa::String ignoreit(constraintsRec["ignorecase"].asString());
+		         casacore::String ignoreit(constraintsRec["ignorecase"].asString());
 		         ignoreit.downcase();
 		         if(ignoreit == "true"){
                             ignorecase=true;
@@ -619,7 +620,7 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		      while(i<theEnums.size()){
 			// std::cerr << i << "*"<< theEnums[i] << "*"<< user.asString() << "*"<< std::endl;
 			if(ignorecase){
-			   casa::String theval(user.asString());
+			   casacore::String theval(user.asString());
 			   theval.downcase();
 			   if(user.asString().length()){
 			      if(!theEnums[i].compare(0, theEnums[i].length(), theval)){
@@ -672,7 +673,7 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		     break;
 	      }
 	      if(!silent && !rstat){
-		   itsLog << casa::LogIO::NORMAL << "Enum checking failed for " << param << casa::LogIO::POST;
+		   itsLog << casacore::LogIO::NORMAL << "Enum checking failed for " << param << casacore::LogIO::POST;
 	      }
 	   }
 	   //cerr << param << " has a range record: " << constraintsRec.count("range") << endl;
@@ -841,7 +842,7 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		     break;
 	      }
 	      if(!silent && !rstat){
-		   itsLog << casa::LogIO::NORMAL << "Range checking failed for " << param << casa::LogIO::POST;
+		   itsLog << casacore::LogIO::NORMAL << "Range checking failed for " << param << casacore::LogIO::POST;
 	      }
 	   }
 	   //
@@ -872,15 +873,15 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		       rstat = false;
                  }
 	         if(!silent && !rstat){
-		      itsLog << casa::LogIO::NORMAL <<  "File existence checking failed for "
-			      << param << " " << user.asString() << casa::LogIO::POST;
+		      itsLog << casacore::LogIO::NORMAL <<  "File existence checking failed for "
+			      << param << " " << user.asString() << casacore::LogIO::POST;
 		 }
 	      }
 	   }
 	return rstat;
 }
 
-bool stdBaseInterface::verify(record &inputs, record &constraints, casa::LogIO &itsLog)
+bool stdBaseInterface::verify(record &inputs, record &constraints, casacore::LogIO &itsLog)
 {
    bool rstat(true);
 //
@@ -901,7 +902,7 @@ bool stdBaseInterface::verify(record &inputs, record &constraints, casa::LogIO &
      // First check to make sure there is a variable available.
      if(!inputs.count((*iter).first)) {
        if(!((*iter).second.asRecord().count("value"))) {
-	 itsLog << casa::LogIO::NORMAL << "Missing " << (*iter).first << " and no default is available!" << casa::LogIO::POST;
+	 itsLog << casacore::LogIO::NORMAL << "Missing " << (*iter).first << " and no default is available!" << casacore::LogIO::POST;
 	 rstat = false;
        }
      } else {
@@ -913,7 +914,7 @@ bool stdBaseInterface::verify(record &inputs, record &constraints, casa::LogIO &
 	 rstat = stdBaseInterface::checkme((*iter).first, user, dflt, itsLog, false);
      }
      if(!rstat) {
-       itsLog << casa::LogIO::WARN << "Argument " << (*iter).first << " failed to verify." << casa::LogIO::POST;
+       itsLog << casacore::LogIO::WARN << "Argument " << (*iter).first << " failed to verify." << casacore::LogIO::POST;
        break;
      }
    }
@@ -929,7 +930,7 @@ bool stdBaseInterface::verify(record &inputs, record &constraints, casa::LogIO &
 		|| iter->first == "")){
 		   // std::cerr << "*** " << iter->first << " ***" << std::endl;
 	      if(!((*iter).second.asRecord().count("value"))){
-	         itsLog << casa::LogIO::NORMAL << "Missing " << (*iter).first << " and no default is available!" << casa::LogIO::POST;
+	         itsLog << casacore::LogIO::NORMAL << "Missing " << (*iter).first << " and no default is available!" << casacore::LogIO::POST;
 	         rstat = false;
 	      }
 	   }
@@ -942,7 +943,7 @@ bool stdBaseInterface::verify(record &inputs, record &constraints, casa::LogIO &
               rstat = stdBaseInterface::checkme((*iter).first, user, dflt, itsLog, false);
        }
        if(!rstat){
-	  itsLog << casa::LogIO::WARN << "Argument " << (*iter).first << " failed to verify." << casa::LogIO::POST;
+	  itsLog << casacore::LogIO::WARN << "Argument " << (*iter).first << " failed to verify." << casacore::LogIO::POST;
 	  break;
        }
        //cerr << iter->first << " " << rstat << endl;

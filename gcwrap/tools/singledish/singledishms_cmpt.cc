@@ -21,6 +21,9 @@ using namespace std;
 
 #define _ORIGIN LogOrigin("singledishms", __func__, WHERE)
 
+using namespace casacore;
+using namespace casa;
+
 namespace casac {
 
 singledishms::singledishms()

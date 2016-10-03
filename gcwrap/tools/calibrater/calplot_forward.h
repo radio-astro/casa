@@ -1,5 +1,9 @@
 #include <stdcasa/StdCasa/CasacSupport.h>
-namespace casa {
+namespace casacore{
+
    class LogIO;
+}
+
+namespace casa {
    class PlotCal;
 }

@@ -2,6 +2,7 @@
 #include <xmlcasa/value_record.h>
 #include <assert.h>
 
+using namespace casacore;
 namespace casac {
 
 LTA_MEMDEF(RecordType, 1, "$Id$");

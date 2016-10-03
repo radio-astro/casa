@@ -51,25 +51,28 @@
 
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 //begin modification
 //july 2 2007
+using namespace casacore;
 using namespace casac;
 //end modification
 
+using namespace casacore;
 namespace casac {
 
 table::table()
 {
    itsTable = 0;
-   itsLog = new casa::LogIO;
+   itsLog = new casacore::LogIO;
 }
 
-table::table(casa::TableProxy *theTable)
+table::table(casacore::TableProxy *theTable)
 {
    //itsTable = new TableProxy(*theTable);
    itsTable = theTable;
-   itsLog = new casa::LogIO;
+   itsLog = new casacore::LogIO;
 }
 
 table::~table()
@@ -82,19 +85,19 @@ table::~table()
 bool
 table::open(const std::string& tablename, const ::casac::record& lockoptions, const bool nomodify)
 {
-    Bool rstat(False);
+    Bool rstat(false);
     try {
         Record *tlock = toRecord(lockoptions);
         //TableLock *itsLock = getLockOptions(tlock);
         if(nomodify){
             if(itsTable)close();
-            itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Old);
+            itsTable = new casacore::TableProxy(String(tablename),*tlock,Table::Old);
         } else {
             if(itsTable)close();
-            itsTable = new casa::TableProxy(String(tablename),*tlock,Table::Update);
+            itsTable = new casacore::TableProxy(String(tablename),*tlock,Table::Update);
         }
         delete tlock;
-        rstat = True;
+        rstat = true;
     } catch (AipsError x) {
         *itsLog << LogOrigin(__func__, tablename);
         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -113,7 +116,7 @@ table::create(const std::string& tablename, const ::casac::record& tabledesc,
 	      int nrow,                        // 0 seems like a good default.
   	      const ::casac::record& dminfo)
 {
- Bool rstat(False);
+ Bool rstat(false);
  try{
    Record *tlock = toRecord(lockoptions);
    Record *tdesc = toRecord(tabledesc);
@@ -121,14 +124,14 @@ table::create(const std::string& tablename, const ::casac::record& tabledesc,
 
    if(itsTable)
      close();
-   itsTable = new casa::TableProxy(String(tablename), *tlock,
+   itsTable = new casacore::TableProxy(String(tablename), *tlock,
                                    String(endianformat), String(memtype),
                                    nrow, *tdesc, *dmI);
    delete tlock;
    delete tdesc;
    delete dmI;
    
-   rstat = True;
+   rstat = true;
  }
  catch (AipsError x) {
    *itsLog << LogOrigin("create", "")
@@ -144,11 +147,11 @@ table::flush()
 {
  *itsLog << LogOrigin(__func__, name());
 
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 itsTable->flush( true );
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -164,11 +167,11 @@ table::resync()
 {
  *itsLog << LogOrigin(__func__, name());
 
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 itsTable->resync();
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -184,11 +187,11 @@ table::close()
 {
  *itsLog << LogOrigin(__func__, name());
 
- Bool rstat(False);
+ Bool rstat(false);
  try {
     delete itsTable;
     itsTable = 0;
-    rstat = True;
+    rstat = true;
  } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -216,9 +219,9 @@ table::fromfits(const std::string& tablename, const std::string& fitsfile, const
 
     Bool useIncrSM;
     if (storageManagerType == String("incremental")) {
-      useIncrSM = True;
+      useIncrSM = true;
     } else 	if ((storageManagerType == String("standard"))||(storageManagerType == String("memory"))) {
-      useIncrSM = False;
+      useIncrSM = false;
 
 
     } else {
@@ -280,7 +283,7 @@ table::fromfits(const std::string& tablename, const std::string& fitsfile, const
     }
     
     tab.flush();
-    TableProxy *tb = new casa::TableProxy(tab);
+    TableProxy *tb = new casacore::TableProxy(tab);
     rstat = new casac::table(tb);
     cout << "done." << endl;
 
@@ -325,14 +328,14 @@ bool
 table::copyrows(const std::string& outtable, const int startrowin, const int startrowout, const int nrow)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		Record lockOpts = itsTable->lockOptions();
 		lockOpts.define("option", "auto");
                 TableProxy theOutTab(outtable, lockOpts, Table::Update);
 		itsTable->copyRows(theOutTab, startrowin, startrowout, nrow); 
-		rstat = True;
+		rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -347,7 +350,7 @@ bool
 table::done()
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
     rstat = close();
  } catch (AipsError x) {
@@ -361,7 +364,7 @@ bool
 table::iswritable()
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 rstat = itsTable->isWritable();
@@ -397,7 +400,7 @@ bool
 table::lock(const bool write, const int nattempts)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 itsTable->lock(write, nattempts);
@@ -416,7 +419,7 @@ bool
 table::unlock()
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 itsTable->unlock();
@@ -435,7 +438,7 @@ bool
 table::datachanged()
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		rstat = itsTable->hasDataChanged(); 
@@ -453,7 +456,7 @@ bool
 table::haslock(const bool write)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 rstat = itsTable->hasLock(write);
@@ -489,7 +492,7 @@ bool
 table::ismultiused(const bool checksubtables)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 rstat = itsTable->isMultiUsed(checksubtables);
@@ -507,7 +510,7 @@ bool
 table::browse()
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
          pid_t pID = vfork();
          if(!pID){
@@ -528,7 +531,7 @@ table::browse()
          } else if (pID < 0) {
              throw AipsError("Table.browse fork failed. Unable to render table.");
          } else {
-	    rstat = True;
+	    rstat = true;
             *itsLog << LogIO::NORMAL << "Table rendered" << LogIO::POST;
          }
  } catch (AipsError x) {
@@ -594,7 +597,7 @@ bool
 table::toasciifmt(const std::string& asciifile, const std::string& headerfile, const std::vector<std::string>& columns, const std::string& sep)
 {
     *itsLog << LogOrigin(__func__, name());
-    Bool rstat(False);
+    Bool rstat(false);
     try {
 	if(!itsTable){
 	    *itsLog << LogIO::WARN << "toasciifmt: No table specified, please open first" << LogIO::POST;
@@ -606,14 +609,14 @@ table::toasciifmt(const std::string& asciifile, const std::string& headerfile, c
 	    String message;
 	    Vector<Int> precision; // optional vector describing the output precision for each column in "columns"
 	                           // - leave empty for now to use default precision
-	    Bool useBrackets(True); // use bracket format for array output by default
+	    Bool useBrackets(true); // use bracket format for array output by default
 	    message = itsTable->toAscii(String(asciifile), String(headerfile), toVectorString(columns), 
 					String(sep), precision, useBrackets);
 	    if(message.size() > 0){
 		*itsLog << LogIO::WARN << "toasciifmt: " << message << LogIO::POST;
 	    }
 	    else {
-	      rstat = True;
+	      rstat = true;
 	    }
 		
 	}	    
@@ -632,7 +635,7 @@ table::taql(const std::string& taqlcommand)
  ::casac::table *rstat(0);
  try {
    if(itsTable){
-     casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlcommand));
+     casacore::TableProxy *theQTab = new TableProxy(tableCommand(taqlcommand));
      rstat = new ::casac::table(theQTab);
    } else {
      *itsLog << LogIO::WARN
@@ -670,7 +673,7 @@ table::query(const std::string& query, const std::string& name,
        taqlString << " orderby " << sortlist;
      if(!name.empty())
        taqlString << " giving \"" << name << "\"";
-     casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
+     casacore::TableProxy *theQTab = new TableProxy(tableCommand(taqlString.str()));
      rstat = new ::casac::table(theQTab);
    } else {
      *itsLog << LogIO::WARN
@@ -699,7 +702,7 @@ table::calc(const std::string& expr, const std::string& prefix, const bool showt
    //		 std::ostringstream calcString;
    //		 calcString <<  "calc from " << itsTable->table().tableName() << " calc ";
    //		 calcString <<   expr;
-		 //casa::Table *theQTab = new Table(tableCommand(taqlString.str()));
+		 //casacore::Table *theQTab = new Table(tableCommand(taqlString.str()));
    //		 *itsLog << LogIO::WARN << "Calc not implemented!" << LogIO::POST;
    //	 } else {
    //		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
@@ -899,13 +902,13 @@ bool
 table::putinfo(const ::casac::record& value)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 Record *tvalue = toRecord(value);
 		 itsTable->putTableInfo(*tvalue);
 		 delete tvalue;
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -920,11 +923,11 @@ bool
 table::addreadmeline(const std::string& value)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 itsTable->addReadmeLine(value);
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -939,7 +942,7 @@ bool
 table::summary(const bool recurse)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
    if(itsTable){
      *itsLog << LogOrigin("summary",name()) << LogIO::NORMAL
@@ -1004,7 +1007,7 @@ table::summary(const bool recurse)
                  << outs.str() << LogIO::POST;
        }
      }
-     rstat = True;
+     rstat = true;
    } else {
      *itsLog << LogOrigin("table","summary") << LogIO::WARN
              << "No table specified, please open first" << LogIO::POST;
@@ -1062,13 +1065,13 @@ bool
 table::setmaxcachesize(const std::string& columnname, const int nbytes)
 {
  *itsLog << LogOrigin(__func__, columnname);
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 	    if(columnname.size()){
 		 if(nbytes > 0){
 		    itsTable->setMaximumCacheSize(columnname, nbytes);
-		     rstat = True;
+		     rstat = true;
 		 } else {
 		    *itsLog << LogIO::WARN << "Need to specify cache size greater than 0" << LogIO::POST;
 		 }
@@ -1089,7 +1092,7 @@ bool
 table::isscalarcol(const std::string& columnname)
 {
  *itsLog << LogOrigin(__func__, columnname);
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 rstat = itsTable->isScalarColumn(columnname);
@@ -1107,10 +1110,10 @@ bool
 table::isvarcol(const std::string& columnname)
 {
  *itsLog << LogOrigin(__func__, columnname);
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
-		 Record myDesc = itsTable->getColumnDescription(columnname, True);
+		 Record myDesc = itsTable->getColumnDescription(columnname, true);
 		 rstat = (myDesc.isDefined("ndim") && !myDesc.isDefined("shape"));
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
@@ -1190,11 +1193,11 @@ bool
 table::addrows(const int nrow)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 itsTable->addRow(nrow);
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1209,11 +1212,11 @@ bool
 table::removerows(const std::vector<int>& rownrs)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 itsTable->removeRow(rownrs);
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1227,17 +1230,17 @@ table::removerows(const std::vector<int>& rownrs)
 bool
 table::addcols(const ::casac::record& desc, const ::casac::record& dminfo)
 {
- Bool rstat(False);
+ Bool rstat(false);
  *itsLog << LogOrigin("addcols", name());
  
  try {
 	 if(itsTable){
 		 Record *tdesc = toRecord(desc);
 		 Record *tdminfo = toRecord(dminfo);
-		 itsTable->addColumns(*tdesc, *tdminfo, False);
+		 itsTable->addColumns(*tdesc, *tdminfo, false);
 		 delete tdesc;
 		 delete tdminfo;
-		 rstat = True;
+		 rstat = true;
 	 } else {
            *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1252,11 +1255,11 @@ bool
 table::renamecol(const std::string& oldname, const std::string& newname)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 itsTable->renameColumn(oldname, newname);
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1271,11 +1274,11 @@ bool
 table::removecols(const std::vector<std::string>& columnames)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 itsTable->removeColumns(toVectorString(columnames));
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1290,7 +1293,7 @@ bool
 table::iscelldefined(const std::string& columnname, const int rownr)
 {
  *itsLog << LogOrigin(__func__, columnname);
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 ROTableColumn tabColumn(itsTable->table(), columnname);
@@ -1406,7 +1409,7 @@ bool
 table::putcell(const std::string& columnname, const std::vector<int>& rownr,
                const ::casac::variant& thevalue)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   *itsLog << LogOrigin("putcell", columnname);
  
@@ -1414,15 +1417,15 @@ table::putcell(const std::string& columnname, const std::vector<int>& rownr,
     if(itsTable){
       if(!itsTable->isWritable()){
         *itsLog << LogIO::WARN
-                << "The table is not modifiable.  Was it opened with nomodify=False?"
+                << "The table is not modifiable.  Was it opened with nomodify=false?"
                 << LogIO::POST;
-        return False;
+        return false;
       }
 
       ValueHolder *aval = toValueHolder(thevalue);
       itsTable->putCell(columnname, rownr, *aval);
       delete aval;
-      return True;
+      return true;
     } else {
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
     }
@@ -1438,7 +1441,7 @@ table::putcellslice(const std::string& columnname, const int rownr,
                     const ::casac::variant& value, const std::vector<int>& blc,
                     const std::vector<int>& trc, const std::vector<int>& incr)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   *itsLog << LogOrigin("putcellslice", columnname);
  
@@ -1446,15 +1449,15 @@ table::putcellslice(const std::string& columnname, const int rownr,
     if(itsTable){
       if(!itsTable->isWritable()){
         *itsLog << LogIO::WARN
-                << "The table is not modifiable.  Was it opened with nomodify=False?"
+                << "The table is not modifiable.  Was it opened with nomodify=false?"
                 << LogIO::POST;
-        return False;
+        return false;
       }
 
       ValueHolder *aval = toValueHolder(value);
       itsTable->putCellSlice(columnname, rownr, blc, trc, incr, *aval);
       delete aval;
-      return True;
+      return true;
     } else {
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
     }
@@ -1469,7 +1472,7 @@ bool
 table::putcol(const std::string& columnname, const ::casac::variant& value,
               const int startrow, const int nrow, const int rowincr)
 {
- Bool rstat(False);
+ Bool rstat(false);
 
  *itsLog << LogOrigin("putcol", columnname);
  
@@ -1477,15 +1480,15 @@ table::putcol(const std::string& columnname, const ::casac::variant& value,
    if(itsTable){
      if(!itsTable->isWritable()){
        *itsLog << LogIO::WARN
-               << "The table is not modifiable.  Was it opened with nomodify=False?"
+               << "The table is not modifiable.  Was it opened with nomodify=false?"
                << LogIO::POST;
-       return False;
+       return false;
      }
      
      ValueHolder *aval = toValueHolder(value);
      itsTable->putColumn(String(columnname), startrow, nrow, rowincr, *aval);
      delete aval;
-     rstat = True;
+     rstat = true;
    } else {
      *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
    }
@@ -1500,7 +1503,7 @@ bool
 table::putvarcol(const std::string& columnname, const ::casac::record& value,
                  const int startrow, const int nrow, const int rowincr)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   *itsLog << LogOrigin("putvarcol", columnname);
  
@@ -1508,15 +1511,15 @@ table::putvarcol(const std::string& columnname, const ::casac::record& value,
     if(itsTable){
       if(!itsTable->isWritable()){
         *itsLog << LogIO::WARN
-                << "The table is not modifiable.  Was it opened with nomodify=False?"
+                << "The table is not modifiable.  Was it opened with nomodify=false?"
                 << LogIO::POST;
-        return False;
+        return false;
       }
 
       Record *aval = toRecord(value);
       itsTable->putVarColumn(String(columnname), startrow, nrow, rowincr, *aval);
       delete aval;
-      rstat = True;
+      rstat = true;
     } else {
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
     }
@@ -1533,7 +1536,7 @@ table::putcolslice(const std::string& columnname, const ::casac::variant& value,
                    const std::vector<int>& incr, const int startrow,
                    const int nrow, const int rowincr)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   *itsLog << LogOrigin("putcolslice", columnname);
  
@@ -1541,9 +1544,9 @@ table::putcolslice(const std::string& columnname, const ::casac::variant& value,
     if(itsTable){
       if(!itsTable->isWritable()){
         *itsLog << LogIO::WARN
-                << "The table is not modifiable.  Was it opened with nomodify=False?"
+                << "The table is not modifiable.  Was it opened with nomodify=false?"
                 << LogIO::POST;
-        return False;
+        return false;
       }
 
       ValueHolder *aval = toValueHolder(value);
@@ -1554,7 +1557,7 @@ table::putcolslice(const std::string& columnname, const ::casac::variant& value,
       }
       itsTable->putColumnSlice(String(columnname), startrow, nrow, rowincr, blc, trc, iinc, *aval);
       delete aval;
-      rstat = True;
+      rstat = true;
     } else {
       *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
     }
@@ -1692,18 +1695,18 @@ bool
 table::putkeyword(const ::casac::variant& keyword, const ::casac::variant& value, const bool makesubrecord)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 ValueHolder *aval = toValueHolder(value);
 		 switch(keyword.type()){
 			 case variant::STRING :
 		                 itsTable->putKeyword(String(), String(keyword.toString()), -1, makesubrecord, *aval);
-		                 rstat = True;
+		                 rstat = true;
 				 break;
 			 case variant::INT :
 		                 itsTable->putKeyword(String(), String(), keyword.toInt(), makesubrecord, *aval);
-		                 rstat = True;
+		                 rstat = true;
 				 break;
 			 default :
 		                 *itsLog << LogIO::WARN << "Keyword must be string or int" << LogIO::POST;
@@ -1724,13 +1727,13 @@ bool
 table::putkeywords(const ::casac::record& value)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 Record *tvalue = toRecord(value);
 		 itsTable->putKeywordSet(String(), *tvalue);
 		 delete tvalue;
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1745,18 +1748,18 @@ bool
 table::putcolkeyword(const std::string& columnname, const ::casac::variant& keyword, const ::casac::variant& value)
 {
  *itsLog << LogOrigin(__func__, columnname);
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 ValueHolder *aval = toValueHolder(value);
 		 switch(keyword.type()){
 			 case variant::STRING :
-		                 itsTable->putKeyword(String(columnname), String(keyword.toString()), -1, True, *aval);
-		                 rstat = True;
+		                 itsTable->putKeyword(String(columnname), String(keyword.toString()), -1, true, *aval);
+		                 rstat = true;
 				 break;
 			 case variant::INT :
-		                 itsTable->putKeyword(String(columnname), String(), keyword.toInt(), True, *aval);
-		                 rstat = True;
+		                 itsTable->putKeyword(String(columnname), String(), keyword.toInt(), true, *aval);
+		                 rstat = true;
 				 break;
 			 default :
 		                 *itsLog << LogIO::WARN << "Keyword must be string or int" << LogIO::POST;
@@ -1777,13 +1780,13 @@ bool
 table::putcolkeywords(const std::string& columnname, const ::casac::record& value)
 {
  *itsLog << LogOrigin(__func__, columnname);
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 Record *tvalue = toRecord(value);
 		 itsTable->putKeywordSet(String(columnname), *tvalue);
 		 delete tvalue;
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1798,23 +1801,23 @@ bool
 table::removekeyword(const ::casac::variant& keyword)
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 switch(keyword.type()){
 			 case variant::STRING :
 		                 itsTable->removeKeyword(String(), keyword.toString(), -1);
-		                 rstat = True;
+		                 rstat = true;
 				 break;
 			 case variant::INT :
 		                 itsTable->removeKeyword(String(), String(), keyword.toInt());
-		                 rstat = True;
+		                 rstat = true;
 				 break;
 			 default :
 		                 *itsLog << LogIO::WARN << "Keyword must be string or int" << LogIO::POST;
 				 break;
 		 }
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1829,23 +1832,23 @@ bool
 table::removecolkeyword(const std::string& columnname, const ::casac::variant& keyword)
 {
  *itsLog << LogOrigin(__func__, columnname);
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
 		 switch(keyword.type()){
 			 case variant::STRING :
 		                 itsTable->removeKeyword(String(columnname), String(keyword.toString()), -1);
-		                 rstat = True;
+		                 rstat = true;
 				 break;
 			 case variant::INT :
 		                 itsTable->removeKeyword(String(columnname), String(), keyword.toInt());
-		                 rstat = True;
+		                 rstat = true;
 				 break;
 			 default :
 		                 *itsLog << LogIO::WARN << "Keyword must be string or int" << LogIO::POST;
 				 break;
 		 }
-		 rstat = True;
+		 rstat = true;
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1975,7 +1978,7 @@ table::getcoldesc(const std::string& columnname)
  ::casac::record *rstat(0);
  try {
 	 if(itsTable){
-		 rstat = fromRecord(itsTable->getColumnDescription(columnname, True));
+		 rstat = fromRecord(itsTable->getColumnDescription(columnname, true));
 	 } else {
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
@@ -1988,14 +1991,14 @@ table::getcoldesc(const std::string& columnname)
 
 bool table::clearlocks()
 {
-	Bool rstat(True);
-	Table::relinquishAutoLocks(True);
+	Bool rstat(true);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool table::listlocks()
 {
-	Bool rstat(True);
+	Bool rstat(true);
 
 	Vector<String> lockedTables = Table::getLockedTables();
 	cout << "Locked tables: " << endl;
@@ -2009,10 +2012,10 @@ bool
 table::ok()
 {
  *itsLog << LogOrigin(__func__, name());
- Bool rstat(False);
+ Bool rstat(false);
  try {
 	 if(itsTable){
-		 rstat = True;
+		 rstat = true;
 	 }
  } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -2021,7 +2024,7 @@ table::ok()
  return rstat;
 }
 
-casa::TableLock *
+casacore::TableLock *
 table::getLockOptions(casac::record &lockoptions){
         *itsLog << LogOrigin(__func__, name());
 	TableLock::LockOption opt = TableLock::AutoLocking;
@@ -2069,8 +2072,8 @@ bool table::fromascii(const std::string& tablename, const std::string& asciifile
 	      atmp = toVectorString(columnnames);
       if(datatypes[0] != "")
 	      btmp = toVectorString(datatypes);
-      itsTable = new casa::TableProxy(String(asciifile), String(headerfile), String(tablename), autoheader, tautoshape, String(sep), String(commentmarker), firstline, lastline, atmp, btmp);
-      // itsTable = new casa::TableProxy(asciifile, headerfile, String(tablename));
+      itsTable = new casacore::TableProxy(String(asciifile), String(headerfile), String(tablename), autoheader, tautoshape, String(sep), String(commentmarker), firstline, lastline, atmp, btmp);
+      // itsTable = new casacore::TableProxy(asciifile, headerfile, String(tablename));
       rstatus = true;
    } catch (AipsError x) {
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -2110,7 +2113,7 @@ void test_record(Record &/*myRecord*/)
     cout << "find: " << list.find(itsTag) << endl;
     itsTag="startTime";
     cout << "no find: " << list.find(itsTag) << "npos: " << std::string::npos << endl;
-    if (list.find(itsTag) == std::string::npos) cout << "False condition" << endl;
+    if (list.find(itsTag) == std::string::npos) cout << "false condition" << endl;
 }
 
 void write_table(Table &outTab)
@@ -2284,13 +2287,13 @@ table::showcache(const bool verbose)
 
 bool table::testincrstman(const std::string& column)
 {
-	Bool ok(False);
+	Bool ok(false);
 
 	if (itsTable)
 	{
 		try
 		{
-			Record columnDescription = itsTable->getColumnDescription(column, True);
+			Record columnDescription = itsTable->getColumnDescription(column, true);
 
 			int pos;
 
@@ -2318,13 +2321,13 @@ bool table::testincrstman(const std::string& column)
 													<< LogIO::POST;
 					}
 
-					return True;
+					return true;
 				}
 			}
 			else
 			{
 				*itsLog << LogIO::WARN << "Data manager type not found for column: " << column << LogIO::POST;
-				return False;
+				return false;
 			}
 
 			// Get data manager group
@@ -2338,7 +2341,7 @@ bool table::testincrstman(const std::string& column)
 			else
 			{
 				*itsLog << LogIO::SEVERE << "Data manager group not found for column: " << column << LogIO::POST;
-				return False;
+				return false;
 			}
 
 			uInt offenndingCursor = 0;
@@ -2386,13 +2389,13 @@ bool table::testincrstman(const std::string& column)
 		catch (AipsError x)
 		{
 			*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
-			return False;
+			return false;
 		}
 	}
 	else
 	{
 		*itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
-		return False;
+		return false;
 	}
 
 	return ok;

@@ -8,20 +8,24 @@
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
 
-namespace casa {
-	class GaussianBeam;
-	class ImageAnalysis;
-	class ImageRegion;
-	class ImageStatsCalculator;
-	class LogIO;
+namespace casacore{
 
-	template<class T> class ImageHistograms;
-	template<class T> class ImageRegridderBase;
+	class GaussianBeam;
+	class ImageRegion;
+	class LogIO;
 	template<class T> class ImageStatistics;
 	template<class T> class PtrHolder;
 	template<class T> class SubImage;
 	class LatticeExprNode;
     class String;
-	class SkyComponent;
 	class DirectionCoordinate;
+}
+
+namespace casa {
+	class ImageAnalysis;
+	class ImageStatsCalculator;
+
+	template<class T> class ImageHistograms;
+	template<class T> class ImageRegridderBase;
+	class SkyComponent;
 }

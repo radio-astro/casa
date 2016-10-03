@@ -23,9 +23,11 @@
 #include <synthesisparsync_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
      
+using namespace casacore;
 namespace casac {
 
 synthesisparsync::synthesisparsync()
@@ -40,7 +42,7 @@ synthesisparsync::~synthesisparsync()
 
   bool synthesisparsync::setupparsync(const casac::record& syncpars)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
@@ -57,10 +59,10 @@ synthesisparsync::~synthesisparsync()
 
   bool synthesisparsync::setimstore(const casac::synthesisimstore *imstore)
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
     itsParSync->setImageStore( const_cast<casac::synthesisimstore *>(imstore)->getImStore() );
-    rstat=True;
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -84,10 +86,10 @@ synthesisimstore* synthesisparsync::getimstore()
 
 bool synthesisparsync::gatherpsfweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
-    itsParSync->gatherImages( /*dopsf*/True ); //, /*doresidual*/False );
-    rstat=True;
+    itsParSync->gatherImages( /*dopsf*/true ); //, /*doresidual*/false );
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -96,10 +98,10 @@ bool synthesisparsync::gatherpsfweight()
 
 bool synthesisparsync::gatherresidual()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
-    itsParSync->gatherImages( /*dopsf*/False) ; //, /*doresidual*/True );
-    rstat=True;
+    itsParSync->gatherImages( /*dopsf*/false) ; //, /*doresidual*/true );
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -108,10 +110,10 @@ bool synthesisparsync::gatherresidual()
 
   bool synthesisparsync::dividepsfbyweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 	itsParSync->dividePSFByWeight( );
-	rstat=True;
+	rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -120,10 +122,10 @@ bool synthesisparsync::gatherresidual()
 
   bool synthesisparsync::divideresidualbyweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 	itsParSync->divideResidualByWeight( );
-	rstat=True;
+	rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -132,10 +134,10 @@ bool synthesisparsync::gatherresidual()
 
   bool synthesisparsync::dividemodelbyweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 	itsParSync->divideModelByWeight( );
-	rstat=True;
+	rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -143,10 +145,10 @@ bool synthesisparsync::gatherresidual()
 }
   bool synthesisparsync::multiplymodelbyweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 	itsParSync->multiplyModelByWeight( );
-	rstat=True;
+	rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -155,10 +157,10 @@ bool synthesisparsync::gatherresidual()
 
 bool synthesisparsync::scattermodel()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
     itsParSync->scatterModel( );
-    rstat=True;
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -168,7 +170,7 @@ bool synthesisparsync::scattermodel()
 bool
 synthesisparsync::done()
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {

@@ -3,12 +3,16 @@
 #include <imageanalysis/Regions/CasacRegionManager.h>
 #include <images/Regions/ImageRegion.h>
 #include <casa/Utilities/PtrHolder.h>
-namespace casa 
-{
+namespace casacore{
+
 	class LogIO;
 	class LatticeExprNode;
 	template<class T> class PtrHolder;
 	class String;
-	class SkyComponent;
 	class DirectionCoordinate;
+}
+
+namespace casa 
+{
+	class SkyComponent;
 }

@@ -2,11 +2,11 @@
 //
 //  These are internal variables the connect us to the objects
 //
-casa::LogIO      *itsLog;
-casa::TableProxy *itsTable;
+casacore::LogIO      *itsLog;
+casacore::TableProxy *itsTable;
 //
 // Private constructor so we can make components on the fly
 //
-table(casa::TableProxy *myTable);
+table(casacore::TableProxy *myTable);
 //
-casa::TableLock *getLockOptions(casac::record &lockoptions);
+casacore::TableLock *getLockOptions(casac::record &lockoptions);

@@ -1,12 +1,12 @@
 /* Private parts of image component */
 
-casa::PtrHolder<casa::LogIO> _log;
-casa::PtrHolder<casa::CasacRegionManager> _regMan;
+casacore::PtrHolder<casacore::LogIO> _log;
+casacore::PtrHolder<casa::CasacRegionManager> _regMan;
 
 // Helper method for doing unions, because the code
 // in this method is needed in multiple places.
-static casa::ImageRegion* dounion(
-	const casa::PtrHolder<casa::Record>& regions
+static casacore::ImageRegion* dounion(
+	const casacore::PtrHolder<casacore::Record>& regions
 );
 
 void setup();

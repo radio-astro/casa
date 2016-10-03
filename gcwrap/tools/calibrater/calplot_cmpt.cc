@@ -26,6 +26,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casac {
 
 calplot::calplot()
@@ -56,11 +57,11 @@ calplot::~calplot()
 bool
 calplot::close()
 {
-   bool rstat(False);
+   bool rstat(false);
    try {
      if( itsPlotCal != NULL )
        itsPlotCal->close();
-     rstat = True;
+     rstat = true;
    } catch (AipsError x)
    {
       *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -74,10 +75,10 @@ bool
 calplot::done()
 {
 
-   bool rstat(False);
+   bool rstat(false);
    try {
      if( itsPlotCal != NULL ){delete itsPlotCal; itsPlotCal = NULL;}
-     rstat = True;
+     rstat = true;
    } catch (AipsError x)
    {
       *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -90,12 +91,12 @@ bool
 calplot::next()
 {
 
-   bool rstat(False);
+   bool rstat(false);
    try {
      if(itsPlotCal==NULL){
        *itsLog <<  LogIO::WARN << "No calibration table defined: please use open"
 	       << LogIO::POST; 
-       return False;
+       return false;
      }
      rstat = itsPlotCal->iterPlotNext();
    } catch (AipsError x)
@@ -109,7 +110,7 @@ calplot::next()
 bool
 calplot::open(const std::string& caltable)
 {
-   bool rstat(False);
+   bool rstat(false);
    try {
 
 	if ( !caltable.compare("") ){
@@ -118,7 +119,7 @@ calplot::open(const std::string& caltable)
         }
 	close();
 	if(itsPlotCal == NULL)
-	  itsPlotCal=new PlotCal();
+	  itsPlotCal=new casa::PlotCal();
         rstat = itsPlotCal->open(String(caltable));
 
    } catch (AipsError x)
@@ -134,12 +135,12 @@ calplot::plot(const std::string& xaxis,
 	      const std::string& yaxis)
 {
 
-   bool rstat(False);
+   bool rstat(false);
    try {
      if(itsPlotCal==NULL){
        *itsLog <<  LogIO::WARN << "No calibration table used: please use open"
 	       << LogIO::POST; 
-       return False;
+       return false;
      }
      rstat = itsPlotCal->plot(String(xaxis),String(yaxis));
    } catch (AipsError x)
@@ -164,21 +165,21 @@ calplot::savefig( const std::string& filename,
 		const std::string& facecolor,
 		const std::string& edgecolor )
 {
-    bool rstat( casa::False );
+    bool rstat( casacore::False );
     if(itsPlotCal==NULL){
 	*itsLog <<  LogIO::WARN << "No calibration table used: please use open"
 		<< LogIO::POST; 
-	return False;
+	return false;
     }
 
     try {
 	rstat = itsPlotCal->saveFigure( String( filename ), Int( dpi ),
 		   String( orientation ), String( papertype ), 
 		   String( facecolor ), String( edgecolor ) );
-    } catch ( casa::AipsError x ) {
+    } catch ( casacore::AipsError x ) {
 	*itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
       RETHROW(x);
-      rstat = casa::False;
+      rstat = casacore::False;
     }
 
     return rstat;
@@ -195,12 +196,12 @@ calplot::plotoptions(const int subplot,
 		     const double markersize,
 		     const double fontsize)
 {
-   bool rstat(False);
+   bool rstat(false);
    try {
      if(itsPlotCal==NULL){
        *itsLog <<  LogIO::WARN << "No calibration table used: please use open"
 	       << LogIO::POST; 
-       return False;
+       return false;
      }
 
      rstat = itsPlotCal->setPlotParam(subplot,overplot,iteration,plotrange,showflags,
@@ -214,7 +215,7 @@ calplot::plotoptions(const int subplot,
 }
 
 bool calplot::markflags(const int /*panel*/, const std::vector<double>& /*region*/){
-  bool rstat(False);
+  bool rstat(false);
 
   try {
 
@@ -230,14 +231,14 @@ bool calplot::markflags(const int /*panel*/, const std::vector<double>& /*region
 }
 
 bool calplot::flagdata(){
-  bool rstat(False);
+  bool rstat(false);
   try {
     if(itsPlotCal==NULL){
       *itsLog <<  LogIO::WARN << "No calibration table used: please use open"
 	      << LogIO::POST; 
-      return False;
+      return false;
     }
-    rstat = itsPlotCal->flagData(FLAG);
+    rstat = itsPlotCal->flagData(casa::FLAG);
    } catch (AipsError x)
    {
       *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -249,12 +250,12 @@ bool calplot::flagdata(){
 
 
 bool calplot::locatedata(){
-  bool rstat(False);
+  bool rstat(false);
   try {
     if(itsPlotCal==NULL){
       *itsLog <<  LogIO::WARN << "No calibration table used: please use open"
 	      << LogIO::POST; 
-      return False;
+      return false;
     }
     rstat = itsPlotCal->locateData();
    } catch (AipsError x)
@@ -274,7 +275,7 @@ calplot::selectcal(const ::casac::variant& antenna,
 		   const std::string& poln) 
 {
 
-  Bool rstat(False);
+  Bool rstat(false);
   try {
     //    std::cout << antenna.typeString() << ": " << antenna.toString() << std::endl;
     //    std::cout << field.typeString() << ": " << field.toString() << std::endl;
@@ -286,7 +287,7 @@ calplot::selectcal(const ::casac::variant& antenna,
 			  getVariantAsString(time),
 			  String(poln));
 			  
-    rstat=True;
+    rstat=true;
     
   } catch (AipsError x) {
     *itsLog <<  LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -300,9 +301,9 @@ bool
 calplot::stopiter( const bool rmplotter )
 {
 
-   bool rstat(False);
+   bool rstat(false);
    try {
-     if(itsPlotCal==NULL) return False;
+     if(itsPlotCal==NULL) return false;
      rstat = itsPlotCal->iterPlotStop( rmplotter );
    } catch (AipsError x)
    {
@@ -316,9 +317,9 @@ bool
 calplot::clearplot(const int subplot)
 {
 
-   bool rstat(False);
+   bool rstat(false);
    try {
-     if(itsPlotCal==NULL) return False;
+     if(itsPlotCal==NULL) return false;
      rstat = itsPlotCal->clearPlot(subplot);
    } catch (AipsError x)
    {
@@ -329,7 +330,7 @@ calplot::clearplot(const int subplot)
 }
 
 // Private function to convert variants to Strings
-casa::String 
+casacore::String
 calplot::getVariantAsString(const ::casac::variant& var) {
 
   String out=String(var.toString());

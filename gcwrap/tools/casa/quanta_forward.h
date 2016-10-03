@@ -4,15 +4,19 @@
 #include <casa/stdmap.h>
 #include <casa/Quanta/UnitName.h>
 
-namespace casa
-{
+namespace casacore{
+
   class String;
   class Record;
   class UnitName;
   class QuantumHolder;
-  //  class Array<String>;
-  //  class std::map<String, UnitName>;
-  //  class Quanta;
+  //  class Array<casacore::String>;
   //  class LogIO;
   //  class LogSink;
+}
+
+namespace casa
+{
+  //  class std::map<casacore::String, casacore::UnitName>;
+  //  class Quanta;
 };

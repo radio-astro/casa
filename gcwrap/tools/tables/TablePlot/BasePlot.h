@@ -98,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // ( see TablePlot.cc )
 // // Instantiate BasePlot 
 // BasePlot<T> BP();
-// BP.Init(Table&);
+// BP.Init(casacore::Table&);
 // BP.getData();
 // ... followed by TPPlotter 'setPlotRange' and 'plotData' calls
 // </srcblock>
@@ -125,9 +125,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // <todo asof="$DATE:$">
-//# A List of bugs, limitations, extensions or planned refinements.
+//# A casacore::List of bugs, limitations, extensions or planned refinements.
 //   <li> Provide the option to flag all channels (or a range) for a chosen range of stokes, or to flag all (or range of) stokes for the chosen channel range.
-//   <li> At some point, use TempArray instead of Matrix, to hold all the data to plot. Then,
+//   <li> At some point, use TempArray instead of casacore::Matrix, to hold all the data to plot. Then,
 // one can limit the memory consumption, at the expense of having TempArrays on disk.
 // </todo>
 
@@ -150,12 +150,12 @@ class BasePlot
       // Attach the BasePlot object to a table/subtable.
       // This function also checks if the FLAG and/or 
       // FLAG_ROW column names exist.
-      Int init(Table &tab, Int &tableNumber,String &rootTabName, 
-               String &tableSelection, String &dataFlagColName, 
-               String &rowFlagColName);   
+      casacore::Int init(casacore::Table &tab, casacore::Int &tableNumber,casacore::String &rootTabName, 
+               casacore::String &tableSelection, casacore::String &dataFlagColName, 
+               casacore::String &rowFlagColName);   
       
       // Create TableExprNodes for all TaQL strings.
-      // The RecordGram::parse() function is used to 
+      // The casacore::RecordGram::parse() function is used to 
       // create TableExprNodes for each of the TaQL strings in the
       // input vector. The parse tree for each expression is also
       // traversed to extract table column names and corresponding
@@ -169,12 +169,12 @@ class BasePlot
       // an odd number of TaQL strings in sent in the input vector.
       // (Only expressions that return a TpDouble scalar or array can
       // be directly plotted).
-      Int createTENS(Vector<String> &datastr);   
+      casacore::Int createTENS(casacore::Vector<casacore::String> &datastr);   
       
       // Read data from the table and fill up storage arrays.
       // This function reads the results of all TableExprNodes
       // from the first row of the table/subtable, to obtain the
-      // shapes of the TaQL results. Data storage arrays are
+      // shapes of the TaQL results. casacore::Data storage arrays are
       // accordingly resized and the reading continues for all
       // other rows.
       // Flags are read using the getFlags function.
@@ -182,33 +182,33 @@ class BasePlot
       // the FLAG column, a one-to-one mapping of flags is done.
       // If the shapes mis-match (or if only one flag exists per row), 
       // then the FLAG_ROW column is read. If neither FLAG nor FLAG_ROW
-      // exist, all flags are assumed as False.
+      // exist, all flags are assumed as false.
       // Errors in TaQL indices are caught and -1 is returned.
-      Int getData(Vector<String> &datastr, Int layer, 
+      casacore::Int getData(casacore::Vector<casacore::String> &datastr, casacore::Int layer, 
          TPConvertBase* conv, TPGuiCallBackHooks* callbackhooks_p);      
       
       // This function is callse from TPPlotter::setPlotRange().
       // Set plot range (all plots for this table).
       // Scan the data storage arrays to compute data ranges. In the case 
-      // of overlay plots (due to Array TpDouble TaQL results), combined
+      // of overlay plots (due to casacore::Array TpDouble TaQL results), combined
       // data ranges for this tables data are computed.
       // This function requires that all stored data arrays be traversed.
       // This can get expensive for large number of data points. It is
       // assumed that for such a large number of data points, plotting
       // could broken down into chunks using an iteration axis.
-      virtual Int setPlotRange(Double &xmin, Double &xmax, 
-              Double &ymin, Double &ymax, 
-              Bool showflags, Bool columnsxaxis, String flagversion, 
-              Int averagenrows, String connectpoints=String("tablerow"),
-              Bool doscalingcorrection=True,String multicolour=String("none"),
-              Bool honourxflags=False); 
+      virtual casacore::Int setPlotRange(casacore::Double &xmin, casacore::Double &xmax, 
+              casacore::Double &ymin, casacore::Double &ymax, 
+              casacore::Bool showflags, casacore::Bool columnsxaxis, casacore::String flagversion, 
+              casacore::Int averagenrows, casacore::String connectpoints=casacore::String("tablerow"),
+              casacore::Bool doscalingcorrection=true,casacore::String multicolour=casacore::String("none"),
+              casacore::Bool honourxflags=false); 
 
       
       // This function is called from TPPlotter::setFlagRegions().
       // The list of regions that have been marked for flagging
       // via TPPlotter::markFlags() is passed into BasePlot and 
       // stored.
-      Int convertCoords(Vector<Vector<Double> > &flagmarks);
+      casacore::Int convertCoords(casacore::Vector<casacore::Vector<casacore::Double> > &flagmarks);
       
       // Fill in flags in the storage arrays.
       // The data storage arrays are traversed and flags for all
@@ -218,131 +218,131 @@ class BasePlot
       // be applied to plots that use the current instance of BasePlot.
       // If rowflag=1, a the FLAG_ROW column is set (if it exists) in
       // addition to the individual flags in the FLAG column (if it exists).
-      Int flagData(Int diskwrite, Int rowflag, Int direction);     
+      casacore::Int flagData(casacore::Int diskwrite, casacore::Int rowflag, casacore::Int direction);     
 
-      virtual Bool selectedPoint(Int np, Int nr);     
+      virtual casacore::Bool selectedPoint(casacore::Int np, casacore::Int nr);     
 
-      Int flagData(Int direction, String msname, 
-                   String ext);     
-      Int flagData(Int direction, String msname, String spwexpr, 
-                   Matrix<Int>& rowMap, Matrix<Int>& chanMap, String ext);     
-      Int getFlags(String versionname, String msname);
-      ////Int setFlags(Int direction, Int setrowflag, String msname);
+      casacore::Int flagData(casacore::Int direction, casacore::String msname, 
+                   casacore::String ext);     
+      casacore::Int flagData(casacore::Int direction, casacore::String msname, casacore::String spwexpr, 
+                   casacore::Matrix<casacore::Int>& rowMap, casacore::Matrix<casacore::Int>& chanMap, casacore::String ext);     
+      casacore::Int getFlags(casacore::String versionname, casacore::String msname);
+      ////casacore::Int setFlags(casacore::Int direction, casacore::Int setrowflag, casacore::String msname);
       
       // Clear all flags (FLAG and FLAG_ROW) from the current
       // table/subtable.
-      Int clearFlags();   
+      casacore::Int clearFlags();   
       
-      Bool saveData(const String& filename);
+      casacore::Bool saveData(const casacore::String& filename);
 
       // Query the internal structures for X data values
-      virtual Double getXVal(Int pnum, Int col);
+      virtual casacore::Double getXVal(casacore::Int pnum, casacore::Int col);
       
       // Query the internal structures for Y data values
-      virtual Double getYVal(Int pnum, Int col);
+      virtual casacore::Double getYVal(casacore::Int pnum, casacore::Int col);
 
       // Query the internal structures for flags
-      virtual Bool getYFlags(Int pnum, Int col);
+      virtual casacore::Bool getYFlags(casacore::Int pnum, casacore::Int col);
       void showFlags();
 
       // Query for the number of points per plot
-      virtual Int getNumRows();
+      virtual casacore::Int getNumRows();
 
       // Query for the number of plots
-      virtual Int getNumPlots();
+      virtual casacore::Int getNumPlots();
 
       // Get the plot colour to use - based on "multicolour"
       // This number is added to the "color" in PlotOption, to
       // generate the different colours for different cellrows/cellcols
-      virtual Int getColourAddOn(Int pnum);
+      virtual casacore::Int getColourAddOn(casacore::Int pnum);
 
       // Query for the type of plot (BASEPLOT)
       // For BasePlot, this is "XYPLOT".
       // For CrossPlot, this is "CROSS".
-      Int getPlotType();
+      casacore::Int getPlotType();
 
-      // Get some Table Info
-      Vector<String> getBasePlotInfo();
+      // Get some casacore::Table Info
+      casacore::Vector<casacore::String> getBasePlotInfo();
       
       // Locate Data
       // Step through the data, check if each point has been selected.
       // If it has, then read out the row number, and index into the
-      // Table and pull out the values of each of the LocateColumns
+      // casacore::Table and pull out the values of each of the LocateColumns
       // for each selected row number.  Channel/Corr (cellcol/cellrow)
       // indices are also found, and concatenated into a [row,col] string
       // to be returned for printing.
-      virtual Int locateData(Vector<String> collist, 
-           Matrix<Double> &info, Vector<String> &cpol);
+      virtual casacore::Int locateData(casacore::Vector<casacore::String> collist, 
+           casacore::Matrix<casacore::Double> &info, casacore::Vector<casacore::String> &cpol);
 
       // Make this different from the above just in case
       // somebody else also use this function
       // make TablePlot to know which one to call
-      virtual Int locateData(Vector<String> collist, 
-           Matrix<Double> &info, Vector<String> &cpol,
-           Matrix<Int>& rmap, Matrix<Int> &cmap);
+      virtual casacore::Int locateData(casacore::Vector<casacore::String> collist, 
+           casacore::Matrix<casacore::Double> &info, casacore::Vector<casacore::String> &cpol,
+           casacore::Matrix<casacore::Int>& rmap, casacore::Matrix<casacore::Int> &cmap);
       
       // Update Flag History
       // Fill in these parameters with a list of flag regions, 
       // flag or unflag, and the
       // number of points selected in these regions.
-      Int updateFlagHistory(Vector<Vector<Double> > &flagmarks, 
-           Int &direction, Int &numflags);
+      casacore::Int updateFlagHistory(casacore::Vector<casacore::Vector<casacore::Double> > &flagmarks,
+           casacore::Int &direction, casacore::Int &numflags);
 
       //Number of rows in the BP's Table.
-      Int NRows_p;
+      casacore::Int NRows_p;
                 
       // A pointer to the CallBack class. One of them is held
       // for each BP.
       TPGuiCallBackHooks* callbackhooks_p;
 
-       // Return the name of the Table being held by BP.
-       String getTableName();
+       // Return the name of the casacore::Table being held by BP.
+       casacore::String getTableName();
 
    protected:
       
       // Create TableExprNodes from input TAQL strings
-      virtual Int createXTENS(Vector<String> &datastr);   
-      Int createYTENS(Vector<String> &datastr);   
+      virtual casacore::Int createXTENS(casacore::Vector<casacore::String> &datastr);   
+      casacore::Int createYTENS(casacore::Vector<casacore::String> &datastr);   
       
       // Read in the values ( after TaQL evaluations ) into
       // the storage arrays.
-      virtual Int getXData(TPConvertBase* conv,Bool dummyread=False);
-      Int getYData(TPConvertBase* conv,Bool dummyread=False);
+      virtual casacore::Int getXData(TPConvertBase* conv,casacore::Bool dummyread=false);
+      casacore::Int getYData(TPConvertBase* conv,casacore::Bool dummyread=false);
 
       // Read flags from the table into theflags_p
       // This reconciles the original indices in the FLAG column, with the
       // indices selected via TaQL. It also take care of getting the flags
-      // in when a TaQL Scalar or Vector reduction has been done.
+      // in when a TaQL Scalar or casacore::Vector reduction has been done.
       // Also, it checks with flagsum_p, to see if anyone else has
-      // updated flags for this Table, and if so, recomputes the TaQL so that
+      // updated flags for this casacore::Table, and if so, recomputes the TaQL so that
       // channel averages take into account updated flags.
       // And lots more !!
-      Int getFlags( String versionname, Bool showflags );
+      casacore::Int getFlags( casacore::String versionname, casacore::Bool showflags );
 
       // Recompute TaQLs in case another BP has changed the flags
       // for this row. 
-      Int reGetYData(Int tenid, Int row, TPConvertBase* conv);
+      casacore::Int reGetYData(casacore::Int tenid, casacore::Int row, TPConvertBase* conv);
 
       // Get TaQL incides
-      Int getIndices(TableExprNode &ten);
+      casacore::Int getIndices(casacore::TableExprNode &ten);
       
       // Traverse the TaQL parse tree and collect TaQL index ranges
-      void ptTraverse(const TableExprNodeRep *tenr);
+      void ptTraverse(const casacore::TableExprNodeRep *tenr);
       
       // Write flags to disk.
       // This does the inverse of getFlags.
       // Flag expansion for TaQL scalar/vector reduction happens here.
-      Int setFlags(Int direction, Int setrowflag);
+      casacore::Int setFlags(casacore::Int direction, casacore::Int setrowflag);
    
       // Clears currently held flag region lists and TaQL index lists.
-      Int cleanUp();      
+      casacore::Int cleanUp();      
 
       // Get the chan, pol from np
-      Matrix<String> getLocateIndices();
-      Matrix<String> getLocateIndices(Matrix<Int>& cmap);
+      casacore::Matrix<casacore::String> getLocateIndices();
+      casacore::Matrix<casacore::String> getLocateIndices(casacore::Matrix<casacore::Int>& cmap);
 
       // Get the chan, pol from np
-      Matrix<Int> getLocatePolChan();
+      casacore::Matrix<casacore::Int> getLocatePolChan();
       
       // Create Map_p = a matrix of important indices.
       // nrows : NPlots_p. So each cellcol/cellrow gets
@@ -353,75 +353,75 @@ class BasePlot
       // Col 2 : index into tens (z)
       // Col 3 : yplotdata row index
       // Col 4 : yplotdata col index
-      Int createMap();
+      casacore::Int createMap();
 
       // Compute averages of rows.
-      Int computeAverages(Int averagenrows);      
+      casacore::Int computeAverages(casacore::Int averagenrows);      
 
       // Compute averages of X values.. this is just a place-holder.
-      virtual Int computeXAverages(Int averagenrows, Int remrows);
+      virtual casacore::Int computeXAverages(casacore::Int averagenrows, casacore::Int remrows);
 
       // Exceptions..
-      void BasePlotError(String msg);
+      void BasePlotError(casacore::String msg);
 
       
-      // The single Table to be accessed.
-      Table SelTab_p;
+      // The single casacore::Table to be accessed.
+      casacore::Table SelTab_p;
 
-      Table* itsTab_p;
-      String itsTabName_p;
+      casacore::Table* itsTab_p;
+      casacore::String itsTabName_p;
 
       // The internal number assigned to the table by
       // TablePlot
-      uInt tabNum_p;
-      // The name of the root Table on disk.
-      // If a memory Table, this should be "".
-      String rootTabName_p;
+      casacore::uInt tabNum_p;
+      // The name of the root casacore::Table on disk.
+      // If a memory casacore::Table, this should be "".
+      casacore::String rootTabName_p;
       // A string with selection information.
-      String tabSelString_p;
+      casacore::String tabSelString_p;
 
-      // List of TaQL strings.
-      Vector<String> DataStr_p;
+      // casacore::List of TaQL strings.
+      casacore::Vector<casacore::String> DataStr_p;
       // Flag to signal a new table being attached
-      Int TableTouch_p; 
+      casacore::Int TableTouch_p; 
       // Remember the "layer" of the plot from this basePlot.
       // This is used to discard "getData" calls for other layers.
-      Int Layer_p;
+      casacore::Int Layer_p;
 
       // Flag to signal the use of averages or not.
       // This is for "averagenrows" and averaging across rows.
-      // If True, then points are averaged, before being sent to TPLP.
-      Bool Average_p; 
+      // If true, then points are averaged, before being sent to TPLP.
+      casacore::Bool Average_p; 
 
       // number of TaQL string pairs.
-      Int nTens_p; 
+      casacore::Int nTens_p; 
       // TableExprnodes created from these TaQL string pairs
-      Vector<TableExprNode> xtens_p;
-      Vector<TableExprNode> ytens_p;
+      casacore::Vector<casacore::TableExprNode> xtens_p;
+      casacore::Vector<casacore::TableExprNode> ytens_p;
 
       // Matrices to hold the actual data to be plotted.
       // i.e. the values obtained after TaQL evaluation.
-      Matrix<Double> xplotdata_p;
-      Matrix<Float> yplotdata_p;
+      casacore::Matrix<casacore::Double> xplotdata_p;
+      casacore::Matrix<casacore::Float> yplotdata_p;
 
-      // Matrix to hold the data flags
-      Matrix<Bool> theflags_p;
-      // Vector to hold the row flags
-      Vector<Bool> rowflags_p;
+      // casacore::Matrix to hold the data flags
+      casacore::Matrix<casacore::Bool> theflags_p;
+      // casacore::Vector to hold the row flags
+      casacore::Vector<casacore::Bool> rowflags_p;
                 
-      // Vector to hold the number of flagged cell rows/cols per row.
-      // For an MS, this is the number of corrs/chans flagged per row.
+      // casacore::Vector to hold the number of flagged cell rows/cols per row.
+      // For an casacore::MS, this is the number of corrs/chans flagged per row.
       // This is used to check when another BasePlot has changed the
       // flags. ( remember - multiple BPs can work on the same Table
       // at once...) and this ensures that channel averages are 
       // recomputed for rows for which the flags have changed.
       // This is how flags changed through one plot, are immediately
       // updated in all other plots from the same Table.
-      Matrix<Int> flagsum_p;
+      casacore::Matrix<casacore::Int> flagsum_p;
 
       // Flag to distinguish between loading flagsum_p for the first
       // time, and using it to check for "changed" rows.
-      Bool firsttime_p;
+      casacore::Bool firsttime_p;
 
       // If averaging is done across rows, the averaged
       // values are stored in these variables.
@@ -429,103 +429,103 @@ class BasePlot
       // Since this is filled on the fly, one can generate
       // plots with different 'averagenrows', without
       // having to re-read data from disk.
-      ArrayColumn<Bool> AvgFlags_p;
-      ScalarColumn<Bool> AvgRowFlags_p;
+      casacore::ArrayColumn<casacore::Bool> AvgFlags_p;
+      casacore::ScalarColumn<casacore::Bool> AvgRowFlags_p;
 
-      Matrix<Double> avgxplotdata_p;
-      Matrix<Float> avgyplotdata_p;
-      Matrix<Bool> avgtheflags_p;
-      Vector<Bool> avgrowflags_p;
-      Vector<Int> avgindices_p;
+      casacore::Matrix<casacore::Double> avgxplotdata_p;
+      casacore::Matrix<casacore::Float> avgyplotdata_p;
+      casacore::Matrix<casacore::Bool> avgtheflags_p;
+      casacore::Vector<casacore::Bool> avgrowflags_p;
+      casacore::Vector<casacore::Int> avgindices_p;
       
       // Number of plots
       // sum (ncellrows x ncellcols from each TaQL XY pair )
       // TPLP sees this number, and asks for data to create
       // this number of plots.
-      Int NPlots_p;
+      casacore::Int NPlots_p;
 
        // Number of rows left after averaging across rows
        // ( averagenrows )
-       Int NAvgRows_p; 
+       casacore::Int NAvgRows_p; 
 
       // a VERY important data structure that holds 
       // very useful index information. This is used
       // all over the place. A description of this
-      // Matrix is in the code of BasePlot::createMap().
-      Matrix<Int> Map_p;
+      // casacore::Matrix is in the code of BasePlot::createMap().
+      casacore::Matrix<casacore::Int> Map_p;
 
       // The first TaQL indices for each Y-TaQL.
-      Vector<Slicer> TENslices_p;
+      casacore::Vector<casacore::Slicer> TENslices_p;
 
       // The Column shapes for columns accessed by each Y-TaQL.
       // This is used to decide if a scalar/vector TaQL reduction
       // has happened or not. This info goes into ReductionType_p
-      Vector<IPosition> TENcolshapes_p;
+      casacore::Vector<casacore::IPosition> TENcolshapes_p;
 
       // Holds info about which cellrows/cellcols are
       // completely flagged per row. This is for use in
       // averaging channel numbers -- not really used.
-      Vector<Vector<Bool> > TENRowColFlag_p;
+      casacore::Vector<casacore::Vector<casacore::Bool> > TENRowColFlag_p;
                 
-      // List of reduction-types for each Y-TaQL.
+      // casacore::List of reduction-types for each Y-TaQL.
       // 0 : no reduction
       // 1 : scalar reduction (SUM(..))
       // 2 : vector reduction (SUM(..,1))
       // 3 : vector reduction (SUM(..,2))
-      Vector<Int> ReductionType_p;
+      casacore::Vector<casacore::Int> ReductionType_p;
       
       // Signal for each TaQL using an ArrayCol or ScalarCol.
-      Vector<Bool> isArrayCol_p;
+      casacore::Vector<casacore::Bool> isArrayCol_p;
 
       // Shapes for Xdata and Ydata.
-      Vector<IPosition> Yshape_p;
-      Vector<IPosition> Xshape_p;
+      casacore::Vector<casacore::IPosition> Yshape_p;
+      casacore::Vector<casacore::IPosition> Xshape_p;
                 
       // accessed column names
-      Vector<String> colnames_p;
+      casacore::Vector<casacore::String> colnames_p;
       // accessed column slices
-      Vector<Slicer> ipslice_p;
+      casacore::Vector<casacore::Slicer> ipslice_p;
       // number of pairs of colnames and indices.
-      Int nip_p; 
+      casacore::Int nip_p; 
       // mapping from yplotdata index to colnames_p indices.
-      Vector<Int> IndCnt_p; 
+      casacore::Vector<casacore::Int> IndCnt_p; 
       
       // Flag holders...
-      ArrayColumn<Bool> Flags_p;
-      ScalarColumn<Bool> RowFlags_p;
-      String FlagColName_p,FlagRowName_p;
-      IPosition FlagColShape_p;
+      casacore::ArrayColumn<casacore::Bool> Flags_p;
+      casacore::ScalarColumn<casacore::Bool> RowFlags_p;
+      casacore::String FlagColName_p,FlagRowName_p;
+      casacore::IPosition FlagColShape_p;
       // flags of FLAG,FLAG_ROW existence.
-      Bool fcol_p,frcol_p; 
+      casacore::Bool fcol_p,frcol_p; 
       
       // list of flag regions ( or locate regions )
-      Vector<Vector<Double> > locflagmarks_p; 
+      casacore::Vector<casacore::Vector<casacore::Double> > locflagmarks_p;
       // # flag regions
-      Int nflagmarks_p; 
+      casacore::Int nflagmarks_p; 
       // 1 : FLAG, 0 : UNFLAG
-      Int flagdirection_p; 
+      casacore::Int flagdirection_p; 
       // number of selected points.
-      Int numflagpoints_p;
+      casacore::Int numflagpoints_p;
 
       // Plot Options that need to be used here.
-      Bool showflags_p;
-      Bool doscalingcorrection_p;
-      String multicolour_p;
+      casacore::Bool showflags_p;
+      casacore::Bool doscalingcorrection_p;
+      casacore::String multicolour_p;
 
       // Pointer to the Convert function
       TPConvertBase* conv_p;
 
       // Dear ol' FlagVersion pointer.
       FlagVersion *FV;
-      String currentflagversion_p;
+      casacore::String currentflagversion_p;
 
-      Int dbg,ddbg,adbg;
-      Timer tmr;
+      casacore::Int dbg,ddbg,adbg;
+      casacore::Timer tmr;
 
-      Int pType_p;
+      casacore::Int pType_p;
 
       SLog *log;
-      static String clname;
+      static casacore::String clname;
 };
 
 } //# NAMESPACE CASA - END 

@@ -25,6 +25,9 @@
 
 using namespace std;
 
+using namespace casacore;
+using namespace casa;
+
 namespace casac {
 
 imagepol::imagepol()
@@ -71,7 +74,7 @@ imagepol::open(const variant& image){
 		else {
 			*itsLog << "Unsupported type for image input" << LogIO::EXCEPTION;
 		}
-		return True;
+		return true;
 	}
 	catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -179,7 +182,7 @@ imagepol::depolratio(const std::string& infile, const bool debias, const double 
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->depolratio(out, infile, debias, clip, sigma, outfile);
     if (rstat) {
         SHARED_PTR<ImageInterface<Float> > x(out);
@@ -247,7 +250,7 @@ imagepol::fraclinpol(const bool debias, const double clip, const double sigma, c
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->fracLinPol(out,debias,Float(clip),
 				 Float(sigma),String(outfile));
     if (rstat) {
@@ -273,7 +276,7 @@ imagepol::fractotpol(const bool debias, const double clip, const double sigma, c
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->fracTotPol(out,debias,Float(clip),
 				 Float(sigma),String(outfile));
     if (rstat) {
@@ -299,7 +302,7 @@ imagepol::linpolint(const bool debias, const double clip, const double sigma, co
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->linPolInt(out,debias,Float(clip),
 				Float(sigma),String(outfile));
     if (rstat) {
@@ -325,7 +328,7 @@ imagepol::linpolposang(const std::string& outfile)
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->linPolPosAng(out,String(outfile));
     if (rstat) {
         return new image(out);
@@ -374,7 +377,7 @@ imagepol::pol(const std::string& which, const bool debias, const double clip, co
     ImageInterface<Float> *out;
     String type(which);
     type.upcase();
-    Bool rstat(False);
+    Bool rstat(false);
     if (type=="LPI") {
       rstat = itsImPol->linPolInt(out,debias,Float(clip),
 				  Float(sigma),String(outfile));
@@ -459,7 +462,7 @@ imagepol::sigmadepolratio(const std::string& infile, const bool debias, const do
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->sigmaDepolarizationRatio(out,String(infile), debias,
 					       Float(clip), Float(sigma),
 					       String(outfile));
@@ -487,7 +490,7 @@ imagepol::sigmafraclinpol(const double clip, const double sigma, const std::stri
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->sigmaFracLinPol(out, Float(clip), Float(sigma),
 				      String(outfile));
     if (rstat) {
@@ -513,7 +516,7 @@ imagepol::sigmafractotpol(const double clip, const double sigma, const std::stri
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->sigmaFracTotPol(out, Float(clip),
 				      Float(sigma), String(outfile));
     if (rstat) {
@@ -559,7 +562,7 @@ imagepol::sigmalinpolposang(const double clip, const double sigma, const std::st
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->sigmaLinPolPosAng(out,Float(clip),
 					Float(sigma),String(outfile));
     if (rstat) {
@@ -749,7 +752,7 @@ imagepol::stokesi(const std::string& outfile)
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->stokesI(out, String(outfile));
     if (rstat) {
         return new image(out);
@@ -774,7 +777,7 @@ imagepol::stokesq(const std::string& outfile)
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->stokesQ(out, String(outfile));
     if (rstat) {
         return new image(out);
@@ -799,7 +802,7 @@ imagepol::stokesu(const std::string& outfile)
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->stokesU(out, String(outfile));
     if (rstat) {
         return new image(out);
@@ -824,7 +827,7 @@ imagepol::stokesv(const std::string& outfile)
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->stokesV(out, String(outfile));
     if (rstat) {
         return new image(out);
@@ -870,7 +873,7 @@ imagepol::totpolint(const bool debias, const double clip, const double sigma, co
       return 0;
     }
     ImageInterface<Float> *out;
-    Bool rstat(False);
+    Bool rstat(false);
     rstat = itsImPol->totPolInt(out,debias,Float(clip),
 				Float(sigma),String(outfile));
     if (rstat) {

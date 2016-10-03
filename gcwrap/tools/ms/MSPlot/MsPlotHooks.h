@@ -46,7 +46,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/Slice.h>
 
-//# Table and TablePlot includes
+//# casacore::Table and TablePlot includes
 #include <tools/tables/TablePlot/TablePlot.h>
 
 #include <flagging/Flagging/SLog.h>
@@ -81,7 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <ul>    
 //   <li> <linkto class="TPResetCallback">TPResetCallback</linkto>class,
 //   <li> <linkto class="TablePlot">TablePlot</linkto>class, 
-//   <li> <linkto class="Table">MsPlot</linkto> class
+//   <li> <linkto class="casacore::Table">MsPlot</linkto> class
 // </ul>    
 // </prerequisite>
 //    
@@ -120,7 +120,7 @@ class MSPlotReset : public TPResetCallBack
  public:
     MSPlotReset( MsPlot *inMsPlot )
     {
-       String fnname = "MSPlotReset";
+       casacore::String fnname = "MSPlotReset";
        log = SLog::slog();
    log->FnEnter(fnname, clname);
    
@@ -130,18 +130,18 @@ class MSPlotReset : public TPResetCallBack
     };
 
     ~MSPlotReset() {
-     String fnname = "MSPlotReset";
+     casacore::String fnname = "MSPlotReset";
    log->FnEnter(fnname, clname);
 
    log->FnExit(fnname, clname);
     };
 
-    Bool reset() {
-     String fnname = "reset";
+    casacore::Bool reset() {
+     casacore::String fnname = "reset";
    log->FnEnter(fnname, clname);
 
    log->FnExit(fnname, clname);
-   return True;
+   return true;
     };
     
 
@@ -150,10 +150,10 @@ class MSPlotReset : public TPResetCallBack
 
     // Message logger
     SLog *log;
-    static const String clname;
+    static const casacore::String clname;
 };
 
-const String MSPlotReset::clname = "MSPlotReset"; 
+const casacore::String MSPlotReset::clname = "MSPlotReset"; 
 //#!///////////////////////////////////////////////////////////////////////////
 //#! 
 //#!      HOOK CLASSES - All classes used with TablePlot, these classes are
@@ -186,8 +186,8 @@ const String MSPlotReset::clname = "MSPlotReset";
 // <ul>
 //   <li> <linkto class="TPGuiCallBackHooks">TPGuiCallBackHooks</linkto>class,
 //   <li> <linkto class="TablePlot">TablePlot</linkto>class, 
-//   <li> <linkto class="Table">MsPlot</linkto> class
-//   <li> <linkto class="Table">Measurement Set</linkto> class 
+//   <li> <linkto class="casacore::Table">MsPlot</linkto> class
+//   <li> <linkto class="casacore::Table">Measurement Set</linkto> class 
 // </ul>    
 // </prerequisite>
 //    
@@ -206,7 +206,7 @@ const String MSPlotReset::clname = "MSPlotReset";
 // <motivation>
 // To provide a way for the TablePlot object to inform the MsPlot object
 // that a particular button has been pressed on the plotting GUI and to
-// allow MS Plot to over ride the default TablePlot behaviour if necessary. 
+// allow casacore::MS Plot to over ride the default TablePlot behaviour if necessary. 
 // </motivation>
 //
 // <thrown>
@@ -232,24 +232,24 @@ const String MSPlotReset::clname = "MSPlotReset";
 class MSPlotMainMSCallBack : public TPGuiCallBackHooks
 {
     public: 
-      MSPlotMainMSCallBack( MeasurementSet *inMS,
-         Vector<String> antNames,
-         //Matrix<Int> baselines,
-         Vector<String> fieldNames,
-         Vector<Vector<String> >corrNames,
-         Vector<Double> refFrequencies,
-         String msname,
-         String extendChn,
-         String extendCor,
-         String extendSp,
-         String extendAnts,
-         String extendTm,
-         Bool crossbl,
-         Double avetime,
-         MeasurementSet *aMS)
+      MSPlotMainMSCallBack( casacore::MeasurementSet *inMS,
+         casacore::Vector<casacore::String> antNames,
+         //casacore::Matrix<casacore::Int> baselines,
+         casacore::Vector<casacore::String> fieldNames,
+         casacore::Vector<casacore::Vector<casacore::String> >corrNames,
+         casacore::Vector<casacore::Double> refFrequencies,
+         casacore::String msname,
+         casacore::String extendChn,
+         casacore::String extendCor,
+         casacore::String extendSp,
+         casacore::String extendAnts,
+         casacore::String extendTm,
+         casacore::Bool crossbl,
+         casacore::Double avetime,
+         casacore::MeasurementSet *aMS)
      {
          log = SLog::slog();
-         String fnname = "MSPlotMainMSCallBack";
+         casacore::String fnname = "MSPlotMainMSCallBack";
 #if LOG2 
          log->FnEnter(fnname + 
           "(inMS, antNames, fieldNames, corrNames, refFrequencies)", clname);
@@ -285,7 +285,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
      };
       
       ~MSPlotMainMSCallBack(){
-          String fnname =  "~MSPlotMainMSCallback";
+          casacore::String fnname =  "~MSPlotMainMSCallback";
 #if LOG2 
           log->FnEnter(fnname, clname);
 
@@ -293,10 +293,10 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
 #endif 
       };
       
-      casa::Bool
-      releasetable( Int /*nrows*/, Int /*ncols*/, Int /*panel*/, String /*tablename*/ )
+      casacore::Bool
+      releasetable( casacore::Int /*nrows*/, casacore::Int /*ncols*/, casacore::Int /*panel*/, casacore::String /*tablename*/ )
       {
-          String fnname = "releasetable";
+          casacore::String fnname = "releasetable";
 #if LOG2 
           log->FnEnter(fnname + "(nrows,ncols,panel,tablename)", clname);
 #endif 
@@ -306,24 +306,24 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
 #if LOG2 
           log->FnExit(fnname, clname);
 #endif 
-          return True;
+          return true;
       }
 
-      casa::Bool
-      createiterplotlabels(Vector<String> iteraxes,
-                           Vector<Double> values, String &titleString) {
-         String fnname = "createiterplotlabels";
+      casacore::Bool
+      createiterplotlabels(casacore::Vector<casacore::String> iteraxes,
+                           casacore::Vector<casacore::Double> values, casacore::String &titleString) {
+         casacore::String fnname = "createiterplotlabels";
 #if LOG2 
          log->FnEnter(fnname + "(iteraxes, values, titleString)", clname );
 #endif 
          //cout << " values=" << values << endl;
-         //for (uInt i = 0; i < itsAntNames.nelements(); i++)
+         //for (casacore::uInt i = 0; i < itsAntNames.nelements(); i++)
          //   cout << itsAntNames[i] << " " ;
          //cout << endl;
 
          titleString = "Iter: ";
          //cout << "main call back createiterplotlabels" << endl;  
-         uInt iterNum = iteraxes.nelements();
+         casacore::uInt iterNum = iteraxes.nelements();
          for (uint axesId = 0; axesId < iterNum; axesId++) {
             if (upcase(iteraxes[axesId]).matches("BASELINE") || 
                 upcase(iteraxes[axesId]).matches("ANTENNA") ||
@@ -337,15 +337,15 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
                      titleString += "Baseline ";
                } 
                else {
-                  titleString += String("Antenna") +
+                  titleString += casacore::String("Antenna") +
                         (iteraxes[axesId].contains("2") ? "2" : "1")
-                        + String(" ");
+                        + casacore::String(" ");
                }
             
                if (values[axesId] < itsAntNames.nelements()) {
                   if (axesId > 0)
-                     titleString += String(" : ");
-                  titleString += itsAntNames[Int(values[axesId])];
+                     titleString += casacore::String(" : ");
+                  titleString += itsAntNames[casacore::Int(values[axesId])];
                } 
                else {
 #if LOG2 
@@ -355,7 +355,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
                       << ", but there are only "
                       << itsAntNames.nelements()
                       << ".";
-                   log->out(os, fnname, clname, LogMessage::DEBUG1); 
+                   log->out(os, fnname, clname, casacore::LogMessage::DEBUG1); 
 #endif 
                }
                
@@ -365,8 +365,8 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
                 titleString += "FIELD ";
                 if ( values[axesId] < itsFieldNames.nelements() ) {
                     if ( axesId > 0 )
-                        titleString += String( " : " );
-                    titleString += itsFieldNames[Int(values[axesId])];
+                        titleString += casacore::String( " : " );
+                    titleString += itsFieldNames[casacore::Int(values[axesId])];
                 } 
                 else {
 #if LOG2 
@@ -376,60 +376,60 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
                      << ", but there are only "
                      << itsFieldNames.nelements()
                      << ".";
-                  log->out(os, fnname, clname, LogMessage::WARN); 
+                  log->out(os, fnname, clname, casacore::LogMessage::WARN); 
 #endif 
                }
             } else {
                 //# This includes SPW, SCAN, FEED, and ARRAY
                 //# since all of these don't have names.  This
                 //# may change in the future.
-                titleString += iteraxes[axesId] + String( " ");
+                titleString += iteraxes[axesId] + casacore::String( " ");
     
                 if ( axesId > 0 )
-                    titleString += String( " : " );
-                titleString += String::toString( Int(values[axesId]) );
+                    titleString += casacore::String( " : " );
+                titleString += casacore::String::toString( casacore::Int(values[axesId]) );
             }
          }
          //cout << "titleString=" << titleString << endl;
          
          /*
-         Bool selected = False;
+         casacore::Bool selected = false;
          if (titleString.contains("Base")) {
-            String selBase = titleString.after("Baseline ");
-            for (Int k = 0; k < itsBaselines.shape()[0]; k++) {
-               String inListBase = itsAntNames(itsBaselines(k, 0))
+            casacore::String selBase = titleString.after("Baseline ");
+            for (casacore::Int k = 0; k < itsBaselines.shape()[0]; k++) {
+               casacore::String inListBase = itsAntNames(itsBaselines(k, 0))
                                    + " : "
                                    + itsAntNames(itsBaselines(k,1));
                //cout << "inListBase=" << inListBase
                //     << " selBase=" << selBase << endl;
                if (inListBase == selBase)
-                  selected = True;
+                  selected = true;
             }
             //cout << "Baseline selected=" << selected << endl;
             return selected;
          }
          if (titleString.contains("Ante")) {
-            String selAnt = titleString.after("Antenna");
+            casacore::String selAnt = titleString.after("Antenna");
             if (selAnt.length() < 2)
-               selected = False;
+               selected = false;
             else if (selAnt.before(" ") == "2") {
                selAnt = selAnt.after(" ");
-               for (Int k = 0; k < itsBaselines.shape()[0]; k++) {
-                   String inListBase = itsAntNames(itsBaselines(k, 1));
+               for (casacore::Int k = 0; k < itsBaselines.shape()[0]; k++) {
+                   casacore::String inListBase = itsAntNames(itsBaselines(k, 1));
                    //cout << "inListA2=" << inListBase
                    //     << " selAnt=" << selAnt << endl;
                    if (inListBase == selAnt)
-                      selected = True;
+                      selected = true;
                }
             }
             else {
                selAnt = selAnt.after(" ");
-               for (Int k = 0; k < itsBaselines.shape()[0]; k++) {
-                   String inListBase = itsAntNames(itsBaselines(k, 0));
+               for (casacore::Int k = 0; k < itsBaselines.shape()[0]; k++) {
+                   casacore::String inListBase = itsAntNames(itsBaselines(k, 0));
                    //cout << "inListA1=" << inListBase
                    //     << " selAnt=" << selAnt << endl;
                    if (inListBase == selAnt)
-                      selected = True;
+                      selected = true;
                }
             }
             //cout << "selected=" << selected << endl;
@@ -438,26 +438,26 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
          */ 
 
          log->FnExit(fnname, clname);
-         return True;
+         return true;
      };
          
-     casa::Bool
-     flagdata(String /*tablename*/) {
+     casacore::Bool
+     flagdata(casacore::String /*tablename*/) {
 #if LOG2 
-         String fnname = "flagdata";
+         casacore::String fnname = "flagdata";
          log->FnEnter(fnname, clname);
          log->FnExit(fnname, clname);
 #endif 
-         return True;
+         return true;
      }
 
-      casa::Bool
-      flagdisplay(Int direction, Vector<String> /*collist*/,
-                Matrix<Double> infomat, Vector<String> cpol) {
-          String fnname = "flagdisplay";
+      casacore::Bool
+      flagdisplay(casacore::Int direction, casacore::Vector<casacore::String> /*collist*/,
+                casacore::Matrix<casacore::Double> infomat, casacore::Vector<casacore::String> cpol) {
+          casacore::String fnname = "flagdisplay";
           //cout << "MSPlotMainMSCallback::flagdisplay flag=" << direction << endl;
          
-          IPosition mshape = infomat.shape();
+          casacore::IPosition mshape = infomat.shape();
           //cout << "infomat.shape=[" << mshape[0] << ", "
           //     << mshape[1] << "] cpol.size=" << cpol.size() << endl;
 
@@ -468,110 +468,110 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           //cout << "infomat=" << infomat << endl;
           //cout << "cpol=" << cpol << endl;
 //--------------------------------------------------------------
-          ROMSDataDescColumns dataDescCol(aveMS->dataDescription());
-          ROMSSpWindowColumns spwColumn(aveMS->spectralWindow());
+          casacore::ROMSDataDescColumns dataDescCol(aveMS->dataDescription());
+          casacore::ROMSSpWindowColumns spwColumn(aveMS->spectralWindow());
 
-          //Int maxrows = ms.nrow();
-          Int maxrows = 0;
-          for (Int i = 0; i < mshape[1]; i++) {
-              maxrows += (Int)infomat(1, i);
+          //casacore::Int maxrows = ms.nrow();
+          casacore::Int maxrows = 0;
+          for (casacore::Int i = 0; i < mshape[1]; i++) {
+              maxrows += (casacore::Int)infomat(1, i);
           }
           //cout << "maxrows=" << maxrows << endl;
-          Vector<FlagID> flagids(maxrows);
+          casacore::Vector<FlagID> flagids(maxrows);
 
-          Int idCount = 0;
-          String warnings = String("Bad row:");
-          for (Int i = 0; i < mshape[1]; i++) {
+          casacore::Int idCount = 0;
+          casacore::String warnings = casacore::String("Bad row:");
+          for (casacore::Int i = 0; i < mshape[1]; i++) {
              if (mshape[0] != 7) {
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
 
              FlagID flagid;
-             flagid.rowNum = (uInt)infomat(0, i);
-             //flagid.npts = (uInt)infomat(1, i);
+             flagid.rowNum = (casacore::uInt)infomat(0, i);
+             //flagid.npts = (casacore::uInt)infomat(1, i);
              if (infomat(2, i) < 0 || 
                  infomat(2, i) >= itsAntNames.nelements()) {
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             flagid.ant1 = (uInt)infomat(2, i);
+             flagid.ant1 = (casacore::uInt)infomat(2, i);
              if (infomat(3, i) < 0 || 
                 infomat(3, i) >= itsAntNames.nelements()) {
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             flagid.ant2 = (uInt)infomat(3, i);
+             flagid.ant2 = (casacore::uInt)infomat(3, i);
              if (infomat(4, i) < 0 || 
                 infomat(4, i) >= itsFieldNames.nelements()) { 
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             flagid.field = (uInt)infomat(4, i);
+             flagid.field = (casacore::uInt)infomat(4, i);
              
              if (aveTime > 0.) {
                 //cout << "flag aved" << endl;
-                Double start = max(infomat(5, i) - aveTime / 2, 0.);
-                Double end = max(infomat(5, i) + aveTime / 2, start);
-                flagid.time = MVTime(start / C::day).string(MVTime::YMD, 7) +
-                              String("~") +   
-                              MVTime(end / C::day).string(MVTime::YMD, 7);
+                casacore::Double start = max(infomat(5, i) - aveTime / 2, 0.);
+                casacore::Double end = max(infomat(5, i) + aveTime / 2, start);
+                flagid.time = casacore::MVTime(start / casacore::C::day).string(casacore::MVTime::YMD, 7) +
+                              casacore::String("~") +   
+                              casacore::MVTime(end / casacore::C::day).string(casacore::MVTime::YMD, 7);
              }
              else {
-                String ltime = 
-                     MVTime(infomat(5, i)/C::day).string(MVTime::YMD, 7); 
+                casacore::String ltime = 
+                     casacore::MVTime(infomat(5, i)/casacore::C::day).string(casacore::MVTime::YMD, 7);
                 //cout << "ltime=" << ltime << endl;
-                String ntime = 
-                     MVTime((infomat(5, i) + 0.1)/C::day).string(MVTime::YMD, 7); 
+                casacore::String ntime = 
+                     casacore::MVTime((infomat(5, i) + 0.1)/casacore::C::day).string(casacore::MVTime::YMD, 7);
                 //cout << "ntime=" << ntime << endl;
-                flagid.time = ltime + String("~") + ntime; 
+                flagid.time = ltime + casacore::String("~") + ntime; 
              }
 
              if (infomat(6, i) < 0 || 
                 infomat(6, i) >= dataDescCol.spectralWindowId().nrow()) { 
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             flagid.spw = dataDescCol.spectralWindowId()((Int)infomat(6, i));
+             flagid.spw = dataDescCol.spectralWindowId()((casacore::Int)infomat(6, i));
              if (infomat(6, i) < 0 || 
                  infomat(6, i) >= dataDescCol.polarizationId().nrow()) { 
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             Int polId = dataDescCol.polarizationId()((Int)infomat(6, i));
+             casacore::Int polId = dataDescCol.polarizationId()((casacore::Int)infomat(6, i));
              if (itsCorrNames[polId].nelements() <= 0) {
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
             
              //cout << "cpol=" << cpol(i) << endl;
              //cout << "cpol.size()=" << cpol(i).size() << endl;
              //cout << "cpol.length()=" << cpol(i).length() << endl;
-             Int cCnt = cpol(i).freq(']');
-             Int k = 0;
-             Int l = 0;
-             for (Int j = 0; j < cCnt; j++) {
+             casacore::Int cCnt = cpol(i).freq(']');
+             casacore::Int k = 0;
+             casacore::Int l = 0;
+             for (casacore::Int j = 0; j < cCnt; j++) {
                 l = cpol(i).index(']', k) + 1; 
-                String sect = cpol(i).substr(k, l);
+                casacore::String sect = cpol(i).substr(k, l);
                 sect = sect.after('[');
                 sect = sect.before(']');
                 //cout << "sect=" << j << " " << sect << endl;
-                String corr = sect.before(',');
-                String chan = sect.after(',');
+                casacore::String corr = sect.before(',');
+                casacore::String chan = sect.after(',');
                 //cout << "corr=" << corr << " chan=" << chan << endl; 
-                Int corrId = atoi(corr.chars());
+                casacore::Int corrId = atoi(corr.chars());
                 flagid.corr = itsCorrNames[polId][corrId];
                 //cout << "corr=" << flagid.corr << endl; 
-                Int colCnt = chan.freq(':');
+                casacore::Int colCnt = chan.freq(':');
                 if (colCnt == 2) {
-                   Int fst = chan.index(':');
+                   casacore::Int fst = chan.index(':');
                    fst = chan.index(':', fst + 1);
-                   String s = chan.substr(0, fst);
+                   casacore::String s = chan.substr(0, fst);
                    //cout << "s=" << s << endl;
-                   flagid.chan = s.before(':') + String('~') + s.after(':');
+                   flagid.chan = s.before(':') + casacore::String('~') + s.after(':');
                 }
                 else if (colCnt == 1) {
-                   flagid.chan = chan.before(':') + String('~') + chan.after(':');
+                   flagid.chan = chan.before(':') + casacore::String('~') + chan.after(':');
                 }
                 else {
                    flagid.chan = chan;
@@ -583,11 +583,11 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
                 k = l;
              }
           }
-          flagids.resize(idCount, True);
+          flagids.resize(idCount, true);
           //cout << "flagids.size()=" << flagids.size() << endl;
          
           
-          Vector<Int> spwNumChan = spwColumn.numChan().getColumn();
+          casacore::Vector<casacore::Int> spwNumChan = spwColumn.numChan().getColumn();
           //cout << "spwNumChan=" << spwNumChan << endl;
           //spwNumChan[0] = 4;
           //spwNumChan[1] = 1;
@@ -600,162 +600,162 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           ExtendFlagger eflg;
           eflg.attach(*aveMS);
 
-          Bool ret;
+          casacore::Bool ret;
           ret = eflg.initdata();
           eflg.setdata();
           eflg.setExtend(extendChan, extendCorr, extendSpw,
                          extendAnt, extendTime, itsCorrNames, spwNumChan);
-          eflg.setUnflag(!Bool(direction));
+          eflg.setUnflag(!casacore::Bool(direction));
 
-          //for (Int i = 0; i < flagids.nelements(); i++) {
+          //for (casacore::Int i = 0; i < flagids.nelements(); i++) {
           //   flagids[i].show();
           //}
           ret = eflg.extend(flagids);
           //cout << "flag display: " << ret << endl;
 	  ((void) ret);
 
-          return True;
+          return true;
 
       }
 
-      casa::Bool
-      flagdata(Int direction, Vector<String> /*collist*/,
-                Matrix<Double> infomat, Vector<String> cpol, Bool /*ave*/) {
-          String fnname = "flagdata";
+      casacore::Bool
+      flagdata(casacore::Int direction, casacore::Vector<casacore::String> /*collist*/,
+                casacore::Matrix<casacore::Double> infomat, casacore::Vector<casacore::String> cpol, casacore::Bool /*ave*/) {
+          casacore::String fnname = "flagdata";
           //cout << "MSPlotMainMSCallback::flagdata flag=" << direction << endl;
          
-          IPosition mshape = infomat.shape();
+          casacore::IPosition mshape = infomat.shape();
           //cout << "infomat.shape=[" << mshape[0] << ", "
           //     << mshape[1] << "] cpol.size=" << cpol.size() << endl;
 
           if (mshape[1] < 1 || cpol.size() < 1) 
-             return True;
+             return true;
 
           //this can be commented out 
-          //if (ave == True) {
+          //if (ave == true) {
           //   return flagdisplay(direction, collist, infomat, cpol);
           //}
 //--------------------------------------------------------------
-          ROMSDataDescColumns dataDescCol(localMS->dataDescription());
+          casacore::ROMSDataDescColumns dataDescCol(localMS->dataDescription());
 
 
           //cout << "flagms=" << flagms << endl; 
-          MS ms(flagms, Table::Update);
+          casacore::MS ms(flagms, casacore::Table::Update);
 
-          ROMSSpWindowColumns spwColumn(ms.spectralWindow());
+          casacore::ROMSSpWindowColumns spwColumn(ms.spectralWindow());
 
-          //Int maxrows = ms.nrow();
-          Int maxrows = 0;
-          for (Int i = 0; i < mshape[1]; i++) {
-              maxrows += (Int)infomat(1, i);
+          //casacore::Int maxrows = ms.nrow();
+          casacore::Int maxrows = 0;
+          for (casacore::Int i = 0; i < mshape[1]; i++) {
+              maxrows += (casacore::Int)infomat(1, i);
           }
 
           //cout << "maxrows=" << maxrows << endl;
-          Vector<FlagID> flagids(maxrows);
+          casacore::Vector<FlagID> flagids(maxrows);
 
-          Int idCount = 0;
-          String warnings = String("Bad row:");
-          for (Int i = 0; i < mshape[1]; i++) {
+          casacore::Int idCount = 0;
+          casacore::String warnings = casacore::String("Bad row:");
+          for (casacore::Int i = 0; i < mshape[1]; i++) {
              if (mshape[0] != 7) {
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
 
              FlagID flagid;
-             flagid.rowNum = (uInt)infomat(0, i);
-             //flagid.npts = (uInt)infomat(1, i);
+             flagid.rowNum = (casacore::uInt)infomat(0, i);
+             //flagid.npts = (casacore::uInt)infomat(1, i);
              if (infomat(2, i) < 0 || 
                  infomat(2, i) >= itsAntNames.nelements()) {
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             flagid.ant1 = (uInt)infomat(2, i);
+             flagid.ant1 = (casacore::uInt)infomat(2, i);
              if (infomat(3, i) < 0 || 
                 infomat(3, i) >= itsAntNames.nelements()) {
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             flagid.ant2 = (uInt)infomat(3, i);
+             flagid.ant2 = (casacore::uInt)infomat(3, i);
              if (infomat(4, i) < 0 || 
                 infomat(4, i) >= itsFieldNames.nelements()) { 
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             flagid.field = (uInt)infomat(4, i);
+             flagid.field = (casacore::uInt)infomat(4, i);
              
              if (aveTime > 0.) {
                 //cout << "flag aved" << endl;
-                Double start = max(infomat(5, i) - aveTime / 2, 0.);
-                Double end = max(infomat(5, i) + aveTime / 2, start);
-                flagid.time = MVTime(start / C::day).string(MVTime::YMD, 7) +
-                              String("~") +   
-                              MVTime(end / C::day).string(MVTime::YMD, 7);
+                casacore::Double start = max(infomat(5, i) - aveTime / 2, 0.);
+                casacore::Double end = max(infomat(5, i) + aveTime / 2, start);
+                flagid.time = casacore::MVTime(start / casacore::C::day).string(casacore::MVTime::YMD, 7) +
+                              casacore::String("~") +   
+                              casacore::MVTime(end / casacore::C::day).string(casacore::MVTime::YMD, 7);
              }
              else {
-                String ltime = 
-                     MVTime(infomat(5, i)/C::day).string(MVTime::YMD, 7); 
+                casacore::String ltime = 
+                     casacore::MVTime(infomat(5, i)/casacore::C::day).string(casacore::MVTime::YMD, 7);
                 //cout << "ltime=" << ltime << endl;
-                //String ntime = 
-                //    MVTime((infomat(5, i) + 0.1)/C::day).string(MVTime::YMD, 7); 
+                //casacore::String ntime = 
+                //    casacore::MVTime((infomat(5, i) + 0.1)/casacore::C::day).string(casacore::MVTime::YMD, 7);
                 //cout << "ntime=" << ntime << endl;
-                //flagid.time = ltime + String("~") + ntime; 
+                //flagid.time = ltime + casacore::String("~") + ntime; 
                 flagid.time = ltime; 
              }
 
              if (infomat(6, i) < 0 || 
                 infomat(6, i) >= dataDescCol.spectralWindowId().nrow()) { 
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             flagid.spw = dataDescCol.spectralWindowId()((Int)infomat(6, i));
+             flagid.spw = dataDescCol.spectralWindowId()((casacore::Int)infomat(6, i));
              if (infomat(6, i) < 0 || 
                  infomat(6, i) >= dataDescCol.polarizationId().nrow()) { 
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
-             Int polId = dataDescCol.polarizationId()((Int)infomat(6, i));
+             casacore::Int polId = dataDescCol.polarizationId()((casacore::Int)infomat(6, i));
              if (itsCorrNames[polId].nelements() <= 0) {
-                warnings += String(" ") + String::toString(i);
+                warnings += casacore::String(" ") + casacore::String::toString(i);
                 break;
              }
             
              //cout << "cpol=" << cpol(i) << endl;
              //cout << "cpol.size()=" << cpol(i).size() << endl;
              //cout << "cpol.length()=" << cpol(i).length() << endl;
-             Int cCnt = cpol(i).freq(']');
-             Vector<String> chans(4);
-             for (Int s = 0; s < 4; s++)
+             casacore::Int cCnt = cpol(i).freq(']');
+             casacore::Vector<casacore::String> chans(4);
+             for (casacore::Int s = 0; s < 4; s++)
                 chans(s) = "";
-             Int k = 0;
-             Int l = 0;
-             String tmpChan = "";
-             String tmpCorr = "";
-             Int secCnt = 0;
-             for (Int j = 0; j < cCnt; j++) {
+             casacore::Int k = 0;
+             casacore::Int l = 0;
+             casacore::String tmpChan = "";
+             casacore::String tmpCorr = "";
+             casacore::Int secCnt = 0;
+             for (casacore::Int j = 0; j < cCnt; j++) {
                 l = cpol(i).index(']', k) + 1; 
-                String sect = cpol(i).substr(k, l);
+                casacore::String sect = cpol(i).substr(k, l);
                 sect = sect.after('[');
                 sect = sect.before(']');
                 //cout << "sect=" << j << " " << sect << endl;
-                String corr = sect.before(',');
-                String chan = sect.after(',');
+                casacore::String corr = sect.before(',');
+                casacore::String chan = sect.after(',');
                 //cout << "corr=" << corr << " chan=" << chan << endl; 
-                Int corrId = atoi(corr.chars());
+                casacore::Int corrId = atoi(corr.chars());
                 tmpCorr = itsCorrNames[polId][corrId];
 
-                Int colCnt = chan.freq(':');
+                casacore::Int colCnt = chan.freq(':');
                 if (secCnt > 0) {
                    tmpChan += ";";
                 }
                 if (colCnt == 2) {
-                   Int fst = chan.index(':');
+                   casacore::Int fst = chan.index(':');
                    fst = chan.index(':', fst + 1);
-                   String s = chan.substr(0, fst);
+                   casacore::String s = chan.substr(0, fst);
                    //cout << "s=" << s << endl;
-                   tmpChan += (s.before(':') + String('~') + s.after(':'));
+                   tmpChan += (s.before(':') + casacore::String('~') + s.after(':'));
                 }
                 else if (colCnt == 1) {
-                   tmpChan += (chan.before(':') + String('~') + chan.after(':'));
+                   tmpChan += (chan.before(':') + casacore::String('~') + chan.after(':'));
                 }
                 else {
                    tmpChan += chan;
@@ -764,7 +764,7 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
                 secCnt++;
                 k = l;
              }
-             for (Int s = 0; s < 4; s++) {
+             for (casacore::Int s = 0; s < 4; s++) {
                 if (chans(s) != "") {
                    flagid.chan = chans(s);
                    flagid.corr = itsCorrNames[polId][s];
@@ -775,15 +775,15 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
              }
           }
           if (idCount < 1)
-              return True;
+              return true;
 
-          flagids.resize(idCount, True);
+          flagids.resize(idCount, true);
           //cout << "flagids.size()=" << flagids.size() << endl;
-          //for (uInt i = 0; i < flagids.size(); i++) {
+          //for (casacore::uInt i = 0; i < flagids.size(); i++) {
           //    flagids(i).show();
           //}
 
-          Vector<Int> spwNumChan = spwColumn.numChan().getColumn();
+          casacore::Vector<casacore::Int> spwNumChan = spwColumn.numChan().getColumn();
 
 //---------------------------------------------------------------
           if (aveBl) {
@@ -791,9 +791,9 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           }
 
           //cout << "sizeof(uint)=" << 8 * sizeof(uint) << endl;
-          Int maxSel = 8 * sizeof(uint) - 5;
-          Int nSel = maxSel; 
-          Int start = 0;
+          casacore::Int maxSel = 8 * sizeof(uint) - 5;
+          casacore::Int nSel = maxSel; 
+          casacore::Int start = 0;
           while (start < idCount) {
 
              nSel = min(idCount - start, maxSel);
@@ -802,17 +802,17 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
              eflg.attach(ms);
              //cout << "ms=" << ms << endl;
 
-             Bool ret;
+             casacore::Bool ret;
              ret = eflg.initdata();
              eflg.setdata();
              eflg.setExtend(extendChan, extendCorr, extendSpw,
                          extendAnt, extendTime, itsCorrNames, spwNumChan);
-             eflg.setUnflag(!Bool(direction));
+             eflg.setUnflag(!casacore::Bool(direction));
 
              //cout << "start=" << start << " nSel=" << nSel 
              //     << " iCount=" << idCount
              //     << endl;
-             ret = eflg.extend(flagids(Slice(start, nSel)));
+             ret = eflg.extend(flagids(casacore::Slice(start, nSel)));
 	     ((void) ret);
 
              //eflg.detach();
@@ -823,40 +823,40 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           //eflg.setSpw("0:3");
           //eflg.setCorrelation("lr");
           //eflg.selectdata();
-          //eflg.setmanualflags(False);
+          //eflg.setmanualflags(false);
           //eflg.run();
         
           //Flagger flagger;
           //
           //flagger.attach(ms);
           //
-          //Bool useoriginalms=True;
+          //casacore::Bool useoriginalms=true;
           //
-          //String field="";
-          //String spw="";
-          //String array="";
-          //String feed="";
-          //String scan="";
-          //String baseline="";
-          //String uvrange="";
-          //String time="";
-          //String correlation="";
+          //casacore::String field="";
+          //casacore::String spw="";
+          //casacore::String array="";
+          //casacore::String feed="";
+          //casacore::String scan="";
+          //casacore::String baseline="";
+          //casacore::String uvrange="";
+          //casacore::String time="";
+          //casacore::String correlation="";
           //
-          //Bool ret = False;
+          //casacore::Bool ret = false;
           //ret = flagger.setdata(field, spw, array, 
           //       feed, scan, baseline, uvrange, time, correlation);
           //
           //cout << "------setdata=" << ret << endl;
           //
-          //Bool autocorr = False;
-          //String clipexpr = "";
-          //Vector<Double> cliprange(0);
-          //String clipcolumn = "DATA";
-          //Bool outside = False;
-          //Double quackinterval = 0.0;
-          //String opmode = "flag";
+          //casacore::Bool autocorr = false;
+          //casacore::String clipexpr = "";
+          //casacore::Vector<casacore::Double> cliprange(0);
+          //casacore::String clipcolumn = "DATA";
+          //casacore::Bool outside = false;
+          //casacore::Double quackinterval = 0.0;
+          //casacore::String opmode = "flag";
           //
-          //Bool unflag = False;
+          //casacore::Bool unflag = false;
           //spw = "0:3";
           //correlation = "lr";
           //
@@ -887,22 +887,22 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           //                feed, scan, baseline, uvrange, time, correlation);
           //cout << "------selectdata=" << ret << endl;
           //
-          //ret = flagger.setmanualflags(False, unflag, 
+          //ret = flagger.setmanualflags(false, unflag, 
           //      clipexpr, cliprange, clipcolumn, outside, 
           //      quackinterval, "SUMMARY");
           //cout << "------summary=" << ret << endl;
           //
-          //flagger.run(False, False);
+          //flagger.run(false, false);
           //cout << "------run=" << ret << endl;
-          return True;
+          return true;
 
       }
 
-      casa::Bool
-      printlocateinfo( Vector<String> /*collist*/,
-                  Matrix<Double> infomat,Vector<String> cpol)
+      casacore::Bool
+      printlocateinfo( casacore::Vector<casacore::String> /*collist*/,
+                  casacore::Matrix<casacore::Double> infomat,casacore::Vector<casacore::String> cpol)
       {
-          String fnname = "printlocateinfo";
+          casacore::String fnname = "printlocateinfo";
 #if LOG2 
           log->FnEnter(fnname + "(collist, infomat, cpol)", clname);
 #endif 
@@ -911,88 +911,88 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
           //cout << "cpol=" << cpol << endl;
 
           //# Define the column headings and other reptitive strings used.
-          Vector<uInt> columnWidths(9);
+          casacore::Vector<casacore::uInt> columnWidths(9);
           columnWidths[0]=8; columnWidths[1]=8; columnWidths[2]=9;
           columnWidths[3]=25; columnWidths[4]=22; columnWidths[5]=6;
           columnWidths[6]=10; columnWidths[7]=14; columnWidths[8]=30; 
          
-          String colNames;
+          casacore::String colNames;
           ostringstream tmp;
      tmp << std::setw( columnWidths[0] ) <<  "ROW #   " << " | "
          << std::setw( columnWidths[1] ) <<  "# Points" << " |"
          << std::setw( columnWidths[2] ) <<  "Baseline" << "| "
          << std::setw( columnWidths[3] ) <<  "Field ID/Name      "  << " | "
-         << std::setw( columnWidths[4] ) <<  "Time         "  << " | "
+         << std::setw( columnWidths[4] ) <<  "casacore::Time         "  << " | "
          << std::setw( columnWidths[5] ) <<  "SPW ID" << " | "
          << std::setw( columnWidths[6] ) <<  "Ref. Freq." << " | "
          << std::setw( columnWidths[7] ) <<  "Corr. Id/Name"  << " |"
          << std::setw( columnWidths[8] ) <<  "[pol /chan]" << " | "
          << endl;
-          colNames += String( tmp );
+          colNames += casacore::String( tmp );
           tmp.str( "" );
 
           //# get the DATA_DESC_ID column so we can extract polarization
           //# and spectral window information.
-          ROMSDataDescColumns dataDescCol( localMS->dataDescription());
+          casacore::ROMSDataDescColumns dataDescCol( localMS->dataDescription());
 
-          IPosition mshape = infomat.shape();
-          String warnings;
-          String info;
+          casacore::IPosition mshape = infomat.shape();
+          casacore::String warnings;
+          casacore::String info;
           if (mshape[1] > 0)
              info += colNames;
           
           //cout << "infomat.shape=[" << mshape[0] << ", "
           //     << mshape[1] << "] cpol.size=" << cpol.size() << endl;
-//          for(Int i=0; i < mshape[1]; i++)
+//          for(casacore::Int i=0; i < mshape[1]; i++)
 //          {
 //         if ( mshape[0] != 7 )
 //         {
-//             warnings += String( "Skipping the " )
-//            + String::toString( i )
-//            + String( " set of data, its not a complete row. " );
+//             warnings += casacore::String( "Skipping the " )
+//            + casacore::String::toString( i )
+//            + casacore::String( " set of data, its not a complete row. " );
 //             break;
 //         }
 //
 //         //# Put the Row number and the # of points in the row
 //         tmp << std::noshowpoint << std::setw( columnWidths[0] )
-//             << String::toString( infomat( 0, i ) ) << " | "
+//             << casacore::String::toString( infomat( 0, i ) ) << " | "
 //             << std::noshowpoint << std::setw( columnWidths[1] )
 //             << infomat( 1, i ) << " |  ";
 //
 //         //# Printout the Baseline, note that the information
 //         //# we are provided is the antenna IDs, but we want
 //         //# to display the antenna names.
-//         String baseline;
+//         casacore::String baseline;
 //         if ( infomat(2,i) < 0
 //            || infomat(2,i) > itsAntNames.nelements() )
-//             baseline += String::toString( infomat(2,i) )
-//            + String( "(ID)" );
+//             baseline += casacore::String::toString( infomat(2,i) )
+//            + casacore::String( "(ID)" );
 //         else 
-//             baseline += itsAntNames( (uInt)infomat(2,i) );
-//         baseline += String( "/" );
+//             baseline += itsAntNames( (casacore::uInt)infomat(2,i) );
+//         baseline += casacore::String( "/" );
 //         if ( infomat(3,i) < 0
 //            || infomat(3,i) > itsAntNames.nelements() )
-//             baseline += String::toString( infomat(3,i) )
-//            + String( "(ID)" );
+//             baseline += casacore::String::toString( infomat(3,i) )
+//            + casacore::String( "(ID)" );
 //         else 
-//             baseline += itsAntNames( (uInt)infomat(3,i) );
+//             baseline += itsAntNames( (casacore::uInt)infomat(3,i) );
 //         baseline += "| ";
 //         tmp << std::setw( columnWidths[2] )
 //             << baseline;
 //         
 //
 //         //# Print out the Field ID, and Field Name
-//         String fieldStr = String::toString(infomat(4,i) )
-//             + String( "/" );
+//         casacore::String fieldStr = casacore::String::toString(infomat(4,i) )
+//             + casacore::String( "/" );
 //         if ( infomat(4,i) < itsFieldNames.nelements() ) 
-//             fieldStr += itsFieldNames[ Int( infomat(4,i) ) ];
+//             fieldStr += itsFieldNames[ casacore::Int( infomat(4,i) ) ];
 //         else {
-//             warnings += String( "Field ID, " )
-//            + String::toString( Int( infomat(4,i) ) )
-//            + String( ", is larger then the" )
-//            + String( " number of field names, " )
-//            + String::toString( itsFieldNames.nelements() )
-//            + String( ". \n" );
+//             warnings += casacore::String( "Field ID, " )
+//            + casacore::String::toString( casacore::Int( infomat(4,i) ) )
+//            + casacore::String( ", is larger then the" )
+//            + casacore::String( " number of field names, " )
+//            + casacore::String::toString( itsFieldNames.nelements() )
+//            + casacore::String( ". \n" );
 //             fieldStr += "??";
 //         }
 //             tmp << std::noshowpoint << std::setw( columnWidths[3] )
@@ -1000,26 +1000,26 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
 //
 //         //Print out the time in YY/MM/DD/hh:mm:ss.s format
 //         tmp << std::setw( columnWidths[4] )
-//             << MVTime( infomat(5, i)/C::day).string( MVTime::DMY,7) 
+//             << casacore::MVTime( infomat(5, i)/casacore::C::day).string( casacore::MVTime::DMY,7)
 //             << " | ";
 //
 //         //# spectral window IDs and Ref Frequency
-//         Int spwId = dataDescCol.spectralWindowId()( (Int)infomat(6, i ) );
+//         casacore::Int spwId = dataDescCol.spectralWindowId()( (casacore::Int)infomat(6, i ) );
 //         tmp << std::noshowpoint << std::setw( columnWidths[5] )
 //             << spwId << " | ";
 //
-//         if ( spwId < (Int)itsRefFrequencies.nelements() ) 
+//         if ( spwId < (casacore::Int)itsRefFrequencies.nelements() ) 
 //             tmp << std::showpoint
 //            << std::setprecision( columnWidths[6]-7)
 //            << std::setw( columnWidths[6] )
 //            << itsRefFrequencies[ spwId ] << " | ";
 //         else {
-//             warnings += String( "SPW ID, " )
-//            + String::toString( spwId )
-//            + String( ", is larger then the" )
-//            + String( " number of reference frequencies, " )
-//            + String::toString( itsRefFrequencies.nelements() )
-//            + String( ". \n" );
+//             warnings += casacore::String( "SPW ID, " )
+//            + casacore::String::toString( spwId )
+//            + casacore::String( ", is larger then the" )
+//            + casacore::String( " number of reference frequencies, " )
+//            + casacore::String::toString( itsRefFrequencies.nelements() )
+//            + casacore::String( ". \n" );
 //             tmp << " ?? " << " | ";
 //         }
 //         
@@ -1027,23 +1027,23 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
 //         //# Polarization ID and list of polls and chans selected
 //         //#  in this row.
 //         //# TODO add some check on spw ID here
-//         Int polId = dataDescCol.polarizationId()( (Int)infomat(6, i ) );
-//         String polStr = String::toString( polId ) + String( "/" );
+//         casacore::Int polId = dataDescCol.polarizationId()( (casacore::Int)infomat(6, i ) );
+//         casacore::String polStr = casacore::String::toString( polId ) + casacore::String( "/" );
 //         if ( itsCorrNames[polId].nelements() > 0 )
-//             for ( Int corrId=0;
-//              corrId < (Int)itsCorrNames[polId].nelements();
+//             for ( casacore::Int corrId=0;
+//              corrId < (casacore::Int)itsCorrNames[polId].nelements();
 //              corrId++ ) {
 //            if ( corrId > 0 )
-//                polStr += String( ", " );
+//                polStr += casacore::String( ", " );
 //            polStr += itsCorrNames[polId][corrId];
 //             }
 //         else {
-//             warnings += String( "Pol ID, " )
-//            + String::toString( polId )
-//            + String( ", is larger then the" )
-//            + String( " number of polarizations, " )
-//            + String::toString( itsCorrNames[polId].nelements() )
-//            + String( ", \n" );
+//             warnings += casacore::String( "Pol ID, " )
+//            + casacore::String::toString( polId )
+//            + casacore::String( ", is larger then the" )
+//            + casacore::String( " number of polarizations, " )
+//            + casacore::String::toString( itsCorrNames[polId].nelements() )
+//            + casacore::String( ", \n" );
 //             polStr += "??";
 //         }
 //         tmp << std::noshowpoint << std::setw( columnWidths[7] )
@@ -1052,15 +1052,15 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
 //         tmp  << std::setw( columnWidths[8] )
 //              << cpol(i)  << "| " << endl;
 //         
-//         info += String( tmp );
+//         info += casacore::String( tmp );
 //         tmp.str( "" );         
 //          }
 
-          for (Int i=0; i < mshape[1]; i++) {
+          for (casacore::Int i=0; i < mshape[1]; i++) {
              if ( mshape[0] != 7 ) {
-                warnings += String( "Skipping the " )
-                         + String::toString( i )
-                         + String( " set of data, its not a complete row. " );
+                warnings += casacore::String( "Skipping the " )
+                         + casacore::String::toString( i )
+                         + casacore::String( " set of data, its not a complete row. " );
                 break;
              }
 
@@ -1068,41 +1068,41 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
 
              //# Put the Row number and the # of points in the row
              tmp << std::noshowpoint << std::setw( columnWidths[0] )
-                    << String::toString(infomat(0, i) ) << " | "
+                    << casacore::String::toString(infomat(0, i) ) << " | "
                     << std::noshowpoint << std::setw( columnWidths[1] )
                     << infomat(1, i) << " |  ";
 
              //# Printout the Baseline, note that the information
              //# we are provided is the antenna IDs, but we want
              //# to display the antenna names.
-             String baseline;
+             casacore::String baseline;
              if (infomat(2, i) < 0 || infomat(2, i) >= itsAntNames.nelements()) {
-                 baseline += String::toString(infomat(2, i)) + String("(ID)");
+                 baseline += casacore::String::toString(infomat(2, i)) + casacore::String("(ID)");
                  continue;
              }
              else 
-                 baseline += itsAntNames((uInt)infomat(2, i));
-             baseline += String( "/" );
+                 baseline += itsAntNames((casacore::uInt)infomat(2, i));
+             baseline += casacore::String( "/" );
              if (infomat(3, i) < 0 || infomat(3, i) >= itsAntNames.nelements()) {
-                 baseline += String::toString(infomat(3, i)) + String("(ID)");
+                 baseline += casacore::String::toString(infomat(3, i)) + casacore::String("(ID)");
                  continue;
              }
              else 
-                 baseline += itsAntNames((uInt)infomat(3, i));
+                 baseline += itsAntNames((casacore::uInt)infomat(3, i));
              baseline += "| ";
              tmp << std::setw( columnWidths[2]) << baseline;
          
              //# Print out the Field ID, and Field Name
-             String fieldStr = String::toString(infomat(4, i)) + String("/");
+             casacore::String fieldStr = casacore::String::toString(infomat(4, i)) + casacore::String("/");
              if (infomat(4, i) < 0 || infomat(4, i) >= itsFieldNames.nelements()) { 
-                warnings += String( "Field ID, " )
-                         + String::toString(Int(infomat(4, i)))
-                         + String(" does not exist" )
-                         + String( ". \n" );
+                warnings += casacore::String( "Field ID, " )
+                         + casacore::String::toString(casacore::Int(infomat(4, i)))
+                         + casacore::String(" does not exist" )
+                         + casacore::String( ". \n" );
                 continue;
              }
              else {
-                fieldStr += itsFieldNames[Int(infomat(4, i))];
+                fieldStr += itsFieldNames[casacore::Int(infomat(4, i))];
              }
 
              tmp << std::noshowpoint << std::setw(columnWidths[3])
@@ -1110,35 +1110,35 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
 
              //Print out the time in YY/MM/DD/hh:mm:ss.s format
              tmp << std::setw(columnWidths[4])
-                    << MVTime(infomat(5, i)/C::day).string(MVTime::DMY, 7) 
+                    << casacore::MVTime(infomat(5, i)/casacore::C::day).string(casacore::MVTime::DMY, 7)
                     << " | ";
 
              //# spectral window IDs and Ref Frequency
              if (infomat(6, i) < 0 || 
                  infomat(6, i) >= dataDescCol.spectralWindowId().nrow()) { 
-                warnings += String("row ")
-                         + String::toString(Int(infomat(6, i)))
-                         + String(" does not exist in SpectralWindow")
-                         + String(". \n");
+                warnings += casacore::String("row ")
+                         + casacore::String::toString(casacore::Int(infomat(6, i)))
+                         + casacore::String(" does not exist in SpectralWindow")
+                         + casacore::String(". \n");
                 continue;
              }
 
-             Int spwId = dataDescCol.spectralWindowId()((Int)infomat(6, i));
+             casacore::Int spwId = dataDescCol.spectralWindowId()((casacore::Int)infomat(6, i));
              tmp << std::noshowpoint << std::setw(columnWidths[5])
                     << spwId << " | ";
 
-             if (spwId < (Int)itsRefFrequencies.nelements()) { 
+             if (spwId < (casacore::Int)itsRefFrequencies.nelements()) { 
                 tmp << std::showpoint
                        << std::setprecision( columnWidths[6]-7)
                        << std::setw(columnWidths[6])
                        << itsRefFrequencies[spwId] << " | ";
              }
              else {
-                 warnings += String("SPW ID, ")
-                          + String::toString(spwId)
-                          + String(" number of reference frequencies, ")
-                          + String::toString(itsRefFrequencies.nelements())
-                          + String(". \n" );
+                 warnings += casacore::String("SPW ID, ")
+                          + casacore::String::toString(spwId)
+                          + casacore::String(" number of reference frequencies, ")
+                          + casacore::String::toString(itsRefFrequencies.nelements())
+                          + casacore::String(". \n" );
                  tmp << " ?? " << " | ";
              }
          
@@ -1147,30 +1147,30 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
              //# TODO add some check on spw ID here
              if (infomat(6, i) < 0 || 
                  infomat(6, i) >= dataDescCol.polarizationId().nrow()) { 
-                warnings += String("row ")
-                         + String::toString(Int(infomat(6, i)))
-                         + String(" does not exist in Polarization")
-                         + String( ". \n" );
+                warnings += casacore::String("row ")
+                         + casacore::String::toString(casacore::Int(infomat(6, i)))
+                         + casacore::String(" does not exist in Polarization")
+                         + casacore::String( ". \n" );
                 continue;
              }
 
-             Int polId = dataDescCol.polarizationId()((Int)infomat(6, i));
-             String polStr = String::toString(polId) + String( "/" );
+             casacore::Int polId = dataDescCol.polarizationId()((casacore::Int)infomat(6, i));
+             casacore::String polStr = casacore::String::toString(polId) + casacore::String( "/" );
              if (itsCorrNames[polId].nelements() > 0) {
-                for (Int corrId=0;
-                     corrId < (Int)itsCorrNames[polId].nelements(); corrId++ ) {
+                for (casacore::Int corrId=0;
+                     corrId < (casacore::Int)itsCorrNames[polId].nelements(); corrId++ ) {
                    if (corrId > 0)
-                      polStr += String( ", " );
+                      polStr += casacore::String( ", " );
                    polStr += itsCorrNames[polId][corrId];
                 }
              }
              else {
-                warnings += String("Pol ID, ")
-                         + String::toString( polId )
-                         + String( ", is larger then the" )
-                         + String( " number of polarizations, " )
-                         + String::toString( itsCorrNames[polId].nelements() )
-                         + String( ", \n" );
+                warnings += casacore::String("Pol ID, ")
+                         + casacore::String::toString( polId )
+                         + casacore::String( ", is larger then the" )
+                         + casacore::String( " number of polarizations, " )
+                         + casacore::String::toString( itsCorrNames[polId].nelements() )
+                         + casacore::String( ", \n" );
                 polStr += "??";
             }
             tmp << std::noshowpoint << std::setw( columnWidths[7] )
@@ -1179,49 +1179,49 @@ class MSPlotMainMSCallBack : public TPGuiCallBackHooks
             tmp << std::setw( columnWidths[8] )
                    << cpol(i)  << "| " << endl;
          
-            info += String(tmp);
+            info += casacore::String(tmp);
           }
 
           //if (mshape[1] > 0)
           //info += colNames;
           //# Display the information in the list.
           if ( info.length() > colNames.length() )
-             log->out(info, fnname, clname, LogMessage::NORMAL);
+             log->out(info, fnname, clname, casacore::LogMessage::NORMAL);
 
           //# Display any warnings encountered.
           if (warnings.length() > 0)
-             //log->out(warnings, fnname, clname, LogMessage::WARN);
+             //log->out(warnings, fnname, clname, casacore::LogMessage::WARN);
              log->out("Error occured while locating data points", 
-                  fnname, clname, LogMessage::WARN);
+                  fnname, clname, casacore::LogMessage::WARN);
 
 #if LOG2 
           log->FnExit(fnname, clname);
 #endif 
-          return True;
+          return true;
       };
     private:
-      MeasurementSet *localMS;             
-      MeasurementSet *aveMS;             
-      Vector<String> itsAntNames;
-      //Matrix<Int> itsBaselines;
-      Vector<String> itsFieldNames;
-      Vector< Vector<String> > itsCorrNames;
-      Vector<Double> itsRefFrequencies;
-      String flagms;
-      String extendChan;
-      String extendCorr;
-      String extendSpw;
-      String extendAnt;
-      String extendTime;
-      Bool aveBl;
-      Double aveTime;
+      casacore::MeasurementSet *localMS;             
+      casacore::MeasurementSet *aveMS;             
+      casacore::Vector<casacore::String> itsAntNames;
+      //casacore::Matrix<casacore::Int> itsBaselines;
+      casacore::Vector<casacore::String> itsFieldNames;
+      casacore::Vector< casacore::Vector<casacore::String> > itsCorrNames;
+      casacore::Vector<casacore::Double> itsRefFrequencies;
+      casacore::String flagms;
+      casacore::String extendChan;
+      casacore::String extendCorr;
+      casacore::String extendSpw;
+      casacore::String extendAnt;
+      casacore::String extendTime;
+      casacore::Bool aveBl;
+      casacore::Double aveTime;
 
       // Message logger
       SLog* log;         
-      static const String clname;
+      static const casacore::String clname;
 };
 
-const String MSPlotMainMSCallBack::clname = "MSPlotMainMSCallBack";
+const casacore::String MSPlotMainMSCallBack::clname = "MSPlotMainMSCallBack";
 //#!//////////////////////////////////////////////////////////////////////////
 //#! All the wonderful docs, that will show up in the user reference
 //#! manual for this class.
@@ -1244,8 +1244,8 @@ const String MSPlotMainMSCallBack::clname = "MSPlotMainMSCallBack";
 // <ul>
 //   <li> <linkto class="TPGuiCallBackHooks">TPGuiCallBackHooks</linkto>class,
 //   <li> <linkto class="TablePlot">TablePlot</linkto>class, 
-//   <li> <linkto class="Table">MsPlot</linkto> class
-//   <li> <linkto class="Table">Measurement Set</linkto> class 
+//   <li> <linkto class="casacore::Table">MsPlot</linkto> class
+//   <li> <linkto class="casacore::Table">Measurement Set</linkto> class 
 // </ul>    
 // </prerequisite>
 //    
@@ -1285,7 +1285,7 @@ const String MSPlotMainMSCallBack::clname = "MSPlotMainMSCallBack";
 // <motivation>
 // To provide a way for the TablePlot object to inform the MsPlot object
 // that a particular button has been pressed on the plotting GUI and to
-// allow MS Plot to over ride the default TablePlot behaviour if necessary. 
+// allow casacore::MS Plot to over ride the default TablePlot behaviour if necessary. 
 // </motivation>
 //
 // <thrown>
@@ -1295,7 +1295,7 @@ const String MSPlotMainMSCallBack::clname = "MSPlotMainMSCallBack";
 // <todo asof="2007/12/19">
 //   <li> Implement the relaseTable method.</li>
 //   <li> Finish the documentation</li>
-//   <li>use enums in the MS code for the string values for the
+//   <li>use enums in the casacore::MS code for the string values for the
 //      locate columns</li>
 //   <li> Restructure TablePlot to send rows of data, rather then single
 //        data point.  This should improve the plotting speed as it will
@@ -1313,10 +1313,10 @@ const String MSPlotMainMSCallBack::clname = "MSPlotMainMSCallBack";
 class MSPlotAntennaCallBack : public TPGuiCallBackHooks
 {
     public: 
-           MSPlotAntennaCallBack(Vector<String> inAntNames, Vector<String> inFieldNames )
+           MSPlotAntennaCallBack(casacore::Vector<casacore::String> inAntNames, casacore::Vector<casacore::String> inFieldNames )
       {
          log = SLog::slog();
-         String fnname =  "MSPlotAntennaMSCallBack" ;
+         casacore::String fnname =  "MSPlotAntennaMSCallBack" ;
 #if LOG2 
          log->FnEnter(fnname + "(antNames, fieldNames)", clname );
 #endif 
@@ -1338,19 +1338,19 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
       
       ~MSPlotAntennaCallBack(){
 #if LOG2 
-          String fnname = "~MSPlotAntennaCallback";
+          casacore::String fnname = "~MSPlotAntennaCallback";
           log->FnEnter(fnname, clname);
           log->FnExit(fnname, clname);
 #endif 
       };
       
-      casa::Bool
-      releasetable( Int /*nrows*/,
-         Int /*ncols*/,
-         Int /*panel*/,
-         String /*tablename */)
+      casacore::Bool
+      releasetable( casacore::Int /*nrows*/,
+         casacore::Int /*ncols*/,
+         casacore::Int /*panel*/,
+         casacore::String /*tablename */)
       {
-          String fnname = "releasetable";
+          casacore::String fnname = "releasetable";
 #if LOG2
           log->FnEnter(fnname + "(nrows,ncols,panel,tablename)", clname );
 #endif 
@@ -1360,15 +1360,15 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
 #if LOG2
           log->FnExit(fnname, clname);
 #endif 
-          return True;
+          return true;
       }
 
-      casa::Bool
-      createiterplotlabels( Vector<String> iteraxes,
-         Vector<Double> values,
-         String &titleString )
+      casacore::Bool
+      createiterplotlabels( casacore::Vector<casacore::String> iteraxes,
+         casacore::Vector<casacore::Double> values,
+         casacore::String &titleString )
      {
-         String fnname = "createiterplotlabels";
+         casacore::String fnname = "createiterplotlabels";
 #if LOG2 
          log->FnEnter(fnname + "(iteraxes, values, titleString)", clname );
 #endif 
@@ -1395,8 +1395,8 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
             if ( values[axesId] < itsAntNames.nelements() )
             {
            if ( axesId > 0 )
-               titleString += String( " : " );
-           titleString += itsAntNames[Int(values[axesId])];
+               titleString += casacore::String( " : " );
+           titleString += itsAntNames[casacore::Int(values[axesId])];
             } else {
                           ostringstream os;
               os       << "Internal error! Antenna ID is "
@@ -1404,7 +1404,7 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
              << ", but there are only "
              << itsAntNames.nelements()
              << ".";
-                        log->out(os, fnname, clname, LogMessage::DEBUG1);
+                        log->out(os, fnname, clname, casacore::LogMessage::DEBUG1);
             }   
         } else if ( upcase(iteraxes[axesId]).matches("FIELD") 
            || upcase(iteraxes[axesId]).matches("FIELD_ID") )
@@ -1413,8 +1413,8 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
             if ( values[axesId] < itsFieldNames.nelements() )
             {           
            if ( axesId > 0 )
-               titleString += String( " : " );
-           titleString += itsFieldNames[Int(values[axesId])];
+               titleString += casacore::String( " : " );
+           titleString += itsFieldNames[casacore::Int(values[axesId])];
             } else {
                         ostringstream os;
          os    << "Internal error! Antenna ID is "
@@ -1422,53 +1422,53 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
              << ", but there are only "
              << itsFieldNames.nelements()
              << ".";
-                        log->out(os, fnname, clname, LogMessage::DEBUG1);
+                        log->out(os, fnname, clname, casacore::LogMessage::DEBUG1);
             }               
         } else {
             //# This includes SPW, SCAN, FEED, and ARRAY
             //# since all of these don't have names.  This
             //# may change in the future.
-            titleString += iteraxes[axesId] + String( " ");
+            titleString += iteraxes[axesId] + casacore::String( " ");
             
             if ( axesId > 0 )
-           titleString += String( " : " );
-            titleString += String::toString( Int(values[axesId]) );
+           titleString += casacore::String( " : " );
+            titleString += casacore::String::toString( casacore::Int(values[axesId]) );
         }
          }
 
 #if LOG2 
          log->FnExit(fnname, clname);
 #endif 
-         return True;
+         return true;
      };
      
 
-      casa::Bool
-      flagdata(String /*tablename*/) {
+      casacore::Bool
+      flagdata(casacore::String /*tablename*/) {
 #if LOG2 
-          String fnname = "flagdata";
+          casacore::String fnname = "flagdata";
           log->FnEnter(fnname, clname);
           log->FnExit(fnname, clname);
 #endif 
-          return True;
+          return true;
       }
 
-      casa::Bool
-      flagdata(Int /*direction*/, Vector<String> /*collist*/,
-                  Matrix<Double> /*infomat*/,Vector<String> /*cpol*/, Bool /*ave*/) {
-          String fnname = "flagdata";
+      casacore::Bool
+      flagdata(casacore::Int /*direction*/, casacore::Vector<casacore::String> /*collist*/,
+                  casacore::Matrix<casacore::Double> /*infomat*/,casacore::Vector<casacore::String> /*cpol*/, casacore::Bool /*ave*/) {
+          casacore::String fnname = "flagdata";
           //cout << "MSPlotAntennaCallBack::flagdata" << endl;
 
          
-          return True;
+          return true;
 
       }
       
-      casa::Bool
-      printlocateinfo( Vector<String> /*collist*/,
-                  Matrix<Double> infomat,Vector<String> /*cpol*/)
+      casacore::Bool
+      printlocateinfo( casacore::Vector<casacore::String> /*collist*/,
+                  casacore::Matrix<casacore::Double> infomat,casacore::Vector<casacore::String> /*cpol*/)
       {
-          String fnname = "printlocateinfo";
+          casacore::String fnname = "printlocateinfo";
 #if LOG2 
           log->FnEnter(fnname + "(collist, infomat, cpol)", clname);
 #endif 
@@ -1477,12 +1477,12 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
           //# points to the front of the list.
 
           //# Define the column widths
-          Vector<uInt> columnWidths(5);
+          casacore::Vector<casacore::uInt> columnWidths(5);
           columnWidths[0]=10; columnWidths[1]=10; columnWidths[2]=10;
           columnWidths[3]=10; columnWidths[4]=10;
 
           //# Define the column headings
-          String colNames;
+          casacore::String colNames;
           ostringstream tmp;
           tmp << std::setw( columnWidths[0] ) <<  "Ant ID  " << " | " 
          << std::setw( columnWidths[1] ) <<  "Ant. Names" << " | "
@@ -1490,40 +1490,40 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
          << std::setw( columnWidths[3] ) <<  "Y     "  << " | "
          << std::setw( columnWidths[4] ) <<  "Z     "  << " |"
          << endl;
-          colNames += String( tmp );
+          colNames += casacore::String( tmp );
           tmp.str( "" );
                     
           //# Set up a string stream for warning msgs and for
           //# display the data.
-          String warnings;
-          String info;
+          casacore::String warnings;
+          casacore::String info;
           info += colNames;
           
-          IPosition mshape = infomat.shape();
-          Vector<Double> position(3);
+          casacore::IPosition mshape = infomat.shape();
+          casacore::Vector<casacore::Double> position(3);
 
           if ( mshape[1] < 1 )
-         warnings += String( "No data to display" );
+         warnings += casacore::String( "No data to display" );
           
-          for( Int i=0; i < mshape[1]; i++)
+          for( casacore::Int i=0; i < mshape[1]; i++)
           {
          if ( mshape[0] != 5 )
          {
-             warnings += String( "Skipping the " )
-            +  String::toString( i )
-            + String( " set of data, its not a complete row.\n" );
+             warnings += casacore::String( "Skipping the " )
+            +  casacore::String::toString( i )
+            + casacore::String( " set of data, its not a complete row.\n" );
          } else {
              if ( infomat( 0, i ) < 0
                 || infomat( 0, i ) >= itsAntNames.nelements() )
              {
-            warnings += String( "Unable to find antenna name ")
-                + String( "for antenna ID: " )
-                + String::toString( infomat( 0, i ) );
+            warnings += casacore::String( "Unable to find antenna name ")
+                + casacore::String( "for antenna ID: " )
+                + casacore::String::toString( infomat( 0, i ) );
              }
              tmp << std::noshowpoint << std::setw( columnWidths[0] )
             << infomat( 0, i ) << " | "
             << std::noshowpoint << std::setw( columnWidths[1] )
-            << itsAntNames[ Int(infomat( 0, i ) ) ] << " | "
+            << itsAntNames[ casacore::Int(infomat( 0, i ) ) ] << " | "
             << std::showpoint
             << std::setprecision( columnWidths[2]-7)
             << std::setw( columnWidths[2] )
@@ -1536,7 +1536,7 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
             << std::setprecision( columnWidths[4]-7)
             << std::setw( columnWidths[4] )
             << infomat( 4, i ) << " | " <<endl;;
-             info += String( tmp );
+             info += casacore::String( tmp );
              tmp.str( "" );
          }
           }
@@ -1544,28 +1544,28 @@ class MSPlotAntennaCallBack : public TPGuiCallBackHooks
              
           //# Display the information in the list.
           if ( info.length() > 0 )
-           log->out( info, fnname, clname, LogMessage::NORMAL);
+           log->out( info, fnname, clname, casacore::LogMessage::NORMAL);
 
           //# Display any warnings encountered.
           if ( warnings.length() > 0 )
-           log->out(warnings, fnname, clname, LogMessage::NORMAL);
+           log->out(warnings, fnname, clname, casacore::LogMessage::NORMAL);
 
 #if LOG2 
           log->FnExit(fnname, clname);
 #endif 
-          return True;
+          return true;
       };
                  
     private:
-      Vector<String> itsAntNames;
-      Vector<String> itsFieldNames;
+      casacore::Vector<casacore::String> itsAntNames;
+      casacore::Vector<casacore::String> itsFieldNames;
 
       // Message logger
       SLog *log;         
-      static const String clname;
+      static const casacore::String clname;
 };
 
-const String MSPlotAntennaCallBack::clname = "MSPlotAntennaCallBack";
+const casacore::String MSPlotAntennaCallBack::clname = "MSPlotAntennaCallBack";
 
 
 
@@ -1592,8 +1592,8 @@ const String MSPlotAntennaCallBack::clname = "MSPlotAntennaCallBack";
 // <ul>
 //   <li> <linkto class="TPGuiCallBackHooks">TPGuiCallBackHooks</linkto>class,
 //   <li> <linkto class="TablePlot">TablePlot</linkto>class, 
-//   <li> <linkto class="Table">MsPlot</linkto> class
-//   <li> <linkto class="Table">Measurement Set</linkto> class 
+//   <li> <linkto class="casacore::Table">MsPlot</linkto> class
+//   <li> <linkto class="casacore::Table">Measurement Set</linkto> class 
 // </ul>    
 // </prerequisite>
 //    
@@ -1612,7 +1612,7 @@ const String MSPlotAntennaCallBack::clname = "MSPlotAntennaCallBack";
 // <motivation>
 // To provide a way for the TablePlot object to inform the MsPlot object
 // that a particular button has been pressed on the plotting GUI and to
-// allow MS Plot to over ride the default TablePlot behaviour if necessary. 
+// allow casacore::MS Plot to over ride the default TablePlot behaviour if necessary. 
 // </motivation>
 //
 // <thrown>
@@ -1639,15 +1639,15 @@ const String MSPlotAntennaCallBack::clname = "MSPlotAntennaCallBack";
 class MSPlotUVWCallBack : public TPGuiCallBackHooks
 {
     public: 
-         MSPlotUVWCallBack( MeasurementSet *inMS,
-         Vector<String> antNames,
-         Vector<String> fieldNames,
-         Vector<Vector<String> >corrNames,
-         Vector<Double> refFrequencies )
+         MSPlotUVWCallBack( casacore::MeasurementSet *inMS,
+         casacore::Vector<casacore::String> antNames,
+         casacore::Vector<casacore::String> fieldNames,
+         casacore::Vector<casacore::Vector<casacore::String> >corrNames,
+         casacore::Vector<casacore::Double> refFrequencies )
      {
               
          log = SLog::slog();
-         String fnname = "MSPlotUVWCallback";
+         casacore::String fnname = "MSPlotUVWCallback";
 #if LOG2 
          log->FnEnter(fnname + 
                 "( inMS, antNames, fieldNames, corrNames, refFrequencies )",
@@ -1677,17 +1677,17 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
       
        ~MSPlotUVWCallBack(){
 #if LOG2 
-          String fnname = "~MSPlotUVWCallback";
+          casacore::String fnname = "~MSPlotUVWCallback";
           log->FnEnter(fnname, clname);
           log->FnExit(fnname, clname);
 #endif 
       };
 
 
-      casa::Bool
-      releasetable( Int /*nrows*/, Int /*ncols*/, Int /*panel*/, String /*tablename */)
+      casacore::Bool
+      releasetable( casacore::Int /*nrows*/, casacore::Int /*ncols*/, casacore::Int /*panel*/, casacore::String /*tablename */)
       {
-          String fnname = "releasetable";
+          casacore::String fnname = "releasetable";
 #if LOG2 
           log->FnEnter(fnname + "(nrows,ncols,panel,tablename )", clname);
 #endif 
@@ -1697,16 +1697,16 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
 #if LOG2 
           log->FnExit(fnname, clname);
 #endif 
-          return True;
+          return true;
       }
 
             
-      casa::Bool
-      createiterplotlabels( Vector<String> iteraxes,
-         Vector<Double> values,
-         String &titleString )
+      casacore::Bool
+      createiterplotlabels( casacore::Vector<casacore::String> iteraxes,
+         casacore::Vector<casacore::Double> values,
+         casacore::String &titleString )
      {
-         String fnname = "createiterplotlabels";
+         casacore::String fnname = "createiterplotlabels";
 #if LOG2 
         log->FnEnter(fnname + "(iteraxes, values, titleString)", clname);   
 #endif 
@@ -1732,8 +1732,8 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
             if ( values[axesId] < itsAntNames.nelements() )
             {
            if ( axesId > 0 )
-               titleString += String( " : " );
-           titleString += itsAntNames[Int(values[axesId])];
+               titleString += casacore::String( " : " );
+           titleString += itsAntNames[casacore::Int(values[axesId])];
             } else {
 #if LOG2 
          ostringstream os;
@@ -1742,7 +1742,7 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
              << ", but there are only "
              << itsAntNames.nelements()
              << ".";
-         log->out(os, fnname, clname, LogMessage::DEBUG1);
+         log->out(os, fnname, clname, casacore::LogMessage::DEBUG1);
 #endif 
             }
         } else if ( upcase(iteraxes[axesId]).matches("FIELD") 
@@ -1752,8 +1752,8 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
             if ( values[axesId] < itsFieldNames.nelements() )
             {
            if ( axesId > 0 )
-               titleString += String( " : " );
-           titleString += itsFieldNames[Int(values[axesId])];
+               titleString += casacore::String( " : " );
+           titleString += itsFieldNames[casacore::Int(values[axesId])];
             } else {
 #if LOG2 
             ostringstream os;
@@ -1762,64 +1762,64 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
              << ", but there are only "
              << itsFieldNames.nelements()
              << ".";
-             log->out(os, fnname, clname, LogMessage::DEBUG1);
+             log->out(os, fnname, clname, casacore::LogMessage::DEBUG1);
 #endif 
             }
         } else {
             //# This includes SPW, SCAN, FEED, and ARRAY
             //# since all of these don't have names.  This
             //# may change in the future.
-            titleString += iteraxes[axesId] + String( " ");
+            titleString += iteraxes[axesId] + casacore::String( " ");
 
             if ( axesId > 0 )
-           titleString += String( " : " );
-            titleString += String::toString( Int(values[axesId]) );
+           titleString += casacore::String( " : " );
+            titleString += casacore::String::toString( casacore::Int(values[axesId]) );
         }
          }
          
 #if LOG2 
         log->FnExit(fnname, clname);
 #endif 
-         return True;
+         return true;
      };
       
-     casa::Bool
-     flagdata(String /*tablename*/) {
+     casacore::Bool
+     flagdata(casacore::String /*tablename*/) {
 #if LOG2 
-         String fnname = "flagdata";
+         casacore::String fnname = "flagdata";
          log->FnEnter(fnname, clname);
          log->FnExit(fnname, clname);
 #endif 
-         return True;
+         return true;
      }
 
-      casa::Bool
-      flagdata(Int /*direction*/, Vector<String> /*collist*/,
-                  Matrix<Double> /*infomat*/,Vector<String> /*cpol*/, Bool /*ave*/) {
-          String fnname = "flagdata";
+      casacore::Bool
+      flagdata(casacore::Int /*direction*/, casacore::Vector<casacore::String> /*collist*/,
+                  casacore::Matrix<casacore::Double> /*infomat*/,casacore::Vector<casacore::String> /*cpol*/, casacore::Bool /*ave*/) {
+          casacore::String fnname = "flagdata";
           //cout << "MSPlotUVWCallBack::flagdata" << endl;
          
-          return True;
+          return true;
 
       }
      
-     casa::Bool
-     printlocateinfo( Vector<String> /*collist*/,
-                  Matrix<Double> infomat,Vector<String> cpol)
+     casacore::Bool
+     printlocateinfo( casacore::Vector<casacore::String> /*collist*/,
+                  casacore::Matrix<casacore::Double> infomat,casacore::Vector<casacore::String> cpol)
      {
-         String fnname = "printlocateinfo";
+         casacore::String fnname = "printlocateinfo";
 #if LOG2 
          log->FnEnter(fnname + "(collist, infomat, cpol)", clname);
 #endif 
 
          //# Define the column headings and other reptitive strings used.
-         Vector<uInt> columnWidths(12);
+         casacore::Vector<casacore::uInt> columnWidths(12);
          columnWidths[0]=8; columnWidths[1]=8; columnWidths[2]=11;
          columnWidths[3]=11; columnWidths[4]=11; columnWidths[5]=8;
          columnWidths[6]=25; columnWidths[7]=22; columnWidths[8]=6;
          columnWidths[9]=10; columnWidths[10]=14; columnWidths[11]=30; 
          
-         String colNames;
+         casacore::String colNames;
          ostringstream tmp;
          tmp << std::setw( columnWidths[0] ) <<  "ROW #" << " | "
         << std::setw( columnWidths[1] ) <<  "# Points"  << " | "
@@ -1829,38 +1829,38 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
         
         << std::setw( columnWidths[5] ) <<  "Baseline" << " | "
         << std::setw( columnWidths[6] ) <<  "Field ID/Name      "  << " | "
-        << std::setw( columnWidths[7] ) <<  "Time         "  << " | "
+        << std::setw( columnWidths[7] ) <<  "casacore::Time         "  << " | "
         << std::setw( columnWidths[8] ) <<  "SPW ID" << " | "
         << std::setw( columnWidths[9] ) <<  "Ref. Freq." << " | "
         << std::setw( columnWidths[10] ) <<  "Corr. Id/Name"  << " |"
         << std::setw( columnWidths[11] ) <<  "[pol /chan]" << " | "
         << endl;
-         colNames += String( tmp );
+         colNames += casacore::String( tmp );
          tmp.str( "" );
 
          //# get the DATA_DESC_ID column so we can extract polarization
          //# and spectral window information.
-         ROMSDataDescColumns dataDescCol( localMS->dataDescription() );
+         casacore::ROMSDataDescColumns dataDescCol( localMS->dataDescription() );
          
-         IPosition mshape = infomat.shape();
-         String warnings;
-         String info;
+         casacore::IPosition mshape = infomat.shape();
+         casacore::String warnings;
+         casacore::String info;
          info += colNames;
          
-         for(Int i=0; i < mshape[1]; i++)
+         for(casacore::Int i=0; i < mshape[1]; i++)
          {
         if ( mshape[0] != 10 )
         {
-            warnings += String( "Skipping the " )
-           + String::toString( i )
-           + String( " set of data, its not a complete row. " );
+            warnings += casacore::String( "Skipping the " )
+           + casacore::String::toString( i )
+           + casacore::String( " set of data, its not a complete row. " );
             break;
         }
 
          
         //# Put the Row number and the # of points in the row
         tmp << std::noshowpoint << std::setw( columnWidths[0] )
-            << String::toString( infomat( 0, i ) ) << " | "
+            << casacore::String::toString( infomat( 0, i ) ) << " | "
             << std::noshowpoint << std::setw( columnWidths[1] )
             << infomat( 1, i ) << " | ";
          
@@ -1879,36 +1879,36 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
             << infomat( 4, i ) << " | ";
          
         //# Printout the Baseline
-         String baseline;
+         casacore::String baseline;
          if ( infomat(5,i) < 0
             || infomat(5,i) > itsAntNames.nelements() )
-             baseline += String::toString( infomat(5,i) )
-            + String( "(ID)" );
+             baseline += casacore::String::toString( infomat(5,i) )
+            + casacore::String( "(ID)" );
          else 
-             baseline += itsAntNames( (uInt)infomat(5,i) );
-         baseline += String( "/" );
+             baseline += itsAntNames( (casacore::uInt)infomat(5,i) );
+         baseline += casacore::String( "/" );
          if ( infomat(6,i) < 0
             || infomat(6,i) > itsAntNames.nelements() )
-             baseline += String::toString( infomat(6,i) )
-            + String( "(ID)" );
+             baseline += casacore::String::toString( infomat(6,i) )
+            + casacore::String( "(ID)" );
          else 
-             baseline += itsAntNames( (uInt)infomat(6,i) );
+             baseline += itsAntNames( (casacore::uInt)infomat(6,i) );
          baseline += " | ";
          tmp << std::setw( columnWidths[5] )
              << baseline;
          
         //# Print out the Field ID, and Field Name
-        String fieldStr = String::toString(infomat(7,i) )
-            + String( "/" );
+        casacore::String fieldStr = casacore::String::toString(infomat(7,i) )
+            + casacore::String( "/" );
         if ( infomat(7,i) < itsFieldNames.nelements() ) 
-            fieldStr += itsFieldNames[ Int( infomat(7,i) ) ];
+            fieldStr += itsFieldNames[ casacore::Int( infomat(7,i) ) ];
         else {
-            warnings += String( "Field ID, " )
-           + String::toString( Int( infomat(7,i) ) )
-           + String( ", is larger then the" )
-           + String( " number of field names, " )
-           + String::toString( itsFieldNames.nelements() )
-           + String( ". \n" );
+            warnings += casacore::String( "Field ID, " )
+           + casacore::String::toString( casacore::Int( infomat(7,i) ) )
+           + casacore::String( ", is larger then the" )
+           + casacore::String( " number of field names, " )
+           + casacore::String::toString( itsFieldNames.nelements() )
+           + casacore::String( ". \n" );
             fieldStr += "??";
         }
         tmp << std::noshowpoint << std::setw( columnWidths[6] )
@@ -1916,27 +1916,27 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
         
         //Print out the time in YY/MM/DD/hh:mm:ss.s format
         tmp << std::setw( columnWidths[7] )
-            << MVTime( infomat(8, i)/C::day).string( MVTime::DMY,7) 
+            << casacore::MVTime( infomat(8, i)/casacore::C::day).string( casacore::MVTime::DMY,7)
             << " | ";
         
         //# spectral window IDs and Ref Frequency
         //# TODO add a check that infomat(9,i) isn't too big.
-        Int spwId = dataDescCol.spectralWindowId()( (Int)infomat(9, i ) );
+        casacore::Int spwId = dataDescCol.spectralWindowId()( (casacore::Int)infomat(9, i ) );
         tmp << std::noshowpoint << std::setw( columnWidths[8] )
             << spwId << " | ";
              
-        if ( spwId < (Int)itsRefFrequencies.nelements() ) 
+        if ( spwId < (casacore::Int)itsRefFrequencies.nelements() ) 
             tmp << std::showpoint
            << std::setprecision( columnWidths[9]-7)
            << std::setw( columnWidths[9] )
            << itsRefFrequencies[ spwId ] << " | ";
         else {
-            warnings += String( "SPW ID, " )
-           + String::toString( spwId )
-           + String( ", is larger then the" )
-           + String( " number of reference frequencies, " )
-           + String::toString( itsRefFrequencies.nelements() )
-           + String( ". \n" );
+            warnings += casacore::String( "SPW ID, " )
+           + casacore::String::toString( spwId )
+           + casacore::String( ", is larger then the" )
+           + casacore::String( " number of reference frequencies, " )
+           + casacore::String::toString( itsRefFrequencies.nelements() )
+           + casacore::String( ". \n" );
             tmp << " ?? " << " | ";
         }
              
@@ -1944,23 +1944,23 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
         //#  in this row.
         //# TODO add a check that infomat(9,i) isn't too big.
         //#      add a check on SPWId    
-        Int polId = dataDescCol.polarizationId()( (Int)infomat(9, i ) );
-        String polStr = String::toString( polId ) + String( "/" );
+        casacore::Int polId = dataDescCol.polarizationId()( (casacore::Int)infomat(9, i ) );
+        casacore::String polStr = casacore::String::toString( polId ) + casacore::String( "/" );
         if ( itsCorrNames[polId].nelements() > 0 )
-            for ( Int corrId=0;
-             corrId < (Int)itsCorrNames[polId].nelements();
+            for ( casacore::Int corrId=0;
+             corrId < (casacore::Int)itsCorrNames[polId].nelements();
              corrId++ ) {
            if ( corrId > 0 )
-               polStr += String( ", " );
+               polStr += casacore::String( ", " );
            polStr += itsCorrNames[polId][corrId];
             }
         else {
-            warnings += String( "Pol ID, " )
-           + String::toString( polId )
-           + String( ", is larger then the" )
-           + String( " number of polarizations, " )
-           + String::toString( itsCorrNames[spwId].nelements() )
-           + String( ", \n" );
+            warnings += casacore::String( "Pol ID, " )
+           + casacore::String::toString( polId )
+           + casacore::String( ", is larger then the" )
+           + casacore::String( " number of polarizations, " )
+           + casacore::String::toString( itsCorrNames[spwId].nelements() )
+           + casacore::String( ", \n" );
             polStr += "??";
         }
         tmp << std::noshowpoint << std::setw( columnWidths[10] )
@@ -1969,38 +1969,38 @@ class MSPlotUVWCallBack : public TPGuiCallBackHooks
         tmp  << std::setw( columnWidths[11] )
              << cpol(i)  << " | " << endl;
          
-        info += String( tmp );
+        info += casacore::String( tmp );
         tmp.str( "" );         
           }   
           info += colNames;
              
           //# Display the information in the list.
           if ( info.length() > colNames.length() )
-           log->out(info, fnname, clname, LogMessage::NORMAL);
+           log->out(info, fnname, clname, casacore::LogMessage::NORMAL);
 
           //# Display any warnings encountered.
           if ( warnings.length() > 0 )
-           log->out( warnings, fnname, clname, LogMessage::WARN);
+           log->out( warnings, fnname, clname, casacore::LogMessage::WARN);
 
 #if LOG2 
           log->FnExit(fnname, clname);
 #endif 
-          return True;
+          return true;
      }
                  
     private:
-      MeasurementSet *localMS;
-      Vector<String> itsAntNames;
-      Vector<String> itsFieldNames;
-      Vector< Vector<String> > itsCorrNames;
-      Vector<Double> itsRefFrequencies;
+      casacore::MeasurementSet *localMS;
+      casacore::Vector<casacore::String> itsAntNames;
+      casacore::Vector<casacore::String> itsFieldNames;
+      casacore::Vector< casacore::Vector<casacore::String> > itsCorrNames;
+      casacore::Vector<casacore::Double> itsRefFrequencies;
 
       // Message logger
       SLog* log;         
-      static const String clname;
+      static const casacore::String clname;
 };
 
-const String MSPlotUVWCallBack::clname = "MSPlotUVWCallBack";
+const casacore::String MSPlotUVWCallBack::clname = "MSPlotUVWCallBack";
 
 };
 

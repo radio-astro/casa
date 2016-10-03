@@ -46,6 +46,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 extern void initPyBind(void);
@@ -169,7 +170,7 @@ void CasaPyInterpreter::setupCustomGuiFeatures()
     // setup custom GUI features ( add buttons and bind them to callbacks )
     pyrunString("figman=pl.get_current_fig_manager();\n\n" );
     pyrunString(
-       "if(pf.newtoolbar is True):pf.setup_custom_features(figman);\n\n" );
+       "if(pf.newtoolbar is true):pf.setup_custom_features(figman);\n\n" );
 }
 
 /*********************************************************************************/

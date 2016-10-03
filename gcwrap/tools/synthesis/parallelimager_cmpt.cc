@@ -17,8 +17,10 @@
 #include <memory>
 #include <algorithm>
 
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 parallelimager::parallelimager()

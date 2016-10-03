@@ -19,8 +19,10 @@
 
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 mstransformer::mstransformer()
@@ -49,14 +51,14 @@ mstransformer::~mstransformer()
 		done();
 
 	} catch (AipsError x) {
-	    Table::relinquishAutoLocks(True);
+	    Table::relinquishAutoLocks(true);
 		*logger_p << LogIO::DEBUG1 		<< "Stack Trace: " << x.getStackTrace()
 										<< LogIO::POST;
 		*logger_p << LogIO::SEVERE 		<< "Exception Reported: " << x.getMesg()
 										<< LogIO::POST;
 		RETHROW(x);
 	}
-    Table::relinquishAutoLocks(True);
+    Table::relinquishAutoLocks(true);
     MeasIERS::closeTables();
 
 }
@@ -72,14 +74,14 @@ mstransformer::done()
 		}
 
 	} catch (AipsError x) {
-	    Table::relinquishAutoLocks(True);
+	    Table::relinquishAutoLocks(true);
 		*logger_p << LogIO::DEBUG1 		<< "Stack Trace: " << x.getStackTrace()
 										<< LogIO::POST;
 		*logger_p << LogIO::SEVERE 		<< "Exception Reported: " << x.getMesg()
 										<< LogIO::POST;
 		RETHROW(x);
 	}
-    Table::relinquishAutoLocks(True);
+    Table::relinquishAutoLocks(true);
 	return true;
 }
 

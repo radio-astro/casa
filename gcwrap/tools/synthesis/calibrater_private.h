@@ -1,8 +1,8 @@
 // Private part to calibrater_cmpt.h
 
-    casa::MeasurementSet *itsMS;
+    casacore::MeasurementSet *itsMS;
     casa::Calibrater *itsCalibrater;
-    casa::LogIO *itsLog;
+    casacore::LogIO *itsLog;
 
     // Set default parameter values
     void defaults();
@@ -21,5 +21,5 @@
     bool fileExists(const std::string& pathName, bool follow);
 
     // Sink used to store history
-    casa::LogSink logSink_p;
+    casacore::LogSink logSink_p;
 

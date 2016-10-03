@@ -23,13 +23,17 @@
 using namespace xercesc;
 using namespace std;
 
-namespace casa {
+namespace casacore{
 
 class Table;
+}
+
+namespace casa {
+
 
 class asdmCasaSaxHandler : public DefaultHandler {
 	public :
-		asdmCasaSaxHandler(Table &, const String &tabName);
+		asdmCasaSaxHandler(casacore::Table &, const casacore::String &tabName);
 		void characters (const XMLCh * const chars,
 				 const unsigned int length);
 		void startElement (const XMLCh * const uri,
@@ -40,42 +44,42 @@ class asdmCasaSaxHandler : public DefaultHandler {
 				 const XMLCh * const localname,
 				 const XMLCh * const qname);
 		void fatalError(const SAXParseException&);
-		void setDescriptor (const String tabName);
+		void setDescriptor (const casacore::String tabName);
                 int countIt(char *str);
-                Array<String> sSplit(char *str);
-                Array<Double> sSplit_d(char *str);
-                Array<Int>    sSplit_i(char *str);
+                casacore::Array<casacore::String> sSplit(char *str);
+                casacore::Array<casacore::Double> sSplit_d(char *str);
+                casacore::Array<casacore::Int>    sSplit_i(char *str);
 
-		void    assignColumn(char *str, Array<Double> &doubleColumn);
-                void    assignColumn(char *str, Array<Int> &intColumn);
-                void    assignColumn(char *str, Array<String> &stringColumn);
-                void    assignColumn(char *str, Array<Bool> &stringColumn);
-                void    assignColumn(char *str, Array<Complex> &stringColumn);
+		void    assignColumn(char *str, casacore::Array<casacore::Double> &doubleColumn);
+                void    assignColumn(char *str, casacore::Array<casacore::Int> &intColumn);
+                void    assignColumn(char *str, casacore::Array<casacore::String> &stringColumn);
+                void    assignColumn(char *str, casacore::Array<casacore::Bool> &stringColumn);
+                void    assignColumn(char *str, casacore::Array<casacore::Complex> &stringColumn);
 
 	private :
-		Bool flagIn;
-		Bool isRow;
-		Bool itsEntityRef;
-                Int  nRow;
-		Int nElements;
-		String itsElement;
-		String currentElement;
-		String valueName;
-		String tName;
-		String xmlTableName;
-		//TableDesc itsTableDesc;
-		Table &itsTable;
+		casacore::Bool flagIn;
+		casacore::Bool isRow;
+		casacore::Bool itsEntityRef;
+                casacore::Int  nRow;
+		casacore::Int nElements;
+		casacore::String itsElement;
+		casacore::String currentElement;
+		casacore::String valueName;
+		casacore::String tName;
+		casacore::String xmlTableName;
+		//casacore::TableDesc itsTableDesc;
+		casacore::Table &itsTable;
 		std::string  itsTag;
 		std::string  tagList;
-                const Int nMaxBuffer;
+                const casacore::Int nMaxBuffer;
                 
 
 		//
-		//Scalar and Array objects are declared here
+		//Scalar and casacore::Array objects are declared here
                 //There is a finite number of datatypes used at each table
                 //However, I cannot have repeated names attached to each 
-                //column, if I have to Int xml tags I have to assign unique
-                //names to the Table columns, i.e. 
+                //column, if I have to casacore::Int xml tags I have to assign unique
+                //names to the casacore::Table columns, i.e. 
                 //
                 //        IntScalarColumn attach(itsTable,"xmlTag1")
                 //        IntScalarColumn attach(itsTable,"xmlTag2")
@@ -92,626 +96,626 @@ class asdmCasaSaxHandler : public DefaultHandler {
                 //
 	        //Scan table definition
 		//
-		ScalarColumn<String> execBlockId;
-                ScalarColumn<Int>    scanNumber;
-                ScalarColumn<String> startTime;
-                ScalarColumn<String> endTime;
-                ScalarColumn<Int>    numSubScan;
-                ScalarColumn<Int>    numIntent;
-                ArrayColumn<String>  scanIntent;
-                ScalarColumn<Bool>   flagRow;
-                ScalarColumn<Int>    numField;
-                ScalarColumn<String> sourceName;
-                ArrayColumn<String>  fieldName;
+		casacore::ScalarColumn<casacore::String> execBlockId;
+                casacore::ScalarColumn<casacore::Int>    scanNumber;
+                casacore::ScalarColumn<casacore::String> startTime;
+                casacore::ScalarColumn<casacore::String> endTime;
+                casacore::ScalarColumn<casacore::Int>    numSubScan;
+                casacore::ScalarColumn<casacore::Int>    numIntent;
+                casacore::ArrayColumn<casacore::String>  scanIntent;
+                casacore::ScalarColumn<casacore::Bool>   flagRow;
+                casacore::ScalarColumn<casacore::Int>    numField;
+                casacore::ScalarColumn<casacore::String> sourceName;
+                casacore::ArrayColumn<casacore::String>  fieldName;
 
                 //Main table
 
-                ScalarColumn<String> configDescriptionId;
-                ScalarColumn<String> fieldId;
-                ScalarColumn<String> time;
-                ArrayColumn<String>  stateId;
-                ScalarColumn<Int>    subscanNumber;
-                ScalarColumn<Int>    integrationNumber;
-                ArrayColumn<Double>  uvw;
-                ArrayColumn<String>  exposure;
-                ArrayColumn<String>  timeCentroid;
-                ScalarColumn<String>  dataOid;
-                ArrayColumn<Int>     flagAnt;
-                ArrayColumn<Int>     flagPol;
-                ArrayColumn<Int>     flagBaseband;
-                ScalarColumn<String> interval;
-                ScalarColumn<Int>    subintegrationNumber;
+                casacore::ScalarColumn<casacore::String> configDescriptionId;
+                casacore::ScalarColumn<casacore::String> fieldId;
+                casacore::ScalarColumn<casacore::String> time;
+                casacore::ArrayColumn<casacore::String>  stateId;
+                casacore::ScalarColumn<casacore::Int>    subscanNumber;
+                casacore::ScalarColumn<casacore::Int>    integrationNumber;
+                casacore::ArrayColumn<casacore::Double>  uvw;
+                casacore::ArrayColumn<casacore::String>  exposure;
+                casacore::ArrayColumn<casacore::String>  timeCentroid;
+                casacore::ScalarColumn<casacore::String>  dataOid;
+                casacore::ArrayColumn<casacore::Int>     flagAnt;
+                casacore::ArrayColumn<casacore::Int>     flagPol;
+                casacore::ArrayColumn<casacore::Int>     flagBaseband;
+                casacore::ScalarColumn<casacore::String> interval;
+                casacore::ScalarColumn<casacore::Int>    subintegrationNumber;
                
                 //AlmaCorrelatorModeId Table
 
-                ScalarColumn<String> almaCorrelatorModeId;
-                ScalarColumn<Int>    numBaseband;
-                ArrayColumn<Int>     basebandIndex;
-                ScalarColumn<String> accumMode;
-                ArrayColumn<Int>     basebandConfig;
-                ScalarColumn<Int>    binMode;
-                ScalarColumn<Bool>   quantization;
-                ScalarColumn<String> windowFunction;
-                ArrayColumn<Int>     axesOrderArray;
+                casacore::ScalarColumn<casacore::String> almaCorrelatorModeId;
+                casacore::ScalarColumn<casacore::Int>    numBaseband;
+                casacore::ArrayColumn<casacore::Int>     basebandIndex;
+                casacore::ScalarColumn<casacore::String> accumMode;
+                casacore::ArrayColumn<casacore::Int>     basebandConfig;
+                casacore::ScalarColumn<casacore::Int>    binMode;
+                casacore::ScalarColumn<casacore::Bool>   quantization;
+                casacore::ScalarColumn<casacore::String> windowFunction;
+                casacore::ArrayColumn<casacore::Int>     axesOrderArray;
 
 		//Antenna Table
 
-                ScalarColumn<String> antennaId;
-                ScalarColumn<String> stationId;
-                ScalarColumn<String> name;
-                ScalarColumn<String> type;
-                ScalarColumn<Double> xPosition;
-                ScalarColumn<Double> yPosition;
-                ScalarColumn<Double> zPosition;
-                ScalarColumn<Double> xOffset;
-                ScalarColumn<Double> yOffset;
-                ScalarColumn<Double> zOffset;
-                ScalarColumn<Double> dishDiameter;
-                ScalarColumn<String> assocAntennaId;
+                casacore::ScalarColumn<casacore::String> antennaId;
+                casacore::ScalarColumn<casacore::String> stationId;
+                casacore::ScalarColumn<casacore::String> name;
+                casacore::ScalarColumn<casacore::String> type;
+                casacore::ScalarColumn<casacore::Double> xPosition;
+                casacore::ScalarColumn<casacore::Double> yPosition;
+                casacore::ScalarColumn<casacore::Double> zPosition;
+                casacore::ScalarColumn<casacore::Double> xOffset;
+                casacore::ScalarColumn<casacore::Double> yOffset;
+                casacore::ScalarColumn<casacore::Double> zOffset;
+                casacore::ScalarColumn<casacore::Double> dishDiameter;
+                casacore::ScalarColumn<casacore::String> assocAntennaId;
 
                 //ConfigDescription Table
                 //The AUX suffix in antennaIdAUX stands for
 		//auxiliary
                 
-                ArrayColumn <String>  dataDescriptionId;
-                ArrayColumn <String>  antennaIdAUX;
-                ArrayColumn <Int>     feedId;
-                ScalarColumn<String>  processorId;
-                ArrayColumn <String>  switchCycleId;
-                ScalarColumn<Int>     numAntenna;
-                ScalarColumn<Int>     numFeed;
-                ArrayColumn <Int>     numSubBand;
-                ScalarColumn<Int>     correlationMode;
-                ScalarColumn<Int>     atmPhaseCode;
-                ArrayColumn <Int>     phasedArrayList;
-                ArrayColumn <Bool>    flagAntAUX;
+                casacore::ArrayColumn <casacore::String>  dataDescriptionId;
+                casacore::ArrayColumn <casacore::String>  antennaIdAUX;
+                casacore::ArrayColumn <casacore::Int>     feedId;
+                casacore::ScalarColumn<casacore::String>  processorId;
+                casacore::ArrayColumn <casacore::String>  switchCycleId;
+                casacore::ScalarColumn<casacore::Int>     numAntenna;
+                casacore::ScalarColumn<casacore::Int>     numFeed;
+                casacore::ArrayColumn <casacore::Int>     numSubBand;
+                casacore::ScalarColumn<casacore::Int>     correlationMode;
+                casacore::ScalarColumn<casacore::Int>     atmPhaseCode;
+                casacore::ArrayColumn <casacore::Int>     phasedArrayList;
+                casacore::ArrayColumn <casacore::Bool>    flagAntAUX;
 		
 		//DataDescription Table
 
-                ScalarColumn<String>  dataDescriptionIdDDT;
-                ScalarColumn<String>  polOrHoloId;
-                ScalarColumn<String>  spectralWindowId;
+                casacore::ScalarColumn<casacore::String>  dataDescriptionIdDDT;
+                casacore::ScalarColumn<casacore::String>  polOrHoloId;
+                casacore::ScalarColumn<casacore::String>  spectralWindowId;
 
 		//ExecBlock Table
 
-                ScalarColumn<String> telescopeName;
-                ScalarColumn<String> configName;
-                ScalarColumn<Double> baseRangeMin;
-                ScalarColumn<Double> baseRangeMax;
-                ScalarColumn<Double> baseRangeMinor;
-                ScalarColumn<Double> baseRangeMajor;
-                ScalarColumn<Double> basePa;
-                ScalarColumn<String> timeInterval;
-                ScalarColumn<String> observerName;
-                ArrayColumn<String>  observingLog;
-                ArrayColumn<String>  schedulerMode;
-                ScalarColumn<String> projectId;
-                ScalarColumn<Double> siteLongitude;
-                ScalarColumn<Double> siteLatitude;
-                ScalarColumn<Double> siteAltitude;
-                ScalarColumn<String> execBlockUID;
-                ScalarColumn<Bool>   aborted;
+                casacore::ScalarColumn<casacore::String> telescopeName;
+                casacore::ScalarColumn<casacore::String> configName;
+                casacore::ScalarColumn<casacore::Double> baseRangeMin;
+                casacore::ScalarColumn<casacore::Double> baseRangeMax;
+                casacore::ScalarColumn<casacore::Double> baseRangeMinor;
+                casacore::ScalarColumn<casacore::Double> baseRangeMajor;
+                casacore::ScalarColumn<casacore::Double> basePa;
+                casacore::ScalarColumn<casacore::String> timeInterval;
+                casacore::ScalarColumn<casacore::String> observerName;
+                casacore::ArrayColumn<casacore::String>  observingLog;
+                casacore::ArrayColumn<casacore::String>  schedulerMode;
+                casacore::ScalarColumn<casacore::String> projectId;
+                casacore::ScalarColumn<casacore::Double> siteLongitude;
+                casacore::ScalarColumn<casacore::Double> siteLatitude;
+                casacore::ScalarColumn<casacore::Double> siteAltitude;
+                casacore::ScalarColumn<casacore::String> execBlockUID;
+                casacore::ScalarColumn<casacore::Bool>   aborted;
 
 		//Feed Table
 
-                ScalarColumn<Int>    feedIdFT;
-                ArrayColumn<Int>     receiverId;
-                ScalarColumn<Int>    numReceptors;
-                ArrayColumn<Double>  beamOffset;
-                ArrayColumn<Double>  focusReference;
-                ArrayColumn<String>  polarizationType;
-                ArrayColumn<Complex> polResponse;
-                ArrayColumn<Double>  receptorAngle;
-                ArrayColumn<String>  beamId;
-                ScalarColumn<Int>    feedNum;
-                ScalarColumn<Float>  illumOffset;
-                ScalarColumn<Float>  illumOffsetPa;
+                casacore::ScalarColumn<casacore::Int>    feedIdFT;
+                casacore::ArrayColumn<casacore::Int>     receiverId;
+                casacore::ScalarColumn<casacore::Int>    numReceptors;
+                casacore::ArrayColumn<casacore::Double>  beamOffset;
+                casacore::ArrayColumn<casacore::Double>  focusReference;
+                casacore::ArrayColumn<casacore::String>  polarizationType;
+                casacore::ArrayColumn<casacore::Complex> polResponse;
+                casacore::ArrayColumn<casacore::Double>  receptorAngle;
+                casacore::ArrayColumn<casacore::String>  beamId;
+                casacore::ScalarColumn<casacore::Int>    feedNum;
+                casacore::ScalarColumn<casacore::Float>  illumOffset;
+                casacore::ScalarColumn<casacore::Float>  illumOffsetPa;
 
 	        //Field Table
 
-                ScalarColumn<String> fieldNameAUX;
-                ScalarColumn<String> code;
-                ScalarColumn<Int>    numPoly;
-                ArrayColumn<Double>  delayDir;
-                ArrayColumn<Double>  phaseDir;
-                ArrayColumn<Double>  referenceDir;
-                ArrayColumn<String>  assocFieldId;
-                ScalarColumn<String> ephemerisId;
-                ScalarColumn<Int>    sourceId;
-                ScalarColumn<String> assocNature;
+                casacore::ScalarColumn<casacore::String> fieldNameAUX;
+                casacore::ScalarColumn<casacore::String> code;
+                casacore::ScalarColumn<casacore::Int>    numPoly;
+                casacore::ArrayColumn<casacore::Double>  delayDir;
+                casacore::ArrayColumn<casacore::Double>  phaseDir;
+                casacore::ArrayColumn<casacore::Double>  referenceDir;
+                casacore::ArrayColumn<casacore::String>  assocFieldId;
+                casacore::ScalarColumn<casacore::String> ephemerisId;
+                casacore::ScalarColumn<casacore::Int>    sourceId;
+                casacore::ScalarColumn<casacore::String> assocNature;
 
 		//Polarization Table
 
-		ScalarColumn<String> polarizationId;
-                ScalarColumn<Int>    numCorr;
-                ArrayColumn<Int>     corrType;
-                ArrayColumn<Int>     corrProduct;
+		casacore::ScalarColumn<casacore::String> polarizationId;
+                casacore::ScalarColumn<casacore::Int>    numCorr;
+                casacore::ArrayColumn<casacore::Int>     corrType;
+                casacore::ArrayColumn<casacore::Int>     corrProduct;
 
                 //Processor Table
 
-		ScalarColumn<String> subType;
+		casacore::ScalarColumn<casacore::String> subType;
 
 		//Reciever Table
 
-                ScalarColumn<Int>    receiverIdAUX;
-                ScalarColumn<Int>    numLo;
-                ScalarColumn<String> frequencyBand;
-                ArrayColumn<Double>  freqLo;
-                ScalarColumn<Double> stability;
-                ArrayColumn<Int>     sidebandLo;
-                ScalarColumn<Double> tDewar;
-                ScalarColumn<String> stabilityDuration;
-                ScalarColumn<String> dewarName;
-                ScalarColumn<Bool>   stabilityflag;
+                casacore::ScalarColumn<casacore::Int>    receiverIdAUX;
+                casacore::ScalarColumn<casacore::Int>    numLo;
+                casacore::ScalarColumn<casacore::String> frequencyBand;
+                casacore::ArrayColumn<casacore::Double>  freqLo;
+                casacore::ScalarColumn<casacore::Double> stability;
+                casacore::ArrayColumn<casacore::Int>     sidebandLo;
+                casacore::ScalarColumn<casacore::Double> tDewar;
+                casacore::ScalarColumn<casacore::String> stabilityDuration;
+                casacore::ScalarColumn<casacore::String> dewarName;
+                casacore::ScalarColumn<casacore::Bool>   stabilityflag;
 
 		//SBSummary Table
 
-                ScalarColumn<String> sbId;
-                ScalarColumn<String> obsUnitSetId;
-                ScalarColumn<String> sbIntent;
-                ScalarColumn<String> sbType;
-                ScalarColumn<String> sbDuration;
-                ScalarColumn<Int>    numScan;
-                ScalarColumn<Int>    numberRepeats;
-                ArrayColumn<String>  weatherConstraint;
-                ArrayColumn<String>  scienceGoal;
-                ScalarColumn<Double> raCenter;
-                ScalarColumn<Double> decCenter;
-                ScalarColumn<Double> frequency;
-                ArrayColumn<String>  observingMode;
+                casacore::ScalarColumn<casacore::String> sbId;
+                casacore::ScalarColumn<casacore::String> obsUnitSetId;
+                casacore::ScalarColumn<casacore::String> sbIntent;
+                casacore::ScalarColumn<casacore::String> sbType;
+                casacore::ScalarColumn<casacore::String> sbDuration;
+                casacore::ScalarColumn<casacore::Int>    numScan;
+                casacore::ScalarColumn<casacore::Int>    numberRepeats;
+                casacore::ArrayColumn<casacore::String>  weatherConstraint;
+                casacore::ArrayColumn<casacore::String>  scienceGoal;
+                casacore::ScalarColumn<casacore::Double> raCenter;
+                casacore::ScalarColumn<casacore::Double> decCenter;
+                casacore::ScalarColumn<casacore::Double> frequency;
+                casacore::ArrayColumn<casacore::String>  observingMode;
 
 		//Source Table
 
-                ScalarColumn<Int>    numLines;
-                ArrayColumn<Double>  direction;
-                ArrayColumn<Double>  properMotion;
-                ScalarColumn<Int>    sourceParameterId;
-                ScalarColumn<String> catalog;
-                ScalarColumn<Int>    calibrationGroup;
-                ArrayColumn<Double>  position;
-                ArrayColumn<String>  transition;
-                ArrayColumn<Double>  restFrequency;
-                ArrayColumn<Double>  sysVel;
-                ScalarColumn<String> sourceModel;
-                ScalarColumn<Double> deltaVel;
-                ArrayColumn<Double>  rangeVel;
+                casacore::ScalarColumn<casacore::Int>    numLines;
+                casacore::ArrayColumn<casacore::Double>  direction;
+                casacore::ArrayColumn<casacore::Double>  properMotion;
+                casacore::ScalarColumn<casacore::Int>    sourceParameterId;
+                casacore::ScalarColumn<casacore::String> catalog;
+                casacore::ScalarColumn<casacore::Int>    calibrationGroup;
+                casacore::ArrayColumn<casacore::Double>  position;
+                casacore::ArrayColumn<casacore::String>  transition;
+                casacore::ArrayColumn<casacore::Double>  restFrequency;
+                casacore::ArrayColumn<casacore::Double>  sysVel;
+                casacore::ScalarColumn<casacore::String> sourceModel;
+                casacore::ScalarColumn<casacore::Double> deltaVel;
+                casacore::ArrayColumn<casacore::Double>  rangeVel;
 
 		//SpectralWindow Table
 
-                ScalarColumn<Int>    numChan;
-                ScalarColumn<Double> refFreq;
-                ArrayColumn<Double>  chanFreq;
-                ArrayColumn<Double>  chanWidth;
-                ArrayColumn<Double>  effectiveBw;
-                ArrayColumn<Double>  resolution;
-                ScalarColumn<Double> totBandwidth;
-                ScalarColumn<Int>    netSideband;
-                ArrayColumn<String>  assocSpectralWindowId;
-                ScalarColumn<Int>    dopplerId;
-                ScalarColumn<Int>    measFreqRef;
-                ScalarColumn<Int>    bbcNo;
-                ScalarColumn<Int>    bbcSideband;
-                ScalarColumn<Int>    ifConvChain;
-                ScalarColumn<Int>    freqGroup;
-                ScalarColumn<String> freqGroupName;
-                ArrayColumn<String>  assocNatureAUX;
+                casacore::ScalarColumn<casacore::Int>    numChan;
+                casacore::ScalarColumn<casacore::Double> refFreq;
+                casacore::ArrayColumn<casacore::Double>  chanFreq;
+                casacore::ArrayColumn<casacore::Double>  chanWidth;
+                casacore::ArrayColumn<casacore::Double>  effectiveBw;
+                casacore::ArrayColumn<casacore::Double>  resolution;
+                casacore::ScalarColumn<casacore::Double> totBandwidth;
+                casacore::ScalarColumn<casacore::Int>    netSideband;
+                casacore::ArrayColumn<casacore::String>  assocSpectralWindowId;
+                casacore::ScalarColumn<casacore::Int>    dopplerId;
+                casacore::ScalarColumn<casacore::Int>    measFreqRef;
+                casacore::ScalarColumn<casacore::Int>    bbcNo;
+                casacore::ScalarColumn<casacore::Int>    bbcSideband;
+                casacore::ScalarColumn<casacore::Int>    ifConvChain;
+                casacore::ScalarColumn<casacore::Int>    freqGroup;
+                casacore::ScalarColumn<casacore::String> freqGroupName;
+                casacore::ArrayColumn<casacore::String>  assocNatureAUX;
 
 		//State Table
 
-                ScalarColumn<String> stateIdAUX;
-                ScalarColumn<Bool>   sig;
-                ScalarColumn<Bool>   ref;
-                ScalarColumn<Int>    calloadNum;
-                ScalarColumn<String> obsMode;
-                ScalarColumn<String> obsIntent;
-                ScalarColumn<Float>  weight;
+                casacore::ScalarColumn<casacore::String> stateIdAUX;
+                casacore::ScalarColumn<casacore::Bool>   sig;
+                casacore::ScalarColumn<casacore::Bool>   ref;
+                casacore::ScalarColumn<casacore::Int>    calloadNum;
+                casacore::ScalarColumn<casacore::String> obsMode;
+                casacore::ScalarColumn<casacore::String> obsIntent;
+                casacore::ScalarColumn<casacore::Float>  weight;
 
 		//Subscan Table
 
-                ScalarColumn<String> subscanIntent;
-                ScalarColumn<Int>    numberIntegration;
-                ArrayColumn<Int>     numberSubintegration;
-                ScalarColumn<String> subscanMode;
+                casacore::ScalarColumn<casacore::String> subscanIntent;
+                casacore::ScalarColumn<casacore::Int>    numberIntegration;
+                casacore::ArrayColumn<casacore::Int>     numberSubintegration;
+                casacore::ScalarColumn<casacore::String> subscanMode;
 
 		//SwitchCycle Table
 
-                ScalarColumn<String> switchCycleIdAUX;
-                ScalarColumn<Int>    numStep;
-                ArrayColumn<Double>   weightArray;
-                ArrayColumn<Double>  offsetArray;
-                ArrayColumn<Double>  freqOffsetArray;
+                casacore::ScalarColumn<casacore::String> switchCycleIdAUX;
+                casacore::ScalarColumn<casacore::Int>    numStep;
+                casacore::ArrayColumn<casacore::Double>   weightArray;
+                casacore::ArrayColumn<casacore::Double>  offsetArray;
+                casacore::ArrayColumn<casacore::Double>  freqOffsetArray;
 
 		//CalCurve Table
 
-                ScalarColumn<String> calDataId;
-                ScalarColumn<String> calReductionId;
-                ScalarColumn<String> antennaName;
-                ScalarColumn<String> startValidTime;
-                ScalarColumn<String> endValidTime;
-                ScalarColumn<String> typeCurve;
-                ArrayColumn<Double>  curve;
-                ArrayColumn<Double>  frequencyRange;
-                ScalarColumn<String> refAntennaName;
-                ScalarColumn<String> receiverBand;
-                ScalarColumn<String> timeOrigin;
+                casacore::ScalarColumn<casacore::String> calDataId;
+                casacore::ScalarColumn<casacore::String> calReductionId;
+                casacore::ScalarColumn<casacore::String> antennaName;
+                casacore::ScalarColumn<casacore::String> startValidTime;
+                casacore::ScalarColumn<casacore::String> endValidTime;
+                casacore::ScalarColumn<casacore::String> typeCurve;
+                casacore::ArrayColumn<casacore::Double>  curve;
+                casacore::ArrayColumn<casacore::Double>  frequencyRange;
+                casacore::ScalarColumn<casacore::String> refAntennaName;
+                casacore::ScalarColumn<casacore::String> receiverBand;
+                casacore::ScalarColumn<casacore::String> timeOrigin;
 
 
 		//CalData Table
 
-                ArrayColumn<Int>     scanSet;
-                ScalarColumn<String> calType;
-                ScalarColumn<String> startTimeObserved;
-                ScalarColumn<String> endTimeObserved;
-                ScalarColumn<String> calDataType;
-                ScalarColumn<Int>    frequencyGroup;
-                ArrayColumn<String>  fieldCode;
-                ArrayColumn<String>  sourceNameAUX;
-                ArrayColumn<String>  sourceCode;
-                ScalarColumn<String> assocCalDataId;
-                ScalarColumn<String> assocCalNature;
+                casacore::ArrayColumn<casacore::Int>     scanSet;
+                casacore::ScalarColumn<casacore::String> calType;
+                casacore::ScalarColumn<casacore::String> startTimeObserved;
+                casacore::ScalarColumn<casacore::String> endTimeObserved;
+                casacore::ScalarColumn<casacore::String> calDataType;
+                casacore::ScalarColumn<casacore::Int>    frequencyGroup;
+                casacore::ArrayColumn<casacore::String>  fieldCode;
+                casacore::ArrayColumn<casacore::String>  sourceNameAUX;
+                casacore::ArrayColumn<casacore::String>  sourceCode;
+                casacore::ScalarColumn<casacore::String> assocCalDataId;
+                casacore::ScalarColumn<casacore::String> assocCalNature;
 
 		//CalPhase Table
 
-                ScalarColumn<String> basebandName;
-                ScalarColumn<Int>    numBaseline;
-                ArrayColumn<String>  antennaNames;
-                ArrayColumn<Double>  decorrelationFactor;
-                ArrayColumn<Double>  uncorrPhaseRms;
-                ArrayColumn<Double>  corrPhaseRms;
-                ArrayColumn<Double>  statPhaseRms;
-                ArrayColumn<Bool>    corrValidity;
+                casacore::ScalarColumn<casacore::String> basebandName;
+                casacore::ScalarColumn<casacore::Int>    numBaseline;
+                casacore::ArrayColumn<casacore::String>  antennaNames;
+                casacore::ArrayColumn<casacore::Double>  decorrelationFactor;
+                casacore::ArrayColumn<casacore::Double>  uncorrPhaseRms;
+                casacore::ArrayColumn<casacore::Double>  corrPhaseRms;
+                casacore::ArrayColumn<casacore::Double>  statPhaseRms;
+                casacore::ArrayColumn<casacore::Bool>    corrValidity;
 
 		//CalReduction Table
 
-                ScalarColumn<Int>    numApplied;
-                ScalarColumn<Int>    numParam;
-                ScalarColumn<String> timeReduced;
-                ArrayColumn<String>  calAppliedArray;
-                ArrayColumn<String>  paramSet;
-                ScalarColumn<String> messages;
-                ScalarColumn<String> software;
-                ScalarColumn<String> softwareVersion;
-                ScalarColumn<String> invalidConditions;
+                casacore::ScalarColumn<casacore::Int>    numApplied;
+                casacore::ScalarColumn<casacore::Int>    numParam;
+                casacore::ScalarColumn<casacore::String> timeReduced;
+                casacore::ArrayColumn<casacore::String>  calAppliedArray;
+                casacore::ArrayColumn<casacore::String>  paramSet;
+                casacore::ScalarColumn<casacore::String> messages;
+                casacore::ScalarColumn<casacore::String> software;
+                casacore::ScalarColumn<casacore::String> softwareVersion;
+                casacore::ScalarColumn<casacore::String> invalidConditions;
 
 		//CalSeeingTable
 
-                ScalarColumn<Int>    numBaseLength;
-                ArrayColumn<Double>  baseLength;
-                ScalarColumn<Double> seeing;
-                ScalarColumn<Double> seeingFrequency;
-                ScalarColumn<Double> seeingFreqBandwidth;
-                ScalarColumn<Double> exponent;
+                casacore::ScalarColumn<casacore::Int>    numBaseLength;
+                casacore::ArrayColumn<casacore::Double>  baseLength;
+                casacore::ScalarColumn<casacore::Double> seeing;
+                casacore::ScalarColumn<casacore::Double> seeingFrequency;
+                casacore::ScalarColumn<casacore::Double> seeingFreqBandwidth;
+                casacore::ScalarColumn<casacore::Double> exponent;
 
 		//CalAtmosphere Table
 
-                ScalarColumn<Int>    numFreq;
-                ArrayColumn<Double>  frequencySpectrum;
-                ScalarColumn<String> syscalType;
-                ArrayColumn<Double>  tSysSpectrum;
-                ArrayColumn<Double>  tRecSpectrum;
-                ArrayColumn<Double>  tAtmSpectrum;
-                ArrayColumn<Double>  tauSpectrum;
-                ArrayColumn<Double>  sbGainSpectrum;
-                ArrayColumn<Double>  forwardEffSpectrum;
-                ScalarColumn<Double> groundPressure;
-                ScalarColumn<Double> groundTemperature;
-                ScalarColumn<Double> groundRelHumidity;
-                ArrayColumn<Double>  tSys;
-                ArrayColumn<Double>  tRec;
-                ArrayColumn<Double>  tAtm;
-                ArrayColumn<Double>  sbGain;
-                ArrayColumn<Double>  water;
-                ArrayColumn<Double>  forwardEfficiency;
-                ArrayColumn<Double>  tau;
+                casacore::ScalarColumn<casacore::Int>    numFreq;
+                casacore::ArrayColumn<casacore::Double>  frequencySpectrum;
+                casacore::ScalarColumn<casacore::String> syscalType;
+                casacore::ArrayColumn<casacore::Double>  tSysSpectrum;
+                casacore::ArrayColumn<casacore::Double>  tRecSpectrum;
+                casacore::ArrayColumn<casacore::Double>  tAtmSpectrum;
+                casacore::ArrayColumn<casacore::Double>  tauSpectrum;
+                casacore::ArrayColumn<casacore::Double>  sbGainSpectrum;
+                casacore::ArrayColumn<casacore::Double>  forwardEffSpectrum;
+                casacore::ScalarColumn<casacore::Double> groundPressure;
+                casacore::ScalarColumn<casacore::Double> groundTemperature;
+                casacore::ScalarColumn<casacore::Double> groundRelHumidity;
+                casacore::ArrayColumn<casacore::Double>  tSys;
+                casacore::ArrayColumn<casacore::Double>  tRec;
+                casacore::ArrayColumn<casacore::Double>  tAtm;
+                casacore::ArrayColumn<casacore::Double>  sbGain;
+                casacore::ArrayColumn<casacore::Double>  water;
+                casacore::ArrayColumn<casacore::Double>  forwardEfficiency;
+                casacore::ArrayColumn<casacore::Double>  tau;
 
 		//CalAmpli Table
 
-                ArrayColumn<Double>  apertureEfficiencyError;
-                ArrayColumn<Double>  uncorrectedApertureEfficiency;
-                ArrayColumn<Double>  correctedApertureEfficiency;
-                ArrayColumn<Bool>    correctionValidity;
+                casacore::ArrayColumn<casacore::Double>  apertureEfficiencyError;
+                casacore::ArrayColumn<casacore::Double>  uncorrectedApertureEfficiency;
+                casacore::ArrayColumn<casacore::Double>  correctedApertureEfficiency;
+                casacore::ArrayColumn<casacore::Bool>    correctionValidity;
 
                 //CalBandpass Table
 
-                ArrayColumn<Double>  freqLimits;
-                ScalarColumn<Int>    numPhasePoly;
-                ScalarColumn<Int>    numAmpliPoly;
-                ArrayColumn<Double>  phaseCurve;
-                ArrayColumn<Double>  ampliCurve;
+                casacore::ArrayColumn<casacore::Double>  freqLimits;
+                casacore::ScalarColumn<casacore::Int>    numPhasePoly;
+                casacore::ScalarColumn<casacore::Int>    numAmpliPoly;
+                casacore::ArrayColumn<casacore::Double>  phaseCurve;
+                casacore::ArrayColumn<casacore::Double>  ampliCurve;
         
                 //AlmaRadiometer Table
 
-                ScalarColumn<String> modeId;
-                ScalarColumn<Int>    numBand;
+                casacore::ScalarColumn<casacore::String> modeId;
+                casacore::ScalarColumn<casacore::Int>    numBand;
 
 		//CalDelay Table
 
-                ArrayColumn<Double>  delayOffset;
-                ArrayColumn<Double>  delayError;
-                ScalarColumn<Double> crossDelayOffset;
-                ScalarColumn<Double> crossDelayOffsetError;
+                casacore::ArrayColumn<casacore::Double>  delayOffset;
+                casacore::ArrayColumn<casacore::Double>  delayError;
+                casacore::ScalarColumn<casacore::Double> crossDelayOffset;
+                casacore::ScalarColumn<casacore::Double> crossDelayOffsetError;
 
 		//CalDevice Table
 
-                ScalarColumn<Int>    numCalload;
-                ArrayColumn<Double>  noiseCal;
-                ArrayColumn<Double>  temperatureLoad;
-                ArrayColumn<Double>  calEff;
+                casacore::ScalarColumn<casacore::Int>    numCalload;
+                casacore::ArrayColumn<casacore::Double>  noiseCal;
+                casacore::ArrayColumn<casacore::Double>  temperatureLoad;
+                casacore::ArrayColumn<casacore::Double>  calEff;
 
                 //CalFlux Table
 
-                ScalarColumn<Int>    numStokes;
-                ArrayColumn<Int>     Stokes;
-                ArrayColumn<Double>  frequencyAUX;
-                ArrayColumn<Double>  frequencyWidth;
-                ArrayColumn<Double>  flux;
-                ArrayColumn<Double>  fluxError;
-                ScalarColumn<String> fluxMethod;
-                ArrayColumn<Double>  size;
-                ArrayColumn<Double>  sizeError;
-                ArrayColumn<Double>  PA;
-                ArrayColumn<Double>  PAError;
+                casacore::ScalarColumn<casacore::Int>    numStokes;
+                casacore::ArrayColumn<casacore::Int>     Stokes;
+                casacore::ArrayColumn<casacore::Double>  frequencyAUX;
+                casacore::ArrayColumn<casacore::Double>  frequencyWidth;
+                casacore::ArrayColumn<casacore::Double>  flux;
+                casacore::ArrayColumn<casacore::Double>  fluxError;
+                casacore::ScalarColumn<casacore::String> fluxMethod;
+                casacore::ArrayColumn<casacore::Double>  size;
+                casacore::ArrayColumn<casacore::Double>  sizeError;
+                casacore::ArrayColumn<casacore::Double>  PA;
+                casacore::ArrayColumn<casacore::Double>  PAError;
 
 
                 //CalFocus Table
 
-                ArrayColumn<Double>  offset;
-                ArrayColumn<Double>  error;
-                ScalarColumn<String> method;
-                ArrayColumn<Double>  pointingDirection;
-                ArrayColumn<Bool>    wasFixed;
+                casacore::ArrayColumn<casacore::Double>  offset;
+                casacore::ArrayColumn<casacore::Double>  error;
+                casacore::ScalarColumn<casacore::String> method;
+                casacore::ArrayColumn<casacore::Double>  pointingDirection;
+                casacore::ArrayColumn<casacore::Bool>    wasFixed;
 
 
                 //CalFocusModel Table
 
-                ScalarColumn<Int>    numCoeff;
-                ArrayColumn<Double>  focusRMS;
-                ArrayColumn<String>  coeffName;
-                ArrayColumn<String>  coeffFormula;
-                ArrayColumn<Double>  coeffValue;
-                ArrayColumn<Double>  coeffError;
-                ArrayColumn<Bool>    coeffFixed;
-                ScalarColumn<String> focusModel;
-                ScalarColumn<Int>    numSourceObs;
+                casacore::ScalarColumn<casacore::Int>    numCoeff;
+                casacore::ArrayColumn<casacore::Double>  focusRMS;
+                casacore::ArrayColumn<casacore::String>  coeffName;
+                casacore::ArrayColumn<casacore::String>  coeffFormula;
+                casacore::ArrayColumn<casacore::Double>  coeffValue;
+                casacore::ArrayColumn<casacore::Double>  coeffError;
+                casacore::ArrayColumn<casacore::Bool>    coeffFixed;
+                casacore::ScalarColumn<casacore::String> focusModel;
+                casacore::ScalarColumn<casacore::Int>    numSourceObs;
 
 
                 //CalGain Table
 
-                ArrayColumn<Double>  gain;
-                ArrayColumn<Bool>    gainValid;
-                ArrayColumn<Double>  fit;
-                ArrayColumn<Double>  fitWeight;
-                ScalarColumn<Bool>   totalGainValid;
-                ScalarColumn<Double> totalFit;
-                ScalarColumn<Double> totalFitWeight;
+                casacore::ArrayColumn<casacore::Double>  gain;
+                casacore::ArrayColumn<casacore::Bool>    gainValid;
+                casacore::ArrayColumn<casacore::Double>  fit;
+                casacore::ArrayColumn<casacore::Double>  fitWeight;
+                casacore::ScalarColumn<casacore::Bool>   totalGainValid;
+                casacore::ScalarColumn<casacore::Double> totalFit;
+                casacore::ScalarColumn<casacore::Double> totalFitWeight;
 
                 //CalHolography Table
  
-                ScalarColumn<Int>    numScrew;
-                ArrayColumn<Double>  focusPosition;
-                ScalarColumn<Double> rawRms;
-                ScalarColumn<Double> weightedRms;
-                ArrayColumn<String>  screwName;
-                ArrayColumn<Double>  screwMotion;
-                ArrayColumn<Double>  screwMotionError;
-                ScalarColumn<Int>    panelModes;
-                ScalarColumn<String> beamMapUID;
-                ScalarColumn<String> surfaceMapUID;
+                casacore::ScalarColumn<casacore::Int>    numScrew;
+                casacore::ArrayColumn<casacore::Double>  focusPosition;
+                casacore::ScalarColumn<casacore::Double> rawRms;
+                casacore::ScalarColumn<casacore::Double> weightedRms;
+                casacore::ArrayColumn<casacore::String>  screwName;
+                casacore::ArrayColumn<casacore::Double>  screwMotion;
+                casacore::ArrayColumn<casacore::Double>  screwMotionError;
+                casacore::ScalarColumn<casacore::Int>    panelModes;
+                casacore::ScalarColumn<casacore::String> beamMapUID;
+                casacore::ScalarColumn<casacore::String> surfaceMapUID;
 
 
                 //CalPointing Table
 
-                ArrayColumn<Double>  collOffset;
-                ArrayColumn<Double>  collError;
-                ScalarColumn<String> pointingMethod;
-                ScalarColumn<String> mode;
-                ArrayColumn<Double>  beamWidth;
-                ArrayColumn<Double>  beamWidthError;
-                ScalarColumn<Double> beamPA;
-                ScalarColumn<Double> beamPAError;
-                ScalarColumn<Double> peakIntensity;
-                ScalarColumn<Double> peakIntensityError;
+                casacore::ArrayColumn<casacore::Double>  collOffset;
+                casacore::ArrayColumn<casacore::Double>  collError;
+                casacore::ScalarColumn<casacore::String> pointingMethod;
+                casacore::ScalarColumn<casacore::String> mode;
+                casacore::ArrayColumn<casacore::Double>  beamWidth;
+                casacore::ArrayColumn<casacore::Double>  beamWidthError;
+                casacore::ScalarColumn<casacore::Double> beamPA;
+                casacore::ScalarColumn<casacore::Double> beamPAError;
+                casacore::ScalarColumn<casacore::Double> peakIntensity;
+                casacore::ScalarColumn<casacore::Double> peakIntensityError;
 
                 //CalPointingModel Table
 
 
-                ScalarColumn<Int>    numObs;
-                ScalarColumn<Int>    numFormula;
-                ScalarColumn<Double> azimuthRms;
-                ScalarColumn<Double> elevationRms;
-                ScalarColumn<Double> skyRms;
-                ArrayColumn<Double>  coeffVal;
-                ScalarColumn<String> pointingModel;
+                casacore::ScalarColumn<casacore::Int>    numObs;
+                casacore::ScalarColumn<casacore::Int>    numFormula;
+                casacore::ScalarColumn<casacore::Double> azimuthRms;
+                casacore::ScalarColumn<casacore::Double> elevationRms;
+                casacore::ScalarColumn<casacore::Double> skyRms;
+                casacore::ArrayColumn<casacore::Double>  coeffVal;
+                casacore::ScalarColumn<casacore::String> pointingModel;
 
 		//CalPosition Table
 
-                ArrayColumn<Double>  positionOffset;
-                ArrayColumn<Double>  positionErr;
-                ScalarColumn<String> delayRms;
-                ScalarColumn<Double> phaseRms;
-                ScalarColumn<Double> axesOffset;
-                ScalarColumn<Bool>   axesOffsetFixed;
-                ScalarColumn<Double> axesOffsetErr;
-                ScalarColumn<String> positionMethod;
-                ArrayColumn<String>  refAntennaNames;
+                casacore::ArrayColumn<casacore::Double>  positionOffset;
+                casacore::ArrayColumn<casacore::Double>  positionErr;
+                casacore::ScalarColumn<casacore::String> delayRms;
+                casacore::ScalarColumn<casacore::Double> phaseRms;
+                casacore::ScalarColumn<casacore::Double> axesOffset;
+                casacore::ScalarColumn<casacore::Bool>   axesOffsetFixed;
+                casacore::ScalarColumn<casacore::Double> axesOffsetErr;
+                casacore::ScalarColumn<casacore::String> positionMethod;
+                casacore::ArrayColumn<casacore::String>  refAntennaNames;
 
                 //CalPrimaryBeam Table
 
-                ScalarColumn<Int>    numPixelX;
-                ScalarColumn<Int>    numPixelY;
-                ScalarColumn<Double> refX;
-                ScalarColumn<Double> refY;
-                ScalarColumn<Double> valX;
-                ScalarColumn<Double> valY;
-                ScalarColumn<Double> incX;
-                ScalarColumn<Double> incY;
-                ArrayColumn<Double>  amplitude;
-                ArrayColumn<Double>  phase;
+                casacore::ScalarColumn<casacore::Int>    numPixelX;
+                casacore::ScalarColumn<casacore::Int>    numPixelY;
+                casacore::ScalarColumn<casacore::Double> refX;
+                casacore::ScalarColumn<casacore::Double> refY;
+                casacore::ScalarColumn<casacore::Double> valX;
+                casacore::ScalarColumn<casacore::Double> valY;
+                casacore::ScalarColumn<casacore::Double> incX;
+                casacore::ScalarColumn<casacore::Double> incY;
+                casacore::ArrayColumn<casacore::Double>  amplitude;
+                casacore::ArrayColumn<casacore::Double>  phase;
 
 	        //CalWVR Table
        
-                ScalarColumn<String> WVRMethod;
-                ArrayColumn<Double>  pathCoeff;
+                casacore::ScalarColumn<casacore::String> WVRMethod;
+                casacore::ArrayColumn<casacore::Double>  pathCoeff;
 
 		//Doppler Table
 
-                ScalarColumn<Int>    transitionIndex;
-                ScalarColumn<Double> velDef;
+                casacore::ScalarColumn<casacore::Int>    transitionIndex;
+                casacore::ScalarColumn<casacore::Double> velDef;
 		
 		//Observation Table
 
-                ScalarColumn<String> observationId;
+                casacore::ScalarColumn<casacore::String> observationId;
 
                 //FlagCmd Table
 
-                ScalarColumn<String> reason;
-                ScalarColumn<Int>    level;
-                ScalarColumn<Int>    severity;
-                ScalarColumn<Bool>   applied;
-                ScalarColumn<String> command;
+                casacore::ScalarColumn<casacore::String> reason;
+                casacore::ScalarColumn<casacore::Int>    level;
+                casacore::ScalarColumn<casacore::Int>    severity;
+                casacore::ScalarColumn<casacore::Bool>   applied;
+                casacore::ScalarColumn<casacore::String> command;
 
 		//Focus Table
 
-                ScalarColumn<String> focusModelId;
-                ScalarColumn<Double> xFocusPosition;
-                ScalarColumn<Double> yFocusPosition;
-                ScalarColumn<Double> zFocusPosition;
-                ScalarColumn<Double> focusTracking;
-                ScalarColumn<Double> xFocusOffset;
-                ScalarColumn<Double> yFocusOffset;
-                ScalarColumn<Double> zFocusOffset;
+                casacore::ScalarColumn<casacore::String> focusModelId;
+                casacore::ScalarColumn<casacore::Double> xFocusPosition;
+                casacore::ScalarColumn<casacore::Double> yFocusPosition;
+                casacore::ScalarColumn<casacore::Double> zFocusPosition;
+                casacore::ScalarColumn<casacore::Double> focusTracking;
+                casacore::ScalarColumn<casacore::Double> xFocusOffset;
+                casacore::ScalarColumn<casacore::Double> yFocusOffset;
+                casacore::ScalarColumn<casacore::Double> zFocusOffset;
 
 		//GainTracking Table
 
-                ScalarColumn<Double> attenuator;
-                ScalarColumn<String> delayoff1;
-                ScalarColumn<String> delayoff2;
-                ScalarColumn<Double> phaseoff1;
-                ScalarColumn<Double> phaseoff2;
-                ScalarColumn<Double> rateoff1;
-                ScalarColumn<Double> rateoff2;
-                ScalarColumn<Double> samplingLevel;
-                ScalarColumn<Double> phaseRefOffset;
+                casacore::ScalarColumn<casacore::Double> attenuator;
+                casacore::ScalarColumn<casacore::String> delayoff1;
+                casacore::ScalarColumn<casacore::String> delayoff2;
+                casacore::ScalarColumn<casacore::Double> phaseoff1;
+                casacore::ScalarColumn<casacore::Double> phaseoff2;
+                casacore::ScalarColumn<casacore::Double> rateoff1;
+                casacore::ScalarColumn<casacore::Double> rateoff2;
+                casacore::ScalarColumn<casacore::Double> samplingLevel;
+                casacore::ScalarColumn<casacore::Double> phaseRefOffset;
 
 		//History Table
 
-                ScalarColumn<String> message;
-                ScalarColumn<String> priority;
-                ScalarColumn<String> origin;
-                ScalarColumn<String> objectId;
-                ScalarColumn<String> application;
-                ScalarColumn<String> cliCommand;
-                ScalarColumn<String> appParms;
+                casacore::ScalarColumn<casacore::String> message;
+                casacore::ScalarColumn<casacore::String> priority;
+                casacore::ScalarColumn<casacore::String> origin;
+                casacore::ScalarColumn<casacore::String> objectId;
+                casacore::ScalarColumn<casacore::String> application;
+                casacore::ScalarColumn<casacore::String> cliCommand;
+                casacore::ScalarColumn<casacore::String> appParms;
 
 		//Holography Table
 
-                ScalarColumn<String> holographyId;
-                ScalarColumn<Double> distance;
-                ScalarColumn<Double> focus;
+                casacore::ScalarColumn<casacore::String> holographyId;
+                casacore::ScalarColumn<casacore::Double> distance;
+                casacore::ScalarColumn<casacore::Double> focus;
 
 		//Pointing Table
 
-                ScalarColumn<Int>    pointingModelId;
-                ArrayColumn<Double>  target;
-                ArrayColumn<Double>  encoder;
-                ScalarColumn<Bool>   pointingTracking;
-                ArrayColumn<Double>  sourceOffset;
-                ScalarColumn<Bool>   phaseTracking;
-                ScalarColumn<Bool>   overTheTop;
+                casacore::ScalarColumn<casacore::Int>    pointingModelId;
+                casacore::ArrayColumn<casacore::Double>  target;
+                casacore::ArrayColumn<casacore::Double>  encoder;
+                casacore::ScalarColumn<casacore::Bool>   pointingTracking;
+                casacore::ArrayColumn<casacore::Double>  sourceOffset;
+                casacore::ScalarColumn<casacore::Bool>   phaseTracking;
+                casacore::ScalarColumn<casacore::Bool>   overTheTop;
 
 
 		//Pointing Table
 
-                ArrayColumn<Int>     phaseRmsAUX;
+                casacore::ArrayColumn<casacore::Int>     phaseRmsAUX;
 
 		//SourceParameter Table
 
-                ScalarColumn<Int>    numDep;
-                ArrayColumn<Int>     stokeParameter;
-                ArrayColumn<Double>  frequencyInterval;
-                ArrayColumn<Double>  fluxErr;
-                ArrayColumn<Double>  positionAngle;
-                ArrayColumn<Double>  sizeErr;
-                ArrayColumn<Double>  positionAngleErr;
-                ArrayColumn<Int>     depSourceParameterId;
+                casacore::ScalarColumn<casacore::Int>    numDep;
+                casacore::ArrayColumn<casacore::Int>     stokeParameter;
+                casacore::ArrayColumn<casacore::Double>  frequencyInterval;
+                casacore::ArrayColumn<casacore::Double>  fluxErr;
+                casacore::ArrayColumn<casacore::Double>  positionAngle;
+                casacore::ArrayColumn<casacore::Double>  sizeErr;
+                casacore::ArrayColumn<casacore::Double>  positionAngleErr;
+                casacore::ArrayColumn<casacore::Int>     depSourceParameterId;
 
 
                 //SquareLawDetector Table
 
-                ScalarColumn<String> squareLawDetectorId;
-                ScalarColumn<String> bandType;
+                casacore::ScalarColumn<casacore::String> squareLawDetectorId;
+                casacore::ScalarColumn<casacore::String> bandType;
 
 		//SysCal Table
-                ScalarColumn<Int>    numLoad;
-                ArrayColumn<Int>     calLoad;
-                ArrayColumn<Double>  feff;
-                ArrayColumn<Double>  aeff;
-                ScalarColumn<Double> phaseDiff;
-                ScalarColumn<Double> sbgain;
-                ArrayColumn<Double>  tcal;
-                ArrayColumn<Double>  trx;
-                ArrayColumn<Double>  tsys;
-                ArrayColumn<Double>  tsky;
-                ArrayColumn<Double>  tant;
-                ArrayColumn<Double>  tantTsys;
-                ArrayColumn<Double>  pwvPath;
-                ArrayColumn<Double>  dpwvPath;
-                ArrayColumn<Double>  feffSpectrum;
-                ArrayColumn<Double>  tcalSpectrum;
-                ArrayColumn<Double>  sbgainSpectrum;
-                ArrayColumn<Double>  trxSpectrum;
-                ArrayColumn<Double>  tskySpectrum;
-                ArrayColumn<Double>  tsysSpectrum;
-                ArrayColumn<Double>  tantSpectrum;
-                ArrayColumn<Double>  tantTsysSpectrum;
-                ArrayColumn<Double>  pwvPathSpectrum;
-                ArrayColumn<Double>  dpwvPathSpectrum;
-                ScalarColumn<Int>    numPolyFreq;
-                ScalarColumn<Double> freqOrigin;
-                ArrayColumn<Double>  delayCurve;
-                ArrayColumn<Double>  bandpassCurve;
-                ScalarColumn<Bool>   phasediffFlag;
-                ScalarColumn<Bool>   sbgainFlag;
-                ScalarColumn<Bool>   tauFlag;
-                ScalarColumn<Bool>   tcalFlag;
-                ScalarColumn<Bool>   trxFlag;
-                ScalarColumn<Bool>   tskyFlag;
-                ScalarColumn<Bool>   tsysFlag;
-                ScalarColumn<Bool>   tantFlag;
-                ScalarColumn<Bool>   tantTsysFlag;
-                ScalarColumn<Bool>   pwvPathFlag;
+                casacore::ScalarColumn<casacore::Int>    numLoad;
+                casacore::ArrayColumn<casacore::Int>     calLoad;
+                casacore::ArrayColumn<casacore::Double>  feff;
+                casacore::ArrayColumn<casacore::Double>  aeff;
+                casacore::ScalarColumn<casacore::Double> phaseDiff;
+                casacore::ScalarColumn<casacore::Double> sbgain;
+                casacore::ArrayColumn<casacore::Double>  tcal;
+                casacore::ArrayColumn<casacore::Double>  trx;
+                casacore::ArrayColumn<casacore::Double>  tsys;
+                casacore::ArrayColumn<casacore::Double>  tsky;
+                casacore::ArrayColumn<casacore::Double>  tant;
+                casacore::ArrayColumn<casacore::Double>  tantTsys;
+                casacore::ArrayColumn<casacore::Double>  pwvPath;
+                casacore::ArrayColumn<casacore::Double>  dpwvPath;
+                casacore::ArrayColumn<casacore::Double>  feffSpectrum;
+                casacore::ArrayColumn<casacore::Double>  tcalSpectrum;
+                casacore::ArrayColumn<casacore::Double>  sbgainSpectrum;
+                casacore::ArrayColumn<casacore::Double>  trxSpectrum;
+                casacore::ArrayColumn<casacore::Double>  tskySpectrum;
+                casacore::ArrayColumn<casacore::Double>  tsysSpectrum;
+                casacore::ArrayColumn<casacore::Double>  tantSpectrum;
+                casacore::ArrayColumn<casacore::Double>  tantTsysSpectrum;
+                casacore::ArrayColumn<casacore::Double>  pwvPathSpectrum;
+                casacore::ArrayColumn<casacore::Double>  dpwvPathSpectrum;
+                casacore::ScalarColumn<casacore::Int>    numPolyFreq;
+                casacore::ScalarColumn<casacore::Double> freqOrigin;
+                casacore::ArrayColumn<casacore::Double>  delayCurve;
+                casacore::ArrayColumn<casacore::Double>  bandpassCurve;
+                casacore::ScalarColumn<casacore::Bool>   phasediffFlag;
+                casacore::ScalarColumn<casacore::Bool>   sbgainFlag;
+                casacore::ScalarColumn<casacore::Bool>   tauFlag;
+                casacore::ScalarColumn<casacore::Bool>   tcalFlag;
+                casacore::ScalarColumn<casacore::Bool>   trxFlag;
+                casacore::ScalarColumn<casacore::Bool>   tskyFlag;
+                casacore::ScalarColumn<casacore::Bool>   tsysFlag;
+                casacore::ScalarColumn<casacore::Bool>   tantFlag;
+                casacore::ScalarColumn<casacore::Bool>   tantTsysFlag;
+                casacore::ScalarColumn<casacore::Bool>   pwvPathFlag;
 
 		//TotalPower Table
 
-                ArrayColumn<Double>  floatData;
+                casacore::ArrayColumn<casacore::Double>  floatData;
 
 		//WVMCal Table
 
-                ScalarColumn<String> calibrationMode;
-                ScalarColumn<String> operationMode;
-                ScalarColumn<Double> wvrefModel;
+                casacore::ScalarColumn<casacore::String> calibrationMode;
+                casacore::ScalarColumn<casacore::String> operationMode;
+                casacore::ScalarColumn<casacore::Double> wvrefModel;
 
 		//Weather Table
 
-                ScalarColumn<Double> pressure;
-                ScalarColumn<Double> relHumidity;
-                ScalarColumn<Double> temperature;
-                ScalarColumn<Double> windDirection;
-                ScalarColumn<Double> windSpeed;
-                ScalarColumn<Double> windMax;
-                ScalarColumn<Bool>   pressureFlag;
-                ScalarColumn<Bool>   relHumidityFlag;
-                ScalarColumn<Bool>   temperatureFlag;
-                ScalarColumn<Bool>   windDirectionFlag;
-                ScalarColumn<Bool>   windSpeedFlag;
-                ScalarColumn<Bool>   windMaxFlag;
-                ScalarColumn<Double> dewPoint;
-                ScalarColumn<Bool>   dewPointFlag;
+                casacore::ScalarColumn<casacore::Double> pressure;
+                casacore::ScalarColumn<casacore::Double> relHumidity;
+                casacore::ScalarColumn<casacore::Double> temperature;
+                casacore::ScalarColumn<casacore::Double> windDirection;
+                casacore::ScalarColumn<casacore::Double> windSpeed;
+                casacore::ScalarColumn<casacore::Double> windMax;
+                casacore::ScalarColumn<casacore::Bool>   pressureFlag;
+                casacore::ScalarColumn<casacore::Bool>   relHumidityFlag;
+                casacore::ScalarColumn<casacore::Bool>   temperatureFlag;
+                casacore::ScalarColumn<casacore::Bool>   windDirectionFlag;
+                casacore::ScalarColumn<casacore::Bool>   windSpeedFlag;
+                casacore::ScalarColumn<casacore::Bool>   windMaxFlag;
+                casacore::ScalarColumn<casacore::Double> dewPoint;
+                casacore::ScalarColumn<casacore::Bool>   dewPointFlag;
 
 		//ASDM Table
 
-                ScalarColumn<String> Name;
-                ScalarColumn<Int>    NumberRows;
+                casacore::ScalarColumn<casacore::String> Name;
+                casacore::ScalarColumn<casacore::Int>    NumberRows;
 
 
 

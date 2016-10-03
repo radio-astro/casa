@@ -35,16 +35,18 @@
 #include <measures_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 measures::measures() : pcomet_p(0)
 {
   itsLog = new LogIO();
-  casa::MEpoch tim;
-  casa::MPosition pos;
-  casa::MDirection dir;
+  casacore::MEpoch tim;
+  casacore::MPosition pos;
+  casacore::MDirection dir;
   frame_p = new MeasFrame(tim,pos,dir);
 }
 
@@ -188,12 +190,12 @@ measures::epoch(const std::string& rf, const ::casac::variant& v0, const ::casac
   try {
     String error("");
 
-    casa::Quantity q0(casaQuantityFromVar(v0));
+    casacore::Quantity q0(casaQuantityFromVar(v0));
     //kludge since cannot pass meaningful default paramters
     if (q0.getValue() == 0 && q0.getUnit() == "") {
-      q0 = casa::Quantity(0.0,"d");
+      q0 = casacore::Quantity(0.0,"d");
     }
-    casa::MEpoch me(q0);
+    casacore::MEpoch me(q0);
     me.setRefString(rf);
     MeasureHolder in(me);
     MeasureHolder out;
@@ -230,15 +232,15 @@ measures::direction(const std::string& rf, const ::casac::variant& v0, const ::c
   ::casac::record *retval = 0;
   try{
     String error;
-    casa::Quantity q0(casaQuantityFromVar(v0));
-    casa::Quantity q1(casaQuantityFromVar(v1));
+    casacore::Quantity q0(casaQuantityFromVar(v0));
+    casacore::Quantity q1(casaQuantityFromVar(v1));
     //kludge since cannot pass meaningful default paramters
     if (q0.getValue() == 0 && q0.getUnit() == "" &&
 	q1.getValue() == 0 && q1.getUnit() == "") {
-      q0 = casa::Quantity(0.0,"deg");
-      q1 = casa::Quantity(90.0,"deg");
+      q0 = casacore::Quantity(0.0,"deg");
+      q1 = casacore::Quantity(90.0,"deg");
     }
-    casa::MDirection d(q0,q1);
+    casacore::MDirection d(q0,q1);
     if (!d.setRefString(rf)) {
       *itsLog << LogIO::WARN
 	      << "Illegal reference frame string.  Reference string set to DEFAULT"
@@ -426,7 +428,7 @@ measures::comettype()
   std::string emptyStr("");
   try {
     if (pcomet_p) {
-      if (pcomet_p->getType() == casa::MDirection::TOPO) {
+      if (pcomet_p->getType() == casacore::MDirection::TOPO) {
 	return String("TOPO");
       } else {
 	return String("APP");
@@ -450,7 +452,7 @@ measures::comettopo()
 
   try {
     Vector<Double> returnval;
-    if (pcomet_p && pcomet_p->getType() == casa::MDirection::TOPO) {
+    if (pcomet_p && pcomet_p->getType() == casacore::MDirection::TOPO) {
       returnval = pcomet_p->getTopo().getValue();
       returnval.tovector(retval);
       unit = "m";
@@ -467,14 +469,14 @@ measures::comettopo()
 // Get the distance of the current comet
 ::casac::record* measures::cometdist()
 {
-  casa::Quantity retval(-1.0, "AU");	// Default to absurdity.
+  casacore::Quantity retval(-1.0, "AU");	// Default to absurdity.
 
   try {
     if(pcomet_p){
       MVPosition relpos;
       
       if(pcomet_p->get(relpos,
-		       dynamic_cast<const casa::MEpoch *>(frame_p->epoch())->get("d").getValue())){
+		       dynamic_cast<const casacore::MEpoch *>(frame_p->epoch())->get("d").getValue())){
 	retval = relpos.getLength("AU");
       }
       else{
@@ -494,14 +496,14 @@ measures::comettopo()
 // Get the angular diameter of the current comet
 ::casac::record* measures::cometangdiam()
 {
-  casa::Quantity retval(-1.0, "rad");	// Default to absurdity.
+  casacore::Quantity retval(-1.0, "rad");	// Default to absurdity.
 
   try {
     if(pcomet_p){
       MVPosition relpos;
       
       if(pcomet_p->get(relpos,
-		       dynamic_cast<const casa::MEpoch *>(frame_p->epoch())->get("d").getValue())){
+		       dynamic_cast<const casacore::MEpoch *>(frame_p->epoch())->get("d").getValue())){
 	double dist = relpos.getLength("AU").getValue();
 	double meanrad = pcomet_p->getMeanRad(true);
 
@@ -564,18 +566,18 @@ measures::position(const std::string& rf, const ::casac::variant& v0, const ::ca
       mpos_rec.defineRecord("m2", QuantRec);
     }
     else{
-      casa::Quantity q0(casaQuantityFromVar(v0));
-      casa::Quantity q1(casaQuantityFromVar(v1));
-      casa::Quantity q2(casaQuantityFromVar(v2));
+      casacore::Quantity q0(casaQuantityFromVar(v0));
+      casacore::Quantity q1(casaQuantityFromVar(v1));
+      casacore::Quantity q2(casaQuantityFromVar(v2));
       //kludge since cannot pass meaningful default paramters
       if (q0.getValue() == 0 && q0.getUnit() == "" &&
 	  q1.getValue() == 0 && q1.getUnit() == "" &&
 	  q2.getValue() == 0 && q2.getUnit() == "") {
-	q0 = casa::Quantity(0.0,"deg");
-	q1 = casa::Quantity(90.0,"deg");
-	q2 = casa::Quantity(0.0,"m");
+	q0 = casacore::Quantity(0.0,"deg");
+	q1 = casacore::Quantity(90.0,"deg");
+	q2 = casacore::Quantity(0.0,"m");
       }
-      casa::Quantity q(1.0,"rad");
+      casacore::Quantity q(1.0,"rad");
       Record QuantRec;
       if (q.isConform(q1)) {
 	// Note reordering of input quantities
@@ -633,7 +635,7 @@ measures::observatory(const std::string& name)
   ::casac::record *retval(0);
   try {
     String error;
-    casa::MPosition returnval;
+    casacore::MPosition returnval;
 
     if (!MeasTable::Observatory(returnval, String(name))) {
       *itsLog << LogIO::SEVERE << "Unknown observatory asked for\n"
@@ -764,7 +766,7 @@ measures::source(const ::casac::variant& name)
   ::casac::record *retval(0);
   try {
     String error;
-    casa::MDirection returnval;
+    casacore::MDirection returnval;
 
     if (!casaMDirection(name, returnval)) {
       *itsLog << LogIO::SEVERE << "Unknown source asked for\n"
@@ -795,10 +797,10 @@ measures::frequency(const std::string& rf, const ::casac::variant& v0, const ::c
   ::casac::record *retval(0);
   try{
     String error;
-    casa::Quantity q0(casaQuantityFromVar(v0));
+    casacore::Quantity q0(casaQuantityFromVar(v0));
     //kludge since cannot pass meaningful default paramters
     if (q0.getValue() == 0 && q0.getUnit() == "") {
-      q0 = casa::Quantity(0.0,"Hz");
+      q0 = casacore::Quantity(0.0,"Hz");
     }
     MFrequency f(q0);
     if (!f.setRefString(rf)) {
@@ -847,12 +849,12 @@ measures::frequency(const std::string& rf, const ::casac::variant& v0, const ::c
 
 record* measures::shift(const record& v, const variant& offset, const variant& pa) {
 	try {
-		casa::Quantity myOffset = casaQuantityFromVar(offset);
+		casacore::Quantity myOffset = casaQuantityFromVar(offset);
 		ThrowIf(
 			! myOffset.isConform("rad"),
 			"offset must be an angular quantity"
 		);
-		casa::Quantity myPA = casaQuantityFromVar(pa);
+		casacore::Quantity myPA = casaQuantityFromVar(pa);
 		ThrowIf(
 			! myPA.isConform("rad"),
 			"pa must be an angular quantity"
@@ -868,7 +870,7 @@ record* measures::shift(const record& v, const variant& offset, const variant& p
 			! in.isMDirection(),
 			"v is not a direction measure"
 		);
-		casa::MDirection md = in.asMDirection();
+		casacore::MDirection md = in.asMDirection();
 		md.shiftAngle(myOffset, myPA);
 		Record myNew;
 		MeasureHolder(md).toRecord(myNew);
@@ -890,10 +892,10 @@ measures::doppler(const std::string& rf, const ::casac::variant& v0, const ::cas
   ::casac::record *retval(0);
   try{
     String error;
-    casa::Quantity q0(casaQuantityFromVar(v0));
+    casacore::Quantity q0(casaQuantityFromVar(v0));
     //kludge since cannot pass meaningful default paramters
     if (q0.getValue() == 0 && q0.getUnit() == "") {
-      q0 = casa::Quantity(0.0,"m/s");
+      q0 = casacore::Quantity(0.0,"m/s");
     }
     MDoppler mq(q0);
     if (!mq.setRefString(rf)) {
@@ -948,12 +950,12 @@ measures::radialvelocity(const std::string& rf, const ::casac::variant& v0, cons
   ::casac::record *retval(0);
   try{
     String error;
-    casa::Quantity q0(casaQuantityFromVar(v0));
+    casacore::Quantity q0(casaQuantityFromVar(v0));
     //kludge since cannot pass meaningful default paramters
     if (q0.getValue() == 0 && q0.getUnit() == "") {
-      q0 = casa::Quantity(0.0,"m/s");
+      q0 = casacore::Quantity(0.0,"m/s");
     }
-    casa::MRadialVelocity mq(q0);
+    casacore::MRadialVelocity mq(q0);
     if (!mq.setRefString(rf)) {
       *itsLog << LogIO::WARN << "Illegal reference frame string." << LogIO::POST;
     }
@@ -1022,18 +1024,18 @@ measures::uvw(const std::string& rf, const ::casac::variant& v0, const ::casac::
       muvw_rec.defineRecord("m2", QuantRec);
     }
     else{
-      casa::Quantity q0(casaQuantity(v0));
-      casa::Quantity q1(casaQuantity(v1));
-      casa::Quantity q2(casaQuantity(v2));
+      casacore::Quantity q0(casaQuantity(v0));
+      casacore::Quantity q1(casaQuantity(v1));
+      casacore::Quantity q2(casaQuantity(v2));
       //kludge since cannot pass meaningful default paramters
       if (q0.getValue() == 0 && q0.getUnit() == "" &&
 	  q1.getValue() == 0 && q1.getUnit() == "" &&
 	  q2.getValue() == 0 && q2.getUnit() == "") {
-	q0 = casa::Quantity(0.0,"deg");
-	q1 = casa::Quantity(0.0,"deg");
-	q2 = casa::Quantity(0.0,"m");
+	q0 = casacore::Quantity(0.0,"deg");
+	q1 = casacore::Quantity(0.0,"deg");
+	q2 = casacore::Quantity(0.0,"m");
       }
-      casa::Quantity q(1.0,"rad");
+      casacore::Quantity q(1.0,"rad");
       Record QuantRec;
       if (q.isConform(q1)) {
 	// Note reordering of input quantities
@@ -1204,7 +1206,7 @@ expand2(String &error, MeasureHolder &out, Vector<Double> &xyz,
        const MeasureHolder &in) {
   if (!in.isMuvw()) {
     error += "Trying to expand non-baseline type\n";
-    return False;
+    return false;
   };
   const MVuvw &uvw2000 = in.asMuvw().getValue();
   if (in.nelements() < 2) {
@@ -1225,14 +1227,14 @@ expand2(String &error, MeasureHolder &out, Vector<Double> &xyz,
         };
         if (!out.setMV(k, mv)) {
           error += "Cannot expand baseline value in DOmeasures::expand\n";
-          return False;
+          return false;
         };
         for (uInt j=0; j<3; ++j) xyz[3*k+j] = mv.getValue()[j];
         ++k;
       };
     };
   };
-  return True;
+  return true;
 }
 
 MeasureHolder
@@ -1323,16 +1325,16 @@ measures::earthmagnetic(const std::string& rf, const ::casac::variant& v0, const
   ::casac::record *retval(0);
   try{
     String error;
-    casa::Quantity q0(casaQuantityFromVar(v0));
-    casa::Quantity q1(casaQuantityFromVar(v1));
-    casa::Quantity q2(casaQuantityFromVar(v2));
+    casacore::Quantity q0(casaQuantityFromVar(v0));
+    casacore::Quantity q1(casaQuantityFromVar(v1));
+    casacore::Quantity q2(casaQuantityFromVar(v2));
     //kludge since cannot pass meaningful default paramters
     if (q0.getValue() == 0 && q0.getUnit() == "" &&
 	q1.getValue() == 0 && q1.getUnit() == "" &&
 	q2.getValue() == 0 && q2.getUnit() == "") {
-      q0 = casa::Quantity( 0.0,"G");
-      q1 = casa::Quantity( 0.0,"deg");
-      q2 = casa::Quantity(90.0,"deg");
+      q0 = casacore::Quantity( 0.0,"G");
+      q1 = casacore::Quantity( 0.0,"deg");
+      q2 = casacore::Quantity(90.0,"deg");
     }
     MVEarthMagnetic mvq(q0, q1, q2);
     MEarthMagnetic mq(mvq);
@@ -1413,18 +1415,18 @@ measures::baseline(const std::string& rf, const ::casac::variant& v0, const ::ca
       mbas_rec.defineRecord("m2", QuantRec);
     }
     else{
-      casa::Quantity q0(casaQuantity(v0));
-      casa::Quantity q1(casaQuantity(v1));
-      casa::Quantity q2(casaQuantity(v2));
+      casacore::Quantity q0(casaQuantity(v0));
+      casacore::Quantity q1(casaQuantity(v1));
+      casacore::Quantity q2(casaQuantity(v2));
       //kludge since cannot pass meaningful default paramters
       if (q0.getValue() == 0 && q0.getUnit() == "" &&
 	  q1.getValue() == 0 && q1.getUnit() == "" &&
 	  q2.getValue() == 0 && q2.getUnit() == "") {
-	q0 = casa::Quantity(0.0,"deg");
-	q1 = casa::Quantity(0.0,"deg");
-	q2 = casa::Quantity(0.0,"m");
+	q0 = casacore::Quantity(0.0,"deg");
+	q1 = casacore::Quantity(0.0,"deg");
+	q2 = casacore::Quantity(0.0,"m");
       }
-      casa::Quantity q(1.0,"rad");
+      casacore::Quantity q(1.0,"rad");
       Record QuantRec;
       if (q.isConform(q1)) {
 	// Note reordering of input quantities
@@ -1518,7 +1520,7 @@ measures::asbaseline(const ::casac::record& pos)
     Record outRec;
     pPos->get(RecordFieldId("type"), tp);
     tp.downcase();
-    if ((tp != downcase(casa::MPosition::showMe())) && (tp != downcase(MBaseline::showMe()))) {
+    if ((tp != downcase(casacore::MPosition::showMe())) && (tp != downcase(MBaseline::showMe()))) {
       *itsLog << LogIO::WARN << "Non-position type for asbaseline input"
 	      << LogIO::POST;
       delete pPos;
@@ -1634,80 +1636,80 @@ Bool measures::measure(String &error, MeasureHolder &out,
     in.asMeasure().getRefPtr()->set(*frame_p);
 
     if (in.isMEpoch()) {
-      casa::MEpoch::Ref outRef;
-      casa::MEpoch::Types tp;
+      casacore::MEpoch::Ref outRef;
+      casacore::MEpoch::Types tp;
       String x = outref;
-      Bool raze = False;
+      Bool raze = false;
       if (x.before(2) == "r_" || x.before(2) == "R_") {
-	raze = True;
+	raze = true;
 	x = x.from(2);
       };
-      if (casa::MEpoch::getType(tp, x)) {
-	if (raze) outRef.setType(tp | casa::MEpoch::RAZE);
+      if (casacore::MEpoch::getType(tp, x)) {
+	if (raze) outRef.setType(tp | casacore::MEpoch::RAZE);
 	else outRef.setType(tp);
-      } else outRef.setType(casa::MEpoch::DEFAULT);
+      } else outRef.setType(casacore::MEpoch::DEFAULT);
       outRef.set(*frame_p);
       if (!mo.isEmpty()) {
 	if (mo.isMEpoch()) outRef.set(mo.asMeasure());
 	else {
 	  error += "Non-conforming offset measure type\n";
-	  return False;
+	  return false;
 	};
       };
-      casa::MEpoch::Convert mcvt(casa::MEpoch::Convert(in.asMeasure(), outRef));
+      casacore::MEpoch::Convert mcvt(casacore::MEpoch::Convert(in.asMeasure(), outRef));
       out = MeasureHolder(mcvt());
       out.makeMV(in.nelements());
       for (uInt i=0; i<in.nelements(); i++) {
         if (!out.setMV(i, mcvt(dynamic_cast<const MVEpoch &>
                                (*in.getMV(i))).getValue())) {
 	  error += "Cannot get extra measure value in DOmeasures::measures\n";
-	  return False;
+	  return false;
 	};
       };
     } else if (in.isMPosition()) {
-      casa::MPosition::Ref outRef;
-      casa::MPosition::Types tp;
-      if (casa::MPosition::getType(tp, outref)) outRef.setType(tp);
-      else outRef.setType(casa::MPosition::DEFAULT);
+      casacore::MPosition::Ref outRef;
+      casacore::MPosition::Types tp;
+      if (casacore::MPosition::getType(tp, outref)) outRef.setType(tp);
+      else outRef.setType(casacore::MPosition::DEFAULT);
       outRef.set(*frame_p);
       if (!mo.isEmpty()) {
 	if (mo.isMPosition()) outRef.set(mo.asMeasure());
 	else {
 	  error += "Non-conforming offset measure type\n";
-	  return False;
+	  return false;
 	};
       };
-      casa::MPosition::Convert mcvt(casa::MPosition::Convert(in.asMeasure(), outRef));
+      casacore::MPosition::Convert mcvt(casacore::MPosition::Convert(in.asMeasure(), outRef));
       out = MeasureHolder(mcvt());
       out.makeMV(in.nelements());
       for (uInt i=0; i<in.nelements(); i++) {
         if (!out.setMV(i, mcvt(dynamic_cast<const MVPosition &>
                                (*in.getMV(i))).getValue())) {
 	  error += "Cannot get extra measure value in DOmeasures::measures\n";
-	  return False;
+	  return false;
 	};
       };
     } else if (in.isMDirection()) {
-      casa::MDirection::Ref outRef;
-      casa::MDirection::Types tp;
-      if (casa::MDirection::getType(tp, outref)) outRef.setType(tp);
-      else outRef.setType(casa::MDirection::DEFAULT);
+      casacore::MDirection::Ref outRef;
+      casacore::MDirection::Types tp;
+      if (casacore::MDirection::getType(tp, outref)) outRef.setType(tp);
+      else outRef.setType(casacore::MDirection::DEFAULT);
       outRef.set(*frame_p);
       if (!mo.isEmpty()) {
 	if (mo.isMDirection()) outRef.set(mo.asMeasure());
 	else {
 	  error += "Non-conforming offset measure type\n";
-	  return False;
+	  return false;
 	};
       };
-      casa::MDirection::Convert mcvt(casa::MDirection::Convert(in.asMeasure(), outRef));
+      casacore::MDirection::Convert mcvt(casacore::MDirection::Convert(in.asMeasure(), outRef));
       out = MeasureHolder(mcvt());
       out.makeMV(in.nelements());
       for (uInt i=0; i<in.nelements(); i++) {
 	if (!out.setMV(i, mcvt(dynamic_cast<const MVDirection &>
 			       (*in.getMV(i))).getValue())) {
 	  error += "Cannot get extra measure value in DOmeasures::measures\n";
-	  return False;
+	  return false;
 	};
       };
    } else if (in.isMFrequency()) {
@@ -1720,7 +1722,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	if (mo.isMFrequency()) outRef.set(mo.asMeasure());
 	else {
 	  error += "Non-conforming offset measure type\n";
-	  return False;
+	  return false;
 	};
       };
       MFrequency::Convert mcvt(MFrequency::Convert(in.asMeasure(), outRef));
@@ -1730,7 +1732,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	if (!out.setMV(i, mcvt(dynamic_cast<const MVFrequency &>
 			       (*in.getMV(i))).getValue())) {
 	  error += "Cannot get extra measure value in DOmeasures::measures\n";
-	  return False;
+	  return false;
 	};
       };
     } else if (in.isMDoppler()) {
@@ -1743,7 +1745,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	if (mo.isMDoppler()) outRef.set(mo.asMeasure());
 	else {
 	  error += "Non-conforming offset measure type\n";
-	  return False;
+	  return false;
 	};
       };
       MDoppler::Convert mcvt(MDoppler::Convert(in.asMeasure(), outRef));
@@ -1753,31 +1755,31 @@ Bool measures::measure(String &error, MeasureHolder &out,
         if (!out.setMV(i, mcvt(dynamic_cast<const MVDoppler &>
                                (*in.getMV(i))).getValue())) {
 	  error += "Cannot get extra measure value in DOmeasures::measures\n";
-	  return False;
+	  return false;
 	};
       };
     } else if (in.isMRadialVelocity()) {
-	    casa::MRadialVelocity::Ref outRef;
-	    casa::MRadialVelocity::Types tp;
-      if (casa::MRadialVelocity::getType(tp, outref)) outRef.setType(tp);
-      else outRef.setType(casa::MRadialVelocity::DEFAULT);
+	    casacore::MRadialVelocity::Ref outRef;
+	    casacore::MRadialVelocity::Types tp;
+      if (casacore::MRadialVelocity::getType(tp, outref)) outRef.setType(tp);
+      else outRef.setType(casacore::MRadialVelocity::DEFAULT);
       outRef.set(*frame_p);
       if (!mo.isEmpty()) {
 	if (mo.isMRadialVelocity()) outRef.set(mo.asMeasure());
 	else {
 	  error += "Non-conforming offset measure type\n";
-	  return False;
+	  return false;
 	};
       };
-      casa::MRadialVelocity::Convert
-	mcvt(casa::MRadialVelocity::Convert(in.asMeasure(), outRef));
+      casacore::MRadialVelocity::Convert
+	mcvt(casacore::MRadialVelocity::Convert(in.asMeasure(), outRef));
       out = MeasureHolder(mcvt());
       out.makeMV(in.nelements());
       for (uInt i=0; i<in.nelements(); i++) {
         if (!out.setMV(i, mcvt(dynamic_cast<const MVRadialVelocity &>
                                (*in.getMV(i))).getValue())) {
 	  error += "Cannot get extra measure value in DOmeasures::measures\n";
-	  return False;
+	  return false;
 	};
       };
     } else if (in.isMBaseline()) {
@@ -1790,7 +1792,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	if (mo.isMBaseline()) outRef.set(mo.asMeasure());
 	else {
 	  error += "Non-conforming offset measure type\n";
-	  return False;
+	  return false;
 	};
       };
       MBaseline::Convert mcvt(MBaseline::Convert(in.asMeasure(), outRef));
@@ -1800,7 +1802,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
         if (!out.setMV(i, mcvt(dynamic_cast<const MVBaseline &>
                                (*in.getMV(i))).getValue())) {
 	  error += "Cannot get extra measure value in DOmeasures::measures\n";
-	  return False;
+	  return false;
 	};
       };
     } else if (in.isMuvw()) {
@@ -1813,7 +1815,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	if (mo.isMuvw()) outRef.set(mo.asMeasure());
 	else {
 	  error += "Non-conforming offset measure type\n";
-	  return False;
+	  return false;
 	};
       };
       Muvw::Convert mcvt(Muvw::Convert(in.asMeasure(), outRef));
@@ -1823,7 +1825,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
         if (!out.setMV(i, mcvt(dynamic_cast<const MVuvw &>
                                (*in.getMV(i))).getValue())) {
 	  error += "Cannot get extra measure value in DOmeasures::measures\n";
-	  return False;
+	  return false;
 	};
       };
     } else if (in.isMEarthMagnetic()) {
@@ -1836,7 +1838,7 @@ Bool measures::measure(String &error, MeasureHolder &out,
 	if (mo.isMEarthMagnetic()) outRef.set(mo.asMeasure());
 	else {
 	  error += "Non-conforming offset measure type\n";
-	  return False;
+	  return false;
 	};
       };
       MEarthMagnetic::Convert
@@ -1847,19 +1849,19 @@ Bool measures::measure(String &error, MeasureHolder &out,
         if (!out.setMV(i, mcvt(dynamic_cast<const MVEarthMagnetic &>
                                (*in.getMV(i))).getValue())) {
 	  error += "Cannot get extra measure value in DOmeasures::measures\n";
-	  return False;
+	  return false;
 	};
       };
     };
     if (out.isEmpty()) {
       error += "No measure created; probably unknow measure type\n";
-      return False;
+      return false;
     };
   } catch (AipsError (x)) {
     error += "Cannot convert due to missing frame information\n";
-    return False;
+    return false;
   };
-  return True;
+  return true;
 }
 
 
@@ -2003,14 +2005,14 @@ measures::doframe(const MeasureHolder &in) {
     if (in.isMPosition() || in.isMDirection() ||
 	in.isMEpoch() || in.isMRadialVelocity()) {
       frame_p->set(in.asMeasure());
-      return True;
+      return true;
     };
   } catch (AipsError(x)) {
     *itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg()
 	    << LogIO::POST;
     RETHROW(x);
   }
-  return False;
+  return false;
 }
 
 // framenow specifies a frame time of now
@@ -2018,7 +2020,7 @@ bool
 measures::framenow()
 {
   try {
-    casa::MEpoch now((casa::Quantity(Time().modifiedJulianDay(), "d")), casa::MEpoch::UTC);
+    casacore::MEpoch now((casacore::Quantity(Time().modifiedJulianDay(), "d")), casacore::MEpoch::UTC);
     measures::doframe(now);
     return true;
   } catch (AipsError(x)) {
@@ -2031,7 +2033,7 @@ measures::framenow()
 std::string
 measures::showframe()
 {
-  std::string s("False");
+  std::string s("false");
   try {
     if (frame_p) {
       ostringstream oss;
@@ -2047,17 +2049,17 @@ measures::showframe()
   return s;
 }
 
-casa::MeasureHolder
-measures::doptorv(const casa::String &rf, const casa::MeasureHolder &v)
+casacore::MeasureHolder
+measures::doptorv(const casacore::String &rf, const casacore::MeasureHolder &v)
 {
   MeasureHolder returnval;
   try {
-	  casa::MRadialVelocity::Ref outRef;
-	  casa::MRadialVelocity tout;
+	  casacore::MRadialVelocity::Ref outRef;
+	  casacore::MRadialVelocity tout;
     tout.giveMe(outRef, rf);
-    returnval = MeasureHolder(casa::MRadialVelocity::
+    returnval = MeasureHolder(casacore::MRadialVelocity::
 			      fromDoppler(v.asMDoppler(), 
-					  static_cast<casa::MRadialVelocity::Types>
+					  static_cast<casacore::MRadialVelocity::Types>
 					  (outRef.getType())));
     uInt nel(v.nelements());
     if (nel>0) {
@@ -2065,9 +2067,9 @@ measures::doptorv(const casa::String &rf, const casa::MeasureHolder &v)
       MDoppler::Convert mfcv(v.asMDoppler(),
 			     v.asMDoppler().getRef());
       for (uInt i=0; i<nel; i++) {
-	returnval.setMV(i, casa::MRadialVelocity::
+	returnval.setMV(i, casacore::MRadialVelocity::
 			fromDoppler(mfcv(v.getMV(i)),
-				    static_cast<casa::MRadialVelocity::Types>
+				    static_cast<casacore::MRadialVelocity::Types>
 				    (outRef.getType())).getValue());
       };
     };
@@ -2118,9 +2120,9 @@ measures::toradialvelocity(const std::string& rf, const ::casac::record& v0)
   return 0;
 }
 
-casa::MeasureHolder
-measures::doptofreq(const casa::String &rf, const casa::MeasureHolder &v,
-		    const casa::Quantity &rfq)
+casacore::MeasureHolder
+measures::doptofreq(const casacore::String &rf, const casacore::MeasureHolder &v,
+		    const casacore::Quantity &rfq)
 {
   MeasureHolder returnval;
 
@@ -2165,7 +2167,7 @@ measures::tofrequency(const std::string& rf, const ::casac::record& v0, const ::
     Record *p_rfq = toRecord(rfq);
     QuantumHolder qh_rfq;
     MeasureHolder mh_rfq;
-    casa::Quantity q_rfq;
+    casacore::Quantity q_rfq;
     if (qh_rfq.fromRecord(error, *p_rfq)) {
       q_rfq = qh_rfq.asQuantity();
     } else if ( (mh_rfq.fromRecord(error,*p_rfq)) &&
@@ -2195,7 +2197,7 @@ measures::tofrequency(const std::string& rf, const ::casac::record& v0, const ::
     MeasureHolder out;
     // if (ismeasure(v0) && v0.type == 'doppler' && is_quantity(rfq) &&
     //	  dq.compare(rfq, dq.quantity(1.,'Hz'))) {
-    casa::Quantity qcomp(1.0,"Hz");// used to compare dimensionality of units
+    casacore::Quantity qcomp(1.0,"Hz");// used to compare dimensionality of units
     if (mh_v0.isMeasure() && mh_v0.isMDoppler() && qh_rfq.isQuantum() &&
 	(q_rfq.getFullUnit().getValue() == qcomp.getFullUnit().getValue())) {
       out = measures::doptofreq(rf,mh_v0,q_rfq);
@@ -2221,19 +2223,19 @@ measures::tofrequency(const std::string& rf, const ::casac::record& v0, const ::
 
 
 MeasureHolder
-todop(String error, MeasureHolder v0, casa::Quantity rfq) {
+todop(String error, MeasureHolder v0, casacore::Quantity rfq) {
   MeasureHolder returnval;
   error = "";
 
   if (v0.isMRadialVelocity()) {
-    returnval = casa::MRadialVelocity::toDoppler(v0.asMeasure());
+    returnval = casacore::MRadialVelocity::toDoppler(v0.asMeasure());
     uInt nel(v0.nelements());
     if (nel>0) {
       returnval.makeMV(nel);
-      casa::MRadialVelocity::Convert mfcv(v0.asMRadialVelocity(),
+      casacore::MRadialVelocity::Convert mfcv(v0.asMRadialVelocity(),
 				    v0.asMRadialVelocity().getRef());
       for (uInt i=0; i<nel; i++) {
-	returnval.setMV(i, casa::MRadialVelocity::
+	returnval.setMV(i, casacore::MRadialVelocity::
 			  toDoppler(mfcv(v0.getMV(i))).
 			  getValue());
       };
@@ -2269,8 +2271,8 @@ measures::todoppler(const std::string& rf, const ::casac::record& v0, const ::ca
   try {
 
   String error;
-  casa::Quantity q_rfq;
-  casa::MFrequency m_rfq;
+  casacore::Quantity q_rfq;
+  casacore::MFrequency m_rfq;
   try{
     casaMFrequency(rfq, m_rfq);
     q_rfq=m_rfq.get("Hz");
@@ -2283,7 +2285,7 @@ measures::todoppler(const std::string& rf, const ::casac::record& v0, const ::ca
 
   QuantumHolder qh_rfq;
   MeasureHolder mh_rfq;
-  casa::Quantity q_rfq;
+  casacore::Quantity q_rfq;
   if (qh_rfq.fromRecord(error, *pRfq)) {
     q_rfq = qh_rfq.asQuantity();
   } else if ( (mh_rfq.fromRecord(error,*pRfq)) &&
@@ -2312,13 +2314,13 @@ measures::todoppler(const std::string& rf, const ::casac::record& v0, const ::ca
 
   MeasureHolder returnval;
 
-  casa::Quantity qcomp(1.0,"Hz");// used to compare dimensionality of units
+  casacore::Quantity qcomp(1.0,"Hz");// used to compare dimensionality of units
 
   // if (ismeasure(v0)) {
   //   if (v0.type == 'radialvelocity') {
   //     loc := private.todop(v0, dq.quantity(1.,'Hz'));
   if (mh_v.isMRadialVelocity()) {
-    returnval = todop(error, mh_v, casa::Quantity(1.,"Hz"));
+    returnval = todop(error, mh_v, casacore::Quantity(1.,"Hz"));
   // } else if (v0.type == 'frequency' && is_quantity(rfq) &&
   //	        dq.compare(rfq, dq.quantity(1.,'Hz'))) {
   //   loc := private.todop(v0, rfq);
@@ -2434,22 +2436,22 @@ measures::rise(const ::casac::variant& crd, const ::casac::variant& ev)
   String error;
   try {
     Record outrec;
-    casa::Quantity elev;
+    casacore::Quantity elev;
     if(toCasaString(ev)==String("")){
-      elev=casa::Quantity(0.0, "deg");
+      elev=casacore::Quantity(0.0, "deg");
     }
     else{
 	elev=casaQuantity(ev);
     }
-    casa::MDirection srcDir;
+    casacore::MDirection srcDir;
     if(casaMDirection(crd, srcDir)){
-	casa::MPosition pos=frame_p->position();
+	casacore::MPosition pos=frame_p->position();
       
-	casa::MDirection hd(casa::MDirection::Convert(srcDir, 
-					  casa::MDirection::Ref(casa::MDirection::HADEC,
+	casacore::MDirection hd(casacore::MDirection::Convert(srcDir,
+					  casacore::MDirection::Ref(casacore::MDirection::HADEC,
 							  *frame_p))());
-	casa::MDirection c(casa::MDirection::Convert(srcDir, 
-					 casa::MDirection::Ref(casa::MDirection::APP,
+	casacore::MDirection c(casacore::MDirection::Convert(srcDir,
+					 casacore::MDirection::Ref(casacore::MDirection::APP,
 							 *frame_p))());
 	
 	Double longi;
@@ -2475,9 +2477,9 @@ measures::rise(const ::casac::variant& crd, const ::casac::variant& ev)
 	  Double appRa=c.getAngle("rad").getValue()(0);
 	  String err;
 	  Record riserec;
-       	  QuantumHolder(casa::Quantity(appRa-a, "rad")).toRecord(err, riserec);
+       	  QuantumHolder(casacore::Quantity(appRa-a, "rad")).toRecord(err, riserec);
 	  outrec.defineRecord("rise", riserec);
-	  QuantumHolder(casa::Quantity(appRa+a, "rad")).toRecord(err, riserec);
+	  QuantumHolder(casacore::Quantity(appRa+a, "rad")).toRecord(err, riserec);
 	  outrec.defineRecord("set", riserec);			
 	  ///
 	}
@@ -2554,19 +2556,19 @@ measures::riseset(const ::casac::variant& crd, const ::casac::variant& ev)
       setLAST=MVAngle(qh.asQuantity())().radian();
       if(setLAST < riseLAST)
       	setLAST+=C::circle;
-      casa::MEpoch newEp(frame_p->epoch());
+      casacore::MEpoch newEp(frame_p->epoch());
       newEp.setRefString("R_UTC");
       newEp.getRefPtr()->set(*frame_p);
-      casa::MEpoch refepoch=casa::MEpoch::Convert(newEp, casa::MEpoch::Ref(casa::MEpoch::LAST, *frame_p))();
+      casacore::MEpoch refepoch=casacore::MEpoch::Convert(newEp, casacore::MEpoch::Ref(casacore::MEpoch::LAST, *frame_p))();
       Double refval=refepoch.get("d").getValue();
       *itsLog << "LAST of rise= " 
 	      << MVAngle(riseLAST).string(MVAngle::TIME, 8) << LogIO::POST;
-      refepoch.set(MVEpoch(casa::Quantity(refval+ riseLAST/C::circle, "d")), 
-		   casa::MEpoch::Ref(casa::MEpoch::LAST, *frame_p));
-      MeasureHolder mh(casa::MEpoch::Convert(refepoch, casa::MEpoch::Ref(casa::MEpoch::UTC, *frame_p))());
+      refepoch.set(MVEpoch(casacore::Quantity(refval+ riseLAST/C::circle, "d")),
+		   casacore::MEpoch::Ref(casacore::MEpoch::LAST, *frame_p));
+      MeasureHolder mh(casacore::MEpoch::Convert(refepoch, casacore::MEpoch::Ref(casacore::MEpoch::UTC, *frame_p))());
       ostringstream os;
       os  << "UTC of rise= " 
-      	      << MVTime(casa::MEpoch::Convert(refepoch, casa::MEpoch::Ref(casa::MEpoch::UTC, *frame_p))().getValue()).string(MVTime::YMD)	      << endl;
+      	      << MVTime(casacore::MEpoch::Convert(refepoch, casacore::MEpoch::Ref(casacore::MEpoch::UTC, *frame_p))().getValue()).string(MVTime::YMD)	      << endl;
       Record riseRec;
       Record riseRecUTC;
       mh.toRecord(err, riseRecUTC);
@@ -2577,14 +2579,14 @@ measures::riseset(const ::casac::variant& crd, const ::casac::variant& ev)
 
       *itsLog << "LAST of  set= " 
 	      << MVAngle(setLAST).string(MVAngle::TIME, 8) << LogIO::POST;
-      refepoch.set(MVEpoch(casa::Quantity(refval+ setLAST/C::circle, "d")));
+      refepoch.set(MVEpoch(casacore::Quantity(refval+ setLAST/C::circle, "d")));
       
       Record setRec;
       Record setRecUTC;
-      MeasureHolder(casa::MEpoch::Convert(refepoch, casa::MEpoch::Ref(casa::MEpoch::UTC, *frame_p))()).toRecord(err, setRecUTC);
+      MeasureHolder(casacore::MEpoch::Convert(refepoch, casacore::MEpoch::Ref(casacore::MEpoch::UTC, *frame_p))()).toRecord(err, setRecUTC);
 
       os  << "UTC of  set= " 
-      	      << MVTime(casa::MEpoch::Convert(refepoch, casa::MEpoch::Ref(casa::MEpoch::UTC, *frame_p))().getValue()).string(MVTime::YMD)	      << endl;
+      	      << MVTime(casacore::MEpoch::Convert(refepoch, casacore::MEpoch::Ref(casacore::MEpoch::UTC, *frame_p))().getValue()).string(MVTime::YMD)	      << endl;
       *itsLog << os.str() << LogIO::POST;
       setRec.defineRecord("utc", setRecUTC);
       Record setRecLAST;
@@ -2641,16 +2643,16 @@ measures::riseset(const ::casac::variant& crd, const ::casac::variant& ev)
 }
 
 // posangle
-casa::Quantity
-measures::posangle (const casa::MDirection& md1, const casa::MDirection& md2) {
-  casa::MDirection x(md1);
-  casa::MDirection y(md2);
+casacore::Quantity
+measures::posangle (const casacore::MDirection& md1, const casacore::MDirection& md2) {
+  casacore::MDirection x(md1);
+  casacore::MDirection y(md2);
   x.getRefPtr()->set(*frame_p);
   y.getRefPtr()->set(*frame_p);
-  if (x.isModel()) x = casa::MDirection::Convert(x, casa::MDirection::DEFAULT)();
-  if (y.isModel()) y = casa::MDirection::Convert(y, casa::MDirection::DEFAULT)();
+  if (x.isModel()) x = casacore::MDirection::Convert(x, casacore::MDirection::DEFAULT)();
+  if (y.isModel()) y = casacore::MDirection::Convert(y, casacore::MDirection::DEFAULT)();
   if (x.getRefPtr()->getType() != y.getRefPtr()->getType()) {
-    y = casa::MDirection::Convert(y, casa::MDirection::castType
+    y = casacore::MDirection::Convert(y, casacore::MDirection::castType
 			    (x.getRefPtr()->getType()))();
   };
   return x.getValue().positionAngle(y.getValue(), "deg");
@@ -2680,7 +2682,7 @@ measures::posangle(const ::casac::record& m1, const ::casac::record& m2)
       *itsLog << LogIO::SEVERE << error << LogIO::POST;
       return recordFromQuantity(Quantum<Vector<Double> >(retval,unit));
     };
-    casa::MDirection x = in1.asMDirection();
+    casacore::MDirection x = in1.asMDirection();
 
     MeasureHolder in2;
     Record *p_m2 = toRecord(m2);
@@ -2696,17 +2698,17 @@ measures::posangle(const ::casac::record& m1, const ::casac::record& m2)
       *itsLog << LogIO::SEVERE << error << LogIO::POST;
       return recordFromQuantity(Quantum<Vector<Double> >(retval,unit));
     };
-    casa::MDirection y = in2.asMDirection();
+    casacore::MDirection y = in2.asMDirection();
     /*
     x.getRefPtr()->set(*frame_p);
     y.getRefPtr()->set(*frame_p);
-    if (x.isModel()) x = casa::MDirection::Convert(x, casa::MDirection::DEFAULT)();
-    if (y.isModel()) y = casa::MDirection::Convert(y, casa::MDirection::DEFAULT)();
+    if (x.isModel()) x = casacore::MDirection::Convert(x, casacore::MDirection::DEFAULT)();
+    if (y.isModel()) y = casacore::MDirection::Convert(y, casacore::MDirection::DEFAULT)();
     if (x.getRefPtr()->getType() != y.getRefPtr()->getType()) {
-      y = casa::MDirection::Convert(y, casa::MDirection::castType
+      y = casacore::MDirection::Convert(y, casacore::MDirection::castType
 			      (x.getRefPtr()->getType()))();
     };
-    return recordFromQuantity(casa::Quantity(x.getValue().positionAngle(y.getValue(), "deg")));
+    return recordFromQuantity(casacore::Quantity(x.getValue().positionAngle(y.getValue(), "deg")));
     */
     return recordFromQuantity(posangle(x,y));
   } catch (AipsError(x)) {
@@ -2740,7 +2742,7 @@ measures::separation(const ::casac::record& m1, const ::casac::record& m2)
       *itsLog << LogIO::SEVERE << error << LogIO::POST;
       return recordFromQuantity(Quantum<Vector<Double> >(retval,unit));
     };
-    casa::MDirection x = in1.asMDirection();
+    casacore::MDirection x = in1.asMDirection();
 
     MeasureHolder in2;
     Record *p_m2 = toRecord(m2);
@@ -2757,14 +2759,14 @@ measures::separation(const ::casac::record& m1, const ::casac::record& m2)
       *itsLog << LogIO::SEVERE << error << LogIO::POST;
       return recordFromQuantity(Quantum<Vector<Double> >(retval,unit));
     };
-    casa::MDirection y = in2.asMDirection();
+    casacore::MDirection y = in2.asMDirection();
 
     x.getRefPtr()->set(*frame_p);
     y.getRefPtr()->set(*frame_p);
-    if (x.isModel()) x = casa::MDirection::Convert(x, casa::MDirection::DEFAULT)();
-    if (y.isModel()) y = casa::MDirection::Convert(y, casa::MDirection::DEFAULT)();
+    if (x.isModel()) x = casacore::MDirection::Convert(x, casacore::MDirection::DEFAULT)();
+    if (y.isModel()) y = casacore::MDirection::Convert(y, casacore::MDirection::DEFAULT)();
     if (x.getRefPtr()->getType() != y.getRefPtr()->getType()) {
-      y = casa::MDirection::Convert(y, casa::MDirection::castType
+      y = casacore::MDirection::Convert(y, casacore::MDirection::castType
 			      (x.getRefPtr()->getType()))();
     };
     return recordFromQuantity(x.getValue().separation(y.getValue(), "deg"));
@@ -2859,11 +2861,11 @@ measures::type()
 }
 
 
-casa::Quantity
+casacore::Quantity
 measures::casaQuantityFromVar(const ::casac::variant& theVar){
-  casa::Quantity retval;
+  casacore::Quantity retval;
   try {
-    casa::QuantumHolder qh;
+    casacore::QuantumHolder qh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){
@@ -2892,9 +2894,9 @@ measures::casaQuantityFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-casa::MeasureHolder
+casacore::MeasureHolder
 measures::casaMeasureHolderFromVar(const ::casac::variant& theVar){
-  casa::MeasureHolder mh;
+  casacore::MeasureHolder mh;
   try {
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
@@ -2922,7 +2924,7 @@ measures::casaMeasureHolderFromVar(const ::casac::variant& theVar){
 }
 
 bool
-measures::casacRec2MeasureHolder(casa::MeasureHolder& mh,
+measures::casacRec2MeasureHolder(casacore::MeasureHolder& mh,
 				   const ::casac::record& theRec){
   bool rstat(false);
   try {
@@ -2942,11 +2944,11 @@ measures::casacRec2MeasureHolder(casa::MeasureHolder& mh,
 return rstat;
 }
 
-casa::MDirection
+casacore::MDirection
 measures::casaMDirectionFromVar(const ::casac::variant& theVar){
-  casa::MDirection retval;
+  casacore::MDirection retval;
   try {
-    casa::MeasureHolder mh;
+    casacore::MeasureHolder mh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){
@@ -2974,11 +2976,11 @@ measures::casaMDirectionFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-casa::MDoppler
+casacore::MDoppler
 measures::casaMDopplerFromVar(const ::casac::variant& theVar){
-  casa::MDoppler retval;
+  casacore::MDoppler retval;
   try {
-    casa::MeasureHolder mh;
+    casacore::MeasureHolder mh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){
@@ -3006,11 +3008,11 @@ measures::casaMDopplerFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-casa::MEpoch
+casacore::MEpoch
 measures::casaMEpochFromVar(const ::casac::variant& theVar){
-  casa::MEpoch retval;
+  casacore::MEpoch retval;
   try {
-    casa::MeasureHolder mh;
+    casacore::MeasureHolder mh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){
@@ -3038,11 +3040,11 @@ measures::casaMEpochFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-casa::MFrequency
+casacore::MFrequency
 measures::casaMFrequencyFromVar(const ::casac::variant& theVar){
-  casa::MFrequency retval;
+  casacore::MFrequency retval;
   try {
-    casa::MeasureHolder mh;
+    casacore::MeasureHolder mh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){
@@ -3070,11 +3072,11 @@ measures::casaMFrequencyFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-casa::MPosition
+casacore::MPosition
 measures::casaMPositionFromVar(const ::casac::variant& theVar){
-  casa::MPosition retval;
+  casacore::MPosition retval;
   try {
-    casa::MeasureHolder mh;
+    casacore::MeasureHolder mh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){
@@ -3102,11 +3104,11 @@ measures::casaMPositionFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-casa::MRadialVelocity
+casacore::MRadialVelocity
 measures::casaMRadialVelocityFromVar(const ::casac::variant& theVar){
-  casa::MRadialVelocity retval;
+  casacore::MRadialVelocity retval;
   try {
-    casa::MeasureHolder mh;
+    casacore::MeasureHolder mh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){
@@ -3134,11 +3136,11 @@ measures::casaMRadialVelocityFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-casa::MBaseline
+casacore::MBaseline
 measures::casaMBaselineFromVar(const ::casac::variant& theVar){
-  casa::MBaseline retval;
+  casacore::MBaseline retval;
   try {
-    casa::MeasureHolder mh;
+    casacore::MeasureHolder mh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){
@@ -3166,11 +3168,11 @@ measures::casaMBaselineFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-casa::Muvw
+casacore::Muvw
 measures::casaMuvwFromVar(const ::casac::variant& theVar){
-  casa::Muvw retval;
+  casacore::Muvw retval;
   try {
-    casa::MeasureHolder mh;
+    casacore::MeasureHolder mh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){
@@ -3198,11 +3200,11 @@ measures::casaMuvwFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
-casa::MEarthMagnetic
+casacore::MEarthMagnetic
 measures::casaMEarthMagneticFromVar(const ::casac::variant& theVar){
-  casa::MEarthMagnetic retval;
+  casacore::MEarthMagnetic retval;
   try {
-    casa::MeasureHolder mh;
+    casacore::MeasureHolder mh;
     String error;
     if(theVar.type()== ::casac::variant::STRING ||
        theVar.type()== ::casac::variant::STRINGVEC){

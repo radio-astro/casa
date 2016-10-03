@@ -22,8 +22,10 @@
 #include <stdcasa/StdCasa/CasacSupport.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 // necessary because our build tools require a default constructor and destructor to be implemented
@@ -96,8 +98,8 @@ record* fitter::logtranspoly(
 	LogIO log;
 	try {
 		ProfileFit1D<Double> fitter;
-		Vector<Double> lnx = casa::log(Vector<Double>(x));
-		Vector<Double> lny = casa::log(Vector<Double>(y));
+		Vector<Double> lnx = casacore::log(Vector<Double>(x));
+		Vector<Double> lny = casacore::log(Vector<Double>(y));
 		fitter.setData(lnx, lny, mask);
 		SpectralList list;
 		if (estimates.size() == 0) {

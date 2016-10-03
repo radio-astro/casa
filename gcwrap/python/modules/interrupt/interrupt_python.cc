@@ -85,11 +85,11 @@ bool interrupt_cont_priv( ) {
 
 static PyObject *interrupt_cont_(PyObject *self, PyObject *args) {
     if ( interrupt_cont_priv( ) ) {
-	Py_INCREF(Py_True);
-	return Py_True;
+	Py_INCREF(Py_true);
+	return Py_true;
     } else {
-	Py_INCREF(Py_False);
-	return Py_False;
+	Py_INCREF(Py_false);
+	return Py_false;
     }
 }
 

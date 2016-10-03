@@ -2,8 +2,12 @@
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <casa/Arrays/Vector.h>
 
+namespace casacore{
+
+   class LogIO;
+}
+
 namespace casa
 {   
-   class LogIO;
    class ComponentList;
 }

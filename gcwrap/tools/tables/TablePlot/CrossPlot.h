@@ -72,8 +72,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <srcblock>
 // // Instantiate BasePlot 
 // CrossPlot<T> CP();
-// CP.Init(Table&);
-// CP.CreateTENS(Vector<String> &TaQL);
+// CP.Init(casacore::Table&);
+// CP.CreateTENS(casacore::Vector<casacore::String> &TaQL);
 // CP.GetData();
 // ... followed by TPPlotter 'setPlotRange' and 'plotData' calls
 // </srcblock>
@@ -103,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // <todo asof="$DATE:$">
-//# A List of bugs, limitations, extensions or planned refinements.
+//# A casacore::List of bugs, limitations, extensions or planned refinements.
 // </todo>
 
 
@@ -118,31 +118,31 @@ class CrossPlot : public BasePlot {
       // This function is called from TPPlotter::setPlotRange().
       // Set plot range (all plots for this table).
       // Scan the data storage arrays to compute data ranges. In the case 
-      // of overlay plots (due to Array TpDouble TaQL results), combined
+      // of overlay plots (due to casacore::Array TpDouble TaQL results), combined
       // data ranges for this tables data are computed.
       // This function requires that all stored data arrays be traversed.
       // This can get expensive for large number of data points. It is
       // assumed that for such a large number of data points, plotting
       // could broken down into chunks using an iteration axis.
-      Int setPlotRange(Double &xmin, Double &xmax, Double &ymin, Double &ymax, 
-         Bool showflags, Bool columnsxaxis, String flagversion, 
-         Int averagenrows, String connectpoints=String("tablerow"), 
-         Bool doscalingcorrection=True, String multicolour=String("none"),
-         Bool honourxflags=False); 
+      casacore::Int setPlotRange(casacore::Double &xmin, casacore::Double &xmax, casacore::Double &ymin, casacore::Double &ymax, 
+         casacore::Bool showflags, casacore::Bool columnsxaxis, casacore::String flagversion, 
+         casacore::Int averagenrows, casacore::String connectpoints=casacore::String("tablerow"), 
+         casacore::Bool doscalingcorrection=true, casacore::String multicolour=casacore::String("none"),
+         casacore::Bool honourxflags=false); 
       
-      // Return True or False = if a point is selected
-      Bool selectedPoint(Int np, Int nr);
+      // Return true or false = if a point is selected
+      casacore::Bool selectedPoint(casacore::Int np, casacore::Int nr);
 
       // Create TableExprNodes from input TAQL strings.
-      Int createXTENS(Vector<String> &datastr);   
+      casacore::Int createXTENS(casacore::Vector<casacore::String> &datastr);   
       
       // Query the internal structures for X,Y data and Flag values
       // These functions are called by TPPlotter
-      Double getXVal(Int pnum, Int col);
-      Double getYVal(Int pnum, Int col);
-      Bool getYFlags(Int pnum, Int col);
-      Int getNumRows();
-      Int getNumPlots();
+      casacore::Double getXVal(casacore::Int pnum, casacore::Int col);
+      casacore::Double getYVal(casacore::Int pnum, casacore::Int col);
+      casacore::Bool getYFlags(casacore::Int pnum, casacore::Int col);
+      casacore::Int getNumRows();
+      casacore::Int getNumPlots();
       
    private:
       
@@ -154,24 +154,24 @@ class CrossPlot : public BasePlot {
       // reading only the first row of the table, 
       // but are required to preserve the format used in BasePlot
       // which reads a value from each row in the table.
-      //Int getXData(TableExprId &tid);
-      Int getXData(TPConvertBase* conv, Bool dummyread=False);
+      //casacore::Int getXData(casacore::TableExprId &tid);
+      casacore::Int getXData(TPConvertBase* conv, casacore::Bool dummyread=false);
 
       // Average the channel numbers ! not really used...
-      Int computeXAverages(Int averagenrows, Int remrows);
+      casacore::Int computeXAverages(casacore::Int averagenrows, casacore::Int remrows);
 
-      void CrossPlotError(String msg);
+      void CrossPlotError(casacore::String msg);
 
       // These hold indices for cell rows, and cell cols.
       // i.e. enumerated values from TaQL indices.
       // i.e. for [1:2,4:8],
       // xpdrow => [0,1]
       // xpdcol => [3,4,5,6,7]
-      Vector<Vector<Double> > xpdrow_p, xpdcol_p;
-      Vector<Int> ncellrows_p,ncellcols_p;
-      Bool columnsxaxis_p;
-      Bool plotperrow_p;
-      Bool honourxflags_p;
+      casacore::Vector<casacore::Vector<casacore::Double> > xpdrow_p, xpdcol_p;
+      casacore::Vector<casacore::Int> ncellrows_p,ncellcols_p;
+      casacore::Bool columnsxaxis_p;
+      casacore::Bool plotperrow_p;
+      casacore::Bool honourxflags_p;
 
       // Variables from Base class.
       using BasePlot::ReductionType_p;
@@ -218,7 +218,7 @@ class CrossPlot : public BasePlot {
       using BasePlot::adbg;
       using BasePlot::tmr;
      
-      static String clname; 
+      static casacore::String clname; 
 };
 
 } //# NAMESPACE CASA - END 

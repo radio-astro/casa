@@ -27,7 +27,7 @@
 #include <tools/utils/CasapyWatcher.h>
 
 using namespace std;
-using namespace casa;
+using namespace casacore;
 
 namespace casac {
 

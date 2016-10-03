@@ -26,6 +26,7 @@
 #include <casa/Arrays/ArrayIO.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
 #define _ORIGIN *_log << LogOrigin("functional_cmpt.cc", __FUNCTION__, __LINE__);
@@ -55,6 +56,7 @@ using namespace casa;
         }
 
 
+using namespace casacore;
 namespace casac {
 
 functional::functional() : _log(new LogIO())
@@ -197,7 +199,7 @@ functional* functional::gaussian2d(
 		if (fwhm.size() != 2) {
 			throw AipsError ("fwhm must have exactly two elelemnts");
 		}
-		casa::Quantity mypa = casaQuantity(pa);
+		casacore::Quantity mypa = casaQuantity(pa);
 		if (mypa.getUnit().empty()) {
 			mypa.setUnit("rad");
 		}

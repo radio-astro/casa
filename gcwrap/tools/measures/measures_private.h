@@ -1,41 +1,41 @@
 // Private part to measures_impl.h
 
 // Do a frame fill with a measure
-bool doframe(const casa::MeasureHolder &in);
+bool doframe(const casacore::MeasureHolder &in);
 // Do a frame fill with a table name (e.g. comet)
-bool doframe(const casa::String &in);
+bool doframe(const casacore::String &in);
 
 // Convert measure
-bool measure(casa::String &error, casa::MeasureHolder &out,
-		       const casa::MeasureHolder &in,
-		       const casa::String &outref,
-		       const casa::Record &off);
+bool measure(casacore::String &error, casacore::MeasureHolder &out,
+		       const casacore::MeasureHolder &in,
+		       const casacore::String &outref,
+		       const casacore::Record &off);
 
-casa::Quantity
-posangle (const casa::MDirection& md1, const casa::MDirection& md2);
+casacore::Quantity
+posangle (const casacore::MDirection& md1, const casacore::MDirection& md2);
 
-casa::MeasureHolder
-doptorv(const casa::String &rf, const casa::MeasureHolder &v);
-casa::MeasureHolder
-doptofreq(const casa::String &rf, const casa::MeasureHolder &v,
-		    const casa::Quantity &rfq);
+casacore::MeasureHolder
+doptorv(const casacore::String &rf, const casacore::MeasureHolder &v);
+casacore::MeasureHolder
+doptofreq(const casacore::String &rf, const casacore::MeasureHolder &v,
+		    const casacore::Quantity &rfq);
 
 //# Data
-casa::MeasFrame *frame_p;    // The globally used MeasFrame for this DO
-casa::MeasComet *pcomet_p;   // The current comet class
-casa::LogIO *itsLog;
+casacore::MeasFrame *frame_p;    // The globally used casacore::MeasFrame for this DO
+casacore::MeasComet *pcomet_p;   // The current comet class
+casacore::LogIO *itsLog;
 
-casa::Quantity casaQuantityFromVar(const ::casac::variant& theVar);
+casacore::Quantity casaQuantityFromVar(const ::casac::variant& theVar);
 
-bool casacRec2MeasureHolder(casa::MeasureHolder& mh, const ::casac::record& r);
-casa::MeasureHolder casaMeasureHolderFromVar(const ::casac::variant& theVar);
+bool casacRec2MeasureHolder(casacore::MeasureHolder& mh, const ::casac::record& r);
+casacore::MeasureHolder casaMeasureHolderFromVar(const ::casac::variant& theVar);
 
-casa::MDirection casaMDirectionFromVar(const ::casac::variant& theVar);
-casa::MDoppler casaMDopplerFromVar(const ::casac::variant& theVar);
-casa::MEpoch casaMEpochFromVar(const ::casac::variant& theVar);
-casa::MFrequency casaMFrequencyFromVar(const ::casac::variant& theVar);
-casa::MPosition casaMPositionFromVar(const ::casac::variant& theVar);
-casa::MRadialVelocity casaMRadialVelocityFromVar(const ::casac::variant& theVar);
-casa::MBaseline casaMBaselineFromVar(const ::casac::variant& theVar);
-casa::Muvw casaMuvwFromVar(const ::casac::variant& theVar);
-casa::MEarthMagnetic casaMEarthMagneticFromVar(const ::casac::variant& theVar);
+casacore::MDirection casaMDirectionFromVar(const ::casac::variant& theVar);
+casacore::MDoppler casaMDopplerFromVar(const ::casac::variant& theVar);
+casacore::MEpoch casaMEpochFromVar(const ::casac::variant& theVar);
+casacore::MFrequency casaMFrequencyFromVar(const ::casac::variant& theVar);
+casacore::MPosition casaMPositionFromVar(const ::casac::variant& theVar);
+casacore::MRadialVelocity casaMRadialVelocityFromVar(const ::casac::variant& theVar);
+casacore::MBaseline casaMBaselineFromVar(const ::casac::variant& theVar);
+casacore::Muvw casaMuvwFromVar(const ::casac::variant& theVar);
+casacore::MEarthMagnetic casaMEarthMagneticFromVar(const ::casac::variant& theVar);

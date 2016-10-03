@@ -1,6 +1,7 @@
 #include <xmlcasa/value_variant.h>
 #include <xmlcasa/type_variant.h>
 
+using namespace casacore;
 namespace casac {
 
 VariantValue::VariantValue() : WX::Utils::Value(VariantType::instance()), variantv(new variant()) { }

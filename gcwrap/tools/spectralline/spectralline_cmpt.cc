@@ -13,8 +13,10 @@
 #include <spectralline_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 spectralline::spectralline() : _log(new LogIO), _table(0) {}
@@ -89,7 +91,7 @@ bool spectralline::open(const string& tablename) {
 bool spectralline::close() {
 	try {
 		if (_table) {
-			_table->relinquishAutoLocks(True);
+			_table->relinquishAutoLocks(true);
 			_table->unlock();
 			delete _table;
 			_table = 0;
@@ -197,7 +199,7 @@ spectralline* spectralline::search(
 			tool->close();
 		}
 		if (table.get()) {
-			table->relinquishAutoLocks(True);
+			table->relinquishAutoLocks(true);
 			table->unlock();
 		}
 		*_log << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;

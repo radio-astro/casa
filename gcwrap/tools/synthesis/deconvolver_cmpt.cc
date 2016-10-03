@@ -25,9 +25,11 @@
 
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
 
+using namespace casacore;
 namespace casac {
 
 deconvolver::deconvolver()
@@ -131,8 +133,8 @@ bool
 deconvolver::boxmask(const std::string& mask, const std::vector<int>& blc, const std::vector<int>& trc, const ::casac::variant& fillvalue, const ::casac::variant& outsidevalue)
 {
   try {
-    casa::Quantity fill(1.0, "Jy");
-    casa::Quantity out(0.0, "Jy");
+    casacore::Quantity fill(1.0, "Jy");
+    casacore::Quantity out(0.0, "Jy");
     if(String(fillvalue.toString()) != String("")){
       fill=casaQuantity(fillvalue);
     }
@@ -155,15 +157,15 @@ bool
 deconvolver::regionmask(const std::string& mask, const ::casac::record& region,
 			const ::casac::variant& boxes, const double value)
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
     
-    casa::Record *pRegion = toRecord(region);
+    casacore::Record *pRegion = toRecord(region);
     if(pRegion->nfields() < 2){
       delete pRegion;
       pRegion=0;
     }
-    casa::Matrix<casa::Quantity> quantBoxes;
+    casacore::Matrix<casacore::Quantity> quantBoxes;
     Matrix<Float> theBoxes;
     if((boxes.type() == ::casac::variant::DOUBLEVEC) ||
        (boxes.type() == ::casac::variant::INTVEC) ){
@@ -179,19 +181,19 @@ deconvolver::regionmask(const std::string& mask, const ::casac::record& region,
       Vector<Int> shape = boxes.arrayshape();
       theBoxes.resize(IPosition(shape));
       Vector<Double> localbox(boxVector);
-      casa::convertArray(theBoxes,localbox.reform(IPosition(shape)));
+      casacore::convertArray(theBoxes,localbox.reform(IPosition(shape)));
       quantBoxes.resize(theBoxes.shape());
       for (Int k=0; k < shape[1]; ++k){
 	for(Int j=0; j < shape[0]; ++j){
-	  quantBoxes(j,k)=casa::Quantity(theBoxes(j,k), "pix");	      
+	  quantBoxes(j,k)=casacore::Quantity(theBoxes(j,k), "pix");
 	} 	    
       }
     }
     else if(boxes.type() == ::casac::variant::STRINGVEC){
       Vector<Int> shape = boxes.arrayshape();
-      casa::Vector<casa::Quantity> theCorners;
+      casacore::Vector<casacore::Quantity> theCorners;
       toCasaVectorQuantity(boxes, theCorners);
-      if(casa::product(shape) != Int(theCorners.nelements())){
+      if(casacore::product(shape) != Int(theCorners.nelements())){
 	throw(AipsError("Error in converting list of strings to Quantities"));
       }
       if(shape.nelements()==1){
@@ -207,7 +209,7 @@ deconvolver::regionmask(const std::string& mask, const ::casac::record& region,
       else{
 	throw(AipsError("Only dealing with 2D blc and trc's for now"));
       }
-      Vector<casa::Quantity> refQuantBoxes(quantBoxes.reform(IPosition(1, theCorners.nelements())));
+      Vector<casacore::Quantity> refQuantBoxes(quantBoxes.reform(IPosition(1, theCorners.nelements())));
       refQuantBoxes=theCorners;
       
       
@@ -235,7 +237,7 @@ deconvolver::clipimage(const std::string& clippedimage, const std::string& input
 {
 
   try {
-    casa::Quantity thresh(0.0, "Jy");
+    casacore::Quantity thresh(0.0, "Jy");
     if(String(threshold.toString()) != String("")){
       thresh=casaQuantity(threshold);
     }
@@ -252,7 +254,7 @@ deconvolver::clipimage(const std::string& clippedimage, const std::string& input
  casac::record*  deconvolver::fullclarkclean(const int niter, const double gain, const ::casac::variant& threshold, const std::string& model, const std::string& mask, const double cyclefactor){
    casac::record* rstat(0);
     try {
-      casa::Quantity thresh(0.0, "Jy");
+      casacore::Quantity thresh(0.0, "Jy");
       if(String(threshold.toString()) != String("")){
 	thresh=casaQuantity(threshold);
       }
@@ -280,7 +282,7 @@ bool
 deconvolver::clarkclean(const int niter, const double gain, const ::casac::variant& threshold, const bool displayprogress, const std::string& model, const std::string& mask, const int histbins, const std::vector<int>& psfpatchsize, const double maxextpsf, const double speedup, const int maxnumpix, const int maxnummajcycles, const int maxnummineriter)
 {
   try {
-    casa::Quantity thresh(0.0, "Jy");
+    casacore::Quantity thresh(0.0, "Jy");
     if(String(threshold.toString()) != String("")){
       thresh=casaQuantity(threshold);
     }
@@ -365,9 +367,9 @@ deconvolver::makegaussian(const std::string& gaussianimage, const ::casac::varia
 {
   try {
 
-    casa::Quantity maj(1, "arcsec");
-    casa::Quantity min(1, "arcsec");
-    casa::Quantity pa(0, "deg");
+    casacore::Quantity maj(1, "arcsec");
+    casacore::Quantity min(1, "arcsec");
+    casacore::Quantity pa(0, "deg");
     if(String(bmaj.toString()) != String("")){
       maj=casaQuantity(bmaj);
     }
@@ -414,7 +416,7 @@ deconvolver::clean(const std::string& algorithm, const int niter, const double g
   casac::record* rstat(0);
   try {
     
-    casa::Quantity thresh(0.0, "Jy");
+    casacore::Quantity thresh(0.0, "Jy");
     if(String(threshold.toString()) != String("")){
       thresh=casaQuantity(threshold);
     }
@@ -442,18 +444,18 @@ deconvolver::naclean(const int niter, const double gain, const ::casac::variant&
   casac::record* rstat(0);
   try {
     
-    casa::Quantity thresh(0.0, "Jy");
+    casacore::Quantity thresh(0.0, "Jy");
     if(String(threshold.toString()) != String("")){
       thresh=casaQuantity(threshold);
     }
     Float maxResidual=0.0;
     Int iterations=0;
     Int memType=2;
-    if(casa::String(memory)==casa::String("none"))
+    if(casacore::String(memory)==casacore::String("none"))
       memType=0;
-    else if (casa::String(memory)==casa::String("weak"))
+    else if (casacore::String(memory)==casacore::String("weak"))
       memType=1;
-    else if(casa::String(memory)==casa::String("strong"))
+    else if(casacore::String(memory)==casacore::String("strong"))
       memType=3;
     Bool converged=itsDeconv->naclean(niter, gain, thresh, 
 				      String(model), String(mask), masksupp, memType, Float(numsigma), maxResidual, iterations);
@@ -507,9 +509,9 @@ deconvolver::restore(const std::string& model, const std::string& image, const :
 
     GaussianBeam beam;
     if(toVectorString(bmaj.toStringVec()).nelements() != 0){
-      casa::Quantity bMaj(1, "arcsec");
-      casa::Quantity bMin(1, "arcsec");
-      casa::Quantity pa(0, "deg");
+      casacore::Quantity bMaj(1, "arcsec");
+      casacore::Quantity bMin(1, "arcsec");
+      casacore::Quantity pa(0, "deg");
       bMaj=casaQuantity(bmaj);
       if(toVectorString(bmin.toStringVec()).nelements() != 0){
 	bMin=casaQuantity(bmin);
@@ -547,9 +549,9 @@ deconvolver::smooth(const std::string& model, const std::string& image, const ::
 {
 
   try {
-    casa::Quantity maj(1, "arcsec");
-    casa::Quantity min(1, "arcsec");
-    casa::Quantity pa(0, "deg");
+    casacore::Quantity maj(1, "arcsec");
+    casacore::Quantity min(1, "arcsec");
+    casacore::Quantity pa(0, "deg");
     if(String(bmaj.toString()) != String("")){
       maj=casaQuantity(bmaj);
     }
@@ -576,11 +578,11 @@ bool
 deconvolver::mem(const std::string& entropy, const int niter, const ::casac::variant& sigma, const ::casac::variant& targetflux, const bool constrainflux, const bool displayprogress, const std::string& model, const std::string& prior, const std::string& mask, const bool imageplane, const bool /*async*/)
 {
   try {
-    casa::Quantity targflux(1.0, "Jy");
+    casacore::Quantity targflux(1.0, "Jy");
     if(String(targetflux.toString()) != String("")){
       targflux=casaQuantity(targetflux);
     }
-    casa::Quantity sig(1.0, "mJy");
+    casacore::Quantity sig(1.0, "mJy");
     if(String(sigma.toString()) != String("")){
       sig=casaQuantity(sigma);
     }
@@ -601,19 +603,19 @@ deconvolver::makeprior(const std::string& prior, const std::string& templateimag
 {
 
   try {
-    casa::Quantity lct(0.0, "Jy");
+    casacore::Quantity lct(0.0, "Jy");
     if(String(lowclipto.toString()) != String("")){
       lct=casaQuantity(lowclipto);
     }
-    casa::Quantity lcf(0.0, "Jy");
+    casacore::Quantity lcf(0.0, "Jy");
     if(String(lowclipfrom.toString()) != String("")){
       lcf=casaQuantity(lowclipfrom);
     }
-    casa::Quantity hct(9.0e20, "Jy");
+    casacore::Quantity hct(9.0e20, "Jy");
     if(String(highclipto.toString()) != String("")){
       hct=casaQuantity(highclipto);
     }
-    casa::Quantity hcf(9.0e20, "Jy");
+    casacore::Quantity hcf(9.0e20, "Jy");
     if(String(highclipfrom.toString()) != String("")){
       hcf=casaQuantity(highclipfrom);
     }
@@ -677,7 +679,7 @@ deconvolver::mtclean(const std::vector<std::string>& residuals,
     Vector<String> resvec(toVectorString(residuals));
     Vector<String> modvec(toVectorString(models));
 
-    casa::Quantity thresh(0.0, "Jy");
+    casacore::Quantity thresh(0.0, "Jy");
     if(String(threshold.toString()) != String(""))
       thresh=casaQuantity(threshold);
 
@@ -715,9 +717,9 @@ bool deconvolver::mtrestore(const std::vector<std::string>& models,
     Vector<String> resvec(toVectorString(residuals));
     Vector<String> imvec(toVectorString(images));
 
-    casa::Quantity maj(1, "arcsec");
-    casa::Quantity min(1, "arcsec");
-    casa::Quantity pa(0, "deg");
+    casacore::Quantity maj(1, "arcsec");
+    casacore::Quantity min(1, "arcsec");
+    casacore::Quantity pa(0, "deg");
     if(String(bmaj.toString()) != String("")){
       maj=casaQuantity(bmaj);
     }
@@ -756,7 +758,7 @@ bool deconvolver::mtcalcpowerlaw(const std::vector<std::string>& images,
     Vector<String> imvec(toVectorString(images));
     Vector<String> resvec(toVectorString(residuals));
 
-    casa::Quantity thresh(0.0, "Jy");
+    casacore::Quantity thresh(0.0, "Jy");
     if(String(threshold.toString()) != String(""))
       thresh=casaQuantity(threshold);
    

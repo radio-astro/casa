@@ -53,7 +53,9 @@
 int main()
 {
   using namespace std;
+using namespace casacore;
   using namespace casa;
+using namespace casacore;
   using namespace casac;
 
   try{

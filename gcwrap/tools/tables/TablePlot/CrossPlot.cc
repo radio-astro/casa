@@ -63,6 +63,7 @@
 
 #include <casa/iomanip.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define TMR(a) "[User: " << a.user() << "] [System: " << a.system() << "] [Real: " << a.real() << "]"
@@ -90,8 +91,8 @@ CrossPlot::CrossPlot() : BasePlot()
    locflagmarks_p.resize(0);
    xpdrow_p.resize(); xpdcol_p.resize();
    columnsxaxis_p=0;
-   plotperrow_p = False;
-   honourxflags_p=False;
+   plotperrow_p = false;
+   honourxflags_p=false;
 
    pType_p = CROSSPLOT; 
 }
@@ -362,7 +363,7 @@ Int CrossPlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
    //cout << "CrossPlot::setPlotRange" << endl;
    Matrix<Double> xprange_p,yprange_p;
    Double xvalue=0.0, yvalue=0.0;
-   Bool flag=False, rflag=False;
+   Bool flag=false, rflag=false;
 
    /* Record the showflags state */
     showflags_p = showflags;
@@ -374,10 +375,10 @@ Int CrossPlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
    yprange_p.resize(NPlots_p,2);
 
    columnsxaxis_p = columnsxaxis;
-   plotperrow_p = False;
+   plotperrow_p = false;
    if( connectpoints.matches(String("cellcol")) || 
        connectpoints.matches(String("cellrow")) )
-      plotperrow_p = True;
+      plotperrow_p = true;
    
    //if(columnsxaxis_p) // Use xpdcol as the x axis values
    //else // Use xpdrow as the x axis values
@@ -402,13 +403,13 @@ Int CrossPlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
 
    /* Update the xpdrow and xpdcol values to account
       for completely flagged cell rows or cell cols. */
-   getXData(conv_p,True);
+   getXData(conv_p,true);
         
    /* Update the averages. 
       This function knows when it should be a no-op */
    computeAverages(averagenrows);
 
-   Bool choosepoint=False;
+   Bool choosepoint=false;
    Int NR=0;
    for(int i=0;i<NPlots_p;i++)
    {
@@ -417,7 +418,7 @@ Int CrossPlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
       
       for(int rc=0;rc<NR;rc++)
       {
-         choosepoint = False;
+         choosepoint = false;
 
          if( columnsxaxis_p ) 
           xvalue = 
@@ -439,13 +440,13 @@ Int CrossPlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
             rflag = avgrowflags_p[rc];
          }
          
-         if( showflags == False )
+         if( showflags == false )
          {
-            if( (flag == False) && (rflag == False) ) choosepoint = True;
+            if( (flag == false) && (rflag == false) ) choosepoint = true;
          }
          else
          {
-            if( (flag == True) || (rflag == True) ) choosepoint = True;
+            if( (flag == true) || (rflag == true) ) choosepoint = true;
          }
          
          if( choosepoint ) 
@@ -529,11 +530,11 @@ Bool CrossPlot::selectedPoint(Int np,Int nr)
          yvalue >= (locflagmarks_p[nf])[2] && 
          yvalue <= (locflagmarks_p[nf])[3]) 
       {
-         return True;
+         return true;
       }
    }
    
-   return False;
+   return false;
 }
 
 /*********************************************************************************/
@@ -562,7 +563,7 @@ Double CrossPlot::getXVal(Int pnum, Int col)
 Double CrossPlot::getXVal(Int pnum, Int col)
 {
    //if( (!Average_p && NRows_p == 1) || (Average_p && NAvgRows_p==1) )
-   if( plotperrow_p == True )
+   if( plotperrow_p == true )
    {
       if(columnsxaxis_p)// x axis is chans. use xpdcol
          return xpdcol_p[Map_p(col,2)][Map_p(col,4)*ncellrows_p[Map_p(col,2)]+Map_p(col,3)];
@@ -585,13 +586,13 @@ Double CrossPlot::getYVal(Int pnum, Int col)
    if( ! Average_p )
    {
       //if( NRows_p == 1 ) return yplotdata_p(Map_p(col,1),pnum);
-      if( plotperrow_p == True ) return yplotdata_p(Map_p(col,1),pnum);
+      if( plotperrow_p == true ) return yplotdata_p(Map_p(col,1),pnum);
       else return yplotdata_p(Map_p(pnum,1),col);
    }
    else
    {
       //if( NAvgRows_p == 1) return avgyplotdata_p(Map_p(col,1),pnum);
-      if( plotperrow_p == True ) return avgyplotdata_p(Map_p(col,1),pnum);
+      if( plotperrow_p == true ) return avgyplotdata_p(Map_p(col,1),pnum);
       else return avgyplotdata_p(Map_p(pnum,1),col);
    }
 }
@@ -602,13 +603,13 @@ Bool CrossPlot::getYFlags(Int pnum, Int col)
    if( ! Average_p )
    {
       //if( NRows_p == 1 ) return theflags_p(Map_p(col,1),pnum) | rowflags_p[pnum];
-      if( plotperrow_p == True ) return theflags_p(Map_p(col,1),pnum) | rowflags_p[pnum];
+      if( plotperrow_p == true ) return theflags_p(Map_p(col,1),pnum) | rowflags_p[pnum];
       else return theflags_p(Map_p(pnum,1),col) | rowflags_p[col];
    }
    else
    {
       //if( NAvgRows_p == 1 ) return avgtheflags_p(Map_p(col,1),pnum) | avgrowflags_p[pnum];
-      if( plotperrow_p == True ) return avgtheflags_p(Map_p(col,1),pnum) | avgrowflags_p[pnum];
+      if( plotperrow_p == true ) return avgtheflags_p(Map_p(col,1),pnum) | avgrowflags_p[pnum];
       else return avgtheflags_p(Map_p(pnum,1),col) | avgrowflags_p[col];
    }
 }
@@ -620,13 +621,13 @@ Int CrossPlot::getNumPlots()
    if( ! Average_p )
    {
       //if( NRows_p == 1 ) return NRows_p;
-      if( plotperrow_p == True ) return NRows_p;
+      if( plotperrow_p == true ) return NRows_p;
       else return NPlots_p;
    }
    else 
    {
       //if( NAvgRows_p == 1 ) return NAvgRows_p;
-      if( plotperrow_p == True ) return NAvgRows_p;
+      if( plotperrow_p == true ) return NAvgRows_p;
       else return NPlots_p;
    }
 }
@@ -638,13 +639,13 @@ Int CrossPlot::getNumRows()
    if( ! Average_p )
    {
       //if( NRows_p == 1 ) return NPlots_p;
-      if( plotperrow_p == True ) return NPlots_p;
+      if( plotperrow_p == true ) return NPlots_p;
       else return NRows_p;
    }
    else
    {
       //if( NAvgRows_p == 1 ) return NPlots_p;
-      if( plotperrow_p == True ) return NPlots_p;
+      if( plotperrow_p == true ) return NPlots_p;
       else return NAvgRows_p;
    }
 }

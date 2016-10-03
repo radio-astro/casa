@@ -35,8 +35,10 @@
 #include <stdio.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 	/*
@@ -56,8 +58,8 @@ logsink::logsink()
   }
 
   // jagonzal: Set task and processor name
-  taskname = new casa::String("casa");
-  processor_name = casa::String("casa");
+  taskname = new casacore::String("casa");
+  processor_name = casacore::String("casa");
 
   //cout << "thelogsink=" << thelogsink << endl;
   thelogsink = new casa::TSLogSink();
@@ -83,7 +85,7 @@ logsink::logsink()
       }
    //std::cout << "logfile.default: " << tmpname << std::endl;
    if(tmpname != "null") {
-      casa::File filein( tmpname ) ;
+      casacore::File filein( tmpname ) ;
       logname = filein.path().absoluteName() ;
       //static_cast<TSLogSink*>(thelogsink)->setLogSink(logname);
    }
@@ -140,7 +142,7 @@ bool logsink::processorOrigin(const std::string &fromwhere)
 {
 	bool rstat = true;
 
-    processor_name = casa::String(fromwhere);
+    processor_name = casacore::String(fromwhere);
 
     return rstat;
 }
@@ -324,7 +326,7 @@ bool logsink::setlogfile(const std::string& filename)
       }
    }
    if(tmpname != "null") {
-      casa::File filein( tmpname ) ;
+      casacore::File filein( tmpname ) ;
       logname = filein.path().absoluteName() ;
       static_cast<TSLogSink*>(thelogsink)->setLogSink(logname);
    }
@@ -390,7 +392,7 @@ logsink::ompGetNumThreads()
 bool
 logsink::ompSetNumThreads(int numThreads)
 {
-	Int res(True);
+	Int res(true);
 
 	#ifdef _OPENMP
 		omp_set_num_threads(numThreads);

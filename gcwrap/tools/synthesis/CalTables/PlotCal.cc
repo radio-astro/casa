@@ -74,6 +74,7 @@
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define NEED_UNDERSCORES
@@ -96,14 +97,14 @@ extern "C" {
     calType_p(""),
     nxPanels_p(1), 
     nyPanels_p(1),
-    multiPlot_p(False), 
-    overPlot_p(False), 
+    multiPlot_p(false), 
+    overPlot_p(false), 
     plotType_p("PHASE"),
     polType_p(""),
     xAxis_p(""),
     yAxis_p(""),
     iterAxes_p(),
-    iterating_p(False),
+    iterating_p(false),
     titleMain_p(""), 
     whichPol_p(0),
     nCalDesc_p(0),
@@ -112,9 +113,9 @@ extern "C" {
     stepFreq_p(),
     nchan_p(),
     resetCallBack_p(NULL),
-    noMS_p(True),
+    noMS_p(true),
     MSstartChan_p(),
-    isNCT_p(True),
+    isNCT_p(true),
     ct_p()
 {
 
@@ -158,7 +159,7 @@ extern "C" {
 
     whichPol_p=0;
 
-    return True;
+    return true;
   }
 
   void  PlotCal::close(){
@@ -182,7 +183,7 @@ extern "C" {
     
     tp_p->clearPlot(nx,ny,panel);
     //tp_p->clearPlot();
-    return True;
+    return true;
   }
   
   Bool PlotCal::setPlotParam(Int subplot,
@@ -215,7 +216,7 @@ extern "C" {
 
 
    // Handle overplot && iteration
-   multiPlot_p=False;
+   multiPlot_p=false;
    iterAxes_p.resize();
    if (iteration.length()>0) {
 
@@ -240,15 +241,15 @@ extern "C" {
        iterAxes_p(iter)="FIELD_ID";
        ++iter;
      }
-     iterAxes_p.resize(iter,True);
-     multiPlot_p=True;
+     iterAxes_p.resize(iter,true);
+     multiPlot_p=true;
    }
 
    // Handle overplot (multiplot trumps overplot)
    overPlot_p = overplot;
    if (multiPlot_p && overplot) {
      cout << "NB: Plot iteration requested, turning off overplot" << endl;
-     overPlot_p=False;
+     overPlot_p=false;
    }
    plotopts_p.define("overplot", overPlot_p);
 
@@ -272,7 +273,7 @@ extern "C" {
    if (plotrange.nelements()<4)
      pltr=Vector<Double>(4,0.0);
    plotopts_p.define("plotrange",pltr);
-   plotopts_p.define( RecordFieldId("plotrangesset"), Vector<Bool>(4,True) );
+   plotopts_p.define( RecordFieldId("plotrangesset"), Vector<Bool>(4,true) );
 
    //Define the plot symbol as defined by matplotlib...
    setPlotSymbols(plotsymbol);
@@ -291,7 +292,7 @@ extern "C" {
    
    //    cout << itsPlotOptions.print() << endl;
    
-   return True;
+   return true;
 
   }
 
@@ -308,10 +309,10 @@ Bool PlotCal::selectCal(const String& antenna,
   Vector<Int> spwId;
   //  Matrix<Int> chanId;
 
-  Bool antSel=False;
-  Bool fldSel=False;
-  Bool spwSel=False;
-  Bool timeSel=False;
+  Bool antSel=false;
+  Bool fldSel=false;
+  Bool spwSel=false;
+  Bool timeSel=false;
 
 
   // This will be revised below, if necessary
@@ -324,33 +325,33 @@ Bool PlotCal::selectCal(const String& antenna,
     cout << "      with this cal table does not exist.  All antennas," << endl;
     cout << "      fields, spws are being selected for plotting." << endl;
 
-    noMS_p=True;
+    noMS_p=true;
   }
   else {
 
-    noMS_p=False;
+    noMS_p=false;
     
     // Use MSSelection-assistance
     antId=getAntIdx(antenna);
     if (antenna.length()>0 && antId.nelements()==0)
       throw(AipsError("Specified antenna(s) select no calibration solutions."));
     if(antId.nelements()>0 && antId(0)!=-1)
-      antSel=True;
+      antSel=true;
     
     fldId=getFieldIdx(field);
     if (field.length()>0 && fldId.nelements()==0)
       throw(AipsError("Specified field(s) select no calibration solutions."));
     if(fldId.nelements()>0 && fldId(0)!=-1)
-      fldSel=True;
+      fldSel=true;
     
     spwId=getSpwIdx(spw,chanId_p);
     if (spw.length()>0 && spwId.nelements()==0)
       throw(AipsError("Specified spw(s) select no calibration solutions."));
     if(spwId.nelements()>0 && spwId(0)!=-1) 
-      spwSel=True;
+      spwSel=true;
     
     if(time.length()>0)
-      timeSel=True;
+      timeSel=true;
 
     // Polarization selection (includes '/')
     polType_p=upcase(poln);
@@ -442,7 +443,7 @@ Bool PlotCal::selectCal(const String& antenna,
       if(tabSel_p.nrow()==0) {
 	tabSel_p=tab_p;
 	throw(AipsError("Combined selection selects nothing."));
-	return False;
+	return false;
       }
 
     }
@@ -451,7 +452,7 @@ Bool PlotCal::selectCal(const String& antenna,
     // Select whole cal table for plotting
     tabSel_p = tab_p;
   
-  return True;
+  return true;
 }
 
 Bool PlotCal::plot(String xaxis, String yaxis) {
@@ -464,7 +465,7 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
   if(tabName_p==""){
     os << LogIO::WARN << "No caltable has been specified."
        << LogIO::POST;
-    return False;
+    return false;
   }
   
   // Disable the Next button for now
@@ -489,7 +490,7 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
   else 
     throw(AipsError("The cal table (type "+calType_p+") you specified is not supported yet."));
   
-  return False;
+  return false;
 
 }
 
@@ -503,7 +504,7 @@ PlotCal::saveFigure( const String& filename, const Int dpi,
     if(tabName_p==""){
 	os << LogIO::WARN << "No caltable has been specified."
 	   << LogIO::POST;
-	return False;
+	return false;
     }
 
     Bool ret = 
@@ -515,40 +516,40 @@ PlotCal::saveFigure( const String& filename, const Int dpi,
   Bool PlotCal::iterPlotNext(){
 
     // Do nothing if not iterating
-    if(!iterating_p) return False;
+    if(!iterating_p) return false;
 
     Vector<String> labcol;
     Vector<Vector<Double> > labval;
     Int ret;
     ret=tp_p->iterMultiPlotNext(labcol, labval);
 
-    if (ret==-1) iterPlotStop(False);
+    if (ret==-1) iterPlotStop(false);
 
-    return True;
+    return true;
 
   }
 
   Bool PlotCal::iterPlotStop( Bool rmplotter ){
 
     tp_p->iterMultiPlotStop( rmplotter );
-    iterating_p=False;
+    iterating_p=false;
 
     // Disable the Next button
     tp_p->changeGuiButtonState("iternext","disabled");
 
-    return True;
+    return true;
   }
   
   Bool PlotCal::markRegion(Int nrows, Int ncols, Int panel, Vector<Double>& region){
     tp_p->markRegions(nrows, ncols, panel, region);
-    return True;
+    return true;
   }
 
 
   Bool PlotCal::flagData(Bool direction){
 
     tp_p->flagData( direction );
-    return True;      
+    return true;      
 
   }
 
@@ -569,7 +570,7 @@ Bool  PlotCal::locateData()
     }
   data.resize(0);
   
-  return True;
+  return true;
 }
 
 
@@ -886,7 +887,7 @@ Bool PlotCal::doPlot(){
 
     // Stop any prior iteration condition
     tp_p->iterMultiPlotStop();
-    iterating_p=False;
+    iterating_p=false;
 
     Block<String> layercols;
 
@@ -942,20 +943,20 @@ Bool PlotCal::doPlot(){
    
 	if (!anyEQ(iterAxes_p,String(CDIcol()))) {
 	  nlayers++;
-	  layercols.resize(nlayers,True);
+	  layercols.resize(nlayers,true);
 	  layercols[nlayers-1]=CDIcol();
 	}
    
 	if (!anyEQ(iterAxes_p,String("ANTENNA1"))) {
 	  nlayers++;
-	  layercols.resize(nlayers,True);
+	  layercols.resize(nlayers,true);
 	  layercols[nlayers-1]="ANTENNA1";
 	}
 
     /*
 	if (!anyEQ(iterAxes_p,String("FIELD_ID"))) {
 	  nlayers++;
-	  layercols.resize(nlayers,True);
+	  layercols.resize(nlayers,true);
 	  layercols[nlayers-1]="FIELD_ID";
 	}
     */
@@ -990,10 +991,10 @@ Bool PlotCal::doPlot(){
       tp_p->checkInputs(itsPlotOptions,plotTaQL_p,iterAxes_p);
       if(tp_p->iterMultiPlotStart( itsPlotOptions, plotTaQL_p,iterAxes_p)==-1){
 	cout << "Error in iteration plot initialization." << endl;
-	return False;
+	return false;
       }
 
-      iterating_p=True;
+      iterating_p=true;
 
       Vector<String> labcol;
       Vector<Vector<Double> > labval;
@@ -1005,7 +1006,7 @@ Bool PlotCal::doPlot(){
     }
     else{
 
-      iterating_p=False;
+      iterating_p=false;
 
       layercols.resize(2);
       layercols[0]=CDIcol();
@@ -1041,7 +1042,7 @@ Bool PlotCal::doPlot(){
 
   }
   
-  return True;
+  return true;
 
 }
   
@@ -1050,10 +1051,10 @@ Bool PlotCal::doPlot(){
 
     cout << "K plotting disabled for the moment." << endl;
 
-    return False;
+    return false;
 
  /*
-    iterating_p=False;
+    iterating_p=false;
 
     label_p.resize(3);
     plotopts_p.define("timeplot", "x");
@@ -1113,10 +1114,10 @@ Bool PlotCal::doPlot(){
 	itsPlotOptions.YLabel=label_p[2];
 	if(tp_p->iterMultiPlotStart( itsPlotOptions, plotstr,iterAxes)==-1){
           cout << "Error in iteration plot initialization." << endl;
-	  return False;
+	  return false;
 	}
 	
-	iterating_p=True;
+	iterating_p=true;
 	iterPlotNext();
       }
       else{
@@ -1148,7 +1149,7 @@ Bool PlotCal::doPlot(){
     // be sure non-multiplot case is closed properly (for now)
     if (!multiPlot_p) close();
     
-    return True;
+    return true;
  */
   }
 
@@ -1221,12 +1222,12 @@ Int PlotCal::multiTables(const Table& tablein,
 
     if (!tr.isDefined("CAL_DESC") && tr.isDefined("ParType")) {
       os << LogIO::NORMAL << "Detected a NewCalTable!" << LogIO::POST;
-      isNCT_p=True;
+      isNCT_p=true;
       ct_p = NewCalTable(tab_p);
     }
     else {
       os << LogIO::NORMAL << "Detected an old CalTable." << LogIO::POST;
-      isNCT_p=False;
+      isNCT_p=false;
     }
 
     tabName_p = tabName;
@@ -1635,7 +1636,7 @@ Int PlotCal::multiTables(const Table& tablein,
 	      i=a1(ii);
 	      j=a2(jj);
 	    }
-	    bllist.resize(nbl+1,True);
+	    bllist.resize(nbl+1,true);
 	    bllist(nbl)=(i+1)*(i+2)/2 + (nAnt-i-1)*i + j-i-1;
 	    ++nbl;
 	  }
@@ -1681,7 +1682,7 @@ Int PlotCal::multiTables(const Table& tablein,
 	      i=a1(ii);
 	      j=a2(jj);
 	    }
-	    bllist.resize(nbl+1,True);
+	    bllist.resize(nbl+1,true);
 	    bllist(nbl)=(i+1)*(i+2)/2 + (nAnt-i-1)*i + j-i-1;
 	    ++nbl;
 	  }
@@ -1775,11 +1776,11 @@ Int PlotCal::multiTables(const Table& tablein,
     if (!isNCT_p) {
 
     Vector<Int> allcds(nCalDesc_p);
-    Vector<Bool> cdmask(nCalDesc_p,False);
+    Vector<Bool> cdmask(nCalDesc_p,false);
     indgen(allcds);
 
     for (Int icd=0;icd<nCalDesc_p;++icd) {
-      cdmask(icd)=False;
+      cdmask(icd)=false;
       for (Int ispw=0;ispw<Int(selspws.nelements());++ispw)
 	cdmask(icd)|=anyEQ(tabSpws_p.column(icd),selspws(ispw));
     }
@@ -1909,7 +1910,7 @@ Int PlotCal::multiTables(const Table& tablein,
     IPosition ipin(3,npolin,max(nchan_p),nrow);
     
     Cube<Bool> flag(ipin);
-    flag=True;
+    flag=true;
     Cube<Complex> gain(ipin);
     gain.set(Complex(1.0));
     Float Amp(0.0),Pha(0.0);
@@ -1999,7 +2000,7 @@ Int PlotCal::multiTables(const Table& tablein,
 	      Pha = getChebVal(pc, x1, x2, freq(chan));
 	      gain(ipol,chan,row)=Complex(Amp)*Complex(cos(Pha),sin(Pha));
 	      // Set flag for valid cache value
-	      flag(ipol,chan,row) = False;
+	      flag(ipol,chan,row) = false;
 	    }
 	  }
 	}
@@ -2087,6 +2088,8 @@ Int PlotCal::multiTables(const Table& tablein,
 //----------------------------------------------------------------------------
 
 void PlotCal::virtualGSpline( Table& tabG ) {
+
+    using casacore::operator*;
   
   //  cout << "Evalutating GSPLINE solutions...." << endl;
 
@@ -2108,7 +2111,7 @@ void PlotCal::virtualGSpline( Table& tabG ) {
   Vector<Int> antidlist=calBuffer.antenna1();
   Int nAnt=GenSort<Int>::sort(antidlist,Sort::Ascending,
 			      Sort::NoDuplicates);
-  antidlist.resize(nAnt,True);
+  antidlist.resize(nAnt,true);
 
   Int nTime(1000);
   Int nRow(nAnt*nTime);
@@ -2117,7 +2120,7 @@ void PlotCal::virtualGSpline( Table& tabG ) {
   Cube<Complex> gainspl(2,1,nRow);
   gainspl.set(Complex(1.0));
   Cube<Bool> flag(2,1,nRow);
-  flag.set(True);
+  flag.set(true);
     
   // Row counter
   Int irow(0);
@@ -2273,9 +2276,9 @@ void PlotCal::virtualGSpline( Table& tabG ) {
 	    phaseVal(ipol) *= freqRatio;
 	  }
 
-	  gainspl(ipol,0,irow) = gain * ampVal(ipol) * Complex(cos(phaseVal(ipol)), 
+	  gainspl(ipol,0,irow) = gain * ampVal(ipol) * Complex(cos(phaseVal(ipol)),
 							       sin(phaseVal(ipol)) );
-	  flag(ipol,0,irow) = False;
+	  flag(ipol,0,irow) = false;
 
       /*
 	  cout << itime << iant << ipol << " "

@@ -36,8 +36,10 @@
 #include <iostream>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 calibrater::calibrater() : 
@@ -46,7 +48,7 @@ calibrater::calibrater() :
   // Default constructor
   //    itsApplyMap   SimpleOrderedMap   Cal. table apply assignments
   //    itsSolveMap   SimpleOrderedMap   Cal. table solve assignments
-  itsLog = new casa::LogIO();
+  itsLog = new casacore::LogIO();
   itsCalibrater = new casa::Calibrater();
 }
 
@@ -61,7 +63,7 @@ bool calibrater::open(const std::string& filename,
 		      const bool compress,
 		      const bool addscratch, const bool addModel)
 {
-  bool rstat(False);
+  bool rstat(false);
   try {
     LogIO os (LogOrigin ("calibrater", "open"));
     os << "Opening MS: " 
@@ -81,7 +83,7 @@ bool calibrater::open(const std::string& filename,
     rstat = itsCalibrater->initialize(*itsMS, compress,addscratch, addModel);
 
     // Open LogSink for MS History table logging
-    logSink_p=LogSink(LogMessage::NORMAL1, False);
+    logSink_p=LogSink(LogMessage::NORMAL1, false);
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -103,11 +105,11 @@ calibrater::selectvis(const ::casac::variant& time,
 		      const int nchan,
 		      const int start,
 		      const int step,
-		      const Quantity& mstart,
-		      const Quantity& mstep,
+		      const casac::Quantity& mstart,
+		      const casac::Quantity& mstep,
 		      const std::string& msselect) {
 
-  Bool rstat(False);
+  Bool rstat(false);
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
 	    << endl << LogIO::POST;
@@ -119,12 +121,12 @@ calibrater::selectvis(const ::casac::variant& time,
     LogIO os(LogOrigin("calibrater", "setdata"), logSink_p);
     os << "Beginning selectvis--(MSSelection version)-------" << LogIO::POST;
     
-    casa::MRadialVelocity mmStart = new casa::MRadialVelocity(casaQuantity(mstart));
-    casa::MRadialVelocity mmStep = new casa::MRadialVelocity(casaQuantity(mstep));
+    casacore::MRadialVelocity mmStart = new casacore::MRadialVelocity(casa::casaQuantity(mstart));
+    casacore::MRadialVelocity mmStep = new casacore::MRadialVelocity(casa::casaQuantity(mstep));
     
     // run reset because setdata is going to delete itsCI's VisSet,
     //  which existing VisJones objects rely upon
-    reset(True,True);
+    reset(true,true);
 
   /*
     casac::variant s(std::string(""));
@@ -179,8 +181,8 @@ calibrater::selectvis(const ::casac::variant& time,
       << (mmStep.getUnit()).getName() << "' msSelect="
       << "'" << msselect << "'";
     os << o.str();
-    //itsCalibrater->writeHistory(os,True);
-    rstat = True;
+    //itsCalibrater->writeHistory(os,true);
+    rstat = true;
   } catch  (AipsError x) {
 
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -548,9 +550,9 @@ calibrater::delmod(const bool otf, const ::casac::variant& field,
       *itsLog << "Deleting OTF Visbility Model info." << LogIO::POST;
       //cerr << "field " << toCasaString(field) << " spw " << toCasaString(spw) << endl;
       String fieldStr=toCasaString(field);
-      if(casa::fcompare(fieldStr,String("false"))==0) fieldStr=String("");
+      if(casacore::fcompare(fieldStr,String("false"))==0) fieldStr=String("");
       String spwStr=toCasaString(spw);
-      if(casa::fcompare(spwStr,String("false"))==0) spwStr=String("");
+      if(casacore::fcompare(spwStr,String("false"))==0) spwStr=String("");
       VisModelData::clearModel(*itsMS, fieldStr, spwStr);
     }
 
@@ -593,7 +595,7 @@ calibrater::solve()
 
 // Solve for the specified calibration components
 //
-   Bool retval = True;
+   Bool retval = true;
 
    try {
 
@@ -626,7 +628,7 @@ calibrater::correct(const std::string& applymode)
 
 // Apply the calibration to update the CORRECTED_DATA column in the MS
 //
-   Bool retval = True;
+   Bool retval = true;
 
    try {
 
@@ -666,7 +668,7 @@ calibrater::corrupt()
 
 // Apply the calibration to corrupt the MODEL_DATA column in the MS
 //
-   Bool retval = True;
+   Bool retval = true;
 
    try {
 
@@ -725,7 +727,7 @@ calibrater::initweights(const std::string& wtmode, const bool dowtsp,
     return false;
   }
 
-  Bool retval = True;
+  Bool retval = true;
   
   try {
     
@@ -1062,7 +1064,7 @@ calibrater::listcal(const std::string& tablein,
 		    const int pagerows)
 {
 
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 
     rstat=itsCalibrater->listCal(tablein,
@@ -1226,7 +1228,7 @@ bool
 calibrater::updatecaltable(const std::string& caltable)
 {
 
-  Bool ok(False);
+  Bool ok(false);
   try
     {
       ok=Calibrater::updateCalTable(caltable);
@@ -1243,7 +1245,7 @@ calibrater::updatecaltable(const std::string& caltable)
 bool
 calibrater::close()
 {
- bool rstat(False);
+ bool rstat(false);
  try {
     if(itsMS) delete itsMS;
     itsMS = 0;
@@ -1251,7 +1253,7 @@ calibrater::close()
     //delete itsLog;
     itsCalibrater = new Calibrater();
 
-    rstat = True;
+    rstat = true;
  } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -1265,14 +1267,14 @@ calibrater::done()
 
   // TBD:  is 'new Calibrater()' ok here?
 
- bool rstat(False);
+ bool rstat(false);
  try {
     if(itsMS) delete itsMS;
     itsMS = 0;
     delete itsCalibrater;
     //delete itsLog;
     itsCalibrater = new Calibrater();
-    rstat = True;
+    rstat = true;
  } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
@@ -1385,7 +1387,7 @@ void calibrater::uvtaql(std::string& uvsel, bool& noselect,
       noselect = false;
       os << "Applying a uv-range selection of " << uvlim[0]/1000.0
 	 << " to " << uvlim[1]/1000.0 << " klambda";
-      //itsCalibrater->writeHistory(os,True);
+      //itsCalibrater->writeHistory(os,true);
     }
     uvsel += " )";
 

@@ -40,6 +40,9 @@
 
 using namespace std;
 
+using namespace casacore;
+using namespace casa;
+
 namespace casac {
 
 regionmanager::regionmanager()
@@ -83,11 +86,11 @@ regionmanager::box(const std::vector<double>& blc, const std::vector<double>& tr
     	Vector<Double> dblc(blc);
     	Vector<Double> dtrc(trc);
     	Vector<Double> dinc(inc);
-    	Bool useAllDefaults = False;
+    	Bool useAllDefaults = false;
 
     	if( (dtrc.nelements()==1 && dtrc[0]<0)
                  && (dblc.nelements()==1 && dblc[0]<1) ) {
-    		useAllDefaults = True;
+    		useAllDefaults = true;
     	}
 	
 	if(dtrc.nelements()==1 && dtrc[0]<0)
@@ -165,8 +168,8 @@ regionmanager::complement(
 
 	// Create a single region to find the complement of.
 	::casac::variant localvar(regions); //cause its const
-	PtrHolder<casa::ImageRegion> unionReg;
-	PtrHolder<casa::Record> lesRegions(toRecord((localvar.asRecord())));
+	PtrHolder<casacore::ImageRegion> unionReg;
+	PtrHolder<casacore::Record> lesRegions(toRecord((localvar.asRecord())));
 
 	// If the "isRegion" field exists then we assume the record
 	// is a region, otherwise we have a set of regions.
@@ -176,7 +179,7 @@ regionmanager::complement(
 	else {
 	    if ( lesRegions->fieldNumber("isRegion")==-1 ) {
 		TableRecord theRec;
-		theRec.assign( lesRegions->asRecord(casa::RecordFieldId(0) ) );
+		theRec.assign( lesRegions->asRecord(casacore::RecordFieldId(0) ) );
 		unionReg.set(ImageRegion::fromRecord( theRec, "" ));
 	   }
 	    else {
@@ -185,12 +188,12 @@ regionmanager::complement(
 	}
 	
 	// And find the complement
-	PtrHolder<casa::ImageRegion> leComplementReg;
+	PtrHolder<casacore::ImageRegion> leComplementReg;
 	if( unionReg.ptr() ){
 	    leComplementReg.set(_regMan->doComplement(*unionReg));
 	}
 	
-	casa::Record returnRec;
+	casacore::Record returnRec;
 	returnRec.assign(leComplementReg->toRecord(""));
 	if ( comment.length() > 1 ) {
 	    returnRec.define("comment", comment );
@@ -230,13 +233,13 @@ regionmanager::concatenation(
 
 
 	// ALgorihtm
-	//   1. convert incoming image record to a CASA::Record(s)
+	//   1. convert incoming image record to a Casacore::Record(s)
 	::casac::variant localregs(regions); //cause its const
-	PtrHolder<casa::Record> lesRegions(toRecord((localregs.asRecord())));
+	PtrHolder<casacore::Record> lesRegions(toRecord((localregs.asRecord())));
 	
 	//   2. convert incoming box record to a TableRecord
 	::casac::variant localbox(box); //cause its const
-	PtrHolder<casa::Record> boxRec(toRecord((localbox.asRecord())));
+	PtrHolder<casacore::Record> boxRec(toRecord((localbox.asRecord())));
 	ThrowIf(
 		boxRec->fieldNumber("isRegion")==-1,
 	    "parameter 'box' has to be a region record. Invalid region record given"
@@ -250,7 +253,7 @@ regionmanager::concatenation(
 	);
 	
 	//   4. add comment to the record??
-	casa::Record returnRec;
+	casacore::Record returnRec;
 	returnRec.assign(leConcatReg->toRecord(""));
 	if ( comment.length() > 1 ) {
 	    returnRec.define("comment", comment );
@@ -293,8 +296,8 @@ regionmanager::difference(const ::casac::record& region1, const ::casac::record&
     
     try {
 	// Get the incoming records into TableRecords.
-	PtrHolder<casa::Record> reg1(toRecord(region1));
-	PtrHolder<casa::Record> reg2(toRecord(region2));
+	PtrHolder<casacore::Record> reg1(toRecord(region1));
+	PtrHolder<casacore::Record> reg2(toRecord(region2));
 
 	TableRecord rec1;
 	rec1.assign(*reg1);
@@ -321,7 +324,7 @@ regionmanager::difference(const ::casac::record& region1, const ::casac::record&
 		"An error has occured while creating the difference of the two regions"
 	);
 
-	casa::Record diffrec;
+	casacore::Record diffrec;
 	diffrec.assign(diffReg->toRecord(""));
 	if ( comment.length() > 1 ) {
 		diffrec.define("comment", comment );
@@ -441,7 +444,7 @@ regionmanager::tofile(const std::string& filename, const ::casac::record& region
     setup();
     *_log << LogOrigin("regionmanager", __func__);
     try{
-      PtrHolder<casa::Record> leRegion(toRecord(region));
+      PtrHolder<casacore::Record> leRegion(toRecord(region));
       //the string lolo below does not matter its being ignored it seems.
       //may be it was meant for future use
       return RegionManager::writeImageFile(String(filename), "lolo", *leRegion);
@@ -463,7 +466,7 @@ regionmanager::fromrecordtotable(const std::string& tablename,
 
     try {
 	*_log << LogOrigin("regionmanager", "fromrecordtotable");
-	PtrHolder<casa::Record> leRec(toRecord(regionrec));
+	PtrHolder<casacore::Record> leRec(toRecord(regionrec));
     
 	String elname=toCasaString(regionname);
 	return (
@@ -485,7 +488,7 @@ regionmanager::fromtabletorecord(
   try {
     String elname=toCasaString(regionname);
     
-    PtrHolder<casa::Record> leRec(_regMan->tableToRecord(String(tablename), elname));
+    PtrHolder<casacore::Record> leRec(_regMan->tableToRecord(String(tablename), elname));
     if(! leRec.ptr()) {
     	leRec.set(new Record());
     }
@@ -510,7 +513,7 @@ regionmanager::intersection(const ::casac::variant& regions, const std::string& 
 	);
 
 	    ::casac::variant localvar(regions); //cause its const
-	    PtrHolder<casa::Record> lesRegions(toRecord((localvar.asRecord())));
+	    PtrHolder<casacore::Record> lesRegions(toRecord((localvar.asRecord())));
 	    PtrHolder<ImageRegion> intersectReg;
 	    ThrowIf(
 	    	lesRegions->nfields() < 2,
@@ -519,8 +522,8 @@ regionmanager::intersection(const ::casac::variant& regions, const std::string& 
 
 	    TableRecord rec1;
 	    TableRecord rec2;
-	    rec1.assign(lesRegions->asRecord(casa::RecordFieldId(0)));
-	    rec2.assign(lesRegions->asRecord(casa::RecordFieldId(1)));
+	    rec1.assign(lesRegions->asRecord(casacore::RecordFieldId(0)));
+	    rec2.assign(lesRegions->asRecord(casacore::RecordFieldId(1)));
 	    *_log << LogIO::DEBUGGING
 		    << "RegionManager val 1 " << rec1.asInt("isRegion") 
 		    << "\nRegionManager val 2 " << rec2.asInt("isRegion") 
@@ -533,14 +536,14 @@ regionmanager::intersection(const ::casac::variant& regions, const std::string& 
 	    	intersectReg.set(_regMan->doIntersection(*reg0, *reg1));
 	    }
 	    for (uInt k=2; k < (lesRegions->nfields()); ++k){
-		rec1.assign(lesRegions->asRecord(casa::RecordFieldId(k)));
+		rec1.assign(lesRegions->asRecord(casacore::RecordFieldId(k)));
 
 		reg0.set(ImageRegion::fromRecord(rec1, ""));
 		ImageRegion reg3(*intersectReg);
 		intersectReg.set(_regMan->doIntersection(*reg0, reg3));
 	    }
 
-	    casa::Record intersectrec;
+	    casacore::Record intersectrec;
 	    intersectrec.assign(intersectReg->toRecord(""));
 	    if ( comment.length() > 1 ) {
 	    	intersectrec.define("comment", comment );
@@ -564,7 +567,7 @@ regionmanager::ispixelregion(const ::casac::record& region)
 	setup();
     *_log << LogOrigin("regionmanager", __func__);
     try {
-    	PtrHolder<casa::Record> localvar(toRecord(region));
+    	PtrHolder<casacore::Record> localvar(toRecord(region));
     	TableRecord letblrec;
     	letblrec.assign(*localvar);
     	PtrHolder<ImageRegion> reg(ImageRegion::fromRecord(letblrec, ""));
@@ -585,7 +588,7 @@ regionmanager::isworldregion(const ::casac::record& region)
 
 
     try {
-	PtrHolder<casa::Record> localvar(toRecord(region));
+	PtrHolder<casacore::Record> localvar(toRecord(region));
 	TableRecord letblrec;
 	letblrec.assign(*localvar);
 	PtrHolder<ImageRegion> reg(ImageRegion::fromRecord(letblrec, ""));
@@ -621,12 +624,12 @@ regionmanager::setcoordinates(const ::casac::record& csys)
     *_log << LogOrigin("regionmanager", __func__);
 
     try {
-	PtrHolder<casa::Record> csysRec(toRecord(csys));
+	PtrHolder<casacore::Record> csysRec(toRecord(csys));
 	ThrowIf(
 		csysRec->nfields() <2,
 		"Given coorsys parameter does not appear to be a valid coordsystem record"
 	);
-	PtrHolder<casa::CoordinateSystem> coordsys(casa::CoordinateSystem::restore(*csysRec, ""));
+	PtrHolder<casacore::CoordinateSystem> coordsys(casacore::CoordinateSystem::restore(*csysRec, ""));
 	ThrowIf(
 		! coordsys.ptr(),
 		"Could not convert given record to a coordsys"
@@ -654,10 +657,10 @@ regionmanager::makeunion(const ::casac::variant& regions, const std::string& com
     	);
 
     	::casac::variant localvar(regions); //cause its const
-    	PtrHolder<casa::Record> lesRegions(toRecord((localvar.asRecord())));
+    	PtrHolder<casacore::Record> lesRegions(toRecord((localvar.asRecord())));
     	PtrHolder<ImageRegion> unionReg(dounion(lesRegions));
 
-    	casa::Record unionrec;
+    	casacore::Record unionrec;
     	unionrec.assign(unionReg->toRecord(""));
     	if ( comment.length() > 1 ) {
     		unionrec.define("comment", comment );
@@ -715,7 +718,7 @@ vector<int> regionmanager::selectedchannels(
 }
 
 // Implementation courtesy of Honglin (https://bugs.aoc.nrao.edu/browse/CAS-1666, 2009dec16)
-casa::ImageRegion* regionmanager::dounion(const PtrHolder<casa::Record>& regions) {
+casacore::ImageRegion* regionmanager::dounion(const PtrHolder<casacore::Record>& regions) {
     ThrowIf(
     	regions->nfields() < 2 || regions->fieldNumber("isRegion") != -1,
     	"need 2 or more regions to make a union"
@@ -726,7 +729,7 @@ casa::ImageRegion* regionmanager::dounion(const PtrHolder<casa::Record>& regions
     unionRegions.resize(nreg);
     for (uInt i = 0; i < nreg; i++) {
         TableRecord trec;
-        trec.assign(regions->asRecord(casa::RecordFieldId(i)));
+        trec.assign(regions->asRecord(casacore::RecordFieldId(i)));
         unionRegions[i] = ImageRegion::fromRecord(trec, "");
     }
     WCUnion leUnion(unionRegions);
@@ -744,9 +747,9 @@ regionmanager::wbox(const ::casac::variant& blc, const ::casac::variant& trc, co
 	setup();
     *_log << LogOrigin("regionmanager", __func__);
     try {
-      casa::Vector<casa::String> losBlc;
-	casa::Vector<casa::String> losTrc;
-	PtrHolder<casa::Record> leRegion;
+      casacore::Vector<casacore::String> losBlc;
+	casacore::Vector<casacore::String> losTrc;
+	PtrHolder<casacore::Record> leRegion;
 
 	if(blc.type() == ::casac::variant::STRING ){
 	  sepCommaEmptyToVectorStrings(losBlc, blc.toString());
@@ -769,14 +772,14 @@ regionmanager::wbox(const ::casac::variant& blc, const ::casac::variant& trc, co
 	}
  
 	Vector<Int>pixaxes(pixelaxes);
-	PtrHolder<casa::Record> csysRec(toRecord(csys));
+	PtrHolder<casacore::Record> csysRec(toRecord(csys));
 	if((csysRec->nfields()) != 0){ 
-	    PtrHolder<casa::Record> csysRec(toRecord(csys));
+	    PtrHolder<casacore::Record> csysRec(toRecord(csys));
 	    ThrowIf(
 	    	csysRec->nfields() <2,
 	    	"Given coordsys parameter does not appear to be a valid coordsystem record"
 	    );
-	    PtrHolder<casa::CoordinateSystem> coordsys(casa::CoordinateSystem::restore(*csysRec, ""));
+	    PtrHolder<casacore::CoordinateSystem> coordsys(casacore::CoordinateSystem::restore(*csysRec, ""));
 	    leRegion.set(_regMan->wbox(losBlc, losTrc,  pixaxes, *coordsys, String(absrel), String(comment)));
 	} else {
 	    //user has set csys already
@@ -805,8 +808,8 @@ regionmanager::wpolygon(const ::casac::variant& x, const ::casac::variant& y,
     *_log << LogOrigin("regionmanager", __func__);
 
     try {
-	casa::Vector<casa::Quantity> losX;
-	casa::Vector<casa::Quantity> losY;
+	casacore::Vector<casacore::Quantity> losX;
+	casacore::Vector<casacore::Quantity> losY;
 	if(x.type() == ::casac::variant::STRING || 
 		x.type() == ::casac::variant::STRINGVEC){
 	    toCasaVectorQuantity(x, losX);
@@ -826,14 +829,14 @@ regionmanager::wpolygon(const ::casac::variant& x, const ::casac::variant& y,
 	PtrHolder<ImageRegion> leRegion;
 
 	Vector<Int>pixaxes(pixelaxes);
-	PtrHolder<casa::Record> csysRec(toRecord(csys));
+	PtrHolder<casacore::Record> csysRec(toRecord(csys));
 	if((csysRec->nfields()) != 0){ 
-	    PtrHolder<casa::Record> csysRec(toRecord(csys));
+	    PtrHolder<casacore::Record> csysRec(toRecord(csys));
 	    ThrowIf(
 	    	csysRec->nfields() <2,
 	    	"Given coorsys parameter does not appear to be a valid coordsystem record"
 	    );
-	    PtrHolder<casa::CoordinateSystem> coordsys(casa::CoordinateSystem::restore(*csysRec, ""));
+	    PtrHolder<casacore::CoordinateSystem> coordsys(casacore::CoordinateSystem::restore(*csysRec, ""));
 	    leRegion.set(_regMan->wpolygon(losX, losY,  pixaxes, *coordsys,
 				   String(absrel)));
 	}
@@ -844,7 +847,7 @@ regionmanager::wpolygon(const ::casac::variant& x, const ::casac::variant& y,
 
 	if(leRegion.ptr()){
       
-	    PtrHolder<casa::Record> leRec(new casa::Record());
+	    PtrHolder<casacore::Record> leRec(new casacore::Record());
 	    leRec->assign(leRegion->toRecord(String("")));
 	    leRec->define("comment", comment);
 	    return fromRecord(*leRec);

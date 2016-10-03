@@ -15,8 +15,10 @@
 #include <casa/aips.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 tablerow::tablerow()
@@ -34,7 +36,7 @@ tablerow::set(const ::casac::record& /*tab*/, const std::vector<std::string>& /*
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 ::casac::record*
@@ -50,7 +52,7 @@ tablerow::put(const int /*rownr*/, const ::casac::record& /*value*/, const bool 
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 bool
@@ -58,7 +60,7 @@ tablerow::close()
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 bool
@@ -66,7 +68,7 @@ tablerow::done()
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 } // casac namespace

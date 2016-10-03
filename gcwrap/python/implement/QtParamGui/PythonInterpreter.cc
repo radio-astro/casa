@@ -27,6 +27,7 @@
 #include <casaqt/QtParamGui/PythonInterpreter.h>
 #include <Python.h>
 
+using namespace casacore;
 namespace casa {
 
 // PYTHONINTERPRETER DEFINITIONS //

@@ -19,6 +19,7 @@ using namespace std;
 
 #define _ORIGIN LogOrigin("sakura", __func__, WHERE)
 
+using namespace casacore;
 namespace casac {
 
 sakura::sakura() : logger_(),sakuraUtils_()

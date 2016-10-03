@@ -1,3 +1,3 @@
 private:
-casa::LogIO logger_;
+casacore::LogIO logger_;
 casa::SakuraUtils sakuraUtils_;

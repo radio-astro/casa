@@ -23,9 +23,11 @@
 #include <synthesisdeconvolver_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
      
+using namespace casacore;
 namespace casac {
 
 synthesisdeconvolver::synthesisdeconvolver()
@@ -40,11 +42,11 @@ synthesisdeconvolver::~synthesisdeconvolver()
 
   bool synthesisdeconvolver::setupdeconvolution(const casac::record& decpars)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
-      casa::Record rec = *toRecord( decpars );
+      casacore::Record rec = *toRecord( decpars );
 
       SynthesisParamsDeconv decpars;
       decpars.fromRecord( rec );
@@ -74,7 +76,7 @@ casac::record* synthesisdeconvolver::interactivegui(const casac::record& iterbot
 {
   casac::record* rstat(0);
   try {
-    casa::Record recpars = *toRecord( iterbot );
+    casacore::Record recpars = *toRecord( iterbot );
     rstat = fromRecord(itsDeconvolver->interactiveGUI( recpars ));
   } catch  (AipsError x) {
     RETHROW(x);
@@ -86,7 +88,7 @@ casac::record* synthesisdeconvolver::executeminorcycle(const casac::record& iter
 {
   casac::record* rstat(0);
   try {
-    casa::Record recpars = *toRecord( iterbot );
+    casacore::Record recpars = *toRecord( iterbot );
     rstat = fromRecord(itsDeconvolver->executeMinorCycle( recpars ));
   } catch  (AipsError x) {
     RETHROW(x);
@@ -119,7 +121,7 @@ bool synthesisdeconvolver::pbcor()
   /*
   bool synthesisdeconvolver::testsummary(const casac::image *imt)
 {
-  casac::record* rstat(False);
+  casac::record* rstat(false);
   try {
 
     const_cast<casac::image *>(imt)->_image->summary();
@@ -135,7 +137,7 @@ bool synthesisdeconvolver::pbcor()
 bool
 synthesisdeconvolver::done()
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {

@@ -21,6 +21,7 @@ namespace casac {
 
 using namespace std;
 XERCES_CPP_NAMESPACE_USE;
+
 using namespace casa::xerces;
 
 stdcasaXMLUtil::stdcasaXMLUtil() :
@@ -973,6 +974,4 @@ void stdcasaXMLUtil::addtovariant(variant *theVariant, variant::TYPE theType, st
     }
     return;
 }
-
-
 }  //End of namespace casac

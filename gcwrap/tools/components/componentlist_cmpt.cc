@@ -66,11 +66,14 @@
 
 using namespace std;
 
+using namespace casacore;
+using namespace casa;
+
 namespace casac {
 
 componentlist::componentlist() 
 {
-      itsLog = new casa::LogIO();
+      itsLog = new LogIO();
       itsList = new ComponentList();
       itsBin = new ComponentList();
 }
@@ -160,7 +163,7 @@ bool componentlist::concatenate(const ::casac::variant& list,
       if(list.type() == ::casac::variant::STRING ||
          list.type() == ::casac::variant::STRINGVEC){
         String filename(list.toString());
-        if(!casa::Table::isReadable(filename)){
+        if(!Table::isReadable(filename)){
           throw(AipsError("Cannot read componentlist "+filename));
         }
         toBeAdded=ComponentList(Path(filename), true);
@@ -188,7 +191,7 @@ bool componentlist::concatenate(const ::casac::variant& list,
       }
       if(what.nelements()==0 || what[0] < 0){
         what.resize(toBeAdded.nelements());
-        casa::indgen(what);
+        indgen(what);
       }
       for (uInt k=0; k < what.nelements(); ++k){
         if(uInt(what[k]) < toBeAdded.nelements()){
@@ -407,7 +410,7 @@ bool componentlist::rename(const std::string& filename, const bool /*log*/)
   try{
     if(itsList && itsBin){
       itsList->rename(Path(filename), Table::NewNoReplace);
-      rstat=True;
+      rstat=true;
     }
     else{
       *itsLog << LogIO::WARN
@@ -431,7 +434,7 @@ bool componentlist::simulate(const int howmany, const bool /*log*/)
       for (int k=0; k < howmany; ++k){
         itsList->add(SkyComponent());
       }	  
-      rstat=True;
+      rstat=true;
     } else {
       *itsLog << LogIO::WARN
               << "componentlist is not opened, please open first" << LogIO::POST;
@@ -480,7 +483,7 @@ bool componentlist::addcomponent(const ::casac::variant& flux,
                   throw(AipsError("flux has to have 1 or 4 elements"));
                   }
       */
-      setlabel(which, label, True);
+      setlabel(which, label, true);
       /*
         std::vector<complex> error(4);
         std::vector<std::complex<double> > stanerr(4, std::complex<double>(0.0, 0.0));
@@ -489,8 +492,8 @@ bool componentlist::addcomponent(const ::casac::variant& flux,
       */
 
       ::casac::variant error;
-      setflux(which, flux, fluxunit, polarization, error, True);
-      casa::MDirection theDir;
+      setflux(which, flux, fluxunit, polarization, error, true);
+      casacore::MDirection theDir;
       ::casac::variant *tmpdir=0;
       //Default case
       if(String(dir.toString())==String("[]")){
@@ -512,7 +515,7 @@ bool componentlist::addcomponent(const ::casac::variant& flux,
         checkIndices(which, "addcomponent",
                      "Direction not changed on any components");
       itsList->setRefDirection(intVec, newDir);
-      setrefdirframe(which, theDir.getRefString(), True);
+      setrefdirframe(which, theDir.getRefString(), true);
       ::casac::variant majoraxiserror; 
       ::casac::variant minoraxiserror; 
       ::casac::variant positionangleerror;
@@ -534,9 +537,9 @@ bool componentlist::addcomponent(const ::casac::variant& flux,
                 << "Could not interpret frequency parameter" 
                 << LogIO::POST;      
       }
-      setfreq(which, theFreq.get("GHz").getValue(), "GHz", True);
-      setfreqframe(which, theFreq.getRefString(), True);
-      rstat=True;
+      setfreq(which, theFreq.get("GHz").getValue(), "GHz", true);
+      setfreqframe(which, theFreq.getRefString(), true);
+      rstat=true;
     } else {
       *itsLog << LogIO::WARN
               << "componentlist is not opened, please open first" << LogIO::POST;
@@ -570,7 +573,7 @@ bool componentlist::close(const bool log)
 	  itsBin = new ComponentList();
 	  if(log)
 	     *itsLog << LogIO::WARN << "componentlist closed" << LogIO::POST;
-	  rstat=True;
+	  rstat=true;
   } catch (AipsError x){
 	  *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	  RETHROW(x)
@@ -614,7 +617,7 @@ bool componentlist::done()
     //bring it back to the state of construction
     itsList = new ComponentList();
     itsBin = new ComponentList();
-    rstat=True;
+    rstat=true;
   }
   catch(AipsError x){
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -989,7 +992,7 @@ bool componentlist::convertfluxpol(const int which, const std::string& polarizat
   try{
     if(itsList && itsBin){
       _checkIndex(which);
-      casa::MDirection refdir = itsList->component(which).shape().refDirection();
+      casacore::MDirection refdir = itsList->component(which).shape().refDirection();
       ostringstream oss;
       refdir.print(oss);
       *itsLog << LogIO::NORMAL3 << String(oss) << LogIO::POST;
@@ -1066,7 +1069,7 @@ std::string componentlist::getrefdirframe(const int which)
   try{
     if(itsList && itsBin){
       _checkIndex(which);
-      casa::MDirection md = itsList->component(which).shape().refDirection();
+      casacore::MDirection md = itsList->component(which).shape().refDirection();
       rstat = md.getRefString().c_str();
     } else {
       *itsLog << LogIO::WARN
@@ -1117,8 +1120,8 @@ bool componentlist::setrefdirframe(const int which, const std::string& frame,
   bool rstat(false);
   try{
     if(itsList && itsBin){
-	    casa::MDirection::Types newFrame;
-      if (!casa::MDirection::getType(newFrame, frame)) {
+	    casacore::MDirection::Types newFrame;
+      if (!casacore::MDirection::getType(newFrame, frame)) {
         *itsLog << LogIO::SEVERE
                 << "Could not parse the 'frame' string: Direction frame not changed"
                 << LogIO::POST;
@@ -1146,8 +1149,8 @@ bool componentlist::convertrefdir(const int which, const std::string& frame)
   bool rstat(false);
   try {
     if(itsList && itsBin){
-	    casa::MDirection::Types newFrame;
-      if (!casa::MDirection::getType(newFrame, frame)) {
+	    casacore::MDirection::Types newFrame;
+      if (!casacore::MDirection::getType(newFrame, frame)) {
         *itsLog << LogIO::SEVERE
                 << "Could not parse the 'frame' string: Direction frame not changed"
                 << LogIO::POST;
@@ -1213,7 +1216,7 @@ bool componentlist::fromrecord(const ::casac::record& rec)
       throw(AipsError(String("Error ")+error+ String(" in converting from record")));
     }
     delete elRec;
-    rstat=True;
+    rstat=true;
 
   } catch (AipsError x){
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1337,7 +1340,7 @@ bool componentlist::setshape(const int which, const std::string& type,
       }
       else{
         Record ma4;
-        QuantumHolder(casa::Quantity(0.0,"rad")).toRecord(errorMessage, ma4);
+        QuantumHolder(casacore::Quantity(0.0,"rad")).toRecord(errorMessage, ma4);
         rec.defineRecord("majoraxiserror",ma4);
         rec.defineRecord("minoraxiserror",ma4);
         rec.defineRecord("positionangleerror",ma4);
@@ -1477,7 +1480,7 @@ bool componentlist::setspectrum(const int which, const std::string& eltype,
 	 Vector<MVFrequency> freqs(tabfreqs.size());
 	 Vector<Flux<Double> > fluxval(tabfreqs.size());
 	 for (Int i=0; i < Int(tabfreqs.size()) ; ++i){
-	   freqs[i]=casa::Quantity(tabfreqs[i], "Hz");
+	   freqs[i]=casacore::Quantity(tabfreqs[i], "Hz");
 	   fluxval[i]=Flux<Double>(tabflux[i]);
 	 }
 	 MFrequency::Types freqFrameType;
@@ -1569,7 +1572,7 @@ bool componentlist::setstokesspectrum(const int which, const std::string& eltype
 	 Vector<MVFrequency> freqs(tabfreqs.size());
 	 Vector<Flux<Double> > fluxval(tabfreqs.size());
 	 for (Int i=0; i < Int(tabfreqs.size()) ; ++i){
-	   freqs[i]=casa::Quantity(tabfreqs[i], "Hz");
+	   freqs[i]=casacore::Quantity(tabfreqs[i], "Hz");
 	   fluxval[i]=Flux<Double>(tabi[i], tabq[i], tabu[i], tabv[i]);
 	 }
 	 MFrequency::Types freqFrameType;
@@ -1586,13 +1589,13 @@ bool componentlist::setstokesspectrum(const int which, const std::string& eltype
 	 Record rec;
 	 Record freqRec;
 	 
-	 casa::Quantity freqQ=String(reffreq.toString()) != String("[]") ? casaQuantity(reffreq) : casa::Quantity(1.4, "GHz");
+	 casacore::Quantity freqQ=String(reffreq.toString()) != String("[]") ? casaQuantity(reffreq) : casacore::Quantity(1.4, "GHz");
 	 MFrequency::Types eltype;
 	 if(!MFrequency::getType(eltype, freqframe))
 	   throw(AipsError(String(freqframe) + String(" is not a frequency frame that is understood")));
 	 MeasureHolder(MFrequency(freqQ, eltype)).toRecord(errorMessage,freqRec);
-	  setfreq(which, freqQ.get("GHz").getValue(), "GHz", True);
-	  setfreqframe(which, freqframe, True);
+	  setfreq(which, freqQ.get("GHz").getValue(), "GHz", true);
+	  setfreqframe(which, freqframe, true);
 	 rec.defineRecord("frequency", freqRec);
 	 *itsLog << LogIO::DEBUG1 << "index: " << index << LogIO::POST;
 	 // Vector<Double> indexVec(index);
@@ -1841,7 +1844,7 @@ bool componentlist::add(const ::casac::record& thecomponent, const bool /*iknow*
       if(elRec !=0){
         delete elRec;
       }
-      rstat=True;
+      rstat=true;
     }
     else {
       *itsLog << LogIO::WARN
@@ -1879,7 +1882,7 @@ bool componentlist::replace(const int /*which*/, const ::casac::record& /*list*/
 
 bool componentlist::summarize(const int which) {
 	itsLog->origin(LogOrigin("componentlist", __FUNCTION__));
-	Bool rstat = False;
+	Bool rstat = false;
 	try{
 		if(itsList && itsBin) {
 			if(uInt(which) >= itsList->nelements() ) {
@@ -1890,11 +1893,11 @@ bool componentlist::summarize(const int which) {
 					throw AipsError(oss.str());
 			}
 			*itsLog << LogIO::NORMAL << itsList->summarize(which) << LogIO::POST;
-			rstat = True;
+			rstat = true;
 		} else {
 			*itsLog << LogIO::WARN
 					<< "componentlist is not opened, please open first" << LogIO::POST;
-			rstat = False;
+			rstat = false;
 		}
 	}
 	catch (AipsError x){

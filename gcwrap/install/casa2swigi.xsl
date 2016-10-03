@@ -42,7 +42,7 @@
 %exception {
    try {
       $action
-      } catch (const casa::AipsError &amp;ae) {
+      } catch (const casacore::AipsError &amp;ae) {
          PyErr_SetString(PyExc_RuntimeError, ae.what());
 	 //PyErr_Print();
          return NULL;

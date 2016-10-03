@@ -1,2 +1,2 @@
 casa::Deconvolver *itsDeconv;
-casa::LogIO *itsLog;
+casacore::LogIO *itsLog;

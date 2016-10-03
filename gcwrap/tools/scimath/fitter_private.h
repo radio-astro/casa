@@ -1,1 +1,1 @@
-casa::Record _recordForUnbounded(const casa::ProfileFit1D<casa::Double>& fitter) const;
+casacore::Record _recordForUnbounded(const casa::ProfileFit1D<casacore::Double>& fitter) const;

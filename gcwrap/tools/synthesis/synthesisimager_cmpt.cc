@@ -28,9 +28,11 @@
 #include <synthesisimager_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
      
+using namespace casacore;
 namespace casac {
 
   // Method used for creating the SynthesisImager object.  By default,
@@ -86,7 +88,7 @@ synthesisimager::setdata(const std::string& msname,
 			    const bool usescratch,
 			    const bool readonly,
 			    const bool incrmodel) {
-	Bool rstat=False;
+	Bool rstat=false;
 	 try {
 	   //if( ! itsImager ) itsImager = new SynthesisImagerVi2();
                  itsImager = makeSI();
@@ -107,14 +109,14 @@ synthesisimager::setdata(const std::string& msname,
 bool 
 synthesisimager::selectdata(const casac::record& selpars)
 {
-  Bool rstat(False);
+  Bool rstat(false);
   
   try 
     {
 
       //if( ! itsImager ) itsImager = new SynthesisImagerVi2();
       itsImager = makeSI();
-      casa::Record recpars = *toRecord( selpars );
+      casacore::Record recpars = *toRecord( selpars );
       SynthesisParamsSelect pars;
       pars.fromRecord( recpars );
 
@@ -145,13 +147,13 @@ synthesisimager::selectdata(const casac::record& selpars)
 
       if( ! itsImager ) ThrowCc("You have to run selectdata and defineimage before tuneselectdata")
 
-      casa::Record outRec;
+      casacore::Record outRec;
       Vector<SynthesisParamsSelect> leDataParams;
 
 
       leDataParams=itsImager->tuneSelectData();
       for (uInt k=0; k < leDataParams.nelements(); ++k){
-    	  outRec.defineRecord(casa::String("ms")+casa::String::toString(k), leDataParams[k].toRecord() );
+    	  outRec.defineRecord(casacore::String("ms")+casacore::String::toString(k), leDataParams[k].toRecord() );
 
       }
       rstat = fromRecord(outRec);
@@ -173,18 +175,18 @@ synthesisimager::selectdata(const casac::record& selpars)
 
 bool synthesisimager::defineimage(const casac::record& impars, const casac::record& gridpars)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
     
       //if( ! itsImager ) itsImager = new SynthesisImager();
       itsImager = makeSI();
-    casa::Record irecpars = *toRecord( impars );
+    casacore::Record irecpars = *toRecord( impars );
     SynthesisParamsImage ipars;
     ipars.fromRecord( irecpars );
 
-    casa::Record grecpars = *toRecord( gridpars );
+    casacore::Record grecpars = *toRecord( gridpars );
     SynthesisParamsGrid gpars;
     gpars.fromRecord( grecpars );
 
@@ -240,19 +242,19 @@ synthesisimager::setimage(const std::string& imagename,
 			     const std::string& convfunc,
 			     const std::string& startmodel,
 
-			     const bool aterm,//    = True,
-			     const bool psterm,//   = True,
-			     const bool mterm,//    = False,
-			     const bool wbawp,//      = True,
+			     const bool aterm,//    = true,
+			     const bool psterm,//   = true,
+			     const bool mterm,//    = false,
+			     const bool wbawp,//      = true,
 			     const std::string& cfcache,//  = "",
-			     const bool dopointing,// = False,
-			     const bool dopbcorr,//   = True,
-			     const bool conjbeams,//  = True,
+			     const bool dopointing,// = false,
+			     const bool dopbcorr,//   = true,
+			     const bool conjbeams,//  = true,
 			     const float computepastep,         //=360.0
 			     const float rotatepastep          //=5.0
 			     )
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
@@ -267,10 +269,10 @@ synthesisimager::setimage(const std::string& imagename,
 	nY=nx;
 
       // Convert cellx, celly
-      casa::Quantity cellX=casaQuantity(cellx);
+      casacore::Quantity cellX=casaQuantity(cellx);
       if(cellX.getValue()==0.0)
-	cellX=casa::Quantity(1.0, "arcsec");
-      casa::Quantity cellY;
+	cellX=casacore::Quantity(1.0, "arcsec");
+      casacore::Quantity cellY;
       if(toCasaString(celly) == String("")){
 	cellY=cellX;
       }
@@ -279,7 +281,7 @@ synthesisimager::setimage(const std::string& imagename,
       }
 
       // Convert phasecenter ( If it is an integer, it's a field, id, connect to last MS.... )
-      casa::MDirection  phaseCenter;
+      casacore::MDirection  phaseCenter;
       //Int fieldid=-1;
       //If phasecenter is a simple numeric value then its taken as a fieldid 
       //otherwise its converted to a MDirection
@@ -302,15 +304,15 @@ synthesisimager::setimage(const std::string& imagename,
 
 
       // Convert projection.
-      casa::String projectionStr = toCasaString( projection );
-      casa::Projection imageprojection = Projection::type( projectionStr );
+      casacore::String projectionStr = toCasaString( projection );
+      casacore::Projection imageprojection = Projection::type( projectionStr );
 
       // Convert distance
-      casa::Quantity cdistance = casaQuantity( distance );
+      casacore::Quantity cdistance = casaQuantity( distance );
 
       // Convert trackDir
-      casa::MDirection  trackDir;
-      if( toCasaString(trackdir) != casa::String("")){
+      casacore::MDirection  trackDir;
+      if( toCasaString(trackdir) != casacore::String("")){
 	  if(!casaMDirection(trackdir, trackDir)){
 	    throw(AipsError("cmpt : Could not interprete trackdir parameter"));
 	  }
@@ -323,18 +325,18 @@ synthesisimager::setimage(const std::string& imagename,
       //----------------------------------------------------------------------------------------------------------------
 
       // Convert freqstart, freqstep, restfreq - whatever units.
-      casa::Quantity freqStart, freqStep, refFreq;
+      casacore::Quantity freqStart, freqStep, refFreq;
       freqStart = casaQuantity(freqstart);
       freqStep = casaQuantity(freqstep);
       refFreq = casaQuantity(reffreq);
 
       // Convert rest-freq
-      casa::Vector<casa::Quantity> restFreq;
+      casacore::Vector<casacore::Quantity> restFreq;
       toCasaVectorQuantity( restfreq, restFreq );
 
       // Convert freqframe
-      casa::MFrequency::Types freqframetype;
-      if( !casa::MFrequency::getType(freqframetype, freqframe) )
+      casacore::MFrequency::Types freqframetype;
+      if( !casacore::MFrequency::getType(freqframetype, freqframe) )
 	throw(AipsError("cmpt : Invalid Frequency Frame " + freqframe));
 
       //----------------------------------------------------------------------------------------------------------------
@@ -373,19 +375,19 @@ bool synthesisimager::setweighting(const std::string& type,
 				   const ::casac::variant& filterbpa */
 				   )
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
 
       //if( ! itsImager ) itsImager = new SynthesisImager(); // More here ? Check that defineImage has been called
       itsImager = makeSI();
-      casa::Quantity cnoise = casaQuantity( noise );
-      casa::Quantity cfov = casaQuantity( fieldofview );
+      casacore::Quantity cnoise = casaQuantity( noise );
+      casacore::Quantity cfov = casaQuantity( fieldofview );
 
       Vector<String> uvtaperpars( toVectorString(uvtaper) );
 
-      casa::Quantity bmaj(0.0,"deg"), bmin(0.0,"deg"), bpa(0.0,"deg");
+      casacore::Quantity bmaj(0.0,"deg"), bmin(0.0,"deg"), bpa(0.0,"deg");
       String filtertype("");
       if(uvtaperpars.nelements()>0) bmaj = casaQuantity( uvtaperpars[0] );
       if(uvtaperpars.nelements()>1) bmin = casaQuantity( uvtaperpars[1] );
@@ -407,7 +409,7 @@ bool synthesisimager::setweighting(const std::string& type,
 
   bool synthesisimager::makepsf()
   {
-    Bool rstat(False);
+    Bool rstat(false);
     
     try {
       
@@ -423,7 +425,7 @@ bool synthesisimager::setweighting(const std::string& type,
 
   bool synthesisimager::drygridding(const std::vector<std::string>& cfList)
   {
-    Bool rstat(False);
+    Bool rstat(false);
     
     try {
       
@@ -444,7 +446,7 @@ bool synthesisimager::setweighting(const std::string& type,
 				    const bool aTermOn,
 				    const bool conjBeams)
   {
-    Bool rstat(False);
+    Bool rstat(false);
     
     try {
       
@@ -461,7 +463,7 @@ bool synthesisimager::setweighting(const std::string& type,
 
   bool synthesisimager::reloadcfcache()
   {
-    Bool rstat(False);
+    Bool rstat(false);
     
     try {
       
@@ -477,7 +479,7 @@ bool synthesisimager::setweighting(const std::string& type,
 
   bool synthesisimager::predictmodel()
   {
-    Bool rstat(False);
+    Bool rstat(false);
     
     try {
       
@@ -493,13 +495,13 @@ bool synthesisimager::setweighting(const std::string& type,
 
 bool synthesisimager::executemajorcycle(const casac::record& controls)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try {
 
     //if( ! itsImager ) itsImager = new SynthesisImager();
     itsImager = makeSI();
-    casa::Record recpars = *toRecord( controls );
+    casacore::Record recpars = *toRecord( controls );
     itsImager->executeMajorCycle( recpars );
 
   } catch  (AipsError x) {
@@ -510,7 +512,7 @@ bool synthesisimager::executemajorcycle(const casac::record& controls)
 
   bool synthesisimager::makepb()
   {
-    Bool rstat(False);
+    Bool rstat(false);
     
     try {
       
@@ -577,7 +579,7 @@ int synthesisimager::updatenchan()
        
   bool synthesisimager::getweightdensity()
   {
-    Bool rstat(False);
+    Bool rstat(false);
     
     try {
       
@@ -592,7 +594,7 @@ int synthesisimager::updatenchan()
   }
   bool synthesisimager::setweightdensity()
   {
-    Bool rstat(False);
+    Bool rstat(false);
     
     try {
       
@@ -610,7 +612,7 @@ int synthesisimager::updatenchan()
 bool
 synthesisimager::done()
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
@@ -631,9 +633,9 @@ synthesisimager::done()
 
   /* PRIVATE HELPER FUNCTIONS */
 
-casa::String checkStr(std::string instr)
+casacore::String checkStr(std::string instr)
 {
-  casa::String cstr = toCasaString( instr );
+  casacore::String cstr = toCasaString( instr );
   if( cstr == String("-1") )
     {
       cstr = "";
@@ -645,11 +647,11 @@ casa::String checkStr(std::string instr)
 /*
   bool synthesisimager::setupdeconvolution(const casac::record& decpars)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
-      casa::Record rec = *toRecord( decpars );
+      casacore::Record rec = *toRecord( decpars );
       itsDeconvolver->setupDeconvolution( rec );
     } 
   catch  (AipsError x) 
@@ -702,7 +704,7 @@ casac::record* synthesisimager::setupiteration(const casac::record& iterpars)
 
   try 
     {
-      casa::Record recpars = *toRecord( iterpars );
+      casacore::Record recpars = *toRecord( iterpars );
       itsIterBot->setupIteration( recpars );
     } 
   catch  (AipsError x) 
@@ -717,7 +719,7 @@ casac::record* synthesisimager::setupiteration(const casac::record& iterpars)
 /*
 bool synthesisimager::cleanComplete()
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
@@ -751,13 +753,13 @@ bool synthesisimager::cleanComplete()
  /*
 bool synthesisimager::runmajorcycle()
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
       // This is a convenience function for tool-level usage, for the non-parallel case.
       // Duplicates the code from getmajorcyclecontrols(), executemajorcycle(), endmajorcycle().
-      casa::Record recpars; // = itsImager->getMajorCycleControls();
+      casacore::Record recpars; // = itsImager->getMajorCycleControls();
       itsImager->executeMajorCycle( recpars );
       itsIterBot->endMajorCycle();
     } 
@@ -787,7 +789,7 @@ casac::record* synthesisimager::getmajorcyclecontrols()
 /*
 bool synthesisimager::endmajorcycle()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   
   try 
     {
@@ -805,13 +807,13 @@ bool synthesisimager::endmajorcycle()
  /*
 bool synthesisimager::runminorcycle()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   
   try 
     {
       // This is a convenience function for tool-level usage, for the non-parallel case.
       // Duplicates the code from getsubiterbot(), executeminorcycle(), endminorcycle().
-      casa::Record iterbotrec = itsIterBot->getSubIterBot();
+      casacore::Record iterbotrec = itsIterBot->getSubIterBot();
       iterbotrec = itsDeconvolver->executeMinorCycle(iterbotrec);
       itsImager->endMinorCycle(iterbotrec);
      } 
@@ -842,9 +844,9 @@ casac::record* synthesisimager::getsubiterbot()
    /*
 casac::record* synthesisimager::executeminorcycle(const casac::record& iterbot)
 {
-  casac::record* rstat(False);
+  casac::record* rstat(false);
   try {
-    casa::Record recpars = *toRecord( iterbot );
+    casacore::Record recpars = *toRecord( iterbot );
     rstat = fromRecord(itsImager->executeMinorCycle( recpars ));
   } catch  (AipsError x) {
     RETHROW(x);
@@ -855,11 +857,11 @@ casac::record* synthesisimager::executeminorcycle(const casac::record& iterbot)
     /*
 bool synthesisimager::endminorcycle(const casac::record& iterbot)
 {
-  Bool rstat(False);
+  Bool rstat(false);
   
   try 
     {
-      casa::Record recpars = *toRecord( iterbot );
+      casacore::Record recpars = *toRecord( iterbot );
       itsImager->endMinorCycle(recpars);
      } 
   catch  (AipsError x) 

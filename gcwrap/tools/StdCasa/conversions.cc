@@ -3,6 +3,7 @@
 #include <xmlcasa/type_variant.h>
 #include <casac/casac.h>
 
+using namespace casacore;
 namespace casac {
 
 void convert_idl_complex_to_cplus_complex(const casac::complex &idl_cpx,std::complex<double> &cpx) {

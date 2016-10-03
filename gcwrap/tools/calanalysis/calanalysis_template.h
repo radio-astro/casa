@@ -3,26 +3,26 @@
 
 template <typename T>
 Bool calanalysis::writeInput( const CalAnalysis::OUTPUT<T>& oOutput,
-    const uInt& row, const uInt& col, ::casac::record& oRecIter ) {
+    const casacore::uInt& row, const casacore::uInt& col, ::casac::record& oRecIter ) {
 
   // Write the field
 
   unsigned int uiField = oOutput.uiField;
-  std::string oFieldString( String::toString(uiField).c_str() );
+  std::string oFieldString( casacore::String::toString(uiField).c_str() );
   oRecIter.insert( std::string("field"), oFieldString );
 
 
   // Write the antenna 1
 
   unsigned int uiAntenna1 = oOutput.uiAntenna1;
-  std::string oAntenna1String( String::toString(uiAntenna1).c_str() );
+  std::string oAntenna1String( casacore::String::toString(uiAntenna1).c_str() );
   oRecIter.insert( std::string("antenna1"), oAntenna1String );
 
 
   // Write the antenna 2
 
   int iAntenna2 = oOutput.iAntenna2;
-  std::string oAntenna2String( String::toString(iAntenna2).c_str() );
+  std::string oAntenna2String( casacore::String::toString(iAntenna2).c_str() );
   oRecIter.insert( std::string("antenna2"), oAntenna2String );
 
 
@@ -79,9 +79,9 @@ Bool calanalysis::writeInput( const CalAnalysis::OUTPUT<T>& oOutput,
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -89,7 +89,7 @@ Bool calanalysis::writeInput( const CalAnalysis::OUTPUT<T>& oOutput,
 
 template <typename T>
 Bool calanalysis::writeData( const CalAnalysis::OUTPUT<T>& oOutput,
-    const uInt& row, const uInt& col, ::casac::record& oRecIter ) {
+    const casacore::uInt& row, const casacore::uInt& col, ::casac::record& oRecIter ) {
 
   // Write the non-iteration axis
 
@@ -107,7 +107,7 @@ Bool calanalysis::writeData( const CalAnalysis::OUTPUT<T>& oOutput,
 
   // Get the number of abscissae
 
-  uInt uiNumAbs = oOutput.oOut(row,col).oData.oAbs.nelements();
+  casacore::uInt uiNumAbs = oOutput.oOut(row,col).oData.oAbs.nelements();
 
 
   // Write the abscissae from the non-iteration axis (either times or
@@ -115,7 +115,7 @@ Bool calanalysis::writeData( const CalAnalysis::OUTPUT<T>& oOutput,
 
   std::vector<double> oAbs( uiNumAbs );
 
-  for ( uInt a=0; a<uiNumAbs; a++ ) {
+  for ( casacore::uInt a=0; a<uiNumAbs; a++ ) {
     oAbs[a] = oOutput.oOut(row,col).oData.oAbs[a];
   }
   
@@ -126,7 +126,7 @@ Bool calanalysis::writeData( const CalAnalysis::OUTPUT<T>& oOutput,
 
   std::vector<double> oValue( uiNumAbs );
 
-  for ( uInt a=0; a<uiNumAbs; a++ ) {
+  for ( casacore::uInt a=0; a<uiNumAbs; a++ ) {
     oValue[a] = oOutput.oOut(row,col).oData.oValue[a];
   }
 
@@ -137,7 +137,7 @@ Bool calanalysis::writeData( const CalAnalysis::OUTPUT<T>& oOutput,
 
   std::vector<double> oValueErr( uiNumAbs );
 
-  for ( uInt a=0; a<uiNumAbs; a++ ) {
+  for ( casacore::uInt a=0; a<uiNumAbs; a++ ) {
     oValueErr[a] = oOutput.oOut(row,col).oData.oValueErr[a];
   }
 
@@ -148,16 +148,16 @@ Bool calanalysis::writeData( const CalAnalysis::OUTPUT<T>& oOutput,
 
   std::vector<bool> oFlag( uiNumAbs );
 
-  for ( uInt a=0; a<uiNumAbs; a++ ) {
+  for ( casacore::uInt a=0; a<uiNumAbs; a++ ) {
     oFlag[a] = oOutput.oOut(row,col).oData.oFlag[a];
   }
 
   oRecIter.insert( string("flag"), oFlag );
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -165,7 +165,7 @@ Bool calanalysis::writeData( const CalAnalysis::OUTPUT<T>& oOutput,
 
 template <typename T>
 Bool calanalysis::writeFit( const CalStats::ARG<T>& oArg,
-    const CalAnalysis::OUTPUT<T>& oOutput, const uInt& row, const uInt& col,
+    const CalAnalysis::OUTPUT<T>& oOutput, const casacore::uInt& row, const casacore::uInt& col,
     ::casac::record& oRecIter ) {
 
   // Write the fit order, type, and weight parameters
@@ -195,10 +195,10 @@ Bool calanalysis::writeFit( const CalStats::ARG<T>& oArg,
 
   // Write the fit parameters
 
-  uInt uiNumPars = oOutput.oOut(row,col).oT.oPars.nelements();
+  casacore::uInt uiNumPars = oOutput.oOut(row,col).oT.oPars.nelements();
   std::vector<double> oPars( uiNumPars );
 
-  for ( uInt p=0; p<uiNumPars; p++ ) {
+  for ( casacore::uInt p=0; p<uiNumPars; p++ ) {
     oPars[p] = oOutput.oOut(row,col).oT.oPars[p];
   }
 
@@ -209,7 +209,7 @@ Bool calanalysis::writeFit( const CalStats::ARG<T>& oArg,
 
   std::vector<double> oVars( uiNumPars );
 
-  for ( uInt p=0; p<uiNumPars; p++ ) {
+  for ( casacore::uInt p=0; p<uiNumPars; p++ ) {
     oVars[p] = oOutput.oOut(row,col).oT.oCovars(p,p);
   }
 
@@ -220,8 +220,8 @@ Bool calanalysis::writeFit( const CalStats::ARG<T>& oArg,
 
   std::vector<double> oCovars( uiNumPars * (uiNumPars-1) / 2 );
 
-  for ( uInt pr=0,p=0; pr<uiNumPars; pr++ ) {
-    for ( uInt pc=pr+1; pc<uiNumPars; pc++,p++ ) {
+  for ( casacore::uInt pr=0,p=0; pr<uiNumPars; pr++ ) {
+    for ( casacore::uInt pc=pr+1; pc<uiNumPars; pc++,p++ ) {
       oCovars[p] = oOutput.oOut(row,col).oT.oCovars(pr,pc);
     }
   }
@@ -231,10 +231,10 @@ Bool calanalysis::writeFit( const CalStats::ARG<T>& oArg,
 
   // Write the fit model
 
-  uInt uiNumData = oOutput.oOut(row,col).oT.oModel.nelements();
+  casacore::uInt uiNumData = oOutput.oOut(row,col).oT.oModel.nelements();
   std::vector<double> oModel( uiNumData );
 
-  for ( uInt d=0; d<uiNumData; d++ ) {
+  for ( casacore::uInt d=0; d<uiNumData; d++ ) {
     oModel[d] = oOutput.oOut(row,col).oT.oModel[d];
   }
 
@@ -245,7 +245,7 @@ Bool calanalysis::writeFit( const CalStats::ARG<T>& oArg,
 
   std::vector<double> oRes( uiNumData );
 
-  for ( uInt d=0; d<uiNumData; d++ ) {
+  for ( casacore::uInt d=0; d<uiNumData; d++ ) {
     oRes[d] = oOutput.oOut(row,col).oT.oRes[d];
   }
 
@@ -254,20 +254,20 @@ Bool calanalysis::writeFit( const CalStats::ARG<T>& oArg,
 
   // Write the fit residual variance
 
-  Double dResVar = oOutput.oOut(row,col).oT.dResVar;
+  casacore::Double dResVar = oOutput.oOut(row,col).oT.dResVar;
 
   oRecIter.insert( std::string("resVar"), dResVar );
 
 
   // Write the fit residual mean
 
-  Double dResMean = oOutput.oOut(row,col).oT.dResMean;
+  casacore::Double dResMean = oOutput.oOut(row,col).oT.dResMean;
 
   oRecIter.insert( std::string("resMean"), dResMean );
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }

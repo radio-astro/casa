@@ -1,13 +1,13 @@
-casa::Bool detached();
-casa::Bool ready2write_();
+casacore::Bool detached();
+casacore::Bool ready2write_();
 
-casa::MeasurementSet *itsMS, *itsOriginalMS;
-casa::MSSelection *itsMSS;
-casa::LogIO *itsLog;
-casa::MSSelector *itsSel;
-casa::MSFlagger *itsFlag;
+casacore::MeasurementSet *itsMS, *itsOriginalMS;
+casacore::MSSelection *itsMSS;
+casacore::LogIO *itsLog;
+casacore::MSSelector *itsSel;
+casacore::MSFlagger *itsFlag;
 casa::VisibilityIterator *itsVI;
 casa::VisBuffer *itsVB;
-casa::Bool doingIterations_p;
+casacore::Bool doingIterations_p;
 
-void addephemcol(const casa::MeasurementSet& appendedMS);
+void addephemcol(const casacore::MeasurementSet& appendedMS);

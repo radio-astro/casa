@@ -2,10 +2,14 @@
 
 #include <stdcasa/StdCasa/CasacSupport.h>
 
+namespace casacore{
+
+class LogIO;
+}
+
 namespace casa
 {
 class SIImageStore;
-class LogIO;
 };
 
 namespace casac {

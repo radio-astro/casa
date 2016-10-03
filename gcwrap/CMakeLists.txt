@@ -23,6 +23,8 @@ cmake_minimum_required( VERSION 2.8 )
 
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
 
+add_definitions ("-DUseCasacoreNamespace")
+
 execute_process( COMMAND svn info
                    RESULT_VARIABLE SVNINFOSTATUS
                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

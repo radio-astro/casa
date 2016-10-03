@@ -32,8 +32,10 @@
 #include <casa/Quanta/QLogical.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 quanta::quanta()
@@ -47,9 +49,9 @@ quanta::~quanta()
 
 }
 
-casa::QuantumHolder
+casacore::QuantumHolder
 quanta::quantumHolderFromVar(const ::casac::variant& theVar){
-  casa::QuantumHolder qh;
+  casacore::QuantumHolder qh;
   try {
     String error;
     if(theVar.type()== ::casac::variant::STRING ) {
@@ -85,12 +87,12 @@ quanta::quantumHolderFromVar(const ::casac::variant& theVar){
 }
 
 casac::record*
-quanta::recordFromQuantity(const casa::Quantity q)
+quanta::recordFromQuantity(const casacore::Quantity q)
 {
   ::casac::record *r=0;
   try {
     String error;
-    casa::Record R;
+    casacore::Record R;
     if (QuantumHolder(q).toRecord(error, R)) {
       r = fromRecord(R);
     } else {
@@ -111,7 +113,7 @@ quanta::recordFromQuantity(const Quantum<Vector<Double> >& q)
   ::casac::record *r=0;
   try {
     String error;
-    casa::Record R;
+    casacore::Record R;
     if (QuantumHolder(q).toRecord(error, R)) {
       r = fromRecord(R);
     } else {
@@ -148,7 +150,7 @@ quanta::formxxx(const ::casac::variant& v, const std::string& format, const int 
 {
   string out("");
   try {
-    casa::Quantity quant = casaQuantity(v);
+    casacore::Quantity quant = casaQuantity(v);
 
     if(!ang_as_formatted_str(out, quant, format, prec))
       *itsLog << LogIO::WARN << "Don't understand " << format << LogIO::POST;
@@ -178,14 +180,14 @@ quanta::convertdop(const ::casac::variant& v, const std::string& outunit)
 quanta::quantity(const ::casac::variant& v, const std::string& unitname)
 {
   if(v.type()==::casac::variant::DOUBLE) {
-    return recordFromQuantity(casa::Quantity(v.toDouble(),String(unitname)));
+    return recordFromQuantity(casacore::Quantity(v.toDouble(),String(unitname)));
   }
   if(v.type()==::casac::variant::DOUBLEVEC) {
     return recordFromQuantity(Quantum<Vector<Double> >(v.toDoubleVec(),
 						       String(unitname)));
   }
   if(v.type()==::casac::variant::INT) {
-    return recordFromQuantity(casa::Quantity(v.toDouble(),String(unitname)));
+    return recordFromQuantity(casacore::Quantity(v.toDouble(),String(unitname)));
   }
   if(v.type()==::casac::variant::INTVEC) {
     return recordFromQuantity(Quantum<Vector<Double> >(v.toDoubleVec(),
@@ -203,7 +205,7 @@ quanta::quantity(const ::casac::variant& v, const std::string& unitname)
 //::casac::record*
 //quanta::quant(const double v, const std::string& name)
 //{
-//  return recordFromQuantity(casa::Quantity(v,String(name)));
+//  return recordFromQuantity(casacore::Quantity(v,String(name)));
 //}
 
 //::casac::record* 
@@ -230,7 +232,7 @@ quanta::getvalue(const ::casac::variant& v)
   return casacQuantity(casaQuantity(v)).value;
   /*
   std::vector<double> rtn;
-  Vector<casa::Quantity> vq;
+  Vector<casacore::Quantity> vq;
   if(toCasaVectorQuantity(v, vq)) {
     uInt n = vq.size();
     rtn.resize(n);
@@ -265,7 +267,7 @@ quanta::canonical(const ::casac::variant& v)
 ::casac::record*
 quanta::canon(const ::casac::variant& v)
 {
-  //  return recordFromQuantity(casa::Quantity(1.,String(v)));
+  //  return recordFromQuantity(casacore::Quantity(1.,String(v)));
   return recordFromQuantity(casaQuantity(v).get());
 }
 
@@ -292,7 +294,7 @@ quanta::convert(const ::casac::variant& v, const ::casac::variant& outunit)
 bool
 quanta::define(const std::string& name, const ::casac::variant& v)
 {
-  const casa::Quantity q(casaQuantity(v));  // Don't repeatedly parse v.
+  const casacore::Quantity q(casaQuantity(v));  // Don't repeatedly parse v.
   
   UnitMap::removeUser(name);
   UnitMap::putUser(name, UnitVal(q.getValue(), q.getUnit()), "User defined");
@@ -332,8 +334,8 @@ quanta::map(const std::string& v)
       "R0    solar radius     ",
       "k2    IAU grav. const^2"
     };
-    static casa::Quantity res[N] = {
-      casa::Quantity(C::pi,""), casa::Quantity(C::e,""),
+    static casacore::Quantity res[N] = {
+      casacore::Quantity(C::pi,""), casacore::Quantity(C::e,""),
       QC::c, QC::G, QC::h, QC::HI, QC::R, QC::NA, QC::e, QC::mp,
       QC::mp_me, QC::mu0, QC::epsilon0, QC::k, QC::F, QC::me, QC::re, QC::a0,
       QC::R0, QC::k2
@@ -392,7 +394,7 @@ std::vector<std::string>
 quanta::angle(const ::casac::variant& v, const int prec, const std::vector<std::string>& form, const bool showform)
 {
   //  Quantum<Vector<Double> > val(Vector<Double>(v.value), String(v.units));
-  casa::Quantity q = casaQuantity(v);
+  casacore::Quantity q = casaQuantity(v);
   Vector<Double> vd(1);
   vd[0]=q.getValue();
   Quantum<Vector<Double> > val( vd, q.getUnit());
@@ -417,7 +419,7 @@ quanta::angle(const ::casac::variant& v, const int prec, const std::vector<std::
 	  if (showform) oss << ", ";
 	  else oss << " ";
 	};
-	oss << MVAngle(casa::Quantity(val.getValue()(k), val.getFullUnit())).string(fm, prec);
+	oss << MVAngle(casacore::Quantity(val.getValue()(k), val.getFullUnit())).string(fm, prec);
 	k++;
       };
       if (ncol > 1 && showform) oss << ']';
@@ -436,7 +438,7 @@ quanta::time(const ::casac::variant& v, const int prec,
 	     const std::vector<std::string>& form, const bool showform)
 {
   //  Quantum<Vector<Double> > val(Vector<Double>(v.value), String(v.units));
-  casa::Quantity q = casaQuantity(v);
+  casacore::Quantity q = casaQuantity(v);
   Vector<Double> vd(1);
   vd[0]=q.getValue();
   Quantum<Vector<Double> > val( vd, q.getUnit());
@@ -461,7 +463,7 @@ quanta::time(const ::casac::variant& v, const int prec,
 	  if (showform) oss << ", ";
 	  else oss << " ";
 	};
-	oss << MVTime(casa::Quantity(val.getValue()(k),
+	oss << MVTime(casacore::Quantity(val.getValue()(k),
 				     val.getFullUnit())).
 	  string(fm, prec);
 	k++;
@@ -503,7 +505,7 @@ quanta::div(const ::casac::variant& v, const ::casac::variant& a)
 ::casac::record*
 quanta::neg(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::Quantity(-casaQuantity(v).getValue(),
+  return recordFromQuantity(casacore::Quantity(-casaQuantity(v).getValue(),
 					   casaQuantity(v).getUnit()));
 }
 
@@ -511,7 +513,7 @@ quanta::neg(const ::casac::variant& v)
 ::casac::record*
 quanta::norm(const ::casac::variant& v, const double a)
 {
-  return recordFromQuantity(casa::Quantity(MVAngle(casaQuantity(v))(a).degree(), "deg"));
+  return recordFromQuantity(casacore::Quantity(MVAngle(casaQuantity(v))(a).degree(), "deg"));
 }
 
 bool
@@ -553,85 +555,85 @@ quanta::ge(const ::casac::variant& v, const ::casac::variant& a)
 ::casac::record*
 quanta::sin(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::sin(casaQuantity(v)));
+  return recordFromQuantity(casacore::sin(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::cos(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::cos(casaQuantity(v)));
+  return recordFromQuantity(casacore::cos(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::tan(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::tan(casaQuantity(v)));
+  return recordFromQuantity(casacore::tan(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::asin(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::asin(casaQuantity(v)));
+  return recordFromQuantity(casacore::asin(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::acos(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::acos(casaQuantity(v)));
+  return recordFromQuantity(casacore::acos(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::atan(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::atan(casaQuantity(v)));
+  return recordFromQuantity(casacore::atan(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::atan2(const ::casac::variant& v, const ::casac::variant& a)
 {
-  return recordFromQuantity(casa::atan2(casaQuantity(v), casaQuantity(a)));
+  return recordFromQuantity(casacore::atan2(casaQuantity(v), casaQuantity(a)));
 }
 
 ::casac::record*
 quanta::abs(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::abs(casaQuantity(v)));
+  return recordFromQuantity(casacore::abs(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::ceil(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::ceil(casaQuantity(v)));
+  return recordFromQuantity(casacore::ceil(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::floor(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::floor(casaQuantity(v)));
+  return recordFromQuantity(casacore::floor(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::log(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::log(casaQuantity(v)));
+  return recordFromQuantity(casacore::log(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::log10(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::log10(casaQuantity(v)));
+  return recordFromQuantity(casacore::log10(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::exp(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::exp(casaQuantity(v)));
+  return recordFromQuantity(casacore::exp(casaQuantity(v)));
 }
 
 ::casac::record*
 quanta::sqrt(const ::casac::variant& v)
 {
-  return recordFromQuantity(casa::sqrt(casaQuantity(v)));
+  return recordFromQuantity(casacore::sqrt(casaQuantity(v)));
 }
 
 // compare units for conformance
@@ -644,7 +646,7 @@ quanta::compare(const ::casac::variant& v, const ::casac::variant& a)
 }
 
 bool
-quanta::qcompare(const ::casac::variant& v, const casa::Quantity a)
+quanta::qcompare(const ::casac::variant& v, const casacore::Quantity a)
 {
   return ( (casaQuantity(v).getFullUnit().getValue()) ==
 	   (a.getFullUnit().getValue()) );
@@ -656,8 +658,8 @@ bool
 quanta::check(const std::string& v)
 {
   bool retval(false);
-  casa::Quantity res;
-  if (casa::Quantity::read(res, v)) {
+  casacore::Quantity res;
+  if (casacore::Quantity::read(res, v)) {
     retval = true;
   }
   return retval;
@@ -667,13 +669,13 @@ quanta::check(const std::string& v)
 bool
 quanta::checkfreq(const ::casac::variant& cm)
 {
-  return (qcompare(cm, casa::Quantity(1.0,"s")) ||
-	  qcompare(cm, casa::Quantity(1.0,"Hz")) ||
-	  qcompare(cm, casa::Quantity(1.0,"deg/s")) ||
-	  qcompare(cm, casa::Quantity(1.0,"m")) ||
-	  qcompare(cm, casa::Quantity(1.0,"m-1")) ||
-	  qcompare(cm, casa::Quantity(1.0,"(eV)")) ||
-	  qcompare(cm, casa::Quantity(1.0,"kg.m"))
+  return (qcompare(cm, casacore::Quantity(1.0,"s")) ||
+	  qcompare(cm, casacore::Quantity(1.0,"Hz")) ||
+	  qcompare(cm, casacore::Quantity(1.0,"deg/s")) ||
+	  qcompare(cm, casacore::Quantity(1.0,"m")) ||
+	  qcompare(cm, casacore::Quantity(1.0,"m-1")) ||
+	  qcompare(cm, casacore::Quantity(1.0,"(eV)")) ||
+	  qcompare(cm, casacore::Quantity(1.0,"kg.m"))
 	  );
 }
 
@@ -681,7 +683,7 @@ quanta::checkfreq(const ::casac::variant& cm)
 ::casac::record*
 quanta::pow(const ::casac::variant& v, const int a)
 {
-  return recordFromQuantity(casa::pow(casaQuantity(v),a));
+  return recordFromQuantity(casacore::pow(casaQuantity(v),a));
 }
 
 // get a constant
@@ -696,14 +698,14 @@ quanta::constants(const std::string& v)
     "mp_me", "mu0", "epsilon0", "k", "F", "me", "re", "a0",
     "R0", "k2"
   };
-  static casa::Quantity res[N] = {
-    casa::Quantity(C::pi,""), casa::Quantity(C::e,""),
+  static casacore::Quantity res[N] = {
+    casacore::Quantity(C::pi,""), casacore::Quantity(C::e,""),
     QC::c, QC::G, QC::h, QC::HI, QC::R, QC::NA, QC::e, QC::mp,
     QC::mp_me, QC::mu0, QC::epsilon0, QC::k, QC::F, QC::me, QC::re, QC::a0,
     QC::R0, QC::k2
   };
   uInt p = MUString::minimaxNC(in, N, types);
-  if (p >= N ) return recordFromQuantity(casa::Quantity(0.,""));
+  if (p >= N ) return recordFromQuantity(casacore::Quantity(0.,""));
   return recordFromQuantity(res[p]);
 }
 
@@ -712,8 +714,8 @@ bool
 quanta::isangle(const ::casac::variant& v)
 {
   return (//check(v) && 
-	  (qcompare(v, casa::Quantity(1.0,"s")) ||
-	   qcompare(v, casa::Quantity(1.0,"rad"))));
+	  (qcompare(v, casacore::Quantity(1.0,"s")) ||
+	   qcompare(v, casacore::Quantity(1.0,"rad"))));
 }
 
 // convert angle to time
@@ -817,7 +819,7 @@ quanta::isquantity(const ::casac::variant& v)
 {
   bool retval = false;
   try {
-    casa::QuantumHolder qh;
+    casacore::QuantumHolder qh;
     String error;
     if(v.type()== ::casac::variant::STRING ||
        v.type()== ::casac::variant::STRINGVEC){
@@ -898,9 +900,9 @@ Int quanta::makeFormA(const Vector<String> &in) {
 }
 
 // dopcv - doppler value conversion
-casa::Quantity
-quanta::dopcv(const casa::Quantity val, const casa::Quantity arg) {
-  casa::Quantity retval;
+casacore::Quantity
+quanta::dopcv(const casacore::Quantity val, const casacore::Quantity arg) {
+  casacore::Quantity retval;
   try {
     retval = MVDoppler(val).get(arg.getFullUnit());
   } catch (AipsError (x)) {
@@ -913,9 +915,9 @@ quanta::dopcv(const casa::Quantity val, const casa::Quantity arg) {
 };
 
 // frqcv - freq converter
-casa::Quantity
-quanta::frqcv(const casa::Quantity val, const casa::Quantity arg) {
-  casa::Quantity retval;
+casacore::Quantity
+quanta::frqcv(const casacore::Quantity val, const casacore::Quantity arg) {
+  casacore::Quantity retval;
   try {
     retval = MVFrequency(val).get(arg.getFullUnit());
   } catch (AipsError (x)) {
@@ -935,12 +937,12 @@ quanta:: tfreq(const Quantum<Vector<Double> > &val, const Vector<Int> &arg,
 
   Int nelem = val.getValue().nelements();
   Vector<Double> x(val.getValue());
-  casa::Quantity y;
+  casacore::Quantity y;
   Unit inun(val.getFullUnit());
   try {
     Unit outun(form);
     for (Int i=0; i<nelem; i++) {
-      y = casa::Quantity(x(i), inun);
+      y = casacore::Quantity(x(i), inun);
       x(i)= MVFrequency(y).get(outun).getValue();
     };
   } catch (AipsError (x)) {
@@ -974,15 +976,15 @@ quanta:: tfreq(const Quantum<Vector<Double> > &val, const Vector<Int> &arg,
 
 //// Two useless(?) classes from DOquanta.cc
 // unit(vector)
-Quantum<Array<Double> >
+casacore::Quantum<casacore::Array<casacore::Double> >
 quanta::unitv(const Array<Double> v, const String& unitname) {
   // returnval().getValue().resize(IPosition());
   // returnval() = Quantum<Array<Double> >(val(), arg());
   return Quantum<Array<Double> >(v, unitname);
 }
 
-casa::Array<casa::QuantumHolder>
-quant(const casa::Array<casa::QuantumHolder> a) {
+casacore::Array<casacore::QuantumHolder>
+quant(const casacore::Array<casacore::QuantumHolder> a) {
   return a;
 }
 

@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define LOG0 0
 
-/* The maximum possible value that matplotlib can handle for Time Formatting is : 
+/* The maximum possible value that matplotlib can handle for casacore::Time Formatting is : 
    3.652e+06 -> 11/02/9999 
    The minumum possible is 1.0 -> 01/01/0001
    
@@ -100,23 +100,23 @@ class TPConvertBase
       //
 
       // X-axis convert methods
-      virtual inline Double Xconvert(Double x, Int /*tblRow*/, Int /*tblNum*/)
+      virtual inline casacore::Double Xconvert(casacore::Double x, casacore::Int /*tblRow*/, casacore::Int /*tblNum*/)
           {return x;};
       
-      virtual inline Double Xconvert_row(Double x, Int /*tblRow*/, Int /*tblNum*/)
+      virtual inline casacore::Double Xconvert_row(casacore::Double x, casacore::Int /*tblRow*/, casacore::Int /*tblNum*/)
           {return x;};
 
-      virtual inline Double Xconvert_col(Double x, Int /*tblRow*/, Int /*tblNum*/)
+      virtual inline casacore::Double Xconvert_col(casacore::Double x, casacore::Int /*tblRow*/, casacore::Int /*tblNum*/)
           {return x;};
 
       // Y-axis convert methods
-      virtual inline Double Yconvert(Double y, Int /*tblRow*/, Int /*tblNum*/)
+      virtual inline casacore::Double Yconvert(casacore::Double y, casacore::Int /*tblRow*/, casacore::Int /*tblNum*/)
           {return y;};
       
-      virtual inline Double Yconvert_row(Double y, Int /*tblRow*/, Int /*tblNum*/)
+      virtual inline casacore::Double Yconvert_row(casacore::Double y, casacore::Int /*tblRow*/, casacore::Int /*tblNum*/)
           {return y;};
       
-      virtual inline Double Yconvert_col(Double y, Int /*tblRow*/, Int /*tblNum*/)
+      virtual inline casacore::Double Yconvert_col(casacore::Double y, casacore::Int /*tblRow*/, casacore::Int /*tblNum*/)
           {return y;};
 };
 
@@ -178,37 +178,37 @@ class TPGuiCallBackHooks
       //Destructor
       virtual ~TPGuiCallBackHooks(){};
 
-      // Specify a list of Table column names to use for the "locate" function 
+      // Specify a list of casacore::Table column names to use for the "locate" function 
       // This function is used by TablePlot to decide which columns to 
       // "locate" on.
        // Called from PanelParams.cc : PlotOption::validataParams();
-       virtual Vector<String> getLocateColumns(){return LocateColumns;};
+       virtual casacore::Vector<casacore::String> getLocateColumns(){return LocateColumns;};
 
        // After the standard TP Locate function call, this method 
        //is called during printing
        //   the results, to accomodate custom formatting. 
        // Called from TablePlot::dumpLocateInfo().
-       // The number of rows in the Matrix are the number of table 
+       // The number of rows in the casacore::Matrix are the number of table 
        // rows selected by the
        // locate regions.
-       // The Matrix (infomat) contains n+2 columns, 
+       // The casacore::Matrix (infomat) contains n+2 columns, 
        // where n = LocateColumns.nelements().
        // column 0 contains the row number.
        // column 1 contains the number of points selected per row
        // The rest of the columns are values for LocateColumns.
-       // The String (cpol) contains information about selected 
+       // The casacore::String (cpol) contains information about selected 
        // cellrows/cellcols. (chans/pols).
-      virtual Bool printlocateinfo(Vector<String> collist,
-          Matrix<Double> infomat,Vector<String> cpol)
+      virtual casacore::Bool printlocateinfo(casacore::Vector<casacore::String> collist,
+          casacore::Matrix<casacore::Double> infomat,casacore::Vector<casacore::String> cpol)
       {
-         ostringstream os;
+         std::ostringstream os;
          
-         IPosition mshape = infomat.shape();
-         for(Int j=0;j<mshape[1];j++) {
-            for(Int k=0;k<mshape[0];k++) {
+         casacore::IPosition mshape = infomat.shape();
+         for(casacore::Int j=0;j<mshape[1];j++) {
+            for(casacore::Int k=0;k<mshape[0];k++) {
                if(collist[k].contains("TIME")) {
                    os << collist[k] << ":" 
-                      << MVTime( infomat(k,j)/C::day).string( MVTime::DMY,7) 
+                      << casacore::MVTime( infomat(k,j)/casacore::C::day).string( casacore::MVTime::DMY,7)
                       << ", " ; 
                }
                else
@@ -217,52 +217,52 @@ class TPGuiCallBackHooks
             os << "[cellrow,cellcol] : " << cpol[j] << "\n";
          }
          SLog::slog()->out(os, "printlocateinfo", "TPCallBackHooks",
-                  LogMessage::NORMAL4);
+                  casacore::LogMessage::NORMAL4);
                         
-         return True;
+         return true;
       };
       
 
        // After the standard TP flagdata function, 
-       // this method is called (per BasePlot/Table)
+       // this method is called (per BasePlot/casacore::Table)
        //   so any external flag-propagation can be carried out
        // Called from TablePlot::flagData.
-       virtual Bool flagdata(String /*tablename*/){return True;};
-       virtual Bool flagdata(Int /*f*/, Vector<String> /*collist*/,
-                            Matrix<Double> /*infomat*/,Vector<String> /*cpol*/,
-                            Bool /*ave*/ = False){
-                  return True;
+       virtual casacore::Bool flagdata(casacore::String /*tablename*/){return true;};
+       virtual casacore::Bool flagdata(casacore::Int /*f*/, casacore::Vector<casacore::String> /*collist*/,
+                            casacore::Matrix<casacore::Double> /*infomat*/,casacore::Vector<casacore::String> /*cpol*/,
+                            casacore::Bool /*ave*/ = false){
+                  return true;
        }
 
        // During the standard TP clearPlot, this function 
        // is called immediately after
        //   each BasePlot destructor.
        // Called from TablePlot::deleteBasePlot.
-       virtual Bool releasetable(Int /*nrows*/, Int /*ncols*/, Int /*panel*/,
-           String /*tablename*/)
-       {return True;};
+       virtual casacore::Bool releasetable(casacore::Int /*nrows*/, casacore::Int /*ncols*/, casacore::Int /*panel*/,
+           casacore::String /*tablename*/)
+       {return true;};
        
        // A function to allow the creation of customized labels for
        // iteration plot panels.
        // Called from TablePlot::iterMultiPlotNext.
-       virtual Bool createiterplotlabels(Vector<String> iteraxes, 
-                Vector<Double> values, String &titlestring)
+       virtual casacore::Bool createiterplotlabels(casacore::Vector<casacore::String> iteraxes, 
+                casacore::Vector<casacore::Double> values, casacore::String &titlestring)
        {
           if(iteraxes.nelements() != values.nelements()) {
-             titlestring = String("error");
-             return True;
+             titlestring = casacore::String("error");
+             return true;
            }
-           titlestring = String("");
-           for(uInt i=0;i<iteraxes.nelements();i++) {
-              titlestring += String(" : ") 
-                       + iteraxes[i] + String(" : ") 
-                       + String::toString((Int)values[i]) + String("  ");
+           titlestring = casacore::String("");
+           for(casacore::uInt i=0;i<iteraxes.nelements();i++) {
+              titlestring += casacore::String(" : ") 
+                       + iteraxes[i] + casacore::String(" : ") 
+                       + casacore::String::toString((casacore::Int)values[i]) + casacore::String("  ");
            }
-           return True;
+           return true;
        };
        
   protected:
-       Vector<String> LocateColumns;
+       casacore::Vector<casacore::String> LocateColumns;
 };
 
 // <summary>
@@ -280,12 +280,12 @@ class TPResetCallBack
 
       // Callback to signal full internal cleanup of TablePlot.
       // This callback is called from TablePlot::resetTP.
-      virtual Bool reset(){
+      virtual casacore::Bool reset(){
 #if LOG0
         SLog::slog()->out("reset callback !",
-           "reset", "TPResetCallBack", LogMessage::DEBUG1);
+           "reset", "TPResetCallBack", casacore::LogMessage::DEBUG1);
 #endif
-        return True;
+        return true;
       };
 
 };
@@ -301,7 +301,7 @@ class TPConvertTimeX : public TPConvertBase
       TPConvertTimeX(){};
       ~TPConvertTimeX(){};
 
-      inline Double Xconvert(Double x,Int /*tblRow*/,Int /*tblNum*/){
+      inline casacore::Double Xconvert(casacore::Double x,casacore::Int /*tblRow*/,casacore::Int /*tblNum*/){
           return x/NSECINYEAR + MJDZERO;
       };
 };
@@ -311,7 +311,7 @@ class TPConvertTimeY : public TPConvertBase
    public :
       TPConvertTimeY(){};
       ~TPConvertTimeY(){};
-      inline Double Yconvert(Double y,Int /*tblRow*/,Int /*tblNum*/){
+      inline casacore::Double Yconvert(casacore::Double y,casacore::Int /*tblRow*/,casacore::Int /*tblNum*/){
          return y/NSECINYEAR + MJDZERO;
       };
 };
@@ -321,10 +321,10 @@ class TPConvertTimeXY : public TPConvertBase
    public :
       TPConvertTimeXY(){};
       ~TPConvertTimeXY(){};
-      inline Double Xconvert_row(Double x,Int /*tblRow*/,Int /*tblNum*/){
+      inline casacore::Double Xconvert_row(casacore::Double x,casacore::Int /*tblRow*/,casacore::Int /*tblNum*/){
          return x/NSECINYEAR + MJDZERO;
       };
-      inline Double Yconvert_col(Double x,Int /*tblRow*/,Int /*tblNum*/){
+      inline casacore::Double Yconvert_col(casacore::Double x,casacore::Int /*tblRow*/,casacore::Int /*tblNum*/){
          return x/NSECINYEAR + MJDZERO;
       };
 };
@@ -335,14 +335,14 @@ class TPConvertChanToFreq : public TPConvertBase
    public :
       TPConvertChanToFreq(){offset=1400, interval=40;};
       ~TPConvertChanToFreq(){};
-      Double offset,interval;
+      casacore::Double offset,interval;
 
       // This plots the column numbers of the data array found in
       // the DATA column of. 'x' is the column index.  Note that
       // we don't need to convert the row values (polarizations)
-      // Setting ColumnsXaxis to False forces only the column values
+      // Setting ColumnsXaxis to false forces only the column values
       // to be plotted.
-      inline Double Xconvert_col(Double x,Int /*tblRow*/,Int /*tblNum*/){
+      inline casacore::Double Xconvert_col(casacore::Double x,casacore::Int /*tblRow*/,casacore::Int /*tblNum*/){
          return x*interval + offset;
       };
 

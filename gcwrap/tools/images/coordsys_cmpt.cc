@@ -40,6 +40,9 @@
 
 using namespace std;
 
+using namespace casacore;
+using namespace casa;
+
 namespace casac {
 
 coordsys::coordsys() : _log(new LogIO()), _csys(),
@@ -63,7 +66,7 @@ void coordsys::_setup(const String& method) {
 	if (! _csys.ptr()) {
 		_csys.set(new CoordinateSystem());
 		Vector<String> empty(0);
-	    addCoordinate(*_csys, False, False, empty, 0, False);
+	    addCoordinate(*_csys, false, false, empty, 0, false);
 
 	    // Give it a meaningful ObsInfo
 	    ObsInfo obsInfo;
@@ -99,34 +102,34 @@ Bool unset(const ::std::vector<int> &par) {
 }
 
 Bool unset(const ::casac::record &theRec) {
-  Bool rstat(True);
+  Bool rstat(true);
   for(::casac::rec_map::const_iterator rec_it = theRec.begin();
       rec_it != theRec.end(); rec_it++){
-    rstat = False;
+    rstat = false;
     break;
   }
   return rstat;
 }
 
 Bool unset(const ::casac::variant &theVar) {
-  Bool rstat(False);
+  Bool rstat(false);
   if ( (theVar.type() == ::casac::variant::BOOLVEC)
-       && (theVar.size() == 0) ) rstat = True;
+       && (theVar.size() == 0) ) rstat = true;
   return rstat;
 }
 
-Bool qcompare(const casa::Quantity& v, const casa::Quantity a) {
+Bool qcompare(const casacore::Quantity& v, const casacore::Quantity a) {
   return ( (v.getFullUnit().getValue()) == (a.getFullUnit().getValue()) );
 }
 
-Bool checkfreq(const casa::Quantity x) {
-  return (qcompare(x, casa::Quantity(1.0,"s")) ||
-	  qcompare(x, casa::Quantity(1.0,"Hz")) ||
-	  qcompare(x, casa::Quantity(1.0,"deg/s")) ||
-	  qcompare(x, casa::Quantity(1.0,"m")) ||
-	  qcompare(x, casa::Quantity(1.0,"m-1")) ||
-	  qcompare(x, casa::Quantity(1.0,"(eV)")) ||
-	  qcompare(x, casa::Quantity(1.0,"kg.m"))
+Bool checkfreq(const casacore::Quantity x) {
+  return (qcompare(x, casacore::Quantity(1.0,"s")) ||
+	  qcompare(x, casacore::Quantity(1.0,"Hz")) ||
+	  qcompare(x, casacore::Quantity(1.0,"deg/s")) ||
+	  qcompare(x, casacore::Quantity(1.0,"m")) ||
+	  qcompare(x, casacore::Quantity(1.0,"m-1")) ||
+	  qcompare(x, casacore::Quantity(1.0,"(eV)")) ||
+	  qcompare(x, casacore::Quantity(1.0,"kg.m"))
 	  );
 }
   
@@ -340,11 +343,11 @@ coordsys::convert(const std::vector<double>& coordin,
   }
 
   //
-  casa::MDoppler::Types dopIn, dopOut;
-  if (!casa::MDoppler::getType(dopIn, dopplerIn)) {
+  casacore::MDoppler::Types dopIn, dopOut;
+  if (!casacore::MDoppler::getType(dopIn, dopplerIn)) {
     *_log << "Illegal doppler" << LogIO::EXCEPTION;
   }
-  if (!casa::MDoppler::getType(dopOut, dopplerOut)) {
+  if (!casacore::MDoppler::getType(dopOut, dopplerOut)) {
     *_log << "Illegal doppler" << LogIO::EXCEPTION;
   }
   //
@@ -371,13 +374,13 @@ record* coordsys::convertdirection(const string& frame) {
 		}
 		String myframe(frame);
 		myframe.upcase();
-		casa::MDirection::Types tp;
+		casacore::MDirection::Types tp;
 
-		if (! casa::MDirection::getType(tp, myframe)) {
+		if (! casacore::MDirection::getType(tp, myframe)) {
 			throw AipsError("Unknown frame specifier " + frame);
 		}
 		const DirectionCoordinate& dc = _csys->directionCoordinate();
-		casa::Quantity angle;
+		casacore::Quantity angle;
 		DirectionCoordinate converted = dc.convert(angle, tp);
 		Int dcNumber = _csys->directionCoordinateNumber();
 		_csys->replaceCoordinate(converted, dcNumber);
@@ -445,11 +448,11 @@ coordsys::convertmany(const ::casac::variant& coordin,
   }
 
   //
-  casa::MDoppler::Types dopIn, dopOut;
-  if (!casa::MDoppler::getType(dopIn, dopplerIn)) {
+  casacore::MDoppler::Types dopIn, dopOut;
+  if (!casacore::MDoppler::getType(dopIn, dopplerIn)) {
     *_log << "Illegal doppler" << LogIO::EXCEPTION;
   }
-  if (!casa::MDoppler::getType(dopOut, dopplerOut)) {
+  if (!casacore::MDoppler::getType(dopOut, dopplerOut)) {
     *_log << "Illegal doppler" << LogIO::EXCEPTION;
   }
   //
@@ -566,7 +569,7 @@ int coordsys::findaxisbyname(const string& name, bool allowfriendlynames) {
 	try {
 		_setup(__func__);
 		Vector<String> names(1, name);
-		return _csys->getWorldAxesOrder(names, False, allowfriendlynames)[0];
+		return _csys->getWorldAxesOrder(names, false, allowfriendlynames)[0];
 	}
 	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Error: " << x.getMesg() << LogIO::POST;
@@ -614,19 +617,19 @@ record* coordsys::findcoordinate(
 		}
 		Int count = -1;
 		Int after = -1;
-		while (True) {
+		while (true) {
 			Int c = _csys->findCoordinate(type, after);
 			if(c < 0) {
 				rec.define("world", Vector<Int>(0));
 				rec.define("pixel", Vector<Int>(0));
-				rec.define("return", False);
+				rec.define("return", false);
 				return fromRecord(rec);
 			}
 			count++;
 			if (count == which) {
 				rec.define("world", _csys->worldAxes(c));
 				rec.define("pixel", _csys->pixelAxes(c));
-				rec.define("return", True);
+				rec.define("return", true);
 				return fromRecord(rec);
 			}
 			after = c;
@@ -655,7 +658,7 @@ coordsys::frequencytofrequency(const std::vector<double>& value,
   }
   Quantum<Double> velocity = casaQuantity(q_velocity);
 
-  casa::MDoppler dop (velocity, casa::MDoppler::RADIO); // Doppler type does not make a difference here
+  casacore::MDoppler dop (velocity, casacore::MDoppler::RADIO); // Doppler type does not make a difference here
   Quantum<Vector<Double> > tmp(frequency, Unit(freqUnit));
   (dop.shiftFrequency(tmp).getValue()).tovector(rstat);
 
@@ -699,11 +702,11 @@ coordsys::frequencytovelocity(const std::vector<double>& value,
   }
 
   // Convert velocity type to enum
-  casa::MDoppler::Types dopplerType;
-  if (!casa::MDoppler::getType(dopplerType, doppler)) {
+  casacore::MDoppler::Types dopplerType;
+  if (!casacore::MDoppler::getType(dopplerType, doppler)) {
     *_log << LogIO::WARN << "Illegal velocity doppler, using RADIO"
 	    << LogIO::POST;
-    dopplerType = casa::MDoppler::RADIO;
+    dopplerType = casacore::MDoppler::RADIO;
   }
 
   // Convert to velocity
@@ -738,7 +741,7 @@ coordsys::fromrecord(const ::casac::record& csys_record)
     if (csysRecord->isDefined("parentName")) {
       _imageName = csysRecord->asString("parentName");
     }
-    return True;
+    return true;
   } catch (const AipsError& x) {
     *_log << LogIO::SEVERE << "exceptions reported: " << x.getMesg()
 	    << LogIO::POST;
@@ -769,8 +772,8 @@ coordsys::increment(const std::string& format, const std::string& coordtype)
       incr = (_csys->coordinate(c)).increment();
     }
     //
-    Bool isAbsolute = False;
-    Bool showAsAbsolute = False;
+    Bool isAbsolute = false;
+    Bool showAsAbsolute = false;
     Record rec = worldVectorToRecord (incr, c, format, isAbsolute,
 				      showAsAbsolute);
     rec.define("pw_type", "world");
@@ -870,7 +873,7 @@ coordsys::projection(const std::string& cordtype)
   String name(cordtype);
 
   // Exception if type not found
-  Int c = findCoordinate (Coordinate::DIRECTION, True);
+  Int c = findCoordinate (Coordinate::DIRECTION, true);
   //
   Record rec;
   const DirectionCoordinate& dc = _csys->directionCoordinate(c);
@@ -894,7 +897,7 @@ coordsys::projection(const std::string& cordtype)
 	types(i) = Projection::name(type);
       }
       rec.define("types", types);
-      //rec.define("all", True);
+      //rec.define("all", true);
     } else {
       Projection::Type type = Projection::type(name3);
       // Throws exception for unknown type
@@ -919,7 +922,7 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
     if (coordinateType.matches(Regex("DI"),-2)) {
       Int nall, nex;
       const uInt *typ;
-      const String *tall = casa::MDirection::allMyTypes(nall, nex, typ);
+      const String *tall = casacore::MDirection::allMyTypes(nall, nex, typ);
       //      Vector<String> tcod(nall-nex);
       //      Vector<String> text(nex);
       rstat.resize(nall);
@@ -960,9 +963,9 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
     const Coordinate::Type type = stringToType(coordinateType);
     // Exception if type not found
     if (type==Coordinate::DIRECTION) {
-      iStart = findCoordinate (Coordinate::DIRECTION, True);
+      iStart = findCoordinate (Coordinate::DIRECTION, true);
     } else if (type==Coordinate::SPECTRAL) {
-      iStart = findCoordinate (Coordinate::SPECTRAL, True);
+      iStart = findCoordinate (Coordinate::SPECTRAL, true);
     } else {
       iStart = -1;
     }
@@ -978,8 +981,8 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
       Coordinate::Type type = _csys->type(i);
       if (type==Coordinate::DIRECTION) {
 	const DirectionCoordinate& dc = _csys->directionCoordinate(i);
-	casa::MDirection::Types dt = dc.directionType();
-	codes(j) = casa::MDirection::showType (dt);
+	casacore::MDirection::Types dt = dc.directionType();
+	codes(j) = casacore::MDirection::showType (dt);
       } else if (type==Coordinate::SPECTRAL) {
 	const SpectralCoordinate& sc = _csys->spectralCoordinate(i);
 	MFrequency::Types ft = sc.frequencySystem();
@@ -1051,8 +1054,8 @@ coordsys::referencevalue(const std::string& format,
     refVal = _csys->coordinate(c).referenceValue();
   }
   //
-  Bool isAbsolute = True;
-  Bool showAsAbsolute = True;
+  Bool isAbsolute = true;
+  Bool showAsAbsolute = true;
   Record rec =
     worldVectorToRecord (refVal, c, format, isAbsolute, showAsAbsolute);
   //
@@ -1125,7 +1128,7 @@ coordsys::replace(const ::casac::record& csys, const int in,
   Bool ok = _csys->replaceCoordinate (newCoord, outIdx);
   if (!ok) {
     *_log << LogIO::WARN << "Replacement incurred warning" << LogIO::POST;
-    ok = True;
+    ok = true;
   }
   rstat = ok;
   delete tmp;
@@ -1142,7 +1145,7 @@ coordsys::restfrequency()
 
   _setup(__func__);
   // Exception if type not found
-  Int c = findCoordinate (Coordinate::SPECTRAL, True);
+  Int c = findCoordinate (Coordinate::SPECTRAL, true);
   //
   const SpectralCoordinate& sc = _csys->spectralCoordinate(c);
   //
@@ -1160,7 +1163,7 @@ coordsys::restfrequency()
   //
   Quantum<Vector<Double> > q(rfs2, sc.worldAxisUnits()(0));
   String error;
-  casa::Record R;
+  casacore::Record R;
   if (QuantumHolder(q).toRecord(error, R)) {
     rstat = fromRecord(R);
   } else {
@@ -1210,9 +1213,9 @@ coordsys::getconversiontype(const std::string& type,const bool showconversion)
     Int c = _csys->findCoordinate(Coordinate::DIRECTION, after);
     if (c >= 0) {
       const DirectionCoordinate& dCoord = _csys->directionCoordinate(c);
-      casa::MDirection::Types type=dCoord.directionType(showconversion);
+      casacore::MDirection::Types type=dCoord.directionType(showconversion);
 	//dCoord.getReferenceConversion(type);
-      return casa::MDirection::showType(type);
+      return casacore::MDirection::showType(type);
     }
   } else if (cType==Coordinate::SPECTRAL) {
     Int after = -1;
@@ -1221,8 +1224,8 @@ coordsys::getconversiontype(const std::string& type,const bool showconversion)
       const SpectralCoordinate& sCoord = _csys->spectralCoordinate(c);
       MFrequency::Types type=sCoord.frequencySystem(showconversion);
       //MEpoch epoch;
-      //casa::MDirection direction;
-      //casa::MPosition position;
+      //casacore::MDirection direction;
+      //casacore::MPosition position;
       //sCoord.getReferenceConversion(type, epoch, position, direction);
       return MFrequency::showType(type);
     }
@@ -1246,7 +1249,7 @@ coordsys::setdirection(const std::string& in_ref,
   _setup(__func__);
   //
   // Bail out if coordinate not found
-  Int ic = findCoordinate (Coordinate::DIRECTION, True);
+  Int ic = findCoordinate (Coordinate::DIRECTION, true);
   if (ic < 0) {
     *_log << LogIO::WARN << "Cannot generate default values"
 	    << LogIO::POST;
@@ -1258,8 +1261,8 @@ coordsys::setdirection(const std::string& in_ref,
 
   String ref(in_ref);
   if (ref=="") {
-    casa::MDirection::Types dt = oldDC.directionType();
-    ref = casa::MDirection::showType (dt);
+    casacore::MDirection::Types dt = oldDC.directionType();
+    ref = casacore::MDirection::showType (dt);
   }
 
   String projName(in_projName);
@@ -1294,7 +1297,7 @@ coordsys::setdirection(const std::string& in_ref,
   } else {
     pv_refval = new ::casac::variant(iv_refval);
   }
-  Bool isWorld(True);  Bool isAbs(True);  Bool first(True);
+  Bool isWorld(true);  Bool isAbs(true);  Bool first(true);
   Record *refvalRec = coordinateValueToRecord(*pv_refval, isWorld, isAbs, first);
   delete pv_refval;
 
@@ -1308,11 +1311,11 @@ coordsys::setdirection(const std::string& in_ref,
   Record *incrRec = coordinateValueToRecord(*pv_incr, isWorld, isAbs, first);
   delete pv_incr;
 
-  Vector<casa::Quantity> poleQ(2);
+  Vector<casacore::Quantity> poleQ(2);
   if (unset(iv_poles)) {
     // Seems to allow the right increment with 180 and 0
-    poleQ(0)=casa::Quantity(180.0, "deg");
-    poleQ(1)=casa::Quantity(0.0,"deg");
+    poleQ(0)=casacore::Quantity(180.0, "deg");
+    poleQ(1)=casacore::Quantity(0.0,"deg");
     
   } else {
     if(!toCasaVectorQuantity(iv_poles, poleQ) || (poleQ.nelements() !=2)){
@@ -1340,19 +1343,19 @@ coordsys::setdirection(const std::string& in_ref,
     } else {
       *_log << LogIO::WARN << "xform paramater invalid"
 	      << LogIO::POST;
-      return False;
+      return false;
     }
   }
 
   // Reference Code
   String ref2 = ref;
   ref2.upcase();
-  casa::MDirection::Types refType;
-  if (!casa::MDirection::getType(refType, ref2)) {
+  casacore::MDirection::Types refType;
+  if (!casacore::MDirection::getType(refType, ref2)) {
     *_log << "Invalid direction code '" << ref
        << "' given. Allowed are : " << endl;
-    for (uInt i=0; i<casa::MDirection::N_Types; i++)
-      *_log << "  " << casa::MDirection::showType(i) << endl;
+    for (uInt i=0; i<casacore::MDirection::N_Types; i++)
+      *_log << "  " << casacore::MDirection::showType(i) << endl;
     *_log << LogIO::EXCEPTION;
   }
 
@@ -1440,7 +1443,7 @@ coordsys::setepoch(const ::casac::record& value)
 }
 
 
-void coordsys::setcoordsys(casa::CoordinateSystem &acsys) {*_csys = acsys;}
+void coordsys::setcoordsys(casacore::CoordinateSystem &acsys) {*_csys = acsys;}
 
 bool
 coordsys::setincrement(const ::casac::variant& value,
@@ -1450,7 +1453,7 @@ coordsys::setincrement(const ::casac::variant& value,
   _setup(__func__);
   /*
  // Kumar's version
- casa::Vector<casa::Quantity> values;
+ casacore::Vector<casacore::Quantity> values;
  toCasaVectorQuantity(value, values);
  String dummyType;
  Int c;
@@ -1458,9 +1461,9 @@ coordsys::setincrement(const ::casac::variant& value,
  Record *rec = 0;
  //Keeping the record compatibility with the output of increment..
  // Can go away when increment return quantas/measures or vector  of them
- Bool inputIsRec=False;
+ Bool inputIsRec=false;
  if(value.type()== ::casac::variant::RECORD){
-   inputIsRec=True;
+   inputIsRec=true;
    ::casac::variant localVar(value); //value  is const
    rec=toRecord(localVar.asRecord());
  }
@@ -1488,7 +1491,7 @@ coordsys::setincrement(const ::casac::variant& value,
    }
  } else {
    const Coordinate::Type type = stringToType (coordinateType);
-   Int c = findCoordinate (type, True);
+   Int c = findCoordinate (type, true);
    //Record compatibility
    if(inputIsRec){
      recordToWorldVector(world, dummyType, c, *rec);
@@ -1515,8 +1518,8 @@ coordsys::setincrement(const ::casac::variant& value,
 
   // Check that value is in world coordinates
   Bool isWorld;
-  Bool shouldBeWorld(True);
-  Bool verbose(False);
+  Bool shouldBeWorld(true);
+  Bool verbose(false);
   ::casac::variant tmpv(value);
   // isWorld := its.isValueWorld (value, shouldBeWorld=T, verbose=F);
   int rtn = isValueWorld(tmpv, shouldBeWorld, verbose);
@@ -1530,7 +1533,7 @@ coordsys::setincrement(const ::casac::variant& value,
   }
 
   // Check that value is in absolute coordinates
-  Bool shouldBeAbs(True);
+  Bool shouldBeAbs(true);
   // if (is_fail(its.checkAbsRel (value=value, shouldBeAbs=T))) fail;
   Bool rtn2 = checkAbsRel(tmpv, shouldBeAbs);
   if (!rtn2) {
@@ -1540,8 +1543,8 @@ coordsys::setincrement(const ::casac::variant& value,
   }
 
   // Convert value to a Record
-  Bool isAbs(True);
-  Bool first(True);
+  Bool isAbs(true);
+  Bool first(true);
   // its.setincrementRec.value :=
   //   its.coordinateValueToRecord (value=value, isWorld=isWorld,
   //                                isAbs=T, first=T);
@@ -1570,7 +1573,7 @@ coordsys::setincrement(const ::casac::variant& value,
     }
   } else {
     const Coordinate::Type type = stringToType (coordinateType);
-    Int c = findCoordinate (type, True);
+    Int c = findCoordinate (type, true);
     recordToWorldVector(world, dummyType, c, *rec);
     trim(world, _csys->coordinate(c).referenceValue());
     //
@@ -1631,7 +1634,7 @@ coordsys::setlineartransform(const std::string& coordinateType,
 
   //
   const Coordinate::Type type = stringToType (coordinateType);
-  Int c = findCoordinate (type, True);
+  Int c = findCoordinate (type, true);
   if (type==Coordinate::LINEAR) {
     LinearCoordinate lc = _csys->linearCoordinate(c);
     lc.setLinearTransform(value);
@@ -1681,7 +1684,7 @@ coordsys::setnames(const std::vector<std::string>& value,
     }
   } else {
     const Coordinate::Type type = stringToType (coordinateType);
-    Int c = findCoordinate (type, True);
+    Int c = findCoordinate (type, true);
     Vector<Int> worldAxes = _csys->worldAxes(c);
     if (names.nelements() != worldAxes.nelements()) {
       *_log << "Supplied axis names vector must be of length "
@@ -1724,7 +1727,7 @@ coordsys::setprojection(const std::string& name,
   }
 
   // Exception if type not found
-  Int ic = findCoordinate (Coordinate::DIRECTION, True);
+  Int ic = findCoordinate (Coordinate::DIRECTION, true);
   //
   DirectionCoordinate
     dirCoordFrom(_csys->directionCoordinate(ic));             // Copy
@@ -1803,7 +1806,7 @@ coordsys::setreferencelocation(const std::vector<int>& pixel,
     dpixel.resize(n);
     for (int i=0; i < n; i++) dpixel[i] =  pixel[i];
   }
-  uInt nPixelAxes = naxes(False);
+  uInt nPixelAxes = naxes(false);
   if (dpixel.size() != nPixelAxes) {
     *_log << LogIO::WARN << "Parameter pixel must be of length "
 	    << nPixelAxes << LogIO::POST;
@@ -1812,7 +1815,7 @@ coordsys::setreferencelocation(const std::vector<int>& pixel,
   std::vector<bool> mask(imask);
   if (unset(mask)) {
     mask.resize(nPixelAxes);
-    for (uInt i=0; i < nPixelAxes; i++) mask[i]=True;
+    for (uInt i=0; i < nPixelAxes; i++) mask[i]=true;
   }
   if (mask.size() != pixel.size()) {
     *_log << LogIO::WARN << "shape and mask must be the same length"
@@ -1905,7 +1908,7 @@ coordsys::setreferencepixel(const std::vector<double>& refpix,
     }
   } else {
     const Coordinate::Type type = stringToType (coordinateType);
-    Int c = findCoordinate (type, True);
+    Int c = findCoordinate (type, true);
     trim(refPix2, _csys->coordinate(c).referencePixel());
     //
     Vector<Int> pixelAxes = _csys->pixelAxes(c);
@@ -1931,8 +1934,8 @@ coordsys::setreferencevalue(const ::casac::variant& value,
 
   _setup(__func__);
   Bool isWorld;
-  Bool shouldBeWorld(True);
-  Bool verbose(False);
+  Bool shouldBeWorld(true);
+  Bool verbose(false);
   ::casac::variant tmpv(value);
   int rtn = isValueWorld(tmpv, shouldBeWorld, verbose);
   if (rtn == -1) {
@@ -1943,7 +1946,7 @@ coordsys::setreferencevalue(const ::casac::variant& value,
     isWorld = (Bool)rtn;
   }
 
-  Bool shouldBeAbs(True);
+  Bool shouldBeAbs(true);
   Bool rtn2 = checkAbsRel(tmpv, shouldBeAbs);
   if (!rtn2) {
     *_log << LogIO::SEVERE
@@ -1951,8 +1954,8 @@ coordsys::setreferencevalue(const ::casac::variant& value,
     return rstat;
   }
 
-  Bool isAbs(True);
-  Bool first(True);
+  Bool isAbs(true);
+  Bool first(true);
   Record *rec = coordinateValueToRecord(value, isWorld, isAbs, first);
   if (!rec) {
     *_log << LogIO::SEVERE
@@ -1975,7 +1978,7 @@ coordsys::setreferencevalue(const ::casac::variant& value,
     }
   } else {
     const Coordinate::Type type = stringToType (coordinateType);
-    c = findCoordinate (type, True);
+    c = findCoordinate (type, true);
     recordToWorldVector(world, dummyType, c, *rec);
     trim(world, _csys->coordinate(c).referenceValue());
     //
@@ -1998,18 +2001,18 @@ coordsys::setrestfrequency(const ::casac::variant& vfvalue, const int which,
   bool rstat(false);
 
   _setup(__func__);
-  Int c = findCoordinate (Coordinate::SPECTRAL, True);
+  Int c = findCoordinate (Coordinate::SPECTRAL, true);
   if (c < 0) return false;  // Avoid exception if type not found
   SpectralCoordinate sc = _csys->spectralCoordinate(c);
 
   QuantumHolder qh;
   Quantum<Vector<Double> > restFrequency;
-  Vector<casa::Quantity> fvalue;
+  Vector<casacore::Quantity> fvalue;
   if (vfvalue.type() == ::casac::variant::STRING ||
       vfvalue.type() == ::casac::variant::STRINGVEC) {
     if (!toCasaVectorQuantity(vfvalue, fvalue)) {
       *_log << LogIO::WARN << "Bad input parameter" << LogIO::POST;
-      return False;
+      return false;
     }
     int len = fvalue.size();
     Vector<Double> tmp(len);
@@ -2027,11 +2030,11 @@ coordsys::setrestfrequency(const ::casac::variant& vfvalue, const int which,
     if(!qh.fromRecord(error, *ptrRec)){
       *_log << LogIO::WARN << "Error " << error
 	      << " in converting quantity "<< LogIO::POST;
-      return False;
+      return false;
     }
     delete ptrRec;
     if (qh.isScalar() && qh.isQuantity()) {
-      casa::Quantity q=qh.asQuantity();
+      casacore::Quantity q=qh.asQuantity();
       Vector<Double> tmp(1);
       tmp[0]=q.getValue();
       Quantum<Vector<Double> > tmpqv(tmp,q.getUnit());
@@ -2042,7 +2045,7 @@ coordsys::setrestfrequency(const ::casac::variant& vfvalue, const int which,
       *_log << LogIO::WARN
 	      << "Cannot convert QuantumHolder to Quantum<Vector<Double> > "
 	      << LogIO::POST;
-      return False;
+      return false;
     }
   } else if (vfvalue.type() == ::casac::variant::DOUBLE) {
     Vector<Double> rf(1);
@@ -2054,12 +2057,12 @@ coordsys::setrestfrequency(const ::casac::variant& vfvalue, const int which,
     restFrequency = Quantum<Vector<Double> >(rf,sc.worldAxisUnits()(0));
   } else {
     *_log << LogIO::WARN << "Bad input parameter" << LogIO::POST;
-    return False;
+    return false;
   }
 
   //
-  casa::Quantity
-    theUnit = casa::Quantity(1.0, restFrequency.getFullUnit().getName());
+  casacore::Quantity
+    theUnit = casacore::Quantity(1.0, restFrequency.getFullUnit().getName());
   if (!checkfreq(theUnit)) {
     *_log << "Value is not a valid frequency" <<LogIO::EXCEPTION;
   }
@@ -2083,7 +2086,7 @@ qvdFromVar(String &error, Quantum<Vector<Double> > &rtn,
 	   const ::casac::variant &vfvalue)
 {
   QuantumHolder qh;
-  Vector<casa::Quantity> fvalue;
+  Vector<casacore::Quantity> fvalue;
   if (vfvalue.type() == ::casac::variant::BOOLVEC) { //unset
     Vector<Double> tmp;
     tmp.resize(0);
@@ -2094,7 +2097,7 @@ qvdFromVar(String &error, Quantum<Vector<Double> > &rtn,
 	     vfvalue.type() == ::casac::variant::STRINGVEC) {
     if (!toCasaVectorQuantity(vfvalue, fvalue)) {
       error = "Bad input parameter";
-      return False;
+      return false;
     }
     int len = fvalue.size();
     Vector<Double> tmp(len);
@@ -2108,11 +2111,11 @@ qvdFromVar(String &error, Quantum<Vector<Double> > &rtn,
     ::casac::variant localvar(vfvalue);
     Record * ptrRec = toRecord(localvar.asRecord());
     if(!qh.fromRecord(error, *ptrRec)){
-      return False;
+      return false;
     }
     delete ptrRec;
     if (qh.isScalar() && qh.isQuantity()) {
-      casa::Quantity q=qh.asQuantity();
+      casacore::Quantity q=qh.asQuantity();
       Vector<Double> tmp(1);
       tmp[0]=q.getValue();
       Quantum<Vector<Double> > tmpqv(tmp,q.getUnit());
@@ -2121,13 +2124,13 @@ qvdFromVar(String &error, Quantum<Vector<Double> > &rtn,
       rtn = qh.asQuantumVectorDouble();
     } else {
       error = "Cannot convert QuantumHolder to Quantum<Vector<Double> > ";
-      return False;
+      return false;
     }
   } else {
     error = "Unrecognized input parameter";
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
 bool
@@ -2139,9 +2142,9 @@ coordsys::setspectral(const std::string& ref, const ::casac::variant& restfreq,
   bool rstat(false);
   _setup(__func__);
 
-  Bool dofreq(False);
-  Bool dovel(False);
-  Quantum<Double> restFrequency = casa::Quantity(-1.0,"GHz");
+  Bool dofreq(false);
+  Bool dovel(false);
+  Quantum<Double> restFrequency = casacore::Quantity(-1.0,"GHz");
   if (!unset(restfreq)) {
     restFrequency = casaQuantity(restfreq);
   }
@@ -2152,14 +2155,14 @@ coordsys::setspectral(const std::string& ref, const ::casac::variant& restfreq,
     *_log << LogIO::WARN << "Error in frequencies parameter.  "
 	    << error << LogIO::POST;
   } else {
-    if (frequencies.getValue().size() > 0) dofreq = True;
+    if (frequencies.getValue().size() > 0) dofreq = true;
   }
   Quantum<Vector<Double> > velocities;
   if (!qvdFromVar(error, velocities, v_velocities)) {
     *_log << LogIO::WARN << "Error in velocities parameter.  "
 	    << error << LogIO::POST;
   } else {
-    if (velocities.getValue().size() > 0) dovel = True;
+    if (velocities.getValue().size() > 0) dovel = true;
   }
 
   //
@@ -2177,7 +2180,7 @@ coordsys::setspectral(const std::string& ref, const ::casac::variant& restfreq,
   }
 
   // Exception if coordinate not found
-  Int ic = findCoordinate (Coordinate::SPECTRAL, True);
+  Int ic = findCoordinate (Coordinate::SPECTRAL, true);
   SpectralCoordinate oldSpecCoord(_csys->spectralCoordinate(ic));
   const Vector<String>& names = oldSpecCoord.worldAxisNames();
 
@@ -2197,11 +2200,11 @@ coordsys::setspectral(const std::string& ref, const ::casac::variant& restfreq,
   if (restFrequency.getValue() > 0) {
     Quantum<Double> t(restFrequency);
     t.convert(Unit(oldSpecCoord.worldAxisUnits()(0)));
-    oldSpecCoord.setRestFrequency(t.getValue(), False);
+    oldSpecCoord.setRestFrequency(t.getValue(), false);
   }
 
   // Frequencies
-  Bool doneFreq = False;
+  Bool doneFreq = false;
   if (dofreq) {
     if (frequencies.getFullUnit() == Unit(String("Hz"))) {
       /*
@@ -2214,14 +2217,14 @@ coordsys::setspectral(const std::string& ref, const ::casac::variant& restfreq,
       sc.setWorldAxisNames(names);
       //
       _csys->replaceCoordinate(sc, ic);
-      doneFreq = True;
+      doneFreq = true;
     } else {
       *_log << "Illegal unit for frequencies" << LogIO::EXCEPTION;
     }
   }
 
   // Velocities
-  Bool doneVel = False;
+  Bool doneVel = false;
   if (dovel) {
     if (velocities.getFullUnit() == Unit(String("km/s"))) {
       if (doneFreq) {
@@ -2229,11 +2232,11 @@ coordsys::setspectral(const std::string& ref, const ::casac::variant& restfreq,
 		<< LogIO::EXCEPTION;
       }
       //
-      casa::MDoppler::Types dopplerType;
+      casacore::MDoppler::Types dopplerType;
       if (doppler.empty()) {
 	*_log << "You must specify the doppler type" << LogIO::EXCEPTION;
       }
-      if (!casa::MDoppler::getType(dopplerType, doppler)) {
+      if (!casacore::MDoppler::getType(dopplerType, doppler)) {
 	*_log << "Invalid doppler '" << doppler << "'" << LogIO::EXCEPTION;
       }
       //
@@ -2249,7 +2252,7 @@ coordsys::setspectral(const std::string& ref, const ::casac::variant& restfreq,
       sc.setWorldAxisNames(names);
       //
       _csys->replaceCoordinate(sc, ic);
-      doneVel = True;
+      doneVel = true;
     } else {
       *_log << "Illegal unit for velocities" << LogIO::EXCEPTION;
     }
@@ -2277,7 +2280,7 @@ coordsys::setstokes(const std::vector<std::string>& in_stokes)
   }
 
   // Exception if type not found
-  Int c = findCoordinate (Coordinate::STOKES, True);
+  Int c = findCoordinate (Coordinate::STOKES, true);
 
   //
   if (stokes.nelements()>0) {
@@ -2401,7 +2404,7 @@ coordsys::settelescope(const std::string& telescope)
 
   obsInfo.setTelescope(telescope);
 
-  casa::MPosition pos;
+  casacore::MPosition pos;
   if (!MeasTable::Observatory(pos, telescope)) {
     *_log << LogIO::WARN
 	    << "This telescope and its position is not known to the casapy system." << endl
@@ -2445,7 +2448,7 @@ coordsys::setunits(const std::vector<std::string>& value,
     const Coordinate::Type type = stringToType (coordinateType);
     Int c = which;
     if (c < 0) {
-      c = findCoordinate (type, False);
+      c = findCoordinate (type, false);
     }
     //
     Vector<Int> worldAxes = _csys->worldAxes(c);
@@ -2491,7 +2494,7 @@ coordsys::stokes()
   _setup(__func__);
 
   // Exception if type not found
-  Int c = findCoordinate (Coordinate::STOKES, True);
+  Int c = findCoordinate (Coordinate::STOKES, true);
   //
   StokesCoordinate sc = _csys->stokesCoordinate(c);
   Vector<Int> stokes = sc.stokes();
@@ -2511,11 +2514,11 @@ coordsys::summary(const std::string& dopplerType, const bool list)
   std::vector<std::string> rstat;
   _setup(__func__);
 
-  casa::MDoppler::Types velType;
-  if (!casa::MDoppler::getType(velType, dopplerType)) {
+  casacore::MDoppler::Types velType;
+  if (!casacore::MDoppler::getType(velType, dopplerType)) {
     *_log << LogIO::WARN << "Illegal doppler type, using RADIO"
 	    << LogIO::POST;
-    velType = casa::MDoppler::RADIO;
+    velType = casacore::MDoppler::RADIO;
   }
   //
   IPosition latticeShape, tileShape;
@@ -2523,13 +2526,13 @@ coordsys::summary(const std::string& dopplerType, const bool list)
   if (!list) {
     // Only write to  local sink so we can fish the messages out
     LogFilter filter;
-    LogSink sink(filter, False);
+    LogSink sink(filter, false);
     LogIO osl(sink);
     //
-    messages = _csys->list(osl, velType, latticeShape, tileShape, True);
+    messages = _csys->list(osl, velType, latticeShape, tileShape, true);
   } else {
     messages =
-      _csys->list(*_log, velType, latticeShape, tileShape, False);
+      _csys->list(*_log, velType, latticeShape, tileShape, false);
   }
   if (messages.size() == 0) {
     rstat.resize(1);
@@ -2559,7 +2562,7 @@ coordsys::toabs(const ::casac::variant& value, const int isworld)
   _setup(__func__);
 
   int shouldBeWorld(isworld);
-  Bool verbose(True);
+  Bool verbose(true);
   Bool isWorld;
   ::casac::variant tmpv(value);
   int rtn = isValueWorld(tmpv, shouldBeWorld, verbose);
@@ -2572,7 +2575,7 @@ coordsys::toabs(const ::casac::variant& value, const int isworld)
   }
 
   // Check that value is in absolute coordinates
-  Bool shouldBeAbs(False);
+  Bool shouldBeAbs(false);
   Bool rtn2 = checkAbsRel(tmpv, shouldBeAbs);
   if (!rtn2) {
     *_log << LogIO::SEVERE
@@ -2580,8 +2583,8 @@ coordsys::toabs(const ::casac::variant& value, const int isworld)
     return rstat;
   }
   // Convert value to a Record
-  Bool isAbs(False);
-  Bool first(False);
+  Bool isAbs(false);
+  Bool first(false);
   Record *rec = coordinateValueToRecord(value, isWorld, isAbs, first);
   if (!rec) {
     *_log << LogIO::SEVERE
@@ -2590,7 +2593,7 @@ coordsys::toabs(const ::casac::variant& value, const int isworld)
     return rstat;
   }
 
-  Bool absToRel = False;
+  Bool absToRel = false;
   //  Record *rec = toRecord(value);
   
   Record rectmp = absRelRecord(*_log, *rec, isWorld, absToRel);
@@ -2615,7 +2618,7 @@ coordsys::toabsmany(const ::casac::variant& value, const int isworld)
   _setup(__func__);
 
   int shouldBeWorld(isworld);
-  Bool verbose(True);
+  Bool verbose(true);
   Bool isWorld;
   ::casac::variant tmpv(value);
 
@@ -2629,7 +2632,7 @@ coordsys::toabsmany(const ::casac::variant& value, const int isworld)
   }
 
   // Check that value is in absolute coordinates
-  Bool shouldBeAbs(False);
+  Bool shouldBeAbs(false);
   Bool rtn2 = checkAbsRel(tmpv, shouldBeAbs);
   if (!rtn2) {
     *_log << LogIO::SEVERE
@@ -2712,8 +2715,8 @@ coordsys::topixel(const ::casac::variant& value)
   _setup(__func__);
 
   //
-  Bool shouldBeWorld(True);
-  Bool verbose(False);
+  Bool shouldBeWorld(true);
+  Bool verbose(false);
   Bool isWorld;
   ::casac::variant tmpv(value);
   int rtn = isValueWorld(tmpv, shouldBeWorld, verbose);
@@ -2726,7 +2729,7 @@ coordsys::topixel(const ::casac::variant& value)
   }
 
   // Check that value is in absolute coordinates
-  Bool shouldBeAbs(True);
+  Bool shouldBeAbs(true);
   Bool rtn2 = checkAbsRel(tmpv, shouldBeAbs);
   if (!rtn2) {
     *_log << LogIO::SEVERE
@@ -2735,8 +2738,8 @@ coordsys::topixel(const ::casac::variant& value)
   }
 
   // Convert value to a Record
-  Bool isAbs(True);
-  Bool first(True);
+  Bool isAbs(true);
+  Bool first(true);
   Record *rec = coordinateValueToRecord(value, isWorld, isAbs, first);
   if (!rec) {
     *_log << LogIO::SEVERE
@@ -2774,8 +2777,8 @@ coordsys::toPixel(const ::casac::variant& value)
   _setup(__func__);
 
   //
-  Bool shouldBeWorld(True);
-  Bool verbose(False);
+  Bool shouldBeWorld(true);
+  Bool verbose(false);
   Bool isWorld;
   ::casac::variant tmpv(value);
   int rtn = isValueWorld(tmpv, shouldBeWorld, verbose);
@@ -2788,7 +2791,7 @@ coordsys::toPixel(const ::casac::variant& value)
   }
 
   // Check that value is in absolute coordinates
-  Bool shouldBeAbs(True);
+  Bool shouldBeAbs(true);
   Bool rtn2 = checkAbsRel(tmpv, shouldBeAbs);
   if (!rtn2) {
     *_log << LogIO::SEVERE
@@ -2797,8 +2800,8 @@ coordsys::toPixel(const ::casac::variant& value)
   }
 
   // Convert value to a Record
-  Bool isAbs(True);
-  Bool first(True);
+  Bool isAbs(true);
+  Bool first(true);
   Record *rec = coordinateValueToRecord(value, isWorld, isAbs, first);
   if (!rec) {
     *_log << LogIO::SEVERE
@@ -2945,7 +2948,7 @@ coordsys::torel(const ::casac::variant& value, const int isworld)
   _setup(__func__);
 
   int shouldBeWorld(isworld);
-  Bool verbose(True);
+  Bool verbose(true);
   Bool isWorld;
   ::casac::variant tmpv(value);
   int rtn = isValueWorld(tmpv, shouldBeWorld, verbose);
@@ -2959,7 +2962,7 @@ coordsys::torel(const ::casac::variant& value, const int isworld)
   }
 
   // Check that value is in absolute coordinates
-  Bool shouldBeAbs(True);
+  Bool shouldBeAbs(true);
   Bool rtn2 = checkAbsRel(tmpv, shouldBeAbs);
   if (!rtn2) {
     *_log << LogIO::SEVERE
@@ -2967,8 +2970,8 @@ coordsys::torel(const ::casac::variant& value, const int isworld)
     return rstat;
   }
   // Convert value to a Record
-  Bool isAbs(True);
-  Bool first(False);
+  Bool isAbs(true);
+  Bool first(false);
   Record *rec = coordinateValueToRecord(value, isWorld, isAbs, first);
   if (!rec) {
     *_log << LogIO::SEVERE
@@ -2978,7 +2981,7 @@ coordsys::torel(const ::casac::variant& value, const int isworld)
   }
 
   //
-  Bool absToRel = True;
+  Bool absToRel = true;
   Record tmpRec = absRelRecord(*_log, *rec, isWorld, absToRel);
   delete rec;
   //
@@ -3146,7 +3149,7 @@ bool coordsys::transpose(const vector<int>& order) {
 			Vector<Int>(order),
 			Vector<Int>(order)
 		);
-		return True;
+		return true;
 	}
     catch (const AipsError& x) {
         *_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -3226,11 +3229,11 @@ coordsys::velocitytofrequency(const std::vector<double>& value,
   }
 
   // Convert velocity type to enum
-  casa::MDoppler::Types velType;
-  if (!casa::MDoppler::getType(velType, dopplerType)) {
+  casacore::MDoppler::Types velType;
+  if (!casacore::MDoppler::getType(velType, dopplerType)) {
     *_log << LogIO::WARN << "Illegal velocity type, using RADIO"
 	    << LogIO::POST;
-    velType = casa::MDoppler::RADIO;
+    velType = casacore::MDoppler::RADIO;
   }
 
   *_log << LogOrigin("coordsys", __func__);
@@ -3446,7 +3449,7 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
     Vector<Double> world2(nWorldAxes);
     const Coordinate& coord = _csys->coordinate(i);
     Vector<String> units = coord.worldAxisUnits();
-    Bool none = True;
+    Bool none = true;
 
     // Fill in missing world axes if all coordinates specified
     if (c < 0) {
@@ -3455,12 +3458,12 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
 	  world2(j) = coord.referenceValue()(j);
 	} else {
 	  world2(j) = world(worldAxes(j));
-	  none = False;
+	  none = false;
 	}
       }
     } else {
       world2 = world;
-      none = False;
+      none = false;
     }
     //
     if (_csys->type(i) == Coordinate::LINEAR ||
@@ -3483,15 +3486,15 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
       if (_csys->type(i) == Coordinate::LINEAR) linearCount++;       if (_csys->type(i) == Coordinate::TABULAR) tabularCount++;
     } else if (_csys->type(i) == Coordinate::DIRECTION) {
       if (!abs) {
-	*_log << "It is not possible to have a relative casa::MDirection measure" << LogIO::EXCEPTION;
+	*_log << "It is not possible to have a relative casacore::MDirection measure" << LogIO::EXCEPTION;
       }
       //AlwaysAssert(worldAxes.nelements()==2,AipsError);
       //
       if (!none) {
-	// Make an casa::MDirection and stick in record
+	// Make an casacore::MDirection and stick in record
 	Quantum<Double> t1(world2(0), units(0));
 	Quantum<Double> t2(world2(1), units(1));
-	casa::MDirection direction(t1, t2, _csys->directionCoordinate(i).directionType());
+	casacore::MDirection direction(t1, t2, _csys->directionCoordinate(i).directionType());
 	//
 	MeasureHolder h(direction);
 	Record dirRec;
@@ -3525,12 +3528,12 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
 	SpectralCoordinate sc(sc0);
 	// Do velocity conversions and stick in MDOppler
 	// Radio
-	sc.setVelocity (String("km/s"), casa::MDoppler::RADIO);
+	sc.setVelocity (String("km/s"), casacore::MDoppler::RADIO);
 	Quantum<Double> velocity;
 	if (!sc.frequencyToVelocity(velocity, frequency)) {
 	  *_log << sc.errorMessage() << LogIO::EXCEPTION;
 	} else {
-	  casa::MDoppler v(velocity, casa::MDoppler::RADIO);
+	  casacore::MDoppler v(velocity, casacore::MDoppler::RADIO);
 	  MeasureHolder h(v);
 	  if (!h.toRecord(error, specRec1)) {
 	    *_log << error << LogIO::EXCEPTION;
@@ -3540,11 +3543,11 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
 	}
 
 	// Optical
-	sc.setVelocity (String("km/s"), casa::MDoppler::OPTICAL);
+	sc.setVelocity (String("km/s"), casacore::MDoppler::OPTICAL);
 	if (!sc.frequencyToVelocity(velocity, frequency)) {
 	  *_log << sc.errorMessage() << LogIO::EXCEPTION;
 	} else {
-	  casa::MDoppler v(velocity, casa::MDoppler::OPTICAL);
+	  casacore::MDoppler v(velocity, casacore::MDoppler::OPTICAL);
 	  MeasureHolder h(v);
 	  if (!h.toRecord(error, specRec1)) {
 	    *_log << error << LogIO::EXCEPTION;
@@ -3554,11 +3557,11 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
 	}
 
 	// beta (relativistic/true)
-	sc.setVelocity (String("km/s"), casa::MDoppler::BETA);
+	sc.setVelocity (String("km/s"), casacore::MDoppler::BETA);
 	if (!sc.frequencyToVelocity(velocity, frequency)) {
 	  *_log << sc.errorMessage() << LogIO::EXCEPTION;
 	} else {
-	  casa::MDoppler v(velocity, casa::MDoppler::BETA);
+	  casacore::MDoppler v(velocity, casacore::MDoppler::BETA);
 	  MeasureHolder h(v);
 	  if (!h.toRecord(error, specRec1)) {
 	    *_log << error << LogIO::EXCEPTION;
@@ -3581,7 +3584,7 @@ Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
 	StokesCoordinate coord(coord0);             // non-const
 	String u;
 	String s = coord.format(u, Coordinate::DEFAULT, world2(0),
-				0, True, True, -1);
+				0, true, true, -1);
 	rec.define("stokes", s);
       }
       stokesCount++;
@@ -3648,12 +3651,12 @@ void coordsys::recordToWorldVector (Vector<Double>& out, String& type,
 
 	  *_log << LogOrigin("coordsys", __func__);
 
-  Bool done = False;
+  Bool done = false;
   if (rec.isDefined("numeric")) {
     out.resize(0);
     out = rec.asArrayDouble("numeric");     // Assumed native units
     type += "n";
-    done = True;
+    done = true;
   }
   //
   Vector<String> units;
@@ -3668,7 +3671,7 @@ void coordsys::recordToWorldVector (Vector<Double>& out, String& type,
       const RecordInterface& recQ = rec.asRecord("quantity");
       out.resize(0);
       out = quantumVectorRecordToVectorDouble (recQ, units);
-      done = True;
+      done = true;
     }
     type += "q";
   }
@@ -3687,7 +3690,7 @@ void coordsys::recordToWorldVector (Vector<Double>& out, String& type,
 	  out(i) = tmp(worldAxes(i));
 	}
       }
-      done = True;
+      done = true;
     }
     type += "m";
   }
@@ -3697,7 +3700,7 @@ void coordsys::recordToWorldVector (Vector<Double>& out, String& type,
       Vector<String> world = rec.asArrayString("string");
       out.resize(0);
       out = stringToWorldVector (*_log, world, units);
-      done = True;
+      done = true;
     }
     type += "s";
   }
@@ -3707,7 +3710,7 @@ void coordsys::recordToWorldVector (Vector<Double>& out, String& type,
       const RecordInterface& recQ = rec.asRecord("quantum");
       out.resize(0);
       out = quantumRecordToVectorDouble (recQ, units);
-      done = True;
+      done = true;
     }
     type += "q";
   }
@@ -3722,9 +3725,9 @@ void coordsys::recordToWorldVector (Vector<Double>& out, String& type,
 	*_log << LogIO::SEVERE << "Error " << error
 		<< " converting string quantity" << LogIO::POST;
       }
-      casa::Quantity q = qh.asQuantity();
+      casacore::Quantity q = qh.asQuantity();
       out[0]=q.getValue(Unit(units(0))); // always gives the correct unit?
-      done = True;
+      done = true;
     }
     type += "s";
   }
@@ -3774,7 +3777,7 @@ coordsys::quantumRecordToVectorDouble (const RecordInterface& recQ,
   // Convert quantum to world double in native units
 {
   // Vector<Double> worldIn(1);
-  //  casa::Quantity q(recQ.asDouble("value"), recQ.asString("unit"));
+  //  casacore::Quantity q(recQ.asDouble("value"), recQ.asString("unit"));
   //  worldIn[0]=q.getValue(Unit(units(0)));
   //  return worldIn;
   Vector<Double> worldIn;
@@ -3788,7 +3791,7 @@ coordsys::quantumRecordToVectorDouble (const RecordInterface& recQ,
   }
   if (qh.isQuantity()) {
     worldIn.resize(1);
-    casa::Quantity q(qh.asQuantity());
+    casacore::Quantity q(qh.asQuantity());
     //worldIn[0]=q.getValue(q.getUnit());
     worldIn[0]=q.getValue(Unit(units(0)));
     return worldIn;
@@ -3837,7 +3840,7 @@ coordsys::measuresToWorldVector (const RecordInterface& rec) const
 	*_log << error << LogIO::EXCEPTION;
       }
       //
-      casa::MDirection d = h.asMDirection();
+      casacore::MDirection d = h.asMDirection();
       const DirectionCoordinate dc = _csys->directionCoordinate (ic);
       Vector<String> units = dc.worldAxisUnits();
       const MVDirection mvd = d.getValue();
@@ -4040,16 +4043,16 @@ void coordsys::setDirectionCode (const String& code, Bool adjust)
 	  _setup(__func__);
 
   // Exception if type not found
-  Int ic = findCoordinate (Coordinate::DIRECTION, True);
+  Int ic = findCoordinate (Coordinate::DIRECTION, true);
   // Convert type
   String code2 = code;
-  casa::MDirection::Types typeTo;
+  casacore::MDirection::Types typeTo;
   code2.upcase();
-  if (!casa::MDirection::getType(typeTo, code2)) {
+  if (!casacore::MDirection::getType(typeTo, code2)) {
     *_log << "Invalid direction code '" << code
 	    << "' given. Allowed are : " << endl;
-    for (uInt i=0; i<casa::MDirection::N_Types; i++)
-      *_log << "  " << casa::MDirection::showType(i) << endl;
+    for (uInt i=0; i<casacore::MDirection::N_Types; i++)
+      *_log << "  " << casacore::MDirection::showType(i) << endl;
     *_log << LogIO::EXCEPTION;
   }
 
@@ -4077,7 +4080,7 @@ void coordsys::setDirectionCode (const String& code, Bool adjust)
 				  refPixFrom(0), refPixFrom(1));
   //
   if (adjust) {
-    casa::MDirection::Convert machine;
+    casacore::MDirection::Convert machine;
     const ObsInfo& obsInfo = _csys->obsInfo();
     Bool madeMachine =
       CoordinateUtil::makeDirectionMachine(*_log, machine, dirCoordTo,
@@ -4108,7 +4111,7 @@ void coordsys::setDirectionCode (const String& code, Bool adjust)
 void coordsys::setSpectralCode (const String& code, Bool adjust)
 {
   // Exception if type not found
-  Int ic = findCoordinate (Coordinate::SPECTRAL, True);
+  Int ic = findCoordinate (Coordinate::SPECTRAL, true);
   // Convert type String to enum
   *_log << LogOrigin("coordsys", "setSpectralCode");
   MFrequency::Types typeTo;
@@ -4186,8 +4189,8 @@ Record coordsys::toWorldRecord (const Vector<Double>& pixel,
   Vector<Double> world;
   Record rec;
   if (_csys->toWorld (world, pixel2)) {
-    Bool isAbsolute = True;
-    Bool showAsAbsolute = True;
+    Bool isAbsolute = true;
+    Bool showAsAbsolute = true;
     Int c = -1;
     rec = worldVectorToRecord (world, c, format, isAbsolute, showAsAbsolute);
   } else {
@@ -4205,16 +4208,16 @@ Record coordsys::absRelRecord (LogIO& os, const RecordInterface& recIn,
     String format;
     Int c = -1;
     recordToWorldVector (value, format, c, recIn);
-    Bool isAbsolute = False;
+    Bool isAbsolute = false;
     if (absToRel) {
       trim(value, _csys->referenceValue());
       _csys->makeWorldRelative (value);
-      isAbsolute = False;
+      isAbsolute = false;
     } else {
       Vector<Double> zero(_csys->nWorldAxes(),0.0);
       trim(value, zero);
       _csys->makeWorldAbsolute (value);
-      isAbsolute = True;
+      isAbsolute = true;
     }
     //
     Bool showAsAbsolute = isAbsolute;
@@ -4338,7 +4341,7 @@ coordsys::isValueWorld(casac::variant& value, int shouldBeWorld,
 }
 
 Bool
-coordsys::checkAbsRel(casac::variant& value, casa::Bool shouldBeAbs)
+coordsys::checkAbsRel(casac::variant& value, casacore::Bool shouldBeAbs)
 {
 	  _setup(__func__);
 
@@ -4356,19 +4359,19 @@ coordsys::checkAbsRel(casac::variant& value, casa::Bool shouldBeAbs)
 	  *_log << LogIO::SEVERE
 		  << "The value is relative, not absolute', origin='coordsys.checkAbsRel"
 		  << LogIO::EXCEPTION;
-	  return False;
+	  return false;
 	}
       } else {
 	if (s == "absolute") {
 	  *_log << LogIO::SEVERE
 		  << "The value is absolute, not relative', origin='coordsys.checkAbsRel"
 		  << LogIO::EXCEPTION;
-	  return False;
+	  return false;
 	}
       }
     }
   }
-  return True;
+  return true;
 }
 
 Record *
@@ -4405,8 +4408,8 @@ coordsys::coordinateValueToRecord(const ::casac::variant& value, Bool isWorld,
 	refVal = _csys->referenceValue();
 	Int c = -1;
 	String format("n");
-	Bool isAbsolute = True;
-	Bool showAsAbsolute = True;
+	Bool isAbsolute = true;
+	Bool showAsAbsolute = true;
 	*rec = worldVectorToRecord (refVal, c, format, isAbsolute, showAsAbsolute);
 	rec->define("pw_type", "world");
 	rec->define("ar_type", "absolute");
@@ -4494,11 +4497,11 @@ coordsys::coordinateValueToRecord(const ::casac::variant& value, Bool isWorld,
   if (value.type() == ::casac::variant::RECORD) {
     // Catch r := cs.toworld (value, 'nqms') style where r is a record
     // with fields including 'measure'
-    Bool none = True;
+    Bool none = true;
     rec = toRecord(tmpv.asRecord());
     if (rec->isDefined("numeric")) {
       if (first) return rec;
-      none = False;
+      none = false;
     }
     if (rec->isDefined("measure")) {
       if (first) return rec;
@@ -4510,7 +4513,7 @@ coordsys::coordinateValueToRecord(const ::casac::variant& value, Bool isWorld,
 	rec = 0;
 	return rec;
       }
-      none = False;
+      none = false;
     }
     if (rec->isDefined("quantity")) {
       if (first) return rec;
@@ -4522,7 +4525,7 @@ coordsys::coordinateValueToRecord(const ::casac::variant& value, Bool isWorld,
 	rec = 0;
 	return rec;
       }
-      none = False;
+      none = false;
     }
     if (rec->isDefined("string")) {
       if (first) return rec;
@@ -4530,7 +4533,7 @@ coordsys::coordinateValueToRecord(const ::casac::variant& value, Bool isWorld,
 	//           rec.numeric := dms.tovector(value.string, 'double');
 	// NEEDS WORK HERE
       }
-      none = False;
+      none = false;
     }
 
     // Assumes the record is a measure...

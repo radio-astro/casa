@@ -27,7 +27,7 @@
 //#
 //# TablePlot Change Log
 //# =======================
-//# Data   Name      Description
+//# casacore::Data   Name      Description
 //# Nov. 2006   Shannon Jaeger  TPPlotter was given a parameter to allow
 //#                             flagged/non-flagged data to be displayed at the
 //#             same time.
@@ -64,7 +64,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// Class that implements X-Y plotting of data from Table objects.
+// Class that implements X-Y plotting of data from casacore::Table objects.
 // </summary>
 
 // <use visibility=export>
@@ -121,7 +121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //  
 // This design allows the following.
 //
-// <li> Access to Table data and the Plotting package are independant of each other.
+// <li> Access to casacore::Table data and the Plotting package are independant of each other.
 // <li> TaQL expressions can be applied to multiple tables and data from multiple tables
 //      are kept independant of each other.
 // <li> Editing operations on multiple panels of a plot window are handled independantly.
@@ -142,7 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //        TablePlot *TP;
 //        TP = casa::TablePlot::TablePlotInstance();
 //        TP->setTableT(SelTABS,TabNames,SelStr);
-//        PlotOptions pop; Vector<String> Errors(2);
+//        PlotOptions pop; casacore::Vector<casacore::String> Errors(2);
 //        //... fill in pop.
 //        Errors = TP->checkInputs(pop,taqlstr,iteraxes);
 //        TP->plotData(pop,taqlstr);   //... or  TP->iterMultiPlotStart(pop,taqlstr,iteraxes)
@@ -166,7 +166,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // <todo asof="$DATE:$">
-//# A List of bugs, limitations, extensions or planned refinements.
+//# A casacore::List of bugs, limitations, extensions or planned refinements.
 //   <li> Add functions to read out the data being plotted (into python arrays).
 //   <li> Remove "INFO" from the TablePlot::locateData() function. It is not required.
 // </todo>
@@ -189,106 +189,106 @@ class TablePlot
          return tableplot;
       }
 
-      // Set a list of Table objects that are to be used for subsequent 
+      // Set a list of casacore::Table objects that are to be used for subsequent 
       //plotting.
       // These Tables are sent into BasePlot objects, which hold onto them. 
       // Tables are released in TablePlot::clearPlot, and a callback
       // (defined in TPCallBackHooks.h) signals this to the user application.
-      // The Table objects passed in can be from Tables on disk, reference
+      // The casacore::Table objects passed in can be from Tables on disk, reference
       // Tables obtained via sub-selection, or in-memory Tables.
-      // The root Table names are used for handling Flag Versions. 
+      // The root casacore::Table names are used for handling Flag Versions. 
       // To disable flag versions, the rootTable names can be empty strings.
       // The selection strings are purely for labelling purposes, and will
       // appear in the Locate and FlagHistory logger output.
       // ArrayColumns in the Tables sent in, need to have the same shape
       // across all rows in the Table. For MSs with varying shape columns,
       // the Tables should be broken up and sent in as a vector<table>.
-      Bool setTableT(Vector<Table> &inTabObj, Vector<String> &rootTabNames, 
-                     Vector<String> &selection);   
+      casacore::Bool setTableT(casacore::Vector<casacore::Table> &inTabObj, casacore::Vector<casacore::String> &rootTabNames, 
+                     casacore::Vector<casacore::String> &selection);   
 
       // Set a list of Tables by specifying their names.
       // This is similar to TablePlot::setTableT(), but explicitly opens the 
-      // Tables with the Table::Update mode, and no explicit lock acquisition.
-      Bool setTableS(Vector<String> &inTabName, Vector<String> &rootTabNames, 
-                     Vector<String> &selection);  
+      // Tables with the casacore::Table::Update mode, and no explicit lock acquisition.
+      casacore::Bool setTableS(casacore::Vector<casacore::String> &inTabName, casacore::Vector<casacore::String> &rootTabNames, 
+                     casacore::Vector<casacore::String> &selection);  
 
-      // Set names of Table columns to be used for Flags.
-      // "dataflags" must be the name of an ArrayColumn<bool>
-      // "rowflags" must be the name of a ScalarColumn<bool>
+      // Set names of casacore::Table columns to be used for Flags.
+      // "dataflags" must be the name of an casacore::ArrayColumn<bool>
+      // "rowflags" must be the name of a casacore::ScalarColumn<bool>
       // These are also the columns that will be used for
       // Flag Versions.
-      Bool useFlagColumns(String dataflags=String("FLAG"), 
-                          String rowflags=String("FLAG_ROW"));
+      casacore::Bool useFlagColumns(casacore::String dataflags=casacore::String("FLAG"), 
+                          casacore::String rowflags=casacore::String("FLAG_ROW"));
       
-      // Check if at least one Table has been set.
-      Bool isTableSet();
+      // Check if at least one casacore::Table has been set.
+      casacore::Bool isTableSet();
       
       // Choose between a GUI-based or completely command-line based interface.
       // This function will reset TablePlot, and instantiate the plotter
-      // class in no-gui mode. Default is gui=True.
+      // class in no-gui mode. Default is gui=true.
       // Note : This function has not been tested since the latest refactoring.
-      Bool setGui(Bool guiVisible=True);
+      casacore::Bool setGui(casacore::Bool guiVisible=true);
 
       // Save the plot to an image file, using the pl.savefig command.
-      Bool saveFigure(const String& filename, const Int dpi, 
-                      const String& orientation, const String& papertype, 
-                      const String& facecolor, const String& edgecolor );
+      casacore::Bool saveFigure(const casacore::String& filename, const casacore::Int dpi, 
+                      const casacore::String& orientation, const casacore::String& papertype, 
+                      const casacore::String& facecolor, const casacore::String& edgecolor );
       
-      Bool saveData(const String& filename);
+      casacore::Bool saveData(const casacore::String& filename);
 
       // Validation check for input parameters.
       // This function returns errors and warnings, based on the
       // validity of the input parameters. The returned vector<string> is of
-      // length 2. The first String is Errors and the second is Warnings.
+      // length 2. The first casacore::String is Errors and the second is Warnings.
       // User applications should not proceed to TablePlot::plotData if 
       // checkInputs fails with errors. TablePlot::plotData re-verifies
       // inputs by calling this function internally as well.
-      Vector<String> checkInputs(PlotOptions &pop, 
-          Vector<Vector<String> > &datastrvector, Vector<String> &iteraxes);
-      Vector<String> checkInputs(PlotOptions &pop, Vector<String> &datastr, 
-          Vector<String> &iteraxes);
+      casacore::Vector<casacore::String> checkInputs(PlotOptions &pop, 
+          casacore::Vector<casacore::Vector<casacore::String> > &datastrvector, casacore::Vector<casacore::String> &iteraxes);
+      casacore::Vector<casacore::String> checkInputs(PlotOptions &pop, casacore::Vector<casacore::String> &datastr, 
+          casacore::Vector<casacore::String> &iteraxes);
 
       // Check that the "FLAG(dataFlagColName_p)" 
-      // ArrayColumn in input Tables have the same
+      // casacore::ArrayColumn in input Tables have the same
       // shape across all rows.
-      Vector<String> checkTables(Vector<Table> &tables);
-      Bool checkShapes(Table &intab);
+      casacore::Vector<casacore::String> checkTables(casacore::Vector<casacore::Table> &tables);
+      casacore::Bool checkShapes(casacore::Table &intab);
 
       // Plot data based on input plot options and [X,Y] TaQL string pairs.
       // Plot options are to be sent in via the PlotOptions class.
       // [X,Y] TaQL string pairs are sent in via datastrvector. 
       // datastrvector.nelements() must be the same as nTabObj.nelements(). 
       // i.e. the same number of Tables currently in use.
-      // For each Table (the inner Vector), there can be any number of
+      // For each casacore::Table (the inner casacore::Vector), there can be any number of
       // XY TaQL pairs. [X1,Y1,X2,Y2,....] and plots from each pair will
       // appear as overlaid plots on the same panel.
       // each table has one set of taql 
       // each taql set has one or more taql pairs
-      Bool plotData(PlotOptions &pop, Vector<Vector<String> > &datastrvector) {
-         return plotData(pop,datastrvector,String("iter_off"));
+      casacore::Bool plotData(PlotOptions &pop, casacore::Vector<casacore::Vector<casacore::String> > &datastrvector) {
+         return plotData(pop,datastrvector,casacore::String("iter_off"));
       };
 
       // Plot data based on input plot options and [X,Y] TaQL string pairs.
       // Same as above, but uses only one [X,Y] TaQL pair for all 
       // the input Tables.
-      Bool plotData(PlotOptions &pop, Vector<String> &datastr) {
-         return plotData(pop,datastr,String("iter_off"));
+      casacore::Bool plotData(PlotOptions &pop, casacore::Vector<casacore::String> &datastr) {
+         return plotData(pop,datastr,casacore::String("iter_off"));
       };
       
       // Refresh the plot. 
-      // Flags are re-read from all active Table objects, and the
+      // Flags are re-read from all active casacore::Table objects, and the
       // plots are re-made with all the current plot options for
       // each panel and layer.
-      Bool rePlot();
+      casacore::Bool rePlot();
 
       // Mark regions to flag. This function calls TPPlotter::markRegion().
       // These regions will apply to all layers of the chosen panel.
-      Bool markRegions(Int nrows, Int ncols, Int panel, Vector<Double> &region);    
+      casacore::Bool markRegions(casacore::Int nrows, casacore::Int ncols, casacore::Int panel, casacore::Vector<casacore::Double> &region);    
 
       // Flag all data in regions marked
       // using markFlags(). Direction is 1 for FLAG, and 0 for UNFLAG.
-      Bool flagData(Int direction);     
-      Bool flagData(Int direction, Vector<Int> regs);     
+      casacore::Bool flagData(casacore::Int direction);     
+      casacore::Bool flagData(casacore::Int direction, casacore::Vector<casacore::Int> regs);     
       
       // Print out information about the data selected using markFlags()
       // It takes in a list of table column names to make lists for.
@@ -300,14 +300,14 @@ class TablePlot
       // TODO - remove INFO from here, and make it an internal parameter. 
       // Remember to declare it inside, and clean it up at the end of this
       // function, after calling dumpLocate from inside.
-      Bool locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO, 
-                      Int doFlag = -1);
-      Bool locateData(Int doFlag = -1);
+      casacore::Bool locateData(casacore::Vector<casacore::String> columnlist, casacore::PtrBlock<casacore::Record*> &INFO, 
+                      casacore::Int doFlag = -1);
+      casacore::Bool locateData(casacore::Int doFlag = -1);
                 
       // Clear all flags from all the tables attached to the vector of BasePlots
       // Dangerous.  Please use this carefully. It was put in mainly for  
       // debugging purposes.
-      Bool clearAllFlags(Bool forRootTable);   
+      casacore::Bool clearAllFlags(casacore::Bool forRootTable);   
 
       
       // FlagVersion control functions.
@@ -315,17 +315,17 @@ class TablePlot
       // by the previous TablePlot::setTableT call.
       // When multiple version names are supplied as a vector, the
       // operation is applied to each of them in turn.
-      Bool  saveFlagVersion(String versionname, String comment, String merge);
-      Bool  restoreFlagVersion(Vector<String> versionname, String merge);
-      Bool  deleteFlagVersion(Vector<String> versionname);
-      Bool  getFlagVersionList(Vector<String> &verlist);
+      casacore::Bool  saveFlagVersion(casacore::String versionname, casacore::String comment, casacore::String merge);
+      casacore::Bool  restoreFlagVersion(casacore::Vector<casacore::String> versionname, casacore::String merge);
+      casacore::Bool  deleteFlagVersion(casacore::Vector<casacore::String> versionname);
+      casacore::Bool  getFlagVersionList(casacore::Vector<casacore::String> &verlist);
 
       // Clear on or all plot panels.
       // Specify the co-ordinates of the panels to clear.
       // Setting all parameters to 0, indicates "clear all plots".
       // BasePlot objects are destroyed in this call, and this
       // triggers the "releaseTable" call-back for user-applications.
-      Bool clearPlot(Int nrows=0, Int ncols=0, Int panel=0);   
+      casacore::Bool clearPlot(casacore::Int nrows=0, casacore::Int ncols=0, casacore::Int panel=0);   
 
       // Plotting from a series of subtables created by iterating over 
       // a specified iteration axis.       
@@ -336,38 +336,38 @@ class TablePlot
       // the regular "overplot" plot option, and two successive 
       // iterMultiPlotStart calls before the first "next", 
       // as well as multipanels (see the "separateiterplot" plot option).
-      Bool iterMultiPlotStart(PlotOptions &pop, 
-         Vector<Vector<String> > &datastrvector,Vector<String> &iteraxes);
-      Bool iterMultiPlotStart(PlotOptions &pop, Vector<String> &datastr,
-         Vector<String> &iteraxes);
+      casacore::Bool iterMultiPlotStart(PlotOptions &pop, 
+         casacore::Vector<casacore::Vector<casacore::String> > &datastrvector,casacore::Vector<casacore::String> &iteraxes);
+      casacore::Bool iterMultiPlotStart(PlotOptions &pop, casacore::Vector<casacore::String> &datastr,
+         casacore::Vector<casacore::String> &iteraxes);
 
       // Advances to the next iteration. BasePlot objects persist, but 
       // their attached tables are replaced by the new subtables created 
       //by TableIter.
-      Int iterMultiPlotNext(Vector<String> &labelcols, 
-                            Vector<Vector<Double> > &labelvals);
+      casacore::Int iterMultiPlotNext(casacore::Vector<casacore::String> &labelcols, 
+                            casacore::Vector<casacore::Vector<casacore::Double> > &labelvals);
 
       // Terminates the iterations. It is called automatically when the end 
       // of the table is reached. It can also be called before the 
       // iterations end, to cleanly terminate the
       // iterations when desired.
-      Int iterMultiPlotStop( Bool /*rmplotter*/) {
+      casacore::Int iterMultiPlotStop( casacore::Bool /*rmplotter*/) {
          iterMultiPlotStop();
          return 0;
       };
-      Bool iterMultiPlotStop();
+      casacore::Bool iterMultiPlotStop();
 
       // Get the current list of Tables from TablePlot.
-      Bool getTabVec(Vector<Table> &tabs);
+      casacore::Bool getTabVec(casacore::Vector<casacore::Table> &tabs);
 
       // Allow the user app to directly run a python command.
-      Bool runPlotCommand(String command);
+      casacore::Bool runPlotCommand(casacore::String command);
       
       //Change the state of a button on the Gui.
       // button : 'iternext','markregion','flag','unflag','locate'
       // state : 'enabled','disabled'
       // defaults -> iternext=disabled, all others are enabled.
-      Bool changeGuiButtonState( String button, String state );
+      casacore::Bool changeGuiButtonState( casacore::String button, casacore::String state );
 
       // Clean up the TablePlot object.
       // Clear all plots and release all tables. This triggers the
@@ -375,12 +375,12 @@ class TablePlot
       // Note : It is dangerous to call this with closewindow=0.
       //        Extra rows of buttons might appear
       //        TODO - do something about this.
-      Bool resetTP(Int closewindow=1); 
+      casacore::Bool resetTP(casacore::Int closewindow=1); 
 
       // Set the "reset" callback function.
       // This callback is triggered when TablePlot::resetTP() is called.
-      Bool setResetCallBack( String appname, TPResetCallBack * resetter );
-      Bool clearResetCallBack( String appname );
+      casacore::Bool setResetCallBack( casacore::String appname, TPResetCallBack * resetter );
+      casacore::Bool clearResetCallBack( casacore::String appname );
 
    private:
       // Default Constructor
@@ -402,7 +402,7 @@ class TablePlot
       // One way to use this is to have the incoming TAQL pair have its 'X' TaQL
       // contain 'CROSS', since for CrossPlots, the x-axis corresponds to
       // column indices of the array column selected by the Y-TaQL.
-      Bool createBP(PtrBlock<BasePlot* > &BPS, Vector<Vector<String> > &taqls);
+      casacore::Bool createBP(casacore::PtrBlock<BasePlot* > &BPS, casacore::Vector<casacore::Vector<casacore::String> > &taqls);
                 
       // Attach each table in the list to a BasePlot object. The first time this
       // function is called, it must be preceded by createBP(). Successive calls
@@ -410,124 +410,124 @@ class TablePlot
       // feature is used while iterating over an
       // iteration axis - subtables created in each iteration are assigned to a
       // fixed vector of BasePlot objects.
-      Bool upDateBP(PtrBlock<BasePlot* > &BPS); 
+      casacore::Bool upDateBP(casacore::PtrBlock<BasePlot* > &BPS); 
 
       // Clear panels that lie partially or completely underneath
       // the plot currently being plotted. This is to mimic the
       // behaviour of native matplotlib, and to ensure automatic
       // cleanup of plots and associated data structures, when they
       // are no longer needed.
-      Bool clearOverLaps(Int nrows, Int ncols, Int panel);   
+      casacore::Bool clearOverLaps(casacore::Int nrows, casacore::Int ncols, casacore::Int panel);   
 
       // Helper function to get the panel index for a particular
       // panel. If this panel does not exist in the list, -1 is returned.
-      Int getPanelIndex(Int nrows, Int ncols, Int panel);
+      casacore::Int getPanelIndex(casacore::Int nrows, casacore::Int ncols, casacore::Int panel);
 
       // TP cleanup + initialization.
-      Bool setupTP();
+      casacore::Bool setupTP();
 
       // Destroy a BasePlot, and trigger the "releasetable" callback function
       // so that user apps know when to delete/close their tables.
-      Bool deleteBasePlot(Int panel,Int layer);
+      casacore::Bool deleteBasePlot(casacore::Int panel,casacore::Int layer);
      
       // Same as plotdata described above.
       // The last parameter is for internal use, and signals whether
       // TablePlot::plotData is being called in iteration or non-iteration mode.
       // This information is used to decide cleanup strategy.
-      Bool plotData(PlotOptions &pop, Vector<Vector<String> > &datastrvector, 
-                    const String iterstate);
-      Bool plotData(PlotOptions &pop, Vector<String> &datastr, 
-                    const String iterstate);
+      casacore::Bool plotData(PlotOptions &pop, casacore::Vector<casacore::Vector<casacore::String> > &datastrvector,
+                    const casacore::String iterstate);
+      casacore::Bool plotData(PlotOptions &pop, casacore::Vector<casacore::String> &datastr, 
+                    const casacore::String iterstate);
                 
       // Read out Flagging information from BasePlots. 
       // This is to be called soon after a TablePlot::MarkRegions and
       // TablePlot::flagData sequence. "flaghist" contains information
       // about the table and plot, the regions marked, and the number of
       // points selected for flagging/unflagging.
-      Bool updateFlagHistory(PtrBlock<Record*> &flaghist);     
+      casacore::Bool updateFlagHistory(casacore::PtrBlock<casacore::Record*> &flaghist);     
                
       // Print out (formatted) info about the flag history.
-      Bool dumpFlagHistory(PtrBlock<Record*> &flaghist);     
+      casacore::Bool dumpFlagHistory(casacore::PtrBlock<casacore::Record*> &flaghist);     
 
       // Print out (formatted) info about the data points selected
       // during a locate operation.
       // This function triggers the call-back for "printlocater" for
       // user apps to perform custom formatting of "locate" output.
-      Bool dumpLocateInfo(PtrBlock<Record*> &INFO, Int flagdata = -1, 
-               Bool ave = 0);
+      casacore::Bool dumpLocateInfo(casacore::PtrBlock<casacore::Record*> &INFO, casacore::Int flagdata = -1, 
+               casacore::Bool ave = 0);
 
       // Generate an exception.
-      void TablePlotError(String msg);
+      void TablePlotError(casacore::String msg);
 
       // Private class variables.
       // number of currently set Tables
-      Int nTabs_p;                      
+      casacore::Int nTabs_p;                      
       // vector of currently set Tables
-      Vector<Table> TABS_p;             
-      // root Table names per Table.
-      Vector<String> rootTabNames_p;    
+      casacore::Vector<casacore::Table> TABS_p;             
+      // root casacore::Table names per Table.
+      casacore::Vector<casacore::String> rootTabNames_p;    
       // Strings with selection info oer Table.
-      Vector<String> tableSelections_p; 
+      casacore::Vector<casacore::String> tableSelections_p; 
       // "FLAG"
-      String dataFlagColName_p;         
+      casacore::String dataFlagColName_p;         
       // "FLAG_ROW"
-      String rowFlagColName_p;          
+      casacore::String rowFlagColName_p;          
       
       // Plotter class
       TPPlotter *TPLP;                        
       // Holds all active BasePlots.
-      PtrBlock<PtrBlock<BasePlot* >*> ATBPS;    
+      casacore::PtrBlock<casacore::PtrBlock<BasePlot* >*> ATBPS;
       // Holds tableiters for each Table.
-      Vector<TableIterator> Iters_p;          
+      casacore::Vector<casacore::TableIterator> Iters_p;          
 
-      // List of parameters per panel.
-      PtrBlock<PanelParams* > PAN;      
+      // casacore::List of parameters per panel.
+      casacore::PtrBlock<PanelParams* > PAN;      
 
       // resetTP callback pointer.
-      PtrBlock<TPResetCallBack *> resetters_p; 
+      casacore::PtrBlock<TPResetCallBack *> resetters_p; 
       // resetTP callback user-app name
-      Vector<String> appnames_p;               
+      casacore::Vector<casacore::String> appnames_p;               
                 
-      // Input TaqlStrings
-      Vector<String> DataStr_p;     
-      // Input iteration axes strings.
-      Vector<String> IterAxes_p;    
+      // casacore::Input TaqlStrings
+      casacore::Vector<casacore::String> DataStr_p;     
+      // casacore::Input iteration axes strings.
+      casacore::Vector<casacore::String> IterAxes_p;    
       
       // Panel co-ordinates of the latest panel.
-      Int NRows_p,NCols_p;   
+      casacore::Int NRows_p,NCols_p;   
       // Temporary instance of Plot options.
       PlotOptions Pop_p;     
       
       // Variables for iteration plots.
       // Overplots and parallel iterations are controlled
       // via these variables.
-      PtrBlock<PlotOptions*> Pops_p;
-      PtrBlock<Vector<Vector<String> >* > TaqlStr_p;
-      PtrBlock<Vector<TableIterator>* > OvpIters_p;
-      PtrBlock<Vector<String>* > OvpRootTabNames_p;
-      PtrBlock<Vector<String>* > OvpTabSelections_p;
-      Vector<String> TitleStrings_p;
-      String Separate_p;
+      casacore::PtrBlock<PlotOptions*> Pops_p;
+      casacore::PtrBlock<casacore::Vector<casacore::Vector<casacore::String> >* > TaqlStr_p;
+      casacore::PtrBlock<casacore::Vector<casacore::TableIterator>* > OvpIters_p;
+      casacore::PtrBlock<casacore::Vector<casacore::String>* > OvpRootTabNames_p;
+      casacore::PtrBlock<casacore::Vector<casacore::String>* > OvpTabSelections_p;
+      casacore::Vector<casacore::String> TitleStrings_p;
+      casacore::String Separate_p;
       
       // Current panel number
-      Int CurrentPanel_p;    
+      casacore::Int CurrentPanel_p;    
       // Flag to signal that setTableT has been called and that
       // BasePlots needs to be created/updated with the new Tables.
-      Int TableTouch_p;
+      casacore::Int TableTouch_p;
       // Flags to signal iterplot mode.
-      Bool IterPlotOn_p;
-      Bool IterPlotStarted_p;
+      casacore::Bool IterPlotOn_p;
+      casacore::Bool IterPlotStarted_p;
       // Flag to check if there is a currently displayed plot or not.
-      Bool isPlotDisplayed_p;
+      casacore::Bool isPlotDisplayed_p;
       // Flag to indicate if Plot window is currently displayed.
-      Bool isGuiVisible_p;
+      casacore::Bool isGuiVisible_p;
       
       // Debug message flags.
-      Timer tmr;
+      casacore::Timer tmr;
       
       // Logger instance.
       SLog* log;
-      static String clname;
+      static casacore::String clname;
 };
 
 
@@ -581,7 +581,7 @@ class TablePlot
 
 
 // <todo asof="$DATE:$">
-//# A List of bugs, limitations, extensions or planned refinements.
+//# A casacore::List of bugs, limitations, extensions or planned refinements.
 // </todo>
 
 
@@ -595,56 +595,56 @@ class TPGuiBinder
       // Destructor
       ~TPGuiBinder(){};
       // Gui callback to read in regions.
-      Bool markregion(Int nrows,Int ncols, Int panel, 
-                      casa::Vector<casa::Double> region) { 
+      casacore::Bool markregion(casacore::Int nrows,casacore::Int ncols, casacore::Int panel, 
+                      casacore::Vector<casacore::Double> region) {
          return itsTablePlot->markRegions(nrows, ncols, panel, region); 
       }
       // Gui callback for flagdata
-      Bool flagdata() {
-         //Bool ret = itsTablePlot->flagData(1);
-         Bool ret = itsTablePlot->locateData(1);
+      casacore::Bool flagdata() {
+         //casacore::Bool ret = itsTablePlot->flagData(1);
+         casacore::Bool ret = itsTablePlot->locateData(1);
          return ret;
       }
       // Gui callback for unflagdata
-      Bool unflagdata() { 
-         //Bool ret = itsTablePlot->flagData(0); 
-         Bool ret = itsTablePlot->locateData(0); 
+      casacore::Bool unflagdata() { 
+         //casacore::Bool ret = itsTablePlot->flagData(0); 
+         casacore::Bool ret = itsTablePlot->locateData(0); 
          return ret;
       }
       // Gui callback for locatedata
-      Bool locatedata() { 
-         //Vector<String> clist;
+      casacore::Bool locatedata() { 
+         //casacore::Vector<casacore::String> clist;
          //clist.resize(0);
-         //PtrBlock<Record*> INFO;
-         //Bool ret = itsTablePlot->locateData(clist, INFO);
-         /* Clean up the PtrBlock */
-         //for(Int i=0;i<(Int)INFO.nelements();i++)
+         //casacore::PtrBlock<casacore::Record*> INFO;
+         //casacore::Bool ret = itsTablePlot->locateData(clist, INFO);
+         /* Clean up the casacore::PtrBlock */
+         //for(casacore::Int i=0;i<(casacore::Int)INFO.nelements();i++)
          //   delete INFO[i];
          //INFO.resize(0);
 
-         Bool ret = itsTablePlot->locateData();
+         casacore::Bool ret = itsTablePlot->locateData();
          return ret;
       }
       // Gui callback for iterplotnext
-      Bool iterplotnext() { 
-         Vector<String> labcol;
-         Vector<Vector<Double> > labval;
+      casacore::Bool iterplotnext() { 
+         casacore::Vector<casacore::String> labcol;
+         casacore::Vector<casacore::Vector<casacore::Double> > labval;
          if(itsTablePlot->iterMultiPlotNext(labcol,labval) == -1)
             itsTablePlot->changeGuiButtonState("iternext","disabled");
-         return True;
+         return true;
       }
       // Gui callback for iterplotstop.
       // Currently not in use.
-      Bool iterplotstop(){ 
+      casacore::Bool iterplotstop(){ 
          return itsTablePlot->iterMultiPlotStop(); 
       }
       // Gui callback for clearplot.
       // Currently not in use.
-      Bool clearplot(){ 
+      casacore::Bool clearplot(){ 
          return itsTablePlot->clearPlot(0,0,0);
       }
       // Gui callback for "Quit".
-      Bool quit(Int closewindow){ 
+      casacore::Bool quit(casacore::Int closewindow){ 
          return itsTablePlot->resetTP(closewindow); 
       }
 

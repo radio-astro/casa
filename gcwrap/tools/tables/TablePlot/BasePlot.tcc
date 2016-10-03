@@ -90,7 +90,7 @@ BasePlot::BasePlot()
 {
    dbg=0;   
    ddbg=0;   adbg=0;
-   String fnname = "BasePlot";
+   casacore::String fnname = "BasePlot";
    log = SLog::slog();
 #if LOG0
    log->FnEnter(fnname, clname);
@@ -103,21 +103,21 @@ BasePlot::BasePlot()
    locflagmarks_p.resize(0);
    DataStr_p.resize(0);
    TableTouch_p=0;
-   Average_p = False;
+   Average_p = false;
    
-   FlagColName_p = "FLAG"; fcol_p = False;
-   FlagRowName_p = "FLAG_ROW"; frcol_p = False;
+   FlagColName_p = "FLAG"; fcol_p = false;
+   FlagRowName_p = "FLAG_ROW"; frcol_p = false;
    ReductionType_p.resize(0);
    Layer_p=0;
-   firsttime_p=True;
+   firsttime_p=true;
    
    Map_p.resize(0,0);
    FV = NULL;
-   currentflagversion_p = String("main");
+   currentflagversion_p = casacore::String("main");
    flagdirection_p = 0;
    numflagpoints_p = 0;
-   showflags_p = False;
-        doscalingcorrection_p = False;
+   showflags_p = false;
+        doscalingcorrection_p = false;
    
    pType_p=XYPLOT; 
 
@@ -142,11 +142,11 @@ BasePlot::~BasePlot()
 /*********************************************************************************/
 
 /* Attach a BasePlot to a table/subtable */
-Int BasePlot::init(Table &tab, Int &tableNumber,String &rootTabName, 
-            String &tableSelection, String &dataFlagColName, 
-            String &rowFlagColName)
+Int BasePlot::init(casacore::Table &tab, casacore::Int &tableNumber,casacore::String &rootTabName, 
+            casacore::String &tableSelection, casacore::String &dataFlagColName, 
+            casacore::String &rowFlagColName)
 {
-   String fnname = "init";
+   casacore::String fnname = "init";
    //cout << "tableNumber=" << tableNumber
    //     << " rootTabName=" << rootTabName
    //     << " tableSelection=" << tableSelection
@@ -166,29 +166,29 @@ Int BasePlot::init(Table &tab, Int &tableNumber,String &rootTabName,
    FlagColName_p = dataFlagColName;
    FlagRowName_p = rowFlagColName;
     
-   if(SelTab_p.isNull()) BasePlotError(String("Null Table"));
+   if(SelTab_p.isNull()) BasePlotError(casacore::String("Null casacore::Table"));
    
    /* Check for the existence of Flag column names */
    /* FLAG and FLAG_ROW */
    fcol_p = SelTab_p.tableDesc().isColumn(FlagColName_p);
    frcol_p = SelTab_p.tableDesc().isColumn(FlagRowName_p);
    
-   String msg = String( "Column : " ) + FlagColName_p;  
+   casacore::String msg = casacore::String( "Column : " ) + FlagColName_p;  
    if(fcol_p) 
-      msg = msg + String( " exists " ); 
+      msg = msg + casacore::String( " exists " ); 
    else 
-      msg = msg + String( " does not exist " );
+      msg = msg + casacore::String( " does not exist " );
 #if LOG0
-   log->out(msg, fnname, clname, LogMessage::DEBUGGING);
+   log->out(msg, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
 
-   msg = String( "Column : " ) + FlagRowName_p;
+   msg = casacore::String( "Column : " ) + FlagRowName_p;
    if(frcol_p) 
-      msg = msg + String( " exists " );
+      msg = msg + casacore::String( " exists " );
    else 
-      msg = msg + String( " does not exist " );
+      msg = msg + casacore::String( " does not exist " );
 #if LOG0
-   log->out(msg, fnname, clname, LogMessage::DEBUGGING);
+   log->out(msg, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
    
    
@@ -205,9 +205,9 @@ Int BasePlot::init(Table &tab, Int &tableNumber,String &rootTabName,
       RowFlags_p.attach(SelTab_p,FlagRowName_p);
    }
 #if LOG0
-   log->out(String("FlagColName : ")+FlagColName_p + 
-         String("FlagRowName : ")+FlagRowName_p,
-         fnname, clname, LogMessage::DEBUGGING);
+   log->out(casacore::String("FlagColName : ")+FlagColName_p + 
+         casacore::String("FlagRowName : ")+FlagRowName_p,
+         fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
 
    /* clear bookkeeping arrays between tables */
@@ -230,13 +230,13 @@ Int BasePlot::init(Table &tab, Int &tableNumber,String &rootTabName,
          FV = new FlagVersion(rootTabName,FlagColName_p,FlagRowName_p);
          FV->attachFlagColumns("main", RowFlags_p, Flags_p, SelTab_p);
       }
-      catch (AipsError x)
+      catch (casacore::AipsError x)
       {
          log->out("Cannot use Flag Versions.",
-               fnname, clname, LogMessage::WARN);
+               fnname, clname, casacore::LogMessage::WARN);
          FV = NULL;
       }
-      currentflagversion_p = String("main");
+      currentflagversion_p = casacore::String("main");
    }
    
    //if(fcol_p) FV->attachDataFlag(Flags_p,"main");
@@ -258,22 +258,22 @@ String BasePlot::getTableName()
 /*********************************************************************************/
 
 /* Create TableExprNodes from TaQL strings and obtain TaQL indices/column names */
-Int BasePlot::createTENS(Vector<String> &datastr)
+Int BasePlot::createTENS(casacore::Vector<casacore::String> &datastr)
 {
-   String fnname = "createTENS";
+   casacore::String fnname = "createTENS";
 #if LOG2
    log->FnEnter(fnname, clname);
 #endif 
       
    /* Check the number of input strings */
-   Int nTStr = datastr.nelements();
+   casacore::Int nTStr = datastr.nelements();
 #if LOG0
-   log->out(String("Number of strings : ") + String::toString(nTStr),
-            fnname, clname, LogMessage::DEBUGGING);
+   log->out(casacore::String("Number of strings : ") + casacore::String::toString(nTStr),
+            fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
    
    if(nTStr%2 != 0) 
-       BasePlotError(String("Need an even number of TaQL strings"));
+       BasePlotError(casacore::String("Need an even number of TaQL strings"));
    
    nTens_p = nTStr/2; 
 
@@ -285,55 +285,55 @@ Int BasePlot::createTENS(Vector<String> &datastr)
       createXTENS(datastr); 
       createYTENS(datastr);
    }
-   catch(AipsError &x)
+   catch(casacore::AipsError &x)
    {
-      BasePlotError(String(x.getMesg()));
+      BasePlotError(casacore::String(x.getMesg()));
    }
    
    /* Fill in default shapes, if not specified in the TaQL */
-   Bool tst=False;
-   Vector<IPosition> colshapes;
+   casacore::Bool tst=false;
+   casacore::Vector<casacore::IPosition> colshapes;
    colshapes.resize(nip_p);
-   Vector<Bool> isarraycol;
+   casacore::Vector<casacore::Bool> isarraycol;
    isarraycol.resize(nip_p);
    
 #if LOG0 
    log->out("Validate the TaQL slices", fnname, clname,
-            LogMessage::DEBUGGING);
+            casacore::LogMessage::DEBUGGING);
 #endif 
-   for(Int i=0;i<nip_p;i++)   
+   for(casacore::Int i=0;i<nip_p;i++)   
    {
       tst = SelTab_p.tableDesc().isColumn(colnames_p(i));
 #if LOG0
-      log->out(String("column ")+colnames_p(i),
-            fnname, clname, LogMessage::DEBUGGING);
+      log->out(casacore::String("column ")+colnames_p(i),
+            fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
-      ROTableColumn rot(SelTab_p,colnames_p(i));
+      casacore::ROTableColumn rot(SelTab_p,colnames_p(i));
                 if(!rot.isNull())
       {
-          ColumnDesc cdesc = rot.columnDesc();
-          Slicer tempslice;
+          casacore::ColumnDesc cdesc = rot.columnDesc();
+          casacore::Slicer tempslice;
           if(cdesc.isArray()) // This is an arrayColumn.
           {
              colshapes[i] = rot.shape(0);
-         isarraycol[i] = True;
+         isarraycol[i] = true;
 
 #if LOG0
-         log->out(String("COLUMN : ") + colnames_p(i) +
-                  " with shape : " + String::toString(colshapes[i]),
-                  fnname, clname, LogMessage::DEBUGGING);
-         log->out( String("Is arraycol : ") +
-                 String::toString(cdesc.isArray()),
-                  fnname, clname, LogMessage::DEBUGGING);
-         log->out( String("slice -> ") +
-                 String::toString(ipslice-p[i])),
-                  fnname, clname, LogMessage::DEBUGGING);
+         log->out(casacore::String("COLUMN : ") + colnames_p(i) +
+                  " with shape : " + casacore::String::toString(colshapes[i]),
+                  fnname, clname, casacore::LogMessage::DEBUGGING);
+         log->out( casacore::String("Is arraycol : ") +
+                 casacore::String::toString(cdesc.isArray()),
+                  fnname, clname, casacore::LogMessage::DEBUGGING);
+         log->out( casacore::String("slice -> ") +
+                 casacore::String::toString(ipslice-p[i])),
+                  fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
           }
           else 
           {
-             colshapes[i] = IPosition(1,0); // This is a Scalar column
-             isarraycol[i] = False;
+             colshapes[i] = casacore::IPosition(1,0); // This is a Scalar column
+             isarraycol[i] = false;
           }
       }
    }
@@ -342,11 +342,11 @@ Int BasePlot::createTENS(Vector<String> &datastr)
    /* Fill in one slice per TEN */
 #if LOG0 
    log->out("Fill in max col shapes for each column ",
-            fnname, clname, LogMessage::DEBUGGING);
+            fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
    
-   Slicer tempslicer;
-   IPosition istart,iend,istride,sliceshape;
+   casacore::Slicer tempslicer;
+   casacore::IPosition istart,iend,istride,sliceshape;
    TENslices_p.resize(0);
    TENslices_p.resize(nTens_p);
    TENRowColFlag_p.resize(0);
@@ -355,24 +355,24 @@ Int BasePlot::createTENS(Vector<String> &datastr)
    TENcolshapes_p.resize(nTens_p);
    isArrayCol_p.resize(nTens_p);
 
-   for(Int z=0;z<nTens_p;z++)
+   for(casacore::Int z=0;z<nTens_p;z++)
    {
       TENcolshapes_p[z] = colshapes[IndCnt_p[z]];
       isArrayCol_p[z] = isarraycol[IndCnt_p[z]];
       
       if( ! isArrayCol_p[z] ) // This is a Scalar column
       {
-         istart = IPosition(1,0);
-         iend = IPosition(1,0);
-         istride = IPosition(1,1);
+         istart = casacore::IPosition(1,0);
+         iend = casacore::IPosition(1,0);
+         istride = casacore::IPosition(1,1);
       
-         //tempslicer = Slicer();
-         tempslicer = Slicer(istart,iend,istride);
+         //tempslicer = casacore::Slicer();
+         tempslicer = casacore::Slicer(istart,iend,istride);
 #if LOG0 
          ostringstream os;
          os << " Scalar -> " << istart <<  " "  
             << iend <<  " " << istride;
-         log->out(os, fnname, clname, LogMessage::DEBUGGING);
+         log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
       }
       else 
@@ -380,14 +380,14 @@ Int BasePlot::createTENS(Vector<String> &datastr)
          //This is an array column and it makes sense to define a proper slice.
          sliceshape = ipslice_p[IndCnt_p[z]].inferShapeFromSource(
            TENcolshapes_p[z],istart,iend,istride);
-         // this is crazy... the Slicer documentation says that
+         // this is crazy... the casacore::Slicer documentation says that
          // the second param is the "end" but it treats it as "length" !!
-         tempslicer = Slicer(istart,sliceshape,istride);
+         tempslicer = casacore::Slicer(istart,sliceshape,istride);
 #if LOG0 
          ostringstream os;
          os << " Sliceshape -> " << istart <<  " "  
             << iend <<  " " << istride;
-         log->out(os, fnname, clname, LogMessage::DEBUGGING);
+         log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
       }
       
@@ -395,30 +395,30 @@ Int BasePlot::createTENS(Vector<String> &datastr)
 #if LOG0 
       ostringstream os;
       os << "z " << z << " slice" << TENslices_p[z];
-      log->out(os, fnname, clname, LogMessage::DEBUGGING);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
       // resize to an array of the shape defined by the slicer.
       TENRowColFlag_p[z].resize(TENslices_p[z].length().product());
-      TENRowColFlag_p[z].set(False);
+      TENRowColFlag_p[z].set(false);
    }
 
 #if LOG0 
-   log->out(String("Number of col slices : ") +
-            String::toString(colnames_p.nelements()),
-            fnname, clname, LogMessage::DEBUGGING);
+   log->out(casacore::String("Number of col slices : ") +
+            casacore::String::toString(colnames_p.nelements()),
+            fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
 
 #if LOG0 
    {
       ostringstream os;
       os << "Number of TENs : " << nTens_p;
-      log->out(os, fnname, clname, LogMessage::DEBUGGING);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
    }
 
    {
       ostringstream os;
       os << "IndCnt: " << IndCnt_p;
-      log->out(os, fnname, clname, LogMessage::DEBUGGING);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
    }
 #endif 
 
@@ -430,37 +430,37 @@ Int BasePlot::createTENS(Vector<String> &datastr)
 
 /*********************************************************************************/
 /* Extract data from the table */
-Int BasePlot::getData(Vector<String> &datastr, Int layer, 
+Int BasePlot::getData(casacore::Vector<casacore::String> &datastr, casacore::Int layer, 
      TPConvertBase* conv, TPGuiCallBackHooks* callbackhooks)
 {
    
   // cout << "getData: datastr=" << datastr << " layer=" << layer
   //      << " conv=" << conv << " callbackhooks=" << callbackhooks << endl;
    /******************* Check whether or not to re-read the data **************************/
-   String fnname ="getData";
+   casacore::String fnname ="getData";
 #if LOG2 
    log->FnEnter(fnname, clname);
 #endif 
    
    /* A bunch of debugging info. */
-   String msg;
+   casacore::String msg;
 #if LOG0 
-   msg = String(" BP layer: ")+String::toString( Layer_p)
-       + String(" input layer: ")+String::toString(layer);
-   log->out(msg, fnname, clname, LogMessage::DEBUGGING);
+   msg = casacore::String(" BP layer: ")+casacore::String::toString( Layer_p)
+       + casacore::String(" input layer: ")+casacore::String::toString(layer);
+   log->out(msg, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
 
 #if LOG0 
    ostringstream os;
    os << "BP DataStr: " << DataStr_p << " input datastr: " << datastr ;
-   log->out(os, fnname, clname, LogMessage::DEBUGGING);
+   log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
 
 #if LOG0 
-   msg = String("old layer=")+String::toString(Layer_p)
-       + String(", new layer=")+String::toString(layer)
-       + String(", table-touch=")+String::toString(TableTouch_p);
-   log->out(msg, fnname, clname, LogMessage::DEBUGGING);
+   msg = casacore::String("old layer=")+casacore::String::toString(Layer_p)
+       + casacore::String(", new layer=")+casacore::String::toString(layer)
+       + casacore::String(", table-touch=")+casacore::String::toString(TableTouch_p);
+   log->out(msg, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
 
    /* if different layer , just return */
@@ -469,17 +469,17 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
    else if(Layer_p != layer) {
 #if LOG0
       log->out("Not re-reading data (1).",
-             fnname, clname, LogMessage::NORMAL2);
+             fnname, clname, casacore::LogMessage::NORMAL2);
 #endif
    }
 
    
    /* if same layer, then check if datastr or table has changed. */
-   Int TQchange=1;
+   casacore::Int TQchange=1;
    if(DataStr_p.nelements() == datastr.nelements())
    {
       TQchange=0;
-      for(Int j=0;j<(Int)datastr.nelements();j++)
+      for(casacore::Int j=0;j<(casacore::Int)datastr.nelements();j++)
          if( !datastr[j].matches(DataStr_p[j]) ) TQchange=1;
    }
 
@@ -493,14 +493,14 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
    /* Do a dynamic cast. If it's the base class, then do NOT set TQchange=1 */
    
    //if(conv != NULL) TQchange = 1;
-   if(conv == NULL) BasePlotError(String("The convert function is null !"));
+   if(conv == NULL) BasePlotError(casacore::String("The convert function is null !"));
 #if LOG0
-   log->out(String("BP TQchange: ")+ String::toString(TQchange),
-            fnname, clname, LogMessage::DEBUGGING);
+   log->out(casacore::String("BP TQchange: ")+ casacore::String::toString(TQchange),
+            fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
    if(TQchange==0) { 
        log->out("Not re-reading data (2).", 
-           fnname, clname, LogMessage::NORMAL2);
+           fnname, clname, casacore::LogMessage::NORMAL2);
 
 #if LOG2
        log->FnExit(fnname, clname);
@@ -518,7 +518,7 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
    callbackhooks_p = callbackhooks;
    /******************************** Create TENs ******************************/
 #if LOG0
-   log->out("Create TENS ", fnname, clname, LogMessage::DEBUGGING);
+   log->out("Create TENS ", fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
    
    createTENS(DataStr_p);
@@ -526,10 +526,10 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
 #if LOG0
    {
       ostringstream os;
-      os << "Get Data into storage arrays. "
+      os << "Get casacore::Data into storage arrays. "
          << "SelTab_p=" << SelTab_p 
          << "DataStr_p=" << DataStr_p;
-      log->out(os, fnname, clname, LogMessage::DEBUGGING);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
    }
 #endif
    NRows_p = (SelTab_p).nrow();
@@ -538,16 +538,16 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
    /******************* Read only the first row and get shape information ******************/
    Yshape_p.resize(0);
    Xshape_p.resize(0);
-   //for( Int i=0;i<(Int)Yshape_p.nelements(); i++ )
+   //for( casacore::Int i=0;i<(casacore::Int)Yshape_p.nelements(); i++ )
    //{
-   //   Yshape_p[i] = IPosition();
-   //   Xshape_p[i] = IPosition();
+   //   Yshape_p[i] = casacore::IPosition();
+   //   Xshape_p[i] = casacore::IPosition();
    //}
    Yshape_p.resize(nTens_p);
    Xshape_p.resize(nTens_p);
    
    /* Setup the flagsum vector */
-   firsttime_p=True;
+   firsttime_p=true;
    flagsum_p.resize(SelTab_p.nrow(),nTens_p); 
    flagsum_p.set(0);
 
@@ -558,31 +558,31 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
    try
    {
       /// TODO - clean this up to one createMap call.
-      getYData(conv,True);  
+      getYData(conv,true);  
       createMap();
       //cout << "Ydata ------------fine-------" << endl;
-      getXData(conv,True);  
+      getXData(conv,true);  
       //cout << "Xdata ------------fine-------" << endl;
       createMap();
    }
-   catch(ArraySlicerError &x){
-      BasePlotError(String("Error in TaQL indices : ") + x.getMesg());
+   catch(casacore::ArraySlicerError &x){
+      BasePlotError(casacore::String("Error in TaQL indices : ") + x.getMesg());
    }
-   catch(AipsError &x){
-      BasePlotError(String("TaQL string Error : ") + x.getMesg());
+   catch(casacore::AipsError &x){
+      BasePlotError(casacore::String("TaQL string Error : ") + x.getMesg());
    }
    
-   log->out( String("Time to allocate mem : ")+ String::toString(tmr.all()),
-       fnname, clname, LogMessage::NORMAL5);
+   log->out( casacore::String("casacore::Time to allocate mem : ")+ casacore::String::toString(tmr.all()),
+       fnname, clname, casacore::LogMessage::NORMAL5);
 
    /* Check for shape. If the X axis is more than one, complain */
    /* If X shape is more than one, it needs to be the SAME as Y */
-   for(Int z=0;z<nTens_p;z++) 
+   for(casacore::Int z=0;z<nTens_p;z++) 
    {
       if(Xshape_p[z].product() > 1 && Xshape_p[z] != Yshape_p[z])
-         BasePlotError(String("X-axis TaQL should only result in a ") +
-                       String("Scalar, or must be exactly the same shape") +
-                       String("as the Y-axis TaQL."));
+         BasePlotError(casacore::String("X-axis TaQL should only result in a ") +
+                       casacore::String("Scalar, or must be exactly the same shape") +
+                       casacore::String("as the Y-axis TaQL."));
    }//end of for z
       
 #if LOG0 
@@ -593,14 +593,14 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
           << "\nMap_p : " << Map_p
           << "\nReductionType : " << ReductionType_p 
           << "\nNPlots : " << NPlots_p;
-      log->out(os, fnname, clname, LogMessage::DEBUG2);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
    }
 #endif 
 
-   /******************************** Extract Data from Table ***************************/
+   /******************************** Extract casacore::Data from casacore::Table ***************************/
 #if LOG0
    log->out("Extracting data using TEN ... ",
-           fnname, clname, LogMessage::DEBUGGING );
+           fnname, clname, casacore::LogMessage::DEBUGGING );
 #endif
    
 
@@ -608,8 +608,8 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
    
    try
    {
-      //ProgressMeter pm(1.0,(Double)NRows_p,"","","","",False,NRows_p/10);
-      //pm.update((Double)rc);
+      //casacore::ProgressMeter pm(1.0,(casacore::Double)NRows_p,"","","","",false,NRows_p/10);
+      //pm.update((casacore::Double)rc);
       
       if(NRows_p>0)
       {
@@ -618,8 +618,8 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
 #if LOG0 
          {
             ostringstream os;
-            os << "Time to extract X data : " << tmr.all() << endl;
-            log->out(os, fnname, clname, LogMessage::NORMAL5);
+            os << "casacore::Time to extract X data : " << tmr.all() << endl;
+            log->out(os, fnname, clname, casacore::LogMessage::NORMAL5);
          }
 #endif 
 
@@ -628,24 +628,24 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
 #if LOG0 
          {
             ostringstream os;
-            os << "Time to extract Y data : " << tmr.all() << endl; 
-            log->out(os, fnname, clname, LogMessage::NORMAL5);
+            os << "casacore::Time to extract Y data : " << tmr.all() << endl; 
+            log->out(os, fnname, clname, casacore::LogMessage::NORMAL5);
          }
 #endif 
 
 	 
          //tmr.mark();
-         //getFlags(True);
+         //getFlags(true);
          //{
          //   ostringstream os;
-         //   os << "Time to extract Flags : " << tmr.all(); 
-         //   log->out(os, fnname, clname, LogMessage::NORMAL4);
+         //   os << "casacore::Time to extract Flags : " << tmr.all(); 
+         //   log->out(os, fnname, clname, casacore::LogMessage::NORMAL4);
          //}
       }//end of for rc
    }
-   catch(AipsError &x)
+   catch(casacore::AipsError &x)
    {
-      BasePlotError(String("getData : ") + x.getMesg());
+      BasePlotError(casacore::String("getData : ") + x.getMesg());
    }
    
    
@@ -660,7 +660,7 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
 /* Compute averages. */
 /* Called from ::setPlotRange */
 /* All the unaveraged data and flags are ready by now */
-Int BasePlot::computeAverages(Int averagenrows)
+Int BasePlot::computeAverages(casacore::Int averagenrows)
 {
    // this is old time average roution. 
    // It is not used for chan-only
@@ -670,14 +670,14 @@ Int BasePlot::computeAverages(Int averagenrows)
    // keep this as-is, because it cost little with the
    // proper averagnrows flag 
    
-   IPosition yshp;
-   String fnname = "computeAverages";
+   casacore::IPosition yshp;
+   casacore::String fnname = "computeAverages";
    log->FnEnter(fnname, clname);
    /* Check if averaging needs to be done ! */
    if (averagenrows > 1 ) 
-      Average_p = True;
+      Average_p = true;
    else 
-      Average_p = False;
+      Average_p = false;
 
    /* If data is being averaged, compute various averages */
    if( Average_p )
@@ -685,7 +685,7 @@ Int BasePlot::computeAverages(Int averagenrows)
       tmr.mark();
 
       /* Compute the reduced number of rows */
-      Int remrows=0;
+      casacore::Int remrows=0;
       if( averagenrows >= NRows_p )
       {
          NAvgRows_p = 1;
@@ -700,47 +700,47 @@ Int BasePlot::computeAverages(Int averagenrows)
             NAvgRows_p += 1; // the end case.
       }
 
-      log->out(String("NAVGROWS : ") + String::toString(NAvgRows_p) + 
-               " and Rem : " + String::toString(remrows),
-               fnname, clname, LogMessage::DEBUG2);
+      log->out(casacore::String("NAVGROWS : ") + casacore::String::toString(NAvgRows_p) + 
+               " and Rem : " + casacore::String::toString(remrows),
+               fnname, clname, casacore::LogMessage::DEBUG2);
 
-      /* Record the unaveraged shapes.. */
+      /* casacore::Record the unaveraged shapes.. */
       yshp = yplotdata_p.shape();
 #if LOG0
       ostringstream os;
       os << "Current yshape : " << yshp;
-      log->out(os, fnname, clname, LogMessage::DEBUGGING);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
       
       if( yshp[1] != NRows_p ) 
-        BasePlotError(String("Internal Error in BasePlot::computeAverages"));
+        BasePlotError(casacore::String("Internal Error in BasePlot::computeAverages"));
       
       /* Resize all the avg data arrays - if not already the correct size ! */
-      if( NRows_p != (Int)avgindices_p.nelements() )   
+      if( NRows_p != (casacore::Int)avgindices_p.nelements() )   
          avgindices_p.resize(NRows_p);
-      if( NAvgRows_p != (Int)avgrowflags_p.nelements() || 
+      if( NAvgRows_p != (casacore::Int)avgrowflags_p.nelements() || 
           yshp[0] != (avgyplotdata_p.shape())[0] )
       {
 #if LOG0
-         log->out("about to resize", fnname, clname, LogMessage::DEBUGGING );
+         log->out("about to resize", fnname, clname, casacore::LogMessage::DEBUGGING );
 #endif
          avgyplotdata_p.resize(yshp[0],NAvgRows_p);
          avgtheflags_p.resize(yshp[0],NAvgRows_p);
          avgrowflags_p.resize(NAvgRows_p);
 #if LOG0
-         log->out("done with resize", fnname, clname, LogMessage::DEBUGGING );
+         log->out("done with resize", fnname, clname, casacore::LogMessage::DEBUGGING );
 #endif
          
-         Int avcount=0;
-         for(Int row=0; row<NRows_p-remrows; row+=averagenrows)
+         casacore::Int avcount=0;
+         for(casacore::Int row=0; row<NRows_p-remrows; row+=averagenrows)
          {
-            for(Int cnt=row; cnt<row+averagenrows; cnt++)
+            for(casacore::Int cnt=row; cnt<row+averagenrows; cnt++)
                avgindices_p[cnt] = avcount;
             avcount++;
          }
          if(remrows>0)
          {
-            for(Int row=NRows_p-remrows; row<NRows_p; row++)
+            for(casacore::Int row=NRows_p-remrows; row<NRows_p; row++)
                avgindices_p[row] = avcount;
          }
       }
@@ -750,24 +750,24 @@ Int BasePlot::computeAverages(Int averagenrows)
 
       /* Y values : fill in avgyplotdata_p, avgtheflags_p */
       /* Honour flags, while averaging the Y-data */
-      Bool tflag=True, avflag=True;
-      Double yval=0.0;
-                Int fcnt=0;
-      Int AvgCounter=0;
-      for(Int num=0; num<yshp[0]; num++)
+      casacore::Bool tflag=true, avflag=true;
+      casacore::Double yval=0.0;
+                casacore::Int fcnt=0;
+      casacore::Int AvgCounter=0;
+      for(casacore::Int num=0; num<yshp[0]; num++)
       {
          /* Fill in all complete averages */
          AvgCounter=0;
-         for(Int row=0; row<NRows_p-remrows; row+=averagenrows)
+         for(casacore::Int row=0; row<NRows_p-remrows; row+=averagenrows)
          {
             yval=0.0;
             avflag = ! showflags_p;
             fcnt = 0;
-            for(Int cnt=row; cnt<row+averagenrows; cnt++)
+            for(casacore::Int cnt=row; cnt<row+averagenrows; cnt++)
             {
                tflag = theflags_p(num,cnt);
 
-               if( showflags_p == False ) 
+               if( showflags_p == false ) 
                    avflag &= tflag;
                else 
                    avflag |= tflag;
@@ -787,7 +787,7 @@ Int BasePlot::computeAverages(Int averagenrows)
             AvgCounter++;
          }
          if(remrows>0 && AvgCounter+1 != NAvgRows_p) 
-            BasePlotError(String("Internal ERROR IN Counting NAvgRows."));
+            BasePlotError(casacore::String("Internal ERROR IN Counting NAvgRows."));
 
          /* Fill in the end value */
          if(remrows>0)
@@ -795,10 +795,10 @@ Int BasePlot::computeAverages(Int averagenrows)
             yval=0.0;
             avflag = ! showflags_p;
             fcnt = 0;
-            for(Int row=NRows_p-remrows; row<NRows_p; row++)
+            for(casacore::Int row=NRows_p-remrows; row<NRows_p; row++)
             {
                tflag = theflags_p(num,row);
-               if( showflags_p == False ) 
+               if( showflags_p == false ) 
                    avflag &= tflag;
                else 
                    avflag |= tflag;
@@ -819,19 +819,19 @@ Int BasePlot::computeAverages(Int averagenrows)
       
       /* Do the row-flags : avgrowflags_p */
       AvgCounter=0;
-      Bool rflag=True;
-      for(Int row=0; row<NRows_p-remrows; row+=averagenrows)
+      casacore::Bool rflag=true;
+      for(casacore::Int row=0; row<NRows_p-remrows; row+=averagenrows)
       {
-         rflag=True;
-         for(Int cnt=row; cnt<row+averagenrows; cnt++) 
+         rflag=true;
+         for(casacore::Int cnt=row; cnt<row+averagenrows; cnt++) 
              rflag &= rowflags_p(cnt);
          avgrowflags_p[AvgCounter] = rflag;
          AvgCounter++;
       }
       if(remrows>0)
       {
-         rflag=True;
-         for(Int row=NRows_p-remrows; row<NRows_p; row++)
+         rflag=true;
+         for(casacore::Int row=NRows_p-remrows; row<NRows_p; row++)
          {
             rflag &= rowflags_p[row]; 
          }
@@ -848,20 +848,20 @@ Int BasePlot::computeAverages(Int averagenrows)
             << "\n\tF : " << avgtheflags_p.shape()
             << "\n\tRF : " << avgrowflags_p.shape();
             //<< avgindices_p << endl;
-         log->out(os, fnname, clname, LogMessage::DEBUGGING);
+         log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
       }
 #endif
 
-      log->out(String("Time to compute Average : ")
-               + String::toString( tmr.all() ), 
-               fnname, clname, LogMessage::NORMAL5 );
+      log->out(casacore::String("casacore::Time to compute Average : ")
+               + casacore::String::toString( tmr.all() ), 
+               fnname, clname, casacore::LogMessage::NORMAL5 );
    }
    else
    {
       //cout << "Do not computer average-------------" << endl;
       /* Free up this memory if it is not going to be used. */
 #if LOG0
-      log->out("resizing to zero", fnname, clname, LogMessage::DEBUGGING);
+      log->out("resizing to zero", fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
       avgxplotdata_p.resize(0,0);
       avgyplotdata_p.resize(0,0);
@@ -876,41 +876,41 @@ Int BasePlot::computeAverages(Int averagenrows)
 }
 
 /*********************************************************************************/
-Int BasePlot::computeXAverages(Int averagenrows, Int remrows)
+Int BasePlot::computeXAverages(casacore::Int averagenrows, casacore::Int remrows)
 {
-   String fnname = "computeXAverages";
-   IPosition xshp;
+   casacore::String fnname = "computeXAverages";
+   casacore::IPosition xshp;
    
    xshp = xplotdata_p.shape();
    avgxplotdata_p.resize(xshp[0],NAvgRows_p);
-   Int AvgCounter=0;
+   casacore::Int AvgCounter=0;
    
    /* X values : fill in avgxplotdata_p */
-   Double xval=0.0;
-   for(Int num=0; num<xshp[0]; num++)
+   casacore::Double xval=0.0;
+   for(casacore::Int num=0; num<xshp[0]; num++)
    {
       /* Fill in all complete averages */
       AvgCounter=0;
-      for(Int row=0; row<NRows_p-remrows; row+=averagenrows)
+      for(casacore::Int row=0; row<NRows_p-remrows; row+=averagenrows)
       {
          xval=0.0;
-         for(Int cnt=row; cnt<row+averagenrows; cnt++)
+         for(casacore::Int cnt=row; cnt<row+averagenrows; cnt++)
             xval += xplotdata_p(num,cnt);
          avgxplotdata_p(num,AvgCounter) = xval/averagenrows;
          AvgCounter++;
       }
       if(remrows>0 && AvgCounter+1 != NAvgRows_p) 
-         BasePlotError(String("Internal ERROR IN Counting NAvgRows."));
+         BasePlotError(casacore::String("Internal ERROR IN Counting NAvgRows."));
 #if LOG0
-      log->out(String("Rem Rows : ") +String::toString(remrows), 
-            fnname, clname, LogMessage::DEBUGGING);
+      log->out(casacore::String("Rem Rows : ") +casacore::String::toString(remrows), 
+            fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
       
       /* Fill in the end value */
       if(remrows>0)
       {
          xval=0.0;
-         for(Int row=NRows_p-remrows; row<NRows_p; row++)
+         for(casacore::Int row=NRows_p-remrows; row<NRows_p; row++)
             xval += xplotdata_p(num,row);
          avgxplotdata_p(num,AvgCounter) = xval/(remrows);
       }
@@ -924,7 +924,7 @@ Int BasePlot::computeXAverages(Int averagenrows, Int remrows)
 Int BasePlot::createMap()
 {
    //cout << "createMap----------------" << endl;
-   String fnname = "createMap";
+   casacore::String fnname = "createMap";
 #if LOG2
    log->FnEnter(fnname, clname);
 #endif 
@@ -939,27 +939,27 @@ Int BasePlot::createMap()
       Col 4 : yplotdata col index
    */
 #if LOG0
-   log->out("Filling in Map_p", fnname, clname, LogMessage::DEBUGGING);
+   log->out("Filling in Map_p", fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
    
    Map_p.resize(NPlots_p,5);
-   Int xptr=0,yptr=0;
-   IPosition fshp, istart, iend,istride;
+   casacore::Int xptr=0,yptr=0;
+   casacore::IPosition fshp, istart, iend,istride;
    
    ReductionType_p.resize(nTens_p);
-   for(Int z=0;z<nTens_p;z++) 
+   for(casacore::Int z=0;z<nTens_p;z++) 
    {
       /* Figure out the type of reduction - for each TEN */
-      IPosition fshp = TENslices_p[z].length();
+      casacore::IPosition fshp = TENslices_p[z].length();
 #if LOG0 
       ostringstream os;
       os  << "SLICE SHAPE=" << fshp
           << "\nYDATA SHAPE=" << Yshape_p[z]
           << "\nIsArrayCol=" << isArrayCol_p[z] << endl; 
-      log->out(os, fnname, clname, LogMessage::DEBUG2);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
 #endif 
 
-      Int nrow=0,ncol=0;
+      casacore::Int nrow=0,ncol=0;
       if( (! isArrayCol_p[z]) || 
           (fshp.nelements() == Yshape_p[z].nelements() && 
            fshp == Yshape_p[z])) {
@@ -998,7 +998,7 @@ Int BasePlot::createMap()
 
       /* Fill up Map_p for this TEN */
       /* Use fortran ordering for the row,col indices... 
-         to make it compatible with Array 
+         to make it compatible with casacore::Array 
       */
 #if LOG0 
       {
@@ -1006,12 +1006,12 @@ Int BasePlot::createMap()
          os << "z=" << z << " Xshape=" << Xshape_p[z] 
             << " Yshape=" << Yshape_p[z] 
             << " ReductionType=" << ReductionType_p[z] << endl;
-         log->out(os, fnname, clname, LogMessage::DEBUG2);
+         log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
       }
 #endif 
                 
-      for(Int col=0;col<ncol;col++)
-      for(Int row=0;row<nrow;row++)
+      for(casacore::Int col=0;col<ncol;col++)
+      for(casacore::Int row=0;row<nrow;row++)
       { 
          Map_p(yptr,0) = (Xshape_p[z].product() > 1 && 
                           Xshape_p[z] == Yshape_p[z]) ? yptr : xptr;  
@@ -1029,7 +1029,7 @@ Int BasePlot::createMap()
    }//end of for z
    if(yptr != NPlots_p) 
        log->out("Wrong number of NPlots !!!", 
-                fnname, clname, LogMessage::WARN );
+                fnname, clname, casacore::LogMessage::WARN );
 
    //cout << "Map_p : " << Map_p << endl;
    
@@ -1044,17 +1044,17 @@ Int BasePlot::createMap()
 /*********************************************************************************/
 
 /* Read in marked flag regions */
-Int BasePlot::convertCoords(Vector<Vector<Double> > &flagmarks)
+Int BasePlot::convertCoords(casacore::Vector<Vector<casacore::Double> > &flagmarks)
 {
-   String fnname = "convertCoords";
+   casacore::String fnname = "convertCoords";
 #if LOG0 
    log->FnEnter(fnname, clname);
 #endif 
    
    nflagmarks_p = flagmarks.nelements();
-   log->out(String( "BP :: nflagmarks_p : " ) + 
-            String::toString(nflagmarks_p), 
-            fnname, clname, LogMessage::DEBUG2);
+   log->out(casacore::String( "BP :: nflagmarks_p : " ) + 
+            casacore::String::toString(nflagmarks_p), 
+            fnname, clname, casacore::LogMessage::DEBUG2);
    
    // record to a history list somewhere here before destroying...
    locflagmarks_p.resize(flagmarks.nelements());
@@ -1064,9 +1064,9 @@ Int BasePlot::convertCoords(Vector<Vector<Double> > &flagmarks)
 #if LOG0
    //locflagmarks_p[llcx, llcy, urcx, urcy]
    ostringstream os;
-   for(Int i=0;i<nflagmarks_p;i++)
+   for(casacore::Int i=0;i<nflagmarks_p;i++)
       os << locflagmarks_p[i] << " ";
-   log->out(os, fnname, clname, LogMessage::DEBUG2);
+   log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
    // change units of locflagmarks_p, if any units changes were 
    //used while plotting..
@@ -1078,10 +1078,10 @@ Int BasePlot::convertCoords(Vector<Vector<Double> > &flagmarks)
 
 /*********************************************************************************/
 /* Read in marked flag regions */
-// direction = 1 : True : flag
-// direction = 0 : False : unflag
-Int BasePlot::updateFlagHistory(Vector<Vector<Double> > &flagmarks, 
-         Int &direction, Int &numflags)
+// direction = 1 : true : flag
+// direction = 0 : false : unflag
+Int BasePlot::updateFlagHistory(casacore::Vector<Vector<casacore::Double> > &flagmarks, 
+         casacore::Int &direction, casacore::Int &numflags)
 {
    flagmarks.resize(0);
    flagmarks = locflagmarks_p;
@@ -1096,9 +1096,9 @@ Int BasePlot::updateFlagHistory(Vector<Vector<Double> > &flagmarks,
 
 /*********************************************************************************/
 /*********************************************************************************/
-Bool BasePlot::selectedPoint(Int np,Int nr)
+Bool BasePlot::selectedPoint(casacore::Int np,casacore::Int nr)
 {
-   static Double xvalue=0.0, yvalue=0.0;
+   static casacore::Double xvalue=0.0, yvalue=0.0;
    //cout << "X,Y" << xplotdata_p(Map_p(np,0),nr) << "," 
    //     << yplotdata_p(Map_p(np,1),nr) << endl;
    //for(int nf=0;nf<nflagmarks_p;nf++) 
@@ -1124,23 +1124,23 @@ Bool BasePlot::selectedPoint(Int np,Int nr)
          yvalue >= (locflagmarks_p[nf])[2] && 
          yvalue <= (locflagmarks_p[nf])[3]) 
       {
-         return True;
+         return true;
       }
    }
 
-   return False;
+   return false;
 }
 /*********************************************************************************/
 //// make this also use fv. - then delete this fn.
 Int BasePlot::clearFlags()
 {
-   String fnname = "clearFlags";
+   casacore::String fnname = "clearFlags";
 #if LOG0
    log->FnEnter(fnname, clname);
 #endif
    
-   Array<Bool> flagcol;
-   Vector<Bool> rflagcol;
+   casacore::Array<casacore::Bool> flagcol;
+   casacore::Vector<casacore::Bool> rflagcol;
    
    if(fcol_p)
    {
@@ -1156,8 +1156,8 @@ Int BasePlot::clearFlags()
       flagcol = (Flags_p.getColumn());  
       ostringstream os;
       os << "flagcol shape : " << flagcol.shape();
-      log->out(os, fnname, clname, LogMessage::DEBUGGING);
-      flagcol = False;
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
+      flagcol = false;
       Flags_p.putColumn(flagcol);
    }
    
@@ -1166,15 +1166,15 @@ Int BasePlot::clearFlags()
       rflagcol = RowFlags_p.getColumn();
       ostringstream os;
       os << "rflagcol length : " << rflagcol.nelements();
-      log->out(os, fnname, clname, LogMessage::DEBUGGING);
-      rflagcol = False;
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
+      rflagcol = false;
       RowFlags_p.putColumn(rflagcol);
    }
       
    SelTab_p.flush();
-   theflags_p.set(False);
+   theflags_p.set(false);
 
-   log->out("All Flags Cleared !!", fnname, clname, LogMessage::DEBUGGING);
+   log->out("All Flags Cleared !!", fnname, clname, casacore::LogMessage::DEBUGGING);
 #if LOG0
    log->FnExit(fnname, clname);
 #endif
@@ -1187,12 +1187,12 @@ Int BasePlot::clearFlags()
 /*********************************************************************************/
 /*********************************************************************************/
 /* Compute the combined plot range */
-Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin, 
-     Double &ymax, Bool showflags, Bool columnsxaxis, String flagversion, 
-     Int averagenrows, String connectpoints, Bool doscalingcorrection, 
-     String multicolour, Bool honourxflags)
+Int BasePlot::setPlotRange(casacore::Double &xmin, casacore::Double &xmax, casacore::Double &ymin, 
+     casacore::Double &ymax, casacore::Bool showflags, casacore::Bool columnsxaxis, casacore::String flagversion, 
+     casacore::Int averagenrows, casacore::String connectpoints, casacore::Bool doscalingcorrection, 
+     casacore::String multicolour, casacore::Bool honourxflags)
 {
-   String fnname = "setPlotRange";
+   casacore::String fnname = "setPlotRange";
 #if LOG0
    log->FnEnter(fnname + "(xmin, xmax, ymin, ...)", clname);
 #endif
@@ -1200,13 +1200,13 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
    //cout << "flagversion=" << flagversion << endl;
   // cout << "BasePlot::setPlotRange" << endl;
 
-   Matrix<Double> xprange_p, yprange_p;
+   casacore::Matrix<casacore::Double> xprange_p, yprange_p;
    xprange_p.resize(NPlots_p,2);
    yprange_p.resize(NPlots_p,2);
-   Double xvalue=0.0, yvalue=0.0;
-   Bool flag=False, rflag=False;
+   casacore::Double xvalue=0.0, yvalue=0.0;
+   casacore::Bool flag=false, rflag=false;
 
-   /* Record the showflags state */
+   /* casacore::Record the showflags state */
    showflags_p = showflags;
    doscalingcorrection_p = doscalingcorrection;
    multicolour_p = multicolour;
@@ -1214,9 +1214,9 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
         /* Update Map_p(xxx,5) for plot colour to use, 
            depending on multicolour setting */
         /*
-        Int base=0,addon=0;
+        casacore::Int base=0,addon=0;
         Map_p(0,5)=0;
-        for(Int i=1;i<NPlots_p;i++)
+        for(casacore::Int i=1;i<NPlots_p;i++)
         {
              if(Map_p(i,2)-1 == Map_p(i-1,2)) base = addon+1; 
              // Increment to next TaQL
@@ -1233,7 +1233,7 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
              addon = MAX(addon,Map_p(i,5));
         }
 
-        *os << LogIO::DEBUGGING << Map_p << LogIO::POST
+        *os << casacore::LogIO::DEBUGGING << Map_p << casacore::LogIO::POST
         */
 
    /* Reset the plot ranges */
@@ -1248,8 +1248,8 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
    /* Update the flag version ! */
    tmr.mark();
    getFlags(flagversion, showflags);
-   log->out(String("time to getFlags") + String::toString(tmr.all()) 
-            + " sec.", fnname, clname, LogMessage::DEBUGGING);
+   log->out(casacore::String("time to getFlags") + casacore::String::toString(tmr.all()) 
+            + " sec.", fnname, clname, casacore::LogMessage::DEBUGGING);
 
    /* Update the averages. 
       This function knows when it should be a no-op */
@@ -1257,8 +1257,8 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
 
 
    /* compute min and max for each Plot */
-   Bool choosepoint=False;
-   Int NR=0;
+   casacore::Bool choosepoint=false;
+   casacore::Int NR=0;
    for(int i=0;i<NPlots_p;i++)
    {
       if( ! Average_p ) 
@@ -1271,7 +1271,7 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
       //cout << " NR=" << NR << endl;
       for(int rc=0;rc<NR;rc++)
       {
-         choosepoint = False;
+         choosepoint = false;
          
          if( ! Average_p )
          {
@@ -1288,13 +1288,13 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
             rflag = avgrowflags_p[rc];
          }
          
-         if(showflags == False) {
-            if ((flag == False) && (rflag == False)) 
-               choosepoint = True;
+         if(showflags == false) {
+            if ((flag == false) && (rflag == false)) 
+               choosepoint = true;
          }
          else {
-            if ((flag == True) || (rflag == True)) 
-               choosepoint = True;
+            if ((flag == true) || (rflag == true)) 
+               choosepoint = true;
          }
             
          if(choosepoint) {
@@ -1341,7 +1341,7 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
    os << "BasePlot::setPlotRange=== Ranges : [" 
         << std::setprecision(12) << xmin << "," 
        << xmax << "] [" << ymin << "," << ymax << "]" << endl;
-   log->out(os, fnname, clname, LogMessage::DEBUG2);
+   log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
 
 #if LOG0
    log->FnExit(fnname, clname);
@@ -1349,7 +1349,7 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
    return 0;
 }
 /*********************************************************************************/
-Double BasePlot::getXVal(Int pnum, Int col)
+Double BasePlot::getXVal(casacore::Int pnum, casacore::Int col)
 {
    if( ! Average_p ) { 
        //cout << "xval=" << std::setprecision(12) 
@@ -1362,7 +1362,7 @@ Double BasePlot::getXVal(Int pnum, Int col)
 
 /*********************************************************************************/
 
-Double BasePlot::getYVal(Int pnum, Int col)
+Double BasePlot::getYVal(casacore::Int pnum, casacore::Int col)
 {
    if( ! Average_p ) {
        //cout << "yval=" << std::setprecision(12) 
@@ -1375,7 +1375,7 @@ Double BasePlot::getYVal(Int pnum, Int col)
 
 /*********************************************************************************/
 /* col means row here ! */
-Bool BasePlot::getYFlags(Int pnum, Int col)
+Bool BasePlot::getYFlags(casacore::Int pnum, casacore::Int col)
 {
    //cout << "Average_p" << Average_p << endl;
    //cout << "col=" << col << " rowflag=" << rowflags_p[col] << endl;
@@ -1387,7 +1387,7 @@ Bool BasePlot::getYFlags(Int pnum, Int col)
 
 /*********************************************************************************/
 
-Int BasePlot::getColourAddOn(Int pnum)
+Int BasePlot::getColourAddOn(casacore::Int pnum)
 {
    if(multicolour_p.matches("both")) 
        return pnum;
@@ -1428,9 +1428,9 @@ Int BasePlot::getPlotType()
 
 /*********************************************************************************/
 
-Vector<String> BasePlot::getBasePlotInfo()
+Vector<casacore::String> BasePlot::getBasePlotInfo()
 {
-   Vector<String> dat(DataStr_p.nelements()+2);
+   casacore::Vector<casacore::String> dat(DataStr_p.nelements()+2);
    if(rootTabName_p.length()==0) 
        dat[0] = SelTab_p.tableName();
    else 
@@ -1438,7 +1438,7 @@ Vector<String> BasePlot::getBasePlotInfo()
 
    dat[1] = tabSelString_p;
    
-   for(Int i=2;i<(Int)dat.nelements();i++)
+   for(casacore::Int i=2;i<(casacore::Int)dat.nelements();i++)
       dat[i] = DataStr_p[i-2];
    
    return dat;
@@ -1452,10 +1452,10 @@ Vector<String> BasePlot::getBasePlotInfo()
 /* Note that this IGNORES flags.... the selected points are not just 
    unflagged ones.  If this is to be put in, combine the rowcount++ 
    with a check on theflags_p */
-Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info, 
-        Vector<String> &cpol)
+Int BasePlot::locateData(casacore::Vector<casacore::String> collist, casacore::Matrix<casacore::Double> &info, 
+        casacore::Vector<casacore::String> &cpol)
 {
-   String fnname = "locateData";
+   casacore::String fnname = "locateData";
    {
 #if LOG0
       ostringstream os;
@@ -1466,14 +1466,14 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    }
    /* Number of columns +2 (for row number and number of selected 
       points in this row ) */
-   Int ncoll = collist.nelements();
+   casacore::Int ncoll = collist.nelements();
 
-   Int maxlen = NRows_p;
+   casacore::Int maxlen = NRows_p;
 
    numflagpoints_p = 0;
    
    /* Initialize to full size.... - resize back later... */
-   info.resize(IPosition(2, ncoll, maxlen));
+   info.resize(casacore::IPosition(2, ncoll, maxlen));
    info = 0.0;
    cpol.resize(maxlen);
    
@@ -1481,56 +1481,56 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    
    /* Create TENs for each column - so that expressions will 
       also work.. for selected rows */
-   Vector<TableExprNode> ctens;
+   casacore::Vector<casacore::TableExprNode> ctens;
    ctens.resize(ncoll-2);
 
 #if LOG0
-   log->out("Create TENS", fnname, clname, LogMessage::DEBUG2);
+   log->out("Create TENS", fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
 
    /* Create TENS */
-   for(Int i=0;i<ncoll-2;i++) 
+   for(casacore::Int i=0;i<ncoll-2;i++) 
    {
       try
       {
-         ctens[i] = RecordGram::parse(SelTab_p, collist[i+2]);
+         ctens[i] = casacore::RecordGram::parse(SelTab_p, collist[i+2]);
       }
-      catch (AipsError x)
+      catch (casacore::AipsError x)
       {
 #if LOG0
          ostringstream os;
          os << " Column expression " << collist[i+2] << " isn't okay ";
-         log->out(os, fnname, clname, LogMessage::SEVERE);
+         log->out(os, fnname, clname, casacore::LogMessage::SEVERE);
 #endif
          BasePlotError(x.getMesg());
       }
       
       /* Check shape of column */
       if(!ctens[i].isScalar()) 
-         BasePlotError(String("Need Scaler column for ") + collist[i+2]);
+         BasePlotError(casacore::String("Need Scaler column for ") + collist[i+2]);
       
       /* Check datatype of column */
       if((ctens[i].dataType() != TpDouble) && (ctens[i].dataType() != TpInt)) 
-            BasePlotError(String("Need Double or TpInt, and not ") + 
-                     ctens[i].dataType() + String(" for ") + collist[i+2]);
+            BasePlotError(casacore::String("Need casacore::Double or TpInt, and not ") + 
+                     ctens[i].dataType() + casacore::String(" for ") + collist[i+2]);
          
    }// for ncoll-2
 
    /**********************************/
-   Matrix<String> Lind = getLocateIndices();
+   casacore::Matrix<casacore::String> Lind = getLocateIndices();
    //cout << "Lind=" << Lind << endl;
 
    log->out("Now start looking at the data", 
-            fnname, clname, LogMessage::DEBUG2);
+            fnname, clname, casacore::LogMessage::DEBUG2);
    
-   Int nselrows=0;
-   Double tmpval=0.0;
-   Bool okay=False;
+   casacore::Int nselrows=0;
+   casacore::Double tmpval=0.0;
+   casacore::Bool okay=false;
    
 #if LOG0
-   log->out(String("NRows=") + String::toString(NRows_p) +
-            String(" NPlots=") + String::toString(NPlots_p),
-            fnname, clname, LogMessage::DEBUG2);
+   log->out(casacore::String("NRows=") + casacore::String::toString(NRows_p) +
+            casacore::String(" NPlots=") + casacore::String::toString(NPlots_p),
+            fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
 
    if(nflagmarks_p>0)
@@ -1538,26 +1538,26 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
       for(int nr=0;nr<NRows_p;nr++)
       {
 
-         cpol(nselrows) = String("");
+         cpol(nselrows) = casacore::String("");
 
          /* Find out the number of selected points in this row */
-         Int rowcount=0;
+         casacore::Int rowcount=0;
          for(int np=0; np < NPlots_p; np++) {
             /* np ---> ten,chan,pol 
                fslice from ten - read the start,end,stride
                count with chan,pol into start,end,stride
                to get actual chan and pol */
                 
-            okay = False;
-            if(showflags_p == False) {
-               if ((theflags_p(Map_p(np, 1), nr) == False) && 
-                   (rowflags_p[nr] == False) ) 
-                  okay = True;
+            okay = false;
+            if(showflags_p == false) {
+               if ((theflags_p(Map_p(np, 1), nr) == false) && 
+                   (rowflags_p[nr] == false) ) 
+                  okay = true;
             }
             else {
-               if ((theflags_p(Map_p(np, 1), nr) == True) || 
-                   (rowflags_p[nr] == True) ) 
-                  okay = True;
+               if ((theflags_p(Map_p(np, 1), nr) == true) || 
+                   (rowflags_p[nr] == true) ) 
+                  okay = true;
             }
    
             //if(selectedPoint(np,nr) &&  !theflags_p(Map_p(np,1),nr) && 
@@ -1565,11 +1565,11 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
             if(okay && selectedPoint(np, nr))
             {   
                rowcount++;
-               cpol[nselrows] += String("[") +
+               cpol[nselrows] += casacore::String("[") +
                   Lind(np, 0) +
-                  String(",") + 
+                  casacore::String(",") + 
                   Lind(np, 1) +
-                  String("] ");
+                  casacore::String("] ");
                numflagpoints_p++;
             }
          }
@@ -1579,9 +1579,9 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
          if(rowcount > 0)
          {
 #if LOG0
-            log->out(String("nselrows=") + String::toString(nselrows) +
-                " nr=" + String::toString(nr),
-                fnname, clname, LogMessage::DEBUG2);
+            log->out(casacore::String("nselrows=") + casacore::String::toString(nselrows) +
+                " nr=" + casacore::String::toString(nr),
+                fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
             /* Number of points into first column */
             info(0, nselrows) = nr;
@@ -1590,18 +1590,18 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
 #if LOG0
             ostringstream os;
             os  << "rowcount : " << info(nselrows, 1);
-            log->out(os, fnname, clname, LogMessage::DEBUG2);
+            log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
    
             /* Look into the table at row 'nr' and fill in the user columns */
-            for(Int i=2; i< ncoll; i++) 
+            for(casacore::Int i=2; i< ncoll; i++) 
             {
                ctens[i-2].get(nr, tmpval);
                info(i, nselrows) = tmpval;
 #if LOG0               
                ostringstream os;
                os << collist[i] << " : " << info(i, nselrows); 
-               log->out(os, fnname, clname, LogMessage::DEBUG2);
+               log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
             }
 
@@ -1613,19 +1613,19 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    
     /******************************/
 #if LOG0   
-   log->out( "Done", fnname, clname, LogMessage::DEBUG2);
+   log->out( "Done", fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
 
    /* Resize to actually used size... */
 
-   info.resize(IPosition(2,ncoll,nselrows),True);
-   cpol.resize(nselrows, True);
+   info.resize(casacore::IPosition(2,ncoll,nselrows),true);
+   cpol.resize(nselrows, true);
 
 #if LOG0
    {
       ostringstream os;
       os << "setlect flag candidate:\n" << cpol;
-      log->out(os, fnname, clname, LogMessage::DEBUG2);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
    }
 #endif
 
@@ -1633,7 +1633,7 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    {
       ostringstream os;
       os << info;
-      log->out(os, fnname, clname, LogMessage::DEBUG2);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
    }
 #endif
 
@@ -1649,11 +1649,11 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
 /* Note that this IGNORES flags.... the selected points are not just 
    unflagged ones.  If this is to be put in, combine the rowcount++ 
    with a check on theflags_p */
-Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info, 
-        Vector<String> &cpol, 
-        Matrix<Int>& rmap, Matrix<Int>& cmap)
+Int BasePlot::locateData(casacore::Vector<casacore::String> collist, casacore::Matrix<casacore::Double> &info, 
+        casacore::Vector<casacore::String> &cpol, 
+        casacore::Matrix<casacore::Int>& rmap, casacore::Matrix<casacore::Int>& cmap)
 {
-   String fnname = "locateData";
+   casacore::String fnname = "locateData";
 #if LOG0
    {
       log->FnEnter(fnname + "(collist, info, cpol, cmap)", clname);
@@ -1664,20 +1664,20 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
          << " cpol=" << cpol 
          << " rmap=" << rmap 
          << " cmap=" << cmap ;
-      log->out(os, fnname, clname, LogMessage::DEBUG2);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
    }
 #endif
 
    /* Number of columns +2 (for row number and number of 
       selected points in this row ) */
-   Int ncoll = collist.nelements();
-   Int maxlen = NRows_p;
+   casacore::Int ncoll = collist.nelements();
+   casacore::Int maxlen = NRows_p;
    
 #if LOG0
    {
       ostringstream os;
       os << "ncoll=" << ncoll << " NRows_p=" << NRows_p << endl;
-      log->out(os, fnname, clname, LogMessage::DEBUG2);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
    }
 #endif
   
@@ -1685,7 +1685,7 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    numflagpoints_p = 0;
    
    /* Initialize to full size.... - resize back later... */
-   info.resize(IPosition(2, ncoll, maxlen));
+   info.resize(casacore::IPosition(2, ncoll, maxlen));
    info = 0.0;
    cpol.resize(maxlen);
    
@@ -1693,56 +1693,56 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    
    /* Create TENs for each column - so that expressions will 
       also work.. for selected rows */
-   Vector<TableExprNode> ctens;
+   casacore::Vector<casacore::TableExprNode> ctens;
    ctens.resize(ncoll-2);
 
 #if LOG0
-   log->out("Create TENS", fnname, clname, LogMessage::DEBUG2);
+   log->out("Create TENS", fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
 
    //cout << "SelTab_p=" << SelTab_p
    //     << " name=" << SelTab_p.tableName() << endl;
 
    /* Create TENS */
-   for(Int i=0;i<ncoll-2;i++) 
+   for(casacore::Int i=0;i<ncoll-2;i++) 
    {
       try
       {
-         ctens[i] = RecordGram::parse(SelTab_p, collist[i+2]);
+         ctens[i] = casacore::RecordGram::parse(SelTab_p, collist[i+2]);
       }
-      catch (AipsError x)
+      catch (casacore::AipsError x)
       {
 #if LOG0
          ostringstream os;
          os << " Column expression " << collist[i+2] << " isn't okay ";
-         log->out(os, fnname, clname, LogMessage::SEVERE);
+         log->out(os, fnname, clname, casacore::LogMessage::SEVERE);
 #endif
          BasePlotError(x.getMesg());
       }
       
       /* Check shape of column */
       if (!ctens[i].isScalar()) 
-         BasePlotError(String("Need Scaler column for ") + collist[i+2]);
+         BasePlotError(casacore::String("Need Scaler column for ") + collist[i+2]);
       
       /* Check datatype of column */
       if ((ctens[i].dataType() != TpInt) &&
           (ctens[i].dataType() != TpDouble)) 
-         BasePlotError(String("Need Double or TpInt, and not ") + 
-                  ctens[i].dataType() + String(" for ") + collist[i+2]);
+         BasePlotError(casacore::String("Need casacore::Double or TpInt, and not ") + 
+                  ctens[i].dataType() + casacore::String(" for ") + collist[i+2]);
          
    }// for ncoll-2
 
    /**********************************/
-   //Matrix<String> Lind = getLocateIndices(cmap);
+   //casacore::Matrix<casacore::String> Lind = getLocateIndices(cmap);
    //cout << "Lind=" << Lind << endl;
 
-   IPosition istart;
-   IPosition iend;
-   IPosition istride;
-   Slicer fslice;
-   Matrix<Int> polids(NPlots_p, 2);
+   casacore::IPosition istart;
+   casacore::IPosition iend;
+   casacore::IPosition istride;
+   casacore::Slicer fslice;
+   casacore::Matrix<casacore::Int> polids(NPlots_p, 2);
    //cout << "nTens_p=" << nTens_p << endl;
-   Int polCnt = 0;
+   casacore::Int polCnt = 0;
    polids = 0;
    for (int z=0;z<nTens_p;z++) {
       if (isArrayCol_p[z]) {
@@ -1750,8 +1750,8 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
          istart = fslice.start();
          iend = fslice.end();
          istride = fslice.stride();
-         for (Int l = istart[1]; l <= iend[1]; l += istride[1]) {
-            for (Int k = istart[0]; k <= iend[0]; k += istride[0]) {
+         for (casacore::Int l = istart[1]; l <= iend[1]; l += istride[1]) {
+            for (casacore::Int k = istart[0]; k <= iend[0]; k += istride[0]) {
                if (polCnt < NPlots_p) {
                    polids(polCnt, 0) = k;
                    polids(polCnt, 1) = l;
@@ -1764,45 +1764,45 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    //cout << "polCnt=" << polCnt << " polids=" << polids << endl;
 
    log->out("Now start looking at the data", 
-            fnname, clname, LogMessage::DEBUG2);
+            fnname, clname, casacore::LogMessage::DEBUG2);
    
-   Int nselrows=0;
-   Double tmpval=0.0;
-   Bool okay=False;
+   casacore::Int nselrows=0;
+   casacore::Double tmpval=0.0;
+   casacore::Bool okay=false;
    
 #if LOG0
-   log->out(String("NRows=") + String::toString(NRows_p) +
-            String(" NPlots=") + String::toString(NPlots_p),
-            fnname, clname, LogMessage::DEBUG2);
+   log->out(casacore::String("NRows=") + casacore::String::toString(NRows_p) +
+            casacore::String(" NPlots=") + casacore::String::toString(NPlots_p),
+            fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
 
    if(nflagmarks_p>0)
    {
       for(int nr=0;nr<NRows_p;nr++)
       {
-         cpol(nselrows) = String("");
+         cpol(nselrows) = casacore::String("");
 
          /* Find out the number of selected points in this row */
-         Int rowcount=0;
+         casacore::Int rowcount=0;
          for(int np=0; np < NPlots_p; np++) {
             /* np ---> ten,chan,pol 
                fslice from ten - read the start,end,stride
                count with chan,pol into start,end,stride
                to get actual chan and pol */
                 
-            okay = False;
-            if(showflags_p == False) {
-               if ((theflags_p(Map_p(np, 1), nr) == False) && 
-                   (rowflags_p[nr] == False) ) 
-                  okay = True;
+            okay = false;
+            if(showflags_p == false) {
+               if ((theflags_p(Map_p(np, 1), nr) == false) && 
+                   (rowflags_p[nr] == false) ) 
+                  okay = true;
             }
             else {
-               if ((theflags_p(Map_p(np, 1), nr) == True) || 
-                   (rowflags_p[nr] == True) ) 
-                  okay = True;
+               if ((theflags_p(Map_p(np, 1), nr) == true) || 
+                   (rowflags_p[nr] == true) ) 
+                  okay = true;
             }
    
-            Int rowCnt = rmap.nrow();
+            casacore::Int rowCnt = rmap.nrow();
 
             //if(selectedPoint(np,nr) &&  !theflags_p(Map_p(np,1),nr) && 
             //                 !rowflags_p[nr])
@@ -1813,8 +1813,8 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
                //np is the (nAvePol * aveChanId) count 0, 1, ...
                //nr is the aved row count
                //cout << "np=" << np << " nr=" << nr;
-               Int sp = 0;
-               for (Int s = 0; s < rowCnt; s++) {
+               casacore::Int sp = 0;
+               for (casacore::Int s = 0; s < rowCnt; s++) {
                   if (rmap(s, 0) == nr) {
                      sp = rmap(s, 2);
                      break;
@@ -1822,25 +1822,25 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
                }
                //cout << " sp=" << sp << endl;
 
-               for (Int t = 0; t < Int(cmap.nrow()); t++) {
+               for (casacore::Int t = 0; t < casacore::Int(cmap.nrow()); t++) {
                   if (sp == cmap(t, 4) && polids(np, 1) == cmap(t, 3)) {
-                     cpol[nselrows] += String("[") +
-                           String::toString(polids(np, 0)) +
-                           String(",") +
-                           String::toString(cmap(t, 0)) +
-                           String(":") +
-                           String::toString(cmap(t, 1)) +
-                           String(":") +
-                           String::toString(cmap(t, 2)) +
-                           String("]"); 
+                     cpol[nselrows] += casacore::String("[") +
+                           casacore::String::toString(polids(np, 0)) +
+                           casacore::String(",") +
+                           casacore::String::toString(cmap(t, 0)) +
+                           casacore::String(":") +
+                           casacore::String::toString(cmap(t, 1)) +
+                           casacore::String(":") +
+                           casacore::String::toString(cmap(t, 2)) +
+                           casacore::String("]"); 
                   } 
                }
 
-               //cpol[nselrows] += String("[") +
+               //cpol[nselrows] += casacore::String("[") +
                //   Lind(np, 0) +
-               //   String(",") + 
+               //   casacore::String(",") + 
                //   Lind(np, 1) +
-               //   String("] ");
+               //   casacore::String("] ");
                numflagpoints_p++;
             }
          }
@@ -1851,9 +1851,9 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
          if(rowcount > 0)
          {
 #if LOG0
-            log->out(String("nselrows=") + String::toString(nselrows) +
-                " nr=" + String::toString(nr),
-                fnname, clname, LogMessage::DEBUG2);
+            log->out(casacore::String("nselrows=") + casacore::String::toString(nselrows) +
+                " nr=" + casacore::String::toString(nr),
+                fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
             /* Number of points into first column */
             info(0, nselrows) = nr;
@@ -1862,18 +1862,18 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
 #if LOG0
             ostringstream os;
             os  << "rowcount : " << info(nselrows, 1);
-            log->out(os, fnname, clname, LogMessage::DEBUG2);
+            log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
    
             /* Look into the table at row 'nr' and fill in the user columns */
-            for(Int i=2; i< ncoll; i++) 
+            for(casacore::Int i=2; i< ncoll; i++) 
             {
                ctens[i-2].get(nr, tmpval);
                info(i, nselrows) = tmpval;
 #if LOG0               
                ostringstream os;
                os << collist[i] << " : " << info(i, nselrows); 
-               log->out(os, fnname, clname, LogMessage::DEBUG2);
+               log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
             }
             nselrows++;
@@ -1884,19 +1884,19 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    
     /******************************/
 #if LOG0   
-   log->out( "Done", fnname, clname, LogMessage::DEBUG2);
+   log->out( "Done", fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
 
    /* Resize to actually used size... */
 
-   info.resize(IPosition(2,ncoll,nselrows),True);
-   cpol.resize(nselrows, True);
+   info.resize(casacore::IPosition(2,ncoll,nselrows),true);
+   cpol.resize(nselrows, true);
 
 #if LOG0
    {
       ostringstream os;
       os << "setlect flag candidate:\n" << cpol;
-      log->out(os, fnname, clname, LogMessage::DEBUG2);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
    }
 #endif
 
@@ -1904,7 +1904,7 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    {
       ostringstream os;
       os << info;
-      log->out(os, fnname, clname, LogMessage::DEBUG2);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
    }
 #endif
 
@@ -1914,14 +1914,14 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    return 0;
 }
 
-Matrix<Int> BasePlot::getLocatePolChan() {
-   IPosition istart;
-   IPosition iend;
-   IPosition istride;
-   Slicer fslice;
-   Matrix<Int> polids(NPlots_p, 2);
+Matrix<casacore::Int> BasePlot::getLocatePolChan() {
+   casacore::IPosition istart;
+   casacore::IPosition iend;
+   casacore::IPosition istride;
+   casacore::Slicer fslice;
+   casacore::Matrix<casacore::Int> polids(NPlots_p, 2);
    //cout << "nTens_p=" << nTens_p << endl;
-   Int polCnt = 0;
+   casacore::Int polCnt = 0;
    polids = 0;
    for (int z=0;z<nTens_p;z++) {
       if (isArrayCol_p[z]) {
@@ -1929,8 +1929,8 @@ Matrix<Int> BasePlot::getLocatePolChan() {
          istart = fslice.start();
          iend = fslice.end();
          istride = fslice.stride();
-         for (Int l = istart[1]; l <= iend[1]; l += istride[1]) {
-            for (Int k = istart[0]; k <= iend[0]; k += istride[0]) {
+         for (casacore::Int l = istart[1]; l <= iend[1]; l += istride[1]) {
+            for (casacore::Int k = istart[0]; k <= iend[0]; k += istride[0]) {
                if (polCnt < NPlots_p) {
                    polids(polCnt, 0) = k;
                    polids(polCnt, 1) = l;
@@ -1943,22 +1943,22 @@ Matrix<Int> BasePlot::getLocatePolChan() {
    return polids;
 }
 
-Matrix<String> BasePlot::getLocateIndices(Matrix<Int>& cmap)
+Matrix<casacore::String> BasePlot::getLocateIndices(casacore::Matrix<casacore::Int>& cmap)
 {
-   String fnname = "getLocateIndices(Matrix<Int>& cmap)";
-   Matrix<String> npmap(NPlots_p, 2);
+   casacore::String fnname = "getLocateIndices(casacore::Matrix<casacore::Int>& cmap)";
+   casacore::Matrix<casacore::String> npmap(NPlots_p, 2);
 
-   IPosition istart;
-   IPosition iend;
-   IPosition istride;
-   Slicer fslice;
-   Int plotcounter=0;
-   Array<Bool> flagit;
+   casacore::IPosition istart;
+   casacore::IPosition iend;
+   casacore::IPosition istride;
+   casacore::Slicer fslice;
+   casacore::Int plotcounter=0;
+   casacore::Array<casacore::Bool> flagit;
 
 #if LOG0 
-   log->out( String("nplots : ")+String::toString(NPlots_p)
-             + " nTens_p=" + String::toString(nTens_p), 
-            fnname, clname, LogMessage::DEBUG1);
+   log->out( casacore::String("nplots : ")+casacore::String::toString(NPlots_p)
+             + " nTens_p=" + casacore::String::toString(nTens_p), 
+            fnname, clname, casacore::LogMessage::DEBUG1);
 #endif
    
    //cout << "nTens_p=" << nTens_p << endl;
@@ -1976,62 +1976,62 @@ Matrix<String> BasePlot::getLocateIndices(Matrix<Int>& cmap)
       ostringstream os;
       os  << "start : " << istart << "   end : " << iend 
           << "   stride : " << istride;
-      log->out(os, fnname, clname, LogMessage::DEBUG1);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG1);
 #endif
 
       if(istart.nelements()!=2) {
-          //cout <<"WRONG DIM" << LogIO::POST
-          npmap(plotcounter,0) = String("-");   
-          npmap(plotcounter,1) = String("-");
+          //cout <<"WRONG DIM" << casacore::LogIO::POST
+          npmap(plotcounter,0) = casacore::String("-");   
+          npmap(plotcounter,1) = casacore::String("-");
           plotcounter++;
       }
       else {
-         for(Int chan=istart[1];chan<=iend[1];chan+=istride[1])
-            for(Int pol=istart[0];pol<=iend[0];pol+=istride[0])
+         for(casacore::Int chan=istart[1];chan<=iend[1];chan+=istride[1])
+            for(casacore::Int pol=istart[0];pol<=iend[0];pol+=istride[0])
             {
                if(plotcounter < NPlots_p)
                {
-                  npmap(plotcounter, 0) = String::toString(pol);   
+                  npmap(plotcounter, 0) = casacore::String::toString(pol);   
                   npmap(plotcounter, 1) = 
-                     String::toString(cmap(chan, 0)) + String(":") +
-                     String::toString(cmap(chan, 1)) + String(":") +
-                     String::toString(cmap(chan, 2));
+                     casacore::String::toString(cmap(chan, 0)) + casacore::String(":") +
+                     casacore::String::toString(cmap(chan, 1)) + casacore::String(":") +
+                     casacore::String::toString(cmap(chan, 2));
                   plotcounter++;
                }
             }
         }
      }
      else {
-        npmap(plotcounter,0) = String("-");   
-        npmap(plotcounter,1) = String("-");
+        npmap(plotcounter,0) = casacore::String("-");   
+        npmap(plotcounter,1) = casacore::String("-");
         plotcounter++;
      }
    } 
 #if LOG0
    ostringstream os;
    os << "npmap=\n" << npmap;
-   log->out(os, fnname, clname, LogMessage::DEBUG2);
+   log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
    return npmap;
 }
 /*********************************************************************************/
 
-Matrix<String> BasePlot::getLocateIndices()
+Matrix<casacore::String> BasePlot::getLocateIndices()
 {
-   String fnname = "getLocateIndices";
-   Matrix<String> npmap(NPlots_p, 2);
+   casacore::String fnname = "getLocateIndices";
+   casacore::Matrix<casacore::String> npmap(NPlots_p, 2);
 
-   IPosition istart;
-   IPosition iend;
-   IPosition istride;
-   Slicer fslice;
-   Int plotcounter=0;
-   Array<Bool> flagit;
+   casacore::IPosition istart;
+   casacore::IPosition iend;
+   casacore::IPosition istride;
+   casacore::Slicer fslice;
+   casacore::Int plotcounter=0;
+   casacore::Array<casacore::Bool> flagit;
 
 #if LOG0 
-   log->out( String("nplots : ")+String::toString(NPlots_p)
-             + " nTens_p=" + String::toString(nTens_p), 
-            fnname, clname, LogMessage::DEBUG1);
+   log->out( casacore::String("nplots : ")+casacore::String::toString(NPlots_p)
+             + " nTens_p=" + casacore::String::toString(nTens_p), 
+            fnname, clname, casacore::LogMessage::DEBUG1);
 #endif
    
    for(int z=0;z<nTens_p;z++) 
@@ -2048,7 +2048,7 @@ Matrix<String> BasePlot::getLocateIndices()
       ostringstream os;
       os  << "start : " << istart << "   end : " << iend 
           << "   stride : " << istride;
-      log->out(os, fnname, clname, LogMessage::DEBUG1);
+      log->out(os, fnname, clname, casacore::LogMessage::DEBUG1);
 #endif
 
       // Assuming that these indices are sane. 
@@ -2056,9 +2056,9 @@ Matrix<String> BasePlot::getLocateIndices()
       
       if(istart.nelements()!=2) 
       {
-          //cout <<"WRONG DIM" << LogIO::POST
-          npmap(plotcounter,0) = String("-");   
-          npmap(plotcounter,1) = String("-");
+          //cout <<"WRONG DIM" << casacore::LogIO::POST
+          npmap(plotcounter,0) = casacore::String("-");   
+          npmap(plotcounter,1) = casacore::String("-");
           plotcounter++;
       }
       else
@@ -2066,61 +2066,61 @@ Matrix<String> BasePlot::getLocateIndices()
       switch(ReductionType_p[z])
       {
          case 0: /* no reduction */
-            for(Int chan=istart[1];chan<=iend[1];chan+=istride[1])
-            for(Int pol=istart[0];pol<=iend[0];pol+=istride[0])
+            for(casacore::Int chan=istart[1];chan<=iend[1];chan+=istride[1])
+            for(casacore::Int pol=istart[0];pol<=iend[0];pol+=istride[0])
             {
                if(plotcounter < NPlots_p)
                {
-                  npmap(plotcounter, 0) = String::toString(pol);   
-                  npmap(plotcounter, 1) = String::toString(chan);
+                  npmap(plotcounter, 0) = casacore::String::toString(pol);   
+                  npmap(plotcounter, 1) = casacore::String::toString(chan);
                   plotcounter++;
                }
             }
             
             break;
          case 1: /* Scalar reduction : MEAN */
-            npmap(plotcounter,0) = String::toString(istart[0]) + String(":") +
-                         String::toString(iend[0]) + String(":") +
-                         String::toString(istride[0]);
-            npmap(plotcounter,1) = String::toString(istart[1]) + String(":") +
-                         String::toString(iend[1]) + String(":") +
-                         String::toString(istride[1]);
+            npmap(plotcounter,0) = casacore::String::toString(istart[0]) + casacore::String(":") +
+                         casacore::String::toString(iend[0]) + casacore::String(":") +
+                         casacore::String::toString(istride[0]);
+            npmap(plotcounter,1) = casacore::String::toString(istart[1]) + casacore::String(":") +
+                         casacore::String::toString(iend[1]) + casacore::String(":") +
+                         casacore::String::toString(istride[1]);
             plotcounter++;
             break;
-         case 2: /* Vector reduction : MEANS - avg over cols (chan) */
-            for(Int pol=istart[0];pol<=iend[0];pol+=istride[0])
+         case 2: /* casacore::Vector reduction : MEANS - avg over cols (chan) */
+            for(casacore::Int pol=istart[0];pol<=iend[0];pol+=istride[0])
             {
-               npmap(plotcounter,0) = String::toString(pol);
+               npmap(plotcounter,0) = casacore::String::toString(pol);
                npmap(plotcounter,1) = 
-                  String::toString(istart[1]) + 
-                  String(":") +
-                  String::toString(iend[1]) + 
-                  String(":") +
-                  String::toString(istride[1]);
+                  casacore::String::toString(istart[1]) + 
+                  casacore::String(":") +
+                  casacore::String::toString(iend[1]) + 
+                  casacore::String(":") +
+                  casacore::String::toString(istride[1]);
                plotcounter++;
             }
             break;
-         case 3: /* Vector reduction : MEANS - avg over rows (pol) */
-            for(Int chan=istart[1];chan<=iend[1];chan+=istride[1])
+         case 3: /* casacore::Vector reduction : MEANS - avg over rows (pol) */
+            for(casacore::Int chan=istart[1];chan<=iend[1];chan+=istride[1])
             {
                npmap(plotcounter,0) = 
-                  String::toString(istart[0]) + 
-                  String(":") +
-                  String::toString(iend[0]) + 
-                  String(":") +
-                  String::toString(istride[0]);
-               npmap(plotcounter,1) = String::toString(chan);
+                  casacore::String::toString(istart[0]) + 
+                  casacore::String(":") +
+                  casacore::String::toString(iend[0]) + 
+                  casacore::String(":") +
+                  casacore::String::toString(istride[0]);
+               npmap(plotcounter,1) = casacore::String::toString(chan);
                plotcounter++;
             }
             break;
-         default: BasePlotError(String("Unsupported TaQL reduction"));
+         default: BasePlotError(casacore::String("Unsupported TaQL reduction"));
       }
       }
      }// end of if ArrayCol
      else
      {
-      npmap(plotcounter,0) = String("-");   
-      npmap(plotcounter,1) = String("-");
+      npmap(plotcounter,0) = casacore::String("-");   
+      npmap(plotcounter,1) = casacore::String("-");
       plotcounter++;
         
      }
@@ -2128,7 +2128,7 @@ Matrix<String> BasePlot::getLocateIndices()
 #if LOG0
    ostringstream os;
    os << "npmap=\n" << npmap;
-   log->out(os, fnname, clname, LogMessage::DEBUG2);
+   log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
    return npmap;
 }
@@ -2137,25 +2137,25 @@ Matrix<String> BasePlot::getLocateIndices()
 /*********************************************************************************/
 /********************** Private(protected) Functions *****************************/
 /*********************************************************************************/
-Int BasePlot::createXTENS(Vector<String> &datastr)
+Int BasePlot::createXTENS(casacore::Vector<casacore::String> &datastr)
 {
-   String fnname = "createXTENS";
+   casacore::String fnname = "createXTENS";
 #if LOG0
    log->FnEnter(fnname + "(datastr)", clname);
 #endif
    xtens_p.resize(nTens_p);
 
    /* Create TENS and traverse parse trees */
-   for(Int i=0;i<nTens_p;i++) 
+   for(casacore::Int i=0;i<nTens_p;i++) 
    {
-      xtens_p[i] = RecordGram::parse(SelTab_p,datastr[i*2]);
+      xtens_p[i] = casacore::RecordGram::parse(SelTab_p,datastr[i*2]);
       
       if( (xtens_p[i].dataType() != TpDouble)  ) 
       {
          ostringstream dtype;
          dtype << xtens_p[i].dataType();
-         BasePlotError(String("DataType of TaQL expression (") + 
-               dtype + String(") is not plottable"));
+         BasePlotError(casacore::String("DataType of TaQL expression (") + 
+               dtype + casacore::String(") is not plottable"));
       }
       
    }
@@ -2165,25 +2165,25 @@ Int BasePlot::createXTENS(Vector<String> &datastr)
    return 0;
 }
 /*********************************************************************************/
-Int BasePlot::createYTENS(Vector<String> &datastr)
+Int BasePlot::createYTENS(casacore::Vector<casacore::String> &datastr)
 {
-   String fnname = "createYTENS";
+   casacore::String fnname = "createYTENS";
 #if LOG0
    log->FnEnter(fnname, clname);
 #endif
    ytens_p.resize(nTens_p);
    /* Create TENS and traverse parse trees */
    nip_p=0;
-   for(Int i=0;i<nTens_p;i++) 
+   for(casacore::Int i=0;i<nTens_p;i++) 
    {
-      ytens_p[i] = RecordGram::parse(SelTab_p,datastr[i*2+1]);
+      ytens_p[i] = casacore::RecordGram::parse(SelTab_p,datastr[i*2+1]);
 
       if( (ytens_p[i].dataType() != TpDouble) ) 
       {
          ostringstream dtype;
          dtype << ytens_p[i].dataType();
-         BasePlotError(String("DataType of TaQL expression (") + 
-              dtype + String(") is not plottable"));
+         BasePlotError(casacore::String("DataType of TaQL expression (") + 
+              dtype + casacore::String(") is not plottable"));
       }
       
       IndCnt_p[i] = nip_p;/* since flags pertain only to y data */
@@ -2192,7 +2192,7 @@ Int BasePlot::createYTENS(Vector<String> &datastr)
    
    if(colnames_p.nelements()==0)
    {
-      BasePlotError(String("No valid Table columns found for the Y data"));
+      BasePlotError(casacore::String("No valid casacore::Table columns found for the Y data"));
    }
 #if LOG0
    log->FnExit(fnname, clname);
@@ -2203,37 +2203,37 @@ Int BasePlot::createYTENS(Vector<String> &datastr)
 /*********************************************************************************/
 
 /* Extract X data from the table */
-Int BasePlot::getXData(TPConvertBase* conv, Bool dummyread)
+Int BasePlot::getXData(TPConvertBase* conv, casacore::Bool dummyread)
 {
-   String fnname = "getXData";
+   casacore::String fnname = "getXData";
 #if LOG0
    log->FnEnter(fnname + "(conv, dummyread)", clname);
 #endif
-   Double xytemp;
-   Array<Double> xtemp;
-   TableExprNode *tten;
-   Int row=0,z=0;
+   casacore::Double xytemp;
+   casacore::Array<casacore::Double> xtemp;
+   casacore::TableExprNode *tten;
+   casacore::Int row=0,z=0;
    
    if(dummyread)
    {
    //cout << "getXData------true" << endl;       
-      Int nxplots=0;
+      casacore::Int nxplots=0;
       for(z=0;z<nTens_p;z++)
       {
          tten = &(xtens_p[z]);
          if(tten->isScalar())
          {
             tten->get(0,xytemp);
-            Xshape_p[z] = IPosition(1,1);
+            Xshape_p[z] = casacore::IPosition(1,1);
          }
          else
          {
-         ////   Xshape_p[z] = IPosition(1,1);
+         ////   Xshape_p[z] = casacore::IPosition(1,1);
             tten->get(0,xtemp);
             Xshape_p[z] = xtemp.shape();
             // complain !
             //tten.get(0,xtemp);
-            //IPosition shp = xtemp.shape();
+            //casacore::IPosition shp = xtemp.shape();
             //if(shp.nelements()==2) Xshape_p[z] = xtemp.shape();
          }
          nxplots += Xshape_p[z].product();
@@ -2242,26 +2242,26 @@ Int BasePlot::getXData(TPConvertBase* conv, Bool dummyread)
       xplotdata_p.set(0.0);
 
 #if LOG0
-      log->out(String("getXData: nxplots=") + String::toString(nxplots) +
-               " NRows_p=" + String::toString(NRows_p), 
-               fnname, clname, LogMessage::DEBUG2);
+      log->out(casacore::String("getXData: nxplots=") + casacore::String::toString(nxplots) +
+               " NRows_p=" + casacore::String::toString(NRows_p), 
+               fnname, clname, casacore::LogMessage::DEBUG2);
 #endif
 
 #if LOG0
       {
          stringstream os;
          os << "Mem allocated for X: " 
-            << nxplots*NRows_p*sizeof(Double)/(1024.0*1024.0) 
+            << nxplots*NRows_p*sizeof(casacore::Double)/(1024.0*1024.0) 
             << " MB ";
-         log->out(os, fnname, clname, LogMessage::DEBUGGING);
+         log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
       }
 #endif
    }
    else
    {
-      Timer ttt;
+      casacore::Timer ttt;
       ttt.mark();
-      Int xp=0;
+      casacore::Int xp=0;
    //cout << "getXData------------" << endl;       
       for(row=0;row<NRows_p;row++)
       {
@@ -2275,12 +2275,12 @@ Int BasePlot::getXData(TPConvertBase* conv, Bool dummyread)
                tten->get(row,xytemp);
                //xplotdata_p(z,row) = xytemp;
                xplotdata_p(z,row) = 
-                     (Double)conv->Xconvert(xytemp,row,tabNum_p);
+                     (casacore::Double)conv->Xconvert(xytemp,row,tabNum_p);
             }
             else
             {
                tten->get(row,xtemp);
-               for (Int i=0;i<Xshape_p[z].product();i++)
+               for (casacore::Int i=0;i<Xshape_p[z].product();i++)
                    xplotdata_p(xp++,row) = 
                      conv->Xconvert((xtemp.data()[i]),row,tabNum_p);
             }
@@ -2296,22 +2296,22 @@ Int BasePlot::getXData(TPConvertBase* conv, Bool dummyread)
 /*********************************************************************************/
 
 /* Extract Y data from the table */
-Int BasePlot::getYData(TPConvertBase *conv, Bool dummyread)
+Int BasePlot::getYData(TPConvertBase *conv, casacore::Bool dummyread)
 {
-   String fnname = "getYData";
+   casacore::String fnname = "getYData";
 #if LOG0
    log->FnEnter(fnname + "(conv, dummyread)", clname);
 #endif
-   Double xytemp;
-   Array<Double> ytemp;
-   TableExprNode *tten;
-   Int yp=0, z=0;
-   Int row=0;
+   casacore::Double xytemp;
+   casacore::Array<casacore::Double> ytemp;
+   casacore::TableExprNode *tten;
+   casacore::Int yp=0, z=0;
+   casacore::Int row=0;
    
    // Read and update shapes for this row, but do not fill data.
    if(dummyread) 
    {
-      Int nyplots=0;
+      casacore::Int nyplots=0;
       for(z=0;z<nTens_p;z++)
       {
          ytemp.resize();
@@ -2321,16 +2321,16 @@ Int BasePlot::getYData(TPConvertBase *conv, Bool dummyread)
          {
 	     //#if LOG0 
             log->out( "before scalar get", fnname, clname, 
-                     LogMessage::DEBUGGING);
+                     casacore::LogMessage::DEBUGGING);
 	    //#endif 
             tten->get(0,xytemp);
-            Yshape_p[z] = IPosition(1,1);
+            Yshape_p[z] = casacore::IPosition(1,1);
          }
          else
          {
 	     //#if LOG0
             log->out( "before vectro get", fnname, clname, 
-                     LogMessage::DEBUGGING);
+                     casacore::LogMessage::DEBUGGING);
 	    //#endif 
             tten->get(0,ytemp);
             Yshape_p[z] = ytemp.shape();
@@ -2340,27 +2340,27 @@ Int BasePlot::getYData(TPConvertBase *conv, Bool dummyread)
       yplotdata_p.resize(nyplots,NRows_p);   
       yplotdata_p.set(0.0);
       theflags_p.resize(nyplots,NRows_p);   
-      theflags_p.set(False);
+      theflags_p.set(false);
       rowflags_p.resize(NRows_p);      
-      rowflags_p.set(False);
+      rowflags_p.set(false);
       NPlots_p = nyplots;
 
       //#if LOG0
-      log->out("getYData: nyplots=" + String::toString(nyplots) +
-               " NRows_p=" + String::toString(NRows_p), 
-               fnname, clname, LogMessage::DEBUG2);
+      log->out("getYData: nyplots=" + casacore::String::toString(nyplots) +
+               " NRows_p=" + casacore::String::toString(NRows_p), 
+               fnname, clname, casacore::LogMessage::DEBUG2);
       //#endif
 
       //#if LOG0 
       {
          ostringstream os;
          os << "Mem allocated for Y: " 
-            << nyplots*NRows_p*sizeof(Float)/(1024.0*1024.0) 
+            << nyplots*NRows_p*sizeof(casacore::Float)/(1024.0*1024.0) 
             << " MB\n"
             << "Mem allocated for F: " 
-            << nyplots*NRows_p*sizeof(Bool)/(1024.0*1024.0) 
+            << nyplots*NRows_p*sizeof(casacore::Bool)/(1024.0*1024.0) 
             << " MB ";
-         log->out(os, fnname, clname, LogMessage::DEBUGGING);
+         log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
       } 
       //#endif
    }
@@ -2382,7 +2382,7 @@ Int BasePlot::getYData(TPConvertBase *conv, Bool dummyread)
             else
             {
                tten->get(row,ytemp);
-               for (Int i=0;i<Yshape_p[z].product();i++){
+               for (casacore::Int i=0;i<Yshape_p[z].product();i++){
                    yplotdata_p(yp++,row) = 
 		       conv->Yconvert((ytemp.data()[i]),row,tabNum_p);
                }
@@ -2392,7 +2392,7 @@ Int BasePlot::getYData(TPConvertBase *conv, Bool dummyread)
 #if LOG0 
          if(yp != NPlots_p) 
              log->out("Again, NPlots is not correct ! ",
-                      fnname, clname, LogMessage::WARN );
+                      fnname, clname, casacore::LogMessage::WARN );
 #endif 
       }//end of for row
       
@@ -2406,15 +2406,15 @@ Int BasePlot::getYData(TPConvertBase *conv, Bool dummyread)
 
 /*********************************************************************************/
 /* Extract Y data from the table for just one TEN and ROW : special case. */
-Int BasePlot::reGetYData(Int tenid, Int row, TPConvertBase *conv)
+Int BasePlot::reGetYData(casacore::Int tenid, casacore::Int row, TPConvertBase *conv)
 {
-   Double xytemp;
-   Array<Double> ytemp;
-   TableExprNode *tten;
-   Int yp=0, z=0,n=0;
-   String fnname = "reGetYData";
+   casacore::Double xytemp;
+   casacore::Array<casacore::Double> ytemp;
+   casacore::TableExprNode *tten;
+   casacore::Int yp=0, z=0,n=0;
+   casacore::String fnname = "reGetYData";
    
-   //if(row<4) cout << row << " : regetY : " << LogIO::POST
+   //if(row<4) cout << row << " : regetY : " << casacore::LogIO::POST
    
    yp=0; 
    for(n=0;n<NPlots_p;n++)
@@ -2436,7 +2436,7 @@ Int BasePlot::reGetYData(Int tenid, Int row, TPConvertBase *conv)
       ytemp.resize();
 
       tten->get(row,ytemp);
-      for (Int i=0;i<Yshape_p[tenid].product();i++)
+      for (casacore::Int i=0;i<Yshape_p[tenid].product();i++)
          // SDJ: WARNING: This may cause issues sending in table number
          // 0 for all plots. 
           
@@ -2444,7 +2444,7 @@ Int BasePlot::reGetYData(Int tenid, Int row, TPConvertBase *conv)
    }
 
    if(tenid == nTens_p-1 && yp != NPlots_p) 
-        log->out( "wrong indexing", fnname, clname, LogMessage::WARN);
+        log->out( "wrong indexing", fnname, clname, casacore::LogMessage::WARN);
    if(tenid < nTens_p-1)
    {
       z=0;
@@ -2454,7 +2454,7 @@ Int BasePlot::reGetYData(Int tenid, Int row, TPConvertBase *conv)
             break;
          }
       if(z != yp) 
-         log->out( "wrong indexing for z", fnname, clname, LogMessage::WARN );
+         log->out( "wrong indexing for z", fnname, clname, casacore::LogMessage::WARN );
    }
    
    return 0;
@@ -2469,7 +2469,7 @@ Int BasePlot::reGetYData(Int tenid, Int row, TPConvertBase *conv)
 Int BasePlot::cleanUp()
 {
 #if LOG0
-   String fnname = "cleanUp";
+   casacore::String fnname = "cleanUp";
    log->FnEnter(fnname, clname);
 #endif
    nip_p=0;
@@ -2486,15 +2486,15 @@ Int BasePlot::cleanUp()
 /*********************************************************************************/
 
 /* Given a TEN, get an index value - required by mspflagdata */
-Int BasePlot::getIndices(TableExprNode &ten)
+Int BasePlot::getIndices(casacore::TableExprNode &ten)
 {
-   const TableExprNodeRep* tenroot = (ten.getNodeRep());
+   const casacore::TableExprNodeRep* tenroot = (ten.getNodeRep());
 
 //#if LOG0
-   String fnname = "getIndices";
+   casacore::String fnname = "getIndices";
    ostringstream os;
    os << "Call ptTravers, tenroot=" << tenroot;
-   log->out(os, fnname, clname, LogMessage::DEBUGGING);
+   log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
 //#endif
    ptTraverse(tenroot); 
 
@@ -2504,16 +2504,16 @@ Int BasePlot::getIndices(TableExprNode &ten)
 /*********************************************************************************/
 
 /* Recursive Parse Tree traversal */
-void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
+void BasePlot::ptTraverse(const casacore::TableExprNodeRep *tenr)
 {
-   String fnname ="ptTraverse";
+   casacore::String fnname ="ptTraverse";
 #if LOG0
        log->FnEnter(fnname, clname);
 #endif
 
-   if(tenr == (TableExprNodeRep*)NULL) {
+   if(tenr == (casacore::TableExprNodeRep*)NULL) {
 #if LOG0
-       log->out("NULL tenr", fnname, clname, LogMessage::DEBUGGING);
+       log->out("NULL tenr", fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
        return;
    }
@@ -2522,44 +2522,44 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
    os  << "dat : " << tenr->dataType() 
        << " , val : " << tenr->valueType() << " , op : " 
        << tenr->operType();
-   log->out(os, fnname, clname, LogMessage::DEBUGGING);
+   log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
    /* Check to see what type this node is */
-   Int etype = -1;
+   casacore::Int etype = -1;
    
-   if(dynamic_cast<const TableExprNodeBinary*>(tenr)!=NULL) {
+   if(dynamic_cast<const casacore::TableExprNodeBinary*>(tenr)!=NULL) {
       etype=3; 
 #if LOG0
       log->out(" ##########***********It's Binary",
-          fnname, clname, LogMessage::DEBUGGING);
+          fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
    }
-   if(dynamic_cast<const TableExprNodeMulti*>(tenr)!=NULL) {
+   if(dynamic_cast<const casacore::TableExprNodeMulti*>(tenr)!=NULL) {
       etype=2; 
 #if LOG0
       log->out(" ##########********It's Multi",
-          fnname, clname, LogMessage::DEBUGGING);
+          fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
    }
-   if(dynamic_cast<const TableExprNodeSet*>(tenr)!=NULL) {
+   if(dynamic_cast<const casacore::TableExprNodeSet*>(tenr)!=NULL) {
       etype=1; 
 #if LOG0
       log->out(" ##########***********It's Set",
-          fnname, clname, LogMessage::DEBUGGING);
+          fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
    }
-   if(dynamic_cast<const TableExprNodeSetElem*>(tenr)!=NULL) {
+   if(dynamic_cast<const casacore::TableExprNodeSetElem*>(tenr)!=NULL) {
       etype=0; 
 #if LOG0
       log->out(" ##########***********It's SetElem",
-          fnname, clname, LogMessage::DEBUGGING);
+          fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif
    }
-   if(dynamic_cast<const TableExprFuncNodeArray*>(tenr)!=NULL) {
+   if(dynamic_cast<const casacore::TableExprFuncNodeArray*>(tenr)!=NULL) {
       etype=4; 
 #if LOG0
       log->out(" ##########***********It's Func node",
-         fnname, clname, LogMessage::DEBUGGING); 
+         fnname, clname, casacore::LogMessage::DEBUGGING); 
 #endif
    }
 
@@ -2570,49 +2570,49 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
 #if LOG0
          /* Act on this node */
          log->out("SetElem Node : ",
-                fnname, clname, LogMessage::DEBUGGING); 
+                fnname, clname, casacore::LogMessage::DEBUGGING); 
         
-         const TableExprNodeSetElem *tense = 
-              dynamic_cast<const TableExprNodeSetElem*>(tenr);
+         const casacore::TableExprNodeSetElem *tense = 
+              dynamic_cast<const casacore::TableExprNodeSetElem*>(tenr);
 
          /* get children */
-         log->out("Start ---> ", fnname, clname, LogMessage::DEBUGGING); 
+         log->out("Start ---> ", fnname, clname, casacore::LogMessage::DEBUGGING); 
          ptTraverse(tense->start());
-         log->out("Increment ---> ", fnname, clname, LogMessage::DEBUGGING);
+         log->out("Increment ---> ", fnname, clname, casacore::LogMessage::DEBUGGING);
          ptTraverse(tense->increment());
-         log->out("End ---> ", fnname, clname, LogMessage::DEBUGGING); 
+         log->out("End ---> ", fnname, clname, casacore::LogMessage::DEBUGGING); 
          ptTraverse(tense->end());
 #endif
          break;
       }
       case 1: /* Set */
       {
-         const TableExprNodeSet *tens=
-             dynamic_cast<const TableExprNodeSet*>(tenr);
+         const casacore::TableExprNodeSet *tens=
+             dynamic_cast<const casacore::TableExprNodeSet*>(tenr);
          /* Act on this node */
 #if LOG0 
-         log->out("Set Node : ", fnname, clname, LogMessage::DEBUGGING); 
+         log->out("Set Node : ", fnname, clname, casacore::LogMessage::DEBUGGING); 
 #endif  
          /* get children */
-         for(Int i=0;i<(Int)tens->nelements();i++)
+         for(casacore::Int i=0;i<(casacore::Int)tens->nelements();i++)
          {
-            const TableExprNodeSetElem tenser = (*tens)[i];
+            const casacore::TableExprNodeSetElem tenser = (*tens)[i];
 #if LOG0
             ostringstream os;
             log->out(" Set[" << i << "] start ---> ",
-                 fnname, clname, LogMessage::DEBUGGING);   
+                 fnname, clname, casacore::LogMessage::DEBUGGING);   
 #endif
             ptTraverse((*tens)[i].start());
 
 #if LOG0
             log->out(" Set[" << i << "] increament ---> ",
-                 fnname, clname, LogMessage::DEBUGGING);   
+                 fnname, clname, casacore::LogMessage::DEBUGGING);   
 #endif
             ptTraverse((*tens)[i].increment());
 
 #if LOG0
             log->out(" Set[" << i << "] end ---> ",
-                 fnname, clname, LogMessage::DEBUGGING);   
+                 fnname, clname, casacore::LogMessage::DEBUGGING);   
 #endif
             ptTraverse((*tens)[i].end());
          }
@@ -2620,33 +2620,33 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
       }
       case 2: /* Multi */
       {
-         const TableExprNodeMulti *tenm=
-            dynamic_cast<const TableExprNodeMulti*>(tenr);
+         const casacore::TableExprNodeMulti *tenm=
+            dynamic_cast<const casacore::TableExprNodeMulti*>(tenr);
          /* Act on this node */
 #if LOG0 
-         log->out("Multi Node : ", fnname, clname, LogMessage::DEBUGGING);
+         log->out("Multi Node : ", fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
          
-         const TableExprNodeIndex* nodePtr = 
-              dynamic_cast<const TableExprNodeIndex*>(tenr);
+         const casacore::TableExprNodeIndex* nodePtr = 
+              dynamic_cast<const casacore::TableExprNodeIndex*>(tenr);
          if(nodePtr!=0)
          {
             if (nodePtr->isConstant())//  &&  nodePtr->isSingle()) 
             {
-               const Slicer& indices = nodePtr->getConstantSlicer();
+               const casacore::Slicer& indices = nodePtr->getConstantSlicer();
                // Extract the index from it.
 #if LOG0
                ostringstream os;
                os << "M Index start: " << indices.start();
                os << "\nM Index end: " << indices.end();
                os << "\nM Index stride: " << indices.stride();
-               log->out(os, fnname, clname, LogMessage::DEBUGGING); 
+               log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING); 
 #endif               
-               //ipslice_p.resize(nip_p+1,True);
+               //ipslice_p.resize(nip_p+1,true);
                //ipslice_p[nip_p] = indices;
                //nip_p++;
                
-               if((Int) ipslice_p.nelements() == nip_p) 
+               if((casacore::Int) ipslice_p.nelements() == nip_p) 
                   ipslice_p[nip_p-1] = indices;
                
             }
@@ -2654,12 +2654,12 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
          }
            
          /* get children */
-         PtrBlock<TableExprNodeRep*> tenrarr = tenm->getChildren();
+         casacore::PtrBlock<casacore::TableExprNodeRep*> tenrarr = tenm->getChildren();
 #if LOG0
          ostringstream os;
          os << "Num elements : " << tenrarr.nelements();
 #endif
-         for(Int i=0;i<(Int)tenrarr.nelements();i++)
+         for(casacore::Int i=0;i<(casacore::Int)tenrarr.nelements();i++)
          {
 #if LOG0
             os << "\nChild " << i << " ---> " ; 
@@ -2669,70 +2669,70 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
          break;
       }
 #if LOG0
-         log->out(os, fnname, clname, LogMessage::DEBUGGING); 
+         log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING); 
 #endif
       case 3: /* Binary */
       {
-         String cname;
-         const TableExprNodeBinary *tenb=
-               dynamic_cast<const TableExprNodeBinary*>(tenr);
+         casacore::String cname;
+         const casacore::TableExprNodeBinary *tenb=
+               dynamic_cast<const casacore::TableExprNodeBinary*>(tenr);
          /* Act on this node */
 #if LOG0
-         log->out("Binary Node : ", fnname, clname, LogMessage::DEBUGGING); 
+         log->out("Binary Node : ", fnname, clname, casacore::LogMessage::DEBUGGING); 
 #endif
          
-         const TableExprNodeArrayColumn *tenac = 
-            dynamic_cast<const TableExprNodeArrayColumn*>(tenb);
+         const casacore::TableExprNodeArrayColumn *tenac = 
+            dynamic_cast<const casacore::TableExprNodeArrayColumn*>(tenb);
          if(tenac != 0){
             cname = tenac->getColumn().columnDesc().name();
 #if LOG0 
             ostringstream os;
-            os << " Array Column Name : " << cname
+            os << " casacore::Array Column Name : " << cname
                 << "\n Num elems : " << colnames_p.nelements();
-            log->out(os, fnname, clname, LogMessage::DEBUGGING); 
+            log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING); 
 #endif 
-            colnames_p.resize(nip_p+1,True); // small array of strings
+            colnames_p.resize(nip_p+1,true); // small array of strings
             colnames_p[nip_p] = cname;
-            ipslice_p.resize(nip_p+1,True);
-            ipslice_p[nip_p] = Slicer(IPosition(2,0,0),
-                                      IPosition(2,-2147483646,-2147483646));
+            ipslice_p.resize(nip_p+1,true);
+            ipslice_p[nip_p] = casacore::Slicer(casacore::IPosition(2,0,0),
+                                      casacore::IPosition(2,-2147483646,-2147483646));
             nip_p++;
          }
 
          
-         const TableExprNodeColumn *tenc = 
-            dynamic_cast<const TableExprNodeColumn*>(tenr);
+         const casacore::TableExprNodeColumn *tenc = 
+            dynamic_cast<const casacore::TableExprNodeColumn*>(tenr);
          if(tenc != 0) {
             cname =  tenc->getColumn().columnDesc().name() ;
 #if LOG0 
-            log->out(String(" Column Name : ")+cname,
-                    fnname, clname, LogMessage::DEBUGGING);
+            log->out(casacore::String(" Column Name : ")+cname,
+                    fnname, clname, casacore::LogMessage::DEBUGGING);
 #endif 
-            colnames_p.resize(nip_p+1,True); // small array of strings
+            colnames_p.resize(nip_p+1,true); // small array of strings
             colnames_p[nip_p] = cname;
-            ipslice_p.resize(nip_p+1,True);
-            ipslice_p[nip_p] = Slicer(IPosition(1,0),IPosition(1,0));
+            ipslice_p.resize(nip_p+1,true);
+            ipslice_p[nip_p] = casacore::Slicer(casacore::IPosition(1,0),casacore::IPosition(1,0));
             nip_p++;
          }
          
 
          /*   
-         const TableExprNodeArrayPart* nodePtr = 
-            dynamic_cast<const TableExprNodeArrayPart*>(tenr);
+         const casacore::TableExprNodeArrayPart* nodePtr = 
+            dynamic_cast<const casacore::TableExprNodeArrayPart*>(tenr);
          if (nodePtr != 0) {
             // The node represents a part of an array; get its index node.
-            const TableExprNodeIndex* inxNode = nodePtr->getIndexNode();
+            const casacore::TableExprNodeIndex* inxNode = nodePtr->getIndexNode();
             // If a constant index accessing a single element,
-            // get the Slicer defining the index.
+            // get the casacore::Slicer defining the index.
             if (inxNode->isConstant() )// &&  inxNode->isSingle()) 
             {
-               const Slicer& indices = inxNode->getConstantSlicer();
+               const casacore::Slicer& indices = inxNode->getConstantSlicer();
                // Extract the index from it.
-               os << LogOrigin( "BasePlot", "ptTraverse", WHERE )
-                  << LogIO::NORMAL3
+               os << casacore::LogOrigin( "BasePlot", "ptTraverse", WHERE )
+                  << casacore::LogIO::NORMAL3
                   << "B Index start: " << indices.start()
                   << "\nB Index end: " << indices.end()
-                  << "\nB Index stride: " << indices.stride() << LogIO::POST
+                  << "\nB Index stride: " << indices.stride() << casacore::LogIO::POST
             }
          }
          */
@@ -2745,44 +2745,44 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
       }
       case 4: /* FuncNodeArray */
       {
-         const TableExprFuncNodeArray *tefna=
-             dynamic_cast<const TableExprFuncNodeArray*>(tenr);
-         const TableExprFuncNode *tefn = tefna->getChild();
+         const casacore::TableExprFuncNodeArray *tefna=
+             dynamic_cast<const casacore::TableExprFuncNodeArray*>(tenr);
+         const casacore::TableExprFuncNode *tefn = tefna->getChild();
          
-         //const TableExprNodeMulti *tenm=
-         //       dynamic_cast<const TableExprNodeMulti*>(tenr);
+         //const casacore::TableExprNodeMulti *tenm=
+         //       dynamic_cast<const casacore::TableExprNodeMulti*>(tenr);
          /* Act on this node */
 #if LOG0
-         log->out("Func Node Array : ", fnname, clname, LogMessage::DEBUGGING); 
+         log->out("Func Node casacore::Array : ", fnname, clname, casacore::LogMessage::DEBUGGING); 
 #endif 
          //tenm->show(cout,1);
          
-         const TableExprNodeIndex* nodePtr = 
-            dynamic_cast<const TableExprNodeIndex*>(tefn);
+         const casacore::TableExprNodeIndex* nodePtr = 
+            dynamic_cast<const casacore::TableExprNodeIndex*>(tefn);
          if(nodePtr!=0)
          {
             if (nodePtr->isConstant())//  &&  nodePtr->isSingle()) 
             {
 #if LOG0 
-               const Slicer& indices = nodePtr->getConstantSlicer();
+               const casacore::Slicer& indices = nodePtr->getConstantSlicer();
                // Extract the index from it.
                ostringstream os;
                os << "F Index start: " << indices.start();
                os << "\nF Index end: " << indices.end();
                os << "\nF Index stride: " << indices.stride();
-               log->out(os, fnname, clname, LogMessage::DEBUGGING); 
+               log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING); 
 #endif 
             }
 
          }
            
          /* get children */
-         PtrBlock<TableExprNodeRep*> tenrarr = tefn->getChildren();
+         casacore::PtrBlock<casacore::TableExprNodeRep*> tenrarr = tefn->getChildren();
          ostringstream os;
 #if LOG0
          os << "Num elements : " << tenrarr.nelements();
 #endif
-         for(Int i=0;i<(Int)tenrarr.nelements();i++)
+         for(casacore::Int i=0;i<(casacore::Int)tenrarr.nelements();i++)
          {
 #if LOG0
             os << " Child " << i << " " ; 
@@ -2790,7 +2790,7 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
             ptTraverse(tenrarr[i]);
          }
 #if LOG0
-         log->out(os, fnname, clname, LogMessage::DEBUGGING); 
+         log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING); 
 #endif
          break;
       }
@@ -2805,10 +2805,10 @@ void BasePlot::showFlags() {
      //cout << "avgtheflags_p=" << avgtheflags_p << endl;
 }
 
-Bool BasePlot::saveData(const String& filename) {
+Bool BasePlot::saveData(const casacore::String& filename) {
     //cout << "BP saveData " << filename << endl;
 
-    RegularFile dataFile(filename);
+    casacore::RegularFile dataFile(filename);
     if (dataFile.exists()) {
         dataFile.setPermissions(0666);
         //if (dataFile.isRegular()) {
@@ -2819,15 +2819,15 @@ Bool BasePlot::saveData(const String& filename) {
         //if (!dataFile.canCreate()){
         //    cout << "cannot create this file" << endl;
         //}
-        dataFile.create(False);
+        dataFile.create(false);
     }
 
-    //LargeRegularFileIO file1(dataFile, ByteIO::Append);
+    //casacore::LargeRegularFileIO file1(dataFile, casacore::ByteIO::Append);
     //cout << "file1 created" << endl;
-    //Timer timer;
-    //AipsIO stream (&file1);
+    //casacore::Timer timer;
+    //casacore::AipsIO stream (&file1);
     //cout << "stream created" << endl;
-    //for (Int i=0; i<100000000; i++) {
+    //for (casacore::Int i=0; i<100000000; i++) {
     //    stream << i ;
     //}
 
@@ -2855,29 +2855,29 @@ Bool BasePlot::saveData(const String& filename) {
  
     out.close(); 
 
-    //timer.show ("LargeRegularFileIO write");
+    //timer.show ("casacore::LargeRegularFileIO write");
 
-    return True;
+    return true;
 }
 
 /*********************************************************************************/
 /* Get Flags */
-/* showflags=True MUST be accompanied by the appropriate TaQL with FLAG */
-Int BasePlot::getFlags(String flagversion, Bool showflags)
+/* showflags=true MUST be accompanied by the appropriate TaQL with FLAG */
+Int BasePlot::getFlags(casacore::String flagversion, casacore::Bool showflags)
 {
-   String fnname = "getFlags";
-   Int fyp;
-   Slicer fslice;
-   Array<Bool> flagit; 
-   Vector<Float> vfcount;
-   Vector<Float> vtcount;
-   Vector<Bool> vsflag;
-   IPosition fshp;
-   Bool sflag;
-   Bool row;
+   casacore::String fnname = "getFlags";
+   casacore::Int fyp;
+   casacore::Slicer fslice;
+   casacore::Array<casacore::Bool> flagit; 
+   casacore::Vector<casacore::Float> vfcount;
+   casacore::Vector<casacore::Float> vtcount;
+   casacore::Vector<casacore::Bool> vsflag;
+   casacore::IPosition fshp;
+   casacore::Bool sflag;
+   casacore::Bool row;
    
-   Int rc;
-   row = False;
+   casacore::Int rc;
+   row = false;
 
    /*** get the right flag version **/
    if(FV)
@@ -2885,8 +2885,8 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
       // If version has not changed... then don't re-attach.....
       if( flagversion.length() && ! currentflagversion_p.matches(flagversion) )
       {
-         log->out(String("getting flag version ")+flagversion,
-              fnname, clname, LogMessage::DEBUGGING); 
+         log->out(casacore::String("getting flag version ")+flagversion,
+              fnname, clname, casacore::LogMessage::DEBUGGING); 
          FV->attachFlagColumns( flagversion, RowFlags_p, Flags_p, SelTab_p);
          currentflagversion_p = flagversion;
       }
@@ -2897,7 +2897,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
    if(frcol_p)
    {
        rowflags_p = RowFlags_p.getColumn();
-       //rowflags_p = False;
+       //rowflags_p = false;
    }
         
    fyp=0; 
@@ -2906,15 +2906,15 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
       if( isArrayCol_p[z] && fcol_p && 
           (TENcolshapes_p[z].isEqual(FlagColShape_p)))      
       {
-      row = False;
+      row = false;
    
-      Float fcount=0.0,tcount=0.0;
-      Int ff=0;
-      Int zp,cnt;
-      Bool reget=False;
-                Int npol=0;
+      casacore::Float fcount=0.0,tcount=0.0;
+      casacore::Int ff=0;
+      casacore::Int zp,cnt;
+      casacore::Bool reget=false;
+                casacore::Int npol=0;
       
-      /* Get the shape of the (sub)Array that has been touched by the TaQL */
+      /* Get the shape of the (sub)casacore::Array that has been touched by the TaQL */
          fslice = TENslices_p[z];
          fshp = fslice.length();
       // Use getColumnRange later.
@@ -2933,7 +2933,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
       /////////////////////////////////////////////////
 
 
-         TENRowColFlag_p[z].set(True);
+         TENRowColFlag_p[z].set(true);
    
       /* Read in flags, depending on the type of reduction that has happened */
       switch(ReductionType_p[z])
@@ -2945,7 +2945,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
          for(rc=0;rc<NRows_p;rc++)
          {
             zp = fyp;
-            for (Int i=0;i<fshp.product();i++)
+            for (casacore::Int i=0;i<fshp.product();i++)
             {
                theflags_p(zp+i,rc) = (flagit.data()[cnt]);
                TENRowColFlag_p[z][i] &= flagit.data()[cnt];
@@ -2955,32 +2955,32 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
          fyp += fshp.product();
          break;
           /* A scalar reduction results in the TaQL result being a scalar, but
-             the FLAG is still an Array. Collapse flags from this Array to a
+             the FLAG is still an Array. Collapse flags from this casacore::Array to a
              single value */
       case 1:
-         log->out(String("z=")+String::toString(z) + " scalar reduction",
-                  fnname, clname, LogMessage::DEBUGGING); 
+         log->out(casacore::String("z=")+casacore::String::toString(z) + " scalar reduction",
+                  fnname, clname, casacore::LogMessage::DEBUGGING); 
          cnt=0;
          for(rc=0;rc<NRows_p;rc++)
          {
             zp = fyp;
             fcount=0.0,tcount=0.0;
-            sflag = ! showflags; // True for showflags = False
-            for (Int i=0;i<fshp.product();i++)
+            sflag = ! showflags; // true for showflags = false
+            for (casacore::Int i=0;i<fshp.product();i++)
             {
                TENRowColFlag_p[z][i] &= flagit.data()[cnt];
 
-               if( showflags == False )
+               if( showflags == false )
                {
                   /* Count and accumulate for unflagged points */
                   sflag &= flagit.data()[cnt];
-                  fcount += (Int)(!(flagit.data()[cnt]));
+                  fcount += (casacore::Int)(!(flagit.data()[cnt]));
                }
                else
                {
                   /* Count and accumulate for flagged points */
                   sflag |= flagit.data()[cnt];
-                  fcount += (Int)((flagit.data()[cnt]));
+                  fcount += (casacore::Int)((flagit.data()[cnt]));
                }
                tcount++;
                cnt++;
@@ -2988,8 +2988,8 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
             theflags_p(zp,rc) = sflag;
             if(firsttime_p) 
             {
-               if( showflags == False )flagsum_p(rc,z) = (Int)fcount;
-               else flagsum_p(rc,z) = (Int)(tcount - fcount);
+               if( showflags == false )flagsum_p(rc,z) = (casacore::Int)fcount;
+               else flagsum_p(rc,z) = (casacore::Int)(tcount - fcount);
 
                if(doscalingcorrection_p && fcount!=0 && tcount!=0) 
                   //correct yplotdata_p !
@@ -2997,37 +2997,37 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
             }
             else
             {
-               reget = False;
-               if( showflags == False && flagsum_p(rc,z) != (Int)fcount ) 
-                   reget = True;
-               if(showflags == True && flagsum_p(rc,z) != (Int)(tcount-fcount))                    reget = True;
+               reget = false;
+               if( showflags == false && flagsum_p(rc,z) != (casacore::Int)fcount ) 
+                   reget = true;
+               if(showflags == true && flagsum_p(rc,z) != (casacore::Int)(tcount-fcount))                    reget = true;
                if(reget)
                {
                   //cout << "reget for z : " << z << " and rc : " 
-                  //     << rc << LogIO::POST
+                  //     << rc << casacore::LogIO::POST
                   reGetYData(z,rc,conv_p);
                   if(doscalingcorrection_p && fcount!=0 && tcount!=0) 
                       //correct yplotdata_p !
                   {
                      yplotdata_p(zp,rc) = yplotdata_p(zp,rc)*tcount/fcount;
                   }
-                  if( showflags == False )flagsum_p(rc,z) = (Int)fcount;
-                  else flagsum_p(rc,z) = (Int)(tcount - fcount);
+                  if( showflags == false )flagsum_p(rc,z) = (casacore::Int)fcount;
+                  else flagsum_p(rc,z) = (casacore::Int)(tcount - fcount);
                }
             }
          }
          fyp++;
 
-         // first time = True : fill in flag_sum_p
-         // first time = False : compare with flag_sum_p[rc]. 
+         // first time = true : fill in flag_sum_p
+         // first time = false : compare with flag_sum_p[rc]. 
          //if changed, re-read y.
          
          break;
          /* A vector reduction has happened. The TaQL result and therefore
-            shape of theflags_p is both a subset of the FLAG Array, and also
+            shape of theflags_p is both a subset of the FLAG casacore::Array, and also
             has one dimension collapsed. 
          */
-         /* Flag subsets from from FLAG Array have to be collapsed in one
+         /* Flag subsets from from FLAG casacore::Array have to be collapsed in one
             dimension, and then filled into theflags_p 
          */
       case 2:
@@ -3042,7 +3042,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
            ostringstream os;
            os  <<"z : " << z << " : In case 2,3 for redtype : "
                << ReductionType_p[z];
-           log->out(os, fnname, clname, LogMessage::DEBUGGING); 
+           log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING); 
          }
          
          vfcount.resize(fshp[ReductionType_p[z]-2]); 
@@ -3057,21 +3057,21 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
             vtcount.set(0.0);
             vsflag.set( !showflags );
             ff=0;
-            for (Int i=0;i<fshp.product();i++)
+            for (casacore::Int i=0;i<fshp.product();i++)
             {
                TENRowColFlag_p[z][i] &= flagit.data()[cnt];
 
-               if( showflags == False )
+               if( showflags == false )
                {
                   /* Count and accumulate for unflagged points */
                   vsflag[ff] &= flagit.data()[cnt];
-                  vfcount[ff] += (Int)(!(flagit.data()[cnt]));
+                  vfcount[ff] += (casacore::Int)(!(flagit.data()[cnt]));
                }
                else
                {
                   /* Count and accumulate for flagged points */
                   vsflag[ff] |= flagit.data()[cnt];
-                  vfcount[ff] += (Int)((flagit.data()[cnt]));
+                  vfcount[ff] += (casacore::Int)((flagit.data()[cnt]));
                }
 
                vtcount[ff]++;
@@ -3087,22 +3087,22 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
                   ff++;
             }
             
-            for(Int i=0;i<(Int)vtcount.nelements();i++) 
+            for(casacore::Int i=0;i<(casacore::Int)vtcount.nelements();i++) 
                theflags_p(zp+i,rc) = vsflag[i];
 #if LOG0               
             if(rc<4) { 
                ostringstream os;
                os << rc << " : about to do flagsum : vfcount : " << vfcount;
-               log->out(os, fnname, clname, LogMessage::DEBUGGING);    
+               log->out(os, fnname, clname, casacore::LogMessage::DEBUGGING);    
             }
 #endif
             
             if(firsttime_p) 
             {
-               if( showflags == False )flagsum_p(rc,z) = (Int)sum(vfcount);
-               else flagsum_p(rc,z) = (Int)(sum(vtcount) - sum(vfcount));
+               if( showflags == false )flagsum_p(rc,z) = (casacore::Int)sum(vfcount);
+               else flagsum_p(rc,z) = (casacore::Int)(sum(vtcount) - sum(vfcount));
                
-               for(Int i=0;i<(Int)vtcount.nelements();i++)
+               for(casacore::Int i=0;i<(casacore::Int)vtcount.nelements();i++)
                {
                   if(doscalingcorrection_p && vfcount[i]!=0 && vtcount[i]!=0)
                      yplotdata_p(zp+i,rc) = 
@@ -3111,25 +3111,25 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
             }
             else
             {
-               reget = False;
-               if( showflags == False && 
-                   flagsum_p(rc,z) != (Int)sum(vfcount) ) reget = True;
-               if( showflags == True && 
-                   flagsum_p(rc,z) != (Int)(sum(vtcount)-sum(vfcount)) ) 
-                     reget = True;
+               reget = false;
+               if( showflags == false && 
+                   flagsum_p(rc,z) != (casacore::Int)sum(vfcount) ) reget = true;
+               if( showflags == true && 
+                   flagsum_p(rc,z) != (casacore::Int)(sum(vtcount)-sum(vfcount)) ) 
+                     reget = true;
                if(reget)
                {
                   reGetYData(z,rc,conv_p);
-                  for(Int i=0;i<(Int)vtcount.nelements();i++)
+                  for(casacore::Int i=0;i<(casacore::Int)vtcount.nelements();i++)
                   {
                      if(doscalingcorrection_p && vfcount[i]!=0 && vtcount[i]!=0)
                         yplotdata_p(zp+i,rc) = 
                           yplotdata_p(zp+i,rc)*vtcount[i]/vfcount[i];
                   }
-                  if( showflags == False )
-                     flagsum_p(rc,z) = (Int)sum(vfcount);
+                  if( showflags == false )
+                     flagsum_p(rc,z) = (casacore::Int)sum(vfcount);
                   else 
-                     flagsum_p(rc,z) = (Int)(sum(vtcount) - sum(vfcount));
+                     flagsum_p(rc,z) = (casacore::Int)(sum(vtcount) - sum(vfcount));
                }
             }
          }
@@ -3137,7 +3137,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
 
          break;
       
-      default: BasePlotError(String("Unsupported TaQL reduction"));
+      default: BasePlotError(casacore::String("Unsupported TaQL reduction"));
       
       }// end of switch
       }// end of if FLAG is to be used
@@ -3159,16 +3159,16 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
    
    if(fyp > 0 && fyp != NPlots_p) 
       log->out("NPlots is not correct (1)", 
-             fnname, clname, LogMessage::WARN );
+             fnname, clname, casacore::LogMessage::WARN );
    ////TODO :  This is never going to be correct - 
-   //if fcol_p or frcol_p are False !!!
+   //if fcol_p or frcol_p are false !!!
 
    /* If *only* ROW_FLAG exists, use it for all vals.. */
    if(frcol_p && !fcol_p)
    {
       fyp=0;
-      for(Int z=0;z<nTens_p;z++)
-      for(Int i=0;i<NPlots_p;i++) 
+      for(casacore::Int z=0;z<nTens_p;z++)
+      for(casacore::Int i=0;i<NPlots_p;i++) 
       // need this because multiple chans/pols are in the same TEN
       {
          if(Map_p(i,2)==z) // all vals for this TEN
@@ -3181,9 +3181,9 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
    }
    if(fyp > 0 && fyp != NPlots_p) 
        log->out( "NPlots is not correct (2)", 
-             fnname, clname, LogMessage::WARN );
+             fnname, clname, casacore::LogMessage::WARN );
    
-   firsttime_p=False;
+   firsttime_p=false;
    
    return 0;
 }
@@ -3196,18 +3196,18 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
 //SelTab_p.flush();
 // 
 // Flag holders...
-//      ArrayColumn<Bool> Flags_p, AvgFlags_p;
-//      ScalarColumn<Bool> RowFlags_p, AvgRowFlags_p;
-//      String FlagColName_p, FlagRowName_p;
-//      IPosition FlagColShape_p;
-//      Bool fcol_p,frcol_p;
+//      casacore::ArrayColumn<casacore::Bool> Flags_p, AvgFlags_p;
+//      casacore::ScalarColumn<casacore::Bool> RowFlags_p, AvgRowFlags_p;
+//      casacore::String FlagColName_p, FlagRowName_p;
+//      casacore::IPosition FlagColShape_p;
+//      casacore::Bool fcol_p,frcol_p;
 //////////////////////////////////////////////////////////////////////
-Int BasePlot::flagData(Int direction, String msname, String spwexpr,
-                       Matrix<Int>& rowMap, Matrix<Int>& chanMap,
-                       String ext)
+Int BasePlot::flagData(casacore::Int direction, casacore::String msname, casacore::String spwexpr,
+                       casacore::Matrix<casacore::Int>& rowMap, casacore::Matrix<casacore::Int>& chanMap,
+                       casacore::String ext)
 {
 
-   String fnname = "flagData";
+   casacore::String fnname = "flagData";
    log->FnEnter(fnname + "(direction, msname)", clname);
    // direction:  0=unflag, 1=flag
    flagdirection_p = direction;
@@ -3226,35 +3226,35 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
    /* 
    #include <ms/MSSel/MSSelection.h>
    #include <ms/MeasurementSets/MeasurementSet.h>
-   MS itsSelectedMS; 
+   casacore::MS itsSelectedMS; 
    try {
-      MS itsMS(itsTabName_p, casa::Table::Update);
-      itsSelectedMS = MS(itsMS);
-      MSSelection MSSelectionObj(itsMS, MSSelection::PARSE_NOW,
+      casacore::MS itsMS(itsTabName_p, casa::Table::Update);
+      itsSelectedMS = casacore::MS(itsMS);
+      casacore::MSSelection MSSelectionObj(itsMS, casacore::MSSelection::PARSE_NOW,
                                  "", "", "",
                                  spwexpr, "", "", "","", "");
 
-      MSSelectionObj.getSelectedMS(itsSelectedMS,String(""));
+      MSSelectionObj.getSelectedMS(itsSelectedMS,casacore::String(""));
       //cout << "itsSelectedMS.nrow()=" << itsSelectedMS.nrow() << endl; 
       itsTab_p = &itsSelectedMS;
    }
    catch (...) {
-      log->out("Can not open MS to write flags",
-               fnname, clname, LogMessage::WARN); 
+      log->out("Can not open casacore::MS to write flags",
+               fnname, clname, casacore::LogMessage::WARN); 
       return 0;
    }
    */
 
-   Table itsSelectedMS; 
-   uInt selRows = 0;
+   casacore::Table itsSelectedMS; 
+   casacore::uInt selRows = 0;
    try {
-      Table itsMS(itsTabName_p, casa::Table::Update);
+      casacore::Table itsMS(itsTabName_p, casa::Table::Update);
       //cout << "itsMS.nrow()=" << itsMS.nrow() << endl; 
 
       //cout << "spwexpr=" << spwexpr << endl;
-      String command = String("select from ") + itsTabName_p +
-                       String(" where DATA_DESC_ID in [") + spwexpr +
-                       String("]");  
+      casacore::String command = casacore::String("select from ") + itsTabName_p +
+                       casacore::String(" where DATA_DESC_ID in [") + spwexpr +
+                       casacore::String("]");  
       //cout << "command=" << command << endl;
 
       itsSelectedMS = tableCommand(command); 
@@ -3263,41 +3263,41 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
 
       itsTab_p = &itsSelectedMS;
    }
-   catch(AipsError &y) {
-      log->out(y.getMesg(), fnname, clname, LogMessage::WARN); 
+   catch(casacore::AipsError &y) {
+      log->out(y.getMesg(), fnname, clname, casacore::LogMessage::WARN); 
       return 0;
    }
    catch (...) {
-      log->out("Can not open MS to write flags",
-               fnname, clname, LogMessage::WARN); 
+      log->out("Can not open casacore::MS to write flags",
+               fnname, clname, casacore::LogMessage::WARN); 
       return 0;
    }
 
-   Vector<uInt> rownrs = itsTab_p->rowNumbers();
+   casacore::Vector<casacore::uInt> rownrs = itsTab_p->rowNumbers();
 
    //try {
-   //   itsTab_p = new Table(itsTabName_p, casa::Table::Update);
+   //   itsTab_p = new casacore::Table(itsTabName_p, casa::Table::Update);
    //}
    //catch (...) {
-   //   log->out("Can not open MS to write flags",
-   //            fnname, clname, LogMessage::WARN); 
+   //   log->out("Can not open casacore::MS to write flags",
+   //            fnname, clname, casacore::LogMessage::WARN); 
    //   return 0;
    //}
-   log->out("MS open for flagging", fnname, clname, LogMessage::DEBUG2); 
-   //log->out("MS open for flagging", fnname, clname, LogMessage::NORMAL, True); 
+   log->out("casacore::MS open for flagging", fnname, clname, casacore::LogMessage::DEBUG2); 
+   //log->out("casacore::MS open for flagging", fnname, clname, casacore::LogMessage::NORMAL, true); 
 
-   Array<Bool> avgflagit; 
-   Vector<Bool> vsflag;
-   IPosition fshp;
-   Bool row;
-   row = False;
+   casacore::Array<casacore::Bool> avgflagit; 
+   casacore::Vector<casacore::Bool> vsflag;
+   casacore::IPosition fshp;
+   casacore::Bool row;
+   row = false;
 
    //if (FV) {
    //   if(flagversion.length() && 
    //        !currentflagversion_p.matches(flagversion))
    //   {
-   //      log->out(String("getting flag version ")+flagversion,
-   //           fnname, clname, LogMessage::DEBUG2); 
+   //      log->out(casacore::String("getting flag version ")+flagversion,
+   //           fnname, clname, casacore::LogMessage::DEBUG2); 
    //      FV->attachFlagColumns(flagversion, AvgRowFlags_p, 
    //                            AvgFlags_p, *itsTab_p);
    //      currentflagversion_p = flagversion;
@@ -3312,14 +3312,14 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
       avgrowflags_p = AvgRowFlags_p.getColumn();
       //cout << "rowflags=" << avgrowfalgs_p <<endl;
    }
-   catch(AipsError &e) {
-      log->out(String(e.getMesg()),
-               fnname, clname, LogMessage::WARN); 
+   catch(casacore::AipsError &e) {
+      log->out(casacore::String(e.getMesg()),
+               fnname, clname, casacore::LogMessage::WARN); 
       return 0;
    }
    catch(...) {
       log->out("Can not get flag column for flagging",
-               fnname, clname, LogMessage::WARN); 
+               fnname, clname, casacore::LogMessage::WARN); 
       return 0;
    }
 
@@ -3330,34 +3330,34 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
    }
    catch(...) {
       log->out("Can not get flag column for flagging",
-               fnname, clname, LogMessage::WARN); 
+               fnname, clname, casacore::LogMessage::WARN); 
       return 0;
    }
 
-   IPosition avgIp = avgflagit.shape();
+   casacore::IPosition avgIp = avgflagit.shape();
    avgtheflags_p.resize(avgIp(0) * avgIp(1), avgIp(2));   
-   //avgtheflags_p.set(False);
+   //avgtheflags_p.set(false);
 
-   Int cnt = 0;
-   for (Int rc = 0; rc < avgIp(2); rc++) {
-      for (Int i = 0; i < avgIp(0) * avgIp(1); i++) {
+   casacore::Int cnt = 0;
+   for (casacore::Int rc = 0; rc < avgIp(2); rc++) {
+      for (casacore::Int i = 0; i < avgIp(0) * avgIp(1); i++) {
          avgtheflags_p(i, rc) = (avgflagit.data()[cnt]);
          cnt++;
       }
    }
    
-   //Int nt = 0;
-   //for (Int rc = 0; rc < 2; rc++) {
-   //   for (Int i = 0; i < avgIp(0) * avgIp(1); i++) {
+   //casacore::Int nt = 0;
+   //for (casacore::Int rc = 0; rc < 2; rc++) {
+   //   for (casacore::Int i = 0; i < avgIp(0) * avgIp(1); i++) {
    //      cout << "avgflagit.data[" << nt << "]=" 
    //           << (avgflagit.data()[nt]) << endl ;
    //      nt++;
    //   }
    //}
 
-   //Int ct = 0;
-   //for (Int rc = 0; rc < 2; rc++) {
-   //   for (Int i = 0; i < avgIp(0) * avgIp(1); i++) {
+   //casacore::Int ct = 0;
+   //for (casacore::Int rc = 0; rc < 2; rc++) {
+   //   for (casacore::Int i = 0; i < avgIp(0) * avgIp(1); i++) {
    //      cout << "ct=" << ct
    //           << " avgtheflags_p("<< i << ", " << rc << ")=" 
    //           << avgtheflags_p(i, rc) << endl ;
@@ -3368,24 +3368,24 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
    //////////////////////////////////////////
    numflagpoints_p = 0;
    try {
-    Int fyp;
-    Slicer fslice;
-    Array<Bool> flagit; 
-    Bool row;
-    IPosition fshp;
+    casacore::Int fyp;
+    casacore::Slicer fslice;
+    casacore::Array<casacore::Bool> flagit; 
+    casacore::Bool row;
+    casacore::IPosition fshp;
  
-    //Int ff;
-    Int zp, rc;
-    //Int cnt;
-    row = False;
-    //Int npol=0;
+    //casacore::Int ff;
+    casacore::Int zp, rc;
+    //casacore::Int cnt;
+    row = false;
+    //casacore::Int npol=0;
 
     //###ReductionType=[0], nTens_p=1
     //cout << "ReductionType=" << ReductionType_p
     //     << " nTens_p=" << nTens_p
     //     << endl;
 
-    Matrix<Int> polids = getLocatePolChan();
+    casacore::Matrix<casacore::Int> polids = getLocatePolChan();
     //cout << "polids=" << polids << endl;
   
     fyp=0;      
@@ -3412,7 +3412,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
       //with stride [1, 1] length [nPol, mChan]
       //each slice contains an [nPol, mChan] matrix of flags 
       //flagit is a [nPol, nChan, nRow] cube of flags
-      //theflags is a [nPol x nChan, nRow] Matrix of flags 
+      //theflags is a [nPol x nChan, nRow] casacore::Matrix of flags 
       //cout << " fslice="<< fslice <<  " fshp=" << fshp 
            //<< " flagit=" << flagit 
       //     << " flagit IP=" << flagit.shape() 
@@ -3432,42 +3432,42 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
         for (rc = 0; rc < NRows_p; rc++) {
 		    
          zp = fyp;
-         for (Int i = 0; i < fshp.product(); i++) {
-           Int zpi = zp + i;
+         for (casacore::Int i = 0; i < fshp.product(); i++) {
+           casacore::Int zpi = zp + i;
 
            if (selectedPoint(zpi, rc)) {
 
-             Vector<Int> polt(fshp(0));
-             Int pCns = 0;
+             casacore::Vector<casacore::Int> polt(fshp(0));
+             casacore::Int pCns = 0;
              if (ext.contains("P")) {
-              for (Int i = 0; i < fshp(0); i++) {
+              for (casacore::Int i = 0; i < fshp(0); i++) {
                polt(pCns++) = i;
               }
              }
              else {
               polt(pCns++) = polids(zpi, 0);
              }
-             polt.resize(pCns, True);
+             polt.resize(pCns, true);
              //cout << "polt=" << polt << endl;
 
-             Vector<Int> chant(fshp(1));
-             Int cCns = 0;
+             casacore::Vector<casacore::Int> chant(fshp(1));
+             casacore::Int cCns = 0;
              if (ext.contains("C")) {
-              for (Int i = 0; i < fshp(1); i++) {
+              for (casacore::Int i = 0; i < fshp(1); i++) {
                chant(cCns++) = i;
               }
              }
              else {
               chant(cCns++) = polids(zpi, 1);
              }
-             chant.resize(cCns, True);
+             chant.resize(cCns, true);
              //cout << "chnt=" << chant << endl;
               
-             for (uInt i = 0; i < chant.nelements(); i++) {
-              Int d = chant(i);
-              for (uInt j = 0; j < polt.nelements(); j++) {
-               Int pol = polt(j);
-               Int s = d * fshp(0) + pol % fshp(0);
+             for (casacore::uInt i = 0; i < chant.nelements(); i++) {
+              casacore::Int d = chant(i);
+              for (casacore::uInt j = 0; j < polt.nelements(); j++) {
+               casacore::Int pol = polt(j);
+               casacore::Int s = d * fshp(0) + pol % fshp(0);
   
                //cout  
                //  << " pol=" << pol
@@ -3477,8 +3477,8 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
                  //<< " oldflag=" << theflags_p(s, row)
                //  << endl;
   
-               theflags_p(s, rc) = (Bool)direction;
-               Int srow = rc * fshp.product() + s;
+               theflags_p(s, rc) = (casacore::Bool)direction;
+               casacore::Int srow = rc * fshp.product() + s;
                //cout << "cnt=" << cnt << " srow=" << srow << endl; 
                (flagit.data()[srow]) = direction ? 
                   theflags_p(s, rc) | (flagit.data()[srow]) :
@@ -3491,13 +3491,13 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
              }
              
       
-             Int row;
-             Int srow;
-             Int msrow = rowMap.shape()(0);
+             casacore::Int row;
+             casacore::Int srow;
+             casacore::Int msrow = rowMap.shape()(0);
 
              //srow = 0;
              //cout << "msrow=" << msrow << endl;
-             //for (Int m = 0; m < msrow; m++) {
+             //for (casacore::Int m = 0; m < msrow; m++) {
              //   if (rowMap(m, 0) == rc) { 
              //      srow++;
              //      cout << srow << " " << rowMap(m, 0) 
@@ -3505,15 +3505,15 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
              //   }
              //}
 
-             for (Int m = 0; m < msrow; m++) {
+             for (casacore::Int m = 0; m < msrow; m++) {
               if (rowMap(m, 0) == rc) { 
 
                //ask rowMap for row and spwid for this aved row
-               uInt rootRow = rowMap(m, 1);
-               Int sp = rowMap(m, 2);
+               casacore::uInt rootRow = rowMap(m, 1);
+               casacore::Int sp = rowMap(m, 2);
 
                row = -1;
-               for (uInt r = 0; r < rownrs.nelements(); r++) {
+               for (casacore::uInt r = 0; r < rownrs.nelements(); r++) {
                    if (rownrs[r] == rootRow) {
                       row = r;
                       break;
@@ -3531,41 +3531,41 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
                //
                //fshp(0) is nPol
                //fshp(1) is mChan
-               //Int rChan = zpi / fshp(0);
-               //Int rPol = zpi % fshp(0);
+               //casacore::Int rChan = zpi / fshp(0);
+               //casacore::Int rPol = zpi % fshp(0);
                //cout << " aveRow=" << rc << " row=" << row
                //     << " rChan=" << rChan << " rPol=" << rPol
                //     << " sp=" << sp << endl;
 
                //cout << " \noldFlag=";
-               //   for (Int b = 0; b < avgIp(0) * avgIp(1); b++) {
+               //   for (casacore::Int b = 0; b < avgIp(0) * avgIp(1); b++) {
                //      cout << avgtheflags_p(b, row);
                //   } 
                //cout << " \noldflagit="; 
-               //   for (Int b = 0; b < avgIp(0) * avgIp(1); b++) {
-               //      Int p = row * avgIp(0) * avgIp(1);
+               //   for (casacore::Int b = 0; b < avgIp(0) * avgIp(1); b++) {
+               //      casacore::Int p = row * avgIp(0) * avgIp(1);
                //      cout << avgflagit.data()[p + b]; 
                //   }
                //cout << "\n";
 
-               Vector<Int> pols(avgIp(0));
-               Int pCnt = 0;
+               casacore::Vector<casacore::Int> pols(avgIp(0));
+               casacore::Int pCnt = 0;
                if (ext.contains("P")) {
-                for (Int i = 0; i < avgIp(0); i++) {
+                for (casacore::Int i = 0; i < avgIp(0); i++) {
                  pols(pCnt++) = i;
                 }
                }
                else {
                 pols(pCnt++) = polids(zpi, 0);
                }
-               pols.resize(pCnt, True);
+               pols.resize(pCnt, true);
                //cout << "pols=" << pols << endl;
 
 
-               Vector<Int> chans(avgIp(1));
-               Int cCnt = 0;
+               casacore::Vector<casacore::Int> chans(avgIp(1));
+               casacore::Int cCnt = 0;
                if (ext.contains("C")) {
-                for (Int i = 0; i < avgIp(1); i++) {
+                for (casacore::Int i = 0; i < avgIp(1); i++) {
                  chans(cCnt++) = i;
                 }
                }
@@ -3573,25 +3573,25 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
                 //for each row in chanMap
                 //if spwid match chanMap(*, 4) and 
                 //   rChan match chanMap(*, 3)
-                for (Int t = 0; t < Int(chanMap.nrow()); t++) {
+                for (casacore::Int t = 0; t < casacore::Int(chanMap.nrow()); t++) {
                  if (sp == chanMap(t, 4) && polids(zpi, 1) == chanMap(t, 3)) {
                   //cout << " chanMap(" << t << ")=" << chanMap.row(t) << endl;
-                  for (Int i = chanMap(t, 0);
+                  for (casacore::Int i = chanMap(t, 0);
                        i <= chanMap(t, 1); i += chanMap(t, 2)) {
                    chans(cCnt++) = i;
                   }
                  }
                 }
                }
-               chans.resize(cCnt, True);
+               chans.resize(cCnt, true);
                //cout << "chns=" << chans << endl;
 
               
-               for (uInt i = 0; i < chans.nelements(); i++) {
-                Int d = chans(i);
-                for (uInt j = 0; j < pols.nelements(); j++) {
-                 Int pol = pols(j);
-                 Int s = d * avgIp(0) + pol;
+               for (casacore::uInt i = 0; i < chans.nelements(); i++) {
+                casacore::Int d = chans(i);
+                for (casacore::uInt j = 0; j < pols.nelements(); j++) {
+                 casacore::Int pol = pols(j);
+                 casacore::Int s = d * avgIp(0) + pol;
   
 
                  //cout  
@@ -3603,7 +3603,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
                  //    << endl;
   
                  //cout << "row=" << row << endl;
-                 avgtheflags_p(s, row) = (Bool)direction;
+                 avgtheflags_p(s, row) = (casacore::Bool)direction;
 
 
                  srow = row * avgIp(0) * avgIp(1) + s;
@@ -3619,13 +3619,13 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
                }
                //cout << "row=" << row << endl;
                //cout << " \nnewFlag=";
-               //   for (Int b = 0; b < avgIp(0) * avgIp(1); b++) {
+               //   for (casacore::Int b = 0; b < avgIp(0) * avgIp(1); b++) {
                //      cout << avgtheflags_p(b, row);
                //   } 
                //cout << " \nnewflagit="; 
-               //   for (Int b = 0; b < avgIp(0) * avgIp(1); 
+               //   for (casacore::Int b = 0; b < avgIp(0) * avgIp(1); 
                //                                       b++) {
-               //      Int p = row * avgIp(0) * avgIp(1);
+               //      casacore::Int p = row * avgIp(0) * avgIp(1);
                //      cout << avgflagit.data()[p + b]; 
                //   }
                //cout << "\n";
@@ -3634,7 +3634,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
                if (direction) {
                 //reconsile after flag cell
                 bool allFlagged = 1;
-                for (Int b = 0; b < avgIp(0) * avgIp(1); b++) {
+                for (casacore::Int b = 0; b < avgIp(0) * avgIp(1); b++) {
                  if (!avgtheflags_p(b, row)) {
                   allFlagged = 0;
                   break;
@@ -3663,16 +3663,16 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
 
           AvgRowFlags_p.putColumn(avgrowflags_p);
 
-          itsTab_p->flush(True);
+          itsTab_p->flush(true);
         }
           catch(...) {
             log->out("Can not write flags", 
-                 fnname, clname, LogMessage::WARN);
+                 fnname, clname, casacore::LogMessage::WARN);
         }
       }
      }
      else if (frcol_p) {
-      Array<Bool> flagarray;  
+      casacore::Array<casacore::Bool> flagarray;  
       if (fcol_p) { 
          flagarray.resize(Flags_p.shape(0));  
       }
@@ -3682,13 +3682,13 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
           ostringstream os;
           os << "FLAGROW\n" 
              << " theflags_p=" << theflags_p << endl; 
-          log->out(os, fnname, clname, LogMessage::DEBUG2);
+          log->out(os, fnname, clname, casacore::LogMessage::DEBUG2);
       }
 #endif
                           
       for (rc = 0; rc < NRows_p; rc++) {
          if (selectedPoint(fyp, rc)) {
-            theflags_p(fyp, rc) = (Bool)direction;
+            theflags_p(fyp, rc) = (casacore::Bool)direction;
             rowflags_p[rc] = direction ?  
                      theflags_p(fyp,rc) | rowflags_p[rc] :  
                      theflags_p(fyp,rc) & rowflags_p[rc];
@@ -3708,64 +3708,64 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
 
     if (fyp > 0 && fyp != NPlots_p) 
        log->out("NPlots is not correct (1)", 
-                fnname, clname, LogMessage::WARN );
+                fnname, clname, casacore::LogMessage::WARN );
  
     if (fcol_p && frcol_p) {
-        Array<Bool> flagarray;
+        casacore::Array<casacore::Bool> flagarray;
         flagarray.resize();
-        Bool rflag = True;
-        for (Int rc = 0; rc < NRows_p; rc++) {
+        casacore::Bool rflag = true;
+        for (casacore::Int rc = 0; rc < NRows_p; rc++) {
            Flags_p.get(rc,flagarray);
-           rflag=True;
-           for (Int j = 0; j < flagarray.shape().product(); j++) 
+           rflag=true;
+           for (casacore::Int j = 0; j < flagarray.shape().product(); j++) 
               rflag &= flagarray.data()[j];
                       
            if (rflag) 
-              rowflags_p[rc]=True;
+              rowflags_p[rc]=true;
            else 
-              rowflags_p[rc]=False;
+              rowflags_p[rc]=false;
         }
      }
  
 #if LOG0
      if (fcol_p && frcol_p) {
-        Array<Bool> flagcol;
+        casacore::Array<casacore::Bool> flagcol;
         flagcol = (Flags_p.getColumn());  
-        IPosition tshp = flagcol.shape();
+        casacore::IPosition tshp = flagcol.shape();
         if (direction == 1) {
-           Int count = 0;
-           Bool rflag = True;
-           for (Int i = 0; i < tshp[2]; i++) {
-              rflag=True;
-              for (Int j = 0; j < tshp[0] * tshp[1]; j++) { 
+           casacore::Int count = 0;
+           casacore::Bool rflag = true;
+           for (casacore::Int i = 0; i < tshp[2]; i++) {
+              rflag=true;
+              for (casacore::Int j = 0; j < tshp[0] * tshp[1]; j++) { 
                    rflag &= flagcol.data()[count+j];
               }
                           
               if (rowflags_p[i]) { 
-                 // If row is flagged, set all data flags to True.
-                 for (Int j = 0; j < tshp[0] * tshp[1]; j++)
-                    flagcol.data()[count+j] = True;
+                 // If row is flagged, set all data flags to true.
+                 for (casacore::Int j = 0; j < tshp[0] * tshp[1]; j++)
+                    flagcol.data()[count+j] = true;
               }
               else if (rflag) 
-                 rowflags_p[i] = True;
+                 rowflags_p[i] = true;
                          
               count += tshp[0] * tshp[1];
           }
        }
        else {
-          Int count = 0;
-          Bool rflag = True;
-          for (Int i = 0; i < tshp[2]; i++) {
-             rflag=True;
-             for (Int j = 0;j < tshp[0] * tshp[1]; j++) 
+          casacore::Int count = 0;
+          casacore::Bool rflag = true;
+          for (casacore::Int i = 0; i < tshp[2]; i++) {
+             rflag=true;
+             for (casacore::Int j = 0;j < tshp[0] * tshp[1]; j++) 
                 rflag &= flagcol.data()[count+j];
                                      
              if (!rowflags_p[i] && rflag) {
-                for (Int j = 0; j < tshp[0] * tshp[1]; j++)
-                   flagcol.data()[count+j] = False;
+                for (casacore::Int j = 0; j < tshp[0] * tshp[1]; j++)
+                   flagcol.data()[count+j] = false;
               }
               else if(!rflag) 
-                 rowflags_p[i]=False;
+                 rowflags_p[i]=false;
                          
               count += tshp[0]*tshp[1];
            }
@@ -3780,24 +3780,24 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
  
      if (fyp > 0 && fyp != NPlots_p) 
          log->out( "NPlots is not correct (2)", 
-              fnname, clname, LogMessage::WARN );
+              fnname, clname, casacore::LogMessage::WARN );
 
      //cout << "SelTab_p=" << SelTab_p << endl;
  
      try {
         SelTab_p.flush();
         log->out("Flags written to disk.",
-                  fnname, clname, LogMessage::DEBUG2); 
+                  fnname, clname, casacore::LogMessage::DEBUG2); 
      }
      catch(...) {
         log->out("Failed to write flags..", 
-                  fnname, clname, LogMessage::WARN);
+                  fnname, clname, casacore::LogMessage::WARN);
      }
 
    }
-   catch (AipsError x) {
+   catch (casacore::AipsError x) {
       log->out("Failed to write flags...", 
-                    fnname, clname, LogMessage::WARN);
+                    fnname, clname, casacore::LogMessage::WARN);
    }
 
    log->FnExit(fnname, clname);
@@ -3809,9 +3809,9 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
 //
 //
 ////////////////////////////////////////////////////////////////////
-Int BasePlot::getFlags(String flagversion, String msname)
+Int BasePlot::getFlags(casacore::String flagversion, casacore::String msname)
 {
-   String fnname = "getFlags";
+   casacore::String fnname = "getFlags";
    log->FnEnter(fnname + "(flageversion, msname)", clname);
 
    itsTabName_p = msname;
@@ -3821,32 +3821,32 @@ Int BasePlot::getFlags(String flagversion, String msname)
    }
 
    try {
-      itsTab_p = new Table(itsTabName_p, casa::Table::Update);
+      itsTab_p = new casacore::Table(itsTabName_p, casa::Table::Update);
    }
    catch (...) {
-      log->out("Can not open MS to write flags",
-               fnname, clname, LogMessage::WARN); 
+      log->out("Can not open casacore::MS to write flags",
+               fnname, clname, casacore::LogMessage::WARN); 
       return 0;
    }
-   log->out("MS open for flagging", fnname, clname, LogMessage::DEBUG2); 
+   log->out("casacore::MS open for flagging", fnname, clname, casacore::LogMessage::DEBUG2); 
 
-   Slicer fslice;
-   Array<Bool> flagit; 
-   Vector<Float> vfcount;
-   Vector<Float> vtcount;
-   Vector<Bool> vsflag;
-   IPosition fshp;
-   //Bool sflag;
-   Bool row;
+   casacore::Slicer fslice;
+   casacore::Array<casacore::Bool> flagit; 
+   casacore::Vector<casacore::Float> vfcount;
+   casacore::Vector<casacore::Float> vtcount;
+   casacore::Vector<casacore::Bool> vsflag;
+   casacore::IPosition fshp;
+   //casacore::Bool sflag;
+   casacore::Bool row;
    
-   row = False;
+   row = false;
 
    //if (FV) {
    //   if(flagversion.length() && 
    //        !currentflagversion_p.matches(flagversion))
    //   {
-   //      log->out(String("getting flag version ")+flagversion,
-   //           fnname, clname, LogMessage::DEBUG2); 
+   //      log->out(casacore::String("getting flag version ")+flagversion,
+   //           fnname, clname, casacore::LogMessage::DEBUG2); 
    //      FV->attachFlagColumns(flagversion, AvgRowFlags_p, 
    //                            AvgFlags_p, *itsTab_p);
    //      currentflagversion_p = flagversion;
@@ -3865,16 +3865,16 @@ Int BasePlot::getFlags(String flagversion, String msname)
    flagit.resize();
    flagit = AvgFlags_p.getColumn();
    //cout << "flagit=" << flagit.shape() << endl;
-   IPosition ip = flagit.shape();
+   casacore::IPosition ip = flagit.shape();
    avgtheflags_p.resize(ip(1) * ip(0), ip(2));   
-   //avgtheflags_p.set(False);
+   //avgtheflags_p.set(false);
 
-   Int fyp=0; 
-   Int cnt=0;
-   Int zp;
-   for (Int rc = 0; rc < ip(2); rc++) {
+   casacore::Int fyp=0; 
+   casacore::Int cnt=0;
+   casacore::Int zp;
+   for (casacore::Int rc = 0; rc < ip(2); rc++) {
       zp = fyp;
-      for (Int i = 0; i < ip(0) * ip(1); i++) {
+      for (casacore::Int i = 0; i < ip(0) * ip(1); i++) {
          avgtheflags_p(zp + i, rc) = (flagit.data()[cnt]);
          cnt++;
       }
@@ -3884,26 +3884,26 @@ Int BasePlot::getFlags(String flagversion, String msname)
    //cout << avgtheflags_p(0, 0) << endl;
    //cout << avgtheflags_p(125, 22653) << endl;
 
-   //Vector<TableExprNode> ctens(2);
-   //ctens[0] = RecordGram::parse(*itsTab_p, "FLAG");
-   //ctens[1] = RecordGram::parse(*itsTab_p, "FLAG_ROW");
+   //casacore::Vector<casacore::TableExprNode> ctens(2);
+   //ctens[0] = casacore::RecordGram::parse(*itsTab_p, "FLAG");
+   //ctens[1] = casacore::RecordGram::parse(*itsTab_p, "FLAG_ROW");
    //
-   //log->out(String("FLAG nrow=") 
-   //         + String::toString(ctens[0].nrow()) +
+   //log->out(casacore::String("FLAG nrow=") 
+   //         + casacore::String::toString(ctens[0].nrow()) +
    //         "FLAG_ROW nrow=" 
-   //         + String::toString(ctens[1].nrow()),
-   //         fnname, clname, LogMessage::DEBUG2);
+   //         + casacore::String::toString(ctens[1].nrow()),
+   //         fnname, clname, casacore::LogMessage::DEBUG2);
    return 0;
 }
 
 /*********************************************************************************/
 /* Set Flags */
 /* Directly write to disk. */
-Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
+Int BasePlot::flagData(casacore::Int diskwrite, casacore::Int setrowflag, casacore::Int direction)
 {
 
 
-   String fnname = "flagData";
+   casacore::String fnname = "flagData";
    log->FnEnter(fnname + "(diskwrite, setrowflag, direction)", clname);
 
    flagdirection_p = direction;
@@ -3911,7 +3911,7 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
    
    ostringstream os;
    os << "Reduction type : " << ReductionType_p;
-   log->out(os, fnname, clname, LogMessage::DEBUG2); 
+   log->out(os, fnname, clname, casacore::LogMessage::DEBUG2); 
     
    // direction = 1 --> flag
    // direction = 0 --> unflag
@@ -3921,16 +3921,16 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
    try
    {
 
-   Int fyp;
-   Slicer fslice;
-   Array<Bool> flagit; 
-   Bool row;
-   IPosition fshp;
+   casacore::Int fyp;
+   casacore::Slicer fslice;
+   casacore::Array<casacore::Bool> flagit; 
+   casacore::Bool row;
+   casacore::IPosition fshp;
    
-   Int ff=0;
-   Int zp,cnt,rc;
-   row = False;
-   Int npol=0;
+   casacore::Int ff=0;
+   casacore::Int zp,cnt,rc;
+   row = false;
+   casacore::Int npol=0;
    
    fyp=0;      
    for(int z=0;z<nTens_p;z++) 
@@ -3966,13 +3966,13 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
               for(rc=0;rc<NRows_p;rc++)
               {
                  zp = fyp;
-                 for (Int i=0;i<fshp.product();i++)
+                 for (casacore::Int i=0;i<fshp.product();i++)
                  {
                   if(selectedPoint(zp+i,rc))
                   {
                  // cout << "zp=" << zp << " i=" << i << " rc=" << rc 
                  //      << " cnt=" << cnt << endl;
-                     theflags_p(zp+i,rc) = (Bool)direction;
+                     theflags_p(zp+i,rc) = (casacore::Bool)direction;
                      //?
                      (flagit.data()[cnt]) = direction ? 
                        theflags_p(zp+i,rc) | (flagit.data()[cnt]) :
@@ -3989,11 +3989,11 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
               for(rc=0;rc<NRows_p;rc++)
               {
                zp = fyp;
-               for (Int i=0;i<fshp.product();i++)
+               for (casacore::Int i=0;i<fshp.product();i++)
                {
                  if(selectedPoint(zp,rc))
                  {
-                  theflags_p(zp,rc) = (Bool)direction;
+                  theflags_p(zp,rc) = (casacore::Bool)direction;
                   (flagit.data()[cnt]) = direction ? 
                     theflags_p(zp,rc) | (flagit.data()[cnt]) :
                     theflags_p(zp,rc) & (flagit.data()[cnt]);
@@ -4005,7 +4005,7 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
               fyp++;
               
               break;
-           case 2: /* Vector reduction : MEANS */
+           case 2: /* casacore::Vector reduction : MEANS */
            case 3:
               npol = fshp[0];
               cnt=0;
@@ -4013,11 +4013,11 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
               {
                  zp = fyp;
                  ff=0;
-                 for (Int i=0;i<fshp.product();i++)
+                 for (casacore::Int i=0;i<fshp.product();i++)
                  {
                     if(selectedPoint(zp+ff,rc))
                     {
-                     theflags_p(zp+ff,rc) = (Bool)direction;
+                     theflags_p(zp+ff,rc) = (casacore::Bool)direction;
                        (flagit.data()[cnt]) = direction ? 
                        theflags_p(zp+ff,rc) | (flagit.data()[cnt]) :
                        theflags_p(zp+ff,rc) & (flagit.data()[cnt]);
@@ -4035,7 +4035,7 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
               }
               fyp += fshp[ReductionType_p[z]-2];
               break;
-           default: BasePlotError(String("Unsupported TaQL reduction"));
+           default: BasePlotError(casacore::String("Unsupported TaQL reduction"));
         }//end of switch
         
         /* Now write these flags to disk */
@@ -4050,7 +4050,7 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
           //cout << "write row flag" << endl; 
           if(frcol_p)
           {
-              Array<Bool> flagarray;  
+              casacore::Array<casacore::Bool> flagarray;  
               if(fcol_p) 
                   flagarray.resize(Flags_p.shape(0));  
                                 
@@ -4060,7 +4060,7 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
                      flagging hasn't been done yet */
                  if(selectedPoint(fyp,rc))
                  {
-                     theflags_p(fyp,rc) = (Bool)direction;
+                     theflags_p(fyp,rc) = (casacore::Bool)direction;
                      rowflags_p[rc] = 
                             direction ?  theflags_p(fyp,rc) | rowflags_p[rc] 
                                       :  theflags_p(fyp,rc) & rowflags_p[rc];
@@ -4086,75 +4086,75 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
 
     if(fyp>0 && fyp != NPlots_p) 
          log->out( "NPlots is not correct (1)", 
-               fnname, clname, LogMessage::WARN );
+               fnname, clname, casacore::LogMessage::WARN );
 
      /* Reconcile flag and rowflag and write back to disk */
      // Only set RF to &&&& of F
      if(fcol_p && frcol_p)
      {
-        Array<Bool> flagarray;
+        casacore::Array<casacore::Bool> flagarray;
         flagarray.resize();
-        Bool rflag=True;
-        for(Int rc=0;rc<NRows_p;rc++)
+        casacore::Bool rflag=true;
+        for(casacore::Int rc=0;rc<NRows_p;rc++)
         {
             Flags_p.get(rc,flagarray);
-            rflag=True;
-            for(Int j=0;j<flagarray.shape().product();j++) 
+            rflag=true;
+            for(casacore::Int j=0;j<flagarray.shape().product();j++) 
                rflag &= flagarray.data()[j];
                      
                if(rflag) 
-                  rowflags_p[rc]=True;
+                  rowflags_p[rc]=true;
                else 
-                 rowflags_p[rc]=False;
+                 rowflags_p[rc]=false;
         }
      }
 
 #if LOG0
      if(fcol_p && frcol_p)
      {
-        Array<Bool> flagcol;
+        casacore::Array<casacore::Bool> flagcol;
         flagcol = (Flags_p.getColumn());  
-        IPosition tshp=flagcol.shape();
-        //cout << "flagcol shape : " << tshp << LogIO::POST
+        casacore::IPosition tshp=flagcol.shape();
+        //cout << "flagcol shape : " << tshp << casacore::LogIO::POST
         if(direction==1)//flag
         {
-            Int count=0;
-            Bool rflag=True;
-            for(Int i=0;i<tshp[2];i++)
+            casacore::Int count=0;
+            casacore::Bool rflag=true;
+            for(casacore::Int i=0;i<tshp[2];i++)
             {
-               rflag=True;
-               for(Int j=0;j<tshp[0]*tshp[1];j++) 
+               rflag=true;
+               for(casacore::Int j=0;j<tshp[0]*tshp[1];j++) 
                    rflag &= flagcol.data()[count+j];
                          
                 if(rowflags_p[i]) 
-                // If row is flagged, set all data flags to True.
+                // If row is flagged, set all data flags to true.
                 {
-                   for(Int j=0;j<tshp[0]*tshp[1];j++)
-                       flagcol.data()[count+j] = True;
+                   for(casacore::Int j=0;j<tshp[0]*tshp[1];j++)
+                       flagcol.data()[count+j] = true;
                 }
                 else if(rflag) 
-                   rowflags_p[i]=True;
+                   rowflags_p[i]=true;
                          
                 count += tshp[0]*tshp[1];
             }
         }
         else //unflag
         {
-           Int count=0;
-           Bool rflag=True;
-           for(Int i=0;i<tshp[2];i++)
+           casacore::Int count=0;
+           casacore::Bool rflag=true;
+           for(casacore::Int i=0;i<tshp[2];i++)
            {
-              rflag=True;
-              for(Int j=0;j<tshp[0]*tshp[1];j++) 
+              rflag=true;
+              for(casacore::Int j=0;j<tshp[0]*tshp[1];j++) 
                  rflag &= flagcol.data()[count+j];
                                      
               if(!rowflags_p[i] && rflag)// unflag all data flags
               {
-                 for(Int j=0;j<tshp[0]*tshp[1];j++)
-                      flagcol.data()[count+j] = False;
+                 for(casacore::Int j=0;j<tshp[0]*tshp[1];j++)
+                      flagcol.data()[count+j] = false;
               }
               else if(!rflag) 
-                 rowflags_p[i]=False;
+                 rowflags_p[i]=false;
                          
               count += tshp[0]*tshp[1];
            }
@@ -4169,23 +4169,23 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
 
      if(fyp>0 && fyp != NPlots_p) 
         log->out( "NPlots is not correct (2)", 
-             fnname, clname, LogMessage::WARN );
+             fnname, clname, casacore::LogMessage::WARN );
 
      try {
         SelTab_p.flush();
      }
      catch(...) {
         log->out("Failed to write flags.", 
-                 fnname, clname, LogMessage::WARN );
+                 fnname, clname, casacore::LogMessage::WARN );
      }
 
      log->out( "Flags written to disk.",
-               fnname, clname, LogMessage::DEBUGGING); 
+               fnname, clname, casacore::LogMessage::DEBUGGING); 
 
    }
-   catch (AipsError x)
+   catch (casacore::AipsError x)
    {
-      BasePlotError(String("Unable to write flags to disk"));
+      BasePlotError(casacore::String("Unable to write flags to disk"));
    }
    
    log->FnExit(fnname, clname);
@@ -4193,18 +4193,18 @@ Int BasePlot::flagData(Int diskwrite, Int setrowflag, Int direction)
 }
 
 /*********************************************************************************/
-void BasePlot::BasePlotError(String msg)
+void BasePlot::BasePlotError(casacore::String msg)
 {
-   throw AipsError("BasePlot: " + msg);
+   throw casacore::AipsError("BasePlot: " + msg);
 }
 /*********************************************************************************/
 
-Int BasePlot::flagData(Int direction, String msname, 
-                       String ext)
+Int BasePlot::flagData(casacore::Int direction, casacore::String msname, 
+                       casacore::String ext)
 {
 
 
-   String fnname = "flagData";
+   casacore::String fnname = "flagData";
    log->FnEnter(fnname + "(diskwrite, setrowflag, direction)", clname);
    //cout << "msname=" << msname << endl;
    //cout << "direction=" << direction << endl;
@@ -4216,7 +4216,7 @@ Int BasePlot::flagData(Int direction, String msname,
    
    ostringstream os;
    //os << "Reduction type : " << ReductionType_p;
-   log->out(os, fnname, clname, LogMessage::DEBUG2); 
+   log->out(os, fnname, clname, casacore::LogMessage::DEBUG2); 
     
    // direction = 1 --> flag
    // direction = 0 --> unflag
@@ -4227,25 +4227,25 @@ Int BasePlot::flagData(Int direction, String msname,
    try
    {
 
-   Int fyp;
-   Slicer fslice;
-   Array<Bool> flagit; 
-   Bool row;
-   IPosition fshp;
+   casacore::Int fyp;
+   casacore::Slicer fslice;
+   casacore::Array<casacore::Bool> flagit; 
+   casacore::Bool row;
+   casacore::IPosition fshp;
    
-   Int ff=0;
-   Int zp,cnt,rc;
-   row = False;
-   Int npol=0;
+   casacore::Int ff=0;
+   casacore::Int zp,cnt,rc;
+   row = false;
+   casacore::Int npol=0;
    
    //get flags
    flagit.resize();
    flagit = Flags_p.getColumn(); 
-   IPosition avgIp = flagit.shape();
+   casacore::IPosition avgIp = flagit.shape();
    //cout << "nPol=" << avgIp(0) << " nChan=" << avgIp(1)
    //     << " nRow=" << avgIp(2) << endl;
 
-   Matrix<Int> polids = getLocatePolChan();
+   casacore::Matrix<casacore::Int> polids = getLocatePolChan();
    //cout << "polids=" << polids << endl;
 
    fyp=0;      
@@ -4282,38 +4282,38 @@ Int BasePlot::flagData(Int direction, String msname,
               cnt=0;
               for(rc=0;rc<NRows_p;rc++) {
                  zp = fyp;
-                 for (Int i=0;i<fshp.product();i++) {
-                  Int zpi = zp + i;
+                 for (casacore::Int i=0;i<fshp.product();i++) {
+                  casacore::Int zpi = zp + i;
                   //cout << "zp=" << zp << " i=" << i << " rc=" << rc 
                   //     << " cnt=" << cnt 
                   //     << " srow=" << rc * fshp.product() + i << endl;
                   if (selectedPoint(zpi,rc)) {
-                    Int pol = polids(zpi, 0);
-                    Int chn = polids(zpi, 1);
+                    casacore::Int pol = polids(zpi, 0);
+                    casacore::Int chn = polids(zpi, 1);
                     //cout << "pol=" << pol << " chn=" << chn << endl;
                      
                     //{
-                    //   theflags_p(zpi,rc) = (Bool)direction;
+                    //   theflags_p(zpi,rc) = (casacore::Bool)direction;
                     //   (flagit.data()[cnt]) = direction ? 
                     //     theflags_p(zpi,rc) | (flagit.data()[cnt]) :
                     //     theflags_p(zpi,rc) & (flagit.data()[cnt]);
                     // }
 
                      
-                     for (Int p = 0; p < avgIp(0); p++) {
-                       for (Int c = 0; c < avgIp(1); c++ ) {
+                     for (casacore::Int p = 0; p < avgIp(0); p++) {
+                       for (casacore::Int c = 0; c < avgIp(1); c++ ) {
                          if (ext.contains("P") && c == chn) {
-                            IPosition ip(3, p, c, rc);
+                            casacore::IPosition ip(3, p, c, rc);
                             //cout << "ip=" << ip << endl;
-                            theflags_p(zpi,rc) = (Bool)direction;
+                            theflags_p(zpi,rc) = (casacore::Bool)direction;
                             flagit(ip) = direction ? 
                                theflags_p(zpi,rc) | flagit(ip) :
                                theflags_p(zpi,rc) & flagit(ip);
                          }
                          if (ext.contains("C") && p == pol) {
-                            IPosition ip(3, p, c, rc);
+                            casacore::IPosition ip(3, p, c, rc);
                             //cout << "ip=" << ip << endl;
-                            theflags_p(zpi,rc) = (Bool)direction;
+                            theflags_p(zpi,rc) = (casacore::Bool)direction;
                             flagit(ip) = direction ? 
                                theflags_p(zpi,rc) | flagit(ip) :
                                theflags_p(zpi,rc) & flagit(ip);
@@ -4332,11 +4332,11 @@ Int BasePlot::flagData(Int direction, String msname,
               for(rc=0;rc<NRows_p;rc++)
               {
                zp = fyp;
-               for (Int i=0;i<fshp.product();i++)
+               for (casacore::Int i=0;i<fshp.product();i++)
                {
                  if(selectedPoint(zp,rc))
                  {
-                  theflags_p(zp,rc) = (Bool)direction;
+                  theflags_p(zp,rc) = (casacore::Bool)direction;
                   (flagit.data()[cnt]) = direction ? 
                     theflags_p(zp,rc) | (flagit.data()[cnt]) :
                     theflags_p(zp,rc) & (flagit.data()[cnt]);
@@ -4348,7 +4348,7 @@ Int BasePlot::flagData(Int direction, String msname,
               fyp++;
               
               break;
-           case 2: /* Vector reduction : MEANS */
+           case 2: /* casacore::Vector reduction : MEANS */
            case 3:
               npol = fshp[0];
               cnt=0;
@@ -4356,11 +4356,11 @@ Int BasePlot::flagData(Int direction, String msname,
               {
                  zp = fyp;
                  ff=0;
-                 for (Int i=0;i<fshp.product();i++)
+                 for (casacore::Int i=0;i<fshp.product();i++)
                  {
                     if(selectedPoint(zp+ff,rc))
                     {
-                     theflags_p(zp+ff,rc) = (Bool)direction;
+                     theflags_p(zp+ff,rc) = (casacore::Bool)direction;
                        (flagit.data()[cnt]) = direction ? 
                        theflags_p(zp+ff,rc) | (flagit.data()[cnt]) :
                        theflags_p(zp+ff,rc) & (flagit.data()[cnt]);
@@ -4378,7 +4378,7 @@ Int BasePlot::flagData(Int direction, String msname,
               }
               fyp += fshp[ReductionType_p[z]-2];
               break;
-           default: BasePlotError(String("Unsupported TaQL reduction"));
+           default: BasePlotError(casacore::String("Unsupported TaQL reduction"));
         }//end of switch
         
         /* Now write these flags to disk */
@@ -4393,7 +4393,7 @@ Int BasePlot::flagData(Int direction, String msname,
           //cout << "write row flag" << endl; 
           if(frcol_p)
           {
-              Array<Bool> flagarray;  
+              casacore::Array<casacore::Bool> flagarray;  
               if(fcol_p) 
                   flagarray.resize(Flags_p.shape(0));  
                                 
@@ -4403,7 +4403,7 @@ Int BasePlot::flagData(Int direction, String msname,
                      flagging hasn't been done yet */
                  if(selectedPoint(fyp,rc))
                  {
-                     theflags_p(fyp,rc) = (Bool)direction;
+                     theflags_p(fyp,rc) = (casacore::Bool)direction;
                      rowflags_p[rc] = 
                             direction ?  theflags_p(fyp,rc) | rowflags_p[rc] 
                                       :  theflags_p(fyp,rc) & rowflags_p[rc];
@@ -4429,75 +4429,75 @@ Int BasePlot::flagData(Int direction, String msname,
 
     if(fyp>0 && fyp != NPlots_p) 
          log->out( "NPlots is not correct (1)", 
-               fnname, clname, LogMessage::WARN );
+               fnname, clname, casacore::LogMessage::WARN );
 
      /* Reconcile flag and rowflag and write back to disk */
      // Only set RF to &&&& of F
      if(fcol_p && frcol_p)
      {
-        Array<Bool> flagarray;
+        casacore::Array<casacore::Bool> flagarray;
         flagarray.resize();
-        Bool rflag=True;
-        for(Int rc=0;rc<NRows_p;rc++)
+        casacore::Bool rflag=true;
+        for(casacore::Int rc=0;rc<NRows_p;rc++)
         {
             Flags_p.get(rc,flagarray);
-            rflag=True;
-            for(Int j=0;j<flagarray.shape().product();j++) 
+            rflag=true;
+            for(casacore::Int j=0;j<flagarray.shape().product();j++) 
                rflag &= flagarray.data()[j];
                      
                if(rflag) 
-                  rowflags_p[rc]=True;
+                  rowflags_p[rc]=true;
                else 
-                 rowflags_p[rc]=False;
+                 rowflags_p[rc]=false;
         }
      }
 
 #if LOG0
      if(fcol_p && frcol_p)
      {
-        Array<Bool> flagcol;
+        casacore::Array<casacore::Bool> flagcol;
         flagcol = (Flags_p.getColumn());  
-        IPosition tshp=flagcol.shape();
-        //cout << "flagcol shape : " << tshp << LogIO::POST
+        casacore::IPosition tshp=flagcol.shape();
+        //cout << "flagcol shape : " << tshp << casacore::LogIO::POST
         if(direction==1)//flag
         {
-            Int count=0;
-            Bool rflag=True;
-            for(Int i=0;i<tshp[2];i++)
+            casacore::Int count=0;
+            casacore::Bool rflag=true;
+            for(casacore::Int i=0;i<tshp[2];i++)
             {
-               rflag=True;
-               for(Int j=0;j<tshp[0]*tshp[1];j++) 
+               rflag=true;
+               for(casacore::Int j=0;j<tshp[0]*tshp[1];j++) 
                    rflag &= flagcol.data()[count+j];
                          
                 if(rowflags_p[i]) 
-                // If row is flagged, set all data flags to True.
+                // If row is flagged, set all data flags to true.
                 {
-                   for(Int j=0;j<tshp[0]*tshp[1];j++)
-                       flagcol.data()[count+j] = True;
+                   for(casacore::Int j=0;j<tshp[0]*tshp[1];j++)
+                       flagcol.data()[count+j] = true;
                 }
                 else if(rflag) 
-                   rowflags_p[i]=True;
+                   rowflags_p[i]=true;
                          
                 count += tshp[0]*tshp[1];
             }
         }
         else //unflag
         {
-           Int count=0;
-           Bool rflag=True;
-           for(Int i=0;i<tshp[2];i++)
+           casacore::Int count=0;
+           casacore::Bool rflag=true;
+           for(casacore::Int i=0;i<tshp[2];i++)
            {
-              rflag=True;
-              for(Int j=0;j<tshp[0]*tshp[1];j++) 
+              rflag=true;
+              for(casacore::Int j=0;j<tshp[0]*tshp[1];j++) 
                  rflag &= flagcol.data()[count+j];
                                      
               if(!rowflags_p[i] && rflag)// unflag all data flags
               {
-                 for(Int j=0;j<tshp[0]*tshp[1];j++)
-                      flagcol.data()[count+j] = False;
+                 for(casacore::Int j=0;j<tshp[0]*tshp[1];j++)
+                      flagcol.data()[count+j] = false;
               }
               else if(!rflag) 
-                 rowflags_p[i]=False;
+                 rowflags_p[i]=false;
                          
               count += tshp[0]*tshp[1];
            }
@@ -4512,23 +4512,23 @@ Int BasePlot::flagData(Int direction, String msname,
 
      if(fyp>0 && fyp != NPlots_p) 
         log->out( "NPlots is not correct (2)", 
-             fnname, clname, LogMessage::WARN );
+             fnname, clname, casacore::LogMessage::WARN );
 
      try {
         SelTab_p.flush();
      }
      catch(...) {
         log->out("Failed to write flags.", 
-                 fnname, clname, LogMessage::WARN );
+                 fnname, clname, casacore::LogMessage::WARN );
      }
 
      log->out( "Flags written to disk.",
-               fnname, clname, LogMessage::DEBUGGING); 
+               fnname, clname, casacore::LogMessage::DEBUGGING); 
 
    }
-   catch (AipsError x)
+   catch (casacore::AipsError x)
    {
-      BasePlotError(String("Unable to write flags to disk"));
+      BasePlotError(casacore::String("Unable to write flags to disk"));
    }
    //cout << " newflag=" << theflags_p << endl;
    

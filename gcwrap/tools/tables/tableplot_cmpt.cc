@@ -37,8 +37,10 @@
 #include <casa/BasicSL/String.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 /* Derived Class for conversion functions for addition */
@@ -72,7 +74,7 @@ class TPGuiBinder : public casa::GUIBinderBase
 			return tbp_p->locatedata(); 
 		}
 		Bool iterplotnext(){ return tbp_p->iterplotnext(); }
-		Bool iterplotstop(){ return tbp_p->iterplotstop(False); }
+		Bool iterplotstop(){ return tbp_p->iterplotstop(false); }
 		Bool clearplot(){return tbp_p->clearplot(0,0,0); }
                 Bool quit(){return tbp_p->done(); }
 	private :
@@ -147,7 +149,7 @@ tableplot::open(const std::vector<std::string>& tabnames)
 		if(adbg)cout << "nTabs : " << nTabs << endl;
 	
 		/* Open tables and attach to internal list */
-		if(TP->setTableS(TabNames,TabNames,SelStr)==-1) return False;
+		if(TP->setTableS(TabNames,TabNames,SelStr)==-1) return false;
 		
 		/* Record the tables - for use in data selection later on */
 		TABS.resize(0);
@@ -167,7 +169,7 @@ tableplot::open(const std::vector<std::string>& tabnames)
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 /* Choose a gui / backend */
 /* Keep this has a place-holder for choosing plotter backends */
@@ -193,7 +195,7 @@ tableplot::setgui(const bool gui)
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-   return True;
+   return true;
 }
 
 
@@ -206,7 +208,7 @@ tableplot::savefig( const std::string& filename,
 		const std::string& facecolor,
 		const std::string& edgecolor )
 {
-        casa::Bool rstat( casa::False );
+        casacore::Bool rstat( casacore::False );
 	try {
 	    rstat = TP->saveFigure( String( filename ), Int( dpi ),
                 String( orientation ), String( papertype ), 
@@ -222,7 +224,7 @@ tableplot::savefig( const std::string& filename,
 bool
 tableplot::selectdata(const std::string& taqlstring)
 {
-	if(alive==0 or nTabs==0){cerr <<"Open a Table first." << endl; return False;}
+	if(alive==0 or nTabs==0){cerr <<"Open a Table first." << endl; return false;}
 	String selectstring(taqlstring);
 		
 	try {
@@ -252,27 +254,27 @@ tableplot::selectdata(const std::string& taqlstring)
 
 		if(!ttt.nrow()) 
 		{
-			cerr << "No Rows in Selected Table !" << endl; return False;
+			cerr << "No Rows in Selected Table !" << endl; return false;
 		}
 		cout << "Number of selected rows : " << ttt.nrow() << endl;
 		SelTABS[i] = ttt;
 		SelStr[i] = selectstring;
 	}
 	/* Attach selected tables to internal list */
-	if(TP->setTableT(SelTABS,TabNames,SelStr)==-1) return False;
+	if(TP->setTableT(SelTABS,TabNames,SelStr)==-1) return false;
 	
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-   return True;
+   return true;
 }
 
 /* Plot Data */
 bool
 tableplot::plotdata(const ::casac::record& poption, const std::vector<std::string>& labels, const std::vector<std::string>& datastr)
 {
-	if(alive==0){ *itsLog << LogIO::WARN << "Please re-open the table" << LogIO::POST; return False;}
+	if(alive==0){ *itsLog << LogIO::WARN << "Please re-open the table" << LogIO::POST; return false;}
 	if(adbg)cout << "Extract and Plot Data" << endl;
 
 	try {
@@ -289,7 +291,7 @@ tableplot::plotdata(const ::casac::record& poption, const std::vector<std::strin
 	Vector<String> Errors(2);
 	
 	Errors[0] = pop.fillFromRecord(tempplotoption);
-	if(Errors[0].length()>0){cout << "ERRORS: "<< Errors[0] << endl; return False;}
+	if(Errors[0].length()>0){cout << "ERRORS: "<< Errors[0] << endl; return false;}
 
 	if((Int)templabels.nelements()==3)
 	{
@@ -304,14 +306,14 @@ tableplot::plotdata(const ::casac::record& poption, const std::vector<std::strin
 	/* Validate Pop */
 	Errors = pop.validateParams();
 	if(Errors[1].length()>0)cout<<"WARNINGS :"<< Errors[1] <<endl;
-	if(Errors[0].length()>0){cout<<"ERRORS :"<<Errors[0]<<endl;return False;}
+	if(Errors[0].length()>0){cout<<"ERRORS :"<<Errors[0]<<endl;return false;}
 	
 	/* Validate all inputs */
 	Vector<String> tempiteraxes(0);
 	//Errors = TP->checkInputs(pop,temptaqlvector, tempiteraxes);
 	Errors = TP->checkInputs(pop,tempdatastr, tempiteraxes);
 	if(Errors[1].length()>0)cout<<Errors[1] <<endl;
-	if(Errors[0].length()>0){cout<<"ERRORS :"<<Errors[0]<<endl;return False;}
+	if(Errors[0].length()>0){cout<<"ERRORS :"<<Errors[0]<<endl;return false;}
 
 	//TP->plotData(pop,temptaqlvector);
 	TP->plotData(pop,tempdatastr);
@@ -321,14 +323,14 @@ tableplot::plotdata(const ::casac::record& poption, const std::vector<std::strin
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-  return True;
+  return true;
 }
 
 /* RE-Plot Data */
 bool
 tableplot::replot()
 {
-	if(alive==0){ *itsLog << LogIO::WARN << "Please re-open the table" << LogIO::POST; return False;}
+	if(alive==0){ *itsLog << LogIO::WARN << "Please re-open the table" << LogIO::POST; return false;}
 	if(adbg)cout << "Extract and Plot Data" << endl;
 
 	try {
@@ -339,14 +341,14 @@ tableplot::replot()
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-  return True;
+  return true;
 }
 #if 1
 /* Start Iteration Plotting */
 bool
 tableplot::iterplotstart(const ::casac::record& poption, const std::vector<std::string>& labels, const std::vector<std::string>& datastr, const std::vector<std::string>& iteraxes)
 {
-	if(alive==0) return False;
+	if(alive==0) return false;
 
 	try {
 	templabels.resize(0);   templabels = toVectorString(labels);
@@ -360,13 +362,13 @@ tableplot::iterplotstart(const ::casac::record& poption, const std::vector<std::
 	if(adbg)cout << "Plot while iterating over an axis..." << endl;
 	
 	if(tempdatastr.nelements() % 2 != 0)
-	{cout << "Error : Need even number of TaQL strings" << endl; return False;}
+	{cout << "Error : Need even number of TaQL strings" << endl; return false;}
 
 	PlotOptions pop;
 	Vector<String> Errors(2);
 	
 	Errors[0] = pop.fillFromRecord(tempplotoption);
-	if(Errors[0].length()>0){cout << "ERRORS: "<< Errors[0] << endl; return False;}
+	if(Errors[0].length()>0){cout << "ERRORS: "<< Errors[0] << endl; return false;}
 	
 	if((Int)templabels.nelements()==3)
 	{
@@ -378,15 +380,15 @@ tableplot::iterplotstart(const ::casac::record& poption, const std::vector<std::
 	/* Validate Pop */
 	Errors = pop.validateParams();
 	if(Errors[1].length()>0)cout<<"WARNINGS :"<< Errors[1] <<endl;
-	if(Errors[0].length()>0){cout<<"ERRORS :"<<Errors[0]<<endl;return False;}
+	if(Errors[0].length()>0){cout<<"ERRORS :"<<Errors[0]<<endl;return false;}
 	
 	/* Validate all inputs */
 	Errors = TP->checkInputs(pop,temptaqlvector,tempiteraxes);
 	if(Errors[1].length()>0)cout<< Errors[1] <<endl;
-	if(Errors[0].length()>0){cout<<"ERRORS :"<<Errors[0]<<endl;return False;}
+	if(Errors[0].length()>0){cout<<"ERRORS :"<<Errors[0]<<endl;return false;}
 	
 	if(TP->iterMultiPlotStart(pop,temptaqlvector,tempiteraxes)==-1)
-	 return False;
+	 return false;
 
         TP->changeGuiButtonState("iternext","enabled");
 
@@ -395,35 +397,35 @@ tableplot::iterplotstart(const ::casac::record& poption, const std::vector<std::
 		RETHROW(x);
 	}
 
-  	return True;
+  	return true;
 }
 
 /* IterPlotNext */
 int
 tableplot::iterplotnext()
 {
-	if(alive==0) return False;
+	if(alive==0) return false;
 
 	try {
 	Vector<String> labcol;
 	Vector<Vector<Double> > labval;
 	
 	if(TP->iterMultiPlotNext(labcol,labval)==-1)
-	 return False;
+	 return false;
 
 
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 /* Terminate Iteration plotting */
 bool
 tableplot::iterplotstop( const bool /*rmplotter*/ )
 {
-	if(alive==0) return False;
+	if(alive==0) return false;
 	if(adbg)cout << " Stop iterplot..." << endl;
 
 	try {
@@ -434,7 +436,7 @@ tableplot::iterplotstop( const bool /*rmplotter*/ )
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 #endif
 
@@ -442,7 +444,7 @@ tableplot::iterplotstop( const bool /*rmplotter*/ )
 bool
 tableplot::markregions(const int nrows, const int ncols, const int panel,const std::vector<double>& region)
 {
-	if(alive==0) return False;
+	if(alive==0) return false;
 	if(adbg)cout << "Mark Flag Regions" << endl;
 
 	try {
@@ -450,13 +452,13 @@ tableplot::markregions(const int nrows, const int ncols, const int panel,const s
 		for(Int i=0;i<(Int)region.size();i++) 
 			regionvec[i] = (Double)region[i];
 		
-		if(TP->markRegions(nrows,ncols,panel,regionvec) == -1) return False;
+		if(TP->markRegions(nrows,ncols,panel,regionvec) == -1) return false;
 		
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 
@@ -464,7 +466,7 @@ tableplot::markregions(const int nrows, const int ncols, const int panel,const s
 bool
 tableplot::flagdata()
 {
-	if(alive==0) return False;
+	if(alive==0) return false;
 	if(adbg)cout << "Flag Data" << endl;
 
 	try {
@@ -475,14 +477,14 @@ tableplot::flagdata()
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 /* Un-Flag Data */
 bool
 tableplot::unflagdata()
 {
-	if(alive==0) return False;
+	if(alive==0) return false;
 	if(adbg)cout << "Unflag Data" << endl;
 
 	try {
@@ -493,14 +495,14 @@ tableplot::unflagdata()
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 /* Locate Data */
 bool
 tableplot::locatedata(const std::vector<std::string>& columnlist)
 {
-	if(alive==0) return False;
+	if(alive==0) return false;
 	if(adbg)cout << "Locate Data" << endl;
 
 	try {
@@ -520,7 +522,7 @@ tableplot::locatedata(const std::vector<std::string>& columnlist)
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 bool 
@@ -528,13 +530,13 @@ tableplot::clearplot(const int nrows, const int ncols, const int panel)
 {
 	if(adbg)cout << " Clear Plot " << endl;
 	try {
-		if(TP->clearPlot(nrows,ncols,panel) == -1) return False;
+		if(TP->clearPlot(nrows,ncols,panel) == -1) return false;
 	
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 /* Clear Flags */
@@ -549,7 +551,7 @@ tableplot::clearflags(const bool roottable)
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 /* Save flag version */
@@ -565,7 +567,7 @@ tableplot::saveflagversion(const std::string& versionname, const std::string& co
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 /* Restore flag version */
@@ -584,7 +586,7 @@ tableplot::restoreflagversion(const std::vector<std::string>& versionname, const
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 /* Get Flag version list */
@@ -604,7 +606,7 @@ tableplot::getflagversionlist()
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 /* Delete flag version */
@@ -623,7 +625,7 @@ tableplot::deleteflagversion(const std::vector<std::string>& versionname)
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 /* Clean up */
@@ -635,8 +637,8 @@ tableplot::done()
 		if(alive==1)
 		{
 			TabNames.resize(0); nTabs=0;
-			TABS.resize(0,True);
-			SelTABS.resize(0,True);
+			TABS.resize(0,true);
+			SelTABS.resize(0,true);
 			
 			temptabnames.resize(0); tempdatastr.resize(0);
 			tempiteraxes.resize(0); templabels.resize(0);
@@ -663,7 +665,7 @@ tableplot::done()
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 

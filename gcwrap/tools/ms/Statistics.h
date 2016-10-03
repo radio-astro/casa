@@ -17,7 +17,7 @@ class Statistics {
    public :
 
    /*
-     Converts data to Float, computes statistics
+     Converts data to casacore::Float, computes statistics
      
      v:           data
      flags:       flagged data is not used, shape must be
@@ -28,29 +28,29 @@ class Statistics {
      return: output dictionary
 
    */
-   static casa::Record
-     get_stats(const casa::Vector<T> v,
-               const casa::Vector<casa::Bool> flags,
+   static casacore::Record
+     get_stats(const casacore::Vector<T> v,
+               const casacore::Vector<casacore::Bool> flags,
                const std::string &column,
                bool &supported);
 
    /*
      As above, but all values are considered unflagged
     */
-   static casa::Record
-     get_stats(const casa::Vector<T> v,
+   static casacore::Record
+     get_stats(const casacore::Vector<T> v,
                const std::string &column,
                bool &supported);
 
    /*
      As get_stats().
      
-     The conversion from complex to Float depends on the parameter
+     The conversion from complex to casacore::Float depends on the parameter
      complex_value. Eg complex_value="imag" picks out the imaginary part.
    */
-   static casa::Record
-     get_stats_complex(const casa::Vector<casa::Complex> v,
-                       const casa::Vector<casa::Bool> flags,
+   static casacore::Record
+     get_stats_complex(const casacore::Vector<casacore::Complex> v,
+                       const casacore::Vector<casacore::Bool> flags,
                        const std::string &column,
                        bool &supported,
                        const std::string complex_value);
@@ -58,14 +58,14 @@ class Statistics {
    /*
      As above, but all values are considered unflagged
     */
-   static casa::Record
-     get_stats_complex(const casa::Vector<casa::Complex> v,
+   static casacore::Record
+     get_stats_complex(const casacore::Vector<casacore::Complex> v,
                        const std::string &column,
                        bool &supported,
                        const std::string complex_value);  
 
    /*
-     Converts data to Float, computes statistics
+     Converts data to casacore::Float, computes statistics
      
      v:           data
      flags:       indicating which data is flagged
@@ -76,9 +76,9 @@ class Statistics {
              N sets of statistical information, one for each index in the array
    */
 
-   static casa::Record
-     get_stats_array(const casa::Matrix<T> v,
-                     const casa::Vector<casa::Bool> flags,
+   static casacore::Record
+     get_stats_array(const casacore::Matrix<T> v,
+                     const casacore::Vector<casacore::Bool> flags,
                      const std::string &column,
                      bool &supported);
 
@@ -90,11 +90,11 @@ class Statistics {
         complex_value: see get_stats_complex()
         itsLog:        where to send log messages
      */
-     static casa::Record
-     get_statistics(const casa::Table &table,
+     static casacore::Record
+     get_statistics(const casacore::Table &table,
                     const std::string &column,
                     const std::string &complex_value,
-                    casa::LogIO *itsLog);
+                    casacore::LogIO *itsLog);
 
 
 

@@ -23,9 +23,11 @@
 #include <synthesisiterbot_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
      
+using namespace casacore;
 namespace casac {
 
   synthesisiterbot::synthesisiterbot():
@@ -49,7 +51,7 @@ casac::record* synthesisiterbot::setupiteration(const casac::record& iterpars)
 
   try 
     {
-      casa::Record recpars = *toRecord( iterpars );
+      casacore::Record recpars = *toRecord( iterpars );
       itsIterBot->setupIteration( recpars );
     } 
   catch  (AipsError x) 
@@ -149,7 +151,7 @@ casac::record* synthesisiterbot::getiterationsummary()
 
 bool synthesisiterbot::endmajorcycle()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   
   try 
     {
@@ -180,11 +182,11 @@ bool synthesisiterbot::endmajorcycle()
 
 bool synthesisiterbot::mergeinitrecord(const casac::record& initrecord)
 {
-  Bool rstat(False);
+  Bool rstat(false);
   
   try 
     {
-      casa::Record recpars = *toRecord( initrecord );
+      casacore::Record recpars = *toRecord( initrecord );
       itsIterBot->startMinorCycle( recpars );
      } 
   catch  (AipsError x) 
@@ -197,11 +199,11 @@ bool synthesisiterbot::mergeinitrecord(const casac::record& initrecord)
 
 bool synthesisiterbot::mergeexecrecord(const casac::record& execrecord)
 {
-  Bool rstat(False);
+  Bool rstat(false);
   
   try 
     {
-      casa::Record recpars = *toRecord( execrecord );
+      casacore::Record recpars = *toRecord( execrecord );
       itsIterBot->endMinorCycle(recpars);
      } 
   catch  (AipsError x) 
@@ -214,7 +216,7 @@ bool synthesisiterbot::mergeexecrecord(const casac::record& execrecord)
 
   bool synthesisiterbot::changestopflag(const bool stopflag)
 {
-  Bool rstat(True);
+  Bool rstat(true);
   
   try 
     {
@@ -232,7 +234,7 @@ bool synthesisiterbot::mergeexecrecord(const casac::record& execrecord)
 bool
 synthesisiterbot::done()
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {

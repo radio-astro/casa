@@ -13,7 +13,11 @@ namespace atm
   class SkyStatus;
 }
 
+namespace casacore{
+
+  class LogIO;
+}
+
 namespace casa
 {
-  class LogIO;
 }

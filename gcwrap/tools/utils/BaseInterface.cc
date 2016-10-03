@@ -10,6 +10,7 @@
 
 //extern "C" char **rl_completion_matches __P((const char *, rl_compentry_func_t *));
 
+using namespace casacore;
 namespace casa {
 
 //extern "C" char **casactl_completion __P((const char *, int , int));
@@ -46,7 +47,7 @@ extern "C" char *command_generator (const char *text, int state)
       list_index++;
       if (strncmp (name, text, len) == 0){
          rstat = strdup(name);
-	 amatch = True;
+	 amatch = true;
       }
    }
 		  /* If no names matched, then return NULL. */
@@ -94,11 +95,11 @@ Int BaseInterface::inputs(Record &params)
       char *line = readline("casactl: ");
       if(line){
 	 if(!strcmp(line, "quit") || !strcmp(line, "exit")){ 
-		 done=True;
+		 done=true;
 		 std::cerr << "Hey quit" << endl;
 		 rstat = -1;
 	 } else if(!strcmp(line, "go") || !strcmp(line, "run")){
-		 done = True;
+		 done = true;
 		 std::cerr << "Hey go" << endl;
 		 rstat = 1;
 	 } else {
@@ -114,19 +115,19 @@ Int BaseInterface::inputs(Record &params)
 void BaseInterface::parse_it(Record &/*params*/, const char *line){
 
    if(!strcmp(line, "help")){
-      done = False;
+      done = false;
       std::cerr << "Hey help" << endl;
    } else if(!strcmp(line, "clear")){
-      done = False;
+      done = false;
       std::cerr << "Hey clear" << endl;
    } else if(!strcmp(line, "reset")){
-      done = False;
+      done = false;
       std::cerr << "Hey reset" << endl;
    } else if(!strcmp(line, "show") || !strcmp(line, "list") || !strcmp(line, "inputs")){
-      done = False;
+      done = false;
       std::cerr << "Hey show" << endl;
    } else if(!strcmp(line, "set")){
-      done = False;
+      done = false;
       std::cerr << "Hey set" << endl;
    } else {
       std::cerr << "Unrecognized! " << line  << endl;
@@ -135,12 +136,12 @@ void BaseInterface::parse_it(Record &/*params*/, const char *line){
 
 Bool BaseInterface::go(const Record &/*params*/)
 {
-   Bool rstat(True);
+   Bool rstat(true);
    return rstat;
 }
 
 void BaseInterface::init(){
-   done = False;
+   done = false;
    rl_readline_name = "casactl";
    rl_attempted_completion_function = casactl_completion;
    commands.push_back("go");

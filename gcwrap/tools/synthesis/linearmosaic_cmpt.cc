@@ -22,15 +22,17 @@
 
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 linearmosaic::linearmosaic() 
  
 {
   // Default constructor
-  itsLog = new casa::LogIO();
+  itsLog = new casacore::LogIO();
   itsMos = new casa::LinearMosaic();
 }
 
@@ -51,11 +53,11 @@ linearmosaic::defineoutputimage(const int nx,
 		      const ::casac::variant& imagecenter,
 		      const std::string& outputimage, const std::string& outputweight) {
 
-  Bool rstat(False);
+  Bool rstat(false);
   try {
     if(itsMos) delete itsMos;
     itsMos=NULL;
-    casa::MDirection imcen;
+    casacore::MDirection imcen;
     if(!casaMDirection(imagecenter, imcen)){
     	    throw(AipsError("Could not interprete phasecenter parameter"));
     }
@@ -64,11 +66,11 @@ linearmosaic::defineoutputimage(const int nx,
     nY=ny;
     if(nY < 1)
     nY=nx;
-    casa::Quantity cellX=casaQuantity(cellx);
-    casa::Quantity cellY=casaQuantity(celly);
+    casacore::Quantity cellX=casaQuantity(cellx);
+    casacore::Quantity cellY=casaQuantity(celly);
     itsMos=new LinearMosaic(outputimage, outputweight, imcen, nX, nY,
     			  cellX, cellY);
-    rstat = True;
+    rstat = true;
   } catch  (AipsError x) {
 
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -78,11 +80,11 @@ linearmosaic::defineoutputimage(const int nx,
 }
 //-------------------------------------------------------------------------
 bool linearmosaic::setoutputimage(const  string& outputimage, const  string& outputweight,  int  imageweight, int weighttype){
-	 Bool rstat(False);
+	 Bool rstat(false);
 	  try {
 		  	  itsMos->setOutImages(outputimage, outputweight, imageweight, weighttype);
 
-		  	  rstat = True;
+		  	  rstat = true;
 		  } catch  (AipsError x) {
 
 		    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -93,14 +95,14 @@ bool linearmosaic::setoutputimage(const  string& outputimage, const  string& out
 }
 ///---------------------------------------------------------------------------
 bool linearmosaic::setlinmostype(const  string& linmostype){
-	 Bool rstat(False);
+	 Bool rstat(false);
 	  try {
 		  	  Int mostype=2;
-		  	  if(casa::String(linmostype)==casa::String("pbweight"))
+		  	  if(casacore::String(linmostype)==casacore::String("pbweight"))
 		  		  mostype=1;
 		  	  itsMos->setlinmostype(mostype);
 
-		  	  rstat = True;
+		  	  rstat = true;
 		  } catch  (AipsError x) {
 
 		    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -113,10 +115,10 @@ bool linearmosaic::setlinmostype(const  string& linmostype){
   // ---------------------------------------------------------------------
   bool linearmosaic::makemosaic(const casac::variant& inimages,  const casac::variant& inweightimages, const int imagewgttype, const int wgttype){
 
- Bool rstat(True);
+ Bool rstat(true);
   try {
 
-	  casa::Vector<String> images, weightimages;
+	  casacore::Vector<String> images, weightimages;
 	  images=toVectorString(toVectorString(inimages, "images"));
 	  weightimages=toVectorString(toVectorString(inweightimages, "weightimages"));
 
@@ -126,23 +128,23 @@ bool linearmosaic::setlinmostype(const  string& linmostype){
 	  for (uInt k=0; k < images.nelements(); ++k){
 
           if(wgttype==1){
-        	  wgt[k]=new casa::PagedImage<Float>(weightimages[k]);
+        	  wgt[k]=new casacore::PagedImage<Float>(weightimages[k]);
           }
           else if(wgttype==2){
         	  PagedImage<Float>tmp(weightimages[k]);
-        	  wgt[k]=new casa::TempImage<Float>(tmp.shape(), tmp.coordinates());
+        	  wgt[k]=new casacore::TempImage<Float>(tmp.shape(), tmp.coordinates());
         	  wgt[k]->copyData((LatticeExpr<Float>)(sqrt(abs(tmp))));
           }
 		  if(imagewgttype==1)
-			  im[k]=new casa::PagedImage<Float>(images[k]);
+			  im[k]=new casacore::PagedImage<Float>(images[k]);
 		  else if(imagewgttype==0){
 			  PagedImage<Float>tmp(images[k]);
-			  im[k]=new casa::TempImage<Float>(tmp.shape(), tmp.coordinates());
+			  im[k]=new casacore::TempImage<Float>(tmp.shape(), tmp.coordinates());
 			  im[k]->copyData((LatticeExpr<Float>)(tmp*(*wgt[k])));
 		  }
 		  else if(imagewgttype==2){
 			  PagedImage<Float>tmp(images[k]);
-			  im[k]=new casa::TempImage<Float>(tmp.shape(), tmp.coordinates());
+			  im[k]=new casacore::TempImage<Float>(tmp.shape(), tmp.coordinates());
 			  im[k]->copyData((LatticeExpr<Float>)(iif(*(wgt[k]) > (0.0),
 			  						       (tmp/(*wgt[k])), 0)));
 		  }
@@ -161,11 +163,11 @@ bool linearmosaic::setlinmostype(const  string& linmostype){
 
   }
   bool linearmosaic::saultweightimage(const  string& outputimage,double fracpeak){
-	  Bool rstat(False);
+	  Bool rstat(false);
 	 	  try {
 	 		  	  itsMos->saultWeightImage(outputimage, Float(fracpeak));
 
-	 		  	  rstat = True;
+	 		  	  rstat = true;
 	 		  } catch  (AipsError x) {
 
 	 		    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

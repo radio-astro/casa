@@ -98,17 +98,17 @@ class PlotOptions
       ~PlotOptions();
 
       // Reset to defaults 
-      Bool reset();
+      casacore::Bool reset();
        
       // Return a string of current values to print (for debugging) 
-      String print();
+      casacore::String print();
 
       // Validate Current entries 
       // Returns 2 Strings, Errors and Warnings.
-      Vector<String> validateParams();
+      casacore::Vector<casacore::String> validateParams();
 
       // Fill entries from a record 
-      String fillFromRecord(Record &rpop);
+      casacore::String fillFromRecord(casacore::Record &rpop);
       
       // operator= : copy semantics
       PlotOptions& operator= (PlotOptions &inplop);
@@ -118,90 +118,90 @@ class PlotOptions
 
       // default : [1,1,1].
       // [nrows, ncols, panel_index] from matplotlib
-      Vector<Int> PanelMap;      
+      casacore::Vector<casacore::Int> PanelMap;      
                 
       // default : []. 
       // [xmin,xmax,ymin,ymax]
       // If min=max, default data range is used.
-      Vector<Double> PlotRange;
+      casacore::Vector<casacore::Double> PlotRange;
       
       // default : []. 
       // [xminSet,xmaxSet,yminSet,ymaxSet]
       // Bitmap to indicate which range values have been set
       // in the PotRange option.
-      Vector<Bool> PlotRangesSet;  
+      casacore::Vector<casacore::Bool> PlotRangesSet;  
                 
       // default : 'o' 
       // 'o' : off -> no time formatting 
       // 'x' : time formatting for x axis
       // 'y' : time formatting for y axis
       // 'b' : time formatting for x and y axes
-      String TimePlotChar;       
+      casacore::String TimePlotChar;       
                 
-      // default : True : 
+      // default : true : 
       // To use with CrossPlot.
-      // True : Columns of the Array are the x axis.
-      // False : Rows of the Array are the x axis.
-      // (example : for a MeasurementSet and "DATA"
-      //            True : channels on x-axis
-      //            False : correlations on x-axis )
-      Bool ColumnsXaxis;      
+      // true : Columns of the casacore::Array are the x axis.
+      // false : Rows of the casacore::Array are the x axis.
+      // (example : for a casacore::MeasurementSet and "DATA"
+      //            true : channels on x-axis
+      //            false : correlations on x-axis )
+      casacore::Bool ColumnsXaxis;      
                 
-      // Default : False
-      // True : This plot must sit on top of existing plots
-      // False : This plot will be a fresh plot
+      // Default : false
+      // true : This plot must sit on top of existing plots
+      // false : This plot will be a fresh plot
       //         clearing away all existing layers
-      Bool OverPlot;             
+      casacore::Bool OverPlot;             
                 
-      // Default : False
-      // True : OverPlot=False will replace only the    
+      // Default : false
+      // true : OverPlot=false will replace only the    
       //        top layer, and will not clear away
       //        all existing layers. 
       //        (example : after making an overplot,
       //         the plotsymbol for the top-most layer
       //         is to be changed  without having to
       //         replot all existing layers)
-      // False : OverPlot=False will clear up all 
+      // false : OverPlot=false will clear up all 
       //         existing layers, before plotting.
-      Bool ReplaceTopPlot;       
+      casacore::Bool ReplaceTopPlot;       
                 
-      // Default : True
-      // True : Make TablePlot mimic the matplotlib
+      // Default : true
+      // true : Make TablePlot mimic the matplotlib
       //        behaviour of automatically clearing panels
       //        when a new panel overlaps on it.
-      // False : Do not do the above. The user will 
+      // false : Do not do the above. The user will 
       //         have to explicitly clear a panel. 
       //         (example : To make a tiny plot
       //          that sits in a corner, inside an
       //          existing larger plot.)
       //
       //
-      Bool RemoveOldPanels;      
+      casacore::Bool RemoveOldPanels;      
                 
       // Default : 12 . matplotlib font size
       // This is the title size. The x,ylabels are
       // 80% of this size.
-      Double FontSize; 
+      casacore::Double FontSize; 
                 
       // X axis label
-      String XLabel;         
+      casacore::String XLabel;         
       
       // Y axis label
-      String YLabel;         
+      casacore::String YLabel;         
       
       // Title
       // For multiline labels, 
       // beware of newline characters. These strings
       // must contain "\\n" in them for newlines.
-      String Title;         
+      casacore::String Title;         
       
       // Default : 8.0 ( in cm ). matplotlib convention
       // Must be same for all panels !
-      Double WindowSize;      
+      casacore::Double WindowSize;      
       
       // Default : 1.0 . -> height/width
       // Must be same for all panels !
-      Double AspectRatio;      
+      casacore::Double AspectRatio;      
       
       // Default : NULL
       // If left as NULL, it gets replaced by a
@@ -220,14 +220,14 @@ class PlotOptions
       // (example : chan numbers to frequency vals.)
      TPGuiCallBackHooks *CallBackHooks; 
      
-     // Default : False
-     // True : If a Scalar or Vector reduction has been
+     // Default : false
+     // true : If a Scalar or casacore::Vector reduction has been
      //        done using MEAN(), the values are rescaled to account for
      //        the number of flagged values being averaged
      //        by TaQL. Note : Try not to use this.
-     // False : Don't do any scaling correction. This is if
+     // false : Don't do any scaling correction. This is if
      //         averaging is via SUM(...)/SUM()
-     Bool DoScalingCorrection;  
+     casacore::Bool DoScalingCorrection;  
      
      // Default : 'none'
      // 'row' : iteration plots from multiple
@@ -236,28 +236,28 @@ class PlotOptions
      // 'col' : iteration plots from multiple
      //         TaQLs can be run parallely. The
      //         panels are separated into cols.
-     String SeparateIter;       
+     casacore::String SeparateIter;       
      
-     // Default : False  ( only for CrossPlot )
-     // False : Compute the average x axis value
+     // Default : false  ( only for CrossPlot )
+     // false : Compute the average x axis value
      //        as the middle of the range being avgd
-     // True : Compute the average x axis value
+     // true : Compute the average x axis value
      //        accounting for flagged cell rows/cols.
-     Bool HonourXFlags;         
+     casacore::Bool HonourXFlags;         
      
      // Default : []
-     // This is the list of Table columns that
+     // This is the list of casacore::Table columns that
      // will get sent into the "locate" function
      // when triggered by the GUI.
      // It will be overridden by anything specified in
      // a DumpLocateInfoBase class.
-     Vector<String> LocateColumns; 
+     casacore::Vector<casacore::String> LocateColumns; 
      
      
      // Layer Dependant Plot Parameters 
      
      // Default : ',' . matplotlib plotsymbols
-     String PlotSymbol;      
+     casacore::String PlotSymbol;      
      
      // Default : '' . matplotlib colour string
      // Can be a predefined pylab colour 'brown', or
@@ -265,60 +265,60 @@ class PlotOptions
      // If specified (length>0), this takes 
      // precedence over the colour specified via
      // PlotSymbol. If a non-predefined colour is
-     // specified, MultiColour is always False.
-     String ColourString;      
+     // specified, MultiColour is always false.
+     casacore::String ColourString;      
      
      // Default [] : If specified, it will apply to 
      // the first N plotted points.
-     Vector<String> PointLabels;
+     casacore::Vector<casacore::String> PointLabels;
      
      // Default : 10.0 . matplotlib markersize
-     Double MarkerSize;      
+     casacore::Double MarkerSize;      
      
      // Default : 2.0 . matplotlib linewidth
-     Double LineWidth;      
+     casacore::Double LineWidth;      
      
      // Default : 'none'
      // 'cellrow' : Cell rows get different colours
      // 'cellcol' : Cell cols get different colours
      // 'both': rows and cols get different colours
      // 'none': rows and cols get the same colour
-     String MultiColour;        
+     casacore::String MultiColour;        
      
-     // Default : True
-     // True : When multiple Tables are sent in simultaneously
+     // Default : true
+     // true : When multiple Tables are sent in simultaneously
      //        into TablePlot, they go to different Layers and
      //        automatically increment colours.
-     // False : All layers begin with the same colour
-     Bool TableMultiColour;     
+     // false : All layers begin with the same colour
+     casacore::Bool TableMultiColour;     
      
-     // Default : False
-     // True : Plot flagged points in purple
-     // False : Plot unflagged points in specified colour
-     // (example : Do an overplot with False and then
-     //  True, to see flagged and unflagged points in
+     // Default : false
+     // true : Plot flagged points in purple
+     // false : Plot unflagged points in specified colour
+     // (example : Do an overplot with false and then
+     //  true, to see flagged and unflagged points in
      //  different colours.)
-     Bool ShowFlags;          
+     casacore::Bool ShowFlags;          
      
      // Default : "main"
      // Name of the flag version to use while plotting
      // If it doesn't find this name, it uses "main".
-     String FlagVersion;      
+     casacore::String FlagVersion;      
      
      // Default : 1
      // Start with the first point, and then 
      // plot only if npoints % SkipNRows == 0
-     Int SkipNRows;           
+     casacore::Int SkipNRows;           
      
      // Default : 1
      // No averaging. 
      // If >1, averages every N points.
      // Users of plotoptions, need to order/sort/select
-     // the input Table, so that such averaging is
+     // the input casacore::Table, so that such averaging is
      // accurate.
-     Int AverageNRows;        
+     casacore::Int AverageNRows;        
      
-     String FlagExt;
+     casacore::String FlagExt;
      // Default : 'none' : no points are connected by lines.
      // If 'tablerow' : number of plots = nchans x ncorrs
      //                 number of points per plot = nrows
@@ -331,11 +331,11 @@ class PlotOptions
      //             -> points along cell rows are connected.
      // Currently, 'cellcol' and 'cellrow' do the same
      // thing. Nplots = nrow, points per plot = nchanxncorr.
-     String Connect;            
+     casacore::String Connect;            
      
      // To allow PanelPArams to get access to some private variables 
-     inline Int getParsedParams(Int &timeplot, Int &plotcolour, 
-                               String &pyplotsym) {
+     inline casacore::Int getParsedParams(casacore::Int &timeplot, casacore::Int &plotcolour, 
+                               casacore::String &pyplotsym) {
          timeplot=TimePlot_p; 
          plotcolour=PlotColour_p;
          pyplotsym=PyPlotSymbol_p;
@@ -343,36 +343,36 @@ class PlotOptions
      };
      
      // Allowed, predefined colours 
-     Int NColours;
-     Bool useLayerColor;
+     casacore::Int NColours;
+     casacore::Bool useLayerColor;
 
      // A long list of supported colour names.
-     Vector<String> ColourList;
-     String pylabcolourstring;
+     casacore::Vector<casacore::String> ColourList;
+     casacore::String pylabcolourstring;
      
      //for chan/time averaging
-     Bool doAverage;
-     Matrix<Int> ChanMap;
-     Matrix<Int> RowMap;
-     String MSName; 
-     String spwExpr; 
+     casacore::Bool doAverage;
+     casacore::Matrix<casacore::Int> ChanMap;
+     casacore::Matrix<casacore::Int> RowMap;
+     casacore::String MSName; 
+     casacore::String spwExpr; 
 
    private:
      
      // 0:1:2:3 -> 'o','x','y','b'
-     Int TimePlot_p;       
-     // an Int for the colour part of plotsymbol
-     Int PlotColour_p;      
+     casacore::Int TimePlot_p;       
+     // an casacore::Int for the colour part of plotsymbol
+     casacore::Int PlotColour_p;      
      // just the plotsymbol (without colour)
-     String PyPlotSymbol_p;      
+     casacore::String PyPlotSymbol_p;      
      
      // Has the 'Convert' TPConvertXXX been
      // created inside PlotOptions, or by the user ?
-     // True : created inside here => needs to be
+     // true : created inside here => needs to be
      //        deleted inside here too, during cleanup. 
-     // False : created outside and supplied in
+     // false : created outside and supplied in
      //         => don't try to delete it !
-     Bool ConvertIsLocal_p;       
+     casacore::Bool ConvertIsLocal_p;       
                 
 };
 
@@ -428,13 +428,13 @@ class PanelParams
       // Change the number of layers
       // Usually called only to increase the layer count, 
       // when overplots are done one-by-one.
-      Int changeNlayers(Int nlayers);
+      casacore::Int changeNlayers(casacore::Int nlayers);
 
       // Fill in parameters from the most current PlotOptions.
-      Int updateLayerParams();
+      casacore::Int updateLayerParams();
 
       // Reset all parameters.
-      Bool reset();
+      casacore::Bool reset();
       
       // A PlotOptions instance to read inputs
       // and to hold layer-independant parameters.
@@ -442,11 +442,11 @@ class PanelParams
       
       // Layer INDEPENDANT parameters 
       // The current plot-range for this panel.
-      Vector<Double> PanelZrange;         
+      casacore::Vector<casacore::Double> PanelZrange;         
 
       // A list of marked regions for this panel.
       // FlagList(panelId, regionCount); 
-      Vector<Vector<Double> > FlagList; 
+      casacore::Vector<casacore::Vector<casacore::Double> > FlagList;
 
       // The layer number for the topmost layer.
       // NOTE : A layer is a plot from one BasePlot object.
@@ -454,40 +454,40 @@ class PanelParams
       //        generates plots from multiple BasePlots.
       //        All layers from one single TablePlot::plotData
       //        call, get the same "layerNumber".
-      Int MaxLayer;
+      casacore::Int MaxLayer;
 
       // Integer form of the TimePlot parameter. 
-      Int TimePlot;
+      casacore::Int TimePlot;
 
       // Ingeter form of the plot colour.
       // Needed to allow automatic colour incrementing !
-      Int PlotColour;
+      casacore::Int PlotColour;
 
       // Python plot symbol.
-      String PyPlotSymbol;
+      casacore::String PyPlotSymbol;
 
       // LAYER DEPENDANT parameters
       // Number of BasePlot-layers.
-      Int nBP;
+      casacore::Int nBP;
 
       // The "layerNumber" for each BasePlot-Plot
-      Vector<Int> LayerNumbers;    
+      casacore::Vector<casacore::Int> LayerNumbers;    
 
       // Other parameters.
-      Vector<Int> LayerColours;
-      Vector<String> LayerSymbols;
-      Vector<Vector<String> > LayerPointLabels;
-      Vector<Vector<String> > LayerLocateColumns;
-      Vector<Double> LayerMarkerSizes;
-      Vector<Double> LayerLineWidths;
-      Vector<Bool> LayerShowFlags;     
-      Vector<String> LayerMultiColours;
-      Vector<String> LayerFlagVersions;
-      Vector<Int> LayerSkipNRows;
-      Vector<Int> LayerAverageNRows;
-      Vector<String> LayerFlagExt;
-      Vector<String> LayerConnects;
-      Vector<Vector<String> > LayerXYTaqls;
+      casacore::Vector<casacore::Int> LayerColours;
+      casacore::Vector<casacore::String> LayerSymbols;
+      casacore::Vector<casacore::Vector<casacore::String> > LayerPointLabels;
+      casacore::Vector<casacore::Vector<casacore::String> > LayerLocateColumns;
+      casacore::Vector<casacore::Double> LayerMarkerSizes;
+      casacore::Vector<casacore::Double> LayerLineWidths;
+      casacore::Vector<casacore::Bool> LayerShowFlags;     
+      casacore::Vector<casacore::String> LayerMultiColours;
+      casacore::Vector<casacore::String> LayerFlagVersions;
+      casacore::Vector<casacore::Int> LayerSkipNRows;
+      casacore::Vector<casacore::Int> LayerAverageNRows;
+      casacore::Vector<casacore::String> LayerFlagExt;
+      casacore::Vector<casacore::String> LayerConnects;
+      casacore::Vector<casacore::Vector<casacore::String> > LayerXYTaqls;
 
 
 };

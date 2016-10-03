@@ -8,6 +8,7 @@
 #include <iostream> 
 //
 using namespace std;
+using namespace casacore;
 using namespace casac;
 //
 int main (int argc, char* args[]) { 

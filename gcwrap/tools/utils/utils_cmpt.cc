@@ -27,14 +27,16 @@
 #include <signal.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 utils::utils()
 {
   myConstraints = 0;
-  itsLog = new casa::LogIO;
+  itsLog = new casacore::LogIO;
 }
 
 utils::~utils()
@@ -230,8 +232,8 @@ utils::removetable(const std::vector<std::string> &tablenames)
 // Now try and blow it away.  If it's open, tabledelete won't delete it.
        String message;
        if(rstat && Table::isReadable(fileName)){
-          if (Table::canDeleteTable(message, fileName, True)) {
-             Table::deleteTable(fileName, True);
+          if (Table::canDeleteTable(message, fileName, true)) {
+             Table::deleteTable(fileName, true);
           } else {
              *itsLog << LogIO::WARN << "Cannot delete file " << fileName
              << " because " << message << LogIO::POST;
@@ -250,7 +252,7 @@ utils::removetable(const std::vector<std::string> &tablenames)
 }
 
 ::casac::record *utils::tableinfo(const std::string &tablename) {
-    Vector<Int> info = casa::DOos::lockInfo(tablename);
+    Vector<Int> info = casacore::DOos::lockInfo(tablename);
     ::casac::record *result = new record( );
 
     switch( info[0] ) {

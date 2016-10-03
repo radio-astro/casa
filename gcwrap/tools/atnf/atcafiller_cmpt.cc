@@ -19,6 +19,9 @@
 
 using namespace std;
 
+using namespace casacore;
+using namespace casa;
+
 namespace casac {
 
 atcafiller::atcafiller()
@@ -40,7 +43,7 @@ bool atcafiller::open(const std::string& msName,
 		 const std::vector<std::string>& options)
 {
     itsATCAFiller->open(msName,rpfitsFiles,options,0);
-    return True;
+    return true;
 }
 
 bool atcafiller::fill()
@@ -59,7 +62,7 @@ bool atcafiller::select(int firstScan, int lastScan,
 			    casaQuantity(highFreq).getValue("Hz"));
     itsATCAFiller->fields(fieldList);
     itsATCAFiller->edge(edge);
-    return True;
+    return true;
 }
 
 } // casac namespace

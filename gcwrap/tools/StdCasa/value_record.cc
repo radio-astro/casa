@@ -1,6 +1,7 @@
 #include <xmlcasa/value_record.h>
 #include <xmlcasa/type_record.h>
 
+using namespace casacore;
 namespace casac {
 
 RecordValue::RecordValue() : WX::Utils::Value(RecordType::instance()), recordv(new record()) { }

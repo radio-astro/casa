@@ -42,7 +42,7 @@ class ValuePanel : public QWidget {
 public:
     // Constructor that takes the parameter name and a reference to the
     // record detailing its properties.
-    ValuePanel(String paramName, const RecordInterface& paramRecord);
+    ValuePanel(casacore::String paramName, const casacore::RecordInterface& paramRecord);
     
     // Destructor.
     virtual ~ValuePanel();
@@ -51,17 +51,17 @@ public:
     // Abstract Methods //
     
     // Returns whether or not the currently inputted value is true or not.
-    // If invalid, the String contains the reason(s), newline-separated.
-    virtual pair<bool, String> valueIsValid() = 0;
+    // If invalid, the casacore::String contains the reason(s), newline-separated.
+    virtual pair<bool, casacore::String> valueIsValid() = 0;
     
     // Returns the type of the current value.
     virtual DataType type() = 0;
     
     // Inserts the entered value into the given record with the given name.
-    virtual void getValue(String name, Record& record) = 0;
+    virtual void getValue(casacore::String name, casacore::Record& record) = 0;
     
     // Sets the current value to the one given in the record with the given id.
-    virtual void setValue(const RecordInterface& rec, RecordFieldId id) = 0;
+    virtual void setValue(const casacore::RecordInterface& rec, casacore::RecordFieldId id) = 0;
     
     
     // Factory Methods //
@@ -70,18 +70,18 @@ public:
     // given parameter.  Right now, it only returns a StandardValuePanel, but
     // in the future when specialized panels are used, this will be where the
     // correct type is transparently created and returned.
-    static ValuePanel* create(String paramName,
-                              const RecordInterface& paramRecord);
+    static ValuePanel* create(casacore::String paramName,
+                              const casacore::RecordInterface& paramRecord);
     
 protected:
     // Parameter name.
-    String m_paramName;
+    casacore::String m_paramName;
     
     // Parameter record.
-    const RecordInterface& m_paramRecord;
+    const casacore::RecordInterface& m_paramRecord;
     
     // Returns the allowed vector in m_paramRecord in a useful format.
-    std::vector<String> allowedVector();
+    std::vector<casacore::String> allowedVector();
 };
 
 
@@ -95,7 +95,7 @@ class StandardValuePanel : public casa::ValuePanel, Ui::ValuePanel {
     
 public:
     // Constructor that takes the parameter name and specification record.
-    StandardValuePanel(String paramName, const RecordInterface& paramRecord);
+    StandardValuePanel(casacore::String paramName, const casacore::RecordInterface& paramRecord);
     
     // Destructor.
     ~StandardValuePanel();
@@ -104,16 +104,16 @@ public:
     // ValuePanel methods
     
     // See ValuePanel::valueIsValid
-    pair<bool, String> valueIsValid();
+    pair<bool, casacore::String> valueIsValid();
     
     // See ValuePanel::type
     DataType type();
     
     // See ValuePanel::getValue
-    void getValue(String name, Record& record);
+    void getValue(casacore::String name, casacore::Record& record);
     
     // See ValuePanel::setValue
-    void setValue(const RecordInterface& rec, RecordFieldId id);
+    void setValue(const casacore::RecordInterface& rec, casacore::RecordFieldId id);
     
 signals:
     // Emitted when the user changes the value.
@@ -126,14 +126,14 @@ private:
     // Whether a value is a filename that must exist for it to be valid.
     bool m_mustExist;
     
-    // Array widgets (for array types only).
+    // casacore::Array widgets (for array types only).
     std::vector<QWidget*> m_aWidgets;
     
-    // Record item panels (for records only).
+    // casacore::Record item panels (for records only).
     std::vector<RecordItemPanel*> m_rPanels;
     
     // Allowed values, or empty if N/A.
-    std::vector<String> m_allowed;
+    std::vector<casacore::String> m_allowed;
     
     // Holds whether the value is a variant or not.
     bool m_isVariant;
@@ -151,7 +151,7 @@ private:
     
     // Limit the chooseable types to the given, for variant values.  May not
     // have a noticeable effect if the type is incompatible.
-    void limitTypes(std::vector<String> types);
+    void limitTypes(std::vector<casacore::String> types);
     
     // Set the lower bound for inputted int values.  May not have a
     // noticeable effect if the type is incompatible.
@@ -171,7 +171,7 @@ private:
     
     // Set the string value to the given.  May not have a noticeable
     // effect if the type is incompatible.
-    void setStringValue(String val);
+    void setStringValue(casacore::String val);
     
     // Set the bool value to the given.  May not have a noticeable
     // effect if the type is incompatible.
@@ -191,15 +191,15 @@ private:
     
     // Set the record value to the given.  May not have a noticeable
     // effect if the type is incompatible.
-    void setRecordValue(const RecordInterface& record);
+    void setRecordValue(const casacore::RecordInterface& record);
     
     // Set the value to the given allowed value.  May not have a noticeable
     // effect if the type is incompatible.
-    void setAllowedValue(String val);
+    void setAllowedValue(casacore::String val);
     
     // Set the string array value to the given.  May not have a noticeable
     // effect if the type is incompatible.
-    void setStringArrayValue(const std::vector<String>& array);
+    void setStringArrayValue(const std::vector<casacore::String>& array);
     
     // Set the bool array value to the given.  May not have a noticeable
     // effect if the type is incompatible.
@@ -215,7 +215,7 @@ private:
     
     // Set the complex array value to the given.  May not have a noticeable
     // effect if the type is incompatible.
-    void setComplexArrayValue(const std::vector<DComplex>& array);    
+    void setComplexArrayValue(const std::vector<casacore::DComplex>& array);    
     
     // Returns a new array widget based on the current type.  Used for adding
     // an item to an array list.
@@ -265,19 +265,19 @@ class RecordItemPanel : public QHBoxLayout {
     
 public:
     // Default constructor.
-    RecordItemPanel(String paramName);
+    RecordItemPanel(casacore::String paramName);
     
     // Destructor.
     ~RecordItemPanel();
     
     // Returns the current key name entered.
-    String name();
+    casacore::String name();
     
     // Returns the value panel used.
     StandardValuePanel* value();
     
     // Insert the key/value pair into the given record.
-    void getValue(Record& record);
+    void getValue(casacore::Record& record);
     
 signals:
     // Emitted when the user changes the value.

@@ -34,6 +34,7 @@
 
 #include <casa/Arrays/Vector.h>
 
+using namespace casacore;
 namespace casa {
 
 // VALUEPANEL DEFINITIONS //

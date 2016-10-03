@@ -64,8 +64,8 @@ public:
     // casapy.  Should be overridden if the child class wants to know when this
     // happens.
     // <group>
-    virtual void logChanged(const casa::String& sinkLocation);
-    virtual void logChanged(casa::LogMessage::Priority filterPriority);
+    virtual void logChanged(const casacore::String& sinkLocation);
+    virtual void logChanged(casacore::LogMessage::Priority filterPriority);
     // </group>
     
     // Called when casapy is closing.  Should be overridden if the child class
@@ -96,8 +96,8 @@ private:
     // Called by the logger component when the sink location or filter priority
     // changes.
     // <group>
-    static void logChanged_(const casa::String& sinkLocation);
-    static void logChanged_(casa::LogMessage::Priority filterPriority);
+    static void logChanged_(const casacore::String& sinkLocation);
+    static void logChanged_(casacore::LogMessage::Priority filterPriority);
     // </group>
 
     // Called by the dbus component when casapy is closing.

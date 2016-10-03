@@ -39,50 +39,50 @@ using namespace casa;
 namespace casac {
 
 static void
-get_statistics_1d(Record &result, 
+get_statistics_1d(casacore::Record &result, 
                   const std::string keyname,
-                  const Vector<Float> data_float)
+                  const casacore::Vector<casacore::Float> data_float)
 {   
     unsigned long number_of_values = data_float.nelements();
            
-    ArrayLattice<Float> al(data_float);
+    casacore::ArrayLattice<casacore::Float> al(data_float);
     
-    SubLattice<Float> sl(al);
-    LatticeStatistics<Float> ls(sl);
+    casacore::SubLattice<casacore::Float> sl(al);
+    casacore::LatticeStatistics<casacore::Float> ls(sl);
     
     struct {
-        LatticeStatsBase::StatisticsTypes type;
+        casacore::LatticeStatsBase::StatisticsTypes type;
         std::string name;
         std::string descr;
     }
     stats_types[] = {
-        {LatticeStatsBase::MIN   , "min",   "minimum"},
-        {LatticeStatsBase::MAX   , "max",   "maximum"},
-        {LatticeStatsBase::SUM   , "sum",   "sum of values"},
-        {LatticeStatsBase::SUMSQ , "sumsq", "sum of squared values"},
+        {casacore::LatticeStatsBase::MIN   , "min",   "minimum"},
+        {casacore::LatticeStatsBase::MAX   , "max",   "maximum"},
+        {casacore::LatticeStatsBase::SUM   , "sum",   "sum of values"},
+        {casacore::LatticeStatsBase::SUMSQ , "sumsq", "sum of squared values"},
         
-        {LatticeStatsBase::MEAN  , "mean"  , "mean value"},
-        {LatticeStatsBase::VARIANCE, "var" , "variance"},
-        {LatticeStatsBase::SIGMA , "stddev", "standard deviation wrt mean"},
-        {LatticeStatsBase::RMS   , "rms"   , "root mean square"},
-        {LatticeStatsBase::MEDIAN, "median", "median value"},
-        {LatticeStatsBase::MEDABSDEVMED, "medabsdevmed", "median absolute deviation wrt median"},
-        {LatticeStatsBase::QUARTILE, "quartile", "first quartile"}
+        {casacore::LatticeStatsBase::MEAN  , "mean"  , "mean value"},
+        {casacore::LatticeStatsBase::VARIANCE, "var" , "variance"},
+        {casacore::LatticeStatsBase::SIGMA , "stddev", "standard deviation wrt mean"},
+        {casacore::LatticeStatsBase::RMS   , "rms"   , "root mean square"},
+        {casacore::LatticeStatsBase::MEDIAN, "median", "median value"},
+        {casacore::LatticeStatsBase::MEDABSDEVMED, "medabsdevmed", "median absolute deviation wrt median"},
+        {casacore::LatticeStatsBase::QUARTILE, "quartile", "first quartile"}
     };
     
-    Record rec;
+    casacore::Record rec;
     
     for (unsigned i = 0 ; i < sizeof(stats_types) / sizeof(*stats_types); i++) {
-        Array<Double> the_stats;
+        casacore::Array<casacore::Double> the_stats;
         ls.getStatistic(the_stats, stats_types[i].type);
       
         if (0) cout << stats_types[i].descr << " [" 
-                    << stats_types[i].name << "]: " << the_stats(IPosition(1, 0)) << endl;
+                    << stats_types[i].name << "]: " << the_stats(casacore::IPosition(1, 0)) << endl;
         rec.define(stats_types[i].name,
-                   the_stats(IPosition(1, 0)));
+                   the_stats(casacore::IPosition(1, 0)));
     }
     
-    rec.define("npts", (Double) number_of_values);
+    rec.define("npts", (casacore::Double) number_of_values);
 
     result.defineRecord(keyname, rec);
 
@@ -101,23 +101,23 @@ get_statistics_1d(Record &result,
 
 */
 template <class T>
-Vector<T>
-reform_array(ROTableColumn &rotc,
-             const Table &t,
+casacore::Vector<T>
+reform_array(casacore::ROTableColumn &rotc,
+             const casacore::Table &t,
              const std::string &column,
              bool &supported)
 {
-    Array <T> v;
+    casacore::Array <T> v;
     
     if (rotc.columnDesc().isScalar()) {
         supported = true;
-        ROScalarColumn<T> ro_col(t, column);
-        v = ro_col.getColumn().reform(IPosition(1, ro_col.getColumn().shape().product()));
+        casacore::ROScalarColumn<T> ro_col(t, column);
+        v = ro_col.getColumn().reform(casacore::IPosition(1, ro_col.getColumn().shape().product()));
     }
     else if (rotc.columnDesc().isArray()) {
         supported = true;
-        ROArrayColumn<T> ro_col(t, column);
-        v = ro_col.getColumn().reform(IPosition(1, ro_col.getColumn().shape().product()));
+        casacore::ROArrayColumn<T> ro_col(t, column);
+        v = ro_col.getColumn().reform(casacore::IPosition(1, ro_col.getColumn().shape().product()));
     }
 
     return v;
@@ -125,11 +125,11 @@ reform_array(ROTableColumn &rotc,
 
 static
 void
-apply_flags(Vector<Float> &v,
-            const Vector<Bool> flags)
+apply_flags(casacore::Vector<casacore::Float> &v,
+            const casacore::Vector<casacore::Bool> flags)
 {
-    IPosition unflagged(1);
-    IPosition indx(1);
+    casacore::IPosition unflagged(1);
+    casacore::IPosition indx(1);
     unflagged(0) = 0;
 
     for (unsigned i = 0; i < v.nelements(); i++) {
@@ -146,24 +146,24 @@ apply_flags(Vector<Float> &v,
 }
 
 template <class T>
-Record
-Statistics<T>::get_stats(const Vector<T> v,
-                         const Vector<Bool> flags,
+casacore::Record
+Statistics<T>::get_stats(const casacore::Vector<T> v,
+                         const casacore::Vector<casacore::Bool> flags,
                          const std::string &column,
                          bool &supported)
 {
     if (v.shape() != flags.shape()) {
       stringstream ss;
       ss << "Incompatible array vs. flags shapes: " << v.shape() << " vs. " << flags.shape();
-      throw AipsError(ss.str());
+      throw casacore::AipsError(ss.str());
     }
 
-    Record result;
+    casacore::Record result;
     if (supported) {
 
-        Vector<Float> data_float(v.shape());
+        casacore::Vector<casacore::Float> data_float(v.shape());
 
-        IPosition indx(1);
+        casacore::IPosition indx(1);
 
         for (unsigned i = 0; i < (unsigned)v.shape()(0); i++) {
             indx(0) = i;
@@ -174,7 +174,7 @@ Statistics<T>::get_stats(const Vector<T> v,
         if (data_float.shape() == 0) {
           stringstream ss;
           ss << "All selected rows are flagged.";
-          throw AipsError(ss.str());
+          throw casacore::AipsError(ss.str());
         }
         get_statistics_1d(result, column, data_float);
     }
@@ -183,22 +183,22 @@ Statistics<T>::get_stats(const Vector<T> v,
 }
 
 template <class T>
-Record
-Statistics<T>::get_stats(const Vector<T> v,
+casacore::Record
+Statistics<T>::get_stats(const casacore::Vector<T> v,
           const std::string &column,
           bool &supported)
 {
   return get_stats(v, 
-                   Vector<Bool>(v.nelements(), false),
+                   casacore::Vector<casacore::Bool>(v.nelements(), false),
                    column, 
                    supported);
 }
 
 
 template<class T>
-Record
-Statistics<T>::get_stats_complex(const Vector<Complex> v,
-                                 const Vector<Bool> flags,
+casacore::Record
+Statistics<T>::get_stats_complex(const casacore::Vector<casacore::Complex> v,
+                                 const casacore::Vector<casacore::Bool> flags,
                                  const std::string &column,
                                  bool &supported,
                                  const std::string complex_value)
@@ -206,23 +206,23 @@ Statistics<T>::get_stats_complex(const Vector<Complex> v,
     if (complex_value != "amp" && complex_value != "amplitude" &&
         complex_value != "phase" && complex_value != "imag" &&
         complex_value != "real" && complex_value != "imaginary") {
-      throw AipsError("complex_value must be amp, amplitude, phase, imag, imaginary or real" +
+      throw casacore::AipsError("complex_value must be amp, amplitude, phase, imag, imaginary or real" +
                       std::string(", is ") + complex_value);
     }
 
     if (v.shape() != flags.shape()) {
       stringstream ss;
       ss << "Incompatible array vs flags shapes: " << v.shape() << " vs " << flags.shape();
-      throw AipsError(ss.str());
+      throw casacore::AipsError(ss.str());
     }
     
-    Record result;
+    casacore::Record result;
     
     if (supported) {
 
-      Vector<Float> data_float(v.shape());
+      casacore::Vector<casacore::Float> data_float(v.shape());
 
-      IPosition indx(1);
+      casacore::IPosition indx(1);
 
       switch (complex_value[0]) {
       case 'a':
@@ -257,7 +257,7 @@ Statistics<T>::get_stats_complex(const Vector<Complex> v,
       if (data_float.shape() == 0) {
         stringstream ss;
         ss << "All selected rows are flagged.";
-        throw AipsError(ss.str());
+        throw casacore::AipsError(ss.str());
       }
       get_statistics_1d(result, column, data_float);
     }
@@ -266,14 +266,14 @@ Statistics<T>::get_stats_complex(const Vector<Complex> v,
 }
 
 template<class T>
-Record
-Statistics<T>::get_stats_complex(const Vector<Complex> v,
+casacore::Record
+Statistics<T>::get_stats_complex(const casacore::Vector<casacore::Complex> v,
                                  const std::string &column,
                                  bool &supported,
                                  const std::string complex_value)
 {
   return get_stats_complex(v, 
-                           Vector<Bool>(v.nelements(), false),
+                           casacore::Vector<casacore::Bool>(v.nelements(), false),
                            column,
                            supported,
                            complex_value);
@@ -282,19 +282,19 @@ Statistics<T>::get_stats_complex(const Vector<Complex> v,
 
 template <class T>
 static void
-get_stats_array_table(const Table &t, 
-                      Record &result,
+get_stats_array_table(const casacore::Table &t, 
+                      casacore::Record &result,
                       const std::string &column,
                       bool &supported)
 {
     supported = true;
     
-    ROArrayColumn<T> ro_col(t, column);
+    casacore::ROArrayColumn<T> ro_col(t, column);
     
-    Matrix<T> v = ro_col.getColumn();
+    casacore::Matrix<T> v = ro_col.getColumn();
 
     result = Statistics<T>::get_stats_array(v,
-                                            Vector<Bool>(v.shape()(1), false),
+                                            casacore::Vector<casacore::Bool>(v.shape()(1), false),
                                             column,
                                             supported);
 
@@ -302,24 +302,24 @@ get_stats_array_table(const Table &t,
 }
 
 template <class T>
-Record
-Statistics<T>::get_stats_array(const Matrix<T> v,
-                               const Vector<Bool> flags,
+casacore::Record
+Statistics<T>::get_stats_array(const casacore::Matrix<T> v,
+                               const casacore::Vector<casacore::Bool> flags,
                                const std::string &column,
                                bool &)
 {
-    Record result;
+    casacore::Record result;
 
     if (v.shape()(1) != flags.shape()(0)) {
       stringstream ss;
       ss << "Incompatible number of values (" << v.shape()(1) <<
         ") and flags (" << flags.shape()(0) << ") given";
-      throw AipsError(ss.str());
+      throw casacore::AipsError(ss.str());
     }
 
-    Vector<Float> data_float(IPosition(1, v.shape()(1)));
+    casacore::Vector<casacore::Float> data_float(casacore::IPosition(1, v.shape()(1)));
 
-    IPosition indx(2);
+    casacore::IPosition indx(2);
 
     /* Compute statistics per column element */
 
@@ -353,23 +353,23 @@ Statistics<T>::get_stats_array(const Matrix<T> v,
 
 */
 template <class T>
-static Vector<T>
-reform_array(ROTableColumn &rotc,
-             MeasurementSet *sel_p,
+static casacore::Vector<T>
+reform_array(casacore::ROTableColumn &rotc,
+             casacore::MeasurementSet *sel_p,
              const std::string &column,
              bool &supported)
 {
-    Array <T> v;
+    casacore::Array <T> v;
     
     if (rotc.columnDesc().isScalar()) {
         supported = true;
-        ROScalarColumn<T> ro_col(*sel_p, column);
-        v = ro_col.getColumn().reform(IPosition(1, ro_col.getColumn().shape().product()));
+        casacore::ROScalarColumn<T> ro_col(*sel_p, column);
+        v = ro_col.getColumn().reform(casacore::IPosition(1, ro_col.getColumn().shape().product()));
     }
     else if (rotc.columnDesc().isArray()) {
         supported = true;
-        ROArrayColumn<T> ro_col(*sel_p, column);
-        v = ro_col.getColumn().reform(IPosition(1, ro_col.getColumn().shape().product()));
+        casacore::ROArrayColumn<T> ro_col(*sel_p, column);
+        v = ro_col.getColumn().reform(casacore::IPosition(1, ro_col.getColumn().shape().product()));
     }
 
     return v;
@@ -377,13 +377,13 @@ reform_array(ROTableColumn &rotc,
 
 
 template <class T>
-Record
-Statistics<T>::get_statistics(const Table &table,
+casacore::Record
+Statistics<T>::get_statistics(const casacore::Table &table,
                               const std::string &column,
                               const std::string &complex_value,
-                              casa::LogIO *itsLog)
+                              casacore::LogIO *itsLog)
 {
-    ROTableColumn rotc(table, column);
+    casacore::ROTableColumn rotc(table, column);
     
     std::string type;
     
@@ -393,12 +393,12 @@ Statistics<T>::get_statistics(const Table &table,
         type = s.str() + "-dimensional ";
     }
             
-    DataType dt1 = rotc.columnDesc().dataType();
+    casacore::DataType dt1 = rotc.columnDesc().dataType();
     
     {
         ostringstream formatter;
         formatter << dt1;
-        type += String(formatter);
+        type += casacore::String(formatter);
     }
     
     if (rotc.columnDesc().isScalar()) {
@@ -420,9 +420,9 @@ Statistics<T>::get_statistics(const Table &table,
     if (complex_value != "") {
         *itsLog << ", use " << complex_value;
     }
-    *itsLog << "..." << LogIO::POST;
+    *itsLog << "..." << casacore::LogIO::POST;
 
-    Record result;
+    casacore::Record result;
 
     /* Strategy depends on data type */
     
@@ -433,34 +433,34 @@ Statistics<T>::get_statistics(const Table &table,
         /* 1d is a special case: Loop over the array, 
            compute statistics for each index
         */
-        if (dt1 == TpDouble) {
-            get_stats_array_table<Double>(table, result, column, supported);
+        if (dt1 == casacore::TpDouble) {
+            get_stats_array_table<casacore::Double>(table, result, column, supported);
         }
-        else if (dt1 == TpFloat) {
-            get_stats_array_table<Float>(table, result, column, supported);
+        else if (dt1 == casacore::TpFloat) {
+            get_stats_array_table<casacore::Float>(table, result, column, supported);
         }
     }
     else {
       /* Scalar or multi-dimensional array */
 
-      if (dt1 == TpBool) {
-        result = Statistics<Bool>::get_stats(reform_array<Bool>(rotc, table, column, supported),
+      if (dt1 == casacore::TpBool) {
+        result = Statistics<casacore::Bool>::get_stats(reform_array<casacore::Bool>(rotc, table, column, supported),
                                  column, supported);
       }
-      else if (dt1 == TpInt) {
-        result = Statistics<Int>::get_stats(reform_array<Int>(rotc, table, column, supported),
+      else if (dt1 == casacore::TpInt) {
+        result = Statistics<casacore::Int>::get_stats(reform_array<casacore::Int>(rotc, table, column, supported),
                                 column, supported);
       }
-      else if (dt1 == TpFloat) {
-        result = Statistics<Float>::get_stats(reform_array<Float>(rotc, table, column, supported),
+      else if (dt1 == casacore::TpFloat) {
+        result = Statistics<casacore::Float>::get_stats(reform_array<casacore::Float>(rotc, table, column, supported),
                                   column, supported);
       }
-      else if (dt1 == TpDouble) {
-        result = Statistics<Double>::get_stats(reform_array<Double>(rotc, table, column, supported),
+      else if (dt1 == casacore::TpDouble) {
+        result = Statistics<casacore::Double>::get_stats(reform_array<casacore::Double>(rotc, table, column, supported),
                                    column, supported);
       }
-      else if (dt1 == TpComplex) {
-        result = get_stats_complex(reform_array<Complex>(rotc, table, column, supported),
+      else if (dt1 == casacore::TpComplex) {
+        result = get_stats_complex(reform_array<casacore::Complex>(rotc, table, column, supported),
                                    column, supported, complex_value);
       }
     }
@@ -470,7 +470,7 @@ Statistics<T>::get_statistics(const Table &table,
     }
     else {
       std::string msg("Sorry, no support for " + type + " columns");
-      throw AipsError(msg);
+      throw casacore::AipsError(msg);
     }
 }
 

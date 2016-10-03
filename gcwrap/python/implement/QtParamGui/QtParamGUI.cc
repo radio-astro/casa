@@ -32,6 +32,7 @@
 #include <QMessageBox>
 #include <QDir>
 
+using namespace casacore;
 namespace casa {
 
 // QTPARAMGUI DEFINITIONS //

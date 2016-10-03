@@ -1,3 +1,3 @@
 casa::AgentFlagger *agentflagger_p;
-casa::LogIO *logger_p;
+casacore::LogIO *logger_p;
 

@@ -75,6 +75,7 @@
        data structures before changing too much !!!
 */
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 #define TMR(a) "[User: " << a.user() << "] [System: " << a.system() << "] [Real: " << a.real() << "]"
@@ -104,21 +105,21 @@ BasePlot::BasePlot()
    locflagmarks_p.resize(0);
    DataStr_p.resize(0);
    TableTouch_p=0;
-   Average_p = False;
+   Average_p = false;
    
-   FlagColName_p = "FLAG"; fcol_p = False;
-   FlagRowName_p = "FLAG_ROW"; frcol_p = False;
+   FlagColName_p = "FLAG"; fcol_p = false;
+   FlagRowName_p = "FLAG_ROW"; frcol_p = false;
    ReductionType_p.resize(0);
    Layer_p=0;
-   firsttime_p=True;
+   firsttime_p=true;
    
    Map_p.resize(0,0);
    FV = NULL;
    currentflagversion_p = String("main");
    flagdirection_p = 0;
    numflagpoints_p = 0;
-   showflags_p = False;
-        doscalingcorrection_p = False;
+   showflags_p = false;
+        doscalingcorrection_p = false;
    
    pType_p=XYPLOT; 
 
@@ -317,7 +318,7 @@ Int BasePlot::createTENS(Vector<String> &datastr)
           if(cdesc.isArray()) // This is an arrayColumn.
           {
              colshapes[i] = rot.shape(0);
-         isarraycol[i] = True;
+         isarraycol[i] = true;
 
 #if LOG0
          log->out(String("COLUMN : ") + colnames_p(i) +
@@ -334,7 +335,7 @@ Int BasePlot::createTENS(Vector<String> &datastr)
           else 
           {
              colshapes[i] = IPosition(1,0); // This is a Scalar column
-             isarraycol[i] = False;
+             isarraycol[i] = false;
           }
       }
    }
@@ -400,7 +401,7 @@ Int BasePlot::createTENS(Vector<String> &datastr)
 #endif
       // resize to an array of the shape defined by the slicer.
       TENRowColFlag_p[z].resize(TENslices_p[z].length().product());
-      TENRowColFlag_p[z].set(False);
+      TENRowColFlag_p[z].set(false);
    }
 
 #if LOG0 
@@ -548,7 +549,7 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
    Xshape_p.resize(nTens_p);
    
    /* Setup the flagsum vector */
-   firsttime_p=True;
+   firsttime_p=true;
    flagsum_p.resize(SelTab_p.nrow(),nTens_p); 
    flagsum_p.set(0);
 
@@ -559,10 +560,10 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
    try
    {
       /// TODO - clean this up to one createMap call.
-      getYData(conv,True);  
+      getYData(conv,true);  
       createMap();
       //cout << "Ydata ------------fine-------" << endl;
-      getXData(conv,True);  
+      getXData(conv,true);  
       //cout << "Xdata ------------fine-------" << endl;
       createMap();
    }
@@ -609,7 +610,7 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
    
    try
    {
-      //ProgressMeter pm(1.0,(Double)NRows_p,"","","","",False,NRows_p/10);
+      //ProgressMeter pm(1.0,(Double)NRows_p,"","","","",false,NRows_p/10);
       //pm.update((Double)rc);
       
       if(NRows_p>0)
@@ -636,7 +637,7 @@ Int BasePlot::getData(Vector<String> &datastr, Int layer,
 
 	 
          //tmr.mark();
-         //getFlags(True);
+         //getFlags(true);
          //{
          //   ostringstream os;
          //   os << "Time to extract Flags : " << tmr.all(); 
@@ -676,9 +677,9 @@ Int BasePlot::computeAverages(Int averagenrows)
    log->FnEnter(fnname, clname);
    /* Check if averaging needs to be done ! */
    if (averagenrows > 1 ) 
-      Average_p = True;
+      Average_p = true;
    else 
-      Average_p = False;
+      Average_p = false;
 
    /* If data is being averaged, compute various averages */
    if( Average_p )
@@ -751,7 +752,7 @@ Int BasePlot::computeAverages(Int averagenrows)
 
       /* Y values : fill in avgyplotdata_p, avgtheflags_p */
       /* Honour flags, while averaging the Y-data */
-      Bool tflag=True, avflag=True;
+      Bool tflag=true, avflag=true;
       Double yval=0.0;
                 Int fcnt=0;
       Int AvgCounter=0;
@@ -768,7 +769,7 @@ Int BasePlot::computeAverages(Int averagenrows)
             {
                tflag = theflags_p(num,cnt);
 
-               if( showflags_p == False ) 
+               if( showflags_p == false ) 
                    avflag &= tflag;
                else 
                    avflag |= tflag;
@@ -799,7 +800,7 @@ Int BasePlot::computeAverages(Int averagenrows)
             for(Int row=NRows_p-remrows; row<NRows_p; row++)
             {
                tflag = theflags_p(num,row);
-               if( showflags_p == False ) 
+               if( showflags_p == false ) 
                    avflag &= tflag;
                else 
                    avflag |= tflag;
@@ -820,10 +821,10 @@ Int BasePlot::computeAverages(Int averagenrows)
       
       /* Do the row-flags : avgrowflags_p */
       AvgCounter=0;
-      Bool rflag=True;
+      Bool rflag=true;
       for(Int row=0; row<NRows_p-remrows; row+=averagenrows)
       {
-         rflag=True;
+         rflag=true;
          for(Int cnt=row; cnt<row+averagenrows; cnt++) 
              rflag &= rowflags_p(cnt);
          avgrowflags_p[AvgCounter] = rflag;
@@ -831,7 +832,7 @@ Int BasePlot::computeAverages(Int averagenrows)
       }
       if(remrows>0)
       {
-         rflag=True;
+         rflag=true;
          for(Int row=NRows_p-remrows; row<NRows_p; row++)
          {
             rflag &= rowflags_p[row]; 
@@ -1079,8 +1080,8 @@ Int BasePlot::convertCoords(Vector<Vector<Double> > &flagmarks)
 
 /*********************************************************************************/
 /* Read in marked flag regions */
-// direction = 1 : True : flag
-// direction = 0 : False : unflag
+// direction = 1 : true : flag
+// direction = 0 : false : unflag
 Int BasePlot::updateFlagHistory(Vector<Vector<Double> > &flagmarks, 
          Int &direction, Int &numflags)
 {
@@ -1125,11 +1126,11 @@ Bool BasePlot::selectedPoint(Int np,Int nr)
          yvalue >= (locflagmarks_p[nf])[2] && 
          yvalue <= (locflagmarks_p[nf])[3]) 
       {
-         return True;
+         return true;
       }
    }
 
-   return False;
+   return false;
 }
 /*********************************************************************************/
 //// make this also use fv. - then delete this fn.
@@ -1158,7 +1159,7 @@ Int BasePlot::clearFlags()
       ostringstream os;
       os << "flagcol shape : " << flagcol.shape();
       log->out(os, fnname, clname, LogMessage::DEBUGGING);
-      flagcol = False;
+      flagcol = false;
       Flags_p.putColumn(flagcol);
    }
    
@@ -1168,12 +1169,12 @@ Int BasePlot::clearFlags()
       ostringstream os;
       os << "rflagcol length : " << rflagcol.nelements();
       log->out(os, fnname, clname, LogMessage::DEBUGGING);
-      rflagcol = False;
+      rflagcol = false;
       RowFlags_p.putColumn(rflagcol);
    }
       
    SelTab_p.flush();
-   theflags_p.set(False);
+   theflags_p.set(false);
 
    log->out("All Flags Cleared !!", fnname, clname, LogMessage::DEBUGGING);
 #if LOG0
@@ -1205,7 +1206,7 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
    xprange_p.resize(NPlots_p,2);
    yprange_p.resize(NPlots_p,2);
    Double xvalue=0.0, yvalue=0.0;
-   Bool flag=False, rflag=False;
+   Bool flag=false, rflag=false;
 
    /* Record the showflags state */
    showflags_p = showflags;
@@ -1258,7 +1259,7 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
 
 
    /* compute min and max for each Plot */
-   Bool choosepoint=False;
+   Bool choosepoint=false;
    Int NR=0;
    for(int i=0;i<NPlots_p;i++)
    {
@@ -1272,7 +1273,7 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
       //cout << " NR=" << NR << endl;
       for(int rc=0;rc<NR;rc++)
       {
-         choosepoint = False;
+         choosepoint = false;
          
          if( ! Average_p )
          {
@@ -1289,13 +1290,13 @@ Int BasePlot::setPlotRange(Double &xmin, Double &xmax, Double &ymin,
             rflag = avgrowflags_p[rc];
          }
          
-         if(showflags == False) {
-            if ((flag == False) && (rflag == False)) 
-               choosepoint = True;
+         if(showflags == false) {
+            if ((flag == false) && (rflag == false)) 
+               choosepoint = true;
          }
          else {
-            if ((flag == True) || (rflag == True)) 
-               choosepoint = True;
+            if ((flag == true) || (rflag == true)) 
+               choosepoint = true;
          }
             
          if(choosepoint) {
@@ -1530,7 +1531,7 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    
    Int nselrows=0;
    Double tmpval=0.0;
-   Bool okay=False;
+   Bool okay=false;
    
 #if LOG0
    log->out(String("NRows=") + String::toString(NRows_p) +
@@ -1553,16 +1554,16 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
                count with chan,pol into start,end,stride
                to get actual chan and pol */
                 
-            okay = False;
-            if(showflags_p == False) {
-               if ((theflags_p(Map_p(np, 1), nr) == False) && 
-                   (rowflags_p[nr] == False) ) 
-                  okay = True;
+            okay = false;
+            if(showflags_p == false) {
+               if ((theflags_p(Map_p(np, 1), nr) == false) && 
+                   (rowflags_p[nr] == false) ) 
+                  okay = true;
             }
             else {
-               if ((theflags_p(Map_p(np, 1), nr) == True) || 
-                   (rowflags_p[nr] == True) ) 
-                  okay = True;
+               if ((theflags_p(Map_p(np, 1), nr) == true) || 
+                   (rowflags_p[nr] == true) ) 
+                  okay = true;
             }
    
             //if(selectedPoint(np,nr) &&  !theflags_p(Map_p(np,1),nr) && 
@@ -1623,8 +1624,8 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
 
    /* Resize to actually used size... */
 
-   info.resize(IPosition(2,ncoll,nselrows),True);
-   cpol.resize(nselrows, True);
+   info.resize(IPosition(2,ncoll,nselrows),true);
+   cpol.resize(nselrows, true);
 
 #if LOG0
    {
@@ -1775,7 +1776,7 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
    
    Int nselrows=0;
    Double tmpval=0.0;
-   Bool okay=False;
+   Bool okay=false;
    
 #if LOG0
    log->out(String("NRows=") + String::toString(NRows_p) +
@@ -1797,16 +1798,16 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
                count with chan,pol into start,end,stride
                to get actual chan and pol */
                 
-            okay = False;
-            if(showflags_p == False) {
-               if ((theflags_p(Map_p(np, 1), nr) == False) && 
-                   (rowflags_p[nr] == False) ) 
-                  okay = True;
+            okay = false;
+            if(showflags_p == false) {
+               if ((theflags_p(Map_p(np, 1), nr) == false) && 
+                   (rowflags_p[nr] == false) ) 
+                  okay = true;
             }
             else {
-               if ((theflags_p(Map_p(np, 1), nr) == True) || 
-                   (rowflags_p[nr] == True) ) 
-                  okay = True;
+               if ((theflags_p(Map_p(np, 1), nr) == true) || 
+                   (rowflags_p[nr] == true) ) 
+                  okay = true;
             }
    
             Int rowCnt = rmap.nrow();
@@ -1896,8 +1897,8 @@ Int BasePlot::locateData(Vector<String> collist, Matrix<Double> &info,
 
    /* Resize to actually used size... */
 
-   info.resize(IPosition(2,ncoll,nselrows),True);
-   cpol.resize(nselrows, True);
+   info.resize(IPosition(2,ncoll,nselrows),true);
+   cpol.resize(nselrows, true);
 
 #if LOG0
    {
@@ -2353,9 +2354,9 @@ Int BasePlot::getYData(TPConvertBase *conv, Bool dummyread)
       yplotdata_p.resize(nyplots,NRows_p);   
       yplotdata_p.set(0.0);
       theflags_p.resize(nyplots,NRows_p);   
-      theflags_p.set(False);
+      theflags_p.set(false);
       rowflags_p.resize(NRows_p);      
-      rowflags_p.set(False);
+      rowflags_p.set(false);
       NPlots_p = nyplots;
 
       //#if LOG0
@@ -2655,7 +2656,7 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
                os << "\nM Index stride: " << indices.stride();
                log->out(os, fnname, clname, LogMessage::DEBUGGING); 
 #endif               
-               //ipslice_p.resize(nip_p+1,True);
+               //ipslice_p.resize(nip_p+1,true);
                //ipslice_p[nip_p] = indices;
                //nip_p++;
                
@@ -2704,9 +2705,9 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
                 << "\n Num elems : " << colnames_p.nelements();
             log->out(os, fnname, clname, LogMessage::DEBUGGING); 
 #endif 
-            colnames_p.resize(nip_p+1,True); // small array of strings
+            colnames_p.resize(nip_p+1,true); // small array of strings
             colnames_p[nip_p] = cname;
-            ipslice_p.resize(nip_p+1,True);
+            ipslice_p.resize(nip_p+1,true);
             ipslice_p[nip_p] = Slicer(IPosition(2,0,0),
                                       IPosition(2,-2147483646,-2147483646));
             nip_p++;
@@ -2721,9 +2722,9 @@ void BasePlot::ptTraverse(const TableExprNodeRep *tenr)
             log->out(String(" Column Name : ")+cname,
                     fnname, clname, LogMessage::DEBUGGING);
 #endif 
-            colnames_p.resize(nip_p+1,True); // small array of strings
+            colnames_p.resize(nip_p+1,true); // small array of strings
             colnames_p[nip_p] = cname;
-            ipslice_p.resize(nip_p+1,True);
+            ipslice_p.resize(nip_p+1,true);
             ipslice_p[nip_p] = Slicer(IPosition(1,0),IPosition(1,0));
             nip_p++;
          }
@@ -2832,7 +2833,7 @@ Bool BasePlot::saveData(const String& filename) {
         //if (!dataFile.canCreate()){
         //    cout << "cannot create this file" << endl;
         //}
-        dataFile.create(False);
+        dataFile.create(false);
     }
 
     //LargeRegularFileIO file1(dataFile, ByteIO::Append);
@@ -2870,12 +2871,12 @@ Bool BasePlot::saveData(const String& filename) {
 
     //timer.show ("LargeRegularFileIO write");
 
-    return True;
+    return true;
 }
 
 /*********************************************************************************/
 /* Get Flags */
-/* showflags=True MUST be accompanied by the appropriate TaQL with FLAG */
+/* showflags=true MUST be accompanied by the appropriate TaQL with FLAG */
 Int BasePlot::getFlags(String flagversion, Bool showflags)
 {
    String fnname = "getFlags";
@@ -2908,7 +2909,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
    if(frcol_p)
    {
        rowflags_p = RowFlags_p.getColumn();
-       //rowflags_p = False;
+       //rowflags_p = false;
    }
         
    fyp=0; 
@@ -2921,7 +2922,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
       Float fcount=0.0,tcount=0.0;
       Int ff=0;
       Int zp,cnt;
-      Bool reget=False;
+      Bool reget=false;
                 Int npol=0;
       
       /* Get the shape of the (sub)Array that has been touched by the TaQL */
@@ -2943,7 +2944,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
       /////////////////////////////////////////////////
 
 
-         TENRowColFlag_p[z].set(True);
+         TENRowColFlag_p[z].set(true);
    
       /* Read in flags, depending on the type of reduction that has happened */
       switch(ReductionType_p[z])
@@ -2975,12 +2976,12 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
          {
             zp = fyp;
             fcount=0.0,tcount=0.0;
-            sflag = ! showflags; // True for showflags = False
+            sflag = ! showflags; // true for showflags = false
             for (Int i=0;i<fshp.product();i++)
             {
                TENRowColFlag_p[z][i] &= flagit.data()[cnt];
 
-               if( showflags == False )
+               if( showflags == false )
                {
                   /* Count and accumulate for unflagged points */
                   sflag &= flagit.data()[cnt];
@@ -2998,7 +2999,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
             theflags_p(zp,rc) = sflag;
             if(firsttime_p) 
             {
-               if( showflags == False )flagsum_p(rc,z) = (Int)fcount;
+               if( showflags == false )flagsum_p(rc,z) = (Int)fcount;
                else flagsum_p(rc,z) = (Int)(tcount - fcount);
 
                if(doscalingcorrection_p && fcount!=0 && tcount!=0) 
@@ -3007,10 +3008,10 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
             }
             else
             {
-               reget = False;
-               if( showflags == False && flagsum_p(rc,z) != (Int)fcount ) 
-                   reget = True;
-               if(showflags == True && flagsum_p(rc,z) != (Int)(tcount-fcount))                    reget = True;
+               reget = false;
+               if( showflags == false && flagsum_p(rc,z) != (Int)fcount ) 
+                   reget = true;
+               if(showflags == true && flagsum_p(rc,z) != (Int)(tcount-fcount))                    reget = true;
                if(reget)
                {
                   //cout << "reget for z : " << z << " and rc : " 
@@ -3021,15 +3022,15 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
                   {
                      yplotdata_p(zp,rc) = yplotdata_p(zp,rc)*tcount/fcount;
                   }
-                  if( showflags == False )flagsum_p(rc,z) = (Int)fcount;
+                  if( showflags == false )flagsum_p(rc,z) = (Int)fcount;
                   else flagsum_p(rc,z) = (Int)(tcount - fcount);
                }
             }
          }
          fyp++;
 
-         // first time = True : fill in flag_sum_p
-         // first time = False : compare with flag_sum_p[rc]. 
+         // first time = true : fill in flag_sum_p
+         // first time = false : compare with flag_sum_p[rc]. 
          //if changed, re-read y.
          
          break;
@@ -3071,7 +3072,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
             {
                TENRowColFlag_p[z][i] &= flagit.data()[cnt];
 
-               if( showflags == False )
+               if( showflags == false )
                {
                   /* Count and accumulate for unflagged points */
                   vsflag[ff] &= flagit.data()[cnt];
@@ -3109,7 +3110,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
             
             if(firsttime_p) 
             {
-               if( showflags == False )flagsum_p(rc,z) = (Int)sum(vfcount);
+               if( showflags == false )flagsum_p(rc,z) = (Int)sum(vfcount);
                else flagsum_p(rc,z) = (Int)(sum(vtcount) - sum(vfcount));
                
                for(Int i=0;i<(Int)vtcount.nelements();i++)
@@ -3121,12 +3122,12 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
             }
             else
             {
-               reget = False;
-               if( showflags == False && 
-                   flagsum_p(rc,z) != (Int)sum(vfcount) ) reget = True;
-               if( showflags == True && 
+               reget = false;
+               if( showflags == false && 
+                   flagsum_p(rc,z) != (Int)sum(vfcount) ) reget = true;
+               if( showflags == true && 
                    flagsum_p(rc,z) != (Int)(sum(vtcount)-sum(vfcount)) ) 
-                     reget = True;
+                     reget = true;
                if(reget)
                {
                   reGetYData(z,rc,conv_p);
@@ -3136,7 +3137,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
                         yplotdata_p(zp+i,rc) = 
                           yplotdata_p(zp+i,rc)*vtcount[i]/vfcount[i];
                   }
-                  if( showflags == False )
+                  if( showflags == false )
                      flagsum_p(rc,z) = (Int)sum(vfcount);
                   else 
                      flagsum_p(rc,z) = (Int)(sum(vtcount) - sum(vfcount));
@@ -3171,7 +3172,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
       log->out("NPlots is not correct (1)", 
              fnname, clname, LogMessage::WARN );
    ////TODO :  This is never going to be correct - 
-   //if fcol_p or frcol_p are False !!!
+   //if fcol_p or frcol_p are false !!!
 
    /* If *only* ROW_FLAG exists, use it for all vals.. */
    if(frcol_p && !fcol_p)
@@ -3193,7 +3194,7 @@ Int BasePlot::getFlags(String flagversion, Bool showflags)
        log->out( "NPlots is not correct (2)", 
              fnname, clname, LogMessage::WARN );
    
-   firsttime_p=False;
+   firsttime_p=false;
    
    return 0;
 }
@@ -3258,7 +3259,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
    Table itsSelectedMS; 
    uInt selRows = 0;
    try {
-      Table itsMS(itsTabName_p, casa::Table::Update);
+      Table itsMS(itsTabName_p, casacore::Table::Update);
       //cout << "itsMS.nrow()=" << itsMS.nrow() << endl; 
 
       //cout << "spwexpr=" << spwexpr << endl;
@@ -3294,7 +3295,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
    //   return 0;
    //}
    log->out("MS open for flagging", fnname, clname, LogMessage::DEBUG2); 
-   //log->out("MS open for flagging", fnname, clname, LogMessage::NORMAL, True); 
+   //log->out("MS open for flagging", fnname, clname, LogMessage::NORMAL, true); 
 
    Array<Bool> avgflagit; 
    Vector<Bool> vsflag;
@@ -3344,7 +3345,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
 
    IPosition avgIp = avgflagit.shape();
    avgtheflags_p.resize(avgIp(0) * avgIp(1), avgIp(2));   
-   //avgtheflags_p.set(False);
+   //avgtheflags_p.set(false);
 
    Int cnt = 0;
    for (Int rc = 0; rc < avgIp(2); rc++) {
@@ -3453,7 +3454,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
              else {
               polt(pCns++) = polids(zpi, 0);
              }
-             polt.resize(pCns, True);
+             polt.resize(pCns, true);
              //cout << "polt=" << polt << endl;
 
              Vector<Int> chant(fshp(1));
@@ -3466,7 +3467,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
              else {
               chant(cCns++) = polids(zpi, 1);
              }
-             chant.resize(cCns, True);
+             chant.resize(cCns, true);
              //cout << "chnt=" << chant << endl;
               
              for (uInt i = 0; i < chant.nelements(); i++) {
@@ -3564,7 +3565,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
                else {
                 pols(pCnt++) = polids(zpi, 0);
                }
-               pols.resize(pCnt, True);
+               pols.resize(pCnt, true);
                //cout << "pols=" << pols << endl;
 
 
@@ -3589,7 +3590,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
                  }
                 }
                }
-               chans.resize(cCnt, True);
+               chans.resize(cCnt, true);
                //cout << "chns=" << chans << endl;
 
               
@@ -3669,7 +3670,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
 
           AvgRowFlags_p.putColumn(avgrowflags_p);
 
-          itsTab_p->flush(True);
+          itsTab_p->flush(true);
         }
           catch(...) {
             log->out("Can not write flags", 
@@ -3719,17 +3720,17 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
     if (fcol_p && frcol_p) {
         Array<Bool> flagarray;
         flagarray.resize();
-        Bool rflag = True;
+        Bool rflag = true;
         for (Int rc = 0; rc < NRows_p; rc++) {
            Flags_p.get(rc,flagarray);
-           rflag=True;
+           rflag=true;
            for (Int j = 0; j < flagarray.shape().product(); j++) 
               rflag &= flagarray.data()[j];
                       
            if (rflag) 
-              rowflags_p[rc]=True;
+              rowflags_p[rc]=true;
            else 
-              rowflags_p[rc]=False;
+              rowflags_p[rc]=false;
         }
      }
  
@@ -3740,38 +3741,38 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
         IPosition tshp = flagcol.shape();
         if (direction == 1) {
            Int count = 0;
-           Bool rflag = True;
+           Bool rflag = true;
            for (Int i = 0; i < tshp[2]; i++) {
-              rflag=True;
+              rflag=true;
               for (Int j = 0; j < tshp[0] * tshp[1]; j++) { 
                    rflag &= flagcol.data()[count+j];
               }
                           
               if (rowflags_p[i]) { 
-                 // If row is flagged, set all data flags to True.
+                 // If row is flagged, set all data flags to true.
                  for (Int j = 0; j < tshp[0] * tshp[1]; j++)
-                    flagcol.data()[count+j] = True;
+                    flagcol.data()[count+j] = true;
               }
               else if (rflag) 
-                 rowflags_p[i] = True;
+                 rowflags_p[i] = true;
                          
               count += tshp[0] * tshp[1];
           }
        }
        else {
           Int count = 0;
-          Bool rflag = True;
+          Bool rflag = true;
           for (Int i = 0; i < tshp[2]; i++) {
-             rflag=True;
+             rflag=true;
              for (Int j = 0;j < tshp[0] * tshp[1]; j++) 
                 rflag &= flagcol.data()[count+j];
                                      
              if (!rowflags_p[i] && rflag) {
                 for (Int j = 0; j < tshp[0] * tshp[1]; j++)
-                   flagcol.data()[count+j] = False;
+                   flagcol.data()[count+j] = false;
               }
               else if(!rflag) 
-                 rowflags_p[i]=False;
+                 rowflags_p[i]=false;
                          
               count += tshp[0]*tshp[1];
            }
@@ -3827,7 +3828,7 @@ Int BasePlot::getFlags(String /*flagversion*/, String msname)
    }
 
    try {
-      itsTab_p = new Table(itsTabName_p, casa::Table::Update);
+      itsTab_p = new Table(itsTabName_p, casacore::Table::Update);
    }
    catch (...) {
       log->out("Can not open MS to write flags",
@@ -3870,7 +3871,7 @@ Int BasePlot::getFlags(String /*flagversion*/, String msname)
    //cout << "flagit=" << flagit.shape() << endl;
    IPosition ip = flagit.shape();
    avgtheflags_p.resize(ip(1) * ip(0), ip(2));   
-   //avgtheflags_p.set(False);
+   //avgtheflags_p.set(false);
 
    Int fyp=0; 
    Int cnt=0;
@@ -4095,18 +4096,18 @@ Int BasePlot::flagData(Int /*diskwrite*/, Int /*setrowflag*/, Int direction)
      {
         Array<Bool> flagarray;
         flagarray.resize();
-        Bool rflag=True;
+        Bool rflag=true;
         for(Int rc=0;rc<NRows_p;rc++)
         {
             Flags_p.get(rc,flagarray);
-            rflag=True;
+            rflag=true;
             for(Int j=0;j<flagarray.shape().product();j++) 
                rflag &= flagarray.data()[j];
                      
                if(rflag) 
-                  rowflags_p[rc]=True;
+                  rowflags_p[rc]=true;
                else 
-                 rowflags_p[rc]=False;
+                 rowflags_p[rc]=false;
         }
      }
 
@@ -4120,21 +4121,21 @@ Int BasePlot::flagData(Int /*diskwrite*/, Int /*setrowflag*/, Int direction)
         if(direction==1)//flag
         {
             Int count=0;
-            Bool rflag=True;
+            Bool rflag=true;
             for(Int i=0;i<tshp[2];i++)
             {
-               rflag=True;
+               rflag=true;
                for(Int j=0;j<tshp[0]*tshp[1];j++) 
                    rflag &= flagcol.data()[count+j];
                          
                 if(rowflags_p[i]) 
-                // If row is flagged, set all data flags to True.
+                // If row is flagged, set all data flags to true.
                 {
                    for(Int j=0;j<tshp[0]*tshp[1];j++)
-                       flagcol.data()[count+j] = True;
+                       flagcol.data()[count+j] = true;
                 }
                 else if(rflag) 
-                   rowflags_p[i]=True;
+                   rowflags_p[i]=true;
                          
                 count += tshp[0]*tshp[1];
             }
@@ -4142,20 +4143,20 @@ Int BasePlot::flagData(Int /*diskwrite*/, Int /*setrowflag*/, Int direction)
         else //unflag
         {
            Int count=0;
-           Bool rflag=True;
+           Bool rflag=true;
            for(Int i=0;i<tshp[2];i++)
            {
-              rflag=True;
+              rflag=true;
               for(Int j=0;j<tshp[0]*tshp[1];j++) 
                  rflag &= flagcol.data()[count+j];
                                      
               if(!rowflags_p[i] && rflag)// unflag all data flags
               {
                  for(Int j=0;j<tshp[0]*tshp[1];j++)
-                      flagcol.data()[count+j] = False;
+                      flagcol.data()[count+j] = false;
               }
               else if(!rflag) 
-                 rowflags_p[i]=False;
+                 rowflags_p[i]=false;
                          
               count += tshp[0]*tshp[1];
            }
@@ -4436,18 +4437,18 @@ Int BasePlot::flagData(Int direction, String /*msname*/,
      {
         Array<Bool> flagarray;
         flagarray.resize();
-        Bool rflag=True;
+        Bool rflag=true;
         for(Int rc=0;rc<NRows_p;rc++)
         {
             Flags_p.get(rc,flagarray);
-            rflag=True;
+            rflag=true;
             for(Int j=0;j<flagarray.shape().product();j++) 
                rflag &= flagarray.data()[j];
                      
                if(rflag) 
-                  rowflags_p[rc]=True;
+                  rowflags_p[rc]=true;
                else 
-                 rowflags_p[rc]=False;
+                 rowflags_p[rc]=false;
         }
      }
 
@@ -4461,21 +4462,21 @@ Int BasePlot::flagData(Int direction, String /*msname*/,
         if(direction==1)//flag
         {
             Int count=0;
-            Bool rflag=True;
+            Bool rflag=true;
             for(Int i=0;i<tshp[2];i++)
             {
-               rflag=True;
+               rflag=true;
                for(Int j=0;j<tshp[0]*tshp[1];j++) 
                    rflag &= flagcol.data()[count+j];
                          
                 if(rowflags_p[i]) 
-                // If row is flagged, set all data flags to True.
+                // If row is flagged, set all data flags to true.
                 {
                    for(Int j=0;j<tshp[0]*tshp[1];j++)
-                       flagcol.data()[count+j] = True;
+                       flagcol.data()[count+j] = true;
                 }
                 else if(rflag) 
-                   rowflags_p[i]=True;
+                   rowflags_p[i]=true;
                          
                 count += tshp[0]*tshp[1];
             }
@@ -4483,20 +4484,20 @@ Int BasePlot::flagData(Int direction, String /*msname*/,
         else //unflag
         {
            Int count=0;
-           Bool rflag=True;
+           Bool rflag=true;
            for(Int i=0;i<tshp[2];i++)
            {
-              rflag=True;
+              rflag=true;
               for(Int j=0;j<tshp[0]*tshp[1];j++) 
                  rflag &= flagcol.data()[count+j];
                                      
               if(!rowflags_p[i] && rflag)// unflag all data flags
               {
                  for(Int j=0;j<tshp[0]*tshp[1];j++)
-                      flagcol.data()[count+j] = False;
+                      flagcol.data()[count+j] = false;
               }
               else if(!rflag) 
-                 rowflags_p[i]=False;
+                 rowflags_p[i]=false;
                          
               count += tshp[0]*tshp[1];
            }

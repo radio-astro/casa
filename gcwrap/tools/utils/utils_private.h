@@ -1,2 +1,2 @@
-casa::LogIO *itsLog;
+casacore::LogIO *itsLog;
 record *myConstraints;

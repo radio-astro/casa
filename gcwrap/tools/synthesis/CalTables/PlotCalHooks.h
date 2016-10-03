@@ -37,7 +37,7 @@
 //# General CASA includes
 #include <casa/BasicSL/String.h>
 
-//# Table and TablePlot includes
+//# casacore::Table and TablePlot includes
 #include <tools/tables/TablePlot/TablePlot.h>
 
 
@@ -54,10 +54,10 @@ public:
   
   ~PlotCalReset() {};
   
-  Bool reset() {
-    cout << "Resetting plotcal" << endl;
+  casacore::Bool reset() {
+    std::cout << "Resetting plotcal" << std::endl;
     itsPlotCal->close();
-    return True;
+    return true;
   };
   
 private:
@@ -68,7 +68,7 @@ private:
 class PlotCalCallBacks : public TPGuiCallBackHooks
 {
 public:
-  PlotCalCallBacks(Record metainfo,Bool isNCT):
+  PlotCalCallBacks(casacore::Record metainfo,casacore::Bool isNCT):
     TPGuiCallBackHooks(),
     isNCT_p(isNCT)
  {
@@ -94,109 +94,109 @@ public:
   };
 
   ~PlotCalCallBacks(){
-    cout << "PlotCalCallBacks dtor" << endl;
+    std::cout << "PlotCalCallBacks dtor" << std::endl;
   };
 
-  casa::Bool flagdata(String /*tablename*/) {
+  casacore::Bool flagdata(casacore::String /*tablename*/) {
     //    cout << "PlotCalCallBacks :: Completed flagging on : "
     //         << tablename << endl;
-    return True;
+    return true;
   }
-  casa::Bool releasetable(Int /*nrows*/, Int /*ncols*/, Int /*panel*/, String /*tablename*/) {
+  casacore::Bool releasetable(casacore::Int /*nrows*/, casacore::Int /*ncols*/, casacore::Int /*panel*/, casacore::String /*tablename*/) {
     //    cout << "PlotCalCallBacks :: releasing "
     //         << tablename << " from panel "
     //         << nrows << "," <<ncols << "," << panel << endl;
-    return True;
+    return true;
   }
-  casa::Bool createiterplotlabels( Vector<String> iteraxes,
-				   Vector<Double> values,
-				   String &titleString ) {
+  casacore::Bool createiterplotlabels( casacore::Vector<casacore::String> iteraxes,
+				   casacore::Vector<casacore::Double> values,
+				   casacore::String &titleString ) {
     //    cout << "iteraxes    = " << iteraxes << endl;
     //    cout << "values      = " << values << endl;
 
     titleString="    ";
-    for (uInt i=0;i<iteraxes.nelements();++i) {
+    for (casacore::uInt i=0;i<iteraxes.nelements();++i) {
 
       if (iteraxes(i)=="ANTENNA1") {
 	if (antNames_p.nelements()>0 && values(i)<antNames_p.nelements())
-	  titleString = titleString + "  Antenna=\\'" + antNames_p((Int)values(i)) + "\\'";
+	  titleString = titleString + "  Antenna=\\'" + antNames_p((casacore::Int)values(i)) + "\\'";
 	else
-	  titleString = titleString + "  AntId=" + String::toString((Int)values(i));
+	  titleString = titleString + "  AntId=" + casacore::String::toString((casacore::Int)values(i));
       }
       if (iteraxes(i)=="FIELD_ID") {
 	if (fieldNames_p.nelements()>0 && values(i)<fieldNames_p.nelements())
-	  titleString = titleString + "  Field=\\'" + fieldNames_p((Int)values(i)) + "\\'";
+	  titleString = titleString + "  Field=\\'" + fieldNames_p((casacore::Int)values(i)) + "\\'";
 	else
-	  titleString = titleString + "  FldId=" + String::toString((Int)values(i));
+	  titleString = titleString + "  FldId=" + casacore::String::toString((casacore::Int)values(i));
       }
       if (iteraxes(i)==CDIcol()) {
 	if (spwIds_p.nelements()>0 && values(i)<spwIds_p.nelements())
-	  titleString = titleString + "  Spw=\\'" + String::toString(spwIds_p((Int)values(i))) + "\\'";
+	  titleString = titleString + "  Spw=\\'" + casacore::String::toString(spwIds_p((casacore::Int)values(i))) + "\\'";
 	else
-	  titleString = titleString + "  CalId=" + String::toString((Int)values(i));
+	  titleString = titleString + "  CalId=" + casacore::String::toString((casacore::Int)values(i));
       }
       if (iteraxes(i)=="TIME") {
-	titleString = titleString + "  Time=\\'" + MVTime(values(i)/C::day).string( MVTime::TIME,7) + "\\'";
+	titleString = titleString + "  casacore::Time=\\'" + casacore::MVTime(values(i)/casacore::C::day).string( casacore::MVTime::TIME,7) + "\\'";
       }
     }
 
     //    cout << "titleString = " << titleString << endl;
     
-    return True;
+    return true;
 
   }
 
-  casa::Bool printlocateinfo(Vector<String> /*collist*/,
-                             Matrix<Double> infomat,
-                             Vector<String> cpol) {
+  casacore::Bool printlocateinfo(casacore::Vector<casacore::String> /*collist*/,
+                             casacore::Matrix<casacore::Double> infomat,
+                             casacore::Vector<casacore::String> cpol) {
 
-    LogIO log;
+    casacore::LogIO log;
 
     if (infomat.shape()[1]>0) {
       //      cout << "collist = " << collist << endl;
       //      cout << "infomat = " << infomat << endl;
       //      cout << "cpol    = " << cpol << endl;
 
-      //      log << "Found the following calibration samples in the region:" << LogIO::POST;
+      //      log << "Found the following calibration samples in the region:" << casacore::LogIO::POST;
 
-      for (Int j=0;j<infomat.shape()[1];++j) {
-        log << MVTime( infomat(4, j)/C::day).string( MVTime::YMD,7) << " ";
+      for (casacore::Int j=0;j<infomat.shape()[1];++j) {
+        log << casacore::MVTime( infomat(4, j)/casacore::C::day).string( casacore::MVTime::YMD,7) << " ";
 
-	if (antNames_p.nelements()>0 && uInt(infomat(2,j))<antNames_p.nelements())
-	  log << " Antenna=" << "'" << antNames_p((Int)infomat(2,j)) << "'";
+	if (antNames_p.nelements()>0 && casacore::uInt(infomat(2,j))<antNames_p.nelements())
+	  log << " Antenna=" << "'" << antNames_p((casacore::Int)infomat(2,j)) << "'";
 	else
 	  log << " AntId=" << infomat(2,j);
 	    
-	if (spwIds_p.nelements()>0 && uInt(infomat(5,j))<spwIds_p.nelements())
-	  log << " SpwId=" << spwIds_p((Int)infomat(5,j));
+	if (spwIds_p.nelements()>0 && casacore::uInt(infomat(5,j))<spwIds_p.nelements())
+	  log << " SpwId=" << spwIds_p((casacore::Int)infomat(5,j));
 	else
 	  log << " CalId=" << infomat(5,j);
 	  
-	if (fieldNames_p.nelements()>0 && uInt(infomat(3,j))<fieldNames_p.nelements())
-	  log << " Field=" << "'" << fieldNames_p((Int)infomat(3,j)) << "'";
+	if (fieldNames_p.nelements()>0 && casacore::uInt(infomat(3,j))<fieldNames_p.nelements())
+	  log << " Field=" << "'" << fieldNames_p((casacore::Int)infomat(3,j)) << "'";
 	else
 	  log << " FldId=" << infomat(3,j);
 
 	log << " pol,chan=" << cpol(j);
            
-	log << LogIO::POST;
+	log << casacore::LogIO::POST;
 
       }
 
     }
-    return True;
+    return true;
   }
 
 private:
 
-  inline String CDIcol() { return (isNCT_p ? "SPECTRAL_WINDOW_ID" : "CAL_DESC_ID"); };
+  inline casacore::String CDIcol() { return (isNCT_p ? "SPECTRAL_WINDOW_ID" : "CAL_DESC_ID"); };
 
 
-  Vector<String> fieldNames_p;
-  Vector<String> antNames_p;
-  Vector<Int> spwIds_p;
+  casacore::Vector<casacore::String> fieldNames_p;
+  casacore::Vector<casacore::String> antNames_p;
+  casacore::Vector<casacore::Int> spwIds_p;
 
-  Bool isNCT_p;
+  casacore::Bool isNCT_p;
 
 };
 
@@ -204,9 +204,9 @@ private:
 class PlotCalFreqAxes : public TPConvertChanToFreq
 {
 public :
-  PlotCalFreqAxes(const Vector<Int>& cdlist,
-		  const Vector<Double>& startFreq,
-		  const Vector<Double>& stepFreq) {
+  PlotCalFreqAxes(const casacore::Vector<casacore::Int>& cdlist,
+		  const casacore::Vector<casacore::Double>& startFreq,
+		  const casacore::Vector<casacore::Double>& stepFreq) {
     cdList = cdlist;
     offsetV = startFreq;
     intervalV = stepFreq;
@@ -214,15 +214,15 @@ public :
 
   }
   ~PlotCalFreqAxes(){};
-  Double offset,interval;
-  inline Double Xconvert_col(Double x,Int /*row*/,Int tblNum){
+  casacore::Double offset,interval;
+  inline casacore::Double Xconvert_col(casacore::Double x,casacore::Int /*row*/,casacore::Int tblNum){
     return x*intervalV(cdList(tblNum)) + offsetV(cdList(tblNum));
   }
 
 private:
-  Vector<Int> cdList;
-  Vector<Double> offsetV;
-  Vector<Double> intervalV;
+  casacore::Vector<casacore::Int> cdList;
+  casacore::Vector<casacore::Double> offsetV;
+  casacore::Vector<casacore::Double> intervalV;
 
 };
 
@@ -230,14 +230,14 @@ private:
 class PlotCalParang : public TPConvertBase
 {
 public:
-  PlotCalParang(Vector<Vector<Int> >& fldlists) {
-    // Set up MSDerivedValues to do calc
+  PlotCalParang(casacore::Vector<casacore::Vector<casacore::Int> >& fldlists) {
+    // Set up casacore::MSDerivedValues to do calc
     fldLists = fldlists;
   };
   ~PlotCalParang(){};
-  inline Double Xconvert(Double x,
-			 Int /*row*/,
-			 Int /*tblNum*/) {
+  inline casacore::Double Xconvert(casacore::Double x,
+			 casacore::Int /*row*/,
+			 casacore::Int /*tblNum*/) {
     //    cout << "PCP::Xconvert: " << tblNum << " " << row << " " << x 
     //	 << fldLists(tblNum)(row)
     //	 << endl;
@@ -245,7 +245,7 @@ public:
   }
 private:
 
-  Vector<Vector<Int> > fldLists;
+  casacore::Vector<casacore::Vector<casacore::Int> > fldLists;
 };
 
 

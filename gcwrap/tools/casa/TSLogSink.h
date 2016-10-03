@@ -37,12 +37,16 @@
 
 #include <fstream>
 
+namespace casacore{
+
+	class LogSinkInterface;
+	class LogFilterInterface;
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 #ifndef AIPS_LOG4CPLUS
-	class LogSinkInterface;
-	class LogFilterInterface;
 #endif
 
 // <summary>
@@ -55,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class=LogSink>LogSink</linkto>
+//   <li> <linkto class=casacore::LogSink>LogSink</linkto>
 // </prerequisite>
 //
 // <synopsis>
@@ -74,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# <todo asof="2005/08/15">
 //# </todo>
 
-class TSLogSink : public LogSinkInterface
+class TSLogSink : public casacore::LogSinkInterface
 {
 public:
   // Create an empty sink without a filter.
@@ -82,8 +86,8 @@ public:
 
   // Create an empty sink with the given filter.
   // <group>
-  explicit TSLogSink (LogMessage::Priority filter);
-  explicit TSLogSink (const LogFilterInterface& filter);
+  explicit TSLogSink (casacore::LogMessage::Priority filter);
+  explicit TSLogSink (const casacore::LogFilterInterface& filter);
   // </group>
 
   // Copy constructor (copy semantics).
@@ -95,25 +99,25 @@ public:
   virtual ~TSLogSink();
 
   // If the message passes the filter, write it
-  virtual Bool postLocally (const LogMessage& message);
+  virtual casacore::Bool postLocally (const casacore::LogMessage& message);
 
   // Returns the id for this class...
-  static String localId( );
-  // Returns the id of the LogSink in use...
-  String id( ) const;
-  const LogFilterInterface& filter() const;
-  LogSinkInterface& filter(const LogFilterInterface &newfilter);
+  static casacore::String localId( );
+  // Returns the id of the casacore::LogSink in use...
+  casacore::String id( ) const;
+  const casacore::LogFilterInterface& filter() const;
+  casacore::LogSinkInterface& filter(const casacore::LogFilterInterface &newfilter);
 #ifndef AIPSLOG4CPLUS
-  void cerrToo(Bool);
-  void setLogSink(String logname = "");
+  void cerrToo(casacore::Bool);
+  void setLogSink(casacore::String logname = "");
 #endif
 
 private:
   // Avoid duplicating code in copy ctor and assignment operator
   void copy_other (const TSLogSink& other);
 #ifndef AIPS_LOG4CPLUS
-  LogSinkInterface *logsink;
-  Bool send2cerr;
+  casacore::LogSinkInterface *logsink;
+  casacore::Bool send2cerr;
   std::ofstream *logfile;
 #endif
 

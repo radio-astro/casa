@@ -110,7 +110,7 @@
 
    [TABS_p]: Vector of Table Objects. This is updated whenever the user calls "open"
              (or the application code calls setTableS or setTableT). 
-        Every time this happens, "TableTouch_p" is set to "True", indicating 
+        Every time this happens, "TableTouch_p" is set to "true", indicating 
         that the user has sent in a new table, and this information has to
         propagate to the BasePlot that will read the data.  
         TablePlot::creatBP() creates the BasePlot/CrossPlot object.
@@ -124,6 +124,7 @@
 #define LOG2 1
 #define LOG0 0
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 casa::TPGuiBinder* GBB=NULL;
@@ -147,7 +148,7 @@ TablePlot::TablePlot()
    resetters_p.resize(0);
    appnames_p.resize(0);
 
-   isGuiVisible_p = True;
+   isGuiVisible_p = true;
 }
 
 /*********************************************************************************/
@@ -160,7 +161,7 @@ Bool TablePlot::setGui(Bool guiVisible)
 
    // Nothing has changed so don't do anything.
    if ( guiVisible == isGuiVisible_p )
-       return True;
+       return true;
    isGuiVisible_p = guiVisible;
    
    
@@ -175,7 +176,7 @@ Bool TablePlot::setGui(Bool guiVisible)
    TPLP = new TPPlotter(guiVisible);   
    
 
-   return True;
+   return true;
 }
 
 
@@ -190,16 +191,16 @@ Bool TablePlot::setupTP()
    /* Init for zero tables */
    // first release autolocks if any tables are being held
    //for(uInt i=0;i<TABS_p.nelements();i++) 
-   //   TABS_p[i].relinquishAutoLocks(True);
+   //   TABS_p[i].relinquishAutoLocks(true);
    TABS_p.resize(0);
    nTabs_p=0;
 
    /* Initial state */
-   IterPlotOn_p=False;
-   IterPlotStarted_p=False;
-   TableTouch_p=False;
+   IterPlotOn_p=false;
+   IterPlotStarted_p=false;
+   TableTouch_p=false;
    CurrentPanel_p=1;
-   isPlotDisplayed_p = False;
+   isPlotDisplayed_p = false;
    
    /* Initialize to zero iteration axes and no overplots */
    IterAxes_p.resize(0);
@@ -217,7 +218,7 @@ Bool TablePlot::setupTP()
 
    /* Start a new log-instance */
 
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -249,7 +250,7 @@ Bool TablePlot::changeGuiButtonState( String button, String state )
    if(TPLP) 
       return TPLP->changeGuiButtonState( button, state );
    else 
-      return False;
+      return false;
 }
 
 /*********************************************************************************/
@@ -265,7 +266,7 @@ Bool TablePlot::saveData(const String& filename) {
             (*ATBPS[p])[i]->saveData(filename);
          }
    }
-   return True;
+   return true;
 } 
 /*********************************************************************************/
 
@@ -283,13 +284,13 @@ Bool TablePlot::saveFigure(const String& filename, const Int dpi,
 
     String fnname= "saveFigure";
     log->FnEnter(fnname + "(filename, dpi, orientation, ...)", clname);
-    casa::Bool rstat = True;
+    casacore::Bool rstat = true;
 
     /* check that the figure manager has been started. */
     if(!isPlotDisplayed_p) {
        log->out("A plot needs to be made before figures can be saved", 
              fnname, clname, LogMessage::WARN );
-       return False;
+       return false;
     }
 
     /* Check if we've been given a filename. */
@@ -299,7 +300,7 @@ Bool TablePlot::saveFigure(const String& filename, const Int dpi,
     if (filename.length() < 1) {
        log->out("No file name given, unable to save the plotted figure.",
           fnname, clname, LogMessage::WARN);
-       rstat = False;
+       rstat = false;
     }
   
     if (upcase(filename).contains(".TXT")) {
@@ -348,7 +349,7 @@ Bool TablePlot::saveFigure(const String& filename, const Int dpi,
              LogMessage::NORMAL);
           runPlotCommand( cmd );
       } catch ( AipsError ae ) {
-          rstat = False;
+          rstat = false;
           throw;
       }
    }
@@ -362,7 +363,7 @@ Bool TablePlot::saveFigure(const String& filename, const Int dpi,
 /* Accept Table names as input.
    - Create Table objects from the string of table names in inTabName 
    - Check if each table has a non-zero number of rows.
-   - Fill in TABS_p, and set TableTouch_p = True so that other functions
+   - Fill in TABS_p, and set TableTouch_p = true so that other functions
      know that a new table has been attached.
  */
 Bool TablePlot::setTableS(Vector<String> &inTabName, 
@@ -399,7 +400,7 @@ Bool TablePlot::setTableS(Vector<String> &inTabName,
          TABS_p[i] = Table(inTabName[i],Table::Update);
          if(!TABS_p[i].nrow()) TablePlotError(String("No Rows in Table."));
       }
-      TableTouch_p=True;
+      TableTouch_p=true;
    }
    catch(TableError &x)
    {
@@ -407,7 +408,7 @@ Bool TablePlot::setTableS(Vector<String> &inTabName,
    }
 
    log->FnExit("setTableS(inTabName, rootTabName, selection)", clname);
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -416,15 +417,15 @@ Bool TablePlot::isTableSet()
    log->FnPass("isTableSet()", clname);
    
    if( TABS_p.nelements() ) 
-       return True;
+       return true;
    else 
-       return False;
+       return false;
 }
 /*********************************************************************************/
 
 /* Accept Table Objects directly.
    - Check if each input table object has a non-zero number of rows.
-   - Fill in TABS_p, and set TableTouch_p = True so that other functions
+   - Fill in TABS_p, and set TableTouch_p = true so that other functions
      know that a new table has been attached.
  */
 Bool TablePlot::setTableT(Vector<Table> &inTabObj, Vector<String> &rootTabNames, Vector<String> &selection)
@@ -463,14 +464,14 @@ Bool TablePlot::setTableT(Vector<Table> &inTabObj, Vector<String> &rootTabNames,
          TABS_p[i] = inTabObj[i];
          if(!TABS_p[i].nrow()) TablePlotError(String("No Rows in Table."));
       }
-      TableTouch_p=True;
+      TableTouch_p=true;
    }
    catch(TableError &x)
    {
       TablePlotError(x.getMesg());
    }
    log->FnExit(fnname, clname);
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -481,7 +482,7 @@ Bool TablePlot::useFlagColumns(String dataflags, String rowflags)
 {
    dataFlagColName_p = dataflags;
    rowFlagColName_p = rowflags;
-   return True;
+   return true;
 }
 /*********************************************************************************/
 /* Allow the application layer to get access to the vector of Table objects. */
@@ -490,7 +491,7 @@ Bool TablePlot::getTabVec(Vector<Table> &tabs)
    log->FnPass("getTabVec(tabs)", clname);
    tabs.resize(TABS_p.nelements());
    for(Int i=0;i<(Int)TABS_p.nelements();i++) tabs[i] = TABS_p[i];
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -530,7 +531,7 @@ Bool TablePlot::createBP(PtrBlock<BasePlot* > &BPS,
    log->out(String("pType=") + pType + " key=" + key,
             fnname, clname, LogMessage::DEBUG1);
 
-   Bool change = False;
+   Bool change = false;
    /* Check plot types, only if BasePlots/CrossPlots already exist */
    if((Int)BPS.nelements() > 0)
    {
@@ -575,15 +576,15 @@ Bool TablePlot::createBP(PtrBlock<BasePlot* > &BPS,
          //   break;
                
       }
-      change = True;
+      change = true;
    }
    
    log->out(String("change : ")+String::toString(change), 
             fnname, clname, LogMessage::DEBUG1);
    log->FnExit(fnname, clname);
    return change;
-   /* if this is True ==> need to call upDateBP
-      if this is False ==> no need to call upDateBP (but no harm if called)
+   /* if this is true ==> need to call upDateBP
+      if this is false ==> no need to call upDateBP (but no harm if called)
    */
 }
 
@@ -591,7 +592,7 @@ Bool TablePlot::createBP(PtrBlock<BasePlot* > &BPS,
 
 /* Attach one table to each BasePlot 
    - The table obj is handed over to the BasePlot, and TableTouch_p is set
-     to False, to indicate that the BasePlot now has the latest table.
+     to false, to indicate that the BasePlot now has the latest table.
 */
 Bool TablePlot::upDateBP(PtrBlock<BasePlot* > &BPS)
 {
@@ -609,10 +610,10 @@ Bool TablePlot::upDateBP(PtrBlock<BasePlot* > &BPS)
          tableSelections_p[i], dataFlagColName_p, rowFlagColName_p); 
    }
    
-   TableTouch_p=False;
+   TableTouch_p=false;
    
    log->FnExit(fnname, clname);
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -626,7 +627,7 @@ Bool TablePlot::deleteBasePlot(Int panel, Int layer)
         PAN[panel]->Plop.PanelMap[2], 
         (*ATBPS[panel])[layer]->getTableName());
    delete (*ATBPS[panel])[layer];
-   return True;
+   return true;
 }
 /*********************************************************************************/
 /* Reset TablePlot - callback. */
@@ -641,23 +642,23 @@ Bool TablePlot::setResetCallBack( String appname, TPResetCallBack * resetter )
    //log->out(String("start : " )+String::toString(n), fnname, clname);
 
         
-   Bool found = False;
+   Bool found = false;
    for( Int i=0;i<n;i++ ) {
       if( appnames_p[i].matches(appname) ) {
          resetters_p[i] = resetter;
-         found = True;
+         found = true;
       }
    }
         
    if(!found) {
-      resetters_p.resize(n+1,True);
+      resetters_p.resize(n+1,true);
       resetters_p[n] = resetter;
-      appnames_p.resize(n+1,True);
+      appnames_p.resize(n+1,true);
       appnames_p[n] = appname;
    }
    
    log->FnExit(fnname, clname);
-   return True;
+   return true;
 }
 
 /* Remove a reset callback */
@@ -684,12 +685,12 @@ Bool TablePlot::clearResetCallBack( String appname )
         resetters_p[i] = resetters_p[i+1];
         appnames_p[i] = appnames_p[i+1];
       }
-      resetters_p.resize(n-1,True);
-      appnames_p.resize(n-1,True);
+      resetters_p.resize(n-1,true);
+      appnames_p.resize(n-1,true);
    }
         
    log->FnExit(fnname, clname);
-   return True;
+   return true;
 }
 /*********************************************************************************/
 /* CleanUp TablePlot */
@@ -709,8 +710,8 @@ Bool TablePlot::resetTP(Int closewindow)
       if(resetters_p[i]) 
          (resetters_p[i])->reset();
   
-   resetters_p.resize(0,True);
-   appnames_p.resize(0,True);
+   resetters_p.resize(0,true);
+   appnames_p.resize(0,true);
  
    if(TPLP && closewindow) TPLP->closeWindow(); 
     // This call is essential - before deleting TPLP
@@ -723,7 +724,7 @@ Bool TablePlot::resetTP(Int closewindow)
    setupTP();
 
    log->FnExit(fnname, clname);
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -735,7 +736,7 @@ Bool TablePlot::runPlotCommand(String command)
 {
    TPLP->runPlotCommand(command);
 
-   return True;
+   return true;
 }
 /*********************************************************************************/
 /*********************************************************************************/
@@ -1077,16 +1078,16 @@ Bool TablePlot::plotData(PlotOptions &pop,
    panindex = getPanelIndex(pop.PanelMap[0],pop.PanelMap[1],pop.PanelMap[2]);
    
    /* OverPlot conventions per panel :
-      OverPlot=False -> clean up all layers and make a fresh plot.
-      OverPlot=True, ReplaceTopPlot=False -> add a new layer.
-      OverPlot=True, RePlaceTopPlot=True -> Change only the top-most layer.
+      OverPlot=false -> clean up all layers and make a fresh plot.
+      OverPlot=true, ReplaceTopPlot=false -> add a new layer.
+      OverPlot=true, RePlaceTopPlot=true -> Change only the top-most layer.
       --> If there aren't any current layers,
-       then set RePlaceTopPlot = False;
+       then set RePlaceTopPlot = false;
    */
-   if( ! isPlotDisplayed_p && pop.ReplaceTopPlot ) pop.ReplaceTopPlot = False;
+   if( ! isPlotDisplayed_p && pop.ReplaceTopPlot ) pop.ReplaceTopPlot = false;
 
-   /* If overplot = False, then clean things up - if the panel exists ! */
-   /* Clean all layers if TableTouch = True. 
+   /* If overplot = false, then clean things up - if the panel exists ! */
+   /* Clean all layers if TableTouch = true. 
      Otherwise leave the first layer. */
    //if(!pop.OverPlot && panindex != -1) 
    if(panindex != -1) 
@@ -1095,21 +1096,21 @@ Bool TablePlot::plotData(PlotOptions &pop,
            String::toString(panindex)+String( " ..." );
       log->out(msg, fnname, clname, LogMessage::NORMAL5);
 
-      if( !pop.OverPlot ) /*  OverPlot = False */
+      if( !pop.OverPlot ) /*  OverPlot = false */
       {
           
          if( PAN[panindex]->MaxLayer == 1 )
-            TPLP->clearPlot(panindex+1,True);
+            TPLP->clearPlot(panindex+1,true);
          else
             clearPlot(pop.PanelMap[0],pop.PanelMap[1],pop.PanelMap[2]);
       }
-      else /* OverPlot = True */
+      else /* OverPlot = true */
       {
          if( pop.ReplaceTopPlot ) /* Replace the Top-Most layer */
          {
             // delete the ATBPS and PAN entries for the MaxLayer, 
             //   and change the MaxLayer !!
-            // Then allow "overplot=True" to take over.
+            // Then allow "overplot=true" to take over.
             Int nmax = 0;
             Int ntotal = ATBPS[panindex]->nelements();
             log->out(String("Plotting ")+ String::toString(ntotal)+
@@ -1124,7 +1125,7 @@ Bool TablePlot::plotData(PlotOptions &pop,
                }
                   
             }
-            (*ATBPS[panindex]).resize(ntotal-nmax,True);
+            (*ATBPS[panindex]).resize(ntotal-nmax,true);
             PAN[panindex]->changeNlayers(ntotal-nmax);
             if( PAN[panindex]->nBP==0 ) 
                 PAN[panindex]->MaxLayer = 1;
@@ -1146,10 +1147,10 @@ Bool TablePlot::plotData(PlotOptions &pop,
    // check if this is always only increased by one. If so, combine with ###
    if(nelm < panel) 
    {
-      ATBPS.resize(panel,True);
+      ATBPS.resize(panel,true);
       for(Int i=nelm;i<(Int)ATBPS.nelements();i++) 
           ATBPS[i]=NULL;
-      PAN.resize(panel,True);
+      PAN.resize(panel,true);
       for(Int i=nelm;i<(Int)PAN.nelements();i++) 
           PAN[i]=NULL;
    }
@@ -1160,7 +1161,7 @@ Bool TablePlot::plotData(PlotOptions &pop,
    {
       PAN[panel-1] = new PanelParams();
       ATBPS[panel-1] = new PtrBlock<BasePlot* >();
-      (*ATBPS[panel-1]).resize(0,True);
+      (*ATBPS[panel-1]).resize(0,true);
    }
    
    /* Count the number of layers in the current panel */
@@ -1169,7 +1170,7 @@ Bool TablePlot::plotData(PlotOptions &pop,
    log->out(String("TableTouch_p : ")+ String::toString(TableTouch_p),
             fnname, clname, LogMessage::DEBUG1);
    
-   /* If OverPlot=True and ReplaceTopPlot=False, add a new BPS */
+   /* If OverPlot=true and ReplaceTopPlot=false, add a new BPS */
    //if(pop.OverPlot && !pop.ReplaceTopPlot)
    if(pop.OverPlot)
    {
@@ -1188,10 +1189,10 @@ Bool TablePlot::plotData(PlotOptions &pop,
       //      upDateBP(newbps); 
 
       /* Update ATBPS, and compute and update layer info */
-      (*ATBPS[panel-1]).resize(noldbps+newbps.nelements(),True);
+      (*ATBPS[panel-1]).resize(noldbps+newbps.nelements(),true);
       PAN[panel-1]->changeNlayers(noldbps+newbps.nelements());
       
-      (*ATBPS[panel-1]).resize(noldbps+newbps.nelements(),True);
+      (*ATBPS[panel-1]).resize(noldbps+newbps.nelements(),true);
       if(noldbps==0) 
          thislayer=1;
       else 
@@ -1210,7 +1211,7 @@ Bool TablePlot::plotData(PlotOptions &pop,
 
    }
    
-   /* If OverPlot=False, work with top plot */   
+   /* If OverPlot=false, work with top plot */   
    //if(!pop.OverPlot || pop.ReplaceTopPlot)
    if(!pop.OverPlot)
    {
@@ -1347,7 +1348,7 @@ Bool TablePlot::plotData(PlotOptions &pop,
           fnname, clname, LogMessage::NORMAL);
       TPLP->plotData(*ATBPS[panel-1],panel,1);
 
-      isPlotDisplayed_p = True;
+      isPlotDisplayed_p = true;
    }
    catch(AipsError &x)
    {
@@ -1356,7 +1357,7 @@ Bool TablePlot::plotData(PlotOptions &pop,
          if the getData fails.. */
    }
    log->FnExit(fnname, clname);
-   return True;
+   return true;
 }
 /*********************************************************************************/
 /* replot */
@@ -1373,7 +1374,7 @@ Bool TablePlot::rePlot()
          TPLP->plotData(*ATBPS[p],p+1,0);
    }
 
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -1431,12 +1432,12 @@ Int TablePlot::getPanelIndex(Int nrows,Int ncols,Int panel)
 //   {
 //      if(PAN[i] != NULL)
 //      {
-//          Bool samePanel = False;
+//          Bool samePanel = false;
 //          /* If it's the same panel, let it be */
 //          if( PAN[i]->Plop.PanelMap[0]==nrows && 
 //          PAN[i]->Plop.PanelMap[1]==ncols && 
 //          PAN[i]->Plop.PanelMap[2]==panel) 
-//          {samePanel=True;}
+//          {samePanel=true;}
 //          
 //          //log->out(String("same panel : ")+String::toString(samePanel),
 //          //         fnname, clname, LogMessage::DEBUG1);
@@ -1482,7 +1483,7 @@ Int TablePlot::getPanelIndex(Int nrows,Int ncols,Int panel)
 //       }// end of if not null
 //   }// end of for PAN
 //
-//   return True;
+//   return true;
 //}
 
 Bool TablePlot::clearOverLaps(Int nrows,Int ncols,Int panel)
@@ -1518,12 +1519,12 @@ Bool TablePlot::clearOverLaps(Int nrows,Int ncols,Int panel)
    for(Int i = 0; i < (Int)PAN.nelements(); i++) {
 
       if(PAN[i] != NULL) {
-          Bool samePanel = False;
+          Bool samePanel = false;
           /* If it's the same panel, let it be */
           if (PAN[i]->Plop.PanelMap[0] == nrows && 
               PAN[i]->Plop.PanelMap[1]==ncols && 
               PAN[i]->Plop.PanelMap[2]==panel) {
-             samePanel = True;
+             samePanel = true;
           }
           
           //log->out(String("same panel : ")+String::toString(samePanel),
@@ -1573,7 +1574,7 @@ Bool TablePlot::clearOverLaps(Int nrows,Int ncols,Int panel)
        }
    }
 
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -1587,7 +1588,7 @@ Bool TablePlot::markRegions(Int nrows, Int ncols, Int panel, Vector<Double> &reg
    String fnname= "markRegions";
    log->FnEnter(fnname + "(nrows, ncols, panel, region)", clname);
         
-   Bool stat=True;
+   Bool stat=true;
         
    if(isPlotDisplayed_p) 
        TPLP->markRegions(nrows,ncols,panel,region);
@@ -1613,7 +1614,7 @@ Bool TablePlot::flagData( Int direction){
    if( ! isPlotDisplayed_p ) {      
        log->out("A plot needs to be made before regions can be (un)flagged",
                  fnname, clname, LogMessage::WARN);      
-       return False;
+       return false;
    }
 
    /* Send in updated plot-options to TPLP. */   
@@ -1639,7 +1640,7 @@ Bool TablePlot::flagData( Int direction){
          }
 
          // maybe remove this too.
-         TPLP->clearPlot(p+1,True);
+         TPLP->clearPlot(p+1,true);
       }
    }
 
@@ -1657,7 +1658,7 @@ Bool TablePlot::flagData( Int direction){
         delete FLAGHIST[i];
    FLAGHIST.resize(0);
    log->out(fnname, clname);
-   return True;
+   return true;
 }
 
 /*****************************************************************************/
@@ -1717,7 +1718,7 @@ Bool TablePlot::flagData(Int direction, Vector<Int> numregions)
          }
               
          // maybe remove this too.
-         TPLP->clearPlot(p+1,True);
+         TPLP->clearPlot(p+1,true);
       }
    }
 
@@ -1735,7 +1736,7 @@ Bool TablePlot::flagData(Int direction, Vector<Int> numregions)
         delete FLAGHIST[i];
    FLAGHIST.resize(0);
    log->out(fnname, clname);
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -1801,7 +1802,7 @@ Bool TablePlot::updateFlagHistory(PtrBlock<Record*> &flaghist)
       }
    }
    log->FnExit(fnname, clname);
-   return True;
+   return true;
 }
 /*********************************************************************************/
 /* Dump the flag history obtained via TP.updateFlagHistory */
@@ -1889,7 +1890,7 @@ Bool TablePlot::dumpFlagHistory(PtrBlock<Record*> &flaghist)
          }
       }
    }         
-   return True;
+   return true;
 }
 
 Bool TablePlot::locateData(Int doFlag) {
@@ -1920,7 +1921,7 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
    if(! isPlotDisplayed_p ) {
       log->out("A plot needs to be made before 'locate' queries can be made", 
                fnname, clname, LogMessage::WARN);
-      return False;
+      return false;
    }
 
    // CHECK FOR EMPTY STRING !!!
@@ -1953,8 +1954,8 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
    }
 
    //loop over all panels, check whether flag extension is required
-   Bool extend = False;
-   Bool average = False;
+   Bool extend = false;
+   Bool average = false;
    for(Int p = 0; p < (Int)ATBPS.nelements(); p++) {
       if(ATBPS[p]!=NULL && numregions(p) > 0) {
          for (Int i = 0; i < (Int)(*ATBPS[p]).nelements(); i++) {
@@ -1962,10 +1963,10 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
             //     << " extendflag=" << PAN[p]->Plop.FlagExt
             //     << endl;
             if (PAN[p]->Plop.FlagExt.length() > 0) {
-               extend = True;
+               extend = true;
             }
             if (PAN[p]->Plop.doAverage) {
-               average = True;
+               average = true;
             }
          }
       }
@@ -1996,7 +1997,7 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
          {
          
             /* Append to list of records */
-            INFO.resize(reccount+1,True);
+            INFO.resize(reccount+1,true);
             INFO[reccount] = new Record();
 
             /* panel number */
@@ -2094,7 +2095,7 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
    reccount = 0;
 
    if (doFlag != -1 && average) {
-   if (False) {
+   if (false) {
    for(Int p=0; p<(Int)ATBPS.nelements(); p++)
    {
       //cout << "locateData ATBPS[" << p << "]=" << ATBPS[p] 
@@ -2107,7 +2108,7 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
          {
          
             /* Append to list of records */
-            INFO.resize(reccount+1,True);
+            INFO.resize(reccount+1,true);
             INFO[reccount] = new Record();
 
             /* panel number */
@@ -2188,12 +2189,12 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
    //   (*ATBPS[0])[0]->showFlags();
    //}
 
-   dumpLocateInfo(INFO, doFlag, True);
+   dumpLocateInfo(INFO, doFlag, true);
       
    }
    else {
      log->out(String("Done flagging. Please run plotxy to reload the MS."),
-               fnname, clname, LogMessage::NORMAL2, True);
+               fnname, clname, LogMessage::NORMAL2, true);
    }
    }
 
@@ -2202,7 +2203,7 @@ Bool TablePlot::locateData(Vector<String> columnlist, PtrBlock<Record*> &INFO,
 
    log->FnExit(fnname, clname);
 
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -2323,11 +2324,11 @@ Bool TablePlot::dumpLocateInfo(PtrBlock<Record*> &INFO, Int doFlag, Bool doAve)
 
    delete genericcallback;
    log->FnExit(fnname, clname);   
-   return True;
+   return true;
 }
 /*********************************************************************************/
 /* Clear Plot */
-/* If TableTouch_p = False, then don't clear out the BPs !! Only reset the PanelParams */
+/* If TableTouch_p = false, then don't clear out the BPs !! Only reset the PanelParams */
 Bool TablePlot::clearPlot(Int nrows, Int ncols, Int panel)
 {
    String fnname= "clearPlot";
@@ -2352,13 +2353,13 @@ Bool TablePlot::clearPlot(Int nrows, Int ncols, Int panel)
          }
          
       }
-      ATBPS.resize(0,True);
+      ATBPS.resize(0,true);
       
       for(Int i=0;i<(Int)PAN.nelements();i++)   delete PAN[i];
-      PAN.resize(0,True);
-      TPLP->clearPlot(0,True);
+      PAN.resize(0,true);
+      TPLP->clearPlot(0,true);
       
-                isPlotDisplayed_p = False;
+                isPlotDisplayed_p = false;
       //resetTP();
    }
    else /* A specific panel is to be cleared */
@@ -2383,7 +2384,7 @@ Bool TablePlot::clearPlot(Int nrows, Int ncols, Int panel)
                String(" is a non-existant panel "),
                fnname, clname, LogMessage::SEVERE);
 
-         return False;
+         return false;
          
       }
 
@@ -2393,7 +2394,7 @@ Bool TablePlot::clearPlot(Int nrows, Int ncols, Int panel)
           ATBPS[panelindex] != NULL && PAN[panelindex] != NULL) 
       {
               log->out( "CLEARING " );
-         TPLP->clearPlot(panelindex+1,True);
+         TPLP->clearPlot(panelindex+1,true);
 
          Int start=0;
          
@@ -2411,22 +2412,22 @@ Bool TablePlot::clearPlot(Int nrows, Int ncols, Int panel)
          }
          else
          {
-            ATBPS[panelindex]->resize(1,True);
+            ATBPS[panelindex]->resize(1,true);
             //PAN[panelindex]->reset();
             PAN[panelindex]->changeNlayers((*ATBPS[panelindex]).nelements());
          }
       }
                 /* If all plots have been cleared, set the "no plot displayed" flag */
-                Bool atleastoneplot=False;
+                Bool atleastoneplot=false;
                 for(Int i=0;i<(Int)ATBPS.nelements();i++) 
                 {
-                        if(ATBPS[i]!=NULL) atleastoneplot=True;
+                        if(ATBPS[i]!=NULL) atleastoneplot=true;
                 }
-                if( ! atleastoneplot ) isPlotDisplayed_p = False;
+                if( ! atleastoneplot ) isPlotDisplayed_p = false;
    }
 
    log->FnExit(fnname, clname);   
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -2532,11 +2533,11 @@ Bool TablePlot::iterMultiPlotStart(PlotOptions &pop,Vector<Vector<String> > &dat
       else
       {
          log->out(String("Over Plot : npop : ")+String::toString(npop));
-         Pops_p.resize(npop+1,True);
+         Pops_p.resize(npop+1,true);
          Pops_p[npop] = new PlotOptions(pop);
 
 
-         TaqlStr_p.resize(npop+1,True);
+         TaqlStr_p.resize(npop+1,true);
 
          // This is called geesh, because this is a geesh 
          // variable.  We shouldn't need to create it.  It
@@ -2551,13 +2552,13 @@ Bool TablePlot::iterMultiPlotStart(PlotOptions &pop,Vector<Vector<String> > &dat
          TaqlStr_p[npop] = new Vector<Vector<String> >(geesh);
          //TaqlStr_p[npop] = new Vector<Vector<String> >(datastrvector);
 
-         OvpRootTabNames_p.resize(npop+1,True);
+         OvpRootTabNames_p.resize(npop+1,true);
          OvpRootTabNames_p[npop] = new Vector<String>(nTabs_p);
          
-         OvpTabSelections_p.resize(npop+1,True);
+         OvpTabSelections_p.resize(npop+1,true);
          OvpTabSelections_p[npop] = new Vector<String>(nTabs_p);
          
-         OvpIters_p.resize(npop+1,True);
+         OvpIters_p.resize(npop+1,true);
          OvpIters_p[npop] = new Vector<TableIterator>(nTabs_p);
 
          npop++;
@@ -2590,14 +2591,14 @@ Bool TablePlot::iterMultiPlotStart(PlotOptions &pop,Vector<Vector<String> > &dat
    NCols_p = pop.PanelMap[1];
         Separate_p = pop.SeparateIter;
 
-   TitleStrings_p.resize(Pops_p.nelements(),True);
+   TitleStrings_p.resize(Pops_p.nelements(),true);
    for(uInt i=0;i<Pops_p.nelements();i++) 
       TitleStrings_p[i] = Pops_p[i]->Title;
 
-   IterPlotStarted_p = True;
+   IterPlotStarted_p = true;
 
    log->FnExit(fnname, clname);
-   return True;
+   return true;
 }
 /* Next iteration */
 Int TablePlot::iterMultiPlotNext(Vector<String> &labelcols, 
@@ -2642,7 +2643,7 @@ Int TablePlot::iterMultiPlotNext(Vector<String> &labelcols,
    if((*OvpIters_p[0])[0].pastEnd()) 
       finished = -1; 
    
-   IterPlotOn_p=True;
+   IterPlotOn_p=true;
    
    if( finished == 0 )
    {
@@ -2675,14 +2676,14 @@ Int TablePlot::iterMultiPlotNext(Vector<String> &labelcols,
                  CurrentPanel_p = Pops_p[pl]->PanelMap[1]*row + col 
                                  + NCols_p*pl + 1;
                  Pops_p[pl]->PanelMap[2] = CurrentPanel_p;
-                 Pops_p[pl]->OverPlot = False;
+                 Pops_p[pl]->OverPlot = false;
               }
               else if(Separate_p.matches("row")) {
                  Pops_p[pl]->PanelMap[0] = NRows_p * Pops_p.nelements();
                  Pops_p[pl]->PanelMap[1] = NCols_p;
                  CurrentPanel_p = NCols_p*NRows_p*pl + NCols_p*row + col + 1;
                  Pops_p[pl]->PanelMap[2] = CurrentPanel_p;
-                 Pops_p[pl]->OverPlot = False;
+                 Pops_p[pl]->OverPlot = false;
               }
               else {
                  Pops_p[pl]->PanelMap[0] = NRows_p;
@@ -2783,10 +2784,10 @@ Bool TablePlot::iterMultiPlotStop()
          delete OvpTabSelections_p[i];
          delete OvpIters_p[i];
       }
-      Pops_p.resize(0,True);
-      OvpRootTabNames_p.resize(0,True);
-      OvpTabSelections_p.resize(0,True);
-      OvpIters_p.resize(0,True);
+      Pops_p.resize(0,true);
+      OvpRootTabNames_p.resize(0,true);
+      OvpTabSelections_p.resize(0,true);
+      OvpIters_p.resize(0,true);
 
       // Once in iteration mode, the TABS_p forgets about the original 
       // tables that were sent in. They get replaced by the mini-tables 
@@ -2798,15 +2799,15 @@ Bool TablePlot::iterMultiPlotStop()
       // between.  This check takes care of this...
       if( ! ( IterPlotStarted_p && IterPlotOn_p ) ) {
          // This check is not great - but okay.
-         TABS_p.resize(0,True);
+         TABS_p.resize(0,true);
          nTabs_p=0;
       }
       
-      IterPlotOn_p=False;
-      IterPlotStarted_p=False;
+      IterPlotOn_p=false;
+      IterPlotStarted_p=false;
    }
    log->FnExit(fnname, clname); 
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -2846,10 +2847,10 @@ Bool TablePlot::clearAllFlags(Bool forRootTable)
    }
    else 
       log->out("Please open a Table first", fnname, clname,
-               LogMessage::SEVERE, True);
+               LogMessage::SEVERE, true);
 
    log->FnExit(fnname, clname);
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -2868,7 +2869,7 @@ Bool TablePlot::saveFlagVersion(String versionname,
    String fnname= "saveFlagVersion";
    log->FnEnter(fnname + "(versionname, comment, merge)", clname);
    
-   Bool ret = True;
+   Bool ret = true;
    if(nTabs_p) {
       ostringstream os;
       os << "Saving flag version " + versionname   
@@ -2886,15 +2887,15 @@ Bool TablePlot::saveFlagVersion(String versionname,
                log->out(String("Disabling flag version support for ")+
                     rootTabNames_p[i], fnname, clname, LogMessage::WARN);
                rootTabNames_p[i] = String("");
-               ret = False;
+               ret = false;
             }
          }
       }
    }
    else {
       log->out("Please open a Table first", fnname, clname,
-               LogMessage::SEVERE,  True);
-      ret = False;
+               LogMessage::SEVERE,  true);
+      ret = false;
    }
    log->FnExit(fnname, clname);
    return ret;
@@ -2905,8 +2906,8 @@ Bool TablePlot::restoreFlagVersion(Vector<String> versionname, String merge )
    String fnname= "restoreFlagVersion";
    log->FnEnter(fnname + "(versioname, merge)", clname);
    
-   Bool replot=False;
-   Bool ret = True;
+   Bool replot=false;
+   Bool ret = true;
    
    if(nTabs_p) {
       ostringstream os;
@@ -2927,15 +2928,15 @@ Bool TablePlot::restoreFlagVersion(Vector<String> versionname, String merge )
                log->out(String("Disabling flag version support for ")+
                    rootTabNames_p[i], fnname, clname, LogMessage::WARN);
                rootTabNames_p[i] = String("");
-               ret = False;
+               ret = false;
             }
          }
       }
    }
    else {
       log->out("Please open a Table first", fnname, clname,
-              LogMessage::SEVERE,True );
-      ret = False;
+              LogMessage::SEVERE,true );
+      ret = false;
    }
 
    if(replot) rePlot();
@@ -2949,7 +2950,7 @@ Bool TablePlot::deleteFlagVersion(Vector<String> versionname )
    String fnname= "deleteFlagVersion";
    log->FnEnter(fnname + "(versionname)", clname);
    
-   Bool ret = True;
+   Bool ret = true;
    if(nTabs_p) {
        ostringstream os;
        os << "Deleting flag version " <<  versionname 
@@ -2969,7 +2970,7 @@ Bool TablePlot::deleteFlagVersion(Vector<String> versionname )
                log->out(String("Disabling flag version support for ")+
                   rootTabNames_p[i], fnname, clname, LogMessage::WARN);
                rootTabNames_p[i] = String("");
-               ret = False;
+               ret = false;
             }
          }
       }
@@ -2977,7 +2978,7 @@ Bool TablePlot::deleteFlagVersion(Vector<String> versionname )
    else {
       log->out(String("Please open a Table first"), 
                fnname, clname, LogMessage::SEVERE);                
-      ret = False;
+      ret = false;
    }
 
    log->FnExit(fnname, clname);
@@ -2992,7 +2993,7 @@ Bool TablePlot::getFlagVersionList( Vector<String>& verlist )
    verlist.resize(0);
    Int num;
    
-   Bool ret = True;
+   Bool ret = true;
    if(nTabs_p) {
       /* Call getVersionList for all tables in the latest setTableT */
       for(Int i=0;i<(Int)TABS_p.nelements();i++) {
@@ -3003,7 +3004,7 @@ Bool TablePlot::getFlagVersionList( Vector<String>& verlist )
                Vector<String> vlist = fv.getVersionList();
                
                num = verlist.nelements();
-               verlist.resize( num + vlist.nelements() + 1, True );
+               verlist.resize( num + vlist.nelements() + 1, true );
                verlist[num] = String("\nTable : ") + rootTabNames_p[i] + 
                               String("\n");
                for(Int j=0;j<(Int)vlist.nelements();j++)
@@ -3020,7 +3021,7 @@ Bool TablePlot::getFlagVersionList( Vector<String>& verlist )
    }
    else {
       log->out("Please open a Table first", fnname, clname, LogMessage::SEVERE);
-      ret = False;
+      ret = false;
    }
    
    log->FnExit(fnname, clname);
@@ -3035,7 +3036,7 @@ Bool TablePlot::checkShapes(Table &intab)
    log->out(String("check shapes for ")+intab.tableName());
 
    TableDesc tdesc = intab.tableDesc();
-   Bool sameshape = True;
+   Bool sameshape = true;
    
    if( tdesc.isColumn(dataFlagColName_p) )
    {
@@ -3049,7 +3050,7 @@ Bool TablePlot::checkShapes(Table &intab)
       {
          if( shp != col.shape(i) )
          {
-            sameshape = False;
+            sameshape = false;
             break;
          }
       }

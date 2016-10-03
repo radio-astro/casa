@@ -2,6 +2,6 @@
 
 
 
-casa::LogIO *itsLog;
+casacore::LogIO *itsLog;
 casa::ImageAnalysis *itsImage;
 casa::ImagePol *itsImPol;

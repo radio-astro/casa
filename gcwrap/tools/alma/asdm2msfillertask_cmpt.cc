@@ -15,6 +15,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casac {
 
 asdm2msfillertask::asdm2msfillertask()

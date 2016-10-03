@@ -34,8 +34,10 @@
 #include <sys/types.h>
 #include <signal.h>
 
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 
@@ -280,7 +282,7 @@ void plotms::setPlotMSTransformations(const std::string& freqframe,
     
     trans.setFrame(freqframe);
     trans.setVelDef(veldef);
-    casa::Quantity restFreq= casaQuantity(restfreq);
+    casacore::Quantity restFreq= casaQuantity(restfreq);
     trans.setRestFreq(restFreq);
     trans.setXpcOffset(xshift);
     trans.setYpcOffset(yshift);
@@ -301,10 +303,10 @@ void plotms::setPlotMSIterate(const std::string& iteraxis,
     iter.setGridRow( rowIndex );
     iter.setGridCol( colIndex );
     if (iteraxis=="") {
-      iter.setGlobalScaleX( False);
-      iter.setGlobalScaleY( False);
-      iter.setCommonAxisX( False );
-      iter.setCommonAxisY( False );
+      iter.setGlobalScaleX( false);
+      iter.setGlobalScaleY( false);
+      iter.setCommonAxisX( false );
+      iter.setCommonAxisY( false );
     }
     else {
     	iter.setGlobalScaleX( xselfscale);
@@ -348,7 +350,7 @@ void plotms::setcallib(const string& callib, const bool updateImmediately,
 			const int plotIndex) {
     
     PlotMSCalibration pmscalib;
-    pmscalib.setUseCallib(True);
+    pmscalib.setUseCallib(true);
     pmscalib.setCalLibrary(callib);
     setPlotMSCalibration_(pmscalib, updateImmediately, plotIndex);
 }

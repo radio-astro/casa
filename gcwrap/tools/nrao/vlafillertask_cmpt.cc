@@ -45,6 +45,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casac {
 
 vlafillertask::vlafillertask()
@@ -175,10 +176,10 @@ vlafillertask::fill(const std::string& msname,
       if(!centerNu.empty())
       {
          istringstream iss(centerNu);
-	 casa::Quantity freq;
+	 casacore::Quantity freq;
          iss >> freq;
          istringstream issbw(bandwidthNu);
-	 casa::Quantity qbw;
+	 casacore::Quantity qbw;
          issbw >> qbw;
          MVFrequency rf(freq);
          MVFrequency bw(qbw);
@@ -192,7 +193,7 @@ vlafillertask::fill(const std::string& msname,
       {
          VLATimeFilter tf;
          Quantum<Double> t;
-         Bool timeFiltering = False;
+         Bool timeFiltering = false;
 	 string tstart(start);
 	 if(start == "")
 		 tstart="1970/1/31/00:00:00";
@@ -200,7 +201,7 @@ vlafillertask::fill(const std::string& msname,
          if(MVTime::read(t, tstart))
          {
             tf.startTime(MVEpoch(t));
-            timeFiltering = True;
+            timeFiltering = true;
          }
 	 string tstop(stop);
 	 if(stop == "")
@@ -208,7 +209,7 @@ vlafillertask::fill(const std::string& msname,
          if(MVTime::read(t, tstop))
          {
             tf.stopTime(MVEpoch(t));
-            timeFiltering = True;
+            timeFiltering = true;
          }
          if(timeFiltering){
             filters.addFilter(tf);
@@ -228,7 +229,7 @@ vlafillertask::fill(const std::string& msname,
             AlwaysAssert(realFileName.isValid(), AipsError);
             file = File(realFileName);
             AlwaysAssert(file.exists(), AipsError);
-            DebugAssert(file.isSymLink() == False, AipsError);
+            DebugAssert(file.isSymLink() == false, AipsError);
          }
          if(file.isRegular())
          {
@@ -253,7 +254,7 @@ vlafillertask::fill(const std::string& msname,
           case variant::STRING :     
 		  {
 	      istringstream iss;
-	      casa::Quantity qfreqtol;
+	      casacore::Quantity qfreqtol;
 	      iss >> qfreqtol;
 	      freqtol2 = qfreqtol.getValue();
 		  }

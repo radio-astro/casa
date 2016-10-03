@@ -50,6 +50,9 @@
 
 using namespace std;
 
+using namespace casacore;
+using namespace casa;
+
 namespace casac {
 
 
@@ -57,9 +60,9 @@ msplot::msplot():
     itsLog(0),
     itsMsPlot(0)
 {
-    itsLog = new casa::LogIO();
+    itsLog = new casacore::LogIO();
     
-    itsMsPlot = new casa::MsPlot();
+    itsMsPlot = new MsPlot();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -84,21 +87,21 @@ msplot::open(const std::string& msname, const bool dovel,
 {
   String Fn = "open( const string& msName )";
   debugFnEntry( Fn );
-  Bool rstat(False);
+  Bool rstat(false);
 
   try {
       if ( itsMsPlot == NULL ) 
 	  itsMsPlot = new MsPlot();
       
       if ( itsMsPlot->open( String( msname ), dovel, restfreq, frame, doppler ) )
-	  rstat = casa::True; 	
+	  rstat = casacore::True;
   } 
-  catch ( casa::AipsError ae) {
+  catch ( casacore::AipsError ae) {
       // TODO decide whether we print another message or
       // if we shoule assume a message was already displayed.
-      *itsLog << casa::LogIO::SEVERE 
+      *itsLog << casacore::LogIO::SEVERE
 	      << "[ msplot::open()] Exception Reported: " 
-	      << ae.getMesg() << casa::LogIO::POST;
+	      << ae.getMesg() << casacore::LogIO::POST;
       //RETHROW( ae );
   }
 
@@ -114,24 +117,24 @@ msplot::clearplot( const int subplot )
     String Fn = "clearplot( subplot )";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
 	if ( subplot == 0 )
 	{
 	    if ( itsMsPlot->clearPlot( 0, 0, 0 ) )
-		rstat = True;
+		rstat = true;
 	} else {
-	    casa::Int ncols, nrows, panel;
+	    casacore::Int ncols, nrows, panel;
 	    if ( parseSubplot( subplot, nrows, ncols, panel ) )
 		if( itsMsPlot->clearPlot( nrows, ncols, panel ) )
-		    rstat = True;
+		    rstat = true;
 	}
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 	    	<< "[msplot::clearplot()] Exception Reported... \n " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
+	    	<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -148,7 +151,7 @@ msplot::emperorsNewClose()
     debugFnEntry( Fn );
 
     debugFnExit( Fn );
-    return True;
+    return true;
 }
 
 
@@ -159,19 +162,19 @@ msplot::reset( )
     String Fn = "reset()";
     debugFnEntry( Fn );
 
-    casa::Bool rstat(casa::False);
+    casacore::Bool rstat(casacore::False);
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
 	
 	if( itsMsPlot != NULL ) {
-	    itsMsPlot->reset( False );
+	    itsMsPlot->reset( false );
 	}
-	rstat = True;
-    } catch (casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+	rstat = true;
+    } catch (casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 	    	<< "msplot::locatedata()] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
+	    	<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -197,20 +200,20 @@ msplot::closeMS( )
     String Fn = "resetMS()";
     debugFnEntry( Fn );
 
-    casa::Bool rstat(casa::False);
+    casacore::Bool rstat(casacore::False);
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
-	// We want to reset the MS so we send True into this method.
+	// We want to reset the MS so we send true into this method.
 	if( itsMsPlot != NULL ) {
-	    itsMsPlot->reset( True );
+	    itsMsPlot->reset( true );
 	}
 	
-	rstat = True;
-    } catch (casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+	rstat = true;
+    } catch (casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 	    	<< "msplot::locatedata()] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
+	    	<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -230,16 +233,16 @@ msplot::done()
  
   //done this way can crash subsequent task (plotxy/plotcal)
   //
-  //casa::Bool rstat( casa::True );
+  //casacore::Bool rstat( casacore::True );
   //if( itsMsPlot != NULL ) {
-  //    //itsMsPlot->reset( True );
+  //    //itsMsPlot->reset( true );
   //    delete itsMsPlot;
   //    itsMsPlot = NULL;
   //}
   debugFnExit( Fn );
   //return rstat;
 
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
 
   Bool rstat = closeMS();
 
@@ -247,20 +250,20 @@ msplot::done()
     const Vector<String> & openTables = cache.getTableNames();
     auto ntb = openTables.size();
     if (ntb > 0)
-       *itsLog << casa::LogIO::NORMAL << "msplot clear cache: \n";
+       *itsLog << casacore::LogIO::NORMAL << "msplot clear cache: \n";
     for (Int i = ntb - 1; i > -1; i--) {
        const String nm = openTables[i];
        try {
            cache.remove(nm);
            *itsLog << nm << "\n";
        }
-       catch (casa::AipsError x) {
-        *itsLog << casa::LogIO::SEVERE
-                << "msplot: " << x.getMesg() << casa::LogIO::POST;
+       catch (casacore::AipsError x) {
+        *itsLog << casacore::LogIO::SEVERE
+                << "msplot: " << x.getMesg() << casacore::LogIO::POST;
        }
     }
     if (ntb > 0)
-       *itsLog << casa::LogIO::POST;
+       *itsLog << casacore::LogIO::POST;
 
   debugFnExit( Fn );
   return rstat;
@@ -311,18 +314,18 @@ msplot::plotoptions(const int subplot,
     String Fn = "msplot::plotoptions()";
     debugFnEntry( Fn );
     
-    casa::Bool rstat( casa::True );
-    if ( ! checkForOpenMS() ) return rstat=False;
+    casacore::Bool rstat( casacore::True );
+    if ( ! checkForOpenMS() ) return rstat=false;
     
     // The record that will hold the full suite of options.
-    casa::Record theOptions;
+    casacore::Record theOptions;
     
 
     //////////////////////////////////////////////////////////////////////
     // Set the number of panels: number of rows, columns and which one
     // we are to use for plotting.
     // Number of the panels starts in top, left corner and
-    casa::Int ncols =1, nrows = 1, panel = 1;
+    casacore::Int ncols =1, nrows = 1, panel = 1;
     if ( subplot > 0 && parseSubplot( subplot, nrows, ncols, panel ) )
     {
 	theOptions.define( RecordFieldId( "nrows" ), nrows );
@@ -330,13 +333,13 @@ msplot::plotoptions(const int subplot,
 	theOptions.define( RecordFieldId( "panel" ), panel );
 	if ( nrows * ncols > 1 )
 	{
-	    theOptions.define( RecordFieldId( "multipanel" ), True );
+	    theOptions.define( RecordFieldId( "multipanel" ), true );
 	} else {
-	    theOptions.define( RecordFieldId( "multipanel" ), False );
+	    theOptions.define( RecordFieldId( "multipanel" ), false );
 	}
     } else if ( subplot != 0 ) {
 	// If we are here the parseSubplot failed.
-	rstat = False;
+	rstat = false;
     }
     
     
@@ -420,8 +423,8 @@ msplot::plotoptions(const int subplot,
     theOptions.define(RecordFieldId("extendflag"), extStr);
     //looks ugly on screen, do this in python instead
     //if (extStr.length() > 0) {
-    //   *itsLog << casa::LogIO::WARN 
-    //	      << "Extended Flagging "  << casa::LogIO::POST;
+    //   *itsLog << casacore::LogIO::WARN
+    //	      << "Extended Flagging "  << casacore::LogIO::POST;
     //}
 
 
@@ -480,13 +483,13 @@ msplot::plotoptions(const int subplot,
 
     try {
 	if ( rstat && itsMsPlot->setplotoptions( theOptions ) )
-	    rstat = casa::True;
+	    rstat = casacore::True;
 	else
-	    rstat = casa::False;
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+	    rstat = casacore::False;
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 		<< "[msplot:: plotoptions()] Exception Reported: " 
-		<< ae.getMesg() << casa::LogIO::POST;
+		<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -502,7 +505,7 @@ msplot::plotoptions(const int subplot,
 bool
 msplot::summary( bool selected )
 {
-    casa::Bool rstat(casa::True);
+    casacore::Bool rstat(casacore::True);
 
     String Fn = "summary( selected? )";
     debugFnEntry( Fn );
@@ -511,11 +514,11 @@ msplot::summary( bool selected )
     
     try {
 	if ( rstat && !itsMsPlot->summary( selected ) )
-	    rstat = casa::False;
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+	    rstat = casacore::False;
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 		<< "[msplot:: summary()] Exception Reported: " 
-		<< ae.getMesg() << casa::LogIO::POST;
+		<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -532,7 +535,7 @@ msplot::extendflag( const std::string& extendcorr,
 		 const std::string& extendant,
 		 const std::string& extendtime)
 {
-  casa::Bool rstat(casa::False);
+  casacore::Bool rstat(casacore::False);
 
   String Fn = "extendflag( .... )";
   debugFnEntry( Fn );
@@ -550,16 +553,16 @@ msplot::extendflag( const std::string& extendcorr,
 			       String( extendant ),
                                String( extendtime )))
      {
-	  rstat = False;
+	  rstat = false;
       } else {
-	  rstat = True;	
+	  rstat = true;	
       }
-  } catch ( casa::AipsError ae ) {
-      *itsLog << casa::LogIO::SEVERE 
+  } catch ( casacore::AipsError ae ) {
+      *itsLog << casacore::LogIO::SEVERE
 	      << "[msplot::extendflat()] Exception Reported: " 
-	      << ae.getMesg() << casa::LogIO::POST;
+	      << ae.getMesg() << casacore::LogIO::POST;
       //RETHROW( ae );
-      rstat = False;
+      rstat = false;
   }
 
   
@@ -579,7 +582,7 @@ msplot::setdata( const std::string& baseline,
                  const std::string& correlation,
 		 const std::string& time)
 {
-  casa::Bool rstat(casa::False);
+  casacore::Bool rstat(casacore::False);
 
   String Fn = "setdata( baseline, field, .... )";
   debugFnEntry( Fn );
@@ -603,16 +606,16 @@ msplot::setdata( const std::string& baseline,
 	  // printed by MsPlot::setdata(), it may be useful to
 	  // put one here just incase there isn't one.
 	  
-	  rstat = False;
+	  rstat = false;
       } else {
-	  rstat = True;	
+	  rstat = true;	
       }
-  } catch ( casa::AipsError ae ) {
-      *itsLog << casa::LogIO::SEVERE 
+  } catch ( casacore::AipsError ae ) {
+      *itsLog << casacore::LogIO::SEVERE
 	      << "[msplot::setdata()] Exception Reported: " 
-	      << ae.getMesg() << casa::LogIO::POST;
+	      << ae.getMesg() << casacore::LogIO::POST;
       //RETHROW( ae );
-      rstat = False;
+      rstat = false;
   }
 
   
@@ -637,7 +640,7 @@ msplot::avedata( const std::string& chanavemode,
                  const bool averagechanid,
                  const bool averagevel)
 {
-  casa::Bool rstat(casa::False);
+  casacore::Bool rstat(casacore::False);
 
   String Fn = "average( datacolumn, averagemode, ... )";
   debugFnEntry( Fn );
@@ -664,16 +667,16 @@ msplot::avedata( const std::string& chanavemode,
 	  // printed by MsPlot::setdata(), it may be useful to
 	  // put one here just incase there isn't one.
 	  
-	  rstat = False;
+	  rstat = false;
       } else {
-	  rstat = True;	
+	  rstat = true;	
       }
-  } catch ( casa::AipsError ae ) {
-      *itsLog << casa::LogIO::SEVERE 
+  } catch ( casacore::AipsError ae ) {
+      *itsLog << casacore::LogIO::SEVERE
 	      << "[msplot::average()] Exception Reported: " 
-	      << ae.getMesg() << casa::LogIO::POST;
+	      << ae.getMesg() << casacore::LogIO::POST;
       //RETHROW( ae );
-      rstat = False;
+      rstat = false;
   }
   
   debugFnExit( Fn );
@@ -694,16 +697,16 @@ msplot::checkplotxy( const std::string& x,
     String Fn = "checkplotxy( x, y, xcolumn, ycolumn, xvalue, yvalue, itereation )";
     debugFnEntry( Fn );
 
-    casa::Bool rstat(casa::False);
+    casacore::Bool rstat(casacore::False);
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
-	casa::Vector<casa::String> l_iteration = casa::toVectorString( iteration );
-	if ( itsMsPlot->plotxy( True, x, y, xcolumn, ycolumn, xvalue, yvalue, l_iteration ) )
-	    rstat = casa::True;
-    } catch (casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE << "[ msplot::checkplotxy() ] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
+	casacore::Vector<casacore::String> l_iteration = casa::toVectorString( iteration );
+	if ( itsMsPlot->plotxy( true, x, y, xcolumn, ycolumn, xvalue, yvalue, l_iteration ) )
+	    rstat = casacore::True;
+    } catch (casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE << "[ msplot::checkplotxy() ] Exception Reported: "
+	    	<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
     
@@ -725,16 +728,16 @@ msplot::plotxy( const std::string& x,
     String Fn = "plotxy( x, y, xcolumn, ycolumn, xvalue, yvalue, iteration )";
     debugFnEntry( Fn );
    
-    casa::Bool rstat(casa::False);
+    casacore::Bool rstat(casacore::False);
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
-	casa::Vector<casa::String> l_iteration = casa::toVectorString( iteration );
-	if ( itsMsPlot->plotxy( False, x, y, xcolumn, ycolumn, xvalue, yvalue, l_iteration ) )
-	    rstat = casa::True;
-    } catch (casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE << "[ msplot::plotxy() ] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
+	casacore::Vector<casacore::String> l_iteration = casa::toVectorString( iteration );
+	if ( itsMsPlot->plotxy( false, x, y, xcolumn, ycolumn, xvalue, yvalue, l_iteration ) )
+	    rstat = casacore::True;
+    } catch (casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE << "[ msplot::plotxy() ] Exception Reported: "
+	    	<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
     
@@ -753,15 +756,15 @@ msplot::plot( const std::string& type,
     String Fn = "plot( type, column, value, iteration )";
     debugFnEntry( Fn );
     
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
-	rstat = plotter( type, column, value, iteration, False );
-    } catch ( casa::AipsError ae) {
-	*itsLog << casa::LogIO::SEVERE 
+	rstat = plotter( type, column, value, iteration, false );
+    } catch ( casacore::AipsError ae) {
+	*itsLog << casacore::LogIO::SEVERE
 	        <<  "[msplot::plot()] Exception Reported: " 
-	        << ae.getMesg() << casa::LogIO::POST;
+	        << ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -780,15 +783,15 @@ msplot::checkplot( const std::string& type,
     String Fn = "checkplot()";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
-	rstat = plotter( type, column, value, iteration, True );
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+	rstat = plotter( type, column, value, iteration, true );
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 	        <<  "[msplot::checkplot()] Exception Reported: " 
-	        << ae.getMesg() << casa::LogIO::POST;
+	        << ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -803,16 +806,16 @@ msplot::iterplotstart( )
 {
     String Fn = "iterplotstart( )";
     debugFnEntry( Fn );
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
 	if( itsMsPlot->iterPlotNext( ) ) 
-	    rstat = True; 
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+	    rstat = true; 
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 	    	<< "[ msplot::iterplotstart() ] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
+	    	<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -828,17 +831,17 @@ msplot::iterplotnext()
     String Fn = "iterplotnext()";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
 	if ( itsMsPlot->iterPlotNext() ) {
-	    rstat = True; 
+	    rstat = true; 
 	}
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 	    	<< "[ msplot::iterplotnext() ] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
+	    	<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -853,21 +856,21 @@ msplot::iterplotstop( const bool rmplotter )
     String Fn = "iterplotstop( rmplotter )";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
 	if ( itsMsPlot->iterPlotStop( rmplotter ) ) {
-	    rstat = True; 
+	    rstat = true; 
 	} else {
-	    rstat = False;
+	    rstat = false;
 	}
 	
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 		<< "[ msplot::iterplotstop() ] Exception Reported: " 
-		<< ae.getMesg() << casa::LogIO::POST;
-	rstat = casa::False;
+		<< ae.getMesg() << casacore::LogIO::POST;
+	rstat = casacore::False;
     }
 
     debugFnExit( Fn );
@@ -887,19 +890,19 @@ msplot::savefig( const std::string& filename,
     
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
 	rstat = itsMsPlot->saveFigure( String( filename ), Int( dpi ),
 		   String( orientation ), String( papertype ), 
 		   String( facecolor ), String( edgecolor ) );
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 		<< LogOrigin( "msplot", "savefig" )
 		<< "Exception Reported: " 
-		<< ae.getMesg() << casa::LogIO::POST;
-	rstat = casa::False;
+		<< ae.getMesg() << casacore::LogIO::POST;
+	rstat = casacore::False;
     }
 
     debugFnExit( Fn );
@@ -914,15 +917,15 @@ msplot::markregion( const int subplot,
     String Fn = "markregion( nrows, ncols, panel, region )";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::True );
+    casacore::Bool rstat( casacore::True );
     if ( ! checkForOpenMS() ) return rstat;
 
     Int nrows, ncols, panel;
     if ( !parseSubplot( subplot, nrows, ncols, panel ) )
-	rstat = False;
+	rstat = false;
 
     try {
-	casa::Vector<casa::Double> theRegion(region.size());
+	casacore::Vector<casacore::Double> theRegion(region.size());
 	for(unsigned int i=0;i<region.size();i++)
 	    theRegion[i] = region[i];
 
@@ -930,13 +933,13 @@ msplot::markregion( const int subplot,
 	// as this method always returns 0.
 	if( rstat )
 	    if ( !itsMsPlot->markRegion( nrows, ncols, panel, theRegion ) )
-		rstat = False;
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+		rstat = false;
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 	    	<< "[ msplot::markregion()] Exception Reported: " << ae.getMesg() 
-	    	<< casa::LogIO::POST;
+	    	<< casacore::LogIO::POST;
 	//RETHROW( ae );
-	rstat = False;
+	rstat = false;
     }
 
   debugFnExit( Fn );
@@ -950,16 +953,16 @@ msplot::flagdata()
     String Fn = "flagdata()";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
-	if ( itsMsPlot->flagData( casa::FLAG ) )
-	    rstat = True;
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+	if ( itsMsPlot->flagData( FLAG ) )
+	    rstat = true;
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 	    	<< "[msplot::flagdata()] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
+	    	<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -974,16 +977,16 @@ msplot::unflagdata()
     String Fn = "clearflags()";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
-	if ( itsMsPlot->flagData( casa::UNFLAG ) )
-	    rstat = True;
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE 
+	if ( itsMsPlot->flagData( UNFLAG ) )
+	    rstat = true;
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE
 	    	<< "[msplot::flagdata()] Exception Reported: " 
-	    	<< ae.getMesg() << casa::LogIO::POST;
+	    	<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -998,7 +1001,7 @@ msplot::clearflags()
     String Fn = "clearflags()";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) 
         return rstat;
 
@@ -1006,14 +1009,14 @@ msplot::clearflags()
 
     try {/*
 	if ( itsMsPlot->clearAllFlags() )
-	rstat = True;*/
+	rstat = true;*/
 	//cout << "Sorry! Not implemented yet." << endl;
-	*itsLog << casa::LogIO::SEVERE << "Sorry! Not implemented yet." 
-	    	<< casa::LogIO::POST;
-    } catch ( casa::AipsError ae ) {
-	*itsLog << casa::LogIO::SEVERE << "Exception Reported: " 
+	*itsLog << casacore::LogIO::SEVERE << "Sorry! Not implemented yet."
+	    	<< casacore::LogIO::POST;
+    } catch ( casacore::AipsError ae ) {
+	*itsLog << casacore::LogIO::SEVERE << "Exception Reported: "
                 << ae.getMesg() 
-	    	<< casa::LogIO::POST;
+	    	<< casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -1030,15 +1033,15 @@ msplot::locatedata()
     String Fn = "locatedata()";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
 	if ( itsMsPlot->locateData() )
-	    rstat = True;
+	    rstat = true;
     } catch (AipsError ae) {
-	*itsLog << casa::LogIO::SEVERE << "Exception Reported: " 
-		<< ae.getMesg() << casa::LogIO::POST;
+	*itsLog << casacore::LogIO::SEVERE << "Exception Reported: "
+		<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -1054,15 +1057,15 @@ msplot::saveflagversion(const std::string& versionname, const std::string& comme
 {
     String Fn = "saveFlagVersion( versionname, comment, merge)";
     debugFnEntry( Fn );
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
 	if ( itsMsPlot->saveFlagVersion( String(versionname), String(comment), String(merge) ) )
-	    rstat = True;
+	    rstat = true;
     } catch (AipsError ae) {
-	*itsLog << casa::LogIO::SEVERE << "Exception Reported: " 
-		<< ae.getMesg() << casa::LogIO::POST;
+	*itsLog << casacore::LogIO::SEVERE << "Exception Reported: "
+		<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -1075,16 +1078,16 @@ msplot::restoreflagversion(const std::vector<std::string>& versionname, const st
 {
     String Fn = "restoreFlagVersion( versionname, merge)";
     debugFnEntry( Fn );
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
-	casa::Vector<casa::String> l_versionname = casa::toVectorString( versionname );
+	casacore::Vector<casacore::String> l_versionname = toVectorString( versionname );
 	if ( itsMsPlot->restoreFlagVersion( l_versionname, String(merge) ) )
-	    rstat = True;
+	    rstat = true;
     } catch (AipsError ae) {
-	*itsLog << casa::LogIO::SEVERE << "Exception Reported: " 
-		<< ae.getMesg() << casa::LogIO::POST;
+	*itsLog << casacore::LogIO::SEVERE << "Exception Reported: "
+		<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -1098,16 +1101,16 @@ msplot::deleteflagversion(const std::vector<std::string>& versionname)
 {
     String Fn = "deleteFlagVersion( versionname )";
     debugFnEntry( Fn );
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
-	casa::Vector<casa::String> l_versionname = casa::toVectorString( versionname );
+	casacore::Vector<casacore::String> l_versionname = toVectorString( versionname );
 	if ( itsMsPlot->deleteFlagVersion( l_versionname ) )
-	    rstat = True;
+	    rstat = true;
     } catch (AipsError ae) {
-	*itsLog << casa::LogIO::SEVERE << "Exception Reported: " 
-		<< ae.getMesg() << casa::LogIO::POST;
+	*itsLog << casacore::LogIO::SEVERE << "Exception Reported: "
+		<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -1121,15 +1124,15 @@ msplot::getflagversionlist()
 {
     String Fn = "getFlagVersionList( )";
     debugFnEntry( Fn );
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     try {
 	if ( itsMsPlot->getFlagVersionList() )
-	    rstat = True;
+	    rstat = true;
     } catch (AipsError ae) {
-	*itsLog << casa::LogIO::SEVERE << "Exception Reported: " 	
-		<< ae.getMesg() << casa::LogIO::POST;
+	*itsLog << casacore::LogIO::SEVERE << "Exception Reported: "
+		<< ae.getMesg() << casacore::LogIO::POST;
 	//RETHROW( ae );
     }
 
@@ -1144,26 +1147,26 @@ msplot::getflagversionlist()
 // TODO add a way of flipping the axis.  Easy to do, for the most part
 // just send in the values to the ycolumns, yvalues instead of the x ones
 //
-casa::Bool
+casacore::Bool
 msplot::plotter( const std::string& type,
     const std::string& column, 
     const std::string& value,
     const std::vector<std::string>& iteration,
-    casa::Bool checkOnly
+    casacore::Bool checkOnly
 )
 {
     String Fn = "plotter()";
     debugFnEntry( Fn );
     //cout << "msplot::plotter----type=" << type << " column=" << column 
     //     << " value=" << value << endl;
-    casa::Bool rstat( casa::False );
+    casacore::Bool rstat( casacore::False );
     if ( ! checkForOpenMS() ) return rstat;
 
     // Create local vars that are easy to handle
-    casa::Vector<casa::String> l_iteration = casa::toVectorString( iteration );
-    casa::String l_type = String( type );
-    casa::String l_column = String( column );
-    casa::String l_value = String( value );
+    casacore::Vector<casacore::String> l_iteration = toVectorString( iteration );
+    casacore::String l_type = String( type );
+    casacore::String l_column = String( column );
+    casacore::String l_value = String( value );
     
     // Check the params to verify usage with given plot type
     // Note that itsMsPlot::plotxy calls the check routine so to avoid doing
@@ -1174,62 +1177,62 @@ msplot::plotter( const std::string& type,
     if ( downcase( type ).matches( String( "array" ) ) )
     {
 	if ( itsMsPlot->plotxy( checkOnly, "XEAST", "YNORTH", "array", "array", "", "", l_iteration ) )
-	    rstat = True;
+	    rstat = true;
 
     } else if ( downcase(l_type).matches( String( "azimuth" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "azimuth", "data", l_column, l_column, l_value, l_value,  l_iteration ) )
-	    rstat = casa::True;
+	    rstat = casacore::True;
 
     } else if ( downcase(l_type).matches( String( "baseline" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "baseline", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-	    rstat = True;
+	    rstat = true;
 
     } else if ( downcase(l_type).matches( String( "elevation" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "elevation", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-		rstat = casa::True;
+		rstat = casacore::True;
 
     } else if ( downcase(l_type).matches( String( "hourangle" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "hourangle", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-	    rstat = casa::True;
+	    rstat = casacore::True;
 
     } else if ( downcase(l_type).matches( String( "parallacticangle" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "parallacticangle", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-	    rstat = casa::True;
+	    rstat = casacore::True;
 
     } else if ( downcase(l_type).matches( String( "uvcoverage" ) ) ||
          downcase(l_type).matches( String( "uvcover" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "u-u", "v-v", "", "", "", "", l_iteration ) )
-		rstat = casa::True;
+		rstat = casacore::True;
 
     } else if ( downcase(l_type).matches( String( "uvdist" ) ) ||
           downcase(l_type).matches( String( "uvdistance" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "uvdist", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-		rstat = True;
+		rstat = true;
 
     } else if ( downcase(l_type).matches( String( "vischannel" ) ) ||
             downcase(l_type).matches( String( "vischan" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "channel", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-		rstat = True;
+		rstat = true;
     } else if ( downcase(l_type).matches( String( "viscorrelation" ) ) 
                  || downcase(l_type).matches( String( "viscorr" ) ) ) { 
 	if ( itsMsPlot->plotxy( checkOnly, "correlation", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-		rstat = True;
+		rstat = true;
     } else if ( downcase(l_type).matches( String( "visfrequency" ) ) ||
             downcase(l_type).matches( String( "visfreq" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "chan_freq", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-		rstat = True;
+		rstat = true;
     } else if ( downcase(l_type).matches( String( "visvelocity" ) ) ||
             downcase(l_type).matches( String( "visvelocity" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "chan_velocity", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-		rstat = True;
+		rstat = true;
 
     } else if ( downcase(l_type).matches( String( "vistime" ) ) ) {
 	if ( itsMsPlot->plotxy( checkOnly, "time", "data", l_column, l_column, l_value, l_value, l_iteration ) )
-		rstat = casa::True;
+		rstat = casacore::True;
     } else if ( downcase(l_type).matches( String( "weight" ) ) ) {
 	// TODO add an error, warning if a column is given
 	if ( itsMsPlot->plotxy( checkOnly, "default_weight", "data", "", l_column, "", l_value, l_iteration ) )
-		rstat = casa::True;
+		rstat = casacore::True;
     } else {
 	*itsLog << LogIO::SEVERE
 		<< "Unrecognized plot type: " << type
@@ -1238,7 +1241,7 @@ msplot::plotter( const std::string& type,
 		<< " uvcoverage, uvdist, viscorr, vischannel, visfreq, "
                 << " vistime, visvelocity, and weight."
 		<< LogIO::POST;
-	rstat = False;
+	rstat = false;
     }
 
     debugFnExit( Fn );
@@ -1250,18 +1253,18 @@ msplot::plotter( const std::string& type,
 // user about using parameters that aren't supported for a particular
 // plot type.
 //
-casa::Bool 
-msplot::checkPlotParams( casa::String& type,
-    casa::String &column, 
-    casa::String &value,
-    Vector<casa::String>& /*iteration*/ 
+casacore::Bool
+msplot::checkPlotParams( casacore::String& type,
+    casacore::String &column,
+    casacore::String &value,
+    Vector<casacore::String>& /*iteration*/
 )
 {
     String Fn = "checkPlotParams( type, column, value, iteration )";
     debugFnEntry( Fn );
 
-    casa::Bool rstat( casa::True );
-    if ( ! checkForOpenMS() ) return rstat=False;
+    casacore::Bool rstat( casacore::True );
+    if ( ! checkForOpenMS() ) return rstat=false;
 
     // TODO this checks should not be done if the plot command is used.
     // For the time being they are commented out.
@@ -1276,7 +1279,7 @@ msplot::checkPlotParams( casa::String& type,
 		    << "'column' parameter is not supported with the "
 		    << type << " plot type."
 		    << LogIO::POST;
-	    rstat = False;
+	    rstat = false;
 	}
 
 	if ( value.length() > 0 )
@@ -1285,7 +1288,7 @@ msplot::checkPlotParams( casa::String& type,
 		    << "'value' parameter is not supported with the "
 		    << type << " plot type."
 		    << LogIO::POST;
-	    rstat = False;
+	    rstat = false;
 	}
 	    
 	if ( iteration.nelements() > 0 && iteration[0].length() > 0 ) 
@@ -1294,7 +1297,7 @@ msplot::checkPlotParams( casa::String& type,
 		    << "'iteration' parameter is not supported with the "
 		    << type << " plot type."
 		    << LogIO::POST;
-	    rstat = False;
+	    rstat = false;
 	}
     */
     } else {
@@ -1328,18 +1331,18 @@ msplot::checkPlotParams( casa::String& type,
 // Note that we are currently limited, r, c, and p must all be less then
 //      or equal to 9.  We may generalize it if needed to support more then
 //      9 panels.
-casa::Bool 
-msplot::parseSubplot( const casa::Int subplot, 
-		     casa::Int& nrows, 
-		     casa::Int& ncols, 
-		     casa::Int& panel )
+casacore::Bool
+msplot::parseSubplot( const casacore::Int subplot,
+		     casacore::Int& nrows,
+		     casacore::Int& ncols,
+		     casacore::Int& panel )
 {
   String Fn = "parseSubplot( subplot, nrows, ncols, panel )";
   debugFnEntry( Fn );
 
-  Bool rstat( True );
+  Bool rstat( true );
 
-  casa::String threeChars = casa::String::toString( subplot ); 
+  casacore::String threeChars = casacore::String::toString( subplot );
   nrows = atoi((threeChars.at(0,1)).chars());
   ncols = atoi((threeChars.at(1,1)).chars());
   panel = atoi((threeChars.substr(2)).chars());
@@ -1347,32 +1350,32 @@ msplot::parseSubplot( const casa::Int subplot,
   // Check to make sure r, c, and p are all values between 1 and 9
   if ( subplot < 111 || subplot > 9981 ) 
   {
-    *itsLog << casa::LogIO::SEVERE 
+    *itsLog << casacore::LogIO::SEVERE
 	    << "Invalid value for subplot: " << threeChars
 	    << ". Subplot values must be\nbetween 111 and 9981."
-	    << casa::LogIO::POST;
-    rstat = False;
+	    << casacore::LogIO::POST;
+    rstat = false;
   }
 
   if( ncols > 9) {
-    *itsLog << casa::LogIO::SEVERE
+    *itsLog << casacore::LogIO::SEVERE
             << "The maximum number of columns (the second digit) is 9."
-            << casa::LogIO::POST;
-    rstat = False;
+            << casacore::LogIO::POST;
+    rstat = false;
   }
   if ( nrows > 9 )
   {
-    *itsLog << casa::LogIO::SEVERE
+    *itsLog << casacore::LogIO::SEVERE
             << "The maximum number of rows (the first digit is 9."
-            << casa::LogIO::POST;
-    rstat = False;
+            << casacore::LogIO::POST;
+    rstat = false;
   }
-    //*itsLog << casa::LogIO::SEVERE 
+    //*itsLog << casacore::LogIO::SEVERE
     //	    << "The total number of panels (nrows x ncols) is: "
     //	    << ncols*nrows
     //	    << " which is\n greater then 9.  Sorry msplot supports"
     //	    << " only 9 panels currently."
-    //	    << casa::LogIO::POST;
+    //	    << casacore::LogIO::POST;
 
   debugFnExit( Fn );
   return rstat;
@@ -1387,14 +1390,14 @@ msplot::checkForOpenMS()
   // TODO this needs to query itsMsPlot to see if it has
   // an open measurement set?
   // Or maybe we don't need this method at all.
-  casa::Bool rstat( casa::True );
+  casacore::Bool rstat( casacore::True );
 
   if( itsMsPlot == NULL )
   {
-    *itsLog << casa::LogIO::SEVERE 
+    *itsLog << casacore::LogIO::SEVERE
 	    <<  "No measurement set has been opened, please run mp.open()." 
-	    << casa::LogIO::POST;
-    rstat = False;
+	    << casacore::LogIO::POST;
+    rstat = false;
   }
 
   debugFnExit( Fn );

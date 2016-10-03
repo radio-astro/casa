@@ -57,28 +57,28 @@ public:
     // * type (required): the type for the parameter
     // * units: what conceptual units the parameter is in
     // * value: a default value
-    ParamPanel(const QtParamGUI& parent, String name,
-               const RecordInterface& record, const Record& globals,
-               const Record& last, const QtParamGUI::ResetMode& resetMode,
-               int labelWidth = -1, const String& constraints = "",
+    ParamPanel(const QtParamGUI& parent, casacore::String name,
+               const casacore::RecordInterface& record, const casacore::Record& globals,
+               const casacore::Record& last, const QtParamGUI::ResetMode& resetMode,
+               int labelWidth = -1, const casacore::String& constraints = "",
                bool subparam = false);
     
     // Destructor.
     ~ParamPanel();
     
     // Returns the parameter's name.
-    String name();
+    casacore::String name();
     
     // Returns the ValuePanel.
     ValuePanel* value();
     
     // Returns whether the current value given to the parameter is valid or
     // not.  If not valid, the second pair value is the reason why.
-    pair<bool, String> isValid();
+    pair<bool, casacore::String> isValid();
     
     // Put the current value into the record with the parameter name as the
     // key.
-    void getValue(Record& record);
+    void getValue(casacore::Record& record);
     
 public slots:
     // Reset the value to the default (if any).
@@ -86,20 +86,20 @@ public slots:
     
 signals:
     // Emitted when the user changes the value in this panel.
-    void valueChanged(String name);
+    void valueChanged(casacore::String name);
     
 private:
     // Parameter name.
-    String m_name;
+    casacore::String m_name;
     
     // Parameter attributes.
-    const RecordInterface& m_record;
+    const casacore::RecordInterface& m_record;
     
     // Global settings.
-    const Record& m_globals;
+    const casacore::Record& m_globals;
     
     // Last settings.
-    const Record& m_last;
+    const casacore::Record& m_last;
     
     // Reset to globals or defaults.
     const QtParamGUI::ResetMode& m_resetMode;

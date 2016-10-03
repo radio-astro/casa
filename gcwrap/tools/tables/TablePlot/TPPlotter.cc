@@ -75,6 +75,7 @@
 
 #include <Python.h>
 
+using namespace casacore;
 namespace casa {  //# NAMESPACE CASA - BEGIN
 
 #define TMR(a) "[User: " << a.user() << "] [System: " << a.system() << "] [Real: " << a.real() << "]"
@@ -113,7 +114,7 @@ TPPlotter::TPPlotter()
    
    setupPlotter();
    
-   usegui_p = True;
+   usegui_p = true;
 #if LOG0
    log->FnExit(fnname, clname);
 #endif
@@ -146,7 +147,7 @@ Int TPPlotter::setupPlotter()
    py_p=NULL;
    PyInterp_p=NULL;
 
-   PPar_p.resize(0,True);
+   PPar_p.resize(0,true);
    nflagmarks_p=0;
    nelem_p = 0;
 
@@ -235,7 +236,7 @@ Int TPPlotter::setPlotRange(PtrBlock<BasePlot* > &PBP,Int panel)
    catch (...) {
       if (PPar_p[panel-1]->Plop.OverPlot) {
          log->out("Trying to overplot...",
-                  fnname, clname, LogMessage::NORMAL4, True);
+                  fnname, clname, LogMessage::NORMAL4, true);
       }
       else {
            //cout << "do nothing" << endl;
@@ -407,7 +408,7 @@ Int TPPlotter::markRegions(Int nrows, Int ncols, Int panel,
    
    /* Append to the list of marked flag regions for this panel */
    nflagmarks_p = (PPar_p[cpanel-1]->FlagList).nelements();
-   (PPar_p[cpanel-1]->FlagList).resize(nflagmarks_p+1,True);
+   (PPar_p[cpanel-1]->FlagList).resize(nflagmarks_p+1,true);
    (PPar_p[cpanel-1]->FlagList)[nflagmarks_p] = Vector<Double>(region);
 
 #if LOG0 
@@ -465,7 +466,7 @@ Int TPPlotter::adjustPlotRange(Int panel)
    
 
    /* If user plotrange is supplied, and if the min != max, and */
-   /* plotrangesset is True then use it with the data ranges */
+   /* plotrangesset is true then use it with the data ranges */
    if((Int)PPar_p[panel-1]->Plop.PlotRange.nelements() == 4)
    {
       if ((PPar_p[panel-1]->Plop.PlotRange)[1] != 
@@ -584,7 +585,7 @@ Int TPPlotter::setPlotOptions(PtrBlock<PanelParams* > &ppar)
    PPar_p.resize(ppar.nelements());
    PPar_p = ppar;
 
-   layernplots_p.resize(ppar.nelements(),True);
+   layernplots_p.resize(ppar.nelements(),true);
 #if LOG0 
    log->out(String("NPPar_pelem here ! : ")
         + String::toString(PPar_p.nelements()),
@@ -639,7 +640,7 @@ TPPlotter::thePlot( BasePlot &BP,
    //Int colourinc = 0;
    Int fpcnt = 0;
    Int allpcnt = 0;
-   Bool chosen=False;
+   Bool chosen=false;
       
    /* Setup the mem. for numpoints to be plotted for each Plot */
    /* Attempts to be memory-smart.. and does not re-allocate if you need a
@@ -674,9 +675,9 @@ TPPlotter::thePlot( BasePlot &BP,
       for(Int rc=0;rc<NRows;rc++)
       {
          /* Check for flags while reading values */
-         // 'flagged' = True --> plot flagged data
-         // 'flagged' = False --> plot unflagged data
-         chosen = False;
+         // 'flagged' = true --> plot flagged data
+         // 'flagged' = false --> plot unflagged data
+         chosen = false;
          
          Bool flg = BP.getYFlags(Pnum,rc);
          //if (flg == (Bool)flagged)
@@ -704,7 +705,7 @@ TPPlotter::thePlot( BasePlot &BP,
                   fillPlotArrays(xval,yval,pcnt_p);
                   pcnt_p++;
                   
-                  chosen = True;
+                  chosen = true;
                   
                   /* Attach a point label, if provided */
                   if(pcnt_p <= nplabels) 
@@ -738,7 +739,7 @@ TPPlotter::thePlot( BasePlot &BP,
 
          /* If number of points plotted is smaller than nplabels, resize
             to make the pointlabels match.. */
-         if(pcnt_p < nplabels) pointlabels_p.resize(pcnt_p,True);
+         if(pcnt_p < nplabels) pointlabels_p.resize(pcnt_p,true);
          
          tcount3 += tmr2.all();
          
@@ -853,7 +854,7 @@ Bool TPPlotter::closeWindow()
          PyInterp_p->pyrunString("pl.close()\n\n" ); 
       }
    }
-   return True;
+   return true;
 }
 
 /*********************************************************************************/
@@ -951,7 +952,7 @@ Int TPPlotter::endPlot(Int panel)
 
    log->out(String("Number of points being plotted : ")
                +String::toString(totalpcnt_p),
-               fnname, clname, LogMessage::NORMAL2, True);
+               fnname, clname, LogMessage::NORMAL2, true);
    log->out(String("Number of points NOT being plotted : ")
                +String::toString(totalflagpcnt_p),
                fnname, clname, LogMessage::NORMAL2);
@@ -1036,8 +1037,8 @@ Int TPPlotter::endPlot(Int panel)
                /* Setup the tick label format */
                if(PPar_p[panel-1]->TimePlot==1 || PPar_p[panel-1]->TimePlot==3)
                {
-                 fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=False )\n";
-                 fmt << "pl.setp( pl.gca().get_yticklabels(), visible=False )\n";
+                 fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=false )\n";
+                 fmt << "pl.setp( pl.gca().get_yticklabels(), visible=false )\n";
                   
                   fmt << "ax.fmt_xdata=yearconv\n";
                   fmt << "ax.fmt_ydata=conv\n";
@@ -1048,7 +1049,7 @@ Int TPPlotter::endPlot(Int panel)
                   fmt << "ax.xaxis.set_major_formatter(timeformatter)\n";
       
                   fmt << "labelFormatter = "
-                         "pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
+                         "pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
                   fmt << "ax.yaxis.set_major_formatter(labelFormatter)\n";
       
                   //fmt << "pl.subplots_adjust(bottom=0.2);\n";
@@ -1058,8 +1059,8 @@ Int TPPlotter::endPlot(Int panel)
                }
                if(PPar_p[panel-1]->TimePlot==2 || PPar_p[panel-1]->TimePlot==3)
                {
-                  fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=False )\n";
-                  fmt << "pl.setp( pl.gca().get_yticklabels(), visible=False )\n";
+                  fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=false )\n";
+                  fmt << "pl.setp( pl.gca().get_yticklabels(), visible=false )\n";
                    
                   fmt << "ax.fmt_xdata=conv\n";
                   fmt << "ax.fmt_ydata=yearconv\n";
@@ -1070,7 +1071,7 @@ Int TPPlotter::endPlot(Int panel)
                   fmt << "ax.yaxis.set_major_formatter(timeformatter)\n";
       
                   fmt << "labelFormatter = "
-                         "pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
+                         "pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
                   fmt << "ax.xaxis.set_major_formatter(labelFormatter)\n";
       
                   //fmt << "pl.subplots_adjust(left=0.2);\n";
@@ -1084,8 +1085,8 @@ Int TPPlotter::endPlot(Int panel)
             else {
                ostringstream fmt;
                
-                  fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=False )\n";
-                  fmt << "pl.setp( pl.gca().get_yticklabels(), visible=False )\n";
+                  fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=false )\n";
+                  fmt << "pl.setp( pl.gca().get_yticklabels(), visible=false )\n";
                
                /* Setup the cursor tracking label format */
                 
@@ -1100,7 +1101,7 @@ Int TPPlotter::endPlot(Int panel)
                fmt << "ax.fmt_ydata=conv\n";
                
       
-               fmt << "labelFormatter = pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
+               fmt << "labelFormatter = pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
                fmt << "ax.xaxis.set_major_formatter(labelFormatter)\n";
                fmt << "ax.yaxis.set_major_formatter(labelFormatter)\n";
                
@@ -1169,7 +1170,7 @@ Int TPPlotter::endPlot(Int panel)
                   fmt << "ax.xaxis.set_major_formatter(timeformatter)\n";
       
                   fmt << "labelFormatter = "
-                         "pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
+                         "pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
                   fmt << "ax.yaxis.set_major_formatter(labelFormatter)\n";
       
                   //fmt << "pl.subplots_adjust(bottom=0.2);\n";
@@ -1191,7 +1192,7 @@ Int TPPlotter::endPlot(Int panel)
                   fmt << "ax.yaxis.set_major_formatter(timeformatter)\n";
       
                   fmt << "labelFormatter = "
-                         "pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
+                         "pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
                   fmt << "ax.xaxis.set_major_formatter(labelFormatter)\n";
       
                   //fmt << "pl.subplots_adjust(left=0.2);\n";
@@ -1234,7 +1235,7 @@ Int TPPlotter::endPlot(Int panel)
                //fmt << "ax.xaxis.set_major_formatter(majorFormatter)\n";
                //fmt << "ax.yaxis.set_major_formatter(majorFormatter)\n";
       
-               fmt << "labelFormatter = pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
+               fmt << "labelFormatter = pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
                fmt << "ax.xaxis.set_major_formatter(labelFormatter)\n";
                fmt << "ax.yaxis.set_major_formatter(labelFormatter)\n";
       
@@ -1278,7 +1279,7 @@ Bool TPPlotter::changeGuiButtonState(String button, String state)
           PyInterp_p->pyrunString("pf.enable_iter_button();\n");
       if( state.matches("disabled") ) 
           PyInterp_p->pyrunString("pf.disable_iter_button();\n");
-      return True;
+      return true;
    }
 
    if( button.matches("markregion") ) {
@@ -1286,7 +1287,7 @@ Bool TPPlotter::changeGuiButtonState(String button, String state)
          PyInterp_p->pyrunString("pf.enable_markregion_button();\n");
       if( state.matches("disabled") ) 
          PyInterp_p->pyrunString("pf.disable_markregion_button();\n");
-      return True;
+      return true;
    }
 
    if( button.matches("flag") ) {
@@ -1294,7 +1295,7 @@ Bool TPPlotter::changeGuiButtonState(String button, String state)
          PyInterp_p->pyrunString("pf.enable_flag_button();\n");
       if( state.matches("disabled") ) 
          PyInterp_p->pyrunString("pf.disable_flag_button();\n");
-      return True;
+      return true;
    }
 
    if( button.matches("unflag") ) {
@@ -1302,7 +1303,7 @@ Bool TPPlotter::changeGuiButtonState(String button, String state)
          PyInterp_p->pyrunString("pf.enable_unflag_button();\n");
       if( state.matches("disabled") ) 
          PyInterp_p->pyrunString("pf.disable_unflag_button();\n");
-      return True;
+      return true;
    }
 
    if( button.matches("locate") ) {
@@ -1310,7 +1311,7 @@ Bool TPPlotter::changeGuiButtonState(String button, String state)
          PyInterp_p->pyrunString("pf.enable_locate_button();\n");
      if( state.matches("disabled") ) 
          PyInterp_p->pyrunString("pf.disable_locate_button();\n");
-     return True;
+     return true;
    }
 
    if( button.matches("clear") ) {
@@ -1318,7 +1319,7 @@ Bool TPPlotter::changeGuiButtonState(String button, String state)
          PyInterp_p->pyrunString("pf.enable_clear_button();\n");
       if( state.matches("disabled") ) 
          PyInterp_p->pyrunString("pf.disable_clear_button();\n");
-      return True;
+      return true;
    }
 
    if( button.matches("quit") ) {
@@ -1326,7 +1327,7 @@ Bool TPPlotter::changeGuiButtonState(String button, String state)
          PyInterp_p->pyrunString("pf.enable_quit_button();\n");
       if( state.matches("disabled") ) 
          PyInterp_p->pyrunString("pf.disable_quit_button();\n");
-      return True;
+      return true;
    }
 
    /* If control gets here, then the button/state is not valid */
@@ -1335,7 +1336,7 @@ Bool TPPlotter::changeGuiButtonState(String button, String state)
 #if LOG0 
    log->FnExit(fnname, clname);
 #endif 
-   return False;
+   return false;
 }
 /*********************************************************************************/
 
@@ -1458,9 +1459,9 @@ TPPlotter::plotXY(Int panel, Int layer, Int colour)
       /* 1 : x-axis, 2 : y axis, 3 : both. */
       if(PPar_p[panel-1]->TimePlot) 
       {
-         if(PPar_p[panel-1]->TimePlot==1) buf << ", xdate=True, ydate=False";
-         if(PPar_p[panel-1]->TimePlot==2) buf << ", xdate=False, ydate=True";
-         if(PPar_p[panel-1]->TimePlot==3) buf << ", xdate=True, ydate=True";
+         if(PPar_p[panel-1]->TimePlot==1) buf << ", xdate=true, ydate=false";
+         if(PPar_p[panel-1]->TimePlot==2) buf << ", xdate=false, ydate=true";
+         if(PPar_p[panel-1]->TimePlot==3) buf << ", xdate=true, ydate=true";
       }
       
       buf << ");\n";
@@ -1592,8 +1593,8 @@ TPPlotter::setPlotLabels(Int panel)
       
       if (row > 5 || col > 5) {
          ostringstream fmt;      
-         fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=False )\n";
-         fmt << "pl.setp( pl.gca().get_yticklabels(), visible=False )\n";
+         fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=false )\n";
+         fmt << "pl.setp( pl.gca().get_yticklabels(), visible=false )\n";
          PyInterp_p->pyrunString(fmt.str().data()); 
       }
 

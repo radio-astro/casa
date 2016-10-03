@@ -29,8 +29,10 @@
 #include <imageanalysis/ImageAnalysis/AntennaResponses.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 vpmanager::vpmanager()
@@ -101,13 +103,13 @@ vpmanager::setcannedpb(const std::string& telescope, const std::string& othertel
 {
   ::casac::record* r=0;
   try{
-    casa::Quantity pai;
-    if(toCasaString(paincrement)==casa::String(""))
-      pai=casa::Quantity(720,"deg");
+    casacore::Quantity pai;
+    if(toCasaString(paincrement)==casacore::String(""))
+      pai=casacore::Quantity(720,"deg");
     else
       pai=casaQuantity(paincrement);
 
-    casa::Record rec;
+    casacore::Record rec;
     VPManager::Instance()->setcannedpb(String(telescope), String(othertelescope), dopb, String(commonpb),
 			dosquint, pai, usesymmetricbeam, rec);
     r=fromRecord(rec);
@@ -125,42 +127,42 @@ vpmanager::setpbairy(const std::string& telescope, const std::string& otherteles
 
   ::casac::record* r=0;
   try{
-    casa::Quantity rf;
-    if(toCasaString(reffreq)==casa::String(""))
-      rf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity rf;
+    if(toCasaString(reffreq)==casacore::String(""))
+      rf=casacore::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    casa::Quantity srf;
-    if(toCasaString(squintreffreq)==casa::String(""))
-      srf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity srf;
+    if(toCasaString(squintreffreq)==casacore::String(""))
+      srf=casacore::Quantity(1.0,"GHz");
     else
       srf=casaQuantity(squintreffreq);
-    casa::Quantity pai;
-    if(toCasaString(paincrement)==casa::String(""))
-      pai=casa::Quantity(720,"deg");
+    casacore::Quantity pai;
+    if(toCasaString(paincrement)==casacore::String(""))
+      pai=casacore::Quantity(720,"deg");
     else
       pai=casaQuantity(paincrement);
-    casa::MDirection sdir;
-    if(toCasaString(squintdir)==casa::String(""))
-      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+    casacore::MDirection sdir;
+    if(toCasaString(squintdir)==casacore::String(""))
+      sdir=casacore::MDirection(casacore::Quantity(0,"deg"),casacore::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
-    casa::Quantity dd;
-    if(toCasaString(dishdiam)==casa::String(""))
-      dd=casa::Quantity(25.0,"m");
+    casacore::Quantity dd;
+    if(toCasaString(dishdiam)==casacore::String(""))
+      dd=casacore::Quantity(25.0,"m");
     else
       dd=casaQuantity(dishdiam);
-    casa::Quantity bd;
-    if(toCasaString(blockagediam)==casa::String(""))
-      bd=casa::Quantity(2.5,"m");
+    casacore::Quantity bd;
+    if(toCasaString(blockagediam)==casacore::String(""))
+      bd=casacore::Quantity(2.5,"m");
     else
       bd=casaQuantity(blockagediam);
-    casa::Quantity mr;
-    if(toCasaString(maxrad)==casa::String(""))
-      mr=casa::Quantity(0.8,"deg");
+    casacore::Quantity mr;
+    if(toCasaString(maxrad)==casacore::String(""))
+      mr=casacore::Quantity(0.8,"deg");
     else
       mr=casaQuantity(maxrad);
-    casa::Record rec;
+    casacore::Record rec;
     VPManager::Instance()->setpbairy(String(telescope), String(othertelescope), dopb, dd, bd, 
 		      mr, rf, sdir, srf, dosquint, pai, usesymmetricbeam, rec);
     r=fromRecord(rec);
@@ -177,32 +179,32 @@ vpmanager::setpbcospoly(const std::string& telescope, const std::string& otherte
 {
   ::casac::record* r=0;
   try{
-    casa::Quantity mr;
-    if(toCasaString(maxrad)==casa::String(""))
-      mr=casa::Quantity(0.8,"deg");
+    casacore::Quantity mr;
+    if(toCasaString(maxrad)==casacore::String(""))
+      mr=casacore::Quantity(0.8,"deg");
     else
       mr=casaQuantity(maxrad);
-    casa::Quantity rf;
-    if(toCasaString(reffreq)==casa::String(""))
-      rf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity rf;
+    if(toCasaString(reffreq)==casacore::String(""))
+      rf=casacore::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    casa::MDirection sdir;
-    if(toCasaString(squintdir)==casa::String(""))
-      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+    casacore::MDirection sdir;
+    if(toCasaString(squintdir)==casacore::String(""))
+      sdir=casacore::MDirection(casacore::Quantity(0,"deg"),casacore::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
-    casa::Quantity srf;
-    if(toCasaString(squintreffreq)==casa::String(""))
-      srf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity srf;
+    if(toCasaString(squintreffreq)==casacore::String(""))
+      srf=casacore::Quantity(1.0,"GHz");
     else
       srf=casaQuantity(squintreffreq);
-    casa::Quantity pai;
-    if(toCasaString(paincrement)==casa::String(""))
-      pai=casa::Quantity(720,"deg");
+    casacore::Quantity pai;
+    if(toCasaString(paincrement)==casacore::String(""))
+      pai=casacore::Quantity(720,"deg");
     else
       pai=casaQuantity(paincrement);
-    casa::Record rec;
+    casacore::Record rec;
     VPManager::Instance()->setpbcospoly(String(telescope), String(othertelescope), dopb,
 			 coeff, scale, mr, rf, isthispb, sdir, srf,
 			 dosquint, pai, usesymmetricbeam, rec);
@@ -222,37 +224,37 @@ vpmanager::setpbgauss(const std::string& telescope, const std::string& othertele
   ::casac::record* r=0;
 
   try{
-    casa::Quantity rf;
-    if(toCasaString(reffreq)==casa::String(""))
-      rf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity rf;
+    if(toCasaString(reffreq)==casacore::String(""))
+      rf=casacore::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    casa::Quantity srf;
-    if(toCasaString(squintreffreq)==casa::String(""))
-      srf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity srf;
+    if(toCasaString(squintreffreq)==casacore::String(""))
+      srf=casacore::Quantity(1.0,"GHz");
     else
       srf=casaQuantity(squintreffreq);
-    casa::Quantity pai;
-    if(toCasaString(paincrement)==casa::String(""))
-      pai=casa::Quantity(720,"deg");
+    casacore::Quantity pai;
+    if(toCasaString(paincrement)==casacore::String(""))
+      pai=casacore::Quantity(720,"deg");
     else
       pai=casaQuantity(paincrement);
-    casa::MDirection sdir;
-    if(toCasaString(squintdir)==casa::String(""))
-      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+    casacore::MDirection sdir;
+    if(toCasaString(squintdir)==casacore::String(""))
+      sdir=casacore::MDirection(casacore::Quantity(0,"deg"),casacore::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
-    casa::Quantity hw;
-    if(toCasaString(halfwidth)==casa::String(""))
-      hw=casa::Quantity(0.5,"deg");
+    casacore::Quantity hw;
+    if(toCasaString(halfwidth)==casacore::String(""))
+      hw=casacore::Quantity(0.5,"deg");
     else
       hw=casaQuantity(halfwidth);
-    casa::Quantity mr;
-    if(toCasaString(maxrad)==casa::String(""))
-      mr=casa::Quantity(0.8,"deg");
+    casacore::Quantity mr;
+    if(toCasaString(maxrad)==casacore::String(""))
+      mr=casacore::Quantity(0.8,"deg");
     else
       mr=casaQuantity(maxrad);
-    casa::Record rec;
+    casacore::Record rec;
     VPManager::Instance()->setpbgauss(String(telescope), String(othertelescope), dopb, hw, 
 		      mr, rf, String(isthispb), sdir, srf, dosquint, pai, 
 		      usesymmetricbeam, rec);
@@ -270,32 +272,32 @@ vpmanager::setpbinvpoly(const std::string& telescope, const std::string& otherte
 {
   ::casac::record* r=0;
   try{
-    casa::Quantity mr;
-    if(toCasaString(maxrad)==casa::String(""))
-      mr=casa::Quantity(0.8,"deg");
+    casacore::Quantity mr;
+    if(toCasaString(maxrad)==casacore::String(""))
+      mr=casacore::Quantity(0.8,"deg");
     else
       mr=casaQuantity(maxrad);
-    casa::Quantity rf;
-    if(toCasaString(reffreq)==casa::String(""))
-      rf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity rf;
+    if(toCasaString(reffreq)==casacore::String(""))
+      rf=casacore::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    casa::MDirection sdir;
-    if(toCasaString(squintdir)==casa::String(""))
-      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+    casacore::MDirection sdir;
+    if(toCasaString(squintdir)==casacore::String(""))
+      sdir=casacore::MDirection(casacore::Quantity(0,"deg"),casacore::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
-    casa::Quantity srf;
-    if(toCasaString(squintreffreq)==casa::String(""))
-      srf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity srf;
+    if(toCasaString(squintreffreq)==casacore::String(""))
+      srf=casacore::Quantity(1.0,"GHz");
     else
       srf=casaQuantity(squintreffreq);
-    casa::Quantity pai;
-    if(toCasaString(paincrement)==casa::String(""))
-      pai=casa::Quantity(720,"deg");
+    casacore::Quantity pai;
+    if(toCasaString(paincrement)==casacore::String(""))
+      pai=casacore::Quantity(720,"deg");
     else
       pai=casaQuantity(paincrement);
-    casa::Record rec;
+    casacore::Record rec;
     VPManager::Instance()->setpbinvpoly(String(telescope), String(othertelescope), dopb,
 			 coeff, mr, rf, isthispb, sdir, srf,
 			 dosquint, pai, usesymmetricbeam, rec);
@@ -313,32 +315,32 @@ vpmanager::setpbnumeric(const std::string& telescope, const std::string& otherte
 {
   ::casac::record* r=0;
   try{
-    casa::Quantity mr;
-    if(toCasaString(maxrad)==casa::String(""))
-      mr=casa::Quantity(0.8,"deg");
+    casacore::Quantity mr;
+    if(toCasaString(maxrad)==casacore::String(""))
+      mr=casacore::Quantity(0.8,"deg");
     else
       mr=casaQuantity(maxrad);
-    casa::Quantity rf;
-    if(toCasaString(reffreq)==casa::String(""))
-      rf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity rf;
+    if(toCasaString(reffreq)==casacore::String(""))
+      rf=casacore::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    casa::MDirection sdir;
-    if(toCasaString(squintdir)==casa::String(""))
-      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+    casacore::MDirection sdir;
+    if(toCasaString(squintdir)==casacore::String(""))
+      sdir=casacore::MDirection(casacore::Quantity(0,"deg"),casacore::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
-    casa::Quantity srf;
-    if(toCasaString(squintreffreq)==casa::String(""))
-      srf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity srf;
+    if(toCasaString(squintreffreq)==casacore::String(""))
+      srf=casacore::Quantity(1.0,"GHz");
     else
       srf=casaQuantity(squintreffreq);
-    casa::Quantity pai;
-    if(toCasaString(paincrement)==casa::String(""))
-      pai=casa::Quantity(720,"deg");
+    casacore::Quantity pai;
+    if(toCasaString(paincrement)==casacore::String(""))
+      pai=casacore::Quantity(720,"deg");
     else
       pai=casaQuantity(paincrement);
-    casa::Record rec;
+    casacore::Record rec;
     VPManager::Instance()->setpbnumeric(String(telescope), String(othertelescope), dopb,
 			 vect, mr, rf, isthispb, sdir, srf,
 			 dosquint, pai, usesymmetricbeam, rec);
@@ -357,11 +359,11 @@ vpmanager::setpbimage(const std::string& telescope, const std::string& othertele
 
   ::casac::record* r=0;
   try{
-    casa::Record rec;
+    casacore::Record rec;
     Vector <String> anames(toVectorString(antnames));
     ////CAS-5666 go round
-    if(anames.nelements()==1 && anames[0]==casa::String(""))
-      anames[0]=casa::String("*");
+    if(anames.nelements()==1 && anames[0]==casacore::String(""))
+      anames[0]=casacore::String("*");
     VPManager::Instance()->setpbimage(String(telescope), String(othertelescope), dopb, 
 				      String(realimage), String(imagimage), String(compleximage), anames, rec);
     r=fromRecord(rec);
@@ -378,32 +380,32 @@ vpmanager::setpbpoly(const std::string& telescope, const std::string& otherteles
 {
   ::casac::record* r=0;
   try{
-    casa::Quantity mr;
-    if(toCasaString(maxrad)==casa::String(""))
-      mr=casa::Quantity(0.8,"deg");
+    casacore::Quantity mr;
+    if(toCasaString(maxrad)==casacore::String(""))
+      mr=casacore::Quantity(0.8,"deg");
     else
       mr=casaQuantity(maxrad);
-    casa::Quantity rf;
-    if(toCasaString(reffreq)==casa::String(""))
-      rf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity rf;
+    if(toCasaString(reffreq)==casacore::String(""))
+      rf=casacore::Quantity(1.0,"GHz");
     else
       rf=casaQuantity(reffreq);
-    casa::MDirection sdir;
-    if(toCasaString(squintdir)==casa::String(""))
-      sdir=casa::MDirection(casa::Quantity(0,"deg"),casa::Quantity(0,"deg")) ;
+    casacore::MDirection sdir;
+    if(toCasaString(squintdir)==casacore::String(""))
+      sdir=casacore::MDirection(casacore::Quantity(0,"deg"),casacore::Quantity(0,"deg")) ;
     else
       casaMDirection(squintdir, sdir);
-    casa::Quantity srf;
-    if(toCasaString(squintreffreq)==casa::String(""))
-      srf=casa::Quantity(1.0,"GHz");
+    casacore::Quantity srf;
+    if(toCasaString(squintreffreq)==casacore::String(""))
+      srf=casacore::Quantity(1.0,"GHz");
     else
       srf=casaQuantity(squintreffreq);
-    casa::Quantity pai;
-    if(toCasaString(paincrement)==casa::String(""))
-      pai=casa::Quantity(720,"deg");
+    casacore::Quantity pai;
+    if(toCasaString(paincrement)==casacore::String(""))
+      pai=casacore::Quantity(720,"deg");
     else
       pai=casaQuantity(paincrement);
-    casa::Record rec;
+    casacore::Record rec;
     VPManager::Instance()->setpbpoly(String(telescope), String(othertelescope), dopb,
 		      coeff, mr, rf, isthispb, sdir, srf,
 		      dosquint, pai, usesymmetricbeam, rec);
@@ -437,7 +439,7 @@ bool vpmanager::reset(){
 
   VPManager::Instance()->reset();
 
-  return True;
+  return true;
 }
 
 bool vpmanager::setuserdefault(const int vplistnum,
@@ -484,9 +486,9 @@ std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
   *itsLog << LogOrigin("vp", "getanttypes");
 
   try{    
-	  casa::MEpoch mObsTime;
-	  casa::MFrequency mFreq;
-	  casa::MDirection mObsDir;
+	  casacore::MEpoch mObsTime;
+	  casacore::MFrequency mFreq;
+	  casacore::MDirection mObsDir;
     
     if(!casaMEpoch(obstime, mObsTime)){
       *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
@@ -540,9 +542,9 @@ int vpmanager::numvps(const std::string& telescope,
 
   try{
 
-	  casa::MEpoch mObsTime;
-	  casa::MFrequency mFreq;
-	  casa::MDirection mObsDir;
+	  casacore::MEpoch mObsTime;
+	  casacore::MFrequency mFreq;
+	  casacore::MDirection mObsDir;
     
     if(!casaMEpoch(obstime, mObsTime)){
       *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
@@ -589,9 +591,9 @@ vpmanager::getvp(const std::string& telescope,
   *itsLog << LogOrigin("vp", "getvp");
 
   try{
-    casa::MEpoch mObsTime;
-    casa::MFrequency mFreq;
-    casa::MDirection mObsDir;
+    casacore::MEpoch mObsTime;
+    casacore::MFrequency mFreq;
+    casacore::MDirection mObsDir;
     Record rec;
     
     int nRefs = 0;
@@ -668,9 +670,9 @@ vpmanager::getvps(const std::string& telescope,
   *itsLog << LogOrigin("vp", "getvp");
 
   try{
-    casa::Vector<casa::MEpoch> mObsTimeV;
-    casa::Vector<casa::MFrequency> mFreqV;
-    casa::MDirection mObsDir;
+    casacore::Vector<casacore::MEpoch> mObsTimeV;
+    casacore::Vector<casacore::MFrequency> mFreqV;
+    casacore::MDirection mObsDir;
     Record rec;
     
     int nRefs = 0;
@@ -741,8 +743,8 @@ vpmanager::getvps(const std::string& telescope,
 	return r;
     }
     else{
-      casa::Vector<Record> out_rec_list;
-      casa::Vector<casa::Vector<uInt> > beam_index;
+      casacore::Vector<Record> out_rec_list;
+      casacore::Vector<casacore::Vector<uInt> > beam_index;
 
       if(VPManager::Instance()->getvps(out_rec_list, beam_index,
 				       telescope, mObsTimeV, mFreqV, antennas, mObsDir)){
@@ -788,7 +790,7 @@ vpmanager::createantresp(const std::string& imdir,
 			 const std::vector<std::string>& bandminfreq, 
 			 const std::vector<std::string>& bandmaxfreq)
 {
-  bool rstat(False);
+  bool rstat(false);
 
   *itsLog << LogOrigin("vp", "createantresp");
 
@@ -810,11 +812,11 @@ vpmanager::createantresp(const std::string& imdir,
     }
       
     String startTime = toCasaString(starttime);
-    casa::MEpoch theStartTime; 
+    casacore::MEpoch theStartTime;
     Quantum<Double> qt;
     if (MVTime::read(qt,startTime)) {
       MVEpoch mv(qt);
-      theStartTime = casa::MEpoch(mv, casa::MEpoch::UTC);
+      theStartTime = casacore::MEpoch(mv, casacore::MEpoch::UTC);
     } else {
       *itsLog << LogIO::SEVERE << "Invalid time format: " 
 	      << startTime << LogIO::POST;
@@ -865,7 +867,7 @@ vpmanager::createantresp(const std::string& imdir,
     // all input parameters checked, now find all the images
     Directory imDirD(imDir);
     String imPattern = "*?_*?_*_*_*?_*?_*?_*?_*?_*?_*?_*?_*?_*?_*_*?.im";
-    Vector<String> imNamesV = imDirD.find(Regex::fromPattern(imPattern), True, False); // follow symlinks, non-recursive
+    Vector<String> imNamesV = imDirD.find(Regex::fromPattern(imPattern), true, false); // follow symlinks, non-recursive
     
     uInt nIm = imNamesV.size();
 
@@ -873,7 +875,7 @@ vpmanager::createantresp(const std::string& imdir,
 
     {
       imPattern = "*.im";
-      Vector<String> imNamesV2 = imDirD.find(Regex::fromPattern(imPattern), True, False);
+      Vector<String> imNamesV2 = imDirD.find(Regex::fromPattern(imPattern), true, false);
 
       if(nIm==0){
 	if(imNamesV2.nelements()==0){
@@ -916,7 +918,7 @@ vpmanager::createantresp(const std::string& imdir,
       pos = imNamesV(i).find("_", pos);
       obsnameV(i) = imNamesV(i).substr(0, pos); // use pos as length in this case
 
-      casa::MPosition Xpos;
+      casacore::MPosition Xpos;
       if (obsnameV(i).length() == 0 || 
 	  !MeasTable::Observatory(Xpos,obsnameV(i))) {
 	// unknown observatory
@@ -1111,15 +1113,15 @@ vpmanager::createantresp(const std::string& imdir,
 		    sortedFuncChannel, sortedNomFreq,
 		    rotAngOffset, // all zero, no sorting necessary
 		    currAntType, theStartTime,
-		    casa::MDirection(casa::Quantity(currAzNom, "deg"),
-			       casa::Quantity(currElNom, "deg"), 
-			       casa::MDirection::AZEL),
-		    casa::MDirection(casa::Quantity(currAzMin, "deg"), 
-			       casa::Quantity(currElMin, "deg"), 
-			       casa::MDirection::AZEL),
-		    casa::MDirection(casa::Quantity(currAzMax, "deg"),
-			       casa::Quantity(currElMax, "deg"), 
-			       casa::MDirection::AZEL),
+		    casacore::MDirection(casacore::Quantity(currAzNom, "deg"),
+			       casacore::Quantity(currElNom, "deg"),
+			       casacore::MDirection::AZEL),
+		    casacore::MDirection(casacore::Quantity(currAzMin, "deg"),
+			       casacore::Quantity(currElMin, "deg"),
+			       casacore::MDirection::AZEL),
+		    casacore::MDirection(casacore::Quantity(currAzMax, "deg"),
+			       casacore::Quantity(currElMax, "deg"),
+			       casacore::MDirection::AZEL),
 		    currRecType,
 		    currBeamnum
 		    )
@@ -1140,7 +1142,7 @@ vpmanager::createantresp(const std::string& imdir,
     *itsLog << LogIO::NORMAL << "Created antenna responses table " << absPathName+"/AntennaResponses" 
 	    << endl << " with " << iRow << " rows." << LogIO::POST;
     
-    rstat = True;
+    rstat = true;
 
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1184,11 +1186,11 @@ vpmanager::getrespimagename(const std::string& telescope,
     MVAngle rotAngOffset;
 
     String startTime = toCasaString(starttime);
-    casa::MEpoch theStartTime; 
+    casacore::MEpoch theStartTime;
     Quantum<Double> qt;
     if (MVTime::read(qt,startTime)) {
       MVEpoch mv(qt);
-      theStartTime = casa::MEpoch(mv, casa::MEpoch::UTC);
+      theStartTime = casacore::MEpoch(mv, casacore::MEpoch::UTC);
     } else {
       *itsLog << LogIO::SEVERE << "Invalid time format: " 
 	      << startTime << LogIO::POST;
@@ -1216,7 +1218,7 @@ vpmanager::getrespimagename(const std::string& telescope,
       return rval;
     }
 
-    casa::MDirection center = casa::MDirection(az, el, casa::MDirection::AZEL); 
+    casacore::MDirection center = casacore::MDirection(az, el, casacore::MDirection::AZEL);
     String receiverType = toCasaString(rectype);
 
     if(!aR.getImageName(functionImageName, 

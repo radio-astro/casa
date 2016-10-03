@@ -23,9 +23,11 @@
 #include <synthesisnormalizer_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
      
+using namespace casacore;
 namespace casac {
 
 synthesisnormalizer::synthesisnormalizer()
@@ -40,11 +42,11 @@ synthesisnormalizer::~synthesisnormalizer()
 
   bool synthesisnormalizer::setupnormalizer(const casac::record& normpars)
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
-      casa::Record rec = *toRecord( normpars );
+      casacore::Record rec = *toRecord( normpars );
       itsNormalizer->setupNormalizer( rec );
     } 
   catch  (AipsError x) 
@@ -57,10 +59,10 @@ synthesisnormalizer::~synthesisnormalizer()
 
 bool synthesisnormalizer::setimstore(const casac::synthesisimstore */*imstore*/)
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
     ////    itsNormalizer->setImageStore( const_cast<casac::synthesisimstore *>(imstore)->getImStore() );
-    rstat=True;
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -82,10 +84,10 @@ synthesisimstore* synthesisnormalizer::getimstore()
 
 bool synthesisnormalizer::gatherweightdensity()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
-    itsNormalizer->gatherImages( /*dopsf*/False, /*doresidual*/False, /*density*/ True );
-    rstat=True;
+    itsNormalizer->gatherImages( /*dopsf*/false, /*doresidual*/false, /*density*/ true );
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -93,10 +95,10 @@ bool synthesisnormalizer::gatherweightdensity()
 }
 bool synthesisnormalizer::scatterweightdensity()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
     itsNormalizer->scatterWeightDensity( ); 
-    rstat=True;
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -106,10 +108,10 @@ bool synthesisnormalizer::scatterweightdensity()
 
 bool synthesisnormalizer::gatherpsfweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
-    itsNormalizer->gatherImages( /*dopsf*/True, /*doresidual*/False, /*density*/ False );
-    rstat=True;
+    itsNormalizer->gatherImages( /*dopsf*/true, /*doresidual*/false, /*density*/ false );
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -118,10 +120,10 @@ bool synthesisnormalizer::gatherpsfweight()
 
 bool synthesisnormalizer::gatherresidual()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
-    itsNormalizer->gatherImages( /*dopsf*/False, /*doresidual*/True, /*density*/ False );
-    rstat=True;
+    itsNormalizer->gatherImages( /*dopsf*/false, /*doresidual*/true, /*density*/ false );
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -130,10 +132,10 @@ bool synthesisnormalizer::gatherresidual()
 
   bool synthesisnormalizer::dividepsfbyweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 	itsNormalizer->dividePSFByWeight( );
-	rstat=True;
+	rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -142,10 +144,10 @@ bool synthesisnormalizer::gatherresidual()
 
   bool synthesisnormalizer::normalizeprimarybeam()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 	itsNormalizer->normalizePrimaryBeam( );
-	rstat=True;
+	rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -154,10 +156,10 @@ bool synthesisnormalizer::gatherresidual()
 
   bool synthesisnormalizer::divideresidualbyweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 	itsNormalizer->divideResidualByWeight( );
-	rstat=True;
+	rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -166,10 +168,10 @@ bool synthesisnormalizer::gatherresidual()
 
   bool synthesisnormalizer::dividemodelbyweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 	itsNormalizer->divideModelByWeight( );
-	rstat=True;
+	rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -177,10 +179,10 @@ bool synthesisnormalizer::gatherresidual()
 }
   bool synthesisnormalizer::multiplymodelbyweight()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
 	itsNormalizer->multiplyModelByWeight( );
-	rstat=True;
+	rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -189,10 +191,10 @@ bool synthesisnormalizer::gatherresidual()
 
 bool synthesisnormalizer::scattermodel()
 {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
     itsNormalizer->scatterModel( );
-    rstat=True;
+    rstat=true;
   } catch  (AipsError x) {
     RETHROW(x);
   }
@@ -202,7 +204,7 @@ bool synthesisnormalizer::scattermodel()
 bool
 synthesisnormalizer::done()
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {

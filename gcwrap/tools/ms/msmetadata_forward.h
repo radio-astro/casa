@@ -5,10 +5,14 @@
 #include <ms_cmpt.h>
 #include <memory>
 
-namespace casa {
+namespace casacore{
+
 	class MSMetaData;
 	class MeasurementSet;
 	class LogIO;
-	class String;
 	struct ScanKey;
+	class String;
+}
+
+namespace casa {
 };

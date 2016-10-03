@@ -13,8 +13,10 @@
 #include <calanalysis_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 // --- //
@@ -217,7 +219,7 @@ std::vector<std::string> calanalysis::field( const bool name ) {
     ROScalarColumn<String> oROSC( oTable, String("NAME") );
 
     Vector<String> oFieldString;
-    oROSC.getColumn( oFieldString, True );
+    oROSC.getColumn( oFieldString, true );
 
     for ( uInt f=0; f<uiNumField; f++ ) field[f] = oFieldString[f];
 
@@ -279,7 +281,7 @@ std::vector<std::string> calanalysis::antenna( const bool name ) {
     ROScalarColumn<String> oROSC( oTable, String("NAME") );
 
     Vector<String> oAntennaString;
-    oROSC.getColumn( oAntennaString, True );
+    oROSC.getColumn( oAntennaString, true );
 
     for ( uInt a=0; a<uiNumAntenna; a++ ) antenna[a] = oAntennaString[a];
 
@@ -543,7 +545,7 @@ std::vector<std::string> calanalysis::spw( const bool name ) {
     ROScalarColumn<String> oROSC( oTable, String("NAME") );
 
     Vector<String> oSPWString;
-    oROSC.getColumn( oSPWString, True );
+    oROSC.getColumn( oSPWString, true );
 
     for ( uInt s=0; s<uiNumSPW; s++ ) spw[s] = oSPWString[s];
 
@@ -881,7 +883,7 @@ Bool calanalysis::parseInput( const ::casac::variant& field,
   if ( !bField ) {
     LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
     log << LogIO::WARN << "Invalid field(s)" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
@@ -892,7 +894,7 @@ Bool calanalysis::parseInput( const ::casac::variant& field,
   if ( !bAntenna ) {
     LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
     log << LogIO::WARN << "Invalid antenna(s)" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
@@ -904,7 +906,7 @@ Bool calanalysis::parseInput( const ::casac::variant& field,
   if ( !bTimeRange ) {
     LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
     log << LogIO::WARN << "Invalid time(s)" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
@@ -915,7 +917,7 @@ Bool calanalysis::parseInput( const ::casac::variant& field,
   if ( !bSPW ) {
     LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
     log << LogIO::WARN << "Invalid spw(s) or channel(s)" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
@@ -926,7 +928,7 @@ Bool calanalysis::parseInput( const ::casac::variant& field,
   if ( !bFeed ) {
     LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
     log << LogIO::WARN << "Invalid feed(s)" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
@@ -937,7 +939,7 @@ Bool calanalysis::parseInput( const ::casac::variant& field,
   if ( !bAxis ) {
     LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
     log << LogIO::WARN << "Invalid user-defined iteration axis" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
@@ -948,7 +950,7 @@ Bool calanalysis::parseInput( const ::casac::variant& field,
   if ( !bRAP ) {
     LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
     log << LogIO::WARN << "Invalid amplitude/phase parameter" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
@@ -966,13 +968,13 @@ Bool calanalysis::parseInput( const ::casac::variant& field,
   if ( !bJumpMax ) {
     LogIO log( LogOrigin( "calanalysis", "parseInput()", WHERE ) );
     log << LogIO::WARN << "Invalid maximum jump parameter" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1006,7 +1008,7 @@ Bool calanalysis::parseField( const ::casac::variant& field,
     oMSS.toTableExprNode( &oNCTI );
 
     Vector<Int> oFieldTemp( oMSS.getFieldList() );
-    oField.resize( oFieldTemp.nelements(), False );
+    oField.resize( oFieldTemp.nelements(), false );
 
     convertArray<uInt,Int>( oField, oFieldTemp );
 
@@ -1014,18 +1016,18 @@ Bool calanalysis::parseField( const ::casac::variant& field,
 
   catch ( AipsError oAE ) {
     oField.resize();
-    return( False );
+    return( false );
   }
 
 
   // Check the length of the output vector
 
-  if ( oField.nelements() == 0 ) return( False );
+  if ( oField.nelements() == 0 ) return( false );
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1059,7 +1061,7 @@ Bool calanalysis::parseAntenna( const ::casac::variant& antenna,
     oMSS.toTableExprNode( &oNCTI );
 
     Vector<Int> oAntenna1Temp( oMSS.getAntenna1List() );
-    oAntenna1.resize( oAntenna1Temp.nelements(), False );
+    oAntenna1.resize( oAntenna1Temp.nelements(), false );
 
     convertArray<uInt,Int>( oAntenna1, oAntenna1Temp );
 
@@ -1075,20 +1077,20 @@ Bool calanalysis::parseAntenna( const ::casac::variant& antenna,
   catch ( AipsError oAE ) {
     oAntenna1.resize();
     oAntenna2.resize();
-    return( False );
+    return( false );
   }
 
 
   // Check the lengths of the output vectors
 
   if ( oAntenna1.nelements() == 0 || oAntenna2.nelements() == 0 ) {
-    return( False );
+    return( false );
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1122,7 +1124,7 @@ Bool calanalysis::parseTimeRange( const ::casac::variant& timerange,
     if ( oTimeRange.nelements() != 2 ) {
       dStartTime = 0.0;
       dStopTime = 0.0;
-      return( False );
+      return( false );
     }
 
     dStartTime = oTimeRange[0];
@@ -1145,15 +1147,15 @@ Bool calanalysis::parseTimeRange( const ::casac::variant& timerange,
 
   for ( uInt tt=0, uiNumTime=0; tt<oTimeTemp.nelements(); tt++ ) {
     if ( oTimeTemp[tt] >= dStartTime && oTimeTemp[tt] <= dStopTime ) {
-      oTime.resize( ++uiNumTime, True );
+      oTime.resize( ++uiNumTime, true );
       oTime[uiNumTime-1] = oTimeTemp[tt];
     }
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1212,7 +1214,7 @@ Bool calanalysis::parseSPW( const ::casac::variant& spw,
       uInt uiStep = oChanList(r,3);
       for ( uInt c=uiStart; c<=uiStop; c+=uiStep ) {
         uInt uiNumChannel = oChannelTemp[uiSPW].nelements();
-        oChannelTemp[uiSPW].resize( uiNumChannel+1, True );
+        oChannelTemp[uiSPW].resize( uiNumChannel+1, true );
         oChannelTemp[uiSPW][uiNumChannel] = c;
       }
     }
@@ -1227,22 +1229,22 @@ Bool calanalysis::parseSPW( const ::casac::variant& spw,
   catch ( AipsError oAE ) {
     oSPW.resize();
     oChannel.resize();
-    return( False );
+    return( false );
   }
 
 
   // Check the lengths of the vectors
 
-  if ( oSPW.nelements() == 0 ) return( False );
+  if ( oSPW.nelements() == 0 ) return( false );
 
   uInt uiNumChannelAll = 0;
   for ( uInt s=0; s<uiNumSPW; s++ ) uiNumChannelAll += oChannel[s].nelements();
-  if ( uiNumChannelAll == 0 ) return( False );
+  if ( uiNumChannelAll == 0 ) return( false );
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1270,7 +1272,7 @@ Bool calanalysis::parseFeed( const ::casac::variant& feed,
   if ( oFeedString == String("") ) {
     oFeed.resize();
     oFeed = poCA->feed();
-    return( True );
+    return( true );
   }
 
 
@@ -1283,7 +1285,7 @@ Bool calanalysis::parseFeed( const ::casac::variant& feed,
     if ( uiNumFeed > 10000 ) {
       delete [] aoFeed;
       oFeed.resize();
-      return( False );
+      return( false );
     }
 
     Vector<String> oFeedTemp( uiNumFeed );
@@ -1293,7 +1295,7 @@ Bool calanalysis::parseFeed( const ::casac::variant& feed,
       if ( !CalAnalysis::exists<String>( aoFeed[f], poCA->feed() ) ) {
         delete [] aoFeed;
         oFeed.resize();
-        return( False );
+        return( false );
       }
       oFeedTemp[f] = aoFeed[f];
     }
@@ -1305,25 +1307,25 @@ Bool calanalysis::parseFeed( const ::casac::variant& feed,
 
     if ( oFeed.nelements() != 1 && oFeed.nelements() != 2 ) {
       oFeed.resize();
-      return( False );
+      return( false );
     }
 
   }
 
   catch ( AipsError oAE ) {
     oFeed.resize();
-    return( False );
+    return( false );
   }
 
 
   // Return the length of the vector
 
-  if ( oFeed.nelements() == 0 ) return( False );
+  if ( oFeed.nelements() == 0 ) return( false );
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1349,13 +1351,13 @@ Bool calanalysis::parseAxis( const std::string& axis,
   } else if ( axisTemp == "T" ) {
     eAxisIterUserID = CalStats::TIME;
   } else {
-    return( False );
+    return( false );
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1383,16 +1385,16 @@ Bool calanalysis::parseRAP( const std::string& ap, CalAnalysis::RAP& eRAP ) {
     } else if ( apTemp == "P" ) {
       eRAP = CalAnalysis::PHASE;
     } else {
-      return( False );
+      return( false );
     }
   } else {
-    return( False );
+    return( false );
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1404,12 +1406,12 @@ Bool calanalysis::parseJumpMax( const double& jumpmax, Double& dJumpMax ) {
 
   dJumpMax = jumpmax;
 
-  if ( dJumpMax < 0.0 ) return( False );
+  if ( dJumpMax < 0.0 ) return( false );
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1425,7 +1427,7 @@ Bool calanalysis::parseArg( const std::string& order, const std::string& type,
   if ( !bOrder ) {
     LogIO log( LogOrigin( "calanalysis", "parseArg()", WHERE ) );
     log << LogIO::WARN << "Invalid fit order" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
@@ -1436,7 +1438,7 @@ Bool calanalysis::parseArg( const std::string& order, const std::string& type,
   if ( !bType ) {
     LogIO log( LogOrigin( "calanalysis", "parseArg()", WHERE ) );
     log << LogIO::WARN << "Invalid fit type" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
@@ -1447,13 +1449,13 @@ Bool calanalysis::parseArg( const std::string& order, const std::string& type,
   if ( !bWeight ) {
     LogIO log( LogOrigin( "calanalysis", "parseArg()", WHERE ) );
     log << LogIO::WARN << "Invalid fit weight" << LogIO::POST;
-    return( False );
+    return( false );
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1481,13 +1483,13 @@ Bool calanalysis::parseOrder( const std::string& order,
   } else if ( orderTemp == "Q" ) {
     eOrder = CalStatsFitter::QUADRATIC;
   } else {
-    return( False );
+    return( false );
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1513,13 +1515,13 @@ Bool calanalysis::parseType( const std::string& type,
   } else if ( typeTemp == "R" ) {
     eType = CalStatsFitter::ROBUST;
   } else {
-    return( False );
+    return( false );
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 
@@ -1537,9 +1539,9 @@ Bool calanalysis::parseWeight( const bool& weight,
   }
 
 
-  // Return True
+  // Return true
 
-  return( True );
+  return( true );
 
 }
 

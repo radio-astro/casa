@@ -23,8 +23,10 @@
 
 using namespace atm;
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 ///// helper functions /////
@@ -36,7 +38,7 @@ inline void atmosphere::check_atmtype_enum(int atmtype) {
 // Assert int value is positive or zero.
 inline void atmosphere::assert_unsigned_int(int value)
 {
-  AlwaysAssert(value>=0, AipsError);
+  AlwaysAssert(value>=0, casacore::AipsError);
 }
 // Assert Spw ID and channel ID are in proper range
 inline void atmosphere::assert_spwid(int spwid) {
@@ -491,8 +493,8 @@ atmosphere::initSpectralWindow(int nbands, const Quantity& fCenter,
 	if (fR[i] == 0) {
 	  numChan[i] = 1;
 	} else {
-	  numChan[i] = (int)ceil((casa::Quantity(fW[i],ufW) /
-				  casa::Quantity(fR[i],ufR)).getValue());
+	  numChan[i] = (int)ceil((casacore::Quantity(fW[i],ufW) /
+				  casacore::Quantity(fR[i],ufR)).getValue());
 	}
 	refChan[i] = numChan[i]/2;  // assume center channel is ref chan
 	refFreq[i] = Frequency(fC[i],fCenter.units);
@@ -540,8 +542,8 @@ atmosphere::addSpectralWindow(const Quantity& fCenter,
 	*itsLog << LogIO::WARN << "Resolution of band cannot be 0,0 GHz!" << LogIO::POST;
 	return rstat;
       }	
-      int numChan = (int)ceil((casa::Quantity(fWidth.value[0],ufW) /
-			       casa::Quantity(fRes.value[0],ufR)).getValue());
+      int numChan = (int)ceil((casacore::Quantity(fWidth.value[0],ufW) /
+			       casacore::Quantity(fRes.value[0],ufR)).getValue());
       int refChan = numChan/2;  // assume center channel is ref chan
       Frequency refFreq = Frequency(fCenter.value[0],fCenter.units);
       Frequency chanSep = Frequency(fRes.value[0],fRes.units);

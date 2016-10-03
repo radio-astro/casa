@@ -1,6 +1,6 @@
 // Private part to spectralline_cmpt.h
 
-casa::LogIO *_log;
+casacore::LogIO *_log;
 casa::SplatalogueTable *_table;
 
 spectralline(casa::SplatalogueTable* table);

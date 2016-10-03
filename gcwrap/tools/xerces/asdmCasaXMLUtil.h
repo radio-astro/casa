@@ -8,21 +8,25 @@
 //
 //P. C. Cortes, July 2007
 //
-namespace casa {
+namespace casacore{
 
 class String;
 class Record;
 class Table;
+}
+
+namespace casa {
+
 
 class asdmCasaXMLUtil {
    public :
 	asdmCasaXMLUtil();
 	~asdmCasaXMLUtil();
-	bool toCasaRecord(Record &outRec, String &xml);
-	bool fromCasaRecord(String &outXML, const Record &theRecord);
-	bool readXMLFile(Table &outTab, const String &xmlFile, const String &tableName);
-	bool writeXMLFile(const String &xmlFile, const Record &inRec);
-	void setRecord(Record &aRec);
+	bool toCasaRecord(casacore::Record &outRec, casacore::String &xml);
+	bool fromCasaRecord(casacore::String &outXML, const casacore::Record &theRecord);
+	bool readXMLFile(casacore::Table &outTab, const casacore::String &xmlFile, const casacore::String &tableName);
+	bool writeXMLFile(const casacore::String &xmlFile, const casacore::Record &inRec);
+	void setRecord(casacore::Record &aRec);
 };
 
 }

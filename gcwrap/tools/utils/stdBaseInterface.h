@@ -1,7 +1,7 @@
 #ifndef CASA_BASEINTERFACE_H
 #define CASA_BASEINTERFACE_H
 //
-//BaseInterface class, uses a Record to produce a simple readline based Command Shell
+//BaseInterface class, uses a casacore::Record to produce a simple readline based Command Shell
 //for a task or method.
 //
 
@@ -17,11 +17,13 @@ using std::string;
 using std::map;
 using std::ostream;
 
-namespace casa {
+namespace casacore{
+
 	class LogIO;
-};
+}
 
 namespace casac {
+
 
 void dumpRecord(ostream &oss, const record &theRec, string spaces = "    ");
 
@@ -37,11 +39,11 @@ class stdBaseInterface {
 	bool go(const record &);
 	static vector<string> &getcommands(){return commands;}
         static vector<string> commands;
-	static bool verify(record &theRec, record &theContraints, casa::LogIO &itsLog);
-	static bool verifyOne(record &theRec, record &theContraints, casa::LogIO &itsLog, bool silent=true);
-	static bool checkme(const string &name, variant &user, record &constraint, casa::LogIO &itsLog, bool silent=false);
-	static bool checkQuanta(const string &name, variant &user, record &constraint, casa::LogIO &itsLog, bool silent=false);
-	static variant *expandEnum(variant &allowed, const variant &value, casa::LogIO &itsLog, bool silent=false);
+	static bool verify(record &theRec, record &theContraints, casacore::LogIO &itsLog);
+	static bool verifyOne(record &theRec, record &theContraints, casacore::LogIO &itsLog, bool silent=true);
+	static bool checkme(const string &name, variant &user, record &constraint, casacore::LogIO &itsLog, bool silent=false);
+	static bool checkQuanta(const string &name, variant &user, record &constraint, casacore::LogIO &itsLog, bool silent=false);
+	static variant *expandEnum(variant &allowed, const variant &value, casacore::LogIO &itsLog, bool silent=false);
    private :
 	void init();
 	void parse_it(record &params, const char *line);

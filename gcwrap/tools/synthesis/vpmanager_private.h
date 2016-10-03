@@ -1,1 +1,1 @@
-casa::LogIO *itsLog;
+casacore::LogIO *itsLog;

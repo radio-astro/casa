@@ -11,12 +11,16 @@
 #include <casa/OS/Timer.h>
 #include <tables/Tables/Table.h>
 
-namespace casa
-{
+namespace casacore{
+
   class LogIO;
   class String;
   class Record;
   class LogSink;
+}
+
+namespace casa
+{
 };
 
 namespace CCM_Python

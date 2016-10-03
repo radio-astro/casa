@@ -45,6 +45,7 @@ using namespace log4cplus;
 #include <casa/Logging/StreamLogSink.h>
 #endif
 
+using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 String TSLogSink::localId( ) {
@@ -64,7 +65,7 @@ TSLogSink::TSLogSink()
 #else
    logsink = 0 ;
    logfile = 0 ;
-   send2cerr = False;
+   send2cerr = false;
    setLogSink();
 #endif
 }
@@ -76,7 +77,7 @@ TSLogSink::TSLogSink (LogMessage::Priority filter)
    logsink = 0 ;
    logfile = 0 ;
    setLogSink();
-   send2cerr = False;
+   send2cerr = false;
 #endif
 }
 
@@ -87,7 +88,7 @@ TSLogSink::TSLogSink (const LogFilterInterface& filter)
    logsink = 0 ;
    logfile = 0 ;
    setLogSink();
-   send2cerr = False;
+   send2cerr = false;
 #endif
 }
 
@@ -161,7 +162,7 @@ LogSinkInterface& TSLogSink::filter (const LogFilterInterface& newfilter)
 
 Bool TSLogSink::postLocally (const LogMessage& message)
 {
-  Bool posted = False;
+  Bool posted = false;
   if (this->filter().pass(message)) {
     String tmp;
     message.origin().objectID().toString(tmp);
@@ -198,7 +199,7 @@ Bool TSLogSink::postLocally (const LogMessage& message)
     }
 #else
     logsink->postLocally(message);
-    posted = True;
+    posted = true;
     switch (message.priority())
     {
 	case LogMessage::DEBUGGING:

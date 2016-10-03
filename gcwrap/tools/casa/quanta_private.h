@@ -1,52 +1,52 @@
 // Private part to quanta_cmpt.h
 
 
-casa::Quantity casaQuantityFromVar(const ::casac::variant& theVar);
-casa::QuantumHolder quantumHolderFromVar(const ::casac::variant& theVar);
-casac::record* recordFromQuantity(casa::Quantity q);
-casac::record* recordFromQuantity(const casa::Quantum<casa::Vector<casa::Double> >& q);
+casacore::Quantity casaQuantityFromVar(const ::casac::variant& theVar);
+casacore::QuantumHolder quantumHolderFromVar(const ::casac::variant& theVar);
+casac::record* recordFromQuantity(casacore::Quantity q);
+casac::record* recordFromQuantity(const casacore::Quantum<casacore::Vector<casacore::Double> >& q);
 
-bool qcompare(const ::casac::variant& v, const casa::Quantity a);
+bool qcompare(const ::casac::variant& v, const casacore::Quantity a);
 
-// List known units static Record mapit(const String &tp);
-static casa::Record mapit(const casa::String &tp);
+// casacore::List known units static casacore::Record mapit(const casacore::String &tp);
+static casacore::Record mapit(const casacore::String &tp);
 
 // Give a constant named by the string
-static casa::Quantity constants(const casa::String &in);
+static casacore::Quantity constants(const casacore::String &in);
 
-// Make time format from String array
-static casa::Int makeFormT(const casa::Vector<casa::String> &in);
+// Make time format from casacore::String array
+static casacore::Int makeFormT(const casacore::Vector<casacore::String> &in);
 
-// Make angle format from String array
-static casa::Int makeFormA(const casa::Vector<casa::String> &in);
+// Make angle format from casacore::String array
+static casacore::Int makeFormA(const casacore::Vector<casacore::String> &in);
 
 // Add a unit name entry to table
-static void mapInsert(casa::Record &out,
-		      const casa::String &type,
-		      const std::map<casa::String, casa::UnitName> &mp);
+static void mapInsert(casacore::Record &out,
+		      const casacore::String &type,
+		      const std::map<casacore::String, casacore::UnitName> &mp);
 
 // dopcv - doppler value conversion
-casa::Quantity
-dopcv(const casa::Quantity val, const casa::Quantity arg);
+casacore::Quantity
+dopcv(const casacore::Quantity val, const casacore::Quantity arg);
 
 // frqcv - freq converter
-casa::Quantity
-frqcv(const casa::Quantity val, const casa::Quantity arg);
+casacore::Quantity
+frqcv(const casacore::Quantity val, const casacore::Quantity arg);
 
 // tfreq - table freq formatter
-casa::Vector<casa::String>
-tfreq(const casa::Quantum<casa::Vector<casa::Double> > &val,
-      const casa::Vector<casa::Int> &arg,
-      const casa::String &form, const casa::Bool form2);
+casacore::Vector<casacore::String>
+tfreq(const casacore::Quantum<casacore::Vector<casacore::Double> > &val,
+      const casacore::Vector<casacore::Int> &arg,
+      const casacore::String &form, const casacore::Bool form2);
 
 //// Some useless classes???
 // unitv - unit(vector)
-casa::Quantum<casa::Array<casa::Double> >
-unitv(const casa::Array<casa::Double> v, const casa::String &unitname);
+casacore::Quantum<casacore::Array<casacore::Double> >
+unitv(const casacore::Array<casacore::Double> v, const casacore::String &unitname);
 
 // quant
-casa::Array<casa::QuantumHolder>
-quant(const casa::Array<casa::QuantumHolder> a);
+casacore::Array<casacore::QuantumHolder>
+quant(const casacore::Array<casacore::QuantumHolder> a);
 
 // Data
-casa::LogIO *itsLog;
+casacore::LogIO *itsLog;

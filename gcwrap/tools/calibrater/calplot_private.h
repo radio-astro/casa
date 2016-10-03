@@ -1,7 +1,7 @@
 
   // Private function to convert variants to Strings
-  casa::String getVariantAsString(const ::casac::variant& var);
+  casacore::String getVariantAsString(const ::casac::variant& var);
 
-  casa::LogIO *itsLog;
+  casacore::LogIO *itsLog;
   casa::PlotCal *itsPlotCal;
 

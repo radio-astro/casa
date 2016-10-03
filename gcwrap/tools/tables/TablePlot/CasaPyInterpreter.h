@@ -96,7 +96,7 @@ class CasaPyInterpreter
 {
    public:
        // Default Constructor
-       CasaPyInterpreter(Bool usegui=True);
+       CasaPyInterpreter(casacore::Bool usegui=true);
        // Copy Constructor
        CasaPyInterpreter( CasaPyInterpreter const& );
        // Assignment
@@ -106,11 +106,11 @@ class CasaPyInterpreter
        
        // Send in a python command string.
        // Be very wary of newlines and blank spaces 
-       void pyrunString( String cmd );
+       void pyrunString( casacore::String cmd );
        // Periodically check if the internal interpreter has thrown 
        // an exception. If so, grab the message and create an AipsError
        // exception.
-       void CheckPlotError( String cmd );
+       void CheckPlotError( casacore::String cmd );
        // Add Gui buttons and bind them.
        // Usually called immediately after construction, and only once.
        void setupCustomGuiFeatures();
@@ -118,13 +118,13 @@ class CasaPyInterpreter
    private:
 
        // Exception generator.
-       void CasaPyInterpreterError(String msg);
+       void CasaPyInterpreterError(casacore::String msg);
        
        // Handle to the internal python interpreter.
        PyObject *interp;
 
        SLog* log;
-       static String clname;
+       static casacore::String clname;
 };
 
 /* Documentation for PlotterGlobals. */
@@ -208,7 +208,7 @@ class CasaPyInterpreter
 //   -   {
 //   -      public :
 //   -         TPGuiBinder( casa::TablePlot* intp ){itsTablePlot = intp;}
-//   -         Bool flagdata(){ return itsTablePlot->flagData(FLAG); }
+//   -         casacore::Bool flagdata(){ return itsTablePlot->flagData(FLAG); }
 //   -      private :
 //   -         casa::TablePlot* itsTablePlot;
 //   -   };

@@ -20,10 +20,10 @@ public:
     
     // Overrides casapy_watcher::logChanged().
     // <group>
-    void logChanged(const casa::String& sinkLocation) {
+    void logChanged(const casacore::String& sinkLocation) {
         p->setLogFilename(sinkLocation); }
-    void logChanged(casa::LogMessage::Priority filterPriority) {
-        p->setLogFilter(casa::LogMessage::toString(filterPriority).c_str()); }
+    void logChanged(casacore::LogMessage::Priority filterPriority) {
+        p->setLogFilter(casacore::LogMessage::toString(filterPriority).c_str()); }
     // </group>
     
     // Overrides casapy_watcher::casapyClosing().
@@ -38,12 +38,12 @@ private:
 class plotms_app  {
 public:
   plotms_app( ) { }
-  const casa::String &dbusName( ) const { return itsDBusName_; }
-  casa::String &dbusName( ) { return itsDBusName_; }
+  const casacore::String &dbusName( ) const { return itsDBusName_; }
+  casacore::String &dbusName( ) { return itsDBusName_; }
   // DBus name of the plotms application we're communicating with.
   const QString &getName( ) const { return casa::PlotMSDBusApp::name( ); }
  private:
-  casa::String itsDBusName_;
+  casacore::String itsDBusName_;
 };
 
 // Non-Static //
@@ -60,7 +60,7 @@ pid_t app_pid;
 
 // Log parameters that are set before the application is launched.
 // <group>
-casa::String itsLogFilename_, itsLogFilter_;
+casacore::String itsLogFilename_, itsLogFilter_;
 // </group>
 
 
@@ -75,24 +75,24 @@ void launchApp();
 void closeApp();
 
 // Helper method for calling an async method.
-void callAsync(const casa::String& methodName);
+void callAsync(const casacore::String& methodName);
 
 // Helper method for realizing synchronous behavior
 void waitUntilIdle();
 
-// Helper method for setting the MS selection.
+// Helper method for setting the casacore::MS selection.
 void setPlotMSSelection_(const casa::PlotMSSelection& selection,
         const bool updateImmediately, const int plotIndex);
 
-// Helper method for setting the MS averaging.
+// Helper method for setting the casacore::MS averaging.
 void setPlotMSAveraging_(const casa::PlotMSAveraging& averaging,
         const bool updateImmediately, const int plotIndex);
 
-// Helper method for setting the MS transformations.
+// Helper method for setting the casacore::MS transformations.
 void setPlotMSTransformations_(const casa::PlotMSTransformations& trans,
         const bool updateImmediately, const int plotIndex);
 
-// Helper method for setting the MS calibration.
+// Helper method for setting the casacore::MS calibration.
 void setPlotMSCalibration_(const casa::PlotMSCalibration& calib,
         const bool updateImmediately, const int plotIndex);
 

@@ -22,9 +22,11 @@
 #include <synthesisutils_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
      
+using namespace casacore;
 namespace casac {
 
 synthesisutils::synthesisutils() 
@@ -43,7 +45,7 @@ synthesisutils::~synthesisutils()
 
   try 
     {
-      casa::Record recpars = *toRecord( selpars );
+      casacore::Record recpars = *toRecord( selpars );
       rstat = fromRecord(  itsUtils->continuumDataPartition( recpars , npart ) );
     } 
   catch  (AipsError x) 
@@ -60,16 +62,16 @@ synthesisutils::~synthesisutils()
 
   try 
     {
-      casa::Record recpars = *toRecord( selpars );
-      casa::Quantity qstart(1.0, "GHz");
-      casa::Quantity qend(1.5,"GHz");
+      casacore::Record recpars = *toRecord( selpars );
+      casacore::Quantity qstart(1.0, "GHz");
+      casacore::Quantity qend(1.5,"GHz");
       if( (fstart.toString().size() != 0) && String(fstart.toString()) != String("[]"))
 	qstart=casaQuantity(fstart);
       if( (fend.toString().size() != 0) && String(fend.toString()) != String("[]"))
 	qend=casaQuantity(fend);
       
-      casa::MFrequency::Types eltype;
-      casa::MFrequency::getType(eltype, frame);
+      casacore::MFrequency::Types eltype;
+      casacore::MFrequency::getType(eltype, frame);
       rstat = fromRecord(  itsUtils->cubeDataPartition( recpars , npart, qstart.getValue("Hz"), qend.getValue("Hz"), eltype ) );
     } 
   catch  (AipsError x) 
@@ -86,7 +88,7 @@ synthesisutils::~synthesisutils()
 
   try 
     {
-      casa::Record recpars = *toRecord( selpars );
+      casacore::Record recpars = *toRecord( selpars );
       rstat = fromRecord(  itsUtils->cubeImagePartition( recpars , npart ) );
     } 
   catch  (AipsError x) 
@@ -104,8 +106,8 @@ synthesisutils::~synthesisutils()
 
    try
      {
-        casa::Record recselpars = *toRecord( selpars );
-        casa::Record recincsys = *toRecord( incsysrec );
+        casacore::Record recselpars = *toRecord( selpars );
+        casacore::Record recincsys = *toRecord( incsysrec );
         if (recincsys.nfields() != 0 ) {
           CoordinateSystem *incsys;
           incsys = CoordinateSystem::restore(recincsys,"coordsys");
@@ -128,7 +130,7 @@ synthesisutils::~synthesisutils()
 
   try 
     {
-      casa::Record recpars = *toRecord( selpars );
+      casacore::Record recpars = *toRecord( selpars );
       SynthesisParamsSelect pars;
       pars.fromRecord( recpars );
       rstat = fromRecord(  pars.toRecord()  );
@@ -147,7 +149,7 @@ synthesisutils::~synthesisutils()
 
   try 
     {
-      casa::Record recpars = *toRecord( impars );
+      casacore::Record recpars = *toRecord( impars );
       SynthesisParamsImage pars;
       pars.fromRecord( recpars );
       rstat = fromRecord(  pars.toRecord()  );
@@ -167,7 +169,7 @@ synthesisutils::~synthesisutils()
 
   try 
     {
-      casa::Record recpars = *toRecord( gridpars );
+      casacore::Record recpars = *toRecord( gridpars );
       SynthesisParamsGrid pars;
       pars.fromRecord( recpars );
       rstat = fromRecord(  pars.toRecord()  );
@@ -187,7 +189,7 @@ synthesisutils::~synthesisutils()
   try
     {
       SynthesisParamsImage pars;
-      casa::Record recpars = *toRecord( impars );
+      casacore::Record recpars = *toRecord( impars );
       rstat = fromRecord( pars.updateParams( recpars ) );
     }
   catch  (AipsError x)
@@ -207,7 +209,7 @@ synthesisutils::~synthesisutils()
   try 
     {
       // Construct parameter object, and verify params.
-      casa::Record recpars = *toRecord( impars );
+      casacore::Record recpars = *toRecord( impars );
       SynthesisParamsImage pars;
       pars.fromRecord( recpars );  // will throw exception if parameters are invalid
 
@@ -251,7 +253,7 @@ synthesisutils::~synthesisutils()
 bool
 synthesisutils::done()
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {

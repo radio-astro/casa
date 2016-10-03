@@ -28,8 +28,10 @@
 
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 flagger::flagger()
@@ -149,7 +151,7 @@ flagger::setmanualflags(
 	if(flagger_p) {
 	    Bool ret;
 	    ret = flagger_p->selectdata(
-		False, 
+		false, 
 		String(field), String(spw), String(array),
 		String(feed), String(scan), String(baseline),
 		String(uvrange), String(time), String(correlation),
@@ -250,16 +252,16 @@ flagger::setflagsummary(const std::string& field, const std::string& spw, const 
 	if(flagger_p) {
 	    Bool ret;
 	    ret = flagger_p->selectdata(
-		False, String(field), String(spw), String(array),
+		false, String(field), String(spw), String(array),
 		String(feed), String(scan), String(baseline),
 		String(uvrange), String(time), String(correlation),
                 String(intent), String(observation));
 
 	    if(ret) {
-		ret = flagger_p->setmanualflags(False,False,
+		ret = flagger_p->setmanualflags(false,false,
 						String(""),Vector<Double>(),String(""),
-						False, False,
-                                                0.0, String("beg"), False,
+						false, false,
+                                                0.0, String("beg"), false,
                                                 String("SUMMARY"));
 	    }
 	    
@@ -292,7 +294,7 @@ flagger::setshadowflags(const std::string& field,
 	if(flagger_p) {
 	    Bool ret;
 	    ret = flagger_p->selectdata(
-		False, 
+		false, 
 		String(field), String(spw), String(array),
 		String(feed), String(scan), String(baseline),
 		String(uvrange), String(time), String(correlation),
@@ -300,10 +302,10 @@ flagger::setshadowflags(const std::string& field,
 
 	    if(ret) {
 		ret = flagger_p->setmanualflags(
-		    False, False,
+		    false, false,
 		    String(""), Vector<Double>(), String(""),
-		    False, False,
-                    0.0, String("beg"), False,
+		    false, false,
+                    0.0, String("beg"), false,
                     String("SHADOW"), diameter);
 	    }
 	    
@@ -337,7 +339,7 @@ flagger::setelevationflags(const std::string& field,
 	if(flagger_p) {
 	    Bool ret;
 	    ret = flagger_p->selectdata(
-		False, 
+		false, 
 		String(field), String(spw), String(array),
 		String(feed), String(scan), String(baseline),
 		String(uvrange), String(time), String(correlation),
@@ -345,10 +347,10 @@ flagger::setelevationflags(const std::string& field,
 
 	    if(ret) {
 		ret = flagger_p->setmanualflags(
-		    False, False,
+		    false, false,
 		    String(""), Vector<Double>(), String(""),
-		    False, False,
-                    0.0, String("beg"), False,
+		    false, false,
+                    0.0, String("beg"), false,
                     String("ELEVATION"), 0, lowerlimit, upperlimit);
 	    }
 	    
@@ -493,7 +495,7 @@ flagger::saveflagversion(const std::string& versionname, const std::string& comm
         {
                 return flagger_p->saveFlagVersion(String(versionname), String(comment),String(merge));
         }
-        return False;
+        return false;
     } catch (AipsError x) {
             *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
@@ -512,7 +514,7 @@ flagger::restoreflagversion(const std::vector<std::string>& versionname, const s
 		verlist = toVectorString(versionname);
                 return flagger_p->restoreFlagVersion(verlist, String(merge));
         }
-        return False;
+        return false;
     } catch (AipsError x) {
             *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
@@ -531,7 +533,7 @@ flagger::deleteflagversion(const std::vector<std::string>& versionname)
 		verlist = toVectorString(versionname);
                 return flagger_p->deleteFlagVersion(verlist);
         }
-        return False;
+        return false;
     } catch (AipsError x) {
             *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);

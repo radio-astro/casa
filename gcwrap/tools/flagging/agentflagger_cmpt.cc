@@ -26,8 +26,10 @@
 
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 agentflagger::agentflagger()
@@ -51,11 +53,11 @@ agentflagger::~agentflagger()
 		done();
 
 	} catch (AipsError x) {
-	    Table::relinquishAutoLocks(True);
+	    Table::relinquishAutoLocks(true);
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-    Table::relinquishAutoLocks(True);
+    Table::relinquishAutoLocks(true);
     MeasIERS::closeTables();
 
 }
@@ -252,7 +254,7 @@ agentflagger::saveflagversion(const std::string& versionname, const std::string&
 		{
 			return agentflagger_p->saveFlagVersion(String(versionname), String(comment),String(merge));
 		}
-		return False;
+		return false;
 	} catch (AipsError x) {
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
@@ -272,7 +274,7 @@ agentflagger::restoreflagversion(const std::vector<std::string>& versionname,
         	verlist = toVectorString(versionname);
             return agentflagger_p->restoreFlagVersion(verlist, String(merge));
         }
-        return False;
+        return false;
     } catch (AipsError x) {
             *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);
@@ -291,7 +293,7 @@ agentflagger::deleteflagversion(const std::vector<std::string>& versionname)
         	verlist = toVectorString(versionname);
             return agentflagger_p->deleteFlagVersion(verlist);
         }
-        return False;
+        return false;
     } catch (AipsError x) {
             *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
             RETHROW(x);

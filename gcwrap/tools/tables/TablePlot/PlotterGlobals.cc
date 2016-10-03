@@ -45,6 +45,7 @@
 
 #define LOG0 0
 
+using namespace casacore;
 namespace casa {
 
 // <summary>

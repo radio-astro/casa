@@ -18,8 +18,10 @@
 #include <casa/Exceptions/Error.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 imagertask::imagertask()

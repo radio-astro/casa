@@ -15,8 +15,10 @@
 #include <casa/aips.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 tableindex::tableindex()
@@ -34,7 +36,7 @@ tableindex::set(const ::casac::record& /*tab*/, const std::vector<std::string>& 
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 bool
@@ -42,7 +44,7 @@ tableindex::isunique()
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 bool
@@ -50,7 +52,7 @@ tableindex::setchanged(const std::vector<std::string>& /*columns*/)
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 int
@@ -75,7 +77,7 @@ tableindex::close()
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 bool
@@ -83,7 +85,7 @@ tableindex::done()
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 } // casac namespace

@@ -3,11 +3,15 @@
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <tables/Tables/Table.h>
 
-namespace casa
-{
+namespace casacore{
+
   class LogIO;
   class String;
   class Record;
   class LogSink;
+}
+
+namespace casa
+{
 };
 

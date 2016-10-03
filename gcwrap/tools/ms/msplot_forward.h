@@ -3,9 +3,13 @@
 #include <casa/Logging/LogIO.h>
 #include <tools/ms/MSPlot/MsPlot.h>
 
-namespace casa
-{
+namespace casacore{
+
     class LogIO;
     class String;
+}
+
+namespace casa
+{
     class MsPlot;
 }

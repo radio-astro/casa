@@ -3,28 +3,28 @@
 private:
 
 
-std::auto_ptr<casa::LogIO> _log;
-std::auto_ptr<casa::Function<casa::Double, casa::Double> > _functional;
+std::auto_ptr<casacore::LogIO> _log;
+std::auto_ptr<casacore::Function<casacore::Double, casacore::Double> > _functional;
 
 functional(
-	casa::Polynomial<casa::Double>*& function
+	casacore::Polynomial<casacore::Double>*& function
 );
 
 functional(
-	casa::Gaussian1D<casa::Double>*& function
+	casacore::Gaussian1D<casacore::Double>*& function
 );
 
 functional(
-	casa::Gaussian2D<casa::Double>*& function
+	casacore::Gaussian2D<casacore::Double>*& function
 );
 
 functional(
-	casa::PowerLogarithmicPolynomial<casa::Double>*& function
+	casacore::PowerLogarithmicPolynomial<casacore::Double>*& function
 );
 
 /*
 functional(
-	casa::Function<casa::Double, casa::Double>*& function
+	casacore::Function<casacore::Double, casacore::Double>*& function
 );
 */
 

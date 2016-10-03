@@ -15,8 +15,10 @@
 #include <casa/aips.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
+using namespace casacore;
 namespace casac {
 
 tableiterator::tableiterator()
@@ -42,7 +44,7 @@ tableiterator::reset()
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 bool
@@ -50,7 +52,7 @@ tableiterator::next()
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 bool
@@ -58,7 +60,7 @@ tableiterator::terminate()
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 bool
@@ -66,7 +68,7 @@ tableiterator::done()
 {
 
     // TODO : IMPLEMENT ME HERE !
-  return False;
+  return false;
 }
 
 } // casac namespace

@@ -2,8 +2,8 @@
 
 #include <stdcasa/StdCasa/CasacSupport.h>
 
-namespace casa
-{
+namespace casacore{
+
   class String;
   class Record;
   class Measure;
@@ -15,10 +15,11 @@ namespace casa
   class MRadialVelocity;
   class MBaseline;
   class Muvw;
+  class MeasComet;
   class MEarthMagnetic;
   class MeasureHolder;
   class MeasFrame;
-  class MeasComet;
   class LogIO;
   class LogSink;
-};
+}
+

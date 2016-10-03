@@ -1,3 +1,7 @@
-namespace casa {
+namespace casacore{
+
 	class LogIO;
+}
+
+namespace casa {
 }

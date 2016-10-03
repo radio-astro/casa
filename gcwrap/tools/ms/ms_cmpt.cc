@@ -111,6 +111,7 @@
 
 using namespace std;
 
+using namespace casacore;
 namespace casac {
 
 ms::ms()
@@ -124,10 +125,10 @@ ms::ms()
 		itsMSS = new MSSelection();
 		itsVI = NULL;//new VisibilityIterator();
 		itsVB = NULL;//new VisBuffer();
-		doingIterations_p=False;
+		doingIterations_p=false;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
 }
@@ -143,10 +144,10 @@ ms::~ms()
 		if(itsMSS)          {delete itsMSS; itsMSS=NULL;}
 		if (itsVI)          {delete itsVI; itsVI=NULL;}
 		if (itsVB)          {delete itsVB; itsVB=NULL;}
-		doingIterations_p=False;
+		doingIterations_p=false;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
 }
@@ -209,7 +210,7 @@ ms::createmultims(const std::string &outputTableName,
 			for(uInt idx=1; idx<tableNameVector.nelements(); idx++){
 				Table otherTab(tableNameVector[idx], Table::Update);
 				TableCopy::copySubTables (otherTab, firstTab,
-				                          False, // noRows==False, i.e. subtables are copied
+				                          false, // noRows==false, i.e. subtables are copied
 				                          omitSubtables);
 			}
 		}
@@ -239,17 +240,17 @@ ms::createmultims(const std::string &outputTableName,
 
 bool ms::ismultims()
 {
-	bool rstat(False);
+	bool rstat(false);
 	try {
 		if(!detached()){
 			rstat = (itsMS->tableInfo().subType() == "CONCATENATED");
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -270,10 +271,10 @@ std::vector<std::string> ms::getreferencedtables()
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rvalue;
 }
 
@@ -290,26 +291,26 @@ ms::nrow(const bool selected)
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool
 ms::iswritable()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		rstat = ready2write_();
 	}
 	catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -359,13 +360,13 @@ ms::open(const std::string& thems, bool nomodify, bool lock, bool check)
 		}
 		itsSel->setMS(*itsMS);
 		itsFlag->setMSSelector(*itsSel);
-		doingIterations_p=False;
+		doingIterations_p=false;
 	} catch (const AipsError& x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 bool
@@ -382,15 +383,15 @@ ms::reset()
 		itsMSS->resetMS(*itsMS);
 		itsSel->setMS(*itsMS);
 		itsFlag->setMSSelector(*itsSel);
-		doingIterations_p=False;
+		doingIterations_p=false;
 	}
 	catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: "
 		        << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	return True;
+	return true;
 }
 
 bool
@@ -419,8 +420,8 @@ ms::fromfits(const std::string& msfile, const std::string &fitsfile,
 		        << LogIO::SEVERE << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
-	return True;
+	Table::relinquishAutoLocks(true);
+	return true;
 }
 
 bool
@@ -440,17 +441,17 @@ ms::fromfitsidi(const std::string& msfile, const std::string &fitsidifile, const
 		open(msfile, nomodify, lock);
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
-	return True;
+	Table::relinquishAutoLocks(true);
+	return true;
 }
 
 bool
 ms::close()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached()){
 			*itsLog << LogOrigin("ms", "close");
@@ -471,15 +472,15 @@ ms::close()
 			};
 			if (itsVB) {delete itsVB; // itsVB = new VisBuffer();
 			};
-			doingIterations_p=False;
-			rstat = True;
+			doingIterations_p=false;
+			rstat = true;
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -493,10 +494,10 @@ ms::name()
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -507,7 +508,7 @@ ms::name()
 
   *itsLog << LogOrigin("ms", "command");
   *itsLog << "not implemented"<<LogIO::POST;
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
   return 0;
   }
 */
@@ -522,11 +523,11 @@ bool ms::tofits(
 	bool multisource, bool combinespw,
 	bool writestation, bool padwithflags, bool overwrite
 ) {
-	Bool rstat(True);
+	Bool rstat(true);
 	try {
 		if(!detached()) {
 			unique_ptr<MeasurementSet> mssel(new MeasurementSet());
-			Bool subselect=False;
+			Bool subselect=false;
 			String fieldS(m1toBlankCStr_(field));
 			String spwS(m1toBlankCStr_(spw));
 			String baselineS=toCasaString(baseline);
@@ -546,7 +547,7 @@ bool ms::tofits(
 				selrec=itsMS->msseltoindex(spwS, fieldS);
 			}
 			catch (const AipsError& x) {
-				Table::relinquishAutoLocks(True);
+				Table::relinquishAutoLocks(true);
 				*itsLog << LogOrigin("ms", "tofits")
 				        << LogIO::SEVERE << x.getMesg() << LogIO::POST;
 				RETHROW(x);
@@ -614,7 +615,7 @@ bool ms::tofits(
 				) {
 				*itsLog << LogOrigin("ms", __func__)
 				        << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
-				rstat = False;
+				rstat = false;
 			}
 		}
 	}
@@ -622,10 +623,10 @@ bool ms::tofits(
 		*itsLog << LogOrigin("ms", __func__)
 		        << LogIO::SEVERE << "Exception Reported: "
 		        << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -657,13 +658,13 @@ record* ms::summary(
 		// so that it is correctly printed in the output
 		MSSummary mss(itsMS, itsOriginalMS->tableName(), cachesize);
 		mss.setListUnflaggedRowCount(listunfl);
-		casa::Record outRec;
+		casacore::Record outRec;
 		if (! listfile.empty()){
 			File diskfile(listfile);
 			ThrowIf(
 				diskfile.exists() && ! overwrite,
 				"File: " + listfile + " already exists; delete "
-				"it, choose another name, or set overwrite=True."
+				"it, choose another name, or set overwrite=true."
 				);
 
 			*itsLog << LogIO::NORMAL << "Writing output to file: "
@@ -681,7 +682,7 @@ record* ms::summary(
 			osbuf = ostr.rdbuf();
 			cout.rdbuf(osbuf);
 			// Sink the messages locally to a string
-			LogSink sink(LogMessage::NORMAL, &ostr, False);
+			LogSink sink(LogMessage::NORMAL, &ostr, false);
 			LogIO os(sink);
 			// Call the listing routines
 			mss.list(os, outRec, verbose, wantreturn);
@@ -694,7 +695,7 @@ record* ms::summary(
             Int count = str.freq('\n') + 1;
             String *s = new String[count];
             static const Regex regx(".*\tINFO\t[+]?\t");
-            casa::split(str, s, count, "\n");
+            casacore::split(str, s, count, "\n");
 			ofstream file;
 			file.open(listfile.data());
             for (Int i=0; i<count; ++i) {
@@ -717,10 +718,10 @@ record* ms::summary(
 	}
 	catch (const AipsError& x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return header;
 }
 
@@ -731,7 +732,7 @@ ms::getscansummary()
 	try {
 		if(!detached()){
 			MSSummary mss(itsMS);
-			casa::Record outRec;
+			casacore::Record outRec;
 			mss.getScanSummary(outRec);
 			scansummary=fromRecord(outRec);
 		}
@@ -739,10 +740,10 @@ ms::getscansummary()
 	catch (const AipsError& x) {
 		*itsLog << LogOrigin("ms", "getscansummary");
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return scansummary;
 }
 
@@ -754,16 +755,16 @@ ms::getspectralwindowinfo()
 		if(!detached()){
 			//*itsLog << LogOrigin("ms", "summary");
 			MSSummary mss(itsMS);
-			casa::Record outRec;
+			casacore::Record outRec;
 			mss.getSpectralWindowInfo(outRec);
 			spwSummary=fromRecord(outRec);
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return spwSummary;
 }
 
@@ -780,8 +781,8 @@ ms::getfielddirmeas(
 			String colname(dircolname);
 			colname.upcase();
 
-			casa::MSFieldColumns msfc(itsMS->field());
-			casa::MDirection d;
+			casacore::MSFieldColumns msfc(itsMS->field());
+			casacore::MDirection d;
 			if(colname=="DELAY_DIR"){
 				d = msfc.delayDirMeas(fieldid, time);
 			}
@@ -821,27 +822,27 @@ ms::getfielddirmeas(
 bool
 ms::listhistory()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached()){
 			*itsLog << LogOrigin("ms", "listhistory");
 			MSSummary mss(*itsMS);
 			mss.listHistory(*itsLog);
-			rstat = True;
+			rstat = true;
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool
 ms::writehistory(const std::string& message, const std::string& parms, const std::string& origin, const std::string& msname, const std::string& app)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if (message.length() > 0 || parms.length() > 0) {
 			MeasurementSet outMS;
@@ -859,14 +860,14 @@ ms::writehistory(const std::string& message, const std::string& parms, const std
 				kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
 			}
 			MSHistoryHandler::addMessage(outMS, message, app, parms, origin);
-			rstat = True;
+			rstat = true;
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -878,14 +879,14 @@ ms::range(const std::vector<std::string>& items, const bool useflags, const int 
 		if(!detached()){
 			MSRange msrange(*itsSel);
 			msrange.setBlockSize(blocksize);
-			retval = fromRecord(msrange.range(toVectorString(items), useflags, False));
+			retval = fromRecord(msrange.range(toVectorString(items), useflags, false));
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 }
 
@@ -1013,7 +1014,7 @@ ms::statistics(const std::string& column,
 			MeasurementSet sel;
 			if (mssel.getSelectedMS(sel)) {
 				/* It is undocumented, but
-				   getSelectedMS() seems to return True
+				   getSelectedMS() seems to return true
 				   if there's a non-trivial selection.
 				   If it returns false, the output MS is null.
 				*/
@@ -1339,10 +1340,10 @@ ms::statistics(const std::string& column,
 		} // end if !detached
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 }
 
@@ -1645,7 +1646,7 @@ ms::statistics2(const std::string& column,
 			MeasurementSet sel;
 			if (mssel.getSelectedMS(sel)) {
 				/* It is undocumented, but
-				   getSelectedMS() seems to return True
+				   getSelectedMS() seems to return true
 				   if there's a non-trivial selection.
 				   If it returns false, the output MS is null.
 				*/
@@ -2050,10 +2051,10 @@ ms::statistics2(const std::string& column,
 			"Exception Reported: " <<
 			x.getMesg() <<
 			LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 }
 
@@ -2076,29 +2077,29 @@ ms::lister(const std::string& options,
            const int          pagerows,
            const std::string& listfile)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
-		if(detached()) return False;
+		if(detached()) return false;
 		*itsLog << LogOrigin("ms", "lister");
 
 		MSLister msl(*itsMS, *itsLog);
 		msl.list(options, datacolumn, field, spw, antenna, timerange,
 		         correlation, scan, feed, array, observation, uvrange, average,
 		         showflags, msselect, pagerows, listfile);
-		rstat = True;
+		rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool
 ms::selectinit(const int datadescid, const bool reset)
 {
-	Bool retval = False;
+	Bool retval = false;
 	try {
 		Vector<Int> ddId(1, datadescid);
 		if(!detached()){
@@ -2117,68 +2118,68 @@ ms::selectinit(const int datadescid, const bool reset)
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 }
 
 bool
 ms::select(const ::casac::record& items)
 {
-	Bool retval = False;
+	Bool retval = false;
 	try {
 		if(!detached()){
 			Record *myTmp = toRecord(items);
-			retval = itsSel->select(*myTmp, False);
+			retval = itsSel->select(*myTmp, false);
 			delete myTmp;
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 }
 
 bool
 ms::selecttaql(const std::string& msselect)
 {
-	Bool retval(False);
+	Bool retval(false);
 	try {
 		if(!detached())
 			retval = itsSel->select(msselect);
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 }
 
 bool
 ms::selectchannel(const int nchan, const int start, const int width, const int inc)
 {
-	Bool retval(False);
+	Bool retval(false);
 	try {
 		if(!detached())
 			retval = itsSel->selectChannel(nchan, start, width, inc);
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 }
 
 bool
 ms::selectpolarization(const std::vector<std::string>& wantedpol)
 {
-	Bool retval(False);
+	Bool retval(false);
 	try {
         if(!detached()) {
             itsSel->initSelection(); // seg fault if not initialized
@@ -2186,10 +2187,10 @@ ms::selectpolarization(const std::vector<std::string>& wantedpol)
         }
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 }
 
@@ -2204,7 +2205,7 @@ ms::regridspw(const std::string& outframe,
               const double regrid_chan_width,
               const bool hanning)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		*itsLog << LogOrigin("ms", "regridspw");
 		if(!ready2write_()){
@@ -2212,12 +2213,12 @@ ms::regridspw(const std::string& outframe,
 			        << "Please open ms with parameter nomodify=false. Write access to ms is needed."
 			        << LogIO::POST;
 
-			return False;
+			return false;
 		}
 
 		double center = regrid_center;
 		if(center > -1E30 && regrid_start > -1E30){
-			Bool agree(False);
+			Bool agree(false);
 			if( regrid_quantity == "chan" ){
 				agree = (center == floor(regrid_bandwidth/2. + regrid_start));
 			}
@@ -2228,7 +2229,7 @@ ms::regridspw(const std::string& outframe,
 				*itsLog << LogIO::SEVERE
 				        << "Please give only the start (lower edge) or the center of the new spectral window, not both."
 				        << LogIO::POST;
-				return False;
+				return false;
 			}
 		}
 		else if(regrid_start > -1E30){ // only start given, need to calculate center
@@ -2265,7 +2266,7 @@ ms::regridspw(const std::string& outframe,
 			// Update HISTORY table of modfied MS
 			String message= "Transformed/regridded with regridspw";
 			writehistory(message, regridMessage, "ms::regridspw()", "", "ms"); // empty name writes to itsMS
-			rstat = True;
+			rstat = true;
 		}
 		else if(rval==0) { // an unsuccessful modification of the MS took place
 			String message= "Frame transformation to " + t_outframe + " failed. MS probably invalid.";
@@ -2281,17 +2282,17 @@ ms::regridspw(const std::string& outframe,
 		}
 		else {
 			*itsLog << LogIO::NORMAL << "MS not modified." << LogIO::POST;
-			rstat = True;
+			rstat = true;
 		}
 
 		delete subms;
 
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -2307,10 +2308,10 @@ ms::cvel(const std::string& mode,
          const std::string& veltype,
          const bool hanning)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 
-	Bool hanningDone(False);
-	Bool needToClearModel(False);
+	Bool hanningDone(false);
+	Bool needToClearModel(false);
 	SubMS *sms = 0;
 
 	try {
@@ -2335,7 +2336,7 @@ ms::cvel(const std::string& mode,
 		Int t_width;
 		Int t_start;
 
-		casa::MDirection  t_phaseCenter;
+		casacore::MDirection  t_phaseCenter;
 		Int t_phasec_fieldid = -1;
 
 		//If phasecenter is a simple numeric value then it's taken as a fieldid
@@ -2348,7 +2349,7 @@ ms::cvel(const std::string& mode,
 			if(t_phasec_fieldid >= (Int)itsMS->field().nrow() || t_phasec_fieldid < 0){
 				*itsLog << LogIO::SEVERE << "Field id " << t_phasec_fieldid
 				        << " selected to be used as phasecenter does not exist." << LogIO::POST;
-				return False;
+				return false;
 			}
 		}
 		else{
@@ -2359,7 +2360,7 @@ ms::cvel(const std::string& mode,
 				if(!casaMDirection(phasec, t_phaseCenter)){
 					*itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
 					        << t_phasec << LogIO::POST;
-					return False;
+					return false;
 				}
 				*itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
 			}
@@ -2393,7 +2394,7 @@ ms::cvel(const std::string& mode,
 			   )
 			){
 			// an error occured
-			return False;
+			return false;
 		}
 
 		// end prepare regridding parameters
@@ -2403,7 +2404,7 @@ ms::cvel(const std::string& mode,
 		String originalName = itsMS->tableName();
 
 		// test parameters of input SPWs
-		Bool foundInconsistentSPW = False;
+		Bool foundInconsistentSPW = false;
 
 		{
 			Table spwtable(originalName+"/SPECTRAL_WINDOW");
@@ -2411,7 +2412,7 @@ ms::cvel(const std::string& mode,
 			ROArrayColumn<Double> chanfreqs(spwtable, "CHAN_FREQ");
 
 			if(spwtable.nrow()>1){
-				needToClearModel = True;
+				needToClearModel = true;
 			}
 
 			for(uInt ii=0; ii<spwtable.nrow(); ii++){
@@ -2419,11 +2420,11 @@ ms::cvel(const std::string& mode,
 				Vector<Double> cf(chanfreqs(ii));
 				Int totNumChan = cw.size();
 
-				Bool isEquidistant = True;
+				Bool isEquidistant = true;
 				for(Int i=0; i<totNumChan; i++){
 					cw(i) = abs(cw(i)); // ignore sign of width
 					if(abs(cw(i)-cw(0))>0.1){
-						isEquidistant = False;
+						isEquidistant = false;
 					}
 				}
 				Double minWidth = min(cw);
@@ -2464,7 +2465,7 @@ ms::cvel(const std::string& mode,
 						    << " expected\n   from their channel widths which would be "
 						    << scientific << setprecision(6) << setw(6) << + chanOrderSign * (cw(i)/2.+cw(i+1)/2.) << " Hz.\n"
 						    << "   Will skip other channels in this SPW.";
-						foundInconsistentSPW = True;
+						foundInconsistentSPW = true;
 						break;
 					}
 				}
@@ -2476,10 +2477,10 @@ ms::cvel(const std::string& mode,
 		}
 
 		// check disk space: need at least twice the size of the original for safety
-		if (2 * DOos::totalSize(itsMS->tableName(), True) >
-		    DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
+		if (2 * DOos::totalSize(itsMS->tableName(), true) >
+		    DOos::freeSpace(Vector<String>(1, itsMS->tableName()), true)(0)) {
 			*itsLog << "Not enough disk space. To be on the safe side, need at least "
-			        << 2 * DOos::totalSize(itsMS->tableName(), True)/1E6
+			        << 2 * DOos::totalSize(itsMS->tableName(), true)/1E6
 			        << " MBytes on the filesystem containing " << itsMS->tableName()
 			        << " for the SPW combination and regridding to succeed." << LogIO::EXCEPTION;
 		}
@@ -2498,8 +2499,8 @@ ms::cvel(const std::string& mode,
 		if(!sms->combineSpws()){
 			*itsLog << LogIO::SEVERE << "Error combining spectral windows." << LogIO::POST;
 			delete sms;
-			open(originalName,  Table::Update, False);
-			return False;
+			open(originalName,  Table::Update, false);
+			return false;
 		}
 
 		*itsLog << LogIO::NORMAL << " " << LogIO::POST;
@@ -2525,7 +2526,7 @@ ms::cvel(const std::string& mode,
 		                          t_doHanning,
 		                          t_phasec_fieldid, // == -1 if t_phaseCenter is valid
 		                          t_phaseCenter,
-		                          True, // use "center is start" mode
+		                          true, // use "center is start" mode
 		                          t_startIsEnd,
 		                          t_nchan,
 		                          t_width,
@@ -2544,7 +2545,7 @@ ms::cvel(const std::string& mode,
 			// Update HISTORY table of modfied MS
 			String message = "Transformed/regridded with cvel";
 			writehistory(message, regridMessage, "ms::cvel()", originalName, "ms");
-			rstat = True;
+			rstat = true;
 		}
 		else if(rval==0) { // an unsuccessful modification of the MS took place
 			String message= "Frame transformation to " + t_outframe + " failed. MS probably invalid.";
@@ -2557,11 +2558,11 @@ ms::cvel(const std::string& mode,
 			      << " interpolation= " << t_regridInterpMeth;
 			String paramstr=param.str();
 			writehistory(message,paramstr,"ms::cvel()", originalName, "ms");
-			rstat = False;
+			rstat = false;
 		}
 		else { // there was no need to regrid
 			*itsLog << LogIO::NORMAL << "SubMS not modified by regridding." << LogIO::POST;
-			rstat = True;
+			rstat = true;
 		}
 
 		delete sms;
@@ -2577,10 +2578,10 @@ ms::cvel(const std::string& mode,
 			Vector<Double> cf(chanfreqs(0));
 			Int totNumChan = cw.size();
 
-			Bool isEquidistant = True;
+			Bool isEquidistant = true;
 			for(Int i=0; i<totNumChan; i++){
 				if(abs(cw(i)-cw(0))>0.1){
-					isEquidistant = False;
+					isEquidistant = false;
 				}
 			}
 			Double minWidth = min(cw);
@@ -2624,7 +2625,7 @@ ms::cvel(const std::string& mode,
 		}
 
 		if(rstat){ // re-open MS for writing, unlocked
-			open(originalName,  False, False);
+			open(originalName,  false, false);
 			*itsLog << LogOrigin("ms", "cvel");
 			if(!hanningDone && t_doHanning){
 				// still need to Hanning Smooth
@@ -2644,10 +2645,10 @@ ms::cvel(const std::string& mode,
 			delete sms;
 		}
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -2705,7 +2706,7 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 				SubMS theMS(*itsMS);
 				Vector<Int> spwidv(spwids);
 				if(!theMS.combineSpws(spwidv,
-				                      True, // dont't modify the MS
+				                      true, // dont't modify the MS
 				                      oldCHAN_FREQ,
 				                      oldCHAN_WIDTH,
 				                      verbose
@@ -2720,16 +2721,16 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 			}
 
 			// determine old reference frame
-			casa::MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
+			casacore::MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
 
 			// determine observation epoch
-			casa::MEpoch theObsTime;
+			casacore::MEpoch theObsTime;
 			String t_obstime = toCasaString(obstime);
 			if (obstime.length()>0) {
 				Quantum<Double> qt;
 				if (MVTime::read(qt,obstime)) {
-					casa::MVEpoch mv(qt);
-					theObsTime = casa::MEpoch(mv, MEpoch::UTC);
+					casacore::MVEpoch mv(qt);
+					theObsTime = casacore::MEpoch(mv, MEpoch::UTC);
 				} else {
 					*itsLog << LogIO::SEVERE << "Invalid time format: "
 					        << obstime << LogIO::POST;
@@ -2788,8 +2789,8 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 			}
 
 			// determine phase center
-			casa::MDirection phaseCenter;
-			casa::MRadialVelocity mRV; // needed when using outframe "SOURCE"
+			casacore::MDirection phaseCenter;
+			casacore::MRadialVelocity mRV; // needed when using outframe "SOURCE"
 			Int phasec_fieldid = -1;
 			String t_phasec = toCasaString(phasec);
 
@@ -2836,29 +2837,29 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 
 			// determine observatory position
 			// use a tabulated version if available
-			casa::MPosition mObsPos;
+			casacore::MPosition mObsPos;
 			{
-				casa::MPosition Xpos;
+				casacore::MPosition Xpos;
 				String Xobservatory;
 				ROMSObservationColumns XObsCols(itsMS->observation());
 				if (itsMS->observation().nrow() > 0) {
 					Xobservatory = XObsCols.telescopeName()(mainCols.observationId()(0));
 				}
 				if (Xobservatory.length() == 0 ||
-				    !casa::MeasTable::Observatory(Xpos,Xobservatory)) {
+				    !casacore::MeasTable::Observatory(Xpos,Xobservatory)) {
 					// unknown observatory
 					if(verbose){
 						*itsLog << LogIO::WARN << "Unknown observatory: \"" << Xobservatory
 						        << "\". Determining observatory position from antenna 0." << LogIO::POST;
 					}
-					Xpos=casa::MPosition::Convert(ANTCols.positionMeas()(0), casa::MPosition::ITRF)();
+					Xpos=casacore::MPosition::Convert(ANTCols.positionMeas()(0), casacore::MPosition::ITRF)();
 				}
 				else{
 					if(verbose){
 						*itsLog << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
 						        << LogIO::POST;
 					}
-					Xpos=casa::MPosition::Convert(Xpos, casa::MPosition::ITRF)();
+					Xpos=casacore::MPosition::Convert(Xpos, casacore::MPosition::ITRF)();
 				}
 				if(verbose){
 					mObsPos = Xpos;
@@ -2918,7 +2919,7 @@ ms::getdata(const std::vector<std::string>& items, const bool ifraxis, const int
 		  }
 		  std::cerr << m << std::endl;
 		  Int *storage;
-		  Bool deleteIt(False);
+		  Bool deleteIt(false);
 		  storage = m.getStorage(deleteIt);
 		  for(int k=0;k<10;k++){
 		  for(int l=0;l<10;l++){
@@ -2928,20 +2929,20 @@ ms::getdata(const std::vector<std::string>& items, const bool ifraxis, const int
 		  }
 		*/
 		if(!detached())
-			retval = fromRecord(itsSel->getData(toVectorString(items), ifraxis, ifraxisgap, increment, average, False));
+			retval = fromRecord(itsSel->getData(toVectorString(items), ifraxis, ifraxisgap, increment, average, false));
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 }
 
 bool
 ms::putdata(const ::casac::record& items)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached()){
 			Record *myTmp = toRecord(items);
@@ -2950,10 +2951,10 @@ ms::putdata(const ::casac::record& items)
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -2961,7 +2962,7 @@ bool
 ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol, const float weightscale,
                 const int handling, const std::string& destmsfile, const bool respectname)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached()){
 			*itsLog << LogOrigin("ms", "concatenate");
@@ -2970,8 +2971,8 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 				*itsLog << "Cannot read the measurement set called " << msfile
 				        << LogIO::EXCEPTION;
 			}
-			if (DOos::totalSize(msfile, True) >
-			    DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
+			if (DOos::totalSize(msfile, true) >
+			    DOos::freeSpace(Vector<String>(1, itsMS->tableName()), true)(0)) {
 				*itsLog << "There does not appear to be enough free disk space "
 				        << "(on the filesystem containing " << itsMS->tableName()
 				        << ") for the concatantion to succeed." << LogIO::EXCEPTION;
@@ -2986,13 +2987,13 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 			Quantum<Double> dirtolerance;
 			Quantum<Double> freqtolerance;
 			if(freqtol.toString().empty()){
-				freqtolerance=casa::Quantity(1.0,"Hz");
+				freqtolerance=casacore::Quantity(1.0,"Hz");
 			}
 			else{
 				freqtolerance=casaQuantity(freqtol);
 			}
 			if(dirtol.toString().empty()){
-				dirtolerance=casa::Quantity(1.0, "mas");
+				dirtolerance=casacore::Quantity(1.0, "mas");
 			}
 			else{
 				dirtolerance=casaQuantity(dirtol);
@@ -3015,13 +3016,13 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 			writehistory(std::string(message.data()), std::string(paramstr.data()),
 			             std::string("ms::concatenate()"), msfile, "ms");
 		}
-		rstat = True;
+		rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3029,7 +3030,7 @@ bool
 ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol,
                     const bool respectname)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached()){
 			*itsLog << LogOrigin("ms", "testconcatenate");
@@ -3050,13 +3051,13 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 			Quantum<Double> dirtolerance;
 			Quantum<Double> freqtolerance;
 			if(freqtol.toString().empty()){
-				freqtolerance=casa::Quantity(1.0,"Hz");
+				freqtolerance=casacore::Quantity(1.0,"Hz");
 			}
 			else{
 				freqtolerance=casaQuantity(freqtol);
 			}
 			if(dirtol.toString().empty()){
-				dirtolerance=casa::Quantity(1.0, "mas");
+				dirtolerance=casacore::Quantity(1.0, "mas");
 			}
 			else{
 				dirtolerance=casaQuantity(dirtol);
@@ -3074,15 +3075,15 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 			String paramstr=param.str();
 			writehistory(std::string(message.data()), std::string(paramstr.data()),
 			             std::string("ms::testconcatenate()"), msfile, "ms");
-			itsMS->flush(True);
+			itsMS->flush(true);
 		}
-		rstat = True;
+		rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3090,7 +3091,7 @@ bool
 ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const ::casac::variant& freqtol,
                     const ::casac::variant& dirtol, const float weightscale, const bool respectname)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached()){
 			*itsLog << LogOrigin("ms", "virtconcatenate");
@@ -3113,13 +3114,13 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 			Quantum<Double> dirtolerance;
 			Quantum<Double> freqtolerance;
 			if(freqtol.toString().empty()){
-				freqtolerance=casa::Quantity(1.0,"Hz");
+				freqtolerance=casacore::Quantity(1.0,"Hz");
 			}
 			else{
 				freqtolerance=casaQuantity(freqtol);
 			}
 			if(dirtol.toString().empty()){
-				dirtolerance=casa::Quantity(1.0, "mas");
+				dirtolerance=casacore::Quantity(1.0, "mas");
 			}
 			else{
 				dirtolerance=casaQuantity(dirtol);
@@ -3129,7 +3130,7 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 			mscat.setRespectForFieldName(respectname);
 			mscat.setWeightScale(weightscale);
 
-			mscat.virtualconcat(appendedMS, True, casa::String(auxfile));
+			mscat.virtualconcat(appendedMS, true, casacore::String(auxfile));
 
 			String message = String(msfile) + " virtually concatenated with " + itsMS->tableName();
 			ostringstream param;
@@ -3141,13 +3142,13 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 			writehistory(std::string(message.data()), std::string(paramstr.data()),
 			             std::string("ms::virtconcatenate()"), msfile, "ms");
 		}
-		rstat = True;
+		rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3155,13 +3156,13 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 bool
 ms::timesort(const std::string& msname)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached()){
 			*itsLog << LogOrigin("ms", "timesort");
 
-			if (DOos::totalSize(itsMS->tableName(), True) >
-			    DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
+			if (DOos::totalSize(itsMS->tableName(), true) >
+			    DOos::freeSpace(Vector<String>(1, itsMS->tableName()), true)(0)) {
 				*itsLog << "There does not appear to be enough free disk space "
 				        << "(on the filesystem containing " << itsMS->tableName()
 				        << ") for the sorting to succeed." << LogIO::EXCEPTION;
@@ -3184,7 +3185,7 @@ ms::timesort(const std::string& msname)
 					newMSmain.rename(originalName, Table::New);    // will also delete original table
 					newMSmain = Table();
 					// reopen
-					open(originalName,  Table::Update, False);
+					open(originalName,  Table::Update, false);
 					*itsLog << LogOrigin("ms", "timesort");
 					String message = "Sorted by TIME in ascending order.";
 					writehistory(std::string(message.data()), "", std::string("ms::timesort()"), originalName, "ms");
@@ -3202,28 +3203,28 @@ ms::timesort(const std::string& msname)
 				}
 			}
 
-			rstat = True;
+			rstat = true;
 		}
 
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool
 ms::sort(const std::string& msname,const std::vector<std::string>& columns)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached()){
 			*itsLog << LogOrigin("ms", "sort");
 
-			if (DOos::totalSize(itsMS->tableName(), True) >
-			    DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
+			if (DOos::totalSize(itsMS->tableName(), true) >
+			    DOos::freeSpace(Vector<String>(1, itsMS->tableName()), true)(0)) {
 				*itsLog << "There does not appear to be enough free disk space "
 				        << "(on the filesystem containing " << itsMS->tableName()
 				        << ") for the sorting to succeed." << LogIO::EXCEPTION;
@@ -3261,7 +3262,7 @@ ms::sort(const std::string& msname,const std::vector<std::string>& columns)
 					newMSmain.rename(originalName, Table::New);    // will also delete original table
 					newMSmain = Table();
 					// reopen
-					open(originalName,  Table::Update, False);
+					open(originalName,  Table::Update, false);
 					*itsLog << LogOrigin("ms", "sort");
 					String message = "Sorted by " + oss.str() + " in ascending order.";
 					writehistory(std::string(message.data()), "", std::string("ms::sort()"), originalName, "ms");
@@ -3279,15 +3280,15 @@ ms::sort(const std::string& msname,const std::vector<std::string>& columns)
 				}
 			}
 
-			rstat = True;
+			rstat = true;
 		}
 
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3298,7 +3299,7 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
                  const std::string&      intent, const std::string& correlation,
                  const std::string&      obs,    const std::string& whichcol)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 
 	try{
 		*itsLog << LogOrigin("ms", "contsub");
@@ -3368,14 +3369,14 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
 			writehistory(message, paramstr, "ms::contsub()", outputms, "ms");
 		}
 
-		rstat = True;
+		rstat = true;
 	}
 	catch (AipsError x){
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3389,7 +3390,7 @@ bool ms::statwt(const bool dorms,                const bool /*byantenna*/,
                 const ::casac::variant& subarray,const std::string& correlation,
                 const std::string&      obs,     const std::string& datacol)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 
 	try {
 		*itsLog << LogOrigin("ms", "statwt");
@@ -3440,14 +3441,14 @@ bool ms::statwt(const bool dorms,                const bool /*byantenna*/,
 		*itsLog << LogIO::NORMAL2
 		        << itsMS->tableName() << " reweighted"
 		        << LogIO::POST;
-		rstat = True;
+		rstat = true;
 	}
 	catch(AipsError x){
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3462,7 +3463,7 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
           const std::string& correlation,    const std::string&      intent,
           const std::string&      obs)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	SubMS *splitter = NULL;
 	try {
 		*itsLog << LogOrigin("ms", "split");
@@ -3527,16 +3528,16 @@ ms::split(const std::string&      outputms,  const ::casac::variant& field,
 			writehistory(message, paramstr, "ms::split()", outputms, "ms");
 		}
 
-		rstat = True;
+		rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		if(splitter){
 			delete splitter;
 		}
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3550,7 +3551,7 @@ ms::partition(const std::string&      outputms,   const ::casac::variant& field,
               const std::string&      combine,    const std::string&      intent,
               const std::string&      obs)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		*itsLog << LogOrigin("ms", "partition");
 		Partition *partitioner = new Partition(*itsMS);
@@ -3600,13 +3601,13 @@ ms::partition(const std::string&      outputms,   const ::casac::variant& field,
 		*itsLog << LogIO::NORMAL2 << "Partition made" << LogIO::POST;
 		delete partitioner;
 
-		rstat = True;
+		rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3614,7 +3615,7 @@ bool
 ms::iterinit(const std::vector<std::string>& columns, const double interval,
              const int maxrows, const bool adddefaultsortcolumns)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached()){
 			Vector<String> cols=toVectorString(columns);
@@ -3625,58 +3626,58 @@ ms::iterinit(const std::vector<std::string>& columns, const double interval,
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool
 ms::iterorigin()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached())
 			rstat =  itsSel->iterOrigin();
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool
 ms::iternext()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached())
 			rstat =  itsSel->iterNext();
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool
 ms::iterend()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached())
 			rstat =  itsSel->iterEnd();
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3687,71 +3688,71 @@ ms::iterend()
 
   *itsLog << LogOrigin("ms", "tosdfits");
   *itsLog << "not implemented"<<LogIO::POST;
-  Table::relinquishAutoLocks(True);
-  return False;
+  Table::relinquishAutoLocks(true);
+  return false;
   }
 
   bool
   ms::createflaghistory(const int numlevel)
   {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
   if(!detached())
   rstat =  itsFlag->createFlagHistory(numlevel);
   } catch (AipsError x) {
   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
   RETHROW(x);
   }
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
   return rstat;
   }
 
   bool
   ms::saveflags(const bool newlevel)
   {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
   if(!detached())
   rstat =  itsFlag->saveFlags(newlevel);
   } catch (AipsError x) {
   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
   RETHROW(x);
   }
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
   return rstat;
   }
 
   bool
   ms::restoreflags(const int level)
   {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
   if(!detached())
   rstat =  itsFlag->restoreFlags(level);
   } catch (AipsError x) {
   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
   RETHROW(x);
   }
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
   return rstat;
   }
 
   int
   ms::flaglevel()
   {
-  Bool rstat(False);
+  Bool rstat(false);
   try {
   if(!detached())
   rstat =  itsFlag->flagLevel();
   } catch (AipsError x) {
   *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
   RETHROW(x);
   }
-  Table::relinquishAutoLocks(True);
+  Table::relinquishAutoLocks(true);
   return rstat;
   }
 */
@@ -3762,17 +3763,17 @@ ms::fillbuffer(const std::string& /*item*/, const bool /*ifraxis*/)
     stringstream ss;
     ss << "ms::fillbuffer method deprecated";
 	throw AipsError(ss.str());
-	Bool rstat(False);
+	Bool rstat(false);
     /*
 	try {
 		if(!detached())
 			rstat =  itsFlag->fillDataBuffer(item, ifraxis);
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
     */
 	return rstat;
 }
@@ -3785,19 +3786,19 @@ ms::diffbuffer(const std::string& /*direction*/, const int /*window*/)
 	throw AipsError(ss.str());
 	::casac::record* retval(0);
     /*
-	Bool domedian(False); //Not in the help file but in glish/C++
+	Bool domedian(false); //Not in the help file but in glish/C++
 	try {
 		if(!detached()){
-			casa::Record daRec = itsFlag->diffDataBuffer(casa::String(direction),
+			casacore::Record daRec = itsFlag->diffDataBuffer(casacore::String(direction),
 			                                             window, domedian);
 			retval = fromRecord(daRec);
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
     */
 	return retval;
 }
@@ -3815,7 +3816,7 @@ ms::getbuffer()
 			retval = fromRecord(itsFlag->getDataBuffer());
 	} catch (AipsError x) {
 		//*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
     */
@@ -3825,7 +3826,7 @@ ms::getbuffer()
 bool
 ms::clipbuffer(const double /*pixellevel*/, const double /*timelevel*/, const double /*channellevel*/)
 {
-	Bool rstat(False);
+	Bool rstat(false);
     stringstream ss;
     ss << "ms::clipbuffer method deprecated";
 	throw AipsError(ss.str());
@@ -3835,10 +3836,10 @@ ms::clipbuffer(const double /*pixellevel*/, const double /*timelevel*/, const do
 			rstat =  itsFlag->clipDataBuffer(pixellevel, timelevel, channellevel);
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
     */
 	return rstat;
 }
@@ -3909,10 +3910,10 @@ ms::asdmref(const std::string& abspath)
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retval;
 
 }
@@ -3920,7 +3921,7 @@ ms::asdmref(const std::string& abspath)
 bool
 ms::setbufferflags(const ::casac::record& /*flags*/)
 {
-	Bool retval = False;
+	Bool retval = false;
     stringstream ss;
     ss << "ms::setbufferflags method deprecated";
 	throw AipsError(ss.str());
@@ -3933,10 +3934,10 @@ ms::setbufferflags(const ::casac::record& /*flags*/)
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
     */
 	return retval;
 
@@ -3945,7 +3946,7 @@ ms::setbufferflags(const ::casac::record& /*flags*/)
 bool
 ms::writebufferflags()
 {
-	Bool rstat(False);
+	Bool rstat(false);
     stringstream ss;
     ss << "ms::setbufferflags method deprecated";
 	throw AipsError(ss.str());
@@ -3955,10 +3956,10 @@ ms::writebufferflags()
 			rstat =  itsFlag->writeDataBufferFlags();
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
     */
 	return rstat;
 }
@@ -3966,16 +3967,16 @@ ms::writebufferflags()
 bool
 ms::clearbuffer()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if(!detached())
 			rstat =  itsFlag->clearDataBuffer();
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -3986,7 +3987,7 @@ bool ms::continuumsub(const ::casac::variant& field,
                       const int fitorder,
                       const std::string& mode)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		*itsLog << LogOrigin("ms", "continuumsub");
 		*itsLog << LogIO::NORMAL2 << "continuumsub starting" << LogIO::POST;
@@ -4000,13 +4001,13 @@ bool ms::continuumsub(const ::casac::variant& field,
 		sub.setMode(mode);
 		sub.subtract();
 		*itsLog << LogIO::NORMAL2 << "continuumsub finished" << LogIO::POST;
-		rstat = True;
+		rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -4017,8 +4018,8 @@ bool ms::continuumsub(const ::casac::variant& field,
 
   *itsLog << LogOrigin("ms", "ptsrc");
   *itsLog << "not implemented"<<LogIO::POST;
-  Table::relinquishAutoLocks(True);
-  return False;
+  Table::relinquishAutoLocks(true);
+  return false;
   }
 */
 
@@ -4026,28 +4027,28 @@ bool
 ms::done()
 {
 	*itsLog << LogOrigin("ms", "done");
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return close();
 }
 
 bool
 ms::detached()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		if (itsMS->isNull()) {
 			*itsLog << LogOrigin("ms", __func__);
 			*itsLog << LogIO::SEVERE
 			        << "ms is not attached to a file - cannot perform operation.\n"
 			        << "Call ms.open('filename') to reattach." << LogIO::POST;
-			rstat = True;
+			rstat = true;
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
@@ -4077,11 +4078,11 @@ ms::msseltoindex(const std::string& vis, const ::casac::variant& spw,
 
 
 	}catch (AipsError x){
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
 
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 
 }
@@ -4089,7 +4090,7 @@ ms::msseltoindex(const std::string& vis, const ::casac::variant& spw,
 bool
 ms::hanningsmooth(const std::string& datacolumn)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		*itsLog << LogOrigin("ms", "hanningsmooth");
 		if(!ready2write_()){
@@ -4107,36 +4108,36 @@ ms::hanningsmooth(const std::string& datacolumn)
 		dcol.downcase();
 		Bool addScratch = !(dcol=="data") && !(dcol=="all"); // don't add scratch columns if they don't exist already
 		// and the requested output column is == "data" or "all"
-		VisSet vs(*itsMS, noSort, allChannels, addScratch, intrvl, False);
+		VisSet vs(*itsMS, noSort, allChannels, addScratch, intrvl, false);
 		if(dcol=="all"){
 			MSMainColumns mainCols(*itsMS);
 			if(!mainCols.correctedData().isNull()){ // there are scratch columns
 				*itsLog << LogIO::NORMAL << "Smoothing MS Main Table column CORRECTED_DATA ... " << LogIO::POST;
-				VisSetUtil::HanningSmooth(vs, "corrected", False); // False, i.e. don't change flags and weights here, will be done below
+				VisSetUtil::HanningSmooth(vs, "corrected", false); // false, i.e. don't change flags and weights here, will be done below
 			}
 			*itsLog << LogIO::NORMAL << "Smoothing MS Main Table column DATA ... " << LogIO::POST;
-			VisSetUtil::HanningSmooth(vs, "data", True);
+			VisSetUtil::HanningSmooth(vs, "data", true);
 		}
 		else{
 			*itsLog << LogIO::NORMAL << "Smoothing MS Main Table column \'"
 			        << datacolumn << "\'" << LogIO::POST;
-			VisSetUtil::HanningSmooth(vs, datacolumn, True);
+			VisSetUtil::HanningSmooth(vs, datacolumn, true);
 		}
 
-		rstat = True;
+		rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool
 ms::uvsub(Bool reverse)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		*itsLog << LogOrigin("ms", "uvsub");
 		if(!ready2write_()){
@@ -4149,7 +4150,7 @@ ms::uvsub(Bool reverse)
 
 		// Ensure CORRECTED_DATA exists and is initialized
 		//   (no-op if CORRECTED_DATA already present)
-		VisSetUtil::addScrCols(*itsMS,False,True,True,False);
+		VisSetUtil::addScrCols(*itsMS,false,true,true,false);
 
 		// Open VisSet w/out triggering scr cols
 		//  because CORRECTED_DATA has already been added above and
@@ -4158,23 +4159,23 @@ ms::uvsub(Bool reverse)
 		Matrix<Int> allChannels;
 		Double intrvl = 0;
 
-		VisSet vs(*itsMS, noSort, allChannels,False, intrvl, False,False);
+		VisSet vs(*itsMS, noSort, allChannels,false, intrvl, false,false);
 		VisSetUtil::UVSub(vs, reverse);
 
-		rstat = True;
+		rstat = true;
 	}
 	catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return rstat;
 }
 
 bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 {
-	Bool retVal=False;
+	Bool retVal=false;
 	try
 	{
 		*itsLog << LogOrigin("ms", "msselect");
@@ -4208,7 +4209,7 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 		{
 			itsMSS->reset(*itsMS, MSSelection::PARSE_NOW,timeExpr,baselineExpr,fieldExpr,spwExpr,uvDistExpr,
 			              taQLExpr,polnExpr,scanExpr,arrayExpr,scanIntentExpr,obsExpr);
-			retVal=(itsMSS->getTEN(itsMS).isNull() == False);
+			retVal=(itsMSS->getTEN(itsMS).isNull() == false);
 		}
 		else
 		{
@@ -4224,7 +4225,7 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 	{
 		RETHROW(x);
 	}
-	Table::relinquishAutoLocks(True);
+	Table::relinquishAutoLocks(true);
 	return retVal;
 }
 
@@ -4240,7 +4241,7 @@ ms::msselectedindices()
 	}
 	catch (AipsError x)
 	{
-		Table::relinquishAutoLocks(True);
+		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
 	return selectedIndices;
@@ -4252,7 +4253,7 @@ ms::addephemeris(const int id,
                  const std::string& comment,
                  const ::casac::variant& field)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	try {
 		*itsLog << LogOrigin("ms", "addephemeris");
 
@@ -4263,7 +4264,7 @@ ms::addephemeris(const int id,
 		Vector<Int> fieldids;
 
 		if(detached()){
-			return False;
+			return false;
 		}
 
 		if(t_field.size()>0){
@@ -4284,8 +4285,8 @@ ms::addephemeris(const int id,
 
 		try{
 			MeasComet mc(t_name);
-			startTime = casa::Quantity(mc.getStart(),"d").getValue("s");
-			Double endTime = casa::Quantity(mc.getEnd(),"d").getValue("s");
+			startTime = casacore::Quantity(mc.getStart(),"d").getValue("s");
+			Double endTime = casacore::Quantity(mc.getEnd(),"d").getValue("s");
 			if(startTime>min(timeRanges)){
 				*itsLog << LogOrigin("ms", "addephemeris")
 				        << LogIO::WARN << "Ephemeris validity time range starts after start of observation." << LogIO::POST;
@@ -4326,7 +4327,7 @@ ms::addephemeris(const int id,
 		if(!itsMS->field().addEphemeris(theId, t_name, t_comment)){
 			*itsLog << LogOrigin("ms", "addephemeris")
 			        << LogIO::SEVERE << "Error adding ephemeris to MS." << LogIO::POST;
-			return False;
+			return false;
 		}
 
 		MSFieldColumns msfc(itsMS->field());
@@ -4356,7 +4357,7 @@ ms::addephemeris(const int id,
 			writehistory(message, paramstr, "ms::addephemeris()", itsMS->tableName(), "ms");
 		}
 
-		rstat = True;
+		rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
@@ -4366,15 +4367,15 @@ ms::addephemeris(const int id,
 }
 
 void
-ms::addephemcol(const casa::MeasurementSet& appendedMS)
+ms::addephemcol(const casacore::MeasurementSet& appendedMS)
 {
 	if(!itsMS->field().actualTableDesc().isColumn(MSField::columnName(MSField::EPHEMERIS_ID))){
 		// if not, test if the other MS uses ephem objects
-		Bool usesEphems = False;
+		Bool usesEphems = false;
 		const ROMSFieldColumns otherFldCol(appendedMS.field());
 		for(uInt i=0; i<otherFldCol.nrow(); i++){
 			if(!otherFldCol.ephemPath(i).empty()){
-				usesEphems = True;
+				usesEphems = true;
 				break;
 			}
 		}
@@ -4388,7 +4389,7 @@ ms::addephemcol(const casa::MeasurementSet& appendedMS)
 			}
 			// reopen this MS
 			close();
-			open(thisMSName, False, False);
+			open(thisMSName, false, false);
 		}
 	}
 }
@@ -4400,7 +4401,7 @@ bool
 ms::niterinit(const std::vector<std::string>& /*columns*/, const double interval,
               const int maxrows, const bool adddefaultsortcolumns)
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	Block<Int> sort(1);
 	sort[0]=MS::TIME;
 	try
@@ -4412,7 +4413,7 @@ ms::niterinit(const std::vector<std::string>& /*columns*/, const double interval
 		if (interval <= 0) itsVI->setRowBlocking(itsMS->nrow());
 		if (maxrows > 0) itsVI->setRowBlocking(maxrows);
 		//       *itsVB = VisBuffer(*itsVI);
-		rstat=True;
+		rstat=true;
 	}
 	catch (AipsError x)
 	{
@@ -4420,14 +4421,14 @@ ms::niterinit(const std::vector<std::string>& /*columns*/, const double interval
 	}
 
 	niterorigin();
-	doingIterations_p=True;
+	doingIterations_p=true;
 	return rstat;
 }
 
 bool
 ms::niterorigin()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	if (!detached())
 	{
 		try
@@ -4435,7 +4436,7 @@ ms::niterorigin()
 			if (itsVI)
 			{
 				itsVI->originChunks();
-				rstat=True;
+				rstat=true;
 			}
 			else
 				*itsLog << "ms::niterorigin:  Please call niterinit() first." << LogIO::EXCEPTION;
@@ -4451,7 +4452,7 @@ ms::niterorigin()
 bool
 ms::niterend()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	if (!detached())
 	{
 		try
@@ -4469,7 +4470,7 @@ ms::niterend()
 bool
 ms::niternext()
 {
-	Bool rstat(False);
+	Bool rstat(false);
 	if (!detached())
 	{
 		try
@@ -4477,7 +4478,7 @@ ms::niternext()
 			if (!niterend())
 			{
 				itsVI->nextChunk();
-				rstat=True;
+				rstat=true;
 			}
 		}
 		catch (AipsError x)
@@ -4495,11 +4496,11 @@ ms::ngetdata(const std::vector<std::string>& items, const bool /*ifraxis*/, cons
 	try
 	{
 		if (itsVI == NULL)
-			niterinit(items,0.0,0,False);
-		// if (doingIterations_p == False)
+			niterinit(items,0.0,0,false);
+		// if (doingIterations_p == false)
 		//  niterorigin();
 
-		casa::Record rec;
+		casacore::Record rec;
 		Int nItems = items.size();
 		for (Int i=0; i<nItems; i++)
 		{

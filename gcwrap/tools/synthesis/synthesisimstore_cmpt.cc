@@ -23,26 +23,28 @@
 #include <synthesisimstore_cmpt.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 
      
+using namespace casacore;
 namespace casac {
 
  synthesisimstore::synthesisimstore()
 {
   itsImStore = new SIImageStore();
-  containsimage=False;
+  containsimage=false;
 }
 
   synthesisimstore::synthesisimstore(casa::SIImageStore* imstore)
 {
   itsImStore = imstore;  /// Or use the constructor from the internal pointers.
-  containsimage=True;
+  containsimage=true;
 }
 
 casa::SIImageStore* synthesisimstore::getImStore()
 {
-  containsimage=False;
+  containsimage=false;
   return itsImStore;
 }
 
@@ -55,7 +57,7 @@ synthesisimstore::~synthesisimstore()
 bool
 synthesisimstore::done()
 {
-  Bool rstat(False);
+  Bool rstat(false);
 
   try 
     {
