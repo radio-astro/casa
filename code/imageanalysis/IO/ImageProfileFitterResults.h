@@ -40,48 +40,48 @@ class LogFile;
 class ProfileFitResults;
 
 class ImageProfileFitterResults {
-	// <summary>
-	// </summary>
+    // <summary>
+    // </summary>
 
-	// <reviewed reviewer="" date="" tests="" demos="">
-	// </reviewed>
+    // <reviewed reviewer="" date="" tests="" demos="">
+    // </reviewed>
 
-	// <prerequisite>
-	// </prerequisite>
+    // <prerequisite>
+    // </prerequisite>
 
-	// <etymology>
-	// </etymology>
+    // <etymology>
+    // </etymology>
 
-	// <synopsis>
-	// This class is the encapsulated IO portion of ImageProfileFitter. It is meant to be
-	// used only by that class. It is seperate from ImageProfileFitter for maintenence
-	// and compile convenience.
-	// </synopsis>
+    // <synopsis>
+    // This class is the encapsulated IO portion of ImageProfileFitter. It is meant to be
+    // used only by that class. It is seperate from ImageProfileFitter for maintenence
+    // and compile convenience.
+    // </synopsis>
 
-	// <example>
-	// <srcblock>
-	// </srcblock>
-	// </example>
+    // <example>
+    // <srcblock>
+    // </srcblock>
+    // </example>
 
 public:
-	ImageProfileFitterResults(
-		const SHARED_PTR<LogIO> log, const CoordinateSystem& csysIm,
-		const Array<SHARED_PTR<ProfileFitResults> >* const &fitters,
-		const SpectralList& nonPolyEstimates,
-		const SHARED_PTR<const SubImage<Float> > subImage, Int fitAxis, Int polyOrder,
-		uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
-		uInt nPLPCoeffs, uInt nLTPCoeffs, Bool logResults, Bool multiFit,
-		const SHARED_PTR<LogFile> logfile, const String& xUnit,
-		const String& summaryHeader
-	);
+    ImageProfileFitterResults(
+        const SHARED_PTR<LogIO> log, const CoordinateSystem& csysIm,
+        const Array<SHARED_PTR<ProfileFitResults> >* const &fitters,
+        const SpectralList& nonPolyEstimates,
+        const SHARED_PTR<const SubImage<Float> > subImage, Int fitAxis, Int polyOrder,
+        uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
+        uInt nPLPCoeffs, uInt nLTPCoeffs, Bool logResults, Bool multiFit,
+        const SHARED_PTR<LogFile> logfile, const String& xUnit,
+        const String& summaryHeader
+    );
 
-	~ImageProfileFitterResults();
+    ~ImageProfileFitterResults();
 
-	// create all the products. Should be run after the object has been entirely configured
-	void createResults();
+    // create all the products. Should be run after the object has been entirely configured
+    void createResults();
 
     // get the result Record
-	Record getResults() const;
+    Record getResults() const;
 
     inline String getClass() const { return _class; };
 
@@ -134,56 +134,56 @@ public:
     //Converts a pixel value into a world value either in velocity, wavelength, or
     //frequency units.
     Double getWorldValue(
-    	double pixelVal, const IPosition& imPos, const String& units,
+        double pixelVal, const IPosition& imPos, const String& units,
         bool velocity, bool wavelength
     ) const;
 
     void setPLPDivisor(const String& x) { _plpDivisor = x; }
 
     vector<String> logSummary(
-    	uInt nProfiles, uInt nAttempted, uInt nSucceeded,
-    	uInt nConverged, uInt nValid
+        uInt nProfiles, uInt nAttempted, uInt nSucceeded,
+        uInt nConverged, uInt nValid
     );
 
     void writeImages(Bool someConverged) const;
 
 private:
-	enum gaussSols {
-	    AMP, CENTER, FWHM, INTEGRAL, AMPERR, CENTERERR,
-	    FWHMERR, INTEGRALERR, NGSOLMATRICES
-	};
+    enum gaussSols {
+        AMP, CENTER, FWHM, INTEGRAL, AMPERR, CENTERERR,
+        FWHMERR, INTEGRALERR, NGSOLMATRICES
+    };
 
-	enum spxSols {
-		SPXSOL, SPXERR, NSPXSOLMATRICES
-	};
+    enum spxSols {
+        SPXSOL, SPXERR, NSPXSOLMATRICES
+    };
 
-	enum axisType {
-		LONGITUDE, LATITUDE, FREQUENCY, POLARIZATION, NAXISTYPES
-	};
+    enum axisType {
+        LONGITUDE, LATITUDE, FREQUENCY, POLARIZATION, NAXISTYPES
+    };
     
     const static String _class;
     Bool _logResults, _multiFit, _doVelocity;
-   	String _xUnit, _centerName, _centerErrName, _fwhmName,
-		_fwhmErrName, _ampName, _ampErrName,
-		_integralName, _integralErrName, _plpName, _plpErrName,
-		_ltpName, _ltpErrName, /*_sigmaName, */ _summaryHeader;
+       String _xUnit, _centerName, _centerErrName, _fwhmName,
+        _fwhmErrName, _ampName, _ampErrName,
+        _integralName, _integralErrName, _plpName, _plpErrName,
+        _ltpName, _ltpErrName, /*_sigmaName, */ _summaryHeader;
     uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
-		_nPLPCoeffs, _nLTPCoeffs;
+        _nPLPCoeffs, _nLTPCoeffs;
     const Array<SHARED_PTR<ProfileFitResults> >* const  _fitters;
-	SpectralList _nonPolyEstimates;
-	// subimage contains the region of the original image
-	// on which the fit is performed.
-	const SHARED_PTR<const SubImage<Float> > _subImage;
-	Int _polyOrder, _fitAxis;
-	vector<axisType> _axisTypes;
-	Array<String> _worldCoords;
-	Record _results;
-	const static uInt _nOthers, _gsPlane, _lsPlane;
-	SHARED_PTR<LogFile> _logfile;
-	SHARED_PTR<LogIO> _log;
-   	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
-   	const CoordinateSystem _csysIm;
-   	String _plpDivisor;
+    SpectralList _nonPolyEstimates;
+    // subimage contains the region of the original image
+    // on which the fit is performed.
+    const SHARED_PTR<const SubImage<Float> > _subImage;
+    Int _polyOrder, _fitAxis;
+    vector<axisType> _axisTypes;
+    Array<String> _worldCoords;
+    Record _results;
+    const static uInt _nOthers, _gsPlane, _lsPlane;
+    SHARED_PTR<LogFile> _logfile;
+    SHARED_PTR<LogIO> _log;
+       Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
+       const CoordinateSystem _csysIm;
+       String _plpDivisor;
 
     void _setResults();
 
@@ -194,39 +194,39 @@ private:
     std::unique_ptr<vector<vector<Array<Double> > > > _createPCFArrays() const;
 
     String _elementToString(
-    	const Double value, const Double error,
-    	const String& unit, Bool isFixed
+        const Double value, const Double error,
+        const String& unit, Bool isFixed
     ) const;
 
     String _pcfToString(
-    	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
-    	const Vector<Double>& world, const IPosition& imPos, Bool showTypeString=True,
-    	const String& indent=""
+        const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
+        const Vector<Double>& world, const IPosition& imPos, Bool showTypeString=True,
+        const String& indent=""
     ) const;
 
     String _gaussianMultipletToString(
-    	const GaussianMultipletSpectralElement& gm,
-    	const CoordinateSystem& csys, const Vector<Double>& world,
-    	const IPosition& imPos
+        const GaussianMultipletSpectralElement& gm,
+        const CoordinateSystem& csys, const Vector<Double>& world,
+        const IPosition& imPos
     ) const;
 
     Bool _setAxisTypes();
 
     String _polynomialToString(
-    	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
-    	const Vector<Double>& imPix, const Vector<Double>& world
+        const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
+        const Vector<Double>& imPix, const Vector<Double>& world
     ) const;
 
     String _powerLogPolyToString(
-    	const PowerLogPolynomialSpectralElement& plp
+        const PowerLogPolynomialSpectralElement& plp
     ) const;
 
     String _logTransPolyToString(
-    	const LogTransformedPolynomialSpectralElement& ltp
+        const LogTransformedPolynomialSpectralElement& ltp
     ) const;
 
     void _marshalFitResults(
-    	Array<Bool>& attemptedArr, Array<Bool>& successArr,
+        Array<Bool>& attemptedArr, Array<Bool>& successArr,
         Array<Bool>& convergedArr, Array<Bool>& validArr,
         Array<String>& typeMat, Array<Int>& niterArr,
         Array<Int>& nCompArr, std::unique_ptr<vector<vector<Array<Double> > > >& pcfArrays,
@@ -235,9 +235,9 @@ private:
     ); 
 
     static void _makeSolutionImages(
-    	const String& name, const CoordinateSystem& csys,
-		const Array<Double>& values, const String& unit,
-		const Array<Bool>& mask
+        const String& name, const CoordinateSystem& csys,
+        const Array<Double>& values, const String& unit,
+        const Array<Bool>& mask
     );
 
     void _insertPCF(
@@ -248,14 +248,14 @@ private:
     ) const;
 
     void _writeImages(
-    	const CoordinateSystem& csys,
-    	const Array<Bool>& mask, const String& yUnit
+        const CoordinateSystem& csys,
+        const Array<Bool>& mask, const String& yUnit
     ) const;
 
     Double _fitAxisIncrement() const;
 
     Double _centerWorld(
-    	const PCFSpectralElement& solution, const IPosition& imPos
+        const PCFSpectralElement& solution, const IPosition& imPos
     ) const;
 
     //Bool _inVelocitySpace() const;
@@ -269,20 +269,20 @@ private:
     static Array<Bool> _replicateMask(const Array<Bool>& array, Int n);
 
     void _doWorldCoords(
-    	Array<String>& directionInfo, const CoordinateSystem& csysSub,
-    	const IPosition& pixel, const DirectionCoordinate* const &dcoord,
-    	const SpectralCoordinate* const &spcoord, const StokesCoordinate* const &polcoord,
-    	Bool returnDirection, const String& directionType
-	);
+        Array<String>& directionInfo, const CoordinateSystem& csysSub,
+        const IPosition& pixel, const DirectionCoordinate* const &dcoord,
+        const SpectralCoordinate* const &spcoord, const StokesCoordinate* const &polcoord,
+        Bool returnDirection, const String& directionType
+    );
 
     void _processSolutions(
-    	/* Array<Bool>& mask, */ Array<String>& typeMat, Array<Int>& niterArr,
-    	Array<Int>& nCompArr, const IPosition& pixel,
-    	SHARED_PTR<const ProfileFitResults> fitter,
-    	/* const RO_MaskedLatticeIterator<Float>& inIter, */
-    	std::unique_ptr<vector<vector<Array<Double> > > >& pcfArrays,
-    	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
-    	Double increment
+        /* Array<Bool>& mask, */ Array<String>& typeMat, Array<Int>& niterArr,
+        Array<Int>& nCompArr, const IPosition& pixel,
+        SHARED_PTR<const ProfileFitResults> fitter,
+        /* const RO_MaskedLatticeIterator<Float>& inIter, */
+        std::unique_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+        vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
+        Double increment
     );
 };
 }
