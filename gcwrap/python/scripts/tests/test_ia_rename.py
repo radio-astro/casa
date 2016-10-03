@@ -86,8 +86,8 @@ class ia_rename_test(unittest.TestCase):
         myia.fromshape("zz",[20, 20])
         myia.rename("zy.im")
         msgs = myia.history()
+        self.assertTrue("ia.rename" in msgs[-3])
         self.assertTrue("ia.rename" in msgs[-2])
-        self.assertTrue("ia.rename" in msgs[-1])
         
 def suite():
     return [ia_rename_test]
