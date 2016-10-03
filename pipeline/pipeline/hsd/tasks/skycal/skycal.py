@@ -140,7 +140,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             LOG.debug('args for tsdcal: %s'%(myargs))
     
             # create job
-            job = casa_tasks.tsdcal(**myargs)
+            job = casa_tasks.sdcal(**myargs)
     
             # execute job
             self._executor.execute(job)

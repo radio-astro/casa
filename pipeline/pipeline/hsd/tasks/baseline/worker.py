@@ -444,7 +444,7 @@ class BaselineSubtractionWorker(basetask.StandardTaskTemplate):
             subtask_results = self._executor.execute(job, merge=False)
             
         # execute tsdbaseline
-        job = casa_tasks.tsdbaseline(infile=vis, datacolumn=datacolumn, blmode='fit', dosubtract=True,
+        job = casa_tasks.sdbaseline(infile=vis, datacolumn=datacolumn, blmode='fit', dosubtract=True,
                                      blformat='table', bloutput=bloutput, 
                                      blfunc='variable', blparam=blparam,
                                      outfile=outfile, overwrite=True)
