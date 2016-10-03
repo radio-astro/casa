@@ -1,18 +1,23 @@
-# Regression Tests
-# Masaya Kuniyoshi
+# Regression Tests of M100 SV data
+# Measurementset version (2016/10/03) updated from ASAP one
 #
-# svn info
+# ASDM: uid___A002_X6218fb_X264
+# Position-Switching observation of M100
+# Tsys SPW: 1, 3, 5, 7
+# Science SPW: 9, 11, 13, 15
 #
-# Path: .
-# URL: https://svn.cv.nrao.edu/svn/casa/trunk
-# Repository Root: https://svn.cv.nrao.edu/svn/casa
-# Repository UUID: ac9c0da5-131f-0410-9009-a9c195f183e6
-# Revision: 31543
-# Node Kind: directory
-# Schedule: normal
-# Last Changed Author: kumar.golap
-# Last Changed Rev: 31542
-# Last Changed Date: 2014-11-07 08:56:52 +0900 (Fri, 07 Nov 2014)
+# Task Sequence:
+# importasdm
+# plotms
+# flagdata
+# sdcal
+# sdbaseline
+# plotms
+# sdimaging
+# immoments
+# exportfits
+# imstat
+#
 
 
 
@@ -23,12 +28,21 @@ import numpy
 from recipes.almahelpers import tsysspwmap
 import shutil
 
+rawname = 'uid___A002_X6218fb_X264'
+msname = rawname + '.ms'
+listname = msname + '.listobs.txt'
+blname = rawname + '.ms_bl'
+target_spws = ['9', '11', '13', '15']
+
+for name in [rawname, listname, msname, blname]:
+    if os.path.exists(name):
+        if os.path.isdir(name): shutil.rmtree(name)
+        else: os.remove(name)
+
 casapath = os.environ['CASAPATH']
-datapath = casapath.split()[0]+'/data/regression/alma-sd/M100/uid___A002_X6218fb_X264'
-print datapath
-shutil.copytree(datapath, 'uid___A002_X6218fb_X264') 
-
-
+datapath = casapath.split()[0]+'/data/regression/alma-sd/M100/'+rawname
+print 'Copying ASDM from '+datapath
+shutil.copytree(datapath, rawname) 
 
 startTime=time.time()
 startProc=time.clock()
@@ -41,7 +55,7 @@ version = casadef.casa_version
 
 print "You are using " + version
 
-if (version < '4.3.0'):
+if (version < '4.5.0'):
     print "YOUR VERSION OF CASA IS TOO OLD FOR THIS GUIDE."
     print "PLEASE UPDATE IT BEFORE PROCEEDING."
 else:
@@ -52,7 +66,7 @@ else:
 
 # ASDM Data #
 
-basename = ['uid___A002_X6218fb_X264']
+basename = [rawname]
 
 
 # Create Measurement Sets from ASDM Data ##
@@ -60,8 +74,7 @@ basename = ['uid___A002_X6218fb_X264']
 
 print '--Import--'
 
-for name in basename:
-    importasdm(asdm = name)
+importasdm(asdm = rawname, vis=msname, overwrite=True)
 
 importproc=time.clock()
 importtime=time.time()
@@ -69,11 +82,10 @@ importtime=time.time()
 # listobs task generates detailed information of the MS
 # ~.listobs.txt
 
-for name in basename:
-    default(listobs)
-    vis = name + '.ms'
-    listfile = name + '.ms.listobs.txt'
-    listobs()
+default(listobs)
+vis = msname
+listfile = listname
+listobs()
 
 
 
@@ -82,130 +94,53 @@ for name in basename:
 # averaging over time in order to speed up the plotting process.
 
 default(plotms)
-vis   = 'uid___A002_X6218fb_X264.ms'
+vis   = msname
 xaxis ='channel'
 yaxis ='amp'
 averagedata = T
 avgtime = '1e8'
 avgscan = T
-iteraxis = 'antenna'
+spw='1,3,5,7,9,11,13,15'
+iteraxis = 'spw'
+coloraxis = 'antenna1'
+gridrows = 3
+gridcols = 3
+showgui = False
+plotfile = 'raw_spectrum.png'
+overwrite = True
 plotms()
-
-
-
-# Convert MS to ASAP format #
-
-print '--Split & Save--'
-
-default(sdsaveold)
-infile= 'uid___A002_X6218fb_X264.ms'
-splitant = True
-#outform = 'asap'
-sdsaveold()
-
-split_save_proc=time.clock()
-split_save_time=time.time()
-
-
-default(sdlistold)
-infile  = 'uid___A002_X6218fb_X264.ms_saved.PM03'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.sdlist'
-sdlistold()
-
-
-default(sdlistold)
-infile  = 'uid___A002_X6218fb_X264.ms_saved.PM04'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.sdlist'
-sdlistold()
-
-
-default(sdlistold)
-infile  = 'uid___A002_X6218fb_X264.ms_saved.CM03'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.sdlist'
-sdlistold()
-
-default(sdlistold)
-infile  = 'uid___A002_X6218fb_X264.ms_saved.CM05'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.sdlist'
-sdlistold()
-
-
 
 # View Spectra #
 
-default(sdplotold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM03'
-spw = '15'
-scanaverage = True
-plottype = 'spectra'
-stack = 'pol'
-panel = 'scan'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.png'
-overwrite = True
-sdplotold()
-
-default(sdplotold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM04'
-spw = '15'
-scanaverage = True
-plottype = 'spectra'
-stack = 'pol'
-panel = 'scan'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.png'
-overwrite = True
-sdplotold()
-
-default(sdplotold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM03'
-spw = '15'
-scanaverage = True
-plottype = 'spectra'
-stack = 'pol'
-panel = 'scan'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.png'
-overwrite = True
-sdplotold()
-
-default(sdplotold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM05'
-spw = '15'
-scanaverage = True
-plottype = 'spectra'
-stack = 'pol'
-panel = 'scan'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.png'
-overwrite = True
-sdplotold()
-
+for antname in ['PM03', 'PM04', 'CM03', 'CM05']:
+    default(plotms)
+    vis   = msname
+    xaxis ='channel'
+    yaxis ='amp'
+    averagedata = T
+    avgtime = '1e8'
+    spw='15'
+    antenna = antname + '&&&'
+    iteraxis = 'scan'
+    coloraxis = 'corr'
+    gridrows = 3
+    gridcols = 3
+    showgui = False
+    plotfile = ('raw_spectrum.%s.spw%s.png' % (antname, spw))
+    overwrite = True
+    plotms()
 
 
 # Flagging #
 print '--Flagging--'
 
-default(sdflagold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM03'
+default(flagdata)
+vis = msname
+mode = 'manual'
 spw = '9; 11; 13; 15: 0~119;3960~4079'
-overwrite = True
-sdflagold()
-
-default(sdflagold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM04'
-spw = '9; 11; 13; 15: 0~119;3960~4079'
-overwrite = True
-sdflagold()
-
-default(sdflagold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM03'
-spw = '9; 11; 13; 15: 0~119;3960~4079'
-overwrite = True
-sdflagold()
-
-default(sdflagold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM05'
-spw = '9; 11; 13; 15: 0~119;3960~4079'
-overwrite = True
-sdflagold()
-
+antenna = 'PM03&&&;PM04&&&;CM03&&&;CM05&&&'
+action = 'apply'
+flagdata()
 
 flagproc = time.clock()
 flagtime = time.time()
@@ -213,47 +148,16 @@ flagtime = time.time()
 
 # Apply Calibration and Inspect #
 
-print '--Calibration sdcal2--'
+print '--Calibration sdcal--'
 
-default(sdcal2old)
-infile  = 'uid___A002_X6218fb_X264.ms_saved.PM03'
+default(sdcal)
+infile  = msname
 calmode = 'ps,tsys,apply'
-tsysspw = '1,3,5,7'
 spwmap  = {'1':[9],'3':[11],'5':[13],'7':[15]}
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal'
-overwrite = True
-sdcal2old()
+sdcal()
 
-default(sdcal2old)
-infile  = 'uid___A002_X6218fb_X264.ms_saved.PM04'
-calmode = 'ps,tsys,apply'
-tsysspw = '1,3,5,7'
-spwmap  = {'1':[9],'3':[11],'5':[13],'7':[15]}
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal'
-overwrite = True
-sdcal2old()
-
-default(sdcal2old)
-infile  = 'uid___A002_X6218fb_X264.ms_saved.CM03'
-calmode = 'ps,tsys,apply'
-tsysspw = '1,3,5,7'
-spwmap  = {'1':[9],'3':[11],'5':[13],'7':[15]}
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal'
-overwrite = True
-sdcal2old()
-
-default(sdcal2old)
-infile  = 'uid___A002_X6218fb_X264.ms_saved.CM05'
-calmode = 'ps,tsys,apply'
-tsysspw = '1,3,5,7'
-spwmap  = {'1':[9],'3':[11],'5':[13],'7':[15]}
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal'
-overwrite = True
-sdcal2old()
-
-
-sdcal2proc=time.clock()
-sdcal2time=time.time()
+sdcalproc=time.clock()
+sdcaltime=time.time()
 
 
 
@@ -261,215 +165,82 @@ sdcal2time=time.time()
 
 print '--Caribration Baseline --'
 
-default(sdbaselineold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal'
-spw = '9, 11, 13, 15'
+default(sdbaseline)
+infile = msname
+datacolumn = 'corrected'
+spw = str(',').join(target_spws)
 maskmode = 'auto'
 thresh = 3.0
 avg_limit = 8
 blfunc = 'poly'
 order = 1
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl'
+outfile = blname
 overwrite = True
-sdbaselineold()
-
-default(sdbaselineold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal'
-spw = '9, 11, 13, 15'
-maskmode = 'auto'
-thresh = 3.0
-avg_limit = 8
-blfunc = 'poly'
-order = 1
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl'
-overwrite = True
-sdbaselineold()
-
-default(sdbaselineold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal'
-spw = '9, 11, 13, 15'
-maskmode = 'auto'
-thresh = 3.0
-avg_limit = 8
-blfunc = 'poly'
-order = 1
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl'
-overwrite = True
-sdbaselineold()
-
-default(sdbaselineold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal'
-spw = '9, 11, 13, 15'
-maskmode = 'auto'
-thresh = 3.0
-avg_limit = 8
-blfunc = 'poly'
-order = 1
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl'
-overwrite = True
-sdbaselineold()
-
+sdbaseline()
 
 sdbaselineproc = time.clock()
 sdbaselinetime = time.time()
 
-
-os.system('rm -rf uid___A002_X6218fb_X264.ms_saved.PM03.cal.plots')
-os.system('rm -rf uid___A002_X6218fb_X264.ms_saved.PM04.cal.plots')
-os.system('rm -rf uid___A002_X6218fb_X264.ms_saved.CM03.cal.plots')
-os.system('rm -rf uid___A002_X6218fb_X264.ms_saved.CM05.cal.plots')
-
-os.system('mkdir uid___A002_X6218fb_X264.ms_saved.PM03.cal.plots')
-os.system('mkdir uid___A002_X6218fb_X264.ms_saved.PM04.cal.plots')
-os.system('mkdir uid___A002_X6218fb_X264.ms_saved.CM03.cal.plots')
-os.system('mkdir uid___A002_X6218fb_X264.ms_saved.CM05.cal.plots')
-
-
-
-# Plot the calibrated spectra, using the sdplot task. 
+# Plot the calibrated spectra, using the plotms task. 
 # The commands below will plot one spectrum per scan, spw and polarization. 
 
-for i in [9, 11, 13, 15]:
-
-    default(sdplotold)
-    infile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal'
-    spw = str(i)
-    plottype = 'spectra'
-    stack = 'pol'
-    panel = 'scan'
-    outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.plots/uid___A002_X6218fb_X264.ms_saved.PM03.cal.spectra.spw'+str(i)+'.png'
-    overwrite = True
-    sdplotold()
-
-    default(sdplotold)
-    infile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal'
-    spw = str(i)
-    plottype = 'spectra'
-    stack = 'pol'
-    panel = 'scan'
-    outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.plots/uid___A002_X6218fb_X264.ms_saved.PM04.cal.spectra.spw'+str(i)+'.png'
-    overwrite = True
-    sdplotold()
-
-
-for i in [9, 11, 13, 15]:
-
-    default(sdplotold)
-    infile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal'
-    spw = str(i)
-    plottype = 'spectra'
-    stack = 'pol'
-    panel = 'scan'
-    outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.plots/uid___A002_X6218fb_X264.ms_saved.CM03.cal.spectra.spw'+str(i)+'.png'
-    overwrite = True
-    sdplotold()
-
-    default(sdplotold)
-    infile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal'
-    spw = str(i)
-    plottype = 'spectra'
-    stack = 'pol'
-    panel = 'scan'
-    outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.plots/uid___A002_X6218fb_X264.ms_saved.CM05.cal.spectra.spw'+str(i)+'.png'
-    overwrite = True
-    sdplotold()
-
-
-
-
-
-
+for i in target_spws:
+    for antname  in ['PM03', 'PM04', 'CM03', 'CM05']:
+        default(plotms)
+        vis   = msname
+        ydatacolumn = 'corrected'
+        xaxis ='frequency'
+        yaxis ='real'
+        averagedata = T
+        avgtime = '1e8'
+        spw = i
+        antenna = antname + '&&&'
+        intent='OBSERVE_TARGET#ON_SOURCE'
+        iteraxis = 'scan'
+        coloraxis = 'corr'
+        gridrows = 3
+        gridcols = 3
+        showgui = False
+        plotfile = ('calibrated_spectrum.%s.spw%s.png' % (antname, spw))
+        plotms()
 
 # View Baselined Spectra with the sdplot task #
 
-default(sdplotold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl'
-spw = '15'
-specunit = 'GHz'
-scanaverage = True
-stack = 'pol'
-panel = 'scan'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl.png'
-overwrite = True
-sdplotold()
-
-default(sdplotold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl'
-spw = '15'
-specunit = 'GHz'
-scanaverage = True
-stack = 'pol'
-panel = 'scan'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl.png'
-overwrite = True
-sdplotold()
-
-default(sdplotold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl'
-spw = '15'
-specunit = 'GHz'
-scanaverage = True
-stack = 'pol'
-panel = 'scan'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl.png'
-overwrite = True
-sdplotold()
-
-default(sdplotold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl'
-spw = '15'
-specunit = 'GHz'
-scanaverage = True
-stack = 'pol'
-panel = 'scan'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl.png'
-overwrite = True
-sdplotold()
-
-
-
-# Convert ASAP to MS #
-
-print '--Save calibrated data (from asap to MS2)--'
-
-default(sdsaveold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl.ms'
-outform = 'MS2'
-sdsaveold()
-
-default(sdsaveold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl.ms'
-outform = 'MS2'
-sdsaveold()
-
-default(sdsaveold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl.ms'
-outform = 'MS2'
-sdsaveold()
-
-default(sdsaveold)
-infile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl'
-outfile = 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl.ms'
-outform = 'MS2'
-sdsaveold()
-
-
-saveproc=time.clock()
-savetime=time.time()
-
+for i in range(len(target_spws)):
+    org_spw = target_spws[i]
+    for antname  in ['PM03', 'PM04', 'CM03', 'CM05']:
+        default(plotms)
+        vis   = blname
+        ydatacolumn = 'data'
+        xaxis ='frequency'
+        yaxis ='real'
+        averagedata = T
+        avgtime = '1e8'
+        spw = str(i)
+        antenna = antname + '&&&'
+        intent='OBSERVE_TARGET#ON_SOURCE'
+        iteraxis = 'scan'
+        coloraxis = 'corr'
+        gridrows = 3
+        gridcols = 3
+        showgui = False
+        plotfile = ('baselined_spectrum.%s.spw%s.png' % (antname, org_spw))
+        overwrite = True
+        plotms()
 
 # Combine all MSs to one MS #
 
 print '--Combine MSs to one MS--'
 
+new_spw15 = target_spws.index('15')
+
 # PM #
+os.system('rm -rf M100_SD_cube_PM_03_04.image*')
 default(sdimaging)
-infiles = ['uid___A002_X6218fb_X264.ms_saved.PM03.cal.bl.ms', 'uid___A002_X6218fb_X264.ms_saved.PM04.cal.bl.ms']
+infiles = [blname]
 field='0'
-spw='15'
+spw=str(new_spw15)
+antenna='PM03,PM04'
 restfreq='115.271204GHz'
 nchan=70
 start=1800
@@ -481,11 +252,16 @@ phasecenter = 'J2000 12h22m54.9 +15d49m15'
 outfile='M100_SD_cube_PM_03_04.image'
 sdimaging()
 
+# CONVERT image unit to K
+imhead(imagename=outfile, mode='put', hdkey='bunit', hdvalue='K')
+
 # CM #
+os.system('rm -rf M100_SD_cube_CM_03_05.image*')
 default(sdimaging)
-infiles = ['uid___A002_X6218fb_X264.ms_saved.CM03.cal.bl.ms', 'uid___A002_X6218fb_X264.ms_saved.CM05.cal.bl.ms']
+infiles = [blname]
 field='0'
-spw='15'
+spw=str(new_spw15)
+antenna='CM03,CM05'
 restfreq='115.271204GHz'
 nchan=70
 start=1800
@@ -496,6 +272,9 @@ cell=['10arcsec','10arcsec']
 phasecenter = 'J2000 12h22m54.9 +15d49m15'
 outfile='M100_SD_cube_CM_03_05.image'
 sdimaging()
+
+# CONVERT image unit to K
+imhead(imagename=outfile, mode='put', hdkey='bunit', hdvalue='K')
 
 
 combproc=time.clock()
@@ -547,19 +326,33 @@ endTime = combtime
 
 # --PM-- #
 st = imstat('M100_SD_cube_PM_03_04.image')
-immax = 0.14828479290008545
-immin = -0.056186217814683914
-imrms = 0.023878581821918488
-# imflux = 29511.69662079087 before imstat change 3/19/2015
-imflux = 187393.2531559114
-immean = 0.0076376026451322136
-immedian = 0.0034651397727429867
-imnpts = 38640.0
-imsum = 295.11696620790872
-imsigma = 0.022624476084946776
-immedabsdevmed = 0.010576624423265457
-imquartile = 0.021630318835377693
-imsumsq = 22.0320119621645
+## ASAP version
+#immax = 0.14828479290008545
+#immin = -0.056186217814683914
+#imrms = 0.023878581821918488
+## imflux = 29511.69662079087 before imstat change 3/19/2015
+#imflux = 187393.2531559114
+#immean = 0.0076376026451322136
+#immedian = 0.0034651397727429867
+#imnpts = 38640.0
+#imsum = 295.11696620790872
+#imsigma = 0.022624476084946776
+#immedabsdevmed = 0.010576624423265457
+#imquartile = 0.021630318835377693
+#imsumsq = 22.0320119621645
+### MS tasks ###
+immax = 0.15019595623
+immin = -0.0556886419654
+imrms = 0.024000922218
+imflux = 188881.24609082
+immean = 0.007754794884
+immedian = 0.00354075804353
+imnpts = 38360.0
+imsum = 297.47393175
+imsigma = 0.0227138921074
+immedabsdevmed = 0.010545257479
+imquartile = 0.0216008159332
+imsumsq = 22.0970589225
 immaxpos = numpy.array([26, 27,  0, 49])
 imminpos = numpy.array([27, 37,  0, 23])
 
@@ -639,64 +432,108 @@ print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
 
+test_status = True
 if all(thistest_immaxpos == immaxpos):
     print '* Passed image maxpos test'
-    print >> logfile, '*  Image maxpos', thistest_immaxpos
+else :
+    test_status = False
+    print '* FAILED image maxpos test'
+print >> logfile, '*  Image maxpos', thistest_immaxpos
+    
 
 if all(thistest_imminpos == imminpos):
     print '* Passed image minpos test'
-    print >> logfile, '*  Image minpos', thistest_imminpos
+else:
+    test_status = False
+    print '* FAILED image minpos test'
+print >> logfile, '*  Image minpos', thistest_imminpos
 
 if (diff_immax < 0.01): 
     print '* Passed image max test '
-    print >>logfile,'*  Image max ',thistest_immax
+else:
+    test_status = False
+    print '* FAILED image max test '
+print >>logfile,'*  Image max ',thistest_immax
 
 if (diff_immin < 0.01): 
     print '* Passed image min test '
-    print >>logfile,'*  Image mmin ',thistest_immin
+else:
+    test_status = False
+    print '* FAILED image min test '
+print >>logfile,'*  Image min ',thistest_immin
 
 if (diff_imrms < 0.01): 
     print '* Passed image rms test '
-    print >>logfile,'*  Image rms ',thistest_imrms
+else:
+    test_status = False
+    print '* FAILED image rms test '
+print >>logfile,'*  Image rms ',thistest_imrms
 
 if (diff_imflux < 0.01):
     print '* Passed image flux test '
-    print >>logfile,'*  Image flux ',thistest_imflux
+else:
+    test_status = False
+    print '* FAILED image flux test '
+print >>logfile,'*  Image flux ',thistest_imflux
 
 if (diff_immean< 0.01):
     print '* Passed image mean test '
-    print >>logfile,'*  Image mean ',thistest_immean
+else:
+    test_status = False
+    print '* FAILED image mean test '
+print >>logfile,'*  Image mean ',thistest_immean
 
 if (diff_immedian<0.01):
     print '* Passed image median test '
-    print >>logfile,'*  Image median ',thistest_immedian
+else:
+    print '* FAILED image median test '
+    test_status = False
+print >>logfile,'*  Image median ',thistest_immedian
 
 if (diff_imnpts< 0.01):
     print '* Passed image npts test '
-    print >>logfile,'*  Image npts ',thistest_imnpts 
+else:
+    print '* FAILED image npts test '
+    test_status = False
+print >>logfile,'*  Image npts ',thistest_imnpts 
 
 if (diff_imsum< 0.01):
     print '* Passed image sum test '
-    print >>logfile,'*  Image sum ',thistest_imsum
+else:
+    print '* FAILED image sum test '
+    test_status = False
+print >>logfile,'*  Image sum ',thistest_imsum
 
 if (diff_imsigma< 0.01):
     print '* Passed image sigma test '
-    print >>logfile,'*  Image sigma ',thistest_imsigma
+else:
+    print '* FAILED image sigma test '
+    test_status = False
+print >>logfile,'*  Image sigma ',thistest_imsigma
 
 if (diff_immedabsdevmed< 0.01):
     print '* Passed image medabsdevmed test '
-    print >>logfile,'*  Image medabsdevmed ',thistest_immedabsdevmed
+else:
+    test_status = False
+    print '* FAILED image medabsdevmed test '
+print >>logfile,'*  Image medabsdevmed ',thistest_immedabsdevmed
 
 if (diff_imquartile< 0.01):
     print '* Passed image quartile test '
-    print >>logfile,'*  Image quartile ',thistest_imquartile
+else:
+    test_status = False
+    print '* FAILED image quartile test '
+print >>logfile,'*  Image quartile ',thistest_imquartile
 
 if (diff_imsumsq< 0.01):
     print '* Passed image sumsq test '
-    print >>logfile,'*  Image sumsq ',thistest_imsumsq
+else:
+    test_status = False
+    print '* FAILED image sumsq test '
+print >>logfile,'*  Image sumsq ',thistest_imsumsq
 
 
-if ((diff_immax<0.01) & (diff_imrms<0.01) & (diff_immin<0.01) &(diff_imflux<0.01) & (diff_immean<0.01) & (diff_immedian<0.01) & (diff_imnpts<0.01) & (diff_imsum<0.01) & (diff_imsigma<0.01) & (diff_immedabsdevmed<0.01) & (diff_imquartile<0.01) & (diff_imsumsq<0.01) & all(thistest_imminpos == imminpos) & all(thistest_immaxpos == immaxpos)): 
+if (test_status):
     regstate=True
     print >>logfile,'---'
     print >>logfile,'Passed Regression test for M100_SD_PM_03_04'
@@ -711,7 +548,6 @@ else:
     print ''
     print >>logfile,'----FAILED Regression test for M100_SD_PM_03_04'
 
-"""
 print >>logfile,'*********************************'
 print >>logfile,''
 print >>logfile,''
@@ -724,24 +560,17 @@ print >>logfile,'****************************************'
 print >>logfile,'* Breakdown: '
 print >>logfile,'*   import       time was: '+str(importtime-startTime)
 print >>logfile,'*            CPU time was: '+str(importproc-startProc)
-print >>logfile,'*   split        time was: '+str(split_save_time-importtime)
-print >>logfile,'*            CPU time was: '+str(split_save_proc-importproc)
-print >>logfile,'*   flag         time was: '+str(flagtime-split_save_time)
-print >>logfile,'*            CPU time was: '+str(flagproc-split_save_proc)
-print >>logfile,'*   sdcal2       time was: '+str(sdcal2time-flagtime)
-print >>logfile,'*            CPU time was: '+str(sdcal2proc-flagproc)
-print >>logfile,'*   baseline     time was: '+str(sdbaselinetime-sdcal2time)
-print >>logfile,'*            CPU time was: '+str(sdbaselineproc-sdcal2proc)
-print >>logfile,'*   save         time was: '+str(savetime-sdbaselinetime)
-print >>logfile,'*            CPU time was: '+str(saveproc-sdbaselineproc)
-print >>logfile,'*   combine MSs  time was: '+str(combtime-savetime)
-print >>logfile,'*            CPU time was: '+str(combproc-saveproc)
+print >>logfile,'*   flag         time was: '+str(flagtime-importtime)
+print >>logfile,'*            CPU time was: '+str(flagproc-importproc)
+print >>logfile,'*   sdcal       time was: '+str(sdcaltime-flagtime)
+print >>logfile,'*            CPU time was: '+str(sdcalproc-flagproc)
+print >>logfile,'*   baseline     time was: '+str(sdbaselinetime-sdcaltime)
+print >>logfile,'*            CPU time was: '+str(sdbaselineproc-sdcalproc)
+print >>logfile,'*   combine MSs  time was: '+str(combtime-sdbaselinetime)
+print >>logfile,'*            CPU time was: '+str(combproc-sdbaselineproc)
 print >>logfile,'****************************************'
-"""
 
 logfile.close()
 
 
-### Resore the previous storage setting
-#sd.rc('scantable',storage=storage_sav)
 
