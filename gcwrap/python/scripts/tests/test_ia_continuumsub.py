@@ -123,8 +123,8 @@ class ia_continuumsub_test(unittest.TestCase):
             myia.open(x)
             msgs = myia.history()
             myia.done() 
-            self.assertTrue("ia.continuumsub" in msgs[-2]) 
-            self.assertTrue("ia.continuumsub" in msgs[-1])
+            self.assertTrue("ia.continuumsub" in msgs[-6]) 
+            self.assertTrue("ia.continuumsub" in msgs[-7])
 
 def suite():
     return [ia_continuumsub_test]
