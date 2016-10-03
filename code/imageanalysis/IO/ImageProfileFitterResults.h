@@ -140,7 +140,7 @@ public:
 
     void setPLPDivisor(const String& x) { _plpDivisor = x; }
 
-    void logSummary(
+    vector<String> logSummary(
     	uInt nProfiles, uInt nAttempted, uInt nSucceeded,
     	uInt nConverged, uInt nValid
     );

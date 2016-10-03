@@ -126,39 +126,46 @@ std::unique_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_cr
 	return pcfArrays;
 }
 
-void ImageProfileFitterResults::logSummary(
+vector<String> ImageProfileFitterResults::logSummary(
     uInt nProfiles, uInt nAttempted, uInt nSucceeded, uInt nConverged, uInt nValid
 ) {
+    vector<String> ret;
 	*_log << LogOrigin(_class, __func__);
 	ostringstream oss;
 	oss << "Number of profiles       = " << nProfiles;
 	String str = oss.str();
 	*_log << LogIO::NORMAL << str << LogIO::POST;
 	_writeLogfile(str + "\n", True, False);
+    ret.push_back(str);
 	oss.str("");
 	oss << "Number of fits attempted = " << nAttempted;
 	str = oss.str();
 	*_log << LogOrigin(_class, __func__);
 	*_log << LogIO::NORMAL << str << LogIO::POST;
 	_writeLogfile(str + "\n", False, False);
+    ret.push_back(str);
 	oss.str("");
 	oss << "Number succeeded         = " << nSucceeded;
 	str = oss.str();
 	*_log << LogOrigin(_class, __func__);
 	*_log << LogIO::NORMAL << str << LogIO::POST;
 	_writeLogfile(str + "\n", False, False);
+    ret.push_back(str);
 	oss.str("");
 	oss << "Number converged         = " << nConverged;
 	str = oss.str();
 	*_log << LogOrigin(_class, __func__);
 	*_log << LogIO::NORMAL << str << LogIO::POST;
 	_writeLogfile(str + "\n", False, False);
+    ret.push_back(str);
 	oss.str("");
 	oss << "Number valid             = " << nValid << endl;
 	str = oss.str();
 	*_log << LogOrigin(_class, __func__);
 	*_log << LogIO::NORMAL << str << LogIO::POST;
 	_writeLogfile(str + "\n", False, False);
+    ret.push_back(str);
+    return ret;
 }
 
 Bool ImageProfileFitterResults::_setAxisTypes() {

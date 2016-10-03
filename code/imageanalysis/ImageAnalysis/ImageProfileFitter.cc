@@ -303,8 +303,11 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
 		_nLorentzSinglets, _nPLPCoeffs, _nLTPCoeffs, _logResults,
 		_multiFit, _getLogFile(), _xUnit, _summaryHeader()
 	);
-	resultHandler.logSummary(
-		_nProfiles, _nAttempted, _nSucceeded, _nConverged, _nValid
+	addHistory(
+        logOrigin,    
+        resultHandler.logSummary(
+		    _nProfiles, _nAttempted, _nSucceeded, _nConverged, _nValid
+        )
 	);
 	if (_nPLPCoeffs > 0) {
 		resultHandler.setPLPName(_plpName);
