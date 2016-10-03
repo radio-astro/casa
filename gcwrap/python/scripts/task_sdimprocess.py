@@ -6,7 +6,6 @@ import numpy.fft as npfft
 
 from taskinit import casalog, gentools, utilstool, qatool
 
-import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
@@ -15,7 +14,6 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
         worker.initialize()
         worker.execute()
         worker.finalize()
-        
     
 class sdimprocess_worker(sdutil.sdtask_interface):
     def __init__(self, **kwargs):

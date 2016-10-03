@@ -12,7 +12,6 @@ import re
 import string
 
 from sdimprocess import sdimprocess
-import asap as sd
 
 #
 # Unit test of sdimprocess task.

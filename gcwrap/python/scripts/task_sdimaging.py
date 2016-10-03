@@ -5,7 +5,6 @@ import numpy
 
 from taskinit import casalog, gentools, qatool
 
-#from asap import _to_list
 import sdutil
 import sdbeamutil
 from cleanhelper import cleanhelper
