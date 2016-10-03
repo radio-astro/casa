@@ -7,7 +7,6 @@ import shutil
 import unittest
 from itertools import izip
 import copy
-from sdstat import sdstat
 import numpy as np
 
 #     Functional tests of visstat2
