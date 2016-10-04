@@ -36,6 +36,7 @@
 
 #include <iomanip>
 
+using namespace casa;
 
 int main () {
 	LogIO log;

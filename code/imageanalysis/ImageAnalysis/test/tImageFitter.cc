@@ -48,6 +48,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+using namespace casa;
+
 void writeTestString(const String& test) {
     cout << "\n" << "*** " << test << " ***" << endl;
 }

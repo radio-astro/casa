@@ -41,6 +41,8 @@
 #include <unistd.h>
 #include <iomanip>
 
+using namespace casa;
+
 Bool allNear (const Vector<Double>& data, const Vector<Double>& templ, Double tol=1.0e-5);
 
 int main() {

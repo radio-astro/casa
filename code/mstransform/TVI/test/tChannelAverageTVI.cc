@@ -24,7 +24,6 @@
 #include <mstransform/TVI/test/tChannelAverageTVI.h>
 
 using namespace std;
-using namespace casacore;
 using namespace casa;
 using namespace casacore;
 using namespace casa::vi;

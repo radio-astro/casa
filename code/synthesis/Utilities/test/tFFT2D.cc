@@ -45,6 +45,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+using namespace casa;
 int main(int argc, char **argv)
 {
  

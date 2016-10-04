@@ -59,6 +59,9 @@
 // #include <casa/BasicMath/Math.h>
 
 #include <casa/namespace.h>
+
+using namespace casa;
+
 int main() {
 	try {
 		const uInt nx = 4;

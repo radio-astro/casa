@@ -45,6 +45,8 @@
 
 #include <casa/namespace.h>
 
+using namespace casa;
+
 using imagetype = Double;
 
 TempImage<imagetype> createtestimage(const Matrix<imagetype>& components,

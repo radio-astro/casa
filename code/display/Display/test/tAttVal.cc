@@ -32,6 +32,9 @@
 
 
 #include <casa/namespace.h>
+
+using namespace casa;
+
 int main(int, char **) {
 	try {
 

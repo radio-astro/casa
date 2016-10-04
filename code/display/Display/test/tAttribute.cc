@@ -35,6 +35,9 @@
 #include <casa/Quanta/QLogical.h>
 
 #include <casa/namespace.h>
+
+using namespace casa;
+
 void localAbort(String message) {
 	cout << message << endl;
 	exit(1);

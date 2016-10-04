@@ -50,12 +50,14 @@
 #include <casa/iostream.h>
 
 #include <casa/namespace.h>
+using namespace casa;
+
 int main() {
   try {
     TwoSidedShape* shapePtr = 0;
     {
       // Create a LDisk component at the default direction
-      const LimbDarkenedDiskShape defDisk;
+      const casa::LimbDarkenedDiskShape defDisk;
       AlwaysAssert(defDisk.ok(), AipsError);
       AlwaysAssert(defDisk.type() == ComponentType::LDISK, AipsError);
       AlwaysAssert(defDisk.isSymmetric() == true, AipsError);

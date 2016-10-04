@@ -42,6 +42,8 @@
 #include <unistd.h>
 #include <iomanip>
 
+using namespace casa;
+
 
 
 uInt testNumber = 0;

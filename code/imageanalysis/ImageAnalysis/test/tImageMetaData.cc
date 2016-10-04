@@ -32,6 +32,8 @@
 #include <casa/namespace.h>
 #include <casa/OS/File.h>
 
+using namespace casa;
+
 int main() {
     try {
     	String casapath = EnvironmentVariable::get("CASAPATH");

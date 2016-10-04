@@ -40,12 +40,6 @@
 #include <singledish/SingleDish/LineFinder.h>
 
 using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
-using namespace casacore;
 using namespace casa;
 using namespace std;
 

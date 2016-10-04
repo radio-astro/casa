@@ -37,6 +37,8 @@
 
 #include <iomanip>
 
+using namespace casa;
+
 int main () {
 	/*
 	PagedImage<Float> pim("g35_sma_usb_12co.image");

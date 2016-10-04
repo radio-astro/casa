@@ -59,7 +59,7 @@ protected:
     casacore::String interpMethod;
     casa::FluxStandard::FluxScale flxStdEnum;
     casacore::Vector<casacore::Double> fluxUsed;
-    casacore::Flux<casacore::Double> returnFlux, returnFluxErr;
+    casa::Flux<casacore::Double> returnFlux, returnFluxErr;
     casacore::Bool foundStd;
     casacore::String coeffsTbName;
     // expected values

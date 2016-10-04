@@ -30,8 +30,6 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 
 
-using namespace casa;
-
 namespace test {
 
 //Base class for SDMaskHandler unit tests

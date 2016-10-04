@@ -40,10 +40,11 @@ class MakeMS {
 
 public:
 
-  static void makems(casa::String msname, casa::MDirection thedir, casa::Double freq=1.5e9,
-		     casa::Double chanwidth=1e6, casa::Int nchan=100, casa::Int nInt=200);
+  static void makems(casacore::String msname, casacore::MDirection thedir, casacore::Double freq=1.5e9,
+		     casacore::Double chanwidth=1e6, casacore::Int nchan=100, casacore::Int nInt=200);
    
 
 };
 
 } // namespace test
+} // namespace casa

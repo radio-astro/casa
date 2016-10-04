@@ -42,6 +42,9 @@
 
 
 #include <casa/namespace.h>
+
+using namespace casa;
+
 int main (int argc, const char* argv[])
 {
 

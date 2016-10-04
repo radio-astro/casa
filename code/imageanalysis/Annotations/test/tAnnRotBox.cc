@@ -34,6 +34,8 @@
 
 #include <iomanip>
 
+using namespace casa;
+
 void testCorners(const Vector<MDirection>& corners) {
 	Vector<Bool> found(4, false);
 	for (uInt i=0; i<4; i++) {

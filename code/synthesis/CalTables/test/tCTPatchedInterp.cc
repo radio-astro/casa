@@ -36,6 +36,9 @@
 #include <casa/namespace.h>
 #include <casa/Arrays/ArrayMath.h>
 
+using namespace casacore;
+using namespace casa;
+
 // <summary>
 // Test program for CTInterp class.
 // </summary>

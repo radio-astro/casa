@@ -32,6 +32,9 @@
 #include <casa/iostream.h>
 
 #include <casa/namespace.h>
+
+using namespace casa;
+
 class tDisplayTool : public DisplayTool {
 public:
 	// Constructor.

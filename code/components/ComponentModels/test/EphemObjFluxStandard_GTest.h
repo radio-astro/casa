@@ -61,10 +61,10 @@ protected:
     casa::FluxStandard::FluxScale flxStdEnum;
     casacore::Vector<casacore::Double> fluxUsed;
     casacore::Bool foundStd;
-    casacore::Flux<casacore::Double> returnFlux, returnFluxErr;
+    casa::Flux<casacore::Double> returnFlux, returnFluxErr;
     casacore::Vector<casacore::Vector<casacore::MFrequency> > spws;
     casacore::Vector<casacore::String> tempCLs;
-    casacore::Vector<casacore::Vector<casacore::Flux<casacore::Double> >> returnFluxes, returnFluxErrs;
+    casacore::Vector<casacore::Vector<casa::Flux<casacore::Double> >> returnFluxes, returnFluxErrs;
     casa::ComponentList* cl;
     // expected values
     casa::FluxStandard::FluxScale expFlxStdEnum;

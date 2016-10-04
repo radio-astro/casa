@@ -47,7 +47,7 @@ protected:
 
     virtual void SetUp();
     virtual void TearDown();
-    casa::String fluxScaleName;
+    casacore::String fluxScaleName;
     std::unique_ptr<casa::FluxStandard> fluxStd;
 // things to test
 // compute (2 signatures)

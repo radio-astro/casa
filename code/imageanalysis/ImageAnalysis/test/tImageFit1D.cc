@@ -52,6 +52,7 @@
 
 #include <casa/namespace.h>
 
+using namespace casa;
 
 
 void testSpectral(uInt what, Bool doVector, Double fac);

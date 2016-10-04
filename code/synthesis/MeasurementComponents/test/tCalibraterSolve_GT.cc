@@ -45,6 +45,7 @@
 
 using namespace std;
 using namespace casa;
+using namespace casacore;
 using namespace casa::vi;
 
 int main(int argc, char **argv) {

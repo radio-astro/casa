@@ -39,6 +39,7 @@
 #include <tables/DataMan/ForwardCol.h>
 
 #include <casa/namespace.h>
+using namespace casa;
 
 int
 main(int argc, char **argv)

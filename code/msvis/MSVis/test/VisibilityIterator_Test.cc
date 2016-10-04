@@ -25,16 +25,14 @@
 #include <tuple>
 
 using namespace std;
-using namespace casacore;
 using namespace casa;
 using namespace casacore;
 using namespace casa::vi;
+using namespace casa::vi::test;
 
 int
 main (int nArgs, char * args [])
 {
-using namespace casacore;
-    using namespace casa::vi::test;
 
     Tester tester;
 
@@ -1437,7 +1435,7 @@ CopyMs::setupNewPointing(MeasurementSet * newMs)
 void
 CopyMs::doit (const String & oldMsName)
 {
-    casa::MeasurementSet oldMs (oldMsName);
+    casacore::MeasurementSet oldMs (oldMsName);
 
     String newMsName = String::format ("%s.copy", oldMsName.c_str());
 

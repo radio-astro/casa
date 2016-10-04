@@ -35,6 +35,7 @@
 #include <casa/namespace.h>
 #include <iomanip>
 
+using namespace casa;
 
 int main () {
 	try {

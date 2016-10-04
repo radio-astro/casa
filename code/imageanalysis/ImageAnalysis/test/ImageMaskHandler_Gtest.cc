@@ -10,9 +10,6 @@
 using namespace std;
 
 using namespace casacore;
-using namespace casacore;
-
-using namespace casacore;
 using namespace casa;
 
 namespace test {
@@ -55,7 +52,7 @@ TEST_F(ImageMaskHandlerTest, copy) {
     EXPECT_TRUE(ntrue(mask) == 6300);
     EXPECT_TRUE(nfalse(mask) == 1700);
 
-    casa::String name = "xyz.im";
+    casacore::String name = "xyz.im";
     SPIIF paged(new PagedImage<Float>(tmp->shape(), csys, name));
     paged->flush();
     auto data = paged->get();

@@ -36,6 +36,7 @@
 #include <casa/iomanip.h>
 #include <casa/namespace.h>
 using namespace std;
+using namespace casa;
 
 int main(int argc, char **argv) {
 

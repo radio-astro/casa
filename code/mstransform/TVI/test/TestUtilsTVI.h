@@ -101,31 +101,31 @@ protected:
 template <class T> casacore::Bool compareVector(	const casacore::Char* column,
 										const casacore::Vector<T> &inp,
 										const casacore::Vector<T> &ref,
-										const casacore::Vector<uInt> &rowIds,
+										const casacore::Vector<casacore::uInt> &rowIds,
 										casacore::Float tolerance = FLT_EPSILON);
 
 template <class T> casacore::Bool compareMatrix(	const casacore::Char* column,
 										const casacore::Matrix<T> &inp,
 										const casacore::Matrix<T> &ref,
-										const casacore::Vector<uInt> &rowIds,
+										const casacore::Vector<casacore::uInt> &rowIds,
 										casacore::Float tolerance = FLT_EPSILON);
 
 template <class T> casacore::Bool compareCube(const casacore::Char* column,
 									const casacore::Cube<T> &inp,
 									const casacore::Cube<T> &ref,
-									const casacore::Vector<uInt> &rowIds,
+									const casacore::Vector<casacore::uInt> &rowIds,
 									casacore::Float tolerance = FLT_EPSILON);
 
-Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
+casacore::Bool compareVisibilityIterators(VisibilityIterator2 &testTVI,
 								VisibilityIterator2 &refTVI,
 								VisBufferComponents2 &columns,
 								casacore::Float tolerance = FLT_EPSILON,
 								dataColMap *datacolmap = NULL);
 
-Bool copyTestFile(String &path,String &filename,String &outfilename);
+casacore::Bool copyTestFile(casacore::String &path,casacore::String &filename,casacore::String &outfilename);
 
-const Cube<Complex> & getViscube(	VisBuffer2 *vb,
-									MS::PredefinedColumns datacol,
+const casacore::Cube<casacore::Complex> & getViscube(	VisBuffer2 *vb,
+									casacore::MS::PredefinedColumns datacol,
 									dataColMap *datacolmap);
 
 void flagEachOtherChannel(VisibilityIterator2 &vi);

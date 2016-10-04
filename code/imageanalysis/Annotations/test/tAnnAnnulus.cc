@@ -35,6 +35,8 @@
 
 #include <vector>
 
+using namespace casa;
+
 int main () {
 	try {
 		LogIO log;

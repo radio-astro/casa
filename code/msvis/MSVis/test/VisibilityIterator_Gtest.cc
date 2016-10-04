@@ -1444,7 +1444,7 @@ CopyMs::setupNewPointing(MeasurementSet * newMs)
 void
 CopyMs::doit (const String & oldMsName)
 {
-    casa::MeasurementSet oldMs (oldMsName);
+    casacore::MeasurementSet oldMs (oldMsName);
 
     String newMsName = String::format ("%s.copy", oldMsName.c_str());
 

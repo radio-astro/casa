@@ -473,7 +473,7 @@ Bool copyTestFile(String &path,String &filename,String &outfilename)
 			// Get base path
 			String pathStr(pathChar);
 			String res[2];
-			casa::split(pathChar,res,2,String(" "));
+			casacore::split(pathChar,res,2,String(" "));
 
 			// Generate full qualified filename
 			String fullfilename(res[0]);

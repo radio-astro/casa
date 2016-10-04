@@ -5,9 +5,7 @@
 #include <display/Display/AttVal.h>
 
 using namespace std;
-using namespace casacore;
 using namespace casa;
-using namespace casacore;
 using namespace casacore;
 
 int

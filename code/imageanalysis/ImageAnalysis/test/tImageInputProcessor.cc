@@ -32,6 +32,7 @@
 #include <casa/namespace.h>
 #include <casa/iomanip.h>
 
+using namespace casa;
 
 void writeTestString(const String& test) {
     LogIO log;

@@ -38,6 +38,8 @@
 #include <casa/namespace.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
+using namespace casa;
+
 int main() {
 	LogIO log;
 	try {

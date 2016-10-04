@@ -55,7 +55,7 @@ protected:
     casacore::MDirection srcDir;
     casa::FluxStandard::FluxScale flxStdEnum;
     casacore::Vector<casacore::Double> fluxUsed;
-    casacore::Flux<casacore::Double> returnFlux, returnFluxErr;
+    casa::Flux<casacore::Double> returnFlux, returnFluxErr;
     casacore::Bool foundStd;
     // expected values
     casa::FluxStandard::FluxScale expFlxStdEnum;

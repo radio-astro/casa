@@ -53,6 +53,9 @@
 #include <casa/iostream.h>
 
 #include <casa/namespace.h>
+
+using namespace casa;
+
 void addNoise (Array<Float>& slice, Normal& noiseGen);
 ImageInterface<Float>* makeQUImage (Double& sigma, Double pa0, Double rm, 
                                     uInt nchan, Double f0, Double dF);

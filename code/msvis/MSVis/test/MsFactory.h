@@ -81,7 +81,7 @@ class GenerateAntenna1 : public Generator<casacore::Int> {
 
 public:
 
-    Int
+    casacore::Int
     operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
         return fillState.antenna1_p;
     }
@@ -92,7 +92,7 @@ class GenerateAntenna2 : public Generator<casacore::Int> {
 
 public:
 
-    Int
+    casacore::Int
     operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
         return fillState.antenna2_p;
     }
@@ -102,7 +102,7 @@ class GenerateDdi: public Generator<casacore::Int> {
 
 public:
 
-    Int
+    casacore::Int
     operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
         return fillState.spectralWindow_p;
     }
@@ -112,7 +112,7 @@ class GenerateExposure : public Generator<casacore::Double> {
 
 public:
 
-    Double
+    casacore::Double
     operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
         return fillState.timeDelta_p * .98;
     }
@@ -122,7 +122,7 @@ class GenerateFlag : public Generator<casacore::Bool> {
 
 public:
 
-    Bool
+    casacore::Bool
     operator () (const FillState & /*fillState*/, casacore::Int channel, casacore::Int correlation) const {
 
         // Generate a of T F T F ... for even rows and F T F T ... for odd rows
@@ -136,7 +136,7 @@ class GenerateFlagRow : public Generator<casacore::Bool> {
 
 public:
 
-    Bool
+    casacore::Bool
     operator () (const FillState & fillState, casacore::Int /*channel*/, casacore::Int /*correlation*/) const {
 
         // Generate a of T F T F ... for even rows and F T F T ... for odd rows
@@ -150,7 +150,7 @@ class GenerateFlagCategory : public GeneratorBase {
 
 public:
 
-    virtual Bool
+    virtual casacore::Bool
     operator () (const FillState & fillState, casacore::Int channel, casacore::Int correlation, casacore::Int /*category*/) const {
 
         casacore::Bool result;
@@ -214,7 +214,7 @@ class GenerateTime : public Generator<casacore::Double> {
 
 public:
 
-    Double
+    casacore::Double
     operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
         return fillState.time_p;
     }
@@ -224,7 +224,7 @@ class GenerateTimeCentroid : public Generator<casacore::Double> {
 
 public:
 
-    Double
+    casacore::Double
     operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
         return fillState.time_p; // same as time for this model
     }
@@ -234,7 +234,7 @@ class GenerateTimeInterval : public Generator<casacore::Double> {
 
 public:
 
-    Double
+    casacore::Double
     operator () (const FillState & fillState, casacore::Int, casacore::Int ) const {
         return fillState.timeDelta_p;
     }
@@ -259,7 +259,7 @@ public:
 
     GenerateVisibility (casacore::Int c) : c_p (c) {}
 
-    Complex
+    casacore::Complex
     operator () (const FillState & fillState, casacore::Int channel, casacore::Int correlation) const {
 
         casacore::Float r = fillState.rowNumber_p * 10 + fillState.spectralWindow_p;
@@ -277,7 +277,7 @@ class GenerateWeightSpectrum : public Generator<casacore::Float> {
 
 public:
 
-    Float
+    casacore::Float
     operator () (const FillState & fillState, casacore::Int channel, casacore::Int correlation) const {
 
         casacore::Float r = fillState.rowNumber_p * 1000 + fillState.spectralWindow_p * 100 +
@@ -290,7 +290,7 @@ class GenerateWeightSpectrumCorrected : public Generator<casacore::Float> {
 
 public:
 
-    Float
+    casacore::Float
     operator () (const FillState & fillState, casacore::Int channel, casacore::Int correlation) const {
 
         casacore::Float r = fillState.rowNumber_p * 1000 + fillState.spectralWindow_p * 100 +

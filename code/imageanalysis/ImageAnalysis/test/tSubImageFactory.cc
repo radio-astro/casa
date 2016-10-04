@@ -33,6 +33,8 @@
 
 #include <casa/namespace.h>
 
+using namespace casa;
+
 void testExtend() {
     CoordinateSystem cSys = CoordinateUtil::defaultCoords4D();
     PagedImage<Float> pa(IPosition(4,10,11,4, 13), cSys, "tSubImage_tmp.pa");

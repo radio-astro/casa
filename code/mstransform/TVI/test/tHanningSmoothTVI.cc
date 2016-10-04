@@ -24,7 +24,6 @@
 #include <mstransform/TVI/test/tHanningSmoothTVI.h>
 
 using namespace std;
-using namespace casacore;
 using namespace casa;
 using namespace casacore;
 using namespace casa::vi;

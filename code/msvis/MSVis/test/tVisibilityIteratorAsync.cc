@@ -42,9 +42,7 @@
 #include <tuple>
 
 using namespace std;
-using namespace casacore;
 using namespace casa::utilj;
-using namespace casacore;
 using namespace casa;
 using namespace casacore;
 using namespace casa::asyncio;

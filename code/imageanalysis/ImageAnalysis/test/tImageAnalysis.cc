@@ -33,6 +33,8 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <casa/OS/EnvVar.h>
 
+using namespace casa;
+
 void writeTestString(const String& test) {
     cout << "\n" << "*** " << test << " ***" << endl;
 }

@@ -39,6 +39,7 @@
 
 using namespace std;
 using namespace casa;
+using namespace casacore;
 using namespace casa::viscal;
 
 class VisCalGlobalsTest : public :: testing::Test {

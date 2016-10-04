@@ -34,6 +34,7 @@
 #include <msvis/MSVis/MSCalEnums.h>
 
 #include <casa/namespace.h>
+using namespace casa;
 // <summary>
 // Test program for class MSCalEnums.
 // </summary>

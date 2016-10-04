@@ -32,6 +32,8 @@
 #include <images/Images/TempImage.h>
 #include <casa/namespace.h>
 
+using namespace casa;
+
 void writeTestString(const String& test) {
     cout << "\n" << "*** " << test << " ***" << endl;
 }

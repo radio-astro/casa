@@ -32,6 +32,8 @@
 
 #include <casa/namespace.h>
 
+using namespace casa;
+
 int main () {
 	LogIO log;
 	try {
