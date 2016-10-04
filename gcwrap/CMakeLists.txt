@@ -765,6 +765,7 @@ endif()
 casa_find( CASACORE
            VERSION 2.0.1
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
+           DEFINITIONS "-DUseCasacoreNamespace"
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -772,7 +773,7 @@ casa_find( CASACORE
            LIBS ${casacore_libs}
            PREFIX_HINTS ${casacore_prefix}
            CPP_VERSION CASACORE_VERSION
-           RUN_VERSION "casa::getVersionCASA()"
+           RUN_VERSION "casacore::getVersionCASA()"
            DEPENDS LAPACK CFITSIO WCSLIB FFTW3 DL )
 
 # Listing explicitly CASACore's dependency libraries is not necessary if the CASACore libraries
