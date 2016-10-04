@@ -28,7 +28,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <widget class="CanvasHolder" name="canvasHolder" native="true">
+     <widget class="casa::CanvasHolder" name="canvasHolder" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>81</horstretch>
@@ -227,7 +227,7 @@
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="SpectralPositioningWidget" name="positioningWidget" native="true">
+           <widget class="casa::SpectralPositioningWidget" name="positioningWidget" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -250,7 +250,7 @@
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout_35">
           <item>
-           <widget class="SettingsWidget" name="specFitSettingsWidget" native="true">
+           <widget class="casa::SettingsWidget" name="specFitSettingsWidget" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -271,7 +271,7 @@
          <attribute name="title">
           <string>Line Overlays</string>
          </attribute>
-         <widget class="LineOverlaysTab" name="lineOverlaysHolder" native="true">
+         <widget class="casa::LineOverlaysTab" name="lineOverlaysHolder" native="true">
           <property name="geometry">
            <rect>
             <x>10</x>
@@ -299,7 +299,7 @@
       <widget class="QWidget" name="page_2">
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="SettingsWidget" name="momentSettingsWidget" native="true">
+         <widget class="casa::SettingsWidget" name="momentSettingsWidget" native="true">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -568,23 +568,23 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CanvasHolder</class>
+   <class>casa::CanvasHolder</class>
    <extends>QWidget</extends>
    <header>display/QtPlotter/CanvasHolder.qo.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>SettingsWidget</class>
+   <class>casa::SettingsWidget</class>
    <extends>QWidget</extends>
    <header>display/QtPlotter/SettingsWidget.qo.h</header>
   </customwidget>
   <customwidget>
-   <class>SpectralPositioningWidget</class>
+   <class>casa::SpectralPositioningWidget</class>
    <extends>QWidget</extends>
    <header>display/QtPlotter/SpectralPositioningWidget.qo.h</header>
   </customwidget>
   <customwidget>
-   <class>LineOverlaysTab</class>
+   <class>casa::LineOverlaysTab</class>
    <extends>QWidget</extends>
    <header>display/QtPlotter/LineOverlaysTab.qo.h</header>
   </customwidget>
