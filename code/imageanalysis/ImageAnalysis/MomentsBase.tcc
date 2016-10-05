@@ -306,7 +306,7 @@ template <class T> void MomentsBase<T>::_checkMethod () {
         std::ostringstream oss;
         oss << "Invalid combination of methods requested." << endl;
         oss << "Valid combinations are: " << endl << endl;
-        oss <<  "casacore::Smooth    Window      Fit   in/exclude " << endl;
+        oss <<  "Smooth    Window      Fit   in/exclude " << endl;
         oss <<  "---------------------------------------" << endl;
         // Basic method. Just use all the data
         oss <<  "  N          N         N        N      " << endl;
