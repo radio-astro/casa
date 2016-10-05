@@ -173,7 +173,7 @@ private:
     ) const;
 
     SPIIF _doCollapse(
-        SPCIIF rotated, Int xAxis, Int yAxis, const Vector<Double>& rotPixStart,
+        Int& collapsedAxis, SPCIIF rotated, Int xAxis, Int yAxis, const Vector<Double>& rotPixStart,
         const Vector<Double>& rotPixEnd, Double halfwidth
     ) const;
 
@@ -182,6 +182,8 @@ private:
         const Vector<Double>& startPixRot, const Vector<Double>& endPixRot,
         Int xAxis, Int yAxis, Double halfwidth, Double paInRad
     ) const;
+
+    SPIIF _dropDegen(SPIIF collapsed, Int collapsedAxis) const;
 
     void _checkWidth(const casacore::Int64 xShape, const casacore::Int64 yShape) const;
 

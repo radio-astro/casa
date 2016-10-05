@@ -309,11 +309,15 @@ SPIIF PVGenerator::generate() const {
         rotated, rotPixStart, rotPixEnd,
         xAxis, yAxis, xdiff, ydiff
     );
-    return _doCollapse(rotated, xAxis, yAxis, rotPixStart, rotPixEnd, halfwidth);
+    Int collapsedAxis;
+    auto collapsed = _doCollapse(
+        collapsedAxis, rotated, xAxis, yAxis, rotPixStart, rotPixEnd, halfwidth
+    );
+    return _dropDegen(collapsed, collapsedAxis);
 }
 
 SPIIF PVGenerator::_doCollapse(
-    SPCIIF rotated, Int xAxis, Int yAxis, const Vector<Double>& rotPixStart,
+    Int& collapsedAxis, SPCIIF rotated, Int xAxis, Int yAxis, const Vector<Double>& rotPixStart,
     const Vector<Double>& rotPixEnd, Double halfwidth
 ) const {
     IPosition blc(rotated->ndim(), 0);
@@ -339,7 +343,7 @@ SPIIF PVGenerator::_doCollapse(
     Vector<Int> dirShape = md.directionShape();
     AlwaysAssert(dirShape[1] == 1, AipsError);
     const auto& dc = collCoords.directionCoordinate();
-    Vector<Int> dirAxisNumbers = collCoords.directionAxesNumbers();
+    collapsedAxis = collCoords.directionAxesNumbers()[1];
     Vector<Double> pixStart(2, 0);
     auto collapsedStart = dc.toWorld(pixStart);
     Vector<Double> pixEnd(2, 0);
@@ -370,10 +374,14 @@ SPIIF PVGenerator::_doCollapse(
     collapsed->coordinates().save(misc, "secondary_coordinates");
     collapsed->setMiscInfo(misc);
     collapsed->setCoordinateInfo(collCoords);
+    return collapsed;
+}
+
+SPIIF PVGenerator::_dropDegen(SPIIF collapsed, Int collapsedAxis) const {
     IPosition keep, axisPath;
     uInt j = 0;
-    for (uInt i=0; i<collapsed->ndim(); i++) {
-        if ((Int)i != dirAxisNumbers[1]) {
+    for (uInt i=0; i<collapsed->ndim(); ++i) {
+        if ((Int)i != collapsedAxis) {
             axisPath.append(IPosition(1, j));
             j++;
             if (collapsed->shape()[i] == 1) {
