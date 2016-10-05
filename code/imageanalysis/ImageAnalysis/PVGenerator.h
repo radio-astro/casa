@@ -156,7 +156,6 @@ protected:
 
     virtual casacore::Bool _mustHaveSquareDirectionPixels() const {return true;}
 
-
 private:
     std::unique_ptr<vector<casacore::Double> > _start, _end;
     casacore::uInt _width;
@@ -176,6 +175,12 @@ private:
 
     casacore::Quantity _increment() const;
 
+    void _moveRefPixel(
+        SPIIF subImage, CoordinateSystem& subCoords, const vector<Double>& start,
+        const vector<Double>& end, Double paInRad, Int xAxis, Int yAxis
+    ) const;
+
+    
     static casacore::String _pairToString(const std::pair<casacore::Double, casacore::Double>& p);
 
 };

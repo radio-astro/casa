@@ -237,7 +237,7 @@ SPIIF PVGenerator::generate() const {
          )
     );
     *_getLog() << LogOrigin(_class, __func__, WHERE);
-    CoordinateSystem subCoords = subImage->coordinates();
+    auto subCoords = subImage->coordinates();
     auto dirAxes = subCoords.directionAxesNumbers();
     Int xAxis = dirAxes[0];
     Int yAxis = dirAxes[1];
@@ -265,34 +265,7 @@ SPIIF PVGenerator::generate() const {
         // check already done when setting the points if _width == 1
         _checkWidthSanity(paInRad, halfwidth, start, end, subImage, xAxis, yAxis);
     }
-
-    {
-        // rotation occurs about the reference pixel, so move the reference pixel to be
-        // on the segment, near the midpoint so that the y value is an integer.
-        vector<Double> midpoint(end.size());
-        // THESE CAN EASILLY BE CHANGED TO ONE PASS WITH C++11 AND LAMBDA FUNCTIONS
-        std::transform( end.begin( ), end.end( ), start.begin( ), midpoint.begin( ), std::plus<double>( ) );
-        std::transform( midpoint.begin( ), midpoint.end( ), midpoint.begin( ), std::bind2nd(std::divides<double>(),2.0) );
-        Double targety = int(midpoint[1]);
-        Double targetx = (near(targety, midpoint[1], 1e-8))
-            ? midpoint[0]
-            : (
-                start[0]*(end[1] - targety) + end[0]*(targety - start[1])
-            )/(end[1] - start[1]);
-        Vector<Double> newRefPix = subCoords.referencePixel();
-        newRefPix[dirAxes[0]] = targetx;
-        newRefPix[dirAxes[1]] = targety;
-        Vector<Double> newRefVal;
-        subCoords.toWorld(newRefVal, newRefPix);
-        subCoords.setReferencePixel(newRefPix);
-        subCoords.setReferenceValue(newRefVal);
-        subImage->setCoordinateInfo(subCoords);
-
-        // rotate the image through this angle, in the opposite direction.
-        *_getLog() << LogIO::NORMAL << "Rotating image by " << (paInRad*180/C::pi)
-            << " degrees about direction coordinate pixel (" << targetx << ", " << targety
-            << ") to align specified slice with the x axis" << LogIO::POST;
-    }
+    _moveRefPixel(subImage, subCoords, start, end, paInRad, xAxis, yAxis);
     Vector<Double> worldStart, worldEnd;
     const auto& dc1 = subCoords.directionCoordinate();
     dc1.toWorld(worldStart, Vector<Double>(start));
@@ -487,6 +460,36 @@ SPIIF PVGenerator::generate() const {
         newMask->put(newArray);
     }
     return _prepareOutputImage(*cDropped, 0, newMask.get());
+}
+
+void PVGenerator::_moveRefPixel(
+    SPIIF subImage, CoordinateSystem& subCoords, const vector<Double>& start,
+    const vector<Double>& end, Double paInRad, Int xAxis, Int yAxis
+) const {
+    // rotation occurs about the reference pixel, so move the reference pixel to be
+    // on the segment, near the midpoint so that the y value is an integer.
+    vector<Double> midpoint(end.size());
+    // THESE CAN EASILLY BE CHANGED TO ONE PASS WITH C++11 AND LAMBDA FUNCTIONS
+    std::transform( end.begin( ), end.end( ), start.begin( ), midpoint.begin( ), std::plus<double>( ) );
+    std::transform( midpoint.begin( ), midpoint.end( ), midpoint.begin( ), std::bind2nd(std::divides<double>(),2.0) );
+    Double targety = int(midpoint[1]);
+    Double targetx = (near(targety, midpoint[1], 1e-8))
+        ? midpoint[0]
+        : (
+            start[0]*(end[1] - targety) + end[0]*(targety - start[1])
+        )/(end[1] - start[1]);
+    Vector<Double> newRefPix = subCoords.referencePixel();
+    newRefPix[xAxis] = targetx;
+    newRefPix[yAxis] = targety;
+    Vector<Double> newRefVal;
+    subCoords.toWorld(newRefVal, newRefPix);
+    subCoords.setReferencePixel(newRefPix);
+    subCoords.setReferenceValue(newRefVal);
+    subImage->setCoordinateInfo(subCoords);
+    // rotate the image through this angle, in the opposite direction.
+    *_getLog() << LogIO::NORMAL << "Rotating image by " << (paInRad*180/C::pi)
+        << " degrees about direction coordinate pixel (" << targetx << ", " << targety
+        << ") to align specified slice with the x axis" << LogIO::POST;
 }
 
 void PVGenerator::_checkWidthSanity(
