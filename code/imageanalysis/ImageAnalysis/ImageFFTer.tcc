@@ -122,7 +122,7 @@ template<class T> void ImageFFTer<T>::_checkExists(
 	if (! name.empty()) {
 		casacore::File f(name);
 		ThrowIf (
-			f.exists(), "casacore::File " + name + " already exists"
+			f.exists(), "File " + name + " already exists"
 		);
 	}
 }
