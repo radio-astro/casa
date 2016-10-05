@@ -122,7 +122,7 @@ void ImageConvolver<T>::convolve(casacore::LogIO& os,
    const casacore::IPosition& inShape = imageIn.shape();
    const casacore::IPosition& outShape = imageOut.shape();
    if (!inShape.isEqual(outShape)) {
-      os << "casacore::Input and output images must have same shape" << casacore::LogIO::EXCEPTION;
+      os << "Input and output images must have same shape" << casacore::LogIO::EXCEPTION;
    }
     if (kernel.ndim() > imageIn.ndim()) {
         os << "Kernel lattice has more axes than the image!" << casacore::LogIO::EXCEPTION;
@@ -231,9 +231,9 @@ void ImageConvolver<T>::checkCoordinates (casacore::LogIO& os, const casacore::C
       if (casacore::CoordinateUtil::findWorldAxis(cSysImage, i) != 
           casacore::CoordinateUtil::findWorldAxis(cSysKernel, i)) {
          if (warnOnly) {
-            os << casacore::LogIO::WARN << "casacore::Coordinate types are not the same for axis " << i+1 << casacore::LogIO::POST;
+            os << casacore::LogIO::WARN << "Coordinate types are not the same for axis " << i+1 << casacore::LogIO::POST;
          } else {
-            os << "casacore::Coordinate types are not the same for axis " << i+1 << casacore::LogIO::EXCEPTION;
+            os << "Coordinate types are not the same for axis " << i+1 << casacore::LogIO::EXCEPTION;
          }
       }
 
