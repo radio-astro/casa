@@ -350,36 +350,10 @@ SPIIF PVGenerator::generate() const {
 
     auto rotPixStart = rotCoords.toPixel(startWorld);
     auto rotPixEnd = rotCoords.toPixel(endWorld);
-    // sanity checks, can be removed when this is well tested and used without issue
-    // The rotated start and end pixels should lie in the image
-    auto rotShape = rotated->shape();
-    for (uInt i=0; i<2 ;i++) {
-        Int64 shape = i == 0 ? rotShape[xAxis] : rotShape[yAxis];
-        AlwaysAssert(
-            rotPixStart[i] > 0 && rotPixEnd[i] > 0
-            && rotPixStart[i] < shape - 1 && rotPixEnd[i] < shape - 1,
-            AipsError
-        );
-    }
-
-    // We've rotated to make the slice coincident with the x axis, therefore, the y axis
-    // values of the endpoints should be equal
-    AlwaysAssert(abs(rotPixStart[yAxis] - rotPixEnd[yAxis]) < 1e-6, AipsError);
-    // the difference in the x axis coordinate of rotated endpoints should simply be
-    // the distance between those points before rotation
-    AlwaysAssert(
-        abs(
-            (rotPixEnd[xAxis] - rotPixStart[xAxis])
-            - sqrt(xdiff*xdiff + ydiff*ydiff)
-        ) < 1e-6, AipsError
+    _checkRotatedImageSanity(
+        rotated, rotPixStart, rotPixEnd,
+        xAxis, yAxis, xdiff, ydiff
     );
-    // CAS-6043, because it's possible for the above conditions to be true but the y values to still be
-    // just a little different and on either side of the 0.5 pixel mark
-    //rotPixEnd[yAxis] = rotPixStart[yAxis];
-    // We have rotated so the position of the starting pixel x is smaller than
-    // the ending pixel x.
-    AlwaysAssert(rotPixStart[xAxis] < rotPixEnd[xAxis], AipsError);
-
     blc = IPosition(rotated->ndim(), 0);
     trc = rotated->shape() - 1;
     blc[xAxis] = (Int)(rotPixStart[xAxis] + 0.5);
@@ -460,6 +434,41 @@ SPIIF PVGenerator::generate() const {
         newMask->put(newArray);
     }
     return _prepareOutputImage(*cDropped, 0, newMask.get());
+}
+
+void PVGenerator::_checkRotatedImageSanity(
+    SPCIIF rotated, const Vector<Double>& rotPixStart, const Vector<Double>& rotPixEnd,
+    Int xAxis, Int yAxis, Double xdiff, Double ydiff
+) const {
+    // sanity checks, can be removed when this is well tested and used without issue
+    // The rotated start and end pixels should lie in the image
+    auto rotShape = rotated->shape();
+    for (uInt i=0; i<2 ;i++) {
+        Int64 shape = i == 0 ? rotShape[xAxis] : rotShape[yAxis];
+        AlwaysAssert(
+            rotPixStart[i] > 0 && rotPixEnd[i] > 0
+            && rotPixStart[i] < shape - 1 && rotPixEnd[i] < shape - 1,
+            AipsError
+        );
+    }
+
+    // We've rotated to make the slice coincident with the x axis, therefore, the y axis
+    // values of the endpoints should be equal
+    AlwaysAssert(abs(rotPixStart[yAxis] - rotPixEnd[yAxis]) < 1e-6, AipsError);
+    // the difference in the x axis coordinate of rotated endpoints should simply be
+    // the distance between those points before rotation
+    AlwaysAssert(
+        abs(
+            (rotPixEnd[xAxis] - rotPixStart[xAxis])
+            - sqrt(xdiff*xdiff + ydiff*ydiff)
+        ) < 1e-6, AipsError
+    );
+    // CAS-6043, because it's possible for the above conditions to be true but the y values to still be
+    // just a little different and on either side of the 0.5 pixel mark
+    //rotPixEnd[yAxis] = rotPixStart[yAxis];
+    // We have rotated so the position of the starting pixel x is smaller than
+    // the ending pixel x.
+    AlwaysAssert(rotPixStart[xAxis] < rotPixEnd[xAxis], AipsError);
 }
 
 void PVGenerator::_moveRefPixel(

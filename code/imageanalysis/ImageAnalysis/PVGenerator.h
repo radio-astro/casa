@@ -166,6 +166,12 @@ private:
     // disallow default constructor
     PVGenerator();
 
+    void _checkRotatedImageSanity(
+        SPCIIF rotated, const Vector<Double>& rotPixStart,
+        const Vector<Double>& rotPixEnd, Int xAxis, Int yAxis,
+        Double xdiff, Double ydiff
+    ) const;
+
     void _checkWidth(const casacore::Int64 xShape, const casacore::Int64 yShape) const;
 
     void _checkWidthSanity(
