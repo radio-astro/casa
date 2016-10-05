@@ -444,7 +444,7 @@ class SDMSInspection(object):
                 rpattern = '^%s_[0-9]$'%(reference_name)
                 if target_name == reference_name:
                     field_map[target.id] = reference.id
-                elif re.match(tpattern, reference_name) or re.match(rpattern, target_name):
+                elif match_field_name(reference_name, target_name):
                     field_map[target.id] = reference.id
         calibration_strategy = {'tsys': do_tsys_transfer,
                                 'tsys_strategy': spwmap,
@@ -503,3 +503,19 @@ class SDMSInspection(object):
                 match = group_key
                 break
         return match    
+    
+def match_field_name(name1, name2):
+    pos1 = name1.find(name2)
+    pos2 = name2.find(name1)
+    pattern = '^_[0-9]+$'
+    is_match = lambda s: re.match(pattern, s) is not None
+    if pos1 == 0:
+        # name1 looks like name2 + suffix, try pattern matching for suffix 
+        suffix = name1[len(name2):]
+        return is_match(suffix)
+    elif pos2 == 0:
+        # name2 looks like name1 + suffix, try pattern matching for suffix
+        suffix = name2[len(name1):]
+        return is_match(suffix)
+    
+    return False
