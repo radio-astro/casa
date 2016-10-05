@@ -135,7 +135,7 @@ SPIIT ImageConcatenator<T>::concatenate(
 						? mypair.first->shape()
 						: mypair.second->shape()
 				) != isIncreasing,
-				"casacore::Coordinate axes in different images with opposing increment signs "
+				"Coordinate axes in different images with opposing increment signs "
 				"is not permitted if relax=false or reorder=true"
 			);
 		}
