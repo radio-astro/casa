@@ -51,7 +51,7 @@ template<class T> SPIIT ImageExprCalculator<T>::compute() const {
 	const casacore::LELLattCoordBase* lattCoord = &(attr.coordinates().coordinates());
 	ThrowIf(
 		! lattCoord->hasCoordinates()
-		|| lattCoord->classname() != "casacore::LELImageCoord",
+		|| lattCoord->classname() != "LELImageCoord",
 		"Images in expression have no coordinates"
 	);
 	const casacore::LELImageCoord* imCoord =
@@ -127,7 +127,7 @@ template<class T> void ImageExprCalculator<T>::_calc(
         const auto attr = node.getAttribute();
         const auto lattCoord = &(attr.coordinates().coordinates());
         if (!lattCoord->hasCoordinates() || lattCoord->classname()
-                != "casacore::LELImageCoord") {
+                != "LELImageCoord") {
             // We assume here that the output coordinates are ok
             mylog << casacore::LogIO::WARN
                     << "Images in expression have no coordinates"
