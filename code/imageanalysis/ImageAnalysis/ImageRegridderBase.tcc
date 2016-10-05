@@ -124,7 +124,7 @@ template <class T> void ImageRegridderBase<T>::_finishConstruction() {
 				}
 				ThrowIf(
 					_outputStokes.empty(),
-					"casacore::Input image and template coordinate system have no common stokes."
+					"Input image and template coordinate system have no common stokes."
 				);
 				ThrowIf(
 					shapeSpecified && ((casacore::Int)_outputStokes.size() != _shape[inputPolAxisNumber]),
