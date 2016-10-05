@@ -431,7 +431,7 @@ void SingleDishMSFiller<T>::save(std::string const &name) {
   POST_START;
 
 #ifdef SINGLEDISHMSFILLER_DEBUG
-  std::cout << "Saving casacore::MS as \"" << name << "\"" << std::endl;
+  std::cout << "Saving MS as \"" << name << "\"" << std::endl;
   std::cout << "current working directory is \"" << casacore::Path().absoluteName()
   << "\"" << std::endl;
 #endif

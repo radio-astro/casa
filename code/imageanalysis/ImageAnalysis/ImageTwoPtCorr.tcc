@@ -229,7 +229,7 @@ IPosition ImageTwoPtCorr<T>::setUpAxes (const casacore::IPosition& axes,
        casacore::Bool bad = (axes2(0)==pixelAxes(0) && axes2(1)!=pixelAxes(1)) ||
                   (axes2(0)==pixelAxes(1) && axes2(1)!=pixelAxes(0));
        if (bad) {
-          os << "You cannot specify just one of the casacore::DirectionCoordinate (sky) axes" << casacore::LogIO::EXCEPTION;
+          os << "You cannot specify just one of the DirectionCoordinate (sky) axes" << casacore::LogIO::EXCEPTION;
        }
      }
    }

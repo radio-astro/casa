@@ -90,7 +90,7 @@ template<class T> casacore::Record ImageMetaData::_summary(
     using casacore::AipsError;
     ThrowIf(
         ! info.toRecord(error, iRec),
-        "Failed to convert casacore::ImageInfo to a record because "
+        "Failed to convert ImageInfo to a record because "
     );
     if (iRec.isDefined("restoringbeam")) {
         retval.defineRecord("restoringbeam", iRec.asRecord("restoringbeam"));

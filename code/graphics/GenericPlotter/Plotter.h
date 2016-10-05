@@ -248,7 +248,7 @@ public:
     // Shows a file chooser dialog and returns the absolute filename that the
     // user chooses.  If a directory is given, start the dialog there.  If the
     // user cancels, an empty casacore::String is returned.
-    virtual casacore::String fileChooserDialog(const casacore::String& title = "casacore::File Chooser",
+    virtual casacore::String fileChooserDialog(const casacore::String& title = "File Chooser",
                                      const casacore::String& directory = "") = 0;
 
     

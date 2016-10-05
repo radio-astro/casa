@@ -566,7 +566,7 @@ template<class T> void CalSet<T>::store (const casacore::String& file,
       std::ostringstream str;
       str << "CalSet::store(): Perhaps CalSet.initCalTableDesc() was not called "
 	  << "before calling CalSet::store()?"
-	  << "  Jones = " << type << "   casacore::File = " << file;
+	  << "  Jones = " << type << "   File = " << file;
       
       throw(casacore::AipsError(str.str()));
     }

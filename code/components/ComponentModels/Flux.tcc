@@ -294,7 +294,7 @@ value(casacore::Quantum<casacore::Vector<T> >& value) {
 template<class T> casacore::Quantum<T>  FluxRep<T>::
 value (casacore::Stokes::StokesTypes stokes, casacore::Bool toJy) 
 {
-   casacore::LogIO os(casacore::LogOrigin("FluxRep", "value(casacore::Stokes::StokesTypes)"));
+   casacore::LogIO os(casacore::LogOrigin("FluxRep", "value(Stokes::StokesTypes)"));
 
 // Get the vector of values that we are holding
   
@@ -313,7 +313,7 @@ value (casacore::Stokes::StokesTypes stokes, casacore::Bool toJy)
          stokes==casacore::Stokes::U || stokes==casacore::Stokes::V)  &&
          cPol==ComponentType::STOKES) {
 //
-      casacore::String error("Failed to extract Flux from SkyComponent because not enough casacore::Stokes values");
+      casacore::String error("Failed to extract Flux from SkyComponent because not enough Stokes values");
       if (stokes==casacore::Stokes::I) {
          if (values.nelements()<1) os << error << casacore::LogIO::EXCEPTION;
          value.setValue(values(0));
@@ -329,7 +329,7 @@ value (casacore::Stokes::StokesTypes stokes, casacore::Bool toJy)
       }
    } else {
       os << "It is not possible currently to extract the flux value" << std::endl;
-      os << "for casacore::Stokes type " << casacore::Stokes::name(stokes)  << " from the SkyComponent" << casacore::LogIO::EXCEPTION;
+      os << "for Stokes type " << casacore::Stokes::name(stokes)  << " from the SkyComponent" << casacore::LogIO::EXCEPTION;
    }
 //
    if (toJy) value.convert(casacore::Unit("Jy"));
@@ -411,7 +411,7 @@ template<class T> casacore::Unit FluxRep<T>::_getConversionUnit(const casacore::
 template<class T> void FluxRep<T>::setValue(
 		const casacore::Quantum<T>& value, casacore::Stokes::StokesTypes stokes
 ) {
-	casacore::LogIO os(casacore::LogOrigin("FluxRep", "setValue(const casacore::Quantum<casacore::Double>&, casacore::Stokes::StokesTypes)"));
+	casacore::LogIO os(casacore::LogOrigin("FluxRep", "setValue(const Quantum<Double>&, Stokes::StokesTypes)"));
 	casacore::Vector<T> tmp(4, 0.0);
 	auto conversionUnit = _getConversionUnit(value.getUnit()) ;
 	if (stokes==casacore::Stokes::I || stokes==casacore::Stokes::Q || stokes==casacore::Stokes::U || stokes==casacore::Stokes::V) {
@@ -427,7 +427,7 @@ template<class T> void FluxRep<T>::setValue(
 	}
 	else {
 		os << casacore::LogIO::WARN << "Can only properly handle I,Q,U,V presently." << std::endl;
-		os << "The brightness is assumed to be casacore::Stokes I"  << casacore::LogIO::POST;
+		os << "The brightness is assumed to be Stokes I"  << casacore::LogIO::POST;
 		tmp(0) = value.getValue(casacore::Unit("Jy"));
 	}
 	setValue(tmp);
@@ -495,7 +495,7 @@ fromRecord(casacore::String& errorMessage, const casacore::RecordInterface& reco
       casacore::LogIO logErr(casacore::LogOrigin("FluxRep", "fromRecord()"));
       logErr << casacore::LogIO::WARN 
 	     << "The flux does not have a 'polarisation' field." << std::endl
-	     << "Using the default of casacore::Stokes"
+	     << "Using the default of Stokes"
 	     << casacore::LogIO::POST;
       setPol(ComponentType::STOKES);
     } else {
@@ -514,7 +514,7 @@ fromRecord(casacore::String& errorMessage, const casacore::RecordInterface& reco
       newPol = ComponentType::polarisation(polVal);
       if (newPol == ComponentType::UNKNOWN_POLARISATION) {
 	errorMessage += casacore::String("The polarisation type is not known.\n") +
-	  casacore::String("Allowed values are 'casacore::Stokes', 'Linear' & 'Circular'\n");
+	  casacore::String("Allowed values are 'Stokes', 'Linear' & 'Circular'\n");
 	return false;
       }
     }
@@ -548,7 +548,7 @@ fromRecord(casacore::String& errorMessage, const casacore::RecordInterface& reco
     } else {
       if (qh.nelements() != 4u) {
 	errorMessage += casacore::String("Must specify all 4 flux values\n")
-	  + casacore::String("if the polarisation representation is not casacore::Stokes\n");
+	  + casacore::String("if the polarisation representation is not Stokes\n");
 	return false;
       }
       if (qh.isQuantumVectorDouble()) {

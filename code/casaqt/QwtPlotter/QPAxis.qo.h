@@ -357,7 +357,7 @@ public:
     bool exportToFile(const PlotExportFormat& format);
 
     // Implements PlotCanvas::fileChooserDialog().
-    casacore::String fileChooserDialog(const casacore::String& title = "casacore::File Chooser",
+    casacore::String fileChooserDialog(const casacore::String& title = "File Chooser",
             const casacore::String& directory = "");
     
     // Implements PlotCanvas::dateFormat().

@@ -382,7 +382,7 @@ template <class	T, class R, class RFilter>
 	  if (V2CTX_P(v_p)->verbose){
 	    std::ostringstream oss;
 	    oss.str("");
-	    oss << "Appended " << filteredRows.size() << " rows to the casacore::MS SYSPOWER table." << endl;
+	    oss << "Appended " << filteredRows.size() << " rows to the MS SYSPOWER table." << endl;
 #if (BOOST_FILESYSTEM_VERSION == 3)
 	    casacore::LogSink::postGlobally(casacore::LogMessage(oss.str(), casacore::LogOrigin((boost::filesystem::path(getexepath())).filename().string(), WHERE),
 #else
@@ -434,7 +434,7 @@ template <class	T, class R, class RFilter>
 	  if (V2CTX_P(v_p)->verbose){
 	    std::ostringstream oss;
 	    oss.str("");
-	    oss << "Appended " << filteredRows.size() << " rows to the casacore::MS SYSPOWER table." << endl;
+	    oss << "Appended " << filteredRows.size() << " rows to the MS SYSPOWER table." << endl;
 #if (BOOST_FILESYSTEM_VERSION == 3)
 	    casacore::LogSink::postGlobally(casacore::LogMessage(oss.str(), casacore::LogOrigin((boost::filesystem::path(getexepath())).filename().string(), WHERE),
 #else

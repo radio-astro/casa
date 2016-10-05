@@ -58,7 +58,7 @@ public:
 
   // Constructor
   LJJones(VisSet& vs);
-	 //  {throw(casacore::AipsError("Use the constructor LJJones(VisSet&, casacore::MeasurementSet&) instead"));};
+	 //  {throw(casacore::AipsError("Use the constructor LJJones(VisSet&, MeasurementSet&) instead"));};
   LJJones(VisSet& vs, casacore::MeasurementSet& ms);
   //   LJJones(const casacore::Int& nAnt);  // NYI
 

@@ -73,7 +73,7 @@ template <class T> void MomentClip<T>::process(
     T&, casacore::Bool&, const casacore::Vector<T>&, const casacore::Vector<casacore::Bool>&,
     const casacore::IPosition&
 ) {
-    ThrowCc("MomentClip<T>::process(casacore::Vector<T>&, casacore::IPosition&): not implemented");
+    ThrowCc("MomentClip<T>::process(Vector<T>&, IPosition&): not implemented");
 }
 
 template <class T> void MomentClip<T>::multiProcess(

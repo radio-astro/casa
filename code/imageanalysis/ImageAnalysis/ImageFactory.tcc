@@ -98,18 +98,18 @@ template <class T> SPIIT ImageFactory::createImage(
     casacore::Bool blank = outfile.empty();
     ThrowIf(
         shape.nelements() != cSys.nPixelAxes(),
-        "Supplied casacore::CoordinateSystem and image shape are inconsistent"
+        "Supplied CoordinateSystem and image shape are inconsistent"
     );
     SPIIT image;
     if (blank) {
         image.reset(new casacore::TempImage<T>(shape, cSys));
-        ThrowIf(! image, "Failed to create casacore::TempImage");
+        ThrowIf(! image, "Failed to create TempImage");
     }
     else {
         image.reset(new casacore::PagedImage<T>(shape, cSys, outfile));
         ThrowIf(
             ! image,
-            "Failed to create casacore::PagedImage"
+            "Failed to create PagedImage"
         );
     }
     ostringstream os;

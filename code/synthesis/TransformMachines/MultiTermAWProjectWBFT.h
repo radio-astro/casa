@@ -114,7 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual casacore::String name() const {return "MultiTermAWProjectWBFT";};
 
     void normalizeAvgPB(casacore::ImageInterface<casacore::Complex>& inImage, casacore::ImageInterface<casacore::Float>& outImage) 
-    {throw(casacore::AipsError("MTAWPWBFT::normalizeAvgPB(casacore::Complex,casacore::Float)"));}
+    {throw(casacore::AipsError("MTAWPWBFT::normalizeAvgPB(Complex,Float)"));}
   };
 } //# NAMESPACE CASA - END
 

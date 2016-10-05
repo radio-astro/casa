@@ -250,7 +250,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return modeZ_;
 		}
 		virtual casacore::String mode() {
-			return modeZ()?  "casacore::Normal" : "Blink";
+			return modeZ()?  "Normal" : "Blink";
 		}
 
 		virtual int nFrames()  {

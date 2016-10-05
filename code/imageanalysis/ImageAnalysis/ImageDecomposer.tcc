@@ -68,7 +68,7 @@ ImageDecomposer<T>::ImageDecomposer(const casacore::ImageInterface<T>& image)
   itsMapPtr = new casacore::TempLattice<casacore::Int>(casacore::TiledShape(itsShape), 1); 
   if (!itsMapPtr) {
      delete itsImagePtr;
-     throw(casacore::AipsError("Failed to create internal casacore::TempLattice"));
+     throw(casacore::AipsError("Failed to create internal TempLattice"));
   }
 //
   itsMapPtr->set(0);
@@ -88,7 +88,7 @@ ImageDecomposer<T>::ImageDecomposer(const ImageDecomposer<T>& other)
   itsMapPtr = new casacore::TempLattice<casacore::Int>(casacore::TiledShape(itsShape), 1);  
   if (!itsMapPtr) {
      delete itsImagePtr;
-     throw(casacore::AipsError("Failed to create internal casacore::TempLattice"));
+     throw(casacore::AipsError("Failed to create internal TempLattice"));
   }
 //
   itsNRegions = other.itsNRegions;
@@ -164,7 +164,7 @@ void ImageDecomposer<T>::setImage(casacore::ImageInterface<T>& image)
    itsMapPtr = new casacore::TempLattice<casacore::Int>(casacore::TiledShape(itsShape), 1); 
    if (!itsMapPtr) {
      delete itsImagePtr;
-     throw(casacore::AipsError("Failed to create internal casacore::TempLattice"));
+     throw(casacore::AipsError("Failed to create internal TempLattice"));
    }
    itsMapPtr->set(0);
 }
@@ -704,7 +704,7 @@ bool ImageDecomposer<T>::isLocalMax(const casacore::IPosition& pos, casacore::In
   } else if (pos.nelements()==3) {
      return isLocalMax(pos(0), pos(1), pos(2),naxis);
   } else {
-     throw(casacore::AipsError("ImageDecomposer<T>::localmax(casacore::IPosition pos, casacore::Int naxis)"
+     throw(casacore::AipsError("ImageDecomposer<T>::localmax(IPosition pos, Int naxis)"
                        " - pos has wrong number of dimensions"));
   }
   return false;
@@ -1807,7 +1807,7 @@ void ImageDecomposer<T>::decomposeImage()
       if (showProcess)  {    
         cout << "-----------------------------------------" << endl;
         cout << "Subimage " << r << endl;
-        cout << "Contour casacore::Map:" << endl;
+        cout << "Contour Map:" << endl;
         subpmap.displayContourMap(*contourPtr);
       }
 
@@ -1815,7 +1815,7 @@ void ImageDecomposer<T>::decomposeImage()
 
       subpmap.deblendRegions(*contourPtr, itsMinRange, itsNAxis);   
       if (showProcess) {
-        cout << "Component casacore::Map:" << endl;
+        cout << "Component Map:" << endl;
         subpmap.display();
       }
 

@@ -59,7 +59,7 @@ public:
     // Implements PlotMSPlotSubtab::update().
     void update(const PlotMSPlot& plot);
     
-    QString tabName() const { return "casacore::Data"; }
+    QString tabName() const { return "Data"; }
 
     //Returns the name of the file that will be plotted.
     casacore::String getFileName() const;

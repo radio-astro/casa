@@ -60,7 +60,7 @@
 	{\
 		gettimeofday(&stop,0);\
 		elapsedTime = (stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0;\
-		*logger_p << casacore::LogIO::DEBUG2 << "FlagDataHandler::" << __FUNCTION__ << " Executed in: " << elapsedTime << " ms, casacore::Memory free: " << casacore::HostInfo::memoryFree( )/1024.0 << " MB" << casacore::LogIO::POST;\
+		*logger_p << casacore::LogIO::DEBUG2 << "FlagDataHandler::" << __FUNCTION__ << " Executed in: " << elapsedTime << " ms, Memory free: " << casacore::HostInfo::memoryFree( )/1024.0 << " MB" << casacore::LogIO::POST;\
 	}
 
 namespace casa { //# NAMESPACE CASA - BEGIN

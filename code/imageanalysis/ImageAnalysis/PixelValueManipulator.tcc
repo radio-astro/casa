@@ -739,7 +739,7 @@ template<class T> casacore::Bool PixelValueManipulator<T>::putRegion(
             }
         }
         else {
-            ThrowCc("The mask is not writable. Probably an casacore::ImageExpr or casacore::SubImage");
+            ThrowCc("The mask is not writable. Probably an ImageExpr or SubImage");
         }
     }
 
@@ -974,7 +974,7 @@ template<class T> casacore::Record PixelValueManipulator<T>::pixelValue(
     casacore::Record qr;
     ThrowIf(
         ! qh.toRecord(error, qr),
-        "Unable to convert casacore::QuantumHolder to casacore::Record " + error
+        "Unable to convert QuantumHolder to Record " + error
     );
     outRec.defineRecord("value", qr);
 

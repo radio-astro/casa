@@ -405,7 +405,7 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casacore::Vector<casac
                break;
           case TpRecord :
 	       {
-	       //std::cerr << "casacore::fromRecord is Record" << std::endl;
+	       //std::cerr << "fromRecord is Record" << std::endl;
 	       casac::record *dummy = fromRecord(theRec.asRecord(i));
 	       casac::variant dum2(dummy);
                transcribedRec->insert(theRec.name(i).c_str(), dum2);

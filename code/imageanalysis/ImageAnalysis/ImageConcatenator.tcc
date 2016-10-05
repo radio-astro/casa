@@ -175,7 +175,7 @@ SPIIT ImageConcatenator<T>::concatenate(
 	}
 	std::unique_ptr<casacore::ImageConcat<T> > pConcat(new casacore::ImageConcat<T> (_axis, _tempClose));
 	ThrowIf(
-		! pConcat.get(), "Failed to create casacore::ImageConcat object"
+		! pConcat.get(), "Failed to create ImageConcat object"
 	);
 	for(casacore::String name: imageList) {
 		_addImage(pConcat, name);

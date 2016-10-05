@@ -57,7 +57,7 @@ Bool ImageMoments<T>::setNewImage(const casacore::ImageInterface<T>& image) {
 
     ThrowIf(
         imageType != TpFloat && imageType != TpDouble,
-        "Moments can only be evaluated for casacore::Float or casacore::Double valued "
+        "Moments can only be evaluated for Float or Double valued "
         "images"
     );
     // Make a clone of the image
@@ -353,7 +353,7 @@ vector<SHARED_PTR<casacore::MaskedLattice<T> > > ImageMoments<T>::createMoments(
         }
         else {
             imgp.reset(new casacore::TempImage<T>(casacore::TiledShape(outImageShape), cSysOut));
-            os_p << casacore::LogIO::NORMAL << "Created casacore::TempImage" << casacore::LogIO::POST;
+            os_p << casacore::LogIO::NORMAL << "Created TempImage" << casacore::LogIO::POST;
         }
         ThrowIf (! imgp, "Failed to create output file");
         imgp->setMiscInfo(_image->miscInfo());

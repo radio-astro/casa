@@ -169,7 +169,7 @@ namespace casa {
 				return "Statistics";
 			}
 			virtual QString FILE_MODE( ) const {
-				return "casacore::File";
+				return "File";
 			}
 			virtual QString FIT_MODE( ) const {
 				return "Fit";

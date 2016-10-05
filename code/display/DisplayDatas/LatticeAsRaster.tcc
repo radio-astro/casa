@@ -267,7 +267,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		casacore::Record minmaxhist;
 		minmaxhist.define("dlformat", HISTOGRAM_RANGE);
-		minmaxhist.define("listname", "casacore::Data Range");
+		minmaxhist.define("listname", "Data Range");
 		minmaxhist.define("ptype", HISTOGRAM_RANGE);
 		minmaxhist.define("pmin", casacore::Float(getDataMin()));
 		minmaxhist.define("pmax", casacore::Float(getDataMax()));

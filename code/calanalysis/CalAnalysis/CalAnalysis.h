@@ -130,8 +130,8 @@ calName      - This member function returns the new format calibration table
                name.
 msName       - This member function returns the associated casacore::MS name.
 visCal       - This member function returns the visibility calibration type.
-parType      - This member function returns the parameter type ("casacore::Complex" or
-               "casacore::Float").
+parType      - This member function returns the parameter type ("Complex" or
+               "Float").
 polBasis     - This member function returns the polarization basis ("L" or "C").
 field        - This member function returns the field numbers.
 antenna      - This member function returns the antenna numbers.
@@ -174,10 +174,10 @@ visCalGet       - This member function gets the visibility calibration type from
                   the new format calibration table.
 visCalSet       - This member function sets the visibility calibration type
                   private variable.
-parTypeGet      - This member function gets the parameter type ("casacore::Complex" or
-                  "casacore::Float") from the new format calibration table.
-parTypeSet      - This member function sets the parameter type ("casacore::Complex" or
-                  "casacore::Float") private variable.
+parTypeGet      - This member function gets the parameter type ("Complex" or
+                  "Float") from the new format calibration table.
+parTypeSet      - This member function sets the parameter type ("Complex" or
+                  "Float") private variable.
 polBasisGet     - This member function gets the polarization basis ("L" or "C")
                   from the new format calibration table.
 polBasisSet     - This member function sets the polarization basis ("L" or "C")

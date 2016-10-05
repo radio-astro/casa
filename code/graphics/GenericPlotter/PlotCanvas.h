@@ -776,7 +776,7 @@ public:
     // Shows a file chooser dialog and return the absolute filename that the
     // user chooses.  If a directory is given, start the dialog there.  If the
     // user cancels the dialog, an empty casacore::String should be returned.
-    virtual casacore::String fileChooserDialog(const casacore::String& title = "casacore::File Chooser",
+    virtual casacore::String fileChooserDialog(const casacore::String& title = "File Chooser",
                                      const casacore::String& directory = "") = 0;
     
     // Gets/Sets the date format for this canvas.  See Plotter::dateFormat().

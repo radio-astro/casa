@@ -81,7 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			    casacore::Bool Evaluate);
     void normalizeAvgPB();
     void normalizeAvgPB(casacore::ImageInterface<casacore::Complex>& /*inImage*/, casacore::ImageInterface<casacore::Float>& /*outImage*/) 
-    {throw(casacore::AipsError("AWPWBFT::normalizeAvgPB(casacore::Complex,casacore::Float)"));}
+    {throw(casacore::AipsError("AWPWBFT::normalizeAvgPB(Complex,Float)"));}
 
     //
     // This method is called from AWProjectFT to compute the

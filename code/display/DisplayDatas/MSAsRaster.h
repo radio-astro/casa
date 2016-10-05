@@ -456,7 +456,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 
-		// A small routine to return the label for the "Visibility casacore::Memory"
+		// A small routine to return the label for the "Visibility Memory"
 		// slider widget.  The label includes feedback on the selected casacore::MS's
 		// total size, and is updated when that changes.
 		casacore::String visMbLabel_();

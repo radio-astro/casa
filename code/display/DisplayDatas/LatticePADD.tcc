@@ -781,7 +781,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if ((dtype == casacore::TpComplex) || (dtype == casacore::TpDComplex)) {
 				casacore::Record complexmode;
 				complexmode.define("dlformat", "complexmode");
-				complexmode.define("listname", "casacore::Complex mode");
+				complexmode.define("listname", "Complex mode");
 				complexmode.define("ptype", "choice");
 				casacore::Vector<casacore::String> vcomplexmode(4);
 				vcomplexmode(0) = "magnitude";
@@ -868,7 +868,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else if (mask.dataType("mask") == casacore::TpString) {
 			maskPtr = new casacore::WCLELMask(mask.asString("mask"));
 			if (!maskPtr) {
-				os << "Failed to create casacore::WCLELMask from mask casacore::String" << casacore::LogIO::POST;
+				os << "Failed to create WCLELMask from mask String" << casacore::LogIO::POST;
 			}
 		} else {
 			os << casacore::LogIO::SEVERE << "Mask is illegal record type" << casacore::LogIO::POST;
@@ -889,7 +889,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			} else {
 				regionPtr = casacore::ImageRegion::fromRecord(rec, casacore::String(""));
 				if (!regionPtr) {
-					os << casacore::LogIO::NORMAL << "Failed to create casacore::ImageRegion from region record" << casacore::LogIO::POST;
+					os << casacore::LogIO::NORMAL << "Failed to create ImageRegion from region record" << casacore::LogIO::POST;
 				}
 			}
 		} else {

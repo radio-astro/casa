@@ -208,7 +208,7 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 	// Construct output image - an casacore::ImageExpr or a PagedImage
 	if (_outname.empty()) {
 		image.reset(new casacore::ImageExpr<T> (latEx, exprName));
-		ThrowIf(! image, "Failed to create casacore::ImageExpr");
+		ThrowIf(! image, "Failed to create ImageExpr");
 	}
 	else {
 		_log << casacore::LogIO::NORMAL << "Creating image `" << _outname
@@ -225,7 +225,7 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 				"Try closing it and rerunning"
 			);
 		}
-		ThrowIf(! image, "Failed to create casacore::PagedImage");
+		ThrowIf(! image, "Failed to create PagedImage");
 
 		// Make mask if needed, and copy data and mask
 		if (latEx.isMasked()) {

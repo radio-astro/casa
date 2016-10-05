@@ -95,7 +95,7 @@ std::vector<casacore::Quantity> Image2DConvolver<T>::_getConvolvingBeamForTarget
 	catch (const casacore::AipsError& x) {
 		ostringstream os;
 		os << "Unable to reach target resolution of "
-			<< targetBeam << " casacore::Input image beam "
+			<< targetBeam << " Input image beam "
 			<< inputBeam << " is (nearly) identical "
 			<< "to or larger than the output beam size";
 		ThrowCc(os.str());
@@ -298,7 +298,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 				os << " ";
 				if (near(inputBeam, casacore::GaussianBeam(originalParms), 1e-5, casacore::Quantity(1e-2, "arcsec"))) {
 					doConvolve = false;
-					os << casacore::LogIO::NORMAL << " casacore::Input beam is already near target resolution so this "
+					os << casacore::LogIO::NORMAL << " Input beam is already near target resolution so this "
 						<< "plane will not be convolved" << casacore::LogIO::POST;
 				}
 				else {

@@ -83,7 +83,7 @@ namespace asdm {
  * The main reference used in crafting these methods is 
  * Astronomical Algorithms by Jean Meeus, second edition,
  * 2000, Willmann-Bell, Inc., ISBN 0-943396-61-1.  See
- * chapter 7, "Julian day", and chapter 12, "Sidereal casacore::Time".
+ * chapter 7, "Julian day", and chapter 12, "Sidereal Time".
  * 
  * @version 1.0 12 January, 2004
  * @author Allen Farris

@@ -304,7 +304,7 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (casacore::uInt itime)
 		countpnts++;
 		if(tfl) countflags ++;
 	      }
-	    //	    if(countflags>0) cout << "casacore::Time : " << itime << " Preflags for baseline : " << bs << " (" << ant1(bs) << "," << ant2(bs) << ") : " << countflags << " out of " << countpnts << " " << corrlist << endl;
+	    //	    if(countflags>0) cout << "Time : " << itime << " Preflags for baseline : " << bs << " (" << ant1(bs) << "," << ant2(bs) << ") : " << countflags << " out of " << countpnts << " " << corrlist << endl;
 	  }
       }
     
@@ -904,7 +904,7 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 		  cout << "Press <c> to continue display, <s> to stop display but continue flagging, <q> to quit." << endl;
 		  //getchar();
 		  cin >> choice;
-		  //		    cout << " casacore::Choice : " << choice << endl;
+		  //		    cout << " Choice : " << choice << endl;
 		  switch(choice)
 		    {
 		    case 'q': 
@@ -1136,8 +1136,8 @@ void RFATimeFreqCrop :: endChunk ()
       
       //      cout << "--> Flagged " << 100 * runningflag/runningcount << " % on " << Expr << ". Applying to correlations : " << corrlist << endl;
       os << "TFCROP : Flagged " << 100 * runningflag/runningcount << " % on " << Expr << ". Applying to corrs : " << corrlist;
-      if(DryRun) os << " (Not writing flags to casacore::MS)" << casacore::LogIO::POST;
-      else os << " (Writing flags to casacore::MS)" << casacore::LogIO::POST;
+      if(DryRun) os << " (Not writing flags to MS)" << casacore::LogIO::POST;
+      else os << " (Writing flags to MS)" << casacore::LogIO::POST;
     }
   RFAFlagCubeBase::endChunk();
   ///  (chunk.visIter()).setRowBlocking(0); //reset to default

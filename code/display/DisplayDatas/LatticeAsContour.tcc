@@ -164,7 +164,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		        "", true, true);
 
 		itsUnitContour = new DParameterRange<casacore::Float>("unitcontour",
-		        "casacore::Unit Contour Level",
+		        "Unit Contour Level",
 		        "Actual contour level corresping to to a '1' in\n"
 		        "the 'Relative Levels' textbox.",
 		        0., 1.,  .001,  1., 1.,	// (set for real below).
@@ -494,7 +494,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		levels.define("help", "These are relative contour levels, which will be\n"
 		              "scaled linearly: 0 and 1 map to the actual contour\n"
 		              "levels set on the 'Base Contour Level' and\n"
-		              "'casacore::Unit Contour Level' sliders, respectively.");
+		              "'Unit Contour Level' sliders, respectively.");
 		rec.defineRecord("rellevels", levels);
 
 		itsBaseContour->toRecord(rec);

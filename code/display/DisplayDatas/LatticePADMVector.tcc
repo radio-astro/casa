@@ -171,14 +171,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			phasePolarity = 1.0;
 //
 			if (isPol) {
-				os << casacore::LogIO::WARN << "The image appears to be a casacore::Complex polarization type" << endl;
+				os << casacore::LogIO::WARN << "The image appears to be a Complex polarization type" << endl;
 				os << "If this is correct, you should probably set the phase type to 'polarimetric'" << casacore::LogIO::POST;
 			}
 		} else if (phaseType==casacore::String("polarimetric")) {
 			phasePolarity = 2.0;
 //
 			if (!isPol) {
-				os << casacore::LogIO::WARN << "The image does not appear to be a casacore::Complex polarization type" << endl;
+				os << casacore::LogIO::WARN << "The image does not appear to be a Complex polarization type" << endl;
 				os << "If this is correct, you should probably set the phase type to 'normal'" << casacore::LogIO::POST;
 			}
 //

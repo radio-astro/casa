@@ -76,7 +76,7 @@ namespace casa{
 				     const casacore::ImageInterface<casacore::Complex>& image,
 				     casacore::ImageInterface<casacore::Complex>& theavgPB,
 				     casacore::Bool reset=true)
-    {throw(casacore::AipsError("PixelatedConvFunc::makeAverageRes(casacore::Complex) called"));};
+    {throw(casacore::AipsError("PixelatedConvFunc::makeAverageRes(Complex) called"));};
     virtual void prepareConvFunction(const VisBuffer& vb, CFStore& cfs) {};
 
   private:

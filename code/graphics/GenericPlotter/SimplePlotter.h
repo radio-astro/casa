@@ -352,7 +352,7 @@ public:
     // Show a file chooser dialog with the given optional window title and
     // starting directory.  Returns the absolute filename that the user
     // selected, or an empty casacore::String if they pushed "Cancel".
-    casacore::String fileChooserDialog(const casacore::String& title = "casacore::File Chooser",
+    casacore::String fileChooserDialog(const casacore::String& title = "File Chooser",
                              const casacore::String& directory = "");
     
     // Exports the plotter to a PDF file at the given location.  If highQuality
