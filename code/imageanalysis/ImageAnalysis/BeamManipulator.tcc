@@ -66,7 +66,7 @@ template <class T> void BeamManipulator<T>::setVerbose(casacore::Bool v) {
 template <class T> void BeamManipulator<T>::set(const casacore::ImageBeamSet& beamSet) {
 	ThrowIf(
 		beamSet.empty(),
-		"casacore::Input beam set cannot be empty"
+		"Input beam set cannot be empty"
 	);
 	casacore::ImageInfo ii = _image->imageInfo();
 	ii.setBeams(beamSet);
