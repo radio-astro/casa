@@ -309,6 +309,13 @@ SPIIF PVGenerator::generate() const {
         rotated, rotPixStart, rotPixEnd,
         xAxis, yAxis, xdiff, ydiff
     );
+    return _doCollapse(rotated, xAxis, yAxis, rotPixStart, rotPixEnd, halfwidth);
+}
+
+SPIIF PVGenerator::_doCollapse(
+    SPCIIF rotated, Int xAxis, Int yAxis, const Vector<Double>& rotPixStart,
+    const Vector<Double>& rotPixEnd, Double halfwidth
+) const {
     IPosition blc(rotated->ndim(), 0);
     auto trc = rotated->shape() - 1;
     blc[xAxis] = (Int)(rotPixStart[xAxis] + 0.5);
@@ -318,28 +325,27 @@ SPIIF PVGenerator::generate() const {
     auto lcbox = (Record)LCBox(blc, trc, rotated->shape()).toRecord("");
     IPosition axes(1, yAxis);
     ImageCollapser<Float> collapser(
-        "mean", rotated, &lcbox,
-        "", axes, false, "", false
+        "mean", rotated, &lcbox, "", axes, false, "", false
     );
     SPIIF collapsed = collapser.collapse();
-    Vector<Double > newRefPix = rotCoords.referencePixel();
+    auto newRefPix = rotated->coordinates().referencePixel();
     newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
     newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];
-    CoordinateSystem collCoords = collapsed->coordinates();
+    auto collCoords = collapsed->coordinates();
 
     // to determine the pixel increment of the angular offset axis, get the
     // distance between the end points
     ImageMetaData md(collapsed);
     Vector<Int> dirShape = md.directionShape();
     AlwaysAssert(dirShape[1] == 1, AipsError);
-    const DirectionCoordinate& dc = collCoords.directionCoordinate();
+    const auto& dc = collCoords.directionCoordinate();
     Vector<Int> dirAxisNumbers = collCoords.directionAxesNumbers();
     Vector<Double> pixStart(2, 0);
-    MVDirection collapsedStart = dc.toWorld(pixStart);
+    auto collapsedStart = dc.toWorld(pixStart);
     Vector<Double> pixEnd(2, 0);
     pixEnd[0] = dirShape[0];
     MVDirection collapsedEnd = dc.toWorld(pixEnd);
-    Quantity separation = collapsedEnd.separation(
+    auto separation = collapsedEnd.separation(
         collapsedStart, dc.worldAxisUnits()[0]
     );
     // The new coordinate must have the same number of axes as the coordinate
@@ -377,7 +383,7 @@ SPIIF PVGenerator::generate() const {
     }
     // now remove the degenerate linear axis
     SHARED_PTR<const SubImage<Float> > cDropped = SubImageFactory<Float>::createSubImageRO(
-        *collapsed, Record(), "", 0, AxesSpecifier(keep, axisPath),    false, true
+        *collapsed, Record(), "", 0, AxesSpecifier(keep, axisPath), false, true
     );
     std::unique_ptr<ArrayLattice<Bool> > newMask;
     if (dynamic_cast<TempImage<Float> *>(collapsed.get())->hasPixelMask()) {

@@ -172,6 +172,11 @@ private:
         Double xdiff, Double ydiff
     ) const;
 
+    SPIIF _doCollapse(
+        SPCIIF rotated, Int xAxis, Int yAxis, const Vector<Double>& rotPixStart,
+        const Vector<Double>& rotPixEnd, Double halfwidth
+    ) const;
+
     SPCIIF _doRotate(
         SPIIF subImage, const vector<Double>& start, const vector<Double>& end,
         const Vector<Double>& startPixRot, const Vector<Double>& endPixRot,
