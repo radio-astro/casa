@@ -270,7 +270,7 @@ vector<SHARED_PTR<casacore::MaskedLattice<T> > > ImageMoments<T>::createMoments(
     // if there is only one output image
     if (moments_p.nelements() == 1 && !doTemp) {
         if(!outName.empty() && (outName == _image->name())) {
-            throw casacore::AipsError("casacore::Input image and output image have same name");
+            throw casacore::AipsError("Input image and output image have same name");
         }
     }
     auto smoothClipMethod = false;
