@@ -41,7 +41,7 @@
 namespace casa {
 
 template<class T> void ImageAnalysis::_destruct(casacore::ImageInterface<T>& image) {
-	if((image.isPersistent()) && ((image.imageType()) == "casacore::PagedImage")) {
+	if((image.isPersistent()) && ((image.imageType()) == "PagedImage")) {
 		casacore::ImageOpener::ImageTypes type = casacore::ImageOpener::imageType(image.name());
 		if (type == casacore::ImageOpener::AIPSPP) {
 			casacore::Table::relinquishAutoLocks(true);
