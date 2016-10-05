@@ -58,8 +58,8 @@ namespace casa {
 
 
 		setImageFunctionalityEnabled( false );
-		connect( &findSourcesDialog, SIGNAL(showOverlay(String, const QString& )), this, SIGNAL(showOverlay(String, const QString&)));
-		connect( &findSourcesDialog, SIGNAL(removeOverlay(String)), this, SIGNAL(removeOverlay(String)));
+		connect( &findSourcesDialog, SIGNAL(showOverlay(casacore::String, const QString& )), this, SIGNAL(showOverlay(casacore::String, const QString&)));
+		connect( &findSourcesDialog, SIGNAL(removeOverlay(casacore::String)), this, SIGNAL(removeOverlay(casacore::String)));
 		connect( &findSourcesDialog, SIGNAL(estimateFileSpecified(const QString&)), this, SLOT(estimateFileChanged( const QString&)));
 
 		ui.channelLineEdit->setText( QString::number(0));

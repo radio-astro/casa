@@ -90,7 +90,7 @@ private slots:
 //
 // <synopsis>
 // casacore::Table keywords are displayed in a QTableWidget which cannot be edited.
-// casacore::Double-clicking certain types of keywords has certain effects:
+// double-clicking certain types of keywords has certain effects:
 // double-clicking a table keyword will open that subtable while
 // double-clicking an array will open the array in a side panel.
 // </synopsis>
@@ -164,7 +164,7 @@ private slots:
 //
 // <synopsis>
 // Field keywords are displayed in a QTreeWidget which cannot be edited.
-// casacore::Double-clicking certain types of keywords has certain effects:
+// double-clicking certain types of keywords has certain effects:
 // double-clicking a table keyword will open that subtable while
 // double-clicking an array will open the array in a side panel.
 // </synopsis>

@@ -50,7 +50,7 @@ namespace casa {
 
 	public:
 		ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
-		void setImage( const SHARED_PTR<const casacore::ImageInterface<casacore::Float> >  img );
+		void setImage( const SHARED_PTR<const casacore::ImageInterface<float> >  img );
 		void setInterval( double minValue, double maxValue );
 		std::pair<double,double> getInterval() const;
 		~ThresholdingBinPlotDialog();

@@ -21,22 +21,22 @@ public:
     DisplayData3(const casacore::String& = "");
     ~DisplayData3();
 
-    void getCube(casacore::Cube<casacore::Float>&, int& pol);
-    static void getDefaultCube(casacore::Cube<casacore::Float>&);
+    void getCube(casacore::Cube<float>&, int& pol);
+    static void getDefaultCube(casacore::Cube<float>&);
 
     void getAxes();
     void getStartEnd(casacore::IPosition& start, casacore::IPosition& end, 
                      casacore::IPosition& stride,
-                     casacore::Int freq = 0, casacore::Int pol = 0);
+                     int freq = 0, int pol = 0);
 private:
 
-    casacore::ImageInterface<casacore::Float>* im_;
+    casacore::ImageInterface<float>* im_;
     casacore::ImageInterface<casacore::Complex>* cim_;
     //DisplayData* dd_;
     casacore::IPosition ip;
 
-    casacore::Cube<casacore::Float> fileCube;
-    casacore::Vector<casacore::Int> axes;
+    casacore::Cube<float> fileCube;
+    casacore::Vector<int> axes;
     casacore::Vector<casacore::String> tAxes;
 
 };

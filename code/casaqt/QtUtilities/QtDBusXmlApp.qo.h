@@ -125,11 +125,11 @@ public:
             bool* retValueSet = NULL);
     static bool dbusXmlCall(const casacore::String& fromName,
             const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Array<casacore::Bool>& retValue,
+            const casacore::Record& parameters, casacore::Array<bool>& retValue,
             bool* retValueSet = NULL);
     static bool dbusXmlCall(const casacore::String& fromName,
             const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Array<casacore::Int>& retValue,
+            const casacore::Record& parameters, casacore::Array<int>& retValue,
             bool* retValueSet = NULL);
     // </group>
     
@@ -231,12 +231,12 @@ protected:
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
     bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Array<casacore::Bool>& retValue,
+            const casacore::Record& parameters, casacore::Array<bool>& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }
     bool dbusXmlCall(const casacore::String& objectName, const casacore::String& methodName,
-            const casacore::Record& parameters, casacore::Array<casacore::Int>& retValue,
+            const casacore::Record& parameters, casacore::Array<int>& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }

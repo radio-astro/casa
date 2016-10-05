@@ -204,16 +204,16 @@ namespace casa {
 
 		//from double click in a region
 		connect(qdp_,
-		        SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-		        SLOT(drawRegion(Record, WorldCanvasHolder*)));
+		        SIGNAL(mouseRegionReady(casacore::Record, WorldCanvasHolder*)),
+		        SLOT(drawRegion(casacore::Record, WorldCanvasHolder*)));
 
 		//also from double click a region
-		connect(qdp_, SIGNAL(newRegion(String)),
-		        SLOT(newRegion_(String)));
+		connect(qdp_, SIGNAL(newRegion(casacore::String)),
+		        SLOT(newRegion_(casacore::String)));
 		connect(qdp_,  SIGNAL(registrationChange()),
 		        SLOT(deleteAll()));
-		connect(qdp_, SIGNAL(activate(Record)),
-		        SLOT(activate(Record)) );
+		connect(qdp_, SIGNAL(activate(casacore::Record)),
+		        SLOT(activate(casacore::Record)) );
 		connect(qdp_, SIGNAL(animatorChange()),
 		        SLOT(zPlaneChanged()) );
 

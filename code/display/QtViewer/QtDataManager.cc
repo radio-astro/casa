@@ -293,7 +293,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		connect( region_file_list, SIGNAL(itemClicked(QTreeWidgetItem*,int)),SLOT(clickItem(QTreeWidgetItem*)));
 		connect( region_file_list, SIGNAL(itemExpanded(QTreeWidgetItem*)),   SLOT(expandItem(QTreeWidgetItem*)));
 
-		connect(panel_,             SIGNAL(createDDFailed(String, String, String, String)), SLOT(showDDCreateError_(String)));
+		connect(panel_,             SIGNAL(createDDFailed(casacore::String, casacore::String, casacore::String, casacore::String)),
+			                    SLOT(showDDCreateError_(casacore::String)));
 
 		connect(lelEdit_,           SIGNAL(gotFocus(QFocusEvent*)),       SLOT(lelGotFocus_()));
 

@@ -244,10 +244,10 @@ TBPlotter::TBPlotter(TBBrowser* b, PlotFactoryPtr f): QMainWindow(),
     connect(plotButton, SIGNAL(clicked()), this, SLOT(plot()));
     connect(overplotButton, SIGNAL(clicked()), this, SLOT(overplot()));
     connect(openButton, SIGNAL(clicked()), this, SLOT(openNewPlotter()));
-    connect(browser, SIGNAL(tableOpened(String, String)),
-            this, SLOT(tableOpened(String, String)));
-    connect(browser, SIGNAL(tableClosed(String)),
-            this, SLOT(tableClosed(String)));
+    connect(browser, SIGNAL(tableOpened(casacore::String, casacore::String)),
+            this, SLOT(tableOpened(casacore::String, casacore::String)));
+    connect(browser, SIGNAL(tableClosed(casacore::String)),
+            this, SLOT(tableClosed(casacore::String)));
     connect(clearButton, SIGNAL(clicked()),
             plotCanvas, SLOT(clearAndHideAxes()));
     connect(allRowsButton, SIGNAL(clicked()), this, SLOT(allRows()));

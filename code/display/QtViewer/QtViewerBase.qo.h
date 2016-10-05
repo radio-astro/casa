@@ -91,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// The number of open QtDisplayPanels.  (More efficient than the
 		// equivalent openDPs().len(), if the number is all that's needed).
-		virtual casacore::Int nOpenDPs();
+		virtual int nOpenDPs();
 
 		// Only to be used by QtDisplayPanels, to inform this class of
 		// their creation.  (C++ should allow individual methods to be
@@ -110,22 +110,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Does the given file pathname hold a readable file with valid ID and
 		// form as a viewer restore xml document?  (If so, contents are set
 		// onto restoredoc).
-		static casacore::Bool isRestoreFile(casacore::String filename, QDomDocument& restoredoc);
+		static bool isRestoreFile(casacore::String filename, QDomDocument& restoredoc);
 
 		// Does the given casacore::String have valid ID and form as viewer restore xml?
 		// (If so, contents are set onto restoredoc).
-		static casacore::Bool isRestoreString(casacore::String xmlState, QDomDocument& restoredoc);
+		static bool isRestoreString(casacore::String xmlState, QDomDocument& restoredoc);
 
 		static const casacore::String cvRestoreID;		//# internal identifier,
 		static const casacore::String cvRestoreFileExt;		//# default file extension,
 		//# for save-restore
 
-		// Utility routines to convert between casacore::Vector<casacore::Float> and String.
+		// Utility routines to convert between casacore::Vector<float> and String.
 		//<group>
-		static casacore::String toString(casacore::Vector<casacore::Float> values);
-		static casacore::Vector<casacore::Float> toVectorF(casacore::String values, casacore::Bool* ok=0);
-		static casacore::String toString(casacore::Vector<casacore::Double> values);
-		static casacore::Vector<casacore::Double> toVectorD(casacore::String values, casacore::Bool* ok=0);
+		static casacore::String toString(casacore::Vector<float> values);
+		static casacore::Vector<float> toVectorF(casacore::String values, bool* ok=0);
+		static casacore::String toString(casacore::Vector<double> values);
+		static casacore::Vector<double> toVectorD(casacore::String values, bool* ok=0);
 		//</group>
 
 
@@ -133,20 +133,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// displaytype is valid for the datatype.  If the former is true
 		// but the latter isn't, displaytype is [re]set to the default
 		// displaytype for the datatype.
-		casacore::Bool dataDisplaysAs(casacore::String datatype, casacore::String& displaytype);
+		bool dataDisplaysAs(casacore::String datatype, casacore::String& displaytype);
 
 		// public (const) data.
 
 		// viewer datatypess.
-		static const casacore::Int IMAGE=1, MEASUREMENT_SET=2, SKY_CATALOG=3,
+		static const int IMAGE=1, MEASUREMENT_SET=2, SKY_CATALOG=3,
 		                 RESTORE=4, LEL=5,                           N_DT=5;
 
 		// viewer displaytypes.
-		static const casacore::Int RASTER=1, CONTOUR=2, VECTOR=3, MARKER=4,
+		static const int RASTER=1, CONTOUR=2, VECTOR=3, MARKER=4,
 		                 SKY_CAT=5, OLDPANEL=6, NEWPANEL=7,          N_DS=7;
 
 		// (for invalid datatype or displaytype).
-		static const casacore::Int INVALID=0;
+		static const int INVALID=0;
 
 
 		bool exiting( ) {
@@ -212,7 +212,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// e.g. dataDisplaysAs_[IMAGE] will be {RASTER, CONTOUR, VECTOR, MARKER}
 		// dataDisplaysAs_[datatype][0] will be the default displaytype for
 		// that datatype.
-		casacore::Vector<casacore::Vector<casacore::Int> > dataDisplaysAs_;
+		casacore::Vector<casacore::Vector<int> > dataDisplaysAs_;
 
 	private:
 		static bool qtviewer_app_exit;

@@ -63,8 +63,8 @@ namespace casa {
 		int getColorCount() const;
 		void setShowCorners( bool show );
 		void setSampleCount( int count );
-		void setAxes( const casacore::Vector<casacore::Int>& axes );
-		void setCoords( const casacore::Vector<casacore::Int>& coords );
+		void setAxes( const casacore::Vector<int>& axes );
+		void setCoords( const casacore::Vector<int>& coords );
 		void setCurveColor( QList<QColor> colors );
 		bool isSelected() const;
 		void setSelected( bool selected );

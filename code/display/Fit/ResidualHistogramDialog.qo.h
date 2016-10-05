@@ -52,7 +52,7 @@ namespace casa {
 		ResidualHistogramDialog( const ResidualHistogramDialog& other );
 		ResidualHistogramDialog operator=( const ResidualHistogramDialog& other );
 		BinPlotWidget* plotWidget;
-        SHARED_PTR<const casacore::ImageInterface<casacore::Float> > residualImage;
+        SHARED_PTR<const casacore::ImageInterface<float> > residualImage;
 		Ui::ResidualHistogramDialogClass ui;
 	};
 }

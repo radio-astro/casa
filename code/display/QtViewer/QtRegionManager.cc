@@ -86,17 +86,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		        SLOT(loadRegionFromImage()));
 		//from double click in a region
 		connect(qdp_,
-		        SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-		        SLOT(drawRegion(Record, WorldCanvasHolder*)));
+		        SIGNAL(mouseRegionReady(casacore::Record, WorldCanvasHolder*)),
+		        SLOT(drawRegion(casacore::Record, WorldCanvasHolder*)));
 		//also from double click a region
-		connect(qdp_, SIGNAL(newRegion(String)),
-		        SLOT(newRegion_(String)));
-		connect(this, SIGNAL(extendRegion(String, String)),
-		        qdp_, SLOT(extendRegion(String, String)));
+		connect(qdp_, SIGNAL(newRegion(casacore::String)),
+		        SLOT(newRegion_(casacore::String)));
+		connect(this, SIGNAL(extendRegion(casacore::String, casacore::String)),
+		        qdp_, SLOT(extendRegion(casacore::String, casacore::String)));
 		connect(qdp_, SIGNAL(animatorChange()),
 		        SLOT(zPlaneChanged()) );
-		connect(qdp_, SIGNAL(activate(Record)),
-		        SLOT(activate(Record)) );
+		connect(qdp_, SIGNAL(activate(casacore::Record)),
+		        SLOT(activate(casacore::Record)) );
 		connect(chan_sel, SIGNAL(editingFinished()),
 		        SLOT(resetRegionExtension()));
 		connect(pol_sel, SIGNAL(editingFinished()),

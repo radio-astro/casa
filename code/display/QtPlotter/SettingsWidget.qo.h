@@ -45,7 +45,7 @@ namespace casa {
 		Q_OBJECT
 
 	public:
-		void setCollapseVals(const casacore::Vector<casacore::Float> &spcVals);
+		void setCollapseVals(const casacore::Vector<float> &spcVals);
 		void setCanvas( QtCanvas* pCanvas );
 		void setTaskMonitor( ProfileTaskMonitor* fitMonitor );
 		void setCurveName( const QString& curveName );

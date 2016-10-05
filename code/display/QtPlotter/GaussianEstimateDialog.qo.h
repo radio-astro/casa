@@ -46,8 +46,8 @@ namespace casa {
 		~GaussianEstimateDialog();
 		void setGaussCount( int count );
 		void setCurveData( const casacore::Vector<float>& xValues, const casacore::Vector<float>& yValues);
-		void setRangeX( casacore::Float min, casacore::Float max );
-		void setRangeY( casacore::Float min, casacore::Float max );
+		void setRangeX( float min, float max );
+		void setRangeY( float min, float max );
 		void setSpecFitUnits( const QString& specUnits );
 		void setDisplayYUnits( const QString& units );
 		QString getDisplayYUnits() const;
@@ -68,7 +68,7 @@ namespace casa {
 		void setCurveData();
 		void setDisplayYUnits();
 		void setCurveColor();
-		void initializeLimits( const casacore::Vector<float>& values, casacore::Float* const min, casacore::Float* const max );
+		void initializeLimits( const casacore::Vector<float>& values, float* const min, float* const max );
 		casacore::Vector<float> translateDataUnits( const casacore::Vector<float>& xValues, Converter* converter );
 		casacore::Vector<float> xVals;
 		casacore::Vector<float> yVals;

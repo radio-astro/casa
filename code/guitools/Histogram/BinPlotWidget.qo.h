@@ -93,7 +93,7 @@ public:
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
     	QWidget* parent);
 
-    bool setImage( const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > img, bool waitOnHistogram = false );
+    bool setImage( const SHARED_PTR<const casacore::ImageInterface<float> > img, bool waitOnHistogram = false );
     bool setImageRegion( casacore::ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
@@ -249,7 +249,7 @@ private:
     //Histogram & data
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
-    SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image;
+    SHARED_PTR<const casacore::ImageInterface<float> > image;
     QwtPlot binPlot;
     const QString NO_DATA;
     const QString NO_DATA_MESSAGE;

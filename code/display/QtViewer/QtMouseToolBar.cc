@@ -159,16 +159,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// Pressing a button will order a button assignment change from the
 			// central registry.
-			connect( mtb,       SIGNAL(mouseToolBtnPress(String, Int)),
-			         msbtns_,   SLOT(chgMouseBtn        (String, Int)) );
-			connect( mtb,       SIGNAL(mouseToolBtnState(String, Int)),
-			         msbtns_,   SLOT(mouseBtnStateChg   (String, Int)) );
+			connect( mtb,       SIGNAL(mouseToolBtnPress(casacore::String, int)),
+			         msbtns_,   SLOT(chgMouseBtn        (casacore::String, int)) );
+			connect( mtb,       SIGNAL(mouseToolBtnState(casacore::String, int)),
+			         msbtns_,   SLOT(mouseBtnStateChg   (casacore::String, int)) );
 		}
 
 
 		// Keeps this toolbar up-to-date with central button-state registry.
-		connect( msbtns_, SIGNAL(mouseBtnChg (std::string, Int)),
-		         SLOT(chgMouseBtn_(std::string, Int)) );
+		connect( msbtns_, SIGNAL(mouseBtnChg (std::string, int)),
+		         SLOT(chgMouseBtn_(std::string, int)) );
 
 		msbtns_->emitBtns();
 	}

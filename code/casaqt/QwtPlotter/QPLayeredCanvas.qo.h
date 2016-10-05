@@ -256,7 +256,7 @@ public:
 #endif
     
     // Is drawing in progress?
-    virtual casacore::Bool isDrawing();
+    virtual bool isDrawing();
     
     // Event Methods //
     

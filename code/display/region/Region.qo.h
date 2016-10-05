@@ -505,7 +505,7 @@ namespace casa {
 			// newInfoObject(...) is currently only used for PVLine regions, but it should be used for
 			// other regions to allow for specialized creation of the region info objects for display
 			// in "statistics"...
-			virtual RegionInfo *newInfoObject( casacore::ImageInterface<casacore::Float> *, PrincipalAxesDD * ) {
+			virtual RegionInfo *newInfoObject( casacore::ImageInterface<float> *, PrincipalAxesDD * ) {
 				return 0;
 			}
 
@@ -517,13 +517,13 @@ namespace casa {
 
 			virtual std::list<SHARED_PTR<RegionInfo> > *generate_dds_centers( ) = 0;
 
-			static casacore::Int getAxisIndex( casacore::ImageInterface<casacore::Float> *image, std::string axtype );
+			static int getAxisIndex( casacore::ImageInterface<float> *image, std::string axtype );
 
 			inline double linear_average( double a, double b ) const {
 				return (a + b) / 2.0;
 			}
-			RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, SHARED_PTR<casacore::ImageInterface<casacore::Float> > image, casacore::ImageRegion& imgReg);
-			RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, casacore::ImageInterface<casacore::Float> *image, casacore::ImageRegion& imgReg );
+			RegionInfo::center_t *getLayerCenter( PrincipalAxesDD *padd, SHARED_PTR<casacore::ImageInterface<float> > image, casacore::ImageRegion& imgReg);
+			RegionInfo::stats_t  *getLayerStats( PrincipalAxesDD *padd, casacore::ImageInterface<float> *image, casacore::ImageRegion& imgReg );
 
 			region::Units current_xunits( ) const;
 			region::Units current_yunits( ) const;

@@ -61,7 +61,7 @@ public:
     FeatherPlotWidget(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent = 0);
 
     //Setting the data into the plots
-    void setData( const casacore::Vector<casacore::Float>& xValues, const casacore::Vector<casacore::Float>& yValues, DataType dType );
+    void setData( const casacore::Vector<float>& xValues, const casacore::Vector<float>& yValues, DataType dType );
     virtual void addSumData();
 
     void clearPlot();
@@ -109,7 +109,7 @@ protected:
 	FeatherDataType::DataType getDataTypeForCurve( CurveType cType ) const;
 
     void resizeEvent( QResizeEvent* event );
-    void resetData( DataType dataType, const casacore::Vector<casacore::Float>& xValues, const casacore::Vector<casacore::Float>& yValues );
+    void resetData( DataType dataType, const casacore::Vector<float>& xValues, const casacore::Vector<float>& yValues );
     virtual void addSumData( bool logAmplitude);
     pair<double,double> getMaxMin( QVector<double> values, FeatherCurveType::CurveType curveType ) const;
     virtual void zoomRectangleOther( double minX, double maxX, double minY, double maxY )=0;

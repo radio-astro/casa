@@ -48,7 +48,7 @@ namespace casa {
 // - DIRTY															//getFtCutIntImage
 // - DIRTY, weighted and scaled										//getFeatheredCutInt
 
-//FeatherWorker3 ( SD convolved with casacore::Int synthesized beam, INT )
+//FeatherWorker3 ( SD convolved with int synthesized beam, INT )
 //- SD convolved with INT synthesized beam							//getFTCutSDImage
 //- SD convolved with INT synthesized beam; weighted and scaled		//getFeatheredCutSD
 
@@ -85,7 +85,7 @@ public:
 	bool loadImages( const QString& lowImagePath, const QString& highImagePath, casacore::LogIO* logger );
 	bool loadDirtyImage( const QString& dirtyImagePath);
 	void applyFeather( bool saveOutput, const QString& outputImagePath );
-	void getEffectiveDishDiameter( casacore::Float& xDiam, casacore::Float& yDiam );
+	void getEffectiveDishDiameter( float& xDiam, float& yDiam );
 	bool setEffectiveDishDiameter( float xDiam, float yDiam );
 	void setSDScale( float scale );
 	void setRadial( bool radialPlot );
@@ -131,15 +131,15 @@ private:
 	bool generateInputImage( QString highResImagePath, QString lowResImagePath);
 	bool generateDirtyImage( QString dirtyImagePath);
 	int getPlaneCount( casacore::ImageInterface<float>* image ) const;
-	casacore::ImageInterface<casacore::Float>* getSinglePlaneImage( casacore::ImageInterface<float>* image ) const;
+	casacore::ImageInterface<float>* getSinglePlaneImage( casacore::ImageInterface<float>* image ) const;
 	void resetBasicFeedImages();
 	void resetDirtyFeedImage();
-	casacore::ImageInterface<casacore::Float>* lowResImage;
-	casacore::ImageInterface<casacore::Float>* highResImage;
-	casacore::ImageInterface<casacore::Float>* dirtyImage;
-	casacore::ImageInterface<casacore::Float>* highResFeedImage;
-	casacore::ImageInterface<casacore::Float>* dirtyFeedImage;
-	casacore::ImageInterface<casacore::Float>* lowResFeedImage;
+	casacore::ImageInterface<float>* lowResImage;
+	casacore::ImageInterface<float>* highResImage;
+	casacore::ImageInterface<float>* dirtyImage;
+	casacore::ImageInterface<float>* highResFeedImage;
+	casacore::ImageInterface<float>* dirtyFeedImage;
+	casacore::ImageInterface<float>* lowResFeedImage;
 	Feather* featherWorker;
 	FeatherThread* thread;
 	QString errorMessage;

@@ -90,7 +90,7 @@ namespace casa {
 		QtCanvas(QWidget *parent = 0);
 
 		void setPlotSettings(const QtPlotSettings &settings);
-		void setTopAxisRange(const casacore::Vector<casacore::Float> &xValues, bool topAxisDescending );
+		void setTopAxisRange(const casacore::Vector<float> &xValues, bool topAxisDescending );
 		void setFrameMarker( float framePositionX );
 		void setZoomRectColor( QColor color );
 		//Returns the spectrum as it is currently displayed in the canvas (with
@@ -125,11 +125,11 @@ namespace casa {
 		void plotPolyLines(QString);
 		template<class T> void plotPolyLine(const casacore::Vector<T>&, const casacore::Vector<T>&,
 				double beamAngle, double beamArea, casacore::SpectralCoordinate coord);
-		void plotPolyLine(const casacore::Vector<casacore::Float> &x, const casacore::Vector<casacore::Float> &y, const casacore::Vector<casacore::Float> &e,
+		void plotPolyLine(const casacore::Vector<float> &x, const casacore::Vector<float> &y, const casacore::Vector<float> &e,
 		                  double beamAngle, double beamArea, casacore::SpectralCoordinate coord, const QString& lb="");
 		enum ColorCategory { TITLE_COLOR, CURVE_COLOR, CURVE_COLOR_PRIMARY,
 		                     CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL};
-		void addPolyLine(const casacore::Vector<casacore::Float> &x, const casacore::Vector<casacore::Float> &y,
+		void addPolyLine(const casacore::Vector<float> &x, const casacore::Vector<float> &y,
 				double beamAngle, double beamArea, casacore::SpectralCoordinate coord,
 		                 const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
 		void addMolecularLine(MolecularLine* molecularLine );

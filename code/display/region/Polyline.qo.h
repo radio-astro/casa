@@ -108,7 +108,7 @@ namespace casa {
 			void setShowMarkerPosition( int regionId, bool show );
 
 		protected:
-			virtual RegionInfo *newInfoObject(casacore::ImageInterface<casacore::Float>* image, PrincipalAxesDD * );
+			virtual RegionInfo *newInfoObject(casacore::ImageInterface<float>* image, PrincipalAxesDD * );
 			unsigned int check_handle( double x, double y ) const;
 
 			enum YScaleTo { ScaleTop, ScaleBottom };

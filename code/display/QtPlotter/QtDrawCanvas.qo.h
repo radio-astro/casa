@@ -100,14 +100,14 @@ namespace casa {
 		//tp > 0, discrete symbols
 		//tp < 0, line and symbols
 		//cl, color value range from 0 up
-		void plotPolyLine(const casacore::Vector<casacore::Int>&,
-		                  const casacore::Vector<casacore::Int>&,
+		void plotPolyLine(const casacore::Vector<int>&,
+		                  const casacore::Vector<int>&,
 		                  int ln = 0, int tp = 0, int cl = 0);
-		void plotPolyLine(const casacore::Vector<casacore::Float> &x,
-		                  const casacore::Vector<casacore::Float> &y,
+		void plotPolyLine(const casacore::Vector<float> &x,
+		                  const casacore::Vector<float> &y,
 		                  int ln = 0, int tp = 0, int cl = 0);
-		void plotPolyLine(const casacore::Vector<casacore::Double>&,
-		                  const casacore::Vector<casacore::Double>&,
+		void plotPolyLine(const casacore::Vector<double>&,
+		                  const casacore::Vector<double>&,
 		                  int ln = 0, int tp = 0, int cl = 0);
 
 		//Each row is a trace
@@ -119,11 +119,11 @@ namespace casa {
 		//tp > 0, different discrete shape for each trace
 		//cl > 0, different color for each trace
 		//cl <= 0, same color for all traces
-		void plotPolyLine(const casacore::Matrix<casacore::Int> &verts,
+		void plotPolyLine(const casacore::Matrix<int> &verts,
 		                  int ln = 0, int tp = 0, int cl = 0);
-		void plotPolyLine(const casacore::Matrix<casacore::Float> &verts,
+		void plotPolyLine(const casacore::Matrix<float> &verts,
 		                  int ln = 0, int tp = 0, int cl = 0);
-		void plotPolyLine(const casacore::Matrix<casacore::Double> &verts,
+		void plotPolyLine(const casacore::Matrix<double> &verts,
 		                  int ln = 0, int tp = 0, int cl = 0);
 
 		// template<class T>

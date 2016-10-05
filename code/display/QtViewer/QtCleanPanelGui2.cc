@@ -325,8 +325,8 @@ namespace casa {
 		dock->setWidget(widget);
 
 		// Receives rectangle regions from the mouse tool.
-		connect( displayPanel(), SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-		         SLOT( newMouseRegion(Record, WorldCanvasHolder*)) );
+		connect( displayPanel(), SIGNAL(mouseRegionReady(casacore::Record, WorldCanvasHolder*)),
+		         SLOT( newMouseRegion(casacore::Record, WorldCanvasHolder*)) );
 
 		connect(stopPB_, SIGNAL(clicked()), this, SLOT(exitStop()));
 		connect(maskDonePB_, SIGNAL(clicked()), this, SLOT(exitDone()));
@@ -434,15 +434,15 @@ namespace casa {
 			csys_p=maskim->coordinates();
 			Int dirIndex=csys_p.findCoordinate(Coordinate::DIRECTION);
 			dirCoord_p=csys_p.directionCoordinate(dirIndex);
-			connect(dd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-			        SLOT(changeMaskAxis(String, String, String, std::vector<int> )));
+			connect(dd, SIGNAL(axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int> )),
+			        SLOT(changeMaskAxis(casacore::String, casacore::String, casacore::String, std::vector<int> )));
 		} else if ( type == "raster" ) {
 			imagedd_ = dd;
 			Record opts;
 			opts.define("axislabelswitch", true);
 			imagedd_->setOptions(opts);
-			connect(dd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-			        SLOT(changeImageAxis(String, String, String, std::vector<int> )));
+			connect(dd, SIGNAL(axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int> )),
+			        SLOT(changeImageAxis(casacore::String, casacore::String, casacore::String, std::vector<int> )));
 		}
 
 	}

@@ -47,8 +47,8 @@ namespace casa {
 		void setCurveData(const casacore::Vector<float>& xValues, const casacore::Vector<float>& yValues);
 		void setCurveColor( QColor color );
 		void setTitle( const QString& titleStr );
-		void setRangeX( casacore::Float xValue, casacore::Float yValue );
-		void setRangeY( casacore::Float xValue, casacore::Float yValue );
+		void setRangeX( float xValue, float yValue );
+		void setRangeY( float xValue, float yValue );
 		void setDisplayYUnits( const QString& units );
 		void molecularLineChanged( float peak, float center, const QString& label,
 		                           const QString& chemicalName, const QString& resolvedQNs, const QString& frequencyUnits );
@@ -75,10 +75,10 @@ namespace casa {
 		void fwhmFixedChanged( bool fixed );
 
 	private:
-		float scale( int value, casacore::Float min, casacore::Float max ) const;
+		float scale( int value, float min, float max ) const;
 		float scaleY( int value ) const;
 		float scaleX( int value ) const;
-		int reverseScale( float value, casacore::Float min, casacore::Float max ) const;
+		int reverseScale( float value, float min, float max ) const;
 		int reverseScaleY( float value ) const;
 		int reverseScaleX( float value ) const;
 		float getFwhmRange() const;
@@ -105,10 +105,10 @@ namespace casa {
 		SpecFitGaussian gaussianEstimate;
 		casacore::Vector<float> xValues;
 		casacore::Vector<float> yValues;
-		casacore::Float minX;
-		casacore::Float maxX;
-		casacore::Float minY;
-		casacore::Float maxY;
+		float minX;
+		float maxX;
+		float minY;
+		float maxY;
 		QColor curveColor;
 		static QColor fitCurveColor;
 		QMap<QString,MolecularLine*> molecularLineMap;

@@ -77,7 +77,7 @@ namespace casa {
 
 		//this is not used, it emits for any wc change, too often
 		void wcChanged(const casacore::String,
-		               const casacore::Vector<casacore::Double>, const casacore::Vector<casacore::Double>);
+		               const casacore::Vector<double>, const casacore::Vector<double>);
 
 		virtual void closeEvent(QCloseEvent* event);
 

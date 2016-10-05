@@ -65,7 +65,7 @@ public:
      */
     HistogramMain(bool showFileLoader, bool fitControls, bool rangeControls,
     		bool plotModeControls, QWidget *parent);
-    bool setImage(SHARED_PTR<const casacore::ImageInterface<casacore::Float> > img );
+    bool setImage(SHARED_PTR<const casacore::ImageInterface<float> > img );
     bool setImageRegion( casacore::ImageRegion* imageRegion, int id );
     std::pair<double,double> getRange() const;
     void deleteImageRegion( int id );
@@ -96,7 +96,7 @@ private slots:
 private:
 	HistogramMain( const HistogramMain& histMain );
 	HistogramMain& operator=( const HistogramMain& histMain );
-	bool generateImage( const QString& imagePath, SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image );
+	bool generateImage( const QString& imagePath, SHARED_PTR<const casacore::ImageInterface<float> > image );
 
     ImageLoader fileLoader;
     SaveHistogramWidget histogramSaver;

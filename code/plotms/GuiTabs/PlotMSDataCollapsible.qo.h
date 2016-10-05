@@ -60,7 +60,7 @@ public:
     void setGridSize( int rowCount, int colCount );
 
     //Return the row and column location for this plot.
-    void getLocation( casacore::Int& rowIndex, casacore::Int& colIndex );
+    void getLocation( int& rowIndex, int& colIndex );
 
     //Plot parameters have changed.
     void parametersHaveChanged(const PlotMSWatchedParameters& params,

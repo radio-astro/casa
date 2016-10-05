@@ -755,8 +755,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			connect( panel_, SIGNAL(colorBarOrientationChange()),
 			         SLOT(setColorBarOrientation_()) );
 
-			connect(this, SIGNAL(statsReady(const String&)),
-			        panel_,  SLOT(showStats(const String&)));
+			connect(this, SIGNAL(statsReady(const casacore::String&)),
+			        panel_,  SLOT(showStats(const casacore::String&)));
 
 			setColorBarOrientation_();
 		}

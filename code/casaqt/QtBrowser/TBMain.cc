@@ -142,10 +142,10 @@ void TBMain::setup() {
     connect(&browser, SIGNAL(threadIsFinished()),this, SLOT(threadFinished()));
     connect(&browser, SIGNAL(findRuleAvailable()),
             this, SLOT(findRuleAvailable()));
-    connect(&browser, SIGNAL(tableOpened(String, String)),
-            this, SLOT(tableOpened(String, String)));
-    connect(&browser, SIGNAL(tableClosed(String)),
-            this, SLOT(tableClosed(String)));
+    connect(&browser, SIGNAL(tableOpened(casacore::String, casacore::String)),
+            this, SLOT(tableOpened(casacore::String, casacore::String)));
+    connect(&browser, SIGNAL(tableClosed(casacore::String)),
+            this, SLOT(tableClosed(casacore::String)));
     connect(&browser, SIGNAL(filterRuleAvailable(int)),
             this, SLOT(filterRuleAvailable(int)));
     connect(&browser, SIGNAL(filterRuleCleared(int)),
@@ -349,7 +349,7 @@ void TBMain::openTaQL() {
     if(waiting) return;
     
     TBTaQL* taql = new TBTaQL(NULL, TBTaQL::SELECT);
-    connect(taql, SIGNAL(command(String)), &browser, SLOT(openTaQL(String)));
+    connect(taql, SIGNAL(command(casacore::String)), &browser, SLOT(openTaQL(casacore::String)));
     taql->exec();
 }
 
@@ -856,8 +856,8 @@ void TBMain::sort() {
         f[i] = fields->at(i)->getName();
     }
     TBSorter* sorter = new TBSorter(f, tt->getSortFields(), this);
-    connect(sorter, SIGNAL(sortEntered(vector<pair<String, bool> >&)),
-            this, SLOT(sort(vector<pair<String, bool> >&)));
+    connect(sorter, SIGNAL(sortEntered(vector<pair<casacore::String, bool> >&)),
+            this, SLOT(sort(vector<pair<casacore::String, bool> >&)));
     sorter->setWindowModality(Qt::WindowModal);
     sorter->exec();
 }

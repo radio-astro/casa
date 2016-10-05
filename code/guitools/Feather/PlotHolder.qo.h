@@ -47,8 +47,8 @@ public:
 
     //casacore::Data related
     typedef FeatherPlotWidget::DataType DataType;
-    void setData( const casacore::Vector<casacore::Float>& x, const casacore::Vector<casacore::Float>& xAmp,
-    		const casacore::Vector<casacore::Float>& y, const casacore::Vector<casacore::Float>& yAmp, DataType dType );
+    void setData( const casacore::Vector<float>& x, const casacore::Vector<float>& xAmp,
+    		const casacore::Vector<float>& y, const casacore::Vector<float>& yAmp, DataType dType );
     void updateScatterData( );
     void addSumData();
     void clearPlots();

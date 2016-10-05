@@ -70,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		~QtExportManager();
 
 	public slots:
-		void updateEM(QtDisplayData* qdd=0, casacore::Bool autoRegister=true);
+		void updateEM(QtDisplayData* qdd=0, bool autoRegister=true);
 
 	protected:
 		void fillFormatBox(int type);
@@ -105,11 +105,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	private:
-		void expImageInterfaceToFITS(casacore::ImageInterface<casacore::Float>* img, casacore::String outFile);
-		void getSectralCoordFlags(const casacore::ImageInterface<casacore::Float>* img, casacore::Bool &preferVelocity, casacore::Bool &opticalVelocity,
-		                          casacore::Bool &preferWavelength, casacore::Bool &preferAirWavelength);
-		void expImageInterfaceToCASA(casacore::ImageInterface<casacore::Float>* img, casacore::String outFile);
-		//void expImageInterfaceToMIRIAD(casacore::ImageInterface<casacore::Float>* img, casacore::String outFile);
+		void expImageInterfaceToFITS(casacore::ImageInterface<float>* img, casacore::String outFile);
+		void getSectralCoordFlags(const casacore::ImageInterface<float>* img, bool &preferVelocity, bool &opticalVelocity,
+		                          bool &preferWavelength, bool &preferAirWavelength);
+		void expImageInterfaceToCASA(casacore::ImageInterface<float>* img, casacore::String outFile);
+		//void expImageInterfaceToMIRIAD(casacore::ImageInterface<float>* img, casacore::String outFile);
 		void messageFromEM(QString &msg);
 
 		QWidget *parent_;

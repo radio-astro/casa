@@ -171,8 +171,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool, int, Bool)),
-		         SLOT(ddCreated_(QtDisplayData*, Bool, int, Bool)) );
+		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, bool, int, bool)),
+		         SLOT(ddCreated_(QtDisplayData*, bool, int, bool)) );
 
 		/*connect( panel_, SIGNAL(ddRemoved(QtDisplayData*)),
 		         SLOT(ddRemoved_(QtDisplayData*)) );
@@ -297,18 +297,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pd_->addTool(RECTANGLE, SHARED_PTR<MultiWCTool>(ortregion_));
 			oelregion_  = new QtOldEllipseTool(pd_);
 			pd_->addTool(ELLIPSE, SHARED_PTR<MultiWCTool>(oelregion_));
-			connect( ortregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-			         SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-			connect( ortregion_, SIGNAL(echoClicked(Record)),
-			         SLOT(clicked(Record)) );
-			connect( optregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-			         SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-			connect( optregion_, SIGNAL(echoClicked(Record)),
-			         SLOT(clicked(Record)) );
-			connect( oelregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-			         SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-			connect( oelregion_, SIGNAL(echoClicked(Record)),
-			         SLOT(clicked(Record)) );
+			connect( ortregion_, SIGNAL(mouseRegionReady(casacore::Record, WorldCanvasHolder*)),
+			         SLOT(mouseRegionReady_(casacore::Record, WorldCanvasHolder*)) );
+			connect( ortregion_, SIGNAL(echoClicked(casacore::Record)),
+			         SLOT(clicked(casacore::Record)) );
+			connect( optregion_, SIGNAL(mouseRegionReady(casacore::Record, WorldCanvasHolder*)),
+			         SLOT(mouseRegionReady_(casacore::Record, WorldCanvasHolder*)) );
+			connect( optregion_, SIGNAL(echoClicked(casacore::Record)),
+			         SLOT(clicked(casacore::Record)) );
+			connect( oelregion_, SIGNAL(mouseRegionReady(casacore::Record, WorldCanvasHolder*)),
+			         SLOT(mouseRegionReady_(casacore::Record, WorldCanvasHolder*)) );
+			connect( oelregion_, SIGNAL(echoClicked(casacore::Record)),
+			         SLOT(clicked(casacore::Record)) );
 		}
 
 
@@ -337,8 +337,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QtMouseToolState* mBtns = panel_->viewer()->mouseBtns();
 		// Central storage for current active mouse button of each tool.
 
-		connect( mBtns, SIGNAL(mouseBtnChg(std::string, Int)),
-		         SLOT(chgMouseBtn_(std::string, Int)) );
+		connect( mBtns, SIGNAL(mouseBtnChg(std::string, int)),
+		         SLOT(chgMouseBtn_(std::string, int)) );
 
 		mBtns->emitBtns();
 	}
@@ -845,8 +845,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		setAnimator_(animrec);
 
-		connect( qdd, SIGNAL(optionsChanged(Record)),
-		         SLOT(setAnimatorOptions_(Record)) );
+		connect( qdd, SIGNAL(optionsChanged(casacore::Record)),
+		         SLOT(setAnimatorOptions_(casacore::Record)) );
 		// (Allows dd to change animator settings itself, e.g.,
 		// after a user-requested change to its animation axis).
 
@@ -909,8 +909,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// Ignore further animation change-request signals from dd,
 			// since it is no longer registered.
-			disconnect( qdd, SIGNAL(optionsChanged(Record)),
-			            this,  SLOT(setAnimatorOptions_(Record)) );
+			disconnect( qdd, SIGNAL(optionsChanged(casacore::Record)),
+			            this,  SLOT(setAnimatorOptions_(casacore::Record)) );
 
 			// Likewise, colorbar rearrangement via this signal won't be
 			// necessary if qdd is not registered.

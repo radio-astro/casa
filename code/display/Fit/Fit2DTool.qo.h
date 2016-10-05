@@ -52,7 +52,7 @@ namespace casa {
 
 	public:
 		Fit2DTool(QWidget *parent = 0);
-		void setImage( SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image);
+		void setImage( SHARED_PTR<const casacore::ImageInterface<float> > image);
 		bool setImageRegion( casacore::ImageRegion* imageRegion, int id );
 		void deleteImageRegion( int id );
 		void imageRegionSelected( int id );
@@ -98,9 +98,9 @@ namespace casa {
 	private:
 		Fit2DTool( const Fit2DTool& fitTool );
 		Fit2DTool operator=( const Fit2DTool& fitTool );
-		casacore::Vector<casacore::Float> populateInclude() const;
-		casacore::Vector<casacore::Float> populateExclude() const;
-		void populateIncludeExclude(casacore::Vector<casacore::Float>& range ) const;
+		casacore::Vector<float> populateInclude() const;
+		casacore::Vector<float> populateExclude() const;
+		void populateIncludeExclude(casacore::Vector<float>& range ) const;
 
 		void setImageFunctionalityEnabled( bool enable );
 		void resetRegion( const QList<int>& pixelX, const QList<int>& pixelY );
@@ -117,7 +117,7 @@ namespace casa {
 		void updateFrame();
 
 		const QString REGION_LABEL;
-        SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image;
+        SHARED_PTR<const casacore::ImageInterface<float> > image;
 		QList<RegionShape*> fitMarkers;
 		Gaussian2DFitter* fitter;
 		ColorComboDelegate* fitColorDelegate;

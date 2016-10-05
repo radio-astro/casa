@@ -78,7 +78,7 @@ namespace casa {
 
 		bool _constructFitter( SHARED_PTR<const casacore::ImageInterface<float> >& image,
 					const casacore::String& region, const casacore::Record* const &regionPtr, const casacore::String& box,
-					const casacore::String& chans, const casacore::String& stokes, const casacore::String& mask, const casacore::Int axis,
+					const casacore::String& chans, const casacore::String& stokes, const casacore::String& mask, const int axis,
 					const casacore::uInt ngauss, const SpectralList& spectralList );
 		/**
 		 * Places the passed in Gaussian estimate val into the indicated row and
@@ -87,13 +87,13 @@ namespace casa {
 		void setEstimateValue( int row, int col, double val );
 		bool isValidEstimate( QString& peakStr, QString& centerStr,
 		                      QString& fwhmStr, QString& fixedStr, int rowIndex );
-		SpectralList buildSpectralList( int nGauss, casacore::Bool& validList );
+		SpectralList buildSpectralList( int nGauss, bool& validList );
 		bool isValidFitSpecification( int gaussCount, bool polyFit );
 		void setCanvas( QtCanvas* canvas );
 		void doFit( float startVal, float endVal, uint gaussCount, bool fitPoly, int polyN );
-		casacore::String getChannels( float startVal, float endVal, const casacore::Vector<casacore::Float>& specValues ) const;
-		void getFitBounds( casacore::Float& startVal, casacore::Float& endVal ) const;
-		int getFitCount(casacore::Int& startChannelIndex, casacore::Int& endChannelIndex );
+		casacore::String getChannels( float startVal, float endVal, const casacore::Vector<float>& specValues ) const;
+		void getFitBounds( float& startVal, float& endVal ) const;
+		int getFitCount(int& startChannelIndex, int& endChannelIndex );
 		void setFitEstimate( int row, double xValue, double yValue, bool centerPeak );
 		void clearEstimates();
 		void clear();
@@ -102,7 +102,7 @@ namespace casa {
 		/**
 					 * Decides if the units represent velocity, wavelength, or frequency.
 					 */
-		void getConversion( const casacore::String& unitStr, casacore::Bool& velocity, casacore::Bool& wavelength ) const ;
+		void getConversion( const casacore::String& unitStr, bool& velocity, bool& wavelength ) const ;
 		bool processFitResults(casacore::Vector<float>& xValues, casacore::Vector<float>& xValuesPix, const casacore::String& yUnit);
 		void getEstimateStrings( int index, QString& peakStr, QString& centerStr, QString& fwhmStr ) const;
 		bool processFitResultGaussian( const SpectralElement* solution,

@@ -121,7 +121,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void hideDisplayButtons();
 		QColor getDirColor(int);
 		QStringList analyseFITSImage(QString path);
-		casacore::Bool isQualImg(const QString &extexpr);
+		bool isQualImg(const QString &extexpr);
 
 
 		std::string guimethod_to_iamethod( const QString & );
@@ -145,7 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public slots:
 
-		void updateDisplayDatas(QtDisplayData* qdd=0, casacore::Bool autoRegister=true);
+		void updateDisplayDatas(QtDisplayData* qdd=0, bool autoRegister=true);
 
 	protected slots:
 
@@ -349,9 +349,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void region_tab_notify( const std::string &value, tab_state & );
 		void region_tab_error( const std::string &value, tab_state & );
 
-		bool export_to_fits(casacore::ImageInterface<casacore::Float> *img, std::string outFile);
-		bool export_to_casa(casacore::ImageInterface<casacore::Float> *img, casacore::String outFile);
-		void getSpectralCoordFlags(const casacore::ImageInterface<casacore::Float>* img, casacore::Bool &preferVelocity, casacore::Bool &opticalVelocity, casacore::Bool &preferWavelength, casacore::Bool &preferAirWavelength);
+		bool export_to_fits(casacore::ImageInterface<float> *img, std::string outFile);
+		bool export_to_casa(casacore::ImageInterface<float> *img, casacore::String outFile);
+		void getSpectralCoordFlags(const casacore::ImageInterface<float>* img, bool &preferVelocity, bool &opticalVelocity, bool &preferWavelength, bool &preferAirWavelength);
 
 		viewer::SlicerGen *slice_gen;
 

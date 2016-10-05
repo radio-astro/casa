@@ -59,16 +59,16 @@ TBTableTabs::TBTableTabs(TBBrowser* b, String f, DriverParams* dp, bool taql):
     name = table.getName();
     
     // Connect widgets
-    connect(&dataTab, SIGNAL(dataChanged(int, int, String)),
-            this, SLOT(dataChanged(int, int, String)));
+    connect(&dataTab, SIGNAL(dataChanged(int, int, casacore::String)),
+            this, SLOT(dataChanged(int, int, casacore::String)));
     connect(&dataTab, SIGNAL(rightWidgetClosed(QWidget*)),
             browser, SLOT(removeActionsAssociatedWithWidget(QWidget*)));
     connect(&keywordsTab, SIGNAL(rightWidgetClosed(QWidget*)),
             browser, SLOT(removeActionsAssociatedWithWidget(QWidget*)));
     connect(&fieldKeywordsTab, SIGNAL(rightWidgetClosed(QWidget*)),
             browser, SLOT(removeActionsAssociatedWithWidget(QWidget*)));
-    connect(&dataTab, SIGNAL(followReferenceRequested(String, int)),
-            browser, SLOT(followReference(String, int)));
+    connect(&dataTab, SIGNAL(followReferenceRequested(casacore::String, int)),
+            browser, SLOT(followReference(casacore::String, int)));
 }
 
 TBTableTabs::~TBTableTabs() { }

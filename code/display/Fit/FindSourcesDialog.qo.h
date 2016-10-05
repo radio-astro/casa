@@ -52,7 +52,7 @@ namespace casa {
 
 	public:
 		FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
-		void setImage( SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image );
+		void setImage( SHARED_PTR<const casacore::ImageInterface<float> > image );
 		void setChannel( int channel );
 
 		void clearImage();
@@ -121,7 +121,7 @@ namespace casa {
 		enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL,
 		                     MAJOR_AXIS_COL, MINOR_AXIS_COL, ANGLE_COL/*, FIXED_COL*/
 		                   };
-        SHARED_PTR<const casacore::ImageInterface<casacore::Float> > image;
+        SHARED_PTR<const casacore::ImageInterface<float> > image;
 		casacore::String pixelBox;
 		QString skyPath;
 		QString overlayColorName;

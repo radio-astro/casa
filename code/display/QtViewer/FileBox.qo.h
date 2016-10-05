@@ -77,7 +77,7 @@ namespace casa {
 
 		//this is not used, it emits for any wc change, too often
 		void wcChanged(const casacore::String,
-		               const casacore::Vector<casacore::Double>, const casacore::Vector<casacore::Double>);
+		               const casacore::Vector<double>, const casacore::Vector<double>);
 
 		virtual void closeEvent ( QCloseEvent * event );
 
@@ -131,8 +131,8 @@ namespace casa {
 		    QtDisplayData* qdd, const casacore::ImageRegion* wcreg);
 
 		bool planeAllowed(casacore::String, casacore::String);
-		bool chanAllowed(const casacore::Double, const casacore::Double);
-		bool polAllowed(const casacore::Double, const casacore::Double);
+		bool chanAllowed(const double, const double);
+		bool polAllowed(const double, const double);
 
 	private:
 

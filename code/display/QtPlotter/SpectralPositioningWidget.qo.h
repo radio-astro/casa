@@ -21,8 +21,8 @@ namespace casa {
 		void setTaskMonitor( ProfileTaskMonitor* monitor );
 		void setLogger( casacore::LogIO* logger );
 
-		void updateRegion( const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		                   const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy );
+		void updateRegion( const casacore::Vector<double> px, const casacore::Vector<double> py,
+		                   const casacore::Vector<double> wx, const casacore::Vector<double> wy );
 		~SpectralPositioningWidget();
 
 	private slots:
@@ -53,15 +53,15 @@ namespace casa {
 		                                   const double* const secondXPix, const double* const secondYPix,
 		                                   double* const blcxPix, double* const blcyPix,
 		                                   double* const trcxPix, double* const trcYPix, bool pixels=true );
-		double toRadians( casacore::Bool& valid, QLineEdit * lineEdit );
+		double toRadians( bool& valid, QLineEdit * lineEdit );
 		void switchBoxLabels( int index, int pageIndex, QLabel* const x1Label, QLabel* const y1Label,
 		                      QLabel* const x2Label, QLabel* const y2Label );
 		void setPixelLineEdits( double topLeft, double bottomLeft,
 		                        double topRight, double bottomRight );
 		void setWorldEdits( double topLeft, double bottomLeft,
 		                    double topRight, double bottomRight );
-		void adjustPoint( const casacore::Vector<casacore::Double>& newX, const casacore::Vector<casacore::Double>& newY,
-		                  casacore::Vector<casacore::Double>& xValues, casacore::Vector<casacore::Double>& yValues );
+		void adjustPoint( const casacore::Vector<double>& newX, const casacore::Vector<double>& newY,
+		                  casacore::Vector<double>& xValues, casacore::Vector<double>& yValues );
 		Ui::SpectralPositioningWidgetClass ui;
 
 		enum PositionTypeIndex { POINT, BOX, END_POSITION_TYPE };
@@ -74,10 +74,10 @@ namespace casa {
 		QMap<BoxSpecificationIndex,QList<QString> > boxLabelMap;
 		ProfileTaskMonitor* profileTaskMonitor;
 		casacore::LogIO* logger;
-		casacore::Vector<casacore::Double> pixelXValues;
-		casacore::Vector<casacore::Double> pixelYValues;
-		casacore::Vector<casacore::Double> worldXValues;
-		casacore::Vector<casacore::Double> worldYValues;
+		casacore::Vector<double> pixelXValues;
+		casacore::Vector<double> pixelYValues;
+		casacore::Vector<double> worldXValues;
+		casacore::Vector<double> worldYValues;
 	};
 }
 #endif // SPECTRALPOSITIONINGWIDGET_H

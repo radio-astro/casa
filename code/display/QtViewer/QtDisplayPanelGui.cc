@@ -662,10 +662,10 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 
 	// For tracking
 
-	connect( qdp_, SIGNAL(trackingInfo(Record)),
-			SLOT(displayTrackingData_(Record)) );
-	connect( qdp_, SIGNAL(trackingInfo(Record)),
-			SLOT(updateMultiSpectralFitLocation( Record)));
+	connect( qdp_, SIGNAL(trackingInfo(casacore::Record)),
+			SLOT(displayTrackingData_(casacore::Record)) );
+	connect( qdp_, SIGNAL(trackingInfo(casacore::Record)),
+			SLOT(updateMultiSpectralFitLocation( casacore::Record)));
 	/*connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
 		         SLOT(deleteTrackBox_(QtDisplayData*)) );
 	 */
@@ -1055,10 +1055,10 @@ void QtDisplayPanelGui::initFit2DTool() {
 		fitTool = new Fit2DTool( this );
 		resetListenerImage();
 
-		connect( fitTool, SIGNAL(showOverlay(String, const QString&)),
-			this, SLOT(addSkyComponentOverlay(String, const QString&)));
-		connect( fitTool, SIGNAL(addResidualFitImage(String)), this, SLOT(addResidualFitImage(String)));
-		connect( fitTool, SIGNAL(removeOverlay(String)),this, SLOT(removeSkyComponentOverlay(String)));
+		connect( fitTool, SIGNAL(showOverlay(casacore::String, const QString&)),
+			this, SLOT(addSkyComponentOverlay(casacore::String, const QString&)));
+		connect( fitTool, SIGNAL(addResidualFitImage(casacore::String)), this, SLOT(addResidualFitImage(casacore::String)));
+		connect( fitTool, SIGNAL(removeOverlay(casacore::String)),this, SLOT(removeSkyComponentOverlay(casacore::String)));
 		connect( fitTool, SIGNAL(remove2DFitOverlay( QList<RegionShape*>)),this, SLOT( remove2DFitOverlay(QList<RegionShape*>)));
 		connect( fitTool, SIGNAL(add2DFitOverlay( QList<RegionShape*> )),this, SLOT( add2DFitOverlay(QList<RegionShape*>)));
 
@@ -1322,8 +1322,8 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	connect( qdd, SIGNAL(showColorHistogram(QtDisplayData*)), this, SLOT(showColorHistogram(QtDisplayData*)));
 
 	//Allows dds to synchronize options that are global.
-	connect( qdd, SIGNAL(globalOptionsChanged(QtDisplayData*, Record)),
-			this,	SLOT(globalOptionsChanged(QtDisplayData*, Record)));
+	connect( qdd, SIGNAL(globalOptionsChanged(QtDisplayData*, casacore::Record)),
+			this,	SLOT(globalOptionsChanged(QtDisplayData*, casacore::Record)));
 	return qdd;
 }
 
@@ -1897,13 +1897,13 @@ void QtDisplayPanelGui::updateViewedImage(){
 		//Disconnect listening to the previous 'channel' DD.
 		for (DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
 			iter != qdp_->endRegistered(); iter++) {
-				disconnect( (*iter), SIGNAL(axisChanged(String, String, String, std::vector<int>)),
-										this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+				disconnect( (*iter), SIGNAL(axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int>)),
+										this, SLOT(controlling_dd_axis_change(casacore::String, casacore::String, casacore::String, std::vector<int> )) );
 		}
 
 		//Hook up the new dd so we get axis change updates.
-		connect( newViewedImage, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
-				this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )),
+		connect( newViewedImage, SIGNAL(axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int>)),
+				this, SLOT(controlling_dd_axis_change(casacore::String, casacore::String, casacore::String, std::vector<int> )),
 				Qt::UniqueConnection );
 
 		//Update the animator to reflect the current axis state.
@@ -2007,8 +2007,8 @@ void QtDisplayPanelGui::showDataManager() {
 		qdm_ = new QtDataManager(this);
 		/*connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
 					qdm_, SLOT(updateDisplayDatas(QtDisplayData*)));*/
-		connect( this, SIGNAL(ddCreated(QtDisplayData*, Bool, int, Bool)),
-				qdm_, SLOT(updateDisplayDatas(QtDisplayData*, Bool)));
+		connect( this, SIGNAL(ddCreated(QtDisplayData*, bool, int, bool)),
+				qdm_, SLOT(updateDisplayDatas(QtDisplayData*, bool)));
 	}
 	qdm_->showNormal();
 	qdm_->raise();
@@ -2208,8 +2208,8 @@ void QtDisplayPanelGui::showRegionManager() {
 				if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {*/
 	QtDisplayData* pdd = dd();
 	if ( pdd != NULL ) {
-		connect(pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-				qrm_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+		connect(pdd, SIGNAL(axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int> )),
+				qrm_, SLOT(changeAxis(casacore::String, casacore::String, casacore::String, std::vector<int> )));
 		//	}
 	//	}
 	}
@@ -2263,8 +2263,8 @@ void QtDisplayPanelGui::showFileBoxPanel() {
 	if ( ppd != NULL ) {
 		connect(qfb_,  SIGNAL(hideFileBox()),
 				SLOT(hideFileBoxPanel()));
-		connect(ppd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-				qfb_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+		connect(ppd, SIGNAL(axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int> )),
+				qfb_, SLOT(changeAxis(casacore::String, casacore::String, casacore::String, std::vector<int> )));
 	}
 	qfb_->showNormal();
 	qfb_->raise();
@@ -2298,8 +2298,8 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
 	QtDisplayData* pdd = dd();
 	if ( pdd != NULL ) {
 		connect(qap_,  SIGNAL(hideRegionInFile()), SLOT(hideAnnotatorPanel()));
-		connect(pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-				qap_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+		connect(pdd, SIGNAL(axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int> )),
+				qap_, SLOT(changeAxis(casacore::String, casacore::String, casacore::String, std::vector<int> )));
 	}
 	qap_->showNormal();
 	qap_->raise();
@@ -2366,8 +2366,8 @@ void QtDisplayPanelGui::initializeProfile( ){
 		profile_->setPath( "" );
 		connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
 		connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
-		connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, SHARED_PTR<ImageInterface<Float> > )),
-				this, SLOT(addDDSlot(String, String, String, Bool, Bool, SHARED_PTR<ImageInterface<Float> >)));
+		connect(profile_, SIGNAL(showCollapsedImg(casacore::String, casacore::String, casacore::String, bool, bool, SHARED_PTR<casacore::ImageInterface<float> > )),
+				this, SLOT(addDDSlot(casacore::String, casacore::String, casacore::String, bool, bool, SHARED_PTR<casacore::ImageInterface<float> >)));
 		connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 		connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 		connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
@@ -2383,10 +2383,10 @@ void QtDisplayPanelGui::initializeProfile( ){
 
 void QtDisplayPanelGui::resetImageProfile(){
 	if ( profileDD_ != NULL ){
-		disconnect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
-		disconnect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-									profile_, SLOT(changeSpectrum(String, String, String )));
+		disconnect( profileDD_, SIGNAL(axisChangedProfile(casacore::String, casacore::String, casacore::String, std::vector<int> )),
+									profile_, SLOT(changeAxis(casacore::String, casacore::String, casacore::String, std::vector<int> )));
+		disconnect( profileDD_, SIGNAL(spectrumChanged(casacore::String, casacore::String, casacore::String )),
+									profile_, SLOT(changeSpectrum(casacore::String, casacore::String, casacore::String )));
 	}
 	profileDD_ = NULL;
 	showImageProfile();
@@ -2424,20 +2424,20 @@ void QtDisplayPanelGui::showImageProfile() {
 						// [Re-]orient pre-existing profiler to pdd
 						profile_->resetProfile(img, pdd->name().c_str());
 						if ( profileDD_ != NULL ){
-							disconnect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
-							disconnect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-									profile_, SLOT(changeSpectrum(String, String, String )));
+							disconnect( profileDD_, SIGNAL(axisChangedProfile(casacore::String, casacore::String, casacore::String, std::vector<int> )),
+									profile_, SLOT(changeAxis(casacore::String, casacore::String, casacore::String, std::vector<int> )));
+							disconnect( profileDD_, SIGNAL(spectrumChanged(casacore::String, casacore::String, casacore::String )),
+									profile_, SLOT(changeSpectrum(casacore::String, casacore::String, casacore::String )));
 							//pdd->checkAxis( false );
 						}
 						else {
 							pdd->checkAxis( true );
 						}
 						profileDD_ = pdd;
-						connect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
-						connect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-									profile_, SLOT(changeSpectrum(String, String, String )));
+						connect( profileDD_, SIGNAL(axisChangedProfile(casacore::String, casacore::String, casacore::String, std::vector<int> )),
+									profile_, SLOT(changeAxis(casacore::String, casacore::String, casacore::String, std::vector<int> )));
+						connect( profileDD_, SIGNAL(spectrumChanged(casacore::String, casacore::String, casacore::String )),
+									profile_, SLOT(changeSpectrum(casacore::String, casacore::String, casacore::String )));
 					}
 					channelDDFound = true;
 					pdd->checkAxis( false );
@@ -2478,12 +2478,12 @@ void QtDisplayPanelGui::showImageProfile() {
 void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 	SHARED_PTR<QtCrossTool> pos = DYNAMIC_POINTER_CAST<QtCrossTool>(ppd->getTool(QtMouseToolNames::POINT));
 	if ( pos.get( ) != 0 ) {
-		connect( pos.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-				const Vector<Double>, const Vector<Double>, const ProfileType)),
-				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-						const Vector<Double>, const Vector<Double>, const ProfileType)));
-		connect( profile_, SIGNAL(coordinateChange(const String&)),
-				pos.get( ), SLOT(setCoordType(const String&)));
+		connect( pos.get( ), SIGNAL(wcNotify( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+				const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType)),
+				profile_, SLOT(wcChanged( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+						const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType)));
+		connect( profile_, SIGNAL(coordinateChange(const casacore::String&)),
+				pos.get( ), SLOT(setCoordType(const casacore::String&)));
 
 		// one region source is shared among all of the tools...
 		// so there is no need to connect these signals for all of the tools...
@@ -2513,72 +2513,72 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 	} else {
 		SHARED_PTR<QtOldCrossTool> pos = DYNAMIC_POINTER_CAST<QtOldCrossTool>(ppd->getTool(QtMouseToolNames::POINT));
 		if ( pos.get( ) != 0 ) {
-			connect( pos.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-					const Vector<Double>, const Vector<Double>, const ProfileType)),
-					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-							const Vector<Double>, const Vector<Double>, const ProfileType)));
-			connect( profile_, SIGNAL(coordinateChange(const String&)),
-					pos.get( ), SLOT(setCoordType(const String&)));
+			connect( pos.get( ), SIGNAL(wcNotify( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+					const Vector<double>, const casacore::Vector<double>, const ProfileType)),
+					profile_, SLOT(wcChanged( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+							const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType)));
+			connect( profile_, SIGNAL(coordinateChange(const casacore::String&)),
+					pos.get( ), SLOT(setCoordType(const casacore::String&)));
 		}
 	}
 
 	SHARED_PTR<QtRectTool> rect = DYNAMIC_POINTER_CAST<QtRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 	if ( rect.get( ) != 0 ) {
-		connect( rect.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-				const Vector<Double>, const Vector<Double>, const ProfileType)),
-				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-						const Vector<Double>, const Vector<Double>, const ProfileType )));
-		connect( profile_, SIGNAL(coordinateChange(const String&)),
-				rect.get( ), SLOT(setCoordType(const String&)));
+		connect( rect.get( ), SIGNAL(wcNotify( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+				const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType)),
+				profile_, SLOT(wcChanged( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+						const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )));
+		connect( profile_, SIGNAL(coordinateChange(const casacore::String&)),
+				rect.get( ), SLOT(setCoordType(const casacore::String&)));
 	} else {
 		SHARED_PTR<QtOldRectTool> rect = DYNAMIC_POINTER_CAST<QtOldRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 		if ( rect.get( ) != 0 ) {
-			connect( rect.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-					const Vector<Double>, const Vector<Double>, const ProfileType)),
-					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-							const Vector<Double>, const Vector<Double>, const ProfileType )));
-			connect( profile_, SIGNAL(coordinateChange(const String&)),
-					rect.get( ), SLOT(setCoordType(const String&)));
+			connect( rect.get( ), SIGNAL(wcNotify( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+					const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType)),
+					profile_, SLOT(wcChanged( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+							const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )));
+			connect( profile_, SIGNAL(coordinateChange(const casacore::String&)),
+					rect.get( ), SLOT(setCoordType(const casacore::String&)));
 		}
 	}
 
 	SHARED_PTR<QtEllipseTool> ellipse = DYNAMIC_POINTER_CAST<QtEllipseTool>(ppd->getTool(QtMouseToolNames::ELLIPSE));
 	if ( ellipse.get( ) != 0 ) {
-		connect( ellipse.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-				const Vector<Double>, const Vector<Double>, const ProfileType )),
-				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-						const Vector<Double>, const Vector<Double>, const ProfileType )));
-		connect( profile_, SIGNAL(coordinateChange(const String&)),
-				ellipse.get( ), SLOT(setCoordType(const String&)));
+		connect( ellipse.get( ), SIGNAL(wcNotify( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+				const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )),
+				profile_, SLOT(wcChanged( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+						const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )));
+		connect( profile_, SIGNAL(coordinateChange(const casacore::String&)),
+				ellipse.get( ), SLOT(setCoordType(const casacore::String&)));
 	} else {
 		SHARED_PTR<QtOldEllipseTool> ellipse = DYNAMIC_POINTER_CAST<QtOldEllipseTool>(ppd->getTool(QtMouseToolNames::ELLIPSE));
 		if ( ellipse.get( ) != 0 ) {
-			connect( ellipse.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-					const Vector<Double>, const Vector<Double>, const ProfileType )),
-					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-							const Vector<Double>, const Vector<Double>, const ProfileType )));
-			connect( profile_, SIGNAL(coordinateChange(const String&)),
-					ellipse.get( ), SLOT(setCoordType(const String&)));
+			connect( ellipse.get( ), SIGNAL(wcNotify( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+					const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )),
+					profile_, SLOT(wcChanged( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+							const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )));
+			connect( profile_, SIGNAL(coordinateChange(const casacore::String&)),
+					ellipse.get( ), SLOT(setCoordType(const casacore::String&)));
 		}
 	}
 
 	SHARED_PTR<QtPolyTool> poly = DYNAMIC_POINTER_CAST<QtPolyTool>(ppd->getTool(QtMouseToolNames::POLYGON));
 	if ( poly.get( ) != 0 ) {
-		connect( poly.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-				const Vector<Double>, const Vector<Double>, const ProfileType )),
-				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-						const Vector<Double>, const Vector<Double>, const ProfileType )));
-		connect( profile_, SIGNAL(coordinateChange(const String&)),
-				poly.get( ), SLOT(setCoordType(const String&)));
+		connect( poly.get( ), SIGNAL(wcNotify( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+				const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )),
+				profile_, SLOT(wcChanged( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+						const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )));
+		connect( profile_, SIGNAL(coordinateChange(const casacore::String&)),
+				poly.get( ), SLOT(setCoordType(const casacore::String&)));
 	} else {
 		SHARED_PTR<QtOldPolyTool> poly = DYNAMIC_POINTER_CAST<QtOldPolyTool>(ppd->getTool(QtMouseToolNames::POLYGON));
 		if ( poly.get( ) != 0 ) {
-			connect( poly.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-					const Vector<Double>, const Vector<Double>, const ProfileType )),
-					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-							const Vector<Double>, const Vector<Double>, const ProfileType )));
-			connect( profile_, SIGNAL(coordinateChange(const String&)),
-					poly.get( ), SLOT(setCoordType(const String&)));
+			connect( poly.get( ), SIGNAL(wcNotify( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+					const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )),
+					profile_, SLOT(wcChanged( const casacore::String, const casacore::Vector<double>, const casacore::Vector<double>,
+							const casacore::Vector<double>, const casacore::Vector<double>, const ProfileType )));
+			connect( profile_, SIGNAL(coordinateChange(const casacore::String&)),
+					poly.get( ), SLOT(setCoordType(const casacore::String&)));
 		}
 	}
 }
@@ -3103,8 +3103,8 @@ void QtDisplayPanelGui::replaceControllingDD( QtDisplayData* oldControllingDD, Q
 	if ( newControllingDD != oldControllingDD ) {
 		if ( oldControllingDD != NULL ) {
 
-			disconnect( oldControllingDD, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
-					this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+			disconnect( oldControllingDD, SIGNAL(axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int>)),
+					this, SLOT(controlling_dd_axis_change(casacore::String, casacore::String, casacore::String, std::vector<int> )) );
 		}
 
 		//Set the new controlling DD in the layers below this one.
@@ -3116,8 +3116,8 @@ void QtDisplayPanelGui::replaceControllingDD( QtDisplayData* oldControllingDD, Q
 
 
 		if ( newControllingDD != 0 ) {
-			connect( newControllingDD, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
-					SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+			connect( newControllingDD, SIGNAL(axisChanged(casacore::String, casacore::String, casacore::String, std::vector<int>)),
+					SLOT(controlling_dd_axis_change(casacore::String, casacore::String, casacore::String, std::vector<int> )) );
 		}
 	}
 }
@@ -3354,8 +3354,8 @@ void QtDisplayPanelGui::showImageManager() {
 		imageManagerDialog->setImageHolders( qdp_->getDataHolder(), displayDataHolder );
 		connect( imageManagerDialog, SIGNAL(ddClosed(QtDisplayData*&)),
 				this, SLOT(ddClose(QtDisplayData*&)));
-		connect( imageManagerDialog, SIGNAL(ddOpened(const String&, const String&, const String&, int, bool, bool, bool, bool)),
-				this, SLOT(ddOpen(const String&, const String&, const String&, int, bool, bool, bool, bool)));
+		connect( imageManagerDialog, SIGNAL(ddOpened(const casacore::String&, const casacore::String&, const casacore::String&, int, bool, bool, bool, bool)),
+				this, SLOT(ddOpen(const casacore::String&, const casacore::String&, const casacore::String&, int, bool, bool, bool, bool)));
 		connect( imageManagerDialog, SIGNAL(registerAll()),
 				this, SLOT(registerAllDDs()));
 		connect( imageManagerDialog, SIGNAL(unregisterAll()),

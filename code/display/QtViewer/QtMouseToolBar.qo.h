@@ -63,7 +63,7 @@ namespace casa {
 		QtMouseToolButton(const std::string &type, QWidget* parent = 0);
 		virtual ~QtMouseToolButton() {  }
 
-		virtual std::string getIconStr(casacore::Int) const;
+		virtual std::string getIconStr(int) const;
 
 	protected:
 
@@ -78,8 +78,8 @@ namespace casa {
 
 	signals:
 
-		void mouseToolBtnPress(casacore::String tool, casacore::Int btn);
-		void mouseToolBtnState(casacore::String tool, casacore::Int state);
+		void mouseToolBtnPress(casacore::String tool, int btn);
+		void mouseToolBtnState(casacore::String tool, int state);
 
 	private:
 		std::string tool_;
@@ -141,7 +141,7 @@ namespace casa {
 		// Connected to the QtMouseToolState::mouseBtnChg() signal.  Changes the
 		// tool button's (QAction's) state (icon, whether checked), to reflect
 		// the [new] mouse button assignment for a given mouse tool.
-		virtual void chgMouseBtn_(std::string tool, casacore::Int button);
+		virtual void chgMouseBtn_(std::string tool, int button);
 
 		// Overridden from QToolBar, responding to clicks from any mouse button.
 		// Relays that mouse button to central registry for assignment to

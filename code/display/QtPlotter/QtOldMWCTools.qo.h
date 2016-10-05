@@ -75,8 +75,8 @@ namespace casa {
 
 	signals:
 		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		               const casacore::Vector<double> px, const casacore::Vector<double> py,
+		               const casacore::Vector<double> wx, const casacore::Vector<double> wy,
 		               const ProfileType ptype);
 
 	protected:
@@ -97,8 +97,8 @@ namespace casa {
 
 	signals:
 		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		               const casacore::Vector<double> px, const casacore::Vector<double> py,
+		               const casacore::Vector<double> wx, const casacore::Vector<double> wy,
 		               const ProfileType ptype);
 
 	protected:
@@ -118,8 +118,8 @@ namespace casa {
 
 	signals:
 		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		               const casacore::Vector<double> px, const casacore::Vector<double> py,
+		               const casacore::Vector<double> wx, const casacore::Vector<double> wy,
 		               const ProfileType ptype);
 
 	protected:
@@ -139,8 +139,8 @@ namespace casa {
 
 	signals:
 		void wcNotify( const casacore::String c,
-		               const casacore::Vector<casacore::Double> px, const casacore::Vector<casacore::Double> py,
-		               const casacore::Vector<casacore::Double> wx, const casacore::Vector<casacore::Double> wy,
+		               const casacore::Vector<double> px, const casacore::Vector<double> py,
+		               const casacore::Vector<double> wx, const casacore::Vector<double> wy,
 		               const ProfileType ptype);
 
 

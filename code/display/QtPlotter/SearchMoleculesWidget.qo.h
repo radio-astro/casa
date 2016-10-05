@@ -148,7 +148,7 @@ namespace casa {
 
 		void setAstronomicalFilters( Searcher* searcher );
 		void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
-		void initializeSearchRange( QLineEdit* lineEdit, casacore::Double& value, bool* valid );
+		void initializeSearchRange( QLineEdit* lineEdit, double& value, bool* valid );
 		vector<string> initializeChemicalNames();
 		vector<string> initializeChemicalFormulas();
 		QList<QString> getSearchChemicals();

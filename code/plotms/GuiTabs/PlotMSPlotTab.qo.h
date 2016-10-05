@@ -158,7 +158,7 @@ public:
     bool setGridSize( int rowCount, int colCount );
 
     //Return the location on the grid for this plot.
-    void getLocation( casacore::Int& rowIndex, casacore::Int& colIndex );
+    void getLocation( int& rowIndex, int& colIndex );
 
     // Remove this plot.
     void removePlot();

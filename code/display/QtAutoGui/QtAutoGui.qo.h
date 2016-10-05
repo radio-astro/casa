@@ -172,7 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QSpacerItem *spacerItem;
 		//QScrollArea *scrollArea;
 
-		casacore::Bool recordLoaded_;
+		bool recordLoaded_;
 		QString m_lockItem;
 		QMutex mutex;
 		void initialize();

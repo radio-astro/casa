@@ -134,7 +134,7 @@ namespace casa {
 		ImageAnalysis* imageAnalysis;
 		QMap<int, ImageSlice*> sliceMap;
 
-		casacore::Vector<casacore::Int> coords;
+		casacore::Vector<int> coords;
 		int curveWidth;
 		int markerSize;
 		bool accumulateSlices;
@@ -148,7 +148,7 @@ namespace casa {
 		casacore::String interpolationMethod;
 		QString xAxis;
 		QString xAxisUnits;
-		casacore::Vector<casacore::Int> axes;
+		casacore::Vector<int> axes;
 		QLayout* statLayout;
 		SliceStatisticsFactory* factory;
 	};

@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 
-		casacore::Bool isActive() {
+		bool isActive() {
 			return active_;
 		}
 
@@ -101,7 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QPalette activePalette_;
 		QPalette inactivePalette_;
-		casacore::Bool active_;
+		bool active_;
 
 	};
 

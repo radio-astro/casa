@@ -95,15 +95,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			class colormap_state {
 			public:
-				colormap_state( const std::string &n, const casacore::Vector<casacore::Float> &s, const casacore::Vector<casacore::Float> &b ) : name_(n), shift_(s), brightness_(b) { }
+				colormap_state( const std::string &n, const casacore::Vector<float> &s, const casacore::Vector<float> &b ) : name_(n), shift_(s), brightness_(b) { }
 				colormap_state( const colormap_state &other ) : name_(other.name_), shift_(other.shift_), brightness_(other.brightness_) { }
 				const std::string &name( ) const {
 					return name_;
 				}
-				const casacore::Vector<casacore::Float> &shift( ) const {
+				const casacore::Vector<float> &shift( ) const {
 					return shift_;
 				}
-				const casacore::Vector<casacore::Float> &brightness( ) const {
+				const casacore::Vector<float> &brightness( ) const {
 					return brightness_;
 				}
 				const std::string &colormap( ) const {
@@ -111,18 +111,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 			private:
 				std::string name_;
-				casacore::Vector<casacore::Float> shift_;
-				casacore::Vector<casacore::Float> brightness_;
+				casacore::Vector<float> shift_;
+				casacore::Vector<float> brightness_;
 			};
 
-			typedef std::pair<casacore::Vector<casacore::Double>,casacore::Vector<casacore::Double> > zoom_state;
+			typedef std::pair<casacore::Vector<double>,casacore::Vector<double> > zoom_state;
 			typedef std::map<std::string,colormap_state> colormap_map;
 
 			panel_state( const panel_state &other ) : zoom_(other.zoom_) { }
-			const casacore::Vector<casacore::Double> &blc( ) const {
+			const casacore::Vector<double> &blc( ) const {
 				return zoom_.first;
 			}
-			const casacore::Vector<casacore::Double> &trc( ) const {
+			const casacore::Vector<double> &trc( ) const {
 				return zoom_.second;
 			}
 			const colormap_state *colormap( const std::string &s ) const;
@@ -143,7 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		~QtDisplayPanel();
 
-		casacore::Bool isEmptyRegistered() const;
+		bool isEmptyRegistered() const;
 		int getRegisteredCount() const;
 		//Manipulation of the QtDisplayData's.
 		DisplayDataHolder::DisplayDataIterator beginRegistered() const;
@@ -158,7 +158,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// any longer, in particular when reacting to ddRemoved signal).
 		// Either qdd pointer or its name can be given.
 		//<group>
-		virtual casacore::Bool isRegistered(QtDisplayData*);
+		virtual bool isRegistered(QtDisplayData*);
 		//</group>
 		QtDisplayData* getControllingDD() const;
 
@@ -233,7 +233,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// Return total number of (main) subpanels (e.g. 12 for 3x4-panel display).
-		casacore::Int nPanels() {
+		int nPanels() {
 			return pd_->nWCHs();
 		}
 
@@ -246,81 +246,81 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//#   startFrame(), lastFrame(), step(),
 		//#   animRate(), minRate(), maxRate(), animating()  ).
 
-		virtual casacore::Bool modeZ()  {
+		virtual bool modeZ()  {
 			return modeZ_;
 		}
 		virtual casacore::String mode() {
 			return modeZ()?  "casacore::Normal" : "Blink";
 		}
 
-		virtual casacore::Int nFrames()  {
+		virtual int nFrames()  {
 			return modeZ()?  nZFrames() : nBFrames();
 		}
-		virtual casacore::Int nZFrames() {
+		virtual int nZFrames() {
 			return zLen_;
 		}
-		virtual casacore::Int nBFrames() {
+		virtual int nBFrames() {
 			return bLen_;
 		}
 
-		virtual casacore::Int frame()  {
+		virtual int frame()  {
 			return index();
 		}
-		virtual casacore::Int index()  {
+		virtual int index()  {
 			return modeZ()?  zIndex() : bIndex();
 		}
-		virtual casacore::Int zIndex() {
+		virtual int zIndex() {
 			return zIndex_;
 		}
-		virtual casacore::Int bIndex() {
+		virtual int bIndex() {
 			return bIndex_;
 		}
 
-		virtual casacore::Int startFrame()  {
+		virtual int startFrame()  {
 			return modeZ()?  zStart() : bStart();
 		}
-		virtual casacore::Int zStart() {
+		virtual int zStart() {
 			return zStart_;
 		}
-		virtual casacore::Int bStart() {
+		virtual int bStart() {
 			return bStart_;
 		}
 
-		virtual casacore::Int lastFrame() {
+		virtual int lastFrame() {
 			return endFrame()-1;
 		}
-		virtual casacore::Int endFrame()  {
+		virtual int endFrame()  {
 			return modeZ()?  zEnd() : bEnd();
 		}
-		virtual casacore::Int zEnd() {
+		virtual int zEnd() {
 			return zEnd_;
 		}
-		virtual casacore::Int bEnd() {
+		virtual int bEnd() {
 			return bEnd_;
 		}
 		//# NB: frame() <  endFrame()  (<--used internally)
 		//# but frame() <= lastFrame() (<--shown in ui)
 
-		virtual casacore::Int step()  {
+		virtual int step()  {
 			return modeZ()?  zStep() : bStep();
 		}
-		virtual casacore::Int zStep() {
+		virtual int zStep() {
 			return zStep_;
 		}
-		virtual casacore::Int bStep() {
+		virtual int bStep() {
 			return bStep_;
 		}
 
-		virtual casacore::Int animRate()  {
+		virtual int animRate()  {
 			return animRate_;
 		}
-		virtual casacore::Int minRate()   {
+		virtual int minRate()   {
 			return minRate_;
 		}
-		virtual casacore::Int maxRate()   {
+		virtual int maxRate()   {
 			return maxRate_;
 		}
-		virtual casacore::Int animating() {
+		virtual int animating() {
 			return animating_;
 		}
 
@@ -337,7 +337,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Save the last region created (via an image DD) with the mouse.
 		// Return value indicates success.
 		// (The casacore::ImageRegion is transformed to a casacore::TableRecord then saved via casacore::AipsIO).
-		casacore::Bool saveLastRegion(casacore::String path);
+		bool saveLastRegion(casacore::String path);
 
 		// same as above except it is saved in the last registered image as a keyword
 
@@ -364,7 +364,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// displayed axes).
 		//
 		// The default policy is 0.
-		void setRegionExtent(casacore::Int ext) {
+		void setRegionExtent(int ext) {
 			rgnExtent_ = casacore::max(0, casacore::min(2,  ext  ));
 		}
 
@@ -373,7 +373,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return lastRgn_;
 		}
 
-		casacore::Bool hasRegion() {
+		bool hasRegion() {
 			return hasRgn_;
 		}
 
@@ -395,7 +395,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Returns true if the given RegionShape is registered on this display panel,
 		// false otherwise.
-		casacore::Bool isRegistered(RegionShape* rs);
+		bool isRegistered(RegionShape* rs);
 
 
 
@@ -419,16 +419,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Save panel state to a file (as xml).  State is also stored to an
 		// internal lastSavedState_ casacore::String (only there, if filename=="").
 		// By default, the file will be overwritten if necessary.
-		virtual casacore::Bool savePanelState(casacore::String filename="", casacore::Bool overwrite=true);
+		virtual bool savePanelState(casacore::String filename="", bool overwrite=true);
 
 		// Restore panel state from a file or from lastSavedState_ if filename=="".
-		virtual casacore::Bool restorePanelState(casacore::String filename="");
+		virtual bool restorePanelState(casacore::String filename="");
 
 		// set panel state from xml casacore::String (lastSavedState_, by default).
-		virtual casacore::Bool setPanelState(casacore::String xmlState="");
+		virtual bool setPanelState(casacore::String xmlState="");
 
 		// [re]set panel state from a QDomDocument.
-		virtual casacore::Bool setPanelState(QDomDocument& restoredoc,
+		virtual bool setPanelState(QDomDocument& restoredoc,
 		                           QString restorefiledir="");
 
 		panel_state getPanelState( ) const;
@@ -464,7 +464,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// itself (e.g. via scripting or save-restore); that will assure that
 		// the options gui does receive all option updates (via the optionsChanged
 		// signal) and updates its user interface accordingly.
-		virtual void setOptions(casacore::Record opts, casacore::Bool emitAll=false);
+		virtual void setOptions(casacore::Record opts, bool emitAll=false);
 
 
 
@@ -533,7 +533,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			else goToB(frm);
 		}
 		//# Note: connected to std Qt signal which takes 'int'.
-		//# As of Qt4.1.3, declaring goTo(casacore::Int frm) will no longer
+		//# As of Qt4.1.3, declaring goTo(int frm) will no longer
 		//# do (which is a bit of a pain...).  (Actually, though,
 		//# it is very unclear to me that having casa Ints, Floats,
 		//# et. al. buys us anything at all...).
@@ -568,13 +568,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Expose Zoomer functions: zoom in/out, zoom out to whole image.
 		//<group>
-		virtual void zoomIn (casacore::Double fctr=2.) {
+		virtual void zoomIn (double fctr=2.) {
 			if(zoom_!=0) zoom_->zoomIn (fctr);
 		}
-		virtual void zoomOut(casacore::Double fctr=2.) {
+		virtual void zoomOut(double fctr=2.) {
 			if(zoom_!=0) zoom_->zoomOut(fctr);
 		}
-		virtual void zoom (const casacore::Vector<casacore::Double> &blc, const casacore::Vector<casacore::Double> &trc ) {
+		virtual void zoom (const casacore::Vector<double> &blc, const casacore::Vector<double> &trc ) {
 			if ( zoom_ != 0 ) zoom_->zoom( blc, trc );
 		}
 		virtual void unzoom() {
@@ -583,7 +583,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//</group>
 
 
-		casacore::Bool worldToLin(casacore::Vector<casacore::Double> &lin, const casacore::Vector<casacore::Double> &world);
+		bool worldToLin(casacore::Vector<double> &lin, const casacore::Vector<double> &world);
 
 		// Returns the pixel canvas's current size.
 		QSize canvasSize() {
@@ -597,7 +597,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pd_->refresh();
 			refreshCBPanels_();
 		}
-		virtual void setBlen_(casacore::Int len);
+		virtual void setBlen_(int len);
 
 		viewer::RegionToolManager *toolMgr( ) { return toolmgr; }
 
@@ -719,7 +719,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// reacts to similar-named signals from QtViewer
 		// <group>
-		virtual void ddCreated_(QtDisplayData*, casacore::Bool autoRegister, int position=-1, casacore::Bool csMaster = false);
+		virtual void ddCreated_(QtDisplayData*, bool autoRegister, int position=-1, bool csMaster = false);
 		virtual void ddRemoved_(QtDisplayData*);
 		// </group>
 
@@ -729,20 +729,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void setAnimatorOptions_(casacore::Record opts);
 		virtual void setAnimator_(casacore::Record sarec);
 
-		virtual void setLen_(casacore::Int len) {	//# (probably unneeded).
+		virtual void setLen_(int len) {	//# (probably unneeded).
 			if(modeZ()) setZlen_(len);
 			else        setBlen_(len);
 		}
-		virtual void setZlen_(casacore::Int len);
+		virtual void setZlen_(int len);
 
 
 		virtual void stop_();
-		virtual void goTo_(casacore::Int frm) {
+		virtual void goTo_(int frm) {
 			if(modeZ()) goToZ_(frm);
 			else goToB_(frm);
 		}
-		virtual void goToZ_(casacore::Int frm);
-		virtual void goToB_(casacore::Int frm);
+		virtual void goToZ_(int frm);
+		virtual void goToB_(int frm);
 
 		virtual void playStep_() {
 			if(animating_<0) prev_();
@@ -757,7 +757,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Connected to QtMouseToolState::mouseBtnChg() signal: changes
 		// button assignment for a mouse tool.
-		virtual void chgMouseBtn_(std::string tool, casacore::Int button);
+		virtual void chgMouseBtn_(std::string tool, int button);
 
 		// Connected to corresp. signals from 'region' mouse tools.  Emits that
 		// signal verbatum, but also processes it through the registered DDs,
@@ -811,7 +811,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Utility function: is the given wc one belonging to the main pd_?
-		virtual casacore::Bool myWC_(const WorldCanvas* wc);
+		virtual bool myWC_(const WorldCanvas* wc);
 
 
 		//# color bar maintenance.
@@ -824,7 +824,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// needs to take.
 		// Only the pcResizing_() slot should set resizing=true; in this case,
 		// arrangeColorBars_ lets the PC take care of refresh.
-		virtual void arrangeColorBars_(casacore::Bool reorient=false, casacore::Bool resizing=false);
+		virtual void arrangeColorBars_(bool reorient=false, bool resizing=false);
 
 
 		// Update Lists of registered DDs which have color bar display
@@ -839,7 +839,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// shrink will usually be 1.; in rare cases where many colorbars are
 		// crowding the main panel and each other, it may be less (and then
 		// the returned margin allowance may also be less than ideal...).
-		virtual casacore::Int marginb_(QtDisplayData* dd, casacore::Float shrink=1.);
+		virtual int marginb_(QtDisplayData* dd, float shrink=1.);
 
 
 		// Used by arrangeColorBars_().
@@ -847,7 +847,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// colorbar panel.  (This is allocated along the direction of the
 		// colorbar's thickness; in the direction its length the panel uses
 		// the entire PC size).
-		virtual casacore::Float cbPanelSpace_(QtDisplayData* dd);
+		virtual float cbPanelSpace_(QtDisplayData* dd);
 
 
 		// Refresh (only) the colorbar panels (if any).  (An attempt to reduce
@@ -867,7 +867,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Note: the DD will _not_ be registered automatically.
 		// origrestorefile and (current) restoredir aid in locating data files
 		// relative to the current restore file location.
-		virtual casacore::Bool ddFileMatch_( const std::string &path, const std::string &dataType, const std::string &displayType,
+		virtual bool ddFileMatch_( const std::string &path, const std::string &dataType, const std::string &displayType,
 		                           QtDisplayData*& dd, QString origrestorefile, QString restoredir);
 
 
@@ -931,19 +931,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QTimer tmr_;
 
-		casacore::Bool tracking_;	//# Won't send out tracking signals when false.
+		bool tracking_;	//# Won't send out tracking signals when false.
 
 
 		//# animation state
 
-		casacore::Bool modeZ_;			//# true (default) == normal mode; else blink.
-		casacore::Int zLen_, bLen_;		//# total number of frames for each mode.
-		casacore::Int zIndex_, bIndex_;		//# current frame (0-based).
+		bool modeZ_;			//# true (default) == normal mode; else blink.
+		int zLen_, bLen_;		//# total number of frames for each mode.
+		int zIndex_, bIndex_;		//# current frame (0-based).
 
-		casacore::Int animRate_;  		//# frames / sec. for play.
-		casacore::Int minRate_, maxRate_;	//# limits to above:
+		int animRate_;  		//# frames / sec. for play.
+		int minRate_, maxRate_;	//# limits to above:
 		//# 1 <= minRate_ <= animRate_ <= maxRate_.
-		casacore::Int animating_;		//# -1: reverse play  0: stopped  1: fwd. play
+		int animating_;		//# -1: reverse play  0: stopped  1: fwd. play
 
 
 
@@ -973,11 +973,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// direction of colorbar thickness (e.g., along the horizontal axis for
 		// a vertical bar).  arrangeColorBars_() gets nominal sizes for colorbar
 		// panels from cbPanelSpace_(), and that is usually what they get.
-		casacore::Vector<casacore::Float> colorBarPanelSizes_;
+		casacore::Vector<float> colorBarPanelSizes_;
 
 		// The portion of the PixelCanvas allocated to the main (image display)
 		// PanelDisplay (pd_);
-		casacore::Float mainPanelSize_;
+		float mainPanelSize_;
 
 		// The following are used (only) by arrangeColorBars_() and its
 		// auxiliary routines, and are set for current conditions every time
@@ -989,9 +989,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// according to the current orientation of color bars.  mrgna_, mrgnb_
 		// are margins in the colorbar thickness direction; mrgnb_ is where
 		// labelling occurs.
-		casacore::Int pcthsz_,  pclnsz_;
-		casacore::Float marginUnit_;
-		casacore::Int mrgna_, mrgnb_,  lnmrgna_, lnmrgnb_;
+		int pcthsz_,  pclnsz_;
+		float marginUnit_;
+		int mrgna_, mrgnb_,  lnmrgna_, lnmrgnb_;
 
 
 
@@ -1004,7 +1004,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		casacore::String rgnImgPath_;
 
 		// Has any such region (ever) been saved?
-		casacore::Bool hasRgn_;
+		bool hasRgn_;
 
 		// Extension policy to use to for saved region (and for statistics:
 		// 0: Region applies to viewed plane only.
@@ -1012,7 +1012,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// 2: Extend along all non-displayed axes.
 		// (The mouse polygon/rectangle always determines the region on the
 		// displayed axes).
-		casacore::Int rgnExtent_;
+		int rgnExtent_;
 
 
 
@@ -1067,17 +1067,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//# This (public) bool is probably temporary.  true by default.
 		//# Set it false to disable stats printing.
-		casacore::Bool printStats;
+		bool printStats;
 
-		casacore::Bool useRegion;
+		bool useRegion;
 
 		//# Printing utilities
 
-		void setAllowBackToFront(casacore::Bool allowed=true) {
+		void setAllowBackToFront(bool allowed=true) {
 			if (pc_) pc_->setAllowBackToFront(allowed);
 		}
 
-		void setUpdateAllowed(casacore::Bool allowed=true) {
+		void setUpdateAllowed(bool allowed=true) {
 			if (pc_) pc_->setUpdateAllowed(allowed);
 		}
 
@@ -1089,7 +1089,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		float getTickLength( );
 		void  setTickLength( float value );
 
-		void setLineWidthPS(casacore::Float &w);
+		void setLineWidthPS(float &w);
 		void setBackgroundPS(casacore::String &w, casacore::String &c);
 
 		void beginLabelAndAxisCaching( ) {
@@ -1193,8 +1193,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# Start_, End_ are current user-defined animator limits;
 		//# The user can now set her/her own desired limits.
 		//# 0 <= Start_ <=Index_ < End_ <=Len_   and  1 <= Step_ <= Len_.
-		casacore::Int zStart_, zEnd_, zStep_;
-		casacore::Int bStart_, bEnd_, bStep_;
+		int zStart_, zEnd_, zStep_;
+		int bStart_, bEnd_, bStep_;
 
 		std::stack<casacore::Record*> drawing_state;
 

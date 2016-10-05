@@ -90,7 +90,7 @@ private:
 	void clearPlots();
 	bool isInputImagesChanged();
 	//bool generateInputImage();
-	pair<float,float> populateDishDiameters(casacore::Bool& validDiameters);
+	pair<float,float> populateDishDiameters(bool& validDiameters);
 	float populateSDFactor() const;
 
 	void updatePlaneInformation();

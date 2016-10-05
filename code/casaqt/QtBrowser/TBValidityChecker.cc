@@ -58,10 +58,10 @@ TBValidityChecker::TBValidityChecker(TBBrowser* b) : QWidget(), browser(b) {
             this, SLOT(tableChanged(QString)));
     tableChooser->setCurrentIndex(0);
 
-    connect(browser, SIGNAL(tableOpened(String)),
-    		this, SLOT(tableOpened(String)));
-    connect(browser, SIGNAL(tableClosed(String)),
-    		this, SLOT(tableClosed(String)));
+    connect(browser, SIGNAL(tableOpened(casacore::String)),
+    		this, SLOT(tableOpened(casacore::String)));
+    connect(browser, SIGNAL(tableClosed(casacore::String)),
+    		this, SLOT(tableClosed(casacore::String)));
 }
 
 TBValidityChecker::~TBValidityChecker() {

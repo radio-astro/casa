@@ -139,7 +139,7 @@ namespace casa {
 		bool in_interact_mode;
 		int interact_id;
 
-		void writeRegionText(const casacore::ImageRegion& imageReg, const casacore::String& filename, casacore::Float value);
+		void writeRegionText(const casacore::ImageRegion& imageReg, const casacore::String& filename, float value);
 
 		QtDisplayData* imagedd_;
 		QtDisplayData* maskdd_;			// later: to display clean region.

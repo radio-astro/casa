@@ -50,13 +50,13 @@ public:
     void setFWHM( double fwhm );
     void setLambda( double lambda );
     void setUnits( const QString& units );
-    void setValues( int id, casacore::Vector<casacore::Float> xValues, casacore::Vector<casacore::Float> yValues );
+    void setValues( int id, casacore::Vector<float> xValues, casacore::Vector<float> yValues );
     double getCenter() const;
     double getPeak() const;
     double getFWHM() const;
     double getLambda() const;
-    casacore::Vector<casacore::Float> getFitValues() const;
-    casacore::Vector<casacore::Float> getFitValuesX() const;
+    casacore::Vector<float> getFitValues() const;
+    casacore::Vector<float> getFitValuesX() const;
     bool isGaussian() const;
     void toAscii( QTextStream& out) const;
     void restrictDomain( double xMin, double xMax );

@@ -102,9 +102,9 @@ namespace casa {
 
 		// Converts between coordinate systems.  The result has unit
 		// RegionShape::UNIT.
-		static bool convertWCS(const casacore::Quantum<casacore::Vector<casacore::Double> >& from,
+		static bool convertWCS(const casacore::Quantum<casacore::Vector<double> >& from,
 		                       casacore::MDirection::Types fromSys,
-		                       casacore::Quantum<casacore::Vector<casacore::Double> >& to,
+		                       casacore::Quantum<casacore::Vector<double> >& to,
 		                       casacore::MDirection::Types toSys);
 
 		// Converts the given coordinates between different systems, using the
@@ -384,10 +384,10 @@ namespace casa {
 		// casacore::String constructor.
 		RSOption(const casacore::String& str);
 
-		// casacore::Bool constructor.
+		// bool constructor.
 		RSOption(bool b = false);
 
-		// casacore::Double constructor.
+		// double constructor.
 		RSOption(double d);
 
 		// casacore::String vector constructor.

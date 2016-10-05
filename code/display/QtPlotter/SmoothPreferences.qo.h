@@ -15,7 +15,7 @@ class SmoothPreferences : public QDialog
 
 public:
     SmoothPreferences(QWidget *parent = 0);
-    casacore::Vector<casacore::Float> applySmoothing( casacore::Vector<casacore::Float> values) const;
+    casacore::Vector<float> applySmoothing( casacore::Vector<float> values) const;
     QString toString() const;
     ~SmoothPreferences();
 
@@ -31,7 +31,7 @@ private:
     void initialize();
     void persist();
     void reset();
-    casacore::Vector<casacore::Float> doConvolve( const casacore::Vector<casacore::Float>& input,
+    casacore::Vector<float> doConvolve( const casacore::Vector<float>& input,
     		int baseKernelSize, casacore::VectorKernel::KernelTypes kernelType ) const;
     Ui::SmoothPreferencesClass ui;
     QString smoothMethod;
