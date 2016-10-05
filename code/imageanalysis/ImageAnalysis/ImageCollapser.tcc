@@ -244,7 +244,7 @@ template<class T> casacore::Bool ImageCollapser<T>::_doMultipleBeams(
         }
     }
     if (! dirAxesOnlyCollapse) {
-        *this->_getLog() << casacore::LogIO::WARN << "casacore::Input image has per plane beams "
+        *this->_getLog() << casacore::LogIO::WARN << "Input image has per plane beams "
                          << "but the collapse is not done exclusively along the direction axes. "
                          << "The output image will arbitrarily have a single beam which "
                          << "is the first beam available in the subimage."
@@ -283,7 +283,7 @@ template<class T> void ImageCollapser<T>::_doOtherStats(
                              << casacore::LogIO::POST;
         } else if (info.hasMultipleBeams()) {
             *this->_getLog() << casacore::LogIO::WARN
-                             << "casacore::Function sqrtsum_npix_beam does not support multiple beams, will"
+                             << "Function sqrtsum_npix_beam does not support multiple beams, will"
                              << "use sqrtsum method instead"
                              << casacore::LogIO::POST;
         } else {
