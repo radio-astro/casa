@@ -358,7 +358,7 @@ template <class T>
 casacore::Vector<T> ImageDecomposer<T>::autoContour(T mincon, T maxcon, T inc) const
 {
   if (inc == T(0)) {
-    throw(casacore::AipsError("casacore::Vector<T> ImageDecomposer<T>::autocontour"
+    throw(casacore::AipsError("Vector<T> ImageDecomposer<T>::autocontour"
                     "T mincon, T maxcon, T inc) - inc cannot be zero"));
   }
   if ((maxcon - mincon) * inc < 0) inc = -inc;
