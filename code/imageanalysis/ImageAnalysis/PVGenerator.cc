@@ -263,26 +263,7 @@ SPIIF PVGenerator::generate() const {
     Double halfwidth = (_width - 1)/2;
     if (_width > 1) {
         // check already done when setting the points if _width == 1
-        Double angle1 = paInRad + C::pi/2;
-        Double halfx = halfwidth*cos(angle1);
-        Double halfy = halfwidth*sin(angle1);
-        Vector<Double> xs(4);
-        xs[0] = start[0] - halfx;
-        xs[1] = start[0] + halfx;
-        xs[2] = end[0] - halfx;
-        xs[3] = end[0] + halfx;
-        Vector<Double> ys(4);
-        ys[0] = start[1] - halfy;
-        ys[1] = start[1] + halfy;
-        ys[2] = end[1] - halfy;
-        ys[3] = end[1] + halfy;
-        ThrowIf(
-            min(xs) < 2 || max(xs) > subImage->shape()[xAxis] - 3
-            || min(ys) < 2 || max(ys) > subImage->shape()[yAxis] - 3,
-            "Error: specified end points and half width are such "
-            "that chosen directional region falls outside or within "
-            "two pixels of the edge of the image."
-        );
+        _checkWidthSanity(paInRad, halfwidth, start, end, subImage, xAxis, yAxis);
     }
 
     {
@@ -380,15 +361,7 @@ SPIIF PVGenerator::generate() const {
         rotator.setAngle(Quantity(paInRad, "rad"));
         rotator.setShape(outShape);
         rotated = rotator.rotate();
-        /*
-        ImageAnalysis ia(imageToRotate);
-        rotated = ia.rotate(
-            "", outShape.asVector(), Quantity(paInRad, "rad"),
-            lcbox, ""
-        );
-        */
     }
-
     // done with these pointers
     subImage.reset();
     imageToRotate.reset();
@@ -514,6 +487,32 @@ SPIIF PVGenerator::generate() const {
         newMask->put(newArray);
     }
     return _prepareOutputImage(*cDropped, 0, newMask.get());
+}
+
+void PVGenerator::_checkWidthSanity(
+    Double paInRad, Double halfwidth, const vector<Double>& start,
+    const vector<Double>& end, SPCIIF subImage, Int xAxis, Int yAxis
+) const {
+    Double angle1 = paInRad + C::pi/2;
+    Double halfx = halfwidth*cos(angle1);
+    Double halfy = halfwidth*sin(angle1);
+    Vector<Double> xs(4);
+    xs[0] = start[0] - halfx;
+    xs[1] = start[0] + halfx;
+    xs[2] = end[0] - halfx;
+    xs[3] = end[0] + halfx;
+    Vector<Double> ys(4);
+    ys[0] = start[1] - halfy;
+    ys[1] = start[1] + halfy;
+    ys[2] = end[1] - halfy;
+    ys[3] = end[1] + halfy;
+    ThrowIf(
+        min(xs) < 2 || max(xs) > subImage->shape()[xAxis] - 3
+        || min(ys) < 2 || max(ys) > subImage->shape()[yAxis] - 3,
+        "Error: specified end points and half width are such "
+        "that chosen directional region falls outside or within "
+        "two pixels of the edge of the image."
+    );
 }
 
 void PVGenerator::setOffsetUnit(const String& s) {

@@ -169,6 +169,11 @@ private:
 
     void _checkWidth(const casacore::Int64 xShape, const casacore::Int64 yShape) const;
 
+    void _checkWidthSanity(
+        Double paInRad, Double halfwidth, const vector<Double>& start,
+        const vector<Double>& end, SPCIIF subImage, Int xAxis, Int yAxis
+    ) const;
+
     casacore::Quantity _increment() const;
 
     static casacore::String _pairToString(const std::pair<casacore::Double, casacore::Double>& p);
