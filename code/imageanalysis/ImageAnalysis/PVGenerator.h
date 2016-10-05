@@ -172,6 +172,12 @@ private:
         Double xdiff, Double ydiff
     ) const;
 
+    SPCIIF _doRotate(
+        SPIIF subImage, const vector<Double>& start, const vector<Double>& end,
+        const Vector<Double>& startPixRot, const Vector<Double>& endPixRot,
+        Int xAxis, Int yAxis, Double halfwidth, Double paInRad
+    ) const;
+
     void _checkWidth(const casacore::Int64 xShape, const casacore::Int64 yShape) const;
 
     void _checkWidthSanity(
@@ -185,7 +191,6 @@ private:
         SPIIF subImage, CoordinateSystem& subCoords, const vector<Double>& start,
         const vector<Double>& end, Double paInRad, Int xAxis, Int yAxis
     ) const;
-
     
     static casacore::String _pairToString(const std::pair<casacore::Double, casacore::Double>& p);
 

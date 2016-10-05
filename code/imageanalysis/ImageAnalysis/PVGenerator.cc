@@ -287,57 +287,12 @@ SPIIF PVGenerator::generate() const {
             - sqrt(xdiff*xdiff + ydiff*ydiff)
         ) < 1e-6, AipsError
     );
-    Double padNumber = max(0.0, 1 - startPixRot[0]);
-    padNumber = max(padNumber, -(startPixRot[1] - halfwidth - 1));
-    auto imageToRotate = subImage;
-    Int nPixels = 0;
-    if (padNumber > 0) {
-        nPixels = (Int)padNumber + 1;
-        *_getLog() << LogIO::NORMAL
-            << "Some pixels will fall outside the rotated image, so "
-            << "padding before rotating with " << nPixels << " pixels."
-            << LogIO::POST;
-        ImagePadder padder(subImage);
-        padder.setPaddingPixels(nPixels);
-        auto padded = padder.pad(true);
-        imageToRotate = padded;
-    }
-    IPosition blc(subImage->ndim(), 0);
-    auto trc = subShape - 1;
-
-    // ensure we have enough real estate after the rotation
-    blc[xAxis] = (Int)min(min(start[0], end[0]) - 1 - halfwidth, 0.0);
-    blc[yAxis] = (Int)min(min(start[1], end[1]) - 1 - halfwidth, 0.0);
-    trc[xAxis] = (Int)max(
-        max(start[0], end[0]) + 1 + halfwidth,
-        blc[xAxis] + (Double)subShape[xAxis] - 1
-    ) + nPixels;
-    trc[yAxis] = (Int)max(
-        max(start[1], end[1]) + 1 + halfwidth,
-        (Double)subShape[yAxis] - 1
-    ) + nPixels;
-
-    Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
-    SPIIF rotated;
-    if (paInRad == 0) {
-        *_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
-        rotated = SubImageFactory<Float>::createSubImageRW(
-            *imageToRotate, lcbox, "", 0,
-            AxesSpecifier(), true
-        );
-    }
-    else {
-        auto outShape = subShape;
-        outShape[xAxis] = (Int)(endPixRot[0] + nPixels + 6);
-        outShape[yAxis] = (Int)(startPixRot[1] + halfwidth) + nPixels + 6;
-        ImageRotator rotator(imageToRotate, &lcbox, "", "", false);
-        rotator.setAngle(Quantity(paInRad, "rad"));
-        rotator.setShape(outShape);
-        rotated = rotator.rotate();
-    }
+    auto rotated = _doRotate(
+        subImage, start, end, startPixRot, endPixRot,
+        xAxis, yAxis, halfwidth, paInRad
+    ); 
     // done with these pointers
     subImage.reset();
-    imageToRotate.reset();
     Vector<Double> origStartPixel(subShape.size(), 0);
     origStartPixel[xAxis] = start[0];
     origStartPixel[yAxis] = start[1];
@@ -354,20 +309,18 @@ SPIIF PVGenerator::generate() const {
         rotated, rotPixStart, rotPixEnd,
         xAxis, yAxis, xdiff, ydiff
     );
-    blc = IPosition(rotated->ndim(), 0);
-    trc = rotated->shape() - 1;
+    IPosition blc(rotated->ndim(), 0);
+    auto trc = rotated->shape() - 1;
     blc[xAxis] = (Int)(rotPixStart[xAxis] + 0.5);
     blc[yAxis] = (Int)(rotPixStart[yAxis] + 0.5 - halfwidth);
     trc[xAxis] = (Int)(rotPixEnd[xAxis] + 0.5);
     trc[yAxis] = (Int)(rotPixEnd[yAxis] + 0.5 + halfwidth);
-
-    lcbox = LCBox(blc, trc, rotated->shape()).toRecord("");
+    auto lcbox = (Record)LCBox(blc, trc, rotated->shape()).toRecord("");
     IPosition axes(1, yAxis);
     ImageCollapser<Float> collapser(
         "mean", rotated, &lcbox,
         "", axes, false, "", false
     );
-
     SPIIF collapsed = collapser.collapse();
     Vector<Double > newRefPix = rotCoords.referencePixel();
     newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
@@ -434,6 +387,62 @@ SPIIF PVGenerator::generate() const {
         newMask->put(newArray);
     }
     return _prepareOutputImage(*cDropped, 0, newMask.get());
+}
+
+SPCIIF PVGenerator::_doRotate(
+    SPIIF subImage, const vector<Double>& start, const vector<Double>& end,
+    const Vector<Double>& startPixRot, const Vector<Double>& endPixRot,
+    Int xAxis, Int yAxis, Double halfwidth, Double paInRad
+) const {
+    Double padNumber = max(0.0, 1 - startPixRot[0]);
+    padNumber = max(padNumber, -(startPixRot[1] - halfwidth - 1));
+    auto imageToRotate = subImage;
+    Int nPixels = 0;
+    if (padNumber > 0) {
+        nPixels = (Int)padNumber + 1;
+        *_getLog() << LogIO::NORMAL
+            << "Some pixels will fall outside the rotated image, so "
+            << "padding before rotating with " << nPixels << " pixels."
+            << LogIO::POST;
+        ImagePadder padder(subImage);
+        padder.setPaddingPixels(nPixels);
+        auto padded = padder.pad(true);
+        imageToRotate = padded;
+    }
+    IPosition blc(subImage->ndim(), 0);
+    auto subShape = subImage->shape();
+    auto trc = subShape - 1;
+
+    // ensure we have enough real estate after the rotation
+    blc[xAxis] = (Int)min(min(start[0], end[0]) - 1 - halfwidth, 0.0);
+    blc[yAxis] = (Int)min(min(start[1], end[1]) - 1 - halfwidth, 0.0);
+    trc[xAxis] = (Int)max(
+        max(start[0], end[0]) + 1 + halfwidth,
+        blc[xAxis] + (Double)subShape[xAxis] - 1
+    ) + nPixels;
+    trc[yAxis] = (Int)max(
+        max(start[1], end[1]) + 1 + halfwidth,
+        (Double)subShape[yAxis] - 1
+    ) + nPixels;
+
+    Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
+    SPIIF rotated;
+    if (paInRad == 0) {
+        *_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
+        return SubImageFactory<Float>::createSubImageRW(
+            *imageToRotate, lcbox, "", 0,
+            AxesSpecifier(), true
+        );
+    }
+    else {
+        auto outShape = subShape;
+        outShape[xAxis] = (Int)(endPixRot[0] + nPixels + 6);
+        outShape[yAxis] = (Int)(startPixRot[1] + halfwidth) + nPixels + 6;
+        ImageRotator rotator(imageToRotate, &lcbox, "", "", false);
+        rotator.setAngle(Quantity(paInRad, "rad"));
+        rotator.setShape(outShape);
+        return rotator.rotate();
+    }
 }
 
 void PVGenerator::_checkRotatedImageSanity(
