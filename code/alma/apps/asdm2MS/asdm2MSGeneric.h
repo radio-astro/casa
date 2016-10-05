@@ -264,7 +264,7 @@ template <class	T, class R, class RFilter>
     myContext.tableFiller_f_p          = tableFiller_f_p;
     myContext.msFillers_m_p            = &msFillers_m;
     myContext.state		       = ParserContext<T, R, RFilter>::START;
-    topLevelElement_s		       = T::name()+"casacore::Table";
+    topLevelElement_s		       = T::name()+"Table";
     myContext.topLevelElement_p	       = (const xmlChar *) topLevelElement_s.c_str(); 
     myContext.entityElement_p	       = (const xmlChar *) "Entity";
     myContext.containerEntityElement_p = (const xmlChar *)"ContainerEntity";
