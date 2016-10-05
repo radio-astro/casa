@@ -289,7 +289,7 @@ template<class T> void SubImageFactory<T>::_getMask(
             ThrowCc("casacore::Input mask specification is incorrect: " + x.getMesg());
         }
     }
-    if (outMask && outMask->asWCRegion().type() == "casacore::WCLELMask") {
+    if (outMask && outMask->asWCRegion().type() == "WCLELMask") {
         const casacore::ImageExpr<casacore::Bool> *myExpression = dynamic_cast<const casacore::WCLELMask*>(
             outMask->asWCRegionPtr()
         )->getImageExpr();
