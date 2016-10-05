@@ -306,6 +306,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convSizes_p.resize(0, true);
     convSupportBlock_p.resize(0, true);
     convFunctionMap_p.resize(0);
+    vbConvIndex_p.clear();
 
   }
 

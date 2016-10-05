@@ -270,7 +270,7 @@ public:
 private:  
 
 
-  casacore::String telescope_p;
+
 
   casacore::Int lastFieldId_p;
 
@@ -347,6 +347,8 @@ protected:
                      const casacore::Int &compareAntenna=-1,
 		     const casacore::Int &compareFeed=-1) const;
   casacore::MDirection convertDir(const VisBuffer& vb, const casacore::MDirection& inDir, const casacore::MDirection::Types outType);
+  casacore::String telescope_p;
+  
 
 };
  

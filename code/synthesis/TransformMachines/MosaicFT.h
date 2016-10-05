@@ -148,10 +148,10 @@ public:
   // Construct from a casacore::Record containing the MosaicFT state
   MosaicFT(const casacore::RecordInterface& stateRec);
 
-  // Copy constructor
+  // Copy constructor--convolution function is referenced
   MosaicFT(const MosaicFT &other);
 
-  // Assignment operator
+  // Assignment operator -- convolution function is referenced
   MosaicFT &operator=(const MosaicFT &other);
 
   ~MosaicFT();
@@ -207,6 +207,7 @@ public:
   virtual void getFluxImage(casacore::ImageInterface<casacore::Float>& image);
 
   // Save and restore the MosaicFT to and from a record
+
   casacore::Bool toRecord(casacore::String& error, casacore::RecordInterface& outRec, 
 		casacore::Bool withImage=false, const casacore::String diskimage="");
   casacore::Bool fromRecord(casacore::String& error, const casacore::RecordInterface& inRec);
@@ -332,6 +333,7 @@ protected:
 	       const casacore::Double& interval);
 
   casacore::Bool getXYPos(const VisBuffer& vb, casacore::Int row);
+
 
   casacore::CountedPtr<casacore::TempImage<casacore::Float> >skyCoverage_p;
   casacore::TempImage<casacore::Complex>* convWeightImage_p;

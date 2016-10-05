@@ -139,7 +139,7 @@ VPSkyJones::VPSkyJones(const ROMSColumns& msc,
     
 
     for (uInt i=0; i < telescopesCol.nrow(); ++i) {
-      String telescope_p = telescopesCol(i); 
+      telescope_p = telescopesCol(i); 
       // if-operator condition checks that the names are not redundant
       if (indexTelescope(telescope_p)<0) {
 	// Ultimately, we need to get the Beam parameters from the MS.beamSubTable,
@@ -150,7 +150,7 @@ VPSkyJones::VPSkyJones(const ROMSColumns& msc,
 	// This frequency is ONLY required to determine which PB model to use:
 	// The VLA, the ATNF, and WSRT have frequency - dependent PB models
 	Quantity freq( msc.spectralWindow().refFrequency()(0), "Hz");
-      
+	
 	if((telescope_p==" ") || (telescope_p=="")) {
 	  whichPB=PBMath::UNKNOWN;
 	}
@@ -171,8 +171,6 @@ VPSkyJones::VPSkyJones(const ROMSColumns& msc,
 	  setPBMath(telescope_p, myPBMath);
 
 	}
-
-
 
       }
     }

@@ -1094,7 +1094,13 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
      
   }
   void SimplePBConvFunc::addPBToFlux(const VisBuffer& vb){
+    
     if(calcFluxScale_p){
+      if(fluxScale_p.shape().nelements()==0)
+	{ //cerr << "nx_p " << nx_p << endl;
+	calcFluxScale_p=False;
+	return;
+      }
       Vector<Int> pixdepoint(2, -100000);
       convertArray(pixdepoint, thePix_p);
       if((pixdepoint(0) >=0) && (pixdepoint(0) < pointingPix_p.shape()[0]) && (pixdepoint(1) >=0) && (pixdepoint(1) < pointingPix_p.shape()[1])  && !pointingPix_p(pixdepoint(0), pixdepoint(1))){
