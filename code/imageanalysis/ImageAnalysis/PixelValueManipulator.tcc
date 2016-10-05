@@ -510,7 +510,7 @@ template<class T> void PixelValueManipulator<T>::_checkUnit(
 		}
 		else {
 			ThrowCc(
-				"casacore::Unit " + unit
+				"Unit " + unit
 				+ " does not conform to corresponding axis unit "
 				+ axisUnit
 			);
@@ -687,7 +687,7 @@ template<class T> casacore::Bool PixelValueManipulator<T>::putRegion(
         if (dataShape[i] != latRegionShape[i]) {
             if (!(i == dataDim - 1 && dataShape[i] == 1)) {
                 ostringstream oss;
-                oss << "casacore::Data array shape (" << dataShape
+                oss << "Data array shape (" << dataShape
                     << ") including inc, does not"
                     << " match the shape of the region bounding box ("
                     << latRegionShape << ")" << endl;
