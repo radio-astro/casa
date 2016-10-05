@@ -286,7 +286,7 @@ template<class T> void SubImageFactory<T>::_getMask(
                 mymask += ">=0.5";
                 continue;
             }
-            ThrowCc("casacore::Input mask specification is incorrect: " + x.getMesg());
+            ThrowCc("Input mask specification is incorrect: " + x.getMesg());
         }
     }
     if (outMask && outMask->asWCRegion().type() == "WCLELMask") {
