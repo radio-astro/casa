@@ -863,7 +863,7 @@ casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tChann
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tHanningSmoothTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( MODULES mstransform SOURCES ../mstransform/TVI/test/tPhaseShiftingTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TVI/test/tRegriddingTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
-casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TVI/test/tUVContSubTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
+#casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TVI/test/tUVContSubTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tCalibraterSolve_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tCalSolVi2Organizer_GT.cc )
