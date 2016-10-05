@@ -178,7 +178,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 	const casacore::IPosition& outShape = imageOut->shape();
 	ThrowIf(
 		! inShape.isEqual(outShape),
-		"casacore::Input and output images must have the same shape"
+		"Input and output images must have the same shape"
 	);
 	// Generate Kernel casacore::Array (height unity)
 	ThrowIf(
@@ -546,7 +546,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 		else if (beamIn.getMinor() < diag && beamIn != casacore::GaussianBeam::NULL_BEAM) {
 			diag.convert(beamIn.getMinor().getFullUnit());
 			if (! _suppressWarnings) {
-				os << casacore::LogIO::WARN << "casacore::Input beam has minor axis "
+				os << casacore::LogIO::WARN << "Input beam has minor axis "
 					<< beamIn.getMinor() << " which is less than the pixel diagonal "
 					<< "length of " << diag << ". Thus, the beam is poorly sampled, "
 					<< "and so the output of this application may not be what you expect. "
