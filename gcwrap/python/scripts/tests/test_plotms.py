@@ -867,6 +867,7 @@ class plotms_test_display(plotms_test_base):
         '''test_display_yaxisloc_iter: Overplot (scan and field) vs time and iterate over antenna.'''
         plotfile_jpg = self.outputDir + "testDisplay08.jpg"
         plotfile1_jpg = self.outputDir + "testDisplay08_Antenna1@VLA:N7,2@VLA:W1,3@VLA:W2,4@VLA:E1.jpg"
+        self.removePlotfile(plotfile_jpg)
         self.removePlotfile(plotfile1_jpg)
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat='jpg', 
