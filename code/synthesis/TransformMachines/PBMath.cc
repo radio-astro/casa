@@ -664,15 +664,8 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
       band = "UNKNOWN";
     }
   } else if(telescope(0,4)=="EVLA") {
-    ////Temporary
-    Bool useEVLABeams;
-    AipsrcValue<Bool>::find(useEVLABeams, "beams.evla", False);
-    //////end Temporary
-    if(useEVLABeams)
-      whichPB = PBMath::EVLA;
-    else
-      whichPB=PBMath::VLA;
-    band = "UNKNOWN";
+       whichPB = PBMath::EVLA;
+       band = "UNKNOWN";
   } else if (telescope(0,4)=="WSRT") {
     if (freqGHz > 3.0 && freqGHz < 6.0) {
       whichPB = PBMath::WSRT;
@@ -948,14 +941,7 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
   } else if (str == "BIMA") {  //  BIMA is a synonym for HATCREEK
     ipb = PBMath::HATCREEK;
   } else if (str == "EVLA"){
-    ///Temporary
-    Bool useEVLABeams;
-    AipsrcValue<Bool>::find(useEVLABeams, "beams.evla", False);
-    //////end Temporary
-    if(useEVLABeams)
       ipb = PBMath::EVLA;
-    else
-       ipb = PBMath::VLA;
   }else if (str == "VLA" ) {
     ipb = PBMath::VLA;
   } else if (str == "VLA_INVERSE") {
