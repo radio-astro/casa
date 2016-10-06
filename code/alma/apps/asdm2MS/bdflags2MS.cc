@@ -110,7 +110,8 @@ ostringstream infostream;
 
 #include <casa/Logging/StreamLogSink.h>
 #include <casa/Logging/LogSink.h>
-using namespace casacore;
+using namespace casa;
+
 
 string appName; // The name of the application.
 
@@ -604,13 +605,15 @@ void traverseBAB(bool					sameAntenna,
   for (SDMDataObject::Baseband bab: basebands) {
     const vector<SDMDataObject::SpectralWindow>& spws = bab.spectralWindows();
     bool firstSPW = true;
-    for(SDMDataObject::SpectralWindow spw: spws) {
-      vector<StokesParameter>::const_iterator ppIter, ppBegin, ppEnd;
-      unsigned int numPolProducts;
+    vector<StokesParameter>::const_iterator ppIter, ppBegin, ppEnd;
+    unsigned int numPolProducts;
+    pair<const FLAGSTYPE*, const FLAGSTYPE*> range;
 
-      if (firstSPW || CorrelatorFlagsAxes::hasSPW()) {
+    for(SDMDataObject::SpectralWindow spw: spws) {
+      if ((firstSPW && !CorrelatorFlagsAxes::hasSPW()) || CorrelatorFlagsAxes::hasSPW()) {
 	/*
-	** Consider the spw if and only if it's the first spw in the vector or if SPW belongs to the list of axes for flags.
+	 * Consider the spectral window if 
+	**  (it's the first spw in the vector and SPW does not belong to the list of axes for flags) or (if SPW belongs to the list of axes for flags).
 	*/
 	ppIter = ppBegin = sameAntenna ? spw.sdPolProducts().begin() : spw.crossPolProducts().begin();
 	ppEnd = sameAntenna ? spw.sdPolProducts().end() : spw.crossPolProducts().end();
@@ -621,13 +624,12 @@ void traverseBAB(bool					sameAntenna,
 
       vector<char>  MSFlagsCell(spw.numSpectralPoint()*flagsCellNumPolProducts, (char) 0);
       if (numFlags) {
-	pair<const FLAGSTYPE*, const FLAGSTYPE*> range;
-
-	if (firstSPW || CorrelatorFlagsAxes::hasSPW())
+	if ((firstSPW && !CorrelatorFlagsAxes::hasSPW()) || CorrelatorFlagsAxes::hasSPW()) {
 	  /*
-	  ** Consume flags if and only if it's the first spw in the vector or if SPW belongs to the list of axes for flags.
+	  ** Consume flags if and only if (it's the first spw in the vector and SPW does not belong to the list of axes for flags) or (if SPW belongs to the list of axes for flags).
 	  */
 	  range  = consumer.consume(numPolProducts);
+	}
 	unsigned int k = 0;
 	for (unsigned int i = 0; i < spw.numSpectralPoint(); i++){
 	  unsigned int kk = 0;
@@ -1063,6 +1065,7 @@ void processCorrelatorFlags(unsigned int numIntegration,
       if (debug) cout << announcedFlagSize << "==" << calculatedFlagSize << " -> forcing SPW to be present." << endl;
     }
     else {
+      CorrelatorFlagsAxes::hasSPW(true);
       if (debug) cout << announcedFlagSize << "!=" << calculatedFlagSize << " -> considering SPW as absent." << endl;
     }
   }
@@ -1159,6 +1162,7 @@ void processCorrelatorFlagsPerSlices(MainRow*					mR_p,
       if (debug) cout << announcedFlagSize << "==" << calculatedFlagSize << " -> forcing SPW to be present." << endl;
     }
     else {
+      CorrelatorFlagsAxes::hasSPW(false);
       if (debug) cout << announcedFlagSize << "!=" << calculatedFlagSize << " -> considering SPW as absent." << endl;
     }
   }
@@ -1306,8 +1310,8 @@ int main (int argC, char * argV[]) {
       ("help", "produces help message.")
       ("flagcond,f", po::value<string>()->default_value(""), flagcondDoc.c_str())
       ("scans,s", po::value<string>(), "processes only the scans specified in the option's value. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the character ':' followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks's are 0-based. \"0:1\" or \"2:2~6\" or \"0:1,1:2~6,8;2:,3:24~30\" \"1,2\" are valid values for the option. \"3:\" alone will be interpreted as 'all the scans of the exec block#3'. An scan index or a scan index range not preceded by an exec block index will be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default all the scans are considered.")
-      ("wvr-corrected-data", po::value<bool>()->default_value(false), "must be set to true (resp. false) whenever the MS to be populated contains corrected (resp. uncorrected) data (default==false)")
-      ("lazy", po::value<bool>()->default_value(false), "must be set to true if the measurement set has been produced by asdm2MS run with the option --lazy (default==false")
+      ("wvr-corrected-data", po::value<bool>()->default_value(false), "must be set to True (resp. False) whenever the MS to be populated contains corrected (resp. uncorrected) data (default==false)")
+      ("lazy", po::value<bool>()->default_value(false), "must be set to True if the measurement set has been produced by asdm2MS run with the option --lazy (default==false")
       ("ocm", po::value<string>(&ocm)->default_value("ca"), "specifies the output correlation mode, i.e. the correlation mode of the ASDM/BDF's data for which the MS flags will be written. The value given to this option must *imperatively* be the same than the one given to the --ocm option for the execution of the filler which produced the MS. Valid values are 'ca' for CROSS_AND_AUTO, 'ao' for AUTO_ONLY and 'co' for CROSS_ONLY.")
       ("verbose,v",  "logs numerous informations as the application is running.")
       ("logfile,l", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
