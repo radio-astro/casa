@@ -110,7 +110,7 @@ ostringstream infostream;
 
 #include <casa/Logging/StreamLogSink.h>
 #include <casa/Logging/LogSink.h>
-using namespace casa;
+using namespace casacore;
 
 
 string appName; // The name of the application.
