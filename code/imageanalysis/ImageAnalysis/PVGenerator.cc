@@ -291,7 +291,7 @@ SPIIF PVGenerator::generate() const {
         subImage, start, end, startPixRot, endPixRot,
         xAxis, yAxis, halfwidth, paInRad
     ); 
-    // done with these pointers
+    // done with this pointer
     subImage.reset();
     Vector<Double> origStartPixel(subShape.size(), 0);
     origStartPixel[xAxis] = start[0];
@@ -302,7 +302,6 @@ SPIIF PVGenerator::generate() const {
     auto startWorld = subCoords.toWorld(origStartPixel);
     auto endWorld = subCoords.toWorld(origEndPixel);
     const auto& rotCoords = rotated->coordinates();
-
     auto rotPixStart = rotCoords.toPixel(startWorld);
     auto rotPixEnd = rotCoords.toPixel(endWorld);
     _checkRotatedImageSanity(
