@@ -12,7 +12,7 @@ from . import logging
 from . import mpihelpers
 from . import utils
 
-from .callibrary import CalLibrary, CalTo, CalFrom, CalApplication, CalState, SDCalLibrary 
+from .callibrary import CalLibrary, CalTo, CalFrom, CalApplication, CalState
 from .launcher import Context, Pipeline
 from .logging import get_logger
 from .jobrequest import JobRequest, casa_tasks
