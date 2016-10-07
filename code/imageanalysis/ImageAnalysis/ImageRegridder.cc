@@ -585,7 +585,7 @@ Vector<std::pair<Double, Double> > ImageRegridder::_getDirectionCorners(
     Vector<String> units = dc.worldAxisUnits();
     dc.toWorld(world, pixel);
     Vector<std::pair<Double, Double> > corners(4);
-    for (uInt i=0; i<4; i++) {
+    for (uInt i=0; i<4; ++i) {
         switch(i) {
         case 0:
             // blcx, blcy
@@ -622,6 +622,14 @@ Vector<std::pair<Double, Double> > ImageRegridder::_getDirectionCorners(
         }
         corners[i].first = x;
         corners[i].second = Quantity(world[1], units[1]).getValue("rad");
+    }
+    auto diff0 = abs(corners[1].first - corners[0].first);  
+    auto diff1 = abs(corners[1].first - C::_2pi - corners[0].first);
+    if (diff0 > diff1) {
+        // image straddles longitude 0 and we have to rationalize the
+        // longitude trc coordinate
+        corners[1].first -= C::_2pi;
+        corners[2].first -= C::_2pi;
     }
     return corners;
 }
