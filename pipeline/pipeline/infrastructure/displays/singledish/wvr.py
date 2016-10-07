@@ -4,8 +4,6 @@ import os
 import pylab as pl
 import numpy
 
-from asap.scantable import is_ms
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
@@ -13,6 +11,10 @@ from . import common
 from . import utils as utils
 
 LOG = infrastructure.get_logger(__name__)
+
+# Scantable-based tasks are gone so input data should always be in MS
+def is_ms(filename):
+    return True
 
 class WvrAxesManager(common.TimeAxesManager):
     Colors = ['r', 'g', 'b', 'c']

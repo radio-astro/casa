@@ -6,12 +6,14 @@ import numpy
 
 from matplotlib.ticker import NullFormatter
 
-from asap.scantable import is_ms
-
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
 from . import utils
+
+# Scantable-based tasks are gone so input data should always be in MS
+def is_ms(filename):
+    return True
 
 class WeatherAxesManager(common.TimeAxesManager):
     def __init__(self):
