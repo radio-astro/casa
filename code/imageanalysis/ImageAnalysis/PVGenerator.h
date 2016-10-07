@@ -179,7 +179,6 @@ private:
 
     SPCIIF _doRotate(
         SPIIF subImage, const vector<Double>& start, const vector<Double>& end,
-        const Vector<Double>& startPixRot, const Vector<Double>& endPixRot,
         Int xAxis, Int yAxis, Double halfwidth, Double paInRad
     ) const;
 

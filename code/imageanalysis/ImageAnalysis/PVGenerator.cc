@@ -266,29 +266,8 @@ SPIIF PVGenerator::generate() const {
         _checkWidthSanity(paInRad, halfwidth, start, end, subImage, xAxis, yAxis);
     }
     _moveRefPixel(subImage, subCoords, start, end, paInRad, xAxis, yAxis);
-    Vector<Double> worldStart, worldEnd;
-    const auto& dc1 = subCoords.directionCoordinate();
-    dc1.toWorld(worldStart, Vector<Double>(start));
-    dc1.toWorld(worldEnd, Vector<Double>(end));
-    std::unique_ptr<DirectionCoordinate> rotCoord(
-        dynamic_cast<DirectionCoordinate *>(
-            dc1.rotate(Quantity(paInRad, "rad"))
-        )
-    );
-    Vector<Double> startPixRot, endPixRot;
-    rotCoord->toPixel(startPixRot, worldStart);
-    rotCoord->toPixel(endPixRot, worldEnd);
-    AlwaysAssert(abs(startPixRot[1] - endPixRot[1]) < 1e-6, AipsError);
-    Double xdiff = fabs(end[0] - start[0]);
-    Double ydiff = fabs(end[1] - start[1]);
-    AlwaysAssert(
-        abs(
-            (endPixRot[0] - startPixRot[0])
-            - sqrt(xdiff*xdiff + ydiff*ydiff)
-        ) < 1e-6, AipsError
-    );
     auto rotated = _doRotate(
-        subImage, start, end, startPixRot, endPixRot,
+        subImage, start, end, 
         xAxis, yAxis, halfwidth, paInRad
     ); 
     // done with this pointer
@@ -304,6 +283,8 @@ SPIIF PVGenerator::generate() const {
     const auto& rotCoords = rotated->coordinates();
     auto rotPixStart = rotCoords.toPixel(startWorld);
     auto rotPixEnd = rotCoords.toPixel(endWorld);
+    Double xdiff = fabs(end[0] - start[0]);
+    Double ydiff = fabs(end[1] - start[1]);
     _checkRotatedImageSanity(
         rotated, rotPixStart, rotPixEnd,
         xAxis, yAxis, xdiff, ydiff
@@ -404,9 +385,29 @@ SPIIF PVGenerator::_dropDegen(SPIIF collapsed, Int collapsedAxis) const {
 
 SPCIIF PVGenerator::_doRotate(
     SPIIF subImage, const vector<Double>& start, const vector<Double>& end,
-    const Vector<Double>& startPixRot, const Vector<Double>& endPixRot,
     Int xAxis, Int yAxis, Double halfwidth, Double paInRad
 ) const {
+    Vector<Double> worldStart, worldEnd;
+    const auto& dc1 = subImage->coordinates().directionCoordinate();
+    dc1.toWorld(worldStart, Vector<Double>(start));
+    dc1.toWorld(worldEnd, Vector<Double>(end));
+    std::unique_ptr<DirectionCoordinate> rotCoord(
+        dynamic_cast<DirectionCoordinate *>(
+            dc1.rotate(Quantity(paInRad, "rad"))
+        )
+    );
+    Vector<Double> startPixRot, endPixRot;
+    rotCoord->toPixel(startPixRot, worldStart);
+    rotCoord->toPixel(endPixRot, worldEnd);
+    AlwaysAssert(abs(startPixRot[1] - endPixRot[1]) < 1e-6, AipsError);
+    Double xdiff = fabs(end[0] - start[0]);
+    Double ydiff = fabs(end[1] - start[1]);
+    AlwaysAssert(
+        abs(
+            (endPixRot[0] - startPixRot[0])
+            - sqrt(xdiff*xdiff + ydiff*ydiff)
+        ) < 1e-6, AipsError
+    );
     Double padNumber = max(0.0, 1 - startPixRot[0]);
     padNumber = max(padNumber, -(startPixRot[1] - halfwidth - 1));
     auto imageToRotate = subImage;
@@ -425,7 +426,6 @@ SPCIIF PVGenerator::_doRotate(
     IPosition blc(subImage->ndim(), 0);
     auto subShape = subImage->shape();
     auto trc = subShape - 1;
-
     // ensure we have enough real estate after the rotation
     blc[xAxis] = (Int)min(min(start[0], end[0]) - 1 - halfwidth, 0.0);
     blc[yAxis] = (Int)min(min(start[1], end[1]) - 1 - halfwidth, 0.0);
@@ -437,14 +437,12 @@ SPCIIF PVGenerator::_doRotate(
         max(start[1], end[1]) + 1 + halfwidth,
         (Double)subShape[yAxis] - 1
     ) + nPixels;
-
     Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
     SPIIF rotated;
     if (paInRad == 0) {
         *_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
         return SubImageFactory<Float>::createSubImageRW(
-            *imageToRotate, lcbox, "", 0,
-            AxesSpecifier(), true
+            *imageToRotate, lcbox, "", 0, AxesSpecifier(), true
         );
     }
     else {
