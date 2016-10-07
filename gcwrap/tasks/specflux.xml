@@ -39,7 +39,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     <param type="string" name="mask">
         <description>Mask to use. See help par.mask. Default is none.</description>
-        <value type="string"/>
+        <value/>
     </param>
     <param type="bool" direction="in" name="stretch" subparam="true">
         <description>Stretch the mask if necessary and possible? See help par.stretch </description>
@@ -57,11 +57,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <any type="variant"/>
         <description>Major axis of overriding restoring beam. If specified, must be a valid quantity.</description>
         <value type="string"/>
+        <example>"4arcsec"</example>
     </param>
     <param type="any" name="minor">
         <any type="variant"/>
         <description>Minor axis of overriding restoring beam. If specified, must be a valid quantity</description>
         <value type="string"/>
+        <example>"3arcsec"</example>
     </param>
     <param type="string" name="logfile">
         <description>File which to write details. Default is to not write to a file.</description>
@@ -112,12 +114,13 @@ unit             Unit to use for the spectral flux calculation. Must be conforma
                  spectral axis unit (ie something conformant with a velocity, frequency, or length).
                  Velocity units may only be used if the spectral coordinate has a rest frequency and
                  if it is &gt; 0.
-major            Major axis of overriding restoring beam. If specified, must be a valid quantity.
-                 If specified, minor must also be specified. The overriding beam is used for
-                 computing flux and flux density values. Ignored if the image brightness units do not contain
-                 "/beam".
+major            Major axis of overriding restoring beam. If specified, must be a valid quantity
+                 If specified, minor must also be specified. The overriding beam is used for computing
+                 flux and flux density values. Ignored if the image brightness units do not contain
+                 "/beam". Example "4arcsec".
 minor            Minor axis of overriding restoring beam. If specified, must be a valid quantity.
                  If specified, major must also be specified. See help on parameter major for details.
+                 Example: "3arcsec".
 logfile          Name of file to which to write tabular output. Default is to not write to a file.
 overwrite        Controls if an already existing log file by the
                  same name can be overwritten. If true, the user is not prompted, the file
