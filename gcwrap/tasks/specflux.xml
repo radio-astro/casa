@@ -23,16 +23,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value type="string"/>
         <example>region="my.rgn"</example>
     </param>
-    <param type="string" name="box" subparam="true">
+    <param type="string" name="box">
         <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
         <value/>
         <example>box="100,100,200,200"</example>
     </param>
-    <param type="string" name="chans" subparam="true">
+    <param type="string" name="chans">
         <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
         <value/>
     </param>
-    <param type="string" name="stokes" subparam="true">
+    <param type="string" name="stokes">
         <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
         <value/>
         <example>stokes="iq"</example>
@@ -80,19 +80,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <value>False</value>
                 </default>
             </notequals>
-        </when>
-        <when param="region">
-            <equals type="string" value="">
-                <default param="box">
-                    <value>""</value>
-                </default>
-                <default param="chans">
-                    <value>""</value>
-                </default>
-                <default param="stokes">
-                    <value>""</value>
-                </default>
-            </equals>
         </when>
         <when param="mask">
             <notequals type="string" value="">
