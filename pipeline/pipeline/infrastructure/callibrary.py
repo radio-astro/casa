@@ -10,8 +10,6 @@ import string
 import types
 import weakref
 
-import asap
-
 import pipeline.extern
 import intervaltree
 import sortedcontainers
