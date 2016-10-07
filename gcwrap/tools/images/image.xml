@@ -8194,14 +8194,20 @@ result.
 <example>
 
 """
+Example:
 #
-print "\t----\t rename Ex 1 \t----"
-ia.maketestimage('myimage',overwrite=T)  
+print ' ---- rename Ex 1, rename a new image ----'
+ia.maketestimage('myimage',overwrite=T)
 print ia.name(strippath=T)
 #myimage
 ia.rename('newimage', overwrite=T)
 print ia.name(strippath=T)
 #newimage
+#
+print ' ---- rename Ex 2, rename an existing image ----'
+ia.open('originalimage',overwrite=T)
+ia.rename('newimage', overwrite=T)
+ia.close()
 #
 """
 
