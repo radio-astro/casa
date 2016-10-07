@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import os
 import pylab as PL
 import numpy as NP
-import asap as sd
 
 import pipeline.infrastructure.api as api
 
@@ -20,26 +19,21 @@ def _calculate(worker, consider_flag=False):
     #worker.SavePlot()
     mask_list = worker.masklist
     return mask_list
-
+    
 class MaskDeviationHeuristic(api.Heuristic):
-    def calculate(self, infile, spw=None):
+    def calculate(self, vis, field_id='', antenna_id='', spw_id='', consider_flag=False):
         """
         Channel mask heuristics using MaskDeviation algorithm implemented 
         in MaskDeviation class. 
         
-        infile -- input Scantable filename
-        spw -- target spw id
+        vis -- input MS filename
+        field_id -- target field identifier
+        antenna_id -- target antenna identifier
+        spw -- target spw identifier
+        consider_flag -- take into account flag in MS or not
         """
-        worker = MaskDeviation(infile, spw)
-        worker.ReadData()
-        mask_list = _calculate(worker)
-        del worker
-        return mask_list
-    
-class MaskDeviationHeuristicForMS(api.Heuristic):
-    def calculate(self, vis, field_id='', antenna_id='', spw_id='', consider_flag=False):
         worker = MaskDeviation(vis, spw_id)
-        worker.ReadDataFromMS(field=field_id, antenna=antenna_id)
+        worker.ReadData(field=field_id, antenna=antenna_id)
         mask_list = _calculate(worker, consider_flag=consider_flag)
         del worker
         return mask_list
@@ -73,31 +67,7 @@ class MaskDeviation(object):
         LOG.debug('MaskDeviation.__init__: infile %s spw %s'%(os.path.basename(self.infile), self.spw))
         self.masklist = []
 
-    def ReadData(self, infile=''):
-        """
-        Use casa.sd to read asap format data
-        This method is used for the testing purpose
-        """
-        if infile != '': self.infile=infile
-        ss = sd.scantable(self.infile, average=False)
-        sel = sd.selector(types=[sd.srctype.pson])
-        if self.spw is not None:
-            sel.set_ifs([self.spw])
-        ss.set_selection(sel)
-        self.nrow = ss.nrow()
-        s = ss._getspectrum(0)
-        #self.nchan = ss.nchan()
-        self.nchan = len(s)
-        LOG.trace('MaskDeviation.ReadData: %s %s'%(self.nrow, self.nchan))
-        self.data = NP.zeros((self.nrow, self.nchan), NP.float)
-        for i in range(self.nrow):
-            #sp = ss._getspectrum(i)
-            #self.data[i] = NP.array(sp, NP.float)
-            self.data[i] = NP.array(ss._getspectrum(i))
-        ss.set_selection()
-        del ss, s, sel
-        
-    def ReadDataFromMS(self, vis='', field='', antenna='', colname=None):
+    def ReadData(self, vis='', field='', antenna='', colname=None):
         """
         Reads data from input MS. 
         """

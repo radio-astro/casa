@@ -2,12 +2,19 @@ import os
 import re
 import pipeline.infrastructure.api as api
 
+def is_ms(filename):
+    table_info = os.path.join(filename, 'table.info')
+    if os.path.exists(filename) and os.path.exists(table_info):
+        with open(table_info, 'r') as f:
+            line = f.readline()
+        return re.match('^Type ?= ?Measurement ?Set *$', line) is not None
+    return False
+
 class DataTypeHeuristics(api.Heuristic):
     """
     Examine type of the input data. Data types that are recognizable
     by this heuristics are:
 
-       'ASAP' -- ASAP Scantable
        'MS2'  -- Measurement Set
        'ASDM' -- ASDM
        'FITS' -- ATNF SDFITS 
@@ -21,15 +28,11 @@ class DataTypeHeuristics(api.Heuristic):
 
         filename -- name of the file on disk
         """
-        from asap.scantable import is_scantable, is_ms
         datatype = 'UNKNOWN'
         abspath = os.path.realpath(os.path.expanduser(os.path.expandvars(filename)))
-        #print 'abspath=',abspath
         if is_ms(abspath):
             datatype = 'MS2'
-        elif is_scantable(abspath):
-            datatype = 'ASAP'
-        elif os.path.isdir(abspath):
+        if os.path.isdir(abspath):
             if os.path.exists(os.path.join(abspath,'ASDM.xml')):
                 datatype = 'ASDM'
         else:

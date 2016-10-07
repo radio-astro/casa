@@ -22,9 +22,6 @@ class CalibrationTypeHeuristics(api.Heuristic):
         datatype = h(filename).lower()
         return getattr(self,'_generate_%s_heuristics'%(datatype))()
 
-    def _generate_asap_heuristics(self):
-        return AsapCalibrationTypeHeuristics()
-
     def _generate_ms2_heuristics(self):
         return MsCalibrationTypeHeuristics()
 
@@ -52,49 +49,6 @@ class DefaultCalibrationTypeHeuristics(api.Heuristic):
         return 'none'
 
 
-class AsapCalibrationTypeHeuristics(api.Heuristic):
-    """
-    Return appropriate calibration type by examining
-    SRCTYPE column in MAIN table.
-    """
-    def calculate(self, filename):
-        """
-        Return calibration type, which is determined
-        by examining SRCTYPE column in MAIN table.
-        """
-        import re
-        import numpy
-        from asap import srctype as st
-        caltype = 'none'
-
-        with casatools.TableReader(filename) as tb:
-            #antenna_name = tb.getkeyword('AntennaName').upper()
-            srctypes = numpy.unique(tb.getcol('SRCTYPE'))
-        if st.fson in srctypes or st.fsoff in srctypes:
-            caltype = 'fs'
-        elif st.nod in srctypes:
-            caltype = 'nod'
-        elif st.psoff in srctypes:
-            caltype = 'ps'
-        elif st.pson in srctypes:
-            # 'otf', 'otfraster', or already calibrated data.
-            LOG.warn('It seems that the data doesn\'t have reference scans. The data would be either fast scan without explicit reference scans or already calibrated data. Here, we assume the data is fast scan without reference. Try to analyse whether observing pattern is raster or not.')
-            
-            LOG.todo('implement an algorithm to distinguish between calibrated data (\'none\') and uncalibrated data without OFF scans (\'otf\' or \'otfraster\')')
-
-            if _israster(filename):
-                caltype = 'otfraster'
-            else:
-                caltype = 'otf'
-        else:
-            # TODO: we have to find a way to distinguish calibrated
-            #       data (caltype should be 'none') and uncalibrated
-            #       data that doesn't have explicit OFF scans
-            #       (such as 'otf' or 'otfraster')
-            LOG.warn('Unrecognized calibration type. Set to \'none\'')
-            caltype = 'none'
-
-        return caltype
 
 
 def _gap_analysis(timestamps, intervals, threshold_factor=3.0):
@@ -107,25 +61,7 @@ def _gap_analysis(timestamps, intervals, threshold_factor=3.0):
     gaplist = numpy.where(separation > threshold)[0]
     return gaplist
         
-def _israster(filename):
-    from asap import srctype as st
-    # filter out WVR data
-    with casatools.TableReader(filename) as tb:
-        ifnos = numpy.unique(tb.getcol('IFNO'))
-        wvr_list = [ifno for ifno in ifnos
-                    if len(tb.query('IFNO==%s'%(ifno)).getcell('FLAGTRA',0)) == 4]
-    LOG.debug('wvr_list=%s'%(wvr_list))
-
-    # retrieve direction and timestamp
-    query_string = 'SRCTYPE == %s'%(int(st.pson))
-    if len(wvr_list) > 0:
-        query_string += ' && IFNO NOT IN %s'%(wvr_list)
-    with casatools.TableReader(filename) as tb:
-        tsel = tb.query(query_string)
-        direction = tsel.getcol('DIRECTION')
-        timestamp = tsel.getcol('TIME') * 86400.0
-        interval = tsel.getcol('INTERVAL')
-
+def _israster(timestamp, interval, direction):
     # gap analysis
     gap_list = _gap_analysis(timestamp, interval, threshold_factor=5.0)
     LOG.debug('gap_list=%s'%(gap_list))

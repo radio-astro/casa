@@ -11,7 +11,7 @@ import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-from pipeline.hsd.heuristics import MaskDeviationHeuristicForMS
+from pipeline.hsd.heuristics import MaskDeviationHeuristic
 from pipeline.domain import DataTable
 
 from .. import common
@@ -447,7 +447,7 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         """
         Create deviation mask using MaskDeviation heuristic
         """
-        h = MaskDeviationHeuristicForMS()
+        h = MaskDeviationHeuristic()
         mask_list = h.calculate(vis=vis, field_id=field_id, antenna_id=antenna_id, spw_id=spw_id, 
                                 consider_flag=consider_flag)
         return mask_list
