@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdcasa/record.h>
+#include <stdcasa/version.h>
 #include <utils_cmpt.h>
 #include <tools/utils/stdBaseInterface.h>
 #include <tools/xerces/stdcasaXMLUtil.h>
@@ -25,6 +26,10 @@
 #include <casa/OS/HostInfo.h>
 #include <stdcasa/StdCasa/CrashReporter.h>
 #include <signal.h>
+#include <string>
+#include <vector>
+#include <cstdlib>
+
 
 using namespace std;
 using namespace casacore;
@@ -379,6 +384,73 @@ utils::_trigger_segfault (int faultType)
     return false;
 }
 
+
+std::vector<int>
+utils::version( ) {
+    std::vector<int> result = {
+        VersionInfo::major( ),
+        VersionInfo::minor( ),
+        VersionInfo::patch( ),
+        VersionInfo::feature( )
+    };
+    return result;
+}
+
+std::string
+utils::version_desc( ) { return VersionInfo::desc( ); }
+
+std::string
+utils::version_info( ) { return VersionInfo::info( ); }
+
+bool
+ utils::compare_version(const  string& comparitor,  const std::vector<int>& vec) {
+  vector<int> current_version = { 5, 0, 0, 15 };
+  for ( unsigned int i=0; i < vec.size( ); ++i )
+    if ( vec[i] < 0 ) throw(AipsError("negative values not allowed in version numbers"));
+
+  unsigned int limit = min(current_version.size( ),vec.size( ));
+  if ( comparitor == ">" ) {
+    for ( unsigned int i=0; i < limit; ++i ) {
+      if ( current_version[i] > vec[i] ) return true;
+      else if ( current_version[i] < vec[i] ) return false;
+    }
+    for ( unsigned int i=limit; i < current_version.size( ); ++i )
+      if ( current_version[i] > 0 ) return true;
+    return false;
+  } else if ( comparitor == "<" ) {
+    for ( unsigned int i=0; i < limit; ++i ) {
+      if ( current_version[i] > vec[i] ) return false;
+      else if ( current_version[i] < vec[i] ) return true;
+    }
+    return false;
+  } else if ( comparitor == ">=" ) {
+    for ( unsigned int i=0; i < limit; ++i ) {
+      if ( current_version[i] > vec[i] ) return true;
+      else if ( current_version[i] < vec[i] ) return false;
+    }
+    return true;
+  } else if ( comparitor == "<=" ) {
+    for ( unsigned int i=0; i < limit; ++i ) {
+      if ( current_version[i] > vec[i] ) return false;
+      else if ( current_version[i] < vec[i] ) return true;
+    }
+    for ( unsigned int i=limit; i < current_version.size( ); ++i )
+      if ( current_version[i] > 0 ) return false;
+    return true;
+  } else if ( comparitor == "=" || comparitor == "==" ) {
+    for ( unsigned int i=0; i < limit; ++i ) {
+      if ( current_version[i] != vec[i] ) return false;
+    }
+    for ( unsigned int i=limit; i < current_version.size( ); ++i )
+      if ( current_version[i] > 0 ) return false;
+    return true;
+  } else if ( comparitor == "!=" ) {
+    return ! compare_version("=",vec);
+  } else {
+    throw(AipsError("unknown comparator"));
+  }
+  return false;
+}
 
 } // casac namespace
 

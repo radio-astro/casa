@@ -18,33 +18,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-if( ${CASA_PATCH_VERSION} STREQUAL "0" )
-
-    execute_process( COMMAND svn info
-                     RESULT_VARIABLE SVNINFOSTATUS
-                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
-
-    ### hash-bound git will need another solution
-    if ( ${SVNINFOSTATUS} STREQUAL "0" )
-        execute_process( COMMAND svnversion
-                         OUTPUT_VARIABLE CASA_PATCH_VERSION
-                         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
-
-        string( REGEX  REPLACE "[a-zA-Z]" "" CASA_PATCH_VERSION ${CASA_PATCH_VERSION} )
-        string( REPLACE "\n" "" CASA_PATCH_VERSION ${CASA_PATCH_VERSION} )
-    endif( )
-
-endif( )
-
-CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/version.cc.cmake version.cc )
+CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/version.cc.in ${CMAKE_CURRENT_BINARY_DIR}/version.cc )
 
 casa_add_library( stdcasa
-        StdCasa/CrashReporter.cc
+	StdCasa/CrashReporter.cc
 	StdCasa/CasacSupport.cc
 	StdCasa/record.cc
 	StdCasa/variant.cc
-	version2.cc
-	version.cc
+	${CMAKE_CURRENT_BINARY_DIR}/version.cc
 	)
 if (UseCrashReporter)
     target_include_directories (libstdcasa PUBLIC ${Breakpad_IncludeRoot})

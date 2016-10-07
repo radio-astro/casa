@@ -62,7 +62,7 @@ import re
 #es = aU.stuffForScienceDataReduction() 
 
 
-if re.search('^4.', casadef.casa_version) == None:
+if cu.compare_version('>=',[5]):
  sys.exit('ERROR: PLEASE USE CASA 4.x')
 
 

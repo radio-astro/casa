@@ -26,9 +26,12 @@ if homedir == None :
 home=os.environ['HOME']
 
 import casadef
+import __casac__
+cu = __casac__.utils.utils()
+
 casa = { 'build': {
              'time': casadef.build_time,
-             'version': casadef.casa_version,
+             'version': cu.version_info( ),
              'number': casadef.subversion_revision
          },
          'source': {

@@ -318,6 +318,60 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
 </method>
 
+<method type="function" name="version">
+<shortdescription>returns four element vector for the version</shortdescription>
+   
+<returns type="intArray"/>
+<description>
+
+Returns a four element vector representing the version (major, minor, patch and feature).
+
+</description>
+</method>
+
+<method type="function" name="version_desc">
+<shortdescription>returns the descriptive version string, e.g. DEV or REL</shortdescription>
+   
+<returns type="string"/>
+<description>
+
+The descriptive string describes a particular packaged version. During a development
+cycle there are different sorts of packaged distributions. For example, a development
+version ("DEV") or a release version ("REL").
+
+</description>
+</method>
+
+<method type="function" name="version_info">
+<shortdescription>Returns the complete version description as a string.</shortdescription>
+   
+<returns type="string"/>
+<description>
+
+Returns a description string that includes the version information and the descriptive string..
+
+</description>
+</method>
+
+<method type="function" name="compare_version">
+<shortdescription>Returns the complete version description as a string.</shortdescription>
+   
+<input>
+    <param type="string" name="comparitor">
+	    <description>what sort of comparison to do, one of &gt;, &lt;, &lt;=, &gt;=, ==, = !=</description>
+    </param>
+    <param type="intArray" name="vec">
+	    <description>vector to use to compare current version number against vec</description>
+    </param>
+</input>
+
+<returns type="bool"/>
+<description>
+
+Returns a description string that includes the version information and the descriptive string..
+
+</description>
+</method>
 
 </tool>
 

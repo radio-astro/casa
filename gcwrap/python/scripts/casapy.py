@@ -128,10 +128,12 @@ if homedir == None :
    sys.exit(1)
 
 import casadef
+import __casac__
+cu = __casac__.utils.utils()
 
 casa = { 'build': {
              'time': casadef.build_time,
-             'version': casadef.casa_version,
+             'version': cu.version_info( ),
              'number': casadef.subversion_revision
          },
          'source': {
@@ -285,7 +287,7 @@ for info in [ (['dbus-daemon'],'dbus'),
             if casa['helpers'][entry] is not None:
                 break
 
-print "CASA Version " + casa['build']['version'] + "-DEV (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
+print "CASA Version " + casa['build']['version'] + "\n  Compiled on: " + casa['build']['time']
 
 a = [] + sys.argv             ## get a copy from goofy python
 a.reverse( )

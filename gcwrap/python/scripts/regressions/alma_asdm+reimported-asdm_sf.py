@@ -199,7 +199,7 @@ def analyseASDM(basename, caltablename0, genwvr=True):
         useversion='v3'
         )
 
-    if(casadef.casa_version>='3.4.0' and genwvr): # generate the WVR correction table
+    if(cu.compare_version('>=',[3,4,0]) and genwvr): # generate the WVR correction table
         print ">> Generating the WVR caltable ", caltablename0
         os.system('rm -rf '+caltablename0)
         wvrgcal(vis=msn, caltable=caltablename0, segsource=False, toffset=-2, reversespw='0~7')
@@ -286,7 +286,7 @@ def analyseASDM(basename, caltablename0, genwvr=True):
         print ">> SPW: ",i
         os.system('rm -rf '+caltablename+'_spw'+str(i)+'.G_WVR')
         wvrspw = 0
-        if(casadef.casa_version>='3.4.0'):
+        if(cu.compare_version('>=',[3,4,0])):
             wvrspw = i
         gaincal(
             vis=msn,
@@ -308,7 +308,7 @@ def analyseASDM(basename, caltablename0, genwvr=True):
         print ">> SPW: ",i
         os.system('rm -rf '+caltablename+'.GSPLINE_WVR_'+str(i))
         wvrspw = 0
-        if(casadef.casa_version>='3.4.0'):
+        if(cu.compare_version('>=',[3,4,0])):
             wvrspw = i
         gaincal(
             vis=msn,
@@ -362,7 +362,7 @@ def analyseASDM(basename, caltablename0, genwvr=True):
     for i in range (2):
         print ">> SPW: ",i
         wvrspw = 0
-        if(casadef.casa_version>='3.4.0'):
+        if(cu.compare_version('>=',[3,4,0])):
             wvrspw = i
         applycal(
             vis=msn,

@@ -55,11 +55,48 @@ include( ui )
 include( target )
 include( CASA )
 
-set( CASA_MAJOR_VERSION 5 )
-set( CASA_MINOR_VERSION 0 )
-set( CASA_PATCH_VERSION 0 )
-set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
+set( CASA_VERSION_MAJOR   5   )
+set( CASA_VERSION_MINOR   0   )
+set( CASA_VERSION_PATCH   0   )
+set( CASA_VERSION_FEATURE 0   )
+set( CASA_VERSION_DESC    "" )
+
+if( ${CASA_VERSION_FEATURE} STREQUAL "0" )
+    execute_process( COMMAND svn info
+                     RESULT_VARIABLE SVNINFOSTATUS
+                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
+ 
+    ### hash-bound git will need another solution
+    if ( ${SVNINFOSTATUS} STREQUAL "0" )
+        execute_process(    COMMAND svnversion
+                            OUTPUT_VARIABLE SUBVERSION_REVISION
+                            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                            OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+        execute_process(    COMMAND curl --silent https://svn.cv.nrao.edu/cgi-bin/casa-version-match?rev=${SUBVERSION_REVISION}
+                            COMMAND perl -pe "s|^\\d+\\.\\d+\\.(\\d+)\\s+\\d+\n*$|$1|"
+                            OUTPUT_VARIABLE CASA_VERSION_FEATURE
+                            OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+    else( )
+        execute_process( COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/install/resolvegitrevision.sh
+                         OUTPUT_VARIABLE CASA_VERSION_FEATURE_AND_BRANCH_TAG # Getting a list
+                         OUTPUT_STRIP_TRAILING_WHITESPACE )
+        message("resolvegitrevision: ${CASA_VERSION_FEATURE_AND_BRANCH_TAG}")
+        list(LENGTH CASA_VERSION_FEATURE_AND_BRANCH_TAG len)
+        message(STATUS "len = ${len}")
+        list ( GET CASA_VERSION_FEATURE_AND_BRANCH_TAG 0 CASA_VERSION_FEATURE)
+        list ( GET CASA_VERSION_FEATURE_AND_BRANCH_TAG 1 BRANCH_TAG)
+        message("CASA_VERSION_FEATURE: ${CASA_VERSION_FEATURE}")
+        message("CASA_VERSION_DESC: ${BRANCH_TAG}")
+        set(CASA_VERSION_DESC " Branch: ${BRANCH_TAG}")
+    endif( )
+endif( )
+
+set( CASA_API_VERSION "${CASA_VERSION_MAJOR}.${CASA_VERSION_MINOR}.${CASA_VERSION_PATCH}-${CASA_VERSION_FEATURE}" )
 string(TIMESTAMP COMPILE_TIME "%Y-%m-%d %H:%M:%S UTC" UTC)
+
+CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/VERSION.in ${CMAKE_CURRENT_SOURCE_DIR}/VERSION )
 
 ###
 ### default name for casa-maintained dbus C++ library... (but could also be called just "dbus-cpp")

@@ -53,9 +53,9 @@ startProc=time.clock()
 
 version = casadef.casa_version
 
-print "You are using " + version
+print "You are using " + cu.version_info( )
 
-if (version < '4.5.0'):
+if (cu.compare_version('<',[4,3,0])):
     print "YOUR VERSION OF CASA IS TOO OLD FOR THIS GUIDE."
     print "PLEASE UPDATE IT BEFORE PROCEEDING."
 else:

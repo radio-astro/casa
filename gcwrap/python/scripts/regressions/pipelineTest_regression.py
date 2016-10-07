@@ -43,7 +43,7 @@ def pipeline_regression():
     if MIN_CASA_REVISION > revision:
         msg = ('Minimum CASA revision for the pipeline is r%s, '
                'got CASA %s (r%s).' % (MIN_CASA_REVISION, 
-                casadef.casa_version,
+                cu.version_info( ),
                 casadef.subversion_revision))
         print msg
         regstate = False

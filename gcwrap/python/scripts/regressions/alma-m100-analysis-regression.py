@@ -24,7 +24,6 @@
 # generation which we ommit in this regression by using canned Tsys cal tables
 # for 3.4.0, the tsys table can be generated without the help of aU
 
-
 step_title = { 0 : 'Data import',
 	       1 : 'Generate antenna position cal tables',
 	       2 : 'Generate tsys cal tables (if possible) or use canned ones',
@@ -185,7 +184,7 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
 
-    if(casadef.casa_version>='3.4.0'):
+    if(cu.compare_version('>=',[3,4,0])):
 
         for name in basename:
             os.system('rm -rf cal-tsys_'+name+'.fdm')
@@ -291,7 +290,7 @@ if(mystep in thesteps):
 
     tsysinterp = 'nearest'
     tsysspwmap=[]
-    if(casadef.casa_version>='3.4.0'):
+    if(cu.compare_version('>=', [3,4,0])):
         print "Using linear interpolation for Tsys in applycal ..."
         tsysinterp='linear'
         tsysspwmap=[0,9,0,11,0,13,0,15]
