@@ -5,19 +5,9 @@ import pipeline.infrastructure.basetask as basetask
 
 import pipeline.hif.tasks.importdata.importdata as importdata
 
-
 LOG = infrastructure.get_logger(__name__)
 
 class ALMAImportDataInputs(importdata.ImportDataInputs):
-    # These are ALMA specific settings and override the defaults in
-    # the base class
-    process_caldevice  = basetask.property_with_default('process_caldevice', False)
-    asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
-    bdfflags  = basetask.property_with_default('bdfflags', True)
-    lazy  = basetask.property_with_default('lazy', False)
-    dbservice = basetask.property_with_default('dbservice', False)
-    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
-    clearcals = basetask.property_with_default('clearcals', True)
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, asis=None,
@@ -25,6 +15,9 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
                  bdfflags=None, lazy=None, save_flagonline=None, dbservice=None,
                  createmms=None, ocorr_mode=None, clearcals=None):
         self._init_properties(vars())
+
+    asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
+    dbservice = basetask.property_with_default('dbservice', False)
 
 
 class ALMAImportData(importdata.ImportData):
