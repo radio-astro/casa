@@ -2,7 +2,27 @@ import re
 import string
 from decimal import *
 import pipeline.infrastructure.api as api
-from pipeline.infrastructure.sdtablereader import ANTENNA_LIST
+
+ANTENNA_LIST = { 'DV[0-6][0-9]': 12.0,
+                 'DA[0-6][0-9]': 12.0,
+                 'PM0[1-4]': 12.0,
+                 'CM[0-1][0-9]': 7.0,
+                 'APEX': 12.0,
+                 'AP-': 12.0,
+                 'NRO': 45.0,
+                 'ASTE': 10.0,
+                 'MRT': 30.0,
+                 'IRAM30m': 30.0,
+                 'Effelsberg': 100.0,
+                 'GBT': 104.9,
+                 'SMT': 10.0,
+                 'HHT': 10.0,
+                 # from asap/src/STAttr.cpp
+                 'MOPRA': 22.0,
+                 'PKS': 64.0,
+                 'TIDBINBILLA': 70.0,
+                 'CEDUNA': 30.0,
+                 'HOBART': 26.0 }
 
 class AntennaDiameter(api.Heuristic):
     """
