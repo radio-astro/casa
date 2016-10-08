@@ -238,10 +238,10 @@ print myname, ' ***********************************************************'
 
 print myname, ' ***********************************************************'
 print myname, ' Test of the stokeslast parameter and the SPECSYS keyword:'
-exportfits(imagename='stokeslast-test.image', fitsimage='stokeslast-test.fits', stokeslast=True)
+exportfits(imagename='stokeslast-test.image', fitsimage='stokeslast-test.fits', stokeslast=True, overwrite=True)
 myresult0 = os.system('grep SPECSYS stokeslast-test.fits > /dev/null')
 specsyspresent = (myresult0 == 0)
-importfits(imagename='stokeslast-test2.image', fitsimage='stokeslast-test.fits')
+importfits(imagename='stokeslast-test2.image', fitsimage='stokeslast-test.fits', overwrite=True)
 myrgn1 = rg.box([0,0,1,0],[64,64,1,0])
 myrgn2 = rg.box([0,0,0,1],[64,64,0,1])
 ia.open('stokeslast-test.image')
@@ -266,12 +266,14 @@ print myname, ' ***********************************************************'
 
 print myname, ' ***********************************************************'
 print myname, ' Test of the wavelength parameter:'
+os.system('rm -f wavelength-test.fits')
 ia.open('stokeslast-test.image')
 ia.tofits(outfile='wavelength-test.fits', wavelength=True)
 ia.close()
 passed = ia.open('wavelength-test.fits')
 ia.close()
 
+os.system('rm -f wavelength-test2.fits')
 ia.open('stokeslast-test.image')
 ia.tofits(outfile='wavelength-test2.fits', wavelength=True, airwavelength=True)
 ia.close()
@@ -288,6 +290,7 @@ print myname, ' ***********************************************************'
 
 print myname, ' ***********************************************************'
 print myname, ' Test of export of a standard single-channel image from clean:'
+os.system('rm -f xxx-test.fits xxx-test-w.fits')
 ia.open('xxx-clean.image')
 ia.tofits(outfile='xxx-test.fits')
 ia.tofits(outfile='xxx-test-w.fits', wavelength=True)
@@ -332,7 +335,7 @@ passed = True
 for myctype in ['freq','vrad','vopt','wave','awav']:
     try:
         print 'Testing CTYPE ', myctype, ' ...'
-        importfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'.fits')
+        importfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'.fits', overwrite=True)
         cond0 = ia.open(myctype+'.im')
         coordm = ia.coordmeasures()
         cond1 = (abs(coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype])<1.) # avoid Python precision problems
@@ -344,16 +347,18 @@ for myctype in ['freq','vrad','vopt','wave','awav']:
         passed1 = cond0 and cond1 and cond2 and cond3
         ia.close()
         if(myctype=='freq'):
-            exportfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'-ex.fits')
+            exportfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'-ex.fits', overwrite=True)
         elif(myctype=='vrad'):
-            exportfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'-ex.fits', velocity=True, optical=False)
+            exportfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'-ex.fits', velocity=True, optical=False, overwrite=True)
         elif(myctype=='vopt'):
-            exportfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'-ex.fits', velocity=True, optical=True)
+            exportfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'-ex.fits', velocity=True, optical=True, overwrite=True)
         elif(myctype=='wave'):
+            os.system('rm -f spec-test-'+myctype+'-ex.fits')
             ia.open(myctype+'.im')
             ia.tofits(outfile='spec-test-'+myctype+'-ex.fits', wavelength=True)
             ia.close()
         elif(myctype=='awav'):
+            os.system('rm -f spec-test-'+myctype+'-ex.fits')
             ia.open(myctype+'.im')
             ia.tofits(outfile='spec-test-'+myctype+'-ex.fits', wavelength=True, airwavelength=True)
             ia.close()
@@ -362,7 +367,7 @@ for myctype in ['freq','vrad','vopt','wave','awav']:
 
         passed2 = True
 
-        importfits(imagename=myctype+'2.im', fitsimage='spec-test-'+myctype+'-ex.fits')
+        importfits(imagename=myctype+'2.im', fitsimage='spec-test-'+myctype+'-ex.fits', overwrite=True)
         cond0 = ia.open(myctype+'2.im')
         coordm = ia.coordmeasures()
         cond1 = (abs(coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype])<1.) # avoid Python precision problems
@@ -434,7 +439,7 @@ expectb = 2.190956850603E+11 # LSRK
 passed = True
 try:
     os.system('rm -rf freq.im')
-    importfits(imagename='freq.im', fitsimage='spec-test-freq.fits')
+    importfits(imagename='freq.im', fitsimage='spec-test-freq.fits', overwrite=True)
     os.system('rm -rf freqx.im')
     imreframe(imagename='freq.im', output='freqx.im', outframe='BARY')
     cond0 = ia.open('freqx.im')
@@ -452,7 +457,7 @@ try:
     passed2 = True
     
     os.system('rm -rf freq2.im')
-    importfits(imagename='freq2.im', fitsimage='spec-test-convbary-ex.fits')
+    importfits(imagename='freq2.im', fitsimage='spec-test-convbary-ex.fits', overwrite=True)
     cond0 = ia.open('freq2.im')
     mycs2 = ia.coordsys()
     ia.close()
@@ -479,7 +484,7 @@ print myname, ' ***********************************************************'
 
 print myname, ' ***********************************************************'
 print myname, ' Test of the beam parameter:'
-importfits(fitsimage='1904-66_AIT.fits', imagename='1904-66_AIT_2.im', beam=['2arcsec','1arcsec','3.0deg'])
+importfits(fitsimage='1904-66_AIT.fits', imagename='1904-66_AIT_2.im', beam=['2arcsec','1arcsec','3.0deg'], overwrite=True)
 passed = False
 ia.open('1904-66_AIT_2.im')
 x = ia.restoringbeam()
