@@ -1,3 +1,139 @@
+#!/usr/bin/perl
+use File::Basename;
+use File::Find;
+use Cwd 'abs_path';
+use Cwd 'getcwd';
+use File::Path qw(make_path remove_tree);
+
+
+
+$installpath = abs_path(dirname(abs_path($0)));
+$topdir = basename($installpath);
+$tmpdir = "$installpath/tmp";
+$outputdir = "$installpath/docs/doxygen";
+$outputdir_default = "$outputdir";
+$mainpage = "$installpath/mainpage.dox";
+$debug = 0;
+$logging = 0;
+$LOG = STDOUT;
+
+die "main page ($mainpage) not found..." unless -r $mainpage;
+
+foreach ( @ARGV ) {
+    if ( m|^tmp=(.*)$| ) {
+        my $dir = $1;
+        die "tmp directory ($dir) does not exist..." unless -d $dir;
+        $tmpdir = $dir;
+    } elsif ( m|^out=(.*)$| ) {
+        my $dir = $1;
+        die "output directory ($dir) does not exits..." unless -d $dir;
+        $outputdir = $dir;
+    } elsif ( m|^-?-debug$| ) {
+        $debug = 1;
+    } elsif ( m|^-?-usage$| || m|help|i ) {
+        usage( );
+        exit(0);
+    } elsif ( m|^log=(.*)$| ) {
+        my $path = $1;
+        my $dir = dirname($path);
+        die "directory of log file ($path) does not exit..." unless -d $dir;
+        open($LOG,"> $path") or die "cannot write to log file ($path): $!";
+        $logging = 1;
+    } else {
+        usage( );
+        die "unknown option \"$_\"...";
+    }
+}
+unless ( -d $tmpdir ) {
+    make_path($tmpdir) or die "could not create temporary directory ($tmpdir)";
+}
+# remove old output directory... plus minimal sanity check...
+# assume that the user has provided a clean directory (if that's what the want)...
+if ( $outputdir eq $outputdir_default && $outputdir ne "/" && -d $outputdir ) { remove_tree($outputdir) }
+# create output directory if it exists...
+unless ( -d $outputdir ) {
+    make_path($outputdir) or die "could not create output directory ($outputdir)";
+}
+
+
+$workdir = "$tmpdir/doxy.$$";
+die "cannot create work directory ($workdir)" unless make_path($workdir);
+
+$using_svn = system("svn info > /dev/null 2>&1") == 0;
+if ( $using_svn ) {
+    chomp(my $svnrev = `svnversion`);
+    $version = `curl --silent https://svn.cv.nrao.edu/cgi-bin/casa-version-match?rev=$svnrev`;
+    $version =~ s|(^\d+\.\d+)\.(\d+)\s+\d+\n*$|$1.0-$2|;
+} else {
+    die "could not find version number script" unless -x "$installpath/code/install/resolvegitrevision.sh";
+    chomp($version = `$installpath/code/install/resolvegitrevision.sh`);
+}
+die "failed to find version number" unless $version =~ m|\d+\.\d+\.\d+-\d+|g;
+print $LOG "casa version: $version\n";
+
+%header_dirs = ( );
+%binaries = ( );
+
+$find_headers = sub {
+    if ( $File::Find::dir =~ m@/linux|/osx|/macos|/build|/gcwrap|/asap|/test$@ ) { next }
+    if ( -f $_ && (m@\.h$@ || m@\.dox$@) )  {
+        my $dir = $File::Find::dir;
+        $dir =~ s|$installpath/?||;
+#        my @dir = split('/',$dir);
+#        $header_dirs{"$topdir/$dir[0]/$dir[1]"} = 1;
+        $header_dirs{"$topdir/$dir/$_"} = 1;
+    }
+};
+find($find_headers,$installpath);
+@header_dirs = keys %header_dirs;
+$header_dirs_string = join(' ',@header_dirs);
+
+chdir($workdir);
+symlink($installpath,$topdir);
+
+# create configuration file
+open($CFG, "> doxygen.cfg") or die "could not create configuration file";
+print $CFG doxygen_cfg( );
+
+
+
+
+@error_lines = ( );
+$error_lines = 75;
+open($DOXY,"doxygen doxygen.cfg 2>&1 |") or die "could not start doxygen: $!";
+while ( <$DOXY> ) {
+    if ( $debug || $logging ) { print $LOG $_ }
+    else {
+        if ( scalar(@error_lines) > $error_lines ) {
+            shift(@error_lines);
+        }
+        push(@error_lines,$_);
+    }
+}
+
+
+$status = close($DOXY);
+unless ( $status ) {
+    print $LOG "...an error occurred...\n";
+    unless ( $debug || $logging ) {
+        print "\n\t...\n\n";
+        foreach( @error_lines ) { print }
+    }
+    if ( $! ) {
+        if ( $logging ) { print $LOG "error closing doxygen pipe: $!\n" }
+        die "error closing doxygen pipe: $!";
+    }
+    else {
+        if ( $logging ) { print $LOG "exit status $? from doxygen\n" }
+        die "exit status $? from doxygen";
+    }
+}
+chdir($installpath);
+remove_tree($workdir);
+exit(0);
+
+sub doxygen_cfg {
+    return <<"END-OF-DOXYGEN";
 # Doxyfile 1.6.3
 
 # This file describes the settings to be used by the documentation system
@@ -31,15 +167,14 @@ PROJECT_NAME           = casa
 # This could be handy for archiving the generated documentation or
 # if some version control system is used.
 
-#PROJECT_NUMBER         = $Rev:20696$
-PROJECT_NUMBER         = $Rev$
+PROJECT_NUMBER         = $version
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute)
 # base path where the generated documentation will be put.
 # If a relative path is entered, it will be relative to the location
 # where doxygen was started. If left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = docs/doxygen
+OUTPUT_DIRECTORY       = $installpath/docs/doxygen
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create
 # 4096 sub-directories (in 2 levels) under the output directory of each output
@@ -82,9 +217,9 @@ REPEAT_BRIEF           = YES
 # in this list, if found as the leading text of the brief description, will be
 # stripped from the text and the result after processing the whole list, is
 # used as the annotated text. Otherwise, the brief description is used as-is.
-# If left blank, the following values are used ("$name" is automatically
-# replaced with the name of the entity): "The $name class" "The $name widget"
-# "The $name file" "is" "provides" "specifies" "contains"
+# If left blank, the following values are used ("\$name" is automatically
+# replaced with the name of the entity): "The \$name class" "The \$name widget"
+# "The \$name file" "is" "provides" "specifies" "contains"
 # "represents" "a" "an" "the"
 
 ABBREVIATE_BRIEF       =
@@ -552,13 +687,13 @@ WARN_IF_DOC_ERROR      = YES
 WARN_NO_PARAMDOC       = NO
 
 # The WARN_FORMAT tag determines the format of the warning messages that
-# doxygen can produce. The string should contain the $file, $line, and $text
+# doxygen can produce. The string should contain the \$file, \$line, and \$text
 # tags, which will be replaced by the file and line number from which the
 # warning originated and the warning text. Optionally the format may contain
-# $version, which will be replaced by the version of the file (if it could
+# \$version, which will be replaced by the version of the file (if it could
 # be obtained via FILE_VERSION_FILTER)
 
-WARN_FORMAT            = "$file:$line: $text"
+WARN_FORMAT            = "\$file:\$line: \$text"
 
 # The WARN_LOGFILE tag can be used to specify a file to which warning
 # and error messages should be written. If left blank the output is written
@@ -575,41 +710,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT                  = mainpage.dox \
-                         casacore/casa \
-                         casacore/coordinates \
-                         casacore/derivedmscal \ 
-                         casacore/fits \
-                         casacore/images \
-                         casacore/lattices \
-                         casacore/measures \
-                         casacore/ms \
-                         casacore/msfits \
-                         casacore/scimath \
-                         casacore/tables \
-                         code/alma \
-                         code/atnf \
-                         code/calanalysis \
-                         code/casadbus \
-                         code/casaqt \
-                         code/components \
-                         code/display \
-                         code/display3d \
-                         code/flagging \
-                         code/graphics \
-                         code/guitools \
-                         code/imageanalysis \
-                         code/miriad \
-                         code/mstransform \                         
-                         code/msvis \
-                         code/nrao \
-                         code/plotms \
-                         code/parallel \
-                         code/singledish \
-                         code/spectrallines \
-                         code/synthesis \
-                         code/tableplot \
-                         code/xmlcasa
+INPUT                  = $mainpage $header_dirs_string
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is
@@ -658,7 +759,9 @@ EXCLUDE_PATTERNS       = */build_* \
                          */demo/* \
                          */test/* \
                          */include/* \
-                         */fortran/*
+                         */fortran/* \
+                         */.git/* \
+                         */.DS_Store/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -702,9 +805,7 @@ IMAGE_PATH             =
 # to standard output.
 # If FILTER_PATTERNS is specified, this tag will be
 # ignored.
-
-#INPUT_FILTER           = casacore/scons-tools/doxygen_pp
-INPUT_FILTER           = casacore/build-tools/doxygen_pp
+INPUT_FILTER           = $installpath/casacore/build-tools/doxygen_pp
 
 # The FILTER_PATTERNS tag can be used to specify filters on a per file pattern
 # basis.
@@ -1388,7 +1489,7 @@ TAGFILES               =
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create
 # a tag file that is based on the input files it reads.
 
-GENERATE_TAGFILE       = docs/doxygen/casacore.tag
+GENERATE_TAGFILE       = $outputdir/casacore.tag
 
 # If the ALLEXTERNALS tag is set to YES all external classes will be listed
 # in the class index. If set to NO only the inherited external classes
@@ -1600,3 +1701,24 @@ GENERATE_LEGEND        = YES
 # the various graphs.
 
 DOT_CLEANUP            = YES
+END-OF-DOXYGEN
+
+}
+
+sub usage {
+    print <<'END-OF-USAGE';
+This script will generate doxygen documentation in "docs/doxygen". The options are:
+
+    -usage         Print this information...
+    -debug         Print verbose information...
+
+    tmp=<DIR>      Directory to use for storing intermediate file and
+                   running doxygen.
+    out=<DIR>      Directory where the output should be created. This
+                   directory should exist, and if you want a clean
+                   run, it should be empty.
+    log=<FILE>     Use <FILE> for all output instead of stdout
+                   (implies '-debug').
+
+END-OF-USAGE
+}
