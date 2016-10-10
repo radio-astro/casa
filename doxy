@@ -114,7 +114,7 @@ while ( <$DOXY> ) {
 
 
 $status = close($DOXY);
-unless ( $status ) {
+if ( $status ) {
     print $LOG "...an error occurred...\n";
     unless ( $debug || $logging ) {
         print "\n\t...\n\n";
