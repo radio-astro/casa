@@ -493,7 +493,7 @@ C
       integer :: apol, achan, aconvplane, irow
       integer :: aconvpol, aconvchan, xind2, yind2
       integer :: posx, posy, msupportx, msupporty, psupportx, psupporty
-
+      logical :: centin
 
    
 
@@ -508,7 +508,7 @@ C
      $              (weight(ichan,irow).ne.0.0)) then
                   if (onmosgrid(loc(1, ichan, irow), nx, ny, 1, 1, 
      $                 nx, ny, support, msupportx, msupporty,
-     $                 psupportx, psupporty)) then
+     $                 psupportx, psupporty, centin)) then
                      do ipol=1, nvispol
                         apol=polmap(ipol)+1
                         aconvpol=convpolmap(ipol)+1
@@ -602,7 +602,7 @@ C Single precision weight grid image...Damn you fortran...no templates
       integer :: apol, achan, aconvplane, irow
       integer :: aconvpol, aconvchan, xind2, yind2
       integer :: posx, posy, msupportx, msupporty, psupportx, psupporty
-
+      logical :: centin
 
    
 
@@ -617,7 +617,7 @@ C Single precision weight grid image...Damn you fortran...no templates
      $              (weight(ichan,irow).ne.0.0)) then
                   if (onmosgrid(loc(1, ichan, irow), nx, ny, 1, 1, 
      $                 nx, ny, support, msupportx, msupporty,
-     $                 psupportx, psupporty)) then
+     $                 psupportx, psupporty, centin)) then
                      do ipol=1, nvispol
                         apol=polmap(ipol)+1
                         aconvpol=convpolmap(ipol)+1
@@ -714,7 +714,7 @@ C     write(*,*)off
       integer :: apol, achan, aconvplane, irow
       integer :: aconvpol, aconvchan, xind2, yind2
       integer :: posx, posy, msupportx, msupporty, psupportx, psupporty
-
+      logical :: centin
 
    
 
@@ -729,7 +729,7 @@ C     write(*,*)off
      $              (weight(ichan,irow).ne.0.0)) then
                   if (onmosgrid(loc(1, ichan, irow), nx, ny, x0, y0, 
      $                 nxsub, nysub, support, msupportx, msupporty,
-     $                 psupportx, psupporty)) then
+     $                 psupportx, psupporty, centin)) then
                      do ipol=1, nvispol
                         apol=polmap(ipol)+1
                         aconvpol=convpolmap(ipol)+1
@@ -768,11 +768,13 @@ C      write(*,*) loc(1, ichan, irow)+ix,loc(2, ichan, irow)+iy,xind,yind
      $                                   nvalue*cwt
                                  end do
                               end do
-                           
-                           sumwt(apol, achan)= sumwt(apol,achan)+
+                           if(centin) then
+                              sumwt(apol, achan)= sumwt(apol,achan)+
      $                             weight(ichan,irow)
+                           endif
                         end if
                      end do
+C if onmos
                   end if
                end if
             end do
@@ -831,7 +833,7 @@ C  Single Precision version
       integer :: apol, achan, aconvplane, irow
       integer :: aconvpol, aconvchan, xind2, yind2
       integer :: posx, posy, msupportx, msupporty, psupportx, psupporty
-
+      logical :: centin
 
    
 
@@ -846,7 +848,7 @@ C  Single Precision version
      $              (weight(ichan,irow).ne.0.0)) then
                   if (onmosgrid(loc(1, ichan, irow), nx, ny, x0, y0, 
      $                 nxsub, nysub, support, msupportx, msupporty,
-     $                 psupportx, psupporty)) then
+     $                 psupportx, psupporty, centin)) then
                      do ipol=1, nvispol
                         apol=polmap(ipol)+1
                         aconvpol=convpolmap(ipol)+1
@@ -884,9 +886,10 @@ C                          write(*,*) support, iloc
      $                                   nvalue*cwt
                                  end do
                               end do
-                           
-                           sumwt(apol, achan)= sumwt(apol,achan)+
+                           if(centin) then
+                              sumwt(apol, achan)= sumwt(apol,achan)+
      $                             weight(ichan,irow)
+                           end if 
                         end if
                      end do
                   end if
@@ -1663,10 +1666,11 @@ C            end if
 
       logical function  onmosgrid(loc, nx, ny, nx0, ny0, 
      $                 nxsub, nysub, support, msuppx, msuppy,
-     $                 psuppx, psuppy)
+     $                 psuppx, psuppy, centerin)
       implicit none
       integer, intent(in) :: nx, ny,  nx0, ny0, nxsub, nysub, loc(2), 
      $     support
+      logical, intent(out) :: centerin
       
       integer, intent(out) :: msuppx, msuppy, psuppx, psuppy
       integer :: loc1sub, loc1plus, loc2sub, loc2plus 
@@ -1682,8 +1686,12 @@ C     $ support, ((loc(2)+support) < (ny0+nysub))
       loc1plus=loc(1)+support
       loc2sub=loc(2)-support
       loc2plus=loc(2)+support
+     
+      centerin=(loc(1).ge.nx0) .and. (loc(1).lt. (nx0+nxsub)).and.
+     $     (loc(2).ge.ny0).and.(loc(2) .lt. (ny0+nysub))
       onmosgrid=(loc1plus .ge. nx0) .and. (loc1sub 
      $     .le. (nx0+nxsub)) .and.(loc2plus .ge. ny0) .and. 
      $     (loc2sub .le. (ny0+nysub))
+      
       return
       end
