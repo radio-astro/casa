@@ -1553,7 +1553,7 @@ try:
     temporaryDirectory = tempfile.gettempdir()
     posterApp = casa['helpers']['crashPoster']
     if posterApp is None: posterApp = "" # handle case where it wasn't found
-    postingUrl = "http:/127.0.0.1:8080/CasaCrashUpload"
+    postingUrl = "https://casa.nrao.edu/cgi-bin/crash-report.pl"
     message = casac.utils()._crash_reporter_initialize(temporaryDirectory, posterApp, postingUrl)
     if len (message) > 0:
         print ("***\n*** Crash reporter failed to initialize: " + message)
