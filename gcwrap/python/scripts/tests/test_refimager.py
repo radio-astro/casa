@@ -1565,7 +1565,7 @@ class test_widefield(testref_base):
           """ [widefield] Test_Widefield_mosaic : MFS with mosaicft  stokes I """
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,spw='1',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='mosaicft',deconvolver='hogbom',pblimit=0.3)
-          report=self.th.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.961231,[256,256,0,0]),(self.img+'.weight',0.2795,[256,256,0,0]) ] )
+          report=self.th.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.961231,[256,256,0,0]),(self.img+'.weight',0.50576,[256,256,0,0]) ] )
           #ret = clean(vis=self.msfile,spw='1',field='*',imagename=self.img+'.old',imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,imagermode='mosaic',psfmode='hogbom')
           self.checkfinal(report)
 
@@ -1575,7 +1575,7 @@ class test_widefield(testref_base):
           """ [widefield] Test_Widefield_mosaicft_mtmfs : MT-MFS with mosaicft  stokes I, alpha """
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=60,gridder='mosaicft',deconvolver='mtmfs')
-          report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.9413,[256,256,0,0]),(self.img+'.weight.tt0',0.27633,[256,256,0,0]),(self.img+'.alpha',0.07786,[256,256,0,0]) ] )
+          report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.9413,[256,256,0,0]),(self.img+'.weight.tt0',0.50546,[256,256,0,0]),(self.img+'.alpha',0.07786,[256,256,0,0]) ] )
           ## alpha should represent that of the mosaic PB (twice)... and should then converge to zero
           self.checkfinal(report)
           
