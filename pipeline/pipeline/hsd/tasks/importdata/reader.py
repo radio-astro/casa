@@ -4,8 +4,6 @@ import os
 import re
 import numpy
 
-import asap as sd
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import DataTableImpl as DataTable
@@ -82,7 +80,6 @@ class MetaDataReader(object):
         spwids = self.detect_target_spw()
         nchan_map = dict([(spwid,self.ms.get_spectral_window(spwid).num_channels) for spwid in spwids])
         ddids = self.detect_target_data_desc()
-        #exclude_types = list(self.detect_exclude_type())
         
         #Rad2Deg = 180. / 3.141592653
         
@@ -290,9 +287,6 @@ class MetaDataReader(object):
         self.vAnt += num_antenna
         
         self.appended_row = nrow
-
-    def detect_exclude_type(self):
-        return map(int, [sd.srctype.poncal, sd.srctype.poffcal])
     
 def direction_convert(direction, mepoch, mposition, outframe):
     direction_type = direction['type']
