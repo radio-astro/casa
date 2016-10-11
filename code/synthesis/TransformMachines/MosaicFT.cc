@@ -127,6 +127,7 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
     FTMachine::operator=(other);
      
     convSampling=other.convSampling;
+    
     sj_p=other.sj_p;
     imageCache=other.imageCache;
     cachesize=other.cachesize;
@@ -1141,9 +1142,12 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
   Int rbeg=startRow+1;
   Int rend=endRow+1;
   Block<Matrix<Double> > sumwgt(ixsub*iysub);
+  Vector<Double *> swgtptr(ixsub*iysub);
+  Vector<Bool> swgtdel(ixsub*iysub);
   for (icounter=0; icounter < ixsub*iysub; ++icounter){
     sumwgt[icounter].resize(sumWeight.shape());
     sumwgt[icounter].set(0.0);
+    swgtptr[icounter]=sumwgt[icounter].getStorage(swgtdel(icounter));
   }
   const Int* pmapstor=polMap.getStorage(del);
   const Int* cmapstor=chanMap.getStorage(del);
@@ -1164,7 +1168,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
   if(useDoubleGrid_p) {
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
     
-#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, doWeightGridding, datStorage, wgtStorage, flagstor, rowflagstor, convstor, wconvstor, pmapstor, cmapstor, gridstor,  csupp, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, convrowmapstor, convchanmapstor, convpolmapstor, nPolConv, nChanConv, nConvFunc) shared(sumwgt) num_threads(ixsub*iysub)
+#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, doWeightGridding, datStorage, wgtStorage, flagstor, rowflagstor, convstor, wconvstor, pmapstor, cmapstor, gridstor,  csupp, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, convrowmapstor, convchanmapstor, convpolmapstor, nPolConv, nChanConv, nConvFunc) shared(swgtptr) num_threads(ixsub*iysub)
     {   
 #pragma omp for schedule(dynamic, 1)      
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
@@ -1201,7 +1205,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
 	   convstor,
 	   cmapstor,
 	   pmapstor,
-	   (sumwgt[icounter]).getStorage(del),
+	   swgtptr[icounter],
 	   convrowmapstor,
 	   convchanmapstor,
 	   convpolmapstor,
@@ -1211,10 +1215,11 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
 	       );
     }
     }//end pragma parallel
+    
     for (icounter=0; icounter < ixsub*iysub; ++icounter){
+      sumwgt[icounter].putStorage(swgtptr[icounter],swgtdel[icounter]);
       sumWeight=sumWeight+sumwgt[icounter];
     }    
-    //cerr << "SUMWGT " << sumWeight << endl;
     griddedData2.putStorage(gridstor, gridcopy);
     if(!doneWeightImage_p){
       //This can be parallelized by making copy of the central part of the griddedWeight
@@ -1865,7 +1870,6 @@ Bool MosaicFT::toRecord(String&  error,
   
   if(sj_p){
     outRec.define("telescope", sj_p->telescope());
-    //cerr <<" Telescope " << sj_p->telescope() << endl;
   }
   outRec.define("uvscale", uvScale);
   outRec.define("uvoffset", uvOffset);

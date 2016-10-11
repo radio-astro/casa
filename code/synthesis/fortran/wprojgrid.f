@@ -192,6 +192,7 @@ C     $                 loc(1), loc(2), loc(3)
       integer :: ix, iy, ipol, ichan
       integer :: apol, achan, irow
       integer :: posx, posy, msupportx, msupporty, psupportx, psupporty
+      logical :: centin
 C      complex :: cfunc(convsize/2-1, convsize/2-1)
 C      integer :: npoint
 
@@ -206,7 +207,7 @@ C      integer :: npoint
 C               write(*,*) irow, ichan, iloc(3), rsupport 
                if (onmywgrid(loc(1, ichan, irow), nx, ny, wconvsize, 
      $              x0, y0, nxsub, nysub, rsupport, msupportx, msupporty
-     $         , psupportx, psupporty)) then
+     $         , psupportx, psupporty, centin)) then
 CCC I thought removing the if in the inner loop will be faster
 CCC but not really as i have to calculate more conjg at this stage
 C                  npoint=rsupport*sampling+1
@@ -266,8 +267,10 @@ C                              end if
                               norm=norm+real(cwt)
                            end do
                         end do
-                        sumwt(apol,achan)=sumwt(apol,achan)+
-     $                       weight(ichan,irow)*norm
+                        if(centin) then
+                           sumwt(apol,achan)=sumwt(apol,achan)+
+     $                          weight(ichan,irow)*norm
+                        end if 
                      end if
                   end do
                else
@@ -326,6 +329,7 @@ C single precision gridder
       integer :: ix, iy, ipol, ichan
       integer :: apol, achan, irow
       integer :: posx, posy, msupportx, msupporty, psupportx, psupporty
+      logical :: centin
 C      complex :: cfunc(convsize/2-1, convsize/2-1)
 C      integer :: npoint
 
@@ -339,7 +343,7 @@ C      integer :: npoint
                rsupport=support(iloc(3))
                if (onmywgrid(loc(1, ichan, irow), nx, ny, wconvsize, 
      $              x0, y0, nxsub, nysub, rsupport, msupportx, 
-     $ msupporty, psupportx, psupporty)) then
+     $ msupporty, psupportx, psupporty, centin)) then
 CCC I thought removing the if in the inner loop will be faster
 CCC but not really as i have to calculate more conjg at this stage
 C                  npoint=rsupport*sampling+1
@@ -399,8 +403,10 @@ C                              end if
                               norm=norm+real(cwt)
                            end do
                         end do
-                        sumwt(apol,achan)=sumwt(apol,achan)+
-     $                       weight(ichan,irow)*norm
+                        if(centin) then
+                           sumwt(apol,achan)=sumwt(apol,achan)+
+     $                          weight(ichan,irow)*norm
+                        end if
                      end if
                   end do
                else
@@ -638,11 +644,12 @@ C      pos(3)=(scale(3)*uvw(3)*freq/c)+offset(3)+1.0;
       return
       end
       logical function onmywgrid(loc, nx, ny, nw, nx0, ny0, nxsub,nysub,
-     $     support, msuppx, msuppy, psuppx, psuppy)
+     $     support, msuppx, msuppy, psuppx, psuppy, centerin)
       implicit none
       integer, intent(in) :: nx, ny, nw, nx0, ny0, nxsub, nysub, loc(3), 
      $     support
       integer, intent(out) :: msuppx, msuppy, psuppx, psuppy
+      logical, intent(out) :: centerin
       integer :: loc1sub, loc1plus, loc2sub, loc2plus
       msuppx=merge(-support, nx0-loc(1), loc(1)-support  >= nx0)
       msuppy=merge(-support, ny0-loc(2), loc(2)-support >= ny0)
@@ -654,8 +661,9 @@ C      pos(3)=(scale(3)*uvw(3)*freq/c)+offset(3)+1.0;
       loc1plus=loc(1)+support
       loc2sub=loc(2)-support
       loc2plus=loc(2)+support
-      
-       onmywgrid=(support.gt.0).and. (loc(3).ge.1) .and. (loc(3).le.nw)
+      centerin=(loc(1).ge.nx0) .and. (loc(1).lt. (nx0+nxsub)).and.
+     $     (loc(2).ge.ny0).and.(loc(2) .lt. (ny0+nysub))
+      onmywgrid=(support.gt.0).and. (loc(3).ge.1) .and. (loc(3).le.nw)
      $     .and. (loc1plus .ge. nx0) .and. (loc1sub 
      $     .le. (nx0+nxsub)) .and.(loc2plus .ge. ny0) .and. 
      $     (loc2sub .le. (ny0+nysub))
