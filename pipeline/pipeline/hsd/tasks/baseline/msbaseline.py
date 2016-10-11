@@ -59,38 +59,6 @@ class SDMSBaselineInputs(basetask.StandardInputs):
     fitfunc = basetask.property_with_default('fitfunc', 'cspline')
     clusteringalgorithm = basetask.property_with_default('clusteringalgorithm', 'kmean')
     deviationmask = basetask.property_with_default('deviationmask', True)
-        
-#         for key in ['spw', 'pol']:
-#             val = getattr(self, key)
-#             if val is None or (val[0] == '[' and val[-1] == ']'):
-#                 self._to_list([key])
-#         #self._to_list(['infiles', 'iflist', 'pollist', 'edge', 'linewindow'])
-#         self._to_list(['infiles', 'edge', 'linewindow'])
-#         self._to_bool(['broadline', 'deviationmask'])
-#         self._to_numeric('fitorder')
-#         if isinstance(self.fitorder, float):
-#             self.fitorder = int(self.fitorder)
-
-#     @property
-#     def antennalist(self):
-#         if type(self.infiles) == list:
-#             antennas = [self.context.observing_run.get_scantable(f).antenna.name 
-#                         for f in self.infiles]
-#             return list(set(antennas))
-#         else:
-#             return [self.context.observing_run.get_scantable(self.infiles).antenna.name]
-
-# #     def get_iflist(self, index):
-# #         spw = '' if self.spw is None else self.spw
-# #         return self._get_arg(spw, index)
-
-# #     def get_pollist(self, index):
-# #         pol = '' if self.pol is None else self.pol
-# #         return self._get_arg(pol, index)
-
-# #     def _get_arg(self, arg_list, index):
-# #         sel = self._to_casa_arg(arg_list, index)
-# #         return common.selection_to_list(sel)
             
 
 class SDMSBaselineResults(common.SingleDishResults):
@@ -280,8 +248,6 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                           field_id=m.field_id)
 #             # assume all members have same spw and pollist
             first_member = group_desc[0]
-#             pols_list = list(common.pol_filter(group_desc, inputs.get_pollist))
-#             LOG.debug('pols_list=%s'%(pols_list))
             iteration = first_member.iteration
             LOG.debug('iteration for group {group_id} is {iter}', group_id=group_id, iter=iteration)
 # 

@@ -11,7 +11,6 @@ import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
 from pipeline.domain import DataTable
 from .. import common
-#from ..common import temporary_filename
 from ..common import utils
 
 LOG = infrastructure.get_logger(__name__)
