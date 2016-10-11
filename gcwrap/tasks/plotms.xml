@@ -50,107 +50,193 @@ MS Parameters
 ###############################################################################
 -->
   <param type="string" name="vis" kind="ms">
-    <description>input MS (or CalTable) (blank for none)</description>
+    <description>Input MS (or CalTable) (blank for none)</description>
     <value />
   </param>
   
   
   
   <param type="int" name="gridrows">
-    <description>Number of subplot rows (default 1).</description>
+    <description>Number of subplot rows</description>
   	<value>1</value>
   </param>
   
   <param type="int" name="gridcols">
-    <description>Number of subplot columns (default 1).</description>
+    <description>Number of subplot columns</description>
   	<value>1</value>
   </param>
   
    <param type="int" name="rowindex">
-       <description>Row location of the plot (0-based, default 0)</description>
+       <description>Row location of the plot (0-based)</description>
        <value>0</value>
    </param>
 
    <param type="int" name="colindex">
-       <description>Column location of the plot (0-based, default 0)</description>
+       <description>Column location of the plot (0-based)</description>
        <value>0</value>
    </param>
   
   <param type="int" name="plotindex">
-    	<description>Index to address a subplot (0-based, default 0)</description>
+    	<description>Index to address a subplot (0-based)</description>
     	<value>0</value>
   	</param>
  
 
   <param type="string" name="xaxis">
-    <description>plot x-axis (blank for default/current)</description>
+    <description>Plot x-axis (blank for default/current)</description>
     <value />
     <allowed kind="enum">
       <value />
-      <value>scan</value><value>Scan</value>
-      <value>field</value><value>Field</value>
-      <value>time</value><value>Time</value>
-      <value>interval</value><value>time_interval</value><value>timeinterval</value><value>timeint</value><value>Interval</value>
-      <value>spw</value><value>Spw</value>
-      <value>channel</value><value>chan</value><value>Channel</value>
-      <value>frequency</value><value>freq</value><value>Frequency</value>
-      <value>correlation</value><value>corr</value><value>Corr</value>
-      <value>antenna1</value><value>ant1</value><value>Antenna1</value>
-      <value>antenna2</value><value>ant2</value><value>Antenna2</value>
-      <value>baseline</value><value>Baseline</value>
-      <value>row</value><value>Row</value>
-      <value>observation</value><value>Observation</value>
-      <value>intent</value><value>Intent</value>
-      <value>feed1</value><value>Feed1</value>
-      <value>feed2</value><value>Feed2</value>
-      <value>uvdist</value><value>UVdist</value>
-      <value>uvwave</value><value>uvdist_l</value><value>uvdistl</value><value>UVwave</value>
-      <value>u</value><value>U</value>
-      <value>v</value><value>V</value>
-      <value>w</value><value>W</value>
-      <value>uwave</value><value>Uwave</value>
-      <value>vwave</value><value>Vwave</value>
-      <value>wwave</value><value>Wwave</value>
-      <value>velocity</value><value>vel</value><value>Velocity</value>
-      <value>amp</value><value>amplitude</value><value>Amp</value>
-      <value>phase</value><value>Phase</value>
-      <value>real</value><value>Real</value>
-      <value>imag</value><value>imaginary</value><value>Imag</value>
-      <value>wt</value><value>Wt</value>
+      <value>scan</value>
+      <value>Scan</value>
+      <value>field</value>
+      <value>Field</value>
+      <value>time</value>
+      <value>Time</value>
+      <value>interval</value>
+      <value>time_interval</value>
+      <value>timeinterval</value>
+      <value>timeint</value>
+      <value>Interval</value>
+      <value>spw</value>
+      <value>Spw</value>
+      <value>channel</value>
+      <value>chan</value>
+      <value>Channel</value>
+      <value>frequency</value>
+      <value>freq</value>
+      <value>Frequency</value>
+      <value>correlation</value>
+      <value>corr</value>
+      <value>Corr</value>
+      <value>antenna1</value>
+      <value>ant1</value>
+      <value>Antenna1</value>
+      <value>antenna2</value>
+      <value>ant2</value>
+      <value>Antenna2</value>
+      <value>baseline</value>
+      <value>Baseline</value>
+      <value>row</value>
+      <value>Row</value>
+      <value>observation</value>
+      <value>Observation</value>
+      <value>intent</value>
+      <value>Intent</value>
+      <value>feed1</value>
+      <value>Feed1</value>
+      <value>feed2</value>
+      <value>Feed2</value>
+      <value>uvdist</value>
+      <value>UVdist</value>
+      <value>uvwave</value>
+      <value>uvdist_l</value>
+      <value>uvdistl</value>
+      <value>UVwave</value>
+      <value>u</value>
+      <value>U</value>
+      <value>v</value>
+      <value>V</value>
+      <value>w</value>
+      <value>W</value>
+      <value>uwave</value>
+      <value>Uwave</value>
+      <value>vwave</value>
+      <value>Vwave</value>
+      <value>wwave</value>
+      <value>Wwave</value>
+      <value>velocity</value>
+      <value>vel</value>
+      <value>Velocity</value>
+      <value>amp</value>
+      <value>amplitude</value>
+      <value>Amp</value>
+      <value>phase</value>
+      <value>Phase</value>
+      <value>real</value>
+      <value>Real</value>
+      <value>imag</value>
+      <value>imaginary</value>
+      <value>Imag</value>
+      <value>wt</value>
+      <value>Wt</value>
       <value>weight</value>
-      <value>wt*amp</value><value>Wt*Amp</value>
-      <value>wtsp</value><value>WtSp</value>
-      <value>weightspectrum</value><value>WeightSpectrum</value>
-      <value>sigma</value><value>Sigma</value>
-      <value>sigmasp</value><value>SigmaSp</value>
-      <value>sigmaspectrum</value><value>SigmaSpectrum</value>
-      <value>flag</value><value>Flag</value>
-      <value>azimuth</value><value>Azimuth</value>
-      <value>elevation</value><value>Elevation</value>
-      <value>hourang</value><value>hourangle</value><value>HourAngle</value>
-      <value>parang</value><value>parangle</value><value>parallacticangle</value><value>ParAngle</value>
-      <value>antenna</value><value>ant</value><value>Antenna</value>
-      <value>ant-azimuth</value><value>Ant-Azimuth</value>
-      <value>ant-elevation</value><value>Ant-Elevation</value>
-      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value><value>Ant-Parangle</value>
-      <value>flagrow</value><value>FlagRow</value>
-      <value>gainamp</value><value>gamp</value><value>GainAmp</value>
-      <value>gainphase</value><value>gphase</value><value>GainPhase</value>
-      <value>gainreal</value><value>greal</value><value>GainReal</value>
-      <value>gainimag</value><value>gimag</value><value>GainImag</value>
-      <value>delay</value><value>del</value><value>Delay</value>
-      <value>swp</value><value>swpower</value><value>switchedpower</value><value>SwPower</value><value>spgain</value>
-      <value>tsys</value><value>Tsys</value>
-      <value>opac</value><value>opacity</value><value>Opac</value>
-      <value>snr</value><value>SNR</value>
-      <value>tec</value><value>TEC</value>
-      <value>radialvelocity</value><value>Radial Velocity</value>
-      <value>rho</value><value>Distance</value>
+      <value>wt*amp</value>
+      <value>Wt*Amp</value>
+      <value>wtsp</value>
+      <value>WtSp</value>
+      <value>weightspectrum</value>
+      <value>WeightSpectrum</value>
+      <value>sigma</value>
+      <value>Sigma</value>
+      <value>sigmasp</value>
+      <value>SigmaSp</value>
+      <value>sigmaspectrum</value>
+      <value>SigmaSpectrum</value>
+      <value>flag</value>
+      <value>Flag</value>
+      <value>azimuth</value>
+      <value>Azimuth</value>
+      <value>elevation</value>
+      <value>Elevation</value>
+      <value>hourang</value>
+      <value>hourangle</value>
+      <value>HourAngle</value>
+      <value>parang</value>
+      <value>parangle</value>
+      <value>parallacticangle</value>
+      <value>ParAngle</value>
+      <value>antenna</value>
+      <value>ant</value>
+      <value>Antenna</value>
+      <value>ant-azimuth</value>
+      <value>Ant-Azimuth</value>
+      <value>ant-elevation</value>
+      <value>Ant-Elevation</value>
+      <value>ant-parang</value>
+      <value>ant-parangle</value>
+      <value>ant-parallacticangle</value>
+      <value>Ant-Parangle</value>
+      <value>flagrow</value>
+      <value>FlagRow</value>
+      <value>gainamp</value>
+      <value>gamp</value>
+      <value>GainAmp</value>
+      <value>gainphase</value>
+      <value>gphase</value>
+      <value>GainPhase</value>
+      <value>gainreal</value>
+      <value>greal</value>
+      <value>GainReal</value>
+      <value>gainimag</value>
+      <value>gimag</value>
+      <value>GainImag</value>
+      <value>delay</value>
+      <value>del</value>
+      <value>Delay</value>
+      <value>swp</value>
+      <value>swpower</value>
+      <value>switchedpower</value>
+      <value>SwPower</value>
+      <value>spgain</value>
+      <value>tsys</value>
+      <value>Tsys</value>
+      <value>opac</value>
+      <value>opacity</value>
+      <value>Opac</value>
+      <value>snr</value>
+      <value>SNR</value>
+      <value>tec</value>
+      <value>TEC</value>
+      <value>radialvelocity</value>
+      <value>Radial Velocity</value>
+      <value>rho</value>
+      <value>Distance</value>
     </allowed>
   </param>
   
     <param type="string" name="xdatacolumn" subparam="true">
-      <description>data column to use for x-axis (blank for default/current)</description>
+      <description>Data column to use for x-axis (blank for default/current)</description>
       <value />
       <allowed kind="enum">
         <value />
@@ -167,76 +253,162 @@ MS Parameters
     </param>    
     
   <param type="any" name="yaxis">    
-  <description>plot y-axis (blank for default/current)</description>
+  <description>Plot y-axis (blank for default/current)</description>
   <any type="variant" limittype="string stringArray"/>
    <value type="string" />
    <value type="stringArray" ><value></value></value>
    <allowed kind="enum">
-       <value />
-       <value>scan</value><value>Scan</value>
-      <value>field</value><value>Field</value>
-      <value>time</value><value>Time</value>
-      <value>interval</value><value>time_interval</value><value>timeinterval</value><value>timeint</value><value>Interval</value>
-      <value>spw</value><value>Spw</value>
-      <value>channel</value><value>chan</value><value>Channel</value>
-      <value>frequency</value><value>freq</value><value>Frequency</value>
-      <value>correlation</value><value>corr</value><value>Corr</value>
-      <value>antenna1</value><value>ant1</value><value>Antenna1</value>
-      <value>antenna2</value><value>ant2</value><value>Antenna2</value>
-      <value>baseline</value><value>Baseline</value>
-      <value>row</value><value>Row</value>
-      <value>observation</value><value>Observation</value>
-      <value>intent</value><value>Intent</value>
-      <value>feed1</value><value>Feed1</value>
-      <value>feed2</value><value>Feed2</value>
-      <value>uvdist</value><value>UVdist</value>
-      <value>uvwave</value><value>uvdist_l</value><value>uvdistl</value><value>UVwave</value>
-      <value>u</value><value>U</value>
-      <value>v</value><value>V</value>
-      <value>w</value><value>W</value>
-      <value>uwave</value><value>Uwave</value>
-      <value>vwave</value><value>Vwave</value>
-      <value>wwave</value><value>Wwave</value>
-      <value>velocity</value><value>vel</value><value>Velocity</value>
-      <value>amp</value><value>amplitude</value><value>Amp</value>
-      <value>phase</value><value>Phase</value>
-      <value>real</value><value>Real</value>
-      <value>imag</value><value>imaginary</value><value>Imag</value>
-      <value>wt</value><value>Wt</value>
+      <value />
+      <value>scan</value>
+      <value>Scan</value>
+      <value>field</value>
+      <value>Field</value>
+      <value>time</value>
+      <value>Time</value>
+      <value>interval</value>
+      <value>time_interval</value>
+      <value>timeinterval</value>
+      <value>timeint</value>
+      <value>Interval</value>
+      <value>spw</value>
+      <value>Spw</value>
+      <value>channel</value>
+      <value>chan</value>
+      <value>Channel</value>
+      <value>frequency</value>
+      <value>freq</value>
+      <value>Frequency</value>
+      <value>correlation</value>
+      <value>corr</value>
+      <value>Corr</value>
+      <value>antenna1</value>
+      <value>ant1</value>
+      <value>Antenna1</value>
+      <value>antenna2</value>
+      <value>ant2</value>
+      <value>Antenna2</value>
+      <value>baseline</value>
+      <value>Baseline</value>
+      <value>row</value>
+      <value>Row</value>
+      <value>observation</value>
+      <value>Observation</value>
+      <value>intent</value>
+      <value>Intent</value>
+      <value>feed1</value>
+      <value>Feed1</value>
+      <value>feed2</value>
+      <value>Feed2</value>
+      <value>uvdist</value>
+      <value>UVdist</value>
+      <value>uvwave</value>
+      <value>uvdist_l</value>
+      <value>uvdistl</value>
+      <value>UVwave</value>
+      <value>u</value>
+      <value>U</value>
+      <value>v</value>
+      <value>V</value>
+      <value>w</value>
+      <value>W</value>
+      <value>uwave</value>
+      <value>Uwave</value>
+      <value>vwave</value>
+      <value>Vwave</value>
+      <value>wwave</value>
+      <value>Wwave</value>
+      <value>velocity</value>
+      <value>vel</value>
+      <value>Velocity</value>
+      <value>amp</value>
+      <value>amplitude</value>
+      <value>Amp</value>
+      <value>phase</value>
+      <value>Phase</value>
+      <value>real</value>
+      <value>Real</value>
+      <value>imag</value>
+      <value>imaginary</value>
+      <value>Imag</value>
+      <value>wt</value>
+      <value>Wt</value>
       <value>weight</value>
-      <value>wt*amp</value><value>Wt*Amp</value>
-      <value>wtsp</value><value>WtSp</value>
-      <value>weightspectrum</value><value>WeightSpectrum</value>
-      <value>sigma</value><value>Sigma</value>
-      <value>sigmasp</value><value>SigmaSp</value>
-      <value>sigmaspectrum</value><value>SigmaSpectrum</value>
-      <value>flag</value><value>Flag</value>
-      <value>azimuth</value><value>Azimuth</value>
-      <value>elevation</value><value>Elevation</value>
-      <value>hourang</value><value>hourangle</value><value>HourAngle</value>
-      <value>parang</value><value>parangle</value><value>parallacticangle</value><value>ParAngle</value>
-      <value>antenna</value><value>ant</value><value>Antenna</value>
-      <value>ant-azimuth</value><value>Ant-Azimuth</value>
-      <value>ant-elevation</value><value>Ant-Elevation</value>
-      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value><value>Ant-Parangle</value>
-      <value>flagrow</value><value>FlagRow</value>
-      <value>gainamp</value><value>gamp</value><value>GainAmp</value>
-      <value>gainphase</value><value>gphase</value><value>GainPhase</value>
-      <value>gainreal</value><value>greal</value><value>GainReal</value>
-      <value>gainimag</value><value>gimag</value><value>GainImag</value>
-      <value>delay</value><value>del</value><value>Delay</value>
-      <value>swp</value><value>swpower</value><value>switchedpower</value><value>SwPower</value><value>spgain</value>
-      <value>tsys</value><value>Tsys</value>
-      <value>opac</value><value>opacity</value><value>Opac</value>
-      <value>snr</value><value>SNR</value>
-      <value>tec</value><value>TEC</value>
-      <value>radialvelocity</value><value>Radial Velocity</value>
-      <value>rho</value><value>Distance</value>
+      <value>wt*amp</value>
+      <value>Wt*Amp</value>
+      <value>wtsp</value>
+      <value>WtSp</value>
+      <value>weightspectrum</value>
+      <value>WeightSpectrum</value>
+      <value>sigma</value>
+      <value>Sigma</value>
+      <value>sigmasp</value>
+      <value>SigmaSp</value>
+      <value>sigmaspectrum</value>
+      <value>SigmaSpectrum</value>
+      <value>flag</value>
+      <value>Flag</value>
+      <value>azimuth</value>
+      <value>Azimuth</value>
+      <value>elevation</value>
+      <value>Elevation</value>
+      <value>hourang</value>
+      <value>hourangle</value>
+      <value>HourAngle</value>
+      <value>parang</value>
+      <value>parangle</value>
+      <value>parallacticangle</value>
+      <value>ParAngle</value>
+      <value>antenna</value>
+      <value>ant</value>
+      <value>Antenna</value>
+      <value>ant-azimuth</value>
+      <value>Ant-Azimuth</value>
+      <value>ant-elevation</value>
+      <value>Ant-Elevation</value>
+      <value>ant-parang</value>
+      <value>ant-parangle</value>
+      <value>ant-parallacticangle</value>
+      <value>Ant-Parangle</value>
+      <value>flagrow</value>
+      <value>FlagRow</value>
+      <value>gainamp</value>
+      <value>gamp</value>
+      <value>GainAmp</value>
+      <value>gainphase</value>
+      <value>gphase</value>
+      <value>GainPhase</value>
+      <value>gainreal</value>
+      <value>greal</value>
+      <value>GainReal</value>
+      <value>gainimag</value>
+      <value>gimag</value>
+      <value>GainImag</value>
+      <value>delay</value>
+      <value>del</value>
+      <value>Delay</value>
+      <value>swp</value>
+      <value>swpower</value>
+      <value>switchedpower</value>
+      <value>SwPower</value>
+      <value>spgain</value>
+      <value>tsys</value>
+      <value>Tsys</value>
+      <value>opac</value>
+      <value>opacity</value>
+      <value>Opac</value>
+      <value>snr</value>
+      <value>SNR</value>
+      <value>tec</value>
+      <value>TEC</value>
+      <value>radialvelocity</value>
+      <value>Radial Velocity</value>
+      <value>rho</value>
+      <value>Distance</value>
     </allowed>
     </param>
     
     <param type="any" name="ydatacolumn" subparam="true">
-      <description>data column to use for y-axis (blank for default/current)</description>
+      <description>Data column to use for y-axis (blank for default/current)</description>
       <any type="variant" limittype='string stringArray'/>
       <value type="string"/>
       <allowed kind="enum" type="string">
@@ -254,7 +426,7 @@ MS Parameters
     </param>
     
     <param type="any" name="yaxislocation" subparam="true">
-      <description>whether to use a left or right y-axis for the data (blank for default)</description>
+      <description>Left or right y-axis for the data (blank for default)</description>
       <any type="variant" limittype='string stringArray'/>
       <value type="string" />
       <allowed kind="enum" type="string">
@@ -272,63 +444,63 @@ MS Selection parameters
 -->
 
   <param type="bool" name="selectdata">
-    <description>data selection parameters</description>
+    <description>Data selection parameters</description>
     <value>True</value>
   </param>
   
     <param type="string" name="field" subparam="true">
-      <description>field names or field index numbers (blank for all)</description>
+      <description>Field names or field index numbers (blank for all)</description>
       <value />
     </param>
     
     <param type="string" name="spw" subparam="true">
-      <description>spectral windows:channels (blank for all)</description>
+      <description>Spectral windows:channels (blank for all)</description>
       <value />
     </param>
     
     <param type="string" name="timerange" subparam="true">
-      <description>time range (blank for all)</description>
+      <description>Time range (blank for all)</description>
       <value />
     </param>
     
     <param type="string" name="uvrange" subparam="true">
-      <description>uv range (blank for all)</description>
+      <description>UV range (blank for all)</description>
       <value />
     </param>
     
     <param type="string" name="antenna" subparam="true">
-      <description>antenna/baselines (blank for all)</description>
+      <description>Antenna/baselines (blank for all)</description>
       <value />
     </param>
     
     <param type="string" name="scan" subparam="true">
-      <description>scan numbers (blank for all)</description>
+      <description>Scan numbers (blank for all)</description>
       <value />
     </param>
     
     <param type="string" name="correlation" subparam="true">
-      <description>correlations (blank for all)</description>
+      <description>Correlations (blank for all)</description>
       <value />
     </param>
     
     <param type="string" name="array" subparam="true">
-      <description>(sub)array numbers (blank for all)</description>
+      <description>(Sub)array numbers (blank for all)</description>
       <value />
     </param>
     
     <param type="any" name="observation" subparam="true">
-      <description>observation ID(s) (blank for all)</description>
+      <description>Observation IDs (blank for all)</description>
       <any type="variant" limittypes="string int"/>
       <value type="string"></value>
     </param>
 
     <param type="string" name="intent" subparam="true">
-      <description>observing intent (blank for all)</description>
+      <description>Observing intent (blank for all)</description>
       <value />
     </param>
 
     <param type="string" name="feed" subparam="true">
-      <description>Select feed (blank for all)</description>
+      <description>Feed numbers (blank for all)</description>
       <value />
     </param>
 
@@ -345,47 +517,47 @@ MS Averaging Parameters
 -->
 
   <param type="bool" name="averagedata">
-    <description>data averaging parameters</description>
+    <description>Data averaging parameters</description>
     <value>True</value>
   </param>
   
     <param type="string" name="avgchannel" subparam="true">
-      <description>average over channel?  (blank = False, otherwise value in channels)</description>
-      <value />
+      <description>Average over channel (blank = False, otherwise value in channels)</description>
+      <value>False</value>
     </param>
     
     <param type="string" name="avgtime" subparam="true">
-      <description>average over time? (blank = False, other value in seconds)</description>
-      <value />
+      <description>Average over time (blank = False, otherwise value in seconds)</description>
+      <value>False</value>
     </param>
     
     <param type="bool" name="avgscan" subparam="true">
-      <description>only valid if time averaging is turned on.  average over scans?</description>
+      <description>Average over scans. Only valid with time averaging</description>
       <value>False</value>
     </param>
     
     <param type="bool" name="avgfield" subparam="true">
-      <description>only valid if time averaging is turned on.  average over fields?</description>
+      <description>Average over fields. Only valid with time averaging</description>
       <value>False</value>
     </param>
     
     <param type="bool" name="avgbaseline" subparam="true">
-      <description>average over all baselines?  (mutually exclusive with avgantenna)</description>
+      <description>Average over all baselines (mutually exclusive with avgantenna)</description>
       <value>False</value>
     </param>
     
     <param type="bool" name="avgantenna" subparam="true">
-      <description>average by per-antenna?  (mutually exclusive with avgbaseline)</description>
+      <description>Average per antenna (mutually exclusive with avgbaseline)</description>
       <value>False</value>
     </param>
     
     <param type="bool" name="avgspw" subparam="true">
-      <description>average over all spectral windows?</description>
+      <description>Average over all spectral windows</description>
       <value>False</value>
     </param>
 
     <param type="bool" name="scalar" subparam="true">
-      <description>Do scalar averaging?</description>
+      <description>Scalar averaging (False=vector averaging)</description>
       <value>False</value>
     </param>
 
@@ -397,12 +569,12 @@ MS Data Transformation Parameters
 -->
 
   <param type="bool" name="transform">
-    <description>transform data in various ways?</description>
+    <description>Transform data in various ways</description>
     <value>True</value>
   </param>
 
     <param type="string" name="freqframe" subparam="true">
-      <description>the frame in which to render frequency and velocity axes </description>
+      <description>The frame in which to render frequency and velocity axes</description>
       <value />
       <allowed kind="enum">
         <value />
@@ -423,7 +595,7 @@ MS Data Transformation Parameters
     </param>
 
     <param type="string" name="veldef" subparam="true">
-      <description>the definition in which to render velocity </description>
+      <description>The definition in which to render velocity </description>
       <value>RADIO</value>
       <allowed kind="enum">
         <value>RADIO</value>
@@ -434,7 +606,10 @@ MS Data Transformation Parameters
 
    <param type="doubleArray" name="shift" subparam="true">
        <description>Adjust phases by this approximate phase center shift [dx,dy] (arcsec)</description>
-       <value type="doubleArray"><value>0.0</value><value>0.0</value></value>
+       <value type="doubleArray">
+           <value>0.0</value>
+           <value>0.0</value>
+       </value>
     </param>
 
 
@@ -447,12 +622,12 @@ Flag Extension Parameters
 -->
 
   <param type="bool" name="extendflag">
-    <description>have flagging extend to other data points?</description>
+    <description>Extend flagging to other data points</description>
     <value>False</value>
   </param>
     
     <param type="bool" name="extcorr" subparam="true">
-      <description>extend flags based on correlation? </description>
+      <description>Extend flags based on correlation </description>
       <value>False</value>
     </param>
 <!--
@@ -467,7 +642,7 @@ Flag Extension Parameters
 -->
     
     <param type="bool" name="extchannel" subparam="true">
-      <description>extend flags based on channel?</description>
+      <description>Extend flags based on channel</description>
       <value>False</value>
     </param>
 
@@ -508,37 +683,44 @@ Iteration Parameters
 -->
 
    <param type="string" name="iteraxis">
-      <description>the axis over which to iterate</description>
+      <description>The axis over which to iterate</description>
       <value />
       <allowed kind="enum">
         <value />
-        <value>scan</value><value>Scan</value>
-        <value>field</value><value>Field</value>
-        <value>spw</value><value>Spw</value>
-        <value>baseline</value><value>Baseline</value>
-        <value>antenna</value><value>Antenna</value>
-        <value>time</value><value>Time</value>
-        <value>corr</value><value>Corr</value>
+        <value>scan</value>
+        <value>Scan</value>
+        <value>field</value>
+        <value>Field</value>
+        <value>spw</value>
+        <value>Spw</value>
+        <value>baseline</value>
+        <value>Baseline</value>
+        <value>antenna</value>
+        <value>Antenna</value>
+        <value>time</value>
+        <value>Time</value>
+        <value>corr</value>
+        <value>Corr</value>
       </allowed>
    </param>
 
    <param type="bool" name="xselfscale" subparam="true">
-       <description>If true, iterated plots should share a common x-axis label per column.</description>
+       <description>Iterated plots share a common x-axis label per column</description>
        <value>False</value>
    </param>
 
    <param type="bool" name="yselfscale" subparam="true">
-       <description>If true, iterated plots should share a common y-axis label per row.</description>
+       <description>Iterated plots share a common y-axis label per row</description>
        <value>False</value>
    </param>
    
    <param type="bool" name="xsharedaxis" subparam="true">
-       <description>Plots should share a common x-axis. Must also set xselfscale=True.</description>
+       <description>Iterated plots share a common x-axis. Must also set xselfscale=True.</description>
        <value>False</value>
    </param>
 
    <param type="bool" name="ysharedaxis" subparam="true">
-       <description>Plots should share a common y-axis. Must also set yselfscale=True.</description>
+       <description>Iterated plots share a common y-axis. Must also set yselfscale=True.</description>
        <value>False</value>
    </param>
 
@@ -551,13 +733,13 @@ Display Parameters
    
     
     <param type="any" name="customsymbol">
-        <description>set a custom symbol(s) for unflagged points</description>
+        <description>Set a custom symbol(s) for unflagged points</description>
          <any type="variant" limittype="bool boolArray"/>
         <value>False</value>
     </param>
 
     <param type="any" name="symbolshape" subparam="true">
-        <description>shape of plotted unflagged symbols</description>
+        <description>Shape of plotted unflagged symbols</description>
         <any type="variant" limittype="string stringArray"/>
         <value type="string">autoscaling</value>
         <allowed kind="enum" type="string">
@@ -571,19 +753,19 @@ Display Parameters
     </param>
 
     <param type="any" name="symbolsize" subparam="true">
-        <description>size of plotted unflagged symbols</description>
+        <description>Size of plotted unflagged symbols</description>
          <any type="variant" limittype="int intArray"/>
         <value type="int">2</value>
     </param>
 
     <param type="any" name="symbolcolor" subparam="true">
-        <description>color of plotted unflagged symbols</description>
+        <description>Color of plotted unflagged symbols</description>
          <any type="variant" limittype="string stringArray"/>
         <value type="string">0000ff</value>
     </param>
 
     <param type="any" name="symbolfill" subparam="true">
-        <description>fill type of plotted unflagged symbols</description>
+        <description>Fill type of plotted unflagged symbols</description>
         <any type="variant" limittype="string stringArray"/>
         <value type="string">fill</value>
         <allowed kind="enum" type="string">
@@ -596,39 +778,53 @@ Display Parameters
     </param>
 
     <param type="any" name="symboloutline" subparam="true">
-        <description>selects outlining plotted unflagged points</description>
+        <description>Selects outlining plotted unflagged points</description>
          <any type="variant" limittype="bool boolArray"/>
         <value type="bool">False</value>
     </param>
 
     <param type="any" name="coloraxis">
-        <description>selects which data to use for colorizing</description>
+        <description>Selects which data to use for colorizing</description>
         <any type="variant" limittype="string stringArray"/>
         <value type="string" />
         <allowed kind="enum" type="string">
             <value />
-            <value>scan</value><value>Scan</value>
-            <value>field</value><value>Field</value>
-            <value>spw</value><value>Spw</value>
-            <value>antenna1</value><value>ant1</value><value>Antenna1</value>
-            <value>antenna2</value><value>ant2</value><value>Antenna2</value>
-            <value>baseline</value><value>Baseline</value>
-            <value>channel</value><value>chan</value><value>Channel</value>
-            <value>corr</value><value>Corr</value>
-            <value>time</value><value>Time</value>
-            <value>observation</value><value>Observation</value>
-            <value>intent</value><value>Intent</value>
+            <value>scan</value>
+            <value>Scan</value>
+            <value>field</value>
+            <value>Field</value>
+            <value>spw</value>
+            <value>Spw</value>
+            <value>antenna1</value>
+            <value>ant1</value>
+            <value>Antenna1</value>
+            <value>antenna2</value>
+            <value>ant2</value>
+            <value>Antenna2</value>
+            <value>baseline</value>
+            <value>Baseline</value>
+            <value>channel</value>
+            <value>chan</value>
+            <value>Channel</value>
+            <value>corr</value>
+            <value>Corr</value>
+            <value>time</value>
+            <value>Time</value>
+            <value>observation</value>
+            <value>Observation</value>
+            <value>intent</value>
+            <value>Intent</value>
         </allowed>
     </param>
 
     <param type="any" name="customflaggedsymbol">
-        <description>set a custom plot symbol for flagged points</description>
+        <description>Set a custom plot symbol for flagged points</description>
         <any type="variant" limittype="bool boolArray"/>
         <value type="bool">False</value>
     </param>
 
     <param type="any" name="flaggedsymbolshape" subparam="true">
-        <description>shape of plotted flagged symbols</description>
+        <description>Shape of plotted flagged symbols</description>
         <any type="variant" limittype="string stringArray"/>
         <value type="string">circle</value>
         <allowed kind="enum" type="string">
@@ -642,19 +838,19 @@ Display Parameters
     </param>
 
     <param type="any" name="flaggedsymbolsize" subparam="true">
-        <description>size of plotted flagged symbols</description>
+        <description>Size of plotted flagged symbols</description>
         <any type="variant" limittype="int intArray"/>
         <value type="int">2</value>
     </param>
 
     <param type="any" name="flaggedsymbolcolor" subparam="true">
-        <description>color of plotted flagged symbols</description>
+        <description>Color of plotted flagged symbols</description>
         <any type="variant" limittype="string stringArray"/>
         <value type="string">ff0000</value>
     </param>
 
     <param type="any" name="flaggedsymbolfill" subparam="true">
-        <description>fill type of plotted flagged symbols</description>
+        <description>Fill type of plotted flagged symbols</description>
         <any type="variant" limittype="string stringArray"/>
         <value type="string">fill</value>
         <allowed kind="enum" type="string">
@@ -667,7 +863,7 @@ Display Parameters
     </param>
 
     <param type="any" name="flaggedsymboloutline" subparam="true">
-        <description>selects outlining plotted flagged points</description>
+        <description>Selects outlining plotted flagged points</description>
         <any type="variant" limittype="bool boolArray"/>
         <value type="bool">False</value>
     </param>
@@ -680,7 +876,7 @@ Plot range Parameter
 -->
 
     <param type="doubleArray" name="plotrange">cd
-        <description>plot axes ranges: [xmin,xmax,ymin,ymax]</description>
+        <description>Plot axes ranges: [xmin,xmax,ymin,ymax]</description>
         <value />
     </param>
 
@@ -716,7 +912,7 @@ Label Paramlegeters
   </param>
 
   <param type="int" name="yaxisfont">
-    <description>Font for plot y-axis.</description>
+    <description>Font for plot y-axis</description>
     <value>0</value>
   </param>
 
@@ -729,7 +925,7 @@ Canvas Parameters
 
 
 <param type="bool" name="showmajorgrid" subparam="false">
-    <description>Show major grid lines (horiz and vert.)</description>
+    <description>Show major grid lines (horiz and vert)</description>
     <value>False</value>
 </param>
 
@@ -739,7 +935,7 @@ Canvas Parameters
 </param>
 
 <param type="string" name="majorstyle" subparam="true">
-    <description>Major grid line style: solid dash dot none</description>
+    <description>Major grid line style</description>
     <allowed kind="enum">
         <value />
         <value>solid</value>
@@ -757,7 +953,7 @@ Canvas Parameters
 
 
 <param type="bool" name="showminorgrid" subparam="false">
-    <description>Show minor grid lines (horiz and vert.)</description>
+    <description>Show minor grid lines (horiz and vert)</description>
     <value>False</value>
 </param>
 
@@ -767,7 +963,7 @@ Canvas Parameters
 </param>
 
 <param type="string" name="minorstyle" subparam="true">
-    <description>Minor grid line style: solid dash dot none</description>
+    <description>Minor grid line style</description>
     <allowed kind="enum">
         <value />
         <value>solid</value>
@@ -813,10 +1009,11 @@ Export plot as image Parameters
 
 
     <param type="string" name="plotfile">
-      <description>Name of plot file to save automatically.</description>
+      <description>Name of plot file to save automatically</description>
     </param>
+
     <param type="string" name="expformat" subparam="true">
-        <description>Export format type (jpg, png, ps, pdf, txt), if not provided, plotfile extension will be used.</description>
+        <description>Export format type. If not provided, plotfile extension will be used.</description>
         <allowed kind="enum">
             <value />
             <value>jpg</value>
@@ -825,15 +1022,17 @@ Export plot as image Parameters
             <value>ps</value>
             <value>txt</value>
         </allowed>
-     </param>
-     <param type="string" name="exprange" subparam="true">
-        <description>Export all iteration plots or only the current one.</description>
+    </param>
+
+    <param type="string" name="exprange" subparam="true">
+        <description>Range of iteration plots to export</description>
         <allowed kind="enum">
             <value />
             <value>current</value>
             <value>all</value>
         </allowed>
-     </param>
+    </param>
+
      <param type="bool" name="highres" subparam="true">
          <description>Use high resolution</description>
          <value>False</value>
@@ -851,7 +1050,7 @@ Export plot as image Parameters
          <value>-1</value>
      </param>
      <param type="bool" name="overwrite" subparam="true">
-         <description>Overwrite plot file if it already exists?</description>
+         <description>Overwrite plot file if it already exists</description>
          <value>False</value>
      </param>
 <!--
