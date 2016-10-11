@@ -192,7 +192,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the
 infiles -- List of data files. These must be a name of Scantables that 
    are registered to context via hsd_importdata task.
    default: []
-   example: vis=['X227.PM01.asap', 'X227.PM02.asap']
+   example: vis=['X227.ms', 'X228.ms']
 
 field -- Data selection by field name.
    default: '' (all fields)
