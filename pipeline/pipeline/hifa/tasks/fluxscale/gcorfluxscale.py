@@ -7,10 +7,11 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.callibrary as callibrary
 
-from pipeline.hif.tasks import importdata
+#from pipeline.hif.tasks import importdata
+from pipeline.h.tasks import importdata
 from pipeline.hif.tasks import gaincal
 from ... import heuristics
-from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 from pipeline.hif.tasks.fluxscale import fluxscale
 from pipeline.hif.tasks.setmodel import setjy
 

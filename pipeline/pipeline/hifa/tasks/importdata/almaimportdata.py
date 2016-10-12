@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 
-import pipeline.hif.tasks.importdata.importdata as importdata
+import pipeline.h.tasks.importdata.importdata as importdata
 
 LOG = infrastructure.get_logger(__name__)
 

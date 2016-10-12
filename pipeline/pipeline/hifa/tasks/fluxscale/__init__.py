@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.weblog as weblog
 
 from . gcorfluxscale import GcorFluxscale
 from . gcorfluxscale import GcorFluxscaleResults
-#from pipeline.hif.tasks.common import commonfluxresults
+#from pipeline.h.tasks.common import commonfluxresults
 from . import qa
 from . import renderer
 

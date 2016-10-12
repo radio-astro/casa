@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
-import pipeline.hif.tasks.importdata.importdata as importdata
+#import pipeline.hif.tasks.importdata.importdata as importdata
+import pipeline.h.tasks.importdata.importdata as importdata
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.qa.scorecalculator as qacalc
