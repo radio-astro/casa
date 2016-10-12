@@ -2,7 +2,8 @@ import operator
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.hif.tasks.importdata.renderer as super_renderer
+#import pipeline.hif.tasks.importdata.renderer as super_renderer
+import pipeline.h.tasks.importdata.renderer as super_renderer
 
 LOG = logging.get_logger(__name__)
 

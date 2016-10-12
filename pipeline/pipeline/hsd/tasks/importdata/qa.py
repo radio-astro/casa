@@ -9,7 +9,8 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.qa.scorecalculator as qacalc
 
-import pipeline.hif.tasks.importdata.qa as importdataqa
+#import pipeline.hif.tasks.importdata.qa as importdataqa
+import pipeline.h.tasks.importdata.qa as importdataqa
 
 LOG = logging.get_logger(__name__)
 

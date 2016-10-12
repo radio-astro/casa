@@ -7,7 +7,8 @@ import pipeline.domain as domain
 from pipeline.domain.datatable import absolute_path
 from . import inspection
 
-import pipeline.hif.tasks.importdata.importdata as importdata
+#import pipeline.hif.tasks.importdata.importdata as importdata
+import pipeline.h.tasks.importdata.importdata as importdata
 import pipeline.hifa.tasks.importdata.almaimportdata as almaimportdata
 
 LOG = infrastructure.get_logger(__name__)
