@@ -21,6 +21,7 @@ class SDImportDataInputs(almaimportdata.ALMAImportDataInputs):
         self._init_properties(vars())
 
     asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere CalWVR')
+    dbservice = basetask.property_with_default('dbservice', False)
     with_pointing_correction = basetask.property_with_default('with_pointing_correction', True)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'ao')
 
