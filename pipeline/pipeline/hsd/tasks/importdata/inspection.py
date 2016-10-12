@@ -397,7 +397,7 @@ class SDMSInspection(object):
                         if 'ATMOSPHERE' in spw.intents and \
                            re.search('(CH_AVG|SQLD|WVR)', spw.name) is None]
         LOG.debug('tsys_windows={spws}'.format(spws=[spw.id for spw in tsys_windows]))
-        TOL = singledish.ScantableRep.tolerance
+        TOL = 1.0e-3
         for spwa in tsys_windows:
             if spwa in science_windows:
                 # identical spw, skip (not necessary to transfer Tsys)

@@ -10,7 +10,6 @@ from . import observingrun
 from . import source
 from . import spectralwindow
 #from .datatable import DataTableImpl as DataTable
-#from .datatableold import DataTableImpl as DataTableOld
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -146,60 +145,6 @@ class SingleDishBase(object):
         for (k, v) in properties.items():
             if k not in kw_ignore:
                 setattr(self, k, v)
-
-class ScantableRep(SingleDishBase):
-    tolerance = 1.0e-3
-
-    def __init__(self, name, ms=None, session=None):
-        self.name = name.rstrip('/')
-        self.ms = ms
-        self.session = session
-
-        # observation property
-        self.observer = None
-        self.start_time = None
-        self.end_time = None
-
-        # polarization property
-        self.polarization = {}
-
-        # spectral window property
-        self.spectral_window = {}
-
-        # calibration property
-        self.tsys_transfer = None
-        self.tsys_transfer_list = []
-
-        # source property
-        self.source = {}
-
-        # antenna property
-        self.antenna = None
-        
-        # exported ms for imaging
-        self.exported_ms = None
-
-    @property
-    def basename(self):
-        return os.path.basename(self.name)
-
-    @property
-    def ms_name(self):
-        if self.ms is not None:
-            return self.ms.basename
-        else:
-            return None
-            
-    @property
-    def baselined_name(self):
-        return self.name + '_work'
-
-    @property
-    def scaled_name(self):
-        return self.name + '_corrected'
-
-    def __repr__(self):
-        return 'Scantable(%s)' % (self.name)
 
 class Polarization(SingleDishBase):
     to_polid = {'XX': 0, 'YY': 1, 'XY': 2, 'YX': 3,
@@ -582,87 +527,6 @@ class SpectralWindowAdapter:
 #     @property
 #     def is_atmcal(self):
 #         return (self.type == 'SP' and self.intent.find('ATMOSPHERE') != -1)
-
-
-class ReductionGroupMember(object):
-    def __init__(self, antenna, spw, pols):
-        self.antenna = antenna
-        self.spw = spw
-        self.pols = pols
-        self.iteration = [0 for p in xrange(self.npol)]
-        self.linelist = [[] for p in xrange(self.npol)]
-        self.channelmap_range = [[] for p in xrange(self.npol)]
-
-    @property
-    def npol(self):
-        return len(self.pols)
-
-    def iter_countup(self, pols=None):
-        for i in self.__gen_pols(pols):
-            self.iteration[i] += 1
-
-    def iter_reset(self):
-        self.iteration = [0 for p in self.pols]
-
-    def add_linelist(self, linelist, pols=None, channelmap_range=None):
-        for i in self.__gen_pols(pols):
-            self.linelist[i] = linelist
-            if channelmap_range is not None:
-                self.channelmap_range[i] = channelmap_range
-            else:
-                self.channelmap_range[i] = linelist
-
-    def __gen_pols(self, pols):
-        if pols is None:
-            for i in xrange(self.npol):
-                yield i
-        elif isinstance(pols, int):
-            yield pols
-        else:
-            for i in pols:
-                yield self.pols.index(i)
-
-    def __repr__(self):
-        return 'ReductionGroupMember(antenna=%s, spw=%s, pols=%s)' % (self.antenna, self.spw, self.pols)
-
-    def __eq__(self, other):
-        return other.antenna == self.antenna and other.spw == self.spw and other.pols == self.pols 
-        
-class ReductionGroupDesc(list):
-    def __init__(self, frequency_range=None, nchan=None):
-        self.frequency_range = frequency_range
-        self.nchan = nchan
-
-    def add_member(self, antenna, spw, pols):
-        new_member = ReductionGroupMember(antenna, spw, pols)
-        if not new_member in self:
-            self.append(new_member)
-
-    def get_iteration(self, antenna, spw, pol=None):
-        member = self[self.__search_member(antenna, spw)]
-        if pol is None:
-            return max(member.iteration)
-        else:
-            return member.iteration[pol]
-            
-    def iter_countup(self, antenna, spw, pols=None):
-        member = self[self.__search_member(antenna, spw)]
-        member.iter_countup(pols)
-
-    def add_linelist(self, linelist, antenna, spw, pols=None, channelmap_range=None):
-        member = self[self.__search_member(antenna, spw)]
-        member.add_linelist(linelist, pols, channelmap_range=channelmap_range)
-
-    def __search_member(self, antenna, spw):
-        for indx in xrange(len(self)):
-            member = self[indx]
-            if member.antenna == antenna and member.spw == spw:
-                return indx
-                break
-
-    def __repr__(self):
-        return 'ReductionGroupDesc(frequency_range=%s, nchan=%s, member=%s)' % (self.frequency_range, self.nchan, self[:])
-
 
 class MSReductionGroupMember(object):
     def __init__(self, ms, antenna_id, spw_id, field_id=None):
