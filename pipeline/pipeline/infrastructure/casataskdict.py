@@ -1,11 +1,13 @@
 import textwrap
 
+import pipeline.h.tasks as h_tasks
 import pipeline.hif.tasks as hif_tasks
 import pipeline.hsd.tasks as hsd_tasks
 import pipeline.hifa.tasks as hifa_tasks
 import pipeline.hifv.tasks as hifv_tasks
 
 CasaTaskDict = {
+    'h_importdata': 'ImportData',
     'hif_antpos': 'Antpos',
     'hif_atmflag': 'Atmflag',
     'hif_applycal': 'Applycal',
@@ -20,7 +22,7 @@ CasaTaskDict = {
     'hif_gaincal': 'Gaincal',
     'hif_gainflag': 'Gainflag',
     'hif_lowgainflag': 'Lowgainflag',
-    'hif_importdata': 'ImportData',
+    #'hif_importdata': 'ImportData',
     'hif_makecleanlist': 'MakeCleanList',
     'hif_makeimages': 'MakeImages',
     'hif_makeimlist': 'MakeImList',
@@ -116,7 +118,7 @@ classToCASATask = {
     hif_tasks.Fluxscale               : 'hif_fluxscale',
     hif_tasks.Gaincal                 : 'hif_gaincal',
     hif_tasks.Gainflag                : 'hif_gainflag',
-    hif_tasks.ImportData              : 'hif_importdata',
+    #hif_tasks.ImportData              : 'hif_importdata',
     hif_tasks.Lowgainflag             : 'hif_lowgainflag',
     hif_tasks.MakeCleanList           : 'hif_makecleanlist',
     hif_tasks.MakeImages              : 'hif_makeimages',
@@ -159,7 +161,9 @@ classToCASATask = {
     hifv_tasks.Applycals              : 'hifv_applycals',
     hifv_tasks.Targetflag             : 'hifv_targetflag',
     hifv_tasks.Statwt                 : 'hifv_statwt',
-    hifv_tasks.PlotSummary            : 'hifv_plotsummary'
+    hifv_tasks.PlotSummary            : 'hifv_plotsummary',
+    # General Tasks
+    h_tasks.ImportData                : 'h_importdata'
 }
 
 
@@ -181,7 +185,7 @@ CASA_COMMANDS_PROLOGUE = (
 )
 
 TASK_COMMENTS = {
-    (hif_tasks.ImportData,
+    (h_tasks.ImportData,
      hifa_tasks.ALMAImportData, 
      hifv_tasks.VLAImportData,
      hsd_tasks.SDImportData,): (
