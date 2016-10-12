@@ -523,12 +523,12 @@ MS Averaging Parameters
   
     <param type="string" name="avgchannel" subparam="true">
       <description>Average over channel (blank = False, otherwise value in channels)</description>
-      <value>False</value>
+      <value />
     </param>
     
     <param type="string" name="avgtime" subparam="true">
       <description>Average over time (blank = False, otherwise value in seconds)</description>
-      <value>False</value>
+      <value />
     </param>
     
     <param type="bool" name="avgscan" subparam="true">
