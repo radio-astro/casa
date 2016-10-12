@@ -7,6 +7,6 @@ from __future__ import absolute_import
 from .image import ImageDisplay
 from .sky import SkyDisplay
 from .slice import SliceDisplay
-from .singledish import SDImageDisplayFactory, ClusterDisplay, SDBaselineAllDisplay
+from .singledish import SDImageDisplayFactory, ClusterDisplay
 from .tsys import TsysPerAntennaChart, TsysSummaryChart
 from .vla import testBPdcalsSummaryChart, testDelaysPerAntennaChart, ampGainPerAntennaChart, phaseGainPerAntennaChart, bpSolAmpPerAntennaChart, bpSolPhasePerAntennaChart, testgainsSummaryChart, testgainsPerAntennaChart, fluxbootSummaryChart, targetflagSummaryChart, plotsummarySummaryChart, finalcalsSummaryChart, finalDelaysPerAntennaChart, finalphaseGainPerAntennaChart, finalbpSolAmpPerAntennaChart, finalbpSolPhasePerAntennaChart, finalbpSolPhaseShortPerAntennaChart, finalAmpTimeCalPerAntennaChart, finalAmpFreqCalPerAntennaChart, finalPhaseGainCalPerAntennaChart, semifinalBPdcalsSummaryChart, DelaysPerAntennaChart,  semifinalphaseGainPerAntennaChart, semifinalbpSolAmpPerAntennaChart, semifinalbpSolPhasePerAntennaChart, opacitiesSummaryChart
