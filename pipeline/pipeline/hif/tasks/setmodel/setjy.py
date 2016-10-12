@@ -9,7 +9,8 @@ import numpy as np
 import decimal
 
 
-from ..common import commonfluxresults
+#from ..common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import standard as standard

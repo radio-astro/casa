@@ -7,7 +7,8 @@ from ...heuristics import fieldnames
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
-from ..common import commonfluxresults
+#from ..common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 from . import setjy
 
 LOG = infrastructure.get_logger(__name__)

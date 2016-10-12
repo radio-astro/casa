@@ -7,7 +7,8 @@ import pipeline.qa.scorecalculator as qacalc
 
 from . import setjy
 from . import setmodel
-from ..common import commonfluxresults
+#from ..common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 
 LOG = logging.get_logger(__name__)
 

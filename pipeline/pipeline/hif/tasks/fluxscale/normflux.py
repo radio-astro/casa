@@ -8,7 +8,8 @@ import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
-from ..common import commonfluxresults
+#from ..common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 
 from pipeline.hif.heuristics import fieldnames as fieldnames
 

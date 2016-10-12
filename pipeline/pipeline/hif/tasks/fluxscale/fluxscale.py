@@ -6,7 +6,8 @@ import types
 import numpy
 
 import pipeline.domain as domain
-from pipeline.hif.tasks.common import commonfluxresults
+#from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 from pipeline.hif.heuristics import fieldnames as fieldnames
 from pipeline.hif.heuristics import caltable as fcaltable
 import pipeline.infrastructure as infrastructure

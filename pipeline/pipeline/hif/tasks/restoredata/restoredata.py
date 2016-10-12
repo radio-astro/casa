@@ -38,7 +38,8 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from .. import applycal
-from .. import importdata
+#from .. import importdata
+import pipeline.h.tasks.importdata.importdata as importdata
 
 from pipeline.infrastructure import casa_tasks
 
