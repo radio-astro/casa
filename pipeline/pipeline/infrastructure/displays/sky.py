@@ -101,34 +101,23 @@ class SkyDisplay(object):
 
         LOG.info('Plotting %s' % (result))
 
-        LOG.info("_PLOT_PANEL:  Before casatools.ImageReader")
 
         with casatools.ImageReader(result) as image:
             try:
                 if collapseFunction == 'center':
-                    LOG.info("_PLOT_PANEL:  After center")
                     collapsed = image.collapse(function='mean', chans=str(image.summary()['shape'][3]/2), axes=[2, 3])
-                    LOG.info("_PLOT_PANEL:  After collapsed")
                 else:
                     if (collapseFunction == 'max') and ('image' in result) and ('pbcor' not in result):
-                        LOG.info("_PLOT_PANEL:  After max")
                         collapsed = image.collapse(function=collapseFunction, axes=[2, 3], outfile=result+'.mom8')
                         LOG.info('generated peak line intensity (moment 8) image of %s' % (os.path.basename(result)))
                     else:
-                        LOG.info("_PLOT_PANEL:  Before default collapse")
                         collapsed = image.collapse(function=collapseFunction, axes=[2, 3])
-                        LOG.info("_PLOT_PANEL:  After default collapse")
             except:
                 # All channels flagged or some other error. Make collapsed zero image.
-                LOG.info("_PLOT_PANEL:  Before newimagefromimage")
                 collapsed = image.newimagefromimage(infile=result)
-                LOG.info("_PLOT_PANEL:  After newimagefromimage")
                 collapsed.set(pixelmask=True, pixels='0')
-                LOG.info("_PLOT_PANEL:  collapsed.set")
                 collapsed = collapsed.collapse(function='mean', axes=[2, 3])
-                LOG.info("_PLOT_PANEL:  collapsed.collapse")
 
-            LOG.info("_PLOT_PANEL:  Before coordsys_stuff")
             name = image.name(strippath=True)
             coordsys = collapsed.coordsys()
             coord_names = coordsys.names()
@@ -138,7 +127,6 @@ class SkyDisplay(object):
             beam = collapsed.restoringbeam()
             brightness_unit = collapsed.brightnessunit()
             miscinfo = collapsed.miscinfo()
-            LOG.info("_PLOT_PANEL:  After coordsys_stuff")
 
             # don't replot if a file of the required name already exists
             if os.path.exists(plotfile):
@@ -146,19 +134,14 @@ class SkyDisplay(object):
                 return plotfile, coord_names, miscinfo.get('field')
 
             # otherwise do the plot
-            LOG.info("_PLOT_PANEL:  before getchunk")
             data = collapsed.getchunk()
-            LOG.info("_PLOT_PANEL:  after getchunk")
             mask = np.invert(collapsed.getchunk(getmask=True))
             shape = np.shape(data)
             data = data.reshape(shape[0], shape[1])
             mask = mask.reshape(shape[0], shape[1])
             mdata = np.ma.array(data, mask=mask)
-            LOG.info("_PLOT_PANEL:  after array manipulation")
 
             collapsed.done()
-
-            LOG.info("_PLOT_PANEL:  after collapsed.done()")
 
             # get x and y axes from coordsys of image
             xpix = np.arange(shape[0])
