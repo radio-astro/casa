@@ -4534,6 +4534,102 @@ for editing based on the rms fit will be added in the near future.
 
   </example>
 </method>
+
+   <method type="function" name="continuumsub2">
+   <shortdescription>Continuum fitting and subtraction in uv plane</shortdescription>
+   
+  <input>
+    
+     <param type="any" direction="in" name="field">
+     <description>Select fields to fit</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+    
+     <param type="any" direction="in" name="fitspw">
+     <description>Spectral windows/channels to use for fitting the continuum; default all spectral windows in all channels</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+    
+     <param type="any" direction="in" name="spw">
+     <description>Select spectral windows and channels from which to subtract a continuum estimate; default: all channels in all spectral windows for which the continuum was estimated</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" direction="in" name="solint">
+     <description>Continuum fit timescale (units optional)</description>
+     <any type="variant"/>
+     <value>int</value>
+     </param>
+    
+     <param type="int" direction="in" name="fitorder">
+     <description>Polynomial order for fit</description>
+     <value>0</value>
+     </param>
+    
+     <param type="string" direction="in" name="mode">
+     <description>Desired use of fit model (see below)</description>
+     <value>subtract</value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description> 
+This function provides a means of continuum determination and
+subtraction by fitting a polynomial of desired order to a subset of
+channels in each time-averaged uv spectrum.  The fit is used to model
+the continuum in all channels (not just those used in the fit), for
+subtraction, if desired.  Use the {\tt fitspw} parameter to limit the
+spectral windows processed and the range of channels used to estimate 
+the continuum  in each (avoid channels containing spectral lines).  The 
+default solution interval 'int' will result in per-integration continuum
+fits for each baseline.  The {\tt mode} parameter indicates 
+how the continuum model (the result of the fit) should be used: 
+{\tt 'subtract'} will store the continuum
+model in the MODEL\_DATA column and subtract it from the CORRECTED\_DATA
+column; {\tt 'replace'} will replace the CORRECTED\_DATA column with
+the continuum model (useful if you want to image the continuum model
+result); and {\tt 'model'} will only store the continuum model in the
+MODEL\_DATA column (the CORRECTED\_DATA is unaffected).
+
+It is important to start the ms tool with {\tt nomodify=False} so that
+changes to the dataset will be allowed (see example below).
+
+For now, the only way to recover the un-subtracted CORRECTED\_DATA column
+is to use calibrater.correct() again.
+
+Note that the MODEL\_DATA and CORRECTED\_DATA columns must be present
+for {\tt continuumsub} to work correctly.  The function will warn the user
+if they are not present, and abort.  To add these scratch columns (for
+now), close the ms tool, then start a calibrater or an imager
+tool, which will add the scratch columns.  Then restart the ms tool,
+and try {\tt continuumsub} again.
+
+Options for shifting known bright sources to the phase center and
+for editing based on the rms fit will be added in the near future.
+
+  </description>
+  <example>
+    
+ ms.fromfits('ngc5921.ms','/aips++/data/demo/NGC5921.fits')
+ ms.close()
+ cb.open('ngc5921.ms')  # add MODEL_DATA, CORRECTED_DATA columns
+ cb.close()
+ ms.open('ngc5921.ms',nomodify=False);    # writable!
+ ms.continuumsub2(field=2,fitspw='0:5~9;50~59',
+                 solint=0.0,fitorder=1,mode='sub')
+ ms.done()
+    
+    This example will fit a linear continuum to channels 5-9 and 50-59 in 
+    spectral window 0 in each scan-averaged spectrum for field 2, and 
+    store the result in the MODEL\_DATA column and subtract it from the 
+    CORRECTED\_DATA column.
+
+  </example>
+</method>
+
 <!-- 
    <method type="function" name="ptsrc">
    <shortdescription>(NOT IMPLEMENTED!!!) Reports global average of visibilities per field</shortdescription>

@@ -4011,6 +4011,37 @@ bool ms::continuumsub(const ::casac::variant& field,
 	return rstat;
 }
 
+bool ms::continuumsub2(const ::casac::variant& field,
+                      const ::casac::variant& fitspw,
+                      const ::casac::variant& spw,
+                      const ::casac::variant& solint,
+                      const int fitorder,
+                      const std::string& mode)
+{
+	Bool rstat(False);
+	try {
+		*itsLog << LogOrigin("ms", "continuumsub");
+		*itsLog << LogIO::NORMAL2 << "continuumsub starting" << LogIO::POST;
+
+		MSContinuumSubtractor sub(*itsMS);
+		sub.setField(toCasaString(field));
+		sub.setFitSpw(toCasaString(fitspw));
+		sub.setSubSpw(toCasaString(spw));
+		sub.setSolutionInterval(toCasaString(solint));
+		sub.setOrder(fitorder);
+		sub.setMode(mode);
+		sub.subtract2();
+		*itsLog << LogIO::NORMAL2 << "continuumsub finished" << LogIO::POST;
+		rstat = True;
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return rstat;
+}
+
 /*
   bool
   ms::ptsrc(const std::vector<int>& fldid, const std::vector<int>& spwid)

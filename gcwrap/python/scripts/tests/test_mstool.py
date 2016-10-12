@@ -504,18 +504,21 @@ class mstool_test_transform(mstool_test_base):
         shutil.copytree(self.testms, subms)
         self.ms.open(subms, False)
         # no model or corrected data in orig MS
-        self.assertTrue(self.ms.continuumsub(field=0, fitspw='0:3~7', solint=0.0, fitorder=1, mode='sub'))
-        rec = self.ms.getdata(['model_data', 'data'])
+        exp_model = array([-0.05976862+0.21077624j,-0.13658243+0.1545141j,-0.21587822-0.11069717j,-0.13609098-0.17520858j,0.18628541-0.08726287j])
+        exp_corr = array([ 0.05145176-0.20602664j,0.12195288-0.1444806j,0.21040531+0.09249699j,0.11938272+0.16995102j,-0.19297704+0.09558354j])
+        self.assertTrue(self.ms.continuumsub(field=1, mode='subtract'))
+        rec = self.ms.getdata(['model_data', 'corrected_data'])
         self.assertEqual(rec['model_data'].shape, (2,63,22653))
-        model0 = rec['model_data'][0][0][0]
-        self.assertEqual(model0, (1+0j))
-        data0 = rec['data'][0][0][0]
-        self.assertAlmostEqual(data0, (3.15738129616+0j))
-        # Now that we have model data, call uvsub
+        # check some values
+        model0 = rec['model_data'][0][0][-5:]
+        corr0 = rec['corrected_data'][0][0][-5:]
+        testing.assert_array_almost_equal(corr0, exp_corr, 7)
+        testing.assert_array_almost_equal(model0, exp_model, 7)
+        # Now that we have model data, call uvsub (corrected-model)
         self.assertTrue(self.ms.uvsub())
         rec = self.ms.getdata(['corrected_data'])
-        corr0 = rec['corrected_data'][0][0][0]
-        self.assertAlmostEqual(corr0, data0-model0)
+        corr1 = rec['corrected_data'][0][0][-5:]
+        testing.assert_array_almost_equal(corr1, corr0-model0, 7)
         # call contsub
         contsubms = "contsub.ms"
         self.assertTrue(self.ms.contsub(contsubms, fitspw='0', 
@@ -528,6 +531,33 @@ class mstool_test_transform(mstool_test_base):
         self.assertAlmostEqual(rec['data'][0][0][0], (-59.606513977050781+0j))
         self.ms.close()
         self.removeMS(contsubms)
+        self.ms.open(self.testms) # prevent SEVERE ms::detached errors in cleanup
+        print
+
+    def test_continuumsub2(self): 
+        """test ms.continuumsub2"""
+        # Despite setUp/tearDown, tests were leaving MS in a changed state
+        # and causing later tests to fail.  So make a unique one:
+        self.ms.close()
+        subms = 'ngc5921_sub2.ms'
+        shutil.copytree(self.testms, subms)
+        self.ms.open(subms, False)
+        # no model or corrected data in orig MS
+        exp_data = array([-0.00831686+0.0047496j,-0.01462955+0.0100335j,-0.00547292-0.01820018j,-0.01670826-0.00525756j,-0.00669163+0.00832068j])
+        exp_model = array([-0.05976862+0.21077624j,-0.13658243+0.1545141j,-0.21587822-0.11069717j,-0.13609098-0.17520858j,0.18628541-0.08726287j])
+        exp_corr = array([ 0.05145176-0.20602664j,0.12195288-0.1444806j,0.21040531+0.09249699j,0.11938272+0.16995102j,-0.19297704+0.09558354j])
+        self.assertTrue(self.ms.continuumsub2(field=1, mode='subtract'))
+        rec = self.ms.getdata(['data', 'model_data', 'corrected_data'])
+        self.assertEqual(rec['corrected_data'].shape, (2,63,22653))
+        data = rec['data'][0][0][-5:]
+        corr = rec['corrected_data'][0][0][-5:]
+        model = rec['model_data'][0][0][-5:]
+        testing.assert_array_almost_equal(data, exp_data, 7)
+        testing.assert_array_almost_equal(corr, exp_corr, 7)
+        testing.assert_array_almost_equal(model, exp_model, 7)
+        testing.assert_array_almost_equal(corr, data-model, 7)
+        self.ms.close()
+        self.removeMS(subms)
         self.ms.open(self.testms) # prevent SEVERE ms::detached errors in cleanup
         print
 
