@@ -29,7 +29,6 @@ class SingleDishDisplayInputs(object):
     def __init__(self, context, result):
         self.context = context
         self.result = result
-        self.isASAP = (len(self.context.observing_run.st_names) > 0)
 
 class SpectralImage(object):
     def __init__(self, imagename):
@@ -154,25 +153,19 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
         associated to the image
         """
         group_id = self.result.outcome['reduction_group_id']
-        if self.isASAP:
-            return self.context.observing_run.reduction_group[group_id]
-        else:
-            return self.context.observing_run.ms_reduction_group[group_id]
+        return self.context.observing_run.ms_reduction_group[group_id]
     
     @property
     def msid_list(self):
-        if self.isASAP: return None
-        else: return self.result.outcome['file_index']
+        return self.result.outcome['file_index']
 
     @property
     def antennaid_list(self):
-        if self.isASAP: return self.result.outcome['file_index']
-        else: return self.result.outcome['assoc_antennas']
+        return self.result.outcome['assoc_antennas']
     
     @property
     def fieldid_list(self):
-        if self.isASAP: return None
-        else: return self.result.outcome['assoc_fields']
+        return self.result.outcome['assoc_fields']
 
     @property
     def spwid_list(self):

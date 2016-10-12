@@ -418,25 +418,6 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
                                 consider_flag=consider_flag)
         return mask_list
 
-    def _generate_storage_for_baselined(self, context, reduction_group):
-        for antenna in xrange(len(context.observing_run)):
-#             reference = context.observing_run[antenna].name
-            reference = context.observing_run[antenna].baseline_source
-#             storage = context.observing_run[antenna].baselined_name
-            storage = self._get_dummy_name(context, antenna)
-            if not os.path.exists(storage):
-                # generate
-                self._generate_storage_from_reference(storage, reference)
-            iter_counter_list = []
-            for (id, desc) in reduction_group.items():
-                for member in desc:
-                    if member.antenna == antenna:
-                        iter_counter_list.extend(member.iteration)
-            LOG.debug('iter_counter_list={}', iter_counter_list)
-            if all(numpy.array(iter_counter_list) == 0):
-                # generate
-                self._generate_storage_from_reference(storage, reference)
-
     def _generate_storage_from_reference(self, storage, reference):
         LOG.debug('generating {} from {}', os.path.basename(storage), os.path.basename(reference))
         with casatools.TableReader(reference) as tb:
@@ -447,10 +428,6 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
     def _dummy_suffix(self):
         return "_temp"
     
-    def _get_dummy_name(self, context, idx):
-        """Generate temporal scantable name."""
-        return context.observing_run[idx].name + self._dummy_suffix
-        
     def _clearup_dummy(self):
         remove_list = glob.glob("*" + self._dummy_suffix)
         for dummy in remove_list:

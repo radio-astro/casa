@@ -43,7 +43,7 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
     # recommendation by EOC
     fwhmfactor = 1.13
     # hard-coded for ALMA-TP array
-    diameter_m = 12.0 #max([ context.observing_run[antid].antenna.diameter for antid in antenna_list ])
+    diameter_m = 12.0 
     obscure_alma = 0.75
     ### END OF ALMA part ###
     with casatools.MSMDReader(ref_ms_name) as msmd:

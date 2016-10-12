@@ -407,33 +407,23 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
                 yield (key,data,threshold,desc)
 
     def __line_property(self, icluster):
-        if self.vis is None:
-            spectral_window = self.context.observing_run[self.antenna].spectral_window[self.spw]
-            refval = spectral_window.refval
-            refpix = spectral_window.refpix
-            increment = spectral_window.increment
-            if len(spectral_window.rest_frequencies) > 0:
-                rest_frequency = spectral_window.rest_frequencies[0]
-            else:
+        reduction_group = self.context.observing_run.ms_reduction_group[self.group_id]
+        field = reduction_group[0].field
+        source_id = field.source_id
+        ms = self.context.observing_run.get_ms(self.vis)
+        spectral_window = ms.get_spectral_window(self.spw)
+        refpix = 0
+        refval = spectral_window.channels.chan_freqs[0]
+        increment = spectral_window.channels.chan_widths[0]
+        with casatools.TableReader(os.path.join(self.vis, 'SOURCE')) as tb:
+            tsel = tb.query('SOURCE_ID == %s && SPECTRAL_WINDOW_ID == %s'%(source_id, self.spw))
+            if tsel.nrows() == 0:
                 rest_frequency = refval
-        else:
-            reduction_group = self.context.observing_run.ms_reduction_group[self.group_id]
-            field = reduction_group[0].field
-            source_id = field.source_id
-            ms = self.context.observing_run.get_ms(self.vis)
-            spectral_window = ms.get_spectral_window(self.spw)
-            refpix = 0
-            refval = spectral_window.channels.chan_freqs[0]
-            increment = spectral_window.channels.chan_widths[0]
-            with casatools.TableReader(os.path.join(self.vis, 'SOURCE')) as tb:
-                tsel = tb.query('SOURCE_ID == %s && SPECTRAL_WINDOW_ID == %s'%(source_id, self.spw))
-                if tsel.nrows() == 0:
-                    rest_frequency = refval
+            else:
+                if tsel.iscelldefined('REST_FREQUENCY', 0):
+                    rest_frequency = tsel.getcell('REST_FREQUENCY', 0)[0]
                 else:
-                    if tsel.iscelldefined('REST_FREQUENCY', 0):
-                        rest_frequency = tsel.getcell('REST_FREQUENCY', 0)[0]
-                    else:
-                        rest_frequency = refval
+                    rest_frequency = refval
         
         # line property in channel
         line_center = self.lines[icluster][0] 

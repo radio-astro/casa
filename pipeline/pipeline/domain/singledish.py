@@ -20,115 +20,13 @@ LOG = infrastructure.get_logger(__name__)
 def to_numeric_freq(m, unit=measures.FrequencyUnits.HERTZ):
     return float(m.convert_to(unit).value)
 
-class ScantableList(observingrun.ObservingRun, list):
+class ScantableList(observingrun.ObservingRun):
     def __init__(self):
         super(ScantableList, self).__init__()
         self.reduction_group = {}
         self.grid_position = {}
         self.datatable_instance = None
         self.datatable_name = None  # os.path.join(context.name,'DataTable.tbl')
-
-    @property
-    def start_time(self):
-        if len(self) > 0:
-            obj = self
-        elif len(self.measurement_sets) > 0:
-            obj = self.measurement_sets
-        else:
-            return None
-        qt = casatools.quanta
-        s = sorted(obj,
-                   key=lambda st: st.start_time['m0'],
-                   cmp=lambda x, y: 1 if qt.gt(x, y) else 0 if qt.eq(x, y) else -1)
-        return s[0].start_time
-
-    @property
-    def end_time(self):
-        if len(self) > 0:
-            obj = self
-        elif len(self.measurement_sets) > 0:
-            obj = self.measurement_sets
-        else:
-            return None
-        qt = casatools.quanta
-        s = sorted(obj,
-                   key=lambda st: st.end_time['m0'],
-                   cmp=lambda x, y: 1 if qt.gt(x, y) else 0 if qt.eq(x, y) else -1)
-        return s[-1].end_time
-
-    @property
-    def st_names(self):
-        return [st.basename for st in self]
-
-    def merge_inspection(self, instance, name=None, reduction_group=None,
-                         calibration_strategy=None, beam_size=None,
-                         grid_position=None, observing_pattern=None):
-        self.datatable_instance = instance
-        if name is not None:
-            self.datatable_name = name
-
-        self.reduction_group = reduction_group
-        self.grid_position = grid_position
-        
-        for idx in xrange(len(self)):
-            self[idx].calibration_strategy = calibration_strategy[idx]
-            self[idx].beam_size = beam_size[idx]
-            self[idx].pattern = observing_pattern[idx]
-            self[idx].work_data = self[idx].name
-            self[idx].baseline_source = self[idx].name
-
-    def add_scantable(self, s):
-        if s.basename in self.st_names:
-            msg = '%s is already in the pipeline context' % (s.name)
-            LOG.error(msg)
-            raise Exception, msg
-
-        self.append(s)
-        if s.ms_name:
-            ms = self.get_ms(name=s.ms_name)
-            if hasattr(ms, 'scantables'):
-                ms.scantables.append(s)
-            else:
-                ms.scantables = [s]
-
-    def get_spw_for_wvr(self, name):
-        st = self.get_scantable(name)
-        spw = st.spectral_window
-        return self.__get_spw_from_condition(spw, lambda v: v.type == 'WVR')
-
-    def get_spw_without_wvr(self, name):
-        st = self.get_scantable(name)
-        spw = st.spectral_window
-        return self.__get_spw_from_condition(spw, lambda v: v.type != 'WVR')
-
-    def get_spw_for_science(self, name):
-        st = self.get_scantable(name)
-        spw = st.spectral_window
-        return self.__get_spw_from_condition(spw, lambda v: v.is_target and v.type != 'WVR' and v.nchan > 1)
-
-    def get_spw_for_caltsys(self, name):
-        st = self.get_scantable(name)
-        spw = st.spectral_window
-        return self.__get_spw_from_condition(spw, lambda v: (v.is_target or v.is_atmcal) and v.type != 'WVR' and v.nchan > 1)
-
-    def __get_spw_from_condition(self, spw_list, condition):
-        return [k for (k, v) in spw_list.items() if condition(v) is True]
-
-    def get_calmode(self, name):
-        st = self.get_scantable(name)
-        return st.calibration_strategy['calmode']
-        
-    def get_scantable(self, name):
-        if isinstance(name, str):
-            for entry in self:
-                if entry.basename == name:
-                    return entry
-            return None
-        else:
-            # should be integer index
-            return self[name]
-
-    
 
 class SingleDishBase(object):
     def __repr__(self):

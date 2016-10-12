@@ -9,6 +9,7 @@ import types
 import pylab as PL
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
 import pipeline.h.heuristics as heuristics
 from pipeline.domain.datatable import DataTableImpl as DataTable
@@ -324,21 +325,52 @@ class DetectLine(basetask.StandardTaskTemplate):
             
 
     def _get_linerange(self, window):
-        if len(window) == 2:
-            # [chmin, chmax] form
-            return window
-        elif len(window) == 3:
-            # [center_freq, velmin, velmax] form
-            spwid = self.inputs.spw
-            spw = self.inputs.context.observing_run[0].spectral_window[spwid]
-            center_freq = window[0] * 1.0e9 # GHz -> Hz
-            restfreq = spw.refval if len(spw.rest_frequencies) == 0 else spw.rest_frequencies[0]
-            dfreq = map(lambda x: restfreq * abs(x) / 299792.458, window[1:])
-            freq_range = [center_freq + dfreq[0], center_freq - dfreq[1]]
-            window = map(lambda x: spw.refpix + (x - spw.refval) / spw.increment, freq_range)
-            window.sort()
-            return window
-        else:
-            raise RuntimeError('Invalid linewindow format')
+        spwid = self.inputs.spw
+        if spwid < 0:
+            raise RuntimeError("Invalid spw id ({})".format(spwid))
+        
+        parsed_window = get_linerange(window, spwid)
+        return parsed_window
     
 
+def get_linerange(window, spwid, ms):
+    if len(window) == 2:
+        # [chmin, chmax] form
+        return window
+    elif len(window) == 3:
+        # [center_freq, velmin, velmax] form
+        spw = ms.spectral_windows[spwid]
+        center_freq = window[0] * 1.0e9 # GHz -> Hz
+        target_fields = ms.get_fields(intent='TARGET')
+        source_id = target_fields[0].source_id
+        restfreq = get_restfrequency(ms.name, spwid, source_id)
+        if restfreq is None:
+            restfreq = float(spw.ref_frequency.to_units().value) * 1.0e9
+        #restfreq = spw.refval if len(spw.rest_frequencies) == 0 else spw.rest_frequencies[0]
+        dfreq = map(lambda x: restfreq * abs(x) / 299792.458, window[1:])
+        freq_range = [center_freq + dfreq[0], center_freq - dfreq[1]]
+        refpix = 0
+        refval = spw.channels.chan_freqs.start
+        increment = spw.channels.chan_freqs.delta
+        window = map(lambda x: refpix + (x - refval) / increment, freq_range)
+        window.sort()
+        return window
+    else:
+        raise RuntimeError('Invalid linewindow format')
+
+def get_restfrequency(vis, spwid, source_id):
+    source_table = os.path.join(vis, 'SOURCE')
+    with casatools.TableReader(source_table) as tb:
+        tsel = tb.query('SOURCE_ID == {} && SPECTRAL_WINDOW_ID == {}'.format(source_id, spwid))
+        try:
+            if tsel.nrows() == 0:
+                return None
+            else:
+                if tsel.iscelldefined('REST_FREQUENCY', 0):
+                    return tsel.getcell('REST_FREQUENCY', 0)[0]
+                else:
+                    return None
+        finally:
+            tsel.close()
+            
+    

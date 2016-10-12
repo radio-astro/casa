@@ -325,7 +325,6 @@ def analyze_plot_table(datatable, dtrows, ms, antid, spwid, plot_table):
         if num_dec > 1:
             increment_ra = plot_table[num_plane * num_ra][3] - plot_table[0][3] / dec_corr
         else:
-            #reference_data = context.observing_run[antid]
             reference_data = ms
             beam_size = casatools.quanta.convert(reference_data.beam_sizes[antid][spwid], outunit='deg')['value']
             increment_ra = beam_size / dec_corr

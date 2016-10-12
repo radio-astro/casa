@@ -153,14 +153,8 @@ class SDSpectralMapDisplay(SDImageDisplay):
         axes_list = axes_manager.axes_list
         plot_objects = []
 
-        if self.inputs.isASAP:
-            antennas = [st.antenna.name for st in self.context.observing_run]
-            if self.antenna == 'COMBINED':
-                reference_data = self.context.observing_run[0]
-            else:
-                reference_data = self.context.observing_run[antennas.index(self.antenna)]
-        else: # MS-based procedure
-            reference_data = self.context.observing_run.measurement_sets[self.inputs.msid_list[0]]
+        # MS-based procedure
+        reference_data = self.context.observing_run.measurement_sets[self.inputs.msid_list[0]]
         is_baselined = reference_data.work_data != reference_data.name
         
         for pol in xrange(self.npol):
