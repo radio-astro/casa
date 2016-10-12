@@ -25,7 +25,8 @@
 //#
 //# $Id$
 //#
-//#include <casa/Quanta/MVTime.h>
+#include <msvis/MSVis/MSContinuumSubtractor.h>
+
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Containers/RecordFieldId.h>
 #include <measures/Measures/Stokes.h>
@@ -33,23 +34,23 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MSSel/MSSelector.h>
 #include <ms/MSSel/MSSelection.h>
-//#include <ms/MeasurementSets/MSRange.h>
-#include <msvis/MSVis/MSContinuumSubtractor.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisibilityIteratorImpl2.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
+#include <msvis/MSVis/IteratingParameters.h>
+#include <msvis/MSVis/AveragingVi2Factory.h>
+#include <msvis/MSVis/LayeredVi2Factory.h>
 #include <scimath/Fitting/LinearFit.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayUtil.h>
-//#include <casa/Arrays/MaskedArray.h>
-//#include <casa/Arrays/MaskArrMath.h>
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 #include <tables/TaQL/TableParse.h>
-//#include <casa/iomanip.h>
 #include <casa/iostream.h>
-
 
 using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -64,7 +65,7 @@ MSContinuumSubtractor::MSContinuumSubtractor (MeasurementSet& ms)
   Block<Int> nosort(0);
   Matrix<Int> noselection;
   Double timeInterval=0.0;
-  Bool compress(false);
+  Bool compress(False);
   VisSet vs(ms,nosort,noselection,timeInterval,compress);
 
   nSpw_= vs.numberSpw();
@@ -260,18 +261,18 @@ void MSContinuumSubtractor::subtract()
 
 
     // default to fit all channels
-    Vector<Bool> fitChanMask(nChan,true);
+    Vector<Bool> fitChanMask(nChan,True);
 
     // Handle non-trivial channel selection:
 
     if (itsFitChans.nelements()>0 && anyEQ(itsFitChans.column(0),itsDDIds(iDD))) {
-      // If subset of channels selected, set mask all false...
-      fitChanMask=false;
+      // If subset of channels selected, set mask all False...
+      fitChanMask=False;
       
       IPosition blc(1,0);
       IPosition trc(1,0);
 
-      // ... and set only selected channels true:
+      // ... and set only selected channels True:
       for (uInt i=0;i<itsFitChans.nrow();++i) {
 	Vector<Int> chansel(itsFitChans.row(i));
 
@@ -279,23 +280,23 @@ void MSContinuumSubtractor::subtract()
 	if (chansel(0)==itsDDIds(iDD)) {
 	  blc(0)=chansel(1);
 	  trc(0)=chansel(2);
-	  fitChanMask(blc,trc)=true;
+	  fitChanMask(blc,trc)=True;
 	}
       }
     }
 
-    //    cout << "fitChanMask = " << fitChanMask << endl;
+    //  cout << "fitChanMask = " << fitChanMask << endl;
 
     // default to subtract from all channels
-    Vector<Bool> subChanMask(nChan,true);
+    Vector<Bool> subChanMask(nChan,True);
     if (itsSubChans.nelements()>0 && anyEQ(itsSubChans.column(0),itsDDIds(iDD))) {
-      // If subset of channels selected, set sub mask all false...
-      subChanMask=false;
+      // If subset of channels selected, set sub mask all False...
+      subChanMask=False;
       
       IPosition blc(1,0);
       IPosition trc(1,0);
 
-      // ... and set only selected sub channels true:
+      // ... and set only selected sub channels True:
       for (uInt i=0;i<itsSubChans.nrow();++i) {
 	Vector<Int> chansel(itsSubChans.row(i));
 
@@ -303,7 +304,7 @@ void MSContinuumSubtractor::subtract()
 	if (chansel(0)==itsDDIds(iDD)) {
 	  blc(0)=chansel(1);
 	  trc(0)=chansel(2);
-	  subChanMask(blc,trc)=true;
+	  subChanMask(blc,trc)=True;
 	}
       }
     }
@@ -317,21 +318,21 @@ void MSContinuumSubtractor::subtract()
         polSel(nPol++)=Stokes::name(Stokes::type(corrTypes(j)));
       }
     }
-    polSel.resize(nPol,true);
+    polSel.resize(nPol,True);
     msSel.selectPolarization(polSel);
      
     msSel.iterInit(
         stringToVector("ARRAY_ID,DATA_DESC_ID,SCAN_NUMBER,FIELD_ID,TIME"),
-        itsSolInt,0,false);
+        itsSolInt,0,False);
     msSel.iterOrigin();
     Int nIter=1;
     while (msSel.iterNext()) nIter++;
     os<<"Processing "<<nIter<<" slots."<< LogIO::POST;
     msSel.iterOrigin();
     do {
-      Record avRec = msSel.getData(stringToVector("corrected_data"),true,0,1,true);
+      Record avRec = msSel.getData(stringToVector("corrected_data"),True,0,1,True);
       Record dataRec = msSel.getData(stringToVector("model_data,corrected_data"),
-                                     true,0,1);
+                                     True,0,1);
       Array<Complex> avCorData(avRec.asArrayComplex("corrected_data"));
       Array<Complex> modelData(dataRec.asArrayComplex("model_data"));
       Array<Complex> correctedData(dataRec.asArrayComplex("corrected_data"));
@@ -397,6 +398,236 @@ void MSContinuumSubtractor::subtract()
     
   }
 }
+
+// Do the subtraction (or save the model)
+void MSContinuumSubtractor::subtract2()
+{
+  // Log selections for subtraction
+  LogIO os(LogOrigin("MSContinuumSubtractor","subtract2"));
+  os << LogIO::NORMAL<< "MSContinuumSubtractor::subtract2() - parameters:" << LogIO::POST;
+  os << LogIO::NORMAL << "   ddIds=" << itsDDIds << "," << LogIO::POST;
+  os << LogIO::NORMAL << "   fieldIds="<< itsFieldIds
+                      << ", order="<< itsOrder
+                      << ", mode="<< itsMode << LogIO::POST;
+  if (itsFitChans.nelements()>0) {
+    os<<"fit channels: " << LogIO::POST;
+    for (uInt i=0;i<itsFitChans.nrow();++i)
+      os<<" spw="<<itsFitChans.row(i)(0)
+	<<": "<<itsFitChans.row(i)(1)<<"~"<<itsFitChans.row(i)(2)
+	<< LogIO::POST;
+  }
+
+  // Use taQL for selection (no DDiD sel in MSSelection)
+  ostringstream select;
+  select <<"select from $1 where ANTENNA1!=ANTENNA2";
+  if (itsFieldIds.nelements()>0) {
+    select<<" && FIELD_ID IN ["<<itsFieldIds(0);
+    for (uInt j=1; j<itsFieldIds.nelements(); j++) 
+        select << ", " << itsFieldIds(j);
+    select << "]";
+  }
+  if (itsDDIds.nelements()>0) {
+    select<<" && DATA_DESC_ID IN ["<<itsDDIds(0);
+    for (uInt j=1; j<itsDDIds.nelements(); j++)
+        select << ", " << itsDDIds(j);
+    select << "]";
+  }
+
+  MeasurementSet selectedMS(tableCommand(select,*ms_p));
+  MSColumns msc(selectedMS);
+  MSSelection mssel;
+
+  if (itsDDIds.nelements()>=1) {
+    cout << "Processing " << itsDDIds.nelements() << " spectral windows" << endl;
+  }
+
+  for (uInt iDD=0; iDD<itsDDIds.nelements(); iDD++) {
+    Vector<Int> ddIDs(1,itsDDIds(iDD));
+    Int nChan = msc.spectralWindow().numChan()
+        (msc.dataDescription().spectralWindowId()(ddIDs(0)));
+    Vector<Int> corrTypes = msc.polarization().corrType()
+        (msc.dataDescription().polarizationId()(ddIDs(0)));
+
+    // default to fit all channels
+    Vector<Bool> fitChanMask(nChan,True);
+    // Handle non-trivial channel selection:
+    if (itsFitChans.nelements()>0 && anyEQ(itsFitChans.column(0),itsDDIds(iDD))) {
+      // If subset of channels selected, set fit mask all False...
+      fitChanMask = False;
+      IPosition blc(1,0);
+      IPosition trc(1,0);
+      // ... and set only selected fit channels True:
+      for (uInt i=0; i<itsFitChans.nrow(); ++i) {
+	    Vector<Int> chansel(itsFitChans.row(i));
+	    // match current spwId/DDid
+	    if (chansel(0)==itsDDIds(iDD)) {
+	        blc(0) = chansel(1);
+	        trc(0) = chansel(2);
+	        fitChanMask(blc,trc) = True;
+	    }
+      }
+    }
+    //  cout << "fitChanMask = " << fitChanMask << endl;
+
+    // default to subtract from all channels
+    Vector<Bool> subChanMask(nChan,True);
+    // Handle non-trivial channel selection:
+    if (itsSubChans.nelements()>0 && anyEQ(itsSubChans.column(0),itsDDIds(iDD))) {
+      // If subset of channels selected, set sub mask all False...
+      subChanMask = False;
+      IPosition blc(1,0);
+      IPosition trc(1,0);
+      // ... and set only selected sub channels True:
+      for (uInt i=0; i<itsSubChans.nrow(); ++i) {
+	    Vector<Int> chansel(itsSubChans.row(i));
+	    // match current spwId/DDid
+	    if (chansel(0)==itsDDIds(iDD)) {
+	        blc(0) = chansel(1);
+	        trc(0) = chansel(2);
+	        subChanMask(blc,trc) = True;
+	    }
+      }
+    }
+
+    // select parallel hand polarizations with MSSelection
+    Vector<String> polSel(corrTypes.nelements()); 
+    Int nPol = 0;
+    for (uInt j=0; j<corrTypes.nelements(); j++) {
+      if (corrTypes(j)==Stokes::XX||corrTypes(j)==Stokes::YY||
+          corrTypes(j)==Stokes::RR||corrTypes(j)==Stokes::LL) {
+        polSel(nPol++)=Stokes::name(Stokes::type(corrTypes(j)));
+      }
+    }
+    polSel.resize(nPol,True);
+    String polnExpr("");
+    if (nPol > 0) {
+        polnExpr = polSel[0];
+        for (Int np=1; np<nPol; ++np) {
+            polnExpr += "," + polSel[np];
+        }
+    }
+    String spwExpr = String::toString(iDD);
+    MeasurementSet spwSelMS(selectedMS);
+    // apply selection to get correlation slices
+    mssel.clear();
+    Vector<Vector<Slice> > chansel;
+    Vector<Vector<Slice> > corrsel;
+    mssSetData(selectedMS, spwSelMS, chansel, corrsel,
+               "", "", "", "", spwExpr, "", "",
+               polnExpr, "", "", "", "", 1, &mssel);
+
+    // Set up FrequencySelection with corrsel for VisibilityIterator2
+    vi::FrequencySelectionUsingChannels freqSel = vi::FrequencySelectionUsingChannels();
+    freqSel.addCorrelationSlices(corrsel);
+
+    // Sort Columns
+    Block<Int> columns(5);
+    Int i(0);
+    columns[i++] = MS::ARRAY_ID;
+    columns[i++] = MS::DATA_DESC_ID;
+    columns[i++] = MS::SCAN_NUMBER;
+    columns[i++] = MS::FIELD_ID;
+    columns[i++] = MS::TIME;
+    vi::SortColumns sortcols(columns, false);
+      
+    // Set up averaged non-calibrating vi
+    vi::IteratingParameters iterpar(itsSolInt, sortcols);
+    vi::AveragingOptions avgopt(vi::AveragingOptions::AverageCorrected |
+            vi::AveragingOptions::CorrectedWeightAvgFromWEIGHT);
+    vi::AveragingParameters avgpar(1e8, 0.0, sortcols, avgopt);
+    vi::LayeredVi2Factory factory(&spwSelMS, &iterpar, &avgpar);
+    vi::VisibilityIterator2* vi2 = new vi::VisibilityIterator2(factory);
+    vi2->setFrequencySelection(freqSel);
+    vi::VisBuffer2* vb2 = vi2->getVisBuffer();
+    vi2->originChunks();
+    vi2->origin();
+
+    // Get continuum model
+    // fit
+    Vector<Float> x(nChan);
+    for (Int i=0; i<nChan; i++) x(i)=i;
+    LinearFit<Float> fitter;
+    Polynomial<AutoDiff<Float> > apoly(itsOrder);
+    fitter.setFunction(apoly);
+    Polynomial<Float> poly(itsOrder);
+    Vector<Float> y1(nChan),y2(nChan);
+    Vector<Float> sol(itsOrder+1);
+    Vector<Complex> tmp(nChan);
+
+    Cube<Complex> avgCorrData;
+    // map is <scan, fit model>
+    map<Int, Cube<Complex>> fitCorrData;
+    Int nIter = 0;
+    IPosition start(3,0,0,0), end(3,0,nChan-1,0);
+    for (vi2->originChunks(); vi2->moreChunks(); vi2->nextChunk()){
+        for (vi2->origin(); vi2->more(); vi2->next()){
+            avgCorrData.resize();
+            avgCorrData = vb2->visCubeCorrected();
+            for (start[2]=end[2]=0; start[2]<avgCorrData.shape()[2]; start[2]++,end[2]++) {
+                for (start[0]=end[0]=0; start[0]<nPol; start[0]++,end[0]++) {
+                    Vector<Complex> c(avgCorrData(start,end).nonDegenerate());
+                    tmp=c; // copy into contiguous storage
+                    c.set(Complex(0.0));  // zero the input
+                    real(y1,tmp);
+                    imag(y2,tmp);
+                    sol = fitter.fit(x,y1,&fitChanMask);
+                    poly.setCoefficients(sol);
+                    y1=x;
+                    y1.apply(poly);
+                    sol = fitter.fit(x,y2,&fitChanMask);
+                    poly.setCoefficients(sol);
+                    y2=x;
+                    y2.apply(poly);
+                    for (Int chn=0; chn<nChan; chn++) {
+                        if (subChanMask(chn))
+                            c(chn)=Complex(y1(chn),y2(chn));
+                    }
+                }
+            }
+            fitCorrData[vb2->scan()(0)] = avgCorrData;
+            nIter++;
+        }
+    }
+    os << "Processing " << nIter << " slots for ddId " << iDD << LogIO::POST;
+    delete vi2;
+
+    // unaveraged non-calibrating vi
+    vi::LayeredVi2Factory factory2(&spwSelMS, &iterpar);
+    vi2 = new vi::VisibilityIterator2(factory2);
+    vi2->setFrequencySelection(freqSel);
+    vb2 = vi2->getVisBuffer();
+    vi2->originChunks();
+    vi2->origin();
+    Cube<Complex> modelData, correctedData, fitModel;
+    for (vi2->originChunks(); vi2->moreChunks(); vi2->nextChunk()){
+        for (vi2->origin(); vi2->more(); vi2->next()){
+            // get model and corrected data with poln selection applied
+            modelData.resize();
+            modelData = vb2->visCubeModel();
+            correctedData.resize();
+            correctedData = vb2->visCubeCorrected();
+            fitModel.resize();
+            fitModel = fitCorrData[vb2->scan()(0)];
+
+            if (itsMode=="subtract" || itsMode=="model") {
+                modelData = fitModel;
+            }
+            if (itsMode=="replace") {
+                correctedData = fitModel;
+            }
+            if (itsMode=="subtract") {
+                correctedData -= fitModel;
+            }
+
+            // write out cubes to MS
+            vi2->getImpl()->writeVisModel(modelData);
+            vi2->getImpl()->writeVisCorrected(correctedData);
+        }
+    }
+    delete vi2;
+  } // end DDId loop
+}
+
 
 } //# NAMESPACE CASA - END
 

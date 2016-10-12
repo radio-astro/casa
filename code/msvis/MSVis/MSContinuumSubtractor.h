@@ -120,6 +120,7 @@ public:
 
 // Do the subtraction (or save the model)
    void subtract();
+   void subtract2();
 
 private:
 // Pointer to MS
