@@ -8,7 +8,8 @@ import string
 import types
 import math
 
-from pipeline.hif.tasks.common import commonfluxresults
+#from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
