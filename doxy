@@ -1702,6 +1702,11 @@ GENERATE_LEGEND        = YES
 # the various graphs.
 
 DOT_CLEANUP            = YES
+
+# lookup cache used 65536/65536 hits=3154235 misses=389459
+# Note: based on cache misses the ideal setting for LOOKUP_CACHE_SIZE is 2 at the cost of higher memory usage.
+LOOKUP_CACHE_SIZE      = 2
+
 END-OF-DOXYGEN
 
 }
