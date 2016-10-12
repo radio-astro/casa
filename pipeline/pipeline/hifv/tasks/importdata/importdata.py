@@ -23,7 +23,8 @@ from pipeline.infrastructure import casa_tasks, casatools
 #from pipeline.hifv.tasks.vlautils import VLAUtils
 import pipeline.infrastructure.mpihelpers as mpihelpers
 from pipeline.hifv.heuristics.vlascanheuristics import VLAScanHeuristics
-from pipeline.hif.tasks.common import commonfluxresults
+#from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 
 LOG = infrastructure.get_logger(__name__)
 
