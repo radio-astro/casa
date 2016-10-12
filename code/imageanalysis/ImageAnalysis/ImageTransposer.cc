@@ -138,9 +138,7 @@ SPIIF ImageTransposer::transpose() const {
             ArrayLattice<Bool>(reorderArray(maskCopy, _order))
         );
     }
-    output->setUnits(this->_getImage()->units());
-    output->setImageInfo(this->_getImage()->imageInfo());
-    output->setMiscInfo(this->_getImage()->miscInfo());
+    ImageUtilities::copyMiscellaneous(*output, *this->_getImage());
     return this->_prepareOutputImage(*output);
 }
 
