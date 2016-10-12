@@ -33,7 +33,8 @@ from pipeline.hif.heuristics import fieldnames
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
-from pipeline.hif.tasks.common import commonfluxresults
+#from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 from pipeline.hifv.tasks.setmodel import vlasetjy
