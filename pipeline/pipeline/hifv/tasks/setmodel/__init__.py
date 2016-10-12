@@ -1,5 +1,6 @@
 from __future__ import absolute_import
-from pipeline.hif.tasks.common import commonfluxresults
+#from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 #import pipeline.hif.tasks.setmodel.renderer as super_renderer
 import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
