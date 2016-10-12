@@ -219,5 +219,20 @@ class imtrans_test(unittest.TestCase):
         self.assertTrue("ia.transpose" in msgs[-2])    
         self.assertTrue("ia.transpose" in msgs[-1])
 
+    def test_imageinfo(self):
+        """Verify image info is copied"""
+        myia = iatool()
+        myia.fromshape("",[10,20,30])
+        myia.setbrightnessunit("Jy/beam")
+        myia.setrestoringbeam("4arcmin", "3arcmin", "0deg")
+        kk = myia.transpose("", "201")
+        self.assertEqual(
+            kk.brightnessunit(), "Jy/beam",
+            "brightness unit not copied"
+        )
+        self.assertTrue(
+            kk.restoringbeam(), "restoring beam not copied"
+        )
+
 def suite():
     return [imtrans_test]
