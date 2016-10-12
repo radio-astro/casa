@@ -10,7 +10,7 @@ from . import observingrun
 from . import source
 from . import spectralwindow
 #from .datatable import DataTableImpl as DataTable
-from .datatableold import DataTableImpl as DataTableOld
+#from .datatableold import DataTableImpl as DataTableOld
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -28,20 +28,6 @@ class ScantableList(observingrun.ObservingRun, list):
         self.grid_position = {}
         self.datatable_instance = None
         self.datatable_name = None  # os.path.join(context.name,'DataTable.tbl')
-
-    def __getstate__(self):
-        mydict = self.__dict__.copy()
-        # not to pickle DataTable instance
-        mydict['datatable_instance'] = None
-        return mydict
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        name = self.__dict__['datatable_name']
-        if name is not None and self.__dict__['datatable_instance'] is None:
-            datatable = DataTableOld(name)
-            self.__dict__['datatable_instance'] = datatable
-        
 
     @property
     def start_time(self):
