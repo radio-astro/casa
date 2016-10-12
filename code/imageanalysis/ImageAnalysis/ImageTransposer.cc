@@ -99,7 +99,6 @@ SPIIF ImageTransposer::transpose() const {
     *_getLog() << LogOrigin(_class, __FUNCTION__);
     // get the image data
     Array<Float> dataCopy = _getImage()->get();
-
     CoordinateSystem newCsys = _getImage()->coordinates();
     IPosition shape = _getImage()->shape();
     if (_reverse.size() > 0) {
@@ -117,14 +116,12 @@ SPIIF ImageTransposer::transpose() const {
     }
     newCsys.transpose(_order, _order);
     IPosition newShape(_order.size());
-
-    for (uInt i=0; i<newShape.size(); i++) {
+    for (uInt i=0; i<newShape.size(); ++i) {
         newShape[i] = shape[_order[i]];
     }
     SPIIF output(
         new TempImage<Float>(TiledShape(newShape), newCsys)
     );
-
     if (_reverse.size() > 0) {
         dataCopy = reverseArray(dataCopy, _reverse);
     }
@@ -141,13 +138,16 @@ SPIIF ImageTransposer::transpose() const {
             ArrayLattice<Bool>(reorderArray(maskCopy, _order))
         );
     }
+    output->setUnits(this->_getImage()->units());
+    output->setImageInfo(this->_getImage()->imageInfo());
+    output->setMiscInfo(this->_getImage()->miscInfo());
     return this->_prepareOutputImage(*output);
 }
 
 ImageTransposer::~ImageTransposer() {}
 
 Vector<Int> ImageTransposer::_getOrder(uInt order) const {
-    *_getLog() << LogOrigin(_class, String(__FUNCTION__));
+    *_getLog() << LogOrigin(_class, String(__func__));
     uInt naxes = _getImage()->ndim();
     uInt raxes = uInt(log10(order)) + 1;
     if (naxes != raxes) {
