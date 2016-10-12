@@ -11,5 +11,4 @@ from .scan import Scan
 from .source import Source
 from .spectralwindow import SpectralWindow, SpectralWindowWithChannelSelection
 from .state import State
-from .singledish import ScantableList
 from .datatable import DataTableImpl as DataTable

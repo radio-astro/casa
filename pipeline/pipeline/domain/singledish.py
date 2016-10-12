@@ -1,33 +1,8 @@
 from __future__ import absolute_import
-import decimal
-import numpy
-import os
-import re
-
-from . import antenna
-from . import measures
-from . import observingrun
-from . import source
-from . import spectralwindow
-#from .datatable import DataTableImpl as DataTable
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
-
-
-def to_numeric_freq(m, unit=measures.FrequencyUnits.HERTZ):
-    return float(m.convert_to(unit).value)
-
-class ScantableList(observingrun.ObservingRun):
-    def __init__(self):
-        super(ScantableList, self).__init__()
-        self.reduction_group = {}
-        self.grid_position = {}
-        self.datatable_instance = None
-        self.datatable_name = None  # os.path.join(context.name,'DataTable.tbl')
-
 
 class MSReductionGroupMember(object):
     def __init__(self, ms, antenna_id, spw_id, field_id=None):

@@ -47,8 +47,6 @@ class SDImportDataResults(basetask.Results):
         self.results = importdata.ImportDataResults(mses=mses, setjy_results=setjy_results)
         
     def merge_with_context(self, context):
-        if not isinstance(context.observing_run, domain.ScantableList):
-            context.observing_run = domain.ScantableList()
         self.results.merge_with_context(context)
         self.__merge_reduction_group(context.observing_run, self.reduction_group_list)
         context.observing_run.ms_datatable_name = self.datatable_name
