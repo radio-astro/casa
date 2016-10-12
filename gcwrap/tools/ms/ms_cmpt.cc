@@ -32,53 +32,50 @@
 #include <casa/iostream.h>
 #include <sstream>
 #include <sys/wait.h>
+#include <array>
+#include <memory>
+
+#include <casacore/scimath/Mathematics/StatisticsTypes.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/STLIO.h>
-#include <ms_cmpt.h>
-#include <msmetadata_cmpt.h>
-#include <tools/ms/Statistics.h>
-#include <msfits/MSFits/MSFitsInput.h>
-#include <msfits/MSFits/MSFitsOutput.h>
-#include <msfits/MSFits/MSFitsIDI.h>
+#include <casa/Logging/LogOrigin.h>
+#include <casa/OS/DOos.h>
+#include <casa/System/ObjectID.h>
+#include <casa/Utilities/Assert.h>
 #include <fits/FITS/FITSReader.h>
+#include <measures/Measures/MeasTable.h>
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MSOper/MSSummary.h>
 #include <ms/MSOper/MSLister.h>
 #include <ms/MSOper/MSConcat.h>
-#include <ms/MSOper/MSFlagger.h>
 #include <ms/MSSel/MSSelectionTools.h>
 #include <ms/MeasurementSets/MSMainColumns.h>
-
-#include <measures/Measures/MeasTable.h>
-
-#include <msvis/MSVis/MSChecker.h>
-#include <msvis/MSVis/MSContinuumSubtractor.h>
-#include <msvis/MSVis/Partition.h>
-#include <msvis/MSVis/Reweighter.h>
-#include <msvis/MSVis/SubMS.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/OS/DOos.h>
+#include <ms/MeasurementSets/MSHistoryHandler.h>
+#include <msfits/MSFits/MSFitsInput.h>
+#include <msfits/MSFits/MSFitsOutput.h>
+#include <msfits/MSFits/MSFitsIDI.h>
+#include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableLock.h>
 #include <tables/TaQL/TableParse.h>
 #include <tables/Tables/ConcatTable.h>
 #include <tables/Tables/TableCopy.h>
-#include <casa/System/ObjectID.h>
-#include <casa/Utilities/Assert.h>
+
+#include <asdmstman/AsdmStMan.h>
+#include <msvis/MSVis/MSChecker.h>
+#include <msvis/MSVis/MSContinuumSubtractor.h>
+#include <msvis/MSVis/Partition.h>
+#include <msvis/MSVis/Reweighter.h>
+#include <msvis/MSVis/SubMS.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisIterator.h>
-
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBuffer2.h>
-#include <array>
-#include <memory>
-
-#include <casacore/scimath/Mathematics/StatisticsTypes.h>
 #include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
 #include <msvis/MSVis/statistics/Vi2ChunkVisAmplitudeProvider.h>
 #include <msvis/MSVis/statistics/Vi2ChunkVisPhaseProvider.h>
@@ -98,18 +95,12 @@
 #include <msvis/MSVis/statistics/Vi2ChunkTimeDataProvider.h>
 #include <msvis/MSVis/statistics/Vi2ChunkWeightSpectrumDataProvider.h>
 
-#include <tables/Tables/SetupNewTab.h>
-#include <ms/MeasurementSets/MSHistoryHandler.h>
-
-#include <asdmstman/AsdmStMan.h>
+#include <ms_cmpt.h>
+#include <msmetadata_cmpt.h>
+#include <tools/ms/Statistics.h>
 
 #include <casa/namespace.h>
 #include <cassert>
-
-//debug only
-#include <ms/MSOper/MSMetaData.h>
-
-using namespace std;
 
 using namespace casacore;
 namespace casac {
@@ -121,7 +112,6 @@ ms::ms()
 		itsOriginalMS = new MeasurementSet();
 		itsSel = new MSSelector();
 		itsLog = new LogIO();
-		itsFlag = new MSFlagger();
 		itsMSS = new MSSelection();
 		itsVI = NULL;//new VisibilityIterator();
 		itsVB = NULL;//new VisBuffer();
@@ -139,7 +129,6 @@ ms::~ms()
 		if(itsMS)           {delete itsMS;itsMS=NULL;}
 		if(itsOriginalMS)   {delete itsOriginalMS;itsOriginalMS=NULL;}
 		if(itsSel)          {delete itsSel; itsSel=NULL;}
-		if(itsFlag)         {delete itsFlag; itsFlag=NULL;}
 		if(itsLog)          {delete itsLog; itsLog=NULL;}
 		if(itsMSS)          {delete itsMSS; itsMSS=NULL;}
 		if (itsVI)          {delete itsVI; itsVI=NULL;}
@@ -340,17 +329,9 @@ ms::open(const std::string& thems, bool nomodify, bool lock, bool check)
 			}
 		}
 		*itsOriginalMS = MeasurementSet(*itsMS);
-		//
-		// itsSel and itsFlag were not being reset by using the set commands so
-		// delete them and renew them.
-		//
 		if(itsSel){
 			delete itsSel;
 			itsSel = new MSSelector();
-		}
-		if(itsFlag){
-			delete itsFlag;
-			itsFlag = new MSFlagger();
 		}
 		if (itsMSS)
 		{
@@ -359,7 +340,6 @@ ms::open(const std::string& thems, bool nomodify, bool lock, bool check)
 			itsMSS->resetMS(*itsMS);
 		}
 		itsSel->setMS(*itsMS);
-		itsFlag->setMSSelector(*itsSel);
 		doingIterations_p=false;
 	} catch (const AipsError& x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -378,11 +358,9 @@ ms::reset()
 		// that hold the pointer to working MS
 		*itsMS = MeasurementSet(*itsOriginalMS);
 		if(itsSel)  {delete itsSel;}  itsSel = new MSSelector();
-		if(itsFlag) {delete itsFlag;} itsFlag = new MSFlagger();
 		if (itsMSS) {delete itsMSS;}  itsMSS = new MSSelection();
 		itsMSS->resetMS(*itsMS);
 		itsSel->setMS(*itsMS);
-		itsFlag->setMSSelector(*itsSel);
 		doingIterations_p=false;
 	}
 	catch (AipsError x) {
@@ -466,7 +444,6 @@ ms::close()
 			delete itsMS;          itsMS = new MeasurementSet();
 			delete itsOriginalMS;  itsOriginalMS = new MeasurementSet();
 			itsSel->setMS(*itsMS);
-			itsFlag->setMSSelector(*itsSel);
 			if (itsMSS) {delete itsMSS;  itsMSS = new MSSelection();};
 			if (itsVI) {delete itsVI; itsVI=NULL;// itsVI = new VisibilityIterator();
 			};
@@ -604,7 +581,6 @@ bool ms::tofits(
 				mssel.reset(new MeasurementSet(*itsMS));
 			}
 			MeasurementSet selms(*mssel);
-			MSMetaData md(&selms, 1000);
 			if (
 				! MSFitsOutput::writeFitsFile(
 					fitsfile, selms, column, istart, inchan,
@@ -3691,158 +3667,7 @@ ms::iterend()
   Table::relinquishAutoLocks(true);
   return false;
   }
-
-  bool
-  ms::createflaghistory(const int numlevel)
-  {
-  Bool rstat(false);
-  try {
-  if(!detached())
-  rstat =  itsFlag->createFlagHistory(numlevel);
-  } catch (AipsError x) {
-  *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  Table::relinquishAutoLocks(true);
-  RETHROW(x);
-  }
-  Table::relinquishAutoLocks(true);
-  return rstat;
-  }
-
-  bool
-  ms::saveflags(const bool newlevel)
-  {
-  Bool rstat(false);
-  try {
-  if(!detached())
-  rstat =  itsFlag->saveFlags(newlevel);
-  } catch (AipsError x) {
-  *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  Table::relinquishAutoLocks(true);
-  RETHROW(x);
-  }
-  Table::relinquishAutoLocks(true);
-  return rstat;
-  }
-
-  bool
-  ms::restoreflags(const int level)
-  {
-  Bool rstat(false);
-  try {
-  if(!detached())
-  rstat =  itsFlag->restoreFlags(level);
-  } catch (AipsError x) {
-  *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  Table::relinquishAutoLocks(true);
-  RETHROW(x);
-  }
-  Table::relinquishAutoLocks(true);
-  return rstat;
-  }
-
-  int
-  ms::flaglevel()
-  {
-  Bool rstat(false);
-  try {
-  if(!detached())
-  rstat =  itsFlag->flagLevel();
-  } catch (AipsError x) {
-  *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  Table::relinquishAutoLocks(true);
-  RETHROW(x);
-  }
-  Table::relinquishAutoLocks(true);
-  return rstat;
-  }
 */
-
-bool
-ms::fillbuffer(const std::string& /*item*/, const bool /*ifraxis*/)
-{
-    stringstream ss;
-    ss << "ms::fillbuffer method deprecated";
-	throw AipsError(ss.str());
-	Bool rstat(false);
-    /*
-	try {
-		if(!detached())
-			rstat =  itsFlag->fillDataBuffer(item, ifraxis);
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(true);
-		RETHROW(x);
-	}
-	Table::relinquishAutoLocks(true);
-    */
-	return rstat;
-}
-
-::casac::record*
-ms::diffbuffer(const std::string& /*direction*/, const int /*window*/)
-{
-    stringstream ss;
-    ss << "ms::diffbuffer method deprecated";
-	throw AipsError(ss.str());
-	::casac::record* retval(0);
-    /*
-	Bool domedian(false); //Not in the help file but in glish/C++
-	try {
-		if(!detached()){
-			casacore::Record daRec = itsFlag->diffDataBuffer(casacore::String(direction),
-			                                             window, domedian);
-			retval = fromRecord(daRec);
-		}
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(true);
-		RETHROW(x);
-	}
-	Table::relinquishAutoLocks(true);
-    */
-	return retval;
-}
-
-::casac::record*
-ms::getbuffer()
-{
-    stringstream ss;
-    ss << "ms::getbuffer method deprecated";
-	throw AipsError(ss.str());
-	::casac::record* retval(0);
-    /*
-	try {
-		if(!detached())
-			retval = fromRecord(itsFlag->getDataBuffer());
-	} catch (AipsError x) {
-		//*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(true);
-		RETHROW(x);
-	}
-    */
-	return retval;
-}
-
-bool
-ms::clipbuffer(const double /*pixellevel*/, const double /*timelevel*/, const double /*channellevel*/)
-{
-	Bool rstat(false);
-    stringstream ss;
-    ss << "ms::clipbuffer method deprecated";
-	throw AipsError(ss.str());
-    /*
-	try {
-		if(!detached())
-			rstat =  itsFlag->clipDataBuffer(pixellevel, timelevel, channellevel);
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(true);
-		RETHROW(x);
-	}
-	Table::relinquishAutoLocks(true);
-    */
-	return rstat;
-}
 
 std::string
 ms::asdmref(const std::string& abspath)
@@ -3916,68 +3741,6 @@ ms::asdmref(const std::string& abspath)
 	Table::relinquishAutoLocks(true);
 	return retval;
 
-}
-
-bool
-ms::setbufferflags(const ::casac::record& /*flags*/)
-{
-	Bool retval = false;
-    stringstream ss;
-    ss << "ms::setbufferflags method deprecated";
-	throw AipsError(ss.str());
-    /*
-	try {
-		if(!detached()){
-			Record *myTmp = toRecord(flags);
-			retval = itsFlag->setDataBufferFlags(*myTmp);
-			delete myTmp;
-		}
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(true);
-		RETHROW(x);
-	}
-	Table::relinquishAutoLocks(true);
-    */
-	return retval;
-
-}
-
-bool
-ms::writebufferflags()
-{
-	Bool rstat(false);
-    stringstream ss;
-    ss << "ms::setbufferflags method deprecated";
-	throw AipsError(ss.str());
-    /*
-	try {
-		if(!detached())
-			rstat =  itsFlag->writeDataBufferFlags();
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(true);
-		RETHROW(x);
-	}
-	Table::relinquishAutoLocks(true);
-    */
-	return rstat;
-}
-
-bool
-ms::clearbuffer()
-{
-	Bool rstat(false);
-	try {
-		if(!detached())
-			rstat =  itsFlag->clearDataBuffer();
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(true);
-		RETHROW(x);
-	}
-	Table::relinquishAutoLocks(true);
-	return rstat;
 }
 
 bool ms::continuumsub(const ::casac::variant& field,
