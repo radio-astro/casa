@@ -6,7 +6,8 @@ import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.qa.scorecalculator as qacalc
 
 from . import vlasetjy
-from pipeline.hif.tasks.common import commonfluxresults
+#from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.h.tasks.common import commonfluxresults
 
 LOG = logging.get_logger(__name__)
 
