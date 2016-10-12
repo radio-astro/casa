@@ -177,8 +177,19 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         amp_vs_freq_detail_plots = {}
         phase_vs_freq_detail_plots = {}
         amp_vs_uv_detail_plots = {}
-        amp_vs_time_detail_plots = {}
         phase_vs_time_detail_plots = {}
+
+        # compromise to generate some antenna-specific plots to allow bad antennas to be identified
+        # while keeping the overall number of plots relatively unchanged.
+        #
+        # Note that 'TARGET' has been removed from the intents list
+        amp_vs_time_detail_plots, amp_vs_time_subpages = self.create_plots(
+            context,
+            result,
+            applycal.AmpVsTimeDetailChart,
+            ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
+            ApplycalAmpVsTimePlotRenderer
+        )
 
         if pipeline.infrastructure.generate_detail_plots(result):
             # detail plots. Don't need the return dictionary, but make sure a
@@ -214,14 +225,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             #     ['AMPLITUDE'],
             #     ApplycalPhaseVsUVPlotRenderer
             # )
-
-            amp_vs_time_detail_plots, amp_vs_time_subpages = self.create_plots(
-                context,
-                result,
-                applycal.AmpVsTimeDetailChart,
-                ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK', 'TARGET'],
-                ApplycalAmpVsTimePlotRenderer
-            )
 
             phase_vs_time_detail_plots, phase_vs_time_subpages = self.create_plots(
                 context,
