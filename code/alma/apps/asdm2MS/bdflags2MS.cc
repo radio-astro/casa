@@ -605,13 +605,15 @@ void traverseBAB(bool					sameAntenna,
   for (SDMDataObject::Baseband bab: basebands) {
     const vector<SDMDataObject::SpectralWindow>& spws = bab.spectralWindows();
     bool firstSPW = true;
-    for(SDMDataObject::SpectralWindow spw: spws) {
-      vector<StokesParameter>::const_iterator ppIter, ppBegin, ppEnd;
-      unsigned int numPolProducts;
+    vector<StokesParameter>::const_iterator ppIter, ppBegin, ppEnd;
+    unsigned int numPolProducts;
+    pair<const FLAGSTYPE*, const FLAGSTYPE*> range;
 
-      if (firstSPW || CorrelatorFlagsAxes::hasSPW()) {
+    for(SDMDataObject::SpectralWindow spw: spws) {
+      if ((firstSPW && !CorrelatorFlagsAxes::hasSPW()) || CorrelatorFlagsAxes::hasSPW()) {
 	/*
-	** Consider the spw if and only if it's the first spw in the vector or if SPW belongs to the list of axes for flags.
+	 * Consider the spectral window if 
+	**  (it's the first spw in the vector and SPW does not belong to the list of axes for flags) or (if SPW belongs to the list of axes for flags).
 	*/
 	ppIter = ppBegin = sameAntenna ? spw.sdPolProducts().begin() : spw.crossPolProducts().begin();
 	ppEnd = sameAntenna ? spw.sdPolProducts().end() : spw.crossPolProducts().end();
@@ -622,13 +624,12 @@ void traverseBAB(bool					sameAntenna,
 
       vector<char>  MSFlagsCell(spw.numSpectralPoint()*flagsCellNumPolProducts, (char) 0);
       if (numFlags) {
-	pair<const FLAGSTYPE*, const FLAGSTYPE*> range;
-
-	if (firstSPW || CorrelatorFlagsAxes::hasSPW())
+	if ((firstSPW && !CorrelatorFlagsAxes::hasSPW()) || CorrelatorFlagsAxes::hasSPW()) {
 	  /*
-	  ** Consume flags if and only if it's the first spw in the vector or if SPW belongs to the list of axes for flags.
+	  ** Consume flags if and only if (it's the first spw in the vector and SPW does not belong to the list of axes for flags) or (if SPW belongs to the list of axes for flags).
 	  */
 	  range  = consumer.consume(numPolProducts);
+	}
 	unsigned int k = 0;
 	for (unsigned int i = 0; i < spw.numSpectralPoint(); i++){
 	  unsigned int kk = 0;
@@ -1064,6 +1065,7 @@ void processCorrelatorFlags(unsigned int numIntegration,
       if (debug) cout << announcedFlagSize << "==" << calculatedFlagSize << " -> forcing SPW to be present." << endl;
     }
     else {
+      CorrelatorFlagsAxes::hasSPW(true);
       if (debug) cout << announcedFlagSize << "!=" << calculatedFlagSize << " -> considering SPW as absent." << endl;
     }
   }
@@ -1160,6 +1162,7 @@ void processCorrelatorFlagsPerSlices(MainRow*					mR_p,
       if (debug) cout << announcedFlagSize << "==" << calculatedFlagSize << " -> forcing SPW to be present." << endl;
     }
     else {
+      CorrelatorFlagsAxes::hasSPW(false);
       if (debug) cout << announcedFlagSize << "!=" << calculatedFlagSize << " -> considering SPW as absent." << endl;
     }
   }
@@ -1310,7 +1313,10 @@ int main (int argC, char * argV[]) {
       ("wvr-corrected-data", po::value<bool>()->default_value(false), "must be set to True (resp. False) whenever the MS to be populated contains corrected (resp. uncorrected) data (default==false)")
       ("lazy", po::value<bool>()->default_value(false), "must be set to True if the measurement set has been produced by asdm2MS run with the option --lazy (default==false")
       ("ocm", po::value<string>(&ocm)->default_value("ca"), "specifies the output correlation mode, i.e. the correlation mode of the ASDM/BDF's data for which the MS flags will be written. The value given to this option must *imperatively* be the same than the one given to the --ocm option for the execution of the filler which produced the MS. Valid values are 'ca' for CROSS_AND_AUTO, 'ao' for AUTO_ONLY and 'co' for CROSS_ONLY.")
-      ("verbose,v",  "logs numerous informations as the application is running.");
+      ("verbose,v",  "logs numerous informations as the application is running.")
+      ("logfile,l", po::value<string>(), "specifies the log filename. If the option is not used then the logged informations are written to the standard error stream.")
+      ;
+
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -1328,6 +1334,11 @@ int main (int argC, char * argV[]) {
     // Parse the command line and retrieve the options and parameters.
     po::store(po::command_line_parser(argC, argV).options(cmdline_options).positional(p).run(), vm);
     po::notify(vm);
+
+    // Where do the log messages should go ?
+    if (vm.count("logfile")) {
+      freopen(vm["logfile"].as<string>().c_str(), "a", stderr);
+    }
 
     // Help ? displays help's content and don't go further.
     if (vm.count("help")) {
