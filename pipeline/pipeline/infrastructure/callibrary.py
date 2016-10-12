@@ -378,7 +378,7 @@ class CalFrom(object):
         'antpos'   : ('KANTPOS JONES',),
         'uvcont'   : ('A MUELLER',),
         'amp'      : ('G JONES',),
-        'sdsky'    : ('SDSKY_PS',)
+        'sdsky'    : ('SDSKY_PS', 'SDSKY_OTF', 'SDSKY_RASTER')
     }
     
     VISCAL = {
