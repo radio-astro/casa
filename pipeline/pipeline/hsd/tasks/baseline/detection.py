@@ -84,7 +84,6 @@ class DetectLineResults(common.SingleDishResults):
 
 class DetectLine(basetask.StandardTaskTemplate):
     Inputs = DetectLineInputs
-    #LineFinder = heuristics.AsapLineFinder
     LineFinder = heuristics.HeuristicsLineFinder
     ThresholdFactor = 3.0
 
