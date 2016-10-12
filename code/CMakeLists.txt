@@ -89,7 +89,7 @@ if( CASA_VERSION_FEATURE STREQUAL "0" )
         list ( GET CASA_VERSION_FEATURE_AND_BRANCH_TAG 1 BRANCH_TAG)
         message("CASA_VERSION_FEATURE: ${CASA_VERSION_FEATURE}")
         message("CASA_VERSION_DESC: ${BRANCH_TAG}")
-        set(CASA_VERSION_DESC " Branch: ${BRANCH_TAG}")
+        set(CASA_VERSION_DESC " ${BRANCH_TAG}")
     endif( )
 endif( )
 

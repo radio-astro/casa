@@ -34,7 +34,8 @@ if [ $branch == "HEAD" ];then
         CASAFORKPOINTHINT=`git merge-base origin/master $branch`
     fi
     headTag=`git describe --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*-mas-[0-9]*' $(git rev-parse $CASAFORKPOINTHINT)`
-    echo "${headTag##*-};$CASA_VERSION_DESC"
+    #echo "${headTag##*-};$CASA_VERSION_DESC"
+    echo "${headTag##*-}; "
 # Master
 elif [ $branch == "master" ];then
     #echo "Resolving master"
@@ -61,7 +62,7 @@ else
         branchTag=`git describe --abbrev=0 | grep \\\-$tagMatcher- | xargs`
         CASA_VERSION_DESC="No tag found for the head commit. Nearest tag: $branchTag, HEAD commit: $headCommit "
     else
-        CASA_VERSION_DESC="$branchTag"
+        CASA_VERSION_DESC="Branch tag: $branchTag"
     fi
     # Do our best to resolve the master tag for revision even when we have
     # Branch tag
