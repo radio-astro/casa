@@ -10,8 +10,6 @@ import pylab as pl
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 
-from pipeline.domain.singledish import ScantableList
-
 from .utils import utc_locator
 
 LOG = infrastructure.get_logger(__name__)
