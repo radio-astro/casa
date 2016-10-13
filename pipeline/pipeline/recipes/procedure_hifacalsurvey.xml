@@ -127,7 +127,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_exportdata</Command>
+        <Command xmlns="">hifa_exportdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>

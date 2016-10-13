@@ -43,7 +43,7 @@ from hif_applycal_cli import hif_applycal_cli as hif_applycal
 from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
 #from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
 from hif_makeimages_cli import hif_makeimages_cli as hif_makeimages
-from hif_exportdata_cli import hif_exportdata_cli as hif_exportdata
+from hifa_exportdata_cli import hifa_exportdata_cli as hifa_exportdata
 from h_save_cli import h_save_cli as h_save
 
 # Pipeline imports
@@ -126,7 +126,7 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         hif_makeimages (pipelinemode=pipelinemode)
     
         # Export the data
-        hif_exportdata(pipelinemode=pipelinemode)
+        hifa_exportdata(pipelinemode=pipelinemode)
     
     except Exception, e:
         if str(e) == IMPORT_ONLY:
