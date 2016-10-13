@@ -8,6 +8,7 @@ import pipeline.hifv.tasks as hifv_tasks
 
 CasaTaskDict = {
     'h_importdata': 'ImportData',
+    'h_exportdata': 'ExportData',
     'hif_antpos': 'Antpos',
     'hif_atmflag': 'Atmflag',
     'hif_applycal': 'Applycal',
@@ -16,7 +17,7 @@ CasaTaskDict = {
     'hif_rawflagchans': 'Rawflagchans',
     'hif_clean': 'Clean',
     'hif_cleanlist': 'CleanList',
-    'hif_exportdata': 'ExportData',
+    #'hif_exportdata': 'ExportData',
     'hif_findcont': 'FindCont',
     'hif_flagcorrected': 'Flagcorrected',
     'hif_gaincal': 'Gaincal',
@@ -48,6 +49,7 @@ CasaTaskDict = {
     'hifa_bandpass': 'ALMAPhcorBandpass',
     'hifa_bpsolint': 'BpSolint',
     'hifa_flagdata': 'FlagDeterALMA',
+    'hifa_exportdata': 'ALMAExportData',
     'hifa_flagtargets': 'FlagTargetsALMA',
     'hifa_fluxcalflag': 'FluxcalFlag',
     'hifa_fluxdb': 'Fluxdb',
@@ -89,6 +91,7 @@ classToCASATask = {
     hifa_tasks.ALMAPhcorBandpass      : 'hifa_bandpass',
     hifa_tasks.ALMAAntpos             : 'hifa_antpos',
     hifa_tasks.BpSolint               : 'hifa_bpsolint',
+    hifa_tasks.ALMAExportData         : 'hifa_exportdata',
     hifa_tasks.FlagDeterALMA          : 'hifa_flagdata',
     hifa_tasks.FlagTargetsALMA        : 'hifa_flagtargets',
     hifa_tasks.FluxcalFlag            : 'hifa_fluxcalflag',
@@ -110,7 +113,7 @@ classToCASATask = {
     hif_tasks.Bandpassflagchans       : 'hif_bpflagchans',
     hif_tasks.Clean                   : 'hif_clean',
     hif_tasks.CleanList               : 'hif_cleanlist',
-    hif_tasks.ExportData              : 'hif_exportdata',
+    #hif_tasks.ExportData              : 'hif_exportdata',
     hif_tasks.FindCont                : 'hif_findcont',
     hif_tasks.Flagcorrected           : 'hif_flagcorrected',
     hif_tasks.Rawflagchans            : 'hif_rawflagchans',
@@ -163,7 +166,8 @@ classToCASATask = {
     hifv_tasks.Statwt                 : 'hifv_statwt',
     hifv_tasks.PlotSummary            : 'hifv_plotsummary',
     # General Tasks
-    h_tasks.ImportData                : 'h_importdata'
+    h_tasks.ImportData                : 'h_importdata',
+    h_tasks.ExportData                : 'h_exportdata'
 }
 
 
@@ -286,7 +290,7 @@ TASK_COMMENTS = {
     (hif_tasks.Clean, hif_tasks.Tclean) : (
         'A single target source is cleaned. '
     ),
-    (hif_tasks.ExportData,
+    (h_tasks.ExportData,
      hsd_tasks.SDMSExportData) : (
         'The output data products are computed. '
     ),
