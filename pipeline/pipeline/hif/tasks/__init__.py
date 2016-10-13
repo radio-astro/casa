@@ -7,7 +7,7 @@ from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .bpflagchans import Bandpassflagchans
 from .clean import Clean
 from .cleanlist import CleanList
-from .exportdata import ExportData
+#from .exportdata import ExportData
 from .findcont import FindCont
 from .flagcorrected import Flagcorrected
 from .flagging import AgentFlagger
