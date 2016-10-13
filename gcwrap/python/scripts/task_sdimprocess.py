@@ -267,7 +267,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                     model = self._get_polyfit_model_array(dslice.reshape(nx,ny),
                                                           mslice.reshape(nx,ny),
                                                           axis, order)
-                    modelimg.putchunk( model, [0,0,ichan,ipol] )
+                    modelimg.putchunk( model, [0,0,ichan] )
             elif ndim==4:
                 for ipol in range(imshape[3]):
                     for ichan in range(imshape[2]):
@@ -338,7 +338,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         else:
             casalog.post( 'direction information is extrapolated.' )
             for i in range(nfile):
-                dirs.append(self.direction[i%len(direction)])
+                dirs.append(self.direction[i%len(self.direction)])
 
         # masklist
         masks = []
