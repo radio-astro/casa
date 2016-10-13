@@ -31,9 +31,8 @@ template<class T> casacore::Bool ImageMaskAttacher::makeMask(
 	casacore::ImageInterface<T>& out, casacore::String& maskName,
 	casacore::Bool init, casacore::Bool makeDefault, casacore::LogIO& os, casacore::Bool list
 ) {
-	os << casacore::LogOrigin("ImageMaskAttacher", __FUNCTION__);
+	os << casacore::LogOrigin("ImageMaskAttacher", __func__);
 	if (out.canDefineRegion()) {
-
 		// Generate mask name if not given
 		if (maskName.empty()) {
 			maskName = out.makeUniqueRegionName(casacore::String("mask"), 0);
