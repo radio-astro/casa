@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from .antpos import ALMAAntpos
 from .bandpass import ALMAPhcorBandpass
 from .bpsolint import BpSolint
+from .exportdata import ALMAExportData
 from .flagging import FlagDeterALMA
 from .flagging import ALMAAgentFlagger
 from .flagging import FlagTargetsALMA
