@@ -33,7 +33,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
-import pipeline.hif.tasks.exportdata.exportdata as hif_exportdata
+#import pipeline.hif.tasks.exportdata.exportdata as hif_exportdata
+import pipeline.h.tasks.exportdata.exportdata as h_exportdata
 from . import manifest
 
 # the logger for this module
@@ -41,11 +42,11 @@ LOG = infrastructure.get_logger(__name__)
 
 
 # Inputs class must be separated per task class even if it's effectively the same
-class SDMSExportDataInputs(hif_exportdata.ExportDataInputs):
+class SDMSExportDataInputs(h_exportdata.ExportDataInputs):
     pass
 
 
-class SDMSExportData(hif_exportdata.ExportData):
+class SDMSExportData(h_exportdata.ExportData):
     """
     SDMSExportData is the base class for exporting data to the products
     subdirectory. It performs the following operations:
