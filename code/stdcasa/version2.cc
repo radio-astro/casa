@@ -41,7 +41,7 @@ void VersionInfo::report(ostream &os)
        time by cmake flags.
     */ 
     if(const char* casaversion = std::getenv("CASAVERSION")) {
-        os << casaversion << endl;
+        os << casaversion;
     }
     else {
         int major1 = majorVersion()/10;
