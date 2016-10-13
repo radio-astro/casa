@@ -424,7 +424,7 @@ void PlotMSPlotter::showAbout() {
 }
 
 void PlotMSPlotter::prepareForPlotting()   {
-    itsPlotTab_->emptyLayout();
+
 	//PlotMSToolsTab *ttab =  getToolsTab();
 	
 	// This is a fix for the zoom stack bug, JIRA CAS-1770.
