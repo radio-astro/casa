@@ -46,7 +46,6 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageInterface.h>
 #include <measures/Measures/Stokes.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapserData.h>
 
@@ -168,7 +167,6 @@ namespace casa {
 		virtual casacore::MFrequency::Types getReferenceFrame() const;
 		QString getBrightnessUnit( SHARED_PTR<casacore::ImageInterface<float> > img ) const;
 		typedef std::pair<QString, SHARED_PTR<casacore::ImageInterface<float> > > OverplotInterface;
-		//typedef pair<QString,ImageAnalysis*> OverplotAnalysis;
 
 		static const casacore::String SHAPE_ELLIPSE;
 		static const casacore::String SHAPE_RECTANGLE;
@@ -343,7 +341,6 @@ namespace casa {
 		void initPreferences();
 		void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
 		void setYUnitConversionVisibility( bool visible );
-		//ImageAnalysis* analysis;
 		SHARED_PTR<casacore::ImageInterface<float> > image;
 
 		//For deciding whether or not it makes sense to show the top axis when
@@ -351,7 +348,6 @@ namespace casa {
 		bool isXUnitsMatch(const QString& matchUnits);
 		bool isFrequencyMatch();
 		bool isVelocityMatch();
-		//int getChannelCount( ImageAnalysis* analysis );
 		int getChannelCount( SHARED_PTR<casacore::ImageInterface<float> >& img);
 		SHARED_PTR<casacore::ImageInterface<float> > findImageWithMaximumChannels();
 		void restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits, bool allowFrequency = true,

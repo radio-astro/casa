@@ -27,7 +27,6 @@
 #include <display/Slicer/SliceWorker.h>
 #include <display/Slicer/SliceSegment.qo.h>
 #include <display/Slicer/ImageSliceColorBar.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <msvis/MSVis/UtilJ.h>
 #include <QPen>
 #include <QDebug>
@@ -99,8 +98,8 @@ namespace casa {
 		this->selected = selected;
 	}
 
-	void ImageSlice::setImageAnalysis( ImageAnalysis* analysis ) {
-		sliceWorker->setImageAnalysis( analysis );
+	void ImageSlice::setImage( std::shared_ptr<casacore::ImageInterface<float> > img ) {
+		sliceWorker->setImage( img );
 	}
 
 	void ImageSlice::setInterpolationMethod( const String& method ) {

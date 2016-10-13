@@ -31,7 +31,6 @@
 #include <QMessageBox>
 #include <QFileSystemModel>
 #include <imageanalysis/Regions/CasacRegionManager.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageSourceFinder.h>
 #include <tables/Tables.h>
 #include <casa/Quanta/MVAngle.h>
@@ -401,8 +400,7 @@ namespace casa {
 		ui.sourceTable->setRowCount( 0 );
 		clearSkyOverlay();
 
-		SHARED_PTR<ImageInterface<Float> > x(image->cloneII());
-		ImageAnalysis* analysis = new ImageAnalysis( x );
+		auto img = std::shared_ptr<casacore::ImageInterface<float> >(image->cloneII( ));
 		bool validRegion = false;
 		Record region = makeRegion( &validRegion );
 		if ( !validRegion ) {
@@ -418,8 +416,7 @@ namespace casa {
 		}
 		int maxEstimates = ui.sourceEstimateCountSpinBox->value();
 		try {
-			//Record sources = analysis->findsources(maxEstimates,cutoff,region,"",true );
-            ImageSourceFinder<Float> isf(analysis->getImage(), &region, "");
+            ImageSourceFinder<Float> isf(img, &region, "");
             isf.setCutoff(cutoff);
             isf.setDoPoint(true);
             skyList.fromComponentList(isf.findSources(maxEstimates));

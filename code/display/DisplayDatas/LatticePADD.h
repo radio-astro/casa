@@ -100,8 +100,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		casacore::String dataType() const {
 			return "image";
 		}
-		// Get image analyis about object...
-		virtual ImageAnalysis *imageanalysis( ) const;
 		SHARED_PTR<casacore::ImageInterface<casacore::Float> > imageinterface( );
 
 

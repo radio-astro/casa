@@ -31,18 +31,12 @@
 #include <casa/Arrays/Vector.h>
 #include <display/region/RegionEnums.h>
 #include <display/Slicer/ImageSlice.qo.h>
+#include <casacore/images/Images/ImageInterface.h>
 
 class QwtPlotCurve;
 
 
-namespace casacore{
-
-	template <class T> class ImageInterface;
-}
-
 namespace casa {
-
-	class ImageAnalysis;
 
 	class SlicePlot : public QwtPlot {
 
@@ -52,7 +46,7 @@ namespace casa {
 		SlicePlot(QWidget *parent = NULL, bool fullVersion = false );
 
 		//Data
-		void setImage( SHARED_PTR<casacore::ImageInterface<float> > img );
+		void setImage( std::shared_ptr<casacore::ImageInterface<float> > img );
 		void updateChannel( int channel );
 		bool setRegionSelected( int regionId, bool selected );
 
@@ -130,8 +124,8 @@ namespace casa {
 		void resetExistingCurveColors();
 
 		QList<QColor> curveColors;
-		SHARED_PTR<casacore::ImageInterface<float> > image;
-		ImageAnalysis* imageAnalysis;
+		std::shared_ptr<casacore::ImageInterface<float> > image;
+
 		QMap<int, ImageSlice*> sliceMap;
 
 		casacore::Vector<int> coords;

@@ -27,7 +27,6 @@
 
 #include <images/Images/ImageInterface.h>
 #include <display/Slicer/SliceAxisDraw.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <msvis/MSVis/UtilJ.h>
 #include <qwt_plot_curve.h>
@@ -46,7 +45,7 @@ namespace casa {
 	const QString SlicePlot::UNIT_X_ARCDEG = "Arc Degrees";
 
 	SlicePlot::SlicePlot(QWidget *parent, bool allFunctionality ) :QwtPlot(parent),
-		image(  ), imageAnalysis( NULL ), AXIS_FONT_SIZE(8),
+		image(  ), AXIS_FONT_SIZE(8),
 		statLayout(NULL), factory(NULL) {
 		setCanvasBackground( Qt::white );
 
@@ -329,10 +328,8 @@ namespace casa {
 			initAxisFont( QwtPlot::yLeft, yAxisLabelStr.c_str());
 
 			//Get a new image imageanalysis for calculating slices
-			delete imageAnalysis;
-			imageAnalysis = new ImageAnalysis( image );
 			for ( QMap<int,ImageSlice*>::iterator it = sliceMap.begin(); it != sliceMap.end(); ++it ) {
-				(*it)->setImageAnalysis( imageAnalysis );
+				(*it)->setImage( image );
 			}
 
 			//Reset the channel.
@@ -346,7 +343,7 @@ namespace casa {
 			slice = sliceMap[regionId];
 		} else {
 			slice = new ImageSlice( regionId );
-			slice->setImageAnalysis( imageAnalysis );
+			slice->setImage( image );
 			slice->setInterpolationMethod( interpolationMethod );
 			slice->setSampleCount( sampleCount );
 			slice->setAxes( axes );
@@ -385,7 +382,7 @@ namespace casa {
 	void SlicePlot::updatePolyLine(  int regionId, const QList<double>& worldX,
 	                                 const QList<double>& worldY, const QList<int> &pixelX,
 	                                 const QList<int> & pixelY) {
-		if ( imageAnalysis != NULL ) {
+		if ( image ) {
 			ImageSlice* slice = getSlicerFor( regionId );
 			slice->updatePolyLine( pixelX, pixelY, worldX, worldY );
 			sliceFinished( regionId);

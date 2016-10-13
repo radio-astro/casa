@@ -29,7 +29,6 @@
 #include <images/Images/ImageOpener.h>
 
 #include <images/Images/PagedImage.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSQualityImage.h>
 #include <images/Images/FITSImgParser.h>
@@ -158,7 +157,6 @@ namespace casa {
 		void ImageProperties::initialize_state( SHARED_PTR<ImageInterface<Float> > image ) {
 
 			cs_ = image->coordinates( );
-			ImageAnalysis ia(image);
 			shape_ = image->shape( ).asVector( );
 			if ( shape_.size( ) <= 0 ) {
 				return;

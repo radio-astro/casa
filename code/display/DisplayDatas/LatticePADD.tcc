@@ -47,7 +47,7 @@
 #include <lattices/Lattices/SubLattice.h>
 #include <images/Images/ImageInterface.h>
 #include <display/Utilities/ImageProperties.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCLELMask.h>
@@ -325,11 +325,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(itsDataUnit==casacore::Unit("_")) return casacore::Unit("");
 
 		return itsDataUnit;
-	}
-
-	template <class T>
-	ImageAnalysis *LatticePADisplayData<T>::imageanalysis( ) const {
-		return create_image_analysis( itsBaseImagePtr );
 	}
 
 	template <class T>

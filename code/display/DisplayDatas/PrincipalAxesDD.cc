@@ -48,7 +48,6 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <display/DisplayEvents/WCPositionEvent.h>
 #include <display/DisplayEvents/WCMotionEvent.h>
 #include <display/DisplayEvents/WCRefreshEvent.h>
@@ -2449,10 +2448,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	PrincipalAxesDD::PrincipalAxesDD(const PrincipalAxesDD &):DisplayData()
 	{}
-
-	ImageAnalysis *PrincipalAxesDD::create_image_analysis( SHARED_PTR<ImageInterface<float> > img ) const {
-		return img ? new ImageAnalysis(img) : 0;
-	}
 
 	void PrincipalAxesDD::operator=(const PrincipalAxesDD &)
 	{}

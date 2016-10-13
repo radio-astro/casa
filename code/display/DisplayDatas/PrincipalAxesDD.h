@@ -364,15 +364,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (Required) copy assignment.
 		void operator=(const PrincipalAxesDD &other);
 
-		// ImageAnalysis class does not support complex images...
-		// so these functions are used to allow only the
-		// LatticePADisplayData<T> template to only return an
-		// image analysis object for the non-complex version...
-		ImageAnalysis *create_image_analysis( SHARED_PTR<casacore::ImageInterface<float> > ) const;
-		ImageAnalysis *create_image_analysis( SHARED_PTR<casacore::ImageInterface<casacore::Complex> > ) const {
-			return 0;
-		}
-
 		std::string error_string;
 
 	private:

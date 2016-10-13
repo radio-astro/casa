@@ -45,7 +45,6 @@
 #include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/conversion/ConverterIntensity.h>
 
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/PixelValueManipulatorData.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>

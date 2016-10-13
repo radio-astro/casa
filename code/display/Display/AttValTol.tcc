@@ -94,14 +94,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (thisValue.nelements() != otherValue.nelements()) return false;
 			//if( !allTrue(nearAbs(thisValue, otherValue, itsValueTolerance))) return false;
 			for (casacore::uInt i = 0; i < thisValue.nelements(); i++) {
-				if (abs(thisValue(i) - otherValue(i)) > itsValueTolerance) return false;
+				if ( (T) abs(thisValue(i) - otherValue(i)) > itsValueTolerance) return false;
 			}
 			return true;
 		} else {
 			//if(anyTrue(nearAbs(thisValue, otherValue, itsValueTolerance))) return true;
 			for (casacore::uInt i = 0; i < thisValue.nelements(); i++) {
 				for (casacore::uInt j = 0; j < otherValue.nelements(); j++) {
-					if (abs(thisValue(i) - otherValue(j)) <= itsValueTolerance) return true;
+					if ( (T) abs(thisValue(i) - otherValue(j)) <= itsValueTolerance) return true;
 				}
 			}
 		}

@@ -27,6 +27,7 @@
 #define IMAGE_SLICE_QO_H_
 
 #include <display/Slicer/ImageSlice.ui.h>
+#include <casacore/images/Images/ImageInterface.h>
 #include <display/Slicer/SliceStatisticsFactory.h>
 #include <display/Slicer/SliceStatistics.h>
 #include <display/Slicer/SliceWorker.h>
@@ -69,7 +70,7 @@ namespace casa {
 		bool isSelected() const;
 		void setSelected( bool selected );
 		void setInterpolationMethod( const casacore::String& method );
-		void setImageAnalysis( ImageAnalysis* analysis );
+		void setImage( std::shared_ptr<casacore::ImageInterface<float> > img );
 		void setUseViewerColors( bool useViewerColors );
 		void setPolylineColorUnit( bool polyline );
 		void setPlotPreferences( int curveWidth, int markerSize );

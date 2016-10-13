@@ -26,6 +26,7 @@
 #ifndef SLICER_WORKER_H_
 #define SLICER_WORKER_H_
 
+#include <casacore/images/Images/ImageInterface.h>
 #include <casa/Arrays/Vector.h>
 #include <QVector>
 #include <QTextStream>
@@ -49,7 +50,7 @@ namespace casa {
 
 	public:
 		SliceWorker( int id );
-		void setImageAnalysis( ImageAnalysis* analysis );
+		void setImage( std::shared_ptr<casacore::ImageInterface<float> > img );
 		void setVertices( const QList<int>& xValues, const QList<int>& yValues,
 		                  const QList<double>& xValuesWorld, const QList<double>& yValuesWorld);
 		void setAxes( const casacore::Vector<casacore::Int>& axes );
@@ -77,7 +78,7 @@ namespace casa {
 		QVector<double> getValues( int index, const QVector<double>& pixels, SliceStatistics* statistic ) const;
 		void computeSlice( const casacore::Vector<double>& xValues,
 		                   const casacore::Vector<double>& yValues );
-		ImageAnalysis* imageAnalysis;
+        std::shared_ptr<casacore::ImageInterface<float> > image;
 		QList<casacore::Record*> sliceResults;
 		casacore::Vector<casacore::Double> verticesX;
 		casacore::Vector<casacore::Double> verticesY;

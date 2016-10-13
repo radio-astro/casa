@@ -24,7 +24,6 @@
 //#
 
 #include "SliceWorker.h"
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <display/Slicer/SliceStatistics.h>
 #include <casa/Containers/Record.h>
@@ -46,8 +45,8 @@ namespace casa {
 
 
 
-	void SliceWorker::setImageAnalysis( ImageAnalysis* analysis ) {
-		imageAnalysis = analysis;
+	void SliceWorker::setImage( std::shared_ptr<casacore::ImageInterface<float> > img ) {
+		image = img;
 	}
 
 	void SliceWorker::setVertices( const QList<int>& xValues,
@@ -104,7 +103,7 @@ namespace casa {
 
 
 	void SliceWorker::compute() {
-		Assert( imageAnalysis != NULL );
+		Assert( image );
 		try {
 			clearResults();
 
@@ -127,30 +126,17 @@ namespace casa {
 
 	void SliceWorker::computeSlice( const Vector<double>& xValues, const Vector<double>& yValues ) {
 		Record* sliceResult = nullptr;
-        auto image = imageAnalysis->getImage();
 		if ( method.length() > 0 ) {
-            /*
-            sliceResult = imageAnalysis-> getslice(xValues, yValues,
-			                                       axes, coords, sampleCount, method);
-            */
             sliceResult = PixelValueManipulator<Float>::getSlice(
                 image, xValues, yValues, axes, coords, sampleCount, method
             );
 		} else if ( sampleCount > 0 ) {
-            /*
-			sliceResult = imageAnalysis-> getslice(xValues, yValues,
-			                                       axes, coords, sampleCount );
-            */
             sliceResult = PixelValueManipulator<Float>::getSlice(
                 image, xValues, yValues, axes, coords, sampleCount
             );
  
 		} else {
 			//Use all default arguments
-            /*
-			sliceResult = imageAnalysis-> getslice(xValues, yValues,
-			                                       axes, coords );
-            */
 	        sliceResult = PixelValueManipulator<Float>::getSlice(
                 image, xValues, yValues, axes, coords
             );
