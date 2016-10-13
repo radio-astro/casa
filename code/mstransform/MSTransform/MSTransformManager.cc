@@ -2168,21 +2168,23 @@ void MSTransformManager::initDataSelectionParams()
 			mssel.setSpwExpr("*");
 		}
 
-		Vector<Int> spwList = mssel.getSpwList(inputMs_p);
+		//Vector<Int> spwList = mssel.getSpwList(inputMs_p);
+		Matrix<Int> spwchan = mssel.getChanList(inputMs_p);
 
 		// jagonzal (CAS-7149): Have to remove duplicates: With multiple pols per SPW
 		// each SPWId appears various (see times test_chanavg_spw_with_diff_pol_shape)
 		vector<Int> noDupSpwList;
-		for (uInt idx=0;idx < spwList.size(); idx++)
+		for (uInt idx=0;idx < spwchan.nrow(); idx++)
 		{
-			if (find(noDupSpwList.begin(),noDupSpwList.end(),spwList(idx)) == noDupSpwList.end())
+			if (find(noDupSpwList.begin(),noDupSpwList.end(),spwchan(idx,0)) == noDupSpwList.end())
 			{
-				noDupSpwList.push_back(spwList(idx));
+				noDupSpwList.push_back(spwchan(idx,0));
 			}
 		}
 
-		spwList.resize(noDupSpwList.size());
-		for (uInt idx=0;idx < noDupSpwList.size(); idx++) spwList(idx) = noDupSpwList[idx];
+		//spwList.resize(noDupSpwList.size());
+		//for (uInt idx=0;idx < noDupSpwList.size(); idx++) spwList(idx) = noDupSpwList[idx];
+		Vector<Int> spwList = noDupSpwList;
 
 		if (freqbin_p.size() == 1)
 		{
