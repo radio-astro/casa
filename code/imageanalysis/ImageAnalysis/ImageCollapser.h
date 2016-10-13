@@ -119,10 +119,7 @@ private:
         const CoordinateSystem& outCoords
     ) const;
 
-    void _doOtherStats(
-        TempImage<T>& tmpIm, SPCIIT subImage,
-        const IPosition& shape, const IPosition& outShape
-    ) const;
+    void _doOtherStats(TempImage<T>& tmpIm, SPCIIT subImage) const;
 
     LatticeStatsBase::StatisticsTypes _getStatsType() const;
 
