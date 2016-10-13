@@ -52,10 +52,8 @@ template<class T> ImageCollapser<T>::ImageCollapser(
 ) : ImageTask<T>(
         image, "", regionRec, "", "", "",
         maskInp, outname, overwrite
-    ),
-    _invertAxesSelection(invertAxesSelection),
-    _axes(axes), _aggType(ImageCollapserData::UNKNOWN)
-{
+    ), _invertAxesSelection(invertAxesSelection),
+    _axes(axes), _aggType(ImageCollapserData::UNKNOWN) {
     _aggType = ImageCollapserData::aggregateType(aggString);
     this->_construct();
     _finishConstruction();
@@ -66,13 +64,9 @@ template<class T> ImageCollapser<T>::ImageCollapser(
     const casacore::IPosition & axes, const casacore::Bool invertAxesSelection,
     const ImageCollapserData::AggregateType aggregateType,
     const casacore::String & outname, const casacore::Bool overwrite
-) : ImageTask<T>(
-        image, "", 0, "", "", "",
-        "", outname, overwrite
-    ),
+) : ImageTask<T>(image, "", 0, "", "", "", "", outname, overwrite),
     _invertAxesSelection(invertAxesSelection),
-    _axes(axes), _aggType(aggregateType)
-{
+    _axes(axes), _aggType(aggregateType) {
     ThrowIf (
         _aggType == ImageCollapserData::UNKNOWN,
         "UNKNOWN aggregateType not allowed"
@@ -85,12 +79,11 @@ template<class T> ImageCollapser<T>::ImageCollapser(
     _finishConstruction();
 }
 
-template<class T> SPIIT ImageCollapser<T>::collapse() const
-{
+template<class T> SPIIT ImageCollapser<T>::collapse() const {
     SPCIIT subImage = SubImageFactory<T>::createSubImageRO(
-                          *this->_getImage(), *this->_getRegion(), this->_getMask(),
-                          this->_getLog().get(), casacore::AxesSpecifier(), this->_getStretch()
-                      );
+        *this->_getImage(), *this->_getRegion(), this->_getMask(),
+        this->_getLog().get(), casacore::AxesSpecifier(), this->_getStretch()
+    );
     *this->_getLog() << casacore::LogOrigin(getClass(), __func__);
     ThrowIf(
         ImageMask::isAllMaskFalse(*subImage),
@@ -101,27 +94,6 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const
     casacore::IPosition inShape = subImage->shape();
     if (_aggType == ImageCollapserData::FLUX) {
         _checkFlux(subImage);
-        /*
-        casacore::String cant = " Cannot do flux density calculation";
-        ThrowIf(
-            ! hasDir,
-            "Image has no direction coordinate." + cant
-        );
-        ThrowIf(
-            subImage->units().getName().contains("beam") && ! subImage->imageInfo().hasBeam(),
-            "Image has no beam." + cant
-        );
-        casacore::Vector<casacore::Int> dirAxes = outCoords.directionAxesNumbers();
-        for (casacore::uInt i=0; i<_axes.nelements(); i++) {
-            casacore::Int axis = _axes[i];
-            ThrowIf(
-                ! anyTrue(dirAxes == axis)
-                && inShape[axis] > 1,
-                "Specified axis " + casacore::String::toString(axis)
-                + " is not a direction axis but has length > 1." + cant
-            );
-        }
-        */
     }
     // Set the compressed axis reference pixel and reference value
     casacore::Vector<casacore::Double> blc, trc;
@@ -158,10 +130,12 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const
     if (_aggType == ImageCollapserData::ZERO) {
         casacore::Array<T> zeros(outShape, 0.0);
         tmpIm.put(zeros);
-    } else if (_aggType == ImageCollapserData::MEDIAN) {
+    }
+    else if (_aggType == ImageCollapserData::MEDIAN) {
         _doMedian(subImage, tmpIm);
-    } else {
-        _doOtherStats(tmpIm, subImage, shape, outShape);
+    }
+    else {
+        _doOtherStats(tmpIm, subImage);
     }
     casacore::Bool copied = subImage->imageInfo().hasMultipleBeams()
                   ? _doMultipleBeams(tmpIm, subImage, hasDir, outCoords)
@@ -176,7 +150,8 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const
         if (sbunit.contains("K")) {
             casacore::String areaUnit = "arcsec2";
             unit = sbunit + "." + areaUnit;
-        } else {
+        }
+        else {
             unit = "Jy";
             if (sbunit.contains("/beam")) {
                 casacore::uInt iBeam = sbunit.find("/beam");
@@ -190,8 +165,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const
 
 template<class T> void ImageCollapser<T>::_checkFlux(
     SPCIIT subImage
-) const
-{
+) const {
     casacore::String cant = " Cannot do flux density calculation";
     const casacore::CoordinateSystem & outCoords = subImage->coordinates();
     ThrowIf(
@@ -217,8 +191,7 @@ template<class T> void ImageCollapser<T>::_checkFlux(
 template<class T> casacore::Bool ImageCollapser<T>::_doMultipleBeams(
     casacore::TempImage<T>& tmpIm, SPCIIT subImage, casacore::Bool hasDir,
     const casacore::CoordinateSystem & outCoords
-) const
-{
+) const {
     casacore::Int naxes = _axes.size();
     casacore::Bool dirAxesOnlyCollapse = hasDir && naxes == 2;
     if (dirAxesOnlyCollapse) {
@@ -232,7 +205,7 @@ template<class T> casacore::Bool ImageCollapser<T>::_doMultipleBeams(
         casacore::Int polAxis = outCoords.polarizationAxisNumber(false);
         dirAxesOnlyCollapse = true;
         casacore::IPosition shape = subImage->shape();
-        for (casacore::Int i = 0; i < naxes; i++) {
+        for (casacore::Int i = 0; i < naxes; ++i) {
             casacore::Int axis = _axes[i];
             if (
                 (axis == specAxis || axis == polAxis)
@@ -245,14 +218,14 @@ template<class T> casacore::Bool ImageCollapser<T>::_doMultipleBeams(
     }
     if (! dirAxesOnlyCollapse) {
         *this->_getLog() << casacore::LogIO::WARN << "Input image has per plane beams "
-                         << "but the collapse is not done exclusively along the direction axes. "
-                         << "The output image will arbitrarily have a single beam which "
-                         << "is the first beam available in the subimage."
-                         << "Thus, the image planes will not be convolved to a common "
-                         << "restoring beam before collapsing. If, however, this is desired, "
-                         << "then run the task imsmooth or the tool method ia.convolve2d() first, "
-                         << "and use the output image of that as the input for collapsing."
-                         << casacore::LogIO::POST;
+            << "but the collapse is not done exclusively along the direction axes. "
+            << "The output image will arbitrarily have a single beam which "
+            << "is the first beam available in the subimage."
+            << "Thus, the image planes will not be convolved to a common "
+            << "restoring beam before collapsing. If, however, this is desired, "
+            << "then run the task imsmooth or the tool method ia.convolve2d() first, "
+            << "and use the output image of that as the input for collapsing."
+            << casacore::LogIO::POST;
         casacore::ImageUtilities::copyMiscellaneous(tmpIm, *subImage, false);
         casacore::ImageInfo info = subImage->imageInfo();
         vector<casacore::Vector<casacore::Quantity> > out;
@@ -266,71 +239,34 @@ template<class T> casacore::Bool ImageCollapser<T>::_doMultipleBeams(
 }
 
 template<class T> void ImageCollapser<T>::_doOtherStats(
-    casacore::TempImage<T>& tmpIm, SPCIIT subImage,
-    const casacore::IPosition & shape, const casacore::IPosition & outShape
-) const
-{
-    casacore::Bool lowPerf = _aggType == ImageCollapserData::FLUX;
-    if (! lowPerf) {
-        lowPerf = ! ImageMask::ImageMask::isAllMaskTrue(*subImage);
-    }
+    casacore::TempImage<T>& tmpIm, SPCIIT subImage
+) const {
     T npixPerBeam = 1;
     if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
         casacore::ImageInfo info = subImage->imageInfo();
         if (! info.hasBeam()) {
             *this->_getLog() << casacore::LogIO::WARN
-                             << "Image has no beam, will use sqrtsum method"
-                             << casacore::LogIO::POST;
-        } else if (info.hasMultipleBeams()) {
+                << "Image has no beam, will use sqrtsum method"
+                << casacore::LogIO::POST;
+        }
+        else if (info.hasMultipleBeams()) {
             *this->_getLog() << casacore::LogIO::WARN
-                             << "Function sqrtsum_npix_beam does not support multiple beams, will"
-                             << "use sqrtsum method instead"
-                             << casacore::LogIO::POST;
-        } else {
+                << "Function sqrtsum_npix_beam does not support multiple beams, will"
+                << "use sqrtsum method instead"
+                << casacore::LogIO::POST;
+        }
+        else {
             npixPerBeam = info.getBeamAreaInPixels(
-                              -1, -1, subImage->coordinates().directionCoordinate()
-                          );
+                -1, -1, subImage->coordinates().directionCoordinate()
+            );
         }
     }
-    if (lowPerf) {
-        _doLowPerf(tmpIm, subImage, npixPerBeam);
-    } else {
-        // no mask, can use higher performance method
-        T (*function)(const casacore::Array<T>&) = _getFuncMap().find(_aggType)->second;
-        // FIXME this can exhaust memory for large images
-        casacore::Array<T> data = subImage->get(false);
-        casacore::Int64 nelements = outShape.product();
-        for (casacore::uInt i = 0; i < nelements; i++) {
-            casacore::IPosition start = toIPositionInArray(i, outShape);
-            casacore::IPosition end = start + shape - 1;
-            casacore::Slicer s(start, end, casacore::Slicer::endIsLast);
-            tmpIm.putAt(function(data(s)), start);
-        }
-        if (
-            _aggType == ImageCollapserData::SQRTSUM
-            || _aggType == ImageCollapserData::SQRTSUM_NPIX
-            || _aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM
-        ) {
-            // FIXME memory check
-            casacore::Array<T> arr = tmpIm.get();
-            _zeroNegatives(arr);
-            arr = sqrt(arr);
-            if (_aggType == ImageCollapserData::SQRTSUM_NPIX) {
-                T npts = subImage->shape().product() / nelements;
-                arr /= npts;
-
-            } else if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
-                arr /= npixPerBeam;
-            }
-            tmpIm.put(arr);
-        }
-    }
+    _doLowPerf(tmpIm, subImage, npixPerBeam);
 }
 
 template<class T> void ImageCollapser<T>::_doLowPerf(
     casacore::TempImage<T>& tmpIm, SPCIIT subImage, T npixPerBeam
-) const
-{
+) const {
     // flux or mask with one or more false values, must use lower performance methods
     casacore::LatticeStatsBase::StatisticsTypes lattStatType = _getStatsType();
     casacore::Array<T> data;
@@ -339,9 +275,7 @@ template<class T> void ImageCollapser<T>::_doLowPerf(
         casacore::ImageStatistics<T> stats(*subImage, false);
         stats.setAxes(_axes.asVector());
         if (
-            ! stats.getConvertedStatistic(
-                data, lattStatType, false
-            )
+            ! stats.getConvertedStatistic(data, lattStatType, false)
         ) {
             ostringstream oss;
             oss << "Unable to calculate flux density: "
@@ -350,7 +284,8 @@ template<class T> void ImageCollapser<T>::_doLowPerf(
         }
         mask.resize(data.shape());
         mask.set(true);
-    } else {
+    }
+    else {
         casacore::LatticeMathUtil::collapse(
             data, mask, _axes, *subImage, false,
             true, true, lattStatType
@@ -369,13 +304,14 @@ template<class T> void ImageCollapser<T>::_doLowPerf(
                     true, true, casacore::LatticeStatsBase::NPTS
                 );
                 data /= npts;
-            } else if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
+            }
+            else if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
                 data /= npixPerBeam;
             }
         }
     }
     casacore::Array<T> dataCopy = (_axes.size() <= 1)
-                        ? data : data.addDegenerate(_axes.size() - 1);
+        ? data : data.addDegenerate(_axes.size() - 1);
     casacore::IPosition newOrder(tmpIm.ndim(), -1);
     casacore::uInt nAltered = _axes.size();
     casacore::uInt nUnaltered = tmpIm.ndim() - nAltered;
@@ -397,16 +333,15 @@ template<class T> void ImageCollapser<T>::_doLowPerf(
     tmpIm.put(reorderArray(dataCopy, newOrder));
     if (! allTrue(mask)) {
         casacore::Array<casacore::Bool> maskCopy = (
-                                   _axes.size() <= 1) ? mask
-                               : mask.addDegenerate(_axes.size() - 1
-                                                   );
+            _axes.size() <= 1) ? mask
+                : mask.addDegenerate(_axes.size() - 1
+        );
         casacore::Array<casacore::Bool> mCopy = reorderArray(maskCopy, newOrder);
         _attachOutputMask(tmpIm, mCopy);
     }
 }
 
-template<class T> casacore::LatticeStatsBase::StatisticsTypes ImageCollapser<T>::_getStatsType() const
-{
+template<class T> casacore::LatticeStatsBase::StatisticsTypes ImageCollapser<T>::_getStatsType() const {
     casacore::LatticeStatsBase::StatisticsTypes lattStatType = casacore::LatticeStatsBase::NACCUM;
     switch (_aggType) {
     case ImageCollapserData::FLUX:
@@ -451,9 +386,7 @@ template<class T> casacore::LatticeStatsBase::StatisticsTypes ImageCollapser<T>:
     return lattStatType;
 }
 
-
-template<class T> void ImageCollapser<T>::_zeroNegatives(casacore::Array<T>& arr)
-{
+template<class T> void ImageCollapser<T>::_zeroNegatives(casacore::Array<T>& arr) {
     typename casacore::Array<T>::iterator iter = arr.begin();
     if (isComplex(whatType(&(*iter))) || allGE(arr, (T)0)) {
         return;
@@ -467,8 +400,7 @@ template<class T> void ImageCollapser<T>::_zeroNegatives(casacore::Array<T>& arr
     }
 }
 
-template<class T> void ImageCollapser<T>::_finishConstruction()
-{
+template<class T> void ImageCollapser<T>::_finishConstruction() {
     for (
         casacore::IPosition::const_iterator iter = _axes.begin();
         iter != _axes.end(); iter++
@@ -483,8 +415,7 @@ template<class T> void ImageCollapser<T>::_finishConstruction()
     _invert();
 }
 
-template<class T> void ImageCollapser<T>::_invert()
-{
+template<class T> void ImageCollapser<T>::_invert() {
     if (_invertAxesSelection) {
         casacore::IPosition x = casacore::IPosition::otherAxes(this->_getImage()->ndim(), _axes);
         _axes.resize(x.size());
@@ -494,11 +425,10 @@ template<class T> void ImageCollapser<T>::_invert()
 
 template<class T> void ImageCollapser<T>::_doMedian(
     SPCIIT image, casacore::TempImage<T>& outImage
-) const
-{
+) const {
     casacore::IPosition cursorShape(image->ndim(), 1);
-    for (casacore::uInt i = 0; i < cursorShape.size(); i++) {
-        for (casacore::uInt j = 0; j < _axes.size(); j++) {
+    for (casacore::uInt i = 0; i < cursorShape.size(); ++i) {
+        for (casacore::uInt j = 0; j < _axes.size(); ++j) {
             if (_axes[j] == i) {
                 cursorShape[i] = image->shape()[i];
                 break;
@@ -506,30 +436,23 @@ template<class T> void ImageCollapser<T>::_doMedian(
         }
     }
     casacore::LatticeStepper stepper(image->shape(), cursorShape);
-    // FIXME check memory
-    casacore::Array<T> ary = image->get(false);
-    // FIXME check memory
-    casacore::Array<casacore::Bool> mask = image->getMask();
-    if (image->hasPixelMask()) {
-        // FIXME check memory
-        mask = mask && image->pixelMask().get(false);
-    }
     std::unique_ptr<casacore::Array<casacore::Bool> > outMask;
-    casacore::Bool hasMaskedPixels = ! allTrue(mask);
+    casacore::Bool hasMaskedPixels = ! ImageMask::isAllMaskTrue(*image);
     for (stepper.reset(); !stepper.atEnd(); stepper++) {
-        casacore::Slicer slicer(stepper.position(), stepper.endPosition(), casacore::Slicer::endIsLast);
-        vector<T> data = ary(slicer).tovector();
+        casacore::Slicer slicer(
+            stepper.position(), stepper.endPosition(), casacore::Slicer::endIsLast
+        );
+        vector<T> data = image->getSlice(slicer).tovector();
         if (hasMaskedPixels) {
-            casacore::Vector<casacore::Bool> maskSlice(mask(slicer).tovector());
+            casacore::Vector<casacore::Bool> maskSlice(image->getMaskSlice(slicer).tovector());
             if (! anyTrue(maskSlice)) {
                 if (! outMask) {
                     outMask.reset(new casacore::Array<casacore::Bool>(outImage.shape(), true));
                 }
                 (*outMask)(stepper.position()) = false;
-                //kk.resize(0);
                 data.resize(0);
-            } else if (! allTrue(maskSlice)) {
-                //vector<T> data = kk.tovector();
+            }
+            else if (! allTrue(maskSlice)) {
                 typename vector<T>::iterator diter = data.begin();
                 casacore::Vector<casacore::Bool>::iterator miter = maskSlice.begin();
                 while (diter != data.end()) {
@@ -538,10 +461,11 @@ template<class T> void ImageCollapser<T>::_doMedian(
                         if (diter == data.end()) {
                             break;
                         }
-                    } else {
-                        diter++;
                     }
-                    miter++;
+                    else {
+                        ++diter;
+                    }
+                    ++miter;
                 }
             }
         }
@@ -550,16 +474,13 @@ template<class T> void ImageCollapser<T>::_doMedian(
             sort(data.begin(), data.end());
         }
         outImage.putAt(
-            s == 0
-            ? 0
-            : s % 2 == 1
-            ? data[s / 2]
-            : (data[s / 2] + data[s / 2 - 1]) / 2,
+            s == 0 ? 0
+              : s % 2 == 1 ? data[s / 2]
+                : (data[s / 2] + data[s / 2 - 1]) / 2,
             stepper.position()
         );
     }
-    if (outMask.get() != 0) {
-        // FIXME check memory
+    if (outMask) {
         _attachOutputMask(outImage, *outMask.get());
     }
 }
@@ -567,21 +488,22 @@ template<class T> void ImageCollapser<T>::_doMedian(
 template<class T> void ImageCollapser<T>::_attachOutputMask(
     casacore::TempImage<T>& outImage,
     const casacore::Array<casacore::Bool>& outMask
-) const
-{
+) const {
     if (this->_getOutname().empty()) {
         outImage.attachMask(casacore::ArrayLattice<casacore::Bool>(outMask));
-    } else {
+    }
+    else {
         casacore::String maskName = outImage.makeUniqueRegionName(
-                              casacore::String("mask"), 0
-                          );
+            casacore::String("mask"), 0
+        );
         outImage.makeMask(maskName, true, true, true, true);
         (&outImage.pixelMask())->put(outMask);
     }
 }
 
-template<class T> const map<casacore::uInt, T ( *)(const casacore::Array<T>&)>& ImageCollapser<T>::_getFuncMap()
-{
+template<class T>
+const map<casacore::uInt, T ( *)(const casacore::Array<T>&)>&
+ImageCollapser<T>::_getFuncMap() {
     if (_funcMap.size() == 0) {
         _funcMap[(casacore::uInt)ImageCollapserData::MAX] = casacore::max;
         _funcMap[(casacore::uInt)ImageCollapserData::MEAN] = casacore::mean;
