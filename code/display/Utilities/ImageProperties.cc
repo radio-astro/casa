@@ -98,11 +98,11 @@ namespace casa {
 			std::vector<std::string> result;
 			if (! beam.isNull()) {
 				char buf[512];
-				sprintf( buf,"%.2f\"", beam.getMajor("arcsec"));
+				sprintf( buf,"%.3f\"", beam.getMajor("arcsec"));
 				result.push_back(buf);
-				sprintf( buf,"%.2f\"", beam.getMinor("arcsec") );
+				sprintf( buf,"%.3f\"", beam.getMinor("arcsec") );
 				result.push_back(buf);
-				sprintf( buf,"%.2f%c", beam.getPA("deg", true), 0x00B0 );
+				sprintf( buf,"%.3f%c", beam.getPA("deg", true), 0x00B0 );
 				result.push_back(buf);
 			}
 			return result;
