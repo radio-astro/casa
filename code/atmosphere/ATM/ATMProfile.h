@@ -268,7 +268,7 @@ public:
   void setLayerThickness(unsigned int i, const Length &layerThickness);
   //void setLayerThickness(const Length &layerThickness, unsigned int i) { setLayerThickness(i, layerThickness); }
 
-  /** casacore::Function to retrieve Average Water vapor density in a given layer in kg/m**3
+  /** Function to retrieve Average Water vapor density in a given layer in kg/m**3
    *  (thickness of layers in ThicknessProfile)
    * @exception AtmException if the layer is not valid.
    */
@@ -295,7 +295,7 @@ public:
   void setLayerPressure(unsigned int i, const Pressure &layerPressure) { v_layerPressure_[i] = layerPressure.get("mb"); }
   //void setLayerPressure(const Pressure &layerPressure, unsigned int i) { setLayerPressure(i, layerPressure); }
 
-  /** casacore::Function to retrieve CO density in a given layer (thickness of layers
+  /** Function to retrieve CO density in a given layer (thickness of layers
    *  in ThicknessProfile)  */
   NumberDensity getLayerCO(unsigned int i) const { return NumberDensity(v_layerCO_[i], "m**-3"); }
   /** Setter for the average number density of CO in layer i in molecules/m**3 (allows to touch one layer each
@@ -303,7 +303,7 @@ public:
   void setLayerCO(unsigned int i, const NumberDensity &layerCO) { v_layerCO_[i] = layerCO.get("m**-3"); }
   //void setLayerCO(const NumberDensity &layerCO, unsigned int i) { setLayerCO(i, layerCO); }
 
-  /** casacore::Function to retrieve O3 density in a given layer (thickness of layers
+  /** Function to retrieve O3 density in a given layer (thickness of layers
    *  in ThicknessProfile) */
   NumberDensity getLayerO3(unsigned int i) const { return NumberDensity(v_layerO3_[i], "m**-3"); }
   /** Setter for the average number density of O3 in layer i in molecules/m**3 (allows to touch one layer each
@@ -311,7 +311,7 @@ public:
   void setLayerO3(unsigned int i, const NumberDensity &layerO3) { v_layerO3_[i] = layerO3.get("m**-3"); }
   //void setLayerO3(const NumberDensity &layerO3, unsigned int i) { setLayerO3(i, layerO3); }
 
-  /** casacore::Function to retrieve N2O density in a given layer (thickness of layers
+  /** Function to retrieve N2O density in a given layer (thickness of layers
    *  in ThicknessProfile)   */
   NumberDensity getLayerN2O(unsigned int i) const { return NumberDensity(v_layerN2O_[i], "m**-3"); }
   /** Setter for the average number density of N2O in layer i in molecules/m**3 (allows to touch one layer each
@@ -319,7 +319,7 @@ public:
   void setLayerN2O(unsigned int i, const NumberDensity &layerN2O) { v_layerN2O_[i] = layerN2O.get("m**-3"); }
   //void setLayerN2O(const NumberDensity &layerN2O, unsigned int i) { setLayerN2O(i, layerN2O); }
 
-  /** casacore::Function to retrieve NO2 density in a given layer (thickness of layers
+  /** Function to retrieve NO2 density in a given layer (thickness of layers
    *  in ThicknessProfile)   */
   NumberDensity getLayerNO2(unsigned int i) const { return NumberDensity(v_layerNO2_[i], "m**-3"); }
   /** Setter for the average number density of NO2 in layer i in molecules/m**3 (allows to touch one layer each
@@ -327,7 +327,7 @@ public:
   void setLayerNO2(unsigned int i, const NumberDensity &layerNO2) { v_layerNO2_[i] = layerNO2.get("m**-3"); }
   //void setLayerNO2(const NumberDensity &layerNO2, unsigned int i) { setLayerNO2(i, layerNO2); }
 
-  /** casacore::Function to retrieve SO2 density in a given layer (thickness of layers
+  /** Function to retrieve SO2 density in a given layer (thickness of layers
    *  in ThicknessProfile)   */
   NumberDensity getLayerSO2(unsigned int i) const { return NumberDensity(v_layerSO2_[i], "m**-3"); }
   /** Setter for the average number density of SO2 in layer i in molecules/m**3 (allows to touch one layer each

@@ -229,17 +229,17 @@ public:
     return InverseLength(imag((vv_N_H2OContPtr_[j]->at(nl))), "m-1");
   }
 
-  /** casacore::Function to retrieve O2 lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve O2 lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
   InverseLength getAbsO2Lines(unsigned int nl) const
   {
     return InverseLength(imag((vv_N_O2LinesPtr_[0]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve O2 lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve O2 lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
   InverseLength getAbsO2Lines(unsigned int nf, unsigned int nl) const
   {
     return InverseLength(imag((vv_N_O2LinesPtr_[nf]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve O2 lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
+  /** Function to retrieve O2 lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
   InverseLength getAbsO2Lines(unsigned int spwid,
                               unsigned int nf,
                               unsigned int nl) const
@@ -248,17 +248,17 @@ public:
     return InverseLength(imag((vv_N_O2LinesPtr_[j]->at(nl))), "m-1");
   }
 
-  /** casacore::Function to retrieve Dry continuum Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve Dry continuum Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
   InverseLength getAbsDryCont(unsigned int nl) const
   {
     return InverseLength(imag((vv_N_DryContPtr_[0]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve Dry continuum Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve Dry continuum Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
   InverseLength getAbsDryCont(unsigned int nf, unsigned int nl) const
   {
     return InverseLength(imag((vv_N_DryContPtr_[nf]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve Dry continuum Absorption Coefficient at layer nl, spectral window spwid and channel nf */
+  /** Function to retrieve Dry continuum Absorption Coefficient at layer nl, spectral window spwid and channel nf */
   InverseLength getAbsDryCont(unsigned int spwid,
                               unsigned int nf,
                               unsigned int nl) const
@@ -267,17 +267,17 @@ public:
     return InverseLength(imag((vv_N_DryContPtr_[j]->at(nl))), "m-1");
   }
 
-  /** casacore::Function to retrieve O3 lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve O3 lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
   InverseLength getAbsO3Lines(unsigned int nl) const
   {
     return InverseLength(imag((vv_N_O3LinesPtr_[0]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve O3 lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve O3 lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
   InverseLength getAbsO3Lines(unsigned int nf, unsigned int nl) const
   {
     return InverseLength(imag((vv_N_O3LinesPtr_[nf]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve O3 lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
+  /** Function to retrieve O3 lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
   InverseLength getAbsO3Lines(unsigned int spwid,
                               unsigned int nf,
                               unsigned int nl) const
@@ -286,17 +286,17 @@ public:
     return InverseLength(imag((vv_N_O3LinesPtr_[j]->at(nl))), "m-1");
   }
 
-  /** casacore::Function to retrieve CO lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve CO lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
   InverseLength getAbsCOLines(unsigned int nl) const
   {
     return InverseLength(imag((vv_N_COLinesPtr_[0]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve CO lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve CO lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
   InverseLength getAbsCOLines(unsigned int nf, unsigned int nl) const
   {
     return InverseLength(imag((vv_N_COLinesPtr_[nf]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve CO lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
+  /** Function to retrieve CO lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
   InverseLength getAbsCOLines(unsigned int spwid,
                               unsigned int nf,
                               unsigned int nl) const
@@ -307,17 +307,17 @@ public:
 
 
 
-  /** casacore::Function to retrieve N2O lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve N2O lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
   InverseLength getAbsN2OLines(unsigned int nl) const
   {
     return InverseLength(imag((vv_N_N2OLinesPtr_[0]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve N2O lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve N2O lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
   InverseLength getAbsN2OLines(unsigned int nf, unsigned int nl) const
   {
     return InverseLength(imag((vv_N_N2OLinesPtr_[nf]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve N2O lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
+  /** Function to retrieve N2O lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
   InverseLength getAbsN2OLines(unsigned int spwid,
                                unsigned int nf,
                                unsigned int nl) const
@@ -326,17 +326,17 @@ public:
     return InverseLength(imag((vv_N_N2OLinesPtr_[j]->at(nl))), "m-1");
   }
 
-  /** casacore::Function to retrieve NO2 lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve NO2 lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
   InverseLength getAbsNO2Lines(unsigned int nl) const
   {
     return InverseLength(imag((vv_N_NO2LinesPtr_[0]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve NO2 lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve NO2 lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
   InverseLength getAbsNO2Lines(unsigned int nf, unsigned int nl) const
   {
     return InverseLength(imag((vv_N_NO2LinesPtr_[nf]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve NO2 lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
+  /** Function to retrieve NO2 lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
   InverseLength getAbsNO2Lines(unsigned int spwid,
                                unsigned int nf,
                                unsigned int nl) const
@@ -346,17 +346,17 @@ public:
   }
 
 
-  /** casacore::Function to retrieve SO2 lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve SO2 lines Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
   InverseLength getAbsSO2Lines(unsigned int nl) const
   {
     return InverseLength(imag((vv_N_SO2LinesPtr_[0]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve SO2 lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve SO2 lines Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
   InverseLength getAbsSO2Lines(unsigned int nf, unsigned int nl) const
   {
     return InverseLength(imag((vv_N_SO2LinesPtr_[nf]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve SO2 lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
+  /** Function to retrieve SO2 lines Absorption Coefficient at layer nl, spectral window spwid and channel nf */
   InverseLength getAbsSO2Lines(unsigned int spwid,
                                unsigned int nf,
                                unsigned int nl) const
@@ -369,12 +369,12 @@ public:
 
 
 
-  /** casacore::Function to retrieve total Dry Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve total Dry Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
   InverseLength getAbsTotalDry(unsigned int nl) const
   {
     return getAbsTotalDry(nl, 0);
   }
-  /** casacore::Function to retrieve total Dry Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve total Dry Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
   InverseLength getAbsTotalDry(unsigned int nf, unsigned int nl) const
   {
     return InverseLength(imag(
@@ -383,7 +383,7 @@ public:
 			      + vv_N_COLinesPtr_[nf]->at(nl) + vv_N_N2OLinesPtr_[nf]->at(nl)
 			      + vv_N_NO2LinesPtr_[nf]->at(nl) + vv_N_SO2LinesPtr_[nf]->at(nl)), "m-1");
   }
-  /** casacore::Function to retrieve total Dry Absorption Coefficient at layer nl, spectral window spwid and channel nf */
+  /** Function to retrieve total Dry Absorption Coefficient at layer nl, spectral window spwid and channel nf */
   InverseLength getAbsTotalDry(unsigned int spwid,
                                unsigned int nf,
                                unsigned int nl) const
@@ -396,18 +396,18 @@ public:
 			      + vv_N_NO2LinesPtr_[j]->at(nl) + vv_N_SO2LinesPtr_[j]->at(nl)), "m-1");
   }
 
-  /** casacore::Function to retrieve total Wet Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve total Wet Absorption Coefficient at layer nl, for single frequency RefractiveIndexProfile object */
   InverseLength getAbsTotalWet(unsigned int nl) const
   {
     return getAbsTotalWet(nl, 0);
   }
-  /** casacore::Function to retrieve total Wet Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve total Wet Absorption Coefficient at layer nl and frequency channel nf, for RefractiveIndexProfile object with a spectral grid */
   InverseLength getAbsTotalWet(unsigned int nf, unsigned int nl) const
   {
     return InverseLength(imag((vv_N_H2OLinesPtr_[nf]->at(nl)
         + vv_N_H2OContPtr_[nf]->at(nl))), "m-1");
   }
-  /** casacore::Function to retrieve total Wet Absorption Coefficient at layer nl, spectral window spwid and channel nf */
+  /** Function to retrieve total Wet Absorption Coefficient at layer nl, spectral window spwid and channel nf */
   InverseLength getAbsTotalWet(unsigned int spwid,
                                unsigned int nf,
                                unsigned int nl) const
@@ -425,100 +425,100 @@ public:
   Opacity getAverageCOLinesOpacity(unsigned int spwid);
   Opacity getAverageDryContOpacity(unsigned int spwid);
 
-  /** casacore::Function to retrieve the integrated Dry Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve the integrated Dry Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
   Opacity getDryOpacity();
-  /** casacore::Function to retrieve the integrated Dry Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve the integrated Dry Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getDryOpacity(unsigned int nc);
   Opacity getDryOpacity(unsigned int spwid, unsigned int nc);
   Opacity getAverageDryOpacity(unsigned int spwid);
 
-  /** casacore::Function to retrieve the integrated Dry Continuum Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve the integrated Dry Continuum Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
   Opacity getDryContOpacity();
-  /** casacore::Function to retrieve the integrated Dry Continuum Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve the integrated Dry Continuum Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getDryContOpacity(unsigned int nc);
   Opacity getDryContOpacity(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated O2 Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve the integrated O2 Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
   Opacity getO2LinesOpacity();
-  /** casacore::Function to retrieve the integrated O2 Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve the integrated O2 Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getO2LinesOpacity(unsigned int nc);
   Opacity getO2LinesOpacity(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated O3 Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve the integrated O3 Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
   Opacity getO3LinesOpacity();
-  /** casacore::Function to retrieve the integrated O3 Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve the integrated O3 Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getO3LinesOpacity(unsigned int nc);
   Opacity getO3LinesOpacity(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated CO Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve the integrated CO Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
   Opacity getCOLinesOpacity();
-  /** casacore::Function to retrieve the integrated CO Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve the integrated CO Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getCOLinesOpacity(unsigned int nc);
   Opacity getCOLinesOpacity(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated N2O Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve the integrated N2O Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
   Opacity getN2OLinesOpacity();
-  /** casacore::Function to retrieve the integrated N2O Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve the integrated N2O Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getN2OLinesOpacity(unsigned int nc);
   Opacity getN2OLinesOpacity(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated NO2 Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve the integrated NO2 Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
   Opacity getNO2LinesOpacity();
-  /** casacore::Function to retrieve the integrated NO2 Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve the integrated NO2 Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getNO2LinesOpacity(unsigned int nc);
   Opacity getNO2LinesOpacity(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated SO2 Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
+  /** Function to retrieve the integrated SO2 Lines Opacity along the atmospheric path for single frequency RefractiveIndexProfile object */
   Opacity getSO2LinesOpacity();
-  /** casacore::Function to retrieve the integrated SO2 Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
+  /** Function to retrieve the integrated SO2 Lines Opacity along the atmospheric path for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getSO2LinesOpacity(unsigned int nc);
   Opacity getSO2LinesOpacity(unsigned int spwid, unsigned int nc);
 
-  /** casacore::Function to retrieve the integrated Wet Opacity along the atmospheric path
+  /** Function to retrieve the integrated Wet Opacity along the atmospheric path
    corresponding to the 1st guess water column (from AtmProfile object) or the
     for single frequency RefractiveIndexProfile object */
   Opacity getWetOpacity() {return getWetOpacity(getGroundWH2O());}
-  /** casacore::Function to retrieve the integrated Wet Opacity along the atmospheric path 
+  /** Function to retrieve the integrated Wet Opacity along the atmospheric path 
    for a given integratedwatercolumn */
   Opacity getWetOpacity(const Length &integratedwatercolumn);
-  /** casacore::Function to retrieve the integrated Wet Opacity along the atmospheric path
+  /** Function to retrieve the integrated Wet Opacity along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile
    object with a spectral grid */
   Opacity getWetOpacity(const Length &integratedwatercolumn, unsigned int nc);
-  /** casacore::Function to retrieve the integrated Wet Opacity along the atmospheric path
+  /** Function to retrieve the integrated Wet Opacity along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile
    object with a spectral grid */
   Opacity getWetOpacity(const Length &integratedwatercolumn, unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
 
  
-  /** casacore::Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
    corresponding to the 1st guess water column (from AtmProfile object)  */
   Opacity getH2OLinesOpacity() {return getH2OLinesOpacity(getGroundWH2O());}
-  /** casacore::Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
    corresponding to a given water vapor column */
   Opacity getH2OLinesOpacity(const Length &integratedwatercolumn);
-  /** casacore::Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getH2OLinesOpacity(const Length &integratedwatercolumn, unsigned int nc);
-  /** casacore::Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Lines Opacity along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object of a spectral window */
   Opacity getH2OLinesOpacity(const Length &integratedwatercolumn, unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
 
-  /** casacore::Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
    corresponding to the 1st guess water column (from AtmProfile object)  */
   Opacity getH2OContOpacity() {return getH2OContOpacity(getGroundWH2O());}
-  /** casacore::Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
    corresponding to a given water vapor column */
   Opacity getH2OContOpacity(const Length &integratedwatercolumn);
-  /** casacore::Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Opacity getH2OContOpacity(const Length &integratedwatercolumn, unsigned int nc);
-  /** casacore::Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
+  /** Function to retrieve the integrated H2O Continuum Opacity along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object of a spectral window */
   Opacity getH2OContOpacity(const Length &integratedwatercolumn, unsigned int spwid, unsigned int nc);
@@ -531,243 +531,243 @@ public:
   Opacity getAverageH2OLinesOpacity(const Length &integratedwatercolumn, unsigned int spwid);
   Opacity getAverageH2OContOpacity(const Length &integratedwatercolumn, unsigned int spwid);
 
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getNonDispersiveDryPhaseDelay();
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getNonDispersiveDryPathLength();
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getNonDispersiveDryPhaseDelay(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getNonDispersiveDryPathLength(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object with several Spectral Grids */
   Angle getNonDispersiveDryPhaseDelay(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with everal Spectral Grids */
   Length getNonDispersiveDryPathLength(unsigned int spwid, unsigned int nc);
 
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getDispersiveDryPhaseDelay();
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getDispersiveDryPathLength();
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getDispersiveDryPhaseDelay(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getDispersiveDryPathLength(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object with several Spectral Grids */
   Angle getDispersiveDryPhaseDelay(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dry part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dry part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with everal Spectral Grids */
   Length getDispersiveDryPathLength(unsigned int spwid, unsigned int nc);
 
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (Dry part) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (Dry part) in spectral Window spwid */
   Length getAverageNonDispersiveDryPathLength(unsigned int spwid);
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (Dry part) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (Dry part) in spectral Window spwid */
   Length getAverageDispersiveDryPathLength(unsigned int spwid);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (Dry part) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (Dry part) in spectral Window spwid */
   Angle getAverageNonDispersiveDryPhaseDelay(unsigned int spwid);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (Dry part) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (Dry part) in spectral Window spwid */
   Angle getAverageDispersiveDryPhaseDelay(unsigned int spwid);
 
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to O2 lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to O2 lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getO2LinesPhaseDelay();
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to O2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to O2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getO2LinesPathLength();
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to O2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to O2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getO2LinesPhaseDelay(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to O2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to O2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getO2LinesPathLength(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to O2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to O2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object with several Spectral Grids */
   Angle getO2LinesPhaseDelay(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (due to O2 Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (due to O2 Lines) in spectral Window spwid */
   Angle getAverageO2LinesPhaseDelay(unsigned int spwid);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to O2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to O2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with everal Spectral Grids */
   Length getO2LinesPathLength(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (due to O2 Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (due to O2 Lines) in spectral Window spwid */
   Length getAverageO2LinesPathLength(unsigned int spwid);
 
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to O3 lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to O3 lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getO3LinesPhaseDelay();
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to O3 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to O3 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getO3LinesPathLength();
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to O3 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to O3 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getO3LinesPhaseDelay(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to O3 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to O3 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getO3LinesPathLength(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to O3 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to O3 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object with several Spectral Grids */
   Angle getO3LinesPhaseDelay(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (due to O3 Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (due to O3 Lines) in spectral Window spwid */
   Angle getAverageO3LinesPhaseDelay(unsigned int spwid);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to O3 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to O3 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with everal Spectral Grids */
   Length getO3LinesPathLength(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (due to O3 Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (due to O3 Lines) in spectral Window spwid */
   Length getAverageO3LinesPathLength(unsigned int spwid);
 
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to CO lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to CO lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getCOLinesPhaseDelay();
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to CO Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to CO Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getCOLinesPathLength();
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to CO Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to CO Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getCOLinesPhaseDelay(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to CO Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to CO Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getCOLinesPathLength(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to CO Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to CO Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object with several Spectral Grids */
   Angle getCOLinesPhaseDelay(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (due to CO Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (due to CO Lines) in spectral Window spwid */
   Angle getAverageCOLinesPhaseDelay(unsigned int spwid);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to CO Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to CO Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with everal Spectral Grids */
   Length getCOLinesPathLength(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (due to CO Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (due to CO Lines) in spectral Window spwid */
   Length getAverageCOLinesPathLength(unsigned int spwid);
 
 
 
 
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to N2O lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to N2O lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getN2OLinesPhaseDelay();
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to N2O Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to N2O Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getN2OLinesPathLength();
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to N2O Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to N2O Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getN2OLinesPhaseDelay(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to N2O Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to N2O Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getN2OLinesPathLength(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to N2O Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to N2O Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object with several Spectral Grids */
   Angle getN2OLinesPhaseDelay(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (due to N2O Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (due to N2O Lines) in spectral Window spwid */
   Angle getAverageN2OLinesPhaseDelay(unsigned int spwid);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to N2O Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to N2O Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with everal Spectral Grids */
   Length getN2OLinesPathLength(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (due to N2O Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (due to N2O Lines) in spectral Window spwid */
   Length getAverageN2OLinesPathLength(unsigned int spwid);
 
 
 
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to NO2 lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to NO2 lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getNO2LinesPhaseDelay();
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to NO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to NO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getNO2LinesPathLength();
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to NO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to NO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getNO2LinesPhaseDelay(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to NO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to NO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getNO2LinesPathLength(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to NO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to NO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object with several Spectral Grids */
   Angle getNO2LinesPhaseDelay(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (due to NO2 Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (due to NO2 Lines) in spectral Window spwid */
   Angle getAverageNO2LinesPhaseDelay(unsigned int spwid);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to NO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to NO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with everal Spectral Grids */
   Length getNO2LinesPathLength(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (due to NO2 Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (due to NO2 Lines) in spectral Window spwid */
   Length getAverageNO2LinesPathLength(unsigned int spwid);
 
 
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to SO2 lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to SO2 lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getSO2LinesPhaseDelay();
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to SO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to SO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getSO2LinesPathLength();
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to SO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to SO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getSO2LinesPhaseDelay(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to SO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to SO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getSO2LinesPathLength(unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (due to SO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (due to SO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object with several Spectral Grids */
   Angle getSO2LinesPhaseDelay(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (due to SO2 Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (due to SO2 Lines) in spectral Window spwid */
   Angle getAverageSO2LinesPhaseDelay(unsigned int spwid);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (due to SO2 Lines) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (due to SO2 Lines) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with everal Spectral Grids */
   Length getSO2LinesPathLength(unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (due to SO2 Lines) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (due to SO2 Lines) in spectral Window spwid */
   Length getAverageSO2LinesPathLength(unsigned int spwid);
 
 
@@ -778,75 +778,75 @@ public:
 
 
 
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dispersive part) along the atmospheric path
    corresponding to the 1st guess water column (from AtmProfile object) 
     for single frequency RefractiveIndexProfile object */
   Angle getDispersiveH2OPhaseDelay() {return getDispersiveH2OPhaseDelay(getGroundWH2O());}
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getDispersiveH2OPhaseDelay(const Length &integratedwatercolumn);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dispersive part) along the atmospheric path
    corresponding to the 1st guess water column (from AtmProfile object) 
     for single frequency RefractiveIndexProfile object */
   Length getDispersiveH2OPathLength() {return getDispersiveH2OPathLength(getGroundWH2O());}
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getDispersiveH2OPathLength(const Length &integratedwatercolumn);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getDispersiveH2OPhaseDelay(const Length &integratedwatercolumn, unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getDispersiveH2OPathLength(const Length &integratedwatercolumn, unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object with several Spectral Grids */
   Angle getDispersiveH2OPhaseDelay(const Length &integratedwatercolumn, unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (Dispersive part) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (Dispersive part) in spectral Window spwid */
   Angle getAverageDispersiveH2OPhaseDelay(const Length &integratedwatercolumn, unsigned int spwid);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path length (Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path length (Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with everal Spectral Grids */
   Length getDispersiveH2OPathLength(const Length &integratedwatercolumn, unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (Dispersive part) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (Dispersive part) in spectral Window spwid */
   Length getAverageDispersiveH2OPathLength(const Length &integratedwatercolumn, unsigned int spwid);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Non-Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Non-Dispersive part) along the atmospheric path
    corresponding to the 1st guess water column (from AtmProfile object) 
     for single frequency RefractiveIndexProfile object */
   Angle getNonDispersiveH2OPhaseDelay() {return getNonDispersiveH2OPhaseDelay(getGroundWH2O());}
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Non-Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Non-Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Angle getNonDispersiveH2OPhaseDelay(const Length &integratedwatercolumn);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path Length (Non-Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path Length (Non-Dispersive part) along the atmospheric path
    corresponding to the 1st guess water column (from AtmProfile object) 
     for single frequency RefractiveIndexProfile object */
   Length getNonDispersiveH2OPathLength() {return getNonDispersiveH2OPathLength(getGroundWH2O());}
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path Length (Non-Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path Length (Non-Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for single frequency RefractiveIndexProfile object */
   Length getNonDispersiveH2OPathLength(const Length &integratedwatercolumn);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Non-Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Non-Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Angle getNonDispersiveH2OPhaseDelay(const Length &integratedwatercolumn, unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path Length (Non-Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path Length (Non-Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with a spectral grid */
   Length getNonDispersiveH2OPathLength(const Length &integratedwatercolumn, unsigned int nc);
-  /** casacore::Function to retrieve the integrated Atmospheric Phase Delay (Non-Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Phase Delay (Non-Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with several spectral grids */
   Angle getNonDispersiveH2OPhaseDelay(const Length &integratedwatercolumn, unsigned int spwid, unsigned int nc);
-  /** casacore::Function to retrieve the average integrated Atmospheric casacore::Path Length (Non-Dispersive part) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Path Length (Non-Dispersive part) in spectral Window spwid */
   Length getAverageNonDispersiveH2OPathLength(const Length &integratedwatercolumn, unsigned int spwid);
-  /** casacore::Function to retrieve the average integrated Atmospheric Phase Delay (Non-Dispersive part) in spectral Window spwid */
+  /** Function to retrieve the average integrated Atmospheric Phase Delay (Non-Dispersive part) in spectral Window spwid */
   Angle getAverageNonDispersiveH2OPhaseDelay(const Length &integratedwatercolumn, unsigned int spwid);
-  /** casacore::Function to retrieve the integrated Atmospheric casacore::Path Length (Non-Dispersive part) along the atmospheric path
+  /** Function to retrieve the integrated Atmospheric Path Length (Non-Dispersive part) along the atmospheric path
    corresponding to a given water vapor column
     for channel nc in an RefractiveIndexProfile object with several spectral grids */
   Length getNonDispersiveH2OPathLength(const Length &integratedwatercolumn, unsigned int spwid, unsigned int nc);
