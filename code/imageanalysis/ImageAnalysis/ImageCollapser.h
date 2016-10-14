@@ -123,11 +123,6 @@ private:
 
     LatticeStatsBase::StatisticsTypes _getStatsType() const;
 
-    void _attachOutputMask(
-		casacore::TempImage<T>& outImage,
-		const casacore::Array<casacore::Bool>& outMask
-    ) const;
-
 	static void _zeroNegatives(casacore::Array<T>& arr);
 
 	static const map<casacore::uInt, T (*)(const casacore::Array<T>&)>& _getFuncMap();

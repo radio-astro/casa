@@ -337,7 +337,8 @@ template<class T> void ImageCollapser<T>::_doLowPerf(
                 : mask.addDegenerate(_axes.size() - 1
         );
         casacore::Array<casacore::Bool> mCopy = reorderArray(maskCopy, newOrder);
-        _attachOutputMask(tmpIm, mCopy);
+        tmpIm.attachMask(ArrayLattice<Bool>(mCopy));
+        
     }
 }
 
@@ -481,23 +482,7 @@ template<class T> void ImageCollapser<T>::_doMedian(
         );
     }
     if (outMask) {
-        _attachOutputMask(outImage, *outMask.get());
-    }
-}
-
-template<class T> void ImageCollapser<T>::_attachOutputMask(
-    casacore::TempImage<T>& outImage,
-    const casacore::Array<casacore::Bool>& outMask
-) const {
-    if (this->_getOutname().empty()) {
-        outImage.attachMask(casacore::ArrayLattice<casacore::Bool>(outMask));
-    }
-    else {
-        casacore::String maskName = outImage.makeUniqueRegionName(
-            casacore::String("mask"), 0
-        );
-        outImage.makeMask(maskName, true, true, true, true);
-        (&outImage.pixelMask())->put(outMask);
+        outImage.attachMask(ArrayLattice<Bool>(*outMask));
     }
 }
 
