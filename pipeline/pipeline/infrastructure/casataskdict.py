@@ -7,11 +7,12 @@ import pipeline.hifa.tasks as hifa_tasks
 import pipeline.hifv.tasks as hifv_tasks
 
 CasaTaskDict = {
+    'h_applycal': 'Applycal',
     'h_importdata': 'ImportData',
     'h_exportdata': 'ExportData',
     'hif_antpos': 'Antpos',
     'hif_atmflag': 'Atmflag',
-    'hif_applycal': 'Applycal',
+    'hif_applycal': 'IFApplycal',
     'hif_bandpass': 'Bandpass',
     'hif_bpflagchans': 'Bandpassflagchans',
     'hif_rawflagchans': 'Rawflagchans',
@@ -107,7 +108,7 @@ classToCASATask = {
     hifa_tasks.Wvrgcalflag            : 'hifa_wvrgcalflag',
     # Interferometry tasks ---------------------------------------------------
     hif_tasks.Antpos                  : 'hif_antpos',
-    hif_tasks.Applycal                : 'hif_applycal',    
+    hif_tasks.IFApplycal              : 'hif_applycal',    
     hif_tasks.Atmflag                 : 'hif_atmflag',
     hif_tasks.Bandpass                : 'hif_bandpass',
     hif_tasks.Bandpassflagchans       : 'hif_bpflagchans',
@@ -166,6 +167,7 @@ classToCASATask = {
     hifv_tasks.Statwt                 : 'hifv_statwt',
     hifv_tasks.PlotSummary            : 'hifv_plotsummary',
     # General Tasks
+    h_tasks.Applycal                  : 'h_applycal',
     h_tasks.ImportData                : 'h_importdata',
     h_tasks.ExportData                : 'h_exportdata'
 }
@@ -277,7 +279,7 @@ TASK_COMMENTS = {
     (hifa_tasks.TimeGaincal,) : (
         'Time dependent gain calibrations are computed. '
     ),
-    (hif_tasks.Applycal, hsd_tasks.SDMSApplycal) : (
+    (h_tasks.Applycal, hif_tasks.IFApplycal, hsd_tasks.SDMSApplycal) : (
         'Calibrations are applied  to the data. Final flagging summaries '
 	'are computed'
     ),
@@ -291,6 +293,7 @@ TASK_COMMENTS = {
         'A single target source is cleaned. '
     ),
     (h_tasks.ExportData,
+     hifa_tasks.ALMAExportData,
      hsd_tasks.SDMSExportData) : (
         'The output data products are computed. '
     ),
