@@ -1191,13 +1191,13 @@ void SynthesisImagerVi2::unlockMSs()
 	   << LogIO::POST;
 	os << LogIO::NORMAL << "Performing WBA-Projection" << LogIO::POST; // Loglevel PROGRESS
       }
-    if((wprojPlane>1)&&(wprojPlane<64)) 
-      {
-	os << LogIO::WARN
-	   << "No. of w-planes set too low for W projection - recommend at least 128"
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
-      }
+    // if((wprojPlane>1)&&(wprojPlane<64)) 
+    //   {
+    // 	os << LogIO::WARN
+    // 	   << "No. of w-planes set too low for W projection - recommend at least 128"
+    // 	   << LogIO::POST;
+    // 	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
+    //   }
 
     // CountedPtr<ATerm> apertureFunction = createTelescopeATerm(mss4vi_p[0], aTermOn);
     // CountedPtr<PSTerm> psTerm = new PSTerm();

@@ -42,12 +42,13 @@
 #include <msvis/MSVis/VisBuffer.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   using namespace CFDefs;
+
   typedef casacore::Cube<casacore::CountedPtr<CFCell > > VBRow2CFMapType;
   typedef casacore::Vector<casacore::CountedPtr<CFBuffer > > VBRow2CFBMapType;
   class CFStore2
   {
   public:
-    CFStore2():storage_p(), pa_p(), mosPointingPos_p(0) {};
+    CFStore2():storage_p(), pa_p(), lazyFillOn_p(False), mosPointingPos_p(0), currentSPWID_p(-1), cfCacheDir_p("") {};
 
     // CFStore2(CFBuffer<casacore::Complex> *dataPtr, casacore::Quantity PA, casacore::Int mosPointing):
     //   storage_p(), pa_p(PA), mosPointingPos_p(mosPointing)
@@ -81,6 +82,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     casacore::Double memUsage();
     //-------------------------------------------------------------------------
+    void clear();
+    //-------------------------------------------------------------------------
     void set(const CFStore2& other)
     {
       pa_p.assign(other.pa_p);
@@ -94,6 +97,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::CountedPtr<CFBuffer>& getCFBuffer(const casacore::Quantity& pa, 
 				      const casacore::Quantity& paTol, 
 				      const casacore::Int& ant1, const casacore::Int& ant2);
+    //-------------------------------------------------------------------------
+    void setCFCacheDir(const String& dir);
+    casacore::String getCFCacheDir() {return cfCacheDir_p;};
+    void setLazyFill(const Bool& val) {lazyFillOn_p=val;}
+    casacore::Bool isLazyFillOn() {return lazyFillOn_p;}
+    void invokeGC(const casacore::Int& spwID);
     //-------------------------------------------------------------------------
     // Get CFBuffer by directly indexing in the list of CFBuffers
     casacore::CountedPtr<CFBuffer>& getCFBuffer(const casacore::Int& paNdx, const casacore::Int& antNdx);
@@ -132,7 +141,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::Matrix<casacore::CountedPtr<CFBuffer > > storage_p;
     casacore::Vector<casacore::Int> ant1_p, ant2_p;
     casacore::Vector<casacore::Quantity> pa_p;
-    casacore::Int mosPointingPos_p;
+    casacore::Bool lazyFillOn_p;
+    casacore::Int mosPointingPos_p, currentSPWID_p;
+    casacore::String cfCacheDir_p;
 
     virtual void getIndex(const casacore::Quantity& pa, 
 			  const casacore::Quantity& paTol, 

@@ -138,6 +138,12 @@ namespace casa{
     //show("thisCell: ", cout);
   }
 
+  void CFCell::clear()
+  {
+    getStorage()->resize();
+    cfShape_p.resize(0);
+  }
+
 } // end casa namespace
 
 

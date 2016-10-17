@@ -41,6 +41,7 @@
 #include <casa/Logging/LogMessage.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+using namespace casacore;
   class AWVisResampler: public VisibilityResampler
   {
   public: 
@@ -276,6 +277,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 const casacore::Vector<casacore::Int>& Origin, const casacore::Vector<casacore::Int>& size);
 
     casacore::Complex* getConvFunc_p(casacore::Vector<casacore::Int>& cfShape,
+				     casacore::Vector<int>& support,
 			   CFBuffer& cfb,
 			   casacore::Double& wVal, casacore::Int& fndx, 
 			   casacore::Int& wndx,

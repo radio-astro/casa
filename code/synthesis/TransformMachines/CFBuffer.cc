@@ -60,6 +60,7 @@ namespace casa{
     for(uInt i=0;i<freqNdxMap_p.nelements();i++) freqNdxMap_p[i].assign(other.freqNdxMap_p[i]);
     conjFreqNdxMap_p.assign(other.conjFreqNdxMap_p);
     for(uInt i=0;i<conjFreqNdxMap_p.nelements();i++) conjFreqNdxMap_p[i].assign(other.conjFreqNdxMap_p[i]);
+    cfCacheDirName_p = other.cfCacheDirName_p;
   }
   //---------------------------------------------------------------
   //
@@ -99,6 +100,19 @@ namespace casa{
     //   for(Int j=0;j<muellerElements(i).nelements();j++)
     // 	if (muellerElements(i)(j) > n) n=muellerElements(i)(j);
     // return n;
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void CFBuffer::clear()
+  {
+    IPosition shp(cfCells_p.shape());
+    for (Int i=0;i < shp[0]; i++)
+      for (Int j=0; j < shp[1]; j++)
+	for (Int k=0; k < shp[2]; k++)
+	  {
+	    cfCells_p(i,j,k)->clear();
+	  }
   }
   //
   //---------------------------------------------------------------
@@ -410,7 +424,8 @@ namespace casa{
     LogIO log_l(LogOrigin("CFBuffer","show[R&D]"));
 
     if (Mesg != NULL) os << Mesg << endl;
-    os << "Shapes: " << cfCells_p.shape() << endl;
+    os<< "---------------------------------------------------------" << endl
+      << "Shapes: " << cfCells_p.shape() << endl;
     for (Int i=0;i<cfCells_p.shape()(0);i++)
       for (Int j=0;j<cfCells_p.shape()(1);j++)
 	for (Int k=0;k<cfCells_p.shape()(2);k++)
@@ -419,6 +434,7 @@ namespace casa{
 	    cfCells_p(i,j,k)->show(Mesg, os);
 	    os << "Pointing offset: " << pointingOffset_p << endl;
 	  }
+    os << "---------------------------------------------------------" << endl;
   }
 
   void CFBuffer::makePersistent(const char *dir, const char *cfName)

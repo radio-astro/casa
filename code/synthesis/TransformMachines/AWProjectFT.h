@@ -545,6 +545,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     PolOuterProduct::MuellerType muellerType_p;
 
+    Int previousSPWID_p;
+
 #include "AWProjectFT.FORTRANSTUFF.INC"
   };
 } //# NAMESPACE CASA - END

@@ -769,6 +769,8 @@ namespace casa{
   }
   template 
   Int SynthesisUtils::getenv(const char *name, const Int defaultVal);
+  template 
+  Bool SynthesisUtils::getenv(const char *name, const Bool defaultVal);
 
   Float SynthesisUtils::libreSpheroidal(Float nu) 
   {
@@ -1130,6 +1132,65 @@ namespace casa{
     csList = cs.list(log_l,MDoppler::RADIO,dummy,dummy);
     os << csList << endl;
   }
+
+  const casacore::Array<Complex> SynthesisUtils::getCFPixels(const casacore::String& Dir,
+							     const casacore::String& fileName)
+  {
+    try
+      {
+	casacore::PagedImage<casacore::Complex> thisCF(Dir+'/'+fileName);
+	return thisCF.get();
+      }
+    catch (AipsError &x)
+      {
+	LogIO log_l(LogOrigin("SynthesisUtils","getCFPixels"));
+	log_l << x.getMesg() << LogIO::EXCEPTION;
+      }
+    return casacore::Array<Complex>(); // Just to keep the complier happy.  Program control should never get here.
+  }
+  
+  casacore::TableRecord SynthesisUtils::getCFParams(const casacore::String& Dir,
+						    const casacore::String& fileName,
+						    casacore::Array<Complex>& pixelBuffer,
+						    casacore::CoordinateSystem& coordSys, 
+						    casacore::Double& sampling,
+						    casacore::Double& paVal,
+						    casacore::Int& xSupport, casacore::Int& ySupport,
+						    casacore::Double& fVal, casacore::Double& wVal, casacore::Int& mVal,
+						    casacore::Double& conjFreq, casacore::Int& conjPoln,
+						    casacore::Bool loadPixels,
+						    casacore::Bool loadMiscInfo)
+  {
+    try
+      {
+	casacore::PagedImage<casacore::Complex> thisCF(Dir+'/'+fileName);
+	if (loadPixels) pixelBuffer.assign(thisCF.get());
+	casacore::TableRecord miscinfo;
+	if (loadMiscInfo)
+	  {
+	    miscinfo= thisCF.miscInfo();
+
+	    miscinfo.get("ParallacticAngle", paVal);
+	    miscinfo.get("MuellerElement", mVal);
+	    miscinfo.get("WValue", wVal);
+	    miscinfo.get("Xsupport", xSupport);
+	    miscinfo.get("Ysupport", ySupport);
+	    miscinfo.get("Sampling", sampling);
+	    miscinfo.get("ConjFreq", conjFreq);
+	    miscinfo.get("ConjPoln", conjPoln);
+	    casacore::Int index= thisCF.coordinates().findCoordinate(casacore::Coordinate::SPECTRAL);
+	    coordSys = thisCF.coordinates();
+	    casacore::SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
+	    fVal=static_cast<Float>(spCS.referenceValue()(0));
+	  }
+	return miscinfo;
+      }
+    catch(AipsError& x)
+      {
+	throw(AipsError(String("Error in SynthesisUtils::getCFParams(): ")
+				      +x.getMesg()));
+      }
+  };
 
   template
   std::vector<Double>::iterator SynthesisUtils::Unique(std::vector<Double>::iterator first, std::vector<Double>::iterator last);

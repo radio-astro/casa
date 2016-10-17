@@ -177,7 +177,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(false), paNdxProcessed_p(),
       visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
       rotatedConvFunc_p(),//cfs2_p(), cfwts2_p(), 
-      runTime1_p(0.0)
+      runTime1_p(0.0), previousSPWID_p(-1)
   {
     //    convSize=0;
     tangentSpecified_p=false;
@@ -235,7 +235,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rotateOTFPAIncr_p(0.1),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(false),
       visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
-      rotatedConvFunc_p(), runTime1_p(0.0)
+      rotatedConvFunc_p(), runTime1_p(0.0), previousSPWID_p(-1)
   {
     //convSize=0;
     tangentSpecified_p=false;
@@ -410,6 +410,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	computePAIncr_p=other.computePAIncr_p;
 	runTime1_p = other.runTime1_p;
 	muellerType_p = other.muellerType_p;
+	previousSPWID_p = other.previousSPWID_p;
       };
     return *this;
   };
@@ -2422,13 +2423,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(*image, vb));
     if (makingPSF)
-      visResampler_p->makeVBRow2CFMap(*cfwts2_p,*convFuncCtor_p, vb,
-				      paChangeDetector.getParAngleTolerance(),
-				      chanMap,polMap,pointingOffset);
+      {
+	cfwts2_p->invokeGC(vbs.spwID_p);
+	//SynthesisUtilMethods::getResource(String("AfterWTS_CFBClearing"),String("memusage"));
+	
+	visResampler_p->makeVBRow2CFMap(*cfwts2_p,*convFuncCtor_p, vb,
+					paChangeDetector.getParAngleTolerance(),
+					chanMap,polMap,pointingOffset);
+	//SynthesisUtilMethods::getResource(String("PSFGridding"),String("memusage"));
+      }
     else
-      visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,
-				      paChangeDetector.getParAngleTolerance(),
-				      chanMap,polMap,pointingOffset);
+      {
+	// If the Wt. CFs are still in the memory, clear them.  They
+	// won't be required again (though with the silly check below,
+	// if the in-memory Wt. CFs are less than 1KB, they will be
+	// left in memory).
+	if (cfwts2_p->memUsage() > 1000)
+	  {
+	    //SynthesisUtilMethods::getResource(String("BeforeWTSClearing"),String("memusage"));
+	    //cerr << "CFWTS memusage before clearing: " << cfwts2_p->memUsage() << endl;
+
+	    cfwts2_p->clear();
+
+	    //cerr << "CFWTS memusage after clearing: " << cfwts2_p->memUsage() << endl;
+	    //SynthesisUtilMethods::getResource(String("AfterWTSClearing"),String("memusage"));
+	  }
+
+	cfs2_p->invokeGC(vbs.spwID_p);
+	//SynthesisUtilMethods::getResource(String("After_CFBClearing"),String("memusage"));
+	visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,
+					paChangeDetector.getParAngleTolerance(),
+					chanMap,polMap,pointingOffset);
+	//SynthesisUtilMethods::getResource(String("ImGridding"),String("memusage"));
+      }
+
+
     //    VBRow2CFMapType theMap(visResampler_p->getVBRow2CFMap());
     VBRow2CFBMapType& theMap=visResampler_p->getVBRow2CFBMap();
     //

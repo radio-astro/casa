@@ -218,8 +218,30 @@ c$$$     $        finitePointingOffset, doPSFOnly,norm)
             wt = convFuncV(iCFPos(1), iCFPos(2), 
      $           iCFPos(3), iCFPos(4))/cfArea
             if (wVal > 0.0) wt = conjg(wt)
+
+c$$$            if ((iCFPos(1) .gt. cfShape(1)) .or.
+c$$$     $           (iCFPos(2) .gt. cfShape(2)) .or.
+c$$$     $           (iCFPos(3) .gt. cfShape(3)) .or.
+c$$$     $           (iCFPos(4) .gt. cfShape(4))) then
+c$$$               write(*,*) 'O: ',iCFPos, cfShape,scaledSupport,
+c$$$     $              off,scaledSampling
+c$$$            endif
+c$$$            if ((iCFPos(1) .le. 0) .or.
+c$$$     $           (iCFPos(2) .le. 0) .or.
+c$$$     $           (iCFPos(3) .le. 0) .or.
+c$$$     $           (iCFPos(4) .le. 0)) then
+c$$$               write(*,*) 'U: ',iCFPos, cfShape,scaledSupport,
+c$$$     $              off,scaledSampling
+c$$$            endif
             
             norm = norm + (wt)
+
+c$$$            if (isnan(abs(wt))) then
+c$$$               write(*,*) iCFPos(1), iCFPos(2), iCFPos(3), iCFPos(4),
+c$$$     $              cfArea,norm
+c$$$               return
+c$$$            endif
+            
             
 c$$$            if ((finitePointingOffset .eq. 1) .and.
 c$$$     $           (doPSFOnly .eq. 0)) then
@@ -231,7 +253,7 @@ c$$$     $           (doPSFOnly .eq. 0)) then
             grid(l_igrdpos(1), l_igrdpos(2), l_igrdpos(3), l_igrdpos(4)) 
      $           =grid(l_igrdpos(1), l_igrdpos(2), 
      $           l_igrdpos(3), l_igrdpos(4)) + nvalue * wt
-            
+
          enddo
       enddo
 c$$$!$OMP END DO

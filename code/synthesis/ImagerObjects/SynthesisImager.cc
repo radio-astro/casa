@@ -1785,13 +1785,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   << LogIO::POST;
 	os << LogIO::NORMAL << "Performing WBA-Projection" << LogIO::POST; // Loglevel PROGRESS
       }
-    if((wprojPlane>1)&&(wprojPlane<64)) 
-      {
-	os << LogIO::WARN
-	   << "No. of w-planes set too low for W projection - recommend at least 128"
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
-      }
+    // if((wprojPlane>1)&&(wprojPlane<64)) 
+    //   {
+    // 	os << LogIO::WARN
+    // 	   << "No. of w-planes set too low for W projection - recommend at least 128"
+    // 	   << LogIO::POST;
+    // 	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
+    //   }
 
     // CountedPtr<ATerm> apertureFunction = createTelescopeATerm(mss4vi_p[0], aTermOn);
     // CountedPtr<PSTerm> psTerm = new PSTerm();
@@ -1858,6 +1858,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     cfCacheObj = new CFCache();
     cfCacheObj->setCacheDir(cfCache.data());
+    // Get the LAZYFILL setting from the user configuration.  If not
+    // found, default to False.
+    //
+    // With lazy fill ON, CFCache loads the required CFs on-demand
+    // from the disk.  And periodically triggers garbage collection to
+    // release CFs that aren't required immediately.
+    cfCacheObj->setLazyFill(SynthesisUtils::getenv("CFCache.LAZYFILL",0)==1);
+
     //    cerr << "Setting wtImagePrefix to " << imageNamePrefix.c_str() << endl;
     cfCacheObj->setWtImagePrefix(imageNamePrefix.c_str());
     cfCacheObj->initCache2();

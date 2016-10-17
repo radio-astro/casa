@@ -93,7 +93,7 @@
 
 using namespace casa::CFDefs;
 using namespace std;
-
+using namespace casacore;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   //  template <class T>
@@ -123,12 +123,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //------------------------------------------------------------------
     //
     CFBuffer(): wValues_p(), maxXSupport_p(-1), maxYSupport_p(-1), pointingOffset_p(), cfHitsStats(),
-		freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p()
+		freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p(), cfCacheDirName_p()
     {};
     
     CFBuffer(casacore::Int maxXSup, casacore::Int maxYSup):
       wValues_p(), maxXSupport_p(maxXSup), maxYSupport_p(maxYSup), pointingOffset_p(), cfHitsStats(),
-      freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p()
+      freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p(), cfCacheDirName_p()
     {
       // storage_p.resize(1,1,1); 
       // storage_p(0,0,0) = new casacore::Array<TT>(dataPtr);
@@ -320,6 +320,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   const casacore::Int& muellerElement,
 		   const casacore::String& fileName);
     void setPA(casacore::Float& pa);
+    void setDir(const casacore::String& Dir) {cfCacheDirName_p=Dir;}
+    void clear();
+    const casacore::String& getCFCacheDir() {return cfCacheDirName_p;};
     casacore::RigidVector<casacore::Int,3> getIndex(const casacore::Double& freqVal, const casacore::Double& wValue, 
 				const casacore::Int& muellerElement);
     //-------------------------------------------------------------------------
@@ -357,6 +360,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void getFreqNdxMaps(casacore::Vector<casacore::Vector<casacore::Int> >& freqNdx, casacore::Vector<casacore::Vector<casacore::Int> >& conjFreqNdx);
     inline casacore::Int nearestFreqNdx(const casacore::Int& spw, const casacore::Int& chan, const casacore::Bool conj=false)
     {
+      //      cerr << "### " << conjFreqNdxMap_p << endl << "### " << freqNdxMap_p << endl;
       if (conj) return conjFreqNdxMap_p[spw][chan];
       else  return freqNdxMap_p[spw][chan];
     }
@@ -404,6 +408,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::Bool freqNdxMapsReady_p;
     casacore::Vector<casacore::Vector<casacore::Int> > freqNdxMap_p, conjFreqNdxMap_p;
     void ASSIGNVVofI(casacore::Int** &target,casacore::Vector<casacore::Vector<casacore::Int> >& source, casacore::Bool& doAlloc);
+    casacore::String cfCacheDirName_p;
   };
 
 } //# NAMESPACE CASA - END

@@ -244,7 +244,8 @@ namespace casa{
 		    //   storeImg(name,ftATerm_l);
 		    // }
 		    //tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
-		    aTerm.applySky(ftATermSq_l, vb, doSquint, 0,me,conjFreq);
+		    if (conjPB_p) aTerm.applySky(ftATermSq_l, vb, doSquint, 0,me,conjFreq);
+		    else aTerm.applySky(ftATermSq_l, vb, doSquint, 0,me,freqValues(inu));
 		  }
 
 		//tt=max(ftATermSq_l.get()); ftATermSq_l.put(abs(ftATermSq_l.get()/tt));
@@ -351,10 +352,7 @@ namespace casa{
 		    TempImage<Complex> twoDPBSq_l(pbShape,cs_l);
 		    //-------------------------------------------------------------		    
 		    // WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
-		    if (conjPB_p)
-		      cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
-		    else
-		      cfWtBuf *= ftATerm_l.get()*conj(ftATerm_l.get());
+		    cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
 		      
 		    //tim.mark();
 		    //UUU cfWtBuf *= ftATerm_l.get();
@@ -449,7 +447,7 @@ namespace casa{
 		    // support sizes.
 		    //
 		    //tim.mark();
-		    Int supportBuffer = (Int)(getOversampling(psTerm, wTerm, aTerm)*1.5);
+		    Int supportBuffer = (Int)(getOversampling(psTerm, wTerm, aTerm)*2.0);
 		    if (!isDryRun)
 		      {
 			if (iw==0) wtcpeak = max(cfWtBuf);
@@ -465,8 +463,6 @@ namespace casa{
 
 		    //tim.mark();
 		    Vector<Double> ftRef(2);
-		    // ftRef(0)=cfWtBuf.shape()(0)/2-1;
-		    // ftRef(1)=cfWtBuf.shape()(1)/2-1;
 		    ftRef(0)=cfWtBuf.shape()(0)/2.0;
 		    ftRef(1)=cfWtBuf.shape()(1)/2.0;
 		    CoordinateSystem ftCoords=cs_l;
@@ -580,8 +576,9 @@ namespace casa{
     for(ndx(1)=0;ndx(1)<cf.shape()(1);ndx(1)++)
       for(ndx(0)=0;ndx(0)<cf.shape()(0);ndx(0)++)
 	if (abs(cf(ndx)) > peak) {peakPix = ndx;peak=abs(cf(ndx));}
-    origin = peakPix(0);
-    
+    //    origin = peakPix(0);
+    if (origin != peakPix(0))
+      log_l << "Peak not at the center " << origin << " " << cf(IPosition(origin,origin,0,0)) << " " << peakPix << " " << peak << LogIO::POST;
     for (Int ix=-xSupport;ix<xSupport;ix++)
       for (int iy=-ySupport;iy<ySupport;iy++)
 	{
@@ -1098,7 +1095,7 @@ namespace casa{
     // will show up when gridding the data or weights.  It will not
     // show up when making the avgPB since the gridding for that is
     // always centered on the center of the image.
-    if (xSupport*sampling + int(sampling/2.0+0.5) > convFuncOrigin)
+    if ((xSupport*sampling + int(sampling/2.0+0.5)) > convFuncOrigin)
       {
 	log_l << "Convolution function support size > N/2.  Limiting it to N/2 "
 	      << "(threshold = " << threshold << ")."
@@ -1509,12 +1506,16 @@ namespace casa{
 		for (Int i=0;i<shp(0);i++)      // Chan-loop
 		  {
 		    cfc = &*(cfb->getCFCellPtr(i,j,k));
+
 		    //baseCFC = &*(baseCFB_p->getCFCellPtr(i,j,k));
 		    // Call this for every VB.  Any optimization
 		    // (e.g. rotating at some increment only) is
 		    // implemented in the ATerm::rotate().
 		    //		    if (rotateCF_p) 
-		    aTerm_l->rotate2(vb,*baseCFC, *cfc,rotateCFOTFAngleRad_p);
+
+		    // Rotate the cell only if it has been loaded.
+		    if (cfc->getShape().product() > 0)
+		      aTerm_l->rotate2(vb,*baseCFC, *cfc,rotateCFOTFAngleRad_p);
 		  }
     }
 	  }
@@ -1573,47 +1574,22 @@ namespace casa{
       Bool doSquint=true; Complex tt;
       ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
       Double freq_l=miscInfo.freqValue;
-      // {
-      // 	Vector<String> csList;
-      // 	IPosition dummy;
-      // 	cout << "CoordSys:===================== ";
-      // 	//      	csList = ftATermSq_l.coordinates().list(log_l,MDoppler::RADIO,dummy,dummy);
 
-      // 	csList = cs_l.list(log_l,MDoppler::RADIO,dummy,dummy);
-      // 	cout << csList << endl;
-      // 	csList = conjPolCS_l.list(log_l,MDoppler::RADIO,dummy,dummy);
-      // 	cout << csList << endl;
-      // }
-
-      //if (!isDryRun)
       {
 	aTerm.applySky(ftATerm_l, vbPA, doSquint, 0, miscInfo.muellerElement,freq_l);//freqHi);
-	aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,miscInfo.muellerElement,conjFreq);
+
+	if (conjPB) aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,miscInfo.muellerElement,conjFreq);
+	else aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,miscInfo.muellerElement,freq_l);
       }
 
       Vector<Double> cellSize;
-      // {
-      // 	Int linIndex=cs_l.findCoordinate(Coordinate::LINEAR);
-      // 	LinearCoordinate lc=cs_l.linearCoordinate(linIndex);
-      // 	Vector<Bool> axes(2); axes=true;
-      // 	Vector<Int> dirShape(2); dirShape(0)=nx;dirShape(1)=ny;
-      // 	Coordinate* FTlc=lc.makeFourierCoordinate(axes,dirShape);
-      // 	cellSize = lc.increment();
-      // }
       {
 	CoordinateSystem skyCoords(skyImage.coordinates());
 	Int directionIndex=skyCoords.findCoordinate(Coordinate::DIRECTION);
 	DirectionCoordinate dc=skyCoords.directionCoordinate(directionIndex);
-	//Vector<Double> cellSize;
-	//	cerr << "#########$$$$$$ " << skyImage.shape() << " " << pbshp << " " << nx << " " << freq_l << " " << conjFreq << endl;
 	cellSize = dc.increment()*(Double)(miscInfo.sampling*skyImage.shape()(0)/nx); // nx is the size of the CF buffer
       }
-      //cerr << "#########$$$$$$ " << cellSize << endl;
 
-      // Int directionIndex=cs_l.findCoordinate(Coordinate::DIRECTION);
-      // DirectionCoordinate dc=cs_l.directionCoordinate(directionIndex);
-      // cellSize = dc.increment();
-      
       //
       // Now compute the PS x W-Term and apply the cached
       // A-Term to build the full CF.
@@ -1638,7 +1614,6 @@ namespace casa{
 	Vector<Double> s(2); s=sampling;
 	//Timer tim;
 	//tim.mark();
-	// if (psTerm.isNoOp() || isDryRun)
 	if (psTerm.isNoOp())
 	  cfBufMat = cfWtBufMat = 1.0;
 	else
@@ -1651,14 +1626,8 @@ namespace casa{
 	  }
 
 	//tim.mark();
-	// if (!isDryRun)
-	  {
-	    if (miscInfo.wValue > 0)
-	      {
-		wTerm.applySky(cfBufMat, cellSize, miscInfo.wValue, cfBuf.shape()(0));///4);
-	      }
-	  }
-
+	if (miscInfo.wValue > 0)
+	  wTerm.applySky(cfBufMat, cellSize, miscInfo.wValue, cfBuf.shape()(0));///4);
 	IPosition PolnPlane(4,0,0,0,0),
 	  pbShape(4, cfBuf.shape()(0), cfBuf.shape()(1), 1, 1);
 	//
@@ -1671,11 +1640,8 @@ namespace casa{
 	TempImage<Complex> twoDPBSq_l(pbShape,cs_l);
 	//-------------------------------------------------------------		    
 	// WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
-	if (conjPB)
-	  cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
-	else
-	  cfWtBuf *= ftATerm_l.get()*conj(ftATerm_l.get());
-	  
+	cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+
 	//tim.mark();
 	cfBuf *= ftATerm_l.get();
 	//tim.show("W*A*2: ");
@@ -1705,11 +1671,10 @@ namespace casa{
 	cs.replaceCoordinate(SpCS,index);
 	
 	//tim.mark();
-	// if (!isDryRun)
-	  {
-	    LatticeFFT::cfft2d(twoDPB_l);
-	    LatticeFFT::cfft2d(twoDPBSq_l);
-	  }
+	{
+	  LatticeFFT::cfft2d(twoDPB_l);
+	  LatticeFFT::cfft2d(twoDPBSq_l);
+	}
 	//tim.show("FFT*2:");
 
 	//tim.mark();
@@ -1727,19 +1692,9 @@ namespace casa{
 	cfWtBuf(Slicer(start,sqSliceLength)).nonDegenerate()
 	  =(twoDPBSq_l.getSlice(start, pbSqSlice, true));
 	//tim.show("Slicer*2:");
-	//
-	//tim.mark();
-	// if (!isDryRun)
-	  // {
-	  //   if (wValue==0) wtcpeak = max(cfWtBuf);
-	  //   cfWtBuf /= wtcpeak;
-	  // }
-	//tim.show("Norm");
 
 	//tim.mark();
-	// if (!isDryRun)
-	//	Int supportBuffer = (Int)(aTerm.getOversampling()*1.5);
-	Int supportBuffer = (Int)(AWConvFunc::getOversampling(psTerm, wTerm, aTerm)*1.5);
+	Int supportBuffer = (Int)(AWConvFunc::getOversampling(psTerm, wTerm, aTerm)*2.0);
 
 	AWConvFunc::resizeCF(cfWtBuf, xSupportWt, ySupportWt, supportBuffer, samplingWt,0.0);
 	//tim.show("Resize:");
@@ -1752,6 +1707,7 @@ namespace casa{
 	SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 	
 	thisCell=cfWtb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
+	thisCell->pa_p=Quantity(vbPA,"rad");
 	thisCell->coordSys_p = ftCoords;
 	thisCell->xSupport_p = xSupportWt;
 	thisCell->ySupport_p = ySupportWt;
@@ -1759,15 +1715,13 @@ namespace casa{
 	//tim.show("CSStuff:");
 
 	//tim.mark();
-	// if (!isDryRun)
-	  {
-	    cpeak = max(cfBuf);
-	    cfBuf /= cpeak;
-	  }
+	{
+	  cpeak = max(cfBuf);
+	  cfBuf /= cpeak;
+	}
 	//tim.show("Peaknorm:");
 
-	// if (!isDryRun) 
-	  AWConvFunc::resizeCF(cfBuf, xSupport, ySupport, supportBuffer, sampling,0.0);
+	AWConvFunc::resizeCF(cfBuf, xSupport, ySupport, supportBuffer, sampling,0.0);
 
 	log_l << "CF Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
 	
@@ -1775,14 +1729,12 @@ namespace casa{
 	ftRef(1)=cfBuf.shape()(1)/2.0;
 
 	//tim.mark();
-	//cfNorm=cfWtNorm=1.0;
-	// if ((wValue == 0) && (!isDryRun))
 	//	if (miscInfo.wValue == 0)
-	  {
-	    cfNorm=0; cfWtNorm=0;
-	    cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);
-	    cfWtNorm = AWConvFunc::cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
-	  }
+	{
+	  cfNorm=0; cfWtNorm=0;
+	  cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);
+	  cfWtNorm = AWConvFunc::cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
+	}
 	//tim.show("Area*2:");
 	
 	//tim.mark();
@@ -1794,7 +1746,8 @@ namespace casa{
 	ftCoords=cs_l;
 	SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
 
-	CountedPtr<CFCell> thisCell=cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
+	//CountedPtr<CFCell>
+	thisCell=cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
 	thisCell->pa_p=Quantity(vbPA,"rad");
 	thisCell->coordSys_p = ftCoords;
 	thisCell->xSupport_p = xSupport;

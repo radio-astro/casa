@@ -41,6 +41,9 @@ namespace casa
     typedef casacore::RigidVector<casacore::Int,2> MuellerElementType ;
     typedef casacore::Matrix<casacore::Int> MuellerMatrixType ;
     typedef casacore::Vector<casacore::Vector<casacore::Int> > PolMapType;
+
+    enum CFCDirType {USERDIR=0, WORKDIR};
+
   } //# NAMESPACE CASA - END
 }
 #endif

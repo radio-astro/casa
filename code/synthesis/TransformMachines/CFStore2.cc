@@ -45,6 +45,9 @@ namespace casa{
 	ant1_p.assign(other.ant1_p);
 	ant2_p.assign(other.ant2_p);
 	pa_p.assign(other.pa_p);
+	lazyFillOn_p=other.lazyFillOn_p;
+	currentSPWID_p = other.currentSPWID_p;
+	cfCacheDir_p = other.cfCacheDir_p;
       }
     return *this;
   };
@@ -98,7 +101,10 @@ namespace casa{
 
     Vector<Int> pos(2);pos(0)=paNdx;pos(1)=antNdx;
     if (storage_p(pos(0),pos(1)).null())
-      storage_p(pos(0),pos(1)) = new CFBuffer;
+      {
+	storage_p(pos(0),pos(1)) = new CFBuffer;
+	storage_p(pos(0),pos(1))->setDir(cfCacheDir_p);
+      }
     return pos;
   };
   //
@@ -108,7 +114,7 @@ namespace casa{
 			     Quantity /*pa*/, 
 			     const Int& /*ant1*/, const Int& /*ant2*/)
   {
-    throw(AipsError("setCFBuffer called!"));
+    throw(AipsError("CFStore2::setCFBuffer called!"));
     // Vector<Int> pos=resize(pa,ant1,ant2);
     // storage_p(pos[0], pos[1]) = dataPtr;
   }
@@ -224,6 +230,17 @@ namespace casa{
   //
   //---------------------------------------------------------------
   //
+  void CFStore2::clear()
+  {
+    IPosition cfsShape = getStorage().shape();
+
+    for (Int ib=0;ib<cfsShape(0); ib++)
+      for(int it=0;it<cfsShape(1); it++)
+	  getStorage()(ib,it)->clear();
+  }
+  //
+  //---------------------------------------------------------------
+  //
   Double CFStore2::memUsage()
   {
     IPosition cfsShape = getStorage().shape();
@@ -259,6 +276,43 @@ namespace casa{
 	}
       return junk;
     }
+  //
+  //---------------------------------------------------------------
+  //
+  void CFStore2::setCFCacheDir(const String& dir)
+  {
+    IPosition cfsShape = getStorage().shape();
+
+    for (Int ib=0;ib<cfsShape(0); ib++)
+      for(int it=0;it<cfsShape(1); it++)
+	  getStorage()(ib,it)->setDir(dir);
+
+    cfCacheDir_p=dir;
+  }
+  //
+  //---------------------------------------------------------------
+  //
+  void CFStore2::invokeGC(const Int& spwID)
+  {
+    if (isLazyFillOn())
+      {
+    	if (spwID != currentSPWID_p)
+	  {
+	    // While the message below is useful as NORMAL1, in a
+	    // parallel run, it appears on the console.  So shutting
+	    // it down.
+
+	    // LogIO log_l(LogOrigin("CFStore2", "invokeGC"));
+	    // log_l << "Invoking Garbage Collector: ";
+	    // // The reason for invoking GC
+	    // if (currentSPWID_p < 0)      log_l << "Initial mopping-up";
+	    // else     log_l << "SPW" << currentSPWID_p << "->SPW" << spwID;
+	    // log_l << LogIO::NORMAL1;
+
+	    clear(); currentSPWID_p=spwID;
+	  }
+      }
+  }
 }; // end casa namespace
 
 

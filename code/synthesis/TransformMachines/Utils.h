@@ -129,6 +129,17 @@ namespace casa
     Iterator Unique(Iterator first, Iterator last);
 			  
     void showCS(const casacore::CoordinateSystem& cs, std::ostream& os, const casacore::String& msg=casacore::String());
+    const casacore::Array<casacore::Complex> getCFPixels(const casacore::String& Dir, const casacore::String& fileName);
+    casacore::TableRecord getCFParams(const casacore::String& dirName,const casacore::String& fileName,
+				      casacore::Array<casacore::Complex>& pixelBuffer,
+				      casacore::CoordinateSystem& coordSys, 
+				      casacore::Double& sampling,
+				      casacore::Double& paVal,
+				      casacore::Int& xSupport, casacore::Int& ySupport,
+				      casacore::Double& fVal, casacore::Double& wVal, casacore::Int& mVal,
+				      casacore::Double& conjFreq, casacore::Int& conjPoln,
+				      casacore::Bool loadPixels,
+				      casacore::Bool loadMiscInfo=true);
   }
 
   void getHADec(casacore::MeasurementSet& ms, const VisBuffer& vb, casacore::Double &HA, casacore::Double& RA, casacore::Double& Dec);

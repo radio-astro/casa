@@ -143,6 +143,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfst.telescopeName=telescopeName_p;
     }
     casacore::CountedPtr<casacore::Array<TT> >& getStorage() {return storage_p;}
+    void setStorage(casacore::Array<TT>& val) {getStorage()->assign(val); cfShape_p=val.shape().asVector();};
+    void clear();
     void makePersistent(const char *dir, const char *cfName="");
     casacore::CountedPtr<CFCell> clone();
     void setParams(const CFCell& other);

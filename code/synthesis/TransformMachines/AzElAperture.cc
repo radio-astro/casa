@@ -103,11 +103,17 @@ namespace casa{
 	  //dPA = baseCFCPA-actualPA;
 	  dPA = currentCFPA-actualPA;
 	  inData.assign(*cfc.getStorage());
-
-	  SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
-					     *cfc.getStorage(),
-					     dPA);//,"LINEAR");
-					     // currentCFPA-actualPA);//,"LINEAR");
+	  try
+	    {
+	      SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
+						 *cfc.getStorage(),
+						 dPA);//,"LINEAR");
+	      // currentCFPA-actualPA);//,"LINEAR");
+	    }
+	  catch (AipsError &x)
+	    {
+	      log_l << x.getMesg() << LogIO::EXCEPTION;
+	    }
 	  cfc.pa_p=Quantity(actualPA, "rad");
 	}
     };
