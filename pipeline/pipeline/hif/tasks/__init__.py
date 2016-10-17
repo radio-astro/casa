@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from .antpos import Antpos
-from .applycal import Applycal
+from .applycal import IFApplycal
 from .atmflag import Atmflag
 from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .bpflagchans import Bandpassflagchans

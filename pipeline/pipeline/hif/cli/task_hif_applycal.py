@@ -6,14 +6,14 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_applycal(vis=None, field=None, intent=None, spw=None, antenna=None,
-    applymode=None, calwt=None, flagbackup=None, pipelinemode=None, dryrun=None,
-    acceptresults=None):
+    applymode=None, calwt=None, flagbackup=None, flagsum=None,
+    flagdetailedsum=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'Applycal'
+    task_name = 'IFApplycal'
 
     ##########################################################################
     #                                                                        #

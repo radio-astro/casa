@@ -10,7 +10,8 @@ from .uvcontfit import UVcontFit
 
 from . import uvcontsub
 from .uvcontsub import UVcontSub
-from ..applycal import applycal
+#from ..applycal import applycal
+from pipeline.h.tasks.applycal import applycal
 
 from . import qa
 from . import renderer

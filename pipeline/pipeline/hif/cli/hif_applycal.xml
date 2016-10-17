@@ -60,6 +60,16 @@ Apply the calibration to the data.
 	<value type="bool">True</value>
     </param>
 
+    <param type="bool" name="flagsum">
+	<description>Compute before and after flagging summary statistics</description>
+	<value type="bool">True</value>
+    </param>
+
+    <param type="bool" name="flagdetailedsum" subparam="true">
+	<description>Compute detailed flagging statistics</description>
+	<value type="bool">True</value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -104,6 +114,13 @@ Apply the calibration to the data.
 	        <default param="flagbackup"><value type="bool">True</value></default>
 	    </equals>
         </when>
+        <when param="flagsum">
+	    <equals type="bool" value="True">
+	        <default param="flagdetailedsum"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="bool" value="False">
+	    </equals>
+        </when>
     </constraints>
 </input>
 
@@ -134,6 +151,12 @@ applymode -- Calibration apply mode
         uncalibrated and unflagged)
    default: ''
 
+flagsum -- Compute before and after flagging statistics summaries. 
+   default: True
+
+flagdetailedsum -- Compute detailed before and after flagging statistics summaries
+   if flagsum is True. 
+   default: True
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs automatically.

@@ -37,7 +37,8 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from .. import applycal
+#from .. import applycal
+import pipeline.h.tasks.applycal.applycal as applycal
 #from .. import importdata
 import pipeline.h.tasks.importdata.importdata as importdata
 
@@ -530,6 +531,8 @@ class RestoreData(basetask.StandardTaskTemplate):
     def _do_applycal(self):
         inputs = self.inputs
         applycal_inputs = applycal.Applycal.Inputs(inputs.context)
+        # Set the following to keep the default behavior. No longer needed ? 
+        # applycal_inputs.flagdetailedsum = True
 
         #Override for VLA
         if self.inputs.ocorr_mode == 'co':

@@ -2,7 +2,8 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.hif.tasks.applycal import applycal
+#from pipeline.hif.tasks.applycal import applycal
+from pipeline.h.tasks.applycal import applycal
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -27,7 +28,7 @@ class UVcontSubInputs(applycal.ApplycalInputs):
                  field=None, spw=None, antenna=None, intent=None,
                  # preapply calibrations
                  opacity=None, parang=None, applymode=None, calwt=None,
-                 flagbackup=None, scan=None, flagsum=None):
+                 flagbackup=None, flagsum=None, flagdetailedsum=None):
         self._init_properties(vars())
 
     @property
