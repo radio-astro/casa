@@ -559,7 +559,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         testgainscans = context.evla['msinfo'][m.name].testgainscans
         
-        applycal_inputs = applycal.Applycal.Inputs(context,
+        applycal_inputs = applycal.IFApplycal.Inputs(context,
             vis = self.inputs.vis,
             field = '',
             spw = '',
