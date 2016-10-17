@@ -44,7 +44,7 @@ elif [ $branch == "master" ];then
         # Get the nearest tag and add Desc
         headCommit=`git rev-parse HEAD`
         masterTag=`git describe --abbrev=0 | grep \\\-mas- | xargs`
-        CASA_VERSION_DESC="No tag. Nearest tag: $masterTag HEAD commit: $headCommit "
+        CASA_VERSION_DESC="ID $headCommit "
     fi
     # Return only the revision number
     echo "${masterTag##*-};$CASA_VERSION_DESC"
@@ -60,9 +60,9 @@ else
         # Get the nearest tag and add Desca
         headCommit=`git rev-parse HEAD`
         branchTag=`git describe --abbrev=0 | grep \\\-$tagMatcher- | xargs`
-        CASA_VERSION_DESC="No tag. Nearest tag: $branchTag HEAD commit: $headCommit "
+        CASA_VERSION_DESC="ID $headCommit "
     else
-        CASA_VERSION_DESC="Branch tag: $branchTag"
+        CASA_VERSION_DESC="BT $branchTag"
     fi
     # Do our best to resolve the master tag for revision even when we have
     # Branch tag
