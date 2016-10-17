@@ -423,7 +423,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         LOG.info("Applying semi-final delay and BP calibrations to all calibrators")
         
-        applycal_inputs = applycal.Applycal.Inputs(context,
+        applycal_inputs = applycal.IFApplycal.Inputs(context,
             vis = self.inputs.vis,
             field = '',
             spw = '',
@@ -456,7 +456,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
                               'applymode'  :'calflagstrict',
                               'flagbackup' :False}
         
-        #applycal_task = applycal.Applycal(applycal_inputs)
+        #applycal_task = applycal.IFApplycal(applycal_inputs)
 
         job = casa_tasks.applycal(**applycal_task_args)
 
