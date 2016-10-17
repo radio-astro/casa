@@ -13,6 +13,8 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
 
 from pipeline.hif.tasks.flagging import flagdeterbase 
+from pipeline.domain import DataTable
+from pipeline.infrastructure.displays.singledish import drawpointing
 
 
 # ------------------------------------------------------------------------------
@@ -119,8 +121,33 @@ class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
 
 
 class FlagDeterALMASingleDishResults(flagdeterbase.FlagDeterBaseResults):
-    pass
-
+    def merge_with_context(self, context):
+        # call parent's method
+        super(FlagDeterALMASingleDishResults, self).merge_with_context(context)
+        
+        # update datatable
+        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
+        # this task uses _handle_multiple_vis framework 
+        msobj = context.observing_run.get_ms(self.inputs['vis'])
+        datatable._update_flag(context, msobj.name)
+        datatable.exportdata(minimal=False)
+        
+        # regenerate pointing plots
+        LOG.info('Regenerate pointing plots to update flag information')
+        for antenna in msobj.antennas:
+            for (target, reference) in msobj.calibration_strategy['field_strategy'].items():
+                LOG.debug('target field id %s / reference field id %s'%(target,reference))
+                task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
+                                                            target_field_id=target,
+                                                            reference_field_id=reference,
+                                                            target_only=True)
+                task.plot(revise_plot=True)
+                task = drawpointing.SingleDishPointingChart(context, msobj, antenna, 
+                                                            target_field_id=target,
+                                                            reference_field_id=reference,
+                                                            target_only=False)
+                task.plot(revise_plot=True)
+        
 
 
 class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
@@ -142,6 +169,10 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
         else:
             return 1.875e9 # 1.875GHz
     
+    def prepare(self):
+        results = super(FlagDeterALMASingleDish, self).prepare()
+        return FlagDeterALMASingleDishResults(results.summaries, results.flagcmds())
+        
     def _yield_edge_spw_cmds(self):
         inputs = self.inputs
         # loop over the spectral windows, generate a flagging command for each

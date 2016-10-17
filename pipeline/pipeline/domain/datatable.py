@@ -647,8 +647,12 @@ class DataTableImpl( object ):
             for dt_row in index[0]:
                 ms_row = rows[dt_row]
                 flag = tb.getcell('FLAG', ms_row)
-                for ipol in range(online_flag.shape[0]):
-                    online_flag[ipol, dt_row] = 0 if flag[ipol].all() else 1
+                rowflag = tb.getcell('FLAG_ROW', ms_row)
+                if rowflag == True:
+                    online_flag[:,dt_row] = 0
+                else:
+                    for ipol in range(online_flag.shape[0]):
+                        online_flag[ipol, dt_row] = 0 if flag[ipol].all() else 1
         self.tb2.putcol('FLAG_PERMANENT', flag_permanent)
         
 # def map_spwchans(atm_spw, science_spw):

@@ -29,18 +29,24 @@ def get_field_name(plot):
         return field_attr.replace('"','')
 %>
 
-<div class="row">      
+<div class="row">
 % if target_pointing is not None and len(target_pointing) > 0:
 	% for plots in zip(target_pointing, whole_pointing):
 		% for plot in plots:
 			<div class="col-md-6">
-				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}" class="fancybox">
+				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}" class="fancybox"
+                   title='Antenna: ${plot.parameters["antenna"]}<br>
+						  Field: ${plot.parameters["field"]}<br>
+						  Intent: ${plot.parameters["intent"]}'>
 					<h3>Antenna ${antenna_name(plot)} Field ${get_field_name(plot)}</h3>
 				</a>
 				<div class="col-md-6">
 				  	<div class="thumbnail">
 						<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-						   class="fancybox">
+						   class="fancybox"
+						   title='Antenna: ${plot.parameters["antenna"]}<br>
+						          Field: ${plot.parameters["field"]}<br>
+						          Intent: ${plot.parameters["intent"]}'>
 							<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 								 title="Telescope pointing for antenna ${antenna_name(plot)}"
 								 alt="Telescope pointing for antenna ${antenna_name(plot)}" />
