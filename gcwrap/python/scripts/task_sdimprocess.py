@@ -160,8 +160,10 @@ class sdimprocess_worker(sdutil.sdtask_interface):
             qsmoothsize = qa.mul(qbeamsize,self.smoothsize)
         bmajor = qsmoothsize
         bminor = qsmoothsize
+        pa = qa.quantity(0.0, 'deg')
         # masked channels are replaced by zero and convolved here.
-        self.convimage = self.image.convolve2d( outfile=self.tmpconvname, major=bmajor, minor=bminor, overwrite=True )
+        self.convimage = self.image.convolve2d( outfile=self.tmpconvname, major=bmajor, minor=bminor, pa=pa, 
+                                                overwrite=True )
         self.convimage.done()
         self.convimage = ia.newimage( self.tmpconvname )
 
