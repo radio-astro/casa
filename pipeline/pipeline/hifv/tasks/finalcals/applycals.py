@@ -97,7 +97,7 @@ class Applycals(basetask.StandardTaskTemplate):
             calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False, caltype='finalcal')
             self.inputs.context.callibrary.add(calto, calfrom)
         
-        applycal_inputs = applycal.Applycal.Inputs(self.inputs.context,
+        applycal_inputs = applycal.IFApplycal.Inputs(self.inputs.context,
                                                    vis=self.inputs.vis,
                                                    field='',
                                                    spw='',
@@ -105,6 +105,6 @@ class Applycals(basetask.StandardTaskTemplate):
                                                    flagbackup=False,
                                                    calwt=False)
         
-        applycal_task = applycal.Applycal(applycal_inputs)
+        applycal_task = applycal.IFApplycal(applycal_inputs)
         
         return self._executor.execute(applycal_task, merge=True)
