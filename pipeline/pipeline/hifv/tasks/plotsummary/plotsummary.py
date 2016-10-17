@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 
 
@@ -34,7 +33,7 @@ class PlotSummary(basetask.StandardTaskTemplate):
 
     def prepare(self):
 
-        result = self._do_plotsummary()
+        self._do_plotsummary()
 
         return PlotSummaryResults()
 
