@@ -5,7 +5,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.domain import DataTable
 
-from pipeline.hif.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
+#from pipeline.hif.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
+from pipeline.h.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -23,8 +24,10 @@ class SDMSApplycalInputs(ApplycalInputs,basetask.StandardInputs,
                  field=None, spw=None, antenna=None, intent=None,
                  # preapply calibrations
                  opacity=None, parang=None, applymode=None, calwt=None,
-                 flagbackup=None, scan=None, flagsum=None):
+                 flagbackup=None, flagsum=None, flagdetailedsum=None):
         self._init_properties(vars())
+
+    flagdetailedsum = basetask.property_with_default('flagdetailedsum', True)
 
     @property
     def intent(self):

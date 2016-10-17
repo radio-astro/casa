@@ -16,7 +16,8 @@ import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
-from pipeline.hif.tasks.applycal.renderer import *
+#from pipeline.hif.tasks.applycal.renderer import *
+from pipeline.h.tasks.applycal.renderer import *
 
 LOG = logging.get_logger(__name__)
 

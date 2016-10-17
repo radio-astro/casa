@@ -4,8 +4,10 @@ import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.renderer.weblog as weblog
 
 from .applycal import SDMSApplycal
-from pipeline.hif.tasks.applycal import qa
-from pipeline.hif.tasks.applycal import ApplycalResults
+#from pipeline.hif.tasks.applycal import qa
+from pipeline.h.tasks.applycal import qa
+#from pipeline.hif.tasks.applycal import ApplycalResults
+from pipeline.h.tasks.applycal import ApplycalResults
 from . import renderer
 
 pipelineqa.registry.add_handler(qa.ApplycalQAHandler())
