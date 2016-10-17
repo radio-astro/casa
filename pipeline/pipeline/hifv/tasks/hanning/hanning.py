@@ -37,10 +37,10 @@ class Hanning(basetask.StandardTaskTemplate):
     def prepare(self):
 
         try:
-            result = self._do_hanningsmooth()
-            LOG.info("Removing original VIS "+self.inputs.vis)
+            self._do_hanningsmooth()
+            LOG.info("Removing original VIS " + self.inputs.vis)
             shutil.rmtree(self.inputs.vis)
-            LOG.info("Renaming temphanning.ms to "+self.inputs.vis)
+            LOG.info("Renaming temphanning.ms to " + self.inputs.vis)
             os.rename('temphanning.ms', self.inputs.vis)
         except:
             LOG.warn('Problem encountered with hanning smoothing.')
