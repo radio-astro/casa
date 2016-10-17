@@ -422,12 +422,12 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         
         LOG.info("Applying semi-final delay and BP calibrations to all calibrators")
-        
+
         applycal_inputs = applycal.IFApplycal.Inputs(context,
             vis = self.inputs.vis,
             field = '',
             spw = '',
-            scan = calibrator_scan_select_string,
+            #scan = calibrator_scan_select_string,
             intent = '',
             flagbackup = False,
             calwt = False,
