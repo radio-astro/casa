@@ -168,7 +168,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// compute the differences;
 		// correct for declination and convert
 		// to arcsec if possible
-		String dText;
 		diff(0) = fabs(world1(0)-world2(0));
 		diff(1) = fabs(world1(1)-world2(1));
 		if (itsRaIndex > -1 && itsDecIndex > -1) {
@@ -194,8 +193,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ostringstream tt, uu;
 		tPosX = Int((itsX1+itsX3)/2.0+0.5);
 		tPosY = Int((itsY1+itsY3)/2.0+0.5);
-		tt << std::setiosflags(ios::scientific) << std::setiosflags(ios::fixed) << std::setprecision(4) << diff(1) << unit;
-		dText=String(tt.str());
+		// "std::setiosflags(ios::fixed)" fails for libc++ (clang)
+		tt << std::setiosflags(ios::scientific) << std::fixed << std::setprecision(4) << diff(1) << unit;
+		auto dText=String(tt.str());
 		if (abs(Double(itsX3-itsX1))>0.1)
 			angle1 = C::pi/2.0+atan(Double(itsY3-itsY1)/Double(itsX3-itsX1));
 		else
@@ -217,7 +217,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// write the distance to the second corner line
 		tPosX = Int((itsX2+itsX3)/2.0+0.5);
 		tPosY = Int((itsY2+itsY3)/2.0+0.5);
-		uu << std::setiosflags(ios::scientific) << std::setiosflags(ios::fixed) << std::setprecision(4) << diff(0) << unit;
+		// "std::setiosflags(ios::fixed)" fails for libc++ (clang)
+		uu << std::setiosflags(ios::scientific) << std::fixed << std::setprecision(4) << diff(0) << unit;
 		dText=String(uu.str());
 		if (abs(Double(itsX3-itsX2))>0.1)
 			angle1 = C::pi/2.0+atan(Double(itsY3-itsY2)/Double(itsX3-itsX2));
@@ -249,7 +250,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			ostringstream ss;
 			tPosX = Int((itsX1+itsX2)/2.0+0.5);
 			tPosY = Int((itsY1+itsY2)/2.0+0.5);
-			ss <<  std::setiosflags(ios::scientific) << std::setiosflags(ios::fixed) << std::setprecision(4) << allDiff << unit;
+			// "std::setiosflags(ios::fixed)" fails for libc++ (clang)
+			ss <<  std::setiosflags(ios::scientific) << std::fixed << std::setprecision(4) << allDiff << unit;
 			dText=String(ss.str());
 			if (abs(Double(itsX2-itsX1))>0.1)
 				angle1 = C::pi/2.0+atan(Double(itsY2-itsY1)/Double(itsX2-itsX1));
@@ -278,4 +280,3 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 } //# NAMESPACE CASA - END
-
