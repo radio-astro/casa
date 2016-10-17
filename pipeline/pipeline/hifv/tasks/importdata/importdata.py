@@ -50,7 +50,6 @@ class VLAImportDataResults(basetask.Results):
             context.evla['msinfo'].update(msinfos)
             context.project_summary.telescope = 'EVLA'
             context.project_summary.observatory = 'Karl G. Jansky Very Large Array'
-            LOG.info("USING THE NEW VLA STUFF")
             # context.evla['msinfo'] = { m.name : msinfo }
 
         if self.setjy_results:
@@ -100,8 +99,7 @@ class VLAImportData(importdata.ImportData):
         results = super(VLAImportData, self).prepare()
 
         # create results object
-        myresults = VLAImportDataResults(mses=results.mses,
-                                        setjy_results=results.setjy_results)
+        myresults = VLAImportDataResults(mses=results.mses, setjy_results=results.setjy_results)
 
         myresults.origin = results.origin
 
