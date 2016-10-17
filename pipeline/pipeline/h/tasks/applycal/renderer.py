@@ -188,7 +188,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             result,
             applycal.AmpVsTimeDetailChart,
             ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
-            ApplycalAmpVsTimePlotRenderer
+            ApplycalAmpVsTimePlotRenderer,
+            avgchannel='9000'
         )
 
         if pipeline.infrastructure.generate_detail_plots(result):
@@ -580,7 +581,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         path = None
 
         if renderer_cls is not None:
-            renderer = renderer_cls(context, result, plots, **kwargs)
+            renderer = renderer_cls(context, result, plots)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 path = renderer.path
