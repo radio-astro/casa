@@ -7,7 +7,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
-from pipeline.hif.heuristics import fieldnames
+#from pipeline.hif.heuristics import fieldnames
+from pipeline.h.heuristics import fieldnames
 
 from .. import common
 from ..common import utils as sdutils
