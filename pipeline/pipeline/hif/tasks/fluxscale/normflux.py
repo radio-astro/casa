@@ -11,7 +11,8 @@ import pipeline.infrastructure.utils as utils
 #from ..common import commonfluxresults
 from pipeline.h.tasks.common import commonfluxresults
 
-from pipeline.hif.heuristics import fieldnames as fieldnames
+#from pipeline.hif.heuristics import fieldnames as fieldnames
+from pipeline.h.heuristics import fieldnames as fieldnames
 
 LOG = infrastructure.get_logger(__name__)
 

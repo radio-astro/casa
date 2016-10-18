@@ -5,7 +5,8 @@ import pipeline.domain as domain
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
-from pipeline.hif.heuristics import fieldnames as fieldnames
+#from pipeline.hif.heuristics import fieldnames as fieldnames
+from pipeline.h.heuristics import fieldnames as fieldnames
 
 # create the pipeline logger for this module
 LOG = infrastructure.get_logger(__name__)

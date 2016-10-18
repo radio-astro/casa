@@ -8,7 +8,8 @@ from . import fluxscale
 from pipeline.hif.tasks.setmodel import setmodel
 from pipeline.hif.tasks.setmodel import setjy
 
-from pipeline.hif.heuristics import fieldnames as fieldnames
+#from pipeline.hif.heuristics import fieldnames as fieldnames
+from pipeline.h.heuristics import fieldnames as fieldnames
 
 LOG = infrastructure.get_logger(__name__)
 

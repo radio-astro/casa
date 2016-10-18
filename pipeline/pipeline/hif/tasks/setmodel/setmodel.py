@@ -3,7 +3,8 @@ import os
 import types
 import copy
 
-from ...heuristics import fieldnames
+#from ...heuristics import fieldnames
+from pipeline.h.heuristics import fieldnames as fieldnames
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
