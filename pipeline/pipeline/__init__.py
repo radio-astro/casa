@@ -2,11 +2,10 @@ from __future__ import absolute_import
 import inspect
 import imp
 import os
-import string
-import subprocess
 import sys
 import webbrowser
 
+from . import environment
 from . import infrastructure
 from . import recipes
 
@@ -18,6 +17,8 @@ from . import hifv
 from . import hifa
 
 from .infrastructure import Pipeline, Context
+from .domain import measures
+
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -25,18 +26,20 @@ __pipeline_documentation_weblink_alma__ = "http://almascience.org/documents-and-
 
 # create a fake module containing all the tasks defined in 
 
+
 def _all_subclasses(cls):
-    '''
+    """
     Return a list of all subclasses that inherit directly or indirectly from
     the given class.
-    '''
+    """
     return cls.__subclasses__() + [g for s in cls.__subclasses__()
                                     for g in _all_subclasses(s)]
 
+
 def _get_unified_task_module(packages):
-    '''
+    """
     Create a new module containing all tasks in the given packages.
-    '''
+    """
     module = imp.new_module('pipeline.tasks')
 
     task_classes = _all_subclasses(infrastructure.api.Task)
@@ -76,51 +79,20 @@ def initcli() :
     execfile(hifvpath, myglobals)
 
 
-# find pipeline revision using svnversion
-def _get_revision():
+revision = environment.pipeline_revision
+
+
+def log_host_environment():
+    LOG.info('Pipeline version {!s} running on {!s}'.format(environment.pipeline_revision, environment.hostname))
     try:
-        # get SVN revision using svnversion as it gives information when the
-        # directory has been modified
-        args = ['svnversion', '.']
-        p = subprocess.Popen(args, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, shell=True,
-                cwd=os.path.dirname(__file__))
-        (stdout, _) = p.communicate()
+        host_summary = '{!s} memory, {!s} x {!s} running {!s}'.format(
+            measures.FileSize(environment.memory_size, measures.FileSizeUnits.BYTES),
+            environment.logical_cpu_cores,
+            environment.cpu_type,
+            environment.host_distribution)
 
-        if p.returncode is not 0:
-            return 'Unknown'
+        LOG.info('Host environment: {!s}'.format(host_summary))
+    except NotImplemented:
+        pass
 
-        revision = string.strip(stdout)
-
-        # get SVN branch using svn info
-        args = ['svn info .']
-        myenv = os.environ.copy()
-        myenv['LC_MESSAGES'] = 'en_US.UTF_8'
-        p = subprocess.Popen(args, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, shell=True,
-                cwd=os.path.dirname(__file__),
-                env=myenv)
-        (stdout, _) = p.communicate()
-
-        if p.returncode is not 0:
-            return revision
-        
-        kv = [s.split(':', 1) for s in stdout.splitlines()]
-        # subindex kv as last item in splitlines is []
-        d = {k:v.strip() for (k, v) in kv[0:-1]}
-
-        url = d['URL']
-        # pipeline trunk and branches live within this common directory
-        common_svn_prefix = '/branches/project/'
-        root = d['Repository Root'] + common_svn_prefix
-
-        branch = os.path.split(os.path.relpath(url, root))[0]
-        if branch == 'pipeline':
-            branch = 'trunk'
-
-        return '%s (%s)' % (revision, branch)
-    except:
-        return 'Unknown'
-
-
-revision = _get_revision()
+log_host_environment()
