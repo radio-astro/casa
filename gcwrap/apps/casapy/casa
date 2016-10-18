@@ -44,7 +44,13 @@ else
     fi
     p_root=${casa3party}
     if [[ "$CASAPATH" =~ /usr/lib* ]] || [[ "$CASAPATH" =~ /opt/casa* ]]; then
-        installed_from_rpm="T"
+        __prefix=`echo ${CASAPATH} | awk '{printf "%s", $1}'`
+        # sometimes users install things into /opt/casa...
+        if [[ -e "$__prefix/lib/python@python_version@/casapy.py" ]]; then
+            installed_from_rpm="T"
+        else
+            installed_from_rpm="F"
+        fi
     else
         installed_from_rpm="F"   
     fi
