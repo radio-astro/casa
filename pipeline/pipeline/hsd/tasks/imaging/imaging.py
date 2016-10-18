@@ -8,7 +8,8 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.utils as utils
-from pipeline.hif.heuristics import fieldnames
+#from pipeline.hif.heuristics import fieldnames
+from pipeline.h.heuristics import fieldnames
 from pipeline.domain import DataTable
 from . import gridding
 from . import weighting
