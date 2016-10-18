@@ -29,7 +29,8 @@ import numpy
 
 import itertools
 
-from pipeline.hif.heuristics import fieldnames
+#from pipeline.hif.heuristics import fieldnames
+from pipeline.h.heuristics import fieldnames
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
