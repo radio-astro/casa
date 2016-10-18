@@ -247,31 +247,29 @@ class MakeImListHeuristics(object):
         valid_data = {}
         try:
             cellvs = []
-            for field_intent in field_intent_list:
+            for field, intent in field_intent_list:
                 # select data to be imaged
-                valid_data[field_intent] = False
+                valid_data[(field, intent)] = False
                 for vis in self.vislist:
                     ms = self.context.observing_run.get_ms(name=vis)
-                    scanids = [scan.id for scan in ms.scans if
-                      field_intent[1] in scan.intents and 
-                      field_intent[0] in [fld.name for fld in scan.fields]]
-                    scanids = str(scanids)
-                    scanids = scanids.replace('[', '')
-                    scanids = scanids.replace(']', '')
+                    ms.get_scans()
+                    scanids = [str(scan.id) for scan in ms.scans
+                               if intent in scan.intents
+                               and field in [fld.name for fld in scan.fields]]
+                    scanids = ','.join(scanids)
                     try:
                         casatools.imager.selectvis(vis=vis,
-                          field=field_intent[0], spw=spwids, scan=scanids,
+                          field=field, spw=spwids, scan=scanids,
                           usescratch=False)
-                        # flag to say that imager has some valid data
-                        # to work on
-                        valid_data[field_intent] = True
+                        # flag to say that imager has some valid data to work
+                        # on
+                        valid_data[(field, intent)] = True
                     except:
                         pass
 
-                if not valid_data[field_intent]:
+                if not valid_data[(field, intent)]:
                     # no point carrying on for this field/intent
-                    LOG.debug('No data for SpW %s field %s' %
-                      (spwids, field_intent[0]))
+                    LOG.debug('No data for SpW %s field %s' % (spwids, field))
                     continue
 
                 casatools.imager.weight(type='natural')
@@ -285,15 +283,15 @@ class MakeImListHeuristics(object):
                     # - not documented but assuming bool in first field of returned
                     # record indicates success or failure
                     LOG.warning('imager.advise failed for field/intent %s/%s spw %s - no valid data?' 
-                      % (field_intent[0], field_intent[1], spwids))
-                    valid_data[field_intent] = False
+                      % (field, intent, spwids))
+                    valid_data[(field, intent)] = False
                 else:
                     cellv = rtn[2]['value']
                     cellu = rtn[2]['unit']
                     cellv /= oversample
                     cellvs.append(cellv)
                     LOG.debug('Cell (oversample %s) for %s/%s spw %s: %s' % (
-                      oversample, field_intent[0], field_intent[1], spwspec, cellv))
+                      oversample, field, intent, spwspec, cellv))
 
             if cellvs:
                 # cell that's good for all field/intents

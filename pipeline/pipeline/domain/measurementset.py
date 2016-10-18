@@ -85,7 +85,7 @@ class MeasurementSet(object):
         else:
             return None
 
-    def get_scans(self, scan_id=None, scan_intent=None):
+    def get_scans(self, scan_id=None, scan_intent=None, field=None):
         pool = self.scans
 
         if scan_id is not None:
@@ -102,6 +102,12 @@ class MeasurementSet(object):
                 scan_intent = scan_intent.split(',')
             scan_intent = set(scan_intent) 
             pool = [s for s in pool if not s.intents.isdisjoint(scan_intent)]
+
+        if field is not None:
+            if type(field) in types.StringTypes:
+                field = string.split(field, ',')
+            field = set(field)
+            pool = [s for s in pool if s.fields in field]
 
         return pool
 

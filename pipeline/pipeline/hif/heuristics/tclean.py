@@ -18,7 +18,6 @@ import pipeline.infrastructure.contfilehandler as contfilehandler
 LOG = infrastructure.get_logger(__name__)
 
 
-
 class TcleanHeuristics(object):
 
     def __init__(self, context, vislist, spw):
@@ -50,7 +49,7 @@ class TcleanHeuristics(object):
           spw.ref_frequency.to_units(measures.FrequencyUnits.HERTZ))
         # use the smallest antenna diameter and the reference frequency
         # to estimate the primary beam radius -
-        #radius of first null = 1.22*lambda/D
+        # radius of first null = 1.22*lambda/D
         self.beam_radius = '%sarcsec' % (
           (1.22 * (3.0e8/ref_frequency) / smallest_diameter) * \
           (180.0 * 3600.0 / math.pi))
@@ -483,51 +482,66 @@ class TcleanHeuristics(object):
 
 
     def lsrk_freq_intersection(self, vis, field, spw):
-
-        '''Calculate LSRK frequency intersection of a list of MSs for a
-           given field and spw. Exclude flagged channels.'''
-
+        """
+        Calculate LSRK frequency intersection of a list of MSs for a
+        given field and spw. Exclude flagged channels.
+        """
         lsrk_freq_ranges = []
         lsrk_channel_widths = []
 
-        msTool = casatools.ms
-        imTool = casatools.imager
-
         for msname in vis:
-
             msDO = self.context.observing_run.get_ms(msname)
             n_ants = len(msDO.antennas)
 
+            # CAS-8997
+            #
+            # ms.selectinit(datadescid=x) is required to avoid the 'Data shape
+            # varies...' warning message. There's no guarantee that a single
+            # spectral window will resolve to a single data description, e.g.
+            # the polarisation setup may change. There's not enough
+            # information passed into this function to consistently identify the
+            # data description that should be specified so on occasion the
+            # warning message will reoccur.
+            #
+            # TODO refactor method signature to include data description ID
+            #
             spwDO = msDO.get_spectral_window(spw)
-            channel_width = float(spwDO.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ))
+            data_description_ids = {dd.id for dd in msDO.data_descriptions if dd.spw is spwDO}
+            if len(data_description_ids) == 1:
+                dd_id = data_description_ids.pop()
+            else:
+                msg = 'Could not resolve {!s} spw {!s} to a single data description'.format(msname, spwDO.id)
+                LOG.warning(msg)
+                dd_id = 0
 
-            msTool.open(msname)
-            msTool.iterinit(maxrows = int(n_ants * ((n_ants - 1) / 2.0 + 1)))
-            msTool.iterorigin()
-            # Antenna selection does not work (CAS-8757)
-            #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
-            staql={'field': field, 'spw': spw}
-            msTool.msselect(staql)
-            flag_ants = msTool.getdata(['flag','antenna1','antenna2'])
-            msTool.done()
+            with casatools.MSReader(msname) as msTool:
+                # CAS-8997 selectinit is required to avoid the 'Data shape varies...' warning message
+                msTool.selectinit(datadescid=dd_id)
+                msTool.iterinit(maxrows = int(n_ants * ((n_ants - 1) / 2.0 + 1)))
+                msTool.iterorigin()
+                # Antenna selection does not work (CAS-8757)
+                #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
+                staql={'field': field, 'spw': spw}
+                msTool.msselect(staql)
+                flag_ants = msTool.getdata(['flag', 'antenna1', 'antenna2'])
 
             # Calculate averaged flagging vector keeping all unflagged channel
             # from any baseline.
             result = np.array([True] * flag_ants['flag'].shape[1])
             for i in xrange(flag_ants['flag'].shape[2]):
                 # Antenna selection does not work (CAS-8757)
-                if (flag_ants['antenna1'][i] != flag_ants['antenna2'][i]):
+                if flag_ants['antenna1'][i] != flag_ants['antenna2'][i]:
                     for j in xrange(flag_ants['flag'].shape[0]):
                          result = np.logical_and(result, flag_ants['flag'][j,:,i])
 
             nfi = np.where(result == False)[0]
 
-            if (nfi.shape != (0,)):
-                imTool.open(msname)
-                # Just the edges. Skip one extra channel in final frequency range.
-                imTool.selectvis(field=field, spw='%s:%d~%d' % (spw, nfi[0], nfi[-1]))
-                result = imTool.advisechansel(getfreqrange = True, freqframe = 'LSRK')
-                imTool.done()
+            if nfi.shape != (0,):
+                with casatools.ImagerReader(msname) as imager:
+                    # Just the edges. Skip one extra channel in final frequency range.
+                    imager.selectvis(field=field, spw='%s:%d~%d' % (spw, nfi[0], nfi[-1]))
+                    result = imager.advisechansel(getfreqrange=True, freqframe='LSRK')
+
                 f0 = result['freqstart']
                 f1 = result['freqend']
 
@@ -538,7 +552,7 @@ class TcleanHeuristics(object):
                 lsrk_channel_widths.append((f1-f0)/(nfi[-1]-nfi[0]+1))
 
         intersect_range = utils.intersect_ranges(lsrk_freq_ranges)
-        if (intersect_range != ()):
+        if intersect_range != ():
             if0, if1 = intersect_range
             return if0, if1, max(lsrk_channel_widths)
         else:

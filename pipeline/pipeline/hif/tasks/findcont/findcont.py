@@ -1,21 +1,20 @@
 from __future__ import absolute_import
 import os
 import re
-import subprocess
 import types
 import copy
 
+from pipeline.hif.heuristics import findcont
+from pipeline.hif.heuristics import makeimlist
+from pipeline.hif.heuristics import tclean
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.contfilehandler as contfilehandler
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.contfilehandler as contfilehandler
 import pipeline.infrastructure.mpihelpers as mpihelpers
+import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
 from .resultobjects import FindContResult
-from pipeline.hif.heuristics import makeimlist
-from pipeline.hif.heuristics import findcont
-from pipeline.hif.heuristics import tclean
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -42,6 +41,7 @@ class FindContInputs(basetask.StandardInputs):
 # registering our preference for imaging measurement sets
 basetask.ImagingMeasurementSetsPreferred.register(FindContInputs)
 
+
 class FindCont(basetask.StandardTaskTemplate):
     Inputs = FindContInputs
 
@@ -58,8 +58,7 @@ class FindCont(basetask.StandardTaskTemplate):
         # single measurement set
         if type(inputs.vis) is not types.ListType:
             inputs.vis = [inputs.vis]
-        targetmslist = [vis for vis in inputs.vis if context.observing_run.get_ms(name=vis).is_imaging_ms]
-        if len(targetmslist) > 0:
+        if any((ms.is_imaging_ms for ms in context.observing_run.get_measurement_sets(inputs.vis))):
             datacolumn = 'data'
         else:
             datacolumn = 'corrected'
@@ -76,20 +75,21 @@ class FindCont(basetask.StandardTaskTemplate):
             for spwid in target['spw'].split(','):
                 source_name = utils.dequote(target['field'])
 
-                if (not result_cont_ranges.has_key(source_name)):
-                    result_cont_ranges[source_name] = {}
+                # get continuum ranges dict for this source, also setting it if accessed for first time
+                source_continuum_ranges = result_cont_ranges.setdefault(source_name, {})
 
-                cont_ranges_source_spw = []
-                if (cont_ranges['fields'].has_key(source_name)):
-                    if (cont_ranges['fields'][source_name].has_key(spwid)):
-                        cont_ranges_source_spw = cont_ranges['fields'][source_name][spwid]
-                else:
-                    cont_ranges['fields'][source_name] = {}
+                # get continuum ranges list for this source and spw, also setting them if accessed for first time
+                cont_ranges_source_spw = cont_ranges['fields'].setdefault(source_name, {}).setdefault(spwid, [])
 
-                if (cont_ranges_source_spw != []):
-                    LOG.info('Using existing selection "%s" for field %s, spw %s' % (cont_ranges_source_spw, source_name, spwid))
-                    result_cont_ranges[source_name][spwid] = {'cont_ranges': cont_ranges_source_spw, 'plotfile': 'none', 'status': 'OLD'}
+                if len(cont_ranges_source_spw) > 0:
+                    LOG.info('Using existing selection {!r} for field {!s}, spw {!s}'.format(cont_ranges_source_spw, source_name, spwid))
+                    source_continuum_ranges[spwid] = {
+                        'cont_ranges': cont_ranges_source_spw,
+                        'plotfile': 'none',
+                        'status': 'OLD'
+                    }
                     num_found += 1
+
                 else:
                     LOG.info('Determining continuum ranges for field %s, spw %s' % (source_name, spwid))
 
@@ -155,7 +155,7 @@ class FindCont(basetask.StandardTaskTemplate):
                             continue
                         LOG.info('Using supplied start frequency %s' % (target['start']))
 
-                    if (target['width'] != '') and (target['nbin'] != -1):
+                    if target['width'] != '' and target['nbin'] != -1:
                         LOG.error('Field %s SPW %s: width and nbin are mutually exclusive' % (target['field'], target['spw']))
                         continue
 
@@ -195,20 +195,6 @@ class FindCont(basetask.StandardTaskTemplate):
                     else:
                         nchan = target['nchan']
 
-                    # Estimate memory usage and adjust chanchunks parameter to avoid
-                    # exceeding the available memory.
-                    #try:
-                    #    mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-                    #except ValueError:
-                        # SC_PHYS_PAGES can be missing on OS X
-                    #    mem_bytes = int(subprocess.check_output(['sysctl', '-n', 'hw.memsize']).strip())
-                    #mem_usable_bytes = 0.8 * mem_bytes
-                    #ms = context.observing_run.get_ms(name=inputs.vis[0])
-                    #spw_info = ms.get_spectral_window(spwid)
-                    #cube_bytes = target['imsize'][0] * target['imsize'][1] * spw_info.num_channels * 4
-                    #tclean_bytes = 9 * cube_bytes
-                    #chanchunks = int(tclean_bytes / mem_usable_bytes) + 1
-
                     # Starting with CASA 4.7.79 tclean can calculate chanchunks automatically.
                     chanchunks = -1
 
@@ -233,9 +219,13 @@ class FindCont(basetask.StandardTaskTemplate):
                     # Try detecting continuum frequency ranges
                     cont_ranges['fields'][source_name][spwid], png = findcont_heuristics.find_continuum('%s.residual' % (findcont_basename))
 
-                    result_cont_ranges[source_name][spwid] = {'cont_ranges': cont_ranges['fields'][source_name][spwid], 'plotfile': png, 'status': 'NEW'}
+                    source_continuum_ranges[spwid] = {
+                        'cont_ranges': cont_ranges['fields'][source_name][spwid],
+                        'plotfile': png,
+                        'status': 'NEW'
+                    }
 
-                    if (cont_ranges['fields'][source_name][spwid] not in [['NONE'], ['']]):
+                    if cont_ranges['fields'][source_name][spwid] not in [['NONE'], ['']]:
                         num_found += 1
 
                 num_total += 1

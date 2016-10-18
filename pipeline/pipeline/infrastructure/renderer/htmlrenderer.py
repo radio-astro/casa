@@ -286,27 +286,29 @@ class T1_1Renderer(RendererBase):
                                         baseline_rms=baseline_rms)
         
             ms_summary_rows.append(row)
-        
-        return {'pcontext'          : context,
-                'casa_version'      : casadef.casa_version,
-                'casa_revision'     : casadef.subversion_revision,
-                'pipeline_revision' : pipeline.revision,
-                'pipeline_doclink'  : pipeline_doclink,
-                'obs_start'         : obs_start.strftime(out_fmt),
-                'obs_end'           : obs_end.strftime(out_fmt),
-                'array_names'       : utils.commafy(array_names),
-                'exec_start'        : exec_start.strftime(out_fmt),
-                'exec_end'          : exec_end.strftime(out_fmt),
-                'exec_duration'     : str(exec_duration),
-                'project_uids'      : project_uids,
-                'schedblock_uids'   : schedblock_uids,
-                'execblock_uids'    : execblock_uids,
-                'ous_uid'           : context.project_structure.ous_entity_id,
-                'ousstatus_entity_id'     : context.project_structure.ousstatus_entity_id,
-                'ppr_uid'           : None,
-                'observers'         : observers,
-#                 'qaadapter'        : qaresults,
-                'ms_summary_rows'   : ms_summary_rows}
+
+        return {
+            'pcontext': context,
+            'casa_version': casadef.casa_version,
+            'casa_revision': casadef.subversion_revision,
+            'pipeline_revision': pipeline.revision,
+            'pipeline_doclink': pipeline_doclink,
+            'obs_start': obs_start.strftime(out_fmt),
+            'obs_end': obs_end.strftime(out_fmt),
+            'array_names': utils.commafy(array_names),
+            'exec_start': exec_start.strftime(out_fmt),
+            'exec_end': exec_end.strftime(out_fmt),
+            'exec_duration': str(exec_duration),
+            'project_uids': project_uids,
+            'schedblock_uids': schedblock_uids,
+            'execblock_uids': execblock_uids,
+            'ous_uid': context.project_structure.ous_entity_id,
+            'ousstatus_entity_id': context.project_structure.ousstatus_entity_id,
+            'ppr_uid': None,
+            'observers': observers,
+            #                 'qaadapter'        : qaresults,
+            'ms_summary_rows'   : ms_summary_rows
+        }
 
 
 class T1_2Renderer(RendererBase):

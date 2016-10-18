@@ -7,12 +7,14 @@ import re
 import string
 from bisect import bisect_left
 
+import cachetools
 import numpy
 
 from . import casatools
 from . import logging
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
+# import pipeline.extern.profilehooks as profilehooks
 
 
 LOG = logging.get_logger(__name__)
@@ -54,10 +56,7 @@ class MeasurementSetReader(object):
             time_col = openms.getcol('TIME')
             antenna1_col = openms.getcol('ANTENNA1')
             antenna2_col = openms.getcol('ANTENNA2')
-#             exposure_col = openms.getcol('EXPOSURE')
             data_desc_id_col = openms.getcol('DATA_DESC_ID')
-#             field_id_col = openms.getcol('FIELD_ID')
-#             state_id_col = openms.getcol('STATE_ID')
 
             # get columns and tools needed to create scan times
             time_colkeywords = openms.getcolkeywords('TIME')
@@ -72,15 +71,11 @@ class MeasurementSetReader(object):
             spwsforscans = msmd.spwsforscans()
 
             for scan_id in msmd.scannumbers():
-                #states = [s for s in ms.states
-                #          if s.id in msmd.statesforscan(scan_id)]
                 states = [s for s in ms.states
                           if s.id in statesforscans[str(scan_id)]]
 
                 intents = reduce(lambda s, t: s.union(t.intents), states, set())
                 
-                #fields = [f for f in ms.fields
-                #          if f.id in msmd.fieldsforscan(scan_id)]
                 fields = [f for f in ms.fields
                           if f.id in fieldsforscans[str(scan_id)]]
 
@@ -88,9 +83,7 @@ class MeasurementSetReader(object):
                 # spw
 #                 scan_times = msmd.timesforscan(scan_id)
                 
-                #exposures = {spw_id : msmd.exposuretime(scan=scan_id, spwid=spw_id)
-                #             for spw_id in msmd.spwsforscan(scan_id)}
-                exposures = {spw_id : msmd.exposuretime(scan=scan_id, spwid=spw_id)
+                exposures = {spw_id: msmd.exposuretime(scan=scan_id, spwid=spw_id)
                              for spw_id in spwsforscans[str(scan_id)]}
                 
                 scan_mask = (scan_number_col==scan_id)                
@@ -122,24 +115,6 @@ class MeasurementSetReader(object):
                     epoch_midpoints = [mt.epoch(time_ref, qt.quantity(o, time_unit))
                                        for o in unique_midpoints]
                     
-#                     dd_times = 
-#                     for raw_midpoint in unique_midpoints:
-#                         # measurement set spec states that exposure is recorded in 
-#                         # seconds
-#                         exposure = exposures[dd.spw.id]
-#                         half_exposure = qt.div(exposure, 2)
-#                         
-#                         # add and subtract half the exposure to get the start and
-#                         # end times for the exposure
-#                         midpoint_epoch = qt.quantity(raw_midpoint, time_unit)
-#                         start_epoch = qt.sub(midpoint_epoch, half_exposure)
-#                         end_epoch = qt.add(midpoint_epoch, half_exposure)
-#                         
-#                         start = mt.epoch(time_ref, start_epoch)
-#                         end = mt.epoch(time_ref, end_epoch)
-#                         
-#                         dd_times.append((raw_midpoint, exposure))
-
                     scan_times[dd.spw.id] = zip(epoch_midpoints,
                                                 itertools.repeat(exposures[dd.spw.id]))
 
@@ -206,12 +181,15 @@ class MeasurementSetReader(object):
         # obsmode mapping
 
         scansforspws = msmd.scansforspws()
-        #statesforscans = msmd.statesforscans()
+
+        # with one scan containing many spws, many of the statesforscan
+        # arguments are repeated. This cache speeds up the subsequent
+        # duplicate calls.
+        cached_states = cachetools.LRUCache(maxsize=1000, missing=msmd.statesforscan)
 
         for spw in ms.spectral_windows:
-            # scan_ids = msmd.scansforspw(spw.id)
             scan_ids = scansforspws[str(spw.id)]
-            state_ids = [msmd.statesforscan(i) for i in scan_ids]
+            state_ids = [cached_states[i] for i in scan_ids]
             state_ids = set(itertools.chain(*state_ids))
             states = [s for s in ms.states if s.id in state_ids] 
 
@@ -221,65 +199,41 @@ class MeasurementSetReader(object):
             LOG.trace('Intents for spw #{0}: {1}'
                       ''.format(spw.id, ','.join(spw.intents)))
             
-#         container = ms.states if ms.states else ms.fields
-#         column = 'STATE_ID' if ms.states else 'FIELD_ID'
-#        
-#         with casatools.TableReader(ms.name) as table:
-#             for dd in ms.data_descriptions:
-#                 spw = dd.spw
-#                 for obj in container:
-#                     # if the spw has already been tagged with this state's
-#                     # intents, go on to the next state
-#                     if obj.intents.issubset(spw.intents):
-#                         continue
-#                         
-#                     subTable = table.query(
-#                         'DATA_DESC_ID=={dd_id} '
-#                         '&& {column}=={identifier}'
-#                         '&& NOT(FLAG_ROW) '
-#                         '&& NOT(ALL(FLAG))'.format(dd_id=dd.id, 
-#                                                    column=column,
-#                                                    identifier=obj.id))
-#                     
-#                     if subTable.nrows() > 0:
-#                         spw.intents.update(obj.intents)
-#                     subTable.close()
-#         
-#         for spw in ms.spectral_windows:
-#             LOG.trace('Intents for spw #{0}: {1}'
-#                       ''.format(spw.id, ','.join(spw.intents)))
-    
     @staticmethod
     def link_fields_to_states(msmd, ms):
         # for each field..
 
-        scansforfields = msmd.scansforfields()
+        # SJW commented out for CASA 4.7.74
+        # scansforfields = msmd.scansforfields()
+
+        cached_states = cachetools.LRUCache(1000, missing=msmd.statesforscan)
 
         for field in ms.fields:
             # Find the state IDs for the field by first identifying the scans
             # for the field, then finding the state IDs for those scans
 
             try:
-                # scan_ids = msmd.scansforfield(field.id)
-                scan_ids = scansforfields[str(field.id)]
-                state_ids = [msmd.statesforscan(i) for i in scan_ids]
-                # flatten the state IDs to a 1D list
-                state_ids = set(itertools.chain(*state_ids))
-                states = [ms.get_state(i) for i in state_ids]
-            
-                # some scans may have multiple fields and/or intents so
-                # it is necessary to distinguish which intents belong to
-                # each field
-                obs_modes_for_field = set(msmd.intentsforfield(field.id))
-                states_for_field = [s for s in states \
-                    if not obs_modes_for_field.isdisjoint(s.obs_mode.split(','))]
-            
-                field.states.update(states_for_field)
-                for state in states_for_field:
-                    field.intents.update(state.intents)
+                scan_ids = msmd.scansforfield(field.id)
             except:
-                LOG.debug("Field "+str(field.id) + " not in scansforfields dictionary.")
-            
+                LOG.debug("Field " + str(field.id) + " not in scansforfields dictionary.")
+                continue
+
+            state_ids = [cached_states[i] for i in scan_ids]
+            # flatten the state IDs to a 1D list
+            state_ids = set(itertools.chain(*state_ids))
+            states = [ms.get_state(i) for i in state_ids]
+
+            # some scans may have multiple fields and/or intents so
+            # it is necessary to distinguish which intents belong to
+            # each field
+            obs_modes_for_field = set(msmd.intentsforfield(field.id))
+            states_for_field = [s for s in states \
+                if not obs_modes_for_field.isdisjoint(s.obs_mode.split(','))]
+
+            field.states.update(states_for_field)
+            for state in states_for_field:
+                field.intents.update(state.intents)
+
     @staticmethod
     def link_fields_to_sources(msmd, ms):        
         for source in ms.sources:
@@ -294,8 +248,6 @@ class MeasurementSetReader(object):
     def link_spws_to_fields(msmd, ms):
         spwsforfields = msmd.spwsforfields()
         for field in ms.fields:
-            #spws = [spw for spw in ms.spectral_windows
-            #        if spw.id in msmd.spwsforfield(field.id)]
             try:
                 spws = [spw for spw in ms.spectral_windows if spw.id in spwsforfields[str(field.id)]]
                 field.valid_spws.update(spws)
@@ -310,38 +262,46 @@ class MeasurementSetReader(object):
         
         # populate ms properties with results of table readers 
         with casatools.MSMDReader(ms_file) as msmd:
+            LOG.info('Populating ms.antenna_array...')
             ms.antenna_array = AntennaTable.get_antenna_array(msmd)
+            LOG.info('Populating ms.spectral_windows...')
             ms.spectral_windows = SpectralWindowTable.get_spectral_windows(msmd)
+            LOG.info('Populating ms.states...')
             ms.states = StateTable.get_states(msmd)
+            LOG.info('Populating ms.fields...')
             ms.fields = FieldTable.get_fields(msmd)
+            LOG.info('Populating ms.sources...')
             ms.sources = SourceTable.get_sources(msmd)
+            LOG.info('Populating ms.data_descriptions...')
             ms.data_descriptions = DataDescriptionTable.get_descriptions(msmd, ms)
 
             # No MSMD functions to help populating pols yet
+            LOG.info('Populating ms.polarizations...')
             ms.polarizations = PolarizationTable.get_polarizations(ms)
+
             with casatools.MSReader(ms.name) as openms:
                 for dd in ms.data_descriptions:
-                    openms.selectinit(dd.id)
+                    openms.selectinit(reset=True)
+                    openms.selectinit(datadescid=dd.id)
                     ms_info = openms.getdata(['axis_info','time'])
-                    dd.obs_time = numpy.mean(ms_info['time'])                
+
+                    dd.obs_time = numpy.mean(ms_info['time'])
                     dd.chan_freq = ms_info['axis_info']['freq_axis']['chan_freq'].tolist()
                     dd.corr_axis = ms_info['axis_info']['corr_axis'].tolist()
     
             # now back to pure MSMD calls
-            LOG.info("TABLEREADER 1")
+            LOG.info('Linking fields to states...')
             MeasurementSetReader.link_fields_to_states(msmd, ms)
-            LOG.info("TABLEREADER 2")
+            LOG.info('Linking fields to sources...')
             MeasurementSetReader.link_fields_to_sources(msmd, ms)
-            LOG.info("TABLEREADER 3")
+            LOG.info('Linking intents to spws...')
             MeasurementSetReader.link_intents_to_spws(msmd, ms)
-            LOG.info("TABLEREADER 4")
+            LOG.info('Linking spectral windows to fields...')
             MeasurementSetReader.link_spws_to_fields(msmd, ms)
-            LOG.info("TABLEREADER 5")
+            LOG.info('Populating ms.scans...')
             ms.scans = MeasurementSetReader.get_scans(msmd, ms)
-            LOG.info("TABLEREADER 6")
 
             (observer, project_id, schedblock_id, execblock_id) = ObservationTable.get_project_info(msmd)
-
 
         MeasurementSetReader.add_band_to_spws(ms)
 
@@ -366,11 +326,11 @@ class SpectralWindowTable(object):
     @staticmethod
     def get_spectral_windows(msmd):
         # map spw ID to spw type
-        spw_types = {i:'FDM' for i in msmd.fdmspws()}
-        spw_types.update({i:'TDM' for i in msmd.tdmspws()})
-        spw_types.update({i:'WVR' for i in msmd.wvrspws()})
-        spw_types.update({i:'CHANAVG' for i in msmd.chanavgspws()})
-        spw_types.update({i:'SQLD' for i in msmd.almaspws(sqld=True)})
+        spw_types = {i: 'FDM' for i in msmd.fdmspws()}
+        spw_types.update({i: 'TDM' for i in msmd.tdmspws()})
+        spw_types.update({i: 'WVR' for i in msmd.wvrspws()})
+        spw_types.update({i: 'CHANAVG' for i in msmd.chanavgspws()})
+        spw_types.update({i: 'SQLD' for i in msmd.almaspws(sqld=True)})
 
         # these msmd functions don't need a spw argument. They return a list of
         # values, one for each spw
