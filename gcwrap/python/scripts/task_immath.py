@@ -175,34 +175,11 @@ def immath(
 ):
     # Tell CASA who will be reporting
     casalog.origin('immath')
-    retValue = False
-    # NOTE: This step likely be eliminated
-    # 
-    # Remove any old tmp files that may be left from
-    # a previous run of immath
-    tb.clearlocks()    
+    
     tmpFilePrefix='_immath_tmp' + str(os.getpid()) + '_'
-    try:
-        _immath_cleanup( tmpFilePrefix )
-    except Exception, e:
-        casalog.post( 'Unable to cleanup working directory '+os.getcwd()+'\n'+str(e), 'SEVERE' )
-        raise Exception, str(e)
-
-    # First check to see if the output file exists.  If it
-    # does then we abort.  CASA doesn't allow files to be
-    # over-written, just a policy.
-    if ( len( outfile ) < 1 ):
-        outfile = 'immath_results.im'
-        casalog.post( "The outfile paramter is empty, consequently the" \
-                      +" resultant image will be\nsaved on disk in file, " \
-                      + outfile, 'WARN' )
-    if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
-        casalog.post(
-            'Output file '+outfile+
-            ' exists. immath can not proceed, please '+
-              'remove it or change the output file name.',
-            'SEVERE'
-        )
+    _immath_initial_cleanup(tmpFilePrefix)
+    outfile = _immath_check_outfile(outfile)
+    if not outfile:
         return False
     
     # Find the list of filenames in the expression
@@ -218,10 +195,7 @@ def immath(
     if ( isinstance( filenames, str ) ):
         filenames= [ filenames ]
     casalog.post( 'List of input files is: '+str(filenames), 'DEBUG1' )
-    #for i in range( len(filenames) ):
-    #        if ( not os.path.exists(filenames[i]) ):
-    #            raise Exception, 'Image data set not found - please verify '+filenames[i]
-
+    
     # Construct the variable name list.  We append to the list the
     # default variable names if the user hasn't supplied a full suite.
     if ( not isinstance( varnames, list ) ):
@@ -430,7 +404,7 @@ def immath(
         )
         # modify stokes type for polarization intensity image
         if (  mode=="poli" ):                
-            csys=retValue.coordsys()
+            csys = res.coordsys()
             if isTPol:
                 csys.setstokes('Ptotal')
             elif isLPol:
@@ -466,15 +440,39 @@ def immath(
         raise
     return True
 
-def _immath_cleanup( filePrefix ):
+def _immath_initial_cleanup(tmpFilePrefix):
+    try:
+        _immath_cleanup(tmpFilePrefix)
+    except Exception, e:
+        casalog.post( 'Unable to cleanup working directory '+os.getcwd()+'\n'+str(e), 'SEVERE' )
+        raise Exception, str(e)
+
+
+def _immath_check_outfile(outfile):
+    if not outfile:
+        outfile = 'immath_results.im'
+        casalog.post(
+            "The outfile parameter is empty, consequently the "
+            + "resultant image will be saved on disk in an image named "
+            + outfile, 'WARN'
+        )
+    if (os.path.exists(outfile)):
+        casalog.post(
+            'Output file '+ outfile
+            + ' exists. immath can not proceed, please ' +
+            + 'remove it or change the output file name.',
+            'SEVERE'
+        )
+        return False
+    return outfile
+
+def _immath_cleanup(filePrefix):
     # Remove any old tmp files that may be left from
     # a previous run of immath
     fileList=os.listdir( os.getcwd() )
     for file in fileList:
         if ( file.startswith( filePrefix ) ):
-            #recursivermdir( file )
             shutil.rmtree( file )
-
 
 def _immath_parse( expr='' ):
         retValue=[]
