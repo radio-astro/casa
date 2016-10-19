@@ -76,7 +76,7 @@ class Solint(basetask.StandardTaskTemplate):
         combtime = 'scan'
 
         refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-        refantobj = findrefant.RefAntHeuristics(vis='calibrators.ms',field=refantfield,
+        refantobj = findrefant.RefAntHeuristics(vis=calMs,field=refantfield,
                                                 geometry=True,flagging=True, intent='', spw='')
         
         RefAntOutput=refantobj.calculate()
@@ -84,7 +84,7 @@ class Solint(basetask.StandardTaskTemplate):
         refAnt=str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
 
         bpdgain_touse = tablebase + table_suffix[0]
-        testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal.g', solint=solint,
+        testgains_result = self._do_gtype_testgains(calMs, 'testgaincal.g', solint=solint,
                                                     context=context, combtime=combtime, refAnt=refAnt)
 
         flaggedSolnResult1 = getCalFlaggedSoln('testgaincal.g')
@@ -102,7 +102,7 @@ class Solint(basetask.StandardTaskTemplate):
             soltime = soltimes[1]
             solint = solints[1]
 
-            testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal3.g', solint=solint,
+            testgains_result = self._do_gtype_testgains(calMs, 'testgaincal3.g', solint=solint,
                                                         context=context, combtime=combtime, refAnt=refAnt)
             flaggedSolnResult3 = getCalFlaggedSoln('testgaincal3.g')
             
@@ -122,7 +122,7 @@ class Solint(basetask.StandardTaskTemplate):
                     soltime = soltimes[2]
                     solint = solints[2]
 
-                    testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincal10.g', solint=solint,
+                    testgains_result = self._do_gtype_testgains(calMs, 'testgaincal10.g', solint=solint,
                                                                 context=context, combtime=combtime, refAnt=refAnt)
                     flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
                     LOG.info("For solint = "+solint+" fraction of flagged solutions = "+str(flaggedSolnResult3['all']['fraction']))
@@ -140,7 +140,7 @@ class Solint(basetask.StandardTaskTemplate):
                         if (fracFlaggedSolns10 > 0.05):
                             solint='inf'
                             combtime=''
-                            testgains_result = self._do_gtype_testgains('calibrators.ms', 'testgaincalscan.g',
+                            testgains_result = self._do_gtype_testgains(calMs, 'testgaincalscan.g',
                                                                         solint=solint, context=context,
                                                                         combtime=combtime, refAnt=refAnt)
                             flaggedSolnResultScan = getCalFlaggedSoln('testgaincalscan.g')
@@ -174,11 +174,10 @@ class Solint(basetask.StandardTaskTemplate):
     def _do_split(self, calMs):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        # channels = self.inputs.context.evla['msinfo'][m.name].channels
         channels = m.get_vla_numchan()
         calibrator_scan_select_string = self.inputs.context.evla['msinfo'][m.name].calibrator_scan_select_string
     
-        LOG.info("Splitting out calibrators into calibrators.ms")
+        LOG.info("Splitting out calibrators into " + calMs)
     
         task_args = {'vis'          : m.name,
                      'outputvis'    : calMs,
@@ -245,7 +244,7 @@ class Solint(basetask.StandardTaskTemplate):
                     old_field = new_field
                 
                 except KeyError:
-                    LOG.warn("WARNING: scan "+str(ii)+" is completely flagged and missing from calibrators.ms")
+                    LOG.warn("WARNING: scan "+str(ii)+" is completely flagged and missing from " + calMs)
               
               
         longsolint = (np.max(durations))*1.01
@@ -259,12 +258,10 @@ class Solint(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
 
         calibrator_scan_select_string=context.evla['msinfo'][m.name].calibrator_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = m.vla_minbaselineforcal()
 
         # Do this to get the reference antenna string
         # temp_inputs = gaincal.GTypeGaincal.Inputs(context)
-        # refant = temp_inputs.refant.lower()
 
         task_args = {'vis'          : calMs,
                      'caltable'     : caltable,
