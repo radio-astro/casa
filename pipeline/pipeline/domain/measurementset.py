@@ -463,10 +463,12 @@ class MeasurementSet(object):
                 spw2band[spw] = 'A'
 
         return spw2band
-        
-        
-    
-    
+
+    def vla_minbaselineforcal(self):
+
+        return max(3, int(len(self.antennas) / 2.0))
+
+
     def vla_spws_for_field(self,field):
         '''VLA spws for field'''
     
