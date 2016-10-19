@@ -769,7 +769,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         themask = LatticeExpr<Float>( iif( (*(imstore->pb())) > pblimit, *(imstore->mask()), 0.0));
       } 
       // attache pixmask to temp res image to be used in stats etc
-      //LatticeExpr<Bool> pbpixmask( iif(*(imstore->pb()) > pblimit, True, False));
       //cerr<<"attaching pixmask to res.."<<endl;
       tempres->attachMask(LatticeExpr<Bool> ( iif(*(imstore->pb()) > pblimit, True, False)));
       //cerr<<"Has pixmask now?= "<<tempres->hasPixelMask()<<endl;
@@ -779,8 +778,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       delete dummy;
     }
      
-    PagedImage<Float> tempmaskforcheck(TiledShape(tempmask->shape()), tempmask->coordinates(),"intialMask.Im");
-    tempmaskforcheck.copyData(LatticeExpr<Float>( *tempmask));
     // Not use this way for now. Got an issue on removing pixel mask from *.mask image
     // retrieve pixelmask (i.e.  pb mask)
     //LatticeExpr<Bool> pixmasyyk;
@@ -833,9 +830,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
        
-    //do statistics
-    // Record thestats = doImageStatistics(image, prevmask)
-    //
     //TempImage<Float>* resforstats = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
     //Array<Float> resdata2;
     //imstore->residual()->get(resdata2);
@@ -844,6 +838,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //LatticeExpr<Bool> prevmask( iif(*tempmask > 0.0 , True, False) );
     //resforstats->attachMask(prevmask);
     //SHARED_PTR<casacore::ImageInterface<float> > tempres_ptr(resforstats);
+    /**
     SHARED_PTR<casacore::ImageInterface<float> > tempres_ptr(tempres);
     //cerr<<" tempres->hasPixelMask? "<<tempres->hasPixelMask()<<endl;
     ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
@@ -856,7 +851,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        imcalc.setRobust(true);
     }
     Record thestats = imcalc.statistics();
-    //Record thestats = doImageStatistics(*tempres, *tempmask);
+    ***/
+    // note: tempres is res image with pblimit applied
+    Bool robust(false);
+    if (alg.contains("newauto") ) {
+       robust=true;
+    } 
+    Record thestats = calcImageStatistics(*tempres, *tempmask, robust);
     Array<Double> max, min, rms, mad;
     thestats.get(RecordFieldId("max"), max);
     thestats.get(RecordFieldId("rms"), rms);
@@ -867,7 +868,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        os<< LogIO::DEBUG1 << "All max's on the input image -- mad.nelements()="<<mad.nelements()<<" mad="<<mad<<LogIO::POST;
     }
 
-    //os<<"SidelobeLevel = "<<imstore->getPSFSidelobeLevel()<<LogIO::POST;
+    os<<"SidelobeLevel = "<<imstore->getPSFSidelobeLevel()<<LogIO::POST;
     itsSidelobeLevel = imstore->getPSFSidelobeLevel();
     //os<< "mask algortihm ="<<alg<< LogIO::POST;
     if (alg==String("") || alg==String("onebox")) {
@@ -893,7 +894,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     delete tempmask; tempmask=0;
   }
 
-  Record doImageStatistics(ImageInterface<Float>& res, ImageInterface<Float>&  prevmask) 
+  Record SDMaskHandler::calcImageStatistics(ImageInterface<Float>& res, ImageInterface<Float>&  prevmask, const Bool robust )
   { 
     TempImage<Float>* tempres = new TempImage<Float>(res.shape(), res.coordinates()); 
     Array<Float> resdata;
@@ -909,7 +910,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     axes[0] = 0;
     axes[1] = 1;
     imcalc.setAxes(axes);
-    imcalc.setRobust(true);
+    imcalc.setRobust(robust);
     Record thestats = imcalc.statistics();
     //Array<Double> max, min, rms, mad;
     //thestats.get(RecordFieldId("max"), max);

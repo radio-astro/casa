@@ -145,7 +145,9 @@ public:
                                           const casacore::Float& smoothFactor=1.0,
                                           const casacore::Float& minBeamFrac=-1); 
                            
-  //casacore::Record doImageStatistics(casacore::ImageInterface<float>& res, casacore::ImageInterface<float>& prevmask);
+  casacore::Record calcImageStatistics(casacore::ImageInterface<float>& res, 
+                                       casacore::ImageInterface<float>& prevmask, 
+                                       const casacore::Bool robust);
 
   SHARED_PTR<casacore::ImageInterface<float> > makeMaskFromBinnedImage (
                                const casacore::ImageInterface<float>& image,
