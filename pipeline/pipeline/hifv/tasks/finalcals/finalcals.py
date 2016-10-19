@@ -4,7 +4,6 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.callibrary as callibrary
 import pipeline.hif.heuristics.findrefant as findrefant
 import pipeline.infrastructure.utils as utils
 
@@ -17,7 +16,6 @@ import scipy.optimize as scpo
 
 
 from pipeline.hif.tasks import gaincal
-from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
 from pipeline.hifv.heuristics import find_EVLA_band, getCalFlaggedSoln, getBCalStatistics
 from pipeline.hifv.tasks.setmodel.setmodel import find_standards, standard_sources
@@ -72,7 +70,6 @@ class Finalcals(basetask.StandardTaskTemplate):
         table_suffix = ['.g','3.g','10.g']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        # soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
         soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
         solints = ['int', '3.0s', '10.0s']
         soltime = soltimes[0]
@@ -203,11 +200,9 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        # tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
         tst_delay_spw = m.get_vla_tst_delay_spw()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
         
         # need to add scan?
         # ref antenna string needs to be lower case for gaincal
@@ -265,11 +260,9 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        # tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
         tst_delay_spw = m.get_vla_tst_delay_spw()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
 
         # Add appropriate temporary tables to the callibrary
         ##calto = callibrary.CalTo(self.inputs.vis)
@@ -332,12 +325,9 @@ class Finalcals(basetask.StandardTaskTemplate):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        # tst_bpass_spw = context.evla['msinfo'][m.name].tst_bpass_spw
         tst_bpass_spw = m.get_vla_tst_bpass_spw()
-        delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
         
         
         # Add appropriate temporary tables to the callibrary
@@ -406,8 +396,7 @@ class Finalcals(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
         
         # need to add scan?
         # ref antenna string needs to be lower case for gaincal
@@ -526,7 +515,6 @@ class Finalcals(basetask.StandardTaskTemplate):
     def _do_split(self, calMs):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        # channels = self.inputs.context.evla['msinfo'][m.name].channels
         channels = m.get_vla_numchan()
         calibrator_scan_select_string = self.inputs.context.evla['msinfo'][m.name].calibrator_scan_select_string
     
@@ -553,12 +541,8 @@ class Finalcals(basetask.StandardTaskTemplate):
         return self._executor.execute(job)
     
     def _doall_setjy(self, calMs, field_spws):
-        
-        context = self.inputs.context
+
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        # field_spws = context.evla['msinfo'][m.name].field_spws
-        # field_spws = m.get_vla_field_spws()
-        # spw2band = context.evla['msinfo'][m.name].spw2band
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
         
@@ -801,11 +785,9 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
 
         # temp_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context)
-        # refant = temp_inputs.refant.lower()
         
         task_args = {'vis'            : calMs,
                      'caltable'       : caltable,
