@@ -1285,6 +1285,7 @@ int main (int argC, char * argV[]) {
   appName = string(argV[0]);
 
   uint64_t bdfSliceSizeInMb = 500; // The default size of the BDF slice hold in memory.
+  LogSink::globalSink();
 
   // Load the BDF flags abbreviations.
   loadBDFlags(abbrev2bitpos);
