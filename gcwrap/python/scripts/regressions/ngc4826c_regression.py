@@ -319,8 +319,14 @@ if (diff_f1 < 0.05 and
 	print >>logfile,'---'
 	print >>logfile,'Passed Regression test for NGC4826'
 	print >>logfile,'---'
+	print ''
+	print 'Regression PASSED'
+	print ''
 else: 
 	regstate=False
+	print ''
+	print 'Regression FAILED'
+	print ''
 	print >>logfile,'----FAILED Regression test for NGC4826'
 print >>logfile,'*********************************'
 

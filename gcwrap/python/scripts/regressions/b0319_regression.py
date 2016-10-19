@@ -175,8 +175,14 @@ if (diff_mod<0.05):
 	print >>logfile,'---'
 	print >>logfile,'Passed Regression test for B0319'
 	print >>logfile,'---'
+        print ''
+        print 'Regression PASSED'
+        print ''
 else:
 	regstate=False
+        print ''
+        print 'Regression FAILED'
+        print ''
 	print >>logfile,'----FAILED Regression test for B0319'
 print >>logfile,'*********************************'
 

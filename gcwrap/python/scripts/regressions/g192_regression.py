@@ -233,7 +233,13 @@ if (regstate):
 	print >>logfile,'---'
 	print >>logfile,'Passed Regression test for G192'
 	print >>logfile,'---'
+	print ''
+	print 'Regression PASSED'
+	print ''
 else: 
+	print ''
+	print 'Regression FAILED'
+	print ''
 	print >>logfile,'----FAILED Regression test for G192'
 print >>logfile,'*********************************'
 
