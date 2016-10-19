@@ -194,11 +194,9 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        # tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
         tst_delay_spw = m.get_vla_tst_delay_spw()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
         
         # need to add scan?
         # ref antenna string needs to be lower case for gaincal
@@ -256,11 +254,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        # tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
-        tst_delay_spw = m.get_vla_tst_delay_spw()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
 
         # Add appropriate temporary tables to the callibrary
         ##calto = callibrary.CalTo(self.inputs.vis)
@@ -347,13 +342,9 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
     def _do_gtype_bpdgains(self, caltable, addcaltable=None, solint='int', context=None, RefAntOutput=None):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        # tst_bpass_spw = context.evla['msinfo'][m.name].tst_bpass_spw
         tst_bpass_spw = m.get_vla_tst_bpass_spw()
-        delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
 
         # Add appropriate temporary tables to the callibrary
         ##calto = callibrary.CalTo(self.inputs.vis)
