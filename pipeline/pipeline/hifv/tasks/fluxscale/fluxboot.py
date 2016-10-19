@@ -119,12 +119,12 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
                         model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
 
-                        LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
+                        LOG.info("Setting model for field "+str(m.get_fields()[myfield].id)+" spw "+str(myspw)+" using "+model_image)
 
                         # Double check, but the fluxdensity=-1 should not matter since
                         #  the model image take precedence
                         try:
-                            job = self._fluxgains_setjy(calMs, str(myfield), str(myspw), model_image, -1)
+                            job = self._fluxgains_setjy(calMs, str(m.get_fields()[myfield].id), str(myspw), model_image, -1)
                             jobs.append(job)
 
                             # result.measurements.update(setjy_result.measurements)
@@ -507,7 +507,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
         
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
         
         # Do this to get the reference antenna string
         # temp_inputs = gaincal.GTypeGaincal.Inputs(context)

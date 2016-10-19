@@ -260,7 +260,7 @@ class Solint(basetask.StandardTaskTemplate):
 
         calibrator_scan_select_string=context.evla['msinfo'][m.name].calibrator_scan_select_string
         # minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
-        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
+        minBL_for_cal = m.vla_minbaselineforcal()
 
         # Do this to get the reference antenna string
         # temp_inputs = gaincal.GTypeGaincal.Inputs(context)
