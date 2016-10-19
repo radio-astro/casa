@@ -147,7 +147,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
             LOG.info("Long solint = " + gain_solint2)
 
             refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-            refantobj = findrefant.RefAntHeuristics(vis='calibrators.ms',field=refantfield,
+            refantobj = findrefant.RefAntHeuristics(vis=calMs,field=refantfield,
                                                     geometry=True,flagging=True, intent='', spw='')
 
             RefAntOutput = refantobj.calculate()
@@ -171,13 +171,13 @@ class Fluxboot(basetask.StandardTaskTemplate):
         # Fluxboot stage
         calMs = 'calibrators.ms'
         context = self.inputs.context
-        LOG.info("Doing flux density bootstrapping using caltable "+ caltable)
+        LOG.info("Doing flux density bootstrapping using caltable " + caltable)
         # LOG.info("Flux densities will be written to " + fluxscale_output)
         try:
-            fluxscale_result = self._do_fluxscale(context, caltable)
+            fluxscale_result = self._do_fluxscale(context, calMs, caltable)
             LOG.info("Fitting data with power law")
             powerfit_results, weblog_results, spindex_results = self._do_powerfit(context, fluxscale_result)
-            setjy_result = self._do_setjy('calibrators.ms', powerfit_results)
+            setjy_result = self._do_setjy(calMs, powerfit_results)
         except Exception as e:
             LOG.warning(e.message)
             LOG.warning("A problem was detected while running fluxscale.  Please review the CASA log.")
@@ -192,13 +192,13 @@ class Fluxboot(basetask.StandardTaskTemplate):
     def analyse(self, results):
         return results
 
-    def _do_fluxscale(self, context, caltable):
+    def _do_fluxscale(self, context, calMs, caltable):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         flux_field_select_string = context.evla['msinfo'][m.name].flux_field_select_string
         fluxcalfields = flux_field_select_string
 
-        task_args = {'vis'          : 'calibrators.ms',
+        task_args = {'vis'          : calMs,
                      'caltable'     : caltable,
                      'fluxtable'    : 'fluxgaincalFcal.g',
                      'reference'    : [fluxcalfields],
@@ -213,9 +213,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
     def _do_powerfit(self, context, fluxscale_result):
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        # field_spws = context.evla['msinfo'][m.name].field_spws
         field_spws = m.get_vla_field_spws()
-        # spw2band = context.evla['msinfo'][m.name].spw2band
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
 
@@ -466,12 +464,12 @@ class Fluxboot(basetask.StandardTaskTemplate):
                     LOG.warn("abs(spix) > 5.0 - Fail")
 
             # merge identical jobs into one job with a multi-spw argument
-            LOG.info("Merging setjy jobs for calibrators.ms")
+            LOG.info("Merging setjy jobs for " + calMs)
             jobs_and_components_calMs = utils.merge_jobs(jobs_calMs, casa_tasks.setjy, merge=('spw',))
             for job, _ in jobs_and_components_calMs:
                 self._executor.execute(job)
 
-            LOG.info("Merging setjy jobs for "+self.inputs.vis)
+            LOG.info("Merging setjy jobs for " + self.inputs.vis)
             jobs_and_components_vis = utils.merge_jobs(jobs_vis, casa_tasks.setjy, merge=('spw',))
             for job, _ in jobs_and_components_vis:
                 self._executor.execute(job)
