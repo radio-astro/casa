@@ -615,7 +615,7 @@ windows in the dataset and close the tool.
         </method>
         
         <method type="function" name="exposuretime">
-            <shortdescription>Get the exposure time for the specified scan, spwid, polarizaiton ID, array ID, and observation ID.</shortdescription>
+            <shortdescription>Get the exposure time for the specified scan, spwid, polarization ID, array ID, and observation ID.</shortdescription>
             <input>
                 <param type="int" direction="in" name="scan">
                     <description>Scan number.</description>
@@ -640,7 +640,7 @@ windows in the dataset and close the tool.
             </input>
             <returns type="record"/>
             <description>
-                Get the exposure time for the specified scan, spwid, polarizaiton ID, array ID, and observation ID.
+                Get the exposure time for the specified scan, spwid, polarization ID, array ID, and observation ID.
                 This is the exposure time of the record with the lowest time stamp of the records associated with
                 these parameters. Returns a quantity dictionary. If polid is not specified (or specified and negative)
                 and there is only one polarization ID in for the specified combination of scan, spwid, obsID, and
