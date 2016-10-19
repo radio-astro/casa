@@ -779,6 +779,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       delete dummy;
     }
      
+    PagedImage<Float> tempmaskforcheck(TiledShape(tempmask->shape()), tempmask->coordinates(),"intialMask.Im");
+    tempmaskforcheck.copyData(LatticeExpr<Float>( *tempmask));
     // Not use this way for now. Got an issue on removing pixel mask from *.mask image
     // retrieve pixelmask (i.e.  pb mask)
     //LatticeExpr<Bool> pixmasyyk;
@@ -791,8 +793,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //  dummy->attachMask(pixmask);
       //if (ntrue(dummy->getMask())) tempres->attachMask(pixmask);
     //  if (ntrue(dummy->getMask())) {
-    //    tempres->attachMask(pixmask);
-    //    cerr<<"tempres->getDefaultMask()="<<tempres->getDefaultMask()<<endl;
         //tempmask->removeMask();
     //  }
     //  else {
@@ -834,6 +834,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
        
     //do statistics
+    // Record thestats = doImageStatistics(image, prevmask)
+    //
+    //TempImage<Float>* resforstats = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
+    //Array<Float> resdata2;
+    //imstore->residual()->get(resdata2);
+    //resforstats->put(resdata2);
+    //resforstats->setImageInfo(imstore->residual()->imageInfo());
+    //LatticeExpr<Bool> prevmask( iif(*tempmask > 0.0 , True, False) );
+    //resforstats->attachMask(prevmask);
+    //SHARED_PTR<casacore::ImageInterface<float> > tempres_ptr(resforstats);
     SHARED_PTR<casacore::ImageInterface<float> > tempres_ptr(tempres);
     //cerr<<" tempres->hasPixelMask? "<<tempres->hasPixelMask()<<endl;
     ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
@@ -841,15 +851,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     axes[0] = 0;
     axes[1] = 1;
     imcalc.setAxes(axes);
+    // for now just for new autobox alg.
+    if (alg.contains("newauto") ) {
+       imcalc.setRobust(true);
+    }
     Record thestats = imcalc.statistics();
-    Array<Double> max, min, rms;
+    //Record thestats = doImageStatistics(*tempres, *tempmask);
+    Array<Double> max, min, rms, mad;
     thestats.get(RecordFieldId("max"), max);
     thestats.get(RecordFieldId("rms"), rms);
     os<< LogIO::DEBUG1 << "All rms's on the input image -- rms.nelements()="<<rms.nelements()<<" rms="<<rms<<LogIO::POST;
     os<< LogIO::DEBUG1 << "All max's on the input image -- max.nelements()="<<max.nelements()<<" max="<<max<<LogIO::POST;
+    if (alg.contains("newauto")) {
+       thestats.get(RecordFieldId("medabsdevmed"), mad);
+       os<< LogIO::DEBUG1 << "All max's on the input image -- mad.nelements()="<<mad.nelements()<<" mad="<<mad<<LogIO::POST;
+    }
 
     //os<<"SidelobeLevel = "<<imstore->getPSFSidelobeLevel()<<LogIO::POST;
-    //itsSidelobeLevel = imstore->getPSFSidelobeLevel();
+    itsSidelobeLevel = imstore->getPSFSidelobeLevel();
     //os<< "mask algortihm ="<<alg<< LogIO::POST;
     if (alg==String("") || alg==String("onebox")) {
       //cerr<<" calling makeAutoMask(), simple 1 cleanbox around the max"<<endl;
@@ -872,6 +891,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     tempmask->get(maskdata);
     imstore->mask()->put(maskdata);
     delete tempmask; tempmask=0;
+  }
+
+  Record doImageStatistics(ImageInterface<Float>& res, ImageInterface<Float>&  prevmask) 
+  { 
+    TempImage<Float>* tempres = new TempImage<Float>(res.shape(), res.coordinates()); 
+    Array<Float> resdata;
+    res.get(resdata);
+    tempres->put(resdata);
+    tempres->setImageInfo(res.imageInfo());
+    SHARED_PTR<casacore::ImageInterface<Float> > tempres_ptr(tempres);
+    
+    // 2nd arg is regionRecord, 3rd is LELmask expression and those will be AND 
+    // to define a region to be get statistics
+    ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
+    Vector<Int> axes(2);
+    axes[0] = 0;
+    axes[1] = 1;
+    imcalc.setAxes(axes);
+    imcalc.setRobust(true);
+    Record thestats = imcalc.statistics();
+    //Array<Double> max, min, rms, mad;
+    //thestats.get(RecordFieldId("max"), max);
+    return thestats;
   }
 
   void SDMaskHandler::autoMaskByThreshold(ImageInterface<Float>& mask,
@@ -1167,6 +1209,90 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }//end of makeAutoMaskByThreshold2
 
+  // for implemtation of Amanda's algorithm
+  void SDMaskHandler::autoMaskByThreshold3(ImageInterface<Float>& mask,
+                                          const ImageInterface<Float>& res, 
+                                          const ImageInterface<Float>& psf, 
+                                          const Record& stats, 
+                                          const Float& sigma, 
+                                          const Int nmask,
+                                          const Float& sidelobeThreshold,
+                                          const Float& cutThreshold,
+                                          const Float& smoothFactor,
+                                          const Float& minBeamFrac) 
+  {
+    LogIO os( LogOrigin("SDMaskHandler","autoMaskByThreshold3",WHERE) );
+    Array<Double> rms, max;
+    Double rmsthresh, minrmsval, maxrmsval, minmaxval, maxmaxval;
+    IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos;
+    Int npix;
+
+    //for debug set to True to save intermediate mask images on disk
+    //Bool debug(False);
+
+    // taking account for beam or input resolution
+    TempImage<Float> tempmask(mask.shape(), mask.coordinates());
+    IPosition shp = mask.shape();
+    CoordinateSystem incsys = res.coordinates();
+    Vector<Double> incVal = incsys.increment(); 
+    Vector<String> incUnit = incsys.worldAxisUnits();
+    Quantity qinc(incVal[0],incUnit[0]);
+    //use beam from residual or psf
+    ImageInfo resInfo = res.imageInfo();
+    ImageInfo psfInfo = psf.imageInfo();
+    GaussianBeam beam;
+    if (resInfo.hasBeam() || psfInfo.hasBeam()) {
+      if (resInfo.hasSingleBeam()) {
+        beam = resInfo.restoringBeam();  
+      }
+      else if (resInfo.hasMultipleBeams()) {
+        beam = CasaImageBeamSet(resInfo.getBeamSet()).getCommonBeam(); 
+      }
+      else if (psfInfo.hasSingleBeam()) {
+        beam = psfInfo.restoringBeam();  
+      }
+      else {
+        beam = CasaImageBeamSet(psfInfo.getBeamSet()).getCommonBeam(); 
+      }
+      Quantity bmaj = beam.getMajor();
+      npix = Int( Double(minBeamFrac) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+    }
+    else {
+       throw(AipsError("No restoring beam(s) in the input image/psf or resolution is given"));
+    }
+    os << LogIO::DEBUG1 << "Acutal bin size used: npix="<<npix<< LogIO::POST;
+
+    // Determine threshold from input image stats
+    stats.get(RecordFieldId("max"), max);
+    stats.get(RecordFieldId("rms"), rms);
+    minMax(minmaxval,maxmaxval,minmaxpos, maxmaxpos, max);
+    minMax(minrmsval,maxrmsval,minrmspos, maxrmspos, rms); 
+    rmsthresh = maxrmsval * sigma;
+    os << LogIO::NORMAL2 <<" thresh="<<rmsthresh<<LogIO::POST;
+
+    SHARED_PTR<ImageInterface<Float> > tempIm_ptr = pruneRegions(res, rmsthresh, nmask, npix);
+    LatticeExpr<Float> themask( iif( *(tempIm_ptr.get()) > rmsthresh, 1.0, 0.0 ));
+
+    //for debug
+    /***
+    PagedImage<Float> tempthemask(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(),"tempthemask.Im");
+    tempthemask.copyData(themask);
+    ***/
+    if (res.hasPixelMask()) {
+      LatticeExpr<Bool>  pixmask(res.pixelMask()); 
+      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0 && pixmask, 1.0, 0.0  ) ) );
+      mask.clearCache();
+      mask.unlock();
+      mask.tempClose();
+      os <<LogIO::DEBUG1 <<"Add previous mask, pbmask and the new mask.."<<LogIO::POST;
+    }
+    else {
+      //os <<"Lattice themask is created..."<<LogIO::POST;
+      //LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
+      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
+      os <<LogIO::DEBUG1 <<"Add previous mask and the new mask.."<<LogIO::POST;
+    }
+  }//end of makeAutoMaskByThreshold3
 
   SHARED_PTR<ImageInterface<Float> >  SDMaskHandler::makeMaskFromBinnedImage(const ImageInterface<Float>& image, 
                                                                              const Int nx, 

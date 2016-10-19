@@ -132,7 +132,21 @@ public:
                            const casacore::Record& theStats,
                            const casacore::Float& sigma=3.0,
                            const casacore::Int nmask=0);
+
+  // implementation of Amanda's autoboxing algorithm
+  void autoMaskByThreshold3(casacore::ImageInterface<float>& mask,
+                                          const casacore::ImageInterface<float>& res, 
+                                          const casacore::ImageInterface<float>& psf, 
+                                          const casacore::Record& stats, 
+                                          const casacore::Float& sigma=3.0, 
+                                          const casacore::Int nmask=0,
+                                          const casacore::Float& sidelobeThreshold=3.0,
+                                          const casacore::Float& cutThreshold=0.01,
+                                          const casacore::Float& smoothFactor=1.0,
+                                          const casacore::Float& minBeamFrac=-1); 
                            
+  //casacore::Record doImageStatistics(casacore::ImageInterface<float>& res, casacore::ImageInterface<float>& prevmask);
+
   SHARED_PTR<casacore::ImageInterface<float> > makeMaskFromBinnedImage (
                                const casacore::ImageInterface<float>& image,
                                const casacore::Int nx,
