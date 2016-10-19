@@ -773,10 +773,17 @@ template<class T> void UVContSubtractionGSLKernel<T>::kernelCore(	Vector<T> &inp
 																	Vector<T> &outputVector)
 {
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
+	Vector<T> model = fitter_p.calcFitModel(inputVector);
+	outputVector = inputVector;
+	outputVector -= model;
+
+
+	/*
+	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	Vector<T> coeff = fitter_p.calcFitCoeff(inputVector);
 
 	// Fill output data
-	outputVector = inputVector;
+	Vector<T> outputVector = inputVector;
 	outputVector -= coeff(0);
 	for (uInt order_idx = 1; order_idx <= fitOrder_p; order_idx++)
 	{
@@ -785,11 +792,13 @@ template<class T> void UVContSubtractionGSLKernel<T>::kernelCore(	Vector<T> &inp
 			outputVector(chan_idx) -= (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
 		}
 	}
+	*/
 
 	/*
 	if (debug_p)
 	{
 		LogIO logger;
+		logger << "freqPows_p =" << freqPows_p << LogIO::POST;
 		logger << "fit order = " << fitOrder_p << LogIO::POST;
 		logger << "coeff =" << coeff << LogIO::POST;
 		logger << "inputFlags =" << inputFlags << LogIO::POST;
@@ -845,10 +854,13 @@ template<class T> void UVContEstimationGSLKernel<T>::kernelCore(	Vector<T> &inpu
 																	Vector<T> &outputVector)
 {
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
+	outputVector = fitter_p.calcFitModel(inputVector);
+
+	/*
+	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	Vector<T> coeff = fitter_p.calcFitCoeff(inputVector);
 
 	// Fill output data
-	outputVector = inputVector;
 	outputVector = coeff(0);
 	for (uInt order_idx = 1; order_idx <= fitOrder_p; order_idx++)
 	{
@@ -857,6 +869,7 @@ template<class T> void UVContEstimationGSLKernel<T>::kernelCore(	Vector<T> &inpu
 			outputVector(chan_idx) += (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
 		}
 	}
+	*/
 
 	return;
 }
