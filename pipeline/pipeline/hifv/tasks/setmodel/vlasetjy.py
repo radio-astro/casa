@@ -1,14 +1,12 @@
 from __future__ import absolute_import
 import ast
 import csv
-import datetime
 import os
 import re
 import string
 import types
 import math
 
-#from pipeline.hif.tasks.common import commonfluxresults
 from pipeline.h.tasks.common import commonfluxresults
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
@@ -20,10 +18,6 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 
 from pipeline.hifv.heuristics import find_EVLA_band
-import numpy
-
-import itertools
-import pipeline.extern.asizeof as asizeof
 
 
 LOG = infrastructure.get_logger(__name__)
@@ -91,7 +85,6 @@ def standard_sources(vis):
         QA_calprep='Fail'
 
     return standard_source_names, standard_source_fields
-
 
 
 class VLASetjyInputs(basetask.StandardInputs):
@@ -326,19 +319,20 @@ class VLASetjyInputs(basetask.StandardInputs):
     def to_casa_args(self):
         d = super(VLASetjyInputs, self).to_casa_args()
         # Filter out reffile. Note that the , is required
-	for ignore in ('reffile',):
-	    if ignore in d:
+        for ignore in ('reffile',):
+            if ignore in d:
                 del d[ignore]
 
         # Enable intent selection in CASA. Convert to CASA intent if
-	# necessary. Not required here.
-	# d['intent'] = utils.to_CASA_intent (self.ms, d['intent'])
-	d['selectdata'] = True
-	
-	# Force usescratch to True for now
-	d['usescratch'] = True
+        # necessary. Not required here.
+        # d['intent'] = utils.to_CASA_intent (self.ms, d['intent'])
+        d['selectdata'] = True
+
+        # Force usescratch to True for now
+        d['usescratch'] = True
 
         return d
+
 
 class VLASetjy(basetask.StandardTaskTemplate):
     Inputs = VLASetjyInputs
@@ -382,23 +376,18 @@ class VLASetjy(basetask.StandardTaskTemplate):
         # Multiple spectral windows spawn multiple setjy jobs. Set a unique
         # marker in the CASA log so that we can identify log entries from this
         # particular task
-        ####start_marker = self._add_marker_to_casa_log()
+        # start_marker = self._add_marker_to_casa_log()
 
         # loop over fields so that we can use Setjy for sources with different
         # standards
-        
-        
-        
+
         setjy_dicts = []
         
         standard_source_names, standard_source_fields = standard_sources(self.inputs.vis)
-        context = self.inputs.context
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
-        #field_spws = context.evla['msinfo'][m.name].field_spws
         field_spws = m.get_vla_field_spws()
-        #spw2band = context.evla['msinfo'][m.name].spw2band
         spw2band = m.get_vla_spw2band()
-        bands = spw2band.values()
+        # bands = spw2band.values()
 
         #Look in spectral window domain object as this information already exists!
         with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
@@ -409,10 +398,16 @@ class VLASetjy(basetask.StandardTaskTemplate):
     
         center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
 
+        LOG.info("STANDARD SOURCE FIELDS:")
+        print standard_source_fields
 
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
                 inputs.field = myfield
+                setjyfield = myfield
+                # Use the domain object to get the actual field id, ***NOT*** the index
+                # setjyfield = m.get_fields()[myfield].id
+
                 jobs = []
                 VLAspws = field_spws[myfield]
                 print 'VLAspws: ', VLAspws, type(VLAspws)
@@ -432,10 +427,10 @@ class VLASetjy(basetask.StandardTaskTemplate):
                     
                     model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
         
-                    LOG.info("Setting model for field "+str(myfield)+" spw "+str(spw.id)+" using "+model_image)
+                    LOG.info("Setting model for field "+str(m.get_fields()[myfield].id)+" spw "+str(spw.id)+" using "+model_image)
         
                     task_args = {'vis'            : inputs.vis,
-                                 'field'          : str(myfield),
+                                 'field'          : str(setjyfield),
                                  'spw'            : str(spw.id),
                                  'selectdata'     : False,
                                  'model'          : model_image,
@@ -528,68 +523,8 @@ class VLASetjy(basetask.StandardTaskTemplate):
                         result.measurements[field.identifier].append(flux)
                         spw_seen.add(spw_id)
 
-
-        '''
-        with commonfluxresults.File(casatools.log.logfile()) as casa_log:
-            # CASA has a bug whereby setting spw='0,1' logs results for spw #0
-            # twice, thus giving us two measurements. We get round this by
-            # noting previously recorded spws in this set
-            spw_seen = set()
-        
-            start_tag_found = False
-            for l in casa_log.backward():
-                if not start_tag_found and start_pattern.match(l):
-                    start_tag_found = True
-                    continue
-
-                if start_tag_found:
-                    flux_match = self._match_flux_log_entry(l)
-                    if flux_match:
-                        log_entry = flux_match.groupdict()
-                        
-                        field_id = log_entry['field']
-                        field = self.inputs.ms.get_fields(field_id)[0]
-                        
-                        spw_id = log_entry['spw']
- 
-                        I = log_entry['I']
-                        Q = log_entry['Q']
-                        U = log_entry['U']
-                        V = log_entry['V']                        
-                        flux = domain.FluxMeasurement(spw_id=spw_id, 
-                                                      I=I, Q=Q, U=U, V=V)
-                       
-                        # .. and here's that check for previously recorded
-                        # spectral windows.
-                        if spw_id not in spw_seen:
-                            result.measurements[field.identifier].append(flux)
-                            spw_seen.add(spw_id)
-                    if end_pattern.match(l):
-                        break
-
-            # Yes, this else belongs to the for loop! This will execute when
-            # no break occurs 
-            else:
-                LOG.error('Could not find start of vlasetjy task in CASA log. '
-                          'Too many sources, or operating in dry-run mode?')
-        '''
-
-
         return result
 
     def analyse(self, result):
         return result
 
-    def _add_marker_to_casa_log(self):
-        comment = 'VLASetjy marker: %s' %  datetime.datetime.now()
-        comment_job = casa_tasks.comment(comment, False)
-        self._executor.execute(comment_job)
-        return comment
-
-    def _match_flux_log_entry(self, log_entry):
-        for pattern in self._flux_patterns:
-            match = pattern.search(log_entry)
-            if match:
-                return match
-        return False
-        
