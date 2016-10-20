@@ -193,46 +193,23 @@ def immath(
         tmpfilenames = _immath_parse(expr)
     if isinstance(filenames, str):
         filenames = [filenames]
-    casalog.post( 'List of input files is: '+str(filenames), 'DEBUG1' )
     varnames = _immath_varnames(varnames, filenames, tmpfilenames)
-    
-    _myia = iatool()
-    #file existance check
-    ignoreimagename = False
-    if mode=='evalexpr':
-        varnamesSet = set(varnames)
-        count = 0
-        for imname in tmpfilenames:
-            # check if it is one of varnames, if not check the files in expr exist 
-            if(not varnamesSet.issuperset(imname)):
-               if( not os.path.exists(imname)):
-                   raise Exception, 'Image data set not found - please verify '+imname
-               else:
-                   count = count + 1            
-        if len(tmpfilenames) == count:
-            ignoreimagename = True
-            filenames = tmpfilenames
-    if not ignoreimagename:
-        for i in range( len(filenames) ):
-            if ( not os.path.exists(filenames[i]) ):
-                casalog.post("Image data set not found - please verify " +filenames[i], "SEVERE")
-                raise Exception, 'Image data set not found - please verify '+filenames[i]
-
-       
-    # Remove spaces from the expression.
+    try:
+        filenames = _immath_filenames(filenames, tmpfilenames, varnames, mode)
+    except Exception, error:
+        casalog.post( "Exception caught was: " + str(error), 'SEVERE')
+        raise
     expr=expr.replace( ' ', '' )
+    
+    try:
+        expr = _immath_dospix(expr, mode, filenames, varnames)
+    except Exception, error:
+        casalog.post( "Exception caught was: " + str(error), 'SEVERE')
+        raise
     doPolThresh = False
+    _myia = iatool()
 
-    # Construct expressions for the spectral and polarization modes.
-    # These are common, repetitive calculations that are handled for
-    # the user.
-    if mode=='spix':
-        # calculate a spectral index distribution image
-        if len(filenames) != 2:
-            raise Exception, 'Requires two images at different frequencies'
-
-        expr = 'spectralindex('+varnames[0]+', '+varnames[1]+')'
-    elif mode=='pola':
+    if mode=='pola':
         expr = _doPolA(filenames, varnames, tmpFilePrefix)
         if (polithresh):
             if (mask != ""):
@@ -427,6 +404,36 @@ def immath(
         casalog.post( 'immath was unable to cleanup temporary files','SEVERE' )
         raise
     return True
+
+def _immath_dospix(expr, mode, filenames, varnames):
+    if mode=='spix':
+        # calculate a spectral index distribution image
+        if len(filenames) != 2:
+            raise Exception, 'Requires two images at different frequencies'
+        expr = 'spectralindex(' + varnames[0] + ', ' + varnames[1] + ')'
+    return expr
+
+def _immath_filenames(filenames, tmpfilenames, varnames, mode):
+    ignoreimagename = False
+    if mode=='evalexpr':
+        varnamesSet = set(varnames)
+        count = 0
+        for imname in tmpfilenames:
+            # check if it is one of varnames, if not check the files in expr exist 
+            if(not varnamesSet.issuperset(imname)):
+               if( not os.path.exists(imname)):
+                   raise Exception, 'Image data set not found - please verify ' + imname
+               else:
+                   count = count + 1            
+        if len(tmpfilenames) == count:
+            ignoreimagename = True
+            filenames = tmpfilenames
+    if not ignoreimagename:
+        for i in range(len(filenames)):
+            if not os.path.exists(filenames[i]):
+                casalog.post("Image data set not found - please verify " +filenames[i], "SEVERE")
+                raise Exception, 'Image data set not found - please verify '+filenames[i]
+    return filenames
 
 def _immath_varnames(varnames, filenames, tmpfilenames):
     # Construct the variable name list.  We append to the list the
