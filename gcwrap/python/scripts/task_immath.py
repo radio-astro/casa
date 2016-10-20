@@ -199,7 +199,7 @@ def immath(
     except Exception, error:
         casalog.post( "Exception caught was: " + str(error), 'SEVERE')
         raise
-    expr=expr.replace( ' ', '' )
+    expr=expr.replace(' ', '')
     
     try:
         expr = _immath_dospix(expr, mode, filenames, varnames)
@@ -208,34 +208,17 @@ def immath(
         raise
     doPolThresh = False
     _myia = iatool()
+    try:
+        (expr, mask, polithresh, doPolThresh, lpol) = _immath_dopola(
+            expr, mask, polithresh, doPolThresh, _myia, mode,
+            filenames, varnames, tmpFilePrefix, imagename, imagemd
+        )
+    except Exception, error:
+        casalog.post( "Exception caught was: " + str(error), 'SEVERE')
+        raise
 
-    if mode=='pola':
-        expr = _doPolA(filenames, varnames, tmpFilePrefix)
-        if (polithresh):
-            if (mask != ""):
-                mask = ""
-                casalog.post("Ignoring mask parameter in favor of polithresh parameter", 'WARN')
-            if (qa.getunit(polithresh) != ""):
-                initUnit = qa.getunit(polithresh)
-                _myia.open(filenames[0])
-                bunit = _myia.brightnessunit()
-                polithresh = qa.convert(polithresh, bunit)
-                _myia.done()
-                if (qa.getunit(polithresh) != bunit):
-                    raise Exception, "Units of polithresh " + initUnit \
-                    + " do not conform to input image units of " + bunit \
-                    + " so cannot perform thresholding. Please correct units and try again."
-                polithresh = qa.getvalue(polithresh)[0]
-            doPolThresh = True
-            [lpolexpr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, False, False)
-            lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
-            lpolexpr = lpolexpr + ")"
-            lpol = tmpFilePrefix + "_lpol.im"
-            res = _myia.imagecalc(
-                pixels=lpolexpr, outfile=lpol, imagemd=_immath_translate_imagemd(imagename, imagemd)
-            )
-            res.done()
-    elif mode=='poli':
+
+    if mode=='poli':
         [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
         sigsq=0
         if len(sigma)>0:
@@ -404,6 +387,39 @@ def immath(
         casalog.post( 'immath was unable to cleanup temporary files','SEVERE' )
         raise
     return True
+
+def _immath_dopola(
+    expr, mask, polithresh, doPolThresh, _myia, mode,
+    filenames, varnames, tmpFilePrefix, imagename, imagemd
+):
+    lpol = ""
+    if mode=='pola':
+        expr = _doPolA(filenames, varnames, tmpFilePrefix)
+        if (polithresh):
+            if (mask != ""):
+                mask = ""
+                casalog.post("Ignoring mask parameter in favor of polithresh parameter", 'WARN')
+            if (qa.getunit(polithresh) != ""):
+                initUnit = qa.getunit(polithresh)
+                _myia.open(filenames[0])
+                bunit = _myia.brightnessunit()
+                polithresh = qa.convert(polithresh, bunit)
+                _myia.done()
+                if (qa.getunit(polithresh) != bunit):
+                    raise Exception, "Units of polithresh " + initUnit \
+                    + " do not conform to input image units of " + bunit \
+                    + " so cannot perform thresholding. Please correct units and try again."
+                polithresh = qa.getvalue(polithresh)[0]
+            doPolThresh = True
+            [lpolexpr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, False, False)
+            lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
+            lpolexpr = lpolexpr + ")"
+            lpol = tmpFilePrefix + "_lpol.im"
+            res = _myia.imagecalc(
+                pixels=lpolexpr, outfile=lpol, imagemd=_immath_translate_imagemd(imagename, imagemd)
+            )
+            res.done()
+    return (expr, mask, polithresh, doPolThresh, lpol)
 
 def _immath_dospix(expr, mode, filenames, varnames):
     if mode=='spix':
