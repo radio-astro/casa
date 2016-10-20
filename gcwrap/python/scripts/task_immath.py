@@ -162,7 +162,6 @@
 # </todo>
 ########################################################################3
 
-
 import os
 import shutil
 from taskinit import *
@@ -188,21 +187,15 @@ def immath(
     #
     # TODO add a size check to make sure all images are the
     # same size.  Is this
-    tmpfilenames=''
-    filenames=imagename
+    tmpfilenames = ''
+    filenames = imagename
     if mode=='evalexpr':
-        tmpfilenames=_immath_parse( expr )
-    if ( isinstance( filenames, str ) ):
-        filenames= [ filenames ]
+        tmpfilenames = _immath_parse(expr)
+    if isinstance(filenames, str):
+        filenames = [filenames]
     casalog.post( 'List of input files is: '+str(filenames), 'DEBUG1' )
+    varnames = _immath_varnames(varnames)
     
-    # Construct the variable name list.  We append to the list the
-    # default variable names if the user hasn't supplied a full suite.
-    if ( not isinstance( varnames, list ) ):
-        name0=varnames
-        varnames=[]
-        if ( len(name0 ) > 0 ):
-            varnames.append( name0 )
     nfile=max(len(filenames),len(tmpfilenames))
     for i in range( len(varnames), nfile ):
         varnames.append( 'IM'+str(i) )
@@ -210,9 +203,9 @@ def immath(
 
     _myia = iatool()
     #file existance check
-    ignoreimagename=False
+    ignoreimagename = False
     if mode=='evalexpr':
-        varnamesSet=set(varnames)
+        varnamesSet = set(varnames)
         count = 0
         for imname in tmpfilenames:
             # check if it is one of varnames, if not check the files in expr exist 
@@ -220,10 +213,10 @@ def immath(
                if( not os.path.exists(imname)):
                    raise Exception, 'Image data set not found - please verify '+imname
                else:
-                   count=count+1            
-        if len(tmpfilenames)==count:
-            ignoreimagename=True
-            filenames=tmpfilenames
+                   count = count + 1            
+        if len(tmpfilenames) == count:
+            ignoreimagename = True
+            filenames = tmpfilenames
     if not ignoreimagename:
         for i in range( len(filenames) ):
             if ( not os.path.exists(filenames[i]) ):
@@ -439,6 +432,16 @@ def immath(
         casalog.post( 'immath was unable to cleanup temporary files','SEVERE' )
         raise
     return True
+
+def _immath_varnames(varnames):
+    # Construct the variable name list.  We append to the list the
+    # default variable names if the user hasn't supplied a full suite.
+    if not isinstance(varnames, list):
+        name0 = varnames
+        varnames = []
+        if name0:
+            varnames.append(name0)
+    return varnames
 
 def _immath_initial_cleanup(tmpFilePrefix):
     try:
