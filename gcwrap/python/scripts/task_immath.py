@@ -194,13 +194,8 @@ def immath(
     if isinstance(filenames, str):
         filenames = [filenames]
     casalog.post( 'List of input files is: '+str(filenames), 'DEBUG1' )
-    varnames = _immath_varnames(varnames)
+    varnames = _immath_varnames(varnames, filenames, tmpfilenames)
     
-    nfile=max(len(filenames),len(tmpfilenames))
-    for i in range( len(varnames), nfile ):
-        varnames.append( 'IM'+str(i) )
-    casalog.post( 'Variable name list is: '+str(varnames), 'DEBUG1' )
-
     _myia = iatool()
     #file existance check
     ignoreimagename = False
@@ -433,7 +428,7 @@ def immath(
         raise
     return True
 
-def _immath_varnames(varnames):
+def _immath_varnames(varnames, filenames, tmpfilenames):
     # Construct the variable name list.  We append to the list the
     # default variable names if the user hasn't supplied a full suite.
     if not isinstance(varnames, list):
@@ -441,6 +436,10 @@ def _immath_varnames(varnames):
         varnames = []
         if name0:
             varnames.append(name0)
+    nfile = max(len(filenames),len(tmpfilenames))
+    for i in range(len(varnames), nfile):
+        varnames.append('IM'+str(i))
+    casalog.post( 'Variable name list is: '+str(varnames), 'DEBUG1' )
     return varnames
 
 def _immath_initial_cleanup(tmpFilePrefix):
