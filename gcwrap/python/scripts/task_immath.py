@@ -208,32 +208,19 @@ def immath(
             expr, mode, filenames, varnames,
             tmpFilePrefix, sigma, _myia
         )
-    except Exception, error:
-        casalog.post( "Exception caught was: " + str(error), 'SEVERE')
-        raise
+        if (mode == 'pola' or mode == 'poli') and stokes:
+            # reset stokes selection for pola and poli
+            casalog.post( "Ignoring stokes parameters selection." ,'WARN' );
+            stokes=''
     
-    if (mode == 'pola' or mode == 'poli') and stokes:
-        # reset stokes selection for pola and poli
-        casalog.post( "Ignoring stokes parameters selection." ,'WARN' );
-        stokes=''
-    # PUT TRY BLOCK AROUND THIS PART
-    #
-    # NEED TO DO EXPRESSION FOR EXPR MODE
-
-    # If the user didn't give any region or mask information
-    # then just evaluated the expression with the filenames in it.
-    if not (box or chans or stokes or region or mask):
-        try:
+        # If the user didn't give any region or mask information
+        # then just evaluated the expression with the filenames in it.
+        if not (box or chans or stokes or region or mask):
             return _immath_dofull(
                 imagename, imagemd, outfile, mode, expr,
                 varnames, filenames, isTPol, isLPol,
                 doPolThresh, polithresh, lpol, _myia
             )
-        except Exception, error:
-            casalog.post( "Exception caught was: " + str(error), 'SEVERE')
-            raise
-
-    try:
         (subImages, file_map) = _immath_createsubimages(
             box, chans, stokes, region, mask,
             stretch, filenames, _myia, tmpFilePrefix
