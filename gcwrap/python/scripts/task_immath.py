@@ -218,7 +218,8 @@ def immath(
 
     try:
         (expr, isLPol, isTPol) = _immath_dopoli(
-            expr, mode, filenames, varnames, tmpFilePrefix, sigma
+            expr, mode, filenames, varnames,
+            tmpFilePrefix, sigma, _myia
         )
     except Exception, error:
         casalog.post( "Exception caught was: " + str(error), 'SEVERE')
@@ -234,33 +235,17 @@ def immath(
 
     # If the user didn't give any region or mask information
     # then just evaluated the expression with the filenames in it.
-    if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 and len(mask)<1):
-        expr = _immath_expr_from_varnames(expr, varnames, filenames)
-        casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
+    if not (box or chans or stokes or region or mask):
         try:
-            res = _myia.imagecalc(
-                pixels=expr, outfile=outfile, imagemd=_immath_translate_imagemd(imagename, imagemd)
+            return _immath_dofull(
+                imagename, imagemd, outfile, mode, expr,
+                varnames, filenames, isTPol, isLPol,
+                doPolThresh, polithresh, lpol, _myia
             )
-            # need to modify stokes type of output image for pol. intensity image
-            if ( mode =="poli" ):
-                csys = res.coordsys()
-                if isTPol:
-                    csys.setstokes('Ptotal')
-                elif isLPol:
-                    csys.setstokes('Plinear')
-                res.setcoordsys(csys.torecord())
-            res.done()
-            if (doPolThresh):
-                _immath_createPolMask(polithresh, lpol, outfile)
-            return True
         except Exception, error:
-            try:
-                _myia.done()
-            except:
-                pass
-            casalog.post( 'Unable to do mathematical expression: '\
-                  +expr+'\n'+str(error), 'SEVERE' )
+            casalog.post( "Exception caught was: " + str(error), 'SEVERE')
             raise
+        
    
     # If we've made it here we need to apply masks or extract
     # regions from the images before doing the calculations first.
@@ -374,7 +359,38 @@ def immath(
         raise
     return True
 
-def _immath_dopoli(expr, mode, filenames, varnames, tmpFilePrefix, sigma):
+def _immath_dofull(
+    imagename, imagemd, outfile, mode, expr, varnames, filenames,
+    isTPol, isLPol, doPolThresh, polithresh, lpol, _myia
+):
+    expr = _immath_expr_from_varnames(expr, varnames, filenames)
+    casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
+    try:
+        res = _myia.imagecalc(
+            pixels=expr, outfile=outfile, imagemd=_immath_translate_imagemd(imagename, imagemd)
+        )
+        # need to modify stokes type of output image for pol. intensity image
+        if ( mode =="poli" ):
+            csys = res.coordsys()
+            if isTPol:
+                csys.setstokes('Ptotal')
+            elif isLPol:
+                csys.setstokes('Plinear')
+            res.setcoordsys(csys.torecord())
+        res.done()
+        if (doPolThresh):
+            _immath_createPolMask(polithresh, lpol, outfile)
+        return True
+    except Exception, error:
+        try:
+            _myia.done()
+        except:
+            pass
+        casalog.post( 'Unable to do mathematical expression: '\
+              +expr+'\n'+str(error), 'SEVERE' )
+        raise
+
+def _immath_dopoli(expr, mode, filenames, varnames, tmpFilePrefix, sigma, _myia):
     isLPol = False
     isTPol = False
     if mode == 'poli':
