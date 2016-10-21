@@ -196,27 +196,14 @@ def immath(
     varnames = _immath_varnames(varnames, filenames, tmpfilenames)
     try:
         filenames = _immath_filenames(filenames, tmpfilenames, varnames, mode)
-    except Exception, error:
-        casalog.post( "Exception caught was: " + str(error), 'SEVERE')
-        raise
-    expr=expr.replace(' ', '')
-    try:
+        expr = expr.replace(' ', '')
         expr = _immath_dospix(expr, mode, filenames, varnames)
-    except Exception, error:
-        casalog.post( "Exception caught was: " + str(error), 'SEVERE')
-        raise
-    doPolThresh = False
-    _myia = iatool()
-    try:
+        doPolThresh = False
+        _myia = iatool()
         (expr, mask, polithresh, doPolThresh, lpol) = _immath_dopola(
             expr, mask, polithresh, doPolThresh, _myia, mode,
             filenames, varnames, tmpFilePrefix, imagename, imagemd
         )
-    except Exception, error:
-        casalog.post( "Exception caught was: " + str(error), 'SEVERE')
-        raise
-
-    try:
         (expr, isLPol, isTPol) = _immath_dopoli(
             expr, mode, filenames, varnames,
             tmpFilePrefix, sigma, _myia
@@ -245,77 +232,20 @@ def immath(
         except Exception, error:
             casalog.post( "Exception caught was: " + str(error), 'SEVERE')
             raise
-        
-   
-    # If we've made it here we need to apply masks or extract
-    # regions from the images before doing the calculations first.
-    # Warning if user has given a region file plus other region
-    # selection information
-                
-    # For each file in the list of files, creat a subimage
-    # of it and store it.  We need to do this only if the user
-    # specified a region or mask information.
-    subImages=[]
-    casalog.post( "SUBIMAGES: "+str(subImages), 'DEBUG2' )
-    file_map = {}
-    i = 0
 
-    for image in filenames:
-        casalog.post( 'Creating tmp image for image ' + image, 'DEBUG2')
-        _myia.open(image)
-        reg = rg.frombcs(csys=_myia.coordsys().torecord(),
-            shape=_myia.shape(), box=box, chans=chans, stokes=stokes,
-            stokescontrol="a", region=region
-        )
-        _myia.done()
-        # TODO see if there are issues when NO region given by user
-        try:
-            _myia.open(image)
-            tmpFile=tmpFilePrefix+str(i)
-            subim = _myia.subimage( region=reg, mask=mask, outfile=tmpFile, stretch=stretch )
-            subim.done()
-            file_map[image] = tmpFile
-            subImages.append( tmpFile )
-            _myia.done()
-            casalog.post( 'Created temporary image '+tmpFile+' from '+\
-                          image, 'DEBUG1' )
-            i = i + 1
-
-        except Exception, e:
-            casalog.post( 'Exception caught is: '+str(e), 'DEBUG2' )
-            casalog.post( 'Unable to apply region to file: '\
-                  + image\
-                  +'.\nUsed region: '+str(reg), 'DEBUG2' )
-            casalog.post( 'Unable to apply region to file: '\
-                          + image, 'SEVERE' )
-            raise
-        finally:
-            _myia.done()
-    # Make sure no problems happened
-
-    if ( len(filenames) != len(subImages) ) :
-        #raise Exception, 'Unable to create subimages for all image names given'
-        casalog.post( 'Unable to create subimages for all image names given',\
-                      'SEVERE' )
-        raise Exception
-    
-    # because real file names also have to be mapped to a corresponding subimage, CAS-1830
-    for k in file_map.keys():
-        # we require actual image names to be in quotes when used in the expression
-        varnames.extend(["'" + k + "'", '"' + k + '"'])
-        subImages.extend(2 * [file_map[k]])
-
-    # Put the subimage names into the expression
     try:
-        expr = _immath_expr_from_varnames(expr, varnames, subImages)
-
-    except Exception, e:
-        casalog.post(
-            "Unable to construct pixel expression aborting immath: " + str(e),
-            'SEVERE'
+        (subImages, file_map) = _immath_createsubimages(
+            box, chans, stokes, region, mask,
+            stretch, filenames, _myia, tmpFilePrefix
         )
-        raise
-    casalog.post( 'Will evaluate expression of subimages: '+expr, 'DEBUG1' )
+        (expr, varnames, subImages) = _immath_updateexpr(
+            expr, varnames, subImages, filenames, file_map
+        )
+    except Exception, error:
+            casalog.post( "Exception caught was: " + str(error), 'SEVERE')
+            raise
+    
+    
     try:
         # Do the calculation
         res = _myia.imagecalc(
@@ -359,6 +289,62 @@ def immath(
         raise
     return True
 
+def _immath_updateexpr(expr, varnames, subImages, filenames, file_map):
+    # Make sure no problems happened
+    if len(filenames) != len(subImages):
+        casalog.post(
+            'Unable to create subimages for all image names given',
+            'SEVERE'
+        )
+        raise Exception
+    # because real file names also have to be mapped to a corresponding subimage, CAS-1830
+    for k in file_map.keys():
+        # we require actual image names to be in quotes when used in the expression
+        varnames.extend(["'" + k + "'", '"' + k + '"'])
+        subImages.extend(2 * [file_map[k]])
+    # Put the subimage names into the expression
+    try:
+        expr = _immath_expr_from_varnames(expr, varnames, subImages)
+    except Exception, e:
+        casalog.post(
+            "Unable to construct pixel expression aborting immath: " + str(e),
+            'SEVERE'
+        )
+        raise
+    return (expr, varnames, subImages)
+    
+def _immath_createsubimages(
+    box, chans, stokes, region, mask,
+    stretch, filenames, _myia, tmpFilePrefix
+):
+    subImages = []
+    file_map = {}
+    i = 0
+    for image in filenames:
+        try:
+            _myia.open(image)
+            reg = rg.frombcs(csys=_myia.coordsys().torecord(),
+                shape=_myia.shape(), box=box, chans=chans, stokes=stokes,
+                stokescontrol="a", region=region
+            )
+            tmpFile = tmpFilePrefix + str(i)
+            subim = _myia.subimage(
+                region=reg, mask=mask, outfile=tmpFile, stretch=stretch
+            )
+            subim.done()
+            file_map[image] = tmpFile
+            subImages.append(tmpFile)
+            _myia.done()
+            i = i + 1
+        except Exception, e:
+            casalog.post(
+                'Unable to apply region to file: ' + image, 'SEVERE'
+            )
+            raise
+        finally:
+            _myia.done()
+    return (subImages, file_map)
+
 def _immath_dofull(
     imagename, imagemd, outfile, mode, expr, varnames, filenames,
     isTPol, isLPol, doPolThresh, polithresh, lpol, _myia
@@ -386,8 +372,10 @@ def _immath_dofull(
             _myia.done()
         except:
             pass
-        casalog.post( 'Unable to do mathematical expression: '\
-              +expr+'\n'+str(error), 'SEVERE' )
+        casalog.post(
+            'Unable to do mathematical expression: ' + expr + ' ' + str(error),
+            'SEVERE'
+        )
         raise
 
 def _immath_dopoli(expr, mode, filenames, varnames, tmpFilePrefix, sigma, _myia):
