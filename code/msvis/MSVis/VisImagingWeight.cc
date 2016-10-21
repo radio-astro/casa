@@ -122,6 +122,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	      // Extract weights correctly (use WEIGHT_SPECTRUM, if available)
 	      Matrix<Float> wtm;
+	      ////////////////
+	      doWtSp=(vb->weightSpectrum().nelements()>0);
+	      //////////////
 	      if (doWtSp)                        
 		// WS available, 
 		unPolChanWeight(wtm,vb->weightSpectrum());               // collapse corr axis (parallel-hand average)
@@ -582,7 +585,7 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
                                          const Matrix<Float>& weight) const{
 
         Double sumwt=0.0;
-
+	//cerr << "shape of weight " << weight.shape() << " max " << max (weight.column(0) ) << " max " << min(weight.column(0)) << " " << weight.column(0).shape() << endl;
         Int nRow=imagingWeight.shape()(1);
         Int nChan=imagingWeight.shape()(0);
         Int nChanWt=weight.shape()(0);
@@ -743,7 +746,7 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
 
     IPosition sh3=corrChanRowWt.shape();
     IPosition sh2=sh3.getLast(2);
-    //cout << sh3 << sh2 << endl;
+    //cerr  << "sh3" <<  sh3 << " sh2 " << sh2 << endl;
     chanRowWt.resize(sh2);
     //cout << "assign..." << endl;
     chanRowWt=corrChanRowWt(Slice(0,1,1),Slice(),Slice()).reform(sh2);
