@@ -315,7 +315,7 @@ protected:
   inline SkyCal<casacore::Float, casacore::Float> &engineF() { return (*engineF_[currSpw()]); }
 
   // arrange data selection according to calibration mode
-  virtual casacore::String configureSelection(casacore::MeasurementSet const &ms) = 0;
+  virtual casacore::MeasurementSet selectMS(casacore::MeasurementSet const &ms) = 0;
 
   // current antenna
   casacore::Int currAnt_;
@@ -352,7 +352,7 @@ public:
   virtual casacore::String longTypeName() { return "SDSKY_PS (position switch sky subtraction)"; }
 
   // data selection for position switch calibration
-  virtual casacore::String configureSelection(casacore::MeasurementSet const &ms);
+  virtual casacore::MeasurementSet selectMS(casacore::MeasurementSet const &ms);
 
 };
   
@@ -376,7 +376,7 @@ public:
   virtual void setSolve(const casacore::Record& solve);
   
   // data selection specific to otfraster mode
-  virtual casacore::String configureSelection(casacore::MeasurementSet const &ms);
+  virtual casacore::MeasurementSet selectMS(casacore::MeasurementSet const &ms);
 
 private:
   // edge detection parameter for otfraster mode
@@ -401,7 +401,7 @@ public:
   virtual casacore::String longTypeName() { return "SDSKY_OTF (position switch sky subtraction specific to OTF fast scan)"; }
 
   // casacore::Data selection specific to otf mode
-  virtual casacore::String configureSelection(casacore::MeasurementSet const &ms);
+  virtual casacore::MeasurementSet selectMS(casacore::MeasurementSet const &ms);
   virtual void setSolve(const casacore::Record& solve);
 
 private:

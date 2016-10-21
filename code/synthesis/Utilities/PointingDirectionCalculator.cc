@@ -526,6 +526,10 @@ Vector<uInt> PointingDirectionCalculator::getRowId() {
     return selectedMS_->rowNumbers();
 }
 
+Vector<uInt> PointingDirectionCalculator::getRowIdForOriginalMS() {
+    return selectedMS_->rowNumbers(*originalMS_, True);
+}
+
 uInt PointingDirectionCalculator::getRowId(uInt i) {
     return selectedMS_->rowNumbers()[i];
 }

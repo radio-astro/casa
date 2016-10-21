@@ -580,7 +580,7 @@ void SingleDishSkyCal::setApply(const Record& apply)
   // call parent method
   SolvableVisCal::setApply(applyCopy);
 }
-  
+
 template<class Accessor>
 void SingleDishSkyCal::traverseMS(MeasurementSet const &ms) {
   Int cols[] = {MS::FIELD_ID, MS::ANTENNA1, MS::FEED1,
@@ -991,9 +991,7 @@ void SingleDishSkyCal::selfGatherAndSolve(VisSet& vs, VisEquation& /*ve*/)
   // Pick up OFF spectra using STATE_ID
   MeasurementSet const &msIn = vs.iter().ms();
   debuglog << "configure data selection for specific calibration mode" << debugpost;
-  String taql = configureSelection(msIn);
-  debuglog << "taql = \"" << taql << "\"" << debugpost;
-  MeasurementSet msSel(tableCommand(taql, msIn));
+  MeasurementSet msSel = selectMS(msIn);
   debuglog << "msSel.nrow()=" << msSel.nrow() << debugpost;
   if (msSel.nrow() == 0) {
     throw AipsError("No reference integration in the data.");
@@ -1088,14 +1086,14 @@ SingleDishPositionSwitchCal::~SingleDishPositionSwitchCal()
   debuglog << "SingleDishPositionSwitchCal::~SingleDishPositionSwitchCal()" << debugpost;
 }
 
-String SingleDishPositionSwitchCal::configureSelection(MeasurementSet const &ms)
+MeasurementSet SingleDishPositionSwitchCal::selectMS(MeasurementSet const &ms)
 {
   Vector<uInt> stateIdList = getOffStateIdList(ms);
   std::ostringstream oss;
   oss << "SELECT FROM $1 WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
       << ::toString(stateIdList)
       << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
-  return String(oss.str());  
+  return MeasurementSet(tableCommand(oss.str(), ms));
 }
 
 //
@@ -1151,9 +1149,9 @@ void SingleDishRasterCal::setSolve(const Record& solve)
   SolvableVisCal::setSolve(solve);
 }
   
-String SingleDishRasterCal::configureSelection(MeasurementSet const &ms)
+MeasurementSet SingleDishRasterCal::selectMS(MeasurementSet const &ms)
 {
-  debuglog << "SingleDishRasterCal::configureSelection" << debugpost;
+  debuglog << "SingleDishRasterCal::selectMS" << debugpost;
   const Record specify;
   std::ostringstream oss;
   oss << "SELECT FROM $1 WHERE ";
@@ -1191,7 +1189,7 @@ String SingleDishRasterCal::configureSelection(MeasurementSet const &ms)
   
   oss //<< ")"
       << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
-  return String(oss);  
+  return MeasurementSet(tableCommand(oss.str(), ms));
 }
 
 //
@@ -1248,7 +1246,7 @@ SingleDishOtfCal::~SingleDishOtfCal()
   debuglog << "SingleDishOtfCal::~SingleDishOtfCal()" << debugpost;
 }
 
-String SingleDishOtfCal::configureSelection(MeasurementSet const &ms)
+MeasurementSet SingleDishOtfCal::selectMS(MeasurementSet const &ms)
 {
   PointingDirectionCalculator calc(ms);
   calc.setDirectionListMatrixShape(PointingDirectionCalculator::ROW_MAJOR);
@@ -1266,12 +1264,12 @@ String SingleDishOtfCal::configureSelection(MeasurementSet const &ms)
   case MDirection::AZELSW :
   case MDirection::AZELGEO :
   case MDirection::AZELSWGEO : {
-	  	  const String& ref_frame_name = MDirection::showType(ref_frame_type);
-	  	  debuglog << "Reference frame of pointings coordinates is non-celestial: " << ref_frame_name << debugpost;
-	  	  String j2000(MDirection::showType(MDirection::J2000));
-	  	  debuglog << "Pointings coordinates will be converted to: " << j2000 << debugpost;
-		  calc.setFrame(j2000);
-  	  }
+        const String& ref_frame_name = MDirection::showType(ref_frame_type);
+        debuglog << "Reference frame of pointings coordinates is non-celestial: " << ref_frame_name << debugpost;
+        String j2000(MDirection::showType(MDirection::J2000));
+        debuglog << "Pointings coordinates will be converted to: " << j2000 << debugpost;
+      calc.setFrame(j2000);
+      }
   }
   // Extract edge pointings for each (field_id,antenna,spectral window) triple
   // MeasurementSet 2 specification / FIELD table:
@@ -1299,119 +1297,120 @@ String SingleDishOtfCal::configureSelection(MeasurementSet const &ms)
 
   ostringstream taql_oss;
   const char delimiter = ',';
-  taql_oss << "SELECT FROM $1 WHERE ROWID() IN [ ";
+
+  Vector<uInt> rowList;
 
   for (uInt field_id=0; field_id < tbl_field.nrow(); ++field_id){
-	  String field_sel(casacore::String::toString<uInt>(field_id));
-	  String const source_name = source_map.at(source_id_col(field_id));
+    String field_sel(casacore::String::toString<uInt>(field_id));
+    String const source_name = source_map.at(source_id_col(field_id));
 
-	  // Set ephemeris flag if source name is the one recognized as a moving source
-	  if (isEphemeris(source_name)) {
-	    calc.setMovingSource(source_name);
-	  }
-	  else {
-	    calc.unsetMovingSource();
-	  }
+    // Set ephemeris flag if source name is the one recognized as a moving source
+    if (isEphemeris(source_name)) {
+      calc.setMovingSource(source_name);
+    }
+    else {
+      calc.unsetMovingSource();
+    }
 
-	  for (uInt ant_id=0; ant_id < tbl_antenna.nrow(); ++ant_id){
-		  String ant_sel(antenna_name(ant_id) + "&&&");
-		  for (uInt spw_id=0; spw_id < tbl_spectral_window.nrow(); ++spw_id){
-			  String spw_sel(casacore::String::toString<uInt>(spw_id));
-			  // Filter user selection by (field_id,antenna,spectral window) triple
-			  try {
-				  calc.selectData(ant_sel,spw_sel,field_sel);
-			  }
-			  catch (AipsError& e) { // Empty selection
-				  // Note: when the underlying MSSelection is empty
-				  // MSSelection internally catches an MSSelectionError error
-				  // but does not re-throw it. It throws instead an AipsError
-				  // copy-constructed from the MSSelectionError
-				  continue;
-			  }
-			  debuglog << "field_id: " << field_id
-					   << " ant_id: "  << ant_id
-					   << " spw: "     << spw_id
-			           << "  ==> selection rows: " << calc.getNrowForSelectedMS() << debugpost;
-			  // Get time-interpolated celestial pointing directions for the filtered user selection
-			  Matrix<Double> pointings_dirs = calc.getDirection();
-			  // Project directions onto image plane
-			  // pixel_scale_ :
-			  //   . hard-coded to 0.5 in constructor
-			  //   . is applied to the median separation of consecutive pointing directions by the projector
-			  //   . projector pixel size = 0.5*directions_median
-			  debuglog << "pixel_scale:" << pixel_scale_ << debugpost;
-			  OrthographicProjector p(pixel_scale_);
-			  p.setDirection(pointings_dirs);
-			  const Matrix<Double> &pointings_coords = p.project();
-			  // Extract edges of the observed region for the (field_id,antenna,spectral window) triple
-			  Vector<Double> pointings_x(pointings_coords.row(0).copy());
-			  Vector<Double> pointings_y(pointings_coords.row(1).copy());
-			  Vector<Bool> is_edge(pointings_coords.ncolumn(),false);
-			  const double pixel_size = 0.0;
-			  // libsakura 2.0: setting pixel_size=0.0 means that CreateMaskNearEdgeDouble will
-			  //   . compute the median separation of consecutive pointing coordinates
-			  //   . use an "edge detection pixel size" = 0.5*coordinates_median (pixel scale hard-coded to 0.5)
-			  debuglog << "sakura library function call: parameters info:" << debugpost;
-			  debuglog << "in: fraction: " << fraction_ << debugpost;
-			  debuglog << "in: pixel size: " << pixel_size << debugpost;
-			  debuglog << "in: pixels count: (nx = " << p.p_size()[0] << " , ny = " << p.p_size()[1] << debugpost;
-			  debuglog << "in: pointings_coords.ncolumn(): " << pointings_coords.ncolumn() << debugpost;
-			  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
-			    fraction_, pixel_size,
-				pointings_coords.ncolumn(), pointings_x.data(), pointings_y.data(),
-			    nullptr /* blc_x */, nullptr /* blc_y */,
-			    nullptr /* trc_x */, nullptr /* trc_y */,
-				is_edge.data());
-			  bool edges_detection_ok = ( status == LIBSAKURA_SYMBOL(Status_kOK) );
-			  if ( ! edges_detection_ok ) {
-				  debuglog << "sakura error: status=" << status << debugpost;
-			  }
-			  AlwaysAssert(edges_detection_ok,AipsError);
-			  // Compute ROW ids of detected edges. ROW "ids" are ROW ids in the original MS, not filtered by user selection.
-			  Vector<uInt> index_2_rowid = calc.getRowId();
-			  uInt edges_count = 0;
-			  for (size_t i = 0; i < is_edge.size(); ++i){
-				  if ( is_edge[i] ) {
-					  ++edges_count;
-					  taql_oss << index_2_rowid[i] << delimiter ;
-				  }
-			  }
-			  debuglog << "edges_count=" << edges_count << debugpost;
-			  AlwaysAssert(edges_count > 0, AipsError);
+    for (uInt ant_id=0; ant_id < tbl_antenna.nrow(); ++ant_id){
+      String ant_sel(antenna_name(ant_id) + "&&&");
+      for (uInt spw_id=0; spw_id < tbl_spectral_window.nrow(); ++spw_id){
+        String spw_sel(casacore::String::toString<uInt>(spw_id));
+        // Filter user selection by (field_id,antenna,spectral window) triple
+        try {
+          calc.selectData(ant_sel,spw_sel,field_sel);
+        }
+        catch (AipsError& e) { // Empty selection
+          // Note: when the underlying MSSelection is empty
+          // MSSelection internally catches an MSSelectionError error
+          // but does not re-throw it. It throws instead an AipsError
+          // copy-constructed from the MSSelectionError
+          continue;
+        }
+        debuglog << "field_id: " << field_id
+             << " ant_id: "  << ant_id
+             << " spw: "     << spw_id
+                 << "  ==> selection rows: " << calc.getNrowForSelectedMS() << debugpost;
+        // Get time-interpolated celestial pointing directions for the filtered user selection
+        Matrix<Double> pointings_dirs = calc.getDirection();
+        // Project directions onto image plane
+        // pixel_scale_ :
+        //   . hard-coded to 0.5 in constructor
+        //   . is applied to the median separation of consecutive pointing directions by the projector
+        //   . projector pixel size = 0.5*directions_median
+        debuglog << "pixel_scale:" << pixel_scale_ << debugpost;
+        OrthographicProjector p(pixel_scale_);
+        p.setDirection(pointings_dirs);
+        const Matrix<Double> &pointings_coords = p.project();
+        // Extract edges of the observed region for the (field_id,antenna,spectral window) triple
+        Vector<Double> pointings_x(pointings_coords.row(0).copy());
+        Vector<Double> pointings_y(pointings_coords.row(1).copy());
+        Vector<Bool> is_edge(pointings_coords.ncolumn(),false);
+        const double pixel_size = 0.0;
+        // libsakura 2.0: setting pixel_size=0.0 means that CreateMaskNearEdgeDouble will
+        //   . compute the median separation of consecutive pointing coordinates
+        //   . use an "edge detection pixel size" = 0.5*coordinates_median (pixel scale hard-coded to 0.5)
+        debuglog << "sakura library function call: parameters info:" << debugpost;
+        debuglog << "in: fraction: " << fraction_ << debugpost;
+        debuglog << "in: pixel size: " << pixel_size << debugpost;
+        debuglog << "in: pixels count: (nx = " << p.p_size()[0] << " , ny = " << p.p_size()[1] << debugpost;
+        debuglog << "in: pointings_coords.ncolumn(): " << pointings_coords.ncolumn() << debugpost;
+        LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
+          fraction_, pixel_size,
+        pointings_coords.ncolumn(), pointings_x.data(), pointings_y.data(),
+          nullptr /* blc_x */, nullptr /* blc_y */,
+          nullptr /* trc_x */, nullptr /* trc_y */,
+        is_edge.data());
+        bool edges_detection_ok = ( status == LIBSAKURA_SYMBOL(Status_kOK) );
+        if ( ! edges_detection_ok ) {
+          debuglog << "sakura error: status=" << status << debugpost;
+        }
+        AlwaysAssert(edges_detection_ok,AipsError);
+        // Compute ROW ids of detected edges. ROW "ids" are ROW ids in the original MS, not filtered by user selection.
+        Vector<uInt> index_2_rowid = calc.getRowIdForOriginalMS();
+        size_t edges_count = ntrue(is_edge);
+        size_t rowListIndex = rowList.size();
+        rowList.resize(rowList.size() + edges_count, True);
+        for (size_t i = 0; i < is_edge.size(); ++i){
+          if ( is_edge[i] ) {
+            rowList[rowListIndex] = index_2_rowid[i]; // i;
+            ++rowListIndex;
+          }
+        }
+        debuglog << "edges_count=" << edges_count << debugpost;
+        AlwaysAssert(edges_count > 0, AipsError);
 #ifdef SDCALSKY_DEBUG
-			  stringstream fname;
-			  fname << calTableName().c_str() << ".edges."
-		            << field_id << "_" << ant_id << "_" << spw_id
-					<< ".csv" ;
-			  debuglog << "Save pointing directions and coordinates to:" << debugpost;
-			  debuglog << fname.str() << debugpost;
-			  ofstream ofs(fname.str());
-			  AlwaysAssert(ofs.good(), AipsError);
-			  ofs << "row_id,field_id,ant_id,spw_id,triple_key,dir_0,dir_1,coord_0,coord_1,edge_0,edge_1,is_edge" << endl;
-			  const auto &d0 =  pointings_dirs.row(0);
-			  const auto &d1 =  pointings_dirs.row(1);
-			  const auto &c0 =  pointings_coords.row(0);
-			  const auto &c1 =  pointings_coords.row(1);
-			  for (uInt j=0; j<d0.size(); j++) {
-				  ofs << index_2_rowid[j] << ","
-					  << field_id << "," << ant_id << "," << spw_id << ","
-					  << field_id << "_" << ant_id << "_" << spw_id << ","
-				      << d0(j) << "," << d1(j) << ","
-				      << c0(j) << "," << c1(j) << "," ;
-				  if ( is_edge[j] ) ofs << c0(j) << "," << c1(j) << "," << 1 << endl;
-				  else ofs << ",," << 0 << endl;
-			  }
+        stringstream fname;
+        fname << calTableName().c_str() << ".edges."
+                << field_id << "_" << ant_id << "_" << spw_id
+          << ".csv" ;
+        debuglog << "Save pointing directions and coordinates to:" << debugpost;
+        debuglog << fname.str() << debugpost;
+        ofstream ofs(fname.str());
+        AlwaysAssert(ofs.good(), AipsError);
+        ofs << "row_id,field_id,ant_id,spw_id,triple_key,dir_0,dir_1,coord_0,coord_1,edge_0,edge_1,is_edge" << endl;
+        const auto &d0 =  pointings_dirs.row(0);
+        const auto &d1 =  pointings_dirs.row(1);
+        const auto &c0 =  pointings_coords.row(0);
+        const auto &c1 =  pointings_coords.row(1);
+        for (uInt j=0; j<d0.size(); j++) {
+          ofs << index_2_rowid[j] << ","
+            << field_id << "," << ant_id << "," << spw_id << ","
+            << field_id << "_" << ant_id << "_" << spw_id << ","
+              << d0(j) << "," << d1(j) << ","
+              << c0(j) << "," << c1(j) << "," ;
+          if ( is_edge[j] ) ofs << c0(j) << "," << c1(j) << "," << 1 << endl;
+          else ofs << ",," << 0 << endl;
+        }
 #endif
-		  }
-	  }
+      }
+    }
   }
-  String taql(taql_oss);
-  Bool have_off_spectra =  ( taql.back() == delimiter );
+  Bool have_off_spectra = (rowList.size() > 0);
   AlwaysAssert(have_off_spectra, AipsError);
-  taql.pop_back();
-  taql += " ] ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
-
-  return taql;
+  MeasurementSet msSel = ms(rowList);
+  debuglog << "rowList = " << rowList << debugpost;
+  return msSel;
 }
 
 } //# NAMESPACE CASA - END

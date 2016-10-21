@@ -79,6 +79,7 @@ public:
     casacore::Matrix<casacore::Double> getDirection();
     casacore::Vector<casacore::Double> getDirection(casacore::uInt irow);
     casacore::Vector<casacore::uInt> getRowId();
+    casacore::Vector<casacore::uInt> getRowIdForOriginalMS();
     casacore::uInt getRowId(casacore::uInt i);
 
 private:
