@@ -17,15 +17,19 @@ class RefantQAHandler(pqa.QAResultHandler):
         ms = context.observing_run.get_ms(vis)
     
         if result._refant != '':
-            scores = [pqa.QAScore(1.0,
-                                  longmsg='Reference antenna for %s was selected successfully' % ms.basename,
-                                  shortmsg='Refant OK',
-                                  vis=ms.basename)]
+            qa_score = 1.0
+            longmsg = 'Reference antenna for %s was selected successfully' % ms.basename
+            shortmsg='Refant OK'
         else:
-            scores = [pqa.QAScore(0.0,
-                                  longmsg='Could not select reference antenna for %s' % ms.basename,
-                                  shortmsg='No refant',
-                                  vis=ms.basename)]
+            qa_score = 0.0
+            longmsg='Could not select reference antenna for %s' % ms.basename
+            shortmsg='No refant'
+
+        origin = pqa.QAOrigin(metric_name='RefantQAHandler',
+                              metric_score=bool(qa_score),
+                              metric_units='Reference antenna was identified')
+
+        scores = [pqa.QAScore(qa_score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)]
 
         result.qa.pool[:] = scores
 

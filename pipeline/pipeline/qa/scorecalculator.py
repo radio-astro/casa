@@ -1,8 +1,8 @@
-'''
+"""
 Created on 9 Jan 2014
 
 @author: sjw
-'''
+"""
 import os
 import collections
 import datetime
@@ -24,7 +24,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_bwswitching',                               # ALMA specific
            'score_tsysspwmap',                                # ALMA specific
            'score_number_antenna_offsets',                    # ALMA specific
-           '_score_missing_derived_fluxes',                    # ALMA specific
+           '_score_missing_derived_fluxes',                   # ALMA specific
            'score_derived_fluxes_snr',                        # ALMA specific
            'score_phaseup_mapping_fraction',                  # ALMA specific
            'score_refspw_mapping_fraction',                   # ALMA specific
@@ -54,7 +54,7 @@ __all__ = ['score_polintents',                                # ALMA specific
 LOG = logging.get_logger(__name__)
 
 
-#- utility functions ---------------------------------------------------------
+# - utility functions --------------------------------------------------------------------------------------------------
 
 def log_qa(method):
     """
@@ -76,6 +76,7 @@ def log_qa(method):
 # struct to hold flagging statistics
 AgentStats = collections.namedtuple("AgentStats", "name flagged total")
 
+
 def calc_flags_per_agent(summaries):
     stats = []
     for idx in range(0, len(summaries)):
@@ -85,7 +86,7 @@ def calc_flags_per_agent(summaries):
         # From the second summary onwards, subtract counts from the previous 
         # one
         if idx > 0:
-            flagcount = flagcount - int(summaries[idx-1]['flagged'])
+            flagcount -= int(summaries[idx - 1]['flagged'])
         
         stat = AgentStats(name=summaries[idx]['name'],
                           flagged=flagcount,
@@ -93,6 +94,7 @@ def calc_flags_per_agent(summaries):
         stats.append(stat)
 
     return stats
+
 
 def linear_score(x, x1, x2, y1=0.0, y2=1.0):
     """
@@ -110,6 +112,7 @@ def linear_score(x, x1, x2, y1=0.0, y2=1.0):
     m = (y2-y1) / (x2-x1)
     c = y1 - m*x1
     return m*clipped_x + c
+
 
 def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac, 
                                  agents=None):
@@ -131,15 +134,19 @@ def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac,
                            if s.name in agents or match_all_agents], 0)
 
     score = linear_score(frac_flagged, min_frac, max_frac, 1.0, 0.0)
-    percent = 100.0*frac_flagged
+    percent = 100.0 * frac_flagged
     longmsg = ('%0.2f%% data in %s flagged by %s flagging agents'
                '' % (percent, ms.basename, utils.commafy(agents, False)))
     shortmsg = '%0.2f%% data flagged' % percent
-    
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, 
-                       vis=ms.basename)
-    
-#- exported scoring functions ------------------------------------------------
+
+    origin = pqa.QAOrigin(metric_name='score_data_flagged_by_agents',
+                          metric_score=frac_flagged,
+                          metric_units='Fraction of data newly flagged')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
+
+# - exported scoring functions -----------------------------------------------------------------------------------------
 
 def score_ms_model_data_column_present(all_mses, mses_with_column):
     """
@@ -166,7 +173,11 @@ def score_ms_model_data_column_present(all_mses, mses_with_column):
 
     score = linear_score(f, 0.0, 1.0, 1.0, 0.5)
 
-    return pqa.QAScore(score, longmsg, shortmsg)
+    origin = pqa.QAOrigin(metric_name='score_ms_model_data_column_present',
+                          metric_score=f,
+                          metric_units='Fraction of MSes with modeldata columns present')
+
+    return pqa.QAScore(score, longmsg, shortmsg, origin=origin)
 
 
 @log_qa
@@ -182,16 +193,13 @@ def score_ms_history_entries_present(all_mses, mses_with_history):
     if mses_with_history:
         # log a message like 'Entries were found in the HISTORY table for 
         # a.ms and b.ms'
-        basenames = utils.commafy([ms.basename for ms in mses_with_history],
-                                  quotes=False)
+        basenames = utils.commafy([ms.basename for ms in mses_with_history], quotes=False)
         if len(mses_with_history) is 1:
             longmsg = ('Unexpected entries were found in the HISTORY table of %s. '
-                        'This measurement set may already be processed.'
-                        '' % basenames)
+                       'This measurement set may already be processed.' % basenames)
         else:
             longmsg = ('Unexpected entries were found in the HISTORY tables of %s. '
-                       'These measurement sets may already be processed.'
-                        '' % basenames)                
+                       'These measurement sets may already be processed.' % basenames)
         shortmsg = '%s/%s have HISTORY' % (num_with, num_all) 
 
     else:
@@ -204,7 +212,12 @@ def score_ms_history_entries_present(all_mses, mses_with_history):
     f = float(num_with) / num_all
     score = linear_score(f, 0.0, 1.0, 1.0, 0.5)
 
-    return pqa.QAScore(score, longmsg, shortmsg)
+    origin = pqa.QAOrigin(metric_name='score_ms_history_entries_present',
+                          metric_score=f,
+                          metric_units='Fraction of MSes with HISTORY')
+
+    return pqa.QAScore(score, longmsg, shortmsg, origin=origin)
+
 
 @log_qa
 def score_bwswitching(mses):
@@ -213,15 +226,14 @@ def score_bwswitching(mses):
     bandwidth switching observings. For bandwidth switched
     observations the TARGET and PHASE spws are different.
     """
-
     score = 1.0
     num_mses = len(mses)
     all_ok = True
     complaints = []
+    nophasecals = []
 
     # analyse each MS
     for ms in mses:
-
         # Get the science spws
         scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
 
@@ -247,7 +259,7 @@ def score_bwswitching(mses):
         for _ in nophasecals:
             score += (-1.0 / num_mses / len(nophasecals))
         longmsg = ('%s contains no phase calibrations for target spws %s'
-            '' % (ms.basename, utils.commafy(nophasecals, False)))
+                   '' % (ms.basename, utils.commafy(nophasecals, False)))
         complaints.append(longmsg)
 
     if all_ok:
@@ -257,8 +269,13 @@ def score_bwswitching(mses):
     else:
         longmsg = '%s.' % utils.commafy(complaints, False)
         shortmsg = 'No phase calibrations found for target spws %s' % list(nophasecals)
-        
-    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
+
+    origin = pqa.QAOrigin(metric_name='score_bwswitching',
+                          metric_score=len(nophasecals),
+                          metric_units='Number of MSes without phase calibrators')
+
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_bands(mses):
@@ -270,8 +287,8 @@ def score_bands(mses):
     # ALMA receiver bands. Warnings will be raised for any 
     # measurement sets containing the following bands.
     score = 1.0
-    score_map = {'8'  : -1.0,
-                 '9'  : -1.0}
+    score_map = {'8': -1.0,
+                 '9': -1.0}
 
     unsupported = set(score_map.keys())
 
@@ -283,10 +300,6 @@ def score_bands(mses):
     for ms in mses:
         msbands = []
         for spw in ms.get_spectral_windows(science_windows_only=True):
-            # This does not work for old data
-            #match = re.match(r'ALMA_RB_(?P<band>\d+)', spw.name)
-            # Get rid of the leading 0 in the band number
-            #bandnum = str(int(match.groupdict()['band']))
             bandnum = spw.band.split(' ')[2]
             msbands.append(bandnum)
         msbands = set(msbands)
@@ -297,7 +310,7 @@ def score_bands(mses):
         for m in overlap:
             score += (score_map[m] / num_mses)
         longmsg = ('%s contains band %s data'
-            '' % (ms.basename, utils.commafy(overlap, False)))
+                   '' % (ms.basename, utils.commafy(overlap, False)))
         complaints.append(longmsg)
 
     if all_ok:
@@ -306,10 +319,15 @@ def score_bands(mses):
         shortmsg = 'No high frequency band data found' 
     else:
         longmsg = '%s.' % utils.commafy(complaints, False)
-        shortmsg = 'High frequency band data found' 
-        
+        shortmsg = 'High frequency band data found'
+
+    origin = pqa.QAOrigin(metric_name='score_bands',
+                          metric_score=score,
+                          metric_units='MS score based on presence of high-frequency data')
+
     # Make score linear
-    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_polintents(mses):
@@ -322,9 +340,11 @@ def score_polintents(mses):
     # measurement sets containing these intents. Ignore the
     # array type for now.
     score = 1.0
-    score_map = {'POLARIZATION'  : -1.0,
-                 'POLANGLE'      : -1.0,
-                 'POLLEAKAGE'    : -1.0}
+    score_map = {
+        'POLARIZATION': -1.0,
+        'POLANGLE': -1.0,
+        'POLLEAKAGE': -1.0
+    }
 
     unsupported = set(score_map.keys())
 
@@ -343,7 +363,7 @@ def score_polintents(mses):
             score += (score_map[m] / num_mses)
 
         longmsg = ('%s contains %s polarization calibration intents'
-            '' % (ms.basename, utils.commafy(overlap, False)))
+                   '' % (ms.basename, utils.commafy(overlap, False)))
         complaints.append(longmsg)
 
     if all_ok:
@@ -353,8 +373,13 @@ def score_polintents(mses):
     else:
         longmsg = '%s.' % utils.commafy(complaints, False)
         shortmsg = 'Polarization calibrators found'
-        
-    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
+
+    origin = pqa.QAOrigin(metric_name='score_polintents',
+                          metric_score=score,
+                          metric_units='MS score based on presence of polarisation data')
+
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_missing_intents(mses, array_type='ALMA_12m'):
@@ -366,11 +391,13 @@ def score_missing_intents(mses, array_type='ALMA_12m'):
     # measurement sets missing these intents 
     score = 1.0
     if array_type == 'ALMA_TP':
-        score_map = {'ATMOSPHERE' : -1.0}
+        score_map = {'ATMOSPHERE': -1.0}
     else:
-        score_map = {'PHASE'     : -1.0,
-                     'BANDPASS'  : -0.1,
-                     'AMPLITUDE' : -0.1}
+        score_map = {
+            'PHASE': -1.0,
+            'BANDPASS': -0.1,
+            'AMPLITUDE': -0.1
+        }
 
     required = set(score_map.keys())
 
@@ -398,8 +425,13 @@ def score_missing_intents(mses, array_type='ALMA_12m'):
     else:
         longmsg = '%s.' % utils.commafy(complaints, False)
         shortmsg = 'Calibrators missing'
-        
-    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
+
+    origin = pqa.QAOrigin(metric_name='score_missing_intents',
+                          metric_score=score,
+                          metric_units='Score based on missing calibration intents')
+
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_ephemeris_coordinates(mses):
@@ -414,19 +446,19 @@ def score_ephemeris_coordinates(mses):
     num_mses = len(mses)
     all_ok = True
     complaints = []
-    zerodirection = casatools.measures.direction('j2000', '0.0deg', '0.0deg')
+    zero_direction = casatools.measures.direction('j2000', '0.0deg', '0.0deg')
+    zero_ra = casatools.quanta.formxxx(zero_direction['m0'], format='hms', prec=3)
+    zero_dec = casatools.quanta.formxxx(zero_direction['m1'], format='dms', prec=2)
 
     # analyse each MS
     for ms in mses:
-
-    # Examine each source
+        # Examine each source
         for source in ms.sources:
-            if source.ra == casatools.quanta.formxxx(zerodirection['m0'], format='hms', prec=3) and \
-                source.dec == casatools.quanta.formxxx(zerodirection['m1'], format='dms', prec=2):
+            if source.ra == zero_ra and source.dec == zero_dec:
                 all_ok = False
                 score += (-1.0 / num_mses)
-                longmsg =  ('Suspicious source coordinates for  %s in %s. Check whether position of 00:00:00.0+00:00:00.0 is valid.'
-                    '' % (source.name, ms.basename))
+                longmsg = ('Suspicious source coordinates for  %s in %s. Check whether position of '
+                           '00:00:00.0+00:00:00.0 is valid.' % (source.name, ms.basename))
                 complaints.append(longmsg)
 
     if all_ok:
@@ -437,7 +469,12 @@ def score_ephemeris_coordinates(mses):
         longmsg = '%s.' % utils.commafy(complaints, False)
         shortmsg = 'Suspicious source coordinates'
 
-    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg)
+    origin = pqa.QAOrigin(metric_name='score_ephemeris_coordinates',
+                          metric_score=score,
+                          metric_units='Score based on presence of ephemeris coordinates')
+
+    return pqa.QAScore(max(0.0, score), longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_online_shadow_agents(ms, summaries):
@@ -446,17 +483,33 @@ def score_online_shadow_agents(ms, summaries):
 
     0 < score < 1 === 60% < frac_flagged < 5%
     """
-    return score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, 
-                                        ['online', 'shadow', 'qa0', 'before', 'template'])
+    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6,
+                                         ['online', 'shadow', 'qa0', 'before', 'template'])
+
+    new_origin = pqa.QAOrigin(metric_name='score_online_shadow_agents',
+                              metric_score=score.origin.metric_score,
+                              metric_units=score.origin.metric_units)
+    score.origin = new_origin
+
+    return score
+
 
 @log_qa
 def score_applycal_agents(ms, summaries):
     """
-    Get a score for the fraction of data flagged by online and shadow agents.
+    Get a score for the fraction of data flagged by applycal agents.
 
     0 < score < 1 === 60% < frac_flagged < 5%
     """
-    return score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['applycal'])
+    score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['applycal'])
+
+    new_origin = pqa.QAOrigin(metric_name='score_applycal_agents',
+                              metric_score=score.origin.metric_score,
+                              metric_units=score.origin.metric_units)
+    score.origin = new_origin
+
+    return score
+
 
 @log_qa
 def score_flagging_view_exists(filename, result):
@@ -466,7 +519,7 @@ def score_flagging_view_exists(filename, result):
 
     # By default, assume no flagging views were found.
     score = 0.0
-    longmsg = 'No flagging views for %s' % (filename)
+    longmsg = 'No flagging views for %s' % filename
     shortmsg = 'No flagging views'
 
     # Check if this is a flagging result for a single metric, where
@@ -475,7 +528,7 @@ def score_flagging_view_exists(filename, result):
         view = result.view
         if view:
             score = 1.0
-            longmsg = 'Flagging views exist for %s' % (filename)
+            longmsg = 'Flagging views exist for %s' % filename
             shortmsg = 'Flagging views exist'
     except AttributeError:
         pass
@@ -489,13 +542,16 @@ def score_flagging_view_exists(filename, result):
             view = metricresult.view
             if view:
                 score = 1.0
-                longmsg = 'Flagging views exist for %s' % (filename)
+                longmsg = 'Flagging views exist for %s' % filename
                 shortmsg = 'Flagging views exist'
     except AttributeError:
         pass
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=filename)
+    origin = pqa.QAOrigin(metric_name='score_flagging_view_exists',
+                          metric_score=bool(score),
+                          metric_units='Presence of flagging view')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=filename, origin=origin)
 
 
 @log_qa
@@ -522,8 +578,13 @@ def score_total_data_flagged(filename, summaries):
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s was flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=os.path.basename(filename))
+
+    origin = pqa.QAOrigin(metric_name='score_total_data_flagged',
+                          metric_score=frac_flagged,
+                          metric_units='Total fraction of data that is flagged')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(filename), origin=origin)
+
 
 @log_qa
 def score_fraction_newly_flagged(filename, summaries, vis):
@@ -550,8 +611,12 @@ def score_fraction_newly_flagged(filename, summaries, vis):
     longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=os.path.basename(vis))
+    origin = pqa.QAOrigin(metric_name='score_fraction_newly_flagged',
+                          metric_score=frac_flagged,
+                          metric_units='Fraction of data that is newly flagged')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(vis), origin=origin)
+
 
 @log_qa
 def linear_score_fraction_newly_flagged(filename, summaries, vis):
@@ -572,8 +637,13 @@ def linear_score_fraction_newly_flagged(filename, summaries, vis):
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=os.path.basename(vis))
+
+    origin = pqa.QAOrigin(metric_name='linear_score_fraction_newly_flagged',
+                          metric_score=frac_flagged,
+                          metric_units='Fraction of data that is newly flagged')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(vis), origin=origin)
+
 
 @log_qa
 def score_contiguous_session(mses, tolerance=datetime.timedelta(hours=1)):
@@ -582,14 +652,18 @@ def score_contiguous_session(mses, tolerance=datetime.timedelta(hours=1)):
     """
     # only need to check when given multiple measurement sets
     if len(mses) < 2:
+        origin = pqa.QAOrigin(metric_name='score_contiguous_session',
+                              metric_score=0,
+                              metric_units='Non-contiguous measurement sets present')
         return pqa.QAScore(1.0,
                            longmsg='%s forms one continuous observing session.' % mses[0].basename,
                            shortmsg='Unbroken observing session',
-                           vis=mses[0].basename)
+                           vis=mses[0].basename,
+                           origin=origin)
 
     # reorder MSes by start time
     by_start = sorted(mses, 
-                      key=lambda m : utils.get_epoch_as_datetime(m.start_time)) 
+                      key=lambda m: utils.get_epoch_as_datetime(m.start_time))
 
     # create an interval for each one, including our tolerance    
     intervals = []    
@@ -619,7 +693,11 @@ def score_contiguous_session(mses, tolerance=datetime.timedelta(hours=1)):
         shortmsg = 'Unbroken observing session'
         score = 1.0
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    origin = pqa.QAOrigin(metric_name='score_contiguous_session',
+                          metric_score=not bool(bad_mses),
+                          metric_units='Non-contiguous measurement sets present')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
 
 @log_qa
@@ -631,8 +709,13 @@ def score_wvrgcal(ms_name, wvr_score):
 
     longmsg = 'RMS improvement was %0.2f for %s' % (wvr_score, ms_name)
     shortmsg = '%0.2fx improvement' % wvr_score
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, 
-                       vis=os.path.basename(ms_name))
+
+    origin = pqa.QAOrigin(metric_name='score_wvrgcal',
+                          metric_score=wvr_score,
+                          metric_units='Phase RMS improvement after applying WVR correction')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(ms_name), origin=origin)
+
 
 @log_qa
 def score_sdtotal_data_flagged(label, frac_flagged):
@@ -652,7 +735,13 @@ def score_sdtotal_data_flagged(label, frac_flagged):
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, label)
     shortmsg = '%0.2f%% data flagged' % percent
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=None)
+
+    origin = pqa.QAOrigin(metric_name='score_sdtotal_data_flagged',
+                          metric_score=frac_flagged,
+                          metric_units='Fraction of data newly flagged')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=None, origin=origin)
+
 
 @log_qa
 def score_sdtotal_data_flagged_old(name, ant, spw, pol, frac_flagged, field=None):
@@ -673,16 +762,22 @@ def score_sdtotal_data_flagged_old(name, ant, spw, pol, frac_flagged, field=None
     if field is None:
         longmsg = '%0.2f%% of data in %s (Ant=%s, SPW=%d, Pol=%d) was flagged' % (percent, name, ant, spw, pol)
     else:
-        longmsg = '%0.2f%% of data in %s (Ant=%s, Field=%s, SPW=%d, Pol=%s) was flagged' % (percent, name, ant, field, spw, pol)
+        longmsg = ('%0.2f%% of data in %s (Ant=%s, Field=%s, SPW=%d, Pol=%s) was '
+                   'flagged' % (percent, name, ant, field, spw, pol))
     shortmsg = '%0.2f%% data flagged' % percent
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, 
-                       vis=os.path.basename(name))
+
+    origin = pqa.QAOrigin(metric_name='score_sdtotal_data_flagged_old',
+                          metric_score=frac_flagged,
+                          metric_units='Fraction of data newly flagged')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(name), origin=origin)
+
 
 @log_qa
-def score_tsysspwmap (ms, unmappedspws):
-    '''
+def score_tsysspwmap(ms, unmappedspws):
+    """
     Score is equal to the fraction of unmapped windows
-    '''
+    """
 
     if len(unmappedspws) <= 0:
         score = 1.0
@@ -693,38 +788,42 @@ def score_tsysspwmap (ms, unmappedspws):
         if nscispws <= 0:
             score = 0.0
         else:
-            score = float(nscispws - len (unmappedspws)) / float(nscispws)
-        longmsg = 'Tsys spw map is incomplete for %s science window%s ' % (ms.basename, utils.commafy(unmappedspws, False, 's'))
+            score = float(nscispws - len(unmappedspws)) / float(nscispws)
+        longmsg = 'Tsys spw map is incomplete for %s science window%s ' % (ms.basename,
+                                                                           utils.commafy(unmappedspws, False, 's'))
         shortmsg = 'Tsys spw map is incomplete'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_tsysspwmap',
+                          metric_score=score,
+                          metric_units='Fraction of unmapped Tsys windows')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
-def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
-    '''
+def score_setjy_measurements(ms, reqfields, reqintents, reqspws, measurements):
+    """
     Score is equal to the ratio of the number of actual flux
     measurements to expected number of flux measurements
-    '''
+    """
 
     # Expected fields
-    scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
+    scifields = {field for field in ms.get_fields(reqfields, intent=reqintents)}
 
     # Expected science windows
-    scispws = set([spw.id for spw in ms.get_spectral_windows(reqspws, science_windows_only=True)])
+    scispws = {spw.id for spw in ms.get_spectral_windows(reqspws, science_windows_only=True)}
 
     # Loop over the expected fields
     nexpected = 0
     for scifield in scifields:
         validspws = set([spw.id for spw in scifield.valid_spws])
-        nexpected = nexpected + len(validspws.intersection(scispws))
+        nexpected += len(validspws.intersection(scispws))
 
     # Loop over the measurements
     nmeasured = 0
-    for key, value in measurements.iteritems():
+    for value in measurements.itervalues():
         # Loop over the flux measurements
-        for flux in value:
-            nmeasured = nmeasured + 1
+        nmeasured += len(value)
 
     # Compute score
     if nexpected == 0:
@@ -748,17 +847,20 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
         longmsg = 'Too many flux calibrator measurements for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Too many flux measurements'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_setjy_measurements',
+                          metric_score=score,
+                          metric_units='Ratio of number of flux measurements to number expected')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
-def score_number_antenna_offsets (ms, antenna, offsets):
-    '''
+def score_number_antenna_offsets(ms, antenna, offsets):
+    """
     Score is 1.0 if no antenna needed a position offset correction, and
     set to the "suboptimal" threshold if at least one antenna needed a 
     correction.
-    '''
-
+    """
     nant_with_offsets = len(offsets) / 3
 
     if nant_with_offsets == 0:
@@ -766,50 +868,47 @@ def score_number_antenna_offsets (ms, antenna, offsets):
         longmsg = 'No antenna position offsets for %s ' % ms.basename
         shortmsg = 'No antenna position offsets'
     else:
-        # Previous QA: set score to fraction of antennas that did not need a
-        # correction.
-        #nant = len([ant.id for ant in ms.get_antenna()])
-        #score = float(nant - nant_with_offsets) / float (nant)
-        
         # CAS-8877: if at least 1 antenna needed correction, then set the score
         # to the "suboptimal" threshold. 
-        score =  rutils.SCORE_THRESHOLD_SUBOPTIMAL   
+        score = rutils.SCORE_THRESHOLD_SUBOPTIMAL
         longmsg = '%d nonzero antenna position offsets for %s ' % (nant_with_offsets, ms.basename)
         shortmsg = 'Nonzero antenna position offsets'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_number_antenna_offsets',
+                          metric_score=nant_with_offsets,
+                          metric_units='Number of antennas requiring position offset correction')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
-def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
-
-    '''
+def score_missing_derived_fluxes(ms, reqfields, reqintents, measurements):
+    """
     Score is equal to the ratio of actual flux
     measurement to expected flux measurements
-    '''
-
+    """
     # Expected fields
-    scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
+    scifields = {field for field in ms.get_fields(reqfields, intent=reqintents)}
 
     # Expected science windows
-    scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+    scispws = {spw.id for spw in ms.get_spectral_windows(science_windows_only=True)}
 
     # Loop over the expected fields
     nexpected = 0
     for scifield in scifields:
-        validspws = set([spw.id for spw in scifield.valid_spws])
-        nexpected = nexpected + len(validspws.intersection(scispws))
+        validspws = {spw.id for spw in scifield.valid_spws}
+        nexpected += len(validspws.intersection(scispws))
 
     # Loop over measurements
     nmeasured = 0
     for key, value in measurements.iteritems():
         # Loop over the flux measurements
         for flux in value:
-            fluxjy = getattr (flux, 'I').to_units(measures.FluxDensityUnits.JANSKY)
-            uncjy = getattr (flux.uncertainty, 'I').to_units(measures.FluxDensityUnits.JANSKY)
+            fluxjy = getattr(flux, 'I').to_units(measures.FluxDensityUnits.JANSKY)
+            uncjy = getattr(flux.uncertainty, 'I').to_units(measures.FluxDensityUnits.JANSKY)
             if fluxjy <= 0.0 or uncjy <= 0.0: 
                 continue
-            nmeasured = nmeasured + 1
+            nmeasured += 1
 
     # Compute score
     if nexpected == 0:
@@ -833,20 +932,27 @@ def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
         longmsg = 'Extra derived fluxes for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Extra derived fluxes'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_missing_derived_fluxes',
+                          metric_score=score,
+                          metric_units='Ratio of number of flux measurements to number expected')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
 def score_refspw_mapping_fraction(ms, ref_spwmap):
-    '''
+    """
     Compute the fraction of science spws that have not been
     mapped to other windows.
-    '''
-
+    """
     if ref_spwmap == [-1]:
         score = 1.0
         longmsg = 'No mapped science spws for %s ' % ms.basename
         shortmsg = 'No mapped science spws'
+
+        origin = pqa.QAOrigin(metric_name='score_refspw_mapping_fraction',
+                              metric_score=0,
+                              metric_units='Number of unmapped science spws')
     else:
         # Expected science windows
         scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
@@ -855,79 +961,73 @@ def score_refspw_mapping_fraction(ms, ref_spwmap):
         nunmapped = 0
         for spwid in scispws:
             if spwid == ref_spwmap[spwid]: 
-                nunmapped = nunmapped + 1
+                nunmapped += 1
         
         if nunmapped >= nexpected:
             score = 1.0
             longmsg = 'No mapped science spws for %s ' % ms.basename
             shortmsg = 'No mapped science spws'
         else:
-            #score =  float(nunmapped) / float(nexpected) 
             # Replace the previous score with a warning
-            score =  rutils.SCORE_THRESHOLD_WARNING
+            score = rutils.SCORE_THRESHOLD_WARNING
             longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
             shortmsg = 'There are mapped science spws'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+        origin = pqa.QAOrigin(metric_name='score_refspw_mapping_fraction',
+                              metric_score=nunmapped,
+                              metric_units='Number of unmapped science spws')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
 def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
-    '''
+    """
     Compute the fraction of science spws that have not been
-    mapped to other probably  wider windows.
+    mapped to other probably wider windows.
 
     Note that reqfields and reqintents are no longer used. Remove at some point
-    '''
-
+    """
+    nunmapped = 0
     if not phaseup_spwmap:
         score = 1.0
         longmsg = 'No mapped science spws for %s ' % ms.basename
         shortmsg = 'No mapped science spws'
     else:
-        # Expected fields
-        #scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
-
         # Expected science windows
         scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
         nexpected = len(scispws)
 
-        # Loop over the expected fields
-        #nexpected = 0
-        #for scifield in scifields:
-            #validspws = set([spw.id for spw in scifield.valid_spws])
-            #nexpected = nexpected + len(validspws.intersection(scispws))
-
-        nunmapped = 0
         for spwid in scispws:
-            if spwid == phaseup_spwmap[spwid]: 
-                nunmapped = nunmapped + 1
+            if spwid == phaseup_spwmap[spwid]:
+                nunmapped += 1
         
         if nunmapped >= nexpected:
             score = 1.0
             longmsg = 'No mapped science spws for %s ' % ms.basename
             shortmsg = 'No mapped science spws'
         else:
-            #score =  float(nunmapped) / float(nexpected) 
             # Replace the previous score with a warning
-            score =  rutils.SCORE_THRESHOLD_WARNING
+            score = rutils.SCORE_THRESHOLD_WARNING
             longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
             shortmsg = 'There are mapped science spws'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_phaseup_mapping_fraction',
+                          metric_score=nunmapped,
+                          metric_units='Number of unmapped science spws')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
 def score_missing_phaseup_snrs(ms, spwids, phsolints):
-
-    '''
+    """
     Score is the fraction of spws with phaseup SNR estimates
-    '''
-
+    """
     # Compute the number of expected and missing SNR measurements
     nexpected = len(spwids)
     missing_spws = []
-    for i in range (len(spwids)):
+    for i in range(len(spwids)):
         if not phsolints[i]:
             missing_spws.append(spwids[i])
     nmissing = len(missing_spws) 
@@ -941,24 +1041,27 @@ def score_missing_phaseup_snrs(ms, spwids, phsolints):
         longmsg = 'No missing phaseup SNR estimates for %s ' % ms.basename
         shortmsg = 'No missing phaseup SNR estimates'
     else:
-        score = float (nexpected - nmissing) / nexpected
+        score = float(nexpected - nmissing) / nexpected
         longmsg = 'Missing phaseup SNR estimates for spws %s in %s ' % \
             (missing_spws, ms.basename)
         shortmsg = 'Missing phaseup SNR estimates'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_missing_phaseup_snrs',
+                          metric_score=nmissing,
+                          metric_units='Number of spws with missing SNR measurements')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
 def score_poor_phaseup_solutions(ms, spwids, nphsolutions, min_nsolutions):
-    '''
+    """
     Score is the fraction of spws with poor phaseup solutions
-    '''
-
+    """
     # Compute the number of expected and poor SNR measurements
     nexpected = len(spwids)
     poor_spws = []
-    for i in range (len(spwids)):
+    for i in range(len(spwids)):
         if not nphsolutions[i]:
             poor_spws.append(spwids[i])
         elif nphsolutions[i] < min_nsolutions:
@@ -974,25 +1077,28 @@ def score_poor_phaseup_solutions(ms, spwids, nphsolutions, min_nsolutions):
         longmsg = 'No poorly determined phaseup solutions for %s ' % ms.basename
         shortmsg = 'No poorly determined phaseup solutions'
     else:
-        score = float (nexpected - npoor) / nexpected
+        score = float(nexpected - npoor) / nexpected
         longmsg = 'Poorly determined phaseup solutions for spws %s in %s ' % \
             (poor_spws, ms.basename)
         shortmsg = 'Poorly determined phaseup solutions'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_poor_phaseup_solutions',
+                          metric_score=npoor,
+                          metric_units='Number of poor phaseup solutions')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
 def score_missing_bandpass_snrs(ms, spwids, bpsolints):
-
-    '''
+    """
     Score is the fraction of spws with bandpass SNR estimates
-    '''
+    """
 
     # Compute the number of expected and missing SNR measurements
     nexpected = len(spwids)
     missing_spws = []
-    for i in range (len(spwids)):
+    for i in range(len(spwids)):
         if not bpsolints[i]:
             missing_spws.append(spwids[i])
     nmissing = len(missing_spws) 
@@ -1006,25 +1112,27 @@ def score_missing_bandpass_snrs(ms, spwids, bpsolints):
         longmsg = 'No missing bandpass SNR estimates for %s ' % ms.basename
         shortmsg = 'No missing bandpass SNR estimates'
     else:
-        score = float (nexpected - nmissing) / nexpected
+        score = float(nexpected - nmissing) / nexpected
         longmsg = 'Missing bandpass SNR estimates for spws %s in%s ' % \
             (missing_spws, ms.basename)
         shortmsg = 'Missing bandpass SNR estimates'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_missing_bandpass_snrs',
+                          metric_score=nmissing,
+                          metric_units='Number of missing bandpass SNR estimates')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
 def score_poor_bandpass_solutions(ms, spwids, nbpsolutions, min_nsolutions):
-
-    '''
+    """
     Score is the fraction of spws with poor bandpass solutions
-    '''
-
+    """
     # Compute the number of expected and poor solutions
     nexpected = len(spwids)
     poor_spws = []
-    for i in range (len(spwids)):
+    for i in range(len(spwids)):
         if not nbpsolutions[i]:
             poor_spws.append(spwids[i])
         elif nbpsolutions[i] < min_nsolutions:
@@ -1033,34 +1141,33 @@ def score_poor_bandpass_solutions(ms, spwids, nbpsolutions, min_nsolutions):
 
     if nexpected <= 0:
         score = 0.0
-        longmsg = 'No bandpass solutions for %s ' % \
-            ms.basename
+        longmsg = 'No bandpass solutions for %s ' % ms.basename
         shortmsg = 'No bandpass solutions'
     elif npoor <= 0:
         score = 1.0
-        longmsg = 'No poorly determined bandpass solutions for %s ' % \
-            ms.basename
+        longmsg = 'No poorly determined bandpass solutions for %s ' % ms.basename
         shortmsg = 'No poorly determined bandpass solutions'
     else:
-        score = float (nexpected - npoor) / nexpected
-        longmsg = 'Poorly determined bandpass solutions for spws %s in %s ' % \
-            (poor_spws, ms.basename)
+        score = float(nexpected - npoor) / nexpected
+        longmsg = 'Poorly determined bandpass solutions for spws %s in %s ' % (poor_spws, ms.basename)
         shortmsg = 'Poorly determined bandpass solutions'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_missing_bandpass_snrs',
+                          metric_score=npoor,
+                          metric_units='Number of poor bandpass solutions')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
 def score_missing_phase_snrs(ms, spwids, snrs):
-
-    '''
+    """
     Score is the fraction of spws with SNR estimates
-    '''
-
+    """
     # Compute the number of expected and missing SNR measurements
     nexpected = len(spwids)
     missing_spws = []
-    for i in range (len(spwids)):
+    for i in range(len(spwids)):
         if not snrs[i]:
             missing_spws.append(spwids[i])
     nmissing = len(missing_spws) 
@@ -1074,25 +1181,26 @@ def score_missing_phase_snrs(ms, spwids, snrs):
         longmsg = 'No missing gaincal SNR estimates for %s ' % ms.basename
         shortmsg = 'No missing gaincal SNR estimates'
     else:
-        score = float (nexpected - nmissing) / nexpected
-        longmsg = 'Missing gaincal SNR estimates for spws %s in %s ' % \
-            (missing_spws, ms.basename)
+        score = float(nexpected - nmissing) / nexpected
+        longmsg = 'Missing gaincal SNR estimates for spws %s in %s ' % (missing_spws, ms.basename)
         shortmsg = 'Missing gaincal SNR estimates'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_missing_phase_snrs',
+                          metric_score=nmissing,
+                          metric_units='Number of missing phase SNR estimates')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
 def score_poor_phase_snrs(ms, spwids, minsnr, snrs):
-
-    '''
+    """
     Score is the fraction of spws with poor snr estimates
-    '''
-
+    """
     # Compute the number of expected and poor solutions
     nexpected = len(spwids)
     poor_spws = []
-    for i in range (len(spwids)):
+    for i in range(len(spwids)):
         if not snrs[i]:
             poor_spws.append(spwids[i])
         elif snrs[i] < minsnr:
@@ -1110,28 +1218,32 @@ def score_poor_phase_snrs(ms, spwids, minsnr, snrs):
             ms.basename
         shortmsg = 'No low gaincal SNR estimates'
     else:
-        score = float (nexpected - npoor) / nexpected
+        score = float(nexpected - npoor) / nexpected
         longmsg = 'Low gaincal SNR estimates for spws %s in %s ' % \
             (poor_spws, ms.basename)
         shortmsg = 'Low gaincal SNR estimates'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_poor_phase_snrs',
+                          metric_score=npoor,
+                          metric_units='Number of poor phase SNR estimates')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
 
 
 @log_qa
 def score_derived_fluxes_snr(ms, measurements):
-    '''
+    """
     Score the SNR of the derived flux measurements.
         1.0 if SNR > 20.0
         0.0 if SNR < 5.0
         linear scale between 0.0 and 1.0 in between
-    '''
-
+    """
     # Loop over measurements
     nmeasured = 0
     score = 0.0
     minscore = 1.0
+    minsnr = None
+
     for _, value in measurements.iteritems():
         # Loop over the flux measurements
         for flux in value:
@@ -1140,12 +1252,14 @@ def score_derived_fluxes_snr(ms, measurements):
             if fluxjy <= 0.0 or uncjy <= 0.0: 
                 continue
             snr = fluxjy / uncjy
-            nmeasured = nmeasured + 1
-            score1 = linear_score (float(snr), 5.0, 20.0, 0.0, 1.0)
-            minscore = min (minscore, score1)
-            score = score + score1
+            minsnr = snr if minsnr is None else min(minsnr, snr)
+            nmeasured += 1
+            score1 = linear_score(float(snr), 5.0, 20.0, 0.0, 1.0)
+            minscore = min(minscore, score1)
+            score += score1
+
     if nmeasured > 0:
-        score = score / nmeasured
+        score /= nmeasured
 
     if nmeasured == 0:
         score = 0.0
@@ -1159,71 +1273,87 @@ def score_derived_fluxes_snr(ms, measurements):
         longmsg = 'Low SNR derived fluxes for %s ' % ms.basename
         shortmsg = 'Low SNR derived fluxes'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
-                       vis=ms.basename)
+    origin = pqa.QAOrigin(metric_name='score_derived_fluxes_snr',
+                          metric_score=minsnr,
+                          metric_units='Minimum SNR of derived flux measurement')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+
 
 @log_qa
 def score_path_exists(mspath, path, pathtype):
-    '''
+    """
     Score the existence of the path
         1.0 if it exist
         0.0 if it does not
-    '''
-
+    """
     if os.path.exists(path):
         score = 1.0
-        longmsg = 'The %s file %s for %s was created' % (pathtype, os.path.basename(path),
-	    os.path.basename(mspath))
-        shortmsg = 'The %s file was created' % (pathtype)
+        longmsg = 'The %s file %s for %s was created' % (pathtype, os.path.basename(path), os.path.basename(mspath))
+        shortmsg = 'The %s file was created' % pathtype
     else:
         score = 0.0
-        longmsg = 'The %s file %s for %s was not created' % (pathtype,
-	    os.path.basename(path), os.path.basename(mspath))
-        shortmsg = 'The %s file was not created' % (pathtype)
+        longmsg = 'The %s file %s for %s was not created' % (pathtype, os.path.basename(path), os.path.basename(mspath))
+        shortmsg = 'The %s file was not created' % pathtype
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    origin = pqa.QAOrigin(metric_name='score_path_exists',
+                          metric_score=bool(score),
+                          metric_units='Path exists on disk')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_file_exists(filedir, filename, filetype):
-    '''
+    """
     Score the existence of a products file
         1.0 if it exists
         0.0 if it does not
-    '''
-
+    """
     if filename is None:
         score = 1.0
-        longmsg = 'The %s file is undefined' % (filetype)
-        shortmsg = 'The %s file is undefined' % (filetype)
-        return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+        longmsg = 'The %s file is undefined' % filetype
+        shortmsg = 'The %s file is undefined' % filetype
 
-    file = os.path.join(filedir, os.path.basename(filename)) 
-    if os.path.exists(file):
+        origin = pqa.QAOrigin(metric_name='score_file_exists',
+                              metric_score=None,
+                              metric_units='No %s file to check' % filetype)
+
+        return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
+    file_path = os.path.join(filedir, os.path.basename(filename))
+    if os.path.exists(file_path):
         score = 1.0
-        longmsg = 'The %s file has been exported' % (filetype)
-        shortmsg = 'The %s file has been exported' % (filetype)
+        longmsg = 'The %s file has been exported' % filetype
+        shortmsg = 'The %s file has been exported' % filetype
     else:
         score = 0.0
         longmsg = 'The %s file %s does not exist' % (filetype, os.path.basename(filename))
-        shortmsg = 'The %s file does not exist' % (filetype)
+        shortmsg = 'The %s file does not exist' % filetype
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    origin = pqa.QAOrigin(metric_name='score_file_exists',
+                          metric_score=bool(score),
+                          metric_units='File exists on disk')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_flags_exist(filedir, visdict):
-    '''
+    """
     Score the existence of the flagging products files 
         1.0 if they all exist
         n / nexpected if some of them exist
         0.0 if none exist
-    '''
-
+    """
     nexpected = len(visdict)
-    nfiles = 0; missing=[]
+    nfiles = 0
+    missing = []
+
     for visname in visdict:
-        file = os.path.join(filedir, os.path.basename(visdict[visname][0])) 
-        if os.path.exists(file):
-            nfiles = nfiles + 1
+        file_path = os.path.join(filedir, os.path.basename(visdict[visname][0]))
+        if os.path.exists(file_path):
+            nfiles += 1
         else:
             missing.append(os.path.basename(visdict[visname][0]))
 
@@ -1232,7 +1362,7 @@ def score_flags_exist(filedir, visdict):
         longmsg = 'Final flag version files %s are missing' % (','.join(missing))
         shortmsg = 'Missing final flags version files'
     elif nfiles < nexpected:
-        score = float (nfiles) / float (nexpected)
+        score = float(nfiles) / float(nexpected)
         longmsg = 'Final flag version files %s are missing' % (','.join(missing))
         shortmsg = 'Missing final flags version files'
     else:
@@ -1240,23 +1370,29 @@ def score_flags_exist(filedir, visdict):
         longmsg = 'No missing final flag version files'
         shortmsg = 'No missing final flags version files'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    origin = pqa.QAOrigin(metric_name='score_flags_exist',
+                          metric_score=len(missing),
+                          metric_units='Number of missing flagging product files')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_applycmds_exist(filedir, visdict):
-    '''
+    """
     Score the existence of the apply commands products files
         1.0 if they all exist
         n / nexpected if some of them exist
         0.0 if none exist
-    '''
-
+    """
     nexpected = len(visdict)
-    nfiles = 0; missing=[]
+    nfiles = 0
+    missing = []
+
     for visname in visdict:
-        file = os.path.join(filedir, os.path.basename(visdict[visname][1])) 
-        if os.path.exists(file):
-            nfiles = nfiles + 1
+        file_path = os.path.join(filedir, os.path.basename(visdict[visname][1]))
+        if os.path.exists(file_path):
+            nfiles += 1
         else:
             missing.append(os.path.basename(visdict[visname][1]))
 
@@ -1265,7 +1401,7 @@ def score_applycmds_exist(filedir, visdict):
         longmsg = 'Final apply commands files %s are missing' % (','.join(missing))
         shortmsg = 'Missing final apply commands files'
     elif nfiles < nexpected:
-        score = float (nfiles) / float (nexpected)
+        score = float(nfiles) / float(nexpected)
         longmsg = 'Final apply commands files %s are missing' % (','.join(missing))
         shortmsg = 'Missing final apply commands files'
     else:
@@ -1273,22 +1409,29 @@ def score_applycmds_exist(filedir, visdict):
         longmsg = 'No missing final apply commands files'
         shortmsg = 'No missing final apply commands files'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    origin = pqa.QAOrigin(metric_name='score_applycmds_exist',
+                          metric_score=len(missing),
+                          metric_units='Number of missing apply command files')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_caltables_exist(filedir, sessiondict):
-    '''
+    """
     Score the existence of the caltables products files
         1.0 if theu all exist
         n / nexpected if some of them exist
         0.0 if none exist
-    '''
+    """
     nexpected = len(sessiondict)
-    nfiles = 0; missing=[]
+    nfiles = 0
+    missing = []
+
     for sessionname in sessiondict:
-        file = os.path.join(filedir, os.path.basename(sessiondict[sessionname][1])) 
-        if os.path.exists(file):
-            nfiles = nfiles + 1
+        file_path = os.path.join(filedir, os.path.basename(sessiondict[sessionname][1]))
+        if os.path.exists(file_path):
+            nfiles += 1
         else:
             missing.append(os.path.basename(sessiondict[sessionname][1]))
 
@@ -1297,7 +1440,7 @@ def score_caltables_exist(filedir, sessiondict):
         longmsg = 'Caltables files %s are missing' % (','.join(missing))
         shortmsg = 'Missing caltables files'
     elif nfiles < nexpected:
-        score = float (nfiles) / float (nexpected)
+        score = float(nfiles) / float(nexpected)
         longmsg = 'Caltables files %s are missing' % (','.join(missing))
         shortmsg = 'Missing caltables files'
     else:
@@ -1305,42 +1448,56 @@ def score_caltables_exist(filedir, sessiondict):
         longmsg = 'No missing caltables files'
         shortmsg = 'No missing caltables files'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    origin = pqa.QAOrigin(metric_name='score_caltables_exist',
+                          metric_score=len(missing),
+                          metric_units='Number of missing caltables')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_sd_line_detection(group_id_list, spw_id_list, lines_list):
     detected_spw = []
     detected_group = []
+
     for group_id, spw_id, lines in zip(group_id_list, spw_id_list, lines_list):
         if any([l[2] for l in lines]):
-            LOG.trace('detected lines exist at group_id %s spw_id %s'%(group_id, spw_id))
+            LOG.trace('detected lines exist at group_id %s spw_id %s' % (group_id, spw_id))
             unique_spw_id = set(spw_id)
             if len(unique_spw_id) == 1:
                 detected_spw.append(unique_spw_id.pop())
             else:
                 detected_spw.append(-1)
             detected_group.append(group_id)
+
     if len(detected_spw) == 0:
         score = 0.0
-        longmsg = 'No spectral lines are detected'
-        shortmsg = 'No spectral lines are detected'
+        longmsg = 'No spectral lines were detected'
+        shortmsg = 'No spectral lines were detected'
     else:
         score = 1.0
         if detected_spw.count(-1) == 0:
-            longmsg = 'Spectral lines are detected at Spws %s'%(', '.join(map(str,detected_spw)))
+            longmsg = 'Spectral lines were detected in spws %s' % (', '.join(map(str, detected_spw)))
         else:
-            longmsg = 'Spectral lines are detected at ReductionGroups %s'%(','.join(map(str,detected_group)))
-        shortmsg = 'Spectral lines are detected'
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+            longmsg = 'Spectral lines were detected in ReductionGroups %s' % (','.join(map(str, detected_group)))
+        shortmsg = 'Spectral lines were detected'
+
+    origin = pqa.QAOrigin(metric_name='score_sd_line_detection',
+                          metric_score=len(detected_spw),
+                          metric_units='Number of spectral lines detected')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
 
 @log_qa
 def score_sd_line_detection_for_ms(group_id_list, field_id_list, spw_id_list, lines_list):
     detected_spw = []
     detected_field = []
     detected_group = []
+
     for group_id, field_id, spw_id, lines in zip(group_id_list, field_id_list, spw_id_list, lines_list):
         if any([l[2] for l in lines]):
-            LOG.trace('detected lines exist at group_id %s field_id %s spw_id %s'%(group_id, field_id, spw_id))
+            LOG.trace('detected lines exist at group_id %s field_id %s spw_id %s' % (group_id, field_id, spw_id))
             unique_spw_id = set(spw_id)
             if len(unique_spw_id) == 1:
                 detected_spw.append(unique_spw_id.pop())
@@ -1352,6 +1509,7 @@ def score_sd_line_detection_for_ms(group_id_list, field_id_list, spw_id_list, li
             else:
                 detected_field.append(-1)
             detected_group.append(group_id)
+
     if len(detected_spw) == 0:
         score = 0.0
         longmsg = 'No spectral lines are detected'
@@ -1359,12 +1517,17 @@ def score_sd_line_detection_for_ms(group_id_list, field_id_list, spw_id_list, li
     else:
         score = 1.0
         if detected_spw.count(-1) == 0 and detected_field.count(-1) == 0:
-            longmsg = 'Spectral lines are detected at Spws (%s) Fields (%s)'%(', '.join(map(str,detected_spw)),
-                                                                              ', '.join(map(str,detected_field)))
+            longmsg = 'Spectral lines are detected at Spws (%s) Fields (%s)' % (', '.join(map(str, detected_spw)),
+                                                                                ', '.join(map(str, detected_field)))
         else:
-            longmsg = 'Spectral lines are detected at ReductionGroups %s'%(','.join(map(str,detected_group)))
+            longmsg = 'Spectral lines are detected at ReductionGroups %s' % (','.join(map(str, detected_group)))
         shortmsg = 'Spectral lines are detected'
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+    origin = pqa.QAOrigin(metric_name='score_sd_line_detection_for_ms',
+                          metric_score=len(detected_spw),
+                          metric_units='Number of spectral lines detected')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
 
 @log_qa
@@ -1378,7 +1541,6 @@ def score_checksources(mses, fieldname, spwid, imagename):
     The fit is performed using pixels in a circular regions
     around the center of the image
     """
-
     qa = casatools.quanta
     me = casatools.measures
 
@@ -1392,7 +1554,7 @@ def score_checksources(mses, fieldname, spwid, imagename):
 
     refdirection = None
     for ms in mses:
-        field = ms.get_fields (name = fieldname)
+        field = ms.get_fields(name=fieldname)
         if not field:
             continue
         if 'CHECK' not in field[0].intents:
@@ -1430,34 +1592,45 @@ def score_checksources(mses, fieldname, spwid, imagename):
         refflux = None
     else:
         median_flux = np.median(np.array(reffluxes))
-        refflux = qa.quantity (median_flux, 'Jy')
+        refflux = qa.quantity(median_flux, 'Jy')
 
     # Do the fit and compute positions offsets and flux ratios
-    fitdict = checksource.checkimage (imagename, refdirection, refflux)
+    fitdict = checksource.checkimage(imagename, refdirection, refflux)
 
     # Compute the scores the default score is the geometric mean of
     # the position and flux scores if both are available.
     if not fitdict:
         score = 0.0
         longmsg = 'Check source fit failed for %s spwd %d' % (fieldname, spwid)
-        shortmsg = 'Check source fit failed' 
+        shortmsg = 'Check source fit failed'
+        metric_score = None
+        metric_units = 'Check source fit failed'
+
     else:
         offset = fitdict['positionoffset']['value'] * 1000.0
         beams = fitdict['beamoffset']['value']
         fitflux = fitdict['fitflux']['value']
+        shortmsg = 'Check source fit successful'
         if not refflux:
-            coherence = None
-            score = max (0.0, 1.0 - min(1.0, beams)) 
-            longmsg = 'Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence None' % (fieldname, spwid, offset, beams, fitflux)
+            score = max(0.0, 1.0 - min(1.0, beams))
+            longmsg = ('Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
+                       'decoherence None' % (fieldname, spwid, offset, beams, fitflux))
+            metric_score = beams
+            metric_units = 'beams'
+
         else:
             coherence = fitdict['fluxloss']['value'] * 100.0
-            offsetscore = max (0.0, 1.0 - min(1.0, beams)) 
-            fluxscore = max (0.0, 1.0 - fitdict['fluxloss']['value'])
-            score = math.sqrt (fluxscore * offsetscore)
-            longmsg = 'Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence)
-        shortmsg = 'Check source fit successful' 
+            offsetscore = max(0.0, 1.0 - min(1.0, beams))
+            fluxscore = max(0.0, 1.0 - fitdict['fluxloss']['value'])
+            score = math.sqrt(fluxscore * offsetscore)
+            longmsg = ('Check source fit for %s spwd %d:  offet %0.3fmarcsec %0.3fbeams  fit flux %0.3fJy  '
+                       'decoherence %0.3f percent' % (fieldname, spwid, offset, beams, fitflux, coherence))
 
-    # Return score
-    return pqa.QAScore (score, longmsg=longmsg, shortmsg=shortmsg)
+            metric_score = (fluxscore, offsetscore)
+            metric_units = 'flux score, offset score'
 
+    origin = pqa.QAOrigin(metric_name='score_checksources',
+                          metric_score=metric_score,
+                          metric_units=metric_units)
 
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)

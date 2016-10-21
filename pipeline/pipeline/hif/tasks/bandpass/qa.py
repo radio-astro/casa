@@ -13,11 +13,15 @@ LOG = logging.get_logger(__name__)
 
 
 class BandpassQAPool(pqa.QAScorePool):
-    score_types = {'AMPLITUDE_SCORE_SNR' : 'amplitude SNR',
-                   'PHASE_SCORE_DD'      : 'phase derivative'}
+    score_types = {
+        'AMPLITUDE_SCORE_SNR': 'amplitude SNR',
+        'PHASE_SCORE_DD': 'phase derivative'
+    }
 
-    short_msg = {'AMPLITUDE_SCORE_SNR' : 'Amp SNR',
-                 'PHASE_SCORE_DD'      : 'Phase derivative'}
+    short_msg = {
+        'AMPLITUDE_SCORE_SNR': 'Amp SNR',
+        'PHASE_SCORE_DD': 'Phase derivative'
+    }
 
     def __init__(self, rawdata, caltable):
         super(BandpassQAPool, self).__init__()
@@ -30,8 +34,7 @@ class BandpassQAPool(pqa.QAScorePool):
         MeasurementSet is needed to convert from integer identifier stored in
         QA dictionary to the antenna, spw and pol it represents.
         """
-#        "Lowest score for %s analysis is %s (ant %s spw %s pol %s)"
-        self.pool[:] = [self._get_qascore(ms, t) for t in self.score_types] 
+        self.pool[:] = [self._get_qascore(ms, t) for t in self.score_types]
 
     def _get_qascore(self, ms, score_type):
         (min_score, spw_str, qa_id) = self._get_min(score_type)
@@ -41,8 +44,12 @@ class BandpassQAPool(pqa.QAScorePool):
                                                             ms.basename,
                                                             identifier)
         shortmsg = self.short_msg[score_type]
-        return pqa.QAScore(min_score, longmsg=longmsg, shortmsg=shortmsg,
-                           vis=ms.basename)
+
+        origin = pqa.QAOrigin(metric_name='BandpassQAPool',
+                              metric_score=min_score,
+                              metric_units='Minimum of bpcal QA scores')
+
+        return pqa.QAScore(min_score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
 
     def _get_min(self, score_type):
         rawscores = self.rawdata['QASCORES'][score_type]
@@ -59,7 +66,7 @@ class BandpassQAPool(pqa.QAScorePool):
                     min_spw = spw_str
                     min_id = id_str
 
-        return (min_score, min_spw, min_id)
+        return min_score, min_spw, min_id
 
     def _get_identifier_from_qa_id(self, ms, spw_str, qa_id):
         spw = ms.get_spectral_window(spw_str)
@@ -88,9 +95,7 @@ class BandpassQAHandler(pqa.QAResultHandler):
         ms = context.observing_run.get_ms(vis)
     
         if (result.final):
-            qa_dir = os.path.join(context.report_dir,
-                                   'stage%s' % result.stage_number,
-                                   'qa')
+            qa_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number, 'qa')
 
             if not os.path.exists(qa_dir):
                 os.makedirs(qa_dir)
@@ -99,8 +104,7 @@ class BandpassQAHandler(pqa.QAResultHandler):
                 (root, _) = os.path.splitext(os.path.basename(calapp.gaintable))
                 qa_file = os.path.join(qa_dir, root + '.bpcal.stats')
                 if os.path.exists(qa_file):
-                    LOG.info('Removing existing QA statistics table from %s'
-                             % qa_file)
+                    LOG.info('Removing existing QA statistics table from %s' % qa_file)
                     shutil.rmtree(qa_file)
 
                 try:
@@ -110,12 +114,11 @@ class BandpassQAHandler(pqa.QAResultHandler):
                 except Exception as e:
                     result.qa = pqa.QAScorePool()
                     result.qa.pool[:] = [pqa.QAScore(0.0, longmsg=str(e), shortmsg='QA exception', vis=vis)]
-                    LOG.error('Problem occurred running QA analysis. QA '
-                          'results will not be available for this task')
+                    LOG.error('Problem occurred running QA analysis. QA results will not be available for this task')
                     LOG.exception(e)
         else:
             result.qa = pqa.QAScorePool()
-            result.qa.pool[:] =  [pqa.QAScore(0.0, longmsg='No bandpass solution', shortmsg='No solution', vis=vis)]
+            result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='No bandpass solution', shortmsg='No solution', vis=vis)]
 
 
 class BandpassListQAHandler(pqa.QAResultHandler):

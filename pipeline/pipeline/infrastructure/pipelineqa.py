@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import abc
+import collections
 import operator
 
 from . import logging
@@ -7,12 +8,21 @@ from . import logging
 LOG = logging.get_logger(__name__)
 
 
+# QAOrigin holds information to help understand how and from where the QA scores are derived
+QAOrigin = collections.namedtuple('QAOrigin', 'metric_name metric_score metric_units')
+
+# Default origin for QAScores that do not define their own origin
+NULL_ORIGIN = QAOrigin(metric_name='Unknown metric',
+                       metric_score='N/A',
+                       metric_units='')
+
+
 class QAScore(object):
-    def __init__(self, score, longmsg='', shortmsg='', vis=None):
+    def __init__(self, score, longmsg='', shortmsg='', vis=None, origin=NULL_ORIGIN):
         self.score = score
         self.longmsg = longmsg
         self.shortmsg = shortmsg
-        
+
         # set target to be a dict, as we expect some targets to be sessions,
         # some to be MSes, some to be whole runs, etc.
         self.target = {}
@@ -20,9 +30,17 @@ class QAScore(object):
         if vis is not None:
             self.target['vis'] = vis
 
+        self.origin = origin
+
+    def __str__(self):
+        return 'QAScore(%s, "%s", "%s", %s)' % (self.score, self.longmsg, self.shortmsg, self.target)
+
     def __repr__(self):
-        return 'QAScore(%s, "%s", "%s", %s)' % (self.score, self.longmsg, 
-                                                self.shortmsg, self.target)
+        origin = None if self.origin is NULL_ORIGIN else self.origin
+        vis = self.target.get('vis', None)
+
+        return 'QAScore({!s}, longmsg={!r}, shortmsg={!r}, vis={!r}, origin={!r})'.format(
+            self.score, self.longmsg, self.shortmsg, vis, origin)
 
 
 class QAScorePool(object):
