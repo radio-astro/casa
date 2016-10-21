@@ -855,10 +855,33 @@ class AmpVsTimeDetailChart(FieldSpwAntDetailChart):
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
         plot_args.update(**overrides)
-        
+
         super(AmpVsTimeDetailChart, self).__init__(
-                context, result, xaxis='time', yaxis='amp', intent=intent, 
+                context, result, xaxis='time', yaxis='amp', intent=intent,
                 **plot_args)
+
+
+class CAS9514AmpVsTimeDetailChart(SpwAntDetailChart):
+    """
+    Create an amplitude vs time plot per spw and antenna, overplotting by field.
+    """
+    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgantenna': False,
+            'avgtime': '',
+            'avgscan': False,
+            'coloraxis': 'field',
+            'overwrite': True,
+            'xselfscale': True,
+            'xsharedaxis': True,
+            'yselfscale': True,
+            'ysharedaxis': True,
+        }
+        plot_args.update(**overrides)
+
+        super(CAS9514AmpVsTimeDetailChart, self).__init__(context, result, xaxis='time', yaxis='amp', intent=intent,
+                                                          **plot_args)
 
 
 class PhaseVsTimeDetailChart(FieldSpwAntDetailChart):

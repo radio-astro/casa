@@ -179,14 +179,17 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         amp_vs_uv_detail_plots = {}
         phase_vs_time_detail_plots = {}
 
-        # compromise to generate some antenna-specific plots to allow bad antennas to be identified
-        # while keeping the overall number of plots relatively unchanged.
+        # CAS-9154 Add per-antenna amplitude vs time plots for applycal stage
+        #
+        # Compromise to generate some antenna-specific plots to allow
+        # bad antennas to be identified while keeping the overall number of
+        # plots relatively unchanged.
         #
         # Note that 'TARGET' has been removed from the intents list
         amp_vs_time_detail_plots, amp_vs_time_subpages = self.create_plots(
             context,
             result,
-            applycal.AmpVsTimeDetailChart,
+            applycal.CAS9514AmpVsTimeDetailChart,
             ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
             ApplycalAmpVsTimePlotRenderer,
             avgchannel='9000'
@@ -819,7 +822,7 @@ class ApplycalAmpVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
         outfile = filenamer.sanitize('amp_vs_time-%s.html' % vis)
         
         super(ApplycalAmpVsTimePlotRenderer, self).__init__(
-                'generic_x_vs_y_field_spw_ant_detail_plots.mako', context, 
+                'generic_x_vs_y_spw_ant_plots.mako', context,
                 result, plots, title, outfile)
 
 
