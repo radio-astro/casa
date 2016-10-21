@@ -31,6 +31,7 @@
 #include <iomanip>
 #include <map>
 
+#include <casa/OS/File.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
 #include <tables/TaQL/TableParse.h>
@@ -452,6 +453,25 @@ inline bool isEphemeris(casacore::String const &name) {
   return false;
 }
 
+// Set number of correlations per spw
+inline void setNumberOfCorrelationsPerSpw(casacore::MeasurementSet const &ms,
+    casacore::Vector<casacore::Int> &nCorr) {
+  casacore::ROScalarColumn<casacore::Int> spwIdCol(ms.dataDescription(), "SPECTRAL_WINDOW_ID");
+  casacore::ROScalarColumn<casacore::Int> polIdCol(ms.dataDescription(), "POLARIZATION_ID");
+  casacore::ROScalarColumn<casacore::Int> numCorrCol(ms.polarization(), "NUM_CORR");
+  auto const spwIdList = spwIdCol.getColumn();
+  auto const polIdList = polIdCol.getColumn();
+  auto const numCorrList = numCorrCol.getColumn();
+  if (nCorr.size() != spwIdList.size()) {
+    nCorr.resize(spwIdList.size());
+  }
+  for (auto i = 0u; i < spwIdList.size(); ++i) {
+    auto const spwId = spwIdList[i];
+    auto const polId = polIdList[i];
+    auto const numCorr = numCorrList[polId];
+    nCorr[spwId] = numCorr;
+  }
+}
 }
 
 using namespace casacore;
@@ -468,12 +488,15 @@ SingleDishSkyCal::SingleDishSkyCal(VisSet& vs)
     engineC_(vs.numberSpw(), NULL),
     engineF_(vs.numberSpw(), NULL),
     currentSky_(vs.numberSpw(), NULL),
-    currentSkyOK_(vs.numberSpw(), NULL)
+    currentSkyOK_(vs.numberSpw(), NULL),
+    nCorr_(nSpw())
+
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(VisSet& vs)" << debugpost;
   append() = false;
 
   initializeSky();
+  initializeCorr();
 }
 
 SingleDishSkyCal::SingleDishSkyCal(const MSMetaInfoForCal& msmc)
@@ -483,12 +506,15 @@ SingleDishSkyCal::SingleDishSkyCal(const MSMetaInfoForCal& msmc)
     engineC_(msmc.nSpw(), NULL),
     engineF_(msmc.nSpw(), NULL),
     currentSky_(msmc.nSpw(), NULL),
-    currentSkyOK_(msmc.nSpw(), NULL)
+    currentSkyOK_(msmc.nSpw(), NULL),
+    nCorr_(nSpw())
+
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(const MSMetaInfoForCal& msmc)" << debugpost;
   append() = False;
 
   initializeSky();
+  initializeCorr();
 }
 
 SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)
@@ -498,12 +524,15 @@ SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)
     engineC_(1, NULL),
     engineF_(1, NULL),
     currentSky_(1, NULL),
-    currentSkyOK_(1, NULL)
+    currentSkyOK_(1, NULL),
+    nCorr_(nSpw())
+
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)" << debugpost;
   append() = false;
 
   initializeSky();
+  initializeCorr();
 }
 
 // Destructor
@@ -767,6 +796,11 @@ void SingleDishSkyCal::syncMeta2(const vi::VisBuffer2& vb)
   // fill interval array with exposure
   interval_.reference(vb.exposure());
   debuglog << "SingleDishSkyCal::syncMeta2 interval_= " << interval_ << debugpost;
+
+  setNumberOfCorrelationsPerSpw(vb.getVi()->ms(), nCorr_);
+  debuglog << "nCorr_ = " << nCorr_ << debugpost;
+  debuglog << "currSpw() = " << currSpw() << debugpost;
+  debuglog << "nPar() = " << nPar() << debugpost;
 }
 
 void SingleDishSkyCal::syncCalMat(const Bool &/*doInv*/)
@@ -977,9 +1011,15 @@ void SingleDishSkyCal::selfGatherAndSolve(VisSet& vs, VisEquation& /*ve*/)
 {
   debuglog << "SingleDishSkyCal::selfGatherAndSolve()" << debugpost;
 
+  MeasurementSet const &msIn = vs.iter().ms();
+
   debuglog << "nspw = " << nSpw() << debugpost;
   fillNChanParList(MeasurementSet(msName()), nChanParList());
   debuglog << "nChanParList=" << ::toString(nChanParList()) << debugpost;
+
+  // set number of correlations per spw
+  setNumberOfCorrelationsPerSpw(msIn, nCorr_);
+  debuglog << "nCorr_ = " << nCorr_ << debugpost;
 
   // Create a new caltable to fill up
   createMemCalTable();
@@ -989,7 +1029,6 @@ void SingleDishSkyCal::selfGatherAndSolve(VisSet& vs, VisEquation& /*ve*/)
   initSolvePar();
 
   // Pick up OFF spectra using STATE_ID
-  MeasurementSet const &msIn = vs.iter().ms();
   debuglog << "configure data selection for specific calibration mode" << debugpost;
   MeasurementSet msSel = selectMS(msIn);
   debuglog << "msSel.nrow()=" << msSel.nrow() << debugpost;
@@ -1034,6 +1073,16 @@ void SingleDishSkyCal::finalizeSky()
     if (engineF_[ispw]) delete engineF_[ispw];
   }
 
+}
+
+void SingleDishSkyCal::initializeCorr()
+{
+  File msPath(msName());
+  if (msPath.exists()) {
+    setNumberOfCorrelationsPerSpw(MeasurementSet(msName()), nCorr_);
+  } else {
+    nCorr_ = 1;
+  }
 }
 
 void SingleDishSkyCal::updateWt2(Matrix<Float> &weight, const Int &antenna1)
@@ -1295,9 +1344,6 @@ MeasurementSet SingleDishOtfCal::selectMS(MeasurementSet const &ms)
     }
   }
 
-  ostringstream taql_oss;
-  const char delimiter = ',';
-
   Vector<uInt> rowList;
 
   for (uInt field_id=0; field_id < tbl_field.nrow(); ++field_id){
@@ -1366,7 +1412,7 @@ MeasurementSet SingleDishOtfCal::selectMS(MeasurementSet const &ms)
           debuglog << "sakura error: status=" << status << debugpost;
         }
         AlwaysAssert(edges_detection_ok,AipsError);
-        // Compute ROW ids of detected edges. ROW "ids" are ROW ids in the original MS, not filtered by user selection.
+        // Compute ROW ids of detected edges. ROW "ids" are ROW ids in the MS filtered by user selection.
         Vector<uInt> index_2_rowid = calc.getRowIdForOriginalMS();
         size_t edges_count = ntrue(is_edge);
         size_t rowListIndex = rowList.size();

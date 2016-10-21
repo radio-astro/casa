@@ -184,8 +184,7 @@ public:
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; }
 
   // Number of pars per ant/bln
-  // TODO: nPar should refer numCorr in input MS
-  virtual casacore::Int nPar() { return 2; }
+  virtual casacore::Int nPar() { return nCorr_[currSpw()]; }
 
   // Total number of (complex) parameters per solve
   //  (specialize to jive with ant- or bln-basedness, etc.)
@@ -333,6 +332,10 @@ private:
   void initializeSky();
   void finalizeSky();
   void updateWt2(casacore::Matrix<casacore::Float> &weight, const casacore::Int& antenna1);
+  void initializeCorr();
+
+  // number of correlations per spw
+  casacore::Vector<casacore::Int> nCorr_;
 };
 
 class SingleDishPositionSwitchCal : public SingleDishSkyCal 
