@@ -9,12 +9,6 @@ import fnmatch
 import sha
 import time
 
-# Historical note:
-# When most of these tests were written, the default was highres=False but 
-# plotms would issue a warning and then export a high resolution image for
-# .png and .jpg files.
-# highres=True has been added to ensure getting the expected results.
-
 # Paths for data
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/plotms/"
 altdatapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/setjy/"
@@ -30,46 +24,46 @@ print 'plotms tests will use data from '+ datapath
 
 class plotms_test_base(unittest.TestCase):
 
-    ms  = "pm_ngc5921.ms"
-    ms2 = "ngc5921.ms"
-    caltable = 'ngc5921.ref1a.gcal'
-    outputDir='/tmp/'
+    testms  = "pm_ngc5921.ms"
+    testms2 = "ngc5921.ms"
+    testcaltable = 'ngc5921.ref1a.gcal'
+    outputDir="/tmp/" + str(os.getpid()) + "/"
     plotfile_jpg = "/tmp/myplot.jpg"
     display = os.environ.get("DISPLAY")
+    ms = os.path.join(outputDir, testms)
+    ms2 = os.path.join(outputDir, testms2)
+    caltable = os.path.join(outputDir, testcaltable)
 
-    def _cleanUp(self):
-        if os.path.exists(self.ms):
-            shutil.rmtree(self.ms)
-        self.removePlotfile()
+    def cleanUp(self):
+        if os.path.exists(self.outputDir):
+            shutil.rmtree(self.outputDir)
 
     def setUpdata(self):
         res = None
         default(plotms)
         if not os.path.exists(self.ms):
-            shutil.copytree(datapath+self.ms, self.ms, symlinks=True)
+            shutil.copytree(os.path.join(datapath,self.testms), 
+                    self.ms, symlinks=True)
 
     def tearDowndata(self):
-        self._cleanUp()
+        self.cleanUp()
         pm.setPlotMSFilename("")
 
     def setUpaltdata(self):
         if not os.path.exists(self.ms2):
-            shutil.copytree(altdatapath+self.ms2, self.ms2, symlinks=True)            
-    def tearDownaltdata(self):
-        if os.path.exists(self.ms2):
-            shutil.rmtree(self.ms2)
+            shutil.copytree(os.path.join(altdatapath,self.testms2),
+                    self.ms2, symlinks=True)
 
     def setUpcaldata(self):
         res = None
         default(plotms)
         if not os.path.exists(self.ms2):
-            shutil.copytree(calpath+self.ms2, self.ms2, symlinks=True)
+            shutil.copytree(os.path.join(calpath,self.testms2), 
+                    self.ms2, symlinks=True)
+        testcaltable = os.path.join(self.outputDir, self.caltable)
         if not os.path.exists(self.caltable):
-            shutil.copytree(calpath+self.caltable, self.caltable, symlinks=True)
-
-    def tearDowncaldata(self):
-        if os.path.exists(self.caltable):
-            shutil.rmtree(self.caltable)
+            shutil.copytree(os.path.join(calpath, self.testcaltable),
+                    self.caltable, symlinks=True)
 
     def checkPlotfile(self, plotfileName, minSize, maxSize=None):
         self.assertTrue(os.path.isfile(plotfileName), "Plot was not created")
@@ -95,7 +89,7 @@ class plotms_test_base(unittest.TestCase):
         nameTarget = namePattern + '*'
         for  file in os.listdir( dirName ):
             if fnmatch.fnmatch( file, nameTarget):
-                os.remove( dirName + "/" + file )
+                os.remove(os.path.join(dirName,file))
 
     def removePlotfile(self, plotfile=None):
         try:
@@ -121,11 +115,10 @@ class plotms_test_basic(plotms_test_base):
         
     def tearDown(self):
         self.tearDowndata()
-        self.tearDownaltdata()
             
     def test_basic_plot(self):
         '''test_basic_plot: Basic plot'''
-        self.plotfile_jpg = self.outputDir + "testBasic01.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testBasic01.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat="jpg", 
@@ -136,7 +129,7 @@ class plotms_test_basic(plotms_test_base):
         
     def test_basic_blankplot(self):               
         '''test_basic_blankplot: Blank plot running plotms with no arguments'''
-        self.plotfile_jpg = self.outputDir + "testBasic02.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testBasic02.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms( showgui=False, plotfile=self.plotfile_jpg, expformat='jpg',
@@ -147,7 +140,7 @@ class plotms_test_basic(plotms_test_base):
            
     def test_basic_overwrite(self):
         '''test_basic_overwrite: Check overwrite functionality'''
-        self.plotfile_jpg = self.outputDir + "testBasic03.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testBasic03.jpg")
         self.removePlotfile()
         time.sleep(5)
         # Create plotfile
@@ -170,8 +163,8 @@ class plotms_test_basic(plotms_test_base):
 
     def test_basic_overplot2MS(self):
         '''test_basic_overplot2MS: Overplot two data sets on one plot.'''
-        if os.path.exists(self.ms2):
-            self.plotfile_jpg = self.outputDir + "testBasic04.jpg"
+        if os.path.exists(os.path.join(self.outputDir, self.ms2)):
+            self.plotfile_jpg = os.path.join(self.outputDir, "testBasic04.jpg")
             self.removePlotfile()
             time.sleep(5)
             # Plot first MS scan vs time
@@ -196,8 +189,8 @@ class plotms_test_basic(plotms_test_base):
 
     def test_basic_overplot2MS_freq(self):
         '''test_basic_overplot2MS_freq: CAS-6975 overplotting problem'''
-        if os.path.exists(self.ms2):
-            self.plotfile_jpg = self.outputDir + "testBasic05.jpg"
+        if os.path.exists(os.path.join(self.outputDir, self.ms2)):
+            self.plotfile_jpg = os.path.join(self.outputDir, "testBasic05.jpg")
             self.removePlotfile()
             time.sleep(5)
             # Create the first plot
@@ -216,8 +209,8 @@ class plotms_test_basic(plotms_test_base):
 
     def test_basic_overplot2colors(self):
         '''test_basic_overplot2colors: CAS-7043 Create overplot with different color for each'''
-        if os.path.exists(self.ms2):
-            self.plotfile_jpg = self.outputDir + "testBasic06.jpg"
+        if os.path.exists(os.path.join(self.outputDir, self.ms2)):
+            self.plotfile_jpg = os.path.join(self.outputDir, "testBasic06.jpg")
             self.removePlotfile()
             time.sleep(5)
             # Create the first plot
@@ -241,7 +234,7 @@ class plotms_test_basic(plotms_test_base):
     def xtest_basic_screenExport(self):
         '''test_basic_screenExport: Export plot in screen resolution'''
         # not working yet...
-        self.plotfile_jpg = self.outputDir + "testBasic07.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testBasic07.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat="jpg", 
@@ -252,7 +245,7 @@ class plotms_test_basic(plotms_test_base):
 
     def xtest_basic_pngExport(self):
         '''test_basic_pngExport: Export plot in png format'''
-        plotfile_png = self.outputDir + "testBasic08.png"
+        plotfile_png = os.path.join(self.outputDir, "testBasic08.png")
         self.removePlotfile(plotfile_png)
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_png, expformat="png", 
@@ -264,7 +257,7 @@ class plotms_test_basic(plotms_test_base):
 
     def xtest_basic_pdfExport(self):
         '''test_basic_pdfExport: Export plot in pdf format'''
-        plotfile_pdf = self.outputDir + "testBasic09.png"
+        plotfile_pdf = os.path.join(self.outputDir, "testBasic09.png")
         self.removePlotfile(plotfile_pdf)
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_pdf, expformat="pdf", 
@@ -288,7 +281,7 @@ class plotms_test_averaging(plotms_test_base):
     
     def test_averaging_time(self):
         '''test_averaging_time: Average time'''
-        self.plotfile_jpg = self.outputDir + "testAveraging01.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAveraging01.jpg")
         self.removePlotfile()
         time.sleep(5)
         # interval = 30s
@@ -300,7 +293,7 @@ class plotms_test_averaging(plotms_test_base):
     
     def test_averaging_timescan(self):
         '''test_averaging_timescan: Average time over scans'''
-        self.plotfile_jpg = self.outputDir + "testAveraging02.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAveraging02.jpg")
         self.removePlotfile()
         time.sleep(5)
         # interval = 30s
@@ -312,7 +305,7 @@ class plotms_test_averaging(plotms_test_base):
 
     def test_averaging_timefield(self):
         '''test_averaging_timefield: Average time over fields'''
-        self.plotfile_jpg = self.outputDir + "testAveraging03.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAveraging03.jpg")
         self.removePlotfile()
         time.sleep(5)
         # interval = 30s
@@ -324,7 +317,7 @@ class plotms_test_averaging(plotms_test_base):
 
     def test_averaging_chan(self):
         '''test_averaging_chan: Average channel'''
-        self.plotfile_jpg = self.outputDir + "testAveraging04.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAveraging04.jpg")
         self.removePlotfile()
         time.sleep(5)
         # nchan = 63
@@ -336,7 +329,7 @@ class plotms_test_averaging(plotms_test_base):
 
     def test_averaging_baseline(self):
         '''test_averaging_baseline: Average over baseline'''
-        self.plotfile_jpg = self.outputDir + "testAveraging05.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAveraging05.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
@@ -347,7 +340,7 @@ class plotms_test_averaging(plotms_test_base):
 
     def test_averaging_antenna(self):
         '''test_averaging_antenna: Average per antenna'''
-        self.plotfile_jpg = self.outputDir + "testAveraging06.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAveraging06.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
@@ -358,7 +351,7 @@ class plotms_test_averaging(plotms_test_base):
 
     def test_averaging_blnant(self):
         '''test_averaging_blnant: Average over baseline and per antenna (should fail)'''
-        self.plotfile_jpg = self.outputDir + "testAveraging07.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAveraging07.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
@@ -368,7 +361,7 @@ class plotms_test_averaging(plotms_test_base):
 
     def test_averaging_spw(self):
         '''test_averaging_spw: Average over spw'''
-        self.plotfile_jpg = self.outputDir + "testAveraging08.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAveraging08.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
@@ -391,7 +384,7 @@ class plotms_test_axis(plotms_test_base):
 
     def test_axis_list(self):
         '''test_axis_list: Overplot scan and field y-axis with time x-axis.'''
-        self.plotfile_jpg = self.outputDir + "testAxis01.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAxis01.jpg")
         self.removePlotfile()
         time.sleep(5)
         '''Create a (scan & field)/time plot'''
@@ -407,7 +400,7 @@ class plotms_test_axis(plotms_test_base):
         
     def test_axis_twoAxes(self):
         '''test_axis_twoAxes: Single plot with two y axes/locations.'''
-        self.plotfile_jpg = self.outputDir + "testAxis02.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAxis02.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, gridrows=1, gridcols=1, 
@@ -428,7 +421,7 @@ class plotms_test_axis(plotms_test_base):
 
     def test_axis_wtamp(self):
         '''test_axis_wtamp: Test that wt*amp works for x-and y-axis choices.'''
-        self.plotfile_jpg = self.outputDir + "testAxis03.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAxis03.jpg")
         self.removePlotfile()
         time.sleep(5)
         # Use a 2x1 grid and plot wt*amp vs time on with one graph
@@ -446,7 +439,7 @@ class plotms_test_axis(plotms_test_base):
 
     def test_axis_nodatacol(self):
         '''test_axis_nodatacol: Test non-visibility data (no datacolumn) x vs. y'''
-        self.plotfile_jpg = self.outputDir + "testAxis04.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAxis04.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
@@ -460,7 +453,8 @@ class plotms_test_axis(plotms_test_base):
         datacols = ['data', 'corrected', 'model', 'residual',
                     'corrected-model', 'data-model'] 
         for datacol in datacols:
-            plotfile = self.outputDir + "testAxis05_" + datacol + ".jpg"
+            filename = "testAxis05_" + datacol + ".jpg"
+            plotfile = os.path.join(self.outputDir, filename)
             self.removePlotfile(plotfile)
             res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                          showgui=False, ydatacolumn=datacol)
@@ -469,7 +463,7 @@ class plotms_test_axis(plotms_test_base):
             self.removePlotfile(plotfile)
 
         # can't put these in a filename!
-        plotfile = self.outputDir + "testAxis05_datadivmodel.jpg"
+        plotfile = os.path.join(self.outputDir, "testAxis05_datadivmodel.jpg")
         self.removePlotfile(plotfile)
         res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                      showgui=False, ydatacolumn='data/model')
@@ -477,7 +471,7 @@ class plotms_test_axis(plotms_test_base):
         self.checkPlotfile(plotfile, 50000)
         self.removePlotfile(plotfile)
 
-        plotfile = self.outputDir + "testAxis05_corrdivmodel.jpg"
+        plotfile = os.path.join(self.outputDir, "testAxis05_corrdivmodel.jpg")
         self.removePlotfile(plotfile)
         res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                      showgui=False, ydatacolumn='corrected/model')
@@ -488,7 +482,7 @@ class plotms_test_axis(plotms_test_base):
 
     def test_axis_baddatacolumn(self):
         '''test_axis_baddatacolumn: Test invalid datacolumn'''
-        self.plotfile_jpg = self.outputDir + "testAxis06.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAxis06.jpg")
         self.removePlotfile()
         time.sleep(5)
         try:
@@ -501,7 +495,7 @@ class plotms_test_axis(plotms_test_base):
 
     def test_axis_datacolumnNoFloat(self):
         '''test_axis_datacolumnNoFloat: Choose 'float' datacolumn that does not exist'''
-        self.plotfile_jpg = self.outputDir + "testAxis07.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAxis07.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, highres=True,
@@ -515,7 +509,8 @@ class plotms_test_axis(plotms_test_base):
         syns = ['chan', 'freq', 'vel', 'ant', 'ant1', 'ant2',
                 'imag', 'vel', 'wtsp']
         for syn in syns:
-            plotfile = self.outputDir + "testAxis08_" + syn + ".jpg"
+            filename = "testAxis08_" + syn + ".jpg"
+            plotfile = os.path.join(self.outputDir, filename)
             self.removePlotfile(plotfile)
             res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                          showgui=False, yaxis=syn)
@@ -526,7 +521,7 @@ class plotms_test_axis(plotms_test_base):
 
     def test_axis_syn_bad(self):
         '''test_axis_syn_bad: Test invalid axis synonym'''
-        self.plotfile_jpg = self.outputDir + "testAxis09.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAxis09.jpg")
         self.removePlotfile()
         # now test bad synonym
         try:
@@ -549,7 +544,8 @@ class plotms_test_axis(plotms_test_base):
                 'ant', 'ant-azimuth', 'ant-elevation', 'ant-parang',
                 'observation', 'intent']
         for axis in axes:
-            plotfile = self.outputDir + "testAxis10_" + axis + ".jpg"
+            filename = "testAxis10_" + axis + ".jpg"
+            plotfile = os.path.join(self.outputDir, filename)
             self.removePlotfile(plotfile)
             res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
                          showgui=False, yaxis=axis)
@@ -565,7 +561,7 @@ class plotms_test_calibration(plotms_test_base):
 
     def setUp(self):
         self.checkDisplay()
-        self.setUpdata()
+        self.setUpcaldata()
         
     def tearDown(self):
         self.tearDowndata()
@@ -573,23 +569,15 @@ class plotms_test_calibration(plotms_test_base):
     def test_calibration_callib(self):
         '''test_calibration_callib: CAS-3034, CAS-7502 callib parameter for OTF calibration'''
         if os.path.exists(calpath):
-            self.plotfile_jpg = self.outputDir + "testCalibration01.jpg"
+            self.plotfile_jpg = os.path.join(self.outputDir, "testCalibration01.jpg")
             self.removePlotfile()
             time.sleep(5)
 
-            # Need this ms to be writeable for calibration
-            msfile = calpath + "ngc5921.ms"
-            newmsfile = "/tmp/ngc5921.ms"
-            if os.path.exists(newmsfile):
-                shutil.rmtree(newmsfile)
-            shutil.copytree(msfile, newmsfile)
-
-            calfile = calpath + "ngc5921.ref1a.gcal"
             # callib is a string not a filename
-            callib = "caltable='" + calfile + "' calwt=True tinterp='nearest'"
-            res = plotms(vis=newmsfile, plotfile = self.plotfile_jpg,
+            callibStr = "caltable='" + self.caltable + "' calwt=True tinterp='nearest'"
+            res = plotms(vis=self.ms2, plotfile = self.plotfile_jpg,
                          ydatacolumn="corrected", xaxis="frequency",
-                         showgui=False, callib=callib, highres=True)
+                         showgui=False, callib=callibStr, highres=True)
             self.assertTrue(res)
             self.checkPlotfile(self.plotfile_jpg, 250000)
         else:
@@ -598,10 +586,10 @@ class plotms_test_calibration(plotms_test_base):
 
     def test_calibration_badcallib(self):
         '''test_calibration_badcallib: callib file does not exist'''
-        self.plotfile_jpg = self.outputDir + "testCalibration02.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testCalibration02.jpg")
         self.removePlotfile()
         time.sleep(5)
-        res = plotms(vis=self.ms, plotfile = self.plotfile_jpg, 
+        res = plotms(vis=self.ms2, plotfile = self.plotfile_jpg, 
                      ydatacolumn="corrected", xaxis="frequency",
                      showgui=False, callib='/tmp/nocallib.txt',
                      highres=True)
@@ -619,11 +607,11 @@ class plotms_test_calplots(plotms_test_base):
         self.setUpcaldata()
         
     def tearDown(self):
-        self.tearDowncaldata()
+        self.tearDowndata
 
     def test_calplot_basic(self):
         '''test_calplot_basic: Basic plot of caltable'''
-        self.plotfile_jpg = self.outputDir + "testCalPlot01.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testCalPlot01.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
@@ -635,7 +623,7 @@ class plotms_test_calplots(plotms_test_base):
  
     def test_calplot_axes(self):
         '''test_calplot_axes: Basic plot of caltable with non-default axes'''
-        self.plotfile_jpg = self.outputDir + "testCalPlot02.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testCalPlot02.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.caltable, xaxis='scan',
@@ -655,8 +643,8 @@ class plotms_test_calplots(plotms_test_base):
 
     def test_calplot_iteration(self):
         '''test_calplot_iteration: caltable with corr iteraxis'''
-        self.plotfile_jpg = self.outputDir + "testCalPlot03.jpg"
-        plotfile1 = self.outputDir + "testCalPlot03_Poln1_2.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testCalPlot03.jpg")
+        plotfile1 = os.path.join(self.outputDir, "testCalPlot03_Poln1_2.jpg")
         self.removeFiles(self.outputDir, "testCalPlot03_")
         time.sleep(5)
         res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
@@ -671,7 +659,7 @@ class plotms_test_calplots(plotms_test_base):
 
     def test_calplot_selection(self):
         '''test_calplot_selection: caltable with corr selection'''
-        self.plotfile_jpg = self.outputDir + "testCalPlot04.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testCalPlot04.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
@@ -683,7 +671,7 @@ class plotms_test_calplots(plotms_test_base):
 
     def test_calplot_ratioplot(self):
         '''test_calplot_ratioplot: caltable with corr selection'''
-        self.plotfile_jpg = self.outputDir + "testCalPlot05.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testCalPlot05.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.caltable, plotfile=self.plotfile_jpg, expformat="jpg", 
@@ -706,7 +694,7 @@ class plotms_test_display(plotms_test_base):
        
     def test_display_symbol(self):
         '''test_display_symbol: Set a custom plotting symbol'''
-        self.plotfile_jpg = self.outputDir + "testDisplay01.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay01.jpg")
         self.removePlotfile()
         time.sleep(5)
         # Test diamond shape
@@ -724,7 +712,7 @@ class plotms_test_display(plotms_test_base):
        
     def test_display_symbol(self):
         '''test_display_symbol: Set a custom plotting symbol'''
-        self.plotfile_jpg = self.outputDir + "testDisplay01.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay01.jpg")
         self.removePlotfile()
         time.sleep(5)
         # Test diamond shape
@@ -745,7 +733,7 @@ class plotms_test_display(plotms_test_base):
 
     def test_display_flsymbol(self):
         '''test_display_flsymbol: Set a custom plotting flaggedsymbol'''
-        self.plotfile_jpg = self.outputDir + "testDisplay02.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay02.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -758,8 +746,8 @@ class plotms_test_display(plotms_test_base):
         
     def test_display_flsymbol_false( self ):
         '''test_display_flsymbol_false:  CAS-7046:  customflaggedsymbol=False '''
-        self.plotfile_jpg = self.outputDir + "testDisplay03.jpg"
-        plotfile2_jpg = self.outputDir + "testDisplay03_2.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay03.jpg")
+        plotfile2_jpg = os.path.join(self.outputDir, "testDisplay03_2.jpg")
         self.removePlotfile()
         self.removePlotfile(plotfile2_jpg)
         time.sleep(5)
@@ -782,7 +770,7 @@ class plotms_test_display(plotms_test_base):
 
     def test_display_legend(self):
         '''test_display_legend: Place a legend on a plot.'''
-        self.plotfile_jpg = self.outputDir + "testDisplay04.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay04.jpg")
         self.removePlotfile()
         time.sleep(5)
         # Place a legend in the upper right corner of the plot
@@ -797,7 +785,7 @@ class plotms_test_display(plotms_test_base):
         '''test_display_legend_overplot: Test that legend works with overplots'''
         # Note when testing this, don't just check the file size, but look at the
         # plot and make sure there is a legend there.
-        self.plotfile_jpg = self.outputDir + "testDisplay05.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay05.jpg")
         self.removePlotfile()
         time.sleep(5)
         # First plot: scan vs time
@@ -819,7 +807,7 @@ class plotms_test_display(plotms_test_base):
          
     def test_display_coloraxis(self):
         '''test_display_coloraxis: Colorize by time on an elevation x amp plot.'''
-        self.plotfile_jpg = self.outputDir + "testDisplay06.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay06.jpg")
         self.removePlotfile()
         time.sleep(5)
         # Colorize by time.
@@ -849,7 +837,7 @@ class plotms_test_display(plotms_test_base):
 
     def test_display_yaxisloc(self):
         '''test_display_yaxisloc: Overplot scan on left y-axis and field on right y-axis.'''
-        self.plotfile_jpg = self.outputDir + "testDisplay07.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay07.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -865,8 +853,8 @@ class plotms_test_display(plotms_test_base):
         
     def test_display_yaxisloc_iter(self):
         '''test_display_yaxisloc_iter: Overplot (scan and field) vs time and iterate over antenna.'''
-        plotfile_jpg = self.outputDir + "testDisplay08.jpg"
-        plotfile1_jpg = self.outputDir + "testDisplay08_Antenna1@VLA:N7,2@VLA:W1,3@VLA:W2,4@VLA:E1.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testDisplay08.jpg")
+        plotfile1_jpg = os.path.join(self.outputDir, "testDisplay08_Antenna1@VLA:N7,2@VLA:W1,3@VLA:W2,4@VLA:E1.jpg")
         self.removePlotfile(plotfile_jpg)
         self.removePlotfile(plotfile1_jpg)
         time.sleep(5)
@@ -886,7 +874,7 @@ class plotms_test_display(plotms_test_base):
     # Removing from test suite until tarball seg fault fixed
     def xtest_display_sharedaxis(self):
         '''test_display_sharedaxis: CAS-7074 sharedaxis on 2x2 grid'''
-        self.plotfile_jpg = self.outputDir + "testDisplay09.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay09.jpg")
         self.removeFiles(self.outputDir, "testDisplay09_" )
         # Create the plot and check that there are 19 iterations
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, exprange='all', 
@@ -902,7 +890,7 @@ class plotms_test_display(plotms_test_base):
 
     def test_display_sharedaxis_scale(self):
         '''test_display_sharedaxis_scale: CAS-7074 xsharedaxis needs to be a subparameter of global scale'''
-        self.plotfile_jpg = self.outputDir + "testDisplay10.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay10.jpg")
         self.removePlotfile()
         time.sleep(5)
         # xsharedaxis without xselfscale!
@@ -914,7 +902,7 @@ class plotms_test_display(plotms_test_base):
 
     def test_display_labels(self):
         '''test_display_labels: test custom title and axis labels'''
-        self.plotfile_jpg = self.outputDir + "testDisplay11.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay11.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -926,7 +914,7 @@ class plotms_test_display(plotms_test_base):
 
     def test_display_gridlines(self):
         '''test_display_gridlines: show major and minor grids'''
-        self.plotfile_jpg = self.outputDir + "testDisplay12.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testDisplay12.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -949,7 +937,7 @@ class plotms_test_grid(plotms_test_base):
 
     def test_grid_location(self):
         '''test_grid_location: Set rowindex & colindex to place a plot in a particular location'''
-        self.plotfile_jpg = self.outputDir + "testGrid01.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testGrid01.jpg")
         self.removePlotfile()
         time.sleep(5)
         # Use a grid with 2 rows and 3 columns. 
@@ -963,8 +951,8 @@ class plotms_test_grid(plotms_test_base):
 
     def test_grid_fill(self):
         '''test_grid_fill: Set grid and fill each location with a plot'''
-        self.plotfile_jpg = self.outputDir + "testGrid02.jpg"
-        plotfile2_jpg = self.outputDir + "testGrid02_2.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testGrid02.jpg")
+        plotfile2_jpg = os.path.join(self.outputDir, "testGrid02_2.jpg")
         self.removePlotfile()
         self.removePlotfile(plotfile2_jpg)
         time.sleep(5)
@@ -1005,10 +993,10 @@ class plotms_test_grid(plotms_test_base):
 
     def test_grid_fill_overplot(self):
         '''test_grid_fill_overplot: 2x2 multiplot display with single plots and overplots'''
-        plotFile = self.outputDir + "testGrid03.jpg"
-        plotFiles = [self.outputDir + "testGrid03_Scan1,2.jpg",
-                     self.outputDir + "testGrid03_Scan3,4,5,6_2.jpg",
-                     self.outputDir + "testGrid03_Scan7_3.jpg"]
+        plotFile = os.path.join(self.outputDir, "testGrid03.jpg")
+        plotFiles = [os.path.join(self.outputDir, "testGrid03_Scan1,2.jpg"),
+                     os.path.join(self.outputDir, "testGrid03_Scan3,4,5,6_2.jpg"),
+                     os.path.join(self.outputDir, "testGrid03_Scan7_3.jpg")]
         
         for  i in range(0, len(plotFiles)):
             self.removePlotfile(plotFiles[i])
@@ -1054,7 +1042,7 @@ class plotms_test_grid(plotms_test_base):
 
     def test_grid_badplotindex(self):
         '''test_grid_badplotindex: Set plotindex out of range'''
-        self.plotfile_jpg = self.outputDir + "testGrid04.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testGrid04.jpg")
         self.removePlotfile()
         time.sleep(5)
         # Fail with nonzero plotindex when clearplots=True (first plot)
@@ -1067,7 +1055,7 @@ class plotms_test_grid(plotms_test_base):
 
     def test_grid_badindex(self):
         '''test_grid_badindex: use row/col index larger than gridrow/gridcol'''
-        self.plotfile_jpg = self.outputDir + "testGrid05.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testGrid05.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, exprange='all',
@@ -1080,8 +1068,8 @@ class plotms_test_grid(plotms_test_base):
     def xtest_grid_screenExport(self):
         '''test_grid_screenExport: Export grid plot in screen resolution'''
         # not working yet so removed this test
-        plotfile_jpg = self.outputDir + "testGrid06.jpg"
-        plotfile1_jpg = self.outputDir + "testGrid06_Scan1,2,3,4.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testGrid06.jpg")
+        plotfile1_jpg = os.path.join(self.outputDir, "testGrid06_Scan1,2,3,4.jpg")
         self.removePlotfile(plotfile1_jpg)
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat="jpg", 
@@ -1124,14 +1112,14 @@ class plotms_test_iteration(plotms_test_base):
     
     def test_iteration_scan(self):
         '''test_iteraxis_scan: Iterate by scan and export all'''
-        plotfile_jpg = self.outputDir + "testIteration01.jpg"
-        plotFiles = [self.outputDir + "testIteration01_Scan1.jpg",
-                     self.outputDir + "testIteration01_Scan2_2.jpg",
-                     self.outputDir + "testIteration01_Scan3_3.jpg",
-                     self.outputDir + "testIteration01_Scan4_4.jpg",
-                     self.outputDir + "testIteration01_Scan5_5.jpg",
-                     self.outputDir + "testIteration01_Scan6_6.jpg",
-                     self.outputDir + "testIteration01_Scan7_7.jpg"]
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration01.jpg")
+        plotFiles = [os.path.join(self.outputDir, "testIteration01_Scan1.jpg"),
+                     os.path.join(self.outputDir, "testIteration01_Scan2_2.jpg"),
+                     os.path.join(self.outputDir, "testIteration01_Scan3_3.jpg"),
+                     os.path.join(self.outputDir, "testIteration01_Scan4_4.jpg"),
+                     os.path.join(self.outputDir, "testIteration01_Scan5_5.jpg"),
+                     os.path.join(self.outputDir, "testIteration01_Scan6_6.jpg"),
+                     os.path.join(self.outputDir, "testIteration01_Scan7_7.jpg")]
         for i in range(0, len(plotFiles)):
             self.removePlotfile(plotFiles[i])
         time.sleep(5)
@@ -1147,7 +1135,7 @@ class plotms_test_iteration(plotms_test_base):
 
     def test_iteration_antenna(self):
         '''test_iteraxis_antenna: Iterate by antenna and export all'''
-        plotfile_jpg = self.outputDir + "testIteration02.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration02.jpg")
         # Create the plot and check that there are 27 iterations
         res = plotms(vis=self.ms, plotfile = plotfile_jpg, exprange='all',
                      showgui=False, iteraxis='antenna', overwrite=True,
@@ -1161,8 +1149,8 @@ class plotms_test_iteration(plotms_test_base):
 
     def test_iteration_time(self):
         '''test_iteraxis_time: Iterate over time'''
-        plotfile_jpg = self.outputDir + "testIteration03.jpg"
-        plotfile1_jpg = self.outputDir + "testIteration03_Time09:18:59.9998.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration03.jpg")
+        plotfile1_jpg = os.path.join(self.outputDir, "testIteration03_Time09:18:59.9998.jpg")
         self.removePlotfile(plotfile1_jpg)
         time.sleep(5)
         # Export first plot only 
@@ -1176,8 +1164,8 @@ class plotms_test_iteration(plotms_test_base):
 
     def test_iteration_timeavg(self):
         '''test_iteraxis_time: Iterate over averaged time'''
-        plotfile_jpg = self.outputDir + "testIteration04.jpg"
-        plotfile1_jpg = self.outputDir + "testIteration04_Time09:19:15.0000.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration04.jpg")
+        plotfile1_jpg = os.path.join(self.outputDir, "testIteration04_Time09:19:15.0000.jpg")
         self.removePlotfile(plotfile1_jpg)
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=plotfile_jpg, expformat='jpg', 
@@ -1190,9 +1178,9 @@ class plotms_test_iteration(plotms_test_base):
 
     def test_iteration_grid(self):
         '''test_iteraxis_grid: Iterate by scan on square grid.'''
-        plotfile_jpg = self.outputDir + "testIteration05.jpg"
-        plotfile1_jpg = self.outputDir + "testIteration05_Scan1,2,3,4.jpg"
-        plotfile2_jpg = self.outputDir + "testIteration05_Scan5,6,7_2.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration05.jpg")
+        plotfile1_jpg = os.path.join(self.outputDir, "testIteration05_Scan1,2,3,4.jpg")
+        plotfile2_jpg = os.path.join(self.outputDir, "testIteration05_Scan5,6,7_2.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg) 
         time.sleep(5)
@@ -1209,9 +1197,9 @@ class plotms_test_iteration(plotms_test_base):
         
     def test_iteration_grid2(self):
         '''test_iteraxis_grid2: Iterate by scan with right axis and non-square grid.'''
-        plotfile_jpg = self.outputDir + "testIteration06.jpg"
-        plotfile1_jpg = self.outputDir + "testIteration06_Scan1,2,3,4,5,6.jpg"
-        plotfile2_jpg = self.outputDir + "testIteration06_Scan7_2.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration06.jpg")
+        plotfile1_jpg = os.path.join(self.outputDir, "testIteration06_Scan1,2,3,4,5,6.jpg")
+        plotfile2_jpg = os.path.join(self.outputDir, "testIteration06_Scan7_2.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg) 
         time.sleep(5)
@@ -1230,10 +1218,10 @@ class plotms_test_iteration(plotms_test_base):
 
     def test_iteration_selection( self ):
         '''test_iteraxis_selection: CAS-7050:(Pipeline) Iteration with selection'''
-        plotfile_jpg = self.outputDir + "testIteration07.jpg"
-        plotfile1_jpg = self.outputDir + "testIteration07_Antenna1@VLA:N7.jpg"
-        plotfile2_jpg = self.outputDir + "testIteration07_Antenna2@VLA:W1_2.jpg"
-        plotfile3_jpg = self.outputDir + "testIteration07_Antenna3@VLA:W2_3.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration07.jpg")
+        plotfile1_jpg = os.path.join(self.outputDir, "testIteration07_Antenna1@VLA:N7.jpg")
+        plotfile2_jpg = os.path.join(self.outputDir, "testIteration07_Antenna2@VLA:W1_2.jpg")
+        plotfile3_jpg = os.path.join(self.outputDir, "testIteration07_Antenna3@VLA:W2_3.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg)
         self.removePlotfile(plotfile3_jpg)
@@ -1255,8 +1243,8 @@ class plotms_test_iteration(plotms_test_base):
         
     def test_iteration_select1( self ):
         '''test_iteraxis_select1: CAS-7050 (Pipeline) Iteration with selection of 1'''
-        plotfile_jpg = self.outputDir + "testIteration08.jpg"
-        plotfile1_jpg = self.outputDir + "testIteration08_Antenna28@VLA:W7.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration08.jpg")
+        plotfile1_jpg = os.path.join(self.outputDir, "testIteration08_Antenna28@VLA:W7.jpg")
         self.removePlotfile(plotfile1_jpg)
         time.sleep(5)
         # One valid selection: check that there is only 1 iteration plot
@@ -1272,7 +1260,7 @@ class plotms_test_iteration(plotms_test_base):
        
     def test_iteration_select0( self ):
         '''test_iteraxis_select0: CAS-7050 (Pipeline) Iteration with empty selection'''
-        self.plotfile_jpg = self.outputDir + "testIteration09.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testIteration09.jpg")
         self.removePlotfile()
         time.sleep(5)
         # Create plot with empty antenna selection and check the result is false'''
@@ -1284,11 +1272,11 @@ class plotms_test_iteration(plotms_test_base):
 
     def test_iteration_badselection( self ):
         '''test_iteraxis_badselection:  CAS-7050:  (Pipeline) Iteration with bad selection, you should be able to tell what plots are skipped.'''
-        plotfile_jpg = self.outputDir + "testIteration10.jpg"
-        plotFiles = [self.outputDir + "testIteration10_Scan1.jpg",
-                     self.outputDir + "testIteration10_Scan2_2.jpg",
-                     self.outputDir + "testIteration10_Scan3_3.jpg",
-                     self.outputDir + "testIteration10_Scan4_4.jpg"]
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration10.jpg")
+        plotFiles = [os.path.join(self.outputDir, "testIteration10_Scan1.jpg"),
+                     os.path.join(self.outputDir, "testIteration10_Scan2_2.jpg"),
+                     os.path.join(self.outputDir, "testIteration10_Scan3_3.jpg"),
+                     os.path.join(self.outputDir, "testIteration10_Scan4_4.jpg")]
         for i in range(0, len(plotFiles)):
             self.removePlotfile(plotFiles[i])
         time.sleep(5)
@@ -1306,9 +1294,9 @@ class plotms_test_iteration(plotms_test_base):
 
     def test_iteration_corr(self):
         '''test_iteraxis_corr: Iterate by correlation and export all'''
-        plotfile_jpg = self.outputDir + "testIteration11.jpg"
-        plotfile1_jpg = self.outputDir + "testIteration11_CorrRR.jpg"
-        plotfile2_jpg = self.outputDir + "testIteration11_CorrLL_2.jpg"
+        plotfile_jpg = os.path.join(self.outputDir, "testIteration11.jpg")
+        plotfile1_jpg = os.path.join(self.outputDir, "testIteration11_CorrRR.jpg")
+        plotfile2_jpg = os.path.join(self.outputDir, "testIteration11_CorrLL_2.jpg")
         # Create the plot and check that there are 27 iterations
         res = plotms(vis=self.ms, plotfile = plotfile_jpg, exprange='all',
                      showgui=False, iteraxis='corr', overwrite=True,
@@ -1336,10 +1324,10 @@ class plotms_test_multi(plotms_test_base):
 
     def test_multi_cookbook(self):
         '''test_cookbook: Juergen's cookbook Plotting Multiple Data Sets example'''
-        plotfile1_jpg = self.outputDir + "testMulti01.jpg"
-        plotfile2_jpg = self.outputDir + "testMulti01_2.jpg"
-        plotfile3_jpg = self.outputDir + "testMulti01_3.jpg"
-        plotfile4_jpg = self.outputDir + "testMulti01_4.jpg"
+        plotfile1_jpg = os.path.join(self.outputDir, "testMulti01.jpg")
+        plotfile2_jpg = os.path.join(self.outputDir, "testMulti01_2.jpg")
+        plotfile3_jpg = os.path.join(self.outputDir, "testMulti01_3.jpg")
+        plotfile4_jpg = os.path.join(self.outputDir, "testMulti01_4.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg)
         self.removePlotfile(plotfile3_jpg)
@@ -1407,8 +1395,8 @@ class plotms_test_multi(plotms_test_base):
         # Note: cannot tell what the issue/fix was from this ticket
         # Seems to be part GUI and part cache issues.
 
-        plotfile1_jpg = self.outputDir + "testMulti02.jpg"
-        plotfile2_jpg = self.outputDir + "testMulti02_2.jpg"
+        plotfile1_jpg = os.path.join(self.outputDir, "testMulti02.jpg")
+        plotfile2_jpg = os.path.join(self.outputDir, "testMulti02_2.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg)
         time.sleep(5)
@@ -1449,9 +1437,9 @@ class plotms_test_selection(plotms_test_base):
     def test_selection_scan(self):
         '''test_selection_scan: Check scan invalid/valid selections'''
         # Will check max size to ensure selection was done
-        plotfile1_jpg = self.outputDir + "testSelection01_scan1.jpg" #FAIL
-        plotfile2_jpg = self.outputDir + "testSelection01_scan2.jpg"
-        plotfile3_jpg = self.outputDir + "testSelection01_scan3.jpg"
+        plotfile1_jpg = os.path.join(self.outputDir, "testSelection01_scan1.jpg") #FAIL
+        plotfile2_jpg = os.path.join(self.outputDir, "testSelection01_scan2.jpg")
+        plotfile3_jpg = os.path.join(self.outputDir, "testSelection01_scan3.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg)
         self.removePlotfile(plotfile3_jpg)
@@ -1477,8 +1465,8 @@ class plotms_test_selection(plotms_test_base):
     def test_selection_spw(self):
         '''test_selection_spw: Check spw invalid/valid selections'''
         # Will check max size to ensure selection was done
-        plotfile1_jpg = self.outputDir + "testSelection02_spw1.jpg" #FAIL
-        plotfile2_jpg = self.outputDir + "testSelection02_spw2.jpg"
+        plotfile1_jpg = os.path.join(self.outputDir, "testSelection02_spw1.jpg") #FAIL
+        plotfile2_jpg = os.path.join(self.outputDir, "testSelection02_spw2.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg)
         time.sleep(5)
@@ -1497,9 +1485,9 @@ class plotms_test_selection(plotms_test_base):
     def test_selection_ant(self):
         # Will check max size to ensure selection was done
         '''test_selection_ant: Check antenna invalid/valid selections'''
-        plotfile1_jpg = self.outputDir + "testSelection03_ant1.jpg" #FAIL
-        plotfile2_jpg = self.outputDir + "testSelection03_ant2.jpg"
-        plotfile3_jpg = self.outputDir + "testSelection03_ant3.jpg"
+        plotfile1_jpg = os.path.join(self.outputDir, "testSelection03_ant1.jpg") #FAIL
+        plotfile2_jpg = os.path.join(self.outputDir, "testSelection03_ant2.jpg")
+        plotfile3_jpg = os.path.join(self.outputDir, "testSelection03_ant3.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg)
         self.removePlotfile(plotfile3_jpg)
@@ -1526,8 +1514,8 @@ class plotms_test_selection(plotms_test_base):
     def test_selection_field(self):
         '''test_selection_field: Check field invalid/valid selections'''
         # Will check max size to ensure selection was done
-        plotfile1_jpg = self.outputDir + "testSelection04_field1.jpg" #FAIL
-        plotfile2_jpg = self.outputDir + "testSelection04_field2.jpg"
+        plotfile1_jpg = os.path.join(self.outputDir, "testSelection04_field1.jpg") #FAIL
+        plotfile2_jpg = os.path.join(self.outputDir, "testSelection04_field2.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg)
         time.sleep(5)
@@ -1546,8 +1534,8 @@ class plotms_test_selection(plotms_test_base):
     def test_selection_corr(self):
         '''test_selection_corr: Check corr invalid/valid selections'''
         # Will check max size to ensure selection was done
-        plotfile1_jpg = self.outputDir + "testSelection04_corr1.jpg" #FAIL
-        plotfile2_jpg = self.outputDir + "testSelection04_corr2.jpg"
+        plotfile1_jpg = os.path.join(self.outputDir, "testSelection04_corr1.jpg") #FAIL
+        plotfile2_jpg = os.path.join(self.outputDir, "testSelection04_corr2.jpg")
         self.removePlotfile(plotfile1_jpg)
         self.removePlotfile(plotfile2_jpg)
         time.sleep(5)
@@ -1581,7 +1569,8 @@ class plotms_test_transform(plotms_test_base):
         frames = ['LSRK', 'LSRD', 'BARY', 'GEO', 'TOPO',
                   'GALACTO', 'LGROUP', 'CMB'] 
         for frame in frames:
-            plotfile = self.outputDir + "testTransform01_" + frame + ".jpg"
+            filename = "testTransform01_" + frame + ".jpg"
+            plotfile = os.path.join(self.outputDir, filename)
             self.removePlotfile(plotfile)
             res = plotms(vis=self.ms, plotfile=plotfile, yaxis='freq', 
                          showgui=False, freqframe=frame, highres=True)
@@ -1592,7 +1581,7 @@ class plotms_test_transform(plotms_test_base):
 
     def test_transform_badframe(self):
         '''test_transform_badframe: Test that invalid freqframe fails.'''
-        self.plotfile_jpg = self.outputDir + "testTransform02.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testTransform02.jpg")
         self.removePlotfile()
         time.sleep(5)
         try:
@@ -1607,7 +1596,8 @@ class plotms_test_transform(plotms_test_base):
         '''test_transform_veldef: Test velocity definitions'''
         vels = ['RADIO', 'OPTICAL', 'TRUE']
         for vel in vels:
-            plotfile = self.outputDir + "testTransform03_" + vel + ".jpg"
+            filename = "testTransform03_" + vel + ".jpg"
+            plotfile = os.path.join(self.outputDir, filename)
             self.removePlotfile(plotfile)
             res = plotms(vis=self.ms, plotfile=plotfile, yaxis='freq', 
                          showgui=False, veldef=vel, highres=True)
@@ -1618,7 +1608,7 @@ class plotms_test_transform(plotms_test_base):
 
     def test_transform_restfreq(self):
         '''test_transform_restfreq: Test rest frequency'''
-        self.plotfile_jpg = self.outputDir + "testTransform04.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testTransform04.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, yaxis='freq', 
@@ -1629,7 +1619,7 @@ class plotms_test_transform(plotms_test_base):
         
     def test_transform_shift(self):
         '''test_transform_shift: Test phase shift'''
-        self.plotfile_jpg = self.outputDir + "testTransform05.jpg"
+        self.plotfile_jpg = os.path.join(self.outputDir, "testTransform05.jpg")
         self.removePlotfile()
         time.sleep(5)
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, yaxis='phase', 
