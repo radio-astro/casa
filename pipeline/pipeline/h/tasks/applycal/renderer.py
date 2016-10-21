@@ -176,7 +176,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         # these dicts map vis to the list of plots
         amp_vs_freq_detail_plots = {}
         phase_vs_freq_detail_plots = {}
-        amp_vs_uv_detail_plots = {}
         phase_vs_time_detail_plots = {}
 
         # CAS-9154 Add per-antenna amplitude vs time plots for applycal stage
@@ -189,10 +188,20 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         amp_vs_time_detail_plots, amp_vs_time_subpages = self.create_plots(
             context,
             result,
-            applycal.CAS9514AmpVsTimeDetailChart,
+            applycal.CAS9154AmpVsTimeDetailChart,
             ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
             ApplycalAmpVsTimePlotRenderer,
             avgchannel='9000'
+        )
+
+        # CAS-9216: Add per-antenna amplitude vs UV distance plots for
+        # applycal stage
+        amp_vs_uv_detail_plots, amp_vs_uv_subpages = self.create_plots(
+            context,
+            result,
+            applycal.CAS9216AmpVsUVDetailChart,
+            ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
+            ApplycalAmpVsUVPlotRenderer,
         )
 
         if pipeline.infrastructure.generate_detail_plots(result):
@@ -212,14 +221,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 applycal.PhaseVsFrequencyDetailChart,
                 ['BANDPASS', 'PHASE', 'CHECK'],
                 ApplycalPhaseVsFreqPlotRenderer
-            )
-
-            amp_vs_uv_detail_plots, amp_vs_uv_subpages = self.create_plots(
-                context,
-                result,
-                applycal.AmpVsUVDetailChart,
-                ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
-                ApplycalAmpVsUVPlotRenderer
             )
 
             # phase_vs_uv_detail_plots, phase_vs_uv_subpages = self.create_plots(
