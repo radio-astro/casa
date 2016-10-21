@@ -13,12 +13,12 @@ HISTOGRAM_LABELS and HISTOGRAM_AXES should be the label for that score and the
 javascript defining the X Axis label to use for that score, respectively. For
 example:
 
-	HISTOGRAM_LABELS = collections.OrderedDict([
-		('ratio', 'Ratio of phase RMS before/after WVR application')
-	])	
-	HISTOGRAM_AXES = collections.OrderedDict([
-		('ratio', 'PLOTS.xAxisLabels["WVR phase RMS"]')
-	])
+    HISTOGRAM_LABELS = collections.OrderedDict([
+        ('ratio', 'Ratio of phase RMS before/after WVR application')
+    ])
+    HISTOGRAM_AXES = collections.OrderedDict([
+        ('ratio', 'PLOTS.xAxisLabels["WVR phase RMS"]')
+    ])
 
 This will create histograms using the value held in plot.parameters['ratio'],
 assigning an x-axis label of 'WVR Phase RMS'. You may want to use OrderedDicts
@@ -38,25 +38,25 @@ HISTOGRAM_AXES = {}
 
 SELECT2_LABEL = {'vis': 'Measurement Set',
                  'spw' : 'Spectral window filter',
-				 'ant' : 'Antenna filter',
-				 'pol' : 'Polarisation filter',
-				 'field' : 'Field filter',
-				 'scan' : 'Scan filter',
-				 'baseband' : 'Baseband filter',
-				 'tsys_spw' : 'T<sub>sys</sub> window filter',
-				 'intent' : 'Observing intent filter',
-				 'type' : 'Type filter'}
-				 
+                 'ant' : 'Antenna filter',
+                 'pol' : 'Polarisation filter',
+                 'field' : 'Field filter',
+                 'scan' : 'Scan filter',
+                 'baseband' : 'Baseband filter',
+                 'tsys_spw' : 'T<sub>sys</sub> window filter',
+                 'intent' : 'Observing intent filter',
+                 'type' : 'Type filter'}
+
 SELECT2_PLACEHOLDER = {'vis': 'Show all measurement sets',
                        'spw' : 'Show all spectral windows',
-				       'ant' : 'Show all antennas',
-				 	   'pol' : 'Show all polarisations',
-				       'field' : 'Show all fields',
-				       'scan' : 'Show all scans',
-				       'baseband' : 'Show all basebands',
-				       'tsys_spw' : 'Show all Tsys windows',
-				       'intent' : 'Show all observing intents',
-				       'type' : 'Show all types'}
+                       'ant' : 'Show all antennas',
+                       'pol' : 'Show all polarisations',
+                       'field' : 'Show all fields',
+                       'scan' : 'Show all scans',
+                       'baseband' : 'Show all basebands',
+                       'tsys_spw' : 'Show all Tsys windows',
+                       'intent' : 'Show all observing intents',
+                       'type' : 'Show all types'}
 
 def get_options(selector, plots):
     try:
@@ -70,14 +70,14 @@ def get_options(selector, plots):
     return options
 
 def format_options(options):
-	# remove any duplicates
-	no_dups = set(options)
-	# convert all options to sortable strings
-	as_strings = [str(o) for o in no_dups]  
-	# sort options
-	sorted_options = utils.numericSort(as_strings)
-	# return HTML element for each option
-	return ['%s' % option for option in sorted_options]
+    # remove any duplicates
+    no_dups = set(options)
+    # convert all options to sortable strings
+    as_strings = [str(o) for o in no_dups]
+    # sort options
+    sorted_options = utils.numericSort(as_strings)
+    # return HTML element for each option
+    return ['%s' % option for option in sorted_options]
 
 %>
 
@@ -91,7 +91,7 @@ def format_options(options):
 
 <script>
 $(document).ready(function () {
-	var scores_dict = $('#scores').data('scores');	
+    var scores_dict = $('#scores').data('scores');
 
     // activate the input fields for spw, antenna, etc.
     $('.select2').select2();
@@ -111,20 +111,20 @@ $(document).ready(function () {
 % endfor
 
 % if self.attr.HISTOGRAM_AXES:
-	var charts = [
-	% for (key, axis) in self.attr.HISTOGRAM_AXES.items():	
-				  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "${key}", "#histogram-${key}", ${axis}),
-	% endfor
-	             ];
+    var charts = [
+    % for (key, axis) in self.attr.HISTOGRAM_AXES.items():
+                  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "${key}", "#histogram-${key}", ${axis}),
+    % endfor
+                 ];
 
-	// link histogram ranges to the range checkbox
-	var rangeCheckbox = $("input#rangeCheckbox");
-	rangeCheckbox.click(function() {
-		var state = rangeCheckbox.prop("checked");
-		charts.forEach(function(chart) {
-			chart.histogram.duration(1000).plotExtent(state);
-		});
-	});
+    // link histogram ranges to the range checkbox
+    var rangeCheckbox = $("input#rangeCheckbox");
+    rangeCheckbox.click(function() {
+        var state = rangeCheckbox.prop("checked");
+        charts.forEach(function(chart) {
+            chart.histogram.duration(1000).plotExtent(state);
+        });
+    });
 % endif
 
     pipeline.pages.detail_plots.ready();
@@ -138,91 +138,91 @@ $(document).ready(function () {
         # remove any redundant selectors, such as MS selector when only MS was plotted
         selectors = filter(lambda selector: len(get_options(selector, plots)) > 1, selectors)
     %>
-	% if len(selectors) > 0:
-		<div class="row">
-		% for selector in selectors:
-			<div class="col-md-${str(12/len(selectors))}">
-				<div class="form-group">
-					<label for="select-${selector}" class="control-label">${SELECT2_LABEL[selector]}</label>
-					<select id="select-${selector}" class="form-control select2" multiple data-placeholder="${SELECT2_PLACEHOLDER[selector]}">
-						% for option in get_options(selector, plots):
-							<option>${option}</option>
-						% endfor
-				    </select>			
-				</div>
-			</div>
-		% endfor
-		</div>
-	% endif
+    % if len(selectors) > 0:
+        <div class="row">
+        % for selector in selectors:
+            <div class="col-md-${str(12/len(selectors))}">
+                <div class="form-group">
+                    <label for="select-${selector}" class="control-label">${SELECT2_LABEL[selector]}</label>
+                    <select id="select-${selector}" class="form-control select2" multiple data-placeholder="${SELECT2_PLACEHOLDER[selector]}">
+                        % for option in get_options(selector, plots):
+                            <option>${option}</option>
+                        % endfor
+                    </select>
+                </div>
+            </div>
+        % endfor
+        </div>
+    % endif
 </%def>
 
 <%def name="render_plots(plots)">
-	% for plot in plots:
-		% if os.path.exists(plot.thumbnail):
-			<div class="col-md-2 col-sm-3">
-			    <%
-			    	fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
-			    	thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
-			    %>
-				<div class="thumbnail">
-					<a href="${fullsize_relpath}"
-					   class="fancybox"
-					   % if hasattr(caller, 'fancybox_caption'):
-					   title='<div class="pull-left">${caller.fancybox_caption(plot)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
-					   % endif
-					   data-thumbnail="${thumbnail_relpath}">
-						<img src="${thumbnail_relpath}"
-							 % if hasattr(caller, 'mouseover'):
-					   		 title="${caller.mouseover(plot)}"
-					   		 % endif
-					   		 data-thumbnail="${thumbnail_relpath}">
-					</a>
-			
-					<div class="caption">
-					% if hasattr(caller, 'caption_title'):
-						<h4>${caller.caption_title(plot)}</h4>
-					% endif
-					% if hasattr(caller, 'caption_subtitle'):
-						<h6>${caller.caption_subtitle(plot)}</h6>								
-					% endif
-					% if hasattr(caller, 'caption_text'):		
-					    ${caller.caption_text(plot)}
-					% endif
-					</div>
-				</div>		
-			</div>
-		% endif
-	% endfor
+    % for plot in plots:
+        % if os.path.exists(plot.thumbnail):
+            <div class="col-md-2 col-sm-3">
+                <%
+                    fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
+                    thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
+                %>
+                <div class="thumbnail">
+                    <a href="${fullsize_relpath}"
+                       class="fancybox"
+                       % if hasattr(caller, 'fancybox_caption'):
+                       title='<div class="pull-left">${caller.fancybox_caption(plot)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
+                       % endif
+                       data-thumbnail="${thumbnail_relpath}">
+                        <img src="${thumbnail_relpath}"
+                             % if hasattr(caller, 'mouseover'):
+                             title="${caller.mouseover(plot)}"
+                             % endif
+                             data-thumbnail="${thumbnail_relpath}">
+                    </a>
+
+                    <div class="caption">
+                    % if hasattr(caller, 'caption_title'):
+                        <h4>${caller.caption_title(plot)}</h4>
+                    % endif
+                    % if hasattr(caller, 'caption_subtitle'):
+                        <h6>${caller.caption_subtitle(plot)}</h6>
+                    % endif
+                    % if hasattr(caller, 'caption_text'):
+                        ${caller.caption_text(plot)}
+                    % endif
+                    </div>
+                </div>
+            </div>
+        % endif
+    % endfor
 </%def>
 
 <div class="page-header">
-	<h1><%block name="title">${plot_title}</%block><button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h1>
+    <h1><%block name="title">${plot_title}</%block><button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h1>
 </div>
 
 % if self.attr.HISTOGRAM_AXES:
-	<div class="row">
-		<div class="col-md-12">
-			<div class="form-group">
-				<label for="rangeCheckbox" class="control-label">Clip histogram range to match data range</label>
-				<input type="checkbox" id="rangeCheckbox" checked></input>
-			</div>
-		</div>
-	</div>
-	
-	<div class="row">
-		% for histogram_id, label in self.attr.HISTOGRAM_LABELS.items():
-		<div class="col-md-${12/len(self.attr.HISTOGRAM_LABELS)}">
-			<div class="panel panel-default">
-				<div class="panel-heading">
-					<h5 class="panel-title">${label}</h5>
-				</div>
-				<div class="panel-body">
-					<div id="histogram-${histogram_id}"></div>
-				</div>
-			</div>
-		</div>
-		% endfor
-	</div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <label for="rangeCheckbox" class="control-label">Clip histogram range to match data range</label>
+                <input type="checkbox" id="rangeCheckbox" checked></input>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        % for histogram_id, label in self.attr.HISTOGRAM_LABELS.items():
+        <div class="col-md-${12/len(self.attr.HISTOGRAM_LABELS)}">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h5 class="panel-title">${label}</h5>
+                </div>
+                <div class="panel-body">
+                    <div id="histogram-${histogram_id}"></div>
+                </div>
+            </div>
+        </div>
+        % endfor
+    </div>
 % endif
 
 
