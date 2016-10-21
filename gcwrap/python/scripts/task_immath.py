@@ -228,52 +228,38 @@ def immath(
         (expr, varnames, subImages) = _immath_updateexpr(
             expr, varnames, subImages, filenames, file_map
         )
-    except Exception, error:
-            casalog.post( "Exception caught was: " + str(error), 'SEVERE')
-            raise
-    
-    
-    try:
-        # Do the calculation
-        res = _myia.imagecalc(
-            pixels=expr, outfile=outfile, imagemd=_immath_translate_imagemd(imagename, imagemd)
+        return _immath_compute(
+            imagename, expr, mode, outfile, imagemd, _myia,
+            isTPol, isLPol, lpol, doPolThresh, polithresh
         )
-        # modify stokes type for polarization intensity image
-        if (  mode=="poli" ):                
-            csys = res.coordsys()
-            if isTPol:
-                csys.setstokes('Ptotal')
-            elif isLPol:
-                csys.setstokes('Plinear')
-            res.setcoordsys(csys.torecord())
-        res.done()
-        if (doPolThresh):
-            _immath_createPolMask(polithresh, lpol, outfile)
-
-        #cleanup
-        _myia.done()                
-        _immath_cleanup( tmpFilePrefix )
-                    
-        return True
     except Exception, error:
-        try:
-            _myia.done()
-            _immath_cleanup( tmpFilePrefix )
-        except:
-            pass
-        casalog.post( "Exception caught was: "+str(error), 'DEBUG2')
-        #raise Exception, 'Unable to evaluate math expression: '\
-        #      +expr+' on file(s) '+str(filenames)
-        casalog.post( 'Unable to evaluate math expression: '\
-                      +expr+' on file(s) '+str(filenames), 'SEVERE' )
+        casalog.post("Unable to process expression " + expr, 'SEVERE')
+        casalog.post("Exception caught was: " + str(error), 'SEVERE')
         raise
-        
-    # Remove any temporary files
-    try: 
-        _immath_cleanup( tmpFilePrefix )
-    except:
-        casalog.post( 'immath was unable to cleanup temporary files','SEVERE' )
-        raise
+    finally:
+        _myia.done()
+        _immath_cleanup(tmpFilePrefix)
+    
+def _immath_compute(
+    imagename, expr, mode, outfile, imagemd, _myia,
+    isTPol, isLPol, lpol, doPolThresh, polithresh
+):
+    # Do the calculation
+    res = _myia.imagecalc(
+        pixels=expr, outfile=outfile,
+        imagemd=_immath_translate_imagemd(imagename, imagemd)
+    )
+    # modify stokes type for polarization intensity image
+    if (  mode=="poli" ):                
+        csys = res.coordsys()
+        if isTPol:
+            csys.setstokes('Ptotal')
+        elif isLPol:
+            csys.setstokes('Plinear')
+        res.setcoordsys(csys.torecord())
+    res.done()
+    if (doPolThresh):
+        _immath_createPolMask(polithresh, lpol, outfile)
     return True
 
 def _immath_updateexpr(expr, varnames, subImages, filenames, file_map):
