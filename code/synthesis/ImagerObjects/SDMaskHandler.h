@@ -138,15 +138,19 @@ public:
                                           const casacore::ImageInterface<float>& res, 
                                           const casacore::ImageInterface<float>& psf, 
                                           const casacore::Record& stats, 
-                                          const casacore::Float& sigma=3.0, 
                                           const casacore::Int nmask=0,
-                                          const casacore::Float& sidelobeThreshold=3.0,
+                                          const casacore::Float& sidelobeLevel=0.0,
+                                          const casacore::Float& sidelobeThresholdFactor=3.0,
+                                          const casacore::Float& noiseThresholdFactor=3.0,
                                           const casacore::Float& cutThreshold=0.01,
                                           const casacore::Float& smoothFactor=1.0,
                                           const casacore::Float& minBeamFrac=-1); 
                            
+  // Calculate statistics on a residual image with additional region and LEL mask specificaations
   casacore::Record calcImageStatistics(casacore::ImageInterface<float>& res, 
                                        casacore::ImageInterface<float>& prevmask, 
+                                       casacore::String& lelmask,
+                                       casacore::Record* regionPtr,
                                        const casacore::Bool robust);
 
   SHARED_PTR<casacore::ImageInterface<float> > makeMaskFromBinnedImage (

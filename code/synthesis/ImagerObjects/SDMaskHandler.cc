@@ -852,20 +852,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     Record thestats = imcalc.statistics();
     ***/
+
+    Record*  region_ptr=0;
+    String LELmask("");
     // note: tempres is res image with pblimit applied
     Bool robust(false);
     if (alg.contains("newauto") ) {
        robust=true;
+       // define an annulus 
+       Float outerRadius=0.0;
+       Float innerRadius=1.0;
+       if (imstore->hasPB()) {
+          //use pb based annulus for statistics
+          outerRadius = 0.2;
+          innerRadius = 0.3; 
+          LatticeExpr<Bool> testlat( iif(( *imstore->pb() < innerRadius && *imstore->pb() > outerRadius) , True, False) );
+          TempImage<Float>* testres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
+          testres->set(1.0);
+          testres->attachMask(testlat);
+          cerr<<"ntrue(testlat) = "<<ntrue(testres->getMask())<<endl;
+          if (ntrue(testres->getMask()) > 0) { 
+              String pbname = imstore->getName()+".pb";
+              LELmask=pbname+"<"+String::toString(innerRadius)+" && "+pbname+">"+String::toString(outerRadius);   
+          }
+       }
     } 
-    Record thestats = calcImageStatistics(*tempres, *tempmask, robust);
-    Array<Double> max, min, rms, mad;
-    thestats.get(RecordFieldId("max"), max);
-    thestats.get(RecordFieldId("rms"), rms);
-    os<< LogIO::DEBUG1 << "All rms's on the input image -- rms.nelements()="<<rms.nelements()<<" rms="<<rms<<LogIO::POST;
-    os<< LogIO::DEBUG1 << "All max's on the input image -- max.nelements()="<<max.nelements()<<" max="<<max<<LogIO::POST;
+    cerr<<"LELmask="<<LELmask<<endl;
+    Record thestats = calcImageStatistics(*tempres, *tempmask, LELmask, region_ptr, robust);
+    Array<Double> maxs, mins, rmss, mads;
+    thestats.get(RecordFieldId("max"), maxs);
+    thestats.get(RecordFieldId("rms"), rmss);
+    os<< LogIO::DEBUG1 << "All rms's on the input image -- rms.nelements()="<<rmss.nelements()<<" rms="<<rmss<<LogIO::POST;
+    os<< LogIO::DEBUG1 << "All max's on the input image -- max.nelements()="<<maxs.nelements()<<" max="<<maxs<<LogIO::POST;
     if (alg.contains("newauto")) {
-       thestats.get(RecordFieldId("medabsdevmed"), mad);
-       os<< LogIO::DEBUG1 << "All max's on the input image -- mad.nelements()="<<mad.nelements()<<" mad="<<mad<<LogIO::POST;
+       thestats.get(RecordFieldId("medabsdevmed"), mads);
+       os<< LogIO::DEBUG1 << "All max's on the input image -- mad.nelements()="<<mads.nelements()<<" mad="<<mads<<LogIO::POST;
     }
 
     os<<"SidelobeLevel = "<<imstore->getPSFSidelobeLevel()<<LogIO::POST;
@@ -894,7 +915,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     delete tempmask; tempmask=0;
   }
 
-  Record SDMaskHandler::calcImageStatistics(ImageInterface<Float>& res, ImageInterface<Float>&  prevmask, const Bool robust )
+  Record SDMaskHandler::calcImageStatistics(ImageInterface<Float>& res, ImageInterface<Float>&  prevmask, String& LELmask,  Record* regionPtr, const Bool robust )
   { 
     TempImage<Float>* tempres = new TempImage<Float>(res.shape(), res.coordinates()); 
     Array<Float> resdata;
@@ -905,13 +926,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // 2nd arg is regionRecord, 3rd is LELmask expression and those will be AND 
     // to define a region to be get statistics
-    ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
+    //ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
+    //String lelstring = pbname+">0.92 && "+pbname+"<0.98";
+    //cerr<<"lelstring = "<<lelstring<<endl;
+    cerr<<"LELMask="<<LELmask<<endl;
+    ImageStatsCalculator imcalc( tempres_ptr, 0, LELmask, False); 
     Vector<Int> axes(2);
     axes[0] = 0;
     axes[1] = 1;
     imcalc.setAxes(axes);
     imcalc.setRobust(robust);
     Record thestats = imcalc.statistics();
+    cerr<<"thestats="<<thestats<<endl;
     //Array<Double> max, min, rms, mad;
     //thestats.get(RecordFieldId("max"), max);
     return thestats;
@@ -1215,24 +1241,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                           const ImageInterface<Float>& res, 
                                           const ImageInterface<Float>& psf, 
                                           const Record& stats, 
-                                          const Float& sigma, 
                                           const Int nmask,
-                                          const Float& sidelobeThreshold,
+                                          const Float& sidelobeLevel,
+                                          const Float& sidelobeThresholdFactor,
+                                          const Float& noiseThresholdFactor,
                                           const Float& cutThreshold,
                                           const Float& smoothFactor,
                                           const Float& minBeamFrac) 
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMaskByThreshold3",WHERE) );
-    Array<Double> rms, max;
-    Double rmsthresh, minrmsval, maxrmsval, minmaxval, maxmaxval;
-    IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos;
-    Int npix;
+    Array<Double> rmss, maxs, mads;
+    Float resPeak, resRms;
+    Double rmsthresh, minrmsval, maxrmsval, minmaxval, maxmaxval, minmadval, maxmadval;
+    IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos, minmadpos, maxmadpos;
+    Int npix, nxpix, nypix;
 
     //for debug set to True to save intermediate mask images on disk
     //Bool debug(False);
 
-    // taking account for beam or input resolution
     TempImage<Float> tempmask(mask.shape(), mask.coordinates());
+    // taking account for beam or input resolution
     IPosition shp = mask.shape();
     CoordinateSystem incsys = res.coordinates();
     Vector<Double> incVal = incsys.increment(); 
@@ -1256,23 +1284,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         beam = CasaImageBeamSet(psfInfo.getBeamSet()).getCommonBeam(); 
       }
       Quantity bmaj = beam.getMajor();
+      Quantity bmin = beam.getMinor();
+      //for pruning for now
       npix = Int( Double(minBeamFrac) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+      //beam in pixels
+      nxpix = Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+      nypix = Int( abs( (bmin/(qinc.convert(bmin),qinc)).get().getValue() ) );
     }
     else {
-       throw(AipsError("No restoring beam(s) in the input image/psf or resolution is given"));
+       throw(AipsError("No restoring beam(s) in the input image/psf"));
     }
-    os << LogIO::DEBUG1 << "Acutal bin size used: npix="<<npix<< LogIO::POST;
+
 
     // Determine threshold from input image stats
-    stats.get(RecordFieldId("max"), max);
-    stats.get(RecordFieldId("rms"), rms);
-    minMax(minmaxval,maxmaxval,minmaxpos, maxmaxpos, max);
-    minMax(minrmsval,maxrmsval,minrmspos, maxrmspos, rms); 
-    rmsthresh = maxrmsval * sigma;
-    os << LogIO::NORMAL2 <<" thresh="<<rmsthresh<<LogIO::POST;
+    stats.get(RecordFieldId("max"), maxs);
+    stats.get(RecordFieldId("rms"), rmss);
+    stats.get(RecordFieldId("medabsdevmed"), mads);
+     
+    minMax(minmaxval,maxmaxval,minmaxpos, maxmaxpos, maxs);
+    minMax(minrmsval,maxrmsval,minrmspos, maxrmspos, rmss); 
+    minMax(minmadval,maxmadval,minmadpos, maxmadpos, mads); 
+    // use max of the list of peak values (for multiple channel plane)
+    resPeak = maxmaxval;
+    // use MAD and convert to rms 
+    resRms = maxmadval * 1.4826; 
 
-    SHARED_PTR<ImageInterface<Float> > tempIm_ptr = pruneRegions(res, rmsthresh, nmask, npix);
-    LatticeExpr<Float> themask( iif( *(tempIm_ptr.get()) > rmsthresh, 1.0, 0.0 ));
+    //define mask threshold  
+    Float sidelobeThreshold = sidelobeLevel * sidelobeThresholdFactor * resPeak;
+    Float noiseThreshold = noiseThresholdFactor * resRms;
+    Float maskThreshold = max(sidelobeThreshold, noiseThreshold);
+    String ThresholdType = (maskThreshold == sidelobeThreshold? "sidelobe": "noise");
+
+
+    os << LogIO::NORMAL1 <<" Using "<<ThresholdType<<" threshold:"<<maskThreshold<<LogIO::POST;
+
+    // branch out if just need to glow mask
+
+    LatticeExpr<Float> themask; 
+    if (resPeak > maskThreshold) {
+      if (minBeamFrac > 0.0 ) {
+        // make temp mask image consist of the original pix value and below the threshold is set to 0 
+        TempImage<Float> maskedRes(res.shape(), res.coordinates());
+        maskedRes.copyData( (LatticeExpr<Float>)( iif(res > maskThreshold, res, 0.0)) );
+        double tempthresh=0.0;
+        SHARED_PTR<ImageInterface<Float> > tempIm_ptr = pruneRegions(maskedRes, tempthresh,  nmask, npix);
+        themask = LatticeExpr<Float> ( iif( *(tempIm_ptr.get()) > maskThreshold, 1.0, 0.0 ));
+      }
+      else {
+        themask = LatticeExpr<Float> ( iif( res > maskThreshold, 1.0, 0.0 ));
+      }  
+    } 
+    else { // do growmask
+    }
+    tempmask.copyData(themask);
+   
+    //smooth
+    SPIIF outmask = convolveMask(tempmask, nxpix, nypix);
+
+    //clean up (appy cutThreshold to convolved mask image)
+    LatticeExpr<Float> thenewmask( iif( *(outmask.get()) > cutThreshold, 1.0, 0.0 ));
 
     //for debug
     /***
@@ -1281,7 +1351,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ***/
     if (res.hasPixelMask()) {
       LatticeExpr<Bool>  pixmask(res.pixelMask()); 
-      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0 && pixmask, 1.0, 0.0  ) ) );
+      mask.copyData( (LatticeExpr<Float>)( iif((mask + thenewmask) > 0.0 && pixmask, 1.0, 0.0  ) ) );
       mask.clearCache();
       mask.unlock();
       mask.tempClose();
@@ -1290,7 +1360,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else {
       //os <<"Lattice themask is created..."<<LogIO::POST;
       //LatticeExpr<Float> themask( iif( tempconvim > rmsthresh/afactor, 1.0, 0.0 ));
-      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
+      mask.copyData( (LatticeExpr<Float>)( iif((mask + thenewmask) > 0.0, 1.0, 0.0  ) ) );
       os <<LogIO::DEBUG1 <<"Add previous mask and the new mask.."<<LogIO::POST;
     }
   }//end of makeAutoMaskByThreshold3
