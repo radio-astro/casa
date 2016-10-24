@@ -459,12 +459,15 @@ inline void setNumberOfCorrelationsPerSpw(casacore::MeasurementSet const &ms,
   casacore::ROScalarColumn<casacore::Int> spwIdCol(ms.dataDescription(), "SPECTRAL_WINDOW_ID");
   casacore::ROScalarColumn<casacore::Int> polIdCol(ms.dataDescription(), "POLARIZATION_ID");
   casacore::ROScalarColumn<casacore::Int> numCorrCol(ms.polarization(), "NUM_CORR");
+  auto numSpw = ms.spectralWindow().nrow();
   auto const spwIdList = spwIdCol.getColumn();
   auto const polIdList = polIdCol.getColumn();
   auto const numCorrList = numCorrCol.getColumn();
-  if (nCorr.size() != spwIdList.size()) {
-    nCorr.resize(spwIdList.size());
+  if (nCorr.size() != numSpw) {
+    nCorr.resize(numSpw);
   }
+  // initialize number of correlations with 0
+  nCorr = 0;
   for (auto i = 0u; i < spwIdList.size(); ++i) {
     auto const spwId = spwIdList[i];
     auto const polId = polIdList[i];
@@ -490,7 +493,6 @@ SingleDishSkyCal::SingleDishSkyCal(VisSet& vs)
     currentSky_(vs.numberSpw(), NULL),
     currentSkyOK_(vs.numberSpw(), NULL),
     nCorr_(nSpw())
-
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(VisSet& vs)" << debugpost;
   append() = false;
@@ -508,7 +510,6 @@ SingleDishSkyCal::SingleDishSkyCal(const MSMetaInfoForCal& msmc)
     currentSky_(msmc.nSpw(), NULL),
     currentSkyOK_(msmc.nSpw(), NULL),
     nCorr_(nSpw())
-
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(const MSMetaInfoForCal& msmc)" << debugpost;
   append() = False;
@@ -526,7 +527,6 @@ SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)
     currentSky_(1, NULL),
     currentSkyOK_(1, NULL),
     nCorr_(nSpw())
-
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)" << debugpost;
   append() = false;
