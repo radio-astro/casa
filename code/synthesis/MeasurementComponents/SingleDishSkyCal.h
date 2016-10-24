@@ -184,7 +184,8 @@ public:
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; }
 
   // Number of pars per ant/bln
-  virtual casacore::Int nPar() { return nCorr_[currSpw()]; }
+//  virtual casacore::Int nPar() { return nCorr_[currSpw()]; }
+  virtual casacore::Int nPar() { return 2; }
 
   // Total number of (complex) parameters per solve
   //  (specialize to jive with ant- or bln-basedness, etc.)
