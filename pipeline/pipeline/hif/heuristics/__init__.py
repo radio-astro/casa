@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-#from . import fluxscale
 from . import findrefant
 
 from .bandpass import MedianSNR
@@ -22,7 +21,5 @@ from .makecleanlist import MakeCleanListHeuristics
 from .findrefant import RefAntHeuristics
 from .solint import PhaseUpSolInt
 from .spw import BestSpwForBandpassHeuristic
-from .fieldnames import IntentFieldnames
+#from .fieldnames import IntentFieldnames
 from .standard import Standard
-#from .tsysspwmap import tsysspwmap
-#from .wvrgcal import WvrgcalHeuristics
