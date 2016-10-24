@@ -174,27 +174,20 @@ def immath(
 ):
     # Tell CASA who will be reporting
     casalog.origin('immath')
-    
     tmpFilePrefix='_immath_tmp' + str(os.getpid()) + '_'
     _immath_initial_cleanup(tmpFilePrefix)
-    outfile = _immath_check_outfile(outfile)
-    if not outfile:
-        return False
-    
-    # Find the list of filenames in the expression
-    # also do a quick check to see if all of the files
-    # exist
-    #
-    # TODO add a size check to make sure all images are the
-    # same size.  Is this
-    tmpfilenames = ''
-    filenames = imagename
-    if mode=='evalexpr':
-        tmpfilenames = _immath_parse(expr)
-    if isinstance(filenames, str):
-        filenames = [filenames]
-    varnames = _immath_varnames(varnames, filenames, tmpfilenames)
     try:
+        outfile = _immath_check_outfile(outfile)
+        # Find the list of filenames in the expression
+        # also do a quick check to see if all of the files
+        # exist
+        tmpfilenames = ''
+        filenames = imagename
+        if mode=='evalexpr':
+            tmpfilenames = _immath_parse(expr)
+        if isinstance(filenames, str):
+            filenames = [filenames]
+        varnames = _immath_varnames(varnames, filenames, tmpfilenames)
         filenames = _immath_filenames(filenames, tmpfilenames, varnames, mode)
         expr = expr.replace(' ', '')
         expr = _immath_dospix(expr, mode, filenames, varnames)
@@ -212,7 +205,6 @@ def immath(
             # reset stokes selection for pola and poli
             casalog.post( "Ignoring stokes parameters selection." ,'WARN' );
             stokes=''
-    
         # If the user didn't give any region or mask information
         # then just evaluated the expression with the filenames in it.
         if not (box or chans or stokes or region or mask):
@@ -470,13 +462,11 @@ def _immath_check_outfile(outfile):
             + outfile, 'WARN'
         )
     if (os.path.exists(outfile)):
-        casalog.post(
+        raise Exception(
             'Output file '+ outfile
-            + ' exists. immath can not proceed, please ' +
-            + 'remove it or change the output file name.',
-            'SEVERE'
+            + ' exists. immath can not proceed, please '
+            + 'remove it or change the output file name.'
         )
-        return False
     return outfile
 
 def _immath_cleanup(filePrefix):
