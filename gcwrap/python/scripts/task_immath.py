@@ -260,11 +260,9 @@ def _immath_compute(
 def _immath_updateexpr(expr, varnames, subImages, filenames, file_map):
     # Make sure no problems happened
     if len(filenames) != len(subImages):
-        casalog.post(
-            'Unable to create subimages for all image names given',
-            'SEVERE'
+        raise Exception(
+            'Unable to create subimages for all image names given'
         )
-        raise Exception
     # because real file names also have to be mapped to a corresponding subimage, CAS-1830
     for k in file_map.keys():
         # we require actual image names to be in quotes when used in the expression
@@ -305,10 +303,9 @@ def _immath_createsubimages(
             _myia.done()
             i = i + 1
         except Exception, e:
-            casalog.post(
-                'Unable to apply region to file: ' + image, 'SEVERE'
+            raise Exception(
+                'Unable to apply region to file: ' + image
             )
-            raise
         finally:
             _myia.done()
     return (subImages, file_map)
@@ -317,34 +314,11 @@ def _immath_dofull(
     imagename, imagemd, outfile, mode, expr, varnames, filenames,
     isTPol, isLPol, doPolThresh, polithresh, lpol, _myia
 ):
-    expr = _immath_expr_from_varnames(expr, varnames, filenames)
-    casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
-    try:
-        res = _myia.imagecalc(
-            pixels=expr, outfile=outfile, imagemd=_immath_translate_imagemd(imagename, imagemd)
-        )
-        # need to modify stokes type of output image for pol. intensity image
-        if ( mode =="poli" ):
-            csys = res.coordsys()
-            if isTPol:
-                csys.setstokes('Ptotal')
-            elif isLPol:
-                csys.setstokes('Plinear')
-            res.setcoordsys(csys.torecord())
-        res.done()
-        if (doPolThresh):
-            _immath_createPolMask(polithresh, lpol, outfile)
-        return True
-    except Exception, error:
-        try:
-            _myia.done()
-        except:
-            pass
-        casalog.post(
-            'Unable to do mathematical expression: ' + expr + ' ' + str(error),
-            'SEVERE'
-        )
-        raise
+    expr = _immath_expr_from_varnames(expr, varnames, filenames)    
+    return _immath_compute(
+        imagename, expr, mode, outfile, imagemd, _myia,
+        isTPol, isLPol, lpol, doPolThresh, polithresh
+    )
 
 def _immath_dopoli(expr, mode, filenames, varnames, tmpFilePrefix, sigma, _myia):
     isLPol = False
