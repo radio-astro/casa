@@ -279,7 +279,7 @@ spw -- Select spectral window/channels to image.
     windows.
     example: '9'
 
-contfile -- Name of file with frequency ranges to exclude for continuum images.
+contfile -- Name of file with frequency ranges to use for continuum images.
     default: 'cont.dat'
     example: 'mycont.dat'
 
