@@ -38,7 +38,7 @@ void MSChecker::checkReferentialIntegrity() const {
     Int nrows = 0;
     String colname, tablename;
     uInt nAnts = _ms.antenna().nrow();
-    for (uInt i=0; i<4; ++i) {
+    for (uInt i=0; i<5; ++i) {
         switch (i) {
         case 0:
             nrows = nAnts;
@@ -59,6 +59,11 @@ void MSChecker::checkReferentialIntegrity() const {
             nrows = _ms.field().nrow();
             tablename = _ms.field().tableName();
             colname = _ms.columnName(MSMainEnums::FIELD_ID);
+            break;
+        case 4:
+            nrows = _ms.observation().nrow();
+            tablename = _ms.observation().tableName();
+            colname = _ms.columnName(MSMainEnums::OBSERVATION_ID);
             break;
         default:
             break;
