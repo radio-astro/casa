@@ -176,6 +176,7 @@ def immath(
     casalog.origin('immath')
     tmpFilePrefix='_immath_tmp' + str(os.getpid()) + '_'
     _immath_initial_cleanup(tmpFilePrefix)
+    _myia = iatool()
     try:
         outfile = _immath_check_outfile(outfile)
         # Find the list of filenames in the expression
@@ -192,7 +193,7 @@ def immath(
         expr = expr.replace(' ', '')
         expr = _immath_dospix(expr, mode, filenames, varnames)
         doPolThresh = False
-        _myia = iatool()
+        
         (expr, mask, polithresh, doPolThresh, lpol) = _immath_dopola(
             expr, mask, polithresh, doPolThresh, _myia, mode,
             filenames, varnames, tmpFilePrefix, imagename, imagemd
@@ -205,31 +206,33 @@ def immath(
             # reset stokes selection for pola and poli
             casalog.post( "Ignoring stokes parameters selection." ,'WARN' );
             stokes=''
-        # If the user didn't give any region or mask information
-        # then just evaluated the expression with the filenames in it.
-        if not (box or chans or stokes or region or mask):
+        if box or chans or stokes or region or mask:
+            (subImages, file_map) = _immath_createsubimages(
+                box, chans, stokes, region, mask,
+                stretch, filenames, _myia, tmpFilePrefix
+            )
+            (expr, varnames, subImages) = _immath_updateexpr(
+                expr, varnames, subImages, filenames, file_map
+            )
+            return _immath_compute(
+                imagename, expr, mode, outfile, imagemd, _myia,
+                isTPol, isLPol, lpol, doPolThresh, polithresh
+            )
+        else:
+            # If the user didn't give any region or mask information
+            # then just evaluated the expression with the filenames in it.
             return _immath_dofull(
                 imagename, imagemd, outfile, mode, expr,
                 varnames, filenames, isTPol, isLPol,
                 doPolThresh, polithresh, lpol, _myia
             )
-        (subImages, file_map) = _immath_createsubimages(
-            box, chans, stokes, region, mask,
-            stretch, filenames, _myia, tmpFilePrefix
-        )
-        (expr, varnames, subImages) = _immath_updateexpr(
-            expr, varnames, subImages, filenames, file_map
-        )
-        return _immath_compute(
-            imagename, expr, mode, outfile, imagemd, _myia,
-            isTPol, isLPol, lpol, doPolThresh, polithresh
-        )
     except Exception, error:
         casalog.post("Unable to process expression " + expr, 'SEVERE')
         casalog.post("Exception caught was: " + str(error), 'SEVERE')
         raise
     finally:
-        _myia.done()
+        if _myia:
+            _myia.done()
         _immath_cleanup(tmpFilePrefix)
     
 def _immath_compute(
