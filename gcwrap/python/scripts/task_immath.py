@@ -177,6 +177,8 @@ def immath(
     tmpFilePrefix='_immath_tmp' + str(os.getpid()) + '_'
     _immath_initial_cleanup(tmpFilePrefix)
     _myia = iatool()
+    isLPol = False
+    isTPol = False
     try:
         outfile = _immath_check_outfile(outfile)
         # Find the list of filenames in the expression
@@ -198,10 +200,10 @@ def immath(
             expr, mask, polithresh, doPolThresh, _myia, mode,
             filenames, varnames, tmpFilePrefix, imagename, imagemd
         )
-        (expr, isLPol, isTPol) = _immath_dopoli(
-            expr, mode, filenames, varnames,
-            tmpFilePrefix, sigma, _myia
-        )
+        if mode == 'poli':
+            (expr, isLPol, isTPol) = _immath_dopoli(
+                filenames, varnames, tmpFilePrefix, sigma, _myia
+            )
         if (mode == 'pola' or mode == 'poli') and stokes:
             # reset stokes selection for pola and poli
             casalog.post( "Ignoring stokes parameters selection." ,'WARN' );
@@ -320,29 +322,26 @@ def _immath_dofull(
         isTPol, isLPol, lpol, doPolThresh, polithresh
     )
 
-def _immath_dopoli(expr, mode, filenames, varnames, tmpFilePrefix, sigma, _myia):
-    isLPol = False
-    isTPol = False
-    if mode == 'poli':
-        [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
-        sigsq = 0
-        if sigma:
-            qsigma = qa.quantity(sigma)
-            if qa.getvalue(qsigma)[0] > 0:
-                sigmaunit=qa.getunit(qsigma)
-                try:
-                    _myia.open(filenames[0])
-                    iunit = _myia.brightnessunit()
-                    _myia.done()
-                except:
-                    raise Exception, 'Unable to get brightness unit from image file ' + filenames[0]
-                if sigmaunit != iunit:
-                    newsigma = qa.convert(qsigma,iunit)
-                else:
-                    newsigma = sigma
-                    sigsq=(qa.getvalue(newsigma)[0])**2
-                expr += '-%s' % sigsq
-            expr += ')'
+def _immath_dopoli(filenames, varnames, tmpFilePrefix, sigma, _myia):
+    [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
+    sigsq = 0
+    if sigma:
+        qsigma = qa.quantity(sigma)
+        if qa.getvalue(qsigma)[0] > 0:
+            sigmaunit=qa.getunit(qsigma)
+            try:
+                _myia.open(filenames[0])
+                iunit = _myia.brightnessunit()
+                _myia.done()
+            except:
+                raise Exception, 'Unable to get brightness unit from image file ' + filenames[0]
+            if sigmaunit != iunit:
+                newsigma = qa.convert(qsigma,iunit)
+            else:
+                newsigma = sigma
+                sigsq=(qa.getvalue(newsigma)[0])**2
+            expr += '-%s' % sigsq
+        expr += ')'
     return (expr, isLPol, isTPol)
 
 def _immath_dopola(
@@ -575,7 +574,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
     isLPol = False
     isTPol = False
 
-    stkslist=__check_stokes(filenames)
+    stkslist = __check_stokes(filenames)
     if len(filenames) == 1:
         # do multistokes image
         if (len(stkslist) < 2):
