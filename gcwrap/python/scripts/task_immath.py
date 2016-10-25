@@ -560,44 +560,41 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
     return expr
 
 def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
-    # FIXME good grief, I question that these opcodes should even exist in immath
-    # there is a polarization image tool (po) that does all of this much more nicely
-    # calculate a polarization intensity image
-    # if 3 files (or 1 file with Q, U, V) total pol intensity image
-    # if 2 files (or file file with Q, U) given linear pol intensity image
-    # FIXME I really hate creating subimages like this, the poli and pola routines really belong in the as of now non-existant squah task
     nfiles = len(filenames)
     if nfiles < 1 or nfiles > 3:
         raise Exception, 'poli requires one multistokes with Q, U, and optionally V stokes or two single stokes (Q, U) images or three single Stokes (Q,U,V) images'
-    isQim = False
-    isUim = False
-    isVim = False
-    isLPol = False
-    isTPol = False
-
-    stkslist = __check_stokes(filenames)
+    stokeslist = __check_stokes(filenames)
     if nfiles == 1:
         return _immath_dopoli_single_image(
-            stkslist, filenames, tpol, createSubims, tmpFilePrefix
+            stokeslist, filenames, tpol, createSubims, tmpFilePrefix
         )
-    elif nfiles == 3:
-        return _immath_dotpol(stkslist, filenames, varnames)
     elif nfiles == 2:
-        for i in range(len(stkslist)):
-            if type(stkslist[i])==list:
-                raise Exception, 'Cannot handle %s, a multi-Stokes image when multiple images supplied.' % filenames[i]
-            else:
-                if stkslist[i]=='Q':isQim=True
-                if stkslist[i]=='U':isUim=True
-        if not (isUim and isQim):
-            missing = []
-            if not isQim: missing.append('Q')
-            if not isUim: missing.append('U')
-            raise Exception, 'Missing Stokes %s image(s)' % missing
-        expr='sqrt('+varnames[0]+'*'+varnames[0]\
-                +'+'+varnames[1]+'*'+varnames[1]
-        isLPol = True
-    return [expr, isLPol, isTPol]
+        return _immath_dolpol(stokeslist, filenames, varnames)
+    else:
+        # nfiles = 3
+        return _immath_dotpol(stokeslist, filenames, varnames)
+
+def _immath_dolpol(stokeslist, filenames, varnames):
+    isQim = False
+    isUim = False
+    for file, stokes in zip(filenames, stokeslist):
+        if type(stokes)==list:
+            raise Exception, 'Cannot handle ' + file \
+                + ', a multi-Stokes image when multiple images supplied.'
+        else:
+            if stokes == 'Q':
+                isQim = True
+            if stokes == 'U':
+                isUim = True
+    if not (isUim and isQim):
+        missing = []
+        for isX, stokes in zip((isQim, isUim), ('Q', 'U')):
+            if not isX:
+                missing.append(stokes)
+        raise Exception, 'Missing Stokes ' + str(missing) + ' image(s)'
+    expr='sqrt(' + varnames[0] + '*' + varnames[0] \
+            + '+' + varnames[1] + '*' + varnames[1]
+    return (expr, True, False)
 
 def _immath_dotpol(stokeslist, filenames, varnames):
     isQim = False
@@ -678,7 +675,6 @@ def _immath_dopoli_single_image(stokeslist, filenames, tpol, createSubims, tmpFi
     # close paren gets added after this method has been called.
     expr = 'sqrt(' + sum
     return (expr, isLPol, isTPol)
-
 
 def _immath_createPolMask(polithresh, lpol, outfile):
     # make the linear polarization threshhold mask CAS-2120
