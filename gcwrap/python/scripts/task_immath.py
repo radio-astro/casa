@@ -577,57 +577,9 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
 
     stkslist = __check_stokes(filenames)
     if nfiles == 1:
-        # do multistokes image
-        if (len(stkslist) < 2):
-            raise Exception, \
-                filenames[0] + " is the only image specified but it " \
-                + "is not multi-stokes so cannot do poli calculation"
-        _myia = iatool()
-        _myia.open(filenames[0])
-        spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
-        if (len(spixels) != 1):
-            _myia.close()
-            raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
-
-        stokesPixel = spixels[0]
-        trc = _myia.shape()
-        blc = len(trc) * [0]
-
-        for i in range(len(trc)):
-            trc[i] = trc[i] - 1
-        neededStokes = ['Q', 'U']
-        if (stkslist.count('V')):
-            neededStokes.append('V')
-        Qimage = Uimage = Vimage = ''
-        for stokes in (neededStokes):
-            if ((stokes == 'Q' or stokes == 'U') and stkslist.count(stokes) == 0):
-                _myia.close()
-                raise Exception, filenames[0] + " is the only image specified but it does not contain stokes " + stokes \
-                + " so poli calculation cannot be done"
-            myfile = tmpFilePrefix + '_' + stokes
-            if (stokes == 'Q'):
-                Qimage = myfile
-            elif (stokes == 'U'):
-                Uimage = myfile
-            elif (stokes == 'V' and tpol):
-                Vimage = myfile
-            if createSubims:
-                pixNum = stkslist.index(stokes)
-                blc[stokesPixel] = pixNum
-                trc[stokesPixel] = pixNum
-                subim = _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
-                subim.done()
-        _myia.done()
-        isTPol = bool(Vimage)
-        isLPol = not isTPol
-        filenames = [Qimage, Uimage]
-        sum = Qimage + '*' + Qimage + " + " + Uimage + '*' + Uimage
-        if isTPol:
-            sum = sum + " + " + Vimage + '*' + Vimage
-            filenames.append(Vimage)
-        # close paren gets added after this method has been called.
-        expr = 'sqrt(' + sum
-
+        return _immath_dopoli_single_image(
+            stkslist, filenames, tpol, createSubims, tmpFilePrefix
+        )
     elif nfiles == 3:
         for i in range(len(stkslist)):
             if type(stkslist[i])==list:
@@ -663,7 +615,61 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
                 +'+'+varnames[1]+'*'+varnames[1]
         isLPol = True
     return [expr, isLPol, isTPol]
-        
+
+def _immath_dopoli_single_image(stokeslist, filenames, tpol, createSubims, tmpFilePrefix):
+    # FIXME use po.totpolint() for this
+    # do multistokes image
+    if (len(stokeslist) < 2):
+        raise Exception, \
+            filenames[0] + " is the only image specified but it " \
+            + "is not multi-stokes so cannot do poli calculation"
+    _myia = iatool()
+    _myia.open(filenames[0])
+    spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
+    if (len(spixels) != 1):
+        _myia.close()
+        raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
+    stokesPixel = spixels[0]
+    trc = _myia.shape()
+    blc = len(trc) * [0]
+    for i in range(len(trc)):
+        trc[i] = trc[i] - 1
+    neededStokes = ['Q', 'U']
+    if (stokeslist.count('V')):
+        neededStokes.append('V')
+    Qimage = Uimage = Vimage = ''
+    for stokes in (neededStokes):
+        if ((stokes == 'Q' or stokes == 'U') and stokeslist.count(stokes) == 0):
+            _myia.close()
+            raise Exception, \
+            filenames[0] + " is the only image specified but it does not contain stokes " \
+            + stokes + " so poli calculation cannot be done"
+        myfile = tmpFilePrefix + '_' + stokes
+        if (stokes == 'Q'):
+            Qimage = myfile
+        elif (stokes == 'U'):
+            Uimage = myfile
+        elif (stokes == 'V' and tpol):
+            Vimage = myfile
+        if createSubims:
+            pixNum = stokeslist.index(stokes)
+            blc[stokesPixel] = pixNum
+            trc[stokesPixel] = pixNum
+            subim = _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
+            subim.done()
+    _myia.done()
+    isTPol = bool(Vimage)
+    isLPol = not isTPol
+    filenames = [Qimage, Uimage]
+    sum = Qimage + '*' + Qimage + " + " + Uimage + '*' + Uimage
+    if isTPol:
+        sum = sum + " + " + Vimage + '*' + Vimage
+        filenames.append(Vimage)
+    # close paren gets added after this method has been called.
+    expr = 'sqrt(' + sum
+    return (expr, isLPol, isTPol)
+
+
 def _immath_createPolMask(polithresh, lpol, outfile):
     # make the linear polarization threshhold mask CAS-2120
     myexpr = "'" + lpol + "' >= " + str(qa.getvalue(polithresh)[0])
