@@ -5,6 +5,7 @@ from .opcal import Opcal
 from .gaincurves import GainCurves
 from .vlautils import VLAUtils
 from .flagging import FlagDeterVLA
+from .exportdata import VLAExportData
 from .flagging import VLAAgentFlagger
 from .flagging import FlagBadDeformatters
 from .flagging import Uncalspw
