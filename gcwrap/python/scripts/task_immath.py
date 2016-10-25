@@ -191,9 +191,9 @@ def immath(
         varnames = _immath_varnames(varnames, filenames, tmpfilenames)
         filenames = _immath_filenames(filenames, tmpfilenames, varnames, mode)
         expr = expr.replace(' ', '')
-        expr = _immath_dospix(expr, mode, filenames, varnames)
+        if mode == 'spix':
+            expr = _immath_dospix(len(filenames), varnames)
         doPolThresh = False
-        
         (expr, mask, polithresh, doPolThresh, lpol) = _immath_dopola(
             expr, mask, polithresh, doPolThresh, _myia, mode,
             filenames, varnames, tmpFilePrefix, imagename, imagemd
@@ -378,13 +378,10 @@ def _immath_dopola(
             res.done()
     return (expr, mask, polithresh, doPolThresh, lpol)
 
-def _immath_dospix(expr, mode, filenames, varnames):
-    if mode=='spix':
-        # calculate a spectral index distribution image
-        if len(filenames) != 2:
-            raise Exception, 'Requires two images at different frequencies'
-        expr = 'spectralindex(' + varnames[0] + ', ' + varnames[1] + ')'
-    return expr
+def _immath_dospix(nfiles, varnames):
+    if nfiles != 2:
+        raise Exception, 'Requires two images at different frequencies'
+    return 'spectralindex(' + varnames[0] + ', ' + varnames[1] + ')'
 
 def _immath_filenames(filenames, tmpfilenames, varnames, mode):
     ignoreimagename = False
