@@ -62,10 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	       const casacore::CountedPtr<PSTerm> psTerm,
 	       const casacore::CountedPtr<WTerm> wTerm,
 	       const casacore::Bool wbAWP=false,
-	       const casacore::Bool conjPB=casacore::True):
-      ConvolutionFunction(),aTerm_p(ATerm),psTerm_p(psTerm), wTerm_p(wTerm), pixFieldGrad_p(), 
-      wbAWP_p(wbAWP), conjPB_p(conjPB), baseCFB_p()
-    {pixFieldGrad_p.resize(2);pixFieldGrad_p=0.0;}
+	       const casacore::Bool conjPB=casacore::True);
 
     ~AWConvFunc() {};
     AWConvFunc& operator=(const AWConvFunc& other);
@@ -75,7 +72,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const casacore::CountedPtr<PolOuterProduct>& pop,
 				  const casacore::Float pa,
 				  const casacore::Float dpa,
-				  const casacore::Vector<casacore::Double>& uvScale, const casacore::Vector<casacore::Double>& uvOffset,
+				  const casacore::Vector<casacore::Double>& uvScale,
+				  const casacore::Vector<casacore::Double>& uvOffset,
 				  const casacore::Matrix<casacore::Double>& vbFreqSelection,
 				  CFStore2& cfs,
 				  CFStore2& cfwts,
@@ -92,7 +90,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm, 
 				    casacore::Bool isDryRun=false);
     static void makeConvFunction2(const casacore::String& uvGridDiskimage,
-				  const casacore::Vector<casacore::Double>& uvScale, const casacore::Vector<casacore::Double>& uvOffset,
+				  const casacore::Vector<casacore::Double>& uvScale,
+				  const casacore::Vector<casacore::Double>& uvOffset,
 				  const casacore::Matrix<casacore::Double>& vbFreqSelection,
 				  CFStore2& cfs,
 				  CFStore2& cfwts,
@@ -115,22 +114,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				     const casacore::ImageInterface<casacore::Complex>& image,
 				     casacore::ImageInterface<casacore::Complex>& theavgPB,
 				     casacore::Bool reset=true);
+
     virtual int getVisParams(const VisBuffer& vb,const casacore::CoordinateSystem& skyCoord=casacore::CoordinateSystem())
     {return aTerm_p->getVisParams(vb,skyCoord);};
+
     virtual void setPolMap(const casacore::Vector<casacore::Int>& polMap) {aTerm_p->setPolMap(polMap);};
     //    virtual void setFeedStokes(const casacore::Vector<casacore::Int>& feedStokes) {aTerm_p->setFeedStokes(feedStokes);};
+
     virtual casacore::Bool findSupport(casacore::Array<casacore::Complex>& func, casacore::Float& threshold,casacore::Int& origin, casacore::Int& R);
+
     virtual casacore::Vector<casacore::Double> findPointingOffset(const casacore::ImageInterface<casacore::Complex>& /*image*/,
-					      const VisBuffer& /*vb*/) {casacore::Vector<casacore::Double> tt(2); tt=0;return tt;};
+								  const VisBuffer& /*vb*/)
+    {casacore::Vector<casacore::Double> tt(2); tt=0;return tt;};
+
     virtual void prepareConvFunction(const VisBuffer& vb, VBRow2CFBMapType& cfs);
     casacore::Int mapAntIDToAntType(const casacore::Int& ant) {return aTerm_p->mapAntIDToAntType(ant);};
 
-    virtual casacore::Vector<casacore::Double> makeFreqValList(casacore::Double& freqScale,
-					   const VisBuffer& vb, 
-					   const casacore::ImageInterface<casacore::Complex>& uvGrid);
+    virtual casacore::Vector<casacore::Double> makeFreqValList(casacore::Double& freqScale,const VisBuffer& vb, 
+							       const casacore::ImageInterface<casacore::Complex>& uvGrid);
     virtual casacore::Vector<casacore::Double> makeWValList(const casacore::Double &dW, const casacore::Int &nW);
 
     virtual void setMiscInfo(const casacore::RecordInterface& params);
+
     virtual casacore::Matrix<casacore::Double> getFreqRangePerSpw(const VisBuffer& vb);
 
 
@@ -139,12 +144,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Global methods (services)
     //
     static void makeConjPolAxis(casacore::CoordinateSystem& cs, casacore::Int conjStokes_in=-1);
-    static casacore::Complex cfArea(casacore::Matrix<casacore::Complex>& cf, const casacore::Int& xSupport, const casacore::Int& ySupport, const casacore::Float& sampling);
-    static casacore::Bool awFindSupport(casacore::Array<casacore::Complex>& func, casacore::Float& threshold, casacore::Int& origin, casacore::Int& radius);
-    static casacore::Bool setUpCFSupport(casacore::Array<casacore::Complex>& func, casacore::Int& xSupport, casacore::Int& ySupport,
-			       const casacore::Float& sampling, const casacore::Complex& peak);
-    static casacore::Bool resizeCF(casacore::Array<casacore::Complex>& func,  casacore::Int& xSupport, casacore::Int& ySupport,
-			 const casacore::Int& supportBuffer, const casacore::Float& sampling, const casacore::Complex& peak);
+    static casacore::Complex cfArea(casacore::Matrix<casacore::Complex>& cf, const casacore::Int& xSupport,
+				    const casacore::Int& ySupport, const casacore::Float& sampling);
+    static casacore::Bool awFindSupport(casacore::Array<casacore::Complex>& func, casacore::Float& threshold,
+					casacore::Int& origin, casacore::Int& radius);
+    static casacore::Bool setUpCFSupport(casacore::Array<casacore::Complex>& func, casacore::Int& xSupport,
+					 casacore::Int& ySupport,const casacore::Float& sampling, const casacore::Complex& peak);
+    static casacore::Bool resizeCF(casacore::Array<casacore::Complex>& func,  casacore::Int& xSupport,
+				   casacore::Int& ySupport, const casacore::Int& supportBuffer, const casacore::Float& sampling,
+				   const casacore::Complex& peak);
     static int getOversampling(PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm);
     virtual casacore::CountedPtr<CFTerms> getTerm(const casacore::String& name)
     {if (name=="ATerm") return aTerm_p; else return NULL;}
@@ -158,9 +166,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void normalizeAvgPB(casacore::ImageInterface<casacore::Complex>& inImage,
 			casacore::ImageInterface<casacore::Float>& outImage);
     casacore::Bool makeAverageResponse_org(const VisBuffer& vb, 
-				 const casacore::ImageInterface<casacore::Complex>& image,
-				 casacore::ImageInterface<casacore::Float>& theavgPB,
-				 casacore::Bool reset=true);
+					   const casacore::ImageInterface<casacore::Complex>& image,
+					   casacore::ImageInterface<casacore::Float>& theavgPB,
+					   casacore::Bool reset=true);
     void makePBSq(casacore::ImageInterface<casacore::Complex>& inImage);
 
 

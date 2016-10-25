@@ -35,6 +35,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Logging/LogIO.h>
+#include <synthesis/TransformMachines/CFCell.h>
 #include <casa/iostream.h>
 
 #ifndef SYNTHESIS_UTILS_H
@@ -130,6 +131,9 @@ namespace casa
 			  
     void showCS(const casacore::CoordinateSystem& cs, std::ostream& os, const casacore::String& msg=casacore::String());
     const casacore::Array<casacore::Complex> getCFPixels(const casacore::String& Dir, const casacore::String& fileName);
+
+    void rotate2(const double& actualPA, CFCell& baseCFC, CFCell& cfc, const double& rotAngleIncr);
+
     casacore::TableRecord getCFParams(const casacore::String& dirName,const casacore::String& fileName,
 				      casacore::Array<casacore::Complex>& pixelBuffer,
 				      casacore::CoordinateSystem& coordSys, 

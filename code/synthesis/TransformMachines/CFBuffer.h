@@ -296,16 +296,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     // Set only the CF parameters.  Return to index of the CF that was set.
     //
+    casacore::RigidVector<Int, 3> setParams(const casacore::Int& inu, const casacore::Int& iw, const casacore::Int& ipx, const casacore::Int& ipy,
+					    const casacore::Double& freqValue,
+					    const casacore::Double& wValue,
+					    const casacore::Int& muellerElement,
+					    casacore::CoordinateSystem& cs,
+					    const casacore::TableRecord& miscInfo);
+
     casacore::RigidVector<casacore::Int, 3> setParams(const casacore::Int& i, const casacore::Int& j, const casacore::Int& ipx, const casacore::Int& ipy,
-				  casacore::CoordinateSystem& cs, casacore::Float& sampling,
-				  casacore::Int& xSupport, casacore::Int& ySupport,
-				  const casacore::Double& freqValue, const casacore::Double& wValue, 
-				  const casacore::Int& muellerElement,
-				  const casacore::String& fileName=casacore::String(),
-				  const casacore::Double& conjFreq=0.0,
-				  const casacore::Int& conjPol=-1,
-				  const casacore::String& telescopeName=casacore::String(),
-				  const casacore::Float& diameter=25.0);
+						      const casacore::Double& freqValue, const casacore::Double& wValue, 
+						      const casacore::Int& muellerElement,
+						      casacore::CoordinateSystem& cs,
+						      const casacore::TableRecord& miscInfo,
+
+						      casacore::Float& sampling,
+						      casacore::Int& xSupport, casacore::Int& ySupport,
+						      const casacore::String& fileName=casacore::String(),
+						      const casacore::Double& conjFreq=0.0,
+						      const casacore::Int& conjPol=-1,
+						      const casacore::String& telescopeName=casacore::String(),
+						      const casacore::Float& diameter=25.0);
     // casacore::RigidVector<casacore::Int, 3> setParams(const casacore::Int& inu, const casacore::Int& iw, const casacore::Int& muellerElement,
     // 				  const casacore::TableRecord& miscInfo);
     void setPointingOffset(const casacore::Vector<casacore::Double>& offset) 

@@ -1192,6 +1192,46 @@ namespace casa{
       }
   };
 
+
+  void SynthesisUtils::rotate2(const double& actualPA, CFCell& baseCFC, CFCell& cfc, const double& rotAngleIncr)
+    {
+      LogIO log_l(LogOrigin("SynthesisUtils", "rotate2"));
+
+      // // If the A-Term is a No-Op, the resulting CF is rotationally
+      // // symmetric.
+      // if (isNoOp()) return;
+
+      (void)baseCFC;
+
+      //double actualPA = getPA(vb);
+      double currentCFPA = cfc.pa_p.getValue("rad");
+      //Double baseCFCPA=baseCFC.pa_p.getValue("rad");
+
+      double dPA = currentCFPA-actualPA;
+
+      if (fabs(dPA) > fabs(rotAngleIncr))
+	{
+	  casacore::Array<TT> inData;
+	  //inData.assign(*baseCFC.getStorage());
+	  //dPA = baseCFCPA-actualPA;
+	  dPA = currentCFPA-actualPA;
+	  inData.assign(*cfc.getStorage());
+	  try
+	    {
+	      SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
+						 *cfc.getStorage(),
+						 dPA);//,"LINEAR");
+	      // currentCFPA-actualPA);//,"LINEAR");
+	    }
+	  catch (AipsError &x)
+	    {
+	      log_l << x.getMesg() << LogIO::EXCEPTION;
+	    }
+	  cfc.pa_p=Quantity(actualPA, "rad");
+	}
+    };
+
+
   template
   std::vector<Double>::iterator SynthesisUtils::Unique(std::vector<Double>::iterator first, std::vector<Double>::iterator last);
   template

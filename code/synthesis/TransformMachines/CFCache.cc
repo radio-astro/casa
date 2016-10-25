@@ -436,7 +436,6 @@ namespace casa{
 		    SynthesisUtils::stdNearestValue(fList, fVal, fndx);
 		    SynthesisUtils::stdNearestValue(wList, wVal, wndx);
 		    SynthesisUtils::stdNearestValue(mList, mVal, mndx);
-		    Float fsampling=sampling;
 		    //
 		    // The coordSys, sampling, xSupport, ySuport
 		    // params are set for the CFCell at the location
@@ -444,12 +443,16 @@ namespace casa{
 		    // determined inside using mVal (why this
 		    // treatment for mndx, please don't ask.  Not just
 		    // yet (SB)).
-		    String telescopeName;miscInfo.get("TelescopeName",telescopeName);
-		    Float diameter; miscInfo.get("Diameter",diameter);
-		    cfb->setParams(fndx, wndx, 0,0, coordSys, fsampling, xSupport, ySupport, 
-		    		   fVal, wVal, mVal,fileNames[nf],conjFreq, conjPoln,
-				   telescopeName, diameter);
+		    // Float fsampling=sampling;
+		    // String telescopeName;miscInfo.get("TelescopeName",telescopeName);
+		    // Float diameter; miscInfo.get("Diameter",diameter);
+		    // cfb->setParams(fndx, wndx, 0,0, fVal, wVal, mVal, coordSys,miscInfo,
+		    // 		   fsampling, xSupport, ySupport, 
+		    // 		   fileNames[nf],conjFreq, conjPoln,
+		    // 		   telescopeName, diameter);
 
+		    cfb->setParams(fndx, wndx, 0,0, fVal, wVal, mVal, coordSys,miscInfo);
+		    
 		    if (verbose > 0) log_l << cfCacheTable_l[ipa].cfNameList[nf]
 					   << "[" << fndx << "," << wndx << "," << mndx << "] "
 					   << paList_p[ipa] << " " << xSupport << LogIO::POST;
@@ -913,7 +916,7 @@ namespace casa{
       {
 	return NOTCACHED;
       }
-    log_l << "Loaded \"" << name.str() << "\"" << LogIO::POST;
+    //log_l << "Loaded \"" << name.str() << "\"" << LogIO::POST;
     avgPBReady_p=true;
     return DISKCACHE;
 

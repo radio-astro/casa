@@ -147,7 +147,7 @@ namespace casa{
   				  Complex& norm,
   				  Int* igrdpos);
 
-  Complex* AWVisResampler::getConvFunc_p(Vector<Int>& cfShape,
+  Complex* AWVisResampler::getConvFunc_p(const double& vbPA, Vector<Int>& cfShape,
 					 Vector<int>& support, CFBuffer& cfb,
 					 Double& wVal, Int& fndx, Int& wndx,
 					 PolMapType& mNdx, PolMapType& conjMNdx,
@@ -194,10 +194,22 @@ namespace casa{
     if (convFuncV == NULL)
       throw(SynthesisFTMachineError("cfcell->getStorage() == null"));
 
-    // Load the CF if it not already loaded
+    // Load the CF if it not already loaded.  If a new CF is loaded,
+    // check if it needs to be rotated.
     if (convFuncV->shape().product() == 0)
       {
-	cerr << "o";
+	cerr << (cfcell->isRotationallySymmetric_p?"o":"R");
+
+	// No rotation necessary if the CF is rotationally symmetric
+	if (!(cfcell->isRotationallySymmetric_p))
+	  {
+	    CFCell *baseCFC=NULL;
+	    // Rotate only if the difference between CF PA and VB PA
+	    // is greater than paTolerance.
+	    SynthesisUtils::rotate2(vbPA, *baseCFC, *cfcell, paTolerance_p);
+	  }
+
+
 	Array<Complex> tt=SynthesisUtils::getCFPixels(cfb.getCFCacheDir(), cfcell->fileName_p);
 	cfcell->setStorage(tt);
 	//cfO.setStorage(tt);
@@ -588,7 +600,7 @@ namespace casa{
 				      if(accumCFs)     allPolNChanDone_l(ipol,ichan,0)=true;
 				      
 				      if(dopsf) nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
-				      else      nvalue= Complex(*(imgWts_ptr+ichan+irow*nDataChan))*
+				      else      nvalue=Complex(*(imgWts_ptr+ichan+irow*nDataChan))*
 						  (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
 				      
 				      norm = 0.0;
@@ -600,7 +612,7 @@ namespace casa{
 					  timer_p.mark();
 					  try
 					    {
-					      convFuncV=getConvFunc_p(cfShape, support, cfb, dataWVal, cfFreqNdx,
+					      convFuncV=getConvFunc_p(vbs.paQuant_p.getValue("rad"),cfShape, support, cfb, dataWVal, cfFreqNdx,
 								      wndx, mNdx, conjMNdx, ipol,  mRow);
 					    }
 					  catch (SynthesisFTMachineError& x)
@@ -790,7 +802,7 @@ runTimeG7_p += timer_p.real();
 			Complex*  convFuncV=NULL;
 			try
 			  {
-			    convFuncV = getConvFunc_p(cfShape, support,cfb, dataWVal, fndx, wndx, mNdx,
+			    convFuncV = getConvFunc_p(vbs.paQuant_p.getValue("rad"),cfShape, support,cfb, dataWVal, fndx, wndx, mNdx,
 						      conjMNdx, ipol, mRow);
 			  }
 			catch (SynthesisFTMachineError& x)

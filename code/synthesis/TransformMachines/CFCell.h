@@ -83,6 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::Double wValue, wIncr, freqValue,freqIncr, conjFreq;    
     casacore::Int muellerElement, conjPoln;
     casacore::String fileName, telescopeName;
+    bool isRotationallySymmetric;
   };
 
   using namespace CFDefs;
@@ -103,9 +104,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //========================= Administrative Parts ==========================
     //------------------------------------------------------------------
     //
-    CFCell():cfShape_p(){};
+    CFCell():cfShape_p(),isRotationallySymmetric_p(false){};
 
-    CFCell(casacore::Array<TT> &dataPtr, casacore::CoordinateSystem& cs, casacore::Float& /*samp*/)
+    CFCell(casacore::Array<TT> &dataPtr, casacore::CoordinateSystem& cs, casacore::Float& /*samp*/):
+      isRotationallySymmetric_p(false)
     {
       if (storage_p.null()) storage_p = new casacore::Array<TT>(dataPtr);
       coordSys_p = cs;
@@ -141,6 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfst.diameter=diameter_p;
       cfst.fileName = fileName_p;
       cfst.telescopeName=telescopeName_p;
+      cfst.isRotationallySymmetric=isRotationallySymmetric_p;
     }
     casacore::CountedPtr<casacore::Array<TT> >& getStorage() {return storage_p;}
     void setStorage(casacore::Array<TT>& val) {getStorage()->assign(val); cfShape_p=val.shape().asVector();};
@@ -167,6 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::Quantity pa_p;
     casacore::Vector<casacore::Int> cfShape_p;
     casacore::String fileName_p,telescopeName_p;
+    bool isRotationallySymmetric_p;
   };
 } //# NAMESPACE CASA - END
 #endif

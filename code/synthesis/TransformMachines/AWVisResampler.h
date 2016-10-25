@@ -276,13 +276,14 @@ using namespace casacore;
 		 const casacore::Double& sinDPA, const casacore::Double& cosDPA,
 		 const casacore::Vector<casacore::Int>& Origin, const casacore::Vector<casacore::Int>& size);
 
-    casacore::Complex* getConvFunc_p(casacore::Vector<casacore::Int>& cfShape,
+    casacore::Complex* getConvFunc_p(const double& vbPA,
+				     casacore::Vector<casacore::Int>& cfShape,
 				     casacore::Vector<int>& support,
-			   CFBuffer& cfb,
-			   casacore::Double& wVal, casacore::Int& fndx, 
-			   casacore::Int& wndx,
-			   PolMapType& mNdx, PolMapType& conjMNdx,
-			   casacore::Int& ipol, casacore::uInt& mRow);
+				     CFBuffer& cfb,
+				     casacore::Double& wVal, casacore::Int& fndx, 
+				     casacore::Int& wndx,
+				     PolMapType& mNdx, PolMapType& conjMNdx,
+				     casacore::Int& ipol, casacore::uInt& mRow);
     void cachePhaseGrad_p(const casacore::Vector<casacore::Double>& pointingOffset,
 			  const casacore::Vector<casacore::Int>&cfShape,
 			  const casacore::Vector<casacore::Int>& convOrigin,

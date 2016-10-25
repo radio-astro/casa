@@ -133,6 +133,7 @@ namespace casa{
     miscinfo.define("ConjPoln", conjPoln_p);
     miscinfo.define("TelescopeName", telescopeName_p);
     miscinfo.define("Diameter", diameter_p);
+    miscinfo.define("OpCode",isRotationallySymmetric_p);
     thisCF.setMiscInfo(miscinfo);
 
     //show("thisCell: ", cout);

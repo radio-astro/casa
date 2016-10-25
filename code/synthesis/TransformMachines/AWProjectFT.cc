@@ -139,6 +139,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							    const Bool wbAWP,
 							    const Bool conjBeams)
   {
+      LogIO log_l(LogOrigin("AWProjectFT", "makeCFObject"));
+      if ((psTermOn==false) && (aTermOn==false))
+	log_l << "Both, psterm and aterm cannot be False.  Please set one or both to True." << LogIO::EXCEPTION;
+
     CountedPtr<ATerm> apertureFunction = AWProjectFT::createTelescopeATerm(telescopeName, aTermOn);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
@@ -2312,6 +2316,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convFuncCtor_p->setRotateCF(computePAIncr_p, rotateOTFPAIncr_p);
 
     paChangeDetector.setTolerance(computePAIncrement);
+    visResampler_p->setPATolerance(computePAIncrement.getValue("rad"));
     log_l << LogIO::NORMAL <<"Setting PA increment to " 
 	  << computePAIncrement.getValue("deg") << " deg" << endl;
     cfCache_p->setPAChangeDetector(paChangeDetector);

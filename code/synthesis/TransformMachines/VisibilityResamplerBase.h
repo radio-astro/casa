@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       runTimeG_p(0.0), runTimeDG_p(0.0),runTimeG1_p(0.0), runTimeG2_p(0.0), runTimeG3_p(0.0), runTimeG4_p(0.0), runTimeG5_p(0.0), runTimeG6_p(0.0), runTimeG7_p(0.0),
       timer_p(),
       uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), spwChanFreq_p(), spwChanConjFreq_p (), convFuncStore_p(), inc_p(),
-      cfMap_p(), conjCFMap_p() 
+      cfMap_p(), conjCFMap_p(), paTolerance_p(360.0)
 
     {};
     // VisibilityResamplerBase(const CFStore& cfs): 
@@ -62,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     VisibilityResamplerBase(const VisibilityResamplerBase& other):
       uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), spwChanFreq_p(), spwChanConjFreq_p (), convFuncStore_p(), inc_p(),
-      cfMap_p(), conjCFMap_p()
+      cfMap_p(), conjCFMap_p(), paTolerance_p(360.0)
     {copy(other);}
 
     virtual ~VisibilityResamplerBase() {};
@@ -81,6 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void setFreqMaps(const casacore::Matrix<casacore::Double>& spwChanFreqs, const casacore::Matrix<casacore::Double>& spwnChanConjFreqs) = 0;
 
     virtual void setConvFunc(const CFStore& cfs) = 0;
+    virtual void setPATolerance(const double& dPA) = 0;
     //
     //------------------------------------------------------------------------------
     //
@@ -161,7 +162,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::Vector<casacore::Int> cfMap_p, conjCFMap_p;
     VBRow2CFMapType vbRow2CFMap_p;
     VBRow2CFBMapType vbRow2CFBMap_p;
-    
+    double paTolerance_p;
 
     void sgrid(casacore::Int& ndim, 
 	       casacore::Double* __restrict__  pos, 

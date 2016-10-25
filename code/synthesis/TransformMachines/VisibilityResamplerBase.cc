@@ -52,6 +52,7 @@ namespace casa{
     SynthesisUtils::SETVEC(conjCFMap_p, other.conjCFMap_p);
     //    vbRow2CFMap_p.assign(other.vbRow2CFMap_p);
     convFuncStore_p = other.convFuncStore_p;
+    paTolerance_p = other.paTolerance_p;
   }
   //
   //-----------------------------------------------------------------------------------

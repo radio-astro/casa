@@ -102,6 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void setFreqMaps(const casacore::Matrix<casacore::Double>& spwChanFreqs, const casacore::Matrix<casacore::Double>& spwChanConjFreqs);
 
     virtual void setConvFunc(const CFStore& cfs);
+    virtual void setPATolerance(const double& dPA) {paTolerance_p = dPA;}
     void init(const casacore::Bool& doublePrecision);
     //
     //------------------------------------------------------------------------------

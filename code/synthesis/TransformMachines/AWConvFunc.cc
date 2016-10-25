@@ -58,6 +58,26 @@
 
 using namespace casacore;
 namespace casa{
+  AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
+			 const casacore::CountedPtr<PSTerm> psTerm,
+			 const casacore::CountedPtr<WTerm> wTerm,
+			 const casacore::Bool wbAWP,
+			 const casacore::Bool conjPB):
+    ConvolutionFunction(),aTerm_p(aTerm),psTerm_p(psTerm), wTerm_p(wTerm), pixFieldGrad_p(), 
+    wbAWP_p(wbAWP), conjPB_p(conjPB), baseCFB_p()
+  {
+    LogIO log_l(LogOrigin("AWConvFunc", "AWConvFunc"));
+    if (psTerm->isNoOp() && aTerm->isNoOp())
+      log_l << "Both, psterm and aterm cannot be set to NoOp. " << LogIO::EXCEPTION;
+    
+    if (wbAWP && aTerm->isNoOp())
+      {
+	log_l << "wbawp=True is ineffective when aterm is OFF.  Setting wbawp to False." << LogIO::NORMAL1;
+	wbAWP_p=false;
+      }
+    
+    pixFieldGrad_p.resize(2);pixFieldGrad_p=0.0;
+  }
   //
   //----------------------------------------------------------------------
   //
@@ -468,16 +488,18 @@ namespace casa{
 		    CoordinateSystem ftCoords=cs_l;
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 		    CountedPtr<CFCell> cfCellPtr;
-
+		    TableRecord dummyMiscInfo;
 		    cfWtb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-				    ftCoords, samplingWt, xSupportWt, ySupportWt,
 				    freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				    ftCoords, dummyMiscInfo, samplingWt, xSupportWt, ySupportWt,
 				    String(""), // Default ==> don't set it in the CFCell
 				    conjFreq, conjPol[0]);
 		    cfCellPtr = cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
 						   muellerElements(imx)(imy));
 		    cfCellPtr->pa_p=Quantity(vbPA,"rad");
 		    cfCellPtr->telescopeName_p = aTerm.getTelescopeName();
+		    cfCellPtr->isRotationallySymmetric_p = aTerm.isNoOp();
+
 		    //cerr << "AWConvFunc: Telescope name = " << cfCellPtr->telescopeName_p << " " << aTerm.getTelescopeName() << endl;
 		    //tim.show("CSStuff:");
 		    // setUpCFSupport(cfBuf, xSupport, ySupport, sampling);
@@ -532,16 +554,15 @@ namespace casa{
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
 
 		    cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-				  ftCoords, sampling, xSupport, ySupport,
-				  freqValues(inu), wValues(iw),
-				  muellerElements(imx)(imy),
+				  freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				  ftCoords, dummyMiscInfo, sampling, xSupport, ySupport,
 				  String(""), // Default ==> Don't set in the CFCell
 				  conjFreq, conjPol[0]);
 		    cfCellPtr=cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
 					       muellerElements(imx)(imy));
 		    cfCellPtr->pa_p=Quantity(vbPA,"rad");
 		    cfCellPtr->telescopeName_p = aTerm.getTelescopeName();
-
+		    cfCellPtr->isRotationallySymmetric_p = aTerm.isNoOp();
 		    //
 		    // Now tha the CFs have been computed, cache its
 		    // paramters in CFCell for quick access in tight
@@ -577,8 +598,14 @@ namespace casa{
       for(ndx(0)=0;ndx(0)<cf.shape()(0);ndx(0)++)
 	if (abs(cf(ndx)) > peak) {peakPix = ndx;peak=abs(cf(ndx));}
     //    origin = peakPix(0);
+
+    //    int peakNIC=0;
+
     if (origin != peakPix(0))
-      log_l << "Peak not at the center " << origin << " " << cf(IPosition(origin,origin,0,0)) << " " << peakPix << " " << peak << LogIO::POST;
+      {
+	log_l << "Peak not at the center " << origin << " " << cf(IPosition(4,origin,origin,0,0)) << " " << peakPix << " " << peak << LogIO::POST;
+	//	peakNIC=1e7;
+      }
     for (Int ix=-xSupport;ix<xSupport;ix++)
       for (int iy=-ySupport;iy<ySupport;iy++)
 	{
@@ -588,7 +615,8 @@ namespace casa{
 	  //      << real(cf(ix*(Int)sampling+origin, iy*(Int)sampling+origin)) << endl;
 	}
     //    cf /= cfNorm;
-    return cfNorm;
+
+    return cfNorm;//+Complex(peakNIC,0.0);
   }
   //
   //----------------------------------------------------------------------
@@ -999,12 +1027,13 @@ namespace casa{
 		      // cfwtb_p->setParams(convSize,convSize,cfb_cs,s,
 		      // 			 convSize, convSize, 
 		      // 			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
+		      TableRecord dummyMiscInfo;
 		      cfb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
-				       cfb_cs,s, convSize, convSize, 
-		      		       freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
+		      		       freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
+				       cfb_cs, dummyMiscInfo, s, convSize, convSize);
 		      cfwtb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
-					 cfb_cs,s, convSize, convSize, 
-		      			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
+					 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
+					 cfb_cs, dummyMiscInfo, s, convSize, convSize);
 		      pm.update((Double)cfDone++);
 		    }
 	      }
@@ -1711,7 +1740,7 @@ namespace casa{
 	thisCell->coordSys_p = ftCoords;
 	thisCell->xSupport_p = xSupportWt;
 	thisCell->ySupport_p = ySupportWt;
-
+	thisCell->isRotationallySymmetric_p = aTerm.isNoOp();
 	//tim.show("CSStuff:");
 
 	//tim.mark();
@@ -1733,9 +1762,28 @@ namespace casa{
 	{
 	  cfNorm=0; cfWtNorm=0;
 	  cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);
-	  cfWtNorm = AWConvFunc::cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
+	  cfWtNorm = AWConvFunc::cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);	    
 	}
 	//tim.show("Area*2:");
+
+	//==============================================================
+	  // thisCell=cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
+	  // if (real(cfNorm) > 1e7)
+	  //   {
+	  //     cfNorm -= Complex(1e7,0.0);
+	  //     ostringstream name;
+	  //     name << "WT_" << miscInfo.wValue;
+	  //     thisCell->makePersistent("./",name.str().c_str());
+	  //   }
+	  // if (real(cfWtNorm) > 1e7)
+	  //   {
+	  //     cfWtNorm -= Complex(1e7,0.0);
+	  //     // ostringstream name;
+	  //     // name << "CFWT_" << miscInfo.wValue;
+	  //     // storeArrayAsImage(name,ftCoords, cfWtBufMat);
+	  //   }
+	//==============================================================
+
 	
 	//tim.mark();
 	cfBuf /= cfNorm;
@@ -1745,13 +1793,14 @@ namespace casa{
 	//tim.mark();
 	ftCoords=cs_l;
 	SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
-
 	//CountedPtr<CFCell>
+
 	thisCell=cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
 	thisCell->pa_p=Quantity(vbPA,"rad");
 	thisCell->coordSys_p = ftCoords;
 	thisCell->xSupport_p = xSupport;
 	thisCell->ySupport_p = ySupport;
+	thisCell->isRotationallySymmetric_p = aTerm.isNoOp();
 
 	(cfWtb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement))->initCache();
 	(cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement))->initCache();
