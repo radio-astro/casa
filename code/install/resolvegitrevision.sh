@@ -9,6 +9,10 @@ if [ ! -z $CASABRANCHHINT ]; then
         b1=${CASABRANCHHINT%/*} # part before the slash
         b2=${CASABRANCHHINT##*/} # part after the slash
         headGrep=$b1-$b2
+    elif [[ $CASABRANCHHINT =~ ^bugfix.*CAS.* ]] ; then
+        b1=${CASABRANCHHINT%/*} # part before the slash
+        b2=${CASABRANCHHINT##*/} # part after the slash
+        headGrep=$b1-$b2
     elif [[ $CASABRANCHHINT =~ .*release.* ]] ; then
         headGrep=$CASABRANCHHINT
     fi
