@@ -482,9 +482,9 @@ def __check_stokes(images):
         for fname in images:
             _myia.open(fname)
             csys = _myia.coordsys()
-            stks=csys.stokes()
+            stokes = csys.stokes()
             _myia.close()
-            retValue.extend(stks)
+            retValue.extend(stokes)
         return retValue
        
 # it is important to sort the varnames in reverse order before doing
@@ -566,7 +566,8 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
     # if 3 files (or 1 file with Q, U, V) total pol intensity image
     # if 2 files (or file file with Q, U) given linear pol intensity image
     # FIXME I really hate creating subimages like this, the poli and pola routines really belong in the as of now non-existant squah task
-    if len(filenames) < 1 or len(filenames) > 3:
+    nfiles = len(filenames)
+    if nfiles < 1 or nfiles > 3:
         raise Exception, 'poli requires one multistokes with Q, U, and optionally V stokes or two single stokes (Q, U) images or three single Stokes (Q,U,V) images'
     isQim = False
     isUim = False
@@ -575,10 +576,12 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
     isTPol = False
 
     stkslist = __check_stokes(filenames)
-    if len(filenames) == 1:
+    if nfiles == 1:
         # do multistokes image
         if (len(stkslist) < 2):
-            raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do poli calculation"
+            raise Exception, \
+                filenames[0] + " is the only image specified but it " \
+                + "is not multi-stokes so cannot do poli calculation"
         _myia = iatool()
         _myia.open(filenames[0])
         spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
@@ -588,10 +591,9 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
 
         stokesPixel = spixels[0]
         trc = _myia.shape()
-        blc = []
+        blc = len(trc) * [0]
 
         for i in range(len(trc)):
-            blc.append(0)
             trc[i] = trc[i] - 1
         neededStokes = ['Q', 'U']
         if (stkslist.count('V')):
@@ -626,7 +628,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
         # close paren gets added after this method has been called.
         expr = 'sqrt(' + sum
 
-    elif len(filenames) == 3:
+    elif nfiles == 3:
         for i in range(len(stkslist)):
             if type(stkslist[i])==list:
                 casalog.post("stokes " + str(stkslist[i]),'SEVERE')
@@ -645,7 +647,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
                 +'+'+varnames[1]+'*'+varnames[1]\
                 +'+'+varnames[2]+'*'+varnames[2]
         isTPol = True
-    elif len(filenames) == 2:
+    elif nfiles == 2:
         for i in range(len(stkslist)):
             if type(stkslist[i])==list:
                 raise Exception, 'Cannot handle %s, a multi-Stokes image when multiple images supplied.' % filenames[i]
