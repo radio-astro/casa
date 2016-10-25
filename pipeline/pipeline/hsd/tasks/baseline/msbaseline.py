@@ -342,7 +342,9 @@ class SDMSBaseline(basetask.StandardTaskTemplate):
         work_data = {}
         plot_list = []
         plot_manager = plotter.BaselineSubtractionPlotManager(self.inputs.context, datatable)
-        for (ms, accum) in registry.items():
+        get_ms_id = lambda msobj: context.observing_run.measurement_sets.index(msobj)
+        for ms in sorted(registry.keys(), key=get_ms_id):
+            accum = registry[ms]
             vis = ms.basename
             field_id_list = accum.get_field_id_list()
             antenna_id_list = accum.get_antenna_id_list()
