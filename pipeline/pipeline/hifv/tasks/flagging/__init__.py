@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 
 
-from pipeline.hif.tasks.flagging import flagdeterbase
+
 from . import vlaagentflagger
 from . import flagbaddeformatters
 from . import checkflag
@@ -14,16 +14,11 @@ from . import renderer
 
 from . import qa
 
-from pipeline.hif.tasks.flagging.flagdeterbase import FlagDeterBase
 from .flagdetervla import FlagDeterVLA
-from .vlaagentflagger import VLAAgentFlagger
-from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
+#from .vlaagentflagger import VLAAgentFlagger
 from .flagbaddeformatters import FlagBadDeformatters
-from .uncalspw import Uncalspw
 from .checkflag import Checkflag
 from .targetflag import Targetflag
-#from .hflag import Heuristicflag
-
 
 #pipelineqa.registry.add_handler(qa.FlagBadDeformattersQAHandler())
 #pipelineqa.registry.add_handler(qa.FlagBadDeformattersListQAHandler())

@@ -4,10 +4,8 @@ import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.renderer.weblog as weblog
 
 from .solint import Solint
-from .testgains import Testgains
 from .fluxboot import Fluxboot
 from . import solint
-from . import testgains
 from . import fluxboot
 from . import renderer
 
