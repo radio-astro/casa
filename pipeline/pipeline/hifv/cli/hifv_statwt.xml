@@ -63,7 +63,7 @@
 
 
 <example>
-The hifv_statwt task
+The hifv_statwt task performs statistical weighting of the visibilities
 
 Keyword arguments:
 
@@ -108,7 +108,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Load an ASDM list in the ../rawdata subdirectory into the context.
+1. Statistical weighting of the visibilities:
 
 hifv_statwt()
 

@@ -69,7 +69,7 @@
 
 
 <example>
-The hifv_fluxboot task
+The hifv_fluxboot task performs the flux density bootstrapping stage of the VLA pipeline.
 
 Keyword arguments:
 
@@ -114,7 +114,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Load an ASDM list in the ../rawdata subdirectory into the context.
+1. VLA CASA pipeline flux density bootstrapping.
 
 hifv_fluxboot()
 

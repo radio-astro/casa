@@ -64,7 +64,7 @@
 
 
 <example>
-The hifv_priorcals runs gaincurves, opacities, and requantizer gains
+The hifv_priorcals runs gaincurves, opacities, requantizer gains and antenna position corrections.
 
 Keyword arguments:
 
@@ -109,7 +109,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Load an ASDM list in the ../rawdata subdirectory into the context.
+1. Run gaincurves, opacities, requantizer gains and antenna position corrections.
 
    hifv_priorcals()
 

@@ -70,7 +70,7 @@
 
 
 <example>
-The hifv_semiFinalBPdcals task runs a second quick calibration to set up for heuristic flagging flagging
+The hifv_semiFinalBPdcals task runs a second quick calibration to set up for heuristic flagging:
 
 Keyword arguments:
 
@@ -118,7 +118,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Load an ASDM list in the ../rawdata subdirectory into the context.
+1. Heuristic flagging
 
 hifv_semiFinalBPdcals()
 

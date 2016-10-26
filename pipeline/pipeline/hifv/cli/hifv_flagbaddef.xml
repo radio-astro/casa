@@ -109,7 +109,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Load an ASDM list in the ../rawdata subdirectory into the context.
+1. Use the bad deformatter heuristics and flag amp and phase (VLA CASA pipeline).
 
    hifv_flagbaddef()
 

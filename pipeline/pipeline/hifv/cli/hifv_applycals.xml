@@ -107,7 +107,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Load an ASDM list in the ../rawdata subdirectory into the context.
+1. Run the final applycals stage of the VLA CASA pipeline.
 
 hifv_applycals()
 

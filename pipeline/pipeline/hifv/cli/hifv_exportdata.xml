@@ -104,7 +104,7 @@
 
 
 <example>
-The hif_exportdata task exports the data defined in the pipeline context
+The hifv_exportdata task for the VLA CASA pipeline exports the data defined in the pipeline context
 and exports it to the data products directory, converting and or
 packing it as necessary.
 
@@ -177,7 +177,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-The hif_exportdata task exports the data defined in the pipeline context
+The hifv_exportdata task exports the data defined in the pipeline context
 and exports it to the data products directory, converting and or packing
 it as necessary.
 

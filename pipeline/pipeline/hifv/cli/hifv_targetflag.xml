@@ -115,7 +115,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Load an ASDM list in the ../rawdata subdirectory into the context.
+1. Run rflag on both the science targets and calibrators:
 
 hifv_targetflag()
 

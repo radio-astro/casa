@@ -64,7 +64,7 @@
 
 
 <example>
-The hifv_setmodel task does an initial run of setjy on the vis
+The hifv_setmodel task does an initial run of setjy on the measurement set
 
 Keyword arguments:
 
@@ -109,9 +109,9 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Load an ASDM list in the ../rawdata subdirectory into the context.
+1. Initial run of setjy on the measurement set
 
-   hifv_testBPdcals()
+   hifv_setmodel
 
 
 </example>
