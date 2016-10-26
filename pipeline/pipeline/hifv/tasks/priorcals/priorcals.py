@@ -9,19 +9,16 @@ result.accept(context)
 """
 
 from __future__ import absolute_import
-import types
-import math
 import os
 
-import pipeline.infrastructure.casatools as casatools
-import numpy
+import urllib2
+import datetime
 
-
-#from pipeline.hif.heuristics import fieldnames
+# from pipeline.hif.heuristics import fieldnames
 from pipeline.h.heuristics import fieldnames
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.utils as utils
 from . import resultobjects
 
 from pipeline.hifv.tasks.gaincurves import GainCurves
@@ -30,24 +27,8 @@ from pipeline.hifv.tasks.rqcal import Rqcal
 from pipeline.hifv.tasks.swpowcal import Swpowcal
 from pipeline.hif.tasks.antpos import Antpos
 
-from pipeline.hifv.tasks.vlautils import VLAUtils
-
 LOG = infrastructure.get_logger(__name__)
 
-
-
-
-
-
-
-
-
-
-
-
-
-import urllib2
-import datetime
 
 def correct_ant_posns (vis_name, print_offsets=False):
     '''
@@ -234,16 +215,6 @@ def correct_ant_posns (vis_name, print_offsets=False):
         print "No offsets found for this MS"
     ant_string = ','.join(["%s" % ii for ii in ants])
     return [ 0, ant_string, parms ]
-    
-    
-    
-    
-    
-    
-
-
-
-
 
 
 class PriorcalsInputs(basetask.StandardInputs):
@@ -255,11 +226,11 @@ class PriorcalsInputs(basetask.StandardInputs):
     def to_casa_args(self):
         raise NotImplementedError
 
+
 class Priorcals(basetask.StandardTaskTemplate):
     Inputs = PriorcalsInputs
 
     def prepare(self):
-        inputs = self.inputs
 
         callist = []
         
@@ -315,9 +286,7 @@ class Priorcals(basetask.StandardTaskTemplate):
         inputs = Antpos.Inputs(self.inputs.context, output_dir='')
         task = Antpos(inputs)
         result = self._executor.execute(task)
-        
-        
-        
+
         antcorrect = {}
         
         try:
@@ -333,6 +302,5 @@ class Priorcals(basetask.StandardTaskTemplate):
                 antcorrect = dict(zip(antList, subList))
         except:
             LOG.info("No offsets found. No caltable created.")
-            
-            
+
         return result, antcorrect
