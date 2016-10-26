@@ -122,9 +122,9 @@ public:
                            const casacore::Bool autoadjust=casacore::False);
 
   // no binning version
-  void autoMaskByThreshold2 (casacore::ImageInterface<float>& mask,
-                           const casacore::ImageInterface<float>& res,
-                           const casacore::ImageInterface<float>& psf,
+  void autoMaskByThreshold2 (casacore::ImageInterface<casacore::Float>& mask,
+                           const casacore::ImageInterface<casacore::Float>& res,
+                           const casacore::ImageInterface<casacore::Float>& psf,
                            const casacore::Quantity& resolution,
                            const casacore::Float& resbybeam,
                            const casacore::Quantity& qthreshold,
@@ -135,8 +135,8 @@ public:
 
   // implementation of Amanda's autoboxing algorithm
   void autoMaskByThreshold3(casacore::ImageInterface<float>& mask,
-                                          const casacore::ImageInterface<float>& res, 
-                                          const casacore::ImageInterface<float>& psf, 
+                                          const casacore::ImageInterface<casacore::Float>& res, 
+                                          const casacore::ImageInterface<casacore::Float>& psf, 
                                           const casacore::Record& stats, 
                                           const casacore::Int nmask=0,
                                           const casacore::Float& sidelobeLevel=0.0,
@@ -147,14 +147,14 @@ public:
                                           const casacore::Float& minBeamFrac=-1); 
                            
   // Calculate statistics on a residual image with additional region and LEL mask specificaations
-  casacore::Record calcImageStatistics(casacore::ImageInterface<float>& res, 
-                                       casacore::ImageInterface<float>& prevmask, 
+  casacore::Record calcImageStatistics(casacore::ImageInterface<casacore::Float>& res, 
+                                       casacore::ImageInterface<casacore::Float>& prevmask, 
                                        casacore::String& lelmask,
                                        casacore::Record* regionPtr,
                                        const casacore::Bool robust);
 
   SHARED_PTR<casacore::ImageInterface<float> > makeMaskFromBinnedImage (
-                               const casacore::ImageInterface<float>& image,
+                               const casacore::ImageInterface<casacore::Float>& image,
                                const casacore::Int nx,
                                const casacore::Int ny,
                                const casacore::Float& fracofpeak,
@@ -163,15 +163,20 @@ public:
                                const casacore::Bool autoadjust,
                                casacore::Double thresh=0.0);
 
-  SHARED_PTR<casacore::ImageInterface<float> > convolveMask(const casacore::ImageInterface<float>& inmask,
+  SHARED_PTR<casacore::ImageInterface<float> > convolveMask(const casacore::ImageInterface<casacore::Float>& inmask,
                                                   int nxpix, int nypix);
 
-  SHARED_PTR<casacore::ImageInterface<float> >  pruneRegions(const casacore::ImageInterface<float>& image,
+  SHARED_PTR<casacore::ImageInterface<float> >  pruneRegions(const casacore::ImageInterface<casacore::Float>& image,
                                                    double& thresh,
                                                    int nmask=0,
                                                    int npix=0);
 
+  void maskWithPerPlaneThreshold(casacore::ImageInterface<casacore::Float>& image, 
+                                 casacore::ImageInterface<casacore::Float>& mask, 
+                                 casacore::Vector<casacore::Float>& thresholds); 
+
   void makePBMask(SHARED_PTR<SIImageStore> imstore, casacore::Float pblimit=0.1);
+
   void autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, 
                         const casacore::String& alg="",
                         const casacore::String& threshold="",

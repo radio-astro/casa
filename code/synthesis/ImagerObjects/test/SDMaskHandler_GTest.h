@@ -62,6 +62,7 @@ protected:
      void testRegionToMaskImage();
      void testRegionText();
      void testCopyMask();
+     void testMaskByPerPlaneThreshold();
 
 };
 

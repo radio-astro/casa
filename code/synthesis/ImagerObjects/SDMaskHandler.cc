@@ -1335,6 +1335,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }  
     } 
     else { // do growmask
+        // binary dilation code here....
     }
     tempmask.copyData(themask);
    
@@ -1759,11 +1760,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// But for now...
 	throw(AipsError("Need PB/Sensitivity/Weight image before a PB-based mask can be made for "+imstore->getName())); 
+
       }
     // Also add option to just use the vpmanager or whatever centralized PB repository there will be (sometime in the distant future...).
 
   }// end of makePBMask
 
+  //n apply per channel plane threshold
+  void SDMaskHandler::maskWithPerPlaneThreshold(ImageInterface<Float>& image, ImageInterface<Float>& mask, Vector<Float>& thresholds) 
+  {
+    IPosition imshape = image.shape();
+    CoordinateSystem imcsys = image.coordinates();
+    Vector<Int> diraxes = CoordinateUtil::findDirectionAxes(imcsys);
+    Int specaxis = CoordinateUtil::findSpectralAxis(imcsys);
+    uInt nchan = imshape (specaxis); 
+    if (nchan != thresholds.nelements()) {
+      throw(AipsError("Mismatch in the number of threshold values and the number of chan planes."));
+    }
+    for (uInt ich=0; ich < nchan; ich++) {
+      IPosition start(4, 0, 0, 0,ich);
+      IPosition length(4, imshape(diraxes(0)),imshape(diraxes(1)),imshape(2),1);
+      Slicer sl(start, length);
+
+      // make a subImage for  a channel slice      
+      SubImage<Float> chanImage(image, sl, true);
+      TempImage<Float>* tempChanImage = new TempImage<Float> (chanImage.shape(), chanImage.coordinates() );
+      Array<Float> chanImageArr;
+      LatticeExpr<Float> chanMask(iif(chanImage > thresholds(ich),1.0, 0.0)); 
+      tempChanImage->copyData(chanMask);
+      tempChanImage->getSlice(chanImageArr, IPosition(4,0), chanImage.shape(),IPosition(4,1,1,1,1));
+      mask.putSlice(chanImageArr,start,IPosition(4,1,1,1,1)); 
+    } // loop over chans
+  }
+
+ 
   void SDMaskHandler::autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, 
                                        const String& alg, 
                                        const String& threshold, 
