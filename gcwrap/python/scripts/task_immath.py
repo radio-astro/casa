@@ -175,11 +175,12 @@ def immath(
     # Tell CASA who will be reporting
     casalog.origin('immath')
     tmpFilePrefix='_immath_tmp' + str(os.getpid()) + '_'
-    _immath_initial_cleanup(tmpFilePrefix)
     _myia = iatool()
     isLPol = False
     isTPol = False
+    lpol = ''
     try:
+        _immath_initial_cleanup(tmpFilePrefix)
         outfile = _immath_check_outfile(outfile)
         # Find the list of filenames in the expression
         # also do a quick check to see if all of the files
@@ -192,15 +193,16 @@ def immath(
             filenames = [filenames]
         varnames = _immath_varnames(varnames, filenames, tmpfilenames)
         filenames = _immath_filenames(filenames, tmpfilenames, varnames, mode)
+        doPolThresh = False
         expr = expr.replace(' ', '')
         if mode == 'spix':
             expr = _immath_dospix(len(filenames), varnames)
-        doPolThresh = False
-        (expr, mask, polithresh, doPolThresh, lpol) = _immath_dopola(
-            expr, mask, polithresh, doPolThresh, _myia, mode,
-            filenames, varnames, tmpFilePrefix, imagename, imagemd
-        )
-        if mode == 'poli':
+        elif mode == 'pola':
+            (expr, mask, polithresh, doPolThresh, lpol) = _immath_dopola(
+                mask, polithresh, filenames, varnames,
+                tmpFilePrefix, imagename, imagemd
+            )
+        elif mode == 'poli':
             (expr, isLPol, isTPol) = _immath_dopoli(
                 filenames, varnames, tmpFilePrefix, sigma, _myia
             )
@@ -345,36 +347,37 @@ def _immath_dopoli(filenames, varnames, tmpFilePrefix, sigma, _myia):
     return (expr, isLPol, isTPol)
 
 def _immath_dopola(
-    expr, mask, polithresh, doPolThresh, _myia, mode,
-    filenames, varnames, tmpFilePrefix, imagename, imagemd
+    mask, polithresh, filenames, varnames,
+    tmpFilePrefix, imagename, imagemd
 ):
     lpol = ""
-    if mode=='pola':
-        expr = _doPolA(filenames, varnames, tmpFilePrefix)
-        if (polithresh):
-            if (mask != ""):
-                mask = ""
-                casalog.post("Ignoring mask parameter in favor of polithresh parameter", 'WARN')
-            if (qa.getunit(polithresh) != ""):
-                initUnit = qa.getunit(polithresh)
-                _myia.open(filenames[0])
-                bunit = _myia.brightnessunit()
-                polithresh = qa.convert(polithresh, bunit)
-                _myia.done()
-                if (qa.getunit(polithresh) != bunit):
-                    raise Exception, "Units of polithresh " + initUnit \
-                    + " do not conform to input image units of " + bunit \
-                    + " so cannot perform thresholding. Please correct units and try again."
-                polithresh = qa.getvalue(polithresh)[0]
-            doPolThresh = True
-            [lpolexpr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, False, False)
-            lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
-            lpolexpr = lpolexpr + ")"
-            lpol = tmpFilePrefix + "_lpol.im"
-            res = _myia.imagecalc(
-                pixels=lpolexpr, outfile=lpol, imagemd=_immath_translate_imagemd(imagename, imagemd)
-            )
-            res.done()
+    doPolThresh = False
+    expr = _doPolA(filenames, varnames, tmpFilePrefix)
+    if (polithresh):
+        if (mask != ""):
+            mask = ""
+            casalog.post("Ignoring mask parameter in favor of polithresh parameter", 'WARN')
+        if (qa.getunit(polithresh) != ""):
+            initUnit = qa.getunit(polithresh)
+            _myia = iatool()
+            _myia.open(filenames[0])
+            bunit = _myia.brightnessunit()
+            polithresh = qa.convert(polithresh, bunit)
+            _myia.done()
+            if (qa.getunit(polithresh) != bunit):
+                raise Exception, "Units of polithresh " + initUnit \
+                + " do not conform to input image units of " + bunit \
+                + " so cannot perform thresholding. Please correct units and try again."
+            polithresh = qa.getvalue(polithresh)[0]
+        doPolThresh = True
+        [lpolexpr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, False, False)
+        lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
+        lpolexpr = lpolexpr + ")"
+        lpol = tmpFilePrefix + "_lpol.im"
+        res = _myia.imagecalc(
+            pixels=lpolexpr, outfile=lpol, imagemd=_immath_translate_imagemd(imagename, imagemd)
+        )
+        res.done()
     return (expr, mask, polithresh, doPolThresh, lpol)
 
 def _immath_dospix(nfiles, varnames):
@@ -686,4 +689,3 @@ def _immath_translate_imagemd(imagename, imagemd):
         # out of range
         return imagemd
     return imagename[idx]
-
