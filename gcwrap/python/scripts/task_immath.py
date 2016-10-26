@@ -568,15 +568,14 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
         return _immath_dopoli_single_image(
             stokeslist, filenames, tpol, createSubims, tmpFilePrefix
         )
-    elif nfiles == 2:
-        return _immath_dolpol(stokeslist, filenames, varnames)
     else:
-        # nfiles = 3
-        return _immath_dotpol(stokeslist, filenames, varnames)
+        return _immath_doltpol(stokeslist, filenames, varnames)
 
-def _immath_dolpol(stokeslist, filenames, varnames):
+def _immath_doltpol(stokeslist, filenames, varnames):
     isQim = False
     isUim = False
+    isVim = False
+    three = len(filenames) == 3
     for file, stokes in zip(filenames, stokeslist):
         if type(stokes)==list:
             raise Exception, 'Cannot handle ' + file \
@@ -584,44 +583,33 @@ def _immath_dolpol(stokeslist, filenames, varnames):
         else:
             if stokes == 'Q':
                 isQim = True
-            if stokes == 'U':
+            elif stokes == 'U':
                 isUim = True
-    if not (isUim and isQim):
+            elif stokes == 'V':
+                isVim=True
+    have_all = isQim and isUim
+    if three:
+        have_all = have_all and isVim
+    if not (have_all):
+        needed_tests = [isQim, isUim]
+        needed_stokes = ['Q', 'U']
+        if three:
+            needed_tests.append(isVim)
+            needed_stokes.append('V')
         missing = []
-        for isX, stokes in zip((isQim, isUim), ('Q', 'U')):
+        for isX, stokes in zip(needed_tests, needed_stokes):
             if not isX:
                 missing.append(stokes)
-        raise Exception, 'Missing Stokes ' + str(missing) + ' image(s)'
-    expr='sqrt(' + varnames[0] + '*' + varnames[0] \
+                raise Exception, 'Missing Stokes ' + str(missing) + ' image(s)'
+    expr = 'sqrt(' + varnames[0] + '*' + varnames[0] \
             + '+' + varnames[1] + '*' + varnames[1]
-    return (expr, True, False)
-
-def _immath_dotpol(stokeslist, filenames, varnames):
-    isQim = False
-    isUim = False
-    isVim = False
-    for i, stokes in zip(range(3), stokeslist):
-        if type(stokes) == list:
-            casalog.post("stokes " + str(stokes),'SEVERE')
-            raise Exception, \
-                'Cannot handle ' + filenames[i] \
-                + ', a multi-Stokes image when more than one image supplied.' 
-        if stokes == 'Q':
-            isQim=True
-        elif stokes == 'U':
-            isUim=True
-        elif stokes == 'V':
-            isVim=True
-    if not (isUim and isQim and isVim):
-        missing = []
-        for isX, stokes in zip((isQim, isUim, isVim), ('Q', 'U', 'V')):
-            if not isX:
-                missing.append(stokes)
-        raise Exception, 'Missing Stokes ' + str(missing) + ' image(s)'
-    expr='sqrt(' + varnames[0] + '*' + varnames[0] \
-        + '+' + varnames[1] + '*' + varnames[1] \
-        + '+' + varnames[2] + '*' + varnames[2]
-    return (expr, False, True)
+    isLPol = True
+    isTPol = False
+    if three:
+        expr = expr + '+' + varnames[2] + '*' + varnames[2]
+        isLPol = False
+        isTPol = True
+    return (expr, isLPol, isTPol)
 
 def _immath_dopoli_single_image(stokeslist, filenames, tpol, createSubims, tmpFilePrefix):
     # FIXME use po.totpolint() for this
