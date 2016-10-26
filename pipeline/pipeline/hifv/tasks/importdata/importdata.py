@@ -42,7 +42,7 @@ class VLAImportDataResults(basetask.Results):
             LOG.info('Adding {0} to context'.format(ms.name))
             target.add_measurement_set(ms)
 
-        if (ms.antenna_array.name == 'EVLA' or ms.antenna_array.name == 'VLA'):
+        if (ms.antenna_array.name == 'EVLA' or ms.antenna_array.name == 'VLA' or ms.antenna_array.name == 'JVLA'):
             if not hasattr(context, 'evla'):
                 context.evla = collections.defaultdict(dict)
 
