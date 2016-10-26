@@ -30,7 +30,7 @@ class TcleanQAHandler(pqa.QAResultHandler):
         # due to the dynamic range limitation. Bypass the real score here.
         if ('VLA' in observatory):
             result.qa.pool[:] = [pqa.QAScore(1.0)]
-        elif (result.error != ''):
+        elif (result.error is not None):
             result.qa.pool[:] = [pqa.QAScore(0.0, longmsg=result.error.longmsg, shortmsg=result.error.shortmsg)]
         else:
             qaTool = casac.quanta()

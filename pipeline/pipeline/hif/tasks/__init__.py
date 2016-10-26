@@ -5,8 +5,6 @@ from .applycal import IFApplycal
 from .atmflag import Atmflag
 from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .bpflagchans import Bandpassflagchans
-from .clean import Clean
-from .cleanlist import CleanList
 #from .exportdata import ExportData
 from .findcont import FindCont
 from .flagcorrected import Flagcorrected
@@ -18,7 +16,6 @@ from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal, KTypeGaincal
 from .gainflag import Gainflag
 #from .importdata import ImportData
 from .lowgainflag import Lowgainflag
-from .makecleanlist import MakeCleanList
 from .makeimages import MakeImages
 from .makeimlist import MakeImList
 from .mstransform import Mstransform

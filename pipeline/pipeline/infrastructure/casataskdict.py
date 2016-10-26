@@ -16,8 +16,6 @@ CasaTaskDict = {
     'hif_bandpass': 'Bandpass',
     'hif_bpflagchans': 'Bandpassflagchans',
     'hif_rawflagchans': 'Rawflagchans',
-    'hif_clean': 'Clean',
-    'hif_cleanlist': 'CleanList',
     #'hif_exportdata': 'ExportData',
     'hif_findcont': 'FindCont',
     'hif_flagcorrected': 'Flagcorrected',
@@ -25,7 +23,6 @@ CasaTaskDict = {
     'hif_gainflag': 'Gainflag',
     'hif_lowgainflag': 'Lowgainflag',
     #'hif_importdata': 'ImportData',
-    'hif_makecleanlist': 'MakeCleanList',
     'hif_makeimages': 'MakeImages',
     'hif_makeimlist': 'MakeImList',
     'hif_mstransform': 'Mstransform',
@@ -114,8 +111,6 @@ classToCASATask = {
     hif_tasks.Atmflag                 : 'hif_atmflag',
     hif_tasks.Bandpass                : 'hif_bandpass',
     hif_tasks.Bandpassflagchans       : 'hif_bpflagchans',
-    hif_tasks.Clean                   : 'hif_clean',
-    hif_tasks.CleanList               : 'hif_cleanlist',
     #hif_tasks.ExportData              : 'hif_exportdata',
     hif_tasks.FindCont                : 'hif_findcont',
     hif_tasks.Flagcorrected           : 'hif_flagcorrected',
@@ -126,7 +121,6 @@ classToCASATask = {
     hif_tasks.Gainflag                : 'hif_gainflag',
     #hif_tasks.ImportData              : 'hif_importdata',
     hif_tasks.Lowgainflag             : 'hif_lowgainflag',
-    hif_tasks.MakeCleanList           : 'hif_makecleanlist',
     hif_tasks.MakeImages              : 'hif_makeimages',
     hif_tasks.MakeImList              : 'hif_makeimlist',
     hif_tasks.Mstransform             : 'hif_mstransform',
@@ -287,13 +281,13 @@ TASK_COMMENTS = {
         'Calibrations are applied  to the data. Final flagging summaries '
 	'are computed'
     ),
-    (hif_tasks.MakeCleanList, hif_tasks.MakeImList) : (
+    (hif_tasks.MakeImList,) : (
         'A list of target sources to be imaged is constructed. '
     ),
-    (hif_tasks.CleanList, hif_tasks.MakeImages) : (
+    (hif_tasks.MakeImages,) : (
         'A list of target sources is cleaned. '
     ),
-    (hif_tasks.Clean, hif_tasks.Tclean) : (
+    (hif_tasks.Tclean,) : (
         'A single target source is cleaned. '
     ),
     (h_tasks.ExportData,

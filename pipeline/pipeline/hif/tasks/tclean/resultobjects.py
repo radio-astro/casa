@@ -60,8 +60,8 @@ class TcleanResult(basetask.Results):
         # Dummy settings for the weblog renderer
         self.results = [self]
         self.targets = ['']
-        self.warning = ''
-        self.error = ''
+        self.warning = None
+        self.error = None
 
     def empty(self):
         return not(self._psf or self._model or self._flux or 
