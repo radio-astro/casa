@@ -15,9 +15,7 @@ from .caltable import RqCaltable
 from .caltable import SwpowCaltable
 from .caltable import AntposCaltable
 from .caltable import WvrgCaltable
-from .clean import CleanHeuristics
 from .gaincurve import Gaincurve
-from .makecleanlist import MakeCleanListHeuristics
 from .findrefant import RefAntHeuristics
 from .solint import PhaseUpSolInt
 from .spw import BestSpwForBandpassHeuristic
