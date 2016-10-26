@@ -602,7 +602,7 @@ def _immath_doltpol(stokeslist, filenames, varnames):
                 missing.append(stokes)
                 raise Exception, 'Missing Stokes ' + str(missing) + ' image(s)'
     expr = 'sqrt(' + varnames[0] + '*' + varnames[0] \
-            + '+' + varnames[1] + '*' + varnames[1]
+        + '+' + varnames[1] + '*' + varnames[1]
     isLPol = True
     isTPol = False
     if three:
@@ -629,10 +629,10 @@ def _immath_dopoli_single_image(stokeslist, filenames, tpol, createSubims, tmpFi
     blc = len(trc) * [0]
     for i in range(len(trc)):
         trc[i] = trc[i] - 1
+    Vimage = ''
     neededStokes = ['Q', 'U']
     if (stokeslist.count('V')):
         neededStokes.append('V')
-    Qimage = Uimage = Vimage = ''
     for stokes in (neededStokes):
         if ((stokes == 'Q' or stokes == 'U') and stokeslist.count(stokes) == 0):
             _myia.close()
@@ -653,16 +653,12 @@ def _immath_dopoli_single_image(stokeslist, filenames, tpol, createSubims, tmpFi
             subim = _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
             subim.done()
     _myia.done()
-    isTPol = bool(Vimage)
-    isLPol = not isTPol
     filenames = [Qimage, Uimage]
-    sum = Qimage + '*' + Qimage + " + " + Uimage + '*' + Uimage
-    if isTPol:
-        sum = sum + " + " + Vimage + '*' + Vimage
+    mystokes = ['Q', 'U']
+    if bool(Vimage):
         filenames.append(Vimage)
-    # close paren gets added after this method has been called.
-    expr = 'sqrt(' + sum
-    return (expr, isLPol, isTPol)
+        mystokes.append('V')
+    return _immath_doltpol(mystokes, filenames, filenames)
 
 def _immath_createPolMask(polithresh, lpol, outfile):
     # make the linear polarization threshhold mask CAS-2120
