@@ -179,8 +179,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      {stopCode = 4;}
 
                     // another non-convergent condition: diverging (if it increases more than by 50%)
-                    else if ( itsIterDone > 0 &&  itsPeakResidual/itsPrevPeakResidual  >1.5) 
-                      {stopCode = 5;}
+//                    else if ( itsIterDone > 0 &&  itsPeakResidual/itsPrevPeakResidual  >1.5) 
+//                      {stopCode = 5;}
 
 		  }
 	        
