@@ -11,7 +11,8 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
 #from pipeline.hif.tasks.common import commonfluxresults
 from pipeline.h.tasks.common import commonfluxresults
-from pipeline.hif.heuristics import fieldnames
+#from pipeline.hif.heuristics import fieldnames
+from pipeline.h.heuristics import fieldnames
 
 import itertools
 import numpy
