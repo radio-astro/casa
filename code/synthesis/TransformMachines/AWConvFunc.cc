@@ -603,7 +603,7 @@ namespace casa{
 
     if (origin != peakPix(0))
       {
-	log_l << "Peak not at the center " << origin << " " << cf(IPosition(4,origin,origin,0,0)) << " " << peakPix << " " << peak << LogIO::POST;
+	log_l << "Peak not at the center " << origin << " " << cf(IPosition(4,origin,origin,0,0)) << " " << peakPix << " " << peak << LogIO::NORMAL1;
 	//	peakNIC=1e7;
       }
     for (Int ix=-xSupport;ix<xSupport;ix++)
