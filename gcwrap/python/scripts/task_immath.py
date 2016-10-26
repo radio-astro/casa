@@ -507,52 +507,31 @@ def _immath_expr_from_varnames(expr, varnames, filenames):
 
 def _doPolA(filenames, varnames, tmpFilePrefix):
     # calculate a polarization position angle image
-    stkslist = __check_stokes(filenames)
+    stokeslist = __check_stokes(filenames)
     Uimage = Qimage = ''
     _myia = iatool()
     if len(filenames) == 1:
         # FIXME I really hate creating subimages like this, the poli and pola routines really belong in the as of now non-existant squah task
-        if (type(stkslist) != list):
-            raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do pola calculation"
-        _myia.open(filenames[0])
-        spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
-        if (len(spixels) != 1):
-            raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
-        stokesPixel = spixels[0]
-        trc = _myia.shape()
-        blc = []
-        for i in range(len(trc)):
-            blc.append(0)
-            trc[i] = trc[i] - 1
-        for stokes in (['Q', 'U']):
-            if (stkslist.count(stokes) == 0):
-                raise Exception, filenames[0] + " is the only image specified but it does not contain stokes " + stokes \
-                + " so pola calculation cannot be done"
-            pixNum = stkslist.index(stokes)
-            blc[stokesPixel] = pixNum
-            trc[stokesPixel] = pixNum
-            myfile = tmpFilePrefix + '_' + stokes
-            _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc), wantreturn=False, overwrite=True)
-            if (stokes == 'Q'):
-                Qimage = myfile
-            elif (stokes == 'U'):
-                Uimage = myfile
-        _myia.done()
+        (mystokes, myfiles) = _immath_extract_stokes_from_single_image(
+            stokeslist, filenames[0], 'pola',
+            tmpFilePrefix, True, False
+        )
         # to use pass by reference semantics correctly, we have to use the same objects passed in
         # rather than create new objects with the same names
-        filenames[0:1] = [Qimage, Uimage]
+        filenames[0:1] = [myfiles[0], myfiles[1]]
+        (Qimage, Uimage) = [myfiles[0], myfiles[1]]
         varnames[0:1] = ["IM0", "IM1"]
     else:
         if len(filenames) > 2:
             casalog.post( "More than two images. Take first two and ignore the rest. " ,'WARN' );
         for i in range(2):
-            if type(stkslist[i]) == list:
+            if type(stokeslist[i]) == list:
                 raise Exception, filenames[i] + " is a mult-stokes image but multiple images are given for pola calculation. " \
                 + "Only a single multi-stokes image *or* multiple single stokes images can be specified for pola calculation"
             else:
-                if stkslist[i] == 'U':
+                if stokeslist[i] == 'U':
                     Uimage = varnames[i]
-                if stkslist[i] == 'Q':
+                if stokeslist[i] == 'Q':
                     Qimage = varnames[i]
         if len(Uimage)<1 or len(Qimage)<1:
             missing = []
@@ -561,6 +540,57 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
             raise Exception, 'Missing Stokes %s image(s)' % missing
     expr = 'pa(%s,%s)' % (Uimage, Qimage)
     return expr
+
+def _immath_extract_stokes_from_single_image(
+    stokeslist, image, mode, tmpFilePrefix, createSubims, tpol
+):
+    if (len(stokeslist) < 2):
+        raise Exception, \
+            image + " is the only image specified but it " \
+            + "is not multi-stokes so cannot do poli calculation"
+    _myia = iatool()
+    _myia.open(image)
+    spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
+    if (len(spixels) != 1):
+        _myia.close()
+        raise Exception, \
+        image + "does not have exactly one stokes axis, cannot do " \
+            + mode + " calculation"
+    stokesPixel = spixels[0]
+    trc = _myia.shape()
+    blc = len(trc) * [0]
+    for i in range(len(trc)):
+        trc[i] = trc[i] - 1
+    Vimage = ''
+    neededStokes = ['Q', 'U']
+    if tpol and stokeslist.count('V'):
+        neededStokes.append('V')
+    for stokes in (neededStokes):
+        if ((stokes == 'Q' or stokes == 'U') and stokeslist.count(stokes) == 0):
+            _myia.close()
+            raise Exception, \
+            image + " is the only image specified but it does not contain stokes " \
+            + stokes + " so " + mode + " calculation cannot be done"
+        myfile = tmpFilePrefix + '_' + stokes
+        if (stokes == 'Q'):
+            Qimage = myfile
+        elif (stokes == 'U'):
+            Uimage = myfile
+        elif (stokes == 'V' and tpol):
+            Vimage = myfile
+        if createSubims:
+            pixNum = stokeslist.index(stokes)
+            blc[stokesPixel] = pixNum
+            trc[stokesPixel] = pixNum
+            subim = _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
+            subim.done()
+    _myia.done()
+    filenames = [Qimage, Uimage]
+    mystokes = ['Q', 'U']
+    if bool(Vimage):
+        filenames.append(Vimage)
+        mystokes.append('V')
+    return (mystokes, filenames)
 
 def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
     nfiles = len(filenames)
@@ -617,50 +647,10 @@ def _immath_doltpol(stokeslist, filenames, varnames):
 def _immath_dopoli_single_image(stokeslist, filenames, tpol, createSubims, tmpFilePrefix):
     # FIXME use po.totpolint() for this
     # do multistokes image
-    if (len(stokeslist) < 2):
-        raise Exception, \
-            filenames[0] + " is the only image specified but it " \
-            + "is not multi-stokes so cannot do poli calculation"
-    _myia = iatool()
-    _myia.open(filenames[0])
-    spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
-    if (len(spixels) != 1):
-        _myia.close()
-        raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
-    stokesPixel = spixels[0]
-    trc = _myia.shape()
-    blc = len(trc) * [0]
-    for i in range(len(trc)):
-        trc[i] = trc[i] - 1
-    Vimage = ''
-    neededStokes = ['Q', 'U']
-    if (stokeslist.count('V')):
-        neededStokes.append('V')
-    for stokes in (neededStokes):
-        if ((stokes == 'Q' or stokes == 'U') and stokeslist.count(stokes) == 0):
-            _myia.close()
-            raise Exception, \
-            filenames[0] + " is the only image specified but it does not contain stokes " \
-            + stokes + " so poli calculation cannot be done"
-        myfile = tmpFilePrefix + '_' + stokes
-        if (stokes == 'Q'):
-            Qimage = myfile
-        elif (stokes == 'U'):
-            Uimage = myfile
-        elif (stokes == 'V' and tpol):
-            Vimage = myfile
-        if createSubims:
-            pixNum = stokeslist.index(stokes)
-            blc[stokesPixel] = pixNum
-            trc[stokesPixel] = pixNum
-            subim = _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
-            subim.done()
-    _myia.done()
-    filenames = [Qimage, Uimage]
-    mystokes = ['Q', 'U']
-    if bool(Vimage):
-        filenames.append(Vimage)
-        mystokes.append('V')
+    (mystokes, filenames) = _immath_extract_stokes_from_single_image(
+        stokeslist, filenames[0], 'poli',
+        tmpFilePrefix, createSubims, tpol
+    )
     return _immath_doltpol(mystokes, filenames, filenames)
 
 def _immath_createPolMask(polithresh, lpol, outfile):
