@@ -1282,7 +1282,7 @@ class imsmooth_test(unittest.TestCase):
             gg.done()
             mycl.fromrecord(zz['results'])
             got = mycl.getfluxvalue(0)
-            self.assertTrue(abs(got[0]/expected[0] - 1) < 2e-7, "Failed testing unit " + unit)
+            self.assertTrue(abs(got[0]/expected[0] - 1) < 3e-7, "Failed testing unit " + unit)
         mycl.done()
         myia.done()
         
