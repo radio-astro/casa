@@ -124,6 +124,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         is_initial_mask = (self.image.maskhandler('default')[0] != '')
         temp_maskname = "temporal"
         imshape = self.image.shape()
+        ndim = len(imshape)
         nx = imshape[0]
         ny = imshape[1]
         nchan = imshape[2]
@@ -168,7 +169,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         self.convimage = ia.newimage( self.tmpconvname )
 
         # get dTij (original - smoothed)
-        if len(imshape) == 4:
+        if ndim == 4:
             # with polarization axis
             npol = imshape[3]
             for ichan in range(nchan):
@@ -177,7 +178,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                     pixsmo = self.convimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] )
                     pixsub = pixmsk - pixsmo
                     self.convimage.putchunk( pixsub, [0,0,ichan,ipol] )
-        elif len(imshape) == 3:
+        elif ndim == 3:
             for ichan in range(nchan):
                 # no polarization axis
                 pixmsk = self.image.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
@@ -219,7 +220,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
 
         # subtract fitted image from original map
         imageorg = ia.newimage( self.infiles )
-        if len(imshape) == 4:
+        if ndim == 4:
             # with polarization axis
             npol = imshape[3]
             for ichan in range(nchan):
@@ -228,7 +229,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                     pixpol = polyimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] )
                     pixsub = pixorg - pixpol
                     polyimage.putchunk( pixsub, [0,0,ichan,ipol] )
-        elif len(imshape) == 3:
+        elif ndim == 3:
             # no polarization axis
             for ichan in range(nchan):
                 pixorg = imageorg.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
@@ -323,9 +324,33 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         # initial setup
         outimage = ia.newimagefromimage( infile=self.infiles[0], outfile=self.outfile, overwrite=self.overwrite )
         imshape = outimage.shape()
-        nx = imshape[0]
-        ny = imshape[1]
-        nchan = imshape[2]
+        ndim = len(imshape)
+        coordsys = outimage.coordsys()
+        axis_types = coordsys.axiscoordinatetypes()
+        try:
+            spectral_axis = axis_types.index('Spectral')
+        except:
+            spectral_axis = -1
+        try:
+            stokes_axis = axis_types.index('Stokes')
+        except:
+            stokes_axis = -1
+        # direction axis should always exist
+        try:
+            direction_axis0 = axis_types.index('Direction')
+            direction_axis1 = axis_types[direction_axis0+1:].index('Direction') + direction_axis0 + 1
+        except IndexError:
+            raise RuntimeError('Direction axes don\'t exist.')
+        nx = imshape[direction_axis0]
+        ny = imshape[direction_axis1]
+        if spectral_axis >= 0:
+            nchan = imshape[spectral_axis]
+        else:
+            nchan = 1
+        if stokes_axis >= 0:
+            npol = imshape[stokes_axis]
+        else:
+            npol = 1
         tmp=[]
         nfile = len(self.infiles)
         for i in xrange(nfile):
@@ -367,9 +392,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         if len(self.thresh) == 0:
             casalog.post( 'Use whole region' )
         else:
-            if len(imshape) == 4:
-                # with polarization axis
-                npol = imshape[3]
+            if ndim == 4:
                 for i in range(nfile):
                     self.realimage = ia.newimage( self.tmprealname[i] )
                     for ichan in range(nchan):
@@ -391,8 +414,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                                             pixmsk[ix][iy] = 0.0
                             self.realimage.putchunk( pixmsk, [0,0,ichan,ipol] )
                     self.realimage.close()
-            elif len(imshape) == 3:
-                # no polarization axis
+            elif ndim == 3:
                 for i in range(nfile):
                     self.realimage = ia.newimage( self.tmprealname[i] )
                     for ichan in range(nchan):
@@ -470,7 +492,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                 weights[i,nx-1:nx] = tmp
 
         # FFT
-        if len(imshape) == 4:
+        if ndim == 4:
             # with polarization axis
             npol = imshape[3]
             for i in range(nfile):
@@ -487,7 +509,8 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                         del pixval, pixfft
                 self.realimage.close()
                 self.imagimage.close()
-        elif len(imshape) == 3:
+                
+        elif ndim == 3:
             # no polarization axis
             for i in range(nfile):
                 self.realimage = ia.newimage( self.tmprealname[i] )
@@ -504,8 +527,8 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                 self.imagimage.close()
 
         # weighted mean
-        if len(imshape) == 4:
-            npol = imshape[3]
+        if ndim == 4:
+            #npol = imshape[3]
             for ichan in range(nchan):
                 for ipol in range(npol):
                     pixout = numpy.zeros( shape=(nx,ny), dtype=complex )
@@ -527,14 +550,14 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                     self.imagimage.putchunk( pixout.imag, [0,0,ichan,ipol] )
                     self.realimage.close()
                     self.imagimage.close()
-        elif len(imshape) == 3:
+        elif ndim == 3:
             for ichan in range(nchan):
                 pixout = numpy.zeros( shape=(nx,ny), dtype=complex )
                 denom = numpy.zeros( shape=(nx,ny), dtype=float )
                 for i in range(nfile):
                     self.realimage = ia.newimage( self.tmprealname[i] )
                     self.imagimage = ia.newimage( self.tmpimagname[i] )
-                    pixval = self.realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
+                    pixval = self.realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) + self.imagimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) * 1.0j
                     pixval = pixval.reshape((nx,ny))
                     pixout = pixout + pixval * weights[i]
                     denom = denom + weights[i]
@@ -552,7 +575,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         # inverse FFT
         self.realimage = ia.newimage( self.tmprealname[0] )
         self.imagimage = ia.newimage( self.tmpimagname[0] )
-        if len(imshape) == 4:
+        if ndim == 4:
             npol = imshape[3]
             for ichan in range(nchan):
                 for ipol in range(npol):
@@ -562,7 +585,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                     pixifft = pixifft.reshape((nx,ny,1,1))
                     outimage.putchunk( pixifft.real, [0,0,ichan,ipol] )
                     del pixval, pixifft
-        elif len(imshape) == 3:
+        elif ndim == 3:
             for ichan in range(nchan):
                 pixval = self.realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) + self.imagimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) * 1.0j
                 pixval = pixval.reshape((nx,ny))
