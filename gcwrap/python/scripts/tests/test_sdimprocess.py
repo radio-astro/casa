@@ -47,6 +47,22 @@ class sdimprocess_unittest_base:
         self.assertEqual(isthere,True,
                          msg='output file %s was not created because of the task failure'%(name))
 
+    def _check_shape(self, infile, outfile):
+        self._checkfile(infile)
+        self._checkfile(outfile)
+        ia.open(infile)
+        inshape = ia.shape()
+        inaxistypes = ia.coordsys().axiscoordinatetypes()
+        ia.close()
+        ia.open(outfile)
+        outshape = ia.shape()
+        outaxistypes = ia.coordsys().axiscoordinatetypes()
+        ia.close()
+        
+        self.assertEqual(len(inshape), len(outshape))
+        self.assertTrue(numpy.all(inshape == outshape))
+        self.assertEqual(inaxistypes, outaxistypes)
+
     def _flux(self, csys, ref):
         # see CAS-5779, images/Images/ImageStatistics.tcc
         axis_ra = csys.findaxis('ra')['axisincoordinate']
@@ -206,6 +222,7 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
     """
     # Input and output names
     rawfile='scan_x.im'
+    rawfile3d = rawfile.replace('.im', '_3d.im')
     prefix=sdimprocess_unittest_base.taskname+'Test1'
     outfile=prefix+'.im'
     mode='press'
@@ -221,6 +238,8 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.rawfile3d)):
+            shutil.rmtree(self.rawfile3d)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test100(self):
@@ -247,6 +266,7 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 155.73097211]),
                   'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+        self._check_shape(self.rawfile, self.outfile)
         self._checkstats(self.outfile,refstats)
 
     def test101(self):
@@ -273,6 +293,7 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 199.21705095]),
                   'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+        self._check_shape(self.rawfile, self.outfile)
         self._checkstats(self.outfile,refstats)
 
     def test102(self):
@@ -319,6 +340,7 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
                     'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
                     'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
 
+        self._check_shape(self.rawfile, self.outfile)
         self._checkstats(self.outfile,refstats)
         ia.open(self.outfile)
         mask_out = ia.getchunk(getmask=True)
@@ -327,13 +349,9 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
         
     def test100_3d(self):
         """Test 100_3d: Pressed method using whole pixels for 3D image"""
-        rawfile3d = self.rawfile.replace('.im', '_3d.im')
-        drop_stokes_axis(self.rawfile, rawfile3d)
-        self.assertTrue(os.path.exists(rawfile3d))
-        try:
-            res=sdimprocess(infiles=rawfile3d,mode=self.mode,numpoly=0,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
-        finally:
-            shutil.rmtree(rawfile3d)
+        drop_stokes_axis(self.rawfile, self.rawfile3d)
+        self.assertTrue(os.path.exists(self.rawfile3d))
+        res=sdimprocess(infiles=self.rawfile3d,mode=self.mode,numpoly=0,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         refstats={'blc': numpy.array([0, 0, 0], dtype=numpy.int32),
@@ -355,6 +373,7 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 155.73097211]),
                   'trc': numpy.array([127, 127,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, 1.415e+09Hz'}
+        self._check_shape(self.rawfile3d, self.outfile)
         self._checkstats(self.outfile,refstats)
 
 ###
@@ -378,6 +397,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
     """
     # Input and output names
     rawfiles=['scan_x.im','scan_y.im']
+    rawfiles3d = map(lambda x: x.replace('.im', '_3d.im'), rawfiles)
     prefix=sdimprocess_unittest_base.taskname+'Test2'
     outfile=prefix+'.im'
     mode='basket'
@@ -393,6 +413,9 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
 
     def tearDown(self):
         for name in self.rawfiles:
+            if (os.path.exists(name)):
+                shutil.rmtree(name)
+        for name in self.rawfiles3d:
             if (os.path.exists(name)):
                 shutil.rmtree(name)
         os.system( 'rm -rf '+self.prefix+'*' )
@@ -419,6 +442,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 206.87355986]),
                   'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+        self._check_shape(self.rawfiles[0], self.outfile)
         self._checkstats(self.outfile,refstats)
 
     def test201(self):
@@ -443,6 +467,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 208.68146098]),
                   'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+        self._check_shape(self.rawfiles[0], self.outfile)
         self._checkstats(self.outfile,refstats)
 
     def test202(self):
@@ -499,6 +524,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
 
         #print imstat(self.outfile)
+        self._check_shape(self.rawfiles[0], self.outfile)
         self._checkstats(self.outfile,refstats)
         ia.open(self.outfile)
         mask_out = ia.getchunk(getmask=True)
@@ -528,19 +554,15 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 206.87355986]),
                   'trc': numpy.array([127, 127,   0,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, I, 1.415e+09Hz'}
+        self._check_shape(self.rawfiles[0], self.outfile)
         self._checkstats(self.outfile,refstats)
         
     def test200_3d(self):
         """Test 200_3d: FFT based Basket-Weaving using whole pixels for 3D image"""
-        rawfiles_3d = map(lambda x: x.replace('.im', '_3d.im'), self.rawfiles)
-        for infile, outfile in zip(self.rawfiles, rawfiles_3d):
+        for infile, outfile in zip(self.rawfiles, self.rawfiles3d):
             drop_stokes_axis(infile, outfile)
             self.assertTrue(os.path.exists(outfile))
-        try:
-            res=sdimprocess(infiles=rawfiles_3d,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
-        finally:
-            for rawfile in rawfiles_3d:
-                shutil.rmtree(rawfile)
+        res=sdimprocess(infiles=self.rawfiles3d,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, 1.415e+09Hz',
                   'max': numpy.array([ 0.92714936]),
@@ -560,6 +582,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 206.87355986]),
                   'trc': numpy.array([127, 127,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, 1.415e+09Hz'}
+        self._check_shape(self.rawfiles3d[0], self.outfile)
         self._checkstats(self.outfile,refstats)
 
 

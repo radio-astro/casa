@@ -8,6 +8,28 @@ from taskinit import casalog, gentools, utilstool, qatool
 
 import sdutil
 
+def create_4d_image(infile, outfile):
+    (ia,) = gentools(['ia'])
+    ia.open(infile)
+    image_shape = ia.shape()
+    try:
+        if len(image_shape) < 4:
+            # add degenerate axes
+            axistypes = ia.coordsys().axiscoordinatetypes()
+            no_stokes = 'Stokes' not in axistypes
+            no_spectral = 'Spectral' not in axistypes
+            stokes_axis = 'I' if no_stokes else ''
+            outimage = ia.adddegaxes(outfile=outfile, spectral=no_spectral,
+                                           stokes=stokes_axis)
+        else:
+            # generage complete copy of input image using subimage
+            outimage = ia.subimage(outfile=outfile)
+    finally:
+        ia.close()
+        
+    return outimage
+
+
 @sdutil.sdtask_decorator
 def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklist, tmax, tmin, outfile, overwrite):
     with sdutil.sdtask_manager(sdimprocess_worker, locals()) as worker:
@@ -323,38 +345,22 @@ class sdimprocess_worker(sdutil.sdtask_interface):
 
         # initial setup
         outimage = ia.newimagefromimage( infile=self.infiles[0], outfile=self.outfile, overwrite=self.overwrite )
-        imshape = outimage.shape()
-        ndim = len(imshape)
+        imshape_out = outimage.shape()
+        ndim_out = len(imshape_out)
         coordsys = outimage.coordsys()
         axis_types = coordsys.axiscoordinatetypes()
-        try:
-            spectral_axis = axis_types.index('Spectral')
-        except:
-            spectral_axis = -1
-        try:
-            stokes_axis = axis_types.index('Stokes')
-        except:
-            stokes_axis = -1
         # direction axis should always exist
         try:
             direction_axis0 = axis_types.index('Direction')
             direction_axis1 = axis_types[direction_axis0+1:].index('Direction') + direction_axis0 + 1
         except IndexError:
             raise RuntimeError('Direction axes don\'t exist.')
-        nx = imshape[direction_axis0]
-        ny = imshape[direction_axis1]
-        if spectral_axis >= 0:
-            nchan = imshape[spectral_axis]
-        else:
-            nchan = 1
-        if stokes_axis >= 0:
-            npol = imshape[stokes_axis]
-        else:
-            npol = 1
+        nx = imshape_out[direction_axis0]
+        ny = imshape_out[direction_axis1]
         tmp=[]
         nfile = len(self.infiles)
         for i in xrange(nfile):
-            tmp.append(numpy.zeros(imshape,dtype=float))
+            tmp.append(numpy.zeros(imshape_out,dtype=float))
         maskedpixel=numpy.array(tmp)
         del tmp
 
@@ -380,61 +386,47 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         
         # mask
         for i in range(nfile):
-            self.realimage = ia.newimagefromimage( infile=self.infiles[i], outfile=self.tmprealname[i] )
-            self.imagimage = ia.newimagefromimage( infile=self.infiles[i], outfile=self.tmpimagname[i] )
+            self.realimage = create_4d_image(self.infiles[i], self.tmprealname[i])
+            self.imagimage = self.realimage.subimage(outfile=self.tmpimagname[i])
+            
             # replace masked pixels with 0.0
             if not self.realimage.getchunk(getmask=True).all():
                 casalog.post("Replacing masked pixels with 0.0 in %d-th image" % (i))
                 self.realimage.replacemaskedpixels(0.0)
             self.realimage.close()
             self.imagimage.close()
+          
+        # Below working images are all 4D regardless of dimension of input images  
+        # image shape for temporary images (always 4D)
+        ia.open(self.tmprealname[0])
+        imshape = ia.shape()
+        ndim = len(imshape)
+        ia.close()
 
         if len(self.thresh) == 0:
             casalog.post( 'Use whole region' )
         else:
-            if ndim == 4:
-                for i in range(nfile):
-                    self.realimage = ia.newimage( self.tmprealname[i] )
-                    for ichan in range(nchan):
-                        for ipol in range(npol):
-                            pixmsk = self.realimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol])
-                            for ix in range(pixmsk.shape[0]):
-                                for iy in range(pixmsk.shape[1]):
-                                    if self.thresh[0] == self.nolimit:
-                                        if pixmsk[ix][iy] > self.thresh[1]:
-                                            maskedpixel[i][ix][iy][ichan][ipol]=pixmsk[ix][iy]
-                                            pixmsk[ix][iy] = 0.0
-                                    elif self.thresh[1] == self.nolimit:
-                                        if pixmsk[ix][iy] < self.thresh[0]:
-                                            maskedpixel[i][ix][iy][ichan][ipol]=pixmsk[ix][iy]
-                                            pixmsk[ix][iy] = 0.0
-                                    else:
-                                        if pixmsk[ix][iy] < self.thresh[0] or pixmsk[ix][iy] > self.thresh[1]:
-                                            maskedpixel[i][ix][iy][ichan][ipol]=pixmsk[ix][iy]
-                                            pixmsk[ix][iy] = 0.0
-                            self.realimage.putchunk( pixmsk, [0,0,ichan,ipol] )
-                    self.realimage.close()
-            elif ndim == 3:
-                for i in range(nfile):
-                    self.realimage = ia.newimage( self.tmprealname[i] )
-                    for ichan in range(nchan):
-                        pixmsk = self.realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
+            for i in range(nfile):
+                self.realimage = ia.newimage( self.tmprealname[i] )
+                for iaxis2 in range(imshape[2]):
+                    for iaxis3 in range(imshape[3]):
+                        pixmsk = self.realimage.getchunk( [0,0,iaxis2,iaxis3], [nx-1,ny-1,iaxis2,iaxis3])
                         for ix in range(pixmsk.shape[0]):
                             for iy in range(pixmsk.shape[1]):
                                 if self.thresh[0] == self.nolimit:
                                     if pixmsk[ix][iy] > self.thresh[1]:
-                                        maskedpixel[i][ix][iy][ichan]=pixmsk[ix][iy]
+                                        maskedpixel[i][ix][iy][iaxis2][iaxis3]=pixmsk[ix][iy]
                                         pixmsk[ix][iy] = 0.0
                                 elif self.thresh[1] == self.nolimit:
                                     if pixmsk[ix][iy] < self.thresh[0]:
-                                        maskedpixel[i][ix][iy][ichan]=pixmsk[ix][iy]
+                                        maskedpixel[i][ix][iy][iaxis2][iaxis3]=pixmsk[ix][iy]
                                         pixmsk[ix][iy] = 0.0
                                 else:
                                     if pixmsk[ix][iy] < self.thresh[0] or pixmsk[ix][iy] > self.thresh[1]:
-                                        maskedpixel[i][ix][iy][ichan]=pixmsk[ix][iy]
+                                        maskedpixel[i][ix][iy][iaxis2][iaxis3]=pixmsk[ix][iy]
                                         pixmsk[ix][iy] = 0.0
-                        self.realimage.putchunk( pixmsk, [0,0,ichan] )
-                    self.realimage.close()
+                        self.realimage.putchunk( pixmsk, [0,0,iaxis2,iaxis3] )
+                self.realimage.close()
         maskedvalue=None
         if any(maskedpixel.flatten()!=0.0):
                 maskedvalue=maskedpixel.mean(axis=0)
@@ -492,109 +484,63 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                 weights[i,nx-1:nx] = tmp
 
         # FFT
-        if ndim == 4:
-            # with polarization axis
-            npol = imshape[3]
-            for i in range(nfile):
-                self.realimage = ia.newimage( self.tmprealname[i] )
-                self.imagimage = ia.newimage( self.tmpimagname[i] )
-                for ichan in range(nchan):
-                    for ipol in range(npol):
-                        pixval = self.realimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] )
-                        pixval = pixval.reshape((nx,ny))
-                        pixfft = npfft.fft2( pixval )
-                        pixfft = pixfft.reshape((nx,ny,1,1))
-                        self.realimage.putchunk( pixfft.real, [0,0,ichan,ipol] )
-                        self.imagimage.putchunk( pixfft.imag, [0,0,ichan,ipol] )
-                        del pixval, pixfft
-                self.realimage.close()
-                self.imagimage.close()
-                
-        elif ndim == 3:
-            # no polarization axis
-            for i in range(nfile):
-                self.realimage = ia.newimage( self.tmprealname[i] )
-                self.imagimage = ia.newimage( self.tmpimagname[i] )
-                for ichan in range(nchan):
-                    pixval = self.realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
+        for i in range(nfile):
+            self.realimage = ia.newimage( self.tmprealname[i] )
+            self.imagimage = ia.newimage( self.tmpimagname[i] )
+            for iaxis2 in range(imshape[2]):
+                for iaxis3 in range(imshape[3]):
+                    pixval = self.realimage.getchunk( [0,0,iaxis2,iaxis3], [nx-1,ny-1,iaxis2,iaxis3] )
                     pixval = pixval.reshape((nx,ny))
                     pixfft = npfft.fft2( pixval )
-                    pixfft = pixfft.reshape((nx,ny,1))
-                    self.realimage.putchunk( pixfft.real, [0,0,ichan] )
-                    self.imagimage.putchunk( pixfft.imag, [0,0,ichan] )
+                    pixfft = pixfft.reshape((nx,ny,1,1))
+                    self.realimage.putchunk( pixfft.real, [0,0,iaxis2,iaxis3] )
+                    self.imagimage.putchunk( pixfft.imag, [0,0,iaxis2,iaxis3] )
                     del pixval, pixfft
-                self.realimage.close()
-                self.imagimage.close()
+            self.realimage.close()
+            self.imagimage.close()
 
         # weighted mean
-        if ndim == 4:
-            #npol = imshape[3]
-            for ichan in range(nchan):
-                for ipol in range(npol):
-                    pixout = numpy.zeros( shape=(nx,ny), dtype=complex )
-                    denom = numpy.zeros( shape=(nx,ny), dtype=float )
-                    for i in range(nfile):
-                        self.realimage = ia.newimage( self.tmprealname[i] )
-                        self.imagimage = ia.newimage( self.tmpimagname[i] )
-                        pixval = self.realimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] ) + self.imagimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] ) * 1.0j
-                        pixval = pixval.reshape((nx,ny))
-                        pixout = pixout + pixval * weights[i]
-                        denom = denom + weights[i]
-                        self.realimage.close()
-                        self.imagimage.close()
-                    pixout = pixout / denom
-                    pixout = pixout.reshape((nx,ny,1,1))
-                    self.realimage = ia.newimage( self.tmprealname[0] )
-                    self.imagimage = ia.newimage( self.tmpimagname[0] )
-                    self.realimage.putchunk( pixout.real, [0,0,ichan,ipol] )
-                    self.imagimage.putchunk( pixout.imag, [0,0,ichan,ipol] )
-                    self.realimage.close()
-                    self.imagimage.close()
-        elif ndim == 3:
-            for ichan in range(nchan):
+        for ichan in range(imshape[2]):
+            for iaxis3 in range(imshape[3]):
                 pixout = numpy.zeros( shape=(nx,ny), dtype=complex )
                 denom = numpy.zeros( shape=(nx,ny), dtype=float )
                 for i in range(nfile):
                     self.realimage = ia.newimage( self.tmprealname[i] )
                     self.imagimage = ia.newimage( self.tmpimagname[i] )
-                    pixval = self.realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) + self.imagimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) * 1.0j
+                    pixval = self.realimage.getchunk( [0,0,ichan,iaxis3], [nx-1,ny-1,ichan,iaxis3] ) \
+                        + self.imagimage.getchunk( [0,0,ichan,iaxis3], [nx-1,ny-1,ichan,iaxis3] ) * 1.0j
                     pixval = pixval.reshape((nx,ny))
                     pixout = pixout + pixval * weights[i]
                     denom = denom + weights[i]
                     self.realimage.close()
                     self.imagimage.close()
                 pixout = pixout / denom
-                pixout = pixout.reshape((nx,ny,1))
+                pixout = pixout.reshape((nx,ny,1,1))
                 self.realimage = ia.newimage( self.tmprealname[0] )
                 self.imagimage = ia.newimage( self.tmpimagname[0] )
-                self.realimage.putchunk( pixout.real, [0,0,ichan] )
-                self.imagimage.putchunk( pixout.imag, [0,0,ichan] )
+                self.realimage.putchunk( pixout.real, [0,0,ichan,iaxis3] )
+                self.imagimage.putchunk( pixout.imag, [0,0,ichan,iaxis3] )
                 self.realimage.close()
                 self.imagimage.close()
 
         # inverse FFT
         self.realimage = ia.newimage( self.tmprealname[0] )
         self.imagimage = ia.newimage( self.tmpimagname[0] )
-        if ndim == 4:
-            npol = imshape[3]
-            for ichan in range(nchan):
-                for ipol in range(npol):
-                    pixval = self.realimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] ) + self.imagimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] ) * 1.0j
-                    pixval = pixval.reshape((nx,ny))
-                    pixifft = npfft.ifft2( pixval )
-                    pixifft = pixifft.reshape((nx,ny,1,1))
-                    outimage.putchunk( pixifft.real, [0,0,ichan,ipol] )
-                    del pixval, pixifft
-        elif ndim == 3:
-            for ichan in range(nchan):
-                pixval = self.realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) + self.imagimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) * 1.0j
+        for ichan in range(imshape[2]):
+            for iaxis3 in range(imshape[3]):
+                pixval = self.realimage.getchunk( [0,0,ichan,iaxis3], [nx-1,ny-1,ichan,iaxis3] ) \
+                    + self.imagimage.getchunk( [0,0,ichan,iaxis3], [nx-1,ny-1,ichan,iaxis3] ) * 1.0j
                 pixval = pixval.reshape((nx,ny))
                 pixifft = npfft.ifft2( pixval )
-                pixifft = pixifft.reshape((nx,ny,1))
-                outimage.putchunk( pixifft.real, [0,0,ichan] )
+                pixifft = pixifft.reshape((nx,ny,1,1))
+                self.realimage.putchunk(pixifft.real, blc=[0,0,ichan,iaxis3])
                 del pixval, pixifft
         if maskedvalue is not None:
-            outimage.putchunk(outimage.getchunk()+maskedvalue)
+            self.realimage.putchunk(self.realimage.getchunk()+maskedvalue)
+            
+        # put result into outimage
+        chunk = self.realimage.getchunk()
+        outimage.putchunk(chunk.reshape(imshape_out))
         # handling of output image mask
         maskstr = ""
         for name in self.infiles:
