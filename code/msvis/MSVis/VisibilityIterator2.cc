@@ -397,6 +397,37 @@ VisibilityIterator2::writeWeightSpectrum (const Cube<Float>& wtsp)
     CheckImplementationPointerW ();
     impl_p->writeWeightSpectrum (wtsp);
 }
+
+void
+VisibilityIterator2::writeVisModel (const Cube<Complex>& modelCube)
+{
+    CheckImplementationPointerW ();
+    impl_p->writeVisModel (modelCube);
+}
+
+void
+VisibilityIterator2::writeVisCorrected (const Cube<Complex>& CorrectedCube)
+{
+    CheckImplementationPointerW ();
+    impl_p->writeVisCorrected (CorrectedCube);
+}
+
+void
+VisibilityIterator2::writeModel(const RecordInterface& record,
+                                bool isComponentList,
+                                bool addToExistingModel)
+{
+    CheckImplementationPointerW ();
+    impl_p->writeModel (record, isComponentList, addToExistingModel);
+}
+
+void
+VisibilityIterator2::writeVisObserved (const Cube<Complex>& ObservedCube)
+{
+    CheckImplementationPointerW ();
+    impl_p->writeVisObserved (ObservedCube);
+}
+
 //
 void
 VisibilityIterator2::initWeightSpectrum (const Cube<Float>& wtsp)

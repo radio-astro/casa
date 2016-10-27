@@ -740,16 +740,17 @@ public:
 
   //void writeSigmaMat(const casacore::Matrix<casacore::Float>& sigmat);
 
-  // This puts a model into the descriptor of the current ms in the iterator
-  // Set iscomponentlist to true if the record represent a componentlist
-  // if false then it is a FTMachine casacore::Record that holds the model image
-  // note the spw and fields selected are going to be associated with this model
-  // incremetal =true implies add the model to previous any existant model
-  // in the ms for the spw and fields
-  // false means any existant model will be replaces.
+  // This puts a model into the descriptor of the current ms in the iterator.
+  // Set isComponentList to true if the record represents a componentList;
+  // if false then it is a FTMachine Record that holds the model image.
+  // Note that the spw and fields selected are going to be associated with this model.
+  // Setting addToExistingModel to true adds the model to the previous existent model
+  // in the ms for the spw and fields; setting it to false means any existing
+  // model will be replaced.
 
-  void writeModel(const casacore::RecordInterface& rec, casacore::Bool iscomponentlist=true,
-                  casacore::Bool incremental=false);
+  void writeModel(const casacore::RecordInterface & record,
+                  casacore::Bool isComponentList = true,
+                  casacore::Bool addToExistingModel = false);
 
   // Requests that the modified VisBuffer2 be written back to the visibility
   // at the same spot that it came from.  The dirtyComponents feature of
