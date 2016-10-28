@@ -126,18 +126,23 @@ $(document).ready(function() {
 	<caption>Phased-up Fluxscale Results</caption>
     <thead>
 	    <tr>
-	        <th scope="col" rowspan="2">Measurement Set</th>
-	        <th scope="col" rowspan="2">Field</th>
-	        <th scope="col" rowspan="2">SpW</th>
-	        <th scope="col" colspan="4">Flux Density</th>
-	        <th scope="col" rowspan="2">Spix</th>
+	        <th scope="col" rowspan="3">Measurement Set</th>
+	        <th scope="col" rowspan="3">Field</th>
+	        <th scope="col" rowspan="3">Spw</th>
+	        <th scope="col" rowspan="3">Frequency Bandwidth (TOPO)</th>
+	        <th scope="col" colspan="4">Derived Flux Density</th>
+	        <th scope="col" rowspan="3">Flux Ratio (Derived / Catalog)</th>
+	        <th scope="col" rowspan="3">Spix</th>
 		</tr>
+		<tr>
+	        <th scope="col" colspan="4">Catalog Flux Density</th>
+	        </tr>
 		<tr>
 	        <th scope="col">I</th>
 	        <th scope="col">Q</th>
 	        <th scope="col">U</th>
 	        <th scope="col">V</th>
-	    </tr>
+	        </tr>
 	</thead>
 	<tbody>
 	% for tr in table_rows:
