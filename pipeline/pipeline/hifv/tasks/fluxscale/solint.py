@@ -81,7 +81,9 @@ class Solint(basetask.StandardTaskTemplate):
         
         RefAntOutput=refantobj.calculate()
         
-        refAnt=str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
+        #refAnt=str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
+
+        refAnt = ','.join([str(i) for i in RefAntOutput[0:4]])
 
         bpdgain_touse = tablebase + table_suffix[0]
         testgains_result = self._do_gtype_testgains(calMs, 'testgaincal.g', solint=solint,

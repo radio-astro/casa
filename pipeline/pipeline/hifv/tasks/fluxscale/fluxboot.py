@@ -73,16 +73,18 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
     def prepare(self):
 
+        calMs = 'calibrators.ms'
+        context = self.inputs.context
+
         if (self.inputs.caltable == None):
             # FLUXGAIN stage
-            calMs = 'calibrators.ms'
+
             caltable = 'fluxgaincal.g'
 
             LOG.info("Setting models for standard primary calibrators")
 
             standard_source_names, standard_source_fields = standard_sources(calMs)
 
-            context = self.inputs.context
             m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
             field_spws = m.get_vla_field_spws()
             new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
@@ -98,7 +100,6 @@ class Fluxboot(basetask.StandardTaskTemplate):
                 reference_frequencies = table.getcol('REF_FREQUENCY')
 
             center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
-
 
             for i, fields in enumerate(standard_source_fields):
                 for myfield in fields:
@@ -150,7 +151,9 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
             RefAntOutput = refantobj.calculate()
 
-            refAnt = str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
+            #refAnt = str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
+
+            refAnt = ','.join([str(i) for i in RefAntOutput[0:4]])
 
             LOG.info("The pipeline will use antenna(s) "+refAnt+" as the reference")
 
@@ -167,8 +170,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
         # ---------------------------------------------------------------------
         # Fluxboot stage
-        calMs = 'calibrators.ms'
-        context = self.inputs.context
+
         LOG.info("Doing flux density bootstrapping using caltable " + caltable)
         # LOG.info("Flux densities will be written to " + fluxscale_output)
         try:
