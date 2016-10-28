@@ -83,7 +83,9 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         RefAntOutput=refantobj.calculate()
         
-        refAnt=str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
+        #refAnt=str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
+
+        refAnt = ','.join([str(i) for i in RefAntOutput[0:4]])
 
         LOG.info("The pipeline will use antenna(s) "+refAnt+" as the reference")
 
