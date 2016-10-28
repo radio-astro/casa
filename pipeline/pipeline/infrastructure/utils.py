@@ -10,6 +10,7 @@ import itertools
 import math
 import operator
 import os
+import xml.dom.minidom as minidom
 
 try:
     import cPickle as pickle
@@ -1193,4 +1194,42 @@ def approx_equal(x, y, numdigits=7):
         np.testing.assert_approx_equal(x, y, numdigits)
         return True
     except:
+        return False
+
+
+def check_ppr(pprfile):
+    """Check PPR to make sure all tasks exist in the CASA task dictionary.
+
+    Compares the <Command> elements of the PPR to the keys of
+    the CASA task dictionary.  This is useful as a quick sanity check
+    before executing the pipeline.
+
+    Args:
+        pprfile: A path to the PPR file (string).
+                 e.g. 'PPR_VLAT003.xml' or 'mydata/working/PPR_VLAT003.xml'
+
+    Returns:
+        False on error.
+        True  on success.
+    """
+
+    import pipeline.infrastructure.casataskdict as casataskdict
+
+    casatasks = set(casataskdict.CasaTaskDict.keys())
+    try:
+        doc = minidom.parse(pprfile)
+    except (IOError, Exception):
+        LOG.info('Please provide a valid xml PPR file as input and try again.')
+        return False
+
+    tasks_in_ppr = set([str(x.firstChild.data) for x in doc.getElementsByTagName('Command')])
+
+    undefined_tasks = (tasks_in_ppr - casatasks)
+    for suspect_task in undefined_tasks:
+        LOG.info("{} is not a recognized CASA task.  Check your PPR and try again.".format(suspect_task))
+
+    if not undefined_tasks:
+        LOG.info("Passed.  All tasks exist in the CASA task dictionary.")
+        return True
+    else:
         return False
