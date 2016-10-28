@@ -201,6 +201,7 @@
 #include <synthesis/TransformMachines/NoOpATerm.h>
 
 #include <synthesis/Utilities/PointingDirectionCalculator.h>
+#include <synthesis/Utilities/SingleDishBeamUtil.h>
 
 using namespace std;
 
@@ -4812,6 +4813,31 @@ Bool Imager::getMapExtent(const MeasurementSet &ms, const String &referenceFrame
     }
 
     return true;
+}
+
+Bool Imager::pointingSampling(const String &referenceFrame,
+			      const String &movingSource,
+			      const String &pointingColumn,
+			      const String &antenna,
+			      Quantum<Vector<Double>> &sampling,
+			      Quantity &positionAngle) {
+  try {
+    SingleDishBeamUtil sdBeamU(*mssel_p, referenceFrame, movingSource,
+			       pointingColumn, antenna);
+    sdBeamU.getPointingSamplingRaster(sampling, positionAngle);
+  }
+  catch (AipsError &e) {
+    LogIO os(LogOrigin("Imager", "pointingSampling", WHERE));
+    os << LogIO::SEVERE << "Failed due to the rror \"" << e.getMesg() << "\"" << LogIO::POST;
+    return false;
+  }
+  catch (...) {
+    LogIO os(LogOrigin("Imager", "pointingSampling", WHERE));
+    os << LogIO::SEVERE << "Failed due to unknown error" << LogIO::POST;
+    throw;
+    return false;
+  }
+  return true;
 }
 
 } //# NAMESPACE CASA - END

@@ -649,6 +649,21 @@ class Imager
           const casacore::String &pointingColumn, casacore::Vector<casacore::Double> &center, casacore::Vector<casacore::Double> &blc,
           casacore::Vector<casacore::Double> &trc, casacore::Vector<casacore::Double> &extent);
 
+  // Caluculate sampling interval of Raster map
+  //
+  //
+  // @param[in] referenceFrame reference direction frame
+  // @param[in] movingSource name of moving source
+  // @param[in] pointingColumn pointing column to use
+  // @param[in] antenna antenna selection string, e.g., '0&&&'
+  // @param[out] sampling the sampling interval in scan direction and orthogonal direction
+  // @param[out] positionAngle position angle of scan
+  //
+  // @return
+  virtual casacore::Bool pointingSampling(const casacore::String &referenceFrame, const casacore::String &movingSource,
+          const casacore::String &pointingColumn, const casacore::String &antenna,
+	  casacore::Quantum<casacore::Vector<casacore::Double>> &sampling, casacore::Quantity &positionAngle);
+
   //Helper function to transfer history table to a logger holder
   //which can be stored in images
   static void transferHistory(casacore::LoggerHolder& imageLog, casacore::ROMSHistoryColumns& msHis);
