@@ -4551,6 +4551,53 @@ TODO: example must be filled.
 </comments>
 </method>
 
+<method type="function" name="pointingsampling">
+   <shortdescription>Calculate Sampling interval of an MS</shortdescription>
+<description>
+Calculate sampling interval of an MS.
+</description>
+<input>
+     <param type="string" name="pattern">
+     <description>scan pattern (NOTE: only raster is supported so far)</description>
+     <value>raster</value>
+     </param>
+
+     <param type="string" name="ref">
+     <description>direction reference</description>
+     <value>J2000</value>
+     </param>
+
+     <param type="string" name="movingsource">
+     <description>moving source name</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="pointingcolumntouse">
+     <description>POINTING table column to be used for computation</description>
+     <value>DIRECTION</value>
+     </param>
+
+     <param type="string" name="antenna">
+     <description>Additional antenna selection</description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="record"/>
+<example>
+im.open(msname)
+im.selectvis(spw='17', field='M100', intent='OBSERVE_TARGET#ON_SOURCE')
+im.pointingsampling(pattern='raster', ref='J2000', antenna='PM03\&amp;\&amp;\&amp;')
+# returns a dictionary of sampling and angle, e.g.,
+# {'angle': {'unit': 'rad', 'value': -0.00014148390015604565},
+# 'sampling': {'unit': 'rad',
+#              'value': array([  1.23216297e-05,   0.00000000e+00])}}
+im.close()
+</example>
+<comments>
+</comments>
+</method>
+
 </tool>
 
 </casaxml>

@@ -1436,6 +1436,7 @@ def get_spwchs(selection, infile):
     return ','.join(l)
 
 
+##### OBSOLETE METHOD #####
 def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
                            intent='ON_SOURCE', scan='',#timerange='',
                            outref=''):

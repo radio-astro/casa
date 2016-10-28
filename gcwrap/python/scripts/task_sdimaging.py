@@ -539,28 +539,52 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         ref_ms_spw = self.get_selection_param_for_ms(ref_ms_idx,self.spw)
         ref_ms_field = self.get_selection_param_for_ms(ref_ms_idx,self.field)
         ref_ms_scan = self.get_selection_param_for_ms(ref_ms_idx,self.scanno)
-        xSampling, ySampling, angle = sdutil.get_ms_sampling_arcsec(ref_ms_name, spw=ref_ms_spw,
-                                                                    antenna=selection_ids['baseline'],
-                                                                    field=ref_ms_field,
-                                                                    scan=ref_ms_scan,#timerange='',
-                                                                    outref=outref)
+        # xSampling, ySampling, angle = sdutil.get_ms_sampling_arcsec(ref_ms_name, spw=ref_ms_spw,
+        #                                                             antenna=selection_ids['baseline'],
+        #                                                             field=ref_ms_field,
+        #                                                             scan=ref_ms_scan,#timerange='',
+        #                                                             outref=outref)
+
+        # obtain sampling interval for beam calculation.
+        self.open_imager(ref_ms_name)
+        ok = self.imager.selectvis(field=ref_ms_field,
+                                   #spw=selection_ids['spw'],
+                                   spw=ref_ms_spw,
+                                   nchan=-1, start=0, step=1,
+                                   baseline=selection_ids['baseline'],
+                                   scan=ref_ms_scan,
+                                   intent=selection_ids['intent'])
+        if len(ant_idx) > 1:
+            casalog.post("Using only antenna %s to calculate sampling interval" % ant_name[0])
+        ptg_samp = self.imager.pointingsampling(pattern='raster', ref=outref,
+                                                movingsource=self.ephemsrcname,
+                                                pointingcolumntouse=self.pointingcolumn,
+                                                antenna=('%s&&&' % ant_name[0]))
+        self.close_imager()
+        my_qa = qatool()
+        xSampling, ySampling = my_qa.getvalue(my_qa.convert(ptg_samp['sampling'], 'arcsec'))
+        angle = my_qa.getvalue(my_qa.convert(ptg_samp['angle'], "deg"))[0]
+
         casalog.post("Detected raster sampling = [%f, %f] arcsec" %
                      (xSampling, ySampling))
         # handling of failed sampling detection
         valid_sampling = True
         sampling = [xSampling, ySampling]
-        if abs(xSampling) < 1.0e-3 or numpy.isnan(xSampling):
+        if abs(xSampling) < 2.2e-3 or not numpy.isfinite(xSampling):
             casalog.post("Invalid sampling=%s arcsec. Using the value of orthogonal direction=%s arcsec" % (xSampling, ySampling), priority="WARN")
             sampling = [ ySampling ]
+            angle = 0.0
             valid_sampling = False
-        if abs(ySampling) < 1.0e-3 or numpy.isnan(ySampling):
+        if abs(ySampling) < 1.0e-3 or not numpy.isfinite(ySampling):
             if valid_sampling:
                 casalog.post("Invalid sampling=%s arcsec. Using the value of orthogonal direction=%s arcsec" % (ySampling, xSampling), priority="WARN")
                 sampling = [ xSampling ]
+                angle = 0.0
                 valid_sampling = True
         # reduce sampling and cell if it's possible
-        if len(sampling)>1 and sampling[0]==sampling[1]:
+        if len(sampling)>1 and abs(sampling[0]-sampling[1]) <= 0.01*abs(sampling[0]):
             sampling = [sampling[0]]
+            angle = 0.0
             if cell[0]==cell[1]: cell = [cell[0]]
         if valid_sampling:
             # actual calculation of beam size

@@ -2021,4 +2021,43 @@ casac::record *imager::mapextent(const std::string &ref, const std::string &movi
     return returnValue;
 }
 
+casac::record *imager::pointingsampling(const std::string &pattern, const std::string &ref, const std::string &movingsource,
+				 const std::string &pointingcolumntouse, const std::string &antenna)
+{
+    casac::record *returnValue;
+    Record r;
+    if(hasValidMS_p){
+      try {
+	if (pattern != "raster") {
+	  throw(AipsError("Only raster pattern is supported."));
+	}
+        String directionRef(ref);
+        String movingSource(movingsource);
+        String columnName(pointingcolumntouse);
+        String antSel(antenna);
+	Quantum<Vector<Double>> sampling;
+	casacore::Quantity positionAngle(0.0, "rad");
+	Bool rstat = itsImager->pointingSampling(directionRef, movingSource, columnName, antSel,
+					    sampling, positionAngle);
+	if (!rstat) {
+	  throw(AipsError("Failed to get sampling interval."));
+	}
+        QuantumHolder qh(sampling);
+        r.defineRecord("sampling", qh.toRecord());
+        qh = QuantumHolder(positionAngle);
+        r.defineRecord("angle", qh.toRecord());
+      }
+      catch(AipsError x){
+	RETHROW(x);
+      }
+    }
+    else{
+        *itsLog << LogIO::SEVERE
+                << "No MeasurementSet has been assigned, please run open."
+                << LogIO::POST;
+    }
+    returnValue = fromRecord(r);
+    return returnValue;
+}
+
 } // casac namespace
