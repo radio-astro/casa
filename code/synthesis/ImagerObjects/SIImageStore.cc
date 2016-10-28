@@ -1419,31 +1419,37 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
 		
 		LatticeExpr<Float> deno;
+		Float scalepb=1.0;
 		if( normtype=="flatnoise"){
-		  deno = LatticeExpr<Float> ( sqrt( abs(*(wtsubim)) ) * itsPBScaleFactor );
+		  deno = LatticeExpr<Float> ( sqrt( abs(*(wtsubim))  / itsPBScaleFactor) );
 		  os << LogIO::NORMAL1 ;
 		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
 		  os << "Dividing " << itsImageName+String(".residual") ;
 		  os << " by [ sqrt(weightimage) * " << itsPBScaleFactor ;
 		  os << " ] to get flat noise with unit pb peak."<< LogIO::POST;
-		  
+		  scalepb=pblimit;
 		}
 		if( normtype=="flatsky") {
-		  deno = LatticeExpr<Float> ( *(wtsubim) );
+		  deno = LatticeExpr<Float> ( abs(*(wtsubim))/ itsPBScaleFactor );
 		  os << LogIO::NORMAL1 ;
 		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
 		  os << "Dividing " << itsImageName+String(".residual") ;
 		  os << " by [ weight ] to get flat sky"<< LogIO::POST;
+		  scalepb=pblimit*pblimit;
 		}
 
 		//		IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
 		//Float resval = ressubim->getAt(ip);
 
-		Float scalepb = pblimit * itsPBScaleFactor * itsPBScaleFactor ;
+	       
 		LatticeExpr<Float> mask( iif( (deno) > scalepb , 1.0, 0.0 ) );
 		LatticeExpr<Float> maskinv( iif( (deno) > scalepb , 0.0, 1.0 ) );
 		LatticeExpr<Float> ratio( ( (*(ressubim)) * mask ) / ( deno + maskinv ) );
 		
+		//above blocks all sources outside minpb but visible with weight coverage
+		//which could be cleaned out...one could use below for that
+		//LatticeExpr<Float> ratio(iif( deno > scalepb, (*(ressubim))/ deno, *ressubim ) );
+
 		ressubim->copyData(ratio);
 
 		//cout << "Val of residual before|after normalizing at center for pol " << pol << " chan " << chan << " : " << resval << "|" << ressubim->getAt(ip) << " weight : " << wtsubim->getAt(ip) << endl;
@@ -1470,15 +1476,16 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   {
     LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
 
+    //cerr << "ITSWEIGHT" << itsUseWeight <<  " sensi " << hasSensitivity() << (weight()) << endl;
+    //cerr <<  " sensi " << hasSensitivity()  << endl;
         if(itsUseWeight // only when needed
-       	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+	   && weight() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
 
 	if( normtype=="flatsky") {
-	  Array<Float> arrmod;
-	  model()->get( arrmod, True );
-
-	  os << LogIO::NORMAL1 << "Model is already flat sky with peak flux : " << max(arrmod);
+	 
+	  LatticeExprNode LEN = max( *model());
+	  os << LogIO::NORMAL1 << "Model is already flat sky with peak flux : " << LEN.getFloat();
 	  os << ". No need to divide before prediction" << LogIO::POST;
 	  
 	  return;
@@ -1509,11 +1516,19 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  os << " by [ sqrt(weight) / " << itsPBScaleFactor ;
 		  os <<" ] to get to flat sky model before prediction" << LogIO::POST;
 		  
-		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim)) ) / itsPBScaleFactor );
+		   LatticeExprNode LEN = max( *wtsubim);
+		  LatticeExprNode LEN1 = min( *wtsubim);
+		  // cerr << "divpblimit " << pblimit << " max " << LEN.getFloat() << " min " << LEN1.getFloat() << endl;
+		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim))  / itsPBScaleFactor) );
 		  
 		  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
 		  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
 		  LatticeExpr<Float> ratio( ( (*(modsubim)) * mask ) / ( deno + maskinv ) );
+		  
+		  // 
+		  //The above has a problem...mask is cutting out clean components found 
+		  // outside pblimit ...use below if this is what is wanted
+		  // LatticeExpr<Float> ratio(iif(abs(*(wtsubim)) == 0.0, *modsubim,  (*(modsubim))/(sqrt( abs(*(wtsubim))  / itsPBScaleFactor)))); 
 		  
 		  IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
 		  ///		  Float modval = modsubim->getAt(ip);
@@ -1544,7 +1559,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
    LogIO os( LogOrigin("SIImageStore","multiplyModelByWeight",WHERE) );
 
         if(itsUseWeight // only when needed
-    	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+	   && weight() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
 	if( normtype=="flatsky") {
 	  os << "Model is already flat sky. No need to multiply back after prediction" << LogIO::POST;
@@ -1570,18 +1585,25 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 									   chan, itsImageShape[3],
 									   pol, itsImageShape[2], 
 									   *model() );
+
+		  LatticeExprNode LEN = max( *wtsubim);
+		  LatticeExprNode LEN1 = min( *wtsubim);
+		  //cerr << "multpblimit " << pblimit << " max " << LEN.getFloat() << " min " << LEN1.getFloat() << endl;
+
 		  os << LogIO::NORMAL1 ;
 		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
 		  os << "Multiplying " << itsImageName+String(".model") ;
 		  os << " by [ sqrt(weight) / " << itsPBScaleFactor;
 		  os <<  " ] to take model back to flat noise with unit pb peak." << LogIO::POST;
-		  
+		  	  
 		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim)) ) / itsPBScaleFactor );
 		  
 		  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
 		  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
 		  LatticeExpr<Float> ratio( ( (*(modsubim)) * mask ) * ( deno + maskinv ) );
-		  
+		 
+		  /////See comment in divmodel and divresidual for below usage 
+		  //LatticeExpr<Float> ratio ( (*(modsubim)) * sqrt( abs(*(wtsubim))  / itsPBScaleFactor) );
 		  modsubim->copyData(ratio);
 		}// if not zero
 		}//chan
