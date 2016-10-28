@@ -308,6 +308,9 @@ class PySynthesisImager:
             self.PStools[immod].scattermodel() 
 
         self.predictModelCore()
+        ###return the model images back to whatever state they were 
+        for immod in range(0,self.NF):
+            self.PStools[immod].multiplymodelbyweight()
 ##        self.SItool.predictmodel();
 
 #############################################
