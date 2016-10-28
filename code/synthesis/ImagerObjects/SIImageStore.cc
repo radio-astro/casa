@@ -1516,9 +1516,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  os << " by [ sqrt(weight) / " << itsPBScaleFactor ;
 		  os <<" ] to get to flat sky model before prediction" << LogIO::POST;
 		  
-		   LatticeExprNode LEN = max( *wtsubim);
-		  LatticeExprNode LEN1 = min( *wtsubim);
-		  // cerr << "divpblimit " << pblimit << " max " << LEN.getFloat() << " min " << LEN1.getFloat() << endl;
+		   
 		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim))  / itsPBScaleFactor) );
 		  
 		  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
@@ -1586,9 +1584,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 									   pol, itsImageShape[2], 
 									   *model() );
 
-		  LatticeExprNode LEN = max( *wtsubim);
-		  LatticeExprNode LEN1 = min( *wtsubim);
-		  //cerr << "multpblimit " << pblimit << " max " << LEN.getFloat() << " min " << LEN1.getFloat() << endl;
+		 
 
 		  os << LogIO::NORMAL1 ;
 		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
