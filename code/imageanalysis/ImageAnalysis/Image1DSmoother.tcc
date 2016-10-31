@@ -58,6 +58,8 @@ template<class T> SPIIT Image1DSmoother<T>::smooth() const {
     oss << "New " << this->_getOutname() << " size => "
         << smoothed->shape();
     msgs[1] = oss.str();
+    *this->_getLog() << LogIO::NORMAL << msgs[0] << LogIO::POST;
+    *this->_getLog() << LogIO::NORMAL << msgs[1] << LogIO::POST;
     this->addHistory(casacore::LogOrigin(getClass(), __func__), msgs);
 	return this->_prepareOutputImage(*smoothed);
 }
