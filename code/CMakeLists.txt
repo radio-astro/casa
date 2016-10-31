@@ -453,6 +453,12 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
             else( )
                 ## RHEL7
                 set( qt4 system-qt )
+                # on RHEL7 we use the system libdbus*, here we assume
+                # that on RHEL6 the third party packages will continue
+                # to be installed in /usr/lib64/casa/02... (on RHEL6
+                # we continue to use libcasa-dbus in preference to
+                # the system libdbus...
+                set( dbus-cpp-library-name casa-dbus-cpp )
             endif( )
         elseif ( EXISTS /usr/lib64/casa/01/bin/qmake )
             set( casa_packages /usr/lib64/casa/01 )
@@ -464,12 +470,12 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
             set( dbusxx dbus-cpp )
             add_definitions( -DDBUS_CPP )
             set( qt4 system-qt )
-	    # on RHEL7 we use the system libdbus*, here we assume
-	    # that on RHEL6 the third party packages will continue
-	    # to be installed in /usr/lib64/casa/01... (on RHEL6
-	    # we continue to use libcasa-dbus in preference to
-	    # the system libdbus...
-	    set( dbus-cpp-library-name casa-dbus-cpp )
+            # on RHEL7 we use the system libdbus*, here we assume
+            # that on RHEL6 the third party packages will continue
+            # to be installed in /usr/lib64/casa/01... (on RHEL6
+            # we continue to use libcasa-dbus in preference to
+            # the system libdbus...
+            set( dbus-cpp-library-name casa-dbus-cpp )
         else( )
             set( dbusxx dbus-c++ )
             set( casa_packages /usr/lib64/casapy )
