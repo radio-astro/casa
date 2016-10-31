@@ -95,7 +95,7 @@
       If wtmode='sigma', WEIGHT will be initialized according to the
       existing SIGMA column.  
 
-      If mode='weight', WEIGHT_SPECTRUM will be initialized according
+      If wtmode='weight', WEIGHT_SPECTRUM will be initialized according
       to the existing WEIGHT column; dowtspec=T must be specified in
       this case.
  
