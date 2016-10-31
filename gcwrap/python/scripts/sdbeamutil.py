@@ -688,7 +688,7 @@ def findFWHM(x,y,level=0.5, s=0):
         x0,x1 = result
         return(abs(x1-x0))
     elif (len(result) == 1):
-        return(2*result[0])
+        return(2*abs(result[0]))
     else:
         ### modified (KS 2015/02/19)
         #print "More than two crossings (%d), fitting slope to points near that power level." % (len(result))
