@@ -50,7 +50,7 @@ from hifv_plotsummary_cli import hifv_plotsummary_cli as hifv_plotsummary
 from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
 #from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
 from hif_makeimages_cli import hif_makeimages_cli as hif_makeimages
-from hifv_exportdata_cli import h_exportdata_cli as h_exportdata
+from hifv_exportdata_cli import hifv_exportdata_cli as hifv_exportdata
 from h_save_cli import h_save_cli as h_save
 
 
