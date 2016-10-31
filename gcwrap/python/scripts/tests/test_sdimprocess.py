@@ -31,7 +31,19 @@ def drop_stokes_axis(imagename, outimagename):
     subimage.close()
     myia.close()
     
-
+def drop_deg_axes(imagename, outimagename):
+    """
+    create 2d image from 4d.
+    The function intends to drop both Stokes and Spectral axis and assumes that
+    the third axis is Spectral and fourth axis is Stokes.
+    """
+    (myia,) = gentools(['ia'])
+    myia.open(imagename)
+    subimage = myia.subimage(outfile=outimagename, dropdeg=True,
+                             keepaxes=[0,1])
+    subimage.close()
+    myia.close()
+    
 ###
 # Base class for sdimprocess unit test
 ###
@@ -222,7 +234,7 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
     """
     # Input and output names
     rawfile='scan_x.im'
-    rawfile3d = rawfile.replace('.im', '_3d.im')
+    rawfilemod = rawfile.replace('.im', '_mod.im')
     prefix=sdimprocess_unittest_base.taskname+'Test1'
     outfile=prefix+'.im'
     mode='press'
@@ -238,8 +250,8 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
-        if (os.path.exists(self.rawfile3d)):
-            shutil.rmtree(self.rawfile3d)
+        if (os.path.exists(self.rawfilemod)):
+            shutil.rmtree(self.rawfilemod)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test100(self):
@@ -349,9 +361,9 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
         
     def test100_3d(self):
         """Test 100_3d: Pressed method using whole pixels for 3D image"""
-        drop_stokes_axis(self.rawfile, self.rawfile3d)
-        self.assertTrue(os.path.exists(self.rawfile3d))
-        res=sdimprocess(infiles=self.rawfile3d,mode=self.mode,numpoly=0,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
+        drop_stokes_axis(self.rawfile, self.rawfilemod)
+        self.assertTrue(os.path.exists(self.rawfilemod))
+        res=sdimprocess(infiles=self.rawfilemod,mode=self.mode,numpoly=0,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         refstats={'blc': numpy.array([0, 0, 0], dtype=numpy.int32),
@@ -373,7 +385,36 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 155.73097211]),
                   'trc': numpy.array([127, 127,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, 1.415e+09Hz'}
-        self._check_shape(self.rawfile3d, self.outfile)
+        self._check_shape(self.rawfilemod, self.outfile)
+        self._checkstats(self.outfile,refstats)
+        
+    def test100_2d(self):
+        """Test 100_2d: Pressed method using whole pixels for 2D image"""
+        drop_deg_axes(self.rawfile, self.rawfilemod)
+        self.assertTrue(os.path.exists(self.rawfilemod))
+        res=sdimprocess(infiles=self.rawfilemod,mode=self.mode,numpoly=0,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        refstats={'blc': numpy.array([0, 0], dtype=numpy.int32),
+                  'blcf': '00:00:00.000, +00.00.00.000',
+                  'max': numpy.array([ 0.76603365]),
+                  'maxpos': numpy.array([63, 63], dtype=numpy.int32),
+                  'maxposf': '23:55:47.944, +01.03.00.212',
+                  'mean': numpy.array([  1.77990955e-11]),
+                  'medabsdevmed': numpy.array([ 0.00867557]),
+                  'median': numpy.array([-0.0022334]),
+                  'min': numpy.array([-0.17581469]),
+                  'minpos': numpy.array([25, 64], dtype=numpy.int32),
+                  'minposf': '23:58:19.982, +01.04.00.222',
+                  'npts': numpy.array([ 16384.]),
+                  'quartile': numpy.array([ 0.01854331]),
+                  'rms': numpy.array([ 0.09749392]),
+                  'sigma': numpy.array([ 0.09749689]),
+                  'sum': numpy.array([  2.91620381e-07]),
+                  'sumsq': numpy.array([ 155.73097211]),
+                  'trc': numpy.array([127, 127], dtype=numpy.int32),
+                  'trcf': '23:51:31.537, +02.07.01.734'}
+        self._check_shape(self.rawfilemod, self.outfile)
         self._checkstats(self.outfile,refstats)
 
 ###
@@ -397,7 +438,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
     """
     # Input and output names
     rawfiles=['scan_x.im','scan_y.im']
-    rawfiles3d = map(lambda x: x.replace('.im', '_3d.im'), rawfiles)
+    rawfilesmod = map(lambda x: x.replace('.im', '_mod.im'), rawfiles)
     prefix=sdimprocess_unittest_base.taskname+'Test2'
     outfile=prefix+'.im'
     mode='basket'
@@ -415,7 +456,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
         for name in self.rawfiles:
             if (os.path.exists(name)):
                 shutil.rmtree(name)
-        for name in self.rawfiles3d:
+        for name in self.rawfilesmod:
             if (os.path.exists(name)):
                 shutil.rmtree(name)
         os.system( 'rm -rf '+self.prefix+'*' )
@@ -559,10 +600,10 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
         
     def test200_3d(self):
         """Test 200_3d: FFT based Basket-Weaving using whole pixels for 3D image"""
-        for infile, outfile in zip(self.rawfiles, self.rawfiles3d):
+        for infile, outfile in zip(self.rawfiles, self.rawfilesmod):
             drop_stokes_axis(infile, outfile)
             self.assertTrue(os.path.exists(outfile))
-        res=sdimprocess(infiles=self.rawfiles3d,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfilesmod,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, 1.415e+09Hz',
                   'max': numpy.array([ 0.92714936]),
@@ -582,7 +623,35 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
                   'sumsq': numpy.array([ 206.87355986]),
                   'trc': numpy.array([127, 127,   0], dtype=numpy.int32),
                   'trcf': '23:51:31.537, +02.07.01.734, 1.415e+09Hz'}
-        self._check_shape(self.rawfiles3d[0], self.outfile)
+        self._check_shape(self.rawfilesmod[0], self.outfile)
+        self._checkstats(self.outfile,refstats)
+        
+    def test200_2d(self):
+        """Test 200_2d: FFT based Basket-Weaving using whole pixels for 2D image"""
+        for infile, outfile in zip(self.rawfiles, self.rawfilesmod):
+            drop_deg_axes(infile, outfile)
+            self.assertTrue(os.path.exists(outfile))
+        res=sdimprocess(infiles=self.rawfilesmod,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
+        refstats={'blc': numpy.array([0, 0], dtype=numpy.int32),
+                  'blcf': '00:00:00.000, +00.00.00.000',
+                  'max': numpy.array([ 0.92714936]),
+                  'maxpos': numpy.array([64, 64], dtype=numpy.int32),
+                  'maxposf': '23:55:43.941, +01.04.00.222',
+                  'mean': numpy.array([ 0.02962625]),
+                  'medabsdevmed': numpy.array([ 0.00571492]),
+                  'median': numpy.array([ 0.00429045]),
+                  'min': numpy.array([-0.02618393]),
+                  'minpos': numpy.array([ 56, 107], dtype=numpy.int32),
+                  'minposf': '23:56:15.881, +01.47.01.037',
+                  'npts': numpy.array([ 16384.]),
+                  'quartile': numpy.array([ 0.01154788]),
+                  'rms': numpy.array([ 0.11236797]),
+                  'sigma': numpy.array([ 0.1083954]),
+                  'sum': numpy.array([ 485.39648429]),
+                  'sumsq': numpy.array([ 206.87355986]),
+                  'trc': numpy.array([127, 127], dtype=numpy.int32),
+                  'trcf': '23:51:31.537, +02.07.01.734'}
+        self._check_shape(self.rawfilesmod[0], self.outfile)
         self._checkstats(self.outfile,refstats)
 
 
