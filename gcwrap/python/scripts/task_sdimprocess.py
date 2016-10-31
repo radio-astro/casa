@@ -149,7 +149,6 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         ndim = len(imshape)
         nx = imshape[0]
         ny = imshape[1]
-        nchan = imshape[2]
         if len(self.thresh) == 0:
             casalog.post( 'Use whole region' )
         else:
@@ -185,28 +184,15 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         bminor = qsmoothsize
         pa = qa.quantity(0.0, 'deg')
         # masked channels are replaced by zero and convolved here.
-        self.convimage = self.image.convolve2d( outfile=self.tmpconvname, major=bmajor, minor=bminor, pa=pa, 
+        self.convimage = self.image.convolve2d( outfile=self.tmppolyname, major=bmajor, minor=bminor, pa=pa, 
                                                 overwrite=True )
         self.convimage.done()
-        self.convimage = ia.newimage( self.tmpconvname )
 
         # get dTij (original - smoothed)
-        if ndim == 4:
-            # with polarization axis
-            npol = imshape[3]
-            for ichan in range(nchan):
-                for ipol in range(npol):
-                    pixmsk = self.image.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol])
-                    pixsmo = self.convimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] )
-                    pixsub = pixmsk - pixsmo
-                    self.convimage.putchunk( pixsub, [0,0,ichan,ipol] )
-        elif ndim == 3:
-            for ichan in range(nchan):
-                # no polarization axis
-                pixmsk = self.image.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
-                pixsmo = self.convimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
-                pixsub = pixmsk - pixsmo
-                self.convimage.putchunk( pixsub, [0,0,ichan] )
+        self.convimage = ia.imagecalc(outfile=self.tmpconvname, 
+                                      pixels='"{org}" - "{conv}"'.format(org=self.tmpmskname,
+                                                                         conv=self.tmppolyname),
+                                      overwrite=True)
 
         # polynomial fit
         fitaxis = 0
@@ -241,31 +227,16 @@ class sdimprocess_worker(sdutil.sdtask_interface):
             polyimage.maskhandler('delete', name=temp_maskname)
 
         # subtract fitted image from original map
-        imageorg = ia.newimage( self.infiles )
-        if ndim == 4:
-            # with polarization axis
-            npol = imshape[3]
-            for ichan in range(nchan):
-                for ipol in range(npol):
-                    pixorg = imageorg.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol])
-                    pixpol = polyimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] )
-                    pixsub = pixorg - pixpol
-                    polyimage.putchunk( pixsub, [0,0,ichan,ipol] )
-        elif ndim == 3:
-            # no polarization axis
-            for ichan in range(nchan):
-                pixorg = imageorg.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
-                pixpol = polyimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
-                pixsub = pixorg - pixpol
-                polyimage.putchunk( pixsub, [0,0,ichan] )
+        subtracted = ia.imagecalc(outfile=self.outfile, 
+                                  pixels='"{org}" - "{fit}"'.format(org=self.infiles,
+                                                                    fit=self.tmppolyname),
+                                  overwrite=self.overwrite)
+        subtracted.done()
 
-        # output
-        polyimage.rename( self.outfile, overwrite=self.overwrite )
-
-        polyimage.done()
-        self.convimage.done( remove=True )
+        # finalization
+        polyimage.done(remove=True)
+        self.convimage.done(remove=True)
         self.image.done()
-        imageorg.done()
 
     def __polynomial_fit_model(self, image=None, model=None, axis=0, order=2):
         if not image or not os.path.exists(image):
@@ -284,30 +255,33 @@ class sdimprocess_worker(sdutil.sdtask_interface):
             nx = imshape[0]
             ny = imshape[1]
             # an xy-plane can be fit simultaneously (doing per plane to save memory)
-            if ndim==3:
-                for ichan in range(imshape[2]):
-                    dslice = modelimg.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
-                    mslice = modelimg.getchunk( [0,0,ichan], [nx-1,ny-1,ichan],
-                                                getmask=True)
+            if ndim == 3:
+                get_blc = lambda i, j: [0, 0, i]
+                get_trc = lambda i, j: [nx-1, ny-1, i]
+                imshape2 = imshape[2]
+                imshape3 = 1
+            elif ndim == 4:
+                get_blc = lambda i, j: [0, 0, i, j]
+                get_trc = lambda i, j: [nx-1, ny-1, i, j]
+                imshape2 = imshape[2]
+                imshape3 = imshape[3]
+            else: # ndim == 2 
+                get_blc = lambda i, j: [0,0]
+                get_trc = lambda i, j: [nx-1, ny-1]
+                imshape2 = 1
+                imshape3 = 1
+                
+            for i3 in range(imshape3):
+                for i2 in range(imshape2):
+                    blc = get_blc(i2, i3)
+                    trc = get_trc(i2, i3)
+                    dslice = modelimg.getchunk(blc, trc)
+                    mslice = modelimg.getchunk(blc, trc, getmask=True)
                     model = self._get_polyfit_model_array(dslice.reshape(nx,ny),
                                                           mslice.reshape(nx,ny),
                                                           axis, order)
-                    modelimg.putchunk( model, [0,0,ichan] )
-            elif ndim==4:
-                for ipol in range(imshape[3]):
-                    for ichan in range(imshape[2]):
-                        dslice = modelimg.getchunk( [0,0,ichan,ipol],
-                                                    [nx-1,ny-1,ichan,ipol])
-                        mslice = modelimg.getchunk( [0,0,ichan,ipol],
-                                                    [nx-1,ny-1,ichan,ipol],
-                                                    getmask=True)
-                        model = self._get_polyfit_model_array(dslice.reshape(nx,ny),
-                                                              mslice.reshape(nx,ny),
-                                                              axis, order)
-                        modelimg.putchunk( model, [0,0,ichan,ipol] )
-            else:
-                # ndim=2 is not supported in this task.
-                raise RuntimeError, "image dimension should be 3 or 4"
+                    modelimg.putchunk(model, blc)
+                
             # the fit model image itself is free from invalid pixels
             modelimg.calcmask('T', asdefault=True)
         except: raise
