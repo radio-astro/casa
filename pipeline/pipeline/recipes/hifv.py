@@ -36,7 +36,7 @@ from hifv_priorcals_cli import hifv_priorcals_cli as hifv_priorcals
 from hif_refant_cli import hif_refant_cli as hif_refant
 from hifv_testBPdcals_cli import hifv_testBPdcals_cli as hifv_testBPdcals
 from hifv_flagbaddef_cli import hifv_flagbaddef_cli as hifv_flagbaddef
-from hifv_uncalspw_cli import hifv_uncalspw_cli as hifv_uncalspw
+#from hifv_uncalspw_cli import hifv_uncalspw_cli as hifv_uncalspw
 from hifv_checkflag_cli import hifv_checkflag_cli as hifv_checkflag
 from hifv_semiFinalBPdcals_cli import hifv_semiFinalBPdcals_cli as hifv_semiFinalBPdcals
 from hifv_solint_cli import hifv_solint_cli as hifv_solint
