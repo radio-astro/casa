@@ -29,7 +29,7 @@ template<class T> void Image1DSmoother<T>::setAxis(casacore::uInt n) {
 }
 
 template<class T> SPIIT Image1DSmoother<T>::smooth() const {
-	*this->_getLog() << casacore::LogOrigin(getClass(), __FUNCTION__);
+	*this->_getLog() << casacore::LogOrigin(getClass(), __func__);
 	SPIIT subImage(
 		SubImageFactory<T>::createImage(
 			*this->_getImage(), "", *this->_getRegion(),
@@ -49,6 +49,16 @@ template<class T> SPIIT Image1DSmoother<T>::smooth() const {
     	impr.replace("0", false, false);
     }
     SPIIT smoothed(_smooth(*subImage));
+    vector<String> msgs(2);
+    ostringstream oss;
+    oss << "Original " << this->_getImage()->name() << " size => "
+        << this->_getImage()->shape();
+    msgs[0] = oss.str();
+    oss.str("");
+    oss << "New " << this->_getOutname() << " size => "
+        << smoothed->shape();
+    msgs[1] = oss.str();
+    this->addHistory(casacore::LogOrigin(getClass(), __func__), msgs);
 	return this->_prepareOutputImage(*smoothed);
 }
 
