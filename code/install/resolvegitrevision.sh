@@ -53,13 +53,13 @@ elif [ $branch == "master" ];then
     # Return only the revision number
     echo "${masterTag##*-};$CASA_VERSION_DESC"
 elif [[ $branch =~ .*\..*\..*-release.* ]];then
-    echo "Resolving release"
+    #echo "Resolving release"
     masterTag=`git tag --points-at HEAD | grep \\\-rel- | xargs`
     if [[ -z "${masterTag// }" ]]; then
         # Get the nearest tag and add Desc
         headCommit=`git rev-parse HEAD`
         masterTag=`git describe --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*-rel-[0-9]*' $(git rev-parse $CASAFORKPOINTHINT)`
-        CASA_VERSION_DESC="ID $headCommit "
+        #CASA_VERSION_DESC="ID $headCommit "
     fi
     # Return only the revision number
     echo "${masterTag##*-};$CASA_VERSION_DESC"
