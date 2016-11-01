@@ -99,7 +99,7 @@ protected:
   std::string my_ms_name_;
   std::string my_data_name_;
 
-  void TestFactory(String const &mode, String const &expectedClassName) {
+  VisibilityIterator2 *ManufactureVIAtFactory(String const &mode) {
     // create read-only VI impl
     Block<MeasurementSet const *> const mss(1,
         new MeasurementSet(my_data_name_, Table::Old));
@@ -115,23 +115,43 @@ protected:
     }
 
     PolAverageVi2Factory factory(modeRec, inputVii.get());
+
+    std::unique_ptr<VisibilityIterator2> vi;
+    try {
+      vi.reset(new VisibilityIterator2(factory));
+    } catch(...) {
+      cout << "Failed to create VI at factory" << endl;
+      throw;
+    }
+
+    cout << "Created VI type \"" << vi->ViiType() << "\"" << endl;
+
+    // vi will be responsible for releasing inputVii so unique_ptr
+    // should release the ownership here
+    inputVii.release();
+
+    return vi.release();
+  }
+
+  void TestFactory(String const &mode, String const &expectedClassName) {
+
+    cout << "Mode \"" << mode << "\" expected class name \"" << expectedClassName << "\""
+        << endl;
+
     if (expectedClassName.size() > 0) {
-      std::unique_ptr<VisibilityIterator2,
-          VerboseDeleterForNew<VisibilityIterator2> > vi(
-          new VisibilityIterator2(factory));
-      // vi will be responsible for releasing inputVii so unique_ptr
-      // should release the ownership here
-      inputVii.release();
+      std::unique_ptr<VisibilityIterator2> vi(
+              ManufactureVIAtFactory(mode));
+
+      // Verify type string
       String viiType = vi->ViiType();
-      cout << "Mode \"" << mode << "\": Created VI type \"" << viiType << "\""
-          << endl;
       EXPECT_TRUE(viiType.startsWith(expectedClassName));
     } else {
+      cout << "Creation of VI via factory will fail" << endl;
       // exception must be thrown
       EXPECT_THROW( {
-        std::unique_ptr<VisibilityIterator2> vi(new VisibilityIterator2(factory));
-      },
-      AipsError);
+            std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory(mode));//new VisibilityIterator2(factory));
+          },
+          AipsError)<< "The process must throw AipsError";
     }
   }
 
@@ -216,7 +236,7 @@ private:
 
 };
 
-TEST_F(PolAverageTVITest, FactoryTest) {
+TEST_F(PolAverageTVITest, Factory) {
 
   TestFactory("default", "GeometricPolAverage");
   TestFactory("Default", "GeometricPolAverage");
@@ -231,6 +251,18 @@ TEST_F(PolAverageTVITest, FactoryTest) {
   TestFactory("", "GeometricPolAverage");
   // invalid mode (throw exception)
   TestFactory("invalid", "");
+}
+
+TEST_F(PolAverageTVITest, GeometricalAverage) {
+  // Create VI
+  std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory("geometric"));
+  ASSERT_TRUE(vi->ViiType().startsWith("GeometricPolAverage("));
+}
+
+TEST_F(PolAverageTVITest, StokesAverage) {
+  // Create VI
+  std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory("stokes"));
+  ASSERT_TRUE(vi->ViiType().startsWith("StokesPolAverage("));
 }
 
 int main(int argc, char **argv) {
