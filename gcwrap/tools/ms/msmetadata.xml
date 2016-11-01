@@ -1333,7 +1333,14 @@ windows in the dataset and close the tool.
                 </param>
             </input>
             <returns type="bool"/>
-            <description>Attach this tool to the specified MS.</description>
+            <description>
+                Attach this tool to the specified MS. This method runs a few basic MS validation tests, and if any of these
+                fail (which indicates that the MS is invalid), an error occurs and the tool is not attached to the MS.
+                Note that it is ultimately the user's responsibility to ensure that the MS is valid. Running the methods
+                of this tool on an invalid MS may result in incorrect results or even a crash of CASA. Such invalidities
+                include any MS subtable not having appropriate information (eg, an OBSERVATION subtable not having enough rows
+                to account for all the OBSERVATION_IDs in the main table).
+            </description>
             <example>
                 msmd.open("my.ms")
                 # do stuff and close it
