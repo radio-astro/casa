@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def h_restoredata(vis=None, session=None, products_dir=None, copytoraw=None,
-    rawdata_dir=None, lazy=None, bdfflags=None, ocorr_mode=None, pipelinemode=None, dryrun=None, acceptresults=None):
+    rawdata_dir=None, lazy=None, bdfflags=None, ocorr_mode=None, pipelinemode=None, asis=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
