@@ -5,15 +5,14 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_exportdata(vis=None, session=None, pprfile=None, calintents=None,
-    calimages=None, targetimages=None, products_dir=None, pipelinemode=None,
-    dryrun=None, acceptresults=None):
+def hifv_restoredata(vis=None, session=None, products_dir=None, copytoraw=None,
+    rawdata_dir=None, lazy=None, bdfflags=None, ocorr_mode=None, pipelinemode=None, asis=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'VLAExportData'
+    task_name = 'VLARestoreData'
 
     ##########################################################################
     #                                                                        #
@@ -22,7 +21,7 @@ def hifv_exportdata(vis=None, session=None, pprfile=None, calintents=None,
     #                                                                        #
     ##########################################################################
 
-    # get the name of this function for the weblog, eg. 'hif_flagdata'
+    # get the name of this function for the weblog, eg. 'hif_restoredata'
     fn_name = sys._getframe().f_code.co_name
 
     # get the context on which this task operates

@@ -22,3 +22,4 @@ from .fluxscale import Fluxboot
 from .finalcals import Applycals
 from .flagging import Targetflag
 from .statwt import Statwt
+from .restoredata import VLARestoreData

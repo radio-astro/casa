@@ -76,7 +76,8 @@ CasaTaskDict = {
     'hifv_applycals': 'Applycals',
     'hifv_targetflag': 'Targetflag',
     'hifv_statwt': 'Statwt',
-    'hifv_plotsummary': 'PlotSummary'
+    'hifv_plotsummary': 'PlotSummary',
+    'hifv_restoredata': 'VLARestoreData'
 }
 
 
@@ -153,6 +154,7 @@ classToCASATask = {
     hifv_tasks.Targetflag             : 'hifv_targetflag',
     hifv_tasks.PlotSummary            : 'hifv_plotsummary',
     hifv_tasks.Statwt                 : 'hifv_statwt',
+    hifv_tasks.VLARestoreData         : 'hifv_restoredata',
     # General Tasks
     h_tasks.Applycal                  : 'h_applycal',
     h_tasks.ImportData                : 'h_importdata',

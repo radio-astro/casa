@@ -60,7 +60,7 @@ class VLAExportData(exportdata.ExportData):
             if filename.endswith('.ms'):
                 filename, filext = os.path.splitext(filename)
             tmpvislist.append(filename)
-        task_string = "    hif_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (
+        task_string = "    hifv_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (
         tmpvislist, session_list, ocorr_mode)
 
         # if context.project_summary.telescope in ('VLA', 'EVLA'):
