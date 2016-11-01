@@ -888,7 +888,11 @@ class AmpVsTimeDetailChart(FieldSpwAntDetailChart):
 
 class CAS9154AmpVsTimeDetailChart(SpwAntDetailChart):
     """
-    Create an amplitude vs time plot per spw and antenna, overplotting by field.
+    Create an amplitude vs time plot per spw and antenna, overplotting by
+    correlation.
+
+    The fields in this plot are already delineated because this plot is
+    against the time axis, hence we can overplot by correlation.
     """
     def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {
@@ -896,7 +900,7 @@ class CAS9154AmpVsTimeDetailChart(SpwAntDetailChart):
             'avgantenna': False,
             'avgtime': '',
             'avgscan': False,
-            'coloraxis': 'field',
+            'coloraxis': 'corr',
             'overwrite': True,
             'xselfscale': True,
             'xsharedaxis': True,
