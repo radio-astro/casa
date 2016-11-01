@@ -36,6 +36,7 @@ casa_add_library( mstransform
  TVI/PhaseShiftingTVI.cc 
  TVI/RegriddingTVI.cc  
  TVI/UVContSubTVI.cc
+ TVI/PolAverageTVI.cc
 )
 
 install (FILES
@@ -65,6 +66,7 @@ install (FILES
 	TVI/PhaseShiftingTVI.h		
  	TVI/RegriddingTVI.h
  	TVI/UVContSubTVI.h 	
+ 	TVI/PolAverageTVI.h
 	DESTINATION include/casacode/mstransform/TVI
 	)
 	
@@ -78,3 +80,4 @@ casa_add_executable( mstransform msuvbin apps/msuvbin/msuvbin.cc )
 casa_add_executable( mstransform fixspwbackport apps/fixspwbackport/fixspwbackport.cc )
 
 casa_add_google_test( MODULES mstransform SOURCES TVI/test/tRecursiveVi2Layers_GT.cc )
+casa_add_google_test( MODULES mstransform SOURCES TVI/test/PolAverageTVI_GTest.cc )
