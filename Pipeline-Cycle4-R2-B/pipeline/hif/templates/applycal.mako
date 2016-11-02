@@ -153,16 +153,36 @@ def format_spwmap(spwmap, scispws):
 <li><a href="#flaggeddata">Flagged data after calibration application</a></li>
 <li><a href="#plots">Plots</a></li>
   <ul>
+%if amp_vs_freq_plots:
   <li><a href="#calampvsfreq">Calibrated amplitude vs frequency</a></li>
+%endif
+%if phase_vs_freq_plots:
   <li><a href="#calphasevsfreq">Calibrated phase vs frequency</a></li>
+%endif
+%if amp_vs_uv_plots:
   <li><a href="#calampvsuvdist">Calibrated amplitude vs UV distance</a></li>
+%endif
+%if amp_vs_time_plots:
   <li><a href="#calampvstime">Calibrated amplitude vs time</a></li>
+%endif
+%if phase_vs_time_plots:
   <li><a href="#calphasevstime">Calibrated phase vs time</a></li>
+%endif
+%if corrected_to_antenna1_plots:
   <li><a href="#corrampvsant">(Corrected amplitude / model) vs antenna</a></li>
+%endif
+%if corrected_to_model_vs_uvdist_plots:
   <li><a href="#corrampvsuvdist">(Corrected amplitude / model) vs UV distance</a></li>
+%endif
+%if science_amp_vs_freq_plots:
   <li><a href="#scicalampvsfreq">Science target: calibrated amplitude vs frequency</a></li>
+%endif
+%if science_phase_vs_freq_plots:
   <li><a href="#scicalphasevsfreq">Science target: calibrated phase vs frequency</a></li>
+%endif
+%if science_amp_vs_uv_plots:
   <li><a href="#scicalampvsuvdist">Science target: calibrated amplitude vs UV distance</a></li>
+%endif
   </ul>
 </ul>
 
@@ -478,6 +498,7 @@ def format_spwmap(spwmap, scispws):
 
 <%self:plot_group plot_dict="${corrected_to_antenna1_plots}"
 				  url_fn="${lambda x: 'junk'}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
 				  title_id="corrampvsant">
 
 	<%def name="title()">
@@ -491,8 +512,12 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
     <%def name="ms_preamble(ms)">
-		<p>Plots for ${ms} were created with UV range set to capture the inner
-		half of the data (UV max < ${str(uv_max[ms])}).</p>
+	% if uv_max[ms].value > 0.0:
+		<p>Plots for AMPLITUDE calibration intent were created with UV
+		range set to capture the inner half of the data
+		(UV max < ${str(uv_max[ms])}). Plots for other intents have no UV
+		range restriction.</p>
+	% endif
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show the ratio of the corrected amplitude to model column for spw ${plot.parameters['spw']}</%def>
@@ -531,8 +556,10 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
     <%def name="ms_preamble(ms)">
+	% if uv_max[ms].value > 0.0:
 		<p>Plots for ${ms} were created with UV range set to capture the inner
 		half of the data (UV max < ${str(uv_max[ms])}).</p>
+	% endif
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show the ratio of the corrected amplitude to model column for spw ${plot.parameters['spw']}</%def>
@@ -586,8 +613,10 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
 	<%def name="ms_preamble(ms)">
+	% if uv_max[ms].value > 0.0:
 		<p>Plots for ${ms} were created with UV range set to capture the inner
 		half of the data (UV max < ${str(uv_max[ms])}).</p>
+	% endif
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for spw ${plot.parameters['spw']}</%def>
@@ -642,8 +671,10 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
 	<%def name="ms_preamble(ms)">
+	% if uv_max[ms].value > 0.0:
 		<p>Plots for ${ms} were created with UV range set to capture the inner
 		half of the data (UV max < ${str(uv_max[ms])}).</p>
+	% endif
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show phase vs frequency for spw ${plot.parameters['spw']}</%def>

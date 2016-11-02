@@ -67,18 +67,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'filesizes': filesizes
         })
 
-        transmission_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['PHASE'], ['BANDPASS'], ['CHECK'], ['AMPLITUDE'], ['TARGET']]:
-            plots, _ = self.create_plots(
-                context,
-                result,
-                plotatmosphere.TransmissionSummaryChart,
-                intents
-            )
-
-            key = utils.commafy(intents, quotes=False)
-            for vis, vis_plots in plots.items():
-                transmission_plots[vis][key] = vis_plots
+        transmission_plots = self.create_transmission_plots(context, result)
 
         # these dicts map vis to the hrefs of the detail pages
         amp_vs_freq_subpages = {}
@@ -157,7 +146,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
          science_amp_vs_uv_summary_plots,
          uv_max) = self.create_science_plots(context, result)
 
-        corrected_ratio_to_antenna1_plots = {}
+        corrected_ratio_to_antenna1_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
         corrected_ratio_to_uv_dist_plots = {}
         for r in result:
             vis = os.path.basename(r.inputs['vis'])
@@ -165,14 +154,22 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             in_m = str(uvrange_dist.to_units(measures.DistanceUnits.METRE))
             uvrange = '0~%sm' % in_m
 
-            p, _ = self.create_plots(
-                context,
-                [r],
-                applycal.CorrectedToModelRatioVsAntenna1SummaryChart,
-                ['AMPLITUDE'],
-                uvrange=uvrange
-            )
-            corrected_ratio_to_antenna1_plots[vis] = p[vis]
+            # CAS-9229: Add amp / model vs antenna id plots for other calibrators
+            for intents, uv_cutoff in [(['AMPLITUDE'], uvrange),
+                                       (['PHASE'], ''),
+                                       (['BANDPASS'], ''),
+                                       (['CHECK'], '')]:
+                p, _ = self.create_plots(
+                    context,
+                    [r],
+                    applycal.CorrectedToModelRatioVsAntenna1SummaryChart,
+                    intents,
+                    uvrange=uv_cutoff
+                )
+
+                key = utils.commafy(intents, quotes=False)
+                for vis, vis_plots in p.items():
+                    corrected_ratio_to_antenna1_plots[vis][key] = vis_plots
 
             p, _ = self.create_plots(
                 context,
@@ -180,16 +177,40 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 applycal.CorrectedToModelRatioVsUVDistanceSummaryChart,
                 ['AMPLITUDE'],
                 uvrange=uvrange,
-                plotrange=[0,float(in_m),0,0]
+                plotrange=[0, float(in_m), 0, 0]
             )
             corrected_ratio_to_uv_dist_plots[vis] = p[vis]
 
         # these dicts map vis to the list of plots
         amp_vs_freq_detail_plots = {}
         phase_vs_freq_detail_plots = {}
-        amp_vs_uv_detail_plots = {}
-        amp_vs_time_detail_plots = {}
         phase_vs_time_detail_plots = {}
+
+        # CAS-9154 Add per-antenna amplitude vs time plots for applycal stage
+        #
+        # Compromise to generate some antenna-specific plots to allow
+        # bad antennas to be identified while keeping the overall number of
+        # plots relatively unchanged.
+        #
+        # Note that 'TARGET' has been removed from the intents list
+        amp_vs_time_detail_plots, amp_vs_time_subpages = self.create_plots(
+            context,
+            result,
+            applycal.CAS9154AmpVsTimeDetailChart,
+            ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
+            ApplycalAmpVsTimePlotRenderer,
+            avgchannel='9000'
+        )
+
+        # CAS-9216: Add per-antenna amplitude vs UV distance plots for
+        # applycal stage
+        amp_vs_uv_detail_plots, amp_vs_uv_subpages = self.create_plots(
+            context,
+            result,
+            applycal.CAS9216AmpVsUVDetailChart,
+            ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
+            ApplycalAmpVsUVPlotRenderer,
+        )
 
         if pipeline.infrastructure.generate_detail_plots(result):
             # detail plots. Don't need the return dictionary, but make sure a
@@ -210,14 +231,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 ApplycalPhaseVsFreqPlotRenderer
             )
 
-            amp_vs_uv_detail_plots, amp_vs_uv_subpages = self.create_plots(
-                context,
-                result,
-                applycal.AmpVsUVDetailChart,
-                ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK'],
-                ApplycalAmpVsUVPlotRenderer
-            )
-
             # phase_vs_uv_detail_plots, phase_vs_uv_subpages = self.create_plots(
             #     context,
             #     result,
@@ -225,14 +238,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             #     ['AMPLITUDE'],
             #     ApplycalPhaseVsUVPlotRenderer
             # )
-
-            amp_vs_time_detail_plots, amp_vs_time_subpages = self.create_plots(
-                context,
-                result,
-                applycal.AmpVsTimeDetailChart,
-                ['AMPLITUDE', 'PHASE', 'BANDPASS', 'CHECK', 'TARGET'],
-                ApplycalAmpVsTimePlotRenderer
-            )
 
             phase_vs_time_detail_plots, phase_vs_time_subpages = self.create_plots(
                 context,
@@ -278,7 +283,36 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'phase_vs_time_subpages': phase_vs_time_subpages,
             'transmission_plots': transmission_plots
         })
-        
+
+    def create_transmission_plots(self, context, results):
+        d = {}
+        for intents in [['PHASE'], ['BANDPASS'], ['CHECK'], ['AMPLITUDE']]:
+            plots, _ = self.create_plots(
+                context,
+                results,
+                plotatmosphere.TransmissionSummaryChart,
+                intents
+            )
+
+            key = utils.commafy(intents, quotes=False)
+            for vis, vis_plots in plots.items():
+                d.setdefault(vis, {})[key] = vis_plots
+
+        for result in results:
+            vis = os.path.basename(result.inputs['vis'])
+            ms = context.observing_run.get_ms(vis)
+
+            d.setdefault(vis, {})['TARGET'] = []
+
+            brightest_fields = T2_4MDetailsApplycalRenderer.get_brightest_fields(ms)
+            for source_id, brightest_field in brightest_fields.items():
+                self.result = self.science_plots_for_result(context, result, plotatmosphere.TransmissionSummaryChart,
+                                                            [brightest_field.id])
+                plots = self.result
+                d[vis]['TARGET'].extend(plots)
+
+        return d
+
     def create_science_plots(self, context, results):
         """
         Create plots for the science targets, returning two dictionaries of 
@@ -400,14 +434,15 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def science_plots_for_result(self, context, result, plotter_cls, fields, 
                                  uvrange=None, renderer_cls=None,
                                  correlation=''):
-        # override field when plotting amp/phase vs frequency, as otherwise
-        # the field is resolved to a list of all field IDs
-
         overrides = {'coloraxis': 'spw',
                      'correlation': correlation}
         if uvrange is not None:
             overrides['uvrange'] = uvrange
-        
+
+        # remove warning message about coloraxis
+        if plotter_cls is plotatmosphere.TransmissionSummaryChart:
+            del overrides['coloraxis']
+
         plots = []
         for field in fields:
             # override field when plotting amp/phase vs frequency, as otherwise
@@ -558,7 +593,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         path = None
 
         if renderer_cls is not None:
-            renderer = renderer_cls(context, result, plots, **kwargs)
+            renderer = renderer_cls(context, result, plots)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 path = renderer.path
@@ -796,7 +831,7 @@ class ApplycalAmpVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
         outfile = filenamer.sanitize('amp_vs_time-%s.html' % vis)
         
         super(ApplycalAmpVsTimePlotRenderer, self).__init__(
-                'generic_x_vs_y_field_spw_ant_detail_plots.mako', context, 
+                'generic_x_vs_y_spw_ant_plots.mako', context,
                 result, plots, title, outfile)
 
 
