@@ -108,7 +108,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
             correlation = ms.get_alma_corrstring()
-            max_uvs[vis] = 0.0
+            max_uvs[vis] = measures.Distance(value=0.0, units=measures.DistanceUnits.METRE)
             
             amp_vs_freq_summary_plots[vis]['TARGET'] = []
 
