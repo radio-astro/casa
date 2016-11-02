@@ -12,7 +12,7 @@ from . import polarization
 
 #pipelineqa.registry.add_handler(qa.PolQAHandler())
 #pipelineqa.registry.add_handler(qa.PolListQAHandler())
-#qaadapter.registry.register_to_dataset_topic(pol.PolResults)
+#qaadapter.registry.register_to_dataset_topic(polarization.PolResults)
 
 
 weblog.add_renderer(Polarization, basetemplates.T2_4MDetailsDefaultRenderer(uri='polarization.mako',
