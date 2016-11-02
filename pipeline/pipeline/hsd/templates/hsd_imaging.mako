@@ -114,7 +114,9 @@ It generates an image combined spectral data from whole antenna as well as image
 	            <div class="thumbnail">
 	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 	                   class="fancybox"
-	                   rel="thumbs">
+                       title='<div class="pull-left">Profile Map<br>SPW ${plot.parameters['spw']}<br>Source ${field}</div>'
+	                   rel="thumbs"
+	                   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 	                    <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 	                         title="Profile map summary for Spectral Window ${plot.parameters['spw']}"
 	                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
@@ -177,7 +179,9 @@ It generates an image combined spectral data from whole antenna as well as image
 	                <div class="thumbnail">
 	                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 	                       class="fancybox"
-	                       rel="thumbs">
+	                       title='<div class="pull-left">${plots['title']}<br>SPW ${plot.parameters['spw']}<br>Source ${field}</div>'
+	                       rel="thumbs"
+	                   	   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 	                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 	                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
 	                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
