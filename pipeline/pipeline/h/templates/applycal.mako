@@ -498,6 +498,7 @@ def format_spwmap(spwmap, scispws):
 
 <%self:plot_group plot_dict="${corrected_to_antenna1_plots}"
 				  url_fn="${lambda x: 'junk'}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
 				  title_id="corrampvsant">
 
 	<%def name="title()">
@@ -512,8 +513,10 @@ def format_spwmap(spwmap, scispws):
 
     <%def name="ms_preamble(ms)">
 	% if uv_max[ms].value > 0.0:
-		<p>Plots for ${ms} were created with UV range set to capture the inner
-		half of the data (UV max < ${str(uv_max[ms])}).</p>
+		<p>Plots for AMPLITUDE calibration intent were created with UV
+		range set to capture the inner half of the data
+		(UV max < ${str(uv_max[ms])}). Plots for other intents have no UV
+		range restriction.</p>
 	% endif
 	</%def>
 

@@ -146,7 +146,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
          science_amp_vs_uv_summary_plots,
          uv_max) = self.create_science_plots(context, result)
 
-        corrected_ratio_to_antenna1_plots = {}
+        corrected_ratio_to_antenna1_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
         corrected_ratio_to_uv_dist_plots = {}
         for r in result:
             vis = os.path.basename(r.inputs['vis'])
@@ -154,14 +154,22 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             in_m = str(uvrange_dist.to_units(measures.DistanceUnits.METRE))
             uvrange = '0~%sm' % in_m
 
-            p, _ = self.create_plots(
-                context,
-                [r],
-                applycal.CorrectedToModelRatioVsAntenna1SummaryChart,
-                ['AMPLITUDE'],
-                uvrange=uvrange
-            )
-            corrected_ratio_to_antenna1_plots[vis] = p[vis]
+            # CAS-9229: Add amp / model vs antenna id plots for other calibrators
+            for intents, uv_cutoff in [(['AMPLITUDE'], uvrange),
+                                       (['PHASE'], ''),
+                                       (['BANDPASS'], ''),
+                                       (['CHECK'], '')]:
+                p, _ = self.create_plots(
+                    context,
+                    [r],
+                    applycal.CorrectedToModelRatioVsAntenna1SummaryChart,
+                    intents,
+                    uvrange=uv_cutoff
+                )
+
+                key = utils.commafy(intents, quotes=False)
+                for vis, vis_plots in p.items():
+                    corrected_ratio_to_antenna1_plots[vis][key] = vis_plots
 
             p, _ = self.create_plots(
                 context,
@@ -169,7 +177,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 applycal.CorrectedToModelRatioVsUVDistanceSummaryChart,
                 ['AMPLITUDE'],
                 uvrange=uvrange,
-                plotrange=[0,float(in_m),0,0]
+                plotrange=[0, float(in_m), 0, 0]
             )
             corrected_ratio_to_uv_dist_plots[vis] = p[vis]
 
