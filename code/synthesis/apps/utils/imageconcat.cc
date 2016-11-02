@@ -37,12 +37,11 @@
 #include <lattices/Lattices/LatticeConcat.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageConcat.h>
-#include <imageanalysis/IO/CasaImageOpener.h>
+#include <images/Images/ImageOpener.h>
 #include <casa/Inputs/Input.h>
 #include <casa/namespace.h>
 using namespace std;
 using namespace casacore;
-using namespace casa;
 
 Bool moveImages(const String& dirname, Vector<String>& images){
   
@@ -175,7 +174,7 @@ int main(int argc, char **argv)
       }
     }
 
-    cerr << "TYPE " << CasaImageOpener::imageType(outname) << endl;
+    cerr << "TYPE " << ImageOpener::imageType(outname) << endl;
     //tim.show("Time taken to concatenate via image: ");
     /* for(Int k=0; k < nimages; ++k){
       //vim[k]->tempClose();

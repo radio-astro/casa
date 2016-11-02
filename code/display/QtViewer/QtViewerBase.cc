@@ -32,7 +32,6 @@
 #include <display/QtViewer/QtApp.h>
 #include <tables/Tables/TableInfo.h>
 #include <images/Images/ImageOpener.h>
-#include <imageanalysis/IO/CasaImageOpener.h>
 #include <display/QtAutoGui/QtXmlRecord.h>
 #include <casa/iomanip.h>
 
@@ -252,7 +251,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//Note:  Calling the CasaImageOpener can produce an AipsError if the file
 			//does not have proper permissions.  Please see CAS-8068.
 			try {
-				if(CasaImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT || ImageOpener::imageType(pathname)==ImageOpener::IMAGEEXPR){
+				if(ImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT || ImageOpener::imageType(pathname)==ImageOpener::IMAGEEXPR){
 					return "Image";
 				}
 			}
@@ -287,7 +286,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//Note:  Calling the CasaImageOpener can throw an AIPS error if the
 			//directory/file does not have proper permissions.  Please see CAS-8068.
 			try {
-				if(CasaImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT){
+				if(ImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT){
 					return "Image";
 				}
 			}

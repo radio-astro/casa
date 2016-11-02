@@ -50,7 +50,6 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Images/ImageInfo.h>
-#include <imageanalysis/IO/CasaImageOpener.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/WorldCanvasHolder.h>
 #include <display/DisplayEvents/WCMotionEvent.h>
@@ -316,14 +315,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					}
 
 					// use the file path name for the opener
-					switch(CasaImageOpener::imageType(tmp_path)) {
+					switch(ImageOpener::imageType(tmp_path)) {
 
 					case ImageOpener::AIPSPP: {
 
 						if( imagePixelType(path_) == TpFloat ) {
 							im_.reset(new PagedImage<Float>(path_, TableLock::AutoNoReadLocking));
-							// regions in image...
-							// Vector<String> regions = im_->regionNames( );
+							// regions in Vector<String> regions = im_->regionNames( );
 							// for ( int i = 0; i < regions.size( ); ++i ) {
 							// 	cout << "\t\t\t\t\t(" << i << "): " << regions[i] << endl;
 							// }
@@ -346,7 +344,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						break;
 					}
 					case ImageOpener::IMAGECONCAT:{
-					  LatticeBase* latt =CasaImageOpener::openImage(path);
+					  LatticeBase* latt =ImageOpener::openImage(path);
 					  if(!latt)
 					    throw(AipsError("Error in opening concatenated Image"));
 					  DataType dtype=latt->dataType();
@@ -359,7 +357,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					  break;
 					}
 					case ImageOpener::IMAGEEXPR:{
-					  LatticeBase* latt =CasaImageOpener::openImage(path);
+					  LatticeBase* latt =ImageOpener::openImage(path);
 					  if(!latt)
 					    throw(AipsError("Error in opening concatenated Image"));
 					  DataType dtype=latt->dataType();

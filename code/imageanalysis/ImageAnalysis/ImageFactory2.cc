@@ -30,7 +30,7 @@
 #include <casa/OS/EnvVar.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageUtilities.h>
-#include <imageanalysis/IO/CasaImageOpener.h>
+#include <images/Images/ImageOpener.h>
 
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
@@ -115,7 +115,7 @@ pair<SPIIF, SPIIC> ImageFactory::fromImage(
     Bool overwrite
 ) {
     _checkInfile(infile);
-    unique_ptr<LatticeBase> latt(CasaImageOpener::openImage(infile));
+    unique_ptr<LatticeBase> latt(ImageOpener::openImage(infile));
     ThrowIf (! latt, "Unable to open lattice");
     auto imagePair = _fromLatticeBase(latt);
     LogIO mylog;
@@ -293,7 +293,7 @@ SHARED_PTR<TempImage<Float> > ImageFactory::floatFromComplex(
 
 pair<SPIIF, SPIIC> ImageFactory::fromFile(const String& infile) {
     _checkInfile(infile);
-    unique_ptr<LatticeBase> latt(CasaImageOpener::openImage(infile));
+    unique_ptr<LatticeBase> latt(ImageOpener::openImage(infile));
     ThrowIf (! latt, "Unable to open lattice");
     return _fromLatticeBase(latt);
 }
