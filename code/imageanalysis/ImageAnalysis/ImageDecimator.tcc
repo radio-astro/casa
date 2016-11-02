@@ -157,7 +157,6 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 	os << "Decimated axis " << _axis << " by keeping only every nth plane, "
 		<< "where n=" << _factor << ". ";
 	this->addHistory(lor, os.str());
-    os.str("");
     if (_function == ImageDecimatorData::COPY) {
         os << "Directly copying every i*nth plane "
             << "in input to plane i in output.";
@@ -166,14 +165,22 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
         os << "Averaging every i to i*(n-1) planes in the input "
             << "image to form plane i in the output image.";
     }
+	this->addHistory(lor, os.str());
+    os.str("");
+    os << "Original " << this->_getImage()->name() << " size => "
+        << this->_getImage()->shape();
+	this->addHistory(lor, os.str());
+    *this->_getLog() << LogIO::NORMAL << os.str() << LogIO::POST;
+    os.str("");
+    os << "New " << this->_getOutname() << " size => "
+        << out.shape();
+	this->addHistory(lor, os.str());
+    *this->_getLog() << LogIO::NORMAL << os.str() << LogIO::POST;
     // FIXME decimating multiple beams not yet supported
     casacore::ImageUtilities::copyMiscellaneous(
         out, *subImage, ! subImage->imageInfo().hasMultipleBeams()
     );
-	this->addHistory(lor, os.str());
     return this->_prepareOutputImage(out, nullptr, outMask.get());
 }
-
-
 
 }
