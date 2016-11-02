@@ -183,16 +183,12 @@ PolAverageTVI::PolAverageTVI(ViImplementation2 *inputVII) :
 PolAverageTVI::~PolAverageTVI() {
 }
 
-void PolAverageTVI::corrType(Vector<Int> & corrTypes) const {
-  // Always return (Stokes::I)
-  Vector<Int> myCorrTypes(1, (Int) Stokes::I);
-  corrTypes.reference(myCorrTypes);
-}
-
-Int PolAverageTVI::dataDescriptionId() const {
-  // TODO
-  return TransformingVi2::dataDescriptionId();
-}
+//void PolAverageTVI::corrType(Vector<Int> & corrTypes) const {
+//  // Always return (Stokes::I)
+//  Vector<Int> myCorrTypes(1, (Int) Stokes::I);
+//  corrTypes.reference(myCorrTypes);
+//}
+//
 
 void PolAverageTVI::flag(Cube<Bool> & flags) const {
   auto const vb = getVii()->getVisBuffer();
@@ -215,14 +211,9 @@ void PolAverageTVI::flag(Matrix<Bool> & flags) const {
   flags.reference(transformedFlags.yzPlane(0));
 }
 
-Int PolAverageTVI::polarizationId() const {
-  // TODO
-  return TransformingVi2::polarizationId();
-}
-
 void PolAverageTVI::jonesC(Vector<SquareMatrix<Complex, 2> > & cjones) const {
   // TODO
-  throw AipsError("PolAverageTVI::jonesC");
+  throw AipsError("PolAverageTVI::jonesC should not be called.");
 }
 
 void PolAverageTVI::sigma(Matrix<Float> & sigmat) const {
@@ -285,33 +276,23 @@ void PolAverageTVI::sigmaSpectrum(Cube<Float> & wtsp) const {
 
 const VisImagingWeight & PolAverageTVI::getImagingWeightGenerator() const {
   // TODO
-  throw AipsError("PolAverageTVI::getImagingWeightGenerator");
+  throw AipsError("PolAverageTVI::getImagingWeightGenerator should not be called.");
 }
 
-Vector<Int> PolAverageTVI::getCorrelations() const {
-  // Always return (Stokes::I)
-  return Vector<Int>(1, Stokes::I);
-}
+//Vector<Int> PolAverageTVI::getCorrelations() const {
+//  // Always return (Stokes::I)
+//  return Vector<Int>(1, Stokes::I);
+//}
 
-Vector<Stokes::StokesTypes> PolAverageTVI::getCorrelationTypesDefined() const {
-  // Always return (Stokes::I)
-  return Vector<Stokes::StokesTypes>(1, Stokes::I);
-}
-
-Vector<Stokes::StokesTypes> PolAverageTVI::getCorrelationTypesSelected() const {
-  // Always return (Stokes::I)
-  return Vector<Stokes::StokesTypes>(1, Stokes::I);
-}
-
-void PolAverageTVI::dataDescriptionIds(Vector<Int> &ddids) const {
-  // TODO
-  TransformingVi2::dataDescriptionIds(ddids);
-}
-
-Int PolAverageTVI::nPolarizationIds() const {
-  // TODO
-  return TransformingVi2::nPolarizationIds();
-}
+//Vector<Stokes::StokesTypes> PolAverageTVI::getCorrelationTypesDefined() const {
+//  // Always return (Stokes::I)
+//  return Vector<Stokes::StokesTypes>(1, Stokes::I);
+//}
+//
+//Vector<Stokes::StokesTypes> PolAverageTVI::getCorrelationTypesSelected() const {
+//  // Always return (Stokes::I)
+//  return Vector<Stokes::StokesTypes>(1, Stokes::I);
+//}
 
 //////////
 // GeometricPolAverageTVI
