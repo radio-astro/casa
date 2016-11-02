@@ -134,7 +134,7 @@ public:
                            const casacore::Int nmask=0);
 
   // implementation of Amanda's autoboxing algorithm
-  void autoMaskByThreshold3(casacore::ImageInterface<float>& mask,
+  void autoMaskByMultiThreshold(casacore::ImageInterface<float>& mask,
                                           const casacore::ImageInterface<casacore::Float>& res, 
                                           const casacore::ImageInterface<casacore::Float>& psf, 
                                           const casacore::Record& stats, 
@@ -142,6 +142,7 @@ public:
                                           const casacore::Float& sidelobeLevel=0.0,
                                           const casacore::Float& sidelobeThresholdFactor=3.0,
                                           const casacore::Float& noiseThresholdFactor=3.0,
+                                          const casacore::Float& lowNoiseThresholdFactor=2.0,
                                           const casacore::Float& cutThreshold=0.01,
                                           const casacore::Float& smoothFactor=1.0,
                                           const casacore::Float& minBeamFrac=-1); 

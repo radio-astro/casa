@@ -930,7 +930,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //String lelstring = pbname+">0.92 && "+pbname+"<0.98";
     //cerr<<"lelstring = "<<lelstring<<endl;
     cerr<<"LELMask="<<LELmask<<endl;
-    ImageStatsCalculator imcalc( tempres_ptr, 0, LELmask, False); 
+    ImageStatsCalculator imcalc( tempres_ptr, regionPtr, LELmask, False); 
     Vector<Int> axes(2);
     axes[0] = 0;
     axes[1] = 1;
@@ -1237,7 +1237,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }//end of makeAutoMaskByThreshold2
 
   // for implemtation of Amanda's algorithm
-  void SDMaskHandler::autoMaskByThreshold3(ImageInterface<Float>& mask,
+  void SDMaskHandler::autoMaskByMultiThreshold(ImageInterface<Float>& mask,
                                           const ImageInterface<Float>& res, 
                                           const ImageInterface<Float>& psf, 
                                           const Record& stats, 
@@ -1245,6 +1245,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                           const Float& sidelobeLevel,
                                           const Float& sidelobeThresholdFactor,
                                           const Float& noiseThresholdFactor,
+                                          const Float& lowNoiseThresholdFactor,
                                           const Float& cutThreshold,
                                           const Float& smoothFactor,
                                           const Float& minBeamFrac) 
@@ -1252,6 +1253,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SDMaskHandler","autoMaskByThreshold3",WHERE) );
     Array<Double> rmss, maxs, mads;
     Float resPeak, resRms;
+    Array<Double> resRmss;
     Double rmsthresh, minrmsval, maxrmsval, minmaxval, maxmaxval, minmadval, maxmadval;
     IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos, minmadpos, maxmadpos;
     Int npix, nxpix, nypix;
@@ -1300,7 +1302,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     stats.get(RecordFieldId("max"), maxs);
     stats.get(RecordFieldId("rms"), rmss);
     stats.get(RecordFieldId("medabsdevmed"), mads);
-     
+    
+    // only useful if single threshold value are used for all spectral planes... 
     minMax(minmaxval,maxmaxval,minmaxpos, maxmaxpos, maxs);
     minMax(minrmsval,maxrmsval,minrmspos, maxrmspos, rmss); 
     minMax(minmadval,maxmadval,minmadpos, maxmadpos, mads); 
@@ -1308,35 +1311,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     resPeak = maxmaxval;
     // use MAD and convert to rms 
     resRms = maxmadval * 1.4826; 
+    resRmss = mads * 1.4826;
 
     //define mask threshold  
     Float sidelobeThreshold = sidelobeLevel * sidelobeThresholdFactor * resPeak;
     Float noiseThreshold = noiseThresholdFactor * resRms;
+    Float lowNoiseThreshold = lowNoiseThresholdFactor * resRms; 
     Float maskThreshold = max(sidelobeThreshold, noiseThreshold);
-    String ThresholdType = (maskThreshold == sidelobeThreshold? "sidelobe": "noise");
+    Float lowMaskThreshold = max(sidelobeThreshold, lowNoiseThreshold);
 
+    String ThresholdType = (maskThreshold == sidelobeThreshold? "sidelobe": "noise");
 
     os << LogIO::NORMAL1 <<" Using "<<ThresholdType<<" threshold:"<<maskThreshold<<LogIO::POST;
 
-    // branch out if just need to glow mask
+    // branch out if just need to grow mask, obviously no 'grow' mask for the beginning of the first iteration
+    // but how should detect if it is the first iteration... the original python prototype code has
+    // a seperate createTHresholdMask... save a state in iterBot or get ncycle info from there?
 
     LatticeExpr<Float> themask; 
-    if (resPeak > maskThreshold) {
-      if (minBeamFrac > 0.0 ) {
+    Bool firstIter(false);
+    // do thresholding via pruneRegions()
+    if (minBeamFrac > 0.0 ) {
         // make temp mask image consist of the original pix value and below the threshold is set to 0 
         TempImage<Float> maskedRes(res.shape(), res.coordinates());
         maskedRes.copyData( (LatticeExpr<Float>)( iif(res > maskThreshold, res, 0.0)) );
         double tempthresh=0.0;
         SHARED_PTR<ImageInterface<Float> > tempIm_ptr = pruneRegions(maskedRes, tempthresh,  nmask, npix);
         themask = LatticeExpr<Float> ( iif( *(tempIm_ptr.get()) > maskThreshold, 1.0, 0.0 ));
-      }
-      else {
-        themask = LatticeExpr<Float> ( iif( res > maskThreshold, 1.0, 0.0 ));
-      }  
-    } 
-    else { // do growmask
-        // binary dilation code here....
     }
+    else {
+      themask = LatticeExpr<Float> ( iif( res > maskThreshold, 1.0, 0.0 ));
+    }  
     tempmask.copyData(themask);
    
     //smooth
@@ -1344,6 +1349,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //clean up (appy cutThreshold to convolved mask image)
     LatticeExpr<Float> thenewmask( iif( *(outmask.get()) > cutThreshold, 1.0, 0.0 ));
+
+    if (!firstIter) {
+       //call growMask
+    }
 
     //for debug
     /***
@@ -1766,7 +1775,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }// end of makePBMask
 
-  //n apply per channel plane threshold
+  //apply per channel plane threshold
   void SDMaskHandler::maskWithPerPlaneThreshold(ImageInterface<Float>& image, ImageInterface<Float>& mask, Vector<Float>& thresholds) 
   {
     IPosition imshape = image.shape();
