@@ -298,8 +298,7 @@ private:
         SHARED_PTR<casacore::ArrayLattice<casacore::Bool> >& initMask,
         casacore::Double zeroLevelOffsetSolution, casacore::Double zeroLevelOffsetError,
         casacore::Bool hasSpectralAxis, casacore::Int spectralAxisNumber, casacore::Bool outputImages, const casacore::IPosition& planeShape,
-        const casacore::Array<casacore::Float>& pixels, const casacore::Array<casacore::Bool>& pixelMask, const casacore::Fit2D& fitter,
-        SPIIF templateImage
+        const casacore::Array<casacore::Float>& pixels, const casacore::Array<casacore::Bool>& pixelMask, const casacore::Fit2D& fitter
     );
 
     casacore::Quantity _pixelWidth();

@@ -378,7 +378,7 @@ void ImageFitter::_fitLoop(
                 initMask, zeroLevelOffsetSolution,
                 zeroLevelOffsetError, hasSpectralAxis,
                 spectralAxisNumber, outputImages, planeShape,
-                pixels, pixelMask, fitter, templateImage
+                pixels, pixelMask, fitter
             );
         }
         else {
@@ -433,7 +433,7 @@ void ImageFitter::_doConverged(
     Double zeroLevelOffsetSolution, Double zeroLevelOffsetError,
     Bool hasSpectralAxis, Int spectralAxisNumber, Bool outputImages,
     const IPosition& planeShape, const Array<Float>& pixels,
-    const Array<Bool>& pixelMask, const Fit2D& fitter, SPIIF templateImage
+    const Array<Bool>& pixelMask, const Fit2D& fitter
 ) {
     convolvedList.addList(_curConvolvedList);
     deconvolvedList.addList(_curDeconvolvedList);
@@ -464,12 +464,11 @@ void ImageFitter::_doConverged(
         pixelOffsets.first, pixelOffsets.second
     );
     SHARED_PTR<TempImage<Float> > fittedResid;
-    if (outputImages) {
-        Array<Bool> myMask(templateImage->shape(), true);
+    if (modelImage) {
+        modelImage->putSlice(curModelPixels, location);
+    }
+    if (residualImage) {
         residualImage->putSlice(curResidPixels, location);
-        if (modelImage) {
-            modelImage->putSlice(curModelPixels, location);
-        }
         fittedResid = DYNAMIC_POINTER_CAST<TempImage<Float> >(
             SubImageFactory<Float>::createImage(
                 *residualImage, "", *_getRegion(), _getMask(),
@@ -486,26 +485,22 @@ void ImageFitter::_doConverged(
         }
     }
     else {
-        if (! tImage) {
-            // coordinates arean't important, just need the stats for a masked lattice.
-            tImage.reset(
-                new TempImage<Float>(
-                    curResidPixels.shape(), CoordinateUtil::defaultCoords2D()
-                )
-            );
-            initMask.reset(
-                new ArrayLattice<Bool>(
-                    Array<Bool>(curResidPixels.shape(), true)
-                )
-            );
-            tImage->attachMask(*initMask);
-        }
+        // coordinates arean't important, just need the stats for a masked lattice.
+        tImage.reset(
+            new TempImage<Float>(
+                curResidPixels.shape(), CoordinateUtil::defaultCoords2D()
+            )
+        );
+        initMask.reset(
+            new ArrayLattice<Bool>(
+                Array<Bool>(curResidPixels.shape(), true)
+            )
+        );
+        tImage->attachMask(*initMask);
         fittedResid = tImage;
         fittedResid->put(curResidPixels);
     }
-    //Lattice<Bool> *fittedResidPixelMask = &(fittedResid->pixelMask());
     LCPixelSet lcResidMask(pixelMask, LCBox(pixelMask.shape()));
-    //fittedResidPixelMask = &lcResidMask;
     std::unique_ptr<MaskedLattice<Float> > maskedLattice(fittedResid->cloneML());
     LatticeStatistics<Float> lStats(*maskedLattice, false);
     Array<Double> stat;
