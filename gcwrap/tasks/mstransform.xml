@@ -380,7 +380,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<param type="bool" name="want_cont" subparam="true">
 			<description>Produce continuum estimate instead of continuum subtracted data</description>
 			<value>False</value>
-		</param>		
+		</param>
+		
+		<param type="bool" name="denoising_lib" subparam="true">
+			<description>Use new denoising library (based on GSL) instead of casacore fitting routines</description>
+			<value>True</value>
+		</param>	
+		
+		<param type="int" name="niter" subparam="true">
+			<description>Number of iterations for re-weighted linear fit</description>
+			<value>1</value>
+		</param>			
 
         <!-- HIDDEN PARAMETERS, UNRELATED to TIME AVERAGING -->
         <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
@@ -465,8 +475,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   <default param="fitspw"><value type="string"></value></default>
                   <default param="fitorder"><value type="int">0</value></default>
                   <default param="want_cont"><value type="bool">False</value></default>
+                  <default param="denoising_lib"><value type="bool">True</value></default>   
+                  <default param="niter"><value type="int">1</value></default>          
             </equals>
-        </when>                      
+        </when>      
     </constraints>
 
 </input>

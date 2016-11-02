@@ -173,75 +173,44 @@ public:
 	Vector<Complex> calcFitCoeff(Vector<Complex> &data);
 	template<class T> Vector<T> calcFitCoeff(Vector<T> &data)
 	{
-		// Store input data as double
+		// Set data
 		setData(data);
 
 		// Call fit method to calculate coefficients
-		gsl_vector *coeffGSL = calcFitCoeffCore(data_p.column(0));
+		calcFitCoeffCore(data_p.column(0),gsl_coeff_real_p);
 
 		// Convert GSL vector into CASA vector
 		Vector<T> coeffCASA(ncomponents_p);
 		for (size_t coeff_idx=0;coeff_idx<ncomponents_p;coeff_idx++)
 		{
-			coeffCASA(coeff_idx) = gsl_vector_get(coeffGSL,coeff_idx);
+			coeffCASA(coeff_idx) = gsl_vector_get(gsl_coeff_real_p,coeff_idx);
 		}
-
-		// Free GSL resources
-		gsl_vector_free (coeffGSL);
 
 		return coeffCASA;
 	}
 
-	void calcFitModelStd(Vector<Complex> &data, Vector<Complex> &model, Vector<Complex> &std);
-	template<class T> void calcFitModelStd(Vector<T> &data, Vector<T> &model, Vector<T> &std)
+	void calcFitModelStd(Vector<Complex> &model,Vector<Complex> &std);
+	template<class T> void calcFitModelStd(	Vector<T> &model, Vector<T> &std)
 	{
-		// Store input data as double
-		setData(data);
-
-		// Call fit method to calculate real/imag coefficients
-		gsl_vector *coeff_real = calcFitCoeffCore(data_p.column(0));
-
-		// Get imag coefficients
-		gsl_vector xGSL;
-		double y, yerr;
-		for (size_t data_idx=0;data_idx<ndata_p;data_idx++)
-		{
-			Vector<Double> xCASA = model_p->getModelAt(data_idx);
-			if (xCASA.size() != ncomponents_p) xCASA.resize(ncomponents_p,True);
-			GslVectorWrap(xCASA,xGSL);
-
-			y = 0;
-			yerr = 0;
-			errno_p = gsl_multifit_linear_est (&xGSL, coeff_real, gsl_covariance_p, &y, &yerr);
-
-			if (model.size() > 0) model(data_idx) = y;
-			if (std.size() > 0 ) std(data_idx) = yerr;
-		}
-
-		// Free GSL resources
-		gsl_vector_free (coeff_real);
+		calcFitModelStdCore(model,std,gsl_coeff_real_p);
 
 		return;
 	}
 
-	template<class T> Vector<T>  calcFitModel(Vector<T> &data)
+	template<class T> void calcFitModel(Vector<T> &model)
 	{
-		Vector<T> model(ndata_p);
 		Vector<T> std;
+		calcFitModelStd(model, std);
 
-		calcFitModelStd(data, model, std);
-
-		return model;
+		return;
 	}
 
-	template<class T> Vector<T>  calcFitStd(Vector<T> &data)
+	template<class T> void calcFitStd(Vector<T> &std)
 	{
 		Vector<T> model;
-		Vector<T> std(ndata_p);
+		calcFitModelStd(model, std);
 
-		calcFitModelStd(data, model, std);
-
-		return std;
+		return;
 	}
 
 
@@ -256,7 +225,28 @@ protected:
 	void setData(Vector<Double> &data);
 	void setData(Vector<Complex> &data);
 
-	virtual gsl_vector* calcFitCoeffCore(Vector<Double> data);
+	virtual void calcFitCoeffCore(Vector<Double> data, gsl_vector* coeff);
+	template<class T> void calcFitModelStdCore(	Vector<T> &model, Vector<T> &std, gsl_vector *coeff)
+	{
+		// Get imag coefficients
+		gsl_vector xGSL;
+		double y, yerr;
+		for (size_t data_idx=0;data_idx<ndata_p;data_idx++)
+		{
+			Vector<Double> xCASA = model_p->getModelAt(data_idx);
+			if (xCASA.size() != ncomponents_p) xCASA.resize(ncomponents_p,True);
+			GslVectorWrap(xCASA,xGSL);
+
+			y = 0;
+			yerr = 0;
+			errno_p = gsl_multifit_linear_est (&xGSL, coeff, gsl_covariance_p, &y, &yerr);
+
+			if (model.size() > 0) model(data_idx) = y;
+			if (std.size() > 0 ) std(data_idx) = yerr;
+		}
+
+		return;
+	}
 
 	// Model
 	size_t ndata_p;
@@ -266,7 +256,8 @@ protected:
 	GslLinearModelBase<Double> *model_p;
 
 	// GSL Resources
-	gsl_vector *gsl_coeff_p;
+	gsl_vector *gsl_coeff_real_p;
+	gsl_vector *gsl_coeff_imag_p;
 	gsl_matrix *gsl_covariance_p;
 	gsl_multifit_linear_workspace *gsl_workspace_p;
 
@@ -301,11 +292,35 @@ public:
 protected:
 
 	void setModel(GslLinearModelBase<Double> &model);
-	gsl_vector* calcFitCoeffCore(Vector<Double> data);
+	virtual void calcFitCoeffCore(Vector<Double> data, gsl_vector* coeff);
 
 	// Weights
 	Vector<Double> weights_p;
 	gsl_vector gls_weights_p;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// Iteratively Reweighted Least Squares class
+//////////////////////////////////////////////////////////////////////////
+
+class IterativelyReweightedLeastSquares : public GslMultifitWeightedLinear
+{
+
+public:
+
+	IterativelyReweightedLeastSquares();
+	IterativelyReweightedLeastSquares(GslLinearModelBase<Double> &model,size_t nIter);
+	~IterativelyReweightedLeastSquares();
+
+	void setNIter(size_t nIter) {nIter_p = nIter;};
+
+	virtual void calcFitCoeffCore(Vector<Double> data, gsl_vector* coeff);
+	virtual void updateWeights(Vector<Double> &data, Vector<Double> &model,  Vector<Double> &weights);
+
+protected:
+
+	size_t nIter_p;
+
 };
 
 } //# NAMESPACE DENOISING - END

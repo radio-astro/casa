@@ -41,8 +41,10 @@ UVContSubTVI::UVContSubTVI(	ViImplementation2 * inputVii,
 {
 	fitOrder_p = 0;
 	want_cont_p = False;
-	gsl_p = True;
 	fitspw_p = String("");
+	withDenoisingLib_p = True;
+	niter_p = 1;
+
 	inputFrequencyMap_p.clear();
 
 	// Parse and check configuration parameters
@@ -114,6 +116,33 @@ Bool UVContSubTVI::parseConfiguration(const Record &configuration)
 						<< "Line-free channel selection is " << fitspw_p << LogIO::POST;
 		}
 	}
+
+	exists = -1;
+	exists = configuration.fieldNumber ("denoising_lib");
+	if (exists >= 0)
+	{
+		configuration.get (exists, withDenoisingLib_p);
+
+		if (withDenoisingLib_p)
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
+						<< "Using denoising lib (GSL based)" << LogIO::POST;
+		}
+	}
+
+	exists = -1;
+	exists = configuration.fieldNumber ("niter");
+	if (exists >= 0)
+	{
+		configuration.get (exists, niter_p);
+
+		if (niter_p > 1)
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
+						<< "Number of iterations for re-weighted linear fit: " << niter_p << LogIO::POST;
+		}
+	}
+
 
 	return ret;
 }
@@ -286,8 +315,9 @@ template<class T> void UVContSubTVI::transformDataCube(	const Cube<T> &inputVis,
 	// Determine number of OpenMP threads
 	int nThreads = 1;
 #ifdef _OPENMP
-	if (gsl_p) nThreads = omp_get_max_threads();
+	if (withDenoisingLib_p) nThreads = omp_get_max_threads();
 #endif
+	nThreads = 1;
 
 	// Transform data
 	if (nThreads > 1)
@@ -336,9 +366,9 @@ template<class T> void UVContSubTVI::transformDataCore(	denoising::GslPolynomial
 
 	if (want_cont_p)
 	{
-		if (gsl_p)
+		if (withDenoisingLib_p)
 		{
-			 UVContEstimationGSLKernel<T> kernel(model,lineFreeChannelMask);
+			 UVContEstimationDenoisingKernel<T> kernel(model,niter_p,lineFreeChannelMask);
 			 UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
 			 transformFreqAxis2(inputVis.shape(),transformer,parallelCorrAxis);
 		}
@@ -351,9 +381,9 @@ template<class T> void UVContSubTVI::transformDataCore(	denoising::GslPolynomial
 	}
 	else
 	{
-		if (gsl_p)
+		if (withDenoisingLib_p)
 		{
-			 UVContSubtractionGSLKernel<T> kernel(model,lineFreeChannelMask);
+			 UVContSubtractionDenoisingKernel<T> kernel(model,niter_p,lineFreeChannelMask);
 			 UVContSubTransformEngine<T> transformer(&kernel,&inputData,&outputData);
 			 transformFreqAxis2(inputVis.shape(),transformer,parallelCorrAxis);
 		}
@@ -730,23 +760,25 @@ template<class T> void UVContEstimationKernel<T>::kernelCore(	Vector<Float> &inp
 }
 
 //////////////////////////////////////////////////////////////////////////
-// UVContSubtractionGSLKernel class
+// UVContSubtractionDenoisingKernel class
 //////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> UVContSubtractionGSLKernel<T>::UVContSubtractionGSLKernel(denoising::GslPolynomialModel<Double>* model,
-																			Vector<Bool> *lineFreeChannelMask):
-																			UVContSubKernel<T>(model,lineFreeChannelMask)
+template<class T> UVContSubtractionDenoisingKernel<T>::UVContSubtractionDenoisingKernel(denoising::GslPolynomialModel<Double>* model,
+																						size_t nIter,
+																						Vector<Bool> *lineFreeChannelMask):
+																						UVContSubKernel<T>(model,lineFreeChannelMask)
 {
 	fitter_p.resetModel(*model);
+	fitter_p.setNIter(nIter);
 }
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void UVContSubtractionGSLKernel<T>::changeFitOrder(size_t order)
+template<class T> void UVContSubtractionDenoisingKernel<T>::changeFitOrder(size_t order)
 {
 	fitOrder_p = order;
 	fitter_p.resetNComponents(order+1);
@@ -757,8 +789,8 @@ template<class T> void UVContSubtractionGSLKernel<T>::changeFitOrder(size_t orde
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void UVContSubtractionGSLKernel<T>::defaultKernel(	Vector<T> &inputVector,
-																		Vector<T> &outputVector)
+template<class T> void UVContSubtractionDenoisingKernel<T>::defaultKernel(	Vector<T> &inputVector,
+																			Vector<T> &outputVector)
 {
 	outputVector = inputVector;
 	return;
@@ -767,16 +799,19 @@ template<class T> void UVContSubtractionGSLKernel<T>::defaultKernel(	Vector<T> &
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void UVContSubtractionGSLKernel<T>::kernelCore(	Vector<T> &inputVector,
-																	Vector<Bool> &inputFlags,
-																	Vector<Float> &inputWeights,
-																	Vector<T> &outputVector)
+template<class T> void UVContSubtractionDenoisingKernel<T>::kernelCore(	Vector<T> &inputVector,
+																		Vector<Bool> &inputFlags,
+																		Vector<Float> &inputWeights,
+																		Vector<T> &outputVector)
 {
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
-	Vector<T> model = fitter_p.calcFitModel(inputVector);
+	fitter_p.calcFitCoeff(inputVector);
+
+	Vector<T> model(outputVector.size());
+	fitter_p.calcFitModel(model);
+
 	outputVector = inputVector;
 	outputVector -= model;
-
 
 	/*
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
@@ -812,23 +847,25 @@ template<class T> void UVContSubtractionGSLKernel<T>::kernelCore(	Vector<T> &inp
 }
 
 //////////////////////////////////////////////////////////////////////////
-// UVContEstimationGSLKernel class
+// UVContEstimationDenoisingKernel class
 //////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> UVContEstimationGSLKernel<T>::UVContEstimationGSLKernel(	denoising::GslPolynomialModel<Double>* model,
-																			Vector<Bool> *lineFreeChannelMask):
-																			UVContSubKernel<T>(model,lineFreeChannelMask)
+template<class T> UVContEstimationDenoisingKernel<T>::UVContEstimationDenoisingKernel(	denoising::GslPolynomialModel<Double>* model,
+																						size_t nIter,
+																						Vector<Bool> *lineFreeChannelMask):
+																						UVContSubKernel<T>(model,lineFreeChannelMask)
 {
 	fitter_p.resetModel(*model);
+	fitter_p.setNIter(nIter);
 }
 
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void UVContEstimationGSLKernel<T>::changeFitOrder(size_t order)
+template<class T> void UVContEstimationDenoisingKernel<T>::changeFitOrder(size_t order)
 {
 	fitOrder_p = order;
 	fitter_p.resetNComponents(order+1);
@@ -838,8 +875,8 @@ template<class T> void UVContEstimationGSLKernel<T>::changeFitOrder(size_t order
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void UVContEstimationGSLKernel<T>::defaultKernel(	Vector<T> &,
-																	Vector<T> &outputVector)
+template<class T> void UVContEstimationDenoisingKernel<T>::defaultKernel(	Vector<T> &,
+																			Vector<T> &outputVector)
 {
 	outputVector = 0;
 	return;
@@ -848,13 +885,14 @@ template<class T> void UVContEstimationGSLKernel<T>::defaultKernel(	Vector<T> &,
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template<class T> void UVContEstimationGSLKernel<T>::kernelCore(	Vector<T> &inputVector,
-																	Vector<Bool> &inputFlags,
-																	Vector<Float> &inputWeights,
-																	Vector<T> &outputVector)
+template<class T> void UVContEstimationDenoisingKernel<T>::kernelCore(	Vector<T> &inputVector,
+																		Vector<Bool> &inputFlags,
+																		Vector<Float> &inputWeights,
+																		Vector<T> &outputVector)
 {
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
-	outputVector = fitter_p.calcFitModel(inputVector);
+	fitter_p.calcFitCoeff(inputVector);
+	fitter_p.calcFitModel(outputVector);
 
 	/*
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);

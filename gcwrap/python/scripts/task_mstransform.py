@@ -60,6 +60,8 @@ def mstransform(
              fitspw,
              fitorder,
              want_cont,
+             denoising_lib,
+             niter,
              disableparallel,    # HIDDEN parameter to create MMS in sequential
              ddistart,           # HIDDEN internal parameter for the sub-table re-indexing
              taql,               # HIDDEN internal parameter
@@ -279,6 +281,8 @@ def mstransform(
             uvcontsub_config['fitspw'] = fitspw
             uvcontsub_config['fitorder'] = fitorder
             uvcontsub_config['want_cont'] = want_cont
+            uvcontsub_config['denoising_lib'] = denoising_lib   
+            uvcontsub_config['niter'] = niter         
             config['uvcontsublib'] = dict(uvcontsub_config)
         
         # Configure the tool and all the parameters

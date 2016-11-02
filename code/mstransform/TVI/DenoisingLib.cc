@@ -83,7 +83,8 @@ GslMultifitLinearBase::GslMultifitLinearBase()
 	ncomponents_p = 0;
 	max_ncomponents_p = 0;
 
-	gsl_coeff_p = NULL;
+	gsl_coeff_real_p = NULL;
+	gsl_coeff_imag_p = NULL;
 	gsl_covariance_p = NULL;
 	gsl_workspace_p = NULL;
 
@@ -119,6 +120,8 @@ void GslMultifitLinearBase::allocGslResources()
 {
 	gsl_covariance_p = gsl_matrix_alloc (ncomponents_p, ncomponents_p);
 	gsl_workspace_p = gsl_multifit_linear_alloc (ndata_p, ncomponents_p);
+	gsl_coeff_real_p = gsl_vector_alloc(ncomponents_p);
+	gsl_coeff_imag_p = gsl_vector_alloc(ncomponents_p);
 }
 
 // -----------------------------------------------------------------------
@@ -128,6 +131,8 @@ void GslMultifitLinearBase::freeGslResources()
 {
 	if (gsl_covariance_p != NULL) gsl_matrix_free (gsl_covariance_p);
 	if (gsl_workspace_p != NULL) gsl_multifit_linear_free (gsl_workspace_p);
+	if (gsl_coeff_real_p != NULL) gsl_vector_free (gsl_coeff_real_p);
+	if (gsl_coeff_imag_p != NULL) gsl_vector_free (gsl_coeff_imag_p);
 }
 
 // -----------------------------------------------------------------------
@@ -225,20 +230,17 @@ void GslMultifitLinearBase::setData(Vector<Complex> &data)
 //       1   , x_n  , x_n^2 , ..., x_n^order]
 //
 // -----------------------------------------------------------------------
-gsl_vector* GslMultifitLinearBase::calcFitCoeffCore(Vector<Double> data)
+void GslMultifitLinearBase::calcFitCoeffCore(Vector<Double> data, gsl_vector* coeff)
 {
 	// Wrap data vector in a gsl_vector
 	gsl_vector data_gsl;
 	GslVectorWrap(data,data_gsl);
 
-	// Allocate vector of coeff
-	gsl_vector* coeff = gsl_vector_alloc (ncomponents_p);
-
 	// Perform coeff calculation
 	errno_p = gsl_multifit_linear (&gsl_model_p, &data_gsl,
 			coeff, gsl_covariance_p, &chisq_p, gsl_workspace_p);
 
-	return coeff;
+	return;
 }
 
 // -----------------------------------------------------------------------
@@ -246,24 +248,20 @@ gsl_vector* GslMultifitLinearBase::calcFitCoeffCore(Vector<Double> data)
 // -----------------------------------------------------------------------
 Vector<Complex> GslMultifitLinearBase::calcFitCoeff(Vector<Complex> &data)
 {
-	// Store input data as double
+	// Set data
 	setData(data);
 
 	// Call fit method to calculate real/imag coefficients
-	gsl_vector *real_coeff = calcFitCoeffCore(data_p.column(0));
-	gsl_vector *imag_coeff = calcFitCoeffCore(data_p.column(1));
+	calcFitCoeffCore(data_p.column(0),gsl_coeff_real_p);
+	calcFitCoeffCore(data_p.column(1),gsl_coeff_imag_p);
 
 	// Get imag coefficients
 	Vector<Complex> fitCoeff(ncomponents_p);
 	for (size_t coeff_idx=0;coeff_idx<ncomponents_p;coeff_idx++)
 	{
-		fitCoeff(coeff_idx) = Complex(	gsl_vector_get(real_coeff,coeff_idx),
-										gsl_vector_get(imag_coeff,coeff_idx));
+		fitCoeff(coeff_idx) = Complex(	gsl_vector_get(gsl_coeff_real_p,coeff_idx),
+										gsl_vector_get(gsl_coeff_imag_p,coeff_idx));
 	}
-
-	// Free GSL resources
-	gsl_vector_free (real_coeff);
-	gsl_vector_free (imag_coeff);
 
 	return fitCoeff;
 }
@@ -271,15 +269,8 @@ Vector<Complex> GslMultifitLinearBase::calcFitCoeff(Vector<Complex> &data)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void GslMultifitLinearBase::calcFitModelStd(Vector<Complex> &data, Vector<Complex> &model, Vector<Complex> &std)
+void GslMultifitLinearBase::calcFitModelStd(Vector<Complex> &model,Vector<Complex> &std)
 {
-	// Store input data as double
-	setData(data);
-
-	// Call fit method to calculate real/imag coefficients
-	gsl_vector *coeff_real = calcFitCoeffCore(data_p.column(0));
-	gsl_vector *coeff_imag = calcFitCoeffCore(data_p.column(1));
-
 	// Get imag coefficients
 	gsl_vector xGSL;
 	double y_real, y_imag, yerr_real, yerr_imag;
@@ -291,19 +282,15 @@ void GslMultifitLinearBase::calcFitModelStd(Vector<Complex> &data, Vector<Comple
 
 		y_real = 0;
 		yerr_real = 0;
-		errno_p = gsl_multifit_linear_est (&xGSL, coeff_real, gsl_covariance_p, &y_real, &yerr_real);
+		errno_p = gsl_multifit_linear_est (&xGSL, gsl_coeff_real_p, gsl_covariance_p, &y_real, &yerr_real);
 
 		y_imag = 0;
 		yerr_imag = 0;
-		errno_p = gsl_multifit_linear_est (&xGSL, coeff_imag, gsl_covariance_p, &y_imag, &yerr_imag);
+		errno_p = gsl_multifit_linear_est (&xGSL, gsl_coeff_imag_p, gsl_covariance_p, &y_imag, &yerr_imag);
 
 		if (model.size() > 0) model(data_idx) = Complex(y_real,y_imag);
 		if (std.size() > 0 ) std(data_idx) = Complex(yerr_real,yerr_imag);
 	}
-
-	// Free GSL resources
-	gsl_vector_free (coeff_real);
-	gsl_vector_free (coeff_imag);
 
 	return;
 }
@@ -432,20 +419,123 @@ void GslMultifitWeightedLinear::setWeightsAndFlags(Vector<Float> &weights, Vecto
 //       Therefore input data is a matrix where each row represents a data series
 //
 // -----------------------------------------------------------------------
-gsl_vector* GslMultifitWeightedLinear::calcFitCoeffCore(Vector<Double> data)
+void GslMultifitWeightedLinear::calcFitCoeffCore(Vector<Double> data, gsl_vector* coeff)
 {
 	// Wrap data vector in a gsl_vector
 	gsl_vector data_gsl;
 	GslVectorWrap(data,data_gsl);
 
-	// Allocate vector of coeff
-	gsl_vector* coeff = gsl_vector_alloc (ncomponents_p);
-
 	// Perform coeff calculation
 	errno_p = gsl_multifit_wlinear (&gsl_model_p, &gls_weights_p, &data_gsl,
 			coeff, gsl_covariance_p, &chisq_p, gsl_workspace_p);
 
-	return coeff;
+	return;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// IterativelyReweightedLeastSquares class
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+IterativelyReweightedLeastSquares::IterativelyReweightedLeastSquares() :
+		GslMultifitWeightedLinear()
+{
+	nIter_p = 1;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+IterativelyReweightedLeastSquares::IterativelyReweightedLeastSquares(GslLinearModelBase<Double> &model,size_t nIter) :
+		GslMultifitWeightedLinear(model)
+{
+	nIter_p = nIter;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+IterativelyReweightedLeastSquares::~IterativelyReweightedLeastSquares()
+{
+
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void IterativelyReweightedLeastSquares::calcFitCoeffCore(Vector<Double> data, gsl_vector* coeff)
+{
+	// Wrap data vector in a gsl_vector
+	gsl_vector data_gsl;
+	GslVectorWrap(data,data_gsl);
+
+	if (nIter_p == 1)
+	{
+		errno_p = gsl_multifit_wlinear (&gsl_model_p, &gls_weights_p, &data_gsl,
+				coeff, gsl_covariance_p, &chisq_p, gsl_workspace_p);
+	}
+	else
+	{
+		// Create a vector to store iterative weights and wrap it in a gsl_vector
+		Vector<Double> reweights(ndata_p);
+		reweights = weights_p; // Deep copy
+		gsl_vector reweights_gsl;
+		GslVectorWrap(reweights,reweights_gsl);
+
+		// Create vectors to store model & std
+		Vector<Double> std(ndata_p);
+		Vector<Double> model(ndata_p);
+
+		// Iterative process
+		for (size_t iter=0; iter<nIter_p; iter++)
+		{
+			// Calculate coefficients for this iteration
+			errno_p = gsl_multifit_wlinear (&gsl_model_p, &reweights_gsl, &data_gsl,
+					coeff, gsl_covariance_p, &chisq_p, gsl_workspace_p);
+
+			if (iter<nIter_p-1)
+			{
+				// Calculate output std
+				calcFitModelStdCore(model,std,coeff);
+
+				// Update weights
+				updateWeights(data,model,reweights);
+			}
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void IterativelyReweightedLeastSquares::updateWeights(Vector<Double> &data, Vector<Double> &model,  Vector<Double> &weights)
+{
+	double reWeight, currentResidual, maxResidual;
+
+	// Find max residual
+	maxResidual = 0;
+	for (size_t idx=0; idx<ndata_p; idx++)
+	{
+		currentResidual = 0;
+		if (weights(idx) > 0)
+		{
+			currentResidual = abs(data(idx)-model(idx));
+			if (currentResidual > maxResidual) maxResidual = currentResidual;
+		}
+		weights(idx) = currentResidual;
+	}
+
+	// Normalize
+	for (size_t idx=0; idx<ndata_p; idx++)
+	{
+		if (weights(idx) > 0) weights(idx) = (maxResidual - weights(idx))/maxResidual;
+	}
+
+	return;
 }
 
 } //# NAMESPACE DENOISING - END
