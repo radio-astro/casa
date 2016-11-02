@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 
     
     Input inp;
-    inp.version("2015/07/15 by CM (MLLN; CASA-BCST) ");
+    inp.version("2016/11/02 by CM (MLLN; CASA-BCST) ");
     // Title of CM  i.e Code Monkey is
     //Master Lead Lion Ninja: CASA-Big Cheese Synthesis Team
     inp.create("outimage", "Out.image", "Output concatenatedimage");
@@ -125,12 +125,12 @@ int main(int argc, char **argv)
     if(conctype=="virtualmove"){
       if(!moveImages(outname, images))
 	return -1;
-      outname=outname+"/concat.aipsio";
+      //outname=outname+"/concat.aipsio";
     }
     if(conctype=="virtualcopy"){
-      if(!copyImages(outname, images))
-	return -1;
-      outname=outname+"/concat.aipsio";
+         if(!copyImages(outname, images))
+	   return -1;
+      //outname=outname+"/concat.aipsio";
     }
     Block<SHARED_PTR<PagedImage<Float> > > vim(nimages);
     for (Int k=0; k < nimages; ++k){
