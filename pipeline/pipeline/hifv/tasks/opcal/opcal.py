@@ -1,19 +1,19 @@
 from __future__ import absolute_import
+
 import types
 
-from pipeline.hif.heuristics import caltable as caltable_heuristic
+import numpy
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.casatools as casatools
+from pipeline.h.heuristics import caltable as caltable_heuristic
+from pipeline.hifv.heuristics import find_EVLA_band
 from pipeline.infrastructure import casa_tasks
 from . import resultobjects
-import pipeline.infrastructure.casatools as casatools
-import numpy
-from pipeline.hifv.heuristics import find_EVLA_band
-
 
 LOG = infrastructure.get_logger(__name__)
-
 
 
 def _find_spw(vis, bands, context):
@@ -26,10 +26,10 @@ def _find_spw(vis, bands, context):
         spw_bandwidths = table.getcol('TOTAL_BANDWIDTH')
         reference_frequencies = table.getcol('REF_FREQUENCY')
     
-    center_frequencies = map(lambda rf, spwbw: rf + spwbw/2,reference_frequencies, spw_bandwidths)
+    center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
     
-    if (bands == []):
-        bands = map(find_EVLA_band,center_frequencies)
+    if bands == []:
+        bands = map(find_EVLA_band, center_frequencies)
     
     unique_bands = list(numpy.unique(bands))
     
@@ -119,21 +119,21 @@ class Opcal(basetask.StandardTaskTemplate):
         spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
         
-        #with casatools.MSReader(inputs.vis) as ms:
-        #    ms_summary = ms.summary()
+        # with casatools.MSReader(inputs.vis) as ms:
+        #     ms_summary = ms.summary()
         
-        #startdate = ms_summary['BeginTime']
+        # startdate = ms_summary['BeginTime']
 
         seasonal_weight = 1.0
 
         try:
-            with casatools.TableReader(self.inputs.vis +'/WEATHER') as table:
+            with casatools.TableReader(self.inputs.vis + '/WEATHER') as table:
                 numRows = table.nrows()
-                if (numRows == 0):
+                if numRows == 0:
                     LOG.warn("Weather station broken during this period, using 100% seasonal model for calculating the zenith opacity")
                     seasonal_weight = 1.0
                 else:
-                    LOG.info("Using seasonal_weight of 0.5")  #Standard value to use
+                    LOG.info("Using seasonal_weight of 0.5")  # Standard value to use
                     seasonal_weight = 0.5
         except:
             LOG.warn("Unable to open MS weather table.  Using 100% seasonal model for calculating the zenith opacity")
@@ -158,7 +158,6 @@ class Opcal(basetask.StandardTaskTemplate):
         gencal_args = inputs.to_casa_args()
         gencal_job = casa_tasks.gencal(**gencal_args)
         self._executor.execute(gencal_job)
-
 
         callist = []
         calto = callibrary.CalTo(vis=inputs.vis)

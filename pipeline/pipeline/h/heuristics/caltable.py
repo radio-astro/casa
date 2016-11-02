@@ -56,9 +56,11 @@ class AmpCaltable(CaltableNamer):
     def get_namer(self):
         return filenamer.AmplitudeCalibrationTable()
 
+
 class AntposCaltable(CaltableNamer):
     def get_namer(self):
         return filenamer.AntposCalibrationTable()
+
 
 class UVcontCaltable(CaltableNamer):
     def get_namer(self):
@@ -66,6 +68,7 @@ class UVcontCaltable(CaltableNamer):
 
     def customise (self, namer, task_args):
         namer.source(task_args.get('source', None))
+
 
 class BandpassCaltable(CaltableNamer):
     def get_namer(self):

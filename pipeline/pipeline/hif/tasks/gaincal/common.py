@@ -1,12 +1,13 @@
 from __future__ import absolute_import
+
 import copy
 import os
 import types
 
-from pipeline.hif.tasks.common import commoncalinputs
-from pipeline.hif.heuristics import caltable as gcaltable
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+from pipeline.h.heuristics import caltable as gcaltable
+from pipeline.hif.tasks.common import commoncalinputs
 
 LOG = infrastructure.get_logger(__name__)
 

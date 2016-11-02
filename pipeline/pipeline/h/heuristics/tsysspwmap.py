@@ -23,52 +23,59 @@ import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class SpwMap(object):
     """
     This object is basically set up to hold the information needed 
     """
-    def __init__(self,calSpwId):
+    def __init__(self, calSpwId):
         self.calSpwId = calSpwId
         self.validFreqRange = []
         self.mapsToSpw = []
         self.bbNo = None
         
-class SpwInfo(object):
-    def __init__(self, mstable, spwId) :
-        self.setTableAndSpwId(mstable,spwId)
 
-    def setTableAndSpwId(self,mstable,spwId) :
+class SpwInfo(object):
+    def __init__(self, mstable, spwId):
+        self.setTableAndSpwId(mstable, spwId)
+
+    def setTableAndSpwId(self, mstable, spwId):
         self.setTable(mstable)
         self.setSpwId(mstable, spwId)
 
-    def setTable(self,mstable) :
+    def setTable(self, mstable):
         self.parameters = mstable.colnames()
         
-    def setSpwId(self,mstable,spwId) :
+    def setSpwId(self, mstable, spwId):
         self.values = {}
-        for i in self.parameters :
-            self.values[i] = mstable.getcell(i,spwId)
+        for i in self.parameters:
+            self.values[i] = mstable.getcell(i, spwId)
     
 
-def areIdentical(spwInfo1,spwInfo2) :
-    if len(spwInfo1.parameters) <= len(spwInfo2.parameters) :
-        minState = spwInfo1 ; maxState = spwInfo2
-    else :
-        minState = spwInfo2 ; maxState = spwInfo1
+def areIdentical(spwInfo1, spwInfo2):
+    if len(spwInfo1.parameters) <= len(spwInfo2.parameters):
+        minState = spwInfo1; maxState = spwInfo2
+    else:
+        minState = spwInfo2; maxState = spwInfo1
     valueCompare = []
-    for i in minState.parameters :
+    for i in minState.parameters:
         compare = (minState.values[i] == maxState.values[i])
-        if numpy.ndarray not in [type(compare)] :
+        if numpy.ndarray not in [type(compare)]:
             compare = numpy.array(compare)
-        if compare.all() : valueCompare.append(True)
-        else : valueCompare.append(False)
-    if False in valueCompare : return False
-    else : return True
+        if compare.all():
+            valueCompare.append(True)
+        else:
+            valueCompare.append(False)
+    if False in valueCompare:
+        return False
+    else:
+        return True
 
-def trimSpwmap(spwMap) :
+
+def trimSpwmap(spwMap):
     compare = range(len(spwMap))
-    for i in compare :
-        if compare[i:] == spwMap[i:] :
+    for i in compare:
+        if compare[i:] == spwMap[i:]:
             break
     return spwMap[:i]
         
@@ -110,55 +117,55 @@ def tsysspwmap(ms, tsystable, trim=True, relax=False, tsysChanTol=1):
     with casatools.TableReader("%s/SPECTRAL_WINDOW" % tsystable) as table:
         for i in measuredTsysSpw:
             spwMap = SpwMap(i)
-            chanFreqs = table.getcell("CHAN_FREQ",i)
+            chanFreqs = table.getcell("CHAN_FREQ", i)
             if len(chanFreqs) > 1:
                 chanWidth = abs(chanFreqs[1]-chanFreqs[0])
             else:
-                chanWidth = table.getcell('EFFECTIVE_BW',i)
+                chanWidth = table.getcell('EFFECTIVE_BW', i)
             spwMap.chanWidth = chanWidth
-            spwMap.validFreqRange = [chanFreqs.min()-0.5*chanWidth,\
-                                 chanFreqs.max()+0.5*chanWidth]
+            spwMap.validFreqRange = [chanFreqs.min()-0.5*chanWidth,
+                                     chanFreqs.max()+0.5*chanWidth]
             spwMaps.append(spwMap)
 
     # Now loop through the main table's spectral window table
     # to map the spectral windows as desired.
     vis = ms.name
-    with casatools.TableReader ("%s/SPECTRAL_WINDOW" % vis) as table:
+    with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
         it = table.nrows()
 
-    for j in spwMaps :
+    for j in spwMaps:
         with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
-            j.bbNo = table.getcell("BBC_NO",j.calSpwId)
-        for i in range(it) :
+            j.bbNo = table.getcell("BBC_NO", j.calSpwId)
+        for i in range(it):
             with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
-                chanFreqs = table.getcell("CHAN_FREQ",i)
-                if len(chanFreqs) > 1 :
-                    chanWidth = table.getcell("CHAN_WIDTH",i)[0]
+                chanFreqs = table.getcell("CHAN_FREQ", i)
+                if len(chanFreqs) > 1:
+                    chanWidth = table.getcell("CHAN_WIDTH", i)[0]
                     freqMin = chanFreqs.min()-0.5*chanWidth
                     freqMax = chanFreqs.max()+0.5*chanWidth
-                else :
-                    chanWidth = table.getcell("CHAN_WIDTH",i)
+                else:
+                    chanWidth = table.getcell("CHAN_WIDTH", i)
                     freqMin = chanFreqs-0.5*chanWidth
                     freqMax = chanFreqs+0.5*chanWidth
-                msSpw  = SpwInfo(table,i)
+                msSpw = SpwInfo(table, i)
                 if j.bbNo == msSpw.values['BBC_NO']:
                     if freqMin >= j.validFreqRange[0]-tsysChanTol*j.chanWidth and \
-                       freqMax <= j.validFreqRange[1]+tsysChanTol*j.chanWidth :
+                       freqMax <= j.validFreqRange[1]+tsysChanTol*j.chanWidth:
                         j.mapsToSpw.append(i)
 
     applyCalSpwMap = []
     spwWithoutMatch = []
     with casatools.TableReader("%s/SPECTRAL_WINDOW" % vis) as table:
-        for i in range(it) :
+        for i in range(it):
             useSpw = None
-            for j in spwMaps :
-                if i in j.mapsToSpw :
-                    if useSpw is not None :
-                        if table.getcell("BBC_NO") == j.bbNo :
+            for j in spwMaps:
+                if i in j.mapsToSpw:
+                    if useSpw is not None:
+                        if table.getcell("BBC_NO") == j.bbNo:
                             useSpw = j.calSpwId
-                    else :
+                    else:
                         useSpw = j.calSpwId
-            if useSpw == None :
+            if useSpw is None:
                 useSpw = i
                 spwWithoutMatch.append(i)
             applyCalSpwMap.append(int(useSpw))        
@@ -170,12 +177,11 @@ def tsysspwmap(ms, tsystable, trim=True, relax=False, tsysChanTol=1):
         no_match = utils.commafy(unmatched_science_spws, False)
         LOG.info('No Tsys match found for spws %s.' % no_match) 
 
-    if trim :
+    if trim:
         LOG.info('Computed tsysspwmap is: '+str(trimSpwmap(applyCalSpwMap)))
-        #return spwWithoutMatch, trimSpwmap(applyCalSpwMap)
+        # return spwWithoutMatch, trimSpwmap(applyCalSpwMap)
         return unmatched_science_spws, trimSpwmap(applyCalSpwMap)
-    else :
+    else:
         LOG.info('Computed tsysspwmap is: '+str(applyCalSpwMap))
-        #return spwWithoutMatch, applyCalSpwMap
+        # return spwWithoutMatch, applyCalSpwMap
         return unmatched_science_spws, applyCalSpwMap
-

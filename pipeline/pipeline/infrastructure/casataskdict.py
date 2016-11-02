@@ -42,6 +42,7 @@ CasaTaskDict = {
     'hsd_importdata': 'SDImportData',
     'hsd_k2jycal': 'SDK2JyCal',
     'hsd_skycal': 'SDMSSkyCal',
+    'hsd_tsyscal': 'SDTsyscal',
     'hifa_importdata': 'ALMAImportData',
     'hifa_antpos': 'ALMAAntpos',
     'hifa_bandpass': 'ALMAPhcorBandpass',
@@ -56,7 +57,7 @@ CasaTaskDict = {
     'hifa_linpolcal': 'Linpolcal',
     'hifa_spwphaseup': 'SpwPhaseup',
     'hifa_timegaincal': 'TimeGaincal',
-    'hifa_tsyscal': 'Tsyscal',
+    'hifa_tsyscal': 'ALMATsyscal',
     'hifa_tsysflag': 'Tsysflag',
     'hifa_wvrgcal': 'Wvrgcal',
     'hifa_wvrgcalflag': 'Wvrgcalflag',
@@ -97,7 +98,7 @@ classToCASATask = {
     hifa_tasks.Linpolcal              : 'hifa_linpolcal',
     hifa_tasks.SpwPhaseup             : 'hifa_spwphaseup',
     hifa_tasks.TimeGaincal            : 'hifa_timegaincal',
-    hifa_tasks.Tsyscal                : 'hifa_tsyscal',
+    hifa_tasks.ALMATsyscal            : 'hifa_tsyscal',
     hifa_tasks.Tsysflag               : 'hifa_tsysflag',
     hifa_tasks.Wvrgcal                : 'hifa_wvrgcal',
     hifa_tasks.Wvrgcalflag            : 'hifa_wvrgcalflag',
@@ -136,7 +137,8 @@ classToCASATask = {
     hsd_tasks.SDImportData            : 'hsd_importdata',
     hsd_tasks.SDK2JyCal               : 'hsd_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsd_skycal',
-    #VLA tasks
+    hsd_tasks.SDTsyscal             : 'hsd_tsyscal',
+    # VLA tasks
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.VLAExportData          : 'hifv_exportdata',
     hifv_tasks.Hanning                : 'hifv_hanning',
@@ -211,7 +213,9 @@ TASK_COMMENTS = {
         'antenna is used.\n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hifa_tasks.Tsyscal,) : (
+    (h_tasks.Tsyscal,
+     hifa_tasks.ALMATsyscal,
+     hsd_tasks.SDTsyscal,) : (
         'The Tsys calibration and spectral window map is computed.'
     ),
     (hifa_tasks.Tsysflag,) : (
@@ -271,7 +275,7 @@ TASK_COMMENTS = {
     ),
     (h_tasks.Applycal, hif_tasks.IFApplycal, hsd_tasks.SDMSApplycal) : (
         'Calibrations are applied  to the data. Final flagging summaries '
-	'are computed'
+        'are computed'
     ),
     (hif_tasks.MakeImList,) : (
         'A list of target sources to be imaged is constructed. '

@@ -1,11 +1,9 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
+import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
-from . import tsyscal
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
@@ -14,13 +12,12 @@ LOG = logging.get_logger(__name__)
 class TsyscalQAHandler(pqa.QAResultHandler):
     result_cls = resultobjects.TsyscalResults
     child_cls = None
-    generating_task = tsyscal.Tsyscal
-    
+
     def handle(self, context, result):
-        vis= result.inputs['vis']
+        vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
 
-        # Check for  existence of unmapped spws and assign a
+        # Check for existence of unmapped spws and assign a
         # score based on the number of unmapped windows relative
         # to mapped ones.
         scores = [qacalc.score_tsysspwmap(ms, result.unmappedspws)]
@@ -43,7 +40,6 @@ class TsyscalListQAHandler(pqa.QAResultHandler):
 
         mses = [r.inputs['vis'] for r in result]
         longmsg = 'No unmapped science windows in %s' % utils.commafy(mses,
-                                                                    quotes=False,
-                                                                    conjunction='or')
+                                                                      quotes=False,
+                                                                      conjunction='or')
         result.qa.all_unity_longmsg = longmsg
-                                                                                        

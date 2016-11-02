@@ -13,7 +13,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hifa_tsyscal</Command>
+        <Command xmlns="">hsd_tsyscal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>

@@ -2,19 +2,16 @@ from __future__ import absolute_import
 
 import types
 
-from pipeline.hif.tasks.gaincal import gaincalmode
-from pipeline.hif.tasks.gaincal import gaincalworker
-from pipeline.hif.tasks.gaincal import gtypegaincal
-
-from pipeline.hifa.heuristics.phasespwmap import simple_n2wspwmap
-from pipeline.hifa.heuristics.phasespwmap import combine_spwmap
-from pipeline.hifa.tasks.gaincalsnr import gaincalsnr
-
-from pipeline.hif.heuristics import caltable as gcaltable
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+from pipeline.h.heuristics import caltable as gcaltable
+from pipeline.hif.tasks.gaincal import gaincalmode
+from pipeline.hif.tasks.gaincal import gaincalworker
+from pipeline.hif.tasks.gaincal import gtypegaincal
+from pipeline.hifa.heuristics.phasespwmap import combine_spwmap
+from pipeline.hifa.heuristics.phasespwmap import simple_n2wspwmap
+from pipeline.hifa.tasks.gaincalsnr import gaincalsnr
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -44,7 +41,7 @@ class SpwPhaseupInputs(gaincalmode.GaincalModeInputs):
         super(SpwPhaseupInputs, self).__init__(context, mode='gtype',
             caltable=caltable, intent=intent, hm_spwmapmode=hm_spwmapmode,
             phasesnr=phasesnr, bwedgefrac=bwedgefrac, hm_nantennas=hm_nantennas,
-            maxfracflagged=maxfracflagged,maxnarrowbw=maxnarrowbw, minfracmaxbw=minfracmaxbw,
+            maxfracflagged=maxfracflagged, maxnarrowbw=maxnarrowbw, minfracmaxbw=minfracmaxbw,
             samebb=samebb, **parameters)
 
     @property

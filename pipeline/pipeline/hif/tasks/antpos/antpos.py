@@ -1,14 +1,14 @@
 from __future__ import absolute_import
+
+import csv
 import os
 import types
-import csv
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.callibrary as callibrary
-
-from pipeline.hif.heuristics import caltable as acaltable
+from pipeline.h.heuristics import caltable as acaltable
+from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -20,8 +20,8 @@ class AntposResults(basetask.Results):
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
-        self.antenna=antenna
-        self.offsets=offsets
+        self.antenna = antenna
+        self.offsets = offsets
 
     def merge_with_context(self, context):
         """
@@ -141,7 +141,7 @@ class AntposInputs(basetask.StandardInputs):
                 'caltable'  : self.caltable,
                 'caltype'   : self.caltype,
                 'antenna'   : antenna,
-                'parameter' : offsets       }
+                'parameter' : offsets}
 
     def _read_antpos_txtfile(self, filename):
         """
@@ -161,7 +161,7 @@ class AntposInputs(basetask.StandardInputs):
         # Rewrite this when we know the real format
         antennas = []
         parameters = []
-        with open (filename, 'r') as datafile:
+        with open(filename, 'r') as datafile:
             for line in datafile:
                 if not line.strip():
                     continue
@@ -213,7 +213,6 @@ class AntposInputs(basetask.StandardInputs):
                 parameters.extend([float(xoffset), float(yoffset),
                     float(zoffset)])
 
-
         # Convert the list to a string since CASA wants it that way?
         return ','.join(antennas), parameters
 
@@ -226,7 +225,7 @@ class Antpos(basetask.StandardTaskTemplate):
 
         gencal_args = inputs.to_casa_args()
         gencal_job = casa_tasks.gencal(**gencal_args)
-        if inputs.hm_antpos == 'file' and  gencal_args['antenna'] == '':
+        if inputs.hm_antpos == 'file' and gencal_args['antenna'] == '':
             LOG.info('No antenna position offsets are defined')
         else:
             self._executor.execute(gencal_job)
@@ -237,8 +236,8 @@ class Antpos(basetask.StandardTaskTemplate):
         # instead
         calfrom = callibrary.CalFrom(gencal_args['caltable'],
                                      caltype='antpos',
-				     spwmap=[],
-				     interp='', calwt=False)
+                                     spwmap=[],
+                                     interp='', calwt=False)
 
         calapp = callibrary.CalApplication(calto, calfrom)
 

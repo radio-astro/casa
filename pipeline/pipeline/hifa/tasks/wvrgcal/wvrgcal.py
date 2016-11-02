@@ -1,24 +1,23 @@
 from __future__ import absolute_import
 
 import collections
-import numpy as np
 import os
 import shutil
 import types
+
+import numpy as np
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-from pipeline.infrastructure import casa_tasks
-from pipeline.hif.heuristics import caltable as caltable_heuristic
-
-from pipeline.hifa.heuristics import wvrgcal as wvrgcal_heuristic
-from pipeline.hifa.heuristics import atm as atm_heuristic
-
-from pipeline.hifa.tasks import bandpass
+from pipeline.h.heuristics import caltable as caltable_heuristic
 from pipeline.hif.tasks import gaincal
-from . import resultobjects 
+from pipeline.hifa.heuristics import atm as atm_heuristic
+from pipeline.hifa.heuristics import wvrgcal as wvrgcal_heuristic
+from pipeline.hifa.tasks import bandpass
+from pipeline.infrastructure import casa_tasks
+from . import resultobjects
 from . import wvrg_qa
 
 LOG = infrastructure.get_logger(__name__)
@@ -35,8 +34,8 @@ class WvrgcalInputs(basetask.StandardInputs):
                  wvrflag=None, hm_smooth=None, smooth=None, scale=None, 
                  maxdistm=None, minnumants=None, mingoodfrac=None, refant=None,
                  qa_intent=None, qa_bandpass_intent=None, qa_spw=None,
-		 accept_threshold=None, bandpass_result=None,
-		 nowvr_result=None):
+                 accept_threshold=None, bandpass_result=None,
+                 nowvr_result=None):
         self._init_properties(vars())
 
     @property
@@ -267,7 +266,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # from heuristics otherwise
         wvrheuristics = wvrgcal_heuristic.WvrgcalHeuristics(
           context=inputs.context, vis=inputs.vis, hm_tie=inputs.hm_tie, 
-          tie=inputs.tie, hm_smooth = inputs.hm_smooth, smooth=inputs.smooth,
+          tie=inputs.tie, hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
           sourceflag=inputs.sourceflag, nsol=inputs.nsol,
           segsource=inputs.segsource)
         
@@ -338,15 +337,15 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # results that can cover them all
         science_spws = ms.get_spectral_windows(science_windows_only=True)
         science_spwids = [spw.id for spw in science_spws]
-        wvr_spwids = sorted([spw.id for spw in ms.spectral_windows if \
-	    spw.num_channels==4 and 'WVR' in spw.intents])
-        
+        wvr_spwids = sorted([spw.id for spw in ms.spectral_windows if
+                             spw.num_channels == 4 and 'WVR' in spw.intents])
+
         smooths_done = set()
         callist = []
         caltables = []
         for spw in science_spwids:
             if inputs.hm_smooth == 'automatic':
-                #smooth = wvrheuristics.smooth(spw)
+                # smooth = wvrheuristics.smooth(spw)
                 # Force the smooth heuristics to a single value
                 # (If integration times vary between spws this may not be
                 # the right thing to do). Integration times varying between
@@ -368,13 +367,13 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 task = casa_tasks.wvrgcal(vis=inputs.vis, caltable=caltable,
                                           toffset=toffset, segsource=segsource,
                                           tie=tie, sourceflag=sourceflag, 
-                                          nsol=nsol,disperse=disperse, 
+                                          nsol=nsol, disperse=disperse,
                                           wvrflag=wvrflag, smooth=smooth,
                                           scale=scale, maxdistm=maxdistm,
                                           minnumants=minnumants,
                                           mingoodfrac=mingoodfrac,
-					  spw=science_spwids,
-					  wvrspw=[wvr_spwids[0]], refant=refant)
+                                          spw=science_spwids,
+                                          wvrspw=[wvr_spwids[0]], refant=refant)
                 jobs.append(task)
                 
                 smooths_done.add(smooth)
@@ -386,8 +385,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
             caltables.append(caltable)
-        
-        
+
         # execute the jobs
         for job in jobs:
             job_result = self._executor.execute(job)
@@ -398,9 +396,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 job_flag = np.array(job_result['Flag'])
                 job_wvrflag = set(job_name[job_flag])
             else:
-                LOG.warn('CASA wvrgcal job terminated unexpectedly with ' \
-                         ' exit code %s; no flags generated.' % (
-                         job_result['rval']))
+                LOG.warn('CASA wvrgcal job terminated unexpectedly with '
+                         'exit code %s; no flags generated.' % (job_result['rval']))
                 job_wvrflag = set([])
             
             input_wvrflag = set(wvrflag)
@@ -529,7 +526,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         else:
             LOG.info('Calculating new bandpass for QA analysis')
             result = self._do_new_qa_bandpass(inputs)
-            #inputs.bandpass_result = result
+            # inputs.bandpass_result = result
             return result
     
     def _do_user_qa_bandpass(self, inputs):
@@ -560,13 +557,13 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 'mode'        : 'channel',
                 'intent'      : intent,
                 'spw'         : inputs.qa_spw,
-		'hm_phaseup'  : 'manual',
-		'hm_bandpass' : 'fixed',
+                'hm_phaseup'  : 'manual',
+                'hm_bandpass' : 'fixed',
                 'solint'      : 'inf,7.8125MHz'}
         
         inputs = bandpass.ALMAPhcorBandpass.Inputs(inputs.context, **args)        
         task = bandpass.ALMAPhcorBandpass(inputs)
-        #result = self._executor.execute(task, merge=True)
+        # result = self._executor.execute(task, merge=True)
         result = self._executor.execute(task, merge=False)
         if not result.final:
             pass
@@ -591,7 +588,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             result = self._do_qa_gaincal(inputs, nowvr_caltable_namer)            
             # cache the no WVR result on the inputs to save us having to
             # recalculate it in future runs
-            #inputs.nowvr_result = result
+            # inputs.nowvr_result = result
             return result
         
     def _do_wvr_gaincal(self, inputs):
@@ -670,4 +667,3 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         wvr_infos = [WVRInfo(*row) for row in zipped]
         
         return wvr_infos
-    

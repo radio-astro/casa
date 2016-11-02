@@ -1,14 +1,15 @@
 from __future__ import absolute_import
+
 import collections
 
-import pipeline.infrastructure.api as api
 import pipeline.domain as domain
+import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
+from pipeline.h.heuristics import caltable as bcaltable
 from . import adapters
-from . import common
 from . import channelbandpass
+from . import common
 from .. import gaincal
-from pipeline.hif.heuristics import caltable as bcaltable
 
 
 class PhaseUpBandpassInputs(channelbandpass.ChannelBandpassInputs):
@@ -86,8 +87,6 @@ class PhaseUpBandpass(basetask.StandardTaskTemplate):
 
         for task in tasks:
             self._executor.execute(task, merge)
-
-
 
             # phaseupbandpassinputs directly extends channelbandpass so we can
             # use a clone of our inputs as the bandpass inputs

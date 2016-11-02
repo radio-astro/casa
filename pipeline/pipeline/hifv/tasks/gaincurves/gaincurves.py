@@ -1,15 +1,15 @@
 from __future__ import absolute_import
+
 import types
 
-from pipeline.hif.heuristics import caltable as caltable_heuristic
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+from pipeline.h.heuristics import caltable as caltable_heuristic
 from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 
 LOG = infrastructure.get_logger(__name__)
-
 
 
 class GainCurvesInputs(basetask.StandardInputs):

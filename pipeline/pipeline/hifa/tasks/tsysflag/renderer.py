@@ -7,8 +7,6 @@ import collections
 import functools
 import os
 
-
-from ..tsyscal import renderer as tsyscalrenderer
 import pipeline.hif.tasks.common.calibrationtableaccess as caltableaccess
 import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.filenamer as filenamer
@@ -16,6 +14,7 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.utils as utils
+from pipeline.h.tasks.tsyscal import renderer as tsyscalrenderer
 
 LOG = logging.get_logger(__name__)
 
@@ -193,7 +192,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             summaries = summaries[-1:]
 
         by_intent = self._flags_by_intent(ms, summaries)
-        by_spw = self._flags_by_spws(ms, summaries)
+        by_spw = self._flags_by_spws(summaries)
 
         return utils.dict_merge(by_intent, by_spw)
 
@@ -238,7 +237,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 
         return total 
     
-    def _flags_by_spws(self, ms, summaries):
+    def _flags_by_spws(self, summaries):
         total = collections.defaultdict(dict)
     
         previous_summary = None

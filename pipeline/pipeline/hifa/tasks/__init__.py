@@ -3,20 +3,19 @@ from __future__ import absolute_import
 from .antpos import ALMAAntpos
 from .bandpass import ALMAPhcorBandpass
 from .bpsolint import BpSolint
+from .dbservice import Fluxdb
 from .exportdata import ALMAExportData
-from .flagging import FlagDeterALMA
 from .flagging import ALMAAgentFlagger
+from .flagging import FlagDeterALMA
 from .flagging import FlagTargetsALMA
-from .gaincal import TimeGaincal
-from .gaincalsnr import GaincalSnr
 from .fluxcalflag import FluxcalFlag
 from .fluxscale import GcorFluxscale
+from .gaincal import TimeGaincal
+from .gaincalsnr import GaincalSnr
 from .importdata import ALMAImportData
 from .linpolcal import Linpolcal
 from .spwphaseup import SpwPhaseup
-from .tsyscal import Tsyscal
+from .tsyscal import Tsyscal as ALMATsyscal
 from .tsysflag import Tsysflag
 from .wvrgcal import Wvrgcal
 from .wvrgcalflag import Wvrgcalflag
-from .dbservice import Fluxdb
-

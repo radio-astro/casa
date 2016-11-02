@@ -5,10 +5,10 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hifa_tsyscal" category="pipeline">
+<task type="function" name="hsd_tsyscal" category="pipeline">
 <shortdescription>Derive a Tsys calibration table</shortdescription>
 <description>
-Derive the Tsys calibration for list of ALMA interferometry measurement sets
+Derive the Tsys calibration for list of single-dish measurement sets.
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">
@@ -75,7 +75,7 @@ Derive the Tsys calibration for list of ALMA interferometry measurement sets
 
 <example>
 
-Derive the Tsys calibration for list of ALMA interferometry measurement sets
+Derive the Tsys calibration for list of single-dish measurement sets
 
 Keyword arguments:
 
@@ -120,7 +120,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-Derive the Tsys calibration for list of ALMA interferometry measurement sets
+Derive the Tsys calibration for list of single-dish measurement sets
 
 Issues
 

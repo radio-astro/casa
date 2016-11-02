@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import ast
 import re
 import types
@@ -6,15 +7,13 @@ import types
 import numpy
 
 import pipeline.domain as domain
-#from pipeline.hif.tasks.common import commonfluxresults
-from pipeline.h.tasks.common import commonfluxresults
-#from pipeline.hif.heuristics import fieldnames as fieldnames
-from pipeline.h.heuristics import fieldnames as fieldnames
-from pipeline.hif.heuristics import caltable as fcaltable
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
+from pipeline.h.heuristics import caltable as fcaltable
+from pipeline.h.heuristics import fieldnames as fieldnames
+from pipeline.h.tasks.common import commonfluxresults
+from pipeline.infrastructure import casa_tasks
 from .. import gaincal
 
 LOG = infrastructure.get_logger(__name__)
@@ -36,7 +35,7 @@ class FluxscaleInputs(basetask.StandardInputs):
         
         :rtype: a dictionary of string/??? kw/val pairs
         """
-        args = self._get_task_args(ignore=('refintent','transintent'))
+        args = self._get_task_args(ignore=('refintent', 'transintent'))
 
         # Due to BANDPASS.ON_SOURCE etc, we need *BANDPASS*, not BANDPASS
         if 'intent' in args:
@@ -45,7 +44,7 @@ class FluxscaleInputs(basetask.StandardInputs):
             else:
                 intents = []
                 for i in args['intent'].split(','):
-                    no_asterisks = i.replace('*','')
+                    no_asterisks = i.replace('*', '')
                     if no_asterisks is not '':
                         intents.append('*{0}*'.format(no_asterisks))
                 args['intent'] = ','.join(intents)
@@ -54,7 +53,7 @@ class FluxscaleInputs(basetask.StandardInputs):
         if 'spw' in args:
             args['spw'] = str(args['spw'])
 
-        for k,v in args.items():
+        for k, v in args.items():
             if v is None:
                 del args[k]        
         return args
@@ -149,7 +148,6 @@ class FluxscaleInputs(basetask.StandardInputs):
         # knows how to handle an object of this type.
         return refspwmap
 
-    
     @refspwmap.setter
     def refspwmap(self, value):
         def element_to_int(e):
@@ -209,7 +207,7 @@ class Fluxscale(basetask.StandardTaskTemplate):
     def _do_gaincal(self):
         inputs = self.inputs
         gaincal_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
-            vis   = inputs.vis,
+            vis = inputs.vis,
             field = ','.join((inputs.reference, inputs.transfer)))
 
         gaincal_task = gaincal.GTypeGaincal(gaincal_inputs)
@@ -240,7 +238,7 @@ class Fluxscale(basetask.StandardTaskTemplate):
                         'fields in caltable?')
             return result
 
-        no_result = numpy.array([-1.,-1.,-1.,-1.])
+        no_result = numpy.array([-1., -1., -1., -1.])
         no_result_fn = lambda (spw, flux): not numpy.array_equal(no_result, 
                                                                  flux)
 

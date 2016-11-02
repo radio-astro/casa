@@ -1,15 +1,16 @@
 from __future__ import absolute_import
+
 import types
 
-from pipeline.hif.tasks.gaincal import common
-from pipeline.hif.tasks.gaincal import gaincalworker
-from pipeline.hif.tasks.gaincal import gaincalmode
-from pipeline.hif.tasks.gaincal import gtypegaincal
-from pipeline.hif.heuristics import caltable as gcaltable
-from pipeline.hifa.heuristics import exptimes as gexptimes
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+from pipeline.h.heuristics import caltable as gcaltable
+from pipeline.hif.tasks.gaincal import common
+from pipeline.hif.tasks.gaincal import gaincalmode
+from pipeline.hif.tasks.gaincal import gaincalworker
+from pipeline.hif.tasks.gaincal import gtypegaincal
+from pipeline.hifa.heuristics import exptimes as gexptimes
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -153,7 +154,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
             fieldnamelist = [field.name for field in inputs.ms.get_fields(task_arg=inputs.field, intent='PHASE')]
             exptimes = gexptimes.get_scan_exptimes(inputs.ms, fieldnamelist, 'PHASE',
                                                    spwidlist)
-            phase_calsolint = '%0.3fs' % (min ([exptime[1] for exptime in exptimes]) / 4.0)
+            phase_calsolint = '%0.3fs' % (min([exptime[1] for exptime in exptimes]) / 4.0)
             phase_gaintype = 'T'
             phase_combine = 'spw'
             phaseup_spwmap = inputs.ms.combine_spwmap
@@ -330,7 +331,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
                                                       **task_args)
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
-        result =  self._executor.execute(gaincal_task)
+        result = self._executor.execute(gaincal_task)
 
         return result
 
@@ -359,7 +360,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
                                                       **task_args)
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
-        result =  self._executor.execute(gaincal_task)
+        result = self._executor.execute(gaincal_task)
 
         return result
 

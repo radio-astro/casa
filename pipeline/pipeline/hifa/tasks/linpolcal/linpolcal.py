@@ -2,17 +2,16 @@ from __future__ import absolute_import
 
 import types
 
-from pipeline.hif.tasks.common import commoncalinputs
-from pipeline.hif.heuristics import caltable as hcaltable
+import pipeline.hif.tasks.gaincal as gaincal
 import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.hif.tasks.gaincal as gaincal
-from .resultobjects import LinpolcalResult
-
+from pipeline.h.heuristics import caltable as hcaltable
+from pipeline.hif.tasks.common import commoncalinputs
+from pipeline.infrastructure import casa_tasks
 from .almapolhelperscopy import *
 from .almapolhelpersfuture import *
+from .resultobjects import LinpolcalResult
 
 LOG = infrastructure.get_logger(__name__)
 

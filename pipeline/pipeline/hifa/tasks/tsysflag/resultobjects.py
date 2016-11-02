@@ -2,11 +2,10 @@ from __future__ import absolute_import
 
 import collections
 
-import pipeline.infrastructure.basetask as basetask
-from pipeline.hifa.tasks.tsyscal import resultobjects 
-from pipeline.hif.tasks.common import flaggableviewresults
-
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+from pipeline.h.tasks.tsyscal import resultobjects
+from pipeline.hif.tasks.common import flaggableviewresults
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -21,10 +20,10 @@ class TsysflagResults(resultobjects.TsyscalResults):
 
         # component results
         self.components = collections.OrderedDict()
-        
+
         # task completion status / reason for incompleteness
         self.task_incomplete_reason = ''
-        
+
         # list of entirely flagged antennas that should be removed from refants
         self.refants_to_remove = set()
 
@@ -32,18 +31,18 @@ class TsysflagResults(resultobjects.TsyscalResults):
         # If any antennas were found to be fully flagged,
         # remove them from the list of reference antennas.
         if self.refants_to_remove:
-            
+
             # Get the MS
             ms = context.observing_run.get_ms(name=self.vis)
-            
+
             # Create list of current refants
             refant = ms.reference_antenna.split(',')
-            
+
             # Remove fully flagged ants from refants, and store back in MS
             for antenna in self.refants_to_remove:
                 refant.remove(antenna)
             ms.reference_antenna = ','.join(refant)
- 
+
     def add(self, name, result):
         self.components[name] = result
 
@@ -61,7 +60,7 @@ class TsysflagResults(resultobjects.TsyscalResults):
 
 
 class TsysflagspectraResults(resultobjects.TsyscalResults,
-  flaggableviewresults.FlaggableViewResults):
+                             flaggableviewresults.FlaggableViewResults):
     def __init__(self, final=[], pool=[], preceding=[]):
         """
         Construct and return a new TsysflagspectraResults.
@@ -98,7 +97,7 @@ class TsysflagDataResults(basetask.Results):
 
 
 class TsysflagViewResults(basetask.Results,
-  flaggableviewresults.FlaggableViewResults):
+                          flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
         Construct and return a new TsysflagViewResults.

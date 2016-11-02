@@ -1,14 +1,14 @@
 from __future__ import absolute_import
+
 import os
 import types
 
-from pipeline.hif.tasks.common import commoncalinputs as commoncalinputs
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
-from pipeline.hif.heuristics import caltable as bcaltable
+import pipeline.infrastructure.basetask as basetask
+from pipeline.h.heuristics import caltable as bcaltable
+from pipeline.hif.tasks.common import commoncalinputs as commoncalinputs
 
 LOG = infrastructure.get_logger(__name__)
-
 
 
 class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
@@ -22,7 +22,7 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
     """
     
     combine = basetask.property_with_default('combine', 'scan')
-    solint  = basetask.property_with_default('solint', 'inf')
+    solint = basetask.property_with_default('solint', 'inf')
     solnorm = basetask.property_with_default('solnorm', True)
 
     @property
