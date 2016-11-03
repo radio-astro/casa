@@ -1,7 +1,7 @@
 <ProcessingProcedure>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_restoredata</Command>
+        <Command xmlns="">hifa_restoredata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
