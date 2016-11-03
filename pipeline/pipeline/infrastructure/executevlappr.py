@@ -167,7 +167,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 
             cInputs = pipeline.tasks.__dict__[taskname].Inputs
             if taskname == 'ImportData' or taskname == 'RestoreData' or \
-                taskname == 'ALMAImportData' or taskname == 'VLAImportData':
+                taskname == 'ALMAImportData' or taskname == 'VLAImportData' or taskname == 'VLARestoreData':
                 task_args['vis'] = files
                 task_args['session'] = sessions
             elif taskname == 'SDImportData':
