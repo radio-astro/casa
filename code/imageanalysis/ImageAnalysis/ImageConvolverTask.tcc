@@ -55,6 +55,10 @@ template <class T> SPIIT ImageConvolverTask<T>::convolve() {
         *this->_getLog(), x, *subImage, _kernel, scaleType,
         _scale, copyMisc
     );
+    if (_kernel.ndim() < subImage->ndim()) {
+        String msg = "NOTE: kernel with fewer dimensions than the input image applied. Degenerate axes added to the kernel";
+        this->addHistory(LogOrigin("ImageConvolverTask", __func__), msg);
+    }
     return this->_prepareOutputImage(x);
 }
 
