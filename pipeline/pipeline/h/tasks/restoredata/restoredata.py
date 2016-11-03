@@ -294,41 +294,13 @@ class RestoreData(basetask.StandardTaskTemplate):
             else:
                 vislist.append(vis)
 
-        # Download ASDMs
-        #   Download ASDMs from the archive or products_dir to rawdata_dir.
+        # Download ASDMs from the archive or products_dir to rawdata_dir.
         #   TBD: Currently assumed done somehow
 
-        # Download flag versions
-        #   Download from the archive or products_dir to rawdata_dir.
+        # Copy the required calibration products from someplace on disK
+        #   default ../products to ../rawdata
         if inputs.copytoraw:
-            inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
-                '*.flagversions.tgz'))
-            for flagfile in inflagfiles:
-                LOG.info('Copying %s to %s' % (flagfile, inputs.rawdata_dir))
-                shutil.copy(flagfile, os.path.join(inputs.rawdata_dir,
-                    os.path.basename(flagfile)))
-
-        # Download calibration tables
-        #   Download calibration files from the archive or products_dir to
-        # rawdata_dir.
-        if inputs.copytoraw:
-            incaltables = glob.glob(os.path.join(inputs.products_dir, \
-                '*.caltables.tgz'))
-            for caltable in incaltables:
-                LOG.info('Copying %s to %s' % (caltable, inputs.rawdata_dir))
-                shutil.copy(caltable, os.path.join(inputs.rawdata_dir,
-                    os.path.basename(caltable)))
-
-        # Download calibration apply lists
-        #   Download from the archive or products_dir to rawdata_dir.
-        #   TBD: Currently assumed done somehow
-        if inputs.copytoraw:
-            inapplycals = glob.glob(os.path.join(inputs.products_dir, \
-                '*.calapply.txt'))
-            for applycal in inapplycals:
-                LOG.info('Copying %s to %s' % (applycal, inputs.rawdata_dir))
-                shutil.copy(applycal, os.path.join(inputs.rawdata_dir,
-                    os.path.basename(applycal)))
+            self._do_copytoraw()
 
         # Convert ASDMS assumed to be on disk in rawdata_dir. After this step
         # has been completed the MS and MS.flagversions directories will exist
@@ -336,7 +308,6 @@ class RestoreData(basetask.StandardTaskTemplate):
         # Flags.Original.
         #    TBD: Add error handling
         import_results = self._do_importasdm(sessionlist=sessionlist, vislist=vislist)
-
 
         # Restore final MS.flagversions and flags
         flag_version_name = 'Pipeline_Final'
@@ -371,6 +342,38 @@ class RestoreData(basetask.StandardTaskTemplate):
         :rtype: :class:~`ExportDataResults`
         """
         return results
+
+    def _do_copytoraw (self):
+
+        inputs = self.inputs
+
+        # Download flag versions
+        #   Download from the archive or products_dir to rawdata_dir.
+        inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
+            '*.flagversions.tgz'))
+        for flagfile in inflagfiles:
+            LOG.info('Copying %s to %s' % (flagfile, inputs.rawdata_dir))
+            shutil.copy(flagfile, os.path.join(inputs.rawdata_dir,
+                os.path.basename(flagfile)))
+
+        # Download calibration tables
+        #   Download calibration files from the archive or products_dir to
+        incaltables = glob.glob(os.path.join(inputs.products_dir, \
+            '*.caltables.tgz'))
+        for caltable in incaltables:
+            LOG.info('Copying %s to %s' % (caltable, inputs.rawdata_dir))
+            shutil.copy(caltable, os.path.join(inputs.rawdata_dir,
+                os.path.basename(caltable)))
+
+        # Download calibration apply lists
+        #   Download from the archive or products_dir to rawdata_dir.
+        #   TBD: Currently assumed done somehow
+        inapplycals = glob.glob(os.path.join(inputs.products_dir, \
+            '*.calapply.txt'))
+        for applycal in inapplycals:
+            LOG.info('Copying %s to %s' % (applycal, inputs.rawdata_dir))
+            shutil.copy(applycal, os.path.join(inputs.rawdata_dir,
+                os.path.basename(applycal)))
 
     def _do_importasdm(self, sessionlist, vislist):
         inputs = self.inputs
