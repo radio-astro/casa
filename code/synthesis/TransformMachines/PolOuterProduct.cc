@@ -44,7 +44,7 @@ namespace casa{
   void PolOuterProduct::initCFMaps(const Vector<Int>& vbPol, const Vector<Int>& visPol2ImMap)
   {
     Int np=0;
-
+    //muellerType_p=HYBRID;
     for (uInt i=0;i<visPol2ImMap.nelements(); i++) 
       {
 	Int n;
@@ -56,8 +56,51 @@ namespace casa{
 	    else if (muellerType_p == FULL)	  cfIndices_p(n).resize(4);
 	
 	    for(uInt j=0;j<cfIndices_p(n).nelements();j++) cfIndices_p(n)(j)=np++;
+		
 	  }
       }	  
+    //	if (visPol2ImMap(i) >= 0)
+	{
+		if(muellerType_p == HYBRID)
+		{
+		  //Int n;
+		  //n=translateStokesToGeneric(vbPol(i));
+		  //cerr<<"N = :"<<n<<endl;
+		  cfIndices_p.resize(4);
+		  cfIndices_p(0).resize(3);
+		  cfIndices_p(1).resize(3);
+		  cfIndices_p(2).resize(3);
+		  cfIndices_p(3).resize(3);
+		  //		  cfIndices_p(0)(0) = 0;
+		  //		  cfIndices_p(0)(1) = 1;
+		  //		  cfIndices_p(0)(2) = 2;
+		  //		  cfIndices_p(1)(0) = 4;
+		  //		  cfIndices_p(1)(1) = 5;
+		  //		  cfIndices_p(1)(2) = 7;
+		  //		  cfIndices_p(2)(0) = 8;
+		  //		  cfIndices_p(2)(1) = 10;
+		  //		  cfIndices_p(2)(2) = 11;
+		  //		  cfIndices_p(3)(0) = 13;
+		  //		  cfIndices_p(3)(1) = 14;
+		  //		  cfIndices_p(3)(2) = 15;
+
+		  cfIndices_p(0)(0) = 0;
+		  cfIndices_p(0)(1) = 1;
+		  cfIndices_p(0)(2) = 2;
+		  cfIndices_p(1)(0) = 3;
+		  cfIndices_p(1)(1) = 4;
+		  cfIndices_p(1)(2) = 5;
+		  cfIndices_p(2)(0) = 6;
+		  cfIndices_p(2)(1) = 7;
+		  cfIndices_p(2)(2) = 8;
+		  cfIndices_p(3)(0) = 9;
+		  cfIndices_p(3)(1) = 10;
+		  cfIndices_p(3)(2) = 11;
+		}
+
+	}
+	//cout<<"cfIndices_p in PolOuterProduct::initCFMaps"<<cfIndices_p;
+
   }
   //---------------------------------------------------------------------
   //
@@ -76,6 +119,45 @@ namespace casa{
 	{
 	  Int n = translateStokesToGeneric(vbPol(i));
 	  outerProdNdx2VBPolMap(i).assign(cfIndices_p(n));
+	  //cout<<"cfIndices_p"<<cfIndices_p<<endl;
+	  if (muellerType_p == HYBRID)
+            {
+                outerProdNdx2VBPolMap(i).resize(3);
+                Int n=translateStokesToGeneric(vbPol(i));
+                if (n==GPP)
+                {
+                        outerProdNdx2VBPolMap(0)(0)=0; //cfIndices_p(0)(0)=0;
+                        outerProdNdx2VBPolMap(0)(1)=1; //cfIndices_p(0)(1)=1;
+                        outerProdNdx2VBPolMap(0)(2)=2; //cfIndices_p(0)(2)=2;
+                        //cout<<"\n outerProdNdx2VBPolMap: "<< outerProdNdx2VBPolMap(0);
+                        //cout<<"\n cfIndices_p: "<< cfIndices_p(0)<< "\n";
+                }
+                else if (n==GPQ)
+                {
+                        outerProdNdx2VBPolMap(1)(0)=4; //cfIndices_p(1)(0)=4; 
+                        outerProdNdx2VBPolMap(1)(1)=5; //cfIndices_p(1)(1)=5; 
+                        outerProdNdx2VBPolMap(1)(2)=7; //cfIndices_p(1)(2)=7;
+
+                        //cout<<"\n outerProdNdx2VBPolMap: "<< outerProdNdx2VBPolMap(1);
+                        //cout<<"\n cfIndices_p: "<< cfIndices_p<< "\n";
+                }
+                else if (n==GQP)
+                {
+                        outerProdNdx2VBPolMap(2)(0)=8; //cfIndices_p(2)(0)=8;
+                        outerProdNdx2VBPolMap(2)(1)=10; //cfIndices_p(2)(1)=10;
+                        outerProdNdx2VBPolMap(2)(2)=11; //cfIndices_p(2)(2)=11;
+                        //cout<<"\n outerProdNdx2VBPolMap: "<< outerProdNdx2VBPolMap(2);
+                        //cout<<"\n cfIndices_p: "<< cfIndices_p(2)<< "\n";
+                }
+                else if (n==GQQ)
+                {
+                        outerProdNdx2VBPolMap(3)(0)=13; //cfIndices_p(3)(0)=13; 
+                        outerProdNdx2VBPolMap(3)(1)=14; //cfIndices_p(3)(1)=14;
+                        outerProdNdx2VBPolMap(3)(2)=15; //cfIndices_p(3)(2)=15;
+                        //cout<<"\n outerProdNdx2VBPolMap: "<< outerProdNdx2VBPolMap(3);
+                        //cout<<"\n cfIndices_p: "<< cfIndices_p(3)<< "\n";
+                }
+            }
 	}
     return outerProdNdx2VBPolMap;
   }
@@ -93,8 +175,8 @@ namespace casa{
     for (Int i=0;i<nVBPol;i++)
       conjOuterProductIndex2VBPolMap_p(i).assign(outerProductIndex2VBPolMap_p(i));
     //
-    // For each conjOuterProduct entry, find the equivalent entire in outerProductMap.
-    // Copy of the assocaited index from outerProductIndex map to conjOuterProductMap
+    // For each conjOuterProduct entry, find the equivalent entry in outerProductMap.
+    // Copy of the associated index from outerProductIndex map to conjOuterProductMap
     //
     for (uInt i=0;i<conjOuterProduct2VBPolMap_p.nelements();i++)
       for (uInt j=0;j<conjOuterProduct2VBPolMap_p(i).nelements();j++)
@@ -145,7 +227,49 @@ namespace casa{
 		outerProd2VBPolMap(i).resize(4);
 		Int n=translateStokesToGeneric(vbPol(i));
 		outerProd2VBPolMap(i).assign(mRows(n).vector());
+	//	cout<<"\n outerProd2VBPolMap: "<< outerProd2VBPolMap(i);
+	//	cout<<"\n mRows: "<< mRows(n)<< "\n";
 	      }
+// The Hybrid option ensures that we are omitting the anti-diagonal that is posing some normalization issue
+// We do this by ensuring that the outerProd2VbPolMap is resized to 3 and set with the appropriate index.
+	    else if (muellerType_p == HYBRID)
+	    {
+	    	outerProd2VBPolMap(i).resize(3);
+                Int n=translateStokesToGeneric(vbPol(i));
+		if (n==GPP)
+		{
+			outerProd2VBPolMap(0)(0)=mRows(0)(0);
+			outerProd2VBPolMap(0)(1)=mRows(0)(1);
+			outerProd2VBPolMap(0)(2)=mRows(0)(2);
+			//cout<<"\n outerProd2VBPolMap: "<< outerProd2VBPolMap(0);
+			//cout<<"\n mRows: "<< mRows(0)<< "\n";
+		}
+		else if (n==GPQ)
+		{
+			outerProd2VBPolMap(1)(0)=mRows(1)(0);
+                        outerProd2VBPolMap(1)(1)=mRows(1)(1);
+                        outerProd2VBPolMap(1)(2)=mRows(1)(3);
+			//cout<<"\n outerProd2VBPolMap: "<< outerProd2VBPolMap(1);
+			//cout<<"\n mRows: "<< mRows(1)<< "\n";
+		}
+		else if (n==GQP)
+		{
+			outerProd2VBPolMap(2)(0)=mRows(2)(0);
+                        outerProd2VBPolMap(2)(1)=mRows(2)(2);
+                        outerProd2VBPolMap(2)(2)=mRows(2)(3);
+			//cout<<"\n outerProd2VBPolMap: "<< outerProd2VBPolMap(2);
+			//cout<<"\n mRows: "<< mRows(2)<< "\n";
+		}
+		else if (n==GQQ)
+		{
+			outerProd2VBPolMap(3)(0)=mRows(3)(1);
+                        outerProd2VBPolMap(3)(1)=mRows(3)(2);
+                        outerProd2VBPolMap(3)(2)=mRows(3)(3);
+			//cout<<"\n outerProd2VBPolMap: "<< outerProd2VBPolMap(3);
+			//cout<<"\n mRows: "<< mRows(3)<< "\n";
+		}
+	    }
+	
 	  }
       }
     return outerProd2VBPolMap;

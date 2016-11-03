@@ -72,7 +72,7 @@ namespace casa{
     
     if (wbAWP && aTerm->isNoOp())
       {
-	log_l << "wbawp=True is ineffective when aterm is OFF.  Setting wbawp to False." << LogIO::NORMAL1;
+	//log_l << "wbawp=True is ineffective when aterm is OFF.  Setting wbawp to False." << LogIO::NORMAL1;
 	wbAWP_p=false;
       }
     

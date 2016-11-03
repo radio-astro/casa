@@ -279,6 +279,7 @@ using namespace casacore;
     casacore::Complex* getConvFunc_p(const double& vbPA,
 				     casacore::Vector<casacore::Int>& cfShape,
 				     casacore::Vector<int>& support,
+				     int& muellerElement,
 				     CFBuffer& cfb,
 				     casacore::Double& wVal, casacore::Int& fndx, 
 				     casacore::Int& wndx,
