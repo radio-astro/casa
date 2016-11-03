@@ -34,7 +34,6 @@
 #include <images/Images/MIRIADImage.h>
 #include <images/Regions/WCBox.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
-#include <imageanalysis/IO/CasaImageOpener.h>
 
 #include <measures/Measures/Stokes.h>
 
