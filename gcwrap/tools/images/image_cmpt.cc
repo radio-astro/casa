@@ -835,7 +835,6 @@ image* image::convolve(
         ic.setScale(scale);
         ic.setStretch(stretch);
         ic.setKernel(fkernelArray);
-        auto z = ic.convolve();
         vector<String> names {
             "outfile", "kernel", "scale", "region",
             "vmask", "overwrite", "stretch"
@@ -844,9 +843,9 @@ image* image::convolve(
             outfile, kernel, scale, region,
             vmask, overwrite, stretch
         };
-        ImageHistory<Float> imh(z);
         auto msgs = _newHistory(__func__, names, values);
-        imh.addHistory(_ORIGIN, msgs);
+        ic.addHistory(_ORIGIN, msgs);
+        auto z = ic.convolve();
         return new image(z);
     }
     catch (const AipsError& x) {
@@ -5533,7 +5532,11 @@ String image::_inputsString(const vector<std::pair<String, variant> >& inputs) {
         }
         quote = iter->second.type() == variant::STRING ? "\"" : "";
         out += iter->first + "=" + quote;
-        out += iter->second.toString();
+        auto asString = iter->second.toString();
+        if (asString.size() > 100) {
+            asString = "...";
+        }
+        out += asString;
         out += quote;
         ++iter;
     }
