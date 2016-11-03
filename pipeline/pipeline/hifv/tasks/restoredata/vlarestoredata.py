@@ -35,6 +35,7 @@ class VLARestoreDataInputs(restoredata.RestoreDataInputs):
 
     bdfflags = basetask.property_with_default('bdfflags', False)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
+    asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
 
 
 class VLARestoreData(restoredata.RestoreData):
@@ -64,41 +65,12 @@ class VLARestoreData(restoredata.RestoreData):
             else:
                 vislist.append(vis)
 
-        # Download ASDMs
-        #   Download ASDMs from the archive or products_dir to rawdata_dir.
+        # Download ASDMs from the archive or products_dir to rawdata_dir.
         #   TBD: Currently assumed done somehow
-
-        # Download flag versions
-        #   Download from the archive or products_dir to rawdata_dir.
+        # Copy the required calibration products from someplace on disK
+        #   default ../products to ../rawdata
         if inputs.copytoraw:
-            inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
-                '*.flagversions.tgz'))
-            for flagfile in inflagfiles:
-                LOG.info('Copying %s to %s' % (flagfile, inputs.rawdata_dir))
-                shutil.copy(flagfile, os.path.join(inputs.rawdata_dir,
-                    os.path.basename(flagfile)))
-
-        # Download calibration tables
-        #   Download calibration files from the archive or products_dir to
-        # rawdata_dir.
-        if inputs.copytoraw:
-            incaltables = glob.glob(os.path.join(inputs.products_dir, \
-                '*.caltables.tgz'))
-            for caltable in incaltables:
-                LOG.info('Copying %s to %s' % (caltable, inputs.rawdata_dir))
-                shutil.copy(caltable, os.path.join(inputs.rawdata_dir,
-                    os.path.basename(caltable)))
-
-        # Download calibration apply lists
-        #   Download from the archive or products_dir to rawdata_dir.
-        #   TBD: Currently assumed done somehow
-        if inputs.copytoraw:
-            inapplycals = glob.glob(os.path.join(inputs.products_dir, \
-                '*.calapply.txt'))
-            for applycal in inapplycals:
-                LOG.info('Copying %s to %s' % (applycal, inputs.rawdata_dir))
-                shutil.copy(applycal, os.path.join(inputs.rawdata_dir,
-                    os.path.basename(applycal)))
+            self._do_copytoraw()
 
         # Convert ASDMS assumed to be on disk in rawdata_dir. After this step
         # has been completed the MS and MS.flagversions directories will exist
@@ -107,7 +79,6 @@ class VLARestoreData(restoredata.RestoreData):
         #    TBD: Add error handling
         import_results = self._do_importasdm(sessionlist=sessionlist, vislist=vislist)
 
-        #ocorr_mode = 'co' for VLA and do hanning smoothing
         for ms in self.inputs.context.observing_run.measurement_sets:
             hanning_results = self._do_hanningsmooth(ms.name)
             self._move_hanning(ms.name)
@@ -135,17 +106,6 @@ class VLARestoreData(restoredata.RestoreData):
         # Return the results object, which will be used for the weblog
         return restoredata.RestoreDataResults(import_results, apply_results)
 
-    def _do_importasdm(self, sessionlist, vislist):
-        inputs = self.inputs
-        # The asis is temporary until we get the EVLA / ALMA factoring
-        # figured out.
-        importdata_inputs = importdata.ImportData.Inputs(inputs.context,
-            vis=vislist, session=sessionlist, save_flagonline=False,
-            lazy=inputs.lazy, bdfflags=inputs.bdfflags, dbservice=False,
-            asis='Receiver CalAtmosphere', ocorr_mode=inputs.ocorr_mode)
-        importdata_task = importdata.ImportData(importdata_inputs)
-        return self._executor.execute(importdata_task, merge=True)
-
     def _do_hanningsmooth(self, vis):
         # Currently for VLA hanning smoothing
         task = casa_tasks.hanningsmooth(vis=vis,
@@ -170,7 +130,7 @@ class VLARestoreData(restoredata.RestoreData):
         # Set the following to keep the default behavior. No longer needed ?
         # applycal_inputs.flagdetailedsum = True
 
-        #Override for VLA
+        # Overrides for VLA
         applycal_inputs.intent = ''
         applycal_inputs.field = ''
         applycal_inputs.spw = ''
