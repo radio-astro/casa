@@ -31,45 +31,45 @@ namespace casa {
 template <class T> const casacore::String ImageConvolverTask<T>::CLASS_NAME = "ImageConvolverTask";
 
 template <class T> ImageConvolverTask<T>::ImageConvolverTask(
-	const SPCIIT image, const casacore::Record *const &region,
-	const casacore::String& mask, const casacore::String& outname, const casacore::Bool overwrite
+    const SPCIIT image, const casacore::Record *const &region,
+    const casacore::String& mask, const casacore::String& outname, const casacore::Bool overwrite
 ) : ImageTask<T>(image, "", region, "", "", "", mask, outname, overwrite),
-	_kernel(), _scale(0) {
-	this->_construct(true);
+    _kernel(), _scale(0) {
+    this->_construct(true);
 }
 
 
 template <class T> SPIIT ImageConvolverTask<T>::convolve() {
 
-	auto autoScale = _scale <= 0;
+    auto autoScale = _scale <= 0;
 
-	auto subImage = SubImageFactory<T>::createSubImageRO(
-		*this->_getImage(), *this->_getRegion(), this->_getMask(),
-		this->_getLog().get(), casacore::AxesSpecifier(), this->_getStretch()
-	);
+    auto subImage = SubImageFactory<T>::createSubImageRO(
+        *this->_getImage(), *this->_getRegion(), this->_getMask(),
+        this->_getLog().get(), casacore::AxesSpecifier(), this->_getStretch()
+    );
 
 
-	casacore::TempImage<T> x(subImage->shape(), subImage->coordinates());
+    casacore::TempImage<T> x(subImage->shape(), subImage->coordinates());
 
-	// Make the convolver
+    // Make the convolver
 
-	casacore::Bool copyMisc = true;
-	//casacore::Bool warnOnly = true;
-	auto scaleType = autoScale
-		? ImageConvolver<T>::AUTOSCALE : ImageConvolver<T>::SCALE;
-	ImageConvolver<T> aic;
-	aic.convolve(
-		*this->_getLog(), x, *subImage, _kernel, scaleType,
-		_scale, copyMisc
-	);
-	return this->_prepareOutputImage(x);
+    casacore::Bool copyMisc = true;
+    //casacore::Bool warnOnly = true;
+    auto scaleType = autoScale
+        ? ImageConvolver<T>::AUTOSCALE : ImageConvolver<T>::SCALE;
+    ImageConvolver<T> aic;
+    aic.convolve(
+        *this->_getLog(), x, *subImage, _kernel, scaleType,
+        _scale, copyMisc
+    );
+    return this->_prepareOutputImage(x);
 }
 
 template <class T> void ImageConvolverTask<T>::setKernel(const casacore::Array<T>& kernel) {
-	ThrowIf(
-		kernel.empty(), "Kernel array cannot be empty"
-	);
-	_kernel.assign(kernel);
+    ThrowIf(
+        kernel.empty(), "Kernel array cannot be empty"
+    );
+    _kernel.assign(kernel);
 }
 
 
