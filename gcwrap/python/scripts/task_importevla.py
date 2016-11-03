@@ -59,7 +59,7 @@ def importevla(
     # Vers8.6 (3.4.0) STM 2011-02-22 full handling of new Flag.xml ant+spw+pol flags
     # Vers9.0 (3.4.0) SMC 2012-03-13 ported to use the new flagger tool (agentflagger)
     # Vers9.1 (4.7.0) DP  2016-06-17 introduced polyephem_tabtimestep parameter
-    #
+    # Version 9.2 (5.0)    2016-11-03  added --with-pointing-correction always
 
     # Create local versions of the flagger and ms tools
     aflocal = casac.agentflagger()
@@ -83,7 +83,7 @@ def importevla(
         srt = 'all'
         time_sampling = 'all'
         showversion = True
-        execute_string = 'asdm2MS  --icm "' + corr_mode + '" --isrt "' \
+        execute_string = 'asdm2MS  --with-pointing-correction --icm "' + corr_mode + '" --isrt "' \
             + srt + '" --its "' + time_sampling + '" --ocm "' \
             + ocorr_mode + '" --wvr-corrected-data "' \
             + wvr_corrected_data + '" --asis "' + asis + '" --scans "' \
