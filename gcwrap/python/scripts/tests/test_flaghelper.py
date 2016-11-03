@@ -480,6 +480,18 @@ class test_flaghelper(test_base):
                "mode='clip' clipzeros=True"]
         mydict = fh.parseDictionary(cmd)
         self.assertTrue(fh.evaluateFlagParameters(mydict,fparams))
+
+    def test_evaluateFlagParameters4(self):
+        '''flaghelper: evaluate new quackinterval parameter type'''
+        cmd = ["mode='quack' quackinterval=2",
+               "mode='quack' quackinterval=3.1"]
+        
+        from tasks import flagdata
+        fparams = flagdata.parameters
+        
+        mydict = fh.parseDictionary(cmd)
+
+        self.assertTrue(fh.evaluateFlagParameters(mydict,fparams))
         
     def test_evaluateDataSelectionParameters(self):
         '''flaghelper: evaluate wrong type of data selection parameters'''

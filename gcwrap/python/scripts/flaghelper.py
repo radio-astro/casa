@@ -1890,8 +1890,8 @@ def evaluateFlagParameters(pardict, pars):
             fpars.pop(par)
         
     # Define the parameters that have variant type in flagdata
-    dup_pars = ['ntime','observation','addantenna','timedev','timedev','freqdev','freqdev']
-    dup_types = [0.0,0,{},[],0.0,[],0.0]
+    dup_pars = ['ntime','observation','addantenna','timedev','timedev','freqdev','freqdev','quackinterval']
+    dup_types = [0.0,0,{},[],0.0,[],0.0,0]
          
     # Create a tuple from flagdata's parameters
     ftup = fpars.items()
@@ -1934,6 +1934,7 @@ def evaluateFlagParameters(pardict, pars):
 #               ('addantenna',{}),
 #                 # quack
 #               ('quackinterval',0.0),
+#               ('quackinterval',0),
 #               ('quackmode','string'),
 #               ('quackincrement',False),
 #                 # tfcrop

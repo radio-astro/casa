@@ -220,7 +220,7 @@
             <!-- QUACK parameters -->
             <param type="any" name="quackinterval" subparam="true">
                 <description>Quack n seconds from scan beginning or end</description>
-                <any type="variant" limittypes="double doubleArray" />
+                <any type="variant" limittypes="double doubleArray int intArray" />
                 <value type="double">1.0</value>
             </param>
             <param type="any" name="quackmode" subparam="true">
@@ -976,6 +976,8 @@
                quackinterval -- Time in seconds from scan beginning or end to flag. Make time slightly 
                                 smaller than the desired time.
                     default: 0.0
+                    type: int or float
+	
                quackmode -- Quack mode
                     default: 'beg'
                     options: 'beg'  ==> flag an interval at the beginning of scan
@@ -1001,6 +1003,7 @@
 
                quackincrement -- Quack incrementally in time?
                     default: False
+                    type: bool
                              False  ==> the quack interval is counted from the
                                         beginning of the scan
                              True   ==> the quack interval is counted from the
@@ -1020,12 +1023,13 @@
                         A positive number allows antennas to overlap in projection
                         A negative number forces antennas apart in projection
                         Zero implies a distance of radius_1+radius_2 between antenna centers.
-                   default: 0.0
+                   default: 0.0	               
 
                addantenna -- It can be either a file name with additional antenna names, positions 
                          and diameters, or a Python dictionary with the same information. 
                          You can use the flaghelper functions to create the dictionary from a file.  
                    default: ''
+                   type: string or {}
                    
                    To create a dictionary inside casapy.
                    > import flaghelper as fh
