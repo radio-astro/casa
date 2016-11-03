@@ -58,7 +58,7 @@ class RawflagchansInputs(basetask.StandardInputs):
         # if the spw was set, look to see which intents were observed in that
         # spectral window and return the intent based on our order of
         # preference: BANDPASS
-        preferred_intents = ('BANDPASS')
+        preferred_intents = ('BANDPASS',)
         if self.spw:
             for spw in self.ms.get_spectral_windows(self.spw):
                 for intent in preferred_intents:
