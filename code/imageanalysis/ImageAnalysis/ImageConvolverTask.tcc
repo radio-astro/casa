@@ -40,21 +40,14 @@ template <class T> ImageConvolverTask<T>::ImageConvolverTask(
 
 
 template <class T> SPIIT ImageConvolverTask<T>::convolve() {
-
     auto autoScale = _scale <= 0;
-
     auto subImage = SubImageFactory<T>::createSubImageRO(
         *this->_getImage(), *this->_getRegion(), this->_getMask(),
         this->_getLog().get(), casacore::AxesSpecifier(), this->_getStretch()
     );
-
-
     casacore::TempImage<T> x(subImage->shape(), subImage->coordinates());
-
     // Make the convolver
-
     casacore::Bool copyMisc = true;
-    //casacore::Bool warnOnly = true;
     auto scaleType = autoScale
         ? ImageConvolver<T>::AUTOSCALE : ImageConvolver<T>::SCALE;
     ImageConvolver<T> aic;
@@ -71,7 +64,6 @@ template <class T> void ImageConvolverTask<T>::setKernel(const casacore::Array<T
     );
     _kernel.assign(kernel);
 }
-
 
 }
 
