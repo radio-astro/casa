@@ -44,12 +44,6 @@ template<class T> void ImageDecimator<T>::setAxis(casacore::uInt n) {
     _axis = n;
 }
 
-template<class T> void ImageDecimator<T>::suppressHistoryWriting(
-    casacore::Bool b) { 
-    _suppressHistory = b;
-    ImageTask<T>::suppressHistoryWriting(b);
-}
-
 template<class T> SPIIT ImageDecimator<T>::decimate() const {
     ThrowIf(
         _factor > this->_getImage()->shape()[_axis],
@@ -159,7 +153,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
             stop[_axis] += _factor;
         }
     }
-    if (! _suppressHistory) {
+    if (! this->_getSuppressHistory()) {
         ostringstream os;
         os << "Decimated axis " << _axis << " by keeping only every nth plane, "
             << "where n=" << _factor << ". ";

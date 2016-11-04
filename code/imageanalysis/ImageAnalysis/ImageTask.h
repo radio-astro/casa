@@ -95,7 +95,7 @@ public:
 
     // suppress writing the history on _prepareOutputImage() call. Useful for
     // not writing history to intermediate image products.
-    virtual void suppressHistoryWriting(casacore::Bool b) { _suppressHistory = b; }
+    void suppressHistoryWriting(casacore::Bool b) { _suppressHistory = b; }
 
     // get the history associated with the task. Does not include the
     // history of the input image.
@@ -106,24 +106,23 @@ public:
 protected:
 
     // if <src>outname</src> is empty, no image will be written
-     // if <src>overwrite</src> is True, if image already exists it will be removed
-      // if <src>overwrite</src> is False, if image already exists exception will be thrown
-
-       ImageTask(
-           const SPCIIT image,
+    // if <src>overwrite</src> is True, if image already exists it will be removed
+    // if <src>overwrite</src> is False, if image already exists exception will be thrown
+    ImageTask(
+        const SPCIIT image,
         const casacore::String& region, const casacore::Record *const &regionPtr,
         const casacore::String& box, const casacore::String& chanInp,
         const casacore::String& stokes, const casacore::String& maskInp,
         const casacore::String& outname, casacore::Bool overwrite
     );
 
-       ImageTask(
-           const SPCIIT image, const casacore::Record *const &regionPtr,
+    ImageTask(
+        const SPCIIT image, const casacore::Record *const &regionPtr,
         const casacore::String& mask,
         const casacore::String& outname, casacore::Bool overwrite
     );
 
-       virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
+    virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
 
     virtual std::vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
@@ -167,6 +166,8 @@ protected:
     virtual casacore::Bool _hasLogfileSupport() const {return false;}
 
     inline casacore::Bool _getStretch() const {return _stretch;}
+
+    Bool _getSuppressHistory() const { return _suppressHistory; }
 
     const SHARED_PTR<LogFile> _getLogFile() const;
 
