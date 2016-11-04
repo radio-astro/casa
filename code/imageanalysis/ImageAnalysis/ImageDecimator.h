@@ -10,68 +10,68 @@
 namespace casa {
 
 template <class T> class ImageDecimator : public ImageTask<T> {
-	// <summary>
-	// Top level interface for removing image planes.
-	// </summary>
+    // <summary>
+    // Top level interface for removing image planes.
+    // </summary>
 
-	// <reviewed reviewer="" date="" tests="" demos="">
-	// </reviewed>
+    // <reviewed reviewer="" date="" tests="" demos="">
+    // </reviewed>
 
-	// <prerequisite>
-	// </prerequisite>
+    // <prerequisite>
+    // </prerequisite>
 
-	// <etymology>
-	// Decimates planes of image
-	// </etymology>
+    // <etymology>
+    // Decimates planes of image
+    // </etymology>
 
-	// <synopsis>
-	// Top level interface for removing image planes.
-	// </synopsis>
+    // <synopsis>
+    // Top level interface for removing image planes.
+    // </synopsis>
 
 public:
 
-	ImageDecimator(
-		const SPCIIT image,
-		const casacore::Record *const region,
-		const casacore::String& maskInp,
-		const casacore::String& outname, casacore::Bool overwrite
-	);
+    ImageDecimator(
+        const SPCIIT image,
+        const casacore::Record *const region,
+        const casacore::String& maskInp,
+        const casacore::String& outname, casacore::Bool overwrite
+    );
 
-	// destructor
-	~ImageDecimator() {}
+    // destructor
+    ~ImageDecimator() {}
 
-	SPIIT decimate() const;
+    SPIIT decimate() const;
 
-	casacore::String getClass() const { const static casacore::String s = "ImageDecimator"; return s; }
+    casacore::String getClass() const { const static casacore::String s = "ImageDecimator"; return s; }
 
-	// every nth plane will be kept
-	void setFactor(casacore::uInt n);
+    // every nth plane will be kept
+    void setFactor(casacore::uInt n);
 
-	// Set the pixel axis number along which the decimation will occur
-	void setAxis(casacore::uInt n);
+    // Set the pixel axis number along which the decimation will occur
+    void setAxis(casacore::uInt n);
 
-	// set the decimation function
-	void setFunction(ImageDecimatorData::Function f);
+    // set the decimation function
+    void setFunction(ImageDecimatorData::Function f);
 
 protected:
-	inline  CasacRegionManager::StokesControl _getStokesControl() const {
-		return CasacRegionManager::USE_ALL_STOKES;
-	}
+    inline  CasacRegionManager::StokesControl _getStokesControl() const {
+        return CasacRegionManager::USE_ALL_STOKES;
+    }
 
-	inline std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-		return std::vector<casacore::Coordinate::Type>();
-	}
+    inline std::vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
+        return std::vector<casacore::Coordinate::Type>();
+    }
 
     inline casacore::Bool _supportsMultipleBeams() const {return false;}
 
     inline casacore::Bool _supportsMultipleRegions() const {return true;}
 
 private:
-	casacore::uInt _axis, _factor;
-	ImageDecimatorData::Function _function;
+    casacore::uInt _axis, _factor;
+    ImageDecimatorData::Function _function;
 
-	// disallow default constructor
-	ImageDecimator();
+    // disallow default constructor
+    ImageDecimator();
 };
 }
 
