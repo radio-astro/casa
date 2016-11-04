@@ -72,80 +72,80 @@ using namespace casacore;
 namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :
-	_imageFloat(), _imageComplex() {
-	_log.reset(new LogIO());
+    _imageFloat(), _imageComplex() {
+    _log.reset(new LogIO());
 }
 
 ImageAnalysis::ImageAnalysis(SPIIF image) :
-	_imageFloat(image),_imageComplex(), _log(new LogIO()) {
+    _imageFloat(image),_imageComplex(), _log(new LogIO()) {
 }
 
 ImageAnalysis::ImageAnalysis(SPIIC image) :
-	_imageFloat(),_imageComplex(image), _log(new LogIO()) {}
+    _imageFloat(),_imageComplex(image), _log(new LogIO()) {}
 
 ImageAnalysis::~ImageAnalysis() {
-	if (_imageFloat) {
-		_destruct(*_imageFloat);
-	}
-	if (_imageComplex) {
-		_destruct(*_imageComplex);
-	}
+    if (_imageFloat) {
+        _destruct(*_imageFloat);
+    }
+    if (_imageComplex) {
+        _destruct(*_imageComplex);
+    }
 }
 /*
 SPCIIC ImageAnalysis::getComplexImage() const {
-	ThrowIf(
-		_imageFloat,
-		"This object currently holds a Float valued image. Use "
-		"getImage instead"
-	);
-	ThrowIf(
-		! _imageComplex,
-		"This image does not hold a valid Complex valued image"
-	);
-	return _imageComplex;
+    ThrowIf(
+        _imageFloat,
+        "This object currently holds a Float valued image. Use "
+        "getImage instead"
+    );
+    ThrowIf(
+        ! _imageComplex,
+        "This image does not hold a valid Complex valued image"
+    );
+    return _imageComplex;
 }
 
 SPIIC ImageAnalysis::getComplexImage() {
-	ThrowIf(
-		_imageFloat,
-		"This object currently holds a Float valued image. Use "
-		"getImage instead"
-	);
-	ThrowIf(
-		! _imageComplex,
-		"This image does not hold a valid Complex valued image"
-	);
-	return _imageComplex;
+    ThrowIf(
+        _imageFloat,
+        "This object currently holds a Float valued image. Use "
+        "getImage instead"
+    );
+    ThrowIf(
+        ! _imageComplex,
+        "This image does not hold a valid Complex valued image"
+    );
+    return _imageComplex;
 }
 
 SPIIF ImageAnalysis::getImage() {
-	ThrowIf(
-		_imageComplex,
-		"This object currently holds a Complex valued image. Use "
-		"getComplexImage instead"
-	);
-	ThrowIf(
-		! _imageFloat,
-		"This image does not hold a valid Float valued image"
-	);
-	return _imageFloat;
+    ThrowIf(
+        _imageComplex,
+        "This object currently holds a Complex valued image. Use "
+        "getComplexImage instead"
+    );
+    ThrowIf(
+        ! _imageFloat,
+        "This image does not hold a valid Float valued image"
+    );
+    return _imageFloat;
 }
 */
 SPCIIF ImageAnalysis::getImage() const {
-	ThrowIf(
-		_imageComplex,
-		"This object currently holds a Complex valued image. Use "
-		"getComplexImage instead"
-	);
-	ThrowIf(
-		! _imageFloat,
-		"This image does not hold a valid Float valued image"
-	);
-	return _imageFloat;
+    ThrowIf(
+        _imageComplex,
+        "This object currently holds a Complex valued image. Use "
+        "getComplexImage instead"
+    );
+    ThrowIf(
+        ! _imageFloat,
+        "This image does not hold a valid Float valued image"
+    );
+    return _imageFloat;
 }
 /*
 void ImageAnalysis::_onlyFloat(const String& method) const {
-	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
+    ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }
 */
 }
