@@ -8,7 +8,8 @@ import pipeline.h.cli.utils as utils
 def hif_makeimlist(vis=None, imagename=None, intent=None, field=None,
                    spw=None, contfile=None, linesfile=None, uvrange=None,
                    specmode=None, outframe=None,
-                   imsize=None, cell=None, calmaxpix=None, phasecenter=None,
+                   sfpblimit=None, imsize=None, pixperbeam=None, cell=None,
+                   calmaxpix=None, phasecenter=None,
                    nchan=None, start=None, width=None, nbins=None, pipelinemode=None,
                    dryrun=None, acceptresults=None):
 
