@@ -105,7 +105,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     
     
     
-FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v spix')
+FluxTR = collections.namedtuple('FluxTR', 'vis field spw freqbw i q u v fluxratio spix')
 
 def make_flux_table(context, results):
     # will hold all the flux stat table rows for the results
@@ -118,19 +118,24 @@ def make_flux_table(context, results):
         # measurements will be empty if fluxscale derivation failed
         if len(single_result.measurements) is 0:
             continue
-            
+
         for field_arg, measurements in single_result.measurements.items():
             field = ms_for_result.get_fields(field_arg)[0]
             intents = ' '. join(field.intents.intersection(set(['BANDPASS', 'PHASE', 'CHECK'])))
             field_cell = '%s (#%s) %s' % (field.name, field.id, intents)
 
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
+                spw = ms_for_result.get_spectral_window(measurement.spw_id)
+                freqbw = '%s %s' % (str(spw.centre_frequency), str(spw.bandwidth))
                 fluxes = collections.defaultdict(lambda: 'N/A')
+
                 for stokes in ['I', 'Q', 'U', 'V']:
                     try:                        
                         flux = getattr(measurement, stokes)
                         unc = getattr(measurement.uncertainty, stokes)
                         flux_jy = flux.to_units(measures.FluxDensityUnits.JANSKY)
+                        if stokes == 'I':
+                            flux_jy_I = flux_jy
                         unc_jy = unc.to_units(measures.FluxDensityUnits.JANSKY)
                         
                         if flux_jy != 0 and unc_jy != 0:
@@ -143,13 +148,51 @@ def make_flux_table(context, results):
                         fluxes[stokes] = '%s%s' % (flux, uncertainty)
                     except:
                         pass
+
                 try:
                     fluxes['spix'] = '%s' % getattr(measurement, 'spix')
                 except:
                     fluxes['spix'] = '0.0'
+
+                # Get the corresponding catalog flux
+                catfluxes = collections.defaultdict(lambda: 'N/A')
+                flux_ratio = 'N/A'
+                for catmeasurement in field.flux_densities:
+                    if catmeasurement.spw_id != int(measurement.spw_id):
+                        continue
+                    for stokes in ['I', 'Q', 'U', 'V']:
+                        try:                        
+                            catflux = getattr(catmeasurement, stokes)
+                            catflux_jy = catflux.to_units(measures.FluxDensityUnits.JANSKY)
+                            if stokes == 'I':
+                                catflux_jy_I = catflux_jy
+                            catfluxes[stokes] = ' %s' % (catflux)
+                        except:
+                            pass
+                    try:
+                        catfluxes['spix'] = '%s' % getattr(catmeasurement, 'spix')
+                    except:
+                        catfluxes['spix'] = '0.0'
+                    if fluxes['I'] != 'N/A' and catfluxes['I'] != 'N/A':
+                        flux_ratio = '%0.3f' % (float(flux_jy_I) / float(catflux_jy_I))
+                    break
                                     
-                tr = FluxTR(vis_cell, field_cell, measurement.spw_id, 
-                            fluxes['I'], fluxes['Q'], fluxes['U'], fluxes['V'],
+                tr = FluxTR(vis_cell, field_cell, measurement.spw_id, freqbw, 
+                            fluxes['I'],
+                            fluxes['Q'],
+                            fluxes['U'],
+                            fluxes['V'],
+                            flux_ratio,
+                            fluxes['spix'])
+
+                rows.append(tr)
+
+                tr = FluxTR(vis_cell, field_cell, measurement.spw_id, freqbw, 
+                            catfluxes['I'],
+                            catfluxes['Q'],
+                            catfluxes['U'],
+                            catfluxes['V'],
+                            flux_ratio,
                             fluxes['spix'])
                 rows.append(tr)
 
