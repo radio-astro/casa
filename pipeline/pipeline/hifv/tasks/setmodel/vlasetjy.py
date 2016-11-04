@@ -459,7 +459,11 @@ class VLASetjy(basetask.StandardTaskTemplate):
                 # merge identical jobs into one job with a multi-spw argument
                 jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
                 for job, _ in jobs_and_components:
-                    setjy_dicts.append(self._executor.execute(job))
+                    try:
+                        setjy_dicts.append(self._executor.execute(job))
+                    except:
+                        LOG.warn("SetJy: One of the selected table has zero rows.")
+
         
         '''
         for field in utils.safe_split(inputs.field):
