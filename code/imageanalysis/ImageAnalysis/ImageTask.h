@@ -89,8 +89,8 @@ public:
     // This adds standard history messages regarding the task that was run and
     // input parameters used. The vectors must have the same length
     void addHistory(
-    	const casacore::LogOrigin& origin, const casacore::String& taskname,
-    	const vector<casacore::String>& paramNames, const vector<casac::variant>& paramValues
+        const casacore::LogOrigin& origin, const casacore::String& taskname,
+        const vector<casacore::String>& paramNames, const vector<casac::variant>& paramValues
     ) const;
 
     // suppress writing the history on _prepareOutputImage() call. Useful for
@@ -111,15 +111,15 @@ protected:
 
        ImageTask(
            const SPCIIT image,
-    	const casacore::String& region, const casacore::Record *const &regionPtr,
-    	const casacore::String& box, const casacore::String& chanInp,
-    	const casacore::String& stokes, const casacore::String& maskInp,
+        const casacore::String& region, const casacore::Record *const &regionPtr,
+        const casacore::String& box, const casacore::String& chanInp,
+        const casacore::String& stokes, const casacore::String& maskInp,
         const casacore::String& outname, casacore::Bool overwrite
     );
 
        ImageTask(
-   		const SPCIIT image, const casacore::Record *const &regionPtr,
-    	const casacore::String& mask,
+           const SPCIIT image, const casacore::Record *const &regionPtr,
+        const casacore::String& mask,
         const casacore::String& outname, casacore::Bool overwrite
     );
 
@@ -155,7 +155,7 @@ protected:
     // if warnOnly is true, log a warning message if file exists and
     // overwrite is true, else throw an exception.
     void _removeExistingFileIfNecessary(
-    	const casacore::String& filename, const casacore::Bool overwrite, casacore::Bool warnOnly=false
+        const casacore::String& filename, const casacore::Bool overwrite, casacore::Bool warnOnly=false
     ) const;
 
     casacore::String _summaryHeader() const;
@@ -171,8 +171,8 @@ protected:
     const SHARED_PTR<LogFile> _getLogFile() const;
 
     casacore::Bool _writeLogfile(
-    	const casacore::String& output, const casacore::Bool open=true,
-    	const casacore::Bool close=true
+        const casacore::String& output, const casacore::Bool open=true,
+        const casacore::Bool close=true
     );
 
     casacore::Bool _openLogfile();
@@ -196,14 +196,14 @@ protected:
     //SPIIT _prepareOutputImage(const casacore::ImageInterface<T>& image) const;
 
     SPIIT _prepareOutputImage(
-    	const casacore::ImageInterface<T>& image, const casacore::Array<T> *const values,
-    	const casacore::ArrayLattice<casacore::Bool> *const mask=nullptr,
-    	const casacore::IPosition *const outShape=nullptr, const casacore::CoordinateSystem *const coordsys=nullptr,
-    	const casacore::String *const outname=nullptr, casacore::Bool overwrite=false, casacore::Bool dropDegen=false
+        const casacore::ImageInterface<T>& image, const casacore::Array<T> *const values,
+        const casacore::ArrayLattice<casacore::Bool> *const mask=nullptr,
+        const casacore::IPosition *const outShape=nullptr, const casacore::CoordinateSystem *const coordsys=nullptr,
+        const casacore::String *const outname=nullptr, casacore::Bool overwrite=false, casacore::Bool dropDegen=false
     ) const;
 
     SPIIT _prepareOutputImage(
-    	const casacore::ImageInterface<T>& image, casacore::Bool dropDegen=false
+        const casacore::ImageInterface<T>& image, casacore::Bool dropDegen=false
     ) const;
 
     // if warnOnly is true, only log a warning message if the file exists and
@@ -249,10 +249,10 @@ private:
     casacore::Bool _logfileAppend = false;
     casacore::Bool _suppressHistory = false;
     casacore::Bool _dropDegen = false;
-	std::unique_ptr<casacore::FiledesIO> _logFileIO;
+    std::unique_ptr<casacore::FiledesIO> _logFileIO;
     Verbosity _verbosity = NORMAL;
     SHARED_PTR<LogFile> _logfile;
-	mutable vector<std::pair<casacore::String, casacore::String> > _newHistory;
+    mutable vector<std::pair<casacore::String, casacore::String> > _newHistory;
 
     mutable C11Timer _timer;
 };
