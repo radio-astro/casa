@@ -44,6 +44,12 @@ template<class T> void ImageDecimator<T>::setAxis(casacore::uInt n) {
     _axis = n;
 }
 
+template<class T> void ImageDecimator<T>::suppressHistoryWriting(
+    casacore::Bool b) { 
+    _suppressHistory = b;
+    ImageTask<T>::suppressHistoryWriting(b);
+}
+
 template<class T> SPIIT ImageDecimator<T>::decimate() const {
     ThrowIf(
         _factor > this->_getImage()->shape()[_axis],
@@ -153,28 +159,30 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
             stop[_axis] += _factor;
         }
     }
-    ostringstream os;
-    os << "Decimated axis " << _axis << " by keeping only every nth plane, "
-        << "where n=" << _factor << ". ";
-    if (_function == ImageDecimatorData::COPY) {
-        os << "Directly copying every i*nth plane "
-            << "in input to plane i in output.";
+    if (! _suppressHistory) {
+        ostringstream os;
+        os << "Decimated axis " << _axis << " by keeping only every nth plane, "
+            << "where n=" << _factor << ". ";
+        if (_function == ImageDecimatorData::COPY) {
+            os << "Directly copying every i*nth plane "
+                << "in input to plane i in output.";
+        }
+        else if (_function == ImageDecimatorData::MEAN) {
+            os << "Averaging every i to i*(n-1) planes in the input "
+                << "image to form plane i in the output image.";
+        }
+        this->addHistory(lor, os.str());
+        os.str("");
+        os << "Original " << this->_getImage()->name() << " size => "
+            << this->_getImage()->shape();
+        this->addHistory(lor, os.str());
+        *this->_getLog() << LogIO::NORMAL << os.str() << LogIO::POST;
+        os.str("");
+        os << "New " << this->_getOutname() << " size => "
+            << out.shape();
+        this->addHistory(lor, os.str());
+        *this->_getLog() << LogIO::NORMAL << os.str() << LogIO::POST;
     }
-    else if (_function == ImageDecimatorData::MEAN) {
-        os << "Averaging every i to i*(n-1) planes in the input "
-            << "image to form plane i in the output image.";
-    }
-    this->addHistory(lor, os.str());
-    os.str("");
-    os << "Original " << this->_getImage()->name() << " size => "
-        << this->_getImage()->shape();
-    this->addHistory(lor, os.str());
-    *this->_getLog() << LogIO::NORMAL << os.str() << LogIO::POST;
-    os.str("");
-    os << "New " << this->_getOutname() << " size => "
-        << out.shape();
-    this->addHistory(lor, os.str());
-    *this->_getLog() << LogIO::NORMAL << os.str() << LogIO::POST;
     // FIXME decimating multiple beams not yet supported
     casacore::ImageUtilities::copyMiscellaneous(
         out, *subImage, ! subImage->imageInfo().hasMultipleBeams()

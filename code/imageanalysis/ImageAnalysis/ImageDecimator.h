@@ -53,6 +53,8 @@ public:
     // set the decimation function
     void setFunction(ImageDecimatorData::Function f);
 
+    void suppressHistoryWriting(casacore::Bool b);
+
 protected:
     inline  CasacRegionManager::StokesControl _getStokesControl() const {
         return CasacRegionManager::USE_ALL_STOKES;
@@ -69,6 +71,7 @@ protected:
 private:
     casacore::uInt _axis, _factor;
     ImageDecimatorData::Function _function;
+    Bool _suppressHistory = False;
 
     // disallow default constructor
     ImageDecimator();

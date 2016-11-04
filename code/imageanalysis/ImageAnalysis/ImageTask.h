@@ -95,7 +95,7 @@ public:
 
     // suppress writing the history on _prepareOutputImage() call. Useful for
     // not writing history to intermediate image products.
-    void suppressHistoryWriting(casacore::Bool b) { _suppressHistory = b; }
+    virtual void suppressHistoryWriting(casacore::Bool b) { _suppressHistory = b; }
 
     // get the history associated with the task. Does not include the
     // history of the input image.
