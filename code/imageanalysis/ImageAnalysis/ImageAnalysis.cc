@@ -73,13 +73,7 @@ namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :
 	_imageFloat(), _imageComplex() {
-
-	// Register the functions to create a FITSImage or MIRIADImage object.
-	FITSImage::registerOpenFunction();
-	MIRIADImage::registerOpenFunction();
-
 	_log.reset(new LogIO());
-
 }
 
 ImageAnalysis::ImageAnalysis(SPIIF image) :
@@ -96,7 +90,6 @@ ImageAnalysis::~ImageAnalysis() {
 	if (_imageComplex) {
 		_destruct(*_imageComplex);
 	}
-	//deleteHist();
 }
 /*
 SPCIIC ImageAnalysis::getComplexImage() const {

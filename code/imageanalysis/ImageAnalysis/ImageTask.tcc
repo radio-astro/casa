@@ -56,8 +56,6 @@ template <class T> ImageTask<T>::ImageTask(
     _chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(false),
     _logfile() {
-    casacore::FITSImage::registerOpenFunction();
-    casacore::MIRIADImage::registerOpenFunction();
 }
 
 template <class T> ImageTask<T>::ImageTask(
