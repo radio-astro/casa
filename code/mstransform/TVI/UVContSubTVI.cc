@@ -43,6 +43,7 @@ UVContSubTVI::UVContSubTVI(	ViImplementation2 * inputVii,
 	want_cont_p = False;
 	fitspw_p = String("");
 	withDenoisingLib_p = True;
+	nThreads_p = 1;
 	niter_p = 1;
 
 	inputFrequencyMap_p.clear();
@@ -127,6 +128,38 @@ Bool UVContSubTVI::parseConfiguration(const Record &configuration)
 		{
 			logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
 						<< "Using denoising lib (GSL based)" << LogIO::POST;
+		}
+	}
+
+	exists = -1;
+	exists = configuration.fieldNumber ("nthreads");
+	if (exists >= 0)
+	{
+		configuration.get (exists, nThreads_p);
+
+		if (nThreads_p > 1)
+		{
+#ifdef _OPENMP
+			if (omp_get_max_threads() < nThreads_p)
+			{
+				logger_p << LogIO::WARN << LogOrigin("UVContSubTVI", __FUNCTION__)
+						<< "Requested " <<  nThreads_p << " OMP threads but maximum possible is " << omp_get_max_threads()<< endl
+						<< "Setting number of OMP threads to " << omp_get_max_threads() << endl
+						<< "Check OMP_NUM_THREADS environmental variable and number of cores in your system"
+						<< LogIO::POST;
+				nThreads_p = omp_get_max_threads();
+			}
+			else
+			{
+				logger_p 	<< LogIO::NORMAL << LogOrigin("UVContSubTVI", __FUNCTION__)
+							<< "Numer of OMP threads set to " << nThreads_p << LogIO::POST;
+			}
+#else
+			logger_p << LogIO::WARN << LogOrigin("UVContSubTVI", __FUNCTION__)
+					<< "Requested " <<  nThreads_p << " threads but OMP is not available in your system"
+					<< LogIO::POST;
+			nThreads_p = 1;
+#endif
 		}
 	}
 
@@ -312,23 +345,30 @@ template<class T> void UVContSubTVI::transformDataCube(	const Cube<T> &inputVis,
 	// Get input flag Cube
 	const Cube<Bool> &flagCube = vb->flagCube();
 
-	// Determine number of OpenMP threads
-	int nThreads = 1;
-#ifdef _OPENMP
-	if (withDenoisingLib_p) nThreads = omp_get_max_threads();
-#endif
-	nThreads = 1;
-
 	// Transform data
-	if (nThreads > 1)
+	if (nThreads_p > 1)
 	{
+#ifdef _OPENMP
+
 		uInt nCorrs = vb->getShape()(0);
+		if (nCorrs < nThreads_p)
+		{
+			omp_set_num_threads(nCorrs);
+		}
+		else
+		{
+			omp_set_num_threads(nThreads_p);
+		}
+
 		#pragma omp parallel for
 		for (uInt corrIdx=0; corrIdx < nCorrs; corrIdx++)
 		{
 			transformDataCore(inputFrequencyMap_p[spwId],lineFreeChannelMask,
 					inputVis,flagCube,inputWeight,outputVis,corrIdx);
 		}
+
+		omp_set_num_threads(nThreads_p);
+#endif
 	}
 	else
 	{
@@ -804,6 +844,7 @@ template<class T> void UVContSubtractionDenoisingKernel<T>::kernelCore(	Vector<T
 																		Vector<Float> &inputWeights,
 																		Vector<T> &outputVector)
 {
+	/*
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	fitter_p.calcFitCoeff(inputVector);
 
@@ -812,13 +853,13 @@ template<class T> void UVContSubtractionDenoisingKernel<T>::kernelCore(	Vector<T
 
 	outputVector = inputVector;
 	outputVector -= model;
+	*/
 
-	/*
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	Vector<T> coeff = fitter_p.calcFitCoeff(inputVector);
 
 	// Fill output data
-	Vector<T> outputVector = inputVector;
+	outputVector = inputVector;
 	outputVector -= coeff(0);
 	for (uInt order_idx = 1; order_idx <= fitOrder_p; order_idx++)
 	{
@@ -827,7 +868,6 @@ template<class T> void UVContSubtractionDenoisingKernel<T>::kernelCore(	Vector<T
 			outputVector(chan_idx) -= (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
 		}
 	}
-	*/
 
 	/*
 	if (debug_p)
@@ -890,11 +930,12 @@ template<class T> void UVContEstimationDenoisingKernel<T>::kernelCore(	Vector<T>
 																		Vector<Float> &inputWeights,
 																		Vector<T> &outputVector)
 {
+	/*
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	fitter_p.calcFitCoeff(inputVector);
 	fitter_p.calcFitModel(outputVector);
+	*/
 
-	/*
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	Vector<T> coeff = fitter_p.calcFitCoeff(inputVector);
 
@@ -907,7 +948,6 @@ template<class T> void UVContEstimationDenoisingKernel<T>::kernelCore(	Vector<T>
 			outputVector(chan_idx) += (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
 		}
 	}
-	*/
 
 	return;
 }

@@ -85,6 +85,7 @@ protected:
     mutable Bool want_cont_p;
     mutable String fitspw_p;
     mutable Bool withDenoisingLib_p;
+    mutable uInt nThreads_p;
     mutable uInt niter_p;
     mutable map<Int,Vector<Bool> > lineFreeChannelMaskMap_p;
 

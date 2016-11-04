@@ -3325,6 +3325,7 @@ bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
 		subtractor.setFitOrder(fitorder);
 		subtractor.setFitSpw(t_fitspw);
 		subtractor.setFitOutSpw(t_spw);
+		subtractor.setWantCont(False);
 
 		if(!subtractor.makeSubMS(t_outputms, t_whichcol, t_tileshape, t_combine)){
 			*itsLog << LogIO::SEVERE
