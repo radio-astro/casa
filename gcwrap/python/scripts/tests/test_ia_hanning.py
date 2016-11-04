@@ -244,8 +244,8 @@ class ia_hanning_test(unittest.TestCase):
         myia.done()
         msgs = bb.history()
         bb.done()
-        self.assertTrue("ia.hanning" in msgs[-6])    
-        self.assertTrue("ia.hanning" in msgs[-5])        
+        self.assertTrue("ia.hanning" in msgs[-4])    
+        self.assertTrue("ia.hanning" in msgs[-3])        
     
 def suite():
     return [ia_hanning_test]
