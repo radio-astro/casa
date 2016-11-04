@@ -77,15 +77,27 @@ struct VerboseDeleterForNew {
     delete p;
   }
 };
+
+struct GeometricAverageValidator {
+  static String GetMode() { return "geometric"; }
+  static String GetTypePrefix() { return "GeometricPolAverage("; }
+};
+
+struct StokesAverageValidator {
+  static String GetMode() { return "stokes"; }
+  static String GetTypePrefix() { return "StokesPolAverage("; }
+};
 } // anonymous namespace
 
 class PolAverageTVITest: public ::testing::Test {
 public:
   virtual void SetUp() {
-    my_data_name_ = "analytic_spectra.ms";
+//    my_data_name_ = "analytic_spectra.ms";
+    my_data_name_ = "analytic_type1.bl.ms";
     my_ms_name_ = "polaverage_test.ms";
     std::string const data_path = ::GetCasaDataPath()
-        + "/regression/unittest/singledish/";
+        + "/regression/unittest/tsdbaseline/";
+//    + "/regression/unittest/singledish/";
 
     copyDataFromRepository(data_path);
     ASSERT_TRUE(File(my_data_name_).exists());
@@ -119,7 +131,7 @@ protected:
     std::unique_ptr<VisibilityIterator2> vi;
     try {
       vi.reset(new VisibilityIterator2(factory));
-    } catch(...) {
+    } catch (...) {
       cout << "Failed to create VI at factory" << endl;
       throw;
     }
@@ -135,12 +147,11 @@ protected:
 
   void TestFactory(String const &mode, String const &expectedClassName) {
 
-    cout << "Mode \"" << mode << "\" expected class name \"" << expectedClassName << "\""
-        << endl;
+    cout << "Mode \"" << mode << "\" expected class name \""
+        << expectedClassName << "\"" << endl;
 
     if (expectedClassName.size() > 0) {
-      std::unique_ptr<VisibilityIterator2> vi(
-              ManufactureVIAtFactory(mode));
+      std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory(mode));
 
       // Verify type string
       String viiType = vi->ViiType();
@@ -149,10 +160,157 @@ protected:
       cout << "Creation of VI via factory will fail" << endl;
       // exception must be thrown
       EXPECT_THROW( {
-            std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory(mode));//new VisibilityIterator2(factory));
+            std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory(mode)); //new VisibilityIterator2(factory));
           },
           AipsError)<< "The process must throw AipsError";
     }
+  }
+
+  template<class Validator>
+  void TestTVI() {
+    // Create VI
+    std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory(Validator::GetMode()));
+    ASSERT_TRUE(vi->ViiType().startsWith(Validator::GetTypePrefix()));
+
+    // MS property via VI
+    auto ms = vi->ms();
+    uInt const nRowMs = ms.nrow();
+    auto const desc = ms.tableDesc();
+    auto const correctedExists = desc.isColumn("CORRECTED_DATA");
+    auto const modelExists = desc.isColumn("MODEL_DATA");
+    auto const dataExists = desc.isColumn("DATA");
+    auto const floatExists = desc.isColumn("FLOAT_DATA");
+    cout << "MS Property" << endl;
+    cout << "\tMS Name: \"" << ms.tableName() << "\"" << endl;
+    cout << "\tNumber of Rows: " << nRowMs << endl;
+    cout << "\tNumber of Spws: " << vi->nSpectralWindows() << endl;
+    cout << "\tNumber of Polarizations: " << vi->nPolarizationIds() << endl;
+    cout << "\tNumber of DataDescs: " << vi->nDataDescriptionIds() << endl;
+    cout << "\tChannelized Weight Exists? "
+        << (vi->weightSpectrumExists() ? "True" : "False") << endl;
+    //cout << "\tChannelized Sigma Exists? " << (vi->sigmaSpectrumExists() ? "True" : "False") << endl;
+
+    // VI iteration
+    Vector<uInt> swept(nRowMs, 0);
+    uInt nRowChunkSum = 0;
+    VisBuffer2 *vb = vi->getVisBuffer();
+    ViImplementation2 *vii = vi->getImpl();
+    vi->originChunks();
+    while (vi->moreChunks()) {
+      vi->origin();
+      Int const nRowChunk = vi->nRowsInChunk();
+      nRowChunkSum += nRowChunk;
+      cout << "***" << endl;
+      cout << "*** Start loop on chunk " << vi->getSubchunkId().chunk() << endl;
+      cout << "*** Number of Rows: " << nRowChunk << endl;
+      cout << "***" << endl;
+
+      Int nRowSubchunkSum = 0;
+
+      while (vi->more()) {
+        auto subchunk = vi->getSubchunkId();
+        cout << "=== Start loop on subchunk " << subchunk.subchunk() << " ===" << endl;
+
+        // cannot use getInterval due to the error
+        // "undefined reference to VisibilityIterator2::getInterval"
+        // even if the code is liked to libmsvis.so.
+        //cout << "Interval: " << vi->getInterval() << endl;
+
+        cout << "Antenna1: " << vb->antenna1() << endl;
+        cout << "Antenna2: " << vb->antenna2() << endl;
+        cout << "Array Id: " << vb->arrayId() << endl;
+        cout << "Data Desc Ids: " << vb->dataDescriptionIds() << endl;
+        cout << "Exposure: " << vb->exposure() << endl;
+        cout << "Feed1: " << vb->feed1() << endl;
+        cout << "Feed2: " << vb->feed2() << endl;
+        cout << "Field Id: " << vb->fieldId() << endl;
+        cout << "Flag Row: " << vb->flagRow() << endl;
+        cout << "Observation Id: " << vb->observationId() << endl;
+        cout << "Processor Id: " << vb->processorId() << endl;
+        cout << "Scan: " << vb->scan() << endl;
+        cout << "State Id: " << vb->stateId() << endl;
+        cout << "Time: " << vb->time() << endl;
+        cout << "Time Centroid: " << vb->timeCentroid() << endl;
+        cout << "Time Interval: " << vb->timeInterval() << endl;
+        //cout << "UVW: " << vb->uvw() << endl;
+
+        cout << "---" << endl;
+        Int nRowSubchunk = vb->nRows();
+        Vector<uInt> rowIds = vb->rowIds();
+        for (auto iter = rowIds.begin(); iter != rowIds.end(); ++iter) {
+          swept[*iter] += 1;
+        }
+        nRowSubchunkSum += nRowSubchunk;
+        Int nAnt = vb->nAntennas();
+        Int nChan = vb->nChannels();
+        Int nCorr = vb->nCorrelations();
+        IPosition shape = vb->getShape();
+        cout << "Number of Subchunk Rows: " << nRowSubchunk << endl;
+        cout << "Number of Antennas: " << nAnt << endl;
+        cout << "Number of Channels: " << nChan << endl;
+        cout << "Number of Correlations: " << nCorr << endl;
+        cout << "Row Ids: " << rowIds << endl;
+        cout << "Spectral Windows: " << vb->spectralWindows() << endl;
+        cout << "Visibility Shape: " << shape << endl;
+        cout << "---" << endl;
+        IPosition visShape = vii->visibilityShape();
+        cout << "Visibility Shape (from VII): " << visShape << endl;
+        Cube<Complex> visCube = vb->visCube();
+        cout << "DATA Shape: " << visCube.shape() << endl;
+        Cube<Complex> visCubeCorrected = vb->visCubeCorrected();
+        cout << "CORRECTED_DATA Shape: " << visCubeCorrected.shape() << endl;
+        Cube<Complex> visCubeModel = vb->visCubeModel();
+        cout << "MODEL_DATA Shape: " << visCubeModel.shape() << endl;
+        Cube<Float> visCubeFloat = vb->visCubeFloat();
+        cout << "FLOAT_DATA Shape: " << visCubeFloat.shape() << endl;
+        Cube<Bool> flagCube = vb->flagCube();
+        cout << "FLAG Shape: " << flagCube.shape() << endl;
+        Vector<Bool> flagRow = vb->flagRow();
+        cout << "FLAG_ROW Shape: " << flagRow.shape() << endl;
+        cout << "===" << endl;
+
+        // internal consistency check
+        EXPECT_EQ(nRowSubchunk, shape[2]);
+        EXPECT_EQ(nChan, shape[1]);
+        EXPECT_EQ(nCorr, shape[0]);
+        EXPECT_EQ(!dataExists, visCube.empty());
+        if (!visCube.empty()) {
+          EXPECT_EQ(visShape, visCube.shape());
+        }
+        EXPECT_EQ(!correctedExists, visCubeCorrected.empty());
+        if (!visCubeCorrected.empty()) {
+          EXPECT_EQ(visShape, visCubeCorrected.shape());
+        }
+        EXPECT_EQ(!modelExists, visCubeModel.empty());
+        if (!visCubeModel.empty()) {
+          EXPECT_EQ(visShape, visCubeModel.shape());
+        }
+        EXPECT_EQ(!floatExists, visCubeFloat.empty());
+        if (!visCubeFloat.empty()) {
+          EXPECT_EQ(visShape, visCubeFloat.shape());
+        }
+        EXPECT_EQ((uInt)1, flagRow.size());
+
+        // polarization averaging check
+        // length of the correlation (polarization) axis must be 1
+        ASSERT_EQ((ssize_t)1, visShape[0]);
+
+        // next round of iteration
+        vi->next();
+      }
+
+      // chunk-subchunk consistency check
+      EXPECT_EQ(nRowChunk, nRowSubchunkSum);
+
+      vi->nextChunk();
+    }
+
+    // chunk-ms consistency check
+    EXPECT_EQ(nRowMs, nRowChunkSum);
+
+    // iteration check
+    EXPECT_TRUE(allEQ(swept, (uInt)1));
+
   }
 
 private:
@@ -253,16 +411,159 @@ TEST_F(PolAverageTVITest, Factory) {
   TestFactory("invalid", "");
 }
 
-TEST_F(PolAverageTVITest, GeometricalAverage) {
-  // Create VI
-  std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory("geometric"));
-  ASSERT_TRUE(vi->ViiType().startsWith("GeometricPolAverage("));
+TEST_F(PolAverageTVITest, GeometricAverage) {
+  TestTVI<GeometricAverageValidator>();
+
+//  // Create VI
+//  std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory("geometric"));
+//  ASSERT_TRUE(vi->ViiType().startsWith("GeometricPolAverage("));
+//
+//  // MS property via VI
+//  auto ms = vi->ms();
+//  uInt const nRowMs = ms.nrow();
+//  auto const desc = ms.tableDesc();
+//  auto const correctedExists = desc.isColumn("CORRECTED_DATA");
+//  auto const modelExists = desc.isColumn("MODEL_DATA");
+//  auto const dataExists = desc.isColumn("DATA");
+//  auto const floatExists = desc.isColumn("FLOAT_DATA");
+//  cout << "MS Property" << endl;
+//  cout << "\tMS Name: \"" << ms.tableName() << "\"" << endl;
+//  cout << "\tNumber of Rows: " << nRowMs << endl;
+//  cout << "\tNumber of Spws: " << vi->nSpectralWindows() << endl;
+//  cout << "\tNumber of Polarizations: " << vi->nPolarizationIds() << endl;
+//  cout << "\tNumber of DataDescs: " << vi->nDataDescriptionIds() << endl;
+//  cout << "\tChannelized Weight Exists? "
+//      << (vi->weightSpectrumExists() ? "True" : "False") << endl;
+//  //cout << "\tChannelized Sigma Exists? " << (vi->sigmaSpectrumExists() ? "True" : "False") << endl;
+//
+//  // VI iteration
+//  Vector<uInt> swept(nRowMs, 0);
+//  uInt nRowChunkSum = 0;
+//  VisBuffer2 *vb = vi->getVisBuffer();
+//  ViImplementation2 *vii = vi->getImpl();
+//  vi->originChunks();
+//  while (vi->moreChunks()) {
+//    vi->origin();
+//    Int const nRowChunk = vi->nRowsInChunk();
+//    nRowChunkSum += nRowChunk;
+//    cout << "***" << endl;
+//    cout << "*** Start loop on chunk " << vi->getSubchunkId().chunk() << endl;
+//    cout << "*** Number of Rows: " << nRowChunk << endl;
+//    cout << "***" << endl;
+//
+//    Int nRowSubchunkSum = 0;
+//
+//    while (vi->more()) {
+//      auto subchunk = vi->getSubchunkId();
+//      cout << "=== Start loop on subchunk " << subchunk.subchunk() << " ===" << endl;
+//
+//      // cannot use getInterval due to the error
+//      // "undefined reference to VisibilityIterator2::getInterval"
+//      // even if the code is liked to libmsvis.so.
+//      //cout << "Interval: " << vi->getInterval() << endl;
+//
+//      cout << "Antenna1: " << vb->antenna1() << endl;
+//      cout << "Antenna2: " << vb->antenna2() << endl;
+//      cout << "Array Id: " << vb->arrayId() << endl;
+//      cout << "Data Desc Ids: " << vb->dataDescriptionIds() << endl;
+//      cout << "Exposure: " << vb->exposure() << endl;
+//      cout << "Feed1: " << vb->feed1() << endl;
+//      cout << "Feed2: " << vb->feed2() << endl;
+//      cout << "Field Id: " << vb->fieldId() << endl;
+//      cout << "Flag Row: " << vb->flagRow() << endl;
+//      cout << "Observation Id: " << vb->observationId() << endl;
+//      cout << "Processor Id: " << vb->processorId() << endl;
+//      cout << "Scan: " << vb->scan() << endl;
+//      cout << "State Id: " << vb->stateId() << endl;
+//      cout << "Time: " << vb->time() << endl;
+//      cout << "Time Centroid: " << vb->timeCentroid() << endl;
+//      cout << "Time Interval: " << vb->timeInterval() << endl;
+//      //cout << "UVW: " << vb->uvw() << endl;
+//
+//      cout << "---" << endl;
+//      Int nRowSubchunk = vb->nRows();
+//      Vector<uInt> rowIds = vb->rowIds();
+//      for (auto iter = rowIds.begin(); iter != rowIds.end(); ++iter) {
+//        swept[*iter] += 1;
+//      }
+//      nRowSubchunkSum += nRowSubchunk;
+//      Int nAnt = vb->nAntennas();
+//      Int nChan = vb->nChannels();
+//      Int nCorr = vb->nCorrelations();
+//      IPosition shape = vb->getShape();
+//      cout << "Number of Subchunk Rows: " << nRowSubchunk << endl;
+//      cout << "Number of Antennas: " << nAnt << endl;
+//      cout << "Number of Channels: " << nChan << endl;
+//      cout << "Number of Correlations: " << nCorr << endl;
+//      cout << "Row Ids: " << rowIds << endl;
+//      cout << "Spectral Windows: " << vb->spectralWindows() << endl;
+//      cout << "Visibility Shape: " << shape << endl;
+//      cout << "---" << endl;
+//      IPosition visShape = vii->visibilityShape();
+//      cout << "Visibility Shape (from VII): " << visShape << endl;
+//      Cube<Complex> visCube = vb->visCube();
+//      cout << "DATA Shape: " << visCube.shape() << endl;
+//      Cube<Complex> visCubeCorrected = vb->visCubeCorrected();
+//      cout << "CORRECTED_DATA Shape: " << visCubeCorrected.shape() << endl;
+//      Cube<Complex> visCubeModel = vb->visCubeModel();
+//      cout << "MODEL_DATA Shape: " << visCubeModel.shape() << endl;
+//      Cube<Float> visCubeFloat = vb->visCubeFloat();
+//      cout << "FLOAT_DATA Shape: " << visCubeFloat.shape() << endl;
+//      Cube<Bool> flagCube = vb->flagCube();
+//      cout << "FLAG Shape: " << flagCube.shape() << endl;
+//      Vector<Bool> flagRow = vb->flagRow();
+//      cout << "FLAG_ROW Shape: " << flagRow.shape() << endl;
+//      cout << "===" << endl;
+//
+//      // internal consistency check
+//      EXPECT_EQ(nRowSubchunk, shape[2]);
+//      EXPECT_EQ(nChan, shape[1]);
+//      EXPECT_EQ(nCorr, shape[0]);
+//      EXPECT_EQ(!dataExists, visCube.empty());
+//      if (!visCube.empty()) {
+//        EXPECT_EQ(visShape, visCube.shape());
+//      }
+//      EXPECT_EQ(!correctedExists, visCubeCorrected.empty());
+//      if (!visCubeCorrected.empty()) {
+//        EXPECT_EQ(visShape, visCubeCorrected.shape());
+//      }
+//      EXPECT_EQ(!modelExists, visCubeModel.empty());
+//      if (!visCubeModel.empty()) {
+//        EXPECT_EQ(visShape, visCubeModel.shape());
+//      }
+//      EXPECT_EQ(!floatExists, visCubeFloat.empty());
+//      if (!visCubeFloat.empty()) {
+//        EXPECT_EQ(visShape, visCubeFloat.shape());
+//      }
+//      EXPECT_EQ((uInt)1, flagRow.size());
+//
+//      // polarization averaging check
+//      // length of the correlation (polarization) axis must be 1
+//      ASSERT_EQ((ssize_t)1, visShape[0]);
+//
+//      // next round of iteration
+//      vi->next();
+//    }
+//
+//    // chunk-subchunk consistency check
+//    EXPECT_EQ(nRowChunk, nRowSubchunkSum);
+//
+//    vi->nextChunk();
+//  }
+//
+//  // chunk-ms consistency check
+//  EXPECT_EQ(nRowMs, nRowChunkSum);
+//
+//  // iteration check
+//  EXPECT_TRUE(allEQ(swept, (uInt)1));
+
 }
 
 TEST_F(PolAverageTVITest, StokesAverage) {
-  // Create VI
-  std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory("stokes"));
-  ASSERT_TRUE(vi->ViiType().startsWith("StokesPolAverage("));
+  TestTVI<StokesAverageValidator>();
+//  // Create VI
+//  std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory("stokes"));
+//  ASSERT_TRUE(vi->ViiType().startsWith("StokesPolAverage("));
 }
 
 int main(int argc, char **argv) {

@@ -117,9 +117,23 @@ public:
     return casacore::String("PolAverage( ") + getVii()->ViiType() + " )";
   }
 
-  // Return the correlation type (returns casacore::Stokes enums)
+  // Methods to control and monitor subchunk iteration
 
-//  virtual void corrType(casacore::Vector<casacore::Int> & corrTypes) const;
+  virtual void origin();
+  virtual void next();
+
+  // Override the following methods to always return Stokes::I
+  virtual void corrType(casacore::Vector<casacore::Int> & corrTypes) const;
+  virtual casacore::Vector<casacore::Int> getCorrelations() const;
+  virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesDefined() const;
+  virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesSelected() const;
+
+  // POLARIZATION table will have additional entry nPolarizationIds() should
+  // return original number plus one
+  // NB: nDataDescriptionIds() will not be affected
+  virtual casacore::Int nPolarizationIds() const {
+    return TransformingVi2::nPolarizationIds() + 1;
+  }
 
   // Return flag for each polarization, channel and row
 
@@ -141,10 +155,10 @@ public:
   // Return the visibilities as found in the casacore::MS, casacore::Cube (npol,nchan,nrow).
 
   virtual void visibilityCorrected(
-      casacore::Cube<casacore::Complex> & vis) const;
+  casacore::Cube<casacore::Complex> & vis) const;
   virtual void visibilityModel(casacore::Cube<casacore::Complex> & vis) const;
   virtual void visibilityObserved(
-      casacore::Cube<casacore::Complex> & vis) const;
+  casacore::Cube<casacore::Complex> & vis) const;
 
   // Return FLOAT_DATA as a casacore::Cube (npol, nchan, nrow) if found in the MS.
 
@@ -178,17 +192,17 @@ protected:
 
   // transform data (DATA, CORRECTED_DATA, MODEL_DATA, FLOAT_DATA)
   virtual void transformComplexData(
-      casacore::Cube<casacore::Complex> const &dataIn,
-      casacore::Cube<casacore::Bool> const &flagIn,
-      casacore::Cube<casacore::Complex> &dataOut) const = 0;
+  casacore::Cube<casacore::Complex> const &dataIn,
+  casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Cube<casacore::Complex> &dataOut) const = 0;
   virtual void transformFloatData(casacore::Cube<casacore::Float> const &dataIn,
-      casacore::Cube<casacore::Bool> const &flagIn,
-      casacore::Cube<casacore::Float> &dataOut) const = 0;
+  casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Cube<casacore::Float> &dataOut) const = 0;
 
   // transform weight (WEIGHT, WEIGHT_SPECTRUM)
   // TODO
   virtual void transformWeight(casacore::Cube<casacore::Float> const &weightIn,
-      casacore::Cube<casacore::Float> &weightOut) const = 0;
+  casacore::Cube<casacore::Float> &weightOut) const = 0;
 
 private:
 
@@ -209,24 +223,24 @@ public:
 
   // transform data (DATA, CORRECTED_DATA, MODEL_DATA, FLOAT_DATA)
   virtual void transformComplexData(
-      casacore::Cube<casacore::Complex> const &dataIn,
-      casacore::Cube<casacore::Bool> const &flagIn,
-      casacore::Cube<casacore::Complex> &dataOut) const;
+  casacore::Cube<casacore::Complex> const &dataIn,
+  casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Cube<casacore::Complex> &dataOut) const;
   virtual void transformFloatData(casacore::Cube<casacore::Float> const &dataIn,
-      casacore::Cube<casacore::Bool> const &flagIn,
-      casacore::Cube<casacore::Float> &dataOut) const;
+  casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Cube<casacore::Float> &dataOut) const;
 
   // transform weight (WEIGHT, WEIGHT_SPECTRUM)
   // TODO
   virtual void transformWeight(casacore::Cube<casacore::Float> const &weightIn,
-      casacore::Cube<casacore::Float> &weightOut) const;
+  casacore::Cube<casacore::Float> &weightOut) const;
 
 protected:
 
   template<class T>
   void transformData(casacore::Cube<T> const &dataIn,
-      casacore::Cube<casacore::Bool> const &flagIn,
-      casacore::Cube<T> &dataOut) const;
+  casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Cube<T> &dataOut) const;
 };
 
 class StokesPolAverageTVI: public PolAverageTVI {
@@ -242,24 +256,24 @@ public:
 
   // transform data (DATA, CORRECTED_DATA, MODEL_DATA, FLOAT_DATA)
   virtual void transformComplexData(
-      casacore::Cube<casacore::Complex> const &dataIn,
-      casacore::Cube<casacore::Bool> const &flagIn,
-      casacore::Cube<casacore::Complex> &dataOut) const;
+  casacore::Cube<casacore::Complex> const &dataIn,
+  casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Cube<casacore::Complex> &dataOut) const;
   virtual void transformFloatData(casacore::Cube<casacore::Float> const &dataIn,
-      casacore::Cube<casacore::Bool> const &flagIn,
-      casacore::Cube<casacore::Float> &dataOut) const;
+  casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Cube<casacore::Float> &dataOut) const;
 
   // transform weight (WEIGHT, WEIGHT_SPECTRUM)
   // TODO
   virtual void transformWeight(casacore::Cube<casacore::Float> const &weightIn,
-      casacore::Cube<casacore::Float> &weightOut) const;
+  casacore::Cube<casacore::Float> &weightOut) const;
 
 protected:
 
   template<class T>
   void transformData(casacore::Cube<T> const &dataIn,
-      casacore::Cube<casacore::Bool> const &flagIn,
-      casacore::Cube<T> &dataOut) const;
+  casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Cube<T> &dataOut) const;
 };
 
 // <summary>
