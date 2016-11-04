@@ -35,7 +35,7 @@
 using namespace casacore;
 
 namespace {
-struct GeometricTransformation {
+struct StokesTransformation {
 public:
   template<class T>
   inline static void transformData(Cube<T> const &dataIn,
@@ -80,7 +80,7 @@ public:
   }
 };
 
-struct StokesTransformation {
+struct GeometricTransformation {
   template<class T>
   inline static void transformData(Cube<T> const &dataIn,
       Cube<Bool> const &flagIn, Cube<Float> const &weightIn, Cube<T> &dataOut) {
@@ -372,7 +372,18 @@ void GeometricPolAverageTVI::transformWeight(Cube<Float> const &weightIn,
 template<class T>
 void GeometricPolAverageTVI::transformData(Cube<T> const &dataIn,
     Cube<Bool> const &flagIn, Cube<T> &dataOut) const {
-  ::GeometricTransformation::transformData<T>(dataIn, flagIn, dataOut);
+  if (weightSpectrumExists()) {
+    Cube<Float> weightSp;
+    getVii()->weightSpectrum(weightSp);
+    ::GeometricTransformation::transformData<T>(dataIn, flagIn, weightSp,
+        dataOut);
+  } else {
+    cout << "scalar weight" << endl;
+    Matrix<Float> weightMat;
+    getVii()->weight(weightMat);
+    ::GeometricTransformation::transformData<T>(dataIn, flagIn, weightMat,
+        dataOut);
+  }
 }
 
 //////////
@@ -402,17 +413,7 @@ void StokesPolAverageTVI::transformWeight(Cube<Float> const &weightIn,
 template<class T>
 void StokesPolAverageTVI::transformData(Cube<T> const &dataIn,
     Cube<Bool> const &flagIn, Cube<T> &dataOut) const {
-  if (weightSpectrumExists()) {
-    Cube<Float> weightSp;
-    getVii()->weightSpectrum(weightSp);
-    ::StokesTransformation::transformData<T>(dataIn, flagIn, weightSp, dataOut);
-  } else {
-    cout << "scalar weight" << endl;
-    Matrix<Float> weightMat;
-    getVii()->weight(weightMat);
-    ::StokesTransformation::transformData<T>(dataIn, flagIn, weightMat,
-        dataOut);
-  }
+  ::StokesTransformation::transformData<T>(dataIn, flagIn, dataOut);
 }
 
 //////////
