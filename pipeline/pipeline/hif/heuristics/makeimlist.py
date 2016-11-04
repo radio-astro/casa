@@ -63,7 +63,7 @@ class MakeImListHeuristics(object):
             # to estimate the primary beam radius -
             # radius of first null in arcsec = 1.22*lambda/D
             self.beam_radius[spwid] = \
-              (1.22 * (3.0e8/ref_frequency) / smallest_diameter) * \
+              (1.22 * (2.99792458e8/ref_frequency) / smallest_diameter) * \
               (180.0 * 3600.0 / math.pi)
 
         # determine spw selection parameters to exclude lines for mfs and cont images
@@ -525,7 +525,7 @@ class MakeImListHeuristics(object):
 
         return result
 
-    def imsize(self, fields, cell, beam, max_pixels=None):
+    def imsize(self, fields, cell, beam, sfpblimit=None, max_pixels=None):
         # get spread of beams
         ignore, xspread, yspread = self.phasecenter(fields, centreonly=False)
 
@@ -555,6 +555,11 @@ class MakeImListHeuristics(object):
         # wide
         nxpix = int((1.5 * beam_radiusv + xspread) / cellvx)
         nypix = int((1.5 * beam_radiusv + yspread) / cellvy)
+
+        if (not self._mosaic) and (sfpblimit is not None):
+            beam_fwhp = 1.12 / 1.22 * beam_radiusv
+            nxpix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / cellvx))
+            nypix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / cellvy))
 
         if max_pixels is not None:
             nxpix = min(nxpix, max_pixels)

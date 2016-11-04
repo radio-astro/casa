@@ -51,7 +51,7 @@ class TcleanHeuristics(object):
         # to estimate the primary beam radius -
         # radius of first null = 1.22*lambda/D
         self.beam_radius = '%sarcsec' % (
-          (1.22 * (3.0e8/ref_frequency) / smallest_diameter) * \
+          (1.22 * (2.99792458e8/ref_frequency) / smallest_diameter) * \
           (180.0 * 3600.0 / math.pi))
 
     def pblimits(self, pb):

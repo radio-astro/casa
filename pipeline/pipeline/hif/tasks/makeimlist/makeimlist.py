@@ -17,7 +17,8 @@ class MakeImListInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, 
       imagename=None, intent=None, field=None, spw=None, contfile=None,
       linesfile=None, uvrange=None, specmode=None, outframe=None,
-      imsize=None, cell=None, calmaxpix=None, phasecenter=None,
+      sfpblimit=None, imsize=None, pixperbeam=None, cell=None,
+      calmaxpix=None, phasecenter=None,
       nchan=None, start=None, width=None, nbins=None):
 
         self._init_properties(vars())
@@ -119,6 +120,16 @@ class MakeImListInputs(basetask.StandardInputs):
          self._outframe = value
 
     @property
+    def sfpblimit(self):
+        return self._sfpblimit
+
+    @sfpblimit.setter
+    def sfpblimit(self, value):
+        if value in (None, -1.0):
+            value = None
+        self._sfpblimit = value
+
+    @property
     def imsize(self):
         if self._imsize is None:
             return []
@@ -133,6 +144,16 @@ class MakeImListInputs(basetask.StandardInputs):
     @imsize.setter
     def imsize(self, value):
         self._imsize = value
+
+    @property
+    def pixperbeam(self):
+        return self._pixperbeam
+
+    @pixperbeam.setter
+    def pixperbeam(self, value):
+        if value in (None, -1.0):
+            value = 5.0
+        self._pixperbeam = value
 
     @property
     def cell(self):
@@ -266,7 +287,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 # Can not just use "has_data" as it only sets up
                 # a selection which checks against existance of
                 # a given item (e.g. an spw).
-                cell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw)
+                cell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw, oversample=0.5*inputs.pixperbeam)
                 # For now we consider the spw for all fields / intents.
                 # May need to handle this individually.
                 if (valid_data[list(field_intent_list)[0]]):
@@ -291,7 +312,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 # the value derives from the single value returned by
                 # imager.advise
                 cells[spwspec], valid_data[spwspec] = self.heuristics.cell(
-                  field_intent_list=field_intent_list, spwspec=spwspec)
+                  field_intent_list=field_intent_list, spwspec=spwspec, oversample=0.5*inputs.pixperbeam)
                 if (cells[spwspec] != ['invalid']):
                     min_cell = cells[spwspec] if (qaTool.convert(cells[spwspec][0], 'arcsec')['value'] < qaTool.convert(min_cell[0], 'arcsec')['value']) else min_cell
             # Rounding to two significant figures
@@ -339,7 +360,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                         field_ids = self.heuristics.field(
                           field_intent[1], field_intent[0])
                         himsize = self.heuristics.imsize(fields=field_ids,
-                          cell=cells[spwspec], beam=beams[spwspec])
+                          cell=cells[spwspec], beam=beams[spwspec], sfpblimit=inputs.sfpblimit)
                         if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX', 'CHECK']:
                             himsize = [min(npix, inputs.calmaxpix) for npix in himsize]
                         imsizes[(field_intent[0],spwspec)] = himsize

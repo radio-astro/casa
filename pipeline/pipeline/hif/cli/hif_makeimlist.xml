@@ -72,9 +72,19 @@ Create a a list of images to be cleaned.
        </allowed>
   </param>
 
+  <param type="double" name="sfpblimit">
+    <description>PB level defining the FOV for single field cleaning</description>
+    <value>-1.0</value>
+  </param>
+
   <param type="intArray" name="imsize">
     <description>Image X and Y size(s) in pixels, \'\' for default. Single value same for both.</description>
     <value></value>
+  </param>
+
+  <param type="double" name="pixperbeam">
+    <description>Pixels per synthesized beam</description>
+    <value>-1.0</value>
   </param>
 
   <param type="stringArray" name="cell">
@@ -223,10 +233,20 @@ specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube'. \'\' defaults to
         mode='cube' produce an LSRK frequency cube, channels are specified
              in frequency
 
+pixperbeam -- Number of pixels per synthesized beam to determined cell size.
+    default: -1.0 (leading either to 5.0 or a modified value in case of
+                   product size limitations).
+    example: 3.0
+
 cell -- Cell size (x, y)
     default '' Compute cell size based on the UV coverage of all the fields
     to be imaged.
     example: ['0.5arcsec', '0.5arcsec']
+
+sfpblimit -- PB level defining the FOV for single field cleaning.
+    default: -1.0 (leading either to 0.2 or a modified value in case of
+                   product size limitations).
+    example: 0.5
 
 imsize -- Image X and Y size in pixels. The sizes must be even and divisible
     by 2,3,5,7 only.
