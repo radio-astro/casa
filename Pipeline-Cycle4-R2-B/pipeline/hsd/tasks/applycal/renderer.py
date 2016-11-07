@@ -69,6 +69,8 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
             'filesizes': filesizes
         })
 
+        transmission_plots = self.create_transmission_plots(context, result)
+        
         # # these dicts map vis to the hrefs of the detail pages
         # amp_vs_time_subpages = {}
 
@@ -87,6 +89,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
             'science_amp_vs_freq_plots': science_amp_vs_freq_summary_plots,
             'uv_max': uv_max,
 #            'amp_vs_time_subpages': amp_vs_time_subpages,
+            'transmission_plots': transmission_plots
         })
         
     def create_single_dish_science_plots(self, context, results):
@@ -104,7 +107,9 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
             correlation = ms.get_alma_corrstring()
-            max_uvs[vis] = 0.0
+            max_uvs[vis] = measures.Distance(value=0.0, units=measures.DistanceUnits.METRE)
+            
+            amp_vs_freq_summary_plots[vis]['TARGET'] = []
 
             # Plot for 1 science field (either 1 science target or for a mosaic 1
             # pointing). The science field that should be chosen is the one with
@@ -117,7 +122,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
                                                       applycal.RealVsFrequencySummaryChart,
                                                       [brightest_field.id], None,
                                                       correlation=correlation)
-                amp_vs_freq_summary_plots[vis][source_id] = plots
+                amp_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
     
             if pipeline.infrastructure.generate_detail_plots(result):
                 fields = set()
