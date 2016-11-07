@@ -2,13 +2,13 @@
 The flagdatasetter module interfaces hid heuristic flaggers to CASA flagdata.
 """
 from __future__ import absolute_import
-import os
+
 import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+from pipeline.h.tasks.common.arrayflaggerbase import FlagCmd
 from pipeline.infrastructure import casa_tasks
-from pipeline.hif.tasks.common.arrayflaggerbase import FlagCmd
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -88,7 +88,7 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
                 jobs = []
 
         else:
-            raise Exception, 'flag commands not in list'
+            raise Exception('flag commands not in list')
 
         # execute any jobs
         results = []
@@ -122,4 +122,4 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
                 else:
                     inputs.inpfile.append(flag)
         else:
-            raise Exception, 'flagcmds not as list'
+            raise Exception('flagcmds not as list')

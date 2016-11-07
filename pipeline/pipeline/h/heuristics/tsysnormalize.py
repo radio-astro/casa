@@ -15,10 +15,12 @@ import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
-def TsysAfterPowerChange(Vorig, Vnew, TsysOrig=200.0, Tatm=270.0):
+
+def TsysAfterPowerChange(v_orig, v_new, tsys_orig=200.0, t_atm=270.0):
     # The maths to derive a new Tsys
-    x = (Vnew / Vorig) * (TsysOrig / (TsysOrig + Tatm))
-    return Tatm * x / (1.0 - x)
+    x = (v_new / v_orig) * (tsys_orig / (tsys_orig + t_atm))
+    return t_atm * x / (1.0 - x)
+
 
 def getPower(vis, scan, spw, duration, fromEnd=False, skipStartSecs=1.0, 
              skipEndSecs=1.0, datacolname='data', verbose=True):
@@ -117,6 +119,7 @@ def scienceSpwForTsysSpw(mymsmd, tsysSpw):
     else:
         return(spws[0])
     return -1
+
 
 def tsysNormalize(vis, tsysTable, newTsysTable, scaleSpws=[], verbose=False):
     """

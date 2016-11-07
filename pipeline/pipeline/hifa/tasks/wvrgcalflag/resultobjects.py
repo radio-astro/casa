@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 
+from pipeline.h.tasks.common import flaggableviewresults
 from ..wvrgcal import resultobjects as wvrgcalresults
-from pipeline.hif.tasks.common import flaggableviewresults
+
 
 class WvrgcalflagResult(wvrgcalresults.WvrgcalResult,
                         flaggableviewresults.FlaggableViewResults):

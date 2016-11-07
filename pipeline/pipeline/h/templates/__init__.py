@@ -1,5 +1,3 @@
-'''
-'''
 import os
 
 import pipeline.infrastructure.renderer.weblog as weblog

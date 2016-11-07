@@ -2,13 +2,13 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.hif.tasks.common import flaggableviewresults
+from pipeline.h.tasks.common import flaggableviewresults
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class FlagcorrectedResults(basetask.Results,
-  flaggableviewresults.FlaggableViewResults):
+                           flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
         Construct and return a new FlagcorrectedResults.
@@ -40,7 +40,7 @@ class FlagcorrectedDataResults(basetask.Results):
 
 
 class FlagcorrectedViewResults(basetask.Results,
-  flaggableviewresults.FlaggableViewResults):
+                               flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
         Construct and return a new FlagcorrectedViewResults.

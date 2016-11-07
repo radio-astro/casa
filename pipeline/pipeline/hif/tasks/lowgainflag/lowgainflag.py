@@ -1,20 +1,20 @@
 from __future__ import absolute_import
 
-import numpy as np 
 import os
 import types
 
-import pipeline.infrastructure as infrastructure
-from pipeline.hif.tasks.common import commoncalinputs
-import pipeline.infrastructure.basetask as basetask
-from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
+import numpy as np
 
-from .resultobjects import LowgainflagResults
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
+from pipeline.h.tasks.common import commonresultobjects
+from pipeline.h.tasks.common import viewflaggers
+from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
+from pipeline.hif.tasks.common import commoncalinputs
 from .resultobjects import LowgainflagDataResults
+from .resultobjects import LowgainflagResults
 from .resultobjects import LowgainflagViewResults
-from ..common import commonresultobjects
-from ..common import calibrationtableaccess as caltableaccess
-from ..common import viewflaggers
 from .. import bandpass
 from .. import gaincal
 
@@ -23,9 +23,9 @@ LOG = infrastructure.get_logger(__name__)
 
 class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None, flag_nmedian=None,
-      fnm_lo_limit=None, fnm_hi_limit=None, niter=None):
+    def __init__(self, context, output_dir=None, vis=None, intent=None,
+                 spw=None, refant=None, flag_nmedian=None, fnm_lo_limit=None,
+                 fnm_hi_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -107,21 +107,23 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         result.vis = inputs.vis
 
         # Construct the task that will read the data.
-        datainputs = LowgainflagDataInputs(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis, intent=inputs.intent,
-          spw=inputs.spw, refant=inputs.refant)
+        datainputs = LowgainflagDataInputs(
+            context=inputs.context, output_dir=inputs.output_dir,
+            vis=inputs.vis, intent=inputs.intent, spw=inputs.spw,
+            refant=inputs.refant)
         datatask = LowgainflagData(datainputs)
         
         # Construct the generator that will create the view of the data
         # that is the basis for flagging.
-        viewtask = LowgainflagView(context=inputs.context,
-          vis=inputs.vis, intent=inputs.intent,
-          spw=inputs.spw, refant=inputs.refant)
+        viewtask = LowgainflagView(
+            context=inputs.context, vis=inputs.vis, intent=inputs.intent,
+            spw=inputs.spw, refant=inputs.refant)
 
         # Construct the task that will set any flags raised in the
         # underlying data.
-        flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.vis, table=inputs.vis, inpfile=[])
+        flagsetterinputs = FlagdataSetter.Inputs(
+            context=inputs.context, vis=inputs.vis, table=inputs.vis,
+            inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Define which type of flagger to use.
@@ -129,7 +131,7 @@ class Lowgainflag(basetask.StandardTaskTemplate):
 
         # Translate the input flagging parameters to a more compact
         # list of rules.
-        rules = flagger.make_flag_rules (
+        rules = flagger.make_flag_rules(
           flag_nmedian=inputs.flag_nmedian,
           fnm_lo_limit=inputs.fnm_lo_limit,
           fnm_hi_limit=inputs.fnm_hi_limit)
@@ -137,10 +139,10 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         # Construct the flagger task around the data view task and the
         # flagsetter task. 
         matrixflaggerinputs = flagger.Inputs(
-          context=inputs.context, output_dir=inputs.output_dir,
-          vis=inputs.vis, datatask=datatask, viewtask=viewtask, 
-          flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
-          extendfields=['field', 'timerange'], iter_datatask=True)
+            context=inputs.context, output_dir=inputs.output_dir,
+            vis=inputs.vis, datatask=datatask, viewtask=viewtask,
+            flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
+            extendfields=['field', 'timerange'], iter_datatask=True)
         flaggertask = flagger(matrixflaggerinputs)
 
         # Execute the flagger task.
@@ -160,8 +162,8 @@ class Lowgainflag(basetask.StandardTaskTemplate):
 
 
 class LowgainflagDataInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None):
+    def __init__(self, context, output_dir=None, vis=None, intent=None,
+                 spw=None, refant=None):
         self._init_properties(vars())
 
 
@@ -180,13 +182,13 @@ class LowgainflagData(basetask.StandardTaskTemplate):
 
         # Calculate a phased-up bpcal
         bpcal_inputs = bandpass.PhcorBandpass.Inputs(
-          context=inputs.context, vis=inputs.vis,
-          intent=inputs.intent, spw=inputs.spw, 
-          refant=inputs.refant, solint='inf,7.8125MHz')
+            context=inputs.context, vis=inputs.vis, intent=inputs.intent,
+            spw=inputs.spw, refant=inputs.refant, solint='inf,7.8125MHz')
         bpcal_task = bandpass.PhcorBandpass(bpcal_inputs)
         bpcal = self._executor.execute(bpcal_task, merge=False)
         if not bpcal.final:
-            LOG.warning('No bandpass solution computed for %s ' % (inputs.ms.basename))
+            LOG.warning('No bandpass solution computed for {0}'.format(
+                inputs.ms.basename))
         else:
             bpcal.accept(inputs.context)
 
@@ -199,7 +201,8 @@ class LowgainflagData(basetask.StandardTaskTemplate):
         gpcal_task = gaincal.GTypeGaincal(gpcal_inputs)
         gpcal = self._executor.execute(gpcal_task, merge=False)
         if not gpcal.final:
-            LOG.warning('No phase time solution computed for %s ' % (inputs.ms.basename))
+            LOG.warning('No phase time solution computed for {0}'.format(
+                inputs.ms.basename))
         else:
             gpcal.accept(inputs.context)
 
@@ -214,7 +217,8 @@ class LowgainflagData(basetask.StandardTaskTemplate):
         if not gacal.final:
             gatable = list(gacal.error)
             gatable = gatable[0].gaintable
-            LOG.warning('No amplitude time solution computed for %s ' % (inputs.ms.basename))
+            LOG.warning('No amplitude time solution computed for %s '.format(
+                inputs.ms.basename))
             result.table = gatable
             result.table_available = False
         else:
@@ -232,8 +236,7 @@ class LowgainflagData(basetask.StandardTaskTemplate):
  
 class LowgainflagView(object):
 
-    def __init__(self, context, vis=None, 
-      intent=None, spw=None, refant=None):
+    def __init__(self, context, vis=None, intent=None, spw=None, refant=None):
         
         self.context = context
         self.vis = vis
@@ -247,9 +250,10 @@ class LowgainflagView(object):
         self.result = LowgainflagViewResults()
 
         if data.table_available:
+
             # Calculate the view
             gatable = data.table
-            LOG.info ('Computing flagging metrics for caltable %s ' % (
+            LOG.info('Computing flagging metrics for caltable {0}'.format(
                 os.path.basename(gatable)))
             self.calculate_view(gatable)
 
@@ -271,8 +275,8 @@ class LowgainflagView(object):
         antenna_ids.sort()
         antenna_name = {}
         for antenna_id in antenna_ids:
-            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas 
-              if antenna.id==antenna_id][0]
+            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas
+                                        if antenna.id == antenna_id][0]
 
         # spw arg may contain channel specification. Let MS parse input and
         # read spw ID from the SpectralWindow domain objects that are returned
@@ -284,7 +288,7 @@ class LowgainflagView(object):
             # The gain table is T, should be no pol dimension
             npols = np.shape(row.get('CPARAM'))[0]
             if npols != 1:
-                raise Exception, 'table has polarization results'
+                raise Exception('table has polarization results')
             times.update([row.get('TIME')])
         times = np.sort(list(times))
 
@@ -318,19 +322,21 @@ class LowgainflagView(object):
                         data[ant, np.abs(times-caltime) < 5] = np.abs(gain)
                         flag[ant, np.abs(times-caltime) < 5] = 0
 
-            axes = [commonresultobjects.ResultAxis(name='Antenna1',
-              units='id', data=np.arange(antenna_ids[-1]+1)),
-              commonresultobjects.ResultAxis(name='Time', units='',
-              data=times)]
+            axes = [
+                commonresultobjects.ResultAxis(
+                    name='Antenna1', units='id',
+                    data=np.arange(antenna_ids[-1]+1)),
+                commonresultobjects.ResultAxis(
+                    name='Time', units='', data=times)
+            ]
 
             # associate the result with a generic filename - using
             # specific names gives confusing duplicates on the weblog
             # display
-            viewresult = commonresultobjects.ImageResult(filename=
-              '%s(gtable)' % os.path.basename(gtable.vis),
-              intent=self.intent,
-              data=data, flag=flag,
-              axes=axes, datatype='gain amplitude', spw=spwid)
+            viewresult = commonresultobjects.ImageResult(
+                filename='%s(gtable)' % os.path.basename(gtable.vis),
+                intent=self.intent, data=data, flag=flag, axes=axes,
+                datatype='gain amplitude', spw=spwid)
           
             # add the view results and their children results to the
             # class result structure

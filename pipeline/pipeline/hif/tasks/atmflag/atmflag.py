@@ -1,17 +1,14 @@
 from __future__ import absolute_import
 
-import os.path
-import numpy as np 
-import re
+import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
-
+from pipeline.h.tasks.common import commonresultobjects
+from pipeline.h.tasks.common import viewflaggers
+from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import AtmflagResults
-from ..common import commonresultobjects
-from ..common import viewflaggers
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -95,7 +92,7 @@ class Atmflag(basetask.StandardTaskTemplate):
           vis=inputs.vis, table=inputs.vis, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
-	# Translate the input flagging parameters to a more compact
+        # Translate the input flagging parameters to a more compact
         # list of rules.
         rules = viewflaggers.VectorFlagger.make_flag_rules(
           flag_minabs=inputs.flag_minabs, fmin_limit=inputs.fmin_limit,
@@ -115,7 +112,7 @@ class Atmflag(basetask.StandardTaskTemplate):
           rules=rules, intent=inputs.intent, niter=1)
         flaggertask = flagger(flaggerinputs)
 
-	# Execute it to flag the data view
+        # Execute it to flag the data view
         result = self._executor.execute(flaggertask)
         return result
 
@@ -148,8 +145,8 @@ class AtmflagWorker(basetask.StandardTaskTemplate):
         resolution = []
         spw_to_band = {}
 
-        for i,spw in enumerate(spws):
-            spw_to_band[spw.id] = i
+        for ispw, spw in enumerate(spws):
+            spw_to_band[spw.id] = ispw
 
             channels = spw.channels
 
@@ -188,13 +185,13 @@ class AtmflagWorker(basetask.StandardTaskTemplate):
         fwidth = casatools.quanta.quantity(width, width_unit)
 
         casatools.atmosphere.initAtmProfile(humidity=H, 
-          temperature=casatools.quanta.quantity(T,"K"),
-          altitude=casatools.quanta.quantity(5059,"m"),
-          pressure=casatools.quanta.quantity(P,'mbar'), 
+          temperature=casatools.quanta.quantity(T, "K"),
+          altitude=casatools.quanta.quantity(5059, "m"),
+          pressure=casatools.quanta.quantity(P, 'mbar'),
           atmType=midLatitudeWinter)
         casatools.atmosphere.initSpectralWindow(len(centre_freq), fcentre,
           fwidth, fresolution)
-        casatools.atmosphere.setUserWH2O(casatools.quanta.quantity(pwv,'mm'))
+        casatools.atmosphere.setUserWH2O(casatools.quanta.quantity(pwv, 'mm'))
 
         for spw in spws:
             band = spw_to_band[spw.id]
@@ -211,7 +208,7 @@ class AtmflagWorker(basetask.StandardTaskTemplate):
                 freqs[i] = reffreq['value'][0] + float(i - refchan) * \
                   chansep['value'][0] 
             axis = commonresultobjects.ResultAxis(name='Frequency',
-              units='GHz', data=freqs)
+                                                  units='GHz', data=freqs)
 
             dry = np.array(casatools.atmosphere.getDryOpacitySpec(band)[1])
             wet = np.array(casatools.atmosphere.getWetOpacitySpec(

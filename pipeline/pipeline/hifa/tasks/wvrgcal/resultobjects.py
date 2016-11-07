@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import collections
 import os
 import types
@@ -6,15 +7,14 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
-from pipeline.hif.tasks.common import commonresultobjects
+from pipeline.h.tasks.common import commonresultobjects
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class WvrgcalResult(basetask.Results):
 
-    def __init__(self, vis, final=[], pool=[], preceding=[],
-      wvrflag=[]):
+    def __init__(self, vis, final=[], pool=[], preceding=[], wvrflag=[]):
         """
         Construct and return a new WvrgcalflagResult.
         """
@@ -49,13 +49,13 @@ class WvrgcalResult(basetask.Results):
 
         for calapp in self.final:
             LOG.debug('Adding calibration to callibrary:\n'
-              '%s\n%s' % (calapp.calto, calapp.calfrom))
+                      '%s\n%s' % (calapp.calto, calapp.calfrom))
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
         if self.wvrflag:
             ms = context.observing_run.get_ms(name=self.vis)
-            if hasattr(ms, 'reference_antenna') and \
-              type(ms.reference_antenna) == types.StringType:
+            if (hasattr(ms, 'reference_antenna')
+                    and isinstance(ms.reference_antenna, str)):
                 refant = ms.reference_antenna.split(',')
                 bad_antennas = set(self.wvrflag).intersection(refant)
                 if bad_antennas:
@@ -82,5 +82,3 @@ class WvrgcalResult(basetask.Results):
         s += '\twvrflag is {wvrflag}'.format(wvrflag=self.wvrflag)
 
         return s
-
-

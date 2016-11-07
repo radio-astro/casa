@@ -2,10 +2,12 @@ from __future__ import absolute_import
 
 import collections
 import os.path
-import numpy as np
 import types
 
+import numpy as np
+
 import pipeline.infrastructure.casatools as casatools
+
 
 def channel_ranges(channels):
     """
@@ -13,16 +15,17 @@ def channel_ranges(channels):
     ranges that describe them.
     """
     channels.sort()
-    range = [channels[0], channels[0]]
+    channel_range = [channels[0], channels[0]]
 
-    for i,chan in enumerate(channels):
-        if chan <= range[1] + 1:
-            range[1] = chan
+    for i, chan in enumerate(channels):
+        if chan <= channel_range[1] + 1:
+            channel_range[1] = chan
         else:
-            return [range] + channel_ranges(channels[i:])
+            return [channel_range] + channel_ranges(channels[i:])
 
     # get here if last channel reached
-    return [range]        
+    return [channel_range]
+
 
 def consolidate_flagcmd_channels(flagcmds, antenna_id_to_name=None):
     """Method to consolidate multiple flagcmds that specify a single
@@ -36,8 +39,8 @@ def consolidate_flagcmd_channels(flagcmds, antenna_id_to_name=None):
     for flagcmd in flagcmds:
         flagchannels = None
         if flagcmd.axisnames is not None:
-            for k,name in enumerate(flagcmd.axisnames):
-                if name.upper()=='CHANNELS':
+            for k, name in enumerate(flagcmd.axisnames):
+                if name.upper() == 'CHANNELS':
                     flagchannels = flagcmd.flagcoords[k]
                     if type(flagchannels) is not types.ListType:
                         flagchannels = [flagchannels]
@@ -70,8 +73,8 @@ def consolidate_flagcmd_channels(flagcmds, antenna_id_to_name=None):
         flagchannels.sort()
 
         flagcoords = flagcmd_coords_dict[ftuple]
-        for k,name in enumerate(list(ftuple[7])):
-            if name.upper()=='CHANNELS':
+        for k, name in enumerate(list(ftuple[7])):
+            if name.upper() == 'CHANNELS':
                 flagcoords[k] = flagchannels
 
         consolidated_flagcmds.append(FlagCmd(
@@ -90,6 +93,7 @@ def consolidate_flagcmd_channels(flagcmds, antenna_id_to_name=None):
           antenna_id_to_name=antenna_id_to_name))
 
     return consolidated_flagcmds
+
 
 def median_and_mad(data):
     """
@@ -144,8 +148,8 @@ class FlagCmd(object):
         # is sorted out. This also avoids problems when the flagging
         # views are caltable derived, but the flags are applied to
         # the data.
-        #if pol is not None:
-            #flagcmd += " correlation='%s'" % pol
+        # if pol is not None:
+        #     flagcmd += " correlation='%s'" % pol
 
         # If specified, add spw to flagging command
         if spw is not None:
@@ -154,12 +158,11 @@ class FlagCmd(object):
                 flagcmd += " spw='%s'" % ",".join(str(s) for s in spw)
             else:
                 flagcmd += " spw='%s'" % spw
-            
 
         # decode axisnames/flagcoords
         if axisnames is not None:
-            for k,name in enumerate(axisnames):
-                if name.upper()=='CHANNELS':
+            for k, name in enumerate(axisnames):
+                if name.upper() == 'CHANNELS':
                     flagchannels = flagcoords[k]
                     if not isinstance(flagchannels, types.ListType):
                         flagchannels = [flagchannels]
@@ -178,8 +181,8 @@ class FlagCmd(object):
                         channel_width = channel_axis.channel_width
                         for trange in ranges:
                             axrange = [
-                            channel_axis.data[trange[0]]-channel_width/2,
-                            channel_axis.data[trange[1]]+channel_width/2]
+                              channel_axis.data[trange[0]]-channel_width/2,
+                              channel_axis.data[trange[1]]+channel_width/2]
                             rangestrs.append('%s~%s%s' % (axrange[0],
                               axrange[1], channel_axis.units))
 
@@ -187,13 +190,13 @@ class FlagCmd(object):
 
             # antenna/baseline flags
             ax_antenna = None
-            for k,name in enumerate(axisnames):
+            for k, name in enumerate(axisnames):
                 if 'ANTENNA' in name.upper():
-                    if antenna is None or antenna==flagcoords[k]:
+                    if antenna is None or antenna == flagcoords[k]:
                         ax_antenna = flagcoords[k]
                     else:
                         ax_antenna = '%s&%s' % (antenna, flagcoords[k])
-                elif name.upper()=='BASELINE':
+                elif name.upper() == 'BASELINE':
                     ax_antenna = flagcoords[k]
             if ax_antenna is not None:
                 # If provided a dictionary to translate antenna IDs
@@ -268,8 +271,8 @@ class FlagCmd(object):
         result = np.array([], np.int)
         # decode axisnames/flagcoords
         if self.axisnames is not None:
-            for k,name in enumerate(self.axisnames):
-                if name.upper()=='CHANNELS':
+            for k, name in enumerate(self.axisnames):
+                if name.upper() == 'CHANNELS':
                     flagchannels = self.flagcoords[k]
                     if not isinstance(flagchannels, types.ListType):
                         flagchannels = [flagchannels]
@@ -333,7 +336,7 @@ class FlagCmd(object):
         # does antenna match?
         if self.antenna is not None:
             if image.ant is not None:
-                match = match and (self.antenna==image.ant[0])
+                match = match and (self.antenna == image.ant[0])
             else:
                 match = match and (('ANTENNA' in str(self.axisnames).upper()) or 
                   ('BASELINE' in str(self.axisnames).upper()))

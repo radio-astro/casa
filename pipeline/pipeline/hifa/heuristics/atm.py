@@ -1,9 +1,10 @@
 from __future__ import absolute_import
 
 import numpy as np
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-from pipeline.hif.tasks.common import commonresultobjects
+from pipeline.h.tasks.common import commonresultobjects
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -24,8 +25,8 @@ class AtmHeuristics(object):
         resolution = []
         spw_to_band = {}
 
-        for i,spw in enumerate(self.science_spws):
-            spw_to_band[spw.id] = i
+        for ispw, spw in enumerate(self.science_spws):
+            spw_to_band[spw.id] = ispw
 
             channels = spw.channels
 
@@ -37,10 +38,10 @@ class AtmHeuristics(object):
             res = np.zeros([len(channels)], np.double)
 
             for i in np.arange(len(freqs)):
-                freq[i] = float(channels[i].low.value + channels[i].high.value) /\
-                  2.0
+                freq[i] = float(channels[i].low.value +
+                                channels[i].high.value) / 2.0
                 channel_width[i] = float(channels[i].low.value -
-                  channels[i].high.value)
+                                         channels[i].high.value)
                 res[i] = float(channels[i].low.value - channels[i].high.value)
       
             centre_frequency = spw.centre_frequency
@@ -68,13 +69,13 @@ class AtmHeuristics(object):
 
         # setup atm
         casatools.atmosphere.initAtmProfile(humidity=H, 
-          temperature=casatools.quanta.quantity(T,"K"),
-          altitude=casatools.quanta.quantity(5059,"m"),
-          pressure=casatools.quanta.quantity(P,'mbar'), 
+          temperature=casatools.quanta.quantity(T, "K"),
+          altitude=casatools.quanta.quantity(5059, "m"),
+          pressure=casatools.quanta.quantity(P, 'mbar'),
           atmType=midLatitudeWinter)
         casatools.atmosphere.initSpectralWindow(len(centre_freq), fcentre,
           fwidth, fresolution)
-        casatools.atmosphere.setUserWH2O(casatools.quanta.quantity(pwv,'mm'))
+        casatools.atmosphere.setUserWH2O(casatools.quanta.quantity(pwv, 'mm'))
 
         self.opacities = {}
         for spw in self.science_spws:
@@ -93,7 +94,7 @@ class AtmHeuristics(object):
                 freqs[i] = reffreq['value'][0] + float(i - refchan) * \
                   chansep['value'][0] 
             axis = commonresultobjects.ResultAxis(name='Frequency',
-              units='GHz', data=freqs)
+                                                  units='GHz', data=freqs)
 
             # calculate opacities
             dry = np.array(casatools.atmosphere.getDryOpacitySpec(band)[1])

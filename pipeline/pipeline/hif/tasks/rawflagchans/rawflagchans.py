@@ -1,20 +1,16 @@
 from __future__ import absolute_import
 
 import os
-import types
 
-import numpy as np 
+import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-
-from pipeline.hif.tasks.common import commonresultobjects
-from pipeline.hif.tasks.common import commonhelpermethods
-from pipeline.hif.tasks.common import viewflaggers
-
-from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
-
+from pipeline.h.tasks.common import commonhelpermethods
+from pipeline.h.tasks.common import commonresultobjects
+from pipeline.h.tasks.common import viewflaggers
+from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import RawflagchansResults, RawflagchansDataResults, RawflagchansViewResults
 
 LOG = infrastructure.get_logger(__name__)
@@ -23,11 +19,11 @@ LOG = infrastructure.get_logger(__name__)
 class RawflagchansInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, spw=None,
-      intent=None,
-      flag_hilo=None, fhl_limit=None, fhl_minsample=None,
-      flag_bad_quadrant=None, fbq_hilo_limit=None,
-      fbq_antenna_frac_limit=None, fbq_baseline_frac_limit=None,
-      niter=None):
+                 intent=None,
+                 flag_hilo=None, fhl_limit=None, fhl_minsample=None,
+                 flag_bad_quadrant=None, fbq_hilo_limit=None,
+                 fbq_antenna_frac_limit=None, fbq_baseline_frac_limit=None,
+                 niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -37,7 +33,7 @@ class RawflagchansInputs(basetask.StandardInputs):
         if self._spw is not None:
             return str(self._spw)
 
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('spw')
 
         science_spws = self.ms.get_spectral_windows(self._spw, with_channels=True)
@@ -49,7 +45,7 @@ class RawflagchansInputs(basetask.StandardInputs):
 
     @property
     def intent(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('intent')
 
         if self._intent is not None:
@@ -184,8 +180,9 @@ class Rawflagchans(basetask.StandardTaskTemplate):
         result.vis = inputs.vis
 
         # Construct the task that will read the data.
-        datainputs = RawflagchansDataInputs(context=inputs.context,
-          vis=inputs.vis, spw=inputs.spw, intent=inputs.intent)
+        datainputs = RawflagchansDataInputs(
+            context=inputs.context, vis=inputs.vis, spw=inputs.spw,
+            intent=inputs.intent)
         datatask = RawflagchansData(datainputs)
         
         # Construct the generator that will create the view of the data
@@ -194,8 +191,9 @@ class Rawflagchans(basetask.StandardTaskTemplate):
         
         # Construct the task that will set any flags raised in the
         # underlying data.
-        flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.vis, table=inputs.vis, inpfile=[])
+        flagsetterinputs = FlagdataSetter.Inputs(
+            context=inputs.context,
+            vis=inputs.vis, table=inputs.vis, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
         
         # Define which type of flagger to use.
@@ -204,20 +202,20 @@ class Rawflagchans(basetask.StandardTaskTemplate):
         # Translate the input flagging parameters to a more compact
         # list of rules.
         rules = flagger.make_flag_rules(
-          flag_hilo=inputs.flag_hilo, fhl_limit=inputs.fhl_limit,
-          fhl_minsample=inputs.fhl_minsample,
-          flag_bad_quadrant=inputs.flag_bad_quadrant,
-          fbq_hilo_limit=inputs.fbq_hilo_limit,
-          fbq_antenna_frac_limit=inputs.fbq_antenna_frac_limit,
-          fbq_baseline_frac_limit=inputs.fbq_baseline_frac_limit)
+            flag_hilo=inputs.flag_hilo, fhl_limit=inputs.fhl_limit,
+            fhl_minsample=inputs.fhl_minsample,
+            flag_bad_quadrant=inputs.flag_bad_quadrant,
+            fbq_hilo_limit=inputs.fbq_hilo_limit,
+            fbq_antenna_frac_limit=inputs.fbq_antenna_frac_limit,
+            fbq_baseline_frac_limit=inputs.fbq_baseline_frac_limit)
         
         # Construct the flagger task around the data view task and the
         # flagger task. 
         flaggerinputs = flagger.Inputs(
-          context=inputs.context, output_dir=inputs.output_dir,
-          vis=inputs.vis, datatask=datatask, viewtask=viewtask, 
-          flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
-          iter_datatask=False)
+            context=inputs.context, output_dir=inputs.output_dir,
+            vis=inputs.vis, datatask=datatask, viewtask=viewtask,
+            flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
+            iter_datatask=False)
         flaggertask = flagger(flaggerinputs)
 
         # Execute the flagger task.
@@ -241,8 +239,7 @@ class Rawflagchans(basetask.StandardTaskTemplate):
 
 class RawflagchansDataInputs(basetask.StandardInputs):
     
-    def __init__(self, context, vis=None, spw=None,
-      intent=None):
+    def __init__(self, context, vis=None, spw=None, intent=None):
         """
         Keyword arguments:
         spw    -- views are created for these spws.
@@ -269,7 +266,8 @@ class RawflagchansData(basetask.StandardTaskTemplate):
         # Take vis from inputs, and add to result.
         result.table = self.inputs.vis
         
-        LOG.info ('Reading flagging view data for vis %s ' % (self.inputs.vis))
+        LOG.info('Reading flagging view data for vis {0}'.format(
+            self.inputs.vis))
 
         # Get the spws to use
         spwids = map(int, self.inputs.spw.split(','))
@@ -278,8 +276,7 @@ class RawflagchansData(basetask.StandardTaskTemplate):
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
 
         # Get antenna names, ids, store in result.
-        _, antenna_ids = \
-          commonhelpermethods.get_antenna_names(ms)
+        _, antenna_ids = commonhelpermethods.get_antenna_names(ms)
         ants = np.array(antenna_ids)
 
         # Create a list of antenna baselines.
@@ -292,7 +289,7 @@ class RawflagchansData(basetask.StandardTaskTemplate):
         # Create a separate flagging view for each spw.
         for spwid in spwids:
 
-            LOG.info('Reading flagging view data for spw %s' % spwid)
+            LOG.info('Reading flagging view data for spw {0}'.format(spwid))
 
             # Get the correlation products.
             corrs = commonhelpermethods.get_corr_products(ms, spwid)
@@ -310,7 +307,7 @@ class RawflagchansData(basetask.StandardTaskTemplate):
             # Open MS and read in required data.       
             with casatools.MSReader(ms.name) as openms:
                 try:
-                    openms.msselect({'scanintent':'*%s*' % self.inputs.intent,'spw':str(spwid)})
+                    openms.msselect({'scanintent': '*%s*' % self.inputs.intent, 'spw': str(spwid)})
                 except:
                     LOG.warning('Unable to compute flagging view for spw %s' % spwid)
                     openms.close()
@@ -322,8 +319,8 @@ class RawflagchansData(basetask.StandardTaskTemplate):
                 openms.iterorigin()
                 iterating = True
                 while iterating:
-                    rec = openms.getdata(['data', 'flag', 'antenna1',
-                      'antenna2'])
+                    rec = openms.getdata(
+                        ['data', 'flag', 'antenna1', 'antenna2'])
                     if 'data' not in rec.keys():
                         break
     
@@ -331,25 +328,29 @@ class RawflagchansData(basetask.StandardTaskTemplate):
                         ant1 = rec['antenna1'][row]
                         ant2 = rec['antenna2'][row]
     
-                        if ant1==ant2:
+                        if ant1 == ant2:
                             continue
     
                         baseline1 = ant1 * (ants[-1] + 1) + ant2
                         baseline2 = ant2 * (ants[-1] + 1) + ant1
     
                         for icorr in range(len(corrs)):
-                            data[icorr,:,baseline1][
-                              rec['flag'][icorr,:,row]==False]\
-                              += rec['data'][icorr,:,row][
-                              rec['flag'][icorr,:,row]==False]
-                            ndata[icorr,:,baseline1][
-                              rec['flag'][icorr,:,row]==False] += 1
-                            data[icorr,:,baseline2][
-                              rec['flag'][icorr,:,row]==False]\
-                              += rec['data'][icorr,:,row][
-                              rec['flag'][icorr,:,row]==False]
-                            ndata[icorr,:,baseline2][
-                              rec['flag'][icorr,:,row]==False] += 1
+
+                            data[icorr, :, baseline1][
+                              rec['flag'][icorr, :, row] == False]\
+                              += rec['data'][icorr, :, row][
+                              rec['flag'][icorr, :, row] == False]
+
+                            ndata[icorr, :, baseline1][
+                              rec['flag'][icorr, :, row] == False] += 1
+
+                            data[icorr, :, baseline2][
+                              rec['flag'][icorr, :, row] == False]\
+                              += rec['data'][icorr, :, row][
+                              rec['flag'][icorr, :, row] == False]
+
+                            ndata[icorr, :, baseline2][
+                              rec['flag'][icorr, :, row] == False] += 1
     
                     iterating = openms.iternext()
 
@@ -363,15 +364,16 @@ class RawflagchansData(basetask.StandardTaskTemplate):
             data = np.abs(data)
             
             # Set flagging state to "True" wherever no data points were available.
-            flag = ndata==0
+            flag = ndata == 0
             
             # Store data and related information for this spwid.
             result.data[spwid] = {
-              'data': data,
-              'flag': flag,
-              'baselines': baselines,
-              'nchans': nchans,
-              'corrs': corrs}
+                'data': data,
+                'flag': flag,
+                'baselines': baselines,
+                'nchans': nchans,
+                'corrs': corrs
+            }
                     
         return result
 
@@ -393,7 +395,6 @@ class RawflagchansView(object):
         # incoming data task result is not new.
         self.result = RawflagchansViewResults()
 
-
     def __call__(self, dataresult):
         """
         When called, the RawflagchansView object calculates flagging views
@@ -408,7 +409,8 @@ class RawflagchansView(object):
         # Take vis from data task results, and add to result.
         self.result.vis = dataresult.table
 
-        LOG.info ('Computing flagging metrics for vis %s ' % (self.result.vis))
+        LOG.info('Computing flagging metrics for vis {0}'.format(
+            self.result.vis))
 
         # Check if dataresult is new for current iteration, or created during 
         # a previous iteration.
@@ -429,10 +431,13 @@ class RawflagchansView(object):
 
                 # Create axes for flagging view.
                 axes = [
-                  commonresultobjects.ResultAxis(name='channels',
-                  units='', data=np.arange(spwdata['nchans'])),
-                  commonresultobjects.ResultAxis(name='Baseline',
-                  units='', data=np.array(spwdata['baselines']), channel_width=1)]
+                    commonresultobjects.ResultAxis(
+                        name='channels', units='',
+                        data=np.arange(spwdata['nchans'])),
+                    commonresultobjects.ResultAxis(
+                        name='Baseline', units='',
+                        data=np.array(spwdata['baselines']), channel_width=1)
+                ]
     
                 # From the data array, create a view for each polarisation.
                 for icorr, corrlist in enumerate(spwdata['corrs']):
@@ -441,9 +446,10 @@ class RawflagchansView(object):
                     self.refine_view(spwdata['data'][icorr], spwdata['flag'][icorr])
     
                     viewresult = commonresultobjects.ImageResult(
-                      filename=self.result.vis, data=spwdata['data'][icorr],
-                      flag=spwdata['flag'][icorr], axes=axes, datatype='Mean amplitude',
-                      spw=spwid, pol=corr, intent=intent)
+                        filename=self.result.vis, data=spwdata['data'][icorr],
+                        flag=spwdata['flag'][icorr], axes=axes,
+                        datatype='Mean amplitude', spw=spwid, pol=corr,
+                        intent=intent)
     
                     # add the view results to the result structure
                     self.result.addview(viewresult.description, viewresult)
@@ -479,7 +485,6 @@ class RawflagchansView(object):
 
         return self.result
 
-
     def refine_view(self, data, flag):
         """Refine the data view by subtracting the median from each
         baseline row, then subtracting the median from each channel
@@ -487,12 +492,11 @@ class RawflagchansView(object):
         """
 
         for baseline in range(np.shape(data)[1]):
-            valid = data[:,baseline][flag[:,baseline]==False]
+            valid = data[:, baseline][flag[:, baseline] == False]
             if len(valid):
-                data[:,baseline] -= np.median(valid)
+                data[:, baseline] -= np.median(valid)
 
         for chan in range(np.shape(data)[0]):
-            valid = data[chan,:][flag[chan,:]==False]
+            valid = data[chan, :][flag[chan, :] == False]
             if len(valid):
-                data[chan,:] -= np.median(valid)
-         
+                data[chan, :] -= np.median(valid)

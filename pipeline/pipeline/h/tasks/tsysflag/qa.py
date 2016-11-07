@@ -1,11 +1,11 @@
 from __future__ import absolute_import
+
 import os
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-
 from . import resultobjects
 
 LOG = logging.get_logger(__name__)
@@ -24,15 +24,21 @@ class TsysflagQAHandler(pqa.QAResultHandler):
         ms = context.observing_run.get_ms(vis)
 
         if result.task_incomplete_reason:
-            scores = [pqa.QAScore(0.0, longmsg='Task ended prematurely',
-              shortmsg='Task ended prematurely', vis=vis)]
+            scores = [
+                pqa.QAScore(0.0, longmsg='Task ended prematurely',
+                            shortmsg='Task ended prematurely', vis=vis)
+            ]
         else:
             try:
-                scores = [qacalc.score_fraction_newly_flagged(caltable,
-                  result.summaries, ms.basename)]
+                scores = [
+                    qacalc.score_fraction_newly_flagged(
+                        caltable, result.summaries, ms.basename)
+                ]
             except AttributeError:
-                scores = [pqa.QAScore(0.0, longmsg='No flagging summaries available',
-                  shortmsg='No flag summaries', vis=vis)]
+                scores = [
+                    pqa.QAScore(0.0, longmsg='No flagging summaries available',
+                                shortmsg='No flag summaries', vis=vis)
+                ]
             
         result.qa.pool[:] = scores
 
@@ -53,7 +59,6 @@ class TsysflagListQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = collated
 
         caltables = [r.inputs['caltable'] for r in result]
-        longmsg = 'No extra data was flagged in %s' % utils.commafy(caltables, 
-                                                                    quotes=False, 
-                                                                    conjunction='or')
+        longmsg = 'No extra data was flagged in %s'.format(
+            utils.commafy(caltables, quotes=False, conjunction='or'))
         result.qa.all_unity_longmsg = longmsg

@@ -1,18 +1,16 @@
 from __future__ import absolute_import
+
 import copy
-import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
-
+from pipeline.h.tasks.common import commonhelpermethods
+from pipeline.h.tasks.common import viewflaggers
 from pipeline.hifa.tasks import bandpass
-from ..wvrgcal import wvrgcal
 from . import resultobjects
 from . import wvrgcalflagsetter
-
-from pipeline.hif.tasks.common import commonhelpermethods
-from pipeline.hif.tasks.common import viewflaggers
+from ..wvrgcal import wvrgcal
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -21,19 +19,20 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
     
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
-      caltable=None, hm_toffset=None, toffset=None, segsource=None, 
-      hm_tie=None, tie=None, sourceflag=None, nsol=None,
-      disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
-      scale=None, maxdistm=None, minnumants=None, mingoodfrac=None, refant=None,
-      flag_intent=None, qa_intent=None, qa_bandpass_intent=None,
-      accept_threshold=None, flag_hi=None, fhi_limit=None, fhi_minsample=None):
+                 caltable=None, hm_toffset=None, toffset=None, segsource=None,
+                 hm_tie=None, tie=None, sourceflag=None, nsol=None,
+                 disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
+                 scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
+                 refant=None, flag_intent=None, qa_intent=None,
+                 qa_bandpass_intent=None, accept_threshold=None, flag_hi=None,
+                 fhi_limit=None, fhi_minsample=None):
         self._init_properties(vars())
 
     # qa_intent setter/getter overrides version in WvrgcalInputs with a 
     # different default 
     @property
     def qa_intent(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('qa_intent')
 
         if self._qa_intent is None:
@@ -55,7 +54,7 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
 
     @property
     def flag_intent(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('flag_intent')
 
         # This is a somewhat complicated way to get the default
@@ -120,19 +119,20 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
 
         # Construct the task that will read the data and create the
         # view of the data that is the basis for flagging.
-        datainputs = WvrgcalflagWorker.Inputs(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis,
-          caltable=inputs.caltable, hm_toffset=inputs.hm_toffset,
-          toffset=inputs.toffset,
-          segsource=inputs.segsource, hm_tie=inputs.hm_tie,
-          tie=inputs.tie, sourceflag=inputs.sourceflag, nsol=inputs.nsol,
-          disperse=inputs.disperse, wvrflag=inputs.wvrflag, 
-          hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
-          scale=inputs.scale, maxdistm=inputs.maxdistm,
-          minnumants=inputs.minnumants, mingoodfrac=inputs.mingoodfrac,
-          refant=inputs.refant,
-          flag_intent=inputs.flag_intent, qa_intent=inputs.qa_intent,
-          qa_bandpass_intent=inputs.qa_bandpass_intent)
+        datainputs = WvrgcalflagWorker.Inputs(
+            context=inputs.context,
+            output_dir=inputs.output_dir, vis=inputs.vis,
+            caltable=inputs.caltable, hm_toffset=inputs.hm_toffset,
+            toffset=inputs.toffset,
+            segsource=inputs.segsource, hm_tie=inputs.hm_tie,
+            tie=inputs.tie, sourceflag=inputs.sourceflag, nsol=inputs.nsol,
+            disperse=inputs.disperse, wvrflag=inputs.wvrflag,
+            hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
+            scale=inputs.scale, maxdistm=inputs.maxdistm,
+            minnumants=inputs.minnumants, mingoodfrac=inputs.mingoodfrac,
+            refant=inputs.refant,
+            flag_intent=inputs.flag_intent, qa_intent=inputs.qa_intent,
+            qa_bandpass_intent=inputs.qa_bandpass_intent)
         datatask = WvrgcalflagWorker(datainputs)
 
         # Construct the task that will set any flags raised in the
@@ -177,11 +177,12 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         # 'flagged' as necessary. If the associated qa score indicates 
         # that applying it will make things worse then remove the file from
         # the result so that it cannot be accepted into the context.
-        if result.qa_wvr.overall_score is not None and \
-          result.qa_wvr.overall_score < inputs.accept_threshold:
-            LOG.warning(
-              'wvrgcal file has qa score (%s) below accept_threshold (%s) and will not be applied' %
-              (result.qa_wvr.overall_score, inputs.accept_threshold))
+        if result.qa_wvr.overall_score is not None \
+                and result.qa_wvr.overall_score < inputs.accept_threshold:
+            LOG.warning('wvrgcal file has qa score ({0}) below'
+                        ' accept_threshold ({1}) and will not be'
+                        ' applied'.format(result.qa_wvr.overall_score,
+                                          inputs.accept_threshold))
             result.final = []
 
         return result
@@ -189,11 +190,11 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
 
 class WvrgcalflagWorkerInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None,
-      caltable=None, hm_toffset=None, toffset=None, segsource=None, 
-      hm_tie=None, tie=None, sourceflag=None, nsol=None,
-      disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
-      scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
-      refant=None, flag_intent=None, qa_intent=None, qa_bandpass_intent=None):
+                 caltable=None, hm_toffset=None, toffset=None, segsource=None,
+                 hm_tie=None, tie=None, sourceflag=None, nsol=None,
+                 disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
+                 scale=None, maxdistm=None, minnumants=None, mingoodfrac=None,
+                 refant=None, flag_intent=None, qa_intent=None, qa_bandpass_intent=None):
         self._init_properties(vars())
 
 
@@ -204,8 +205,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         super(WvrgcalflagWorker, self).__init__(inputs)
         # we need a persistent result object when flagging as it will contain
         # results at each flagging iteration
-        self.result = resultobjects.WvrgcalflagResult(
-          vis=inputs.vis)
+        self.result = resultobjects.WvrgcalflagResult(vis=inputs.vis)
         self.result.bandpass_result = None
         self.result.nowvr_result = None
         self.result.qa_spw = ''
@@ -215,20 +215,22 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
 
         # calculate the wvrgcal with low value for accept_threshold to
         # ensure that the wvrgcal is always accepted into the context.
-        wvrgcalinputs = wvrgcal.Wvrgcal.Inputs(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis,
-          hm_toffset=inputs.hm_toffset, toffset=inputs.toffset,
-          hm_tie=inputs.hm_tie, tie=inputs.tie,
-          sourceflag=inputs.sourceflag, nsol=inputs.nsol,
-          disperse=inputs.disperse, wvrflag=inputs.wvrflag,
-          hm_smooth=inputs.hm_smooth, smooth=inputs.smooth, scale=inputs.scale,
-          maxdistm=inputs.maxdistm, minnumants=inputs.minnumants,
-          mingoodfrac=inputs.mingoodfrac, refant=inputs.refant, qa_intent=inputs.qa_intent,
-          qa_bandpass_intent=inputs.qa_bandpass_intent,
-          accept_threshold=0.0,
-          bandpass_result=self.result.bandpass_result,
-          nowvr_result=self.result.nowvr_result,
-          qa_spw=self.result.qa_spw)
+        wvrgcalinputs = wvrgcal.Wvrgcal.Inputs(
+            context=inputs.context,
+            output_dir=inputs.output_dir, vis=inputs.vis,
+            hm_toffset=inputs.hm_toffset, toffset=inputs.toffset,
+            hm_tie=inputs.hm_tie, tie=inputs.tie,
+            sourceflag=inputs.sourceflag, nsol=inputs.nsol,
+            disperse=inputs.disperse, wvrflag=inputs.wvrflag,
+            hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
+            scale=inputs.scale, maxdistm=inputs.maxdistm,
+            minnumants=inputs.minnumants, mingoodfrac=inputs.mingoodfrac,
+            refant=inputs.refant, qa_intent=inputs.qa_intent,
+            qa_bandpass_intent=inputs.qa_bandpass_intent,
+            accept_threshold=0.0,
+            bandpass_result=self.result.bandpass_result,
+            nowvr_result=self.result.nowvr_result,
+            qa_spw=self.result.qa_spw)
         wvrgcaltask = wvrgcal.Wvrgcal(wvrgcalinputs)
         result = self._executor.execute(wvrgcaltask, merge=True)
 
@@ -258,14 +260,14 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
             else:
                 LOG.warning('no data for intent %s' % flag_intent)
         if not intent_available:
-            LOG.warning('no data fits flag_intent %s, no flagging will be done' %
-              self.inputs.flag_intent)
+            LOG.warning('no data fits flag_intent {0}, no flagging will be'
+                        ' done'.format(self.inputs.flag_intent))
 
         # from the QA section of the wvrgcal result, copy those views for which 
         # the intent matches the flag_intent 
         for description in result.qa_wvr.descriptions():
             for flag_intent in flag_intent_list:
-                if ('Intent:%s' % flag_intent in description):
+                if 'Intent:%s' % flag_intent in description:
                     # set antennas specified by the wvrflag parameter in the 
                     # flagging image to show that these data are already 'flagged'
                     # (i.e. interpolated)
@@ -273,8 +275,8 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
                     ant_names, ant_ids = commonhelpermethods.get_antenna_names(ms)
                     wvrflagids = []
                     for ant_name in self.result.wvrflag:
-                        ant_id = [id for id in ant_names if 
-                                  ant_names[id]==ant_name]
+                        ant_id = [idx for idx in ant_names if
+                                  ant_names[idx] == ant_name]
                         wvrflagids += ant_id
                     image.setflags(axisname='Antenna', indices=wvrflagids)
                     self.result.addview(description, image)

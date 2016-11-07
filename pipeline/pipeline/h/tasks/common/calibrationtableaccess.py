@@ -1,12 +1,11 @@
 from __future__ import absolute_import
 
-import collections
-import copy 
+import copy
 import os
+
 import numpy as np
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
@@ -40,7 +39,7 @@ class CalibrationTableRow(object):
     """
     def __init__(self, columns, *coldata):
         self.rowdata = {}
-        for i,col in enumerate(columns):
+        for i, col in enumerate(columns):
             self.rowdata[col.upper()] = coldata[i]
 
     def get(self, field):
@@ -55,7 +54,7 @@ class CalibrationTableDataFiller(object):
     @staticmethod
     def getcal(caltable, columns=[]):
         cal = CalibrationTableData(name=caltable)
-        if columns==[]:
+        if not columns:
             columns = CalibrationTableDataFiller._colnames(caltable)
         # Aug 2012, CASA 3.4, there was a problem reading the WEIGHT column.
         # Not being filled. Leave out for now
@@ -108,4 +107,3 @@ class CalibrationTableDataFiller(object):
                     coldata.append(table.getcol(colname))
 
             return zip(*coldata)
-

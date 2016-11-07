@@ -5,12 +5,12 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hifa_tsysflag" category="pipeline">
+<task type="function" name="hsd_tsysflag" category="pipeline">
 
 <shortdescription>Flag deviant system temperature measurements</shortdescription>
 
 <description>
-Flag deviant system temperatures for ALMA interferometry measurements. This is done by running a
+Flag deviant system temperatures for single-dish measurements. This is done by running a
 sequence of flagging subtasks, each looking for a different type of possible error.
 </description>
 
@@ -37,7 +37,7 @@ sequence of flagging subtasks, each looking for a different type of possible err
  
     <param type="bool" name="fnm_byfield" subparam="true">
         <description>Evaluate the nmedian metric separately for each field.</description>
-        <value>False</value>
+        <value>True</value>
     </param>
 
     <param type="bool" name="flag_derivative">
@@ -207,7 +207,7 @@ sequence of flagging subtasks, each looking for a different type of possible err
 
 <example>
 
-Flag deviant system temperatures for ALMA interferometry measurements.
+Flag deviant system temperatures for single-dish measurements.
 
 Flag all deviant system temperature measurements in the system temperature
 calibration table by running a sequence of flagging tests, each designed
@@ -253,7 +253,7 @@ fnm_limit -- Flag spectra with median value higher than fnm_limit * median
     default: 2.0
 
 fnm_byfield -- Evaluate the nmedian metric separately for each field.
-    default: False
+    default: True
  
 flag_derivative -- True to flag Tsys spectra with high median derivative.
     default: True
@@ -343,12 +343,12 @@ Examples:
 
 1. Flag Tsys measurements using currently recommended tests:
 
-   hifa_tsysflag()
+   hsd_tsysflag()
 
 2. Flag Tsys measurements using all recommended tests apart from that
    using the 'fieldshape' metric.
  
-   hifa_tsysflag(flag_fieldshape=False)
+   hsd_tsysflag(flag_fieldshape=False)
 </example> 
 
 </task>

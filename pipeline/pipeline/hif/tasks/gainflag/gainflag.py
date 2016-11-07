@@ -1,22 +1,21 @@
 from __future__ import absolute_import
 
-import numpy as np 
 import os
-import types
 from collections import defaultdict
 
-import pipeline.infrastructure as infrastructure
-from pipeline.hif.tasks.common import commoncalinputs
-import pipeline.infrastructure.basetask as basetask
-from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
+import numpy as np
 
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
+from pipeline.h.tasks.common import commonresultobjects
+from pipeline.h.tasks.common import viewflaggers
+from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
+from pipeline.hif.tasks.common import commoncalinputs
 from .resultobjects import GainflagResults
-from .resultobjects import GainflaggerResults
 from .resultobjects import GainflaggerDataResults
+from .resultobjects import GainflaggerResults
 from .resultobjects import GainflaggerViewResults
-from ..common import commonresultobjects
-from ..common import calibrationtableaccess as caltableaccess
-from ..common import viewflaggers
 from .. import bandpass
 from .. import gaincal
 
@@ -26,19 +25,19 @@ LOG = infrastructure.get_logger(__name__)
 class GainflagInputs(commoncalinputs.CommonCalibrationInputs):
     
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None, niter=None,
-      flag_mediandeviant=None, fmeddev_limit=None,
-      flag_rmsdeviant=None, frmsdev_limit=None,
-      flag_nrmsdeviant=None, fnrmsdev_limit=None,
-      metric_order=None):
+    def __init__(self, context, output_dir=None, vis=None, intent=None,
+                 spw=None, refant=None, niter=None,
+                 flag_mediandeviant=None, fmeddev_limit=None,
+                 flag_rmsdeviant=None, frmsdev_limit=None,
+                 flag_nrmsdeviant=None, fnrmsdev_limit=None,
+                 metric_order=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
         
     @property
     def intent(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('intent')
 
         if self._intent is None:
@@ -162,13 +161,22 @@ class Gainflag(basetask.StandardTaskTemplate):
         # Collect requested flagging metrics that were not specified in
         # ordered metric lists, append them to end of list, and raise a warning.
         if inputs.flag_mediandeviant and 'mediandeviant' not in metric_list:
-            LOG.warning('mediandeviant flagging metric requested but not specified in the definition of the order-in-which-to-evaluate-metrics; appending metric to the end.')
+            LOG.warning(
+                'mediandeviant flagging metric requested but not specified in'
+                ' the definition of the order-in-which-to-evaluate-metrics;'
+                ' appending metric to the end.')
             metrics_to_evaluate.append('mediandeviant')
         if inputs.flag_rmsdeviant and 'rmsdeviant' not in metric_list:
-            LOG.warning('rmsdeviant flagging metric requested but not specified in the definition of the order-in-which-to-evaluate-metrics; appending metric to the end.')
+            LOG.warning(
+                'rmsdeviant flagging metric requested but not specified in'
+                ' the definition of the order-in-which-to-evaluate-metrics;'
+                ' appending metric to the end.')
             metrics_to_evaluate.append('rmsdeviant')
         if inputs.flag_nrmsdeviant and 'nrmsdeviant' not in metric_list:
-            LOG.warning('nrmsdeviant flagging metric requested but not specified in the definition of the order-in-which-to-evaluate-metrics; appending metric to the end.')
+            LOG.warning(
+                'nrmsdeviant flagging metric requested but not specified in'
+                ' the definition of the order-in-which-to-evaluate-metrics;'
+                ' appending metric to the end.')
             metrics_to_evaluate.append('nrmsdeviant')
 
         # Initialize result and store vis and order of metrics in result
@@ -214,8 +222,7 @@ class Gainflag(basetask.StandardTaskTemplate):
         result.summaries = [stats_before, stats_after]
 
         return result
-    
-    
+
     def analyse(self, result):
         return result
     
@@ -223,17 +230,17 @@ class Gainflag(basetask.StandardTaskTemplate):
 class GainflaggerInputs(commoncalinputs.CommonCalibrationInputs):
     
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None, niter=None, 
-      flag_maxabs=None, fmax_limit=None,
-      metric=None, prepend=''):
+    def __init__(self, context, output_dir=None, vis=None, intent=None,
+                 spw=None, refant=None, niter=None,
+                 flag_maxabs=None, fmax_limit=None,
+                 metric=None, prepend=''):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
     @property
     def intent(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('intent')
 
         if self._intent is None:
@@ -304,21 +311,23 @@ class Gainflagger(basetask.StandardTaskTemplate):
         result.vis = inputs.vis
 
         # Construct the task that will read the data.
-        datainputs = GainflaggerDataInputs(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis, intent=inputs.intent,
-          spw=inputs.spw, refant=inputs.refant)
+        datainputs = GainflaggerDataInputs(
+          context=inputs.context, output_dir=inputs.output_dir,
+          vis=inputs.vis, intent=inputs.intent, spw=inputs.spw,
+          refant=inputs.refant)
         datatask = GainflaggerData(datainputs)
         
         # Construct the generator that will create the view of the data
         # that is the basis for flagging.
-        viewtask = GainflaggerView(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis, intent=inputs.intent,
+        viewtask = GainflaggerView(
+          context=inputs.context, vis=inputs.vis, intent=inputs.intent,
           spw=inputs.spw, refant=inputs.refant, metric=inputs.metric)
 
         # Construct the task that will set any flags raised in the
         # underlying data.
-        flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.vis, table=inputs.vis, inpfile=[])
+        flagsetterinputs = FlagdataSetter.Inputs(
+          context=inputs.context, vis=inputs.vis, table=inputs.vis,
+          inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Define which type of flagger to use.
@@ -353,16 +362,17 @@ class Gainflagger(basetask.StandardTaskTemplate):
         result.summaries = flaggerresult.summaries
         
         return result
-    
-    
+
     def analyse(self, result):
         return result
 
 
 class GainflaggerDataInputs(basetask.StandardInputs):
     
-    def __init__(self, context, output_dir=None, vis=None, 
+    def __init__(
+      self, context, output_dir=None, vis=None,
       intent=None, spw=None, refant=None):
+
         self._init_properties(vars())
 
 
@@ -371,8 +381,7 @@ class GainflaggerData(basetask.StandardTaskTemplate):
 
     def __init__(self, inputs):
         super(GainflaggerData, self).__init__(inputs)
-    
-    
+
     def prepare(self):
         inputs = self.inputs
 
@@ -388,7 +397,8 @@ class GainflaggerData(basetask.StandardTaskTemplate):
         bpcal_task = bandpass.PhcorBandpass(bpcal_inputs)
         bpcal = self._executor.execute(bpcal_task, merge=False)
         if not bpcal.final:
-            LOG.warning('No bandpass solution computed for %s ' % (inputs.ms.basename))
+            LOG.warning('No bandpass solution computed for {0}'.format(
+                inputs.ms.basename))
         else:
             bpcal.accept(inputs.context)
 
@@ -401,7 +411,8 @@ class GainflaggerData(basetask.StandardTaskTemplate):
         gpcal_task = gaincal.GTypeGaincal(gpcal_inputs)
         gpcal = self._executor.execute(gpcal_task, merge=False)
         if not gpcal.final:
-            LOG.warning('No phase time solution computed for %s ' % (inputs.ms.basename))
+            LOG.warning('No phase time solution computed for {0}'.format(
+                inputs.ms.basename))
         else:
             gpcal.accept(inputs.context)
 
@@ -418,7 +429,8 @@ class GainflaggerData(basetask.StandardTaskTemplate):
         if not gacal.final:
             gatable = list(gacal.error)
             gatable = gatable[0].gaintable
-            LOG.warning('No amplitude time solution computed for %s ' % (inputs.ms.basename))
+            LOG.warning('No amplitude time solution computed for %s '.format(
+                inputs.ms.basename))
             result.table = gatable
             result.table_available = False
         else:
@@ -436,8 +448,8 @@ class GainflaggerData(basetask.StandardTaskTemplate):
     
 class GainflaggerView(object):
 
-    def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None, metric=None):
+    def __init__(self, context, vis=None, intent=None, spw=None, refant=None,
+                 metric=None):
         
         self.context = context
         self.vis = vis
@@ -445,8 +457,7 @@ class GainflaggerView(object):
         self.spw = spw
         self.refant = refant
         self.metric = metric
-    
-    
+
     def __call__(self, data):
         
         # Initialize result structure
@@ -456,17 +467,15 @@ class GainflaggerView(object):
             
             # Calculate the view
             gatable = data.table
-            LOG.info ('Computing flagging metrics for caltable %s ' % (
+            LOG.info('Computing flagging metrics for caltable {0}'.format(
                 os.path.basename(gatable)))
-            
             self.calculate_view(gatable, metric=self.metric)
 
         # Add visibility name to result
         self.result.vis = self.vis
 
         return self.result
-    
-    
+
     def calculate_view(self, table, metric='mediandeviant'):
         """
         Method to calculate the flagging view.
@@ -492,7 +501,6 @@ class GainflaggerView(object):
         if metric in ['mediandeviant', 'rmsdeviant', 'nrmsdeviant']:
             self.calculate_median_rms_deviant_view(table, metric)
 
-        
     def calculate_median_rms_deviant_view(self, gtable, metric='mediandeviant'):
         """
         Method to calculate the "mediandeviant", "rmsdeviant", or "nrmsdeviant" flagging view.
@@ -523,8 +531,8 @@ class GainflaggerView(object):
         antenna_ids.sort()
         antenna_name = {}
         for antenna_id in antenna_ids:
-            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas 
-              if antenna.id==antenna_id][0]
+            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas
+                                        if antenna.id == antenna_id][0]
 
         # Get spectral window IDs
         spwids = [spw.id for spw in ms.get_spectral_windows(self.spw)]
@@ -535,7 +543,7 @@ class GainflaggerView(object):
             # The gain table is T, should be no pol dimension
             npols = np.shape(row.get('CPARAM'))[0]
             if npols != 1:
-                raise Exception, 'table has polarization results'
+                raise Exception('table has polarization results')
             times.update([row.get('TIME')])
         times = np.sort(list(times))
         
@@ -587,8 +595,8 @@ class GainflaggerView(object):
                     # Convert to numpy arrays
                     data_per_ant[ant] = np.array(data_per_ant[ant])
                     
-                    ## Calculate median absolute deviation from the median
-                    #mad_ant = np.median(np.abs(data_per_ant[ant] - np.median(data_per_ant[ant])))
+                    # Calculate median absolute deviation from the median
+                    # mad_ant = np.median(np.abs(data_per_ant[ant] - np.median(data_per_ant[ant])))
     
                     # Calculate standard deviation of antenna
                     stdev_ant = np.std(data_per_ant[ant])
@@ -631,20 +639,22 @@ class GainflaggerView(object):
 
                 # Calculate final deviation metric for each antenna.
                 for ant in data_per_ant.keys():
-                    data[ant] = ( (stdev_per_ant[ant]/median_per_ant[ant] - median_sm) / sigma_sm)
+                    data[ant] = ((stdev_per_ant[ant]/median_per_ant[ant] - median_sm) / sigma_sm)
             
             # Create axes for view result, set time on y-axis to the first timestamp.
-            axes = [commonresultobjects.ResultAxis(name='Antenna1',
-              units='id', data=np.arange(antenna_ids[-1]+1)),
-              commonresultobjects.ResultAxis(name='Time', units='',
-              data=times[0:1])]
+            axes = [
+                commonresultobjects.ResultAxis(
+                    name='Antenna1', units='id',
+                    data=np.arange(antenna_ids[-1]+1)),
+                commonresultobjects.ResultAxis(
+                    name='Time', units='', data=times[0:1])
+            ]
 
             # Convert flagging view into an ImageResult.
-            viewresult = commonresultobjects.ImageResult(filename=
-              '%s(gtable)' % os.path.basename(gtable.vis),
-              intent=self.intent,
-              data=data, flag=flag,
-              axes=axes, datatype='gain amplitude', spw=spwid)
+            viewresult = commonresultobjects.ImageResult(
+                filename='%s(gtable)' % os.path.basename(gtable.vis),
+                intent=self.intent, data=data, flag=flag, axes=axes,
+                datatype='gain amplitude', spw=spwid)
           
             # Add the view result to the class result structure.
             self.result.addview(viewresult.description, viewresult)            

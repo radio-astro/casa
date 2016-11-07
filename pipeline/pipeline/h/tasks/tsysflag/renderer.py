@@ -7,13 +7,13 @@ import collections
 import functools
 import os
 
-import pipeline.hif.tasks.common.calibrationtableaccess as caltableaccess
 import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.utils as utils
+from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.h.tasks.tsyscal import renderer as tsyscalrenderer
 
 LOG = logging.get_logger(__name__)
@@ -28,8 +28,8 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='tsysflag.mako',
                  description='Flag Tsys calibration',
                  always_rerender=False):
-        super(T2_4MDetailsTsysflagRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+        super(T2_4MDetailsTsysflagRenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, ctx, context, results):
         weblog_dir = os.path.join(context.report_dir,
@@ -142,21 +142,27 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
             for msresult in results:
                 if not msresult.task_incomplete_reason:
-                    flagcmd_abspath = self._write_flagcmd_to_disk(weblog_dir, msresult.components[component], component)
-                    report_abspath = self._write_report_to_disk(weblog_dir, msresult.components[component], component)
+                    flagcmd_abspath = self._write_flagcmd_to_disk(
+                        weblog_dir, msresult.components[component], component)
+                    report_abspath = self._write_report_to_disk(
+                        weblog_dir, msresult.components[component], component)
     
-                    flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-                    report_relpath = os.path.relpath(report_abspath, report_dir)
+                    flagcmd_relpath = os.path.relpath(flagcmd_abspath,
+                                                      report_dir)
+                    report_relpath = os.path.relpath(report_abspath,
+                                                     report_dir)
     
-                    table_basename = os.path.basename(msresult.components[component].table)
-                    htmlreports[component][table_basename] = (flagcmd_relpath, report_relpath)
+                    table_basename = os.path.basename(
+                        msresult.components[component].table)
+                    htmlreports[component][table_basename] = \
+                        (flagcmd_relpath, report_relpath)
 
         return htmlreports
 
     def _write_flagcmd_to_disk(self, weblog_dir, result, component=''):
         tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir,
-                                '%s%s-flag_commands.txt' % (tablename, component))
+        filename = os.path.join(
+            weblog_dir, '%s%s-flag_commands.txt' % (tablename, component))
 
         flagcmds = [l.flagcmd for l in result.flagcmds()]
         with open(filename, 'w') as flagfile:
@@ -380,9 +386,11 @@ def plot_tsys_spectra(name_of_metric, context, result_for_metric, reportdir):
                     if median_spectrum.ant is None or median_spectrum.ant[0] == tsysspectrum.ant[0]:
                         # do the plot
                         plotter = displays.SliceDisplay()
-                        plots.extend(plotter.plot(context=context, results=tsysspectra, description_to_plot=tsys_desc,
-                                                  overplot_spectrum=median_spectrum, reportdir=reportdir,
-                                                  plotbad=False))
+                        plots.extend(plotter.plot(
+                            context=context, results=tsysspectra,
+                            description_to_plot=tsys_desc,
+                            overplot_spectrum=median_spectrum,
+                            reportdir=reportdir, plotbad=False))
                         break
 
     ensure_vis_in_plot_metadata(plots, result_for_metric.inputs['vis'])

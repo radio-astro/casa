@@ -45,20 +45,20 @@ class ResultBase(object):
             m = int(np.floor(t/60.0))
             t -= m * 60.0
             s = int(np.floor(t))
-            tstring = '%sh%sm%ss' % (h,m,s)
+            tstring = '%sh%sm%ss' % (h, m, s)
 
         temp = self.filename
         if self.filename is not None:
             temp = os.path.basename(self.filename)
 
-        fields = [('File',temp), 
-                  ('Intent',self.intent),
-                  ('Field',self.fieldname),
-                  ('ID',self.field_id),
-                  ('SpW',self.spw),
-                  ('Pol',self.pol),
-                  ('Ant',self.ant),
-                  ('Time',tstring)]
+        fields = [('File', temp),
+                  ('Intent', self.intent),
+                  ('Field', self.fieldname),
+                  ('ID', self.field_id),
+                  ('SpW', self.spw),
+                  ('Pol', self.pol),
+                  ('Ant', self.ant),
+                  ('Time', tstring)]
         return ' '.join('%s:%s' % (k) for k in fields if k[1] is not None)
 
 
@@ -98,10 +98,10 @@ class ImageResult(ResultBase):
     def setflags(self, axisname=None, indices=None):
         """Set the flag array for specified axis values."""
         if indices:
-            if self.axes[0].name==axisname:
-                self.flag[np.array(indices),:] = True
-            if self.axes[1].name==axisname:
-                self.flag[:,np.array(indices)] = True
+            if self.axes[0].name == axisname:
+                self.flag[np.array(indices), :] = True
+            if self.axes[1].name == axisname:
+                self.flag[:, np.array(indices)] = True
 
 
 class SpectrumResult(ResultBase):
@@ -117,7 +117,7 @@ class SpectrumResult(ResultBase):
         else:
             self.flag = flag.copy()
 
-        valid_data = data[self.flag==False]
+        valid_data = data[self.flag == False]
         if len(valid_data) > 0:
             self.median = np.median(valid_data)
         else:
@@ -185,5 +185,3 @@ class QaResult(object):
 
     def last(self, description):
         return copy.deepcopy(self.view[description][-1])
-
-

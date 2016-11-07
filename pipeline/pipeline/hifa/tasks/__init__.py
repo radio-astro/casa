@@ -17,6 +17,6 @@ from .linpolcal import Linpolcal
 from .restoredata import ALMARestoreData
 from .spwphaseup import SpwPhaseup
 from .tsyscal import Tsyscal as ALMATsyscal
-from .tsysflag import Tsysflag
+from .tsysflag import Tsysflag as ALMATsysflag
 from .wvrgcal import Wvrgcal
 from .wvrgcalflag import Wvrgcalflag

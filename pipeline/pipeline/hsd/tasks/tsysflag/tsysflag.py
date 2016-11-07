@@ -19,5 +19,16 @@ class TsysflagInputs(tsysflag.TsysflagInputs):
                  metric_order=None, normalize_tsys=None):
         self._init_properties(vars())
 
+    @property
+    def fnm_byfield(self):
+        return self._fnm_byfield
+
+    @fnm_byfield.setter
+    def fnm_byfield(self, value):
+        if value is None:
+            value = True
+        self._fnm_byfield = value
+
+
 class Tsysflag(tsysflag.Tsysflag):
     Inputs = TsysflagInputs

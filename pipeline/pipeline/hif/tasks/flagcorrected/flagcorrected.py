@@ -2,18 +2,15 @@ from __future__ import absolute_import
 
 import types
 
-import numpy as np 
+import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-
-from pipeline.hif.tasks.common import commonresultobjects
-from pipeline.hif.tasks.common import commonhelpermethods
-from pipeline.hif.tasks.common import viewflaggers
-
-from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
-
+from pipeline.h.tasks.common import commonhelpermethods
+from pipeline.h.tasks.common import commonresultobjects
+from pipeline.h.tasks.common import viewflaggers
+from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import FlagcorrectedResults, FlagcorrectedDataResults, FlagcorrectedViewResults
 
 LOG = infrastructure.get_logger(__name__)
@@ -162,7 +159,7 @@ class Flagcorrected(basetask.StandardTaskTemplate):
         # FIXME: if metric='baseline', these flagging rules are possibly
         # not appropriate; need to add a switch for generating rules
         # depending on metric.
-        rules = flagger.make_flag_rules (
+        rules = flagger.make_flag_rules(
           flag_bad_antenna=inputs.flag_bad_antenna, 
           fba_lo_limit=inputs.fba_lo_limit,
           fba_minsample=inputs.fba_minsample,
@@ -235,7 +232,7 @@ class FlagcorrectedData(basetask.StandardTaskTemplate):
         # Take vis from inputs, and add to result.
         result.table = self.inputs.vis
 
-        LOG.info ('Reading flagging view data for vis %s ' % (self.inputs.vis))
+        LOG.info('Reading flagging view data for vis %s ' % (self.inputs.vis))
         
         # Get the spws to use.
         spwids = map(int, self.inputs.spw.split(','))
@@ -267,7 +264,7 @@ class FlagcorrectedData(basetask.StandardTaskTemplate):
             # Open MS and read in required data.       
             with casatools.MSReader(ms.name) as openms:
                 try:
-                    openms.msselect({'scanintent':'*%s*' % self.inputs.intent, 'spw':str(spwid)})
+                    openms.msselect({'scanintent': '*%s*' % self.inputs.intent, 'spw': str(spwid)})
                 except:
                     LOG.warning('Unable to compute flagging view for spw %s' % spwid)
                     openms.close()
@@ -291,7 +288,7 @@ class FlagcorrectedData(basetask.StandardTaskTemplate):
                     data = np.zeros([len(corrs), nants, ntimes], np.complex)
                     ndata = np.zeros([len(corrs), nants, ntimes], np.int)
                 else:
-                    raise Exception, 'bad metric: %s' % metric
+                    raise Exception('bad metric: %s' % metric)
     
                 # Read in the MS data in chunks of limited number of rows at a time.
                 openms.iterinit(maxrows=500)
@@ -312,14 +309,14 @@ class FlagcorrectedData(basetask.StandardTaskTemplate):
                         tim = rec['time'][row]
     
                         # Skip auto-correlation data.                        
-                        if ant1==ant2:
+                        if ant1 == ant2:
                             continue
     
                         # Treat data for each polarisation independently.
                         for icorr in range(len(corrs)):
                             # Get corrected data, flags, and derive unflagged data.
-                            corrected_data = rec['corrected_data'][icorr,:,row]
-                            corrected_flag = rec['flag'][icorr,:,row]
+                            corrected_data = rec['corrected_data'][icorr, :, row]
+                            corrected_flag = rec['flag'][icorr, :, row]
                             valid_data = corrected_data[corrected_flag==False]
 
                             # If unflagged data is found...
@@ -339,20 +336,20 @@ class FlagcorrectedData(basetask.StandardTaskTemplate):
                                     
                                     # Store data for each baseline, and set corresponding
                                     # flag to unflagged.
-                                    data[icorr, times==tim, baseline1] = med_data
-                                    flag[icorr, times==tim, baseline1] = 0
-                                    data[icorr, times==tim, baseline2] = med_data
-                                    flag[icorr, times==tim, baseline2] = 0
+                                    data[icorr, times == tim, baseline1] = med_data
+                                    flag[icorr, times == tim, baseline1] = 0
+                                    data[icorr, times == tim, baseline2] = med_data
+                                    flag[icorr, times == tim, baseline2] = 0
                                 elif metric == 'antenna':
                                     # Take median of unflagged data.
                                     med_data = np.median(valid_data)
                                     
                                     # Store data for each antenna, and set corresponding
                                     # flag to unflagged.
-                                    data[icorr, ant1, times==tim] += med_data
-                                    data[icorr, ant2, times==tim] += med_data
-                                    ndata[icorr, ant1, times==tim] += 1
-                                    ndata[icorr, ant2, times==tim] += 1
+                                    data[icorr, ant1, times == tim] += med_data
+                                    data[icorr, ant2, times == tim] += med_data
+                                    ndata[icorr, ant1, times == tim] += 1
+                                    ndata[icorr, ant2, times == tim] += 1
     
                     iterating = openms.iternext()
     
@@ -408,7 +405,6 @@ class FlagcorrectedView(object):
         # Store input parameters.
         self.metric = metric
 
-
     def __call__(self, dataresult):
         """
         When called, the FlagcorrectedView object calculates flagging views
@@ -426,7 +422,7 @@ class FlagcorrectedView(object):
         # Take vis from data task results, and add to result.
         self.result.vis = dataresult.table
 
-        LOG.info ('Computing flagging metrics for vis %s ' % (self.result.vis))
+        LOG.info('Computing flagging metrics for vis %s ' % (self.result.vis))
 
         # Check if dataresult is new for current iteration, or created during 
         # a previous iteration.
@@ -449,18 +445,18 @@ class FlagcorrectedView(object):
                 if self.metric == 'baseline':
                     axes = [
                       commonresultobjects.ResultAxis(name='Time',
-                      units='', data=spwdata['times']),
+                                                     units='', data=spwdata['times']),
                       commonresultobjects.ResultAxis(name='Baseline',
-                      units='', data=np.array(spwdata['baselines']), channel_width=1)]
+                                                     units='', data=np.array(spwdata['baselines']), channel_width=1)]
                 elif self.metric == 'antenna':
                     axes = [
                       commonresultobjects.ResultAxis(name='Antenna',
-                      units='', data=spwdata['ants'], channel_width=1),
+                                                     units='', data=spwdata['ants'], channel_width=1),
                       commonresultobjects.ResultAxis(name='Time',
-                      units='', data=spwdata['times'])]
+                                                     units='', data=spwdata['times'])]
     
                 # From the data array, create a view for each polarisation. 
-                for icorr,corrlist in enumerate(spwdata['corrs']):
+                for icorr, corrlist in enumerate(spwdata['corrs']):
                     corr = corrlist[0]
     
                     viewresult = commonresultobjects.ImageResult(
@@ -496,4 +492,3 @@ class FlagcorrectedView(object):
                           'Cannot create flagging views.')
 
         return self.result
-

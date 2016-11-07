@@ -4,7 +4,7 @@ import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.hif.tasks.common import flaggableviewresults
+from pipeline.h.tasks.common import flaggableviewresults
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -38,7 +38,7 @@ class GainflagResults(basetask.Results):
 
 
 class GainflaggerResults(basetask.Results,
-  flaggableviewresults.FlaggableViewResults):
+                         flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
         Construct and return a new GainflaggerResults.
@@ -72,7 +72,7 @@ class GainflaggerDataResults(basetask.Results):
 
 
 class GainflaggerViewResults(basetask.Results,
-  flaggableviewresults.FlaggableViewResults):
+                             flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
         Construct and return a new GainflaggerViewResults.

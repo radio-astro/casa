@@ -1,24 +1,19 @@
 from __future__ import absolute_import
 
-import collections
 import os
-import numpy as np 
-import re
-import types
 
-from pipeline.infrastructure import casa_tasks
+import numpy as np
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
-from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
-
+from pipeline.h.tasks.common import calibrationtableaccess as caltableaccess
+from pipeline.h.tasks.common import commonhelpermethods
+from pipeline.h.tasks.common import commonresultobjects
+from pipeline.h.tasks.common import viewflaggers
+from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
+from pipeline.infrastructure import casa_tasks
 from .resultobjects import BandpassflagResults
-from ..common import commonresultobjects
-from ..common import calibrationtableaccess as caltableaccess
-from ..common import commonhelpermethods
-from ..common import viewflaggers
-
 from .. import bandpass
 
 LOG = infrastructure.get_logger(__name__)
@@ -108,7 +103,7 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
         bandpass_scans.sort()
         phase_scans.sort()
 
-        if bandpass_scans==phase_scans:
+        if bandpass_scans == phase_scans:
             LOG.error('%s BANDPASS and PHASE data identical - bpflagchans aborting' %
               os.path.basename(inputs.vis))
             return BandpassflagResults()
@@ -151,7 +146,7 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
           rules=rules, niter=inputs.niter)
         flaggertask = flagger(flaggerinputs)
 
- 	# Execute it to flag the data view
+        # Execute it to flag the data view
         summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
         stats_before = self._executor.execute(summary_job)
         result = self._executor.execute(flaggertask)
@@ -189,7 +184,6 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
             self.first = False
 
             inputs = self.inputs
-            final = []
 
             # Calculate new bandpass from PHASE intent
             view_inputs = bandpass.PhcorBandpass.Inputs(inputs.context,
@@ -197,7 +191,6 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
               mode='channel',
               intent='PHASE',
               minsnr=0.0)
-	      #maxchannels=0)
 
             task = bandpass.PhcorBandpass(view_inputs)
             view_result = self._executor.execute(task, merge=False)
@@ -215,7 +208,7 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
             for row in bptable.rows:
                 bpspws.update([row.get('SPECTRAL_WINDOW_ID')])
 
-            LOG.info ('Computing flagging metrics for caltable %s ' % (name))
+            LOG.info('Computing flagging metrics for caltable %s ' % (name))
             for spwid in bpspws:
                 # calculate view for each group of fieldids
                 self.calculate_view(bptable, spwid)
@@ -265,16 +258,16 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
             nchan = len(freqs)
             frequnits = table.getcolkeyword('CHAN_FREQ', 'QuantumUnits')[0]
             # make numbers sensible
-            if frequnits=='Hz':
+            if frequnits == 'Hz':
                 if np.median(freqs) > 1.0e9:
-                     freqs /= 1.0e9
-                     frequnits = 'GHz'
+                    freqs /= 1.0e9
+                    frequnits = 'GHz'
                 elif np.median(freqs) > 1.0e6:
-                     freqs /= 1.0e6
-                     frequnits = 'MHz'
+                    freqs /= 1.0e6
+                    frequnits = 'MHz'
                 elif np.median(freqs) > 1.0e3:
-                     freqs /= 1.0e3
-                     frequnits = 'kHz'
+                    freqs /= 1.0e3
+                    frequnits = 'kHz'
 
         # arrays to hold view for this spw
         viewdata = np.zeros([npols, nchan, antenna_ids[-1]+1])
@@ -282,7 +275,7 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
 
         # fill in view arrays
         for row in bptable.rows:
-            rowspw=row.get('SPECTRAL_WINDOW_ID')
+            rowspw = row.get('SPECTRAL_WINDOW_ID')
             if rowspw != spwid:
                 continue
 
@@ -296,9 +289,9 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
 
         # lastly, construct the view objects
         axes = [commonresultobjects.ResultAxis(name='Channels',
-          units='', data=np.arange(nchan)),
-          commonresultobjects.ResultAxis(name='Antenna1',
-          units='id', data=np.arange(antenna_ids[-1]+1))]
+                                               units='', data=np.arange(nchan)),
+                commonresultobjects.ResultAxis(name='Antenna1',
+                                               units='id', data=np.arange(antenna_ids[-1]+1))]
 # following has freq axis instead of channels
 #        axes = [commonresultobjects.ResultAxis(name='Frequency',
 #          units=frequnits, data=freqs),

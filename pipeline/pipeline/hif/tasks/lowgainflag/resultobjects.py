@@ -2,13 +2,13 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.hif.tasks.common import flaggableviewresults
+from pipeline.h.tasks.common import flaggableviewresults
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class LowgainflagResults(basetask.Results,
-  flaggableviewresults.FlaggableViewResults):
+                         flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
         Construct and return a new LowgainflagResults.
@@ -40,7 +40,7 @@ class LowgainflagDataResults(basetask.Results):
         return s
 
 class LowgainflagViewResults(basetask.Results,
-  flaggableviewresults.FlaggableViewResults):
+                             flaggableviewresults.FlaggableViewResults):
     def __init__(self):
         """
         Construct and return a new LowgainflagViewResults.

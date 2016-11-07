@@ -4,8 +4,8 @@ import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+from pipeline.h.tasks.common import flaggableviewresults
 from pipeline.h.tasks.tsyscal import resultobjects
-from pipeline.hif.tasks.common import flaggableviewresults
 
 LOG = infrastructure.get_logger(__name__)
 
