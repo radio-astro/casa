@@ -163,6 +163,7 @@ casa = { 'build': {
              'logfile': os.getcwd( ) + '/casa-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
          },
          'state' : {
+             'init_version': 0,
              'startup': True,
              'unwritable': set( )
          }
