@@ -81,7 +81,16 @@ def total_for_mses(mses, row):
 	total = 0
 	for ms in mses:
 	        #total += flags[ms]['before'][row].total
-		total += flags[ms]['edgespw'][row].total
+		if 'edgespw' in flags[ms].keys():
+		    total += flags[ms]['edgespw'][row].total
+		elif 'clip' in flags[ms].keys():
+		    total += flags[ms]['clip'][row].total
+		elif 'quack' in flags[ms].keys():
+		    total += flags[ms]['quack'][row].total
+		elif 'baseband' in flags[ms].keys():
+		    total += flags[ms]['baseband'][row].total
+		else:
+		    total += flags[ms]['before'][row].total
 		for agent in flags[ms].keys():
 			fs = flags[ms][agent][row]
 			if not (agent == 'before' or agent == 'anos' or agent == 'shadow' or agent == 'intents'):
