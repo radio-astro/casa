@@ -462,7 +462,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                     try:
                         setjy_dicts.append(self._executor.execute(job))
                     except:
-                        LOG.warn("SetJy: One of the selected table has zero rows.")
+                        LOG.warn("SetJy: One of the selected tables has zero rows.")
 
         
         '''
