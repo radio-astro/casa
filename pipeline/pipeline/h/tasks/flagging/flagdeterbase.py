@@ -136,7 +136,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
 
     @property
     def fileonline(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('fileonline')
         
         if self._fileonline is None:
@@ -150,7 +150,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
 
     @property
     def filetemplate(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('filetemplate')
 
         if not self._filetemplate:
@@ -168,7 +168,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         if value in (None, ''):
             value = []
         elif type(value) is types.StringType:
-            value = list(value.replace('[','').replace(']','').replace("'","").split(','))
+            value = list(value.replace('[', '').replace(']', '').replace("'", "").split(','))
         self._filetemplate = value
 
     @property
@@ -180,14 +180,14 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         if value is None: 
             value = 'halfint'
         if value not in ('halfint', '1.5int', 'manual'):
-            LOG.warning('Unexpected value for hm_tbuff: %s. Using halfint.', 
-                        value)
+            LOG.warning('Unexpected value for hm_tbuff: {0}. Using'
+                        ' halfint.'.format(value))
             value = 'halfint'
         self._hm_tbuff = value
 
     @property
     def inpfile(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('inpfile')
 
         vis_root = os.path.splitext(self.vis)[0]
@@ -195,14 +195,15 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
 
     @property
     def intents(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('intents')
 
         if self._intents is not None:
             return self._intents
 
         # return just the unwanted intents that are present in the MS
-        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND','UNKNOWN', 'SYSTEM_CONFIGURATION'])
+        intents_to_flag = {'POINTING', 'FOCUS', 'ATMOSPHERE', 'SIDEBAND',
+                           'UNKNOWN', 'SYSTEM_CONFIGURATION'}
         return ','.join(self.ms.intents.intersection(intents_to_flag))
 
     @intents.setter
@@ -211,7 +212,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
 
     @property
     def tbuff(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('tbuff')
 
         if self.hm_tbuff == 'halfint':
@@ -219,7 +220,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
                 return [0.048, 0.0]
 
             median_ints = [self.ms.get_median_science_integration_time(intent=intent)
-                           for intent in ('AMPLITUDE','BANDPASS','PHASE','TARGET','CHECK')
+                           for intent in ('AMPLITUDE', 'BANDPASS', 'PHASE', 'TARGET', 'CHECK')
                            if intent in self.ms.intents]
             if not median_ints:
                 return [0.048, 0.0]
@@ -237,7 +238,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
             
     @tbuff.setter
     def tbuff(self, value=None):
-        if value == None:
+        if value is None:
             value = [0.0, 0.0]
         self._tbuff = value                
         
@@ -414,29 +415,26 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
                     flag_cmds.append("mode='manual' intent='%s' reason='intents'" % intent_item)
             flag_cmds.append("mode='summary' name='intents'")
 
-
-
         if inputs.online:
             if not os.path.exists(inputs.fileonline):
                 LOG.warning('Online flag file \'%s\' was not found. Online '
                             'flagging for %s disabled.' % (inputs.fileonline, 
                                                            inputs.ms.basename))
             else:
-                #QA0 flag
+                # QA0 flag
                 if inputs.qa0:
                     cmdlist = self._read_flagfile(inputs.fileonline)
                     flag_cmds.extend([cmd for cmd in cmdlist if ('QA0' in cmd)])
                     flag_cmds.append("mode='summary' name='qa0'")
                     
-                    #All other online flags
+                    # All other online flags
                     flag_cmds.extend([cmd for cmd in cmdlist if not ('QA0' in cmd)])
                     flag_cmds.append("mode='summary' name='online'")
             
                 else:
                     flag_cmds.extend(self._read_flagfile(inputs.fileonline))
                     flag_cmds.append("mode='summary' name='online'")
-        
-        
+
         # flag template?
         if inputs.template:
             if not os.path.exists(inputs.filetemplate):
@@ -462,8 +460,6 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             flag_cmds.append("mode='manual' scan='%s' reason='scans'" % inputs.scannumber)
             flag_cmds.append("mode='summary' name='scans'")
 
-
-        
         # Flag spectral window edge channels?
         if inputs.edgespw: 
             to_flag = self._get_edgespw_cmds()
@@ -479,11 +475,10 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         return flag_cmds
 
-    def _get_autocorr_cmd (self):
-        #return "mode='manual' antenna='*&&&'"
+    def _get_autocorr_cmd(self):
+        # return "mode='manual' antenna='*&&&'"
         return "mode='manual' autocorr=True"
 
-    
     def verify_spw(self, spw):
         """
         Verify that the given spw should be flagged, raising a ValueError if
@@ -502,7 +497,6 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         if ncorr not in (1, 2, 4):
             raise ValueError('Wrong number of correlations %s for spw %s '
                              '' % (ncorr, spw.id))
-
 
     def _get_edgespw_cmds(self):
         inputs = self.inputs
@@ -554,7 +548,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         # If the input is a list of flagging command file names, call this
         # function recursively.  Otherwise, read in the file and return its
         # contents
-        if type(filename) is types.ListType:
+        if isinstance(filename, list):
             return ''.join([self._add_file(f) for f in filename])
         else:
             with open(filename) as stream:

@@ -1,10 +1,9 @@
-
 from __future__ import absolute_import
-import pipeline.qa.scorecalculator as qacalc
+
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
-
+import pipeline.qa.scorecalculator as qacalc
 from . import flagtargetsalma
 
 LOG = logging.get_logger(__name__)
@@ -24,7 +23,8 @@ class FlagTargetsALMAQAHandler(pqa.QAResultHandler):
         try:
             scores = [qacalc.score_almatargets_agents(ms, result.summaries)]
         except:
-            scores = [pqa.QAScore(1.0,longmsg='Flag Summary off', shortmsg='Flag Summary off')]
+            scores = [pqa.QAScore(1.0, longmsg='Flag Summary off',
+                                  shortmsg='Flag Summary off')]
 
         result.qa.pool[:] = scores
 

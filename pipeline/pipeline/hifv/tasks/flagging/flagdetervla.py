@@ -63,22 +63,19 @@
 # -------
 
 from __future__ import absolute_import
-import os
-import types
-import string
+
 import math
+import os
+import string
+import types
 
 import flaghelper
-
-#import casac
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+from pipeline.h.tasks.flagging import flagdeterbase
 from pipeline.infrastructure import casa_tasks
-import pipeline.domain.measures as measures
-
-from pipeline.hif.tasks.flagging import flagdeterbase 
 
 # import pipeline.tasks.flagging.FlagDeterBase as gronk
 
@@ -132,7 +129,7 @@ LOG = infrastructure.get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 
-class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
+class FlagDeterVLAInputs(flagdeterbase.FlagDeterBaseInputs):
 
 # ------------------------------------------------------------------------------
 
@@ -231,14 +228,14 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
         # Initialize the public member variables of the inherited class
         # FlagDeterBaseInputs()
-	
-	super( FlagDeterVLAInputs, self ).__init__( context, vis=vis,
-		    output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr,
-		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
-		    edgespw=edgespw, fracspw=fracspw, fracspwfps=fracspwfps, online=online,
-		    fileonline=fileonline, template=template, filetemplate=filetemplate,
-		    hm_tbuff=hm_tbuff, tbuff=tbuff)
 
+        super(FlagDeterVLAInputs, self).__init__(
+            context, vis=vis, output_dir=output_dir, flagbackup=flagbackup,
+            autocorr=autocorr, shadow=shadow, scan=scan, scannumber=scannumber,
+            intents=intents, edgespw=edgespw, fracspw=fracspw,
+            fracspwfps=fracspwfps, online=online, fileonline=fileonline,
+            template=template, filetemplate=filetemplate, hm_tbuff=hm_tbuff,
+            tbuff=tbuff)
 
         self._init_properties(vars())
         
@@ -350,7 +347,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
 # ------------------------------------------------------------------------------
 
-class FlagDeterVLAResults( flagdeterbase.FlagDeterBaseResults ):
+class FlagDeterVLAResults(flagdeterbase.FlagDeterBaseResults):
     pass
 
 # ------------------------------------------------------------------------------
@@ -379,7 +376,7 @@ class FlagDeterVLAResults( flagdeterbase.FlagDeterBaseResults ):
 
 # ------------------------------------------------------------------------------
 
-class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
+class FlagDeterVLA(flagdeterbase.FlagDeterBase):
 
 # ------------------------------------------------------------------------------
 

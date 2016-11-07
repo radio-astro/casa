@@ -1,25 +1,22 @@
 from __future__ import absolute_import
 
+import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.domain.measures as measures
-
-from pipeline.hif.tasks.flagging import flagdeterbase 
+from pipeline.h.tasks.flagging import flagdeterbase
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
-    edgespw  = basetask.property_with_default('edgespw', True)
-    fracspw  = basetask.property_with_default('fracspw', 0.0625)
-    template  = basetask.property_with_default('template', True)
+class FlagDeterALMAInputs(flagdeterbase.FlagDeterBaseInputs):
+    edgespw = basetask.property_with_default('edgespw', True)
+    fracspw = basetask.property_with_default('fracspw', 0.0625)
+    template = basetask.property_with_default('template', True)
 
-    
     # new property for ACA correlator
     fracspwfps = basetask.property_with_default('fracspwfps', 0.048387)
-    
-    
-    #New property for QA0 flags
+
+    # New property for QA0 flags
     qa0 = basetask.property_with_default('qa0', True)
 
     @basetask.log_equivalent_CASA_call
@@ -100,7 +97,7 @@ class FlagDeterALMA(flagdeterbase.FlagDeterBase):
                     cmd = '{0}:{1};{2}'.format(spw.id, chans[0], chans[1])
                     to_flag.append(cmd)
 
-        #Combine spw/channels, ie:
+        # Combine spw/channels, ie:
         # 16:0~119,16:3960~4079,18:0~119,18:3960~4079,20:3960~4079,20:0~119,22:3960~4079,22:0~119
         #  needs to be combined as:
         # 16:0~119;3960~4079,18:0~119;3960~4079,20:0~119;3960~4079,22:0~119;3960~4079

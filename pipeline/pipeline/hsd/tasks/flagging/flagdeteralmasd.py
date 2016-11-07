@@ -10,10 +10,8 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-import pipeline.domain.measures as measures
-
-from pipeline.hif.tasks.flagging import flagdeterbase 
 from pipeline.domain import DataTable
+from pipeline.h.tasks.flagging import flagdeterbase
 from pipeline.infrastructure.displays.singledish import drawpointing
 
 
@@ -46,12 +44,13 @@ class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
         # Initialize the public member variables of the inherited class
         # FlagDeterBaseInputs()
 
-        super(FlagDeterALMASingleDishInputs, self).__init__(context, vis=vis,
-            output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr,
-		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
-		    edgespw=edgespw, fracspw=fracspw, fracspwfps=fracspwfps, online=online,
-		    fileonline=fileonline, template=template, filetemplate=filetemplate,
-		    hm_tbuff=hm_tbuff, tbuff=tbuff)
+        super(FlagDeterALMASingleDishInputs, self).__init__(
+            context, vis=vis, output_dir=output_dir, flagbackup=flagbackup,
+            autocorr=autocorr, shadow=shadow, scan=scan, scannumber=scannumber,
+            intents=intents, edgespw=edgespw, fracspw=fracspw,
+            fracspwfps=fracspwfps, online=online, fileonline=fileonline,
+            template=template, filetemplate=filetemplate, hm_tbuff=hm_tbuff,
+            tbuff=tbuff)
 
         self.fracspwfps = fracspwfps
         self.qa0 = qa0

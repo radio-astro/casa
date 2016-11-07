@@ -4,13 +4,13 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 import pipeline.qa.scorecalculator as qacalc
-from . import agentflagger
+from . import flagdeterbase
 
 LOG = logging.get_logger(__name__)
 
 
-class AgentFlaggerQAHandler(pqa.QAResultHandler):    
-    result_cls = agentflagger.AgentFlaggerResults
+class FlagDeterBaseQAHandler(pqa.QAResultHandler):
+    result_cls = flagdeterbase.FlagDeterBaseResults
     child_cls = None
 
     def handle(self, context, result):
@@ -24,9 +24,9 @@ class AgentFlaggerQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = scores
 
 
-class AgentFlaggerListQAHandler(pqa.QAResultHandler):
+class FlagDeterBaseListQAHandler(pqa.QAResultHandler):
     result_cls = list
-    child_cls = agentflagger.AgentFlaggerResults
+    child_cls = flagdeterbase.FlagDeterBaseResults
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
