@@ -209,7 +209,34 @@ protected:
   virtual void transformWeight(casacore::Array<casacore::Float> const &weightIn,
   casacore::Array<casacore::Float> &weightOut) const = 0;
 
+  // Flags (per ms, per data description) whether transformation must be executed or not
+  // condition:
+  //
+  //   1. if polarization type is neither Linear nor Circular, do not transform
+  //   2. if visibility only contain one polarization component, do not transform
+  //   3. if visibility contains cross-polarization (XY, YX, RL, LR), do not
+  //      take into account it
+  //
+//  casacore::Vector<Vector<Bool> > doTransform_;
+  casacore::Vector<casacore::Bool> doTransform_;
+
+  // List of polarization ids that points either (XX,YY) or (RR,LL)
+//  Vector<Vector<uInt> > polId0;
+//  Vector<Vector<uInt> > polId1;
+  casacore::Vector<casacore::Int> polId0_;
+  casacore::Vector<casacore::Int> polId1_;
+
 private:
+
+  // Properly fill doTransform_, polId0_, and polId1_ based on current MS
+  void configurePolAverage();
+
+  // Reconfigure if necessary
+  void reconfigurePolAverageIfNecessary() {
+    if (isNewMs()) {
+      configurePolAverage();
+    }
+  }
 
   friend PolAverageVi2Factory;
 };
@@ -245,6 +272,8 @@ protected:
   template<class T>
   void transformData(casacore::Cube<T> const &dataIn,
   casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Int pid0,
+  casacore::Int pid1,
   casacore::Cube<T> &dataOut) const;
 };
 
@@ -278,6 +307,8 @@ protected:
   template<class T>
   void transformData(casacore::Cube<T> const &dataIn,
   casacore::Cube<casacore::Bool> const &flagIn,
+  casacore::Int pid0,
+  casacore::Int pid1,
   casacore::Cube<T> &dataOut) const;
 };
 
