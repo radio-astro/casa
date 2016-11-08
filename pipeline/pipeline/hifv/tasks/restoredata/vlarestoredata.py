@@ -1,25 +1,15 @@
 from __future__ import absolute_import
-import glob
+
 import os
-import re
 import shutil
-import string
-import tarfile
-import tempfile
 import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.h.tasks.applycal.applycal as applycal
-# import pipeline.h.tasks.importdata.importdata as importdata
 from pipeline.h.tasks.restoredata import restoredata
-import pipeline.h.tasks.importdata.importdata as importdata
-#import pipeline.h.tasks.finalcals.applycals as applycal
-
-
-from pipeline.infrastructure import casa_tasks
-
-
+from ..importdata import importdata
+from ..finalcals import applycals
+from ..hanning import hanning
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -81,8 +71,6 @@ class VLARestoreData(restoredata.RestoreData):
 
         for ms in self.inputs.context.observing_run.measurement_sets:
             hanning_results = self._do_hanningsmooth(ms.name)
-            self._move_hanning(ms.name)
-
 
         # Restore final MS.flagversions and flags
         flag_version_name = 'Pipeline_Final'
@@ -106,27 +94,28 @@ class VLARestoreData(restoredata.RestoreData):
         # Return the results object, which will be used for the weblog
         return restoredata.RestoreDataResults(import_results, apply_results)
 
+    # Override generic method and use an ALMA specific one. Not much difference
+    # now but should simplify parameters in future
+    def _do_importasdm(self, sessionlist, vislist):
+        inputs = self.inputs
+        importdata_inputs = importdata.VLAImportData.Inputs(inputs.context,
+            vis=vislist, session=sessionlist, save_flagonline=False,
+            lazy=inputs.lazy, bdfflags=inputs.bdfflags, dbservice=False,
+            asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
+        importdata_task = importdata.VLAImportData(importdata_inputs)
+        return self._executor.execute(importdata_task, merge=True)
+
     def _do_hanningsmooth(self, vis):
         # Currently for VLA hanning smoothing
-        task = casa_tasks.hanningsmooth(vis=vis,
-                                        datacolumn='data',
-                                        outputvis='temphanning.ms')
+        inputs = self.inputs
+        hanning_inputs = hanning.Hanning.Inputs(inputs.context)
+        hanning_task = hanning.Hanning(hanning_inputs)
 
-        return self._executor.execute(task)
-
-    def _move_hanning(self, vis):
-        # Currently for VLA hanning smoothing
-        try:
-            LOG.info("Removing original VIS "+vis)
-            shutil.rmtree(vis)
-            LOG.info("Renaming temphanning.ms to "+vis)
-            os.rename('temphanning.ms', vis)
-        except:
-            LOG.warn('Problem encountered with hanning smoothing.')
+        return self._executor.execute(hanning_task, merge=True)
 
     def _do_applycal(self):
         inputs = self.inputs
-        applycal_inputs = applycal.Applycal.Inputs(inputs.context)
+        applycal_inputs = applycals.Applycals.Inputs(inputs.context)
         # Set the following to keep the default behavior. No longer needed ?
         # applycal_inputs.flagdetailedsum = True
 
@@ -135,5 +124,5 @@ class VLARestoreData(restoredata.RestoreData):
         applycal_inputs.field = ''
         applycal_inputs.spw = ''
 
-        applycal_task = applycal.Applycal(applycal_inputs)
+        applycal_task = applycals.Applycals(applycal_inputs)
         return self._executor.execute(applycal_task, merge=True)
