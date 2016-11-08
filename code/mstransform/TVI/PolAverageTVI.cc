@@ -35,6 +35,11 @@
 using namespace casacore;
 
 namespace {
+template<class T>
+inline T replaceFlaggedDataWithZero(T v, Bool b) {
+  return ((b) ? T(0) : v);
+}
+
 struct StokesTransformation {
 public:
   template<class T>
@@ -47,25 +52,30 @@ public:
     auto const cubeShape = dataIn.shape();
     IPosition const newShape(3, 1, cubeShape[1], cubeShape[2]);
     size_t const npol = cubeShape[0];
+    size_t const nchan = cubeShape[1];
+    size_t const nrow = cubeShape[2];
     size_t const nelem = cubeShape[1] * cubeShape[2];
     Cube<T> transformedData(newShape, T(0));
     Cube<Float> weightSum(newShape, 0.0f);
+
+    for (size_t i = 0; i < npol; ++i) {
+      IPosition start(3, i, 0, 0);
+      IPosition end(3, i, nchan - 1, nrow - 1);
+      auto dslice = dataIn(start, end);
+      auto fslice = flagIn(start, end);
+      Array<Float> weight(dslice.shape());
+      Array<T> weightedData(dslice.shape());
+      arrayContTransform(dslice, fslice, weightedData, replaceFlaggedDataWithZero<T>);
+      arrayContTransform(fslice, weight, [](Bool b) {
+        return ((b) ? 0.0f : 1.0f);
+      });
+      transformedData += weightedData;
+      weightSum += weight;
+    }
+
     // transformedData, transformedFlag and nAccumulated should be contiguous array
     auto p_tdata = transformedData.data();
     auto p_wsum = weightSum.data();
-    Bool b0, b1;
-    T const *p_data = dataIn.getStorage(b0);
-    Bool const *p_flag = flagIn.getStorage(b1);
-
-    for (size_t ipol = 0; ipol < npol; ++ipol) {
-      for (size_t i = 0; i < nelem; ++i) {
-        auto offsetIndex = nelem * ipol + i;
-        if (!p_flag[offsetIndex]) {
-          p_tdata[i] += p_data[offsetIndex];
-          p_wsum[i] += 1.0f;
-        }
-      }
-    }
 
     for (size_t i = 0; i < nelem; ++i) {
       if (p_wsum[i] > 0.0) {
@@ -73,10 +83,15 @@ public:
       }
     }
 
-    dataIn.freeStorage(p_data, b0);
-    flagIn.freeStorage(p_flag, b1);
-
     dataOut.reference(transformedData);
+  }
+
+  static inline void AccumulateWeight(Float const wt, Double &wtsum) {
+    wtsum += 1.0 / wt;
+  }
+
+  static inline void NormalizeWeight(Double const wtsum, Float &wt) {
+    wt = 4.0 / wtsum;
   }
 };
 
@@ -94,34 +109,33 @@ struct GeometricTransformation {
     Cube<Bool> transformedFlag(newShape, True);
     Cube<Float> weightSum(newShape, 0.0f);
     size_t const npol = cubeShape[0];
+    size_t const nchan = cubeShape[1];
+    size_t const nrow = cubeShape[2];
     size_t const nelem = cubeShape[1] * cubeShape[2];
+
+
+    for (size_t i = 0; i < npol; ++i) {
+      IPosition start(3, i, 0, 0);
+      IPosition end(3, i, nchan - 1, nrow - 1);
+      auto const dslice = dataIn(start, end);
+      auto const wslice = weightIn(start, end);
+      auto const fslice = flagIn(start, end);
+      Array<Float> weight(dslice.shape());
+      Array<T> weightedData(dslice.shape());
+      arrayContTransform(dslice * wslice, fslice, weightedData, replaceFlaggedDataWithZero<T>);
+      arrayContTransform(wslice, fslice, weight, replaceFlaggedDataWithZero<Float>);
+      transformedData += weightedData;
+      weightSum += weight;
+    }
+
     // transformedData, transformedFlag and nAccumulated should be contiguous array
     T *p_tdata = transformedData.data();
     Float *p_wsum = weightSum.data();
-    Bool b0, b1, b2;
-    T const *p_data = dataIn.getStorage(b0);
-    Bool const *p_flag = flagIn.getStorage(b1);
-    Float const *p_weight = weightIn.getStorage(b2);
-
-    for (size_t ipol = 0; ipol < npol; ++ipol) {
-      for (size_t i = 0; i < nelem; ++i) {
-        auto offsetIndex = nelem * ipol + i;
-        if (!p_flag[offsetIndex]) {
-          p_tdata[i] += p_data[offsetIndex] * p_weight[offsetIndex];
-          p_wsum[i] += p_weight[offsetIndex];
-        }
-      }
-    }
-
     for (size_t i = 0; i < nelem; ++i) {
       if (p_wsum[i] > 0.0) {
         p_tdata[i] /= T(p_wsum[i]);
       }
     }
-
-    dataIn.freeStorage(p_data, b0);
-    flagIn.freeStorage(p_flag, b1);
-    weightIn.freeStorage(p_weight, b2);
 
     dataOut.reference(transformedData);
   }
@@ -143,30 +157,28 @@ struct GeometricTransformation {
     auto const nchan = dataIn.shape()[1];
     auto const nrow = dataIn.shape()[2];
     auto const nelem = nchan * nrow;
+
+    for (ssize_t i = 0; i < npol; ++i) {
+      for (ssize_t j = 0; j < nrow; ++j) {
+        IPosition start(3, i, 0, j);
+        IPosition end(3, i, nchan - 1, j);
+        auto dslice = dataIn(start, end);
+        auto fslice = flagIn(start, end);
+        auto w = weightIn(i, j);
+        Array<Float> weight(dslice.shape());
+        Array<T> weightedData(dslice.shape());
+        arrayContTransform(dslice * w, fslice, weightedData, replaceFlaggedDataWithZero<T>);
+        arrayContTransform(fslice, weight, [&w](Bool b) {
+          return ((b) ? 0.0f: w);
+        });
+        transformedData += weightedData;
+        weightSum += weight;
+      }
+    }
+
     // transformedData, transformedFlag and nAccumulated should be contiguous array
     T *p_tdata = transformedData.data();
     Float *p_wsum = weightSum.data();
-    Bool b0, b1, b2;
-    T const *p_data = dataIn.getStorage(b0);
-    Bool const *p_flag = flagIn.getStorage(b1);
-    Float const *p_weight = weightIn.getStorage(b2);
-
-    cout << "weightIn.shape() = " << weightIn.shape() << endl;
-    cout << "dataIn.shape() = " << cubeShape << endl;
-
-    for (ssize_t ipol = 0; ipol < npol; ++ipol) {
-      for (ssize_t ichan = 0; ichan < nchan; ++ichan) {
-        for (ssize_t irow = 0; irow < nrow; ++irow) {
-          auto wIndex = ipol * nrow + irow;
-          auto dIndex = ipol * (nrow * nchan) + ichan * nrow + irow;
-          auto tIndex = ichan * nrow + irow;
-          if (!p_flag[dIndex]) {
-            p_tdata[tIndex] += p_data[dIndex] * p_weight[wIndex];
-            p_wsum[tIndex] += p_weight[wIndex];
-          }
-        }
-      }
-    }
 
     for (ssize_t i = 0; i < nelem; ++i) {
       if (p_wsum[i] > 0.0) {
@@ -174,19 +186,65 @@ struct GeometricTransformation {
       }
     }
 
-    dataIn.freeStorage(p_data, b0);
-    flagIn.freeStorage(p_flag, b1);
-    weightIn.freeStorage(p_weight, b2);
-
     dataOut.reference(transformedData);
     cout << "end " << __func__ << endl;
+  }
+
+  static inline void AccumulateWeight(Float const wt, Double &wtsum) {
+    wtsum += wt;
+  }
+
+  static inline void NormalizeWeight(Double const wtsum, Float &wt) {
+    wt = wtsum;
   }
 };
 
 inline Float weight2Sigma(Float x) {
   return 1.0 / sqrt(x);
 }
+
+template<class WeightHandler>
+inline void transformWeight(Array<Float> const &weightIn,
+    Array<Float> &weightOut) {
+  cout << "start " << __func__ << endl;
+  if (weightIn.empty()) {
+    cout << "input weight is empty" << endl;
+    weightOut.resize();
+    return;
+  }
+  IPosition const shapeIn = weightIn.shape();
+  IPosition shapeOut(shapeIn);
+  // set length of polarization axis to 1
+  shapeOut[0] = 1;
+  cout << "shapeIn = " << shapeIn << " shapeOut = " << shapeOut << endl;
+
+  // initialization
+  weightOut.resize(shapeOut);
+  weightOut = 0.0f;
+
+  ssize_t numPol = shapeIn[0];
+  Int64 numElemPerPol = shapeOut.product();
+  cout << "numElemPerPol = " << numElemPerPol << endl;
+  cout << "numPol = " << numPol << endl;
+
+  Bool b;
+  Float const *p_wIn = weightIn.getStorage(b);
+  Float *p_wOut = weightOut.data();
+
+  for (Int64 i = 0; i < numElemPerPol; ++i) {
+    ssize_t offsetIndex = i * numPol;
+    Double sum = 0.0;
+    for (ssize_t j = 0; j < numPol; ++j) {
+      //sum += p_wOut[offsetIndex + j];
+      WeightHandler::AccumulateWeight(p_wIn[offsetIndex + j], sum);
+    }
+    //p_wOut[i] = sum;
+    WeightHandler::NormalizeWeight(sum, p_wOut[i]);
+  }
+
+  weightIn.freeStorage(p_wIn, b);
 }
+} // anonymous namespace
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -244,7 +302,8 @@ void PolAverageTVI::flag(Matrix<Bool> & flags) const {
   flags.reference(transformedFlags.yzPlane(0));
 }
 
-void PolAverageTVI::jonesC(Vector<SquareMatrix<Complex, 2> > & cjones) const {
+void PolAverageTVI::jonesC(
+    Vector<SquareMatrix<Complex, 2> > & /*cjones*/) const {
   // TODO
   throw AipsError("PolAverageTVI::jonesC should not be called.");
 }
@@ -311,16 +370,30 @@ IPosition PolAverageTVI::visibilityShape() const {
 
 void PolAverageTVI::weight(Matrix<Float> & wtmat) const {
   // TODO
+  Matrix<Float> wtmatOrg;
+  getVii()->weight(wtmatOrg);
+  transformWeight(wtmatOrg, wtmat);
 }
 
 void PolAverageTVI::weightSpectrum(Cube<Float> & wtsp) const {
   // TODO
+  if (weightSpectrumExists()) {
+    Cube<Float> wtspOrg;
+    getVii()->weightSpectrum(wtspOrg);
+    transformWeight(wtspOrg, wtsp);
+  } else {
+    wtsp.resize();
+  }
 }
 
 void PolAverageTVI::sigmaSpectrum(Cube<Float> & wtsp) const {
-  // sigma = (weight)^-1/2
-  weightSpectrum(wtsp);
-  arrayTransformInPlace(wtsp, ::weight2Sigma);
+  if (sigmaSpectrumExists()) {
+    // sigma = (weight)^-1/2
+    weightSpectrum(wtsp);
+    arrayTransformInPlace(wtsp, ::weight2Sigma);
+  } else {
+    wtsp.resize();
+  }
 }
 
 const VisImagingWeight & PolAverageTVI::getImagingWeightGenerator() const {
@@ -364,9 +437,9 @@ void GeometricPolAverageTVI::transformFloatData(Cube<Float> const &dataIn,
   transformData(dataIn, flagIn, dataOut);
 }
 
-void GeometricPolAverageTVI::transformWeight(Cube<Float> const &weightIn,
-    Cube<Float> &weightOut) const {
-
+void GeometricPolAverageTVI::transformWeight(Array<Float> const &weightIn,
+    Array<Float> &weightOut) const {
+  ::transformWeight<GeometricTransformation>(weightIn, weightOut);
 }
 
 template<class T>
@@ -378,7 +451,6 @@ void GeometricPolAverageTVI::transformData(Cube<T> const &dataIn,
     ::GeometricTransformation::transformData<T>(dataIn, flagIn, weightSp,
         dataOut);
   } else {
-    cout << "scalar weight" << endl;
     Matrix<Float> weightMat;
     getVii()->weight(weightMat);
     ::GeometricTransformation::transformData<T>(dataIn, flagIn, weightMat,
@@ -406,8 +478,9 @@ void StokesPolAverageTVI::transformFloatData(Cube<Float> const &dataIn,
   transformData(dataIn, flagIn, dataOut);
 }
 
-void StokesPolAverageTVI::transformWeight(Cube<Float> const &weightIn,
-    Cube<Float> &weightOut) const {
+void StokesPolAverageTVI::transformWeight(Array<Float> const &weightIn,
+    Array<Float> &weightOut) const {
+  ::transformWeight<StokesTransformation>(weightIn, weightOut);
 }
 
 template<class T>

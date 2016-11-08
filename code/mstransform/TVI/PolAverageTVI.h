@@ -135,6 +135,11 @@ public:
     return TransformingVi2::nPolarizationIds() + 1;
   }
 
+  // Polarization Id will point to the new row to be added (to the end)
+  virtual casacore::Int polarizationId() const {
+    return nPolarizationIds() - 1;
+  }
+
   // Return flag for each polarization, channel and row
 
   virtual void flag(casacore::Cube<casacore::Bool> & flags) const;
@@ -201,8 +206,8 @@ protected:
 
   // transform weight (WEIGHT, WEIGHT_SPECTRUM)
   // TODO
-  virtual void transformWeight(casacore::Cube<casacore::Float> const &weightIn,
-  casacore::Cube<casacore::Float> &weightOut) const = 0;
+  virtual void transformWeight(casacore::Array<casacore::Float> const &weightIn,
+  casacore::Array<casacore::Float> &weightOut) const = 0;
 
 private:
 
@@ -232,8 +237,8 @@ public:
 
   // transform weight (WEIGHT, WEIGHT_SPECTRUM)
   // TODO
-  virtual void transformWeight(casacore::Cube<casacore::Float> const &weightIn,
-  casacore::Cube<casacore::Float> &weightOut) const;
+  virtual void transformWeight(casacore::Array<casacore::Float> const &weightIn,
+  casacore::Array<casacore::Float> &weightOut) const;
 
 protected:
 
@@ -265,8 +270,8 @@ public:
 
   // transform weight (WEIGHT, WEIGHT_SPECTRUM)
   // TODO
-  virtual void transformWeight(casacore::Cube<casacore::Float> const &weightIn,
-  casacore::Cube<casacore::Float> &weightOut) const;
+  virtual void transformWeight(casacore::Array<casacore::Float> const &weightIn,
+  casacore::Array<casacore::Float> &weightOut) const;
 
 protected:
 
