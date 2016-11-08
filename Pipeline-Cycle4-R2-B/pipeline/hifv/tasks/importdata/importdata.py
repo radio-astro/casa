@@ -123,7 +123,7 @@ class VLAImportDataResults(basetask.Results):
         #msinfo.integrationTime()
         #msinfo.quackingScans()
         #msinfo.basebandspws()
-        msinfo.calibratorIntents()
+        msinfo.calibratorIntentsOld()
         #msinfo.corrStrings()
         #msinfo.getAntennas()
         msinfo.determine3C84()
