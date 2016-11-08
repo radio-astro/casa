@@ -611,7 +611,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                     try:
                         self._executor.execute(job)
                     except Exception, e:
-                        LOG.error('Unable to complete flux scaling operation.')
+                        LOG.warn('Unable to complete flux scaling operation.')
                         LOG.exception(e)
                         
         
