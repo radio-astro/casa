@@ -160,7 +160,7 @@ class SingleDishPlotmsLeaf(object):
         return casa_tasks.plotms(**task_args)
     
     def _get_plot_object(self, figfile, task):
-        parameters = {'vis': self.vis,
+        parameters = {'vis': os.path.basename(self.vis),
                       'ant': self.antenna_name,
                       'spw': self.spw,
                       'field': self.field_name}
