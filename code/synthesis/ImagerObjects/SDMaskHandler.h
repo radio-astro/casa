@@ -171,10 +171,23 @@ public:
                                                    double& thresh,
                                                    int nmask=0,
                                                    int npix=0);
-
+  // create a mask image (1/0 image) applying a different threshold for each channel plane
   void maskWithPerPlaneThreshold(casacore::ImageInterface<casacore::Float>& image, 
                                  casacore::ImageInterface<casacore::Float>& mask, 
                                  casacore::Vector<casacore::Float>& thresholds); 
+
+  // A core method for binary dilation of the input lattice   
+  void binaryDilationCore(casacore::Lattice<casacore::Float>& inlattice,
+                      casacore::Array<casacore::Float>& structure,
+                      casacore::Lattice<casacore::Float>& mask,
+                      casacore::Lattice<casacore::Float>& outlattice);
+
+  // Binary dilation with imageinterface and multiple iterations
+  void binaryDilation(casacore::ImageInterface<casacore::Float>& inImage,
+                      casacore::Array<casacore::Float>& structure,
+                      casacore::Int niteration,
+                      casacore::ImageInterface<casacore::Float>& mask,
+                      casacore::ImageInterface<casacore::Float>& outImage);
 
   void makePBMask(SHARED_PTR<SIImageStore> imstore, casacore::Float pblimit=0.1);
 

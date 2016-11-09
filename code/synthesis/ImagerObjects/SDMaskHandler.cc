@@ -915,7 +915,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     delete tempmask; tempmask=0;
   }
 
-  Record SDMaskHandler::calcImageStatistics(ImageInterface<Float>& res, ImageInterface<Float>&  prevmask, String& LELmask,  Record* regionPtr, const Bool robust )
+  Record SDMaskHandler::calcImageStatistics(ImageInterface<Float>& res, ImageInterface<Float>& /*  prevmask */, String& LELmask,  Record* regionPtr, const Bool robust )
   { 
     TempImage<Float>* tempres = new TempImage<Float>(res.shape(), res.coordinates()); 
     Array<Float> resdata;
@@ -929,7 +929,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
     //String lelstring = pbname+">0.92 && "+pbname+"<0.98";
     //cerr<<"lelstring = "<<lelstring<<endl;
-    cerr<<"LELMask="<<LELmask<<endl;
+    //cerr<<"LELMask="<<LELmask<<endl;
     ImageStatsCalculator imcalc( tempres_ptr, regionPtr, LELmask, False); 
     Vector<Int> axes(2);
     axes[0] = 0;
@@ -937,7 +937,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imcalc.setAxes(axes);
     imcalc.setRobust(robust);
     Record thestats = imcalc.statistics();
-    cerr<<"thestats="<<thestats<<endl;
+    //cerr<<"thestats="<<thestats<<endl;
     //Array<Double> max, min, rms, mad;
     //thestats.get(RecordFieldId("max"), max);
     return thestats;
@@ -1254,7 +1254,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Array<Double> rmss, maxs, mads;
     Float resPeak, resRms;
     Array<Double> resRmss;
-    Double rmsthresh, minrmsval, maxrmsval, minmaxval, maxmaxval, minmadval, maxmadval;
+    Double minrmsval, maxrmsval, minmaxval, maxmaxval, minmadval, maxmadval;
     IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos, minmadpos, maxmadpos;
     Int npix, nxpix, nypix;
 
@@ -1289,9 +1289,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Quantity bmin = beam.getMinor();
       //for pruning for now
       npix = Int( Double(minBeamFrac) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+      // make npix beam area in pixels? (and need to modify pruneRegions)...
       //beam in pixels
-      nxpix = Int( abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
-      nypix = Int( abs( (bmin/(qinc.convert(bmin),qinc)).get().getValue() ) );
+      nxpix = Int( Double(smoothFactor) * abs( (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() ) );
+      nypix = Int( Double(smoothFactor) * abs( (bmin/(qinc.convert(bmin),qinc)).get().getValue() ) );
     }
     else {
        throw(AipsError("No restoring beam(s) in the input image/psf"));
@@ -1352,6 +1353,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if (!firstIter) {
        //call growMask
+       cerr<<"create constraint mask using lowNoiseThreshold: "<<lowMaskThreshold<<endl;
     }
 
     //for debug
@@ -1800,6 +1802,97 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       tempChanImage->getSlice(chanImageArr, IPosition(4,0), chanImage.shape(),IPosition(4,1,1,1,1));
       mask.putSlice(chanImageArr,start,IPosition(4,1,1,1,1)); 
     } // loop over chans
+  }
+
+  void SDMaskHandler::binaryDilationCore(Lattice<Float>& inlattice,
+                      Array<Float>& structure,
+                      Lattice<Float>& mask,
+                      Lattice<Float>& outlattice)
+  {
+    LogIO os( LogOrigin("SDMaskHandler", "binaryDilation", WHERE) );
+    //
+    //IPosition cursorShape=inlattice.niceCursorShape();
+    IPosition inshape = inlattice.shape();
+    Int nx = inshape(0);
+    Int ny = inshape(0);
+    // assume here 3x3 structure elements (connectivity of either 1 or 2)
+    IPosition seshape = structure.shape();
+    Int se_nx =seshape(0); 
+    Int se_ny =seshape(1); 
+
+    if (mask.shape()!=inshape) {
+      throw(AipsError("Incompartible mask shape. Need to be the same as the input image."));
+    } 
+    // assume the origin of structure element is the center  se(1,1)
+    IPosition cursorShape(4, nx, ny, 1, 1);
+    IPosition axisPath(4, 0, 1, 3, 2);
+    //cerr<<"cursorShape="<<cursorShape<<endl;
+    //cerr<<"structure="<<structure<<endl;
+    LatticeStepper tls(inlattice.shape(), cursorShape, axisPath); 
+    RO_LatticeIterator<Float> li(inlattice, tls);
+    RO_LatticeIterator<Float> mi(mask, tls);
+    LatticeIterator<Float> oli(outlattice,tls);
+    for (li.reset(), oli.reset(); !li.atEnd(); li++, oli++) {
+      Array<Float> planeImage(li.cursor());
+      //cerr<<"planeImage.shape()="<<planeImage.shape()<<endl;
+      for (Int i=0; i < nx; i++) {
+        for (Int j=0; j < ny; j++) {
+          if (planeImage(IPosition(4,i,j,0,0))==1.0) {
+            //cerr<<"if planeImage ==1 i="<<i<<" j="<<j<<endl;
+            // Set the value for se(1,1)
+            planeImage(IPosition(4,i,j,0,0)) = 2.0;
+            for (Int ise=0; ise < se_nx; ise++) {
+              for (Int jse = 0; jse < se_ny; jse++) {
+                Int relx_se = ise - 1;
+                Int rely_se = jse - 1;
+                if (structure(IPosition(2,ise,jse)) && !(ise==1.0 && jse==1.0)) {
+                  //cerr<<"structure("<<ise<<","<<jse<<")="<<structure(IPosition(2,ise,jse))<<endl; 
+                  if ((i + relx_se) >= 0 && (i + relx_se) < nx &&
+                      (j + rely_se) >= 0 && (j + rely_se) < ny) {
+                    if (planeImage(IPosition(4,i+relx_se,j+rely_se,0,0))==0 ) {
+                      // set to 2.0 to make distinction with the orignal 1.0 pixels
+                      planeImage(IPosition(4, i+relx_se, j+rely_se,0,0))=2.0;
+                      //cerr<<" i+relx_se="<<i+relx_se<<" j+rely_se="<<j+rely_se<<endl;
+                    }                   
+                  }
+                } // if(se(ise,jse)
+              } // if planeImage(i,j)=1.0
+            } // S.E. col loop
+          } // S.E. row loop
+        } // image col loop
+      } //inage row loop
+      for (Int ii=0; ii < nx; ii++) {
+        for (Int jj=0; jj < ny; jj++) {
+          if (planeImage(IPosition(4,ii,jj,0,0))==2) 
+            planeImage(IPosition(4,ii,jj,0,0))=1;
+        }
+      }
+      oli.rwCursor() = planeImage;
+    }
+  }
+
+  /***
+  void SDMaskHandler::binaryDilation(Lattice<Float>& inlattice,
+                      Array<Float>& structure,
+                      Int niteration,
+                      Lattice<Float>& mask,
+                      Lattice<Float>& outlattice)
+  ***/
+  void SDMaskHandler::binaryDilation(ImageInterface<Float>& inImage,
+                      Array<Float>& structure,
+                      Int niteration,
+                      ImageInterface<Float>& mask,
+                      ImageInterface<Float>& outImage)
+  {
+
+      binaryDilationCore(inImage,structure,mask,outImage);
+      Int iter = 1;
+      while (iter < niteration) {
+        ArrayLattice<Float> templattice(inImage.shape());
+        templattice.copyData(outImage);
+        binaryDilationCore(templattice,structure,mask,outImage); 
+        iter++;
+      }
   }
 
  
