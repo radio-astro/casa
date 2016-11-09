@@ -332,8 +332,7 @@ class SDBLFlag(basetask.StandardTaskTemplate):
         stats_after = self._executor.execute(flagdata_summary_job)
  
         outcome = {'flagdata_summary': [stats_before, stats_after],
-                    'summary': flagResult,
-                    'byfield': True} # temporal flag to tell template 
+                    'summary': flagResult}
         results = SDBLFlagResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)

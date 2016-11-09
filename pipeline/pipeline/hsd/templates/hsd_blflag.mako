@@ -31,7 +31,6 @@ try:
    nrows = []
    flags = []
    field_map = {}
-   default_field = "default"
    for r in result:
        summaries = r.outcome['summary']
        for summary in summaries:
@@ -42,14 +41,13 @@ try:
            pol.append(summary['pol'])
            nrows.append(summary['nrow'])
            flags.append(summary['nflags'])
-           field = summary['field'] if r.outcome['byfield'] else default_field
+           field = summary['field']
            if not field_map.has_key(field):
                field_map[field] = []
            field_map[field].append(len(html_names) -1)
 
    unique_fields = field_map.keys()
-   do_field = False if (len(unique_fields)==1 and unique_fields[0] == default_field) else True
-   flag_types = ['Total', 'Tsys', 'Weather', 'User', 'Online']
+   flag_types = ['Total', 'Tsys', 'Weather', 'User', 'After calibration']
    fit_flags = ['Baseline RMS', 'Running mean', 'Expected RMS']
 except Exception, e:
    print 'hsd_imaging html template exception:', e
@@ -69,14 +67,50 @@ except Exception, e:
 For 1.-3., the RMSes of spectra before and after baseline fit are obtained using line free channels.
 </p>
 
-<H2>Flag Summaries</H2>
+<h2>Contents</h2>
+<ul>
+<li><a href="#summarytable">Flag Summary</a></li>
+<li><a href="#detailtable">Flag by Reason</a></li>
+  <ul>
+%for field in unique_fields:
+	<li><a href="#${field}">${field}</a></li>
+%endfor
+  </ul>
+</ul>
 
+
+<H2 id="summarytable" class="jumptarget">Flag Summary</H2>
+<table class="table table-bordered table-striped" summary="Flag Summary">
+	<caption>flag summary of ON-source target scans per source and spw</caption>
+    <thead>
+	    <tr>
+	        <th scope="col" rowspan="2">Field</th>
+	        <th scope="col" rowspan="2">SpW</th>
+	        <th scope="col" colspan="3">Flagged Fraction</th>
+		</tr>
+		<tr>
+	        <th scope="col">Before</th>
+	        <th scope="col">Additional</th>
+	        <th scope="col">Total</th>
+	    </tr>
+	</thead>
+	<tbody>
+	% for tr in sumary_table_rows:
+		<tr>
+		% for td in tr:
+			${td}
+		% endfor
+		</tr>
+	%endfor
+	</tbody>
+</table>
+
+
+<H2 id="detailtable" class="jumptarget">Flag by Reason</H2>
 % if html_names:
 	%for field in unique_fields:
-		%if do_field:
-			<H3>${field}</H3>
-		%endif
-		<table class="table table-bordered table-striped " summary=field>
+		<H3 id="${field}" class="jumptarget">${field}</H3>
+		<table class="table table-bordered table-striped " summary="${field}">
 		<thead>
 			<tr>
 			<th rowspan="2">
@@ -90,7 +124,7 @@ For 1.-3., the RMSes of spectra before and after baseline fit are obtained using
 			%endfor
 			</tr>
 			<tr>
-			<th>Name</th><th>Ant.</th><th>spw</th><th>Pol</th><th># of rows</th>
+			<th>Name</th><th>spw</th><th>Ant.</th><th>Pol</th><th># of rows</th>
 			<th>row #</th><th>fraction</th>
 			%for fflag in fit_flags:
 			<th>post-fit</th><th>pre-fit</th>
@@ -101,7 +135,7 @@ For 1.-3., the RMSes of spectra before and after baseline fit are obtained using
 		%for idx in field_map[field]:
 		<tr>
 			<th><a class="replace-pre" href="${os.path.join(rel_path, html_names[idx])}">details</a></th>
-			<td>${asdm_names[idx]}</td><td>${ant_names[idx]}</td><td>${spw[idx]}</td><td>${pol[idx]}</td><td>${nrows[idx]}</td>
+			<td>${asdm_names[idx]}</td><td>${spw[idx]}</td><td>${ant_names[idx]}</td><td>${pol[idx]}</td><td>${nrows[idx]}</td>
 			<td>${flags[idx][0]}</td>
 			%for nflg in flags[idx]:
 			<td>${get_fraction(nflg, nrows[idx])}</td>
