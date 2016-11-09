@@ -89,7 +89,7 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                                                       context=context,
                                                       result=result,
                                                       plots=details,
-                                                      title ='Sky Level vs Frequency',
+                                                      title ='Sky Level vs Frequency for {vis}'.format(vis=os.path.basename(vis)),
                                                       outfile='%s-sky_level_vs_frequency.html'%(vis))
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
@@ -102,7 +102,7 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                                                       context=context,
                                                       result=result,
                                                       plots=details,
-                                                      title ='Sky Level vs Time',
+                                                      title ='Sky Level vs Time for {vis}'.format(vis=os.path.basename(vis)),
                                                       outfile='%s-sky_level_vs_time.html'%(vis))
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
