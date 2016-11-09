@@ -84,30 +84,33 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
 
             result.final = final_original    
             
-        for vis, details in details_amp_vs_freq.items():
-            renderer = basetemplates.JsonPlotRenderer(uri='generic_x_vs_y_field_spw_ant_detail_plots.mako',
-                                                      context=context,
-                                                      result=result,
-                                                      plots=details,
-                                                      title ='Sky Level vs Frequency for {vis}'.format(vis=os.path.basename(vis)),
-                                                      outfile='%s-sky_level_vs_frequency.html'%(vis))
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-            amp_vs_freq_subpages[vis] = os.path.basename(renderer.path)
             
-        LOG.debug('number of items for details_amp_vs_time: {n}'.format(n=len(details_amp_vs_time)))
-        for vis, details in details_amp_vs_time.items():
-            LOG.debug('vis={vis}, number of plots {n}'.format(vis=vis, n=len(details)))
-            renderer = basetemplates.JsonPlotRenderer(uri='generic_x_vs_y_field_spw_ant_detail_plots.mako',
-                                                      context=context,
-                                                      result=result,
-                                                      plots=details,
-                                                      title ='Sky Level vs Time for {vis}'.format(vis=os.path.basename(vis)),
-                                                      outfile='%s-sky_level_vs_time.html'%(vis))
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
+        # Sky Level vs Frequency
+        flattened = [plot for inner in details_amp_vs_freq.values() for plot in inner]
+        renderer = basetemplates.JsonPlotRenderer(uri='hsd_generic_x_vs_y_ant_field_spw_plots.mako',
+                                                  context=context,
+                                                  result=result,
+                                                  plots=flattened,
+                                                  title ='Sky Level vs Frequency',
+                                                  outfile='sky_level_vs_frequency.html')
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+        for vis in details_amp_vs_freq.keys():
+            amp_vs_freq_subpages[vis] = os.path.basename(renderer.path)        
+            
+        # Sky Level vs Time
+        flattened = [plot for inner in details_amp_vs_time.values() for plot in inner]
+        renderer = basetemplates.JsonPlotRenderer(uri='hsd_generic_x_vs_y_ant_field_spw_plots.mako',
+                                                  context=context,
+                                                  result=result,
+                                                  plots=flattened,
+                                                  title ='Sky Level vs Time',
+                                                  outfile='sky_level_vs_time.html')
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+        for vis in details_amp_vs_time.keys():
             amp_vs_time_subpages[vis] = os.path.basename(renderer.path)
-            
+           
         LOG.debug('reference_coords=%s'%(reference_coords))    
         
         # update Mako context                
