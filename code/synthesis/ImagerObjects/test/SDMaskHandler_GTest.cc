@@ -300,7 +300,12 @@ void ImageInterfaceTest::testBinaryDilation()
     IPosition shape(4, 100, 100, 1, 5);
     csys=CoordinateUtil::defaultCoords4D();
     PagedImage<Float> InImage(TiledShape(shape),csys, String("testBDilationIn.im"));
-    PagedImage<Float> dummyMaskImage(TiledShape(shape),csys, String("testBDilationDummyMask.im"));
+    //PagedImage<Float> dummyMaskImage(TiledShape(shape),csys, String("testBDilationDummyMask.im"));
+    TempImage<Float> dummyMaskImage(TiledShape(shape),csys);
+    dummyMaskImage.putAt(1.0, IPosition(4,0,0,0,0));
+    dummyMaskImage.putAt(1.0, IPosition(4,99,99,0,0));
+    dummyMaskImage.attachMask( LatticeExpr<Bool> (iif(dummyMaskImage >  0, True, False)));
+    ArrayLattice<Bool> mask(dummyMaskImage.getMask());
     InImage.setUnits(Unit("Jy/pixel"));
     InImage.set(0.0);
     InImage.putAt(1.0, IPosition(4,40,50,0,0));
@@ -324,10 +329,11 @@ void ImageInterfaceTest::testBinaryDilation()
     se(IPosition(2,2,1))=1.0;
     se(IPosition(2,1,2))=1.0;
     
-    maskhandler.binaryDilation(InImage, se, 1, dummyMaskImage,outmaskimage); 
+    maskhandler.binaryDilation(InImage, se, 1, mask, outmaskimage); 
 
     //value test
     //chan0 
+    ASSERT_TRUE(outmaskimage.getAt(IPosition(4,0,0,0,0))==Float(1.0));
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,40,51,0,0))==Float(1.0));
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,41,50,0,0))==Float(1.0));
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,39,50,0,0))==Float(1.0));
@@ -336,7 +342,8 @@ void ImageInterfaceTest::testBinaryDilation()
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,40,52,0,0))==Float(0.0));
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,0,98,0,0))==Float(1.0));
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,1,98,0,0))==Float(0.0));
-    ASSERT_TRUE(outmaskimage.getAt(IPosition(4,99,98,0,0))==Float(1.0));
+    ASSERT_TRUE(outmaskimage.getAt(IPosition(4,99,99,0,0))==Float(1.0));
+    ASSERT_TRUE(outmaskimage.getAt(IPosition(4,99,98,0,0))==Float(0.0));
     //chan1
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,40,50,0,1))==Float(0.0));
     //chan3
@@ -355,7 +362,11 @@ void ImageInterfaceTest::testBinaryDilationIter()
     IPosition shape(4, 100, 100, 1, 5);
     csys=CoordinateUtil::defaultCoords4D();
     PagedImage<Float> InImage(TiledShape(shape),csys, String("testBDilationIn.im"));
-    PagedImage<Float> dummyMaskImage(TiledShape(shape),csys, String("testBDilationDummyMask.im"));
+    //PagedImage<Float> dummyMaskImage(TiledShape(shape),csys, String("testBDilationDummyMask.im"));
+    TempImage<Float> dummyMaskImage(TiledShape(shape),csys);
+    dummyMaskImage.set(0);
+    dummyMaskImage.attachMask( LatticeExpr<Bool>( iif(dummyMaskImage == 0, false, true)) );
+    ArrayLattice<Bool> mask( dummyMaskImage.getMask());
     InImage.setUnits(Unit("Jy/pixel"));
     InImage.set(0.0);
     InImage.putAt(1.0, IPosition(4,40,50,0,0));
@@ -379,8 +390,7 @@ void ImageInterfaceTest::testBinaryDilationIter()
     se(IPosition(2,2,1))=1.0;
     se(IPosition(2,1,2))=1.0;
     
-    cerr<<"calling binaryDilation.."<<endl;
-    maskhandler.binaryDilation(InImage, se, 2, dummyMaskImage,outmaskimage); 
+    maskhandler.binaryDilation(InImage, se, 2, mask, outmaskimage); 
     //chan0 
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,40,48,0,0))==Float(1.0));
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,40,53,0,0))==Float(0.0));

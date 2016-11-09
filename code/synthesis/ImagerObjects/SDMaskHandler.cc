@@ -1806,7 +1806,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SDMaskHandler::binaryDilationCore(Lattice<Float>& inlattice,
                       Array<Float>& structure,
-                      Lattice<Float>& mask,
+                      Lattice<Bool>& mask,
                       Lattice<Float>& outlattice)
   {
     LogIO os( LogOrigin("SDMaskHandler", "binaryDilation", WHERE) );
@@ -1830,14 +1830,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //cerr<<"structure="<<structure<<endl;
     LatticeStepper tls(inlattice.shape(), cursorShape, axisPath); 
     RO_LatticeIterator<Float> li(inlattice, tls);
-    RO_LatticeIterator<Float> mi(mask, tls);
+    RO_LatticeIterator<Bool> mi(mask, tls);
     LatticeIterator<Float> oli(outlattice,tls);
-    for (li.reset(), oli.reset(); !li.atEnd(); li++, oli++) {
+    for (li.reset(), mi.reset(), oli.reset(); !li.atEnd(); li++, mi++, oli++) {
       Array<Float> planeImage(li.cursor());
+      Array<Bool> planeMask(mi.cursor());
+      if (nfalse(planeMask)>0) {
       //cerr<<"planeImage.shape()="<<planeImage.shape()<<endl;
       for (Int i=0; i < nx; i++) {
         for (Int j=0; j < ny; j++) {
-          if (planeImage(IPosition(4,i,j,0,0))==1.0) {
+          if (planeImage(IPosition(4,i,j,0,0))==1.0 && !planeMask(IPosition(4,i,j,0,0)) ) {
             //cerr<<"if planeImage ==1 i="<<i<<" j="<<j<<endl;
             // Set the value for se(1,1)
             planeImage(IPosition(4,i,j,0,0)) = 2.0;
@@ -1867,21 +1869,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             planeImage(IPosition(4,ii,jj,0,0))=1;
         }
       }
-      oli.rwCursor() = planeImage;
+      } // if ntrure() ...
+      oli.woCursor() = planeImage;
     }
   }
 
-  /***
-  void SDMaskHandler::binaryDilation(Lattice<Float>& inlattice,
-                      Array<Float>& structure,
-                      Int niteration,
-                      Lattice<Float>& mask,
-                      Lattice<Float>& outlattice)
-  ***/
   void SDMaskHandler::binaryDilation(ImageInterface<Float>& inImage,
                       Array<Float>& structure,
                       Int niteration,
-                      ImageInterface<Float>& mask,
+                      Lattice<Bool>& mask,
                       ImageInterface<Float>& outImage)
   {
 

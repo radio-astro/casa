@@ -179,14 +179,14 @@ public:
   // A core method for binary dilation of the input lattice   
   void binaryDilationCore(casacore::Lattice<casacore::Float>& inlattice,
                       casacore::Array<casacore::Float>& structure,
-                      casacore::Lattice<casacore::Float>& mask,
+                      casacore::Lattice<casacore::Bool>& mask,
                       casacore::Lattice<casacore::Float>& outlattice);
 
   // Binary dilation with imageinterface and multiple iterations
   void binaryDilation(casacore::ImageInterface<casacore::Float>& inImage,
                       casacore::Array<casacore::Float>& structure,
                       casacore::Int niteration,
-                      casacore::ImageInterface<casacore::Float>& mask,
+                      casacore::Lattice<casacore::Bool>& mask,
                       casacore::ImageInterface<casacore::Float>& outImage);
 
   void makePBMask(SHARED_PTR<SIImageStore> imstore, casacore::Float pblimit=0.1);
