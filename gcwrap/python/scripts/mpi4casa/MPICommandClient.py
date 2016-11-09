@@ -626,6 +626,7 @@ class MPICommandClient:
             # jagonzal: This method is called by the atexit module and if it fails it
             # causes ipython to crash, producing a report and waiting for user input
             # so we cannot risk under any circumstances such an event
+            abort_mpi_environment = False 
             try:
                 
                 casalog_call_origin = "MPICommandClient::stop_services"
@@ -677,7 +678,7 @@ class MPICommandClient:
                                             'finalize_mpi_environment':finalize_mpi_environment},
                                            check_response=False)    
                 
-                # Finalize MPI environment            
+                # Finalize MPI environment           
                 if finalize_mpi_environment:
                     try:
                         casalog.post("Going to finalize MPI environment","INFO",casalog_call_origin)
@@ -686,23 +687,31 @@ class MPICommandClient:
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception finalizing MPI environment %s" 
                                      % str(formatted_traceback),"SEVERE",casalog_call_origin)
+                        abort_mpi_environment = True
                 else:
                     casalog.post("MPIServers with rank %s are in timeout condition, skipping MPI_Finalize()" 
                                  % str(server_rank_timeout),"SEVERE",casalog_call_origin)
-                
-                # UnMark MPI environment to be finalized by the MPICommunicator destructor
-                # (Either because it is already finalized or due to a 
-                # server not responsive that prevents graceful finalization)  
-                self.__communicator.set_finalize_mpi_environment(False)         
-                                  
-                # Set life cycle state
-                self.__life_cycle_state = 2            
-                
-                casalog.post("All services stopped","INFO",casalog_call_origin)
-                
+                    abort_mpi_environment = True
+            
             except:
                 formatted_traceback = traceback.format_exc()
                 print "Unhandled exception in MPICommandClient::stop_services %s" %(formatted_traceback)
+                
+            # UnMark MPI environment to be finalized by the MPICommunicator destructor
+            # (Either because it is already finalized or due to a 
+            # server not responsive that prevents graceful finalization)  
+            self.__communicator.set_finalize_mpi_environment(False)   
+            
+            # Set life cycle state
+            self.__life_cycle_state = 2  
+                                
+            # Abort or notify graceful finalization
+            if abort_mpi_environment: 
+                casalog.post("Not possible to finalize gracefully.. calling Aborting MPI environment",
+                             "SEVERE",casalog_call_origin)                
+                MPIEnvironment.abort_mpi_environment()
+            else:
+                casalog.post("All services stopped","INFO",casalog_call_origin)                      
            
 
         def push_command_request(self,command,block=False,target_server=None,parameters=None):

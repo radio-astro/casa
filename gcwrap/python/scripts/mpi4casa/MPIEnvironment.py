@@ -222,5 +222,13 @@ class MPIEnvironment:
     def finalize_mpi_environment():
         MPIEnvironment.__mpi_factory.Finalize()
         
+    @staticmethod
+    def abort_mpi_environment():
+        if MPIEnvironment.is_mpi_enabled:
+            MPIEnvironment.__mpi_factory.COMM_WORLD.Abort()        
+        
+        
+
+        
 # EOF
 
