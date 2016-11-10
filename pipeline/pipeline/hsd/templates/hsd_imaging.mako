@@ -103,7 +103,16 @@ plots_list = [{'title': 'Channel Map',
 <p>This task generates single dish images per source per spectral window. 
 It generates an image combined spectral data from whole antenna as well as images per antenna.</p>
 
-<h3>Profile Map</h3>
+<h3>Contents</h3>
+<ul>
+<li><a href="#profilemap">Profile Map</a></li>
+% for plots in plots_list:
+    <li><a href="#${plots['title'].replace(" ", "")}">${plots['title']}</a></li>
+% endfor
+</ul>
+
+
+<h3 id="profilemap" class="jumptarget">Profile Map</h3>
 % for field in sparsemap_subpage.keys():
     <h4><a class="replace"
            href="${os.path.join(dirname, sparsemap_subpage[field])}">${field}</a>
@@ -164,11 +173,7 @@ It generates an image combined spectral data from whole antenna as well as image
 %endfor
 
 % for plots in plots_list:
-    % if plots.has_key('note'):
-        <h3>${plots['title']} (${plots['note']})</h3>
-    % else:
-        <h3>${plots['title']}</h3>
-    % endif
+    <h3 id="${plots['title'].replace(" ", "")}" class="jumptarget">${plots['title']}</h3>
     % for field in plots['subpage'].keys():
         <h4><a class="replace"
                href="${os.path.join(dirname, plots['subpage'][field])}">${field}</a>
