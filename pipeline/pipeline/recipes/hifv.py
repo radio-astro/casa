@@ -75,7 +75,8 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_hanning (pipelinemode=pipelinemode)
     
         # Flag known bad data
-        hifv_flagdata (pipelinemode=pipelinemode, scan=True, hm_tbuff='1.5int', intents='*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*')
+        hifv_flagdata (pipelinemode=pipelinemode, scan=True, hm_tbuff='1.5int',
+                       intents='*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*')
     
         # Fill model columns for primary calibrators
         hifv_vlasetjy (pipelinemode=pipelinemode)
@@ -86,7 +87,6 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
 
         # Initial test calibrations using bandpass and delay calibrators
         hifv_testBPdcals (pipelinemode=pipelinemode)
-        # testBPdcals_plots()
     
         # Identify and flag basebands with bad deformatters or rfi based on
         # bp table amps and phases
