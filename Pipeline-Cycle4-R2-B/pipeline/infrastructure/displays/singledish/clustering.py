@@ -123,15 +123,18 @@ class ClusterDisplay(object):
                 # having key 'index' indicates the result comes from old (Scantable-based) 
                 # procedure
                 antenna = group['index'][0]
-                vis = None
+                vis = self.context.observing_run[antenna].ms.basename
             else:
                 # having key 'antenna' instead of 'index' indicates the result comes from 
                 # new (MS-based) procedure
                 antenna = group['antenna'][0]
                 vis = group['name'][0]
             spw = group['spw'][0]
-            field = group['field'][0]
             ms = self.context.observing_run.get_ms(vis)
+            if group.has_key('field'):
+                field = group['field'][0]
+            else:
+                field = ms.get_fields(intent='TARGET')[0].id
             source_name = ms.fields[field].source.name.replace(' ', '_').replace('/','_')
             group_id = group['group_id']
             iteration = group['iteration']

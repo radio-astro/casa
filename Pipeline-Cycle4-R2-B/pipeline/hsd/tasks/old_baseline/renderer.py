@@ -46,8 +46,11 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
                 group_desc['cover_plots'] = _plots
                 plot_cover.append(group_desc)
                 
-        ctx.update({'detail': plot_detail,
-                    'cover_only': plot_cover})
+        # nominal field name
+        fields = context.observing_run.measurement_sets[0].get_fields(intent='TARGET')
+        field = fields[0].name.replace(' ', '_')
+        ctx.update({'detail': {field: plot_detail},
+                    'cover_only': {field: plot_cover}})
                 
         # profile map before and after baseline subtracton
         maptype_list = ['before', 'after']
