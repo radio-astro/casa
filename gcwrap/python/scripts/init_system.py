@@ -28,6 +28,7 @@ if homedir == None :
 import casadef
 utilstool = casac.utils
 cu = casac.cu = utilstool()
+from procmgr import procmgr
 
 casa = { 'build': {
              'time': casadef.build_time,
@@ -64,7 +65,8 @@ casa = { 'build': {
              'init_version': 1,
              'startup': True,
              'unwritable': set( )
-         }
+         },
+         'procmgr': procmgr( ),
        }
 
 
