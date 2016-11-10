@@ -236,21 +236,23 @@ class Tsysflag(basetask.StandardTaskTemplate):
         
         inputs = self.inputs
         
-        # Initialize the final result and store caltable to flag in result.
+        # Initialize the final result and store caltable to flag and its
+        # associated vis in result.
         result = TsysflagResults()
         result.caltable = inputs.caltable
-
-        # Load the input tsys caltable and store its vis in the result
-        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(inputs.caltable)        
-        result.vis = tsystable.vis
+        result.vis = caltableaccess.CalibrationTableDataFiller._readvis(
+            inputs.caltable)
 
         # If requested, create a new Tsys table with normalized Tsys,
         # and mark this as the table to use for determining flags.
         if inputs.normalize_tsys:
             norm_caltable = inputs.caltable + '_normalized'
-            LOG.info("Creating normalized Tsys table {0} to use for assessing new flags.".format(norm_caltable))
-            LOG.info("Newly found flags will also be applied to Tsys table {0}.".format(inputs.caltable))
-            tsysNormalize(inputs.vis, tsysTable=inputs.caltable, newTsysTable=norm_caltable)
+            LOG.info("Creating normalized Tsys table {0} to use for assessing"
+                     " new flags.".format(norm_caltable))
+            LOG.info("Newly found flags will also be applied to Tsys table"
+                     " {0}.".format(inputs.caltable))
+            tsysNormalize(inputs.vis, tsysTable=inputs.caltable,
+                          newTsysTable=norm_caltable)
             caltable_to_assess = norm_caltable
         else:
             caltable_to_assess = inputs.caltable
@@ -271,7 +273,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
                                'toomany': inputs.flag_toomany}
 
         # Convert metric order string to list of strings
-        metric_order_as_list = [metric.strip() for metric in inputs.metric_order.split(',')]
+        metric_order_as_list = [metric.strip()
+                                for metric in inputs.metric_order.split(',')]
         
         # If the input metric order list contains illegal values, then log
         # an error and stop further evaluation of Tsysflag.
