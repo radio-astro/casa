@@ -71,7 +71,14 @@ Horizontal red bars in the top panel shows the additional masks that corresponds
 deviation, which effectively are any spectral features including the ones not detected or validated in the 
 line detection stage.</p>
 
-<h2>Spectral Data Before Baseline Subtraction</h2>
+<h2>Contents</h2>
+<ul>
+<li><a href="#beforebaseline">Spectral Data Before Baseline Subtraction</a></li>
+<li><a href="#afterbaseline">Spectral Data After Baseline Subtraction</a></li>
+<li><a href="#clusteranalysis">Line Detection by Clustering Analysis</a></li>
+</ul>
+
+<h2 id="beforebaseline" class="jumptarget">Spectral Data Before Baseline Subtraction</h2>
 
 <p>Red lines indicate the result of baseline fit that is subtracted from the calibrated spectra.</p>
 
@@ -114,7 +121,7 @@ line detection stage.</p>
 %endfor
 
 
-<h2>Spectral Data After Baseline Subtraction</h2>
+<h2 id="afterbaseline" class="jumptarget">Spectral Data After Baseline Subtraction</h2>
 
 <p>Red lines show zero-level. Spectra that are properly subtracted should be located around red lines.</p>
 
@@ -156,7 +163,7 @@ line detection stage.</p>
 	<div class="clearfix"></div><!--  flush plots, break to next row -->
 %endfor
 
-<h2>Line Detection by Clustering Analysis</h2>
+<h2 id="clusteranalysis" class="jumptarget">Line Detection by Clustering Analysis</h2>
 
 % for field in detail.keys():
   % if len(detail[field]) > 0 or len(cover_only[field]) > 0:
