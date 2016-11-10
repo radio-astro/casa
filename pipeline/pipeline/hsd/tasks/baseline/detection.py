@@ -329,7 +329,8 @@ class DetectLine(basetask.StandardTaskTemplate):
         if spwid < 0:
             raise RuntimeError("Invalid spw id ({})".format(spwid))
         
-        parsed_window = get_linerange(window, spwid)
+        ms = self.inputs.context.observing_run.measurement_sets[0]
+        parsed_window = get_linerange(window, spwid, ms)
         return parsed_window
     
 
