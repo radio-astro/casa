@@ -1,6 +1,42 @@
 <%!
 rsc_path = "../"
+import collections
 import os
+import pipeline.infrastructure.utils as utils
+
+def get_fraction(flagged, total):
+   if total == 0 or flagged < 0.0:
+       return 'N/A'
+   else:
+       return '%0.1f%%' % (100.0 * float(flagged) / float(total))
+
+FlagDetailTR = collections.namedtuple("FlagDetailTR", "name spw ant pol nrow totnrow totfrac tsys weather user before postbl prebl postrmean prermean postrms prerms link")
+
+def make_detailed_table(result, stage_dir, fieldname):
+   rel_path = os.path.basename(stage_dir)   ### stage#
+   rows = []
+   for r in result:
+       summaries = r.outcome['summary']
+       for summary in summaries:
+           if summary['field'] != fieldname:
+               continue
+           html_name = summary['html']
+           asdm_name = summary['name']
+           ant_name = summary['antenna']
+           spw = summary['spw']
+           pol = summary['pol']
+           nrows = summary['nrow']
+           flags = summary['nflags']
+           cell_elems = [asdm_name, spw, ant_name, pol, nrows, flags[0]]
+           for nflg in flags:
+               cell_elems.append(get_fraction(nflg, nrows))
+           htext = '<a class="replace-pre" href="%s">details</a>' % (os.path.join(rel_path, html_name),)
+           cell_elems.append(htext)
+           trow = FlagDetailTR(*cell_elems)
+           rows.append(trow)
+   if len(rows) == 0:
+       return []
+   return utils.merge_td_columns(rows, num_to_merge=4)
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
@@ -9,47 +45,20 @@ import os
 <%block name="title">Flag data by Tsys, weather, and statistics of spectra</%block>
 
 <%
-def get_fraction(flagged, total):
-   if total == 0 or flagged < 0.0:
-       return 'N/A'
-   else:
-       return '%0.1f%%' % (100.0 * float(flagged) / float(total))
-
 try:
    stage_number = result.stage_number
    stage_dir = os.path.join(pcontext.report_dir,'stage%d'%(stage_number))
    if not os.path.exists(stage_dir):
        os.mkdir(stage_dir)
 
-   rel_path = os.path.basename(stage_dir)   ### stage#
-
-   html_names = []
-   asdm_names = []
-   ant_names = []
-   spw = []
-   pol = []
-   nrows = []
-   flags = []
-   field_map = {}
-   default_field = "default"
+   unique_fields = []
    for r in result:
        summaries = r.outcome['summary']
        for summary in summaries:
-           html_names.append(summary['html'])
-           asdm_names.append(summary['name'])
-           ant_names.append(summary['antenna'])
-           spw.append(summary['spw'])
-           pol.append(summary['pol'])
-           nrows.append(summary['nrow'])
-           flags.append(summary['nflags'])
-           field = summary['field'] if r.outcome['byfield'] else default_field
-           if not field_map.has_key(field):
-               field_map[field] = []
-           field_map[field].append(len(html_names) -1)
+            if summary['field'] not in unique_fields:
+                unique_fields.append(summary['field'])
 
-   unique_fields = field_map.keys()
-   do_field = False if (len(unique_fields)==1 and unique_fields[0] == default_field) else True
-   flag_types = ['Total', 'Tsys', 'Weather', 'User', 'Online']
+   flag_types = ['Total', 'Tsys', 'Weather', 'User', 'After calibration']
    fit_flags = ['Baseline RMS', 'Running mean', 'Expected RMS']
 except Exception, e:
    print 'hsd_imaging html template exception:', e
@@ -69,48 +78,77 @@ except Exception, e:
 For 1.-3., the RMSes of spectra before and after baseline fit are obtained using line free channels.
 </p>
 
-<H2>Flag Summaries</H2>
+<h2>Contents</h2>
+<ul>
+<li><a href="#summarytable">Flag Summary</a></li>
+<li><a href="#detailtable">Flag by Reason</a></li>
+  <ul>
+%for field in unique_fields:
+	<li><a href="#${field}">${field}</a></li>
+%endfor
+  </ul>
+</ul>
 
-% if html_names:
-	%for field in unique_fields:
-		%if do_field:
-			<H3>${field}</H3>
-		%endif
-		<table class="table table-bordered table-striped " summary=field>
-		<thead>
-			<tr>
-			<th rowspan="2">
+
+<H2 id="summarytable" class="jumptarget">Flag Summary</H2>
+<table class="table table-bordered table-striped" summary="Flag Summary">
+	<caption>flag summary of ON-source target scans per source and spw</caption>
+    <thead>
+	    <tr>
+	        <th scope="col" rowspan="2">Field</th>
+	        <th scope="col" rowspan="2">SpW</th>
+	        <th scope="col" colspan="3">Flagged Fraction</th>
+		</tr>
+		<tr>
+	        <th scope="col">Before</th>
+	        <th scope="col">Additional</th>
+	        <th scope="col">Total</th>
+	    </tr>
+	</thead>
+	<tbody>
+	% for tr in sumary_table_rows:
+		<tr>
+		% for td in tr:
+			${td}
+		% endfor
+		</tr>
+	%endfor
+	</tbody>
+</table>
+
+
+<H2 id="detailtable" class="jumptarget">Flag by Reason</H2>
+%for field in unique_fields:
+	<H3 id="${field}" class="jumptarget">${field}</H3>
+	<table class="table table-bordered table-striped " summary="${field}">
+	<thead>
+		<tr>
 			<th colspan="5">Data Selection</th>
 			<th colspan="2">Flagged Total</th>
 			%for ftype in flag_types[1:]:
-			<th rowspan="2">${ftype}</th>
+				<th rowspan="2">${ftype}</th>
 			%endfor
 			%for fflag in fit_flags:
-			<th colspan="2">${fflag}</th>
+				<th colspan="2">${fflag}</th>
 			%endfor
-			</tr>
-			<tr>
-			<th>Name</th><th>Ant.</th><th>spw</th><th>Pol</th><th># of rows</th>
+			<th rowspan="2">Plots</th>
+		</tr>
+		<tr>
+			<th>Name</th><th>spw</th><th>Ant.</th><th>Pol</th><th># of rows</th>
 			<th>row #</th><th>fraction</th>
 			%for fflag in fit_flags:
-			<th>post-fit</th><th>pre-fit</th>
-			%endfor
-			</tr>
-		</thead>
-		<tbody>
-		%for idx in field_map[field]:
-		<tr>
-			<th><a class="replace-pre" href="${os.path.join(rel_path, html_names[idx])}">details</a></th>
-			<td>${asdm_names[idx]}</td><td>${ant_names[idx]}</td><td>${spw[idx]}</td><td>${pol[idx]}</td><td>${nrows[idx]}</td>
-			<td>${flags[idx][0]}</td>
-			%for nflg in flags[idx]:
-			<td>${get_fraction(nflg, nrows[idx])}</td>
+				<th>post-fit</th><th>pre-fit</th>
 			%endfor
 		</tr>
+		</thead>
+		<tbody>
+		% for tr in make_detailed_table(result, stage_dir, field):
+			<tr>
+			% for td in tr:
+				${td}
+			% endfor
+			</tr>
 		%endfor <!-- end of table row loop -->
 		</tbody>
 		</table>
 	%endfor <!-- end of per field loop -->
-% else:
-No Flag Summaries
-% endif
