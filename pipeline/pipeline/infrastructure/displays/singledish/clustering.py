@@ -417,13 +417,16 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         increment = spectral_window.channels.chan_widths[0]
         with casatools.TableReader(os.path.join(self.vis, 'SOURCE')) as tb:
             tsel = tb.query('SOURCE_ID == %s && SPECTRAL_WINDOW_ID == %s'%(source_id, self.spw))
-            if tsel.nrows() == 0:
-                rest_frequency = refval
-            else:
-                if tsel.iscelldefined('REST_FREQUENCY', 0):
-                    rest_frequency = tsel.getcell('REST_FREQUENCY', 0)[0]
-                else:
+            try:
+                if tsel.nrows() == 0:
                     rest_frequency = refval
+                else:
+                    if tsel.iscelldefined('REST_FREQUENCY', 0):
+                        rest_frequency = tsel.getcell('REST_FREQUENCY', 0)[0]
+                    else:
+                        rest_frequency = refval
+            finally:
+                tsel.close()
         
         # line property in channel
         line_center = self.lines[icluster][0] 
