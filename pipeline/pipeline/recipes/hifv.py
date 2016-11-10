@@ -1,9 +1,6 @@
 # General imports
 
-import os
-import sys
 import traceback
-import inspect
 
 # Make sure CASA exceptions are rethrown
 try:
@@ -46,9 +43,7 @@ from hifv_applycals_cli import hifv_applycals_cli as hifv_applycals
 from hifv_targetflag_cli import hifv_targetflag_cli as hifv_targetflag
 from hifv_statwt_cli import hifv_statwt_cli as hifv_statwt
 from hifv_plotsummary_cli import hifv_plotsummary_cli as hifv_plotsummary
-#from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
 from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
-#from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
 from hif_makeimages_cli import hif_makeimages_cli as hif_makeimages
 from hifv_exportdata_cli import hifv_exportdata_cli as hifv_exportdata
 from h_save_cli import h_save_cli as h_save
@@ -88,13 +83,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         # Gain curves, opacities, antenna position corrections, 
         # requantizer gains (NB: requires CASA 4.1!)
         hifv_priorcals (pipelinemode=pipelinemode)
-    
-        # Compute the prioritized lists of reference antennas
-        # hif_refant (pipelinemode=pipelinemode)
-    
-        # Heuristic flagging
-        # hifv_hflag (pipelinemode=pipelinemode)
-        
+
         # Initial test calibrations using bandpass and delay calibrators
         hifv_testBPdcals (pipelinemode=pipelinemode)
         # testBPdcals_plots()
@@ -124,15 +113,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         
         # Determine solint for scan-average equivalent
         hifv_solint(pipelinemode=pipelinemode)
-    
-        # Do test gain calibrations to establish short solint
-        # hifv_testgains (pipelinemode=pipelinemode)
-    
-        # Make gain table for flux density bootstrapping
-        # Make a gain table that includes gain and opacity corrections for final
-        # amp cal, for flux density bootstrapping
-        # hifv_fluxgains (pipelinemode=pipelinemode)
-    
+
         # Do the flux density boostrapping -- fits spectral index of
         # calibrators with a power-law and puts fit in model column
         hifv_fluxboot (pipelinemode=pipelinemode)
@@ -156,11 +137,9 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_plotsummary (pipelinemode=pipelinemode)
         
         # Make a list of expected point source calibrators to be cleaned
-        # hif_makecleanlist (intent='PHASE,BANDPASS', pipelinemode=pipelinemode)
         hif_makeimlist (intent='PHASE,BANDPASS', pipelinemode=pipelinemode)
     
         # Make clean images for the selected calibrators
-        # hif_cleanlist (pipelinemode=pipelinemode)
         hif_makeimages (pipelinemode=pipelinemode)
 
         # Export the data
