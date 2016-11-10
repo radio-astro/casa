@@ -1,5 +1,5 @@
 //# HetArrayConvFunc.cc: Implementation for HetArrayConvFunc
-//# Copyright (C) 2008-2013
+//# Copyright (C) 2008-2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -114,7 +114,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 
   void HetArrayConvFunc::findAntennaSizes(const VisBuffer& vb){
-    //cerr << "findAnt " << msId_p  << "  " << vb.msId() << " " << vb.msName() << endl;
     if(msId_p != vb.msId()){
       msId_p=vb.msId();
       
@@ -276,7 +275,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
       else if(pbClass_p==PBMathInterface::COMMONPB){
-	//cerr << "Doing the commonPB thing" << endl;
 	antDiam2IndexMap_p.define(String::toString(dishDiam(0)), diamIndex);
 	antIndexToDiamIndex_p.set(diamIndex);
 	antMath_p.resize(diamIndex+1);
@@ -701,7 +699,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     */
     makerowmap(vb, convFuncRowMap);
-
+    ///need to deal with only the maximum of different baselines available in this
+    ///vb
+    ndishpair=max(convFuncRowMap)+1;
     
     convSupportBlock_p.resize(actualConvIndex_p+1);
     convSizes_p.resize(actualConvIndex_p+1);
@@ -719,6 +719,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convFunc_p=(*convFunctions_p[actualConvIndex_p]);
     weightConvFunc_p.resize();
     weightConvFunc_p=(*convWeights_p[actualConvIndex_p]);
+
+    //cerr << "convfunc shapes " <<  convFunc_p.shape() <<  "   " << weightConvFunc_p.shape() << "  " << convSize_p << " pol " << nBeamPols << "  chan " << nBeamChans << " ndishpair " << ndishpair << endl;
+
     //convSupport_p.resize();
     //convSupport_p=(*convSupportBlock_p[actualConvIndex_p]);
     Bool delc; Bool delw;
@@ -759,6 +762,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   }
 
+typedef unsigned long long ooLong; 
 
   void HetArrayConvFunc::applyGradientToYLine(const Int iy, Complex*& convFunctions, Complex*& convWeights, const Double pixXdir, const Double pixYdir, Int convSize, const Int ndishpair, const Int nChan, const Int nPol){
     Double cy, sy;
@@ -774,7 +778,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for (Int ichan=0; ichan < nChan; ++ichan){
 	  //Int chanoffset=ichan*ndishpair*convSize*convSize;
 	  for(Int iz=0; iz <ndishpair; ++iz){
-	    Int index=(((ipol*nChan+ichan)*ndishpair+iz)*convSize+iy)*convSize+ix;
+	    ooLong index=((ooLong(iz*nChan+ichan)*nPol+ipol)*ooLong(convSize)+ooLong(iy))*ooLong(convSize)+ooLong(ix);
 	    convFunctions[index]= convFunctions[index]*phx*phy;
 	    convWeights[index]= convWeights[index]*phx*phy;
 	  }
