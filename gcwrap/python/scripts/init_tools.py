@@ -4,54 +4,6 @@ except ImportError, e:
     print "failed to load casa:\n", e
     sys.exit(1)
 
-imager = casac.imager
-imtool=imager
-calibrater = casac.calibrater
-cbtool=calibrater
-mstool = casac.ms
-tptool = casac.tableplot
-tp = tptool()
-mptool = casac.msplot
-mp = mptool()
-pmtool = casac.plotms
-pm = pmtool()
-cptool = casac.calplot
-cp = cptool()
-qatool = casac.quanta
-qa = casac.qa =  qatool()
-tbtool = casac.table
-#fgtool = casac.flagger
-aftool = casac.agentflagger
-af = aftool()
-metool = casac.measures
-iatool = casac.image
-potool = casac.imagepol
-lmtool= casac.linearmosaic
-smtool = casac.simulator
-cltool = casac.componentlist
-coordsystool = casac.coordsys
-cstool = casac.coordsys
-rgtool = casac.regionmanager
-sltool = casac.spectralline
-dctool = casac.deconvolver
-vptool = casac.vpmanager
-msmdtool = casac.msmetadata
-fitool = casac.fitter
-fntool = casac.functional
-imdtool = casac.imagemetadata
-
-utilstool = casac.utils
-cu = casac.cu = utilstool()
-vftask = casac.vlafillertask()
-vlafiller=vftask.fill
-at = casac.atmosphere()
-ca = casac.calanalysis()
-mttool = casac.mstransformer
-mt = mttool()
-sdmstool = casac.singledishms
-sdms = sdmstool()
-parallelimager = casac.parallelimager()
-
 def gentools(tools=None):
 	"""
 	Generate a fresh set of tools; only the ones who have
@@ -76,8 +28,6 @@ def gentools(tools=None):
 	else:
 		reqtools=tools
 	return tuple([eval(tooldic[reqtool]) for reqtool in reqtools])
-
-im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms,lm=gentools()
 
 def write_history(myms, vis, tname, param_names, param_vals, myclog=None, debug=False):
         """
@@ -170,3 +120,68 @@ def write_history(myms, vis, tname, param_names, param_vals, myclog=None, debug=
                 if isopen:
                         myms.close()
         return retval        
+
+imager = casac.imager
+imtool=imager
+calibrater = casac.calibrater
+cbtool=calibrater
+mstool = casac.ms
+tptool = casac.tableplot
+tp = tptool()
+mptool = casac.msplot
+mp = mptool()
+pmtool = casac.plotms
+pm = pmtool()
+cptool = casac.calplot
+cp = cptool()
+qatool = casac.quanta
+qa = casac.qa =  qatool()
+tbtool = casac.table
+#fgtool = casac.flagger
+aftool = casac.agentflagger
+af = aftool()
+metool = casac.measures
+iatool = casac.image
+potool = casac.imagepol
+lmtool= casac.linearmosaic
+smtool = casac.simulator
+cltool = casac.componentlist
+coordsystool = casac.coordsys
+cstool = casac.coordsys
+rgtool = casac.regionmanager
+sltool = casac.spectralline
+dctool = casac.deconvolver
+vptool = casac.vpmanager
+msmdtool = casac.msmetadata
+fitool = casac.fitter
+fntool = casac.functional
+imdtool = casac.imagemetadata
+
+utilstool = casac.utils
+cu = casac.cu = utilstool()
+vftask = casac.vlafillertask()
+vlafiller=vftask.fill
+at = casac.atmosphere()
+ca = casac.calanalysis()
+mttool = casac.mstransformer
+mt = mttool()
+sdmstool = casac.singledishms
+sdms = sdmstool()
+parallelimager = casac.parallelimager()
+
+##
+## viewer tool
+##
+from viewertool import viewertool
+try:
+    ving = viewertool( False )
+    if casa['flags'].has_key('--nogui') :
+        vi = ving
+    else:
+        vi = viewertool( True )
+except:
+    print "Unable to start viewer, maybe no dbus available?"
+
+
+im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms,lm=gentools()
+
