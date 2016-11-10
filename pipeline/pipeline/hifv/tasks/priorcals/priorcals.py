@@ -14,7 +14,6 @@ import os
 import urllib2
 import datetime
 
-# from pipeline.hif.heuristics import fieldnames
 from pipeline.h.heuristics import fieldnames
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
