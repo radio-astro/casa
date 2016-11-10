@@ -75,4 +75,3 @@ def make_summary_table(flagdict):
             rows.append(tr)
     
     return utils.merge_td_columns(rows, num_to_merge=2)
-        
