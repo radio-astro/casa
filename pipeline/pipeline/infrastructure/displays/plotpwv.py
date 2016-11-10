@@ -72,7 +72,11 @@ def plotPWV(ms, figfile='', plotrange=[0,0,0,0], clip=True):
     try:
         [watertime, water, antennaName] = readPWVFromMS(ms)
     except:
-        LOG.warn("Could not open %s/ASDM_CALWVR nor ASDM_CALATMOSPHERE" % (ms))
+        observatory = getObservatoryName(ms)
+        if (observatory.find('ALMA') < 0 and observatory.find('ACA') < 0):
+            LOG.info("This is not ALMA data.  No ASDM_CALWVR or ASDM_CALATMOSPHERE")
+        else:
+            LOG.warn("Could not open %s/ASDM_CALWVR nor ASDM_CALATMOSPHERE" % (ms))
         return
 
     # Initialize plotting
