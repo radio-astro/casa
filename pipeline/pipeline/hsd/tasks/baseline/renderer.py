@@ -65,12 +65,18 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
             plot_list = self._plots_per_field_with_type(sparsemap_plots, maptype)
             summary = self._summary_plots(plot_list)
             subpage = {}
-            for (name, _plots) in plot_list.items():
-                plot_title = 'Sparse Profile Map %s Baseline Subtraction'%(maptype.lower())
-                renderer = sdsharedrenderer.SingleDishGenericPlotsRenderer(context, results, name, _plots, 
-                                                          plot_title)
-                with renderer.get_file() as fileobj:
+            flattened = [plot for inner in plot_list.values() for plot in inner]
+            plot_title = 'Sparse Profile Map %s Baseline Subtraction'%(maptype.lower())
+            renderer = basetemplates.JsonPlotRenderer('generic_x_vs_y_ant_field_spw_pol_plots.mako',
+                                                      context,
+                                                      results,
+                                                      flattened,
+                                                      plot_title,
+                                                      filenamer.sanitize('%s.html' % (plot_title.lower())))
+            with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
+            
+            for (name, _plots) in plot_list.items():
                 subpage[name] = os.path.basename(renderer.path)
             ctx.update({'sparsemap_subpage_%s'%(maptype.lower()): subpage,
                         'sparsemap_%s'%(maptype.lower()): summary})

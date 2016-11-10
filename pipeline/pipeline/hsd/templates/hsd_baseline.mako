@@ -77,7 +77,8 @@ line detection stage.</p>
 
 % for field in sparsemap_subpage_before.keys():
     <h3><a class="replace"
-           href="${os.path.join(dirname, sparsemap_subpage_before[field])}">${field}</a>
+           href="${os.path.join(dirname, sparsemap_subpage_before[field])}"
+           data-field="${field}">${field}</a>
     </h3>
     % for plot in sparsemap_before[field]:
         % if os.path.exists(plot.thumbnail):
@@ -95,7 +96,8 @@ line detection stage.</p>
 	                    <h4>
 	                        <a href="${os.path.join(dirname, sparsemap_subpage_before[field])}"
 	                           class="replace"
-	                           data-spw="${plot.parameters['spw']}">
+	                           data-spw="${plot.parameters['spw']}"
+	                           data-field="${field}">
 	                           Spectral Window ${plot.parameters['spw']}
 	                        </a>
 	                    </h4>
@@ -118,7 +120,8 @@ line detection stage.</p>
 
 % for field in sparsemap_subpage_after.keys():
     <h3><a class="replace"
-           href="${os.path.join(dirname, sparsemap_subpage_after[field])}">${field}</a>
+           href="${os.path.join(dirname, sparsemap_subpage_after[field])}"
+           data-field="${field}">${field}</a>
     </h3>
     % for plot in sparsemap_after[field]:
         % if os.path.exists(plot.thumbnail):
@@ -136,7 +139,8 @@ line detection stage.</p>
 	                    <h4>
 	                        <a href="${os.path.join(dirname, sparsemap_subpage_after[field])}"
 	                           class="replace"
-	                           data-spw="${plot.parameters['spw']}">
+	                           data-spw="${plot.parameters['spw']}"
+	                           data-field="${field}">
 	                           Spectral Window ${plot.parameters['spw']}
 	                        </a>
 	                    </h4>
@@ -162,7 +166,7 @@ line detection stage.</p>
     <!-- Link to details page -->
     % for plots in detail[field]:
       <h4><a class="replace"
-      href="${os.path.join(dirname, plots['html'])}">${plots['title']}</h4>
+      href="${os.path.join(dirname, plots['html'])}" data-field="${field}">${plots['title']}</h4>
     
 <!--		href="${os.path.relpath(os.path.join(dirname, plots['html']), pcontext.report_dir)}">${plots['title']}-->
       % for plot in plots['cover_plots']:
