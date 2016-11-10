@@ -32,7 +32,17 @@ $(document).ready(function() {
 
 <p>This task generates a sky calibration table, a collection of OFF spectra for single dish data calibration.</p>
 
-<h2>Results</h2>
+<h2>Contents</h2>
+<ul>
+<li><a href="#resulttable">Results</a></li>
+% if len(reference_coords) > 0:
+	<li><a href="#refcoordtable">Reference Coordinates</a></li>
+% endif
+<li><a href="#ampfreqplots">Amp vs. Frequency Plots</a></li>
+<li><a href="#amptimeplots">Amp vs. Time Plots</a></li>
+</ul>
+
+<h2 id="resulttable" class="jumptarget">Results</h2>
 <table class="table table-bordered" summary="Application Results">
 	<caption>Applied calibrations and parameters used for caltable generation</caption>
     <thead>
@@ -66,7 +76,7 @@ $(document).ready(function() {
 </table>
 
 % if len(reference_coords) > 0:
-    <h2>Reference Coordinates</h2>
+    <h2 id="refcoordtable" class="jumptarget">Reference Coordinates</h2>
     <table class="table table-bordered" summary="Reference Coordinates">
 	    <caption>Reference coordinates for position-switch calibration</caption>
         <thead>
@@ -94,7 +104,7 @@ $(document).ready(function() {
     </table>
 % endif
 
-<h2>Amp vs. Frequency Plots</h2>
+<h2 id="ampfreqplots" class="jumptarget">Amp vs. Frequency Plots</h2>
 % for ms in pcontext.observing_run.measurement_sets:
     <% 
         vis = ms.basename 
@@ -132,7 +142,7 @@ $(document).ready(function() {
 	<div class="clearfix"></div><!--  flush plots, break to next row -->
 % endfor
 
-<h2>Amp vs. Time Plots</h2>
+<h2 id="amptimeplots" class="jumptarget">Amp vs. Time Plots</h2>
 % for ms in pcontext.observing_run.measurement_sets:
     <% 
         vis = ms.basename 
