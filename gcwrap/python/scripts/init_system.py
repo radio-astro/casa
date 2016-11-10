@@ -124,3 +124,9 @@ else :
         else:
             raise RuntimeError, "Unable to find the XML constraints directory in your CASAPATH"
 
+##
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## try to set casapyinfo path...
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.path.exists( __casapath__ + "/bin/casapyinfo") :
+    casa['helpers']['info'] = __casapath__ + "/bin/casa-config"

@@ -15,6 +15,8 @@ __pylib = os.path.dirname(os.path.realpath(__file__))
 __init_scripts = [
     "init_system.py",
     "init_user_pre.py",
+    "init_mpi.py",
+    "init_dbus.py",
     "init_tools.py",
     "init_logger.py",
     "init_tasks.py",
