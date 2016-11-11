@@ -66,7 +66,8 @@ using namespace casa;
 static pid_t manager_root_pid = 0;
 static bool sigterm_received = false;
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
-                             char *&dbus_name, bool &do_dbus, bool &inital_run, bool &server_startup,
+                             char *&dbus_name, bool &do_dbus, bool &inital_run,
+                             bool &server_startup, bool &daemon,
                              bool &without_gui, bool &persistent, bool &casapy_start,
                              char *&logfile_path );
 static void start_manager_root( const char *origname, int numargs, char **args,
@@ -151,6 +152,7 @@ int main( int argc, const char *argv[] ) {
 	casa::dbus::diagnostic.argv( argc, argv );
 
 	bool server_startup = false;
+    bool daemon = false;
 	bool without_gui = false;
 	bool persistent = false;
 	bool casapy_start = false;
@@ -180,8 +182,8 @@ int main( int argc, const char *argv[] ) {
 //     QCoreApplication::setAttribute(Qt::AA_MacDontSwapCtrlAndMeta);
 
 	preprocess_args( argc, argv, numargs, args, dbus_name, with_dbus,
-	                 initial_run, server_startup, without_gui, persistent,
-	                 casapy_start, logfile_path );
+	                 initial_run, server_startup, daemon, without_gui,
+                     persistent, casapy_start, logfile_path );
 
 	//
 	// setup casa logging's global sink, if the user supplied a path...
@@ -196,8 +198,12 @@ int main( int argc, const char *argv[] ) {
 	}
 
 	if ( (server_startup || without_gui) && initial_run ) {
-		launch_server( argv[0], numargs, args, dbus_name, without_gui,
-		               persistent, casapy_start );
+        if ( daemon ) {
+            launch_server( argv[0], numargs, args, dbus_name, without_gui,
+                           persistent, casapy_start );
+        } else {
+            start_manager_root( argv[0], numargs, args, dbus_name, without_gui, getpid( ) );
+        }
 		exit(0);
 	}
 
@@ -378,7 +384,7 @@ int main( int argc, const char *argv[] ) {
 // of args, and the last arg (not included in numargs count) is null (for execvp)
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
                              char *&dbus_name, bool &with_dbus, bool &initial_run,
-                             bool &server_startup, bool &without_gui, bool &persistent,
+                             bool &server_startup, bool &daemon, bool &without_gui, bool &persistent,
                              bool &casapy_start, char *&logfile_path ) {
 
 	without_gui = false;
@@ -420,6 +426,8 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 			} else if ( x + 1 < argc ) {
 				dbus_name = strdup(argv[++x]);
 			}
+		} else if ( ! strcmp(argv[x],"--daemon") ) {
+			daemon = true;
 		} else if ( ! strcmp(argv[x],"--persist") ) {
 			persistent = true;
 		} else if ( ! strcmp(argv[x],"--casapy") ) {

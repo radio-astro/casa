@@ -58,6 +58,8 @@ set( CASA_MINOR_VERSION 0 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
+set( casa_startup 0 )
+
 ###
 ### default name for casa-maintained dbus C++ library... (but could also be called just "dbus-cpp")
 ###
@@ -395,6 +397,7 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
     if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
         if ( EXISTS /opt/casa/02/bin/python )
             set( casa_packages /opt/casa/02 )
+            set( casa_startup 1 )
             set( dbusxx dbus-cpp )
             add_definitions( -DDBUS_CPP )
             if ( EXISTS /opt/casa/02/bin/qmake )
@@ -404,6 +407,7 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
                 ## RHEL7
                 set( qt4 system-qt )
             endif( )
+            set( python_version 2.7 )
         elseif ( EXISTS /usr/lib64/casa/01/bin/qmake )
             set( casa_packages /usr/lib64/casa/01 )
 	        set( dbusxx dbus-cpp )
@@ -1377,14 +1381,12 @@ add_subdirectory(python)
 add_custom_target( doc DEPENDS taskref_html taskref_pdf casaref_html casaref_pdf )
 #add_custom_target( doc )
 
-configure_file( apps/casapy/casapy ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casapy @ONLY )
 configure_file( apps/casapy/casa ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casa @ONLY )
 
 install( PROGRAMS
          install/buildmytasks
          install/xmlgenpy
-	 ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casa
-	 ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casapy
+         ${CMAKE_CURRENT_BINARY_DIR}/preprocessed/casa
          DESTINATION bin )
 
 install( FILES

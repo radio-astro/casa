@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( tools tools_regressions_admin_python python/${PYTHONV}
+casa_add_python( tools tools_regressions_admin_python lib/python${PYTHONV}
   publish_summary.py
   runUnitTest.py
   memTest.py
@@ -47,4 +47,4 @@ install( PROGRAMS
          runUnitTest.py
 	 execute.py
          make_mmsdata.py
-         DESTINATION python/${PYTHONV}/regressions/admin )
+         DESTINATION lib/python${PYTHONV}/regressions/admin )

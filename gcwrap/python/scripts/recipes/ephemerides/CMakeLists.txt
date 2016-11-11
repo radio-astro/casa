@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( tools tools_ephemerides_python python/${PYTHONV}/recipes/ephemerides
+casa_add_python( tools tools_ephemerides_python lib/python${PYTHONV}/recipes/ephemerides
   __init__.py
   JPLephem_reader.py
   JPLephem_reader2.py

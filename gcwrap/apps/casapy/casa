@@ -1,7 +1,14 @@
 #! /bin/bash
 startDir=$(pwd)
+
+if [ @casa_startup@ -le 0 ]; then
+    startup="casapy.py"
+else
+    startup="start_casa.py"
+fi
+
 #
-#This is a shell script for running the casapy.py script
+#This is a shell script for running the $startup script
 #it's adapted from the mac python script and no doubt will
 #be freely adjusted for linux.
 #
@@ -46,7 +53,7 @@ else
     if [[ "$CASAPATH" =~ /usr/lib* ]] || [[ "$CASAPATH" =~ /opt/casa* ]]; then
         __prefix=`echo ${CASAPATH} | awk '{printf "%s", $1}'`
         # sometimes users install things into /opt/casa...
-        if [[ -e "$__prefix/lib/python@python_version@/casapy.py" ]]; then
+        if [[ -e "$__prefix/lib/python@python_version@/$startup" ]]; then
             installed_from_rpm="T"
         else
             installed_from_rpm="F"
@@ -106,7 +113,7 @@ fi
 if [ $installed_from_rpm = "T" ]; then
     export   __CASAPY_PYTHONDIR=${prefix}/lib/python@python_version@
 else
-    export   __CASAPY_PYTHONDIR=${prefix}/python/@python_version@
+    export   __CASAPY_PYTHONDIR=${prefix}/lib/python@python_version@
 fi
 p_path=${__CASAPY_PYTHONDIR}:${__CASAPY_PYTHONDIR}/regressions/admin:${p_path}
 # echo "DEBUG: __CASAPY_PYTHONDIR = $__CASAPY_PYTHONDIR"
@@ -229,13 +236,13 @@ if [[ -f casa.log ]]; then
 fi
 
 if [ $installed_from_rpm = "T" ]; then
-    casapy_command="${prefix}/lib/python@python_version@/casapy.py"
+    casapy_command="${prefix}/lib/python@python_version@/$startup"
 else
-    casapy_command="${prefix}/python/@python_version@/casapy.py"
+    casapy_command="${prefix}/lib/python@python_version@/$startup"
 fi
 # echo "DEBUG: casapy_command = $casapy_command"
 
-#exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python/@python_version@/casapy.py $*
+#exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python@python_version@/$startup $*
 if [ ${_dodebug} = "T" ]; then
     echo
     echo "Debugger run command is: run -W ignore::DeprecationWarning ${casapy_command} $*"

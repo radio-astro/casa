@@ -125,7 +125,7 @@ macro( casa_add_tasks module _target )
 
   install( 
     PROGRAMS ${_out_py}
-    DESTINATION python/${PYTHONV} 
+    DESTINATION lib/python${PYTHONV} 
     )
 
   # Create tasksinfo.py
@@ -168,7 +168,7 @@ macro( casa_add_tasks module _target )
   add_dependencies( ${module}_fast tasks_fast )
 
   install(
-    PROGRAMS ${_tasks} ${_tasksinfo} DESTINATION python/${PYTHONV}
+    PROGRAMS ${_tasks} ${_tasksinfo} DESTINATION lib/python${PYTHONV}
     )
 endmacro()
 
@@ -285,7 +285,7 @@ macro( casa_add_tools out_swig out_sources out_py )
                                   ${CASAMPI_LIBRARIES})
 			  #install( FILES ${CMAKE_CURRENT_BINARY_DIR}/_${_base}.so
 			  #${CMAKE_CURRENT_BINARY_DIR}/${_base}.py
-			  #DESTINATION python/${PYTHONV}/casac/${_base} )
+			  #DESTINATION lib/python${PYTHONV}/casac/${_base} )
 
     set( _outputs
 	    ${_base}_cmpt.h
@@ -323,8 +323,8 @@ macro( casa_add_tools out_swig out_sources out_py )
 
   set(${out_sources} ${${out_sources}} ${_initpy} )
   set(${out_sources} ${${out_sources}} ${_casacpy} )
-  install(FILES ${_initpy} DESTINATION  python/${PYTHONV}/__casac__ )
-  install(FILES ${_casacpy} DESTINATION python/${PYTHONV} )
+  install(FILES ${_initpy} DESTINATION  lib/python${PYTHONV}/__casac__ )
+  install(FILES ${_casacpy} DESTINATION lib/python${PYTHONV} )
   
 endmacro( casa_add_tools )
 

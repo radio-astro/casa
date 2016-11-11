@@ -331,6 +331,6 @@ macro( casa_add_pymodule name )
 
   set_target_properties( ${name} PROPERTIES PREFIX "" )
   target_link_libraries( ${name} libtools ${tools_LINK_TO} )
-  install( TARGETS ${name} LIBRARY DESTINATION python/${PYTHONV} )
+  install( TARGETS ${name} LIBRARY DESTINATION lib/python${PYTHONV} )
 
 endmacro()

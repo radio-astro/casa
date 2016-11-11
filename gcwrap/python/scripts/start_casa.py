@@ -1,4 +1,5 @@
 import os
+import sys
 if os.environ.has_key('LD_PRELOAD'):
     del os.environ['LD_PRELOAD']
 
@@ -27,5 +28,16 @@ __init_scripts = [
     "init_welcome.py",
 ]
 
-__startup_scripts = filter( os.path.isfile, map(lambda f: __pylib + '/' + f, __init_scripts ) )
-start_ipython( argv=["-c", "for i in " + str(__startup_scripts) + ": execfile( i )", "-i"] )
+##
+## this is filled via add_shutdown_hook (from casa_shutdown.py)
+##
+casa_shutdown_handlers = [ ]
+
+try:
+    __startup_scripts = filter( os.path.isfile, map(lambda f: __pylib + '/' + f, __init_scripts ) )
+    start_ipython( argv=["-c", "for i in " + str(__startup_scripts) + ": execfile( i )", "-i"] )
+except: pass
+
+### this should (perhaps) be placed in an 'atexit' hook...
+for handler in casa_shutdown_handlers:
+    handler( )

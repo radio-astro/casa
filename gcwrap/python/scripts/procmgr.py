@@ -31,10 +31,8 @@ class procmgr(Thread):
         def stop(self):
             """ stop( ) -> None
             stops the process if it is running"""
-            print "stop -> running: ", self.__running
             if self.__running:
                 self.__running = False
-                print "stop -> set running flag"
                 if self.__proc and self.__proc.poll( ) == None:
                     print "%s => proc %s is being stopped" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
                     try:
@@ -69,6 +67,9 @@ class procmgr(Thread):
                 self.stderr = self.__proc.stderr
 
             self.__running = True
+            ## at this point, processes could automatically be restarted
+            ## (in a loop) if __running is not false when the process
+            ## expires... (as pylot does)
             self.__proc.wait( )
 
 
@@ -92,16 +93,13 @@ class procmgr(Thread):
         tag: identifier for the new process
         cmd: list of strings representing the command followed by the arguments
         with_output: should output be collected (default is to discard output)"""
-        print ">>>>>>======>> ", self.__running
         if self.__running == False: return None
-        print ">>>>>>======>> still good"
         if not isinstance(cmd, (list,str)):
             print "'cmd' is not a list of strings"
             return None
         if self.running(tag):
             print "process with %s tag already exists" % tag
             return None
-        print ">>>>>>======>> ok made it to the real work..."
         self.__procs[tag] = self.proc(tag,cmd,with_output)
         self.__procs[tag].start( )
         sleep(0.1)
@@ -116,10 +114,8 @@ class procmgr(Thread):
 
     def shutdown(self):
         """stops all managed processes"""
-        print "in stop function"
         if self.__running:
             for p in self.__procs:
-                print ">>>>>> ", p
                 self.__procs[p].stop( )
         self.__running = False
 

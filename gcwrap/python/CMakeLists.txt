@@ -19,7 +19,7 @@
 #
 
 #casa_add_executable(tableplot projtable  apps/projtable/projtable.cc)
-casa_add_python( python  casa_python python/${PYTHONV}
+casa_add_python( python  casa_python lib/python${PYTHONV}
 scripts/asap_init.py
 scripts/assignmentFilter.py
 scripts/callibrary.py
@@ -27,6 +27,22 @@ scripts/carta.py
 scripts/casa_in_py.py
 scripts/casa.py
 scripts/casapy.py
+scripts/procmgr.py
+scripts/casa_stack_manip.py
+scripts/casa_shutdown.py
+scripts/start_casa.py
+scripts/init_system.py
+scripts/init_mpi.py
+scripts/init_dbus.py
+scripts/init_tools.py
+scripts/init_logger.py
+scripts/init_funcs.py
+scripts/init_asap.py
+scripts/init_testing.py
+scripts/init_tasks.py
+scripts/init_welcome.py
+scripts/init_user_pre.py
+scripts/init_user_post.py
 scripts/casapy_engine.py
 scripts/caltab_convert2.py
 scripts/check_exceptionhandling.py

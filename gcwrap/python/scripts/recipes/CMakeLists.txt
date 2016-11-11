@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( tools tools_recipes_python python/${PYTHONV}/recipes
+casa_add_python( tools tools_recipes_python lib/python${PYTHONV}/recipes
   almahelpers.py
   almapolhelpers.py
   atcapolhelpers.py

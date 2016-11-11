@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
+casa_add_python( tools tools_tests_python lib/python${PYTHONV}/tests
   __init__.py
   test_admit.py
   test_agentflagger.py

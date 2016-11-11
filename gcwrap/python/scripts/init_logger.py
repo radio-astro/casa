@@ -1,4 +1,3 @@
-logpid=[]
 
 def casalogger(logfile=''):
     """
@@ -19,26 +18,17 @@ def casalogger(logfile=''):
             casa['files']['logfile'] = os.getcwd( ) + '/casa.log'
             logfile = 'casa.log'
 
-    pid=9999
     if (os.uname()[0]=='Darwin'):
         if casa['helpers']['logger'] == 'console':
-           os.system("open -a console " + logfile)
+            casa['procmgr'].create("logger",['/usr/bin/open','-a','console', logfile])
         else:
-           # XCode7 writes debug messages to stderr, which then end up in the
-           # Casa console. Hence the stderr is directed to devnull
-           #pid=os.spawnvp(os.P_NOWAIT,casa['helpers']['logger'],[casa['helpers']['logger'], logfile])
-           DEVNULL = open(os.devnull, 'w')
-           pid = Popen([casa['helpers']['logger'],logfile], stderr=DEVNULL).pid
-           #pid = Popen([casa['helpers']['logger'],logfile], stdin=PIPE, stdout=FNULL, stderr=STDOUT).pid
+            casa['procmgr'].create("logger",[casa['helpers']['logger'],logfile])
 
     elif (os.uname()[0]=='Linux'):
-        pid=os.spawnlp(os.P_NOWAIT,casa['helpers']['logger'],casa['helpers']['logger'],logfile)
+        casa['procmgr'].create("logger",[casa['helpers']['logger'],logfile])
+
     else:
         print 'Unrecognized OS: No logger available'
-
-    if (pid!=9999): logpid.append(pid)
-
-
 
 
 thelogfile = ''

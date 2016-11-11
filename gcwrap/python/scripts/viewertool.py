@@ -7,6 +7,7 @@ import string
 import inspect
 from taskinit import casac       ### needed for regionmanager
 
+
 try:
     import dbus
     try:
@@ -101,32 +102,42 @@ class viewertool(object):
         a=inspect.stack()
         stacklevel=0
         for k in range(len(a)):
-            if a[k][1] == "<string>" or (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
+            if a[k][1].startswith("<ipython-input-") or \
+               a[k][1] == "<string>" or \
+               (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
                       stacklevel=k
 
         myf=sys._getframe(stacklevel).f_globals
 
         viewer_path = None
-        if type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == dict and myf['casa'].has_key('helpers') \
-                and type(myf['casa']['helpers']) == dict and myf['casa']['helpers'].has_key('viewer'):
-            viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
-            if len(os.path.dirname(viewer_path)) == 0:
-                for dir in os.getenv('PATH').split(':') :
-                    dd = dir + os.sep + viewer_path
-                    if os.path.exists(dd) and os.access(dd,os.X_OK) :
-                        viewer_path = dd
+        if type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == dict :
+            if myf['casa'].has_key('helpers') \
+               and type(myf['casa']['helpers']) == dict and myf['casa']['helpers'].has_key('viewer'):
+                viewer_path = myf['casa']['helpers']['viewer']   #### set in casapy.py
+                if len(os.path.dirname(viewer_path)) == 0:
+                    for dir in os.getenv('PATH').split(':') :
+                        dd = dir + os.sep + viewer_path
+                        if os.path.exists(dd) and os.access(dd,os.X_OK) :
+                            viewer_path = dd
+                            break
+                args = [ viewer_path, "--casapy" ]
+            else:
+                for exe in ['casaviewer']:
+                    for dir in os.getenv('PATH').split(':') :
+                        dd = dir + os.sep + exe
+                        if os.path.exists(dd) and os.access(dd,os.X_OK) :
+                            viewer_path = dd
+                            break
+                    if viewer_path is not None:
                         break
-            args = [ viewer_path, "--casapy" ]
-        else:
-            for exe in ['casaviewer']:
-                for dir in os.getenv('PATH').split(':') :
-                    dd = dir + os.sep + exe
-                    if os.path.exists(dd) and os.access(dd,os.X_OK) :
-                        viewer_path = dd
-                        break
-                if viewer_path is not None:
-                    break
-            args = [ viewer_path ]
+                args = [ viewer_path ]
+
+            if myf['casa'].has_key('state') and myf['casa']['state'].has_key('init_version'):
+                if myf['casa']['state']['init_version'] <= 0:
+                    args += [ '--daemon' ]
+            else:
+                args += [ '--daemon' ]
+
 
         if viewer_path == None or not os.access(viewer_path,os.X_OK):
             raise RuntimeError("cannot find casa viewer executable")
@@ -145,8 +156,14 @@ class viewertool(object):
             args += [ "--rcdir=" + myf['casa']['flags']['--rcdir'] ]
 
 	if (os.uname()[0]=='Darwin'):
+            if myf['casa'].has_key('procmgr'):
+                myf['casa']['procmgr'].create(self.__state['dbus name'],args)
+            else:
 		vwrpid=os.spawnvp( os.P_NOWAIT, viewer_path, args )
 	elif (os.uname()[0]=='Linux'):
+            if myf['casa'].has_key('procmgr'):
+                myf['casa']['procmgr'].create(self.__state['dbus name'],args)
+            else:
 		vwrpid=os.spawnlp( os.P_NOWAIT, viewer_path, *args )
 	else:
         	raise Exception,'unrecognized operating system'

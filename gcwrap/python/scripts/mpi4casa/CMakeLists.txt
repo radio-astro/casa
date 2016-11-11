@@ -24,7 +24,7 @@
 
 
 
-casa_add_python( tools tools_mpi4casa_python python/${PYTHONV}/mpi4casa
+casa_add_python( tools tools_mpi4casa_python lib/python${PYTHONV}/mpi4casa
   __init__.py
   MPIEnvironment.py  
   MPICommunicator.py

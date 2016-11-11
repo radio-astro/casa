@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_python( tools tools_regressions_python python/${PYTHONV}/regressions
+casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
   3c129_tutorial_regression.py
   3C219D_regression.py
   3C391polim_regression.py
