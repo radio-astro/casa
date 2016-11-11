@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import cgi
 
 import numpy as np
@@ -19,44 +20,48 @@ def printTsysFlags(tsystable, htmlreport):
     """Method that implements a version of printTsysFlags by Todd Hunter.
     """
     with casatools.TableReader(tsystable) as mytb:
-        spws=mytb.getcol("SPECTRAL_WINDOW_ID")
+        spws = mytb.getcol("SPECTRAL_WINDOW_ID")
         
     with casatools.TableReader(tsystable+"/ANTENNA") as mytb:
-        antNames = mytb.getcol("NAME")
+        ant_names = mytb.getcol("NAME")
 
     with open(htmlreport, 'w') as stream:
         stream.write('<html>')
 
         with casatools.TableReader(tsystable) as mytb:
-            for iant in range(len(antNames)):
+            for iant in range(len(ant_names)):
                 for spw in np.unique(spws):
                     
                     # select rows from table for specified antenna and spw
                     zseltb = mytb.query("SPECTRAL_WINDOW_ID=={0} && ANTENNA1=={1}".format(spw, iant))
-                    flags = zseltb.getcol("FLAG")
+                    try:
+                        flags = zseltb.getcol("FLAG")
+                        times = zseltb.getcol("TIME")
+                        fields = zseltb.getcol("FIELD_ID")
+                    finally:
+                        zseltb.close()
+
                     npol = len(flags)
                     nchan = len(flags[0])
-                    times = zseltb.getcol("TIME")
-                    fields = zseltb.getcol("FIELD_ID")
                     uniqueTimes = np.unique(times)
-                    
+
                     for pol in range(npol):
                         for t in range(len(times)):
-                            zflag=np.where(flags[pol,:,t])[0]
-                            
-                            if (len(zflag) > 0):
-                                if (len(zflag) == nchan):
+                            zflag=np.where(flags[pol, :, t])[0]
+
+                            if len(zflag) > 0:
+                                if len(zflag) == nchan:
                                     chans = 'all channels'
                                 else:
                                     chans = '%d channels: ' % (
                                       len(zflag)) + str(zflag)
-                                
-                                timeIndex = list(uniqueTimes).index(times[t])
-                                myline = antNames[iant] + \
+
+                                time_index = list(uniqueTimes).index(times[t])
+                                myline = ant_names[iant] + \
                                   " (#%02d), field %d, time %d, pol %d, spw %d, "%(
-                                  iant, fields[t], timeIndex, pol, spw) + \
+                                  iant, fields[t], time_index, pol, spw) + \
                                   chans + "<br>\n"
-                                
+
                                 stream.write(myline)
                 
                 # format break between antennas
