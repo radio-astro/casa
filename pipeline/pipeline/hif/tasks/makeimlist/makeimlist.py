@@ -493,6 +493,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                               'imsize': imsizes[(field_intent[0], spwspec)],
                               'phasecenter': phasecenters[field_intent[0]],
                               'specmode': inputs.specmode,
+                              'gridder': self.heuristics.gridder(field_intent[1], field_intent[0]),
                               'imagename': imagenames[(field_intent, spwspec)],
                               'start': inputs.start,
                               'width': widths[(field_intent[0], spwspec)],
