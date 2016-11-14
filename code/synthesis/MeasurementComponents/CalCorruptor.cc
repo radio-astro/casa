@@ -124,12 +124,22 @@ Complex ANoiseCorruptor::simPar() {
   if (currAnt() == currAnt2()){
     return (*nDist_p)()*amp(); // auto-correlation
   }else{
+    // Double randnum1 = (*nDist_p)();
+    // Double randnum2 = (*nDist_p)();
+    // return Complex(randnum1*amp(),randnum2*amp()); // cross-correlation
     return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp()); // cross-correlation
   }
 }
 
 
-ANoiseCorruptor::~ANoiseCorruptor() {};
+ANoiseCorruptor::~ANoiseCorruptor() {
+  if (nDist_p) {
+    delete nDist_p;
+  }
+  if (rndGen_p) {
+    delete rndGen_p;
+  }
+};
 
 
 
