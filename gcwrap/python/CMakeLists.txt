@@ -30,6 +30,7 @@ scripts/casapy.py
 scripts/procmgr.py
 scripts/casa_stack_manip.py
 scripts/casa_shutdown.py
+scripts/casa_builtin.py
 scripts/start_casa.py
 scripts/init_system.py
 scripts/init_mpi.py

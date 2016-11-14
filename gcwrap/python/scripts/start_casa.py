@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 if os.environ.has_key('LD_PRELOAD'):
     del os.environ['LD_PRELOAD']
 
@@ -29,6 +30,12 @@ __init_scripts = [
 ]
 
 ##
+## this is filled via register_builtin (from casa_builtin.py)
+##
+casa_builtins = { }
+casa_builtins_enabled = False
+
+##
 ## this is filled via add_shutdown_hook (from casa_shutdown.py)
 ##
 casa_shutdown_handlers = [ ]
@@ -36,7 +43,11 @@ casa_shutdown_handlers = [ ]
 try:
     __startup_scripts = filter( os.path.isfile, map(lambda f: __pylib + '/' + f, __init_scripts ) )
     start_ipython( argv=["-c", "for i in " + str(__startup_scripts) + ": execfile( i )", "-i"] )
-except: pass
+except:
+    print "Unexpected error:", sys.exc_info()[0]
+    traceback.print_exc(file=sys.stdout)
+    pass
+
 
 ### this should (perhaps) be placed in an 'atexit' hook...
 for handler in casa_shutdown_handlers:

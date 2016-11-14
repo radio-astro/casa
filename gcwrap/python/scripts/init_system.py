@@ -12,7 +12,7 @@ try:
 except ImportError, e:
     print "failed to load matplotlib:\n", e
     print "sys.path =", "\n\t".join(sys.path)
-    
+
 from asap_init import *
 
 
@@ -27,7 +27,8 @@ if homedir == None :
 ##
 import casadef
 utilstool = casac.utils
-cu = casac.cu = utilstool()
+cu = casac.cu = utilstool( )
+
 from procmgr import procmgr
 
 casa = { 'build': {
@@ -58,7 +59,7 @@ casa = { 'build': {
              'xml': None
          },
          'flags': { },
-         'files': { 
+         'files': {
              'logfile': os.getcwd( ) + '/casa-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
          },
          'state' : {

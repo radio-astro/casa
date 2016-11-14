@@ -37,7 +37,7 @@ _af_msg_keys = {
 	types.ObjectType		  : 1,
 	types.InstanceType		  : 1,
 	types.ModuleType		  : 1,
-	"__casac__"				  : 2,
+	"__casac__"			  : 2,
 	"viewertool"                      : 2,
 	"builtin"			  : 3,
 	"parameter"			  : 4
