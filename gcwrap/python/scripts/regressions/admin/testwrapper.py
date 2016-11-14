@@ -19,7 +19,7 @@ PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 DATA_DIR = AIPS_DIR+'/data'
 
-SCRIPT_REPOS=AIPS_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/tests/'
+SCRIPT_REPOS=AIPS_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/tests/'
 
 if not os.access(SCRIPT_REPOS, os.F_OK):
     if os.access(AIPS_DIR+'/lib64', os.F_OK):
