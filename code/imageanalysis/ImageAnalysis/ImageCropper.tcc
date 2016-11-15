@@ -135,6 +135,7 @@ SHARED_PTR<casacore::ImageInterface<T> > ImageCropper<T>::crop(
 		*subImage, lcbox.toRecord(""), "",
 		this->_getLog().get(), casacore::AxesSpecifier(), false, true
 	);
+    this->_reportOldNewImageShapes(*cropped);
 	SHARED_PTR<casacore::ImageInterface<T> > outImage( this->_prepareOutputImage(*cropped));
 	if (! wantReturn) {
 		outImage.reset();
@@ -148,5 +149,4 @@ String ImageCropper<T>::getClass() const {
 }
 
 }
-
 
