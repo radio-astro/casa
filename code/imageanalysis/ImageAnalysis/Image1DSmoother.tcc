@@ -49,18 +49,7 @@ template<class T> SPIIT Image1DSmoother<T>::smooth() const {
     	impr.replace("0", false, false);
     }
     SPIIT smoothed(_smooth(*subImage));
-    vector<String> msgs(2);
-    ostringstream oss;
-    oss << "Original " << this->_getImage()->name() << " size => "
-        << this->_getImage()->shape();
-    msgs[0] = oss.str();
-    oss.str("");
-    oss << "New " << this->_getOutname() << " size => "
-        << smoothed->shape();
-    msgs[1] = oss.str();
-    *this->_getLog() << LogIO::NORMAL << msgs[0] << LogIO::POST;
-    *this->_getLog() << LogIO::NORMAL << msgs[1] << LogIO::POST;
-    this->addHistory(casacore::LogOrigin(getClass(), __func__), msgs);
+    this->_reportOldNewImageShapes(*smoothed);
 	return this->_prepareOutputImage(*smoothed);
 }
 

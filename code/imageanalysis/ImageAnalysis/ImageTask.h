@@ -234,6 +234,8 @@ protected:
 
     template <class U> void _doHistory(SHARED_PTR<casacore::ImageInterface<U>>& image) const;
 
+    void _reportOldNewImageShapes(const ImageInterface<T>& out) const;
+
 private:
     const SPCIIT _image;
     mutable SHARED_PTR<casacore::LogIO> _log = SHARED_PTR<casacore::LogIO>(new casacore::LogIO());
