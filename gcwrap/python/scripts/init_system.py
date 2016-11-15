@@ -1,5 +1,7 @@
+import os
 import sys
 import time
+import argparse
 
 try:
     from casac import casac
@@ -133,3 +135,42 @@ else :
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 if os.path.exists( __casapath__ + "/bin/casapyinfo") :
     casa['helpers']['info'] = __casapath__ + "/bin/casa-config"
+
+class iArgumentParser(argparse.ArgumentParser):
+    '''iPython thinks it knows that a user would never want to
+    exit in any way other than typing "exit" at the command line'''
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, sys.stderr)
+        os._exit(status)
+
+argparser = iArgumentParser(prog="casa",description='Start CASA (Common Astronomy Software Applications)')
+
+argparser.add_argument( '--rcdir',dest='rcdir',default=casa['dirs']['rc'],
+                        help='location for startup files' )
+argparser.add_argument( '--logfile',dest='logfile',default=casa['files']['logfile'],
+                        help='path to log file' )
+argparser.add_argument( "--maclogger",dest='maclogger',action='store_const',const='console',
+                        default=__casapath__+'/'+__casaarch__+'/apps/casalogger.app/Contents/MacOS/casalogger',
+                        help='logger to use on Apple systems' )
+argparser.add_argument( "--log2term",dest='log2term',action='store_const',const=True,default=False,
+                        help='direct output to terminal' )
+argparser.add_argument( "--nologger",dest='nologger',action='store_const',const=True,default=False,
+                        help='do not start CASA logger' )
+argparser.add_argument( "--nologfile",dest='nologfile',action='store_const',const=True,default=False,
+                        help='do not create a log file' )
+argparser.add_argument( "--nogui",dest='nogui',action='store_const',const=True,default=False,
+                        help='avoid starting GUI tools' )
+argparser.add_argument( '--colors', dest='prompt', default='NoColor',
+                        help='prompt color', choices=['NoColor', 'Linux', 'LightBG'] )
+argparser.add_argument( "--pipeline",dest='pipeline',action='store_const',const=True,default=False,
+                        help='start CASA pipeline run' )
+argparser.add_argument( "-c",dest='execute',default=[],nargs='+',
+                        help='python eval string or python script to execute' )
+
+casa['flags'] = argparser.parse_args( )
+#### must keep args in sync with 'casa' state...
+casa['files']['logfile'] = casa['flags'].logfile
+casa['dirs']['rc'] = casa['flags'].rcdir
+
+print casa['flags']

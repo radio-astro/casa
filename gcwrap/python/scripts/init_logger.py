@@ -35,13 +35,10 @@ thelogfile = ''
 
 if casa['files'].has_key('logfile') :
     thelogfile = casa['files']['logfile']
-if casa['flags'].has_key('--nologfile') :
+if casa['flags'].nologfile:
     thelogfile = 'null'
 
 deploylogger = True
-if casa['flags'].has_key('--nolog') :
-    print "--nolog is deprecated, please use --nologger"
-    deploylogger = False
 
 if not os.access('.', os.W_OK) :
     print 
@@ -51,10 +48,10 @@ if not os.access('.', os.W_OK) :
     deploylogger = False
     thelogfile = 'null'
     
-if casa['flags'].has_key('--nologger') :
+if casa['flags'].nologger :
     deploylogger = False
 
-if casa['flags'].has_key('--nogui') :
+if casa['flags'].nogui :
     deploylogger = False
 
 #print 'thelogfile:', thelogfile
@@ -94,7 +91,7 @@ casalog.processorOrigin(processor_origin)
 
 # Log initialization ###################################################################################################
 
-casalog.showconsole(MPIEnvironment.log_to_console or casa['flags'].has_key('--log2term'))
+casalog.showconsole(MPIEnvironment.log_to_console or casa['flags'].log2term)
 try:
     casalog.post("CASA Version " + casa['build']['version'])
 except:

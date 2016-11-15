@@ -34,10 +34,11 @@ if __casa.has_key('state') and __casa['state'].has_key('init_version') and __cas
             return node
         def visit_Assign(self, node):
             for n in node.targets:
-                if __builtins__.has_key(n.id):
-                    raise InputRejected("attempt to modify a python builtin value")
-                if self.casa_builtins.has_key(n.id):
-                    raise InputRejected("attempt to modify a casa builtin value")
+                if not isinstance(n,ast.Attribute):
+                    if __builtins__.has_key(n.id):
+                        raise InputRejected("attempt to modify a python builtin value")
+                    if self.casa_builtins.has_key(n.id):
+                        raise InputRejected("attempt to modify a casa builtin value")
             return node
         def visit_Lambda(self, node):
             return node
