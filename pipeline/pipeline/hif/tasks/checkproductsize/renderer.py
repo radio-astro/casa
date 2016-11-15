@@ -38,22 +38,22 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
         if result.size_mitigation_parameters.has_key('nbins'):
             nbins = result.size_mitigation_parameters['nbins']
         else:
-            nbins = ''
+            nbins = 'default'
 
         if result.size_mitigation_parameters.has_key('sfpblimit'):
             sfpblimit = str(result.size_mitigation_parameters['sfpblimit'])
         else:
-            sfpblimit = ''
+            sfpblimit = 'default'
 
         if result.size_mitigation_parameters.has_key('pixperbeam'):
             pixperbeam = str(result.size_mitigation_parameters['pixperbeam'])
         else:
-            pixperbeam = ''
+            pixperbeam = 'default'
 
         if result.size_mitigation_parameters.has_key('field'):
             field = str(result.size_mitigation_parameters['field'])
         else:
-            field = ''
+            field = 'default'
 
         rows = [TR(nbins=nbins, sfpblimit=sfpblimit, pixperbeam=pixperbeam, field=field)]
 
