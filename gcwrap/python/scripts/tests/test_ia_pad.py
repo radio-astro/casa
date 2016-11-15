@@ -224,8 +224,8 @@ class ia_pad_test(unittest.TestCase):
         myia.done()
         msgs = bb.history()
         bb.done()
-        self.assertTrue("ia.pad" in msgs[-2])
-        self.assertTrue("ia.pad" in msgs[-1])
+        self.assertTrue("ia.pad" in msgs[-4])
+        self.assertTrue("ia.pad" in msgs[-3])
 
 def suite():
     return [ia_pad_test]
