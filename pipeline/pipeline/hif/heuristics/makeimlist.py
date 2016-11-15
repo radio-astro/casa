@@ -278,6 +278,7 @@ class MakeImListHeuristics(object):
                 aipsfieldofview = '%4.1farcsec' % (2.0 * beam)
                 rtn = casatools.imager.advise(takeadvice=False,
                   amplitudeloss=0.5, fieldofview=aipsfieldofview)
+                casatools.imager.done()
                 if not rtn[0]:
                     # advise can fail if all selected data are flagged
                     # - not documented but assuming bool in first field of returned

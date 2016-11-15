@@ -48,7 +48,10 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def field(self):
-        return self._field
+        if (self._field is None) and ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('field'):
+            return self.context.size_mitigation_parameters['field']
+        else:
+            return self._field
 
     @field.setter
     def field(self, value):
@@ -121,7 +124,10 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def sfpblimit(self):
-        return self._sfpblimit
+        if (self._sfpblimit is None) and ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('sfpblimit'):
+            return self.context.size_mitigation_parameters['sfpblimit']
+        else:
+            return self._sfpblimit
 
     @sfpblimit.setter
     def sfpblimit(self, value):
@@ -147,7 +153,10 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def pixperbeam(self):
-        return self._pixperbeam
+        if (self._pixperbeam is None) and ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('pixperbeam'):
+            return self.context.size_mitigation_parameters['pixperbeam']
+        else:
+            return self._pixperbeam
 
     @pixperbeam.setter
     def pixperbeam(self, value):
@@ -219,7 +228,10 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def nbins(self):
-        return self._nbins
+        if (self._nbins is None) and ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('nbins'):
+            return self.context.size_mitigation_parameters['nbins']
+        else:
+            return self._nbins
 
     @nbins.setter
     def nbins(self, value):

@@ -63,6 +63,9 @@ class CheckProductSize(basetask.StandardTaskTemplate):
     def prepare(self):
         checkproductsize_heuristics = checkproductsize.CheckProductSizeHeuristics(self.inputs)
 
+        # Clear any previous size mitigation parameters
+        self.inputs.context.size_mitigation_parameters = {}
+
         size_mitigation_parameters, maxcubesize, productsize, error, reason = checkproductsize_heuristics.mitigate_sizes()
 
         if error:
