@@ -844,7 +844,7 @@ template<class T> void UVContSubtractionDenoisingKernel<T>::kernelCore(	Vector<T
 																		Vector<Float> &inputWeights,
 																		Vector<T> &outputVector)
 {
-	/*
+
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	fitter_p.calcFitCoeff(inputVector);
 
@@ -853,8 +853,8 @@ template<class T> void UVContSubtractionDenoisingKernel<T>::kernelCore(	Vector<T
 
 	outputVector = inputVector;
 	outputVector -= model;
-	*/
 
+	/*
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	Vector<T> coeff = fitter_p.calcFitCoeff(inputVector);
 
@@ -868,6 +868,7 @@ template<class T> void UVContSubtractionDenoisingKernel<T>::kernelCore(	Vector<T
 			outputVector(chan_idx) -= (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
 		}
 	}
+	*/
 
 	/*
 	if (debug_p)
@@ -930,12 +931,11 @@ template<class T> void UVContEstimationDenoisingKernel<T>::kernelCore(	Vector<T>
 																		Vector<Float> &inputWeights,
 																		Vector<T> &outputVector)
 {
-	/*
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	fitter_p.calcFitCoeff(inputVector);
 	fitter_p.calcFitModel(outputVector);
-	*/
 
+	/*
 	fitter_p.setWeightsAndFlags(inputWeights,inputFlags);
 	Vector<T> coeff = fitter_p.calcFitCoeff(inputVector);
 
@@ -948,6 +948,7 @@ template<class T> void UVContEstimationDenoisingKernel<T>::kernelCore(	Vector<T>
 			outputVector(chan_idx) += (freqPows_p(order_idx,chan_idx))*coeff(order_idx);
 		}
 	}
+	*/
 
 	return;
 }

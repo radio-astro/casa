@@ -189,6 +189,18 @@ public:
 		return coeffCASA;
 	}
 
+	void getFitCoeff(Vector<Complex> &coeff);
+	template<class T> void getFitCoeff(Vector<T> &coeff)
+	{
+		coeff.resize(ncomponents_p,False);
+		for (size_t model_idx=0;model_idx<ncomponents_p;model_idx++)
+		{
+			coeff(model_idx) = gsl_vector_get(gsl_coeff_real_p,model_idx);
+		}
+
+		return;
+	}
+
 	void calcFitModelStd(Vector<Complex> &model,Vector<Complex> &std);
 	template<class T> void calcFitModelStd(	Vector<T> &model, Vector<T> &std)
 	{
@@ -197,18 +209,10 @@ public:
 		return;
 	}
 
+	void calcFitModel(Vector<Complex> &model);
 	template<class T> void calcFitModel(Vector<T> &model)
 	{
-		Vector<T> std;
-		calcFitModelStd(model, std);
-
-		return;
-	}
-
-	template<class T> void calcFitStd(Vector<T> &std)
-	{
-		Vector<T> model;
-		calcFitModelStd(model, std);
+		calcFitModelCore(model,gsl_coeff_real_p);
 
 		return;
 	}
@@ -226,6 +230,7 @@ protected:
 	void setData(Vector<Complex> &data);
 
 	virtual void calcFitCoeffCore(Vector<Double> data, gsl_vector* coeff);
+
 	template<class T> void calcFitModelStdCore(	Vector<T> &model, Vector<T> &std, gsl_vector *coeff)
 	{
 		// Get imag coefficients
@@ -243,6 +248,29 @@ protected:
 
 			if (model.size() > 0) model(data_idx) = y;
 			if (std.size() > 0 ) std(data_idx) = yerr;
+		}
+
+		return;
+	}
+
+	template<class T> void calcFitModelCore(Vector<T> &model, gsl_vector *coeff)
+	{
+		Double coeff_i;
+		Matrix<Double> &modelMatrix = model_p->getModelMatrix();
+
+		coeff_i = gsl_vector_get(coeff,0);
+		for (size_t data_idx=0; data_idx<ndata_p; data_idx++)
+		{
+			model(data_idx) = coeff_i*modelMatrix(0,data_idx);
+		}
+
+		for (size_t model_idx=0;model_idx<ncomponents_p;model_idx++)
+		{
+			coeff_i = gsl_vector_get(coeff,model_idx);
+			for (size_t data_idx=0; data_idx<ndata_p; data_idx++)
+			{
+				model(data_idx) = coeff_i*modelMatrix(model_idx,data_idx);
+			}
 		}
 
 		return;

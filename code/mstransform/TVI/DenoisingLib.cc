@@ -295,6 +295,34 @@ void GslMultifitLinearBase::calcFitModelStd(Vector<Complex> &model,Vector<Comple
 	return;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void GslMultifitLinearBase::calcFitModel(Vector<Complex> &model)
+{
+	Complex coeff_i;
+	Matrix<Double> &modelMatrix = model_p->getModelMatrix();
+
+	coeff_i = Complex(gsl_vector_get(gsl_coeff_real_p,0),
+			gsl_vector_get(gsl_coeff_imag_p,0));
+	for (size_t data_idx=0; data_idx<ndata_p; data_idx++)
+	{
+		model(data_idx) = coeff_i*modelMatrix(0,data_idx);
+	}
+
+	for (size_t model_idx=1;model_idx<ncomponents_p;model_idx++)
+	{
+		coeff_i = Complex(gsl_vector_get(gsl_coeff_real_p,model_idx),
+				gsl_vector_get(gsl_coeff_imag_p,model_idx));
+		for (size_t data_idx=0; data_idx<ndata_p; data_idx++)
+		{
+			model(data_idx) += coeff_i*modelMatrix(model_idx,data_idx);
+		}
+	}
+
+	return;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // GslMultifitWeightedLinear class
 //////////////////////////////////////////////////////////////////////////
@@ -484,8 +512,7 @@ void IterativelyReweightedLeastSquares::calcFitCoeffCore(Vector<Double> data, gs
 		gsl_vector reweights_gsl;
 		GslVectorWrap(reweights,reweights_gsl);
 
-		// Create vectors to store model & std
-		Vector<Double> std(ndata_p);
+		// Create vectors to store model
 		Vector<Double> model(ndata_p);
 
 		// Iterative process
@@ -498,7 +525,7 @@ void IterativelyReweightedLeastSquares::calcFitCoeffCore(Vector<Double> data, gs
 			if (iter<nIter_p-1)
 			{
 				// Calculate output std
-				calcFitModelStdCore(model,std,coeff);
+				calcFitModelCore(model,coeff);
 
 				// Update weights
 				updateWeights(data,model,reweights);
@@ -514,7 +541,7 @@ void IterativelyReweightedLeastSquares::calcFitCoeffCore(Vector<Double> data, gs
 // -----------------------------------------------------------------------
 void IterativelyReweightedLeastSquares::updateWeights(Vector<Double> &data, Vector<Double> &model,  Vector<Double> &weights)
 {
-	double reWeight, currentResidual, maxResidual;
+	double currentResidual, maxResidual;
 
 	// Find max residual
 	maxResidual = 0;
