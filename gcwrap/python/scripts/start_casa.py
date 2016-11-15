@@ -33,7 +33,6 @@ __init_scripts = [
 ## this is filled via register_builtin (from casa_builtin.py)
 ##
 casa_builtins = { }
-casa_builtins_enabled = False
 
 ##
 ## this is filled via add_shutdown_hook (from casa_shutdown.py)
