@@ -40,26 +40,66 @@ class SingleDishSkyCalDisplayBase(object):
     def _update_figfile(self):
         raise NotImplementedError()
 
-
-class SingleDishSkyCalAmpVsFreqSummaryChart(bandpass.BandpassAmpVsFreqSummaryChart, SingleDishSkyCalDisplayBase):
+class SingleDishSkyCalAmpVsFreqSummaryChart(common.PlotbandpassDetailBase, SingleDishSkyCalDisplayBase):
     def __init__(self, context, result, field):
-        super(SingleDishSkyCalAmpVsFreqSummaryChart, self).__init__(context, result)
-        
+        super(SingleDishSkyCalAmpVsFreqSummaryChart, self).__init__(context, result, 
+                                                                    'freq', 'amp', 
+                                                                    showatm=True,
+                                                                    overlay='antenna',
+                                                                    solutionTimeThresholdSeconds=3600.)
+
+        self.spw_ids = self._figfile.keys()
+        self._figfile = dict(((spw_id, self._figfile[spw_id][0]) \
+                              for spw_id in self.spw_ids))
         self.init_with_field(context, result, field)
-         
+        
     def plot(self):
-        self._kwargs['timeranges'] = '0'
-        
-        wrappers = super(SingleDishSkyCalAmpVsFreqSummaryChart, self).plot()
-         
-        self.add_field_identifier(wrappers)
-        
+        missing = [spw_id
+                   for spw_id in self.spw_ids
+                   if not os.path.exists(self._figfile[spw_id])]
+        if missing:
+            LOG.trace('Executing new plotbandpass job for missing figures')
+            #ant_ids = ','.join([str(ant_id) for ant_id in missing])
+            for spw_id in missing:
+                try:
+                    task = self.create_task(spw_id, '')
+                    task.execute(dry_run=False)
+                except Exception as ex:
+                    LOG.error('Could not create plotbandpass summary plots')
+                    LOG.exception(ex)
+                    return None
+
+        wrappers = []
+        for spw_id, figfile in self._figfile.items():
+            print 'create plot for', spw_id
+            if os.path.exists(figfile):
+                print figfile, 'exists'
+                task = self.create_task(spw_id, '')
+                wrapper = logger.Plot(figfile,
+                                      x_axis=self._xaxis,
+                                      y_axis=self._yaxis,
+                                      parameters={'vis' : self._vis_basename,
+                                                  'spw' : spw_id,
+                                                  'field' : self.field_name},
+                                      command=str(task))
+                wrappers.append(wrapper)
+            else:
+                LOG.trace('No plotbandpass summary plot found for spw '
+                          '%s' % spw_id)
+                
         return wrappers
-    
+
     def _update_figfile(self, old_prefix, new_prefix):
-        for (ant_id, figfiles) in self._figfile.items():
-            self._figfile[ant_id] = map(lambda x: x.replace(old_prefix, new_prefix), figfiles)
-        
+        for (spw_id, figfile) in self._figfile.items():
+            self._figfile[spw_id] = figfile.replace(old_prefix, new_prefix)
+            spw_indicator = 'spw{}'.format(spw_id)
+            pieces = self._figfile[spw_id].split('.')
+            try:
+                spw_index = pieces.index(spw_indicator)
+            except:
+                spw_index = -3
+            pieces.pop(spw_index - 1)
+            self._figfile[spw_id] = '.'.join(pieces)
     
 class SingleDishSkyCalAmpVsFreqDetailChart(bandpass.BandpassDetailChart, SingleDishSkyCalDisplayBase):
     def __init__(self, context, result, field):
