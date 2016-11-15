@@ -150,27 +150,19 @@ class SingleDishPlotmsLeaf(object):
             self.field_id = fields[0].id
         LOG.debug('field: ID %s Name \'%s\''%(self.field_id, self.field_name))
 
-        ants = ms.get_antenna(self.antenna)
-        assert len(ants) == 1
-        self.antenna_name = ants[0].name
-        self.antenna_id = ants[0].id
-        self.antenna_selection = '{antenna}&&&'.format(antenna=self.antenna_name)
-        LOG.debug('antenna: ID %s Name \'%s\''%(self.antenna_id, self.antenna_name))
+        self.antenna_selection = '*&&&'
 
         self._figroot = os.path.join(context.report_dir, 
                                      'stage%s' % result.stage_number)
         
     def plot(self):
-        prefix = '{caltable}-{y}_vs_{x}-{field}-{antenna}'.format(caltable=os.path.basename(self.caltable), 
-                                                                  y=self.yaxis, x=self.xaxis,
-                                                                  field=self.field_name,
-                                                                  antenna=self.antenna_name)
-        title = '{caltable} \nField "{field}" Antenna {antenna}'.format(caltable=os.path.basename(self.caltable), 
-                                                                    field=self.field_name,
-                                                                    antenna=self.antenna_name)
-        if len(self.spw) > 0:
-            prefix += '-spw{spw}'.format(spw=self.spw)
-            title += ' Spw {spw}'.format(spw=self.spw)
+        prefix = '{caltable}-{y}_vs_{x}-{field}-spw{spw}'.format(caltable=os.path.basename(self.caltable), 
+                                                              y=self.yaxis, x=self.xaxis,
+                                                              field=self.field_name,
+                                                              spw=self.spw)
+        title = '{caltable} \nField "{field}" Spw {spw}'.format(caltable=os.path.basename(self.caltable), 
+                                                                field=self.field_name,
+                                                                spw=self.spw)
             
         figfile = os.path.join(self._figroot, '{prefix}.png'.format(prefix=prefix))
         
@@ -201,7 +193,7 @@ class SingleDishPlotmsLeaf(object):
     
     def _get_plot_object(self, figfile, task):
         parameters = {'vis': os.path.basename(self.vis),
-                      'ant': self.antenna_name,
+                      'ant': '',
                       'spw': self.spw,
                       'field': self.field_name}
         
@@ -221,11 +213,11 @@ class SingleDishPlotmsSpwComposite(common.SpwComposite):
 class SingleDishPlotmsAntSpwComposite(common.AntSpwComposite):
     leaf_class = SingleDishPlotmsSpwComposite
     
-class SingleDishSkyCalAmpVsTimeSummaryChart(SingleDishPlotmsAntComposite):
+class SingleDishSkyCalAmpVsTimeSummaryChart(SingleDishPlotmsSpwComposite):
     def __init__(self, context, result, calapp):
         super(SingleDishSkyCalAmpVsTimeSummaryChart, self).__init__(context, result, calapp,
                                                                     xaxis='time', yaxis='amp', 
-                                                                    coloraxis='spw')
+                                                                    coloraxis='ant1')
         
 class SingleDishSkyCalAmpVsTimeDetailChart(SingleDishPlotmsAntSpwComposite):
     def __init__(self, context, result, calapp):
