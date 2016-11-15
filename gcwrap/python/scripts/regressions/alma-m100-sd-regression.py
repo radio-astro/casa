@@ -341,20 +341,20 @@ st = imstat('M100_SD_cube_PM_03_04.image')
 #imquartile = 0.021630318835377693
 #imsumsq = 22.0320119621645
 ### MS tasks ###
-immax = 0.15019595623
-immin = -0.0556886419654
-imrms = 0.024000922218
-imflux = 188881.24609082
-immean = 0.007754794884
-immedian = 0.00354075804353
+immax = 0.149762198329
+immin = -0.0560916438699
+imrms = 0.0239948061386
+imflux = 188834.785818
+immean = 0.00775288738976
+immedian = 0.00352751777973
 imnpts = 38360.0
-imsum = 297.47393175
-imsigma = 0.0227138921074
-immedabsdevmed = 0.010545257479
-imquartile = 0.0216008159332
-imsumsq = 22.0970589225
-immaxpos = numpy.array([26, 27,  0, 49])
-imminpos = numpy.array([27, 37,  0, 23])
+imsum = 297.400760271
+imsigma = 0.0227080800888
+immedabsdevmed = 0.0105304607423
+imquartile = 0.0215698019601
+imsumsq = 22.0857976817
+immaxpos = numpy.array([26, 27, 0, 49])
+imminpos = numpy.array([14, 27, 0, 64])
 
 
 """
