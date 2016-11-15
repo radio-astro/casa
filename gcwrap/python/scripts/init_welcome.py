@@ -23,6 +23,13 @@ if casa['flags'].execute:
         @contextlib.contextmanager
         def redirect_argv(args):
             sys._argv = sys.argv[:]
+            ###
+            ### this could be cleaned up to be just:
+            ###
+            ###    sys.argv = ['somescript.py', arg1, arg2...]
+            ###
+            ### but casa scripts seem to have been
+            ### expecting the 'casa' arg as well as the '-c' arg
             sys.argv=['casa','-c'] + args
             sys._save_exit = sys.exit
             sys.exit=redirect_exit
