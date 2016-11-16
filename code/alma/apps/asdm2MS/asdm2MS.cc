@@ -1968,11 +1968,12 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	ScalarColumn<casacore::Double> Rho(*table_p, "Rho");
 	Rho.putColumnRange(slicer, Rho_V);
       
-	
-	LOG ("Filling column RadVel");
-	Vector<casacore::Double> RadVel_V(IPosition(1, numRows), &radVelMS_v[0], SHARE);
-	ScalarColumn<casacore::Double> RadVel(*table_p, "RadVel");
-	RadVel.putColumnRange(slicer, RadVel_V);
+	if (radVelExists) {
+	  LOG ("Filling column RadVel");
+	  Vector<casacore::Double> RadVel_V(IPosition(1, numRows), &radVelMS_v[0], SHARE);
+	  ScalarColumn<casacore::Double> RadVel(*table_p, "RadVel");
+	  RadVel.putColumnRange(slicer, RadVel_V);
+	}
       
 	infostream.str("");
 	infostream << "converted in " << table_p->nrow() << " ephemeris rows in the table '" << table_p->tableName() << "'.";
