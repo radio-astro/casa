@@ -113,7 +113,10 @@ void CalCorruptor::setCurrTime(const Double& time) {
     if (currAnt() == currAnt2()){
       return (*nDist_p)()*amp(); // auto-correlation
     }else{
-      return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp()); // cross-correlation
+      // work-around to assure consistent random number sequence on different architectures.
+      Double randR = (*nDist_p)();
+      Double randI = (*nDist_p)();
+      return Complex(randR*amp(),randI*amp()); // cross-correlation
     }
   } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in AnoiseCorruptor::simPar(vi,type,ipar)"));
 }
@@ -124,10 +127,10 @@ Complex ANoiseCorruptor::simPar() {
   if (currAnt() == currAnt2()){
     return (*nDist_p)()*amp(); // auto-correlation
   }else{
-    // Double randnum1 = (*nDist_p)();
-    // Double randnum2 = (*nDist_p)();
-    // return Complex(randnum1*amp(),randnum2*amp()); // cross-correlation
-    return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp()); // cross-correlation
+    // work-around to assure consistent random number sequence on different architectures.
+    Double randR = (*nDist_p)();
+    Double randI = (*nDist_p)();
+    return Complex(randR*amp(),randI*amp()); // cross-correlation
   }
 }
 
@@ -147,7 +150,10 @@ ANoiseCorruptor::~ANoiseCorruptor() {
 
   Complex DJonesCorruptor::simPar(const VisIter& /*vi*/, VisCal::Type type,Int ipar) {
   if (type==VisCal::D) {
-    Complex g((*nDist_p)()*camp().real(),(*nDist_p)()*camp().imag());    
+    // work-around to assure consistent random number sequence on different architectures.
+    Double randR = (*nDist_p)();
+    Double randI = (*nDist_p)();
+    Complex g(randR*camp().real(),randI*camp().imag());    
     if (prtlev()>5) cout << "D::simPar ";    
     if (ipar>0) {
       g += Complex(-offset().real(),offset().imag());
@@ -1178,7 +1184,10 @@ void fBM::initialize(const Int seed, const Float beta) {
     if (mode()=="fbm") {
       return gain(ipar,focusChan());
     } else if (mode()=="random") {
-      return Complex((*nDist_p)()*camp().real(),(*nDist_p)()*camp().imag());    
+      // work-around to assure consistent random number sequence on different architectures.
+      Double randR = (*nDist_p)();
+      Double randI = (*nDist_p)();
+      return Complex(randR*camp().real(),randI*camp().imag());    
     } else throw(AipsError("unknown corruptor mode "+mode()));
   } else  throw(AipsError("GCorruptor: incompatible VisCal type "+VisCal::nameOfType(type)));
 }
