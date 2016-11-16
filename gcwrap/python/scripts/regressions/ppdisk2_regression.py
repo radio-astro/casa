@@ -101,24 +101,19 @@ ia.close()
 #             'min': -1.6e-04, 
 #             'rms': 1.9e-04,
 #             'sigma': 1.4e-04 }
-# refstats = { 'flux': 0.0367,
-#              'max': 6.2e-04,
-#              'min': -1.75e-04, 
-#              'rms': 1.9e-04,
-#              'sigma': 1.36e-04 }
-# r38537
-refstats = { 'flux': 0.03588313,
-             'max': 6.0579e-04,
-             'min': -1.5679e-04, 
-             'rms': 1.9189e-04,
-             'sigma': 1.3794e-04 }
+# r38847
+refstats = { 'flux': 0.036714,
+             'max': 0.00061958,
+             'min': -0.0001894,
+             'rms': 0.0001925,
+             'sigma': 0.00013576 }
 
 
-reftol   = {'flux':  0.05,
-            'max':   0.1,
-            'min':   0.1,
-            'rms':   0.1,
-            'sigma': 0.1}
+reftol   = {'flux':  0.01,
+            'max':   0.02,
+            'min':   0.02,
+            'rms':   0.01,
+            'sigma': 0.01}
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
