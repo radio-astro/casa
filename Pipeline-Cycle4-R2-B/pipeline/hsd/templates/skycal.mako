@@ -100,7 +100,7 @@ $(document).ready(function() {
         vis = ms.basename 
         subpage = os.path.join(dirname, amp_vs_freq_subpages[vis])
     %>
-    <h4><a class="replace" href="${subpage}">${vis}</a></h4>
+    <h4><a class="replace" href="${subpage}" data-vis="${vis}">${vis}</a></h4>
     % for plot in summary_amp_vs_freq[vis]:
         % if os.path.exists(plot.thumbnail):
             <% 
@@ -138,7 +138,7 @@ $(document).ready(function() {
         vis = ms.basename 
         subpage = os.path.join(dirname, amp_vs_time_subpages[vis])
     %>
-    <h4><a class="replace" href="${subpage}">${vis}</a></h4>
+    <h4><a class="replace" href="${subpage}" data-vis="${vis}">${vis}</a></h4>
     % for plot in summary_amp_vs_time[vis]:
         % if os.path.exists(plot.thumbnail):
             <% 
