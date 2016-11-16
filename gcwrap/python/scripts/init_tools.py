@@ -175,7 +175,7 @@ parallelimager = casac.parallelimager()
 from viewertool import viewertool
 try:
     ving = viewertool( False )
-    if casa['flags'].has_key('--nogui') :
+    if casa['flags'].nogui :
         vi = ving
     else:
         vi = viewertool( True )

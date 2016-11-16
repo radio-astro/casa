@@ -46,6 +46,7 @@ if casa['flags'].execute:
 else:
     from casa_builtin import enable_builtin_protection,register_builtin
 
+    register_builtin("casa")
     register_builtin("cu")
     register_builtin(["viewer","imview","msview"])
 

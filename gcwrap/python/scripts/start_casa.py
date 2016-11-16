@@ -16,6 +16,7 @@ from IPython import start_ipython
 __pylib = os.path.dirname(os.path.realpath(__file__))
 __init_scripts = [
     "init_system.py",
+    "init_crashrpt.py",
     "init_user_pre.py",
     "init_mpi.py",
     "init_dbus.py",
@@ -24,6 +25,7 @@ __init_scripts = [
     "init_tasks.py",
     "init_funcs.py",
     "init_asap.py",
+    "init_pipeline.py",
     "init_testing.py",
     "init_user_post.py",
     "init_welcome.py",
