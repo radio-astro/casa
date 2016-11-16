@@ -106,24 +106,25 @@ $(document).ready(function() {
             <% 
                 img_path = os.path.relpath(plot.abspath, pcontext.report_dir)
                 thumbnail_path = os.path.relpath(plot.thumbnail, pcontext.report_dir)
-                ant = plot.parameters['ant']
+                spw = plot.parameters['spw']
                 field = plot.parameters['field']
             %>
  	        <div class="col-md-3">
 	            <div class="thumbnail">
 	                <a href="${img_path}" class="fancybox" rel="thumbs">
 	                    <img src="${thumbnail_path}"
-	                         title="Sky level summary for Field ${field}, Antenna ${ant}"
+	                         title="Sky level summary for Field ${field}, Spw ${spw}"
 	                         data-thumbnail="${thumbnail_path}">
 	                </a>
 	                <div class="caption">
 	                    <h4>
-	                        <a href="${subpage}" class="replace" data-field="${field}" data-ant="${ant}">
-	                           Field ${field} Antenna ${ant}
+	                        <a href="${subpage}" class="replace" 
+	                           data-vis="${vis}" data-field="${field}" data-spw="${spw}">
+	                           Field ${field} Spw ${spw}
 	                        </a>
 	                    </h4>
 	
-	                    <p>Plot of sky level vs frequency for field ${field}, antenna ${ant}.</p>
+	                    <p>Plot of sky level vs frequency for field ${field}, spw ${spw}.</p>
 	                </div>
 	            </div>
 	        </div>
@@ -144,24 +145,25 @@ $(document).ready(function() {
             <% 
                 img_path = os.path.relpath(plot.abspath, pcontext.report_dir)
                 thumbnail_path = os.path.relpath(plot.thumbnail, pcontext.report_dir)
-                ant = plot.parameters['ant']
+                spw = plot.parameters['spw']
                 field = plot.parameters['field']
             %>
  	        <div class="col-md-3">
 	            <div class="thumbnail">
 	                <a href="${img_path}" class="fancybox" rel="thumbs">
 	                    <img src="${thumbnail_path}"
-	                         title="Sky level summary for Field ${field}, Antenna ${ant}"
+	                         title="Sky level summary for Field ${field}, Spw ${spw}"
 	                         data-thumbnail="${thumbnail_path}">
 	                </a>
 	                <div class="caption">
 	                    <h4>
-	                        <a href="${subpage}" class="replace" data-field="${field}" data-ant="${ant}">
-	                           Field ${field} Antenna ${ant}
+	                        <a href="${subpage}" class="replace" 
+	                           data-vis="${vis}" data-field="${field}" data-spw="${spw}">
+	                           Field ${field} Spw ${spw}
 	                        </a>
 	                    </h4>
 	
-	                    <p>Plot of sky level vs time for field ${field}, antenna ${ant}.</p>
+	                    <p>Plot of sky level vs time for field ${field}, spw ${spw}.</p>
 	                </div>
 	            </div>
 	        </div>

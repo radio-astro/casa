@@ -40,26 +40,66 @@ class SingleDishSkyCalDisplayBase(object):
     def _update_figfile(self):
         raise NotImplementedError()
 
-
-class SingleDishSkyCalAmpVsFreqSummaryChart(bandpass.BandpassAmpVsFreqSummaryChart, SingleDishSkyCalDisplayBase):
+class SingleDishSkyCalAmpVsFreqSummaryChart(common.PlotbandpassDetailBase, SingleDishSkyCalDisplayBase):
     def __init__(self, context, result, field):
-        super(SingleDishSkyCalAmpVsFreqSummaryChart, self).__init__(context, result)
-        
+        super(SingleDishSkyCalAmpVsFreqSummaryChart, self).__init__(context, result, 
+                                                                    'freq', 'amp', 
+                                                                    showatm=True,
+                                                                    overlay='antenna',
+                                                                    solutionTimeThresholdSeconds=3600.)
+
+        self.spw_ids = self._figfile.keys()
+        self._figfile = dict(((spw_id, self._figfile[spw_id][0]) \
+                              for spw_id in self.spw_ids))
         self.init_with_field(context, result, field)
-         
+        
     def plot(self):
-        self._kwargs['timeranges'] = '0'
-        
-        wrappers = super(SingleDishSkyCalAmpVsFreqSummaryChart, self).plot()
-         
-        self.add_field_identifier(wrappers)
-        
+        missing = [spw_id
+                   for spw_id in self.spw_ids
+                   if not os.path.exists(self._figfile[spw_id])]
+        if missing:
+            LOG.trace('Executing new plotbandpass job for missing figures')
+            #ant_ids = ','.join([str(ant_id) for ant_id in missing])
+            for spw_id in missing:
+                try:
+                    task = self.create_task(spw_id, '')
+                    task.execute(dry_run=False)
+                except Exception as ex:
+                    LOG.error('Could not create plotbandpass summary plots')
+                    LOG.exception(ex)
+                    return None
+
+        wrappers = []
+        for spw_id, figfile in self._figfile.items():
+            print 'create plot for', spw_id
+            if os.path.exists(figfile):
+                print figfile, 'exists'
+                task = self.create_task(spw_id, '')
+                wrapper = logger.Plot(figfile,
+                                      x_axis=self._xaxis,
+                                      y_axis=self._yaxis,
+                                      parameters={'vis' : self._vis_basename,
+                                                  'spw' : spw_id,
+                                                  'field' : self.field_name},
+                                      command=str(task))
+                wrappers.append(wrapper)
+            else:
+                LOG.trace('No plotbandpass summary plot found for spw '
+                          '%s' % spw_id)
+                
         return wrappers
-    
+
     def _update_figfile(self, old_prefix, new_prefix):
-        for (ant_id, figfiles) in self._figfile.items():
-            self._figfile[ant_id] = map(lambda x: x.replace(old_prefix, new_prefix), figfiles)
-        
+        for (spw_id, figfile) in self._figfile.items():
+            self._figfile[spw_id] = figfile.replace(old_prefix, new_prefix)
+            spw_indicator = 'spw{}'.format(spw_id)
+            pieces = self._figfile[spw_id].split('.')
+            try:
+                spw_index = pieces.index(spw_indicator)
+            except:
+                spw_index = -3
+            pieces.pop(spw_index - 1)
+            self._figfile[spw_id] = '.'.join(pieces)
     
 class SingleDishSkyCalAmpVsFreqDetailChart(bandpass.BandpassDetailChart, SingleDishSkyCalDisplayBase):
     def __init__(self, context, result, field):
@@ -110,27 +150,19 @@ class SingleDishPlotmsLeaf(object):
             self.field_id = fields[0].id
         LOG.debug('field: ID %s Name \'%s\''%(self.field_id, self.field_name))
 
-        ants = ms.get_antenna(self.antenna)
-        assert len(ants) == 1
-        self.antenna_name = ants[0].name
-        self.antenna_id = ants[0].id
-        self.antenna_selection = '{antenna}&&&'.format(antenna=self.antenna_name)
-        LOG.debug('antenna: ID %s Name \'%s\''%(self.antenna_id, self.antenna_name))
+        self.antenna_selection = '*&&&'
 
         self._figroot = os.path.join(context.report_dir, 
                                      'stage%s' % result.stage_number)
         
     def plot(self):
-        prefix = '{caltable}-{y}_vs_{x}-{field}-{antenna}'.format(caltable=os.path.basename(self.caltable), 
-                                                                  y=self.yaxis, x=self.xaxis,
-                                                                  field=self.field_name,
-                                                                  antenna=self.antenna_name)
-        title = '{caltable} \nField "{field}" Antenna {antenna}'.format(caltable=os.path.basename(self.caltable), 
-                                                                    field=self.field_name,
-                                                                    antenna=self.antenna_name)
-        if len(self.spw) > 0:
-            prefix += '-spw{spw}'.format(spw=self.spw)
-            title += ' Spw {spw}'.format(spw=self.spw)
+        prefix = '{caltable}-{y}_vs_{x}-{field}-spw{spw}'.format(caltable=os.path.basename(self.caltable), 
+                                                              y=self.yaxis, x=self.xaxis,
+                                                              field=self.field_name,
+                                                              spw=self.spw)
+        title = '{caltable} \nField "{field}" Spw {spw}'.format(caltable=os.path.basename(self.caltable), 
+                                                                field=self.field_name,
+                                                                spw=self.spw)
             
         figfile = os.path.join(self._figroot, '{prefix}.png'.format(prefix=prefix))
         
@@ -161,7 +193,7 @@ class SingleDishPlotmsLeaf(object):
     
     def _get_plot_object(self, figfile, task):
         parameters = {'vis': os.path.basename(self.vis),
-                      'ant': self.antenna_name,
+                      'ant': '',
                       'spw': self.spw,
                       'field': self.field_name}
         
@@ -181,11 +213,11 @@ class SingleDishPlotmsSpwComposite(common.SpwComposite):
 class SingleDishPlotmsAntSpwComposite(common.AntSpwComposite):
     leaf_class = SingleDishPlotmsSpwComposite
     
-class SingleDishSkyCalAmpVsTimeSummaryChart(SingleDishPlotmsAntComposite):
+class SingleDishSkyCalAmpVsTimeSummaryChart(SingleDishPlotmsSpwComposite):
     def __init__(self, context, result, calapp):
         super(SingleDishSkyCalAmpVsTimeSummaryChart, self).__init__(context, result, calapp,
                                                                     xaxis='time', yaxis='amp', 
-                                                                    coloraxis='spw')
+                                                                    coloraxis='ant1')
         
 class SingleDishSkyCalAmpVsTimeDetailChart(SingleDishPlotmsAntSpwComposite):
     def __init__(self, context, result, calapp):
