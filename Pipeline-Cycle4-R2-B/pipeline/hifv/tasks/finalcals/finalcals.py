@@ -602,8 +602,8 @@ class Finalcals(basetask.StandardTaskTemplate):
                         # result.measurements.update(setjy_result.measurements)
                     except Exception, e:
                         # something has gone wrong, return an empty result
-                        LOG.error('Unable to add flux scaling operation')
-                        LOG.exception(e)
+                        LOG.warn("SetJy issue with field id=" + str(job.kw['field']) + "and spw=" + str(job.kw['spw']))
+                        # LOG.exception(e)
 
                 LOG.info("Merging flux scaling operation for setjy jobs for "+self.inputs.vis)
                 jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
@@ -611,8 +611,8 @@ class Finalcals(basetask.StandardTaskTemplate):
                     try:
                         self._executor.execute(job)
                     except Exception, e:
-                        LOG.warn('Unable to complete flux scaling operation.')
-                        LOG.exception(e)
+                        LOG.warn("SetJy issue with field id=" + str(job.kw['field']) + "and spw=" + str(job.kw['spw']))
+                        # LOG.exception(e)
                         
         
         return True
