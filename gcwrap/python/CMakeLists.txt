@@ -33,11 +33,13 @@ scripts/casa_shutdown.py
 scripts/casa_builtin.py
 scripts/start_casa.py
 scripts/init_system.py
+scripts/init_crashrpt.py
 scripts/init_mpi.py
 scripts/init_dbus.py
 scripts/init_tools.py
 scripts/init_logger.py
 scripts/init_funcs.py
+scripts/init_pipeline.py
 scripts/init_asap.py
 scripts/init_testing.py
 scripts/init_tasks.py
