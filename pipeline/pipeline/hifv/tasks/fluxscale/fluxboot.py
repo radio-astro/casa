@@ -138,8 +138,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
                         try:
                             self._executor.execute(job)
                         except Exception, e:
-                            LOG.warn('Unable to complete flux scaling operation.  Please check the results')
-                            LOG.exception(e)
+                            LOG.warn("SetJy issue with field id="+str(job.kw['field']) + "and spw=" +str(job.kw['spw']))
+                            #LOG.exception(e)
 
             LOG.info("Making gain tables for flux density bootstrapping")
             LOG.info("Short solint = " + new_gain_solint1)
