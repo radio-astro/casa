@@ -6,6 +6,7 @@ import abc
 import numpy
 import math
 import pylab as pl
+import matplotlib.gridspec as gridspec
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
@@ -18,6 +19,24 @@ LOG = infrastructure.get_logger(__name__)
 
 NoData = -32767.0
 NoDataThreshold = NoData + 10000.0
+
+def form3(n):
+    if n <= 4:
+        return 4
+    elif n == 5:
+        return 5
+    elif n < 8:
+        return 7
+    else:
+        return 8
+
+def form4(n):
+    if n <= 4:
+        return 4
+    elif n < 8:
+        return 5
+    else:
+        return 5.5
 
 class SparseMapAxesManager(object):
     def __init__(self, nh, nv, brightnessunit, ticksize, clearpanel=True, figure_id=None):
@@ -39,6 +58,21 @@ class SparseMapAxesManager(object):
         if clearpanel:
             pl.clf()
             
+        _f = form4(self.nv)
+        self.gs_top = gridspec.GridSpec(1, 1,
+                                        left=0.08,
+                                        bottom=1.0 - 1.0/_f, top=0.96)
+        self.gs_bottom = gridspec.GridSpec(self.nv+1, self.nh+1,
+                                           hspace=0, wspace=0,
+                                           left=0, right=0.95,
+                                           bottom=0.01, top=1.0 - 1.0/_f-0.07)
+#         self.gs_top = gridspec.GridSpec(1, 1,
+#                                         bottom=1.0 - 1.0/form3(self.nv), top=0.96)
+#         self.gs_bottom = gridspec.GridSpec(self.nv+1, self.nh+1,
+#                                            hspace=0, wspace=0,
+#                                            left=0, right=0.95,
+#                                            bottom=0.01, top=1.0 - 1.0/form3(self.nv)-0.07)
+        
     @staticmethod
     def MATPLOTLIB_FIGURE_ID():
         return 8910
@@ -47,8 +81,7 @@ class SparseMapAxesManager(object):
     def axes_integsp(self):
         if self._axes_integsp is None:
             pl.figure(self.figure_id)
-            #axes = pl.subplot((self.nv+3)/2+3, 1, 1)
-            axes = pl.subplot((self.nv+3)/2+1, 1, 1)
+            axes = pl.subplot(self.gs_top[:,:])
             axes.cla()
             axes.xaxis.set_major_formatter(self.numeric_formatter)
             pl.xlabel('Frequency(GHz)', size=(self.ticksize+1))
@@ -86,7 +119,7 @@ class SparseMapAxesManager(object):
     def __axes_spmap(self):
         for x in xrange(self.nh):
             for y in xrange(self.nv):
-                axes = pl.subplot(self.nv+3, self.nh+1, (self.nv - 1 - y + 2) * (self.nh + 1) + (self.nh - 1 - x) + 2)
+                axes = pl.subplot(self.gs_bottom[self.nv - y - 1, self.nh - x])
                 axes.cla()
                 axes.yaxis.set_major_locator(pl.NullLocator())
                 axes.xaxis.set_major_locator(pl.NullLocator())
@@ -96,20 +129,20 @@ class SparseMapAxesManager(object):
 
     def setup_labels(self, label_ra, label_dec):
         for x in xrange(self.nh):
-            a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 2) * (self.nh + 1) + self.nh - x + 1)
+            a1 = pl.subplot(self.gs_bottom[-1, self.nh - x])
             a1.set_axis_off()
             if len(a1.texts) == 0:
                 pl.text(0.5, 0.5, HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0))
         for y in xrange(self.nv):
-            a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 1 - y) * (self.nh + 1) + 1)
+            a1 = pl.subplot(self.gs_bottom[self.nv - y - 1, 0])
             a1.set_axis_off()
             if len(a1.texts) == 0:
                 pl.text(0.5, 0.5, DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0))
-        a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 2) * (self.nh + 1) + 1)
+        a1 = pl.subplot(self.gs_bottom[-1, 0])
         a1.set_axis_off()
         pl.text(0.5, 1, 'Dec', horizontalalignment='center', verticalalignment='bottom', size=(self.ticksize+1))
         pl.text(1, 0.5, 'RA', horizontalalignment='center', verticalalignment='center', size=(self.ticksize+1))
