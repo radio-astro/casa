@@ -183,7 +183,7 @@ if os.environ.has_key('CASAPATH') :
         casa['dirs']['root'] = __casapath__
         casa['dirs']['data'] = __casapath__ + "/data"
         if os.path.exists(__casapath__ + "/" + __casaarch__ + "/lib/python2.7/assignmentFilter.py"):
-            casa['dirs']['python'] = __casapath__ + "/" + __casaarch__ + "/python/2.7"
+            casa['dirs']['python'] = __casapath__ + "/" + __casaarch__ + "/lib/python2.7"
         elif os.path.exists(__casapath__ + "/lib/python2.7/assignmentFilter.py"):
             casa['dirs']['python'] = __casapath__ + "/lib/python2.7"
         elif os.path.exists(__casapath__ + "/Resources/python/assignmentFilter.py"):
