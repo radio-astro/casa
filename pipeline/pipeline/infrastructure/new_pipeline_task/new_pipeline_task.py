@@ -29,22 +29,32 @@ class NewTask():
             if 'new_pipeline_task.py' in arg:
                 script_args = argv[idx + 1:]
 
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(prog="new_pipeline_task", add_help=False)
         parser.add_argument('--package', help="Pipeline package.  One of 'h', 'hif', 'hifa', 'hifa', 'hifv', or 'hsd'.",
                             type=str, choices=['h', 'hif', 'hifa', 'hifa', 'hifv', 'hsd'], required=True)
         parser.add_argument('--task', help='New task name', type=str, required=True)
+        parser.add_argument('--module',
+                            help="Optional module name.  e.g. if task is 'foo' "
+                                 "and module is 'bar' then 'tasks/foo/bar.py' is created",
+                            type=str, default='', required=False)
 
         try:
             args = parser.parse_args(script_args)
         except:
-            print('Problem with new_pipeline_task arguments.')
-            return '', ''
+            parser.print_help()
+            return '', '', ''
 
         area = args.package
         task_name = args.task
-        return area, task_name
 
-    def create(self, area, task_name):
+        if args.module:
+            module_name = args.module
+        else:
+            module_name = task_name
+
+        return area, task_name, module_name
+
+    def create(self, area, task_name, module_name):
 
         from mako.template import Template
 
@@ -73,7 +83,7 @@ class NewTask():
         # -----------------------------------------------------------------------------
         # define the new files
         # -----------------------------------------------------------------------------
-        module_file = '{tdir}/{task}.py'.format(tdir=task_dir, task=task_name)
+        module_file = '{tdir}/{task}.py'.format(tdir=task_dir, task=module_name)
         init_file = '{tdir}/__init__.py'.format(tdir=task_dir)
         cli_file = '{cdir}/task_{area}_{task}.py'.format(cdir=cli_dir, area=area, task=task_name)
         cli_xml = '{cdir}/{area}_{task}.xml'.format(cdir=cli_dir, area=area, task=task_name)
@@ -101,7 +111,7 @@ class NewTask():
 
         print('\tCreating {f}'.format(f=init_file))
         with open(init_file, 'w+') as fd:
-            fd.writelines(init_template.render(taskname=task_name))
+            fd.writelines(init_template.render(taskname=task_name, modulename=module_name))
 
         print('\tCreating {f}'.format(f=cli_file))
         with open(cli_file, 'w+') as fd:
@@ -260,8 +270,8 @@ class NewTask():
 if __name__ == '__main__':
 
     new_task = NewTask()
-    area, task_name = new_task.parse_command_line(sys.argv)
+    area, task_name, module_name = new_task.parse_command_line(sys.argv)
     if not area or not task_name:
-        print('Both area and task_name need to be defined')
+        print('At least area and task_name need to be defined.')
     else:
-        new_task.create(area, task_name)
+        new_task.create(area, task_name, module_name)

@@ -18,6 +18,16 @@ want to create task "foo" in the package "hif", I could do one of the following.
        newtask = new_pipeline_task.NewTask()
        newtask.create('hif', 'foo')
     ```
+    
+* There is an optional "--module" parameter if you want to give the task module
+file a different name than the task itself.  For example, if task is 'foo' 
+and module is 'bar' then 'tasks/foo/bar.py' is created.
+
+    Command line:
+    ```
+    casa --nogui --nologger -c $SCIPIPE_HEURISTICS/pipeline/infrastructure/new_pipeline_task/new_pipeline_task.py --package hif --task foo --module bar
+    ```
+
 
 * To verify the new task is working, you should run the module both as a pipeline 
 task and by calling it directly as registered CASA task.  There is a script that 
