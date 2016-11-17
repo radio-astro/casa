@@ -209,8 +209,8 @@ else :
     else :
         casa['dirs']['root'] = __casapath__
         casa['dirs']['data'] = __casapath__ + "/data"
-        if os.path.exists(__casapath__ + "/" + __casaarch__ + "python/2.7/assignmentFilter.py"):
-            casa['dirs']['python'] = __casapath__ + "/" + __casaarch__ + "/python/2.7"
+        if os.path.exists(__casapath__ + "/" + __casaarch__ + "lib/python2.7/assignmentFilter.py"):
+            casa['dirs']['python'] = __casapath__ + "/" + __casaarch__ + "/lib/python2.7"
         elif os.path.exists(__casapath__ + "/lib/python2.7/assignmentFilter.py"):
             casa['dirs']['python'] = __casapath__ + "/lib/python2.7"
         elif os.path.exists(__casapath__ + "/Resources/python/assignmentFilter.py"):
@@ -1286,7 +1286,7 @@ def pybot_install( ):
         print "OUTPUT: ", output
         print "ERROR:  ", err
 
-    install = subprocess.Popen( "python setup.py install --install-lib=%s/python/2.7 --install-scripts=%s/bin" % (archdir,archdir), \
+    install = subprocess.Popen( "python setup.py install --install-lib=%s/lib/python2.7 --install-scripts=%s/bin" % (archdir,archdir), \
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=tmp )
     (output, err) = install.communicate()
     if len(err) > 0:
