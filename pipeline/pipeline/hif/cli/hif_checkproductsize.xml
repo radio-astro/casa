@@ -90,7 +90,12 @@ Check interferometry imaging product size and try to mitigate to maximum allowed
 
 <example>
 
-Check interferometry imaging product size and try to mitigate to maximum allowed values.
+Check interferometry imaging product size and try to mitigate to maximum
+allowed values. The task implements a mitigation cascade computing the largest
+cube size and trying to reduce it below a given limit by adjusting the nbins,
+hm_imsize and hm_cell parameters. If this step succeeds, it also checks the
+overall imaging product size and if necessary reduces the number of fields to
+be imaged.
 
 Keyword arguments:
 

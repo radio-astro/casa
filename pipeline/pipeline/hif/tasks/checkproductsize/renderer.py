@@ -13,7 +13,7 @@ import pipeline.infrastructure.renderer.logger as logger
 
 LOG = logging.get_logger(__name__)
 
-TR = collections.namedtuple('TR', 'nbins sfpblimit pixperbeam field')
+TR = collections.namedtuple('TR', 'nbins hm_imsize hm_cell field')
 
 
 class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -40,21 +40,21 @@ class T2_4MDetailsCheckProductSizeRenderer(basetemplates.T2_4MDetailsDefaultRend
         else:
             nbins = 'default'
 
-        if result.size_mitigation_parameters.has_key('sfpblimit'):
-            sfpblimit = str(result.size_mitigation_parameters['sfpblimit'])
+        if result.size_mitigation_parameters.has_key('hm_imsize'):
+            hm_imsize = str(result.size_mitigation_parameters['hm_imsize'])
         else:
-            sfpblimit = 'default'
+            hm_imsize = 'default'
 
-        if result.size_mitigation_parameters.has_key('pixperbeam'):
-            pixperbeam = str(result.size_mitigation_parameters['pixperbeam'])
+        if result.size_mitigation_parameters.has_key('hm_cell'):
+            hm_cell = str(result.size_mitigation_parameters['hm_cell'])
         else:
-            pixperbeam = 'default'
+            hm_cell = 'default'
 
         if result.size_mitigation_parameters.has_key('field'):
             field = str(result.size_mitigation_parameters['field'])
         else:
             field = 'default'
 
-        rows = [TR(nbins=nbins, sfpblimit=sfpblimit, pixperbeam=pixperbeam, field=field)]
+        rows = [TR(nbins=nbins, hm_imsize=hm_imsize, hm_cell=hm_cell, field=field)]
 
         return utils.merge_td_columns(rows)

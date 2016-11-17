@@ -34,8 +34,8 @@ $(document).ready(function() {
         <thead>
             <tr>
                 <th>nbins</th>
-                <th>sfpblimit</th>
-                <th>pixperbeam</th>
+                <th>hm_imsize</th>
+                <th>hm_cell</th>
                 <th>field</th>
             </tr>
         </thead>
