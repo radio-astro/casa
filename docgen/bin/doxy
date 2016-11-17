@@ -5,14 +5,12 @@ use Cwd 'abs_path';
 use Cwd 'getcwd';
 use File::Path qw(make_path remove_tree);
 
-
-
-$installpath = abs_path(dirname(abs_path($0)));
+$installpath = abs_path(dirname(abs_path($0))."/../..");
 $topdir = basename($installpath);
 $tmpdir = "$installpath/tmp";
 $outputdir = "$installpath/docs/doxygen";
 $outputdir_default = "$outputdir";
-$mainpage = "$installpath/mainpage.dox";
+$mainpage = "$installpath/docgen/mainpage.dox";
 $debug = 0;
 $logging = 0;
 $LOG = STDOUT;
@@ -48,7 +46,7 @@ unless ( -d $tmpdir ) {
     make_path($tmpdir) or die "could not create temporary directory ($tmpdir)";
 }
 # remove old output directory... plus minimal sanity check...
-# assume that the user has provided a clean directory (if that's what the want)...
+# assume that the user has provided a clean directory (if that's what they want)...
 if ( $outputdir eq $outputdir_default && $outputdir ne "/" && -d $outputdir ) { remove_tree($outputdir) }
 # create output directory if it exists...
 unless ( -d $outputdir ) {
@@ -175,7 +173,7 @@ PROJECT_NUMBER         = $version
 # If a relative path is entered, it will be relative to the location
 # where doxygen was started. If left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = $installpath/docs/doxygen
+OUTPUT_DIRECTORY       = $outputdir
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create
 # 4096 sub-directories (in 2 levels) under the output directory of each output
