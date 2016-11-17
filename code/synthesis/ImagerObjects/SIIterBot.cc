@@ -149,9 +149,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//		cout << "itsMajorDone="<<itsMajorDone<<" itsIterDone="<<itsIterDone<< " itsInitPeakResidual="<<itsInitPeakResidual<<" itsPeakResidual="<<itsPeakResidual <<" itsPrevPeakResidual : " <<  itsPrevPeakResidual << " itsStopFlag="<<itsStopFlag<<endl;
 
 		if( itsPeakResidual>0 && itsPrevPeakResidual>0 && 
-		    itsPeakResidual > itsPrevPeakResidual )
+		    fabs(itsPeakResidual - itsPrevPeakResidual)/itsPrevPeakResidual > 2.0 )
 		  {
-		    os << LogIO::WARN << "Peak residual increased from " << itsPrevPeakResidual << " to " << itsPeakResidual << endl;
+		    os << "[WARN] Peak residual increased from " << itsPrevPeakResidual << " to " << itsPeakResidual << LogIO::POST;
 		  }
 
 		/// This may interfere with some other criterion... check.
@@ -178,9 +178,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    if( fabs( itsInitPeakResidual - itsPeakResidual )<1e-10) 
 		      {stopCode = 4;}
 
-                    // another non-convergent condition: diverging (if it increases more than by 50%)
+                    // another non-convergent condition: diverging (relative increase is more than 5 times)
+                    else if ( itsIterDone > 0 && fabs(itsPeakResidual-itsPrevPeakResidual)/itsPrevPeakResidual  > 5.0) 
 //                    else if ( itsIterDone > 0 &&  itsPeakResidual/itsPrevPeakResidual  >1.5) 
-//                      {stopCode = 5;}
+                      {stopCode = 5;}
 
 		  }
 	        
