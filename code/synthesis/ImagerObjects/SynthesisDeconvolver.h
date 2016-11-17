@@ -147,6 +147,7 @@ protected:
   casacore::uInt itsDeconvolverId;
   casacore::Vector<casacore::Float> itsScales;
 
+  ///// for mask
   casacore::String itsMaskType;
   casacore::Vector<casacore::String> itsMaskList;
   casacore::String itsMaskString;
@@ -158,6 +159,15 @@ protected:
   casacore::Float itsMaskResByBeam;
   casacore::Int itsNMask;
   casacore::Bool itsAutoAdjust;
+  
+  //// for new automasking algorithm
+  casacore::Float itsSidelobeThreshold;
+  casacore::Float itsNoiseThreshold;
+  casacore::Float itsLowNoiseThreshold;
+  casacore::Float itsSmoothFactor;
+  casacore::Float itsMinBeamFrac;
+  casacore::Float itsCutThreshold;
+  
   casacore::Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
   casacore::Bool itsIsInteractive;
  

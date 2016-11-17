@@ -151,6 +151,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           {
             itsAutoMaskAlgorithm="thresh2";
           }
+        else if(itsMaskType=="auto-multithresh")
+          { 
+            itsAutoMaskAlgorithm="multithresh";
+          }
         else if(itsMaskType=="auto-onebox")
           {
             itsAutoMaskAlgorithm="onebox";
@@ -176,6 +180,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         itsMaskResByBeam = decpars.maskResByBeam;
         itsNMask = decpars.nMask;
         itsAutoAdjust = decpars.autoAdjust;
+        itsSidelobeThreshold = decpars.sidelobeThreshold;
+        itsNoiseThreshold = decpars.noiseThreshold;
+        itsLowNoiseThreshold = decpars.lowNoiseThreshold;
+        itsSmoothFactor = decpars.smoothFactor;
+        itsMinBeamFrac = decpars.minBeamFrac;
+        itsCutThreshold = decpars.cutThreshold;
 	itsIsInteractive = decpars.interactive;
       }
     catch(AipsError &x)
@@ -457,10 +467,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      //modify mask using automask otherwise no-op
      if ( itsAutoMaskAlgorithm != "" )  {
        if ( itsPBMask > 0.0 ) {
-         itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust,  itsPBMask);
+         itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust,  itsSidelobeThreshold, itsNoiseThreshold, itsLowNoiseThreshold, itsCutThreshold, itsSmoothFactor, itsMinBeamFrac, itsPBMask);
        }
        else {
-         itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust);
+         itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust, itsSidelobeThreshold, itsNoiseThreshold, itsLowNoiseThreshold, itsCutThreshold, itsSmoothFactor, itsMinBeamFrac);
        }
      }
   }

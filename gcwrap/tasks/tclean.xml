@@ -1810,6 +1810,7 @@ HPX HEALPix grid.  -->
               <value>pb</value>
 	      <value>auto-thresh</value>
 	      <value>auto-thresh2</value>
+	      <value>auto-multithresh</value>
 	    </allowed>
     </param>
 
@@ -1939,8 +1940,49 @@ HPX HEALPix grid.  -->
 </description>
 	    <value type="bool">False</value>
     </param>
-           
-
+    <!-- Amanda's code -->
+    <param type="double" name="sidelobethreshold" subparam="true">
+           <shortdescription>sidelobethreshold *  the max sidelobe level</shortdescription>
+           <value type="double">3.0</value>
+<description>
+mask threshold based on sidelobe levels:  sidelobethreshold * max_sidelobe_level
+</description>
+    </param>
+    <param type="double" name="noisethreshold" subparam="true">
+    <shortdescription>noisethreshold * rms in residual image</shortdescription>
+           <value type="double">3.0</value>
+<description>
+mask threshold based on the noise level: noisethreshold * rms
+</description>
+    </param>
+    <param type="double" name="lownoisethreshold" subparam="true">
+    <shortdescription>lownoisethreshold * rms in residual image</shortdescription>
+           <value type="double">3.0</value>
+<description>
+mask threshold to grow previously masked regions via binary dilation:   lownoisethreshold * rms in residual image
+</description>
+    </param>
+    <param type="double" name="smoothfactor" subparam="true">
+           <shortdescription>smoothing factor in a unit of the beam</shortdescription>
+           <value type="double">1.0</value>
+<description>
+smoothing factor in a unit of the beam
+</description>
+    </param>
+    <param type="double" name="minbeamfrac" subparam="true">
+           <shortdescription> minimum beam fraction for pruning</shortdescription>
+           <value type="double">-1.0</value>
+<description>
+minimum beam fraction in size to prune masks smaller than mimbeamfrac * beam
+</description>
+    </param>
+    <param type="double" name="cutthreshold" subparam="true">
+           <shortdescription>threshold to cut the smoothed mask to create a final mask</shortdescription>
+           <value type="double">0.01</value>
+<description>
+threshold to cut the smoothed mask to create a final mask: cutthreshold * peak of the smoothed mask
+</description>
+    </param>
 
 <!--============================================== -->
 <!--                            Other Operational Parameters                                       -->
@@ -2456,7 +2498,7 @@ HPX HEALPix grid.  -->
          <default param="pbmask"><value>0.0</value></default>
        </equals>
        <equals type="string" value="pb">
-         <default param="pbmask"><value>0.2</value></default>
+         <default param="pbmask"><value type="double">0.2</value></default>
        </equals>
        <!-- auto masks -->
        <equals type="string" value="auto-thresh"> 
@@ -2472,6 +2514,16 @@ HPX HEALPix grid.  -->
          <default param="maskthreshold"><value>""</value></default>
          <default param="maskresolution"><value>""</value></default>
          <default param="nmask"><value>0</value></default>
+       </equals>
+       <!-- auto mask by multiple threshold (orignal algorithm by A.Kepley) -->
+       <equals type="string" value="auto-multithresh">
+         <default param="pbmask"><value>0.2</value></default>
+         <default param="sidelobethreshold"><value>3.0</value></default>
+         <default param="noisethreshold"><value>3.0</value></default>
+         <default param="lownoisethreshold"><value>1.0</value></default>
+         <default param="smoothfactor"><value>1.0</value></default>
+         <default param="minbeamfrac"><value type="double">-1.0</value></default>
+         <default param="cutthreshold"><value>0.01</value></default>
        </equals>
    </when>
 

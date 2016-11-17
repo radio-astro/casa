@@ -727,6 +727,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                const Float& resbybeam,
                                const Int nmask,
                                const Bool autoadjust,
+                               // new params for the multithreshold alg.
+                               const Float& sidelobethreshold,
+                               const Float& noisethreshold, 
+                               const Float& lownoisethreshold,
+                               const Float& cutthreshold,
+                               const Float& smoothfactor,
+                               const Float& minbeamfrac, 
                                Float pblimit)
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMask",WHERE) );
@@ -857,7 +864,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String LELmask("");
     // note: tempres is res image with pblimit applied
     Bool robust(false);
-    if (alg.contains("newauto") ) {
+    Bool doAnnulus(false);
+    if (alg.contains("multithresh") ) {
        robust=true;
        // define an annulus 
        Float outerRadius=0.0;
@@ -870,21 +878,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           TempImage<Float>* testres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
           testres->set(1.0);
           testres->attachMask(testlat);
-          cerr<<"ntrue(testlat) = "<<ntrue(testres->getMask())<<endl;
-          if (ntrue(testres->getMask()) > 0) { 
+          //cerr<<"ntrue(testlat) = "<<ntrue(testres->getMask())<<endl;
+          if (ntrue(testres->getMask()) > 0 && doAnnulus) { 
               String pbname = imstore->getName()+".pb";
               LELmask=pbname+"<"+String::toString(innerRadius)+" && "+pbname+">"+String::toString(outerRadius);   
           }
        }
     } 
-    cerr<<"LELmask="<<LELmask<<endl;
     Record thestats = calcImageStatistics(*tempres, *tempmask, LELmask, region_ptr, robust);
     Array<Double> maxs, mins, rmss, mads;
     thestats.get(RecordFieldId("max"), maxs);
     thestats.get(RecordFieldId("rms"), rmss);
     os<< LogIO::DEBUG1 << "All rms's on the input image -- rms.nelements()="<<rmss.nelements()<<" rms="<<rmss<<LogIO::POST;
     os<< LogIO::DEBUG1 << "All max's on the input image -- max.nelements()="<<maxs.nelements()<<" max="<<maxs<<LogIO::POST;
-    if (alg.contains("newauto")) {
+    if (alg.contains("multithresh")) {
        thestats.get(RecordFieldId("medabsdevmed"), mads);
        os<< LogIO::DEBUG1 << "All max's on the input image -- mad.nelements()="<<mads.nelements()<<" mad="<<mads<<LogIO::POST;
     }
@@ -902,11 +909,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else if (alg==String("thresh2")) {
       autoMaskByThreshold2(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask);
     }
-    /***
     else if (alg==String("multithresh")) {
-      autoMaskByMultiThreshold(*tempmaSk, *tempres, *temppsf, thestats, nmask, itsSidelobeLevel, sidelobeThresholdFactor,
-                                          noiseThresholdFactor, owNoiseThresholdFactor, cutThreshold, smoothFactor, minBeamFrac);
-    ***/
+      cerr<<"calling autoMaskByMultiTresh..."<<endl;
+      autoMaskByMultiThreshold(*tempmask, *tempres, *temppsf, thestats, itsSidelobeLevel, sidelobethreshold,
+                                          noisethreshold, lownoisethreshold, cutthreshold, smoothfactor, minbeamfrac);
+    }
 
     // this did not work (it won't physically remove the mask from the image 
     /***
@@ -1247,7 +1254,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                           const ImageInterface<Float>& res, 
                                           const ImageInterface<Float>& psf, 
                                           const Record& stats, 
-                                          const Int nmask,
                                           const Float& sidelobeLevel,
                                           const Float& sidelobeThresholdFactor,
                                           const Float& noiseThresholdFactor,
@@ -1257,8 +1263,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                           const Float& minBeamFrac) 
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMaskByThreshold3",WHERE) );
+    cerr<<"Got in autoMaskByMulti..."<<endl;
     Array<Double> rmss, maxs, mads;
-    Float resPeak, resRms;
+    //Float resPeak, resRms;
     Array<Double> resRmss;
     Double minrmsval, maxrmsval, minmaxval, maxmaxval, minmadval, maxmadval;
     IPosition minrmspos, maxrmspos, minmaxpos, maxmaxpos, minmadpos, maxmadpos;
@@ -1268,7 +1275,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //Bool debug(False);
 
     TempImage<Float> tempmask(mask.shape(), mask.coordinates());
-    TempImage<Float> prevmask(mask.shape(),mask.coordinates());
+    TempImage<Float> prevmask(mask.shape(), mask.coordinates());
     prevmask.copyData(LatticeExpr<Float>(mask) );
     // taking account for beam or input resolution
     IPosition shp = mask.shape();
@@ -1279,6 +1286,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //use beam from residual or psf
     ImageInfo resInfo = res.imageInfo();
     ImageInfo psfInfo = psf.imageInfo();
+    cerr<<"check pt 0"<<endl;
     GaussianBeam beam;
     if (resInfo.hasBeam() || psfInfo.hasBeam()) {
       if (resInfo.hasSingleBeam()) {
@@ -1307,20 +1315,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
+    cerr<<"check pt 1"<<endl;
     // Determine threshold from input image stats
     stats.get(RecordFieldId("max"), maxs);
     stats.get(RecordFieldId("rms"), rmss);
     stats.get(RecordFieldId("medabsdevmed"), mads);
+    cerr<<"check pt 2"<<endl;
     
     // only useful if single threshold value are used for all spectral planes... 
     minMax(minmaxval,maxmaxval,minmaxpos, maxmaxpos, maxs);
     minMax(minrmsval,maxrmsval,minrmspos, maxrmspos, rmss); 
     minMax(minmadval,maxmadval,minmadpos, maxmadpos, mads); 
     // use max of the list of peak values (for multiple channel plane)
-    resPeak = maxmaxval;
+    //resPeak = maxmaxval;
     // use MAD and convert to rms 
-    resRms = maxmadval * 1.4826; 
+    //resRms = maxmadval * 1.4826; 
     resRmss = mads * 1.4826;
+    cerr<<"check pt 3"<<endl;
 
     //define mask threshold 
     //Array<Float> sidelobeThreshold = sidelobeLevel * sidelobeThresholdFactor * maxs;
@@ -1329,7 +1340,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float lowNoiseThreshold;
     Vector<Float> maskThreshold(maxs.nelements());
     Vector<Float> lowMaskThreshold(maxs.nelements());
-    Vector<String> ThresholdType;
+    Vector<String> ThresholdType(maxs.nelements());
+    cerr<<"maxs="<<maxs<<endl;
+    cerr<<"check pt 4 maxs.nelments()="<<maxs.nelements()<<endl;
     for (uInt ich=0; ich < maxs.nelements(); ich++) {
       sidelobeThreshold = sidelobeLevel * sidelobeThresholdFactor * (Float)maxs(IPosition(2,0,ich)); 
       noiseThreshold = noiseThresholdFactor * (Float)resRmss(IPosition(2,0,ich));
@@ -1339,6 +1352,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ThresholdType(ich) = (maskThreshold(ich) == sidelobeThreshold? "sidelobe": "noise");
       os << LogIO::NORMAL1 <<" Using "<<ThresholdType(ich)<<" threshold for chan "<<String::toString(ich)<<" threshold="<<maskThreshold(ich)<<LogIO::POST;
     }
+    cerr<<"check pt 5"<<endl;
 
 
     // Below corresponds to createThresholdMask in Amanda's Python code.
@@ -1350,6 +1364,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool firstIter(false);
     // do thresholding via pruneRegions() for now
     if (minBeamFrac > 0.0 ) {
+      cerr<<"check pt 5.1 calling makeMaskByCHanThresh and pruneRegion..."<<endl;
         // make temp mask image consist of the original pix value and below the threshold is set to 0 
         TempImage<Float> maskedRes(res.shape(), res.coordinates());
         makeMaskByPerChanThreshold(res, maskedRes, maskThreshold); 
@@ -1362,24 +1377,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         makeMaskByPerChanThreshold(*(tempIm_ptr.get()), tempmask, maskThreshold); 
     }
     else {
+      cerr<<"check pt 5.2 calling makeMaskByPerChanTresh"<<endl;
       //themask = LatticeExpr<Float> ( iif( res > maskThreshold, 1.0, 0.0 ));
         makeMaskByPerChanThreshold(res, tempmask, maskThreshold); 
       //tempmask.copyData(themask);
     }  
-   
+    
+    cerr<<"check pt 6 call convolveMask.."<<endl;
     //smooth
     SPIIF outmask = convolveMask(tempmask, nxpix, nypix);
 
+    cerr<<"check pt 7 Done convolve, do cut threshold."<<endl;
     //clean up (appy cutThreshold to convolved mask image)
     LatticeExpr<Float> thenewmask( iif( *(outmask.get()) > cutThreshold, 1.0, 0.0 ));
 
     // take stats on the current mask for setting flags for grow mask : if max < 1 for any spectral plane it will grow the previous mask
     String lelmask("");
+    cerr<<" check pt 8"<<endl;
     Record maskstats = calcImageStatistics(tempmask, tempmask, lelmask, 0, false);
-    Array<Float> maskmaxs;
+    cerr<<" done stats on tempmask..."<<endl;
+    cerr<<"tempmask.shape="<<tempmask.shape()<<endl;
+    Array<Double> maskmaxs;
     maskstats.get(RecordFieldId("max"),maskmaxs);
     // per plane stats 
     IPosition arrshape = maskmaxs.shape();
+    cerr<<"maskmaxs.shape="<<maskmaxs.shape()<<endl;
     uInt naxis=arrshape.size();
     IPosition indx(naxis,0);
     // ignoring corr for now and ssume first axis is channel
@@ -1390,17 +1412,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         dogrow(indx) = true;
       }
     }   
-
+    cerr<<"Done makeing dogrow="<<dogrow<<endl;
     if (!firstIter) {
        //call growMask
        cerr<<"create constraint mask using lowNoiseThreshold: "<<lowMaskThreshold<<endl;
        // corresponds to calcThresholdMask with lowNoiseThreshold...
        TempImage<Float> constraintMaskImage(res.shape(), res.coordinates()); 
        // constrainMask is 1/0 mask
+       cerr<<" do makeMaskByPerChanThresh for constraintMaskImage"<<endl;
        makeMaskByPerChanThreshold(res, constraintMaskImage, lowMaskThreshold);
        // for mask in binaryDilation, translate it to T/F (if T it will grow the mask region (NOTE currently binary dilation 
        // does opposite T/F interpretation NEED to CHANGE)
        TempImage<Bool> constraintMask(res.shape(),res.coordinates());
+       cerr<<"Fill constraint Mask"<<endl;
        constraintMask.copyData( LatticeExpr<Bool> (iif(constraintMaskImage > 0, true, false)) );
        // simple structure element for binary dilation
        IPosition axislen(2, 3, 3);
@@ -1413,9 +1437,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        se(IPosition(2,1,2))=1.0;
        // nIteration for binary dilation 
        Int niter=100; 
+       cerr<<"calling binarDilation.."<<endl;
        binaryDilation(mask, se, niter, constraintMask, dogrow, prevmask); 
-       prevmask.copyData( LatticeExpr<Float> (constraintMask*prevmask));
+       cerr<<"Done binaryDilation, fill to prevmask"<<endl;
+       prevmask.copyData( LatticeExpr<Float> (constraintMaskImage*prevmask));
        SPIIF outprevmask = convolveMask(prevmask, nxpix, nypix);
+       cerr<<"done convolve prevmask"<<endl;
        prevmask.copyData( LatticeExpr<Float> (iif( *(outprevmask.get()) > cutThreshold, 1.0, 0.0 )) );
     }
 
@@ -1972,6 +1999,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        const Float& resbybeam, 
                                        const Int nmask,
                                        const Bool autoadjust,
+                                       const Float& sidelobethreshold,
+                                       const Float& noisethreshold, 
+                                       const Float& lownoisethreshold,
+                                       const Float& cutthreshold, 
+                                       const Float& smoothfactor,
+                                       const Float& minbeamfrac,
                                        Float pblimit)
   { 
     LogIO os( LogOrigin("SDMaskHandler","autoMaskWithinPB",WHERE) );
@@ -1979,7 +2012,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     os <<LogIO::DEBUG1<<"Calling autoMaskWithinPB .."<<LogIO::POST;
     // changed to do automask ater pb mask is generated so automask do stats within pb mask
-    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask, autoadjust, pblimit);
+    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask, autoadjust, 
+              sidelobethreshold, noisethreshold, lownoisethreshold, cutthreshold, smoothfactor, 
+              minbeamfrac, pblimit);
 
     if( imstore->hasPB() )
       {

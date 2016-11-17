@@ -346,6 +346,12 @@ public:
   casacore::String maskResolution;
   casacore::Float fracOfPeak;
   casacore::Float maskResByBeam;
+  casacore::Float sidelobeThreshold;
+  casacore::Float noiseThreshold;
+  casacore::Float lowNoiseThreshold;
+  casacore::Float smoothFactor;
+  casacore::Float minBeamFrac;
+  casacore::Float cutThreshold;
   int nMask;
   bool autoAdjust;
 
