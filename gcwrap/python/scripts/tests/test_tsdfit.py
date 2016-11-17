@@ -987,6 +987,7 @@ class sdfit_selection(sdfit_unittest_base,unittest.TestCase):
         """Test selection by pol (corrected)"""
         self.run_test("pol", "corrected")
 
+
 class sdfit_auto(sdfit_unittest_base,unittest.TestCase):
     """
     This class tests fitmode='auto'
@@ -1086,5 +1087,137 @@ class sdfit_auto(sdfit_unittest_base,unittest.TestCase):
         flagdata(vis=self.infile, spw='6:0~19;101~127')
         self.run_test(True, None, spw='', edge=[0])
 
+
+class sdfit_timeaverage(sdfit_unittest_base,unittest.TestCase):
+    """
+    tests for time-averaging capability
+
+    Note: the input data 'sdfit_tave.ms' has 32 rows. Any combination of 
+          SCAN_ID (8 and 9), STATE_ID (6 and 4) and FIELD_ID (4 and 5)
+          has 4 rows, where Gaussian profile has different amplitude and 
+          different weight:
+          --------------------------------------
+          irow scan state field weight amplitude
+          --------------------------------------
+           0   8    6     4     0.5    1*0.94
+           1   8    6     4     0.5    1*0.98
+           2   8    6     4     1.0    1*1.01
+           3   8    6     4     1.0    1*1.03
+
+           4   8    6     5     0.5    2*0.94
+           5   8    6     5     0.5    2*0.98
+           6   8    6     5     1.0    2*1.01
+           7   8    6     5     1.0    2*1.03
+
+           8   8    4     4     0.5    3*0.94
+                     ..........
+
+          12   8    4     5     0.5    4*0.94
+                     ..........
+
+          16   9    6     4     0.5    5*0.94
+                     ..........
+
+          20   9    6     5     0.5    6*0.94
+                     ..........
+
+          24   9    4     4     0.5    7*0.94
+                     ..........
+
+          28   9    4     5     0.5    8*0.94
+          29   9    4     5     0.5    8*0.98
+          30   9    4     5     1.0    8*1.01
+          31   9    4     5     1.0    8*1.03
+          --------------------------------------
+          Averaging the first 4 rows, taking account of weight, gives
+          Gaussian with peak amplitude of 1. 
+    """
+    datapath = os.environ.get('CASAPATH').split()[0] + \
+        '/data/regression/unittest/tsdfit/'
+    infile = "sdfit_tave.ms"
+    outfile = "sdfit.out"
+    common_param = dict(infile=infile, outfile=outfile, datacolumn='float_data',
+                        fitfunc='gaussian', nfit=[1], pol='XX', timeaverage=True)
+    select_param = dict(scan='8', intent='*ON_SOURCE*', field='4')
+    def setUp(self):
+        self._remove([self.infile])
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(sdfit)
+
+    def tearDown(self):
+        self._remove([self.infile, self.outfile])
+
+    def run_test(self, select=True, ref_val=None, **kwarg):
+        param = dict(**self.common_param)
+        param.update(kwarg)
+        if select:
+            param.update(**self.select_param)
+        fit_val = sdfit(**param)
+        #print("Return:",fit_val)
+        for irow in range(len(fit_val['peak'])):
+            out = fit_val['peak'][irow][0][0]
+            ref = ref_val[irow]
+            self.assertTrue(numpy.allclose(out, ref, rtol=1.e2), 
+                            "result in row %d differs" % (irow))
+                
+    def testTimebinNullString(self):
+        """Test timebin='' : no averaging"""
+        ref = [0.94, 0.98, 1.01, 1.03]
+        self.run_test(True, ref, timebin='')
+
+    def testAverage2(self):
+        """Test timebin='0.2s' : averaging 2 spectra"""
+        ref = [0.96, 1.02]
+        self.run_test(True, ref, timebin='0.2s')
+
+    def testAverage4(self):
+        """Test timebin='0.4s' : averaging 4 spectra"""
+        ref = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+        self.run_test(False, ref, timebin='0.4s')
+
+    def testTimespanScan(self):
+        """Test timespan='scan' : averaging across SCAN_NUMBER border"""
+        ref = [3.0, 4.0, 5.0, 6.0]
+        self.run_test(False, ref, timebin='10s', timespan='scan')
+
+    def testTimespanState(self):
+        """Test timespan='state' : averaging across STATE_ID border"""
+        ref = [2.0, 3.0, 6.0, 7.0]
+        self.run_test(False, ref, timebin='10s', timespan='state')
+
+    def testTimespanField(self):
+        """Test timespan='field' : averaging across FIELD_ID border"""
+        ref = [1.5, 3.5, 5.5, 7.5]
+        self.run_test(False, ref, timebin='10s', timespan='field')
+
+    def testTimespanScanState(self):
+        """Test timespan='scan,state' : averaging across SCAN_NUMBER and STATE_ID borders"""
+        ref = [4.0, 10.0]
+        self.run_test(False, ref, timebin='10s', timespan='scan,state')
+
+    def testTimespanScanField(self):
+        """Test timespan='scan,field' : averaging across SCAN_NUMBER and FIELD_ID borders"""
+        ref = [3.5, 5.5]
+        self.run_test(False, ref, timebin='10s', timespan='scan,field')
+
+    def testTimespanStateField(self):
+        """Test timespan='state,field' : averaging across STATE_ID and FIELD_ID borders"""
+        ref = [2.5, 6.5]
+        self.run_test(False, ref, timebin='10s', timespan='state,field')
+
+    def testTimespanScanStateField(self):
+        """Test timespan='scan,state,field' : averaging across SCAN_NUMBER, STATE_ID and FIELD_ID borders"""
+        ref = [4.5]
+        self.run_test(False, ref, timebin='10s', timespan='scan,state,field')
+
+    def testTimespanStateAutoAdded(self):
+        """Test timespan='scan,field' : to see if 'state' is automatically added to timespan"""
+        ref = [4.5]
+        self.run_test(False, ref, timebin='100s', timespan='scan,field')
+
+
 def suite():
-    return [sdfit_basicTest, sdfit_selection, sdfit_auto]
+    return [sdfit_basicTest, 
+            sdfit_selection, 
+            sdfit_auto, 
+            sdfit_timeaverage]
