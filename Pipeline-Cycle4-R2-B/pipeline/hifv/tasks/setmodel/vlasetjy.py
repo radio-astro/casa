@@ -466,7 +466,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                     try:
                         setjy_dicts.append(self._executor.execute(job))
                     except:
-                        LOG.warn("SetJy issue with field id="+str(job.kw['field']) + "and spw=" +str(job.kw['spw']))
+                        LOG.warn("SetJy issue with field id="+str(job.kw['field']) + " and spw=" +str(job.kw['spw']))
         
         '''
         for field in utils.safe_split(inputs.field):
