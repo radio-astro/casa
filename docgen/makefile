@@ -4,8 +4,16 @@ makefile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 current_dir := $(dir $(makefile_path))
 DOXY = $(current_dir)bin/doxy
 PLONE = $(current_dir)bin/fetch_plone
+INDEX = $(current_dir)bin/create_index
 
-all: doxygen plone
+all: index doxygen plone
+
+index: check
+	if test -f "$(DOCROOT)/doc/index.html"; then                           \
+	    rm -f "$(DOCROOT)/doc/index.html";                                 \
+    fi
+	mkdir -p $(DOCROOT)/doc &&                                             \
+	$(INDEX) out=$(DOCROOT)/doc
 
 doxygen: check
 	if test -d "$(DOCROOT)/doc/doxygen"; then                              \

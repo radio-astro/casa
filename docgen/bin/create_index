@@ -1,0 +1,106 @@
+#!/usr/bin/perl
+use File::Basename;
+use File::Find;
+use Cwd 'abs_path';
+use Cwd 'getcwd';
+use File::Path qw(make_path remove_tree);
+
+$origin = getcwd( );
+$binpath = abs_path(dirname(abs_path($0)));
+$installpath = abs_path("$binpath/../..");
+$tmpdir = "$installpath/tmp";
+$outputdir = "$installpath/docs";
+$outputdir_default = "$outputdir";
+$debug = 0;
+$logging = 0;
+$LOG = STDOUT;
+
+foreach ( @ARGV ) {
+    if ( m|^tmp=(.*)$| ) {
+        my $dir = $1;
+        die "tmp directory ($dir) does not exist..." unless -d $dir;
+        $tmpdir = $dir;
+    } elsif ( m|^out=(.*)$| ) {
+        my $dir = $1;
+        die "output directory ($dir) does not exits..." unless -d $dir;
+        $outputdir = $dir;
+    } elsif ( m|^-?-debug$| ) {
+        $debug = 1;
+    } elsif ( m|^-?-usage$| || m|help|i ) {
+        usage( );
+        exit(0);
+    } elsif ( m|^log=(.*)$| ) {
+        my $path = $1;
+        my $dir = dirname($path);
+        die "directory of log file ($path) does not exit..." unless -d $dir;
+        open($LOG,"> $path") or die "cannot write to log file ($path): $!";
+        $logging = 1;
+    } else {
+        usage( );
+        die "unknown option \"$_\"...";
+    }
+}
+
+unless ( -d $tmpdir ) {
+    make_path($tmpdir) or die "could not create temporary directory ($tmpdir)";
+}
+unless ( -d $outputdir ) {
+    make_path($outputdir) or die "could not create output directory ($outputdir)";
+}
+
+chdir($installpath);         ### start out in casa's root directory
+$using_svn = system("svn info > /dev/null 2>&1") == 0;
+if ( $using_svn ) {
+    chomp(my $svnrev = `svnversion`);
+    $version = `curl --silent https://svn.cv.nrao.edu/cgi-bin/casa-version-match?rev=$svnrev`;
+    $version =~ s|(^\d+\.\d+)\.(\d+)\s+\d+\n*$|$1.0-$2|;
+} else {
+    die "could not find version number script" unless -x "$installpath/code/install/resolvegitrevision.sh";
+    chomp($version = `$installpath/code/install/resolvegitrevision.sh`);
+}
+die "failed to find version number" unless $version =~ m|\d+\.\d+\.\d+-\d+|g;
+print $LOG "casa version: $version\n";
+
+open(INDEX,"> $outputdir/index.html");
+print INDEX gen_index( );
+close(INDEX);
+
+
+sub gen_index {
+    return <<"_INDEX_EOF_";
+<html>
+<h1>CASA Documentation</h1>
+<p>This site is the documentation included in released versions of CASA. This particular
+   site contains the documentation included in the current distribution:
+<ul>
+    <li> <a href="plone/casa.nrao.edu/plonedocs/index.html">CASA $version User Manual</a>
+    <li> <a href="doxygen/html/index.html">CASA $version Coding Reference</a>
+</ul
+<p>You can find the most recent information online at:
+<ul>
+    <li> <a href="https://casa.nrao.edu">CASA's Homepage</a>
+    <li> <a href="https://casa.nrao.edu/plonedocs/">The Latest CASA User Manual</a>
+    <li> <a href="https://casa.nrao.edu/doxygen/">The Latest CASA Coding Reference</a>
+</ul>
+</html>
+_INDEX_EOF_
+}
+
+
+sub usage {
+    print <<'END-OF-USAGE';
+This script will generate doxygen documentation in "docs/doxygen". The options are:
+
+    -usage         Print this information...
+    -debug         Print verbose information...
+
+    tmp=<DIR>      Directory to use for storing intermediate file and
+                   running doxygen.
+    out=<DIR>      Directory where the output should be created. This
+                   directory should exist, and if you want a clean
+                   run, it should be empty.
+    log=<FILE>     Use <FILE> for all output instead of stdout
+                   (implies '-debug').
+
+END-OF-USAGE
+}
