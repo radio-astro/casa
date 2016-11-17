@@ -495,7 +495,7 @@ elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
         set( dbusxx dbus-c++ )
         set( casa_packages /usr/lib/casapy )
         set( qt4 system-qt )
-        set( python_version 2.6 )
+        set( python_version 2.7 )
 
     endif()
 else()
