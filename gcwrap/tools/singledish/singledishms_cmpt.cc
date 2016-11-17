@@ -329,6 +329,9 @@ bool
 singledishms::fit_line(string const& datacolumn,
 		       ::casac::variant const& spw,
 		       ::casac::variant const& pol,
+                       bool const timeaverage,
+                       string const& timebin,
+                       string const& timespan,
 		       string const& fitfunc,
 		       string const& nfit,
 		       bool const linefinding,
@@ -343,6 +346,12 @@ singledishms::fit_line(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
+    if (timeaverage) {
+      Record average_param = get_time_averaging_record(timeaverage, timebin,
+						       timespan);
+      itsSd->setAverage(average_param);
+    }
+
     itsSd->fitLine(datacolumn, toCasaString(spw), toCasaString(pol), 
 		   fitfunc, nfit, linefinding, threshold, avg_limit,
 		   minwidth, edge, tempfile, tempoutfile);

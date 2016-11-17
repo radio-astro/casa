@@ -566,6 +566,21 @@ Fit line profile to selected spectra and obtain the best-fit parameter values
       <value></value>
     </param>
 
+    <param type="bool" name="timeaverage">
+        <description>Average data in time.</description>
+        <value>false</value>
+    </param>
+
+    <param type="string" name="timebin">
+        <description>Bin width for time averaging.</description>     
+        <value>0s</value>
+    </param>
+    
+    <param type="string" name="timespan">
+        <description>Span the timebin across \'scan\', \'state\', \'field\', or a combination of them (e.g., \'scan,state\').</description>
+        <value></value>
+    </param>
+
     <param type="string" name="fitfunc">
       <description>Function of line profile</description>
       <value>gaussian</value>
