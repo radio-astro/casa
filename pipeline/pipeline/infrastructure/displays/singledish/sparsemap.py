@@ -14,6 +14,7 @@ from .utils import DDMMSSs, HHMMSSss
 #from .utils import sd_polmap as polmap
 from .utils import PlotObjectHandler
 from .common import DPIDetail, SDImageDisplay, ShowPlot
+from . import atmutil
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -373,6 +374,12 @@ class SDSparseMapDisplay(SDImageDisplay):
 #     def num_valid_spectrum(self):
 #         return self.inputs.num_valid_spectrum
 
+    def enable_atm(self):
+        self.showatm = True
+        
+    def disable_atm(self):
+        self.showatm = False
+
     def plot(self):
 
         self.init()
@@ -387,6 +394,18 @@ class SDSparseMapDisplay(SDImageDisplay):
         #else: pl.ioff()
         #pl.figure(self.MATPLOTLIB_FIGURE_ID)
         #if ShowPlot: pl.ioff()
+        
+        if hasattr(self, 'showatm') and self.showatm is True:
+            ms_id = min(self.inputs.msid_list)
+            ms = self.inputs.context.observing_run.measurement_sets[ms_id]
+            vis = ms.name
+            antenna_id = 0 # nominal
+            spw_id = self.inputs.spw
+            atm_freq, atm_transmission = atmutil.get_transmission(vis=vis, antenna_id=antenna_id,
+                                                        spw_id=spw_id, doplot=False)
+        else:
+            atm_transmission = None
+            atm_freq = None
 
         num_panel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxPanel)
         STEP = int((max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1) - 1) / num_panel) + 1
@@ -411,7 +430,8 @@ class SDSparseMapDisplay(SDImageDisplay):
         refpix[1], refval[1], increment[1] = self.image.direction_axis(1, unit='deg')
         plotter.setup_labels(refpix, refval, increment)
         
-        
+        plotter.set_atm_transmission(atm_transmission, atm_freq)
+      
         # loop over pol
         for pol in xrange(self.npol):
             

@@ -9,7 +9,7 @@ import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
 from pipeline.infrastructure.displays.singledish.utils import sd_polmap
 from pipeline.domain import DataTable
 from ..common import utils 
-from ..common import atmutil
+from pipeline.infrastructure.displays.singledish import atmutil
 
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
