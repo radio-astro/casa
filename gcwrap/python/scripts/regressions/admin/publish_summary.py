@@ -23,6 +23,13 @@ quantity=casac.quanta()
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
 
+print "PYVER        - ", PYVER
+print "AIPS_DIR     - ", AIPS_DIR
+print "SCRIPT_REPOS - ", AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
+print "--------------------------------------------------------------------------------"
+os.sysetm("ls " + AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/')
+print "--------------------------------------------------------------------------------"
+
 if os.access(AIPS_DIR+'/lib64', os.F_OK):
     SCRIPT_REPOS = AIPS_DIR+'/lib64/python'+PYVER+'/regressions/'
     UTILS_DIR = AIPS_DIR+'/lib64/casapy/bin/'
