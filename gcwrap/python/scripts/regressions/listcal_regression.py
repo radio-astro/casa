@@ -442,7 +442,7 @@ def load_jupiter6cm(prefix,msname,caltable):
     setjy()
     
     #
-    # You should see something like this in the logger and casapy.log file:
+    # You should see something like this in the logger and casa.log file:
     #
     # 1331+305  spwid=  0  [I=7.462, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
     # 1331+305  spwid=  1  [I=7.51, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)

@@ -547,7 +547,7 @@ else:
     saveinputs('setjy',prefix+'.setjy.saved')
     setjy()
     #
-    # You should see something like this in the logger and casapy.log file:
+    # You should see something like this in the logger and casa.log file:
     #
     # 0137+331  spwid=  0  [I=5.405, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
     # 0137+331  spwid=  1  [I=5.458, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)

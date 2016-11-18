@@ -54,7 +54,7 @@
 # NGC1333_1.UVFITS---> importuvfits ----> n1333_1.ms                        #
 #                           |                                               #
 #                           v                                               #
-#                        listobs    ----> casapy.log                        #
+#                        listobs    ----> casa.log                          #
 #                           |                                               #
 #                           v                                               #
 #                       flagdata    ----> n1333_1.ms                        #
@@ -81,7 +81,7 @@
 # NGC1333_2.UVFITS---> importuvfits ----> n1332_2.ms                        #
 #                           |                                               #
 #                           v                                               #
-#                        listobs    ----> casapy.log                        #
+#                        listobs    ----> casa.log                          #
 #                           |                                               #
 #                           v                                               #
 #                       flagdata    ----> n1333_2.ms                        #

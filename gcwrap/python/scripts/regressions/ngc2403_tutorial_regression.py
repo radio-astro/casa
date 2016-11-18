@@ -136,7 +136,7 @@ listobs()
 
 print ""
 print "The listobs output will be displayed in your logger window and in"
-print "the casapy.log file"
+print "the casa.log file"
 
 if benchmarking:
     list2time=time.time()

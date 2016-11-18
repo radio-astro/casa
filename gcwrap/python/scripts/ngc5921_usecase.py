@@ -68,7 +68,7 @@ verbose = True
 
 listobs()
 
-# You should get in your logger window and in the casapy.log file
+# You should get in your logger window and in the casa.log file
 # something like:
 #
 # MeasurementSet Name:  /home/sandrock2/smyers/Testing2/Sep07/ngc5921.usecase.ms
@@ -194,7 +194,7 @@ modimage = ''
 setjy()
 
 #
-# You should see something like this in the logger and casapy.log file:
+# You should see something like this in the logger and casa.log file:
 #
 # 1331+30500002_0  spwid=  0  [I=14.76, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
 #

@@ -15,7 +15,7 @@
 #   NGC5921.fits ----> importuvfits  ------>  ngc5921.ms   +                 #
 #   (1.4GHz,                 |                ngc5921.ms.flagversions        #
 #    63 sp chan,             v                                               #
-#    D-array)             listobs    ------>  casapy.log                     #
+#    D-array)             listobs    ------>  casa.log                       #
 #                            |                                               #
 #                            v                                               #
 #                      flagautocorr                                          #
@@ -61,7 +61,7 @@
 #                       exportfits   ------>  ngc5921.clean.fits             #
 #                            |                                               #
 #                            v                                               #
-#                         imstat     ------>  casapy.log                     #
+#                         imstat     ------>  casa.log                       #
 #                            |                                               #
 #                            v                                               #
 #                        immoments   ------>  ngc5921.moments.integrated +   #
@@ -229,7 +229,7 @@ verbose = True
 
 listobs()
 
-# You should get in your logger window and in the casapy.log file
+# You should get in your logger window and in the casa.log file
 # something like:
 #
 # MeasurementSet Name:  /home/sandrock2/smyers/Testing2/Sep07/ngc5921_regression/ngc5921.ms
@@ -371,7 +371,7 @@ usescratch=False
 setjy()
 
 #
-# You should see something like this in the logger and casapy.log file:
+# You should see something like this in the logger and casa.log file:
 #
 # 1331+30500002_0  spwid=  0  [I=14.76, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
 #

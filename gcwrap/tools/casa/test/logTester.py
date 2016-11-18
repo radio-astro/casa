@@ -29,7 +29,7 @@ class LogTester:
     #whenever whereever you want a new logfile
     #
     #change the default fname if you want
-    def newlogfile(self, fname='casapy.py'):
+    def newlogfile(self, fname='casa.log'):
         self._log['logTool'].setlogfile(fname)
 
     def reduce(self, start=None):

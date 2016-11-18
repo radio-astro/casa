@@ -28,7 +28,7 @@
 #   NGC5921.fits --> importuvfits  -->  <prefix>.ms   +                  #
 #   (1.4GHz,               |            <prefix>.ms.flagversions         #
 #    63 sp chan,           v                                             #
-#    D-array)           listobs    -->  casapy.log                       #
+#    D-array)           listobs    -->  casa.log                         #
 #                          |                                             #
 #                          v                                             #
 #                     flagautocorr                                       #
@@ -68,7 +68,7 @@
 #                     exportfits   -->  <prefix>.clean.fits              #
 #                          |                                             #
 #                          v                                             #
-#                       imhead     -->  casapy.log                       #
+#                       imhead     -->  casa.log                         #
 #                          |                                             #
 #                          v                                             #
 #                       imstat     -->  xstat (parameter)                #
@@ -142,7 +142,7 @@ verbose = True
 
 listobs()
 
-# You should get in your logger window and in the casapy.log file
+# You should get in your logger window and in the casa.log file
 # something like:
 #
 # MeasurementSet Name:  /home/sandrock2/smyers/Testing2/Sep07/ngc5921.usecase.ms
@@ -273,7 +273,7 @@ if scriptmode:
 setjy()
 
 #
-# You should see something like this in the logger and casapy.log file:
+# You should see something like this in the logger and casa.log file:
 #
 # 1331+30500002_0  spwid=  0  [I=14.76, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
 #

@@ -92,7 +92,7 @@ verbose = True
 
 listobs()
 
-# You should get in your logger window and in the casapy.log file
+# You should get in your logger window and in the casa.log file
 # something like:
 #
 #    Observer: FLUX99     Project:   

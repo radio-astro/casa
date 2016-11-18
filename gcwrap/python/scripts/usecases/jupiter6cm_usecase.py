@@ -111,7 +111,7 @@ verbose = True
 
 listobs()
 
-# You should get in your logger window and in the casapy.log file
+# You should get in your logger window and in the casa.log file
 # something like:
 #
 #    Observer: FLUX99     Project:   
@@ -586,7 +586,7 @@ field = '1331+305'
 setjy()
 
 #
-# You should see something like this in the logger and casapy.log file:
+# You should see something like this in the logger and casa.log file:
 #
 # 1331+305  spwid=  0  [I=7.462, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
 # 1331+305  spwid=  1  [I=7.51, Q=0, U=0, V=0] Jy, (Perley-Taylor 99)
