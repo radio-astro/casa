@@ -172,6 +172,14 @@ private:
         casacore::Bool emitMessage
     ) const;
 
+    void _doMultipleBeams(
+        LogIO& os, ImageInfo& iiOut, T& kernelVolume, SPIIT imageOut, String& brightnessUnitOut,
+        GaussianBeam& beamOut, Double factor1, const ImageInterface<T>& imageIn,
+        const vector<Quantity>& originalParms, vector<Quantity>& kernelParms,
+        Array<T>& kernel, VectorKernel::KernelTypes kernelType, Bool logFactors,
+        Double pixelArea
+    ) const;
+
     T _fillKernel (
         casacore::Matrix<T>& kernelMatrix,
         casacore::VectorKernel::KernelTypes kernelType,
