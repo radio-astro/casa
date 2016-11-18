@@ -236,7 +236,7 @@ MS Parameters
   </param>
   
     <param type="string" name="xdatacolumn" subparam="true">
-      <description>Data column to use for x-axis (blank for default/current)</description>
+      <description>Data column to use for x-axis (blank for default/current).  Note that residuals are complex (vector) differences or ratios.</description>
       <value />
       <allowed kind="enum">
         <value />
@@ -408,7 +408,7 @@ MS Parameters
     </param>
     
     <param type="any" name="ydatacolumn" subparam="true">
-      <description>Data column to use for y-axis (blank for default/current)</description>
+      <description>Data column to use for y-axis (blank for default/current). Note that residuals are complex (vector) differences or ratios.</description>
       <any type="variant" limittype='string stringArray'/>
       <value type="string"/>
       <allowed kind="enum" type="string">
@@ -1622,8 +1622,8 @@ Constraints
 
       &gt;&gt;&gt; xaxis, yaxis expandable parameters
         xdatacolumn, 
-        ydatacolumn  -- which data column to use for Visibility values:
-                        default: '' ('data' on first execuation;
+        ydatacolumn  -- data column to use for Visibility values:
+                        default: '' ('data' on first execution;
                                      thereafter the most recent
                                      setting is used)
                         valid options:  'data'      (observed)
@@ -1632,7 +1632,10 @@ Constraints
                                         'residual'  (aliases 'corrected-model')
                                         'corrected-model'
                                         'data-model'
+                                        'data/model'
+                                        'corected/model'
                                         'float'
+                        Note that residuals are complex (vector) differences or ratios.
     
     selectdata -- data selection parameters flag
                   default: True  (reveals data selection parameters
