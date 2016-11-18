@@ -309,6 +309,14 @@ class MakeImList(basetask.StandardTaskTemplate):
         field_intent_list = self.heuristics.field_intent_list(
           intent=inputs.intent, field=inputs.field)
 
+        # Parse hm_cell to get optional pixperbeam setting
+        cell = inputs.hm_cell
+        if type(cell) is types.StringType:
+            pixperbeam = float(cell.split('ppb')[0])
+            cell = []
+        else:
+            pixperbeam = 5.0
+        
         # Remove bad spws in cont mode
         if inputs.specmode == 'cont':
             filtered_spwlist = []
@@ -316,7 +324,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 # Can not just use "has_data" as it only sets up
                 # a selection which checks against existance of
                 # a given item (e.g. an spw).
-                cell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw, oversample=0.5*inputs.pixperbeam)
+                cell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw, oversample=0.5*pixperbeam)
                 # For now we consider the spw for all fields / intents.
                 # May need to handle this individually.
                 if (valid_data[list(field_intent_list)[0]]):
@@ -331,12 +339,6 @@ class MakeImList(basetask.StandardTaskTemplate):
         # cell is a list of form [cellx, celly]. If the list has form [cell]
         # then that means the cell is the same size in x and y. If cell is
         # empty then fill it with a heuristic result
-        cell = inputs.hm_cell
-        if type(cell) is types.StringType:
-            pixperbeam = float(cell.split('ppb')[0])
-            cell = []
-        else:
-            pixperbeam = 5.0
         cells = {}
         valid_data = {}
         if cell == []:
