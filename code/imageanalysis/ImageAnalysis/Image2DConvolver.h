@@ -180,6 +180,14 @@ private:
         Double pixelArea
     ) const;
 
+    void _doSingleBeam(
+        LogIO& os, ImageInfo& iiOut, T& kernelVolume, vector<Quantity>& kernelParms, Array<T>& kernel,
+        String& brightnessUnitOut, GaussianBeam& beamOut, SPIIT imageOut,
+        const ImageInterface<T>& imageIn, const vector<Quantity>& originalParms,
+        VectorKernel::KernelTypes kernelType, Bool logFactors, Double factor1,
+        Double pixelArea
+    ) const;
+
     T _fillKernel (
         casacore::Matrix<T>& kernelMatrix,
         casacore::VectorKernel::KernelTypes kernelType,

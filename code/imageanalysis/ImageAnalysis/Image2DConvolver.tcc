@@ -241,6 +241,13 @@ template <class T> void Image2DConvolver<T>::_convolve(
         );
     }
     else {
+        _doSingleBeam(
+            os, iiOut, kernelVolume, kernelParms, kernel,
+            brightnessUnitOut, beamOut, imageOut, imageIn,
+            originalParms, kernelType, logFactors, factor1, 
+            pixelArea
+        );
+        /*
         casacore::GaussianBeam inputBeam = imageInfo.restoringBeam();
         if (_targetres) {
             kernelParms = _getConvolvingBeamForTargetResolution(
@@ -298,9 +305,76 @@ template <class T> void Image2DConvolver<T>::_convolve(
                 iiOut.removeRestoringBeam();
             }
         }
+        */
     }
     imageOut->setUnits(brightnessUnitOut);
     imageOut->setImageInfo(iiOut);
+}
+
+template <class T> void Image2DConvolver<T>::_doSingleBeam(
+    LogIO& os, ImageInfo& iiOut, T& kernelVolume, vector<Quantity>& kernelParms, Array<T>& kernel,
+    String& brightnessUnitOut, GaussianBeam& beamOut, SPIIT imageOut,
+    const ImageInterface<T>& imageIn, const vector<Quantity>& originalParms,
+    VectorKernel::KernelTypes kernelType, Bool logFactors, Double factor1, Double pixelArea
+) const {
+    casacore::GaussianBeam inputBeam = imageIn.imageInfo().restoringBeam();
+    if (_targetres) {
+        kernelParms = _getConvolvingBeamForTargetResolution(
+            originalParms, inputBeam
+        );
+        os << casacore::LogIO::NORMAL << "Convolving image that has a beam of "
+            << inputBeam << " with a Gaussian of "
+            << casacore::GaussianBeam(kernelParms) << " to reach a target resolution of "
+            << casacore::GaussianBeam(originalParms) << casacore::LogIO::POST;
+        kernelVolume = _makeKernel(
+            kernel, kernelType, kernelParms, imageIn
+        );
+    }
+    const CoordinateSystem& cSys = imageIn.coordinates();
+    T scaleFactor = _dealWithRestoringBeam(
+        os, brightnessUnitOut, beamOut, kernel, kernelVolume,
+        kernelType, kernelParms, cSys, inputBeam,
+        imageIn.units(), true
+    );
+    os << casacore::LogIO::NORMAL << "Scaling pixel values by ";
+    if (logFactors) {
+        if (_targetres) {
+            casacore::GaussianBeam kernelBeam(kernelParms);
+            factor1 = pixelArea/kernelBeam.getArea("arcsec*arcsec");
+        }
+        casacore::Double factor2 = beamOut.getArea("arcsec*arcsec")/inputBeam.getArea("arcsec*arcsec");
+        os << "inverse of area of convolution kernel in pixels (" << factor1
+            << ") times the ratio of the beam areas (" << factor2 << ") = ";
+    }
+    os << scaleFactor << casacore::LogIO::POST;
+    if (_targetres && near(beamOut.getMajor(), beamOut.getMinor(), 1e-7)) {
+        // circular beam should have same PA as given by user if
+        // targetres
+        beamOut.setPA(originalParms[2]);
+    }
+    // Convolve.  We have already scaled the convolution kernel (with some
+    // trickery cleverer than what ImageConvolver can do) so no more scaling
+    ImageConvolver<T> aic;
+    aic.convolve(
+        os, *imageOut, imageIn, scaleFactor*kernel, ImageConvolver<T>::NONE,
+        1.0, true
+    );
+    // Overwrite some bits and pieces in the output image to do with the
+    // restoring beam  and image units
+    casacore::Bool holdsOneSkyAxis;
+    casacore::Bool hasSky = casacore::CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, _axes.asVector());
+    if (hasSky && ! beamOut.isNull()) {
+        iiOut.setRestoringBeam(beamOut);
+    }
+    else {
+        // If one of the axes is in the sky plane, we must
+        // delete the restoring beam as it is no longer meaningful
+        if (holdsOneSkyAxis) {
+            os << casacore::LogIO::WARN << "Because you convolved just one of the sky axes" << endl;
+            os << "The output image does not have a valid spatial restoring beam" << casacore::LogIO::POST;
+            iiOut.removeRestoringBeam();
+        }
+    }
 }
 
 template <class T> void Image2DConvolver<T>::_doMultipleBeams(
