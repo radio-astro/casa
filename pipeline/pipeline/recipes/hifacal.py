@@ -125,6 +125,9 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         # Make clean images for the selected calibrators
         hif_makeimages (pipelinemode=pipelinemode)
     
+        # Check product size limits and mitigate imaging parameters
+        hif_checkproductsize (pipelinemode=pipelinemode)
+    
         # Export the data
         hifa_exportdata(pipelinemode=pipelinemode)
     
