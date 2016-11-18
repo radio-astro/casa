@@ -132,7 +132,7 @@ class UVcontFitInputs(basetask.StandardInputs):
 
     @spw.setter
     def spw(self, value):
-        self._spw = value
+        self._spw = str(value)
 
     @property
     def combine(self):
