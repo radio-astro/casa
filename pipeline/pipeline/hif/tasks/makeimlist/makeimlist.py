@@ -187,8 +187,6 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @hm_cell.setter
     def hm_cell(self, value):
-        if value is None:
-            value = []
         self._hm_cell = value
 
     @property
@@ -316,7 +314,7 @@ class MakeImList(basetask.StandardTaskTemplate):
             cell = []
         else:
             pixperbeam = 5.0
-        
+
         # Remove bad spws in cont mode
         if inputs.specmode == 'cont':
             filtered_spwlist = []
