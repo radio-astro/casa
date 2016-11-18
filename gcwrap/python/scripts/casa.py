@@ -96,25 +96,25 @@ else:
 def setup_path():
     global __ipcontroller__, __ld_library_path__
     _rootdir = None
-    if os.path.exists(os.path.join(__casapath__, 'bin', 'casapyinfo')):
+    if os.path.exists(os.path.join(__casapath__, 'bin', 'casa-config')):
         _rootdir = os.path.join(__casapath__, 'bin')
     else:
         for root, dirs, files in os.walk(__casapath__):
             # skip data folder which might be a network mount
             if root == __casapath__ and 'data' in dirs:
                 del dirs[dirs.index('data')]
-            if root.endswith("/bin") and "casapyinfo" in files :
+            if root.endswith("/bin") and "casa-config" in files :
                 _rootdir = root
                 break
     if _rootdir is None:
         return
 
-    __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(_rootdir + "/casapyinfo --exec 'which ipcontroller'"))
+    __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(_rootdir + "/casa-config --exec 'which ipcontroller'"))
     if os.path.exists(__ipcontroller__) :
         os.environ['PATH'] = os.path.dirname(__ipcontroller__) + ":" + os.environ['PATH']
     else :
         raise RuntimeError, "cannot configure CASA tasking system"
-    __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(_rootdir + "/casapyinfo --exec 'echo $LD_LIBRARY_PATH'"))
+    __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(_rootdir + "/casa-config --exec 'echo $LD_LIBRARY_PATH'"))
     map(lambda x: sys.path.append(x),__ld_library_path__)
 
 setup_path()

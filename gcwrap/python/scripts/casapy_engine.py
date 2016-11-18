@@ -94,8 +94,8 @@ else :
 
 
 # Setup helper paths
-if os.path.exists( __casapath__ + "/bin/casapyinfo") :
-    casa['helpers']['info'] = __casapath__ + "/bin/casapyinfo"
+if os.path.exists( __casapath__ + "/bin/casa-config") :
+    casa['helpers']['info'] = __casapath__ + "/bin/casa-config"
     
 
 if os.uname()[0]=='Darwin' :

@@ -98,13 +98,13 @@ casa = { 'build': {
 ### next adjust PATH and LD_LIBRARY_PATH
 ###
 #for root, dirs, files in os.walk(__casapath__):
-#    if root.endswith("/bin") and "casapyinfo" in files :
-#        __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(root + "/casapyinfo --exec 'which ipcontroller'"))
+#    if root.endswith("/bin") and "casa-config" in files :
+#        __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(root + "/casa-config --exec 'which ipcontroller'"))
 #        if os.path.exists(__ipcontroller__) :
 #            os.environ['PATH'] = os.path.dirname(__ipcontroller__) + ":" + os.environ['PATH']
 #        else :
 #            raise RuntimeError, "cannot configure CASA tasking system"
-#        __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(root + "/casapyinfo --exec 'echo $LD_LIBRARY_PATH'"))
+#        __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(root + "/casa-config --exec 'echo $LD_LIBRARY_PATH'"))
 #        map(lambda x: sys.path.append(x),__ld_library_path__)
 #        break
 
