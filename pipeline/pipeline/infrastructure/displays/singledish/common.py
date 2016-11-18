@@ -287,7 +287,7 @@ class SDImageDisplay(object):
         (refpix, refval, increment) = self.image.spectral_axis(unit='GHz')
         self.frequency = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
         self.velocity = self.image.to_velocity(self.frequency, freq_unit='GHz')
-
+        self.frequency_frame = self.image.coordsys.getconversiontype('spectral')
         self.x_max = self.nx - 1
         self.x_min = 0
         self.y_max = self.ny - 1
