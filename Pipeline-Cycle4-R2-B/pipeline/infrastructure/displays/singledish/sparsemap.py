@@ -10,6 +10,7 @@ import matplotlib.gridspec as gridspec
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.casatools as casatools
 from .utils import DDMMSSs, HHMMSSss
 #from .utils import sd_polmap as polmap
 from .utils import PlotObjectHandler
@@ -217,8 +218,16 @@ class SDSparseMapPlotter(object):
         self.deviation_mask = mask
         
     def set_atm_transmission(self, transmission, frequency):
-        self.atm_transmission = transmission
-        self.atm_frequency = frequency
+        if self.atm_transmission is None:
+            self.atm_transmission = [transmission]
+            self.atm_frequency = [frequency]
+        else:
+            self.atm_transmission.append(transmission)
+            self.atm_frequency.append(frequency)
+    
+    def unset_atm_transmission(self):
+        self.atm_transmission = None
+        self.atm_frequency = None
         
     def plot(self, map_data, averaged_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
@@ -295,14 +304,17 @@ class SDSparseMapPlotter(object):
                 fmin = ch_to_freq(chmin, frequency)
                 fmax = ch_to_freq(chmax, frequency)
                 plot_helper.axvspan(fmin, fmax, ymin=0.95, ymax=1, color='red')
-        if overlay_atm_transmission:#self.atm_transmission is not None:
+        if overlay_atm_transmission:
             pl.gcf().sca(self.axes.axes_atm)
-            plot_helper.plot(self.atm_frequency, self.atm_transmission, 
-                             color='m', linestyle='-', linewidth=0.4)           
-            M = self.atm_transmission.min()
+            amin = 1.0
+            amax = 0.0
+            for (t, f) in zip(self.atm_transmission, self.atm_frequency):
+                plot_helper.plot(f, t, color='m', linestyle='-', linewidth=0.4)           
+                amin = min(amin, t.min())
+                amax = max(amax, t.max())
             Y = 0.6
-            ymin = (M - Y) / (1.0 - Y)
-            ymax = self.atm_transmission.max() + (1.0 - self.atm_transmission.max()) * 0.1
+            ymin = (amin - Y) / (1.0 - Y)
+            ymax = amax + (1.0 - amax) * 0.1
             pl.axis((global_xmin, global_xmax, ymin, ymax))
                     
         is_valid_fit_result = (fit_result is not None and fit_result.shape == map_data.shape)
@@ -395,18 +407,6 @@ class SDSparseMapDisplay(SDImageDisplay):
         #pl.figure(self.MATPLOTLIB_FIGURE_ID)
         #if ShowPlot: pl.ioff()
         
-        if hasattr(self, 'showatm') and self.showatm is True:
-            ms_id = min(self.inputs.msid_list)
-            ms = self.inputs.context.observing_run.measurement_sets[ms_id]
-            vis = ms.name
-            antenna_id = 0 # nominal
-            spw_id = self.inputs.spw
-            atm_freq, atm_transmission = atmutil.get_transmission(vis=vis, antenna_id=antenna_id,
-                                                        spw_id=spw_id, doplot=False)
-        else:
-            atm_transmission = None
-            atm_freq = None
-
         num_panel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxPanel)
         STEP = int((max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1) - 1) / num_panel) + 1
         NH = (self.x_max - self.x_min) / STEP + 1
@@ -430,7 +430,45 @@ class SDSparseMapDisplay(SDImageDisplay):
         refpix[1], refval[1], increment[1] = self.image.direction_axis(1, unit='deg')
         plotter.setup_labels(refpix, refval, increment)
         
-        plotter.set_atm_transmission(atm_transmission, atm_freq)
+        if hasattr(self, 'showatm') and self.showatm is True:
+            msid_list = numpy.unique(self.inputs.msid_list)
+            for ms_id in msid_list:
+                ms = self.inputs.context.observing_run.measurement_sets[ms_id]
+                vis = ms.name
+                antenna_id = 0 # nominal
+                spw_id = self.inputs.spw
+                atm_freq, atm_transmission = atmutil.get_transmission(vis=vis, antenna_id=antenna_id,
+                                                            spw_id=spw_id, doplot=False)
+                frame = self.frequency_frame
+                if frame != 'TOPO':
+                    # do conversion
+                    field_id = self.inputs.fieldid_list[0]
+                    field = ms.fields[field_id]
+                    direction_ref = field.mdirection
+                    start_time = ms.start_time
+                    end_time = ms.end_time
+                    me = casatools.measures
+                    qa = casatools.quanta
+                    qmid_time = qa.quantity(start_time['m0'])
+                    qa.add(qmid_time, end_time['m0'])
+                    qa.div(qmid_time, 2.0)
+                    time_ref = me.epoch(rf=start_time['refer'], 
+                                        v0=qmid_time)
+                    position_ref = ms.antennas[antenna_id].position
+                    
+                    # initialize
+                    me.done()
+                    me.doframe(time_ref)
+                    me.doframe(direction_ref)
+                    me.doframe(position_ref)
+                    def _tolsrk(x):
+                        m = me.frequency(rf=frame, v0=qa.quantity(x, 'GHz'))
+                        converted = me.measure(v=m, rf='LSRK')
+                        qout = qa.convert(converted['m0'], outunit='GHz')
+                        return qout['value']
+                    tolsrk = numpy.vectorize(_tolsrk)
+                    atm_freq = tolsrk(atm_freq)
+                plotter.set_atm_transmission(atm_transmission, atm_freq)
       
         # loop over pol
         for pol in xrange(self.npol):
