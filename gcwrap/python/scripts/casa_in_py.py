@@ -54,7 +54,7 @@ casa = { 'build': {
          },
          'flags': { },
          'files': { 
-             'logfile': os.getcwd( ) + '/casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+             'logfile': os.getcwd( ) + '/casa-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
          },
          'state' : { 'startup': True }
        }
