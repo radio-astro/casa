@@ -27,7 +27,7 @@ print "PYVER        - ", PYVER
 print "AIPS_DIR     - ", AIPS_DIR
 print "SCRIPT_REPOS - ", AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
 print "--------------------------------------------------------------------------------"
-os.sysetm("ls " + AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/')
+os.system("ls " + AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/')
 print "--------------------------------------------------------------------------------"
 
 if os.access(AIPS_DIR+'/lib64', os.F_OK):
