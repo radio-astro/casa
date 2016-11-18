@@ -66,7 +66,9 @@ class PerformanceParameters (object):
         desired_largest_scale = '0.0arcsec',
         desired_spectral_resolution = '0.0MHz',
         desired_sensitivity = '0.0Jy',
-        desired_dynamic_range = 1.0
+        desired_dynamic_range = 1.0,
+        max_cube_size = 30.0,
+        max_product_size = 200.0
         ):
 
         self.desired_angular_resolution = desired_angular_resolution
@@ -74,6 +76,8 @@ class PerformanceParameters (object):
         self.desired_spectral_resolution = desired_spectral_resolution
         self.desired_sensitivity = desired_sensitivity
         self.desired_dynamic_range = desired_dynamic_range
+        self.max_cube_size = max_cube_size
+        self.max_product_size = max_product_size
 
     def __iter__(self):
         return vars(self).iteritems()

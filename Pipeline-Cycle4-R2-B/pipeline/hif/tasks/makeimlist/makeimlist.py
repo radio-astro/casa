@@ -17,8 +17,7 @@ class MakeImListInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, 
       imagename=None, intent=None, field=None, spw=None, contfile=None,
       linesfile=None, uvrange=None, specmode=None, outframe=None,
-      sfpblimit=None, imsize=None, pixperbeam=None, cell=None,
-      calmaxpix=None, phasecenter=None,
+      hm_imsize=None, hm_cell=None, calmaxpix=None, phasecenter=None,
       nchan=None, start=None, width=None, nbins=None):
 
         self._init_properties(vars())
@@ -48,7 +47,10 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def field(self):
-        return self._field
+        if (self._field is None) and ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('field'):
+            return self.context.size_mitigation_parameters['field']
+        else:
+            return self._field
 
     @field.setter
     def field(self, value):
@@ -120,50 +122,72 @@ class MakeImListInputs(basetask.StandardInputs):
          self._outframe = value
 
     @property
-    def sfpblimit(self):
-        return self._sfpblimit
+    def hm_imsize(self):
+        if self._hm_imsize is None:
+            if ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('hm_imsize'):
+                self._hm_imsize = self.context.size_mitigation_parameters['hm_imsize']
+            else:
+                self._hm_imsize = []
 
-    @sfpblimit.setter
-    def sfpblimit(self, value):
-        if value in (None, -1.0):
-            value = None
-        self._sfpblimit = value
+        # Convert string to list
+        if type(self._hm_imsize) is types.StringType:
+            if len(self._hm_imsize) > 0:
+                if self._hm_imsize[0] == '[':
+                    temp = self._hm_imsize.translate(None, '[]\'')
+                    temp = temp.split(',')
+                    try:
+                        self._hm_imsize = map(int, temp)
+                    except:
+                        self._hm_imsize = temp
+                    self._hm_imsize = map(int, temp)
+            else:
+                self._hm_imsize = []
+
+        # Convert to single string for '<nummber>pb' option
+        temp = None
+        for item in self._hm_imsize:
+            if item.find('pb') != -1:
+                temp = item
+        if temp:
+            self._hm_imsize = temp
+
+        return self._hm_imsize
+
+    @hm_imsize.setter
+    def hm_imsize(self, value):
+        self._hm_imsize = value
 
     @property
-    def imsize(self):
-        if self._imsize is None:
-            return []
-        elif type(self._imsize) is types.StringType:
-            if self._imsize[0] == '[':
-                temp = self._imsize.translate(None, '[]\'')
-            temp = temp.split(',')
-            self._imsize = map(int, temp)
+    def hm_cell(self):
+        if self._hm_cell is None:
+            if ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('hm_cell'):
+                self._hm_cell = self.context.size_mitigation_parameters['hm_cell']
+            else:
+                self._hm_cell = []
 
-        return self._imsize
+        # Convert string to list
+        if type(self._hm_cell) is types.StringType:
+            if len(self._hm_cell) > 0:
+                if self._hm_cell[0] == '[':
+                    temp = self._hm_cell.translate(None, '[]\'')
+                    temp = temp.split(',')
+                    self._hm_cell = temp
+            else:
+                self._hm_cell = []
 
-    @imsize.setter
-    def imsize(self, value):
-        self._imsize = value
+        # Convert to single string for '<nummber>ppb' option
+        temp = None
+        for item in self._hm_cell:
+            if item.find('ppb') != -1:
+                temp = item.replace('"', '').replace("'", "")
+        if temp:
+            self._hm_cell = temp
 
-    @property
-    def pixperbeam(self):
-        return self._pixperbeam
+        return self._hm_cell
 
-    @pixperbeam.setter
-    def pixperbeam(self, value):
-        if value in (None, -1.0):
-            value = 5.0
-        self._pixperbeam = value
-
-    @property
-    def cell(self):
-        return self._cell
-
-    @cell.setter
-    def cell(self, value):
-        if value is None:
-            value = []
-        self._cell = value
+    @hm_cell.setter
+    def hm_cell(self, value):
+        self._hm_cell = value
 
     @property
     def calmaxpix(self):
@@ -219,7 +243,10 @@ class MakeImListInputs(basetask.StandardInputs):
 
     @property
     def nbins(self):
-        return self._nbins
+        if (self._nbins is None) and ('TARGET' in self.intent) and self.context.size_mitigation_parameters.has_key('nbins'):
+            return self.context.size_mitigation_parameters['nbins']
+        else:
+            return self._nbins
 
     @nbins.setter
     def nbins(self, value):
@@ -280,6 +307,14 @@ class MakeImList(basetask.StandardTaskTemplate):
         field_intent_list = self.heuristics.field_intent_list(
           intent=inputs.intent, field=inputs.field)
 
+        # Parse hm_cell to get optional pixperbeam setting
+        cell = inputs.hm_cell
+        if type(cell) is types.StringType:
+            pixperbeam = float(cell.split('ppb')[0])
+            cell = []
+        else:
+            pixperbeam = 5.0
+
         # Remove bad spws in cont mode
         if inputs.specmode == 'cont':
             filtered_spwlist = []
@@ -287,7 +322,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 # Can not just use "has_data" as it only sets up
                 # a selection which checks against existance of
                 # a given item (e.g. an spw).
-                cell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw, oversample=0.5*inputs.pixperbeam)
+                cell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw, oversample=0.5*pixperbeam)
                 # For now we consider the spw for all fields / intents.
                 # May need to handle this individually.
                 if (valid_data[list(field_intent_list)[0]]):
@@ -302,7 +337,6 @@ class MakeImList(basetask.StandardTaskTemplate):
         # cell is a list of form [cellx, celly]. If the list has form [cell]
         # then that means the cell is the same size in x and y. If cell is
         # empty then fill it with a heuristic result
-        cell = inputs.cell
         cells = {}
         valid_data = {}
         if cell == []:
@@ -312,7 +346,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 # the value derives from the single value returned by
                 # imager.advise
                 cells[spwspec], valid_data[spwspec] = self.heuristics.cell(
-                  field_intent_list=field_intent_list, spwspec=spwspec, oversample=0.5*inputs.pixperbeam)
+                  field_intent_list=field_intent_list, spwspec=spwspec, oversample=0.5*pixperbeam)
                 if (cells[spwspec] != ['invalid']):
                     min_cell = cells[spwspec] if (qaTool.convert(cells[spwspec][0], 'arcsec')['value'] < qaTool.convert(min_cell[0], 'arcsec')['value']) else min_cell
             # Rounding to two significant figures
@@ -346,7 +380,12 @@ class MakeImList(basetask.StandardTaskTemplate):
 
         # if imsize not set then use heuristic code to calculate the
         # centers for each field/spwspec
-        imsize = inputs.imsize
+        imsize = inputs.hm_imsize
+        if type(imsize) is types.StringType:
+            sfpblimit = float(imsize.split('pb')[0])
+            imsize = []
+        else:
+            sfpblimit = 0.2
         imsizes = {}
         if imsize == []:
             for field_intent in field_intent_list:
@@ -360,7 +399,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                         field_ids = self.heuristics.field(
                           field_intent[1], field_intent[0])
                         himsize = self.heuristics.imsize(fields=field_ids,
-                          cell=cells[spwspec], beam=beams[spwspec], sfpblimit=inputs.sfpblimit)
+                          cell=cells[spwspec], beam=beams[spwspec], sfpblimit=sfpblimit)
                         if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX', 'CHECK']:
                             himsize = [min(npix, inputs.calmaxpix) for npix in himsize]
                         imsizes[(field_intent[0],spwspec)] = himsize
@@ -493,6 +532,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                               'imsize': imsizes[(field_intent[0], spwspec)],
                               'phasecenter': phasecenters[field_intent[0]],
                               'specmode': inputs.specmode,
+                              'gridder': self.heuristics.gridder(field_intent[1], field_intent[0]),
                               'imagename': imagenames[(field_intent, spwspec)],
                               'start': inputs.start,
                               'width': widths[(field_intent[0], spwspec)],
