@@ -2210,10 +2210,10 @@ threshold to cut the smoothed mask to create a final mask: cutthreshold * peak o
       <shortdescription>Run major cycles in parallel</shortdescription>
       <description>Run major cycles in parallel (this feature is experimental)
         
-                       Parallel tclean will run only if casapy has already been started using mpirun.
+                       Parallel tclean will run only if casa has already been started using mpirun.
                        Please refer to HPC documentation for details on how to start this on your system.
                        
-                       Example :  mpirun -n 3 -xterm 0 `which casapy`
+                       Example :  mpirun -n 3 -xterm 0 `which casa`
 
                        Continuum Imaging :
                           -  Data are partitioned (in time) into NProc pieces

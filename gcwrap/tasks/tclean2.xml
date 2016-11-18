@@ -2030,11 +2030,11 @@ or if an externally produced .pb image exists on disk)
 
 				Run major cycles in parallel (this feature is experimental)
 
-				Parallel tclean will run only if casapy has already been started
+				Parallel tclean will run only if casa has already been started
 				using mpirun.  Please refer to HPC documentation for details on
 				how to start this on your system.
 
-				Example :  mpirun -n 3 -xterm 0 `which casapy`
+				Example :  mpirun -n 3 -xterm 0 `which casa`
 
 				Continuum Imaging :
 				-  Data are partitioned (in time) into NProc pieces

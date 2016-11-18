@@ -54,7 +54,7 @@
 # This test runs as part of the CASA python unit test suite and can be run from
 # the command line via eg
 # 
-# `which casapy` --nologger --log2term  -c `echo $CASAPATH | awk '{print $1}'`/linux_64b/python/2.6/runUnitTest.py test_ia_summary[test1,test2,...]
+# `which casa` --nologger --log2term  -c `echo $CASAPATH | awk '{print $1}'`/linux_64b/python/2.6/runUnitTest.py test_ia_summary[test1,test2,...]
 #
 # </example>
 #

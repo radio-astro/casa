@@ -37,10 +37,10 @@ else
     exit 1
 fi
 
-if which casapy > /dev/null ; then
-    echo "Using `which casapy`"
+if which casa > /dev/null ; then
+    echo "Using `which casa`"
 else
-    echo "No casapy in PATH!"
+    echo "No casa in PATH!"
     exit 1
 fi
 
@@ -90,12 +90,12 @@ else
     echo "DISPLAY = $DISPLAY"
 fi
 
-cmd="casapy --nologger -c $command"
+cmd="casa --nologger -c $command"
 echo $cmd
 $cmd &
 pid=$!
 wait $pid
-echo "casapy returned $?"
+echo "casa returned $?"
 
 echo "Kill anything in process group $pid if it exists..."
 kill -s TERM -- -$pid

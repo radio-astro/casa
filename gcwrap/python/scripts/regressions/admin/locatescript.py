@@ -27,7 +27,7 @@ SCRIPT_REPOS4 = os.environ["CASAPATH"].split()[0]
 SCRIPT_REPOS4 += "/Resources/python"
 
 def locatescript(lescript=''):
-    a=os.popen("which casapy", "r")
+    a=os.popen("which casa", "r")
     lepath=string.split(a.read(),"/bin")[0]
     if (os.path.exists(SCRIPT_REPOS+"/regressions/"+lescript)):
         lepath = SCRIPT_REPOS+"/regressions/"+lescript
