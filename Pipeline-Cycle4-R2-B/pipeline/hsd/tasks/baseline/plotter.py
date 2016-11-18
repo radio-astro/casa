@@ -9,6 +9,7 @@ import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
 from pipeline.infrastructure.displays.singledish.utils import sd_polmap
 from pipeline.domain import DataTable
 from ..common import utils 
+from pipeline.infrastructure.displays.singledish import atmutil
 
 _LOG = infrastructure.get_logger(__name__)
 LOG = utils.OnDemandStringParseLogger(_LOG)
@@ -108,7 +109,8 @@ class BaselineSubtractionPlotManager(object):
         self.postfit_storage.resize_storage(num_ra, num_dec, num_pol, num_chan)
     
     def plot_spectra_with_fit(self, field_id, antenna_id, spw_id, 
-                              grid_table=None, deviation_mask=None, channelmap_range=None):
+                              grid_table=None, deviation_mask=None, channelmap_range=None,
+                              showatm=True):
         if grid_table is None:
             return []
         
@@ -142,8 +144,16 @@ class BaselineSubtractionPlotManager(object):
         postfit_prefix = os.path.join(self.stage_dir, outprefix_template('after'))
         LOG.debug('prefit_prefix=\'{}\'', os.path.basename(prefit_prefix))
         LOG.debug('postfit_prefix=\'{}\'', os.path.basename(postfit_prefix))
+        
+        if showatm is True:
+            atm_freq, atm_transmission = atmutil.get_transmission(vis=self.ms.name, antenna_id=self.antenna_id,
+                                                        spw_id=self.spw_id, doplot=False)
+        else:
+            atm_transmission = None
+            atm_freq = None
         plot_list = self.plot_profile_map_with_fit(prefit_prefix, postfit_prefix, 
-                                                   deviation_mask, line_range)
+                                                   deviation_mask, line_range,
+                                                   atm_transmission, atm_freq)
         ret = []
         for (plot_type, plots) in plot_list.items():
             if plot_type == 'pre_fit':
@@ -170,7 +180,7 @@ class BaselineSubtractionPlotManager(object):
         return ret
     
     def plot_profile_map_with_fit(self, prefit_figfile_prefix, postfit_figfile_prefix, 
-                                  deviation_mask, line_range):
+                                  deviation_mask, line_range, atm_transmission, atm_frequency):
         """
         plot_table format:
         [[0, 0, RA0, DEC0, [IDX00, IDX01, ...]],
@@ -229,6 +239,7 @@ class BaselineSubtractionPlotManager(object):
         plotter.setup_lines(line_range, lines_map)
         plotter.setup_reference_level(0.0)
         plotter.set_deviation_mask(deviation_mask)
+        plotter.set_atm_transmission(atm_transmission, atm_frequency)
         plotter.set_global_scaling()
         for ipol in xrange(npol):
             postfit_figfile = postfit_figfile_prefix + '_pol%s.png'%(ipol)

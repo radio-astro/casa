@@ -6,6 +6,7 @@ import abc
 import numpy
 import math
 import pylab as pl
+import matplotlib.gridspec as gridspec
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
@@ -13,11 +14,30 @@ from .utils import DDMMSSs, HHMMSSss
 #from .utils import sd_polmap as polmap
 from .utils import PlotObjectHandler
 from .common import DPIDetail, SDImageDisplay, ShowPlot
+from . import atmutil
 
 LOG = infrastructure.get_logger(__name__)
 
 NoData = -32767.0
 NoDataThreshold = NoData + 10000.0
+
+def form3(n):
+    if n <= 4:
+        return 4
+    elif n == 5:
+        return 5
+    elif n < 8:
+        return 7
+    else:
+        return 8
+
+def form4(n):
+    if n <= 4:
+        return 4
+    elif n < 8:
+        return 5
+    else:
+        return 5.5
 
 class SparseMapAxesManager(object):
     def __init__(self, nh, nv, brightnessunit, ticksize, clearpanel=True, figure_id=None):
@@ -29,6 +49,7 @@ class SparseMapAxesManager(object):
         
         self._axes_integsp = None
         self._axes_spmap = None
+        self._axes_atm = None
         
         if figure_id is None:
             self.figure_id = self.MATPLOTLIB_FIGURE_ID()
@@ -38,6 +59,21 @@ class SparseMapAxesManager(object):
         if clearpanel:
             pl.clf()
             
+        _f = form4(self.nv)
+        self.gs_top = gridspec.GridSpec(1, 1,
+                                        left=0.08,
+                                        bottom=1.0 - 1.0/_f, top=0.96)
+        self.gs_bottom = gridspec.GridSpec(self.nv+1, self.nh+1,
+                                           hspace=0, wspace=0,
+                                           left=0, right=0.95,
+                                           bottom=0.01, top=1.0 - 1.0/_f-0.07)
+#         self.gs_top = gridspec.GridSpec(1, 1,
+#                                         bottom=1.0 - 1.0/form3(self.nv), top=0.96)
+#         self.gs_bottom = gridspec.GridSpec(self.nv+1, self.nh+1,
+#                                            hspace=0, wspace=0,
+#                                            left=0, right=0.95,
+#                                            bottom=0.01, top=1.0 - 1.0/form3(self.nv)-0.07)
+        
     @staticmethod
     def MATPLOTLIB_FIGURE_ID():
         return 8910
@@ -46,7 +82,7 @@ class SparseMapAxesManager(object):
     def axes_integsp(self):
         if self._axes_integsp is None:
             pl.figure(self.figure_id)
-            axes = pl.subplot((self.nv+3)/2+3, 1, 1)
+            axes = pl.subplot(self.gs_top[:,:])
             axes.cla()
             axes.xaxis.set_major_formatter(self.numeric_formatter)
             pl.xlabel('Frequency(GHz)', size=(self.ticksize+1))
@@ -66,11 +102,25 @@ class SparseMapAxesManager(object):
             self._axes_spmap = list(self.__axes_spmap())
 
         return self._axes_spmap
+    
+    @property
+    def axes_atm(self):
+        if self._axes_atm is None:
+            pl.figure(self.figure_id)
+            self._axes_atm = self.axes_integsp.twinx()
+            ylabel = self._axes_atm.set_ylabel('ATM Transmission', size=self.ticksize)
+            ylabel.set_color('m')
+            self._axes_atm.yaxis.set_tick_params(colors='m', labelsize=self.ticksize-1)
+            self._axes_atm.yaxis.set_ticks([0.5, 0.8, 0.9, 0.95, 0.98, 1.0])
+            self._axes_atm.yaxis.set_major_formatter(
+                pl.FuncFormatter(lambda x, pos: '{}%'.format(int(x*100)))
+                )
+        return self._axes_atm
 
     def __axes_spmap(self):
         for x in xrange(self.nh):
             for y in xrange(self.nv):
-                axes = pl.subplot(self.nv+3, self.nh+1, (self.nv - 1 - y + 2) * (self.nh + 1) + (self.nh - 1 - x) + 2)
+                axes = pl.subplot(self.gs_bottom[self.nv - y - 1, self.nh - x])
                 axes.cla()
                 axes.yaxis.set_major_locator(pl.NullLocator())
                 axes.xaxis.set_major_locator(pl.NullLocator())
@@ -80,20 +130,20 @@ class SparseMapAxesManager(object):
 
     def setup_labels(self, label_ra, label_dec):
         for x in xrange(self.nh):
-            a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 2) * (self.nh + 1) + self.nh - x + 1)
+            a1 = pl.subplot(self.gs_bottom[-1, self.nh - x])
             a1.set_axis_off()
             if len(a1.texts) == 0:
                 pl.text(0.5, 0.5, HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0))
         for y in xrange(self.nv):
-            a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 1 - y) * (self.nh + 1) + 1)
+            a1 = pl.subplot(self.gs_bottom[self.nv - y - 1, 0])
             a1.set_axis_off()
             if len(a1.texts) == 0:
                 pl.text(0.5, 0.5, DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
             else:
                 a1.texts[0].set_text(DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0))
-        a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 2) * (self.nh + 1) + 1)
+        a1 = pl.subplot(self.gs_bottom[-1, 0])
         a1.set_axis_off()
         pl.text(0.5, 1, 'Dec', horizontalalignment='center', verticalalignment='bottom', size=(self.ticksize+1))
         pl.text(1, 0.5, 'RA', horizontalalignment='center', verticalalignment='center', size=(self.ticksize+1))
@@ -112,6 +162,8 @@ class SDSparseMapPlotter(object):
         self.reference_level = None
         self.global_scaling = True
         self.deviation_mask = None
+        self.atm_transmission = None
+        self.atm_frequency = None
         
     @property
     def nh(self):
@@ -164,14 +216,23 @@ class SDSparseMapPlotter(object):
     def set_deviation_mask(self, mask):
         self.deviation_mask = mask
         
+    def set_atm_transmission(self, transmission, frequency):
+        self.atm_transmission = transmission
+        self.atm_frequency = frequency
+        
     def plot(self, map_data, averaged_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
+        
+        overlay_atm_transmission = self.atm_transmission is not None
         
         spmin = averaged_data.min()
         spmax = averaged_data.max()
         dsp = spmax - spmin
         spmin -= dsp * 0.1
-        spmax += dsp * 0.1
+        if overlay_atm_transmission:
+            spmax += dsp * 0.4
+        else:
+            spmax += dsp * 0.1
         LOG.debug('spmin=%s, spmax=%s'%(spmin,spmax))
         
         global_xmin = min(frequency[0], frequency[-1])
@@ -233,7 +294,16 @@ class SDSparseMapPlotter(object):
             for chmin, chmax in self.deviation_mask:
                 fmin = ch_to_freq(chmin, frequency)
                 fmax = ch_to_freq(chmax, frequency)
-                plot_helper.axvspan(fmin, fmax, ymin=0.9, ymax=1, color='red')
+                plot_helper.axvspan(fmin, fmax, ymin=0.95, ymax=1, color='red')
+        if overlay_atm_transmission:#self.atm_transmission is not None:
+            pl.gcf().sca(self.axes.axes_atm)
+            plot_helper.plot(self.atm_frequency, self.atm_transmission, 
+                             color='m', linestyle='-', linewidth=0.4)           
+            M = self.atm_transmission.min()
+            Y = 0.6
+            ymin = (M - Y) / (1.0 - Y)
+            ymax = self.atm_transmission.max() + (1.0 - self.atm_transmission.max()) * 0.1
+            pl.axis((global_xmin, global_xmax, ymin, ymax))
                     
         is_valid_fit_result = (fit_result is not None and fit_result.shape == map_data.shape)
 
@@ -304,6 +374,12 @@ class SDSparseMapDisplay(SDImageDisplay):
 #     def num_valid_spectrum(self):
 #         return self.inputs.num_valid_spectrum
 
+    def enable_atm(self):
+        self.showatm = True
+        
+    def disable_atm(self):
+        self.showatm = False
+
     def plot(self):
 
         self.init()
@@ -318,6 +394,18 @@ class SDSparseMapDisplay(SDImageDisplay):
         #else: pl.ioff()
         #pl.figure(self.MATPLOTLIB_FIGURE_ID)
         #if ShowPlot: pl.ioff()
+        
+        if hasattr(self, 'showatm') and self.showatm is True:
+            ms_id = min(self.inputs.msid_list)
+            ms = self.inputs.context.observing_run.measurement_sets[ms_id]
+            vis = ms.name
+            antenna_id = 0 # nominal
+            spw_id = self.inputs.spw
+            atm_freq, atm_transmission = atmutil.get_transmission(vis=vis, antenna_id=antenna_id,
+                                                        spw_id=spw_id, doplot=False)
+        else:
+            atm_transmission = None
+            atm_freq = None
 
         num_panel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxPanel)
         STEP = int((max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1) - 1) / num_panel) + 1
@@ -342,7 +430,8 @@ class SDSparseMapDisplay(SDImageDisplay):
         refpix[1], refval[1], increment[1] = self.image.direction_axis(1, unit='deg')
         plotter.setup_labels(refpix, refval, increment)
         
-        
+        plotter.set_atm_transmission(atm_transmission, atm_freq)
+      
         # loop over pol
         for pol in xrange(self.npol):
             

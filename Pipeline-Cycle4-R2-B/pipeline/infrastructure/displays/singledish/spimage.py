@@ -27,6 +27,7 @@ class SDSpectralImageDisplay(SDImageDisplay):
         plot_list = []
         t0 = time.time()
         worker = sparsemap.SDSparseMapDisplay(self.inputs)
+        worker.enable_atm()
         plot_list.extend(worker.plot())
         t1 = time.time()
         worker = channelmap.SDChannelMapDisplay(self.inputs)
