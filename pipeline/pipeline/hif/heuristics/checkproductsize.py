@@ -144,11 +144,11 @@ class CheckProductSizeHeuristics(object):
                         'shortmsg': 'Product size mitigation error'}
             else:
                 nfields = int(self.inputs.maxproductsize / (productsize / len(fields)))
-                size_mitigation_parameters['fields'] = fields[:nfields]
-                LOG.info('Size mitigation: Setting field to %s' % (str(size_mitigation_parameters['fields'])))
+                size_mitigation_parameters['field'] = ','.join(fields[:nfields])
+                LOG.info('Size mitigation: Setting field to %s' % (size_mitigation_parameters['field']))
 
                 # Recalculate sizes
-                makeimlist_inputs.hm_imsize = size_mitigation_parameters['hm_imsize']
+                makeimlist_inputs.field = size_mitigation_parameters['field']
                 makeimlist_result = makeimlist_task.prepare()
                 imlist = makeimlist_result.targets
                 maxcubesize, productsize = self.calculate_sizes(imlist)

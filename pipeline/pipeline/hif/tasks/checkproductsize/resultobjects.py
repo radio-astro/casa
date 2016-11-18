@@ -26,8 +26,8 @@ class CheckProductSizeResult(basetask.Results):
         repr = 'CheckProductSize:\n'
         repr += ' Status: %s\n' % (self.status)
         repr += ' Reason: %s\n' % (self.reason['longmsg'])
-        repr += ' Max cube size: %s\n' % (self.maxcubesize)
-        repr += ' Product size: %s\n' % (self.productsize)
+        repr += ' Max cube size: %s GB\n' % (self.maxcubesize)
+        repr += ' Product size: %s GB\n' % (self.productsize)
         repr += ' Mitigation parameters:\n'
         for parameter, value in self.size_mitigation_parameters.iteritems():
             repr += '  %s: %s\n' % (parameter, value)
