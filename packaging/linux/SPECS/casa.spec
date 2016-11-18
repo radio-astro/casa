@@ -15,7 +15,7 @@
 %define SVNROOT       https://svn.cv.nrao.edu/svn/casa/branches/release-4_7
 ###
 ### configure version and revision...
-%define ver           4.7.0
+%define ver           4.7.1
 %define rev           %(/usr/src/rpmbuild/build/SOURCES/%{name}/svn-revision branch=release-4_7)
 %if %{?ver:1}0
 %define CASAVER       %{ver}
@@ -317,12 +317,12 @@ gmake 'VERBOSE=1' install
 cd $top/code
 mkdir build
 cd build
-cmake $COMPILERS -DBoost_NO_BOOST_CMAKE=1 -DEXTRA_C_FLAGS="-DPG_PPU -I/usr/include/wcslib-4.3" -Darch=linux -DSKIP_PGPLOT="yes" -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
+cmake $COMPILERS -DUseCrashReporter=1 -DBoost_NO_BOOST_CMAKE=1 -DEXTRA_C_FLAGS="-DPG_PPU -I/usr/include/wcslib-4.3" -Darch=linux -DSKIP_PGPLOT="yes" -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
 gmake 'VERBOSE=1'
 
 cd $top/gcwrap
 mkdir build && cd build
-cmake $COMPILERS -DBoost_NO_BOOST_CMAKE=1 -Darch=linux -DPYTHONLIBD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
+cmake $COMPILERS -DUseCrashReporter=1 -DBoost_NO_BOOST_CMAKE=1 -Darch=linux -DPYTHONLIBD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
 gmake 'VERBOSE=1'
 
 cd $top/asap

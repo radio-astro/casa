@@ -86,7 +86,7 @@ if ( ! $arch ) {
 ###
 $distribution_directory='';
 if ( $osname eq "linux" ) {
-    unless( $template_url ) { $template_url = 'https://svn.cv.nrao.edu/svn/casa/development_tools/packaging/template/linux/casa-distro' }
+    unless( $template_url ) { $template_url = '-r38790 https://svn.cv.nrao.edu/svn/casa/development_tools/packaging/template/linux/casa-distro' }
     if ( $template_url =~ m|/(\w+)-distro$| ) { $distro_name = $1 }
     die "please supply a version string with 'version=<VER>'" unless $version;
     die "please supply a release \"type\" string with 'type=[prerelease|test|DEV]'" unless $reltype;
