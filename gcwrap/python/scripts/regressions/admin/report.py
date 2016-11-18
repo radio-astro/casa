@@ -1402,7 +1402,7 @@ class report:
                     line = "cruft001             = 330204                                   # cruft from subversion"
 
                 ###
-                ### workarounds for casa-config not returning
+                ### workarounds for casapyinfo not returning
                 ### non-zero on error
                 ###
                 line = re.sub(" rcasapyinfo.*", "' # changed by report", line)

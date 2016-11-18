@@ -45,9 +45,9 @@ def locatescript(lescript=''):
         lepath=lepath+"/python/"+PYVER+"/"+lescript
     elif(os.path.exists(lepath+"/lib/python"+PYVER+"/"+lescript)):
         lepath=lepath+"/lib/python"+PYVER+"/"+lescript
-    elif(os.path.exists('/usr/bin/casa-config')):         
+    elif(os.path.exists('/usr/bin/casapyinfo')):         
         #locate the /usr/bin one
-        a=os.popen("/usr/bin/casa-config --environ | grep CASAPATH", "r")
+        a=os.popen("/usr/bin/casapyinfo --environ | grep CASAPATH", "r")
         x=a.read()
         lepath=string.split(string.split(x,'="')[1], " ")[0]+"/lib/python"+PYVER+"/"+lescript
     else:
