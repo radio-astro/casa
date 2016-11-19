@@ -1803,6 +1803,10 @@ HPX HEALPix grid.  -->
                           if pbmask is >0.0, the region outside the specified pb gain level is excluded from
                           image statistics in determination of the threshold. 
                           maskresolution and nmask are used to 'prune' the automask regions.
+
+                       auto-multithresh: automask by multiple thresholds for deconvolution 
+                          subparameters : sidelobethreshold, noisethreshold, lownoisethreshold, smoothfactor,
+                                          minbeamfrac, cutthreshold  
 </description>
       <value type="string">user</value>
 	    <allowed kind="enum">
@@ -1944,43 +1948,37 @@ HPX HEALPix grid.  -->
     <param type="double" name="sidelobethreshold" subparam="true">
            <shortdescription>sidelobethreshold *  the max sidelobe level</shortdescription>
            <value type="double">3.0</value>
-<description>
-mask threshold based on sidelobe levels:  sidelobethreshold * max_sidelobe_level
+<description> mask threshold based on sidelobe levels:  sidelobethreshold * max_sidelobe_level
 </description>
     </param>
     <param type="double" name="noisethreshold" subparam="true">
     <shortdescription>noisethreshold * rms in residual image</shortdescription>
            <value type="double">3.0</value>
-<description>
-mask threshold based on the noise level: noisethreshold * rms
+<description> mask threshold based on the noise level: noisethreshold * rms
 </description>
     </param>
     <param type="double" name="lownoisethreshold" subparam="true">
     <shortdescription>lownoisethreshold * rms in residual image</shortdescription>
            <value type="double">3.0</value>
-<description>
-mask threshold to grow previously masked regions via binary dilation:   lownoisethreshold * rms in residual image
+<description> mask threshold to grow previously masked regions via binary dilation:   lownoisethreshold * rms in residual image
 </description>
     </param>
     <param type="double" name="smoothfactor" subparam="true">
            <shortdescription>smoothing factor in a unit of the beam</shortdescription>
            <value type="double">1.0</value>
-<description>
-smoothing factor in a unit of the beam
+<description> smoothing factor in a unit of the beam
 </description>
     </param>
     <param type="double" name="minbeamfrac" subparam="true">
            <shortdescription> minimum beam fraction for pruning</shortdescription>
            <value type="double">-1.0</value>
-<description>
-minimum beam fraction in size to prune masks smaller than mimbeamfrac * beam
+<description> minimum beam fraction in size to prune masks smaller than mimbeamfrac * beam
 </description>
     </param>
     <param type="double" name="cutthreshold" subparam="true">
            <shortdescription>threshold to cut the smoothed mask to create a final mask</shortdescription>
            <value type="double">0.01</value>
-<description>
-threshold to cut the smoothed mask to create a final mask: cutthreshold * peak of the smoothed mask
+<description> threshold to cut the smoothed mask to create a final mask: cutthreshold * peak of the smoothed mask
 </description>
     </param>
 
