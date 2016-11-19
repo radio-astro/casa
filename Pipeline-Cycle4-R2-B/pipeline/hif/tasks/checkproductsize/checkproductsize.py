@@ -77,6 +77,9 @@ class CheckProductSize(basetask.StandardTaskTemplate):
 
         result = CheckProductSizeResult(self.inputs.maxcubesize, self.inputs.maxproductsize, maxcubesize, productsize, size_mitigation_parameters, status, reason)
 
+        # Log summary information
+        LOG.info(str(result))
+
         return result
 
     def analyse(self, result):

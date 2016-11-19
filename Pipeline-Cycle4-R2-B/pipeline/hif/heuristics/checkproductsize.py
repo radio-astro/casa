@@ -18,8 +18,12 @@ class CheckProductSizeHeuristics(object):
         for target in imlist:
             nx, ny = target['imsize']
             nchan = self.context.observing_run.measurement_sets[0].get_spectral_window(target['spw']).num_channels
+            if target['nbin'] != -1:
+                nbin = target['nbin']
+            else:
+                nbin = 1
             mfssize = 4. * nx * ny / 1e9 # Should include nterms
-            cubesize = 4. * nx * ny * nchan / 1e9
+            cubesize = 4. * nx * ny * nchan / nbin / 1e9
             cubesizes.append(cubesize)
             productsize += 2.0 * (mfssize + cubesize)
 
