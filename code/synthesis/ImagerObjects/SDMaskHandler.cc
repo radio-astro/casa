@@ -1384,7 +1384,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         //PagedImage<Float> savedPreMask(res.shape(),res.coordinates(),"savedPrePruneImage");
         //savedPreMask.copyData(maskedRes);
         //maskedRes.copyData( (LatticeExpr<Float>)( iif(res > maskThreshold, res, 0.0)) );
-        double tempthresh=0.1;
+        Double tempthresh=0.1;
         // ToDo: need npix be an area? and fix purnRegions too!!!
         // nmask=-1
         SHARED_PTR<ImageInterface<Float> > tempIm_ptr = pruneRegions(maskedRes, tempthresh,  -1, beampix);
@@ -1416,12 +1416,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Array<Bool> dogrow(arrshape);
     for (uInt i=0; i < arrshape(0); i++) {
       indx(0) = i;
+      /***
       if (maskmaxs(indx) < 1.0 ) {
         dogrow(indx) = true;
       }
+      ***/
+      // set dogrow true for all chans (contraintMask should be able to handle skiping channels )
+      dogrow(indx) = true;
     }   
     if (iterdone) {
-       cerr<<" iter done ="<<iterdone<<" grow mask..."<<endl;
+       //cerr<<" iter done ="<<iterdone<<" grow mask..."<<endl;
        os<<LogIO::DEBUG1<<"Grow mask stage..."<<endl;
        //call growMask
        // corresponds to calcThresholdMask with lowNoiseThreshold...
@@ -1444,8 +1448,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        // nIteration for binary dilation 
        Int niter=100; 
        binaryDilation(mask, se, niter, constraintMask, dogrow, prevmask); 
+       // multiply binary dilated mask by constraintmask
        prevmask.copyData( LatticeExpr<Float> (constraintMaskImage*prevmask));
-       SPIIF outprevmask = convolveMask(prevmask, nxpix, nypix);
+       // prune the resultant mask 
+       if (minBeamFrac > 0.0) {
+         Double thethresh=0.1;
+         SHARED_PTR<ImageInterface<Float> > tempPrunedMask_ptr = pruneRegions(prevmask, thethresh,  -1, beampix);
+         prevmask.copyData( *(tempPrunedMask_ptr.get()) );
+       }
+       SPIIF outprevmask = convolveMask( prevmask, nxpix, nypix);
        prevmask.copyData( LatticeExpr<Float> (iif( *(outprevmask.get()) > cutThreshold, 1.0, 0.0 )) );
     }
 

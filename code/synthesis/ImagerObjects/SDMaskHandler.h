@@ -192,13 +192,14 @@ public:
 
   // Convolve mask image
   SHARED_PTR<casacore::ImageInterface<float> > convolveMask(const casacore::ImageInterface<casacore::Float>& inmask,
-                                                  int nxpix, int nypix);
+                                                  casacore::Int nxpix, casacore::Int nypix);
 
   // Prune the mask regions found 
   SHARED_PTR<casacore::ImageInterface<float> >  pruneRegions(const casacore::ImageInterface<casacore::Float>& image,
-                                                   double& thresh,
-                                                   int nmask=0,
-                                                   int npix=0);
+                                                   casacore::Double& thresh,
+                                                   casacore::Int nmask=0,
+                                                   casacore::Int npix=0);
+
   // create a mask image (1/0 image) applying a different threshold for each channel plane
   void makeMaskByPerChanThreshold(const casacore::ImageInterface<casacore::Float>& image, 
                                  casacore::ImageInterface<casacore::Float>& mask, 
