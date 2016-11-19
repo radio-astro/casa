@@ -119,6 +119,7 @@ public:
   // @param[in] pblimit Primary beam cut off level
   //
   void autoMask(SHARED_PTR<SIImageStore> imstore, 
+                const casacore::Int iterdone,
                 const casacore::String& alg="",
                 const casacore::String& threshold="",
                 const casacore::Float& fracpeak=0.0,
@@ -163,6 +164,7 @@ public:
                                           const casacore::ImageInterface<casacore::Float>& res, 
                                           const casacore::ImageInterface<casacore::Float>& psf, 
                                           const casacore::Record& stats, 
+                                          const casacore::Int iterdone,
                                           const casacore::Float& sidelobeLevel=0.0,
                                           const casacore::Float& sidelobeThresholdFactor=3.0,
                                           const casacore::Float& noiseThresholdFactor=3.0,
@@ -221,6 +223,7 @@ public:
   void makePBMask(SHARED_PTR<SIImageStore> imstore, casacore::Float pblimit=0.1);
 
   void autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, 
+                        const casacore::Int iterdone,
                         const casacore::String& alg="",
                         const casacore::String& threshold="",
                         const casacore::Float& fracpeak=0.0,

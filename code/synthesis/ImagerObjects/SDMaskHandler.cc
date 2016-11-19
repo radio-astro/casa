@@ -720,6 +720,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void SDMaskHandler::autoMask(SHARED_PTR<SIImageStore> imstore, 
+                               const Int iterdone,
                                const String& alg, 
                                const String& threshold, 
                                const Float& fracofpeak, 
@@ -910,7 +911,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       autoMaskByThreshold2(*tempmask, *tempres, *temppsf, qreso, resbybeam, qthresh, fracofpeak, thestats, sigma, nmask);
     }
     else if (alg==String("multithresh")) {
-      autoMaskByMultiThreshold(*tempmask, *tempres, *temppsf, thestats, itsSidelobeLevel, sidelobethreshold,
+      autoMaskByMultiThreshold(*tempmask, *tempres, *temppsf, thestats, iterdone, itsSidelobeLevel, sidelobethreshold,
                                           noisethreshold, lownoisethreshold, cutthreshold, smoothfactor, minbeamfrac);
     }
 
@@ -1263,6 +1264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                           const ImageInterface<Float>& res, 
                                           const ImageInterface<Float>& psf, 
                                           const Record& stats, 
+                                          const Int iterdone,
                                           const Float& sidelobeLevel,
                                           const Float& sidelobeThresholdFactor,
                                           const Float& noiseThresholdFactor,
@@ -1313,7 +1315,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Quantity bmin = beam.getMinor();
       //for pruning for now
       // minBeamFrac * beamarea 
-      beampix = Int( Double(minBeamFrac) * C::pi
+      Double beamfrac=1.0;
+      if (minBeamFrac > 0.0) {
+          beamfrac = (Double) minBeamFrac; 
+      }
+      beampix = Int( beamfrac * C::pi
                      * (bmaj/(qinc.convert(bmaj),qinc)).get().getValue() * (bmin/(qinc.convert(bmin),qinc)).get().getValue()
                      / (4. * C::ln2) ); 
       // make npix beam area in pixels? (and need to modify pruneRegions)...
@@ -1350,7 +1356,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Float> maskThreshold(maxs.nelements());
     Vector<Float> lowMaskThreshold(maxs.nelements());
     Vector<String> ThresholdType(maxs.nelements());
-    cerr<<"maxs="<<maxs<<endl;
+    //cerr<<"maxs="<<maxs<<endl;
     for (uInt ich=0; ich < maxs.nelements(); ich++) {
       sidelobeThreshold = sidelobeLevel * sidelobeThresholdFactor * (Float)maxs(IPosition(2,0,ich)); 
       noiseThreshold = noiseThresholdFactor * (Float)resRmss(IPosition(2,0,ich));
@@ -1369,7 +1375,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // a seperate createThresholdMask... save a state in iterBot or get ncycle info from there?
 
     LatticeExpr<Float> themask; 
-    Bool firstIter(false);
+   // Bool firstIter(false);
     // do thresholding via pruneRegions() for now
     if (minBeamFrac > 0.0 ) {
         // make temp mask image consist of the original pix value and below the threshold is set to 0 
@@ -1414,7 +1420,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         dogrow(indx) = true;
       }
     }   
-    if (!firstIter) {
+    if (iterdone) {
+       cerr<<" iter done ="<<iterdone<<" grow mask..."<<endl;
        os<<LogIO::DEBUG1<<"Grow mask stage..."<<endl;
        //call growMask
        // corresponds to calcThresholdMask with lowNoiseThreshold...
@@ -1658,7 +1665,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SHARED_PTR<casacore::ImageInterface<Float> >  SDMaskHandler::pruneRegions(const ImageInterface<Float>& image, Double& thresh, Int nmask, Int npix)
   {
     LogIO os( LogOrigin("SDMaskHnadler", "pruneRegions",WHERE) );
-    Bool debug(True);
+    Bool debug(False);
 
     IPosition fullimShape=image.shape();
     TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates());
@@ -1989,6 +1996,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
  
   void SDMaskHandler::autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, 
+                                       const Int iterdone,
                                        const String& alg, 
                                        const String& threshold, 
                                        const Float& fracofpeak, 
@@ -2009,7 +2017,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     os <<LogIO::DEBUG1<<"Calling autoMaskWithinPB .."<<LogIO::POST;
     // changed to do automask ater pb mask is generated so automask do stats within pb mask
-    autoMask( imstore, alg, threshold, fracofpeak, resolution, resbybeam, nmask, autoadjust, 
+    autoMask( imstore, iterdone, alg, threshold, fracofpeak, resolution, resbybeam, nmask, autoadjust, 
               sidelobethreshold, noisethreshold, lownoisethreshold, cutthreshold, smoothfactor, 
               minbeamfrac, pblimit);
 

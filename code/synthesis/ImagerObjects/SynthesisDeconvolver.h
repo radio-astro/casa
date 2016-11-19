@@ -98,7 +98,7 @@ class SynthesisDeconvolver
 
   void setStartingModel();
   void setupMask();
-  void setAutoMask();
+  void setAutoMask(casacore::Int iterDone);
 
 protected:
 
@@ -167,6 +167,7 @@ protected:
   casacore::Float itsSmoothFactor;
   casacore::Float itsMinBeamFrac;
   casacore::Float itsCutThreshold;
+  casacore::Int itsIterDone;
   
   casacore::Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
   casacore::Bool itsIsInteractive;

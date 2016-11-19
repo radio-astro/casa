@@ -218,6 +218,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       setStartingModel();
 
       // Set up the mask too.
+      itsIterDone = itsLoopController.getIterDone();
       setupMask();
 
  
@@ -313,7 +314,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SynthesisUtilMethods::getResource("Start Deconvolver");
 
     try {
-      if ( !itsIsInteractive ) setAutoMask();
+      if ( !itsIsInteractive ) setAutoMask(itsIterDone);
       itsLoopController.setCycleControls(minorCycleControlRec);
 
       itsDeconvolver->deconvolve( itsLoopController, itsImages, itsDeconvolverId );
@@ -423,7 +424,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
         // Skip automask for non-interactive mode. 
         if ( itsAutoMaskAlgorithm != "" && itsIsInteractive) {
-          setAutoMask();
+          setAutoMask(itsIterDone);
           /***
           if ( itsPBMask > 0.0 ) {
             itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsPBMask);
@@ -462,15 +463,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SynthesisDeconvolver::setAutoMask()
+  void SynthesisDeconvolver::setAutoMask(Int iterDone)
   {
      //modify mask using automask otherwise no-op
      if ( itsAutoMaskAlgorithm != "" )  {
        if ( itsPBMask > 0.0 ) {
-         itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust,  itsSidelobeThreshold, itsNoiseThreshold, itsLowNoiseThreshold, itsCutThreshold, itsSmoothFactor, itsMinBeamFrac, itsPBMask);
+         itsMaskHandler->autoMaskWithinPB( itsImages, itsIterDone, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust,  itsSidelobeThreshold, itsNoiseThreshold, itsLowNoiseThreshold, itsCutThreshold, itsSmoothFactor, itsMinBeamFrac, itsPBMask);
        }
        else {
-         itsMaskHandler->autoMask( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust, itsSidelobeThreshold, itsNoiseThreshold, itsLowNoiseThreshold, itsCutThreshold, itsSmoothFactor, itsMinBeamFrac);
+         itsMaskHandler->autoMask( itsImages, itsIterDone, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust, itsSidelobeThreshold, itsNoiseThreshold, itsLowNoiseThreshold, itsCutThreshold, itsSmoothFactor, itsMinBeamFrac );
        }
      }
   }
