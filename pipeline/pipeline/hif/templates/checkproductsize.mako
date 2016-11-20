@@ -29,6 +29,21 @@ $(document).ready(function() {
 % if not table_rows:
     <p>There are no product size check results.
 % else:
+    <%
+    allowedcubesize = '%s GB' % (result[0].allowedcubesize)
+    maxcubesize = '%s GB' % (result[0].maxcubesize)
+    allowedproductsize = '%s GB' % (result[0].allowedproductsize)
+    productsize = '%s GB' % (result[0].productsize)
+    %>
+    <p>
+    Allowed maximum cube size: ${allowedcubesize}
+    <br>
+    Actual maximum cube size: ${maxcubesize}
+    <br>
+    Allowed product size: ${allowedproductsize}
+    <br>
+    Actual product size: ${productsize}
+    <p>
     Size mitigation parameters for subsequent hif_makeimlist calls
     <table class="table">
         <thead>
