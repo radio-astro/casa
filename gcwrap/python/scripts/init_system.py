@@ -132,7 +132,7 @@ else :
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## try to set casapyinfo path...
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-if os.path.exists( __casapath__ + "/bin/casapyinfo") :
+if os.path.exists( __casapath__ + "/bin/casa-config") :
     casa['helpers']['info'] = __casapath__ + "/bin/casa-config"
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
