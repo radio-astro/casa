@@ -4,6 +4,10 @@ from parameter_dictionary import *
 from task_help import *
 
 from parameter_check import *
+
+##allow globals for taskby default
+casaglobals=True
+
 ####################
 def go(taskname=None):
     """ Execute taskname: """
