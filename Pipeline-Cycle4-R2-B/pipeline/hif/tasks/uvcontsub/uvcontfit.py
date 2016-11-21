@@ -133,6 +133,8 @@ class UVcontFitInputs(basetask.StandardInputs):
 
     @spw.setter
     def spw(self, value):
+        if value is None:
+            value = ''
         self._spw = str(value)
 
     @property
