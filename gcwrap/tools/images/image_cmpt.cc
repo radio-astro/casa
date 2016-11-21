@@ -3384,26 +3384,6 @@ image* image::newimagefromshape(
             ! mytype.startsWith("f") && ! mytype.startsWith("c"),
             "Input parm type must start with either 'f' or 'c'"
         );
-        /*
-        vector<std::pair<LogOrigin, String> > msgs;
-        {
-
-            ostringstream os;
-            os << "Ran ia." << __func__;
-            msgs.push_back(make_pair(lor, os.str()));
-            vector<std::pair<String, variant> > inputs;
-            inputs.push_back(make_pair("outfile", outfile));
-            inputs.push_back(make_pair("shape", shape));
-            inputs.push_back(make_pair("csys", csys));
-            inputs.push_back(make_pair("linear", linear));
-            inputs.push_back(make_pair("overwrite", overwrite));
-            inputs.push_back(make_pair("log", log));
-            inputs.push_back(make_pair("type", type));
-            os.str("");
-            os << "ia." << __func__ << _inputsString(inputs);
-            msgs.push_back(make_pair(lor, os.str()));
-        }
-        */
         unique_ptr<image> ret;
         if (mytype.startsWith("f")) {
             SPIIF myfloat = ImageFactory::floatImageFromShape(
@@ -4808,11 +4788,23 @@ bool image::setrestoringbeam(
             "major", "minor", "pa", "beam", "remove", "log",
             "channel", "polarization", "imagename"
         };
+        variant myb = beam;
+        std::set<String> dontQuote;
+        if (rec && ! rec->empty()) {
+            std::ostringstream oss;
+            auto paKey = rec->isDefined("pa") ? "pa" : "positionangle";
+            oss << "{'major': " << _quantityRecToString(rec->asRecord("major"))
+                << ", 'minor': " << _quantityRecToString(rec->asRecord("minor"))
+                << ", 'positionangle': " << _quantityRecToString(rec->asRecord(paKey))
+                << "}";
+            myb = oss.str();
+            dontQuote.insert("beam");
+        }
         vector<variant> values {
-            major, minor, pa, beam, remove, log,
+            major, minor, pa, myb, remove, log,
             channel, polarization, imagename
         };
-        _addHistory(__func__, names, values);
+        _addHistory(__func__, names, values, vector<casacore::String>(), dontQuote);
         return true;
     }
     catch (const AipsError& x) {
@@ -4821,6 +4813,13 @@ bool image::setrestoringbeam(
         RETHROW(x);
     }
     return false;
+}
+
+String image::_quantityRecToString(const Record& q) {
+    ostringstream oss;
+    oss << "{'value': " << q.asDouble("value")
+        << ", 'unit': '" << q.asString("unit") << "'}";
+    return oss.str();
 }
 
 vector<int> image::shape() {
@@ -5492,9 +5491,9 @@ bool image::unlock() {
 
 void image::_addHistory(
     const String& method, const vector<String>& names, const vector<variant>& values,
-    const vector<String>& appendMsgs
+    const vector<String>& appendMsgs, const std::set<String>& dontQuote
 ) {
-    auto msgs = _newHistory(method, names, values);
+    auto msgs = _newHistory(method, names, values, dontQuote);
     for (const auto& m: appendMsgs) {
         msgs.push_back(m);
     }
@@ -5520,7 +5519,10 @@ String image::_getMask(const variant& mask) {
     }
 }
 
-String image::_inputsString(const vector<std::pair<String, variant> >& inputs) {
+String image::_inputsString(
+    const vector<std::pair<String, variant> >& inputs,
+    const std::set<String>& dontQuote
+) {
     String out = "(";
     String quote;
     vector<pair<String, variant> >::const_iterator begin = inputs.begin();
@@ -5530,10 +5532,12 @@ String image::_inputsString(const vector<std::pair<String, variant> >& inputs) {
         if (iter != begin) {
             out += ", ";
         }
-        quote = iter->second.type() == variant::STRING ? "\"" : "";
+        quote = iter->second.type() == variant::STRING
+            && std::find(dontQuote.begin(), dontQuote.end(), iter->first) == dontQuote.end()
+            ? "\"" : "";
         out += iter->first + "=" + quote;
         auto asString = iter->second.toString();
-        if (asString.size() > 100) {
+        if (asString.size() > 300) {
             asString = "...";
         }
         out += asString;
@@ -5551,7 +5555,7 @@ Bool image::_isUnset(const variant &theVar) {
 
 vector<String> image::_newHistory(
     const string& method, const vector<String>& names,
-    const vector<variant>& values
+    const vector<variant>& values, const std::set<String>& dontQuote
 ) {
     AlwaysAssert(names.size() == values.size(), AipsError);
     vector<String> msgs;
@@ -5563,7 +5567,7 @@ vector<String> image::_newHistory(
         inputs.push_back(make_pair(names[i], values[i]));
     }
     os.str("");
-    os << "ia." << method << _inputsString(inputs);
+    os << "ia." << method << _inputsString(inputs, dontQuote);
     msgs.push_back(os.str());
     return msgs;
 }

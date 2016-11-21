@@ -54,9 +54,12 @@ template<class T> image* _adddegaxes(
 );
 
 void _addHistory(
-    const casacore::String& method, const vector<casacore::String>& kyes, const vector<variant>& vals,
-    const vector<casacore::String>& appendMsgs=vector<casacore::String>()
+    const casacore::String& method, const vector<casacore::String>& keys, const vector<variant>& vals,
+    const vector<casacore::String>& appendMsgs=vector<casacore::String>(),
+    const std::set<casacore::String>& dontQuote=std::set<casacore::String>()
 );
+
+static String _quantityRecToString(const Record& q);
 
 template <class T> image* _boxcar(
 	SPCIIT myimage, const variant& region,
@@ -122,7 +125,8 @@ template<class T> SPIIT _imagecalc(
 );
 
 static casacore::String _inputsString(
-	const std::vector<std::pair<casacore::String, casac::variant> >& inputs
+	const std::vector<std::pair<casacore::String, casac::variant> >& inputs,
+	const std::set<String>& dontQuote
 );
 
 static bool _isUnset(const variant& var);
@@ -132,7 +136,7 @@ casacore::String _name(bool strippath=false) const;
 
 static vector<casacore::String> _newHistory(
 	const string& method, const vector<casacore::String>& names,
-	const vector<variant>& values
+	const vector<variant>& values, const std::set<String>& dontQuote=std::set<String>()
 );
 
 // the returned value of pixels will have either 0 or two elements, if 0 then the returned

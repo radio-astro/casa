@@ -8,6 +8,8 @@
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
 
+#include <set>
+
 namespace casacore{
 
 	class GaussianBeam;
