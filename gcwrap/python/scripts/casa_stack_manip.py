@@ -59,3 +59,6 @@ def stack_frame_find(label="casa",level='stack') :
         return myf
     else:
         return None
+
+def find_casa( ):
+    return stack_find( )
