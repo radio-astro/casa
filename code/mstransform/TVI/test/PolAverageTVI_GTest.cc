@@ -757,6 +757,11 @@ TEST_F(PolAverageTVITest, StokesAverage) {
   TestTVI<StokesAverageValidator>();
 }
 
+// TODO: define test on not-well-behaved data
+//       such as partially flagged, contains NaN, etc.
+// TODO: define test on the data that should not average
+//       along polarization axis (IQUV or single polarization)
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   std::cout << "PolAverageTVI test " << std::endl;

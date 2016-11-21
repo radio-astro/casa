@@ -37,6 +37,7 @@
 #include <vector>
 
 #include <casacore/measures/Measures/Stokes.h>
+#include <casacore/casa/Containers/Record.h>
 
 namespace casacore {
 
@@ -223,8 +224,7 @@ protected:
   // List of polarization ids that points either (XX,YY) or (RR,LL)
 //  Vector<Vector<uInt> > polId0;
 //  Vector<Vector<uInt> > polId1;
-  casacore::Vector<casacore::Int> polId0_;
-  casacore::Vector<casacore::Int> polId1_;
+  casacore::Vector<casacore::Int> polId0_;casacore::Vector<casacore::Int> polId1_;
 
 private:
 
@@ -341,10 +341,12 @@ protected:
 class PolAverageVi2Factory: public ViFactory {
 
 public:
-
   // Constructor
   PolAverageVi2Factory(casacore::Record const &configuration,
       ViImplementation2 *inputVII);
+  PolAverageVi2Factory(casacore::Record const &configuration,
+  casacore::MeasurementSet const *ms, SortColumns const sortColumns,
+  casacore::Double timeInterval, casacore::Bool isWritable);
 
   // Destructor
   ~PolAverageVi2Factory();
@@ -352,14 +354,47 @@ public:
   ViImplementation2 * createVi() const;
 
 private:
-
   enum AveragingMode {
     GEOMETRIC, STOKES, NUM_MODES, DEFAULT = GEOMETRIC
   };
 
+  static AveragingMode GetAverageModeFromConfig(
+  casacore::Record const &configuration) {
+    if (configuration.isDefined("mode")) {
+      casacore::String mode = configuration.asString("mode");
+      mode.downcase();
+      if (mode == "geometric") {
+        return AveragingMode::GEOMETRIC;
+      } else if (mode == "stokes") {
+        return AveragingMode::STOKES;
+      } else if (mode == "default") {
+        return AveragingMode::DEFAULT;
+      } else {
+        return AveragingMode::NUM_MODES;
+      }
+    }
+    return AveragingMode::DEFAULT;
+  }
+
   ViImplementation2 *inputVII_p;
 
   AveragingMode mode_;
+};
+
+class PolAverageTVILayerFactory: public ViiLayerFactory {
+
+public:
+  PolAverageTVILayerFactory(casacore::Record const &configuration);
+  virtual ~PolAverageTVILayerFactory() {
+  }
+  ;
+
+protected:
+
+  ViImplementation2 * createInstance(ViImplementation2* vii0) const;
+
+  casacore::Record configuration_p;
+
 };
 
 } //# NAMESPACE VI - END

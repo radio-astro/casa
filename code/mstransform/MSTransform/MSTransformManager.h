@@ -404,6 +404,7 @@ protected:
 	void parseCalParams(casacore::Record &configuration);
 	void parseUVContSubParams(casacore::Record &configuration);
 	void setSpwAvg(casacore::Record &configuration);
+	void parsePolAvgParams(casacore::Record &configuration);
 
 	// From input MS
 	void initDataSelectionParams();
@@ -1323,6 +1324,10 @@ protected:
 
 	// Spw avergain parameters
 	casacore::Bool spwAverage_p;
+
+	// Polarization transformation parameters
+	casacore::Bool polAverage_p;
+	casacore::Record polAverageConfig_p;
 
 	// Weight Spectrum parameters
 	casacore::Bool usewtspectrum_p;

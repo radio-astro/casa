@@ -33,6 +33,7 @@
 #include <casacore/ms/MeasurementSets/MSPolColumns.h>
 
 #include <msvis/MSVis/VisBufferComponents2.h>
+#include <msvis/MSVis/VisibilityIteratorImpl2.h>
 
 using namespace casacore;
 
@@ -619,24 +620,22 @@ void StokesPolAverageTVI::transformData(Cube<T> const &dataIn,
 //////////
 // PolAverageTVIFactory
 /////////
-PolAverageVi2Factory::PolAverageVi2Factory(
-casacore::Record const &configuration, ViImplementation2 *inputVII) :
+PolAverageVi2Factory::PolAverageVi2Factory(Record const &configuration,
+    ViImplementation2 *inputVII) :
     inputVII_p(inputVII), mode_(AveragingMode::DEFAULT) {
   inputVII_p = inputVII;
 
-  if (configuration.isDefined("mode")) {
-    String mode = configuration.asString("mode");
-    mode.downcase();
-    if (mode == "geometric") {
-      mode_ = AveragingMode::GEOMETRIC;
-    } else if (mode == "stokes") {
-      mode_ = AveragingMode::STOKES;
-    } else if (mode == "default") {
-      mode_ = AveragingMode::DEFAULT;
-    } else {
-      mode_ = AveragingMode::NUM_MODES;
-    }
-  }
+  mode_ = PolAverageVi2Factory::GetAverageModeFromConfig(configuration);
+}
+
+PolAverageVi2Factory::PolAverageVi2Factory(Record const &configuration,
+    MeasurementSet const *ms, SortColumns const sortColumns,
+    Double timeInterval, Bool isWritable) :
+    inputVII_p(nullptr), mode_(AveragingMode::DEFAULT) {
+  inputVII_p = new VisibilityIteratorImpl2(Block<MeasurementSet const *>(1, ms),
+      sortColumns, timeInterval, VbPlain, isWritable);
+
+  mode_ = PolAverageVi2Factory::GetAverageModeFromConfig(configuration);
 }
 
 PolAverageVi2Factory::~PolAverageVi2Factory() {
@@ -654,5 +653,18 @@ ViImplementation2 * PolAverageVi2Factory::createVi() const {
   return nullptr;
 }
 
+PolAverageTVILayerFactory::PolAverageTVILayerFactory(Record const &configuration) :
+  ViiLayerFactory()
+{
+  configuration_p = configuration;
+}
+
+ViImplementation2*
+PolAverageTVILayerFactory::createInstance(ViImplementation2* vii0) const
+{
+  // Make the PolAverageTVI, using supplied ViImplementation2, and return it
+  PolAverageVi2Factory factory(configuration_p, vii0);
+  return factory.createVi();
+}
 } // # NAMESPACE VI - END
 } // #NAMESPACE CASA - END
