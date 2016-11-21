@@ -430,7 +430,7 @@ class SDSparseMapDisplay(SDImageDisplay):
         refpix[1], refval[1], increment[1] = self.image.direction_axis(1, unit='deg')
         plotter.setup_labels(refpix, refval, increment)
         
-        if hasattr(self, 'showatm') and self.showatm is True:
+        if (not self.inputs.isASAP) and hasattr(self, 'showatm') and self.showatm is True:
             msid_list = numpy.unique(self.inputs.msid_list)
             for ms_id in msid_list:
                 ms = self.inputs.context.observing_run.measurement_sets[ms_id]
