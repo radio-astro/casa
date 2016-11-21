@@ -123,9 +123,20 @@ for ms in pcontext.observing_run.measurement_sets:
 <p>This task generates single dish images per source per spectral window. 
 It generates an image combined spectral data from whole antenna as well as images per antenna.</p>
 
+<h3>Contents</h3>
+<ul>
+% if isASAP:
+  <li><a href="#jyperktable">Jy/K Conversion Factor</a></li>
+% endif
+<li><a href="#profilemap">Profile Map</a></li>
+% for plots in plots_list:
+    <li><a href="#${plots['title'].replace(" ", "")}">${plots['title']}</a></li>
+% endfor
+</ul>
+
 <!---------- start of isASAP block ------------>
 % if isASAP:
-<h3>Jy/K Conversion Factor</h3>
+<h3 id="jyperktable" class="jumptarget">Jy/K Conversion Factor</h3>
 The following table lists the Jy/K factor applied to the spectral data. 
 % if reffile is not None and len(reffile) > 0 and os.path.exists(os.path.join(stage_dir, os.path.basename(reffile))):
 Input file is <a class="replace-pre" href="${os.path.relpath(reffile, pcontext.report_dir)}">${os.path.basename(reffile)}</a>.
@@ -171,7 +182,7 @@ No Jy/K factors file is specified.
 % endif
 <!---------- end of isASAP block ------------>
 
-<h3>Profile Map</h3>
+<h3 id="profilemap" class="jumptarget">Profile Map</h3>
 % for field in sparsemap_subpage.keys():
     <h4><a class="replace"
            href="${os.path.join(dirname, sparsemap_subpage[field])}">${field}</a>
@@ -233,9 +244,9 @@ No Jy/K factors file is specified.
 
 % for plots in plots_list:
     % if plots.has_key('note'):
-        <h3>${plots['title']} (${plots['note']})</h3>
+        <h3 id="${plots['title'].replace(" ", "")}" class="jumptarget">${plots['title']} (${plots['note']})</h3>
     % else:
-        <h3>${plots['title']}</h3>
+        <h3 id="${plots['title'].replace(" ", "")}" class="jumptarget">${plots['title']}</h3>
     % endif
     % for field in plots['subpage'].keys():
         <h4><a class="replace"
