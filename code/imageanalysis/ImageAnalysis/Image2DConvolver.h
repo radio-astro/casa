@@ -220,6 +220,10 @@ private:
         const std::vector<casacore::Quantity>& targetBeamParms,
         const casacore::GaussianBeam& inputBeam
     ) const;
+
+    void _logBeamInfo(
+        SPIIT image, const ImageInfo& imageInfo, const String& desc
+    ) const;
 };
 
 }

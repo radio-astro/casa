@@ -180,7 +180,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
         ! inShape.isEqual(outShape),
         "Input and output images must have the same shape"
     );
-    // Generate Kernel casacore::Array (height unity)
+    // Generate Kernel Array (height unity)
     ThrowIf(
         _targetres && kernelType != casacore::VectorKernel::GAUSSIAN,
         "targetres can only be true for a Gaussian convolving kernel"
@@ -247,6 +247,32 @@ template <class T> void Image2DConvolver<T>::_convolve(
     }
     imageOut->setUnits(brightnessUnitOut);
     imageOut->setImageInfo(iiOut);
+    _logBeamInfo(imageOut, imageInfo, "Original " + this->_getImage()->name());
+    _logBeamInfo(imageOut, iiOut, "Output " + this->_getOutname());
+}
+
+template <class T> void Image2DConvolver<T>::_logBeamInfo(
+    SPIIT image, const ImageInfo& imageInfo, const String& desc
+) const {
+    ostringstream oss;
+    const auto& beamSet = imageInfo.getBeamSet();
+    if (! imageInfo.hasBeam()) {
+        oss << desc << " has no beam";
+    }
+    else if (imageInfo.hasSingleBeam()) {
+        oss << desc << " resolution " << beamSet.getBeam();
+    }
+    else {
+        oss << desc << " has multiple beams. Min area beam: "
+            << beamSet.getMinAreaBeam() << ". Max area beam: "
+            << beamSet.getMaxAreaBeam() << ". Median area beam "
+            << beamSet.getMedianAreaBeam();
+    }
+    auto msg = oss.str();
+    ImageHistory<T> ih(image);
+    LogOrigin lor(getClass(), __func__);
+    ih.addHistory(lor, msg);
+    *this->_getLog() << LogIO::NORMAL << msg << LogIO::POST;
 }
 
 template <class T> void Image2DConvolver<T>::_doSingleBeam(
@@ -368,7 +394,7 @@ template <class T> void Image2DConvolver<T>::_doMultipleBeams(
             subCsys.setReferencePixel(subRefPix);
         }
         auto inputBeam = imageIn.imageInfo().restoringBeam(channel, polarization);
-        casacore::Bool doConvolve = true;
+        auto doConvolve = true;
         if (_targetres) {
             os << casacore::LogIO::NORMAL;
             if (channel >= 0) {
