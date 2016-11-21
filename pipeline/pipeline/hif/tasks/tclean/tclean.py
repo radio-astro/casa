@@ -128,10 +128,20 @@ class Tclean(cleanbase.CleanBase):
     def is_multi_vis_task(self):
         return True
 
-    def copy_products(self, old_pname, new_pname):
+    def copy_products(self, old_pname, new_pname, iter):
         try:
-            LOG.info('Copying %s to %s' % (old_pname, new_pname))
-            shutil.copytree(old_pname, new_pname)
+            if mpihelpers.mpi_server_list:
+                num_compute_nodes = len(mpihelpers.mpi_server_list)
+                LOG.info('Copying %d node file of %s to %s' % (num_compute_nodes, old_pname, new_pname))
+                for n in xrange(1, num_compute_nodes + 1):
+                    shutil.copytree( \
+                        old_pname.replace('iter%d' % (iter - 1), \
+                                          'iter%d.n%d' % (iter - 1, n)), \
+                        new_pname.replace('iter%d' % (iter), \
+                                          'iter%d.n%d' % (iter, n)))
+            else:
+                LOG.info('Copying %s to %s' % (old_pname, new_pname))
+                shutil.copytree(old_pname, new_pname)
         except Exception as e:
             LOG.warning('Exception copying %s: %s' % (old_pname, e))
 
@@ -553,7 +563,7 @@ class Tclean(cleanbase.CleanBase):
                 else:
                     exts = ['']
                 for ext in exts:
-                    self.copy_products('%s%s' % (old_pname, ext), '%s%s' % (new_pname, ext))
+                    self.copy_products('%s%s' % (old_pname, ext), '%s%s' % (new_pname, ext), iter)
 
             # Determine the cleaning threshold
             threshold = seq_result.threshold
