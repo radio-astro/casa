@@ -419,7 +419,7 @@ class ExportData(basetask.StandardTaskTemplate):
         #    Should check sources be added here.
         LOG.info ('Exporting calibrator source images')
         if inputs.calintents == '':
-            calintents_list = ['PHASE', 'BANDPASS', 'AMPLITUDE']
+            calintents_list = ['PHASE', 'BANDPASS', 'CHECK', 'AMPLITUDE']
         else:
             calintents_list = inputs.calintents.split(',')
         calimages_list, calimages_fitslist = self._export_images ( \
