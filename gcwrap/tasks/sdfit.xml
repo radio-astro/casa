@@ -80,6 +80,21 @@ or sdreduce.
         <value type="string"></value>
     </param>
 
+    <param type="bool" name="polaverage">
+        <description>average data over polarizations</description>
+        <value>False</value>    
+    </param>
+    
+    <param type="string" name="polaveragemode" subparam="true">
+        <description>polarization averaging mode (\'stokes\' or \'geometric\'). \'default\' is equivalent to \'stokes\'.</description>
+        <allowed kind="enum">
+            <value>default</value>
+            <value>stokes</value>
+            <value>geometric</value>
+        </allowed>
+        <value>default</value>
+    </param>
+    
     <param type="string" name="fitfunc">
         <shortdescription>function for fitting [\'gaussian\', \'lorentzian\']</shortdescription>
         <description>function for fitting</description>
@@ -144,6 +159,12 @@ or sdreduce.
                 <equals type="bool" value="True">
                         <default param="timebin"><value type="string">0s</value></default>
                         <default param="timespan"><value type="string"></value></default>
+                </equals>
+            </when>
+            <when param="polaverage">
+                <equals type="bool" value="False"/>
+                <equals type="bool" value="True">
+                    <default param="polaveragemode"><value type="string">default</value></default>
                 </equals>
             </when>
             <when param="fitmode">
@@ -228,6 +249,12 @@ timeaverage -- average data over time
         timespan -- span the timebin across \'scan\', \'state\', \'field\', or a combination of them (e.g., \'scan,state\')
                 default: '' (average each scan, intent and field separately)
                 example: 'scan' time averaging is done across scan ID boundaries
+polaverage -- average data over polarizations
+        default: False
+    &gt;&gt;&gt; polaverage expandable parameters
+        polaveragemode -- polarization averaging mode
+                default: 'default' (='stokes')
+                options: 'stokes', 'geometric'
 fitfunc -- function for fitting
         options: 'gaussian', 'lorentzian'
         default: 'gaussian'
@@ -301,6 +328,17 @@ or sdreduce.
 Note that multiple scans, IFs, and polarizations can in principle 
 be handled, but we recommend that you use scan, field, spw, and pol
 to give a single selection for each fit.
+
+-------
+POLARIZATION AVERAGE
+-------
+Two modes of polarization averaging are available. The default is 
+'stokes' which is an average based on a formulation of Stokes 
+parameter. In this mode, averaged data is calculated by 
+(XX + YY) / 2 or (RR + LL) / 2. Other option is 'geometric', which 
+is a conventional way of averaging in the field of single-dish 
+data reduction. The averaged data is given by weighted average 
+of XX and YY, or RR and LL. 
 
 -------
 FITMODE

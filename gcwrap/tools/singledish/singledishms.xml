@@ -581,6 +581,21 @@ Fit line profile to selected spectra and obtain the best-fit parameter values
         <value></value>
     </param>
 
+    <param type="bool" name="polaverage">
+        <description>average data over polarizations</description>
+        <value>False</value>    
+    </param>
+    
+    <param type="string" name="polaveragemode">
+        <description>polarization averaging mode (\'stokes\' or \'geometric\'). \'default\' is equivalent to \'stokes\'.</description>
+        <allowed kind="enum">
+            <value>default</value>
+            <value>stokes</value>
+            <value>geometric</value>
+        </allowed>
+        <value>default</value>
+    </param>
+
     <param type="string" name="fitfunc">
       <description>Function of line profile</description>
       <value>gaussian</value>
