@@ -1238,7 +1238,9 @@ void MSTransformManager::parsePolAvgParams(Record &configuration)
 {
   String const key("polAverageMode");
   polAverage_p = configuration.isDefined(key);
-  polAverageConfig_p.define("mode", configuration.asString(key));
+  if (polAverage_p) {
+    polAverageConfig_p.define("mode", configuration.asString(key));
+  }
 }
 
 // -----------------------------------------------------------------------
