@@ -51,6 +51,7 @@ try:
    if not os.path.exists(stage_dir):
        os.mkdir(stage_dir)
 
+   trim_name = lambda s : s if not s.startswith('"') or not s.endswith('"') else s[1:-1]
    unique_fields = []
    for r in result:
        summaries = r.outcome['summary']
@@ -84,7 +85,7 @@ For 1.-3., the RMSes of spectra before and after baseline fit are obtained using
 <li><a href="#detailtable">Flag by Reason</a></li>
   <ul>
 %for field in unique_fields:
-	<li><a href="#${field}">${field}</a></li>
+	<li><a href="#${trim_name(field)}">${field}</a></li>
 %endfor
   </ul>
 </ul>
@@ -119,7 +120,7 @@ For 1.-3., the RMSes of spectra before and after baseline fit are obtained using
 
 <H2 id="detailtable" class="jumptarget">Flag by Reason</H2>
 %for field in unique_fields:
-	<H3 id="${field}" class="jumptarget">${field}</H3>
+	<H3 id="${trim_name(field)}" class="jumptarget">${field}</H3>
 	<table class="table table-bordered table-striped " summary="${field}">
 	<thead>
 		<tr>
