@@ -1236,10 +1236,19 @@ void MSTransformManager::setSpwAvg(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::parsePolAvgParams(Record &configuration)
 {
-  String const key("polAverageMode");
-  polAverage_p = configuration.isDefined(key);
+  String key("polaverage");
+  Bool exists = configuration.isDefined(key);
+  if (exists) {
+    polAverage_p = configuration.asBool(key);
+  }
+
+  key = "polaveragemode";
   if (polAverage_p) {
-    polAverageConfig_p.define("mode", configuration.asString(key));
+    if (configuration.isDefined(key)) {
+      polAverageConfig_p.define("mode", configuration.asString(key));
+    } else {
+      polAverageConfig_p.define("mode", "default");
+    }
   }
 }
 
