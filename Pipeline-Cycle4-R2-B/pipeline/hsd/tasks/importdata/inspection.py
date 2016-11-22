@@ -428,18 +428,19 @@ class SDMSInspection(object):
         # {target field: reference field}
         target_fields = ms.get_fields(intent='TARGET')
         reference_fields = ms.get_fields(intent='REFERENCE')
+        trim_name = lambda s : s[1:-1] if s.startswith('"') and s.endswith('"') else s
         field_map = {}
         for target in target_fields:
             target_name = target.name
             LOG.debug('target name: \'%s\''%(target_name))
             for reference in reference_fields:
-                reference_name = reference.name
+                reference_name = trim_name(reference.name)
                 LOG.debug('reference name: \'%s\''%(reference_name))
-                tpattern = '^%s_[0-9]$'%(target_name)
-                rpattern = '^%s_[0-9]$'%(reference_name)
+                tpattern = '^%s_[0-9]$'%(trim_name(target_name))
+                rpattern = '^%s_[0-9]$'%(trim_name(reference_name))
                 if target_name == reference_name:
                     field_map[target.id] = reference.id
-                elif re.match(tpattern, reference_name) or re.match(rpattern, target_name):
+                elif re.match(tpattern, trim_name(reference_name)) or re.match(rpattern, trim_name(target_name)):
                     field_map[target.id] = reference.id
         calibration_strategy = {'tsys': do_tsys_transfer,
                                 'tsys_strategy': spwmap,
