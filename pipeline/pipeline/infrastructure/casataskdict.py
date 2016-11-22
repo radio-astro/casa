@@ -7,10 +7,13 @@ import pipeline.hifa.tasks as hifa_tasks
 import pipeline.hifv.tasks as hifv_tasks
 
 CasaTaskDict = {
+    # General Tasks ----------------------------------------------------------
     'h_applycal': 'Applycal',
     'h_importdata': 'ImportData',
     'h_exportdata': 'ExportData',
     'h_restoredata': 'RestoreData',
+    'h_tsyscal': 'Tsyscal',
+    # Interferometry tasks ---------------------------------------------------
     'hif_antpos': 'Antpos',
     'hif_atmflag': 'Atmflag',
     'hif_applycal': 'IFApplycal',
@@ -33,6 +36,7 @@ CasaTaskDict = {
     'hif_tclean': 'Tclean',
     'hif_uvcontfit': 'UVcontFit',
     'hif_uvcontsub': 'UVcontSub',
+    # Single dish tasks ------------------------------------------------------
     'hsd_applycal': 'SDMSApplycal',
     'hsd_baseline': 'SDMSBaseline',
     'hsd_blflag': 'SDMSBLFlag',
@@ -44,6 +48,7 @@ CasaTaskDict = {
     'hsd_skycal': 'SDMSSkyCal',
     'hsd_tsyscal': 'SDTsyscal',
     'hsd_tsysflag': 'SDTsysflag',
+    # ALMA interferometry tasks ---------------------------------------------
     'hifa_importdata': 'ALMAImportData',
     'hifa_antpos': 'ALMAAntpos',
     'hifa_bandpass': 'ALMAPhcorBandpass',
@@ -63,6 +68,7 @@ CasaTaskDict = {
     'hifa_tsysflag': 'ALMATsysflag',
     'hifa_wvrgcal': 'Wvrgcal',
     'hifa_wvrgcalflag': 'Wvrgcalflag',
+    # VLA tasks -----------------------------------------------------------------
     'hifv_importdata': 'VLAImportData',
     'hifv_exportdata': 'VLAExportData',
     'hifv_hanning': 'Hanning',
@@ -142,7 +148,7 @@ classToCASATask = {
     hsd_tasks.SDMSSkyCal              : 'hsd_skycal',
     hsd_tasks.SDTsyscal               : 'hsd_tsyscal',
     hsd_tasks.SDTsysflag              : 'hsd_tsysflag',
-    # VLA tasks
+    # VLA tasks ----------------------------------------------------------------
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.VLAExportData          : 'hifv_exportdata',
     hifv_tasks.Hanning                : 'hifv_hanning',
@@ -161,11 +167,12 @@ classToCASATask = {
     hifv_tasks.PlotSummary            : 'hifv_plotsummary',
     hifv_tasks.Statwt                 : 'hifv_statwt',
     hifv_tasks.VLARestoreData         : 'hifv_restoredata',
-    # General Tasks
+    # General Tasks -------------------------------------------------------------
     h_tasks.Applycal                  : 'h_applycal',
     h_tasks.ImportData                : 'h_importdata',
     h_tasks.ExportData                : 'h_exportdata',
-    h_tasks.RestoreData               : 'h_restoredata'
+    h_tasks.RestoreData               : 'h_restoredata',
+    h_tasks.Tsyscal                   : 'h_tsyscal'
 }
 
 
