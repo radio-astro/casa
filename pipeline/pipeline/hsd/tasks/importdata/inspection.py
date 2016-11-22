@@ -505,6 +505,9 @@ class SDMSInspection(object):
         return match    
     
 def match_field_name(name1, name2):
+    trim_name = lambda s : s[1:-1] if s.startswith('"') and s.endswith('"') else s
+    name1 = trim_name(name1)
+    name2 = trim_name(name2)
     pos1 = name1.find(name2)
     pos2 = name2.find(name1)
     pattern = '^_[0-9]+$'
