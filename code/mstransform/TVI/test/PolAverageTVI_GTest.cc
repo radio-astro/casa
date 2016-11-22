@@ -734,9 +734,9 @@ private:
 
 TEST_F(PolAverageTVITest, Factory) {
 
-  TestFactory("default", "GeometricPolAverage");
-  TestFactory("Default", "GeometricPolAverage");
-  TestFactory("DEFAULT", "GeometricPolAverage");
+  TestFactory("default", "StokesPolAverage");
+  TestFactory("Default", "StokesPolAverage");
+  TestFactory("DEFAULT", "StokesPolAverage");
   TestFactory("geometric", "GeometricPolAverage");
   TestFactory("Geometric", "GeometricPolAverage");
   TestFactory("GEOMETRIC", "GeometricPolAverage");
@@ -744,7 +744,7 @@ TEST_F(PolAverageTVITest, Factory) {
   TestFactory("Stokes", "StokesPolAverage");
   TestFactory("STOKES", "StokesPolAverage");
   // empty mode (default)
-  TestFactory("", "GeometricPolAverage");
+  TestFactory("", "StokesPolAverage");
   // invalid mode (throw exception)
   TestFactory("invalid", "");
 }
@@ -761,6 +761,8 @@ TEST_F(PolAverageTVITest, StokesAverage) {
 //       such as partially flagged, contains NaN, etc.
 // TODO: define test on the data that should not average
 //       along polarization axis (IQUV or single polarization)
+// TODO: define test on another type of constructor of TVI factory
+// TODO: define test LayeredTVI factory
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

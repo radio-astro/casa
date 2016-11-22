@@ -355,7 +355,7 @@ public:
 
 private:
   enum AveragingMode {
-    GEOMETRIC, STOKES, NUM_MODES, DEFAULT = GEOMETRIC
+    GEOMETRIC, STOKES, NUM_MODES, DEFAULT = STOKES
   };
 
   static AveragingMode GetAverageModeFromConfig(
