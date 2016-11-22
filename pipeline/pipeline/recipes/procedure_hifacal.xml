@@ -35,7 +35,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hifa_tsyscal</Command>
+        <Command xmlns="">h_tsyscal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>

@@ -25,7 +25,7 @@ from hifa_fluxcalflag_cli import hifa_fluxcalflag_cli as hifa_fluxcalflag
 from hif_rawflagchans_cli import hif_rawflagchans_cli as hif_rawflagchans
 from hifa_fluxdb_cli import hifa_fluxdb_cli as hifa_fluxdb
 from hif_refant_cli import hif_refant_cli as hif_refant
-from hifa_tsyscal_cli import hifa_tsyscal_cli as hifa_tsyscal
+from h_tsyscal_cli import h_tsyscal_cli as h_tsyscal
 from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
 from hifa_antpos_cli import hifa_antpos_cli as hifa_antpos
 from hifa_wvrgcalflag_cli import hifa_wvrgcalflag_cli as hifa_wvrgcalflag
