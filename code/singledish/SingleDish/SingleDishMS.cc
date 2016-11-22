@@ -274,6 +274,33 @@ void SingleDishMS::setAverage(Record const &average, bool const verbose) {
   }
 }
 
+void SingleDishMS::setPolAverage(Record const &average, bool const verbose) {
+  LogIO os(_ORIGIN);
+  if (!pol_average_.empty()) // polaverage is set before
+    os << "Discard old average and setting new one." << LogIO::POST;
+  if (average.empty()) // empty polaverage is passed
+    os << "Resetting average." << LogIO::POST;
+
+  pol_average_ = average;
+
+  if (verbose && !pol_average_.empty()) {
+    LogIO os(_ORIGIN);
+    Int ifield;
+    ifield = pol_average_.fieldNumber(String("polaverage"));
+    os << "[Polarization Averaging Settings]" << LogIO::POST;
+    if (ifield < 0 || !pol_average_.asBool(ifield)) {
+      os << "No polarization averaging will be done" << LogIO::POST;
+      return;
+    }
+
+    String polAverageModeExpr("");
+    polAverageModeExpr = get_field_as_casa_string(pol_average_, "polaveragemode");
+    if (polAverageModeExpr != "") {
+      os << "- Mode: " << polAverageModeExpr << LogIO::POST;
+    }
+  }
+}
+
 String SingleDishMS::get_field_as_casa_string(Record const &in_data,
     string const &field_name) {
   Int ifield;
@@ -330,6 +357,9 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
 
   // smoothing
   configure_param.define("smoothFourier", doSmoothing_);
+
+  // merge polarization averaging parameters
+  configure_param.merge(pol_average_);
 
   // Generate SDMSManager
   sdh_ = new SDMSManager();

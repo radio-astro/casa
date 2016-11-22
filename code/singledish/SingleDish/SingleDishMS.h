@@ -74,6 +74,11 @@ public:
    */
   void setAverage(casacore::Record const& average, bool const verbose = true);
 
+  /*
+   * Set polarization averaging parameters.
+   */
+  void setPolAverage(casacore::Record const& average, bool const verbose = true);
+
   // Multiply a scale factor to selected spectra
   void scale(float const factor, string const& in_column_name,
       string const& out_ms_name);
@@ -407,6 +412,8 @@ private:
   casacore::Record selection_;
   // casacore::Record of average
   casacore::Record average_;
+  // Record of polarization average
+  casacore::Record pol_average_;
   // SDMSManager
   SDMSManager *sdh_;
   // pointer to accessor function
