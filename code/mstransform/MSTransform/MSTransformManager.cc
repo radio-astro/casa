@@ -1462,6 +1462,13 @@ void MSTransformManager::setup()
 		regridSpwSubTable();
 	}
 
+	// Subtable manipulation for polarization averaging
+	if (polAverage_p) {
+//	  Int nInputPolarizations = outputMs_p->polarization().nrow();
+	  Int averagedPolId = getAveragedPolarizationId();
+	  reindexPolarizationIdInDataDesc(averagedPolId);
+	}
+
 	//// Determine the frequency transformation methods to use ////
 
 
@@ -3941,6 +3948,71 @@ void MSTransformManager::separateSysPowerSubtable()
 	}
 
 	return;
+}
+
+// -----------------------------------------------------------------------
+// Return polarization id corresponding to polarization averaged data (Stokes I)
+// Append Polarization row if necessary
+// -----------------------------------------------------------------------
+Int MSTransformManager::getAveragedPolarizationId() {
+  logger_p << LogOrigin("MSTransformManager", __func__, WHERE);
+  MSPolarizationColumns cols(outputMs_p->polarization());
+  Int polId = -1;
+  Int nrow = cols.nrow();
+  for (Int i = 0; i < nrow; ++i) {
+    auto const numCorr = cols.numCorr()(i);
+    auto const flagRow = cols.flagRow()(i);
+    if (numCorr == 1 && flagRow == False) {
+      Vector<Int> const corrType = cols.corrType()(i);
+      Int const corrType0 = corrType[0];
+      if (Stokes::type(corrType0) == Stokes::I) {
+        logger_p << "Matched " << i << LogIO::POST;
+        polId = i;
+        break;
+      }
+    }
+  }
+
+  if (polId < 0) {
+    // add new row to PolarizationTable
+    outputMs_p->polarization().addRow(1, False);
+    polId = nrow;
+    Matrix<Int> corrProduct(2, 1, 0);
+    cols.corrProduct().put(polId, corrProduct);
+    Vector<Int> corrType(1, Stokes::I);
+    cols.corrType().put(polId, corrType);
+    cols.flagRow().put(polId, False);
+    cols.numCorr().put(polId, 1);
+  }
+
+  return polId;
+}
+
+// -----------------------------------------------------------------------
+// Re-index POLARIZATION_ID's in DATA_DESCRIPTION table
+// -----------------------------------------------------------------------
+void MSTransformManager::reindexPolarizationIdInDataDesc(Int newPolarizationId) {
+  logger_p << LogOrigin("MSTransformManager", __func__, WHERE);
+  logger_p << "new polid is " << newPolarizationId << LogIO::POST;
+  MSDataDescColumns ddcols(outputMs_p->dataDescription());
+  MSPolarizationColumns pcols(outputMs_p->polarization());
+  Int nrow = ddcols.nrow();
+  auto __isValidType = [&](Vector<Int> const &ctype) {
+    return (anyEQ(ctype, (Int)Stokes::XX) && anyEQ(ctype, (Int)Stokes::YY))
+      || (anyEQ(ctype, (Int)Stokes::RR) && anyEQ(ctype, (Int)Stokes::LL));
+  };
+  for (Int i = 0; i < nrow; ++i) {
+    Int const polarizationId = ddcols.polarizationId()(i);
+    Int nCorr = pcols.numCorr()(polarizationId);
+    Vector<Int> corrType = pcols.corrType()(polarizationId);
+    Bool flagRow = pcols.flagRow()(polarizationId);
+    Bool needReindex = (polarizationId != newPolarizationId) &&
+        (nCorr > 1) && (flagRow == False) && __isValidType(corrType);
+    if (needReindex) {
+      logger_p << "ddid " << i << " polid " << polarizationId << " needs reindex" << LogIO::POST;
+      ddcols.polarizationId().put(i, newPolarizationId);
+    }
+  }
 }
 
 // -----------------------------------------------------------------------

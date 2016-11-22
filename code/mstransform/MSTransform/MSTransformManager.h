@@ -440,6 +440,9 @@ protected:
 	void separateCalDeviceSubtable();
 	void separateSysPowerSubtable();
 
+	// To average polarization components
+	casacore::Int getAveragedPolarizationId();
+	void reindexPolarizationIdInDataDesc(casacore::Int newPolarizationId);
 
 	// Setters for Weight-based transformation
 	void propagateWeights(casacore::Bool on);
