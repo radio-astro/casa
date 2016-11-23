@@ -182,26 +182,29 @@ class Gainflag(basetask.StandardTaskTemplate):
             
             if metric == 'mediandeviant':
                 flaggerinputs = GainflaggerInputs(
-                  context=inputs.context, output_dir=inputs.output_dir,
-                  vis=inputs.vis, intent=None, spw=None, refant=None, niter=None,
-                  metric=metric, prepend='flag {0} - '.format(metric),
-                  flag_maxabs=True, fmax_limit=inputs.fmeddev_limit)
+                    context=inputs.context, output_dir=inputs.output_dir,
+                    vis=inputs.vis, intent=inputs.intent, spw=None,
+                    refant=None, niter=None, metric=metric,
+                    prepend='flag {0} - '.format(metric), flag_maxabs=True,
+                    fmax_limit=inputs.fmeddev_limit)
                 flaggertask = Gainflagger(flaggerinputs)
             
             elif metric == 'rmsdeviant':
                 flaggerinputs = GainflaggerInputs(
-                  context=inputs.context, output_dir=inputs.output_dir,
-                  vis=inputs.vis, intent=None, spw=None, refant=None, niter=None,
-                  metric=metric, prepend='flag {0} - '.format(metric),
-                  flag_maxabs=True, fmax_limit=inputs.frmsdev_limit)
+                    context=inputs.context, output_dir=inputs.output_dir,
+                    vis=inputs.vis, intent=inputs.intent, spw=None,
+                    refant=None, niter=None, metric=metric,
+                    prepend='flag {0} - '.format(metric), flag_maxabs=True,
+                    fmax_limit=inputs.frmsdev_limit)
                 flaggertask = Gainflagger(flaggerinputs)
 
             elif metric == 'nrmsdeviant':
                 flaggerinputs = GainflaggerInputs(
-                  context=inputs.context, output_dir=inputs.output_dir,
-                  vis=inputs.vis, intent=None, spw=None, refant=None, niter=None,
-                  metric=metric, prepend='flag {0} - '.format(metric),
-                  flag_maxabs=True, fmax_limit=inputs.fnrmsdev_limit)
+                    context=inputs.context, output_dir=inputs.output_dir,
+                    vis=inputs.vis, intent=inputs.intent, spw=None,
+                    refant=None, niter=None, metric=metric,
+                    prepend='flag {0} - '.format(metric), flag_maxabs=True,
+                    fmax_limit=inputs.fnrmsdev_limit)
                 flaggertask = Gainflagger(flaggerinputs)
             
             result.add(metric, self._executor.execute(flaggertask))
@@ -304,21 +307,23 @@ class Gainflagger(basetask.StandardTaskTemplate):
         result.vis = inputs.vis
 
         # Construct the task that will read the data.
-        datainputs = GainflaggerDataInputs(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis, intent=inputs.intent,
-          spw=inputs.spw, refant=inputs.refant)
+        datainputs = GainflaggerDataInputs(
+            context=inputs.context, output_dir=inputs.output_dir,
+            vis=inputs.vis, intent=inputs.intent, spw=inputs.spw,
+            refant=inputs.refant)
         datatask = GainflaggerData(datainputs)
         
         # Construct the generator that will create the view of the data
         # that is the basis for flagging.
-        viewtask = GainflaggerView(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis, intent=inputs.intent,
-          spw=inputs.spw, refant=inputs.refant, metric=inputs.metric)
+        viewtask = GainflaggerView(
+            context=inputs.context, vis=inputs.vis, intent=inputs.intent,
+            spw=inputs.spw, refant=inputs.refant, metric=inputs.metric)
 
         # Construct the task that will set any flags raised in the
         # underlying data.
-        flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.vis, table=inputs.vis, inpfile=[])
+        flagsetterinputs = FlagdataSetter.Inputs(
+            context=inputs.context, vis=inputs.vis, table=inputs.vis,
+            inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Define which type of flagger to use.
@@ -327,19 +332,19 @@ class Gainflagger(basetask.StandardTaskTemplate):
         # Translate the input flagging parameters to a more compact
         # list of rules.
         rules = flagger.make_flag_rules(
-          flag_maxabs=inputs.flag_maxabs,
-          fmax_limit=inputs.fmax_limit)
+            flag_maxabs=inputs.flag_maxabs,
+            fmax_limit=inputs.fmax_limit)
 
         # Construct the flagger task around the data view task  and the
         # flagger task. Extend any newly found flags by removing selection
         # of "FIELD" and "TIMERANGE". Extend any newly found flags in a spw
         # by flagging same in all spws of corresponding baseband.
         matrixflaggerinputs = flagger.Inputs(
-          context=inputs.context, output_dir=inputs.output_dir,
-          vis=inputs.vis, datatask=datatask, viewtask=viewtask, 
-          flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
-          extendfields=['field', 'timerange'], extendbaseband=True,
-          prepend=inputs.prepend, iter_datatask=True)
+            context=inputs.context, output_dir=inputs.output_dir,
+            vis=inputs.vis, datatask=datatask, viewtask=viewtask,
+            flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
+            extendfields=['field', 'timerange'], extendbaseband=True,
+            prepend=inputs.prepend, iter_datatask=True)
         flaggertask = flagger(matrixflaggerinputs)
 
         # Execute the flagger task.
@@ -361,8 +366,8 @@ class Gainflagger(basetask.StandardTaskTemplate):
 
 class GainflaggerDataInputs(basetask.StandardInputs):
     
-    def __init__(self, context, output_dir=None, vis=None, 
-      intent=None, spw=None, refant=None):
+    def __init__(self, context, output_dir=None, vis=None, intent=None,
+                 spw=None, refant=None):
         self._init_properties(vars())
 
 
@@ -382,9 +387,9 @@ class GainflaggerData(basetask.StandardTaskTemplate):
 
         # Calculate a phased-up bpcal
         bpcal_inputs = bandpass.PhcorBandpass.Inputs(
-          context=inputs.context, vis=inputs.vis,
-          intent=inputs.intent, spw=inputs.spw, 
-          refant=inputs.refant, solint='inf,7.8125MHz')
+            context=inputs.context, vis=inputs.vis,
+            intent=inputs.intent, spw=inputs.spw,
+            refant=inputs.refant, solint='inf,7.8125MHz')
         bpcal_task = bandpass.PhcorBandpass(bpcal_inputs)
         bpcal = self._executor.execute(bpcal_task, merge=False)
         if not bpcal.final:
@@ -394,10 +399,10 @@ class GainflaggerData(basetask.StandardTaskTemplate):
 
         # Calculate gain phases
         gpcal_inputs = gaincal.GTypeGaincal.Inputs(
-          context=inputs.context, vis=inputs.vis,
-          intent=inputs.intent, spw=inputs.spw,
-          refant=inputs.refant,
-          calmode='p', minsnr=2.0, solint='int', gaintype='G')
+            context=inputs.context, vis=inputs.vis,
+            intent=inputs.intent, spw=inputs.spw,
+            refant=inputs.refant,
+            calmode='p', minsnr=2.0, solint='int', gaintype='G')
         gpcal_task = gaincal.GTypeGaincal(gpcal_inputs)
         gpcal = self._executor.execute(gpcal_task, merge=False)
         if not gpcal.final:
@@ -407,10 +412,10 @@ class GainflaggerData(basetask.StandardTaskTemplate):
 
         # Calculate gain amplitudes
         gacal_inputs = gaincal.GTypeGaincal.Inputs(
-          context=inputs.context, vis=inputs.vis,
-          intent=inputs.intent, spw=inputs.spw,
-          refant=inputs.refant,
-          calmode='a', minsnr=2.0, solint='int', gaintype='T')
+            context=inputs.context, vis=inputs.vis,
+            intent=inputs.intent, spw=inputs.spw,
+            refant=inputs.refant,
+            calmode='a', minsnr=2.0, solint='int', gaintype='T')
         gacal_task = gaincal.GTypeGaincal(gacal_inputs)
         gacal = self._executor.execute(gacal_task, merge=False)
         
@@ -495,7 +500,8 @@ class GainflaggerView(object):
         
     def calculate_median_rms_deviant_view(self, gtable, metric='mediandeviant'):
         """
-        Method to calculate the "mediandeviant", "rmsdeviant", or "nrmsdeviant" flagging view.
+        Method to calculate the "mediandeviant", "rmsdeviant", or "nrmsdeviant"
+        flagging view.
         
         Input parameters:
         
@@ -560,8 +566,8 @@ class GainflaggerView(object):
                     if not gainflag:
                         data_per_ant[ant].append(gain)
                         data_all_ant.append(gain)
-                        # At least one good datapoint was found for this antenna, so set 
-                        # flag to 0.
+                        # At least one good datapoint was found for this
+                        # antenna, so set flag to 0.
                         flag[ant] = 0
             
             # Convert "all antenna" data to numpy array
@@ -577,8 +583,9 @@ class GainflaggerView(object):
                     # Convert to numpy arrays
                     data_per_ant[ant] = np.array(data_per_ant[ant])
                     
-                    # Calculate "abs(median(ant) - median(all_ant)) / MAD(all_ant)" and store in flagging view
-                    data[ant] = np.abs(np.median(data_per_ant[ant]) - np.median(data_all_ant)) / mad_all_ant
+                    # Calculate metric and store in flagging view
+                    data[ant] = np.abs(np.median(data_per_ant[ant])
+                                       - np.median(data_all_ant)) / mad_all_ant
             
             elif metric == 'rmsdeviant':
                 # Calculate metric for each antenna
