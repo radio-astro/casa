@@ -499,23 +499,27 @@ class MeasurementSet(object):
             field_names = table.getcol('NAME')
         
         return field_names
-        
+
     def get_vla_field_spws(self):
         ''' Find field spws for VLA  '''
-        
+
         vis = self.name
-        
+
         ##with casatools.TableReader(vis+'/FIELD') as table:
         ##    numFields = table.nrows()
-            
-        #Map field IDs to spws
+
+        # Map field IDs to spws
         field_spws = []
         ##for ii in range(numFields):
         ##    field_spws.append(self.vla_spws_for_field(ii))
 
         with casatools.MSMDReader(vis) as msmd:
             spwsforfields = msmd.spwsforfields()
-            for key in spwsforfields.keys():
+            spwfieldkeys = [int(i) for i in spwsforfields.keys()]
+            spwfieldkeys.sort()
+            spwfieldkeys = [str(i) for i in spwfieldkeys]
+
+            for key in spwfieldkeys:
                 field_spws.append(spwsforfields[key])
 
         return field_spws
