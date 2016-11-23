@@ -1250,8 +1250,7 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
       }
     else{
       arrayLattice = new ArrayLattice<Complex>(griddedData);
-	cerr << "##### " << griddedData2.shape() << endl;
-	storeArrayAsImage(String("cgrid_ft.im"), image->coordinates(), griddedData);
+      //storeArrayAsImage(String("cgrid_ft.im"), image->coordinates(), griddedData);
       lattice=arrayLattice;
       LatticeFFT::cfft2d(*lattice,false);
     }
