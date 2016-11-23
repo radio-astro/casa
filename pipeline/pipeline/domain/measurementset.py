@@ -523,7 +523,11 @@ class MeasurementSet(object):
 
         with casatools.MSMDReader(vis) as msmd:
             spwsforfields = msmd.spwsforfields()
-            for key in spwsforfields.keys():
+            spwfieldkeys = [int(i) for i in spwsforfields.keys()]
+            spwfieldkeys.sort()
+            spwfieldkeys = [str(i) for i in spwfieldkeys]
+
+            for key in spwfieldkeys:
                 field_spws.append(spwsforfields[key])
 
         return field_spws
