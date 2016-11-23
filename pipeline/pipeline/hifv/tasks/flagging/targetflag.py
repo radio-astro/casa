@@ -136,7 +136,7 @@ class Targetflag(basetask.StandardTaskTemplate):
                      'action'       : 'apply',
                      'display'      : '',
                      'extendflags'  : False,
-                     'flagbackup'   : False,
+                     'flagbackup'   : True,
                      'savepars'     : True}
                      
         job = casa_tasks.flagdata(**task_args)
