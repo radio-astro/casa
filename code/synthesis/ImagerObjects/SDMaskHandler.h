@@ -190,15 +190,24 @@ public:
                                const casacore::Bool autoadjust,
                                casacore::Double thresh=0.0);
 
-  // Convolve mask image
+  // Convolve mask image with nx pixel by ny pixel
   SHARED_PTR<casacore::ImageInterface<float> > convolveMask(const casacore::ImageInterface<casacore::Float>& inmask,
                                                   casacore::Int nxpix, casacore::Int nypix);
+ 
+  // Convolve mask image by a gaussian 
+  SHARED_PTR<casacore::ImageInterface<float> > convolveMask(const casacore::ImageInterface<casacore::Float>& inmask,
+                                                  const casacore::GaussianBeam& beam);
 
   // Prune the mask regions found 
   SHARED_PTR<casacore::ImageInterface<float> >  pruneRegions(const casacore::ImageInterface<casacore::Float>& image,
                                                    casacore::Double& thresh,
                                                    casacore::Int nmask=0,
                                                    casacore::Int npix=0);
+  // Prune the mask regions per spectral plane
+  SHARED_PTR<casacore::ImageInterface<float> >  pruneRegions2(const casacore::ImageInterface<casacore::Float>& image,
+                                                   casacore::Double& thresh,
+                                                   casacore::Int nmask=0,
+                                                   casacore::Double prunesize=0.0);
 
   // create a mask image (1/0 image) applying a different threshold for each channel plane
   void makeMaskByPerChanThreshold(const casacore::ImageInterface<casacore::Float>& image, 
@@ -219,6 +228,9 @@ public:
                       casacore::Lattice<casacore::Bool>& mask,
                       casacore::Array<casacore::Bool>& chanmask,
                       casacore::ImageInterface<casacore::Float>& outImage);
+
+  // return beam area in pixel unit
+  casacore::Float pixelBeamArea(const casacore::GaussianBeam& beam, const casacore::CoordinateSystem& csys); 
 
   // Create a mask image applying PB level
   void makePBMask(SHARED_PTR<SIImageStore> imstore, casacore::Float pblimit=0.1);
@@ -248,7 +260,7 @@ public:
 
 protected:
   InteractiveMasking *interactiveMasker_p;
-
+  
 private:
   double itsRms;
   double itsMax;

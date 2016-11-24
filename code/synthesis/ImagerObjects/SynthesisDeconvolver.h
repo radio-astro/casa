@@ -98,7 +98,7 @@ class SynthesisDeconvolver
 
   void setStartingModel();
   void setupMask();
-  void setAutoMask(casacore::Int iterDone);
+  void setAutoMask();
 
 protected:
 

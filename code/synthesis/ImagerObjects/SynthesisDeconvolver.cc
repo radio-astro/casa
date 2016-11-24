@@ -314,7 +314,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SynthesisUtilMethods::getResource("Start Deconvolver");
 
     try {
-      if ( !itsIsInteractive ) setAutoMask(itsIterDone);
+      if ( !itsIsInteractive ) setAutoMask();
       itsLoopController.setCycleControls(minorCycleControlRec);
 
       itsDeconvolver->deconvolve( itsLoopController, itsImages, itsDeconvolverId );
@@ -424,7 +424,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
         // Skip automask for non-interactive mode. 
         if ( itsAutoMaskAlgorithm != "" && itsIsInteractive) {
-          setAutoMask(itsIterDone);
+          setAutoMask();
           /***
           if ( itsPBMask > 0.0 ) {
             itsMaskHandler->autoMaskWithinPB( itsImages, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsPBMask);
@@ -463,7 +463,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SynthesisDeconvolver::setAutoMask(Int iterDone)
+  void SynthesisDeconvolver::setAutoMask()
   {
      //modify mask using automask otherwise no-op
      if ( itsAutoMaskAlgorithm != "" )  {
