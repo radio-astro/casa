@@ -20,6 +20,9 @@ class MakeImListHeuristics(object):
 
     def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
         self.context = context
+
+        cqa = casatools.quanta
+
         if type(vislist) is types.ListType:
             self.vislist = vislist
         else:
@@ -63,7 +66,7 @@ class MakeImListHeuristics(object):
             # to estimate the primary beam radius -
             # radius of first null in arcsec = 1.22*lambda/D
             self.beam_radius[spwid] = \
-              (1.22 * (2.99792458e8/ref_frequency) / smallest_diameter) * \
+              (1.22 * (cqa.constants('c')['value'] / ref_frequency) / smallest_diameter) * \
               (180.0 * 3600.0 / math.pi)
 
         # determine spw selection parameters to exclude lines for mfs and cont images
