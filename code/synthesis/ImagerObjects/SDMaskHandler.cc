@@ -2001,7 +2001,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       uInt removeBySize=0;
       for (uInt icomp=0; icomp < sortedindx.nelements(); icomp++) {
         Bool removeit(False);
-        cerr<<"sortedindx="<<sortedindx[icomp]<<" comp="<<clmat.row(sortedindx[icomp])<<endl;
+        if (debug) {
+          cerr<<"sortedindx="<<sortedindx[icomp]<<" comp="<<clmat.row(sortedindx[icomp])<<endl;
+        }
         Vector<Quantum<Double> > qblc(ndim);
         Vector<Quantum<Double> > qtrc(ndim);
         Vector<Double> wblc(ndim);
