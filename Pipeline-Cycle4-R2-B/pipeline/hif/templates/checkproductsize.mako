@@ -30,10 +30,10 @@ $(document).ready(function() {
     <p>There are no product size check results.
 % else:
     <%
-    allowedcubesize = '%s GB' % (result[0].allowedcubesize)
-    maxcubesize = '%s GB' % (result[0].maxcubesize)
-    allowedproductsize = '%s GB' % (result[0].allowedproductsize)
-    productsize = '%s GB' % (result[0].productsize)
+    allowedcubesize = '%.3g GB' % (result[0].allowedcubesize)
+    maxcubesize = '%.3g GB' % (result[0].maxcubesize)
+    allowedproductsize = '%.3g GB' % (result[0].allowedproductsize)
+    productsize = '%.3g GB' % (result[0].productsize)
     %>
     <p>
     Allowed maximum cube size: ${allowedcubesize}
