@@ -142,11 +142,11 @@ public:
 		 VLA, VLA_INVERSE, VLA_NVSS, VLA_2NULL, 
 		 VLA_4, VLA_P, VLA_L, VLA_C, VLA_X, VLA_U, VLA_K, VLA_Q, 
 		 WSRT, WSRT_LOW, ALMA, ALMASD, ACA, IRAMPDB, IRAM30M, SMA, 
-		 ATA, ATCA_C_RI, ATCA, ATCA_16, ATCA_K, ATCA_Q, ATCA_W,  EVLA, NONE
+		 ATA, ATCA_C_RI, ATCA, ATCA_16, ATCA_K, ATCA_Q, ATCA_W,  EVLA, NGVLA, NONE
   };
 
   enum {
-    NumberOfCommonPB=43  };
+    NumberOfCommonPB=44  };
 
   // Default constructor, required for casacore::Block<PBMath>
   PBMath();

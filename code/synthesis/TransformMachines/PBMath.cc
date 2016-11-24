@@ -666,6 +666,9 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
   } else if(telescope(0,4)=="EVLA") {
        whichPB = PBMath::EVLA;
        band = "UNKNOWN";
+  } else if(telescope(0,4)=="NGVLA") {
+    whichPB = PBMath::NGVLA;
+    band = "UNKNOWN";
   } else if (telescope(0,4)=="WSRT") {
     if (freqGHz > 3.0 && freqGHz < 6.0) {
       whichPB = PBMath::WSRT;
@@ -839,6 +842,9 @@ void PBMath::nameCommonPB(const PBMath::CommonPB iPB, String & str)
   case PBMath::EVLA:
     str = "EVLA";
     break;
+  case PBMath::NGVLA:
+    str = "NGVLA";
+    break;
   case PBMath::VLA:
     str = "VLA";
     break;
@@ -942,6 +948,8 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
     ipb = PBMath::HATCREEK;
   } else if (str == "EVLA"){
       ipb = PBMath::EVLA;
+  } else if (str == "NGVLA"){
+    ipb = PBMath::NGVLA;
   }else if (str == "VLA" ) {
     ipb = PBMath::VLA;
   } else if (str == "VLA_INVERSE") {
@@ -1280,7 +1288,11 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
 				       Quantity(0.8564,"deg"), Quantity(1.0,"GHz"));
     }
   break;
-
+  case NGVLA:
+    // No squint assumed here or blockage 
+    thepbMath = new PBMath1DAiry( Quantity(18.0,"m"), Quantity(0.0,"m"),
+				     Quantity(1.5,"deg"), Quantity(1.0,"GHz"));
+    break;
   // These 4 cases, OVRO, GMRT, NRAO12M, and NRAO140FT, do not represent
   // well determined models (though some of them have well determined models).
   // We are inserting them for completeness, though we should update some of them.
