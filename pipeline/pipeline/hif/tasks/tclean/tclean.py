@@ -183,10 +183,6 @@ class Tclean(cleanbase.CleanBase):
         if inputs.gridder in ('', None):
             inputs.gridder = self.clheuristics.gridder(inputs.intent, inputs.field)
 
-        # Determine the default deconvolver
-        if inputs.deconvolver in ('', None):
-            inputs.deconvolver = self.clheuristics.deconvolver(inputs.intent,
-                                                          inputs.field)
 
         # Determine the phase center.
         if inputs.phasecenter in ('', None):

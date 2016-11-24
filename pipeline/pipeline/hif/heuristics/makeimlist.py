@@ -393,9 +393,6 @@ class MakeImListHeuristics(object):
         else:
             return 'standard'
 
-    def deconvolver(self, intent, field):
-        return 'hogbom'
-
     def phasecenter(self, fields, centreonly=True):
 
         cme = casatools.measures
@@ -624,7 +621,9 @@ class MakeImListHeuristics(object):
         # increase width slightly to try to avoid the error:
         # WARN SubMS::convertGridPars *** Requested new channel width is
         # smaller than smallest original channel width.
-        width = decimal.Decimal('1.0001') * width
+        # This should no longer be necessary (CASA >=4.7) and this width
+        # method does not seem to be used anywhere anyways.
+        #width = decimal.Decimal('1.0001') * width
         width = str(width)
         return width
 
