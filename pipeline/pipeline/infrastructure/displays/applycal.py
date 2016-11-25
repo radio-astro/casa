@@ -22,7 +22,7 @@ class PlotmsLeaf(object):
     exactly one plot. 
     """
     def __init__(self, context, result, calto, xaxis, yaxis,  
-                 spw='', ant='', field='', scan='', intent='', uvrange='', **plot_args):
+                 spw='', ant='', field='', scan='', intent='', uvrange='', correlation='', **plot_args):
         self._context = context
         self._result = result
 
@@ -35,7 +35,24 @@ class PlotmsLeaf(object):
         self._spw = spw
         self._intent = intent
         self._uvrange = uvrange
-        
+
+        # TODO
+        # This should be revisited when the confusion between correlation and
+        # polarisation is ironed out. I'm not convinced that
+        # get_alma_corrstring does anything useful; I suspect an empty string
+        # forcing all correlations to be plotted would be equivalent.
+        if correlation == '':
+            observatory = self._ms.antenna_array.name
+            if observatory == 'ALMA':
+                correlation = self._ms.get_alma_corrstring()
+            elif observatory in ('VLA', 'EVLA'):
+                correlation = self._ms.get_vla_corrstring()
+            else:
+                # New observatories: you could probably use '' but I can't
+                # guarantee it, hence the error is raised
+                raise NotImplementedError('Could not expand correlation for observatory: {!s}'.format(observatory))
+        self._correlation = correlation
+
 #         # convert intent to scan selection
 #         if intent != '':
 #             domain_fields = self._ms.get_fields(field)
@@ -171,18 +188,21 @@ class PlotmsLeaf(object):
 
     def _get_plot_task(self):
         casa_intent = utils.to_CASA_intent(self._ms, self._intent)
-        task_args = {'vis'             : self._ms.name,
-                     'xaxis'           : self._xaxis,
-                     'yaxis'           : self._yaxis,
-                     'field'           : str(self._field),
-                     'spw'             : str(self._spw),
-                     'scan'            : str(self._scan),
-                     'intent'          : casa_intent,
-                     'antenna'         : self._ant,
-                     'uvrange'         : self._uvrange,
-                     'plotfile'        : self._plotfile,
-                     'clearplots'      : True,
-                     'showgui'         : False}
+        task_args = {
+            'vis': self._ms.name,
+            'xaxis': self._xaxis,
+            'yaxis': self._yaxis,
+            'field': str(self._field),
+            'spw': str(self._spw),
+            'scan': str(self._scan),
+            'intent': casa_intent,
+            'antenna': self._ant,
+            'uvrange': self._uvrange,
+            'correlation': self._correlation,
+            'plotfile': self._plotfile,
+            'clearplots': True,
+            'showgui': False
+        }
 
         task_args.update(**self._plot_args)
         

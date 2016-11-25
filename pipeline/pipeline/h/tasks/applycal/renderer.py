@@ -330,7 +330,6 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
-            correlation = ms.get_alma_corrstring()
 
             amp_vs_freq_summary_plots[vis]['TARGET'] = []
             phase_vs_freq_summary_plots[vis]['TARGET'] = []
@@ -361,20 +360,20 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                       result, 
                                                       applycal.AmpVsFrequencySummaryChart,
                                                       [brightest_field.id],
-                                                      uv_range, correlation=correlation)
+                                                      uv_range)
                 amp_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
     
                 plots = self.science_plots_for_result(context, 
                                                       result,
                                                       applycal.PhaseVsFrequencyPerSpwSummaryChart,
                                                       [brightest_field.id],
-                                                      uv_range, correlation=correlation)
+                                                      uv_range)
                 phase_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
     
                 plots = self.science_plots_for_result(context, 
                                                       result, 
                                                       applycal.AmpVsUVSummaryChart,
-                                                      [brightest_field.id], correlation=correlation)
+                                                      [brightest_field.id])
                 amp_vs_uv_summary_plots[vis]['TARGET'].extend(plots)
 
             if pipeline.infrastructure.generate_detail_plots(result):
@@ -390,8 +389,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                   applycal.AmpVsFrequencySummaryChart,
                                                   fields,
                                                   uv_range,
-                                                  ApplycalAmpVsFreqSciencePlotRenderer,
-                                                  correlation=correlation)
+                                                  ApplycalAmpVsFreqSciencePlotRenderer)
                 amp_vs_freq_detail_plots[vis] = plots
 
                 plots = self.science_plots_for_result(context,
@@ -399,16 +397,14 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                               applycal.PhaseVsFrequencyPerBasebandSummaryChart,
                                               fields,
                                               uv_range,
-                                              ApplycalPhaseVsFreqSciencePlotRenderer,
-                                              correlation=correlation)
+                                              ApplycalPhaseVsFreqSciencePlotRenderer)
                 phase_vs_freq_detail_plots[vis] = plots
 
                 plots = self.science_plots_for_result(context,
                                               result, 
                                               applycal.AmpVsUVSummaryChart,
                                               fields,
-                                              renderer_cls=ApplycalAmpVsUVSciencePlotRenderer,
-                                              correlation=correlation)
+                                              renderer_cls=ApplycalAmpVsUVSciencePlotRenderer)
                 amp_vs_uv_detail_plots[vis] = plots
 
         for d, plotter_cls in (
@@ -432,10 +428,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 amp_vs_uv_summary_plots, max_uvs)
 
     def science_plots_for_result(self, context, result, plotter_cls, fields, 
-                                 uvrange=None, renderer_cls=None,
-                                 correlation=''):
-        overrides = {'coloraxis': 'spw',
-                     'correlation': correlation}
+                                 uvrange=None, renderer_cls=None):
+        overrides = {'coloraxis': 'spw'}
         if uvrange is not None:
             overrides['uvrange'] = uvrange
 
@@ -566,23 +560,18 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         subpages = {}
 
         for result in results:
-            vis = os.path.basename(result.inputs['vis'])
-            ms = context.observing_run.get_ms(vis)
-            corrstring = ms.get_alma_corrstring()
-
-            plots, href = self.plots_for_result(context, result, plotter_cls,
-                                                intents, corrstring,
-                                                renderer_cls, **kwargs)
+            plots, href = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls, **kwargs)
             d = utils.dict_merge(d, plots)
+
+            vis = os.path.basename(result.inputs['vis'])
             subpages[vis] = href
 
         return d, subpages
 
-    def plots_for_result(self, context, result, plotter_cls, intents,
-                         corrstring, renderer_cls=None, **kwargs):
+    def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None, **kwargs):
         vis = os.path.basename(result.inputs['vis'])
 
-        plotter = plotter_cls(context, result, intents, correlation=corrstring, **kwargs)
+        plotter = plotter_cls(context, result, intents, **kwargs)
         plots = plotter.plot()
         for plot in plots:
             plot.parameters['intent'] = intents

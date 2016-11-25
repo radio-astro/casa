@@ -107,7 +107,6 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
-            correlation = ms.get_alma_corrstring()
             max_uvs[vis] = measures.Distance(value=0.0, units=measures.DistanceUnits.METRE)
             
             amp_vs_freq_summary_plots[vis]['TARGET'] = []
@@ -121,8 +120,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
                 plots = self.science_plots_for_result(context,
                                                       result,
                                                       applycal.RealVsFrequencySummaryChart,
-                                                      [brightest_field.id], None,
-                                                      correlation=correlation)
+                                                      [brightest_field.id], None)
                 amp_vs_freq_summary_plots[vis]['TARGET'].extend(plots)
     
             if pipeline.infrastructure.generate_detail_plots(result):
@@ -139,8 +137,7 @@ class T2_4MDetailsSDApplycalRenderer(T2_4MDetailsApplycalRenderer,
                                                       result,
                                                       applycal.RealVsFrequencySummaryChart,
                                                       fields, None,
-                                                      ApplycalAmpVsFreqSciencePlotRenderer,
-                                                      correlation=correlation)
+                                                      ApplycalAmpVsFreqSciencePlotRenderer)
                 amp_vs_freq_detail_plots[vis] = plots
 
         for d, plotter_cls in (

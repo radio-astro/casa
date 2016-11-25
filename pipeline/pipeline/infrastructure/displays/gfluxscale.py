@@ -8,20 +8,6 @@ from . import setjy as setjy
 LOG = infrastructure.get_logger(__name__)
 
 
-# this can probably be replaced with the setjy version, letting the extra ant
-# argument go through as kwargs
-# class BasebandSummaryChart(setjy.PlotmsBasebandComposite):
-#     """
-#     Base class for executing plotms per baseband
-#     """
-#     def __init__(self, context, result, xaxis, yaxis, intent, ant, **kwargs):
-#         LOG.info('%s vs %s plot' % (yaxis, xaxis))
-# 
-#         # request plots per spw, overlaying all antennas
-#         super(BasebandSummaryChart, self).__init__(
-#                 context, result, xaxis, yaxis, intent=intent, ant=ant, **kwargs)
-                
-
 class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
     """
     Create an amplitude vs UV distance plot for baseband.
@@ -68,27 +54,20 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
         pltmin = 0
         pltmax = 0
         
-        vis = os.path.basename(result.inputs['vis'])
-        ms = context.observing_run.get_ms(vis)
-        corrstring = ms.get_alma_corrstring()
-        
-        #LOG.info("GFLUXSCALE DISPLAY UVRANGE: "+uvrange)
-    
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'field'       : fields,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgbaseline' : False,
-                     'avgchannel'  : '9000',
-                     'antenna'     : ant,
-                     'correlation' : corrstring,
-                     'uvrange'     : uvrange,   #Specified in hifa_gfluxscale task inputs
-                     'plotrange'   : [uvrangeplot['uvdist'][0], uvrangeplot['uvdist'][1],pltmin,pltmax],
-                     'coloraxis'   : 'spw',
-                     'overwrite'   : True}
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'field': fields,
+            'avgtime': '',
+            'avgscan': False,
+            'avgbaseline': False,
+            'avgchannel': '9000',
+            'antenna': ant,
+            'uvrange': uvrange,  # Specified in hifa_gfluxscale task inputs
+            'plotrange': [uvrangeplot['uvdist'][0], uvrangeplot['uvdist'][1], pltmin, pltmax],
+            'coloraxis': 'spw',
+            'overwrite': True
+        }
         plot_args.update(**overrides)
         
         super(GFluxscaleSummaryChart, self).__init__(
-                context, result, xaxis='uvdist', yaxis='amp', intent=intent, ant=ant,
-                **plot_args)
-
+                context, result, xaxis='uvdist', yaxis='amp', intent=intent, ant=ant, **plot_args)

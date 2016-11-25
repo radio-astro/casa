@@ -1,8 +1,8 @@
-'''
+"""
 Created on 11 Sep 2014
 
 @author: sjw
-'''
+"""
 import collections
 import os
 
@@ -57,26 +57,18 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return d
 
     def plots_for_result(self, context, result, plotter_cls, intents):
-        vis = os.path.basename(result.inputs['vis'])
-        ms = context.observing_run.get_ms(vis)
-        corrstring = ms.get_alma_corrstring()
-
-        plotter = plotter_cls(context, result, intents, correlation=corrstring)
+        plotter = plotter_cls(context, result, intents)
         plots = plotter.plot()
 
         d = collections.defaultdict(dict)
         vis = os.path.basename(result.inputs['vis'])        
         d[vis] = plots
 
-        # if renderer_cls is not None:
-        #     renderer = renderer_cls(context, result, plots, **kwargs)
-        #     with renderer.get_file() as fileobj:
-        #         fileobj.write(renderer.render())
-
         return d
     
 FluxTR = collections.namedtuple('FluxTR', 'vis field spw freq band i q u v spix')
-    
+
+
 def make_flux_table(context, results):
     # will hold all the flux stat table rows for the results
     rows = []
@@ -91,8 +83,7 @@ def make_flux_table(context, results):
             
         for field_arg, measurements in single_result.measurements.items():
             field = ms_for_result.get_fields(field_arg)[0]
-            intents = " ".join(field.intents.intersection(set(['AMPLITUDE',
-               'BANDPASS', 'CHECK', 'PHASE'])))
+            intents = " ".join(field.intents.intersection({'AMPLITUDE', 'BANDPASS', 'CHECK', 'PHASE'}))
             field_cell = '%s (#%s) %s' % (field.name, field.id, intents)
 
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
