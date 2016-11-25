@@ -654,8 +654,10 @@ class PlotAntsChart(object):
         """
 
         # Get longitude and latitude offsets in meters for antennas.
-        xoffsets = np.array([ant.offset['longitude offset']['value'] for ant in antennas])
-        yoffsets = np.array([ant.offset['latitude offset']['value'] for ant in antennas])
+        xoffsets = np.array([ant.offset['longitude offset']['value']
+                             for ant in antennas])
+        yoffsets = np.array([ant.offset['latitude offset']['value']
+                             for ant in antennas])
 
         # Take median of antenna offsets as the actual center for the plot.
         xcenter = np.median(xoffsets)
@@ -665,12 +667,13 @@ class PlotAntsChart(object):
         theta = np.arctan2(xoffsets-xcenter, yoffsets-ycenter)
         r = ((xoffsets-xcenter)**2 + (yoffsets-ycenter)**2)**0.5
         
-        # Set rmin, clamp between a min and max value, ignore station at r=0 if one is there.
-        rmin_min, rmin_max = 7, 200
+        # Set rmin, clamp between a min and max value, ignore station
+        # at r=0 if one is there.
+        rmin_min, rmin_max = 3, 200
         rmin = min(rmin_max, max(rmin_min, np.min(r[r>0])))
         
         # Update r to move any points below rmin to r=rmin.
-        r[r<=rmin] = rmin
+        r[r <= rmin] = rmin
         rmin = np.log(rmin)
         
         # Set rmax.
@@ -691,9 +694,9 @@ class PlotAntsChart(object):
         subpl.grid(False)
         
         # Draw circles at specific distances from the center.
-        angles = np.arange(0,2.01*np.pi,0.01*np.pi)
+        angles = np.arange(0, 2.01*np.pi, 0.01*np.pi)
         show_circle = True
-        for cr in [30,100,300,1000,3000,10000]:
+        for cr in [30, 100, 300, 1000, 3000, 10000]:
 
             # Only draw circles outside rmin.
             if cr > np.min(r) and show_circle:
@@ -706,16 +709,19 @@ class PlotAntsChart(object):
                 inc = 0.1*10000/cr
                 if cr > 100:
                     for angle in np.arange(inc/2., 2*np.pi+0.05, inc):
-                        subpl.plot([angle,angle], [np.log(0.95*cr), np.log(1.05*cr)], 'k-') 
+                        subpl.plot([angle, angle],
+                                   [np.log(0.95*cr), np.log(1.05*cr)], 'k-')
 
                 # Add text label to circle to denote distance from center.
                 va = 'top'
                 circle_label_angle = -20.0 * np.pi / 180.
                 if cr >= 1000:
-                    if (np.log(cr) < rmax):
-                        subpl.text(circle_label_angle, np.log(cr), '%d km'%(cr/1000), size=8, va=va)
+                    if np.log(cr) < rmax:
+                        subpl.text(circle_label_angle, np.log(cr),
+                                   '%d km' % (cr/1000), size=8, va=va)
                 else:
-                    subpl.text(circle_label_angle, np.log(cr), '%dm'%(cr), size=8, va=va)
+                    subpl.text(circle_label_angle, np.log(cr), '%dm' % (cr),
+                               size=8, va=va)
 
             # Find out if most recently drawn circle was outside all antennas, 
             # if so, no more circles will be drawn.
@@ -729,26 +735,31 @@ class PlotAntsChart(object):
             subpl.plot(theta[i], np.log(r[i]), 'ko', ms=5, mfc='k')
     
             # Draw label for the antenna.
-            subpl.text(theta[i], np.log(r[i]), ' '+antenna.name,
-              size=8, color='k', ha='left', va='bottom', weight='bold')        
+            subpl.text(theta[i], np.log(r[i]), ' '+antenna.name, size=8,
+                       color='k', ha='left', va='bottom', weight='bold')
     
             # Create label for legend
             if max(r) < 100:
-                label = r'{}: {:2.0f} m, {:4.0f}$^\circ$'.format(antenna.name, r[i], np.degrees(theta[i]))                
-            if max(r) < 1000:
-                label = r'{}: {:3.0f} m, {:4.0f}$^\circ$'.format(antenna.name, r[i], np.degrees(theta[i]))                
+                label = r'{}: {:2.0f} m, {:4.0f}$^\circ$'.format(
+                    antenna.name, r[i], np.degrees(theta[i]))
+            elif max(r) < 1000:
+                label = r'{}: {:3.0f} m, {:4.0f}$^\circ$'.format(
+                    antenna.name, r[i], np.degrees(theta[i]))
             elif max(r) < 3000:
-                label = r'{}: {:3.2f} km, {:4.0f}$^\circ$'.format(antenna.name, 0.001*r[i], np.degrees(theta[i]))   
+                label = r'{}: {:3.2f} km, {:4.0f}$^\circ$'.format(
+                    antenna.name, 0.001*r[i], np.degrees(theta[i]))
             else:
-                label = r'{}: {:3.1f} km, {:4.0f}$^\circ$'.format(antenna.name, 0.001*r[i], np.degrees(theta[i]))
+                label = r'{}: {:3.1f} km, {:4.0f}$^\circ$'.format(
+                    antenna.name, 0.001*r[i], np.degrees(theta[i]))
 
             # Draw a key in the legend for finding the antenna.
-            subpl.annotate(label, xy=(0.5,0.5), xytext=(0.02,0.925-0.90*i/len(antennas)), 
-              xycoords='figure fraction', textcoords='figure fraction', weight='bold', 
-              arrowprops=None, color='black', ha='left', va='center', size=8)
+            subpl.annotate(label, xy=(0.5, 0.5),
+                           xytext=(0.02, 0.925-0.90*i/len(antennas)),
+                           xycoords='figure fraction',
+                           textcoords='figure fraction', weight='bold',
+                           arrowprops=None, color='black', ha='left',
+                           va='center', size=8)
 
         # Set minimum and maximum radius.
         subpl.set_rmax(rmax)
         subpl.set_rmin(rmin)
-
-
