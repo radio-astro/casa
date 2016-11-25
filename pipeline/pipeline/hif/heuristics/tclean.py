@@ -55,52 +55,6 @@ class TcleanHeuristics(object):
 
         return pblimit_image, pblimit_cleanmask
 
-    def field(self, intent, field):
-        result = []
-
-        for vis in self.vislist:
-            ms = self.context.observing_run.get_ms(name=vis)
-            fields = ms.fields
-
-            field_list = []
-            if field is not None:
-                # field set explicitly
-                if type(field) is not types.ListType:
-                    field_names = [field]
-                else:
-                    field_names = field
-
-                # 'escape' regexp control characters in field name, except for
-                # * which people use as a wildcard character - replace * by .*
-                # to convert it to regexp form
-                for i,fld in enumerate(field_names):
-                    for char in '()+?.^$[]{}|': 
-                        fld = fld.replace(char, '\%s' % char)
-                    fld = fld.replace('*', '.*')
-                    field_names[i] = fld
-
-                # convert to field ids
-                for field_name in field_names:
-                    field_list += [fld.id for fld in fields if re.search(
-                      pattern=field_name, string=fld.name)]
-
-            if intent is not None:
-                # pattern matching to allow intents of form *TARGET* to work
-                re_intent = intent.replace('*', '.*')
-                field_list = [fld.id for fld in fields if
-                  fld.id in field_list and re.search(pattern=re_intent,
-                  string=str(fld.intents))]
-
-            # this will be a mosaic if there is more than 1 field_id for any 
-            # measurement set - probably needs more work, what if want to
-            # mosaic together single fields in multiple measurement sets?
-            self._mosaic = len(field_list) > 1
- 
-            field_string = ','.join(str(fld_id) for fld_id in field_list)
-            result.append(field_string)
-
-        return result
-
     def deconvolver(self, specmode, spwspec):
         if (specmode == 'cont'):
             abs_min_frequency = 1.0e15
