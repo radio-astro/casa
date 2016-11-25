@@ -238,6 +238,9 @@ private:
     }
   }
 
+  // warn if current dd is inappropriate for polarization averaging
+  void warnIfNoTransform();
+
   friend PolAverageVi2Factory;
 };
 

@@ -25,6 +25,7 @@
 #include <casacore/casa/Arrays/Matrix.h>
 #include <casacore/casa/Arrays/Vector.h>
 #include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Logging/LogIO.h>
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/casa/Exceptions/Error.h>
 #include <casacore/casa/Arrays/ArrayIter.h>
@@ -282,6 +283,9 @@ void PolAverageTVI::origin() {
 
   // reconfigure if necessary
   reconfigurePolAverageIfNecessary();
+
+  // warn if current dd is inappropriate for polarization averaging
+  warnIfNoTransform();
 }
 
 void PolAverageTVI::next() {
@@ -292,6 +296,25 @@ void PolAverageTVI::next() {
 
   // reconfigure if necessary
   reconfigurePolAverageIfNecessary();
+
+  // warn if current dd is inappropriate for polarization averaging
+  warnIfNoTransform();
+}
+
+void PolAverageTVI::warnIfNoTransform() {
+  if (!doTransform_[dataDescriptionId()]) {
+    auto const vb = getVii()->getVisBuffer();
+    LogIO os(LogOrigin("PolAverageTVI", __func__, WHERE));
+    String msg("Skip polarization average because");
+    if (vb->nCorrelations() == 1) {
+      msg += " number of polarizations is 1.";
+    } else if (anyEQ(vb->correlationTypes(), (Int)Stokes::I)) {
+      msg += " polarization type is Stokes.";
+    } else {
+      msg += " no valid polarization components are found.";
+    }
+    os << LogIO::WARN << msg << LogIO::POST;
+  }
 }
 
 void PolAverageTVI::corrType(Vector<Int> & corrTypes) const {
