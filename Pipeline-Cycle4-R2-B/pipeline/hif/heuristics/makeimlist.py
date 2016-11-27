@@ -539,6 +539,9 @@ class MakeImListHeuristics(object):
         else:
             celly = cell[0]
 
+        if (cellx == 'invalid') or (celly == 'invalid'):
+            return [0, 0]
+
         # get cell and beam sizes in arcsec
         cellq = cqa.quantity(cellx)
         cqa.convert(cellq, 'arcsec')
