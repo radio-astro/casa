@@ -322,7 +322,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 # Can not just use "has_data" as it only sets up
                 # a selection which checks against existance of
                 # a given item (e.g. an spw).
-                cell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw, oversample=0.5*pixperbeam)
+                hcell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw, oversample=0.5*pixperbeam)
                 # For now we consider the spw for all fields / intents.
                 # May need to handle this individually.
                 if (valid_data[list(field_intent_list)[0]]):
@@ -347,13 +347,13 @@ class MakeImList(basetask.StandardTaskTemplate):
                 # imager.advise
                 cells[spwspec], valid_data[spwspec] = self.heuristics.cell(
                   field_intent_list=field_intent_list, spwspec=spwspec, oversample=0.5*pixperbeam)
-                if (cells[spwspec] != ['invalid']):
+                if ('invalid' not in cells[spwspec]):
                     min_cell = cells[spwspec] if (qaTool.convert(cells[spwspec][0], 'arcsec')['value'] < qaTool.convert(min_cell[0], 'arcsec')['value']) else min_cell
             # Rounding to two significant figures
             min_cell = ['%.2g%s' % (qaTool.getvalue(min_cell[0]), qaTool.getunit(min_cell[0]))]
             # Use same cell size for all spws (in a band (TODO))
             for spwspec in spwlist:
-                if (cells[spwspec] != ['invalid']):
+                if ('invalid' not in cells[spwspec]):
                     cells[spwspec] = min_cell
         else:
             for spwspec in spwlist:
