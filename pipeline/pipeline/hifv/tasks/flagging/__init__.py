@@ -4,9 +4,6 @@ import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.infrastructure.renderer.qaadapter as qaadapter
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 
-
-
-from . import vlaagentflagger
 from . import flagbaddeformatters
 from . import checkflag
 from . import targetflag
@@ -15,7 +12,6 @@ from . import renderer
 from . import qa
 
 from .flagdetervla import FlagDeterVLA
-#from .vlaagentflagger import VLAAgentFlagger
 from .flagbaddeformatters import FlagBadDeformatters
 from .checkflag import Checkflag
 from .targetflag import Targetflag
@@ -33,7 +29,8 @@ from .targetflag import Targetflag
 #qaadapter.registry.register_to_dataset_topic(targetflag.TargetflagResults)
 
 
-weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsVLAAgentFlaggerRenderer(), group_by=weblog.UNGROUPED)
+# Use locally defined renderer for VLA deterministic flagging.
+weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsFlagDeterVLARenderer(), group_by=weblog.UNGROUPED)
 
 weblog.add_renderer(FlagBadDeformatters, 
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='flagbaddef.mako',

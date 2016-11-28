@@ -13,16 +13,18 @@ LOG = logging.get_logger(__name__)
 
 FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 
-class T2_4MDetailsVLAAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
+
+class T2_4MDetailsFlagDeterVLARenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 
-    def __init__(self, uri='vlaagentflagger.mako', 
+    def __init__(self, uri='flagdetervla.mako',
                  description='VLA Deterministic flagging', always_rerender=False):
-        super(T2_4MDetailsVLAAgentFlaggerRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+
+        super(T2_4MDetailsFlagDeterVLARenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def get_display_context(self, context, result):
-        super_cls = super(T2_4MDetailsVLAAgentFlaggerRenderer, self)
+        super_cls = super(T2_4MDetailsFlagDeterVLARenderer, self)
         ctx = super_cls.get_display_context(context, result)
 
         weblog_dir = os.path.join(context.report_dir,
@@ -123,7 +125,7 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRende
                     if previous_summary:
                         flagcount -= int(previous_summary['scan'][i]['flagged'])
     
-                ft = T2_4MDetailsVLAAgentFlaggerRenderer.FlagTotal(flagcount, 
+                ft = T2_4MDetailsFlagDeterVLARenderer.FlagTotal(flagcount,
                                                                 totalcount)
                 total[summary['name']][intent] = ft
                 
@@ -150,7 +152,7 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRende
                 if previous_summary:
                     flagcount -= int(previous_summary['spw'][spw_id]['flagged'])
 
-            ft = T2_4MDetailsVLAAgentFlaggerRenderer.FlagTotal(flagcount, 
+            ft = T2_4MDetailsFlagDeterVLARenderer.FlagTotal(flagcount,
                                                             totalcount)
             total[summary['name']]['SCIENCE SPWS'] = ft
                 

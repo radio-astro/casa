@@ -5,7 +5,6 @@ from .bandpass import ALMAPhcorBandpass
 from .bpsolint import BpSolint
 from .dbservice import Fluxdb
 from .exportdata import ALMAExportData
-from .flagging import ALMAAgentFlagger
 from .flagging import FlagDeterALMA
 from .flagging import FlagTargetsALMA
 from .fluxcalflag import FluxcalFlag

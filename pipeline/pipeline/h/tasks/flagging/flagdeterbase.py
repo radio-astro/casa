@@ -485,7 +485,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         it should not.
         
         Checks in this function should be generic. Observatory-dependent tests
-        should be added by extending the AgentFlagger and overriding this
+        should be added by extending FlagDeterBase and overriding this
         method.
         """
         # Get the data description for this spw

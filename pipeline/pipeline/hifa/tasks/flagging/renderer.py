@@ -8,11 +8,13 @@ import pipeline.infrastructure.utils as utils
 
 LOG = logging.get_logger(__name__)
 
+
 class T2_4MDetailsFlagTargetsALMARenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='flagtargets.mako', 
                  description='Target flagging', always_rerender=False):
-        super(T2_4MDetailsFlagTargetsALMARenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
+
+        super(T2_4MDetailsFlagTargetsALMARenderer, self).__init__(
+            uri=uri, description=description, always_rerender=always_rerender)
 
     def update_mako_context(self, mako_context, pipeline_context, result):
         weblog_dir = os.path.join(pipeline_context.report_dir,
@@ -24,7 +26,7 @@ class T2_4MDetailsFlagTargetsALMARenderer(basetemplates.T2_4MDetailsDefaultRende
                                            flagutils.flags_for_result(r, pipeline_context))
 
             # copy template files across to weblog directory
-            toggle_to_filenames = {'template' : 'filetemplate'}
+            toggle_to_filenames = {'template': 'filetemplate'}
 
             inputs = r.inputs
             for toggle, filenames in toggle_to_filenames.items():
@@ -45,7 +47,6 @@ class T2_4MDetailsFlagTargetsALMARenderer(basetemplates.T2_4MDetailsDefaultRende
 
             flagcmd_files[ms.basename] = flagcmds_path
 
-
         # return all agents so we get ticks and crosses against each one
         agents = ['before', 'template']
 
@@ -54,4 +55,3 @@ class T2_4MDetailsFlagTargetsALMARenderer(basetemplates.T2_4MDetailsDefaultRende
             'agents': agents,
             'dirname': weblog_dir,
             'flagcmds': flagcmd_files})
-
