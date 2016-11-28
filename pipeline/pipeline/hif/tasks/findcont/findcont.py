@@ -5,8 +5,7 @@ import types
 import copy
 
 from pipeline.hif.heuristics import findcont
-from pipeline.hif.heuristics import makeimlist
-from pipeline.hif.heuristics import tclean
+from pipeline.hif.heuristics import imageparams
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
@@ -96,12 +95,12 @@ class FindCont(basetask.StandardTaskTemplate):
                     findcont_basename = '%s.I.findcont' % (os.path.basename(target['imagename']).replace('spw%s' % (target['spw'].replace(',','_')), 'spw%s' % (spwid)).replace('STAGENUMBER', str(context.stage)))
 
                     # determine the gridder mode here (temporarily ...)
-                    clheuristics = makeimlist.MakeImListHeuristics(context=context,
+                    image_heuristics = imageparams.ImageParamsHeuristics(context=context,
                                                                    vislist=inputs.vis,
                                                                    spw=spwid,
                                                                    contfile=context.contfile,
                                                                    linesfile=context.linesfile)
-                    gridder = clheuristics.gridder(target['intent'], target['field'])
+                    gridder = image_heuristics.gridder(target['intent'], target['field'])
 
                     # need scan id list for multiple target case
                     # TODO: move this to a heuristics to avoid duplicated code (see tclean)
@@ -136,9 +135,8 @@ class FindCont(basetask.StandardTaskTemplate):
 
                     # To avoid noisy edge channels, use only the LSRK frequency
                     # intersection and skip one channel on either end.
-                    tclean_heuristics = tclean.TcleanHeuristics(context, inputs.vis, target['spw'])
                     # Use only the current spw ID here !
-                    if0, if1, channel_width = tclean_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
+                    if0, if1, channel_width = image_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
                     if (if0 == -1) or (if1 == -1):
                         LOG.error('No LSRK frequency intersect among selected for Field %s SPW %s' % (target['field'], spwid))
                         continue

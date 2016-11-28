@@ -9,7 +9,7 @@ import pipeline.infrastructure.mpihelpers as mpihelpers
 from ..tclean import Tclean
 from ..tclean.resultobjects import TcleanResult
 from .resultobjects import MakeImagesResult
-from pipeline.hif.heuristics import makeimlist
+from pipeline.hif.heuristics import imageparams
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -180,13 +180,13 @@ class CleanTaskFactory(object):
         })
 
         # set the imager mode here (temporarily ...)
-        clheuristics = makeimlist.MakeImListHeuristics(
+        image_heuristics = imageparams.ImageParamsHeuristics(
                 context=inputs.context, vislist=inputs.vis,
                 spw=task_args['spw'])
-        task_args['gridder'] = clheuristics.gridder(
+        task_args['gridder'] = image_heuristics.gridder(
                 task_args['intent'], task_args['field'])
-        # Let the Tclean heuristics determine the deconvolver
-        #task_args['deconvolver'] = clheuristics.deconvolver(
+        # Let the image heuristics determine the deconvolver
+        #task_args['deconvolver'] = image_heuristics.deconvolver(
         #        task_args['intent'], task_args['field'])
 
         if inputs.hm_masking == '':

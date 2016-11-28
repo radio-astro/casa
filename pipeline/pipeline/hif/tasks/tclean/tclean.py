@@ -6,7 +6,7 @@ import operator
 import decimal
 
 import pipeline.domain.measures as measures
-from pipeline.hif.heuristics import tclean
+from pipeline.hif.heuristics import imageparams
 from pipeline.hif.heuristics import mosaicoverlap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -23,8 +23,6 @@ from .iterativesequence import IterativeSequence
 from .iterativesequence2 import IterativeSequence2
 from . import cleanbase
 
-from pipeline.hif.heuristics import makeimlist
-
 LOG = infrastructure.get_logger(__name__)
 
 
@@ -38,7 +36,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  noiseimage=None, hm_masking=None, hm_maskthreshold=None, hm_cleaning=None, tlimit=None,
                  masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
         self._init_properties(vars())
-        self.heuristics = tclean.TcleanHeuristics(self.context, self.vis, self.spw)
+        self.image_heuristics = imageparams.ImageParamsHeuristics(self.context, self.vis, self.spw)
 
     # Add extra getters and setters here
     spwsel_lsrk = basetask.property_with_default('spwsel_lsrk', {})
@@ -91,7 +89,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     @property
     def deconvolver(self):
         if not self._deconvolver:
-            return self.heuristics.deconvolver(self.specmode, self.spw)
+            return self.image_heuristics.deconvolver(self.specmode, self.spw)
         else:
             return self._deconvolver
 
@@ -103,12 +101,12 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     def robust(self):
         if self._robust == -999.0:
             if (self.spw.find(',') == -1):
-                return self.heuristics.robust(self.spw)
+                return self.image_heuristics.robust(self.spw)
             else:
                 robust = 0.0
                 spws = self.spw.split(',')
                 for spw in spws:
-                    robust += self.heuristics.robust(spw)
+                    robust += self.image_heuristics.robust(spw)
                 robust /= len(spws)
                 return robust
         else:
@@ -166,28 +164,28 @@ class Tclean(cleanbase.CleanBase):
         self.pblimit_cleanmask = 0.3
         inputs.pblimit = self.pblimit_image
 
-        # Instantiate the clean list heuristics class
-        self.clheuristics = makeimlist.MakeImListHeuristics(context=context,
-                                                       vislist=inputs.vis,
-                                                       spw=inputs.spw,
-                                                       contfile=context.contfile,
-                                                       linesfile=context.linesfile)
+        # Instantiate the image parameter heuristics class
+        self.image_heuristics = imageparams.ImageParamsHeuristics(context=context,
+                                    vislist=inputs.vis,
+                                    spw=inputs.spw,
+                                    contfile=context.contfile,
+                                    linesfile=context.linesfile)
 
         # Generate the image name if one is not supplied.
         if inputs.imagename in ('', None):
-            inputs.imagename = self.clheuristics.imagename(intent=inputs.intent,
+            inputs.imagename = self.image_heuristics.imagename(intent=inputs.intent,
                                                       field=inputs.field,
                                                       spwspec=inputs.spw)
 
         # Determine the default gridder
         if inputs.gridder in ('', None):
-            inputs.gridder = self.clheuristics.gridder(inputs.intent, inputs.field)
+            inputs.gridder = self.image_heuristics.gridder(inputs.intent, inputs.field)
 
 
         # Determine the phase center.
         if inputs.phasecenter in ('', None):
-            field_id = self.clheuristics.field(inputs.intent, inputs.field)
-            inputs.phasecenter = self.clheuristics.phasecenter(field_id)
+            field_id = self.image_heuristics.field(inputs.intent, inputs.field)
+            inputs.phasecenter = self.image_heuristics.phasecenter(field_id)
 
         # If imsize not set then use heuristic code to calculate the
         # centers for each field  / spw
@@ -197,16 +195,16 @@ class Tclean(cleanbase.CleanBase):
 
             # The heuristics cell size  is always the same for x and y as
             # the value derives from a single value returned by imager.advise
-            cell, valid_data = self.clheuristics.cell(field_intent_list=[(inputs.field, inputs.intent)],
+            cell, valid_data = self.image_heuristics.cell(field_intent_list=[(inputs.field, inputs.intent)],
                                            spwspec=inputs.spw)
-            beam = self.clheuristics.beam(spwspec=inputs.spw)
+            beam = self.image_heuristics.beam(spwspec=inputs.spw)
 
             if inputs.cell == []:
                 inputs.cell = cell
                 LOG.info('Heuristic cell: %s' % cell)
 
-            field_ids = self.clheuristics.field(inputs.intent, inputs.field)
-            imsize = self.clheuristics.imsize(fields=field_ids,
+            field_ids = self.image_heuristics.field(inputs.intent, inputs.field)
+            imsize = self.image_heuristics.imsize(fields=field_ids,
                                          cell=inputs.cell, beam=beam)
             if inputs.imsize == []:
                 inputs.imsize = imsize
@@ -215,7 +213,7 @@ class Tclean(cleanbase.CleanBase):
         if (inputs.specmode == 'cube'):
             # To avoid noisy edge channels, use only the LSRK frequency
             # intersection and skip one channel on either end.
-            if0, if1, channel_width = inputs.heuristics.lsrk_freq_intersection(inputs.vis, inputs.field, inputs.spw)
+            if0, if1, channel_width = self.image_heuristics.lsrk_freq_intersection(inputs.vis, inputs.field, inputs.spw)
 
             if (if0 == -1) or (if1 == -1):
                 LOG.error('No LSRK frequency intersect among selected MSs for Field %s SPW %s' % (inputs.field, inputs.spw))
@@ -408,7 +406,7 @@ class Tclean(cleanbase.CleanBase):
         # Determine masking limits depending on PB
         extension = '.tt0' if result.multiterm else ''
         self.pblimit_image, self.pblimit_cleanmask = \
-            inputs.heuristics.pblimits(result.flux+extension)
+            self.image_heuristics.pblimits(result.flux+extension)
         inputs.pblimit = self.pblimit_image
 
         # Give the result to the sequence_manager for analysis
@@ -645,7 +643,7 @@ class Tclean(cleanbase.CleanBase):
             targetmslist = [context.observing_run.get_ms(name=ms) for ms in inputs.vis]
 
         # Convert LSRK ranges to TOPO
-        spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, aggregate_lsrk_bw = self.inputs.heuristics.calc_topo_ranges(inputs)
+        spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, aggregate_lsrk_bw = self.image_heuristics.calc_topo_ranges(inputs)
 
         detailed_field_sensitivities = {}
         min_sensitivities = []
