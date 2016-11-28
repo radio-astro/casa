@@ -21,6 +21,10 @@ try:
 except:
     import tests.selection_syntax as selection_syntax
 
+try:
+    import testutils
+except:
+    import tests.testutils as testutils
 
 ### Utilities for reading blparam file
 class FileReader(object):
@@ -1215,9 +1219,141 @@ class sdfit_timeaverage(sdfit_unittest_base,unittest.TestCase):
         ref = [4.5]
         self.run_test(False, ref, timebin='100s', timespan='scan,field')
 
+class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
+    """
+    Test polarization averaging capability
+    
+        test_polaverage_default   -- test default average mode (=stokes)
+        test_polaverage_stokes    -- test stokes average mode
+        test_polaverage_geometric -- test geometric average mode 
+    """
+    infile = "gaussian.ms"
+    
+    # reference value from basicTest
+    answer = sdfit_basicTest.answer012
+    
+    def setUp(self):
+        testutils.copytree_ignore_subversion(self.datapath, self.infile)
+        self.edit_weight()
+    
+    def tearDown(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+
+    def edit_weight(self):
+        (myms, mytb,) = gentools(['ms', 'tb'])
+        sel = myms.msseltoindex(vis=self.infile, spw='0')
+        ddid = sel['dd'][0]
+        mytb.open(self.infile, nomodify=False)
+        tsel = mytb.query('DATA_DESC_ID=={}'.format(ddid))
+        try:
+            # weight for XX is two times larger than YY
+            print 'Editing weight'
+            weight = tsel.getcell('WEIGHT', 0)
+            print '    weight (before)', weight
+            weight[1] *= 2.0
+            print '    weight (after)', weight
+            tsel.putcell('WEIGHT', 0, weight)
+        finally:
+            tsel.close()
+            mytb.close()
+
+    def scale_expected_peak(self, mode, peak):
+        scaled = numpy.copy(peak)
+        if mode == 'default' or mode == 'stokes':
+            scaled /= 2.0
+        elif mode == 'geometric':
+            (myms, mytb,) = gentools(['ms', 'tb'])
+            sel = myms.msseltoindex(vis=self.infile, spw='0')
+            ddid = sel['dd'][0]
+            mytb.open(self.infile)
+            tsel = mytb.query('DATA_DESC_ID=={}'.format(ddid))
+            try:
+                weight = tsel.getcell('WEIGHT', 0)
+            finally:
+                tsel.close()
+                mytb.close()
+            wsum = numpy.sum(weight)
+            scaled *= weight / wsum
+
+        return scaled
+            
+    def verify(self, mode, result):
+        print 'mode=\'{}\''.format(mode)
+        print 'result=\'{}\''.format(result)
+        
+        # number of fit results
+        # number of fit results should be 1
+        # (2 spectra are reduced into 1 by polarization averaging)
+        nresults = len(result['nfit'])
+        self.assertEqual(nresults, 1)
+        
+        # verify nfit
+        # nfit should be 2
+        nfit = numpy.asarray(result['nfit'])
+        self.assertTrue(numpy.all(nfit == 2))
+        
+        # verify cent
+        # cent should not be changed
+        cent = numpy.asarray(result['cent'])
+        cent_result = cent[0,:,0]
+        cent_err = cent[0,:,1]
+        cent_expected = numpy.asarray(self.answer['cent'])[:2].squeeze()
+        print 'cent (result)={}\ncent (expected)={}'.format(cent_result, 
+                                                            cent_expected) 
+        err_factor = 2.0
+        for i in xrange(2):
+            self.assertLessEqual(cent_expected[i], cent_result[i] + err_factor * cent_err[i])
+            self.assertGreaterEqual(cent_expected[i], cent_result[i] - err_factor * cent_err[i])
+            
+        # verify fwhm
+        # fwhm should not be changed
+        fwhm = numpy.asarray(result['fwhm'])
+        fwhm_result = fwhm[0,:,0]
+        fwhm_err = fwhm[0,:,1]
+        fwhm_expected = numpy.asarray(self.answer['fwhm'])[:2].squeeze()
+        print 'fwhm (result)={}\nfwhm (expected)={}'.format(fwhm_result, 
+                                                            fwhm_expected) 
+        err_factor = 2.0
+        for i in xrange(2):
+            self.assertLessEqual(fwhm_expected[i], fwhm_result[i] + err_factor * fwhm_err[i])
+            self.assertGreaterEqual(fwhm_expected[i], fwhm_result[i] - err_factor * fwhm_err[i])
+        
+        # verify peak
+        # peak should depend on mode and weight value
+        peak = numpy.asarray(result['peak'])
+        peak_result = peak[0,:,0]
+        peak_err = peak[0,:,1]
+        peak_expected = numpy.asarray(self.answer['peak'])[:2].squeeze()
+        peak_expected_scaled = self.scale_expected_peak(mode, peak_expected)
+        print 'peak (result)={}\npeak (expected)={}'.format(peak_result, 
+                                                            peak_expected_scaled) 
+        err_factor = 2.0
+        for i in xrange(2):
+            self.assertLessEqual(peak_expected_scaled[i], peak_result[i] + err_factor * peak_err[i])
+            self.assertGreaterEqual(peak_expected_scaled[i], peak_result[i] - err_factor * peak_err[i])
+        
+    def run_test(self, mode):
+        # only spw 0 is processed
+        result = sdfit(infile=self.infile, datacolumn='float_data', fitfunc='gaussian', 
+                       nfit=[2], spw='0', polaverage=True, polaveragemode=mode)
+        self.verify(mode, result)        
+    
+    def test_polaverage_default(self):
+        """ test_polaverage_default: test default average mode (=stokes) """
+        self.run_test(mode='default')
+    
+    def test_polaverage_stokes(self):
+        """ test_polaverage_stokes: test stokes average mode """
+        self.run_test(mode='stokes')
+        
+    def test_polaverage_geometric(self):
+        """ test_polaverage_geometric: test geometric average mode """
+        self.run_test(mode='geometric')
 
 def suite():
     return [sdfit_basicTest, 
             sdfit_selection, 
             sdfit_auto, 
-            sdfit_timeaverage]
+            sdfit_timeaverage,
+            sdfit_polaverage]
