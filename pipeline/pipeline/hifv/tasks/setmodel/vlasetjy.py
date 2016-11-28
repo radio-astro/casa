@@ -370,7 +370,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
 
         # get the spectral windows for the spw inputs argument
         # This is done later in the loop for the VLA
-        print "Type of inputs.spw: ", inputs.spw, type(inputs.spw)
+        #print "Type of inputs.spw: ", inputs.spw, type(inputs.spw)
         spws = [spw for spw in inputs.ms.get_spectral_windows(inputs.spw)]
 
         # Multiple spectral windows spawn multiple setjy jobs. Set a unique
@@ -410,12 +410,11 @@ class VLASetjy(basetask.StandardTaskTemplate):
 
                 jobs = []
                 VLAspws = field_spws[myfield]
-                print 'VLAspws: ', VLAspws, type(VLAspws)
+                #print 'VLAspws: ', VLAspws, type(VLAspws)
                 strlistVLAspws = ','.join(str(spw) for spw in VLAspws)
                 spws = [spw for spw in inputs.ms.get_spectral_windows(strlistVLAspws)]
                 
                 for spw in spws:
-                    inputs.spw = spw.id
                     reference_frequency = center_frequencies[spw.id]
                     try:
                         EVLA_band = spw2band[spw.id]
@@ -454,7 +453,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                         except:
                             I = inputs.fluxdensity
                             flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
-                        result.measurements[field].append(flux)
+                        result.measurements[myfield].append(flux)
                 
                 # merge identical jobs into one job with a multi-spw argument
                 jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
@@ -464,49 +463,6 @@ class VLASetjy(basetask.StandardTaskTemplate):
                     except:
                         LOG.warn("SetJy issue with field id="+str(job.kw['field']) + " and spw=" +str(job.kw['spw']))
 
-        
-        '''
-        for field in utils.safe_split(inputs.field):
-            print "setjy field: ", field
-            inputs.field = field
-            jobs = []
-            for spw in spws:
-                print "setjy spw: ", spw, spw.id, type(spw.id)
-                inputs.spw = spw.id
-                task_args = inputs.to_casa_args()
-                jobs.append(casa_tasks.setjy(**task_args))
-                
-                # Flux densities coming from a non-lookup are added to the
-                # results so that user-provided calibrator fluxes are
-                # committed back to the domain objects
-                if inputs.fluxdensity is not -1:
-#                    l = inputs.field.split(',')
-#                     field_idx = l.index(field)                                    
-                    try:
-                        (I,Q,U,V) = inputs.fluxdensity
-                        flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
-                    except:
-                        I = inputs.fluxdensity
-                        flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
-                    result.measurements[field].append(flux)
-
-            # merge identical jobs into one job with a multi-spw argument
-            # be careful - that comma after spw is required for ignore to
-            # be an iterable of strings!
-            jobs = self._merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
-            for job in jobs:
-                self._executor.execute(job)
-        '''
-
-        # higher-level tasks may run multiple Setjy tasks before running
-        # analyse, so we also tag the end of our jobs so we can identify the
-        # values from this task
-        ####end_marker = self._add_marker_to_casa_log()
-
-        # We read the log in reverse order, so the end timestamp should
-        # trigger processing and the start timestamps should terminate it.
-        ####end_pattern = re.compile('.*%s.*' % start_marker)
-        ####start_pattern = re.compile('.*%s.*' % end_marker)
 
         spw_seen = set()
         for setjy_dict in setjy_dicts:
