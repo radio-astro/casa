@@ -406,9 +406,11 @@ void NRO2MSReader::shiftFrequency(string const &vdef,
                                   std::vector<double> &freqs) {
   double factor = v/2.99792458e8;
   if (vdef == "RAD") {
-    factor = 1.0 / (1.0 + factor);
+    //factor = 1.0 / (1.0 + factor);
+    factor = 1.0 - factor;
   } else if (vdef == "OPT") {
-    factor += 1.0;
+    //factor += 1.0;
+    factor = 1.0 / (1.0 + factor);
   } else {
     cout << "vdef=" << vdef << " is not supported." << endl;
     factor = 1.0;
