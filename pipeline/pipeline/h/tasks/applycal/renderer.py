@@ -440,8 +440,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # CAS-9395: ALMA pipeline weblog plot of calibrated amp vs.
             # frequency with avgantenna=True and a uvrange upper limit leads
             # to misleading results and wrong conclusions
-            if plotter_cls is applycal.AmpVsFrequencySummaryChart:
-                overrides['avgantenna'] = False
+            overrides['avgantenna'] = False
 
         plots = []
         for field in fields:
