@@ -653,51 +653,67 @@ class AquaReport(object):
     def add_fluxcal_flagging_metric (self, stage_element, fluxcalflag_result):
 
         '''
-        Recompute the metric defining the percentage of newly flagged data.
-
         Results are probably always iterable but support a non-iterable
         option just in case.
+
+        Note that this tasks implements 2 score, a percentage flagging score, and a reference
+        spw map warning score.
         '''
 
         # Retrieve the flagging summaries
         results = fluxcalflag_result.read()
 
+        vis = 'Undefined'
+        metric_value = 'Undefined'
+        metric_name = 'Undefined'
+
+        if not results:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
+
         # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
 
-            # Construct the list of metrics.
-            mlist = []
-            for i in range(len(results)):
-                if not results[i]:
-                    continue
-                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
-                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
-                    agent_stats[1:]], 0))
+            # Construct a list of score values of the appropriate type
+            scores = []; scorevalues = []
+            for r in results:
+                for qascore in r.qa.pool:
+                    if qascore.origin.metric_name != '%FluxcalFlags':
+                        continue
+                    scores.append(qascore)
+                    scorevalues.append(qascore.score)
 
             # Locate the largest metric
-            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
-            if idx is None:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
+            qavalue, idx = max ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
+
+            if idx is not None:
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
-                if metric is not None:
-                    metric = '%0.3f' % (100.0 * metric)
+                if qavalue is not None:
+                    metric_name = scores[idx].origin.metric_name
+                    metric_value = scores[idx].origin.metric_score
+                    if metric_value != 'N/A':
+                        metric_value = '%0.3f' % (100.0 * metric_value)
+                    else:
+                        metric_value = 'Undefined'
 
         # Single result
         else:
             # By definition this is the result with the lowest metric
-            if not results:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
-                agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
-                metric =  reduce(operator.add, [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
-                metric = '%0.3f' % (100.0 * metric)
+            vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+            for qascore in results.qa.pool:
+                qaname = qascore.origin.metric_name
+                if qaname != '%FluxcalFlags':
+                    continue
+                metric_name = qaname
+                qavalue = qascore.origin.metric_score
+                if qa_value != 'N/A':
+                    metric_value = '%0.3f' % (100.0 * qa_value)
+                else:
+                    metric_value = 'Undefined'
 
-        eltree.SubElement(stage_element, "Metric", Name="%FluxcalFlags",
-            Value=metric, Asdm=vis)
+        eltree.SubElement(stage_element, "Metric", Name=metric_name,
+            Value=metric_value, Asdm=vis)
 
     def add_rawflagchans_flagging_metric (self, stage_element, rawflagchans_result):
 
