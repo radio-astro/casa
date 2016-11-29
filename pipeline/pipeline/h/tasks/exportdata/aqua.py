@@ -270,7 +270,7 @@ class AquaReport(object):
 
             elif self.stagedict[stage][0] == 'hifa_flagdata':
                 try:
-                    self.add_online_shadow_flagging_metric(st,
+                    self.add_online_shadow_template_flagging_metric(st,
                         self.context.results[stage-1])
                 except:
                     LOG.warn ("Error handling hifa_flagdata result")
@@ -536,13 +536,10 @@ class AquaReport(object):
             Value=metric, Asdm=vis)
 
 
-    def add_online_shadow_flagging_metric (self, stage_element,
+    def add_online_shadow_template_flagging_metric (self, stage_element,
         flagdata_result):
 
         '''
-        Recompute the metric defining the percentage of online and shadow
-        flagged data.
-
         Results are probably always iterable but support a non-iterable
         option just in case.
         '''
@@ -550,41 +547,56 @@ class AquaReport(object):
         # Retrieve the flagging results
         results = flagdata_result.read()
 
+        vis = 'Undefined'
+        metric_value = 'Undefined'
+        metric_name = 'Undefined'
+
+        if not results:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
+
         # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
 
-            # Construct the list of metrics.
-            mlist = []
-            for i in range(len(results)):
-                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
-                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
-                    agent_stats if s.name in ['online', 'shadow']], 0))
+            # Construct a list of score values of the appropriate type
+            scores = []; scorevalues = []
+            for r in results:
+                for qascore in r.qa.pool:
+                    if qascore.origin.metric_name != '%OnlineShadowTemplateFlags':
+                        continue
+                    scores.append(qascore)
+                    scorevalues.append(qascore.score)
 
             # Find the highest valued metric.
-            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
-            if idx is None:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
+            qavalue, idx = max ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
+            if idx is not None:
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
-                if metric is not None:
-                    metric = '%0.3f' % (100.0 * metric)
+                if qavalue is not None:
+                    metric_name = scores[idx].origin.metric_name
+                    metric_value = scores[idx].origin.metric_score
+                    if metric_value != 'N/A':
+                        metric_value = '%0.3f' % (100.0 * metric_value)
+                    else:
+                        metric_value = 'Undefined'
 
         # Single result.
         else:
             # By definition this is the result with the lowest metric
-            if not results:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
-                agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
-                metric = reduce(operator.add, [float(s.flagged) / s.total for s in \
-                    agent_stats if s.name in ['online', 'shadow']], 0)
-                metric = '%0.3f' % (100.0 * metric)
+            vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+            for qascore in results.qa.pool:
+                qaname = qascore.origin.metric_name
+                if qaname != '%OnlineShadowTemplateFlags':
+                    continue
+                metric_name = qaname
+                qavalue = qascore.origin.metric_score
+                if qa_value != 'N/A':
+                    metric_value = '%0.3f' % (100.0 * qa_value)
+                else:
+                    metric_value = 'Undefined'
 
-        eltree.SubElement(stage_element, "Metric", Name="%OnlineShadowFlags",
-            Value=metric, Asdm=vis)
+        eltree.SubElement(stage_element, "Metric", Name=metric_name,
+            Value=metric_value, Asdm=vis)
 
 
     def add_tsys_flagging_metric (self, stage_element, tsysflag_result):
@@ -765,9 +777,6 @@ class AquaReport(object):
 
         # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
-
-            # Construct the list of results.
-            #rlist = [r.qa.representative.score for r in results if r.qa.representative.metric_name == 'PhaseRmsRatio']
 
             # Construct a list of score values of the appropriate type
             scores = []; scorevalues = []
