@@ -438,6 +438,10 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                      'correlation': correlation}
         if uvrange is not None:
             overrides['uvrange'] = uvrange
+            # CAS-9395: ALMA pipeline weblog plot of calibrated amp vs.
+            # frequency with avgantenna=True and a uvrange upper limit leads
+            # to misleading results and wrong conclusions
+            overrides['avgantenna'] = False
 
         # remove warning message about coloraxis
         if plotter_cls is plotatmosphere.TransmissionSummaryChart:
