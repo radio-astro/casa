@@ -429,13 +429,18 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def science_plots_for_result(self, context, result, plotter_cls, fields, 
                                  uvrange=None, renderer_cls=None):
-        overrides = {'coloraxis': 'spw'}
+        if plotter_cls is plotatmosphere.TransmissionSummaryChart:
+            # remove warning message about coloraxis
+            overrides = {}
+        else:
+            overrides = {'coloraxis': 'spw'}
+
         if uvrange is not None:
             overrides['uvrange'] = uvrange
-
-        # remove warning message about coloraxis
-        if plotter_cls is plotatmosphere.TransmissionSummaryChart:
-            del overrides['coloraxis']
+            # CAS-9395: ALMA pipeline weblog plot of calibrated amp vs.
+            # frequency with avgantenna=True and a uvrange upper limit leads
+            # to misleading results and wrong conclusions
+            overrides['avgantenna'] = False
 
         plots = []
         for field in fields:
