@@ -19,7 +19,7 @@ class FlagDeterBaseQAHandler(pqa.QAResultHandler):
     
         # CAS-7059 base the metric (and warnings) on Shadowing+Online, instead
         # of on the Total.
-        scores = [qacalc.score_online_shadow_agents(ms, result.summaries)]
+        scores = [qacalc.score_online_shadow_template_agents(ms, result.summaries, name='%OnlineShadowTemplateFlags')]
                   
         result.qa.pool[:] = scores
 
