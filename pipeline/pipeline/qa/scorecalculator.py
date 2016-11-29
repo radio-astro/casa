@@ -477,18 +477,27 @@ def score_ephemeris_coordinates(mses):
 
 
 @log_qa
-def score_online_shadow_agents(ms, summaries):
+def score_online_shadow_template_agents(ms, summaries, name=None, comment=None):
     """
-    Get a score for the fraction of data flagged by online and shadow agents.
+    Get a score for the fraction of data flagged by online, shadow, and template agents.
 
     0 < score < 1 === 60% < frac_flagged < 5%
     """
     score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6,
                                          ['online', 'shadow', 'qa0', 'before', 'template'])
 
-    new_origin = pqa.QAOrigin(metric_name='score_online_shadow_agents',
+    if not name:
+        metric_name = 'score_online_shadow_template_agents'
+    else:
+        metric_name = name
+    if not comment:
+        metric_units = 'Fraction of data newly flagged by online, shadow, and template agents' 
+    else:
+        metric_units = comment
+
+    new_origin = pqa.QAOrigin(metric_name=metric_name,
                               metric_score=score.origin.metric_score,
-                              metric_units=score.origin.metric_units)
+                              metric_units=metric_units)
     score.origin = new_origin
 
     return score
