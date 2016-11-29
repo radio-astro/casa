@@ -86,7 +86,16 @@ def make_flux_table(context, results):
             continue
             
         for field_arg, measurements in single_result.measurements.items():
+            fields = ms_for_result.get_fields(field_arg)
             field = ms_for_result.get_fields(field_arg)[0]
+            try:
+                if (len(fields) > 1):
+                    for f in fields:
+                        for intent in f.intents:
+                            if 'AMPLITUDE' in intent:
+                                field = f
+            except:
+                LOG.info("Single amplitude calibrator")
             field_cell = '%s (#%s)' % (field.name, field.id)
 
             for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
