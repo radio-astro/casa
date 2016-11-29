@@ -304,12 +304,12 @@ class AquaReport(object):
             #     Retrieve the result with the highest percentage of new
             #     flags.
 
-            elif self.stagedict[stage][0] == 'hifa_tsysflag':
+            elif self.stagedict[stage][0] == 'h_tsysflag':
                 try:
                     self.add_tsys_flagging_metric(st,
                         self.context.results[stage-1])
                 except:
-                    LOG.warn ("Error handling hifa_tsysflag result")
+                    LOG.warn ("Error handling h_tsysflag result")
 
             # WVR calibration and flagging
             #     Retrieve the result with the poorest rms improvement.
@@ -744,8 +744,7 @@ class AquaReport(object):
 
         '''
         Retrieve the ratio of phase rms (without wvr) / phase rms (with wvr)
-        metric.  This metric is incorrectly labeled as a score in the results.
-        This metric is either None or a floating point value.
+        metric.  
 
         Results are probably always iterable but support a non-iterable
         option just in case.
@@ -754,40 +753,60 @@ class AquaReport(object):
         # Retrieve the results.
         results = wvr_result.read()
 
+        # Initialize
+        vis = 'Undefined'
+        metric_value = 'Undefined'
+        metric_name = 'Undefined'
+
+        if not results:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
+
         # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
 
             # Construct the list of results.
-            rlist = [r.qa_wvr.overall_score for r in results]
+            #rlist = [r.qa.representative.score for r in results if r.qa.representative.metric_name == 'PhaseRmsRatio']
+
+            # Construct a list of score values of the appropriate type
+            scores = []; scorevalues = []
+            for r in results:
+                for qascore in r.qa.pool:
+                    if qascore.origin.metric_name != 'PhaseRmsRatio':
+                        continue
+                    scores.append(qascore)
+                    scorevalues.append(qascore.score)
 
             # Evaluate the metrics
-            metric, idx = min ((metric, idx) for (idx, metric) in enumerate(rlist)) 
-            if idx is None:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
+            qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
+            if idx is not None:
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
-                if metric is not None:
-                    metric = '%0.3f' % results[idx].qa_wvr.overall_score
-                else:
-                    metric = 'Undefined'
+                if qavalue is not None:
+                    metric_name = scores[idx].origin.metric_name
+                    metric_value = scores[idx].origin.metric_score
+                    if metric_value != 'N/A':
+                        metric_value = '%0.3f' % metric_value
+                    else:
+                        metric_value = 'Undefined'
 
         # Single result
         else:
             # By definition this is the result with the lowest metric
-            if not results:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
-                if results.qa_wvr.overall_score is None:
-                    metric = 'Undefined'
+            vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+            for qascore in results.qa.pool:
+                qaname = qascore.origin.metric_name
+                if qaname != 'PhaseRmsRatio':
+                    continue
+                metric_name = qaname
+                qavalue = qascore.origin.metric_score
+                if qa_value != 'N/A':
+                    metric_value = '%0.3f' % qa_value
                 else:
-                    metric = '%0.3f' % results.qa_wvr.overall_score
-            print 'single', 'Metric', metric, 'Vis', vis
+                    metric_value = 'Undefined'
 
-        eltree.SubElement(stage_element, "Metric", Name="PhaseRmsRatio",
-            Value=metric, Asdm=vis)
+        eltree.SubElement(stage_element, "Metric", Name=metric_name,
+            Value=metric_value, Asdm=vis)
 
 
     def add_highlow_gain_flagging_metric (self, stage_element,
