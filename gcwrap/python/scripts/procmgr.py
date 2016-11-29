@@ -55,7 +55,7 @@ class procmgr(Thread):
             print "%s => proc %s is being started" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
             out = PIPE if self.__with_output else file(os.devnull,'a')
             self.__proc = Popen( self.__cmd, stderr=out , stdout=out, stdin=PIPE )
-            self.__watchdog = Popen( [ '/usr/bin/bash','-c', 
+            self.__watchdog = Popen( [ '/bin/bash','-c', 
                                        'while kill -0 %d > /dev/null 2>&1; do sleep 1; kill -0 %d > /dev/null 2>&1 || kill -9 %d > /dev/null 2>&1; done' % \
                                      (self.__proc.pid, os.getpid( ), self.__proc.pid) ] )
 
