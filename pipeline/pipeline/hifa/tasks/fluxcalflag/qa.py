@@ -26,8 +26,16 @@ class FluxcalflagQAHandler(pqa.QAResultHandler):
         score1 = qacalc.score_fraction_newly_flagged(ms.basename,
                                                       result.summaries,
                                                       ms.basename)
+        neworigin = pqa.QAOrigin(metric_name = '%FluxcalFlags',
+                                 metric_score = score1.origin.metric_score,
+                                 metric_units = 'Percentage of flux calibrator newly flagged')
+        score1.origin = neworigin
 
         score2 = self._refspw_mapping_fraction(ms, result._refspwmap)
+        neworigin = pqa.QAOrigin(metric_name = '%ReferenceSpwmapWarning',
+                                 metric_score = score1.origin.metric_score,
+                                 metric_units = 'Reference spw map warning')
+        score2.origin = neworigin
 
         scores = [score1, score2]
         result.qa.pool[:] = scores
