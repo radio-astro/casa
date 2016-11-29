@@ -701,7 +701,7 @@ def score_contiguous_session(mses, tolerance=datetime.timedelta(hours=1)):
 
 
 @log_qa
-def score_wvrgcal(ms_name, wvr_score):
+def score_wvrgcal(ms_name, wvr_score, name=None, comment=None):
     if wvr_score < 1.0:
         score = 0
     else:
@@ -709,10 +709,18 @@ def score_wvrgcal(ms_name, wvr_score):
 
     longmsg = 'RMS improvement was %0.2f for %s' % (wvr_score, ms_name)
     shortmsg = '%0.2fx improvement' % wvr_score
+    if not name:
+        metric_name = 'score_wvrgcal'
+    else:
+        metric_name = name
+    if not comment:
+        metric_units='Phase RMS improvement after applying WVR correction'
+    else:
+        metric_units = comment
 
-    origin = pqa.QAOrigin(metric_name='score_wvrgcal',
+    origin = pqa.QAOrigin(metric_name=metric_name,
                           metric_score=wvr_score,
-                          metric_units='Phase RMS improvement after applying WVR correction')
+                          metric_units=metric_units)
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(ms_name), origin=origin)
 
