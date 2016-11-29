@@ -24,7 +24,12 @@ class WvrgcalflagQAHandler(pqa.QAResultHandler):
         try:
             wvr_score = result.qa_wvr.overall_score
             if wvr_score is not None:
-                result.qa.pool[:] = [qacalc.score_wvrgcal(ms_name, result.qa_wvr.overall_score, name='PhaseRmsRatio')]
+                score_object = qacalc.score_wvrgcal(ms_name, result.qa_wvr.overall_score)
+                new_origin = pqa.QAOrigin(metric_name='PhaseRmsRatio',
+                              metric_score=score_object.origin.metric_score,
+                              metric_units='Phase RMS improvement after applying WVR correction')
+                score_object.origin = new_origin
+                result.qa.pool[:] = [score_object]
             else:
                 # If wvr_score was not available, check if this is caused 
                 # by lack of 12m data in MS. If lack of wvr_score was not 
