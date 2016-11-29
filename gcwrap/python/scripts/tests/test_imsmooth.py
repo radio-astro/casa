@@ -1415,8 +1415,8 @@ class imsmooth_test(unittest.TestCase):
         myia.done()
         msgs = bb.history()
         bb.done()
-        self.assertTrue("ia.convolve2d" in msgs[-2])     
-        self.assertTrue("ia.convolve2d" in msgs[-1])     
+        self.assertTrue("ia.convolve2d" in msgs[-4])     
+        self.assertTrue("ia.convolve2d" in msgs[-3])     
 
 def suite():
     return [imsmooth_test]    
