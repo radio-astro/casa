@@ -44,7 +44,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_setjy_measurements',
            'score_missing_intents',
            'score_ephemeris_coordinates',
-           'score_online_shadow_agents',
+           'score_online_shadow_template_agents',
            'score_applycal_agents',
            'score_total_data_flagged',
            'score_ms_model_data_column_present',
@@ -477,7 +477,7 @@ def score_ephemeris_coordinates(mses):
 
 
 @log_qa
-def score_online_shadow_template_agents(ms, summaries, name=None, comment=None):
+def score_online_shadow_template_agents(ms, summaries):
     """
     Get a score for the fraction of data flagged by online, shadow, and template agents.
 
@@ -486,18 +486,9 @@ def score_online_shadow_template_agents(ms, summaries, name=None, comment=None):
     score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6,
                                          ['online', 'shadow', 'qa0', 'before', 'template'])
 
-    if not name:
-        metric_name = 'score_online_shadow_template_agents'
-    else:
-        metric_name = name
-    if not comment:
-        metric_units = 'Fraction of data newly flagged by online, shadow, and template agents' 
-    else:
-        metric_units = comment
-
-    new_origin = pqa.QAOrigin(metric_name=metric_name,
+    new_origin = pqa.QAOrigin(metric_name='score_online_shadow_template_agents',
                               metric_score=score.origin.metric_score,
-                              metric_units=metric_units)
+                              metric_units='Fraction of data newly flagged by online, shadow, and template agents')
     score.origin = new_origin
 
     return score
@@ -710,7 +701,7 @@ def score_contiguous_session(mses, tolerance=datetime.timedelta(hours=1)):
 
 
 @log_qa
-def score_wvrgcal(ms_name, wvr_score, name=None, comment=None):
+def score_wvrgcal(ms_name, wvr_score):
     if wvr_score < 1.0:
         score = 0
     else:
@@ -718,20 +709,13 @@ def score_wvrgcal(ms_name, wvr_score, name=None, comment=None):
 
     longmsg = 'RMS improvement was %0.2f for %s' % (wvr_score, ms_name)
     shortmsg = '%0.2fx improvement' % wvr_score
-    if not name:
-        metric_name = 'score_wvrgcal'
-    else:
-        metric_name = name
-    if not comment:
-        metric_units='Phase RMS improvement after applying WVR correction'
-    else:
-        metric_units = comment
 
-    origin = pqa.QAOrigin(metric_name=metric_name,
+    origin = pqa.QAOrigin(metric_name='score_wvrgcal',
                           metric_score=wvr_score,
-                          metric_units=metric_units)
+                          metric_units='Phase RMS improvement after applying WVR correction')
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(ms_name), origin=origin)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, vis=os.path.basename(ms_name),
+        origin=origin)
 
 
 @log_qa
