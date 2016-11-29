@@ -426,7 +426,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 	  }
 	}
 	else{
-	  if(!incremental&&!initialized) {
+	  if(!incremental&&!initialized && (cubeSlice==0)) {
 	    vb->setModelVisCube(Complex(0.0,0.0));
 	  }
 	  // get the model visibility and write it to the model MS
@@ -824,7 +824,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	      if(myStopSig.gotStopSignal())
 		throw(AipsError("Terminating..."));
                 //	      Timers tInitModel=Timers::getTime();
-                if(!incremental && !predictedComp) {
+	      if(!incremental && !predictedComp && (cubeSlice==0 )) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
                 }
@@ -1640,7 +1640,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
       finalizeGetSlice();
       initializeGetSlice(result, row, false, cubeSlice, 
 			 nCubeSlice);
-      if(incremental || (nmodels > 1)){
+      if(incremental || (nmodels > 1) ){
 	for (Int model=0; model < nmodels; ++model){
 	  ftm_p[model]->get(vb,row);
 	  refvb.reference(vb.modelVisCube().xyPlane(row));
@@ -1661,7 +1661,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     
     finalizeGetSlice();
     initializeGetSlice(result, 0, false, cubeSlice, nCubeSlice);
-    if(incremental || (nmodels > 1)){
+    if(incremental || (nmodels > 1) ){
       for (Int model=0; model < nmodels; ++model){
 	ftm_p[model]->get(vb);
 	result.modelVisCube()+=vb.modelVisCube();
@@ -1671,7 +1671,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
       ftm_p[0]->get(result);
   }
   else {
-    if(incremental || (nmodels >1)){
+    if(incremental || (nmodels >1)  ){
       for (Int model=0; model < nmodels; ++model){
 	ftm_p[model]->get(vb);
 	result.modelVisCube()+=vb.modelVisCube();
@@ -1845,6 +1845,7 @@ void CubeSkyEquation::fixImageScale()
 	IPosition trc(4, nXX, nYY, npola, nchana);
 	blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
 	
+	Vector<Float> planeWeightMax(npola*nchana, 0.0);
 	//Those damn weights per plane can be wildly different so 
 	//deal with it properly here
 	for (Int j=0; j < npola; ++j){
@@ -1858,7 +1859,7 @@ void CubeSkyEquation::fixImageScale()
 	    Float planeMax;
 	    LatticeExprNode LEN = max( ggSSub );
 	    planeMax =  LEN.getFloat();
-	    
+	    planeWeightMax(j*nchana+k)=planeMax;
 	    ///////////
 	    LatticeExprNode LEN1 = min( ggSSub );
 	    os << LogIO::DEBUG1
@@ -1867,6 +1868,7 @@ void CubeSkyEquation::fixImageScale()
 	    ///As we chop the image later...the weight can vary per channel
 	    ///lets be conservative and go to 1% of ggsMin2
 	    if(planeMax !=0){
+	      //cerr << "DOFLAT " << doflat_p << endl;
 	      if(doflat_p){
 		fscalesub.copyData( (LatticeExpr<Float>) 
 				    (iif(ggSSub < (ggSMin2/100.0), 
@@ -1895,6 +1897,10 @@ void CubeSkyEquation::fixImageScale()
 	  }
 	  
 	}
+
+	TableRecord info=(sm_->fluxScale(model)).miscInfo();
+	info.define("weightMax", planeWeightMax);
+	sm_->fluxScale(model).setMiscInfo(info);
 	/*
 	  
 	  ftm_p[model]->getFluxImage(sm_->fluxScale(model));

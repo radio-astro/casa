@@ -414,7 +414,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //logIO() << LogIO::DEBUGGING << "Channel Map: " << chanMap << LogIO::POST;
     }
     // Should never get here
-    if(max(chanMap)>=nchan||min(chanMap)<-1) {
+    if(max(chanMap)>=nchan||min(chanMap)<-3) {
       logIO() << "Illegal Channel Map: " << chanMap << LogIO::EXCEPTION;
     }
     
@@ -799,7 +799,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> mychanmap=multiChanMap_p[vb.spectralWindow()];
     copyOfFlag.assign(vb.flagCube());
     for (uInt k=0; k< mychanmap.nelements(); ++ k)
-      if(mychanmap(k) < 0)
+      if(mychanmap(k) ==-1)
 	copyOfFlag.xzPlane(k).set(true);
     
     swapyz(vb.modelVisCube(), copyOfFlag, flipdata);
@@ -1533,6 +1533,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    */
 	  }
 	}
+	else{
+
+
+	if(nvischan > 1){
+	  Double fwidth=fabs(lsrFreq[1]-lsrFreq[0]);
+	  Double limit=0;
+	  Double where=c(0)*fabs(spectralCoord_p.increment()(0));
+	  if( freqInterpMethod_p==InterpolateArray1D<Double,Complex>::linear)
+	    limit=1;
+	  else if( freqInterpMethod_p==InterpolateArray1D<Double,Complex>::cubic ||  freqInterpMethod_p==InterpolateArray1D<Double,Complex>::spline)
+	    limit=2;
+	  if(((pixel<0) && (where >= (0-limit*fwidth))) )
+	    chanMap(chan)=-2;
+	  if((pixel>=nchan) ) {
+	    Double fend;
+	    spectralCoord_p.toWorld(fend, Double(nchan));
+	    if(where < (fend+limit*fwidth))
+	      chanMap(chan)=-2;
+	  }
+	}
+	}
       }
     }
     
@@ -1667,7 +1688,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int yOffset=zOffset;
       for (uInt iy=0; iy<nyy; ++iy, yOffset+=nxx*nzz) {
 	for (uInt ix=0; ix<nxx; ++ix){ 
-	  if(!poutflag[i])
+	  if(!poutflag[i] )
 	    pout[i] = pin[ix+yOffset];
 	  ++i;
 	}
@@ -2109,6 +2130,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	if( useWeightImage() && dopsf ) { 
 	  getWeightImage( *(imstore->weight())  , sumWeights); 
+
+	  //cerr << "weightim val " << (imstore->weight())->getAt(IPosition(4, nx/2, ny/2, 0, 0)) << " nx, ny " << ny <<", " << ny << " sumWeights " << sumWeights << endl;
+
 	  // Fill weight image only once, during PSF generation. Remember.... it is normalized only once
 	  // during PSF generation.
 	}
@@ -2178,7 +2202,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	}
 
-    }
+      }///image mosaic only
     //------------------------------------------------------------------------------------
 
 
