@@ -269,9 +269,8 @@ template <class T> void Image2DConvolver<T>::_logBeamInfo(
             << beamSet.getMedianAreaBeam();
     }
     auto msg = oss.str();
-    ImageHistory<T> ih(image);
     LogOrigin lor(getClass(), __func__);
-    ih.addHistory(lor, msg);
+    this->addHistory(lor, msg);
     *this->_getLog() << LogIO::NORMAL << msg << LogIO::POST;
 }
 
