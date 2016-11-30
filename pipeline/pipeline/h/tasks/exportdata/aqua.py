@@ -12,7 +12,7 @@ import pipeline
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
-import pipeline.qa.scorecalculator as calcmetrics
+#import pipeline.qa.scorecalculator as calcmetrics
 
 LOG = logging.get_logger(__name__)
 
@@ -478,62 +478,42 @@ class AquaReport(object):
         option just in case.
         '''
 
-        # Score map for interferometry
-        score_map = {'PHASE'     : -1.0,
-                     'BANDPASS'  : -0.1,
-                     'AMPLITUDE' : -0.1}
-        required = set(score_map.keys())
-
         # Retrieve the importdata summaries
         results = importdata_result.read()
 
-        # Loop over results.
-        if isinstance (results, collections.Iterable):
-            # Construct list pf metrics.
-            mlist = []
-            for r in results:
-                # There is a list of MS objects in each result,
-                # but there seems to be only one MS per result.
-                for ms in r.mses:
-                    # An intent is missing
-                    if not required.issubset(ms.intents):
-                        missing = required.difference(ms.intents)
-                        mvalue = 1.0
-                        for m in missing:
-                            mvalue += score_map[m]
-                        mlist.append(mvalue)
-                    # All intents present
-                    else:
-                        mlist.append(1.0)
+        vis = 'Undefined'
+        metric_value = 'Undefined'
+        metric_name = 'Undefined'
 
-            # Determine the smallest metric
-            metric, idx = min ((metric, idx) for (idx, metric) in enumerate(mlist)) 
-            if idx is None:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
-                if metric is not None:
-                    metric = '%0.3f' % (metric)
-        else:
-            # By definition this is the result with the lowest metric
-            if not results:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
-                for ms in results.mses:
-                    if not required.issubset(ms.intents):
-                        missing = required.difference(ms.intents)
-                        metric = 1.0
-                        for m in missing:
-                            metric += score_map[m]
-                    else:
-                        metric = 1.0
-                    metric = '%0.3f' % (metric)
+        if not results:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
 
-        eltree.SubElement(stage_element, "Metric", Name="MissingIntentsMark",
-            Value=metric, Asdm=vis)
+        # Construct a list of score values of the appropriate type
+        scores = []; scorevalues = []
+        for r in results:
+            for qascore in r.qa.pool:
+                if qascore.origin.metric_name != 'MissingIntentsMark':
+                    continue
+                scores.append(qascore)
+                scorevalues.append(qascore.score)
+
+        # Locate the largest metric
+        qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))
+
+        if idx is not None:
+            vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+            if qavalue is not None:
+                metric_name = scores[idx].origin.metric_name
+                metric_value = scores[idx].origin.metric_score
+                if metric_value != 'N/A':
+                    metric_value = '%0.3f' % (metric_value)
+                else:
+                    metric_value = 'Undefined'
+
+        eltree.SubElement(stage_element, "Metric", Name=metric_name,
+            Value=metric_value, Asdm=vis)
 
 
     def add_online_shadow_template_flagging_metric (self, stage_element,
@@ -556,42 +536,24 @@ class AquaReport(object):
                 Value=metric_value, Asdm=vis)
             return
 
-        # If results is iterable loop over the results.
-        if isinstance (results, collections.Iterable):
-
-            # Construct a list of score values of the appropriate type
-            scores = []; scorevalues = []
-            for r in results:
-                for qascore in r.qa.pool:
-                    if qascore.origin.metric_name != '%OnlineShadowTemplateFlags':
-                        continue
-                    scores.append(qascore)
-                    scorevalues.append(qascore.score)
-
-            # Find the highest valued metric.
-            qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
-            if idx is not None:
-                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
-                if qavalue is not None:
-                    metric_name = scores[idx].origin.metric_name
-                    metric_value = scores[idx].origin.metric_score
-                    if metric_value != 'N/A':
-                        metric_value = '%0.3f' % (100.0 * metric_value)
-                    else:
-                        metric_value = 'Undefined'
-
-        # Single result.
-        else:
-            # By definition this is the result with the lowest metric
-            vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
-            for qascore in results.qa.pool:
-                qaname = qascore.origin.metric_name
-                if qaname != '%OnlineShadowTemplateFlags':
+        # Construct a list of score values of the appropriate type
+        scores = []; scorevalues = []
+        for r in results:
+            for qascore in r.qa.pool:
+                if qascore.origin.metric_name != '%OnlineShadowTemplateFlags':
                     continue
-                metric_name = qaname
-                qavalue = qascore.origin.metric_score
-                if qa_value != 'N/A':
-                    metric_value = '%0.3f' % (100.0 * qa_value)
+                scores.append(qascore)
+                scorevalues.append(qascore.score)
+
+        # Find the highest valued metric.
+        qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
+        if idx is not None:
+            vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+            if qavalue is not None:
+                metric_name = scores[idx].origin.metric_name
+                metric_value = scores[idx].origin.metric_score
+                if metric_value != 'N/A':
+                    metric_value = '%0.3f' % (100.0 * metric_value)
                 else:
                     metric_value = 'Undefined'
 
