@@ -711,7 +711,6 @@ class AquaReport(object):
                 Value=metric_value, Asdm=vis)
             return
 
-
         # Construct a list of score values of the appropriate type
         scores = []; scorevalues = []
         for r in results:
@@ -790,10 +789,6 @@ class AquaReport(object):
         gainflag_result):
 
         '''
-        Recompute  the metric that defines the percentage of newly
-        flagged data. Account for the metric which defines the
-        existence of flagging views.
-
         Results are probably always iterable but support a non-iterable
         option just in case.
         '''
@@ -801,54 +796,44 @@ class AquaReport(object):
         # Retrieve the results.
         results = gainflag_result.read()
 
-        # If results is iterable loop over the results.
-        if isinstance (results, collections.Iterable):
+        vis = 'Undefined'
+        metric_value = 'Undefined'
+        metric_name = 'Undefined'
 
-            # Construct the list of results.
-            mlist = []
-            for i in range(len(results)):
-                if not results[i].view:
+        if not results:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
+
+        # Construct a list of score values of the appropriate type
+        scores = []; scorevalues = []
+        for r in results:
+            for qascore in r.qa.pool:
+                if qascore.origin.metric_name != '%HighLowGainFlags':
                     continue
-                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
-                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
-                    agent_stats[1:]], 0))
+                scores.append(qascore)
+                scorevalues.append(qascore.score)
 
-            # Evaluate the metrics
-            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
-            if idx is None:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
-                if metric is not None:
-                    metric = '%0.3f' % (100.0 * metric)
+        # Locate the largest metric
+        qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))
 
-        # Single result
-        else:
-            # By definition this is the result with the lowest metric
-            if not results:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
-                if not results.view:
-                    metric = 'Undefined'
+        if idx is not None:
+            vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+            if qavalue is not None:
+                metric_name = scores[idx].origin.metric_name
+                metric_value = scores[idx].origin.metric_score
+                if metric_value != 'N/A':
+                    metric_value = '%0.3f' % (100.0 * metric_value)
                 else:
-                    agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
-                    metric =  reduce(operator.add, [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
-                    metric = '%0.3f' % (100.0 * metric)
+                    metric_value = 'Undefined'
 
-        eltree.SubElement(stage_element, "Metric", Name="%HighLowGainFlags",
-            Value=metric, Asdm=vis)
+        eltree.SubElement(stage_element, "Metric", Name=metric_name,
+            Value=metric_value, Asdm=vis)
 
     def add_gain_flagging_metric (self, stage_element,
         gainflag_result):
 
         '''
-        Recompute  the metric that defines the percentage of newly
-        flagged data. Account for the metric which defines the
-        existence of flagging views.
-
         Results are probably always iterable but support a non-iterable
         option just in case.
         '''
@@ -856,40 +841,39 @@ class AquaReport(object):
         # Retrieve the results.
         results = gainflag_result.read()
 
-        # If results is iterable loop over the results.
-        if isinstance (results, collections.Iterable):
+        vis = 'Undefined'
+        metric_value = 'Undefined'
+        metric_name = 'Undefined'
 
-            # Construct the list of results.
-            mlist = []
-            for i in range(len(results)):
-                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
-                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
-                    agent_stats[1:]], 0))
+        if not results:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
 
-            # Evaluate the metrics
-            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
-            if idx is None:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
-                if metric is not None:
-                    metric = '%0.3f' % (100.0 * metric)
+        # Construct a list of score values of the appropriate type
+        scores = []; scorevalues = []
+        for r in results:
+            for qascore in r.qa.pool:
+                if qascore.origin.metric_name != '%GainFlags':
+                    continue
+                scores.append(qascore)
+                scorevalues.append(qascore.score)
 
-        # Single result
-        else:
-            # By definition this is the result with the lowest metric
-            if not results:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
-                agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
-                metric =  reduce(operator.add, [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
-                metric = '%0.3f' % (100.0 * metric)
+        # Locate the largest metric
+        qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))
 
-        eltree.SubElement(stage_element, "Metric", Name="%GainFlags",
-            Value=metric, Asdm=vis)
+        if idx is not None:
+            vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+            if qavalue is not None:
+                metric_name = scores[idx].origin.metric_name
+                metric_value = scores[idx].origin.metric_score
+                if metric_value != 'N/A':
+                    metric_value = '%0.3f' % (100.0 * metric_value)
+                else:
+                    metric_value = 'Undefined'
+
+        eltree.SubElement(stage_element, "Metric", Name=metric_name,
+            Value=metric_value, Asdm=vis)
 
 
     def add_applycal_flagging_metric (self, stage_element,
@@ -905,41 +889,39 @@ class AquaReport(object):
         # Retrieve the results
         results = applycal_result.read()
 
-        # If results is iterable loop over the results.
-        if isinstance (results, collections.Iterable):
+        vis = 'Undefined'
+        metric_value = 'Undefined'
+        metric_name = 'Undefined'
 
-            # Construct the list of results.
-            mlist = []
-            for i in range(len(results)):
-                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
-                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
-                    agent_stats if s.name in ['applycal']], 0))
+        if not results:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
 
-            # Evaluate the metric
-            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
-            if idx is None:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
-                if metric is not None:
-                    metric = '%0.3f' % (100.0 * metric)
+        # Construct a list of score values of the appropriate type
+        scores = []; scorevalues = []
+        for r in results:
+            for qascore in r.qa.pool:
+                if qascore.origin.metric_name != '%ApplycalFlags':
+                    continue
+                scores.append(qascore)
+                scorevalues.append(qascore.score)
 
-        # Single result
-        else:
-            # By definition this is the result with the lowest metric
-            if not results:
-                vis = 'Undefined'
-                metric = 'Undefined'
-            else:
-                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
-                agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
-                metric = reduce(operator.add, [float(s.flagged) / s.total for s in \
-                    agent_stats if s.name in ['online', 'shadow']], 0)
-                metric = '%0.3f' % (100.0 * metric)
+        # Locate the largest metric
+        qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))
 
-        eltree.SubElement(stage_element, "Metric", Name="%ApplycalFlags",
-            Value=metric, Asdm=vis)
+        if idx is not None:
+            vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+            if qavalue is not None:
+                metric_name = scores[idx].origin.metric_name
+                metric_value = scores[idx].origin.metric_score
+                if metric_value != 'N/A':
+                    metric_value = '%0.3f' % (100.0 * metric_value)
+                else:
+                    metric_value = 'Undefined'
+
+        eltree.SubElement(stage_element, "Metric", Name=metric_name,
+            Value=metric_value, Asdm=vis)
 
     def write (self, filename):
 
