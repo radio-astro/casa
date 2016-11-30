@@ -569,7 +569,7 @@ class AquaReport(object):
                     scorevalues.append(qascore.score)
 
             # Find the highest valued metric.
-            qavalue, idx = max ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
+            qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
             if idx is not None:
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
                 if qavalue is not None:
@@ -685,7 +685,7 @@ class AquaReport(object):
                     scorevalues.append(qascore.score)
 
             # Locate the largest metric
-            qavalue, idx = max ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
+            qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
 
             if idx is not None:
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
