@@ -20,9 +20,20 @@ class ApplycalQAHandler(pqa.QAResultHandler):
         # calculate QA scores from agentflagger summary dictionary, adopting
         # the minimum score as the representative score for this task
         try:
-            scores = [qacalc.score_applycal_agents(ms, result.summaries)]
+            score = qacalc.score_applycal_agents(ms, result.summaries)
+            new_origin = pqa.QAOrigin(metric_name='%ApplycalFlags',
+                                  metric_score=score.origin.metric_score,
+                                  metric_units='Percentage newly flagged by applycal')
+            score.origin = new_origin
+
+            scores = [score]
         except:
-            scores = [pqa.QAScore(1.0,longmsg='Flag Summary off', shortmsg='Flag Summary off')]
+            score = pqa.QAScore(1.0,longmsg='Flag Summary off', shortmsg='Flag Summary off')
+            new_origin = pqa.QAOrigin(metric_name='%ApplycalFlags',
+                                  metric_score=score.origin.metric_score,
+                                  metric_units='Percentage newly flagged by applycal')
+            score.origin = new_origin
+            scores = [score]
         
         result.qa.pool[:] = scores
 
