@@ -24,21 +24,30 @@ class TsysflagQAHandler(pqa.QAResultHandler):
         ms = context.observing_run.get_ms(vis)
 
         if result.task_incomplete_reason:
-            scores = [
-                pqa.QAScore(0.0, longmsg='Task ended prematurely',
-                            shortmsg='Task ended prematurely', vis=vis)
-            ]
+            score = pqa.QAScore(0.0, longmsg='Task ended prematurely',
+                shortmsg='Task ended prematurely', vis=vis)
+            new_origin = pqa.QAOrigin(metric_name='%TsysCaltableFlags',
+                metric_score=score.origin.metric_score,
+                metric_units='Percentage Tsys caltable newly flagged')
+            score.origin = new_origin
+            scores = [score]
         else:
             try:
-                scores = [
-                    qacalc.score_fraction_newly_flagged(
-                        caltable, result.summaries, ms.basename)
-                ]
+                score = qacalc.score_fraction_newly_flagged(caltable,
+                    result.summaries, ms.basename)
+                new_origin = pqa.QAOrigin(metric_name='%TsysCaltableFlags',
+                    metric_score=score.origin.metric_score,
+                    metric_units='Percentage Tsys caltable newly flagged')
+                score.origin = new_origin
+                scores = [score]
             except AttributeError:
-                scores = [
-                    pqa.QAScore(0.0, longmsg='No flagging summaries available',
-                                shortmsg='No flag summaries', vis=vis)
-                ]
+                score = pqa.QAScore(0.0, longmsg='No flagging summaries available',
+                    shortmsg='No flag summaries', vis=vis)
+                new_origin = pqa.QAOrigin(metric_name='%TsysCaltableFlags',
+                    metric_score=score.origin.metric_score,
+                    metric_units='Percentage Tsys caltable newly flagged')
+                score.origin = new_origin
+                scores = [score]
             
         result.qa.pool[:] = scores
 
