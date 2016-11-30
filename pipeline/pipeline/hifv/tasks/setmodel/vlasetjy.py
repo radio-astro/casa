@@ -404,7 +404,6 @@ class VLASetjy(basetask.StandardTaskTemplate):
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
                 inputs.field = myfield
-                setjyfield = myfield
                 # Use the domain object to get the actual field id, ***NOT*** the index
                 # setjyfield = m.get_fields()[myfield].id
 
@@ -415,6 +414,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                 spws = [spw for spw in inputs.ms.get_spectral_windows(strlistVLAspws)]
                 
                 for spw in spws:
+                    inputs.spw = spw.id
                     reference_frequency = center_frequencies[spw.id]
                     try:
                         EVLA_band = spw2band[spw.id]
@@ -429,7 +429,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                     LOG.info("Setting model for field "+str(m.get_fields()[myfield].id)+" spw "+str(spw.id)+" using "+model_image)
         
                     task_args = {'vis'            : inputs.vis,
-                                 'field'          : str(setjyfield),
+                                 'field'          : str(myfield),
                                  'spw'            : str(spw.id),
                                  'selectdata'     : False,
                                  'model'          : model_image,
