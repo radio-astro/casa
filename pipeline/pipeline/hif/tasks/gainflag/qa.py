@@ -27,7 +27,17 @@ class GainflagQAHandler(pqa.QAResultHandler):
         score1 = qacalc.linear_score_fraction_newly_flagged(ms.basename,
                                                              result.summaries,
                                                              ms.basename)
+        new_origin = pqa.QAOrigin(metric_name='%GainFlags',
+                                  metric_score=score1.origin.metric_score,
+                                  metric_units='Percentage of gain flag data newly flagged')
+        score1.origin = new_origin
+
         score2 = qacalc.score_flagging_view_exists(ms.basename, result)
+        new_origin = pqa.QAOrigin(metric_name='ValidFlaggingView',
+                                  metric_score=score2.origin.metric_score,
+                                  metric_units='Valid flagging view')
+        score2.origin = new_origin
+
         scores = [score1, score2]
         result.qa.pool[:] = scores
 
