@@ -91,11 +91,9 @@ SPIIF ImagePadder::pad(const Bool wantReturn) const {
     ArrayLattice<Float> values(valArray);
     values.putSlice(subImage->get(), blc);
     const Array<Float>& vals = values.get();
-    this->_reportOldNewImageShapes(*subImage);
-    SPIIF outImage(
-        _prepareOutputImage(
-            *subImage, &vals, &mask, &outShape, &newCoords
-        )
+    this->_reportOldNewImageShapes(outShape);
+    SPIIF outImage = _prepareOutputImage(
+        *subImage, &vals, &mask, &outShape, &newCoords
     );
     if (! wantReturn) {
         outImage.reset();

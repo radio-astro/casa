@@ -235,6 +235,8 @@ protected:
     template <class U> void _doHistory(SHARED_PTR<casacore::ImageInterface<U>>& image) const;
 
     void _reportOldNewImageShapes(const ImageInterface<T>& out) const;
+    
+    void _reportOldNewImageShapes(const IPosition& outShape) const;
 
 private:
     const SPCIIT _image;

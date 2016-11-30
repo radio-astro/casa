@@ -469,7 +469,7 @@ template <class U> void ImageTask<T>::_doHistory(SHARED_PTR<casacore::ImageInter
     }
 }
 
-template <class T> void ImageTask<T>::_reportOldNewImageShapes(const ImageInterface<T>& out) const {
+template <class T> void ImageTask<T>::_reportOldNewImageShapes(const IPosition& outShape) const {
     LogOrigin lor(getClass(), __func__);
     ostringstream os;
     os << "Original " << _getImage()->name() << " size => "
@@ -477,9 +477,13 @@ template <class T> void ImageTask<T>::_reportOldNewImageShapes(const ImageInterf
     addHistory(lor, os.str());
     *_getLog() << LogIO::NORMAL << os.str() << LogIO::POST;
     os.str("");
-    os << "New " << _getOutname() << " size => " << out.shape();
+    os << "New " << _getOutname() << " size => " << outShape;
     addHistory(lor, os.str());
     *_getLog() << LogIO::NORMAL << os.str() << LogIO::POST;
+}
+
+template <class T> void ImageTask<T>::_reportOldNewImageShapes(const ImageInterface<T>& out) const {
+    _reportOldNewImageShapes(out.shape());
 }
 
 }
