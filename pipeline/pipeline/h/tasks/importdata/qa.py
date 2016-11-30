@@ -21,6 +21,11 @@ class ImportDataQAHandler(pqa.QAResultHandler):
 
     def handle(self, context, result):
         score1 = self._check_intents(result.mses)
+        new_origin = pqa.QAOrigin(metric_name='MissingIntentsMark',
+                                  metric_score=score1.origin.metric_score,
+                                  metric_units='Measure of missing scan intents')
+        score1.origin = new_origin
+
         self._check_flagged_calibrator_data(result.mses)
         score3 = self._check_model_data_column(result.mses)
         score4 = self._check_history_column(result.mses, result.inputs)
