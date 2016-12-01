@@ -277,6 +277,8 @@ protected:
   ImageBeamSet itsPSFBeams;
   ImageBeamSet itsRestoredBeams;
 
+  Float itsPSFSideLobeLevel;
+
   //
   //------------------------------------------
   // Non-persistent internal variables

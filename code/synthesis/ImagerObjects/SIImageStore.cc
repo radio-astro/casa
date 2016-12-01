@@ -1158,7 +1158,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 									  *pb() );
 		  
 		  LatticeExpr<Float> normed( sqrt(abs(*wtsubim)) / itsPBScaleFactor  );
-		  LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
+		  LatticeExpr<Float> limited( iif( normed > fabs(pblimit) , normed, 0.0 ) );
 		  pbsubim->copyData( limited );
 		}// if not zero
 	      }
@@ -1170,7 +1170,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	    //removeMask( pb() );
 	    
 	    //MSK//	
-	    LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
+	    LatticeExpr<Bool> pbmask( iif( *pb() > fabs(pblimit) , True , False ) );
 	    //MSK// 
 	    createMask( pbmask, pb() );
 	  }
@@ -1201,12 +1201,12 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  if(fmax>1.0)
 		    {
 		      LatticeExpr<Float> normed( (*pbsubim) / fmax  );
-		      LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
+		      LatticeExpr<Float> limited( iif( normed > fabs(pblimit) , normed, 0.0 ) );
 		      pbsubim->copyData( limited );
 		    }
 		  else
 		    {
-		      LatticeExpr<Float> limited( iif((*pbsubim) > pblimit , (*pbsubim), 0.0 ) );
+		      LatticeExpr<Float> limited( iif((*pbsubim) > fabs(pblimit) , (*pbsubim), 0.0 ) );
 		      pbsubim->copyData( limited );
 		    }
 	      }
@@ -1216,7 +1216,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	  {
 	    //	    removeMask( pb() );
 	    //MSK//		
-	    LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
+	    LatticeExpr<Bool> pbmask( iif( *pb() > fabs(pblimit) , True , False ) );
 	    //MSK// 
 	    createMask( pbmask, pb() );
 	  }
@@ -1437,7 +1437,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		//		IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
 		//Float resval = ressubim->getAt(ip);
 
-		Float scalepb = pblimit * itsPBScaleFactor * itsPBScaleFactor ;
+		Float scalepb = fabs(pblimit) * itsPBScaleFactor * itsPBScaleFactor ;
 		LatticeExpr<Float> mask( iif( (deno) > scalepb , 1.0, 0.0 ) );
 		LatticeExpr<Float> maskinv( iif( (deno) > scalepb , 0.0, 1.0 ) );
 		LatticeExpr<Float> ratio( ( (*(ressubim)) * mask ) / ( deno + maskinv ) );
@@ -1459,7 +1459,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     // createMask
     ///// A T/F mask in the residual will confuse users looking at the interactive clean
     ///// window
-        if((residual()->getDefaultMask()=="") && hasPB())
+        if((residual()->getDefaultMask()=="") && hasPB() && pblimit >=0.0)
        {copyMask(pb(),residual());}
   }
   
@@ -1509,8 +1509,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  
 		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim)) ) / itsPBScaleFactor );
 		  
-		  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
-		  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+		  LatticeExpr<Float> mask( iif( (deno) > fabs(pblimit) , 1.0, 0.0 ) );
+		  LatticeExpr<Float> maskinv( iif( (deno) > fabs(pblimit) , 0.0, 1.0 ) );
 		  LatticeExpr<Float> ratio( ( (*(modsubim)) * mask ) / ( deno + maskinv ) );
 		  
 		  IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
@@ -1576,8 +1576,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  
 		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim)) ) / itsPBScaleFactor );
 		  
-		  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
-		  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+		  LatticeExpr<Float> mask( iif( (deno) > fabs(pblimit) , 1.0, 0.0 ) );
+		  LatticeExpr<Float> maskinv( iif( (deno) > fabs(pblimit) , 0.0, 1.0 ) );
 		  LatticeExpr<Float> ratio( ( (*(modsubim)) * mask ) * ( deno + maskinv ) );
 		  
 		  modsubim->copyData(ratio);
@@ -1872,7 +1872,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     try
       {
 	//MSK//	
-	if(hasPB()){copyMask(pb(),image(term));}
+	if(hasPB()){copyMask(residual(),image(term));}
 	ImageInfo iminf = image(term)->imageInfo();
         iminf.setBeams( itsRestoredBeams);
 	image(term)->setImageInfo(iminf);
@@ -2412,18 +2412,71 @@ Bool SIImageStore::isModelEmpty()
     LogIO os( LogOrigin("SIImageStore","getPSFSidelobeLevel",WHERE) );
 
     /// Calculate only once, store and return for all subsequent calls.
-
-    LatticeExprNode psfside( min( *psf() ) );
-    Float psfsidelobe = fabs( psfside.getFloat() );
-
-    if(psfsidelobe == 1.0)
+    if( itsPSFSideLobeLevel == 0.0 )
       {
-	//os << LogIO::WARN << "For testing only. Set psf sidelobe level to 0.01" << LogIO::POST;
-	psfsidelobe = 0.01;
+
+	ImageBeamSet thebeams = getBeamSet();
+
+	//------------------------------------------------------------
+	IPosition oneplaneshape( itsImageShape );
+	AlwaysAssert( oneplaneshape.nelements()==4, AipsError );
+	oneplaneshape[2]=1; oneplaneshape[3]=1;
+	TempImage<Float> psfbeam( oneplaneshape, itsCoordSys );
+	
+	// In a loop through channels, subtract out or mask out the main lobe
+	Float allmin=0.0, allmax=0.0;
+	for(Int pol=0; pol<itsImageShape[2]; pol++)
+	  {
+	    for(Int chan=0; chan<itsImageShape[3]; chan++)
+	      {
+		SHARED_PTR<ImageInterface<Float> > onepsf=makeSubImage(0,1, 
+								       chan, itsImageShape[3],
+								       pol, itsImageShape[2], 
+								       (*psf()) );
+		
+		
+		GaussianBeam beam = thebeams.getBeam( chan, pol );
+		Vector<Float> abeam(3); // Holds bmaj, bmin, pa  in asec, asec, deg 
+		abeam[0] = beam.getMajor().get("arcsec").getValue() * C::arcsec;
+		abeam[1] = beam.getMinor().get("arcsec").getValue() * C::arcsec;
+		abeam[2] = (beam.getPA().get("deg").getValue() + 90.0)* C::degree;
+
+		//cout << "Beam : " << abeam << endl;
+
+		StokesImageUtil::MakeGaussianPSF( psfbeam,  abeam, False);
+
+		//		storeImg( String("psfbeam.im"), psfbeam );
+	
+		//Subtract from PSF plane
+		LatticeExpr<Float> delobed(  (*onepsf) - psfbeam  );
+		
+		// For debugging
+		//onepsf->copyData( delobed );
+		
+		//Calc max and min and accumulate across channels. 
+		
+		LatticeExprNode minval_le( min( *onepsf ) );
+		LatticeExprNode maxval_le( max( delobed ) );
+
+		Float minval = minval_le.getFloat();
+		Float maxval = maxval_le.getFloat();
+
+		if( minval < allmin ) allmin = minval;
+		if( maxval > allmax ) allmax = maxval;
+		
+	      }//chan
+	  }//pol
+	
+	//------------------------------------------------------------
+
+	itsPSFSideLobeLevel = max( fabs(allmin), fabs(allmax) );
+
+	//os << "PSF min : " << allmin << " max : " << allmax << " psfsidelobelevel : " << itsPSFSideLobeLevel << LogIO::POST;
+      }// if changed
+
+    return itsPSFSideLobeLevel;
       }
 
-    return psfsidelobe;
-  }
 
   void SIImageStore::findMinMax(const Array<Float>& lattice,
 					const Array<Float>& mask,
@@ -2558,7 +2611,9 @@ Bool SIImageStore::findMinMaxLattice(const Lattice<Float>& lattice,
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) { itsImageShape=IPosition(4,0,0,0,0); }
 
     itsOpened=0;
- 
+
+    itsPSFSideLobeLevel=0.0;
+
   }
 
 

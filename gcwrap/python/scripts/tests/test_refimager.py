@@ -136,7 +136,7 @@ class test_onefield(testref_base):
           """ [onefield] Test_Onefield_mem : mfs with mem minor cycle """
           self.prepData('refim_eptwochan.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',niter=10,deconvolver='mem',interactive=0)
-          report=self.th.checkall(ret=ret, peakres=7.84, modflux=6.49, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[100,100,0,0])])
+          report=self.th.checkall(ret=ret, peakres=12.7, modflux=6.98, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[100,100,0,0])])
           self.checkfinal(pstr=report)
 
      def test_onefield_multiscale(self):
@@ -325,7 +325,7 @@ class test_iterbot(testref_base):
           """ [iterbot] Test_Iterbot_Mfs_4 : Iterations with high gain """
           self.prepData('refim_twochan.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=10, gain=0.5,interactive=0)
-          report=self.th.checkall(ret=ret, peakres=0.026, modflux=1.274, iterdone=10, nmajordone=3,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
+          report=self.th.checkall(ret=ret, peakres=0.024, modflux=1.274, iterdone=10, nmajordone=3,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
           self.checkfinal(report)
 
@@ -333,7 +333,7 @@ class test_iterbot(testref_base):
           """ [iterbot] Test_Iterbot_Mfs_5 : Threshold test """
           self.prepData('refim_twochan.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=10,threshold='0.1Jy',gain=0.5,interactive=0)
-          report=self.th.checkall(ret=ret, peakres=0.0924, modflux=1.129, iterdone=5, nmajordone=2,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
+          report=self.th.checkall(ret=ret, peakres=0.0924, modflux=1.129, iterdone=5, nmajordone=3,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
           self.checkfinal(report)
 
@@ -349,7 +349,7 @@ class test_iterbot(testref_base):
           """ [iterbot] Test_Iterbot_Mfs_7 : Threshold + cyclefactor to trigger major cycles earlier """
           self.prepData('refim_twochan.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=10,threshold='0.01Jy', gain=0.5,cyclefactor=10.0,interactive=0)
-          report=self.th.checkall(ret=ret, peakres=0.026, modflux=1.274, iterdone=10, nmajordone=4,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
+          report=self.th.checkall(ret=ret, peakres=0.024, modflux=1.274, iterdone=10, nmajordone=9,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
           self.checkfinal(report)
 
@@ -430,12 +430,12 @@ class test_multifield(testref_base):
           self.th.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nnchan=1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nusemask=user\nmask=circle[[40pix,40pix],10pix]')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0)
           report=self.th.checkall(ret=ret, 
-                        iterdone=20, ## should be 20 but for the iter+1 returned from mtcleaner...
+                        iterdone=13, 
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image'],
                         imval=[(self.img+'.image',1.075,[50,50,0,0]),
-                               (self.img+'1.image',5.590,[40,40,0,0]),
-                               (self.img+'.residual',0.04,[30,18,0,0])])
+                               (self.img+'1.image',5.580,[40,40,0,0]),
+                               (self.img+'.residual',0.038,[30,18,0,0])])
 
           self.checkfinal(report)
 
@@ -445,7 +445,7 @@ class test_multifield(testref_base):
           self.th.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\n\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nusemask=user\nmask=circle[[40pix,40pix],10pix]')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='mtmfs',interactive=0)
           report=self.th.checkall(ret=ret, 
-                        iterdone=20,
+                        iterdone=12,
                         nmajordone=2,
                         imexist=[self.img+'.image.tt0', self.img+'1.image.tt0',self.img+'.image.tt1', self.img+'1.image.tt1', self.img+'.alpha', self.img+'1.alpha'],
                         imval=[(self.img+'.image.tt0',1.094,[50,50,0,0]),
@@ -463,15 +463,15 @@ class test_multifield(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest')
           report=self.th.checkall(ret=ret, 
                         #iterdone=38,
-                        iterdone=58,
+                        iterdone=42,
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image'],
                         imval=[(self.img+'.image',1.434,[50,50,0,0]),
                                (self.img+'1.image',7.452,[40,40,0,0]),
                                (self.img+'2.image',7.452,[51,40,0,0]),
-                               (self.img+'.image',0.762,[50,50,0,1]),
-                               (self.img+'1.image',3.702,[40,40,0,1]),
-                               (self.img+'2.image',3.702,[51,40,0,1]) ])
+                               (self.img+'.image',0.758,[50,50,0,1]),
+                               (self.img+'1.image',3.71,[40,40,0,1]),
+                               (self.img+'2.image',3.675,[51,40,0,1]) ])
           self.checkfinal(report)
 
      def test_multifield_both_cube_diffshape(self):
@@ -480,11 +480,11 @@ class test_multifield(testref_base):
           self.th.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nnchan=3\n')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest')
           report=self.th.checkall(ret=ret, 
-                        iterdone=38,
+                        iterdone=22,
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image'],
-                        imval=[(self.img+'.image',1.434,[50,50,0,0]),
-                               (self.img+'1.image',7.452,[40,40,0,0]),
+                        imval=[(self.img+'.image',1.433,[50,50,0,0]),
+                               (self.img+'1.image',7.44,[40,40,0,0]),
                                (self.img+'.image',0.762,[50,50,0,1]),
                                (self.img+'1.image',3.702,[40,40,0,1]) ])
           self.checkfinal(report)
@@ -495,7 +495,7 @@ class test_multifield(testref_base):
           self.th.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nspecmode=mfs\n')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest')
           report=self.th.checkall(ret=ret, 
-                        iterdone=30,
+                        iterdone=15,
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image'],
                         imval=[(self.img+'.image',1.4,[50,50,0,0]),
@@ -509,7 +509,7 @@ class test_multifield(testref_base):
           self.th.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nreffreq=1.5GHz\ndeconvolver=mtmfs\n')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0)
           report=self.th.checkall(ret=ret, 
-                        iterdone=20,
+                        iterdone=13,
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image.tt0',self.img+'1.alpha'],
                         imval=[(self.img+'.image',1.094,[50,50,0,0]),
@@ -523,10 +523,10 @@ class test_multifield(testref_base):
           self.th.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nreffreq=1.5GHz\ndeconvolver=mtmfs\nspecmode=mfs\n')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest')
           report=self.th.checkall(ret=ret, 
-                        iterdone=30,  # two chans in one field, and one chan in the other
+                        iterdone=15,  # two chans in one field, and one chan in the other
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image.tt0',self.img+'1.alpha'],
-                        imval=[(self.img+'.image',1.427,[50,50,0,0]),
+                        imval=[(self.img+'.image',1.426,[50,50,0,0]),
                                (self.img+'1.image.tt0',5.575,[40,40,0,0]),
                                (self.img+'.image',0.762,[50,50,0,1]) , 
                                (self.img+'1.alpha', -1.0, [40,40,0,0])  ])
@@ -542,7 +542,7 @@ class test_multifield(testref_base):
 #          self.th.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmask=circle[[40pix,40pix],10pix]\ngridder=wproject\nwprojplanes=6')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',gridder='wproject',wprojplanes=4,interactive=0)
           report=self.th.checkall(ret=ret, 
-                        iterdone=20,
+                        iterdone=13,
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image'],
                         imval=[(self.img+'.image',1.075,[50,50,0,0]),
@@ -585,7 +585,7 @@ class test_multifield(testref_base):
           self.th.write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[200,200]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:59:02.426 +40.51.14.559\n')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:58:39.580 +40.55.55.931",outlierfile=self.img+'.out.txt',niter=20,deconvolver='mtmfs',interactive=0)
           report=self.th.checkall(ret=ret, 
-                        iterdone=40, ## both images see the brightest source.
+                        iterdone=39, ## both images see the brightest source.
                         nmajordone=2,
                         imexist=[self.img+'.image.tt0', self.img+'1.image.tt0'],
                         imval=[(self.img+'.image.tt0',5.53,[48,51,0,0]),
@@ -1928,14 +1928,14 @@ class test_startmodel(testref_base):
           
           report=self.th.checkall(imexist=[self.img+'.model.tt0',self.img+'.2.model.tt0',self.img+'.3.model.tt0'],
                         imval=[ 
-                                (self.img+'.model.tt0',1.08,[100,100,0,0]),
-                                (self.img+'.model.tt0',5.56,[154,172,0,0]),
-                                (self.img+'.3.model.tt0',1.108,[100,100,0,0]), 
-                                (self.img+'.3.model.tt0',0.056,[154,172,0,0]),
-                                (self.img+'.model.tt1',-1.057,[100,100,0,0]),
-                                (self.img+'.model.tt1',-5.521,[154,172,0,0]),
-                                (self.img+'.3.model.tt1',-1.099,[100,100,0,0]), 
-                                (self.img+'.3.model.tt1',-0.0904,[154,172,0,0])   ] )
+                                (self.img+'.model.tt0',1.11,[100,100,0,0]),
+                                (self.img+'.model.tt0',5.6,[154,172,0,0]),
+                                (self.img+'.3.model.tt0',1.12,[100,100,0,0]), 
+                                (self.img+'.3.model.tt0',0.013,[154,172,0,0]),
+                                (self.img+'.model.tt1',-1.1027,[100,100,0,0]),
+                                (self.img+'.model.tt1',-5.602,[154,172,0,0]),
+                                (self.img+'.3.model.tt1',-1.12,[100,100,0,0]), 
+                                (self.img+'.3.model.tt1',-0.0213,[154,172,0,0])   ] )
           self.checkfinal(report)
           
  ##############################################
