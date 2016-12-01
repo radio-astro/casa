@@ -762,7 +762,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imstore->mask()->get(maskdata);
     String maskname = imstore->getName()+".mask";
     tempmask->put(maskdata);
-
     if (pblimit>0.0 && imstore->hasPB()) {
       //cerr<<" applying pb mask ..."<<endl;
       LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, True, False));
@@ -779,12 +778,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // attache pixmask to temp res image to be used in stats etc
       //cerr<<"attaching pixmask to res.."<<endl;
       tempres->attachMask(LatticeExpr<Bool> ( iif(*(imstore->pb()) > pblimit, True, False)));
-      //cerr<<"Has pixmask now?= "<<tempres->hasPixelMask()<<endl;
       imstore->mask()->copyData( themask );
       imstore->mask()->get(maskdata);
       tempmask->put(maskdata);
       delete dummy;
     }
+    // debug
+    PagedImage<Float> initialRes(tempres->shape(), tempres->coordinates(), "initialRes.im");
+    initialRes.copyData(*tempres);
      
     // Not use this way for now. Got an issue on removing pixel mask from *.mask image
     // retrieve pixelmask (i.e.  pb mask)
@@ -872,17 +873,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        Float outerRadius=0.0;
        Float innerRadius=1.0;
        if (imstore->hasPB()) {
+          LatticeExpr<Bool> blat;
           //use pb based annulus for statistics
-          outerRadius = 0.2;
-          innerRadius = 0.3; 
-          LatticeExpr<Bool> testlat( iif(( *imstore->pb() < innerRadius && *imstore->pb() > outerRadius) , True, False) );
+          if (doAnnulus) {
+              outerRadius = 0.2;
+              innerRadius = 0.3; 
+              blat=LatticeExpr<Bool> (iif(( *imstore->pb() < innerRadius && *imstore->pb() > outerRadius) , True, False) );
+          }
+          else {
+              blat=LatticeExpr<Bool> ((*imstore->pb()).pixelMask());
+          }
           TempImage<Float>* testres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
           testres->set(1.0);
-          testres->attachMask(testlat);
-          //cerr<<"ntrue(testlat) = "<<ntrue(testres->getMask())<<endl;
-          if (ntrue(testres->getMask()) > 0 && doAnnulus) { 
+          testres->attachMask(blat);
+              
+          if (ntrue(testres->getMask()) > 0 ) {
               String pbname = imstore->getName()+".pb";
-              LELmask=pbname+"<"+String::toString(innerRadius)+" && "+pbname+">"+String::toString(outerRadius);   
+              if (doAnnulus) { 
+                  LELmask=pbname+"<"+String::toString(innerRadius)+" && "+pbname+">"+String::toString(outerRadius);   
+              }
           }
        }
     } 
@@ -894,7 +903,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os<< LogIO::DEBUG1 << "All max's on the input image -- max.nelements()="<<maxs.nelements()<<" max="<<maxs<<LogIO::POST;
     if (alg.contains("multithresh")) {
        thestats.get(RecordFieldId("medabsdevmed"), mads);
-       os<< LogIO::DEBUG1 << "All max's on the input image -- mad.nelements()="<<mads.nelements()<<" mad="<<mads<<LogIO::POST;
+       os<< LogIO::DEBUG1 << "All MAD's on the input image -- mad.nelements()="<<mads.nelements()<<" mad="<<mads<<LogIO::POST;
     }
 
     os<<"SidelobeLevel = "<<imstore->getPSFSidelobeLevel()<<LogIO::POST;
@@ -934,6 +943,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Array<Float> resdata;
     res.get(resdata);
     tempres->put(resdata);
+    // if input image (res) has a pixel mask, make sure to honor it so the region is exclude from statistics
+    if (res.hasPixelMask()) {
+      tempres->attachMask(res.pixelMask());
+    }
+      
     tempres->setImageInfo(res.imageInfo());
     SHARED_PTR<casacore::ImageInterface<Float> > tempres_ptr(tempres);
     
@@ -1282,7 +1296,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nxpix, nypix;
 
     //for debug set to True to save intermediate mask images on disk
-    Bool debug(True);
+    Bool debug(False);
 
     TempImage<Float> tempmask(mask.shape(), mask.coordinates());
     TempImage<Float> prevmask(mask.shape(), mask.coordinates());
@@ -1375,7 +1389,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else {
         chindx(1) = ich;
       }
-      sidelobeThreshold = sidelobeLevel * sidelobeThresholdFactor * (Float)mads(chindx); 
+      sidelobeThreshold = sidelobeLevel * sidelobeThresholdFactor * (Float)maxs(chindx); 
       noiseThreshold = noiseThresholdFactor * (Float)resRmss(chindx);
       lowNoiseThreshold = lowNoiseThresholdFactor * (Float)resRmss(chindx); 
       maskThreshold(ich) = max(sidelobeThreshold, noiseThreshold);
@@ -1398,7 +1412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         TempImage<Float> maskedRes(res.shape(), res.coordinates());
         makeMaskByPerChanThreshold(res, maskedRes, maskThreshold); 
         if (debug) {
-          PagedImage<Float> savedPreMask(res.shape(),res.coordinates(),"savedPrePruneImage");
+          PagedImage<Float> savedPreMask(res.shape(),res.coordinates(),"tmp-beforePruningMask.im");
           savedPreMask.copyData(maskedRes);
         }
         //maskedRes.copyData( (LatticeExpr<Float>)( iif(res > maskThreshold, res, 0.0)) );
@@ -1406,11 +1420,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         // ToDo: need npix be an area? and fix purnRegions too!!!
         // nmask=-1
         SHARED_PTR<ImageInterface<Float> > tempIm_ptr = pruneRegions2(maskedRes, tempthresh,  -1, pruneSize);
+        if (debug) {
+          PagedImage<Float> savedPrunedPreThreshMask(res.shape(),res.coordinates(),"tmp-postPruningBeforeThreshMask.im");
+          savedPrunedPreThreshMask.copyData(*(tempIm_ptr.get()));
+        }
         //themask = LatticeExpr<Float> ( iif( *(tempIm_ptr.get()) > maskThreshold, 1.0, 0.0 ));
         makeMaskByPerChanThreshold(*(tempIm_ptr.get()), tempmask, maskThreshold); 
         if (debug) {
-          PagedImage<Float> savedPreMask(res.shape(),res.coordinates(),"savedPostPruneImage");
-          savedPreMask.copyData(tempmask);
+          PagedImage<Float> savedPostPrunedMask(res.shape(),res.coordinates(),"tmp-postPruningPostThreshMask.im");
+          savedPostPrunedMask.copyData(tempmask);
         }
     }
     else {
@@ -1454,7 +1472,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        TempImage<Float> constraintMaskImage(res.shape(), res.coordinates()); 
        // constrainMask is 1/0 mask
        makeMaskByPerChanThreshold(res, constraintMaskImage, lowMaskThreshold);
-       PagedImage<Float> beforepruneconstIm(res.shape(), res.coordinates(),"beforepruneConst.Im");
+       PagedImage<Float> beforepruneconstIm(res.shape(), res.coordinates(),"tmp-beforepruneConst-"+String::toString(iterdone)+".im");
        beforepruneconstIm.copyData(constraintMaskImage);
        // prune the constraintImage
        if (minBeamFrac > 0.0 ) {
@@ -1462,7 +1480,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          SHARED_PTR<ImageInterface<Float> > tempPrunedMask_ptr = pruneRegions2(constraintMaskImage, thethresh,  -1, pruneSize);
          constraintMaskImage.copyData( *(tempPrunedMask_ptr.get()) );
        }
-       PagedImage<Float> afterpruneconstIm(res.shape(), res.coordinates(),"afterpruneConst.Im");
+       PagedImage<Float> afterpruneconstIm(res.shape(), res.coordinates(),"tmp-afterpruneConst"+String::toString(iterdone)+".im");
        afterpruneconstIm.copyData(constraintMaskImage);
        // for mask in binaryDilation, translate it to T/F (if T it will grow the mask region (NOTE currently binary dilation 
        // does opposite T/F interpretation NEED to CHANGE)
@@ -1502,7 +1520,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (res.hasPixelMask()) {
       LatticeExpr<Bool>  pixmask(res.pixelMask()); 
       //mask.copyData( (LatticeExpr<Float>)( iif((mask + thenewmask) > 0.0 && pixmask, 1.0, 0.0  ) ) );
-      mask.copyData( (LatticeExpr<Float>)( iif((prevmask + thenewmask) > 0.0 && pixmask, 1.0, 0.0  ) ) );
+      // add all masks (previous one, growed mask, current thresh mask)
+      // mask = untouched prev mask, prevmask=modified prev mask by the grow func, thenewmask=mask by thresh on current residual 
+      mask.copyData( (LatticeExpr<Float>)( iif((mask+prevmask + thenewmask) > 0.0 && pixmask, 1.0, 0.0  ) ) );
       mask.clearCache();
       mask.unlock();
       mask.tempClose();
@@ -1991,8 +2011,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //os << "Sorting py peak flux DONE..."<<LogIO::POST;
       os<< LogIO::DEBUG1<<"sortedindx="<<sortedindx<<LogIO::POST;
       // FOR DEBUGGING
-      for (uInt j = 0; j < blcs.nelements(); j++) {
-        os<<" j="<<j<<" blcs="<<blcs[j]<<" trcs="<<trcs[j]<<LogIO::POST;
+      if (debug) {
+        for (uInt j = 0; j < blcs.nelements(); j++) {
+          os<<" j="<<j<<" blcs="<<blcs[j]<<" trcs="<<trcs[j]<<LogIO::POST;
+        }
       }
       Vector<Int> absRel(ndim, RegionType::Abs);
       PtrBlock<const WCRegion *> wbox;
@@ -2048,9 +2070,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           if (debug) {
             cerr<<"regpix="<<regpix<<" prunesize="<<prunesize<<" xboxdim="<<xboxdim<<" yboxdim="<<yboxdim<<endl;
           }
-          //if (( xboxdim < npix || yboxdim < npix ) && xboxdim*yboxdim < npix*npix ) {
-          //if ( xboxdim*yboxdim < Int(ceil(prunesize)) ) {
-          if ( regpix < prunesize ) {
+          // regpix seems to be a bit too small ..., try pruning by blc, trc ...
+          if ( xboxdim*yboxdim < Int(ceil(prunesize)) ) {
+          //if ( regpix < prunesize ) {
             removeit = True;
             removeBySize++;
           }
@@ -2090,7 +2112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       // Debug
       if (debug) {
-        PagedImage<Float> debugPrunedIm(tempIm->shape(),tempIm->coordinates(),"prunedSub.Im");
+        PagedImage<Float> debugPrunedIm(tempIm->shape(),tempIm->coordinates(),"tmp-prunedSub.im");
         debugPrunedIm.copyData(*tempIm);
       }
       //
