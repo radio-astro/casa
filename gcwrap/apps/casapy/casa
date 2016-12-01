@@ -19,7 +19,9 @@ if [ $OSTYPE = "Darwin" ]; then
     isapple="T"
     installed_from_rpm="F"   
     OSVERS=$(uname -r | awk -F. '{print $1}')
-    if [ -d /opt/casa/01 ]; then
+    if [ -d /opt/casa/02 ]; then
+        casa3party=/opt/casa/02
+    elif [ -d /opt/casa/01 ]; then
         casa3party=/opt/casa/01
     else
         if [ $OSVERS -eq "10" ]; then
