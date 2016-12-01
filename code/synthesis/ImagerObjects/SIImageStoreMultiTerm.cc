@@ -883,7 +883,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIImageStoreMultiTerm","divideModelByWeight",WHERE) );
 
         if( 	itsUseWeight // only when needed
-	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+	&& weight() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
 
 	if( normtype=="flatsky") {
@@ -923,7 +923,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     
     if(        itsUseWeight // only when needed
-	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+	&& weight() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
 
 	if( normtype=="flatsky") {
