@@ -3,9 +3,8 @@ import os
 import inspect
 import string
 import time
-from taskinit import *
 import viewertool
-
+from casa_stack_manip import stack_frame_find
 
 class __viewer_class(object):
 	"viewer() task with local state for created viewer tool"
@@ -69,18 +68,12 @@ class __viewer_class(object):
 
 
 		"""
-		a=inspect.stack()
-		stacklevel=0
-		for k in range(len(a)):
-			if a[k][1] == "<string>" or (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
-				stacklevel=k
-
-		myf=sys._getframe(stacklevel).f_globals
+                myf=stack_frame_find( )
+                vi = myf['vi'] if myf.has_key('vi') else None
+                ving = myf['ving'] if myf.has_key('ving') else None
 
 		#Python script
 		try:
-			## vi might not be defined in taskinit if loading
-			## directly from python via casa.py...
 			vwr = vi
 			if type(gui) == bool and gui == False:
 				vwr = ving

@@ -2,6 +2,8 @@ from math import *
 from tasks import *
 from parameter_dictionary import *
 from task_help import *
+import numpy as np
+from casa_stack_manip import stack_frame_find
 
 from parameter_check import *
 
@@ -11,7 +13,7 @@ casaglobals=True
 ####################
 def go(taskname=None):
     """ Execute taskname: """
-    myf = sys._getframe(len(inspect.stack())-1).f_globals
+    myf=stack_frame_find( )
     if taskname==None: taskname=myf['taskname']
     oldtaskname=taskname
     if(myf.has_key('taskname')):
@@ -83,7 +85,7 @@ def inp(taskname=None, page=False):
             os.system('rm '+tempfile)
             return
         ####
-        myf=sys._getframe(len(inspect.stack())-1).f_globals
+        myf=stack_frame_find( )
         if((taskname==None) and (not myf.has_key('taskname'))):
             print 'No task name defined for inputs display'
             return
@@ -123,7 +125,7 @@ def update_params(func, printtext=True, ipython_globals=None):
     from odict import odict
 
     if ipython_globals == None:
-        myf=sys._getframe(len(inspect.stack())-1).f_globals
+        myf=stack_frame_find( )
     else:
         myf=ipython_globals
 
@@ -206,7 +208,7 @@ def update_params(func, printtext=True, ipython_globals=None):
                 
                 #print 'params:', params[k], '; noerror:', noerror, '; myf[params]:', myf[params[k]]
                 myfparamsk=myf[params[k]]
-                if(type(myf[params[k]])==pl.ndarray):
+                if(type(myf[params[k]])==np.ndarray):
                     myfparamsk=myfparamsk.tolist()
                 #if(myf[params[k]]==paramval):
                 if(myfparamsk==paramval):
@@ -417,7 +419,7 @@ def print_params_col(param=None, value=None, comment='', colorparam=None,
     print parampart + valpart + commentpart
 
 def __set_default_parameters(b):
-    myf=sys._getframe(len(inspect.stack())-1).f_globals
+    myf=stack_frame_find( )
     a=b
     elkey=a.keys()
     for k in range(len(a)):
@@ -464,7 +466,7 @@ def backupoldfile(thefile=''):
     shutil.copy2(outpathfile, backupfile)
 
 def tput(taskname=None, outfile=''):
-	myf = sys._getframe(len(inspect.stack())-1).f_globals
+	myf=stack_frame_find( )
 	if taskname == None: taskname = myf['taskname']
 	if type(taskname) != str:
 		taskname=taskname.__name__
@@ -486,7 +488,7 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
 
     try:
         if ipython_globals == None:
-	    myf = sys._getframe(len(inspect.stack())-1).f_globals
+            myf=stack_frame_find( )
         else:
             myf=ipython_globals
 
@@ -594,7 +596,7 @@ def default(taskname=None):
     """
 
     try:
-	myf = sys._getframe(len(inspect.stack())-1).f_globals
+        myf=stack_frame_find( )
         if taskname==None: taskname=myf['taskname']
         myf['taskname']=taskname
         if type(taskname)!=str:

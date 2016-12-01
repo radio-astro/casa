@@ -4,9 +4,7 @@ import sys
 import time
 import base64
 import string
-import inspect
-from taskinit import casac       ### needed for regionmanager
-
+from casa_stack_manip import stack_frame_find
 
 try:
     import dbus
@@ -46,7 +44,6 @@ class viewertool(object):
     "manage task engines"
 
     __t = string.maketrans("abcdefghijklmnopqrstuvwxyz0123456789/*:%$#@!&()~+,.:;{}[]|\\\"'^","abcdefghijklmnopqrstuvwxyz0123456789__________________________")
-    __rgm = casac.regionmanager()
 
     ###
     ### 'use_existing' defaults to false because:
@@ -99,15 +96,8 @@ class viewertool(object):
         if dbus_connection( ) == None:
             raise Exception, "dbus is not available; cannot script the viewer"
 
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if a[k][1].startswith("<ipython-input-") or \
-               a[k][1] == "<string>" or \
-               (string.find(a[k][1], 'ipython console') > 0 or string.find(a[k][1],"casapy.py") > 0):
-                      stacklevel=k
-
-        myf=sys._getframe(stacklevel).f_globals
+        myf=stack_frame_find( )
+        self.__rgm = myf['casac'].regionmanager()
 
         viewer_path = None
         if type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == dict :
