@@ -276,6 +276,8 @@ protected:
   casacore::ImageBeamSet itsPSFBeams;
   casacore::ImageBeamSet itsRestoredBeams;
 
+  casacore::Float itsPSFSideLobeLevel;
+
   //
   //------------------------------------------
   // Non-persistent internal variables

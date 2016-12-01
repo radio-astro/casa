@@ -826,7 +826,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else { makePBImage(pblimit); }
     //    calcSensitivity();
-    // createMask
   }
 
 
@@ -863,7 +862,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      os << " by [ weight ] to get flat sky"<< LogIO::POST;
 	    }
 	    
-	    Float scalepb = pblimit * itsPBScaleFactor * itsPBScaleFactor ;
+	    Float scalepb = fabs(pblimit) * itsPBScaleFactor * itsPBScaleFactor ;
 	    LatticeExpr<Float> mask( iif( (deno) > scalepb , 1.0, 0.0 ) );
 	    LatticeExpr<Float> maskinv( iif( (deno) > scalepb , 0.0, 1.0 ) );
 	    LatticeExpr<Float> ratio( ( (*(residual(tix))) * mask ) / ( deno + maskinv ) );
@@ -871,11 +870,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    residual(tix)->copyData(ratio);
 	  }
 
-	if( (residual(tix)->getDefaultMask()=="") && hasPB())
+	if( (residual(tix)->getDefaultMask()=="") && hasPB()  && pblimit >= 0.0 )
 	  {copyMask(pb(),residual(tix));}
 
       }
-    // createMask
   }
 
   void SIImageStoreMultiTerm::divideModelByWeight(Float pblimit, const String normtype)
@@ -906,14 +904,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    
 	    LatticeExpr<Float> deno( sqrt( abs(*(weight(0))) ) / itsPBScaleFactor );
 	    
-	    LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
-	    LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+	    LatticeExpr<Float> mask( iif( (deno) > fabs(pblimit) , 1.0, 0.0 ) );
+	    LatticeExpr<Float> maskinv( iif( (deno) > fabs(pblimit) , 0.0, 1.0 ) );
 	    LatticeExpr<Float> ratio( ( (*(model(tix))) * mask ) / ( deno + maskinv ) );
 
 	    itsModels[tix]->copyData(ratio);
 	  }    
       }
-    // createMask
   }
 
 
@@ -942,14 +939,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	  LatticeExpr<Float> deno( sqrt( abs(*(weight(0)) ) ) / itsPBScaleFactor );
 
-	  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
-	  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+	  LatticeExpr<Float> mask( iif( (deno) > fabs(pblimit) , 1.0, 0.0 ) );
+	  LatticeExpr<Float> maskinv( iif( (deno) > fabs(pblimit) , 0.0, 1.0 ) );
 	  LatticeExpr<Float> ratio( ( (*(model(tix))) * mask ) * ( deno + maskinv ) );
 
 	    itsModels[tix]->copyData(ratio);
 	  }    
       }
-    // createMask
   }
 
 
@@ -1205,7 +1201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SIImageStoreMultiTerm","calcFractionalBandwidth",WHERE) );
 
-    Double fbw;
+    Double fbw=1.0;
 
     for(uInt i=0; i<itsCoordSys.nCoordinates(); i++)
     {
