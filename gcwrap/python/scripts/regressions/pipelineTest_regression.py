@@ -23,7 +23,7 @@ startProc=0.0
 endProc=0.0
 regstate = True
 standard_file = 'VLApipeline44-standard'
-MIN_CASA_REVISION = 36095
+#MIN_CASA_REVISION = 36095
 
 def load_context(filename):
     with open(filename, 'rb') as picklefile:
@@ -36,18 +36,18 @@ EPS       = 1e-5  # Logical "zero"
 #
 def pipeline_regression():
     global regstate
-    global MIN_CASA_REVISION
+    #global MIN_CASA_REVISION
         
     
-    revision = int(casadef.subversion_revision)
-    if MIN_CASA_REVISION > revision:
-        msg = ('Minimum CASA revision for the pipeline is r%s, '
-               'got CASA %s (r%s).' % (MIN_CASA_REVISION, 
-                cu.version_info( ),
-                casadef.subversion_revision))
-        print msg
-        regstate = False
-        raise EnvironmentError(msg)     
+    #revision = int(casadef.subversion_revision)
+    #if MIN_CASA_REVISION > revision:
+    #    msg = ('Minimum CASA revision for the pipeline is r%s, '
+    #           'got CASA %s (r%s).' % (MIN_CASA_REVISION,
+    #            cu.version_info( ),
+    #            casadef.subversion_revision))
+    #    print msg
+    #    regstate = False
+    #    raise EnvironmentError(msg)
     
     
     
