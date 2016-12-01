@@ -353,58 +353,58 @@ class CalFrom(object):
     """
 
     CALTYPES = {
-        'unknown'           : 0,
-        'gaincal'           : 1,
-        'bandpass'          : 2,
-        'tsys'              : 3,
-        'wvr'               : 4,
-        'polarization'      : 5,
-        'antpos'            : 6,
-        'gc'                : 7,
-        'opac'              : 8,
-        'rq'                : 9,
-        'swpow'             : 10,
-        'finalcal'          : 11,
-        'uvcont'            : 12,
-        'amp'               : 13,
-        'ps'                : 14,
-        'otfraster'         : 15
+        'unknown': 0,
+        'gaincal': 1,
+        'bandpass': 2,
+        'tsys': 3,
+        'wvr': 4,
+        'polarization': 5,
+        'antpos': 6,
+        'gc': 7,
+        'opac': 8,
+        'rq': 9,
+        'swpow': 10,
+        'finalcal': 11,
+        'uvcont': 12,
+        'amp': 13,
+        'ps': 14,
+        'otfraster': 15
     }
 
     CALTYPE_TO_VISCAL = {
-        'gaincal'  : ('G JONES', 'GSPLINE', 'T JONES'),
-        'bandpass' : ('B JONES', 'BPOLY'),
-        'tsys'     : ('B TSYS',),
-        'antpos'   : ('KANTPOS JONES',),
-        'uvcont'   : ('A MUELLER',),
-        'amp'      : ('G JONES',),
-        'sdsky'    : ('SDSKY_PS', 'SDSKY_OTF', 'SDSKY_RASTER')
+        'gaincal': ('G JONES', 'GSPLINE', 'T JONES'),
+        'bandpass': ('B JONES', 'BPOLY'),
+        'tsys': ('B TSYS',),
+        'antpos': ('KANTPOS JONES',),
+        'uvcont': ('A MUELLER',),
+        'amp': ('G JONES',),
+        'sdsky': ('SDSKY_PS', 'SDSKY_OTF', 'SDSKY_RASTER')
     }
-    
+
     VISCAL = {
-        'P JONES'       : 'P Jones (parallactic angle phase)',
-        'T JONES'       : 'T Jones (polarization-independent troposphere)',
-        'TF JONES'      : 'Tf Jones (frequency-dependent atmospheric complex gain)',
-        'G JONES'       : 'G Jones (electronic Gain)',
-        'B JONES'       : 'B Jones (bandpass)',
-        'DGEN JONES'    : 'Dgen Jones (instrumental polarization)',
-        'DFGEN JONES'   : 'Dfgen Jones (frequency-dependent instrumental polarization)',
-        'D JONES'       : 'D Jones (instrumental polarization)',
-        'DF JONES'      : 'Df Jones (frequency-dependent instrumental polarization)',
-        'J JONES'       : 'J Jones (generic polarized gain)',
-        'M MUELLER'     : 'M Mueller (baseline-based)',
-        'MF MUELLER'    : 'Mf Mueller (closure bandpass)',
-        'TOPAC'         : 'TOpac (Opacity corrections in amplitude)',
-        'TFOPAC'        : 'TfOpac (frequency-dependent opacity)',
-        'X MUELLER'     : 'X Mueller (baseline-based)',
-        'X JONES'       : 'X Jones (antenna-based)',
-        'XF JONES'      : 'Xf Jones (antenna-based)',
-        'GLINXPH JONES' : 'GlinXph Jones (X-Y phase)',
-        'B TSYS'        : 'B TSYS (freq-dep Tsys)',
-        'BPOLY'         : 'B Jones Poly (bandpass)',
-        'GSPLINE'       : 'G Jones SPLINE (elec. gain)',
-        'KANTPOS JONES' : 'KAntPos Jones (antenna position errors)',
-        'A MUELLER'     : 'A Mueller (baseline-based)',
+        'P JONES': 'P Jones (parallactic angle phase)',
+        'T JONES': 'T Jones (polarization-independent troposphere)',
+        'TF JONES': 'Tf Jones (frequency-dependent atmospheric complex gain)',
+        'G JONES': 'G Jones (electronic Gain)',
+        'B JONES': 'B Jones (bandpass)',
+        'DGEN JONES': 'Dgen Jones (instrumental polarization)',
+        'DFGEN JONES': 'Dfgen Jones (frequency-dependent instrumental polarization)',
+        'D JONES': 'D Jones (instrumental polarization)',
+        'DF JONES': 'Df Jones (frequency-dependent instrumental polarization)',
+        'J JONES': 'J Jones (generic polarized gain)',
+        'M MUELLER': 'M Mueller (baseline-based)',
+        'MF MUELLER': 'Mf Mueller (closure bandpass)',
+        'TOPAC': 'TOpac (Opacity corrections in amplitude)',
+        'TFOPAC': 'TfOpac (frequency-dependent opacity)',
+        'X MUELLER': 'X Mueller (baseline-based)',
+        'X JONES': 'X Jones (antenna-based)',
+        'XF JONES': 'Xf Jones (antenna-based)',
+        'GLINXPH JONES': 'GlinXph Jones (X-Y phase)',
+        'B TSYS': 'B TSYS (freq-dep Tsys)',
+        'BPOLY': 'B Jones Poly (bandpass)',
+        'GSPLINE': 'G Jones SPLINE (elec. gain)',
+        'KANTPOS JONES': 'KAntPos Jones (antenna position errors)',
+        'A MUELLER': 'A Mueller (baseline-based)',
     }
 
     # Hundreds of thousands of CalFroms can be created and stored in a context.
@@ -1033,48 +1033,38 @@ class CalToIntervalAdapter(object):
     def __init__(self, context, calto):
         self._context = context
         self._calto = calto
-        id_to_intent = get_intent_id_map(self.ms)
-        self._intent_to_id = {v: i for i, v in id_to_intent.iteritems()}
 
-    def _to_range(self, interval):
-        return range(interval.begin, interval.end)
+        ms = context.observing_run.get_ms(calto.vis)
+        self.ms = ms
 
-    @property
-    def antenna(self):
-        antenna_ids = [a.id for a in self.ms.get_antenna(self._calto.antenna)]
-        return [sequence_to_range(seq) for seq in contiguous_sequences(antenna_ids)]
+        antenna_ids = (a.id for a in ms.get_antenna(calto.antenna))
+        self.antenna = [sequence_to_range(seq) for seq in contiguous_sequences(antenna_ids)]
 
-    @property
-    def field(self):
-        field_ids = [f.id for f in self.ms.get_fields(task_arg=self._calto.field)]
-        return [sequence_to_range(seq) for seq in contiguous_sequences(field_ids)]
+        field_ids = (f.id for f in ms.get_fields(task_arg=calto.field))
+        self.field = [sequence_to_range(seq) for seq in contiguous_sequences(field_ids)]
 
-    @property
-    def intent(self):
+        spw_ids = (spw.id for spw in ms.get_spectral_windows(self._calto.spw, science_windows_only=False))
+        self.spw = [sequence_to_range(seq) for seq in contiguous_sequences(spw_ids)]
+
+        id_to_intent = get_intent_id_map(ms)
+        intent_to_id = {v: i for i, v in id_to_intent.iteritems()}
+
         if self._calto.intent == '':
-            return [(0, len(self._intent_to_id))]
+            self.intent = [(0, len(intent_to_id))]
+        else:
+            str_intents = self._calto.intent.split(',')
+            # the conditional check for intent is required as task parameters may
+            # specify an intent that is not in the MS, such as CHECK.
+            intent_ids = (intent_to_id[intent] for intent in str_intents
+                          if intent in intent_to_id)
+            self.intent = [sequence_to_range(seq) for seq in contiguous_sequences(intent_ids)]
 
-        str_intents = self._calto.intent.split(',')
-        # the conditional check for intent is required as task parameters may
-        # specify an intent that is not in the MS, such as CHECK.
-        intent_ids = [self._intent_to_id[intent] for intent in str_intents
-                      if intent in self._intent_to_id]
-        return [sequence_to_range(seq) for seq in contiguous_sequences(intent_ids)]
-
-    @property
-    def ms(self):
-        return self._context.observing_run.get_ms(self._calto.vis)
-
-    @property
-    def spw(self):
-        spw_ids = [spw.id for spw in self.ms.get_spectral_windows(self._calto.spw,
-                                                                  science_windows_only=False)]
-        return [sequence_to_range(seq) for seq in contiguous_sequences(spw_ids)]
+    def __str__(self):
+        return ('CalToIntervalAdapter(ms={!r}, field={!r}, intent={!r}, spw={!r}, antenna={!r})'.format(
+            os.path.basename(self._calto.vis), self.field, self.intent, self.spw, self.antenna))
 
     def __repr__(self):
-        return ('CalToIntervalAdapter(ms=\'%s\', field=\'%s\', intent=\'%s\', '
-                'spw=%s, antenna=%s)' % (self.ms.name, self.field,
-                                         self.intent, self.spw, self.antenna))
+        return ('CalToIntervalAdapter({!s}, {!s})'.format(self._context, self._calto))
 
 
 def create_data_reducer(join):
@@ -1188,7 +1178,7 @@ def defrag_interval_tree(tree):
     # branch - the branch with the list of CalApplications. The intervals in this
     # branch can be merged
     leaf_values = [tsd_accessor(interval) for interval in tree]
-    if not all([isinstance(v, intervaltree.IntervalTree) for v in leaf_values]):
+    if not all((isinstance(v, intervaltree.IntervalTree) for v in leaf_values)):
         return merge_contiguous_intervals(tree)
 
     # otherwise call recursively
@@ -1518,7 +1508,7 @@ def create_interval_tree_for_ms(ms):
     Create a new IntervalTree fitted to the dimensions of a measurement set.
 
     This function creates a new IntervalTree with the size of the antenna,
-    spw, field and intent dimensions fitted to that of the input measurement
+    spw, field and intent dimensions fitted to envelop of the input measurement
     set.
 
     :param ms:
@@ -1628,6 +1618,7 @@ class IntervalCalState(object):
         self.data = {}
         self.id_to_intent = {}
         self.id_to_field = {}
+        self.shape = {}
 
     @staticmethod
     def from_calapplication(context, calto, calfroms):
@@ -1648,6 +1639,8 @@ class IntervalCalState(object):
         ms = context.observing_run.get_ms(calto.vis)
         calstate.data[ms.name] = selection
 
+        calstate.data[ms.name] = trim_to_valid_data_selection(calstate, ms.name)[ms.name]
+
         return calstate
 
     @staticmethod
@@ -1667,6 +1660,40 @@ class IntervalCalState(object):
         interval_trees = {ms.name: create_interval_tree_for_ms(ms)
                           for ms in context.observing_run.measurement_sets}
         calstate.data.update(interval_trees)
+
+        # create the shape of valid data selections for future trimming
+        # See CAS-9415: CalLibrary needs a way to filter out calibration
+        # applications for missing data selections
+        for vis, antenna_tree in interval_trees.iteritems():
+            # create map of observing intent to intent ID by inverting
+            # existing map
+            intent_to_id = {v: k for k, v in calstate.id_to_intent[vis].iteritems()}
+
+            ms = context.observing_run.get_ms(vis)
+            spw_shape = {}
+            for spw in ms.spectral_windows:
+                intents_for_field = {}
+                for field in ms.fields:
+                    if spw in field.valid_spws:
+                        # construct the list of observed intent IDs for this field
+                        observed_intent_ids = (intent_to_id[i] for i in field.intents)
+                        # convert the intent IDs to an IntervalTree-friendly range
+                        # and record it against the field ID
+                        intents_for_field[field.id] = tuple(
+                            sequence_to_range(seq) for seq in contiguous_sequences(observed_intent_ids)
+                        )
+                # merge adjacent field intervals that have identical values
+                spw_shape[spw.id] = _merge_intervals(intents_for_field)
+            # merge adjacent spw intervals that have identical values
+            spw_shape = _merge_intervals(spw_shape)
+
+            # assume that spws are observed by all antennas. Note the trailing comma to make it a tuple!
+            # the inner tuple is needed to convert the generator comprehension to objects
+            antenna_shape = (tuple((((interval.begin, interval.end),), spw_shape) for interval in antenna_tree),)
+
+            calstate.shape[vis] = antenna_shape
+
+        calstate.data = trim_to_valid_data_selection(calstate)
 
         return calstate
 
@@ -1717,6 +1744,7 @@ class IntervalCalState(object):
         calstate.data[vis] = trimmed
         calstate.id_to_intent[vis] = self.id_to_intent[vis]
         calstate.id_to_field[vis] = self.id_to_field[vis]
+        calstate.shape = self.shape
 
         return calstate
 
@@ -1775,9 +1803,10 @@ class IntervalCalState(object):
         """
         calstate = IntervalCalState()
 
-        # copy the id mapping functions across.
+        # copy the ID mapping and shape data across.
         calstate.id_to_intent = self.id_to_intent
         calstate.id_to_field = self.id_to_field
+        calstate.shape = self.shape
 
         for vis, my_root in self.data.iteritems():
             # adopt IntervalTrees present in just this object
@@ -1794,6 +1823,8 @@ class IntervalCalState(object):
 
             calstate.data[vis] = union
 
+        calstate.data = trim_to_valid_data_selection(calstate)
+
         return calstate
 
     def __add__(self, other):
@@ -1805,6 +1836,7 @@ class IntervalCalState(object):
                 calstate[vis] = other_root
                 calstate.id_to_intent[vis] = other.id_to_intent[vis]
                 calstate.id_to_field[vis] = other.id_to_field[vis]
+                calstate.shape[vis] = other.shape[vis]
 
         return calstate
 
@@ -1815,6 +1847,7 @@ class IntervalCalState(object):
         self.data = sum_state.data
         self.id_to_field = sum_state.id_to_field
         self.id_to_intent = sum_state.id_to_intent
+        self.shape = sum_state.shape
 
         return self
 
@@ -2097,3 +2130,83 @@ class TimestampedData(collections.namedtuple('TimestampedDataBase', ['time', 'da
         )
 
 
+def trim_to_valid_data_selection(calstate, vis=None):
+    """
+    Trim an IntervalCalState to the shape of valid (present) data selections.
+
+    This is achieved by trimming Intervals for each dimension (antenna, spw,
+    field, intent) to exclude ranges for which no data is present.
+
+    See CAS-9415: CalLibrary needs a way to filter out calibration
+    applications for missing data selections
+
+    :param calstate: the calstate to shape
+    :param vis: name of the calstate to shape. If not defined, shape all.
+    :return: a new, shaped IntervalCalState
+    """
+    if vis is None:
+        vislist = calstate.data.keys()
+    else:
+        vislist = [vis] if isinstance(vis, str) else vis
+
+    results = {}
+    for vis in vislist:
+        antenna_tree = calstate.data[vis]
+
+        new_root = intervaltree.IntervalTree()
+        for antenna_tuple in calstate.shape[vis]:
+            for antenna_ranges, spw_tuple in antenna_tuple:
+                for spw_ranges, field_tuple in spw_tuple:
+                    for field_ranges, intent_ranges in field_tuple:
+                        tree_intervals = (antenna_ranges, spw_ranges, field_ranges, intent_ranges)
+                        # print 'Shaping to {!r}'.format(tree_intervals)
+                        new_root |= trim_nd(antenna_tree, tree_intervals)
+
+        results[vis] = new_root
+
+    return results
+
+
+def _merge_intervals(unmerged):
+    """
+    Merge adjacent Intervals (represented by the keys within the input dict)
+    that have identical values and output an IntervalTree-friendly tuple of
+    constructor arguments.
+
+    For example, a dict containing
+
+        {1: A, 2: B, 3:A, 4:A}
+
+    would be converted to
+
+        ((((1, 2), (3, 5)), 'A'), (((2, 3),), 'B'))
+
+    :param unmerged: a dict mapping IDs to values
+    :return: tuple of constructor arguments ready for create_interval_tree_nd
+    """
+    reversed = collections.defaultdict(set)
+    for k, v in unmerged.iteritems():
+        reversed[v].add(k)
+    return tuple(sorted((tuple(sequence_to_range(seq) for seq in contiguous_sequences(v)), k)
+                         for k, v in reversed.items()))
+
+
+def _print_dimensions(calstate):
+    """
+    Debugging function used to print the dimensions of an IntervalCalState.
+
+    :param calstate: the calstate to inspect
+    :return:
+    """
+    for vis, antenna_tree in calstate.data.iteritems():
+        for antenna_interval in antenna_tree.items():
+            antenna_ranges = (antenna_interval.begin, antenna_interval.end)
+            for spw_interval in antenna_interval.data.data:
+                spw_ranges = (spw_interval.begin, spw_interval.end)
+                for field_interval in spw_interval.data.data:
+                    field_ranges = (field_interval.begin, field_interval.end)
+                    for intent_interval in field_interval.data.data:
+                        intent_ranges = (intent_interval.begin, intent_interval.end)
+
+                        tree_intervals = (antenna_ranges, spw_ranges, field_ranges, intent_ranges)
+                        print '{!r}'.format(tree_intervals)
