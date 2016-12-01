@@ -20,7 +20,7 @@ __rethrow_casa_exceptions = True
 from h_init_cli import h_init_cli as h_init
 from hsd_importdata_cli import hsd_importdata_cli as hsd_importdata
 from hsd_flagdata_cli import hsd_flagdata_cli as hsd_flagdata
-from hsd_tsyscal_cli import hsd_tsyscal_cli as hsd_tsyscal
+from h_tsyscal_cli import h_tsyscal_cli as h_tsyscal
 from hsd_tsysflag_cli import hsd_tsysflag_cli as hsd_tsysflag
 from hsd_skycal_cli import hsd_skycal_cli as hsd_skycal
 from hsd_k2jycal_cli import hsd_k2jycal_cli as hsd_k2jycal
@@ -45,7 +45,7 @@ def hsdms(vislist, importonly=False, pipelinemode='automatic',
           interactive=True):
 
     echo_to_screen = interactive
-    casatools.post_to_log ("Beginning pipeline run ...")
+    casatools.post_to_log("Beginning pipeline run ...")
 
     try:
         # Initialize the pipeline
@@ -60,7 +60,7 @@ def hsdms(vislist, importonly=False, pipelinemode='automatic',
         hsd_flagdata(pipelinemode=pipelinemode)
         
         # Tsys calibration
-        hsd_tsyscal(pipelinemode=pipelinemode)
+        h_tsyscal(pipelinemode=pipelinemode)
         
         # Flag system temperature calibration
         hsd_tsysflag(pipelinemode=pipelinemode)

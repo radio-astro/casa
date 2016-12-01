@@ -46,7 +46,6 @@ CasaTaskDict = {
     'hsd_importdata': 'SDImportData',
     'hsd_k2jycal': 'SDK2JyCal',
     'hsd_skycal': 'SDMSSkyCal',
-    'hsd_tsyscal': 'SDTsyscal',
     'hsd_tsysflag': 'SDTsysflag',
     # ALMA interferometry tasks ---------------------------------------------
     'hifa_importdata': 'ALMAImportData',
@@ -64,7 +63,6 @@ CasaTaskDict = {
     'hifa_restoredata': 'ALMARestoreData',
     'hifa_spwphaseup': 'SpwPhaseup',
     'hifa_timegaincal': 'TimeGaincal',
-    'hifa_tsyscal': 'ALMATsyscal',
     'hifa_tsysflag': 'ALMATsysflag',
     'hifa_wvrgcal': 'Wvrgcal',
     'hifa_wvrgcalflag': 'Wvrgcalflag',
@@ -107,7 +105,6 @@ classToCASATask = {
     hifa_tasks.ALMARestoreData        : 'hifa_restoredata',
     hifa_tasks.SpwPhaseup             : 'hifa_spwphaseup',
     hifa_tasks.TimeGaincal            : 'hifa_timegaincal',
-    hifa_tasks.ALMATsyscal            : 'hifa_tsyscal',
     hifa_tasks.ALMATsysflag           : 'hifa_tsysflag',
     hifa_tasks.Wvrgcal                : 'hifa_wvrgcal',
     hifa_tasks.Wvrgcalflag            : 'hifa_wvrgcalflag',
@@ -146,7 +143,6 @@ classToCASATask = {
     hsd_tasks.SDImportData            : 'hsd_importdata',
     hsd_tasks.SDK2JyCal               : 'hsd_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsd_skycal',
-    hsd_tasks.SDTsyscal               : 'hsd_tsyscal',
     hsd_tasks.SDTsysflag              : 'hsd_tsysflag',
     # VLA tasks ----------------------------------------------------------------
     hifv_tasks.VLAImportData          : 'hifv_importdata',
@@ -223,9 +219,7 @@ TASK_COMMENTS = {
         'antenna is used.\n'
         '' + SILENT_TASK_COMMENT
     ),
-    (h_tasks.Tsyscal,
-     hifa_tasks.ALMATsyscal,
-     hsd_tasks.SDTsyscal,): (
+    (h_tasks.Tsyscal,): (
         'The Tsys calibration and spectral window map is computed.'
     ),
     (h_tasks.Tsysflag,
