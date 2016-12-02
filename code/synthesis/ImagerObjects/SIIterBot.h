@@ -221,6 +221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Float itsPeakResidual;
 	                Float itsPrevPeakResidual;
 	                Float itsInitPeakResidual;
+ 	  Float itsMinPeakResidual;
 
 			/* The number of Controllers Currently Connected */
 			int    itsControllerCount;
