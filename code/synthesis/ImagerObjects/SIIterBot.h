@@ -225,6 +225,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			casacore::Float itsPeakResidual;
 	        casacore::Float itsPrevPeakResidual;
 	        casacore::Float itsInitPeakResidual;
+	                casacore::Float itsMinPeakResidual;
 
 			/* The number of Controllers Currently Connected */
 			int    itsControllerCount;

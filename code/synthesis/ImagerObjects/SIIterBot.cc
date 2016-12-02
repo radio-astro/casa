@@ -68,6 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsMaxPsfSidelobe(0.0),
 						itsPeakResidual(0.0),
 						itsPrevPeakResidual(-1.0),
+						itsMinPeakResidual(1e+9),
 						itsInitPeakResidual(0.0),
 						itsControllerCount(0),
 						itsNiter(0),
@@ -178,15 +179,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    if( fabs( itsInitPeakResidual - itsPeakResidual )<1e-10) 
 		      {stopCode = 4;}
 
-                    // another non-convergent condition: diverging (relative increase is more than 5 times)
+                    // another non-convergent condition: diverging (relative increase is more than 5 times across one major cycle)
                     else if ( itsIterDone > 0 && fabs(itsPeakResidual-itsPrevPeakResidual)/fabs(itsPrevPeakResidual)  > 5.0) 
-                      {stopCode = 5;}
+                      {
+			//cout << "Peak res : " << itsPeakResidual << "  Dev from prev peak res " << endl; 
+			stopCode = 5;}
+
+		    // divergence check, 5 times increase from the minimum peak residual so far (across all previous major cycles).
+		    else if ( itsIterDone > 0 && (fabs(itsPeakResidual)-itsMinPeakResidual)/itsMinPeakResidual  > 5.0 )
+                      {
+			//cout << "Peak res : " << itsPeakResidual <<  "    Dev from min peak res " << itsMinPeakResidual << endl; 
+			stopCode = 5;}
+
 
 		  }
 	        
 		//		os << "Peak residual : " << itsPeakResidual << " and " << itsIterDone << " iterations."<< LogIO::POST;
 		//cout << "cleancomp : stopcode : " << stopCode << endl;
 
+		//cout << "peak res : " << itsPeakResidual << "   itsminPR : " << itsMinPeakResidual << endl;
+
+		if( itsIterDone > 0 &&  fabs(itsPeakResidual) < itsMinPeakResidual ) itsMinPeakResidual = fabs(itsPeakResidual);
 		itsPrevPeakResidual = itsPeakResidual;
 
 		itsStopCode=stopCode;
