@@ -1179,8 +1179,6 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		createMask( pbmask, pb() );
 	      }
 
-	    ////////// Na.... still need a way to simply prevent the copyMask from being called.
-
 	  }
   }
 
@@ -1473,6 +1471,10 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     ///// window
         if((residual()->getDefaultMask()=="") && hasPB()  &&  pblimit >=0.0 )
        {copyMask(pb(),residual());}
+
+	///////  CAS-9371 needs this, but removeMask gives an error unless you exit from casa before restarting tclean with negative pblimit
+	///// if( pblimit <0.0 && (residual()->getDefaultMask()).matches("mask0") ) removeMask( residual() );
+
   }
   
 
@@ -1894,7 +1896,14 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     try
       {
 	//MSK//	
-	if(hasPB()){copyMask(residual(term),image(term));}
+	if( hasPB() )
+	  {
+	    ///////  CAS-9371 needs this, but removeMask gives an error unless you exit from casa before restarting tclean with negative pblimit
+	    //////if( (image(term)->getDefaultMask()).matches("mask0") ) removeMask( image(term) );
+	    copyMask(residual(term),image(term));
+	  }
+
+	//	if(hasPB()){copyMask(residual(term),image(term));}
 	ImageInfo iminf = image(term)->imageInfo();
         iminf.setBeams( itsRestoredBeams);
 	image(term)->setImageInfo(iminf);

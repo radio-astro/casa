@@ -873,6 +873,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( (residual(tix)->getDefaultMask()=="") && hasPB()  && pblimit >= 0.0 )
 	  {copyMask(pb(),residual(tix));}
 
+	///////  CAS-9371 needs this, but removeMask gives an error unless you exit from casa before restarting tclean with negative pblimit
+	///////  if( pblimit <0.0 && (residual(tix)->getDefaultMask()).matches("mask0") ) removeMask( residual(tix) );
+
       }
   }
 
