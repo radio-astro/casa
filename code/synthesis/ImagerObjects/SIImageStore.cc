@@ -1427,7 +1427,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		LatticeExpr<Float> deno;
 		Float scalepb=1.0;
 		if( normtype=="flatnoise"){
-		  deno = LatticeExpr<Float> ( sqrt( abs(*(wtsubim))  / itsPBScaleFactor) );
+		  deno = LatticeExpr<Float> ( sqrt( abs(*(wtsubim)) ) * itsPBScaleFactor );
 		  os << LogIO::NORMAL1 ;
 		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
 		  os << "Dividing " << itsImageName+String(".residual") ;
@@ -1436,7 +1436,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  scalepb=fabs(pblimit);
 		}
 		if( normtype=="flatsky") {
-		  deno = LatticeExpr<Float> ( abs(*(wtsubim))/ itsPBScaleFactor );
+		  deno = LatticeExpr<Float> ( *(wtsubim) );
 		  os << LogIO::NORMAL1 ;
 		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
 		  os << "Dividing " << itsImageName+String(".residual") ;
@@ -1521,7 +1521,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  os <<" ] to get to flat sky model before prediction" << LogIO::POST;
 		  
 		   
-		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim))  / itsPBScaleFactor) );
+		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim)) ) / itsPBScaleFactor );
 		  
 		  LatticeExpr<Float> mask( iif( (deno) > fabs(pblimit) , 1.0, 0.0 ) );
 		  LatticeExpr<Float> maskinv( iif( (deno) > fabs(pblimit) , 0.0, 1.0 ) );

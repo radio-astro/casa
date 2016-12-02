@@ -1511,8 +1511,8 @@ class test_widefield(testref_base):
 
      def test_widefield_aproj_mfs(self):
           """ [widefield] Test_Widefield_aproj : MFS with narrowband AWProjection (wbawp=F, 1spw)  stokes I """
-          casalog.post("EMPTY TEST")
-          return
+          # casalog.post("EMPTY TEST")
+          # return
 
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,spw='1',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=False,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom',savemodel='modelcolumn')
@@ -1540,8 +1540,8 @@ class test_widefield(testref_base):
      def test_widefield_wbaproj_mfs(self):
           """ [widefield] Test_Widefield_wbaproj_mfs : MFS with wideband AWProjection (wbawp=T, allspw) and nt=1 stokes I  """
 
-          casalog.post("EMPTY TEST")
-          return
+          # casalog.post("EMPTY TEST")
+          # return
 
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom',pblimit=0.3)
@@ -1568,12 +1568,12 @@ class test_widefield(testref_base):
      def test_widefield_wbaproj_mtmfs(self):
           """ [widefield] Test_Widefield_wbaproj_mtmfs : MFS with wideband AWProjection (wbawp=T,conjbeams=T, allspw) and nt=2 stokes I  """
 
-          casalog.post("EMPTY TEST")
-          return
+          # casalog.post("EMPTY TEST")
+          # return
 
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs',pblimit=0.1)
-          report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.96,[256,256,0,0]),(self.img+'.weight.tt0',0.486,[256,256,0,0]),(self.img+'.alpha',0.0,[256,256,0,0]) ] )
+          report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.96,[256,256,0,0]),(self.img+'.weight.tt0',0.486,[256,256,0,0]),(self.img+'.alpha',0.05096,[256,256,0,0]) ] )
           ## alpha should be ZERO as the pb spectrum has been taken out.
           self.checkfinal(report)
 
