@@ -502,12 +502,12 @@ class TcleanHeuristics(object):
             channel_width = float(spwDO.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ))
 
             msTool.open(msname)
-            msTool.iterinit(maxrows = int(n_ants * ((n_ants - 1) / 2.0 + 1)))
-            msTool.iterorigin()
             # Antenna selection does not work (CAS-8757)
             #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
             staql={'field': field, 'spw': spw}
             msTool.msselect(staql)
+            msTool.iterinit(maxrows = int(n_ants * ((n_ants - 1) / 2.0 + 1)))
+            msTool.iterorigin()
             flag_ants = msTool.getdata(['flag','antenna1','antenna2'])
             msTool.done()
 
