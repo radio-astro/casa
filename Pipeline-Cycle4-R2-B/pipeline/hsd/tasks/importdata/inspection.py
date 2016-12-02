@@ -431,7 +431,7 @@ class SDMSInspection(object):
         trim_name = lambda s : s[1:-1] if s.startswith('"') and s.endswith('"') else s
         field_map = {}
         for target in target_fields:
-            target_name = target.name
+            target_name = trim_name(target.name)
             LOG.debug('target name: \'%s\''%(target_name))
             for reference in reference_fields:
                 reference_name = trim_name(reference.name)
