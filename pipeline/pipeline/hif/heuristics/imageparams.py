@@ -898,12 +898,12 @@ class ImageParamsHeuristics(object):
             with casatools.MSReader(msname) as msTool:
                 # CAS-8997 selectinit is required to avoid the 'Data shape varies...' warning message
                 msTool.selectinit(datadescid=dd_id)
-                msTool.iterinit(maxrows = int(n_ants * ((n_ants - 1) / 2.0 + 1)))
-                msTool.iterorigin()
                 # Antenna selection does not work (CAS-8757)
                 #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
                 staql={'field': field, 'spw': spw}
                 msTool.msselect(staql)
+                msTool.iterinit(maxrows = int(n_ants * ((n_ants - 1) / 2.0 + 1)))
+                msTool.iterorigin()
                 flag_ants = msTool.getdata(['flag', 'antenna1', 'antenna2'])
 
             # Calculate averaged flagging vector keeping all unflagged channel
