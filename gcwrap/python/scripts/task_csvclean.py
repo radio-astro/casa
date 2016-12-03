@@ -6,6 +6,7 @@ import numpy as np
 import sys
 from cleanhelper import *
 from taskinit import *
+from casa_stack_manip import stack_frame_find
 
 im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms=gentools(['im','cb','ms','tb','me','ia','po','sm','cl','cs','rg','sl','dc','vp','msmd','fi','fn','imd','sdms'])
 
@@ -255,7 +256,7 @@ def csvclean(vis, imagename,field, spw, advise, mode, nchan, width, imsize, cell
             adv=im.advise(fieldofview=fov)
             cellx=qa.tos(adv[2], prec=4)
             celly=cellx
-            myf = sys._getframe(len(inspect.stack())-1).f_globals
+            myf = stack_frame_find( )
             myf['cell']=[cellx,cellx]
             myf['imsize']=[adv[1], adv[1]]
             nx=ny=adv[1]

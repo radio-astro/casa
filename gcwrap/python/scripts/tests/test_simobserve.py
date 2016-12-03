@@ -10,8 +10,8 @@ import unittest
 import numpy
 import glob
 # to rethrow exception 
-import inspect
-glb = sys._getframe(len(inspect.stack())-1).f_globals
+from casa_stack_manip import stack_frame_find
+glb = stack_frame_find( )
 if glb.has_key('__rethrow_casa_exceptions'):
     rethrow_org = glb['__rethrow_casa_exceptions']
 else:

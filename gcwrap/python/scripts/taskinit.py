@@ -1,6 +1,8 @@
+import os
 import sys
 import string
 import inspect
+from casa_stack_manip import stack_find, find_casa
 
 ####---------------- return path to XML files ----------------
 def static_var(varname, value):
@@ -24,51 +26,35 @@ def xmlpath( ):
     return xmlpath.path
 ####----------------------------------------------------------
 
-
-####---------------- fish around in the call stack -----------
-def __taskinit_casa(label="casa" ) :
-    a=inspect.stack()
-    stacklevel=0
-    for k in range(len(a)):
-        if a[k][1] == "<string>" or \
-                a[k][1].startswith("<ipython-input-") or \
-                string.find(a[k][1], 'ipython console') > 0 or \
-                string.find(a[k][1],"casapy.py") > 0 or \
-                string.find(a[k][1],"casa.py") > 0:
-            stacklevel=k
-            # jagonzal: Take the first level that matches the requirement
-            break
-
-    myf=sys._getframe(stacklevel).f_globals
-
-    if myf.has_key(label) :
-        return myf[label]
-    else:
-        return { }
-####----------------------------------------------------------
-
-casa =  __taskinit_casa("casa")
+casa = find_casa( )
 
 if casa.has_key('state') and casa['state'].has_key('init_version') and casa['state']['init_version'] > 0:
 
-    casac = __taskinit_casa("casac")
-    casalog = __taskinit_casa("casalog")
-    gentools = __taskinit_casa("gentools")
-    qatool = __taskinit_casa("qatool")
-    qa = __taskinit_casa("qa")
-    utilstool = __taskinit_casa("utilstool")
-    tbtool =  __taskinit_casa("tbtool")
-    tb =  __taskinit_casa("tb")
-    ms =  __taskinit_casa("ms")
-    mstool =  __taskinit_casa("mstool")
-    aftool =  __taskinit_casa("aftool")
-    cbtool =  __taskinit_casa("cbtool")
-    cltool =  __taskinit_casa("cltool")
-    write_history = __taskinit_casa("write_history")
-    me  = __taskinit_casa("me")
-    metool = __taskinit_casa("metool")
-    imtool = __taskinit_casa("imtool")
-    smtool = __taskinit_casa("smtool")
+    #
+    ##allow globals for taskby default
+    casaglobals=True
+
+    casac = stack_find("casac")
+    casalog = stack_find("casalog")
+    gentools = stack_find("gentools")
+    qatool = stack_find("qatool")
+    qa = stack_find("qa")
+    utilstool = stack_find("utilstool")
+    tbtool =  stack_find("tbtool")
+    tb =  stack_find("tb")
+    ms =  stack_find("ms")
+    mstool =  stack_find("mstool")
+    aftool =  stack_find("aftool")
+    cbtool =  stack_find("cbtool")
+    cltool =  stack_find("cltool")
+    write_history = stack_find("write_history")
+    me  = stack_find("me")
+    metool = stack_find("metool")
+    mttool = stack_find("mttool")
+    imtool = stack_find("imtool")
+    smtool = stack_find("smtool")
+    at = stack_find("at")
+    msmdtool = stack_find("msmdtool")
 
 else:
     from casac import *

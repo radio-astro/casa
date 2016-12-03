@@ -29,6 +29,7 @@ from recipes.listshapes import listshapes
 from tasks import *
 from taskinit import *
 import unittest
+from casa_stack_manip import stack_frame_find
 
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/split/'
 
@@ -982,7 +983,7 @@ class split_test_blankov(unittest.TestCase):
         original_throw_pref = False
         try:
             #print "\n\tSplitting", self.inpms
-            myf = sys._getframe(len(inspect.stack()) - 1).f_globals
+            myf = stack_frame_find( )
             # This allows distinguishing ValueError from other exceptions, and
             # quiets an expected error message.
             original_throw_pref = myf.get('__rethrow_casa_exceptions', False)

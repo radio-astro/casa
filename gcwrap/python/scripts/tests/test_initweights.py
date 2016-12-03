@@ -9,12 +9,13 @@ from __main__ import default
 from tasks import *
 from taskinit import *
 import unittest
+from casa_stack_manip import stack_frame_find
 
 from initweights import initweights
 
 # to rethrow exception 
 import inspect
-g = sys._getframe(len(inspect.stack())-1).f_globals
+g = stack_frame_find( )
 exception_stat = g['__rethrow_casa_exceptions'] if g.has_key('__rethrow_casa_exceptions') else False
 
 class initweights_common(unittest.TestCase):

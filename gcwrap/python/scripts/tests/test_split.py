@@ -18,7 +18,6 @@ Features tested:
 Note: The time_then_chan_avg regression is a more "end-to-end" test of split.
 '''
 
-import inspect
 import os
 import numpy
 import re
@@ -33,6 +32,7 @@ from tasks import split, partition, listobs, flagdata, importasdm, flagcmd
 from taskinit import mstool, msmdtool, tbtool
 import unittest
 from parallel.parallel_task_helper import ParallelTaskHelper
+from casa_stack_manip import stack_frame_find
 
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/split/'
 
@@ -1002,7 +1002,7 @@ class split_test_blankov(unittest.TestCase):
         original_throw_pref = False
         try:
             #print "\n\tSplitting", self.inpms
-            myf = sys._getframe(len(inspect.stack()) - 1).f_globals
+            myf = stack_frame_find( )
             # This allows distinguishing ValueError from other exceptions, and
             # quiets an expected error message.
             original_throw_pref = myf.get('__rethrow_casa_exceptions', False)

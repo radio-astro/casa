@@ -2,19 +2,12 @@ import os
 import sys
 import inspect
 import string
+from casa_stack_manip import stack_frame_find
+
 
 def asap_init():
     """ Initialize ASAP....: """
-    a=inspect.stack()
-    stacklevel=0
-    for k in range(len(a)):
-        #if (string.find(a[k][1], 'ipython console') > 0):
-        if a[k][1] == "<string>" or \
-               (string.find(a[k][1], 'ipython console') > 0) or \
-               string.find(a[k][1],"casapy.py") > 0:
-            stacklevel=k
-            break
-    myf=sys._getframe(stacklevel).f_globals
+    myf=stack_frame_find( )
     casapath=os.environ['CASAPATH']
     print('*** Loading ATNF ASAP Package...')
     import asap as sd

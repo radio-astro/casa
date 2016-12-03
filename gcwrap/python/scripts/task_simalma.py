@@ -14,6 +14,7 @@ from imregrid import imregrid
 from immath import immath
 from sdimaging import sdimaging
 import sdbeamutil
+from casa_stack_manip import stack_frame_find
 
 def simalma(
     project=None,
@@ -135,12 +136,7 @@ def simalma(
 
         #----------------------------------------
         # Get globals to call saveinputs()
-        a = inspect.stack()
-        stacklevel = 0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel = k
-        myf = sys._getframe(stacklevel).f_globals
+        myf = stack_frame_find( )
 
         # Save input parameters of simalma
         saveinputs = myf['saveinputs']

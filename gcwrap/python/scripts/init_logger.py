@@ -54,7 +54,6 @@ if casa['flags'].nologger :
 if casa['flags'].nogui :
     deploylogger = False
 
-#print 'thelogfile:', thelogfile
 if thelogfile == 'null':
     pass
 else:
@@ -71,27 +70,25 @@ else:
             casalogger(thelogfile)
 
 
-# Log initialization ###################################################################################################
-
-# IMPORTANT: The following steps must be follow the described order, 
-#            otherwise a seg fault occurs when setting the log file.
-# 1st Create casalog object, it will be used by tasks when importing taskinit
 casalog = casac.logsink()
-# 2nd Set log file accessing CASA dictionary of calling context via stack inspection
+
 if casa.has_key('files') and casa['files'].has_key('logfile') :
     casalog.setlogfile(casa['files']['logfile'])
 
-# 3rd Set logger as global
-casalog.setglobal(True)
-
-# Set processor origin (normally "casa" but in the MPI case we use the hostname and rank involved)
 from mpi4casa.MPIEnvironment import MPIEnvironment
 processor_origin = MPIEnvironment.processor_origin
 casalog.processorOrigin(processor_origin)
 
-# Log initialization ###################################################################################################
-
 casalog.showconsole(MPIEnvironment.log_to_console or casa['flags'].log2term)
+
+###
+### For reasons unknown, setglobal causes the global logger to steal the
+### log sink associated with this casalog object we've created, making
+### our casalog object useless for the purposes of configuration. As a
+### result, it's best to call this last.
+###
+casalog.setglobal(True)
+
 try:
     casalog.post("CASA Version " + casa['build']['version'])
 except:

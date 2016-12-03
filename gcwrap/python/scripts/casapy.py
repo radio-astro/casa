@@ -8,6 +8,11 @@ import filecmp
 import traceback # To pretty-print tracebacks
 from subprocess import Popen, PIPE, STDOUT
 
+##
+## toplevel frame marker
+##
+_casa_top_frame_ = True
+
 # jagonzal: MPIServer initialization before wathdog fork
 from mpi4casa.MPIEnvironment import MPIEnvironment
 if MPIEnvironment.is_mpi_enabled and not MPIEnvironment.is_mpi_client:

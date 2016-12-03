@@ -1,6 +1,5 @@
 import sys
 import os
-import inspect
 import string
 import time
 import viewertool

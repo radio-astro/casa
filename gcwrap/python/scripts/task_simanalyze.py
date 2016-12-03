@@ -7,6 +7,7 @@ import pdb
 from sdimaging import sdimaging
 from imregrid import imregrid
 from immath import immath
+from casa_stack_manip import stack_frame_find
 
 def simanalyze(
     project=None,
@@ -43,12 +44,7 @@ def simanalyze(
     casalog.origin('simanalyze')
     if verbose: casalog.filter(level="DEBUG2")
 
-    a = inspect.stack()
-    stacklevel = 0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel = k
-    myf = sys._getframe(stacklevel).f_globals
+    myf = stack_frame_find( )
     
     # create the utility object:    
     myutil = simutil()

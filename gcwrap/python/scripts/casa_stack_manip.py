@@ -2,7 +2,8 @@ import sys
 import string
 import inspect
 
-def stack_find(label="casa",level='stack') :
+def stack_find(symbol, level='stack') :
+    label="_casa_top_frame_"
     a=inspect.stack()
     stacklevel=0
     if level == "stack":
@@ -15,23 +16,36 @@ def stack_find(label="casa",level='stack') :
                 stacklevel=k
                 # jagonzal: Take the first level that matches the requirement
                 break
+
+        myf=sys._getframe(stacklevel).f_globals
+
+        if myf.has_key(symbol) and myf.has_key(label) :
+            return myf[symbol]
+
+        else:
+            return None
+
     elif level == "root":
         for k in range(len(a)):
             if string.find(a[k][1],"start_casa.py") > 0:
                 stacklevel=k
                 # jagonzal: Take the first level that matches the requirement
                 break
+
+        myf=sys._getframe(stacklevel).f_globals
+
+        if myf.has_key(symbol) :
+            return myf[symbol]
+
+        else:
+            return None
+
     else:
         raise RuntimeError("unknown stack level %s" % level)
 
-    myf=sys._getframe(stacklevel).f_globals
 
-    if myf.has_key(label) :
-        return myf[label]
-    else:
-        return None
-
-def stack_frame_find(label="casa",level='stack') :
+def stack_frame_find(level='stack') :
+    label="_casa_top_frame_"
     a=inspect.stack()
     stacklevel=0
     if level == "stack":
@@ -61,4 +75,4 @@ def stack_frame_find(label="casa",level='stack') :
         return None
 
 def find_casa( ):
-    return stack_find( )
+    return stack_find('casa')

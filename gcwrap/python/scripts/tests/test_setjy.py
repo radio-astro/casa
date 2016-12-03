@@ -5,6 +5,7 @@ import filecmp
 import numpy
 from tasks import *
 from taskinit import *
+from casa_stack_manip import stack_frame_find
 from __main__ import default
 """
 Unit tests for task setjy.
@@ -1132,7 +1133,7 @@ class test_inputs(SetjyUnitTestBase):
         # test by temporarily setting __rethrow_casa_exceptions
         sjran=None
         try:
-            myf = sys._getframe(len(inspect.stack()) - 1).f_globals
+            myf = stack_frame_find( )
             original_rethrow_setting=myf.get('__rethrow_casa_exceptions',False)
             myf['__rethrow_casa_exceptions']=True
             print "\nRunning setjy with a non-existant vis"

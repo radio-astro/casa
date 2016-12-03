@@ -33,6 +33,14 @@ cu = casac.cu = utilstool( )
 
 from procmgr import procmgr
 
+##
+## toplevel frame marker
+##
+_casa_top_frame_ = True
+
+##
+## global casa state dictionary...
+##
 casa = { 'build': {
              'time': casadef.build_time,
              'version': cu.version_info( ),

@@ -9,7 +9,6 @@ from taskinit import *
 from parallel.parallel_data_helper import ParallelDataHelper
 import flaghelper as fh
 from update_spw import update_spwchan
-import inspect
 from callibrary import callibrary
 
 

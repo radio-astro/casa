@@ -8,11 +8,12 @@ from __main__ import default
 import exceptions
 import __builtin__
 from parallel.parallel_task_helper import ParallelTaskHelper
+from casa_stack_manip import stack_frame_find
 import flaghelper as fh
 
 # to rethrow exception 
 import inspect
-g = sys._getframe(len(inspect.stack())-1).f_globals
+g = stack_frame_find( )
 g['__rethrow_casa_exceptions'] = True
 
 # Path for data

@@ -10,6 +10,7 @@ import time
 import numpy
 import re
 import string
+from casa_stack_manip import stack_frame_find
 
 try:
     import selection_syntax
@@ -17,8 +18,7 @@ except:
     import tests.selection_syntax as selection_syntax
 
 # to rethrow exception 
-import inspect
-g = sys._getframe(len(inspect.stack())-1).f_globals
+g = stack_frame_find( )
 g['__rethrow_casa_exceptions'] = True
 from sdcalold import sdcalold
 import asap as sd
