@@ -625,7 +625,7 @@ def taskparamgui(useGlobals=True):
     import paramgui
 
     if useGlobals:
-        paramgui.setGlobals(sys._getframe(len(inspect.stack())-1).f_globals)
+        paramgui.setGlobals(stack_frame_find( ))
     else:
         paramgui.setGlobals({})
 

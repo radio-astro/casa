@@ -3,20 +3,14 @@ import os
 import string
 import inspect
 
-
 from parameter_check import *
+from casa_stack_manip import stack_frame_find
 
 def filecatalog():
 	""" Open the File Catalog GUI:
 
 	"""
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
+        myf=stack_frame_find( )
         myf['__last_task']='filecatalog'
         ###
         #Handle globals or user over-ride of arguments

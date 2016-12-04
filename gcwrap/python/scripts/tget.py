@@ -7,6 +7,7 @@ from odict import odict
 
 from parameter_check import *
 from tasksinfo import *
+from casa_stack_manip import stack_frame_find
 
 def tget(task=None, savefile=''):
 	""" Get last input values from file on disk for a specified task: 
@@ -20,13 +21,7 @@ def tget(task=None, savefile=''):
 
 	"""
         try:
-		a=inspect.stack()
-		stacklevel=0
-		for k in range(len(a)):
-			if (string.find(a[k][1], 'ipython console') > 0):
-				stacklevel=k
-				break
-		myf=sys._getframe(stacklevel).f_globals
+		myf=stack_frame_find( )
 		if task==None :
 			if myf.has_key('task') :
 				task=myf['task']
@@ -97,12 +92,7 @@ def tget(task=None, savefile=''):
                 print "tget --error: ", e
 
 def tget_defaults(param=None):
-       a=inspect.stack()
-       stacklevel=0
-       for k in range(len(a)):
-         if (string.find(a[k][1], 'ipython console') > 0):
-               stacklevel=k
-       myf=sys._getframe(stacklevel).f_globals
+       myf=stack_frame_find( )
        a=odict()
        a['task']=''
        a['savefile']=''

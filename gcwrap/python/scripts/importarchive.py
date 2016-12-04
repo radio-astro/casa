@@ -5,7 +5,7 @@ import string
 import inspect
 
 from parameter_check import *
-
+from casa_stack_manip import stack_frame_find
 
 def importarchive(
     archivefiles=None,
@@ -35,14 +35,7 @@ def importarchive(
 
 ...."""
 
-    a = inspect.stack()
-    stacklevel = 0
-    for k in range(len(a)):
-        if string.find(a[k][1], 'casapy.py') > 0:
-            stacklevel = k
-            break
-    myf = sys._getframe(len(a) - stacklevel).f_globals
-        # myf=sys._getframe(1).f_globals
+    myf = stack_frame_find( )
     vftask = myf['vftask']
     vlafiller = vftask.fill
 #    fg = myf['fg']
@@ -60,7 +53,6 @@ def importarchive(
             pass
         else:
                         # user has set it - use over-ride
-                        # sys._getframe().f_globals[key]=keyVal
             myf[key] = keyVal
 
     archivefiles = myf['archivefiles']

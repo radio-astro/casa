@@ -3,13 +3,9 @@ import inspect
 import sys
 import os
 import shutil
+from casa_stack_manip import stack_frame_find
 
-a=inspect.stack()
-stacklevel=0
-for k in range(len(a)):
-    if (string.find(a[k][1], 'ipython console') > 0):
-        stacklevel=k
-myf=sys._getframe(stacklevel).f_globals
+myf=stack_frame_find( )
 casalog=myf['casalog']
 
 #

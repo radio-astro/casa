@@ -4,6 +4,7 @@ import inspect
 from odict import odict
 
 from parameter_check import *
+from casa_stack_manip import stack_frame_find
 
 def pointcal(vis=None,model=None,caltable=None,
 	     field=None,spw=None,
@@ -73,12 +74,7 @@ def pointcal(vis=None,model=None,caltable=None,
 		default: 0.0 (scan based); example: solint=60.
 
 	"""
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-        myf=sys._getframe(stacklevel).f_globals
+        myf=stack_frame_find( )
         myf['taskname']='pointcal'
 	###fill unfilled parameters with defaults
 	myf['update_params'](func=myf['taskname'], printtext=False)
@@ -118,7 +114,6 @@ def pointcal(vis=None,model=None,caltable=None,
 		scan=''
 		msselect=''
         solint=myf['solint']
-        #sys._getframe(1).f_globals[key]=keyVal
 
         #Add type/menu/range error checking here
         arg_names=['vis','model','caltable',
@@ -166,12 +161,7 @@ def pointcal(vis=None,model=None,caltable=None,
 
 
 def pointcal_defaults(param=None):
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-        myf=sys._getframe(stacklevel).f_globals
+        myf=stack_frame_find( )
 	a=odict()
         a['vis']=''
         a['model']=''
