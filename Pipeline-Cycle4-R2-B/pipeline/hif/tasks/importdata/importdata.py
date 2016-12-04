@@ -529,12 +529,14 @@ def read_fluxes(ms, dbservice=True):
             try:
                 fluxdict = fluxservice(ms, frequency, source_name)
                 f = fluxdict['fluxdensity']
+                spix = fluxdict['spectralindex']
                 try:
                     iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
                                iquv[1], iquv[2], iquv[3])
                     if int(spw_id) in science_spw_ids:
                         #LOG.info("Source: "+source_name +" spw: "+spw_id+"    ASDM Flux: "+str(iquv[0])+"    Online catalog Flux: "+str(f) +" Jy")
                         LOG.info("Source: "+source_name +" spw: "+str(spw_id)+"    ASDM Flux: "+str(iquv[0])+"    Online catalog Flux: "+str(f) +" Jy")
+                        LOG.info("         Online catalog Spectral Index: " + str(spix))
                 except:
                     #No flux values from Source.xml
                     iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
@@ -544,6 +546,7 @@ def read_fluxes(ms, dbservice=True):
                     if (int(spw_id) in science_spw_ids):
                         #LOG.info("Source: "+source_name +" spw: "+spw_id+"    No ASDM Flux, Online Catalog Flux: "+str(f))
                         LOG.info("Source: "+source_name +" spw: "+str(spw_id)+"    No ASDM Flux, Online Catalog Flux: "+str(f))
+                        LOG.info("         Online catalog Spectral Index: " + str(spix))
                 m = domain.FluxMeasurement(spw_id, *iquv_db)
 
             except:
@@ -603,7 +606,8 @@ def fluxservice(ms, frequency, sourcename):
          - source - we will get source.name from this object
     """
     #serviceurl = 'http://bender.csrg.cl:2121/bfs-0.2/ssap'
-    serviceurl =  'http://asa-test.alma.cl/bfs/'
+    #serviceurl =  'http://asa-test.alma.cl/bfs/'
+    serviceurl = 'https://almascience.eso.org/sc/flux'
 
     qt = casatools.quanta
     mt = casatools.measures

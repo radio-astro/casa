@@ -56,7 +56,7 @@
     
     <param type="bool" name="dbservice">
 	<description>Use the online flux catalog</description>
-	<value>False</value>
+	<value>True</value>
     </param>
 
     <param type="string" name="createmms">

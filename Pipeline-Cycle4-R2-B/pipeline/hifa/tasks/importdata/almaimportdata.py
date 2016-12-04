@@ -15,7 +15,7 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
     asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
     bdfflags  = basetask.property_with_default('bdfflags', True)
     lazy  = basetask.property_with_default('lazy', False)
-    dbservice = basetask.property_with_default('dbservice', False)
+    dbservice = basetask.property_with_default('dbservice', True)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
     clearcals = basetask.property_with_default('clearcals', True)
 
