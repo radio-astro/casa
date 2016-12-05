@@ -16,70 +16,12 @@ except ImportError, e:
     print "sys.path =", "\n\t".join(sys.path)
 
 from asap_init import *
-
-
-homedir = os.getenv('HOME')
-if homedir == None :
-   print "Environment variable HOME is not set, please set it"
-   sys.exit(1)
-
-##
-## the authoritative verison comes from casac.utils, with misc
-## build details (wich may vary) come from casadef...
-##
-import casadef
-utilstool = casac.utils
-cu = casac.cu = utilstool( )
-
-from procmgr import procmgr
+from casa_system import casa
 
 ##
 ## toplevel frame marker
 ##
 _casa_top_frame_ = True
-
-##
-## global casa state dictionary...
-##
-casa = { 'build': {
-             'time': casadef.build_time,
-             'version': cu.version_info( ),
-             'number': casadef.subversion_revision
-         },
-         'source': {
-             'url': casadef.subversion_url,
-             'revision': casadef.subversion_revision
-         },
-         'helpers': {
-             'crashPoster' : 'CrashReportPoster',
-             'logger': 'casalogger',
-             'viewer': 'casaviewer',
-             'info': None,
-             'dbus': None,
-             'ipcontroller': None,
-             'ipengine': None
-         },
-         'dirs': {
-             'rc': homedir + '/.casa',
-             'data': None,
-             'recipes': None,
-             'root': None,
-             'python': None,
-             'pipeline': None,
-             'xml': None
-         },
-         'flags': { },
-         'files': {
-             'logfile': os.getcwd( ) + '/casa-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
-         },
-         'state' : {
-             'init_version': 1,
-             'startup': True,
-             'unwritable': set( )
-         },
-         'procmgr': procmgr( ),
-       }
-
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## set up casa root

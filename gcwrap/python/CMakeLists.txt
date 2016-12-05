@@ -32,6 +32,7 @@ scripts/casa_stack_manip.py
 scripts/casa_shutdown.py
 scripts/casa_builtin.py
 scripts/start_casa.py
+scripts/casa_system.py
 scripts/init_system.py
 scripts/init_crashrpt.py
 scripts/init_mpi.py
