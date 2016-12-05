@@ -247,12 +247,12 @@ template <class T> void Image2DConvolver<T>::_convolve(
     }
     imageOut->setUnits(brightnessUnitOut);
     imageOut->setImageInfo(iiOut);
-    _logBeamInfo(imageOut, imageInfo, "Original " + this->_getImage()->name());
-    _logBeamInfo(imageOut, iiOut, "Output " + this->_getOutname());
+    _logBeamInfo(imageInfo, "Original " + this->_getImage()->name());
+    _logBeamInfo(iiOut, "Output " + this->_getOutname());
 }
 
 template <class T> void Image2DConvolver<T>::_logBeamInfo(
-    SPIIT image, const ImageInfo& imageInfo, const String& desc
+    const ImageInfo& imageInfo, const String& desc
 ) const {
     ostringstream oss;
     const auto& beamSet = imageInfo.getBeamSet();

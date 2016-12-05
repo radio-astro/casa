@@ -222,7 +222,7 @@ private:
     ) const;
 
     void _logBeamInfo(
-        SPIIT image, const ImageInfo& imageInfo, const String& desc
+        const ImageInfo& imageInfo, const String& desc
     ) const;
 };
 
