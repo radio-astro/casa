@@ -1013,6 +1013,24 @@ finally:
             
         return out_manifest_file
 
+    def _fitsfile(self, products_dir, imagename):
+
+        """Strip off stage and iter information to generate
+           FITS file name."""
+
+        # Need to remove stage / iter information
+        #fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', imagename)
+        fitsname = re.sub('\.s\d+[_]\d+\.', '.', imagename)
+        fitsname = re.sub('\.iter\d+\.image', '', fitsname)
+        fitsname = re.sub('\.iter\d+\.image.pbcor', '.pbcor', fitsname)
+        fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
+        # .pb must be tried after .pbcor.image !
+        fitsname = re.sub('\.iter\d+\.pb', '.pb', fitsname)
+        fitsfile = os.path.join (products_dir,
+                                 os.path.basename(fitsname) + '.fits')
+
+        return fitsfile
+
     def _export_images (self, context, calimages, intents, images,
                         products_dir):
 
@@ -1029,32 +1047,54 @@ finally:
                 cleanlist = context.calimlist.get_imlist()
             else:
                 cleanlist = context.sciimlist.get_imlist()
-            for image in cleanlist:
+            for image_number, image in enumerate(cleanlist):
+                # We need to store the image
+                cleanlist[image_number]['fitsfiles'] = []
                 # Image name probably includes path
                 if image['sourcetype'] in intents:
                     if (image['multiterm']):
                         for nt in xrange(image['multiterm']):
-                            images_list.append(image['imagename'].replace('.image', '.image.tt%d' % (nt)))
+                            imagename = image['imagename'].replace('.image', '.image.tt%d' % (nt))
+                            images_list.append(imagename)
+                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
                         if (image['imagename'].find('.pbcor') != -1):
-                            images_list.append(image['imagename'].replace('.image.pbcor', '.alpha'))
-                            images_list.append('%s.error' % (image['imagename'].replace('.image.pbcor', '.alpha')))
+                            imagename = image['imagename'].replace('.image.pbcor', '.alpha')
+                            images_list.append(imagename)
+                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
+                            imagename = '%s.error' % (image['imagename'].replace('.image.pbcor', '.alpha'))
+                            images_list.append(imagename)
+                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
                         else:
-                            images_list.append(image['imagename'].replace('.image', '.alpha'))
-                            images_list.append('%s.error' % (image['imagename'].replace('.image', '.alpha')))
+                            imagename = image['imagename'].replace('.image', '.alpha')
+                            images_list.append(imagename)
+                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
+                            imagename = '%s.error' % (image['imagename'].replace('.image', '.alpha'))
+                            images_list.append(imagename)
+                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
                     else:
-                        images_list.append(image['imagename'])
+                        imagename = image['imagename']
+                        images_list.append(imagename)
+                        cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
 
                     # Add PB
                     if (image['imagename'].find('.pbcor') != -1):
                         if (image['multiterm']):
-                            images_list.append(image['imagename'].replace('.image.pbcor', '.pb.tt0'))
+                            imagename = image['imagename'].replace('.image.pbcor', '.pb.tt0')
+                            images_list.append(imagename)
+                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
                         else:
-                            images_list.append(image['imagename'].replace('.image.pbcor', '.pb'))
+                            imagename = image['imagename'].replace('.image.pbcor', '.pb')
+                            images_list.append(imagename)
+                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
                     else:
                         if (image['multiterm']):
-                            images_list.append(image['imagename'].replace('.image', '.pb.tt0'))
+                            imagename = image['imagename'].replace('.image', '.pb.tt0')
+                            images_list.append(imagename)
+                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
                         else:
-                            images_list.append(image['imagename'].replace('.image', '.pb'))
+                            imagename = image['imagename'].replace('.image', '.pb')
+                            images_list.append(imagename)
+                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
         else:
             # Assume only the root image name was given.
             cleanlib = imagelibrary.ImageLibrary()
@@ -1075,21 +1115,15 @@ finally:
                 else:
                     images_list.append(image)
             cleanlist = cleanlib.get_imlist()
+            # Need to add the FITS names
+            for i in xrange(len(cleanlist)):
+                cleanlist[i]['fitsfiles'] = [self._fitsfile(products_dir, images_list[i])]
 
         # Convert to FITS.
         fits_list = []
         for image in images_list:
             print 'Working on', image
-            # Need to remove stage / iter information
-            #fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', image)
-            fitsname = re.sub('\.s\d+[_]\d+\.', '.', image)
-            fitsname = re.sub('\.iter\d+\.image', '', fitsname)
-            fitsname = re.sub('\.iter\d+\.image.pbcor', '.pbcor', fitsname)
-            fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
-            # .pb must be tried after .pbcor.image !
-            fitsname = re.sub('\.iter\d+\.pb', '.pb', fitsname)
-            fitsfile = os.path.join (products_dir,
-                                     os.path.basename(fitsname) + '.fits')
+            fitsfile = self._fitsfile(products_dir, image)
             LOG.info('Saving final image %s to FITS file %s' % \
                      (os.path.basename(image), os.path.basename(fitsfile)))
             if not self._executor._dry_run:

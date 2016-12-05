@@ -117,13 +117,15 @@ import os
    </thead>
    <tbody>
 %for r in result:
-    %for calimage, fitsfile in zip(r.calimages[0], r.calimages[1]):
-      <tr>
-          <td>${calimage['sourcename']}</td>
-          <td>${calimage['sourcetype']}</td>
-          <td>${calimage['spwlist']}</td>
-          <td>${os.path.basename(fitsfile)}</td>
-      </tr>
+    %for calimage in r.calimages[0]:
+        %for fitsfile in calimage['fitsfiles']:
+          <tr>
+              <td>${calimage['sourcename']}</td>
+              <td>${calimage['sourcetype']}</td>
+              <td>${calimage['spwlist']}</td>
+              <td>${os.path.basename(fitsfile)}</td>
+          </tr>
+        %endfor
     %endfor
 %endfor
    </tbody>
@@ -144,13 +146,15 @@ import os
    </thead>
    <tbody>
 %for r in result:
-    %for targetimage, fitsfile in zip(r.targetimages[0], r.targetimages[1]):
-      <tr>
-          <td>${targetimage['sourcename']}</td>
-          <td>${targetimage['sourcetype']}</td>
-          <td>${targetimage['spwlist']}</td>
-          <td>${os.path.basename(fitsfile)}</td>
-      </tr>
+    %for targetimage in r.targetimages[0]:
+        %for fitsfile in targetimage['fitsfiles']:
+          <tr>
+              <td>${targetimage['sourcename']}</td>
+              <td>${targetimage['sourcetype']}</td>
+              <td>${targetimage['spwlist']}</td>
+              <td>${os.path.basename(fitsfile)}</td>
+          </tr>
+        %endfor
     %endfor
 %endfor
    </tbody>
