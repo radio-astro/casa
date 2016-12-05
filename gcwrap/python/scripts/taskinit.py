@@ -56,6 +56,25 @@ if casa.has_key('state') and casa['state'].has_key('init_version') and casa['sta
     at = stack_find("at")
     msmdtool = stack_find("msmdtool")
 
+    coordsystool = stack_find("coordsystool")
+    cptool = stack_find("cptool")
+    cstool = stack_find("cstool")
+    dctool = stack_find("dctool")
+    fitool = stack_find("fitool")
+    fntool = stack_find("fntool")
+    iatool = stack_find("iatool")
+    imdtool = stack_find("imdtool")
+    lmtool = stack_find("lmtool")
+    mptool = stack_find("mptool")
+    pmtool = stack_find("pmtool")
+    potool = stack_find("potool")
+    rgtool = stack_find("rgtool")
+    sdmstool = stack_find("sdmstool")
+    sltool = stack_find("sltool")
+    tptool = stack_find("tptool")
+    viewertool = stack_find("viewertool")
+    vptool = stack_find("vptool")
+
 else:
     from casac import *
     import viewertool

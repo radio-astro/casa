@@ -79,7 +79,7 @@ from mpi4casa.MPIEnvironment import MPIEnvironment
 processor_origin = MPIEnvironment.processor_origin
 casalog.processorOrigin(processor_origin)
 
-casalog.showconsole(MPIEnvironment.log_to_console or casa['flags'].log2term)
+casalog.showconsole((MPIEnvironment.is_mpi_enabled and MPIEnvironment.log_to_console) or casa['flags'].log2term)
 
 ###
 ### For reasons unknown, setglobal causes the global logger to steal the
