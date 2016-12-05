@@ -88,10 +88,12 @@ protected:
 			      DONOISE,
 			      gain,tsys,
 			      DONORM,
-			      POLBASIS,DOAC);
+			      POLBASIS,DOAC,Complex(0.0f),
+			      true);  // poln turned on
 
     s2=SimpleSimVi2Parameters(NFLD,NSCAN,NSPW,NANT,NCORR,
-			      ntpf,nchan);
+			      ntpf,nchan,Complex(0.0f),
+			      true);  // poln turned on
 
     fp=2.*FLT_EPSILON;
 
@@ -202,7 +204,6 @@ TEST_F( SimpleSimVi2Test , SimpleSimVi2Parameters_NonTrivial2 ) {
   //ASSERT_STREQ(s0.date0_,DATE0);
   ASSERT_EQ(DT,s2.dt_);
 
-
   ASSERT_FALSE(s0.doNoise_);
 
   ASSERT_EQ(uInt(4),s0.stokes_.nelements());
@@ -300,6 +301,7 @@ TEST_F( SimpleSimVi2Test , SimpleSimVi2_NonTrivial1 ) {
 
   ASSERT_EQ(FREQ+DF/2,vb->getFrequencies(0)(0));  // row=0, chan=0
   
+  Double t0(-1.0);
   Int nchunk(0),niter(0),eniter(0);
   for (vi->originChunks();vi->moreChunks();vi->nextChunk()) {
     
@@ -329,7 +331,6 @@ TEST_F( SimpleSimVi2Test , SimpleSimVi2_NonTrivial1 ) {
 
       // Test stats of residual (implicitly tests Stokes I level)
       Cube<Complex> resid(vb->visCube()-vb->visCubeModel());
-
       Float rmean=mean(real(resid)), imean=mean(imag(resid));
       Float rerr=stddev(real(resid)), ierr=stddev(imag(resid));
       Float ewt=2*DF*DT;
@@ -343,6 +344,18 @@ TEST_F( SimpleSimVi2Test , SimpleSimVi2_NonTrivial1 ) {
       ASSERT_GT(3.0f,imean/eerrN);  // 3 sigma
       ASSERT_GT(0.1,rerr);  // 10%
       ASSERT_GT(0.1,ierr);  // 10%
+
+
+      // Check rudimentary feedPa  (0.05*dt)
+      Double t=vb->time()(0);
+      Vector<Float> fpa;
+      fpa.reference(vb->feedPa(t));
+      if (t0<0.0)
+	t0=floor(t);
+      fpa-=Float((t-t0)*0.05);
+      //cout.precision(12);
+      //cout << "t=" << t << " vb->feed_pa() = " << fpa<< endl;
+      ASSERT_TRUE(allNearAbs(fpa,0.0f,1e-6));
 
       // Formal weights
       Cube<Float> wtsp(vb->weightSpectrum());

@@ -80,7 +80,8 @@ public:
   // Simple, shape-oriented ctor
   SimpleSimVi2Parameters(casacore::Int nField,casacore::Int nScan, casacore::Int nSpw, casacore::Int nAnt, casacore::Int nCorr,
 			 const casacore::Vector<casacore::Int>& nTimePerField, const casacore::Vector<casacore::Int>& nChan,
-			 casacore::Complex c0=casacore::Complex(0.0f));
+			 casacore::Complex c0=casacore::Complex(0.0f),
+			 casacore::Bool doParang=false);
 
   // Full control
   SimpleSimVi2Parameters(casacore::Int nField,casacore::Int nScan,casacore::Int nSpw,casacore::Int nAnt,casacore::Int nCorr,
@@ -92,7 +93,8 @@ public:
 			 const casacore::Matrix<casacore::Float>& gain, const casacore::Matrix<casacore::Float>& tsys, 
 			 casacore::Bool doNorm=true,
 			 casacore::String polBasis="circ", casacore::Bool doAC=false,
-			 casacore::Complex c0 = casacore::Complex(0.0f));
+			 casacore::Complex c0 = casacore::Complex(0.0f),
+			 casacore::Bool doParang=false);
   
   SimpleSimVi2Parameters(const SimpleSimVi2Parameters& other);
   SimpleSimVi2Parameters& operator=(const SimpleSimVi2Parameters& other);
@@ -113,6 +115,7 @@ public:
   casacore::String polBasis_;
   casacore::Bool doAC_;
   casacore::Complex c0_;
+  casacore::Bool doParang_;  // Simple linear-in-time, for now
 
   // Return frequencies for specified spw
   casacore::Vector<casacore::Double> freqs(casacore::Int spw) const;
@@ -269,7 +272,7 @@ public:
   virtual casacore::Bool allBeamOffsetsZero () const { SSVi2NotPossible() };
   virtual casacore::MDirection azel0 (casacore::Double) const { SSVi2NotPossible() };
   virtual const casacore::Vector<casacore::MDirection> & azel (casacore::Double) const { SSVi2NotPossible() };
-  virtual const casacore::Vector<casacore::Float> & feed_pa (casacore::Double) const { SSVi2NotPossible() };
+  virtual const casacore::Vector<casacore::Float> & feed_pa (casacore::Double t) const; 
   virtual const casacore::Cube<casacore::RigidVector<casacore::Double, 2> > & getBeamOffsets () const { SSVi2NotPossible() };
   virtual casacore::Double hourang (casacore::Double) const { SSVi2NotPossible() };
   virtual const casacore::Float & parang0 (casacore::Double) const { SSVi2NotPossible() };
@@ -364,6 +367,9 @@ private:
   // Generate noise on data
   void addNoise(casacore::Cube<casacore::Complex>& vis) const;
 
+  // Corrupt by (ad hoc) parang factors
+  void corruptByParang(casacore::Cube<casacore::Complex>& vis) const;
+
   // casacore::Input parameters
   const SimpleSimVi2Parameters pars_;
   /*
@@ -384,6 +390,7 @@ private:
   casacore::Vector<casacore::Float> wt0_;
   casacore::Matrix<casacore::Complex> vis0_;
 
+
   // Counters
   casacore::Int iChunk_,iSubChunk_,iRow0_;
   casacore::Int iScan_;
@@ -402,6 +409,9 @@ private:
 
   // Trivial (for now) MDirection, so phaseCenter() has something to return
   casacore::MDirection phaseCenter_;
+
+  // Trivial (for now) parang
+  mutable casacore::Vector<casacore::Float> feedpa_;
 
 };
 
