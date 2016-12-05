@@ -1077,20 +1077,16 @@ finally:
                         if (image['multiterm']):
                             imagename = image['imagename'].replace('.image.pbcor', '.pb.tt0')
                             images_list.append(imagename)
-                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
                         else:
                             imagename = image['imagename'].replace('.image.pbcor', '.pb')
                             images_list.append(imagename)
-                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
                     else:
                         if (image['multiterm']):
                             imagename = image['imagename'].replace('.image', '.pb.tt0')
                             images_list.append(imagename)
-                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
                         else:
                             imagename = image['imagename'].replace('.image', '.pb')
                             images_list.append(imagename)
-                            cleanlist[image_number]['fitsfiles'].append(self._fitsfile(products_dir, imagename))
         else:
             # Assume only the root image name was given.
             cleanlib = imagelibrary.ImageLibrary()
