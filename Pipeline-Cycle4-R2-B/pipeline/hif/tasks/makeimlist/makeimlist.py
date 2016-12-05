@@ -142,12 +142,15 @@ class MakeImListInputs(basetask.StandardInputs):
                     self._hm_imsize = map(int, temp)
             else:
                 self._hm_imsize = []
+        elif type(self._hm_imsize) is types.IntType:
+            self._hm_imsize = [self._hm_imsize, self._hm_imsize]
 
-        # Convert to single string for '<nummber>pb' option
+        # Convert to single string for '<number>pb' option
         temp = None
         for item in self._hm_imsize:
-            if item.find('pb') != -1:
-                temp = item
+            if type(item) is types.StringType:
+                if item.find('pb') != -1:
+                    temp = item
         if temp:
             self._hm_imsize = temp
 
