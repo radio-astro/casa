@@ -808,7 +808,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
 	}
 
 	display = (char*) malloc( sizeof(char) * 50 );
-	sprintf( display, "DISPLAY=localhost:%d.0", display_num );
+	sprintf( display, "DISPLAY=:%d.0", display_num );
 	sprintf( authority, "XAUTHORITY=%s/.casa/xauthority", home );
 
 #endif
