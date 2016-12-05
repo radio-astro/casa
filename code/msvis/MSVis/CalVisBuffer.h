@@ -114,25 +114,25 @@ public:
   //  const casacore::Cube<casacore::Bool>& infocusFlagCube() const {return this->infocusFlagCube();}
 
   casacore::Matrix<casacore::Bool>& infocusFlag() { return infocusFlag_p; }
-  const casacore::Matrix<casacore::Bool>& infocusFlag() const {return this->infocusFlag();}
+  const casacore::Matrix<casacore::Bool>& infocusFlag() const {return infocusFlag_p;}
 
   casacore::Cube<casacore::Complex>& infocusVisCube() { return infocusVisCube_p; }
-  const casacore::Cube<casacore::Complex>& infocusVisCube() const {return this->infocusVisCube();}
+  const casacore::Cube<casacore::Complex>& infocusVisCube() const {return infocusVisCube_p;}
 
   casacore::Cube<casacore::Complex>& infocusModelVisCube() { return infocusModelVisCube_p; }
-  const casacore::Cube<casacore::Complex>& infocusModelVisCube() const {return this->infocusModelVisCube();}
+  const casacore::Cube<casacore::Complex>& infocusModelVisCube() const {return infocusModelVisCube_p;}
 
   // Workspace for the residual visibilities
   casacore::Cube<casacore::Complex>& residuals() { return residuals_p; }
-  const casacore::Cube<casacore::Complex>& residuals() const {return this->residuals();}
+  const casacore::Cube<casacore::Complex>& residuals() const {return residuals_p;}
 
   // Workspace for flags of the residuals
   casacore::Matrix<casacore::Bool>& residFlag() { return residFlag_p; }
-  const casacore::Matrix<casacore::Bool>& residFlag() const {return this->residFlag();}
+  const casacore::Matrix<casacore::Bool>& residFlag() const {return residFlag_p;}
 
   // Workspace for the differentiated residuals
   casacore::Array<casacore::Complex>& diffResiduals() { return diffResiduals_p; }
-  const casacore::Array<casacore::Complex>& diffResiduals() const {return this->diffResiduals();}
+  const casacore::Array<casacore::Complex>& diffResiduals() const {return diffResiduals_p;}
 
   //</group>
 
