@@ -259,6 +259,7 @@ ClarkCleanLatModel::ClarkCleanLatModel(Lattice<Float> & model,
 
 
 ClarkCleanLatModel::~ClarkCleanLatModel() {
+  if(itsResidualPtr != NULL){delete itsResidualPtr; itsResidualPtr=NULL;}
 }
 
 

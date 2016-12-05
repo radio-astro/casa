@@ -706,15 +706,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True; // do something more intelligent here.
   }
 
-  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > im )
+  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > &im )
   {
     //im->flush();
     im->clearCache();
     im->unlock();
     im->tempClose();
+    im = NULL;  // This was added to allow modification by modules independently
   }
 
-  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Complex> > im )
+  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Complex> > &im )
   {
     im->tempClose();
   }
@@ -918,6 +919,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SHARED_PTR<ImageInterface<Float> > SIImageStore::residual(uInt /*nterm*/)
   {
     accessImage( itsResidual, itsParentResidual, imageExts(RESIDUAL) );
+    //    cout << "read residual : " << itsResidual << endl;
     return itsResidual;
   }
   SHARED_PTR<ImageInterface<Float> > SIImageStore::weight(uInt /*nterm*/)
@@ -1472,8 +1474,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
         if((residual()->getDefaultMask()=="") && hasPB()  &&  pblimit >=0.0 )
        {copyMask(pb(),residual());}
 
-	///////  CAS-9371 needs this, but removeMask gives an error unless you exit from casa before restarting tclean with negative pblimit
-	///// if( pblimit <0.0 && (residual()->getDefaultMask()).matches("mask0") ) removeMask( residual() );
+	if( pblimit <0.0 && (residual()->getDefaultMask()).matches("mask0") ) removeMask( residual() );
 
   }
   
@@ -1898,8 +1899,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	//MSK//	
 	if( hasPB() )
 	  {
-	    ///////  CAS-9371 needs this, but removeMask gives an error unless you exit from casa before restarting tclean with negative pblimit
-	    //////if( (image(term)->getDefaultMask()).matches("mask0") ) removeMask( image(term) );
+	    if( (image(term)->getDefaultMask()).matches("mask0") ) removeMask( image(term) );
 	    copyMask(residual(term),image(term));
 	  }
 
