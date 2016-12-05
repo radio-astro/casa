@@ -75,6 +75,8 @@ def run():
         # Get CASA environment dictionary
         global casa
         casa = request['casa']
+        global _casa_top_frame_
+        _casa_top_frame_ = True
         
         # Re-set log file
         if request['logmode'] == 'separated' or request['logmode'] == 'redirect':
