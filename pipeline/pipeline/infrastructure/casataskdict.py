@@ -14,6 +14,8 @@ CasaTaskDict = {
     'h_restoredata': 'RestoreData',
     'h_tsyscal': 'Tsyscal',
     # Interferometry tasks ---------------------------------------------------
+    'hif_circfeedpolcal': 'Circfeedpolcal',
+    'hif_linfeedpolcal': 'Linfeedpolcal',
     'hif_antpos': 'Antpos',
     'hif_atmflag': 'Atmflag',
     'hif_applycal': 'IFApplycal',
@@ -110,6 +112,7 @@ classToCASATask = {
     hifa_tasks.Wvrgcalflag            : 'hifa_wvrgcalflag',
     # Interferometry tasks ---------------------------------------------------
     hif_tasks.Antpos                  : 'hif_antpos',
+    hif_tasks.Circfeedpolcal          : 'hif_circfeedpolcal',
     hif_tasks.IFApplycal              : 'hif_applycal',    
     hif_tasks.Atmflag                 : 'hif_atmflag',
     hif_tasks.Bandpass                : 'hif_bandpass',
@@ -117,6 +120,7 @@ classToCASATask = {
     hif_tasks.CheckProductSize        : 'hif_checkproductsize',
     hif_tasks.FindCont                : 'hif_findcont',
     hif_tasks.Flagcorrected           : 'hif_flagcorrected',
+    hif_tasks.Linfeedpolcal           : 'hif_linfeedpolcal',
     hif_tasks.Rawflagchans            : 'hif_rawflagchans',
     hif_tasks.Fluxcal                 : 'hif_fluxcal',
     hif_tasks.Fluxscale               : 'hif_fluxscale',

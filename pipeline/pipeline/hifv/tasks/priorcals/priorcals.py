@@ -18,6 +18,7 @@ from pipeline.h.heuristics import fieldnames
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 
 from pipeline.hifv.tasks.gaincurves import GainCurves
@@ -25,6 +26,7 @@ from pipeline.hifv.tasks.opcal import Opcal
 from pipeline.hifv.tasks.rqcal import Rqcal
 from pipeline.hifv.tasks.swpowcal import Swpowcal
 from pipeline.hif.tasks.antpos import Antpos
+from recipes import tec_maps
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -303,3 +305,19 @@ class Priorcals(basetask.StandardTaskTemplate):
             LOG.info("No offsets found. No caltable created.")
 
         return result, antcorrect
+
+    def _do_tec_maps(self):
+
+        #tec_image, tec_rms_image = tec_maps.create('vlass3C48.ms')
+        tec_maps.create(vis=self.vis, doplot=True, imname='iono')
+        # gencal_job = casa_tasks.gencal(**gencal_args)
+        gencal_job = casa_tasks.gencal(vis=self.vis, caltable='file.tec', caltype='tecim', infile='iono.IGS_TEC.im')
+        self._executor.execute(gencal_job)
+
+        '''
+        gencal(vis='vlass3C48.ms', caltable='vlass3C48.tec', caltype='tecim', infile=tec_image)
+        plotcal(caltable='vlass3C48.tec', yaxis='tec', figfile='vlass3C48_TEC-LOS.png', showgui=F)
+        tec_image, tec_rms_image = tec_maps.create('vlass3C286.ms')
+        gencal(vis='vlass3C286.ms', caltable='vlass3C286.tec', caltype='tecim', infile=tec_image)
+        plotcal(caltable='vlass3C286.tec', yaxis='tec', figfile='vlass3C286_TEC-LOS.png', showgui=F)
+        '''

@@ -5,7 +5,7 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
-from recipes import tec_maps
+
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -51,16 +51,34 @@ class Polarization(basetask.StandardTaskTemplate):
     def analyse(self, results):
         return results
 
-    def _do_somethingpol(self):
+    def _do_polcal(self):
 
-        task = casa_tasks.polcal(vis=self.inputs.vis, caltable='tempcal.pol')
+        '''
+        From Chris Hales script
+
+        polcal(vis='vlass3C48.ms', caltable='vlass3C48.D_1', field='0', refant='ea20', poltype='Df+QU',
+               gaintable=['vlass3C48.antpos', 'vlass3C48.K', 'vlass3C48.B', 'vlass3C48.Gp', 'vlass3C48.Ga',
+                          'vlass3C48.Kx_1'], gainfield=['', '', '', '0', '0', ''], spwmap=[[], spwmapK, [], [], [], []])
+        polcal(vis='vlass3C286.ms', caltable='vlass3C286.D_1', field='1', refant='ea20', poltype='Df+QU',
+               gaintable=['vlass3C286.antpos', 'vlass3C286.K', 'vlass3C286.B', 'vlass3C286.Gp', 'vlass3C286.Ga',
+                          'vlass3C286.Kx_1'], gainfield=['', '', '', '1', '1', ''],
+               spwmap=[[], spwmapK, [], [], [], []])
+        '''
+
+        spwmapK = [0, 0, 0]
+        spwmapGinit = [1, 1, 1]
+
+        task_args = {'vis': self.inputs.vis,
+                              'caltable': caltable,
+                              'field': '0',
+                              'refant': RefAntOutput[0].lower(),
+                              'gaintable': GainTables,
+                              'gainfield': ['', '', '', '0', '0', ''],
+                              'spwmap': [[], spwmapK, [], [], [], []],
+                              'parang': True}
+
+        task = casa_tasks.polcal(**task_args)
 
         return self._executor.execute(task)
 
-    def _do_tec_maps(self):
-
-        tec_maps.create(vis=self.vis, doplot=True, imname='iono')
-        # gencal_job = casa_tasks.gencal(**gencal_args)
-        gencal_job = casa_tasks.gencal(vis=self.vis, caltable='tec.cal', caltype='tecim', infile='iono.IGS_TEC.im')
-        self._executor.execute(gencal_job)
 
