@@ -564,8 +564,8 @@ class GainflaggerView(object):
                     gainflag = row.get('FLAG')[0][0]
                     # Only store non-flagged data
                     if not gainflag:
-                        data_per_ant[ant].append(gain)
-                        data_all_ant.append(gain)
+                        data_per_ant[ant].append(np.abs(gain))
+                        data_all_ant.append(np.abs(gain))
                         # At least one good datapoint was found for this
                         # antenna, so set flag to 0.
                         flag[ant] = 0
