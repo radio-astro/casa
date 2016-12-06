@@ -342,6 +342,9 @@ private:
   ClarkCleanProgress* itsProgressPtr;
   casacore::Bool itsJustStarting;
   casacore::Bool itsWarnFlag;
+
+  casacore::Bool itsLocalResTL;
+
 };
 
 
