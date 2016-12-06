@@ -116,6 +116,13 @@ def tclean(
     nmask,#=0,
     autoadjust,#=False
 
+    ##### automask by multithresh
+    sidelobethreshold,#=5.0,
+    noisethreshold,#=3.0,
+    lownoisethreshold,#=3.0,
+    smoothfactor,#=1.0,
+    minbeamfrac,#=0.3, 
+    cutthreshold,#=0.01,
 
     ## Misc
 
@@ -135,7 +142,6 @@ def tclean(
     #####################################################
     
     ### Move these checks elsewhere ? 
-
     if specmode=='mfs' and nterms==1 and deconvolver == "mtmfs":
         casalog.post( "The MTMFS deconvolution algorithm (deconvolver='mtmfs') needs nterms>1.Please set nterms=2 (or more). ", "WARN", "task_tclean" )
         return
@@ -242,6 +248,14 @@ def tclean(
         nmask=nmask,
         autoadjust=autoadjust,
 
+        ### automask multithresh params
+        sidelobethreshold=sidelobethreshold,
+        noisethreshold=noisethreshold,
+        lownoisethreshold=lownoisethreshold,
+        smoothfactor=smoothfactor,
+        minbeamfrac=minbeamfrac,
+        cutthreshold=cutthreshold,
+ 
         savemodel=savemodel
         )
     

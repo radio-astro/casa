@@ -1495,6 +1495,13 @@ class ImagerParameters():
                  nmask=0,
                  autoadjust=False,
 
+                 sidelobethreshold=5.0,
+                 noisethreshold=3.0,
+                 lownoisethreshold=3.0,
+                 smoothfactor=1.0,
+                 minbeamfrac=0.3,
+                 cutthreshold=0.01,
+
 #                 usescratch=True,
 #                 readonly=True,
                  savemodel="none",
@@ -1550,8 +1557,11 @@ class ImagerParameters():
         ######### Deconvolution
         self.alldecpars = { self.defaultKey: { 'id':0, 'deconvolver':deconvolver, 'nterms':nterms, 
                                     'scales':scales, 'scalebias':scalebias, 'restoringbeam':restoringbeam, 'usemask':usemask, 
-                                    'mask':mask, 'pbmask':pbmask, 'maskthreshold':maskthreshold, 
-                                    'maskresolution':maskresolution,'nmask':nmask,'autoadjust':autoadjust,
+                                    'mask':mask, 'pbmask':pbmask, 'maskthreshold':maskthreshold,
+                                    'maskresolution':maskresolution, 'nmask':nmask,'autoadjust':autoadjust,
+                                    'sidelobethreshold':sidelobethreshold, 'noisethreshold':noisethreshold,
+                                    'lownoisethreshold':lownoisethreshold, 'smoothfactor':smoothfactor,
+                                    'minbeamfrac':minbeamfrac, 'cutthreshold':cutthreshold,
                                     'interactive':interactive, 'startmodel':startmodel} }
 
         ######### Iteration control. 

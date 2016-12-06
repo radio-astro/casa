@@ -100,6 +100,7 @@ public:
   void makeAutoMask(SHARED_PTR<SIImageStore> imstore);
   // Top level autoMask interface...
   void autoMask(SHARED_PTR<SIImageStore> imstore, 
+                const Int iterdone,
                 const String& alg="",
                 const String& threshold="",
                 const Float& fracpeak=0.0,
@@ -107,8 +108,14 @@ public:
                 const Float& resbybeam=0.0,
                 const Int nmask=0, 
                 const Bool autoadjust=False,
+                const Float& sidelobethreshold=0.0,
+                const Float& noisethreshold=0.0,
+                const Float& lownoisethreshold=0.0,
+                const Float& cutthreshold=0.0,
+                const Float& smoothfactor=0.0,
+                const Float& minbeamfrac=0.0,
                 Float pblimit=0.0);
-  // automask algorithms...  
+  // automask by threshold with binning before applying it
   void autoMaskByThreshold (ImageInterface<Float>& mask,
                            const ImageInterface<Float>& res, 
                            const ImageInterface<Float>& psf, 
@@ -121,7 +128,7 @@ public:
                            const Int nmask=0, 
                            const Bool autoadjust=False);
 
-  // no binning version
+  // automask by threshold : no binning version
   void autoMaskByThreshold2 (ImageInterface<Float>& mask,
                            const ImageInterface<Float>& res, 
                            const ImageInterface<Float>& psf, 
@@ -132,7 +139,28 @@ public:
                            const Record& theStats,
                            const Float& sigma=3.0,
                            const Int nmask=0);
+
+  // implementation of Amanda's automasking algorithm using multiple thresholds
+  void autoMaskByMultiThreshold(ImageInterface<Float>& mask,
+                                          const ImageInterface<Float>& res,
+                                          const ImageInterface<Float>& psf,
+                                          const Record& stats,
+                                          const Int iterdone,
+                                          const Float& sidelobeLevel=0.0,
+                                          const Float& sidelobeThresholdFactor=3.0,
+                                          const Float& noiseThresholdFactor=3.0,
+                                          const Float& lowNoiseThresholdFactor=2.0,
+                                          const Float& cutThreshold=0.01,
+                                          const Float& smoothFactor=1.0,
+                                          const Float& minBeamFrac=-1.0);
                            
+  // Calculate statistics on a residual image with additional region and LEL mask specificaations
+  Record calcImageStatistics(ImageInterface<Float>& res,
+                                       ImageInterface<Float>& prevmask,
+                                       String& lelmask,
+                                       Record* regionPtr,
+                                       const Bool robust);
+
   SHARED_PTR<ImageInterface<Float> > makeMaskFromBinnedImage (
                                const ImageInterface<Float>& image, 
                                const Int nx, 
@@ -143,16 +171,53 @@ public:
                                const Bool autoadjust,
                                Double thresh=0.0);
 
+  // Convolve mask image with nx pixel by ny pixel
   SHARED_PTR<ImageInterface<Float> > convolveMask(const ImageInterface<Float>& inmask, 
                                                   Int nxpix, Int nypix);
 
+  // Convolve mask image by a gaussian
+  SHARED_PTR<ImageInterface<Float> > convolveMask(const ImageInterface<Float>& inmask,
+                                                  const GaussianBeam& beam);
+  //
+  // Prune the mask regions found
   SHARED_PTR<ImageInterface<Float> >  pruneRegions(const ImageInterface<Float>& image, 
                                                    Double& thresh, 
                                                    Int nmask=0, 
                                                    Int npix=0);
 
+  // Prune the mask regions per spectral plane
+  SHARED_PTR<ImageInterface<Float> >  pruneRegions2(const ImageInterface<Float>& image,
+                                                   Double& thresh,
+                                                   Int nmask=0,
+                                                   Double prunesize=0.0);
+
+  // create a mask image (1/0 image) applying a different threshold for each channel plane
+  void makeMaskByPerChanThreshold(const ImageInterface<Float>& image,
+                                 ImageInterface<Float>& mask,
+                                 Vector<Float>& thresholds);
+
+  // A core method for binary dilation of the input lattice
+  void binaryDilationCore(Lattice<Float>& inlattice,
+                      Array<Float>& structure,
+                      Lattice<Bool>& mask,
+                      Array<Bool>& chanmask,
+                      Lattice<Float>& outlattice);
+
+  // Multiple Binary dilation application of an image with a constraint mask and channel plane based flags
+  void binaryDilation(ImageInterface<Float>& inImage,
+                      Array<Float>& structure,
+                      Int niteration,
+                      Lattice<Bool>& mask,
+                      Array<Bool>& chanmask,
+                      ImageInterface<Float>& outImage);
+ 
+  // return beam area in pixel unit
+  Float pixelBeamArea(const GaussianBeam& beam, const CoordinateSystem& csys);
+
+  // Create a mask image applying PB level
   void makePBMask(SHARED_PTR<SIImageStore> imstore, Float pblimit=0.1);
   void autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, 
+                        const Int iterdone,
                         const String& alg="",
                         const String& threshold="",
                         const Float& fracpeak=0.0,
@@ -160,6 +225,12 @@ public:
                         const Float& resbybeam=0.0,
                         const Int nmask=0,
                         const Bool autoadjust=False,
+                        const Float& sidelobethreshold=0.0,
+                        const Float& noisethreshold=0.0,
+                        const Float& lownoisethreshold=0.0,
+                        const Float& cutthreshold=0.0,
+                        const Float& smoothfactor=0.0,
+                        const Float& minbeamfrac=0.0,
                         Float pblimit=0.1);
 
   // check if input image is a mask image with 0 or a value (if normalize=true, 1)

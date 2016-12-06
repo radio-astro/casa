@@ -154,6 +154,16 @@ protected:
   Float itsMaskResByBeam;
   Int itsNMask;
   Bool itsAutoAdjust;
+
+  //// for new automasking algorithm
+  Float itsSidelobeThreshold;
+  Float itsNoiseThreshold;
+  Float itsLowNoiseThreshold;
+  Float itsSmoothFactor;
+  Float itsMinBeamFrac;
+  Float itsCutThreshold;
+  Int itsIterDone;
+
   Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
   Bool itsIsInteractive;
  

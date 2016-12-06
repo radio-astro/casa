@@ -346,6 +346,12 @@ public:
   String maskResolution;
   Float fracOfPeak;
   Float maskResByBeam;
+  Float sidelobeThreshold;
+  Float noiseThreshold;
+  Float lowNoiseThreshold;
+  Float smoothFactor;
+  Float minBeamFrac;
+  Float cutThreshold;
   Int nMask;
   Bool autoAdjust;
 

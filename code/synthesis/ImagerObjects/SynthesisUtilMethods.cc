@@ -3247,7 +3247,78 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                 err+= "autoadjust must be a bool\n";
               }
           }
-
+        //params for the new automasking algorithm
+        if( inrec.isDefined("sidelobethreshold"))
+          {
+            if(inrec.dataType("sidelobethreshold")==TpFloat || inrec.dataType("sidelobethreshold")==TpDouble )
+              {
+                err+= readVal(inrec, String("sidelobethreshold"), sidelobeThreshold );
+              }
+            else 
+              {
+                err+= "sidelobethreshold must be a float or double";
+              }
+          }
+        if( inrec.isDefined("noisethreshold"))
+          {
+            if(inrec.dataType("noisethreshold")==TpFloat || inrec.dataType("noisethreshold")==TpDouble )
+              {
+                err+= readVal(inrec, String("noisethreshold"), noiseThreshold );
+              }
+            else 
+              {
+                err+= "noisethreshold must be a float or double";
+              }
+          }
+        if( inrec.isDefined("lownoisethreshold"))
+          {
+            if(inrec.dataType("lownoisethreshold")==TpFloat || inrec.dataType("lownoisethreshold")==TpDouble )
+              {
+                err+= readVal(inrec, String("lownoisethreshold"), lowNoiseThreshold );
+              }
+            else 
+              {
+                err+= "lownoisethreshold must be a float or double";
+              }
+          }
+        if( inrec.isDefined("smoothfactor"))
+          {
+            if( inrec.dataType("smoothfactor")==TpFloat || inrec.dataType("smoothfactor")==TpDouble )
+              {
+                err+= readVal(inrec, String("smoothfactor"), smoothFactor );
+              }
+            else 
+              {
+                err+= "smoothfactor must be a float or double";
+              }
+          }
+        if( inrec.isDefined("minbeamfrac"))
+          {
+            if( inrec.dataType("minbeamfrac")==TpFloat || inrec.dataType("minbeamfrac")==TpDouble )
+              {
+                err+= readVal(inrec, String("minbeamfrac"), minBeamFrac );
+              }
+            else 
+              {
+                if (inrec.dataType("minbeamfrac")==TpInt) {
+                  cerr<<"minbeamfrac is int"<<endl;
+                }
+                if (inrec.dataType("minbeamfrac")==TpString) {
+                  cerr<<"minbeamfrac is String"<<endl;
+                }
+                err+= "minbeamfrac must be a float or double";
+              }
+          }
+        if( inrec.isDefined("cutthreshold"))
+          {
+            if( inrec.dataType("cutthreshold")==TpFloat || inrec.dataType("cutthreshold")==TpDouble )
+              {
+                err+= readVal(inrec, String("cutthreshold"), cutThreshold );
+              }
+            else {
+                err+= "cutthreshold must be a float or double";
+            }
+          }
         if( inrec.isDefined("restoringbeam") )     
 	  {
 	    String errinfo("");
@@ -3409,6 +3480,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     decpar.define("maskresolution",maskResolution);
     decpar.define("nmask",nMask);
     decpar.define("autoadjust",autoAdjust);
+    decpar.define("sidelobethreshold",sidelobeThreshold);
+    decpar.define("noisethreshold",noiseThreshold);
+    decpar.define("lownoisethreshold",lowNoiseThreshold);
+    decpar.define("smoothfactor",smoothFactor);
+    decpar.define("minbeamfrac",minBeamFrac);
+    decpar.define("cutthreshold",cutThreshold);
     decpar.define("interactive",interactive);
 
     return decpar;
