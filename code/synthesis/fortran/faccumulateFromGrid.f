@@ -1,4 +1,4 @@
-      subroutine faccumulateFromGrid(nvalue, grid, convFuncV,
+      subroutine faccumulateFromGrid(nvalue, norm,grid, convFuncV,
      $     wVal, scaledSupport, scaledSampling, 
      $     off, convOrigin, cfShape, loc,
      $     igrdpos,  sinDPA, cosDPA,
@@ -37,7 +37,7 @@
       data iloc/1,1,1,1/, iCFPos/1,1,1,1/
       l_igrdpos(3) = igrdpos(3)+1
       l_igrdpos(4) = igrdpos(4)+1
-      norm=0.0
+c      norm=0.0
       l_phaseGradOriginX=phNX/2 + 1
       l_phaseGradOriginY=phNY/2 + 1
 
@@ -99,6 +99,8 @@ c$$$     $           phaseGrad(iloc(1) + l_phaseGradOriginX,
 c$$$     $           iloc(2) + l_phaseGradOriginY),ix,iy,norm
          enddo
       enddo
-      nvalue = nvalue *conjg(phasor)/norm
+c      nvalue = nvalue *conjg(phasor)/norm
+c     Normalization by norm is done in the Mueller loop in AWVR.
+      nvalue = nvalue *conjg(phasor)
 c$$$      stop
       end

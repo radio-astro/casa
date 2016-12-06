@@ -200,6 +200,9 @@ namespace casa{
     // check if it needs to be rotated.
     if (convFuncV->shape().product() == 0)
       {
+	Array<Complex>  tt=SynthesisUtils::getCFPixels(cfb.getCFCacheDir(), cfcell->fileName_p);
+	cfcell->setStorage(tt);
+
 	cerr << (cfcell->isRotationallySymmetric_p?"o":"+");
 
 	// No rotation necessary if the CF is rotationally symmetric
@@ -210,11 +213,6 @@ namespace casa{
 	    // is greater than paTolerance.
 	    SynthesisUtils::rotate2(vbPA, *baseCFC, *cfcell, paTolerance_p);
 	  }
-
-
-	Array<Complex> tt=SynthesisUtils::getCFPixels(cfb.getCFCacheDir(), cfcell->fileName_p);
-	cfcell->setStorage(tt);
-	//cfO.setStorage(tt);
       }
 
     //cfShape.reference(cfcell->cfShape_p);
@@ -811,10 +809,10 @@ namespace casa{
 		  
 		  if((apol>=0) && (apol<nGridPol)) {
 		    igrdpos[2]=apol; igrdpos[3]=achan;
-		    nvalue=0.0;      norm(apol)=0.0;
+		    nvalue=0.0;      norm(ipol)=0.0;
 
 		    // With VBRow2CFMap in use, CF for each pol. plane is a separate 2D Array.  
-		    for (uInt mRow=0; mRow<conjMNdx[ipol].nelements(); mRow++)
+		    for (uInt mCol=0; mCol<conjMNdx[ipol].nelements(); mCol++)
 		      {
 			int visGridElement, muellerElement;
 			//
@@ -827,7 +825,7 @@ namespace casa{
 			    convFuncV = getConvFunc_p(vbs.paQuant_p.getValue("rad"),
 						      cfShape, support, muellerElement,
 						      cfb, dataWVal, fndx, wndx, mNdx,
-						      conjMNdx, ipol, mRow);
+						      conjMNdx, ipol, mCol);
 			  }
 			catch (SynthesisFTMachineError& x)
 			  {
@@ -837,7 +835,7 @@ namespace casa{
 			// Set the polarization plane of the gridded data to use for predicting with the CF from mCols column
 			visGridElement=(int)(muellerElement%nDataPol);
 			igrdpos[2]=polMap_p[visGridElement];
-			//cerr << "DG: " << mRow << "-->" << visGridElement << "-->" << ipol << " " << polMap_p[ipol] << " " << polMap_p[visGridElement] << endl;
+			//cerr << "DG: " << mCol << "-->" << visGridElement << "-->" << ipol << " " << polMap_p[ipol] << " " << polMap_p[visGridElement] << endl;
 			//
 			// Compute the incrmenets and center pixel for the current CF
 			//
@@ -850,12 +848,6 @@ namespace casa{
 			  cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq(),
 					   ((const Int)(vbs.vb_p)->spectralWindow()),((const Int)((vbs.vb_p)->fieldId())));
 			
-			//
-			// ALERT: The -1 in the expression for iloc
-			// was determined by comparing with a working
-			// old code (fpbmos.f).
-			//
-
 			// accumulateFromGrid() is a local C++ method with the inner loops.  The include
 			// file (FortanizedLoopsFromGrid.cc) has the interface code to call the inner 
 			// loops re-written in FORTRAN (in synthesis/fortran/faccumulateOnGrid.f)
@@ -867,7 +859,8 @@ namespace casa{
 #include <synthesis/TransformMachines/FortranizedLoopsFromGrid.cc>
 
 		      }
-		    visCube(ipol,ichan,irow)=nvalue; // Goes with FortranizedLoopsFromGrid.cc
+		    visCube(ipol,ichan,irow)=nvalue/norm[ipol]; // Goes with FortranizedLoopsFromGrid.cc
+		    //		    visCube(ipol,ichan,irow)=nvalue; // Goes with FortranizedLoopsFromGrid.cc
 		    //if (casa::isNaN(nvalue))
 		      // {
 		      // 	cout << ipol << "," << ichan << "," << irow << "," << nvalue << "," << nDataChan << "," << nGridChan << "," << achan << endl;

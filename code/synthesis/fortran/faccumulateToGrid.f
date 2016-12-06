@@ -40,14 +40,15 @@
       data iloc/1,1,1,1/, iCFPos/1,1,1,1/
       l_igrdpos(3) = igrdpos(3)+1
       l_igrdpos(4) = igrdpos(4)+1
-      norm=0.0
+c      norm=0.0
       l_phaseGradOriginX=phNX/2 + 1
       l_phaseGradOriginY=phNY/2 + 1
 
       cfArea = fGetCFArea(convFuncV, wVal, scaledSupport, 
      $     scaledSampling, off, convOrigin, cfShape,
      $     cfNX, cfNY, cfNP, cfNC)
-      
+
+      cfArea=1.0 
       do iy=-scaledSupport(2),scaledSupport(2) 
          iloc(2)=nint(scaledSampling(2)*iy+off(2)-1)
          iCFPos(2)=iloc(2)+convOrigin(2)+1
@@ -177,7 +178,7 @@ c$$$     $        (doPSFOnly .eq. 0)) then
       data iloc/1,1,1,1/, iCFPos/1,1,1,1/
       l_igrdpos(3) = igrdpos(3)+1
       l_igrdpos(4) = igrdpos(4)+1
-      norm=0.0
+c      norm=0.0
       l_phaseGradOriginX=phNX/2 + 1
       l_phaseGradOriginY=phNY/2 + 1
       
@@ -185,7 +186,7 @@ c$$$     $        (doPSFOnly .eq. 0)) then
      $     scaledSampling, off, convOrigin, cfShape,
      $     cfNX, cfNY, cfNP, cfNC)
 
-
+      cfArea=1.0
 c$$$!$OMP PARALLEL 
 c$$$!$OMP& DEFAULT(NONE) 
 c$$$!$OMP& FIRSTPRIVATE(grid)

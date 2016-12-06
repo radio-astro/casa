@@ -53,7 +53,8 @@ namespace casa{
 			    casacore::Int *imNX, casacore::Int *imNY, casacore::Int *imNP, casacore::Int *imNC,
 			    casacore::Int *cfNX, casacore::Int *cfNY, casacore::Int *cfNP, casacore::Int *cfNC,
 			    casacore::Int *phNX, casacore::Int *phNY);
-    void faccumulatefromgrid_(casacore::Complex *nvalue, const casacore::Complex *grid, casacore::Complex *CF, 
+    void faccumulatefromgrid_(casacore::Complex *nvalue,casacore::Complex *norm,
+			      const casacore::Complex *grid, casacore::Complex *CF, 
 			      casacore::Double *wVal, 
 			      casacore::Int *scaledSupport, casacore::Float *scaledSampling,
 			      casacore::Double *off, casacore::Int *convOrigin, casacore::Int *cfShape, casacore::Int *loc,

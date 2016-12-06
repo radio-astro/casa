@@ -1081,7 +1081,7 @@ namespace casa{
   //
   //----------------------------------------------------------------------
   //
-  Bool AWConvFunc::setUpCFSupport(Array<Complex>& func, Int& xSupport, Int& ySupport,
+  Bool AWConvFunc::setUpCFSupport(Array<Complex>& cfVals, Int& xSupport, Int& ySupport,
 				  const Float& sampling, const Complex& peak)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "setUpCFSupport[R&D]"));
@@ -1091,13 +1091,13 @@ namespace casa{
     // they are same for all poln. planes).
     //
     xSupport = ySupport = -1;
-    Int convFuncOrigin=func.shape()[0]/2, R; 
+    Int convFuncOrigin=cfVals.shape()[0]/2, R; 
     Bool found=false;
     Float threshold;
     // Threshold as a fraction of the peak (presumed to be the center pixel).
     if (abs(peak) != 0) threshold = real(abs(peak));
     else 
-      threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
+      threshold   = real(abs(cfVals(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
     //threshold *= aTerm_p->getSupportThreshold();
     threshold *= 1e-3;
@@ -1111,7 +1111,7 @@ namespace casa{
     //
     // Timer tim;
     // tim.mark();
-    if ((found = AWConvFunc::awFindSupport(func,threshold,convFuncOrigin,R)))
+    if ((found = AWConvFunc::awFindSupport(cfVals,threshold,convFuncOrigin,R)))
       xSupport=ySupport=Int(0.5+Float(R)/sampling)+1;
     // tim.show("findSupport:");
 
@@ -1140,20 +1140,20 @@ namespace casa{
   //
   //----------------------------------------------------------------------
   //
-  Bool AWConvFunc::resizeCF(Array<Complex>& func, Int& xSupport, Int& ySupport,
+  Bool AWConvFunc::resizeCF(Array<Complex>& cfVals, Int& xSupport, Int& ySupport,
 			    const Int& supportBuffer, const Float& sampling, const Complex& peak)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "resizeCF[R&D]"));
-    Int ConvFuncOrigin=func.shape()[0]/2;  // Conv. Func. is half that size of convSize
+    Int ConvFuncOrigin=cfVals.shape()[0]/2;  // Conv. Func. is half that size of convSize
     
-    Bool found = setUpCFSupport(func, xSupport, ySupport, sampling,peak);
+    Bool found = setUpCFSupport(cfVals, xSupport, ySupport, sampling,peak);
 
     //Int supportBuffer = (Int)(aTerm_p->getOversampling()*1.5);
     Int bot=(Int)(ConvFuncOrigin-sampling*xSupport-supportBuffer),//-convSampling/2, 
       top=(Int)(ConvFuncOrigin+sampling*xSupport+supportBuffer);//+convSampling/2;
     //    bot *= 2; top *= 2;
     bot = max(0,bot);
-    top = min(top, func.shape()(0)-1);
+    top = min(top, cfVals.shape()(0)-1);
     
     Array<Complex> tmp;
     IPosition blc(4,bot,bot,0,0), trc(4,top,top,0,0);
@@ -1161,16 +1161,16 @@ namespace casa{
     // Cut out the conv. func., copy in a temp. array, resize the
     // CFStore.data, and copy the cutout version to CFStore.data.
     //
-    tmp = func(blc,trc);
-    func.resize(tmp.shape());
-    func = tmp; 
+    tmp = cfVals(blc,trc);
+    cfVals.resize(tmp.shape());
+    cfVals = tmp; 
     return found;
   }
   //
   //----------------------------------------------------------------------
   // A global method for use in OMP'ed findSupport() below
   //
-  void archPeak(const Float& threshold, const Int& origin, const Block<Int>& cfShape, const Complex* funcPtr, 
+  void archPeak(const Float& threshold, const Int& origin, const Block<Int>& cfShape, const Complex* cfValsPtr, 
 		const Int& nCFS, const Int& PixInc,const Int& th, const Int& R, Block<Int>& maxR)
   {
     Block<Complex> vals;
@@ -1188,8 +1188,8 @@ namespace casa{
 	ndx[1]=(int)(origin + R*cos(2.0*M_PI*pix*PixInc/R));
 	
 	if ((ndx[0] < cfShape[0]) && (ndx[1] < cfShape[1]))
-	  //vals[pix]=func(ndx);
-	  vals[pix]=funcPtr[ndx[0]+ndx[1]*cfShape[1]+ndx[2]*cfShape[2]+ndx[3]*cfShape[3]];
+	  //vals[pix]=cfVals(ndx);
+	  vals[pix]=cfValsPtr[ndx[0]+ndx[1]*cfShape[1]+ndx[2]*cfShape[2]+ndx[3]*cfShape[3]];
       }
 
     maxR[th]=-R;
@@ -1204,26 +1204,26 @@ namespace casa{
   //
   //----------------------------------------------------------------------
   //
-  Bool AWConvFunc::findSupport(Array<Complex>& func, Float& threshold, 
+  Bool AWConvFunc::findSupport(Array<Complex>& cfVals, Float& threshold, 
 			       Int& origin, Int& radius)
   {
-    return awFindSupport(func, threshold, origin, radius);
+    return awFindSupport(cfVals, threshold, origin, radius);
   }
-  Bool AWConvFunc::awFindSupport(Array<Complex>& func, Float& threshold, 
+  Bool AWConvFunc::awFindSupport(Array<Complex>& cfVals, Float& threshold, 
 			       Int& origin, Int& radius)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "findSupport[R&D]"));
 
-    Int nCFS=func.shape().nelements(),
+    Int nCFS=cfVals.shape().nelements(),
       PixInc=1, R0, R1, R, convSize;
     Block<Int> cfShape(nCFS);
     Bool found=false;
-    Complex *funcPtr;
+    Complex *cfValsPtr;
     Bool dummy;
     uInt Nth=1, threadID=0;
 
     for (Int i=0;i<nCFS;i++)
-    	cfShape[i]=func.shape()[i];
+    	cfShape[i]=cfVals.shape()[i];
     convSize = cfShape[0];
 
 #ifdef _OPENMP
@@ -1232,7 +1232,7 @@ namespace casa{
     
     Block<Int> maxR(Nth);
 
-    funcPtr = func.getStorage(dummy);
+    cfValsPtr = cfVals.getStorage(dummy);
 
     R1 = convSize/2-2;
 
@@ -1240,8 +1240,8 @@ namespace casa{
       {
 	    R0 = R1; R1 -= Nth;
 
-//#pragma omp parallel default(none) firstprivate(R0,R1)  private(R,threadID) shared(origin,threshold,PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
-#pragma omp parallel firstprivate(R0,R1)  private(R,threadID) shared(PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
+//#pragma omp parallel default(none) firstprivate(R0,R1)  private(R,threadID) shared(origin,threshold,PixInc,maxR,cfShape,nCFS,cfValsPtr) num_threads(Nth)
+#pragma omp parallel firstprivate(R0,R1)  private(R,threadID) shared(PixInc,maxR,cfShape,nCFS,cfValsPtr) num_threads(Nth)
 	    { 
 #pragma omp for
 	      for(R=R0;R>R1;R--)
@@ -1249,7 +1249,7 @@ namespace casa{
 #ifdef _OPENMP
 		  threadID=omp_get_thread_num();
 #endif
-		  archPeak(threshold, origin, cfShape, funcPtr, nCFS, PixInc, threadID, R, maxR);
+		  archPeak(threshold, origin, cfShape, cfValsPtr, nCFS, PixInc, threadID, R, maxR);
 		}
 	    }///omp 	    
 

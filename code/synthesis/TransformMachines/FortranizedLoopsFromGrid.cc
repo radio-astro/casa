@@ -56,6 +56,7 @@
   // Call the FORTRAN function with the gridding inner-loops (in synthesis/fortran/faccumulateFromGrid.f)
   //
   faccumulatefromgrid_(&nvalue, 
+		       &norm[ipol],
 		       gridPtr, 
 		       convFuncV, 
 		       &dataWVal,
