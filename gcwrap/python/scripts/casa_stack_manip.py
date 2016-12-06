@@ -11,8 +11,8 @@ def stack_find(symbol, level='stack') :
             if a[k][1] == "<string>" or \
                a[k][1].startswith("<ipython-input-") or \
                string.find(a[k][1], 'ipython console') > 0 or \
-               string.find(a[k][1],"casapy.py") > 0 or \
-               string.find(a[k][1],"casa.py") > 0 or \
+               string.find(a[k][1],"/casapy.py") > 0 or \
+               string.find(a[k][1],"/casa.py") > 0 or \
                string.find(a[k][1],"mpi4casapy.py") > 0:
                 stacklevel=k
                 # jagonzal: Take the first level that matches the requirement
@@ -54,8 +54,8 @@ def stack_frame_find(level='stack') :
             if a[k][1] == "<string>" or \
                a[k][1].startswith("<ipython-input-") or \
                string.find(a[k][1], 'ipython console') > 0 or \
-               string.find(a[k][1],"casapy.py") > 0 or \
-               string.find(a[k][1],"casa.py") > 0 or \
+               string.find(a[k][1],"/casapy.py") > 0 or \
+               string.find(a[k][1],"/casa.py") > 0 or \
                string.find(a[k][1],"mpi4casapy.py") > 0:
                 stacklevel=k
                 # jagonzal: Take the first level that matches the requirement
