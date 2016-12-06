@@ -259,7 +259,7 @@ def tclean(
         savemodel=savemodel
         )
     
-    paramList.printParameters()
+    #paramList.printParameters()
 
     pcube=False
     concattype=''
