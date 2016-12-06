@@ -19,7 +19,6 @@ from . import hifa
 from .infrastructure import Pipeline, Context
 from .domain import measures
 
-
 LOG = infrastructure.get_logger(__name__)
 
 __pipeline_documentation_weblink_alma__ = "http://almascience.org/documents-and-tools/pipeline-documentation-archive"
@@ -77,7 +76,7 @@ def initcli() :
     execfile(hsdpath, myglobals)
     execfile(hifapath, myglobals)
     execfile(hifvpath, myglobals)
-
+    #exec('import pipeline.infrastructure.executeppr', myglobals)
 
 revision = environment.pipeline_revision
 
@@ -96,3 +95,7 @@ def log_host_environment():
         pass
 
 log_host_environment()
+
+# FINALLY import executeppr. Do so as late as possible in pipeline module
+# because executeppr make use of a part of pipeline module.
+import pipeline.infrastructure.executeppr
