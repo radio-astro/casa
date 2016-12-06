@@ -74,6 +74,7 @@ def initcli() :
     execfile(hsdpath, myglobals)
     execfile(hifapath, myglobals)
     execfile(hifvpath, myglobals)
+    #exec('import pipeline.infrastructure.executeppr', myglobals)
 
 
 # find pipeline revision using svnversion
@@ -124,3 +125,7 @@ def _get_revision():
 
 
 revision = _get_revision()
+
+# FINALLY import executeppr. Do so as late as possible in pipeline module
+# because executeppr make use of a part of pipeline module.
+import pipeline.infrastructure.executeppr
