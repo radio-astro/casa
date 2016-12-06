@@ -86,6 +86,16 @@
 			 &gnx, &gny, &gnp, &gnc,
 			 &cf0, &cf1, &cf2, &cf3,
 			 &phx, &phy);
+      // if (fpclassify(abs(norm)) == FP_NAN)
+      // 	{
+      // 	  cerr << "N NAN: " << nvalue << " " << support << " " << sampling << " " << off << " " << convOrigin << " " << loc << " " << igrdpos << " " << cfShape << endl;
+      // 	  throw(AipsError("NAN DETECTED IN NORM"));
+      // 	}
+      // if (fpclassify(vbs.imagingWeight_p(ichan, irow)) == FP_NAN)
+      // 	{
+      // 	  cerr << "WT NAN: " << nvalue << " " << support << " " << sampling << " " << off << " " << convOrigin << " " << loc << " " << igrdpos << " " << cfShape << endl;
+      // 	  throw(AipsError("NAN DETECTED IN WT"));
+      // 	}
     }
   else
     {
@@ -103,11 +113,15 @@
 			  &gnx, &gny, &gnp, &gnc,
 			  &cf0, &cf1, &cf2, &cf3,
 			  &phx, &phy);
+    //   if (fpclassify(abs(norm)) == FP_NAN)
+    //   	{
+    //   	  cerr << "dN NAN: " << getpid() << " " << nvalue << " " << supportPtr[0] << " " << sampling << " " << off << " " << convOrigin << " " << loc << " " << igrdpos << " " << cfShapePtr[0] << endl;
+    //   	  throw(AipsError("NAN DETECTED IN NORM"));
+    //   	}
+    //   if (fpclassify(vbs.imagingWeight_p(ichan, irow)) == FP_NAN)
+    //   	{
+    //   	  cerr << "dWT NAN: " << nvalue << " " << support << " " << sampling << " " << off << " " << convOrigin << " " << loc << " " << igrdpos << " " << cfShape << endl;
+    //   	  throw(AipsError("NAN DETECTED IN WT"));
+    //   	}
     }
-		     
-		     // &nx,&ny,&nGridPol, &nGridChan,
-		     // &unity, &unity, &unity, &unity,
-		     // &cfShape(0),&cfShape(1),&cfShape(2),&cfShape(3),
-		     // &(cached_phaseGrad_p.shape()[0]),
-		     // &(cached_phaseGrad_p.shape()[1]));
 }

@@ -775,7 +775,7 @@ runTimeG7_p += timer_p.real();
 		  
 		  if((apol>=0) && (apol<nGridPol)) {
 		    igrdpos[2]=apol; igrdpos[3]=achan;
-		    nvalue=0.0;      norm(apol)=0.0;
+		    nvalue=0.0;      norm(ipol)=0.0;
 		    
 		    // ConjPlane = cfMap_p(ipol);
 		    // PolnPlane = conjCFMap_p(ipol);
@@ -859,7 +859,7 @@ runTimeG7_p += timer_p.real();
 
 			 //		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
 		      }
-		    visCube(ipol,ichan,irow)=nvalue; // Goes with FortranizedLoopsFromGrid.cc
+		    visCube(ipol,ichan,irow)=nvalue/norm[ipol]; // Goes with FortranizedLoopsFromGrid.cc
 		    //if (casa::isNaN(nvalue))
 		      // {
 		      // 	cout << ipol << "," << ichan << "," << irow << "," << nvalue << "," << nDataChan << "," << nGridChan << "," << achan << endl;
