@@ -8,7 +8,8 @@ import pipeline
 
 
 
-
+pathname=os.environ.get('CASAPATH').split()[0]
+rootdatapath = pathname+'/data/regression/pipeline/'
 
 
 '''Initial VLA pipeline regression
@@ -22,8 +23,10 @@ endTime=0.0
 startProc=0.0
 endProc=0.0
 regstate = True
-standard_file = 'VLApipeline44-standard'
+standard_file = rootdatapath + 'VLApipeline44-standard'
 #MIN_CASA_REVISION = 36095
+
+
 
 def load_context(filename):
     with open(filename, 'rb') as picklefile:
@@ -52,7 +55,7 @@ def pipeline_regression():
     
     
     #ASDM      = "/export/home/icarus_2/awells/CASA_stable/data/regression/foo/vla_pipeline_data/rawdata/13A-537.sb24066356.eb24324502.56514.05971091435"
-    ASDM = "13A-537.sb24066356.eb24324502.56514.05971091435"
+    ASDM = rootdatapath  + "13A-537.sb24066356.eb24324502.56514.05971091435"
     try:
         import pipeline.recipes.hifv as hifv
     except ImportError, e:
