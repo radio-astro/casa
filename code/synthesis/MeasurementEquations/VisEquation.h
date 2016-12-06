@@ -140,6 +140,7 @@ public:
   // Corrupt in place the MODEL visibilities in a VisBuffer
   //  with the apply-able VisCals
   void corrupt(VisBuffer& vb);
+  void corrupt2(vi::VisBuffer2& vb);
 
   // Correct/Corrupt in place the OBSERVED/MODEL visibilities in a VisBuffer
   //  with the apply-able VisCals on either side of the SolvableVisCal

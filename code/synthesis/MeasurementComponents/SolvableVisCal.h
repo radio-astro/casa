@@ -266,6 +266,10 @@ public:
 
   // Set up data and model for pol solve
   void setUpForPolSolve(VisBuffer& vb);
+  // A VB2-specific version which depends on local specialization
+  //   (this may be further refined later)
+  virtual void setUpForPolSolve(vi::VisBuffer2&) {
+    throw(casacore::AipsError("setUpForPolSolve(VB2) not specialized in "+typeName()+" as required.")); };
 
   // Differentiate VB model w.r.t. Cal  parameters (no 2nd derivative yet)
   virtual void differentiate(CalVisBuffer& cvb)=0;

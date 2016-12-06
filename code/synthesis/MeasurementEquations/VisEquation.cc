@@ -279,6 +279,22 @@ void VisEquation::corrupt(VisBuffer& vb) {
 }
 
 //----------------------------------------------------------------------
+// Corrupt in place the MODEL visibilities in a VisBuffer
+void VisEquation::corrupt2(vi::VisBuffer2& vb) {
+
+  if (prtlev()>0) cout << "VE::corrupt2(VB2)" << endl;
+
+  AlwaysAssert(ok(),AipsError);
+
+  if (napp_==0) throw(AipsError("Nothing to Apply"));
+
+  // Apply each VisCal in right-to-left order
+  for (Int iapp=(napp_-1);iapp>-1;iapp--)
+    vc()[iapp]->corrupt2(vb);
+
+}
+
+//----------------------------------------------------------------------
 void VisEquation::collapse(VisBuffer& vb) {
 
   if (prtlev()>0) cout << "VE::collapse()" << endl;
@@ -366,6 +382,13 @@ void VisEquation::collapse2(vi::VisBuffer2& vb) {
   else
     // from MS
     vb.visCubeModel();
+
+  // If we are solving for the polarization:
+  //  1. Normalize data and model by I model
+  //  2. Set cross-hands to (1,0) so P factors multiplying them
+  //     are propogated, and we can solve for pol factors
+  if (svc().solvePol())
+    svc().setUpForPolSolve(vb);
 
   // initialize LHS/RHS indices
   Int lidx=0;

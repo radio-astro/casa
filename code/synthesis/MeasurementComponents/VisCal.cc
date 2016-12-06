@@ -302,7 +302,7 @@ void VisCal::correct(VisBuffer& vb, Bool trial) {
 
 }
 
-void VisCal::correct2(vi::VisBuffer2& vb, Bool trial, Bool doWtSp) {
+void VisCal::correct2(vi::VisBuffer2& vb, Bool trial, Bool doWtSp, Bool dosync) {
 
   if (prtlev()>3) cout << "VC::correct2(vb)" << endl;
 
@@ -310,7 +310,8 @@ void VisCal::correct2(vi::VisBuffer2& vb, Bool trial, Bool doWtSp) {
   countInFlag2(vb);
 
   // Bring calibration up-to-date w/ the vb
-  syncCal2(vb,true);
+  if (dosync)
+    syncCal2(vb,true);
 
   // Organize for weight calibration
   Cube<Float> wtcube;
@@ -432,13 +433,10 @@ void VisCal::setMeta(Int obs, Int scan, Double time,
 		     Int spw, const Vector<Double>& freq,
 		     Int fld) {
 
-  currSpw()=spw;
-
-  currField()=fld;
+  // Call internal method
+  syncMeta(spw,time,fld,freq,freq.nelements());	
   currScan()=scan;
   currObs()=obs;
-  currFreq().assign(freq);
-  currTime()=time;  // current time for apply is _currTime()_
   
 }
 
@@ -482,7 +480,6 @@ void VisCal::sizeApplyParCurrSpw(Int nVisChan) {
 void VisCal::setDefApplyParCurrSpw(Bool sync, Bool doInv) {
 
   // TBD: generalize for type-dep def values, etc.
-
   switch (parType()) {
   case VisCalEnum::COMPLEX: {
     AlwaysAssert(currCPar().nelements()>0,AipsError);
@@ -506,6 +503,65 @@ void VisCal::setDefApplyParCurrSpw(Bool sync, Bool doInv) {
     syncCal(doInv);
 
 }
+
+// Set parameters to specified values in the currSpw(),
+//   and optionally sync matrices
+void VisCal::setApplyParCurrSpw(const Cube<Complex> cpar,
+				bool sync, bool doInv) {
+
+  switch (parType()) {
+  case VisCalEnum::COMPLEX: {
+    AlwaysAssert(currCPar().nelements()>0,AipsError);
+    AlwaysAssert(currCPar().shape()==cpar.shape(),AipsError);  // shapes must match
+    currCPar()=cpar;
+    break;
+  }
+  case VisCalEnum::REAL: {
+    throw(AipsError("Cannot set real parameters with complext values!"));
+    break;
+  }
+  default:
+    throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		    "COMPLEXREAL found in VC::setDefApplyParCurrSpw()"));
+  }
+
+  currParOK().set(True);
+  validateP();
+  
+  // Synchronize matrices
+  if (sync)
+    syncCal(doInv);
+
+}
+
+void VisCal::setApplyParCurrSpw(const Cube<float> rpar,
+				bool sync, bool doInv) {
+
+  switch (parType()) {
+  case VisCalEnum::REAL: {
+    AlwaysAssert(currRPar().nelements()>0,AipsError);
+    AlwaysAssert(currRPar().shape()==rpar.shape(),AipsError);  // shapes must match
+    currRPar()=rpar;
+    break;
+  }
+  case VisCalEnum::COMPLEX: {
+    throw(AipsError("Cannot set complex parameters with real values!"));
+    break;
+  }
+  default:
+    throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
+		    "COMPLEXREAL found in VC::setDefApplyParCurrSpw()"));
+  }
+
+  currParOK().set(True);
+  validateP();
+  
+  // Synchronize matrices
+  if (sync)
+    syncCal(doInv);
+
+}
+
 
 void VisCal:: initCalFlagCount() {
   ndataIn_=nflagIn_=nflagOut_=0;
@@ -1811,9 +1867,9 @@ void VisJones::syncJones(const Bool& doInv) {
     // EXCEPT, ensure uniqueness if taking the inverse
     //   (this makes a copy, can we avoid?)
     if (doInv) {
-      //      cout << "  Unique: " << currJElem().data() << "-->";
+      //cout << "  Unique: " << currJElem().data() << "-->";
       currJElem().unique();
-      //      cout << currJElem().data() << endl;
+      //cout << currJElem().data() << endl;
     }
   }
   else {

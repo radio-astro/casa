@@ -157,7 +157,8 @@ public:
   // Apply calibration to data in VisBuffer (correct casacore::Data or corrupt Model)
   //  (in-place versions)
   virtual void correct(VisBuffer& vb, casacore::Bool trial=false);
-  virtual void correct2(vi::VisBuffer2& vb, casacore::Bool trial=false, casacore::Bool doWtSp=false);
+  virtual void correct2(vi::VisBuffer2& vb, casacore::Bool trial=false, 
+			casacore::Bool doWtSp=false, casacore::Bool dosync=true);
   virtual void corrupt(VisBuffer& vb);
   virtual void corrupt2(vi::VisBuffer2& vb);
 
@@ -200,6 +201,14 @@ public:
   // Set parameters to def values in the currSpw(), 
   //   and optionally sync everything
   virtual void setDefApplyParCurrSpw(bool sync=false, bool doInv=false);
+
+  // Set parameters to specified values in the currSpw(),
+  //   and optionally sync matrices
+  virtual void setApplyParCurrSpw(const casacore::Cube<casacore::Complex> cpar,
+				  bool sync=false, bool doInv=false);
+
+  virtual void setApplyParCurrSpw(const casacore::Cube<float> rpar,
+				  bool sync=false, bool doInv=false);
 
 
 protected:

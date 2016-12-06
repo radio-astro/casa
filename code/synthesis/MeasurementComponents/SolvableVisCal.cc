@@ -2833,6 +2833,10 @@ void SolvableVisCal::enforceAPonData(VisBuffer& vb) {
 void SolvableVisCal::setUpForPolSolve(VisBuffer& vb) {
 
   // TBD: migrate this to VisEquation?
+
+  // NB (2016Nov29, gmoellen): No, should actually move this very specific
+  //   activity into DJones where it is specifically relevant.
+  //   VB2 version has done this.
   
   // Divide model and data by (scalar) stokes I (which may be resolved!), 
   //  and set model cross-hands to (1,0) so we can solve for fractional
@@ -4841,6 +4845,9 @@ void SolvableVisJones::differentiate(SolveDataBuffer& sdb) {  // VI2
   
   // "Apply" the current Q,U or X estimates to the crosshand model
   // NB:  This is circular-basis specific!!
+
+  /*   2016Nov29 (gmoellen):  MOVED TO DJones::guessPar(SDBList)
+
   if (solvePol()>0) {
     Complex pol(1.0);
 
@@ -4856,7 +4863,9 @@ void SolvableVisJones::differentiate(SolveDataBuffer& sdb) {  // VI2
     Array<Complex> LR(Vout(blc,trc));
     LR*=conj(pol);
   }
-  
+  */  
+
+
   // Visibility vector renderers
   VisVector::VisType vt(visType(nCorr));
   VisVector cVm(vt);  // The model data corrupted by trial solution

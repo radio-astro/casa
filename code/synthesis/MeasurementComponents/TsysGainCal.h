@@ -79,7 +79,8 @@ public:
   virtual casacore::Bool freqDepPar() { return true; };
 
   // Specialized to turn on spectral weight calibration
-  virtual void correct2(vi::VisBuffer2& vb, casacore::Bool trial=false, casacore::Bool doWtSp=false);
+  virtual void correct2(vi::VisBuffer2& vb, casacore::Bool trial=false, 
+			casacore::Bool doWtSp=false, casacore::Bool dosync=true);
 
 protected:
 

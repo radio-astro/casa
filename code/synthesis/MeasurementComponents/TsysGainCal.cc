@@ -302,13 +302,14 @@ void StandardTsys::specify(const Record&) {
 
 }
 
-void StandardTsys::correct2(vi::VisBuffer2& vb, Bool trial, Bool doWtSp) {
+void StandardTsys::correct2(vi::VisBuffer2& vb, Bool trial, 
+			    Bool doWtSp, Bool dosync) {
 
   // Signal channelized weight calibration downstream
   freqDepCalWt_=doWtSp;
 
   // Call parent:
-  BJones::correct2(vb,trial,doWtSp);
+  BJones::correct2(vb,trial,doWtSp,dosync);
 }
 
 
