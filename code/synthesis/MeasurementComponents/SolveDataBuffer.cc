@@ -109,6 +109,47 @@ Bool SolveDataBuffer::Ok() {
   return (wtsum>0.0f);
 }
 
+/*
+// Divide corrected by model
+void SolveDataBuffer::divideCorrByModel() {
+
+  Int nCor(nCorrelations());
+  Int nChan(nChannels());
+  Int nRow(nRows());
+  Float amp(1.0);
+  Complex cor(1.0);
+    
+  Cube<Complex> vC; vC.reference(visCubeCorrected());
+  Cube<Complex> vM; vM.reference(visCubeModel());
+  Cube<Float> wS; wS.reference(weightSpectrum());
+
+  for (Int irow=0;irow<nRow;++irow) {
+    if (!flagRow()(irow)) {
+      for (Int ich=0;ich<nChan;++ich) {
+	for (Int icorr=0;icorr<nCor;icorr++) {
+	  if (!flagCube()(icorr,ich,irow)) {
+	    amp=abs(vM(icorr,ich,irow));
+	    if (amp>0.0f) {
+	      // Divide corr by model
+	      vC(icorr,ich,irow)/=vM(icorr,ich,irow);
+	      // Adjust weight by square of model amp
+	      wS(icorr,ich,irow)*=square(amp);
+	    }
+	  } // !*fl
+	  else {
+	    // zero data and weight
+	    vC(icorr,ich,irow)=Complex(0.0);
+	    wS(icorr,ich,irow)=0.0;
+	  }
+	  // model always unity after division
+	  vM(icorr,ich,irow)=Complex(1.0);
+	} // icorr
+      } // ich
+    } // !*flR
+  } // irow
+}
+*/
+
 void SolveDataBuffer::enforceAPonData(const String& apmode)
 {
 
@@ -423,6 +464,13 @@ Bool SDBList::Ok() {
 
 }
 
+/*
+void SDBList::divideCorrByModel()
+{
+  for (Int i=0;i<nSDB_;++i)
+    SDB_[i]->divideCorrByModel();
+}
+*/
 
 void SDBList::enforceAPonData(const String& apmode)
 {
