@@ -259,7 +259,8 @@ ClarkCleanLatModel::ClarkCleanLatModel(Lattice<Float> & model,
 
 
 ClarkCleanLatModel::~ClarkCleanLatModel() {
-  if(itsResidualPtr != NULL){delete itsResidualPtr; itsResidualPtr=NULL;}
+  // CAS-9268 needs this for tclean
+  //  if(itsResidualPtr != NULL){delete itsResidualPtr; itsResidualPtr=NULL;}
 }
 
 
