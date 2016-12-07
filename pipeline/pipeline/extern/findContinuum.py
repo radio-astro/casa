@@ -38,7 +38,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.111 2016/09/14 05:19:59 thunter Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.120 2016/12/06 05:16:27 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -107,9 +107,10 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                   header='', plotAtmosphere='transmission', airmass=1.5, pwv=1.0,
                   channelFractionForSlopeRemoval=0.75, mask='', 
                   invert=False, meanSpectrumMethod='auto',peakFilterFWHM=10,
-                  skyTempThreshold=1.5,
+                  skyTempThreshold=1.2, # was 1.5 in C4R2, reduced after slope removal added
                   skyTransmissionThreshold=0.08, maxGroupsForSkyThreshold=5,
-                  minBandwidthFractionForSkyThreshold=0.2, regressionTest=False):
+                  minBandwidthFractionForSkyThreshold=0.2, regressionTest=False,
+                  quadraticFit=True, triangleFraction=1.0, maxMemory=-1, tdmSkyTempThreshold=0.65):
     """
     This function calls functions to:
     1) compute the mean spectrum of a dirty cube
@@ -170,7 +171,8 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         'auto' currently invokes 'meanAboveThreshold' unless sky temperature range (max-min)
         from the atmospheric model is more than skyTempThreshold
     skyTempThreshold: rms value in Kelvin, above which meanSpectrumMethod is changed in 'auto' mode to peakOverMad
-        for non-TDM spectra. The value is automatically reduced to 2/3 of this value for TDM spectra.
+        for non-TDM spectra. 
+    tdmSkyTempThreshold: rms value in Kelvin (for TDM spectra) 
     skyTransmissionThreshold: threshold on (max-min)/mean, above which meanSpectrumMethod is changed in 'auto' mode to peakOverMad
     peakFilterFWHM: value used by 'peakOverRms' and 'peakOverMad' methods to presmooth 
         each plane with a Gaussian kernel of this width (in pixels).  Set to 1 to not do any 
@@ -198,8 +200,12 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
          and remove a linear slope and re-identify continuum channels (for the
          meanAboveThreshold methods only)
     invert: if reading previous meanSpectrum file, then invert the sign and add the minimum
+    quadraticFit: if True, fit quadratic polynomial to the noise regions when appropriate; 
+         otherwise fit only a linear slope
+    triangleFraction: MAD of dual-linfit residual must be less than this fraction*originalMAD
+    maxMemory: behave as if the machine has this many GB of memory
     """
-    casalogPost("\n BEGINNING: findContinuum.findContinuum('%s', centralArcsec='%s', mask='%s', overwrite=%s, sigmaFindContinuum='%s', meanSpectrumMethod='%s', peakFilterFWHM=%.0f, meanSpectrumFile='%s')" % (img, str(centralArcsec), mask, overwrite, str(sigmaFindContinuum), meanSpectrumMethod, peakFilterFWHM, meanSpectrumFile))
+    casalogPost("\n BEGINNING: findContinuum.findContinuum('%s', centralArcsec='%s', mask='%s', overwrite=%s, sigmaFindContinuum='%s', meanSpectrumMethod='%s', peakFilterFWHM=%.0f, meanSpectrumFile='%s', triangleFraction=%.2f)" % (img, str(centralArcsec), mask, overwrite, str(sigmaFindContinuum), meanSpectrumMethod, peakFilterFWHM, meanSpectrumFile, triangleFraction))
     casalogPost("0) Current memory usage: %.3f GB, resident: %.3f GB" % (memoryUsage(), residentMemoryUsage()))
     img = img.rstrip('/')
     imageInfo = [] # information returned from getImageInfo
@@ -275,12 +281,15 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
         hostname = os.getenv('HOST')
     except:
         hostname = "?"
-    casalogPost("Total memory on %s = %.3f GB" % (hostname,
-                                            bytes/1e9))
+    casalogPost("Total memory on %s = %.3f GB" % (hostname,bytes/(1024.**3)))
+    if (maxMemory > 0 and maxMemory < bytes/(1024.**3)):
+        bytes = maxMemory*(1024.**3)
+        casalogPost("but behaving as if it has only %.3f GB" % (bytes/(1024.**3)))
     meanSpectrumMethodRequested = meanSpectrumMethod
     meanSpectrumMethodMessage = ''
     npixels = float(nchan)*naxis1*naxis2
     maxpixels = bytes/67 # float(1024)*1024*960
+    triangularPatternSeen = False
     if (meanSpectrumMethod.find('auto') >= 0):
         meanSpectrumMethod = 'meanAboveThreshold'
         if (img != ''):
@@ -289,19 +298,26 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
             if (b > skyTransmissionThreshold or e > skyTempThreshold):
                 meanSpectrumMethod = 'peakOverMad'
                 meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since atmos. variation %.2f>%.2f or %.3f>%.1fK." % (meanSpectrumMethod,b,skyTransmissionThreshold,e,skyTempThreshold)
-            elif (e > skyTempThreshold*2/3. and tdmSpectrum(channelWidth,nchan)):
+            elif (e > tdmSkyTempThreshold and abs(channelWidth*nchan) > 1e9): # tdmSpectrum(channelWidth,nchan)):
                 meanSpectrumMethod = 'peakOverMad'
-                meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since atmos. variation %.2f>%.2f or %.3f>%.2fK." % (meanSpectrumMethod,b,skyTransmissionThreshold,e,skyTempThreshold*2/3.)
+                meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since atmos. variation %.2f>%.2f or %.3f>%.2fK." % (meanSpectrumMethod,b,skyTransmissionThreshold,e,tdmSkyTempThreshold)
             else:
                 # Maybe comment this out once thresholds are stable
-                if tdmSpectrum(channelWidth,nchan):
-                    myThreshold = skyTempThreshold*2/3.
+                if abs(channelWidth*nchan > 1e9): # tdmSpectrum(channelWidth,nchan):
+                    myThreshold = tdmSkyTempThreshold
                 else:
                     myThreshold = skyTempThreshold
-                meanSpectrumMethodMessage = "Did not change meanSpectrumMethod since atmos. variation %.2f<%.2f and %.3f<%.1fK." % (b,skyTransmissionThreshold,e,myThreshold)
-                if (checkForTriangularWavePattern(img,header)):
+                triangularPatternSeen, value = checkForTriangularWavePattern(img,header,triangleFraction)
+                if (triangularPatternSeen):
                     meanSpectrumMethod = 'peakOverMad'
-                    meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since triangular wave pattern was seen." % (meanSpectrumMethod)
+                    meanSpectrumMethodMessage = "Set meanSpectrumMethod='%s' since triangular pattern was seen (%.2f<%.2f)." % (meanSpectrumMethod, value, triangleFraction)
+                else:
+                    if value == False:
+                        triangleMsg = 'slopeTest=F'
+                    else:
+                        triangleMsg = '%.2f>%.2f' % (value,triangleFraction)
+                    meanSpectrumMethodMessage = "Did not change meanSpectrumMethod since atmos. variation %.2f<%.2f & %.3f<%.1fK (%s)." % (b,skyTransmissionThreshold,e,myThreshold,triangleMsg)
+
             casalogPost(meanSpectrumMethodMessage)
 
     centralArcsecField = centralArcsec                    
@@ -321,6 +337,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                 header['maxpixpos'][0] < naxis2/2 + newWidth/2 and
                 header['maxpixpos'][1] > naxis2/2 - newWidth/2 and 
                 header['maxpixpos'][1] < naxis2/2 + newWidth/2):
+                npixels = float(nchan)*newWidth*newWidth
                 casalogPost('Data max is within the smaller field')
                 casalogPost("Reducing image width examined from %.2f to %.2f arcsec to avoid memory problems." % (totalWidthArcsec,centralArcsecField))
             else:
@@ -356,12 +373,15 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                               channelFractionForSlopeRemoval, mask, 
                               invert, meanSpectrumMethod, peakFilterFWHM, 
                               fullLegend, iteration, meanSpectrumMethodMessage,
-                              regressionTest=regressionTest)
+                              regressionTest=regressionTest, quadraticFit=quadraticFit,
+                              megapixels=npixels*1e-6, triangularPatternSeen=triangularPatternSeen,
+                              maxMemory=maxMemory)
     if result == None:
         return
     selection, png, slope, channelWidth, nchan, useLowBaseline = result
     if (centralArcsec == 'auto' and img != '' and len(selection.split(separator)) < 2):
         # Only one range was found, so look closer into the center for a line
+        print "Only one range found....."
         myselection = selection.split(separator)[0]
         if (myselection.find('~') > 0):
             a,b = [int(i) for i in myselection.split('~')]
@@ -394,7 +414,9 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                       channelFractionForSlopeRemoval, mask, 
                                       invert, meanSpectrumMethod, peakFilterFWHM, 
                                       fullLegend,iteration,meanSpectrumMethodMessage,
-                                      regressionTest=regressionTest)
+                                      regressionTest=regressionTest, quadraticFit=quadraticFit,
+                                      megapixels=npixels*1e-6, triangularPatternSeen=triangularPatternSeen,
+                                      maxMemory=maxMemory)
         if result == None:
             return
         selection, png, slope, channelWidth, nchan, useLowBaseline = result
@@ -448,7 +470,9 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                   invert, meanSpectrumMethod, peakFilterFWHM, 
                                   fullLegend, iteration, 
                                   meanSpectrumMethodMessage,
-                                  regressionTest=regressionTest)
+                                  regressionTest=regressionTest, quadraticFit=quadraticFit,
+                                  megapixels=npixels*1e-6, triangularPatternSeen=triangularPatternSeen,
+                                  maxMemory=maxMemory)
 
         selection, png, slope, channelWidth, nchan, useLowBaseline = result
       else:
@@ -614,7 +638,7 @@ def tdmSpectrum(channelWidth, nchan):
     else:
         return False
 
-def atmosphereVariation(img, header, chanInfo, airmass=1.5, pwv=-1):
+def atmosphereVariation(img, header, chanInfo, airmass=1.5, pwv=-1, removeSlope=True):
     """
     Computes the absolue and percentage variation in atmospheric transmission 
     and sky temperature across an image cube.
@@ -623,9 +647,16 @@ def atmosphereVariation(img, header, chanInfo, airmass=1.5, pwv=-1):
                       standard devation of Tsky
     """
     freqs, values = CalcAtmTransmissionForImage(img, header, chanInfo, airmass=airmass, pwv=pwv, value='transmission')
+    if removeSlope:
+        slope, intercept = linfit(freqs, values, values*0.001)
+        print "removing slope: %f per GHz (%.0f,%.2f)" % (slope,freqs[0],values[0])
+        values = values - (freqs*slope + intercept) + np.mean(values)
     maxMinusMin = np.max(values)-np.min(values)
     percentage = maxMinusMin/np.mean(values)
     freqs, values = CalcAtmTransmissionForImage(img, header, chanInfo, airmass=airmass, pwv=pwv, value='tsky')
+    if removeSlope:
+        slope, intercept = linfit(freqs, values, values*0.001)
+        values = values - (freqs*slope + intercept) + np.mean(values)
     TmaxMinusMin = np.max(values)-np.min(values)
     Tpercentage = TmaxMinusMin*100/np.mean(values)
     stdValues = np.std(values)
@@ -646,7 +677,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
                      peakFilterFWHM=15, fullLegend=False, iteration=0,
                      meanSpectrumMethodMessage='', minSlopeToRemove=1e-8,
                      minGroupsForSFCAdjustmentInPeakOverMad=10, 
-                     regressionTest=False):
+                     regressionTest=False, quadraticFit=False, megapixels=0,
+                     triangularPatternSeen=False, maxMemory=-1):
     """
     This function calls functions to:
     1) compute the mean spectrum of a dirty cube
@@ -720,8 +752,14 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     plotAtmosphere: '', 'tsky', or 'transmission'
     airmass: for plot of atmospheric transmission
     pwv: in mm (for plot of atmospheric transmission)
-    channelFractionForSlopeRemoval: if this many channels are initially selected, then fit 
-         and remove a linear slope and re-identify continuum channels.
+    channelFractionForSlopeRemoval: if at least this many channels are initially selected, or 
+       if there are only 1-2 ranges found and the widest range has > nchan/3 channels, then 
+       fit and remove a linear slope and re-identify continuum channels.
+    quadraticFit: if True, fit quadratic polynomial to the noise regions when appropriate; 
+         otherwise fit only a linear slope
+    megapixels: simply used to label the plot
+    triangularPatternSeen: if True, then slightly boost sigmaFindContinuum if it is in 'auto' mode
+    maxMemory: only used to name the png if it is set
     """
     casalogPost("%d) Current memory usage: %.3f GB, resident: %.3f GB" % (iteration+1, memoryUsage(), residentMemoryUsage()))
     startTime = timeUtilities.time()
@@ -834,6 +872,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             sigmaFindContinuum = 3.5
         else:
             sigmaFindContinuum = 6.0
+        if triangularPatternSeen:
+            sigmaFindContinuum += 0.5
     else:
         sigmaFindContinuumAutomatic = False
     continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff, trimChannels, useLowBaseline, narrowValueModified = \
@@ -927,13 +967,25 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     largestGroup = channelsInLargestGroup(selection)
     selections = len(selection.split(separator))
     slopeRemoved = False
+    channelDistancesFromCenter = np.array(continuumChannels)-nchan/2
+    if len(np.where(channelDistancesFromCenter > 0)[0]) > 0 and len(np.where(channelDistancesFromCenter < 0)[0]) > 0:
+        channelsInBothHalves = True
+    else:
+        casalogPost("channelDistancesFromCenter = %s" % (channelDistancesFromCenter))
+        channelsInBothHalves = False  # does not get triggered by case 115, which could use it
     if (selectedChannels > channelFractionForSlopeRemoval*nchan or 
         (largestGroup>nchan/3 and selections <= 2 and channelFractionForSlopeRemoval<1)):
         previousResult = continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC        
         # remove linear slope from mean spectrum and run it again
         index = channelSelectionRangesToIndexArray(selection)
-        casalogPost("Fitting slope to %d channels (largestGroup=%d,nchan/3=%d,selectedChannels=%d)" % (len(index), largestGroup, nchan/3, selectedChannels))
-        slope, intercept = linfit(index, avgSpectrumNansReplaced[index], MAD(avgSpectrumNansReplaced[index]))
+        if quadraticFit and channelsInBothHalves:
+            casalogPost("Fitting quadratic to %d channels (largestGroup=%d,nchan/3=%d,selectedChannels=%d)" % (len(index), largestGroup, nchan/3, selectedChannels))
+            fitResult = polyfit(index, avgSpectrumNansReplaced[index], MAD(avgSpectrumNansReplaced[index]))
+            order2, slope, intercept, xoffset = fitResult
+        else:
+            casalogPost("Fitting slope to %d channels (largestGroup=%d,nchan/3=%d,selectedChannels=%d)" % (len(index), largestGroup, nchan/3, selectedChannels))
+            fitResult = linfit(index, avgSpectrumNansReplaced[index], MAD(avgSpectrumNansReplaced[index]))
+            slope, intercept = fitResult
         rerun = False
         if (factor >= 1.5 and maxTrim==maxTrimDefault and trimChannels=='auto'):
             #                 add these 'and' cases on July 20, 2016
@@ -942,11 +994,23 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             sigmaFindContinuum /= factor
             casalogPost("Restoring sigmaFindContinuum to %f" % (sigmaFindContinuum))
             rerun = True
-        if (abs(slope) > minSlopeToRemove):
-            casalogPost("Removing slope = %g" % (slope))
-            avgSpectrumNansReplaced -= np.array(range(len(avgSpectrumNansReplaced)))*slope
+        if quadraticFit and channelsInBothHalves:
+            casalogPost("Removing quadratic = %g*(x-%f)**2 + %g*(x-%f) + %g" % (order2,xoffset,slope,xoffset,intercept))
+            myx = np.arange(len(avgSpectrumNansReplaced)) - xoffset
+            avgSpectrumNansReplaced += nanmean(avgSpectrumNansReplaced)-(myx**2*order2 + myx*slope + intercept)
             slopeRemoved = True
             rerun = True
+            if lineStrengthFactor < 1.2:
+                sigmaFindContinuum += 0.5
+                casalogPost("lineStrengthFactor = %f < 1.2 (increasing sigmaFindContinuum by 0.5 to %.1f)" % (lineStrengthFactor,sigmaFindContinuum)) 
+            else:
+                casalogPost("lineStrengthFactor = %f > 1.2" % (lineStrengthFactor)) 
+        else:
+            if (abs(slope) > minSlopeToRemove):
+                casalogPost("Removing slope = %g" % (slope))
+                avgSpectrumNansReplaced -= np.array(range(len(avgSpectrumNansReplaced)))*slope
+                slopeRemoved = True
+                rerun = True
 # The following helped deliver more continuum bandwidth for HD_142527 spw3, but
 # it harmed 2013.1.00518 13co (and probably others) by including wing emission.
 #            if trimChannels == 'auto':   # prevent overzealous trimming  July 20, 2016
@@ -956,7 +1020,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             continuumChannels,selection,threshold,median,groups,correctionFactor,medianTrue,mad,medianCorrectionFactor,negativeThreshold,lineStrengthFactor,singleChannelPeaksAboveSFC,allGroupsAboveSFC,spectralDiff,trimChannels,useLowBaseline, narrowValueModified = \
             findContinuumChannels(avgSpectrumNansReplaced, nBaselineChannels, sigmaFindContinuum, nanmin, 
                                   baselineModeB, trimChannels, narrow, verbose, maxTrim, maxTrimFraction, 
-                                  separator, slope)
+                                  separator, fitResult)
             # If we had only one group and only added one or two more group after removing slope, and the
             # smallest is small compared to the original group, then discard the new solution.
             if (groups <= 3 and previousResult[4] == 1):
@@ -1142,10 +1206,10 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     if (centralArcsec == 'auto'):
         areaString += 'mean over area: (unknown)'
     elif (centralArcsec < 0):
-        areaString += 'mean over area: whole field'
+        areaString += 'mean over area: whole field (%.0fMpix)' % (megapixels)
     else:
-        areaString += 'mean over area: central box of radius %.1f arcsec' % (centralArcsec)
-    pl.text(0.5,0.99-i*inc,areaString, transform=ax1.transAxes, ha='center', size=fontsize)
+        areaString += 'mean over: central box of radius %.1f arcsec (%.0fMpix)' % (centralArcsec,megapixels)
+    pl.text(0.5,0.99-i*inc,areaString, transform=ax1.transAxes, ha='center', size=fontsize-1)
     if (meanSpectrumMethodMessage != ''):
 #        msmm_ylabel = 0.01
         msmm_ylabel = -0.10
@@ -1162,7 +1226,10 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             discarded = ' (removed)'
         else:
             discarded = ' (not removed)'
-        finalLine += 'linear slope: %g %s' % (roundFigures(slope,3),discarded)
+        if quadraticFit and channelsInBothHalves:
+            finalLine += 'quadratic fit: %g*(x-%g)**2+%g*(x-%g)+%g %s' % (roundFigures(order2,3),roundFigures(xoffset,4),roundFigures(slope,3),roundFigures(xoffset,4),roundFigures(intercept,3),discarded)
+        else:
+            finalLine += 'linear slope: %g %s' % (roundFigures(slope,3),discarded)
     i += 1
     pl.text(0.5, 0.99-i*inc, finalLine, transform=ax1.transAxes, ha='center', size=fontsize)
     i += 1
@@ -1170,13 +1237,16 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
 #        a,b,c,d,e = atmosphereVariation(img, header, chanInfo, airmass=airmass, pwv=pwv)
 #        finalLine = 'transmission: %f, %f  skyTemp: %f, %f' % (a,b,c,d)
 #        pl.text(0.5, 0.99-i*inc, finalLine, transform=ax1.transAxes, ha='center', size=fontsize)
+    gigabytes = getMemorySize()/(1024.**3)
     if not regressionTest:
         # Write CVS version
         pl.text(1.03, -0.005-2*inc, ' '.join(version().split()[1:4]), size=8, 
                 transform=ax1.transAxes, ha='right')
         # Write CASA version
-        pl.text(-0.03, -0.005-2*inc, "CASA "+casadef.casa_version+" r"+casadef.subversion_revision, 
+        pl.text(-0.03, -0.005-2*inc, "CASA "+casadef.casa_version+" r"+casadef.subversion_revision+' (%.0fGB)'%gigabytes, 
              size=8, transform=ax1.transAxes, ha='left')
+    else:
+        pl.text(-0.03, -0.005-2*inc,'(%.0fGB)'%gigabytes, size=8, transform=ax1.transAxes, ha='left')
     if (plotAtmosphere != ''):
         if (plotAtmosphere == 'tsky'):
             value = 'tsky'
@@ -1223,6 +1293,8 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
         narrowString = pickNarrowString(narrow, len(avgSpectrumNansReplaced), narrowValueModified) # this is used later
         trimString = pickTrimString(trimChannels, len(avgSpectrumNansReplaced), maxTrim)
         png += '.meanSpectrum.%s.%s.%s.%.1fsigma.narrow%s.trim%s%s' % (meanSpectrumMethod, baselineModeA, baselineModeB, sigmaFindContinuum, narrowString, trimString, transition)
+        if maxMemory > 0:
+            png += '.%.0fGB' % (maxMemory)
         if overwrite:
             png += '.overwriteTrue.png'
         else: # change the following to '.png' after my test of July 20, 2016
@@ -1235,9 +1307,13 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
         if (len(alternateDirectory) < 1):
             alternateDirectory = '.'
         png = alternateDirectory + '/' + os.path.basename(png)
+        pngdir = alternateDirectory
         print "png = ", png
-    pl.savefig(png)
-    casalogPost("Wrote png = %s" % (png))
+    if (not os.access(pngdir, os.W_OK)):
+        casalogPost("No permission to write to alternateDirectory. Will not save the plot.")
+    else:
+        pl.savefig(png)
+        casalogPost("Wrote png = %s" % (png))
     donetime = timeUtilities.time()
     casalogPost("%.1f sec elapsed in runFindContinuum" % (donetime-startTime))
 #    sd = open('spectralDiff.dat','a')
@@ -1418,7 +1494,7 @@ def readPreviousMeanSpectrum(meanSpectrumFile, verbose=False, invert=False):
 def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3, 
                           nanmin=None, baselineMode='min', trimChannels='auto',
                           narrow='auto', verbose=False, maxTrim=maxTrimDefault, 
-                          maxTrimFraction=1.0, separator=';', slope=0.0,
+                          maxTrimFraction=1.0, separator=';', fitResult=None,
                           maxGroupsForMaxTrimAdjustment=3, lowHighBaselineThreshold=1.5,
                           lineSNRThreshold=20):
     """
@@ -1453,11 +1529,22 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     9  correction factor applied to get the inferred true median
     10 negative threshold used
     11 lineStrength factor
-    12 singleChannelPeaksAboveSFC, 
+    12 singleChannelPeaksAboveSFC: how many cases where only a single channel exceeds the threshold 
     13 allGroupsAboveSFC
     14 spectralDiff (percentage of median)
     """
-    originalSpectrum = spectrum + slope*np.array(range(len(spectrum)))
+    if (fitResult != None):
+        myx = np.arange(len(spectrum))
+        if (len(fitResult) > 2):
+            myx -= fitResult[3]
+            originalSpectrum = spectrum + (fitResult[0]*myx**2 + fitResult[1]*myx + fitResult[2]) - nanmean(spectrum)
+#            print "fitResult = ", fitResult
+            casalog.post("min/max spectrum = %f, %f" % (np.min(spectrum), np.max(spectrum)))
+            casalog.post("min/max originalSpectrum = %f, %f" % (np.min(originalSpectrum), np.max(originalSpectrum)))
+        else:
+            originalSpectrum = spectrum + fitResult[0]*myx
+    else:
+        originalSpectrum = spectrum
     if (narrow == 'auto'):
         narrow = pickNarrow(len(spectrum))
         autoNarrow = True
@@ -1467,7 +1554,13 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     percentile = 100.0*nBaselineChannels/npts
     correctionFactor = sigmaCorrectionFactor(baselineMode, npts, percentile)
     sigmaEffective = sigmaFindContinuum*correctionFactor
-    casalogPost("****** starting findContinuumChannels (slope=%g) ***********" % (slope))
+    if (fitResult != None):
+        if (len(fitResult) > 2):
+            casalogPost("****** starting findContinuumChannels (polynomial=%g*(x-%.2f)**2+%g*(x-%.2f)+%g) ***********" % (fitResult[0], fitResult[3], fitResult[1], fitResult[3], fitResult[2]))
+        else:
+            casalogPost("****** starting findContinuumChannels (slope=%g) ***********" % (fitResult[0]))
+    else:
+        casalogPost("****** starting findContinuumChannels ***********")
     casalogPost("Using sigmaFindContinuum=%.2f, sigmaEffective=%.1f, percentile=%.0f for mode=%s, channels=%d/%d" % (sigmaFindContinuum, sigmaEffective, percentile, baselineMode, nBaselineChannels, len(spectrum)))
     if (baselineMode == 'edge'):
         # pick n channels on both edges
@@ -1573,32 +1666,38 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         lastmin = np.min(channels)
         channels.remove(lastmin)
         removed = 1
+        casalog.post("Checking channels %d-%d" % (np.min(channels),np.max(channels)))
         for c in range(np.min(channels),np.max(channels)):
             mydiff = abs(originalSpectrum[c] - np.min(originalSpectrum))
             mycrit = abs(1e-10*np.min(originalSpectrum))
             if (mydiff > mycrit):
                 break
-            channels.remove(c)
-            removed += 1
+            if c in channels:
+                channels.remove(c)
+                removed += 1
         casalogPost("Removed %d channels on low channel edge that were at the minimum." % (removed))
     # Now come in from the upper side
     if (abs(originalSpectrum[np.max(channels)] - np.min(originalSpectrum)) < abs(1e-10*np.min(originalSpectrum))):
         lastmin = np.max(channels)
         channels.remove(lastmin)
         removed = 1
+        casalog.post("Checking channels %d-%d" % (np.max(channels),np.min(channels)))
         for c in range(np.max(channels),np.min(channels)-1,-1):
             mydiff = abs(originalSpectrum[c] - np.min(originalSpectrum))
             mycrit = abs(1e-10*np.min(originalSpectrum))
             if (mydiff > mycrit):
                 break
-            channels.remove(c)
-            removed += 1
+            if c in channels:
+                channels.remove(c)
+                removed += 1
         casalogPost("Removed %d channels on high channel edge that were at the minimum." % (removed))
     peakChannels = np.where(spectrum > threshold)[0]
     peakChannelsLists = splitListIntoContiguousLists(peakChannels)
     widthOfWidestFeature = maxLengthOfLists(peakChannelsLists)
-    casalogPost("Width of widest feature = %d" % (widthOfWidestFeature))
-    if (signalRatio > 0 and signalRatio < 0.6 and spectralDiff2 < 1.2 and 
+    casalogPost("Width of widest feature = %d (length spectrum = %d)" % (widthOfWidestFeature, len(spectrum)))
+    # C4R2 had signalRatio < 0.6 and spectralDiff2 < 1.2 but this yielded only 1 channel 
+    # of continuum on NGC6334I spw25 when memory expanded to 256GB.
+    if (signalRatio > 0 and signalRatio < 0.925 and spectralDiff2 < 1.3 and 
         len(spectrum) > 1000  and trimChannels=='auto' and 
         widthOfWidestFeature < len(spectrum)/8):
         # This is meant to prevent rich hot cores from returning only 1
@@ -1607,7 +1706,10 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
         trimChannels = 13
         if autoNarrow:
             narrow = 2
-        casalogPost('Setting trimChannels=%d, narrow=%s since many lines appear to be present.' % (trimChannels,str(narrow)))
+        casalogPost('Setting trimChannels=%d, narrow=%s since many lines appear to be present (signalRatio=%f).' % (trimChannels,str(narrow), signalRatio))
+    else:
+        casalogPost('Not changing trimChannels from %s: signalRatio=%f, spectralDiff2=%f' % (str(trimChannels), signalRatio, spectralDiff2))
+        
 
     peakMultiChannelsLists = splitListIntoContiguousListsAndRejectNarrow(peakChannels, narrow=2)
     allGroupsAboveSFC = len(peakChannelsLists)
@@ -1683,13 +1785,20 @@ def rejectNarrowInnerWindowsChannels(channels):
     """
     mylists = splitListIntoContiguousLists(channels)
     groups = len(mylists)
-    if (groups > 2 and groups < 8):
+#    if (groups > 2 and groups < 8):  C4R2
+    if (groups > 2 and groups < 16):
         channels = []
         lenFirstGroup = len(mylists[0])
         lenLastGroup = len(mylists[-1])
         channels += mylists[0]
+        if (groups < 8):
+            widthFactor = 1
+        else:
+            # this is to prevent unnecessarily trimming narrow windows, e.g. in a hot core case
+            widthFactor = 0.2
         for group in range(1,groups):
-            if (len(mylists[group]) >= lenFirstGroup or len(mylists[group]) >= lenLastGroup):
+#            if (len(mylists[group]) >= np.mean([lenFirstGroup,lenLastGroup])*widthFactor): #  or len(mylists[group]) >= lenLastGroup*widthFactor):
+            if (len(mylists[group]) >= np.min([lenFirstGroup,lenLastGroup])*widthFactor): 
                 channels += mylists[group]
     return(channels)
 
@@ -1730,8 +1839,9 @@ def splitListIntoContiguousListsAndTrim(channels, trimChannels=0.1,
     maxTrim: used in 'auto' mode
     Returns: a new single list
     """
-    if (trimChannels <= 0):
-        return(np.array(channels))
+    if type(trimChannels) != str:
+        if (trimChannels <= 0):
+            return(np.array(channels))
     length = len(channels)
     trimChannelsMode = trimChannels
     if (trimChannels == 'auto'):
@@ -1800,6 +1910,7 @@ def pickAutoTrimChannels(length, maxTrim):
     """
     trimChannels = 0.1
     if (length*trimChannels > maxTrim):
+        casalogPost("pickAutoTrimChannels(): set trimChannels = %d because %.0f > %d" % (maxTrim,length*trimChannels,maxTrim))
         trimChannels = maxTrim
     return(trimChannels)
 
@@ -3210,6 +3321,32 @@ def linfit(x, y, yerror, pinit=[0,0]):
     covar = out[1]
     return(p)
 
+def polyfit(x, y, yerror, pinit=[0,0,0,0]):
+    """
+    Basic second-order polynomial function fitter with error bars in y-axis data points.
+    Uses scipy.optimize.leastsq().  Accepts either lists or arrays.
+    Input:
+         x, y: x and y axis values
+         yerror: uncertainty in the y-axis values (vector or scalar)
+         pinit contains the initial guess of [slope, intercept]
+         y = order2coeff*(x-xoffset)**2 + slope*(x-xoffset) + y-intercept
+    Output:
+       The fit result as: [xoffset, order2coeff, slope, y-intercept]
+    - Todd Hunter
+    """
+    x = np.array(x)
+    y = np.array(y)
+    pinit[2] = np.mean(y)
+    pinit[3] = x[len(x)/2]
+    if (type(yerror) != list and type(yerror) != np.ndarray):
+        yerror = np.ones(len(x)) * yerror
+    fitfunc = lambda p, x: p[2] + p[1]*(x-p[3]) + p[0]*(x-p[3])**2
+    errfunc = lambda p,x,y,err: (y-fitfunc(p,x))/(err**2)
+    out = scipy.optimize.leastsq(errfunc, pinit, args=(x,y,yerror/y), full_output=1)
+    p = out[0]
+    covar = out[1]
+    return(p)
+
 def channelsInLargestGroup(selection):
     """
     Returns the number of channels in the largest group of channels in a
@@ -3310,36 +3447,57 @@ def widthOfMaskArcsec(mask):
     width = np.abs(cdelt1)*(np.max([width,height])+1)
     return width
 
-def checkForTriangularWavePattern(img, header, fraction=1.0, pad=20):
+def checkForTriangularWavePattern(img, header, triangleFraction=1.0, pad=20):
     """
     Fit and remove linear slopes to each half of the spectrum, then comparse
-    the MAD of the residual to the max-min.
+    the MAD of the residual to the MAD of the original spectrum
+    pad: fraction of total channels to ignore on each edge (e.g. 20: 1/20th)
+    triangleFraction: MAD of dual-linfit residual must be less than this fraction*originalMAD
+    Returns: 
+    * Boolean: whether triangular pattern meets the threshold
+    * value: either False (if slope test failed) or a float (the ratio of the MADs)
     """
     casalogPost('Checking for triangular wave pattern in the noise')
     chanlist, mad = computeMadSpectrum(img, header)
     nchan = len(chanlist)
-    n0 = nchan/2 #- nchan/pad
-    n1 = nchan/2 #+ nchan/pad
-#    slope,intercept = linfit(chanlist[nchan/pad:-nchan/pad], mad[nchan/pad:-nchan/pad], MAD(mad[nchan/pad:-nchan/pad]))
+#    n0 = nchan/2 #- nchan/pad
+#    n1 = nchan/2 #+ nchan/pad
+    n0 = nchan/2 - nchan/pad
+    n1 = nchan/2 + nchan/pad
     slope = 0
     intercept = np.mean(mad[nchan/pad:-nchan/pad])
     slope0, intercept0 = linfit(chanlist[nchan/pad:n0], mad[nchan/pad:n0], MAD(mad[nchan/pad:n0]))
     slope1, intercept1 = linfit(chanlist[n1:-nchan/pad], mad[n1:-nchan/pad], MAD(mad[n1:-nchan/pad]))
-    casalogPost("checkForTriangularWavePattern: slope0=%g, slope1=%g" % (slope0,slope1))
-    if (slope0 > 0 and slope1 < 0):
+    casalogPost("checkForTriangularWavePattern: slope0=%+g, slope1=%+g, %s" % (slope0,slope1,os.path.basename(img)))
+    slopeTest = slope0 > 0 and slope1 < 0 
+    slopeDiff = abs(abs(slope1)-abs(slope0))
+    slopeSum = (abs(slope1)+abs(slope0))
+    similarSlopeThreshold = 0.70 # 0.40
+    similarSlopes = slopeDiff/slopeSum < similarSlopeThreshold 
+    # if the slope is sufficiently high, then it is probably a real feature, not a noise feature
+    slopeSignPattern = slope0 > 0 and slope1 < 0
+    largeSlopes = abs(slope0)>1e-5 or abs(slope1)>1e-5
+    differentSlopeThreshold = 5
+    differentSlopes = (abs(slope0/slope1) > differentSlopeThreshold) or (abs(slope0/slope1) < 1.0/differentSlopeThreshold)
+    slopeTest = (slopeSignPattern and similarSlopes and not largeSlopes) or (differentSlopes and not largeSlopes)
+    if slopeTest:
         residual = mad - (chanlist*slope + intercept)
+        madOfResidualSingleLine = MAD(residual)  
         residual0 = mad[:nchan/2] - (chanlist[:nchan/2]*slope0 + intercept0)
         residual1 = mad[nchan/2:] - (chanlist[nchan/2:]*slope1 + intercept1)
-        madOfResidualSingleLine = MAD(residual)
         madOfResidual = MAD(list(residual0) + list(residual1))
-        threshold = madOfResidualSingleLine*fraction
+        madRatio = madOfResidual/madOfResidualSingleLine
 #        fraction = 0.17
 #        threshold = fraction*(np.max(mad[nchan/pad:-nchan/pad])-
 #                              np.min(mad[nchan/pad:-nchan/pad]))
-        casalogPost("checkForTriangularWavePattern: MAD_of_residual=%e, threshold=%e, ratio_MADoverThreshold=%f" % (madOfResidual, threshold, madOfResidual/threshold))
-        if (madOfResidual < threshold):
-            return True
-    return False
+        casalogPost("checkForTriangularWavePattern: MAD_of_residual=%e, thresholdFraction=%.2f, ratio_of_MADs=%.3f, slopeDiff/slopeSum=%.2f, slope0/slope1=%.2f, signPattern=%s similarSlopes=%s largeSlopes=%s differentSlopes=%s" % (madOfResidual, triangleFraction, madRatio, slopeDiff/slopeSum,slope0/slope1,slopeSignPattern,similarSlopes,largeSlopes,differentSlopes))
+        if (madRatio < triangleFraction):
+            return True, madRatio
+        else:
+            return False, madRatio
+    else:
+        casalogPost("checkForTriangularWavePattern: slopeDiff/slopeSum=%.2f signPattern=%s similarSlopes=%s largeSlopes=%s  %s" % (slopeDiff/slopeSum,slopeSignPattern,similarSlopes,largeSlopes,os.path.basename(img)))
+    return False, slopeTest
     
 def computeMadSpectrum(img, header, box='', listit=False, verbose=False):
     """
