@@ -90,13 +90,17 @@ public:
   //  TBD?  Needed?
   virtual void guessPar(VisBuffer& ) {};
 
-  // K now uses generic gather, but solves for itself per solution
+  // FringeJones uses generic gather, but solves for itself per solution
   virtual casacore::Bool useGenericGatherForSolve() { return true; };
   virtual casacore::Bool useGenericSolveOne() { return false; }
 
   // Override G here; nothing to do for K, for now
   //   TBD: refant apply, etc.
   virtual void globalPostSolveTinker() {};
+
+  // Local implementation of selfSolveOne (generalized signature)
+  virtual void selfSolveOne(VisBuffGroupAcc& vbga);
+  virtual void selfSolveOne(SDBList& sdbs);
 
 
 protected:
@@ -115,10 +119,6 @@ protected:
   // Initialize trivial dJs
   //  TBD: make this default in SVC?
   virtual void initTrivDJ() {};
-
-  // Local implementation of selfSolveOne (generalized signature)
-  //  **TBD:  migration to SolveDataBuffer**
-  virtual void selfSolveOne(VisBuffGroupAcc& vbga);
 
   // Reference frequencies
   casacore::Vector<casacore::Double> KrefFreqs_;

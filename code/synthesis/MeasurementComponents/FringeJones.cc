@@ -30,6 +30,7 @@
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>  // *
+#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
@@ -213,27 +214,26 @@ void FringeJones::calcAllJones() {
   }
 }
 
-void FringeJones::selfSolveOne(VisBuffGroupAcc& vbga) {
+void FringeJones::selfSolveOne(VisBuffGroupAcc&) {
 
-  // NB: The following meta info may be incomplete w.r.t.
-  //   the contents of the VisBufferGroupAcc (esp. when 
-  //   vbga.nBuf()>1); this will be remedied in the 
-  //   forthcoming SolveDataBuffer version...
-  
-  Int nVB=vbga.nBuf();
+  // NB: Use "FringeJones::selfSolveOne(SDBList& sdbs)" instead!
+  throw(AipsError("VisBuffGroupAcc is invalid for FringeJones"));
 
-  cout << "Scan=" << currScan()
-       << ((combscan() && (nVB>1)) ? "+" : "")
-       << " Time=" << ((nVB>1)?"~":"")
-       << MVTime(refTime()/C::day).string(MVTime::YMD,7)
-       << " Field=" << currField()
-       << ((combfld() && (nVB>1)) ? "+" : "")
-       << " Spw=" << currSpw()
-       << ((combspw() && (nVB>1)) ? "+" : "")
-       << " nVB=" << nVB
-       << ": I don't know how to solve yet!" << endl;
+}
 
-  // Actual solve TBD!!!!!
+
+void FringeJones::selfSolveOne(SDBList& sdbs) {
+
+  Int nSDB=sdbs.nSDB();
+  cout << "FringeJones::selfSolveOne: nSDB = " << nSDB << endl;   // remove this
+
+  // Implement actual solve here!!!
+
+  //  E.g., gather data from visCubeCorrected in the SolveDataBuffers 
+  //   in the SDBList and feed to solving code
+  //  Typically, each SolveDataBuffer will contain a single timestamp 
+  //    in a single spw
+  //  E.g., see KJones::solveOneSDBmbd(SDBList&)
 
 }
 
