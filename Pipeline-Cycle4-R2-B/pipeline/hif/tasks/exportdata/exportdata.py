@@ -1050,6 +1050,7 @@ finally:
             for image_number, image in enumerate(cleanlist):
                 # We need to store the image
                 cleanlist[image_number]['fitsfiles'] = []
+                cleanlist[image_number]['auxfitsfiles'] = []
                 # Image name probably includes path
                 if image['sourcetype'] in intents:
                     if (image['multiterm']):
@@ -1081,16 +1082,20 @@ finally:
                         if (image['multiterm']):
                             imagename = image['imagename'].replace('.image.pbcor', '.pb.tt0')
                             images_list.append(imagename)
+                            cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
                         else:
                             imagename = image['imagename'].replace('.image.pbcor', '.pb')
                             images_list.append(imagename)
+                            cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
                     else:
                         if (image['multiterm']):
                             imagename = image['imagename'].replace('.image', '.pb.tt0')
                             images_list.append(imagename)
+                            cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
                         else:
                             imagename = image['imagename'].replace('.image', '.pb')
                             images_list.append(imagename)
+                            cleanlist[image_number]['auxfitsfiles'].append(self._fitsfile(products_dir, imagename))
         else:
             # Assume only the root image name was given.
             cleanlib = imagelibrary.ImageLibrary()
@@ -1114,6 +1119,7 @@ finally:
             # Need to add the FITS names
             for i in xrange(len(cleanlist)):
                 cleanlist[i]['fitsfiles'] = [self._fitsfile(products_dir, images_list[i])]
+                cleanlist[i]['auxfitsfiles'] = []
 
         # Convert to FITS.
         fits_list = []
