@@ -1,15 +1,26 @@
 import subprocess
 import os
 import sys
+import __casac__
+
 
 class carta:
     def __init__(self):
-       print __file__
-       print sys.platform
-       scriptdir = os.path.dirname(__file__)
-       relativepath = "/../../etc/carta/bin/carta.sh"
-       if sys.platform == "darwin" :
-           relativepath = "/../Carta.app/Contents/MacOS/carta.sh"
-       cartapath = scriptdir + relativepath
-       print cartapath
-       subprocess.Popen([cartapath])
+        # Default paths for packaged applications
+        #print __file__
+        #print sys.platform
+        script_dir = os.path.dirname(__file__)
+        relative_path = "/../../etc/carta/bin/carta.sh"
+        if sys.platform == "darwin" :
+            relative_path = "/../Carta.app/Contents/MacOS/carta.sh"
+        carta_path = script_dir + relative_path
+
+        # Get Carta home from .casarc
+        cu = __casac__.utils.utils()
+        cartahome = cu.getrc("CartaHome")
+        if cartahome != "":
+            carta_path = cartahome + "/bin/carta.sh"
+            if sys.platform == "darwin" :
+                carta_path = cartahome + "/Contents/MacOS/carta.sh"
+            print "Starting carta from:" + carta_path
+        subprocess.check_output([carta_path])
