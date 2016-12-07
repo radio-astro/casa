@@ -29,7 +29,6 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <casa/BasicMath/Math.h>
-#include <casa/namespace.h>
 
 #include <synthesis/MeasurementComponents/KJones.h>
 #include <synthesis/MeasurementComponents/SolveDataBuffer.h>

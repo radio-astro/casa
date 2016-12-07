@@ -29,15 +29,21 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <casa/BasicMath/Math.h>
-#include <casa/namespace.h>
 
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
-//#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
-//#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
-//#include <msvis/MSVis/SimpleSimVi2.h>
-//#include <msvis/MSVis/VisBuffer2.h>
+#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
+#include <msvis/MSVis/SimpleSimVi2.h>
+#include <msvis/MSVis/VisBuffer2.h>
+
+#include <gtest/gtest.h>
 
 #include "VisCalTestBase_GT.h"
+
+using namespace std;
+using namespace casa;
+using namespace casacore;
+using namespace casa::vi;
 
 // <summary>
 // Test program for PJones
@@ -82,12 +88,12 @@ TEST_F(PJonesTest, PJonesApplyTest) {
   ASSERT_EQ(VisCal::P,Papp.type());
   ASSERT_EQ(String("P Jones"),Papp.typeName());
   //  ASSERT_EQ(1,Papp.nPar());  // not really used by PJones?
-  ASSERT_EQ(false,Papp.freqDepPar());
-  ASSERT_EQ(false,Papp.freqDepMat());
-  ASSERT_EQ(false,Papp.freqDepCalWt());
-  ASSERT_EQ(false,Papp.timeDepMat());
-  ASSERT_EQ(true,Papp.isApplied());
-  ASSERT_EQ(false,Papp.isSolvable());
+  ASSERT_FALSE(Papp.freqDepPar());
+  ASSERT_FALSE(Papp.freqDepMat());
+  ASSERT_FALSE(Papp.freqDepCalWt());
+  ASSERT_FALSE(Papp.timeDepMat());
+  ASSERT_TRUE(Papp.isApplied());
+  ASSERT_FALSE(Papp.isSolvable());
 
   for (vi2.originChunks();vi2.moreChunks();vi2.nextChunk()) {
     for (vi2.origin();vi2.more();vi2.next()) {

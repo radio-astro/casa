@@ -29,14 +29,9 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <casa/BasicMath/Math.h>
-#include <casa/namespace.h>
 
 #include <synthesis/MeasurementComponents/DJones.h>
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
-//#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
-//#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
-//#include <msvis/MSVis/SimpleSimVi2.h>
-//#include <msvis/MSVis/VisBuffer2.h>
 
 #include <gtest/gtest.h>
 

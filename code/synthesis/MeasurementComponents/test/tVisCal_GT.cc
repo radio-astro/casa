@@ -93,12 +93,12 @@ TEST_F(VisCalTest, GJonesApplyState) {
   ASSERT_EQ(VisCal::G,G->type());
   ASSERT_EQ(String("G Jones"),G->typeName());
   ASSERT_EQ(2,G->nPar());
-  ASSERT_EQ(false,G->freqDepPar());
-  ASSERT_EQ(false,G->freqDepMat());
-  ASSERT_EQ(false,G->freqDepCalWt());
-  ASSERT_EQ(false,G->timeDepMat());
-  ASSERT_EQ(true,G->isApplied());
-  ASSERT_EQ(true,G->isSolvable());
+  ASSERT_FALSE(G->freqDepPar());
+  ASSERT_FALSE(G->freqDepMat());
+  ASSERT_FALSE(G->freqDepCalWt());
+  ASSERT_FALSE(G->timeDepMat());
+  ASSERT_TRUE(G->isApplied());
+  ASSERT_TRUE(G->isSolvable());
 
   /*
   IPosition sh(3,2,1,nAnt);  // nChan=1 for G
@@ -138,13 +138,13 @@ TEST_F(VisCalTest, GJonesSolveState) {
   ASSERT_EQ(VisCal::G,G->type());
   ASSERT_EQ(String("G Jones"),G->typeName());
   ASSERT_EQ(2,G->nPar());
-  ASSERT_EQ(false,G->freqDepPar());
-  ASSERT_EQ(false,G->freqDepMat());
-  ASSERT_EQ(false,G->freqDepCalWt());
-  ASSERT_EQ(false,G->timeDepMat());
-  ASSERT_EQ(false,G->isApplied());
-  ASSERT_EQ(true,G->isSolved());
-  ASSERT_EQ(true,G->isSolvable());
+  ASSERT_FALSE(G->freqDepPar());
+  ASSERT_FALSE(G->freqDepMat());
+  ASSERT_FALSE(G->freqDepCalWt());
+  ASSERT_FALSE(G->timeDepMat());
+  ASSERT_FALSE(G->isApplied());
+  ASSERT_TRUE(G->isSolved());
+  ASSERT_TRUE(G->isSolvable());
   
   ASSERT_EQ(caltablename,G->calTableName());
   ASSERT_EQ(solint,G->solint());
@@ -174,12 +174,12 @@ TEST_F(VisCalTest, BJonesApplyState) {
   ASSERT_EQ(VisCal::B,B->type());
   ASSERT_EQ(String("B Jones"),B->typeName());
   ASSERT_EQ(2,B->nPar());
-  ASSERT_EQ(true,B->freqDepPar());
-  ASSERT_EQ(true,B->freqDepMat());
-  ASSERT_EQ(false,B->freqDepCalWt());
-  ASSERT_EQ(false,B->timeDepMat());
-  ASSERT_EQ(true,B->isApplied());
-  ASSERT_EQ(true,B->isSolvable());
+  ASSERT_TRUE(B->freqDepPar());
+  ASSERT_TRUE(B->freqDepMat());
+  ASSERT_FALSE(B->freqDepCalWt());
+  ASSERT_FALSE(B->timeDepMat());
+  ASSERT_TRUE(B->isApplied());
+  ASSERT_TRUE(B->isSolvable());
 
   delete B;
 }
@@ -209,13 +209,13 @@ TEST_F(VisCalTest, BJonesSolveState) {
   ASSERT_EQ(VisCal::B,B->type());
   ASSERT_EQ(String("B Jones"),B->typeName());
   ASSERT_EQ(2,B->nPar());
-  ASSERT_EQ(true,B->freqDepPar());
-  ASSERT_EQ(true,B->freqDepMat());
-  ASSERT_EQ(false,B->freqDepCalWt());
-  ASSERT_EQ(false,B->timeDepMat());
-  ASSERT_EQ(false,B->isApplied());
-  ASSERT_EQ(true,B->isSolved());
-  ASSERT_EQ(true,B->isSolvable());
+  ASSERT_TRUE(B->freqDepPar());
+  ASSERT_TRUE(B->freqDepMat());
+  ASSERT_FALSE(B->freqDepCalWt());
+  ASSERT_FALSE(B->timeDepMat());
+  ASSERT_FALSE(B->isApplied());
+  ASSERT_TRUE(B->isSolved());
+  ASSERT_TRUE(B->isSolvable());
   
   ASSERT_EQ(caltablename,B->calTableName());
   ASSERT_EQ(solint,B->solint());
@@ -246,12 +246,12 @@ TEST_F(VisCalTest, TJonesApplyState) {
   ASSERT_EQ(VisCal::T,T->type());
   ASSERT_EQ(String("T Jones"),T->typeName());
   ASSERT_EQ(1,T->nPar());
-  ASSERT_EQ(false,T->freqDepPar());
-  ASSERT_EQ(false,T->freqDepMat());
-  ASSERT_EQ(false,T->freqDepCalWt());
-  ASSERT_EQ(false,T->timeDepMat());
-  ASSERT_EQ(true,T->isApplied());
-  ASSERT_EQ(true,T->isSolvable());
+  ASSERT_FALSE(T->freqDepPar());
+  ASSERT_FALSE(T->freqDepMat());
+  ASSERT_FALSE(T->freqDepCalWt());
+  ASSERT_FALSE(T->timeDepMat());
+  ASSERT_TRUE(T->isApplied());
+  ASSERT_TRUE(T->isSolvable());
 
   delete T;
 }
@@ -279,13 +279,13 @@ TEST_F(VisCalTest, TJonesSolveState) {
   ASSERT_EQ(VisCal::T,T->type());
   ASSERT_EQ(String("T Jones"),T->typeName());
   ASSERT_EQ(1,T->nPar());
-  ASSERT_EQ(false,T->freqDepPar());
-  ASSERT_EQ(false,T->freqDepMat());
-  ASSERT_EQ(false,T->freqDepCalWt());
-  ASSERT_EQ(false,T->timeDepMat());
-  ASSERT_EQ(false,T->isApplied());
-  ASSERT_EQ(true,T->isSolvable());
-  ASSERT_EQ(true,T->isSolved());
+  ASSERT_FALSE(T->freqDepPar());
+  ASSERT_FALSE(T->freqDepMat());
+  ASSERT_FALSE(T->freqDepCalWt());
+  ASSERT_FALSE(T->timeDepMat());
+  ASSERT_FALSE(T->isApplied());
+  ASSERT_TRUE(T->isSolvable());
+  ASSERT_TRUE(T->isSolved());
 
   ASSERT_EQ(caltablename,T->calTableName());
   ASSERT_EQ(solint,T->solint());
@@ -316,12 +316,12 @@ TEST_F(VisCalTest, DJonesApplyState) {
   ASSERT_EQ(VisCal::D,D->type());
   ASSERT_EQ(String("Dgen Jones"),D->typeName());
   ASSERT_EQ(2,D->nPar());
-  ASSERT_EQ(false,D->freqDepPar());
-  ASSERT_EQ(false,D->freqDepMat());
-  ASSERT_EQ(false,D->freqDepCalWt());
-  ASSERT_EQ(false,D->timeDepMat());
-  ASSERT_EQ(true,D->isApplied());
-  ASSERT_EQ(true,D->isSolvable());
+  ASSERT_FALSE(D->freqDepPar());
+  ASSERT_FALSE(D->freqDepMat());
+  ASSERT_FALSE(D->freqDepCalWt());
+  ASSERT_FALSE(D->timeDepMat());
+  ASSERT_TRUE(D->isApplied());
+  ASSERT_TRUE(D->isSolvable());
 
   delete D;
 }
@@ -350,13 +350,13 @@ TEST_F(VisCalTest, DJonesSolveState) {
   ASSERT_EQ(VisCal::D,D->type());
   ASSERT_EQ(String("Dgen Jones"),D->typeName());
   ASSERT_EQ(2,D->nPar());
-  ASSERT_EQ(false,D->freqDepPar());
-  ASSERT_EQ(false,D->freqDepMat());
-  ASSERT_EQ(false,D->freqDepCalWt());
-  ASSERT_EQ(false,D->timeDepMat());
-  ASSERT_EQ(false,D->isApplied());
-  ASSERT_EQ(true,D->isSolvable());
-  ASSERT_EQ(true,D->isSolved());
+  ASSERT_FALSE(D->freqDepPar());
+  ASSERT_FALSE(D->freqDepMat());
+  ASSERT_FALSE(D->freqDepCalWt());
+  ASSERT_FALSE(D->timeDepMat());
+  ASSERT_FALSE(D->isApplied());
+  ASSERT_TRUE(D->isSolvable());
+  ASSERT_TRUE(D->isSolved());
 
   ASSERT_EQ(caltablename,D->calTableName());
   ASSERT_EQ(solint,D->solint());
@@ -387,12 +387,12 @@ TEST_F(VisCalTest, KJonesApplyState) {
   ASSERT_EQ(VisCal::K,K->type());
   ASSERT_EQ(String("K Jones"),K->typeName());
   ASSERT_EQ(2,K->nPar());
-  ASSERT_EQ(false,K->freqDepPar());
-  ASSERT_EQ(true,K->freqDepMat());
-  ASSERT_EQ(false,K->freqDepCalWt());
-  ASSERT_EQ(false,K->timeDepMat());
-  ASSERT_EQ(true,K->isApplied());
-  ASSERT_EQ(true,K->isSolvable());
+  ASSERT_FALSE(K->freqDepPar());
+  ASSERT_TRUE(K->freqDepMat());
+  ASSERT_FALSE(K->freqDepCalWt());
+  ASSERT_FALSE(K->timeDepMat());
+  ASSERT_TRUE(K->isApplied());
+  ASSERT_TRUE(K->isSolvable());
 
   delete K;
 }
@@ -421,13 +421,13 @@ TEST_F(VisCalTest, KJonesSolveState) {
   ASSERT_EQ(VisCal::K,K->type());
   ASSERT_EQ(String("K Jones"),K->typeName());
   ASSERT_EQ(2,K->nPar());
-  ASSERT_EQ(false,K->freqDepPar());
-  ASSERT_EQ(true,K->freqDepMat());
-  ASSERT_EQ(false,K->freqDepCalWt());
-  ASSERT_EQ(false,K->timeDepMat());
-  ASSERT_EQ(false,K->isApplied());
-  ASSERT_EQ(true,K->isSolvable());
-  ASSERT_EQ(true,K->isSolved());
+  ASSERT_FALSE(K->freqDepPar());
+  ASSERT_TRUE(K->freqDepMat());
+  ASSERT_FALSE(K->freqDepCalWt());
+  ASSERT_FALSE(K->timeDepMat());
+  ASSERT_FALSE(K->isApplied());
+  ASSERT_TRUE(K->isSolvable());
+  ASSERT_TRUE(K->isSolved());
 
   ASSERT_EQ(caltablename,K->calTableName());
   ASSERT_EQ(solint,K->solint());

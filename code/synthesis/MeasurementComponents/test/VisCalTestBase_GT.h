@@ -24,51 +24,44 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
+#ifndef SYNTHESIS_MC_TEST_VISCALTESTBASE_H
+#define SYNTHESIS_MC_TEST_VISCALTESTBASE_H
+
 #include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Exceptions/Error.h>
+//#include <casa/Arrays/ArrayMath.h>
 #include <casa/iostream.h>
 #include <casa/BasicMath/Math.h>
-#include <casa/namespace.h>
 
-#include <synthesis/MeasurementComponents/DJones.h>
-#include <synthesis/MeasurementComponents/StandardVisCal.h>
-#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <msvis/MSVis/SimpleSimVi2.h>
 #include <msvis/MSVis/VisBuffer2.h>
 
 #include <gtest/gtest.h>
 
-using namespace std;
-using namespace casa;
-using namespace casacore;
-using namespace casa::vi;
-
 // <summary>
-// Test program for KJones-related classes
+// Base class for VisCal GoogleTesting
 // </summary>
 
 class VisCalTestBase : public ::testing::Test {
 
 public:
 
-  VisCalTestBase(Int nFld_=1,Int nScan_=1,Int nSpw_=1,
-		 Int nAnt_=4,Int nCorr_=4,Int nChan_=8,
-		 Int nTime_=1,Bool doParang=false) :
+ VisCalTestBase(int nFld_=1,int nScan_=1,int nSpw_=1,
+		int nAnt_=4,int nCorr_=4,int nChan_=8,
+		int nTime_=1,bool doParang=false) :
     nFld(nFld_),nScan(nScan_),nSpw(nSpw_),
     nAnt(nAnt_),nCorr(nCorr_),nChan(nChan_),nTime(nTime_),
     ssvp(nFld,nScan,nSpw,nAnt,nCorr,
-	 Vector<Int>(nFld,nTime),
-	 Vector<Int>(nSpw,nChan),Complex(1.0),
+	 casacore::Vector<int>(nFld,nTime),
+	 casacore::Vector<int>(nSpw,nChan),casacore::Complex(1.0),
 	 doParang),  // turns on poln
     ssf(ssvp),
-    vi2(Vector<ViiLayerFactory*>(1,&ssf)),
+    vi2(casacore::Vector<casa::vi::ViiLayerFactory*>(1,&ssf)),
     vb2(vi2.getImpl()->getVisBuffer()),
     msmc(ssvp)
   {}
   
-  void summary(String name) {
+  void summary(casacore::String name) {
     cout << name << ":" << endl
 	 << " nFld =" << nFld << endl
 	 << " nScan=" << nScan << endl
@@ -79,14 +72,15 @@ public:
 	 << " nTime=" << nTime << endl;
   }
 
-  Int nFld,nScan,nSpw,nAnt,nCorr,nChan,nTime;
+  int nFld,nScan,nSpw,nAnt,nCorr,nChan,nTime;
 
-  SimpleSimVi2Parameters ssvp;
-  SimpleSimVi2LayerFactory ssf;
-  VisibilityIterator2 vi2;
-  VisBuffer2* vb2;
+  casa::vi::SimpleSimVi2Parameters ssvp;
+  casa::vi::SimpleSimVi2LayerFactory ssf;
+  casa::vi::VisibilityIterator2 vi2;
+  casa::vi::VisBuffer2* vb2;
 
-  MSMetaInfoForCal msmc;
+  casa::MSMetaInfoForCal msmc;
 
 };
 
+#endif  // SYNTHESIS_MC_TEST_VISCALTESTBASE_H
