@@ -196,10 +196,6 @@ TEST_F(KJonesTest, SBDSolveTest) {
   Vector<Int> refant(1,0); solvePar.define("refant",refant);
   K.setSolve(solvePar);
 
-  SolvableVisCal* svc;
-  svc=&K;
-
-
   for (vi2.originChunks();vi2.moreChunks();vi2.nextChunk()) {
     for (vi2.origin();vi2.more();vi2.next()) {
 
@@ -252,7 +248,7 @@ TEST_F(KJonesTest, SBDSolveTest) {
       SDBList sdbs;
       sdbs.add(*vb2);
 
-      svc->selfSolveOne(sdbs);
+      K.selfSolveOne(sdbs);
 
 
       Cube<Float> soldiff=abs(K.solveRPar()-del);
@@ -290,9 +286,6 @@ TEST_F(KJonesTest, MBDSolveTest) {
   solvePar.define("combine",String(""));
   Vector<Int> refant(1,0); solvePar.define("refant",refant);
   K.setSolve(solvePar);
-
-  SolvableVisCal* svc;
-  svc=&K;
 
   SDBList sdbs;
 
@@ -351,7 +344,7 @@ TEST_F(KJonesTest, MBDSolveTest) {
 	    sdbs.aggregateFld());
   K.sizeSolveParCurrSpw(nChan); 
   
-  svc->selfSolveOne(sdbs);
+  K.selfSolveOne(sdbs);
   
   Cube<Float> soldiff=abs(K.solveRPar()-del);
   
@@ -387,10 +380,6 @@ TEST_F(KJonesTest, KCrossSolveTest) {
   solvePar.define("combine",String(""));
   Vector<Int> refant(1,0); solvePar.define("refant",refant);
   K.setSolve(solvePar);
-
-  SolvableVisCal* svc;
-  svc=&K;
-
 
   for (vi2.originChunks();vi2.moreChunks();vi2.nextChunk()) {
     for (vi2.origin();vi2.more();vi2.next()) {
@@ -447,7 +436,7 @@ TEST_F(KJonesTest, KCrossSolveTest) {
       SDBList sdbs;
       sdbs.add(*vb2);
 
-      svc->selfSolveOne(sdbs);
+      K.selfSolveOne(sdbs);
       Cube<Float> soldiff=abs(K.solveRPar()-del);
 
       //cout << "K.solveRPar() = " << K.solveRPar() << endl;

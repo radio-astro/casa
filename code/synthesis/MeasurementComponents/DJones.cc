@@ -2230,7 +2230,7 @@ void GlinXphJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
 // Handle trivial vbga
 void GlinXphJones::selfSolveOne(VisBuffGroupAcc& vbga) {
 
-  // Expecting only on VB in the vbga
+  // Expecting only on VB in the vbga (with many times)
   if (vbga.nBuf()!=1)
     throw(AipsError("GlinXphJones can't process multi-vb vbga."));
 

@@ -168,6 +168,9 @@ public:
   // Override G here; nothing to do for K, for now
   virtual void globalPostSolveTinker() {};
 
+  // Local implementation of selfSolveOne (generalized signature)
+  virtual void selfSolveOne(VisBuffGroupAcc& vbga);
+  virtual void selfSolveOne(SDBList& sdbs);
 
 protected:
 
@@ -182,10 +185,6 @@ protected:
 
   // Initialize trivial dJs
   virtual void initTrivDJ() {};
-
-  // Local implementation of selfSolveOne (generalized signature)
-  virtual void selfSolveOne(VisBuffGroupAcc& vbga);
-  virtual void selfSolveOne(SDBList& sdbs);
 
   // FFT solver for one VB
   virtual void solveOneVB(const VisBuffer& vb);
@@ -223,12 +222,13 @@ public:
   // By definition, we consider cross-hands
   virtual casacore::Bool phandonly() { return false; };
 
-protected:
-
   // Local implementation of selfSolveOne 
   //   This traps combine='spw', which isn't supported yet
   virtual void selfSolveOne(VisBuffGroupAcc& vbga);
   virtual void selfSolveOne(SDBList& sdbs);
+
+
+protected:
 
 
   // FFT solver for on VB, that collapses baselines and cross-hands first
