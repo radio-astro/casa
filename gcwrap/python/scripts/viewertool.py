@@ -146,13 +146,15 @@ class viewertool(object):
             args += [ "--rcdir=" + myf['casa']['flags']['--rcdir'] ]
 
 	if (os.uname()[0]=='Darwin'):
-            if myf['casa'].has_key('procmgr'):
-                myf['casa']['procmgr'].create(self.__state['dbus name'],args)
+            if myf['casa']['state']['init_version'] > 0:
+                from casa_system import procmgr
+                procmgr.create(self.__state['dbus name'],args)
             else:
 		vwrpid=os.spawnvp( os.P_NOWAIT, viewer_path, args )
 	elif (os.uname()[0]=='Linux'):
-            if myf['casa'].has_key('procmgr'):
-                myf['casa']['procmgr'].create(self.__state['dbus name'],args)
+            if myf['casa']['state']['init_version'] > 0:
+                from casa_system import procmgr
+                procmgr.create(self.__state['dbus name'],args)
             else:
 		vwrpid=os.spawnlp( os.P_NOWAIT, viewer_path, *args )
 	else:

@@ -40,6 +40,7 @@ if casa.has_key('state') and casa['state'].has_key('init_version') and casa['sta
     qatool = stack_find("qatool")
     qa = stack_find("qa")
     utilstool = stack_find("utilstool")
+    cu = stack_find("cu")
     tbtool =  stack_find("tbtool")
     tb =  stack_find("tb")
     ms =  stack_find("ms")
@@ -510,4 +511,3 @@ else:
             for name in dirs:
                 os.rmdir( os.path.join( root, name ) )
         os.rmdir(top)
-

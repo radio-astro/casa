@@ -1,7 +1,7 @@
 import os
 import time
 import casadef
-from procmgr import procmgr
+from procmgr import procmgr as _procmgr
 
 import __casac__
 _cu = __casac__.utils.utils()
@@ -50,5 +50,6 @@ casa = { 'build': {
              'startup': True,
              'unwritable': set( )
          },
-         'procmgr': procmgr( ),
        }
+
+procmgr = _procmgr( )

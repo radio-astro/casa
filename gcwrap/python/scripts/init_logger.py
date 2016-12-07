@@ -10,6 +10,7 @@ def casalogger(logfile=''):
     we will figure out how to signal the casalogger with the new name but not
     for a while.
     """
+    from casa_system import procmgr
 
     if logfile == '':
         if casa.has_key('files') and casa['files'].has_key('logfile') :
@@ -19,13 +20,14 @@ def casalogger(logfile=''):
             logfile = 'casa.log'
 
     if (os.uname()[0]=='Darwin'):
+
         if casa['helpers']['logger'] == 'console':
-            casa['procmgr'].create("logger",['/usr/bin/open','-a','console', logfile])
+            procmgr.create("logger",['/usr/bin/open','-a','console', logfile])
         else:
-            casa['procmgr'].create("logger",[casa['helpers']['logger'],logfile])
+            procmgr.create("logger",[casa['helpers']['logger'],logfile])
 
     elif (os.uname()[0]=='Linux'):
-        casa['procmgr'].create("logger",[casa['helpers']['logger'],logfile])
+        procmgr.create("logger",[casa['helpers']['logger'],logfile])
 
     else:
         print 'Unrecognized OS: No logger available'
@@ -41,13 +43,13 @@ if casa['flags'].nologfile:
 deploylogger = True
 
 if not os.access('.', os.W_OK) :
-    print 
+    print
     print "********************************************************************************"
     print "Warning: no write permission in current directory, no log files will be written."
     print "********************************************************************************"
     deploylogger = False
     thelogfile = 'null'
-    
+
 if casa['flags'].nologger :
     deploylogger = False
 
@@ -94,4 +96,3 @@ try:
 except:
     print "Error: the logfile is not writable"
     sys.exit(1)
-
