@@ -131,6 +131,35 @@ import os
    </tbody>
 </table>
 
+<h4>Auxiliary Calibrator Source Images</h4>
+
+<p>FITS files of all the auxiliary calibrator source images</p>
+
+<table class="table table-bordered table-striped" summary="Auxiliary calibrator source images">
+    <thead>
+	<tr>
+	    <th scope="col">Source name</th>
+	    <th scope="col">Source type</th>
+	    <th scope="col">Spw</th>
+	    <th scope="col">FITS file</th>
+	</tr>
+   </thead>
+   <tbody>
+%for r in result:
+    %for calimage in r.calimages[0]:
+        %for fitsfile in calimage['auxfitsfiles']:
+          <tr>
+              <td>${calimage['sourcename']}</td>
+              <td>${calimage['sourcetype']}</td>
+              <td>${calimage['spwlist']}</td>
+              <td>${os.path.basename(fitsfile)}</td>
+          </tr>
+        %endfor
+    %endfor
+%endfor
+   </tbody>
+</table>
+
 <h4>Target Source Images</h4>
 
 <p>FITS files of all the target source images</p>
@@ -148,6 +177,35 @@ import os
 %for r in result:
     %for targetimage in r.targetimages[0]:
         %for fitsfile in targetimage['fitsfiles']:
+          <tr>
+              <td>${targetimage['sourcename']}</td>
+              <td>${targetimage['sourcetype']}</td>
+              <td>${targetimage['spwlist']}</td>
+              <td>${os.path.basename(fitsfile)}</td>
+          </tr>
+        %endfor
+    %endfor
+%endfor
+   </tbody>
+</table>
+
+<h4>Auxiliary Target Source Images</h4>
+
+<p>FITS files of all the auxiliary target source images</p>
+
+<table class="table table-bordered table-striped" summary="Auxiliary Target source images">
+    <thead>
+	<tr>
+	    <th scope="col">Source name</th>
+	    <th scope="col">Source type</th>
+	    <th scope="col">Spw</th>
+	    <th scope="col">FITS file</th>
+	</tr>
+   </thead>
+   <tbody>
+%for r in result:
+    %for targetimage in r.targetimages[0]:
+        %for fitsfile in targetimage['auxfitsfiles']:
           <tr>
               <td>${targetimage['sourcename']}</td>
               <td>${targetimage['sourcetype']}</td>
