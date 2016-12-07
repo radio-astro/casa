@@ -167,13 +167,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( retval==-2 ) {os << LogIO::WARN << "MSClean minor cycle stopped at large scale negative or diverging" << LogIO::POST;}
     if( retval==-3 ) {os << LogIO::WARN << "MSClean minor cycle stopped because it is diverging" << LogIO::POST; }
 
-
-    peakresidual = itsCleaner.strengthOptimum();
+    ////This is going to be wrong if there is no 0 scale;
+    peakresidual = max(abs(itsCleaner.residual()));
     modelflux = sum( itsMatModel ); // Performance hog ?
   }	    
 
   void SDAlgorithmMSClean::finalizeDeconvolver()
   {
+    ///MatrixCleaner does not modify the original residual image matrix
+    ///so the first line is a dummy. 
     (itsImages->residual())->put( itsMatResidual );
     (itsImages->model())->put( itsMatModel );
   }
