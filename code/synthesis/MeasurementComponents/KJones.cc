@@ -27,9 +27,11 @@
 #include <synthesis/MeasurementComponents/KJones.h>
 
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>  // *
+#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
@@ -52,8 +54,9 @@
 #include <casa/Logging/LogSink.h>
 
 
-
+using namespace casa::vi;
 using namespace casacore;
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -75,6 +78,8 @@ DelayFFT::DelayFFT(Double f0, Double df, Double padBW,
   delay_(),
   flag_()
 {
+
+  //  cout << "pad ch=" << padBW/df_ << " " << nPadChan_*df << endl;
 
   IPosition ip1(3,nCorr_,nPadChan_,nElem_);
   Vpad_.resize(ip1);
@@ -105,6 +110,8 @@ DelayFFT::DelayFFT(Double f0, Double df, Double padBW,
   //  cout << "ctor0: " << f0 << " " << df << " " << padBW << " " << nPadChan_ << endl;
   //  cout << "ctor0: " << f0_ << " " << df_ << " " << padBW_ << " " << nPadChan_ << endl;
 
+  //  cout << "pad ch=" << padBW/df_ << " " << nPadChan_*df << endl;
+
   Vpad_.resize(nCorr_,nPadChan_,nElem_);
   Vpad_.set(v0);
 
@@ -113,7 +120,7 @@ DelayFFT::DelayFFT(Double f0, Double df, Double padBW,
 }
 
 
- DelayFFT::DelayFFT(const VisBuffer& vb,Double padBW,Int refant) :
+DelayFFT::DelayFFT(const VisBuffer& vb,Double padBW,Int refant) :
   f0_(vb.frequency()(0)/1.e9),      // GHz
   df_(vb.frequency()(1)/1.e9-f0_),
   padBW_(padBW),
@@ -182,6 +189,72 @@ DelayFFT::DelayFFT(Double f0, Double df, Double padBW,
     }
   }
   //cout << "...end DelayFFT(vb)" << endl;
+	      
+}
+DelayFFT::DelayFFT(SolveDataBuffer& sdb,Double padBW,Int refant,Int nElem) :
+  f0_(sdb.freqs()(0)/1e9),      // GHz
+  df_(sdb.freqs()(1)/1e9-f0_),
+  padBW_(padBW),
+  nCorr_(0),    // set in body
+  nPadChan_(Int(0.5+padBW_/df_)),
+  nElem_(nElem), // antenna-based
+  refant_(refant),
+  Vpad_(),
+  delay_(),
+  flag_()
+{
+
+  // VB facts
+  Int nCorr=sdb.nCorrelations();
+  Int nChan=sdb.nChannels();
+  Int nRow=sdb.nRows();
+
+  // Discern effective shapes
+  nCorr_=(nCorr>1 ? 2 : 1); // number of p-hands
+  Int sC=(nCorr>2 ? 3 : 1); // step for p-hands
+  
+  // Shape the data
+  IPosition ip1(3,nCorr_,nPadChan_,nElem_);
+  Vpad_.resize(ip1);
+  Vpad_.set(Complex(0.0));
+
+  //  this->state();
+
+  // Fill the relevant data
+  Int iant=0;
+  for (Int irow=0;irow<nRow;++irow) {
+    Int a1(sdb.antenna1()(irow)), a2(sdb.antenna2()(irow));
+    if (!sdb.flagRow()(irow) && a1!=a2) {
+
+      if (a1==refant)
+	iant=a2;
+      else if (a2==refant) 
+	iant=a1;
+      else
+	continue;  // an irrelevant baseline
+
+      Slicer sl0(Slice(0,nCorr_,sC),Slice(),Slice(irow,1,1)); // this visCube slice
+      Slicer sl1(Slice(),Slice(0,nChan,1),Slice(iant,1,1)); // this Vpad_ slice
+
+      Cube<Complex> vC(sdb.visCubeCorrected()(sl0));
+
+      // Divide by non-zero amps
+      Cube<Float> vCa(amplitude(vC));
+      vCa(vCa<FLT_EPSILON)=1.0;
+      vC/=vCa;
+
+      // Zero flagged channels
+      Cube<Bool> fl(sdb.flagCube()(sl0));
+      vC(fl)=Complex(0.0);
+
+      // TBD: apply weights
+      //      Matrix<Float> wt(vb.weightMat()(Slice,Slice(irow,1,1)));
+
+      // Acquire this baseline for solving
+      Vpad_(sl1)=vC;
+    }
+  }
+  //cout << "...end DelayFFT(sdb)" << endl;
 	      
 }
 
@@ -293,6 +366,16 @@ void DelayFFT::searchPeak() {
 	Float delay=fpk/Float(nPadChan_);  // cycles/sample
 	if (delay>0.5) delay-=1.0;         // fold
 	delay/=df_;                        // nsec
+
+	/*
+	cout << "delay=" 
+	     << Float(ipk>0 ? ipk-1 : (nPadChan_-1))/Float(nPadChan_)/df_ << "..."
+	     << Float(ipk)/Float(nPadChan_)/df_ << "..."
+	     << Float(ipk<(nPadChan_-1) ? ipk+1 : 0)/Float(nPadChan_)/df_ << "-->"
+	     << delay << "    "
+	     << alo << " " << amax << " " << ahi 
+	     << endl;
+	*/
 
 	delay_(icorr,ielem)=delay;     
 	flag_(icorr,ielem)=false;
@@ -427,6 +510,19 @@ void KJones::setApply(const Record& apply) {
 
     
 }
+void KJones::setApply() {
+
+  // Call parent to do conventional things
+  GJones::setApply();
+
+  // Enforce calWt() = false for delays
+  calWt()=false;
+
+  // Set the ref freqs to something usable
+  KrefFreqs_.resize(nSpw());
+  KrefFreqs_.set(0.0);
+
+}
 
 void KJones::setCallib(const Record& callib,
 		       const MeasurementSet& selms) {
@@ -477,7 +573,7 @@ void KJones::specify(const Record& specify) {
 
 void KJones::calcAllJones() {
 
-  if (prtlev()>6) cout << "       VJ::calcAllJones()" << endl;
+  //if (prtlev()>6) cout << "       VJ::calcAllJones()" << endl;
 
   // Should handle OK flags in this method, and only
   //  do Jones calc if OK
@@ -540,6 +636,21 @@ void KJones::selfSolveOne(VisBuffGroupAcc& vbga) {
 
 }
 
+
+void KJones::selfSolveOne(SDBList& sdbs) {
+
+  // Forward to MBD solver if more than one VB (more than one spw, probably)
+  if (sdbs.nSDB()!=1) 
+    this->solveOneSDBmbd(sdbs);
+
+  // otherwise, call the single-VB solver with the first SDB in the SDBList
+  else
+    this->solveOneSDB(sdbs(0));
+
+}
+
+
+
 void KJones::solveOneVBmbd(VisBuffGroupAcc& vbga) {
 
   Int nbuf=vbga.nBuf();
@@ -581,6 +692,58 @@ void KJones::solveOneVBmbd(VisBuffGroupAcc& vbga) {
 
   //  cout << "sum: " << sumfft.delay()(Slice(0,1,1),Slice()) << endl;
   
+  // Keep solutions
+  Matrix<Float> sRP(solveRPar().nonDegenerate(1));
+  sRP=sumfft.delay();  
+  Matrix<Bool> sPok(solveParOK().nonDegenerate(1));
+  sPok=(!sumfft.flag());
+
+}
+
+
+void KJones::solveOneSDBmbd(SDBList& sdbs) {
+
+  Int nbuf=sdbs.nSDB();
+  
+  Vector<Int> nch(nbuf,0);
+  Vector<Double> f0(nbuf,0.0);
+  Vector<Double> df(nbuf,0.0);
+  Double flo(1e15),fhi(0.0);
+
+  for (Int ibuf=0;ibuf<nbuf;++ibuf) {
+    SolveDataBuffer& sdb(sdbs(ibuf));
+    Vector<Double> chf(sdb.freqs());
+    nch(ibuf)=sdbs(ibuf).nChannels();
+    f0(ibuf)=chf(0)/1.0e9;           // GHz
+    df(ibuf)=(chf(1)-chf(0))/1.0e9;  // GHz
+    flo=min(flo,f0[ibuf]);
+    fhi=max(fhi,f0[ibuf]+nch[ibuf]*df[ibuf]);
+  }
+  Double tbw=fhi-flo;
+
+  Double ptbw=tbw*8;  // pad total bw by 8X
+  // TBD:  verifty that all df are factors of tbw
+
+  /*
+  cout << "tbw = " << tbw << "  (" << flo << "-" << fhi << ")" << " resoln=" << 1.0/tbw
+       << ";   ptbw = " << ptbw << " resoln=" << 1/ptbw
+       << endl;
+  */
+
+  Int nCor=sdbs(0).nCorrelations();
+  
+  DelayFFT sumfft(f0[0],min(df),ptbw,(nCor>1 ? 2 : 1),nAnt(),refant(),Complex(0.0));
+  for (Int ibuf=0;ibuf<nbuf;++ibuf) {
+    DelayFFT delfft1(sdbs(ibuf),ptbw,refant(),nAnt());
+    delfft1.FFT();
+    delfft1.shift(f0[0]);
+    sumfft.add(delfft1);
+
+    delfft1.searchPeak();
+  }
+
+  sumfft.searchPeak();
+
   // Keep solutions
   Matrix<Float> sRP(solveRPar().nonDegenerate(1));
   sRP=sumfft.delay();  
@@ -743,6 +906,159 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   */
 
 }
+// Do the FFTs
+void KJones::solveOneSDB(SolveDataBuffer& sdb) {
+
+  Int nChan=sdb.nChannels();
+
+  solveRPar()=0.0;
+  solveParOK()=false;
+
+  //  cout << "solveRPar().shape()   = " << solveRPar().shape() << endl;
+  //  cout << "sdb.nCorrelations()    = " << sdb.nCorrelations() << endl;
+  //  cout << "sdb.correlationTypes() = " << sdb.correlationTypes() << endl;
+
+  // FFT parallel-hands only
+  Int nCorr=sdb.nCorrelations();
+  Int nC= (nCorr>1 ? 2 : 1);  // number of parallel hands
+  Int sC= (nCorr>2 ? 3 : 1);  // step by 3 for full pol data
+
+  // I/O shapes
+  Int fact(8);
+  Int nPadChan=nChan*fact;
+
+  IPosition ip0=sdb.visCubeCorrected().shape();
+  IPosition ip1=ip0;
+  ip1(0)=nC;    // the number of correlations to FFT 
+  ip1(1)=nPadChan; // padded channel axis
+
+  // I/O slicing
+  Slicer sl0(Slice(0,nC,sC),Slice(),Slice());  
+  Slicer sl1(Slice(),Slice(nChan*(fact-1)/2,nChan,1),Slice());
+
+  // Fill the (padded) transform array
+  //  TBD: only do ref baselines
+  Cube<Complex> vpad(ip1);
+  Cube<Complex> slvis=sdb.visCubeCorrected();
+  vpad.set(Complex(0.0));
+  vpad(sl1)=slvis(sl0);
+
+  // We will only transform frequency axis of 3D array
+  Vector<Bool> ax(3,false);
+  ax(1)=true;
+  
+  // Do the FFT
+  ArrayLattice<Complex> c(vpad);
+  LatticeFFT::cfft(c,ax);        
+
+  // Find peak in each FFT
+  Int ipk=0;
+  Float amax(0.0);
+  Vector<Float> amp;
+
+  //  cout << "Time=" << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+  //       << " Spw=" << currSpw() << ":" << endl;
+
+  for (Int irow=0;irow<sdb.nRows();++irow) {
+    if (!sdb.flagRow()(irow) &&
+	sdb.antenna1()(irow)!=sdb.antenna2()(irow) &&
+	(sdb.antenna1()(irow)==refant() || 
+	 sdb.antenna2()(irow)==refant()) ) {
+
+      for (Int icor=0;icor<ip1(0);++icor) {
+	amp=amplitude(vpad(Slice(icor,1,1),Slice(),Slice(irow,1,1)));
+	ipk=1;
+	amax=0;
+	for (Int ich=1;ich<nPadChan-1;++ich) {
+	  if (amp(ich)>amax) {
+	    ipk=ich;
+	    amax=amp(ich);
+	  }
+	} // ich
+
+	/*
+	cout << sdb.antenna1()(irow) << " " << sdb.antenna2()(irow) << " "
+	     << ntrue(sdb.flagCube()(Slice(0,2,3),Slice(),Slice(irow,1,1))) << " "
+	     << ntrue(sdb.flag()(Slice(),Slice(irow,1,1))) 
+	     << endl;
+	*/
+
+       	// Derive refined peak (fractional) channel
+	// via parabolic interpolation of peak and neighbor channels
+
+	Vector<Float> amp3(amp(IPosition(1,ipk-1),IPosition(1,ipk+1)));
+	Float denom(amp3(0)-2.0*amp3(1)+amp3(2));
+
+	if (amax>0.0 && abs(denom)>0) {
+
+	  Float fipk=Float(ipk)+0.5-(amp3(2)-amp3(1))/denom;
+	    
+	  // Handle FFT offset and scale
+	  Float delay=(fipk-Float(nPadChan/2))/Float(nPadChan); // cycles/sample
+	  
+	  // Convert to cycles/Hz and then to nsec
+	  Double df=sdb.freqs()(1)-sdb.freqs()(0);
+	  delay/=df;
+	  delay/=1.0e-9;
+	  
+	  //	  cout << " Antenna ID=";
+	  if (sdb.antenna1()(irow)==refant()) {
+	    //	    cout << vb.antenna2()(irow) 
+	    //		 << ", pol=" << icor << " delay(nsec)="<< -delay; 
+	    solveRPar()(icor,0,sdb.antenna2()(irow))=-delay;
+	    solveParOK()(icor,0,sdb.antenna2()(irow))=true;
+	  }
+	  else if (sdb.antenna2()(irow)==refant()) {
+	    //	    cout << vb.antenna1()(irow) 
+	    //		 << ", pol=" << icor << " delay(nsec)="<< delay;
+	    solveRPar()(icor,0,sdb.antenna1()(irow))=delay;
+	    solveParOK()(icor,0,sdb.antenna1()(irow))=true;
+	  }
+	  //	  cout << " (refant ID=" << refant() << ")" << endl;
+
+	  /*	  
+	  cout << irow << " " 
+	       << vb.antenna1()(irow) << " " 
+	       << vb.antenna2()(irow) << " " 
+	       << icor << " "
+	       << ipk << " "
+	       << fipk << " "
+	       << delay << " "
+	       << endl;
+	  */
+	} // amax > 0
+    /*
+	else {
+	  cout << "No solution found for antenna ID= ";
+	  if (vb.antenna1()(irow)==refant())
+	    cout << vb.antenna2()(irow);
+	  else if (vb.antenna2()(irow)==refant()) 
+	    cout << vb.antenna1()(irow);
+	  cout << " in polarization " << icor << endl;
+	}
+    */
+	
+      } // icor
+    } // !flagrRow, etc.
+
+  } // irow
+
+  // Ensure refant has zero delay and is NOT flagged
+  solveRPar()(Slice(),Slice(),Slice(refant(),1,1)) = 0.0;
+  solveParOK()(Slice(),Slice(),Slice(refant(),1,1)) = true;
+
+  /*  
+  if (nfalse(solveParOK())>0) {
+    cout << "NB: No delay solutions found for antenna IDs: ";
+    Int nant=solveParOK().shape()(2);
+    for (Int iant=0;iant<nant;++iant)
+      if (!(solveParOK()(0,0,iant)))
+	cout << iant << " ";
+    cout << endl;
+  }
+  */
+
+}
 
 // **********************************************************
 //  KcrossJones Implementations
@@ -824,6 +1140,20 @@ void KcrossJones::selfSolveOne(VisBuffGroupAcc& vbga) {
 }
 
 
+void KcrossJones::selfSolveOne(SDBList& sdbs) {
+
+  // Trap MBD attempt (NYI)
+  if (sdbs.nSDB()!=1) 
+    throw(AipsError("KcrossJones does not yet support MBD"));
+  //    this->solveOneVBmbd(vbga);
+
+  // otherwise, call the single-VB solver with the first VB in the vbga
+  else
+    this->solveOneSDB(sdbs(0));
+
+}
+
+
 // Do the FFTs
 void KcrossJones::solveOneVB(const VisBuffer& vb) {
 
@@ -895,6 +1225,92 @@ void KcrossJones::solveOneVB(const VisBuffer& vb) {
 
   // Convert to cycles/Hz and then to nsec
   Double df=vb.frequency()(1)-vb.frequency()(0);
+  delay/=df;
+  delay/=1.0e-9;
+
+  solveRPar()(Slice(0,1,1),Slice(),Slice())=delay;
+  solveParOK()=true;
+
+  logSink() << " Time="<< MVTime(refTime()/C::day).string(MVTime::YMD,7)
+	    << " Spw=" << currSpw()
+	    << " Global cross-hand delay=" << delay << " nsec"
+	    << LogIO::POST;
+}
+
+// Do the FFTs
+void KcrossJones::solveOneSDB(SolveDataBuffer& sdb) {
+
+  solveRPar()=0.0;
+  solveParOK()=false;
+
+  Int fact(16);
+  Int nChan=sdb.nChannels();
+  Int nPadChan=nChan*fact;
+
+  // Collapse cross-hands over baseline
+  Vector<Complex> sumvis(nPadChan);
+  sumvis.set(Complex(0.0));
+  Vector<Complex> slsumvis(sumvis(Slice(nChan*(fact-1)/2,nChan,1)));
+  Vector<Float> sumwt(nChan);
+  sumwt.set(0.0);
+  for (Int irow=0;irow<sdb.nRows();++irow) {
+    if (!sdb.flagRow()(irow) &&
+	sdb.antenna1()(irow)!=sdb.antenna2()(irow)) {
+
+      for (Int ich=0;ich<nChan;++ich) {
+	if (!sdb.flagCube()(1,ich,irow)) {
+	  // 1st cross-hand
+	  Float& wt(sdb.weightSpectrum()(1,ich,irow));
+	  slsumvis(ich)+=(sdb.visCubeCorrected()(1,ich,irow)*wt);
+	  sumwt(ich)+=wt;
+	}
+	if (!sdb.flagCube()(2,ich,irow)) {
+	  // 2nd cross-hand
+	  Float& wt(sdb.weightSpectrum()(2,ich,irow));
+	  slsumvis(ich)+=conj(sdb.visCubeCorrected()(2,ich,irow)*wt);
+	  sumwt(ich)+=wt;
+	}
+      }
+    }
+  }
+  // Normalize the channelized sum
+  for (int ich=0;ich<nChan;++ich)
+    if (sumwt(ich)>0)
+      slsumvis(ich)/=sumwt(ich);
+    else
+      slsumvis(ich)=Complex(0.0);
+  
+  // Do the FFT
+  ArrayLattice<Complex> c(sumvis);
+  LatticeFFT::cfft(c,true);        
+      
+  // Find peak in each FFT
+  Vector<Float> amp=amplitude(sumvis);
+
+  Int ipk=0;
+  Float amax(0.0);
+  for (Int ich=0;ich<nPadChan;++ich) {
+    if (amp(ich)>amax) {
+      ipk=ich;
+      amax=amp(ich);
+    }
+  } // ich
+	
+  // Derive refined peak (fractional) channel
+  // via parabolic interpolation of peak and neighbor channels
+  Float fipk=ipk;
+  // Interpolate the peak (except at edges!)
+  if (ipk>0 && ipk<(nPadChan-1)) {
+    Vector<Float> amp3(amp(IPosition(1,ipk-1),IPosition(1,ipk+1)));
+    fipk=Float(ipk)+0.5-(amp3(2)-amp3(1))/(amp3(0)-2.0*amp3(1)+amp3(2));
+    Vector<Float> pha3=phase(sumvis(IPosition(1,ipk-1),IPosition(1,ipk+1)));
+  }
+
+  // Handle FFT offset and scale
+  Float delay=(fipk-Float(nPadChan/2))/Float(nPadChan); // cycles/sample
+
+  // Convert to cycles/Hz and then to nsec
+  Double df=sdb.freqs()(1)-sdb.freqs()(0);
   delay/=df;
   delay/=1.0e-9;
 

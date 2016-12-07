@@ -48,6 +48,9 @@ public:
   // Construct from a VB
   DelayFFT(const VisBuffer& vb,casacore::Double padBW,casacore::Int refant);
 
+  // Construct from a VB2
+  DelayFFT(SolveDataBuffer& sdb,casacore::Double padBW,casacore::Int refant,casacore::Int nElem);
+
   // Perform FFT
   void FFT();
 
@@ -86,9 +89,14 @@ private:
 
 // Forward declarations
 
+
 // K Jones provides support for SBD delays
 class KJones : public GJones {
+
+
 public:
+
+  //  friend class KJonesTest;
 
   // Constructor
   KJones(VisSet& vs);
@@ -100,6 +108,7 @@ public:
 
   // Local setApply to enforce calWt=F for delays
   virtual void setApply(const casacore::Record& apply);
+  virtual void setApply();
   using GJones::setApply;
   virtual void setCallib(const casacore::Record& callib,
 			 const casacore::MeasurementSet& selms);
@@ -176,12 +185,15 @@ protected:
 
   // Local implementation of selfSolveOne (generalized signature)
   virtual void selfSolveOne(VisBuffGroupAcc& vbga);
+  virtual void selfSolveOne(SDBList& sdbs);
 
   // FFT solver for one VB
   virtual void solveOneVB(const VisBuffer& vb);
+  virtual void solveOneSDB(SolveDataBuffer& sdb);
 
   // FFT solver for multi-VB (MBD)
   virtual void solveOneVBmbd(VisBuffGroupAcc& vbga);
+  virtual void solveOneSDBmbd(SDBList& sdbs);
 
   // Reference frequencies
   casacore::Vector<casacore::Double> KrefFreqs_;
@@ -216,9 +228,12 @@ protected:
   // Local implementation of selfSolveOne 
   //   This traps combine='spw', which isn't supported yet
   virtual void selfSolveOne(VisBuffGroupAcc& vbga);
+  virtual void selfSolveOne(SDBList& sdbs);
+
 
   // FFT solver for on VB, that collapses baselines and cross-hands first
   virtual void solveOneVB(const VisBuffer& vb);
+  virtual void solveOneSDB(SolveDataBuffer& sdb);
 
 };
 
@@ -244,6 +259,7 @@ public:
 
   // Local setApply (to enforce KrefFreq_=0.0)
   virtual void setApply(const casacore::Record& apply);
+  using KJones::setApply;
 
  
 };

@@ -296,7 +296,6 @@ TEST_F(VisCalTest, TJonesSolveState) {
   delete T;
 }
 
-/*
 TEST_F(VisCalTest, DJonesApplyState) {
 
   VisCal *D = new DJones(msmc);
@@ -437,7 +436,6 @@ TEST_F(VisCalTest, KJonesSolveState) {
 
   delete K;
 }
-*/
 
 /*
 TEST(MISC, MISC0) {

@@ -27,6 +27,7 @@
 #include <synthesis/MeasurementComponents/DJones.h>
 #include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
+#include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <synthesis/CalTables/CTIter.h>
@@ -257,6 +258,173 @@ void DJones::guessPar(VisBuffer& vb) {
     reportSolvedQU();
 
 
+  } // solvePol()?
+
+}
+
+
+void DJones::setUpForPolSolve(vi::VisBuffer2& vb) {
+
+  // Divide model and data by (scalar) stokes I model (which may be resolved!), 
+  //  and set model cross-hands to (1,0) so we can solve for fractional
+  //  pol factors.
+
+  // NB: this is circ-basis-specific!!
+  
+  // NB: this method assumes vCC.set(vC)  (corrected data already set)
+
+  // Only if solving for Q an U
+  //  (leave cross-hands alone if just solving for X)
+  if (solvePol()>1) {
+
+    Int nCorr(vb.nCorrelations());
+    Vector<Float> ampCorr(nCorr);
+    Vector<Int> n(nCorr,0);
+    Complex sI(0.0);
+    for (Int irow=0;irow<vb.nRows();++irow) {
+      if (!vb.flagRow()(irow)) {
+	ampCorr=0.0f;
+	n=0;
+	for (Int ich=0;ich<vb.nChannels();++ich) {
+
+	  Vector<Bool> fl(vb.flagCube()(Slice(),Slice(ich,1,1),Slice(irow,1,1)));
+	  Vector<Float> wt(vb.weightSpectrum()(Slice(),Slice(ich,1,1),Slice(irow,1,1)));
+	  Vector<Complex> vCM(vb.visCubeModel()(Slice(),Slice(ich,1,1),Slice(irow,1,1)));
+	  Vector<Complex> vCC(vb.visCubeCorrected()(Slice(),Slice(ich,1,1),Slice(irow,1,1)));
+
+	  if (sum(fl)>0) {
+	    // one or more correlations is flagged; cannot use
+	    fl.set(true);
+	    wt.set(0.0f);
+	    vCC.set(0.0f);
+	  }
+	  else {
+	    // all corrs ok, so do the calculation
+	    sI=(vCM(0)+vCM(3))/Complex(2.0);
+	    if (abs(sI)>0.0) {
+	      vCC/=sI;
+	      wt*=square(abs(sI));
+	    }
+	    else {
+	      // model stokes I is zero, cannot use
+	      fl.set(true);
+	      wt.set(0.0f);
+	      vCC.set(0.0f);
+	    }
+	  }
+	  // Make model unity (so parang corruption works)
+	  // NB: this is circ-basis specific!
+	  // Q: Is this correct for p-hands?  (E.g., lin basis, or V!=0 in circ basis?)
+	  vCM.set(Complex(1.0));
+
+	} // ich
+      } // !flagRow
+    } // irow
+  }
+
+}
+
+void DJones::guessPar(SDBList& sdbs) {
+
+  if (prtlev()>4) cout << "   D::guessPar(sdbs)" << endl;
+
+  // TBD: Should we use a common wt for the X-hands??
+
+  // First guess is zero D-terms
+  solveCPar()=0.0;
+  solveParOK()=true;
+
+  /*   TBD******************
+
+  if (jonesType()==Jones::GenLinear) {
+    vb.weightMat().row(0)=0.0;
+    vb.weightMat().row(3)=0.0;
+  }
+
+  */
+
+
+  if (solvePol()) {
+
+    Int nSDB=sdbs.nSDB();
+
+    Int nChan=sdbs.nChannels(); // insists on uniformity over SDBs
+
+    // solvePol() tells us how many source pol parameters
+    srcPolPar().resize(solvePol());
+
+    // The following assumes the MODEL_DATA has been
+    //  corrupted by P 
+
+    LSQFit fit(2,LSQComplex());
+    Vector<Complex> ce(2);
+    ce(0)=Complex(1.0);
+    Complex d,md;
+    Float wt,a(0.0);
+    for (int isdb=0;isdb<nSDB;++isdb) {
+      SolveDataBuffer& sdb(sdbs(isdb));
+    for (Int irow=0;irow<sdb.nRows();++irow) {
+      if (!sdb.flagRow()(irow)  &&
+	  sdb.antenna1()(irow)!=sdb.antenna2()(irow)) {
+	for (Int ich=0;ich<nChan;++ich) {
+	  for (Int icorr=1;icorr<3;++icorr) {
+	    if (!sdb.flagCube()(icorr,ich,irow)) {
+	      md=sdb.visCubeModel()(icorr,ich,irow);
+	      if (icorr==2) md=conj(md);
+	      a=abs(md);
+	      if (a>0.0) {
+		wt=Double(sdb.weightSpectrum()(icorr,ich,irow));
+		if (wt>0.0) {
+		  d=sdb.visCubeCorrected()(icorr,ich,irow);
+		  if (icorr==2) d=conj(d);
+		  if (abs(d)>0.0) {
+
+		    ce(1)=md;
+		    fit.makeNorm(ce.data(),wt,d,LSQFit::COMPLEX);
+
+		  } // abs(d)>0
+		} // wt>0
+	      } // a>0
+	    } // icorr
+	  } // !flag
+	} // ich
+      } // !flagRow
+    } // row
+    } // isdb
+
+    uInt rank;
+    Bool ok = fit.invert(rank);
+
+    Complex sol[2];
+    if (ok)
+      fit.solve(sol);
+    else
+      throw(AipsError("Source polarization solution is singular; try solving for D-terms only."));
+
+    Complex Pol(1.0); // for updating the model
+    if (solvePol()==1 && a>0.0)  {
+      srcPolPar()(0)=Complex(arg(sol[1]));
+      Pol=exp(Complex(0.0,real(srcPolPar()(0))));  // same as sol[1]?
+    }
+    else if (solvePol()==2) {
+      srcPolPar()(0)=Complex(real(sol[1]));  // Q
+      srcPolPar()(1)=Complex(imag(sol[1]));  // U
+      Pol=Complex(real(srcPolPar()(0)),real(srcPolPar()(1)));  // same as real(sol[1]),imag(sol[1])?
+    }
+
+    // Log source polarization solution
+    reportSolvedQU();
+
+    // update model data with this source pol estimate
+    Array<Complex> RL,LR;
+    Complex cPol=conj(Pol); // for LR
+    for (int isdb=0;isdb<nSDB;++isdb) {
+      SolveDataBuffer& sdb(sdbs(isdb));
+      RL.reference(sdb.visCubeModel()(Slice(1,1,1),Slice(),Slice())); // icorr=1
+      RL*=Pol;
+      LR.reference(sdb.visCubeModel()(Slice(2,1,1),Slice(),Slice())); // icorr=2
+      LR*=cPol;
+    }	
   } // solvePol()?
 
 }
@@ -679,6 +847,222 @@ void DllsJones::solveOneVB(const VisBuffer& vb) {
 	} // !AC
       } // !flagRow
     } // irow
+
+    if (ng>0) {
+
+      // Turn the crank on the solver
+      uInt rank;
+      lsq.invert(rank,false);  // true);  // SVD?
+      Cube<Complex> Dest(2,1,nAnt());
+
+      lsq.solve(Dest.data());
+      
+      //if (Int(rank)<nAnt()) 
+      //cout << "   Need to reference!!";
+      
+      // Conjugate Dy's because we solved for their conjugates
+      Dest(Slice(1,1,1),Slice(),Slice())=conj(Dest(Slice(1,1,1),Slice(),Slice()));
+      
+      // Store the result
+      solveCPar()=Dest;
+      //solveParOK().set(true);  // we set this more 'carefully' above
+    }
+    //cout << endl;
+
+  } // ich
+
+}
+
+void DllsJones::solveOneSDB(SolveDataBuffer& sdb) {
+
+  Int nChan=sdb.nChannels();
+
+  solveAllCPar()=Complex(0.0);
+  solveAllParOK()=false;
+
+  // Solve per chan
+  Vector<Complex> cEq(2);
+  Vector<uInt> cEqIdx(2);
+  Vector<Complex> obs(2);
+  Vector<Float> wt(2);
+  for (Int ich=0;ich<nChan;++ich) {
+
+    solveCPar().reference(solveAllCPar()(Slice(),Slice(ich,1,1),Slice()));
+    solveParOK().reference(solveAllParOK()(Slice(),Slice(ich,1,1),Slice()));
+    solveParOK().set(false);
+
+    LSQFit lsq(2*nAnt(),LSQComplex(),0);
+
+    Int ng(0);
+    for (Int irow=0;irow<sdb.nRows();++irow) {
+      if (!sdb.flagRow()(irow)) {
+	
+	// Discern this row's antennas, avoid ACs
+	Int a1=sdb.antenna1()(irow);
+	Int a2=sdb.antenna2()(irow);
+	if (a1!=a2) {
+	  
+	  // If not flagged...
+	  if (!sdb.flagCube()(0,ich,irow) &&
+	      !sdb.flagCube()(1,ich,irow) &&
+	      !sdb.flagCube()(2,ich,irow) &&
+	      !sdb.flagCube()(3,ich,irow) ) {
+	    ++ng;
+
+	    // simple-minded OK-setting, for now
+	    solveParOK().xyPlane(a1).set(true);
+	    solveParOK().xyPlane(a2).set(true);
+
+	    // Discern D indices for this baseline
+	    Int xi=2*a1;
+	    Int yi=2*a1+1;
+	    Int xj=2*a2;
+	    Int yj=2*a2+1;
+	    /*
+	    cout << "currCh="<<currCh 
+		 << " irow="<<irow 
+		 << " a1="<<a1 << " a2="<<a2
+		 << " XY: xi/yj*="<< xi<<"/"<<yj
+		 << " YX: yi/xj*="<< yi<<"/"<<xj
+		 << endl;
+	    */
+
+	    wt(0)=sdb.weightSpectrum()(1,ich,irow);
+	    wt(1)=sdb.weightSpectrum()(2,ich,irow);
+
+	    cEq(0)=sdb.visCubeModel()(0,ich,irow);
+	    cEq(1)=sdb.visCubeModel()(3,ich,irow);
+	    obs(0)=sdb.visCubeCorrected()(1,ich,irow)-sdb.visCubeModel()(1,ich,irow);
+	    obs(1)=sdb.visCubeCorrected()(2,ich,irow)-sdb.visCubeModel()(2,ich,irow);
+
+	    cEqIdx(0)=yj; cEqIdx(1)=xi;
+	    lsq.makeNorm(2,cEqIdx.data(),cEq.data(),wt(0),obs(0),LSQFit::Complex());
+	    cEqIdx(0)=yi; cEqIdx(1)=xj;
+	    lsq.makeNorm(2,cEqIdx.data(),cEq.data(),wt(1),conj(obs(1)),LSQFit::Complex());
+
+	  }
+	
+	} // !AC
+      } // !flagRow
+    } // irow
+
+    if (ng>0) {
+
+      // Turn the crank on the solver
+      uInt rank;
+      lsq.invert(rank,false);  // true);  // SVD?
+      Cube<Complex> Dest(2,1,nAnt());
+
+      lsq.solve(Dest.data());
+      
+      //if (Int(rank)<nAnt()) 
+      //cout << "   Need to reference!!";
+      
+      // Conjugate Dy's because we solved for their conjugates
+      Dest(Slice(1,1,1),Slice(),Slice())=conj(Dest(Slice(1,1,1),Slice(),Slice()));
+      
+      // Store the result
+      solveCPar()=Dest;
+      //solveParOK().set(true);  // we set this more 'carefully' above
+    }
+    //cout << endl;
+
+  } // ich
+
+}
+
+void DllsJones::solveOne(SDBList& sdbs) {
+
+  // In general, there will be many SDBs in the SDBList, usually
+  //  over time (parang).  (If combine='spw', then there will be
+  //  multiple SDBs over spw; in this case, we have to be clearer
+  //  about what we mean by nChan below....)
+
+  // The number of SDBs in the SDBList
+  Int nSDB=sdbs.nSDB();
+
+  //cout << "nSDB=" << nSDB << endl;
+
+  // This will insist on uniformity over SDBs (usually the same spw)
+  Int nChan=sdbs.nChannels();
+
+  solveAllCPar()=Complex(0.0);
+  solveAllParOK()=false;
+
+  // Solve per chan
+  Vector<Complex> cEq(2);
+  Vector<uInt> cEqIdx(2);
+  Vector<Complex> obs(2);
+  Vector<Float> wt(2);
+  for (Int ich=0;ich<nChan;++ich) {
+
+    solveCPar().reference(solveAllCPar()(Slice(),Slice(ich,1,1),Slice()));
+    solveParOK().reference(solveAllParOK()(Slice(),Slice(ich,1,1),Slice()));
+    solveParOK().set(false);
+
+    LSQFit lsq(2*nAnt(),LSQComplex(),0);
+
+    Int ng(0);
+    Float wtsum(0.0);
+    for (Int isdb=0;isdb<nSDB;++isdb) {
+      SolveDataBuffer& sdb(sdbs(isdb));
+    for (Int irow=0;irow<sdb.nRows();++irow) {
+      if (!sdb.flagRow()(irow)) {
+	
+	// Discern this row's antennas, avoid ACs
+	Int a1=sdb.antenna1()(irow);
+	Int a2=sdb.antenna2()(irow);
+	if (a1!=a2) {
+	  
+	  // If not flagged...
+	  if (!sdb.flagCube()(0,ich,irow) &&
+	      !sdb.flagCube()(1,ich,irow) &&
+	      !sdb.flagCube()(2,ich,irow) &&
+	      !sdb.flagCube()(3,ich,irow) ) {
+	    ++ng;
+
+	    // simple-minded OK-setting, for now
+	    solveParOK().xyPlane(a1).set(true);
+	    solveParOK().xyPlane(a2).set(true);
+
+	    // Discern D indices for this baseline
+	    Int xi=2*a1;
+	    Int yi=2*a1+1;
+	    Int xj=2*a2;
+	    Int yj=2*a2+1;
+	    /*
+	    cout << "currCh="<<currCh 
+		 << " irow="<<irow 
+		 << " a1="<<a1 << " a2="<<a2
+		 << " XY: xi/yj*="<< xi<<"/"<<yj
+		 << " YX: yi/xj*="<< yi<<"/"<<xj
+		 << endl;
+	    */
+
+	    wt(0)=sdb.weightSpectrum()(1,ich,irow);
+	    wt(1)=sdb.weightSpectrum()(2,ich,irow);
+
+	    cEq(0)=sdb.visCubeModel()(0,ich,irow);
+	    cEq(1)=sdb.visCubeModel()(3,ich,irow);
+	    obs(0)=sdb.visCubeCorrected()(1,ich,irow)-sdb.visCubeModel()(1,ich,irow);
+	    obs(1)=sdb.visCubeCorrected()(2,ich,irow)-sdb.visCubeModel()(2,ich,irow);
+
+	    cEqIdx(0)=yj; cEqIdx(1)=xi;
+	    lsq.makeNorm(2,cEqIdx.data(),cEq.data(),wt(0),obs(0),LSQFit::Complex());
+	    cEqIdx(0)=yi; cEqIdx(1)=xj;
+	    lsq.makeNorm(2,cEqIdx.data(),cEq.data(),wt(1),conj(obs(1)),LSQFit::Complex());
+
+	    wtsum+=(wt(0)+wt(1));
+
+	  }
+	
+	} // !AC
+      } // !flagRow
+    } // irow
+    } // isdb
+
+    //cout << "wtsum=" << wtsum << endl;
+
 
     if (ng>0) {
 
@@ -1405,6 +1789,229 @@ void XJones::solveOneVB(const VisBuffer& vb) {
   
 }
 
+void XJones::solveOneSDB(SolveDataBuffer& sdb) {
+
+  // This just a simple average of the cross-hand
+  //  visbilities...
+
+  // We are actually solving for all channels simultaneously
+  solveCPar().reference(solveAllCPar());
+  solveParOK().reference(solveAllParOK());
+  solveParErr().reference(solveAllParErr());
+  solveParSNR().reference(solveAllParSNR());
+  
+  // Fill solveCPar() with 1, nominally, and flagged
+  solveCPar()=Complex(1.0);
+  solveParOK()=false;
+
+  Int nChan=sdb.nChannels();
+
+  Complex d,md;
+  Float wt;
+  Vector<DComplex> rl(nChan,0.0),lr(nChan,0.0);
+  Double sumwt(0.0);
+  for (Int irow=0;irow<sdb.nRows();++irow) {
+    if (!sdb.flagRow()(irow) &&
+	sdb.antenna1()(irow)!=sdb.antenna2()(irow)) {
+
+      for (Int ich=0;ich<nChan;++ich) {
+	if (!sdb.flagCube()(1,ich,irow) &&
+	    !sdb.flagCube()(2,ich,irow)) {
+	  
+	  // A common weight for both crosshands
+	  // TBD: we should probably consider this carefully...
+	  //  (also in D::guessPar...)
+	  wt=Double(sdb.weightSpectrum()(1,ich,irow)+
+		    sdb.weightSpectrum()(2,ich,irow))/2.0;
+
+	  // correct weight for model normalization
+	  //	  a=abs(vb.modelVisCube()(1,ich,irow));
+	  //	  wt*=(a*a);
+	  
+	  if (wt>0.0) {
+	    // Cross-hands only
+	    for (Int icorr=1;icorr<3;++icorr) {
+	      d=sdb.visCubeCorrected()(icorr,ich,irow);
+	      
+	      if (abs(d)>0.0) {
+		
+		if (icorr==1) 
+		  rl(ich)+=DComplex(Complex(wt)*d);
+		else
+		  lr(ich)+=DComplex(Complex(wt)*d);
+		
+		sumwt+=Double(wt);
+		
+	      } // abs(d)>0
+	    } // icorr
+	  } // wt>0
+	} // !flag
+      } // ich
+    } // !flagRow
+  } // row
+  
+
+  //  cout << "spw = " << currSpw() << endl;
+  //  cout << " rl = " << rl << " " << phase(rl)*180.0/C::pi << endl;
+  //  cout << " lr = " << lr << " " << phase(lr)*180.0/C::pi << endl;
+
+  // Record results
+  solveCPar()=Complex(1.0);
+  solveParOK()=false;
+  for (Int ich=0;ich<nChan;++ich) {
+    // combine lr with rl
+    rl(ich)+=conj(lr(ich));
+  
+    // Normalize to unit amplitude
+    //  (note that the phase result is insensitive to sumwt)
+    Double amp=abs(rl(ich));
+    // For now, all antennas get the same solution
+    IPosition blc(3,0,0,0);
+    IPosition trc(3,0,0,nElem()-1);
+    if (sumwt>0 && amp>0.0) {
+      rl(ich)/=DComplex(amp);
+      blc(1)=trc(1)=ich;
+      solveCPar()(blc,trc)=Complex(rl(ich));
+      solveParOK()(blc,trc)=true;
+    }
+  }
+
+  
+  if (ntrue(solveParOK())>0) {
+    Float ang=arg(sum(solveCPar()(solveParOK()))/Float(ntrue(solveParOK())))*90.0/C::pi;
+    
+    
+    logSink() << "Mean position angle offset solution for " 
+	      << msmc().fieldName(currField())
+	      << " (spw = " << currSpw() << ") = "
+	      << ang
+	      << " deg."
+	      << LogIO::POST;
+  }
+  else
+    logSink() << "Position angle offset solution for " 
+	      << msmc().fieldName(currField())
+	      << " (spw = " << currSpw() << ") "
+	      << " was not determined (insufficient data)."
+	      << LogIO::POST;
+  
+}
+
+
+void XJones::solveOne(SDBList& sdbs) {
+
+  // This just a simple average of the cross-hand
+  //  visbilities...
+
+  Int nSDB=sdbs.nSDB();
+
+  //cout << "nSDB=" << nSDB << endl;
+
+  // We are actually solving for all channels simultaneously
+  solveCPar().reference(solveAllCPar());
+  solveParOK().reference(solveAllParOK());
+  solveParErr().reference(solveAllParErr());
+  solveParSNR().reference(solveAllParSNR());
+  
+  // Fill solveCPar() with 1, nominally, and flagged
+  solveCPar()=Complex(1.0);
+  solveParOK()=false;
+
+  Int nChan=sdbs.nChannels();
+
+  Complex d,md;
+  Float wt;
+  Vector<DComplex> rl(nChan,0.0),lr(nChan,0.0);
+  Double sumwt(0.0);
+  for (Int isdb=0;isdb<nSDB;++isdb) {
+    SolveDataBuffer& sdb(sdbs(isdb));
+  for (Int irow=0;irow<sdb.nRows();++irow) {
+    if (!sdb.flagRow()(irow) &&
+	sdb.antenna1()(irow)!=sdb.antenna2()(irow)) {
+
+      for (Int ich=0;ich<nChan;++ich) {
+	if (!sdb.flagCube()(1,ich,irow) &&
+	    !sdb.flagCube()(2,ich,irow)) {
+	  
+	  // A common weight for both crosshands
+	  // TBD: we should probably consider this carefully...
+	  //  (also in D::guessPar...)
+	  wt=Double(sdb.weightSpectrum()(1,ich,irow)+
+		    sdb.weightSpectrum()(2,ich,irow))/2.0;
+
+	  // correct weight for model normalization
+	  //	  a=abs(vb.modelVisCube()(1,ich,irow));
+	  //	  wt*=(a*a);
+	  
+	  if (wt>0.0) {
+	    // Cross-hands only
+	    for (Int icorr=1;icorr<3;++icorr) {
+	      d=sdb.visCubeCorrected()(icorr,ich,irow);
+	      
+	      if (abs(d)>0.0) {
+		
+		if (icorr==1) 
+		  rl(ich)+=DComplex(Complex(wt)*d);
+		else
+		  lr(ich)+=DComplex(Complex(wt)*d);
+		
+		sumwt+=Double(wt);
+		
+	      } // abs(d)>0
+	    } // icorr
+	  } // wt>0
+	} // !flag
+      } // ich
+    } // !flagRow
+  } // row
+  } // isdb
+
+  //  cout << "spw = " << currSpw() << endl;
+  //  cout << " rl = " << rl << " " << phase(rl)*180.0/C::pi << endl;
+  //  cout << " lr = " << lr << " " << phase(lr)*180.0/C::pi << endl;
+
+  // Record results
+  solveCPar()=Complex(1.0);
+  solveParOK()=false;
+  for (Int ich=0;ich<nChan;++ich) {
+    // combine lr with rl
+    rl(ich)+=conj(lr(ich));
+  
+    // Normalize to unit amplitude
+    //  (note that the phase result is insensitive to sumwt)
+    Double amp=abs(rl(ich));
+    // For now, all antennas get the same solution
+    IPosition blc(3,0,0,0);
+    IPosition trc(3,0,0,nElem()-1);
+    if (sumwt>0 && amp>0.0) {
+      rl(ich)/=DComplex(amp);
+      blc(1)=trc(1)=ich;
+      solveCPar()(blc,trc)=Complex(rl(ich));
+      solveParOK()(blc,trc)=true;
+    }
+  }
+
+  
+  if (ntrue(solveParOK())>0) {
+    Float ang=arg(sum(solveCPar()(solveParOK()))/Float(ntrue(solveParOK())))*90.0/C::pi;
+    
+    
+    logSink() << "Mean position angle offset solution for " 
+	      << msmc().fieldName(currField())
+	      << " (spw = " << currSpw() << ") = "
+	      << ang
+	      << " deg."
+	      << LogIO::POST;
+  }
+  else
+    logSink() << "Position angle offset solution for " 
+	      << msmc().fieldName(currField())
+	      << " (spw = " << currSpw() << ") "
+	      << " was not determined (insufficient data)."
+	      << LogIO::POST;
+  
+}
+
 // **********************************************************
 //  XfJones: CHANNELIZED position angle for circulars (antenna-based)
 //
@@ -1632,6 +2239,18 @@ void GlinXphJones::selfSolveOne(VisBuffGroupAcc& vbga) {
 
 }
 
+// SDBList (VI2) version
+void GlinXphJones::selfSolveOne(SDBList& sdbs) {
+
+  // Expecting multiple SDBs (esp. in time)
+  if (sdbs.nSDB()==1)
+    throw(AipsError("GlinXphJones needs multiple SDBs"));
+
+  // Call single-VB specialized solver with the one vb
+  this->solveOne(sdbs);
+
+}
+
 // Solve for the X-Y phase from the cross-hand's slope in R/I
 void GlinXphJones::solveOneVB(const VisBuffer& vb) {
 
@@ -1824,6 +2443,228 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
       }
       else
 	sigf(itime)=DBL_MAX;    // ~zero weight
+    }
+    
+    // p0=Q, p1=U, p2 = real part of net instr pol offset
+    //  x is TWICE the parallactic angle
+    CompiledFunction<AutoDiff<Double> > fn;
+    fn.setFunction("-p0*sin(x) + p1*cos(x) + p2");
+
+    LinearFit<Double> fitter;
+    fitter.setFunction(fn);
+    
+    Vector<Double> soln=fitter.fit(xf,yf,sigf,&maskf);
+    
+    QU_(0,thisSpw) = soln(0);
+    QU_(1,thisSpw) = soln(1);
+
+    cout << " Fractional Poln: "
+	 << "Q = " << QU_(0,thisSpw) << ", "
+	 << "U = " << QU_(1,thisSpw) << "; "
+	 << "P = " << sqrt(soln(0)*soln(0)+soln(1)*soln(1)) << ", "
+	 << "X = " << atan2(soln(1),soln(0))*90.0/C::pi << "deg."
+	 << endl;
+    cout << " Net (over baselines) instrumental polarization: " 
+	 << soln(2) << endl;
+
+  }	
+
+}
+
+// Solve for the X-Y phase from the cross-hand's slope in R/I
+void GlinXphJones::solveOne(SDBList& sdbs) {
+
+  // ensure
+  if (QU_.shape()!=IPosition(2,2,nSpw())) {
+    QU_.resize(2,nSpw());
+    QU_.set(0.0);
+  }
+
+  Int thisSpw=spwMap()(sdbs.aggregateSpw());
+  
+  // We are actually solving for all channels simultaneously
+  solveCPar().reference(solveAllCPar());
+  solveParOK().reference(solveAllParOK());
+  solveParErr().reference(solveAllParErr());
+  solveParSNR().reference(solveAllParSNR());
+  
+  // Fill solveCPar() with 1, nominally, and flagged
+  solveCPar()=Complex(1.0);
+  solveParOK()=false;
+
+  Int nChan=sdbs.nChannels();
+
+  // Number of datapoints in fit is the number of SDBs
+  Int nSDB=sdbs.nSDB();
+
+  Matrix<Double> x(nSDB,nChan,0.0),y(nSDB,nChan,0.0),wt(nSDB,nChan,0.0),sig(nSDB,nChan,0.0);
+  Matrix<Bool> mask(nSDB,nChan,false);
+
+  mask.set(false);
+  Complex v(0.0);
+  Float wt0(0.0);
+  
+  for (Int isdb=0;isdb<nSDB;++isdb) {
+    SolveDataBuffer& sdb(sdbs(isdb));
+
+    for (Int irow=0;irow<sdb.nRows();++irow) {
+      if (!sdb.flagRow()(irow) &&
+	  sdb.antenna1()(irow)!=sdb.antenna2()(irow)) {
+	
+	for (Int ich=0;ich<nChan;++ich) {
+	  if (!sdb.flagCube()(1,ich,irow)) {
+	    wt0=sdb.weightSpectrum()(1,ich,irow);
+	    v=sdb.visCubeCorrected()(1,ich,irow);
+	    x(isdb,ich)+=Double(wt0*real(v));
+	    y(isdb,ich)+=Double(wt0*imag(v));
+	    wt(isdb,ich)+=Double(wt0);
+	  }
+	  if (!sdb.flagCube()(2,ich,irow)) {
+	    wt0=sdb.weightSpectrum()(2,ich,irow);
+	    v=conj(sdb.visCubeCorrected()(2,ich,irow));
+	    x(isdb,ich)+=Double(wt0*real(v));
+	    y(isdb,ich)+=Double(wt0*imag(v));
+	    wt(isdb,ich)+=Double(wt0);
+	  }
+	}
+      }
+    }
+  }
+
+  // Normalize data by accumulated weights
+  for (Int isdb=0;isdb<nSDB;++isdb) {
+    for (Int ich=0;ich<nChan;++ich) {
+      if (wt(isdb,ich)>0.0) {
+	x(isdb,ich)/=wt(isdb,ich);
+	y(isdb,ich)/=wt(isdb,ich);
+	sig(isdb,ich)=sqrt(1.0/wt(isdb,ich));
+	mask(isdb,ich)=true;
+      }
+      else
+	sig(isdb,ich)=DBL_MAX;    // ~zero weight
+    }
+  }
+
+  // Solve for each channel
+  Vector<Complex> Cph(nChan);
+  Cph.set(Complex(1.0,0.0));
+  Float currAmb(1.0);
+  Bool report(false);
+  for (Int ich=0;ich<nChan;++ich) {
+
+    if (sum(wt.column(ich))>0.0) {
+      report=true;
+      LinearFit<Double> phfitter;
+      Polynomial<AutoDiff<Double> > line(1);
+      phfitter.setFunction(line);
+      Vector<Bool> m(mask.column(ich));
+
+      // Fit shallow and steep, and always prefer shallow
+      
+      // Assumed shallow solve:
+      Vector<Double> solnA;
+      solnA.assign(phfitter.fit(x.column(ich),y.column(ich),sig.column(ich),&m));
+
+      // Assumed steep solve:
+      Vector<Double> solnB;
+      solnB.assign(phfitter.fit(y.column(ich),x.column(ich),sig.column(ich),&m));
+
+      Double Xph(0.0);
+      if (abs(solnA(1))<abs(solnB(1))) {
+	Xph=atan(solnA(1));
+      }
+      else {
+	Xph=atan(1.0/solnB(1));
+      }
+
+      Cph(ich)=currAmb*Complex(DComplex(cos(Xph),sin(Xph)));
+
+      // Watch for and remove ambiguity changes which can
+      //  occur near Xph~= +/-90 deg (the atan above can jump)
+      //  (NB: this does _not_ resolve the amb; it merely makes
+      //   it consistent within the spw)
+      if (ich>0) {
+	// If Xph changes by more than pi/2, probably a ambig jump...
+	Float dang=abs(arg(Cph(ich)/Cph(ich-1)));
+	if (dang > (C::pi/2.)) {
+	  Cph(ich)*=-1.0;   // fix this one
+	  currAmb*=-1.0;    // reverse currAmb, so curr amb is carried forward
+	  //	  cout << "  Found XY phase ambiguity jump at chan=" << ich << " in spw=" << currSpw();
+	}
+      }
+
+      //      cout << " (" << currAmb << ")";
+      //      cout << endl;
+
+
+      // Set all antennas with this X-Y phase (as a complex number)
+      solveCPar()(Slice(0,1,1),Slice(ich,1,1),Slice())=Cph(ich);
+      solveParOK()(Slice(),Slice(ich,1,1),Slice())=true;
+    }
+    else {
+      solveCPar()(Slice(0,1,1),Slice(ich,1,1),Slice())=Complex(1.0);
+      solveParOK()(Slice(),Slice(ich,1,1),Slice())=false;
+    }
+  }
+
+  if (report)
+    cout << endl 
+	 << "Spw = " << thisSpw
+	 << " (ich=" << nChan/2 << "/" << nChan << "): " << endl
+	 << " X-Y phase = " << arg(Cph[nChan/2])*180.0/C::pi << " deg." << endl;
+      
+
+  // Now fit for the source polarization
+  {
+
+    Vector<Double> wtf(nSDB,0.0),sigf(nSDB,0.0),xf(nSDB,0.0),yf(nSDB,0.0);
+    Vector<Bool> maskf(nSDB,false);
+    Float wt0;
+    Complex v;
+    for (Int isdb=0;isdb<nSDB;++isdb) {
+      SolveDataBuffer& sdb(sdbs(isdb));
+
+      for (Int irow=0;irow<sdb.nRows();++irow) {
+	if (!sdb.flagRow()(irow) &&
+	    sdb.antenna1()(irow)!=sdb.antenna2()(irow)) {
+	  
+	  Float fpa(0.0);  //sdb.feed_pa(vb.time()(irow))(0)));
+	  throw(AipsError("Need feedpa in SDB!!"));
+	  
+	  
+	  for (Int ich=0;ich<nChan;++ich) {
+	    
+	    if (!sdb.flagCube()(1,ich,irow)) {
+	      // Correct x-hands for xy-phase and add together
+	      wt0=sdb.weightSpectrum()(1,ich,irow);
+	      v=sdb.visCubeCorrected()(1,ich,irow)/Cph(ich);
+	      xf(isdb)+=Double(wt0*2.0*(fpa));
+	      yf(isdb)+=Double(wt0*real(v));
+	      wtf(isdb)+=Double(wt0);
+	    }
+	    if (!sdb.flagCube()(2,ich,irow)) {
+	      // Correct x-hands for xy-phase and add together
+	      wt0=sdb.weightSpectrum()(2,ich,irow);
+	      v=sdb.visCubeCorrected()(2,ich,irow)/conj(Cph(ich));
+	      xf(isdb)+=Double(wt0*2.0*(fpa));
+	      yf(isdb)+=Double(wt0*real(v));
+	      wtf(isdb)+=Double(wt0);
+	    }
+	  }
+	}
+      }
+    }
+    
+    // Normalize data by accumulated weights
+    for (Int isdb=0;isdb<nSDB;++isdb) {
+      if (wtf(isdb)>0.0) {
+	xf(isdb)/=wtf(isdb);
+	yf(isdb)/=wtf(isdb);
+	sigf(isdb)=sqrt(1.0/wtf(isdb));
+	maskf(isdb)=true;
+      }
+      else
+	sigf(isdb)=DBL_MAX;    // ~zero weight
     }
     
     // p0=Q, p1=U, p2 = real part of net instr pol offset
