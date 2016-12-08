@@ -1026,7 +1026,11 @@ try:
 	    if (withtclean):
 		exppeak = [1.18952155113,1.16193449497]
 		exprms = [0.000674300128594,0.000708947714884]
-	    
+                # expectation values  set 8 Dec 2016 based on CASA Version 5.0.0-80 Compiled on: Wed 2016/12/07 04:31:44 UTC
+                # ( change due to new cyclethreshold because of more accurate psf sidelobe level calc : CAS-9070 )
+                exppeak = [1.18951940536,1.16193413734]
+		exprms = [0.000674192491959,0.000708995265435]
+
 	
 	    for name in basename:
 	
@@ -1067,8 +1071,11 @@ try:
 		# As of r37595 the parallel and sequential versions of tclean produce the same result with a precision better than 1%
 		exppeakm = 0.189118593931
 		exprmsm = 0.0094265351072
-	
-	
+                # expectation values  set 8 Dec 2016 based on CASA Version 5.0.0-80 Compiled on: Wed 2016/12/07 04:31:44 UTC
+                # ( change due to new cyclethreshold because of more accurate psf sidelobe level calc : CAS-9070 )
+		exppeakm = 0.189606815577 
+		exprmsm = 0.0095296749288
+
 	    calstat=imstat(imagename='test-M100line.image', region='', box='42,115,65,134')
 	    resrmsm=(calstat['rms'][0])
 	    calstat=imstat(imagename='test-M100line.image', region='')
