@@ -4,7 +4,6 @@ import os
 import copy
 import shutil
 import partitionhelper as ph
-import traceback
 
 # To handle thread-based Tier-2 parallelization
 import thread 
@@ -225,8 +224,6 @@ class ParallelTaskHelper:
         if (self.__bypass_parallel_processing == 1):
             for job in self._executionList:
                 parameters = job.getCommandArguments()
-                print "----------------------------------------------------------------------------------------------------"
-                print "****************************************************************************************************"
                 try:
                     exec("from taskinit import *; from tasks import *; " + job.getCommandLine())
                     # jagonzal: Special case for partition
@@ -235,15 +232,12 @@ class ParallelTaskHelper:
                     else:
                         self._sequential_return_list[parameters['vis']] = returnVar0
                 except Exception, instance:
-                    traceback.print_exc()
                     str_instance = str(instance)
                     if (string.find(str_instance,"NullSelection") == 0):
                         casalog.post("Error running task sequentially %s: %s" % (job.getCommandLine(),str_instance),"WARN","executeJobs")
                         traceback.print_tb(sys.exc_info()[2])
                     else:
                         casalog.post("Ignoring NullSelection error from %s" % (parameters['vis']),"INFO","executeJobs")
-                print "****************************************************************************************************"
-                print "----------------------------------------------------------------------------------------------------"
             self._executionList = []
         else:
             for job in self._executionList:
