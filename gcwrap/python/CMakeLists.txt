@@ -24,6 +24,7 @@ scripts/asap_init.py
 scripts/assignmentFilter.py
 scripts/callibrary.py
 scripts/carta.py
+scripts/carta_install.py
 scripts/casa.py
 scripts/casapy.py
 scripts/procmgr.py
