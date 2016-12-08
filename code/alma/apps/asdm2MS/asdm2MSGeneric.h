@@ -293,7 +293,7 @@ template <class	T, class R, class RFilter>
    *
    */ 
   static void start_element_callback(void *v_p, const xmlChar *name, const xmlChar **) {
-    const xmlChar* expectedElement;
+    const xmlChar* expectedElement = NULL;
     typename ParserContext<T, R, RFilter>::StatesEnum nextState;
 
     if (V2CTX_P(v_p)->debug) TableSAXReader<T, R, RFilter>::enterElementInfo(V2CTX_P(v_p), name);

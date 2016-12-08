@@ -215,7 +215,7 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
 			Enum<CorrelationMode> correlationMode,
 			bool reverse, bool autoTrailing, 
 			vector<Vector<casacore::Double> >& v_uvw,
-			casacore::MSFieldColumns* msfc_p){
+			casacore::MSFieldColumns* /* msfc_p */){
 
   map<Tag,ArrayParam>::const_iterator itf=m_array_.find(configDescriptionId);
 
@@ -269,7 +269,7 @@ void UvwCoords::uvw_bl( Tag configDescriptionId,
 			Enum<CorrelationMode> correlationMode,
 			bool reverse, bool autoTrailing, 
 			vector<Vector<casacore::Double> >& v_uvw,
-			casacore::MSFieldColumns* msfc_p){
+			casacore::MSFieldColumns* /* msfc_p */){
 
   map<Tag,ArrayParam>::const_iterator itf=m_array_.find(configDescriptionId);
 
@@ -354,7 +354,7 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<pair<unsigned int,double>
 
 
 void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, Enum<CorrelationMode> correlationMode,
- 			pair<bool,bool> dataOrder, vector<Vector<casacore::Double> >& v_uvw, casacore::MSFieldColumns* msfc_p){
+ 			pair<bool,bool> dataOrder, vector<Vector<casacore::Double> >& v_uvw, casacore::MSFieldColumns* /* msfc_p */){
 
   bool coutest=false;
 
@@ -488,7 +488,7 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, E
 }
 
 
-vector<double> UvwCoords::antPos(const vector<double>& itrfPos,const vector<double>& hoffset){
+vector<double> UvwCoords::antPos(const vector<double>& itrfPos,const vector<double>& /* hoffset */){
 
   // passage du systeme de coords STATION au CS YOKE retire car devra etre integre dans Measure
   return itrfPos;

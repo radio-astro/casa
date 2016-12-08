@@ -187,7 +187,7 @@ bool Name2Table::init() {
 
 const set<ASDM_TABLE_BASE*>& Name2Table::find (const vector<string>& name, bool verbose) {
 
-  LogSinkInterface& lsif = LogSink::globalSink();
+  // LogSinkInterface& lsif = LogSink::globalSink();
   ostringstream infostream; 
 
   // Empty the set just to be sure.

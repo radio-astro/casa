@@ -959,7 +959,7 @@ void clearScanSet(const char*, const char*) {
 */
 struct eb_scan_selection : public grammar<eb_scan_selection> {
   template<typename ScannerT> struct definition {
-    definition (eb_scan_selection const& self) {
+    definition (eb_scan_selection const& /* self */) {
       eb_scan_list   = eb_scan >> *(';' >> eb_scan);
       eb_scan	     = (eb[push_back_a(eb_v, ebNumber)][assign_a(ebNumber, allEbs)] >> scan_list)[&mergeScanSet][&clearScanSet];
       eb	     = !(int_p[assign_a(readEb)] >> ':')[assign_a(ebNumber, readEb)];
@@ -2713,13 +2713,6 @@ void fillMainLazily2(const string& dsName,
     for (vector<MainRowCUStruct>::iterator iter=mRCU_s_v.begin(); iter!=mRCU_s_v.end(); iter++) {
       MainRow* mR_p = iter->mR_p;
 
-      // Depending on there is an ephemeris attached to the field or not 
-      // we obtain the phase direction in two different ways :
-      // * no ephemeris attached -> use the phase dir information found in the ASDM Field table
-      // * ephemeris attached -> get the phase direction from the MS Field columns and a given time, this
-      // can work IF AND ONLY if the MS Field column is filled prior to the calculation of the UVWs.
-      bool ephemerisAttached = mR_p->getFieldUsingFieldId()->isEphemerisIdExists();
-
       SDMDataObjectStreamReader sdosr;
       sdosr.open(iter->bdfName);
       LOG("Processing " + iter->bdfName);
@@ -4118,13 +4111,6 @@ void fillMain(
   vector<float *> correctedData_v;
 
   /* compute the UVW */
-  // Depending on there is an ephemeris attached to the field or not 
-  // we obtain the phase direction in two different ways :
-  // * no ephemeris attached -> use the phase dir information found in the ASDM Field table
-  // * ephemeris attached -> get the phase direction from the MS Field columns and a given time, this
-  // can work IF AND ONLY if the MS Field column is filled prior to the calculation of the UVWs.
-  bool attachedEphemeris = r_p->getFieldUsingFieldId()->isEphemerisIdExists();
-
   vector<double> uvw_v(3*vmsData_p->v_time.size());
   vector<casacore::Vector<casacore::Double> > vv_uvw(vmsData_p->v_time.size());
 #if DDPRIORITY
@@ -4132,7 +4118,7 @@ void fillMain(
 		   sdmbin::SDMBinData::dataOrder(),
 		   vv_uvw);
 #else
-  uvwCoords.uvw_bl(r, vmsData_p->v_timeCentroid, e_query_cm, 
+  uvwCoords.uvw_bl(r_p, vmsData_p->v_timeCentroid, e_query_cm, 
 		   sdmbin::SDMBinData::dataOrder(),
 		   vv_uvw);
 #endif
@@ -4378,7 +4364,7 @@ void calcUVW(MainRow* r_p,
                    sdmbin::SDMBinData::dataOrder(),
                    vv_uvw);
 #else
-  uvwCoords.uvw_bl(r, vmsData_p->v_timeCentroid, e_query_cm,
+  uvwCoords.uvw_bl(r_p, vmsData_p->v_timeCentroid, e_query_cm,
                    sdmbin::SDMBinData::dataOrder(),
                    vv_uvw);
 #endif

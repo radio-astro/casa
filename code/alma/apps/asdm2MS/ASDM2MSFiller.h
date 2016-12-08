@@ -331,7 +331,7 @@ class ASDM2MSFiller
   void addField( const string&			name_,
 		 const string&			code_,
 		 double				time_,
-		 int                            num_poly_,
+		 unsigned int                   num_poly_,
 		 vector<vector<double> >&	delay_dir_,
 		 vector<vector<double> >&	phase_dir_,
 		 vector<vector<double> >&	reference_dir_,
