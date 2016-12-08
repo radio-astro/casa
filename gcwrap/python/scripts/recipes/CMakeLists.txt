@@ -27,7 +27,6 @@ casa_add_python( tools tools_recipes_python lib/python${PYTHONV}/recipes
   checknan.py
   checkdataformat.py
   cl2skycat.py
-  cluster.py
   cmpmses.py
   commongrid.py
   drawmaskinimage.py

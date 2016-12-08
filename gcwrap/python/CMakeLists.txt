@@ -24,7 +24,6 @@ scripts/asap_init.py
 scripts/assignmentFilter.py
 scripts/callibrary.py
 scripts/carta.py
-scripts/casa_in_py.py
 scripts/casa.py
 scripts/casapy.py
 scripts/procmgr.py
@@ -158,7 +157,6 @@ scripts/task_listobs.py
 scripts/task_listpartition.py
 scripts/task_listsdm.py
 scripts/task_listvis.py
-scripts/taskmanager.py
 scripts/task_makemask.py 
 scripts/task_mosaic.py
 scripts/task_mstransform.py
