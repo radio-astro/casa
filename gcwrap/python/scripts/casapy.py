@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 if os.environ.has_key('LD_PRELOAD'):
     del os.environ['LD_PRELOAD']
