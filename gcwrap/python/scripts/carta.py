@@ -16,9 +16,9 @@ class carta:
         carta_path = script_dir + relative_path
 
         # Get Carta home from .casarc
-        cu = __casac__.utils.utils()
-        cartahome = cu.getrc("CartaHome")
-        if cartahome != "":
+        casa_util = __casac__.utils.utils()
+        cartahome = casa_util.getrc("CartaHome")
+        if cartahome != "" and cartahome !="Unknown value":
             carta_path = cartahome + "/bin/carta.sh"
             if sys.platform == "darwin" :
                 carta_path = cartahome + "/Contents/MacOS/carta.sh"
