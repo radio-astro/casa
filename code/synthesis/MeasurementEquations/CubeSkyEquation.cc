@@ -824,7 +824,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	      if(myStopSig.gotStopSignal())
 		throw(AipsError("Terminating..."));
                 //	      Timers tInitModel=Timers::getTime();
-	      if(!incremental && !predictedComp && (cubeSlice==0 )) {
+	      if(!incremental && !predictedComp && (cubeSlice==0 || (noModelCol_p) )) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
                 }
