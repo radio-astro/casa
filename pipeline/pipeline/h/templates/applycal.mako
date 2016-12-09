@@ -597,6 +597,7 @@ def format_spwmap(spwmap, scispws):
 	</%def>
 
 	<%def name="preamble()">
+	% if uv_max[ms].value > 0.0:
 		<p>Calibrated amplitude vs frequency plots for a representative
 		science field in each measurement set. The science field displayed
 		here is the one with the brightest average amplitude over all spectral
@@ -607,6 +608,12 @@ def format_spwmap(spwmap, scispws):
 		<p>Note: due to a technical problem with visstat, the science field
 		displayed here not the brightest field for the source but the first 
 		field for the source.</p>
+	% else: #Single dish (source = field, so far)
+		<p>Calibrated amplitude vs frequency plots of each source in each 
+		measurement set.The atmospheric transmission for each spectral window is
+        displayed above each plot, calculated using data from the first scan
+        with science target intent in each measurement set.</p>
+	% endif
 		
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
