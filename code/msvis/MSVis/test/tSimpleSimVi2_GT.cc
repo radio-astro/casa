@@ -93,7 +93,7 @@ protected:
 
     s2=SimpleSimVi2Parameters(NFLD,NSCAN,NSPW,NANT,NCORR,
 			      ntpf,nchan,Complex(0.0f),
-			      true);  // poln turned on
+			      "circ",true,true);  // poln turned on
 
     fp=2.*FLT_EPSILON;
 

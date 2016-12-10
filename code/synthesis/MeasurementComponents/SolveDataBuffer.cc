@@ -43,6 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 SolveDataBuffer::SolveDataBuffer() : 
   vb_(0),
   freqs_(0),
+  feedPa_(0),
   focusChan_p(-1),
   infocusFlagCube_p(),
   infocusWtSpec_p(),
@@ -56,6 +57,7 @@ SolveDataBuffer::SolveDataBuffer() :
 SolveDataBuffer::SolveDataBuffer(const vi::VisBuffer2& vb) :
   vb_(0),
   freqs_(0),
+  feedPa_(0),
   focusChan_p(-1),
   infocusFlagCube_p(),
   infocusWtSpec_p(),
@@ -75,6 +77,7 @@ SolveDataBuffer::SolveDataBuffer(const vi::VisBuffer2& vb) :
 SolveDataBuffer::SolveDataBuffer(const SolveDataBuffer& sdb) :
   vb_(),
   freqs_(0),
+  feedPa_(0),
   focusChan_p(-1),
   infocusFlagCube_p(),
   infocusWtSpec_p(),
@@ -87,9 +90,9 @@ SolveDataBuffer::SolveDataBuffer(const SolveDataBuffer& sdb) :
   // Copy from the other's VB2
   initFromVB(*(sdb.vb_));
 
-  // copy over freqs_
+  // copy over freqs_, feedPa
   freqs_.assign(sdb.freqs_);
-  
+  feedPa_.assign(sdb.feedPa_);
 
 }
 
@@ -325,6 +328,11 @@ void SolveDataBuffer::initFromVB(const vi::VisBuffer2& vb)
     freqs_+=100.0005e9; // _edge_ of first channel at 100 GHz.
   }
 
+  // Store the feedPa info
+  if (vb.isAttached())
+    // Assumes vb.time() is constant!
+    feedPa_.assign(vb.feedPa(vb.time()(0)));
+
 }
 void SolveDataBuffer::cleanUp() 
 {
@@ -453,6 +461,25 @@ const Vector<Double>& SDBList::freqs() const {
   return f;
   
 }
+
+// How many correlations?
+//   Currently, this insists on uniformity over all SDBs
+Int SDBList::nCorrelations() const {
+
+  Int nCorr=SDB_[0]->nCorrelations();
+
+  // Trap non-uniformity, for now
+  for (Int isdb=1;isdb<nSDB_;++isdb)
+    AlwaysAssert((SDB_[isdb]->nCorrelations()==nCorr),AipsError);
+
+  // Reach here, then ok
+  return nCorr;
+
+}
+
+
+
+
 
 Bool SDBList::Ok() {
 

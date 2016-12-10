@@ -2480,7 +2480,7 @@ void GlinXphJones::solveOne(SDBList& sdbs) {
     QU_.set(0.0);
   }
 
-  Int thisSpw=spwMap()(sdbs.aggregateSpw());
+  Int thisSpw=sdbs.aggregateSpw();
   
   // We are actually solving for all channels simultaneously
   solveCPar().reference(solveAllCPar());
@@ -2628,9 +2628,7 @@ void GlinXphJones::solveOne(SDBList& sdbs) {
 	if (!sdb.flagRow()(irow) &&
 	    sdb.antenna1()(irow)!=sdb.antenna2()(irow)) {
 	  
-	  Float fpa(0.0);  //sdb.feed_pa(vb.time()(irow))(0)));
-	  throw(AipsError("Need feedpa in SDB!!"));
-	  
+	  Float fpa(sdb.feedPa()(0));  // assumes same for all antennas!
 	  
 	  for (Int ich=0;ich<nChan;++ich) {
 	    
@@ -2676,7 +2674,11 @@ void GlinXphJones::solveOne(SDBList& sdbs) {
     fitter.setFunction(fn);
     
     Vector<Double> soln=fitter.fit(xf,yf,sigf,&maskf);
-    
+
+    srcPolPar().resize(2);
+    srcPolPar()(0)=soln(0);
+    srcPolPar()(1)=soln(1);
+        
     QU_(0,thisSpw) = soln(0);
     QU_(1,thisSpw) = soln(1);
 

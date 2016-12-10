@@ -124,6 +124,9 @@ public:
   const casacore::Cube<casacore::Complex>& visCubeModel() const { return vb_->visCubeModel(); };
   const casacore::Cube<casacore::Complex>& visCubeCorrected() const { return vb_->visCubeCorrected(); };
 
+  // The feedPa
+  const casacore::Vector<casacore::Float>& feedPa() const { return feedPa_; };
+
   // These are not const, because we will generally amend them:
   casacore::Vector<casacore::Bool>& flagRow() {fR_.reference(vb_->flagRow());return fR_;};
   casacore::Cube<casacore::Bool>& flagCube() {fC_.reference(vb_->flagCube());return fC_;};
@@ -175,6 +178,10 @@ private:
   //  Currently, assumed uniform over rows
   casacore::Vector<double> freqs_;
 
+  // The feedPa
+  //  Currently, assumed uniform (per antenna) over rows
+  casacore::Vector<float> feedPa_;
+
     // Array reference objects for things in the vb we need to mess with
   casacore::Vector<casacore::Bool> fR_;
   casacore::Cube<casacore::Bool> fC_;
@@ -221,6 +228,11 @@ public:
   int aggregateSpw() const;
   int aggregateFld() const;
   double aggregateTime() const;
+
+  // How man correlations
+  //   Currently, this insists on uniformity over all SDBs
+  int nCorrelations() const;
+
 
   // How many data chans?
   //   Currently, this insists on uniformity over all SDBs

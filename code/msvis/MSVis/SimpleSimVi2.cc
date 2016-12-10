@@ -57,7 +57,8 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters() :
   polBasis_("circ"),
   doAC_(false),
   c0_(Complex(0.0)),
-  doParang_(False)
+  autoPol_(false),
+  doParang_(false)
 {
   
   Vector<Int> nTimePerField(nTimePerField_);
@@ -76,7 +77,9 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters() :
 
 SimpleSimVi2Parameters::SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int nAnt,Int nCorr,
 					       const Vector<Int>& nTimePerField,const Vector<Int>& nChan,
-					       Complex c0, Bool doParang) :
+					       Complex c0,
+					       String polBasis,
+					       Bool autoPol,Bool doParang) :
   nField_(nField),
   nScan_(nScan),
   nSpw_(nSpw),
@@ -93,9 +96,10 @@ SimpleSimVi2Parameters::SimpleSimVi2Parameters(Int nField,Int nScan,Int nSpw,Int
   gain_(Matrix<Float>(1,1,1.0)),
   tsys_(Matrix<Float>(1,1,1.0)),
   doNorm_(False),
-  polBasis_("circ"),
+  polBasis_(polBasis),
   doAC_(False),
   c0_(c0),
+  autoPol_(autoPol),
   doParang_(doParang)
 {
 
@@ -272,9 +276,11 @@ void SimpleSimVi2Parameters::initialize(const Vector<Int>& nTimePerField,const V
     stokes_.set(0.0f);                       // enforce unpolarized!
     stokes_(Slice(0),Slice())=stokes(0,0);   // only I specified
 
-    // If parang turned on, set Q=0.1*I (so we can see parang effect)
-    if (doParang_)  
-      stokes_(Slice(1),Slice())=Float(stokes(0,0)*0.1f);
+    // If requested, set Q=0.04*I, U=0.03*I 
+    if (autoPol_) {
+      stokes_(Slice(1),Slice())=Float(stokes(0,0)*0.04f);
+      stokes_(Slice(2),Slice())=Float(stokes(0,0)*0.03f);
+    }
   }
   else
     stokes_=stokes; // insist shapes match
@@ -343,25 +349,54 @@ SimpleSimVi2::SimpleSimVi2 (const SimpleSimVi2Parameters& pars)
     wt0_.set(1.0);
 
   // Fundamental vis are just stokes combos (complex)
-  vis0_.resize(pars_.nCorr_,pars_.nField_);
+  const Int& nCor(pars_.nCorr_);
+  vis0_.resize(nCor,pars_.nField_);
   vis0_.set(Complex(0.0));
   for (Int ifld=0;ifld<pars_.nField_;++ifld) {
     if (pars_.polBasis_=="circ") {
       vis0_(0,ifld)=Complex(pars_.stokes_(0,ifld)+pars_.stokes_(3,ifld),0.0);
-      if (pars_.nCorr_>1) {
-	vis0_(3,ifld)=Complex(pars_.stokes_(0,ifld)-pars_.stokes_(3,ifld),0.0);
-	if (pars_.nCorr_>2) {
-	  vis0_(1,ifld)=Complex(pars_.stokes_(1,ifld),pars_.stokes_(2,ifld));
-	  vis0_(2,ifld)=Complex(pars_.stokes_(1,ifld),-1.0*pars_.stokes_(2,ifld));
+      if (nCor>1) {
+	vis0_(nCor-1,ifld)=Complex(pars_.stokes_(0,ifld)-pars_.stokes_(3,ifld),0.0);
+	if (nCor>2) {
+	  vis0_(1,ifld)=Complex(pars_.stokes_(1,ifld),      pars_.stokes_(2,ifld));
+	  vis0_(2,ifld)=Complex(pars_.stokes_(1,ifld),-1.0f*pars_.stokes_(2,ifld));
+	}
+      }
+    }
+    else if (pars_.polBasis_=="lin") {
+      vis0_(0,ifld)=Complex(pars_.stokes_(0,ifld)+pars_.stokes_(1,ifld),0.0);
+      if (nCor>1) {
+	vis0_(nCor-1,ifld)=Complex(pars_.stokes_(0,ifld)-pars_.stokes_(1,ifld),0.0);
+	if (nCor>2) {
+	  vis0_(1,ifld)=Complex(pars_.stokes_(2,ifld),      pars_.stokes_(3,ifld));
+	  vis0_(2,ifld)=Complex(pars_.stokes_(2,ifld),-1.0f*pars_.stokes_(3,ifld));
 	}
       }
     }
   }
-  corrdef_(0)=Stokes::type("RR");
-  corrdef_(1)=Stokes::type("RL");
-  corrdef_(2)=Stokes::type("LR");
-  corrdef_(3)=Stokes::type("LL");
 
+  corrdef_.resize(nCor);
+  if (pars_.polBasis_=="circ") {
+    corrdef_(0)=Stokes::type("RR");
+    if (nCor>1) {
+      corrdef_(nCor-1)=Stokes::type("LL");
+      if (nCor>2) {
+	corrdef_(1)=Stokes::type("RL");
+	corrdef_(2)=Stokes::type("LR");
+      }
+    }
+  }
+  else if (pars_.polBasis_=="lin") {
+    corrdef_(0)=Stokes::type("XX");
+    if (nCor>1) {
+      corrdef_(3)=Stokes::type("YY");
+      if (nCor>2) {
+	corrdef_(1)=Stokes::type("XY");
+	corrdef_(2)=Stokes::type("YX");
+      }
+    }
+  }
+    
   VisBufferOptions vbopt=VbWritable;
   vb_ = createAttachedVisBuffer(VbPlain,vbopt);
 
@@ -569,12 +604,10 @@ void SimpleSimVi2::antenna2 (Vector<Int> & ant2) const {
 }
 
 void SimpleSimVi2::corrType (Vector<Int> & corrs) const { 
-  corrs.resize(pars_.nCorr_);
-  corrs[0]=corrdef_(0);
-  corrs[1]=corrdef_(1);
-  corrs[2]=corrdef_(2);
-  corrs[3]=corrdef_(3);
-  /*SSVi2NotYetImplemented() */
+  const Int& nCor(pars_.nCorr_);
+  corrs.resize(nCor);
+  for (Int icor=0;icor<nCor;++icor) 
+    corrs[icor]=corrdef_[icor];
 }
 
 Int  SimpleSimVi2::dataDescriptionId () const { return thisSpw_; }
@@ -622,7 +655,7 @@ void SimpleSimVi2::visibilityObserved (Cube<Complex> & vis) const {
   // get basic signals from model
   this->visibilityModel(vis);
 
-  if (pars_.doParang_)
+  if (pars_.doParang_ && pars_.nCorr_==4)
     corruptByParang(vis);
 
   if (abs(pars_.c0_)>0.0) {  // Global offset for systematic solve testing
@@ -732,11 +765,9 @@ void SimpleSimVi2::sigmaSpectrum (Cube<Float> & sigsp) const {
 
 const casacore::Vector<casacore::Float>& SimpleSimVi2::feed_pa (casacore::Double t) const
 { 
-  feedpa_.resize(nAntennas());
+  feedpa_.resize(nAntennas(),0.0f);
   if (pars_.doParang_)
     feedpa_.set(0.05f*Float(t-t0_));  // 0.05 rad/s
-  else
-    feedpa_.set(0.0);   // zero
     
   return feedpa_;
 }
@@ -845,29 +876,49 @@ void SimpleSimVi2::corruptByParang(Cube<Complex>& vis) const {
 
   // Assumes constant time in this subchunk
   Vector<Float> pa(this->feed_pa(thisTime_));
-  //cout << "  pa=" << pa(0) << " " << pa(0)*180.f/C::pi << endl;
-  Matrix<Complex> P(2,pars_.nAnt_,Complex(1.0f));
-  for (Int iant=0;iant<pars_.nAnt_;++iant) {
-    // Assumes circ basis!
-    Float& a(pa(iant));
-    P(1,iant)=Complex(cos(a),sin(a));
-    P(0,iant)=conj(P(1,iant));
-  }
-  //cout << "P=" << P << endl;
-
   // Row-wise antenna Ids
   Vector<Int> a1;
   Vector<Int> a2;
   this->antenna1(a1);
   this->antenna2(a2);
-  for (Int irow=0;irow<nBsln_;++irow) {
-    Int& i(a1(irow)), j(a2(irow));
-    for (Int icor=0;icor<pars_.nCorr_;++icor) {
-      Cube<Complex> v(vis(Slice(icor,1,1),Slice(),Slice(irow,1,1)));
-      v*=(P(icor/2,i)*conj(P(icor%2,j)));   // cf PJones
+
+  Cube<Complex> v;
+  if (pars_.polBasis_=="circ") {
+    Matrix<Complex> P(2,pars_.nAnt_,Complex(1.0f));
+    for (Int iant=0;iant<pars_.nAnt_;++iant) {
+      Float& a(pa(iant));
+      P(1,iant)=Complex(cos(a),sin(a));
+      P(0,iant)=conj(P(1,iant));
+    }
+    for (Int irow=0;irow<nBsln_;++irow) {
+      Int& i(a1(irow)), j(a2(irow));
+      for (Int icor=0;icor<pars_.nCorr_;++icor) {
+	v.reference(vis(Slice(icor,1,1),Slice(),Slice(irow,1,1)));
+	v*=(P(icor/2,i)*conj(P(icor%2,j)));   // cf PJones
+      }
     }
   }
-
+  else if (pars_.polBasis_=="lin") {
+    Matrix<Float> P(2,pars_.nAnt_,0.0f);
+    for (Int iant=0;iant<pars_.nAnt_;++iant) {
+      Float& a(pa(iant));
+      P(0,iant)=cos(a);
+      P(1,iant)=sin(a);
+    }
+    Vector<Complex> v0(pars_.nCorr_),v1;
+    for (Int irow=0;irow<nBsln_;++irow) {
+      Int& i(a1(irow)), j(a2(irow));
+      Float& C(P(0,i)),S(P(1,i)),c(P(0,j)),s(P(1,j));
+      for (Int ich=0;ich<pars_.nChan_(thisSpw_);++ich) {
+	v1.reference(vis.xyPlane(irow).column(ich));
+	v0.assign(v1);  // _deep copy_ of this irow
+	v1(0)=( C*v0[0]+S*v0[2])*c    + ( C*v0[1]+S*v0[3])*s;
+	v1(1)=( C*v0[0]+S*v0[2])*(-s) + ( C*v0[1]+S*v0[3])*c;
+	v1(2)=(-S*v0[0]+C*v0[2])*c    + (-S*v0[1]+C*v0[3])*s;
+	v1(3)=(-S*v0[0]+C*v0[2])*(-s) + (-S*v0[1]+C*v0[3])*c;
+      }
+    }
+  }
 }
 
 

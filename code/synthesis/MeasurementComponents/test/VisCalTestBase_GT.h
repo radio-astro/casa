@@ -48,13 +48,14 @@ public:
 
  VisCalTestBase(int nFld_=1,int nScan_=1,int nSpw_=1,
 		int nAnt_=4,int nCorr_=4,int nChan_=8,
-		int nTime_=1,bool doParang=false) :
+		int nTime_=1,bool doPol=false,
+		casacore::String polBasis="circ") :
     nFld(nFld_),nScan(nScan_),nSpw(nSpw_),
     nAnt(nAnt_),nCorr(nCorr_),nChan(nChan_),nTime(nTime_),
     ssvp(nFld,nScan,nSpw,nAnt,nCorr,
 	 casacore::Vector<int>(nFld,nTime),
 	 casacore::Vector<int>(nSpw,nChan),casacore::Complex(1.0),
-	 doParang),  // turns on poln
+	 polBasis,doPol,doPol),
     ssf(ssvp),
     vi2(casacore::Vector<casa::vi::ViiLayerFactory*>(1,&ssf)),
     vb2(vi2.getImpl()->getVisBuffer()),
