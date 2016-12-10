@@ -872,6 +872,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	if( (residual(tix)->getDefaultMask()=="") && hasPB() && pblimit >= 0.0)
 	  {copyMask(pb(),residual(tix));}
+	
+	if( pblimit <0.0 && (residual(tix)->getDefaultMask()).matches("mask0") ) removeMask( residual(tix) );
 
       }
     // createMask

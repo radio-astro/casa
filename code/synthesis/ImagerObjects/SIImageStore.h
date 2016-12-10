@@ -135,8 +135,8 @@ class SIImageStore
   /// Other
   virtual Bool releaseLocks();
   virtual Bool releaseComplexGrids();
-  void releaseImage( SHARED_PTR<ImageInterface<Float> > im );
-  void releaseImage( SHARED_PTR<ImageInterface<Complex> > im );
+  void releaseImage( SHARED_PTR<ImageInterface<Float> > &im );
+  void releaseImage( SHARED_PTR<ImageInterface<Complex> > &im );
   virtual Double getReferenceFrequency(){return 0.0;}
   virtual uInt getNTaylorTerms(Bool dopsf=False); //{return 1;};
   GaussianBeam getPSFGaussian();

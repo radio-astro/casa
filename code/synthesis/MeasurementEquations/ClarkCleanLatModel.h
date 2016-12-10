@@ -338,6 +338,7 @@ private:
   ClarkCleanProgress* itsProgressPtr;
   Bool itsJustStarting;
   Bool itsWarnFlag;
+  Bool itsLocalResTL;
 };
 
 

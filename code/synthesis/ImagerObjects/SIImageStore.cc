@@ -704,15 +704,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True; // do something more intelligent here.
   }
 
-  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > im )
+  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > &im )
   {
     //im->flush();
     im->clearCache();
     im->unlock();
     im->tempClose();
+    im=NULL;
   }
 
-  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Complex> > im )
+  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Complex> > &im )
   {
     im->tempClose();
   }
@@ -1461,6 +1462,9 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     ///// window
         if((residual()->getDefaultMask()=="") && hasPB() && pblimit >=0.0)
        {copyMask(pb(),residual());}
+  
+	if( pblimit <0.0 && (residual()->getDefaultMask()).matches("mask0") ) removeMask( residual() );
+	
   }
   
 
@@ -1872,7 +1876,10 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     try
       {
 	//MSK//	
-	if(hasPB()){copyMask(residual(),image(term));}
+	if(hasPB()){
+	  if( (image(term)->getDefaultMask()).matches("mask0") ) removeMask( image(term) );
+	  copyMask(residual(),image(term));
+	}
 	ImageInfo iminf = image(term)->imageInfo();
         iminf.setBeams( itsRestoredBeams);
 	image(term)->setImageInfo(iminf);

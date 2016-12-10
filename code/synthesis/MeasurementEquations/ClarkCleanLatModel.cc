@@ -155,7 +155,8 @@ ClarkCleanLatModel::ClarkCleanLatModel()
    itsLog(LogOrigin("ClarkCleanLatModel", "ClarkCleanLatModel()")),
    itsProgressPtr(0),
    itsJustStarting(True),
-   itsWarnFlag(False)
+   itsWarnFlag(False),
+   itsLocalResTL(False)
 
 {
 };
@@ -177,7 +178,8 @@ ClarkCleanLatModel::ClarkCleanLatModel(Lattice<Float> & model)
    itsLog(LogOrigin("ClarkCleanLatModel", 
 		    "ClarkCleanLatModel(const Lattice<Float> & model)")),
    itsProgressPtr(0),
-   itsWarnFlag(False)
+   itsWarnFlag(False),
+   itsLocalResTL(False)
 {
   AlwaysAssert(getModel().ndim() >= 2, AipsError);
   if (getModel().ndim() >= 3)
@@ -210,7 +212,8 @@ ClarkCleanLatModel::ClarkCleanLatModel(Lattice<Float> & model,
 		    ", Lattice<Float> & mask)")),
    itsProgressPtr(0),
    itsJustStarting(True),
-   itsWarnFlag(False)
+   itsWarnFlag(False),
+   itsLocalResTL(False)
 
 {
      AlwaysAssert(getModel().ndim() >= 2, AipsError);
@@ -249,7 +252,8 @@ ClarkCleanLatModel::ClarkCleanLatModel(Lattice<Float> & model,
 		    ", Lattice<Float> & mask)")),
    itsProgressPtr(0),
    itsJustStarting(True),
-   itsWarnFlag(False)
+   itsWarnFlag(False),
+   itsLocalResTL(False)
 
 {
 
@@ -258,6 +262,7 @@ ClarkCleanLatModel::ClarkCleanLatModel(Lattice<Float> & model,
 
 
 ClarkCleanLatModel::~ClarkCleanLatModel() {
+  if(itsLocalResTL==True && itsResidualPtr != NULL){delete itsResidualPtr; itsResidualPtr=NULL;}
 }
 
 
@@ -317,6 +322,7 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
   // compute the current residual image (using an FFT)
   if(itsResidualPtr==0){
     itsResidualPtr=new TempLattice<Float> (dataShape);
+    itsLocalResTL=True;
     eqn.residual(*itsResidualPtr, *this);
   }
   // Determine the psf patch to use 
