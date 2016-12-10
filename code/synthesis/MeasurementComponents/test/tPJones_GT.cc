@@ -121,15 +121,15 @@ TEST_F(PJonesTest, PJonesApplyTest) {
 
       Vector<Complex> mVb(partialMeans(vb2->visCubeCorrected(),IPosition(2,1,2)));
       //cout << "mean(vCC) = " << mVb << endl;
-      ASSERT_NE(0.1,real(mVb(1)));
-      ASSERT_NE(0.0,imag(mVb(1)));
+      ASSERT_NE(0.04,real(mVb(1)));
+      ASSERT_NE(0.03,imag(mVb(1)));
 
       Papp.correct2(*vb2,false,false,true);  // (trial?,doWtSp?,dosync?)
 
       Vector<Complex> mVa(partialMeans(vb2->visCubeCorrected(),IPosition(2,1,2)));
       //cout << "mean(vCC) = " << mVa << endl;
-      ASSERT_NEAR(0.1,real(mVa(1)),1e-6);
-      ASSERT_NEAR(0.0,imag(mVa(1)),1e-6);
+      ASSERT_NEAR(0.04,real(mVa(1)),1e-6);
+      ASSERT_NEAR(0.03,imag(mVa(1)),1e-6);
 
 
     }
