@@ -75,6 +75,8 @@ class CheckProductSize(basetask.StandardTaskTemplate):
         else:
             status = 'OK'
 
+        size_mitigation_parameters['status'] = status
+
         result = CheckProductSizeResult(self.inputs.maxcubesize, self.inputs.maxproductsize, maxcubesize, productsize, size_mitigation_parameters, status, reason)
 
         # Log summary information
