@@ -471,6 +471,20 @@ class MakeImList(basetask.StandardTaskTemplate):
         # be run to obtain the required images
         result = MakeImListResult()
         result.set_max_num_targets(len(field_intent_list)*len(spwlist))
+        # describe the function of this task by interpreting the inputs
+        # parameters to give an execution context
+        long_description = _DESCRIPTIONS.get((inputs.intent, inputs.specmode),
+                                             'Compile a list of cleaned images to be calculated')
+        result.metadata['long description'] = long_description
+
+        # Check for size mitigation errors.
+        if inputs.context.size_mitigation_parameters.has_key('status'):
+            if inputs.context.size_mitigation_parameters['status'] == 'ERROR':
+                LOG.error('Size mitigation had failed. Will not create any clean targets.')
+                result.contfile = None
+                result.linesfile = None
+                return result
+
         for field_intent in field_intent_list:
             for spwspec in spwlist:
                 spwspec_ok = True
@@ -548,12 +562,6 @@ class MakeImList(basetask.StandardTaskTemplate):
         # Temporarily pass contfile and linefile for hif_findcont and hif_makeimages
         result.contfile = inputs.contfile
         result.linesfile = inputs.linesfile
-
-        # describe the function of this task by interpreting the inputs
-        # parameters to give an execution context
-        long_description = _DESCRIPTIONS.get((inputs.intent, inputs.specmode),
-                                             'Compile a list of cleaned images to be calculated')
-        result.metadata['long description'] = long_description
 
         return result
 
