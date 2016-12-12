@@ -393,6 +393,7 @@ private:
 //  M: baseline-based (closure) 
 //
 
+/*
 
 class MMueller : public SolvableVisMueller {
 public:
@@ -487,7 +488,7 @@ private:
 
 };
 
-
+*/
 
 
 // **********************************************************
@@ -594,6 +595,111 @@ private:
   virtual void calcWtScale();
   
 };
+
+// **********************************************************
+//  M: baseline-based (closure) 
+//
+
+
+class MMueller : public SolvableVisMueller {
+public:
+
+  // Constructor
+  MMueller(VisSet& vs);
+  MMueller(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  MMueller(const MSMetaInfoForCal& msmc);
+  MMueller(const casacore::Int& nAnt);
+
+  virtual ~MMueller();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::M; };
+
+  // Return type name as string
+  virtual casacore::String typeName()     { return "M Mueller"; };
+  virtual casacore::String longTypeName() { return "M Mueller (baseline-based)"; };
+
+  // Type of Jones matrix according to nPar()
+  virtual Mueller::MuellerType muellerType() { return Mueller::Diag2; };
+
+  // Local setApply
+  using SolvableVisCal::setApply;
+  virtual void setApply(const casacore::Record& apply);
+
+  // M gathers/solves for itself under self-determined conditions
+  virtual casacore::Bool useGenericGatherForSolve() { return useGenGathSolve_p; };
+
+  // M solves for itself (by copying averaged data)
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
+  virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
+
+  // Local M version only supports normalization
+  virtual void globalPostSolveTinker();
+
+  // Modern solving
+  virtual void selfSolveOne(SDBList& sdbs);
+  using SolvableVisMueller::selfSolveOne;  // VS/VI version (trap)
+
+  virtual void createCorruptor(const VisIter& vi, const casacore::Record& simpar, const casacore::Int nSim);
+protected:
+
+  // M currently has just 2 complex parameters, i.e., both parallel hands
+  virtual casacore::Int nPar() { return 2; };
+
+  // Jones matrix elements are trivial
+  virtual casacore::Bool trivialMuellerElem() { return true; };
+
+  // solve implementation
+  virtual void solveOne(SDBList& sdbs);
+
+private:
+  AtmosCorruptor *atmcorruptor_p;
+
+  const bool useGenGathSolve_p;  // true unless VisSet-driven ctor used
+
+
+};
+
+
+// **********************************************************
+//  MfMueller (freq-dep MMueller)
+//
+
+class MfMueller : public MMueller {
+public:
+
+  // Constructor
+  MfMueller(VisSet& vs);
+  MfMueller(casacore::String msname,casacore::Int MSnAnt,casacore::Int MSnSpw);
+  MfMueller(const MSMetaInfoForCal& msmc);
+  MfMueller(const casacore::Int& nAnt);
+
+  virtual ~MfMueller();
+
+  // Return the type enum
+  virtual Type type() { return VisCal::M; };
+
+  // Return type name as string
+  virtual casacore::String typeName()     { return "Mf Mueller"; };
+  virtual casacore::String longTypeName() { return "Mf Mueller (closure bandpass)"; };
+
+  // This is the freq-dep version of M
+  //   (this is the ONLY fundamental difference from M)
+  virtual casacore::Bool freqDepPar() { return true; };
+
+  // Normalize baseline spectra (after B)
+  virtual void normalize();
+
+protected:
+
+  // <nothing>
+
+private:
+
+  // <nothing>
+
+};
+
 
 
 } //# NAMESPACE CASA - END

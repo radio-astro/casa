@@ -874,6 +874,7 @@ casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tDJon
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tFringeJones_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tGlinXphJones_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tKJones_GT.cc )
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tMMueller_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tMSMetaInfoForCal_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tPJones_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisVectorJonesMueller_GT.cc )

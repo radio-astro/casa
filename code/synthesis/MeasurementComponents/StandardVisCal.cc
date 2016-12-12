@@ -1505,7 +1505,7 @@ void JJones::initTrivDJ() {
 
 
 
-
+/*
 
 // **********************************************************
 //  MMueller: baseline-based (closure) solution
@@ -1863,7 +1863,7 @@ void MfMueller::normalize() {
   cout << "End of MfMueller::normalize()" << endl;
 }
 
-
+*/
 
 // **********************************************************
 //  TOpac
@@ -2120,6 +2120,441 @@ void TfOpac::calcWtScale() {
 }
 
 
+// **********************************************************
+//  MMueller: baseline-based (closure) solution
+//
 
+MMueller::MMueller(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  SolvableVisMueller(vs),    // immediate parent
+  useGenGathSolve_p(false)  // VisSet-driven ctor
+{
+  if (prtlev()>2) cout << "M::M(vs)" << endl;
+}
+
+MMueller::MMueller(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  SolvableVisMueller(msname,MSnAnt,MSnSpw),    // immediate parent
+  useGenGathSolve_p(true)  // modern ctor
+{
+  if (prtlev()>2) cout << "M::M(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+MMueller::MMueller(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  SolvableVisMueller(msmc),  // immediate parent
+  useGenGathSolve_p(true)  // modern ctor
+{
+  if (prtlev()>2) cout << "M::M(msmc)" << endl;
+}
+
+MMueller::MMueller(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  SolvableVisMueller(nAnt),
+  useGenGathSolve_p(true)  // modern ctor
+{
+  if (prtlev()>2) cout << "M::M(nAnt)" << endl;
+}
+
+MMueller::~MMueller() {
+  if (prtlev()>2) cout << "M::~M()" << endl;
+}
+
+void MMueller::setApply(const Record& apply) {
+
+  SolvableVisCal::setApply(apply);
+
+  // Force calwt to false for now
+  calWt()=false;
+
+}
+
+void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
+
+  if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
+
+  AlwaysAssert(!useGenGathSolve_p,AipsError);
+
+  // Inform logger/history
+  logSink() << "Solving for " << typeName()
+            << LogIO::POST;
+
+  // Initialize the svc according to current VisSet
+  //  (this counts intervals, sizes CalSet)
+  Vector<Int> nChunkPerSol;
+  Int nSol = sizeUpSolve(vs,nChunkPerSol);
+  
+  // Create the Caltable
+  createMemCalTable();
+
+  // The iterator, VisBuffer
+  VisIter& vi(vs.iter());
+  VisBuffer vb(vi);
+
+  //  cout << "nSol = " << nSol << endl;
+  //  cout << "nChunkPerSol = " << nChunkPerSol << endl;
+
+  Vector<Int> slotidx(vs.numberSpw(),-1);
+
+  Int nGood(0);
+  vi.originChunks();
+  for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+    // Arrange to accumulate
+    VisBuffAccumulator vba(nAnt(),preavg(),false);
+    
+    for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
+
+      // Current _chunk_'s spw
+      Int spw(vi.spectralWindow());
+
+      // Abort if we encounter a spw for which a priori cal not available
+      if (!ve.spwOK(spw))
+        throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
+
+
+      // Collapse each timestamp in this chunk according to VisEq
+      //  with calibration and averaging
+      for (vi.origin(); vi.more(); vi++) {
+
+        // Force read of the field Id
+        vb.fieldId();
+
+	// Apply the channel mask
+	this->applyChanMask(vb);
+
+        // This forces the data/model/wt I/O, and applies
+        //   any prior calibrations
+        ve.collapse(vb);
+
+        // If permitted/required by solvable component, normalize
+        if (normalizable())
+          vb.normalize();
+
+	// If this solve not freqdep, and channels not averaged yet, do so
+	if (!freqDepMat() && vb.nChannel()>1) 
+	  vb.freqAveCubes();
+
+        // Accumulate collapsed vb in a time average
+        vba.accumulate(vb);
+      }
+      // Advance the VisIter, if possible
+      if (vi.moreChunks()) vi.nextChunk();
+
+    }
+
+    // Finalize the averged VisBuffer
+    vba.finalizeAverage();
+
+    // The VisBuffer to solve with
+    VisBuffer& svb(vba.aveVisBuff());
+
+    // Make data amp- or phase-only
+    enforceAPonData(svb);
+
+    // Establish meta-data for this interval
+    //  (some of this may be used _during_ solve)
+    //  (this sets currSpw() in the SVC)
+    Bool vbOk=syncSolveMeta(svb,-1);
+
+    Int thisSpw=spwMap()(svb.spectralWindow());
+    slotidx(thisSpw)++;
+
+    // We are actually solving for all channels simultaneously
+    solveCPar().reference(solveAllCPar());
+    solveParOK().reference(solveAllParOK());
+    solveParErr().reference(solveAllParErr());
+    solveParSNR().reference(solveAllParSNR());
+
+    // Fill solveCPar() with 1, nominally, and flagged
+    solveCPar()=Complex(1.0);
+    solveParOK()=false;
+    
+    if (vbOk && svb.nRow()>0) {
+
+      // Insist that channel,row shapes match
+      IPosition visshape(svb.visCube().shape());
+      AlwaysAssert(solveCPar().shape().getLast(2)==visshape.getLast(2),AipsError);
+      
+      // Zero flagged data
+      IPosition vblc(3,0,0,0);
+      IPosition vtrc(visshape);  vtrc-=1;      
+      Int nCorr(visshape(0));
+      for (Int i=0;i<nCorr;++i) {
+	vblc(0)=vtrc(0)=i;
+	svb.visCube()(vblc,vtrc).reform(visshape.getLast(2))(svb.flag())=Complex(1.0);
+      }
+      
+      // Form correct slice of visCube to copy to solveCPar
+      IPosition vcblc(3,0,0,0);
+      IPosition vctrc(svb.visCube().shape()); vctrc-=1;
+      IPosition vcstr(3,1,1,1);
+
+      IPosition spblc(3,0,0,0);
+      IPosition sptrc(solveCPar().shape()); sptrc-=1;
+
+      IPosition flshape(svb.flag().shape());
+      
+      switch (nCorr) {
+      case 1: {
+	// fill 1st par only
+	spblc(0)=sptrc(0)=0; 
+	solveCPar()(spblc,sptrc)=svb.visCube();
+	// first pol flags
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+	break;
+      }
+      case 2: {
+	// shapes match
+	solveCPar()=svb.visCube();
+	spblc(0)=sptrc(0)=0; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+	spblc(0)=sptrc(0)=1; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+
+	break;
+      }
+      case 4: {
+	// Slice visCube with stride
+	vcstr(0)=3;
+	solveCPar()=svb.visCube()(vcblc,vctrc,vcstr);
+	spblc(0)=sptrc(0)=0; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+	spblc(0)=sptrc(0)=1; 
+	solveParOK()(spblc,sptrc).reform(flshape)=!svb.flag();
+
+	break;
+      }
+      default:
+	throw(AipsError("Problem in MMueller::selfSolve."));
+	break;
+      }
+
+      nGood++;
+
+      // record in in-memory caltable
+      keepNCT();
+    }
+  }
+  
+  logSink() << "  Found good "
+            << typeName() << " solutions in "
+            << nGood << " intervals."
+            << LogIO::POST;
+
+  // Store whole of result in a caltable
+  if (nGood==0)
+    logSink() << "No output calibration table written."
+              << LogIO::POST;
+  else {
+
+    // Do global post-solve tinkering (e.g., normalization)
+    globalPostSolveTinker();
+
+    // write the table
+    storeNCT();
+  }
+
+}
+
+void MMueller::globalPostSolveTinker() {
+
+  // normalize, if requested
+  if (solnorm()) normalize();
+
+}
+
+void MMueller::selfSolveOne(SDBList& sdbs) {
+
+  AlwaysAssert(useGenGathSolve_p,AipsError);
+  
+  // Call the implementation...
+  this->solveOne(sdbs);
+
+}
+
+void MMueller::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim) 
+{
+  LogIO os(LogOrigin("MM", "createCorruptor()", WHERE));
+
+  if (prtlev()>2) cout << "   MM::createCorruptor()" << endl;
+  os << LogIO::DEBUG1 << "   MM::createCorruptor()" 
+     << LogIO::POST;
+
+  atmcorruptor_p = new AtmosCorruptor();
+  corruptor_p = atmcorruptor_p;
+
+  // call generic parent to set corr,spw,etc info
+  SolvableVisCal::createCorruptor(vi,simpar,nSim);
+
+  Int rxType(0); // 0=2SB, 1=DSB
+  if (simpar.isDefined("rxType")) {    
+    rxType=simpar.asInt("rxType");
+  }
+ 
+  // this is the M type corruptor - maybe we should make the corruptor 
+  // take the VC as an argument
+  atmcorruptor_p->initialize(vi,simpar,VisCal::M,rxType); 
+}
+
+void MMueller::solveOne(SDBList& sdbs) {
+
+  AlwaysAssert(useGenGathSolve_p,AipsError);
+  
+  // This just a simple average of the parallel-hand
+
+  Int nSDB=sdbs.nSDB();
+
+  //cout << "nSDB=" << nSDB << endl;
+
+  // We are actually solving for all channels simultaneously
+  solveCPar().reference(solveAllCPar());
+  solveParOK().reference(solveAllParOK());
+  solveParErr().reference(solveAllParErr());
+  solveParSNR().reference(solveAllParSNR());
+  
+  // Fill solveCPar() with 0, nominally, and flagged
+  solveCPar()=Complex(0.0);
+  solveParOK()=false;
+
+  Cube<Float> sumwt(solveCPar().shape(),0.0f);
+  Int nChan=sdbs.nChannels();
+  AlwaysAssert(nChan==nChanPar(),AipsError);  // channelization should be consistent
+  Int nCorr=sdbs.nCorrelations();
+  Int dCorr=( nCorr==4 ? 3 : 1 );
+
+  for (Int isdb=0;isdb<nSDB;++isdb) {
+    SolveDataBuffer& sdb(sdbs(isdb));
+    
+    Int nRow=sdb.nRows();
+
+    // Zero flagged data
+    Cube<Complex> vc(sdb.visCubeCorrected()); // non-const access
+    vc(sdb.flagCube())=Complex(0.0);
+
+    const Vector<Int>& a1(sdb.antenna1()), a2(sdb.antenna2());
+
+    Cube<Complex> vis,sol;
+    Cube<Float> wt,swt;
+    Cube<Bool> fl,solok;
+    Slice chsl; // whole slice on chan axis
+    for (Int irow=0;irow<nRow;++irow) {
+      Slice vrsl(irow,1,1), srsl(blnidx(a1(irow),a2(irow)),1,1);
+      for (Int icor=0;icor<nCorr;icor+=dCorr) {
+	Slice vcsl(icor,1,1), scsl(icor%2,1,1);
+
+	vis.reference(sdb.visCubeCorrected()(vcsl,chsl,vrsl));
+	wt.reference(sdb.weightSpectrum()(vcsl,chsl,vrsl));
+	fl.reference(sdb.flagCube()(vcsl,chsl,vrsl));
+	sol.reference(solveCPar()(scsl,chsl,srsl));
+	solok.reference(solveParOK()(scsl,chsl,srsl));
+	swt.reference(sumwt(scsl,chsl,srsl));
+
+	// Accumulate
+	sol+=(vis*wt);
+	swt+=wt;
+	solok&=!fl;
+      }
+    }
+  }
+
+  // Normalize
+  sumwt(!solveParOK())=(1.0);
+  solveCPar()/=sumwt;
+
+  // TBD....  (move to MMueller::postSolveTinker, since this is wrong for AMueller!)
+  //solveCPar()(!solveParOK())=Complex(1.0); // set flagged ones to 1.0
+
+}
+
+
+// **********************************************************
+//  MfMueller: freq-dep MMueller
+//
+
+MfMueller::MfMueller(VisSet& vs) :
+  VisCal(vs),             // virtual base
+  VisMueller(vs),         // virtual base
+  MMueller(vs)            // immediate parent
+{
+  if (prtlev()>2) cout << "Mf::Mf(vs)" << endl;
+}
+
+MfMueller::MfMueller(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  MMueller(msname,MSnAnt,MSnSpw)            // immediate parent
+{
+  if (prtlev()>2) cout << "Mf::Mf(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+MfMueller::MfMueller(const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  MMueller(msmc)            // immediate parent
+{
+  if (prtlev()>2) cout << "Mf::Mf(msmc)" << endl;
+}
+
+MfMueller::MfMueller(const Int& nAnt) :
+  VisCal(nAnt), 
+  VisMueller(nAnt),
+  MMueller(nAnt)
+{
+  if (prtlev()>2) cout << "Mf::Mf(nAnt)" << endl;
+}
+
+MfMueller::~MfMueller() {
+  if (prtlev()>2) cout << "Mf::~Mf()" << endl;
+}
+
+void MfMueller::normalize() {
+
+  // This is just like BJones
+  // TBD:  consolidate (via generalized SVC::normalize(Block<String> cols) )
+
+  // Only if we have a CalTable, and it is not empty
+  if (ct_ && ct_->nrow()>0) {
+
+    // TBD: trap attempts to normalize a caltable containing FPARAM (non-Complex)?
+
+    logSink() << "Normalizing solutions per spw, pol, baseline, time"
+	      << LogIO::POST;
+
+    Block<String> col(4);
+    col[0]="SPECTRAL_WINDOW_ID";
+    col[1]="TIME";
+    col[2]="ANTENNA1";
+    col[3]="ANTENNA2";
+    CTIter ctiter(*ct_,col);
+
+    // Cube iteration axes are pol and ant
+    IPosition itax(2,0,2);
+   
+    while (!ctiter.pastEnd()) {
+      Cube<Bool> fl(ctiter.flag());
+      
+      if (nfalse(fl)>0) {
+	Cube<Complex> p(ctiter.cparam());
+	ArrayIterator<Complex> soliter(p,itax,false);
+	ArrayIterator<Bool> fliter(fl,itax,false);
+	while (!soliter.pastEnd()) {
+	  normSolnArray(soliter.array(),!fliter.array(),true); // Do phase
+	  soliter.next();
+	  fliter.next();
+	}
+	
+	// record result...	
+	ctiter.setcparam(p);
+      }
+      ctiter.next();
+    }
+  }
+  cout << "End of MfMueller::normalize()" << endl;
+}
 
 } //# NAMESPACE CASA - END
