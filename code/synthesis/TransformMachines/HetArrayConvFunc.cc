@@ -123,6 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int diamIndex=antDiam2IndexMap_p.ndefined();
       Vector<Double> dishDiam=ac.dishDiameter().getColumn();
       Vector<String>dishName=ac.name().getColumn();
+      String telescop=vb.msColumns().observation().telescopeName()(0);
       PBMath::CommonPB whichPB;
       if(pbClass_p==PBMathInterface::COMMONPB){
 	String band;
@@ -131,7 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// The VLA, the ATNF, and WSRT have frequency - dependent PB models
 	Quantity freq( vb.msColumns().spectralWindow().refFrequency()(0), "Hz");
 	
-	String telescop=vb.msColumns().observation().telescopeName()(0);
+
 	PBMath::whichCommonPBtoUse( telescop, freq, band, whichPB, commonPBName );
 	//Revert to using AIRY for unknown common telescope
 	if(whichPB==PBMath::UNKNOWN)
@@ -139,37 +140,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       }
       if(pbClass_p== PBMathInterface::AIRY){
-      ////////We'll be using dish diameter as key
-      for (uInt k=0; k < dishDiam.nelements(); ++k){
-	if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(String::toString(dishDiam(k)))){
+	////////We'll be using dish diameter as key
+	for (uInt k=0; k < dishDiam.nelements(); ++k){
+	  if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(String::toString(dishDiam(k)))){
 	    antIndexToDiamIndex_p(k)=antDiam2IndexMap_p(String::toString(dishDiam(k)));
-	}
-	else{
-	  if(dishDiam[k] > 0.0){ //there may be stations with no dish on
-	    antDiam2IndexMap_p.define(String::toString(dishDiam(k)), diamIndex);
-	    antIndexToDiamIndex_p(k)=diamIndex;
-	    antMath_p.resize(diamIndex+1);
-	    //cerr << "diamindex " << diamIndex << " antMath_p,size " << antMath_p.nelements() << endl;
-	    if(pbClass_p== PBMathInterface::AIRY){
-	      Quantity qdiam(10.7, "m");
-	      Quantity blockDiam(0.75, "m");
-	      ///For ALMA 12m dish it is effectively 10.7 m according to Todd Hunter
+	  }
+	  else{
+	    if(dishDiam[k] > 0.0){ //there may be stations with no dish on
+	      antDiam2IndexMap_p.define(String::toString(dishDiam(k)), diamIndex);
+	      antIndexToDiamIndex_p(k)=diamIndex;
+	      antMath_p.resize(diamIndex+1);
+	      //cerr << "diamindex " << diamIndex << " antMath_p,size " << antMath_p.nelements() << endl;
+	      if(pbClass_p== PBMathInterface::AIRY){
+		Quantity qdiam(10.7, "m");
+		Quantity blockDiam(0.75, "m");
+		///For ALMA 12m dish it is effectively 10.7 m according to Todd Hunter
 	      ///@ 2011-12-06
-	      if(!((vb.msColumns().observation().telescopeName()(0) =="ALMA") 
-		   && (abs(dishDiam[k] - 12.0) < 0.5))){
-		qdiam= Quantity (dishDiam(k),"m");	
-		//VLA ratio of blockage to dish
-		blockDiam= Quantity(dishDiam(k)/25.0*2.0, "m");
-	      }	      
-	      antMath_p[diamIndex]=new PBMath1DAiry(qdiam, blockDiam,  
-						    Quantity(150,"arcsec"), 
-						    Quantity(100.0,"GHz"));
+		if(!((vb.msColumns().observation().telescopeName()(0) =="ALMA") 
+		     && (abs(dishDiam[k] - 12.0) < 0.5))){
+		  qdiam= Quantity (dishDiam(k),"m");	
+		  //VLA ratio of blockage to dish
+		  blockDiam= Quantity(dishDiam(k)/25.0*2.0, "m");
+		}	      
+		antMath_p[diamIndex]=new PBMath1DAiry(qdiam, blockDiam,  
+						      Quantity(150,"arcsec"), 
+						      Quantity(100.0,"GHz"));
+		
 	      
+	      }
 	      
-	    }
-
-	    //////Will no longer support this
-	    /*else if(pbClass_p== PBMathInterface::IMAGE){
+	      //////Will no longer support this
+	      /*else if(pbClass_p== PBMathInterface::IMAGE){
 	      //Get the image name by calling code for the antenna name and array name
 	      //For now hard wired to ALMA as this part of the code will not be accessed for non-ALMA 
 	      //see Imager::setMosaicFTMachine 
@@ -179,52 +180,52 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      //right voltage pattern image. 
 	      String vpImageName="";
 	      if (abs(dishDiam[k]-7.0) < 1.0) 
-		Aipsrc::find(vpImageName, "alma.vp.7m", "");
+	      Aipsrc::find(vpImageName, "alma.vp.7m", "");
 	      else
-		Aipsrc::find(vpImageName, "alma.vp.12m", "") ;
+	      Aipsrc::find(vpImageName, "alma.vp.12m", "") ;
 	      //cerr << "first vpImagename " << vpImageName  << endl;
 	      if(vpImageName==""){
-		String beamPath; 
-		if(!MeasTable::AntennaResponsesPath(beamPath, "ALMA")){
-		  throw(AipsError("Alma beam images requested cannot be found ")); 		  
-		}
+	      String beamPath; 
+	      if(!MeasTable::AntennaResponsesPath(beamPath, "ALMA")){
+	      throw(AipsError("Alma beam images requested cannot be found ")); 		  
+	      }
 		else{
-		  beamPath=beamPath.before(String("AntennaResponses"));	
-		  vpImageName= (abs(dishDiam[k]-7.0) < 1.0) ? beamPath
-		    +String("/ALMA_AIRY_7M.VP") : 
-		    beamPath+String("/ALMA_AIRY_12M.VP");
+		beamPath=beamPath.before(String("AntennaResponses"));	
+		vpImageName= (abs(dishDiam[k]-7.0) < 1.0) ? beamPath
+		+String("/ALMA_AIRY_7M.VP") : 
+		beamPath+String("/ALMA_AIRY_12M.VP");
 		}
 		
-
-	      }
+		
+		}
 	      //cerr << "Using the image VPs " << vpImageName << endl; 
 	      if(Table::isReadable(vpImageName))
-		antMath_p[diamIndex]=new PBMath2DImage(PagedImage<Complex>(vpImageName)); 
+	      antMath_p[diamIndex]=new PBMath2DImage(PagedImage<Complex>(vpImageName)); 
 	      else
 		throw(AipsError(String("Cannot find voltage pattern image ") + vpImageName));
+		}
+		else{
+		
+		throw(AipsError("Do not  deal with non airy dishes or images of VP yet "));
 	    }
-	    else{
-
-	      throw(AipsError("Do not  deal with non airy dishes or images of VP yet "));
-	    }
-	    */
-	    ++diamIndex;
-	  } 
+	      */
+	      ++diamIndex;
+	    } 
+	  }
+	  
 	}
-
-      }
 
 
       }
       else if(pbClass_p== PBMathInterface::IMAGE) { 
-
+	
 	VPManager *vpman=VPManager::Instance();
 	if(vpTable_p != String(""))
 	  vpman->loadfromtable(vpTable_p);
 	///else it is already loaded in the static object
 	Vector<Record> recs;
 	Vector<Vector<String> > antnames;
-
+	
 	if(vpman->imagepbinfo(antnames, recs)){
 	  Vector<Bool> dishDefined(dishName.nelements(), false);
 	  Int nbeams=antnames.nelements();
@@ -275,11 +276,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
       else if(pbClass_p==PBMathInterface::COMMONPB){
-	antDiam2IndexMap_p.define(String::toString(dishDiam(0)), diamIndex);
-	antIndexToDiamIndex_p.set(diamIndex);
-	antMath_p.resize(diamIndex+1);
-	antMath_p[diamIndex]=PBMath::pbMathInterfaceForCommonPB(whichPB, True);
-
+	///Have to use telescop part as string as in multims case different
+	//telescopes may have same dish size but different commonpb
+	// VLA and EVLA for e.g.
+	if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(telescop+String("_")+String::toString(dishDiam(0)))){
+	  antIndexToDiamIndex_p.set(antDiam2IndexMap_p(telescop+String("_")+String::toString(dishDiam(0))));   
+	}
+	else{   
+	  antDiam2IndexMap_p.define(telescop+"_"+String::toString(dishDiam(0)), diamIndex);
+	  antIndexToDiamIndex_p.set(diamIndex);
+	  antMath_p.resize(diamIndex+1);
+	  antMath_p[diamIndex]=PBMath::pbMathInterfaceForCommonPB(whichPB, True);
+	}
 
       }
       else{
@@ -701,6 +709,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makerowmap(vb, convFuncRowMap);
     ///need to deal with only the maximum of different baselines available in this
     ///vb
+    //cerr << "ms " << vb.msName() << " convFuncRowMap " << convFuncRowMap << endl;
     ndishpair=max(convFuncRowMap)+1;
     
     convSupportBlock_p.resize(actualConvIndex_p+1);
