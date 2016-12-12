@@ -111,7 +111,7 @@ protected:
   virtual void calibrateCurrentVB() const;
 
   // Calibrater and VisEquation
-  Calibrater cb_p;
+  Calibrater *cb_p;
   VisEquation *ve_p;   
 
   // A simple factor for testing

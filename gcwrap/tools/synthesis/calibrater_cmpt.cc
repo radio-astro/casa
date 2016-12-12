@@ -43,13 +43,16 @@ using namespace casacore;
 namespace casac {
 
 calibrater::calibrater() : 
-  itsMS(0)
+  itsMS(0),
+  oldcal_(true)  // use OldCalibrater for now...
 {
   // Default constructor
   //    itsApplyMap   SimpleOrderedMap   Cal. table apply assignments
   //    itsSolveMap   SimpleOrderedMap   Cal. table solve assignments
   itsLog = new casacore::LogIO();
-  itsCalibrater = new casa::Calibrater();
+  itsCalibrater = casa::Calibrater::factory(oldcal_);
+  LogIO os (LogOrigin ("calibrater", "ctor"));
+
 }
 
 calibrater::~calibrater()
@@ -65,6 +68,14 @@ bool calibrater::open(const std::string& filename,
 {
   bool rstat(false);
   try {
+    {
+    LogIO os (LogOrigin ("calibrater", "open"));
+    if (oldcal_)
+      os << "****Using OLD VI-driven calibrater tool****";
+    else
+      os << "****Using NEW VI2-driven calibrater tool****";
+    os << LogIO::POST;    
+    }
     LogIO os (LogOrigin ("calibrater", "open"));
     os << "Opening MS: " 
        << filename
@@ -1251,7 +1262,7 @@ calibrater::close()
     itsMS = 0;
     delete itsCalibrater;
     //delete itsLog;
-    itsCalibrater = new Calibrater();
+    itsCalibrater = casa::Calibrater::factory(oldcal_);
 
     rstat = true;
  } catch  (AipsError x) {
@@ -1265,15 +1276,13 @@ bool
 calibrater::done()
 {
 
-  // TBD:  is 'new Calibrater()' ok here?
-
  bool rstat(false);
  try {
     if(itsMS) delete itsMS;
     itsMS = 0;
     delete itsCalibrater;
     //delete itsLog;
-    itsCalibrater = new Calibrater();
+    itsCalibrater = casa::Calibrater::factory(oldcal_);
     rstat = true;
  } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

@@ -48,6 +48,7 @@
 #include <casa/sstream.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
 #include <synthesis/CalTables/CLPatchPanel.h>
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <synthesis/MeasurementComponents/VisCalSolver.h>
 #include <synthesis/MeasurementComponents/UVMod.h>
 #include <synthesis/MeasurementComponents/TsysGainCal.h>
@@ -81,7 +82,7 @@ Calibrater::Calibrater():
   mssel_p(0), 
   mss_p(0),
   frequencySelections_p(0),
-  vs_p(0), 
+  msmc_p(0),
   ve_p(0),
   vc_p(),
   svc_p(0),
@@ -97,7 +98,7 @@ Calibrater::Calibrater(String msname):
   mssel_p(0), 
   mss_p(0),
   frequencySelections_p(0),
-  vs_p(0), 
+  msmc_p(0),
   ve_p(0),
   vc_p(),
   svc_p(0),
@@ -125,22 +126,18 @@ Calibrater::Calibrater(String msname):
   // Reset the apply/solve VisCals
   reset();
 
-  //  NB: the reset() method traditionallydepends on the vs_p, so can't use it here
-  //  unsetapply();
-  //  unsetsolve();
-
 }
 
+/*
 Calibrater::Calibrater(const Calibrater & other)
 {
   operator=(other);
 }
 
-Calibrater &Calibrater::operator=(const Calibrater & other)
+Calibrater& Calibrater::operator=(const Calibrater & other)
 {
   ms_p=other.ms_p;
   mssel_p=other.mssel_p;
-  vs_p=other.vs_p;
   ve_p=other.ve_p;
   histLockCounter_p=other.histLockCounter_p;
   hist_p=other.hist_p;
@@ -148,14 +145,45 @@ Calibrater &Calibrater::operator=(const Calibrater & other)
   
   return *this;
 }
+*/
 
 Calibrater::~Calibrater()
 {
   cleanup();
+  if (msmc_p) delete msmc_p; msmc_p=0;
   if (ms_p)   delete ms_p;   ms_p=0;
   if (hist_p) delete hist_p; hist_p=0;
 
 }
+
+Calibrater* Calibrater::factory(Bool old) {
+  
+  Calibrater* cal(NULL);
+
+  if (old)
+    cal = new OldCalibrater();
+  else
+    throw(AipsError("VI2-aware Calibrater not yet available..."));
+  //cal = new Calibrater(msname);
+
+  return cal;
+
+}
+
+Calibrater* Calibrater::factory(String msname, Bool old) {
+  
+  Calibrater* cal(NULL);
+
+  if (old)
+    cal = new OldCalibrater(msname);
+  else
+    throw(AipsError("VI2-aware Calibrater not yet available..."));
+  //cal = new Calibrater(msname);
+
+  return cal;
+
+}
+
 
 LogIO& Calibrater::logSink() {return sink_p;};
 
@@ -185,35 +213,12 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
       AlwaysAssert(ms_p,AipsError);
     };
 
-    // Disabled 2016/04/19 (gmoellen): avoid direct MS.HISTORY 
-    //   updates from below the python level, FOR NOW
-
-    /*
-
-    // Setup to write LogIO to HISTORY Table in MS
-    if(!(Table::isReadable(ms_p->historyTableName()))){
-      // create a new HISTORY table if its not there
-      TableRecord &kws = ms_p->rwKeywordSet();
-      SetupNewTable historySetup(ms_p->historyTableName(),
-				 MSHistory::requiredTableDesc(),Table::New);
-      kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
-      MSHistoryHandler::addMessage(*ms_p, "HISTORY Table added by Calibrater",
-				   "Calibrater","","Calibrater::initialize()");
-    }
-    historytab_p=Table(ms_p->historyTableName(),
-		       TableLock(TableLock::UserNoReadLocking), Table::Update);
-    // jagonzal (CAS-4110): When the selectvis method throws an exception the initialize method
-    // is called again to leave the calibrater in a proper state, and since there was a previous
-    // initialization the history handler was already created, and has to be destroyed before
-    // creating a new one to avoid leaveing the HISTORY table opened.
-    if (hist_p) delete hist_p;
-    hist_p= new MSHistoryHandler(*ms_p, "calibrater");
-
-    // (2016/04/19) */
-
     // Remember the ms's name
     msname_p=ms_p->tableName();
 
+    // Initialize the meta-info server that will be shared with VisCals
+    if (msmc_p) delete msmc_p;
+    msmc_p = new MSMetaInfoForCal(*ms_p);
 
     // Add/init scr cols, if requested (init is hard-wired)
     if (addScratch || addModel) {
@@ -223,29 +228,13 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
 
     // Set the selected MeasurementSet to be the same initially
     // as the input MeasurementSet
-    if (mssel_p) delete mssel_p;
-    mssel_p=new MeasurementSet(*ms_p);
-    
     logSink() << LogIO::NORMAL
 	      << "Initializing nominal selection to the whole MS."
 	      << LogIO::POST;
 
-
-    // Create a VisSet with no selection
-    // (gmoellen 2012/02/06: this merely makes a VisIter now)
-    if (vs_p) {
-      delete vs_p;
-      vs_p=0;
-    };
-    Block<Int> nosort(0);
-    Matrix<Int> noselection;
-    Double timeInterval=0;
-    // gmoellen 2012/02/06    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress, addModel);
-    vs_p=new VisSet(*ms_p,nosort,noselection,false,timeInterval,false,false);
-
-    // Size-up the chanmask PB
-    initChanMask();
-
+    if (mssel_p) delete mssel_p;
+    mssel_p=new MeasurementSet(*ms_p);
+    
     // Create the associated VisEquation
     //  TBD: move to ctor and make it non-pointer
     if (ve_p) {
@@ -264,40 +253,14 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
 	      << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
 	      << LogIO::POST;
     cleanup();
-    if (ms_p) delete ms_p; ms_p=NULL;
+    if (msmc_p) delete msmc_p; msmc_p=NULL;
+    if (ms_p)   delete ms_p;   ms_p=NULL;
     if (hist_p) delete hist_p; hist_p=NULL;
 
     throw(AipsError("Error in Calibrater::initialize()"));
     return false;
   } 
   return false;
-}
-
-
-Bool Calibrater::initCalSet(const Int& calSet) 
-{
-
-  //  logSink() << LogOrigin("Calibrater","initCalSet") << LogIO::NORMAL3;
-
-  if (vs_p) {
-
-    Block<Int> columns;
-    // include scan iteration, for more optimal iteration
-    columns.resize(5);
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::SCAN_NUMBER;
-    columns[2]=MS::FIELD_ID;
-    columns[3]=MS::DATA_DESC_ID;
-    columns[4]=MS::TIME;
-    vs_p->resetVisIter(columns,0.0);
-
-    vs_p->initCalSet(calSet);
-    return true;
-  }
-  else {
-    throw(AipsError("Calibrater cannot initCalSet"));
-    return false;
-  }
 }
 
 
@@ -311,11 +274,11 @@ void Calibrater::selectvis(const String& time,
 			   const String& baseline,
 			   const String& uvrange,
 			   const String& chanmode,
-			   const Int& nchan,
-			   const Int& start, 
-			   const Int& step,
-			   const MRadialVelocity& mStart,
-			   const MRadialVelocity& mStep,
+			   const Int&,
+			   const Int&,
+			   const Int&,
+			   const MRadialVelocity&,
+			   const MRadialVelocity&,
 			   const String& msSelect)
 {
 // Define primary measurement set selection criteria
@@ -385,12 +348,10 @@ void Calibrater::selectvis(const String& time,
 
 
     // Assume no selection, for starters
-    // gmoellen 2012/01/30    mssel_p = new MeasurementSet(sorted, ms_p);
     mssel_p = new MeasurementSet(*ms_p);
 
     // Apply user-supplied selection
     Bool nontrivsel=false;
-    // gmoellen 2012/01/30    nontrivsel= mssSetData(MeasurementSet(sorted, ms_p),
 
     // Ensure use of a fresh MSSelection object
     if (mss_p) { delete mss_p; mss_p=NULL; }
@@ -422,28 +383,19 @@ void Calibrater::selectvis(const String& time,
       logSink() << "Selection did not drop any rows" << LogIO::POST;
     }
 
-    // Now, re-create the associated VisSet
-    if(vs_p) delete vs_p; vs_p=0;
-    Block<int> sort(0);
-    Matrix<Int> noselection;
-    // gmoellen 2012/01/30    vs_p = new VisSet(*mssel_p,sort,noselection);
-    vs_p = new VisSet(*mssel_p,sort,noselection,false,0.0,false,false);
-    AlwaysAssert(vs_p, AipsError);
-
     // Attempt to use MSSelection for channel selection
     //  if user not using the old way
     if (chanmode=="none") {
       selectChannel(spw);
     }
     else {
-      // Reluctantly use the old-fashioned way
+      // Old-fashioned way now deprecated
       logSink() << LogIO::WARN 
 		<< "You have used the old-fashioned mode parameter" << endl
-		<< "for channel selection.  It still works, for now," << endl
-		<< "but this will be eliminated in the near future." << endl
+		<< "for channel selection." << endl
 		<< "Please begin using the new channel selection" << endl
 		<< "syntax in the spw parameter." << LogIO::POST;
-      selectChannel(chanmode,nchan,start,step,mStart,mStep);
+      throw(AipsError("Old-fashioned chanmode selection is no longer supported!"));
     }
 
   }
@@ -548,7 +500,7 @@ Bool Calibrater::setapply (const String& type,
 	      << LogIO::POST;
 
     // Add a new VisCal to the apply list
-    vc = createVisCal(upType,*vs_p);  
+    vc = createVisCal(upType,*msmc_p);  
 
     vc->setApply(applypar);       
 
@@ -621,95 +573,7 @@ Bool Calibrater::validatecallib(Record callib) {
   }
   return true;
 }
-// Set up apply-able calibration via a Cal Library
-Bool Calibrater::setcallib(Record callib) {
 
-  logSink() << LogOrigin("Calibrater", "setcallib(callib)");
-
-  //  cout << "Calibrater::setcallib: callib.isFixed() = " << boolalpha << callib.isFixed() << endl;
-
-  uInt ntab=callib.nfields();
-
-  //  cout << "callib.nfields() = " << ntab << endl;
-
-  // Do some preliminary per-table verification
-  for (uInt itab=0;itab<ntab;++itab) {
-
-    String tabname=callib.name(itab);
-
-    // Insist that the table exists on disk
-    if (!Table::isReadable(tabname))
-      throw(AipsError("Caltable "+tabname+" does not exist."));
-
-  }
-
-  // Tables exist, so deploy them...
-
-  for (uInt itab=0;itab<ntab;++itab) {
-
-    String tabname=callib.name(itab);
-
-    // Get the type from the table
-    String upType=calTableType(tabname);
-    upType.upcase();
-
-    // Add table name to the record
-    Record thistabrec=callib.asrwRecord(itab);
-    thistabrec.define("tablename",tabname);
-
-    // First try to create the requested VisCal object
-    VisCal *vc(NULL);
-
-    try {
-
-      if(!ok()) 
-	throw(AipsError("Calibrater not prepared for setapply."));
-      
-      logSink() << LogIO::NORMAL 
-		<< "Arranging to APPLY:"
-		<< LogIO::POST;
-      
-      // Add a new VisCal to the apply list
-      vc = createVisCal(upType,*vs_p);  
-
-
-      // ingest this table according to its callib
-      vc->setCallib(thistabrec,*mssel_p);
-
-    } catch (AipsError x) {
-      logSink() << LogIO::SEVERE << x.getMesg() 
-		<< " Check inputs and try again."
-		<< LogIO::POST;
-      if (vc) delete vc;
-      throw(AipsError("Error in Calibrater::setapply."));
-      return false;
-    }
-
-    // Creation apparently successful, so add to the apply list
-    // TBD: consolidate with above?
-    try {
-      
-      uInt napp=vc_p.nelements();
-      vc_p.resize(napp+1,false,true);      
-      vc_p[napp] = vc;
-      vc=NULL;
-   
-      // Maintain sort of apply list
-      ve_p->setapply(vc_p);
-      
-    } catch (AipsError x) {
-      logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
-		<< LogIO::POST;
-      if (vc) delete vc;
-      throw(AipsError("Error in Calibrater::setapply."));
-      return false;
-    } 
-  }
-
-  // All ok, if we get this far!
-  return true;
-
-}
 
 // Set up apply-able calibration via a Cal Library
 Bool Calibrater::setcallib2(Record callib) {
@@ -743,10 +607,6 @@ Bool Calibrater::setcallib2(Record callib) {
   // Local MS object for callib parsing (only)
   MeasurementSet lms(msname_p,Table::Update);
 
-  // Get some global shape info:
-  Int MSnAnt = lms.antenna().nrow();
-  Int MSnSpw = lms.spectralWindow().nrow();
-
   for (uInt itab=0;itab<ntab;++itab) {
 
     String tabname=callib.name(itab);
@@ -772,7 +632,7 @@ Bool Calibrater::setcallib2(Record callib) {
 		<< LogIO::POST;
       
       // Add a new VisCal to the apply list
-      vc = createVisCal(upType,msname_p,MSnAnt,MSnSpw);  
+      vc = createVisCal(upType,*msmc_p);
 
       // ingest this table according to its callib
       vc->setCallib(thistabrec,lms);
@@ -1030,7 +890,7 @@ Bool Calibrater::setsolve (const String& type,
 	      << LogIO::POST;
 
     // Create the new SolvableVisCal
-    svc = createSolvableVisCal(upType,*vs_p);
+    svc = createSolvableVisCal(upType,*msmc_p);
     svc->setSolve(solvepar);
     
     logSink() << LogIO::NORMAL << ".   "
@@ -1110,36 +970,12 @@ Bool Calibrater::solvestate() {
   return true;
 }
 
-
-Bool Calibrater::cleanup() {
-
-  //  logSink() << LogOrigin("Calibrater","cleanup") << LogIO::NORMAL;
-
-  // Delete the VisCals
-  reset();
-
-  // Delete chanmask
-  initChanMask();
-
-  // Delete derived dataset stuff
-  if(vs_p) delete vs_p; vs_p=0;
-  if(mssel_p) delete mssel_p; mssel_p=0;
-  if(mss_p) delete mss_p; mss_p=0;
-  if (frequencySelections_p)  delete frequencySelections_p;  frequencySelections_p=0;
-
-  // Delete the current VisEquation
-  if(ve_p) delete ve_p; ve_p=0;
-
-  return true;
-
-}
-
 Bool Calibrater::reset(const Bool& apply, const Bool& solve) {
 
   //  logSink() << LogOrigin("Calibrater","reset") << LogIO::NORMAL;
 
   // Delete the VisCal apply list
-  if (apply)   //  **************OK?   && vs_p) 
+  if (apply)   
     unsetapply();
 
   // Delete the VisCal solve object
@@ -1200,108 +1036,6 @@ Bool Calibrater::unsetsolve() {
   return false;
 }
 
-
-Bool
-Calibrater::correct(String mode)
-{
-    logSink() << LogOrigin("Calibrater","correct") << LogIO::NORMAL;
-
-    Bool retval = true;
-
-    try {
-
-        // make mode all-caps
-        String upmode=mode;
-	upmode.upcase();
-
-	// If trialmode=T, only the flags will be set
-	//   (and only written if not TRIAL)
-	Bool trialmode=(upmode.contains("TRIAL") || 
-			upmode.contains("FLAGONLY"));
-
-        // Set up VisSet and its VisibilityIterator.
-
-        VisibilityIterator::DataColumn whichOutCol = configureForCorrection ();
-
-        VisIter& vi(vs_p->iter());
-        VisBufferAutoPtr vb (vi);
-        vi.origin();
-
-        // Pass each timestamp (VisBuffer) to VisEquation for correction
-
-        Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
-        uncalspw.set(false);		        // instead of bombing the user
-        uncalspw.set(False);		        // instead of bombing the user
-                                        // in a loop.
-
-        for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-
-            for (vi.origin(); vi.more(); vi++) {
-
-                uInt spw = vb->spectralWindow();
-
-		// Re-initialize weights from sigma column
-		vb->resetWeightMat();
-
-		// If we can calibrate this vb, do it...
-                if (ve_p->spwOK(spw)){
-		  
-		  // throws exception if nothing to apply
-		  ve_p->correct(*vb,trialmode);
-		    
-                }
-		// ...else don't, prepare warning, and possibly set flags
-                else{
-
-		  // set uncalspw for warning message
-		  uncalspw[spw] = true;
-		  // set the flags, if we are being strict
-		  if (upmode.contains("STRICT"))
-		    // set the flags
-		    // (don't touch the data/weights, which are initialized)
-		    vb->flag().set(true);
-                }
-
-		// Only if not a trial run, trigger write to disk
-		if (!upmode.contains("TRIAL")) {
-		      
-		  if (upmode.contains("CAL")) {
-		    vi.setVis (vb->visCube(), whichOutCol);
-		    vi.setWeightMat(vb->weightMat()); 
-		  }
-		  
-		  if (upmode.contains("FLAG"))
-		    vi.setFlag (vb->flag());
-		  
-		}
-		
-            }
-        }
-
-        vs_p->flush (); // Flush to disk
-
-        // Now that we're out of the loop, summarize any errors.
-
-        retval = summarize_uncalspws(uncalspw, "correct",
- 				     upmode.contains("STRICT"));
-
-	actRec_=Record();
-	actRec_.define("origin","Calibrater::correct");
-	actRec_.defineRecord("VisEquation",ve_p->actionRec());
-
-    }
-    catch (AipsError x) {
-        logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-	              << LogIO::POST;
-
-        logSink() << "Resetting all calibration application settings." << LogIO::POST;
-        unsetapply();
-
-        throw(AipsError("Error in Calibrater::correct."));
-        retval = false;         // Not that it ever gets here...
-    }
-    return retval;
- }
 Bool
 Calibrater::correct2(String mode)
 {
@@ -1488,118 +1222,446 @@ Calibrater::correct2(String mode)
         retval = false;         // Not that it ever gets here...
     }
     return retval;
- }
-
-
-VisibilityIterator::DataColumn
-Calibrater::configureForCorrection ()
-{
-    if (!ok())
-      throw(AipsError("Calibrater not prepared for correct!"));
-
-    // Nominally, we write out to the CORRECTED_DATA, unless absent
-    VisibilityIterator::DataColumn whichOutCol(VisibilityIterator::Corrected);
-
-    if (!ms_p->tableDesc().isColumn("CORRECTED_DATA"))
-      throw(AipsError("CORRECTED_DATA column unexpectedly absent. Cannot correct."));
-
-    // Ensure apply list non-zero and properly sorted
-    ve_p->setapply(vc_p);
-
-    // Report the types that will be applied
-    applystate();
-
-    // Arrange for iteration over data
-    Block<Int> columns;
-    // include scan iteration
-    columns.resize(5);
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::SCAN_NUMBER;
-    columns[2]=MS::FIELD_ID;
-    columns[3]=MS::DATA_DESC_ID;
-    columns[4]=MS::TIME;
-
-    // Reset the VisibilityIterator in the VisSet. 
-    vs_p->resetVisIter (columns, 0.0);
-
-    return whichOutCol;
 }
 
+Bool Calibrater::corrupt2()
+{
+    logSink() << LogOrigin("Calibrater","corrupt2 (VI2/VB2)") << LogIO::NORMAL;
+    Bool retval = true;
 
-Bool Calibrater::corrupt() {
-  
-  logSink() << LogOrigin("Calibrater","corrupt") << LogIO::NORMAL;
-  Bool retval = true;
+    try {
 
-  try {
+      if (!ok())
+	throw(AipsError("Calibrater not prepared for corrupt2!"));
+      
+      // MODEL_DATA column must be physically present!
+      if (!ms_p->tableDesc().isColumn("MODEL_DATA"))
+	throw(AipsError("MODEL_DATA column unexpectedly absent. Cannot corrupt."));
 
-    if (!ok())
-      throw(AipsError("Calibrater not prepared for corrupt!"));
+      // Ensure apply list non-zero and properly sorted
+      ve_p->setapply(vc_p);
 
-    // Nominally, we write out to the MODEL_DATA, unless absent
-    VisibilityIterator::DataColumn whichOutCol(VisibilityIterator::Model);
+      /*
+      // Trap uvcontsub case, since it does not yet handlg VB2
+      if (anyEQ(ve_p->listTypes(),VisCal::A)) {
 
-    if (!ms_p->tableDesc().isColumn("MODEL_DATA"))
-      throw(AipsError("MODEL_DATA column unexpectedly absent. Cannot corrupt."));
+	// Only uvcontsub, nothing else
+	if (ve_p->nTerms()==1) {
+	  // Use old method (which doesn't need WEIGHT_SPECTRUM support in this context)
+	  return this->correct(mode);
+	}
+	else
+	  throw(AipsError("Cannot handle AMueller (uvcontsub) and other types simultaneously."));
+      }
+      */
+      
+      // Report the types that will be applied
+      applystate();
 
-    // Ensure apply list non-zero and properly sorted
-    ve_p->setapply(vc_p);
+      // Arrange for iteration over data
+      Block<Int> columns;
+      // include scan iteration
+      columns.resize(5);
+      columns[0]=MS::ARRAY_ID;
+      columns[1]=MS::SCAN_NUMBER;
+      columns[2]=MS::FIELD_ID;
+      columns[3]=MS::DATA_DESC_ID;
+      columns[4]=MS::TIME;
 
-    // Report the types that will be applied
-    applystate();
+      vi::SortColumns sc(columns);
+      vi::VisibilityIterator2 vi(*mssel_p,sc,true);
 
-    // Arrange for iteration over data
-    Block<Int> columns;
-    // include scan iteration
-    columns.resize(5);
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::SCAN_NUMBER;
-    columns[2]=MS::FIELD_ID;
-    columns[3]=MS::DATA_DESC_ID;
-    columns[4]=MS::TIME;
-    vs_p->resetVisIter(columns,0.0);
-    VisIter& vi(vs_p->iter());
-    VisBuffer vb(vi);
-    
-    // Pass each timestamp (VisBuffer) to VisEquation for corruption.
-    Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
-    uncalspw.set(false);		        // instead of bombing the user
-						// in a loop.
-    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-      Int spw = vi.spectralWindow();
+      // Apply channel selection (see selectChannel(spw))
+      if (frequencySelections_p)
+	vi.setFrequencySelection(*frequencySelections_p);
 
-      // Only proceed if spw can be calibrated
-      if (ve_p->spwOK(spw)) {
+      vi::VisBuffer2 *vb = vi.getVisBuffer();
 
-	for (vi.origin(); vi.more(); vi++) {
-	  
-	  // Corrupt the MODEL_DATA
-	  //  (note we are not treating weights and flags)
-	  ve_p->corrupt(vb);    // throws exception if nothing to apply
-	  vi.setVis(vb.modelVisCube(),whichOutCol);
+      // Detect if we will be setting WEIGHT_SPECTRUM, and arrange for this
+      vi.originChunks();    // required for wSExists() in next line to work
+      vi.origin();
+      
+      Vector<Bool> uncalspw(vi.nSpectralWindows());  // Used to accumulate error messages
+      uncalspw.set(false);		             // instead of bombing the user
 
+      // Pass each timestamp (VisBuffer) to VisEquation for correction
+      uInt nvb(0);
+      for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+	for (vi.origin(); vi.more(); vi.next()) {
+	  uInt spw = vb->spectralWindows()(0);
+	  if (ve_p->spwOK(spw)){
+
+	    // Make all vb "not dirty", for safety
+	    vb->dirtyComponentsClear();
+
+	    // throws exception if nothing to apply
+	    ve_p->corrupt2(*vb);
+
+	    // make visCubeModel _ONLY_ dirty for writeChangesBack
+	    vb->setVisCubeModel(vb->visCubeModel());
+	    
+	    // Push the corrupted model back to the MS
+	    vb->writeChangesBack();
+	    nvb+=1;  // increment vb counter
+	  }
+	  else{
+	    uncalspw[spw] = true;
+	  }
 	}
       }
-      else 
-	uncalspw[spw] = true;
+
+      // Now that we're out of the loop, summarize any errors.
+      retval = summarize_uncalspws(uncalspw, "corrupt2",false);   // (didn't flag them)
+      
+      actRec_=Record();
+      actRec_.define("origin","Calibrater::corrupt2");
+      actRec_.defineRecord("VisEquation",ve_p->actionRec());
+
+      //cout << "Number of VisBuffers corrupted: " << nvb << endl;
+      
     }
-    // Flush to disk
-    vs_p->flush();
+    catch (AipsError x) {
+        logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+	              << LogIO::POST;
 
-    // Now that we're out of the loop, summarize any errors.
-    retval = summarize_uncalspws(uncalspw, "corrupt");
-  }
-  catch (AipsError x) {
-    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
-	      << LogIO::POST;
+        logSink() << "Resetting all calibration application settings." << LogIO::POST;
+        unsetapply();
 
-    logSink() << "Resetting all calibration application settings." << LogIO::POST;
-    unsetapply();
+        throw(AipsError("Error in Calibrater::corrupt2."));
+        retval = false;         // Not that it ever gets here...
+    }
+    return retval;
+ }
 
-    throw(AipsError("Error in Calibrater::corrupt."));
-    retval = false;  // Not that it ever gets here...
-  } 
-  return retval;
+Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
+				     String tsystable, String gainfield, String interp, Vector<Int> spwmap) {
+
+	logSink() << LogOrigin("Calibrater", "initWeightsWithTsys")
+			<< LogIO::NORMAL;
+	Bool retval = true;
+
+	try {
+
+		if (!ok())
+			throw(AipsError("Calibrater not prepared for initWeights!"));
+
+		String uptype = calTableType(tsystable);
+		if (!uptype.contains("TSYS")) {
+			throw(AipsError(
+					"Invalid calibration table type for Tsys weighting."));
+		}
+		// Set record format for calibration table application information
+		RecordDesc applyparDesc;
+		applyparDesc.addField("t", TpDouble);
+		applyparDesc.addField("table", TpString);
+		applyparDesc.addField("interp", TpString);
+		applyparDesc.addField("spw", TpArrayInt);
+		applyparDesc.addField("fieldstr", TpString);
+		applyparDesc.addField("calwt", TpBool);
+		applyparDesc.addField("spwmap", TpArrayInt);
+		applyparDesc.addField("opacity", TpArrayDouble);
+
+		// Create record with the requisite field values
+		Record applypar(applyparDesc);
+		applypar.define("t", 0.0);
+		applypar.define("table", tsystable);
+		applypar.define("interp", interp);
+		applypar.define("spw", getSpwIdx(""));
+		applypar.define("fieldstr", gainfield);
+		applypar.define("calwt", true);
+		applypar.define("spwmap", spwmap);
+		applypar.define("opacity", Vector<Double>(1, 0.0));
+
+		if (vc_p.nelements() > 0) {
+			logSink() << LogIO::WARN << "Resetting all calibration application settings." << LogIO::POST;
+			unsetapply();
+		}
+		logSink() << LogIO::NORMAL << "Weight initialization does not support selection. Resetting MS selection." << LogIO::POST;
+		selectvis();
+		StandardTsys vc = StandardTsys(*msmc_p);
+		vc.setApply(applypar);
+
+		logSink() << LogIO::NORMAL << ".   " << vc.applyinfo() << LogIO::POST;
+		PtrBlock<VisCal*> vcb(1, &vc);
+		// Maintain sort of apply list
+		ve_p->setapply(vcb);
+
+		// Detect WEIGHT_SPECTRUM and SIGMA_SPECTRUM
+		TableDesc mstd = ms_p->actualTableDesc();
+		String colWtSp = MS::columnName(MS::WEIGHT_SPECTRUM);
+		Bool wtspexists = mstd.isColumn(colWtSp);
+		String colSigSp = MS::columnName(MS::SIGMA_SPECTRUM);
+		Bool sigspexists = mstd.isColumn(colSigSp);
+		Bool addsigsp = (dowtsp && !sigspexists);
+
+		// Some log info
+		bool use_exposure = false;
+		if (wtmode == "tsys") {
+			logSink()
+					<< "Initializing SIGMA and WEIGHT according to channel bandwidth and Tsys. NOTE this is an expert mode."
+					<< LogIO::WARN << LogIO::POST;
+		} else if (wtmode == "tinttsys") {
+			logSink()
+					<< "Initializing SIGMA and WEIGHT according to channel bandwidth, integration time, and Tsys. NOTE this is an expert mode."
+					<< LogIO::WARN << LogIO::POST;
+			use_exposure = true;
+		} else {
+			throw(AipsError("Unrecognized wtmode specified: " + wtmode));
+		}
+
+		// Force dowtsp if the column already exists
+		if (wtspexists && !dowtsp) {
+			logSink() << "Found WEIGHT_SPECTRUM; will force its initialization."
+					<< LogIO::POST;
+			dowtsp = true;
+		}
+
+		// Report that we are initializing the WEIGHT_SPECTRUM, and prepare to do so.
+		if (dowtsp) {
+
+			// Ensure WEIGHT_SPECTRUM really exists at all
+			//   (often it exists but is empty)
+			if (!wtspexists) {
+				logSink() << "Creating WEIGHT_SPECTRUM." << LogIO::POST;
+
+				// Nominal defaulttileshape
+				IPosition dts(3, 4, 32, 1024);
+
+				// Discern DATA's default tile shape and use it
+				const Record dminfo = ms_p->dataManagerInfo();
+				for (uInt i = 0; i < dminfo.nfields(); ++i) {
+					Record col = dminfo.asRecord(i);
+					//if (upcase(col.asString("NAME"))=="TILEDDATA") {
+					if (anyEQ(col.asArrayString("COLUMNS"), String("DATA"))) {
+						dts = IPosition(
+								col.asRecord("SPEC").asArrayInt(
+										"DEFAULTTILESHAPE"));
+						//cout << "Found DATA's default tile: " << dts << endl;
+						break;
+					}
+				}
+
+				// Add the column
+				String colWtSp = MS::columnName(MS::WEIGHT_SPECTRUM);
+				TableDesc tdWtSp;
+				tdWtSp.addColumn(
+						ArrayColumnDesc<Float>(colWtSp, "weight spectrum", 2));
+				TiledShapeStMan wtSpStMan("TiledWgtSpectrum", dts);
+				ms_p->addColumn(tdWtSp, wtSpStMan);
+			} else
+				logSink() << "Found WEIGHT_SPECTRUM." << LogIO::POST;
+			// Ensure WEIGHT_SPECTRUM really exists at all
+			//   (often it exists but is empty)
+		if (!sigspexists) {
+				logSink() << "Creating SIGMA_SPECTRUM." << LogIO::POST;
+
+				// Nominal defaulttileshape
+				IPosition dts(3, 4, 32, 1024);
+
+				// Discern DATA's default tile shape and use it
+				const Record dminfo = ms_p->dataManagerInfo();
+				for (uInt i = 0; i < dminfo.nfields(); ++i) {
+					Record col = dminfo.asRecord(i);
+					//if (upcase(col.asString("NAME"))=="TILEDDATA") {
+					if (anyEQ(col.asArrayString("COLUMNS"), String("DATA"))) {
+						dts = IPosition(
+								col.asRecord("SPEC").asArrayInt(
+										"DEFAULTTILESHAPE"));
+						//cout << "Found DATA's default tile: " << dts << endl;
+						break;
+					}
+				}
+
+				// Add the column
+				String colSigSp = MS::columnName(MS::SIGMA_SPECTRUM);
+				TableDesc tdSigSp;
+				tdSigSp.addColumn(
+						ArrayColumnDesc<Float>(colSigSp, "sigma spectrum", 2));
+				TiledShapeStMan sigSpStMan("TiledSigtSpectrum", dts);
+				ms_p->addColumn(tdSigSp, sigSpStMan);
+				{
+				  TableDesc loctd = ms_p->actualTableDesc();
+				  String loccolSigSp = MS::columnName(MS::SIGMA_SPECTRUM);
+				  AlwaysAssert(loctd.isColumn(loccolSigSp),AipsError);
+				}
+		}
+		}
+		else {
+    if (sigspexists) {
+      logSink() << "Removing SIGMA_SPECTRUM for non-channelized weight." << LogIO::POST;
+      if (true || ms_p->canRemoveColumn(colSigSp)) {
+	ms_p->removeColumn(colSigSp);
+      }
+      else
+	logSink() << LogIO::WARN << "Failed to remove SIGMA_SPECTRUM column. Values in SIGMA and SIGMA_SPECTRUM columns may be inconsistent after the operation." << LogIO::POST;
+    }
+		}
+
+		// Arrange for iteration over data
+		//  TBD: Be sure this sort is optimal for creating WS?
+		Block<Int> columns;
+		// include scan iteration
+		columns.resize(5);
+		columns[0] = MS::ARRAY_ID;
+		columns[1] = MS::SCAN_NUMBER;
+		columns[2] = MS::FIELD_ID;
+		columns[3] = MS::DATA_DESC_ID;
+		columns[4] = MS::TIME;
+
+		vi::SortColumns sc(columns);
+		vi::VisibilityIterator2 vi2(*ms_p, sc, true);
+		vi::VisBuffer2 *vb = vi2.getVisBuffer();
+
+		ROMSColumns mscol(*ms_p);
+		const ROMSSpWindowColumns& msspw(mscol.spectralWindow());
+		uInt nSpw = msspw.nrow();
+		Vector<Double> effChBw(nSpw, 0.0);
+		for (uInt ispw = 0; ispw < nSpw; ++ispw) {
+			effChBw[ispw] = mean(msspw.effectiveBW()(ispw));
+		}
+
+		Int ivb(0);
+		for (vi2.originChunks(); vi2.moreChunks(); vi2.nextChunk()) {
+
+			for (vi2.origin(); vi2.more(); vi2.next(), ++ivb) {
+
+				Int spw = vb->spectralWindows()(0);
+
+				Int nrow = vb->nRows();
+				Int nchan = vb->nChannels();
+				Int ncor = vb->nCorrelations();
+
+				// Prepare for WEIGHT_SPECTRUM and SIGMA_SPECTRUM, if nec.
+				Cube<Float> newwtsp(0, 0, 0), newsigsp(0, 0, 0);
+				if (dowtsp) {
+				  newwtsp.resize(ncor, nchan, nrow);
+				  newwtsp.set(1.0);
+				  newsigsp.resize(ncor, nchan, nrow);
+				  newsigsp.set(1.0);
+				}
+
+				if (ve_p->spwOK(spw)) {
+
+					// Re-initialize weight info from sigma info
+					//   This is smart wrt spectral weights, etc.
+					//   (this makes W and WS, if present, "dirty" in the vb)
+					// TBD: only do this if !trial (else: avoid the I/O)
+					// vb->resetWeightsUsingSigma();
+					// Handle non-trivial modes
+					// Init WEIGHT, SIGMA  from bandwidth & time
+					Matrix<Float> newwt(ncor, nrow), newsig(ncor, nrow);
+					newwt.set(1.0);
+					newsig.set(1.0);
+
+					// Detect ACs
+					const Vector<Int> a1(vb->antenna1());
+					const Vector<Int> a2(vb->antenna2());
+					Vector<Bool> ac(a1 == a2);
+
+					// XCs need an extra factor of 2
+					Vector<Float> xcfactor(nrow, 2.0);
+					xcfactor(ac) = 1.0;				// (but not ACs)
+
+					// The row-wise integration time
+					Vector<Float> expo(nrow);
+					convertArray(expo, vb->exposure());
+
+					// Set weights to channel bandwidth first.
+					newwt.set(Float(effChBw(spw)));
+
+					// For each correlation, apply exposure and xcfactor
+					for (Int icor = 0; icor < ncor; ++icor) {
+
+						Vector<Float> wt(newwt.row(icor));
+						if (use_exposure) {
+							wt *= expo;
+						}
+						wt *= xcfactor;
+						if (dowtsp) {
+							for (Int ich = 0; ich < nchan; ++ich) {
+								Vector<Float> wtspi(
+										newwtsp(Slice(icor, 1, 1),
+												Slice(ich, 1, 1), Slice()).nonDegenerate(
+												IPosition(1, 2)));
+								wtspi = wt;
+							}
+						}
+					}
+					// Handle SIGMA_SPECTRUM
+					if (dowtsp) {
+					  newsigsp = 1.0f / sqrt(newwtsp);
+					}
+					// sig from wt is inverse sqrt
+					newsig = 1.0f / sqrt(newwt);
+
+					// Arrange write-back of both SIGMA and WEIGHT
+					vb->setSigma(newsig);
+					vb->setWeight(newwt);
+					if (dowtsp) {
+					  vb->initWeightSpectrum(newwtsp);
+					  vb->initSigmaSpectrum(newsigsp);
+					}
+					// Force writeback to disk (need to initialize weight/sigma before applying cal table)
+					vb->writeChangesBack();
+
+					// Arrange for _in-place_ apply on CORRECTED_DATA (init from DATA)
+					//   (this makes CD "dirty" in the vb)
+					// TBD: only do this if !trial (else: avoid the I/O)
+					vb->setVisCubeCorrected(vb->visCube());
+
+					// Make flagcube dirty in the vb
+					//  NB: we must _always_ do this I/O  (even trial mode)
+					vb->setFlagCube(vb->flagCube());
+
+					// Make all vb "not dirty"; we'll carefully arrange the writeback below
+					vb->dirtyComponentsClear();
+
+					// throws exception if nothing to apply
+					ve_p->correct2(*vb, false, dowtsp);
+
+					if (dowtsp) {
+						vb->setWeightSpectrum(vb->weightSpectrum());
+						// If WS was calibrated, set W to its channel-axis median
+						vb->setWeight( partialMedians(vb->weightSpectrum(), IPosition(1, 1)) );
+						newsigsp = 1.0f / sqrt(vb->weightSpectrum());
+						vb->initSigmaSpectrum(newsigsp);
+						vb->setSigma( partialMedians(newsigsp, IPosition(1, 1)) );
+					} else {
+						vb->setWeight(vb->weight());
+						newsig = 1.0f / sqrt(vb->weight());
+						vb->setSigma(newsig);
+					}
+					// Force writeback to disk
+					vb->writeChangesBack();
+
+				} else {//Not calibrating the spw
+				  if (dowtsp && !wtspexists) {
+				    // newly created WS Need to initialize
+				    vb->initWeightSpectrum(newwtsp);
+				  }
+				  if (addsigsp) {
+				    // newly created SS Need to initialize
+				    vb->initSigmaSpectrum(newsigsp);
+				    vb->writeChangesBack();
+				  }
+				}
+			}
+		}
+		// clear-up Tsys caltable from list of apply
+		unsetapply();
+
+	} catch (AipsError x) {
+		logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+				<< LogIO::POST;
+
+		logSink() << "Resetting all calibration application settings."
+				<< LogIO::POST;
+		unsetapply();
+
+		throw(AipsError("Error in Calibrater::initWeights."));
+		retval = false;  // Not that it ever gets here...
+	}
+	return retval;
 }
 
 
@@ -1924,8 +1986,1637 @@ Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
   return retval;
 }
 
-Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
-		String tsystable, String gainfield, String interp, Vector<Int> spwmap) {
+
+Bool Calibrater::initWeights(Bool doBT, Bool dowtsp) {
+
+  logSink() << LogOrigin("Calibrater","initWeights") << LogIO::NORMAL;
+  Bool retval = true;
+
+  try {
+
+    if (!ok())
+      throw(AipsError("Calibrater not prepared for initWeights!"));
+
+    // Log that we are beginning...
+    if (doBT)
+      logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth and integration time." << LogIO::POST;
+    else
+      logSink() << "Initializing SIGMA and WEIGHT to unity." << LogIO::POST;
+
+    if (dowtsp) {
+      logSink() << "Also initializing WEIGHT_SPECTRUM uniformly in channel (==WEIGHT)." << LogIO::POST;
+
+      // Ensure WEIGHT_SPECTRUM really exists at all 
+      //   (often it exists but is empty)
+      TableDesc mstd = ms_p->actualTableDesc();
+      if (!mstd.isColumn("WEIGHT_SPECTRUM")) {
+	cout << "Creating WEIGHT_SPECTRUM!" << endl;
+
+	// Nominal defaulttileshape
+	IPosition dts(3,4,32,1024); 
+
+	// Discern DATA's default tile shape and use it
+	const Record dminfo=ms_p->dataManagerInfo();
+	for (uInt i=0;i<dminfo.nfields();++i) {
+	  Record col=dminfo.asRecord(i);
+	  //if (upcase(col.asString("NAME"))=="TILEDDATA") {
+	  if (anyEQ(col.asArrayString("COLUMNS"),String("DATA"))) {
+	    dts=IPosition(col.asRecord("SPEC").asArrayInt("DEFAULTTILESHAPE"));
+	    cout << "Found DATA's default tile: " << dts << endl;
+	    break;
+	  }
+	}
+
+	// Add the column
+	String colWtSp=MS::columnName(MS::WEIGHT_SPECTRUM);
+	TableDesc tdWtSp;
+	tdWtSp.addColumn(ArrayColumnDesc<Float>(colWtSp,"weight spectrum", 2));
+	TiledShapeStMan wtSpStMan("TiledWgtSpectrum",dts);
+	ms_p->addColumn(tdWtSp,wtSpStMan);
+      }
+    }
+
+    // Arrange for iteration over data
+    Block<Int> columns;
+    // include scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+
+    vi::SortColumns sc(columns);
+    vi::VisibilityIterator2 vi2(*ms_p,sc,true);
+    vi::VisBuffer2 *vb = vi2.getVisBuffer();
+
+    ROMSColumns mscol(*ms_p);
+    const ROMSSpWindowColumns& msspw(mscol.spectralWindow());
+    uInt nSpw=msspw.nrow();
+    Vector<Double> effChBw(nSpw,0.0);
+    for (uInt ispw=0;ispw<nSpw;++ispw) {
+      effChBw[ispw]=mean(msspw.effectiveBW()(ispw));
+    }
+
+    Int ivb(0);
+    for (vi2.originChunks(); vi2.moreChunks(); vi2.nextChunk()) {
+
+      for (vi2.origin(); vi2.more(); vi2.next()) {
+
+	Int spw = vb->spectralWindows()(0);
+
+	Int nrow=vb->nRows();
+	Int nchan=vb->nChannels();
+	Int ncor=vb->nCorrelations();
+
+	Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
+	newwt.set(1.0);
+	newsig.set(1.0);
+
+	Cube<Float> newwtsp(0,0,0);
+	if (dowtsp) {
+	  newwtsp.resize(ncor,nchan,nrow);
+	  newwtsp.set(1.0);
+	}
+
+	// If requested, set weights according to bandwidth and integration time
+	if (doBT) {
+	  
+	  // Detect ACs
+	  const Vector<Int> a1(vb->antenna1());
+	  const Vector<Int> a2(vb->antenna2());
+	  Vector<Bool> ac(a1==a2);
+	  
+	  // XCs need an extra factor of 2
+	  Vector<Float> xcfactor(nrow,2.0);
+	  xcfactor(ac)=1.0;   // (but not ACs)
+	  
+	  // The row-wise integration time
+	  Vector<Float> expo(nrow);
+	  convertArray(expo,vb->exposure());
+
+	  // Set weights to channel bandwidth first.
+	  newwt.set(Float(effChBw(spw)));
+	  
+	  // For each correlation, apply exposure and xcfactor
+	  for (Int icor=0;icor<ncor;++icor) {
+
+	    Vector<Float> wt(newwt.row(icor));
+	    wt*=expo;
+	    wt*=xcfactor;
+	    if (dowtsp) {
+	      for (Int ich=0;ich<nchan;++ich) {
+		Vector<Float> wtsp(newwtsp(Slice(icor,1,1),Slice(ich,1,1),Slice()));
+		wtsp=wt;
+	      }
+	    }
+	    
+	  }
+
+	  // sig from wt is inverse sqrt
+	  newsig=newsig/sqrt(newwt);
+
+	}
+
+	/*
+	  cout << ivb << " "
+	  << ncor << " " << nchan << " " << nrow << " "
+	  << expo(0) << " "
+	  << newwt(0,0) << " "
+	  << newsig(0,0) << " "
+	  << endl;
+	*/
+	++ivb;
+
+	// Set in vb, and writeback
+	vb->setWeight(newwt);
+	vb->setSigma(newsig);
+	vb->writeChangesBack();
+	
+	if (dowtsp)
+	  vb->initWeightSpectrum(newwtsp);
+
+      }
+    }
+
+  }
+  catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+             << LogIO::POST;
+
+    logSink() << "Resetting all calibration application settings." << LogIO::POST;
+    unsetapply();
+
+    throw(AipsError("Error in Calibrater::initWeightsOLD."));
+    retval = false;  // Not that it ever gets here...
+  }
+  return retval;
+}
+
+
+Bool Calibrater::solve() {
+
+  logSink() << LogOrigin("Calibrater","solve") << LogIO::NORMAL3;
+
+  try {
+
+    if (!ok()) 
+      throw(AipsError("Calibrater not prepared for solve."));
+
+    // Handle nothing-to-solve-for case
+    if (!svc_p)
+      throw(AipsError("Please run setsolve before attempting to solve."));
+
+    // Handle specified caltable
+    if (svc_p) {
+
+      // If table exists (readable) and not deletable
+      //   we have to abort (append=T requires deletable)
+      if ( Table::isReadable(svc_p->calTableName()) &&
+	   !Table::canDeleteTable(svc_p->calTableName()) ) {
+	throw(AipsError("Specified caltable ("+svc_p->calTableName()+") exists and\n cannot be replaced (or appended to) because it appears to be open somewhere (Quit plotcal?)."));
+      }
+    }
+
+    // Arrange VisEquation for solve
+    ve_p->setsolve(*svc_p);
+
+    // Ensure apply list properly sorted w.r.t. solvable term
+    ve_p->setapply(vc_p);
+
+    // Report what is being applied and solved-for
+    applystate();
+    solvestate();
+
+    // Report correct/corrupt apply order
+    //    ve_p->state();
+
+    // Generally use standard solver
+    if (svc_p->useGenericGatherForSolve())
+      genericGatherAndSolve();  // VI2-driven, SDBs
+    else {
+      //cout << "Fully self-directed data gather and solve" << endl;
+      // Fully self-directed data gather and solve
+      throw(AipsError("Can't do selfGatherAndSolve for "+svc_p->typeName()));
+      //svc_p->selfGatherAndSolve(*vs_p,*ve_p);
+    }
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+
+    logSink() << "Reseting entire solve/apply state." << LogIO::POST;
+    reset();
+
+    throw(AipsError("Error in Calibrater::solve."));
+    return false;
+  } 
+
+  return true;
+
+}
+
+
+Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
+				     const String& origin,
+				     Bool strictflag)
+{
+  Bool hadprob = false;
+  uInt totNspw = uncalspw.nelements();
+
+  for(uInt i = 0; i < totNspw; ++i){
+    if(uncalspw[i]){
+      hadprob = true;
+      break;
+    }
+  }
+  if(hadprob){
+    logSink() << LogIO::WARN
+	      << "Spectral window(s) ";
+    for(uInt i = 0; i < totNspw; ++i){
+      if(uncalspw[i]){
+	logSink() << i << ", ";
+      }
+    }
+    logSink() << "\n  could not be " << origin << "ed due to missing (pre-)calibration\n"
+	      << "    in one or more of the specified tables.\n";
+    if (strictflag)
+      logSink() << "    These spws have been flagged!";
+    else
+      logSink() << "    Please check your results carefully!";
+
+    logSink() << LogIO::POST;
+  }
+  return !hadprob;
+}
+
+void Calibrater::fluxscale(const String& infile, 
+			   const String& outfile,
+			   const String& refFields, 
+			   const Vector<Int>& refSpwMap, 
+			   const String& tranFields,
+			   const Bool& append,
+                           const Float& inGainThres,
+                           const String& antSel,
+                           const String& timerangeSel,
+                           const String& scanSel,
+			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
+			   Vector<Int>& tranidx,
+			   const String& oListFile,
+                           const Bool& incremental,
+                           const Int& fitorder,
+                           const Bool& display) {
+
+  // TBD:  Permit more flexible matching on specified field names
+  //  (Currently, exact matches are required.)
+
+  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL3;
+
+  // Convert refFields/transFields to index lists
+  Vector<Int> refidx(0);
+
+  if (refFields.length()>0)
+    refidx=getFieldIdx(refFields);
+  else
+    throw(AipsError("A reference field must be specified!"));
+
+  if (tranFields.length()>0)
+    tranidx=getFieldIdx(tranFields);
+
+  // Call Vector<Int> version:
+  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,inGainThres,antSel,timerangeSel,
+      scanSel,oFluxScaleFactor,oListFile,incremental,fitorder,display);
+
+}
+
+void Calibrater::fluxscale(const String& infile, 
+			   const String& outfile,
+			   const Vector<Int>& refField, 
+			   const Vector<Int>& refSpwMap, 
+			   const Vector<Int>& tranField,
+			   const Bool& append,
+			   const Float& inGainThres,
+			   const String& antSel,
+			   const String& timerangeSel,
+			   const String& scanSel,
+			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
+			   const String& oListFile,
+			   const Bool& incremental,
+			   const Int& fitorder,
+			   const Bool& display) {
+  
+  //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
+
+  // TBD: write inputs to MSHistory
+  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL3;
+
+  try {
+    // If infile is Calibration table
+    if (Table::isReadable(infile) && 
+	Table::tableInfo(infile).type()=="Calibration") {
+
+      // get calibration type
+      String caltype;
+      caltype = Table::tableInfo(infile).subType();
+      logSink() << "Table " << infile 
+		<< " is of type: "<< caltype 
+		<< LogIO::POST;
+      String message="Table "+infile+" is of type: "+caltype;
+      MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
+      
+      // form selection
+      String select="";
+      // Selection is empty for case of no tran specification
+      if (tranField.nelements()>0) {
+	
+	// All selected fields
+	Vector<Int> allflds = concatenateArray(refField,tranField);
+	
+	// Assemble TaQL
+	ostringstream selectstr;
+	selectstr << "FIELD_ID IN [";
+	for (Int iFld=0; iFld<allflds.shape(); iFld++) {
+	  if (iFld>0) selectstr << ", ";
+	  selectstr << allflds(iFld);
+	}
+	selectstr << "]";
+	select=selectstr.str();
+      }
+
+      // Construct proper SVC object
+      SolvableVisCal *fsvj_;
+      if (caltype == "G Jones") {
+	fsvj_ = createSolvableVisCal("G",*msmc_p);
+      } else if (caltype == "T Jones") {
+	fsvj_ = createSolvableVisCal("T",*msmc_p);
+      } else {
+	// Can't process other than G and T (add B?)
+	ostringstream typeErr;
+	typeErr << "Type " << caltype 
+	       << " not supported in fluxscale.";
+
+	throw(AipsError(typeErr.str()));
+      }
+
+      // fill table with selection
+      RecordDesc applyparDesc;
+      applyparDesc.addField ("table", TpString);
+      applyparDesc.addField ("select", TpString);
+      Record applypar(applyparDesc);
+      applypar.define ("table", infile);
+      applypar.define ("select", select);
+      fsvj_->setApply(applypar);
+
+      //Bool incremental=false;
+      // Make fluxscale calculation
+      Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
+      //fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
+      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,inGainThres,antSel,
+        timerangeSel,scanSel,oFluxScaleFactor, oListFile,incremental,fitorder,display);
+//        oListFile);
+     
+      // If no outfile specified, use infile (overwrite!)
+      String out(outfile);
+      if (out.length()==0)
+	out = infile;
+
+      // Store result
+      if (append) {
+	logSink() << "Appending result to " << out << LogIO::POST;
+	String message="Appending result to "+out;
+	MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
+      } else {
+	logSink() << "Storing result in " << out << LogIO::POST;
+	String message="Storing result in "+out;
+	MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
+      }
+      fsvj_->storeNCT(out,append);
+      
+      // Clean up
+      delete fsvj_;
+
+    } else {
+      // Table not found/unreadable, or not Calibration
+      ostringstream tabErr;
+      tabErr << "File " << infile
+	     << " does not exist or is not a Calibration Table.";
+
+      throw(AipsError(tabErr.str()));
+
+    }
+  } catch (AipsError x) {
+
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+    
+    // Write to MS History table
+    //    String message="Caught Exception: "+x.getMesg();
+    //    MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
+
+    throw(AipsError("Error in Calibrater::fluxscale."));
+
+    return;
+
+  }
+  return;
+
+
+}
+
+void Calibrater::specifycal(const String& type,
+			    const String& caltable,
+			    const String& time,
+			    const String& spw,
+			    const String& antenna,
+			    const String& pol,
+			    const Vector<Double>& parameter,
+			    const String& infile) {
+
+  logSink() << LogOrigin("Calibrater","specifycal") << LogIO::NORMAL;
+
+  // SVJ objects:
+  SolvableVisCal *cal_(NULL);
+
+  try {
+ 			    
+    // Set record format for calibration table application information
+    RecordDesc specifyDesc;
+    specifyDesc.addField ("caltable", TpString);
+    specifyDesc.addField ("time", TpString);
+    specifyDesc.addField ("spw", TpArrayInt);
+    specifyDesc.addField ("antenna", TpArrayInt);
+    specifyDesc.addField ("pol", TpString);
+    specifyDesc.addField ("parameter", TpArrayDouble);
+    specifyDesc.addField ("caltype",TpString);
+    specifyDesc.addField ("infile",TpString);
+
+    // Create record with the requisite field values
+    Record specify(specifyDesc);
+    specify.define ("caltable", caltable);
+    specify.define ("time", time);
+    if (spw=="*")
+      specify.define ("spw",Vector<Int>(1,-1));
+    else
+      specify.define ("spw",getSpwIdx(spw));
+    if (antenna=="*")
+      specify.define ("antenna",Vector<Int>(1,-1) );
+    else
+      specify.define ("antenna",getAntIdx(antenna));
+    specify.define ("pol",pol);
+    specify.define ("parameter",parameter);
+    specify.define ("caltype",type);
+    specify.define ("infile",infile);
+
+    // Now do it
+    String utype=upcase(type);
+    if (utype=="G" || utype.contains("AMP") || utype.contains("PH"))
+      cal_ = createSolvableVisCal("G",*msmc_p);
+    else if (utype=='K' || utype.contains("SBD") || utype.contains("DELAY"))
+      cal_ = createSolvableVisCal("K",*msmc_p);
+    else if (utype.contains("MBD"))
+      cal_ = createSolvableVisCal("KMBD",*msmc_p);
+    else if (utype.contains("ANTPOS"))
+      cal_ = createSolvableVisCal("KANTPOS",*msmc_p);
+    else if (utype.contains("TSYS"))
+      cal_ = createSolvableVisCal("TSYS",*msmc_p);
+    else if (utype.contains("EVLAGAIN") ||
+	     utype.contains("SWP") ||
+	     utype.contains("RQ"))
+      cal_ = createSolvableVisCal("EVLASWP",*msmc_p);
+    else if (utype.contains("OPAC"))
+      cal_ = createSolvableVisCal("TOPAC",*msmc_p);
+    else if (utype.contains("GC") || utype.contains("EFF"))
+      cal_ = createSolvableVisCal("GAINCURVE",*msmc_p);
+    else if (utype.contains("TEC"))
+      cal_ = createSolvableVisCal("TEC",*msmc_p);
+    else if (utype.contains("SDSKY_PS"))
+      cal_ = createSolvableVisCal("SDSKY_PS",*msmc_p);
+    else if (utype.contains("SDSKY_RASTER"))
+      cal_ = createSolvableVisCal("SDSKY_RASTER",*msmc_p);
+    else if (utype.contains("SDSKY_OTF"))
+      cal_ = createSolvableVisCal("SDSKY_OTF",*msmc_p);
+    else
+      throw(AipsError("Unrecognized caltype."));
+
+    // set up for specification (set up the CalSet)
+    cal_->setSpecify(specify);
+
+    // fill with specified values
+    cal_->specify(specify);
+
+    // Store result
+    cal_->storeNCT();
+
+    delete cal_;
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+
+    if (cal_) delete cal_;
+    
+    throw(AipsError("Error in Calibrater::specifycal."));
+    return;
+  }
+  return;
+
+}
+
+
+Bool Calibrater::smooth(const String& infile, 
+			String& outfile,  // const Bool& append,
+			const String& smoothtype,
+			const Double& smoothtime,
+			const String& fields)
+{
+
+  // TBD: support append?
+  // TBD: spw selection?
+
+  logSink() << LogOrigin("Calibrater","smooth") << LogIO::NORMAL;
+
+  logSink() << "Beginning smoothing/interpolating method." << LogIO::POST;
+
+
+  // A pointer to an SVC
+  SolvableVisCal *svc(NULL);
+
+  try {
+    
+    // Handle no in file 
+    if (infile=="")
+      throw(AipsError("Please specify an input calibration table."));
+
+    // Handle bad smoothtype
+    if (smoothtype!="mean" && smoothtype!="median")
+      throw(AipsError("Unrecognized smooth type!"));
+
+    // Handle bad smoothtime
+    if (smoothtime<=0)
+      throw(AipsError("Please specify a strictly positive smoothtime."));
+
+    // Handle no outfile
+    if (outfile=="") {
+      outfile=infile;
+      logSink() << "Will overwrite input file with smoothing result." 
+		<< LogIO::POST;
+    }
+
+
+    svc = createSolvableVisCal(calTableType(infile),*msmc_p);
+    
+    if (svc->smoothable()) {
+      
+      // Fill calibration table using setApply
+      RecordDesc applyparDesc;
+      applyparDesc.addField ("table", TpString);
+      Record applypar(applyparDesc);
+      applypar.define ("table", infile);
+      svc->setApply(applypar);
+
+      // Convert refFields/transFields to index lists
+      Vector<Int> fldidx(0);
+      if (fields.length()>0)
+	fldidx=getFieldIdx(fields);
+
+      // Delegate to SVC
+      svc->smooth(fldidx,smoothtype,smoothtime);
+      
+      // Store the result on disk
+      //    if (append) logSink() << "Appending result to " << outfile << LogIO::POST;
+      //else 
+      logSink() << "Storing result in " << outfile << LogIO::POST;
+      
+      
+      if (outfile != "") 
+	svc->calTableName()=outfile;
+      svc->storeNCT();
+
+      // Clean up
+      if (svc) delete svc; svc=NULL;
+      
+      // Apparently, it worked
+      return true;
+
+    }
+    else
+      throw(AipsError("This type ("+svc->typeName()+") does not support smoothing."));
+
+  } catch (AipsError x) {
+   
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+    // Clean up
+    if (svc) delete svc; svc=NULL;
+
+    throw(AipsError("Error in Calibrater::smooth."));
+
+    return false;
+  }
+  return false;
+}
+
+// List a calibration table
+Bool Calibrater::listCal(const String& infile,
+			 const String& field,
+			 const String& antenna,
+			 const String& spw,
+			 const String& listfile,
+			 const Int& pagerows) {
+    
+    SolvableVisCal *svc(NULL);
+    logSink() << LogOrigin("Calibrater","listCal");
+    
+    try {
+        
+        // Trap (currently) unsupported types
+        if (upcase(calTableType(infile))=="GSPLINE" ||
+            upcase(calTableType(infile))=="BPOLY")
+            throw(AipsError("GSPLINE and BPOLY tables cannot currently be listed."));
+        
+        // Get user's selected fields, ants
+        Vector<Int> ufldids=getFieldIdx(field);
+        Vector<Int> uantids=getAntIdx(antenna);
+        
+        String newSpw = spw;
+        Bool defaultSelect = false;
+        if (spw.empty()) { // list all channels (default)
+            defaultSelect = true;
+            newSpw = "*"; 
+            logSink() << LogIO::NORMAL1 << "Spws selected: ALL" << endl
+                      << "Channels selected: ALL" << LogIO::POST;
+        }
+        // Get user's selected spw and channels
+        Vector<Int> uspwids=getSpwIdx(newSpw);
+        Matrix<Int> uchanids=getChanIdx(newSpw);
+        if (!defaultSelect) {
+            logSink() << LogIO::NORMAL1 << "Spw and Channel selection matrix: "
+                      << endl << "Each rows shows: [ Spw , Start Chan , Stop Chan , Chan Step ]"
+                      << endl << uchanids << LogIO::POST;
+        }
+        logSink() << LogIO::DEBUG2 
+                  << "uspwids = "  << uspwids  << endl
+                  << "uchanids = " << uchanids << LogIO::POST;
+        
+        // By default, do first spw, first chan
+        if (uspwids.nelements()==0) {
+            uchanids.resize(1,4);
+            uchanids=0;
+        } 
+        
+        // Set record format for calibration table application information
+        RecordDesc applyparDesc;
+        applyparDesc.addField ("table", TpString);
+        
+        // Create record with the requisite field values
+        Record applypar(applyparDesc);
+        applypar.define ("table", infile);
+        
+        // Generate the VisCal to be listed
+        svc = createSolvableVisCal(calTableType(infile),*msmc_p);  
+        svc->setApply(applypar);       
+        
+        // list it
+        svc->listCal(ufldids,uantids,uchanids,  //uchanids(0,0),uchanids(0,1),
+                     listfile,pagerows);
+        
+        if (svc) delete svc; svc=NULL;
+        
+        return true;
+        
+    } catch (AipsError x) {
+        
+        logSink() << LogIO::SEVERE
+                  << "Caught Exception: "
+                  << x.getMesg()
+                  << LogIO::POST;
+        // Clean up
+        if (svc) delete svc; svc=NULL;
+        
+        throw(AipsError("Error in Calibrater::listCal."));
+        
+        return false;
+    }
+    return false;
+    
+}
+
+
+
+Bool Calibrater::updateCalTable(const String& caltable) {
+
+  // Call the SVC method that knows how
+  return NewCalTable::CTBackCompat(caltable);
+
+}
+
+void Calibrater::selectChannel(const String& spw) {
+
+  if (mss_p && mssel_p) {
+
+    // Refresh the frequencySelections object to feed to VI2, if relevant
+    if (frequencySelections_p) {
+      delete frequencySelections_p;
+      frequencySelections_p=NULL;
+    }
+    frequencySelections_p = new vi::FrequencySelections();
+
+    vi::FrequencySelectionUsingChannels usingChannels;
+    usingChannels.add(*mss_p,mssel_p);
+    frequencySelections_p->add(usingChannels);
+
+    //    cout << usingChannels.toString() << endl;
+    //    cout << "FS.size() = " << frequencySelections_p->size() << endl;
+
+  }
+
+  // TBD:  Does frequencySelections_p support string info for reporting to logger?
+
+  Matrix<Int> chansel = getChanIdx(spw);
+  uInt nselspw=chansel.nrow();
+
+  if (nselspw==0)
+    logSink() << "Frequency selection: Selecting all channels in all spws." 
+	      << LogIO::POST;
+  else {
+
+    logSink() << "Frequency selection: " << LogIO::POST;
+
+    // Trap non-unit step (for now)
+    if (ntrue(chansel.column(3)==1)!=nselspw) {
+      logSink() << LogIO::WARN
+		<< "Calibration does not support non-unit channel stepping; "
+		<< "using step=1."
+		<< LogIO::POST;
+      chansel.column(3)=1;
+    }
+
+    Vector<Int> uspw(chansel.column(0));
+    Vector<Int> ustart(chansel.column(1));
+    Vector<Int> uend(chansel.column(2));
+    Vector<Int> ustep(chansel.column(3));
+
+    logSink() << LogIO::NORMAL;
+    for (uInt i=0;i<nselspw;++i) {
+
+      logSink() << ".  Spw " << uspw(i) << ":"
+		<< ustart(i) << "~" << uend(i) 
+		<< " (" << uend(i)-ustart(i)+1 << " channels,"
+		<< " step by " << ustep(i) << ")"
+		<< endl;
+	
+    } // i
+    logSink() << LogIO::POST;
+
+  } // non-triv spw selection
+
+}
+
+
+Bool Calibrater::cleanup() {
+
+  //  logSink() << LogOrigin("Calibrater","cleanup") << LogIO::NORMAL;
+
+  // Delete the VisCals
+  reset();
+
+  // Delete derived dataset stuff
+  if(mssel_p) delete mssel_p; mssel_p=0;
+  if(mss_p) delete mss_p; mss_p=0;
+  if (frequencySelections_p)  delete frequencySelections_p;  frequencySelections_p=0;
+
+  // Delete the current VisEquation
+  if(ve_p) delete ve_p; ve_p=0;
+
+  return true;
+
+}
+
+// Parse refant specification
+Vector<Int> Calibrater::getRefantIdxList(const String& refant) {
+
+  Vector<Int> irefant;
+  if (refant.length()==0) {
+    // Nothing specified, return -1 in single-element vector
+    irefant.resize(1);
+    irefant(0)=-1;
+  }
+  else {
+    // parse the specification
+    MSSelection msselect;
+    msselect.setAntennaExpr(refant);
+    Vector<Int> iref=msselect.getAntenna1List(mssel_p);
+    if (anyLT(iref,0))
+      cout << "Negated selection (via '!') not yet implemented for refant," << endl << " and will be ignored." << endl;
+    irefant=iref(iref>-1).getCompressedArray();
+    if (irefant.nelements()==0) {
+      irefant.resize(1);
+      irefant(0)=-1;
+    }
+  }
+
+  return irefant;
+}
+
+
+// Interpret refant *index*
+Vector<Int> Calibrater::getAntIdx(const String& antenna) {
+
+    MSSelection msselect;
+    msselect.setAntennaExpr(antenna);
+    return msselect.getAntenna1List(mssel_p);
+
+}
+
+// Interpret field indices (MSSelection)
+Vector<Int> Calibrater::getFieldIdx(const String& fields) {
+
+  MSSelection mssel;
+  mssel.setFieldExpr(fields);
+  return mssel.getFieldList(mssel_p);
+
+}
+
+// Interpret spw indices (MSSelection)
+Vector<Int> Calibrater::getSpwIdx(const String& spws) {
+
+  MSSelection mssel;
+  mssel.setSpwExpr(spws);
+
+  /*
+  cout << "mssel.getSpwList(mssel_p) = " << mssel.getSpwList(mssel_p) << endl;
+  cout << "mssel.getChanList(mssel_p) = " << mssel.getChanList(mssel_p) << endl;  cout << "Vector<Int>() = " << Vector<Int>() << endl;
+  */
+
+  // Use getChanList (column 0 for spw) because it is 
+  //  more reliable about the number and order of specified spws.
+  //  return mssel.getSpwList(mssel_p);
+  Matrix<Int> chanmat=mssel.getChanList(mssel_p);
+  if (chanmat.nelements()>0) 
+    return chanmat.column(0);
+  else
+    return Vector<Int>();
+
+}
+
+Matrix<Int> Calibrater::getChanIdx(const String& spw) {
+
+  MSSelection mssel;
+  mssel.setSpwExpr(spw);
+
+  return mssel.getChanList(mssel_p);
+
+}
+
+
+// Query apply types if we are calibrating the weights
+Bool Calibrater::calWt() {
+
+  Int napp(vc_p.nelements());
+  // Return true as soon as we find a type which is cal'ing wts
+  for (Int iapp=0;iapp<napp;++iapp)
+    if (vc_p[iapp] && vc_p[iapp]->calWt())
+      return true;
+
+  // None cal'd weights, so return false
+  return false;
+
+}
+
+Bool Calibrater::ok() {
+
+  if(ms_p && mssel_p && ve_p) {
+    return true;
+  }
+  else {
+    logSink() << "Calibrater is not yet initialized" << LogIO::POST;
+    return false;
+  }
+}
+
+
+
+void Calibrater::writeHistory(LogIO& /*os*/, Bool /*cliCommand*/)
+{
+  // Disabled 2016/04/19: avoid direct MS.HISTORY updates from
+  //   below the python level, FOR NOW
+
+  return;
+  /*
+  if (!historytab_p.isNull()) {
+    if (histLockCounter_p == 0) {
+      historytab_p.lock(false);
+    }
+    ++histLockCounter_p;
+
+    os.postLocally();
+    if (cliCommand) {
+      hist_p->cliCommand(os);
+    } else {
+      hist_p->addMessage(os);
+    }
+
+    if (histLockCounter_p == 1) {
+      historytab_p.unlock();
+    }
+    if (histLockCounter_p > 0) {
+      --histLockCounter_p;
+    }
+  } else {
+    os << LogIO::SEVERE << "calibrater is not yet initialized" << LogIO::POST;
+  }
+  */
+}
+
+// *********************************************
+//  OldCalibrater implementations that use vs_p
+
+OldCalibrater::OldCalibrater(): 
+  Calibrater(),
+  vs_p(0), 
+  rawvs_p(0)
+{
+}
+
+OldCalibrater::OldCalibrater(String msname): 
+  Calibrater(msname),
+  vs_p(0), 
+  rawvs_p(0)
+{
+}
+
+/*
+OldCalibrater::OldCalibrater(const OldCalibrater & other) :
+  Calibrater(other)
+{
+  operator=(other);
+}
+
+OldCalibrater& OldCalibrater::operator=(const OldCalibrater & other)
+{
+  Calibrater::operator=(other); // copy parental units
+  vs_p=other.vs_p;
+  rawvs_p=other.rawvs_p;
+  return *this;
+}
+*/
+
+OldCalibrater::~OldCalibrater()
+{
+  OldCalibrater::cleanupVisSet();
+}
+
+
+// Select data (using MSSelection syntax)
+void OldCalibrater::selectvis(const String& time,
+			      const String& spw,
+			      const String& scan,
+			      const String& field,
+			      const String& intent,
+			      const String& obsIDs,
+			      const String& baseline,
+			      const String& uvrange,
+			      const String& chanmode,
+			      const Int& nchan,
+			      const Int& start, 
+			      const Int& step,
+			      const MRadialVelocity& mStart,
+			      const MRadialVelocity& mStep,
+			      const String& msSelect)
+{
+// Define primary measurement set selection criteria
+// Inputs:
+//    time
+//    spw
+//    scan
+//    field
+//    intent
+//    obsIDs
+//    baseline
+//    uvrange
+//    chanmode     const String&            Frequency/velocity selection mode
+//                                          ("channel", "velocity" or 
+//                                           "opticalvelocity")
+//    nchan        const Int&               No of channels to select
+//    start        const Int&               Start channel to select
+//    step         const Int&               Channel increment
+//    mStart       const MRadialVelocity&   Start radial vel. to select
+//    mStep        const MRadialVelocity&   Radial velocity increment
+//    msSelect     const String&            MS selection string (TAQL)
+// Output to private data:
+//
+  logSink() << LogOrigin("Calibrater","selectvis") << LogIO::NORMAL3;
+  
+  try {
+
+ /*   
+    cout << "time     = " << time << " " << time.length() <<endl;
+    cout << "spw      = " << spw << " " << spw.length() <<endl;
+    cout << "scan     = " << scan << " " << scan.length() <<endl;
+    cout << "field    = " << field << " " << field.length() <<endl;
+    cout << "baseline = " << baseline << " " << baseline.length() << endl;
+    cout << "uvrange  = " << uvrange << " " << uvrange.length() << endl;
+ */
+
+    logSink() << "Selecting data" << LogIO::POST;
+    
+    // Apply selection to the original MeasurementSet
+    logSink() << "Performing selection on MeasurementSet" << endl;
+    
+    if (mssel_p) {
+      delete mssel_p;
+      mssel_p=0;
+    };
+
+    // Report non-trivial user selections
+    if (time!="")
+      logSink() << " Selecting on time: '" << time << "'" << endl;
+    if (spw!="")
+      logSink() << " Selecting on spw: '" << spw << "'" << endl;
+    if (scan!="")
+      logSink() << " Selecting on scan: '" << scan << "'" << endl;
+    if (field!="")
+      logSink() << " Selecting on field: '" << field << "'" << endl;
+    if (intent!="")
+      logSink() << " Selecting on intent: '" << intent << "'" << endl;
+    if(obsIDs != "")
+      logSink() << " Selecting by observation IDs: '" << obsIDs << "'" << endl;
+    if (baseline!="")
+      logSink() << " Selecting on antenna/baseline: '" << baseline << "'" << endl;
+    if (uvrange!="")
+      logSink() << " Selecting on uvrange: '" << uvrange << "'" << endl;
+    if (msSelect!="")
+      logSink() << " Selecting with TaQL: '" << msSelect << "'" << endl;
+    logSink() << LogIO::POST;
+
+
+    // Assume no selection, for starters
+    // gmoellen 2012/01/30    mssel_p = new MeasurementSet(sorted, ms_p);
+    mssel_p = new MeasurementSet(*ms_p);
+
+    // Apply user-supplied selection
+    Bool nontrivsel=false;
+    // gmoellen 2012/01/30    nontrivsel= mssSetData(MeasurementSet(sorted, ms_p),
+
+    // Ensure use of a fresh MSSelection object
+    if (mss_p) { delete mss_p; mss_p=NULL; }
+    mss_p=new MSSelection();
+    nontrivsel= mssSetData(*ms_p,
+			   *mssel_p,"",
+			   time,baseline,
+			   field,spw,
+			   uvrange,msSelect,
+			   "",scan,"",intent, obsIDs,mss_p);
+
+    // Keep any MR status for the MS
+    mssel_p->setMemoryResidentSubtables(ms_p->getMrsEligibility());
+
+    // If non-trivial MSSelection invoked and nrow reduced:
+    if(nontrivsel && mssel_p->nrow()<ms_p->nrow()) {
+
+      // Escape if no rows selected
+      if (mssel_p->nrow()==0) 
+	throw(AipsError("Specified selection selects zero rows!"));
+
+      // ...otherwise report how many rows are selected
+      logSink() << "By selection " << ms_p->nrow() 
+		<< " rows are reduced to " << mssel_p->nrow() 
+		<< LogIO::POST;
+    }
+    else {
+      // Selection did nothing:
+      logSink() << "Selection did not drop any rows" << LogIO::POST;
+    }
+
+    // Now, re-create the associated VisSet
+    if(vs_p) delete vs_p; vs_p=0;
+    Block<int> sort(0);
+    Matrix<Int> noselection;
+    // gmoellen 2012/01/30    vs_p = new VisSet(*mssel_p,sort,noselection);
+    vs_p = new VisSet(*mssel_p,sort,noselection,false,0.0,false,false);
+    AlwaysAssert(vs_p, AipsError);
+
+    // Attempt to use MSSelection for channel selection
+    //  if user not using the old way
+    if (chanmode=="none") {
+      selectChannel(spw);
+    }
+    else {
+      // Reluctantly use the old-fashioned way
+      logSink() << LogIO::WARN 
+		<< "You have used the old-fashioned mode parameter" << endl
+		<< "for channel selection.  It still works, for now," << endl
+		<< "but this will be eliminated in the near future." << endl
+		<< "Please begin using the new channel selection" << endl
+		<< "syntax in the spw parameter." << LogIO::POST;
+      selectChannel(chanmode,nchan,start,step,mStart,mStep);
+    }
+
+  }
+  catch (MSSelectionError& x) {
+    // Re-initialize with the existing MS
+    logSink() << LogOrigin("Calibrater","selectvis",WHERE) 
+	      << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+	      << LogIO::POST;
+    // jagonzal (CAS-4110): I guess it is not necessary to create these columns when the selection is empty
+    initialize(*ms_p,false,false,false);
+    throw(AipsError("Error in data selection specification: " + x.getMesg()));
+  } 
+  catch (AipsError x) {
+    // Re-initialize with the existing MS
+    logSink() << LogOrigin("Calibrater","selectvis",WHERE) 
+	      << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+	      << LogIO::POST;
+    // jagonzal (CAS-4110): I guess it is not necessary to create these columns when the selection is empty.
+    initialize(*ms_p,false,false,false);
+    throw(AipsError("Error in Calibrater::selectvis(): " + x.getMesg()));
+  } 
+};
+
+
+Bool OldCalibrater::setapply (const String& type, 
+			      const Record& applypar)
+{
+  logSink() << LogOrigin("Calibrater", "setapply(type, applypar)");
+
+  // First try to create the requested VisCal object
+  VisCal *vc(NULL);
+
+  try {
+
+    if(!ok()) 
+      throw(AipsError("Calibrater not prepared for setapply."));
+
+    String upType=type;
+    upType.upcase();
+
+    logSink() << LogIO::NORMAL 
+	      << "Arranging to APPLY:"
+	      << LogIO::POST;
+
+    // Add a new VisCal to the apply list
+    vc = createVisCal(upType,*vs_p);  
+
+    vc->setApply(applypar);       
+
+    logSink() << LogIO::NORMAL << ".   "
+	      << vc->applyinfo()
+	      << LogIO::POST;
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE << x.getMesg() 
+	      << " Check inputs and try again."
+	      << LogIO::POST;
+    if (vc) delete vc;
+    throw(AipsError("Error in Calibrater::setapply."));
+    return false;
+  }
+
+  // Creation apparently successful, so add to the apply list
+  // TBD: consolidate with above?
+  try {
+
+    uInt napp=vc_p.nelements();
+    vc_p.resize(napp+1,false,true);      
+    vc_p[napp] = vc;
+    vc=NULL;
+   
+    // Maintain sort of apply list
+    ve_p->setapply(vc_p);
+    
+    return true;
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+	      << LogIO::POST;
+    if (vc) delete vc;
+    throw(AipsError("Error in Calibrater::setapply."));
+    return false;
+  } 
+  return false;
+}
+
+// Set up apply-able calibration via a Cal Library
+Bool OldCalibrater::setcallib(Record callib) {
+
+  logSink() << LogOrigin("Calibrater", "setcallib(callib)");
+
+  //  cout << "Calibrater::setcallib: callib.isFixed() = " << boolalpha << callib.isFixed() << endl;
+
+  uInt ntab=callib.nfields();
+
+  //  cout << "callib.nfields() = " << ntab << endl;
+
+  // Do some preliminary per-table verification
+  for (uInt itab=0;itab<ntab;++itab) {
+
+    String tabname=callib.name(itab);
+
+    // Insist that the table exists on disk
+    if (!Table::isReadable(tabname))
+      throw(AipsError("Caltable "+tabname+" does not exist."));
+
+  }
+
+  // Tables exist, so deploy them...
+
+  for (uInt itab=0;itab<ntab;++itab) {
+
+    String tabname=callib.name(itab);
+
+    // Get the type from the table
+    String upType=calTableType(tabname);
+    upType.upcase();
+
+    // Add table name to the record
+    Record thistabrec=callib.asrwRecord(itab);
+    thistabrec.define("tablename",tabname);
+
+    // First try to create the requested VisCal object
+    VisCal *vc(NULL);
+
+    try {
+
+      if(!ok()) 
+	throw(AipsError("Calibrater not prepared for setapply."));
+      
+      logSink() << LogIO::NORMAL 
+		<< "Arranging to APPLY:"
+		<< LogIO::POST;
+      
+      // Add a new VisCal to the apply list
+      vc = createVisCal(upType,*vs_p);  
+
+
+      // ingest this table according to its callib
+      vc->setCallib(thistabrec,*mssel_p);
+
+    } catch (AipsError x) {
+      logSink() << LogIO::SEVERE << x.getMesg() 
+		<< " Check inputs and try again."
+		<< LogIO::POST;
+      if (vc) delete vc;
+      throw(AipsError("Error in Calibrater::setapply."));
+      return false;
+    }
+
+    // Creation apparently successful, so add to the apply list
+    // TBD: consolidate with above?
+    try {
+      
+      uInt napp=vc_p.nelements();
+      vc_p.resize(napp+1,false,true);      
+      vc_p[napp] = vc;
+      vc=NULL;
+   
+      // Maintain sort of apply list
+      ve_p->setapply(vc_p);
+      
+    } catch (AipsError x) {
+      logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+		<< LogIO::POST;
+      if (vc) delete vc;
+      throw(AipsError("Error in Calibrater::setapply."));
+      return false;
+    } 
+  }
+
+  // All ok, if we get this far!
+  return true;
+
+}
+
+
+// Set up apply-able calibration via a Cal Library
+Bool OldCalibrater::setcallib2(Record callib) {
+
+  logSink() << LogOrigin("Calibrater", "setcallib2(callib)");
+
+  //  cout << "Calibrater::setcallib2(callib) : " << boolalpha << callib << endl;
+
+  uInt ntab=callib.nfields();
+
+  //  cout << "callib.nfields() = " << ntab << endl;
+
+  // Do some preliminary per-table verification
+  for (uInt itab=0;itab<ntab;++itab) {
+
+    String tabname=callib.name(itab);
+
+    // Trap parang
+    // TBD...
+    //    if (tabname=="<parang>")
+    //      continue;
+
+    // Insist that the table exists on disk
+    if (!Table::isReadable(tabname))
+      throw(AipsError("Caltable "+tabname+" does not exist."));
+
+  }
+
+  // Tables exist, so deploy them...
+
+  // Local MS object for callib parsing (only)
+  MeasurementSet lms(msname_p,Table::Update);
+
+  // Get some global shape info:
+  Int MSnAnt = lms.antenna().nrow();
+  Int MSnSpw = lms.spectralWindow().nrow();
+
+  for (uInt itab=0;itab<ntab;++itab) {
+
+    String tabname=callib.name(itab);
+
+    // Get the type from the table
+    String upType=calTableType(tabname);
+    upType.upcase();
+
+    // Add table name to the record
+    Record thistabrec=callib.asrwRecord(itab);
+    thistabrec.define("tablename",tabname);
+
+    // First try to create the requested VisCal object
+    VisCal *vc(NULL);
+
+    try {
+
+      //      if(!ok()) 
+      //	throw(AipsError("Calibrater not prepared for setapply."));
+      
+      logSink() << LogIO::NORMAL 
+		<< "Arranging to APPLY:"
+		<< LogIO::POST;
+      
+      // Add a new VisCal to the apply list
+      vc = createVisCal(upType,msname_p,MSnAnt,MSnSpw);  
+
+      // ingest this table according to its callib
+      vc->setCallib(thistabrec,lms);
+
+    } catch (AipsError x) {
+      logSink() << LogIO::SEVERE << x.getMesg() 
+		<< " Check inputs and try again."
+		<< LogIO::POST;
+      if (vc) delete vc;
+      throw(AipsError("Error in Calibrater::callib2."));
+      return false;
+    }
+
+    // Creation apparently successful, so add to the apply list
+    // TBD: consolidate with above?
+    try {
+      
+      uInt napp=vc_p.nelements();
+      vc_p.resize(napp+1,false,true);      
+      vc_p[napp] = vc;
+      vc=NULL;
+   
+      // Maintain sort of apply list
+      ve_p->setapply(vc_p);
+      
+    } catch (AipsError x) {
+      logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+		<< LogIO::POST;
+      if (vc) delete vc;
+      throw(AipsError("Error in Calibrater::setapply."));
+      return false;
+    } 
+  }
+  // All ok, if we get this far!
+  return true;
+
+}
+
+
+Bool OldCalibrater::setsolve (const String& type, 
+			      const Record& solvepar) {
+
+  // Attempt to create the solvable object
+  SolvableVisCal *svc(NULL);
+  try {
+
+    if(!ok()) 
+      throw(AipsError("Calibrater not prepared for setsolve."));
+
+    String upType = type;
+    upType.upcase();
+
+    // Clean out any old solve that was lying around
+    unsetsolve();
+
+    logSink() << LogIO::NORMAL 
+	      << "Arranging to SOLVE:"
+	      << LogIO::POST;
+
+    // Create the new SolvableVisCal
+    svc = createSolvableVisCal(upType,*vs_p);
+    svc->setSolve(solvepar);
+    
+    logSink() << LogIO::NORMAL << ".   "
+	      << svc->solveinfo()
+	      << LogIO::POST;
+
+    // Creation apparently successful, keep it
+    svc_p=svc;
+    svc=NULL;
+
+    return true;
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+	      << LogIO::POST;
+    unsetsolve();
+    if (svc) delete svc;
+    throw(AipsError("Error in Calibrater::setsolve."));
+    return false;
+  } 
+  return false;
+}
+
+Bool OldCalibrater::correct(String mode)
+{
+    logSink() << LogOrigin("Calibrater","correct") << LogIO::NORMAL;
+
+    Bool retval = true;
+
+    try {
+
+        // make mode all-caps
+        String upmode=mode;
+	upmode.upcase();
+
+	// If trialmode=T, only the flags will be set
+	//   (and only written if not TRIAL)
+	Bool trialmode=(upmode.contains("TRIAL") || 
+			upmode.contains("FLAGONLY"));
+
+        // Set up VisSet and its VisibilityIterator.
+
+        VisibilityIterator::DataColumn whichOutCol = configureForCorrection ();
+
+        VisIter& vi(vs_p->iter());
+        VisBufferAutoPtr vb (vi);
+        vi.origin();
+
+        // Pass each timestamp (VisBuffer) to VisEquation for correction
+
+        Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
+        uncalspw.set(false);		        // instead of bombing the user
+        uncalspw.set(False);		        // instead of bombing the user
+                                        // in a loop.
+
+        for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+
+            for (vi.origin(); vi.more(); vi++) {
+
+                uInt spw = vb->spectralWindow();
+
+		// Re-initialize weights from sigma column
+		vb->resetWeightMat();
+
+		// If we can calibrate this vb, do it...
+                if (ve_p->spwOK(spw)){
+		  
+		  // throws exception if nothing to apply
+		  ve_p->correct(*vb,trialmode);
+		    
+                }
+		// ...else don't, prepare warning, and possibly set flags
+                else{
+
+		  // set uncalspw for warning message
+		  uncalspw[spw] = true;
+		  // set the flags, if we are being strict
+		  if (upmode.contains("STRICT"))
+		    // set the flags
+		    // (don't touch the data/weights, which are initialized)
+		    vb->flag().set(true);
+                }
+
+		// Only if not a trial run, trigger write to disk
+		if (!upmode.contains("TRIAL")) {
+		      
+		  if (upmode.contains("CAL")) {
+		    vi.setVis (vb->visCube(), whichOutCol);
+		    vi.setWeightMat(vb->weightMat()); 
+		  }
+		  
+		  if (upmode.contains("FLAG"))
+		    vi.setFlag (vb->flag());
+		  
+		}
+		
+            }
+        }
+
+        vs_p->flush (); // Flush to disk
+
+        // Now that we're out of the loop, summarize any errors.
+
+        retval = summarize_uncalspws(uncalspw, "correct",
+ 				     upmode.contains("STRICT"));
+
+	actRec_=Record();
+	actRec_.define("origin","Calibrater::correct");
+	actRec_.defineRecord("VisEquation",ve_p->actionRec());
+
+    }
+    catch (AipsError x) {
+        logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+	              << LogIO::POST;
+
+        logSink() << "Resetting all calibration application settings." << LogIO::POST;
+        unsetapply();
+
+        throw(AipsError("Error in Calibrater::correct."));
+        retval = false;         // Not that it ever gets here...
+    }
+    return retval;
+}
+
+Bool OldCalibrater::corrupt() {
+  
+  logSink() << LogOrigin("Calibrater","corrupt") << LogIO::NORMAL;
+  Bool retval = true;
+
+  try {
+
+    if (!ok())
+      throw(AipsError("Calibrater not prepared for corrupt!"));
+
+    // Nominally, we write out to the MODEL_DATA, unless absent
+    VisibilityIterator::DataColumn whichOutCol(VisibilityIterator::Model);
+
+    if (!ms_p->tableDesc().isColumn("MODEL_DATA"))
+      throw(AipsError("MODEL_DATA column unexpectedly absent. Cannot corrupt."));
+
+    // Ensure apply list non-zero and properly sorted
+    ve_p->setapply(vc_p);
+
+    // Report the types that will be applied
+    applystate();
+
+    // Arrange for iteration over data
+    Block<Int> columns;
+    // include scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+    vs_p->resetVisIter(columns,0.0);
+    VisIter& vi(vs_p->iter());
+    VisBuffer vb(vi);
+    
+    // Pass each timestamp (VisBuffer) to VisEquation for corruption.
+    Vector<Bool> uncalspw(vi.numberSpw());	// Used to accumulate error messages
+    uncalspw.set(false);		        // instead of bombing the user
+						// in a loop.
+    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+      Int spw = vi.spectralWindow();
+
+      // Only proceed if spw can be calibrated
+      if (ve_p->spwOK(spw)) {
+
+	for (vi.origin(); vi.more(); vi++) {
+	  
+	  // Corrupt the MODEL_DATA
+	  //  (note we are not treating weights and flags)
+	  ve_p->corrupt(vb);    // throws exception if nothing to apply
+	  vi.setVis(vb.modelVisCube(),whichOutCol);
+
+	}
+      }
+      else 
+	uncalspw[spw] = true;
+    }
+    // Flush to disk
+    vs_p->flush();
+
+    // Now that we're out of the loop, summarize any errors.
+    retval = summarize_uncalspws(uncalspw, "corrupt");
+  }
+  catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+	      << LogIO::POST;
+
+    logSink() << "Resetting all calibration application settings." << LogIO::POST;
+    unsetapply();
+
+    throw(AipsError("Error in Calibrater::corrupt."));
+    retval = false;  // Not that it ever gets here...
+  } 
+  return retval;
+}
+
+Bool OldCalibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
+					String tsystable, String gainfield, String interp, Vector<Int> spwmap) {
 
 	logSink() << LogOrigin("Calibrater", "initWeightsWithTsys")
 			<< LogIO::NORMAL;
@@ -2255,207 +3946,7 @@ Bool Calibrater::initWeightsWithTsys(String wtmode, Bool dowtsp,
 	return retval;
 }
 
-Bool Calibrater::initWeights(Bool doBT, Bool dowtsp) {
-
-  logSink() << LogOrigin("Calibrater","initWeights") << LogIO::NORMAL;
-  Bool retval = true;
-
-  try {
-
-    if (!ok())
-      throw(AipsError("Calibrater not prepared for initWeights!"));
-
-    // Log that we are beginning...
-    if (doBT)
-      logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth and integration time." << LogIO::POST;
-    else
-      logSink() << "Initializing SIGMA and WEIGHT to unity." << LogIO::POST;
-
-    if (dowtsp) {
-      logSink() << "Also initializing WEIGHT_SPECTRUM uniformly in channel (==WEIGHT)." << LogIO::POST;
-
-      // Ensure WEIGHT_SPECTRUM really exists at all 
-      //   (often it exists but is empty)
-      TableDesc mstd = ms_p->actualTableDesc();
-      if (!mstd.isColumn("WEIGHT_SPECTRUM")) {
-	cout << "Creating WEIGHT_SPECTRUM!" << endl;
-
-	// Nominal defaulttileshape
-	IPosition dts(3,4,32,1024); 
-
-	// Discern DATA's default tile shape and use it
-	const Record dminfo=ms_p->dataManagerInfo();
-	for (uInt i=0;i<dminfo.nfields();++i) {
-	  Record col=dminfo.asRecord(i);
-	  //if (upcase(col.asString("NAME"))=="TILEDDATA") {
-	  if (anyEQ(col.asArrayString("COLUMNS"),String("DATA"))) {
-	    dts=IPosition(col.asRecord("SPEC").asArrayInt("DEFAULTTILESHAPE"));
-	    cout << "Found DATA's default tile: " << dts << endl;
-	    break;
-	  }
-	}
-
-	// Add the column
-	String colWtSp=MS::columnName(MS::WEIGHT_SPECTRUM);
-	TableDesc tdWtSp;
-	tdWtSp.addColumn(ArrayColumnDesc<Float>(colWtSp,"weight spectrum", 2));
-	TiledShapeStMan wtSpStMan("TiledWgtSpectrum",dts);
-	ms_p->addColumn(tdWtSp,wtSpStMan);
-      }
-    }
-
-    // Arrange for iteration over data
-    Block<Int> columns;
-    // include scan iteration
-    columns.resize(5);
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::SCAN_NUMBER;
-    columns[2]=MS::FIELD_ID;
-    columns[3]=MS::DATA_DESC_ID;
-    columns[4]=MS::TIME;
-
-    vi::SortColumns sc(columns);
-    vi::VisibilityIterator2 vi2(*ms_p,sc,true);
-    vi::VisBuffer2 *vb = vi2.getVisBuffer();
-
-    ROMSColumns mscol(*ms_p);
-    const ROMSSpWindowColumns& msspw(mscol.spectralWindow());
-    uInt nSpw=msspw.nrow();
-    Vector<Double> effChBw(nSpw,0.0);
-    for (uInt ispw=0;ispw<nSpw;++ispw) {
-      effChBw[ispw]=mean(msspw.effectiveBW()(ispw));
-    }
-
-    Int ivb(0);
-    for (vi2.originChunks(); vi2.moreChunks(); vi2.nextChunk()) {
-
-      for (vi2.origin(); vi2.more(); vi2.next()) {
-
-	Int spw = vb->spectralWindows()(0);
-
-	Int nrow=vb->nRows();
-	Int nchan=vb->nChannels();
-	Int ncor=vb->nCorrelations();
-
-	Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
-	newwt.set(1.0);
-	newsig.set(1.0);
-
-	Cube<Float> newwtsp(0,0,0);
-	if (dowtsp) {
-	  newwtsp.resize(ncor,nchan,nrow);
-	  newwtsp.set(1.0);
-	}
-
-	// If requested, set weights according to bandwidth and integration time
-	if (doBT) {
-	  
-	  // Detect ACs
-	  const Vector<Int> a1(vb->antenna1());
-	  const Vector<Int> a2(vb->antenna2());
-	  Vector<Bool> ac(a1==a2);
-	  
-	  // XCs need an extra factor of 2
-	  Vector<Float> xcfactor(nrow,2.0);
-	  xcfactor(ac)=1.0;   // (but not ACs)
-	  
-	  // The row-wise integration time
-	  Vector<Float> expo(nrow);
-	  convertArray(expo,vb->exposure());
-
-	  // Set weights to channel bandwidth first.
-	  newwt.set(Float(effChBw(spw)));
-	  
-	  // For each correlation, apply exposure and xcfactor
-	  for (Int icor=0;icor<ncor;++icor) {
-
-	    Vector<Float> wt(newwt.row(icor));
-	    wt*=expo;
-	    wt*=xcfactor;
-	    if (dowtsp) {
-	      for (Int ich=0;ich<nchan;++ich) {
-		Vector<Float> wtsp(newwtsp(Slice(icor,1,1),Slice(ich,1,1),Slice()));
-		wtsp=wt;
-	      }
-	    }
-	    
-	  }
-
-	  // sig from wt is inverse sqrt
-	  newsig=newsig/sqrt(newwt);
-
-	}
-
-	/*
-	  cout << ivb << " "
-	  << ncor << " " << nchan << " " << nrow << " "
-	  << expo(0) << " "
-	  << newwt(0,0) << " "
-	  << newsig(0,0) << " "
-	  << endl;
-	*/
-	++ivb;
-
-	// Set in vb, and writeback
-	vb->setWeight(newwt);
-	vb->setSigma(newsig);
-	vb->writeChangesBack();
-	
-	if (dowtsp)
-	  vb->initWeightSpectrum(newwtsp);
-
-      }
-    }
-
-  }
-  catch (AipsError x) {
-    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-             << LogIO::POST;
-
-    logSink() << "Resetting all calibration application settings." << LogIO::POST;
-    unsetapply();
-
-    throw(AipsError("Error in Calibrater::initWeightsOLD."));
-    retval = false;  // Not that it ever gets here...
-  }
-  return retval;
-}
-
-
-Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
-				     const String& origin,
-				     Bool strictflag)
-{
-  Bool hadprob = false;
-  uInt totNspw = uncalspw.nelements();
-
-  for(uInt i = 0; i < totNspw; ++i){
-    if(uncalspw[i]){
-      hadprob = true;
-      break;
-    }
-  }
-  if(hadprob){
-    logSink() << LogIO::WARN
-	      << "Spectral window(s) ";
-    for(uInt i = 0; i < totNspw; ++i){
-      if(uncalspw[i]){
-	logSink() << i << ", ";
-      }
-    }
-    logSink() << "\n  could not be " << origin << "ed due to missing (pre-)calibration\n"
-	      << "    in one or more of the specified tables.\n";
-    if (strictflag)
-      logSink() << "    These spws have been flagged!";
-    else
-      logSink() << "    Please check your results carefully!";
-
-    logSink() << LogIO::POST;
-  }
-  return !hadprob;
-}
-
-Bool Calibrater::solve() {
+Bool OldCalibrater::solve() {
 
   logSink() << LogOrigin("Calibrater","solve") << LogIO::NORMAL3;
 
@@ -2531,7 +4022,1060 @@ Bool Calibrater::solve() {
 
 }
 
-Bool Calibrater::genericGatherAndSolve() {
+Vector<Double> OldCalibrater::modelfit(const Int& niter,
+				       const String& stype,
+				       const Vector<Double>& par,
+				       const Vector<Bool>& vary,
+				       const String& file) {
+
+ /*
+  cout << "Calibrater::modelfit" << endl;
+  cout << " niter = " << niter << endl;
+  cout << " stype = " << stype << endl;
+  cout << " par   = " << par << endl;
+  cout << " vary  = " << vary << endl;
+  cout << " file  = " << file << endl;
+ */
+  //  logSink() << LogOrigin("Calibrater","modelfit") << LogIO::NORMAL;
+  
+  try {
+    if(!ok()) throw(AipsError("Calibrater not ok()"));
+
+    // Construct UVMod with the VisSet
+    UVMod uvmod(*vs_p);
+
+    if (stype=="P")
+      uvmod.setModel(ComponentType::POINT, par, vary);
+    else if (stype=="G")
+      uvmod.setModel(ComponentType::GAUSSIAN, par, vary);
+    else if (stype=="D")
+      uvmod.setModel(ComponentType::DISK, par, vary);
+    else
+      throw(AipsError("Unrecognized component type in Calibrater::modelfit."));
+    
+    // Run the fit
+    uvmod.modelfit(niter,file);
+
+    // Return the parameter vector
+    return uvmod.par();
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+    throw(AipsError("Error in Calibrater::modelfit."));
+    
+    return Vector<Double>();
+  } 
+
+}
+
+void OldCalibrater::fluxscale(const String& infile, 
+			      const String& outfile,
+			      const Vector<Int>& refField, 
+			      const Vector<Int>& refSpwMap, 
+			      const Vector<Int>& tranField,
+			      const Bool& append,
+			      const Float& inGainThres,
+			      const String& antSel,
+			      const String& timerangeSel,
+			      const String& scanSel,
+			      SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
+			      const String& oListFile,
+			      const Bool& incremental,
+			      const Int& fitorder,
+			      const Bool& display) {
+
+  //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
+
+  // TBD: write inputs to MSHistory
+  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL3;
+
+  try {
+    // If infile is Calibration table
+    if (Table::isReadable(infile) && 
+	Table::tableInfo(infile).type()=="Calibration") {
+
+      // get calibration type
+      String caltype;
+      caltype = Table::tableInfo(infile).subType();
+      logSink() << "Table " << infile 
+		<< " is of type: "<< caltype 
+		<< LogIO::POST;
+      String message="Table "+infile+" is of type: "+caltype;
+      MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
+      
+      // form selection
+      String select="";
+      // Selection is empty for case of no tran specification
+      if (tranField.nelements()>0) {
+	
+	// All selected fields
+	Vector<Int> allflds = concatenateArray(refField,tranField);
+	
+	// Assemble TaQL
+	ostringstream selectstr;
+	selectstr << "FIELD_ID IN [";
+	for (Int iFld=0; iFld<allflds.shape(); iFld++) {
+	  if (iFld>0) selectstr << ", ";
+	  selectstr << allflds(iFld);
+	}
+	selectstr << "]";
+	select=selectstr.str();
+      }
+
+      // Construct proper SVC object
+      SolvableVisCal *fsvj_;
+      if (caltype == "G Jones") {
+	fsvj_ = createSolvableVisCal("G",*vs_p);
+      } else if (caltype == "T Jones") {
+	fsvj_ = createSolvableVisCal("T",*vs_p);
+      } else {
+	// Can't process other than G and T (add B?)
+	ostringstream typeErr;
+	typeErr << "Type " << caltype 
+	       << " not supported in fluxscale.";
+
+	throw(AipsError(typeErr.str()));
+      }
+
+      // fill table with selection
+      RecordDesc applyparDesc;
+      applyparDesc.addField ("table", TpString);
+      applyparDesc.addField ("select", TpString);
+      Record applypar(applyparDesc);
+      applypar.define ("table", infile);
+      applypar.define ("select", select);
+      fsvj_->setApply(applypar);
+
+      //Bool incremental=false;
+      // Make fluxscale calculation
+      Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
+      //fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
+      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,inGainThres,antSel,
+        timerangeSel,scanSel,oFluxScaleFactor, oListFile,incremental,fitorder,display);
+//        oListFile);
+     
+      // If no outfile specified, use infile (overwrite!)
+      String out(outfile);
+      if (out.length()==0)
+	out = infile;
+
+      // Store result
+      if (append) {
+	logSink() << "Appending result to " << out << LogIO::POST;
+	String message="Appending result to "+out;
+	MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
+      } else {
+	logSink() << "Storing result in " << out << LogIO::POST;
+	String message="Storing result in "+out;
+	MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
+      }
+      fsvj_->storeNCT(out,append);
+      
+      // Clean up
+      delete fsvj_;
+
+    } else {
+      // Table not found/unreadable, or not Calibration
+      ostringstream tabErr;
+      tabErr << "File " << infile
+	     << " does not exist or is not a Calibration Table.";
+
+      throw(AipsError(tabErr.str()));
+
+    }
+  } catch (AipsError x) {
+
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+    
+    // Write to MS History table
+    //    String message="Caught Exception: "+x.getMesg();
+    //    MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
+
+    throw(AipsError("Error in Calibrater::fluxscale."));
+
+    return;
+
+  }
+  return;
+
+
+}
+
+void OldCalibrater::accumulate(const String& intab,
+			       const String& incrtab,
+			       const String& outtab,
+			       const String& fields,
+			       const String& calFields,
+			       const String& interp,
+			       const Double& t,
+			       const Vector<Int>& spwmap) {
+  
+  //  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
+
+  logSink() << "Beginning accumulate." << LogIO::POST;
+
+  // SVJ objects:
+  SolvableVisCal *incal_(NULL), *incrcal_(NULL);
+
+  try {
+    
+  /*
+    cout << "intab     = " << intab << endl;
+    cout << "incrtab   = " << incrtab << endl;
+    cout << "outtab    = " << outtab << endl;
+    cout << "fields    = " << fields << endl;
+    cout << "calFields = " << calFields << endl;
+    cout << "interp    = " << interp << endl;
+    cout << "t         = " << t << endl;
+  */
+
+    // Incremental table's type sets the type we are dealing with
+    String caltype=calTableType(incrtab);
+
+    // If no input cumulative timescale specified, then
+    //   a valid input cumulative table must be specified
+    if (t < 0.0) {
+
+      String intype=calTableType(intab);
+
+      if (intype!=caltype) {
+      
+	ostringstream typeErr;
+	typeErr << "Table " << intab
+		<< " is not the same type as "
+		<< incrtab << " (" << caltype << ")";
+	throw(AipsError(typeErr.str()));
+      }
+    }
+
+    // At this point all is ok; we will:
+    //  o fill from intab and accumulate to it (t<0), OR
+    //  o create a new cumulative table from scratch (t>0)
+
+    // If creating a new cumulative table, it must span the whole dataset,
+    //   so reset data selection to whole MS, and setup iterator
+    if (t>0.0) {
+      selectvis();
+      Block<Int> columns;
+      columns.resize(4);
+      columns[0]=MS::ARRAY_ID;
+      columns[1]=MS::TIME;
+      columns[2]=MS::FIELD_ID;
+      columns[3]=MS::DATA_DESC_ID;
+      vs_p->resetVisIter(columns,t);
+    }
+
+    //	logSink() << "Table " << infile 
+    //		  << " is of type: "<< caltype 
+    //		  << LogIO::POST;
+
+    incal_ = createSolvableVisCal(caltype,*vs_p);
+    incrcal_ = createSolvableVisCal(caltype,*vs_p);
+    
+    // TBD: move to svj.setAccumulate?
+    if ( !(incal_->accumulatable()) ) {
+      ostringstream typeErr;
+      typeErr << "Type " << caltype 
+	      << " not yet supported in accumulate.";
+      throw(AipsError(typeErr.str()));
+    }
+
+    // At this point, accumulation apparently supported,
+    //   so continue...
+    
+    // initialize the cumulative solutions
+    incal_->setAccumulate(*vs_p,intab,"",t,-1);
+    
+
+    /*
+    // form selection on incr table
+    String incrSel="";
+    if (calFields.shape()>0) {
+      
+      // Assemble TaQL
+      ostringstream selectstr;
+      selectstr << "FIELD_ID IN [";
+      for (Int iFld=0; iFld<calFields.shape(); iFld++) {
+	if (iFld>0) selectstr << ", ";
+	selectstr << calFields(iFld);
+      }
+      selectstr << "]";
+      incrSel=selectstr.str();
+    }
+    */
+    
+    // fill incr table with selection
+    logSink() << "Preparing to accumulate calibration from table: "
+	      << incrtab
+	      << LogIO::POST;
+
+    // Set record format for calibration table application information
+    RecordDesc applyparDesc;
+    applyparDesc.addField ("t", TpDouble);
+    applyparDesc.addField ("table", TpString);
+    //    applyparDesc.addField ("select", TpString);
+    applyparDesc.addField ("fieldstr", TpString);
+    applyparDesc.addField ("interp", TpString);
+    applyparDesc.addField ("spwmap",TpArrayInt);
+    
+    // Create record with the requisite field values
+    Record applypar(applyparDesc);
+    applypar.define ("t", t);
+    applypar.define ("table", incrtab);
+    //    applypar.define ("select", incrSel);
+    applypar.define ("fieldstr", calFields);
+    applypar.define ("interp", interp);
+    applypar.define ("spwmap",spwmap);
+
+    incrcal_->setApply(applypar);
+
+    Vector<Int> fldidx(0);
+    if (fields.length()>0)
+      fldidx=getFieldIdx(fields);
+
+    // All ready, now do the accumulation
+    incal_->accumulate(incrcal_,fldidx);
+    
+    // ...and store the result
+    logSink() << "Storing accumulated calibration in table: " 
+	      << outtab
+	      << LogIO::POST;
+
+    if (outtab != "") 
+      incal_->calTableName()=outtab;
+
+    incal_->storeNCT();
+    
+    delete incal_;
+    delete incrcal_;
+
+    logSink() << "Finished accumulation." 
+	      << LogIO::POST;
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+
+    if (incal_) delete incal_;
+    if (incrcal_) delete incrcal_;
+    
+    throw(AipsError("Error in Calibrater::accumulate."));
+    return;
+  }
+  return;
+
+}
+
+void OldCalibrater::specifycal(const String& type,
+			       const String& caltable,
+			       const String& time,
+			       const String& spw,
+			       const String& antenna,
+			       const String& pol,
+			       const Vector<Double>& parameter,
+			       const String& infile) {
+
+  logSink() << LogOrigin("Calibrater","specifycal") << LogIO::NORMAL;
+
+  // SVJ objects:
+  SolvableVisCal *cal_(NULL);
+
+  try {
+ 			    
+    // Set record format for calibration table application information
+    RecordDesc specifyDesc;
+    specifyDesc.addField ("caltable", TpString);
+    specifyDesc.addField ("time", TpString);
+    specifyDesc.addField ("spw", TpArrayInt);
+    specifyDesc.addField ("antenna", TpArrayInt);
+    specifyDesc.addField ("pol", TpString);
+    specifyDesc.addField ("parameter", TpArrayDouble);
+    specifyDesc.addField ("caltype",TpString);
+    specifyDesc.addField ("infile",TpString);
+
+    // Create record with the requisite field values
+    Record specify(specifyDesc);
+    specify.define ("caltable", caltable);
+    specify.define ("time", time);
+    if (spw=="*")
+      specify.define ("spw",Vector<Int>(1,-1));
+    else
+      specify.define ("spw",getSpwIdx(spw));
+    if (antenna=="*")
+      specify.define ("antenna",Vector<Int>(1,-1) );
+    else
+      specify.define ("antenna",getAntIdx(antenna));
+    specify.define ("pol",pol);
+    specify.define ("parameter",parameter);
+    specify.define ("caltype",type);
+    specify.define ("infile",infile);
+
+    // Now do it
+    String utype=upcase(type);
+    if (utype=="G" || utype.contains("AMP") || utype.contains("PH"))
+      cal_ = createSolvableVisCal("G",*vs_p);
+    else if (utype=='K' || utype.contains("SBD") || utype.contains("DELAY"))
+      cal_ = createSolvableVisCal("K",*vs_p);
+    else if (utype.contains("MBD"))
+      cal_ = createSolvableVisCal("KMBD",*vs_p);
+    else if (utype.contains("ANTPOS"))
+      cal_ = createSolvableVisCal("KANTPOS",*vs_p);
+    else if (utype.contains("TSYS"))
+      cal_ = createSolvableVisCal("TSYS",*vs_p);
+    else if (utype.contains("EVLAGAIN") ||
+	     utype.contains("SWP") ||
+	     utype.contains("RQ"))
+      cal_ = createSolvableVisCal("EVLASWP",*vs_p);
+    else if (utype.contains("OPAC"))
+      cal_ = createSolvableVisCal("TOPAC",*vs_p);
+    else if (utype.contains("GC") || utype.contains("EFF"))
+      cal_ = createSolvableVisCal("GAINCURVE",*vs_p);
+    else if (utype.contains("TEC"))
+      cal_ = createSolvableVisCal("TEC",*vs_p);
+    else if (utype.contains("SDSKY_PS"))
+      cal_ = createSolvableVisCal("SDSKY_PS",*vs_p);
+    else if (utype.contains("SDSKY_RASTER"))
+      cal_ = createSolvableVisCal("SDSKY_RASTER",*vs_p);
+    else if (utype.contains("SDSKY_OTF"))
+      cal_ = createSolvableVisCal("SDSKY_OTF",*vs_p);
+    else
+      throw(AipsError("Unrecognized caltype."));
+
+    // set up for specification (set up the CalSet)
+    cal_->setSpecify(specify);
+
+    // fill with specified values
+    cal_->specify(specify);
+
+    // Store result
+    cal_->storeNCT();
+
+    delete cal_;
+
+  } catch (AipsError x) {
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+
+    if (cal_) delete cal_;
+    
+    throw(AipsError("Error in Calibrater::specifycal."));
+    return;
+  }
+  return;
+
+}
+
+Bool OldCalibrater::smooth(const String& infile, 
+			   String& outfile,  // const Bool& append,
+			   const String& smoothtype,
+			   const Double& smoothtime,
+			   const String& fields)
+{
+
+  // TBD: support append?
+  // TBD: spw selection?
+
+  logSink() << LogOrigin("Calibrater","smooth") << LogIO::NORMAL;
+
+  logSink() << "Beginning smoothing/interpolating method." << LogIO::POST;
+
+
+  // A pointer to an SVC
+  SolvableVisCal *svc(NULL);
+
+  try {
+    
+    // Handle no in file 
+    if (infile=="")
+      throw(AipsError("Please specify an input calibration table."));
+
+    // Handle bad smoothtype
+    if (smoothtype!="mean" && smoothtype!="median")
+      throw(AipsError("Unrecognized smooth type!"));
+
+    // Handle bad smoothtime
+    if (smoothtime<=0)
+      throw(AipsError("Please specify a strictly positive smoothtime."));
+
+    // Handle no outfile
+    if (outfile=="") {
+      outfile=infile;
+      logSink() << "Will overwrite input file with smoothing result." 
+		<< LogIO::POST;
+    }
+
+
+    svc = createSolvableVisCal(calTableType(infile),*vs_p);
+    
+    if (svc->smoothable()) {
+      
+      // Fill calibration table using setApply
+      RecordDesc applyparDesc;
+      applyparDesc.addField ("table", TpString);
+      Record applypar(applyparDesc);
+      applypar.define ("table", infile);
+      svc->setApply(applypar);
+
+      // Convert refFields/transFields to index lists
+      Vector<Int> fldidx(0);
+      if (fields.length()>0)
+	fldidx=getFieldIdx(fields);
+
+      // Delegate to SVC
+      svc->smooth(fldidx,smoothtype,smoothtime);
+      
+      // Store the result on disk
+      //    if (append) logSink() << "Appending result to " << outfile << LogIO::POST;
+      //else 
+      logSink() << "Storing result in " << outfile << LogIO::POST;
+      
+      
+      if (outfile != "") 
+	svc->calTableName()=outfile;
+      svc->storeNCT();
+
+      // Clean up
+      if (svc) delete svc; svc=NULL;
+      
+      // Apparently, it worked
+      return true;
+
+    }
+    else
+      throw(AipsError("This type ("+svc->typeName()+") does not support smoothing."));
+
+  } catch (AipsError x) {
+   
+    logSink() << LogIO::SEVERE
+	      << "Caught Exception: "
+	      << x.getMesg()
+	      << LogIO::POST;
+    // Clean up
+    if (svc) delete svc; svc=NULL;
+
+    throw(AipsError("Error in Calibrater::smooth."));
+
+    return false;
+  }
+  return false;
+}
+
+// List a calibration table
+Bool OldCalibrater::listCal(const String& infile,
+			    const String& field,
+			    const String& antenna,
+			    const String& spw,
+			    const String& listfile,
+			    const Int& pagerows) {
+    
+    SolvableVisCal *svc(NULL);
+    logSink() << LogOrigin("Calibrater","listCal");
+    
+    try {
+        
+        // Trap (currently) unsupported types
+        if (upcase(calTableType(infile))=="GSPLINE" ||
+            upcase(calTableType(infile))=="BPOLY")
+            throw(AipsError("GSPLINE and BPOLY tables cannot currently be listed."));
+        
+        // Get user's selected fields, ants
+        Vector<Int> ufldids=getFieldIdx(field);
+        Vector<Int> uantids=getAntIdx(antenna);
+        
+        String newSpw = spw;
+        Bool defaultSelect = false;
+        if (spw.empty()) { // list all channels (default)
+            defaultSelect = true;
+            newSpw = "*"; 
+            logSink() << LogIO::NORMAL1 << "Spws selected: ALL" << endl
+                      << "Channels selected: ALL" << LogIO::POST;
+        }
+        // Get user's selected spw and channels
+        Vector<Int> uspwids=getSpwIdx(newSpw);
+        Matrix<Int> uchanids=getChanIdx(newSpw);
+        if (!defaultSelect) {
+            logSink() << LogIO::NORMAL1 << "Spw and Channel selection matrix: "
+                      << endl << "Each rows shows: [ Spw , Start Chan , Stop Chan , Chan Step ]"
+                      << endl << uchanids << LogIO::POST;
+        }
+        logSink() << LogIO::DEBUG2 
+                  << "uspwids = "  << uspwids  << endl
+                  << "uchanids = " << uchanids << LogIO::POST;
+        
+        // By default, do first spw, first chan
+        if (uspwids.nelements()==0) {
+            uchanids.resize(1,4);
+            uchanids=0;
+        } 
+        
+        // Set record format for calibration table application information
+        RecordDesc applyparDesc;
+        applyparDesc.addField ("table", TpString);
+        
+        // Create record with the requisite field values
+        Record applypar(applyparDesc);
+        applypar.define ("table", infile);
+        
+        // Generate the VisCal to be listed
+        svc = createSolvableVisCal(calTableType(infile),*vs_p);  
+        svc->setApply(applypar);       
+        
+        // list it
+        svc->listCal(ufldids,uantids,uchanids,  //uchanids(0,0),uchanids(0,1),
+                     listfile,pagerows);
+        
+        if (svc) delete svc; svc=NULL;
+        
+        return true;
+        
+    } catch (AipsError x) {
+        
+        logSink() << LogIO::SEVERE
+                  << "Caught Exception: "
+                  << x.getMesg()
+                  << LogIO::POST;
+        // Clean up
+        if (svc) delete svc; svc=NULL;
+        
+        throw(AipsError("Error in Calibrater::listCal."));
+        
+        return false;
+    }
+    return false;
+    
+}
+
+Bool OldCalibrater::initialize(MeasurementSet& inputMS, 
+			       Bool compress,
+			       Bool addScratch, Bool addModel)  {
+  
+  logSink() << LogOrigin("Calibrater","") << LogIO::NORMAL3;
+  
+  try {
+    timer_p.mark();
+
+    // Set pointer ms_p from input MeasurementSet
+    if (ms_p) {
+      *ms_p=inputMS;
+    } else {
+      ms_p = new MeasurementSet(inputMS);
+      AlwaysAssert(ms_p,AipsError);
+    };
+
+    // Disabled 2016/04/19 (gmoellen): avoid direct MS.HISTORY 
+    //   updates from below the python level, FOR NOW
+
+    /*
+
+    // Setup to write LogIO to HISTORY Table in MS
+    if(!(Table::isReadable(ms_p->historyTableName()))){
+      // create a new HISTORY table if its not there
+      TableRecord &kws = ms_p->rwKeywordSet();
+      SetupNewTable historySetup(ms_p->historyTableName(),
+				 MSHistory::requiredTableDesc(),Table::New);
+      kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
+      MSHistoryHandler::addMessage(*ms_p, "HISTORY Table added by Calibrater",
+				   "Calibrater","","Calibrater::initialize()");
+    }
+    historytab_p=Table(ms_p->historyTableName(),
+		       TableLock(TableLock::UserNoReadLocking), Table::Update);
+    // jagonzal (CAS-4110): When the selectvis method throws an exception the initialize method
+    // is called again to leave the calibrater in a proper state, and since there was a previous
+    // initialization the history handler was already created, and has to be destroyed before
+    // creating a new one to avoid leaveing the HISTORY table opened.
+    if (hist_p) delete hist_p;
+    hist_p= new MSHistoryHandler(*ms_p, "calibrater");
+
+    // (2016/04/19) */
+
+    // Remember the ms's name
+    msname_p=ms_p->tableName();
+
+
+    // Add/init scr cols, if requested (init is hard-wired)
+    if (addScratch || addModel) {
+      Bool alsoinit=true;
+      VisSetUtil::addScrCols(*ms_p,addModel,addScratch,alsoinit,compress);
+    }
+
+    // Set the selected MeasurementSet to be the same initially
+    // as the input MeasurementSet
+    if (mssel_p) delete mssel_p;
+    mssel_p=new MeasurementSet(*ms_p);
+    
+    logSink() << LogIO::NORMAL
+	      << "Initializing nominal selection to the whole MS."
+	      << LogIO::POST;
+
+
+    // Create a VisSet with no selection
+    // (gmoellen 2012/02/06: this merely makes a VisIter now)
+    if (vs_p) {
+      delete vs_p;
+      vs_p=0;
+    };
+    Block<Int> nosort(0);
+    Matrix<Int> noselection;
+    Double timeInterval=0;
+    // gmoellen 2012/02/06    vs_p=new VisSet(*ms_p,nosort,noselection,addScratch,timeInterval,compress, addModel);
+    vs_p=new VisSet(*ms_p,nosort,noselection,false,timeInterval,false,false);
+
+    // Size-up the chanmask PB
+    initChanMask();
+
+    // Create the associated VisEquation
+    //  TBD: move to ctor and make it non-pointer
+    if (ve_p) {
+      delete ve_p;
+      ve_p=0;
+    };
+    ve_p=new VisEquation();
+
+    // Reset the apply/solve VisCals
+    reset(true,true);
+
+    return true;
+
+  } catch (AipsError x) {
+    logSink() << LogOrigin("Calibrater","initialize",WHERE) 
+	      << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+	      << LogIO::POST;
+    cleanup();
+    cleanupVisSet();
+    if (ms_p) delete ms_p; ms_p=NULL;
+    if (hist_p) delete hist_p; hist_p=NULL;
+
+    throw(AipsError("Error in Calibrater::initialize()"));
+    return false;
+  } 
+  return false;
+}
+
+Bool OldCalibrater::initCalSet(const Int& calSet) 
+{
+
+  //  logSink() << LogOrigin("Calibrater","initCalSet") << LogIO::NORMAL3;
+
+  if (vs_p) {
+
+    Block<Int> columns;
+    // include scan iteration, for more optimal iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+    vs_p->resetVisIter(columns,0.0);
+
+    vs_p->initCalSet(calSet);
+    return true;
+  }
+  else {
+    throw(AipsError("Calibrater cannot initCalSet"));
+    return false;
+  }
+}
+
+Bool OldCalibrater::cleanupVisSet() {
+
+  //  logSink() << LogOrigin("OldCalibrater","cleanupVisSet") << LogIO::NORMAL;
+
+  if(vs_p) delete vs_p; vs_p=0;
+
+  // Delete chanmask
+  initChanMask();
+
+  return true;
+
+}
+
+VisibilityIterator::DataColumn OldCalibrater::configureForCorrection ()
+{
+    if (!ok())
+      throw(AipsError("Calibrater not prepared for correct!"));
+
+    // Nominally, we write out to the CORRECTED_DATA, unless absent
+    VisibilityIterator::DataColumn whichOutCol(VisibilityIterator::Corrected);
+
+    if (!ms_p->tableDesc().isColumn("CORRECTED_DATA"))
+      throw(AipsError("CORRECTED_DATA column unexpectedly absent. Cannot correct."));
+
+    // Ensure apply list non-zero and properly sorted
+    ve_p->setapply(vc_p);
+
+    // Report the types that will be applied
+    applystate();
+
+    // Arrange for iteration over data
+    Block<Int> columns;
+    // include scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+
+    // Reset the VisibilityIterator in the VisSet. 
+    vs_p->resetVisIter (columns, 0.0);
+
+    return whichOutCol;
+}
+
+void OldCalibrater::selectChannel(const String& spw) {
+
+  // Initialize the chanmask_
+  initChanMask();
+
+  if (mss_p && mssel_p) {
+
+    // Refresh the frequencySelections object to feed to VI2, if relevant
+    if (frequencySelections_p) {
+      delete frequencySelections_p;
+      frequencySelections_p=NULL;
+    }
+    frequencySelections_p = new vi::FrequencySelections();
+
+    vi::FrequencySelectionUsingChannels usingChannels;
+    usingChannels.add(*mss_p,mssel_p);
+    frequencySelections_p->add(usingChannels);
+
+    //    cout << usingChannels.toString() << endl;
+    //    cout << "FS.size() = " << frequencySelections_p->size() << endl;
+
+  }
+
+  Matrix<Int> chansel = getChanIdx(spw);
+  uInt nselspw=chansel.nrow();
+
+  if (nselspw==0)
+    logSink() << "Frequency selection: Selecting all channels in all spws." 
+	      << LogIO::POST;
+  else {
+
+    logSink() << "Frequency selection: " << LogIO::POST;
+
+    // Trap non-unit step (for now)
+    if (ntrue(chansel.column(3)==1)!=nselspw) {
+      logSink() << LogIO::WARN
+		<< "Calibration does not support non-unit channel stepping; "
+		<< "using step=1."
+		<< LogIO::POST;
+      chansel.column(3)=1;
+    }
+
+    Int nspw=vs_p->numberSpw();
+    Vector<Int> nChan0;
+    nChan0 = vs_p->numberChan();
+
+    Vector<Int> uspw(chansel.column(0));
+    Vector<Int> ustart(chansel.column(1));
+    Vector<Int> uend(chansel.column(2));
+
+    Vector<Int> start(nspw,INT_MAX);
+    Vector<Int> end(nspw,-INT_MAX);
+    logSink() << LogIO::NORMAL;
+    for (uInt i=0;i<nselspw;++i) {
+      
+      Int& spw=uspw(i);
+
+      // Initialize this spw mask, if necessary (def = masked)
+      if (!chanmask_[spw])
+      	chanmask_[spw]=new Vector<Bool>(nChan0(spw),true);
+
+      // revise net start/end/nchan
+      start(spw)=min(start(spw),ustart(i));
+      end(spw)=max(end(spw),uend(i));
+      Int nchan=end(spw)-start(spw)+1;  // net inclusive nchan
+
+      // User's 
+      Int step=chansel(i,3);
+      Int unchan=uend(i)-ustart(i)+1;
+      
+      // Update the mask (false = valid)
+      (*chanmask_[spw])(Slice(ustart(i),unchan))=false;
+
+
+      logSink() << ".  Spw " << spw << ":"
+		<< ustart(i) << "~" << uend(i) 
+		<< " (" << uend(i)-ustart(i)+1 << " channels,"
+		<< " step by " << step << ")"
+		<< endl;
+
+  /*
+      cout << i << " " << spw << " {" 
+	   << start(spw) << " [" << ustart(i) << " " 
+	   << uend(i) << "] " << end(spw) << "}" << endl;
+      cout << "chanmask = ";
+      for (Int j=0;j<nChan0(spw);++j) cout << (*chanmask_[spw])(j);
+      cout << endl << endl;
+  */
+	
+      // Call via VisSet (avoid call to VisIter::origin)
+      vs_p->selectChannel(1,start(spw),nchan,step,spw,false);
+	
+    } // i
+    logSink() << LogIO::POST;
+
+  } // non-triv spw selection
+
+  // For testing:
+  if (false) {
+
+    VisIter& vi(vs_p->iter());
+    VisBuffer vb(vi);
+    
+    // Pass each timestamp (VisBuffer) to VisEquation for correction
+    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+      vi.origin();
+      //      for (vi.origin(); vi.more(); vi++)
+	cout << vb.spectralWindow() << " "
+	     << vb.nChannel() << " "
+	     << vb.channel() << " "
+	     << vb.visCube().shape()
+	     << endl;
+    }
+  }
+
+}
+
+void OldCalibrater::initChanMask() {
+
+  for (uInt i=0;i<chanmask_.nelements();++i) 
+    if (chanmask_[i])
+      delete chanmask_[i];
+  if (vs_p) {
+    chanmask_.resize(vs_p->numberSpw(),true);
+    chanmask_=NULL;
+  }
+  else {
+    //    throw(AipsError("Trouble sizing chanmask!"));
+    // just don't support channel masking:
+    chanmask_.resize(0,true);
+  }
+
+}
+
+// Select on channel in the VisSet
+void OldCalibrater::selectChannel(const String& mode, 
+			       const Int& nchan, 
+			       const Int& start, const Int& step,
+			       const MRadialVelocity& mStart,
+			       const MRadialVelocity& mStep) {
+  
+  // Set data selection variables
+  dataMode_p=mode;
+  dataNchan_p=nchan;
+  if (dataNchan_p<0) dataNchan_p=0; 
+  dataStart_p=start;
+  if (dataStart_p<0) dataNchan_p=0; 
+  dataStep_p=step;
+  if (dataStep_p<1) dataNchan_p=1; 
+  
+  mDataStart_p=mStart;
+  mDataStep_p=mStep;
+  
+  // Select on frequency channel
+  if(dataMode_p=="channel") {
+    // *** this bit here is temporary till we unifomize data selection
+    //Getting the selected SPWs
+    ROMSMainColumns msc(*mssel_p);
+    Vector<Int> dataDescID = msc.dataDescId().getColumn();
+    Bool dum;
+    Sort sort( dataDescID.getStorage(dum),sizeof(Int) );
+    sort.sortKey((uInt)0,TpInt);
+    Vector<uInt> index,uniq;
+    sort.sort(index,dataDescID.nelements());
+    uInt nSpw = sort.unique(uniq,index);
+    
+    Vector<Int> selectedSpw(nSpw);
+    Vector<Int> nChan(nSpw);
+    for (uInt k=0; k < nSpw; ++k) {
+      selectedSpw[k]=dataDescID[index[uniq[k]]];
+      nChan[k]=vs_p->numberChan()(selectedSpw[k]);
+      
+    }
+    if(dataNchan_p==0) dataNchan_p=vs_p->numberChan()(selectedSpw[0]);
+    if(dataStart_p<0) {
+      logSink() << LogIO::SEVERE << "Illegal start pixel = " 
+		<< dataStart_p << LogIO::POST;
+    }
+    Int end = Int(dataStart_p) + Int(dataNchan_p) * Int(dataStep_p);
+    for (uInt k=0; k < selectedSpw.nelements() ; ++k){
+      if(end < 1 || end > nChan[k]) {
+	logSink() << LogIO::SEVERE << "Illegal step pixel = " << dataStep_p
+		  << " in Spw " << selectedSpw[k]
+		  << LogIO::POST;
+      }
+      logSink() << "Selecting "<< dataNchan_p
+		<< " channels, starting at visibility channel "
+		<< dataStart_p  << " stepped by "
+		<< dataStep_p << " in Spw " << selectedSpw[k] << LogIO::POST;
+      
+      // Set frequency channel selection for all spectral window id's
+      Int nch;
+      //Vector<Int> nChan=vs_p->numberChan();
+      //Int nSpw=vs_p->numberSpw();
+      if (dataNchan_p==0) {
+	nch=nChan(k);
+      }else {
+	nch=dataNchan_p;
+      };
+      vs_p->selectChannel(1,dataStart_p,nch,dataStep_p,selectedSpw[k]);
+      
+    }
+  }
+  // Select on velocity
+  else if (dataMode_p=="velocity") {
+    MVRadialVelocity mvStart(mDataStart_p.get("m/s"));
+    MVRadialVelocity mvStep(mDataStep_p.get("m/s"));
+    MRadialVelocity::Types
+      vType((MRadialVelocity::Types)mDataStart_p.getRefPtr()->getType());
+    logSink() << "Selecting "<< dataNchan_p
+	      << " channels, starting at radio velocity " << mvStart
+	      << " stepped by " << mvStep << ", reference frame is "
+	      << MRadialVelocity::showType(vType) << LogIO::POST;
+    vs_p->iter().selectVelocity(Int(dataNchan_p), mvStart, mvStep,
+				vType, MDoppler::RADIO);
+  }
+  
+  // Select on optical velocity
+  else if (dataMode_p=="opticalvelocity") {
+    MVRadialVelocity mvStart(mDataStart_p.get("m/s"));
+    MVRadialVelocity mvStep(mDataStep_p.get("m/s"));
+    MRadialVelocity::Types
+      vType((MRadialVelocity::Types)mDataStart_p.getRefPtr()->getType());
+    logSink() << "Selecting "<< dataNchan_p
+	      << " channels, starting at optical velocity " << mvStart
+	      << " stepped by " << mvStep << ", reference frame is "
+	      << MRadialVelocity::showType(vType) << LogIO::POST;
+    vs_p->iter().selectVelocity(Int(dataNchan_p), mvStart, mvStep,
+				vType, MDoppler::OPTICAL);
+  }
+  
+  
+}
+
+Bool OldCalibrater::ok() {
+
+  if(vs_p && ms_p && mssel_p && ve_p) {
+    return true;
+  }
+  else {
+    logSink() << "Calibrater is not yet initialized" << LogIO::POST;
+    return false;
+  }
+}
+
+Bool OldCalibrater::genericGatherAndSolve() {
 
   //cout << "Generic gather and solve." << endl;
 
@@ -2787,1054 +5331,6 @@ Bool Calibrater::genericGatherAndSolve() {
 
   return true;
 
-}
-
-Vector<Double> Calibrater::modelfit(const Int& niter,
-				    const String& stype,
-				    const Vector<Double>& par,
-				    const Vector<Bool>& vary,
-			            const String& file) {
-
- /*
-  cout << "Calibrater::modelfit" << endl;
-  cout << " niter = " << niter << endl;
-  cout << " stype = " << stype << endl;
-  cout << " par   = " << par << endl;
-  cout << " vary  = " << vary << endl;
-  cout << " file  = " << file << endl;
- */
-  //  logSink() << LogOrigin("Calibrater","modelfit") << LogIO::NORMAL;
-  
-  try {
-    if(!ok()) throw(AipsError("Calibrater not ok()"));
-
-    // Construct UVMod with the VisSet
-    UVMod uvmod(*vs_p);
-
-    if (stype=="P")
-      uvmod.setModel(ComponentType::POINT, par, vary);
-    else if (stype=="G")
-      uvmod.setModel(ComponentType::GAUSSIAN, par, vary);
-    else if (stype=="D")
-      uvmod.setModel(ComponentType::DISK, par, vary);
-    else
-      throw(AipsError("Unrecognized component type in Calibrater::modelfit."));
-    
-    // Run the fit
-    uvmod.modelfit(niter,file);
-
-    // Return the parameter vector
-    return uvmod.par();
-
-  } catch (AipsError x) {
-    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
-    throw(AipsError("Error in Calibrater::modelfit."));
-    
-    return Vector<Double>();
-  } 
-
-}
-
-void Calibrater::fluxscale(const String& infile, 
-			   const String& outfile,
-			   const String& refFields, 
-			   const Vector<Int>& refSpwMap, 
-			   const String& tranFields,
-			   const Bool& append,
-                           const Float& inGainThres,
-                           const String& antSel,
-                           const String& timerangeSel,
-                           const String& scanSel,
-			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-			   Vector<Int>& tranidx,
-			   const String& oListFile,
-                           const Bool& incremental,
-                           const Int& fitorder,
-                           const Bool& display) {
-
-  // TBD:  Permit more flexible matching on specified field names
-  //  (Currently, exact matches are required.)
-
-  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL3;
-
-  // Convert refFields/transFields to index lists
-  Vector<Int> refidx(0);
-
-  if (refFields.length()>0)
-    refidx=getFieldIdx(refFields);
-  else
-    throw(AipsError("A reference field must be specified!"));
-
-  if (tranFields.length()>0)
-    tranidx=getFieldIdx(tranFields);
-
-  // Call Vector<Int> version:
-  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,inGainThres,antSel,timerangeSel,
-      scanSel,oFluxScaleFactor,oListFile,incremental,fitorder,display);
-
-}
-
-void Calibrater::fluxscale(const String& infile, 
-			   const String& outfile,
-			   const Vector<Int>& refField, 
-			   const Vector<Int>& refSpwMap, 
-			   const Vector<Int>& tranField,
-			   const Bool& append,
-                           const Float& inGainThres,
-                           const String& antSel,
-                           const String& timerangeSel,
-                           const String& scanSel,
-			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-			   const String& oListFile,
-                           const Bool& incremental,
-                           const Int& fitorder,
-                           const Bool& display) {
-
-  //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
-
-  // TBD: write inputs to MSHistory
-  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL3;
-
-  try {
-    // If infile is Calibration table
-    if (Table::isReadable(infile) && 
-	Table::tableInfo(infile).type()=="Calibration") {
-
-      // get calibration type
-      String caltype;
-      caltype = Table::tableInfo(infile).subType();
-      logSink() << "Table " << infile 
-		<< " is of type: "<< caltype 
-		<< LogIO::POST;
-      String message="Table "+infile+" is of type: "+caltype;
-      MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
-      
-      // form selection
-      String select="";
-      // Selection is empty for case of no tran specification
-      if (tranField.nelements()>0) {
-	
-	// All selected fields
-	Vector<Int> allflds = concatenateArray(refField,tranField);
-	
-	// Assemble TaQL
-	ostringstream selectstr;
-	selectstr << "FIELD_ID IN [";
-	for (Int iFld=0; iFld<allflds.shape(); iFld++) {
-	  if (iFld>0) selectstr << ", ";
-	  selectstr << allflds(iFld);
-	}
-	selectstr << "]";
-	select=selectstr.str();
-      }
-
-      // Construct proper SVC object
-      SolvableVisCal *fsvj_;
-      if (caltype == "G Jones") {
-	fsvj_ = createSolvableVisCal("G",*vs_p);
-      } else if (caltype == "T Jones") {
-	fsvj_ = createSolvableVisCal("T",*vs_p);
-      } else {
-	// Can't process other than G and T (add B?)
-	ostringstream typeErr;
-	typeErr << "Type " << caltype 
-	       << " not supported in fluxscale.";
-
-	throw(AipsError(typeErr.str()));
-      }
-
-      // fill table with selection
-      RecordDesc applyparDesc;
-      applyparDesc.addField ("table", TpString);
-      applyparDesc.addField ("select", TpString);
-      Record applypar(applyparDesc);
-      applypar.define ("table", infile);
-      applypar.define ("select", select);
-      fsvj_->setApply(applypar);
-
-      //Bool incremental=false;
-      // Make fluxscale calculation
-      Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
-      //fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
-      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,inGainThres,antSel,
-        timerangeSel,scanSel,oFluxScaleFactor, oListFile,incremental,fitorder,display);
-//        oListFile);
-     
-      // If no outfile specified, use infile (overwrite!)
-      String out(outfile);
-      if (out.length()==0)
-	out = infile;
-
-      // Store result
-      if (append) {
-	logSink() << "Appending result to " << out << LogIO::POST;
-	String message="Appending result to "+out;
-	MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
-      } else {
-	logSink() << "Storing result in " << out << LogIO::POST;
-	String message="Storing result in "+out;
-	MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
-      }
-      fsvj_->storeNCT(out,append);
-      
-      // Clean up
-      delete fsvj_;
-
-    } else {
-      // Table not found/unreadable, or not Calibration
-      ostringstream tabErr;
-      tabErr << "File " << infile
-	     << " does not exist or is not a Calibration Table.";
-
-      throw(AipsError(tabErr.str()));
-
-    }
-  } catch (AipsError x) {
-
-    logSink() << LogIO::SEVERE
-	      << "Caught Exception: "
-	      << x.getMesg()
-	      << LogIO::POST;
-    
-    // Write to MS History table
-    //    String message="Caught Exception: "+x.getMesg();
-    //    MSHistoryHandler::addMessage(*ms_p, message, "calibrater", "", "calibrater::fluxscale()");
-
-    throw(AipsError("Error in Calibrater::fluxscale."));
-
-    return;
-
-  }
-  return;
-
-
-}
-
-void Calibrater::accumulate(const String& intab,
-			    const String& incrtab,
-			    const String& outtab,
-			    const String& fields,
-			    const String& calFields,
-			    const String& interp,
-			    const Double& t,
-			    const Vector<Int>& spwmap) {
-  
-  //  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
-
-  logSink() << "Beginning accumulate." << LogIO::POST;
-
-  // SVJ objects:
-  SolvableVisCal *incal_(NULL), *incrcal_(NULL);
-
-  try {
-    
-  /*
-    cout << "intab     = " << intab << endl;
-    cout << "incrtab   = " << incrtab << endl;
-    cout << "outtab    = " << outtab << endl;
-    cout << "fields    = " << fields << endl;
-    cout << "calFields = " << calFields << endl;
-    cout << "interp    = " << interp << endl;
-    cout << "t         = " << t << endl;
-  */
-
-    // Incremental table's type sets the type we are dealing with
-    String caltype=calTableType(incrtab);
-
-    // If no input cumulative timescale specified, then
-    //   a valid input cumulative table must be specified
-    if (t < 0.0) {
-
-      String intype=calTableType(intab);
-
-      if (intype!=caltype) {
-      
-	ostringstream typeErr;
-	typeErr << "Table " << intab
-		<< " is not the same type as "
-		<< incrtab << " (" << caltype << ")";
-	throw(AipsError(typeErr.str()));
-      }
-    }
-
-    // At this point all is ok; we will:
-    //  o fill from intab and accumulate to it (t<0), OR
-    //  o create a new cumulative table from scratch (t>0)
-
-    // If creating a new cumulative table, it must span the whole dataset,
-    //   so reset data selection to whole MS, and setup iterator
-    if (t>0.0) {
-      selectvis();
-      Block<Int> columns;
-      columns.resize(4);
-      columns[0]=MS::ARRAY_ID;
-      columns[1]=MS::TIME;
-      columns[2]=MS::FIELD_ID;
-      columns[3]=MS::DATA_DESC_ID;
-      vs_p->resetVisIter(columns,t);
-    }
-
-    //	logSink() << "Table " << infile 
-    //		  << " is of type: "<< caltype 
-    //		  << LogIO::POST;
-
-    incal_ = createSolvableVisCal(caltype,*vs_p);
-    incrcal_ = createSolvableVisCal(caltype,*vs_p);
-    
-    // TBD: move to svj.setAccumulate?
-    if ( !(incal_->accumulatable()) ) {
-      ostringstream typeErr;
-      typeErr << "Type " << caltype 
-	      << " not yet supported in accumulate.";
-      throw(AipsError(typeErr.str()));
-    }
-
-    // At this point, accumulation apparently supported,
-    //   so continue...
-    
-    // initialize the cumulative solutions
-    incal_->setAccumulate(*vs_p,intab,"",t,-1);
-    
-
-    /*
-    // form selection on incr table
-    String incrSel="";
-    if (calFields.shape()>0) {
-      
-      // Assemble TaQL
-      ostringstream selectstr;
-      selectstr << "FIELD_ID IN [";
-      for (Int iFld=0; iFld<calFields.shape(); iFld++) {
-	if (iFld>0) selectstr << ", ";
-	selectstr << calFields(iFld);
-      }
-      selectstr << "]";
-      incrSel=selectstr.str();
-    }
-    */
-    
-    // fill incr table with selection
-    logSink() << "Preparing to accumulate calibration from table: "
-	      << incrtab
-	      << LogIO::POST;
-
-    // Set record format for calibration table application information
-    RecordDesc applyparDesc;
-    applyparDesc.addField ("t", TpDouble);
-    applyparDesc.addField ("table", TpString);
-    //    applyparDesc.addField ("select", TpString);
-    applyparDesc.addField ("fieldstr", TpString);
-    applyparDesc.addField ("interp", TpString);
-    applyparDesc.addField ("spwmap",TpArrayInt);
-    
-    // Create record with the requisite field values
-    Record applypar(applyparDesc);
-    applypar.define ("t", t);
-    applypar.define ("table", incrtab);
-    //    applypar.define ("select", incrSel);
-    applypar.define ("fieldstr", calFields);
-    applypar.define ("interp", interp);
-    applypar.define ("spwmap",spwmap);
-
-    incrcal_->setApply(applypar);
-
-    Vector<Int> fldidx(0);
-    if (fields.length()>0)
-      fldidx=getFieldIdx(fields);
-
-    // All ready, now do the accumulation
-    incal_->accumulate(incrcal_,fldidx);
-    
-    // ...and store the result
-    logSink() << "Storing accumulated calibration in table: " 
-	      << outtab
-	      << LogIO::POST;
-
-    if (outtab != "") 
-      incal_->calTableName()=outtab;
-
-    incal_->storeNCT();
-    
-    delete incal_;
-    delete incrcal_;
-
-    logSink() << "Finished accumulation." 
-	      << LogIO::POST;
-
-  } catch (AipsError x) {
-    logSink() << LogIO::SEVERE
-	      << "Caught Exception: "
-	      << x.getMesg()
-	      << LogIO::POST;
-
-    if (incal_) delete incal_;
-    if (incrcal_) delete incrcal_;
-    
-    throw(AipsError("Error in Calibrater::accumulate."));
-    return;
-  }
-  return;
-
-}
-
-void Calibrater::specifycal(const String& type,
-			    const String& caltable,
-			    const String& time,
-			    const String& spw,
-			    const String& antenna,
-			    const String& pol,
-			    const Vector<Double>& parameter,
-			    const String& infile) {
-
-  logSink() << LogOrigin("Calibrater","specifycal") << LogIO::NORMAL;
-
-  // SVJ objects:
-  SolvableVisCal *cal_(NULL);
-
-  try {
- 			    
-    // Set record format for calibration table application information
-    RecordDesc specifyDesc;
-    specifyDesc.addField ("caltable", TpString);
-    specifyDesc.addField ("time", TpString);
-    specifyDesc.addField ("spw", TpArrayInt);
-    specifyDesc.addField ("antenna", TpArrayInt);
-    specifyDesc.addField ("pol", TpString);
-    specifyDesc.addField ("parameter", TpArrayDouble);
-    specifyDesc.addField ("caltype",TpString);
-    specifyDesc.addField ("infile",TpString);
-
-    // Create record with the requisite field values
-    Record specify(specifyDesc);
-    specify.define ("caltable", caltable);
-    specify.define ("time", time);
-    if (spw=="*")
-      specify.define ("spw",Vector<Int>(1,-1));
-    else
-      specify.define ("spw",getSpwIdx(spw));
-    if (antenna=="*")
-      specify.define ("antenna",Vector<Int>(1,-1) );
-    else
-      specify.define ("antenna",getAntIdx(antenna));
-    specify.define ("pol",pol);
-    specify.define ("parameter",parameter);
-    specify.define ("caltype",type);
-    specify.define ("infile",infile);
-
-    // Now do it
-    String utype=upcase(type);
-    if (utype=="G" || utype.contains("AMP") || utype.contains("PH"))
-      cal_ = createSolvableVisCal("G",*vs_p);
-    else if (utype=='K' || utype.contains("SBD") || utype.contains("DELAY"))
-      cal_ = createSolvableVisCal("K",*vs_p);
-    else if (utype.contains("MBD"))
-      cal_ = createSolvableVisCal("KMBD",*vs_p);
-    else if (utype.contains("ANTPOS"))
-      cal_ = createSolvableVisCal("KANTPOS",*vs_p);
-    else if (utype.contains("TSYS"))
-      cal_ = createSolvableVisCal("TSYS",*vs_p);
-    else if (utype.contains("EVLAGAIN") ||
-	     utype.contains("SWP") ||
-	     utype.contains("RQ"))
-      cal_ = createSolvableVisCal("EVLASWP",*vs_p);
-    else if (utype.contains("OPAC"))
-      cal_ = createSolvableVisCal("TOPAC",*vs_p);
-    else if (utype.contains("GC") || utype.contains("EFF"))
-      cal_ = createSolvableVisCal("GAINCURVE",*vs_p);
-    else if (utype.contains("TEC"))
-      cal_ = createSolvableVisCal("TEC",*vs_p);
-    else if (utype.contains("SDSKY_PS"))
-      cal_ = createSolvableVisCal("SDSKY_PS",*vs_p);
-    else if (utype.contains("SDSKY_RASTER"))
-      cal_ = createSolvableVisCal("SDSKY_RASTER",*vs_p);
-    else if (utype.contains("SDSKY_OTF"))
-      cal_ = createSolvableVisCal("SDSKY_OTF",*vs_p);
-    else
-      throw(AipsError("Unrecognized caltype."));
-
-    // set up for specification (set up the CalSet)
-    cal_->setSpecify(specify);
-
-    // fill with specified values
-    cal_->specify(specify);
-
-    // Store result
-    cal_->storeNCT();
-
-    delete cal_;
-
-  } catch (AipsError x) {
-    logSink() << LogIO::SEVERE
-	      << "Caught Exception: "
-	      << x.getMesg()
-	      << LogIO::POST;
-
-    if (cal_) delete cal_;
-    
-    throw(AipsError("Error in Calibrater::specifycal."));
-    return;
-  }
-  return;
-
-}
-
-
-Bool Calibrater::smooth(const String& infile, 
-			String& outfile,  // const Bool& append,
-                        const String& smoothtype,
-			const Double& smoothtime,
-                        const String& fields)
-{
-
-  // TBD: support append?
-  // TBD: spw selection?
-
-  logSink() << LogOrigin("Calibrater","smooth") << LogIO::NORMAL;
-
-  logSink() << "Beginning smoothing/interpolating method." << LogIO::POST;
-
-
-  // A pointer to an SVC
-  SolvableVisCal *svc(NULL);
-
-  try {
-    
-    // Handle no in file 
-    if (infile=="")
-      throw(AipsError("Please specify an input calibration table."));
-
-    // Handle bad smoothtype
-    if (smoothtype!="mean" && smoothtype!="median")
-      throw(AipsError("Unrecognized smooth type!"));
-
-    // Handle bad smoothtime
-    if (smoothtime<=0)
-      throw(AipsError("Please specify a strictly positive smoothtime."));
-
-    // Handle no outfile
-    if (outfile=="") {
-      outfile=infile;
-      logSink() << "Will overwrite input file with smoothing result." 
-		<< LogIO::POST;
-    }
-
-
-    svc = createSolvableVisCal(calTableType(infile),*vs_p);
-    
-    if (svc->smoothable()) {
-      
-      // Fill calibration table using setApply
-      RecordDesc applyparDesc;
-      applyparDesc.addField ("table", TpString);
-      Record applypar(applyparDesc);
-      applypar.define ("table", infile);
-      svc->setApply(applypar);
-
-      // Convert refFields/transFields to index lists
-      Vector<Int> fldidx(0);
-      if (fields.length()>0)
-	fldidx=getFieldIdx(fields);
-
-      // Delegate to SVC
-      svc->smooth(fldidx,smoothtype,smoothtime);
-      
-      // Store the result on disk
-      //    if (append) logSink() << "Appending result to " << outfile << LogIO::POST;
-      //else 
-      logSink() << "Storing result in " << outfile << LogIO::POST;
-      
-      
-      if (outfile != "") 
-	svc->calTableName()=outfile;
-      svc->storeNCT();
-
-      // Clean up
-      if (svc) delete svc; svc=NULL;
-      
-      // Apparently, it worked
-      return true;
-
-    }
-    else
-      throw(AipsError("This type ("+svc->typeName()+") does not support smoothing."));
-
-  } catch (AipsError x) {
-   
-    logSink() << LogIO::SEVERE
-	      << "Caught Exception: "
-	      << x.getMesg()
-	      << LogIO::POST;
-    // Clean up
-    if (svc) delete svc; svc=NULL;
-
-    throw(AipsError("Error in Calibrater::smooth."));
-
-    return false;
-  }
-  return false;
-}
-
-
-  // List a calibration table
-Bool Calibrater::listCal(const String& infile,
-			 const String& field,
-			 const String& antenna,
-			 const String& spw,
-			 const String& listfile,
-             const Int& pagerows) {
-    
-    SolvableVisCal *svc(NULL);
-    logSink() << LogOrigin("Calibrater","listCal");
-    
-    try {
-        
-        // Trap (currently) unsupported types
-        if (upcase(calTableType(infile))=="GSPLINE" ||
-            upcase(calTableType(infile))=="BPOLY")
-            throw(AipsError("GSPLINE and BPOLY tables cannot currently be listed."));
-        
-        // Get user's selected fields, ants
-        Vector<Int> ufldids=getFieldIdx(field);
-        Vector<Int> uantids=getAntIdx(antenna);
-        
-        String newSpw = spw;
-        Bool defaultSelect = false;
-        if (spw.empty()) { // list all channels (default)
-            defaultSelect = true;
-            newSpw = "*"; 
-            logSink() << LogIO::NORMAL1 << "Spws selected: ALL" << endl
-                      << "Channels selected: ALL" << LogIO::POST;
-        }
-        // Get user's selected spw and channels
-        Vector<Int> uspwids=getSpwIdx(newSpw);
-        Matrix<Int> uchanids=getChanIdx(newSpw);
-        if (!defaultSelect) {
-            logSink() << LogIO::NORMAL1 << "Spw and Channel selection matrix: "
-                      << endl << "Each rows shows: [ Spw , Start Chan , Stop Chan , Chan Step ]"
-                      << endl << uchanids << LogIO::POST;
-        }
-        logSink() << LogIO::DEBUG2 
-                  << "uspwids = "  << uspwids  << endl
-                  << "uchanids = " << uchanids << LogIO::POST;
-        
-        // By default, do first spw, first chan
-        if (uspwids.nelements()==0) {
-            uchanids.resize(1,4);
-            uchanids=0;
-        } 
-        
-        // Set record format for calibration table application information
-        RecordDesc applyparDesc;
-        applyparDesc.addField ("table", TpString);
-        
-        // Create record with the requisite field values
-        Record applypar(applyparDesc);
-        applypar.define ("table", infile);
-        
-        // Generate the VisCal to be listed
-        svc = createSolvableVisCal(calTableType(infile),*vs_p);  
-        svc->setApply(applypar);       
-        
-        // list it
-        svc->listCal(ufldids,uantids,uchanids,  //uchanids(0,0),uchanids(0,1),
-                     listfile,pagerows);
-        
-        if (svc) delete svc; svc=NULL;
-        
-        return true;
-        
-    } catch (AipsError x) {
-        
-        logSink() << LogIO::SEVERE
-                  << "Caught Exception: "
-                  << x.getMesg()
-                  << LogIO::POST;
-        // Clean up
-        if (svc) delete svc; svc=NULL;
-        
-        throw(AipsError("Error in Calibrater::listCal."));
-        
-        return false;
-    }
-    return false;
-    
-}
-
-Bool Calibrater::updateCalTable(const String& caltable) {
-
-  // Call the SVC method that knows how
-  return NewCalTable::CTBackCompat(caltable);
-
-}
-
-
-
-void Calibrater::selectChannel(const String& spw) {
-
-  // Initialize the chanmask_
-  initChanMask();
-
-  if (mss_p && mssel_p) {
-
-    // Refresh the frequencySelections object to feed to VI2, if relevant
-    if (frequencySelections_p) {
-      delete frequencySelections_p;
-      frequencySelections_p=NULL;
-    }
-    frequencySelections_p = new vi::FrequencySelections();
-
-    vi::FrequencySelectionUsingChannels usingChannels;
-    usingChannels.add(*mss_p,mssel_p);
-    frequencySelections_p->add(usingChannels);
-
-    //    cout << usingChannels.toString() << endl;
-    //    cout << "FS.size() = " << frequencySelections_p->size() << endl;
-
-  }
-
-  Matrix<Int> chansel = getChanIdx(spw);
-  uInt nselspw=chansel.nrow();
-
-  if (nselspw==0)
-    logSink() << "Frequency selection: Selecting all channels in all spws." 
-	      << LogIO::POST;
-  else {
-
-    logSink() << "Frequency selection: " << LogIO::POST;
-
-    // Trap non-unit step (for now)
-    if (ntrue(chansel.column(3)==1)!=nselspw) {
-      logSink() << LogIO::WARN
-		<< "Calibration does not support non-unit channel stepping; "
-		<< "using step=1."
-		<< LogIO::POST;
-      chansel.column(3)=1;
-    }
-
-    Int nspw=vs_p->numberSpw();
-    Vector<Int> nChan0;
-    nChan0 = vs_p->numberChan();
-
-    Vector<Int> uspw(chansel.column(0));
-    Vector<Int> ustart(chansel.column(1));
-    Vector<Int> uend(chansel.column(2));
-
-    Vector<Int> start(nspw,INT_MAX);
-    Vector<Int> end(nspw,-INT_MAX);
-    logSink() << LogIO::NORMAL;
-    for (uInt i=0;i<nselspw;++i) {
-      
-      Int& spw=uspw(i);
-
-      // Initialize this spw mask, if necessary (def = masked)
-      if (!chanmask_[spw])
-      	chanmask_[spw]=new Vector<Bool>(nChan0(spw),true);
-
-      // revise net start/end/nchan
-      start(spw)=min(start(spw),ustart(i));
-      end(spw)=max(end(spw),uend(i));
-      Int nchan=end(spw)-start(spw)+1;  // net inclusive nchan
-
-      // User's 
-      Int step=chansel(i,3);
-      Int unchan=uend(i)-ustart(i)+1;
-      
-      // Update the mask (false = valid)
-      (*chanmask_[spw])(Slice(ustart(i),unchan))=false;
-
-
-      logSink() << ".  Spw " << spw << ":"
-		<< ustart(i) << "~" << uend(i) 
-		<< " (" << uend(i)-ustart(i)+1 << " channels,"
-		<< " step by " << step << ")"
-		<< endl;
-
-  /*
-      cout << i << " " << spw << " {" 
-	   << start(spw) << " [" << ustart(i) << " " 
-	   << uend(i) << "] " << end(spw) << "}" << endl;
-      cout << "chanmask = ";
-      for (Int j=0;j<nChan0(spw);++j) cout << (*chanmask_[spw])(j);
-      cout << endl << endl;
-  */
-	
-      // Call via VisSet (avoid call to VisIter::origin)
-      vs_p->selectChannel(1,start(spw),nchan,step,spw,false);
-	
-    } // i
-    logSink() << LogIO::POST;
-
-  } // non-triv spw selection
-
-  // For testing:
-  if (false) {
-
-    VisIter& vi(vs_p->iter());
-    VisBuffer vb(vi);
-    
-    // Pass each timestamp (VisBuffer) to VisEquation for correction
-    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-      vi.origin();
-      //      for (vi.origin(); vi.more(); vi++)
-	cout << vb.spectralWindow() << " "
-	     << vb.nChannel() << " "
-	     << vb.channel() << " "
-	     << vb.visCube().shape()
-	     << endl;
-    }
-  }
-
-}
-
-void Calibrater::initChanMask() {
-
-  for (uInt i=0;i<chanmask_.nelements();++i) 
-    if (chanmask_[i])
-      delete chanmask_[i];
-  if (vs_p) {
-    chanmask_.resize(vs_p->numberSpw(),true);
-    chanmask_=NULL;
-  }
-  else {
-    //    throw(AipsError("Trouble sizing chanmask!"));
-    // just don't support channel masking:
-    chanmask_.resize(0,true);
-  }
-
-}
-
-// Select on channel in the VisSet
-void Calibrater::selectChannel(const String& mode, 
-			       const Int& nchan, 
-			       const Int& start, const Int& step,
-			       const MRadialVelocity& mStart,
-			       const MRadialVelocity& mStep) {
-  
-  // Set data selection variables
-  dataMode_p=mode;
-  dataNchan_p=nchan;
-  if (dataNchan_p<0) dataNchan_p=0; 
-  dataStart_p=start;
-  if (dataStart_p<0) dataNchan_p=0; 
-  dataStep_p=step;
-  if (dataStep_p<1) dataNchan_p=1; 
-  
-  mDataStart_p=mStart;
-  mDataStep_p=mStep;
-  
-  // Select on frequency channel
-  if(dataMode_p=="channel") {
-    // *** this bit here is temporary till we unifomize data selection
-    //Getting the selected SPWs
-    ROMSMainColumns msc(*mssel_p);
-    Vector<Int> dataDescID = msc.dataDescId().getColumn();
-    Bool dum;
-    Sort sort( dataDescID.getStorage(dum),sizeof(Int) );
-    sort.sortKey((uInt)0,TpInt);
-    Vector<uInt> index,uniq;
-    sort.sort(index,dataDescID.nelements());
-    uInt nSpw = sort.unique(uniq,index);
-    
-    Vector<Int> selectedSpw(nSpw);
-    Vector<Int> nChan(nSpw);
-    for (uInt k=0; k < nSpw; ++k) {
-      selectedSpw[k]=dataDescID[index[uniq[k]]];
-      nChan[k]=vs_p->numberChan()(selectedSpw[k]);
-      
-    }
-    if(dataNchan_p==0) dataNchan_p=vs_p->numberChan()(selectedSpw[0]);
-    if(dataStart_p<0) {
-      logSink() << LogIO::SEVERE << "Illegal start pixel = " 
-		<< dataStart_p << LogIO::POST;
-    }
-    Int end = Int(dataStart_p) + Int(dataNchan_p) * Int(dataStep_p);
-    for (uInt k=0; k < selectedSpw.nelements() ; ++k){
-      if(end < 1 || end > nChan[k]) {
-	logSink() << LogIO::SEVERE << "Illegal step pixel = " << dataStep_p
-		  << " in Spw " << selectedSpw[k]
-		  << LogIO::POST;
-      }
-      logSink() << "Selecting "<< dataNchan_p
-		<< " channels, starting at visibility channel "
-		<< dataStart_p  << " stepped by "
-		<< dataStep_p << " in Spw " << selectedSpw[k] << LogIO::POST;
-      
-      // Set frequency channel selection for all spectral window id's
-      Int nch;
-      //Vector<Int> nChan=vs_p->numberChan();
-      //Int nSpw=vs_p->numberSpw();
-      if (dataNchan_p==0) {
-	nch=nChan(k);
-      }else {
-	nch=dataNchan_p;
-      };
-      vs_p->selectChannel(1,dataStart_p,nch,dataStep_p,selectedSpw[k]);
-      
-    }
-  }
-  // Select on velocity
-  else if (dataMode_p=="velocity") {
-    MVRadialVelocity mvStart(mDataStart_p.get("m/s"));
-    MVRadialVelocity mvStep(mDataStep_p.get("m/s"));
-    MRadialVelocity::Types
-      vType((MRadialVelocity::Types)mDataStart_p.getRefPtr()->getType());
-    logSink() << "Selecting "<< dataNchan_p
-	      << " channels, starting at radio velocity " << mvStart
-	      << " stepped by " << mvStep << ", reference frame is "
-	      << MRadialVelocity::showType(vType) << LogIO::POST;
-    vs_p->iter().selectVelocity(Int(dataNchan_p), mvStart, mvStep,
-				vType, MDoppler::RADIO);
-  }
-  
-  // Select on optical velocity
-  else if (dataMode_p=="opticalvelocity") {
-    MVRadialVelocity mvStart(mDataStart_p.get("m/s"));
-    MVRadialVelocity mvStep(mDataStep_p.get("m/s"));
-    MRadialVelocity::Types
-      vType((MRadialVelocity::Types)mDataStart_p.getRefPtr()->getType());
-    logSink() << "Selecting "<< dataNchan_p
-	      << " channels, starting at optical velocity " << mvStart
-	      << " stepped by " << mvStep << ", reference frame is "
-	      << MRadialVelocity::showType(vType) << LogIO::POST;
-    vs_p->iter().selectVelocity(Int(dataNchan_p), mvStart, mvStep,
-				vType, MDoppler::OPTICAL);
-  }
-  
-  
-}
-
-// Parse refant specification
-Vector<Int> Calibrater::getRefantIdxList(const String& refant) {
-
-  Vector<Int> irefant;
-  if (refant.length()==0) {
-    // Nothing specified, return -1 in single-element vector
-    irefant.resize(1);
-    irefant(0)=-1;
-  }
-  else {
-    // parse the specification
-    MSSelection msselect;
-    msselect.setAntennaExpr(refant);
-    Vector<Int> iref=msselect.getAntenna1List(mssel_p);
-    if (anyLT(iref,0))
-      cout << "Negated selection (via '!') not yet implemented for refant," << endl << " and will be ignored." << endl;
-    irefant=iref(iref>-1).getCompressedArray();
-    if (irefant.nelements()==0) {
-      irefant.resize(1);
-      irefant(0)=-1;
-    }
-  }
-
-  return irefant;
-}
-
-
-// Interpret refant *index*
-Vector<Int> Calibrater::getAntIdx(const String& antenna) {
-
-    MSSelection msselect;
-    msselect.setAntennaExpr(antenna);
-    return msselect.getAntenna1List(mssel_p);
-
-}
-
-// Interpret field indices (MSSelection)
-Vector<Int> Calibrater::getFieldIdx(const String& fields) {
-
-  MSSelection mssel;
-  mssel.setFieldExpr(fields);
-  return mssel.getFieldList(mssel_p);
-
-}
-
-// Interpret spw indices (MSSelection)
-Vector<Int> Calibrater::getSpwIdx(const String& spws) {
-
-  MSSelection mssel;
-  mssel.setSpwExpr(spws);
-
-  /*
-  cout << "mssel.getSpwList(mssel_p) = " << mssel.getSpwList(mssel_p) << endl;
-  cout << "mssel.getChanList(mssel_p) = " << mssel.getChanList(mssel_p) << endl;  cout << "Vector<Int>() = " << Vector<Int>() << endl;
-  */
-
-  // Use getChanList (column 0 for spw) because it is 
-  //  more reliable about the number and order of specified spws.
-  //  return mssel.getSpwList(mssel_p);
-  Matrix<Int> chanmat=mssel.getChanList(mssel_p);
-  if (chanmat.nelements()>0) 
-    return chanmat.column(0);
-  else
-    return Vector<Int>();
-
-}
-
-Matrix<Int> Calibrater::getChanIdx(const String& spw) {
-
-  MSSelection mssel;
-  mssel.setSpwExpr(spw);
-
-  return mssel.getChanList(mssel_p);
-
-}
-
-
-// Query apply types if we are calibrating the weights
-Bool Calibrater::calWt() {
-
-  Int napp(vc_p.nelements());
-  // Return true as soon as we find a type which is cal'ing wts
-  for (Int iapp=0;iapp<napp;++iapp)
-    if (vc_p[iapp] && vc_p[iapp]->calWt())
-      return true;
-
-  // None cal'd weights, so return false
-  return false;
-
-}
-
-Bool Calibrater::ok() {
-
-  if(vs_p && ms_p && mssel_p && ve_p) {
-    return true;
-  }
-  else {
-    logSink() << "Calibrater is not yet initialized" << LogIO::POST;
-    return false;
-  }
-}
-
-void Calibrater::writeHistory(LogIO& /*os*/, Bool /*cliCommand*/)
-{
-  // Disabled 2016/04/19: avoid direct MS.HISTORY updates from
-  //   below the python level, FOR NOW
-
-  return;
-  /*
-  if (!historytab_p.isNull()) {
-    if (histLockCounter_p == 0) {
-      historytab_p.lock(false);
-    }
-    ++histLockCounter_p;
-
-    os.postLocally();
-    if (cliCommand) {
-      hist_p->cliCommand(os);
-    } else {
-      hist_p->addMessage(os);
-    }
-
-    if (histLockCounter_p == 1) {
-      historytab_p.unlock();
-    }
-    if (histLockCounter_p > 0) {
-      --histLockCounter_p;
-    }
-  } else {
-    os << LogIO::SEVERE << "calibrater is not yet initialized" << LogIO::POST;
-  }
-  */
 }
 
 

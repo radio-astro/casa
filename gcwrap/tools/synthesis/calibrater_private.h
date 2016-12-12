@@ -1,6 +1,7 @@
 // Private part to calibrater_cmpt.h
 
     casacore::MeasurementSet *itsMS;
+    bool oldcal_;
     casa::Calibrater *itsCalibrater;
     casacore::LogIO *itsLog;
 

@@ -137,7 +137,7 @@ void CalibratingParameters::validate() const
 CalibratingVi2::CalibratingVi2(	vi::ViImplementation2 * inputVii,
 				const CalibratingParameters& calpar) :
   TransformingVi2 (inputVii),
-  cb_p(),
+  cb_p(0),
   ve_p(0),
   corrFactor_p(calpar.getCorrFactor()), // temporary
   visCalibrationOK_p(False)
@@ -157,7 +157,8 @@ CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
                                 const CalibratingParameters& calpar,
                                 String msname) :
   TransformingVi2 (inputVii),
-  cb_p(msname),
+  //cb_p(new OldCalibrater(msname)),
+  cb_p(Calibrater::factory(msname)),
   ve_p(0),
   corrFactor_p(1.0),
   visCalibrationOK_p(False)
@@ -165,11 +166,11 @@ CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
 
   if (calpar.byCalLib()) {
     // Arrange calibration
-    cb_p.validatecallib(calpar.getCalLibRecord());
-    cb_p.setcallib2(calpar.getCalLibRecord());
-    cb_p.applystate();
+    cb_p->validatecallib(calpar.getCalLibRecord());
+    cb_p->setcallib2(calpar.getCalLibRecord());
+    cb_p->applystate();
     // Point to VisEquation
-    ve_p = cb_p.ve();
+    ve_p = cb_p->ve();
   }
   else {
     // Simple mode using only the calfactor (good for tests)
@@ -188,7 +189,7 @@ CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
 CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
                                 VisEquation *ve) :
   TransformingVi2 (inputVii),
-  cb_p(),
+  cb_p(0),
   ve_p(ve),
   corrFactor_p(1.0),
   visCalibrationOK_p(False)
@@ -209,9 +210,13 @@ CalibratingVi2::CalibratingVi2( vi::ViImplementation2 * inputVii,
 CalibratingVi2::~CalibratingVi2()
 {
   //  cout << "  ~CalVi2:      " << this << endl;
-
   // ve_p is a borrowed pointer, so need not delete here
   ve_p=0;
+
+  // Delete Calibrater object if present
+  if (cb_p) delete cb_p;
+  cb_p=0;
+
 }
 
 
