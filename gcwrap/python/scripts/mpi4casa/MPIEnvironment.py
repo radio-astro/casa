@@ -222,10 +222,13 @@ class MPIEnvironment:
     def finalize_mpi_environment():
         MPIEnvironment.__mpi_factory.Finalize()
         
-    @staticmethod
-    def abort_mpi_environment():
+    @classmethod
+    def abort_mpi_environment(cls):
         if MPIEnvironment.is_mpi_enabled:
-            MPIEnvironment.__mpi_factory.COMM_WORLD.Abort()        
+            # 1.10 sometimes hangs on aborts
+            # abort is only needed with >= 2.0 to kill all processes on timeout
+            if 'Open MPI v1.10' not in cls.mpi_vendor_str:
+                MPIEnvironment.__mpi_factory.COMM_WORLD.Abort()
         
         
 
