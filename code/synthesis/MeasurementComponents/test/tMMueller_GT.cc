@@ -30,7 +30,7 @@
 #include <casa/iostream.h>
 #include <casa/BasicMath/Math.h>
 
-#include <synthesis/MeasurementComponents/MMueller.h>
+#include <synthesis/MeasurementComponents/StandardVisCal.h>
 #include <synthesis/MeasurementComponents/SolveDataBuffer.h>
 
 #include <gtest/gtest.h>
