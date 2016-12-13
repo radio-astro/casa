@@ -41,7 +41,7 @@ if casa['flags'].execute:
             execfile(casa['flags'].execute[0])
         os._exit(0)
     else:
-        eval(casa['flags'].execute)
+        eval(casa['flags'].execute[0])
         os._exit(0)
 else:
     from casa_builtin import enable_builtin_protection,register_builtin
