@@ -139,6 +139,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rvi_p=NULL;
     //    cerr << "IN DESTR"<< endl;
     //    VisModelData::listModel(mss4vi_p[0]);
+
+    SynthesisUtilMethods::getResource("End Run");
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -192,6 +194,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool SynthesisImager::selectData(const SynthesisParamsSelect& selpars)
   {
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
+
+    SynthesisUtilMethods::getResource("Start Run");
 
     try
       {
@@ -1136,6 +1140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 rvi_p->useImagingWeight(imwgt_p);
       ///////////////////////////////
 	 
+    SynthesisUtilMethods::getResource("Set Weighting");
 	 
 	 ///	 return true;
 	 
@@ -2122,7 +2127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     	if(!dopsf)itsMappers.initializeDegrid(*vb);
     	itsMappers.initializeGrid(*vb,dopsf);
-	SynthesisUtilMethods::getResource("After initGrid for all mappers");
+	//SynthesisUtilMethods::getResource("After initGrid for all mappers");
 
     	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
     	{
@@ -2150,7 +2155,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	}
     	//cerr << "IN SYNTHE_IMA" << endl;
     	//VisModelData::listModel(rvi_p->getMeasurementSet());
-	SynthesisUtilMethods::getResource("Before finalize for all mappers");
+	//SynthesisUtilMethods::getResource("Before finalize for all mappers");
     	if(!dopsf) itsMappers.finalizeDegrid(*vb);
     	itsMappers.finalizeGrid(*vb, dopsf);
 

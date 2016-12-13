@@ -131,13 +131,13 @@ casac::record* synthesisiterbot::getiterationsummary()
 
 
 
-  int synthesisiterbot::cleanComplete()
+  int synthesisiterbot::cleanComplete(const bool lastcyclecheck)
 {
   Int rstat=0;
 
   try 
     {
-      rstat = itsIterBot->cleanComplete( );
+      rstat = itsIterBot->cleanComplete( lastcyclecheck );
     } 
   catch  (AipsError x) 
     {

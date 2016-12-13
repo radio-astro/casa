@@ -209,7 +209,7 @@ class PySynthesisImager:
          #print 'Converged : ', stopflag
          if( stopflag>0 ):
              #stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles']
-             stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'peak residual increased by more than 5 times across a major cycle','peak residual increased by more than 5 times from the minimum reached']
+             stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'peak residual increased by more than 5 times from the previous major cycle','peak residual increased by more than 5 times from the minimum reached']
              casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
 
              # revert the current automask to the previous one 
@@ -288,7 +288,7 @@ class PySynthesisImager:
             self.PStools[immod].scattermodel() 
 
         if self.IBtool != None:
-            lastcycle = (self.IBtool.cleanComplete() > 0)
+            lastcycle = (self.IBtool.cleanComplete(lastcyclecheck=True) > 0)
         else:
             lastcycle = True
         self.runMajorCycleCore(lastcycle)
@@ -1151,7 +1151,7 @@ class PyParallelDeconvolver(PySynthesisImager):
         stopflag = self.IBtool.cleanComplete()
         print 'Converged : ', stopflag
         if( stopflag>0 ):
-            stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'peak residual increased by more than 5 times across a major cycle','peak residual increased by more than 5 times from the minimum reached']
+            stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'peak residual increased by more than 5 times from the previous major cycle','peak residual increased by more than 5 times from the minimum reached']
             casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
             if self.iterpars['interactive']:
                 for immod in range(0,self.listOfNodes):

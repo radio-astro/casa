@@ -125,9 +125,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMinorCycleController::setPeakResidual(Float peakResidual)
   {
     itsPeakResidual = peakResidual;
+    //    cout << "Setting peak res (SIMinorCycleController) : " << itsPeakResidual << endl;
 
     if( itsMinResidual > itsPeakResidual )
       itsMinResidual = itsPeakResidual;
+
+  }
+
+  void SIMinorCycleController::setPeakResidualNoMask(Float peakResidual)
+  {
+    itsPeakResidualNoMask = peakResidual;
+    //    cout << "Setting peak res (SIMinorCycleController) : " << itsPeakResidual << endl;
+
+    if( itsMinResidualNoMask > itsPeakResidualNoMask )
+      itsMinResidualNoMask = itsPeakResidualNoMask;
 
   }
 
@@ -185,6 +196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                         itsUpdatedModelFlag);
     returnRecord.define(RecordFieldId("maxcycleiterdone"),
                         itsMaxCycleIterDone);
+    returnRecord.define( RecordFieldId("peakresidualnomask"), itsPeakResidualNoMask);
 
     return returnRecord;
   }
@@ -197,6 +209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Control Variables */
     returnRecord.define(RecordFieldId("peakresidual"), itsPeakResidual);
     returnRecord.define(RecordFieldId("maxpsfsidelobe"), itsMaxPsfSidelobe);
+    returnRecord.define( RecordFieldId("peakresidualnomask"), itsPeakResidualNoMask);
 
     /* Reset Counters and summary for the current set of minorcycle iterations */
     itsIterDone = 0;

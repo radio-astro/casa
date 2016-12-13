@@ -72,6 +72,11 @@ This is used to construct {\tt synthesisiterbot} tool.
 </description>
 <input>
 
+     <param type="bool" name="lastcyclecheck">
+     <description>Check using peak residual before major cycle.</description>
+     <value type="bool">false</value>
+     </param>
+
 </input>
 <returns type="int"/>
 </method>

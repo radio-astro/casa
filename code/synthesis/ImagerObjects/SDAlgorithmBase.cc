@@ -166,7 +166,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		    os << LogIO::NORMAL1  << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
 
-		    SynthesisUtilMethods::getResource("In deconvolver : one plane" );
+		    SynthesisUtilMethods::getResource("In Deconvolver : one step" );
 		    
 		    loopcontrols.incrementMinorCycleCount( iterdone ); // CAS-8767 : add subimageindex and merge with addSummaryMinor call later.
 		    
@@ -237,7 +237,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {maxResidualAcrossPlanes=peakresidual; maxResChan=chanid; maxResPol=polid;}
 
 	    totalFluxAcrossPlanes += modelflux;
-
 	    
 	  }// end of polid loop
 	

@@ -96,7 +96,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// virtual bool majorCycleRequired(casacore::Float currentPeakResidual);
 
-			virtual int cleanComplete();
+	                virtual int cleanComplete(casacore::Bool lastcyclecheck=casacore::False);
     
 			/* --- Functions for interacting with Minor Cycle Control --- */
 			virtual casacore::Record getMinorCycleControls();
@@ -223,9 +223,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			casacore::Float itsMaxPsfFraction;
 			casacore::Float itsMaxPsfSidelobe;
 			casacore::Float itsPeakResidual;
-	        casacore::Float itsPrevPeakResidual;
-	        casacore::Float itsInitPeakResidual;
+	                casacore::Float itsPrevPeakResidual;
+	                casacore::Float itsInitPeakResidual;
 	                casacore::Float itsMinPeakResidual;
+	                casacore::Float itsMinorCyclePeakResidual;
+
+			casacore::Float itsPeakResidualNoMask;
+			casacore::Float itsPrevPeakResidualNoMask;
+			casacore::Float itsMinPeakResidualNoMask;
+
 
 			/* The number of Controllers Currently Connected */
 			int    itsControllerCount;

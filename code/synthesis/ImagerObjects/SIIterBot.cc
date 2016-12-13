@@ -68,8 +68,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsMaxPsfSidelobe(0.0),
 						itsPeakResidual(0.0),
 						itsPrevPeakResidual(-1.0),
-						itsMinPeakResidual(1e+9),
 						itsInitPeakResidual(0.0),
+						itsMinPeakResidual(1e+9),
+						itsMinorCyclePeakResidual(0.0),
+						itsPeakResidualNoMask(0.0),
+						itsPrevPeakResidualNoMask(-1.0),
+						itsMinPeakResidualNoMask(1e+9),
 						itsControllerCount(0),
 						itsNiter(0),
 						itsCycleNiter(0),
@@ -138,7 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	int SIIterBot_state::cleanComplete(){
+	int SIIterBot_state::cleanComplete(Bool lastcyclecheck){
 		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
 
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
@@ -146,6 +150,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//		printOut("FromcleanComplete ", false);
 
 		int stopCode=0;
+
+		Float usePeakRes;
+		if(lastcyclecheck==True){usePeakRes = itsMinorCyclePeakResidual; }
+		else{usePeakRes = itsPeakResidual; }
                 
 		//		cout << "itsMajorDone="<<itsMajorDone<<" itsIterDone="<<itsIterDone<< " itsInitPeakResidual="<<itsInitPeakResidual<<" itsPeakResidual="<<itsPeakResidual <<" itsPrevPeakResidual : " <<  itsPrevPeakResidual << " itsStopFlag="<<itsStopFlag<<endl;
 
@@ -165,7 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		    if( itsIterDone >= itsNiter ) { stopCode=1; }
 		    //os << "Numer of iterations. "; // (" << itsIterDone << ") >= limit (" << itsNiter << ")" ;
-		    if( itsPeakResidual <= itsThreshold ) {stopCode=2; }
+		    if( usePeakRes <= itsThreshold ) {stopCode=2; }
 		    //os << "Peak residual (" << itsPeakResidual << ") <= threshold(" << itsThreshold << ")";
 		    if( itsStopFlag ) {stopCode=3;}
 		      //os << "Forced stop. ";
@@ -175,33 +183,74 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  }
 		else // not converged yet... but....if nothing has changed in this round... also stop
 		  {
-		    //cout << "Prev Res : " << itsInitPeakResidual << "   current res : " << itsPeakResidual << endl;
-		    if( fabs( itsInitPeakResidual - itsPeakResidual )<1e-10) 
-		      {stopCode = 4;}
+		    if( itsIterDone>0 && fabs(itsPrevPeakResidual - itsPeakResidual)<1e-10) 
+		     {stopCode = 4;}
 
+		    /*
                     // another non-convergent condition: diverging (relative increase is more than 5 times across one major cycle)
-                    else if ( itsIterDone > 0 && fabs(itsPeakResidual-itsPrevPeakResidual)/fabs(itsPrevPeakResidual)  > 5.0) 
+                    else if ( itsIterDone > 0 && 
+			      fabs(itsPeakResidual-itsPrevPeakResidual)/fabs(itsPrevPeakResidual)  > 5.0) 
                       {
-			//cout << "Peak res : " << itsPeakResidual << "  Dev from prev peak res " << endl; 
+			cout << "(5) Peak res : " << itsPeakResidual 
+			     << "  Dev from prev peak res " << itsPrevPeakResidual << endl; 
 			stopCode = 5;}
 
 		    // divergence check, 5 times increase from the minimum peak residual so far (across all previous major cycles).
-		    else if ( itsIterDone > 0 && (fabs(itsPeakResidual)-itsMinPeakResidual)/itsMinPeakResidual  > 5.0 )
+		    else if ( itsIterDone > 0 && 
+			      (fabs(itsPeakResidual)-itsMinPeakResidual)/itsMinPeakResidual  > 5.0 )
                       {
-			//cout << "Peak res : " << itsPeakResidual <<  "    Dev from min peak res " << itsMinPeakResidual << endl; 
+			cout << "(6) Peak res : " << itsPeakResidual 
+			     <<  "    Dev from min peak res " << itsMinPeakResidual << endl; 
+			stopCode = 6;}
+		    */
+                    // another non-convergent condition: diverging (relative increase is more than 5 times across one major cycle)
+                    else if ( itsIterDone > 0 && 
+			      fabs(itsPeakResidualNoMask-itsPrevPeakResidualNoMask)/fabs(itsPrevPeakResidualNoMask)  > 5.0) 
+                      {
+			cout << "(5) Peak res (no mask) : " << itsPeakResidualNoMask 
+			     << "  Dev from prev peak res " << itsPrevPeakResidualNoMask << endl; 
 			stopCode = 5;}
 
+		    // divergence check, 5 times increase from the minimum peak residual so far (across all previous major cycles).
+		    else if ( itsIterDone > 0 && 
+			      (fabs(itsPeakResidualNoMask)-itsMinPeakResidualNoMask)/itsMinPeakResidualNoMask  > 5.0 )
+                      {
+			cout << "(6) Peak res (no mask): " << itsPeakResidualNoMask 
+			     <<  "    Dev from min peak res " << itsMinPeakResidualNoMask << endl; 
+			stopCode = 6;}
 
 		  }
-	        
+
+		/*
+		if( lastcyclecheck==False)
+		  {
+		    cout << "*****" << endl;
+		    cout << "Peak residual : " << itsPeakResidual << "  No Mask : " << itsPeakResidualNoMask << endl;
+		    cout << "Prev Peak residual : " << itsPrevPeakResidual << "  No Mask : " << itsPrevPeakResidualNoMask << endl;
+		    cout << "Min Peak residual : " << itsMinPeakResidual << "  No Mask : " << itsMinPeakResidualNoMask << endl;
+		  }
+		*/
+
 		//		os << "Peak residual : " << itsPeakResidual << " and " << itsIterDone << " iterations."<< LogIO::POST;
 		//cout << "cleancomp : stopcode : " << stopCode << endl;
 
 		//cout << "peak res : " << itsPeakResidual << "   itsminPR : " << itsMinPeakResidual << endl;
 
-		if( itsIterDone > 0 &&  fabs(itsPeakResidual) < itsMinPeakResidual ) itsMinPeakResidual = fabs(itsPeakResidual);
-		itsPrevPeakResidual = itsPeakResidual;
+		if( lastcyclecheck==False)
+		  {
+		    if( fabs(itsPeakResidual) < itsMinPeakResidual ) 
+		      {itsMinPeakResidual = fabs(itsPeakResidual);}
+		    
+		    itsPrevPeakResidual = itsPeakResidual;
 
+
+		    if( fabs(itsPeakResidualNoMask) < itsMinPeakResidualNoMask ) 
+		      {itsMinPeakResidualNoMask = fabs(itsPeakResidualNoMask);}
+		    
+		    itsPrevPeakResidualNoMask = itsPeakResidualNoMask;
+
+		  }
+		
 		itsStopCode=stopCode;
 		return stopCode;
 	}
@@ -224,8 +273,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		/* Now that we have set the threshold, zero the peak residual 
 		   so it can be found again after the minor cycles */
-		itsInitPeakResidual = itsPeakResidual;
-		itsPeakResidual = 0;
+		//	itsInitPeakResidual = itsPeakResidual;
+		//	itsPeakResidual = 0;
 
 
 		/* This returns a record suitable for initializing the minor cycle
@@ -257,6 +306,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							   initRecord.asFloat(RecordFieldId("peakresidual")) );
 		itsMaxPsfSidelobe =  max( itsMaxPsfSidelobe, initRecord.asFloat(RecordFieldId("maxpsfsidelobe")) );
 
+		itsPeakResidualNoMask = max( itsPeakResidualNoMask, initRecord.asFloat(RecordFieldId("peakresidualnomask")));
+
+		if ( itsPrevPeakResidual == -1.0 ) itsPrevPeakResidual = itsPeakResidual;
+		if ( itsPrevPeakResidualNoMask == -1.0 ) itsPrevPeakResidualNoMask = itsPeakResidualNoMask;
+
 	}
 
 
@@ -271,7 +325,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		itsMaxCycleIterDone = max( itsMaxCycleIterDone, execRecord.asInt(RecordFieldId("maxcycleiterdone")) );
 
-		itsPeakResidual = max( itsPeakResidual, execRecord.asFloat(RecordFieldId("peakresidual")) );
+		itsMinorCyclePeakResidual = max( itsPeakResidual, execRecord.asFloat(RecordFieldId("peakresidual")) );
   
 		itsUpdatedModelFlag |=execRecord.asBool( RecordFieldId("updatedmodelflag") );
 
@@ -391,6 +445,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		/* Get ready to do the minor cycle */
 		itsPeakResidual = 0;
+		itsPeakResidualNoMask = 0;
 		itsMaxPsfSidelobe = 0;
 		itsMaxCycleIterDone = 0;
 	}

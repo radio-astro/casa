@@ -229,6 +229,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
       itsLoopController.setPeakResidual( validMask ? itsImages->getPeakResidualWithinMask() : itsImages->getPeakResidual() );
+      itsLoopController.setPeakResidualNoMask( itsImages->getPeakResidual() );
       itsLoopController.setMaxPsfSidelobe( itsImages->getPSFSidelobeLevel() );
       returnRecord = itsLoopController.getCycleInitializationRecord();
 

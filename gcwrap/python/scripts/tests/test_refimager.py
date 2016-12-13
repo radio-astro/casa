@@ -144,7 +144,7 @@ class test_onefield(testref_base):
           """ [onefield] Test_Onefield_multiscale : mfs with multiscale minor cycle """
           self.prepData('refim_eptwochan.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',niter=10,deconvolver='multiscale',scales=[0,20,40,100],interactive=0)
-          report=self.th.checkall(ret=ret, peakres=2.3, modflux=2.87, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[100,100,0,0])])
+          report=self.th.checkall(ret=ret, peakres=1.28, modflux=2.87, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[100,100,0,0])])
           self.checkfinal(pstr=report)
 
      def test_onefield_mtmfs(self):
@@ -402,6 +402,12 @@ class test_iterbot(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',specmode='cube',deconvolver='hogbom',niter=1000000,threshold='0.0000001Jy',gain=0.5,interactive=0)
           report=self.th.checkall(ret=ret,iterdone=1749,nmajordone=8,imexist=[self.img+'.psf', self.img+'.residual'])
 
+     def test_iterbot_divergence(self): 
+          """ [iterbot] Test_Iterbot_divergence : Use negative loop gain to make it diverge (verification of CAS-9244 fix) """
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec', niter=50,cycleniter=5, gain=-0.2,interactive=0)
+          report=self.th.checkall(ret=ret,iterdone=10,nmajordone=3,imexist=[self.img+'.psf', self.img+'.image'])
+
      def test_iterbot_mfs_deconvolvers(self):
           """ [iterbot] : test_iterbot_deconvolvers : Do all minor cycle algorithms respond in the same way to iteration controls ? No ! """
           # clark and hogbom reach niter first, but multiscale gets to cyclethreshold first. Check peakres and iterdone.
@@ -413,7 +419,7 @@ class test_iterbot(testref_base):
           report2=self.th.checkall(ret=ret2, peakres=0.3530, modflux=0.7719, iterdone=10, nmajordone=2,imexist=[self.img+'2.psf', self.img+'2.residual', self.img+'2.image'])
 
           ret3 = tclean(vis=self.msfile,imagename=self.img+'3',imsize=100,cell='8.0arcsec',niter=10,threshold='0.1Jy', interactive=0,deconvolver='multiscale')
-          report3=self.th.checkall(ret=ret3, peakres=0.4358, modflux=0.7327, iterdone=10, nmajordone=2,imexist=[self.img+'3.psf', self.img+'3.residual', self.img+'3.image'])
+          report3=self.th.checkall(ret=ret3, peakres=0.3922, modflux=0.7327, iterdone=10, nmajordone=2,imexist=[self.img+'3.psf', self.img+'3.residual', self.img+'3.image'])
      
 
           self.checkfinal(report1+report2+report3)

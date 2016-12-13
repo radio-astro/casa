@@ -112,6 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::Float getMaxPsfSidelobe();
     
     void setPeakResidual(casacore::Float peakResidual);
+    void setPeakResidualNoMask(casacore::Float peakResidual);
     void addIntegratedFlux(casacore::Float integratedFlux);
     void setMaxPsfSidelobe(casacore::Float maxPsfSidelobe);
 
@@ -142,6 +143,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    casacore::Float itsMaxPsfSidelobe;
 
    casacore::Float itsMinResidual;
+   casacore::Float itsMinResidualNoMask;
+   casacore::Float itsPeakResidualNoMask;
 
     /* Summary Variable */
     casacore::Array<casacore::Double> itsSummaryMinor;

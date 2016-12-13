@@ -74,7 +74,7 @@ class SynthesisIterBot
   casacore::Record getIterationDetails();
   casacore::Record getIterationSummary();
 
-  int cleanComplete();
+  int cleanComplete(casacore::Bool lastcyclecheck=casacore::False);
 
   casacore::Record getSubIterBot();
 

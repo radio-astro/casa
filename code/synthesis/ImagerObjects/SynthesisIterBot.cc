@@ -154,12 +154,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
   
   
-	int SynthesisIterBot::cleanComplete() {
+	int SynthesisIterBot::cleanComplete(Bool lastcyclecheck) {
 		int returnValue=0;
 		try {
 			//Float peakResidual = itsLoopController.getPeakResidual(); // This should go..
 			if ( itsLoopController )
-				returnValue=itsLoopController->cleanComplete();
+				returnValue=itsLoopController->cleanComplete(lastcyclecheck);
 		} catch (AipsError &x) {
 			throw( AipsError("Error checking clean complete state : "+x.getMesg()) );
 		}
