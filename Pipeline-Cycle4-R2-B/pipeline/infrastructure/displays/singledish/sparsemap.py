@@ -450,8 +450,8 @@ class SDSparseMapDisplay(SDImageDisplay):
                     me = casatools.measures
                     qa = casatools.quanta
                     qmid_time = qa.quantity(start_time['m0'])
-                    qa.add(qmid_time, end_time['m0'])
-                    qa.div(qmid_time, 2.0)
+                    qmid_time = qa.add(qmid_time, end_time['m0'])
+                    qmid_time = qa.div(qmid_time, 2.0)
                     time_ref = me.epoch(rf=start_time['refer'], 
                                         v0=qmid_time)
                     position_ref = ms.antennas[antenna_id].position
@@ -462,8 +462,9 @@ class SDSparseMapDisplay(SDImageDisplay):
                     me.doframe(direction_ref)
                     me.doframe(position_ref)
                     def _tolsrk(x):
-                        m = me.frequency(rf=frame, v0=qa.quantity(x, 'GHz'))
-                        converted = me.measure(v=m, rf='LSRK')
+                        # ATM is always in TOPO
+                        m = me.frequency(rf='TOPO', v0=qa.quantity(x, 'GHz'))
+                        converted = me.measure(v=m, rf=frame)
                         qout = qa.convert(converted['m0'], outunit='GHz')
                         return qout['value']
                     tolsrk = numpy.vectorize(_tolsrk)
