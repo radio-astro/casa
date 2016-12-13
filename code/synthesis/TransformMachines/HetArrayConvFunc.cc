@@ -123,6 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int diamIndex=antDiam2IndexMap_p.ndefined();
       Vector<Double> dishDiam=ac.dishDiameter().getColumn();
       Vector<String>dishName=ac.name().getColumn();
+      String telescop=vb.msColumns().observation().telescopeName()(0);
       PBMath::CommonPB whichPB;
       if(pbClass_p==PBMathInterface::COMMONPB){
 	String band;
@@ -131,7 +132,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// The VLA, the ATNF, and WSRT have frequency - dependent PB models
 	Quantity freq( vb.msColumns().spectralWindow().refFrequency()(0), "Hz");
 	
-	String telescop=vb.msColumns().observation().telescopeName()(0);
 	PBMath::whichCommonPBtoUse( telescop, freq, band, whichPB, commonPBName );
 	//Revert to using AIRY for unknown common telescope
 	if(whichPB==PBMath::UNKNOWN)
@@ -276,12 +276,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       else if(pbClass_p==PBMathInterface::COMMONPB){
 	//cerr << "Doing the commonPB thing" << endl;
-	antDiam2IndexMap_p.define(String::toString(dishDiam(0)), diamIndex);
-	antIndexToDiamIndex_p.set(diamIndex);
-	antMath_p.resize(diamIndex+1);
-	antMath_p[diamIndex]=PBMath::pbMathInterfaceForCommonPB(whichPB, True);
-
-
+	///Have to use telescop part as string as in multims case different
+	//telescopes may have same dish size but different commonpb
+	// VLA and EVLA for e.g.
+	if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(telescop+String("_")+String::toString(dishDiam(0)))){
+	  antIndexToDiamIndex_p.set(antDiam2IndexMap_p(telescop+String("_")+String::toString(dishDiam(0))));   
+	}
+	else{   
+	  antDiam2IndexMap_p.define(telescop+"_"+String::toString(dishDiam(0)), diamIndex);
+	  antIndexToDiamIndex_p.set(diamIndex);
+	  antMath_p.resize(diamIndex+1);
+	  antMath_p[diamIndex]=PBMath::pbMathInterfaceForCommonPB(whichPB, True);
+	}
+	
       }
       else{
 
@@ -305,7 +312,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convSizes_p.resize(0, True);
     convSupportBlock_p.resize(0, True);
     convFunctionMap_p.resize(0);
-
+    vbConvIndex_p.clear();
   }
 
  
@@ -699,8 +706,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     */
     makerowmap(vb, convFuncRowMap);
-
-    
+    ///need to deal with only the maximum of different baselines available in this
+    ///vb
+    ndishpair=max(convFuncRowMap)+1;
     convSupportBlock_p.resize(actualConvIndex_p+1);
     convSizes_p.resize(actualConvIndex_p+1);
     //convSupportBlock_p[actualConvIndex_p]=new Vector<Int>(ndishpair);
@@ -757,7 +765,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   }
 
-
+  typedef unsigned long long ooLong; 
   void HetArrayConvFunc::applyGradientToYLine(const Int iy, Complex*& convFunctions, Complex*& convWeights, const Double pixXdir, const Double pixYdir, Int convSize, const Int ndishpair, const Int nChan, const Int nPol){
     Double cy, sy;
 
@@ -772,7 +780,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for (Int ichan=0; ichan < nChan; ++ichan){
 	  //Int chanoffset=ichan*ndishpair*convSize*convSize;
 	  for(Int iz=0; iz <ndishpair; ++iz){
-	    Int index=(((ipol*nChan+ichan)*ndishpair+iz)*convSize+iy)*convSize+ix;
+	    ooLong index=((ooLong(iz*nChan+ichan)*nPol+ipol)*ooLong(convSize)+ooLong(iy))*ooLong(convSize)+ooLong(ix);
 	    convFunctions[index]= convFunctions[index]*phx*phy;
 	    convWeights[index]= convWeights[index]*phx*phy;
 	  }
