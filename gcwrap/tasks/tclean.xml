@@ -1462,6 +1462,10 @@ HPX HEALPix grid.  -->
 
 </description>
 	    <value type="double">0.5</value>
+	    <allowed kind="range">
+	      <value range="min">-2.0</value>
+	      <value range="max">2.0</value>
+	    </allowed>
     </param>
 
     <param type="int" name="npixels" subparam="true">
