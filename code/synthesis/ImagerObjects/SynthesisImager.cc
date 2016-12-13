@@ -1968,12 +1968,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     LogIO os(LogOrigin("SynthesisImager", "createMosFTMachine",WHERE));
    
+    rvi_p->originChunks();
     ROMSColumns msc(rvi_p->ms());
     String telescop=msc.observation().telescopeName()(0);
-    // Hack...start
-    //if(telescop=="EVLA"){os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; telescop="VLA";}
-    // Hack...stop
-
+    ///Multi ms with different telescop
+    Bool multiTel=False;
+    for(rvi_p->originChunks(); rvi_p->moreChunks(); rvi_p->nextChunk()){
+      if(rvi_p->newMS() && telescop !=  ROMSColumns(rvi_p->ms()).observation().telescopeName()(0))
+	multiTel=True;
+    }
+    rvi_p->originChunks();
+  
     PBMath::CommonPB kpb;
     Record rec;
     getVPRecord( rec, kpb, telescop );
@@ -2020,16 +2025,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       vps= new VPSkyJones(telescop, myPB, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
       kpb=PBMath::DEFAULT;
     }
-    
+   
+
+    //cerr << "SImager tel " << ((vps) ? vps->telescope(): "NOTEL " )  << " multiTel " << multiTel << endl;
+ 
     theFT = new MosaicFTNew(vps, mLocation_p, stokes, 1000000000, 16, useAutoCorr, 
 		      useDoublePrec);
-    PBMathInterface::PBClass pbtype=(kpb==PBMath::EVLA)? PBMathInterface::COMMONPB: PBMathInterface::AIRY;
+    PBMathInterface::PBClass pbtype=((kpb==PBMath::EVLA) || multiTel)? PBMathInterface::COMMONPB: PBMathInterface::AIRY;
     if(rec.asString("name")=="IMAGE")
        pbtype=PBMathInterface::IMAGE;
     ///Use Heterogenous array mode for the following
     ///Added EVLA in it to use different beam models for different frequencies
     if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
-       || (kpb==PBMath::ALMA) || (kpb==PBMath::EVLA)){
+       || (kpb==PBMath::ALMA) || (kpb==PBMath::EVLA) || multiTel){
       CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, "");
       static_cast<MosaicFTNew &>(*theFT).setConvFunc(mospb);
     }
