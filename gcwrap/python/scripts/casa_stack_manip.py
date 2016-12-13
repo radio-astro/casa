@@ -8,8 +8,7 @@ def stack_find(symbol, level='stack') :
     stacklevel=0
     if level == "stack":
         for k in range(len(a)):
-            if a[k][1] == "<string>" or \
-               a[k][1].startswith("<ipython-input-") or \
+            if a[k][1].startswith("<ipython-input-") or \
                string.find(a[k][1], 'ipython console') > 0 or \
                string.find(a[k][1],"/casapy.py") > 0 or \
                string.find(a[k][1],"/casa.py") > 0 or \
@@ -51,8 +50,7 @@ def stack_frame_find(level='stack') :
     stacklevel=0
     if level == "stack":
         for k in range(len(a)):
-            if a[k][1] == "<string>" or \
-               a[k][1].startswith("<ipython-input-") or \
+            if a[k][1].startswith("<ipython-input-") or \
                string.find(a[k][1], 'ipython console') > 0 or \
                string.find(a[k][1],"/casapy.py") > 0 or \
                string.find(a[k][1],"/casa.py") > 0 or \
