@@ -283,54 +283,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				return "DS9 Region File";
 
 		} else if (fileInfo.isDir()) {	// Directory
-			//Note:  Calling the CasaImageOpener can throw an AIPS error if the
-			//directory/file does not have proper permissions.  Please see CAS-8068.
-			try {
-				if(ImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT){
-					return "Image";
-				}
-			}
-			catch( AipsError& /*error*/ ){
-				//qDebug()<<"Error determining image type: "<<error.getMesg().c_str();
-				//The file type is determined correctly below.
-			}
 
 			QFileInfo tab(pathName + "/table.dat");
 
-			if (tab.isFile ())  {
+            //---------------------------- table ----------------------------
+			if ( tab.isFile( ) )  {
 
-				try {				// Table
+				try {
 
 					TableInfo tblinfo = TableInfo(pathName.toStdString()+"/table.info");
+					String info = tblinfo.type( );
+                    if ( info == "Image" ) return info;
+					else if (info =="IERS" || info =="IERSe" || info =="Skycatalog") return "Sky Catalog";
+					else if (QString(info.chars( )).simplified( )=="")  return "Table";
+                    else return info;
 
-					QString result = tblinfo.type().chars();
-					if (result =="IERS" || result =="IERSe" || result =="Skycatalog") {
+				} catch (...)  { return "Bad Table"; }
 
-						return "Sky Catalog";
-					}
+            }
 
-					if (result.simplified()=="")  return "Table";
+            //---------------------------- imageopener ----------------------------
+			//Note:  Calling the CasaImageOpener can throw an AIPS error if the
+			//directory/file does not have proper permissions.  Please see CAS-8068.
+			try {
+                ImageOpener::ImageTypes info = ImageOpener::imageType(pathname);
+				if( info == ImageOpener::IMAGECONCAT ) return "Image";
+                else if ( info == ImageOpener::MIRIAD ) {
+                    QFileInfo vis(pathName + "/visdata" );
+                    if ( vis.exists( ) )  return "Miriad Vis";
+                    else return "Miriad Image";
+                }
+			} catch( AipsError& /*error*/ ){ }
 
-					return result.toStdString();
-
-				} catch (...)  {
-					return "Bad Table";
-				}
-
-			} else {				// Non-Table Directory
-
-				QFileInfo hd(pathName,  "header");
-				QFileInfo imt(pathName +  "/image" );
-
-				if (hd.isFile() && imt.exists())  return "Miriad Image";
-
-				QFileInfo vis(pathName + "/visdata" );
-
-				if (hd.isFile() && vis.exists())  return "Miriad Vis";
-
-
-				return "Directory";
-			}
+            return "Directory";
 		}
 
 
