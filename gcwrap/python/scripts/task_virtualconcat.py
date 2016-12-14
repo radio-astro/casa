@@ -6,6 +6,8 @@ from taskinit import *
 import partitionhelper as ph
 from parallel.parallel_task_helper import ParallelTaskHelper
 
+cb = cbtool( )
+
 def virtualconcat(vislist,concatvis,freqtol,dirtol,respectname,
           visweightscale,keepcopy,copypointing):
     """

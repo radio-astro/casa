@@ -15,6 +15,8 @@ from tasks import *
 from taskinit import *
 import unittest
 
+cb = cbtool( )
+
 myname = 'test_virtualconcat'
 
 # name of the resulting MS
