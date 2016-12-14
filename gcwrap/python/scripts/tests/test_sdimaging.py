@@ -12,6 +12,9 @@ import math
 import re
 import string
 
+_ia = iatool( )
+_rg = rgtool( )
+
 try:
     import selection_syntax
 except:
@@ -153,9 +156,9 @@ class sdimaging_unittest_base(unittest.TestCase):
 
     def _checkshape(self,name,nx,ny,npol,nchan):
         self._checkfile(name)
-        ia.open(name)
-        imshape=ia.shape()
-        ia.close()
+        _ia.open(name)
+        imshape=_ia.shape()
+        _ia.close()
         self.assertEqual(nx,imshape[0],
                     msg='nx does not match')
         self.assertEqual(ny,imshape[1],
@@ -186,16 +189,16 @@ class sdimaging_unittest_base(unittest.TestCase):
         self._checkfile(name)
         if compstats is None: compstats = ref.keys()
         if region is None: region = ""
-        ia.open(name)
+        _ia.open(name)
         try:
             if ignoremask:
-                def_mask = ia.maskhandler('default')
-                ia.calcmask('T')
-            stats=ia.statistics(region=region, list=True, verbose=True)
+                def_mask = _ia.maskhandler('default')
+                _ia.calcmask('T')
+            stats=_ia.statistics(region=region, list=True, verbose=True)
             if ignoremask:
-                ia.maskhandler('set',def_mask)
+                _ia.maskhandler('set',def_mask)
         except: raise
-        finally: ia.close()
+        finally: _ia.close()
         #for key in stats.keys():
         for key in compstats:
             message='statistics \'%s\' does not match: %s (expected: %s)' % ( key, str(stats[key]), str(ref[key]) )
@@ -212,10 +215,10 @@ class sdimaging_unittest_base(unittest.TestCase):
         """ Test image center, cell size and imsize"""
         cell = self._format_dir_list(cell)
         imsize = self._format_dir_list(imsize)
-        ia.open(imagename)
-        csys = ia.coordsys()
-        ret = ia.summary()
-        ia.close()
+        _ia.open(imagename)
+        csys = _ia.coordsys()
+        ret = _ia.summary()
+        _ia.close()
         ra_idx = csys.findaxisbyname('ra')
         dec_idx = csys.findaxisbyname('dec')
         ra_unit = ret['axisunits'][ra_idx]
@@ -265,9 +268,9 @@ class sdimaging_unittest_base(unittest.TestCase):
 
     def _check_beam(self, image, ref_beam):
         """Check image beam size"""
-        ia.open(image)
-        beam = ia.restoringbeam()
-        ia.close()
+        _ia.open(image)
+        beam = _ia.restoringbeam()
+        _ia.close()
         maj_asec = qa.getvalue(qa.convert(beam['major'], 'arcsec'))
         min_asec = qa.getvalue(qa.convert(beam['minor'], 'arcsec'))
         maj_asec_ref = qa.getvalue(qa.convert(ref_beam['major'], 'arcsec'))
@@ -280,9 +283,9 @@ class sdimaging_unittest_base(unittest.TestCase):
         self.assertTrue(qa.compare(restfreq, 'Hz'))
         myunit = qa.getunit(restfreq)
         refval = qa.getvalue(restfreq)[0]
-        ia.open(imagename)
-        csys = ia.coordsys()
-        ia.close()
+        _ia.open(imagename)
+        csys = _ia.coordsys()
+        _ia.close()
         testval = qa.getvalue(qa.convert(csys.restfrequency(), myunit))
         csys.done()
         ret=numpy.allclose(testval,refval, atol=1.e-5, rtol=1.e-5)
@@ -1904,7 +1907,7 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,sdimaging_un
                          are calculated from whole pixels in image. default
                          is False (take image mask into account).
         """
-        boxreg = rg.box(**box) if box is not None else None
+        boxreg = _rg.box(**box) if box is not None else None
         refstats = ref.copy()
         refstats.update(box)
         for stats in ['blcf', 'trcf']:
@@ -2249,7 +2252,7 @@ class sdimaging_test_polflag(sdimaging_unittest_base):
         # statistics of YY only
         refstats['blc'][2] = 1
         for key in ['blcf', 'trcf']: refstats.pop(key)
-        box = rg.box(blc=refstats['blc'],trc=refstats['trc'])
+        box = _rg.box(blc=refstats['blc'],trc=refstats['trc'])
         self._checkstats(self.outfile,refstats,atol=1.e-5,region=box)
 
 class sdimaging_test_mslist(sdimaging_unittest_base):
