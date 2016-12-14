@@ -15,6 +15,8 @@ from taskinit import *
 import unittest
 from math import sqrt
 
+cb = cbtool( )
+
 myname = 'test_concat'
 
 # name of the resulting MS

@@ -6,6 +6,8 @@ from math import sqrt
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
+cb = cbtool( )
+
 def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 	   visweightscale, forcesingleephemfield):
 	"""concatenate visibility datasets
