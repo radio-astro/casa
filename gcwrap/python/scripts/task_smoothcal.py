@@ -1,6 +1,8 @@
 import os
 from taskinit import *
 
+_cb = cbtool( )
+
 def smoothcal(vis,tablein,caltable,field,smoothtype,smoothtime):
 	""" Smooth calibration solution(s) derived from one or more sources:
 
@@ -24,17 +26,17 @@ def smoothcal(vis,tablein,caltable,field,smoothtype,smoothtime):
 	try:
 		casalog.origin('smoothcal')
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
+                        _cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
 			       
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
-		cb.smooth(tablein=tablein,tableout=caltable,field=field,smoothtype=smoothtype,smoothtime=smoothtime)
-		cb.close()
+		_cb.smooth(tablein=tablein,tableout=caltable,field=field,smoothtype=smoothtype,smoothtime=smoothtime)
+		_cb.close()
 
 	except Exception, instance:
 		print '*** Error ***',instance
-		cb.close()
+		_cb.close()
 		raise Exception, instance
 
 

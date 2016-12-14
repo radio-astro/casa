@@ -6,7 +6,7 @@ from taskinit import *
 import partitionhelper as ph
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-cb = cbtool( )
+_cb = cbtool( )
 
 def virtualconcat(vislist,concatvis,freqtol,dirtol,respectname,
           visweightscale,keepcopy,copypointing):
@@ -231,8 +231,8 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,respectname,
         if(considerscrcols and needscrcols[0]):
             # create scratch cols            
             casalog.post('creating scratch columns in '+theconcatvis , 'INFO')
-            cb.open(theconcatvis) # calibrator-open creates scratch columns
-            cb.close()
+            _cb.open(theconcatvis) # calibrator-open creates scratch columns
+            _cb.close()
 
         # scale the weights of the first MS in the chain
         if doweightscale:
@@ -273,8 +273,8 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,respectname,
             if(considerscrcols and needscrcols[i]):
                 # create scratch cols            
                 casalog.post('creating scratch columns for '+elvis, 'INFO')
-                cb.open(elvis) # calibrator-open creates scratch columns
-                cb.close()
+                _cb.open(elvis) # calibrator-open creates scratch columns
+                _cb.close()
                 
             m.virtconcatenate(msfile=elvis,
                       auxfilename=auxfile,
