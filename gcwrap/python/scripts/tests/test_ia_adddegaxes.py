@@ -90,8 +90,8 @@ class ia_adddegaxes_test(unittest.TestCase):
             imshape = [10,10]
             myim.fromshape(imname, imshape, type=t)
             self.assertTrue(myim)
-            self.assertRaises(Exception, myim.adddegaxes, direction=T)
-            myim2 = myim.adddegaxes(spectral=T)
+            self.assertRaises(Exception, myim.adddegaxes, direction=True)
+            myim2 = myim.adddegaxes(spectral=True)
             self.assertTrue(myim2)
             s = myim2.shape()
             s2 = [imshape[0],imshape[1],1]
@@ -112,7 +112,7 @@ class ia_adddegaxes_test(unittest.TestCase):
             self.assertTrue(mycs.done())
             self.assertTrue(myim2.done())
             #
-            myim2 = myim.adddegaxes(linear=T)
+            myim2 = myim.adddegaxes(linear=True)
             self.assertTrue(myim2)
             s = myim2.shape()
             s2 = [imshape[0],imshape[1],1]
@@ -123,7 +123,7 @@ class ia_adddegaxes_test(unittest.TestCase):
             self.assertTrue(mycs.done())
             self.assertTrue(myim2.done())
             
-            myim2 = myim.adddegaxes(tabular=T)
+            myim2 = myim.adddegaxes(tabular=True)
             self.assertTrue(myim2)
             s = myim2.shape()
             s2 = [imshape[0],imshape[1],1]
@@ -137,13 +137,13 @@ class ia_adddegaxes_test(unittest.TestCase):
             #
             # Make Spectral image
             #
-            mycs = cs.newcoordsys(spectral=T)
+            mycs = cs.newcoordsys(spectral=True)
             self.assertTrue(mycs)
             imname = 'ia.fromshape2.image_' + t
             imshape = [10]
             myim.fromshape(imname, imshape, csys=mycs.torecord(), type=t)
             self.assertTrue(myim)
-            myim2 = myim.adddegaxes(direction=T)
+            myim2 = myim.adddegaxes(direction=True)
             self.assertTrue(myim2)
             s = myim2.shape()
             s2 = [imshape[0],1,1]

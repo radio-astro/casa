@@ -147,13 +147,13 @@ class ia_decimate_test(unittest.TestCase):
                 if m == 0:
                     trc[2] = i*factor
                     expdata = myia.getchunk(blc, trc)
-                    expmask = myia.getchunk(blc, trc, getmask=T)
+                    expmask = myia.getchunk(blc, trc, getmask=True)
                 elif m == 1:
                     trc[2] = (i+1)*factor - 1
                     reg = rg.box(blc, trc)
                     cc = myia.collapse("mean", 2, region=reg)
                     expdata = cc.getchunk()
-                    expmask = cc.getchunk(getmask=T)
+                    expmask = cc.getchunk(getmask=True)
                 blc = [0, 0, i, 0]
                 trc = shape - 1
                 trc[2] = i

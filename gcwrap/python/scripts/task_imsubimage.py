@@ -1,5 +1,7 @@
 from taskinit import *
 
+_rg = rgtool( )
+
 def imsubimage(
     imagename, outfile, box, region, chans, stokes, mask, dropdeg,
     overwrite, verbose, stretch, keepaxes
@@ -13,7 +15,7 @@ def imsubimage(
         if (len(outfile) == 0):
             raise Exception, "outfile must be specified."
         if (type(region) != type({})):
-            region = rg.frombcs(
+            region = _rg.frombcs(
                 csys=myia.coordsys().torecord(), shape=myia.shape(), box=box,
                 chans=chans, stokes=stokes, stokescontrol="a", region=region
             )

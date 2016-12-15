@@ -98,7 +98,7 @@ class ia_fft_test(unittest.TestCase):
         zz = yy.fft(
             real="real2.im", mask=mymask + ">0", stretch=True
         )
-        self.assertTrue(type(zz) == type(false))
+        self.assertTrue(type(zz) == type(False))
         yy.done()
         
     def test_delta(self):
@@ -173,7 +173,7 @@ class ia_fft_test(unittest.TestCase):
         b2 = c.imag
         b3 = abs(c)  # sqrt( real(x)^2 + imag(x)^2 )
         
-        ok =im1.remove(T) and im2.remove(T) and im3.remove(T) and im4.remove(T)
+        ok =im1.remove(True) and im2.remove(True) and im3.remove(True) and im4.remove(True)
         self.assertTrue(ok)
         #
         # FFT whole image

@@ -210,7 +210,7 @@ class ia_pv_test(unittest.TestCase):
                     expec[:,i] = range(2,8)
                 got = pv.getchunk()
                 self.assertTrue((got == expec).all())
-                self.assertTrue(pv.getchunk(getmask=T).all())
+                self.assertTrue(pv.getchunk(getmask=True).all())
                 got = pv.toworld([0,0,0])['numeric'][1]
                 self.assertTrue(abs(got - expeccoord) < 1e-6)
                 gotinc = pv.coordsys().increment()["numeric"]
@@ -255,7 +255,7 @@ class ia_pv_test(unittest.TestCase):
                     expec[:,i] = range(3,9)
                 got = pv.getchunk()
                 self.assertTrue((got == expec).all())
-                self.assertTrue(pv.getchunk(getmask=T).all())
+                self.assertTrue(pv.getchunk(getmask=True).all())
                 pv.done()
         
     def test_stretch(self):
@@ -368,9 +368,9 @@ class ia_pv_test(unittest.TestCase):
             overwrite=True, start=[343,42],end=[343,660],width=425,unit='arcsec'
         )
         myia.open(datapath + "pv_mask_exp.im")
-        expec = myia.getchunk(getmask=T)
+        expec = myia.getchunk(getmask=True)
         myia.open(outfile)
-        got = myia.getchunk(getmask=T)
+        got = myia.getchunk(getmask=True)
         myia.done()
         self.assertTrue((got == expec).all())
 

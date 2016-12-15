@@ -78,20 +78,20 @@ def alleqnum(x,num,tolerance=0):
         for i in range(x.shape[0]):
             if not (abs(x[i]-num) < tolerance):
                 print "x[",i,"]=", x[i]
-                return false
+                return False
     if len(x.shape)==2:
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):
                 if not (abs(x[i][j]-num) < tolerance):
                     print "x[",i,"][",j,"]=", x[i][j]
-                    return false
+                    return False
     if len(x.shape)==3:
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):
                 for k in range(x.shape[2]):
                     if not (abs(x[i][j][k]-num) < tolerance):
                         print "x[",i,"][",j,"][",k,"]=", x[i][j][k]
-                        return false
+                        return False
     if len(x.shape)==4:
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):
@@ -99,10 +99,10 @@ def alleqnum(x,num,tolerance=0):
                     for l in range(x.shape[3]):
                         if not (abs(x[i][j][k][l]-num) < tolerance):
                             print "x[",i,"][",j,"][",k,"][",l,"]=", x[i][j][k]
-                            return false
+                            return False
     if len(x.shape)>4:
         stop('unhandled array shape in alleq')
-    return true
+    return True
 
 
 class ia_rebin_test(unittest.TestCase):
@@ -171,10 +171,10 @@ class ia_rebin_test(unittest.TestCase):
         
         outfile = "gk.im"
         try:
-            myim2b = true
+            myim2b = True
             myim2b = myim2.rebin("", bin=[-100,2], overwrite=True)
         except Exception, e:
-            myim2b = false
+            myim2b = False
         self.assertFalse(myim2b)
         
         self.assertFalse(

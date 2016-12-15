@@ -154,14 +154,14 @@ class ia_subimage_test(unittest.TestCase):
                     == myia.restoringbeam(channel=i+2, polarization=j+2)
                 )
         box = rg.box([2, 2, 2, 2], [5, 5, 5, 2])
-        subim = myia.subimage("", region=box, dropdeg=T)
+        subim = myia.subimage("", region=box, dropdeg=True)
         for i in range(subim.shape()[2]):
             self.assertTrue(
                 subim.restoringbeam(channel=i, polarization=-1)
                 == myia.restoringbeam(channel=i+2, polarization=2)
             )
         box = rg.box([2, 2, 6, 1], [5, 5, 6, 3])
-        subim = myia.subimage("", region=box, dropdeg=T)
+        subim = myia.subimage("", region=box, dropdeg=True)
         for i in range(subim.shape()[2]):
             self.assertTrue(
                 subim.restoringbeam(channel=-1, polarization=i)
@@ -226,9 +226,9 @@ class ia_subimage_test(unittest.TestCase):
         myia.open(outfile)
         # includes Q although that plane should be fully masked
         self.assertTrue((myia.shape() == numpy.array([19, 19, 20, 3])).all())
-        self.assertTrue(myia.getchunk(getmask=T)[:,:,:,0].all())
-        self.assertTrue(myia.getchunk(getmask=T)[:,:,:,2].all())
-        self.assertFalse(myia.getchunk(getmask=T)[:,:,:,1].any())
+        self.assertTrue(myia.getchunk(getmask=True)[:,:,:,0].all())
+        self.assertTrue(myia.getchunk(getmask=True)[:,:,:,2].all())
+        self.assertFalse(myia.getchunk(getmask=True)[:,:,:,1].any())
         myia.done()
         
         region = "box[[2pix,2pix],[6pix,6pix]])"

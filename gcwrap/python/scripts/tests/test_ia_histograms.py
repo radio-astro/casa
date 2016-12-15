@@ -78,20 +78,20 @@ def alleqnum(x,num,tolerance=0):
         for i in range(x.shape[0]):
             if not (abs(x[i]-num) < tolerance):
                 print "x[",i,"]=", x[i]
-                return false
+                return False
     if len(x.shape)==2:
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):
                 if not (abs(x[i][j]-num) < tolerance):
                     print "x[",i,"][",j,"]=", x[i][j]
-                    return false
+                    return False
     if len(x.shape)==3:
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):
                 for k in range(x.shape[2]):
                     if not (abs(x[i][j][k]-num) < tolerance):
                         print "x[",i,"][",j,"][",k,"]=", x[i][j][k]
-                        return false
+                        return False
     if len(x.shape)==4:
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):
@@ -99,10 +99,10 @@ def alleqnum(x,num,tolerance=0):
                     for l in range(x.shape[3]):
                         if not (abs(x[i][j][k][l]-num) < tolerance):
                             print "x[",i,"][",j,"][",k,"][",l,"]=", x[i][j][k]
-                            return false
+                            return False
     if len(x.shape)>4:
         stop('unhandled array shape in alleq')
-    return true
+    return True
 
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/ia_histograms/'
 
@@ -129,7 +129,7 @@ class ia_histograms_test(unittest.TestCase):
             ok = myim.histograms(axes=[9,19])
         except Exception, e:
             print 'Caught expected Exception' + str(e)
-            ok = false
+            ok = False
         self.assertFalse(ok, 'Histograms unexpectedly did not fail (1)')
         
         nbins = 25
@@ -184,7 +184,7 @@ class ia_histograms_test(unittest.TestCase):
         self.assertTrue(hists, 'histograms failed (4)')
         hists = myim.histograms()
         self.assertTrue(hists, 'histograms failed (5)')
-        hists = myim.histograms(cumu=T, log=T)
+        hists = myim.histograms(cumu=True, log=True)
         self.assertTrue(hists, 'histograms failed (6)')
 
         ok = myim.done()

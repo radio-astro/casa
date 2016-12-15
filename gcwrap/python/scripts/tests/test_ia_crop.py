@@ -94,7 +94,7 @@ class ia_crop_test(unittest.TestCase):
                 ["2.15930000e+04arcmin", "6.00000305e+00arcmin","1.41500500e+09Hz"]
             )
         )
-        myia.set(pixelmask=F,region=reg)
+        myia.set(pixelmask=False,region=reg)
         crop = myia.crop()
         self.assertTrue((crop.shape() == [16, 14, 12]).all())
         crop = myia.crop(axes=[0])
