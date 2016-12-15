@@ -1161,6 +1161,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 									  pol, itsImageShape[2], 
 									  *pb() );
 		  
+		  
 		  LatticeExpr<Float> normed( sqrt(abs(*wtsubim)) / itsPBScaleFactor  );
 		  LatticeExpr<Float> limited( iif( normed > fabs(pblimit) , normed, 0.0 ) );
 		  pbsubim->copyData( limited );
@@ -1397,8 +1398,13 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   {
     LogIO os( LogOrigin("SIImageStore","divideResidualByWeight",WHERE) );
     
+
+    
+
     // Normalize by the sumwt, per plane. 
     Bool didNorm = divideImageByWeightVal( *residual() );
+
+    
     
    
     if( itsUseWeight )
@@ -1433,7 +1439,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  os << "Dividing " << itsImageName+String(".residual") ;
 		  os << " by [ sqrt(weightimage) * " << itsPBScaleFactor ;
 		  os << " ] to get flat noise with unit pb peak."<< LogIO::POST;
-		  scalepb=fabs(pblimit);
+		  scalepb=fabs(pblimit)*itsPBScaleFactor*itsPBScaleFactor;
 		}
 		if( normtype=="flatsky") {
 		  deno = LatticeExpr<Float> ( *(wtsubim) );
@@ -1441,7 +1447,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
 		  os << "Dividing " << itsImageName+String(".residual") ;
 		  os << " by [ weight ] to get flat sky"<< LogIO::POST;
-		  scalepb=fabs(pblimit*pblimit);
+		  scalepb=fabs(pblimit*pblimit)*itsPBScaleFactor*itsPBScaleFactor;
 		}
 
 		//		IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
@@ -1475,6 +1481,9 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
        {copyMask(pb(),residual());}
 
 	if( pblimit <0.0 && (residual()->getDefaultMask()).matches("mask0") ) removeMask( residual() );
+
+
+
 
   }
   
