@@ -197,7 +197,7 @@ class specfit_test(unittest.TestCase):
         self.assertTrue(abs(diffData).max() < 2e-11)
         self.assertTrue(
             (
-                got.getchunk(getmask=T) == expected.getchunk(getmask=T)
+                got.getchunk(getmask=True) == expected.getchunk(getmask=True)
             ).all()
         )
         gotCsys = got.coordsys()
@@ -914,7 +914,7 @@ class specfit_test(unittest.TestCase):
                     else:
                         sig[:,:,50,:] = birdiesigma
                     if i == 1:
-                        myia.fromarray(sigmaimage, sig, overwrite=T)
+                        myia.fromarray(sigmaimage, sig, overwrite=True)
                         myia.done()
                         sig = sigmaimage
                     for code in [run_fitprofile, run_specfit]:
@@ -945,7 +945,7 @@ class specfit_test(unittest.TestCase):
         res = specfit(
             imagename=datapath + 'simple.im',
             region='circle [[5pix, 5pix], 3pix], range=[1chan,14chan]',
-            multifit=T,residual=resid
+            multifit=True,residual=resid
         )
         myia = iatool()
         myia.open(datapath + resid)
@@ -1042,7 +1042,7 @@ class specfit_test(unittest.TestCase):
         pixfit = specfit(
             imagename=datapath + 'IRC10216_HC3N.cube_r0.5.image',
             region=datapath + 'specfit.crtf', ngauss=2,
-            multifit=T, amp='fit.amp.image', center='fitcenter.image',
+            multifit=True, amp='fit.amp.image', center='fitcenter.image',
             fwhm='fitfwhm.image'
         )
         for im in ('fit.amp.image', 'fitcenter.image', 'fitfwhm.image'):
