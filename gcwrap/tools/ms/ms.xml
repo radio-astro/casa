@@ -1106,7 +1106,7 @@ the ms definition itself. -->
      </param>
     
      <param type="int" direction="in" name="width">
-     <description>number of input channels to average</description>
+     <description>DEPRECATED. Use mstransform to select and average data prior to running tofits().</description>
      <value>1</value>
      </param>
 
@@ -1178,6 +1178,11 @@ the ms definition itself. -->
     the measurement set associated with this tool. The \fits\ file is
     always written in floating point format and the data are always
     stored in the primary array of the \fits\ file.
+
+    IMPORTANT NOTE: In general, some of the data averaging features of this method
+    have never worked properly. In general, users should run mstransform
+    to select and average data prior to running tofits(). The
+    associated input parameters are slowly being deprecated and removed.
 
     If the measurement set has been imaged or calibrated in CASA, it
     may contain additional data columns. You need to select ONE of

@@ -14,16 +14,19 @@ def exportuvfits(
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
         writesyscal=False #until ms syscal table defined
-        #start=-1 # redundant, use spw expr
-        #nchan=-1 # redundant, use spw expr
+        if avgchan != 1:
+            casalog.post(
+                "WARNING: The avgchan parameter has been deprecated. It no longer "
+                + "functions (and it is questionable if it actually ever did) and will "
+                + "be removed in a future version. Run mstransform prior to exportuvfits "
+                + "to select and average data before writing it to UVFITS format", 'WARN'
+            )
         res = myms.tofits(
             fitsfile=fitsfile,
             column=datacolumn,
             field=field, spw=spw,
             baseline=antenna, time=time,
-            #start=start,
-            #nchan=nchan,
-            width=avgchan,
+            # width=avgchan,
             writesyscal=writesyscal,
             multisource=multisource,
             combinespw=combinespw,

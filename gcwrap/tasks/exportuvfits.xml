@@ -53,7 +53,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<value></value>
 	</param>
 	<param type="int" name="avgchan">
-		<description>Channel averaging width (value > 1 indicates averaging)</description>
+		<description>DEPRECATED. Use mstransform to select and average data prior to running exportuvfits.</description>
 		<value>1</value>
 	</param>
 
@@ -104,6 +104,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         the same file.  See the spw, multisource, and combinespw descriptions
         below.
 
+        IMPORTANT NOTE: In general, some of the data averaging features of this task have never
+        worked properly. In general, users should run mstransform to select and average data
+        prior to running exportuvfits. The associated input parameters are being slowly
+        deprecated and removed.
+
         Keyword arguments:
         vis -- Name of input visibility file
                 default: none;  example: vis='ngc5921.ms'
@@ -152,9 +157,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 30min on next day
                timerange='09:44:00' data within one integration of time
                timerange='&gt;10:24:00' data after this time
-        avgchan -- Channel averaging width (value &gt; 1 indicates averaging)
-                default =&gt;1; example: avgchan=3
-                output data will average channels in groups of three.
+        avgchan -- DEPRECATED Use mstranform to select and average data prior to running exportuvfits.
         multisource -- Write in multi-source format
                 default: =&gt; True;
                 Set to False if a single source is selected. Note that diffmap does not work on

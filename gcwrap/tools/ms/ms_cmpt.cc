@@ -515,7 +515,13 @@ bool ms::tofits(
 			Int inchan=1;
 			Int istart=0;
 			Int istep=1;
-			Int iwidth=width;
+            if (width != 1) {
+                *itsLog << LogIO::WARN << LogOrigin("ms", __func__)
+                    << "The width parameter has been deprecated. Run mstransform "
+                    << "prior to running ms.tofits() to select and average data."
+                    << LogIO::POST;
+            }
+			Int iwidth = 1;
 			if (spwS==String("")) {
 				spwS="*";
 			}
@@ -551,12 +557,6 @@ bool ms::tofits(
 					inchan=1;
 					istep=1;
 				}
-			}
-			if (iwidth < 1) {
-				iwidth = 1;
-			}
-			if (iwidth > inchan) {
-				iwidth = inchan;
 			}
 			subselect = mssSetData(
 				*itsMS, *mssel, "", timeS, baselineS, fieldS,
