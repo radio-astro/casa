@@ -3,6 +3,88 @@ from taskinit import *
 from odict import odict
 import numpy
 
+_ia = iatool( )
+_rg = rgtool( )
+
+# AUTHOR: S. Jaeger
+#
+# NAME: getimaxes
+#
+# DESCRIPTION:
+# This function uses the coordinate information associated
+# with an image to find where the directional (sky) axes are,
+# the spectral axes, and the stokes axes.
+#
+# INPUT:
+#    imagename   string   path to a file on disk.
+#
+# RETURN
+#    list of four lists, [list1, list2, list3, list4 ], as follows :
+#       list1: ['axis num of 1st sky axis', 'Name of axis' ]
+#       list2: ['axis num of 2nd sky axis', 'Name of axis' ]
+#       list3: ['axis num of spectral axis', 'Spectral' ]
+#       list4: ['axis num of stokes axis', 'Stokes' ]
+
+def getimaxes(imagename):
+	"""
+	Open an image file, looking at its coordinate system information
+	to determine which axes are directional, linear, spectral, and
+	the stokes axies.
+
+	The return list or lists contains the axis numbers and names in
+	the following order:
+	     1. Directional or Linear
+	     2. Directional or Linear
+	     3. Spectral
+	     4. Stokes
+
+	Note that if an axis type is not found an empty list is returned
+        for that axis.
+	"""
+
+	# Get the images coord. sys.
+	csys=None
+	_ia.open( imagename )
+	csys=_ia.coordsys()
+
+	# Find where the directional and channel axies are
+	# Save the internal placement of the axies in a list
+	# (which will be in the following order:
+	#    direction1: RA, Longitude, Linear, el, ..
+	#    direction2: DEC, Lattitude, Linear, az, ..
+	#    spectral:
+	#    stokes: I or V
+	axisTypes=csys.axiscoordinatetypes()
+	axisNames=csys.names()
+	
+	# Note that we make a potentially dangerous assumption here
+	# that the first directional access is always RA, but it
+	# may not be.  The names given to the axies are completely
+	# arbitrary and can not be used to determine one axis from
+	# another.
+	# TODO throw exception??? if we find extra axies or
+	#      unrecognized axies.
+	retValue=[['',''],['',''],['',''],['','']]
+	foundFirstDir=False
+	for i in range( len( axisTypes ) ):
+		if ( axisTypes[i]=='Direction' or axisTypes[i]=='Linear' ):
+			if ( not foundFirstDir ) :
+				retValue[0]=[i,axisNames[i]]
+				foundFirstDir=True
+			else:
+				retValue[1]=[i,axisNames[i]]
+		elif ( axisTypes[i]=='Spectral' ) :
+			retValue[2]=[i,axisNames[i]]
+		elif ( axisTypes[i]=='Stokes' ) :
+			retValue[3]=[i,axisNames[i]]
+
+	if ( csys != None ):
+	    del csys
+	if ( _ia.isopen() ):
+	    _ia.close()
+	return retValue
+
+
 # The function that handles the imval task.
 def imval(imagename, region, box, chans, stokes):
     myia = iatool()
@@ -128,7 +210,7 @@ def imval(imagename, region, box, chans, stokes):
             chans = ""
         if stokes.startswith("-1"):
             stokes = ""
-        reg = rg.frombcs(
+        reg = _rg.frombcs(
             mycsys.torecord(), myia.shape(), box, chans,
             stokes, "a", region
         )

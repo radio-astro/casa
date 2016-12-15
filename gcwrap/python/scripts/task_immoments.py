@@ -85,6 +85,7 @@
 
 import os
 from taskinit import *
+_rg = rgtool( )
 
 def immoments(
     imagename, moments, axis, region, box, chans, stokes,
@@ -104,7 +105,7 @@ def immoments(
         elif ( len( outfile ) ==  1 ):
             raise Exception, 'outfile is not specified but must be'
         _myia.open(imagename) 
-        reg = rg.frombcs(csys=_myia.coordsys().torecord(),
+        reg = _rg.frombcs(csys=_myia.coordsys().torecord(),
             shape=_myia.shape(), box=box, chans=chans, stokes=stokes,
             stokescontrol="a", region=region
         )
@@ -124,4 +125,4 @@ def immoments(
         raise
     finally:
         _myia.done()
-            
+

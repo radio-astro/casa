@@ -97,6 +97,10 @@ from tasks import *
 from taskinit import *
 import unittest
 
+_rg = rgtool( )
+_ia = iatool( )
+#from imval import imval
+
     #
     # To make things a little more interesting, I've used the
     # lyrics to song for debug msgs, guess which song and you win
@@ -131,7 +135,7 @@ debug_msgs[19]= "There's gotta be somebody for me out there"
 debug_msgs[20]= "Tonight, out on the street out in the moonlight"
 debug_msgs[21]= "And dammit this feels too right"
 debug_msgs[22]= "It's just like Deja Vu"
-debug_msgs[23]= "Me standin’ here with you"
+debug_msgs[23]= "Me standin’ here with you"
 debug_msgs[24]= "So I'll be holdin`my own breath"
 debug_msgs[25]= "Could this be the end?"
 debug_msgs[26]= "Is it that moment when"
@@ -1066,13 +1070,13 @@ class immoment_test2(unittest.TestCase):
         self.assertTrue(len(tb.showcache()) == 0)
 
         try:
-            ia.open( 'n1333_both.image' )
-            csys=ia.coordsys()
-            ia.done()
-            ia.fromshape( 'test.image', shape=[800,800,1,18], csys=csys.torecord(), overwrite=True, log=True )
-            ia.addnoise()
-            stats=ia.statistics(list=True, verbose=True)
-            ia.done()
+            _ia.open( 'n1333_both.image' )
+            csys=_ia.coordsys()
+            _ia.done()
+            _ia.fromshape( 'test.image', shape=[800,800,1,18], csys=csys.torecord(), overwrite=True, log=True )
+            _ia.addnoise()
+            stats=_ia.statistics(list=True, verbose=True)
+            _ia.done()
             # pick a place that is slightly bigger then the mid value
             # range for doing the mask, just for fun.
             maskPt=float((stats['max'][0]+stats['min'][0])/2.0)-1.5
@@ -1202,7 +1206,7 @@ class immoment_test2(unittest.TestCase):
         mask = iatool()
         mask.open("exp")
         mask = mask.subimage(
-            "mymask", region=rg.box(blc=[0, 0, 0], trc=[99, 99,0]),
+            "mymask", region=_rg.box(blc=[0, 0, 0], trc=[99, 99,0]),
             dropdeg=True
         )
         cc = mask.getchunk()
