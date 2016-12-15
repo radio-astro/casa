@@ -425,7 +425,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 	  }
 	}
 	else{
-	  if(!incremental&&!initialized) {
+	  if(!incremental&&!initialized && (cubeSlice==0)) {
 	    vb->setModelVisCube(Complex(0.0,0.0));
 	  }
 	  // get the model visibility and write it to the model MS
@@ -823,7 +823,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	      if(myStopSig.gotStopSignal())
 		throw(AipsError("Terminating..."));
                 //	      Timers tInitModel=Timers::getTime();
-                if(!incremental && !predictedComp) {
+                if(!incremental && !predictedComp && (cubeSlice==0 || (noModelCol_p) )) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
                 }
