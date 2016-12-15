@@ -556,7 +556,7 @@ class rg_frombcs_test(unittest.TestCase):
         expec = [box11, box12]
         got = subi.toworld([10,10])['numeric'][0:2]
         self.compLists(got, expec)
-        gotmask = subi.getchunk(getmask=T)[:,:,0,0]
+        gotmask = subi.getchunk(getmask=True)[:,:,0,0]
         subi.done()
         expmask = gotmask.copy()
         expmask[:] = False
