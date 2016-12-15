@@ -13,6 +13,8 @@ import string
 
 from sdimprocess import sdimprocess
 
+_ia = iatool( )
+
 #
 # Unit test of sdimprocess task.
 # 
@@ -62,14 +64,14 @@ class sdimprocess_unittest_base:
     def _check_shape(self, infile, outfile):
         self._checkfile(infile)
         self._checkfile(outfile)
-        ia.open(infile)
-        inshape = ia.shape()
-        inaxistypes = ia.coordsys().axiscoordinatetypes()
-        ia.close()
-        ia.open(outfile)
-        outshape = ia.shape()
-        outaxistypes = ia.coordsys().axiscoordinatetypes()
-        ia.close()
+        _ia.open(infile)
+        inshape = _ia.shape()
+        inaxistypes = _ia.coordsys().axiscoordinatetypes()
+        _ia.close()
+        _ia.open(outfile)
+        outshape = _ia.shape()
+        outaxistypes = _ia.coordsys().axiscoordinatetypes()
+        _ia.close()
         
         self.assertEqual(len(inshape), len(outshape))
         self.assertTrue(numpy.all(inshape == outshape))
@@ -77,8 +79,8 @@ class sdimprocess_unittest_base:
 
     def _flux(self, csys, ref):
         # see CAS-5779, images/Images/ImageStatistics.tcc
-        axis_ra = csys.findaxis('ra')['axisincoordinate']
-        axis_dec = csys.findaxis('dec')['axisincoordinate']
+        axis_ra = csys.findaxis(axis=csys.findaxisbyname('ra'))['axisincoordinate']
+        axis_dec = csys.findaxis(axis=csys.findaxisbyname('dec'))['axisincoordinate']
         print axis_ra, axis_dec
         units = csys.units()
         increments = csys.increment()['numeric']
@@ -89,14 +91,14 @@ class sdimprocess_unittest_base:
         
     def _checkstats(self,name,ref):
         self._checkfile(name)
-        ia.open(name)
-        stats=ia.statistics(list=True, verbose=True)
+        _ia.open(name)
+        stats=_ia.statistics(list=True, verbose=True)
 
         # set 'flux' value to ref
         if not ref.has_key('flux'):
-            ref['flux'] = self._flux(ia.coordsys(), ref)
+            ref['flux'] = self._flux(_ia.coordsys(), ref)
 
-        ia.close()
+        _ia.close()
         
         for key in stats.keys():
         #for key in self.keys:
@@ -354,9 +356,9 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
 
         self._check_shape(self.rawfile, self.outfile)
         self._checkstats(self.outfile,refstats)
-        ia.open(self.outfile)
-        mask_out = ia.getchunk(getmask=True)
-        ia.close()
+        _ia.open(self.outfile)
+        mask_out = _ia.getchunk(getmask=True)
+        _ia.close()
         self.assertTrue((mask_out==mask_in).all(), "Unexpected mask in output image.")
         
     def test100_3d(self):
@@ -567,9 +569,9 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
         #print imstat(self.outfile)
         self._check_shape(self.rawfiles[0], self.outfile)
         self._checkstats(self.outfile,refstats)
-        ia.open(self.outfile)
-        mask_out = ia.getchunk(getmask=True)
-        ia.close()
+        _ia.open(self.outfile)
+        mask_out = _ia.getchunk(getmask=True)
+        _ia.close()
         self.assertTrue((mask_out==mask_ref).all(), "Unexpected mask in output image.")
 
     def test203(self):
