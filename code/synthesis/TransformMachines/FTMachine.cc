@@ -403,7 +403,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //logIO() << LogIO::DEBUGGING << "Channel Map: " << chanMap << LogIO::POST;
     }
     // Should never get here
-    if(max(chanMap)>=nchan||min(chanMap)<-1) {
+    if(max(chanMap)>=nchan||min(chanMap)<-3) {
       logIO() << "Illegal Channel Map: " << chanMap << LogIO::EXCEPTION;
     }
     
