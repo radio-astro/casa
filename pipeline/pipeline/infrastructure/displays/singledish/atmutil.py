@@ -181,7 +181,8 @@ def get_transmission(vis, antenna_id=0, spw_id=0, doplot=False):
     dry_opacity = get_dry_opacity(myat)
     wet_opacity = get_wet_opacity(myat)
     transmission = calc_transmission(airmass, dry_opacity, wet_opacity)
-    frequency = numpy.fromiter((center_freq + (float(i) - 0.5 * nchan) * resolution for i in xrange(nchan)), dtype=numpy.float64)
+    #frequency = numpy.fromiter((center_freq + (float(i) - 0.5 * nchan) * resolution for i in xrange(nchan)), dtype=numpy.float64)
+    frequency = qa.convert(myat.getSpectralWindow(0), "GHz")['value']
    
     if doplot:
         plot(frequency, dry_opacity, wet_opacity, transmission)
