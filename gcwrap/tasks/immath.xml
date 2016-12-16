@@ -196,7 +196,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                                 c is the value if false
                           Take the rms value of two images
                           expr = ' sqrt(IM0 * IM0 + IM1 * IM1) '
-                          Note: No exponentiaion available?
                           Build an image pixel by pixel from the minimum of (image2.im, 2*image1.im)
                           expr='min(IM1,2*max(IM0))'
                varnames   For mode="evalexpr". Instead of the default variable names IM0, IM1, ..., use
