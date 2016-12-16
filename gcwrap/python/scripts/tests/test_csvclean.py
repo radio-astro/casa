@@ -6,6 +6,8 @@ from tasks import *
 from taskinit import *
 import unittest
 
+_ia = iatool( )
+
 '''
 Unit tests for task csvclean. It tests the following parameters:
     vis:           wrong and correct values
@@ -47,9 +49,9 @@ class csvclean_test1(unittest.TestCase):
      
 
     def getpixval(self,img,pixel):
-        ia.open(img)
-        px = ia.pixelvalue(pixel)
-        ia.close()
+        _ia.open(img)
+        px = _ia.pixelvalue(pixel)
+        _ia.close()
         return px['value']['value']
     
     def verify_stats(self,stats):
@@ -79,9 +81,9 @@ class csvclean_test1(unittest.TestCase):
     def verify_field(self,image,phasecenter):
         #use ia.summary, get the coordinates from refval and
         #compare to the ones given to csvclean
-        ia.open(image)
-        summary = ia.summary()
-        ia.close()
+        _ia.open(image)
+        summary = _ia.summary()
+        _ia.close()
         # values of refval are in radians
         ra = summary['refval'][0]
         dec = summary['refval'][1]
@@ -240,9 +242,9 @@ class csvclean_test1(unittest.TestCase):
         '''Csvclean 17: Verify statistics of image---DISABLED'''
         self.res = csvclean(vis=self.msfile,imagename=self.img,field='2',imsize=[500,500],
                             niter=10, restoringbeam=['0.5arcsec'],cell='0.35arcsec',phasecenter=0)
-        ia.open(self.img+'.image')
-        stats = ia.statistics(list=True, verbose=True)
-        ia.close()
+        _ia.open(self.img+'.image')
+        stats = _ia.statistics(list=True, verbose=True)
+        _ia.close()
         print stats
         retValue = self.verify_stats(stats)
         

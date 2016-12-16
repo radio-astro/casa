@@ -9,6 +9,8 @@ import math
 import numpy
 import numbers
 
+_rg = rgtool( )
+
 #run using
 # `which casa` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --mem test_imstat
 #
@@ -348,7 +350,7 @@ class imstat_test(unittest.TestCase):
         myia.fromshape("test011.im", shape)
         box = "0, 0, 2, 2, 4, 4, 6, 6"
         chans = "0~4, 6, >8"
-        reg = rg.frombcs(
+        reg = _rg.frombcs(
             myia.coordsys().torecord(), shape,
             box=box, chans=chans
         )
@@ -358,7 +360,7 @@ class imstat_test(unittest.TestCase):
         self.assertTrue(bb["npts"][0] == 126)
         
         rfilename = "myreg.reg"
-        rg.tofile(rfilename, reg)
+        _rg.tofile(rfilename, reg)
         bb = myia.statistics(region=rfilename)
         self.assertTrue(bb["npts"][0] == 126)
             
@@ -376,7 +378,7 @@ class imstat_test(unittest.TestCase):
                 for j in range(shape[3]):
                     got = myia.statistics(
                         axes=axes,
-                        region=rg.box(
+                        region=_rg.box(
                             blc = [0, 0, i, j],
                             trc=[shape[0]-1, shape[1]-1, i, j]
                         )
@@ -635,7 +637,7 @@ class imstat_test(unittest.TestCase):
         bb[50,50] = 200
         bb[51,51] = -200
         myia.putchunk(bb)
-        reg = rg.box([25,25],[75,75])
+        reg = _rg.box([25,25],[75,75])
         resnew = myia.statistics(region=reg, clmethod="framework")
         resold = myia.statistics(region=reg, clmethod="tiled")
         myia.done()
@@ -647,7 +649,7 @@ class imstat_test(unittest.TestCase):
     
         myia.fromshape("", [100,100, 100])
         myia.addnoise()
-        reg = rg.box([25,25,25],[75,75,25])
+        reg = _rg.box([25,25,25],[75,75,25])
         for axes in [[], [0], [1], [2], [0,1], [0,2], [1,2], [0,1,2]]:
             resnew = myia.statistics(axes=axes, region=reg, clmethod="framework")
             resold = myia.statistics(axes=axes, region=reg, clmethod="tiled")

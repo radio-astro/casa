@@ -95,6 +95,9 @@ from tasks import *
 from taskinit import *
 import unittest
 
+_ia = iatool( )
+_rg = rgtool( )
+
 sep = os.sep
 datapath=os.environ.get('CASAPATH').split()[0] + sep + 'data' + sep\
     + 'regression' + sep + 'unittest' + sep + 'immath' + sep
@@ -145,9 +148,9 @@ imageList4 = [IQU_im, IQUV_im, POLA_im, POLL_im, POLT_im, Q_im, QU_im, U_im, UV_
 
 # Retrieve the pixel value at a particular postion in an image.
 def _getPixelValue( imageName, point ):
-    ia.open( imageName );
-    retValue = ia.pixelvalue( point );
-    ia.close();
+    _ia.open( imageName );
+    retValue = _ia.pixelvalue( point );
+    _ia.close();
     
     if len( retValue ) < 1 :
         # Create an exception
@@ -169,7 +172,7 @@ def _exceptionInfo( maxLevel=5 ):
     return(excName, excArgs, excTb)
 
 def make_data(imshape):
-    data = ia.makearray(0, imshape)
+    data = _ia.makearray(0, imshape)
     for i in range(imshape[0]):
         data[i] = list(data[i])
         for j in range(imshape[1]):
@@ -411,7 +414,7 @@ class immath_test1(unittest.TestCase):
         print "immath( imagename="+imageList[1]+", expr='IM0', "\
                         +"region="+imageList[2]+", outfile='input_test12' )"
         try:
-            rec = rg.fromfiletorecord(imageList[2])
+            rec = _rg.fromfiletorecord(imageList[2])
             results=immath( imagename=imageList[1], expr='IM0', \
                         region=imageList[2], outfile='input_test12' )
         except:
@@ -918,9 +921,9 @@ class immath_test2(unittest.TestCase):
         else:
             # Verify the size of the output image, and check to make sure
             # the values are copied over correctly
-            ia.open( outimage );
-            size = ia.shape();
-            ia.close()
+            _ia.open( outimage );
+            size = _ia.shape();
+            _ia.close()
             if ( len(size) < 4 or size[0]!=256 or size[1]!=256 or \
                     size[2]!=1 or size[3]!=1 ):
                 retValue['success']=False
@@ -959,9 +962,9 @@ class immath_test2(unittest.TestCase):
         # function, however, we are assuming that its a 256x256x1x46 image.
         size=[]
         try:
-            ia.open( outimage )
-            size=ia.shape()
-            ia.done()
+            _ia.open( outimage )
+            size=_ia.shape()
+            _ia.done()
         except Exception, e:
             casalog.post( "Exception occured getting image shape ... "+str(e), 'DEBUG1')
             retValue['success']=False
@@ -1115,9 +1118,9 @@ class immath_test2(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         funcs = ['sin', 'SIN', 'Sin']
         imagename = cas1452_1_im
-        ia.open(imagename)
-        expected = numpy.sin(ia.getchunk())
-        ia.close()
+        _ia.open(imagename)
+        expected = numpy.sin(_ia.getchunk())
+        _ia.close()
         #try:
         for f in funcs:
             try:
@@ -1133,9 +1136,9 @@ class immath_test2(unittest.TestCase):
                     mode='evalexpr', expr=expr
                 )
             )
-            ia.open(outfile)
-            got = ia.getchunk()
-            ia.close()
+            _ia.open(outfile)
+            got = _ia.getchunk()
+            _ia.close()
             maxdiff = numpy.abs(got - expected).max()
             self.assertTrue( maxdiff <= 1e-7)
             os.system('rm -rf ' + outfile)
@@ -1194,9 +1197,9 @@ class immath_test3(unittest.TestCase):
     def _comp(self, imagename, mode, outfile, expected, epsilon, polithresh=''):
         self.assertTrue(immath(imagename=imagename, outfile=outfile, mode=mode, polithresh=polithresh))
         self.assertTrue(os.path.exists(outfile))
-        ia.open(outfile)
-        got = ia.getchunk()
-        ia.done()
+        _ia.open(outfile)
+        got = _ia.getchunk()
+        _ia.done()
         diff = expected - got
         if (epsilon == 0):
             #<debug>
@@ -1437,8 +1440,8 @@ class immath_test3(unittest.TestCase):
         # Define a region as a global symbol.
         # Use it in an expression using the $-notation.
         # The mask should be all true (in fact, there is no mask).
-        #global_iet_reg1 = rg.quarter()
-        global_iet_reg1 = rg.box(blc=[.25,.25],trc=[.75,.75], frac=True)
+        #global_iet_reg1 = _rg.quarter()
+        global_iet_reg1 = _rg.box(blc=[.25,.25],trc=[.75,.75], frac=True)
         #ex3 = imagecalc(pixels='$global_iet_im1[$global_iet_reg1]')
         ex3all = myia.imagecalc(pixels='"'+imname1+'"')
         self.assertTrue(ex3all)

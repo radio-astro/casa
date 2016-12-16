@@ -59,7 +59,7 @@ import numpy as np
 import shutil
 from taskinit import *
 from recipes.pixelmask2cleanmask import pixelmask2cleanmask
-(csys,) = gentools(['cs']) 
+(csys,ia,rg) = gentools(['cs','ia','rg']) 
 
 debug = False 
 #debug = True 

@@ -167,6 +167,8 @@ import shutil
 from taskinit import *
 import re
 
+_rg = rgtool( )
+
 def immath(
     imagename, mode, outfile, expr, varnames, sigma,
     polithresh, mask, region, box, chans, stokes, stretch,
@@ -293,7 +295,7 @@ def _immath_createsubimages(
     for image in filenames:
         try:
             _myia.open(image)
-            reg = rg.frombcs(csys=_myia.coordsys().torecord(),
+            reg = _rg.frombcs(csys=_myia.coordsys().torecord(),
                 shape=_myia.shape(), box=box, chans=chans, stokes=stokes,
                 stokescontrol="a", region=region
             )
@@ -582,7 +584,7 @@ def _immath_extract_stokes_from_single_image(
             pixNum = stokeslist.index(stokes)
             blc[stokesPixel] = pixNum
             trc[stokesPixel] = pixNum
-            subim = _myia.subimage(outfile=myfile, region=rg.box(blc=blc, trc=trc))
+            subim = _myia.subimage(outfile=myfile, region=_rg.box(blc=blc, trc=trc))
             subim.done()
     _myia.done()
     filenames = [Qimage, Uimage]
