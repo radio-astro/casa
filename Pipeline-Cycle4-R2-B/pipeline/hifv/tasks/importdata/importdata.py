@@ -478,7 +478,9 @@ class VLAImportData(basetask.StandardTaskTemplate):
             # do we have the necessary calibrators?
             if not required.issubset(ms.intents):
                 missing = required.difference(ms.intents)
-                LOG.warning('%s is missing calibration intents %s'
+                LOG.warning('%s is missing calibration intents %s.'
+                            '  If intent BANDPASS is missing,  the flux density '
+                            'calibrator will be used as the bandpass calibrator instead.'
                             '' % (ms.basename, utils.commafy(missing)))
                 all_ok = False
                 
