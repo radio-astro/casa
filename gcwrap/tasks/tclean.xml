@@ -1499,12 +1499,12 @@ HPX HEALPix grid.  -->
                    uvtaper = [bmaj, bmin, bpa]
 
                    NOTE: the on-sky FWHM in arcsec is roughly  the uv taper/200 (klambda).
-                   default: outertaper=[]; no outer taper applied
- 		   example: outertaper=['5klambda']  circular taper 
+                   default: uvtaper=[]; no Gaussian taper applied
+ 		   example: uvtaper=['5klambda']  circular taper 
  				FWHM=5 kilo-lambda
-                            outertaper=['5klambda','3klambda','45.0deg']
-                            outertaper=['10arcsec'] on-sky FWHM 10 arcseconds
-                            outertaper=['300.0'] default units are lambda 
+                            uvtaper=['5klambda','3klambda','45.0deg']
+                            uvtaper=['10arcsec'] on-sky FWHM 10 arcseconds
+                            uvtaper=['300.0'] default units are lambda 
  			        in aperture plane
 
 </description>
