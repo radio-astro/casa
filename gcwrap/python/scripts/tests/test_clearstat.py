@@ -6,6 +6,8 @@ from tasks import *
 from taskinit import *
 import unittest
 
+_ia = iatool( )
+
 '''
 Unit tests of task clearstat. It tests the following parameters:
     clears read lock on table,
@@ -52,8 +54,8 @@ class clearstat_test(unittest.TestCase):
         os.system('rm -rf ' + self.img)
 
         tb.close()
-        if(ia.isopen == True):
-            ia.close()
+        if(_ia.isopen == True):
+            _ia.close()
             
         
     def test1(self):
@@ -79,23 +81,23 @@ class clearstat_test(unittest.TestCase):
 
     def test3(self):
         '''Test 3: Clear image read lock'''
-        ia.open(self.img)
-        lock = ia.haslock()
+        _ia.open(self.img)
+        lock = _ia.haslock()
         self.assertTrue(lock[0]==True and lock[1]==False,'Cannot acquire read lock on image')
         clearstat()
-        lock = ia.haslock()
-        ia.close()
+        lock = _ia.haslock()
+        _ia.close()
         self.assertTrue(lock[0]==False and lock[1]==False,'Failed to clear read lock on image')
 
     def test4(self):
         '''Test 4: Clear image write lock'''
-        ia.open(self.img)
-        ia.lock(writelock=True)
-        lock = ia.haslock()
+        _ia.open(self.img)
+        _ia.lock(writelock=True)
+        lock = _ia.haslock()
         self.assertTrue(lock[0]==True and lock[1]==True,'Cannot acquire write lock on image')
         clearstat()
-        lock = ia.haslock()
-        ia.close()
+        lock = _ia.haslock()
+        _ia.close()
         self.assertTrue(lock[0]==False and lock[1]==False,'Failed to clear write lock on image')
 
     def test5(self):
@@ -104,17 +106,17 @@ class clearstat_test(unittest.TestCase):
         tbreadlock = tb.haslock(write=False)
         tb.lock()
         tbwritelock = tb.haslock(write=True)
-        ia.open(self.img)
-        ia.lock(writelock=True)
-        lock = ia.haslock()
+        _ia.open(self.img)
+        _ia.lock(writelock=True)
+        lock = _ia.haslock()
         self.assertTrue(tbreadlock==True and tbwritelock==True and lock[0]==True and lock[1]==True,
                         'Cannot acquire locks on table and/or image')
         clearstat()
         tbreadlock = tb.haslock(write=False)
         tbwritelock = tb.haslock(write=True)
-        lock = ia.haslock()
+        lock = _ia.haslock()
         tb.close()
-        ia.close()
+        _ia.close()
 
         self.assertTrue(tbreadlock==False and tbwritelock==False and lock[0]==False and lock[1]==False,
                         'Failed to clear locks on table and/or image')

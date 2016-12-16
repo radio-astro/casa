@@ -113,7 +113,9 @@ import casac
 from tasks import *
 from taskinit import *
 import unittest
+import traceback
 
+_ia = iatool( )
 
 # Input files
 image_file = 'n4826_bima.im'
@@ -515,13 +517,13 @@ class imval_test(unittest.TestCase):
         # Find the min/max points of the image.
         bbox={}
         try: 
-            ia.open( image_file )
-            bbox=ia.boundingbox()
-            ia.done()
+            _ia.open( image_file )
+            bbox=_ia.boundingbox()
+            _ia.done()
         except:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Unable to find size of image "+image_name
+                     +"\nError: Unable to find size of image "+image_file
     
         dir_blc=[]
         dir_trc=[]
@@ -772,13 +774,13 @@ class imval_test(unittest.TestCase):
         # Find the min/max points of the image.
         bbox={}
         try: 
-            ia.open( image_file )
-            bbox=ia.boundingbox()
-            ia.done()
+            _ia.open( image_file )
+            bbox=_ia.boundingbox()
+            _ia.done()
         except:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Unable to find size of input image "+image_name
+                     +"\nError: Unable to find size of input image "+image_file
         
         dir_blc=dir_trc=[]
         min_chan=max_chan=min_stokes=max_stokes=-2
@@ -795,7 +797,7 @@ class imval_test(unittest.TestCase):
         else:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Unable to find corners of input image "+image_name
+                     +"\nError: Unable to find corners of input image "+image_file
             return retValue
     
         #

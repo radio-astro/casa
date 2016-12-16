@@ -8,6 +8,9 @@ from tasks import *
 from taskinit import *
 import unittest
 
+_ia = iatool( )
+_rg = rgtool( )
+
 '''
 Unit tests for task clean. It tests the following parameters:
     vis:           wrong and correct values
@@ -55,9 +58,9 @@ class clean_test1(unittest.TestCase):
         os.system('rm -rf ' + self.img+'*')
      
     def getpixval(self,img,pixel):
-        ia.open(img)
-        px = ia.pixelvalue(pixel)
-        ia.close()
+        _ia.open(img)
+        px = _ia.pixelvalue(pixel)
+        _ia.close()
         return px['value']['value']
         
     def compareimages(self,inimage,refimage):
@@ -66,12 +69,12 @@ class clean_test1(unittest.TestCase):
         return true if pix values are identical
         usually useful for mask images
         """
-        ia.open(inimage)
-        invals = ia.getchunk()
-        ia.close()
-        ia.open(refimage)
-        refvals= ia.getchunk()
-        ia.close()
+        _ia.open(inimage)
+        invals = _ia.getchunk()
+        _ia.close()
+        _ia.open(refimage)
+        refvals= _ia.getchunk()
+        _ia.close()
         diff = refvals - invals
         return (numpy.all(diff==0))
 
@@ -394,24 +397,24 @@ class clean_test1(unittest.TestCase):
         self.res=clean(vis=self.msfile,imagename=self.img+'.wide',mode='channel',mask=self.img+'.narrow.mask', niter=10,imagermode='')
       
         # make sub-image from masks for comparison 
-        ia.open(self.img+'.mask')
-        r1=rg.box([0,0,0,2],[256,256,0,4])
-        sbim=ia.subimage(outfile=self.img+'.subim.mask', region=r1)
-        ia.close()
+        _ia.open(self.img+'.mask')
+        r1=_rg.box([0,0,0,2],[256,256,0,4])
+        sbim=_ia.subimage(outfile=self.img+'.subim.mask', region=r1)
+        _ia.close()
         sbim.close()
         #
         os.system('cp -r '+self.img+'.mask '+self.img+'.ref.mask')
-        ia.open(self.img+'.narrow.mask')
+        _ia.open(self.img+'.narrow.mask')
         # note: narrow mask made with a single spw does not exactly 
         # match with the wider cube with 2 spws in width
-        pixs = ia.getchunk(blc=[0,0,0,0],trc=[256,256,0,1])
-        r1=rg.box([0,0,0,0],[256,256,0,1])
-        ia.close()
-        ia.open(self.img+'.ref.mask')
-        ia.set(pixelmask=False)
-        ia.set(pixelmask=True, region=r1)
-        ia.putchunk(pixels=pixs,blc=[0,0,0,2])
-        ia.close()
+        pixs = _ia.getchunk(blc=[0,0,0,0],trc=[256,256,0,1])
+        r1=_rg.box([0,0,0,0],[256,256,0,1])
+        _ia.close()
+        _ia.open(self.img+'.ref.mask')
+        _ia.set(pixelmask=False)
+        _ia.set(pixelmask=True, region=r1)
+        _ia.putchunk(pixels=pixs,blc=[0,0,0,2])
+        _ia.close()
 
         self.assertTrue(os.path.exists(self.img+'.narrow.image'))
         self.assertTrue(os.path.exists(self.img+'.wide.image'))

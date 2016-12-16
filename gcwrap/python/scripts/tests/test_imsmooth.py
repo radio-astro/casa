@@ -106,6 +106,9 @@ from taskinit import *
 import unittest
 import math
 
+_ia = iatool( )
+_rg = rgtool( )
+
 targetres_im = "imsmooth_targetres.fits"
 tiny = "tiny.im"
 list=['g192_a2.image', 'g192_a2.image-2.rgn']
@@ -661,11 +664,11 @@ class imsmooth_test(unittest.TestCase):
         # the image.
         try:
             # Get the coordinate system and size of the image
-            ia.open( 'g192_a2.image' )
-            csys = ia.coordsys()
-            bb = ia.boundingbox()
+            _ia.open( 'g192_a2.image' )
+            csys = _ia.coordsys()
+            bb = _ia.boundingbox()
             shape = bb['bbShape']
-            ia.done()
+            _ia.done()
     
             # Create an array of zero's, then set position 212,220,0,20
             # to 100 (our point source).
@@ -675,9 +678,9 @@ class imsmooth_test(unittest.TestCase):
             inputArray[212,220,0,20] = 100
     
             # Now make the image!
-            ia.fromarray( pixels=inputArray, csys=csys.torecord(), \
+            _ia.fromarray( pixels=inputArray, csys=csys.torecord(), \
                           outfile='smooth.pointsrc.image' )
-            ia.done()
+            _ia.done()
         except Exception, err:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
@@ -710,8 +713,8 @@ class imsmooth_test(unittest.TestCase):
             #      2. Check that the max is at 212, 220, 0 , 20
             allowedError = 0.009
             
-            ia.open( 'smooth_test1')
-            stats = ia.statistics()
+            _ia.open( 'smooth_test1')
+            stats = _ia.statistics()
             sum = stats['sum'][0]
             if ( ( sum < 100 and sum < ( 100-allowedError ) )
                  or ( sum > 100 and sum > ( 100+allowedError) ) ):
@@ -728,7 +731,7 @@ class imsmooth_test(unittest.TestCase):
                     +"\nError: Max position found at "+str(maxpos)\
                     +" expected it to be at 212,220,0,20."            
             
-            ia.done()
+            _ia.done()
                 
     
         # Do a box car smooth and verify expected results as follows:
@@ -750,8 +753,8 @@ class imsmooth_test(unittest.TestCase):
             # Now that we know something has been done lets check the results!
             #        1. Check that the sum of the points is 100
             #        2. That the points in the box are 0.125=(100/((10+10)*(20+20))
-            ia.open( 'smooth_test2')
-            stats = ia.statistics()
+            _ia.open( 'smooth_test2')
+            stats = _ia.statistics()
             if ( ( sum < 100 and sum < ( 100-allowedError ) )
                  or ( sum > 100 and sum > ( 100+allowedError) ) ):
                 retValue['success']=False
@@ -759,18 +762,18 @@ class imsmooth_test(unittest.TestCase):
                     +"\nError: Sum under Gaussian is "+str(stats['sum'][0])\
                     +" expected 100."
     
-            val1 = ia.pixelvalue( [ 204,200,0,20] )
-            val2 = ia.pixelvalue( [ 222,236,0,20] )
-            val3 = ia.pixelvalue( [ 204,239,0,20] )
-            val4 = ia.pixelvalue( [ 222,201,0,20] )        
-            midVal = ia.pixelvalue( [212,220,0,20] )
+            val1 = _ia.pixelvalue( [ 204,200,0,20] )
+            val2 = _ia.pixelvalue( [ 222,236,0,20] )
+            val3 = _ia.pixelvalue( [ 204,239,0,20] )
+            val4 = _ia.pixelvalue( [ 222,201,0,20] )        
+            midVal = _ia.pixelvalue( [212,220,0,20] )
             for value in [val1, val2, val3, val4, midVal ]:
                 if ( value>(0.125-allowedError) and value<(0.125+allowedError)):
                     retValue['success']=False
                     retValue['error_msgs']=retValue['error_msgs']\
                         +"\nError: Values in the smoothed box are not all 0.125"\
                         +" found value of "+str(value)
-            ia.done()
+            _ia.done()
     
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
@@ -810,11 +813,11 @@ class imsmooth_test(unittest.TestCase):
         # the image.
         try:
             # Get the coordinate system and size of the image
-            ia.open( 'g192_a2.image' )
-            csys = ia.coordsys()
-            bb = ia.boundingbox()
+            _ia.open( 'g192_a2.image' )
+            csys = _ia.coordsys()
+            bb = _ia.boundingbox()
             shape = bb['bbShape']
-            ia.done()
+            _ia.done()
     
             # Create an array of zero's, then set a couple positions (point
             # sources) to 100.
@@ -827,9 +830,9 @@ class imsmooth_test(unittest.TestCase):
     
             
             # Now make the image!
-            ia.fromarray( pixels=inputArray, csys=csys.torecord(), \
+            _ia.fromarray( pixels=inputArray, csys=csys.torecord(), \
                           outfile='rgn.pointsrc.image' )
-            ia.done()
+            _ia.done()
         except Exception, err:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
@@ -862,15 +865,15 @@ class imsmooth_test(unittest.TestCase):
         else:
             # Now that we know something has been done lets check the results!
             #      1. Check that the sum of the values under the curve is 0
-            ia.open( 'rgn_test1')
-            stats = ia.statistics()
+            _ia.open( 'rgn_test1')
+            stats = _ia.statistics()
             if ( stats['sum'][0] < ( 0-allowedError) \
                  or stats['sum'][0] > ( 0+allowedError) ):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                     +"\nError: Sum on smoothed file rgn_test1 is "\
                     +str(stats['sum'][0]) +" expected value is 0."
-            ia.done()
+            _ia.done()
     
     
         results = None
@@ -891,15 +894,15 @@ class imsmooth_test(unittest.TestCase):
         else:
             # Now that we know something has been done lets check the results!
             #     1. Check that the sum of the values under the curve is 0
-            ia.open( 'rgn_test2')
-            stats = ia.statistics()
+            _ia.open( 'rgn_test2')
+            stats = _ia.statistics()
             if ( stats['sum'][0] < ( 0-allowedError) \
                  or stats['sum'][0] > ( 0+allowedError) ):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                     +"\nError: Sum on smoothed file rgn_test2 is "\
                     +str(stats['sum'][0]) +" expected value is 0."
-            ia.done()
+            _ia.done()
     
     
     
@@ -929,15 +932,15 @@ class imsmooth_test(unittest.TestCase):
             # Now that we know something has been done lets check the results!
             #     1. Check that the sum of the values under the curve is 100
             #     2. Check that the max is at 49,71, 0, 14
-            ia.open( 'rgn_test3')
-            stats = ia.statistics()
+            _ia.open( 'rgn_test3')
+            stats = _ia.statistics()
             if ( stats['sum'][0] < ( 100-allowedError) \
                  or stats['sum'][0] > ( 100+allowedError) ):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']\
                     +"\nError: Sum on smoothed file rgn_test3 is "\
                     +str(stats['sum'][0]) +" expected value is 100."
-            ia.done()
+            _ia.done()
     
             # Note that since we've selected a single plane then our
             # output image has a single plane, 0, only!  Thus, unlike
@@ -972,9 +975,9 @@ class imsmooth_test(unittest.TestCase):
             # Now that we know something has been done lets check the results!
             #     1. Check that the sum of the values under the curve is 100
             #     2. Check that the max is at 49,71, 0, 14
-            ia.open(output)
-            stats = ia.statistics()
-            ia.done()
+            _ia.open(output)
+            stats = _ia.statistics()
+            _ia.done()
             
             sum = stats['sum'][0]
             fluxDensity = 99.948 # not 100 because of flux located outside small image
@@ -1033,7 +1036,7 @@ class imsmooth_test(unittest.TestCase):
         for i in range(5):
             blc=[0, 0, i]
             trc=[shape[0]-1, shape[1]-1, i]
-            reg = rg.box(blc=blc, trc=trc)
+            reg = _rg.box(blc=blc, trc=trc)
             xx = myia.subimage(region=reg)
             exp = xx.convolve2d(axes=[0, 1], major=major, minor=minor, pa=pa)
             expbeam = exp.restoringbeam()
@@ -1136,7 +1139,7 @@ class imsmooth_test(unittest.TestCase):
                 pa = "0deg"
             
                 for k in range(shape[2]):
-                    reg = rg.box(blc=[0, 0, k], trc=[shape[0]-1, shape[1]-1, k])
+                    reg = _rg.box(blc=[0, 0, k], trc=[shape[0]-1, shape[1]-1, k])
                     subim = myia.subimage(outfile="", region=reg, dropdeg=True)
                     convim = subim.convolve2d(
                         type="gaussian", major=major, minor=minor,

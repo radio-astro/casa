@@ -191,7 +191,7 @@ class spxfit_test(unittest.TestCase):
         gotchunk = got.getchunk()
         expchunk = expected.getchunk()
         self.checkArray(gotchunk, expchunk)
-        self.checkArray(got.getchunk(getmask=T), expected.getchunk(getmask=T))
+        self.checkArray(got.getchunk(getmask=True), expected.getchunk(getmask=True))
         gotCsys = got.coordsys()
         expectedCsys = expected.coordsys()
         diffPixels = gotCsys.referencepixel()['numeric'] - expectedCsys.referencepixel()['numeric']
@@ -453,7 +453,7 @@ class spxfit_test(unittest.TestCase):
         global myia
         for i in (0, 1):
             myia.open(outfile + "_" + str(i))
-            mask = myia.getchunk(getmask=T)
+            mask = myia.getchunk(getmask=True)
             self.assertTrue((mask.shape == myia.shape()).all())
             self.assertTrue(mask.all())
             myia.done()

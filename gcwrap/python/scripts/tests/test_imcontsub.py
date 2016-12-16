@@ -104,6 +104,8 @@ from tasks import *
 from taskinit import *
 import unittest
 
+_ia = iatool( )
+
 # Input files
 list = ['g192_a2.image', 'g192_a2.image-2.rgn', 
         'g192_a2.contfree', 'g192_a2.cont', 
@@ -461,9 +463,9 @@ class imcontsub_test(unittest.TestCase):
             subtract_expr = '(\"' + newimg + '\"-\"' + oldimg + '\")'
             output_image = newimg + '.diff'
             immath(mode='evalexpr', expr=subtract_expr, outfile=output_image)
-            ia.open(output_image)
-            stats = ia.statistics()
-            ia.close()
+            _ia.open(output_image)
+            stats = _ia.statistics()
+            _ia.close()
             absmax = max(abs(stats['min']), abs(stats['max']))
             # in an infinite precision utopia, the difference image would be 0, but
             # alas, we do not live in such a world yet.
