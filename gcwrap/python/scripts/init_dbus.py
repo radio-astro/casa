@@ -12,26 +12,19 @@ for info in [ (['dbus-daemon'],'dbus'),
               (['CrashReportPoster'],'crashPoster'),
               (['ipcontroller','ipcontroller-2.6'], 'ipcontroller'),
               (['ipengine','ipengine-2.6'], 'ipengine') ]:
-    print "Looping info: " + str(info)
     exelist = info[0]
     entry = info[1]
     for exe in exelist:
-        print "EXE:" + exe
         if casa['helpers']['info']:
-            print "AA"
             casa['helpers'][entry] = (lambda fd: fd.readline().strip('\n'))(os.popen(casa['helpers']['info'] + " --exec 'which " + exe + "'"))
         if casa['helpers'][entry] and os.path.exists(casa['helpers'][entry]):
-            print "BB: " + casa['helpers'][entry]
             break
         else:
-            print "CC"
             casa['helpers'][entry] = None
 
         ### first look in known locations relative to top (of binary distros) or known casa developer areas
         for srchdir in [ __casapath__ + '/MacOS', __casapath__ + '/lib/casa/bin', '/usr/lib64/casa/01/bin', '/opt/casa/01/bin' ] :
-            print "srchdir: " + srchdir
             dd = srchdir + os.sep + exe
-            print "DD: " + dd
             if os.path.exists(dd) and os.access(dd,os.X_OK) :
                 casa['helpers'][entry] = dd
                 break
