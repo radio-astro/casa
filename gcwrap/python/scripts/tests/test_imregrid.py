@@ -6,6 +6,10 @@ from tasks import *
 from taskinit import *
 import unittest
 
+_ia = iatool( )
+_rg = rgtool( )
+_cs = cstool( )
+
 IMAGE = 'image.im'
 gim = "gaussian_source.im"
 
@@ -148,8 +152,8 @@ class imregrid_test(unittest.TestCase):
         )
         s1 = imstat(IMAGE)
         s2 = imstat(out1)
-        ia.open(out1)
-        print "out shape " + str(ia.shape())
+        _ia.open(out1)
+        print "out shape " + str(_ia.shape())
         print "S1: ", s1
         print " "
         print " "
@@ -219,7 +223,7 @@ class imregrid_test(unittest.TestCase):
         
         
         # Exercise various reference codes (no check on output)
-        codes = cs.newcoordsys(direction=True).referencecode('dir', True)
+        codes = _cs.newcoordsys(direction=True).referencecode('dir', True)
         rec1 = im1.torecord()
         im1.done()
         for ref in codes:
@@ -604,7 +608,7 @@ class imregrid_test(unittest.TestCase):
         xx.done()
         self.assertRaises(
             Exception,myia.regrid, outfile="seventh",csys=ccopy.torecord(),
-            axes=2, region=rg.box([0,0,0,0],[19,19,998,3])
+            axes=2, region=_rg.box([0,0,0,0],[19,19,998,3])
         )
         
     def test_no_output_stokes(self):
@@ -1127,7 +1131,7 @@ class imregrid_test(unittest.TestCase):
         myia.fromshape(iname, [20, 20, 10])
         myia.addnoise()
         sname = "8345.sub"
-        sub = myia.subimage(sname, region=rg.box([0,0,5], [19,19,5]), mask=iname + ">0")
+        sub = myia.subimage(sname, region=_rg.box([0,0,5], [19,19,5]), mask=iname + ">0")
         expec = sub.getchunk()
         expm = sub.getchunk(getmask=True)
         myia.done()

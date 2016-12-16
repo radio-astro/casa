@@ -57,6 +57,9 @@ from taskinit import *
 import unittest
 import inspect
 
+_ia = iatool( )
+_vp = vptool( )
+
 from refimagerhelper import TestHelpers
 
 ## List to be run
@@ -1623,8 +1626,8 @@ class test_widefield(testref_base):
      def test_widefield_mosaicft_cube(self):
           """ [widefield] Test_Widefield_mosaicft_cube : MFS with mosaicft  stokes I """
           self.prepData("refim_mawproject.ms")
-#          vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10]) 
-#          vp.saveastable('evlavp.tab')
+#          _vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10]) 
+#          _vp.saveastable('evlavp.tab')
           ret = tclean(vis=self.msfile,spw='*',field='0',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=10,gridder='mosaicft',deconvolver='hogbom',gain=0.1,stokes='I') #,vptable='evlavp.tab')
           report=self.th.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.7987,[256,256,0,0]),(self.img+'.weight',0.6528,[256,256,0,0]) ] )
           self.checkfinal(report)
@@ -1922,9 +1925,9 @@ class test_startmodel(testref_base):
           ## image both sources
           tclean(vis=self.msfile,spw='0:0',imagename=self.img,imsize=200,cell='10.0arcsec',niter=100)
           ## mask out all but the brightest outlier source
-          ia.open(self.img+'.model')
-          ia.calcmask(mask='"'+self.img+'.model">2.0') # keep only high values. i.e. the far out bright source.
-          ia.close()
+          _ia.open(self.img+'.model')
+          _ia.calcmask(mask='"'+self.img+'.model">2.0') # keep only high values. i.e. the far out bright source.
+          _ia.close()
           ## predict only that outlier source
           tclean(vis=self.msfile,spw='0:0',imagename=self.img+'.2',niter=0,savemodel='modelcolumn',imsize=200,cell='10.0arcsec',startmodel=self.img+'.model')
           ## subtract it out
@@ -1945,12 +1948,12 @@ class test_startmodel(testref_base):
           ## image both sources
           tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='10.0arcsec',niter=100,deconvolver='mtmfs')
           ## mask out all but the brightest outlier source
-          ia.open(self.img+'.model.tt0')
-          ia.calcmask(mask='"'+self.img+'.model.tt0">2.0') # keep only high values. i.e. the far out bright source.
-          ia.close()
-          ia.open(self.img+'.model.tt1')
-          ia.calcmask(mask='"'+self.img+'.model.tt0">2.0') # keep only high values. i.e. the far out bright source.
-          ia.close()
+          _ia.open(self.img+'.model.tt0')
+          _ia.calcmask(mask='"'+self.img+'.model.tt0">2.0') # keep only high values. i.e. the far out bright source.
+          _ia.close()
+          _ia.open(self.img+'.model.tt1')
+          _ia.calcmask(mask='"'+self.img+'.model.tt0">2.0') # keep only high values. i.e. the far out bright source.
+          _ia.close()
           ## predict only that outlier source
           tclean(vis=self.msfile,imagename=self.img+'.2',niter=0,savemodel='modelcolumn',imsize=200,cell='10.0arcsec',startmodel=[self.img+'.model.tt0',self.img+'.model.tt1'],deconvolver='mtmfs')
           ## subtract it out
@@ -1979,8 +1982,8 @@ class test_pbcor(testref_base):
 
           self.th = TestHelpers()
 
-          vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10]) 
-          vp.saveastable('evlavp.tab')
+          _vp.setpbpoly(telescope='EVLA', coeff=[1.0, -1.529e-3, 8.69e-7, -1.88e-10]) 
+          _vp.saveastable('evlavp.tab')
 
      def test_pbcor_mfs(self):
           """ [pbcor] Test pbcor with mfs"""

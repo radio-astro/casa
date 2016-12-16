@@ -8,6 +8,9 @@ import re;
 from taskinit import *
 import copy
 
+_ia = iatool( )
+_cb = cbtool( )
+
 '''
 A set of helper functions for the tasks  tclean, xxxx
 
@@ -2105,16 +2108,16 @@ class TestHelpers():
 
      def get_max(self,imname):
           """Get Image max"""
-          ia.open(imname)
-          stat = ia.statistics()
-          ia.close()
+          _ia.open(imname)
+          stat = _ia.statistics()
+          _ia.close()
           return stat['max'],stat['maxpos']
 
      def get_pix(self,imname,pos):
           """Get Image val"""
-          ia.open(imname)
-          apos = ia.pixelvalue(pos)
-          ia.close()
+          _ia.open(imname)
+          apos = _ia.pixelvalue(pos)
+          _ia.close()
           if apos == {}:
                return None
           else:
@@ -2385,9 +2388,9 @@ class TestHelpers():
           return pstr
         
      def getcoordsys(self,imname):
-         ia.open(imname)
-         csys = ia.coordsys().torecord()
-         ia.close()
+         _ia.open(imname)
+         csys = _ia.coordsys().torecord()
+         _ia.close()
          return csys
 
 
@@ -2408,8 +2411,8 @@ class TestHelpers():
           tb.open( msname, nomodify=False )
           hasmodcol = (  (tb.colnames()).count('MODEL_DATA')>0 )
           if not hasmodcol:
-               cb.open(msname)
-               cb.close()
+               _cb.open(msname)
+               _cb.close()
           hasmodcol = (  (tb.colnames()).count('MODEL_DATA')>0 )
           if hasmodcol:
                dat = tb.getcol('MODEL_DATA')
