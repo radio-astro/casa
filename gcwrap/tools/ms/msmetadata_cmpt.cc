@@ -1079,6 +1079,13 @@ int msmetadata::nantennas() {
 	return 0;
 }
 
+int msmetadata::narrays() {
+	_FUNC(
+		return _msmd->nArrays();
+	)
+	return 0;
+}
+
 int msmetadata::nbaselines(bool doAC) {
 	_FUNC(
 		return _msmd->nBaselines(doAC);

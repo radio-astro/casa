@@ -484,12 +484,16 @@ class msmd_test(unittest.TestCase):
         """ Test nantennas()"""
         self.assertTrue(self.md.nantennas() == 15)
      
+    def test_narrays(self):
+        """ Test narrays()"""
+        self.assertTrue(self.md.narrays() == 1)
+
     def test_nfields(self):
         """ Test nfields()"""
         self.assertTrue(self.md.nfields() == 6)
      
     def test_nobservations(self):
-        """ Test nfields()"""
+        """ Test nobservations()"""
         self.assertTrue(self.md.nobservations() == 1)
      
     def test_nscans(self):

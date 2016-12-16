@@ -1034,20 +1034,7 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
-        
-         <method type="function" name="nantennas">
-            <shortdescription>Get the number of antennas associated with the MS.</shortdescription>
-            <returns type="int"/>
-            <description>
-                Get the number of antennas associated with the MS.
-            </description>
-            <example>
-    msmd.open("my.ms")
-    number_of_antennas = msmd.nantennas()
-    msmd.done()
-            </example>
-        </method>
-        
+       
         <method type="function" name="namesforfields" direction="in">
             <shortdescription>Get the name of the specified field.</shortdescription>
              <input>
@@ -1094,6 +1081,32 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="nantennas">
+            <shortdescription>Get the number of antennas associated with the MS.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of antennas associated with the MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_antennas = msmd.nantennas()
+    msmd.done()
+            </example>
+        </method>
+
+        <method type="function" name="narrays">
+            <shortdescription>Get the number of arrays associated with the MS from the ARRAY table.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of arrays associated with the MS from the ARRAY table.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_array_ids = msmd.narrays()
+    msmd.done()
+            </example>
+        </method>
+
         <method type="function" name="nbaselines">
             <shortdescription>Get the number of baselines represented in the main MS table.</shortdescription>
             <input>
