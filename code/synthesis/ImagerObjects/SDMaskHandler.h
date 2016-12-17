@@ -238,6 +238,9 @@ public:
 
 // 
   static Bool cloneImShape(const ImageInterface<Float>& inImage, const String& outImageName);
+  // max MB of memory to use in TempImage
+  static inline casacore::Double memoryToUse() {return 1.0;};
+
 
 protected:
   InteractiveMasking *interactiveMasker_p;

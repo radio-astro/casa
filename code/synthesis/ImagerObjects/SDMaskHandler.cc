@@ -114,11 +114,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SDMaskHandler","fillMask",WHERE) );
     String maskString;
     try {
-      TempImage<Float> tempAllMaskImage(imstore->mask()->shape(), imstore->mask()->coordinates());
+      TempImage<Float> tempAllMaskImage(imstore->mask()->shape(), imstore->mask()->coordinates(), memoryToUse());
       tempAllMaskImage.set(0.0);
       if (maskStrings.nelements()) {
         //working temp mask image
-        TempImage<Float> tempMaskImage(imstore->mask()->shape(), imstore->mask()->coordinates());
+        TempImage<Float> tempMaskImage(imstore->mask()->shape(), imstore->mask()->coordinates(), memoryToUse());
         copyMask(*(imstore->mask()), tempMaskImage);
         for (uInt imsk = 0; imsk < maskStrings.nelements(); imsk++) {
           maskString = maskStrings[imsk];
@@ -300,7 +300,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //PagedImage<Float> tempmask(TiledShape(maskImage->shape(),
       //                                    maskImage->niceCursorShape()), maskImage->coordinates(), tempfname);
       SHARED_PTR<ImageInterface<Float> > tempmask;
-      tempmask.reset( new TempImage<Float>(TiledShape(maskImage.shape(),maskImage.niceCursorShape()), maskImage.coordinates()) );
+      tempmask.reset( new TempImage<Float>(TiledShape(maskImage.shape(),maskImage.niceCursorShape()), maskImage.coordinates(), memoryToUse() ) );
       //tempmask = new PagedImage<Float>(maskImage.shape(), maskImage.coordinates(),"__tmp_rgmask");
       tempmask->copyData(maskImage);
 
@@ -480,7 +480,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
      LogIO os( LogOrigin("SDMaskHandler", "copyAllMasks", WHERE) );
 
-     TempImage<Float> tempoutmask(outImageMask.shape(), outImageMask.coordinates());
+     TempImage<Float> tempoutmask(outImageMask.shape(), outImageMask.coordinates(), memoryToUse());
      
      for (uInt i = 0; i < inImageMasks.nelements(); i++) {
        copyMask(*inImageMasks(i), tempoutmask);
@@ -524,12 +524,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //imregrid.showDebugInfo(1);
       //imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
       //
-      TempImage<Float>* inImageMaskptr = new TempImage<Float>(inshape,incsys);
+      TempImage<Float>* inImageMaskptr = new TempImage<Float>(inshape,incsys,memoryToUse());
       ArrayLattice<Bool> inimmask(inImageMask.getMask());
       inImageMaskptr->copyData((LatticeExpr<Float>)(inImageMask * iif(inimmask,1.0,0.0)) );
       //
       SPCIIF tempim(inImageMaskptr);
-      SPCIIF templateim(new TempImage<Float>(outshape,outcsys));
+      SPCIIF templateim(new TempImage<Float>(outshape,outcsys, memoryToUse()));
       Record* dummyrec = 0;
       //ImageRegridder regridder(tempim, outfilename, templateim, axes, dummyrec, "", true, outshape);
       ImageRegridder regridder(tempim, "", templateim, axes, dummyrec, "", true, outshape);
@@ -743,7 +743,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //  thresh: threshold based auto masking (uses threshold or fracofpeak, and resolution)
     //      
     os << LogIO::NORMAL2 <<"algorithm:"<<alg<<LogIO::POST;
-    TempImage<Float>* tempres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
+    TempImage<Float>* tempres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates(), memoryToUse()); 
     Array<Float> resdata;
     Array<Float> maskdata;
     Array<Float> psfdata;
@@ -751,12 +751,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     tempres->put(resdata);
     tempres->setImageInfo(imstore->residual()->imageInfo());
 
-    TempImage<Float>* temppsf = new TempImage<Float>(imstore->psf()->shape(), imstore->psf()->coordinates()); 
+    TempImage<Float>* temppsf = new TempImage<Float>(imstore->psf()->shape(), imstore->psf()->coordinates(), memoryToUse()); 
     imstore->psf()->get(psfdata);
     temppsf->put(psfdata);
     temppsf->setImageInfo(imstore->psf()->imageInfo());
 
-    TempImage<Float>* tempmask = new TempImage<Float>(imstore->mask()->shape(), imstore->mask()->coordinates());
+    TempImage<Float>* tempmask = new TempImage<Float>(imstore->mask()->shape(), imstore->mask()->coordinates(), memoryToUse());
     // get current mask
     imstore->mask()->get(maskdata);
     String maskname = imstore->getName()+".mask";
@@ -764,7 +764,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (pblimit>0.0 && imstore->hasPB()) {
       //cerr<<" applying pb mask ..."<<endl;
       LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, True, False));
-      TempImage<Float>* dummy = new TempImage<Float>(tempres->shape(), tempres->coordinates());
+      TempImage<Float>* dummy = new TempImage<Float>(tempres->shape(), tempres->coordinates(), memoryToUse());
       dummy->attachMask(pixmask);
       LatticeExpr<Float> themask;
       if (!ntrue(dummy->getMask())) { // initial zero mask
@@ -882,7 +882,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           else {
               blat=LatticeExpr<Bool> ((*imstore->pb()).pixelMask());
           }
-          TempImage<Float>* testres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
+          TempImage<Float>* testres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates(), memoryToUse()); 
           testres->set(1.0);
           testres->attachMask(blat);
               
@@ -938,7 +938,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Record SDMaskHandler::calcImageStatistics(ImageInterface<Float>& res, ImageInterface<Float>& /*  prevmask */, String& LELmask,  Record* regionPtr, const Bool robust )
   { 
-    TempImage<Float>* tempres = new TempImage<Float>(res.shape(), res.coordinates()); 
+    TempImage<Float>* tempres = new TempImage<Float>(res.shape(), res.coordinates(), memoryToUse()); 
     Array<Float> resdata;
     res.get(resdata);
     tempres->put(resdata);
@@ -995,7 +995,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool doconvolve(True);
 
     // taking account for beam or input resolution
-    TempImage<Float> tempmask(mask.shape(), mask.coordinates());
+    TempImage<Float> tempmask(mask.shape(), mask.coordinates(), memoryToUse());
     IPosition shp = mask.shape();
     CoordinateSystem incsys = res.coordinates();
     Vector<Double> incVal = incsys.increment(); 
@@ -1074,8 +1074,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //os << LogIO::NORMAL2 <<" thresh="<<rmsthresh<<LogIO::POST;
 
 
-    TempImage<Float>* tempIm2 = new TempImage<Float>(res.shape(), res.coordinates() );
-    TempImage<Float>* tempIm = new TempImage<Float>(res.shape(), res.coordinates() );
+    TempImage<Float>* tempIm2 = new TempImage<Float>(res.shape(), res.coordinates(), memoryToUse());
+    TempImage<Float>* tempIm = new TempImage<Float>(res.shape(), res.coordinates(), memoryToUse());
     tempIm->copyData(res);    
 
     SPCIIF tempIm2_ptr(tempIm2);
@@ -1171,7 +1171,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //Bool debug(False);
 
     // taking account for beam or input resolution
-    TempImage<Float> tempmask(mask.shape(), mask.coordinates());
+    TempImage<Float> tempmask(mask.shape(), mask.coordinates(), memoryToUse());
     IPosition shp = mask.shape();
     CoordinateSystem incsys = res.coordinates();
     Vector<Double> incVal = incsys.increment(); 
@@ -1297,8 +1297,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //for debug set to True to save intermediate mask images on disk
     Bool debug(False);
 
-    TempImage<Float> tempmask(mask.shape(), mask.coordinates());
-    TempImage<Float> prevmask(mask.shape(), mask.coordinates());
+    TempImage<Float> tempmask(mask.shape(), mask.coordinates(), memoryToUse());
+    TempImage<Float> prevmask(mask.shape(), mask.coordinates(), memoryToUse());
     prevmask.copyData(LatticeExpr<Float>(mask) );
     // taking account for beam or input resolution
     IPosition shp = mask.shape();
@@ -1408,7 +1408,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    // Bool firstIter(false);
     if (minBeamFrac > 0.0 ) {
         // make temp mask image consist of the original pix value and below the threshold is set to 0 
-        TempImage<Float> maskedRes(res.shape(), res.coordinates());
+        TempImage<Float> maskedRes(res.shape(), res.coordinates(), memoryToUse());
         makeMaskByPerChanThreshold(res, maskedRes, maskThreshold); 
         if (debug) {
           PagedImage<Float> savedPreMask(res.shape(),res.coordinates(),"tmp-beforePruningMask.im");
@@ -1468,7 +1468,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        os<<LogIO::DEBUG1<<"Grow mask stage..."<<endl;
        //call growMask
        // corresponds to calcThresholdMask with lowNoiseThreshold...
-       TempImage<Float> constraintMaskImage(res.shape(), res.coordinates()); 
+       TempImage<Float> constraintMaskImage(res.shape(), res.coordinates(), memoryToUse()); 
        // constrainMask is 1/0 mask
        makeMaskByPerChanThreshold(res, constraintMaskImage, lowMaskThreshold);
        if(debug) {
@@ -1487,7 +1487,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        }
        // for mask in binaryDilation, translate it to T/F (if T it will grow the mask region (NOTE currently binary dilation 
        // does opposite T/F interpretation NEED to CHANGE)
-       TempImage<Bool> constraintMask(res.shape(),res.coordinates());
+       TempImage<Bool> constraintMask(res.shape(),res.coordinates(), memoryToUse());
        constraintMask.copyData( LatticeExpr<Bool> (iif(constraintMaskImage > 0, true, false)) );
        // simple structure element for binary dilation
        IPosition axislen(2, 3, 3);
@@ -1569,7 +1569,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // vars to store min,max values of extrema and rms in all planes
     Double minRmsVal, maxRmsVal, minMaxVal, maxMaxVal, minMinVal, maxMinVal;
     IPosition minRmsPos, maxRmsPos, minMaxPos, maxMaxPos, minMinPos, maxMinPos;
-    TempImage<Float>* tempImForStat = new TempImage<Float>(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
+    TempImage<Float>* tempImForStat = new TempImage<Float>(tempRebinnedIm.shape(), tempRebinnedIm.coordinates(), memoryToUse() );
     tempImForStat->copyData(tempRebinnedIm);
     SHARED_PTR<casacore::ImageInterface<float> > temprebin_ptr(tempImForStat);
     //os<<" temprebin_ptr.get()->hasPixelMask()="<<temprebin_ptr.get()->hasPixelMask()<<LogIO::POST;
@@ -1593,7 +1593,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //os << LogIO::NORMAL <<"Statistics on binned image: min of Max="<<minMaxVal<<"@"<<minMaxPos<<LogIO::POST;
     //os << LogIO::NORMAL <<"Statistics on binned image: min of rms="<<minRmsVal<<"@"<<minRmsPos<<LogIO::POST;
 
-    TempImage<Float>* tempMask = new TempImage<Float> (tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
+    TempImage<Float>* tempMask = new TempImage<Float> (tempRebinnedIm.shape(), tempRebinnedIm.coordinates(), memoryToUse() );
 
 
     //Double dr =  maxMaxVal/rmses(maxMaxPos);
@@ -1709,7 +1709,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SHARED_PTR<ImageInterface<Float> > SDMaskHandler::convolveMask(const ImageInterface<Float>& inmask, const GaussianBeam& beam)
   {
     LogIO os( LogOrigin("SDMaskHandler","convolveMask",WHERE) );
-    TempImage<Float>* tempIm = new TempImage<Float>(inmask.shape(), inmask.coordinates() );
+    TempImage<Float>* tempIm = new TempImage<Float>(inmask.shape(), inmask.coordinates(), memoryToUse() );
     tempIm->copyData(inmask);
     SHARED_PTR<casacore::ImageInterface<float> > tempIm2_ptr(tempIm);
     //DEBUG will be removed 
@@ -1733,7 +1733,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SHARED_PTR<ImageInterface<Float> > SDMaskHandler::convolveMask(const ImageInterface<Float>& inmask, Int nxpix, Int nypix)
   {
     LogIO os( LogOrigin("SDMaskHandler","convolveMask",WHERE) );
-    TempImage<Float>* tempIm = new TempImage<Float>(inmask.shape(), inmask.coordinates() );
+    TempImage<Float>* tempIm = new TempImage<Float>(inmask.shape(), inmask.coordinates(), memoryToUse() );
     tempIm->copyData(inmask);
     SHARED_PTR<casacore::ImageInterface<float> > tempIm2_ptr(tempIm);
     //DEBUG will be removed 
@@ -1760,7 +1760,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool debug(False);
 
     IPosition fullimShape=image.shape();
-    TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates());
+    TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates(), memoryToUse());
 
     if (nmask==0 && npix==0 ) {
       //No-op
@@ -1793,7 +1793,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition subimShape=subIm->shape();
     uInt ndim = subimShape.nelements();
     //SHARED_PTR<casacore::ImageInterface<float> > tempIm_ptr(subIm);
-    TempImage<Float>* tempIm = new TempImage<Float> (TiledShape(subIm->shape(), subIm->niceCursorShape()), subIm->coordinates() );
+    TempImage<Float>* tempIm = new TempImage<Float> (TiledShape(subIm->shape(), subIm->niceCursorShape()), subIm->coordinates(), memoryToUse() );
     // to search for both positive and negative components
     tempIm->copyData(LatticeExpr<Float> (abs(*subIm)));
     os << LogIO::NORMAL2 <<"Finding regions by ImageDecomposer..."<<LogIO::POST;
@@ -1949,7 +1949,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool debug(False);
 
     IPosition fullimShape=image.shape();
-    TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates());
+    TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates(), memoryToUse());
     fullIm->set(0);
 
     if (nmask==0 && prunesize==0.0 ) {
@@ -1980,7 +1980,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       regMan.setcoordsys(cSys);
       IPosition subimShape=subIm->shape();
       uInt ndim = subimShape.nelements();
-      TempImage<Float>* tempIm = new TempImage<Float> (TiledShape(subIm->shape(), subIm->niceCursorShape()), subIm->coordinates() );
+      TempImage<Float>* tempIm = new TempImage<Float> (TiledShape(subIm->shape(), subIm->niceCursorShape()), subIm->coordinates(), memoryToUse() );
       // to search for both positive and negative components
       tempIm->copyData(LatticeExpr<Float> (abs(*subIm)));
       //use ImageDecomposer
@@ -2195,7 +2195,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // make a subImage for  a channel slice      
       AxesSpecifier aspec(False);
       SubImage<Float> chanImage(image, sl, aspec, true);
-      TempImage<Float>* tempChanImage = new TempImage<Float> (chanImage.shape(), chanImage.coordinates() );
+      TempImage<Float>* tempChanImage = new TempImage<Float> (chanImage.shape(), chanImage.coordinates(), memoryToUse() );
       Array<Float> chanImageArr;
       LatticeExpr<Float> chanMask(iif(chanImage > thresholds(ich),1.0, 0.0)); 
       tempChanImage->copyData(chanMask);
