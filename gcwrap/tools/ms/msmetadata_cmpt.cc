@@ -189,9 +189,10 @@ record* msmetadata::antennadiameter(const variant& antenna) {
 
 vector<int> msmetadata::antennaids(
 	const variant& names, const variant& mindiameter,
-	const variant& maxdiameter
+	const variant& maxdiameter, int obsid
 ) {
 	_FUNC(
+		_checkObsId(obsid, False);
 		vector<String> myNames;
 		// because variants default to boolvecs even when we specify elsewise in the xml.
 		casacore::Quantity mind = mindiameter.type() == variant::BOOLVEC ?
@@ -206,12 +207,25 @@ vector<int> msmetadata::antennaids(
 			! maxd.isConform("m"),
 			"maxdiameter must have units of length"
 		);
+        set<uInt> filteredAnts;
+        auto filterObsID = obsid >= 0;
+        if (filterObsID) {
+            filteredAnts = _antsForObsID(obsid);
+        }
 		vector<Int> foundIDs;
 		variant::TYPE type = names.type();
 		if (type == variant::BOOLVEC) {
-			Vector<Int> x(_msmd->nAntennas());
-			indgen(x, 0);
-			foundIDs = x.tovector();
+		    if (filterObsID) {
+                foundIDs = _setUIntToVectorInt(filteredAnts);
+                if (foundIDs.empty()) {
+                    return vector<int>();
+                }
+            }
+            else {
+	            Vector<Int> x(_msmd->nAntennas());
+			    indgen(x, 0);
+			    foundIDs = x.tovector();
+            }
 		}
 		else if (type == variant::STRING) {
 			myNames.push_back(names.toString());
@@ -250,7 +264,29 @@ vector<int> msmetadata::antennaids(
 					}
 				}
 			}
-			foundIDs = _vectorUIntToVectorInt(_msmd->getAntennaIDs(foundNames));
+            auto allFoundIDs = _msmd->getAntennaIDs(foundNames);
+            uInt i = 0;
+            vector<uInt> r;
+            for (const auto& idSet: allFoundIDs) {
+                if (filterObsID) {
+                    _intersection(r, idSet, filteredAnts);
+                }
+                else {
+                    auto nEntries = idSet.size();
+                    if (nEntries > 1) {
+                        *_log << LogIO::WARN << "Antenna " << foundNames[i]
+                            << " is listed in the ANTENNA table " << nEntries
+                            << " times and is associated with IDs " << idSet
+                            << ". Only the largest ID associated with it "
+                            << "will be returned" << LogIO::POST;
+                    }
+                    foundIDs.push_back(*idSet.rbegin());
+                    ++i;
+                }
+            }
+            if (filterObsID) {
+                foundIDs = _vectorUIntToVectorInt(r);
+            }
 		}
 		Quantum<Vector<Double> > diams = _msmd->getAntennaDiameters();
 		casacore::Quantity maxAntD(max(diams.getValue()), diams.getUnit());
@@ -270,6 +306,18 @@ vector<int> msmetadata::antennaids(
 		return foundIDs;
 	)
 	return vector<int>();
+}
+
+std::set<uInt> msmetadata::_antsForObsID(Int obsid) const {
+    auto ssprops = _msmd->getSubScanProperties(True);
+    std::set<uInt> filteredAnts;
+    for (const auto& prop: *ssprops) {
+        if (prop.first.obsID == obsid) {
+            auto ants = prop.second.antennas;
+            filteredAnts.insert(ants.begin(), ants.end());
+        }
+    }
+    return filteredAnts;
 }
 
 vector<string> msmetadata::antennanames(const variant& antennaids) {
@@ -362,9 +410,9 @@ record* msmetadata::antennaposition(const variant& which) {
 		}
 		else {
 			out = MeasureHolder(
-				_msmd->getAntennaPositions(
+				*_msmd->getAntennaPositions(
 					vector<String>(1, which.toString())
-				)[0]
+				)[0].rbegin()
 			);
 		}
 		Record outRec;
@@ -374,15 +422,31 @@ record* msmetadata::antennaposition(const variant& which) {
 	return 0;
 }
 
-vector<string> msmetadata::antennastations(const variant& ants) {
-	_FUNC(
+vector<string> msmetadata::antennastations(const variant& ants, int obsid) {
+    _FUNC(
+		_checkObsId(obsid, False);
+        std::set<uInt> filteredAnts;
+        auto filterObsID = obsid >= 0;
+        if (filterObsID) {
+            filteredAnts = _antsForObsID(obsid);
+            if (filteredAnts.empty()) {
+                return vector<string>();
+            }
+        }
 		variant::TYPE type = ants.type();
 		if (type == variant::INT) {
-			vector<uInt> ids;
 			int id = ants.toInt();
+            vector<uInt> ids;
 			if (id >= 0) {
-				ids.push_back(id);
+			    if (filterObsID && filteredAnts.find(id) == filteredAnts.end()) {
+                    // ant ID not included in obsid
+                    return vector<string>();
+                }
+	            ids.push_back(id);
 			}
+            else if (filterObsID) {
+                ids = _setUIntToVectorUInt(filteredAnts);
+            }
 			return _vectorStringToStdVectorString(
 				_msmd->getAntennaStations(ids)
 			);
@@ -391,46 +455,90 @@ vector<string> msmetadata::antennastations(const variant& ants) {
 			vector<Int> ids = ants.toIntVec();
 			if (ids.empty() || (ids.size() == 1 && ids[0] < 0)) {
 				return _vectorStringToStdVectorString(
-					_msmd->getAntennaStations(vector<uInt>())
+					_msmd->getAntennaStations(
+                        filterObsID ? _setUIntToVectorUInt(filteredAnts) : vector<uInt>()
+                    )
 				);
 			}
-			else if (min(Vector<Int>(ids)) < 0) {
+			else if (*min_element(ids.begin(), ids.end()) < 0) {
 				throw AipsError("No antenna ID may be less than zero when multiple IDs specified.");
 			}
-			else {
+			else if (! filterObsID) {
 				return _vectorStringToStdVectorString(
 					_msmd->getAntennaStations(
 						_vectorIntToVectorUInt(ants.toIntVec())
 					)
 				);
 			}
+            else {
+                auto goodAnts = _intersection(_vectorIntToVectorUInt(ants.toIntVec()), filteredAnts);
+                if (goodAnts.empty()) {
+                    return vector<string>();
+                }
+                else {
+                    return _vectorStringToStdVectorString(
+				        _msmd->getAntennaStations(goodAnts)
+				    );
+                }
+            }
 		}
 		else if (type == variant::STRING) {
-			vector<String> names(1, String(ants.toString()));
-			return _vectorStringToStdVectorString(
-				_msmd->getAntennaStations(names)
-			);
+            if (filterObsID) {
+                auto antids = _msmd->getAntennaIDs(ants.toString());
+                vector<uInt> ids;
+                _intersection(ids, antids, filteredAnts);
+			    return _vectorStringToStdVectorString(
+				    _msmd->getAntennaStations(ids)
+			    );
+            }
+            else {
+                vector<String> names(1, String(ants.toString()));
+			    return _vectorStringToStdVectorString(
+				    *_msmd->getAntennaStations(names).rbegin()
+			    );
+            }
 		}
 		else if (type == variant::STRINGVEC) {
-			return _vectorStringToStdVectorString(
-				_msmd->getAntennaStations(
-					_vectorStdStringToVectorString(
-						ants.toStringVec()
-					)
-				)
-			);
+            if (filterObsID) {
+                auto antIDs = _vectorIntToVectorUInt(antennaids(ants, "0m", "1pc", obsid));
+                return _vectorStringToStdVectorString(_msmd->getAntennaStations(antIDs));
+            }
+            else {
+                auto inputAnts = _vectorStdStringToVectorString(ants.toStringVec());
+                auto allStations = _msmd->getAntennaStations(inputAnts);
+                vector<string> lastStations;
+                uInt i = 0;
+                for (const auto& myStations: allStations) {
+                    auto n = myStations.size();
+                    if (n > 1) {
+                        auto antIDs = _setUIntToVectorUInt(_msmd->getAntennaIDs(inputAnts[i]));
+                        *_log << LogIO::WARN << "Antenna " << inputAnts[i] << " is listed "
+                            << n << " times in the ANTENNA table. Its associated stations are "
+                            << myStations << " which are associated with antenna IDs " << antIDs
+                            << ",respectively. Only the station associated with the last ID ("
+                            << *antIDs.rbegin() << ") will be returned." << LogIO::POST;
+                    }
+                    // This works in the n > 1 case because myStations is a vector ordered by
+                    // antenna ID, not a set
+                    lastStations.push_back(*myStations.rbegin());
+                    ++i;
+                }
+                return lastStations;
+            }
 		}
 		else if (type == variant::BOOLVEC) {
-			return _vectorStringToStdVectorString(
-				_msmd->getAntennaStations(vector<uInt>())
-			);
+            vector<uInt> myAnts;
+            if (filterObsID) {
+                myAnts = _setUIntToVectorUInt(filteredAnts);
+            }
+			return _vectorStringToStdVectorString(_msmd->getAntennaStations(myAnts));
 		}
 		else {
 			throw AipsError(
 				"Unsupported type (" + ants.typeString() + ") for ants."
 			);
 		}
-	)
+    )
 	return vector<string>();
 }
 
@@ -2041,6 +2149,12 @@ std::vector<int> msmetadata::_setUIntToVectorInt(const std::set<casacore::uInt>&
 	return output;
 }
 
+std::vector<uInt> msmetadata::_setUIntToVectorUInt(const std::set<casacore::uInt>& inset) {
+	vector<uInt> output;
+    std::copy(inset.begin(), inset.end(), std::back_inserter(output));
+	return output;
+}
+
 std::vector<int> msmetadata::_setIntToVectorInt(const std::set<casacore::Int>& inset) {
 	vector<int> output;
     std::copy(inset.begin(), inset.end(), std::back_inserter(output));
@@ -2212,6 +2326,28 @@ std::set<Int> msmetadata::_idsFromExpansion(
 		}
 	}
 	return ids;
+}
+
+template <class T> vector<T> msmetadata::_intersection(
+    const vector<T>& v, const std::set<T>& s
+) {
+    vector<T> r;
+    for (const auto& e: v) {
+        if (s.find(e) != s.end()) {
+            r.push_back(e);
+        }
+    }
+    return r;
+}
+
+template <class T> void msmetadata::_intersection(
+    vector<T>& r, const std::set<T>& s1, const std::set<T>& s2
+) {
+    set<int> intersect;
+    set_intersection(
+        s1.begin(), s1.end(), s2.begin(), s2.end(),
+        std::back_inserter(r)
+    );
 }
 
 std::vector<casacore::String> msmetadata::_match(

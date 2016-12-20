@@ -4,6 +4,8 @@ std::unique_ptr<casacore::LogIO> _log;
 
 msmetadata(const casacore::MeasurementSet * const & s, const float maxcache);
 
+std::set<casacore::uInt> _antsForObsID(casacore::Int obsid) const;
+
 void _checkAntennaId(int id, bool throwIfNegative) const;
 
 void _checkArrayId(int id, bool throwIfNegative) const;
@@ -22,6 +24,16 @@ std::set<casacore::ScanKey> _getScanKeys(int scan, int obsid, int arrayid) const
 
 std::set<casacore::ScanKey> _getScanKeys(const vector<int>& scan, int obsid, int arrayid) const;
 
+// return the intersection of the elements in v and s. In the returned vector, elements
+// have the same ordering as in the input vector, v.
+template <class T> static vector<T> _intersection(const vector<T>& v, const std::set<T>& s);
+
+// inserts intersection of two sets at the end of vector r. The newly inserted items will be
+// ordered (although the entire contents of r may not be).
+template <class T> static void _intersection(
+    vector<T>& r, const std::set<T>& s1, const std::set<T>& s2
+);
+
 bool _isAttached(const bool throwExceptionIfNotAttached=true) const;
 
 void _handleException(const casacore::AipsError& x) const;
@@ -29,6 +41,8 @@ void _handleException(const casacore::AipsError& x) const;
 static std::vector<double> _setDoubleToVectorDouble(const std::set<casacore::Double>& inset);
 
 static std::vector<int> _setUIntToVectorInt(const std::set<casacore::uInt>& inset);
+
+static std::vector<casacore::uInt> _setUIntToVectorUInt(const std::set<casacore::uInt>& inset);
 
 static std::vector<int> _setIntToVectorInt(const std::set<casacore::Int>& inset);
 

@@ -166,11 +166,18 @@ windows in the dataset and close the tool.
                     <value type="string">1pc</value>
                     <any type="variant"/>
                 </param>
+                <param type="int" name="obsid">
+                    <description>Observation ID. If negative, all observation IDs are considered.</description>
+                    <value>-1</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
                 Get the zero-based antenna IDs for the specfied antenna names and the specified diameter
-                range. An array of unique IDs in order of the specified names is returned.
+                range for the specified observation ID. An array of unique IDs in order of the specified names is returned.
+                Note that if a specified name is listed mulitple times in the ANTENNA table, the largest
+                ID is returned, unless the observation ID is specified to be non-negative, in which case, the
+                returned IDs are filtered based on the specified observation ID.
                 If no names and no diameter range is specified, all IDs are returned.
             </description>
             <example>
@@ -267,10 +274,18 @@ windows in the dataset and close the tool.
                     <description>Zero-based antenna ID(s) in the ANTENNA table or antenna name(s). Single numeric id less than zero retrieves all station names.</description>
                     <value type="int">-1</value>
                 </param>
+                <param type="int" name="obsid">
+                    <description>Observation ID. If negative, all observation IDs are considered.</description>
+                    <value>-1</value>
+                </param>
             </input>
             <returns type="stringarray"/>
             <description>
-                Get the station names of the specified antennas.
+                Get the station names of the specified antennas. If a specified antenna name is listed multiple
+                times in the ANTENNA table, obsid is negative, and which is specified as an array of names, then
+                the station associated with the largest ID for that antenna is returned. If obsid is nonnegative,
+                returned stations are filtered based on that. If which is specified as a string (antenna name),
+                then all the stations associated with that antenna are returned.
             </description>
             <example>
     msmd.open("my.ms")
