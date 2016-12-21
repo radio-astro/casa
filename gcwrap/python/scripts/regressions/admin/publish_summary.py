@@ -1,7 +1,7 @@
 from casac import casac
 from taskinit import casalog
-from imageTest import * 
-from visTest import * 
+from imageTest import *
+from visTest import *
 from testbase import *
 from tableMaker import *
 import time
@@ -14,6 +14,7 @@ import pdb
 import traceback
 import re
 import cProfile
+from casa_stack_manip import stack_find, find_casa
 
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
@@ -35,14 +36,14 @@ if os.access(AIPS_DIR+'/lib64', os.F_OK):
     UTILS_DIR = AIPS_DIR+'/lib64/casapy/bin/'
 elif os.access(AIPS_DIR+'/lib', os.F_OK):
     SCRIPT_REPOS = AIPS_DIR+'/lib/python'+PYVER+'/regressions/'
-    UTILS_DIR = AIPS_DIR+'/lib/casapy/bin/'        
+    UTILS_DIR = AIPS_DIR+'/lib/casapy/bin/'
 elif os.access(AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/', os.F_OK):
     # devel
     SCRIPT_REPOS = AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
     UTILS_DIR = ''
 else:            #Mac release
     SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'
-    UTILS_DIR = AIPS_DIR+'/MacOS/'        
+    UTILS_DIR = AIPS_DIR+'/MacOS/'
 # because casapy releases have a different directory structure
 
 
@@ -67,7 +68,7 @@ class runTest:
         CPP_PROFILE: set to True to enable C++ profiling.  This requires that the command 'sudo opcontrol' must work.  You also need the 'dot' tool distributed as part of graphviz.  Run 'dot -Txxx' to verify that your dot installation supports PNG images.
         Note, a profile is created only for the casapy process. If you want to include profiles for async / child processes, refer to the documentation for opreport."""
         casalog.showconsole(onconsole=True)
-        
+
         TEMPLATE_RESULT_DIR=AIPS_DIR+'/data/regression/'
         tests = [test]
         if type(tests) != type([]):
@@ -86,13 +87,13 @@ class runTest:
         self.resultsubdir = ''
 
         print SCRIPT_REPOS
-        
+
         if((len(tests)==1) and (tests[0]=='all')):
             self.numTests=self.tester.locateTests()
         else:
             self.numTests=self.tester.locateTests(tests)
         testName=''
-             
+
         #pdb.set_trace()
         for k in range(self.numTests) :
             ### cleanup before each test
@@ -205,7 +206,7 @@ class runTest:
                         prof.dump_stats(self.resultsubdir+'/cProfile.profile')
                     except:
                         print >> sys.stderr, "Failed to write profiling data!"
-               
+
                 self.op_done(CPP_PROFILE)
 
                 # Dump contents of any *.log file produced
@@ -248,7 +249,7 @@ class runTest:
                     # Clean up early, so that this infrastructure can continue
                     if not exec_success and cleanup:
                         self.tester.cleanup()
-                        
+
                 # Copy C++ profiling info
                 if CPP_PROFILE:
                     os.system('cp cpp_profile.* ' + self.resultsubdir)
@@ -286,7 +287,7 @@ class runTest:
                         )
                     if errorcode != 0:
                         datasvnr = "Unknown version"
-                        
+
                 self.result_common['data_version'] = "'"+datasvnr+"'", "Data repository version"
 
                 # execution test
@@ -337,7 +338,7 @@ class runTest:
                 #if len(whatToTest) != 0:
                 #    keys=whatToTest.keys()
                 #    print 'THE KEYS ARE ', keys
-                for j in range(len(leResult)) :   
+                for j in range(len(leResult)) :
                     templateImage=TEMPLATE_RESULT_DIR+"/"+testName+"/reference/"+leImages[j]
                     if retemplate:
                         if os.access(templateImage, os.F_OK):
@@ -359,7 +360,7 @@ class runTest:
                         print >> sys.stderr, leResult[j], 'missing!'
                         exec_success = False
                         whatToTest[leResult[j]] = []
-                        
+
                     if not template_exists:
                         print >> sys.stderr, templateImage, 'missing!'
 
@@ -379,7 +380,7 @@ class runTest:
                         else:
                             if os.access(self.imdir, os.F_OK):
                                 shutil.rmtree(self.imdir)
-                                
+
                             if(leQualityTest=='simple'):
                                 self.simpleStats(leResult[j], templateImage, testName, WORKING_DIR, RESULT_DIR)
                             elif(leQualityTest=='pol2'):
@@ -432,9 +433,9 @@ class runTest:
 
                 print "Unexpected error:", sys.exc_info()[0]
                 raise
-            
+
         # end for k...
-                
+
         print "Created ", self.resultsubdir
 
 
@@ -448,7 +449,7 @@ class runTest:
                      os.environ["CASAPATH"].split()[1] + '/bin/casa'
 
             gprof2dot = SCRIPT_REPOS + "/../gprof2dot.py"
-            
+
             os.system("sudo opcontrol --stop && sudo opcontrol --dump")
             os.system("opreport -clf image-exclude:/no-vmlinux " + casapy + " > cpp_profile.txt")
             os.system("cat cpp_profile.txt | " + gprof2dot + " -e0.1 -n1 -f oprofile > cpp_profile.dot")
@@ -475,7 +476,7 @@ class runTest:
             out2, rms2 = b.bmodel(plane=k)
  #           rms1=a.subtract(plane=k)
  #           rms2=b.subtract(plane=k)
-        
+
 #            quickresult+=('Pol #%s\n  Image    coord: [%.3f,%.3f]\n  FWHM in x: %.6f\n  FWHM in y: %.6f\n'%(pol[k],out1[0][0],out1[0][1],out1[0][2],out1[0][3]))
 #            quickresult+=('Pol #%s\n  Template coord: [%.3f,%.3f]\n  FWHM in x: %.6f\n  FWHM in y: %.6f\n'%(pol[k],out2[0][0],out2[0][1],out2[0][2],out2[0][3]))
             if(out1[0] != False and out2[0] != False):
@@ -525,21 +526,21 @@ class runTest:
             self.result['ref_'+pol[k]+'_min'] = min1, pol[k]+" min"
             self.result['ref_'+pol[k]+'_max'] = max1, pol[k]+" max"
             self.result['ref_'+pol[k]+'_rms'] = rms1, pol[k]+" rms"
-            
+
             if(not returnFlag):
                 status=status*0
             if(abs(max2-max1) > rms2/2.0):
                 status=status*0
             if(abs(min2-min1) > rms2/2.0):
-                status=status*0   
+                status=status*0
         quickresult+='</pre>'
         page=a.done()
         b.done()
-        
+
         self.result['status'] = ['fail', 'pass'][status==1], "result of regression test"
 
 
-       
+
     def simpleStats(self, imageName, templateImage, testname, WORKING_DIR, RESULT_DIR):
         a=ImageTest(imageName,write=True,resultDir=self.resultdir,imDir=self.imdir)
         b=ImageTest(templateImage,write=False,resultDir=self.resultdir,imDir=self.imdir)
@@ -548,7 +549,7 @@ class runTest:
         status=1   # 1     : pass
                    # 2     : unknown
                    # other : fail
-        
+
         rms2,max2,min2,returnFlag=a.simple_stats(sigma=rms1)
         a.changeImage(templateImage)
         rms1,max1,min1,returnFlag1=a.simple_stats()
@@ -570,7 +571,7 @@ class runTest:
         self.result['ref_rms'] = rms1, "reference rms"
 
 
-        
+
     def visStats(self, msName, templateMS, testname, WORKING_DIR, RESULT_DIR):
         a=VisTest(msName,write=True,resultDir=self.resultdir,imDir=self.imdir)
         b=VisTest(templateMS,write=False,resultDir=self.resultdir,imDir=self.imdir)
@@ -579,7 +580,7 @@ class runTest:
         status=1   # 1     : pass
                    # 2     : unknown
                    # other : fail
-        
+
         arms2,amax2,amin2,prms2,pmax2,pmin2,returnFlag2=a.simple_stats()
         if(not returnFlag2):
             status=0
@@ -598,12 +599,12 @@ class runTest:
         if(abs(amax2-amax1) > arms2/2.0):
             status=status*0
         if(abs(amin2-amin1) > arms2/2.0):
-            status=status*0   
+            status=status*0
         if(abs(pmax2-pmax1) > prms2/2.0):
             status=status*0
         if(abs(pmin2-pmin1) > prms2/2.0):
-            status=status*0   
-                
+            status=status*0
+
         self.result['status'] = ['fail', 'pass'][status==1], "result of regression test"
         self.result['ms_amp_min'] = amin2, "ms amp min"
         self.result['ms_amp_max'] = amax2, "ms amp max"
@@ -619,20 +620,20 @@ class runTest:
         self.result['ref_pha_max'] = pmax1, "reference phase max"
         self.result['ref_pha_rms'] = prms1, "reference phase rms"
 
-        
+
     def cubeImageTest(self, imageName, templateImage, testname, WORKING_DIR, RESULT_DIR):
         a=ImageTest(imageName,write=True,resultDir=self.resultdir,imDir=self.imdir)
 #        b=ImageTest(templateImage,write=False,resultDir=self.resultdir,imDir=self.imdir)
         status=1
 #        XY1,fwhm1=a.auto_fitCube(a.b,verbose=0)
         XY1,fwhm1=a.auto_fitCube2()
-        
+
         a.changeImage(templateImage)
-        
+
 #        XY2,fwhm2=a.auto_fitCube(a.b,verbose=0)
 
         XY2,fwhm2=a.auto_fitCube2()
-        
+
         if(abs((XY1[0][0]-XY2[0][0])/XY2[0][0]) > 0.1):
             status=0
         if(abs((fwhm1[0]-fwhm2[0])/fwhm2[0]) > 0.1):
@@ -665,17 +666,23 @@ class runTest:
         stacklevel=0
         for k in range(len(a)):
             if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k     
+                stacklevel=k
         myf=sys._getframe(stacklevel).f_globals
-
-        return "CASA Version " + myf['casa']['build']['version'] + " (r"+myf['casa']['source']['revision'] + ")"
+        # The two versions are for different start up scripts (start_casa.py and casapy.py)
+        # Once the conversion to start_casa.py is complete, the check and else branch can
+        # be removed
+        casa = find_casa()
+        if casa['state']['init_version'] > 0:
+            return "CASA Version " + casa['build']['version']
+        else:
+            return "CASA Version " + myf['casa']['build']['version'] + " (r"+myf['casa']['source']['revision'] + ")"
 
     def create_log(self, product_file):
         filename = "%s/result-%s-%s.txt" % \
                    (self.resultsubdir, product_file, \
                     self.result['type'][0])
         filename = filename.replace("--", "-")
-        
+
         print "Writing file", filename
         try:
             self.logfd=open(filename, "w")
@@ -808,13 +815,13 @@ class logger:
     # fake remaining methods to make this class behave like a file
     #def __getattr__(self, name):
 #        return getattr(self.streams[0], name)
-    
+
 #    def __setattr__(self, name, value):
 #        if name in dir(self):
 #            self.__dict__[name] = value
 #        else:
 #            setattr(self.streams[0], name, value)
-       
+
     def __del__(self):
         pass
         #print >> sys.__stdout__,  "Die", self.name
