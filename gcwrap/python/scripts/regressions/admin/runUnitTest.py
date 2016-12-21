@@ -37,7 +37,7 @@ from taskinit import casalog
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
 CASA_DIR = os.environ["CASAPATH"].split()[0]
-TESTS_DIR = CASA_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/python/' + PYVER + '/tests/'
+TESTS_DIR = CASA_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/tests/'
 #DATA_DIR = CASA_DIR+'/data/'
 #print 'HELLOR DATA_DIR'
 #print DATA_DIR

@@ -13,7 +13,7 @@ casaglobals=True
 ####################
 def go(taskname=None):
     """ Execute taskname: """
-    myf=sys._getframe(len(inspect.stack())-1).f_globals
+    myf=stack_frame_find( )
     if taskname==None: taskname=myf['taskname']
     oldtaskname=taskname
     if(myf.has_key('taskname')):
