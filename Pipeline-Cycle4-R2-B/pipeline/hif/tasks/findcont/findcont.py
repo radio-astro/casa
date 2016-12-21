@@ -140,7 +140,8 @@ class FindCont(basetask.StandardTaskTemplate):
                     # Use only the current spw ID here !
                     if0, if1, channel_width = tclean_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
                     if (if0 == -1) or (if1 == -1):
-                        LOG.error('No LSRK frequency intersect among selected for Field %s SPW %s' % (target['field'], spwid))
+                        LOG.error('No LSRK frequency intersect among selected MSs for Field %s SPW %s' % (target['field'], spwid))
+                        result_cont_ranges[source_name][spwid] = {'cont_ranges': ['NONE'], 'plotfile': 'none', 'status': 'NEW'}
                         continue
 
                     # Check for manually supplied values
