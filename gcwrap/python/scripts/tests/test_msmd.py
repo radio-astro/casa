@@ -275,12 +275,12 @@ class msmd_test(unittest.TestCase):
                 expids = []
                 expnames = []
         if i < 25:
-            got = self.md.fieldsforspw(i, false)
+            got = self.md.fieldsforspw(i, False)
             self.assertTrue((got == expids).all())
             got = self.md.fieldsforspw(i, true)
             self.assertTrue((got == expnames).all())
         else:
-            got = self.md.fieldsforspw(i, false)
+            got = self.md.fieldsforspw(i, False)
             self.assertTrue(len(got) == 0)
             got = self.md.fieldsforspw(i, true)
             self.assertTrue(len(got) == 0)
