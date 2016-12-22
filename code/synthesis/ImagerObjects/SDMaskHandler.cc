@@ -892,6 +892,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                   LELmask=pbname+"<"+String::toString(innerRadius)+" && "+pbname+">"+String::toString(outerRadius);   
               }
           }
+          delete testres; testres=0;
        }
     } 
     Record thestats = calcImageStatistics(*tempres, *tempmask, LELmask, region_ptr, robust);
@@ -934,6 +935,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     tempmask->get(maskdata);
     imstore->mask()->put(maskdata);
     delete tempmask; tempmask=0;
+    delete temppsf; temppsf=0;
+    delete tempres; tempres=0;
   }
 
   Record SDMaskHandler::calcImageStatistics(ImageInterface<Float>& res, ImageInterface<Float>& /*  prevmask */, String& LELmask,  Record* regionPtr, const Bool robust )
@@ -1938,7 +1941,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       fullIm->putSlice(subimData,start,stride);
       //cerr<<"shape fullIm ="<<fullIm->shape()<<endl;
     }
-
+    delete subIm; subIm=0;
+    delete tempIm; tempIm=0;
     return SHARED_PTR<ImageInterface<Float> >(fullIm);
   }
  
@@ -2132,6 +2136,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //tempIm->getSlice(subimData,Slicer(substart,subend),True);
       tempIm->getSlice(subimData,IPosition(2,0), tempIm->shape(), IPosition(2,1,1));
       fullIm->putSlice(subimData,start,IPosition(4,1,1,1,1));
+      delete tempIm; tempIm=0;
+      delete subIm; subIm=0;
       }// if(nRegion) end 
     }
     return SHARED_PTR<ImageInterface<Float> >(fullIm);
@@ -2202,6 +2208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //tempChanImage->getSlice(chanImageArr, IPosition(4,0), chanImage.shape(),IPosition(4,1,1,1,1));
       tempChanImage->getSlice(chanImageArr, IPosition(2,0), chanImage.shape(),IPosition(2,1,1));
       mask.putSlice(chanImageArr,start,IPosition(4,1,1,1,1)); 
+      delete tempChanImage; tempChanImage=0;
     } // loop over chans
   }
 
