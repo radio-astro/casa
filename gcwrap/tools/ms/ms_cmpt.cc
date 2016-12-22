@@ -28,54 +28,45 @@
 //# @version
 //////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <casa/iostream.h>
-#include <sstream>
-#include <sys/wait.h>
-#include <array>
-#include <memory>
-
-#include <casacore/scimath/Mathematics/StatisticsTypes.h>
-#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/STLIO.h>
-#include <casa/Logging/LogOrigin.h>
 #include <casa/OS/DOos.h>
-#include <casa/System/ObjectID.h>
-#include <casa/Utilities/Assert.h>
+#include <casa/OS/File.h>
+#include <casa/Quanta/MVTime.h>
 #include <fits/FITS/FITSReader.h>
-#include <measures/Measures/MeasTable.h>
-#include <ms/MeasurementSets/MSRange.h>
-#include <ms/MSOper/MSSummary.h>
-#include <ms/MSOper/MSLister.h>
-#include <ms/MSOper/MSConcat.h>
-#include <ms/MSSel/MSSelectionTools.h>
-#include <ms/MeasurementSets/MSMainColumns.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
+#include <ms/MeasurementSets/MSRange.h>
+#include <ms/MSOper/MSConcat.h>
+#include <ms/MSOper/MSLister.h>
+#include <ms/MSOper/MSSummary.h>
+#include <ms/MSSel/MSSelectionTools.h>
+#include <ms/MSSel/MSSelUtil2.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
 #include <msfits/MSFits/MSFitsIDI.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableLock.h>
-#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/ConcatTable.h>
+#include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableCopy.h>
 
 #include <asdmstman/AsdmStMan.h>
+#include <mstransform/TVI/ChannelAverageTVI.h>
+#include <msvis/MSVis/AveragingVi2Factory.h>
+#include <msvis/MSVis/LayeredVi2Factory.h>
 #include <msvis/MSVis/MSChecker.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/Partition.h>
 #include <msvis/MSVis/Reweighter.h>
 #include <msvis/MSVis/SubMS.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisIterator.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisIterator.h>
-#include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
+
+#include <msvis/MSVis/statistics/Vi2ChunkStatisticsIteratee.h>
 #include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
 #include <msvis/MSVis/statistics/Vi2ChunkVisAmplitudeProvider.h>
 #include <msvis/MSVis/statistics/Vi2ChunkVisPhaseProvider.h>
@@ -108,14 +99,24 @@ namespace casac {
 ms::ms()
 {
 	try {
-		itsMS = new MeasurementSet();
-		itsOriginalMS = new MeasurementSet();
-		itsSel = new MSSelector();
+		itsMS = new MeasurementSet(); // working MS
+		itsOriginalMS = new MeasurementSet();  // before transformation
+		itsSelectedMS = new MeasurementSet();  // accumulate selections
+        itsSel = new MSSelector();
 		itsLog = new LogIO();
-		itsMSS = new MSSelection();
-		itsVI = NULL;//new VisibilityIterator();
-		itsVB = NULL;//new VisBuffer();
-		doingIterations_p=false;
+        itsMSS = new MSSelection();
+		itsVI = NULL;
+		itsVI2 = NULL;
+        doingIterations_p=false;
+        doingAveraging_p=false;
+        polnExpr_p = "";
+        wantedpol_p.resize();
+        ifrnumbers_p.resize();
+        chansel_p.clear();
+        chanselExpr_p = "";
+        initSel_p = False;
+        maxrows_p = False;
+        nAnt1_p = 0;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
@@ -128,12 +129,21 @@ ms::~ms()
 	try {
 		if(itsMS)           {delete itsMS;itsMS=NULL;}
 		if(itsOriginalMS)   {delete itsOriginalMS;itsOriginalMS=NULL;}
-		if(itsSel)          {delete itsSel; itsSel=NULL;}
+		if(itsSelectedMS)   {delete itsSelectedMS;itsSelectedMS=NULL;}
+        if(itsSel)          {delete itsSel; itsSel=NULL;}
 		if(itsLog)          {delete itsLog; itsLog=NULL;}
 		if(itsMSS)          {delete itsMSS; itsMSS=NULL;}
 		if (itsVI)          {delete itsVI; itsVI=NULL;}
-		if (itsVB)          {delete itsVB; itsVB=NULL;}
+		if (itsVI2)         {delete itsVI2; itsVI2=NULL;}
 		doingIterations_p=false;
+		doingAveraging_p=false;
+        polnExpr_p = "";
+        wantedpol_p.resize();
+        ifrnumbers_p.resize();
+        chansel_p.clear();
+        chanselExpr_p = "";
+        initSel_p = False;
+        maxrows_p = False;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
@@ -280,6 +290,27 @@ ms::nrow(const bool selected)
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return rstat;
+}
+
+int
+ms::nrow2(const bool selected)
+{
+	*itsLog << LogOrigin("ms", "nrow");
+	Int rstat(0);
+    try {
+		if(!detached()){
+			if(!selected)
+				rstat = itsOriginalMS->nrow();
+			else
+				rstat = itsSelectedMS->nrow();
+		}
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
@@ -329,18 +360,26 @@ ms::open(const std::string& thems, bool nomodify, bool lock, bool check)
 			}
 		}
 		*itsOriginalMS = MeasurementSet(*itsMS);
-		if(itsSel){
+		*itsSelectedMS = MeasurementSet(*itsMS);
+        if(itsSel){
 			delete itsSel;
 			itsSel = new MSSelector();
 		}
-		if (itsMSS)
+        itsSel->setMS(*itsMS);
+        if (itsMSS)
 		{
 			delete itsMSS;
 			itsMSS = new MSSelection();
 			itsMSS->resetMS(*itsMS);
 		}
-		itsSel->setMS(*itsMS);
 		doingIterations_p=false;
+		doingAveraging_p=false;
+        polnExpr_p = "";
+        wantedpol_p.resize();
+        ifrnumbers_p.resize();
+        chansel_p.clear();
+        chanselExpr_p = "";
+        initSel_p = False;
 	} catch (const AipsError& x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
@@ -357,11 +396,20 @@ ms::reset()
 		// Set itsMS to the original MS, and re-make the various objects
 		// that hold the pointer to working MS
 		*itsMS = MeasurementSet(*itsOriginalMS);
-		if(itsSel)  {delete itsSel;}  itsSel = new MSSelector();
-		if (itsMSS) {delete itsMSS;}  itsMSS = new MSSelection();
-		itsMSS->resetMS(*itsMS);
-		itsSel->setMS(*itsMS);
+		*itsSelectedMS = MeasurementSet(*itsMS);
+        if(itsSel)  {delete itsSel;}  itsSel = new MSSelector();
+        if (itsMSS) {delete itsMSS;}  itsMSS = new MSSelection();
+        itsMSS->resetMS(*itsMS);
+        itsSel->setMS(*itsMS);
 		doingIterations_p=false;
+		doingAveraging_p=false;
+        polnExpr_p = "";
+        wantedpol_p.resize();
+        ifrnumbers_p.resize();
+        chansel_p.clear();
+        chanselExpr_p = "";
+        initSel_p = False;
+        maxrows_p = False;
 	}
 	catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: "
@@ -443,13 +491,19 @@ ms::close()
 			*itsLog << LogIO::POST;
 			delete itsMS;          itsMS = new MeasurementSet();
 			delete itsOriginalMS;  itsOriginalMS = new MeasurementSet();
-			itsSel->setMS(*itsMS);
-			if (itsMSS) {delete itsMSS;  itsMSS = new MSSelection();};
-			if (itsVI) {delete itsVI; itsVI=NULL;// itsVI = new VisibilityIterator();
-			};
-			if (itsVB) {delete itsVB; // itsVB = new VisBuffer();
-			};
+			delete itsSelectedMS;  itsSelectedMS = new MeasurementSet();
+            itsSel->setMS(*itsMS);
+            if (itsMSS) {delete itsMSS;  itsMSS = new MSSelection();};
+			if (itsVI) {delete itsVI; itsVI=NULL;}
+			if (itsVI2) {delete itsVI2; itsVI2=NULL;}
 			doingIterations_p=false;
+		    doingAveraging_p=false;
+            polnExpr_p = "";
+            wantedpol_p.resize();
+            ifrnumbers_p.resize();
+            chansel_p.clear();
+            initSel_p = False;
+            maxrows_p = False;
 			rstat = true;
 		}
 	} catch (AipsError x) {
@@ -854,6 +908,26 @@ ms::range(const std::vector<std::string>& items, const bool useflags, const int 
 	try {
 		if(!detached()){
 			MSRange msrange(*itsSel);
+			msrange.setBlockSize(blocksize);
+			retval = fromRecord(msrange.range(toVectorString(items), useflags, False));
+		}
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return retval;
+}
+
+::casac::record*
+ms::range2(const std::vector<std::string>& items, const bool useflags, const int blocksize)
+{
+	*itsLog << LogOrigin("ms", "range");
+	::casac::record *retval(0);
+	try {
+		if(!detached()){
+			MSRange msrange(*itsSelectedMS);
 			msrange.setBlockSize(blocksize);
 			retval = fromRecord(msrange.range(toVectorString(items), useflags, false));
 		}
@@ -2072,10 +2146,41 @@ ms::lister(const std::string& options,
 	return rstat;
 }
 
+Bool ms::checkinit() {
+    if (initSel_p) return True;
+    // No DDIDs selected, check if data shapes same
+    // else select DDID 0
+    initSel_p = True;;
+    vi::VisibilityIterator2* vi2 = new vi::VisibilityIterator2(*itsSelectedMS);
+    vi::VisBuffer2* vb2 = vi2->getVisBuffer();
+    vi2->originChunks();
+    vi2->origin();
+    IPosition firstShape = vb2->getShape();
+    Bool shapesConform = True;
+    for (vi2->originChunks(); vi2->moreChunks(); vi2->nextChunk()) {
+        for (vi2->origin(); vi2->more(); vi2->next()) {
+            IPosition thisShape = vb2->getShape();
+            if (thisShape(0) != firstShape(0) ||
+                    thisShape(1) != firstShape(1)) {
+                shapesConform = False;
+                break;
+            }
+        }
+    }
+    initSel_p = shapesConform;
+    if (!shapesConform) {
+	    *itsLog << LogOrigin("ms", "checkinit");
+		*itsLog << LogIO::WARN << "Data shape varies, selecting first data desc id only" << LogIO::POST;
+        initSel_p = selectinit2(0);
+    }
+    delete vi2;
+    return initSel_p;
+}
+
 bool
 ms::selectinit(const int datadescid, const bool reset)
 {
-	Bool retval = false;
+	Bool retval = False;
 	try {
 		Vector<Int> ddId(1, datadescid);
 		if(!detached()){
@@ -2091,6 +2196,36 @@ ms::selectinit(const int datadescid, const bool reset)
 			} else {
 				retval = itsSel->initSelection(ddId, reset);
 			}
+		}
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return retval;
+}
+
+bool
+ms::selectinit2(const int datadescid, const bool resetsel)
+{
+	*itsLog << LogOrigin("ms", "selectinit2");
+	Bool retval = false;
+	try {
+		Vector<Int> ddId(1, datadescid);
+		if(!detached()){
+			Int n=ddId.nelements();
+			if (n>0 && min(ddId)<0 && !resetsel) {
+				*itsLog << "The data description id must be a list of "
+					"positive integers" << LogIO::EXCEPTION;
+			}
+            if (resetsel) {
+                retval = reset();
+            } else {
+                String taQLExpr = "DATA_DESC_ID IN [" + String::toString(datadescid) + "]";
+                retval = selecttaql2(taQLExpr);
+                initSel_p = retval;
+            }
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -2113,6 +2248,113 @@ ms::select(const ::casac::record& items)
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return retval;
+}
+
+bool
+ms::select2(const ::casac::record& items)
+{
+	*itsLog << LogOrigin("ms", "select");
+    // Use selecttaql and msselect for these selections
+	Bool retval = true;
+	try {
+		if(!detached()){
+            if (checkinit()) {
+	          *itsLog << LogOrigin("ms", "select");
+			  Record* selRecord = toRecord(items);
+              for (uInt field=0; field < selRecord->nfields(); ++field) {
+                String fieldStr = selRecord->name(field);
+                fieldStr.upcase();
+                if (fieldStr=="ANTENNA1" || 
+                    fieldStr=="ANTENNA2" || 
+                    fieldStr=="ARRAY_ID" || 
+                    fieldStr=="FEED1" ||
+                    fieldStr=="FEED2" ||
+                    fieldStr=="FIELD_ID" ||
+                    fieldStr=="SCAN_NUMBER" ||
+                    fieldStr=="DATA_DESC_ID" ||
+                    fieldStr=="ROWS") {
+                  String taqlStr = fieldStr;
+                  if (fieldStr=="ROWS") taqlStr = "ROWID()";
+                  taqlStr += " in [";
+                  taqlStr += MSSelection::indexExprStr(selRecord->asArrayInt(RecordFieldId(field)));
+                  taqlStr += "]";
+			      retval = retval & selecttaql2(taqlStr);
+                }
+                else if (fieldStr=="IFR_NUMBER") {
+                    Vector<Int> ifrNums = selRecord->asArrayInt(RecordFieldId(field));
+                    String antennaExpr("");
+                    Record antSelRec(Record::Variable);
+                    for (uInt nums=0; nums<ifrNums.nelements(); ++nums) {
+                        Int ant1 = ifrNums(nums)/1000;
+                        Int ant2 = ifrNums(nums)%1000;
+                        String bslnExpr = String::toString(ant1)+"&"+String::toString(ant2);
+                        antennaExpr += bslnExpr + ";";
+                     }
+                     antennaExpr.rtrim(';'); // remove trailing ';'
+                     antSelRec.define("baseline", antennaExpr);
+                     ::casac::record* casacRec = fromRecord(antSelRec);
+                     retval = retval & msselect(*casacRec);
+                }
+                else if (fieldStr=="TIME") {
+                    Vector<Double> times = selRecord->asArrayDouble(RecordFieldId(field));
+                    if (times.nelements()==2) {
+                        Record timeSelRec(Record::Variable);
+                        MVTime startTime = MVTime(times[0]/86400.0);
+                        MVTime stopTime = MVTime(times[1]/86400.0);
+                        String timeExpr = startTime.string(MVTime::YMD) + "~" + stopTime.string(MVTime::YMD);
+                        timeSelRec.define("time", timeExpr);
+                        ::casac::record* casacRec = fromRecord(timeSelRec);
+                        retval = retval & msselect(*casacRec);
+                    } else {
+                        *itsLog << LogIO::WARN << "Illegal value for time range: two element numeric vector [start,stop] required" << LogIO::POST;
+                        retval = false;
+                    }
+                }
+                else if (fieldStr == "U" ||
+                         fieldStr == "V" ||
+                         fieldStr == "W") {
+                    Vector<Double> uvw = selRecord->asArrayDouble(RecordFieldId(field));
+                    if (uvw.nelements()==2) {
+                        String uvwStr = "UVW[";
+                        if (fieldStr=="U")      uvwStr += "1]";
+                        else if (fieldStr=="V") uvwStr += "2]";
+                        else                    uvwStr += "3]";
+                        String taqlStr = uvwStr + ">=" + String::toString(uvw[0]);
+                        taqlStr += " && ";
+                        taqlStr += uvwStr + "<=" + String::toString(uvw[1]);
+			            retval = retval & selecttaql2(taqlStr);
+                    } else {
+                        *itsLog << LogIO::WARN << "Illegal value for uvdist range selection: two element numeric vector required" << LogIO::POST;
+                        retval = false;
+                    }       
+                }
+                else if (fieldStr == "UVDIST") {
+                    Vector<Double> uvdist = selRecord->asArrayDouble(RecordFieldId(field));
+                    if (uvdist.nelements()==2) {
+                        Record uvdistSelRec(Record::Variable);
+                        String uvdistExpr = String::toString(uvdist[0]) + "~" + String::toString(uvdist[1]);
+                        uvdistSelRec.define("uvdist", uvdistExpr);
+                        ::casac::record* casacRec = fromRecord(uvdistSelRec);
+                        retval = retval & msselect(*casacRec);
+                    } else {
+                        *itsLog << LogIO::WARN << "Illegal value for uvdist range selection: two element numeric vector required" << LogIO::POST;
+                        retval = false;
+                    }
+                }
+                else
+                  *itsLog << LogIO::WARN << "Unrecognized field in input ignored: "+fieldStr << LogIO::POST;
+                     
+              }
+			  delete selRecord;
+		  }
+        }
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
@@ -2123,10 +2365,35 @@ ms::select(const ::casac::record& items)
 bool
 ms::selecttaql(const std::string& msselect)
 {
-	Bool retval(false);
+	Bool retval(False);
 	try {
 		if(!detached())
 			retval = itsSel->select(msselect);
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return retval;
+}
+
+bool
+ms::selecttaql2(const std::string& taqlstr)
+{
+    *itsLog << LogOrigin("ms", "selecttaql");
+	Bool retval(false);
+	try {
+		if(!detached()) {
+            Record taqlSelRec(Record::Variable);
+            String taqlExpr = String::toString(taqlstr);
+            taqlSelRec.define("taql", taqlExpr);
+            ::casac::record* casacRec = fromRecord(taqlSelRec);
+            retval = msselect(*casacRec);
+        }
+    } catch (MSSelectionNullSelection x) {
+		*itsLog << LogIO::WARN << "Selected table has zero rows" << LogIO::POST;
+        retval = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
@@ -2145,6 +2412,92 @@ ms::selectchannel(const int nchan, const int start, const int width, const int i
 			retval = itsSel->selectChannel(nchan, start, width, inc);
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return retval;
+}
+
+String ms::getSpwExpr() {
+    // Get spw selection
+    String spwExpr;
+    Vector<Int> selSpws = getspectralwindows();
+    // if using all spws, use "*"
+    uInt totalSpws = itsSelectedMS->dataDescription().nrow();
+    if(selSpws.size() == totalSpws) {
+        spwExpr = "* : ";
+    } else {
+        for (uInt spwIdx=0; spwIdx<selSpws.size(); ++spwIdx) {
+            // join spw sels with ';'
+            if (spwIdx > 0) spwExpr += ";";
+            spwExpr += String::toString(selSpws(spwIdx));
+        }
+        spwExpr += " : ";
+    }
+    return spwExpr;
+}
+
+bool
+ms::selectchannel2(const int nchan, const int start, const int width, const int inc)
+{
+	*itsLog << LogOrigin("ms", "selectchannel2");
+	Bool retval(false);
+	try {
+		if(!detached()) {
+            if (checkinit()) {
+	            *itsLog << LogOrigin("ms", "selectchannel2");
+                // No averaging = width of 1
+                Int chanbin = ( width>0 ? width : 1 );
+                Bool ok = (nchan>0 && start>=0 && width>0 && inc>0);
+                if (!ok) {
+                    *itsLog << LogIO::SEVERE << "Illegal channel selection"<<LogIO::POST;
+                    return False;
+                }
+
+                // Make channel selection string
+                int firstchan = start;
+                Vector<int> selChans(chanbin);
+                String chanSelStr;
+                for (int outchan=0; outchan<nchan; ++outchan) {
+                    int chan = firstchan;
+                    // Get list of channels
+                    for (int j=0; j<chanbin; ++j)
+                        selChans(j) = chan++;
+                    // join chan sels with ';'
+                    if (outchan > 0) chanSelStr += ";";
+                    // convert chan vector to chan range string
+                    chanSelStr += String::toString(selChans(0));
+                    if (selChans.size() > 1)
+                        chanSelStr += "~" + String::toString(selChans(selChans.size()-1));
+                    firstchan += inc;
+                }
+                int end = selChans(selChans.size()-1);
+                Vector<Int> spws = getspectralwindows();
+                ROMSColumns msc(*itsSelectedMS);
+                Int numchans = msc.spectralWindow().numChan().getColumn()(spws(0));
+                if (start>numchans || end>numchans) {
+                    *itsLog << LogIO::SEVERE << "Illegal channel selection"<<LogIO::POST;
+                    return False;
+                }
+                
+                // Check spw selection;
+                String spwExpr = getSpwExpr();
+                spwExpr += chanSelStr;
+                // If spw is set you can't set it again with channel ranges
+                // so make a new selMS
+                MeasurementSet newSelectedMS;
+                retval = mssSetData(*itsSelectedMS, newSelectedMS,
+                        "","","","",spwExpr);
+                if (retval) {
+                    chansel_p.resize(4);
+                    chansel_p = {nchan, start, chanbin, inc};
+                    chanselExpr_p = chanSelStr;  // use in ChanAvgTVI Record
+                }
+            }
+        }
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
@@ -2155,7 +2508,7 @@ ms::selectchannel(const int nchan, const int start, const int width, const int i
 bool
 ms::selectpolarization(const std::vector<std::string>& wantedpol)
 {
-	Bool retval(false);
+	Bool retval(False);
 	try {
         if(!detached()) {
             itsSel->initSelection(); // seg fault if not initialized
@@ -2163,8 +2516,62 @@ ms::selectpolarization(const std::vector<std::string>& wantedpol)
         }
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		Table::relinquishAutoLocks(true);
+		Table::relinquishAutoLocks(True);
 		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return retval;
+}
+
+bool
+ms::selectpolarization2(const std::vector<std::string>& wantedpol)
+{
+	*itsLog << LogOrigin("ms", "selectpolarization");
+	Bool retval(false);
+	try {
+        if(!detached()) {
+            if (checkinit()) {
+	            *itsLog << LogOrigin("ms", "selectpolarization");
+                Record polnSelRec(Record::Variable);
+                String polnExpr = MSSelection::nameExprStr(wantedpol);
+                polnSelRec.define("polarization", polnExpr);
+                ::casac::record* casacRec = fromRecord(polnSelRec);
+                retval = msselect(*casacRec);
+                if (retval) {
+                    polnExpr_p = polnExpr;
+                    wantedpol_p.resize();
+                }
+            }
+        }
+	} catch (AipsError x) {
+        if (x.getMesg().find("No match") != std::string::npos) {
+            // either invalid poln selection or need conversion
+            try {
+                wantedpol_p.resize(wantedpol.size());
+                for (uInt i=0; i<wantedpol.size(); ++i) {
+                    Stokes::StokesTypes type = Stokes::type(wantedpol[i]);
+                    if (type == Stokes::Undefined) {
+                        *itsLog << LogIO::SEVERE << "Unrecognized polarization: "<< wantedpol[i] << LogIO::POST;
+                        wantedpol_p.resize();
+	                    Table::relinquishAutoLocks(true);
+                        return false;
+                    } else {
+                        wantedpol_p[i] = type;
+                    }
+                }
+                polnExpr_p = "";
+                itsMSS->setPolnExpr(polnExpr_p);
+                retval = true;
+            } catch (AipsError x) {
+		        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		        Table::relinquishAutoLocks(true);
+		        RETHROW(x);
+            }
+        } else {
+		    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		    Table::relinquishAutoLocks(true);
+		    RETHROW(x);
+        }
 	}
 	Table::relinquishAutoLocks(true);
 	return retval;
@@ -2878,6 +3285,134 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	return rval;
 }
 
+Vector<Int> ms::convertCorrToInt(vi::VisBuffer2* vb2) {
+    Vector<Stokes::StokesTypes> types = vb2->getCorrelationTypesSelected();
+    size_t nPol = types.size();
+    Vector<Int> inputPol(nPol);
+    for (uInt i=0; i<nPol; ++i)
+        inputPol(i) = static_cast<Int>(types(i));
+    return inputPol;
+}
+
+Vector<Int> ms::addgaps(Vector<Int> ifrnums, Int gap) {
+    Int gapRows = (nAnt1_p-1) * gap;
+    Vector<Int> ifrgap(ifrnums.size() + gapRows);
+    uInt gapIdx=0;
+    for (uInt i=0; i<ifrnums.size(); ++i) {
+        // look for ant1 change:
+        if (i>0 && (ifrnums(i)/1000 != ifrnums(i-1)/1000)) {
+            // add gap(s)
+            for (Int ngap=0; ngap<gap; ++ngap) {
+               ifrgap(gapIdx++) = -1;
+            }
+        }
+        ifrgap(gapIdx++) = ifrnums(i);
+    }
+    return ifrgap;
+}
+
+Vector<Int> ms::getifrnumbers() {
+    // Get vector of ifr numbers in MS
+    ROMSColumns msc(*itsSelectedMS);
+    const Sort::Order order = Sort::Ascending;
+    const Int option = Sort::HeapSort | Sort::NoDuplicates;
+    // form ifr numbers
+    Vector<Int> ant1 = msc.antenna1().getColumn();
+    Vector<Int> ant2 = msc.antenna2().getColumn();
+    Vector<Int> ifrnums = ant1*1000 + ant2;  // ifrnums for all rows of MS
+    // now sort and unique (need nAnt1_p for gap)
+    nAnt1_p = GenSort<Int>::sort(ant1, order, option);
+    Int nIfr = GenSort<Int>::sort(ifrnums, order, option);
+    return ifrnums(Slice(0,nIfr)); 
+}
+
+Vector<Int> ms::getbaselines(vi::VisBuffer2* vb2) {
+    // Get ifr numbers in current visbuffer 
+    Vector<Int> ant1 = vb2->antenna1();
+    Vector<Int> ant2 = vb2->antenna2();
+    Vector<Int> baselines = ant1*1000 + ant2; // form ifrnums vector
+    return baselines;
+}
+
+template <typename T>
+void ms::ifrToArray(Array<T>& ifrarray, vi::VisBuffer2* vb2) {
+    // resizes per vb and reorders per MS ifr
+    IPosition ifrshape = ifrarray.shape();
+    ifrshape.setLast(IPosition(1, vb2->nRows()));
+    Int ndim = ifrshape.size();
+    Array<T> outputarray(ifrshape);
+    outputarray.set(0);
+    Vector<Int> baselines = getbaselines(vb2);
+    Slicer outslicer, ifrslicer;
+    for (uInt i=0; i<baselines.size(); ++i) {
+        for (uInt j=0; j<ifrnumbers_p.size(); ++j) {
+            if (baselines(i) == ifrnumbers_p(j)) {
+                switch (ndim) {
+                    case 1: {
+                        outputarray[i] = ifrarray[j];
+                        }
+                        break;
+                    case 2: {
+                        outslicer = Slicer(Slice(), i);
+                        ifrslicer = Slicer(Slice(), j);
+                        outputarray(outslicer) = ifrarray(ifrslicer);
+                        }
+                        break;
+                    case 3: {
+                        outslicer = Slicer(Slice(), Slice(), i);
+                        ifrslicer = Slicer(Slice(), Slice(), j);
+                        outputarray(outslicer) = ifrarray(ifrslicer);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+    ifrarray.resize(ifrshape);
+    ifrarray.reference(outputarray);
+}
+
+template <typename T>
+void ms::getIfrArray(Array<T>& inputarray, vi::VisBuffer2* vb2) {
+    // resizes and reorders input array by ifr 
+    IPosition inshape = inputarray.shape();
+    inshape.setLast(IPosition(1, ifrnumbers_p.size()));
+    Array<T> ifrarray(inshape);
+    ifrarray.set(0);
+    Int ndim = ifrarray.ndim();
+    Slicer inslicer, ifrslicer;
+    Vector<Int> baselines = getbaselines(vb2);
+    for (uInt i=0; i<baselines.size(); ++i) {
+        for (uInt j=0; j<ifrnumbers_p.size(); ++j) {
+            if (baselines(i) == ifrnumbers_p(j)) {
+                switch (ndim) {
+                    case 1: {
+                        ifrarray[j] = inputarray[i];
+                        }
+                        break;
+                    case 2: {
+                        inslicer = Slicer(Slice(), i);
+                        ifrslicer = Slicer(Slice(), j);
+                        ifrarray(ifrslicer) = inputarray(inslicer);
+                        }
+                        break;
+                    case 3: {
+                        inslicer = Slicer(Slice(), Slice(), i);
+                        ifrslicer = Slicer(Slice(), Slice(), j);
+                        ifrarray(ifrslicer) = inputarray(inslicer);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+    inputarray.resize(inshape);
+    inputarray.reference(ifrarray);
+}
 
 ::casac::record*
 ms::getdata(const std::vector<std::string>& items, const bool ifraxis, const int ifraxisgap, const int increment, const bool average)
@@ -2908,6 +3443,250 @@ ms::getdata(const std::vector<std::string>& items, const bool ifraxis, const int
 			retval = fromRecord(itsSel->getData(toVectorString(items), ifraxis, ifraxisgap, increment, average, false));
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return retval;
+}
+
+::casac::record*
+ms::getdata2(const std::vector<std::string>& items, const bool ifraxis, const int ifraxisgap, const int increment, const bool average)
+{
+	*itsLog << LogOrigin("ms", "getdata2");
+
+	::casac::record *retval(0);
+	try {
+		if(!detached()) {
+            Record out(RecordInterface::Variable);
+            Vector<String> itemnames(items);
+            Int axisgap = ifraxisgap;
+		    doingAveraging_p = average;
+
+            uInt nrows = itsSelectedMS->nrow();
+            if (nrows == 0) {
+                *itsLog << LogIO::WARN << "Selected Table is empty - use selectinit" << LogIO::POST;
+		        return retval;
+	        }
+
+            if (axisgap>0 && ifraxis==false) {
+                *itsLog << LogIO::WARN << "ifraxis not requested, ignoring ifraxisgap argument" << LogIO::POST;
+                axisgap = 0;
+            }
+
+            // Keep table before increment selection, restore later
+            MeasurementSet origSelMS = *itsSelectedMS;
+            if ((increment>1) && (uInt(increment)<=nrows)) {
+                Vector<uInt> rows(nrows/increment);
+                indgen(rows, uInt(0), uInt(increment));
+                Table selTable = (*itsSelectedMS)(rows);
+                *itsSelectedMS = selTable;
+            }
+
+            if (ifraxis) 
+                ifrnumbers_p = getifrnumbers();
+            if (axisgap>0) {
+                Vector<Int> ifrWithGaps = addgaps(ifrnumbers_p, axisgap);
+                ifrnumbers_p.resize(ifrWithGaps.size());
+                ifrnumbers_p = ifrWithGaps;
+            }
+
+            // Check for flag_sum, done after get flags
+            // Check for ha, last, ut -- included in AXIS_INFO
+            // Check data columns: empty array if does not exist
+            // (issue warning once!)
+            ROMSColumns msc(*itsSelectedMS);
+            Bool noCorrectedCol = msc.correctedData().isNull();
+            Bool noModelCol = msc.modelData().isNull();
+            Bool noFloatCol = msc.floatData().isNull();
+            Bool do_flag_sum(False), do_axis_info(False), do_info_options(False),
+                 do_time(False), do_field(False), do_flag(False), do_weight(False);
+            Vector<Bool> info_options(3); // [ha, last, ut]
+            for (uInt it=0; it<itemnames.size(); ++it) {
+                String name = downcase(itemnames(it));
+                if (name=="flag_sum") 
+                    do_flag_sum = True; // added later
+                if (name=="axis_info") 
+                    do_axis_info = True;
+                if (name=="time") 
+                    do_time = True; // needed for axis_info
+                if (name=="field_id") 
+                    do_field = True; // needed for info options
+                if (average) {
+                    if (name=="flag") do_flag = True;
+                    if (name=="weight") do_weight = True;
+                }
+                if (name=="ha" && ifraxis) {
+                    do_info_options = True;
+                    info_options(0) = True;
+                    out.define(itemnames(it), info_options);
+                    itemnames(it)="";
+                }
+                if (name=="last" && ifraxis) {
+                    do_info_options = True;
+                    info_options(1) = True;
+                    out.define(itemnames(it), info_options);
+                    itemnames(it)="";
+                }
+                if (name=="ut" && ifraxis) {
+                    do_info_options = True;
+                    info_options(2) = True;
+                    out.define(itemnames(it), info_options);
+                    itemnames(it)="";
+                }
+
+                // check data columns
+                // model
+                if (noModelCol &&
+                    ((name.find("model")!=string::npos) ||
+                     (name.find("ratio")!=string::npos) ||
+                     (name.find("residual")!=string::npos))) { 
+		                *itsLog << LogIO::WARN << "Requested column doesn't exist: " + itemnames(it) <<  LogIO::POST;
+                        if (name.find("data")!=string::npos) {
+                            out.define(itemnames(it), Array<Complex>());
+                        } else {
+                            out.define(itemnames(it), Array<Float>());
+                        }
+                        itemnames(it)="";
+                }
+                // corrected
+                if (noCorrectedCol &&
+                    ((name.find("corrected")!=string::npos) ||
+                     (name.find("ratio")!=string::npos) ||
+                     (name.find("residual")!=string::npos))) {
+		                *itsLog << LogIO::WARN << "Requested column doesn't exist: " + itemnames(it) <<  LogIO::POST;
+                        if (name.find("data")!=string::npos) {
+                            out.define(itemnames(it), Array<Complex>());
+                        } else {
+                            out.define(itemnames(it), Array<Float>());
+                        }
+                        itemnames(it)="";
+                }
+                // float
+                if (noFloatCol &&
+                    name.find("float")!=string::npos) {
+		                *itsLog << LogIO::WARN << "Requested column doesn't exist: " + itemnames(it) <<  LogIO::POST;
+                        out.define(itemnames(it), Array<Float>());
+                        itemnames(it)="";
+                }
+            } // for loop (itemnames)
+
+            if (ifraxis && do_axis_info && !do_time) {
+                // need time for time_axis
+                size_t itemsSize = itemnames.size();
+                itemnames.resize(itemsSize+1, True);
+                itemnames(itemsSize) = "time";
+            }
+            if (ifraxis && do_axis_info && do_info_options && !do_field) {
+                // need field for options
+                size_t itemsSize = itemnames.size();
+                itemnames.resize(itemsSize+1, True);
+                itemnames(itemsSize) = "field_id";
+            }
+            if (average && !do_flag) {
+                size_t itemsSize = itemnames.size();
+                itemnames.resize(itemsSize+1, True);
+                itemnames(itemsSize) = "flag";
+            }
+            if (average && !do_weight) {
+                size_t itemsSize = itemnames.size();
+                itemnames.resize(itemsSize+1, True);
+                itemnames(itemsSize) = "weight";
+            }
+
+
+            // iterate to next chunk or subchunk (if maxrows) and get items
+            if (itsVI2) {
+                vi::VisBuffer2* vb2 = itsVI2->getVisBuffer();
+                if (maxrows_p) {
+                    // this is per visbuffer!
+                    // Iteration adjusted in iternext2()
+                    for (uInt it=0; it<itemnames.size(); ++it) {
+                        if (!itemnames(it).empty()) 
+                            getitem(itemnames(it), vb2, out, ifraxis);
+                    }
+                } else {
+                    for (itsVI2->origin(); itsVI2->more(); itsVI2->next()) {
+                        for (uInt it=0; it<itemnames.size(); ++it) {
+                            if (!itemnames(it).empty()) 
+                                getitem(itemnames(it), vb2, out, ifraxis);
+                        }
+                    }
+                }
+            } else {   
+                // Set up iterator and go through all chunks
+                // Note: iter methods change LogOrigin, change back!
+                if (checkinit()) {
+                    *itsLog << LogOrigin("ms", "getdata2");
+                    // init iterator, do not sort columns
+                    std::vector<std::string> columns = {""};
+                    if (iterinit2(columns, 0.0, 0, false)) {
+                        iterorigin2();
+                        vi::VisBuffer2* vb2 = itsVI2->getVisBuffer();
+                        *itsLog << LogOrigin("ms", "getdata2");
+                        // handle first chunk
+                        for (itsVI2->origin(); itsVI2->more(); itsVI2->next()) {
+                            for (uInt it=0; it<itemnames.size(); ++it) {
+                                if (!itemnames(it).empty()) {
+                                    getitem(itemnames(it), vb2, out, ifraxis);
+                                }
+                            }
+                        }
+                        // continue iteration
+                        while (iternext2()) {
+                            *itsLog << LogOrigin("ms", "getdata2");
+                            for (itsVI2->origin(); itsVI2->more(); itsVI2->next()) {
+                                for (uInt it=0; it<itemnames.size(); ++it) {
+                                    if (!itemnames(it).empty())
+                                        getitem(itemnames(it), vb2, out, ifraxis);
+                                }
+                            }
+                        }
+                        iterend2();
+                        *itsLog << LogOrigin("ms", "getdata2");
+                    } // iterinit
+                } // checkinit 
+            } // else (!VI2)
+
+            if (average) {
+                getAveragedValues(itemnames, out);
+                // remove or redefine flag field
+                if (!do_flag) out.removeField("flag");
+                else {
+                    if (out.isDefined("dataflag"))
+                        out.renameField("dataflag", "flag");
+                }
+                // remove or redefine weight field
+                if (!do_weight) out.removeField("weight");
+                else {
+                    Array<Float> weights = out.asArrayFloat("weight");
+                    out.removeField("weight");
+                    getWeightSum(weights);  // redefines weights array
+                    out.define("weight", weights); 
+                }
+            }
+            if (do_flag_sum) {
+                Array<Bool> flagarray = out.asArrayBool("flag_sum");
+                out.removeField("flag_sum");
+                Array<Int> flagsum = getFlagCount(flagarray, ifraxis);
+                out.define("flag_sum", flagsum);
+            }
+            if (do_axis_info && ifraxis) {
+                // copy time field and remove if not requested by user
+                addTimeAxis(out);
+                if (!do_time) out.removeField("time");
+                if (do_info_options) {
+                    getInfoOptions(info_options, out);
+                    // remove field_id field if not requested by user
+                    if (!do_field) out.removeField("field_id");
+                }
+            }
+            // restore original selected table
+            *itsSelectedMS = origSelMS;
+            retval = casa::fromRecord(out);
+        } // !detached
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
@@ -2915,10 +3694,878 @@ ms::getdata(const std::vector<std::string>& items, const bool ifraxis, const int
 	return retval;
 }
 
+void ms::getAveragedValues(Vector<String> fieldnames, Record& rec) {
+    for (uInt it=0; it<fieldnames.size(); ++it) {
+        String field = fieldnames(it);
+        MSS::Field fld = MSS::field(field);
+        switch(fld) {
+            case MSS::AMPLITUDE:
+            case MSS::CORRECTED_AMPLITUDE:
+            case MSS::MODEL_AMPLITUDE:
+            case MSS::RATIO_AMPLITUDE:
+            case MSS::RESIDUAL_AMPLITUDE:
+            case MSS::OBS_RESIDUAL_AMPLITUDE:
+            case MSS::IMAGINARY:
+            case MSS::CORRECTED_IMAGINARY:
+            case MSS::MODEL_IMAGINARY:
+            case MSS::RATIO_IMAGINARY:
+            case MSS::RESIDUAL_IMAGINARY:
+            case MSS::OBS_RESIDUAL_IMAGINARY:
+            case MSS::PHASE:
+            case MSS::CORRECTED_PHASE:
+            case MSS::MODEL_PHASE:
+            case MSS::RATIO_PHASE:
+            case MSS::RESIDUAL_PHASE:
+            case MSS::OBS_RESIDUAL_PHASE:
+            case MSS::REAL:
+            case MSS::CORRECTED_REAL:
+            case MSS::MODEL_REAL:
+            case MSS::RATIO_REAL:
+            case MSS::RESIDUAL_REAL:
+            case MSS::OBS_RESIDUAL_REAL:
+            case MSS::FLOAT_DATA: {
+                Array<Bool> flags = rec.asArrayBool("flag");
+                Array<Float> weight = rec.asArrayFloat("weight");
+                Array<Float> data = rec.asArrayFloat(field);
+                Array<Bool> dataflag;
+                MSSelUtil2<Float>::timeAverage(dataflag, data, flags, weight);
+                rec.removeField(field);
+                rec.define(field, data);
+                rec.define("dataflag", dataflag);
+                }
+                break; 
+            case MSS::DATA:
+            case MSS::CORRECTED_DATA:
+            case MSS::MODEL_DATA:
+            case MSS::RATIO_DATA:
+            case MSS::RESIDUAL_DATA:
+            case MSS::OBS_RESIDUAL_DATA: {
+                Array<Bool> flags = rec.asArrayBool("flag");
+                Array<Float> weight = rec.asArrayFloat("weight");
+                Array<Complex> data = rec.asArrayComplex(field);
+                Array<Bool> dataflag;
+                MSSelUtil2<Complex>::timeAverage(dataflag, data, flags, weight);
+                rec.removeField(field);
+                rec.define(field, data);
+                rec.define("dataflag", dataflag);
+                }
+                break;
+            case MSS::ANTENNA1:
+            case MSS::ANTENNA2:
+            case MSS::ARRAY_ID:
+            case MSS::DATA_DESC_ID:
+            case MSS::FEED1:
+            case MSS::FEED2:
+            case MSS::FIELD_ID:
+            case MSS::IFR_NUMBER:
+            case MSS::SCAN_NUMBER: {
+                // Use common value if allEQ, else -1
+                Vector<Int> intvec = rec.asArrayInt(field);
+                if (intvec.nelements()>1) {
+                    Int first = intvec(0);
+                    if (!allEQ(intvec, first)) first = -1;
+                    intvec.resize(1);
+                    intvec(0) = first;
+                }
+                rec.removeField(field);
+                rec.define(field, intvec);
+                }
+                break;
+            case MSS::SIGMA: {
+                Array<Float> sigma = rec.asArrayFloat(field);
+                rec.removeField(field);
+                getAvgSigma(sigma); // redefines sigma
+                rec.define(field, sigma);
+                }
+                break; 
+            case MSS::TIME: {
+                Vector<Double> times = rec.asArrayDouble(field);
+                Int ntimes = times.nelements();
+                Double avgtime(0);
+                for (Int i=0; i<ntimes; ++i) avgtime+=times(i);
+                avgtime /= ntimes;
+                times.resize(1);
+                times = avgtime;
+                rec.removeField(field);
+                rec.define(field, times);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void ms::getWeightSum(Array<Float>& weight) {
+    // sum of weights when averaging
+    IPosition arrayshape = weight.shape();
+    uInt nCorr(arrayshape(0)), nIfr(0), nRow(0);
+    if (arrayshape.size()==2) {  // Matrix: no ifraxis
+        nRow = arrayshape(1);
+        Vector<Float> sumwt(nCorr);
+        sumwt = 0.0;
+        for (uInt i=0; i<nRow; i++) {
+            for (uInt j=0; j<nCorr; j++) {
+                sumwt(j) += weight(IPosition(2,j,i));
+            }
+        }
+        weight.resize(sumwt.shape());
+        weight.reference(sumwt);
+    } else { // Cube: ifraxis
+        nIfr = arrayshape(1);
+        nRow = arrayshape(2);
+        Matrix<Float> sumwt(IPosition(2, nCorr, nIfr));
+        sumwt = 0.0;
+        for (uInt i=0; i<nIfr; i++) {
+            for (uInt j=0; j<nCorr; j++) {
+                for (uInt k=0; k<nRow; k++) {
+                    sumwt(j,i) += weight(IPosition(3,j,i,k));
+                }
+            }
+        }
+        weight.resize(sumwt.shape());
+        weight.reference(sumwt);
+    }
+}
+
+void ms::getAvgSigma(Array<Float>& sigma) {
+    IPosition arrayshape = sigma.shape();
+    uInt nCorr(arrayshape(0)), nIfr(0), nRow(0);
+    if (arrayshape.size()==2) {  // Matrix: no ifraxis
+        nRow = arrayshape(1);
+        Vector<Float> sumsquares(nCorr);
+        sumsquares = 0.0;
+        for (uInt j=0; j<nCorr; j++) {
+            for (uInt i=0; i<nRow; ++i) {
+                sumsquares(j) += square(sigma(IPosition(2,j,i)));
+            }
+            sumsquares(j) = sqrt(sumsquares(j));
+        }
+        sigma.resize(sumsquares.shape());
+        sigma.reference(sumsquares);
+    } else { // Cube: ifraxis
+        nIfr = arrayshape(1);
+        nRow = arrayshape(2);
+        Matrix<Float> sumsquares(IPosition(2, nCorr, nIfr));
+        sumsquares = 0.0;
+        for (uInt i=0; i<nIfr; i++) {
+            for (uInt j=0; j<nCorr; j++) {
+                for (uInt k=0; k<nRow; k++) {
+                    sumsquares(j,i) += square(sigma(IPosition(3,j,i,k)));
+                }
+                sumsquares(j,i) = sqrt(sumsquares(j,i));
+            }
+        }
+        sigma.resize(sumsquares.shape());
+        sigma.reference(sumsquares);
+    }
+}
+
+void ms::convertPoln(Cube<Complex>& inputcube, vi::VisBuffer2* vb) {
+    Cube<Complex> scData;
+    Vector<Int> inputPol = convertCorrToInt(vb);
+    StokesConverter* sc = new StokesConverter(wantedpol_p, inputPol, True);
+    if (sc) sc->convert(scData, inputcube);
+    inputcube.reference(scData);
+    if (sc) delete sc;
+}
+
+template <typename T>
+void ms::addArrayToRec(Array<T>& inputarray, Record& rec, 
+        String field, Bool ifraxis) {
+    Array<T> fieldArray;
+    try {
+        rec.get(field, fieldArray);
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+    rec.removeField(field); // free up fieldArray for resizing
+    IPosition fieldArrayShape = fieldArray.shape();
+    uInt ndim = fieldArrayShape.size();
+    if (ifraxis) {
+        if (ndim == inputarray.ndim()) {
+            // add time axis
+            fieldArrayShape.append(IPosition(1,1));
+        }
+        ssize_t timeAxisSize = fieldArrayShape.last();
+        fieldArrayShape.setLast(IPosition(1, timeAxisSize + 1));
+        fieldArray.resize(fieldArrayShape, True);
+        // add inputarray to last axis
+        fieldArray[timeAxisSize] = inputarray;
+    } else {
+        size_t startrows = fieldArrayShape.last();
+        size_t addrows = inputarray.shape().last();
+        IPosition start(ndim, 0);
+        start.setLast(IPosition(1, startrows));
+        IPosition length = fieldArrayShape.getFirst(ndim-1);
+        length.append(IPosition(1,addrows));
+        // add new rows to last axis, then add cube
+        fieldArrayShape.setLast(IPosition(1,startrows+addrows));
+        fieldArray.adjustLastAxis(fieldArrayShape);
+        fieldArray(Slicer(start, length)) = inputarray;
+    }
+    rec.define(field, fieldArray);
+}
+
+void ms::completeMissingIfrs(Vector<Int>& inputvec, Record& rec, String field) {
+    // missing antennas result in -1; try to fill in
+    Vector<Int> recvec = rec.asArrayInt(field);
+    rec.removeField(field);
+    for (uInt i=0; i<recvec.size(); ++i) 
+        if (recvec(i) == -1) recvec(i) = inputvec(i);
+    rec.define(field, recvec);
+}
+
+Array<Int> ms::getFlagCount(Array<Bool> flagarray, Bool ifraxis) {
+    IPosition flagshape = flagarray.shape();
+    uInt nPol(flagshape(0)), nChan(flagshape(1)), nIfr(flagshape(2)), nRow(0);
+    Array<Int> flagsum;
+    if (ifraxis) {
+        nRow = flagshape(3);
+        flagsum.resize(IPosition(3, nPol, nChan, nIfr));
+        for (uInt j=0; j<nPol; j++) {
+            for (uInt k=0; k<nChan; k++) {
+                for (uInt l=0; l<nIfr; l++) {
+                    Int count = 0;
+                    for (uInt m=0; m<nRow; m++) {
+                        if (flagarray(IPosition(4,j,k,l,m))) count++;
+                    }
+                    flagsum(IPosition(3,j,k,l)) = count;
+                }
+            }
+        }
+    } else {
+        flagsum.resize(IPosition(2, nPol, nChan));
+        for (uInt j=0; j<nPol; j++) {
+            for (uInt k=0; k<nChan; k++) {
+                Int count=0;
+                for (uInt l=0; l<nIfr; l++) {
+                    if (flagarray(IPosition(3,j,k,l))) count++;
+                }
+                flagsum(IPosition(2,j,k)) = count;
+            }
+        }
+    }
+    return flagsum;
+}
+
+void ms::getInfoOptions(Vector<Bool> info_options, Record& outputRec) {
+    // get [axis_info][time_axis]["MJDseconds"]
+    // previously obtained with getdata(["time"])
+    String infoName = "axis_info";
+    if (!outputRec.isDefined(infoName)) infoName="AXIS_INFO";
+    Record axisInfoRec = outputRec.asRecord(infoName);
+    outputRec.removeField(infoName);
+    Record timeAxisRec = axisInfoRec.asRecord("time_axis");
+    axisInfoRec.removeField("time_axis");
+    Bool do_ha(info_options(0)), do_last(info_options(1)), do_ut(info_options(2));
+    Vector<Double> times = timeAxisRec.asArrayDouble("MJDseconds");
+
+    // set up arrays for values
+    IPosition arraySize = IPosition(1,times.size());
+    Vector<Double>haArray, lastArray, utArray;
+
+    if (do_ha || do_last) {
+        if (do_ha) haArray.resize(arraySize);
+        if (do_last) lastArray.resize(arraySize);
+        // these depend on field array
+        Vector<Int> fields = outputRec.asArrayInt("field_id");
+        // set up MSDerivedValues
+        MSDerivedValues msd;
+        ROMSColumns msCol(*itsSelectedMS);
+        msd.setAntennas(msCol.antenna());
+        MEpoch ep=msCol.timeMeas()(0);
+        // iterate through fields
+        for (uInt field=0; field<fields.size(); ++field) {
+            Int fieldId = fields(field);
+            if (msCol.field().numPoly()(fieldId) == 0)
+                msd.setFieldCenter(msCol.field().phaseDirMeas(fieldId));
+            else if (msCol.field().numPoly()(fieldId) > 0)
+                msd.setFieldCenter(msCol.field().phaseDirMeas(fieldId, times(field)));
+            ep.set(MVEpoch(times(field)/C::day));
+            msd.setEpoch(ep);
+            if (do_ha) haArray(field) = msd.hourAngle()/C::_2pi*C::day;
+            if (do_last) lastArray(field) = msd.last().getValue().get();
+        }
+    }
+    if (do_ha) timeAxisRec.define("HA", haArray);
+    if (do_last) timeAxisRec.define("LAST", lastArray);
+
+    if (do_ut) {
+        utArray.resize(arraySize);
+        // this depends on time array
+        Double firstTime = times(IPosition(1,1));
+        Double startOfDay = C::day* int(firstTime/C::day);
+        Array<Double> utArray = times - startOfDay;
+        timeAxisRec.define("UT", utArray);
+    }
+
+            /*
+            // get values for HA field and remove it
+            String haName = "ha";
+            if (!outputRec.isDefined(haName)) haName="HA";
+            Array<Double> haArray = outputRec.asArrayDouble(haName);
+            outputRec.removeField(haName);
+            // now add it to time_axis Record
+            timeAxisRec.define("HA", haArray);
+            */
+
+    // Now put Records back into container Records
+    axisInfoRec.defineRecord("time_axis", timeAxisRec);
+    outputRec.defineRecord(infoName, axisInfoRec);
+}
+
+Vector<String> ms::getCorrAxis(vi::VisBuffer2* vb2) {
+    Vector<Stokes::StokesTypes> types;
+    uInt polSize = wantedpol_p.size();
+    if (polSize > 0) {
+        // convert Int to StokesTypes
+        types.resize(polSize);
+        for (uInt i=0; i<polSize; ++i) 
+            types(i) = Stokes::type(wantedpol_p(i));
+    } else {
+        types = vb2->getCorrelationTypesSelected();
+    }
+    Vector<String> corrNames(types.size());
+    for (uInt i=0; i<types.size(); ++i) {
+        corrNames(i) = Stokes::name(types(i));
+    }
+    return corrNames;
+}
+
+Record ms::getFreqAxis() {
+    ROMSColumns msCol(*itsSelectedMS);
+    // get columns from SPECTRAL_WINDOW table
+    Vector<Int> spws = getspectralwindows();
+    int nSpw = spws.nelements();
+    Vector<uInt> uSpws(nSpw); // need uInt for RefRows
+    for (int i=0; i<nSpw; ++i) { uSpws(i) = spws(i); }
+    Matrix<Double> chanfreqs = msCol.spectralWindow().chanFreq().getColumnCells(RefRows(uSpws));
+    Matrix<Double> resolution = msCol.spectralWindow().resolution().getColumnCells(RefRows(uSpws));
+    if (chansel_p.size() > 0) {
+        // get channel-selected elements
+        int nChan = chansel_p[0];
+        int start = chansel_p[1];
+        int width = chansel_p[2];
+        int inc   = chansel_p[3];
+        Matrix<Double> selChanFreqs(nChan, nSpw);
+        Matrix<Double> selResolution(nChan, nSpw);
+        // get values for selected spws and chans
+        for (int spw=0; spw<nSpw; ++spw) {
+            start = chansel_p[1];
+            for (int chan=0; chan<nChan; ++chan) {
+                selChanFreqs(chan,spw) = 0.0;
+                selResolution(chan,spw) = 0.0;
+                // accum channels in width then get average
+                for (int n=0; n<width; ++n) {
+                    selChanFreqs(chan,spw) += chanfreqs(start+n, spw);
+                    selResolution(chan,spw) += resolution(start+n, spw);
+                }
+                selChanFreqs(chan,spw) /= width;
+                selResolution(chan,spw) /= width;
+                start += inc;
+            }
+        }
+        chanfreqs.resize();
+        chanfreqs = selChanFreqs;
+        resolution.resize();
+        resolution = selResolution;
+    }
+    Record freqaxis;
+    freqaxis.define("chan_freq", chanfreqs);
+    freqaxis.define("resolution", resolution);
+    return freqaxis;
+}
+
+Record ms::getIfrAxis() {
+    Record ifrAxisRec;
+    ifrAxisRec.define("ifr_number", ifrnumbers_p);
+    // storage
+    Vector<String> ifrnames(ifrnumbers_p.size());
+    Vector<String> ifrshortnames(ifrnumbers_p.size());
+    Vector<Double> baselines(ifrnumbers_p.size(), 0.0);
+    // read columns from MS
+    ROMSColumns msCol(*itsSelectedMS);
+    Vector<String> antnames = msCol.antenna().name().getColumn();
+    Array<Double> antpos = msCol.antenna().position().getColumn();
+
+    Int ant1, ant2;
+    String name1, name2, shortname1, shortname2;
+    for (uInt i=0; i<ifrnumbers_p.size(); ++i) {
+        ant1 = ifrnumbers_p(i)/1000;
+        ant2 = ifrnumbers_p(i)%1000;
+        // name
+        name1 = antnames(ant1);
+        name2 = antnames(ant2);
+        ifrnames(i) = name1 + "-" + name2;
+        // shortname
+        string::size_type name1size = name1.size(); 
+        if (name1size>2) shortname1 = name1.from(name1size-2);
+        else shortname1=name1;
+        string::size_type name2size = name2.size(); 
+        if (name2size>2) shortname2 = name2.from(name2size-2);
+        else shortname2=name2;
+        ifrshortnames(i) = shortname1 + "-" + shortname2;
+        // baseline
+        Vector<Double> ant1pos = antpos[ant1];
+        Vector<Double> ant2pos = antpos[ant2];
+        baselines(i) = sqrt(pow((ant1pos[0] - ant2pos[0]), 2) + 
+                         pow((ant1pos[1] - ant2pos[1]), 2) +
+                         pow((ant1pos[2] - ant2pos[2]), 2));
+    }
+    ifrAxisRec.define("ifr_name", ifrnames);
+    ifrAxisRec.define("ifr_shortname", ifrshortnames);
+    ifrAxisRec.define("baseline", baselines);
+    return ifrAxisRec;
+}
+
+void ms::addTimeAxis(Record& out) {
+    // copy "time" field to ["axis_info"]["time_axis"]["MJDseconds"]
+    Array<Double> times = out.asArrayDouble("time");
+    Record timeAxisRec;
+    timeAxisRec.define("MJDseconds", times);
+    String fieldname = "axis_info";
+    if (!out.isDefined(fieldname)) fieldname = "AXIS_INFO";
+    Record axisInfoRec = out.asRecord(fieldname);
+    out.removeField(fieldname);
+    axisInfoRec.defineRecord("time_axis", timeAxisRec);
+    out.defineRecord(fieldname, axisInfoRec);
+}
+
+void ms::getitem(String item, vi::VisBuffer2* vb2, Record& outputRec, bool ifraxis) {
+    String itemname = downcase(item);
+    Bool fieldExists = outputRec.isDefined(item);
+    Record intermediateValue(RecordInterface::Variable);
+    MSS::Field fld = MSS::field(itemname);
+    switch(fld) {
+		case MSS::AMPLITUDE: {
+            getitem("data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> viscube = intermediateValue.asArrayComplex("data");
+            Cube<Float> amp = amplitude(viscube);
+            if (fieldExists) addArrayToRec(amp, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, amp);
+            }
+            break; 
+		case MSS::CORRECTED_AMPLITUDE: {
+            getitem("corrected_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> corrcube = intermediateValue.asArrayComplex("corrected_data");
+            Cube<Float> corramp = amplitude(corrcube);
+            if (fieldExists) addArrayToRec(corramp, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, corramp);
+            }
+            break; 
+		case MSS::MODEL_AMPLITUDE: {
+            getitem("model_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> modelcube = intermediateValue.asArrayComplex("model_data");
+            Cube<Float> modelamp = amplitude(modelcube);
+            if (fieldExists) addArrayToRec(modelamp, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, modelamp);
+            }
+            break; 
+		case MSS::RATIO_AMPLITUDE: {
+            getitem("ratio_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> ratiocube = intermediateValue.asArrayComplex("ratio_data");
+            Cube<Float> ratioamp = amplitude(ratiocube);
+            if (fieldExists) addArrayToRec(ratioamp, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, ratioamp);
+            }
+            break; 
+		case MSS::RESIDUAL_AMPLITUDE: {
+            getitem("residual_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> rescube = intermediateValue.asArrayComplex("residual_data");
+            Cube<Float> resamp = amplitude(rescube);
+            if (fieldExists) addArrayToRec(resamp, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, resamp);
+                                      }
+            break; 
+		case MSS::OBS_RESIDUAL_AMPLITUDE: {
+            getitem("obs_residual_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> obsrescube = intermediateValue.asArrayComplex("obs_residual_data");
+            Cube<Float> obsresamp = amplitude(obsrescube);
+            if (fieldExists) addArrayToRec(obsresamp, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, obsresamp);
+            }
+            break; 
+		case MSS::ANTENNA1: {
+            Vector<Int> ant1 = vb2->antenna1();
+            if (ifraxis) {
+                getIfrArray(ant1, vb2);
+                if (fieldExists) completeMissingIfrs(ant1, outputRec, itemname);
+                else outputRec.define(itemname, ant1);
+            } else { 
+                if (fieldExists) addArrayToRec(ant1, outputRec, itemname);
+                else outputRec.define(itemname, ant1);
+            }
+            }
+            break; 
+		case MSS::ANTENNA2: {
+            Vector<Int> ant2 = vb2->antenna2();
+            if (ifraxis) {
+                getIfrArray(ant2, vb2);
+                if (fieldExists) completeMissingIfrs(ant2, outputRec, itemname);
+                else outputRec.define(itemname, ant2);
+            } else {
+                if (fieldExists) addArrayToRec(ant2, outputRec, itemname);
+                else outputRec.define(itemname, ant2);
+            }
+                            }
+            break; 
+		case MSS::ARRAY_ID: {
+            Vector<Int> arrayIds = vb2->arrayId();
+            if (ifraxis) arrayIds.resize(IPosition(1,1), True);
+            if (fieldExists) addArrayToRec(arrayIds, outputRec, itemname);
+            else outputRec.define(itemname, arrayIds);
+            }
+            break; 
+		case MSS::DATA: {
+            Cube<Complex> viscube = vb2->visCube();
+            if (wantedpol_p.size() > 0) convertPoln(viscube, vb2);
+            if (ifraxis) getIfrArray(viscube, vb2);
+            if (fieldExists) addArrayToRec(viscube, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, viscube);
+                        }
+            break;
+		case MSS::CORRECTED_DATA: {
+            Cube<Complex> corrcube = vb2->visCubeCorrected();
+            if (wantedpol_p.size() > 0) convertPoln(corrcube, vb2);
+            if (ifraxis) getIfrArray(corrcube, vb2);
+            if (fieldExists) addArrayToRec(corrcube, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, corrcube);
+                                  }
+            break; 
+		case MSS::MODEL_DATA: {
+            Cube<Complex> modelcube = vb2->visCubeModel();
+            if (wantedpol_p.size() > 0) convertPoln(modelcube, vb2);
+            if (ifraxis) getIfrArray(modelcube, vb2);
+            if (fieldExists) addArrayToRec(modelcube, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, modelcube);
+            }
+            break; 
+		case MSS::RATIO_DATA: {
+            Cube<Complex> ratiocube = vb2->visCubeCorrected() / vb2->visCubeModel();
+            if (wantedpol_p.size() > 0) convertPoln(ratiocube, vb2);
+            if (ifraxis) getIfrArray(ratiocube, vb2);
+            if (fieldExists) addArrayToRec(ratiocube, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, ratiocube);
+            }
+            break; 
+		case MSS::RESIDUAL_DATA: {
+            Cube<Complex> residcube = vb2->visCubeCorrected() - vb2->visCubeModel();
+            if (wantedpol_p.size() > 0) convertPoln(residcube, vb2);
+            if (ifraxis) getIfrArray(residcube, vb2);
+            if (fieldExists) addArrayToRec(residcube, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, residcube);
+            }
+            break; 
+		case MSS::OBS_RESIDUAL_DATA: {
+            Cube<Complex> obsrescube = vb2->visCube() - vb2->visCubeModel();
+            if (wantedpol_p.size() > 0) convertPoln(obsrescube, vb2);
+            if (ifraxis) getIfrArray(obsrescube, vb2);
+            if (fieldExists) addArrayToRec(obsrescube, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, obsrescube);
+            }
+            break; 
+        case MSS::DATA_DESC_ID: {
+            Vector<Int> ddids = vb2->dataDescriptionIds();
+            if (ifraxis) ddids.resize(IPosition(1,1), True);
+            if (fieldExists) addArrayToRec(ddids, outputRec, itemname);
+            else outputRec.define(itemname, ddids);
+            }
+            break; 
+		case MSS::FEED1: {
+            Vector<Int> feed1 = vb2->feed1();
+            if (ifraxis) feed1.resize(IPosition(1,1), True);
+            if (fieldExists) addArrayToRec(feed1, outputRec, itemname);
+            else outputRec.define(itemname, feed1);
+            }
+            break; 
+		case MSS::FEED2: {
+            Vector<Int> feed2 = vb2->feed2();
+            if (ifraxis) feed2.resize(IPosition(1,1), True);
+            if (fieldExists) addArrayToRec(feed2, outputRec, itemname);
+            else outputRec.define(itemname, feed2);
+            }
+            break;
+		case MSS::FIELD_ID: {
+            Vector<Int> fieldIds = vb2->fieldId();
+            if (ifraxis) fieldIds.resize(IPosition(1,1), True);
+            if (fieldExists) addArrayToRec(fieldIds, outputRec, itemname);
+            else outputRec.define(itemname, fieldIds);
+            }
+            break; 
+		case MSS::FLAG: 
+		case MSS::FLAG_SUM: {
+            Cube<Bool> flagcube = vb2->flagCube();
+            if (ifraxis) getIfrArray(flagcube, vb2);
+            if (fieldExists) addArrayToRec(flagcube, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, flagcube);
+            }
+            break; 
+		case MSS::FLAG_ROW: {
+            Vector<Bool> flagrow = vb2->flagRow();
+            if (ifraxis) getIfrArray(flagrow, vb2);
+            if (fieldExists) addArrayToRec(flagrow, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, flagrow);
+            }
+            break; 
+		case MSS::FLOAT_DATA: {
+            Cube<Float> floatcube = vb2->visCubeFloat();
+            if (ifraxis) getIfrArray(floatcube, vb2);
+            if (fieldExists) addArrayToRec(floatcube, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, floatcube);
+            }
+            break;
+		case MSS::IFR_NUMBER: {
+            if (ifraxis) {
+                if (!fieldExists) outputRec.define(itemname, ifrnumbers_p);
+            } else {
+                Vector<Int> ifrs = getbaselines(vb2);
+                if (fieldExists) addArrayToRec(ifrs, outputRec, itemname);
+                else outputRec.define(itemname, ifrs);
+            }
+            }
+            break;
+		case MSS::IMAGINARY: {
+            getitem("data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> viscube = intermediateValue.asArrayComplex("data");
+            Cube<Float> imagnry = imag(viscube);
+            if (fieldExists) addArrayToRec(imagnry, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, imagnry);
+            }
+            break; 
+		case MSS::CORRECTED_IMAGINARY: {
+            getitem("corrected_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> corrcube = intermediateValue.asArrayComplex("corrected_data");
+            Cube<Float> corrimag = imag(corrcube);
+            if (fieldExists) addArrayToRec(corrimag, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, corrimag);
+            }
+            break; 
+		case MSS::MODEL_IMAGINARY: {
+            getitem("model_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> modelcube = intermediateValue.asArrayComplex("model_data");
+            Cube<Float> modelimag = imag(modelcube);
+            if (fieldExists) addArrayToRec(modelimag, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, modelimag);
+                                   }
+            break; 
+		case MSS::RATIO_IMAGINARY: {
+            getitem("ratio_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> ratiocube = intermediateValue.asArrayComplex("ratio_data");
+            Cube<Float> ratioimag = imag(ratiocube);
+            if (fieldExists) addArrayToRec(ratioimag, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, ratioimag);
+            }
+            break; 
+		case MSS::RESIDUAL_IMAGINARY: {
+            getitem("residual_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> rescube = intermediateValue.asArrayComplex("residual_data");
+            Cube<Float> resimag = imag(rescube);
+            if (fieldExists) addArrayToRec(resimag, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, resimag);
+            }
+            break; 
+		case MSS::OBS_RESIDUAL_IMAGINARY: {
+            getitem("obs_residual_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> obsrescube = intermediateValue.asArrayComplex("obs_residual_data");
+            Cube<Float> obsresimag = imag(obsrescube);
+            if (fieldExists) addArrayToRec(obsresimag, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, obsresimag);
+            }
+            break; 
+		case MSS::PHASE: {
+            getitem("data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> viscube = intermediateValue.asArrayComplex("data");
+            Cube<Float> visphase = phase(viscube);
+            if (fieldExists) addArrayToRec(visphase, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, visphase);
+            }
+            break; 
+		case MSS::CORRECTED_PHASE: {
+            getitem("corrected_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> corrcube = intermediateValue.asArrayComplex("corrected_data");
+            Cube<Float> corrphase = phase(corrcube);
+            if (fieldExists) addArrayToRec(corrphase, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, corrphase);
+                                   }
+            break; 
+		case MSS::MODEL_PHASE: {
+            getitem("model_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> modelcube = intermediateValue.asArrayComplex("model_data");
+            Cube<Float> modelphase = phase(modelcube);
+            if (fieldExists) addArrayToRec(modelphase, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, modelphase);
+            }
+            break; 
+		case MSS::RATIO_PHASE: {
+            getitem("ratio_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> ratiocube = intermediateValue.asArrayComplex("ratio_data");
+            Cube<Float> ratiophase = phase(ratiocube);
+            if (fieldExists) addArrayToRec(ratiophase, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, ratiophase);
+            }
+            break; 
+		case MSS::RESIDUAL_PHASE: {
+            getitem("residual_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> rescube = intermediateValue.asArrayComplex("residual_data");
+            Cube<Float> resphase = phase(rescube);
+            if (fieldExists) addArrayToRec(resphase, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, resphase);
+            }
+            break; 
+		case MSS::OBS_RESIDUAL_PHASE: {
+            getitem("obs_residual_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> obsrescube = intermediateValue.asArrayComplex("obs_residual_data");
+            Cube<Float> obsresphase = phase(obsrescube);
+            if (fieldExists) addArrayToRec(obsresphase, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, obsresphase);
+            }
+            break; 
+		case MSS::REAL: {
+            getitem("data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> viscube = intermediateValue.asArrayComplex("data");
+            Cube<Float> visreal = real(viscube);
+            if (fieldExists) addArrayToRec(visreal, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, visreal);
+            }
+            break; 
+		case MSS::CORRECTED_REAL: {
+            getitem("corrected_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> corrcube = intermediateValue.asArrayComplex("corrected_data");
+            Cube<Float> corrreal = real(corrcube);
+            if (fieldExists) addArrayToRec(corrreal, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, corrreal);
+                                  }
+            break; 
+		case MSS::MODEL_REAL: {
+            getitem("model_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> modelcube = intermediateValue.asArrayComplex("model_data");
+            Cube<Float> modelreal = real(modelcube);
+            if (fieldExists) addArrayToRec(modelreal, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, modelreal);
+            }
+            break; 
+		case MSS::RATIO_REAL: {
+            getitem("ratio_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> ratiocube = intermediateValue.asArrayComplex("ratio_data");
+            Cube<Float> ratioreal = real(ratiocube);
+            if (fieldExists) addArrayToRec(ratioreal, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, ratioreal);
+            }
+            break; 
+		case MSS::RESIDUAL_REAL: {
+            getitem("residual_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> rescube = intermediateValue.asArrayComplex("residual_data");
+            Cube<Float> resreal = real(rescube);
+            if (fieldExists) addArrayToRec(resreal, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, resreal);
+            }
+            break; 
+		case MSS::OBS_RESIDUAL_REAL: {
+            getitem("obs_residual_data", vb2, intermediateValue, ifraxis);
+            Cube<Complex> obsrescube = intermediateValue.asArrayComplex("obs_residual_data");
+            Cube<Float> obsresreal = real(obsrescube);
+            if (fieldExists) addArrayToRec(obsresreal, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, obsresreal);
+            }
+            break; 
+		case MSS::SCAN_NUMBER: {
+            Vector<Int> scans = vb2->scan();
+            if (ifraxis) scans.resize(IPosition(1,1), True);
+            if (fieldExists) addArrayToRec(scans, outputRec, itemname);
+            else outputRec.define(itemname, scans);
+            }
+            break; 
+		case MSS::SIGMA: {
+            Matrix<Float> sigma = vb2->sigma();
+            if (ifraxis) getIfrArray(sigma, vb2);
+            if (fieldExists) addArrayToRec(sigma, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, sigma);
+            }
+            break; 
+		case MSS::TIME: {
+            Vector<Double> times = vb2->time();
+            if (ifraxis) times.resize(IPosition(1,1), True);
+            if (fieldExists) addArrayToRec(times, outputRec, itemname);
+            else outputRec.define(itemname, times);
+            }
+            break; 
+		case MSS::UVW: {
+            Matrix<Double> uvw = vb2->uvw();
+            if (ifraxis) getIfrArray(uvw, vb2);
+            if (fieldExists) addArrayToRec(uvw, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, uvw);
+            }
+            break; 
+		case MSS::U: {
+            Vector<Double> u = vb2->uvw().row(0);
+            if (ifraxis) getIfrArray(u, vb2);
+            if (fieldExists) addArrayToRec(u, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, u);
+            }
+            break; 
+		case MSS::V: {
+            Vector<Double> v = vb2->uvw().row(1);
+            if (ifraxis) getIfrArray(v, vb2);
+            if (fieldExists) addArrayToRec(v, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, v);
+            }
+            break; 
+		case MSS::W: {
+            Vector<Double> w = vb2->uvw().row(2);
+            if (ifraxis) getIfrArray(w, vb2);
+            if (fieldExists) addArrayToRec(w, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, w);
+            }
+            break; 
+		case MSS::UVDIST: {
+            Array<Double> u(vb2->uvw().row(0));
+            Array<Double> v(vb2->uvw().row(1));
+            Vector<Double> uvdist = sqrt(u*u+v*v);
+            if (ifraxis) getIfrArray(uvdist, vb2);
+            if (fieldExists) addArrayToRec(uvdist, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, uvdist);
+            }
+            break; 
+		case MSS::WEIGHT: {
+            Matrix<Float> weight = vb2->weight();
+            if (ifraxis) getIfrArray(weight, vb2);
+            if (fieldExists) addArrayToRec(weight, outputRec, itemname, ifraxis);
+            else outputRec.define(itemname, weight);
+            }
+            break; 
+		case MSS::AXIS_INFO: {
+            if (!fieldExists) {
+                // corr_, freq_, ifr_axis same for all iterations!
+                Record info(RecordInterface::Variable);
+                Vector<String> corrAxis = getCorrAxis(vb2);
+                // corr_axis
+                info.define("corr_axis", corrAxis);
+                // freq_axis
+                Record freqAxis = getFreqAxis();
+                info.defineRecord("freq_axis", freqAxis);
+                if (ifraxis) {
+                    // ifr_axis
+                    Record ifrAxis = getIfrAxis();
+                    info.defineRecord("ifr_axis", ifrAxis);
+                }
+                outputRec.defineRecord(itemname, info);
+            } 
+            }
+            break;
+		case MSS::UNDEFINED:
+		default:
+			*itsLog << LogIO::WARN << "Unrecognized field or field not implemented: "
+                    << itemname << LogIO::POST;
+			break;
+    }
+}
+
 bool
 ms::putdata(const ::casac::record& items)
 {
-	Bool rstat(false);
+	Bool rstat(False);
 	try {
 		if(!detached()){
 			Record *myTmp = toRecord(items);
@@ -2927,11 +4574,270 @@ ms::putdata(const ::casac::record& items)
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return rstat;
+}
+
+bool
+ms::putdata2(const ::casac::record& items)
+{
+	*itsLog << LogOrigin("ms", "putdata2");
+	bool rstat(false);
+	try {
+		if(!detached()){
+            // run some checks!
+            if (nrow2(True)==0) {
+                *itsLog << LogIO::SEVERE << "Selected Table is empty - use selectinit"
+				    << LogIO::POST;
+		        return false;
+	        }
+	        *itsLog << LogOrigin("ms", "putdata2");
+            if (!ready2write_()) {
+                *itsLog << LogIO::SEVERE << "MeasurementSet is not writable; use open with nomodify=False" << LogIO::POST;
+		        return false;
+            }
+            if (chansel_p.size()>0 && chansel_p[2]>0) {
+                *itsLog << LogIO::SEVERE << "Channel averaging not supported when writing data" << LogIO::POST;
+		        return false;
+            }
+            if (doingAveraging_p) {
+                *itsLog << LogIO::SEVERE << "Averaging not supported when writing data, cannot change data shape" << LogIO::POST;
+		        return false;
+            }
+            if (wantedpol_p.size() > 0) {
+                *itsLog << LogIO::SEVERE << "Polarization conversion not supported when writing data" << LogIO::POST;
+		        return false;
+            }
+
+			Record* putRecord = toRecord(items);
+            // check for valid fields for putdata, issue warning once
+            Vector<Bool> allowed(putRecord->nfields());
+            for (uInt i=0; i<putRecord->nfields(); ++i) {
+                String fieldname = downcase(putRecord->name(i));
+                allowed(i) = allowPut(fieldname);
+            }
+            if (anyTrue(allowed)) {
+                Int startrow(0), subchunk(0);
+                if (itsVI2) {
+                    vi::VisBuffer2* vb2 = itsVI2->getVisBuffer();
+                    for (itsVI2->origin(); itsVI2->more(); itsVI2->next()) {
+                        for (uInt i=0; i<putRecord->nfields(); ++i) {
+                            if (allowed(i)) putitem(i, vb2, *putRecord,
+                                startrow, subchunk);
+                        }
+                        startrow += vb2->nRows();
+                        ++subchunk;
+                    }
+                } else {
+                    if (checkinit()) {
+                        *itsLog << LogOrigin("ms", "putdata2");
+                        std::vector<std::string> columns = {""};
+                        if (iterinit2(columns, 0.0, 0, false)) {
+                            iterorigin2();
+                            *itsLog << LogOrigin("ms", "putdata2");
+                            vi::VisBuffer2* vb2 = itsVI2->getVisBuffer();
+                            for (itsVI2->origin(); itsVI2->more(); itsVI2->next()) {
+                                for (uInt i=0; i<putRecord->nfields(); ++i) {
+                                    if (allowed(i)) putitem(i, vb2, *putRecord,
+                                        startrow, subchunk);
+                                }
+                                startrow += vb2->nRows();
+                                ++subchunk;
+                            }
+                            while(iternext2()) {
+                                *itsLog << LogOrigin("ms", "putdata2");
+                                for (itsVI2->origin(); itsVI2->more(); itsVI2->next()) {
+                                    for (uInt i=0; i<putRecord->nfields(); ++i) {
+                                        if (allowed(i)) putitem(i, vb2, *putRecord,
+                                            startrow, subchunk);
+                                    }
+                                    startrow += vb2->nRows();
+                                    ++subchunk;
+                                }
+                            }
+                            iterend2();
+                            *itsLog << LogOrigin("ms", "putdata2");
+                        } // iterinit
+                    } // checkinit
+                } // else
+                rstat = true;
+            }
+			delete putRecord;
+		}
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
 	Table::relinquishAutoLocks(true);
 	return rstat;
+}
+
+bool ms::allowPut(String fieldname) {
+    ROMSColumns msc(*itsSelectedMS);
+    MSS::Field fld = MSS::field(fieldname);
+    bool allow(true);
+    switch(fld) {
+        case MSS::CORRECTED_DATA:
+            if (msc.correctedData().isNull()) {
+                *itsLog << LogIO::WARN << "Cannot write " << fieldname << ", column does not exist" << LogIO::POST;
+                allow = false;
+            }
+            break; 
+        case MSS::MODEL_DATA:
+            if (msc.modelData().isNull()) {
+                *itsLog << LogIO::WARN << "Cannot write " << fieldname << ", column does not exist" << LogIO::POST;
+                allow = false;
+            }
+            break; 
+        case MSS::FLOAT_DATA:
+            if (msc.floatData().isNull()) {
+                *itsLog << LogIO::WARN << "Cannot write " << fieldname << ", column does not exist" << LogIO::POST;
+                allow = false;
+            }
+            break; 
+        case MSS::DATA:
+        case MSS::FLAG:
+        case MSS::FLAG_ROW:
+        case MSS::SIGMA:
+        case MSS::WEIGHT:
+            break;
+        case MSS::UNDEFINED:
+        default:
+            *itsLog << LogIO::WARN << "Invalid field in putdata ignored: " << fieldname << LogIO::POST;
+            allow = false;
+    }
+    return allow;
+}
+
+void ms::putitem(uInt fieldId, vi::VisBuffer2* vb2, Record& inputRecord,
+    Int startrow, Int subchunk) {
+    String fieldname = downcase(inputRecord.name(fieldId));
+    MSS::Field fld = MSS::field(fieldname);
+    switch (fld) {
+        case MSS::DATA:
+        case MSS::CORRECTED_DATA:
+        case MSS::MODEL_DATA: {
+            Array<Complex> data = inputRecord.toArrayComplex(fieldname);
+            IPosition shape = data.shape();
+            // get dataToWrite cube from data array
+            Cube<Complex> dataToWrite;
+            if (shape.size()==3) {
+                // Write nrows of array at a time
+                IPosition start(3,0,0,startrow), 
+                          length(3,shape(0), shape(1), vb2->nRows()), 
+                          stride(3,1,1,1);
+                Slicer slicer(start, length, stride);
+                dataToWrite = data(slicer);
+            } else if (shape.size()==4) { // ifraxis
+                // Each ifraxis is a subchunk's worth of data
+                dataToWrite = data[subchunk];
+                // reorder/resize chunk according to MS ifr and vb shape
+                ifrToArray(dataToWrite, vb2);
+            }
+            switch (fld) {
+                case MSS::DATA:
+                    itsVI2->getImpl()->writeVisObserved(dataToWrite);
+                    break;
+                case MSS::CORRECTED_DATA:
+                    itsVI2->getImpl()->writeVisCorrected(dataToWrite);
+                    break;
+                case MSS::MODEL_DATA:
+                    itsVI2->getImpl()->writeVisModel(dataToWrite);
+                    break;
+                default:
+                    break;
+            }
+        }
+        break; 
+        case MSS::FLOAT_DATA: {
+            Array<Float> data = inputRecord.toArrayFloat(fieldname);
+            IPosition shape = data.shape();
+            Cube<Float> dataToWrite;
+            if (shape.size()==3) {
+                IPosition start(3,0,0,startrow), 
+                          length(3,shape(0), shape(1), vb2->nRows()), 
+                          stride(3,1,1,1);
+                Slicer slicer(start, length, stride);
+                dataToWrite = data(slicer);
+            } else if (shape.size()==4) { // ifraxis
+                dataToWrite = data[subchunk];
+                ifrToArray(dataToWrite, vb2);
+            }
+            vb2->setVisCubeFloat(dataToWrite);
+            itsVI2->getImpl()->writeBackChanges(vb2);
+        }
+        break;
+        case MSS::FLAG: {
+            Array<Bool> flags = inputRecord.toArrayBool(fieldname);
+            IPosition shape = flags.shape();
+            Cube<Bool> dataToWrite;
+            if (shape.size()==3) {
+                IPosition start(3,0,0,startrow), 
+                          length(3,shape(0), shape(1), vb2->nRows()), 
+                          stride(3,1,1,1);
+                Slicer slicer(start, length, stride);
+                dataToWrite = flags(slicer);
+            } else if (shape.size()==4) { // ifraxis
+                dataToWrite = flags[subchunk];
+                ifrToArray(dataToWrite, vb2);
+            }
+            itsVI2->getImpl()->writeFlag(dataToWrite);
+        }
+        break;
+        case MSS::FLAG_ROW: {
+            Array<Bool> flagrow = inputRecord.toArrayBool(fieldname);
+            IPosition shape = flagrow.shape();
+            Vector<Bool> dataToWrite;
+            if (shape.size()==1) {
+                IPosition start(1,startrow), 
+                          length(1,vb2->nRows()), 
+                          stride(1,1);
+                Slicer slicer(start, length, stride);
+                dataToWrite = flagrow(slicer);
+            } else if (shape.size()==2) { // ifraxis
+                dataToWrite = flagrow[subchunk];
+                ifrToArray(dataToWrite, vb2);
+            }
+            itsVI2->getImpl()->writeFlagRow(dataToWrite);
+        }
+        break;
+        case MSS::SIGMA:
+        case MSS::WEIGHT: {
+            Array<Float> data = inputRecord.toArrayFloat(fieldname);
+            IPosition shape = data.shape();
+            Matrix<Float> dataToWrite;
+            if (shape.size()==2) {
+                IPosition start(2,0,startrow), 
+                          length(2,shape(0), vb2->nRows()), 
+                          stride(2,1,1);
+                Slicer slicer(start, length, stride);
+                dataToWrite = data(slicer);
+            } else if (shape.size()==3) { // ifraxis
+                dataToWrite = data[subchunk];
+                ifrToArray(dataToWrite, vb2);
+            }
+            switch (fld) {
+                case MSS::SIGMA:
+                    itsVI2->getImpl()->writeSigma(dataToWrite);
+                    break;
+                case MSS::WEIGHT:
+                    itsVI2->getImpl()->writeWeight(dataToWrite);
+                    break;
+                default:
+                    break;
+            }
+        }
+        break;
+        case MSS::UNDEFINED:
+        default: {
+            *itsLog << LogIO::WARN << "Unrecognized field in putdata ignored: " << fieldname << LogIO::POST;
+        }
+        break;
+    }
 }
 
 bool
@@ -3588,6 +5494,20 @@ ms::partition(const std::string&      outputms,   const ::casac::variant& field,
 	return rstat;
 }
 
+Vector<Int> ms::getspectralwindows() {
+    // Get list of selected SPWs from DDID selection
+    ROMSColumns msc(*itsSelectedMS);
+    Vector<Int> allDDIDs = msc.dataDescId().getColumn();
+    Vector<Int> allSPWs = msc.dataDescription().spectralWindowId().getColumn();
+    Int n = GenSort<Int>::sort(allDDIDs, Sort::Ascending, Sort::NoDuplicates);
+    Vector<Int> selDDIDs = allDDIDs(Slice(0,n));
+    Vector<Int> selSPWs(selDDIDs.size());
+    for (uInt i=0; i<selDDIDs.size(); ++i) {
+        selSPWs(i) = allSPWs(selDDIDs(i));
+    }
+    return selSPWs;
+}
+
 bool
 ms::iterinit(const std::vector<std::string>& columns, const double interval,
              const int maxrows, const bool adddefaultsortcolumns)
@@ -3603,6 +5523,103 @@ ms::iterinit(const std::vector<std::string>& columns, const double interval,
 		}
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return rstat;
+}
+
+bool
+ms::iterinit2(const std::vector<std::string>& columns, const double interval,
+             const int maxrows, const bool adddefaultsortcolumns)
+{
+	*itsLog << LogOrigin("ms", "iterinit");
+	Bool rstat(false);
+	try {
+		if (!detached()) {
+            // make sure we start fresh
+            if (itsVI2)         {delete itsVI2; itsVI2=NULL;}
+
+            Bool polnSelection = !polnExpr_p.empty();
+            Bool chanSelection = !chanselExpr_p.empty();
+            Bool chanAverage = ((chansel_p.size() > 0) && (chansel_p[2] > 1));
+
+            // Iterating parameters for first layer (basic VIImpl2)
+            // Process given columns
+            Block<Int> columnIds = Block<Int>();
+            Vector<String> colNames = casa::toVectorString(columns);
+            Int n = colNames.nelements();
+            if (n>0 && colNames(0)!="") {
+                columnIds.resize(n);
+                for (Int i=0; i<n; ++i) {
+                    columnIds[i] = MS::columnType(colNames(i));
+                    if (columnIds[i]==MS::UNDEFINED_COLUMN) {
+                        *itsLog << LogIO::SEVERE << "Iteration initialization failed: unrecognized column name " << colNames(i) << LogIO::POST;
+                        return false;
+                    }
+                }
+            }
+            // Make sort columns
+            vi::SortColumns sortcols = vi::SortColumns(columnIds, adddefaultsortcolumns);
+            vi::IteratingParameters iterpar(interval, sortcols);
+            // Make VI2 basic layer
+            bool writable = true;  // for putdata
+            vi::VisIterImpl2LayerFactory viilayer(itsSelectedMS, iterpar, writable);
+            Vector<vi::ViiLayerFactory*> layers(1);
+            layers[0] = &viilayer;
+
+            // Add channel-averaging layer if requested in selectchannel2 
+            if (chanAverage) {
+                Record config;
+                config.define("chanbin", chansel_p[2]);
+                if (chanSelection) {
+                    String spwExpr = getSpwExpr() + chanselExpr_p;
+                    config.define("spw", spwExpr);
+                }
+                vi::ChannelAverageTVILayerFactory* chanavglayer =
+                    new vi::ChannelAverageTVILayerFactory(config);
+                layers.resize(layers.size()+1, True);
+                layers[1] = chanavglayer;
+            }
+
+            // Create VI2
+            itsVI2 = new vi::VisibilityIterator2(layers);
+            if (itsVI2 != NULL) {
+                // Apply max rows
+                if (maxrows>0) {
+                    maxrows_p = True;
+                    itsVI2->setRowBlocking(maxrows-1);
+                }
+
+                // Apply in-row selections with FrequencySelection class
+                // If chanavg, chan selection handled in chanavg layer;
+                if (polnSelection || (chanSelection && !chanAverage)) {
+                    vi::FrequencySelectionUsingChannels freqSel = vi::FrequencySelectionUsingChannels();
+                    if (polnSelection) {
+                        Vector<Vector<Slice>> corrslices, chanslices;
+                        mssSetData(*itsSelectedMS, *itsSelectedMS, 
+                            chanslices, corrslices, "", "", "", "", "", "", 
+                            "", polnExpr_p, "", "", "", "", 1, itsMSS);
+                        freqSel.addCorrelationSlices(corrslices);
+                    }
+
+                    if (chanSelection) {
+                        Int nchan(chansel_p[0]), start(chansel_p[1]), width(chansel_p[2]), inc(chansel_p[3]);
+                        Vector<Int> spws = getspectralwindows();
+                        for (Int chanbin=0; chanbin<nchan; ++chanbin) {
+                            for (uInt spwIdx=0; spwIdx<spws.size(); ++spwIdx) 
+                                freqSel.add(spws(spwIdx), start, width, 1);
+                            start += inc;
+                        }
+                    }
+                    itsVI2->setFrequencySelection(freqSel);
+                }
+                rstat = true;
+            }
+		}
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
@@ -3613,10 +5630,34 @@ ms::iterinit(const std::vector<std::string>& columns, const double interval,
 bool
 ms::iterorigin()
 {
-	Bool rstat(false);
+	Bool rstat(False);
 	try {
 		if(!detached())
 			rstat =  itsSel->iterOrigin();
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return rstat;
+}
+
+bool
+ms::iterorigin2()
+{
+	*itsLog << LogOrigin("ms", "iterorigin");
+	Bool rstat(false);
+	try {
+		if(!detached()) {
+            if (itsVI2) {
+			    itsVI2->originChunks();
+			    itsVI2->origin();
+			    rstat = true;
+            } else {
+                *itsLog << LogIO::SEVERE << "Iteration failed: must call iterinit first" << LogIO::POST;
+            }
+        }
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
@@ -3635,6 +5676,44 @@ ms::iternext()
 			rstat =  itsSel->iterNext();
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return rstat;
+}
+
+bool
+ms::iternext2()
+{
+	*itsLog << LogOrigin("ms", "iternext");
+	Bool rstat(false);
+	try {
+		if(!detached()) {
+            if (itsVI2) {
+                if (maxrows_p) {  // doing subchunks
+                    itsVI2->next();
+                    if (!itsVI2->more()) {
+                        itsVI2->nextChunk();
+                        if (!itsVI2->moreChunks())
+                            rstat = False;
+                        else {
+                            itsVI2->origin();
+                            rstat = itsVI2->more();
+                        }
+                    } else {
+                        rstat = true;
+                    }
+                } else { // doing chunks
+			        itsVI2->nextChunk();
+                    rstat = itsVI2->moreChunks();
+                }
+            } else {
+                *itsLog << LogIO::SEVERE << "Iteration failed: must call iterinit first" << LogIO::POST;
+            }
+        }
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
 		RETHROW(x);
 	}
@@ -3645,10 +5724,31 @@ ms::iternext()
 bool
 ms::iterend()
 {
-	Bool rstat(false);
+	Bool rstat(False);
 	try {
 		if(!detached())
 			rstat =  itsSel->iterEnd();
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		Table::relinquishAutoLocks(True);
+		RETHROW(x);
+	}
+	Table::relinquishAutoLocks(True);
+	return rstat;
+}
+
+bool
+ms::iterend2()
+{
+	*itsLog << LogOrigin("ms", "iterend");
+	Bool rstat(false);
+	try {
+		if(!detached())
+		    if (itsVI2) {
+                delete itsVI2;
+                itsVI2 = NULL;
+            }
+			rstat = true;
 	} catch (AipsError x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
@@ -3984,8 +6084,10 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 			if (casaRec->name(i) == "time")          {timeExpr       = casaRec->asString(RecordFieldId(i));}
 			if (casaRec->name(i) == "field")         {fieldExpr      = casaRec->asString(RecordFieldId(i));}
 			if (casaRec->name(i) == "baseline")      {baselineExpr   = casaRec->asString(RecordFieldId(i));}
+			if (casaRec->name(i) == "antenna")       {baselineExpr   = casaRec->asString(RecordFieldId(i));}
 			if (casaRec->name(i) == "scan")          {scanExpr       = casaRec->asString(RecordFieldId(i));}
 			if (casaRec->name(i) == "scanintent")    {scanIntentExpr = casaRec->asString(RecordFieldId(i));}
+			if (casaRec->name(i) == "state")         {scanIntentExpr = casaRec->asString(RecordFieldId(i));}
 			if (casaRec->name(i) == "polarization")  {polnExpr       = casaRec->asString(RecordFieldId(i));}
 			if (casaRec->name(i) == "uvdist")        {uvDistExpr     = casaRec->asString(RecordFieldId(i));}
 			if (casaRec->name(i) == "observation")   {obsExpr        = casaRec->asString(RecordFieldId(i));}
@@ -3997,7 +6099,7 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 
 		//
 		// If only parsing is requested, just set up the itsMSS object.
-		// This is much faster if one is only interseted in the indices
+		// This is much faster if one is only interested in the indices
 		// and not the actual selected MS.
 		//
 		if (onlyparse)
@@ -4005,15 +6107,13 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 			itsMSS->reset(*itsMS, MSSelection::PARSE_NOW,timeExpr,baselineExpr,fieldExpr,spwExpr,uvDistExpr,
 			              taQLExpr,polnExpr,scanExpr,arrayExpr,scanIntentExpr,obsExpr);
 			retVal=(itsMSS->getTEN(itsMS).isNull() == false);
-		}
-		else
-		{
-			retVal = mssSetData(*itsMS, *itsMS, "",/*outMSName*/
-			                    timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
-			                    taQLExpr, polnExpr, scanExpr,
-			                    arrayExpr, scanIntentExpr, obsExpr, itsMSS);
-		}
-		itsSel->setMS(*itsMS);
+		} else {
+		    retVal = mssSetData(*itsSelectedMS, *itsSelectedMS, "",/*outMSName*/
+		        timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
+			    taQLExpr, polnExpr, scanExpr,
+			    arrayExpr, scanIntentExpr, obsExpr, itsMSS);
+        }
+        if (itsSel) itsSel->setMS(*itsSelectedMS);
 		return retVal;
 	}
 	catch (AipsError x)

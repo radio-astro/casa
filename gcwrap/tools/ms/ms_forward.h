@@ -4,17 +4,20 @@
 namespace casacore{
 
 class MeasurementSet;
-class LogIO;
 class MSSelector;
-class MSFlagger;
+class LogIO;
 class MSSelection;
 }
 
 namespace casa
 {
-
 class VisibilityIterator;
 class VisBuffer;
+namespace vi {
+class VisibilityIterator2;
+class VisBuffer2;
+}
+
 }
 
 namespace casac {
