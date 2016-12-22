@@ -13,7 +13,10 @@ class FindContQAHandler(pqa.QAResultHandler):
     child_cls = None
 
     def handle(self, context, result):
-        score = float(result.num_found) / float(result.num_total)
+        if result.num_total != 0:
+            score = float(result.num_found) / float(result.num_total)
+        else:
+            score = 0.0
         longmsg, shortmsg = ('Found continuum ranges', '') if score == 1.0 else \
             ('Found only %d of %d continuum ranges' % (result.num_found, result.num_total), 'Missing continuum ranges')
         result.qa.pool[:] = [pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)]
