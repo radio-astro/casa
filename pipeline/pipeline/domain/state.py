@@ -256,6 +256,16 @@ class StateSMT(State):
     def __init__(self, state_id, obs_mode):
         super(StateSMT, self).__init__(state_id, obs_mode)
 
+class StateNAOJ(State):
+    # dictionary to map from STATE table obs_mode to pipeline intent
+    obs_mode_mapping = {
+        'OBSERVE_TARGET#ON_SOURCE'           : 'TARGET',
+        'OBSERVE_TARGET#OFF_SOURCE'          : 'REFERENCE'
+    }
+    
+    def __init__(self, state_id, obs_mode):
+        super(StateNAOJ, self).__init__(state_id, obs_mode)
+
 class StateFactory(object):
     def __init__(self, observatory, start=None):
         if observatory == 'ALMA':
@@ -269,6 +279,8 @@ class StateFactory(object):
             self._constructor = StateAPEX
         elif (observatory == 'SMT'):
             self._constructor = StateSMT
+        elif (observatory == 'NRO'):
+            self._constructor = StateNAOJ
         else:
             raise KeyError('%s has no matching State class' % observatory)
 

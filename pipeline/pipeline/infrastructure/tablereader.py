@@ -350,7 +350,10 @@ class SpectralWindowTable(object):
             chan_widths = msmd.chanwidths(i)            
             chan_effective_bws = msmd.chaneffbws(i)
             sideband = msmd.sideband(i)
-            baseband = msmd.baseband(i)
+            try: ### BBC_NO column is optional
+                baseband = msmd.baseband(i)
+            except: ### For Nobeyama (TODO: how to define BBC_NO for NRO)
+                baseband = i
             ref_freq = msmd.reffreq(i)
 
             spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
