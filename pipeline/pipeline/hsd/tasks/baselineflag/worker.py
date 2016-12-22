@@ -744,9 +744,14 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
             fout.write("# SPW: %d\n" % spwid)
             fout.write("#"*60+"\n")
             # data part
+            # Flag status by Active flag type is summarized in FLAG_SUMMARY column
+            # NOTE Elements in FLAG and FLAG_PERMANENT have 0 (flagged) even if the
+            # flag category is inactive.
+            # We want avoid generating flag commands if online flag is the only reason for the flag.
             for i in xrange(len(dt_ids)):
                 line = [base_selection]
                 ID = dt_ids[i]
+                tSFLAG = datatable.tb2.getcell('FLAG_SUMMARY', ID)
                 tFLAG = datatable.tb2.getcell('FLAG', ID)
                 tPFLAG = datatable.tb2.getcell('FLAG_PERMANENT', ID)
                 flag_sum = tFLAG.sum(axis=1) + tPFLAG.sum(axis=1)
@@ -765,7 +770,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 sflag = flag_sum + numpy.ones(flag_sum.shape)-online
                 flagged_pols = []
                 for idx in range(len(polids)):
-                    if sflag[polids[idx]] != num_flag:
+                    if tSFLAG[polids[idx]]==0 and sflag[polids[idx]] != num_flag:
                         flagged_pols.append(pollist[idx])
                 if (len(flagged_pols)==0): # no flag in selcted pols
                     continue

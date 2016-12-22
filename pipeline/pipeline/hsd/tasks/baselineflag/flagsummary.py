@@ -194,13 +194,13 @@ class SDBLFlagSummary(object):
             NPpdata[0][N] = tTSYS
             NPpflag[0][N] = tPFLAG[1]
             NPprows[0][N] = row
-            if tPFLAG[1] == 0:
+            if FlagRule_local['TsysFlag']['isActive'] and tPFLAG[1] == 0:
                 FlaggedRowsCategory[0].append(row)
             # Weather flag
-            if tPFLAG[0] == 0:
+            if FlagRule_local['WeatherFlag']['isActive'] and tPFLAG[0] == 0:
                 FlaggedRowsCategory[1].append(row)
             # User flag
-            if tPFLAG[2] == 0:
+            if FlagRule_local['UserFlag']['isActive'] and tPFLAG[2] == 0:
                 FlaggedRowsCategory[2].append(row)
             # Online flag
             if tPFLAG[3] == 0:
@@ -210,31 +210,31 @@ class SDBLFlagSummary(object):
             # RMS flag before baseline fit
             NPpdata[1][N] = tSTAT[2]
             NPpflag[1][N] = tFLAG[2]
-            if tFLAG[2] == 0:
+            if FlagRule_local['RmsPreFitFlag']['isActive'] and tFLAG[2] == 0:
                 FlaggedRowsCategory[5].append(row)
             NPpdata[2][N] = tSTAT[1]
             NPpflag[2][N] = tFLAG[1]
-            if tFLAG[1] == 0:
+            if FlagRule_local['RmsPostFitFlag']['isActive'] and tFLAG[1] == 0:
                 FlaggedRowsCategory[4].append(row)
             # Running mean flag before baseline fit
             NPpdata[3][N] = tSTAT[4]
             NPpflag[3][N] = tFLAG[4]
-            if tFLAG[4] == 0:
+            if FlagRule_local['RunMeanPreFitFlag']['isActive'] and tFLAG[4] == 0:
                 FlaggedRowsCategory[7].append(row)
             # Running mean flag after baseline fit
             NPpdata[4][N] = tSTAT[3]
             NPpflag[4][N] = tFLAG[3]
-            if tFLAG[3] == 0:
+            if FlagRule_local['RunMeanPostFitFlag']['isActive'] and tFLAG[3] == 0:
                 FlaggedRowsCategory[6].append(row)
             # Expected RMS flag before baseline fit
             NPpdata[5][N] = tSTAT[6]
             NPpflag[5][N] = tFLAG[6]
-            if tFLAG[6] == 0:
+            if FlagRule_local['RmsExpectedPreFitFlag']['isActive'] and tFLAG[6] == 0:
                 FlaggedRowsCategory[9].append(row)
             # Expected RMS flag after baseline fit
             NPpdata[6][N] = tSTAT[5]
             NPpflag[6][N] = tFLAG[5]
-            if tFLAG[5] == 0:
+            if FlagRule_local['RmsExpectedPostFitFlag']['isActive'] and tFLAG[5] == 0:
                 FlaggedRowsCategory[8].append(row)
             N += 1
         # data store finished
