@@ -5,6 +5,7 @@ import string
 from locatescript import copydata
 from locatescript import locatescript
 import inspect
+import pylab as pl
 
 # Short description
 def description():

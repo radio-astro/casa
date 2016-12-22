@@ -340,7 +340,7 @@ def analyseASDM(basename, caltablename0, genwvr=True):
             timerange="", showgui=False
             )
         tget(plotcal)
-        overplot=T
+        overplot=True
         plotsymbol='.'; caltable=caltablename+"_spw"+str(i)+".G"; plotcal()
         plotsymbol=':'; caltable=caltablename+".GSPLINE_WVR_"+str(i);
         figfile=caltablename+"_gaincals.png"

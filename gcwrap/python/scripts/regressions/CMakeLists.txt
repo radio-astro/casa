@@ -19,6 +19,9 @@
 #
 
 casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
+  3C129_regression.py
+  3C219D_test_regression.py
+  asdm-imexport+analysis_regression.py
   3c129_tutorial_regression.py
   3C219D_regression.py
   3C391polim_regression.py

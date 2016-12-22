@@ -10,6 +10,14 @@ PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 CASA_DIR = os.environ["CASAPATH"].split()[0]
 TESTS_DIR = CASA_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
 
+_potential_data_directories = ( "/opt/casa/data",
+                                "/home/casa/data",
+                                "/home/casa/data/trunk",
+                                "/export/data/casa" )
+
+REGRESSION_DATA = filter(lambda x: os.access(x,os.F_OK),map(lambda y: y+"/regression",_potential_data_directories))
+                      
+
 if not os.access(TESTS_DIR, os.F_OK):
     if os.access(CASA_DIR+'/lib64', os.F_OK):
         TESTS_DIR = CASA_DIR+'/lib64/python' + PYVER + '/regressions/'

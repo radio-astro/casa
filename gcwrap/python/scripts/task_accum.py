@@ -1,6 +1,7 @@
 import sys
 import os
 from taskinit import *
+_cb = cbtool( )
 
 def accum(vis=None,tablein=None,incrtable=None,caltable=None,field=None,calfield=None,interp=None,accumtime=None,spwmap=None):
 
@@ -137,16 +138,16 @@ def accum(vis=None,tablein=None,incrtable=None,caltable=None,field=None,calfield
                      accumtime=-1.0
 
               if ((type(vis)==str) & (os.path.exists(vis))):
-                     cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
+                     _cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
               else:
                      raise Exception, 'Visibility data set not found - please verify the name'
 
-              cb.accumulate(tablein=tablein,incrtable=incrtable,tableout=caltable,
+              _cb.accumulate(tablein=tablein,incrtable=incrtable,tableout=caltable,
                             field=field,calfield=calfield,interp=interp,t=accumtime,spwmap=spwmap)
-              cb.close()
+              _cb.close()
 
        except Exception, instance:
               print '*** Error ***',instance
-              cb.close()
+              _cb.close()
               raise Exception, instance
 

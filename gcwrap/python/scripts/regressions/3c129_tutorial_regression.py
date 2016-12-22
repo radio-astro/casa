@@ -8,8 +8,8 @@
 # Original version GMoellenbrok 2008-06-08  Patch 2 summer school        #
 # Modified/merge   STM          2008-07-31  Clean up                     #
 # Updated version  STM          2008-08-07  finishing touches            #
-# Updated version  GMoellenbrock2009-11-20  Add evlabands=F              #
-# Updated          GAM          2013-11-25  Commented plotxy calls
+# Updated version  GMoellenbrock2009-11-20  Add evlabands=False          #
+# Updated          GAM          2013-11-25  Commented plotxy calls       #
 #                                                                        #
 # Based on 2008 Synthesis Imaging Workshop script                        #
 #                                                                        #
@@ -69,7 +69,7 @@ import pickle
  
 # if you are running it and want it to stop during interactive parts.
 
-scriptmode = F
+scriptmode = False
 
 # Enable benchmarking?
 benchmarking = True
@@ -112,7 +112,7 @@ print ""
 #=====================================================================
 # Fill B-config data at C-band (5 GHz)
 print "--Import (Bconfig)--"
-importvla(archivefiles=['AT166_1', 'AT166_2'],vis=msnameB,bandname='C',evlabands=F); 
+importvla(archivefiles=['AT166_1', 'AT166_2'],vis=msnameB,bandname='C',evlabands=False); 
  
 #=====================================================================
 # List a summary of the dataset in the logger
@@ -148,8 +148,8 @@ setjy(vis=msnameB,field='0134+329',modimage=fluxcaldir+'3C48_C.im',scalebychan=F
 #=====================================================================
 # TBD: migrate plotxy calls to plotms?
 
-#plotxy(vis=msnameB,spw='0',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.initial.spw0.png');
-#plotxy(vis=msnameB,spw='1',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.initial.spw1.png'); 
+#plotxy(vis=msnameB,spw='0',field='0420+417,0518+165,0134+329',selectdata=True,correlation='RR,LL',interactive=False,figfile='at166B.plotxy.initial.spw0.png');
+#plotxy(vis=msnameB,spw='1',field='0420+417,0518+165,0134+329',selectdata=True,correlation='RR,LL',interactive=False,figfile='at166B.plotxy.initial.spw1.png'); 
 
 print "--Flagdata--"
 flagdata(vis=msnameB,antenna='VA01',timerange='1994/07/25/14:21:10.0~14:21:20.0',mode='manual')
@@ -158,7 +158,7 @@ flagdata(vis=msnameB,antenna='VA01',timerange='1994/07/25/14:21:10.0~14:21:20.0'
 # Solve for gains on calibrators 
 #  NB: reference phases to VA12; pre-apply parallactic angle correction 
 print "--Gaincal--"
-gaincal(vis=msnameB,caltable='at166B.gcal',field='0420+417,0518+165,0134+329',refant='VA12',parang=T); 
+gaincal(vis=msnameB,caltable='at166B.gcal',field='0420+417,0518+165,0134+329',refant='VA12',parang=True); 
  
 #--> (22/22 good solutions) 
  
@@ -172,8 +172,8 @@ if scriptmode:
     plotcal(caltable='at166B.gcal',yaxis='snr',subplot=313); 
     user_check=raw_input('hit Return to continue script\n')
 else:
-    plotcal(caltable='at166B.gcal',yaxis='amp',subplot=211,showgui=F,figfile=''); 
-    plotcal(caltable='at166B.gcal',yaxis='phase',subplot=212,showgui=F,figfile='at166B.gcal.plotcal.png'); 
+    plotcal(caltable='at166B.gcal',yaxis='amp',subplot=211,showgui=False,figfile=''); 
+    plotcal(caltable='at166B.gcal',yaxis='phase',subplot=212,showgui=False,figfile='at166B.gcal.plotcal.png'); 
     
 #--> Variations:  plot solutions per antenna using iteration='antenna'
  
@@ -191,7 +191,7 @@ if scriptmode:
     plotcal(caltable='at166B.fcal',yaxis='amp'); 
     user_check=raw_input('hit Return to continue script\n')
 else:
-    plotcal(caltable='at166B.fcal',yaxis='amp',showgui=F,figfile='at166B.fcal.plotcal.png'); 
+    plotcal(caltable='at166B.fcal',yaxis='amp',showgui=False,figfile='at166B.fcal.plotcal.png'); 
 
 #--> Note that gain amps are ~constant now  
  
@@ -211,7 +211,7 @@ if scriptmode:
     plotcal(caltable='at166B.dcal',xaxis='antenna',yaxis='amp'); 
     user_check=raw_input('hit Return to continue script\n')
 else:
-    plotcal(caltable='at166B.dcal',xaxis='antenna',yaxis='amp',showgui=F,figfile='at166B.dcal.plotcal.png'); 
+    plotcal(caltable='at166B.dcal',xaxis='antenna',yaxis='amp',showgui=False,figfile='at166B.dcal.plotcal.png'); 
 
 # You can plot imag vs. real also
 # plotcal(caltable='at166B.dcal',xaxis='real',yaxis='imag',plotrange=[-0.05,0.05,-0.05,0.05]); 
@@ -234,22 +234,22 @@ polcal(vis='at166B.ms',caltable='at166B.xcal',field='0518+165',refant='VA12',pol
 #=====================================================================
 # apply all calibration... 
 #  (NB: different fields are selected from each caltable, depending on selected data fields) 
-#  (NB: parang=T is set to rotate polarization p.a. frame from antennas to sky 
+#  (NB: parang=True is set to rotate polarization p.a. frame from antennas to sky 
 print "--Applycal--"
 print "  apply calibration to 0420+417,3C129"
-applycal(vis=msnameB,field='0420+417,3C129',gaintable=['at166B.fcal','at166B.dcal','at166B.xcal'],gainfield=['0420+417','0420+417','0518+165'],parang=T); 
+applycal(vis=msnameB,field='0420+417,3C129',gaintable=['at166B.fcal','at166B.dcal','at166B.xcal'],gainfield=['0420+417','0420+417','0518+165'],parang=True); 
 
 print "  apply calibration to 0518+165"
-applycal(vis=msnameB,field='0518+165',gaintable=['at166B.fcal','at166B.dcal','at166B.xcal'],gainfield=['0518+165','0420+417','0518+165'],parang=T); 
+applycal(vis=msnameB,field='0518+165',gaintable=['at166B.fcal','at166B.dcal','at166B.xcal'],gainfield=['0518+165','0420+417','0518+165'],parang=True); 
 
 print "  apply calibration to 0134+329"
-applycal(vis=msnameB,field='0134+329',gaintable=['at166B.fcal','at166B.dcal','at166B.xcal'],gainfield=['0134+329','0420+417','0518+165'],parang=T); 
+applycal(vis=msnameB,field='0134+329',gaintable=['at166B.fcal','at166B.dcal','at166B.xcal'],gainfield=['0134+329','0420+417','0518+165'],parang=True); 
  
 #=====================================================================
 # Examine (edit?) calibrated data (calibrators) 
 #  TBD: migrate plotxy to plotms?
 #print "--Plotxy (corrected)--"
-#plotxy(vis=msnameB,datacolumn='corrected',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166B.plotxy.final.png'); 
+#plotxy(vis=msnameB,datacolumn='corrected',field='0420+417,0518+165,0134+329',selectdata=True,correlation='RR,LL',interactive=False,figfile='at166B.plotxy.final.png'); 
 
 #=====================================================================
 # do some simple imaging of each source 
@@ -260,7 +260,7 @@ print "--Clean--"
 #
 # Non-interactive (no clean boxes) for now
 #
-clean(vis=msnameB,imagename='at166B.3c129',field='3C129',psfmode='hogbom',imagermode='',niter=2500,imsize=[2048,2048],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=F);
+clean(vis=msnameB,imagename='at166B.3c129',field='3C129',psfmode='hogbom',imagermode='',niter=2500,imsize=[2048,2048],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=False);
 
 print "  Clean image is at166B.3c129.image"
 
@@ -269,13 +269,13 @@ print "  Clean image is at166B.3c129.image"
 
 # You can clean the calibrators also:
 # 0518: 
-# clean(vis=msnameB,imagename='at166B.0518',field='0518+165',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=F); 
+# clean(vis=msnameB,imagename='at166B.0518',field='0518+165',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=False); 
  
 # 0134: 
-# clean(vis=msnameB,imagename='at166B.0134',field='0134+329',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=F); 
+# clean(vis=msnameB,imagename='at166B.0134',field='0134+329',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=False); 
  
 # 0420: 
-# clean(vis=msnameB,imagename='at166B.0420',field='0420+417',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=F); 
+# clean(vis=msnameB,imagename='at166B.0420',field='0420+417',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=False); 
 
 #=====================================================================
 # Examine images in viewer... 
@@ -301,7 +301,7 @@ print ""
  
 # Fill C-config data at C-band (5 GHz)
 print "--Import (Cconfig)--"
-importvla(archivefiles='AT166_3',vis=msnameC,bandname='C',evlabands=F); 
+importvla(archivefiles='AT166_3',vis=msnameC,bandname='C',evlabands=False); 
  
 #=====================================================================
 # List a summary of the dataset in the logger
@@ -321,13 +321,13 @@ setjy(vis=msnameC,field='0134+329',modimage=fluxcaldir+'3C48_C.im',scalebychan=F
 # Plot data and interactively edit 
 #  One spw at a time, calibrators only, RR, LL only 
 #  TBD: migrage plotxy to plotms?
-#plotxy(vis=msnameC,spw='0',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166C.plotxy.initial.spw0.png');
-#plotxy(vis=msnameC,spw='1',field='0420+417,0518+165,0134+329',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166C.plotxy.initial.spw1.png'); 
+#plotxy(vis=msnameC,spw='0',field='0420+417,0518+165,0134+329',selectdata=True,correlation='RR,LL',interactive=False,figfile='at166C.plotxy.initial.spw0.png');
+#plotxy(vis=msnameC,spw='1',field='0420+417,0518+165,0134+329',selectdata=True,correlation='RR,LL',interactive=False,figfile='at166C.plotxy.initial.spw1.png'); 
  
 # Solve for gains on calibrators 
 #  NB: reference phases to VA12; pre-apply parallactic angle correction 
 print "--Gaincal--"
-gaincal(vis=msnameC,caltable='at166C.gcal',field='0420+417,0518+165,0134+329',refant='VA12',parang=T,solint=500); 
+gaincal(vis=msnameC,caltable='at166C.gcal',field='0420+417,0518+165,0134+329',refant='VA12',parang=True,solint=500); 
  
 #--> (12/14 good solutions)  NB: no solutions for 0134+329 (too little data?) 
  
@@ -341,8 +341,8 @@ if scriptmode:
     plotcal(caltable='at166C.gcal',yaxis='phase'); 
     user_check=raw_input('hit Return to continue script\n')
 else:
-    plotcal(caltable='at166C.gcal',yaxis='amp',subplot=211,showgui=F,figfile=''); 
-    plotcal(caltable='at166C.gcal',yaxis='phase',subplot=212,showgui=F,figfile='at166C.gcal.plotcal.png'); 
+    plotcal(caltable='at166C.gcal',yaxis='amp',subplot=211,showgui=False,figfile=''); 
+    plotcal(caltable='at166C.gcal',yaxis='phase',subplot=212,showgui=False,figfile='at166C.gcal.plotcal.png'); 
 
 #--> Variations:  plot solutions per antenna, spw, etc. 
  
@@ -359,7 +359,7 @@ if scriptmode:
     plotcal(caltable='at166C.fcal',yaxis='amp'); 
     user_check=raw_input('hit Return to continue script\n')
 else:
-    plotcal(caltable='at166C.fcal',yaxis='amp',showgui=F,figfile='at166C.fcal.plotcal.png'); 
+    plotcal(caltable='at166C.fcal',yaxis='amp',showgui=False,figfile='at166C.fcal.plotcal.png'); 
  
 #--> gain amplitudes now ~constant 
  
@@ -377,7 +377,7 @@ if scriptmode:
     plotcal(caltable='at166C.dcal',xaxis='antenna',yaxis='amp'); 
     user_check=raw_input('hit Return to continue script\n')
 else:
-    plotcal(caltable='at166C.dcal',xaxis='antenna',yaxis='amp',showgui=F,figfile='at166C.dcal.plotcal.png'); 
+    plotcal(caltable='at166C.dcal',xaxis='antenna',yaxis='amp',showgui=False,figfile='at166C.dcal.plotcal.png'); 
 
 # You can plot imag vs. real also
 # plotcal(caltable='at166C.dcal',xaxis='real',yaxis='imag',plotrange=[-0.05,0.05,-0.05,0.05]); 
@@ -399,20 +399,20 @@ polcal(vis='at166C.ms',caltable='at166C.xcal',field='0518+165',refant='VA12',pol
 #=====================================================================
 # apply all calibration... 
 #  (NB: different fields are selected from each caltable, depending on selected data fields) 
-#  (NB: parang=T is set to rotate polarization p.a. frame from antennas to sky 
+#  (NB: parang=True is set to rotate polarization p.a. frame from antennas to sky 
 #...to 0420 & 3C129 
 print "--Applycal--"
 print "  apply calibration to 0420+417,3C129"
-applycal(vis=msnameC,field='0420+417,3C129',gaintable=['at166C.fcal','at166C.dcal','at166C.xcal'],gainfield=['0420+417','0420+417','0518+165'],parang=T); 
+applycal(vis=msnameC,field='0420+417,3C129',gaintable=['at166C.fcal','at166C.dcal','at166C.xcal'],gainfield=['0420+417','0420+417','0518+165'],parang=True); 
 
 print "  apply calibration to 0518+165"
-applycal(vis=msnameC,field='0518+165',gaintable=['at166C.fcal','at166C.dcal','at166C.xcal'],gainfield=['0518+165','0420+417','0518+165'],parang=T); 
+applycal(vis=msnameC,field='0518+165',gaintable=['at166C.fcal','at166C.dcal','at166C.xcal'],gainfield=['0518+165','0420+417','0518+165'],parang=True); 
  
 #=====================================================================
 # Examine (edit?) calibrated data (calibrators) 
 # TBD: migrate plotxy to plotms
 #print "--Plotxy (corrected)--"
-#plotxy(vis=msnameC,datacolumn='corrected',field='0420+417,0518+165',selectdata=T,correlation='RR,LL',interactive=F,figfile='at166C.plotxy.final.png'); 
+#plotxy(vis=msnameC,datacolumn='corrected',field='0420+417,0518+165',selectdata=True,correlation='RR,LL',interactive=False,figfile='at166C.plotxy.final.png'); 
  
 #=====================================================================
 # do some simple imaging of each source 
@@ -423,7 +423,7 @@ print "--Clean--"
 #
 # Non-interactive (no clean boxes) for now
 #
-clean(vis=msnameC,imagename='at166C.3c129',field='3C129',psfmode='hogbom',imagermode='',niter=2500,imsize=[2048,2048],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=F); 
+clean(vis=msnameC,imagename='at166C.3c129',field='3C129',psfmode='hogbom',imagermode='',niter=2500,imsize=[2048,2048],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=False); 
 
 print "  Clean image is at166C.3c129.image"
 
@@ -432,10 +432,10 @@ print "  Clean image is at166C.3c129.image"
 
 # You can also clean the calibrators:
 # 0518: 
-# clean(vis=msnameC,imagename='at166C.0518',field='0518+165',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=F); 
+# clean(vis=msnameC,imagename='at166C.0518',field='0518+165',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=False); 
  
 # 0420: 
-# clean(vis=msnameC,imagename='at166C.0420',field='0420+417',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=F); 
+# clean(vis=msnameC,imagename='at166C.0420',field='0420+417',psfmode='hogbom',niter=500,imsize=[512,512],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=False); 
  
 #=====================================================================
 # Examine images in viewer... 
@@ -493,9 +493,9 @@ print "--Clean--"
 if scriptmode:
     print "Use interactive clean to draw clean boxes or polygons on image"
     print "Increase npercycle as you clean deeper"
-    clean(vis='3C129BC.ms',imagename='3C129BC.clean',psfmode='clark',imagermode='csclean',niter=50000,threshold='0.08mJy',imsize=[2048,2048],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=T,npercycle=1000)
+    clean(vis='3C129BC.ms',imagename='3C129BC.clean',psfmode='clark',imagermode='csclean',niter=50000,threshold='0.08mJy',imsize=[2048,2048],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=True,npercycle=1000)
 else:
-    clean(vis='3C129BC.ms',imagename='3C129BC.clean',psfmode='clark',imagermode='csclean',niter=50000,threshold='0.16mJy',imsize=[2048,2048],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=F);
+    clean(vis='3C129BC.ms',imagename='3C129BC.clean',psfmode='clark',imagermode='csclean',niter=50000,threshold='0.16mJy',imsize=[2048,2048],cell=['0.3arcsec','0.3arcsec'],stokes='IQUV',weighting='briggs',robust=0.5,interactive=False);
 
 # The non-interactive clean gives a S/N ratio around 850.
 # If you do custom clean boxes and clean more deeply you should

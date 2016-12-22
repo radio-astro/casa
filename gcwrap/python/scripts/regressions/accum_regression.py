@@ -5,7 +5,7 @@
 #                                                                           #
 # Rationale for Inclusion:                                                  #
 #    It ensures that the task is working properly.                          #
-#                                                                           # 
+#                                                                           #
 # Features tested:                                                          #
 #    1) Is the task working properly?                                       #
 #    2) Is the task producing the same results as the reference?            #
@@ -56,6 +56,7 @@ import regression_utility as tstutl
 from __main__ import default
 from tasks import *
 from taskinit import *
+import traceback
 
 
 # Enable benchmarking?
@@ -78,6 +79,22 @@ prefix=testdir+"/"+'ngc5921'
 # (WARNING! Removes old test directory of the same name if one exists)
 tstutl.maketestdir(testdir)
 
+#
+#=====================================================================
+# Copy fits file if needed... (runRegressionTest.py defines REGRESSION_DATA)
+#
+if not os.path.isfile(fitsdata):
+    try:
+        from shutil import copyfile
+        from itertools import dropwhile
+        copyfile( dropwhile( lambda x: not os.path.isfile(x),
+                             map(lambda x: x+"/ngc5921/ngc5921.fits", REGRESSION_DATA)
+                           ).next( ), "ngc5921.fits" )
+        ## runRegressionTest.py runs regressions in current directory
+        testdir=''
+    except:
+        traceback.print_exc()
+
 # Start benchmarking
 if benchmarking:
     startTime = time.time()
@@ -89,25 +106,25 @@ if benchmarking:
 # Import the data from FITS to MS
 #
 try:
-    
+
     print '--Import--'
-    
+
     # Safest to start from task defaults
     default('importuvfits')
-    
+
     # Set up the MS filename and save as new global variable
     msfile = prefix + '.ms'
-    
+
     # Use task importuvfits
     fitsfile = fitsdata
     vis = msfile
     antnamescheme="new"
     importuvfits()
-    
+
     # Record import time
     if benchmarking:
         importtime = time.time()
-    
+
     #
     #=====================================================================
     #
@@ -115,13 +132,13 @@ try:
     #
     print '--Setjy--'
     default('setjy')
-    
+
     setjy(vis=msfile,field='0',scalebychan=False,standard='Perley-Taylor 99')
-    
+
     # Record setjy completion time
     if benchmarking:
         setjytime = time.time()
-    
+
     #
     #=====================================================================
     #
@@ -129,16 +146,16 @@ try:
     #
     print '--Gaincal using interval per integration--'
     default('gaincal')
-    
+
     Ginttable = prefix + '.int.gcal'
     gaincal(vis=msfile,caltable=Ginttable,
             field='0', gaintype='G',solint='int',combine='',refant='VA02')
-    
-    
+
+
     # gaincal calibration completion time
     if benchmarking:
         gaintime1 = time.time()
-    
+
     #
     #=====================================================================
     #
@@ -146,16 +163,16 @@ try:
     #
     print '--Gaincal using interval infinite--'
     default('gaincal')
-    
+
     Gscantable = prefix + '.scan.gcal'
     gaincal(vis=msfile,caltable=Gscantable,
             field='0', gaintype='G',solint='inf',combine='',refant='VA02')
-    
-    
+
+
     # gaincal calibration completion time
     if benchmarking:
         gaintime2 = time.time()
-    
+
     #
     #=====================================================================
     #
@@ -163,16 +180,16 @@ try:
     #
     print '--Gaincal using previous solution--'
     default('gaincal')
-    
+
     Grinttable = prefix + '.rint.gcal'
     gaincal(vis=msfile,caltable=Grinttable,field='0', gaintype='G',gaintable=Gscantable,
             solint='int',combine='',interp='nearest',refant='VA02')
-    
-    
+
+
     # gaincal calibration completion time
     if benchmarking:
         gaintime3 = time.time()
-    
+
     #
     #=====================================================================
     #
@@ -180,17 +197,17 @@ try:
     #
     print '--Accum on initial data--'
     default('accum')
-    
+
     Acc1table = prefix + '.acc1.gcal'
     accum(vis=msfile,tablein='',accumtime=1.0,caltable=Acc1table,incrtable=Gscantable,
           field='0', calfield='0',interp='nearest')
-    
-    
+
+
     # gaincal calibration completion time
     if benchmarking:
         accumtime1 = time.time()
-    
-    
+
+
     #
     #=====================================================================
     #
@@ -198,16 +215,16 @@ try:
     #
     print '--Accum using previous solution--'
     default('accum')
-    
+
     Acc2table = prefix + '.acc2.gcal'
     accum(vis=msfile,tablein=Acc1table,caltable=Acc2table,incrtable=Grinttable,
           field='0', calfield='0',interp='nearest')
-    
-    
+
+
     # gaincal calibration completion time
     if benchmarking:
         accumtime2 = time.time()
-        
+
     endProc = time.clock()
     endTime = time.time()
 
@@ -220,18 +237,18 @@ try:
     plotcal(caltable=Acc2table,plotsymbol='.',overplot=True,field='0',markersize=8.0,
             showgui=False,figfile=saveplot)
 
-        
+
     # Compare Acc2table with Ginttable
     EPS = 1e-5
     total = 0
     fail = 0
-    
+
     tb.open(Ginttable)
 #    intcol = tb.getvarcol('GAIN')
     intcol = tb.getvarcol('CPARAM')
     iflag = tb.getvarcol('FLAG')
     tb.close()
-    
+
     tb.open(Acc2table)
     afield = tb.query('FIELD_ID == 0')
 #    acccol = afield.getvarcol('GAIN')
@@ -239,18 +256,18 @@ try:
     aflag = afield.getvarcol('FLAG')
     afield.done()
     tb.close()
-    
+
     n1 = len(intcol)
     n2 = len(acccol)
     if n1 != n2 :
         print >> sys.stderr, "The two tables have different lengths"
-        
+
      # Loop over every row,pol and get the data
     for i in range(1,n1,1) :
-      row = 'r%s'%i     
+      row = 'r%s'%i
       # polarization is 0-1
-      for pol in range(0,2) :     
-        
+      for pol in range(0,2) :
+
         # do not take flagged values
         if (not (iflag[row][pol] and aflag[row][pol])) :
             total += 1
@@ -260,7 +277,7 @@ try:
             if (abs(intdata - accdata) > EPS) :
                 fail += 1
                 print >>sys.stderr, row,pol,intdata,accdata
-            
+
     if fail > 0 :
         perc = fail*100/total
         regstate = False
@@ -292,4 +309,3 @@ try:
 
 except Exception, instance:
     print >> sys.stderr, "Regression test failed for accum instance = ", instance
-
