@@ -139,6 +139,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     if0, if1, channel_width = image_heuristics.lsrk_freq_intersection(inputs.vis, target['field'], spwid)
                     if (if0 == -1) or (if1 == -1):
                         LOG.error('No LSRK frequency intersect among selected MSs for Field %s SPW %s' % (target['field'], spwid))
+                        cont_ranges['fields'][source_name][spwid] = ['NONE']
                         result_cont_ranges[source_name][spwid] = {'cont_ranges': ['NONE'], 'plotfile': 'none', 'status': 'NEW'}
                         continue
 
