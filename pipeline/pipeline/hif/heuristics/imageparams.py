@@ -871,9 +871,6 @@ class ImageParamsHeuristics(object):
         lsrk_channel_widths = []
 
         for msname in vis:
-            msDO = self.context.observing_run.get_ms(msname)
-            n_ants = len(msDO.antennas)
-
             # CAS-8997
             #
             # ms.selectinit(datadescid=x) is required to avoid the 'Data shape
@@ -886,6 +883,7 @@ class ImageParamsHeuristics(object):
             #
             # TODO refactor method signature to include data description ID
             #
+            msDO = self.context.observing_run.get_ms(msname)
             spwDO = msDO.get_spectral_window(spw)
             data_description_ids = {dd.id for dd in msDO.data_descriptions if dd.spw is spwDO}
             if len(data_description_ids) == 1:
@@ -895,27 +893,38 @@ class ImageParamsHeuristics(object):
                 LOG.warning(msg)
                 dd_id = 0
 
-            with casatools.MSReader(msname) as msTool:
-                # CAS-8997 selectinit is required to avoid the 'Data shape varies...' warning message
-                msTool.selectinit(datadescid=dd_id)
-                # Antenna selection does not work (CAS-8757)
-                #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
-                staql={'field': field, 'spw': spw}
-                msTool.msselect(staql)
-                msTool.iterinit(maxrows = int(n_ants * ((n_ants - 1) / 2.0 + 1)))
-                msTool.iterorigin()
-                flag_ants = msTool.getdata(['flag', 'antenna1', 'antenna2'])
+            try:
+                with casatools.MSReader(msname) as msTool:
+                    # CAS-8997 selectinit is required to avoid the 'Data shape varies...' warning message
+                    msTool.selectinit(datadescid=dd_id)
+                    # Antenna selection does not work (CAS-8757)
+                    #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
+                    staql={'field': field, 'spw': spw}
+                    msTool.msselect(staql)
+                    msTool.iterinit(maxrows = 500)
+                    msTool.iterorigin()
 
-            # Calculate averaged flagging vector keeping all unflagged channel
-            # from any baseline.
-            result = np.array([True] * flag_ants['flag'].shape[1])
-            for i in xrange(flag_ants['flag'].shape[2]):
-                # Antenna selection does not work (CAS-8757)
-                if flag_ants['antenna1'][i] != flag_ants['antenna2'][i]:
-                    for j in xrange(flag_ants['flag'].shape[0]):
-                         result = np.logical_and(result, flag_ants['flag'][j,:,i])
+                    result = np.array([True] * spwDO.num_channels)
 
-            nfi = np.where(result == False)[0]
+                    iterating = True
+                    while iterating:
+                        flag_ants = msTool.getdata(['flag','antenna1','antenna2'])
+
+                        # Calculate averaged flagging vector keeping all unflagged
+                        # channels from any baseline.
+                        for i in xrange(flag_ants['flag'].shape[2]):
+                            # Antenna selection does not work (CAS-8757)
+                            if (flag_ants['antenna1'][i] != flag_ants['antenna2'][i]):
+                                for j in xrange(flag_ants['flag'].shape[0]):
+                                     result = np.logical_and(result, flag_ants['flag'][j,:,i])
+
+                        iterating = msTool.iternext()
+
+                nfi = np.where(result == False)[0]
+
+            except Exception as e:
+                LOG.error('Exception while determining edge flags: %s' % e)
+                nfi = np.array([])
 
             if nfi.shape != (0,):
                 with casatools.ImagerReader(msname) as imager:
