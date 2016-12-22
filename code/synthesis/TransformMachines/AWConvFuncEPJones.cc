@@ -157,10 +157,11 @@ namespace casa{
       if (vb.msColumns().observation().nrow() > 0) {
 	tel = vb.msColumns().observation().telescopeName()(vb.msColumns().observationId()(0));
       }
-      if (tel.length() == 0 || 
+      if (tel.length() == 0 || !tel.contains("VLA") ||
 	  !MeasTable::Observatory(pos,tel)) {
 	// unknown observatory, use first antenna
-	pos=vb.msColumns().antenna().positionMeas()(0);
+   	  Int ant1=vb.antenna1()(0);
+	  pos=vb.msColumns().antenna().positionMeas()(ant1);
       }
       //cout << "TELESCOPE " << tel << endl;
       //Store this to build epochs via the time access of visbuffer later
@@ -174,6 +175,8 @@ namespace casa{
       pointToPix_p=MDirection::Convert( MDirection(), elRef);
       nx_p=iimage.shape()(coordIndex);
       ny_p=iimage.shape()(coordIndex+1);
+      // pointingPix_p.resize(nx_p, ny_p);
+      // pointingPix_p.set(false);
       coordIndex=csys_p.findCoordinate(Coordinate::SPECTRAL);
       Int pixAxis=csys_p.pixelAxes(coordIndex)[0];
       nchan_p=iimage.shape()(pixAxis);

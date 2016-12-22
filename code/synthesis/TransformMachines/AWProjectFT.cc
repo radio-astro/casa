@@ -1731,7 +1731,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
     doUVWRotation_p=true;
-    rotateUVW(uvw, dphase, vb);
+    //rotateUVW(uvw, dphase, vb);
+    girarUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
     // // This is the convention for dphase
@@ -1834,7 +1835,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     doUVWRotation_p=true;
-    rotateUVW(uvw, dphase, vb);
+    //rotateUVW(uvw, dphase, vb);
+    girarUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
     // This is the convention for dphase
@@ -2544,7 +2546,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
     doUVWRotation_p=true;
-    rotateUVW(uvw, dphase, vb);
+    //rotateUVW(uvw, dphase, vb);
+    girarUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
     // This is the convention for dphase
@@ -2718,7 +2721,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
     doUVWRotation_p=true;
-    rotateUVW(uvw, dphase, vb);
+    //rotateUVW(uvw, dphase, vb);
+    girarUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
     // This is the convention for dphase
@@ -2914,7 +2918,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
     doUVWRotation_p=true;
-    rotateUVW(uvw, dphase, vb);
+    //rotateUVW(uvw, dphase, vb);
+    girarUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
     // This is the convention for dphase

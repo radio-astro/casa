@@ -242,8 +242,8 @@ protected:
   void findConvFunction(const casacore::ImageInterface<casacore::Complex>& image,
 			const VisBuffer& vb);
 
-  void girarUVW(casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase,
-  		const VisBuffer& vb);
+  // void girarUVW(casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase,
+  // 		const VisBuffer& vb);
 
   void addBeamCoverage(casacore::ImageInterface<casacore::Complex>& image);
   void prepGridForDegrid();
@@ -338,7 +338,6 @@ protected:
   casacore::CountedPtr<casacore::TempImage<casacore::Float> >skyCoverage_p;
   casacore::TempImage<casacore::Complex>* convWeightImage_p;
   casacore::CountedPtr<SimplePBConvFunc> pbConvFunc_p;
-  casacore::CountedPtr<casacore::UVWMachine> phaseShifter_p;
  //Later this 
   casacore::String machineName_p;
   casacore::Bool doneWeightImage_p;

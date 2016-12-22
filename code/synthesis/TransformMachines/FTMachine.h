@@ -292,6 +292,8 @@ public:
 
   // Rotate the uvw from the observed phase center to the
   // desired phase center.
+  void girarUVW(casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase,
+   		const VisBuffer& vb);
   void rotateUVW(casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase,
 		 const VisBuffer& vb);
 
@@ -400,6 +402,7 @@ protected:
   casacore::ImageInterface<casacore::Complex>* image;
 
   casacore::UVWMachine* uvwMachine_p;
+  casacore::CountedPtr<casacore::UVWMachine> phaseShifter_p;
 
   casacore::MeasFrame mFrame_p;
 
