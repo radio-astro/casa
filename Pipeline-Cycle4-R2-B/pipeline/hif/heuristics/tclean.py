@@ -496,31 +496,40 @@ class TcleanHeuristics(object):
         for msname in vis:
 
             msDO = self.context.observing_run.get_ms(msname)
-            n_ants = len(msDO.antennas)
-
             spwDO = msDO.get_spectral_window(spw)
-            channel_width = float(spwDO.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ))
 
-            msTool.open(msname)
-            # Antenna selection does not work (CAS-8757)
-            #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
-            staql={'field': field, 'spw': spw}
-            msTool.msselect(staql)
-            msTool.iterinit(maxrows = int(n_ants * ((n_ants - 1) / 2.0 + 1)))
-            msTool.iterorigin()
-            flag_ants = msTool.getdata(['flag','antenna1','antenna2'])
-            msTool.done()
-
-            # Calculate averaged flagging vector keeping all unflagged channel
-            # from any baseline.
-            result = np.array([True] * flag_ants['flag'].shape[1])
-            for i in xrange(flag_ants['flag'].shape[2]):
+            try:
+                msTool.open(msname)
                 # Antenna selection does not work (CAS-8757)
-                if (flag_ants['antenna1'][i] != flag_ants['antenna2'][i]):
-                    for j in xrange(flag_ants['flag'].shape[0]):
-                         result = np.logical_and(result, flag_ants['flag'][j,:,i])
+                #staql={'field': field, 'spw': spw, 'antenna': '*&*'}
+                staql={'field': field, 'spw': spw}
+                msTool.msselect(staql)
+                msTool.iterinit(maxrows = 500)
+                msTool.iterorigin()
 
-            nfi = np.where(result == False)[0]
+                result = np.array([True] * spwDO.num_channels)
+
+                iterating = True
+                while iterating:
+                    flag_ants = msTool.getdata(['flag','antenna1','antenna2'])
+
+                    # Calculate averaged flagging vector keeping all unflagged
+                    # channels from any baseline.
+                    for i in xrange(flag_ants['flag'].shape[2]):
+                        # Antenna selection does not work (CAS-8757)
+                        if (flag_ants['antenna1'][i] != flag_ants['antenna2'][i]):
+                            for j in xrange(flag_ants['flag'].shape[0]):
+                                 result = np.logical_and(result, flag_ants['flag'][j,:,i])
+
+                    iterating = msTool.iternext()
+
+                msTool.done()
+
+                nfi = np.where(result == False)[0]
+
+            except Exception as e:
+                LOG.error('Exception while determining edge flags: %s' % e)
+                nfi = np.array([])
 
             if (nfi.shape != (0,)):
                 imTool.open(msname)
