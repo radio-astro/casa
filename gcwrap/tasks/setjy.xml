@@ -642,14 +642,18 @@
 
             polangle -- Coefficients of the frequency-dependent linear polarization angle (in radians) expressed as,
                         pol. angle = 0.5*arctan(U/Q) = d0 + d1*((freq-reffreq)/reffreq) + d2*((freq-reffreq)/reffreq)^2 + ..
-                        When Q and U flux densities are given fluxdensity, d0 is determined from
+                        When Q and U flux densities are given in fluxdensity, d0 is determined from
                         these flux densities and the entry for d0 in polangle is ignored. Or Q and U flux densities in
                         fluxdensity can be set to 0.0 and then polindex[0] and polangle[0] are used to determine Q and U
-                        at reffreq.
+                        at reffreq. Here polangle parameters are aussumed to represent the intrisic polarization angle.
+                        For the flux densities of Q and U = 0, both full coefficients of polindex and polangle are 
+                        needed to calcuate frequency-depended Q and U flux densities correctly. 
+                        Then, if rotmeas is given, the calculated Q and U flux densities are corrected for the 
+                        Faraday rotation.
                 Default: []
                 Example: [0.57, 0.2] (=[d0,d1])
 
-            rotmeas -- rotation measure (in rad/m^2)
+            rotmeas -- rotation measure (in rad/m^2). 
 
        &gt;&gt;&gt; standard="fluxscale" expandable parameters
 	    fluxdict -- Output dictionary from fluxscale
@@ -662,7 +666,7 @@
                 the fluxdict (but those spws with fluxd=-1 will be skipped) are
                 used.  
 		default: {}
-                 
+
 
         usescratch  -- If False: 'virtual' model is created. The model information is saved 
         either in the SOURCE_MODEL column in the SOURCE table (if one exists) or in the keyword 
