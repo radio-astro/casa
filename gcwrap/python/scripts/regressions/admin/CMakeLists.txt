@@ -21,6 +21,7 @@
 casa_add_python( tools tools_regressions_admin_python lib/python${PYTHONV}
   publish_summary.py
   runUnitTest.py
+  runRegressionTest.py
   memTest.py
   testbase.py
   imageTest.py
@@ -45,6 +46,7 @@ install( PROGRAMS
          runcasa_from_shell.sh
          tests_list.txt
          runUnitTest.py
+         runRegressionTest.py
 	 execute.py
          make_mmsdata.py
          DESTINATION lib/python${PYTHONV}/regressions/admin )
