@@ -22,6 +22,7 @@ import commands
 import pylab as pl
 import datetime
 import string
+import pdb
 
 # profile generation:
 import time
@@ -40,12 +41,13 @@ known_releases = ["CASA Version 2.3.0 (build #6654)",
                   "CASA Version 3.0.1 (r11099)",
                   "CASA Version 3.0.2 (r11761)",
                   "CASA Version 3.1.0 (r13568)",
-                  "CASA Version 3.2.0 (r15111)"]
+                  "CASA Version 3.2.0 (r15111)",
+                  "CASA Version 3.4.0 (r19915)"]
 
 
 exclude_host = ['el4tst','el4tst64b',
                 'ub8tst','ub8tst64b',
-                'fc8tst','fc8tst64b', 'fc8tst.cv.nrao.edu','onager','ballista' ]
+                'fc8tst','fc8tst64b', 'fc8tst.cv.nrao.edu','ballista' ]
 exclude_test = {}
 exclude_test['pointing_regression'] = ["CASA Version 2.4.0 (build #8115)"]
 same_version_per_host = False # if False, the latest run for each test is reported
@@ -81,10 +83,13 @@ def cmp_version(a, b):
         if a[:n] != b[:n]:
             return cmp_std(a[:n], b[:n])
         else:
+            #pdb.set_trace()
             # Compare XYZ numerically in
             # "CASA Version 3.0.1 (rXYZ)"
-            a_int = int(a[n:len(a)-len(")")])
-            b_int = int(b[n:len(b)-len(")")])
+            #a_int = int(a[n:len(a)-len(")")])
+            a_int=int(string.join(re.findall(r'\d',a[ (a.index("(")+1) : a.index(")")]),''))
+            #b_int = int(b[n:len(b)-len(")")])
+            b_int=int(string.join(re.findall(r'\d',b[ (b.index("(")+1) : b.index(")")]),''))
             return cmp_std(a_int, b_int)
         
 
@@ -1203,10 +1208,10 @@ class report:
                     # if there's a mismatch between this python and
                     # CASA's python which created the binary cProfile.profile
                     lib = "lib64" if os.uname()[4] == 'x86_64' else "lib"
-                    gprof2dot = "/tmp/gprof2dot.py"
+                    gprof2dot = "/home/heron1/kgolap/casa_active/linux_64b/lib/python2.7/gprof2dot.py"
                     if not os.path.isfile(gprof2dot):
-                        gprof2dot = "/export/data/casa-regressions/bin/gprof2dot.py"
-                    os.system("/usr/" + lib + "/casapy/bin/python " + gprof2dot + " -f pstats " +\
+                        gprof2dot = "./gprof2dot.py"
+                    os.system("/usr/" + lib + "/casa/01/bin/python " + gprof2dot + " -f pstats " +\
                               prof_file + " | dot -Tpng -o " +\
                               report_dir + '/' + plot_file)
                     fd.write('<br><a href="'+plot_file+'">Python profile</a>')
