@@ -352,9 +352,10 @@ class mstool_test_select(mstool_test_base):
     def test_msselect(self): 
         """test ms.msselect, ms.msselectedindices, ms.reset"""
         staql={'field':'1445+0990*', 'scan':'3~5'}
+        # msselect changes "base" MS
         self.ms.msselect(staql)
         # fewer rows with selection
-        self.assertEqual(self.ms.nrow(), 22653)
+        self.assertEqual(self.ms.nrow(), 1890)
         self.assertEqual(self.ms.nrow(True), 1890)
         self.assertEqual(self.ms.nrow2(True), 1890)
         # selected field 1

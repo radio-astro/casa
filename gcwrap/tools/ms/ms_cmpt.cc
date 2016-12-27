@@ -6112,8 +6112,9 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 		        timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
 			    taQLExpr, polnExpr, scanExpr,
 			    arrayExpr, scanIntentExpr, obsExpr, itsMSS);
+		    *itsMS = MeasurementSet(*itsSelectedMS);
         }
-        if (itsSel) itsSel->setMS(*itsSelectedMS);
+        if (itsSel) itsSel->setMS(*itsMS);
 		return retVal;
 	}
 	catch (AipsError x)
