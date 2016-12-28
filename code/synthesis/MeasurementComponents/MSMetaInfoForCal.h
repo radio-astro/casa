@@ -66,7 +66,9 @@ public:
   Bool msOk() const { return msOk_; };
 
   // Return access to MSMetaData object (if avail)
-  const MSMetaData& msmd() const;
+  //  Would like this to be const, but many methods in MSMetaData aren't....
+  MSMetaData& msmd() const;
+  //  const MSMetaData& msmd() const;
 
   // The number of antennas
   uInt nAnt() const { return nAnt_;};

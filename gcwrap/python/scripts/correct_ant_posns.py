@@ -218,6 +218,14 @@ def correct_ant_posns (vis_name, print_offsets=False):
       else:
         casalog.post("No offsets found for this MS", "WARN")
     ant_string = ','.join(["%s" % ii for ii in ants])
+
+    # Are we in the session 16B trop delay model mis-app?
+    # If so, ensure we return non-trivially, even if no ant pos offsets were found
+    dotropcorr=tel_name[0].find('VLA')>-1 and time_range[0,0]>4977417600.0 and time_range[0,0]<4985884800.0
+    if dotropcorr and len(parms)==0:
+        ant_string='0'
+        parms=[0,0,0]
+
     return [ 0, ant_string, parms ]
 
 

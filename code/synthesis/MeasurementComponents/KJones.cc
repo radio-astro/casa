@@ -29,10 +29,13 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MSOper/MSMetaData.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>  // *
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
+#include <casa/Quanta/QuantumHolder.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MatrixMath.h>
@@ -979,7 +982,10 @@ void KMBDJones::setApply(const Record& apply) {
 KAntPosJones::KAntPosJones(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
-  KJones(vs)             // immediate parent
+  KJones(vs),             // immediate parent
+  doTrDelCorr_(false),
+  userEterm_(0.0),
+  eterm_(0.0)
 {
   if (prtlev()>2) cout << "Kap::Kap(vs)" << endl;
 
@@ -990,7 +996,10 @@ KAntPosJones::KAntPosJones(VisSet& vs) :
 KAntPosJones::KAntPosJones(String msname,Int MSnAnt,Int MSnSpw) :
   VisCal(msname,MSnAnt,MSnSpw),             // virtual base
   VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
-  KJones(msname,MSnAnt,MSnSpw)              // immediate parent
+  KJones(msname,MSnAnt,MSnSpw),              // immediate parent
+  doTrDelCorr_(false),
+  userEterm_(0.0),
+  eterm_(0.0)
 {
   if (prtlev()>2) cout << "Kap::Kap(msname,MSnAnt,MSnSpw)" << endl;
 
@@ -1001,7 +1010,10 @@ KAntPosJones::KAntPosJones(String msname,Int MSnAnt,Int MSnSpw) :
 KAntPosJones::KAntPosJones(const MSMetaInfoForCal& msmc) :
   VisCal(msmc),             // virtual base
   VisMueller(msmc),         // virtual base
-  KJones(msmc)              // immediate parent
+  KJones(msmc),              // immediate parent
+  doTrDelCorr_(false),
+  userEterm_(0.0),
+  eterm_(0.0)
 {
   if (prtlev()>2) cout << "Kap::Kap(msmc)" << endl;
 
@@ -1013,7 +1025,10 @@ KAntPosJones::KAntPosJones(const MSMetaInfoForCal& msmc) :
 KAntPosJones::KAntPosJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
-  KJones(nAnt)
+  KJones(nAnt),
+  doTrDelCorr_(false),
+  userEterm_(0.0),
+  eterm_(0.0)
 {
   if (prtlev()>2) cout << "Kap::Kap(nAnt)" << endl;
 }
@@ -1043,6 +1058,11 @@ void KAntPosJones::setApply(const Record& apply) {
   
   // Call parent to do conventional things
   KJones::setApply(newapply);
+
+  // Arrange for TrDelError correction, if applicable
+  //   (force check for CalTable keyword
+  if (vlaTrDelCorrApplicable(true))
+    initTrDelCorr();
 
 }
 
@@ -1086,6 +1106,12 @@ void KAntPosJones::setCallib(const Record& callib,
       if (spwMap()(ispw)>-1)
 	KrefFreqs_(ispw)=tmpfreqs(spwMap()(ispw));
   }
+
+  // Arrange for Trop Delr correction, if applicable
+  //   (force check for CalTable keyword
+  if (vlaTrDelCorrApplicable(true))
+    initTrDelCorr();
+
     
 }
 
@@ -1196,6 +1222,12 @@ void KAntPosJones::specify(const Record& specify) {
   //  (currSpw()=0 is the only one we need)
   keepNCT();
 
+  // Detect if Trop Del correction applicable
+  if (vlaTrDelCorrApplicable()) {
+    markCalTableForTrDelCorr();
+  }
+
+
 }
 
 // KAntPosJones needs ant-based phase direction and position frame
@@ -1207,6 +1239,10 @@ void KAntPosJones::syncMeta(const VisBuffer& vb) {
   phasedir_p=vb.msColumns().field().phaseDirMeas(currField());
   antpos0_p=vb.msColumns().antenna().positionMeas()(0);
 
+  if (doTrDelCorr_)
+    // capture azel info
+    azel_.reference(vb.azel(currTime()));
+
 }
 
 // KAntPosJones needs ant-based phase direction and position frame
@@ -1217,6 +1253,10 @@ void KAntPosJones::syncMeta2(const vi::VisBuffer2& vb) {
 
   phasedir_p=vb.getVi()->subtableColumns().field().phaseDirMeas(currField());
   antpos0_p=vb.getVi()->subtableColumns().antenna().positionMeas()(0);
+
+  if (doTrDelCorr_)
+    // capture azel info
+    azel_.reference(vb.azel(currTime()));
 
 }
 
@@ -1251,14 +1291,14 @@ void KAntPosJones::calcAllJones() {
     Vector<Double> dpars(rpars.nelements());
     convertArray(dpars,rpars);
 
+    // We need the w offset (in direction of source) implied
+    //  by the antenna position correction
+    Double dw(0.0);
+      
     // Only do complicated calculation if there 
     //   is a non-zero ant pos error
     if (max(abs(rpars))>0.0) {
 
-      // We need the w offset (in direction of source) implied
-      //  by the antenna position correction
-      Double dw(0.0);
-      
       // The current antenna's error as an MBaseline (earth frame)
       mvb=MVBaseline(dpars);
       mb.set(mvb,mbearthref);
@@ -1270,7 +1310,15 @@ void KAntPosJones::calcAllJones() {
       MVuvw uvw(mbdir.getValue(),phasedir_p.getValue());
 
       // dw is third element
-      dw=uvw.getVector()(2);
+      dw=uvw.getVector()(2); // in m
+
+    }
+
+    // Add on the Tropo Delay correction
+    if (doTrDelCorr_)
+      dw+=calcTrDelError(iant); // still in m
+    
+    if (abs(dw)>0.0) {
 
       // In time units 
       dw/=C::c;    // to sec
@@ -1292,8 +1340,175 @@ void KAntPosJones::calcAllJones() {
       currJElemOK().xyPlane(iant)=True;
     }
 
-  }
+  } // iant
 
 }
+
+bool KAntPosJones::vlaTrDelCorrApplicable(bool checkCalTable) {
+
+  // Nominally OFF
+  doTrDelCorr_=false;
+
+  Int nobs(msmc().msmd().nObservations());
+  //  MUST be VLA
+  Vector<String> obsnames(msmc().msmd().getObservatoryNames());
+  for (Int iobs=0;iobs<nobs;++iobs)
+    if (!obsnames(iobs).contains("VLA")) return false;
+  
+  // Reach here only if all obs are VLA
+
+  // Parse boundary dates
+  if (MJDlim_.nelements()==0) {
+    MJDlim_.resize(2);
+    QuantumHolder qh;
+    String er;
+    qh.fromString(er,MJD0);
+    MJDlim_[0]=qh.asQuantity().getValue();
+    qh.fromString(er,MJD1);
+    MJDlim_[1]=qh.asQuantity().getValue();
+  }
+
+  // Are we in affected date range?
+  double iMJD=msmc().msmd().getTimeRangesOfObservations()[0].first.getValue().get();  // days
+  if (iMJD > MJDlim_[0] &&
+      iMJD < MJDlim_[1]) {
+    // TURN IT ON!
+    doTrDelCorr_=true;
+    logSink() << "NB: This EVLA dataset appears to fall within the period" << endl
+              << "  of semester 16B during which the online tropospheric" << endl
+              << "  delay model was mis-applied." << LogIO::WARN << LogIO::POST;
+  }
+  
+
+  // Check table for user-specified scale, if requested
+  //  (setApply context)
+  if (checkCalTable) {
+    const TableRecord& tr(ct_->keywordSet());
+    if (tr.isDefined("VLATrDelCorr")) {
+      userEterm_ =tr.asDouble("VLATrDelCorr");
+      if (userEterm_==0.0) {
+        // keyword value says turn it off!
+        if (doTrDelCorr_)
+          logSink() << "Found VLATrDelCorr=0.0 in the antpos caltable; turning trop delay correction OFF."
+                    << LogIO::WARN << LogIO::POST;
+        doTrDelCorr_=false;
+      }
+      else {
+        if (!doTrDelCorr_)
+          // user (via caltable) is insisting, even if we are out of date range
+          logSink() << "Found VLATrDelCorr keyword in the antpos caltable; turning trop delay correction ON."
+                    << LogIO::WARN << LogIO::POST;
+        doTrDelCorr_=true;
+      }
+
+    } 
+    else {
+      // Keyword not present in caltable == TURN IT OFF
+      doTrDelCorr_=false;
+      logSink() << "No VLATrDelCorr keyword in the antpos caltable; turning trop delay correction OFF."
+                << LogIO::WARN << LogIO::POST;
+    }
+  }
+
+  if (doTrDelCorr_)
+    logSink() << "A correction for the online tropopspheric delay model error WILL BE APPLIED!"
+              << LogIO::WARN << LogIO::POST;
+
+  return doTrDelCorr_;
+}
+
+void KAntPosJones::markCalTableForTrDelCorr() {
+
+  // Only do this if turned on!
+  AlwaysAssert(doTrDelCorr_,AipsError);
+
+  logSink() << "Marking antpos caltable to turn ON the trop delay correction."
+            << LogIO::WARN << LogIO::POST;
+
+  // Add a Table keyword to signal the correction
+  TableRecord& tr(ct_->rwKeywordSet());
+  userEterm_=1.0;  // non-zero is meaningful, 1.0 is nominal
+  tr.define("VLATrDelCorr",userEterm_);
+
+}
+
+
+void KAntPosJones::initTrDelCorr() {
+
+  // Must have turned TrDelCorr on!
+  AlwaysAssert(doTrDelCorr_,AipsError);
+
+  // correction scale factor
+  eterm_=-1.0e-15;  // s/m   (nominal)
+
+  // Apply user-supplied factor from keyword
+  if (userEterm_!=1.0) {
+    logSink() << "Applying user-supplied scalefactor="+String::toString<Double>(userEterm_)+" to the trop delay correction."
+              << LogIO::WARN << LogIO::POST;
+    eterm_*=userEterm_;
+  }
+
+  logSink() << "Tropospheric delay error correction coefficient="+String::toString<Double>(eterm_/1e-12)+" (ps/m)"
+            << LogIO::WARN << LogIO::POST;
+
+  losDist_.resize(nAnt());  // distance from center
+  armAz_.resize(nAnt());
+
+  // Local VLA geometry
+  Vector<String> sta(msmc().msmd().getAntennaStations());
+  Vector<Double> vlapos(msmc().msmd().getObservatoryPosition(0).get("m").getValue("m"));
+  Vector<MPosition> mpos(msmc().msmd().getAntennaPositions());
+
+  // Process each antenna
+  for (int iant=0;iant<nAnt();++iant) {
+
+    String pre("");
+    if (sta(iant).startsWith("EVLA:")) pre="EVLA:";
+    if (sta(iant).startsWith("VLA:")) pre="VLA:";
+
+    // Set VLA arm Az (deg)
+    if (sta(iant).contains(pre+"N")) {
+      armAz_(iant) = 355.0;
+    }
+    else if (sta(iant).contains(pre+"E")) {
+      armAz_(iant) = 115.0;
+    }
+    else if (sta(iant).contains(pre+"W")) {
+      armAz_(iant) = 236.0;
+    }
+
+    // Set distance from center (m)
+    Vector<Double> ipos(mpos(iant).get("m").getValue("m"));
+    losDist_(iant)=sqrt(square(ipos(0)-vlapos(0))+
+                        square(ipos(1)-vlapos(1))+
+                        square(ipos(2)-vlapos(2)));  // m from center
+
+  }
+
+  // Handle units
+  armAz_*=(C::pi/180.0); // to rad
+  losDist_*=eterm_;   // to s (light travel time)
+  losDist_*=C::c;     // to m (light travel distance)
+}
+
+Double KAntPosJones::calcTrDelError(Int iant) {
+
+  // Time-dep part of the calculation
+  Double dgeo(1.0);
+  Vector<Double> iazel(azel_(iant).getAngle().getValue());
+  Double az=iazel(0);
+  Double el=iazel(1);
+  dgeo*=cos(az-armAz_(iant));
+  dgeo/=tan(el);
+  dgeo/=sin(el);
+
+  //  if (iant==26) cout << az*180/C::pi << " " << el*180/C::pi << " " << dgeo << endl;
+
+  return dgeo*losDist_(iant);
+
+}
+
+
+
 
 } //# NAMESPACE CASA - END
