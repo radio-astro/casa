@@ -127,7 +127,7 @@ MSMetaInfoForCal::~MSMetaInfoForCal()
 }
 
 // Return access to MSMetaData object (if avail)
-const MSMetaData& MSMetaInfoForCal::msmd() const {
+MSMetaData& MSMetaInfoForCal::msmd() const {
 
   if (msOk_ && msmd_)
     return *msmd_;

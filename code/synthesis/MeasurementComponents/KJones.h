@@ -329,7 +329,22 @@ private:
   casacore::MDirection phasedir_p;
   casacore::MPosition antpos0_p;
 
+  // utility methods/variables for Trop Delay Error correction
+  bool vlaTrDelCorrApplicable(bool checkCalTable=false);
+  void markCalTableForTrDelCorr();
+  void initTrDelCorr();                        // init (at set apply)
+  double calcTrDelError(int iant);              // calc (per ant,timestamp)
+  bool doTrDelCorr_;                            // on or off
+  double userEterm_;
+  casacore::Vector<double> MJDlim_;             // applicable date ranges
+  #define MJD0 String("2016/08/09/00:00:00.0")
+  #define MJD1 String("2016/11/15/00:00:00.0") 
+  double eterm_;                                // scale
+  casacore::Vector<double> losDist_, armAz_;    // geo info
+  casacore::Vector<casacore::MDirection> azel_;
+
 };
+
 
 } //# NAMESPACE CASA - END
 
