@@ -22,7 +22,7 @@ if not os.access(TESTS_DIR, os.F_OK):
     if os.access(CASA_DIR+'/lib64', os.F_OK):
         TESTS_DIR = CASA_DIR+'/lib64/python' + PYVER + '/regressions/'
     elif os.access(CASA_DIR+'/lib', os.F_OK):
-        TESTS_DIR = CASA_DIR+'/lib/python/regressions/'
+        TESTS_DIR = CASA_DIR+'/lib/python' + PYVER + '/regressions/'
     else:            #Mac release
         TESTS_DIR = CASA_DIR+'/Resources/python/regressions/'
 
