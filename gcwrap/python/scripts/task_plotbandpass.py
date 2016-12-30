@@ -1846,6 +1846,21 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     casalogPost(debug,"scans to plot: %s" % (str(scansToPlot)))
     casalogPost(debug,"UT times to plot: %s" % (timerangeListTimesString))
     casalogPost(debug,"Corresponding time IDs (0-based): %s" % (str(timerangeList)))
+    if (len(timerangeListTimes) > len(np.unique(scansToPlot))):
+        # fix for CAS-9474
+        uniqueScansToPlot, idx = np.unique(scansToPlot, return_index=True)
+        if (len(uniqueScansToPlot) < len(scansToPlot)):
+            # If the solution time for one spw differs by more than solutionTimeThresholdSeconds from
+            # another spw, then we will get 2 identical entries for the same scan, and thus duplicate 
+            # plots.  So, remove one.
+            if debug: print "Engaging fix for CAS-9474"
+            scansToPlot = uniqueScansToPlot
+            timerangeListTimes = list(np.array(timerangeListTimes)[idx])
+            timerangeList = list(np.array(timerangeList)[idx])
+            timerangeListTimesString = mjdsecArrayToUTString(timerangeListTimes)
+            casalogPost(debug,"Revised scans to plot: %s" % (str(scansToPlot)))
+            casalogPost(debug,"Revised UT times to plot: %s" % (timerangeListTimesString))
+            casalogPost(debug,"Corresponding time IDs (0-based): %s" % (str(timerangeList)))
   
     # Check for mismatch
     if (bpolyOverlay):
@@ -3084,7 +3099,12 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           # for caltable2.
                           sm = sloppyMatch(uniqueTimes2[mytime],times2[i],solutionTimeThresholdSeconds,myprint=False)
                       else:
-                          sm = sloppyMatch(uniqueTimes2[mytime],times2[i],solutionTimeThresholdSeconds,
+                          if (mytime >= len(uniqueTimes2)):
+                              # Fix for CAS-9474: avoid calling sloppyMatch because it will crash.  
+                              # Setting sm=False will result in an abort: "no amp data found in second solution."
+                              sm = False
+                          else:
+                              sm = sloppyMatch(uniqueTimes2[mytime],times2[i],solutionTimeThresholdSeconds,
                                            mytime, scansToPlotPerSpw[ispw], scansForUniqueTimes,  # au version
                                            myprint=debugSloppyMatch)
                       if ((ant2[i]==xant) and (cal_desc_id2[i]==ispw) and sm
