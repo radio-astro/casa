@@ -34,3 +34,4 @@ def pybot_setup( ):
 
 import publish_summary
 import runUnitTest
+import runRegressionTest
