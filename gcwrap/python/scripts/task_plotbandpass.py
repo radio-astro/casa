@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.86 2016/05/26 18:10:55 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.87 2016/12/30 01:11:56 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
