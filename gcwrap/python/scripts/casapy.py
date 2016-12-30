@@ -1355,6 +1355,7 @@ from task_help import *
 #
 import publish_summary
 import runUnitTest
+import runRegressionTest
 #
 home=os.environ['HOME']
 
