@@ -6,6 +6,10 @@ import shutil
 import traceback
 from publish_summary import runTest
 
+## flush output
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
 CASA_DIR = os.environ["CASAPATH"].split()[0]
