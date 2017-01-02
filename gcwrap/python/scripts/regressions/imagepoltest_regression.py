@@ -40,7 +40,7 @@ po = casac.imagepol()
 
 def imagepoltest(which=None):
     #
-    dowait = true
+    dowait = True
     #
     def info(message):
         note(message, origin="imagepoltest")
@@ -86,10 +86,10 @@ def imagepoltest(which=None):
                     for k in range(x.shape[2]):
                         if not (abs(x[i][j][k]-num) < tolerance):
                             print "x[",i,"][",j,"][",k,"]=", x[i][j][k]
-                            return false
+                            return False
         else:
             stop('unhandled array shape in alleqnum')
-        return true
+        return True
         
     def mean(x):
         result=0
@@ -362,7 +362,7 @@ def imagepoltest(which=None):
         # Linearly polarized intensity
         #
         pp = math.sqrt(stokes[1]*stokes[1] + stokes[2]*stokes[2] + sigma*sigma)
-        s = po.linpolint(debias=F)
+        s = po.linpolint(debias=False)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -371,7 +371,7 @@ def imagepoltest(which=None):
         if not s.done(): fail()
         #
         pp = math.sqrt(stokes[1]*stokes[1] + stokes[2]*stokes[2] - sigma*sigma)
-        s = po.linpolint(debias=T, clip=10.0)
+        s = po.linpolint(debias=True, clip=10.0)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -379,7 +379,7 @@ def imagepoltest(which=None):
             stop('Debiased linearly polarized intensity values (1) are wrong')
         if not s.done(): fail()
         #
-        s = po.linpolint(debias=T, clip=10.0, sigma=sigma)
+        s = po.linpolint(debias=True, clip=10.0, sigma=sigma)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -404,7 +404,7 @@ def imagepoltest(which=None):
         #
         pp = math.sqrt(stokes[1]*stokes[1] + stokes[2]*stokes[2] +
                        stokes[3]*stokes[3] + sigma*sigma)
-        s = po.totpolint(debias=F)
+        s = po.totpolint(debias=False)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -414,7 +414,7 @@ def imagepoltest(which=None):
         #
         pp = math.sqrt(stokes[1]*stokes[1] + stokes[2]*stokes[2] +
                        stokes[3]*stokes[3] - sigma*sigma)
-        s = po.totpolint(debias=T, clip=10.0)
+        s = po.totpolint(debias=True, clip=10.0)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -422,7 +422,7 @@ def imagepoltest(which=None):
             stop('Debiased total polarized intensity values (1) are wrong')
         if not s.done(): fail()
         #
-        s = po.totpolint(debias=T, clip=10.0, sigma=sigma)
+        s = po.totpolint(debias=True, clip=10.0, sigma=sigma)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -476,7 +476,7 @@ def imagepoltest(which=None):
         #
         pp = math.sqrt(stokes[1]*stokes[1] + stokes[2]*stokes[2] +
                        sigma*sigma) / float(stokes[0])
-        s = po.fraclinpol(debias=F)
+        s = po.fraclinpol(debias=False)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -486,7 +486,7 @@ def imagepoltest(which=None):
         #
         pp = math.sqrt(stokes[1]*stokes[1] + stokes[2]*stokes[2] -
                        sigma*sigma) / float(stokes[0])
-        s = po.fraclinpol(debias=T, clip=10.0)
+        s = po.fraclinpol(debias=True, clip=10.0)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -494,7 +494,7 @@ def imagepoltest(which=None):
             stop('Debiased fractional linear polarization values (1) are wrong')
         if not s.done(): fail()
         #
-        s = po.fraclinpol(debias=T, clip=10.0, sigma=sigma)
+        s = po.fraclinpol(debias=True, clip=10.0, sigma=sigma)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -507,7 +507,7 @@ def imagepoltest(which=None):
         #
         pp = math.sqrt(stokes[1]*stokes[1] + stokes[2]*stokes[2] +
                        stokes[3]*stokes[3] + sigma*sigma) / float(stokes[0])
-        s = po.fractotpol(debias=F)
+        s = po.fractotpol(debias=False)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -517,7 +517,7 @@ def imagepoltest(which=None):
         #
         pp = math.sqrt(stokes[1]*stokes[1] + stokes[2]*stokes[2] +
                        stokes[3]*stokes[3] - sigma*sigma) / float(stokes[0])
-        s = po.fractotpol(debias=T, clip=10.0)
+        s = po.fractotpol(debias=True, clip=10.0)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -525,7 +525,7 @@ def imagepoltest(which=None):
             stop('Debiased fractional total polarization values (1) are wrong')
         if not s.done(): fail()
         #
-        s = po.fractotpol(debias=T, clip=10.0, sigma=sigma)
+        s = po.fractotpol(debias=True, clip=10.0, sigma=sigma)
         if not s: fail()
         pixels = s.getchunk()
         d = abs(mean(pixels)-pp) / float(pp)
@@ -580,15 +580,15 @@ def imagepoltest(which=None):
         #
         which = ["lpi","tpi","lppa","flp","ftp"]
         for i in which:
-            s = po.pol(i, debias=F)
+            s = po.pol(i, debias=False)
             if not s: fail()
             if not s.done(): fail()
             #
-            s = po.pol(i, debias=T, clip=10.0)
+            s = po.pol(i, debias=True, clip=10.0)
             if not s: fail()
             if not s.done(): fail()
             #
-            s = po.pol(i, debias=T, clip=10.0, sigma=sigma)
+            s = po.pol(i, debias=True, clip=10.0, sigma=sigma)
             if not s: fail()
             if not s.done(): fail()
         try:
@@ -779,10 +779,10 @@ def imagepoltest(which=None):
         try:
             note("Expect SEVERE error and Exception here")
             s = po.sigmastokes(which='fish')
-            isfail = false
+            isfail = False
         except Exception, e:
             note("Caught expected exception")
-            isfail = true
+            isfail = True
         if not isfail:
             stop('Function sigmastokes unexpectedly did not fail')
 
@@ -1003,7 +1003,7 @@ def imagepoltest(which=None):
         # Check results
         #
         ampim = ia.newimagefromfile(ampname)
-        srec = ampim.summary(list=F)
+        srec = ampim.summary(list=False)
         rminc = srec['incr'][3]
         rmrefpix = srec['refpix'][3]
         idx = int((rm+rminc/2.0)/float(rminc) + rmrefpix)
@@ -1251,7 +1251,7 @@ def imagepoltest(which=None):
         dd = m1 / float(m2)
         edd = dd * math.sqrt( (em1*em1/float(m1*m1)) + (em2*em2/float(m2*m2)) )
         #
-        depol = po.depolratio(infile=imname2, debias=F);       # Use file name
+        depol = po.depolratio(infile=imname2, debias=False);       # Use file name
         if not depol: fail()
         pixels = depol.getchunk()
         diff = abs(mean(pixels)-dd) / float(dd)
@@ -1261,7 +1261,7 @@ def imagepoltest(which=None):
         #
         myim2 = ia.newimagefromfile(imname2)
         if not myim2: fail()
-        depol = po.depolratio(infile=myim2.name(), debias=F);  # Use Image tool
+        depol = po.depolratio(infile=myim2.name(), debias=False);  # Use Image tool
         if not depol: fail()
         pixels = depol.getchunk()
         diff = abs(mean(pixels)-dd) / float(dd)
@@ -1272,7 +1272,7 @@ def imagepoltest(which=None):
         #
         # Error in depolarization ratio
         #
-        edepol = po.sigmadepolratio(infile=imname2, debias=F); # Use file name
+        edepol = po.sigmadepolratio(infile=imname2, debias=False); # Use file name
         if not edepol: fail()
         pixels = edepol.getchunk()
         diff = abs(mean(pixels)-edd) / float(edd)

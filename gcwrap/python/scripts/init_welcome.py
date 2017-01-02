@@ -37,8 +37,13 @@ if casa['flags'].execute:
             sys.argv = sys._argv
             sys.exit = sys._save_exit
 
-        with redirect_argv(casa['flags'].execute):
-            execfile(casa['flags'].execute[0])
+        try:
+            with redirect_argv(casa['flags'].execute):
+                execfile(casa['flags'].execute[0])
+        except Exception, err:
+            traceback.print_exc()
+            os._exit(1)
+
         os._exit(0)
     else:
         eval(casa['flags'].execute[0])

@@ -5,11 +5,11 @@
 # properly interacting with spw selection and setting up the output grid.
 
 import os, time
+import pylab as pl
 
 # options you can set in local variables:
 # pyonly: just run through setChannelization, not full clean
 # analonly: print stats about previously run data and make plot.
-
 # root name of files produced:
 rt="cln_w3oh"
 

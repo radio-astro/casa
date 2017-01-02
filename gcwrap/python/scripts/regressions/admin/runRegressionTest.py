@@ -3,6 +3,7 @@ import re
 import sys
 import getopt
 import shutil
+import traceback
 from publish_summary import runTest
 
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
@@ -73,7 +74,6 @@ if __name__ == "__main__":
             except getopt.GetoptError, err:
                 # Print help information and exit:
                 print str(err) # will print something like "option -a not recognized"
-                usage()
                 os._exit(2)
                 
             # List of tests to run
@@ -88,8 +88,8 @@ if __name__ == "__main__":
             
             #If no option is given, show the Help page
             if opts == [] and args == []:
-                usage()
-                os._exit(0)
+                print "no arguments given..."
+                os._exit(1)
                 
             
             # All other options       
