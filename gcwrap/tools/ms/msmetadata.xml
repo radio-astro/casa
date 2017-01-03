@@ -1855,6 +1855,24 @@ windows in the dataset and close the tool.
     dir10_B1950 = me.convert(dir10, "B1950")
             </example>
         </method>
+
+        <method type="function" name="sourcetimes">
+            <shortdescription>Get the values of the TIME column from the SOURCE table.</shortdescription>
+            <returns type="record"/>
+            <description>
+                Get the values of the TIME column from the SOURCE table. Returns a dictionary in which the
+                keys are the associated row numbers, represented as strings, in the SOURCE table. Each value
+                in the returned dictionary is a valid time quantity.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get TIME column values from the SOURCE table
+    sourcetimes = msmd.sourcetimes()
+    msmd.done()
+    # the time associated with zero-based row number 10
+    time10 = sourcetimes["10"]
+            </example>
+        </method>
         
         <method type="function" name="sourceidforfield">
             <shortdescription>Get the source ID from the field table for the specified field ID.</shortdescription>

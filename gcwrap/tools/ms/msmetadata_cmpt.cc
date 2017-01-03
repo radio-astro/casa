@@ -1687,6 +1687,23 @@ record* msmetadata::sourcedirs() {
 	return nullptr;
 }
 
+record* msmetadata::sourcetimes() {
+	_FUNC(
+		auto times = _msmd->getSourceTimes();
+        Record r;
+		uInt i = 0;
+        Unit u = times->getUnit();
+        for (const auto& t: times->getValue()) {
+            casacore::Quantity q(t, u);
+            QuantumHolder qh(q);
+            r.defineRecord(String::toString(i), qh.toRecord());
+            ++i;
+        }
+		return fromRecord(r);
+	)
+	return nullptr;
+}
+
 int msmetadata::sourceidforfield(int field) {
 	_FUNC(
 		_checkFieldId(field, true);
