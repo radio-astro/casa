@@ -49,7 +49,7 @@ template <class T> void BeamManipulator<T>::remove() {
 template <class T> void BeamManipulator<T>::rotate(const casacore::Quantity& angle) {
 	casacore::ImageInfo ii = _image->imageInfo();
 	casacore::ImageBeamSet beams = ii.getBeamSet();
-	beams.rotate(angle);
+	beams.rotate(angle, True);
 	ii.setBeams(beams);
 	_image->setImageInfo(ii);
 }
