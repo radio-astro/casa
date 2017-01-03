@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 
 if casa['flags'].execute:
     import os.path

@@ -34,4 +34,12 @@ def pybot_setup( ):
 
 import publish_summary
 import runUnitTest
-import runRegressionTest
+###
+### runRegressionTest is not currently set up to be
+### imported and invoked but rather run like:
+###
+###   casa --nologger --log2term -c scripts/runRegressionTest.py cleanhelper
+###
+### importing it, breaks it...
+###
+#import runRegressionTest
