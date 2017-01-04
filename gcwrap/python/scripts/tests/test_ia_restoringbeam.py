@@ -324,7 +324,7 @@ class ia_restoringbeam_test(unittest.TestCase):
         self.assertTrue(
             qa.eq(
                 myia.restoringbeam(channel=1, polarization=0)['positionangle'],
-                "100deg"
+                "-80deg"
             )
         )
 
