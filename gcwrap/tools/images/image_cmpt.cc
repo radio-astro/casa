@@ -4428,17 +4428,20 @@ bool image::rotatebeam(const variant& angle) {
             return false;
         }
         Quantum<Double> pa(_casaQuantityFromVar(angle));
+        vector<String> names { "angle" };
+        vector<variant> values { angle };
+        auto msgs = _newHistory(__func__, names, values);
         if (_imageF) {
             BeamManipulator<Float> bManip(_imageF);
-            bManip.rotate(pa);
+            bManip.rotate(pa, msgs);
         }
         else {
             BeamManipulator<Complex> bManip(_imageC);
-            bManip.rotate(pa);
+            bManip.rotate(pa, msgs);
         }
-        vector<String> names { "angle" };
-        vector<variant> values { angle };
-        _addHistory(__func__, names, values);
+        
+
+        //_addHistory(__func__, names, values);
         return true;
     }
     catch (const AipsError& x) {
