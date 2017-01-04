@@ -40,7 +40,14 @@ public:
 	void remove();
 
 	// rotate all the beams counterclockwise by the specified angle
-	void rotate(const casacore::Quantity& angle);
+    // prependMsgs get added to the history before the before/after beam info
+    void rotate(
+        const Quantity& angle
+    );
+
+    void rotate(
+        const Quantity& angle, const vector<String>& prependMsgs
+    );
 
 	void set(
 		const casacore::Quantity& major, const casacore::Quantity& minor,

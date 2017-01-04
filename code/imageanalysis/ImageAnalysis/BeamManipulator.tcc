@@ -25,6 +25,8 @@
 //# $Id: $
 
 #include <imageanalysis/ImageAnalysis/BeamManipulator.h>
+
+#include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 
 namespace casa {
@@ -52,6 +54,50 @@ template <class T> void BeamManipulator<T>::rotate(const casacore::Quantity& ang
 	beams.rotate(angle, True);
 	ii.setBeams(beams);
 	_image->setImageInfo(ii);
+}
+
+template <class T> void BeamManipulator<T>::rotate(
+    const casacore::Quantity& angle, const vector<String>& prependMsgs
+) {
+   	ImageInfo ii = _image->imageInfo();
+    ImageBeamSet oBeams = ii.getBeamSet();
+    cout << "orig " << oBeams.getMinAreaBeam() << endl;
+    rotate(angle);
+    ImageBeamSet beams = _image->imageInfo().getBeamSet();
+    cout << "final " << beams.getMinAreaBeam() << endl;
+    vector<String> msgs;
+    ostringstream oss;
+    auto name = _image->name();
+    if (ii.hasSingleBeam()) {
+        oss << "Original " << name << " restoring beam: " << oBeams.getBeam();
+        msgs.push_back(oss.str());
+        oss.str("");
+        oss << "New " << name << " restoring beam: " << beams.getBeam();
+        msgs.push_back(oss.str());
+    }
+    else {
+        String s = "This image has multiple beams. Reporting the rotation of the minimum and maximum area beams:";
+        msgs.push_back(s);
+        oss << "Original " << name << " minimum area restoring beam: " << oBeams.getMinAreaBeam();
+        msgs.push_back(oss.str());
+        oss.str("");
+        oss << "New " << name << " minimum area restoring beam: " << beams.getMinAreaBeam();
+        msgs.push_back(oss.str());
+        oss.str("");
+        oss << "Original " << name << " maximum area restoring beam: " << oBeams.getMaxAreaBeam();
+        msgs.push_back(oss.str());
+        oss.str("");
+        oss << "New " << name << " maximum area restoring beam: " << beams.getMaxAreaBeam();
+        msgs.push_back(oss.str());
+    }
+    LogIO log;
+    LogOrigin lor("BeamManipulator", __func__);
+    for (const auto& m: msgs) {
+        log << lor << LogIO::NORMAL << m << LogIO::POST;
+    }
+    msgs.insert(msgs.begin(), prependMsgs.begin(), prependMsgs.end()); 
+    ImageHistory<T> ih(_image);
+    ih.addHistory(lor, msgs);
 }
 
 template <class T> void BeamManipulator<T>::setVerbose(casacore::Bool v) {
