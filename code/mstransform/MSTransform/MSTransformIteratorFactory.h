@@ -101,6 +101,7 @@ namespace casa {
 // Once this is done one can normally iterate and access the transformed data:
 //
 // <srcblock>
+//  visIter->originChunks();
 // 	while (visIter->moreChunks())
 // 	{
 // 		visIter->origin();
