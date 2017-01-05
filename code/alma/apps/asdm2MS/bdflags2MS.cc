@@ -423,6 +423,12 @@ public:
     LOGEXIT("MSFlagAccumulator::accumulate(unsigned int numChan, unsigned int numPol, T* values)");
   }
 
+  const vector < vector < vector < FLAG_CELL > > > &flagCell() {  // The 1st axis ( left ) is TIME
+                                                                 // The 2nd axis ( middle ) is BAL or ANT
+                                                                 // The 3rd axis ( right ) is DD
+    return flagCell_vvv;
+  }
+
   unsigned int numIntegration() const {
     return numIntegration_;
   }
@@ -720,7 +726,7 @@ void traverseALMARadiometerFlagsAxes(unsigned int				numTime,
   unsigned int		numFlags = flagsPair.first;
   BDFFlagConsumer<FLAGSTYPE> consumer(flags_p, numFlags);
 
-  accumulator.resetIntegration();
+  // accumulator.resetIntegration(); This call has been transfered to the caller 01/02/2016 Michel Caillat
   for (unsigned int iTime = 0; iTime < numTime; iTime++) {
     traverseANT(basebands, antennas, flagsPair, consumer, flagEval, accumulator);
     accumulator.nextIntegration();
@@ -909,11 +915,11 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
 	cellFlagged = cellFlagged || flagged;
 	allSet = allSet && flagged;
       }
-
     if (cellFlagged) numFlaggedRows ++;
 
     flag.put((uInt)iRow0, flagCell);
-    flagRow.put((uInt)iRow0, flagRow.get((uInt)iRow0) || allSet);  // Let's OR the content of flagRow with what's found in the BDF flags.
+    //    flagRow.put((uInt)iRow0, flagRow.get((uInt)iRow0) || allSet);  // Let's OR the content of flagRow with what's found in the BDF flags.
+    flagRow.put((uInt)iRow0, allSet);  // Let's OR the content of flagRow with what's found in the BDF flags.
     iRow0++;
   }
 
@@ -1804,15 +1810,18 @@ int main (int argC, char * argV[]) {
 	  if (sdo.hasPackedData()) {
 	    numFlags = sdo.tpDataSubset().flags(flags_p);
 	    pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
+	    accumulator.resetIntegration();
 	    traverseALMARadiometerFlagsAxes(numIntegrations, sdo.dataStruct().basebands(), antennas, flagsPair, flagEval, accumulator);
 	  }
 	  else {
 	    const vector<SDMDataSubset>& sdmDataSubsets = sdo.sdmDataSubsets();
+	    accumulator.resetIntegration();
 	    for (unsigned int iIntegration = 0; iIntegration < numIntegrations; iIntegration++) {
 	      numFlags = sdmDataSubsets[iIntegration].flags(flags_p);
 	      pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
 	      traverseALMARadiometerFlagsAxes(1, sdo.dataStruct().basebands(), antennas, flagsPair, flagEval, accumulator);
 	    }
+	    const vector < vector < vector <FLAG_CELL> > >& x = accumulator.flagCell();
 	  }
 	  infostream.str("");
 

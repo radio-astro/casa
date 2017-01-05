@@ -532,7 +532,7 @@ int ASDM2MSFiller::createMS(const string& msName, bool complexData, bool withCom
 #else
 #endif
   // Add focus_lenth to FEED
-  cout<<"update feed table"<<endl;
+  cout << "update feed table" << endl;
   {
      TableDesc td;
      StandardStMan feedStMan("feed standard manager");
