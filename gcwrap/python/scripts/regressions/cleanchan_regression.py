@@ -7,6 +7,7 @@
 
 
 import os, time
+import pylab as pl
 
 # options you can set in local variables:
 # pyonly: just run through setChannelization, not full clean
