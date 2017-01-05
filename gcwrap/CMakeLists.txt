@@ -254,7 +254,10 @@ message( STATUS "$_gfortran_lib_path = ${_gfortran_lib_path}" )
 #
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
-
+    if ( EXISTS /opt/casa/02/bin/python )
+            set( casa_packages /opt/casa/02 )
+            set( casa_startup 1 )
+    endif()
     ### look for dynamic libgfortran
     if( NOT _gfortran_lib_path )
         execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
