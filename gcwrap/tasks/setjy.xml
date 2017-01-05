@@ -620,7 +620,13 @@
 
                 Example: [-0.7, -0.15] for alpha and a curvature term
 
-	    reffreq -- The reference frequency for spix, given with units.
+	    reffreq -- The reference frequency for spix, given with a unit with
+                an optional frequency frame (if the frame is not given, LSRK 
+                is assumed). 
+                There should be no space between the value and the unit 
+                (e.g. '100.0GHz' or 'TOPO 100.0GHz' are correct but with 
+                '100.0 GHz' you will see a warning message that it will be
+                defaulted to LSRK). 
 		Default: '1GHz'; this is only here to prevent division by 0!
 		N.B.: If the flux density is being scaled by spectral index,
 		then reffreq must be set to whatever reference frequency is
@@ -628,7 +634,7 @@
 		determined from vis.  On the other hand, if spix is 0, then any
 		positive frequency can be used (and ignored).
 
-		Examples: '86.0GHz', '4.65e9Hz'
+		Examples: '86.0GHz', 'TOPO 86.0GHz', '4.65e9Hz'
 
             polindex -- Coefficients of the frequency-dependent linear polarization index (polarization fraction) 
                         expressed as,
@@ -645,9 +651,9 @@
                         When Q and U flux densities are given in fluxdensity, d0 is determined from
                         these flux densities and the entry for d0 in polangle is ignored. Or Q and U flux densities in
                         fluxdensity can be set to 0.0 and then polindex[0] and polangle[0] are used to determine Q and U
-                        at reffreq. Here polangle parameters are aussumed to represent the intrisic polarization angle.
+                        at reffreq. Here polangle parameters are assumed to represent the intrinsic polarization angle.
                         For the flux densities of Q and U = 0, both full coefficients of polindex and polangle are 
-                        needed to calcuate frequency-depended Q and U flux densities correctly. 
+                        needed to calculate frequency-depended Q and U flux densities correctly. 
                         Then, if rotmeas is given, the calculated Q and U flux densities are corrected for the 
                         Faraday rotation.
                 Default: []
