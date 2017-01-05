@@ -4,15 +4,9 @@ import string
 import time
 from locatescript import copydata
 from locatescript import locatescript
-import inspect
+from casa_stack_manip import stack_frame_find
 
-a=inspect.stack()
-stacklevel=0
-for k in range(len(a)):
-    if (string.find(a[k][1], 'ipython console') > 0):
-        stacklevel=k
-        break
-gl=sys._getframe(stacklevel).f_globals
+gl=stack_frame_find( )
 
 def data():
     ### return the data files that is needed by the regression script
