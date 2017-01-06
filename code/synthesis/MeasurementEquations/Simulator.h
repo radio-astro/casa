@@ -340,6 +340,8 @@ public:
   
 private:
 
+  // Get VP record - copied from SynthesisImager
+  void getVPRecord(casacore::Record &rec, PBMath::CommonPB &kpb, casacore::String telescop);
   
   // Arrange to corrupt with simulated calibration
   //   (cf Calibrater setapply)
@@ -513,6 +515,9 @@ private:
   // </group>
   
   casacore::Int prtlev_;
+
+  casacore::String itsVpTable;
+  bool itsMakeVP;
 
 };
 

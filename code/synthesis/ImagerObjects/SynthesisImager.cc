@@ -1931,7 +1931,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os(LogOrigin("SynthesisImager", "getVPRecord",WHERE));
 
     VPManager *vpman=VPManager::Instance();
-    if( itsVpTable != String("") ) 
+    if( itsVpTable != String("") )  
       {
 	os << "Loading Voltage Pattern information from " << itsVpTable << LogIO::POST;
 	vpman->loadfromtable(itsVpTable);

@@ -87,7 +87,8 @@
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
-#include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/MosaicFTNew.h>
+#include <synthesis/MeasurementEquations/VPManager.h>
 #include <synthesis/TransformMachines/HetArrayConvFunc.h> //2016
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
 #include <casa/OS/HostInfo.h>
@@ -2188,6 +2189,53 @@ Bool Simulator::predict(const Vector<String>& modelImage,
   return true;
 }
 
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// copied from SynthesisImager
+  void Simulator::getVPRecord(Record &rec, PBMath::CommonPB &kpb, String telescop)
+  {
+    LogIO os(LogOrigin("Simulator", "getVPRecord",WHERE));
+
+    VPManager *vpman=VPManager::Instance();
+    if( itsVpTable != String("") ) // 20170106 no functionality to actually set itsVpTable yet
+      {
+	os << "Loading Voltage Pattern information from " << itsVpTable << LogIO::POST;
+	vpman->loadfromtable(itsVpTable);
+      }
+    else
+      {
+	//	os << "Using Voltage Pattern currently set in the VPManager" << LogIO::POST;
+	os << "Using default Voltage Patterns from the VPManager" << LogIO::POST;
+	vpman->reset();
+      }
+
+    os << "Temporary alert : The state of the vpmanager tool has been modified by loading these primary beam models. If any of your scripts rely on the vpmanager state being preserved throughout your CASA session, please use vp.saveastable() and vp.loadfromtable() as needed. This 'feature'/warning will hopefully go away by the 4.7 release." << LogIO::POST;
+    
+
+    //    PBMath::CommonPB kpb;
+    PBMath::enumerateCommonPB(telescop, kpb);
+    //    Record rec;
+    vpman->getvp(rec, telescop);
+
+    //ostringstream oss; rec.print(oss);
+    //os << "Using VP model : " << oss.str() << LogIO::POST;
+
+    if(rec.empty()){
+      if((telescop=="EVLA")){
+	os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters. To use EVLA beams, please use the vpmanager and set the vptable parameter in tclean (see inline help for vptable)." << LogIO::POST; 
+	telescop="VLA";
+	vpman->getvp(rec, telescop);
+	kpb=PBMath::VLA;
+      }
+      else{
+	os << LogIO::WARN << "vpmanager does not have a beam for antenna : "+telescop <<".\n Please use the vpanager to define one (and optionally save its state as a table and supply its name via the vptable parameter.)" << LogIO::POST;
+      }
+    }
+    
+  }// get VPRecord
+
+
+
 Bool Simulator::createSkyEquation(const Vector<String>& image,
 				     const String complist)
 {
@@ -2301,11 +2349,33 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     else {
       ams=ms_p;
     }
+    // 2016 from SynthesisImager:
+    ROMSColumns msc(*ams);
+    String telescop=msc.observation().telescopeName()(0);
+    PBMath::CommonPB kpb;
+    Record rec;
+
     if((ftmachine_p=="sd")||(ftmachine_p=="both")||(ftmachine_p=="mosaic")) {
+      getVPRecord( rec, kpb, telescop );
       if(!gvp_p) {
 	os << "Using default primary beams for gridding" << LogIO::POST;
-	ROMSColumns msc(*ams);
-	gvp_p=new VPSkyJones(msc, true, parAngleInc_p, squintType_p);
+	// 2016 from SynthesisImager:
+	VPSkyJones* gvp_p=NULL;
+	// in SynthesisImager this is passed in as a parameter
+	Float rotatePAStep(5.);
+	if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
+	  os << "Using default primary beams for gridding" << LogIO::POST;
+	  gvp_p= new VPSkyJones(msc, True, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
+	}
+	else{
+	  PBMath myPB(rec);
+	  String whichPBMath;
+	  PBMathInterface::namePBClass(myPB.whichPBClass(), whichPBMath);
+	  os  << "Using the PB defined by " << whichPBMath << " for beam calculation for telescope " << telescop << LogIO::POST;
+	  gvp_p= new VPSkyJones(telescop, myPB, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
+	  kpb=PBMath::DEFAULT;
+	}
+	///2016
       }
       if(ftmachine_p=="sd") {
 	os << "Single dish gridding " << LogIO::POST;
@@ -2319,10 +2389,19 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       else if(ftmachine_p=="mosaic") {
 	os << "Performing Mosaic gridding" << LogIO::POST;
 	// RI TODO need stokesString for current spw - e.g. currSpw()?
-	ft_p = new MosaicFT(gvp_p, mLocation_p, stokesString_p[0], cache_p/2, tile_p, true);
-	PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;	
-	CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, "");	
-	static_cast<MosaicFT &>(*ft_p).setConvFunc(mospb);
+	//2016 from SynthesisImager:
+	ft_p = new MosaicFTNew(gvp_p, mLocation_p, stokesString_p[0], cache_p/2, tile_p, true);
+	PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
+	if(rec.asString("name")=="IMAGE")
+	  pbtype=PBMathInterface::IMAGE;
+	///Use Heterogenous array mode for the following
+	if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
+	   || (kpb==PBMath::ALMA)){
+	  //os << "Setting primary beams by antenna diameter" << LogIO::WARN;
+	  CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, "");
+	  static_cast<MosaicFTNew &>(*ft_p).setConvFunc(mospb);
+	}
+	///2016
       }
       else if(ftmachine_p=="both") {
 	os << "Performing single dish gridding with convolution function "
