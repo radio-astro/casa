@@ -88,6 +88,7 @@
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/HetArrayConvFunc.h> //2016
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
 #include <casa/OS/HostInfo.h>
 #include <images/Images/PagedImage.h>
@@ -228,7 +229,6 @@ Simulator &Simulator::operator=(const Simulator &other)
 
 Simulator::~Simulator()
 {
-//RI  cout<<"Sim::~Sim: nlock="<<Table::nAutoLocks()<< " .. deleting components .. ";
   if (ms_p) {
     ms_p->relinquishAutoLocks();
     ms_p->unlock();
@@ -258,7 +258,6 @@ Simulator::~Simulator()
   if(ft_p) delete ft_p; ft_p = 0;
   if(cft_p) delete cft_p; cft_p = 0;
   
-//RI  cout<<"nlock="<<Table::nAutoLocks()<<endl;
 }
 
 
@@ -1856,10 +1855,8 @@ Bool Simulator::corrupt() {
 
   try {
     
-//RI    cout<<"Sim::corrupt: nlock="<<Table::nAutoLocks()<< " .. locking .. ";
     ms_p->lock();
     if(mssel_p) mssel_p->lock();
-//RI    cout<<"nlock="<<Table::nAutoLocks()<<endl;
 
 //    makeVisSet();
 //    AlwaysAssert(vs_p, AipsError);
@@ -1969,11 +1966,9 @@ Bool Simulator::corrupt() {
 //      makeVisSet()
 //    }
 
-//RI    cout<<"Sim::corrupt: nlock="<<Table::nAutoLocks()<< " .. unlocking .. ";
     ms_p->relinquishAutoLocks();
     ms_p->unlock();
     if(mssel_p) mssel_p->unlock();
-//RI    cout<<"nlock="<<Table::nAutoLocks()<<endl;
 
   } catch (std::exception& x) {
     ms_p->relinquishAutoLocks();
@@ -2141,7 +2136,6 @@ Bool Simulator::predict(const Vector<String>& modelImage,
       os << LogIO::SEVERE << "Failed to create SkyEquation" << LogIO::POST;
       return false;
     }
-
     if (incremental) {
       se_p->predict(false,MS::MODEL_DATA);  
     } else {
@@ -2326,6 +2320,9 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	os << "Performing Mosaic gridding" << LogIO::POST;
 	// RI TODO need stokesString for current spw - e.g. currSpw()?
 	ft_p = new MosaicFT(gvp_p, mLocation_p, stokesString_p[0], cache_p/2, tile_p, true);
+	PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;	
+	CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, "");	
+	static_cast<MosaicFT &>(*ft_p).setConvFunc(mospb);
       }
       else if(ftmachine_p=="both") {
 	os << "Performing single dish gridding with convolution function "
@@ -2432,7 +2429,6 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     //Bool freqFrameValid_p = true;
     //ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
 
-    
     se_p = new SkyEquation ( *sm_p, *vs_p, *ft_p, *cft_p );
     
     // Now add any SkyJones that are needed

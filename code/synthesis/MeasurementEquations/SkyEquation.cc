@@ -392,7 +392,7 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	  // get the model visibility (adds to vb->model)
 	  //get(vb,model,incremental);
 	  // this version takes Type and reads existing Type col instead 
-	  // of hardcoded existing MODEL co
+	  // of hardcoded existing MODEL column
 	  get(* vb,model,incremental,Type);
 	  // and write it to VI	  
 	  switch(Type) {
@@ -864,7 +864,9 @@ VisBuffer& SkyEquation::get(VisBuffer& result, Int model,
   }
 
   //result.modelVisCube(); // get the visibility so vb will have it
-  VisBufferAutoPtr vb (result);
+  //VisBufferAutoPtr vb (result);
+  VisBuffer* vb;
+  vb = &result;
 
   Bool FTChanged=changedFTMachine(* vb);
 
