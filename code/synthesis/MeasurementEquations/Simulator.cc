@@ -2360,7 +2360,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       if(!gvp_p) {
 	os << "Using default primary beams for gridding" << LogIO::POST;
 	// 2016 from SynthesisImager:
-	VPSkyJones* gvp_p=NULL;
+	//VPSkyJones* gvp_p=NULL;
 	// in SynthesisImager this is passed in as a parameter
 	Float rotatePAStep(5.);
 	if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
