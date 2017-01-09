@@ -320,8 +320,11 @@ def main(testnames=[]):
 # by argparse. The next section will need to be updated accordingly
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
-    # Get command line arguments
+    ## flush output
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
     
+    # Get command line arguments
     if "-c" in sys.argv:
         # If called with ... -c runUnitTest.py from the command line,
         # then parse the command line parameters
@@ -421,4 +424,3 @@ if __name__ == "__main__":
     except:
         traceback.print_exc()
         
-
