@@ -14,6 +14,7 @@ CasaTaskDict = {
     'h_restoredata': 'RestoreData',
     'h_tsyscal': 'Tsyscal',
     # Interferometry tasks ---------------------------------------------------
+    'hif_editimlist': 'Editimlist',
     'hif_circfeedpolcal': 'Circfeedpolcal',
     'hif_linfeedpolcal': 'Linfeedpolcal',
     'hif_antpos': 'Antpos',
@@ -113,6 +114,7 @@ classToCASATask = {
     # Interferometry tasks ---------------------------------------------------
     hif_tasks.Antpos                  : 'hif_antpos',
     hif_tasks.Circfeedpolcal          : 'hif_circfeedpolcal',
+    hif_tasks.Editimlist              : 'hif_editimlist',
     hif_tasks.IFApplycal              : 'hif_applycal',    
     hif_tasks.Atmflag                 : 'hif_atmflag',
     hif_tasks.Bandpass                : 'hif_bandpass',

@@ -26,6 +26,7 @@ from .uvcontsub import UVcontFit, UVcontSub
 from .polarization import Polarization
 from .linfeedpolcal import Linfeedpolcal
 from .circfeedpolcal import Circfeedpolcal
+from .editimlist import Editimlist
 
 # set default tasks for tasks with several implementations to our desired
 # specific implementation
