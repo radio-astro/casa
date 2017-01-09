@@ -287,7 +287,7 @@ class Solint(basetask.StandardTaskTemplate):
                      'gainfield'    : [''],
                      'interp'       : [''],
                      'spwmap'       : [],
-                     'parang'       : False}
+                     'parang'       : True}
 
         job = casa_tasks.gaincal(**task_args)
             

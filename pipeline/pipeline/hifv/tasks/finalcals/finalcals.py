@@ -60,6 +60,8 @@ class Finalcals(basetask.StandardTaskTemplate):
     Inputs = FinalcalsInputs
     
     def prepare(self):
+
+        self.parang = True
         
         basevis = os.path.basename(self.inputs.vis)
         
@@ -248,7 +250,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                                 'gainfield'   : [''],
                                 'interp'      : [''],
                                 'spwmap'      : [],
-                                'parang'      : False}
+                                'parang'      : self.parang}
 
         delaycal_inputs.refant = delaycal_inputs.refant.lower()
 
@@ -315,7 +317,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                               'gainfield'   :[''],
                               'interp'      :[''],
                               'spwmap'      :[],
-                              'parang'      :False}
+                              'parang'      :self.parang}
 
         delaycal_inputs.refant = delaycal_inputs.refant.lower()
 
@@ -382,7 +384,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                               'gainfield'   :[''],
                               'interp'      :[''],
                               'spwmap'      :[],
-                              'parang'      :False}
+                              'parang'      :self.parang}
 
 
         bpdgains_inputs.refant = bpdgains_inputs.refant.lower()
@@ -446,7 +448,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                               'gainfield'   :[''],
                               'interp'      :[''],
                               'spwmap'      :[],
-                              'parang'      :False}
+                              'parang'      :self.parang}
 
         gaincal_inputs.refant = gaincal_inputs.refant.lower()
 
@@ -504,7 +506,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                               'interp'     :[interp],
                               'spwmap'     :[],
                               'calwt'      :[False]*ntables,
-                              'parang'     :False,
+                              'parang'     :self.parang,
                               'applymode'  :'calflagstrict',
                               'flagbackup' :False}
         
@@ -809,7 +811,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                      'gainfield'      : [''],
                      'interp'         : [''],
                      'spwmap'         : [],
-                     'parang'         : False}
+                     'parang'         : self.parang}
         
         job = casa_tasks.gaincal(**task_args)
         

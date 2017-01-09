@@ -138,7 +138,7 @@ def do_bandpass(vis, caltable, context=None, RefAntOutput=None, spw=None, ktypec
                           'gainfield'   :[''],
                           'interp'      :[''],
                           'spwmap'      :[],
-                          'parang'      :False}
+                          'parang'      :True}
 
     job = casa_tasks.bandpass(**bandpass_task_args)
 

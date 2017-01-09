@@ -63,9 +63,10 @@ class testBPdcalsResults(basetask.Results):
 class testBPdcals(basetask.StandardTaskTemplate):
     Inputs = testBPdcalsInputs
 
+
     def prepare(self):
 
-
+        self.parang = True
         
         gtypecaltable = 'testdelayinitialgain.g'
         ktypecaltable = 'testdelay.k'
@@ -368,7 +369,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                 'gainfield'   : [''],
                                 'interp'      : [''],
                                 'spwmap'      : [],
-                                'parang'      : False}
+                                'parang'      : self.parang}
 
         delaycal_inputs.refant = delaycal_inputs.refant.lower()
 
@@ -437,7 +438,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                               'gainfield'   :[''],
                               'interp'      :[''],
                               'spwmap'      :[],
-                              'parang'      :False}
+                              'parang'      :self.parang}
 
 
         #delaycal_inputs.refant = delaycal_inputs.refant.lower()
@@ -535,7 +536,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                               'gainfield'   :[''],
                               'interp'      :[''],
                               'spwmap'      :[],
-                              'parang'      :False}
+                              'parang'      :self.parang}
 
         #bpdgains_inputs.refant = bpdgains_inputs.refant.lower()
 
@@ -580,7 +581,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                               'interp'     :[interp],
                               'spwmap'     :[],
                               'calwt'      :[False]*ntables,
-                              'parang'     :False,
+                              'parang'     :self.parang,
                               'applymode'  :'calflagstrict',
                               'flagbackup' :False}
 
