@@ -67,8 +67,8 @@ class PerformanceParameters (object):
         desired_spectral_resolution = '0.0MHz',
         desired_sensitivity = '0.0Jy',
         desired_dynamic_range = 1.0,
-        max_cube_size = 30.0,
-        max_product_size = 200.0
+        max_cube_size = -1.0,
+        max_product_size = -1.0
         ):
 
         self.desired_angular_resolution = desired_angular_resolution
