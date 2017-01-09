@@ -296,7 +296,9 @@ class Priorcals(basetask.StandardTaskTemplate):
                 LOG.info("Start antenna position corrections")
                 antparamlist = correct_ant_posns(inputs.vis[0], print_offsets=False)
                 LOG.info("End antenna position corrections")
-            
+
+                self._check_tropdelay(antpos_caltable)
+
                 antList = antparamlist[1].split(',')
                 N=3
                 subList = [antparamlist[2][n:n+N] for n in range(0, len(antparamlist[2]), N)]
@@ -305,6 +307,35 @@ class Priorcals(basetask.StandardTaskTemplate):
             LOG.info("No offsets found. No caltable created.")
 
         return result, antcorrect
+
+    def _check_tropdelay(self, antpos_caltable):
+
+        # Insert value if required for testing
+
+        '''
+        #print "ADDED TEST TROP VALUE"
+        trdelscale = 1.23
+        tb = casatools.casac.table()
+        tb.open(antpos_caltable, nomodify=False)
+        tb.putkeyword('VLATrDelCorr', trdelscale)
+        tb.close()
+        #print "END OF ADDING TEST TROP VALUE"
+        '''
+
+        # Detect EVLA 16B Trop Del Corr
+        # (Silent if required keyword absent, or has value=0.0)
+        #antpostable = 'cal.antpos'
+        trdelkw = 'VLATrDelCorr'
+        with casatools.TableReader(antpos_caltable) as tb:
+            if tb.keywordnames().count(trdelkw) == 1:
+                trdelscale = tb.getkeyword(trdelkw)
+                if trdelscale != 0.0:
+                    warning_message = "NB: This EVLA dataset appears to fall within the period of semester 16B " \
+                                      "during which the online tropospheric delay model was mis-applied. " \
+                                      "A correction for the online tropospheric delay model error WILL BE APPLIED!  " \
+                                      "Tropospheric delay error correction coefficient="+str(-trdelscale/1000.0)+ " (ps/m) "
+                    LOG.debug("EVLA 16B Online Trop Del Corr is ON, scale=" + str(trdelscale))
+                    LOG.warn(warning_message)
 
     def _do_tec_maps(self):
 
