@@ -39,6 +39,7 @@ from hifa_spwphaseup_cli import hifa_spwphaseup_cli as hifa_spwphaseup
 from hifa_gfluxscale_cli import hifa_gfluxscale_cli as hifa_gfluxscale
 from hifa_timegaincal_cli import hifa_timegaincal_cli as hifa_timegaincal
 from hif_applycal_cli import hif_applycal_cli as hif_applycal
+from hif_checkproductsize_cli import hif_checkproductsize_cli as hif_checkproductsize
 #from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
 from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
 #from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
@@ -126,7 +127,7 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         hif_makeimages (pipelinemode=pipelinemode)
     
         # Check product size limits and mitigate imaging parameters
-        hif_checkproductsize (pipelinemode=pipelinemode)
+        hif_checkproductsize (maxcubesize=30.0, maxproductsize=200.0)
     
         # Export the data
         hif_exportdata(pipelinemode=pipelinemode)
