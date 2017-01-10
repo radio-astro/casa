@@ -654,7 +654,7 @@
                         at reffreq. Here polangle parameters are assumed to represent the intrinsic polarization angle.
                         For the flux densities of Q and U = 0, both full coefficients of polindex and polangle are 
                         needed to calculate frequency-depended Q and U flux densities correctly. 
-                        Then, if rotmeas is given, the calculated Q and U flux densities are corrected for the 
+                        If rotmeas is given, the calculated Q and U flux densities are then corrected for the 
                         Faraday rotation.
                 Default: []
                 Example: [0.57, 0.2] (=[d0,d1])
