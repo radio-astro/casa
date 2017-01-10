@@ -145,6 +145,13 @@ for info in [ (['dbus-daemon'],'dbus'),
 if os.path.exists(casa['dirs']['root']+"/pipeline"):
     casa['dirs']['pipeline'] = casa['dirs']['root']+"/pipeline"
 
+# initialize/finalize Sakura library
+if hasattr(casac,'sakura'):
+    #casalog.post('Managing Sakura lifecycle', priority='DEBUG')
+    casac.sakura().initialize_sakura()
+    import atexit
+    atexit.register(lambda: __import__('casac').casac.sakura().cleanup_sakura())
+
 class iArgumentParser(argparse.ArgumentParser):
     '''iPython thinks it knows that a user would never want to
     exit in any way other than typing "exit" at the command line'''
