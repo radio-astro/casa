@@ -36,7 +36,7 @@ casa_shutdown_handlers = [ ]
 
 try:
     __startup_scripts = filter( os.path.isfile, map(lambda f: __pylib + '/' + f, __init_scripts ) )
-    start_ipython( argv=["-c", "for i in " + str(__startup_scripts) + ": execfile( i )", "-i"] )
+    start_ipython( argv=['--autocall=2', "-c", "for i in " + str(__startup_scripts) + ": execfile( i )", "-i" ] )
 except:
     print "Unexpected error:", sys.exc_info()[0]
     traceback.print_exc(file=sys.stdout)
