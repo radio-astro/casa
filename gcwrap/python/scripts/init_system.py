@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import argparse
+from IPython.terminal.prompts import Prompts, Token
 
 try:
     from casac import casac
@@ -17,6 +18,15 @@ except ImportError, e:
 
 from asap_init import *
 from casa_system import casa
+
+class _Prompt(Prompts):
+     def in_prompt_tokens(self, cli=None):
+         return [(Token.Prompt, 'CASA <'),
+                 (Token.PromptNum, str(self.shell.execution_count)),
+                 (Token.Prompt, '>: ')]
+
+_ip = get_ipython()
+_ip.prompts = _Prompt(_ip)
 
 ##
 ## toplevel frame marker
