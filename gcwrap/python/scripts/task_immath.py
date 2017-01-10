@@ -217,6 +217,15 @@ def immath(
                 box, chans, stokes, region, mask,
                 stretch, filenames, _myia, tmpFilePrefix
             )
+            if imagemd:
+                casalog.post(
+                    "Specifying region, box, chan, or stokes will "
+                    + "create smaller sub-images. The image "
+                    + "metadata specified in imagemd will have to "
+                    + "conform to the output, not the input image "
+                    + "dimensions. Please check your output image "
+                    + "for accurate header definition.", 'WARN'
+                )
             (expr, varnames, subImages) = _immath_updateexpr(
                 expr, varnames, subImages, filenames, file_map
             )
