@@ -1411,7 +1411,7 @@ bool KAntPosJones::vlaTrDelCorrApplicable(bool checkCalTable) {
   }
 
   if (doTrDelCorr_)
-    logSink() << "A correction for the online tropopspheric delay model error WILL BE APPLIED!"
+    logSink() << "A correction for the online tropospheric delay model error WILL BE APPLIED!"
               << LogIO::WARN << LogIO::POST;
 
   return doTrDelCorr_;
