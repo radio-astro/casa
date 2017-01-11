@@ -945,6 +945,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   { 
     TempImage<Float>* tempres = new TempImage<Float>(res.shape(), res.coordinates(), memoryToUse()); 
     Array<Float> resdata;
+    //
+    
     res.get(resdata);
     tempres->put(resdata);
     // if input image (res) has a pixel mask, make sure to honor it so the region is exclude from statistics
@@ -1300,7 +1302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nxpix, nypix;
 
     //for debug set to True to save intermediate mask images on disk
-    Bool debug(False);
+    Bool debug(false);
 
     TempImage<Float> tempmask(mask.shape(), mask.coordinates(), memoryToUse());
     TempImage<Float> prevmask(mask.shape(), mask.coordinates(), memoryToUse());
@@ -1412,7 +1414,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // branch out if just need to grow mask, obviously no 'grow' mask for the beginning of the first iteration
     // but how should detect if it is the first iteration... the original python prototype code has
     // a seperate createThresholdMask... save a state in iterBot or get ncycle info from there?
-
     LatticeExpr<Float> themask; 
    // Bool firstIter(false);
     if (minBeamFrac > 0.0 ) {
@@ -1420,7 +1421,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         TempImage<Float> maskedRes(res.shape(), res.coordinates(), memoryToUse());
         makeMaskByPerChanThreshold(res, maskedRes, maskThreshold); 
         if (debug) {
-          PagedImage<Float> savedPreMask(res.shape(),res.coordinates(),"tmp-beforePruningMask.im");
+          String tmpfname1="tmp-beforePruningMask-"+String::toString(iterdone)+".im";
+          PagedImage<Float> savedPreMask(res.shape(),res.coordinates(),tmpfname1);
           savedPreMask.copyData(maskedRes);
         }
         //maskedRes.copyData( (LatticeExpr<Float>)( iif(res > maskThreshold, res, 0.0)) );
@@ -1428,16 +1430,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         // ToDo: need npix be an area? and fix purnRegions too!!!
         // nmask=-1
         SHARED_PTR<ImageInterface<Float> > tempIm_ptr = pruneRegions2(maskedRes, tempthresh,  -1, pruneSize);
+        tempmask.copyData(*(tempIm_ptr.get()));
         if (debug) {
-          PagedImage<Float> savedPrunedPreThreshMask(res.shape(),res.coordinates(),"tmp-postPruningBeforeThreshMask.im");
+          String tmpfname2="tmp-postPruningMask-"+String::toString(iterdone)+".im";
+          PagedImage<Float> savedPrunedPreThreshMask(res.shape(),res.coordinates(),tmpfname2);
           savedPrunedPreThreshMask.copyData(*(tempIm_ptr.get()));
         }
         //themask = LatticeExpr<Float> ( iif( *(tempIm_ptr.get()) > maskThreshold, 1.0, 0.0 ));
-        makeMaskByPerChanThreshold(*(tempIm_ptr.get()), tempmask, maskThreshold); 
-        if (debug) {
-          PagedImage<Float> savedPostPrunedMask(res.shape(),res.coordinates(),"tmp-postPruningPostThreshMask.im");
-          savedPostPrunedMask.copyData(tempmask);
-        }
+        // Need this?
+        //makeMaskByPerChanThreshold(*(tempIm_ptr.get()), tempmask, maskThreshold); 
+        //if (debug) {
+        //  PagedImage<Float> savedPostPrunedMask(res.shape(),res.coordinates(),"tmp-postPruningPostThreshMask.im");
+        //  savedPostPrunedMask.copyData(tempmask);
+        //}
     }
     else {
       //themask = LatticeExpr<Float> ( iif( res > maskThreshold, 1.0, 0.0 ));
@@ -1447,6 +1452,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     //smooth
     SPIIF outmask = convolveMask(tempmask, modbeam );
+    if (debug) {
+        String tmpfname3="tmp-postSmoothMask-"+String::toString(iterdone)+".im";
+        PagedImage<Float> savedSmoothedMask(res.shape(),res.coordinates(),tmpfname3);
+        savedSmoothedMask.copyData(*(outmask.get()));
+    }
+
 
     //clean up (appy cutThreshold to convolved mask image)
     LatticeExpr<Float> thenewmask( iif( *(outmask.get()) > cutThreshold, 1.0, 0.0 ));
@@ -1460,7 +1471,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition arrshape = maskmaxs.shape();
     uInt naxis=arrshape.size();
     IPosition indx(naxis,0);
-    // ignoring corr for now and ssume first axis is channel
+    // ignoring corr for now and assume first axis is channel
     Array<Bool> dogrow(arrshape);
     for (uInt i=0; i < arrshape(0); i++) {
       indx(0) = i;
