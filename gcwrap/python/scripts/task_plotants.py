@@ -1,7 +1,7 @@
 import os
 import pylab as pl
 from taskinit import *
-
+from __casac__ import msplot
 def plotants(vis=None,figfile=''):
        """Plot the antenna distribution in the local reference frame:
 
@@ -32,6 +32,7 @@ def plotants(vis=None,figfile=''):
        """
 
        try:
+              mp = mptool()
               if type(vis) == str and os.path.isdir(vis):
                      mp.open(vis)
               else:

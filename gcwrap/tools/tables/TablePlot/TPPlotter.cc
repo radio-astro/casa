@@ -1037,8 +1037,8 @@ Int TPPlotter::endPlot(Int panel)
                /* Setup the tick label format */
                if(PPar_p[panel-1]->TimePlot==1 || PPar_p[panel-1]->TimePlot==3)
                {
-                 fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=false )\n";
-                 fmt << "pl.setp( pl.gca().get_yticklabels(), visible=false )\n";
+                 fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=False )\n";
+                 fmt << "pl.setp( pl.gca().get_yticklabels(), visible=False )\n";
                   
                   fmt << "ax.fmt_xdata=yearconv\n";
                   fmt << "ax.fmt_ydata=conv\n";
@@ -1049,7 +1049,7 @@ Int TPPlotter::endPlot(Int panel)
                   fmt << "ax.xaxis.set_major_formatter(timeformatter)\n";
       
                   fmt << "labelFormatter = "
-                         "pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
+                         "pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
                   fmt << "ax.yaxis.set_major_formatter(labelFormatter)\n";
       
                   //fmt << "pl.subplots_adjust(bottom=0.2);\n";
@@ -1059,8 +1059,8 @@ Int TPPlotter::endPlot(Int panel)
                }
                if(PPar_p[panel-1]->TimePlot==2 || PPar_p[panel-1]->TimePlot==3)
                {
-                  fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=false )\n";
-                  fmt << "pl.setp( pl.gca().get_yticklabels(), visible=false )\n";
+                  fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=False )\n";
+                  fmt << "pl.setp( pl.gca().get_yticklabels(), visible=False )\n";
                    
                   fmt << "ax.fmt_xdata=conv\n";
                   fmt << "ax.fmt_ydata=yearconv\n";
@@ -1071,7 +1071,7 @@ Int TPPlotter::endPlot(Int panel)
                   fmt << "ax.yaxis.set_major_formatter(timeformatter)\n";
       
                   fmt << "labelFormatter = "
-                         "pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
+                         "pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
                   fmt << "ax.xaxis.set_major_formatter(labelFormatter)\n";
       
                   //fmt << "pl.subplots_adjust(left=0.2);\n";
@@ -1085,8 +1085,8 @@ Int TPPlotter::endPlot(Int panel)
             else {
                ostringstream fmt;
                
-                  fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=false )\n";
-                  fmt << "pl.setp( pl.gca().get_yticklabels(), visible=false )\n";
+                  fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=False )\n";
+                  fmt << "pl.setp( pl.gca().get_yticklabels(), visible=False )\n";
                
                /* Setup the cursor tracking label format */
                 
@@ -1101,7 +1101,7 @@ Int TPPlotter::endPlot(Int panel)
                fmt << "ax.fmt_ydata=conv\n";
                
       
-               fmt << "labelFormatter = pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
+               fmt << "labelFormatter = pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
                fmt << "ax.xaxis.set_major_formatter(labelFormatter)\n";
                fmt << "ax.yaxis.set_major_formatter(labelFormatter)\n";
                
@@ -1170,7 +1170,7 @@ Int TPPlotter::endPlot(Int panel)
                   fmt << "ax.xaxis.set_major_formatter(timeformatter)\n";
       
                   fmt << "labelFormatter = "
-                         "pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
+                         "pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
                   fmt << "ax.yaxis.set_major_formatter(labelFormatter)\n";
       
                   //fmt << "pl.subplots_adjust(bottom=0.2);\n";
@@ -1192,7 +1192,7 @@ Int TPPlotter::endPlot(Int panel)
                   fmt << "ax.yaxis.set_major_formatter(timeformatter)\n";
       
                   fmt << "labelFormatter = "
-                         "pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
+                         "pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
                   fmt << "ax.xaxis.set_major_formatter(labelFormatter)\n";
       
                   //fmt << "pl.subplots_adjust(left=0.2);\n";
@@ -1235,7 +1235,7 @@ Int TPPlotter::endPlot(Int panel)
                //fmt << "ax.xaxis.set_major_formatter(majorFormatter)\n";
                //fmt << "ax.yaxis.set_major_formatter(majorFormatter)\n";
       
-               fmt << "labelFormatter = pl.ScalarFormatter(useOffset=false,useMathText=true)\n";
+               fmt << "labelFormatter = pl.ScalarFormatter(useOffset=False,useMathText=True)\n";
                fmt << "ax.xaxis.set_major_formatter(labelFormatter)\n";
                fmt << "ax.yaxis.set_major_formatter(labelFormatter)\n";
       
@@ -1459,9 +1459,9 @@ TPPlotter::plotXY(Int panel, Int layer, Int colour)
       /* 1 : x-axis, 2 : y axis, 3 : both. */
       if(PPar_p[panel-1]->TimePlot) 
       {
-         if(PPar_p[panel-1]->TimePlot==1) buf << ", xdate=true, ydate=false";
-         if(PPar_p[panel-1]->TimePlot==2) buf << ", xdate=false, ydate=true";
-         if(PPar_p[panel-1]->TimePlot==3) buf << ", xdate=true, ydate=true";
+         if(PPar_p[panel-1]->TimePlot==1) buf << ", xdate=True, ydate=False";
+         if(PPar_p[panel-1]->TimePlot==2) buf << ", xdate=False, ydate=True";
+         if(PPar_p[panel-1]->TimePlot==3) buf << ", xdate=True, ydate=True";
       }
       
       buf << ");\n";
@@ -1593,8 +1593,8 @@ TPPlotter::setPlotLabels(Int panel)
       
       if (row > 5 || col > 5) {
          ostringstream fmt;      
-         fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=false )\n";
-         fmt << "pl.setp( pl.gca().get_yticklabels(), visible=false )\n";
+         fmt << "pl.setp( pl.gca().get_xticklabels(), Visible=False )\n";
+         fmt << "pl.setp( pl.gca().get_yticklabels(), visible=False )\n";
          PyInterp_p->pyrunString(fmt.str().data()); 
       }
 

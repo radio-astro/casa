@@ -12,6 +12,7 @@ except ImportError, e:
 
 try:
     import matplotlib
+    matplotlib.use('TkAgg')
 except ImportError, e:
     print "failed to load matplotlib:\n", e
     print "sys.path =", "\n\t".join(sys.path)
