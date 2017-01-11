@@ -85,36 +85,36 @@ def cleanup(dir):
             note(raiser.__name__+'failed on'+problemPath,"SEVERE")
             raise RuntimeError, "Cleanup of " + dir + " fails!"
         shutil.rmtree(dir,0,errFunc)
-    return true
+    return True
 
 def all(x,y,tolerance=0):
     if len(x) != len(y):
-        return false
+        return False
     for i in range(len(x)):
         if not (abs(x[i]-y[i]) <= tolerance):
             print "x["+str(i)+"]=", x[i]
             print "y["+str(i)+"]=", y[i]
-            return false
-    return true
+            return False
+    return True
 
 def alleq(x,y,tolerance=0):
     if x.size != y.size:
         print "x.size=", x.size
         print "y.size=", y.size
-        return false
+        return False
     if len(x.shape)==1:
         for i in range(len(x)):
             if not (abs(x[i]-y[i]) < tolerance):
                 print "x[",i,"]=", x[i]
                 print "y[",i,"]=", y[i]
-                return false
+                return False
     if len(x.shape)==2:
         for i in range(len(x)):
             for j in range(len(x[i])):
                 if not (abs(x[i][j]-y[i][j]) < tolerance):
                     print "x[",i,"][",j,"]=", x[i][j]
                     print "y[",i,"][",j,"]=", y[i][j]
-                    return false
+                    return False
     if len(x.shape)==3:
         for i in range(len(x)):
             for j in range(len(x[i])):
@@ -122,7 +122,7 @@ def alleq(x,y,tolerance=0):
                     if not (abs(x[i][j][k]-y[i][j][k]) < tolerance):
                         print "x[",i,"][",j,"][",k,"]=", x[i][j][k]
                         print "y[",i,"][",j,"][",k,"]=", y[i][j][k]
-                        return false
+                        return False
     if len(x.shape)==4:
         for i in range(len(x)):
             for j in range(len(x[i])):
@@ -131,10 +131,10 @@ def alleq(x,y,tolerance=0):
                         if not (abs(x[i][j][k][l]-y[i][j][k][l]) < tolerance):
                             print "x[",i,"][",j,"][",k,"][",l,"]=", x[i][j][k][l]
                             print "y[",i,"][",j,"][",k,"][",l,"]=", y[i][j][k][l]
-                            return false
+                            return False
     if len(x.shape)>4:
         stop('unhandled array shape in alleq')
-    return true
+    return True
 
 
 def coordsystest():
@@ -166,26 +166,26 @@ def coordsystest():
         #if not ok: fail(' id record has wrong fields')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T);
+        mycs = cs.newcoordsys(direction=True);
         if not mycs: fail('coordsys constructor 2 failed')
         #if not cs.iscoordsys(mycs): fail('is_coordsys 2 failed')
         if mycs.ncoordinates()!=1: fail('ncoordinates 2 failed')
         if mycs.coordinatetype(0)!=['Direction']: fail('coordinatetype 1 failed')
-        t1 = mycs.axiscoordinatetypes(T);
-        t2 = mycs.axiscoordinatetypes(F);
+        t1 = mycs.axiscoordinatetypes(True);
+        t2 = mycs.axiscoordinatetypes(False);
         ok = t1[0]=='Direction' and t1[1]=='Direction'
         ok = ok and t2[0]=='Direction'
         ok = ok and t2[1]=='Direction'
         if not ok: fail('axiscoordinatetypes 1 failed')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(spectral=T)
+        mycs = cs.newcoordsys(spectral=True)
         if not mycs: fail('coordsys constructor 3 failed')
         #if not cs.iscoordsys(mycs): fail('is_coordsys 3 failed')
         if mycs.ncoordinates()!=1: fail('ncoordinates 3 failed')
         if mycs.coordinatetype(0)!=['Spectral']: fail('coordinatetype 2 failed')
-        t1 = mycs.axiscoordinatetypes(T)
-        t2 = mycs.axiscoordinatetypes(F)
+        t1 = mycs.axiscoordinatetypes(True)
+        t2 = mycs.axiscoordinatetypes(False)
         ok = (t1==['Spectral']) and (t2==['Spectral'])
         if not ok: fail('axiscoordinatetypes 2 failed')
         if not mycs.done(): fail()
@@ -195,8 +195,8 @@ def coordsystest():
         #if not cs.iscoordsys(mycs): fail('is_coordsys 4 failed')
         if mycs.ncoordinates()!=1: fail('ncoordinates 4 failed')
         if mycs.coordinatetype(0)!=['Stokes']: fail('coordinatetype 3 failed')
-        t1 = mycs.axiscoordinatetypes(T)
-        t2 = mycs.axiscoordinatetypes(F)
+        t1 = mycs.axiscoordinatetypes(True)
+        t2 = mycs.axiscoordinatetypes(False)
         ok = t1==['Stokes'] and t2==['Stokes']
         if not ok: fail('axiscoordinatetypes 3 failed')
         if not mycs.done(): fail()
@@ -206,25 +206,25 @@ def coordsystest():
         #if not cs.iscoordsys(mycs): fail('is_coordsys 5 failed;'
         if mycs.ncoordinates()!=1: fail('ncoordinates 5 failed')
         if mycs.coordinatetype(0)!=['Linear']: fail('coordinatetype 4 failed')
-        t1 = mycs.axiscoordinatetypes(T)
-        t2 = mycs.axiscoordinatetypes(F)
+        t1 = mycs.axiscoordinatetypes(True)
+        t2 = mycs.axiscoordinatetypes(False)
         ok = t1[0]=='Linear' and t2[0]=='Linear'
         if not ok: fail('axiscoordinatetypes 4 failed')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(tabular=T)
+        mycs = cs.newcoordsys(tabular=True)
         if not mycs: fail('coordsys constructor 6 failed')
         #if not cs.iscoordsys(mycs): fail('is_coordsys 6 failed')
         if mycs.ncoordinates()!=1: fail('ncoordinates 6 failed')
         if mycs.coordinatetype(0)!=['Tabular']: fail('coordinatetype 6 failed')
-        t1 = mycs.axiscoordinatetypes(T)
-        t2 = mycs.axiscoordinatetypes(F)
+        t1 = mycs.axiscoordinatetypes(True)
+        t2 = mycs.axiscoordinatetypes(False)
         ok = t1==['Tabular'] and t2==['Tabular']
         if not ok: fail('axiscoordinatetypes 5 failed')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T, stokes="I Q U V",
-                              linear=1, tabular=T)
+        mycs = cs.newcoordsys(direction=True, spectral=True, stokes="I Q U V",
+                              linear=1, tabular=True)
         if not mycs: fail('coordsys constructor 7 failed')
         #if not cs.iscoordsys(mycs): fail('is_coordsys 7 failed')
         if mycs.ncoordinates()!=5: fail('ncoordinates 7 failed')
@@ -240,8 +240,8 @@ def coordsystest():
             t[2]!='Spectral' or t[3]!='Linear' or
             t[4]!='Tabular'): fail('coordinatetype 6 failed')
         #
-        t1 = mycs.axiscoordinatetypes(T)
-        t2 = mycs.axiscoordinatetypes(F)
+        t1 = mycs.axiscoordinatetypes(True)
+        t2 = mycs.axiscoordinatetypes(False)
         ok = t1[0]=='Direction' and t1[1]=='Direction'
         ok = ok and (t1[2]=='Stokes' and t1[3]=='Spectral')
         ok = ok and (t1[4]=='Linear' and t1[5]=='Tabular')
@@ -265,7 +265,7 @@ def coordsystest():
         #if not cs1.done(): fail()
         #if not cs2.done(): fail()
         ###
-        return T
+        return True
 
     def test2():
         info('')
@@ -281,7 +281,7 @@ def coordsystest():
         info('')
         info ('Testing referencecode')
         info('')
-        mycs = cs.newcoordsys(direction=T, spectral=T)
+        mycs = cs.newcoordsys(direction=True, spectral=True)
         if not mycs: fail('coordsys constructor 1 failed')
         #
         d = me.frequency('LSRK')
@@ -291,7 +291,7 @@ def coordsystest():
         #
         for i in list['normal']:
             if (i!='REST'):
-                ok = mycs.setreferencecode(type='spectral', value=i, adjust=T)
+                ok = mycs.setreferencecode(type='spectral', value=i, adjust=True)
                 if not ok: fail()
                 if (mycs.referencecode(type='spectral')!=[i]):
                     fail('failed to recover spectral reference code '+i)
@@ -306,13 +306,13 @@ def coordsystest():
         #
         for i in list['normal']:
             if not re.search("AZEL",i, re.IGNORECASE):
-                ok = mycs.setreferencecode(type='direction', value=i, adjust=F)
+                ok = mycs.setreferencecode(type='direction', value=i, adjust=False)
                 if not ok: fail()
                 if (mycs.referencecode(type='direction')!=[i]):
                     fail('failed to recover direction reference code '+i)
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T, linear=1)
+        mycs = cs.newcoordsys(direction=True, spectral=True, linear=1)
         if not mycs: fail('coordsys constructor 2 failed')
         ok = mycs.setreferencecode(type='direction', value='B1950')
         if not ok: fail()
@@ -324,12 +324,12 @@ def coordsystest():
         if not ok: fail('referencecode 3 failed')
         #
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setreferencecode(value='doggies')
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok: fail('setreferencecode unexpectedly did not fail')
         #
         # projection
@@ -353,12 +353,12 @@ def coordsystest():
             if not n: fail()
         #
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setprojection('fish')
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            ok = false
+            ok = False
         if ok: fail('setprojection 1 unexpectedly did not fail')
         #
         # restfrequency
@@ -392,7 +392,7 @@ def coordsystest():
         #
         rf1 = qa.quantity([1e9, 2e9], 'Hz')
         # Select second freq
-        ok = mycs.setrestfrequency(value=rf1, which=1, append=F);
+        ok = mycs.setrestfrequency(value=rf1, which=1, append=False);
         rf2 = qa.convert(mycs.restfrequency(),qa.getunit(rf1))
         v1 = qa.getvalue(rf1)
         v2 = qa.getvalue(rf2)
@@ -403,37 +403,37 @@ def coordsystest():
         #
         rf1 = qa.quantity('1kg')
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setrestfrequency(rf1)
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            ok = false
+            ok = False
         if ok: fail('setrestfrequency 3 unexpectedly did not fail')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T, spectral=F)
+        mycs = cs.newcoordsys(direction=True, spectral=False)
         try:
             note('Expect SEVERE error and Exception here')
             rf = mycs.restfrequency()
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            rf = false
+            rf = False
         if rf: fail('restfrequency unexpectedly did not fail')
         #
         rf1 = qa.quantity('1GHz')
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setrestfrequency(rf1)
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            ok = false
+            ok = False
         if ok: fail('setrestfrequency 4 unexpectedly did not fail')
         #
         if not mycs.done(): fail()
         #
-        return T
+        return True
 
     def test3():
         info('')
@@ -441,7 +441,7 @@ def coordsystest():
         info('')
         info('Test 3 - torecord, fromrecord, copy')
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T, stokes="I Q U V",
+        mycs = cs.newcoordsys(direction=True, spectral=True, stokes="I Q U V",
                               linear=3)
         if not mycs: fail('coordsys constructor 1 failed')
         #
@@ -452,7 +452,7 @@ def coordsystest():
         ok = ok and r.has_key('linear3')
         if not ok: fail('torecord did not produce valid record')
         #
-        cs2 = cs.newcoordsys(direction=F, spectral=F, stokes="", linear=0)
+        cs2 = cs.newcoordsys(direction=False, spectral=False, stokes="", linear=0)
         if not cs2: fail('coordsys constructor 2 failed')
         ok = cs2.fromrecord(r)
         if not ok: fail('fromrecord 1 failed')
@@ -462,15 +462,15 @@ def coordsystest():
         if not mycs.done(): fail()
         if not cs2.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail('coordsys constructor 3 failed')
         cs2 = mycs.copy()
         if not cs2: fail()
         ok = mycs.done()
-        if (ok==false and cs2==false): fail('copy was a reference !')
+        if (ok==False and cs2==False): fail('copy was a reference !')
         if not cs2.done(): fail;
         ###
-        return T
+        return True
 
     def test4():
         info('')
@@ -479,7 +479,7 @@ def coordsystest():
         info('Test 4 - setepoch, epoch, setobserver, observer')
         info('         settelescope, telescope, setparentname, parentname')
         #
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail('coordsys constructor 1 failed')
         #
         # Epoch
@@ -546,7 +546,7 @@ def coordsystest():
         if not mycs.done(): fail()
         #
         ###
-        return T
+        return True
 
     def test5():
         info('')
@@ -559,7 +559,7 @@ def coordsystest():
         info('         setlineartransform, lineartransform')
         info('         setstokes, stokes')
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T)
+        mycs = cs.newcoordsys(direction=True, spectral=True)
         if not mycs: fail('coordsys constructor 1 failed')
         #
         # Names
@@ -592,7 +592,7 @@ def coordsystest():
         info('')
         info ('Testing units')
         info('')
-        mycs = cs.newcoordsys(direction=T, spectral=T)
+        mycs = cs.newcoordsys(direction=True, spectral=True)
         if not mycs: fail('coordsys constructor 2 failed')
         val1 = "deg rad GHz"
         ok = mycs.setunits(value=val1)
@@ -603,20 +603,20 @@ def coordsystest():
         if not ok: fail('setunits/units 1 reflection failed')
         #
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setunits(value="Hz Hz Hz")
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            ok = false
+            ok = False
         if ok: fail('setunits 2 unexpectedly did not fail')
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setunits(value="m")
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            ok = false
+            ok = False
         if ok: fail('setunits 3 unexpectedly did not fail')
         #
         val1 = "deg rad GHz"
@@ -634,10 +634,10 @@ def coordsystest():
         if not ok: fail('setunits/units reflection 2 failed')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T, linear=2)
+        mycs = cs.newcoordsys(direction=True, linear=2)
         if not mycs: fail('coordsys constructor 2b failed')
         val1 = "Hz kHz"
-        ok = mycs.setunits(type='linear', value=val1, overwrite=T)
+        ok = mycs.setunits(type='linear', value=val1, overwrite=True)
         if not ok: fail()
         val2 = mycs.units()
         ok = val1.split()[0]==val2[2] and val1.split()[1]==val2[3]
@@ -649,7 +649,7 @@ def coordsystest():
         info('')
         info ('Testing referencepixel')
         info('')
-        mycs = cs.newcoordsys(direction=T, spectral=T)
+        mycs = cs.newcoordsys(direction=True, spectral=True)
         if not mycs: fail('coordsys constructor 3 failed')
         val1 = [0,1,2]
         ok = mycs.setreferencepixel(value=val1)
@@ -679,20 +679,20 @@ def coordsystest():
         if not ok: fail('setreferencepixel 3 failed')
         #
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setreferencepixel (type='lin', value=[0,0])
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            ok = false
+            ok = False
         if ok: fail('setreferencepixel 1 unexpectedly did not fail')
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.referencepixel('lin')
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            ok = false
+            ok = False
         if ok: fail('setreferencepixel 2 unexpectedly did not fail')
         if not mycs.done(): fail()
         #
@@ -701,7 +701,7 @@ def coordsystest():
         info('')
         info ('Testing lineartransform')
         info('')
-        mycs = cs.newcoordsys(direction=T, spectral=T, stokes='IQ', tabular=T, linear=3)
+        mycs = cs.newcoordsys(direction=True, spectral=True, stokes='IQ', tabular=True, linear=3)
         if not mycs: fail('coordsys constructor 3b failed')
         #
         val1 = ia.makearray(0,[2,2])
@@ -767,7 +767,7 @@ def coordsystest():
         info('')
         info ('Testing referencevalue')
         info('')
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail('coordsys constructor 4 failed')
         ok = mycs.setunits(value="rad rad")
         if not ok: fail()
@@ -787,7 +787,7 @@ def coordsystest():
             fail('setreferencevalue/referencevalue 1 reflection failed')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail('coordsys constructor 5 failed')
         units = mycs.units()
         if not units: fail()
@@ -803,19 +803,19 @@ def coordsystest():
         if not ok: fail('setreferencevalue/referencevalue 2 reflection failed')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(spectral=T)
+        mycs = cs.newcoordsys(spectral=True)
         if not mycs: fail('coordsys constructor 6 failed')
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setreferencevalue (value='i like doggies')
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok: fail('setreferencevalue unexpectedly did not fail')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T)
+        mycs = cs.newcoordsys(direction=True, spectral=True)
         if not mycs: fail('coordsys constructor 7 failed')
         val1 = mycs.referencevalue(format='q')
         if not val1: fail()
@@ -845,7 +845,7 @@ def coordsystest():
         info('')
         info ('Testing increment')
         info('')
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail('coordsys constructor 7 failed')
         ok = mycs.setunits(value="rad rad")
         if not ok: fail()
@@ -865,7 +865,7 @@ def coordsystest():
             fail('setincrement/increment 1 reflection failed')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail('coordsys constructor 8 failed')
         units = mycs.units()
         if not units: fail()
@@ -882,19 +882,19 @@ def coordsystest():
             fail('setincrement/increment 2 reflection failed')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(spectral=T)
+        mycs = cs.newcoordsys(spectral=True)
         if not mycs: fail('coordsys constructor 9 failed')
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setincrement(value='i like doggies')
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok: fail('setincrement 1 unexpectedly did not fail')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T)
+        mycs = cs.newcoordsys(direction=True, spectral=True)
         if not mycs: fail('coordsys constructor 10 failed')
         val1 = [1.0, 2.0, 3.0]
         ok = mycs.setincrement(value=val1)
@@ -910,7 +910,7 @@ def coordsystest():
             val2 = mycs.increment(type='lin', format='q')
         except Exception, e:
             note('Caught expected Exception')
-            val2 = false
+            val2 = False
         if val2: fail('increment 2 unexpectedly did not fail')
         #
         val1 = [-10]
@@ -938,29 +938,29 @@ def coordsystest():
             fail('stokes 2 recovered wrong values')
         if not mycs.done(): fail;
         #
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail()
         try:
-            stokes = true
+            stokes = True
             note('Expect SEVERE error and Exception here')
             stokes = mycs.stokes()
         except Exception, e:
             note('Caught expected Exception')
-            stokes = false
+            stokes = False
         if stokes: fail('stokes 2 unexpectedly did not fail')
         try:
-            ok = true
+            ok = True
             note('Expect SEVERE error and Exception here')
             ok = mycs.setstokes("I V")
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok: fail('setstokes 2 unexpectedly did not fail')
         #
         if not mycs.done(): fail;
         #
         ###
-        return T
+        return True
 
     def test6():
         info('')
@@ -974,13 +974,13 @@ def coordsystest():
         find coordinate and findaxis tests are now in test_coordsys.py
         # findcoordinate
         #local pa, wa
-        
+
         try:
             note('Expect SEVERE error and Exception here')
             ok = mycs.findcoordinate('fish', 1)['return']
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok:
             return stop('findcoordinate 1 unexpectedly did not fail')
         ok = mycs.findcoordinate('dir', 20)['return']
@@ -988,7 +988,7 @@ def coordsystest():
             return stop('findcoordinate 2 unexpectedly did not fail')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T, stokes="I V", spectral=T, linear=2)
+        mycs = cs.newcoordsys(direction=True, stokes="I V", spectral=True, linear=2)
         if not mycs: fail('coordsys constructor 1 failed')
         ok = mycs.findcoordinate('dir',0)
         if not ok['return']:
@@ -1035,7 +1035,7 @@ def coordsystest():
         #
         # findaxis
         #
-        mycs = cs.newcoordsys(direction=T, linear=2)
+        mycs = cs.newcoordsys(direction=True, linear=2)
         #local coord, axisincoord
         #
         ok = mycs.findaxis(T, 0)
@@ -1067,7 +1067,7 @@ def coordsystest():
             ok = mycs.findaxis(T, 4)
         except Exception, e:
             note('Caught expect Exception:' + str(e))
-            ok = false
+            ok = False
         if ok:
             return stop('findaxis 4 unexpectedly found the axis')
         #
@@ -1075,15 +1075,15 @@ def coordsystest():
         if not mycs.done(): fail()
 
         ###
-        return T
- 
+        return True
+
     def test7():
         info('')
         info('')
         info('')
         info('Test 7 - toworld, toworldmany, topixel, topixelmany')
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T, stokes="I V", linear=2)
+        mycs = cs.newcoordsys(direction=True, spectral=True, stokes="I V", linear=2)
         if not mycs: fail('coordsys constructor 1 failed')
         #
         info('')
@@ -1214,7 +1214,7 @@ def coordsystest():
             #
             if not mycs.done(): fail()
             ###
-            return T
+            return True
 
     def test8():
         info('')
@@ -1232,7 +1232,7 @@ def coordsystest():
         if mycs.naxes()!=0: fail('naxes 1 gave wrong result')
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T, stokes="I V", linear=2)
+        mycs = cs.newcoordsys(direction=True, spectral=True, stokes="I V", linear=2)
         if not mycs: fail('coordsys constructor 2 failed')
         n = mycs.naxes()
         if not n: fail('naxes 2 failed')
@@ -1246,10 +1246,10 @@ def coordsystest():
         # from Glish, all I can do is check the maps are the
         # same presently
         #
-        toworld = mycs.axesmap(toworld=T)
+        toworld = mycs.axesmap(toworld=True)
 	print toworld
         if not len(toworld): fail()
-        topixel = mycs.axesmap(toworld=F)
+        topixel = mycs.axesmap(toworld=False)
         if not len(topixel): fail()
         #
         idx = range(0,len(mycs.referencepixel()['numeric']))
@@ -1258,7 +1258,7 @@ def coordsystest():
         #
         if not mycs.done(): fail()
         ###
-        return T
+        return True
 
     def test9():
         info('')
@@ -1269,7 +1269,7 @@ def coordsystest():
         info('')
         info('Testing reorder')
         info('')
-        mycs = cs.newcoordsys(direction=T, spectral=T, stokes='I V', linear=1)
+        mycs = cs.newcoordsys(direction=True, spectral=True, stokes='I V', linear=1)
         if not mycs: fail('coordsys constructor 1 failed')
         #order = [4,3,2,1]
         order = [3,2,1, 0]
@@ -1286,7 +1286,7 @@ def coordsystest():
             ok = mycs.reorder([1,2])
         except Exception, e:
             note("Caught expected Exception")
-            ok = false
+            ok = False
         if ok: fail('reorder 2 unexpectedly did not fail')
         #
         try:
@@ -1294,12 +1294,12 @@ def coordsystest():
             ok = mycs.reorder([1,2,3,10])
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok: fail('reorder 3 unexpectedly did not fail')
         #
         if not mycs.done(): fail()
         ###
-        return T
+        return True
 
     def test10():
         info('')
@@ -1307,7 +1307,7 @@ def coordsystest():
         info('')
         info('Test 10 - frequencytovelocity, velocitytofrequency')
         #
-        mycs = cs.newcoordsys(spectral=T)
+        mycs = cs.newcoordsys(spectral=True)
         if not mycs: fail('coordsys constructor 1 failed')
         #
         info('')
@@ -1381,64 +1381,64 @@ def coordsystest():
         # Forced errors
         try:
             note('Expect SEVERE error and Exception here')
-            vel = true
+            vel = True
             vel = mycs.frequencytovelocity(value=rv['numeric'][0],
                                            frequnit='Jy',
                                            doppler='radio', velunit='km/s')
         except Exception, e:
             note('Caught expected Exception')
-            vel = false
+            vel = False
         if vel: fail('frequencytovelocity 5 unexpectedly did not fail')
         try:
             note('Expect SEVERE error and Exception here')
-            freq = true
+            freq = True
             freq = mycs.velocitytofrequency(value=rv['numeric'][0],
                                             frequnit='Jy',
                                             doppler='radio', velunit='km/s')
         except Exception, e:
             note('Caught expected Exception')
-            freq = false
+            freq = False
         if freq: fail('velocitytofrequency 5 unexpectedly did not fail')
         ##
         try:
             note('Expect SEVERE error and Exception here')
-            vel = true
+            vel = True
             vel = mycs.frequencytovelocity(value=rv['numeric'][0],
                                            frequnit='GHz',
                                            doppler='radio', velunit='doggies')
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            vel = false
+            vel = False
         if vel: fail('frequencytovelocity 6 unexpectedly did not fail')
         try:
             note('Expect SEVERE error and Exception here')
-            freq = true
+            freq = True
             freq = mycs.velocitytofrequency(value=rv['numeric'][0],
                                             frequnit='GHz',
                                             doppler='radio', velunit='doggies')
         except Exception, e:
             note('Caught expected Exception: '+str(e))
-            freq = false
+            freq = False
         if freq:
             fail('velocitytofrequency 6 unexpectedly did not fail')
         #
         if not mycs.done(): fail()
         #
-        mycs = cs.newcoordsys(direction=T, spectral=F)
+        mycs = cs.newcoordsys(direction=True, spectral=False)
         if not mycs: fail('coordsys constructor 2 failed')
         try:
             note('Expect SEVERE error and Exception here')
-            vel = true
+            vel = True
             vel = mycs.frequencytovelocity(value=[1.0], frequnit='Hz',
                                            doppler='radio', velunit='km/s')
         except Exception, e:
             note('Caught expected Exception')
-            vel = false
+            vel = False
         if vel:
             fail('frequencytovelocity 7 unexpectedly did not fail')
         if not mycs.done(): fail()
         ###
-        return T
+        return True
 
     def test11():
         info('')
@@ -1446,7 +1446,7 @@ def coordsystest():
         info('')
         info('Test 11 - setreferencelocation')
         #
-        mycs = cs.newcoordsys(linear=2, spectral=T)
+        mycs = cs.newcoordsys(linear=2, spectral=True)
         if not mycs: fail('coordsys constructor 1 failed')
         #
         p = [1.0, 1.0, 1.0]
@@ -1464,7 +1464,7 @@ def coordsystest():
         w += inc
         p = [51,51,5]  #p = ((shp-1)/2.0) + 1
         #
-        ok = mycs.setreferencelocation (pixel=p, world=w, mask=[T,T,T])
+        ok = mycs.setreferencelocation (pixel=p, world=w, mask=[True,True,True])
         if not ok: fail()
         #
         rp = mycs.referencepixel()['numeric']
@@ -1483,7 +1483,7 @@ def coordsystest():
         if not mycs.done(): fail;
         #
         ###
-        return T
+        return True
 
     def test12():
         info('')
@@ -1491,7 +1491,7 @@ def coordsystest():
         info('')
         info('Test 12 - toabs, torel, toabsmany, torelmany')
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T, stokes="I V LL", linear=2)
+        mycs = cs.newcoordsys(direction=True, spectral=True, stokes="I V LL", linear=2)
         if not mycs: fail('coordsys constructor 1 failed')
         #
         info('')
@@ -1540,7 +1540,7 @@ def coordsystest():
             p2 = mycs.toabs(p)
         except Exception, e:
             note("Caught expected Exception")
-            p2 = false
+            p2 = False
         if p2: fail('toabs 1 unexpectedly did not fail')
         #
         p2 = mycs.torel(p)
@@ -1550,7 +1550,7 @@ def coordsystest():
             p3 = mycs.torel(p2)
         except Exception, e:
             note('Caught expected Exception')
-            p3 = false
+            p3 = False
         if p3: fail('torel 1 unexpectedly did not fail')
         #
         w = mycs.referencevalue()
@@ -1560,7 +1560,7 @@ def coordsystest():
             w2 = mycs.toabs(w)
         except:
             note('Caught expected exception')
-            w2 = false
+            w2 = False
         if w2: fail('toabs 2 unexpectedly did not fail')
         #
         w2 = mycs.torel(w)
@@ -1570,7 +1570,7 @@ def coordsystest():
             w3 = mycs.torel(w2)
         except Exception, e:
             note('Caught expected Exception')
-            w3 = false
+            w3 = False
         if w3: fail('torel 2 unexpectedly did not fail')
         #
         # toabsmany, torelmany
@@ -1589,14 +1589,14 @@ def coordsystest():
             for j in range(len(w)):
                 ww[j,i] = w[i]
         #
-        relpix = mycs.torelmany(pp, F)
+        relpix = mycs.torelmany(pp, False)
         if len(relpix['numeric'])!=len(p): fail()
-        abspix = mycs.toabsmany(relpix, F)
+        abspix = mycs.toabsmany(relpix, False)
         if len(abspix['numeric'])!=len(relpix['numeric']): fail()
         #
-        relworld = mycs.torelmany(ww, T)
+        relworld = mycs.torelmany(ww, True)
         if len(relworld['numeric'])!=len(w): fail()
-        absworld = mycs.toabsmany(relworld, T)
+        absworld = mycs.toabsmany(relworld, True)
         if len(absworld['numeric'])!=len(relworld['numeric']): fail()
         #
         for i in range(n):
@@ -1611,15 +1611,15 @@ def coordsystest():
             #
         if not mycs.done(): fail()
         ###
-        return T
- 
+        return True
+
 
     def test13():
         info('')
         info('')
         info('Test 13 - convert, convertmany')
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T, stokes="I V LL",
+        mycs = cs.newcoordsys(direction=True, spectral=True, stokes="I V LL",
                               linear=2)
         if not mycs: fail('coordsys constructor 1 failed')
         tol = 1.0e-6
@@ -1627,12 +1627,12 @@ def coordsystest():
 
         ####################
         # abs pix to abs pix
-        absin = n*[T]
+        absin = n*[True]
         unitsin = n*['pix']
         coordin = mycs.referencepixel()['numeric'] # Make sure in range of stokes
         for i in range(len(coordin)):
             coordin[i] += 2
-        absout = n*[T]
+        absout = n*[True]
         unitsout = n*['pix']
         dopplerin = 'radio'
         dopplerout = 'radio'
@@ -1643,23 +1643,23 @@ def coordsystest():
         if not all(p,coordin,tol): fail('convert 1 gives wrong values')
 
         # abs pix to rel pix
-        absout = n * [F]
+        absout = n * [False]
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
         if not len(p): fail()
         #
-        p2 = mycs.torel(coordin, F)['numeric']
+        p2 = mycs.torel(coordin, False)['numeric']
         if len(p2)!=n: fail()
         if not all(p,p2,tol):
             fail('convert 2 gives wrong values')
 
         # rel pix to abs pix
-        absin = n * [F]
+        absin = n * [False]
         rp = mycs.referencepixel()['numeric']
         for i in range(len(rp)): rp[i] += 2
-        coordin = list(mycs.torel(rp, F)['numeric'])
+        coordin = list(mycs.torel(rp, False)['numeric'])
         if len(coordin)!=n: fail()
-        absout = n * [T]
+        absout = n * [True]
         #
         p = mycs.convert(coordin, absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
@@ -1672,11 +1672,11 @@ def coordsystest():
 
         #######################
         # abs pix to abs world
-        absin = n * [T]
+        absin = n * [True]
         coordin = mycs.referencepixel()['numeric'] + 2
         if len(coordin)!=n: fail()
         unitsin = n * ['pix']
-        absout = n * [T]
+        absout = n * [True]
         unitsout = mycs.units()
         if not unitsout: fail()
         #
@@ -1691,11 +1691,11 @@ def coordsystest():
         if not all(p,w,tol): fail('convert 4 gives wrong values')
 
         # abs pix to rel world
-        absin = n * [T]
+        absin = n * [True]
         coordin = list(mycs.referencepixel()['numeric']+2)
         if len(coordin)!=n: fail()
         unitsin = n * ['pix']
-        absout = n * [F]
+        absout = n * [False]
         unitsout = mycs.units()
         if not unitsout: fail()
         #
@@ -1705,15 +1705,15 @@ def coordsystest():
         #
         p2 = mycs.referencepixel()['numeric'] + 2
         if len(p2)!=n: fail()
-        w = mycs.torel(mycs.toworld(p2),T)['numeric']
+        w = mycs.torel(mycs.toworld(p2),True)['numeric']
         if not all(p,w,tol): fail('convert 5 gives wrong values')
-        
+
         # rel pix to abs world
-        absin = n * [F]
-        coordin = mycs.torel(mycs.referencepixel()['numeric']+2,F)
+        absin = n * [False]
+        coordin = mycs.torel(mycs.referencepixel()['numeric']+2,False)
         if not coordin: fail()
         unitsin = n * ['pix']
-        absout = n * [T]
+        absout = n * [True]
         unitsout = mycs.units()
         if not unitsout: fail()
         #
@@ -1728,11 +1728,11 @@ def coordsystest():
         if not all(p,w,tol): fail('convert 6 gives wrong values')
 
         # rel pix to rel world
-        absin = n * [F]
-        coordin = mycs.torel(mycs.referencepixel()['numeric']+2,F)
+        absin = n * [False]
+        coordin = mycs.torel(mycs.referencepixel()['numeric']+2,False)
         if not coordin: fail()
         unitsin = n * ['pix']
-        absout = n * [F]
+        absout = n * [False]
         unitsout = mycs.units()
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
@@ -1741,18 +1741,18 @@ def coordsystest():
         #
         p2 = mycs.referencepixel()['numeric']+2
         if len(p2)!=n: fail()
-        w = mycs.torel(mycs.toworld(p2),T)['numeric']
+        w = mycs.torel(mycs.toworld(p2),True)['numeric']
         if len(w)!=6: fail()
         if not all(p,w,tol): fail('convert 7 gives wrong values')
 
         #######################
         # abs world to abs pix
-        absin = n * [T]
+        absin = n * [True]
         coordin = mycs.toworld(mycs.referencepixel()['numeric']+2)
         if not coordin: fail()
         unitsin = mycs.units()
         if not unitsout: fail()
-        absout = n * [T]
+        absout = n * [True]
         unitsout = n * ['pix']
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
@@ -1764,29 +1764,29 @@ def coordsystest():
         if not all(p,p2,tol): fail('convert 8 gives wrong values')
 
         # abs world to rel pix
-        absin = n * [T]
+        absin = n * [True]
         coordin = mycs.toworld(mycs.referencepixel()['numeric']+2)
         if not coordin: fail()
         unitsin = mycs.units()
         if not unitsin: fail()
         unitsout = n * ['pix']
-        absout = n * [F]
+        absout = n * [False]
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
         if not len(p): fail()
         #
-        p2 = mycs.torel(mycs.referencepixel()['numeric']+2,F)['numeric']
+        p2 = mycs.torel(mycs.referencepixel()['numeric']+2,False)['numeric']
         if len(p2)!=n: fail()
         if not all(p,p2,tol): fail('convert 9 gives wrong values')
 
         # rel world to abs pix
-        absin = n * [F]
-        coordin = mycs.torel(mycs.toworld(mycs.referencepixel()['numeric']+2),T)
+        absin = n * [False]
+        coordin = mycs.torel(mycs.toworld(mycs.referencepixel()['numeric']+2),True)
         if not coordin: fail()
         unitsin = mycs.units()
         if not unitsin: fail()
-        absout = n * [T]
+        absout = n * [True]
         unitsout = n * ['pix']
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
@@ -1798,18 +1798,18 @@ def coordsystest():
         if not all(p,p2,tol): fail('convert 10 gives wrong values')
 
         # rel world to rel pix
-        absin = n * [F]
-        coordin = mycs.torel(mycs.toworld(mycs.referencepixel()['numeric']+2),T)
+        absin = n * [False]
+        coordin = mycs.torel(mycs.toworld(mycs.referencepixel()['numeric']+2),True)
         if not coordin: fail()
         unitsin = mycs.units()
-        absout = n * [F]
+        absout = n * [False]
         unitsout = n * ['pix']
         #
         p = mycs.convert(list(coordin['numeric']), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
         if not len(p): fail()
         #
-        p2 = mycs.torel(mycs.referencepixel()['numeric']+2,F)['numeric']
+        p2 = mycs.torel(mycs.referencepixel()['numeric']+2,False)['numeric']
         if len(p2)!=n: fail()
         if not all(p, p2, tol): fail('convert 11 gives wrong values')
 
@@ -1834,14 +1834,14 @@ def coordsystest():
         if not vRefOut: fail()
 
         # absvel to absvel
-        absin = n * [T]
+        absin = n * [True]
         p = mycs.referencepixel()['numeric'] + 2
         if len(p)!=n: fail()
         coordin = mycs.toworld(p)
         if not coordin: fail()
         unitsin = mycs.units()
         if not unitsin: fail()
-        absout = n * [T]
+        absout = n * [True]
         unitsout = mycs.units()
         if not unitsout: fail()
         #
@@ -1879,8 +1879,8 @@ def coordsystest():
         vOut -= vRefOut
         #
         coordin[sAxis] = vIn
-        absin[sAxis] = T
-        absout[sAxis] = F
+        absin[sAxis] = True
+        absout[sAxis] = False
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
@@ -1901,8 +1901,8 @@ def coordsystest():
         if not vIn: fail()
         #
         coordin[sAxis] = vIn
-        absin[sAxis] = T
-        absout[sAxis] = T
+        absin[sAxis] = True
+        absout[sAxis] = True
         unitsout = mycs.units()
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
@@ -1926,15 +1926,15 @@ def coordsystest():
         if not vIn: fail()
         #
         coordin[sAxis] = vIn
-        absin[sAxis] = T
-        absout[sAxis] = F
+        absin[sAxis] = True
+        absout[sAxis] = False
         unitsout = mycs.units()
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
         if not len(p): fail()
         #
-        w = mycs.torel(mycs.toworld(mycs.referencepixel()['numeric']+2),T)['numeric']
+        w = mycs.torel(mycs.toworld(mycs.referencepixel()['numeric']+2),True)['numeric']
         if len(w)!=n: fail()
         d = abs(p[sAxis]-w[sAxis])
         if not d<tol: fail('convert 15 gives wrong values')
@@ -1951,8 +1951,8 @@ def coordsystest():
         if not vIn: fail()
         #
         coordin[sAxis] = vIn
-        absin[sAxis] = T
-        absout[sAxis] = T
+        absin[sAxis] = True
+        absout[sAxis] = True
         unitsout[sAxis] = 'pix'
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
@@ -1976,15 +1976,15 @@ def coordsystest():
         if not vIn: fail()
         #
         coordin[sAxis] = vIn
-        absin[sAxis] = T
-        absout[sAxis] = F
+        absin[sAxis] = True
+        absout[sAxis] = False
         unitsout[sAxis] = 'pix'
         #
         p = mycs.convert(list(coordin), absin, dopplerin, unitsin,
                          absout, dopplerout, unitsout)
         if not len(p): fail()
         #
-        p2  = mycs.torel(mycs.referencepixel()['numeric']+2,F)['numeric']
+        p2  = mycs.torel(mycs.referencepixel()['numeric']+2,False)['numeric']
         if len(p2)!=n: fail()
         d = abs(p[sAxis]-p2[sAxis])
         if not (d<tol): fail('convert 17 gives wrong values')
@@ -2005,8 +2005,8 @@ def coordsystest():
         if not vOut: fail()
         #
         coordin[sAxis] = vIn
-        absin[sAxis] = F
-        absout[sAxis] = T
+        absin[sAxis] = False
+        absout[sAxis] = True
         unitsin[sAxis] = 'km/s'
         unitsout[sAxis] = 'km/s'
         #
@@ -2027,8 +2027,8 @@ def coordsystest():
                                         velunit='km/s')
         if not vOut: fail()
         #
-        absin[sAxis] = T
-        absout[sAxis] = T
+        absin[sAxis] = True
+        absout[sAxis] = True
         unitsin = mycs.units()
         unitsout[sAxis] = 'km/s'
         #
@@ -2044,15 +2044,15 @@ def coordsystest():
         if len(p)!=n: fail()
         w = mycs.toworld(p)['numeric']
         if len(w)!=n: fail()
-        coordin = mycs.torel(w,T)['numeric']
+        coordin = mycs.torel(w,True)['numeric']
         if len(coordin)!=n: fail()
         vOut = mycs.frequencytovelocity(value=w[sAxis],
                                         doppler=dopplerout,
                                         velunit='km/s')
         if not vOut: fail()
         #
-        absin[sAxis] = F
-        absout[sAxis] = T
+        absin[sAxis] = False
+        absout[sAxis] = True
         unitsin = mycs.units()
         unitsout[sAxis] = 'km/s'
         #
@@ -2075,8 +2075,8 @@ def coordsystest():
         #
         coordin = w
         coordin[sAxis] = p[sAxis]
-        absin[sAxis] = T
-        absout[sAxis] = T
+        absin[sAxis] = True
+        absout[sAxis] = True
         unitsin[sAxis] = 'pix'
         unitsout[sAxis] = 'km/s'
         #
@@ -2097,10 +2097,10 @@ def coordsystest():
                                         velunit='km/s')
         if not vOut: fail()
         #
-        p = mycs.torel(p,F)['numeric']
+        p = mycs.torel(p,False)['numeric']
         coordin[sAxis] = p[sAxis]
-        absin[sAxis] = F
-        absout[sAxis] = T
+        absin[sAxis] = False
+        absout[sAxis] = True
         unitsin[sAxis] = 'pix'
         unitsout[sAxis] = 'km/s'
         #
@@ -2113,26 +2113,26 @@ def coordsystest():
         mycs.done()
 
         # mixed
-        mycs = cs.newcoordsys(direction=T, spectral=T, linear=1)
+        mycs = cs.newcoordsys(direction=True, spectral=True, linear=1)
         if not mycs: fail()
         absPix = mycs.referencepixel()
         absPix['numeric'] += 4
         if len(absPix['numeric'])!=4: fail()
-        relPix = mycs.torel(absPix, F)
+        relPix = mycs.torel(absPix, False)
         if len(relPix['numeric'])!=4: fail()
         absWorld = mycs.toworld(absPix)
         if not absWorld: fail()
-        relWorld = mycs.torel(absWorld, T)
+        relWorld = mycs.torel(absWorld, True)
         if not relWorld: fail()
         n = mycs.naxes();
 
         # convertmany.  any test is as good as any other
         coordin = mycs.referencepixel()['numeric']
         if len(coordin)!=n: fail()
-        absin = n * [T]
+        absin = n * [True]
         unitsin = n * ['pix']
         dopplerin = 'radio'
-        absout = n * [T]
+        absout = n * [True]
         unitsout = mycs.units()
         if not unitsout: fail()
         dopplerout = 'radio'
@@ -2153,7 +2153,7 @@ def coordsystest():
                 d = rOut[j,i] - coordout[j]
                 if not (d<tol): fail('convertmany gives wrong values')
         #
-        return T
+        return True
 
     def test14():
         info('')
@@ -2165,19 +2165,19 @@ def coordsystest():
         info('Testing setspectral')
         info('')
         #
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail('coordsys constructor 1 failed')
         try:
             note("Expect SEVERE error and Exception here")
             ok = mycs.setspectral(refcode='lsrk')
         except Exception, e:
             note("Caught expected Exception")
-            ok = false
+            ok = False
         if ok:
             fail ('setspectral 1 unexpectedly did not fail')
         mycs.done()
         #
-        mycs = cs.newcoordsys(spectral=T)
+        mycs = cs.newcoordsys(spectral=True)
         #
         rc = 'LSRK'
         ok = mycs.setspectral(refcode=rc)
@@ -2223,19 +2223,19 @@ def coordsystest():
         info('Testing settabular')
         info('')
         #
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail('coordsys constructor 1 failed')
         try:
             note('Expect SEVERE error and Exception here')
             ok = mycs.settabular(pixel=[1,2], world=[1,2])
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok:
             fail ('settabular 1 unexpectedley did not fail')
         mycs.done()
         #
-        mycs = cs.newcoordsys(tabular=T)
+        mycs = cs.newcoordsys(tabular=True)
         #
         p = [0, 1, 2, 3, 4]
         w = [10, 20, 30, 40, 50]
@@ -2255,7 +2255,7 @@ def coordsystest():
             ok = mycs.settabular(pixel=[0,1,2], world=[10,20])
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok: fail('settabular test 2 unexpectedly did not fail')
         #
         try:
@@ -2263,7 +2263,7 @@ def coordsystest():
             ok = mycs.settabular(pixel=[0,1], world=[1,10,20])
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok: fail('settabular test 3 unexpectedly did not fail')
         #
         ok = mycs.settabular(pixel=[0,1,2], world=[1,10,20])
@@ -2273,14 +2273,14 @@ def coordsystest():
             ok = mycs.settabular(pixel=[0,1,2,3])
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok: fail('settabular test 5 unexpectedly did not fail')
         try:
             note('Expect SEVERE error and Exception here')
             ok = mycs.settabular(world=[0,1,2,3])
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok: fail('settabular test 6 unexpectedly did not fail')
         #
         if not mycs.done(): fail()
@@ -2298,7 +2298,7 @@ def coordsystest():
         mycs = cs.newcoordsys()
         if not mycs: fail('coordsys constructor 1 failed')
         #
-        ok = mycs.addcoordinate(direction=T, spectral=T, linear=2, tabular=T, stokes="I V")
+        ok = mycs.addcoordinate(direction=True, spectral=True, linear=2, tabular=True, stokes="I V")
         if not ok:
             fail ('addcoordinate failed')
         #
@@ -2308,26 +2308,26 @@ def coordsystest():
 
         # We don't know what order they will be in. This is annoying.
         types = mycs.coordinatetype()
-        hasDir = F
-        hasSpec = F
-        hasLin = F
-        hasTab = F
-        hasStokes = F
+        hasDir = False
+        hasSpec = False
+        hasLin = False
+        hasTab = False
+        hasStokes = False
         for i in range(n):
             if (types[i]=='Direction'):
-                hasDir = T
+                hasDir = True
             else:
                 if (types[i]=='Spectral'):
-                    hasSpec = T
+                    hasSpec = True
                 else:
                     if (types[i]=='Linear'):
-                        hasLin = T
+                        hasLin = True
                     else:
                         if (types[i]=='Tabular'):
-                            hasTab = T
+                            hasTab = True
                         else:
                             if (types[i]=='Stokes'):
-                                hasStokes = T
+                                hasStokes = True
         #
         ok = hasDir and hasSpec and hasLin and hasTab and hasStokes
         if not ok:
@@ -2341,7 +2341,7 @@ def coordsystest():
         info('')
         info('Test 17 - toworld, topixel with reference conversion')
         #
-        mycs = cs.newcoordsys(direction=T, spectral=T)
+        mycs = cs.newcoordsys(direction=True, spectral=True)
         if not mycs: fail()
         #
         v = mycs.units()
@@ -2353,9 +2353,9 @@ def coordsystest():
         #
         mycs.setrestfrequency(1.420405752E9)
         #
-        ok = mycs.setreferencecode(value='J2000', type='direction', adjust=F)
+        ok = mycs.setreferencecode(value='J2000', type='direction', adjust=False)
         if not ok: fail;
-        ok = mycs.setreferencecode(value='LSRK', type='spectral', adjust=F)
+        ok = mycs.setreferencecode(value='LSRK', type='spectral', adjust=False)
         if not ok: fail;
         #
         v = mycs.referencevalue()
@@ -2408,7 +2408,7 @@ def coordsystest():
         tol = 1e-3
         if not all(p2,p,tol): fail('failed consistency test 1')
         ###
-        return T
+        return True
 
     def test18():
         info('')
@@ -2420,7 +2420,7 @@ def coordsystest():
         info('Testing setdirection')
         info('')
         #
-        mycs = cs.newcoordsys(direction=T)
+        mycs = cs.newcoordsys(direction=True)
         if not mycs: fail('coordsys constructor 1 failed')
 
         # Test 1
@@ -2483,7 +2483,7 @@ def coordsystest():
         info('Testing replace')
         info('')
         #
-        mycs = cs.newcoordsys(direction=T, linear=1)
+        mycs = cs.newcoordsys(direction=True, linear=1)
         if not mycs: fail('coordsys constructor 1 failed')
         #
         cs2 = cs.newcoordsys(linear=1)
@@ -2494,12 +2494,12 @@ def coordsystest():
             ok = mycs.replace(cs2.torecord(), whichin=0, whichout=0)
         except Exception, e:
             note('Caught expected Exception')
-            ok = false
+            ok = False
         if ok:
             fail('replace 1 unexpectedly did not fail')
         ok = cs2.done()
         #
-        cs2 = cs.newcoordsys(spectral=T)
+        cs2 = cs.newcoordsys(spectral=True)
         ok = mycs.replace(cs2.torecord(), whichin=0, whichout=1)
         if not ok: fail()
         if mycs.coordinatetype(1) != ['Spectral']:
@@ -2528,7 +2528,7 @@ def coordsystest():
     test17()
     test18()
     test19()
-    
+
 
 Benchmarking = True
 if Benchmarking:
