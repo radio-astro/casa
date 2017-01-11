@@ -253,7 +253,7 @@ class sdgaincal_const_test(sdgaincal_test_base):
         self._verify_caltable(self._is_empty_caltable, **params)
         
     def test_const02(self):
-        """test_const02: too narrow central region, empty caltable is created"""
+        """test_const02: valid caltable is created. gain factor is all 1.0"""
         params = self.generate_params(radius='65arcsec')
         self.run_task(**params)
         
@@ -273,8 +273,7 @@ class sdgaincal_const_test(sdgaincal_test_base):
 class sdgaincal_variable_test(sdgaincal_test_base):
     """
     Unit tests for task sdgaincal.
-    Test data contains the data constant over time and direction, which 
-    means that gain factor is always 1.0.
+    Gain calibration for variable data.
     
     The list of tests:
     Test Name           | Radius      | Expectation
