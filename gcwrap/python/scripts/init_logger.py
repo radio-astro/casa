@@ -1,3 +1,4 @@
+from mpi4casa.MPIEnvironment import MPIEnvironment
 
 def casalogger(logfile=''):
     """
@@ -56,6 +57,10 @@ if casa['flags'].nologger :
 if casa['flags'].nogui :
     deploylogger = False
 
+## do not start logger gui on MPI clients...
+if MPIEnvironment.is_mpi_enabled and MPIEnvironment.is_mpi_client:
+    deploylogger = False
+
 if thelogfile == 'null':
     pass
 else:
@@ -77,7 +82,6 @@ casalog = casac.logsink()
 if casa.has_key('files') and casa['files'].has_key('logfile') :
     casalog.setlogfile(casa['files']['logfile'])
 
-from mpi4casa.MPIEnvironment import MPIEnvironment
 processor_origin = MPIEnvironment.processor_origin
 casalog.processorOrigin(processor_origin)
 
