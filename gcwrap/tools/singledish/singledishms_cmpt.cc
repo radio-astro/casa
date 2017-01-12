@@ -331,8 +331,7 @@ singledishms::fit_line(string const& datacolumn,
 		       ::casac::variant const& pol,
                        string const& timebin,
                        string const& timespan,
-                       bool const polaverage,
-                       string const& polaveragemode,
+                       string const& polaverage,
 		       string const& fitfunc,
 		       string const& nfit,
 		       bool const linefinding,
@@ -353,10 +352,10 @@ singledishms::fit_line(string const& datacolumn,
       itsSd->setAverage(average_param);
     }
 
-    if (polaverage) {
+    if (polaverage != "") {
       Record average_param;
-      average_param.define("polaverage", polaverage);
-      average_param.define("polaveragemode", polaveragemode);
+      average_param.define("polaverage", true);
+      average_param.define("polaveragemode", polaverage);
       itsSd->setPolAverage(average_param, True);
     }
 

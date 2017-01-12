@@ -1286,7 +1286,11 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
         # number of fit results should be 1
         # (2 spectra are reduced into 1 by polarization averaging)
         nresults = len(result['nfit'])
-        self.assertEqual(nresults, 1)
+        if (mode == ''):
+            self.assertEqual(nresults, 2)
+            return
+        else:
+            self.assertEqual(nresults, 1)
         
         # verify nfit
         # nfit should be 2
@@ -1336,12 +1340,12 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
     def run_test(self, mode):
         # only spw 0 is processed
         result = sdfit(infile=self.infile, datacolumn='float_data', fitfunc='gaussian', 
-                       nfit=[2], spw='0', polaverage=True, polaveragemode=mode)
+                       nfit=[2], spw='0', polaverage=mode)
         self.verify(mode, result)        
     
     def test_polaverage_default(self):
-        """ test_polaverage_default: test default average mode (=stokes) """
-        self.run_test(mode='default')
+        """ test_polaverage_default: test default case (no averaging) """
+        self.run_test(mode='')
     
     def test_polaverage_stokes(self):
         """ test_polaverage_stokes: test stokes average mode """
@@ -1352,9 +1356,9 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
         self.run_test(mode='geometric')
 
 def suite():
-    return [#sdfit_basicTest, 
-            #sdfit_selection, 
-            #sdfit_auto, 
+    return [sdfit_basicTest, 
+            sdfit_selection, 
+            sdfit_auto, 
             sdfit_timeaverage,
-            #sdfit_polaverage
-]
+            sdfit_polaverage
+           ]

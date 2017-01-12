@@ -13,7 +13,7 @@ from numpy import ma, array, logical_not, logical_and
 def sdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None,
            timerange=None, scan=None, pol=None, intent=None,
            timebin=None, timespan=None,
-           polaverage=None, polaveragemode=None,
+           polaverage=None, 
            fitfunc=None, fitmode=None, nfit=None, thresh=None, avg_limit=None,
            minwidth=None, edge=None, outfile=None, overwrite=None):
     casalog.origin('sdfit')
@@ -53,7 +53,7 @@ def sdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None,
 
         sdms.fit_line(datacolumn=datacolumn, spw=spw, pol=pol, 
                       timebin=timebin, timespan=timespan,
-                      polaverage=polaverage, polaveragemode=polaveragemode,
+                      polaverage=polaverage, 
                       fitfunc=fitfunc, nfit=num_fit_str,
                       linefinding=(fitmode=='auto'), threshold=thresh,
                       avg_limit=avg_limit, minwidth=minwidth, edge=edge,
