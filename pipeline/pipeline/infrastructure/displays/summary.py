@@ -553,7 +553,7 @@ class PlotAntsChart(object):
         # map: with pad names
         plf1 = pylab.figure(1)
         if self.polarlog:
-            self.draw_polarlog_ant_map_in_subplot(plf1, self.ms.antennas)
+            self.draw_polarlog_ant_map_in_subplot(plf1)
         else:
             self.draw_pad_map_in_subplot(plf1, self.ms.antennas)
         pylab.title('Antenna Positions for %s' % self.ms.basename)
@@ -645,32 +645,38 @@ class PlotAntsChart(object):
 
     # This plot is adapted from the "plotPositionsLogarithmic" function
     # in the Analysis Utils written by Todd Hunter.
-    def draw_polarlog_ant_map_in_subplot(self, plf, antennas):
+    def draw_polarlog_ant_map_in_subplot(self, plf):
         """
         Draw a polar-log map of antennas.
         
         plf: a pylab.figure instance
-        antennas: a list of dictionaries, each representing an antenna
         """
 
         # Get longitude and latitude offsets in meters for antennas.
         xoffsets = np.array([ant.offset['longitude offset']['value']
-                             for ant in antennas])
+                             for ant in self.ms.antennas])
         yoffsets = np.array([ant.offset['latitude offset']['value']
-                             for ant in antennas])
+                             for ant in self.ms.antennas])
 
-        # Take median of antenna offsets as the actual center for the plot.
-        xcenter = np.median(xoffsets)
-        ycenter = np.median(yoffsets)
-        
-        # Derive radial offset and angle w.r.t. center position.
-        theta = np.arctan2(xoffsets-xcenter, yoffsets-ycenter)
+        # Set center of plot and min/max rmin as appropriate for observatory.
+        if self.context.project_summary.telescope in ('VLA', 'EVLA'):
+            # For (E)VLA, set a fixed local center position that has been
+            # tuned to work well for its array configurations (CAS-7479).
+            xcenter, ycenter = -32, 0
+            rmin_min, rmin_max = 12.5, 350
+        else:
+            # For non-(E)VLA, take the median of antenna offsets as the
+            # center for the plot.
+            xcenter = np.median(xoffsets)
+            ycenter = np.median(yoffsets)
+            rmin_min, rmin_max = 3, 350
+
+        # Derive radial offset w.r.t. center position.
         r = ((xoffsets-xcenter)**2 + (yoffsets-ycenter)**2)**0.5
-        
+
         # Set rmin, clamp between a min and max value, ignore station
         # at r=0 if one is there.
-        rmin_min, rmin_max = 3, 200
-        rmin = min(rmin_max, max(rmin_min, np.min(r[r>0])))
+        rmin = min(rmin_max, max(rmin_min, 0.8*np.min(r[r > 0])))
         
         # Update r to move any points below rmin to r=rmin.
         r[r <= rmin] = rmin
@@ -678,6 +684,9 @@ class PlotAntsChart(object):
         
         # Set rmax.
         rmax = np.log(1.5*np.max(r))
+
+        # Derive angle of offset w.r.t. center position.
+        theta = np.arctan2(xoffsets-xcenter, yoffsets-ycenter)
 
         # Set up subplot.
         subpl = plf.add_subplot(1, 1, 1, polar=True, projection='polar')
@@ -719,8 +728,12 @@ class PlotAntsChart(object):
                     if np.log(cr) < rmax:
                         subpl.text(circle_label_angle, np.log(cr),
                                    '%d km' % (cr/1000), size=8, va=va)
+                        subpl.text(circle_label_angle + np.pi, np.log(cr),
+                                   '%d km' % (cr / 1000), size=8, va=va)
                 else:
                     subpl.text(circle_label_angle, np.log(cr), '%dm' % (cr),
+                               size=8, va=va)
+                    subpl.text(circle_label_angle + np.pi, np.log(cr), '%dm' % (cr),
                                size=8, va=va)
 
             # Find out if most recently drawn circle was outside all antennas, 
@@ -729,13 +742,13 @@ class PlotAntsChart(object):
                 show_circle = False
 
         # For each antenna:
-        for i, antenna in enumerate(antennas):
+        for i, antenna in enumerate(self.ms.antennas):
 
             # Draw the antenna position.
             subpl.plot(theta[i], np.log(r[i]), 'ko', ms=5, mfc='k')
     
             # Draw label for the antenna.
-            subpl.text(theta[i], np.log(r[i]), ' '+antenna.name, size=8,
+            subpl.text(theta[i], np.log(r[i]), '   '+antenna.name, size=8,
                        color='k', ha='left', va='bottom', weight='bold')
     
             # Create label for legend
@@ -754,7 +767,7 @@ class PlotAntsChart(object):
 
             # Draw a key in the legend for finding the antenna.
             subpl.annotate(label, xy=(0.5, 0.5),
-                           xytext=(0.02, 0.925-0.90*i/len(antennas)),
+                           xytext=(0.02, 0.925-0.90*i/len(self.ms.antennas)),
                            xycoords='figure fraction',
                            textcoords='figure fraction', weight='bold',
                            arrowprops=None, color='black', ha='left',
