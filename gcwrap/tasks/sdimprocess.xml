@@ -59,7 +59,7 @@ the scanning effect.
     </param>
 
     <param type="any" name="direction" subparam="true">
-        <description>scan direction of each image in unit of degree</description>
+        <description>scan direction (p.a.) counterclockwise from the horizontal axis in unit of degree</description>
         <any type="variant" limittype="double doubleArray"/>
         <value type="doubleArray"></value>
     </param>
@@ -120,7 +120,8 @@ mode -- image processing mode
                  'press' (Pressed-out method)
         default: 'basket'
     &gt;&gt;&gt;mode expandable parameter
-        direction -- scan direction of each input image in unit of degree
+        direction -- scan direction (p.a.) counterclockwise from the 
+                     horizontal axis in unit of degree.
                 default: []
                 example: direction=[0.0, 90.0] means that the first image
                          has scan direction along longitude axis while the
@@ -188,11 +189,11 @@ provided as float value, its unit is assumed to 'arcsec'. It is also
 possible to set the beamsize as string consisting of the numerical 
 value and the unit. The smoothsize must be float value.
 
-The infiles only allows an image data (CASA or FITS), and not does
-not work with MS or Scantable. The direction is an angle with respect 
-to the horizontal direction, and its unit is degree. Any value may be 
-interpreted properly, but the value ranging from 0.0 to 180.0 will be 
-secure. The tmax and the tmin is used to specify a threshold that 
+The infiles only allows an image data (CASA or FITS), and does not 
+work with MS or Scantable. The direction is an angle with respect to 
+the horizontal direction, and its unit is degree. Any value may be 
+interpreted properly, but the value ranging from 0.0 to 180.0 will 
+be secure. The tmax and the tmin is used to specify a threshold that 
 defines a range of spectral values used for processing. The data point 
 that has the value larger than tmax or smaller than tmin will be 
 excluded from the processing. The default (0.0) is no threshold. 
