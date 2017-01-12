@@ -566,14 +566,9 @@ Fit line profile to selected spectra and obtain the best-fit parameter values
       <value></value>
     </param>
 
-    <param type="bool" name="timeaverage">
-        <description>Average data in time.</description>
-        <value>false</value>
-    </param>
-
     <param type="string" name="timebin">
         <description>Bin width for time averaging.</description>     
-        <value>0s</value>
+        <value></value>
     </param>
     
     <param type="string" name="timespan">

@@ -65,14 +65,9 @@ or sdreduce.
         <value></value>
     </param>
 
-    <param type="bool" name="timeaverage">
-        <description>average data over time</description>
-        <value>False</value>
-    </param>
-
-    <param type="string" name="timebin" subparam="true">
+    <param type="string" name="timebin">
         <description>bin width for time averaging</description>
-        <value type="string">0s</value>
+        <value type="string"></value>
     </param>
     
     <param type="string" name="timespan" subparam="true">
@@ -154,12 +149,10 @@ or sdreduce.
     </param>
 
     <constraints>
-            <when param="timeaverage">
-                <equals type="bool" value="False"/>
-                <equals type="bool" value="True">
-                        <default param="timebin"><value type="string">0s</value></default>
+            <when param="timebin">
+                <notequals type="string" value="">
                         <default param="timespan"><value type="string"></value></default>
-                </equals>
+                </notequals>
             </when>
             <when param="polaverage">
                 <equals type="bool" value="False"/>
@@ -241,11 +234,10 @@ intent -- select data by observational intent, also referred to as 'scan intent'
         default: '' (use all scan intents)
         example: intent='*ON_SOURCE*' (any valid scan-intent expression accepted by the MSSelection module can be specified)
         this selection is in addition to the other selections to data
-timeaverage -- average data over time
-        default: False
-    &gt;&gt;&gt; timeaverage expandable parameters
-        timebin -- bin width for time averaging. it must be a positive value.
-                default: '0s'
+timebin -- bin width for time averaging. it must be a positive value.
+        default: '' (no time averaging)
+        example: timebin='1s' (time averaging performed over 1 second bins)
+    &gt;&gt;&gt; timebin expandable parameters
         timespan -- span the timebin across \'scan\', \'state\', \'field\', or a combination of them (e.g., \'scan,state\')
                 default: '' (average each scan, intent and field separately)
                 example: 'scan' time averaging is done across scan ID boundaries
