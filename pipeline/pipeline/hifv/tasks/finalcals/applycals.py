@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
 import os
+import types
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
+
 
 from pipeline.hifv.tasks.flagging.uncalspw import Uncalspw
 
@@ -32,7 +34,7 @@ class ApplycalsResults(basetask.Results):
         :param applied: caltables applied by this task
         :type applied: list of :class: ~pipeline.domain.caltable.CalibrationTable
         """
-        super(ApplycalResults, self).__init__()
+        super(ApplycalsResults, self).__init__()
         self.applied = set()
         self.applied.update(applied)
         
