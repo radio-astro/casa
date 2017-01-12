@@ -13,7 +13,7 @@ for k in range(len(a)):
 gl=sys._getframe(stacklevel).f_globals
 
 def description():
-    return "test casapy coordsys tool"
+    return "test asap freuqency switch calibration and wide field single dish imaging"
 
 def data():
     ### return the data files that is needed by the regression script

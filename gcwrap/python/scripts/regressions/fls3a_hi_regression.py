@@ -10,6 +10,10 @@
 import time
 import os
 
+from taskinit import gentools
+
+(myim, myia) = gentools(['im', 'ia'])
+
 os.system('rm -rf FLS3a_HI.image FLS3a_HI.asap FLS3b_HI.asap FLS3a_calfs')
 
 casapath=os.environ['CASAPATH'].split()[0]
@@ -59,7 +63,7 @@ print '--Import--'
 storage_sav=sd.rcParams['scantable.storage']
 sd.rc('scantable',storage='disk')		# Note this enables handling of large datasets with limited memory
 #s=sd.scantable('FLS3_all_newcal_SP',false)	# the 'false' indicates that no averaging should be done - this is
-s=sd.scantable(datapath,average=false,getpt=false)	# the 'false' indicates that no averaging should be done - this is
+s=sd.scantable(datapath,average=False,getpt=False)	# the 'false' indicates that no averaging should be done - this is
 						# always the case for data that hasn't been calibrated
 importproc=time.clock()
 importtime=time.time()
@@ -93,21 +97,21 @@ savetime=time.time()
 
 print '--Image data--'
 #CASA									#AIPS++
-im.open('FLS3a_calfs')			#set the data			# myim:=imager('FLS3a_calfs_v4')
-im.selectvis(nchan=901,start=30,step=1,	#choose a subset of the dataa   # myim.setdata(mode='channel',start=30,
+myim.open('FLS3a_calfs')			#set the data			# myim:=imager('FLS3a_calfs_v4')
+myim.selectvis(nchan=901,start=30,step=1,	#choose a subset of the dataa   # myim.setdata(mode='channel',start=30,
 spw=0,field=0)							# step=1,nchan=901,fieldid=1,spwid=1)
 dir='J2000 17:18:29 +59.31.23'		#set map center			# dir=dm.direction('17h18m29s','+59d31m23s')
-im.defineimage(nx=150,cellx='1.5arcmin',#define image parameters	# myim.setimage(150,150,cellx='1.5arcmin',
+myim.defineimage(nx=150,cellx='1.5arcmin',#define image parameters	# myim.setimage(150,150,cellx='1.5arcmin',
 phasecenter=dir,mode='channel',start=30, 				# celly='1.5arcmin',mode='channel',nchan=901,
 nchan=901,step=1,spw=0)							# start=30,step=1,phasecenter=dir,doshift=T,
 									# spwid=1)
 # choose SD gridding, gridding cache size
-im.setoptions(ftmachine='sd',cache=1000000000) 				# myim.setoptions(ftmachine='sd',gridfunction='SF')
-im.setsdoptions(convsupport=4)						# myim.setsdoptions(convsupport=supportsize)
+myim.setoptions(ftmachine='sd',cache=1000000000) 				# myim.setoptions(ftmachine='sd',gridfunction='SF')
+myim.setsdoptions(convsupport=4)						# myim.setsdoptions(convsupport=supportsize)
 #make the image
-im.makeimage(type='singledish',image='FLS3a_HI.image')			# myim.makeimage(image='test.image',type='singledish')
+myim.makeimage(type='singledish',image='FLS3a_HI.image')			# myim.makeimage(image='test.image',type='singledish')
 imagetime=time.time()
-im.close()								# myim.close()
+myim.close()								# myim.close()
 #ia.open('test.image')							# ia:=image('test.image')
 #ia.setbrightnessunit('K')						# ia.setbrightnessunit('K')
 #ia.close()								# ia.close()
@@ -121,11 +125,11 @@ endTime = imagetime
 # -- end of FLS3 HI script
 #
 # Regression
-ia.open('FLS3a_HI.image')
-statistics=ia.statistics(list=True, verbose=True)
+myia.open('FLS3a_HI.image')
+statistics=myia.statistics(list=True, verbose=True)
 thistest_immax=statistics['max'][0]
 thistest_imrms=statistics['rms'][0]
-ia.close()
+myia.close()
 
 #
 #hi_max=25.577
