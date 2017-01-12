@@ -2,6 +2,7 @@
 # Regression Script for simdata2 of a 3d cube #
 
 import os, time
+import pylab as pl
 
 # Clear out results from previous runs.
 #os.system('rm -rf testcube2 tc2*')
@@ -11,8 +12,8 @@ startProc = time.clock()
 
 print '--Running simdata of test cube--'
 # configs are in the repository
-l=locals() 
-if not l.has_key("repodir"): 
+l=locals()
+if not l.has_key("repodir"):
     repodir=os.getenv("CASAPATH").split(' ')[0]
 
 print 'I think the data repository is at '+repodir
@@ -31,9 +32,9 @@ project="tc2"
 skymodel="testcube2"
 inbright=".1"
 indirection="J2000 19h00m00s -40d00m00s"
-incell="0.2arcsec" 
-incenter="350GHz"   
-inwidth="0.5MHz" 
+incell="0.2arcsec"
+incenter="350GHz"
+inwidth="0.5MHz"
 
 setpointings=False
 ptgfile=datadir+"testcube.ptg.txt"
@@ -73,7 +74,7 @@ refstats = { 'max': 2.05e-01 +  7.52e-03j,
              'sum': 1.72e+04 + -1.53e+03j,
              'std': 5.53e-02 }
 
-### tight 
+### tight
 reftol   = {'max':  5e-3,
             'min':  5e-3,
             'sum':  5e-3,
@@ -123,8 +124,8 @@ for ke in rskes:
     else:
         status=status+"%9.2e          , expected %9.2e." % (cube_stats[ke], refstats[ke])
     print >> logfile, status
-    
-    
+
+
 
 
 print >> logfile,'---'
@@ -142,7 +143,7 @@ else:
 print >> logfile, 'regression test for simdata of test cube.'
 print >>logfile,'---'
 print >>logfile,'*********************************'
-    
+
 print >>logfile,''
 print >>logfile,'********** Benchmarking **************'
 print >>logfile,''
@@ -151,7 +152,7 @@ print >>logfile,'Total CPU        time was: %8.3f s.' % (endProc - startProc)
 print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                          (endTime - startTime))
 print >>logfile,'*************************************'
-    
+
 logfile.close()
-						    
+
 print '--Finished simdata of test cube regression--'
