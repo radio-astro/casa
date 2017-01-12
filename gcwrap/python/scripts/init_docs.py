@@ -1,4 +1,5 @@
 import os
+import datetime
 import webbrowser
 import subprocess
 
@@ -20,6 +21,17 @@ def doc_fetch( ):
     if not os.path.exists(casa['dirs']['doc']):
         print ("directory %s does not exist..." % casa['dirs']['doc'])
         return False
+
+    ## rename existing directory
+    if os.path.exists(casa['dirs']['doc'] + "/casa.nrao.edu"):
+        path = casa['dirs']['doc'] + "/casa.nrao.edu"
+        now = datetime.datetime.now( ).isoformat('-')
+        os.rename(path, path + "." + now)
+
+    print "this will take some time..."
+    print "relax..."
+    print "do not hit ^C ..."
+    print "do not expect output..."
     url = "https://casa.nrao.edu/casadocs/stable"
     return subprocess.call( [ "wget", "--no-parent", "--no-check-certificate", "--html-extension", "--convert-links", "--recursive",
                               "--level=inf", "--page-requisites", "-e", "robots=off", "--wait=0", "--quota=inf", "--reject",
