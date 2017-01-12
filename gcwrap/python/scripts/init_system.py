@@ -62,6 +62,15 @@ if os.environ.has_key('CASAPATH') :
             casa['dirs']['xml'] = __casapath__ + "/xml"
         else:
             raise RuntimeError, "Unable to find the XML constraints directory in your CASAPATH"
+
+        casa['dirs']['doc'] = None
+        if os.path.exists(__casapath__ + "/share/doc"):
+            casa['dirs']['doc'] = __casapath__ + "/share/doc"
+        elif os.path.exists(__casapath__ + "/doc"):
+            casa['dirs']['doc'] = __casapath__ + "/doc"
+        elif os.path.exists(__casapath__ + "/Contents/Resources/doc"):
+            casa['dirs']['doc'] = __casapath__ + "/Contents/Resources/doc"
+
 else :
     __casapath__ = casac.__file__
     while __casapath__ and __casapath__ != "/" :
@@ -89,6 +98,14 @@ else :
             casa['dirs']['xml'] = __casapath__ + "/xml"
         else:
             raise RuntimeError, "Unable to find the XML constraints directory in your CASAPATH"
+
+        casa['dirs']['doc'] = None
+        if os.path.exists(__casapath__ + "/share/doc"):
+            casa['dirs']['doc'] = __casapath__ + "/share/doc"
+        elif os.path.exists(__casapath__ + "/doc"):
+            casa['dirs']['doc'] = __casapath__ + "/doc"
+        elif os.path.exists(__casapath__ + "/Contents/Resources/doc"):
+            casa['dirs']['doc'] = __casapath__ + "/Contents/Resources/doc"
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## try to set casapyinfo path...

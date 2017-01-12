@@ -37,6 +37,7 @@ scripts/init_system.py
 scripts/init_crashrpt.py
 scripts/init_mpi.py
 scripts/init_dbus.py
+scripts/init_docs.py
 scripts/init_tools.py
 scripts/init_logger.py
 scripts/init_funcs.py

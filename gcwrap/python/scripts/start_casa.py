@@ -19,6 +19,7 @@ __init_scripts = [
     "init_pipeline.py",
     "init_mpi.py",
     "init_testing.py",
+    "init_docs.py",
     "init_user_post.py",
     "init_crashrpt.py",
     "init_welcome.py",
