@@ -1,7 +1,7 @@
 #====================================================================
-#                                                                    
-# Script for simulating and imaging VLA Orion continuum mosaic       
-#                                                                    
+#
+# Script for simulating and imaging VLA Orion continuum mosaic
+#
 # Created STM 2008-11-04 from SMA mosaic simulation
 # Updated STM 2008-11-06 formatting improvements
 # Updated STM 2008-11-19 Patch3 final version 640x640
@@ -15,19 +15,19 @@
 #         RI  2012-01-15 prefer pickle in DATADIR/regressions/ if exists
 #
 # Simulates point sources and cleans
-#                                                                       
-# Script Notes:                                                         
+#
+# Script Notes:
 #    o Starts with a template MS <templatems> which must be present
 #      (set <templatems> to point to this)
-#    o The results are written out as a dictionary in a pickle file     
-#         <scriptprefix>.regression.<datestring>.pickle           
-#      as well as in a text file                                        
-#         out.<scriptprefix>.<datestring>.log                         
-#      (these are not auto-deleted at start of script)                  
+#    o The results are written out as a dictionary in a pickle file
+#         <scriptprefix>.regression.<datestring>.pickle
+#      as well as in a text file
+#         out.<scriptprefix>.<datestring>.log
+#      (these are not auto-deleted at start of script)
 #    o If you want to show regression differences from a previous
-#      run then you can provide a file from a previous run   
+#      run then you can provide a file from a previous run
 #         <scriptprefix>.pickle
-#                                                                       
+#
 #====================================================================
 # IMPORTANT: VERSIONING HERE
 #====================================================================
@@ -98,7 +98,7 @@ else:
             os.system('curl '+webms+' -f -o '+msname+'.tgz')
             # NOTE: could also use wget
             #os.system('wget '+webms)
-        
+
         print '--Unpacking tarball '
         os.system('tar xzf '+msname+'.tgz')
         if os.access(msname,F_OK):
@@ -185,7 +185,7 @@ complist = {}
 complist['A'] = {}
 complist['A']['rf'] = 'J2000'
 complist['A']['RA'] = '05:35:22.024'
-complist['A']['Dec'] = '-05.24.14.789' 
+complist['A']['Dec'] = '-05.24.14.789'
 complist['A']['flux'] = myflux
 
 # Comp B is in center of field 6 (phs center), at 96% of peak .flux
@@ -274,7 +274,7 @@ print "Copying "+templatems+" to "+msfile
 os.system('cp -rf '+templatems+' '+msfile)
 
 sm.openfromms(msfile)
-sm.setvp(dovp=T, usedefaultvp=T, dosquint=F)
+sm.setvp(dovp=True, usedefaultvp=True, dosquint=False)
 
 #Add components
 sm.predict(complist=clfile)
@@ -282,7 +282,7 @@ sm.predict(complist=clfile)
 #Add noise if desired
 if mynoise!="":
     print 'Adding noise '+mynoise
-    sm.setvp(dovp=F)
+    sm.setvp(dovp=False)
     sm.setnoise(mode='simplenoise',simplenoise=mynoise)
     sm.corrupt()
 
@@ -294,58 +294,58 @@ listobs(msfile)
 
 #====================================================================
 #DS9 shape files for viewer
-#j2000; text 05:35:07.42 -05:25:36.07 # text={2} color=blue   
-#j2000; text 05:35:17.42 -05:25:36.79 # text={3} color=blue   
-#j2000; text 05:35:27.42 -05:25:37.52 # text={4} color=blue   
-#j2000; text 05:35:27.47 -05:23:07.52 # text={5} color=blue   
-#j2000; text 05:35:17.47 -05:23:06.79 # text={6} color=blue   
-#j2000; text 05:35:07.47 -05:23:06.07 # text={7} color=blue   
-#j2000; text 05:35:07.52 -05:20:36.07 # text={8} color=blue   
-#j2000; text 05:35:17.52 -05:20:36.80 # text={9} color=blue   
-#j2000; text 05:35:27.52 -05:20:37.52 # text={10} color=blue   
-#j2000; text 05:35:32.61 -05:16:07.88 # text={11} color=blue   
-# 
+#j2000; text 05:35:07.42 -05:25:36.07 # text={2} color=blue
+#j2000; text 05:35:17.42 -05:25:36.79 # text={3} color=blue
+#j2000; text 05:35:27.42 -05:25:37.52 # text={4} color=blue
+#j2000; text 05:35:27.47 -05:23:07.52 # text={5} color=blue
+#j2000; text 05:35:17.47 -05:23:06.79 # text={6} color=blue
+#j2000; text 05:35:07.47 -05:23:06.07 # text={7} color=blue
+#j2000; text 05:35:07.52 -05:20:36.07 # text={8} color=blue
+#j2000; text 05:35:17.52 -05:20:36.80 # text={9} color=blue
+#j2000; text 05:35:27.52 -05:20:37.52 # text={10} color=blue
+#j2000; text 05:35:32.61 -05:16:07.88 # text={11} color=blue
+#
 # From listobs:
 #    Fields: 12
-# 	  ID   Code Name          Right Ascension  Declination   Epoch   
-# 	  0    A    0518+165      05:21:09.89      +16.38.22.04  J2000   
-# 	  1    A    0539-057      05:41:38.09      -05.41.49.43  J2000   
-# 	  2         ORION1        05:35:07.42      -05.25.36.07  J2000   
-# 	  3         ORION2        05:35:17.42      -05.25.36.79  J2000   
-# 	  4         ORION3        05:35:27.42      -05.25.37.52  J2000   
-# 	  5         ORION4        05:35:27.47      -05.23.07.52  J2000   
-# 	  6         ORION5        05:35:17.47      -05.23.06.79  J2000   
-# 	  7         ORION6        05:35:07.47      -05.23.06.07  J2000   
-# 	  8         ORION7        05:35:07.52      -05.20.36.07  J2000   
-# 	  9         ORION8        05:35:17.52      -05.20.36.80  J2000   
-# 	  10        ORION9        05:35:27.52      -05.20.37.52  J2000   
-# 	  11        ORION10       05:35:32.61      -05.16.07.88  J2000   
+# 	  ID   Code Name          Right Ascension  Declination   Epoch
+# 	  0    A    0518+165      05:21:09.89      +16.38.22.04  J2000
+# 	  1    A    0539-057      05:41:38.09      -05.41.49.43  J2000
+# 	  2         ORION1        05:35:07.42      -05.25.36.07  J2000
+# 	  3         ORION2        05:35:17.42      -05.25.36.79  J2000
+# 	  4         ORION3        05:35:27.42      -05.25.37.52  J2000
+# 	  5         ORION4        05:35:27.47      -05.23.07.52  J2000
+# 	  6         ORION5        05:35:17.47      -05.23.06.79  J2000
+# 	  7         ORION6        05:35:07.47      -05.23.06.07  J2000
+# 	  8         ORION7        05:35:07.52      -05.20.36.07  J2000
+# 	  9         ORION8        05:35:17.52      -05.20.36.80  J2000
+# 	  10        ORION9        05:35:27.52      -05.20.37.52  J2000
+# 	  11        ORION10       05:35:32.61      -05.16.07.88  J2000
 # Spectral Windows:
 # SpwID  #Chans Frame Ch1(MHz)   ChanWid(kHz)TotBW(kHz)  Ref(MHz)   Corrs
-# 0      1 TOPO  8435.1   50000    50000       8435.1      RR  LL  RL  LR  
-# 1      1 TOPO  8485.1   50000    50000       8485.1      RR  LL  RL  LR  
+# 0      1 TOPO  8435.1   50000    50000       8435.1      RR  LL  RL  LR
+# 1      1 TOPO  8485.1   50000    50000       8485.1      RR  LL  RL  LR
 #====================================================================
 
 sim1time=time.time()
 
 #====================================================================
-#  Some details about the mosaic (from old aips++ glish script): 
-#    primary beam at X-band = 5.4', 
+#  Some details about the mosaic (from old aips++ glish script):
+#    primary beam at X-band = 5.4',
 #    mosaic field spacing = 2.5'
 #    total mosaic size = approx. 9.5' = 570"
 #    synthesized beam size = 8.4" in D config at 3.6 cm, 8.3 GHz
 #    cell size = 2" and nx,ny = 300 (600" field size)
 #    phase center = center field: J2000 05:35:17.470, -005.23.06.790
-#    NOTE: field 10 is outside of the 9 point primary mosaic (sitting 
-#     on M43 -- but the flux is resolved out so there is no use to 
-#     add it to the mosaic.  The script below leaves it out.  
+#    NOTE: field 10 is outside of the 9 point primary mosaic (sitting
+#     on M43 -- but the flux is resolved out so there is no use to
+#     add it to the mosaic.  The script below leaves it out.
 #====================================================================
 # Clean
 print "Preparing to image data"
 
 # Set up clean boxes
 clnbox = []
-for comp in compnames: 
+for comp in compnames:
     clnbox.append(complist[comp]['clnbox'])
 
 print ""
@@ -372,7 +372,7 @@ scaletype          =  "SAULT"
 flatnoise           =  False
 multiscale         =  []
 negcomponent       =  -1
-interactive        =  F
+interactive        =  False
 mask               =  []
 nchan              =  1
 start              =  0
@@ -401,7 +401,7 @@ cyclespeedup       =  -1
 print "Will be mosaicing using phasecenter "+phasecenter
 
 print "First make dirty image"
-pbcor              =  T
+pbcor              =  True
 dirtimag = prefix + ".dirty"
 imagename          =  dirtimag
 niter              =  0
@@ -419,7 +419,7 @@ else:
 
 #Clean image
 contimag = prefix + ".clean"
-pbcor              =  F
+pbcor              =  False
 imagename          =  contimag
 niter              =  myniter
 print "Now actually clean the image using niter = "+str(niter)
@@ -437,9 +437,9 @@ clean1time=time.time()
 #      niter=100,gain=0.1,threshold=0.0,
 #      psfmode='clark',imagermode='mosaic',scaletype='SAULT',
 #      mask='g19_d2usb_cont.model.mask',
-#      interactive=F,imsize=400,cell="0.5arcsec",
+#      interactive=False,imsize=400,cell="0.5arcsec",
 #      phasecenter="J2000 18h25m56.09 -12d04m28.20",
-#      pbcor=T,minpb=0.15)
+#      pbcor=True,minpb=0.15)
 
 dirimage = dirtimag+'.image'
 clnimage = contimag+'.image'
@@ -613,7 +613,7 @@ def lprint(msg, lfile):
     """
     print msg
     print >> logfile, msg
-    
+
 lprint('Running '+myvers+' on host '+myhost, logfile)
 lprint('  at '+datestring, logfile)
 lprint('  using '+mypath, logfile)
@@ -747,7 +747,7 @@ new_regression['compstats'] = complist
 compresults = {}
 for comp in compnames:
     compresults[comp] = {}
-    
+
     xstat_dirimg = complist[comp]['dirtystat']
     xstat_img = complist[comp]['imstat']
     if myflux!=0.0:
@@ -764,7 +764,7 @@ for comp in compnames:
     compresults[comp]['dirty_image_max']['value'] = xstat_dirimg['max'][0]
     compresults[comp]['dirty_image_max']['op'] = op
     compresults[comp]['dirty_image_max']['tol'] = tol
-    
+
     op = 'diff'
     tol = 0.5
     compresults[comp]['dirty_image_maxposx'] = {}
@@ -772,13 +772,13 @@ for comp in compnames:
     compresults[comp]['dirty_image_maxposx']['value'] = xstat_dirimg['maxpos'][0]
     compresults[comp]['dirty_image_maxposx']['op'] = op
     compresults[comp]['dirty_image_maxposx']['tol'] = tol
-    
+
     compresults[comp]['dirty_image_maxposy'] = {}
     compresults[comp]['dirty_image_maxposy']['name'] = 'Dirty image max pos y'
     compresults[comp]['dirty_image_maxposy']['value'] = xstat_dirimg['maxpos'][1]
     compresults[comp]['dirty_image_maxposy']['op'] = op
     compresults[comp]['dirty_image_maxposy']['tol'] = tol
-    
+
     op = 'divf'
     tol = 0.08
     compresults[comp]['clean_image_max'] = {}
@@ -794,13 +794,13 @@ for comp in compnames:
     compresults[comp]['clean_image_maxposx']['value'] = xstat_img['maxpos'][0]
     compresults[comp]['clean_image_maxposx']['op'] = op
     compresults[comp]['clean_image_maxposx']['tol'] = tol
-    
+
     compresults[comp]['clean_image_maxposy'] = {}
     compresults[comp]['clean_image_maxposy']['name'] = 'Restored image max pos y'
     compresults[comp]['clean_image_maxposy']['value'] = xstat_img['maxpos'][1]
     compresults[comp]['clean_image_maxposy']['op'] = op
     compresults[comp]['clean_image_maxposy']['tol'] = tol
-    
+
     op = 'divf'
     tol = 0.08
     compresults[comp]['residual_image_max'] = {}
@@ -808,7 +808,7 @@ for comp in compnames:
     compresults[comp]['residual_image_max']['value'] = xstat_res['max'][0]
     compresults[comp]['residual_image_max']['op'] = op
     compresults[comp]['residual_image_max']['tol'] = tol
-    
+
     compresults[comp]['residual_image_rms'] = {}
     compresults[comp]['residual_image_rms']['name'] = 'Residual image rms'
     compresults[comp]['residual_image_rms']['value'] = xstat_res['sigma'][0]
@@ -821,13 +821,13 @@ for comp in compnames:
         compresults[comp]['model_image_sum']['value'] = xstat_mod['sum'][0]
         compresults[comp]['model_image_sum']['op'] = op
         compresults[comp]['model_image_sum']['tol'] = tol
-        
+
         compresults[comp]['pbmodel_image_sum'] = {}
         compresults[comp]['pbmodel_image_sum']['name'] = 'PBCOR Model image flux'
         compresults[comp]['pbmodel_image_sum']['value'] = xstat_pbmod['sum'][0]
         compresults[comp]['pbmodel_image_sum']['op'] = op
         compresults[comp]['pbmodel_image_sum']['tol'] = tol
-        
+
         compresults[comp]['sim_comp_flux'] = {}
         compresults[comp]['sim_comp_flux']['name'] = 'Simulated comp flux'
         compresults[comp]['sim_comp_flux']['value'] = complist[comp]['flux']
@@ -841,7 +841,7 @@ for comp in compnames:
         compresults[comp]['sim_comp_posx']['value'] = complist[comp]['xpix']
         compresults[comp]['sim_comp_posx']['op'] = op
         compresults[comp]['sim_comp_posx']['tol'] = tol
-    
+
         compresults[comp]['sim_comp_posy'] = {}
         compresults[comp]['sim_comp_posy']['name'] = 'Simulated comp pos y'
         compresults[comp]['sim_comp_posy']['value'] = complist[comp]['ypix']
@@ -950,7 +950,7 @@ else:
                   'clean_imageall_max','clean_imageall_rms','clean_imageoff_rms',
                   'clean_residall_max','clean_residall_rms','clean_residoff_rms',
                   'flux_area']
-    
+
     compreslist = ['dirty_image_max','dirty_image_maxposx','dirty_image_maxposy',
                    'clean_image_max','clean_image_maxposx','clean_image_maxposy',
                    'residual_image_max','residual_image_rms']
@@ -966,7 +966,7 @@ if regression['exist']:
     lprint("  Regression from version " + regression['version'] + " on " +
            regression['date'], logfile)
     lprint("  Regression platform " + regression['host'] + " using " +
-           regression['aipspath'], logfile)    
+           regression['aipspath'], logfile)
     final_status = 'Passed'
 else:
     # Just print results
@@ -983,18 +983,18 @@ for comp in compnames:
     if regression['exist']:
         # Set up storage for regression results
         testcompresults[comp] = {}
-        
+
     for keys in compreslist:
         res = compresults[comp][keys]
         new_val = res['value']
-        
+
         if regression['exist']:
             testcompresults[comp][keys] = {}
             testres = {}
             testres['value'] = new_val
             testres['op'] = res['op']
             testres['tol'] = res['tol']
-            
+
             if prev_compresults.has_key(comp):
                 # This is a known comp
                 if prev_compresults[comp].has_key(keys):
@@ -1005,37 +1005,37 @@ for comp in compnames:
                         new_diff = (new_val - prev_val)/prev_val
                     else:
                         new_diff = new_val - prev_val
-                        
+
                     if abs(new_diff) > res['tol']:
                         new_status = 'Failed'
                     else:
                         new_status = 'Passed'
-                        
+
                     testres['prev'] = prev_val
                     testres['diff'] = new_diff
                     testres['status'] = new_status
                     testres['test'] = 'Last'
-                    
+
                 else:
                     # Unknown regression key
                     testres['prev'] = 0.0
                     testres['diff'] = 1.0
                     testres['status'] = 'Missed'
                     testres['test'] = 'none'
-                    
+
             else:
                 # Unknown regression comp
                 testres['prev'] = 0.0
                 testres['diff'] = 1.0
                 testres['status'] = 'Unknown'
                 testres['test'] = 'none'
-                
+
             # Save results
             testcompresults[comp][keys] = testres
-                            
+
             if testres['status']=='Failed':
                 final_status = 'Failed'
-                
+
             # Print results
             lprint('--%30s : %12.6f was %12.6f %4s %12.6f (%6s) %s ' % (res['name'],
                                                                        testres['value'],
@@ -1048,7 +1048,7 @@ for comp in compnames:
         else:
             # Just print results
             lprint('--%30s : %12.6f ' % ( res['name'], res['value'] ), logfile)
-            
+
 # Do the overall results
 lprint("", logfile)
 lprint(" Whole image :", logfile)
@@ -1062,7 +1062,7 @@ for keys in resultlist:
         testres['value'] = new_val
         testres['op'] = res['op']
         testres['tol'] = res['tol']
-    
+
         # Compute regression results
         if prev_results.has_key(keys):
             # This is a known regression key
@@ -1072,12 +1072,12 @@ for keys in resultlist:
                 new_diff = (new_val - prev_val)/prev_val
             else:
                 new_diff = new_val - prev_val
-            
+
             if abs(new_diff)>res['tol']:
                 new_status = 'Failed'
             else:
                 new_status = 'Passed'
-            
+
             testres['prev'] = prev_val
             testres['diff'] = new_diff
             testres['status'] = new_status
@@ -1107,9 +1107,9 @@ for keys in resultlist:
     else:
         # Just print the current results
         lprint('--%30s : %12.6f ' % ( res['name'], res['value'] ), logfile)
-    
+
 # Done
-                    
+
 if regression['exist']:
     # Final regression status
     if (final_status == 'Passed'):
@@ -1123,7 +1123,7 @@ if regression['exist']:
     else:
         regstate=False
         lprint('----FAILED Regression test for ' + mydataset, logfile)
-        
+
     # Write these regression test results to the dictionary
     new_regression['testresults'] = testresults
     new_regression['testcompresults'] = testcompresults
