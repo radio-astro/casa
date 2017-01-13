@@ -3,6 +3,9 @@ import string
 from taskinit import *
 import pylab as pl
 
+mycp=cptool()
+mytp=tptool()
+
 from parameter_check import *
 
 def plotcal(caltable=None,xaxis=None,yaxis=None,
@@ -116,25 +119,25 @@ def plotcal(caltable=None,xaxis=None,yaxis=None,
 	poln=string.upper(poln)
 	try:
 		# Turn the display of the plot GUI on or off
-		tp.setgui( showgui );
+		mytp.setgui( showgui );
 
                 if ((type(caltable)==str) & (os.path.exists(caltable))):
-			cp.open(caltable)
+			mycp.open(caltable)
                 else:
                         raise Exception, 'Calibration table not found - please verify the name'
 
 		# If the user wants the plot window cleared then clear it.
 		#if ( clearpanel.lower()=='current' ) :
-		#	cp.clearplot( subplot=subplot );
+		#	mycp.clearplot( subplot=subplot );
 		#elif ( clearpanel.lower()=='all' ) :
-		#	cp.clearplot(); #RI
+		#	mycp.clearplot(); #RI
 		##if clearpanel.lower()>0: #DP 
-			##cp.clearplot(0) #DP
+			##mycp.clearplot(0) #DP
 			#pl.ion()
-			#tp.clearplot(0,0,0)
+			#mytp.clearplot(0,0,0)
 		
-		cp.selectcal(antenna=antenna,field=field,spw=spw,time=timerange,poln=poln)
-		cp.plotoptions(subplot=subplot,
+		mycp.selectcal(antenna=antenna,field=field,spw=spw,time=timerange,poln=poln)
+		mycp.plotoptions(subplot=subplot,
 			       overplot=overplot,
 			       iteration=iteration,
 			       plotrange=plotrange,
@@ -143,14 +146,14 @@ def plotcal(caltable=None,xaxis=None,yaxis=None,
 			       plotcolor=plotcolor,
 			       markersize=markersize,
 			       fontsize=fontsize)
-		cp.plot(xaxis,yaxis)
+		mycp.plot(xaxis,yaxis)
               
                 if (showgui):
                    pl.gcf().show()
 
 		if ( len(figfile) > 0 ) :
-			cp.savefig( figfile ); 
+			mycp.savefig( figfile ); 
 
 	except Exception, instance:
 		print '*** Error ***',instance
-		cp.close()
+		mycp.close()

@@ -442,7 +442,7 @@ bandpass()
 # channels 6-56 (out of 0-62) are the best
 
 # add this to the callibrary
-c.add(caltable=btable,tinterp='nearest',calwt=T)
+c.add(caltable=btable,tinterp='nearest',calwt=True)
 c.write(callibfile)
 
 # bandpass calibration completion time
@@ -491,7 +491,7 @@ minsnr = 1.0
 refant = '15'
 
 # Turn on cal library apply
-docallib=T
+docallib=True
 callib=callibfile
 
 gaincal()
@@ -511,8 +511,8 @@ gaincal()
 
 
 # add this gain result to the callibrary
-c.add(caltable=gtable,field='0',fldmap=[0],tinterp='nearest',calwt=T)
-c.add(caltable=gtable,field='1,2',fldmap='1',tinterp='linear',calwt=T)
+c.add(caltable=gtable,field='0',fldmap=[0],tinterp='nearest',calwt=True)
+c.add(caltable=gtable,field='1,2',fldmap='1',tinterp='linear',calwt=True)
 c.write(callibfile)
 
 
@@ -605,7 +605,7 @@ fluxscale()
 
 # Add this to the cal library
 
-c.add(caltable=ftable,fldmap='nearest',tinterp='nearest',calwt=T)
+c.add(caltable=ftable,fldmap='nearest',tinterp='nearest',calwt=True)
 c.write(callibfile)
 
 # Record fluxscale completion time
@@ -634,7 +634,7 @@ selectdata = False
 field = ''
 
 # Turn on the cal library
-docallib=T
+docallib=True
 callib=callibfile
 
 applycal()

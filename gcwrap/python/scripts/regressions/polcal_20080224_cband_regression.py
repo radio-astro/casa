@@ -16,6 +16,7 @@
 import time
 import os
 import pickle
+import pylab as pl
 
 pathname=os.environ.get('CASAPATH').split()[0]
 
