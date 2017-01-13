@@ -57,8 +57,10 @@ class CheckProductSizeHeuristics(object):
             LOG.error('Cannot determine any default imaging targets')
             return {}, 0.0, 0.0, True, {'longmsg': 'Cannot determine any default imaging targets', 'shortmsg': 'Cannot determine targets'}
 
-        # Get product sizes
+        # Get original maximum cube and product sizes
         maxcubesize, productsize = self.calculate_sizes(imlist)
+        original_maxcubesize = maxcubesize
+        original_productsize = productsize
         LOG.info('Default imaging leads to a maximum cube size of %s GB and a product size of %s GB' % (maxcubesize, productsize))
         LOG.info('Allowed maximum cube size: %s GB. Allowed maximum product size: %s GB.' % (self.inputs.maxcubesize, self.inputs.maxproductsize))
 
@@ -130,8 +132,8 @@ class CheckProductSizeHeuristics(object):
         if maxcubesize > self.inputs.maxcubesize:
             LOG.error('Maximum cube size cannot be mitigated. Remaining factor: %.4f' % (maxcubesize / self.inputs.maxcubesize))
             return size_mitigation_parameters, \
-                   maxcubesize, \
-                   productsize, \
+                   original_maxcubesize, original_productsize, \
+                   maxcubesize, productsize, \
                    True, \
                    {'longmsg': 'Maximum cube size cannot be mitigated. Remaining factor: %.4f' % (maxcubesize / self.inputs.maxcubesize), \
                     'shortmsg': 'Cube size mitigation error'}
@@ -142,6 +144,7 @@ class CheckProductSizeHeuristics(object):
             if productsize / self.inputs.maxproductsize / len(fields) > 1:
                 LOG.error('Product size cannot be mitigated. Remaining factor: %.4f.' % (productsize / self.inputs.maxproductsize / len(fields)))
                 return size_mitigation_parameters, \
+                       original_maxcubesize, original_productsize, \
                        maxcubesize, productsize, \
                        True, \
                        {'longmsg': 'Product size cannot be mitigated. Remaining factor: %.4f.' % (productsize / self.inputs.maxproductsize / len(fields)), \
@@ -160,12 +163,14 @@ class CheckProductSizeHeuristics(object):
 
         if size_mitigation_parameters != {}:
             return size_mitigation_parameters, \
+                   original_maxcubesize, original_productsize, \
                    maxcubesize, productsize, \
                    False, \
                    {'longmsg': 'Size had to be mitigated', \
                     'shortmsg': 'Size was mitigated'}
         else:
             return size_mitigation_parameters, \
+                   original_maxcubesize, original_productsize, \
                    maxcubesize, productsize, \
                    False, \
                    {'longmsg': 'No size mitigation needed', \
