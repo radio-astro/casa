@@ -242,6 +242,7 @@ public:
 
 
   // Local setApply
+  using SolvableVisCal::setApply;
   virtual void setApply(const casacore::Record& apply);
 
   // In general, we are freq-dep
