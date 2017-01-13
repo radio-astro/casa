@@ -23,7 +23,10 @@ image = casac.image()
 quantity=casac.quanta()
 
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
+TESTS_DIR = AIPS_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
+stack_frame_find()['TESTS_DIR']=TESTS_DIR
 
+#print 'KEYS of stack frame', stack_frame_find().keys()
 print "PYVER        - ", PYVER
 print "AIPS_DIR     - ", AIPS_DIR
 print "SCRIPT_REPOS - ", AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
