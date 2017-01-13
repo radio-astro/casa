@@ -14,7 +14,7 @@ import pdb
 import traceback
 import re
 import cProfile
-from casa_stack_manip import stack_find, find_casa
+from casa_stack_manip import *
 
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 

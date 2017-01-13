@@ -4,7 +4,7 @@ import sys
 import getopt
 import shutil
 import traceback
-from casa_stack_manip import stack_frame_find
+from casa_stack_manip import *
 from publish_summary import runTest
 
 ## flush output
