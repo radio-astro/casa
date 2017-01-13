@@ -30,19 +30,25 @@ $(document).ready(function() {
     <p>There are no product size check results.
 % else:
     <%
-    allowedcubesize = '%.3g GB' % (result[0].allowedcubesize)
-    maxcubesize = '%.3g GB' % (result[0].maxcubesize)
-    allowedproductsize = '%.3g GB' % (result[0].allowedproductsize)
-    productsize = '%.3g GB' % (result[0].productsize)
+    allowed_maxcubesize = '%.3g GB' % (result[0].allowed_maxcubesize)
+    original_maxcubesize = '%.3g GB' % (result[0].original_maxcubesize)
+    mitigated_maxcubesize = '%.3g GB' % (result[0].mitigated_maxcubesize)
+    allowed_productsize = '%.3g GB' % (result[0].allowed_productsize)
+    original_productsize = '%.3g GB' % (result[0].original_productsize)
+    mitigated_productsize = '%.3g GB' % (result[0].mitigated_productsize)
     %>
     <p>
-    Allowed maximum cube size: ${allowedcubesize}
+    Allowed maximum cube size: ${allowed_maxcubesize}
     <br>
-    Actual maximum cube size: ${maxcubesize}
+    Predicted maximum cube size: ${original_maxcubesize}
     <br>
-    Allowed product size: ${allowedproductsize}
+    Mitigated maximum cube size: ${mitigated_maxcubesize}
     <br>
-    Actual product size: ${productsize}
+    Allowed product size: ${allowed_productsize}
+    <br>
+    Predicted product size: ${original_productsize}
+    <br>
+    Mitigated product size: ${mitigated_productsize}
     <p>
     Size mitigation parameters for subsequent hif_makeimlist calls
     <table class="table">
