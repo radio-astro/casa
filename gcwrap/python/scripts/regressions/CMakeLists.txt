@@ -90,4 +90,5 @@ casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
   testcube2_regression.py
   testcompsim.py
   pipelineTest_regression.py
+  time_then_chan_avg.py
 )

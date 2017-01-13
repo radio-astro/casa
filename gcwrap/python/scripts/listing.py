@@ -131,7 +131,7 @@ def diffMetadata(testOut, standardOut, prefix=""):
     
     # else... do the rest
     print "  - Writing differences to ", diffOut
-    
+    temp = sys.stdout
     sys.stdout = open(diffOut,'w') # redirect stdout
     printDiff('','',[standardOut,testOut]) # Print some header info
 
@@ -160,8 +160,9 @@ def diffMetadata(testOut, standardOut, prefix=""):
     print " %10i = Total number of lines with non-float differences" % countDiff 
 
     # Restore stdout
-    sys.stdout = sys.__stdout__
-    
+    #sys.stdout = sys.__stdout__
+    sys.stdout.close()
+    sys.stdout = temp
     return False
 #=============================================================================
 
@@ -178,7 +179,7 @@ def diffAmpPhsFloat(test, standard, prefix="", precision="1e-6"):
     print "  - Comparing float content of output."
     #print "  - Assuming all floats are Amplitude-Phase pairs!"
     print "  - Writing to " + floatOut
-
+    temp = sys.stdout
     sys.stdout = open(floatOut,'w')
 
     # Read in files
@@ -314,7 +315,9 @@ def diffAmpPhsFloat(test, standard, prefix="", precision="1e-6"):
     print "  %10f = Largest difference amplitude" % maxAmpDiff
 
     # Restore stdout
-    sys.stdout = sys.__stdout__
+    #sys.stdout = sys.__stdout__
+    sys.stdout.close()
+    sys.stdout = temp
     
     # cleanup
     testFile.close()
