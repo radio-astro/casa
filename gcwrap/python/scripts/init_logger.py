@@ -58,7 +58,7 @@ if casa['flags'].nogui :
     deploylogger = False
 
 ## do not start logger gui on MPI clients...
-if MPIEnvironment.is_mpi_enabled and MPIEnvironment.is_mpi_client:
+if MPIEnvironment.is_mpi_enabled and not MPIEnvironment.is_mpi_client:
     deploylogger = False
 
 if thelogfile == 'null':
