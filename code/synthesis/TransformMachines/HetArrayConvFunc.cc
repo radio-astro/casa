@@ -134,6 +134,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 
 	PBMath::whichCommonPBtoUse( telescop, freq, band, whichPB, commonPBName );
+
+	////////////////////
+	String commonpbstr;
+	PBMath::nameCommonPB(whichPB, commonpbstr);
+	//cerr << "ms " << vb.msName() << "  pb " << commonpbstr << endl;
+
+
+	////////////////
 	//Revert to using AIRY for unknown common telescope
 	if(whichPB==PBMath::UNKNOWN)
 	  pbClass_p=PBMathInterface::AIRY;
@@ -281,12 +289,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// VLA and EVLA for e.g.
 	if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(telescop+String("_")+String::toString(dishDiam(0)))){
 	  antIndexToDiamIndex_p.set(antDiam2IndexMap_p(telescop+String("_")+String::toString(dishDiam(0))));   
+	  //cerr << " 0 telescop " << telescop << " index " << antDiam2IndexMap_p(telescop+String("_")+String::toString(dishDiam(0))) << endl;
 	}
 	else{   
 	  antDiam2IndexMap_p.define(telescop+"_"+String::toString(dishDiam(0)), diamIndex);
 	  antIndexToDiamIndex_p.set(diamIndex);
 	  antMath_p.resize(diamIndex+1);
 	  antMath_p[diamIndex]=PBMath::pbMathInterfaceForCommonPB(whichPB, True);
+	  //cerr << " 1 telescop " << telescop << " index " << antDiam2IndexMap_p(telescop+String("_")+String::toString(dishDiam(0))) << endl; 
+	  
 	}
 
       }
@@ -320,7 +331,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void HetArrayConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
 					  const VisBuffer& vb,
-					  const Int& convSampling, const Vector<Double>& visFreq,
+					  const Int& convSamp, const Vector<Double>& visFreq,
 					  Array<Complex>& convFunc, 
 					  Array<Complex>& weightConvFunc, 
 					  Vector<Int>& convsize,
@@ -387,6 +398,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///// In multi ms mode ndishpair may change when meeting a new ms
     //// redo the calculation then
     if(msChanged){
+      //cerr << "ms " << vb.msName() << " spw " <<  vb.spectralWindow() << endl;
       doneMainConv_p[actualConvIndex_p]=false;
       //cerr << "invalidating doneMainConv " << endl; //<<  convFunctions_p[actualConvIndex_p]->shape()[3] << " =? " << nBeamChans << " convsupp " << convSupport_p.nelements() << endl;
     }
@@ -401,6 +413,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nx=nx_p;
     Int ny=ny_p;
     Int support=0;
+    Int convSampling=1;
     if(!doneMainConv_p[actualConvIndex_p]){
       for (uInt ii=0; ii < ndish; ++ii){
 	support=max((antMath_p[ii])->support(coords), support);
@@ -431,8 +444,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pixFieldDir(0)=pixFieldDir(0)- Double(nx / 2);
     pixFieldDir(1)=pixFieldDir(1)- Double(ny / 2);
     //phase gradient per pixel to apply
-    pixFieldDir(0)=-pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSampling);
-    pixFieldDir(1)=-pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSampling);
+    pixFieldDir(0)=-pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSamp);
+    pixFieldDir(1)=-pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSamp);
 
     
    
@@ -479,7 +492,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Double memtobeused= Double(memtot)*1024.0;
       if(memtot <= 2000000)
     	  memtobeused=0.0;
-      //cerr << "Shape " << pbShape << endl;
+      //cerr << "Shape " << pbShape << " memtobe used " << memtobeused << endl;
       TempImage<Complex> pBScreen(TiledShape(pbShape), coords, memtobeused/2.2);
       TempImage<Complex> pB2Screen(TiledShape(pbShape), coords, memtobeused/2.2);
       IPosition start(4, 0, 0, 0, 0);
@@ -618,6 +631,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  plane=plane+j;
 	  begin[4]=plane;
 	  end[4]=plane;
+	  //cerr << "ms" << vb.msName() << " spw " << vb.spectralWindow() << " k " << k << "  j  " << j << " plane " << plane << endl;
 	  Slicer slplane(begin, end, Slicer::endIsLast);
 	  //cerr <<  "SHAPES " << convFunc_p(begin, end).shape() << "  " << pBScreen.get(false).shape() << " begin and end " << begin << "    " << end << endl;
 	  //convFunc_p(begin, end).copyMatchingPart(pBScreen.get(false));
@@ -666,9 +680,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convWeights_p[actualConvIndex_p]= new Array<Complex>();
       convSupportBlock_p[actualConvIndex_p]=new Vector<Int>();
       Int newConvSize=2*(max(convSupport_p)+2)*convSampling;
+      Int newRealConvSize=newConvSize* Int(Double(convSamp)/Double(convSampling));
       Int lattSize=convFuncTemp.shape()(0);
       (*convSupportBlock_p[actualConvIndex_p])=convSupport_p;
      
+      //cerr << "convSize " << newConvSize << "  " << newRealConvSize<< " lattSize " << lattSize << endl;
+
       if(newConvSize < lattSize){
 	IPosition blc(5, (lattSize/2)-(newConvSize/2),
 		      (lattSize/2)-(newConvSize/2),0,0,0);
@@ -676,11 +693,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      (lattSize/2)+(newConvSize/2-1), nBeamPols-1, nBeamChans-1,ndishpair-1);
 	IPosition shp(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair);
 	
-	convFunctions_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair ));
-	convWeights_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair ));
-	(*convFunctions_p[actualConvIndex_p])=convFuncTemp.getSlice(blc,shp);
-	convSize_p=newConvSize;
-	(*convWeights_p[actualConvIndex_p])=weightConvFuncTemp.getSlice(blc, shp);
+	convFunctions_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newRealConvSize, newRealConvSize, nBeamPols, nBeamChans, ndishpair ));
+	convWeights_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newRealConvSize, newRealConvSize, nBeamPols, nBeamChans, ndishpair ));
+	(*convFunctions_p[actualConvIndex_p])=resample(convFuncTemp.getSlice(blc,shp), Double(convSamp)/Double(convSampling));
+	convSize_p=newRealConvSize;
+	(*convWeights_p[actualConvIndex_p])=resample(weightConvFuncTemp.getSlice(blc, shp),Double(convSamp)/Double(convSampling)) ;
 	convFunc_p.resize();
 	weightConvFunc_p.resize();
       }
@@ -709,7 +726,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makerowmap(vb, convFuncRowMap);
     ///need to deal with only the maximum of different baselines available in this
     ///vb
-    //cerr << "ms " << vb.msName() << " convFuncRowMap " << convFuncRowMap << endl;
+    //cerr << "ms " << vb.msName() << " convFuncRowMap " << convFuncRowMap[0] << endl;
     ndishpair=max(convFuncRowMap)+1;
     
     convSupportBlock_p.resize(actualConvIndex_p+1);
@@ -1209,6 +1226,80 @@ typedef unsigned long long ooLong;
     }
 
   }
+
+  Array<Complex> HetArrayConvFunc::resample(const Array<Complex>& inarray, const Double factor){
+
+    Double nx=Double(inarray.shape()(0));
+    Double ny=Double(inarray.shape()(1));
+    IPosition shp=inarray.shape();
+    shp(0)=Int(nx*factor);
+    shp(1)=Int(ny*factor);
+
+    Array<Complex> out(shp);
+    ArrayIterator<Complex> inIt(inarray, 2);
+    ArrayIterator<Complex> outIt(out, 2);
+    //for (zzz=0; zzz< shp.(4); ++zzz){
+    //  for(yyy=0; yyy< shp.(3); ++yyy){
+    // for(xxx=0; xxx< shp.(2); ++xxx){
+    while(!inIt.pastEnd()){
+      Matrix<Float> leReal=real(Matrix<Complex>(inIt.array()));
+      Matrix<Float> leImag=imag(Matrix<Complex>(inIt.array()));
+      Bool leRealCopy, leImagCopy;
+      Float *realptr=leReal.getStorage(leRealCopy);
+      Float *imagptr=leImag.getStorage(leImagCopy);
+      Bool isCopy;
+      Matrix<Complex> outMat(outIt.array());
+      Complex *intPtr=outMat.getStorage(isCopy);
+      Float realval, imagval;
+      omp_set_nested(0);
+#pragma omp parallel for default(none) private(realval, imagval) firstprivate(intPtr, realptr, imagptr, nx, ny) shared(leReal, leImag)
+      
+      for (Int k =0; k < Int(ny*factor); ++k){
+	Double y =Double(k)/factor;
+	
+	for (Int j=0; j < Int(nx*factor); ++j){
+	  //      Interpolate2D interp(Interpolate2D::LANCZOS);
+	  Double x=Double(j)/Double(factor);
+	  //interp.interp(realval, where, leReal);
+	  realval=interpLanczos(x , y, nx, ny,   
+				realptr);
+	  imagval=interpLanczos(x , y, nx, ny,   
+				imagptr);
+	  //interp.interp(imagval, where, leImag);
+	  intPtr[k*Int(nx*factor)+j]=Complex(realval, imagval);
+	}
+	
+      }
+      out.putStorage(intPtr, isCopy);
+      leReal.putStorage(realptr, leRealCopy);
+      leImag.putStorage(imagptr, leImagCopy);
+      inIt.next();
+      outIt.next();
+    }
+    return out;
+  }
+
+  Float HetArrayConvFunc::sinc(const Float x)  {
+    if (x == 0) {
+        return 1;
+    }
+    return sin(C::pi * x) / (C::pi * x);
+}
+  Float HetArrayConvFunc::interpLanczos( const Double& x , const Double& y, const Double& nx, const Double& ny,   const Float* data, const Float a){
+  Double floorx = floor(x);
+  Double floory = floor(y);
+  Float result=0.0;
+  if (floorx < a || floorx >= nx - a || floory < a || floory >= ny - a) {
+        result = 0;
+        return result;
+  }
+  for (Float i = floorx - a + 1; i <= floorx + a; ++i) {
+        for (Float j = floory - a + 1; j <= floory + a; ++j) {
+	  result += Float(Double(data[Int(j*nx+i)]) * sinc(x - i)*sinc((x-i)/ a) * sinc(y - j)*sinc((y-j)/ a));
+        }
+    }
+  return result;
+}
 
   ImageInterface<Float>&  HetArrayConvFunc::getFluxScaleImage(){
     if(!calcFluxScale_p)

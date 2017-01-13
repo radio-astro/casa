@@ -131,6 +131,7 @@ namespace casa{
       virtual casacore::Bool fromRecord(casacore::String& err, const casacore::RecordInterface& rec, casacore::Bool calcFluxneeded=false);
       //give possibility to erase history
       virtual void reset();
+      virtual casacore::String name() {return casacore::String("SimplePBConvFunc");}
     protected:
       SkyJones* sj_p;
       casacore::TempImage<casacore::Float> fluxScale_p;

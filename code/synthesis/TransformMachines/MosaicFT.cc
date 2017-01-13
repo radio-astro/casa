@@ -267,7 +267,7 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
   
   
   //oversample if image is small
-  //But not more than 5000 pixels
+  //But not more than 50000 pixels
   convSampling=(max(nx, ny) < 50) ? 100: Int(ceil(5000.0/max(nx, ny)));
   if(convSampling <1) 
     convSampling=1;
@@ -275,6 +275,12 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
     pbConvFunc_p=new SimplePBConvFunc();
   if(sj_p)
     pbConvFunc_p->setSkyJones(sj_p);
+  ////TEST for HetArray only for now
+  if(pbConvFunc_p->name()=="HetArrayConvFunc"){
+    if(convSampling <10) 
+      convSampling=10;
+    AipsrcValue<Int>::find (convSampling, "mosaic.oversampling", 10);
+  }
   pbConvFunc_p->findConvFunction(iimage, vb, convSampling, interpVisFreq_p, convFunc, weightConvFunc_p, convSizePlanes_p, convSupportPlanes_p,
 		  convPolMap_p, convChanMap_p, convRowMap_p);
 
@@ -1799,7 +1805,8 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
 {
   
   logIO() << LogOrigin("MosaicFT", "getWeightImage") << LogIO::NORMAL;
-  
+  cerr << "SUMWT " << sumWeight << endl;
+
   weights.resize(sumWeight.shape());
   convertArray(weights,sumWeight);
   /*
