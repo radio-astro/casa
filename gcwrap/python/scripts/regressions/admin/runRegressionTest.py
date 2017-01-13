@@ -4,6 +4,7 @@ import sys
 import getopt
 import shutil
 import traceback
+from casa_stack_manip import stack_frame_find
 from publish_summary import runTest
 
 ## flush output
@@ -14,7 +15,7 @@ PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
 CASA_DIR = os.environ["CASAPATH"].split()[0]
 TESTS_DIR = CASA_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
-
+stack_frame_find()['TESTS_DIR']=TESTS_DIR
 _potential_data_directories = ( "/opt/casa/data",
                                 "/home/casa/data",
                                 "/home/casa/data/trunk",
