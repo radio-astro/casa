@@ -1343,9 +1343,9 @@ msplot::parseSubplot( const casacore::Int subplot,
   Bool rstat( true );
 
   casacore::String threeChars = casacore::String::toString( subplot );
-  nrows = atoi((threeChars.at(0,1)).chars());
-  ncols = atoi((threeChars.at(1,1)).chars());
-  panel = atoi((threeChars.substr(2)).chars());
+  nrows = atoi(threeChars.substr(0,1).c_str());
+  ncols = atoi(threeChars.substr(1,1).c_str());
+  panel = atoi(threeChars.substr(2,1).c_str());
 
   // Check to make sure r, c, and p are all values between 1 and 9
   if ( subplot < 111 || subplot > 9981 ) 
