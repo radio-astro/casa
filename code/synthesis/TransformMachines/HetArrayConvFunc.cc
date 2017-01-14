@@ -1251,7 +1251,9 @@ typedef unsigned long long ooLong;
       Matrix<Complex> outMat(outIt.array());
       Complex *intPtr=outMat.getStorage(isCopy);
       Float realval, imagval;
+#ifdef _OPENMP
       omp_set_nested(0);
+#endif
 #pragma omp parallel for default(none) private(realval, imagval) firstprivate(intPtr, realptr, imagptr, nx, ny) shared(leReal, leImag)
       
       for (Int k =0; k < Int(ny*factor); ++k){
