@@ -46,13 +46,13 @@ def ic2233_reg():
         ms.fromfits(fitsfile=FITSFILE,msfile=MSFILE);
         ms.done();
 
-    im.open(MSFILE,usescratch=true);
+    im.open(MSFILE,usescratch=True);
     
     im.selectvis(nchan=NCHAN,start=CHSTART,step=1,spw=SPW,time=TIMERANGE);
     im.defineimage(nx=IMSIZE,ny=IMSIZE,cellx=CELLSIZE,celly=CELLSIZE,stokes=STOKES,
                    nchan=1,start=CHSTART,step=NCHAN-1,phasecenter=0);
     im.setoptions(cache=IMSIZE*IMSIZE*4,ftmachine=FTMACHINE,
-                  applypointingoffsets=false, dopbgriddingcorrections=true,
+                  applypointingoffsets=False, dopbgriddingcorrections=True,
                   cfcachedirname=MYIMAGE+".cf", pastep=360.0);
     im.clean(algorithm=ALGORITHM,niter=NITER,interactive=INTERACTIVE,
              model=MYIMAGE+".mod",
