@@ -88,7 +88,7 @@ public:
           64, // nchan per spw
           16, // ntime per scan
           false),  // unpolarized
-      fpar(6, 1, VisCalTestBase::nAnt, 0.0f)  // 6 pars per antenna
+      fpar(2, 64, VisCalTestBase::nAnt, 0.0f)  // 6 pars per antenna
   {
 
     // Add SingleDishSkyCalTest specific init
@@ -124,5 +124,77 @@ TEST_F(SingleDishSkyCalTest, OtfCalApplyState) {
       << "TODO: SingleDishOtfCal should have a constructor that accepts MSMetaInfoForCal object"
       << endl;
   SUCCEED();
+}
+
+// selfSolveOneTest for SDSKY_PS
+TEST_F(SingleDishSkyCalTest, PositionSwitchCal_selfSolveOneTest) {
+
+  // Apply-able SingleDishPositionSwitchCal
+  SingleDishPositionSwitchCal PSapp(msmc); // "<noms>",nAnt,nSpw);
+  PSapp.setApply();
+
+  // Fill PSapp with actual parameters
+  for (Int ispw=0;ispw<nSpw;++ispw) {
+    PSapp.setMeta(0,1,0.0,
+                 ispw,ssvp.freqs(ispw),
+                 nChan);
+    PSapp.sizeApplyParCurrSpw(nChan);
+
+    // Disable until phase model implemented...
+    PSapp.setApplyParCurrSpw(fpar,true,false);  // don't invert
+  }
+
+  SingleDishPositionSwitchCal PSsol(VisCalTestBase::msmc);
+  Record solvePar;
+  solvePar.define("table",String("test.pscal"));  // not used
+  solvePar.define("solint",String("inf"));
+  solvePar.define("combine",String(""));
+  Vector<Int> refant(1,0); solvePar.define("refant",refant);
+  PSsol.setSolve(solvePar);
+
+  SDBList sdbs;
+  for (vi2.originChunks();vi2.moreChunks();vi2.nextChunk()) {
+    for (vi2.origin();vi2.more();vi2.next()) {
+
+      Int ispw=vb2->spectralWindows()(0);
+      Int obsid(vb2->observationId()(0));
+      Int scan(vb2->scan()(0));
+      Double timestamp(vb2->time()(0));
+      Int fldid(vb2->fieldId()(0));
+      Vector<Double> freqs(vb2->getFrequencies(0));
+      Vector<Int> a1(vb2->antenna1());
+      Vector<Int> a2(vb2->antenna2());
+
+      vb2->resetWeightsUsingSigma();
+      vb2->setVisCubeCorrected(vb2->visCube());
+      vb2->setFlagCube(vb2->flagCube());
+
+      // Corrupt with FJapp
+      PSapp.setMeta(obsid,scan,timestamp,
+        ispw,freqs,
+        fldid);
+      // Disabled until phase model implemented
+      //PSapp.correct2(*vb2,false,false,false); // (trial?, doWtSp?, dosync)
+
+      // Add vb2 to the SDBList
+      sdbs.add(*vb2);
+
+    }
+  }
+
+  // Setup meta & sizes for the solve
+  PSsol.setMeta(sdbs.aggregateObsId(),
+    sdbs.aggregateScan(),
+    sdbs.aggregateTime(),
+    sdbs.aggregateSpw(),
+    sdbs.freqs(),
+    sdbs.aggregateFld());
+  PSsol.sizeSolveParCurrSpw(sdbs.nChannels());
+//
+//  PSsol.selfSolveOne(sdbs);
+//
+//  // Add comparison tests here
+
+
 }
 
