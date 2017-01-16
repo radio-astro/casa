@@ -404,7 +404,7 @@ utils::version_info( ) { return VersionInfo::info( ); }
 
 bool
  utils::compare_version(const  string& comparitor,  const std::vector<int>& vec) {
-  vector<int> current_version = { 5, 0, 0, 15 };
+  vector<int> current_version = version( );
   for ( unsigned int i=0; i < vec.size( ); ++i )
     if ( vec[i] < 0 ) throw(AipsError("negative values not allowed in version numbers"));
 
