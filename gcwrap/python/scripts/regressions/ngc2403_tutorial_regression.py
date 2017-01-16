@@ -336,7 +336,7 @@ antenna='9~12'
 
 print ""
 if scriptmode:
-    showgui=T
+    showgui=True
     figfile=''
     saveinputs('plotcal',prefix+'.saved.plotcal.gaincal.ant9to12amp')
 
@@ -344,7 +344,7 @@ if scriptmode:
 
     user_check=raw_input('Return to continue script\n')
 else:
-    showgui=F
+    showgui=False
     figfile=prefix+'.plotcal.gaincal.amp.png'
     saveinputs('plotcal',prefix+'.saved.plotcal.gaincal.ant9to12amp')
 
@@ -361,10 +361,10 @@ subplot=211
 saveinputs('plotcal',prefix+'.saved.plotcal.gaincal.ant9phase.panel1')
 
 if scriptmode:
-    showgui=T
+    showgui=True
     plotcal()
 else:
-    showgui=F
+    showgui=False
     figfile=''
     plotcal()
 
@@ -374,7 +374,7 @@ subplot=212
 print ""
 # Pause script if you are running in scriptmode
 if scriptmode:
-    showgui=T
+    showgui=True
     figfile=''
     saveinputs('plotcal',prefix+'.saved.plotcal.gaincal.ant9phase.panel2')
 
@@ -384,7 +384,7 @@ if scriptmode:
     print " Next, we will determine the flux of 0841+708"
     user_check=raw_input('Return to continue script\n')
 else:
-    showgui=F
+    showgui=False
     figfile=prefix+'.plotcal.gaincal.phase.png'
     saveinputs('plotcal',prefix+'.saved.plotcal.gaincal.ant9phase.panel2')
 
@@ -458,7 +458,7 @@ antenna             =     '9~12'
 plotrange           = [-1, -1, 0.9, 1.15]
 
 if scriptmode:
-    showgui=T
+    showgui=True
     figfile=''
     saveinputs('plotcal',prefix+'.saved.plotcal.bandpass.field1.ant9to12amp')
 
@@ -467,7 +467,7 @@ if scriptmode:
     print ""
     user_check=raw_input('Return to continue script\n')
 else:
-    showgui=F
+    showgui=False
     figfile=prefix+'.plotcal.bandpass.field1.ant9to12amp.png'
     saveinputs('plotcal',prefix+'.saved.plotcal.bandpass.field1.ant9to12amp')
 
@@ -478,7 +478,7 @@ print ""
 antenna='25'
 
 if scriptmode:
-    showgui=T
+    showgui=True
     field = '1,3~4'
     iteration='field'
     figfile=''
@@ -499,7 +499,7 @@ if scriptmode:
     user_check=raw_input('Return when done to run applycal\n')
 
 else:
-    showgui=F
+    showgui=False
     field = '1'
     iteration=''
     figfile=prefix+'.plotcal.bandpass.field1.ant25amp.png'
