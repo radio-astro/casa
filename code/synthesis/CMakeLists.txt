@@ -881,6 +881,7 @@ casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisV
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisCal_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tVisCalGlobals_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tSolveDataBuffer_GT.cc )
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/SingleDishSkyCal_GTest.cc )
 
 casa_add_google_test( MODULES synthesis SOURCES ImagerObjects/test/SDMaskHandler_GTest.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/SDPosInterpolator_GTest.cc )
