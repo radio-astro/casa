@@ -1,0 +1,81 @@
+<ProcessingProcedure>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_importdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+<!--
+    <ProcessingCommand>
+        <Command xmlns="">hsd_flagdata</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">shadow</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+-->
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_baseline</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+    
+    <ProcessingCommand>
+        <Command xmlns="">hsd_blflag</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">flag_tsys</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_pofre</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_prfre</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_baseline</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_blflag</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">flag_tsys</Keyword>
+                <Value xmlns="">False</Value>
+             </Parameter>
+             <Parameter>
+                <Keyword xmlns="">flag_pofre</Keyword>
+                <Value xmlns="">False</Value>
+             </Parameter>
+             <Parameter>
+                <Keyword xmlns="">flag_prfre</Keyword>
+                <Value xmlns="">False</Value>
+             </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_imaging</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_exportdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+</ProcessingProcedure>
