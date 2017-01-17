@@ -53,7 +53,11 @@ import pipeline.infrastructure.imagelibrary as imagelibrary
 LOG = infrastructure.get_logger(__name__)
 
 from . import manifest
-from . import aqua
+#from . import aqua
+
+StdFileProducts = collections.namedtuple('StdFileProducts', 'ppr_file weblog_file casa_commands_file casa_pipescript casa_restore_script')
+AuxFileProducts = collections.namedtuple('AuxFileProducts', 'flux_file antenna_file cont_file flagtargets_list')
+
 
 class ExportDataInputs(basetask.StandardInputs):
     """
@@ -274,198 +278,70 @@ class ExportData(basetask.StandardTaskTemplate):
         # 'self.inputs' everywhere
         inputs = self.inputs
 
-        # Get the parent ous ousstatus name. This is the sanitized ous
-        # status uid
-        ps = inputs.context.project_structure
-        if ps is None:
-            oussid = 'unknown'
-        elif ps.ousstatus_entity_id == 'unknown':
-            oussid = 'unknown'
-        else:
-            oussid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+        # Initialize the standard ous product string  and the pipeline manifest
+        oussid, pipemanifest, ouss = self._do_init(inputs.context)
 
-        # Initialize the manifest document and the top level ous status.
-        pipemanifest = self._init_pipemanifest(oussid)
-        ouss = pipemanifest.set_ous(oussid)
+        result = ExportDataResults()
 
-        # Force inputs.vis to be a list.
-        vislist = inputs.vis
-        if type(vislist) is types.StringType:
-            vislist = [vislist,]
-        vislist = [vis for vis in vislist if not inputs.context.observing_run.get_ms(name=vis).is_imaging_ms]
+        # Make the standard vislist and the sessions lists. 
+        session_list, session_names, session_vislists, vislist = self._make_lists(inputs.context, inputs.session, inputs.vis)
 
-        # Locate and copy the pipeline processing request.
-        #     There should normally be at most one pipeline processing request.
-        #     In interactive mode there is no PPR.
-        ppr_files = self._export_pprfile (inputs.context, inputs.output_dir,
-                                          inputs.products_dir, inputs.pprfile)
-        if (ppr_files != []):
-            ppr_file = os.path.basename(ppr_files[0])
-            pipemanifest.add_pprfile (ouss, os.path.basename(ppr_file))
-        else:
-            ppr_file = None
+        # Export the standard per OUS file products
+        stdfproducts = self._do_standard_ous_products(inputs.context, oussid, inputs.pprfile, 
+            session_list, vislist, inputs.output_dir, inputs.products_dir)
+        result.weblog=os.path.basename(stdfproducts.weblog_file)
+        result.pipescript=os.path.basename(stdfproducts.casa_pipescript)
+        result.restorescript=os.path.basename(stdfproducts.casa_restore_script)
+        result.commandslog=os.path.basename(stdfproducts.casa_commands_file)
 
-        # Loop over the measurements sets in the working directory and
-        # save the final flags using the flag manager.
-        flag_version_name = 'Pipeline_Final'
-        for visfile in vislist:
-            self._save_final_flagversion (visfile, flag_version_name)
+        # Export the auxiliary file products
+        #    These are optional for reprocessing but information to the user
+        auxfproducts =  self._do_auxiliary_products(inputs.context, oussid, inputs.output_dir, inputs.products_dir)
 
-        # Copy the final flag versions to the data products directory
-        # and tar them up.
-        flag_version_list = []
-        for visfile in vislist:
-            flag_version_file = self._export_final_flagversion ( \
-                inputs.context, visfile, flag_version_name, \
-                inputs.products_dir)
-            flag_version_list.append(flag_version_file)
+        # Make the standard ms dictionary and export per ms products
+        #    Currently these are per MS flagging tables and per session calibration tables
+        visdict = self._do_standard_ms_products (inputs.context, vislist, inputs.products_dir)
+        result.visdict=visdict
 
-        # Loop over the measurements sets in the working directory, and
-        # create the calibration apply file(s) in the products directory.
-        apply_file_list = []
-        for visfile in vislist:
-            apply_file =  self._export_final_applylist (inputs.context, \
-                visfile, inputs.products_dir)
-            apply_file_list.append (apply_file)
-
-        # Create the ordered vis dictionary
-        #    The keys are the base vis names
-        #    The values are a tuple containing the flags and applycal files
-        visdict = collections.OrderedDict()
-        for i in range(len(vislist)):
-            visdict[os.path.basename(vislist[i])] = \
-                (os.path.basename(flag_version_list[i]), \
-                 os.path.basename(apply_file_list[i]))
-
-        # Get the session list and the visibility files associated with
-        # each session.
-        session_list, session_names, session_vislists= self._get_sessions ( \
-            inputs.context, inputs.session, vislist)
-
-        # Export tar files of the calibration tables one per session
-        caltable_file_list = []
-        for i in range(len(session_names)):
-            caltable_file = self._export_final_calfiles (inputs.context, oussid,
-                session_names[i], session_vislists[i], inputs.products_dir)
-            caltable_file_list.append (caltable_file)
-
-        # Create the ordered session dictionary
-        #    The keys are the session names
-        #    The values are a tuple containing the vislist and the caltables
-        sessiondict = collections.OrderedDict()
-        for i in range(len(session_names)):
-            sessiondict[session_names[i]] = \
-                ([os.path.basename(visfile) for visfile in session_vislists[i]], \
-                 os.path.basename(caltable_file_list[i]))
-        for session_name in sessiondict:
-            session = pipemanifest.set_session(ouss, session_name)
-            pipemanifest.add_caltables(session, sessiondict[session_name][1])
-            for vis_name in sessiondict[session_name][0]:
-                pipemanifest.add_asdm (session, vis_name, visdict[vis_name][0],
-                    visdict[vis_name][1])
-
-        # Export a tar file of the web log
-        weblog_file = self._export_weblog (inputs.context, inputs.products_dir,
-            oussid)
-        pipemanifest.add_weblog (ouss, os.path.basename(weblog_file))
-
-        # Export the processing log independently of the web log
-        casa_commands_file = self._export_casa_commands_log (inputs.context,
-            inputs.context.logs['casa_commands'], inputs.products_dir, oussid)
-        pipemanifest.add_casa_cmdlog (ouss,
-            os.path.basename(casa_commands_file))
-
-        # Export the processing script independently of the web log
-        casa_pipescript = self._export_casa_script (inputs.context,
-            inputs.context.logs['pipeline_script'], inputs.products_dir, oussid)
-        pipemanifest.add_pipescript (ouss, os.path.basename(casa_pipescript))
-
-        # Export the restore script independently of the web log
-        casa_restore_script = self._export_casa_restore_script (inputs.context,
-            inputs.context.logs['pipeline_restore_script'], inputs.products_dir,
-            oussid, vislist, session_list)
-        pipemanifest.add_restorescript (ouss, os.path.basename(casa_restore_script))
-
-        # Export the flux.csv file
-        #    Does not need to be exported to the archive because the information
-        #    is encapsulated in the calibration tables
-        #    Relies on file name convention
-        flux_file = self._export_flux_file (inputs.context, oussid, 'flux.csv',
+        # Make the standard sessions dictionary and export per session products
+        sessiondict = self._do_standard_session_products (inputs.context, oussid, session_names, session_vislists,
             inputs.products_dir)
-        pipemanifest.add_flux_file (ouss, os.path.basename(flux_file))
-
-        # Export the antennapos.csv file.
-        #    Does not need to be exported to the archive because the information
-        #    is encapsulated in the calibration tables
-        #    Relies on file name convention
-        antenna_file = self._export_antpos_file (inputs.context, oussid, 'antennapos.csv',
-            inputs.products_dir)
-        pipemanifest.add_antennapos_file (ouss, os.path.basename(antenna_file))
-
-        # Export the cont.dat file.
-        #    May need to be exported to the archive. This is TBD
-        #    Relies on file name convention
-        cont_file = self._export_cont_file (inputs.context, oussid, 'cont.dat',
-            inputs.products_dir)
-        pipemanifest.add_cont_file (ouss, os.path.basename(cont_file))
-
-        # Export the target source template flagging files
-        #    Whether or not these should be exported to the archive depends on
-        #    the final plage of the target flagging step in the work flow
-        targetflags_list = self._export_targetflags_files (inputs.context, oussid,
-            '*_flagtargetstemplate.txt', inputs.products_dir)
+        result.sessiondict=sessiondict
 
         # Export calibrator images to FITS
-        #    Should check sources be added here.
-        LOG.info ('Exporting calibrator source images')
-        if inputs.calintents == '':
-            calintents_list = ['PHASE', 'BANDPASS', 'CHECK', 'AMPLITUDE']
-        else:
-            calintents_list = inputs.calintents.split(',')
         calimages_list, calimages_fitslist = self._export_images ( \
-            inputs.context, True, calintents_list, inputs.calimages, \
+            inputs.context, True, inputs.calintents, inputs.calimages, \
             inputs.products_dir)
-        pipemanifest.add_images (ouss,
-            [os.path.basename(image) for image in calimages_fitslist], 
-            'calibrator')
+        result.calimages=(calimages_list, calimages_fitslist)
 
         # Export science target images to FITS
-        LOG.info ('Exporting target source images')
         targetimages_list, targetimages_fitslist = self._export_images ( \
-            inputs.context, False, ['TARGET'], inputs.targetimages, \
+            inputs.context, False, 'TARGET', inputs.targetimages, \
             inputs.products_dir)
-        pipemanifest.add_images (ouss,
-            [os.path.basename(image) for image in targetimages_fitslist], \
-            'target')
+        result.targetimages=(targetimages_list, targetimages_fitslist)
 
         # Generate the AQUA report
-        aqua_reportfile = 'pipeline_aquareport.xml'
-        LOG.info ('Generating pipeline AQUA report')
-        try:
-            aqua.aquaReportFromContext (inputs.context, aqua_reportfile)
-        except:
-            LOG.error ('Error generating the pipeline AQUA report')
-        finally:
-            LOG.info ('Exporting pipeline AQUA report')
-            pipe_aquareport_file = self._export_aqua_report (inputs.context,
-                oussid, aqua_reportfile, inputs.products_dir)
-            pipemanifest.add_aqua_report(ouss, os.path.basename(pipe_aquareport_file))
+        #    This is a dummy place holder
+        #LOG.info ('Before AQUA report')
+        #aqua_reportfile = 'pipeline_aquareport.xml'
+        #pipe_aquareport_file = self._export_aqua_report (inputs.context,
+            #oussid, aqua_reportfile, aqua, inputs.products_dir)
+        #if os.path.exists(pipe_aquareport_file):
+            #pipemanifest.add_aqua_report(ouss, os.path.basename(pipe_aquareport_file))
+            #LOG.info ('Export AQUA report')
+        #LOG.info ('After AQUA report')
 
         # Export the pipeline manifest file
+        self._make_pipe_manifest (pipemanifest, ouss, stdfproducts, auxfproducts, sessiondict, visdict,
+            [os.path.basename(image) for image in calimages_fitslist], 
+            [os.path.basename(image) for image in targetimages_fitslist])
         casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
             'pipeline_manifest.xml', inputs.products_dir, pipemanifest)
+        result.manifest=os.path.basename(casa_pipe_manifest)
 
         # Return the results object, which will be used for the weblog
-        return ExportDataResults(pprequest=ppr_file, \
-                                 sessiondict=sessiondict, \
-                                 visdict=visdict,
-                                 calimages=(calimages_list, calimages_fitslist),
-                                 targetimages=(targetimages_list, targetimages_fitslist),
-                                 weblog=os.path.basename(weblog_file), \
-                                 pipescript=os.path.basename(casa_pipescript), \
-                                 restorescript=os.path.basename(casa_restore_script), \
-                                 commandslog=os.path.basename(casa_commands_file),
-                                 manifest=os.path.basename(casa_pipe_manifest))
+        return result
+
 
     def analyse(self, results):
         """
@@ -478,6 +354,241 @@ class ExportData(basetask.StandardTaskTemplate):
         :rtype: :class:~`ExportDataResults`
         """
         return results
+
+    def get_oussid (self, context):
+
+        # Get the parent ous ousstatus name. This is the sanitized ous
+        # status uid
+        ps = context.project_structure
+        if ps is None:
+            oussid = 'unknown'
+        elif ps.ousstatus_entity_id == 'unknown':
+            oussid = 'unknown'
+        else:
+            oussid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+
+        return oussid
+
+    def _do_init(self, context):
+
+        '''
+        Initialize the prepare
+        '''
+
+        # Get the parent ous ousstatus name. This is the sanitized ous
+        # status uid
+        oussid = self.get_oussid(context)
+
+        # Initialize the manifest document and the top level ous status.
+        pipemanifest = self._init_pipemanifest(oussid)
+        ouss = pipemanifest.set_ous(oussid)
+
+        return oussid, pipemanifest, ouss
+
+    def _make_lists (self, context, session, vis):
+
+        '''
+        Create the vis and sessions lists
+        '''
+
+        # Force inputs.vis to be a list.
+        vislist = vis
+        if type(vislist) is types.StringType:
+            vislist = [vislist,]
+        vislist = [vis for vis in vislist if not context.observing_run.get_ms(name=vis).is_imaging_ms]
+
+        # Get the session list and the visibility files associated with
+        # each session.
+        session_list, session_names, session_vislists= self._get_sessions ( \
+            context, session, vislist)
+
+        return session_list, session_names, session_vislists, vislist
+
+    def _do_standard_ous_products(self, context, oussid, pprfile, session_list, vislist, output_dir, products_dir):
+
+        '''
+        Generate the per ous standard products
+        '''
+
+        # Locate and copy the pipeline processing request.
+        #     There should normally be at most one pipeline processing request.
+        #     In interactive mode there is no PPR.
+        ppr_files = self._export_pprfile (context, output_dir, products_dir, pprfile)
+        if (ppr_files != []):
+            ppr_file = os.path.basename(ppr_files[0])
+        else:
+            ppr_file = None
+
+        # Export a tar file of the web log
+        weblog_file = self._export_weblog (context, products_dir, oussid)
+
+        # Export the processing log independently of the web log
+        casa_commands_file = self._export_casa_commands_log (context,
+            context.logs['casa_commands'], products_dir, oussid)
+
+        # Export the processing script independently of the web log
+        casa_pipescript = self._export_casa_script (context,
+            context.logs['pipeline_script'], products_dir, oussid)
+
+        # Export the restore script independently of the web log
+        casa_restore_script = self._export_casa_restore_script (context,
+            context.logs['pipeline_restore_script'], products_dir,
+            oussid, vislist, session_list)
+
+        return StdFileProducts (ppr_file,
+            weblog_file,
+            casa_commands_file,
+            casa_pipescript,
+            casa_restore_script)
+
+    def _do_auxiliary_products(self, context, oussid, output_dir, products_dir):
+
+        '''
+        Generate the auxliliary products
+        '''
+
+        # Export the flux.csv file
+        #    Does not need to be exported to the archive because the information
+        #    is encapsulated in the calibration tables
+        #    Relies on file name convention
+        flux_file = self._export_flux_file (context, oussid, 'flux.csv', products_dir)
+
+        # Export the antennapos.csv file.
+        #    Does not need to be exported to the archive because the information
+        #    is encapsulated in the calibration tables
+        #    Relies on file name convention
+        antenna_file = self._export_antpos_file (context, oussid, 'antennapos.csv',
+            products_dir)
+
+        # Export the cont.dat file.
+        #    May need to be exported to the archive. This is TBD
+        #    Relies on file name convention
+        cont_file = self._export_cont_file (context, oussid, 'cont.dat',
+            products_dir)
+
+        # Export the target source template flagging files
+        #    Whether or not these should be exported to the archive depends on
+        #    the final plage of the target flagging step in the work flow
+        targetflags_list = self._export_targetflags_files (context, oussid,
+            '*_flagtargetstemplate.txt', products_dir)
+
+        return AuxFileProducts (flux_file,
+            antenna_file,
+            cont_file,
+            targetflags_list)
+
+    def _do_standard_ms_products (self, context, vislist, products_dir):
+
+        '''
+        Generate the per ms standard products
+        '''
+
+        # Loop over the measurements sets in the working directory and
+        # save the final flags using the flag manager.
+        flag_version_name = 'Pipeline_Final'
+        for visfile in vislist:
+            self._save_final_flagversion (visfile, flag_version_name)
+
+        # Copy the final flag versions to the data products directory
+        # and tar them up.
+        flag_version_list = []
+        for visfile in vislist:
+            flag_version_file = self._export_final_flagversion ( \
+                context, visfile, flag_version_name, \
+                products_dir)
+            flag_version_list.append(flag_version_file)
+
+        # Loop over the measurements sets in the working directory, and
+        # create the calibration apply file(s) in the products directory.
+        apply_file_list = []
+        for visfile in vislist:
+            apply_file =  self._export_final_applylist (context, \
+                visfile, products_dir)
+            apply_file_list.append (apply_file)
+
+        # Create the ordered vis dictionary
+        #    The keys are the base vis names
+        #    The values are a tuple containing the flags and applycal files
+        visdict = collections.OrderedDict()
+        for i in range(len(vislist)):
+            visdict[os.path.basename(vislist[i])] = \
+                (os.path.basename(flag_version_list[i]), \
+                 os.path.basename(apply_file_list[i]))
+
+        return visdict
+
+    def _do_standard_session_products (self, context, oussid, session_names, session_vislists, products_dir):
+
+        '''
+        Generate the per ms standard products
+        '''
+
+        # Export tar files of the calibration tables one per session
+        caltable_file_list = []
+        for i in range(len(session_names)):
+            caltable_file = self._export_final_calfiles (context, oussid,
+                session_names[i], session_vislists[i], products_dir)
+            caltable_file_list.append (caltable_file)
+
+        # Create the ordered session dictionary
+        #    The keys are the session names
+        #    The values are a tuple containing the vislist and the caltables
+        sessiondict = collections.OrderedDict()
+        for i in range(len(session_names)):
+            sessiondict[session_names[i]] = \
+                ([os.path.basename(visfile) for visfile in session_vislists[i]], \
+                 os.path.basename(caltable_file_list[i]))
+
+        return sessiondict
+
+    def _make_pipe_manifest (self, pipemanifest, ouss, stdfproducts, auxfproducts, sessiondict,
+        visdict, calimages, targetimages):
+
+        '''
+        Generate the manifest file
+        '''
+
+        if stdfproducts.ppr_file:
+            pipemanifest.add_pprfile (ouss, os.path.basename(stdfproducts.ppr_file))
+
+        # Add the flagging and calibration products
+        for session_name in sessiondict:
+            session = pipemanifest.set_session(ouss, session_name)
+            pipemanifest.add_caltables(session, sessiondict[session_name][1])
+            for vis_name in sessiondict[session_name][0]:
+                pipemanifest.add_asdm (session, vis_name, visdict[vis_name][0],
+                    visdict[vis_name][1])
+
+        # Add a tar file of the web log
+        pipemanifest.add_weblog (ouss, os.path.basename(stdfproducts.weblog_file))
+
+        # Add the processing log independently of the web log
+        pipemanifest.add_casa_cmdlog (ouss,
+            os.path.basename(stdfproducts.casa_commands_file))
+
+        # Add the processing script independently of the web log
+        pipemanifest.add_pipescript (ouss, os.path.basename(stdfproducts.casa_pipescript))
+
+        # Add the restore script independently of the web log
+        pipemanifest.add_restorescript (ouss, os.path.basename(stdfproducts.casa_restore_script))
+
+        if auxfproducts:
+            # Export the flux.csv file
+            pipemanifest.add_flux_file (ouss, os.path.basename(auxfproducts.flux_file))
+
+            # Export the antennapos.csv file.
+            pipemanifest.add_antennapos_file (ouss, os.path.basename(auxfproducts.antenna_file))
+
+            # Export the cont.dat file.
+            #    May need to be exported to the archive. This is TBD
+            #    Relies on file name convention
+            pipemanifest.add_cont_file (ouss, os.path.basename(auxfproducts.cont_file))
+
+        # Add the calibrator images
+        pipemanifest.add_images (ouss, calimages, 'calibrator')
+
+        # Add the target images
+        pipemanifest.add_images (ouss, targetimages, 'target')
 
     def _init_pipemanifest (self, oussid):
         '''
@@ -784,30 +895,14 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return os.path.basename(out_casalog_file)
 
-    def _export_aqua_report (self, context, oussid, aquareport_name, products_dir):
+    #def _export_aqua_report (self, context, oussid, aquareport_name, aqua, products_dir):
+        #"""
+        #Save the AQUA report.
+        #    Dummy place holder as the base class is not associated with a specific pipeline recipe
+        #"""
 
-        """
-        Save the AQUA report.
-        """
-
-        ps = context.project_structure
-        if ps is None:
-            aqua_file = os.path.join (context.output_dir, aquareport_name)
-            out_aqua_file = os.path.join (products_dir, aquareport_name)
-        elif ps.ousstatus_entity_id == 'unknown':
-            aqua_file = os.path.join (context.output_dir, aquareport_name)
-            out_aqua_file = os.path.join (products_dir, aquareport_name)
-        else:
-            aqua_file = os.path.join (context.output_dir, aquareport_name)
-            out_aqua_file = os.path.join (products_dir, oussid + '.' + aquareport_name)
-
-        if os.path.exists(aqua_file):
-            LOG.info('Copying AQUA report %s to %s' % \
-                     (aqua_file, out_aqua_file))
-            shutil.copy (aqua_file, out_aqua_file)
-            return os.path.basename(out_aqua_file)
-        else:
-            return 'Undefined'
+        #LOG.info('Dummy AQUA report generator')
+        #return ''
 
     def _export_flux_file (self, context, oussid, fluxfile_name, products_dir):
 
@@ -1027,11 +1122,11 @@ finally:
 
         return fitsfile
 
-    def _export_images (self, context, calimages, intents, images,
+    def _export_images (self, context, calimages, calintents, images,
                         products_dir):
 
         """
-        Export the images to FITS files.
+        Expora the images to FITS files.
         """
 
 
@@ -1040,8 +1135,15 @@ finally:
         if len(images) == 0:
             # Get the image library
             if calimages:
+                LOG.info ('Exporting calibrator source images')
+                if calintents == '':
+                    intents = ['PHASE', 'BANDPASS', 'CHECK', 'AMPLITUDE']
+                else:
+                    intents = calintents.split(',')
                 cleanlist = context.calimlist.get_imlist()
             else:
+                LOG.info ('Exporting target source images')
+                intents = ['TARGET']
                 cleanlist = context.sciimlist.get_imlist()
             for image_number, image in enumerate(cleanlist):
                 # We need to store the image
