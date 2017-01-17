@@ -35,6 +35,7 @@ $(document).ready(function() {
     mitigated_maxcubesize = '%.3g GB' % (result[0].mitigated_maxcubesize)
     allowed_productsize = '%.3g GB' % (result[0].allowed_productsize)
     original_productsize = '%.3g GB' % (result[0].original_productsize)
+    cube_mitigated_productsize = '%.3g GB' % (result[0].cube_mitigated_productsize)
     mitigated_productsize = '%.3g GB' % (result[0].mitigated_productsize)
     %>
     <p>
@@ -46,7 +47,9 @@ $(document).ready(function() {
     <br>
     Allowed product size: ${allowed_productsize}
     <br>
-    Predicted product size: ${original_productsize}
+    Initial predicted product size: ${original_productsize}
+    <br>
+    Predicted product size after cube mitigation: ${cube_mitigated_productsize}
     <br>
     Mitigated product size: ${mitigated_productsize}
     <p>

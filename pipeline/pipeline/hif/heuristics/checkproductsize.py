@@ -128,11 +128,15 @@ class CheckProductSizeHeuristics(object):
             maxcubesize, productsize = self.calculate_sizes(imlist)
             LOG.info('hm_cell mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
+        # Save cube mitigated product size for logs
+        cube_mitigated_productsize = productsize
+
         # If still too large, stop with an error
         if maxcubesize > self.inputs.maxcubesize:
             LOG.error('Maximum cube size cannot be mitigated. Remaining factor: %.4f' % (maxcubesize / self.inputs.maxcubesize))
             return size_mitigation_parameters, \
                    original_maxcubesize, original_productsize, \
+                   cube_mitigated_productsize, \
                    maxcubesize, productsize, \
                    True, \
                    {'longmsg': 'Maximum cube size cannot be mitigated. Remaining factor: %.4f' % (maxcubesize / self.inputs.maxcubesize), \
@@ -145,6 +149,7 @@ class CheckProductSizeHeuristics(object):
                 LOG.error('Product size cannot be mitigated. Remaining factor: %.4f.' % (productsize / self.inputs.maxproductsize / len(fields)))
                 return size_mitigation_parameters, \
                        original_maxcubesize, original_productsize, \
+                       cube_mitigated_productsize, \
                        maxcubesize, productsize, \
                        True, \
                        {'longmsg': 'Product size cannot be mitigated. Remaining factor: %.4f.' % (productsize / self.inputs.maxproductsize / len(fields)), \
@@ -164,6 +169,7 @@ class CheckProductSizeHeuristics(object):
         if size_mitigation_parameters != {}:
             return size_mitigation_parameters, \
                    original_maxcubesize, original_productsize, \
+                   cube_mitigated_productsize, \
                    maxcubesize, productsize, \
                    False, \
                    {'longmsg': 'Size had to be mitigated', \
@@ -171,6 +177,7 @@ class CheckProductSizeHeuristics(object):
         else:
             return size_mitigation_parameters, \
                    original_maxcubesize, original_productsize, \
+                   cube_mitigated_productsize, \
                    maxcubesize, productsize, \
                    False, \
                    {'longmsg': 'No size mitigation needed', \

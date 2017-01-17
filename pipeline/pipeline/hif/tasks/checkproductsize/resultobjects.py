@@ -13,6 +13,7 @@ class CheckProductSizeResult(basetask.Results):
                  allowed_productsize, \
                  original_maxcubesize, \
                  original_productsize, \
+                 cube_mitigated_productsize, \
                  mitigated_maxcubesize, \
                  mitigated_productsize, \
                  size_mitigation_parameters, \
@@ -23,6 +24,7 @@ class CheckProductSizeResult(basetask.Results):
         self.allowed_productsize = allowed_productsize
         self.original_maxcubesize = original_maxcubesize
         self.original_productsize = original_productsize
+        self.cube_mitigated_productsize = cube_mitigated_productsize
         self.mitigated_maxcubesize = mitigated_maxcubesize
         self.mitigated_productsize = mitigated_productsize
         self.size_mitigation_parameters = size_mitigation_parameters
@@ -41,7 +43,8 @@ class CheckProductSizeResult(basetask.Results):
         repr += ' Predicted maximum cube size: %.3g GB\n' % (self.original_maxcubesize)
         repr += ' Mitigated maximum cube size: %.3g GB\n' % (self.mitigated_maxcubesize)
         repr += ' Allowed product size: %.3g GB\n' % (self.allowed_productsize)
-        repr += ' Predicted product size: %.3g GB\n' % (self.original_productsize)
+        repr += ' Initial predicted product size: %.3g GB\n' % (self.original_productsize)
+        repr += ' Predicted product size after cube mitigation: %.3g GB\n' % (self.cube_mitigated_productsize)
         repr += ' Mitigated product size: %.3g GB\n' % (self.mitigated_productsize)
         repr += ' Mitigation parameters:\n'
         for parameter, value in self.size_mitigation_parameters.iteritems():
