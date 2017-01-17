@@ -30,6 +30,7 @@ casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
   ori_sio_regression.py
   pylabmem_regression.py
   wproject_regression.py
+  calstat_test_regression.py
   3c129_tutorial_regression.py
   3C219D_regression.py
   3C391polim_regression.py
