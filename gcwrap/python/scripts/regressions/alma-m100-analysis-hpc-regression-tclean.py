@@ -244,7 +244,7 @@ try:
 	        if(makeplots):
 	            # Plot amplitude vs time
 	            plotms(vis=name+'.ms', xaxis='time', yaxis='amp', spw='1',
-	               averagedata=T, avgchannel='4000', coloraxis='field',
+	               averagedata=True, avgchannel='4000', coloraxis='field',
 	               iteraxis='spw', plotfile=name+'-amp-vs-time.png', overwrite=True)
 	
 	    timing()
@@ -301,7 +301,7 @@ try:
 	                     interp=['nearest',tsysinterp,'nearest','nearest'],
 	                     spwmap=[[],tsysspwmap,[],[]],
 	                     gaintable=['cal-wvr_'+name,'cal-tsys_'+name+'.fdm','cal-delay_'+name+'.K','cal-antpos_'+name],
-	                     flagbackup=F)
+	                     flagbackup=False)
 	
 	
 	    timing()
@@ -390,7 +390,7 @@ try:
 	                caltable='cal-'+name+'-BPint.Gp', 
 	                spw='*:190~310',
 	                field='*Bandpass*',
-	                selectdata=F, solint='int', refant=therefant, calmode='p')
+	                selectdata=False, solint='int', refant=therefant, calmode='p')
 	
 	        if(makeplots):
 	            plotcal(caltable='cal-'+name+'-BPint.Gp', 
@@ -418,8 +418,8 @@ try:
 	        bandpass(vis=name+'-line-vs.ms', 
 	                 caltable='cal-'+name+'.B1', 
 	                 field='*Bandpass*',
-	                 bandtype='B', fillgaps=10, solnorm = T, combine='',
-	                 selectdata=F,
+	                 bandtype='B', fillgaps=10, solnorm =True, combine='',
+	                 selectdata=False,
 	                 solint='inf',
 	                 refant=therefant,
 	                 gaintable='cal-'+name+'-BPint.Gp')
@@ -485,7 +485,7 @@ try:
 	        spw='*:25~455', 
 	        field='*Phase*,*Band*,Titan',
 	        gaintable='cal-'+name+'.B1',
-	        selectdata=F, solint='int', 
+	        selectdata=False, solint='int', 
 	        refant=therefant, calmode='p')
 	        
 	        if(makeplots):
@@ -517,7 +517,7 @@ try:
 	        spw='*:25~455', 
 	        field='*Phase*,*Band*,Titan',
 	        gaintable='cal-'+name+'.B1',
-	        selectdata=F, solint='inf', 
+	        selectdata=False, solint='inf', 
 	        refant=therefant, calmode='p')
 	        
 	        if(makeplots):
@@ -549,7 +549,7 @@ try:
 	        spw='*:25~455', 
 	        field='*Phase*,*Band*,Titan',
 	        gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp'],
-	        selectdata=F, solint='inf', 
+	        selectdata=False, solint='inf', 
 	        refant=therefant, calmode='ap')
 	        
 	        if(makeplots):
@@ -593,39 +593,39 @@ try:
 	        applycal(vis=name+'-line-vs.ms',field='*Band*',
 	            gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
 	            interp=['nearest','nearest','nearest'],
-	            gainfield=['*Band*','*Band*','*Band*'],calwt=F,flagbackup=T)
+	            gainfield=['*Band*','*Band*','*Band*'],calwt=False,flagbackup=True)
 	
 	        # to the secondary phase cal
 	        applycal(vis=name+'-line-vs.ms',field='3c273 - Phase',
 	            gaintable=['cal-'+name+'.B1','cal-'+name+'-scan.Gp','cal-'+name+'.flux'],
 	                interp=['nearest','linear','linear'],
 	                gainfield=['*Band*','1224*','1224*'],
-	        calwt=F,
-	        flagbackup=T)
+	        calwt=False,
+	        flagbackup=True)
 	
 	        # to the primary phase cal
 	        applycal(vis=name+'-line-vs.ms',field='1224*',
 	            gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
 	            interp=['nearest','nearest','nearest'],
 	            gainfield=['*Band*','1224*','1224*'],
-	        calwt=F,
-	        flagbackup=T)
+	        calwt=False,
+	        flagbackup=True)
 	
 	        # to Titan
 	        applycal(vis=name+'-line-vs.ms',field='Titan',
 	                 gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
 	                 interp=['nearest','nearest','nearest'],
 	                 gainfield=['*Band*','Titan','Titan'],
-	                 calwt=F,
-	                 flagbackup=T)
+	                 calwt=False,
+	                 flagbackup=True)
 	
 	        # to M100
 	        applycal(vis=name+'-line-vs.ms',field='M100',
 	            gaintable=['cal-'+name+'.B1','cal-'+name+'-scan.Gp','cal-'+name+'.flux'],
 	            interp=['nearest','linear','linear'],
 	            gainfield=['*Band*','1224*','1224*'],
-	        calwt=F,
-	        flagbackup=T)
+	        calwt=False,
+	        flagbackup=True)
 	
 	
 	# For X146 the calibrated fluxes for the secondary phase cal are different for the different pols. What
@@ -671,7 +671,7 @@ try:
 				
 	    if makeplots:
 	        for name in basename:
-	            imview(raster={'file': imview_input, 'colorwedge':T,
+	            imview(raster={'file': imview_input, 'colorwedge':True,
 	                           'range':[-0.02, 8.0], 'scaling':-1.5, 'colormap':'Rainbow 2'},
 	                   out='test-'+name+'-sec_phasecal.png', zoom=1)
 	
@@ -714,7 +714,7 @@ try:
 	
 	    if makeplots:
 	        for name in basename:
-	            imview(raster={'file': imview_input, 'colorwedge':T,
+	            imview(raster={'file': imview_input, 'colorwedge':True,
 	                           'range':[-0.005, 0.9], 'scaling':-2.5, 'colormap':'Rainbow 2'},
 	                   out='test-'+name+'-prim_phasecal.png', zoom=1)
 	            calstat=imstat(imagename=imview_input, region='', box='30,30,170,80')
@@ -819,7 +819,7 @@ try:
 		 	specmode = 'mfs',
 		 	niter = 1000,
 		 	mask='M100cont-orig.mask',
-		 	interactive = F,
+		 	interactive =False,
 		 	imsize = 200,
 		 	cell = '0.5arcsec',
 		 	phasecenter='J2000 12h22m54.9 +15d49m15',
@@ -834,7 +834,7 @@ try:
 		 	mode = 'mfs',
 		 	niter = 1000,
 		 	mask='M100cont-orig.mask',
-		 	interactive = F,
+		 	interactive =False,
 		 	imsize = 200,
 			cell = '0.5arcsec',
 			imagermode = 'mosaic',
@@ -983,11 +983,11 @@ try:
 	        imview(contour={'file': 'M100-CO.mom0','levels': 
 	                        [1,2,5,10,20,40,80,160],'base':0,'unit':1}, 
 	               raster={'file': 'M100-CO.mom1','range': [1440,1700],
-	                       'colorwedge':T, 'colormap': 'Rainbow 2'}, out='M100-CO_velfield.png')
+	                       'colorwedge':True, 'colormap': 'Rainbow 2'}, out='M100-CO_velfield.png')
 	        os.system('rm -rf M100-CO_map.png')
 	        imview(contour={'file': 'M100-CO.mom1','levels': 
 	                        [1430,1460,1490,1520,1550,1580,1610,1640,1670,1700],'base':0,'unit':1}, 
-	               raster={'file': 'M100-CO.mom0', 'colorwedge':T,
+	               raster={'file': 'M100-CO.mom0', 'colorwedge':True,
 	                       'colormap': 'Rainbow 2','scaling':-1.8,'range': [0.5,20]}, 
 	               out='M100-CO_map.png')
 	
@@ -995,7 +995,7 @@ try:
 	        imview(contour={'file': 'M100cont.image','levels': 
 	                        [0.00025,0.0004],'base':0,'unit':1}, 
 	               zoom=3,
-	               raster={'file': 'M100-CO.mom0', 'colorwedge':T,
+	               raster={'file': 'M100-CO.mom0', 'colorwedge':True,
 	                       'colormap': 'Rainbow 2','scaling':0,'range': [0.8,40]}, 
 	               out='M100-CO_contmap.png')
 	
