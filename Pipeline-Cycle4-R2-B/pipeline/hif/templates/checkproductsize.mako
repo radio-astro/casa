@@ -49,7 +49,7 @@ $(document).ready(function() {
     <br>
     Initial predicted product size: ${original_productsize}
     <br>
-    Predicted product size after cube mitigation: ${cube_mitigated_productsize}
+    Predicted product size after cube size mitigation: ${cube_mitigated_productsize}
     <br>
     Mitigated product size: ${mitigated_productsize}
     <p>
