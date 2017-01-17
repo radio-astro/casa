@@ -36,7 +36,7 @@ casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
   accum_regression.py
   alma-m100-analysis-regression.py
   alma-m100-analysis-hpc-regression.py
-  alma-m100-analysis-hpc-regression-tclean.py  
+  alma-m100-analysis-hpc-regression-tclean.py
   alma-m100-sd-regression.py
   alma-ngc3256-analysis-regression.py
   alma-titan-ephemeris-regression.py
@@ -91,4 +91,5 @@ casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
   testcompsim.py
   pipelineTest_regression.py
   time_then_chan_avg.py
+  calstat_test_regression.py
 )
