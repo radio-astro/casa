@@ -415,13 +415,13 @@ Record ImageStatsCalculator::statistics(
 ) {
 	LogOrigin myOrigin(_class, __func__);
 	*_getLog() << myOrigin;
-	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
+	CountedPtr<ImageRegion> region, mask;
 	String mtmp = _getMask();
 	if (mtmp == "false" || mtmp == "[]") {
 		mtmp = "";
 	}
     _subImage = SubImageFactory<Float>::createSubImageRO(
-		pRegionRegion, pMaskRegion, *_getImage(), *_getRegion(), mtmp,
+		region, mask, *_getImage(), *_getRegion(), mtmp,
 		(_verbose ? _getLog().get() : 0), AxesSpecifier(),
 		_getStretch()
 	);
@@ -433,8 +433,8 @@ Record ImageStatsCalculator::statistics(
 	IPosition shape = _subImage->shape();
 	IPosition blc(_subImage->ndim(), 0);
 	IPosition trc(shape - 1);
-	if (pRegionRegion) {
-		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
+	if (region) {
+		LatticeRegion latRegion = region->toLatticeRegion(
 			_getImage()->coordinates(), _getImage()->shape()
 		);
 		Slicer sl = latRegion.slicer();
@@ -469,7 +469,7 @@ Record ImageStatsCalculator::statistics(
 		_statistics->resetError();
 		if (
 		    _haveRegionsChanged(
-				pRegionRegion.get(), pMaskRegion.get(),
+				region.get(), mask.get(),
 				_oldStatsRegion.get(), _oldStatsMask.get()
 			)
 		) {
@@ -518,8 +518,8 @@ Record ImageStatsCalculator::statistics(
 	// Assign old regions to current regions
 	_oldStatsMask.reset(0);
 
-	_oldStatsRegion = pRegionRegion;
-	_oldStatsMask = pMaskRegion;
+	_oldStatsRegion = region;
+	_oldStatsMask = mask;
 	//_oldStatsStorageForce = _disk;
 	// Set cursor axes
 	*_getLog() << myOrigin;
@@ -686,23 +686,23 @@ String ImageStatsCalculator::_configureAlgorithm() {
 }
 
 Bool ImageStatsCalculator::_haveRegionsChanged(
-	ImageRegion* pNewRegion,
-	ImageRegion* pNewMask, ImageRegion* pOldRegion,
-	ImageRegion* pOldMask
+	ImageRegion* newRegion,
+	ImageRegion* newMask, ImageRegion* oldRegion,
+	ImageRegion* oldMask
 ) {
 	Bool regionChanged = (
-			pNewRegion != 0 && pOldRegion != 0
-			&& (*pNewRegion) != (*pOldRegion)
+			newRegion != 0 && oldRegion != 0
+			&& (*newRegion) != (*oldRegion)
 		)
-		|| (pNewRegion == 0 && pOldRegion != 0)
-		|| (pNewRegion != 0 && pOldRegion == 0
+		|| (newRegion == 0 && oldRegion != 0)
+		|| (newRegion != 0 && oldRegion == 0
 	);
 	Bool maskChanged = (
-			pNewMask != 0 && pOldMask != 0
-			&& (*pNewMask) != (*pOldMask)
+			newMask != 0 && oldMask != 0
+			&& (*newMask) != (*oldMask)
 		)
-		|| (pNewMask == 0 && pOldMask != 0)
-		|| (pNewMask != 0 && pOldMask == 0
+		|| (newMask == 0 && oldMask != 0)
+		|| (newMask != 0 && oldMask == 0
 	);
 	return (regionChanged || maskChanged);
 }

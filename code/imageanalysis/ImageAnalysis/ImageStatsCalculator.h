@@ -167,10 +167,10 @@ private:
     // moved from ImageAnalysis
     // See if the combination of the 'region' and 'mask' ImageRegions have changed
     static casacore::Bool _haveRegionsChanged (
-    	casacore::ImageRegion* pNewRegionRegion,
-    	casacore::ImageRegion* pNewMaskRegion,
-    	casacore::ImageRegion* pOldRegionRegion,
-    	casacore::ImageRegion* pOldMaskRegion
+    	casacore::ImageRegion* newRegion,
+    	casacore::ImageRegion* newMask,
+    	casacore::ImageRegion* oldRegion,
+    	casacore::ImageRegion* oldMask
     );
 
     void _reportDetailedStats(
