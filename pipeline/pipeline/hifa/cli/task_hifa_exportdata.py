@@ -13,7 +13,7 @@ def hifa_exportdata(vis=None, session=None, pprfile=None, calintents=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'ExportData'
+    task_name = 'ALMAExportData'
     
     ##########################################################################
     #                                                                        #
