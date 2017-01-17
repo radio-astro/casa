@@ -68,6 +68,7 @@ class CheckProductSize(basetask.StandardTaskTemplate):
 
         size_mitigation_parameters, \
         original_maxcubesize, original_productsize, \
+        cube_mitigated_productsize, \
         maxcubesize, productsize, error, reason = \
             checkproductsize_heuristics.mitigate_sizes()
 
@@ -84,6 +85,7 @@ class CheckProductSize(basetask.StandardTaskTemplate):
                                         self.inputs.maxproductsize, \
                                         original_maxcubesize, \
                                         original_productsize, \
+                                        cube_mitigated_productsize, \
                                         maxcubesize, \
                                         productsize, \
                                         size_mitigation_parameters, \
