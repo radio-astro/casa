@@ -50,10 +50,8 @@ class VLAExportData(exportdata.ExportData):
         # This is hardcoded.
         tmpvislist = []
 
-        # ALMA default
+        # VLA ocorr_value
         ocorr_mode = 'co'
-        #if context.project_summary.telescope in ('VLA', 'EVLA'):
-        #    ocorr_mode = 'co'
 
         for vis in vislist:
             filename = os.path.basename(vis)
@@ -63,8 +61,6 @@ class VLAExportData(exportdata.ExportData):
         task_string = "    hifv_restoredata (vis=%s, session=%s, ocorr_mode='%s')" % (
         tmpvislist, session_list, ocorr_mode)
 
-        # if context.project_summary.telescope in ('VLA', 'EVLA'):
-        #     task_string += '\n    hifv_statwt()'
         task_string += '\n    hifv_statwt()'
 
         template = '''__rethrow_casa_exceptions = True
