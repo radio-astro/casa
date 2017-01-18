@@ -141,9 +141,27 @@ Application-Wide Options Methods
   </returns>
 </method>
 
+<method type="function" name="setPlotmsPid">
+  <keyword>setPlotmsPid</keyword>
+
+  <shortdescription>Connect dbus to existing plotms pid.</shortdescription>
+
+  <description />
+
+  <input>
+    <param type="int" name="pid">
+      <description>plotms process ID to use</description>
+    </param>
+  </input>
+
+  <example />
+
+  <returns />
+</method>
+
 <method type="function" name="setClearSelectionOnAxesChange">
   <keyword>setClearSelectionOnAxesChange</keyword>
-  
+
   <shortdescription>Sets whether any selections are cleared on an axes change or not.</shortdescription>
   
   <description />
