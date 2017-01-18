@@ -1,6 +1,9 @@
 import time
 import os
+import sys
+from casa_stack_manip import stack_frame_find
 
+gl=stack_frame_find( )
 regstate = True
 try:
 	im=gl['casac'].imager()
@@ -22,8 +25,9 @@ try:
 
 	time2=time.time();
 	print 'Time taken for wproject= ', (time2-time1)/60,'mins'
-except:
-	regstate = False
+except Exception:
+	print("Unexpected error:", sys.exc_info())
+	regstate= False
 
 if(regstate):
    	print ''
