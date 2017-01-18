@@ -65,20 +65,20 @@ class ImageStatsCalculator: public ImageTask<casacore::Float> {
 
 public:
 
-	enum PreferredClassicalAlgorithm {
-		// old algorithm
-		TILED_APPLY,
-		// new algorithm
-		STATS_FRAMEWORK,
-		// decide based on size and number of steps needed for
-		// stats
-		AUTO
-	};
+    enum PreferredClassicalAlgorithm {
+        // old algorithm
+        TILED_APPLY,
+        // new algorithm
+        STATS_FRAMEWORK,
+        // decide based on size and number of steps needed for
+        // stats
+        AUTO
+    };
 
-   	ImageStatsCalculator(
-   		const SPCIIF image,
-    	const casacore::Record *const &regionPtr,
-    	const casacore::String& maskInp, casacore::Bool beVerboseDuringConstruction=false
+       ImageStatsCalculator(
+           const SPCIIF image,
+        const casacore::Record *const &regionPtr,
+        const casacore::String& maskInp, casacore::Bool beVerboseDuringConstruction=false
     );
 
     ~ImageStatsCalculator();
@@ -91,9 +91,9 @@ public:
 
     // configure fit to half algorithm
     void configureFitToHalf(
-    	casacore::FitToHalfStatisticsData::CENTER centerType,
-    	casacore::FitToHalfStatisticsData::USE_DATA useData,
-    	casacore::Double centerValue
+        casacore::FitToHalfStatisticsData::CENTER centerType,
+        casacore::FitToHalfStatisticsData::USE_DATA useData,
+        casacore::Double centerValue
     );
 
     // configure hinges-fences algorithm
@@ -104,7 +104,7 @@ public:
     inline casacore::String getClass() const {return _class;}
 
     inline void setAxes(const casacore::Vector<casacore::Int>& axes) {
-    	_axes.assign(axes); casacore::GenSort<casacore::Int>::sort(_axes);
+        _axes.assign(axes); casacore::GenSort<casacore::Int>::sort(_axes);
     }
 
     void setDisk(casacore::Bool d);
@@ -129,23 +129,23 @@ public:
     // if messageStore != 0, log messages, stripped of time stampe and priority, will also
     // be placed in this parameter and returned to caller for eg logging to file.
     casacore::Record statistics(
-    	 vector<casacore::String> *const &messageStore=0
+         vector<casacore::String> *const &messageStore=0
     );
 
     const static String SIGMA;
 
 protected:
 
-   	CasacRegionManager::StokesControl _getStokesControl() const {
-   		return CasacRegionManager::USE_ALL_STOKES;
-   	}
+       CasacRegionManager::StokesControl _getStokesControl() const {
+           return CasacRegionManager::USE_ALL_STOKES;
+       }
 
     vector<OutputDestinationChecker::OutputStruct> _getOutputStruct() {
-    	return vector<OutputDestinationChecker::OutputStruct>(0);
+        return vector<OutputDestinationChecker::OutputStruct>(0);
     }
 
     vector<casacore::Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<casacore::Coordinate::Type>(0);
+        return vector<casacore::Coordinate::Type>(0);
     }
 
     casacore::Bool _hasLogfileSupport() const { return true; }
@@ -169,15 +169,15 @@ private:
     // moved from ImageAnalysis
     // See if the combination of the 'region' and 'mask' ImageRegions have changed
     static casacore::Bool _haveRegionsChanged (
-    	casacore::ImageRegion* newRegion,
-    	casacore::ImageRegion* newMask,
-    	casacore::ImageRegion* oldRegion,
-    	casacore::ImageRegion* oldMask
+        casacore::ImageRegion* newRegion,
+        casacore::ImageRegion* newMask,
+        casacore::ImageRegion* oldRegion,
+        casacore::ImageRegion* oldMask
     );
 
     void _reportDetailedStats(
-    	const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > tempIm,
-    	const casacore::Record& retval
+        const SHARED_PTR<const casacore::ImageInterface<casacore::Float> > tempIm,
+        const casacore::Record& retval
     );
 
 };
