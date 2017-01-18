@@ -61,11 +61,11 @@ RegionTextParser::RegionTextParser(
     const IPosition& imShape,
     const Int requireAtLeastThisVersion,
     const String& prependRegion,
-    const String& globalOverrideChans, const String& globalOverrrideStokes
+    const String& globalOverrideChans, const String& globalOverrrideStokes,
+    Bool verbose
 ) : _csys(csys), _log(new LogIO()), _currentGlobals(),
-    _lines(),
-    _globalKeysToApply(),
-    _fileVersion(-1), _imShape(imShape), _regions(0) {
+    _lines(), _globalKeysToApply(), _fileVersion(-1), _imShape(imShape),
+    _regions(0), _verbose(verbose) {
     RegularFile file(filename);
     if (! file.exists()) {
         throw AipsError(
@@ -113,9 +113,11 @@ RegionTextParser::RegionTextParser(
 RegionTextParser::RegionTextParser(
     const CoordinateSystem& csys, const IPosition& imShape,
     const String& text, const String& prependRegion,
-    const String& globalOverrideChans, const String& globalOverrrideStokes
+    const String& globalOverrideChans, const String& globalOverrrideStokes,
+    Bool verbose
 ) : _csys(csys), _log(new LogIO()), _currentGlobals(), _lines(),
-    _globalKeysToApply(), _fileVersion(-1), _imShape(imShape), _regions(0) {
+    _globalKeysToApply(), _fileVersion(-1), _imShape(imShape), _regions(0),
+    _verbose(verbose) {
     if (! _csys.hasDirectionCoordinate()) {
         throw AipsError(
             _ORIGIN + "Coordinate system has no direction coordinate"

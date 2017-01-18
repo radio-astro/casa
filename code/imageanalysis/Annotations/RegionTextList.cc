@@ -55,9 +55,9 @@ RegionTextList::RegionTextList(
     RegionTextParser parser(
         filename, csys, shape, requireAtLeastThisVersion,
         prependRegion,
-        globalOverrideChans, globalOverrrideStokes
+        globalOverrideChans, globalOverrrideStokes,
+        verbose
     );
-    parser.setVerbose(verbose);
     vector<AsciiAnnotationFileLine> lines = parser.getLines();
     vector<AsciiAnnotationFileLine>::const_iterator iter = lines.begin();
     vector<AsciiAnnotationFileLine>::const_iterator end = lines.end();
@@ -75,9 +75,9 @@ RegionTextList::RegionTextList(
 ) : _lines(),
     _csys(csys), _shape(shape), _canGetRegion(true), _union(), _composite() {
     RegionTextParser parser(
-        csys, shape, text, prependRegion, globalOverrideChans, globalOverrrideStokes
+        csys, shape, text, prependRegion, globalOverrideChans,
+        globalOverrrideStokes, verbose
     );
-    parser.setVerbose(verbose);
     Vector<AsciiAnnotationFileLine> lines = parser.getLines();
     for (
         Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();

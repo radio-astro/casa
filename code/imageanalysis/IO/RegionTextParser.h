@@ -75,29 +75,15 @@ public:
         casacore::Bool boolVal;
         AnnotationBase::LineStyle lineStyleVal;
         AnnotationBase::FontStyle fontStyleVal;
-        // casacore::Vector<casacore::MFrequency> freqRange;
         SHARED_PTR<std::pair<casacore::MFrequency, casacore::MFrequency> > freqRange;
         casacore::Vector<casacore::Stokes::StokesTypes> stokes;
         AnnotationBase::RGB color;
         vector<casacore::Int> intVec;
     };
-    /*
-    struct GlobalOverrideChans {
-        // the "classic" channel specification
-        casacore::String chanSpec;
-        // the number of spectral planes in the image
-        casacore::uInt nChannels;
-        // the image's spectral coordinate
-        casacore::SpectralCoordinate specCoord;
-    };
-    */
 
     using ParamSet = std::map<AnnotationBase::Keyword, ParamValue>;
 
     RegionTextParser() = delete;
-
-
-
 
     // <group>
     // differentiating between the filename and simple text constructors
@@ -111,13 +97,16 @@ public:
         const casacore::String& filename, const casacore::CoordinateSystem& csys,
         const casacore::IPosition& imShape, const casacore::Int requireAtLeastThisVersion,
         const casacore::String& prependRegion="",
-        const casacore::String& globalOverrideChans="", const casacore::String& globalOverrrideStokes=""
+        const casacore::String& globalOverrideChans="",
+        const casacore::String& globalOverrrideStokes="",
+        casacore::Bool verbose=true
     );
 
     RegionTextParser(
         const casacore::CoordinateSystem& csys, const casacore::IPosition& imShape, const casacore::String& text,
         const casacore::String& prependRegion="",
-        const casacore::String& globalOverrideChans="", const casacore::String& globalOverrrideStokes=""
+        const casacore::String& globalOverrideChans="", const casacore::String& globalOverrrideStokes="",
+        casacore::Bool verbose=true
     );
     //</group>
 
@@ -137,8 +126,6 @@ public:
         SHARED_PTR<std::pair<casacore::MFrequency, casacore::MFrequency> > overridingFreqRange,
         SHARED_PTR<casacore::Vector<casacore::Stokes::StokesTypes> > overridingCorrRange
     );
-
-    void setVerbose(casacore::Bool v) { _verbose = v; }
 
 private:
 
