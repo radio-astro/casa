@@ -93,4 +93,6 @@ casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
   pipelineTest_regression.py
   time_then_chan_avg.py
   calstat_test_regression.py
+  wideband.py
+  wproject.py
 )
