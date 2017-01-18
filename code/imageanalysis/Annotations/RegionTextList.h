@@ -57,99 +57,99 @@ class RegionTextList {
 
 public:
 
-	// <group>
-	// create an empty list which can be appended to. This constructor
-	// is used for constructing an annotation list on the fly, possibly
-	// to be written to a file when complete. Do not use this constructor
-	// if you want to determine the final composite region.
-	RegionTextList();
+    // <group>
+    // create an empty list which can be appended to. This constructor
+    // is used for constructing an annotation list on the fly, possibly
+    // to be written to a file when complete. Do not use this constructor
+    // if you want to determine the final composite region.
+    RegionTextList();
 
-	// create an empty list which can be appended to. This constructor
-	// is used for constructing an annotation list on the fly, possibly
-	// to be written to a file when complete. It can be used to determine
-	// the composite region as well but it is the caller's responsibility
-	// to ensure the regions added to this object are constructed
-	// in a consistent manner (eg using the same coordinate system).
-	// <src>shape</src> is the image shape and is only used if
-	// the first region is a difference; in that case, the all pixels in entire
-	// shape are set to good initially.
-	// <src>globalOverrideChans</src> override all spectral selections in the file
-	// or text by using this channel selection<src>
-	// <src>globalOverrideStokes</src> override all correlation selections in the file
-	// or text by using this polarization selection<src>
-	RegionTextList(
-		const casacore::CoordinateSystem& csys, const casacore::IPosition shape
-	);
+    // create an empty list which can be appended to. This constructor
+    // is used for constructing an annotation list on the fly, possibly
+    // to be written to a file when complete. It can be used to determine
+    // the composite region as well but it is the caller's responsibility
+    // to ensure the regions added to this object are constructed
+    // in a consistent manner (eg using the same coordinate system).
+    // <src>shape</src> is the image shape and is only used if
+    // the first region is a difference; in that case, the all pixels in entire
+    // shape are set to good initially.
+    // <src>globalOverrideChans</src> override all spectral selections in the file
+    // or text by using this channel selection<src>
+    // <src>globalOverrideStokes</src> override all correlation selections in the file
+    // or text by using this polarization selection<src>
+    RegionTextList(
+        const casacore::CoordinateSystem& csys, const casacore::IPosition shape
+    );
 
-	// create a list by reading it from a file.
-	// An exception is thrown if the file is not in the correct
-	// format or does not exist. The coordinate system is used for
-	// setting defaults and reference frames to be used.
-	// <src>shape</src> is the image shape and is only used if
-	// the first region is a difference; in that case, the all pixels in entire
-	// shape are set to good initially.
-	RegionTextList(
-		const casacore::String& filename, const casacore::CoordinateSystem& csys,
-		const casacore::IPosition shape, const casacore::String& prependRegion="",
-		const casacore::String& globalOverrideChans="", const casacore::String& globalOverrrideStokes="",
-		const casacore::Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION
-	);
+    // create a list by reading it from a file.
+    // An exception is thrown if the file is not in the correct
+    // format or does not exist. The coordinate system is used for
+    // setting defaults and reference frames to be used.
+    // <src>shape</src> is the image shape and is only used if
+    // the first region is a difference; in that case, the all pixels in entire
+    // shape are set to good initially.
+    RegionTextList(
+        const casacore::String& filename, const casacore::CoordinateSystem& csys,
+        const casacore::IPosition shape, const casacore::String& prependRegion="",
+        const casacore::String& globalOverrideChans="", const casacore::String& globalOverrrideStokes="",
+        const casacore::Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION
+    );
 
-	// create a list by reading it from a text string.
-	// An exception is thrown if the text is not in the correct
-	// format. The coordinate system is used for
-	// setting defaults and reference frames to be used.
-	// <src>shape</src> is the image shape and is only used if
-	// the first region is a difference; in that case, the all pixels in entire
-	// shape are set to good initially.
-	RegionTextList(
-		const casacore::CoordinateSystem& csys, const casacore::String& text,
-		const casacore::IPosition shape,
-		const casacore::String& prependRegion="",
-		const casacore::String& globalOverrideChans="",
-		const casacore::String& globalOverrrideStokes=""
-	);
-	//</group>
+    // create a list by reading it from a text string.
+    // An exception is thrown if the text is not in the correct
+    // format. The coordinate system is used for
+    // setting defaults and reference frames to be used.
+    // <src>shape</src> is the image shape and is only used if
+    // the first region is a difference; in that case, the all pixels in entire
+    // shape are set to good initially.
+    RegionTextList(
+        const casacore::CoordinateSystem& csys, const casacore::String& text,
+        const casacore::IPosition shape,
+        const casacore::String& prependRegion="",
+        const casacore::String& globalOverrideChans="",
+        const casacore::String& globalOverrrideStokes=""
+    );
+    //</group>
 
-	~RegionTextList();
+    ~RegionTextList();
 
-	// add a line to the end of the list
-	void addLine(const AsciiAnnotationFileLine& line);
+    // add a line to the end of the list
+    void addLine(const AsciiAnnotationFileLine& line);
 
-	// number of lines in the list
-	casacore::uInt nLines() const;
+    // number of lines in the list
+    casacore::uInt nLines() const;
 
-	// get the line at the specified index
-	AsciiAnnotationFileLine lineAt(const casacore::uInt i) const;
+    // get the line at the specified index
+    AsciiAnnotationFileLine lineAt(const casacore::uInt i) const;
 
-	// get all lines in the list
-	inline const casacore::Vector<AsciiAnnotationFileLine>& getLines() const {
-		return _lines;
-	}
+    // get all lines in the list
+    inline const casacore::Vector<AsciiAnnotationFileLine>& getLines() const {
+        return _lines;
+    }
 
-	std::ostream& print(std::ostream& os) const;
+    std::ostream& print(std::ostream& os) const;
 
-	// get the composite region.
-	casacore::CountedPtr<const casacore::WCRegion> getRegion() const;
+    // get the composite region.
+    casacore::CountedPtr<const casacore::WCRegion> getRegion() const;
 
-	// get the composite region as a region record.
-	casacore::Record regionAsRecord() const;
+    // get the composite region as a region record.
+    casacore::Record regionAsRecord() const;
 
 private:
-	casacore::Vector<AsciiAnnotationFileLine> _lines;
-	vector<SHARED_PTR<const casacore::WCRegion> > _regions;
-	casacore::CoordinateSystem _csys;
-	casacore::IPosition _shape;
-	casacore::Bool _canGetRegion;
-	// if false, then the corresponding region is complementary to
-	// the result of the previous region operations in the sequence
-	vector<casacore::Bool> _union;
-	mutable vector<SHARED_PTR<const casacore::WCDifference> > _myDiff;
-	mutable SHARED_PTR<const casacore::WCRegion> _composite;
+    casacore::Vector<AsciiAnnotationFileLine> _lines;
+    vector<SHARED_PTR<const casacore::WCRegion> > _regions;
+    casacore::CoordinateSystem _csys;
+    casacore::IPosition _shape;
+    casacore::Bool _canGetRegion;
+    // if false, then the corresponding region is complementary to
+    // the result of the previous region operations in the sequence
+    vector<casacore::Bool> _union;
+    mutable vector<SHARED_PTR<const casacore::WCDifference> > _myDiff;
+    mutable SHARED_PTR<const casacore::WCRegion> _composite;
 };
 
 inline std::ostream &operator<<(std::ostream& os, const RegionTextList& list) {
-	return list.print(os);
+    return list.print(os);
 };
 
 }
