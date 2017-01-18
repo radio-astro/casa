@@ -38,6 +38,8 @@ namespace casa {
 
 const String ImageStatsCalculator::_class = "ImageStatsCalculator";
 
+const String ImageStatsCalculator::SIGMA = "ImageStatsCalculator";
+
 ImageStatsCalculator::ImageStatsCalculator(
 	const SPCIIF image,
 	const Record *const &regionPtr,
@@ -388,7 +390,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 				<< std::setw(width) << retval.asArrayDouble("sum")(arrayIndex) << " "
 				<< std::setw(width) << retval.asArrayDouble("mean")(arrayIndex) << " "
 				<< std::setw(width) << retval.asArrayDouble("rms")(arrayIndex) << " "
-				<< std::setw(width) << retval.asArrayDouble("sigma")(arrayIndex) << " "
+				<< std::setw(width) << retval.asArrayDouble(SIGMA)(arrayIndex) << " "
 				<< std::setw(width) << retval.asArrayDouble("min")(arrayIndex) << " "
 				<< std::setw(width) << retval.asArrayDouble("max")(arrayIndex);
 			if (_algConf.algorithm == StatisticsData::CHAUVENETCRITERION) {
@@ -593,7 +595,7 @@ Record ImageStatsCalculator::statistics(
 		statsout.define("q1", q1);
 		statsout.define("q3", q3);
 	}
-	statsout.define("sigma", sigma);
+	statsout.define(SIGMA, sigma);
 	statsout.define("rms", rms);
 	if (
 		doFlux

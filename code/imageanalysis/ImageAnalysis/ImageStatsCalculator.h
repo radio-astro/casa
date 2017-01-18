@@ -132,6 +132,8 @@ public:
     	 vector<casacore::String> *const &messageStore=0
     );
 
+    const static String SIGMA;
+
 protected:
 
    	CasacRegionManager::StokesControl _getStokesControl() const {
