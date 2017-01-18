@@ -285,6 +285,9 @@ file:///opt/casa/code/tools/xml/casa.xsd">
     <param type="string" name="crashPostingUrl">
 	    <description>URL to use when posting crash report.</description>
     </param>
+    <param type="string" name="logFile">
+	    <description>Full name of initial logfile</description>
+    </param>
     
   </input>
 

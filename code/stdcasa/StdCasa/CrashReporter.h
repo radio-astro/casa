@@ -18,7 +18,9 @@ public:
 
     static std::string initialize (const std::string & crashDumpDirectory,
                                    const std::string & crashDumpPosterApplication,
-                                   const std::string & crashPostingUrl);
+                                   const std::string & crashPostingUrl,
+                                   const std::string & logFile);
+
     static std::string initializeFromApplication (const char * applicationArg0);
 
 };

@@ -67,6 +67,7 @@ namespace {  // Unnamed namespace to limit the scope
 
 string crashDumpPoster; // Path to the crash report posting application
 string crashUrl; // Url to post the crash dump to
+string logFile;
 
 // crashCallback - callback routine called by breakpad after the crash
 // dump has been successfully created.  The routine will execute a fork
@@ -98,8 +99,9 @@ crashCallbackCommon (const char * dumpPath,
 
         execl (crashDumpPoster.c_str(),       // File to run
                crashDumpPoster.c_str(),       // Argument 0
-               dumpPath, // Argument #1
-               crashUrl.c_str(),
+               dumpPath,                      // Argument #1
+               crashUrl.c_str(),              // Argument #2
+               logFile.c_str(),               // Argument #3
                nullptr);          // No more arguments
 
        // If the execl call succeeds then control will never reach here
@@ -164,7 +166,8 @@ namespace casa {
 string
 CrashReporter::initialize (const string & crashDumpDirectory,
                            const string & crashDumpPosterApplication,
-                           const string & crashPostingUrl)
+                           const string & crashPostingUrl,
+                           const string & theLogFile)
 {
     bool useCrashReporter = false;
     AipsrcValue<Bool>::find (useCrashReporter, String ("UseCrashReporter"), false);
@@ -172,6 +175,8 @@ CrashReporter::initialize (const string & crashDumpDirectory,
     if (! useCrashReporter){
         return "";
     }
+
+    logFile = theLogFile; // save for capture during a crash.
 
     // Validate the directory and application provided.
 
@@ -261,6 +266,7 @@ CrashReporter::initializeFromApplication (const char * applicationArg0)
 
         // Replace a string of contiguous spaces (should be one of these) with
         // a "slash".
+
         std::regex spaces (" +");
         exePath = regex_replace (exePath, spaces, "/");
 
@@ -296,7 +302,7 @@ CrashReporter::initializeFromApplication (const char * applicationArg0)
     String crashReportUrl;
     AipsrcValue<String>::find (crashReportUrl, "CrashReporter.url", String ());
 
-    return casa::CrashReporter::initialize (crashReportDirectory, crashReportPoster, crashReportUrl);
+    return casa::CrashReporter::initialize (crashReportDirectory, crashReportPoster, crashReportUrl, "");
 }
 
 

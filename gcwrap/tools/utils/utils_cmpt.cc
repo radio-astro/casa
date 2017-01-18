@@ -348,12 +348,13 @@ void bogusHandler (int, siginfo_t *, void *)
 string
 utils::_crash_reporter_initialize (const string & crashDirectory,
                                    const string & crashPosterApplication,
-                                   const string & crashPostingUrl)
+                                   const string & crashPostingUrl,
+				   const string & logFile)
 {
     // *NOTE*: Not intended for casual use!
 
     string status = casa::CrashReporter::initialize(crashDirectory, crashPosterApplication,
-                                                    crashPostingUrl);
+                                                    crashPostingUrl, logFile);
 
     return status;
 }

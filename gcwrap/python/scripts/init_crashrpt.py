@@ -10,7 +10,8 @@ try:
     posterApp = casa['helpers']['crashPoster']
     if posterApp is None: posterApp = "" # handle case where it wasn't found
     postingUrl = "https://casa.nrao.edu/cgi-bin/crash-report.pl"
-    message = casac.utils()._crash_reporter_initialize(temporaryDirectory, posterApp, postingUrl)
+    theLogFile = casa['files']['logfile']
+    message = casac.utils()._crash_reporter_initialize(temporaryDirectory, posterApp, postingUrl, theLogFile)
     if len (message) > 0:
         print ("***\n*** Crash reporter failed to initialize: " + message)
 except Exception as e:

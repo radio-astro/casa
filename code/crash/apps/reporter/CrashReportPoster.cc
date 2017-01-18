@@ -110,6 +110,7 @@ private:
     string archiveFilename_p;
     string arguments_p;
     string crashPostingUrl_p;
+    string logFile_p;
     OstreamSet logStream_p;
     vector<string> manifest_p;
     string manifestString_p;
@@ -177,6 +178,11 @@ CrashReportPoster::captureAdditionalInformation ()
     captureOne ("mount", "mountinfo.txt");
     captureOne ("lsb_release -a", "lsbinfo.txt");
     captureOne ("uname -a", "unameinfo.txt");
+    if (logFile_p.size() > 0){
+        captureOne ("cat " + logFile_p, "casa.log");
+    } else {
+        captureOne ("echo '--> No log file provided.'", "casa.log");
+    }
 
 #else
 
@@ -188,6 +194,11 @@ CrashReportPoster::captureAdditionalInformation ()
     captureOne ("mount", "mountinfo.txt");
     captureOne ("lsb_release -a", "lsbinfo.txt");
     captureOne ("uname -a", "unameinfo.txt");
+    if (logFile_p.size() > 0){
+        captureOne ("cat " + logFile_p, "casa.log");
+    } else {
+        captureOne ("echo '--> No log file provided.'", "casa.log");
+    }
 
 #endif
 }
@@ -196,7 +207,15 @@ void
 CrashReportPoster::captureOne (const string & command,
                                const string & filename)
 {
-    bool ok = doSystem (command + " > " + filename, false);
+    // Execute the command, if given and then add the filename holding
+    // the result to the manifest of the crash archive.  If there is no
+    // command, the filename is simply added to the manifest.
+
+    bool ok = true;
+    if (command.size() > 0){
+        ok = doSystem (command + " > " + filename, false);
+    }
+
     if (ok) {
         manifest_p.push_back (filename);
     }
@@ -254,14 +273,15 @@ CrashReportPoster::parseArguments (int nArgs, char ** args)
         arguments_p += string (" ") + args [i];
     }
 
-    ThrowIf (nArgs < 3, "At least two arguments required.");
+    ThrowIf (nArgs < 4, "At least three arguments required.");
 
     // Add crash report to the manifest.
 
-    string crashDumpFile = args [1];
-    crashPostingUrl_p = args [2];
+    string crashDumpFile = args [1];  // Full name of the breakpad crash dump
+    crashPostingUrl_p = args [2];     // URL to post the crash archive to
+    logFile_p = args [3];             // name of the sessions log file
 
-    if (nArgs >= 4 && string (args[3]) == "stderr"){
+    if (nArgs >= 5 && string (args[4]) == "stderr"){
 
         logStream_p.loan (& cerr);
     }
@@ -284,6 +304,7 @@ CrashReportPoster::parseArguments (int nArgs, char ** args)
     i = filename.find (".");
 
     archiveFilename_p = filename.substr (0, i - 1);
+
 }
 
 void
