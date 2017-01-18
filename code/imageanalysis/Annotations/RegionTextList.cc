@@ -70,16 +70,18 @@ RegionTextList::RegionTextList(
 RegionTextList::RegionTextList(
     const CoordinateSystem& csys, const String& text,
     const IPosition shape, const String& prependRegion,
-    const String& globalOverrideChans, const String& globalOverrrideStokes
+    const String& globalOverrideChans, const String& globalOverrrideStokes,
+    casacore::Bool verbose
 ) : _lines(),
     _csys(csys), _shape(shape), _canGetRegion(true), _union(), _composite() {
     RegionTextParser parser(
         csys, shape, text, prependRegion, globalOverrideChans, globalOverrrideStokes
     );
+    parser.setVerbose(verbose);
     Vector<AsciiAnnotationFileLine> lines = parser.getLines();
     for (
         Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();
-        iter != lines.end(); iter++
+        iter != lines.end(); ++iter
     ) {
         addLine(*iter);
     }

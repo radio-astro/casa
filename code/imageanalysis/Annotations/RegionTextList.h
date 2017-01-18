@@ -109,7 +109,8 @@ public:
         const casacore::IPosition shape,
         const casacore::String& prependRegion="",
         const casacore::String& globalOverrideChans="",
-        const casacore::String& globalOverrrideStokes=""
+        const casacore::String& globalOverrrideStokes="",
+        casacore::Bool verbose=true
     );
     //</group>
 
