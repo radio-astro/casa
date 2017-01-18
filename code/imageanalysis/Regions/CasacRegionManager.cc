@@ -273,7 +273,7 @@ Record CasacRegionManager::fromBCS(
             }
             _setRegion(
                 regionRecord, diagnostics, regionName, imShape,
-                imageName, crtfBoxString, chans, stokes
+                imageName, crtfBoxString, chans, stokes, verbose
             );
         }
     }
@@ -287,29 +287,9 @@ Record CasacRegionManager::fromBCS(
         stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
     }
     else if (! regionName.empty()) {
-        /*
-        ThrowIf(
-            ! chans.empty() || ! stokes.empty(),
-            "regionName and chans and/or stokes cannot "
-            "be specified simultaneously"
-        );
-        */
-        /*
-        RegionTextParser::GlobalOverrideChans *chanDescPtr = NULL;
-        RegionTextParser::GlobalOverrideChans chanDesc;
-        if (! chans.empty()) {
-            const CoordinateSystem& csys = getcoordsys();
-            if (csys.hasSpectralAxis()) {
-                chanDesc.chanSpec = chans;
-                chanDesc.nChannels = imShape[csys.spectralAxisNumber(false)];
-                chanDesc.specCoord = csys.spectralCoordinate();
-                chanDescPtr = &chanDesc;
-            }
-        }
-        */
         _setRegion(
             regionRecord, diagnostics, regionName,
-            imShape, imageName, "", chans, stokes
+            imShape, imageName, "", chans, stokes, verbose
         );
         if (verbose) {
             *_getLog() << origin;
@@ -365,16 +345,14 @@ Record CasacRegionManager::fromBCS(
 
 Record CasacRegionManager::regionFromString(
     const CoordinateSystem& csys, const String& regionStr,
-    const String& imageName, const IPosition& imShape /*,
-    const String& globalOverrideChans,
-    const String& globalStokesOverride */
+    const String& imageName, const IPosition& imShape,
+    Bool verbose
 ) {
     CasacRegionManager mgr(csys);
     Record reg;
     String diag;
     mgr._setRegion(
-        reg, diag, regionStr, imShape, imageName, "", "", ""
-        /*globalOverrideChans, globalStokesOverride*/
+        reg, diag, regionStr, imShape, imageName, "", "", "", verbose
     );
     return reg;
 }
@@ -395,7 +373,8 @@ void CasacRegionManager::_setRegion(
     const String& imageName,
     const String& prependBox,
     const String& globalOverrideChans,
-    const String& globalStokesOverride
+    const String& globalStokesOverride,
+    Bool verbose
 ) {
     if (regionName.empty() && imageName.empty()) {
         regionRecord = Record();
@@ -452,7 +431,7 @@ void CasacRegionManager::_setRegion(
         try {
             RegionTextList annList(
                 csys, regionName, imShape, prependBox, globalOverrideChans,
-                globalStokesOverride
+                globalStokesOverride, verbose
             );
             regionRecord = annList.regionAsRecord();
             diagnostics = "Region read from text string " + regionName;

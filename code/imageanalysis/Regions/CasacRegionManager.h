@@ -100,9 +100,8 @@ public:
 
     static casacore::Record regionFromString(
         const casacore::CoordinateSystem& csys, const casacore::String& regionStr,
-        const casacore::String& imageName, const casacore::IPosition& imShape /*,
-        const casacore::String& globalOverrideChans,
-        const casacore::String& globalStokesOverride */
+        const casacore::String& imageName, const casacore::IPosition& imShape,
+        casacore::Bool verbose=true
     );
 
     // Return the range(s) of spectral channels selected by the specification or the
@@ -116,24 +115,10 @@ public:
 
     vector<casacore::uInt> setSpectralRanges(
         casacore::String specification, casacore::uInt& nSelectedChannels,
-        /*
-        const casacore::String& globalChannelOverride,
-        const casacore::String& globalStokesOverrideconst,
-        */
         const casacore::IPosition& imShape=casacore::IPosition(0)
     ) const;
 
 private:
-
-    // disallow copy constructor and = operator
-
-    // CasacRegionManager(const CasacRegionManager&) : casacore::RegionManager() {}
-
-    /*
-    CasacRegionManager& operator=(const CasacRegionManager&) {
-        ThrowCc("=operator disallowed");
-    }
-    */
 
     casacore::String _pairsToString(const vector<casacore::uInt>& pairs) const;
 
@@ -165,13 +150,13 @@ private:
         const casacore::String& imageName,
         const casacore::String& prependBox,
         const casacore::String& globalOverrideChans,
-        const casacore::String& globalStokesOverride
+        const casacore::String& globalStokesOverride,
+        casacore::Bool verbose
     );
 
     vector<casacore::uInt> _spectralRangeFromRangeFormat(
         casacore::uInt& nSelectedChannels, const casacore::String& specification,
-        const casacore::IPosition& imShape /*, const casacore::String& globalChannelOverride,
-        const casacore::String& globalStokesOverride */
+        const casacore::IPosition& imShape 
     ) const;
 
     vector<casacore::uInt> _spectralRangeFromRegionRecord(
