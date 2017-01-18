@@ -91,8 +91,10 @@ public:
     RegionTextList(
         const casacore::String& filename, const casacore::CoordinateSystem& csys,
         const casacore::IPosition shape, const casacore::String& prependRegion="",
-        const casacore::String& globalOverrideChans="", const casacore::String& globalOverrrideStokes="",
-        const casacore::Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION
+        const casacore::String& globalOverrideChans="",
+        const casacore::String& globalOverrrideStokes="",
+        const casacore::Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION,
+        casacore::Bool verbose=true
     );
 
     // create a list by reading it from a text string.
