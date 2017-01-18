@@ -138,6 +138,8 @@ public:
         SHARED_PTR<casacore::Vector<casacore::Stokes::StokesTypes> > overridingCorrRange
     );
 
+    void setVerbose(casacore::Bool v) { _verbose = v; }
+
 private:
 
     const static casacore::String sOnePair;
@@ -154,15 +156,11 @@ private:
     casacore::Int _fileVersion;
     casacore::IPosition _imShape;
     casacore::uInt _regions;
+    casacore::Bool _verbose = true;
 
     SHARED_PTR<std::pair<casacore::MFrequency, casacore::MFrequency> > _overridingFreqRange;
+
     SHARED_PTR<casacore::Vector<casacore::Stokes::StokesTypes> > _overridingCorrRange;
-
-    /*
-    RegionTextParser() {}
-
-    RegionTextParser& operator=(const RegionTextParser&);
-    */
 
     void _parse(const casacore::String& contents, const casacore::String& fileDesc);
 
