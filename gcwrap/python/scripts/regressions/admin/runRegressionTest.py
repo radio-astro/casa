@@ -15,7 +15,7 @@ PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
 CASA_DIR = os.environ["CASAPATH"].split()[0]
 TESTS_DIR = CASA_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
-stack_frame_find()['TESTS_DIR']=TESTS_DIR
+
 _potential_data_directories = ( "/opt/casa/data",
                                 "/home/casa/data",
                                 "/home/casa/data/trunk",
@@ -31,7 +31,7 @@ if not os.access(TESTS_DIR, os.F_OK):
         TESTS_DIR = CASA_DIR+'/lib/python' + PYVER + '/regressions/'
     else:            #Mac release
         TESTS_DIR = CASA_DIR+'/Resources/python/regressions/'
-
+stack_frame_find()['TESTS_DIR']=TESTS_DIR
 
 def _find_script_path( name ):
     if os.access(TESTS_DIR+name+".py",os.F_OK):
