@@ -5,7 +5,7 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
-
+import pipeline.hif.tasks.gaincal as gaincal
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -46,12 +46,38 @@ class Polarization(basetask.StandardTaskTemplate):
 
         LOG.info("This Polarization class is running.")
 
+
+
         return PolarizationResults()
 
     def analyse(self, results):
         return results
 
-    def _do_polcal(self):
+    def do_gaincal(self, caltable, RefAntOutput):
+        inputs = self.inputs
+
+        #Similar inputs to linpolcal.py
+        task_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
+                                                  output_dir=inputs.output_dir,
+                                                  vis=inputs.vis,
+                                                  caltable=caltable,
+                                                  field=inputs.field,
+                                                  intent='',
+                                                  scan='',
+                                                  spw=inputs.spw,
+                                                  solint='int',
+                                                  gaintype='KCROSS',
+                                                  refant=RefAntOutput[0].lower(),
+                                                  smodel=[1, 0, 1, 0],
+                                                  to_intent='PHASE,TARGET,AMPLITUDE,BANDPASS',
+                                                  to_field=None)
+
+        gaincal_task = gaincal.GTypeGaincal(task_inputs)
+        result = self._executor.execute(gaincal_task, merge=True)
+
+        return result
+
+    def do_polcal(self, caltable, poltype, RefAntOutput):
 
         '''
         From Chris Hales script
@@ -69,13 +95,14 @@ class Polarization(basetask.StandardTaskTemplate):
         spwmapGinit = [1, 1, 1]
 
         task_args = {'vis': self.inputs.vis,
-                              'caltable': caltable,
-                              'field': '0',
-                              'refant': RefAntOutput[0].lower(),
-                              'gaintable': GainTables,
-                              'gainfield': ['', '', '', '0', '0', ''],
-                              'spwmap': [[], spwmapK, [], [], [], []],
-                              'parang': True}
+                     'caltable': caltable,
+                     'field': '0',
+                     'refant': RefAntOutput[0].lower(),
+                     'gaintable': GainTables,
+                     'poltype': poltype,
+                     'gainfield': ['', '', '', '0', '0', ''],
+                     'spwmap': [[], spwmapK, [], [], [], []],
+                     'parang': True}
 
         task = casa_tasks.polcal(**task_args)
 
