@@ -18,7 +18,8 @@ class EditimlistInputs(basetask.StandardInputs):
                  imagename=None, intent=None, field=None, spw=None, contfile=None,
                  linesfile=None, uvrange=None, specmode=None, outframe=None,
                  hm_imsize=None, hm_cell=None, calmaxpix=None, phasecenter=None,
-                 nchan=None, start=None, width=None, nbins=None):
+                 nchan=None, start=None, width=None, nbins=None,
+                 polproducts=None, usefile=False, msfterms=None, tapersize=None):
 
         self._init_properties(vars())
 
@@ -259,6 +260,48 @@ class EditimlistInputs(basetask.StandardInputs):
             value = ''
         self._nbins = value
 
+    @property
+    def polproducts(self):
+        return self._polproducts
+
+    @polproducts.setter
+    def polproducts(self, value):
+        if value is None:
+            value = ''
+        self._polproducts = value
+
+
+    @property
+    def usefile(self):
+        return self._usefile
+
+    @usefile.setter
+    def usefile(self, value):
+        if value is None:
+            value = ''
+        self._usefile = value
+
+    @property
+    def msfterms(self):
+        return self._msfterms
+
+    @msfterms.setter
+    def msfterms(self, value):
+        if value is None:
+            value = ''
+        self._msfterms = value
+
+    @property
+    def tapersize(self):
+        return self._tapersize
+
+    @tapersize.setter
+    def tapersize(self, value):
+        if value is None:
+            value = ''
+        self._tapersize = value
+
+
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
@@ -322,7 +365,12 @@ class Editimlist(basetask.StandardTaskTemplate):
                   'width': inputs.width,
                   'nbin': '',
                   'nchan': inputs.nchan,
-                  'uvrange': inputs.uvrange}
+                  'uvrange': inputs.uvrange,
+                  'polproducts': inputs.polproducts,
+                  'usefile': inputs.usefile,
+                  'msfterms': inputs.msfterms,
+                  'tapersize': inputs.tapersize
+                  }
 
         result.add_target(target)
 
