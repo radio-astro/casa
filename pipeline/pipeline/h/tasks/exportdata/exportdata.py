@@ -278,32 +278,45 @@ class ExportData(basetask.StandardTaskTemplate):
         # 'self.inputs' everywhere
         inputs = self.inputs
 
-        # Initialize the standard ous product string  and the pipeline manifest
-        oussid, pipemanifest, ouss = self._do_init(inputs.context)
+        # Initialize the standard ous is string.
+        oussid = self.get_oussid(inputs.context)
 
+        # Define the results object
         result = ExportDataResults()
 
         # Make the standard vislist and the sessions lists. 
         session_list, session_names, session_vislists, vislist = self._make_lists(inputs.context, inputs.session, inputs.vis)
 
         # Export the standard per OUS file products
+        #    The pipeline processing request
+        #    A compressed tarfile of the weblog
+        #    The pipeline processing script
+        #    The pipeline restore script
+        #    The CASA commands log
         stdfproducts = self._do_standard_ous_products(inputs.context, oussid, inputs.pprfile, 
             session_list, vislist, inputs.output_dir, inputs.products_dir)
-        result.weblog=os.path.basename(stdfproducts.weblog_file)
-        result.pipescript=os.path.basename(stdfproducts.casa_pipescript)
-        result.restorescript=os.path.basename(stdfproducts.casa_restore_script)
-        result.commandslog=os.path.basename(stdfproducts.casa_commands_file)
+        result.pprequest = os.path.basename(stdfproducts.ppr_file) 
+        result.weblog =os.path.basename(stdfproducts.weblog_file)
+        result.pipescript =os.path.basename(stdfproducts.casa_pipescript)
+        result.restorescript =os.path.basename(stdfproducts.casa_restore_script)
+        result.commandslog =os.path.basename(stdfproducts.casa_commands_file)
 
         # Export the auxiliary file products
-        #    These are optional for reprocessing but information to the user
+        #    TBD Move this routine to the ALMA interferometry pipeline
+        #    These are optional for reprocessing but informative to the user
+        #    The calibrator source fluxes file
+        #    The antenna positions file
+        #    The continuum regions file
+        #    The target flagging file
         auxfproducts =  self._do_auxiliary_products(inputs.context, oussid, inputs.output_dir, inputs.products_dir)
 
         # Make the standard ms dictionary and export per ms products
-        #    Currently these are per MS flagging tables and per session calibration tables
+        #    Currently these are compressed tar files of per MS flagging tables and per MS text files of calibration apply instructions
         visdict = self._do_standard_ms_products (inputs.context, vislist, inputs.products_dir)
         result.visdict=visdict
 
         # Make the standard sessions dictionary and export per session products
+        #    Currently these are compressed tar files of per session calibration tables
         sessiondict = self._do_standard_session_products (inputs.context, oussid, session_names, session_vislists,
             inputs.products_dir)
         result.sessiondict=sessiondict
@@ -320,19 +333,9 @@ class ExportData(basetask.StandardTaskTemplate):
             inputs.products_dir)
         result.targetimages=(targetimages_list, targetimages_fitslist)
 
-        # Generate the AQUA report
-        #    This is a dummy place holder
-        #LOG.info ('Before AQUA report')
-        #aqua_reportfile = 'pipeline_aquareport.xml'
-        #pipe_aquareport_file = self._export_aqua_report (inputs.context,
-            #oussid, aqua_reportfile, aqua, inputs.products_dir)
-        #if os.path.exists(pipe_aquareport_file):
-            #pipemanifest.add_aqua_report(ouss, os.path.basename(pipe_aquareport_file))
-            #LOG.info ('Export AQUA report')
-        #LOG.info ('After AQUA report')
-
         # Export the pipeline manifest file
-        self._make_pipe_manifest (pipemanifest, ouss, stdfproducts, auxfproducts, sessiondict, visdict,
+        #    Remove support for auxiliary data products to the individual pipelines
+        pipemanifest = self._make_pipe_manifest (oussid, stdfproducts, auxfproducts, sessiondict, visdict,
             [os.path.basename(image) for image in calimages_fitslist], 
             [os.path.basename(image) for image in targetimages_fitslist])
         casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
@@ -357,6 +360,10 @@ class ExportData(basetask.StandardTaskTemplate):
 
     def get_oussid (self, context):
 
+        """
+        Determine the ous prefix
+        """
+
         # Get the parent ous ousstatus name. This is the sanitized ous
         # status uid
         ps = context.project_structure
@@ -368,22 +375,6 @@ class ExportData(basetask.StandardTaskTemplate):
             oussid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
 
         return oussid
-
-    def _do_init(self, context):
-
-        '''
-        Initialize the prepare
-        '''
-
-        # Get the parent ous ousstatus name. This is the sanitized ous
-        # status uid
-        oussid = self.get_oussid(context)
-
-        # Initialize the manifest document and the top level ous status.
-        pipemanifest = self._init_pipemanifest(oussid)
-        ouss = pipemanifest.set_ous(oussid)
-
-        return oussid, pipemanifest, ouss
 
     def _make_lists (self, context, session, vis):
 
@@ -541,12 +532,16 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return sessiondict
 
-    def _make_pipe_manifest (self, pipemanifest, ouss, stdfproducts, auxfproducts, sessiondict,
+    def _make_pipe_manifest (self, oussid, stdfproducts, auxfproducts, sessiondict,
         visdict, calimages, targetimages):
 
         '''
         Generate the manifest file
         '''
+
+        # Initialize the manifest document and the top level ous status.
+        pipemanifest = self._init_pipemanifest(oussid)
+        ouss = pipemanifest.set_ous(oussid)
 
         if stdfproducts.ppr_file:
             pipemanifest.add_pprfile (ouss, os.path.basename(stdfproducts.ppr_file))
@@ -573,13 +568,13 @@ class ExportData(basetask.StandardTaskTemplate):
         pipemanifest.add_restorescript (ouss, os.path.basename(stdfproducts.casa_restore_script))
 
         if auxfproducts:
-            # Export the flux.csv file
+            # Add the flux.csv file
             pipemanifest.add_flux_file (ouss, os.path.basename(auxfproducts.flux_file))
 
-            # Export the antennapos.csv file.
+            # Add the antennapos.csv file.
             pipemanifest.add_antennapos_file (ouss, os.path.basename(auxfproducts.antenna_file))
 
-            # Export the cont.dat file.
+            # Add the cont.dat file.
             #    May need to be exported to the archive. This is TBD
             #    Relies on file name convention
             pipemanifest.add_cont_file (ouss, os.path.basename(auxfproducts.cont_file))
@@ -589,6 +584,8 @@ class ExportData(basetask.StandardTaskTemplate):
 
         # Add the target images
         pipemanifest.add_images (ouss, targetimages, 'target')
+
+        return pipemanifest
 
     def _init_pipemanifest (self, oussid):
         '''
