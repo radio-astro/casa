@@ -1737,3 +1737,8 @@ print ""
 
 print ""
 print "Completed POLCAL Regression"
+if passfail:
+    print "Regression PASSED
+else:
+    print "Regression FAILED'
+            
