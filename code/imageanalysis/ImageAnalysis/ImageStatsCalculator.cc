@@ -38,7 +38,7 @@ namespace casa {
 
 const String ImageStatsCalculator::_class = "ImageStatsCalculator";
 
-const String ImageStatsCalculator::SIGMA = "ImageStatsCalculator";
+const String ImageStatsCalculator::SIGMA = "sigma";
 
 ImageStatsCalculator::ImageStatsCalculator(
     const SPCIIF image,
