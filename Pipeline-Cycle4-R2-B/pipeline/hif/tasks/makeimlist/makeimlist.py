@@ -66,7 +66,8 @@ class MakeImListInputs(basetask.StandardInputs):
     def spw(self, value):
         if value is None:
             value = ''
-        self._spw = value
+        # Use str() method to catch single spwid case via PPR which maps to int.
+        self._spw = str(value)
 
     @property
     def contfile(self):
