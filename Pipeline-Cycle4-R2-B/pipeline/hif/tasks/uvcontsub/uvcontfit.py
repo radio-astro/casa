@@ -1,19 +1,18 @@
 from __future__ import absolute_import
 
+import collections
 import os
 import types
+
 import numpy as np
-import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
-from pipeline.infrastructure import casa_tasks
-
-from pipeline.hif.heuristics import caltable as uvcaltable
 import pipeline.infrastructure.contfilehandler as contfilehandler
+from pipeline.h.heuristics import caltable as uvcaltable
+from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -89,7 +88,7 @@ class UVcontFitInputs(basetask.StandardInputs):
         unique_field_names = set([f.name for f in fields])
         field_ids = set([f.id for f in fields])
 
-        #Fields with different intents may have the same name. Check for this
+        # Fields with different intents may have the same name. Check for this
         # and return the IDs if necessary
         if len(unique_field_names) is len(field_ids):
             return ','.join(unique_field_names)
@@ -122,7 +121,7 @@ class UVcontFitInputs(basetask.StandardInputs):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('spw')
 
-        science_target_intents = set (self.intent.split(','))
+        science_target_intents = set(self.intent.split(','))
         science_target_spws = []
 
         science_spws = [spw for spw in self.ms.get_spectral_windows(self._spw)]
@@ -263,7 +262,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
                 #     Not ideal because of the way inputs works but ...
 
                 caltable = uvcaltable.UVcontCaltable()
-                caltable = caltable (output_dir=inputs.output_dir,
+                caltable = caltable(output_dir=inputs.output_dir,
                     stage=inputs.context.stage, vis=inputs.vis, source=sname)
                 spwdict[sname] = spwstr
 
@@ -280,14 +279,13 @@ class UVcontFit(basetask.StandardTaskTemplate):
                                      spwmap=[],
                                      interp='',
                                      calwt=False)
-                calapps.append (callibrary.CalApplication(calto, calfrom))
+                calapps.append(callibrary.CalApplication(calto, calfrom))
                 
                 inputs.intent = orig_intent
 
         return UVcontFitResults(spwdict=spwdict, pool=calapps)
 
-
-    def analyse (self, result):
+    def analyse(self, result):
 
         # With no best caltable to find, our task is simply to set the one
         # caltable as the best result
@@ -315,15 +313,15 @@ class UVcontFit(basetask.StandardTaskTemplate):
 
         # Get all the associated sources
         all_sources = [f.source for f in all_fields]
-        all_source_names = list(set ([f.source.name for f in all_fields]))
+        all_source_names = list(set([f.source.name for f in all_fields]))
 
         # Collect the merged ranges
         #    Error checking ?
         cranges_spwsel = collections.OrderedDict()
         for sname in all_source_names:
-            source_fields =  [s.fields for s in all_sources if s.name == sname][0]
+            source_fields = [s.fields for s in all_sources if s.name == sname][0]
             if len(source_fields) > 1:
-                rep_field_id, rep_field_name = self._get_rep_field (source_fields)
+                rep_field_id, rep_field_name = self._get_rep_field(source_fields)
                 if rep_field_id < 0:
                     rep_field_id = source_fields[1].id
                     rep_field_name = source_fields[1].name
@@ -335,20 +333,23 @@ class UVcontFit(basetask.StandardTaskTemplate):
             for spw_id in [str(spw.id) for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
                 cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
                 if not cranges_spwsel[sname][spw_id]:
-                    LOG.warn('No frequency ranges for MS %s source %s and spw %d' % (inputs.ms.basename, sname, int(spw_id)))
+                    LOG.info('No continuum region detection attempted for MS %s source %s spw %d' % (inputs.ms.basename, sname, int(spw_id)))
+                    continue
+                elif cranges_spwsel[sname][spw_id] in ['NONE']:
+                    LOG.warn('Continuum region detection failed for MS %s source %s spw %d' % (inputs.ms.basename, sname, int(spw_id)))
                     continue
                 else:
-                    LOG.info('Input frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id), cranges_spwsel[sname][spw_id]))
+                    LOG.info('Input continuum frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id), cranges_spwsel[sname][spw_id]))
                 try:
                     freq_ranges, chan_ranges, aggregate_lsrk_bw = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
                         [inputs.vis], [rep_field_id], int(spw_id))
-                    LOG.info('Output frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                    LOG.info('Output continuum frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                         freq_ranges[0]))
-                    LOG.info('Output channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                    LOG.info('Output continuum channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                        chan_ranges[0]))
                     cranges_spwsel[sname][spw_id] = freq_ranges[0]
                 except:
-                    LOG.info('Frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                    LOG.info('Output continuum frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                         cranges_spwsel[sname][spw_id]))
 
         return cranges_spwsel
@@ -376,7 +377,8 @@ class UVcontFit(basetask.StandardTaskTemplate):
             mdirections.append(phase_dir)
 
         # Compute offsets from field 0.
-        xsep = []; ysep = []
+        xsep = []
+        ysep = []
         for mdirection in mdirections:
             pa = cme.posangle(mdirections[0], mdirection)
             sep = cme.separation(mdirections[0], mdirection)
@@ -394,7 +396,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
         ycen = ysep.min() + (ysep.max() - ysep.min()) / 2.0
 
         # Initialize phase center
-        ref =  cme.getref(mdirections[0])
+        ref = cme.getref(mdirections[0])
         md = cme.getvalue(mdirections[0])
         m0 = cqa.quantity(md['m0'])
         m1 = cqa.quantity(md['m1'])
@@ -403,7 +405,7 @@ class UVcontFit(basetask.StandardTaskTemplate):
         # of center to ref values of first field.
         m0 = cqa.add(m0, cqa.div('%sarcsec' % xcen, cqa.cos(m1)))
         m1 = cqa.add(m1, '%sarcsec' % ycen)
-        if ref=='ICRS' or ref=='J2000' or ref=='B1950':
+        if ref == 'ICRS' or ref == 'J2000' or ref == 'B1950':
             m0 = cqa.time(m0, prec=10)[0]
         else:
             m0 = cqa.angle(m0, prec=9)[0]
@@ -490,4 +492,3 @@ class UVcontFitResults(basetask.Results):
                 spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
                 name=calapplication.gaintable)
         return s
-
