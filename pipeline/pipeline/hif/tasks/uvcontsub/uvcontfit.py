@@ -333,20 +333,23 @@ class UVcontFit(basetask.StandardTaskTemplate):
             for spw_id in [str(spw.id) for spw in inputs.ms.get_spectral_windows(task_arg=inputs.spw)]:
                 cranges_spwsel[sname][spw_id] = contfile_handler.get_merged_selection(sname, spw_id)
                 if not cranges_spwsel[sname][spw_id]:
-                    LOG.warn('No frequency ranges for MS %s source %s and spw %d' % (inputs.ms.basename, sname, int(spw_id)))
+                    LOG.info('No continuum region detection attempted for MS %s source %s spw %d' % (inputs.ms.basename, sname, int(spw_id)))
+                    continue
+                elif cranges_spwsel[sname][spw_id] in ['NONE']:
+                    LOG.warn('Continuum region detection failed for MS %s source %s spw %d' % (inputs.ms.basename, sname, int(spw_id)))
                     continue
                 else:
-                    LOG.info('Input frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id), cranges_spwsel[sname][spw_id]))
+                    LOG.info('Input continuum frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id), cranges_spwsel[sname][spw_id]))
                 try:
                     freq_ranges, chan_ranges, aggregate_lsrk_bw = contfile_handler.lsrk_to_topo(cranges_spwsel[sname][spw_id],
                         [inputs.vis], [rep_field_id], int(spw_id))
-                    LOG.info('Output frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                    LOG.info('Output continuum frequency range for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                         freq_ranges[0]))
-                    LOG.info('Output channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                    LOG.info('Output continuum channel ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                        chan_ranges[0]))
                     cranges_spwsel[sname][spw_id] = freq_ranges[0]
                 except:
-                    LOG.info('Frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
+                    LOG.info('Output continuum frequency ranges for MS %s and spw %d are %s' % (inputs.ms.basename, int(spw_id),
                         cranges_spwsel[sname][spw_id]))
 
         return cranges_spwsel
