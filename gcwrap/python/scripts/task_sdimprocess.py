@@ -349,12 +349,12 @@ class sdimprocess_worker(sdutil.sdtask_interface):
 
         # masklist
         masks = []
-        if type(self.masklist) == float:
+        if isinstance(self.masklist, int) or isinstance(self.masklist, float):
             for i in range(nfile):
-                masks.append( self.masklist )
-        elif type(self.masklist) == list and nfile != len(self.masklist):
+                masks.append(self.masklist)
+        elif isinstance(self.masklist, list):#  and nfile != len(self.masklist):
             for i in range(nfile):
-                masks.append( self.masklist[i%len(self.masklist)] )
+                masks.append(self.masklist[i%len(self.masklist)])
         for i in range(len(masks)):
             masks[i] = 0.01 * masks[i]
         
