@@ -4779,10 +4779,11 @@ ms.tosdfits("myfile.sdfits")  # write SDFITS file
    </input>
    <returns type="string"/>
    <description>
-   If the MS is imported from an ASDM  with option lazy=True, the DATA column of the MS is virtual
-   and directly reads the visibilities from the ASDM. A reference to the original ASDM is stored
-   with the MS. If the ASDM needs to be moved to a different path, the reference to it in the MS
-   needs to be updated. This can be achieved with ms.asdmref().
+   If the MS is imported from an ASDM  with option lazy=True, the DATA or FLOAT_DATA column of the MS
+   is virtual and directly reads the visibilities from the ASDM. A reference to the original ASDM is 
+   stored with the MS. If the ASDM needs to be moved to a different path, the reference to it in the 
+   MS needs to be updated. This can be achieved with ms.asdmref().
+
    When called with an empty string (default), the method just reports the currently set ASDM path.
 
    Return value is a string containing the new path if the path was successfully set or 

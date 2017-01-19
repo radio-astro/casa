@@ -129,6 +129,8 @@ namespace casa {
     AsdmColumn* col;
     if (name == "DATA") {
       col = new AsdmDataColumn(this, dtype);
+    } else if (name ==  "FLOAT_DATA") {
+      col = new AsdmFloatDataColumn(this, dtype);
     } else if (name == "FLAG") {
       col = new AsdmFlagColumn(this, dtype);
     } else if (name == "WEIGHT") {
@@ -472,6 +474,34 @@ namespace casa {
     }
   }
 
+  void AsdmStMan::getAuto (const AsdmIndex& ix, Float* buf, uInt bl)
+  {
+    // Get pointer to the data in the block.
+    Float* data = (reinterpret_cast<Float*>(&(itsData[0])));
+    data = data + ix.blockOffset + bl * ix.stepBl; 
+
+    // This can only apply to the FLOAT_DATA column, and in that
+    // case nPol can only be 1 or 2, anything else is an error.
+    // No complex values should be possible here.
+
+    if (ix.nPol > 2) {
+      throw DataManError ("AsdmStMan: more than 2 polarizations found for FLOAT_DATA, can not accomodate.");
+    }
+
+    if (itsDoSwap) {
+      Float valr;
+      for (uInt i=0; i<ix.nChan * ix.nPol; ++i) {
+	CanonicalConversion::reverse4 (&valr, data++);
+	*buf++ = valr;
+      }
+    } else {
+      // No byte swap needed.
+      for (uInt i=0; i<ix.nChan * ix.nPol; ++i) {
+	*buf++ = data[i];
+      }
+    }
+  }
+
   IPosition AsdmStMan::getShape (uInt rownr)
   {
     // Here determine the shape from the rownr.
@@ -547,6 +577,47 @@ namespace casa {
     default:
       throw DataManError ("AsdmStMan: Unknown data type");
     }
+  }
+
+  void AsdmStMan::getData (uInt rownr, Float* buf)
+  {
+    const AsdmIndex& ix = findIndex (rownr);
+
+    // float data can only be fetched for type 10
+    if (ix.dataType != 10) {
+      throw DataManError ("AsdmStMan: illegal data type for FLOAT_DATA column");
+    }
+  
+    // Open the BDF if needed.
+    if (Int(ix.fileNr) != itsOpenBDF) {
+      closeBDF();
+      itsFD  = FiledesIO::open (itsBDFNames[ix.fileNr].c_str(), false);
+      itsBDF = new FiledesIO (itsFD, itsBDFNames[ix.fileNr]);
+      itsOpenBDF = ix.fileNr;
+      itsFileOffset = ix.fileOffset;
+      itsData.resize(0);
+    }
+  
+    // Or we did not have open a new BDF but are aiming at a new position in the same BDF
+    else if ( itsFileOffset != ix.fileOffset ) {
+      itsFileOffset = ix.fileOffset;
+      itsData.resize(0);
+    }
+
+    // Read data block if not done yet, i.e. if and only if we are in a new BDF or in the same
+    // one but at a new position (fileOffset).
+    //
+    if (itsData.empty()) {
+      itsData.resize (ix.dataSize());
+      itsBDF->seek (ix.fileOffset);
+      itsBDF->read (itsData.size(), &(itsData[0]));
+    }
+    // Determine the spw and baseline from the row.
+    // The rows are stored in order of spw,baseline.
+    // getAuto appears to not depend on spw.  R.Garwood.
+
+    uInt bl = (rownr - ix.row);
+    getAuto (ix, buf, bl);
   }
 
   void AsdmStMan::getBDFNames(Block<String>& bDFNames)

@@ -86,6 +86,41 @@ namespace casa {
     destination->assign (entireCell (slicer));
   }
 
+  AsdmFloatDataColumn::~AsdmFloatDataColumn()
+  {}
+  IPosition AsdmFloatDataColumn::shape (uInt rownr)
+  {
+    return itsParent->getShape (rownr);
+  }
+  void AsdmFloatDataColumn::getArrayfloatV (uInt rownr, Array<Float>* dataPtr)
+  {
+    Bool deleteIt;
+    Float* data = dataPtr->getStorage(deleteIt);
+    itsParent->getData (rownr, data);
+    dataPtr->putStorage (data, deleteIt);
+  }
+
+  void AsdmFloatDataColumn::getSlicefloatV (uInt rowNumber, const Slicer & slicer,
+					    Array<casacore::Float> * destination)
+  {
+     // Create an array to hold the entire table cell.
+
+    Array<Float> entireCell (shape (rowNumber));
+
+    // Load the entire cell into an array
+
+    Bool deleteIt;
+    Float * entireCellData = entireCell.getStorage(deleteIt); // get pointer to storage
+
+    itsParent->getData (rowNumber, entireCellData); // fill storage with data
+
+    entireCell.putStorage (entireCellData, deleteIt); // "return" storage
+
+    // Transfer the data specified by the slicer into the destination array.
+
+    destination->assign (entireCell (slicer));
+  }
+
 
 
 

@@ -99,6 +99,20 @@ public:
                                  casacore::Array<casacore::Complex> * destination);
 };
 
+// <summary>FLOAT_DATA column in the ASDM Storage Manager.</summary>
+// <use visibility=local>
+class AsdmFloatDataColumn : public AsdmColumn
+{
+public:
+  explicit AsdmFloatDataColumn (AsdmStMan* parent, int dtype)
+    : AsdmColumn(parent, dtype) {}
+  virtual ~AsdmFloatDataColumn();
+  virtual casacore::IPosition shape (casacore::uInt rownr);
+  virtual void getArrayfloatV (casacore::uInt rowNr, casacore::Array<casacore::Float> * dataPtr);
+  virtual void getSlicefloatV (casacore::uInt rowNumber, const casacore::Slicer & slicer,
+			       casacore::Array<casacore::Float> * destination);
+};
+
 // <summary>FLAG column in the ASDM Storage Manager.</summary>
 // <use visibility=local>
 class AsdmFlagColumn : public AsdmColumn

@@ -1296,7 +1296,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     // Make the MS table
     TableDesc td = MS::requiredTableDesc();
-    
     Vector<String> tiledDataNames;
 
     // Even though we know the data is going to be the same shape throughout I'll
@@ -1304,7 +1303,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     // with other shapes to be appended.
     uInt ncols = colNamesTok.nelements();
     const Bool mustWriteOnlyToData = mustConvertToData(ncols, colNamesTok);
-    
+    Bool hasFloatData = False;
+
     if (mustWriteOnlyToData)
       {
         MS::addColumnToDesc(td, MS::DATA, 2);
@@ -1320,6 +1320,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     else{
       tiledDataNames.resize(ncols);
       for(uInt i = 0; i < ncols; ++i){
+	// only add data-like columns here
         // Unfortunately MS::PredefinedColumns aren't ordered so that I can just check if
         // colNamesTok[i] is in the "data range".
         if(colNamesTok[i] == MS::DATA ||
@@ -1327,18 +1328,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
            colNamesTok[i] == MS::CORRECTED_DATA ||
            colNamesTok[i] == MS::FLOAT_DATA ||
            colNamesTok[i] == MS::LAG_DATA) {
+	  MS::addColumnToDesc(td, colNamesTok[i], 2);
+	  // compress them unless they are DATA or FLOAT_DATA and the AsdmStMan is in use
 	  if(asdmStManUse==DONT ||
-	     colNamesTok[i] != MS::DATA){
-	    MS::addColumnToDesc(td, colNamesTok[i], 2);
+	     (colNamesTok[i] != MS::DATA && colNamesTok[i] != MS::FLOAT_DATA)){
 	    if (compress) MS::addColumnCompression(td,colNamesTok[i],true);
+	  }
+	  if (colNamesTok[i] == MS::FLOAT_DATA) {
+	    // make a note that FLOAT_DATA is being used, for later.
+	    hasFloatData = True;
 	  }
         }
         else {
           throw(AipsError(MS::columnName(colNamesTok[i]) +
                           " is not a recognized data column "));
         }
+	//  Add tiled versions for these columns except for DATA and FLOAT_DATA when AsdmStMan is in use.
 	if(asdmStManUse==DONT ||
-	   colNamesTok[i] != MS::DATA){
+	   (colNamesTok[i] != MS::DATA && colNamesTok[i] != MS::FLOAT_DATA)){
 	  String hcolName = String("Tiled") + MS::columnName(colNamesTok[i]);
 	  td.defineHypercolumn(hcolName, 3,
 			       stringToVector(MS::columnName(colNamesTok[i])));
@@ -1446,10 +1453,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     TiledShapeStMan tiledStMan5("TiledSigma", 
                                 IPosition(2,tileShape(0), tileShape(1) * tileShape(2)));
     
-    // Bind the DATA, FLAG & WEIGHT_SPECTRUM columns to the tiled stman or asdmStMan
+    // Bind the DATA or FLOAT_DATA, FLAG & WEIGHT_SPECTRUM columns to the tiled stman or asdmStMan
 
     AsdmStMan sm;
-    
+
     if (mustWriteOnlyToData){
       if(asdmStManUse==DONT){
 	TiledShapeStMan tiledStMan1Data("TiledDATA",tileShape);
@@ -1457,7 +1464,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	newtab.bindColumn(MS::columnName(MS::DATA), tiledStMan1Data);
       }
       else{
-	newtab.bindColumn(MS::columnName(MS::DATA), sm);
+	if (hasFloatData) {
+	  newtab.bindColumn(MS::columnName(MS::FLOAT_DATA), sm);
+	} else{
+	  newtab.bindColumn(MS::columnName(MS::DATA), sm);
+	}
       }
     }
     else{
@@ -1467,9 +1478,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         newtab.bindColumn(MS::columnName(colNamesTok[i]), tiledStMan1Data);
       }
       if(asdmStManUse!=DONT){
-	newtab.bindColumn(MS::columnName(MS::DATA), sm);
+	if (hasFloatData) {
+	  newtab.bindColumn(MS::columnName(MS::FLOAT_DATA), sm);
+	} else {
+	  newtab.bindColumn(MS::columnName(MS::DATA), sm);
+	}
       }
-    }    
+    }
     newtab.bindColumn(MS::columnName(MS::FLAG_CATEGORY),tiledStMan1fc);
     newtab.bindColumn(MS::columnName(MS::WEIGHT_SPECTRUM),tiledStMan2);
     

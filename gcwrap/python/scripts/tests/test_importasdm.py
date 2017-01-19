@@ -17,6 +17,9 @@
 #    7) Can the resulting ASDM be reimported without raising exceptions     #
 #    8) Does it have the same number of integrations as the original        #
 #    9) Can a mixed mode ASDM be imported in lazy mode                      #
+#   10) Does the lazy mode when used with auto-only and the FLOAT_DATA      #
+#       column produce an equivalent MS as the non-lazy mode does with the  #
+#       same data selection                                                 #
 #                                                                           #
 # Input data:                                                               #
 #     one dataset for the filler of ASDM 1.0                                #
@@ -1271,6 +1274,146 @@ class asdm_import7(test_base):
  
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+
+    def test7_lazy4(self):
+        '''Asdm-import: Test good 12 m ASDM with mixed pol/channelisation input with default filler in lazy mode selecting only AUTO data, writing to FLOAT_DATA'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        myasdmname = 'uid___A002_X71e4ae_X317_short'
+        themsname = myasdmname+".ms"
+
+        self.res = importasdm(myasdmname, vis=themsname, ocorr_mode="ao", lazy=True, scans='0:1~4') # only the first 4 scans to save time
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["ANTENNA/table.dat",
+                            "CALDEVICE/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "SYSCAL/table.dat",
+                            "SYSPOWER/table.dat",
+                            "ANTENNA/table.f0",
+                            "CALDEVICE/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0",
+                            "SYSCAL/table.f0",
+                            "SYSPOWER/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(themsname+"/"+name, os.F_OK):
+                print myname, ": Error  ", themsname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+themsname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            mslocal.open(themsname)
+            mslocal.close()
+            print  myname, ": MS can be opened. Now testing the changing of the asdmref ..."
+            mslocal.open(themsname)
+            mslocal.asdmref("./moved_"+myasdmname)
+            mslocal.close()
+            os.system("mv "+myasdmname+" moved_"+myasdmname)
+            
+            mslocal.open(themsname)
+            
+        except:
+            print myname, ": Error  Cannot open MS table", themsname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
+        else:
+            mslocal.close()
+            print myname, ": OK. Checking tables in detail ..."
+    
+            importasdm(asdm="moved_"+myasdmname, vis='reference.ms', ocorr_mode="ao", lazy=False, overwrite=True, scans='0:1~3')
+
+            if(os.path.exists('reference.ms')):
+                retValue['success'] = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                                    +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.FLOAT_DATA,t2.FLOAT_DATA, 1.e-06)))") == 0
+                if not retValue['success']:
+                    print "ERROR: DATA does not agree with reference."
+                else:
+                    print "DATA columns agree."
+
+                retValueTmp = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                                    +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.WEIGHT,t2.WEIGHT, 1.e-06)))") == 0
+                if not retValueTmp:
+                    print "ERROR: WEIGHT does not agree with reference."
+                else:
+                    print "WEIGHT columns agree."
+                    
+                retValueTmp2 = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                            +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") == 0
+                if not retValueTmp2:
+                    print "ERROR: FLAG does not agree with reference."
+                else:
+                    print "FLAG columns agree."
+
+                retValue['success'] = retValue['success'] and retValueTmp and retValueTmp2
+
+                for subtname in ["ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "OBSERVATION",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL"]:
+                    
+                    print "\n*** Subtable ",subtname
+                    excllist = []
+                    if subtname=='SOURCE':
+                        excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
+                    if subtname=='SYSCAL':
+                        excllist=['TANT_SPECTRUM', 'TANT_TSYS_SPECTRUM']
+                    if subtname=='SPECTRAL_WINDOW':
+                        excllist=['CHAN_FREQ', 'CHAN_WIDTH', 'EFFECTIVE_BW', 'RESOLUTION', 'ASSOC_SPW_ID', 'ASSOC_NATURE']
+                        for colname in excllist:
+                            if colname!='ASSOC_NATURE':
+                                retValue['success'] = th.compVarColTables('reference.ms/SPECTRAL_WINDOW',
+                                                                          themsname+'/SPECTRAL_WINDOW', colname, 0.01) and retValue['success']
+                    if subtname=='POLARIZATION':
+                        excllist=['CORR_TYPE', 'CORR_PRODUCT']
+                        for colname in excllist: 
+                            retValue['success'] = th.compVarColTables('reference.ms/POLARIZATION',
+                                                                      themsname+'/POLARIZATION', colname, 0.01) and retValue['success']
+                    try:    
+                        retValue['success'] = th.compTables('reference.ms/'+subtname,
+                                                            themsname+'/'+subtname, excllist, 
+                                                            0.01) and retValue['success']
+                    except:
+                        retValue['success'] = False
+                        print "ERROR for table ", subtname
+
+        os.system("mv moved_"+myasdmname+" "+myasdmname)
+                
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+
 
         
 def suite():

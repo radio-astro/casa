@@ -5777,9 +5777,12 @@ ms::asdmref(const std::string& abspath)
 	*itsLog << LogOrigin("ms", "asdmref");
 	try {
 		if(!detached()){
-			// get the data manager of the DATA column
+			// get the data manager of the DATA column or FLOAT_DATA
 			TableDesc mSTD(itsMS->actualTableDesc());
-			ColumnDesc myColDesc(mSTD.columnDesc("DATA"));
+			String dataColName("DATA");
+			// doing it this way, if there is no DATA or FLOAT_DATA, DATA is reported as the unknown column
+			if (!mSTD.isColumn(dataColName) && mSTD.isColumn("FLOAT_DATA")) dataColName = "FLOAT_DATA";
+			ColumnDesc myColDesc(mSTD.columnDesc(dataColName));
 			String hcName(myColDesc.dataManagerGroup());
 			DataManager* myDM = itsMS->findDataManager(hcName);
 			String dataManName(myDM->dataManagerName());

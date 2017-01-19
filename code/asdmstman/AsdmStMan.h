@@ -178,6 +178,9 @@ public:
   // Get data.
   void getData (casacore::uInt rownr, casacore::Complex* buf);
 
+  // Get float data
+  void getData (casacore::uInt rownr, casacore::Float* buf);
+
   casacore::uInt getAsdmStManVersion() const
     { return itsVersion; }
 
@@ -280,6 +283,7 @@ private:
   void getInt   (const AsdmIndex&, casacore::Complex* buf, casacore::uInt bl, casacore::uInt spw);
   void getFloat (const AsdmIndex&, casacore::Complex* buf, casacore::uInt bl, casacore::uInt spw);
   void getAuto  (const AsdmIndex&, casacore::Complex* buf, casacore::uInt bl);
+  void getAuto  (const AsdmIndex&, casacore::Float* buf, casacore::uInt bl);
   // </group>
 
 

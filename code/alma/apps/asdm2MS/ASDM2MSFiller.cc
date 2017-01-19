@@ -239,7 +239,7 @@ ASDM2MSFiller::ASDM2MSFiller(const string& name_,
   itsDataShapes(0),
   itsNCat(3)
 {
-  int status;
+  // int status;
 
   itsCreationTime = creation_time_;
    
@@ -250,14 +250,15 @@ ASDM2MSFiller::ASDM2MSFiller(const string& name_,
   itsScanNumber         = 0;
 
   //cout << "About to call createMS" << endl;
-  status = createMS(name_, 
-                    complexData, 
-                    withCompression, 
-                    telname_, 
-                    maxNumCorr,
-                    maxNumChan,
-                    withCorrectedData,
-		    useAsdmStMan4DATA);
+  // returned value is not used here
+  createMS(name_, 
+	   complexData, 
+	   withCompression, 
+	   telname_, 
+	   maxNumCorr,
+	   maxNumChan,
+	   withCorrectedData,
+	   useAsdmStMan4DATA);
   //cout << "Back from call createMS" << endl;
 
 }
@@ -285,16 +286,9 @@ int ASDM2MSFiller::createMS(const string& msName,
   cat(2) = "USER";
 
 
-  //cout << "Entering createMS : measurement set = "<< aName <<"\n";
-
-
-  const Int tileSizeKBytes = 1024;
-
   const Int nTileCorr = maxNumCorr;
   const Int nTileChan = maxNumChan;
 
-  Int nTileRow;
-  
   //needed to call setupMS
   String telescop(telescopeName);
   casacore::Int inint = 0;
@@ -670,8 +664,8 @@ int ASDM2MSFiller::addAntenna( const string& name_,
 
 const casacore::MeasurementSet* ASDM2MSFiller::ms() { return itsMS; }
 
-
-void ASDM2MSFiller::addData (bool                      complexData,
+// complexData argument is not used in this version
+void ASDM2MSFiller::addData (bool                      /* complexData */,
 			     vector<double>            &time_,
 			     vector<int>               &antennaId1_,
 			     vector<int>               &antennaId2_,
@@ -1089,7 +1083,7 @@ void ASDM2MSFiller::addData (bool			 complexData,
 
   int cRow0 = 0;
   //printf("itsMSMainRow+theSize=%d\n", itsMSMainRow+theSize);
-  int maxrow = itsMSMainRow+theSize;
+  //int maxrow = itsMSMainRow+theSize;
   for (unsigned int cRow = itsMSMainRow; cRow < itsMSMainRow+theSize; cRow++) {      
     int numCorr = dataShape_.at(cRow0).at(0);
     int numChan = dataShape_.at(cRow0).at(1);
@@ -1217,13 +1211,14 @@ String ASDM2MSFiller::msPath() {
 }
 
 // Add a record in the table FEED
+// beam_id parameter not used here
 void ASDM2MSFiller::addFeed(int      antenna_id_,
 			    int      feed_id_,
 			    int      spectral_window_id_,
 			    double   time_,
 			    double   interval_,
 			    int      num_receptors_,
-			    int      beam_id_,
+			    int      /* beam_id_ */,
 			    vector<double>& beam_offset_,
 			    vector<string>& pol_type_,
 			    vector<std::complex<float> >& polarization_response_,
@@ -1371,14 +1366,15 @@ void ASDM2MSFiller::updateEphemerisIdInField(vector<pair<int, int> >& idxEphemer
 }	       
 
 // Add a record in the table FLAG_CMD;
+// Only time_ and interval_ are currently used here
 void ASDM2MSFiller::addFlagCmd(double		time_,
 			       double		interval_,
-			       const string&	type_,
-			       const string&	reason_,
-			       int		level_,
-			       int		severity_,
-			       int		applied_,
-			       string&   command_) {
+			       const string&	/* type_ */,
+			       const string&	/* reason_ */,
+			       int		/* level_ */,
+			       int		/* severity_ */,
+			       int		/* applied_ */,
+			       string&   /* command_ */) {
   uInt						crow;
   MSFlagCmd					msflagcmd = itsMS -> flagCmd();
   MSFlagCmdColumns				msflagcmdCol(msflagcmd);
@@ -1578,9 +1574,10 @@ void ASDM2MSFiller::addPointingSlice(unsigned int                 n_row_,
 
 		 
 // Adds a record in the table Polarization
+// Only num_corr_ is used here
 int ASDM2MSFiller::addPolarization(int num_corr_,
-				   vector<int>& corr_type_,
-				   vector<int>& corr_product_) {
+				   vector<int>& /* corr_type_ */,
+				   vector<int>& /* corr_product_ */) {
   uInt crow;
   int  i;
   Vector<Int>  corrType(num_corr_);
@@ -2244,7 +2241,7 @@ void ASDM2MSFiller::addCalDevice(int				antennaId,
   //itsMSCalDeviceTable.flush();
 }
 
-void ASDM2MSFiller::end(double time_) {
+void ASDM2MSFiller::end(double /* time_ */) {
   itsMS->flush();
   delete itsMS;
 }

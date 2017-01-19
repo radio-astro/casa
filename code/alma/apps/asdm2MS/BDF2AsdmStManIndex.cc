@@ -3,6 +3,7 @@
 #include <casa/Containers/BlockIO.h>
 
 #include "BDF2AsdmStManIndex.h"
+#include "ASDM2MSException.h"
 
 using namespace casacore;
 using namespace casa;
@@ -240,9 +241,10 @@ void BDF2AsdmStManIndex::appendCrossIndex(unsigned int          iDD,
   case INT32_TYPE : asdmIndex.dataType = 1; break;
   case FLOAT32_TYPE : asdmIndex.dataType = 3; break;
   default: 
-    cout << "BDF2AsdmStManIndex::appendCrossIndex: '" << dataType << "' unrecognized crossdata type." << endl;
+    oss.str("");
+    oss<< "BDF2AsdmStManIndex::appendCrossIndex: '" << dataType << "' unrecognized crossdata type in file " << bdfName << ".";
+    throw ASDM2MSException(oss.str());
   }
-  asdmIndex.dataType     = dataType;
 
   crossIndexes_vv[iDD].push_back(asdmIndex);
   LOGEXIT("BDF2AsdmStManIndex::appendCrossIndex");
