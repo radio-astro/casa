@@ -51,7 +51,6 @@ startProc=time.clock()
 
 # Check CASA Version #
 
-version = casadef.casa_version
 
 print "You are using " + cu.version_info( )
 
@@ -97,9 +96,9 @@ default(plotms)
 vis   = msname
 xaxis ='channel'
 yaxis ='amp'
-averagedata = T
+averagedata = True
 avgtime = '1e8'
-avgscan = T
+avgscan = True
 spw='1,3,5,7,9,11,13,15'
 iteraxis = 'spw'
 coloraxis = 'antenna1'
@@ -117,7 +116,7 @@ for antname in ['PM03', 'PM04', 'CM03', 'CM05']:
     vis   = msname
     xaxis ='channel'
     yaxis ='amp'
-    averagedata = T
+    averagedata = True
     avgtime = '1e8'
     spw='15'
     antenna = antname + '&&&'
@@ -191,7 +190,7 @@ for i in target_spws:
         ydatacolumn = 'corrected'
         xaxis ='frequency'
         yaxis ='real'
-        averagedata = T
+        averagedata = True
         avgtime = '1e8'
         spw = i
         antenna = antname + '&&&'
@@ -214,7 +213,7 @@ for i in range(len(target_spws)):
         ydatacolumn = 'data'
         xaxis ='frequency'
         yaxis ='real'
-        averagedata = T
+        averagedata = True
         avgtime = '1e8'
         spw = str(i)
         antenna = antname + '&&&'

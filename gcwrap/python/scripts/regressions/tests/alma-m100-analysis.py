@@ -1,10 +1,11 @@
-# wrapper script for the ALMA M100 analysis regression test
 import sys
 import os
 import string
 from locatescript import copydata
 from locatescript import locatescript
-import inspect
+from casa_stack_manip import stack_frame_find
+
+gl=stack_frame_find( )
 
 # Short description
 def description():
@@ -19,13 +20,6 @@ pass_on = { "asdm_dataset_name" : "uid___A002_X2a5c2f_X54",
             "mask3" : 'test-M100line-orig.mask'
             }
 
-a=inspect.stack()
-stacklevel=0
-for k in range(len(a)):
-    if (string.find(a[k][1], 'ipython console') > 0):
-        stacklevel=k
-        break
-gl=sys._getframe(stacklevel).f_globals
 
 def data():
     ### return the data files that are needed by the regression script

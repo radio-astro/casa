@@ -96,4 +96,6 @@ casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
   wideband.py
   wproject.py
   polcal_20080224_cband.py
+  alma-m100-analysis.py
+  alma-m100-sd.py
 )
