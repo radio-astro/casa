@@ -116,6 +116,26 @@ Edit a list of images to be cleaned.
     <value type="string"></value>
   </param>
 
+  <param type="string" name="polproducts">
+    <description></description>
+    <value></value>
+  </param>
+
+  <param type="string" name="usefile">
+    <description></description>
+    <value></value>
+  </param>
+
+  <param type="string" name="msfterms">
+    <description></description>
+    <value></value>
+  </param>
+
+  <param type="string" name="tapersize">
+    <description></description>
+    <value></value>
+  </param>
+
   <param type="string" name="pipelinemode">
     <description>The pipeline operating mode</description>
     <value>automatic</value>
@@ -308,6 +328,14 @@ nchan -- Total number of channels in the output image(s)
 start -- First channel for frequency mode images.
     default '' Starts at first input channel of the spw.
     example: '22.3GHz'
+
+polproducts --
+
+usefile --
+
+msfterms --
+
+tapersize --
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but
