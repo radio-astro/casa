@@ -189,14 +189,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   void SynthesisUtilMethods::getResource(String label, String fname)
   {
-           return;
+               return;
 
      LogIO os( LogOrigin("SynthesisUtilMethods","getResource",WHERE) );
 
 
         FILE* file = fopen("/proc/self/status", "r");
         int vmSize = -1, vmRSS=-1, pid=-1;
-	//	int fdSize=-1;
+	int fdSize=-1;
         char line[128];
     
         while (fgets(line, 128, file) != NULL){
@@ -206,9 +206,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if (strncmp(line, "VmRSS:", 6) == 0){
 	    vmRSS = parseLine(line)/1024.0;
 	  }
-	  //	  if (strncmp(line, "FDSize:", 7) == 0){
-	  //  fdSize = parseLine(line);
-	  //}
+	  	  if (strncmp(line, "FDSize:", 7) == 0){
+	    fdSize = parseLine(line);
+	  }
 	  if (strncmp(line, "Pid:", 4) == 0){
 	    pid = parseLine(line);
 	  }
@@ -225,8 +225,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	oss << " PID: " << pid ;
 	oss << " MemRSS: " << vmRSS << " MB.";
 	oss << " VirtMem: " << vmSize << " MB.";
-	//	oss << " FDSize: " << fdSize;
 	oss << " ProcTime: " << now.tv_sec << "." << now.tv_usec;
+	oss << " FDSize: " << fdSize;
 	oss <<  " [" << label << "] ";
 
 
@@ -2680,15 +2680,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else if ( mode=="mfs" ) {
       chanFreq.resize(1);
       chanFreqStep.resize(1);
-      chanFreqStep[0] = freqmax - freqmin;
+      //chanFreqStep[0] = freqmax - freqmin;
       Double freqmean = (freqmin + freqmax)/2;
       if (refFreq.getValue("Hz")==0) {
         chanFreq[0] = freqmean;
         refPix = 0.0;
+	chanFreqStep[0] = freqmax - freqmin;
       }
       else { 
         chanFreq[0] = refFreq.getValue("Hz"); 
-        refPix  = (refFreq.getValue("Hz") - freqmean)/chanFreqStep[0];
+	// Set the new reffreq to be the refPix (CAS-9518)
+        refPix  = 0.0; // (refFreq.getValue("Hz") - freqmean)/chanFreqStep[0];
+	// A larger bandwidth to compensate for the shifted reffreq (CAS-9518)
+	chanFreqStep[0] = freqmax - freqmin + 2*fabs(chanFreq[0] - freqmean);
       }
 
       if( nchan==-1 ) nchan=1;
