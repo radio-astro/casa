@@ -2,6 +2,9 @@ import os
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
+_ms = mstool( )
+_cb = cbtool( )
+
 def delmod(vis=None,otf=None,field=None,scr=None):
 
         casalog.origin('delmod')
@@ -20,19 +23,19 @@ def delmod(vis=None,otf=None,field=None,scr=None):
 		if ((type(vis)==str) & (os.path.exists(vis))):
 			# ... and we are asked to do something...
 			# open without adding anything!
-			cb.open(vis,addcorr=False,addmodel=False)
-			cb.delmod(otf=otf,field=field,scr=scr)
-			cb.close()
+			_cb.open(vis,addcorr=False,addmodel=False)
+			_cb.delmod(otf=otf,field=field,scr=scr)
+			_cb.close()
 		else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
         	#write history
-        	ms.open(vis,nomodify=False)
-        	ms.writehistory(message='taskname = delmod',origin='delmod')
-        	ms.writehistory(message='vis         = "'+str(vis)+'"',origin='delmod')
-		ms.writehistory(message='otf         = "'+str(otf)+'"',origin='delmod')
-		ms.writehistory(message='scr         = "'+str(scr)+'"',origin='delmod')
-		ms.close()
+        	_ms.open(vis,nomodify=False)
+        	_ms.writehistory(message='taskname = delmod',origin='delmod')
+        	_ms.writehistory(message='vis         = "'+str(vis)+'"',origin='delmod')
+		_ms.writehistory(message='otf         = "'+str(otf)+'"',origin='delmod')
+		_ms.writehistory(message='scr         = "'+str(scr)+'"',origin='delmod')
+		_ms.close()
 
 	except Exception, instance:
 		print '*** Error ***',instance
