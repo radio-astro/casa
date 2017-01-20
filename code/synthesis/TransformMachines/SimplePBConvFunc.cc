@@ -713,11 +713,12 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       */
       //cerr << "twoDPB shape " << twoDPB.shape() << " slice shape " << IPosition(4, tempConvSize, tempConvSize, 1, 1) << endl;
       convFunc_p=twoDPB.getSlice(IPosition(4,0,0,0,0), IPosition(4, tempConvSize, tempConvSize, 1, 1), true);
-      
+      weightConvFunc_p.resize();
+      weightConvFunc_p=twoDPB2.getSlice(IPosition(4,0,0,0,nBeamChans-1), IPosition(4, tempConvSize, tempConvSize, 1, 1), true);
       //convFunc/=max(abs(convFunc));
-      Float maxAbsConvFunc=max(amplitude(convFunc_p));
+      Float maxAbsConvFunc=max(amplitude(weightConvFunc_p));
       
-      Float minAbsConvFunc=min(amplitude(convFunc_p));
+      Float minAbsConvFunc=min(amplitude(weightConvFunc_p));
       //cerr << "min max " << minAbsConvFunc << "  " <<  maxAbsConvFunc << endl;
       convSupport_p=-1;
       Bool found=false;
@@ -726,14 +727,14 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       Int trial=0;
       for (trial=tempConvSize/2-2;trial>0;trial--) {
 	//Searching down a diagonal
-	if(abs(convFunc_p(tempConvSize/2-trial, tempConvSize/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+	if(abs(weightConvFunc_p(tempConvSize/2-trial, tempConvSize/2-trial)) >  (1.0e-3*maxAbsConvFunc)) {
 	  found=true;
 	  trial=Int(sqrt(2.0*Float(trial*trial)));
 	  break;
 	}
       }
       if(!found){
-	if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
+	if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-3*maxAbsConvFunc)) 
 	  found=true;
 	// if it drops by more than 2 magnitudes per pixel
 	trial=( tempConvSize > (10*convSampling)) ? 5*convSampling : (tempConvSize/2 - 4*convSampling);
