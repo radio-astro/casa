@@ -1805,7 +1805,7 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
 {
   
   logIO() << LogOrigin("MosaicFT", "getWeightImage") << LogIO::NORMAL;
-  cerr << "SUMWT " << sumWeight << endl;
+  //cerr << "SUMWT " << sumWeight << endl;
 
   weights.resize(sumWeight.shape());
   convertArray(weights,sumWeight);
