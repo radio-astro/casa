@@ -759,6 +759,48 @@ class test_msselection(test_base):
         self.assertEqual(s['baseline']['VA09&&VA28']['flagged'], 252)
         self.assertEqual(s['baseline']['VA09&&VA09']['flagged'], 3780)
         self.assertEqual(s['flagged'], 190386)
+        
+    def test_spw_error_handler_name(self):
+        '''flagdata: A non-existing spw name in a compound with a existing spw should not fail'''
+        # CAS-9366: flagcmd fails when applying flags based on an spw selection by name, when
+        # one of the spws do not exist
+        # The spw names in Four_ants_3C286.ms are not unique. They are:
+        #     Subband:0 Subband:1 Subband:2 Subband:3 Subband:4 Subband:5 Subband:6 Subband:7
+        # spw=0,8       1,9       2,10 etc.
+        self.setUp_data4tfcrop()
+        
+        # Copy the input flagcmd file with a non-existing spw name
+        # flagsfile has spw='"Subband:1","Subband:2","Subband:8"
+        flagsfile = 'cas9366.flags.txt'
+        os.system('cp -rf '+datapath + flagsfile +' '+ ' .')
+        
+        # Try to flag
+        try:
+            flagdata(self.vis, mode='list', inpfile=flagsfile, flagbackup=False)
+        except Exception, instance:
+            print 'Expected RuntimeError error: %s'%instance
+
+        # should flag spws 1,2,9,10
+        s = flagdata(self.vis, mode='summary')
+        self.assertEqual(s['spw']['1']['flagged'],274944.0)
+        self.assertEqual(s['spw']['9']['flagged'],274944.0)
+        self.assertEqual(s['spw']['2']['flagged'],274944.0)
+        self.assertEqual(s['spw']['10']['flagged'],274944.0)
+        self.assertEqual(s['flagged'],274944.0*4)
+
+    def test_spw_error_handler_id(self):
+        '''flagdata: A non-existing spw ID in a compound with a existing spw should not fail'''
+                        
+        # Try to flag. Only spw=0 exists
+        try:
+            flagdata(self.vis, spw='0,32,33', flagbackup=False)
+        except Exception, instance:
+            print 'Expected RuntimeError error: %s'%instance
+
+        # Only spw 0 should be flagged
+        s = flagdata(self.vis, mode='summary')
+        self.assertEqual(s['flagged'],2854278.0)
+
                         
 class test_statistics_queries(test_base):
 

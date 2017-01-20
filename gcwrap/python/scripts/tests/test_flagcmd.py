@@ -164,7 +164,7 @@ class test_base(unittest.TestCase):
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()        
-        default(flagcmd)
+        default(flagcmd)        
 
     def unflag_ms(self):
         aflocal.open(self.vis)
@@ -1010,6 +1010,30 @@ class test_actions(test_base):
         self.assertEqual(res['scan']['7']['flagged'], 190512)
         self.assertEqual(res['flagged'], 762048+142884+190512)
         
+    def test_spw_error_handler(self):
+        '''flagcmd: A non-existing spw name in a compound with a existing spw should not fail'''
+        # CAS-9366: flagcmd fails when applying flags based on an spw selection by name, when
+        # one of the spws do not exist
+        # The spw names in Four_ants_3C286.ms are not unique. They are:
+        # Subband:0 Subband:1 Subband:2 Subband:3 Subband:4 Subband:5 Subband:6 Subband:7
+        # spw=0,8   1,9       2,10 etc.
+        
+        # Copy the input flagcmd file with a non-existing spw name
+        # flagsfile has spw='"Subband:1","Subband:2","Subband:8"
+        flagsfile = 'cas9366.flags.txt'
+        os.system('cp -rf '+datapath + flagsfile +' '+ ' .')
+        
+        # Save flags commands to FLAG_CMD table
+        flagcmd(self.vis, inpmode='list', inpfile=flagsfile, action='list', savepars=True)
+        
+        # Try to flag
+        flagcmd(self.vis, action='apply')
+
+        # Check flagged spws
+        s = flagdata(self.vis, mode='summary')
+        # should flag spws 1,2,9,10
+        self.assertEqual(s['flagged'],274944.0*4)
+
         
 class test_cmdbandpass(test_base):
     """Flagcmd:: Test flagging task with Bpass-based CalTable """

@@ -554,6 +554,10 @@ FlagAgentBase::setDataSelection(Record config)
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	int exists;
+	// Set the MS Selection error handler to catch spw IDs or names that are
+    // not present in the MS in an expression that contains valid spw values.
+	// This will issue a WARNING and not fail.
+    MSSelectionLogError mssLESPW;
 	MSSelection parser;
 
 	exists = config.fieldNumber ("array");
@@ -688,6 +692,7 @@ FlagAgentBase::setDataSelection(Record config)
 		}
 		else
 		{
+		    parser.setErrorHandler(MSSelection::SPW_EXPR, &mssLESPW, true);
 			parser.setSpwExpr(spwSelection_p);
 			if (flagDataHandler_p->parseExpression(parser))
 			{

@@ -269,13 +269,14 @@ FlagMSHandler::selectData()
 
 	// Set the MS Selection error handler to catch antenna names that are
     // not present in the MS in an expression that contains valid antenna names.
-	// Catch also invalid intent values in a valid intent expression.
+	// Catch also invalid intent or spw values in a valid expression.
 	// This will issue a WARNING and not fail.
-    MSSelectionLogError mssLEA,mssLES;
+    MSSelectionLogError mssLEA,mssLES,mssLESPW;
     measurementSetSelection_p = new MSSelection();
     
     measurementSetSelection_p->setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
     measurementSetSelection_p->setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
+    measurementSetSelection_p->setErrorHandler(MSSelection::SPW_EXPR, &mssLESPW, true);
 
     measurementSetSelection_p->reset(
 			*originalMeasurementSet_p,

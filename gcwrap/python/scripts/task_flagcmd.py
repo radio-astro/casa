@@ -279,22 +279,23 @@ def flagcmd(
     
                 # Apply/Unapply the flag commands to the data
                 apply = True
-    
+
                 # Select the data
     
                 # Select a loose union of the data selection from the list.
                 # The loose union will be calculated for field and spw only.
                 # Antenna, correlation and timerange should be handled by the agent
                 unionpars = {}
-                if vrows.__len__() > 1:
-                    unionpars = fh.parseUnion(vis, myflagcmd)
-                    if len(unionpars.keys()) > 0:
-                        casalog.post('Pre-selecting a subset of the MS: ')
-                        casalog.post('%s' % unionpars)
-                    else:
-                        casalog.post('Iterating through the entire MS')
+#                 if vrows.__len__() > 1:
+#                     unionpars = fh.parseUnion(vis, myflagcmd)
+#                     if len(unionpars.keys()) > 0:
+#                         casalog.post('Pre-selecting a subset of the MS: ')
+#                         casalog.post('%s' % unionpars)
+#                     else:
+#                         casalog.post('Iterating through the entire MS')
     
-                elif vrows.__len__() == 1:
+#                elif vrows.__len__() == 1:
+                if vrows.__len__() == 1:
     
                 # Get all the selection parameters, but set correlation to ''
                     # if the table was selected by row, we need to
