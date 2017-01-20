@@ -26,17 +26,17 @@ class EditimlistResult(basetask.Results):
 
         for new_target in new_targets:
             if new_target['field'] not in existing_targets_names:
-                print('adding ', new_target['field'])
                 context.clean_list_pending.append(new_target)
             else:
-                indices = [i for i, x in enumerate(existing_targets) if x == new_target]
+                indices = [i for i, x in enumerate(existing_targets) if x['field'] == new_target['field']]
                 if len(indices) > 1:
-                    print('multiple targets with the same field name')
-                    print('replacing the first occurrence')
+                    print('Multiple targets with the same field name')
+                    print('Replacing the first occurrence')
                     context.clean_list_pending[indices[0]] = new_target
                 if len(indices) == 1:
-                    print('replacing', new_target['field'], 'with ', existing_targets[indices[0]]['field'])
-                    context.clean_list_pending[indices[0]] = new_target
+                    print('Replacing ' + new_target['field'] + ' with ' + existing_targets[indices[0]]['field'])
+                    context.clean_list_pending[indices[0]] = copy.deepcopy(new_target)
+                    print(' ')
 
         # context.clean_list_pending = copy.deepcopy(new_list_pending)
         context.contfile = self.contfile

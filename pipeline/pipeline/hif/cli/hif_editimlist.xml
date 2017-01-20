@@ -121,7 +121,7 @@ Edit a list of images to be cleaned.
     <value></value>
   </param>
 
-  <param type="string" name="usefile">
+  <param type="string" name="parameter_file">
     <description></description>
     <value></value>
   </param>
@@ -331,7 +331,7 @@ start -- First channel for frequency mode images.
 
 polproducts --
 
-usefile --
+parameter_file --
 
 msfterms --
 

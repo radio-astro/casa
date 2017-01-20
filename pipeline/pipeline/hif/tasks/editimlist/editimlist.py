@@ -19,7 +19,7 @@ class EditimlistInputs(basetask.StandardInputs):
                  linesfile=None, uvrange=None, specmode=None, outframe=None,
                  hm_imsize=None, hm_cell=None, calmaxpix=None, phasecenter=None,
                  nchan=None, start=None, width=None, nbins=None,
-                 polproducts=None, usefile=False, msfterms=None, tapersize=None):
+                 polproducts=None, parameter_file=False, msfterms=None, tapersize=None):
 
         self._init_properties(vars())
 
@@ -272,14 +272,14 @@ class EditimlistInputs(basetask.StandardInputs):
 
 
     @property
-    def usefile(self):
-        return self._usefile
+    def parameter_file(self):
+        return self._parameter_file
 
-    @usefile.setter
-    def usefile(self, value):
+    @parameter_file.setter
+    def parameter_file(self, value):
         if value is None:
             value = ''
-        self._usefile = value
+        self._parameter_file = value
 
     @property
     def msfterms(self):
@@ -318,7 +318,12 @@ class Editimlist(basetask.StandardTaskTemplate):
         # this python class will produce a list of images to be calculated.
         inputs = self.inputs
 
-        qaTool = casatools.quanta
+        if os.access(inputs.parameter_file, os.R_OK):
+            with open(inputs.parameter_file) as parfile:
+                for line in parfile:
+                    parameter, value = line.partition('=')[::2]
+                    if parameter.strip() is not 'parameter_file':
+                        exec ('inputs.' + parameter.strip() + '=' + value.strip())
 
         # make sure inputs.vis is a list, even it is one that contains a
         # single measurement set
@@ -367,7 +372,7 @@ class Editimlist(basetask.StandardTaskTemplate):
                   'nchan': inputs.nchan,
                   'uvrange': inputs.uvrange,
                   'polproducts': inputs.polproducts,
-                  'usefile': inputs.usefile,
+                  'parameter_file': inputs.parameter_file,
                   'msfterms': inputs.msfterms,
                   'tapersize': inputs.tapersize
                   }
