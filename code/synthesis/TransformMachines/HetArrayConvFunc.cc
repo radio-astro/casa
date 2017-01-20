@@ -27,6 +27,7 @@
 //# $Id$
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/Vector.h>
@@ -539,6 +540,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   //tim.mark();
 	   //subim.copyData((LatticeExpr<Complex>) (iif(abs(subim)> 5e-2, subim, 0)));
 	   //subim2.copyData((LatticeExpr<Complex>) (iif(abs(subim2)> 25e-4, subim2, 0)));
+	   
 	
 	   ft_p.c2cFFT(subim);
 	  
@@ -642,7 +644,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //cerr << "blcQ " << blcQ << " trcQ " << trcQ << " pbShape " << pbShape << endl;
 	  Slicer slQ(blcQ, trcQ, Slicer::endIsLast);
 	  {
-	    SubImage<Complex>  pBSSub(pBScreen, slQ, false);
+	    SubImage<Complex>  pBSSub(pBScreen, slQ, false);	    
 	    SubLattice<Complex> cFTempSub(convFuncTemp,  slplane, true);
 	    LatticeConcat<Complex> lc(4);
 	    lc.setLattice(pBSSub);
@@ -1004,25 +1006,27 @@ typedef unsigned long long ooLong;
     os << LogOrigin("HetArrConvFunc", "suppAndNorm")  << LogIO::NORMAL;
     // Locate support
 	Int convSupport=-1;
-	IPosition begin(5, 0, 0, 0, 0, plane);
+	///Use largest channel as highest freq thus largest conv func
+	IPosition begin(5, 0, 0, 0, convFuncLat.shape()(3)-1, plane);
 	IPosition shape(5, convFuncLat.shape()[0],  convFuncLat.shape()[1], 1, 1, 1);
 	//Int convSize=convSize_p;
 	Int convSize=shape(0);
-	Matrix<Complex> convPlane=convFuncLat.getSlice(begin, shape, true);
+	///use FT weightconvlat as it is wider 
+	Matrix<Complex> convPlane=weightConvFuncLat.getSlice(begin, shape, true);
 	Float maxAbsConvFunc=max(amplitude(convPlane));
 	Float minAbsConvFunc=min(amplitude(convPlane));
 	Bool found=false;
 	Int trial=0;
 	for (trial=convSize/2-2;trial>0;trial--) {
 	  //Searching down a diagonal
-	  if(abs(convPlane(convSize/2-trial,convSize/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+	  if(abs(convPlane(convSize/2-trial,convSize/2-trial)) >  (1e-3*maxAbsConvFunc)) {
 	    found=true;
 	    trial=Int(sqrt(2.0*Float(trial*trial)));
 	    break;
 	  }
 	}
 	if(!found){
-	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
+	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-3*maxAbsConvFunc)) 
 	  found=true;
 	  // if it drops by more than 2 magnitudes per pixel
 	  trial=( (10*convSampling) < convSize) ? 5*convSampling : (convSize/2 - 4*convSampling);
@@ -1074,14 +1078,22 @@ typedef unsigned long long ooLong;
 	    //end[3]=chan;
 	    convPlane.resize();
 	    convPlane=convFuncLat.getSlice(begin, shape, true);
+	    ///////
+	    //Matrix<Float> ampi=amplitude(convPlane) ;
+	    //LogicalArray mask(ampi < Float(1.e-3* maxAbsConvFunc));
+
+	    //convPlane(mask)=0.0;
+	    /////  
 	    pbSum=real(sum(convPlane(blc,trc)))/Double(convSampling)/Double(convSampling);
 	    if(pbSum>0.0) {
 	      (convPlane)=convPlane*Complex(1.0/pbSum,0.0);
 	      convFuncLat.putSlice(convPlane, begin);
-	      convPlane.resize();
-	      convPlane=weightConvFuncLat.getSlice(begin, shape, true);
-	      (convPlane) =(convPlane)*Complex(1.0/pbSum,0.0);
-	      weightConvFuncLat.putSlice(convPlane, begin);
+	      //convPlane.resize();
+	      Matrix<Complex> convPlane2;
+	      convPlane2=weightConvFuncLat.getSlice(begin, shape, true);
+	      //convPlane2(mask)=0.0;
+	      (convPlane2) =(convPlane2)*Complex(1.0/pbSum,0.0);
+	      weightConvFuncLat.putSlice(convPlane2, begin);
 	    }
 	    else {
 	      os << "Convolution function integral is not positive"
