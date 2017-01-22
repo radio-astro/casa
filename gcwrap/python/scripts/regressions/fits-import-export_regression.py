@@ -25,6 +25,8 @@
 #############################################################################
 
 
+casapath = os.environ['CASAPATH'].split()[0]
+datapath = ""
 
 # get the dataset name from the wrapper if possible
 
@@ -70,13 +72,17 @@ else: # the script has been called from the wrapper, don't need to output name
 
 def checkimage(myfitsimage_name, maxpos_expect, maxposf_expect):
     global myname
+    global datapath
     subtest_passed = True
+
+    if not os.path.exists(datapath+myfitsimage_name+'.fits'):
+        datapath = casapath + "/data/regression/fits-import-export/input/"
 
     # import the image
     default('importfits')
     try:
-        print myname, ' Importing ', myfitsimage_name+'.fits', ' ...'
-        importfits(fitsimage = myfitsimage_name+'.fits',
+        print myname, ' Importing ', datapath+myfitsimage_name+'.fits', ' ...'
+        importfits(fitsimage = datapath+myfitsimage_name+'.fits',
                    imagename = myfitsimage_name,
                    overwrite = True)
     except:
@@ -155,7 +161,7 @@ def checkimageb(myfitsimage_name):
     default('importfits')
     try:
         print myname, ' Importing ', myfitsimage_name+'.fits', ' ...'
-        importfits(fitsimage = myfitsimage_name+'.fits',
+        importfits(fitsimage = datapath+myfitsimage_name+'.fits',
                    imagename = myfitsimage_name,
                    overwrite = True)
     except:
@@ -223,7 +229,6 @@ for i in mydict.keys():
         failed_tests.append(mydict[i][3])
     print myname, ' ***********************************************************'
 
-
 thefitsimage_name = mydict[1][0]
 print myname, ' ***********************************************************'
 print myname, ' Test of the BITPIX parameter:'
@@ -238,13 +243,13 @@ print myname, ' ***********************************************************'
 
 print myname, ' ***********************************************************'
 print myname, ' Test of the stokeslast parameter and the SPECSYS keyword:'
-exportfits(imagename='stokeslast-test.image', fitsimage='stokeslast-test.fits', stokeslast=True, overwrite=True)
+exportfits(imagename=datapath+'stokeslast-test.image', fitsimage='stokeslast-test.fits', stokeslast=True, overwrite=True)
 myresult0 = os.system('grep SPECSYS stokeslast-test.fits > /dev/null')
 specsyspresent = (myresult0 == 0)
 importfits(imagename='stokeslast-test2.image', fitsimage='stokeslast-test.fits', overwrite=True)
 myrgn1 = rg.box([0,0,1,0],[64,64,1,0])
 myrgn2 = rg.box([0,0,0,1],[64,64,0,1])
-ia.open('stokeslast-test.image')
+ia.open(datapath+'stokeslast-test.image')
 ia.subimage(outfile='sub1.im', region = myrgn1, overwrite=True)
 ia.close()
 ia.open('stokeslast-test2.image')
@@ -267,14 +272,14 @@ print myname, ' ***********************************************************'
 print myname, ' ***********************************************************'
 print myname, ' Test of the wavelength parameter:'
 os.system('rm -f wavelength-test.fits')
-ia.open('stokeslast-test.image')
+ia.open(datapath+'stokeslast-test.image')
 ia.tofits(outfile='wavelength-test.fits', wavelength=True)
 ia.close()
 passed = ia.open('wavelength-test.fits')
 ia.close()
 
 os.system('rm -f wavelength-test2.fits')
-ia.open('stokeslast-test.image')
+ia.open(datapath+'stokeslast-test.image')
 ia.tofits(outfile='wavelength-test2.fits', wavelength=True, airwavelength=True)
 ia.close()
 passed = passed and ia.open('wavelength-test2.fits')
@@ -291,7 +296,7 @@ print myname, ' ***********************************************************'
 print myname, ' ***********************************************************'
 print myname, ' Test of export of a standard single-channel image from clean:'
 os.system('rm -f xxx-test.fits xxx-test-w.fits')
-ia.open('xxx-clean.image')
+ia.open(datapath+'xxx-clean.image')
 ia.tofits(outfile='xxx-test.fits')
 ia.tofits(outfile='xxx-test-w.fits', wavelength=True)
 ia.close()
@@ -335,7 +340,7 @@ passed = True
 for myctype in ['freq','vrad','vopt','wave','awav']:
     try:
         print 'Testing CTYPE ', myctype, ' ...'
-        importfits(imagename=myctype+'.im', fitsimage='spec-test-'+myctype+'.fits', overwrite=True)
+        importfits(imagename=myctype+'.im', fitsimage=datapath+'spec-test-'+myctype+'.fits', overwrite=True)
         cond0 = ia.open(myctype+'.im')
         coordm = ia.coordmeasures()
         cond1 = (abs(coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype])<1.) # avoid Python precision problems
@@ -400,7 +405,7 @@ print myname, ' Test of import with use of parameter defaultaxes:'
 passed = True
 for name in ['dir_and_stokes.fits', 'dir_stokes_and_freq.fits', 'onlydir.fits', 'dir_and_freq.fits', 'dir_freq_and_stokes.fits', 'freq.fits']:
     print name
-    importfits(fitsimage=name, imagename=name+'.im', overwrite=True, defaultaxes=True, defaultaxesvalues=['19h30m00',2.,'6GHz', 'Q'])
+    importfits(fitsimage=datapath+name, imagename=name+'.im', overwrite=True, defaultaxes=True, defaultaxesvalues=['19h30m00',2.,'6GHz', 'Q'])
     ia.open(name+'.im')
     mycs = ia.coordsys()
     ia.close()
@@ -439,7 +444,7 @@ expectb = 2.190956850603E+11 # LSRK
 passed = True
 try:
     os.system('rm -rf freq.im')
-    importfits(imagename='freq.im', fitsimage='spec-test-freq.fits', overwrite=True)
+    importfits(imagename='freq.im', fitsimage=datapath+'spec-test-freq.fits', overwrite=True)
     os.system('rm -rf freqx.im')
     imreframe(imagename='freq.im', output='freqx.im', outframe='BARY')
     cond0 = ia.open('freqx.im')
@@ -484,7 +489,7 @@ print myname, ' ***********************************************************'
 
 print myname, ' ***********************************************************'
 print myname, ' Test of the beam parameter:'
-importfits(fitsimage='1904-66_AIT.fits', imagename='1904-66_AIT_2.im', beam=['2arcsec','1arcsec','3.0deg'], overwrite=True)
+importfits(fitsimage=datapath+'1904-66_AIT.fits', imagename='1904-66_AIT_2.im', beam=['2arcsec','1arcsec','3.0deg'], overwrite=True)
 passed = False
 ia.open('1904-66_AIT_2.im')
 x = ia.restoringbeam()
