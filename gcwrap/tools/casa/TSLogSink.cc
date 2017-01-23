@@ -56,7 +56,7 @@ String TSLogSink::id( ) const {
     return String("TSLogSink");
 }
 
-TSLogSink::TSLogSink()
+TSLogSink::TSLogSink(const std::string &path)
 : LogSinkInterface()
 {
 #ifdef AIPS_LOG4CPLUS
@@ -66,7 +66,7 @@ TSLogSink::TSLogSink()
    logsink = 0 ;
    logfile = 0 ;
    send2cerr = false;
-   setLogSink();
+   setLogSink(path);
 #endif
 }
 

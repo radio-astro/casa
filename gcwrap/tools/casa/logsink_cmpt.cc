@@ -49,12 +49,16 @@ static LogSinkInterface *thelogsink
 static string theLogName;
 
 //logsink::logsink():thelogsink(0)
-logsink::logsink()
+logsink::logsink(const std::string &filename)
 {
-  if(!theLogName.size()){
+  if( ! theLogName.size( ) ){
      char *buff = NULL;
-     char *mybuff = getcwd(buff, MAXPATHLEN);
-     theLogName = string(mybuff) + string("/casa.log");
+     if ( filename.at(0) == '/' )
+         theLogName = filename;
+     else {
+         char *mybuff = getcwd(buff, MAXPATHLEN);
+         theLogName = string(mybuff) + "/" + filename;
+     }
   }
 
   // jagonzal: Set task and processor name
@@ -62,7 +66,7 @@ logsink::logsink()
   processor_name = casacore::String("casa");
 
   //cout << "thelogsink=" << thelogsink << endl;
-  thelogsink = new casa::TSLogSink();
+  thelogsink = new casa::TSLogSink(theLogName);
   setlogfile(theLogName);
   itsorigin = new LogOrigin("casa");
   logLevel =  LogMessage::NORMAL;
@@ -71,7 +75,6 @@ logsink::logsink()
   logname = theLogName ;
   filterMsgList.clear();
   //version();
-  
    string tmpname = "" ;
       String logfileKey="logfile.no.default";
       String logname2;
@@ -93,7 +96,6 @@ logsink::logsink()
       //thelogsink = new NullLogSink();
       ;
    }
-      
 }
 
 std::string logsink::version(){

@@ -55,8 +55,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
 
 
-<!-- this method is not implemented at all 
-   <method type="constructor" name="emptycomponentlist">
+   <method type="constructor" name="componentlist">
    <shortdescription>Construct an empty componentlist</shortdescription>
    
 <description>
@@ -71,14 +70,14 @@ function.
 </description>
 
 <input>
+<!--
   
      <param type="bool" name="log">
      <description>Send a message to the logger</description>
      <value>true</value>
      </param> 
+-->
 </input>
-
-<returns type="casacomponentlist">A componentlist tool</returns>
 
 <example>
 
@@ -87,7 +86,6 @@ cl := emptycomponentlist();
 
 </example>
 </method>
--->
  
 <method type="function" name="open">
    <shortdescription>Construct an componentlist

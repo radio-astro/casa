@@ -41,7 +41,7 @@ This returns a Glish variable containing the tool functions of
 imager in an alternate universe that you have to tunnel to with a wormhole
 </description>
 <input>
-
+<!--
      <param type="string" name="filename">
      <description>MeasurementSet to be imaged</description>
      <value></value>
@@ -62,6 +62,7 @@ imager in an alternate universe that you have to tunnel to with a wormhole
      <description>Flag to force a new imager client</description>
      <value>true</value>
      </param>
+-->
 </input>
 <returns type="imager"/>
 <example>

@@ -349,13 +349,12 @@ the ms definition itself. -->
 
 </description>
 
-<!-- 
    <method type="constructor" name="ms">
    <shortdescription>Create an ms tool attached to a measurement set</shortdescription>
    
   <keyword>ms</keyword>
   <input>
-    
+<!-- 
      <param type="string" direction="in" name="filename">
      <description>measurement set file-name</description>
      <value></value>
@@ -380,6 +379,7 @@ the ms definition itself. -->
      <description>start a new server tool</description>
      <value>false</value>
      </param>
+-->
   </input>
   <returns type="msobject"/>
 
@@ -436,7 +436,6 @@ the ms definition itself. -->
     See the example for the <link anchor="ms:ms.nrow.function">nrow</link> function.
   </example>
 </method>
--->
  
    <method type="function" name="fromfits">
    <shortdescription>Create a measurement set from a uvfits file</shortdescription>

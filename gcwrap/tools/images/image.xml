@@ -856,6 +856,12 @@ print "\t----\t Intro Ex 10 \t----"
 
 </description> 
 
+   <method type="constructor" name="image">
+     <shortdescription></shortdescription>
+     <description></description>
+     <input></input>
+     <example></example>
+   </method>
 
    <method type="function" name="newimage">
    <shortdescription>Construct a new image analysis tool using the specified image.

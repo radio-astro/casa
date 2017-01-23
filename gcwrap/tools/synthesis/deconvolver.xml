@@ -43,7 +43,7 @@ mydecon.open('dirty.image', 'psf.image')
 
 </description>
 <input>
-
+<!--
      <param type="string" name="dirtyname">
      <description>Dirty image to be processed. Table name.</description>
      <value>dirtyname</value>
@@ -53,6 +53,7 @@ mydecon.open('dirty.image', 'psf.image')
      <description>point spread function to be processed. Table name</description>
      <value></value>
      </param>
+-->
 </input>
 <returns type="casadeconvolver">deconvolver tool</returns>
 <example>

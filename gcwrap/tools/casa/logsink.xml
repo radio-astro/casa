@@ -19,19 +19,15 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 <description></description>
 
 <method type="constructor" name="logsink">
-
   <shortdescription>Construct a logsink tool</shortdescription>
-
   <description></description>
-
   <input>
-
+    <param type="string"  name="filename">
+      <description>logfile name</description>
+      <value>casa.log</value>
+    </param>
   </input>
-
-  <returns type="logsink"/>
-
   <example></example> 
-  <returns type="bool"/>
 </method>
 
 <method type="function" name="origin">

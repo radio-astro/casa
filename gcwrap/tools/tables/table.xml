@@ -30,7 +30,6 @@ table handling.
 
 
 
-<!-- 
    <method type="constructor" name="table">
    <shortdescription>Construct table tool</shortdescription>
    
@@ -97,7 +96,7 @@ to use virtual columns as well.
 
 </description>
 <input>
-
+<!-- 
      <param type="string"  name="tablename">
      <description>Name of table on disk</description>
      <value></value>
@@ -165,6 +164,7 @@ to use virtual columns as well.
      <any type="record"/>
      <value>false</value>
      </param>
+-->
 </input>
 <returns type="table"/>
 

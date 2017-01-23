@@ -85,7 +85,7 @@ If the table is already in the order of the data in the given columns, the
 argument \texttt{sort} can be set to F to avoid needless sorting.
 </description>
 <input>
-
+<!--
      <param type="record" direction="in" name="tab">
      <description>table to be indexed, wants a table tool</description>
      </param>
@@ -98,6 +98,7 @@ argument \texttt{sort} can be set to F to avoid needless sorting.
      <description>is a sort of the key values needed?</description>
      <value>true</value>
      </param>
+-->
 </input>
 <return type="bool"/>
 </method>

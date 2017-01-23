@@ -22,12 +22,12 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 </code>
 
 
-<!-- 
    <method type="constructor" name="quanta">
    <shortdescription>Construct quanta tool</shortdescription>
    
 <input>
 
+<!-- 
      <param type="string" direction="in" name="host">
      <description>host on which to run tool</description>
      <value>valid host name string</value>
@@ -38,14 +38,13 @@ file:///opt/casa/code/tools/xml/casa.xsd">
      <description>force the use of a new server</description>
      <value>false</value>
      </param>
+-->
 </input>
-<returns type="quanta"/>
 <description>
 Create a quanta tool on the specified host (or by default the
 host you are running on). 
 </description>
 </method>
--->
 
 
  

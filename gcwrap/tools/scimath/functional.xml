@@ -104,19 +104,12 @@ fitted in a least squares fit (see the fitting \tool\ ).
 <!-- ****************************************************************** -->
 
 
-<!--
    <method type="constructor" name="functional">
    <shortdescription>Construct a functional tool</shortdescription>
 <description>
 Create a {\tt functional} tool.
 </description>
-<returns type="functional">functional tool or fail</returns>
-<description>
-Create a functionalserver \tool on the specified host (or by default the
-host you are running on). 
-</description>
 </method>
--->
 <!-- ****************************************************************** -->
 <!--
    <method type="function" name="open">

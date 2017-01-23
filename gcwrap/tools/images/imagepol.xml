@@ -268,16 +268,16 @@ anchor="images:imagepol.fourierrotationmeasure.function">fourierrotationmeasure<
 
 </description>
 
-<!--
    <method type="constructor" name="imagepol">
    <shortdescription>Create an Imagepol tool from an \casa\ image file</shortdescription>
    
 <input>
-  
+<!--
      <param type="string" direction="in" name="infile">
      <description>Input image file name</description>
      <value></value>
      </param>
+-->
 </input>
 <returns type="imagepol"/>
 <description>
@@ -355,8 +355,6 @@ write them out to disk.
 
 </example>
 </method>
-
---> 
 
  
    <method type="function" name="imagepoltestimage">

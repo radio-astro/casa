@@ -45,7 +45,7 @@ visrow.close();
    <shortdescription>Construct table row tool</shortdescription>
    
 <input>
-
+<!--
      <param type="record" direction="in" name="tab">
      <description>table to be accessed, expects table tool</description>
      </param>
@@ -55,11 +55,12 @@ visrow.close();
      <value>all</value>
      </param>
 
-     <param type="unknown" direction="bool" name="exclude">
+     <param type="bool" direction="in" name="exclude">
      <description>Exclude instead of include the named columns?</description>
      <value>false</value>
      <choice>F</choice>
      </param>
+-->
 </input>
 <returns type="record"/>
 </method>

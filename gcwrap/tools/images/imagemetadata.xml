@@ -54,6 +54,13 @@ immd.done()
 
 </description>
 
+   <method type="constructor" name="imagemetadata">
+     <shortdescription></shortdescription>
+     <description></description>
+     <input></input>
+     <example></example>
+   </method>
+
 <method type="function" name="add">
     <shortdescription>Add a key-value pair if possible.</shortdescription>
     <input>

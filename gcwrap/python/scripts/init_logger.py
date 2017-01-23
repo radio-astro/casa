@@ -77,10 +77,7 @@ else:
             casalogger(thelogfile)
 
 
-casalog = casac.logsink()
-
-if casa.has_key('files') and casa['files'].has_key('logfile') :
-    casalog.setlogfile(casa['files']['logfile'])
+casalog = casac.logsink(casa['files']['logfile'])
 
 processor_origin = MPIEnvironment.processor_origin
 casalog.processorOrigin(processor_origin)

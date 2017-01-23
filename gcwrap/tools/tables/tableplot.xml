@@ -29,6 +29,13 @@ can call the tableplot functions and customize the generated plots.
 </description>
 
 
+   <method type="constructor" name="tableplot">
+     <shortdescription></shortdescription>
+     <description></description>
+     <input></input>
+     <example></example>
+   </method>
+
     <method type="function" name="open">
    <shortdescription>Specify list of tables to operate on.</shortdescription>
    

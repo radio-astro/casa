@@ -69,7 +69,7 @@ specify another sort algorithm. 'n' is no sort, 'q' is quicksort,
 'i' is insertion sort, other is heapsort. A full word can also be used.
 </description>
 <input>
-
+<!--
      <param type="record" direction="in" name="tab">
      <description>table to be iterated, expects table tool</description>
      </param>
@@ -87,6 +87,7 @@ specify another sort algorithm. 'n' is no sort, 'q' is quicksort,
      <description>Sort the table first?</description>
      <value>true</value>
      </param>
+-->
 </input>
 <returns type="bool"/>
 </method>

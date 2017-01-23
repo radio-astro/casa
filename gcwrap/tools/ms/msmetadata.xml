@@ -79,6 +79,13 @@ windows in the dataset and close the tool.
             </example>
         </description>
 
+        <method type="constructor" name="msmetadata">
+          <shortdescription></shortdescription>
+          <description></description>
+          <input></input>
+          <example></example>
+        </method>
+
         <method type="function" name="almaspws">
             <shortdescription>Get a list of spectral window IDs with ALMA-specific attributes.</shortdescription>
             <input>

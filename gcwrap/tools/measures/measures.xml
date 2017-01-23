@@ -23,12 +23,11 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
 
 
-<!-- 
    <method type="constructor" name="measures">
    <shortdescription>Construct measures tool</shortdescription>
    
 <input>
-
+<!-- 
      <param type="string" direction="in" name="host">
      <description>host on which to run tool</description>
      <value></value>
@@ -39,7 +38,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 server</description>
      <value>false</value>
      </param>
-
+-->
 </input>
 <returns type="measures"/>
 <description>
@@ -47,8 +46,6 @@ Create a measures tool on the specified host (or by default the
 host you are running on).
 </description>
 </method>
--->
-
 
  
    <method type="function" name="dirshow">

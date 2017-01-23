@@ -388,6 +388,13 @@ csys.summary()
 
 </example>
  
+   <method type="constructor" name="coordsys">
+     <shortdescription></shortdescription>
+     <description></description>
+     <input></input>
+     <example></example>
+   </method>
+
    <method type="function" name="newcoordsys">
    <shortdescription>Create a non-default coordsys tool</shortdescription>
    

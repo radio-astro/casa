@@ -82,7 +82,7 @@ class TSLogSink : public casacore::LogSinkInterface
 {
 public:
   // Create an empty sink without a filter.
-  TSLogSink();
+    TSLogSink(const std::string &name);
 
   // Create an empty sink with the given filter.
   // <group>

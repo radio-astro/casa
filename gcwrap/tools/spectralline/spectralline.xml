@@ -76,6 +76,13 @@ splattotable does this conversion.
 
 </description>
 
+<method type="constructor" name="spectralline">
+  <shortdescription></shortdescription>
+  <description></description>
+  <input></input>
+  <example></example>
+</method>
+
 <method type="function" name="splattotable">
     <shortdescription>Convert a downloaded Splatalogue spectral line list to a casa table.</shortdescription>
     <input>

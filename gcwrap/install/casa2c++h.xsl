@@ -75,14 +75,12 @@ static <xsl:value-of select="@xsi:type"/><xsl:text> </xsl:text><xsl:value-of sel
 </xsl:for-each>	
 </xsl:for-each>
 
-         <xsl:value-of select="@name"/>();
          ~<xsl:value-of select="@name"/>();
 <xsl:for-each select="aps:method">
-<xsl:if test="lower-case(@type)!='constructor'">
- <xsl:text>         </xsl:text><xsl:apply-templates select="aps:returns"/> <xsl:value-of select="@name"/>(<xsl:apply-templates select="aps:input"></xsl:apply-templates> <xsl:if test="aps:output and aps:input">, </xsl:if>
+ <xsl:text>         </xsl:text><xsl:if test="lower-case(@type)!='constructor'"><xsl:apply-templates select="aps:returns"/></xsl:if> <xsl:value-of select="@name"/>(<xsl:apply-templates select="aps:input"></xsl:apply-templates> <xsl:if test="aps:output and aps:input">, </xsl:if>
               <xsl:apply-templates select="aps:output">
 </xsl:apply-templates>);
-</xsl:if>
+
 </xsl:for-each>
       private :
 <xsl:for-each select="aps:code">
