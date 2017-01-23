@@ -357,6 +357,10 @@ public:
   Humidity    getRelativeHumidityThreshold() const {return relativeHumidityThreshold_;};
   Length      getWvScaleHeightThreshold() const {return wvScaleHeightThreshold_;};
 
+  void        setAltitudeThreshold(const Length &altitudeThreshold) {altitudeThreshold_=altitudeThreshold;};
+  void        setGroundPressureThreshold(const Pressure &groundPressureThreshold) {groundPressureThreshold_=groundPressureThreshold;};
+  void        setGroundTemperatureThreshold(const Temperature &groundTemperatureThreshold) {groundTemperatureThreshold_=groundTemperatureThreshold;};
+
 
   //@}
 
