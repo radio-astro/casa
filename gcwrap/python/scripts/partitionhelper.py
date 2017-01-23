@@ -239,6 +239,7 @@ class convertToMMS():
 
         '''
         from tasks import partition
+        from __main__ import default
 
         if not os.path.lexists(ms):
             return False
