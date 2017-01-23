@@ -21,18 +21,8 @@ PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 imager = casac.imager()
 image = casac.image()
 quantity=casac.quanta()
-
 AIPS_DIR = os.environ["CASAPATH"].split()[0]
-TESTS_DIR = AIPS_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
-stack_frame_find()['TESTS_DIR']=TESTS_DIR
 
-#print 'KEYS of stack frame', stack_frame_find().keys()
-print "PYVER        - ", PYVER
-print "AIPS_DIR     - ", AIPS_DIR
-print "SCRIPT_REPOS - ", AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/'
-print "--------------------------------------------------------------------------------"
-os.system("ls " + AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python' + PYVER + '/regressions/')
-print "--------------------------------------------------------------------------------"
 
 if os.access(AIPS_DIR+'/lib64', os.F_OK):
     SCRIPT_REPOS = AIPS_DIR+'/lib64/python'+PYVER+'/regressions/'
@@ -47,7 +37,19 @@ elif os.access(AIPS_DIR + '/' + os.environ["CASAPATH"].split()[1] + '/lib/python
 else:            #Mac release
     SCRIPT_REPOS = AIPS_DIR+'/Resources/python/regressions/'
     UTILS_DIR = AIPS_DIR+'/MacOS/'
+
+TESTS_DIR = SCRIPT_REPOS
+stack_frame_find()['TESTS_DIR']=TESTS_DIR
 # because casapy releases have a different directory structure
+#print 'KEYS of stack frame', stack_frame_find().keys()
+print "PYVER        - ", PYVER
+print "AIPS_DIR     - ", AIPS_DIR
+print "SCRIPT_REPOS - ", SCRIPT_REPOS
+print "--------------------------------------------------------------------------------"
+os.system("ls " + SCRIPT_REPOS)
+print "--------------------------------------------------------------------------------"
+
+
 
 
 # set to True to skip the test execution and reuse product files
