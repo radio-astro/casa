@@ -4,6 +4,7 @@
 #include <atmosphere/ATM/ATMSkyStatus.h>
 #include <atmosphere/ATM/ATMVersion.h>
 
+#include <stdcasa/StdCasa/CasacSupport.h>
 
 namespace atm
 {
