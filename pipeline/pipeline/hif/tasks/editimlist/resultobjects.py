@@ -20,6 +20,9 @@ class EditimlistResult(basetask.Results):
         new_targets_names = [x['field'] for x in self.targets]
         print 'new targets', new_targets_names
 
+        if not hasattr(context, 'clean_list_pending'):
+            context.clean_list_pending = []
+
         existing_targets = context.clean_list_pending
         existing_targets_names = [x['field'] for x in context.clean_list_pending]
         print 'existing targets', existing_targets_names

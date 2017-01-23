@@ -365,7 +365,7 @@ class Editimlist(basetask.StandardTaskTemplate):
                   'phasecenter': '',
                   'specmode': inputs.specmode,
                   'gridder': '',
-                  'imagename': '',
+                  'imagename': inputs.imagename,
                   'start': inputs.start,
                   'width': inputs.width,
                   'nbin': '',
