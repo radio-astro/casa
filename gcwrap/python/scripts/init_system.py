@@ -8,7 +8,7 @@ try:
     from casac import casac
 except ImportError, e:
     print "failed to load casa:\n", e
-    sys.exit(1)
+    os._exit(1)
 
 try:
     import matplotlib
