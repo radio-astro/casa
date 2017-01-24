@@ -126,7 +126,7 @@ Edit a list of images to be cleaned.
     <value></value>
   </param>
 
-  <param type="string" name="msfterms">
+  <param type="string" name="mfs_nterms">
     <description></description>
     <value></value>
   </param>
@@ -333,7 +333,7 @@ polproducts --
 
 parameter_file --
 
-msfterms --
+mfs_nterms --
 
 tapersize --
 

@@ -10,7 +10,7 @@ def hif_editimlist(vis=None, imagename=None, intent=None, field=None,
                    specmode=None, outframe=None, hm_imsize=None, hm_cell=None,
                    calmaxpix=None, phasecenter=None,
                    nchan=None, start=None, width=None, nbins=None,
-                   polproducts=None, parameter_file=False, msfterms=None, tapersize=None,
+                   polproducts=None, parameter_file=False, mfs_nterms=None, tapersize=None,
                    pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

@@ -19,7 +19,7 @@ class EditimlistInputs(basetask.StandardInputs):
                  linesfile=None, uvrange=None, specmode=None, outframe=None,
                  hm_imsize=None, hm_cell=None, calmaxpix=None, phasecenter=None,
                  nchan=None, start=None, width=None, nbins=None,
-                 polproducts=None, parameter_file=False, msfterms=None, tapersize=None):
+                 polproducts=None, parameter_file=False, mfs_nterms=None, tapersize=None):
 
         self._init_properties(vars())
 
@@ -282,14 +282,14 @@ class EditimlistInputs(basetask.StandardInputs):
         self._parameter_file = value
 
     @property
-    def msfterms(self):
-        return self._msfterms
+    def mfs_nterms(self):
+        return self._mfs_nterms
 
-    @msfterms.setter
-    def msfterms(self, value):
+    @mfs_nterms.setter
+    def mfs_nterms(self, value):
         if value is None:
             value = ''
-        self._msfterms = value
+        self._mfs_nterms = value
 
     @property
     def tapersize(self):
@@ -372,8 +372,7 @@ class Editimlist(basetask.StandardTaskTemplate):
                   'nchan': inputs.nchan,
                   'uvrange': inputs.uvrange,
                   'polproducts': inputs.polproducts,
-                  'parameter_file': inputs.parameter_file,
-                  'msfterms': inputs.msfterms,
+                  'mfs_nterms': inputs.mfs_nterms,
                   'tapersize': inputs.tapersize
                   }
 
