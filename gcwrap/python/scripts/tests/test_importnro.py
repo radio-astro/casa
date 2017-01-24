@@ -24,7 +24,7 @@ class importnro_test(unittest.TestCase):
     """
     # Input and output names
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/importnro/'
-    infile='orixz.OrionKL.20151209212931.16.Y'
+    infile='orixa.OrionKL.20151209212931.16.Y'
     prefix='importnro_test'
     outfile=prefix+'.ms'
 
