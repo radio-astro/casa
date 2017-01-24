@@ -20,7 +20,7 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
     specializations that inherit from CommonBandpassInputs for concrete
     implementations.
     """
-    
+
     combine = basetask.property_with_default('combine', 'scan')
     solint = basetask.property_with_default('solint', 'inf')
     solnorm = basetask.property_with_default('solnorm', True)
@@ -28,11 +28,11 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
     @property
     def caltable(self):
         # The value of caltable is ms-dependent, so test for multiple
-        # measurement sets and listify the results if necessary 
+        # measurement sets and listify the results if necessary
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('caltable')
         return super(CommonBandpassInputs, self).caltable
-        
+
     @caltable.setter
     def caltable(self, value):
         if value is None:
@@ -43,15 +43,15 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
     def intent(self):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('intent')
-        
+
         if not isinstance(self.vis, list) and isinstance(self._intent, list):
             idx = self._my_vislist.index(self.vis)
             #return self._intent[idx]
             return self._intent
 
         if type(self.vis) is types.StringType and type(self._intent) is types.StringType:
-            return self._intent        
-        
+            return self._intent
+
         # if the spw was set, look to see which intents were observed in that
         # spectral window and return the intent based on our order of
         # preference: BANDPASS, AMPLITUDE, PHASE
@@ -94,7 +94,7 @@ class BandpassResults(basetask.Results):
     calibration tasks.
     """
     
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=None, pool=None, preceding=None):
         """
         Construct and return a new BandpassResults.
         
@@ -111,6 +111,13 @@ class BandpassResults(basetask.Results):
         :param tasks: the caltables on which the parameters were determined
         :type tasks: list of :class:`~pipeline.domain.caltable.CalibrationTable`
         """
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(BandpassResults, self).__init__()
         self.pool = pool[:]
         self.final = final[:]

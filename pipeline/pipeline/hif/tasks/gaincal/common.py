@@ -47,7 +47,7 @@ class GaincalResults(basetask.Results):
     calibration tasks.
     """
     
-    def __init__(self, final=[], pool=[], subtask_results=[]):
+    def __init__(self, final=None, pool=None, subtask_results=None):
         """
         Construct and return a new GaincalResults.
         
@@ -66,6 +66,13 @@ class GaincalResults(basetask.Results):
         :param subtask_results: the Results objects of any subtasks executed by this task
         :type subtask_results: list of :class:`~pipeline.api.Result`
         """
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if subtask_results is None:
+            subtask_results = []
+
         super(GaincalResults, self).__init__()
         self.pool = pool[:]
         self.final = final[:]
