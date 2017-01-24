@@ -31,6 +31,7 @@ from . import launcher
 from . import logging
 from . import pipelineqa
 from . import utils
+from . import vdp
 import pipeline.extern.decorator as decorator
 
 LOG = logging.get_logger(__name__)
@@ -176,7 +177,7 @@ def _record_constructor_args(func, *args, **kwargs):
 
     # ModeInputs classes collect all arguments into a kwargs dict called
     # parameters. This dict needs to be unpacked.
-    if isinstance(self, ModeInputs) and 'parameters' in call_args:
+    if isinstance(self, (ModeInputs, vdp.ModeInputs)) and 'parameters' in call_args:
         parameters = call_args['parameters']
         del call_args['parameters']
         call_args.update(parameters.items())
@@ -439,7 +440,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         # of dictionary of all kw argument names except self, the 
         # pipeline-specific arguments (context, output_dir, etc.) and
         # caltable.
-        skip = ['self', 'context', 'output_dir', 'ms', 
+        skip = ['self', 'context', 'output_dir', 'ms',
                 'to_field', 'to_intent', 'calto', 'calstate']
         skip.extend(ignore)
         kw_names = [a for a in inspect.getargspec(self.__init__).args
@@ -512,7 +513,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         for unwanted in ('to_intent', 'to_field'):
             if unwanted in args:
                 del args[unwanted]
-            
+
         for k,v in args.items():
             if v is None:
                 del args[k]        
@@ -1131,38 +1132,52 @@ class StandardTaskTemplate(api.Task):
         head = self.inputs.vis[0]
         tail = self.inputs.vis[1:]
 
-        to_split = ('to_field', 'to_intent', 'calphasetable', 'targetphasetable')
-        split_properties = self._get_handled_headtails(to_split)
+        if isinstance(self.inputs, (StandardInputs, ModeInputs)):
+            to_split = ('to_field', 'to_intent', 'calphasetable', 'targetphasetable')
+            split_properties = self._get_handled_headtails(to_split)
 
-        for name, ht in split_properties.items():
-            setattr(self.inputs, name, ht.head)
+            for name, ht in split_properties.items():
+                setattr(self.inputs, name, ht.head)
 
-        refant_tail = None
-        if hasattr(self.inputs, 'refant'):
-            if type(self.inputs.refant) is types.ListType and self.inputs.refant:
-                refant_head = self.inputs.refant[0]
-                refant_tail = self.inputs.refant[1:]
-                self.inputs.refant = refant_head
+            refant_tail = None
+            if hasattr(self.inputs, 'refant'):
+                if type(self.inputs.refant) is types.ListType and self.inputs.refant:
+                    refant_head = self.inputs.refant[0]
+                    refant_tail = self.inputs.refant[1:]
+                    self.inputs.refant = refant_head
 
-        try:
-            LOG.trace('Setting VISLIST_RESET_KEY prior to task execution')
-            setattr(self.inputs, VISLIST_RESET_KEY, True)
+            try:
+                LOG.trace('Setting VISLIST_RESET_KEY prior to task execution')
+                setattr(self.inputs, VISLIST_RESET_KEY, True)
+                self.inputs.vis = head
+                results = ResultsList()
+                results.append(self.execute(dry_run=dry_run, **parameters))
+
+                self.inputs.vis = tail
+            finally:
+                LOG.trace('Deleting VISLIST_RESET_KEY after task execution')
+                delattr(self.inputs, VISLIST_RESET_KEY)
+
+            for name, ht in split_properties.items():
+                setattr(self.inputs, name, ht.tail)
+
+            if hasattr(self.inputs, 'refant') and refant_tail is not None:
+                self.inputs.refant = refant_tail
+
+            results.extend(self.execute(dry_run=dry_run, **parameters))
+
+        else:
+            assert isinstance(self.inputs, (vdp.StandardInputs, vdp.ModeInputs))
             self.inputs.vis = head
             results = ResultsList()
             results.append(self.execute(dry_run=dry_run, **parameters))
 
             self.inputs.vis = tail
-        finally:
-            LOG.trace('Deleting VISLIST_RESET_KEY after task execution')
-            delattr(self.inputs, VISLIST_RESET_KEY)
-
-        for name, ht in split_properties.items():
-            setattr(self.inputs, name, ht.tail)
-
-        if hasattr(self.inputs, 'refant') and refant_tail is not None:
-            self.inputs.refant = refant_tail
-            
-        results.extend(self.execute(dry_run=dry_run, **parameters))
+            tail_result = self.execute(dry_run=dry_run, **parameters)
+            if type(results) is types.ListType:
+                results.extend(tail_result)
+            else:
+                results.append(tail_result)
 
         # Delete the capture log for subtasks as the log will be attached to the
         # outer ResultList.
