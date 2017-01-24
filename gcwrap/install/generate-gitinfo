@@ -104,7 +104,7 @@ exit 0;
 
 sub output {
 	my $fh = shift(@_);
-	my $rev = 1; #($revision ? $revision : $subversion_revision);
+	my $rev = 40000; #($revision ? $revision : $subversion_revision);
 	my $sdate = localtime(); #$subversion_date;
 	my $url = "git"; $subversion_url;
 	if ( $revision_only ) {
