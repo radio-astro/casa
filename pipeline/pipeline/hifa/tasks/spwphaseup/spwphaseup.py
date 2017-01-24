@@ -193,9 +193,7 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
           'minsnr'      : inputs.minsnr,
           'combine'     : inputs.combine,
           'refant'      : inputs.refant,
-          'minblperant' : inputs.minblperant,
-          'to_intent'   : 'PHASE,CHECK,TARGET,AMPLITUDE,BANDPASS',
-          'to_field'    : None
+          'minblperant' : inputs.minblperant
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
                                                       **task_args)

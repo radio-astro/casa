@@ -68,9 +68,7 @@ class Polarization(basetask.StandardTaskTemplate):
                                                   solint='int',
                                                   gaintype='KCROSS',
                                                   refant=RefAntOutput[0].lower(),
-                                                  smodel=[1, 0, 1, 0],
-                                                  to_intent='PHASE,TARGET,AMPLITUDE,BANDPASS',
-                                                  to_field=None)
+                                                  smodel=[1, 0, 1, 0])
 
         gaincal_task = gaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)

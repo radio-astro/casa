@@ -23,7 +23,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
     def antenna(self):
         if self._antenna is not None:
             return self._antenna
-        
+
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('antenna')
 
@@ -40,7 +40,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
     def uvrange(self):
         if self._uvrange is not None:
             return self._uvrange
-        
+
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('uvrange')
 
@@ -56,13 +56,13 @@ class CommonCalibrationInputs(basetask.StandardInputs,
     def caltable(self):
         """
         Get the caltable argument for these inputs.
-        
+
         If set to a table-naming heuristic, this should give a sensible name
         considering the current CASA task arguments.
-        """ 
+        """
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('caltable')
-        
+
         if callable(self._caltable):
             casa_args = self._get_task_args(ignore=('caltable',))
             return self._caltable(output_dir=self.output_dir,
@@ -84,7 +84,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         # run the answer through a set, just in case there are duplicates
         fields = set()
         fields.update(utils.safe_split(intent_fields))
-        
+
         return ','.join(fields)
 
     @field.setter
@@ -97,7 +97,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
     def minblperant(self):
         """
         Get the value of minblperant.
-        
+
         """
 
         # if minblperant was overridden, return the manually specified value
@@ -110,14 +110,14 @@ class CommonCalibrationInputs(basetask.StandardInputs,
             return self._handle_multiple_vis('minblperant')
 
         # if we cannot find the context value without the measurement set
-	# set value to 4, otherwise use number of antennas to determine value
+        # set value to 4, otherwise use number of antennas to determine value
         if not self.ms:
             minlperant = 4
-	else:
-	    nant = len(self.ms.antennas)
-	    if nant < 5:
-	        minblperant = max (2, nant - 1)
-	    else:
+        else:
+            nant = len(self.ms.antennas)
+            if nant < 5:
+                minblperant = max(2, nant - 1)
+            else:
                 minblperant = 4
 
         # otherwise return whatever we found. We assume the calling function
@@ -128,7 +128,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
     def minblperant(self, value):
         """
         Set the value of minblperant.
-        
+
         Setting the value to None restores the default pipeline value.
         """
         self._minblperant = value
@@ -159,7 +159,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         if not self.ms:
             return None
 
-        # get the reference antenna for this measurement set        
+        # get the reference antenna for this measurement set
         ant = self.ms.reference_antenna
         if type(ant) is types.ListType:
             ant = ant[0]
@@ -176,7 +176,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
     def refant(self, value):
         """
         Set the value of refant.
-        
+
         Setting the value to None lets the current context value take
         precedence.
         """
@@ -189,7 +189,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
     @selectdata.setter
     def selectdata(self, value):
         if value is None:
-            # set selectdata True if antenna is specified so that CASA gaincal 
+            # set selectdata True if antenna is specified so that CASA gaincal
             # task will check that parameter
             if self.antenna != '':
                 value = True
@@ -201,7 +201,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
     def spw(self):
         if self._spw is not None:
             return self._spw
-        
+
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('spw')
 
@@ -211,54 +211,3 @@ class CommonCalibrationInputs(basetask.StandardInputs,
     @spw.setter
     def spw(self, value):
         self._spw = value
-        
-    @property
-    def to_field(self):
-        if not callable(self._to_field):
-            return self._to_field
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('to_field')
-
-        # this will give something like '0542+3243,0343+242'
-        fields_with_intent = self._to_field(self.ms, self.to_intent)
-
-        # run the answer through a set, just in case there are duplicates
-        unique_fields = set(utils.safe_split(fields_with_intent))
-        
-        return ','.join(unique_fields)
-
-    @to_field.setter
-    def to_field(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._to_field = value
-
-    @property
-    def to_intent(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('to_intent')
-        
-        # if to_intent was manually specified as a list for multi-vis 
-        # application, get the appropriate intent to use from that list  
-        if not isinstance(self.vis, list) and isinstance(self._to_intent, list):
-	    # Not sure why we need this logic.
-            #idx = self._my_vislist.index(self.vis)
-            #return self._to_intent[idx]
-            return ','.join(self._to_intent)
-
-        # if to_intent was manually specified as a single value, return it
-        if type(self.vis) is types.StringType and type(self._to_intent) is types.StringType:
-            return self._to_intent
-        
-        # current default - return all intents
-        return ','.join(self.ms.intents)
-    
-    @to_intent.setter
-    def to_intent(self, value):
-        if isinstance(value, list):
-            value = [str(v).replace('*', '') for v in value]
-            value = ','.join(self._to_intent)
-        if type(value) is types.StringType:    
-            value = str(value).replace('*', '')
-        self._to_intent = value

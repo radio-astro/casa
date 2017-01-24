@@ -14,7 +14,7 @@ class BandpassWorkerInputs(common.CommonBandpassInputs):
     BandpassInputs defines the inputs required by the :class:`Bandpass`
     task.
     """
-    
+
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None,
                  # 
@@ -27,9 +27,7 @@ class BandpassWorkerInputs(common.CommonBandpassInputs):
                  degamp=None, degphase=None, visnorm=None, maskcenter=None,
                  maskedge=None, append=None, scan=None,
                  # preapply calibrations
-                 opacity=None, parang=None,
-                 # calibration target
-                 to_intent=None, to_field=None):
+                 opacity=None, parang=None):
         self._init_properties(vars())
 
 
@@ -97,8 +95,6 @@ class BandpassWorker(basetask.StandardTaskTemplate):
         # should calibrate 
         calto = callibrary.CalTo(vis=inputs.vis,
                                  spw=orig_spw)
-                                 #field=inputs.to_field,
-                                 #intent=inputs.to_intent,
                                  #antenna=orig_antenna)
 
         # create the calfrom object describing which data should be selected

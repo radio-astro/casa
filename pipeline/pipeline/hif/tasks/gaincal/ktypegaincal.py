@@ -27,9 +27,7 @@ class KTypeGaincalInputs(common.CommonGaincalInputs):
 		 combine=None, refant=None, minblperant=None, minsnr=None,
 		 solnorm=None, append=None, scan=None,
                  # preapply calibrations
-                 opacity=None, parang=None,
-                 # calibration target
-                 to_intent=None, to_field=None):
+                 opacity=None, parang=None):
         self._init_properties(vars())
 
 

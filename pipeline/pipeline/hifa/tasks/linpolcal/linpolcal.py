@@ -301,9 +301,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
           solint='inf',
           gaintype='KCROSS',
           refant=inputs.refant,
-          smodel=[1,0,1,0],
-          to_intent='PHASE,TARGET,AMPLITUDE,BANDPASS',
-          to_field=None)
+          smodel=[1,0,1,0])
 
         gaincal_task = gaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)
@@ -361,9 +359,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
           minblperant=4,
           solnorm=False,
           smodel=smodel,
-          parang=parang,
-          to_intent='PHASE,TARGET,AMPLITUDE,BANDPASS',
-          to_field=None)
+          parang=parang)
 
         gaincal_task = gaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)
@@ -385,9 +381,7 @@ class Linpolcal(basetask.StandardTaskTemplate):
           preavg=300,
           combine='obs,scan',
           refant=inputs.refant,
-          smodel=[1,0,1,0],
-          to_intent='PHASE,TARGET,AMPLITUDE,BANDPASS',
-          to_field=None)
+          smodel=[1,0,1,0])
 
         gaincal_task = gaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)
