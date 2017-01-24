@@ -53,7 +53,6 @@ import pipeline.infrastructure.imagelibrary as imagelibrary
 LOG = infrastructure.get_logger(__name__)
 
 from . import manifest
-#from . import aqua
 
 StdFileProducts = collections.namedtuple('StdFileProducts', 'ppr_file weblog_file casa_commands_file casa_pipescript casa_restore_script')
 AuxFileProducts = collections.namedtuple('AuxFileProducts', 'flux_file antenna_file cont_file flagtargets_list')
@@ -285,7 +284,8 @@ class ExportData(basetask.StandardTaskTemplate):
         result = ExportDataResults()
 
         # Make the standard vislist and the sessions lists. 
-        session_list, session_names, session_vislists, vislist = self._make_lists(inputs.context, inputs.session, inputs.vis)
+        session_list, session_names, session_vislists, vislist = self._make_lists(inputs.context,
+            inputs.session, inputs.vis)
 
         # Export the standard per OUS file products
         #    The pipeline processing request
@@ -295,7 +295,8 @@ class ExportData(basetask.StandardTaskTemplate):
         #    The CASA commands log
         stdfproducts = self._do_standard_ous_products(inputs.context, oussid, inputs.pprfile, 
             session_list, vislist, inputs.output_dir, inputs.products_dir)
-        result.pprequest = os.path.basename(stdfproducts.ppr_file) 
+        if stdfproducts.ppr_file:
+            result.pprequest = os.path.basename(stdfproducts.ppr_file) 
         result.weblog =os.path.basename(stdfproducts.weblog_file)
         result.pipescript =os.path.basename(stdfproducts.casa_pipescript)
         result.restorescript =os.path.basename(stdfproducts.casa_restore_script)
@@ -334,7 +335,7 @@ class ExportData(basetask.StandardTaskTemplate):
         result.targetimages=(targetimages_list, targetimages_fitslist)
 
         # Export the pipeline manifest file
-        #    Remove support for auxiliary data products to the individual pipelines
+        #    TBD Remove support for auxiliary data products to the individual pipelines
         pipemanifest = self._make_pipe_manifest (oussid, stdfproducts, auxfproducts, sessiondict, visdict,
             [os.path.basename(image) for image in calimages_fitslist], 
             [os.path.basename(image) for image in targetimages_fitslist])
@@ -459,7 +460,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         # Export the target source template flagging files
         #    Whether or not these should be exported to the archive depends on
-        #    the final plage of the target flagging step in the work flow
+        #    the final place of the target flagging step in the work flow
         targetflags_list = self._export_targetflags_files (context, oussid,
             '*_flagtargetstemplate.txt', products_dir)
 
@@ -606,10 +607,8 @@ class ExportData(basetask.StandardTaskTemplate):
         if pprfile == '':
             ps = context.project_structure
             if ps is None:
-                #pprtemplate = 'PPR_*.xml'
                 pprtemplate = None
             elif ps.ppr_file == '':
-                #pprtemplate = 'PPR_*.xml'
                 pprtemplate = None
             else:
                 pprtemplate = os.path.basename(ps.ppr_file)
@@ -658,7 +657,6 @@ class ExportData(basetask.StandardTaskTemplate):
         # Save the current working directory and move to the pipeline
         # working directory. This is required for tarfile IO
         cwd = os.getcwd()
-        #os.chdir (os.path.dirname(vis))
         os.chdir (context.output_dir)
 
         # Define the name of the output tarfile
@@ -746,11 +744,6 @@ class ExportData(basetask.StandardTaskTemplate):
             for visname in vis:
                 session = context.observing_run.get_ms(name=visname).session
                 wksessions.append(session)
-                #session_names = ['Session_1']
-                #session_vis_list = [vis]
-                #LOG.info('Visibility list for session %s is %s' % \
-                #(session_names[0], session_vis_list[0]))
-                #return session_names, session_vis_list
         else:
             wksessions = sessions
 
@@ -892,15 +885,6 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return os.path.basename(out_casalog_file)
 
-    #def _export_aqua_report (self, context, oussid, aquareport_name, aqua, products_dir):
-        #"""
-        #Save the AQUA report.
-        #    Dummy place holder as the base class is not associated with a specific pipeline recipe
-        #"""
-
-        #LOG.info('Dummy AQUA report generator')
-        #return ''
-
     def _export_flux_file (self, context, oussid, fluxfile_name, products_dir):
 
         """
@@ -987,15 +971,6 @@ class ExportData(basetask.StandardTaskTemplate):
         output_filelist = []
         ps = context.project_structure
         for file_name in glob.glob(pattern):
-            #if ps is None:
-                #flags_file = os.path.join (context.output_dir, file_name)
-                #out_flags_file = os.path.join (products_dir, file_name)
-            #elif ps.ousstatus_entity_id == 'unknown':
-                #flags_file = os.path.join (context.output_dir, file_name)
-                #out_flags_file = os.path.join (products_dir, file_name)
-            #else:
-                #flags_file = os.path.join (context.output_dir, file_name)
-                #out_flags_file = os.path.join (products_dir, oussid + '.' + file_name)
             flags_file = os.path.join (context.output_dir, file_name)
             out_flags_file = os.path.join (products_dir, file_name)
             if os.path.exists(flags_file):
@@ -1025,7 +1000,6 @@ class ExportData(basetask.StandardTaskTemplate):
             script_file = os.path.join (context.report_dir, script_name)
             out_script_file = os.path.join (products_dir, script_name)
         else:
-            #ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
             script_file = os.path.join (context.report_dir, script_name)
             out_script_file = os.path.join (products_dir, oussid + '.' + script_name)
 
