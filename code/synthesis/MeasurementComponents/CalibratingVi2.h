@@ -110,6 +110,10 @@ protected:
   // Correct the current VB
   virtual void calibrateCurrentVB() const;
 
+  // Initialize corrected data member to raw data
+  //  (this method is sensitive to DATA vs. FLOAT_DATA
+  virtual void initCorrected(casa::vi::VisBuffer2* vb) const;
+
   // Calibrater and VisEquation
   Calibrater *cb_p;
   VisEquation *ve_p;   

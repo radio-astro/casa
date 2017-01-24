@@ -392,7 +392,9 @@ void CalibratingVi2::calibrateCurrentVB() const
     // Fill current flags, raw weights, and raw vis
     vb->flagCube();
     vb->resetWeightsUsingSigma();  //  this is smart re spec weights or not
-    vb->setVisCubeCorrected(vb->visCube());
+
+    // Initialize "corrected" data from "raw" data
+    initCorrected(vb);
 
     // If the VisEquation is set, use it, otherwise use the corrFactor_p
     if (ve_p) {
@@ -434,6 +436,23 @@ void CalibratingVi2::calibrateCurrentVB() const
 
   }    
   //  cout << endl;
+}
+
+void CalibratingVi2::initCorrected(casa::vi::VisBuffer2* vb) const {
+
+  if (getVii()->existsColumn(VisBufferComponent2::VisibilityCubeFloat)) {
+    // Convert FLOAT_DATA to Complex, and assign
+    Cube<Float> f(vb->visCubeFloat());
+    Cube<Complex> c;
+    c.resize(f.shape());
+    convertArray(c,f);
+    vb->setVisCubeCorrected(c);
+  }
+  else
+    // Just copy the (already-Complex DATA column)
+    vb->setVisCubeCorrected(vb->visCube());
+
+  //  cout << "CalVi2::setCorrected()" << endl;
 }
 
 CalVi2LayerFactory::CalVi2LayerFactory(const CalibratingParameters& pars)
@@ -535,7 +554,7 @@ void CalSolvingVi2::calibrateCurrentVB() const
     vb->resetWeightsUsingSigma();
     
     // Initialize corrected data w/ data
-    vb->setVisCubeCorrected(vb->visCube());
+    initCorrected(vb);
 
     // If the VisEquation is set, use it, otherwise use the corrFactor_p
     if (ve_p) {
