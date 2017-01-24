@@ -636,7 +636,15 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
 
     VisImagingWeight& VisImagingWeight::operator=(const VisImagingWeight& other){
         if(this != &other){
-            gwt_p=other.gwt_p;
+	  //            gwt_p=other.gwt_p;
+
+	    gwt_p.resize(other.gwt_p.nelements(), true, false);
+	    for (uInt k=0; k < gwt_p.nelements(); ++k){
+	      gwt_p[k].resize();
+	      gwt_p[k]=other.gwt_p[k];
+	    }
+
+
             wgtType_p=other.wgtType_p;
             uscale_p=other.uscale_p;
             vscale_p=other.vscale_p;
