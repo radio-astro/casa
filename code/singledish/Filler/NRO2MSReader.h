@@ -88,7 +88,7 @@ public:
   virtual casacore::Bool getData(size_t irow, sdfiller::DataRecord &record);
 
   virtual int getNROArraySize() {
-    return obs_header_.NBEAM * obs_header_.NPOL * obs_header_.NSPWIN;
+    return obs_header_.ARYNM0; //obs_header_.NBEAM * obs_header_.NPOL * obs_header_.NSPWIN;
   }
   virtual int getNRONumBeam() {
     return obs_header_.NBEAM;
@@ -98,6 +98,19 @@ public:
   }
   virtual int getNRONumSpw() {
     return obs_header_.NSPWIN;
+  }
+
+  virtual int getNROArrayBeamId(int array_id) {
+//	  assert(array_id >= 0 && array_id < getNROArraySize());
+    return array_mapper_[array_id].getBeamId();
+  }
+  virtual int getNROArrayPolId(int array_id) {
+//	  assert(array_id >= 0 && array_id < getNROArraySize());
+    return array_mapper_[array_id].getPolId();
+  }
+  virtual int getNROArraySpwId(int array_id) {
+//	  assert(array_id >= 0 && array_id < getNROArraySize());
+    return array_mapper_[array_id].getSpwId();
   }
 
 protected:
@@ -150,6 +163,32 @@ private:
     }
   }
 
+  struct NROArrayData {
+	  int beam_id=-1;
+	  int pol_id=-1;
+	  string pol_name="";
+	  int spw_id=-1;
+	  void set(int16_t const arr_data, string const *pol_data) {
+		  if (arr_data < 1000) {
+			  throw "An attempt to set invalid ARRAY information to NROArrayData.\n";
+		  }
+		  beam_id = static_cast<int>(arr_data/1000) - 1;
+		  pol_id = static_cast<int>((arr_data % 1000)/100) - 1;
+		  spw_id = static_cast<int>(arr_data % 100) -1;
+		  pol_name = pol_data[pol_id];
+	  }
+	  int getBeamId() const {return beam_id;}
+	  int getPolId() const {return pol_id;}
+	  int getSpwId() const {return spw_id;}
+	  string getPolName() const {return pol_name;}
+
+  };
+
+  std::vector<NROArrayData> array_mapper_;
+
+  void constructArrayTable();
+  bool checkScanArray(string const scan_array, NROArrayData const *header_array);
+
   int beam_id_counter_;
   int source_spw_id_counter_;
   int spw_id_counter_;
@@ -173,7 +212,7 @@ private:
 		      std::vector<double> &freqs);
 
   std::vector<double> getSpectrum(int const irow, sdfiller::NRODataScanData const &data);
-  casacore::Int getPolNo(string const &rx);
+//  casacore::Int getPolNo(string const &rx);
 
   casacore::Bool (NRO2MSReader::*get_antenna_row_)(sdfiller::AntennaRecord &);
   casacore::Bool (NRO2MSReader::*get_field_row_)(sdfiller::FieldRecord &);

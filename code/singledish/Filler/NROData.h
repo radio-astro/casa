@@ -98,6 +98,8 @@ struct NRODataObsHeader {
   int NSPWIN;
   int CHMAX;
   string VERSION;
+  int16_t ARRYTB[36];
+  string POLNAME[12];
   string CDMY1;
 };
 
@@ -136,6 +138,7 @@ struct NRODataScanData {
   int IDMY0;
   int IDMY2;
   double DPFRQ0;
+  string ARRYSCN;
   string CDMY1;
   double SFCTR0;
   double ADOFF0;

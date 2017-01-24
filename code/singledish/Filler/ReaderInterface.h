@@ -72,6 +72,16 @@ public:
     return 0;
   }
 
+  virtual int getNROArrayBeamId(int /* array_id */) {
+    return -1;
+  }
+  virtual int getNROArrayPolId(int /* array_id */) {
+    return -1;
+  }
+  virtual int getNROArraySpwId(int /* array_id */) {
+    return -1;
+  }
+
   virtual casacore::Bool isFloatData() const {
     return false;
   }

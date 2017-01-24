@@ -838,17 +838,11 @@ void SingleDishMSFiller<T>::fillNROArray() {
   casacore::ScalarColumn<int> bea(nro_table, "BEAM");
   casacore::ScalarColumn<int> pol(nro_table, "POLARIZATION");
  casacore:: ScalarColumn<int> spw(nro_table, "SPECTRAL_WINDOW");
-  int iarr = 0;
-  for (int ibeam = 0; ibeam < reader_->getNRONumBeam(); ++ibeam) {
-    for (int ipol = 0; ipol < reader_->getNRONumPol(); ++ipol) {
-      for (int ispw = 0; ispw < reader_->getNRONumSpw(); ++ispw) {
+  for (int iarr = 0; iarr < reader_->getNROArraySize(); ++iarr) {
         arr.put(iarr, iarr);
-        bea.put(iarr, ibeam);
-        pol.put(iarr, ipol);
-        spw.put(iarr, ispw);
-        ++iarr;
-      }
-    }
+        bea.put(iarr, reader_->getNROArrayBeamId(iarr));
+        pol.put(iarr, reader_->getNROArrayPolId(iarr));
+        spw.put(iarr, reader_->getNROArraySpwId(iarr));
   }
 
   POST_END;
