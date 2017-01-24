@@ -976,6 +976,7 @@ class asdm_import7(test_base):
         self.assertEqual(self.res, None)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["ANTENNA/table.dat",
+                            "CALDEVICE/table.dat",
                             "DATA_DESCRIPTION/table.dat",
                             "FEED/table.dat",
                             "FIELD/table.dat",
@@ -989,7 +990,10 @@ class asdm_import7(test_base):
                             "SPECTRAL_WINDOW/table.dat",
                             "STATE/table.dat",
                             "SYSCAL/table.dat",
+                            "SYSPOWER/table.dat",
+                            "WEATHER/table.dat",
                             "ANTENNA/table.f0",
+                            "CALDEVICE/table.f0",
                             "DATA_DESCRIPTION/table.f0",
                             "FEED/table.f0",
                             "FIELD/table.f0",
@@ -1002,7 +1006,9 @@ class asdm_import7(test_base):
                             "SOURCE/table.f0",
                             "SPECTRAL_WINDOW/table.f0",
                             "STATE/table.f0",
-                            "SYSCAL/table.f0"
+                            "SYSCAL/table.f0",
+                            "SYSPOWER/table.f0",
+                            "WEATHER/table.f0"
                             ])
         for name in mscomponents:
             if not os.access(themsname+"/"+name, os.F_OK):
@@ -1031,7 +1037,7 @@ class asdm_import7(test_base):
             mslocal.close()
             print myname, ": OK. Checking tables in detail ..."
     
-            importasdm(asdm="moved_"+myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3')
+            importasdm(asdm="moved_"+myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~4')
 
             if(os.path.exists('reference.ms')):
                 retValue['success'] = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
@@ -1058,6 +1064,7 @@ class asdm_import7(test_base):
                 retValue['success'] = retValue['success'] and retValueTmp and retValueTmp2
 
                 for subtname in ["ANTENNA",
+                                 "CALDEVICE",
                                  "DATA_DESCRIPTION",
                                  "FEED",
                                  "FIELD",
@@ -1068,10 +1075,14 @@ class asdm_import7(test_base):
                                  "SOURCE",
                                  "SPECTRAL_WINDOW",
                                  "STATE",
-                                 "SYSCAL"]:
+                                 "SYSCAL",
+                                 "SYSPOWER",
+                                 "WEATHER"]:
                     
                     print "\n*** Subtable ",subtname
                     excllist = []
+                    if subtname=='CALDEVICE':
+                        excllist=['NOISE_CAL','CAL_EFF']
                     if subtname=='SOURCE':
                         excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
                     if subtname=='SYSCAL':
@@ -1094,6 +1105,19 @@ class asdm_import7(test_base):
                     except:
                         retValue['success'] = False
                         print "ERROR for table ", subtname
+
+                try:
+                    # test that the PRESSURE column has the expected units
+                    wxcalOK = tblocal.open(themsname+'/WEATHER')
+                    if wxcalOK:
+                        wxcalOK = tblocal.getcolkeyword("PRESSURE","QuantumUnits")[0] == 'hPa'
+                        tblocal.close()
+                    retValue['success'] = wxcalOK and retValue['success']
+                    if not wxcalOK:
+                        print "PRESSURE column in WEATHER table is missing or has incorrect units"
+                except:
+                    retValue['success'] = False
+                    print "ERROR getting units of PRESSURE column in WEATHER table."
 
         os.system("mv moved_"+myasdmname+" "+myasdmname)
                 
