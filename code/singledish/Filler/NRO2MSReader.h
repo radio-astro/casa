@@ -172,15 +172,24 @@ private:
 		  if (arr_data < 1000) {
 			  throw "An attempt to set invalid ARRAY information to NROArrayData.\n";
 		  }
+		  // indices in NOSTAR data are 1-base
 		  beam_id = static_cast<int>(arr_data/1000) - 1;
 		  pol_id = static_cast<int>((arr_data % 1000)/100) - 1;
 		  spw_id = static_cast<int>(arr_data % 100) -1;
 		  pol_name = pol_data[pol_id];
 	  }
-	  int getBeamId() const {return beam_id;}
-	  int getPolId() const {return pol_id;}
-	  int getSpwId() const {return spw_id;}
-	  string getPolName() const {return pol_name;}
+	  int getBeamId() const {
+		  if (beam_id < 0) throw "Array data is not set yet\n";
+		  return beam_id;}
+	  int getPolId() const {
+		  if (pol_id < 0) throw "Array data is not set yet\n";
+		  return pol_id;}
+	  int getSpwId() const {
+		  if (spw_id < 0) throw "Array data is not set yet\n";
+		  return spw_id;}
+	  string getPolName() const {
+		  if (pol_name.size() == 0) throw "Array data is not set yet\n";
+		  return pol_name;}
 
   };
 

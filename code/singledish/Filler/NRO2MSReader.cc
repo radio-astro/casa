@@ -354,6 +354,7 @@ bool NRO2MSReader::checkScanArray(string const scan_array,
 		throw AipsError(
 				"Internal Data ERROR: insufficient length of ARRAY information from scan header");
 	}
+	// indices in NOSTAR data are 1-base
 	int const sbeam = atoi(scan_array.substr(0, 2).c_str()) -1;
 	string const spol = scan_array.substr(2, 2);
 	int const sspw = atoi(scan_array.substr(4, 2).c_str()) -1;
