@@ -199,7 +199,7 @@ argparser.add_argument( '--colors', dest='prompt', default='NoColor',
                         help='prompt color', choices=['NoColor', 'Linux', 'LightBG'] )
 argparser.add_argument( "--pipeline",dest='pipeline',action='store_const',const=True,default=False,
                         help='start CASA pipeline run' )
-argparser.add_argument( "-c",dest='execute',default=[],nargs='+',
+argparser.add_argument( "-c",dest='execute',default=[],nargs=argparse.REMAINDER,
                         help='python eval string or python script to execute' )
 
 casa['flags'] = argparser.parse_args( )
