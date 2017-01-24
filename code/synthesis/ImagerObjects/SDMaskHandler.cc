@@ -743,6 +743,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //  onebox: a box around a max (box size +/-5pix around max position)
     //  thresh: threshold based auto masking (uses threshold or fracofpeak, and resolution)
     //      
+    // create a working copy of residual image (including pixel masks) 
     os << LogIO::NORMAL2 <<"algorithm:"<<alg<<LogIO::POST;
     TempImage<Float>* tempres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates(), memoryToUse()); 
     Array<Float> resdata;
@@ -751,6 +752,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imstore->residual()->get(resdata);
     tempres->put(resdata);
     tempres->setImageInfo(imstore->residual()->imageInfo());
+    tempres->attachMask(ArrayLattice<Bool> (imstore->residual()->getMask()));
 
     TempImage<Float>* temppsf = new TempImage<Float>(imstore->psf()->shape(), imstore->psf()->coordinates(), memoryToUse()); 
     imstore->psf()->get(psfdata);
@@ -762,6 +764,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imstore->mask()->get(maskdata);
     String maskname = imstore->getName()+".mask";
     tempmask->put(maskdata);
+    // 
+    
     if (pblimit>0.0 && imstore->hasPB()) {
       //cerr<<" applying pb mask ..."<<endl;
       LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, True, False));
@@ -1351,8 +1355,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       modbeam.setMajorMinor(Double(smoothFactor) * bmaj, Double(smoothFactor) * bmin);
       modbeam.setPA(beam.getPA());
       
-      os<<LogIO::DEBUG1<<"beam in pixels: B_maj="<<nxpix<<" B_min="<<nypix<<" beam area="<<beampix<<endl;
-      os<<LogIO::DEBUG1<<"prune size="<<pruneSize<<"(minbeamfrac="<<minBeamFrac<<" * beampix="<<beampix<<")"<<endl;
+      os<<LogIO::DEBUG1<<"beam in pixels: B_maj="<<nxpix<<" B_min="<<nypix<<" beam area="<<beampix<<LogIO::POST;
+      os<<LogIO::DEBUG1<<"prune size="<<pruneSize<<"(minbeamfrac="<<minBeamFrac<<" * beampix="<<beampix<<")"<<LogIO::POST;
     }
     else {
        throw(AipsError("No restoring beam(s) in the input image/psf"));
@@ -1364,7 +1368,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     stats.get(RecordFieldId("rms"), rmss);
     stats.get(RecordFieldId("medabsdevmed"), mads);
     
-    os<<LogIO::DEBUG1<<"mads = "<<mads<<endl;
     // only useful if single threshold value are used for all spectral planes... 
     minMax(minmaxval,maxmaxval,minmaxpos, maxmaxpos, maxs);
     minMax(minrmsval,maxrmsval,minrmspos, maxrmspos, rmss); 
@@ -1374,8 +1377,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // use MAD and convert to rms 
     //resRms = maxmadval * 1.4826; 
     resRmss = mads * 1.4826;
-    os<<LogIO::DEBUG1<<"Now mads = "<<mads<<endl;
-    os<<LogIO::DEBUG1<<" resRmss= "<<resRmss<<endl;
+    os<<LogIO::DEBUG1<<" resRmss (mads*1.4826)= "<<resRmss<<LogIO::POST;
     
 
     //define mask threshold 
@@ -1405,7 +1407,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       maskThreshold(ich) = max(sidelobeThreshold, noiseThreshold);
       lowMaskThreshold(ich) = max(sidelobeThreshold, lowNoiseThreshold);
       ThresholdType(ich) = (maskThreshold(ich) == sidelobeThreshold? "sidelobe": "noise");
-      os << LogIO::DEBUG1 <<" sidelobeTreshold="<<sidelobeThreshold<<" noiseThreshold="<<noiseThreshold<<" lowNoiseThreshold="<<lowNoiseThreshold<<endl;
+      os << LogIO::DEBUG1 <<" sidelobeTreshold="<<sidelobeThreshold<<" noiseThreshold="<<noiseThreshold<<" lowNoiseThreshold="<<lowNoiseThreshold<<LogIO::POST;
       os << LogIO::NORMAL <<" Using "<<ThresholdType(ich)<<" threshold for chan "<<String::toString(ich)<<" threshold="<<maskThreshold(ich)<<LogIO::POST;
     }
 
