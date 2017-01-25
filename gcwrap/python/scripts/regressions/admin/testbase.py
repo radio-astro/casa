@@ -8,6 +8,7 @@ import sys
 from  casac import *
 import inspect
 import re
+import pdb
 #from tasks import *  # execfile
 #from taskinit import casalog
 
@@ -119,7 +120,6 @@ class testbase :
     def runtests(self, testName, testId=0, dry=False):
         try:
             leFile=self.testsToRun[testId]
-
             if leFile[0:6] == 'tests/':
                 print "Import", leFile
                 leTest = __import__(testName)
@@ -267,19 +267,20 @@ class testbase :
         testName=string.lower(testname)
 
         # search for DIR/tests/<name>.py
+        ##give priority to /tests scripts
         if os.path.isdir(scriptdir+'/tests/'):
             allScripts=os.listdir(scriptdir+'/tests/')
         else:
             allScripts=[]
         print "allScripts = ", allScripts
-        theScript=''
+        theScript=[]
         numOfScript=0
         for scr in allScripts :
             #if(string.find(scr,testname)>=0):
             if(scr == testname+'.py'):
                 print scr, testname
                 #if (self.ispythonscript(scr)):
-                theScript = 'tests/'+scr
+                theScript.append('tests/'+scr)
                 numOfScript +=1
 
         # search for DIR/<name>.py
@@ -291,15 +292,15 @@ class testbase :
         for scr in allScripts:
             #print scriptdir, scr, testname
             if (scr == testname + '.py'):
-                theScript = scr
+                theScript.append(scr)
                 numOfScript += 1             
         if numOfScript == 0:
             raise Exception("Could not find test %s" % testname)
         if( numOfScript > 1) :
             print 'More than 1 scripts found for name '+testname
-            print 'Using the following one '+ theScript
-        print "Found", theScript
-        return theScript
+            print 'Using the following one '+ theScript[0]
+        print "Found", theScript[0]
+        return theScript[0]
 
     def ispythonscript(self, thescript):
         if(string.find(thescript,'.py', len(thescript)-3) > 0):

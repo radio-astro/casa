@@ -667,17 +667,22 @@ class runTest:
         self.result['ref_fit1_fwhm'] = fwhm2[1], "reference fit1 FWHM"
 
     def get_casa_version(self):
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-            if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-        myf=sys._getframe(stacklevel).f_globals
+        #a=inspect.stack()
+        #stacklevel=0
+        #for k in range(len(a)):
+        #    if (string.find(a[k][1], 'ipython console') > 0):
+        #       stacklevel=k
+        #myf=sys._getframe(stacklevel).f_globals
+        myf=stack_frame_find()
         # The two versions are for different start up scripts (start_casa.py and casapy.py)
         # Once the conversion to start_casa.py is complete, the check and else branch can
         # be removed
-        casa = find_casa()
-        if casa['state']['init_version'] > 0:
+        try:
+            casa = myf.find_casa()
+        except:
+            if(type(myf['casa'])==dict):
+                casa=myf['casa']
+        if casa['state']['init_version'] > 1:
             return "CASA Version " + casa['build']['version']
         else:
             return "CASA Version " + myf['casa']['build']['version'] + " (r"+myf['casa']['source']['revision'] + ")"

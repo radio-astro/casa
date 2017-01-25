@@ -3,14 +3,18 @@ import os
 import string
 from locatescript import locatescript
 import inspect
+import pdb
 
-a=inspect.stack()
-stacklevel=0
-for k in range(len(a)):
-    if (string.find(a[k][1], 'ipython console') > 0):
-        stacklevel=k
-        break
-gl=sys._getframe(stacklevel).f_globals
+from casa_stack_manip import stack_frame_find
+
+gl=stack_frame_find( )
+#a=inspect.stack()
+#stacklevel=0
+#for k in range(len(a)):
+#    if (string.find(a[k][1], 'ipython console') > 0):
+#        stacklevel=k
+#        break
+#gl=sys._getframe(stacklevel).f_globals
 
 def description():
     return "NGC 5921, VLA D-array, import, export, flagging, calibration, imaging, image statistics"
