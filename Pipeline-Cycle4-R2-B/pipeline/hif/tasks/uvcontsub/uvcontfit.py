@@ -11,7 +11,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.contfilehandler as contfilehandler
-from pipeline.h.heuristics import caltable as uvcaltable
+from pipeline.hif.heuristics import caltable as uvcaltable
 from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
