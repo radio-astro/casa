@@ -777,7 +777,7 @@ class test_MPICommandServer(unittest.TestCase):
         
     def test_server_not_responsive(self):
         
-        # First find a sutiable server
+        # First find a suitable server
         rank = -1
         server_list = self.client.get_server_status()
         for server in server_list:

@@ -64,26 +64,37 @@ def run():
     while not start_service_signal_available:
         start_service_signal_available = communicator.control_service_request_probe()
         if start_service_signal_available:
-            # Receive CASA global dictionary
+            # Receive CASA global dictionary (filtered)
             request = communicator.control_service_request_recv()
         else:
             time.sleep(MPIEnvironment.mpi_start_service_sleep_time)
-      
+
     # Check if request is start or stop signal
     if request['signal'] == 'start':
-    
+
+        cli_logfile_name, logmode_name = 'casa_filtered', 'logmode'
+        for entry_name in [cli_logfile_name, logmode_name]:
+            if entry_name not in request:
+                raise RuntimeError('A \'start\' MPI request must have a {0} entry but it '
+                                   'was not found. Host name: {1}. MPI rank: {2}, '.
+                                   format(entry_name, MPIEnvironment.hostname,
+                                          MPIEnvironment.mpi_processor_rank))
+
         # Get CASA environment dictionary
         global casa
-        casa = request['casa']
+        casa_filtered = request['casa_filtered']
+        casa.update(casa_filtered)
         global _casa_top_frame_
         _casa_top_frame_ = True
+
         
         # Re-set log file
-        if request['logmode'] == 'separated' or request['logmode'] == 'redirect':
-            casa['files']['logfile'] = '%s-server-%s-host-%s-pid-%s' % (casa['files']['logfile'],
-                                                                       str(MPIEnvironment.mpi_processor_rank),
-                                                                       str(MPIEnvironment.hostname),
-                                                                       str(MPIEnvironment.mpi_pid))
+        if request[logmode_name] == 'separated' or request[logmode_name] == 'redirect':
+            casa['files']['logfile'] = ('{0}-server-{1}-host-{2}-pid-{3}'.
+                                        format(casa['files']['logfile'],
+                                               MPIEnvironment.mpi_processor_rank,
+                                               MPIEnvironment.hostname,
+                                               MPIEnvironment.mpi_pid))
     
         # Import logger, logfile is set at taskinit retrieving from the casa dict. from the stack
         from taskinit import casalog
@@ -93,7 +104,7 @@ def run():
         casalog.origin(casalog_call_origin)
         
         # If log mode is separated activate showconsole to have all logs sorted by time at the terminal
-        if request['logmode'] == 'redirect':
+        if request[logmode_name] == 'redirect':
             casalog.showconsole(True)
             
         # Install filter to remove MSSelectionNullSelection errors
@@ -113,5 +124,3 @@ def run():
     else:
         
         MPIEnvironment.finalize_mpi_environment()
-    
-        

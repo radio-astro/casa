@@ -400,7 +400,17 @@ class MPICommandClient:
             
             
         def __send_start_service_signal(self):
-            
+
+            def filter_out_dict(a_dict, keys_exclude):
+                """ Return a dictionary copied from the input dictionary
+                but excluding the entries with keys given in the second
+                parameter.
+                """
+                filtered = {key: value for key, value in a_dict.items()
+                            if key not in keys_exclude}
+                return filtered
+
+
             casalog_call_origin = "MPICommandClient::send_start_service_signal"
             
             casalog.post("Sending start service signal to all servers","INFO",casalog_call_origin)
@@ -408,7 +418,10 @@ class MPICommandClient:
             # Prepare stop service request
             request = {}
             request['signal'] = 'start'
-            request['casa'] = casa # The request contains the global casa dictionary to be used by the servers
+            request['casa_filtered'] = filter_out_dict(casa, 
+                                                       ['build', 'time', 'version', 'rc', 
+                                                        'root', 'xml', 'flags', 'dbus', 
+                                                        'source', 'url', 'state'])
             request['logmode'] = self.__log_mode
             
             # Send request to all servers

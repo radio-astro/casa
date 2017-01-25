@@ -13,7 +13,7 @@ from subprocess import Popen, PIPE, STDOUT
 ##
 _casa_top_frame_ = True
 
-# jagonzal: MPIServer initialization before wathdog fork
+# jagonzal: MPIServer initialization before watchdog fork
 from mpi4casa.MPIEnvironment import MPIEnvironment
 if MPIEnvironment.is_mpi_enabled and not MPIEnvironment.is_mpi_client:
     import mpi4casa.mpi4casapy as mpi4casapy
