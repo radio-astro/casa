@@ -46,6 +46,7 @@ scripts/init_asap.py
 scripts/init_testing.py
 scripts/init_tasks.py
 scripts/init_welcome.py
+scripts/init_welcome_helpers.py
 scripts/init_user_pre.py
 scripts/init_user_post.py
 scripts/casapy_engine.py
