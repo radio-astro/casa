@@ -19,8 +19,12 @@ if casa['flags'].execute:
         immediate_exit_with_handlers()
 
     else:
-        # Run code given in the command line
-        eval(casa['flags'].execute[0])
+        try:
+            exec(casa['flags'].execute[0])
+        except Exception, err:
+            traceback.print_exc()
+            os._exit(0)
+
         immediate_exit_with_handlers()
 
 else:

@@ -203,7 +203,7 @@ argparser.add_argument( "--pipeline",dest='pipeline',action='store_const',const=
 argparser.add_argument( "-c",dest='execute',default=[],nargs=argparse.REMAINDER,
                         help='python eval string or python script to execute' )
 
-casa['flags'] = argparser.parse_args( )
+casa['flags'], casa['args'] = argparser.parse_known_args( )
 #### must keep args in sync with 'casa' state...
 casa['files']['logfile'] = casa['flags'].logfile
 casa['dirs']['rc'] = casa['flags'].rcdir
