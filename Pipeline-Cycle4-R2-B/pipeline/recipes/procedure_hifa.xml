@@ -131,7 +131,7 @@
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">maxproductsize</Keyword>
-                <Value xmlns="">200.0</Value>
+                <Value xmlns="">400.0</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>

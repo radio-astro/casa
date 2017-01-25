@@ -127,7 +127,7 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         hif_makeimages (pipelinemode=pipelinemode)
     
         # Check product size limits and mitigate imaging parameters
-        hif_checkproductsize (maxcubesize=30.0, maxproductsize=200.0)
+        hif_checkproductsize (maxcubesize=30.0, maxproductsize=400.0)
     
         # Export the data
         hif_exportdata(pipelinemode=pipelinemode)
