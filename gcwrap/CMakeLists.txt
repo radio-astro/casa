@@ -131,13 +131,21 @@ if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE RelWithDebInfo )
 endif()
 
+# Build CrashReporter by default
+if( NOT DEFINED UseCrashReporter)
+    set( UseCrashReporter 1 )
+endif()
+
 if( INTERACTIVE_ITERATION )
 	add_definitions( -DINTERACTIVE_ITERATION )
 endif()
 
 if( CMAKE_BUILD_TYPE STREQUAL Debug )
   add_definitions( -DAIPS_DEBUG )
-  set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0 -fno-omit-frame-pointer" )
+  set( CMAKE_CXX_FLAGS_DEBUG " -O0" )
+  if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+      set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -fno-omit-frame-pointer" )
+  endif( )
 endif()
 
 include( UsePrivatePath )
@@ -188,10 +196,19 @@ dump( CMAKE_SYSTEM
 set( BUILD_SHARED_LIBS ON )
 
 if( APPLE )
-    set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wcast-align -Wno-comment" )
+    set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-comment" )
 else ()
-    set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment" )
+    set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-comment" )
 endif()
+if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wcast-align" )
+    if (NOT APPLE)
+        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -Wno-non-template-friend" )
+    endif( )
+endif( )
+if ( NOT UseCrashReporter OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -DNO_CRASH_REPORTER" )
+endif( )
 
 set( DEFAULT_C_FLAGS
      "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
@@ -206,11 +223,31 @@ else()
     message( FATAL_ERROR "Building requires a c++11 compatible compiler" )
 endif()
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+   get_filename_component(INTEL_PATH ${CMAKE_CXX_COMPILER} DIRECTORY)
+   set(INTEL_LIB_PATH "${INTEL_PATH}/../lib/intel64_lin")
+   find_library( INTEL_IMF imf HINTS ${INTEL_LIB_PATH} )
+   find_library( INTEL_SVML svml HINTS ${INTEL_LIB_PATH} )
+   find_library( INTEL_IRNG irng HINTS ${INTEL_LIB_PATH} )
+   find_library( INTEL_INTLC intlc HINTS ${INTEL_LIB_PATH} )
+   find_library( INTEL_IFPORT ifport HINTS ${INTEL_LIB_PATH} )
+   find_library( INTEL_IFCORE ifcore HINTS ${INTEL_LIB_PATH} )
+   find_library( INTEL_IOMP iomp5 HINTS ${INTEL_LIB_PATH} )
+   set(INTEL_LIBRARIES "${INTEL_IMF} ${INTEL_SVML} ${INTEL_IRNG} ${INTEL_INTLC} ${INTEL_IFPORT} ${INTEL_IFCORE} ${INTEL_IOMP}")
+   set(CMAKE_EXE_LINKER_FLAGS "-L${INTEL_LIB_PATH} ${CMAKE_EXE_LINKER_FLAGS} ${INTEL_LIBRARIES} -Wl,-rpath,${INTEL_LIB_PATH}")
+   set(CMAKE_SHARED_LINKER_FLAGS "-L${INTEL_LIB_PATH} ${CMAKE_SHARED_LINKER_FLAGS} ${INTEL_LIBRARIES} -Wl,-rpath,${INTEL_LIB_PATH}")
+endif()
+
+
 # OpenMP
-find_package( OpenMP )
 if( OPENMP_FOUND )
-  set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
-  set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+        set(DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -qopenmp")
+        set(DEFAULT_C_FLAGS "${DEFAULT_C_FLAGS} -qopenmp")
+    else( )
+        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
+        set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
+    endif()
 endif()
 
 # use faster fortran rules for complex operations, removes restoring complex
@@ -342,14 +379,6 @@ if( APPLE )
                          COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
                          OUTPUT_VARIABLE _cxx_version
                          OUTPUT_STRIP_TRAILING_WHITESPACE )
-	    set (INTEL_CXX_COMPILER "false" )
-	    if( _cxx_version MATCHES "ICC")
-		    set (INTEL_CXX_COMPILER "true" )
-        endif()
-	    set (INTEL_FORTRAN_COMPILER "false" )
-	    if( _gfortran__version MATCHES "IFORT")
-		    set (INTEL_FORTRAN_COMPILER "true" )
-	    endif()
 
 	    message( STATUS "$_gfortran_version = ${_gfortran_version}" )
 	    message( STATUS "$_gcc_machine = ${_gcc_machine}" )
@@ -379,7 +408,7 @@ if( APPLE )
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    if( NOT INTEL_CXX_COMPILER STREQUAL "true" )
+    if( NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" )
         if( _cxx_version STREQUAL "4.4" )
 	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -mfpmath=sse" )
         else()
@@ -548,7 +577,7 @@ endif()
 # Choose to have correct RPATHs both in the build tree and
 # in the install tree (at the cost of having to change the
 # rpath when installing)
-set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:arbitraryExtraPaddingToAllowForRpathGrowth" )
+set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${INTEL_LIB_PATH}:arbitraryExtraPaddingToAllowForRpathGrowth" )
 set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 

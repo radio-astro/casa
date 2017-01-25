@@ -24,7 +24,9 @@
 #include <tables/Tables/Table.h>
 #include <casa/System/Aipsrc.h>
 #include <casa/OS/HostInfo.h>
+#ifndef NO_CRASH_REPORTER
 #include <stdcasa/StdCasa/CrashReporter.h>
+#endif
 #include <signal.h>
 #include <string>
 #include <vector>
@@ -351,12 +353,16 @@ utils::_crash_reporter_initialize (const string & crashDirectory,
                                    const string & crashPostingUrl,
 				   const string & logFile)
 {
+#ifndef NO_CRASH_REPORTER
     // *NOTE*: Not intended for casual use!
 
     string status = casa::CrashReporter::initialize(crashDirectory, crashPosterApplication,
                                                     crashPostingUrl, logFile);
 
     return status;
+#else
+    return "";
+#endif
 }
 
 bool

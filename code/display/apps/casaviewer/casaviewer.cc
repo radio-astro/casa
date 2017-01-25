@@ -48,7 +48,9 @@
 #include <display/Utilities/Lowlevel.h>
 
 #include <unistd.h>
+#ifndef NO_CRASH_REPORTER
 #include <stdcasa/StdCasa/CrashReporter.h>
+#endif
 #include <sys/stat.h>
 
 /*
@@ -147,8 +149,9 @@ bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
 
 int main( int argc, const char *argv[] ) {
 
+#ifndef NO_CRASH_REPORTER
     CrashReporter::initializeFromApplication(argv[0]);
-
+#endif
 	casa::dbus::diagnostic.argv( argc, argv );
 
 	bool server_startup = false;

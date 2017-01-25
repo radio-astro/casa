@@ -20,21 +20,26 @@
 
 CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/version.cc.in ${CMAKE_CURRENT_BINARY_DIR}/version.cc )
 
-casa_add_library( stdcasa
-	StdCasa/CrashReporter.cc
-	StdCasa/CasacSupport.cc
-	StdCasa/record.cc
-	StdCasa/variant.cc
-	${CMAKE_CURRENT_BINARY_DIR}/version.cc
-	)
-if (UseCrashReporter)
+if (UseCrashReporter AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+   casa_add_library( stdcasa
+                     StdCasa/CrashReporter.cc
+                     StdCasa/CasacSupport.cc
+                     StdCasa/record.cc
+                     StdCasa/variant.cc
+                     ${CMAKE_CURRENT_BINARY_DIR}/version.cc
+                   )
     target_include_directories (libstdcasa PUBLIC ${Breakpad_IncludeRoot})
     target_link_libraries (libstdcasa general ${Breakpad_Library})
-endif ()
 
-if (UseCrashReporter)
    message ("DEBUG Adding UseCrashReporter to definitions")
     add_definitions( -DUseCrashReporter )
+else( )
+   casa_add_library( stdcasa
+                     StdCasa/CasacSupport.cc
+                     StdCasa/record.cc
+                     StdCasa/variant.cc
+                     ${CMAKE_CURRENT_BINARY_DIR}/version.cc
+                   )
 endif ()
 
 add_dependencies( libstdcasa_fast stdcasa_definitions )
@@ -49,12 +54,21 @@ install (FILES
 	version.h
 	DESTINATION include/casacode/stdcasa
 	)
-install (FILES
-        StdCasa/CrashReporter.h
-	StdCasa/CasacSupport.h
-	StdCasa/string_conversions
-	DESTINATION include/casacode/stdcasa/StdCasa
+
+if (UseCrashReporter AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+   install( FILES
+            StdCasa/CrashReporter.h
+            StdCasa/CasacSupport.h
+            StdCasa/string_conversions
+            DESTINATION include/casacode/stdcasa/StdCasa
 	)
+else( )
+   install( FILES
+            StdCasa/CasacSupport.h
+            StdCasa/string_conversions
+            DESTINATION include/casacode/stdcasa/StdCasa
+	)
+endif( )
 install (FILES
     thread/Barrier.h
 	DESTINATION include/casacode/stdcasa/thread

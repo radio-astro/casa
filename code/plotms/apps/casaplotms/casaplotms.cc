@@ -32,7 +32,9 @@
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <casadbus/utilities/Diagnostic.h>
+#ifndef NO_CRASH_REPORTER
 #include <stdcasa/StdCasa/CrashReporter.h>
+#endif
 
 #include <signal.h>
 #include <QDebug>
@@ -46,10 +48,12 @@ int main(int argc, char* argv[]) {
 setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediately always */
 #endif
 
+#ifndef NO_CRASH_REPORTER
     String s = CrashReporter::initializeFromApplication(argv[0]);
     if (! s.empty()){
         cerr << "*** Warning during crash reporter initialization: " << s << endl;
     }
+#endif
 
     // log arguments if CASA_DIAGNOSTIC_FILE environment variable is set...
     casa::dbus::diagnostic.argv( argc, argv );
