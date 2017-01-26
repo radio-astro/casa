@@ -2,6 +2,7 @@ startTime = time.time()
 startProc = time.clock()
 
 projname="cltest"
+import shutil 
 
 if os.path.exists(projname): shutil.rmtree(projname)
 
@@ -71,71 +72,96 @@ go()
 endTime = time.time()
 endProc = time.clock()
 
-ia.open(project+"/"+project + '.alma.cycle0.extended.image')
-hii_stats=ia.statistics(verbose=False,list=False)
-ia.close()
 
-reftol   = {'sum':  0.1,
-            'max':  0.04,
-            'min':  0.04,
-            'rms':  0.1}
+#return ['cltest/cltest.alma.cycle0.extended.ms','cltest/cltest.alma.cycle0.extended.image','cltest/cltest.alma.cycle0.extended.diff']
 
-refstats = { 'max': 4.9786,
-             'min': -0.13691,
-             'rms': 0.096445,
-             'sum': 325.71 }
+regstate=True
+verbose=True
+import testhelper as th
+newImage=project+"/"+project + '.alma.cycle0.extended.image'
+if verbose: print newImage
+templateImage=th.findTemplate("sim_testcomp",newImage)
+regstate=regstate and th.compImages(newImage,templateImage,verbose=verbose)
 
-import datetime
-datestring = datetime.datetime.isoformat(datetime.datetime.today())
-outfile    = project+"/"+project + '.' + datestring + '.log'
-logfile    = open(outfile, 'w')
+newImage=project+"/"+project + '.alma.cycle0.extended.diff'
+if verbose: print newImage
+templateImage=th.findTemplate("sim_testcomp",newImage)
+regstate=regstate and th.compImages(newImage,templateImage,verbose=verbose)
 
-print 'Writing regression output to ' + outfile + "\n"
+newMS=project+"/"+project + '.alma.cycle0.extended.ms'
+if verbose: print newMS
+templateMS=th.findTemplate("sim_testcomp",newMS)
+regstate=regstate and th.compMS(newMS,templateMS,verbose=verbose)
 
-print >> logfile,casa['build']
 
-regstate = True
-rskes = refstats.keys()
-rskes.sort()
-for ke in rskes:
-    adiff=abs(hii_stats[ke][0] - refstats[ke])/abs(refstats[ke])
-    if adiff < reftol[ke]:
-        print >> logfile, "* Passed %-5s image test, got % -11.5g expected % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
-    else:
-        print >> logfile, "* FAILED %-5s image test, got % -11.5g instead of % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
-        regstate = False
 
-print >> logfile,'---'
+
+
+#ia.open(project+"/"+project + '.alma.cycle0.extended.image')
+#hii_stats=ia.statistics(verbose=False,list=False)
+#ia.close()
+#
+#reftol   = {'sum':  0.1,
+#            'max':  0.04,
+#            'min':  0.04,
+#            'rms':  0.1}
+#
+#refstats = { 'max': 4.9786,
+#             'min': -0.13691,
+#             'rms': 0.096445,
+#             'sum': 325.71 }
+#
+#import datetime
+#datestring = datetime.datetime.isoformat(datetime.datetime.today())
+#outfile    = project+"/"+project + '.' + datestring + '.log'
+#logfile    = open(outfile, 'w')
+#
+#print 'Writing regression output to ' + outfile + "\n"
+#
+#print >> logfile,casa['build']
+#
+#regstate = True
+#rskes = refstats.keys()
+#rskes.sort()
+#for ke in rskes:
+#    adiff=abs(hii_stats[ke][0] - refstats[ke])/abs(refstats[ke])
+#    if adiff < reftol[ke]:
+#        print >> logfile, "* Passed %-5s image test, got % -11.5g expected % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
+#    else:
+#        print >> logfile, "* FAILED %-5s image test, got % -11.5g instead of % -11.5g." % (ke, hii_stats[ke][0], refstats[ke])
+#        regstate = False
+#
+#print >> logfile,'---'
 if regstate:
-    print >> logfile, 'Passed',
+#    print >> logfile, 'Passed',
     print ''
     print 'Regression PASSED'
     print ''
 else:
-    print >> logfile, 'FAILED',
+#    print >> logfile, 'FAILED',
     print ''
     print 'Regression FAILED'
     print ''
-
-print >> logfile, 'regression test for component-only simdata'
-print >>logfile,'---'
-print >>logfile,'*********************************'
-    
-print >>logfile,''
-print >>logfile,'********** Benchmarking **************'
-print >>logfile,''
-print >>logfile,'Total wall clock time was: %8.3f s.' % (endTime - startTime)
-print >>logfile,'Total CPU        time was: %8.3f s.' % (endProc - startProc)
-print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
-                                                            (endTime - startTime))
-
-msfstat = os.stat(project+"/"+project+'.alma.cycle0.extended.ms')
-print >>logfile,'* Breakdown:                           *'
-print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
-print >>logfile,'*  deconvolution with %d iterations took %8.3fs.' % ( niter,
-                                                                       endTime - msfstat[8])
-print >>logfile,'*************************************'
-    
-logfile.close()
+#
+#print >> logfile, 'regression test for component-only simdata'
+#print >>logfile,'---'
+#print >>logfile,'*********************************'
+#    
+#print >>logfile,''
+#print >>logfile,'********** Benchmarking **************'
+#print >>logfile,''
+#print >>logfile,'Total wall clock time was: %8.3f s.' % (endTime - startTime)
+#print >>logfile,'Total CPU        time was: %8.3f s.' % (endProc - startProc)
+#print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
+#                                                            (endTime - startTime))
+#
+#msfstat = os.stat(project+"/"+project+'.alma.cycle0.extended.ms')
+#print >>logfile,'* Breakdown:                           *'
+#print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
+#print >>logfile,'*  deconvolution with %d iterations took %8.3fs.' % ( niter,
+#                                                                       endTime - msfstat[8])
+#print >>logfile,'*************************************'
+#    
+#logfile.close()
 
 

@@ -61,52 +61,28 @@ print "Output will be prefixed with "+prefix
 #Start from existing MS
 templatems = 'orion_calsplit.ms'
 
+try:
+    datapaths=REGRESSION_DATA
+except:
+    datapaths=[]
+datapaths.append(os.environ.get('CASAPATH').split()[0]+"/data/")
+from itertools import dropwhile
+
 if os.access(templatems,F_OK):
     # already in current directory
     print "  Using "+templatems+" found in current directory"
 else:
-    pathname=os.environ.get('CASAPATH').split()[0]
-    #datapath=pathname+'/data/regression/ATST3/Orion/'
-    datapath=pathname+'/data/regression/orionmos4sim/'
     msname='orion.ms'
-    mspath=datapath+msname
-    # Path to web archive
-    webms = 'http://casa.nrao.edu/Data/VLA/Orion/'+msname+'.tgz'
-    # Alternate path at AOC
-    altms = '/home/ballista/casa/active/data/regression/ATST3/Orion/'+msname
-    if os.access(msname,F_OK):
-        # ms in current directory
-        print "  Using "+msname+" found in current directory"
-    elif os.access(mspath,F_OK):
-        print '--Copy data to local directory--'
-        print "  Using "+mspath
-        os.system("cp -r "+mspath+" .")
-        os.system('chmod -R a+wx '+msname)
-    elif os.access(altms,F_OK):
-        print '--Copy data to local directory--'
-        print "  Using "+altms
-        os.system("cp -r "+altms+" .")
-        os.system('chmod -R a+wx '+msname)
-    else:
-        if os.access(msname+'.tgz',F_OK):
-            # ms tarball in current directory
-            print "  Using "+msname+".tgz found in current directory"
-        else:
-            # try web retrieval
-            print '--Retrieve data from '+webms
-            # Use curl (for Mac compatibility)
-            os.system('curl '+webms+' -f -o '+msname+'.tgz')
-            # NOTE: could also use wget
-            #os.system('wget '+webms)
-
-        print '--Unpacking tarball '
-        os.system('tar xzf '+msname+'.tgz')
-        if os.access(msname,F_OK):
-            # should now be in current directory
-            print "  Using "+msname+" found in current directory"
-        else:
+    if not os.access(msname,F_OK):
+        try:
+            found = dropwhile( lambda x: not os.path.exists(x),
+                           map(lambda x: x+'/regression/orionmos4sim/'+msname,datapaths) ).next()
+        except:
             raise IOError," ERROR: "+msname+" not found"
 
+        from shutil import copytree
+        print "Copying "+found
+        copytree(found,msname)
     # Starting from orion.ms which has already been calibrated
     print '--Split--'
     split(vis=msname,outputvis=templatems,datacolumn='corrected')
@@ -889,28 +865,16 @@ regression = {}
 regressfile = scriptprefix + '.pickle'
 prev_results = {}
 
-repodir=os.getenv("CASAPATH")
-repodir=repodir.split()[0]
-regressdirfile= repodir+ "/data/regression/orionmos4sim/"+scriptprefix + '.pickle'
+if not os.access(regressfile,F_OK):
+    try:
+        found = dropwhile( lambda x: not os.path.exists(x),
+                       map(lambda x: x+'/regression/orionmos4sim/'+regressfile,datapaths) ).next()
+    except:
+        raise IOError," ERROR: "+regressfile+" not found"
 
-# Path to web archive (latest version)
-#webfile = 'http://casa.nrao.edu/Doc/Scripts/'+scriptprefix+'.pickle'
-#webfile = 'http://casa.nrao.edu/Patch4/Doc/Scripts/'+scriptprefix+'.pickle'
-webfile = 'http://casa.nrao.edu/Release0/Doc/Scripts/'+scriptprefix+'.pickle'
-
-if os.access(regressfile,F_OK):
-    # pickle file in current directory
-    print "  Found "+regressfile+" in current directory"
-else:
-    if os.access(regressdirfile,F_OK):
-        # pickle file in local copy of regressions dir
-        print "  Found "+regressdirfile+" in your local data repo"
-        regressfile=regressdirfile
-    else:
-        print "Trying web download of "+webfile
-        os.system('curl '+webfile+' -f -o '+regressfile)
-        # NOTE: could also use wget
-        # os.system('wget '+webfile)
+    from shutil import copy
+    print "Copying "+regressfile
+    copy(found,regressfile)
 
 # Now try to access this file
 try:

@@ -590,6 +590,98 @@ def getColShape(table,col,start_row=0,nrow=1,row_inc=1):
 
 
 
+def findTemplate(testname,refimage,copy=False):
+    """
+    find a template image (or MS - it does assume its a directory)
+    look in order in:
+    REGRESSION_DATA/regression/testname/refimage
+    CASAPATH/data/regression/testname/refimage
+    REGRESSION_DATA/regression/testname/reference/refimage/
+    CASAPATH/data/regression/testname/reference/refimage
+    if copy=True, copy what's found to cwd
+    """
+    from os import F_OK
+    try:
+        datapaths=REGRESSION_DATA
+    except:
+        datapaths=[]
+    datapaths.append(os.environ.get('CASAPATH').split()[0]+"/data/")
+    possibilities=map(lambda x: x+'/regression/'+testname+'/'+refimage,datapaths)+map(lambda x: x+'/regression/'+testname+'/reference/'+refimage,datapaths) 
+
+    #print possibilities
+    from itertools import dropwhile
+    try:
+        found = dropwhile( lambda x: not os.access(x,F_OK),possibilities).next()
+    except:
+        raise IOError," ERROR: "+refimage+" not found"
+    if copy:
+        from shutil import copytree
+        print "Copying "+found
+        copytree(found,msname)
+    return found
+
+
+def compImages(im0,im1,keys=['flux','min','max','maxpos','rms'],tol=1e-4,verbose=False):
+    """
+    compare two images using imstat and the specified keys, 
+    to a tolerance tol, and printing the comparison if verbose==True
+    note that the string keys like 'blcf' will fail
+    """
+    from os import F_OK
+    if isinstance(tol,float):
+        tol=tol+np.zeros(len(keys))
+    myia=casac.image()
+    ims=[im0,im1]
+    s=[]
+    for i in range(2):
+        if not os.access(ims[i],F_OK): 
+            print ims[i]+" not found"
+            return False
+        myia.open(ims[1])
+        s.append(myia.statistics())
+        myia.done()
+    status=True
+    for ik in range(len(keys)):
+        k=keys[ik]
+        s0=s[0][k][0]
+        s1=s[1][k][0]
+        if abs(s0-s1)*2/(s0+s1)>tol[ik]: status=False
+        if verbose:
+            print ("%7s: "%k),s0,s1
+    return status
+
+
+def compMS(ms0,ms1,keys=['mean','min','max','rms'],ap="amp",tol=1e-4,verbose=False):
+    """
+    compare two MS using ms.statistics on amp or phase as specified, 
+    and the specified keys, 
+    to a tolerance tol, and printing the comparison if verbose==True
+    """
+    from os import F_OK
+    if isinstance(tol,float):
+        tol=tol+np.zeros(len(keys))
+    myms=casac.ms()
+    mss=[ms0,ms1]
+    s=[]
+    for i in range(2):
+        if not os.access(mss[i],F_OK): 
+            print mss[i]+" not found"
+            return False
+        myms.open(mss[1])
+        s.append(myms.statistics("DATA",ap)["DATA"])
+        myms.done()
+    status=True
+    for ik in range(len(keys)):
+        k=keys[ik]
+        s0=s[0][k]
+        s1=s[1][k]
+        if abs(s0-s1)*2/(s0+s1)>tol[ik]: status=False
+        if verbose:
+            print ("%7s: "%k),s0,s1
+    return status
+        
+    
+
 
 
 
