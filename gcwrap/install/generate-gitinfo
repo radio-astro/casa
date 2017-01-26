@@ -104,6 +104,8 @@ exit 0;
 
 sub output {
 	my $fh = shift(@_);
+    # Hardcoded revision to allow pipeline subversion revision checks
+    # to work during Git transition
 	my $rev = 40000; #($revision ? $revision : $subversion_revision);
 	my $sdate = localtime(); #$subversion_date;
 	my $url = "git"; $subversion_url;
