@@ -65,7 +65,7 @@ class CheckProductSizeHeuristics(object):
         LOG.info('Allowed maximum cube size: %s GB. Allowed maximum product size: %s GB.' % (self.inputs.maxcubesize, self.inputs.maxproductsize))
 
         # If too large, check for nchan >= 3840
-        if maxcubesize > self.inputs.maxcubesize:
+        if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
             nbins = []
             for spw, nchan in nchans.iteritems():
                 if nchan >= 3840:
@@ -83,7 +83,7 @@ class CheckProductSizeHeuristics(object):
             LOG.info('First nbin mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
         # If still too large, check for nchan >= 1920
-        if maxcubesize > self.inputs.maxcubesize:
+        if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
             nbins = []
             for spw, nchan in nchans.iteritems():
                 if nchan >= 1920:
@@ -101,7 +101,7 @@ class CheckProductSizeHeuristics(object):
             LOG.info('Second nbin mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
         # If still too large, try changing FOV
-        if maxcubesize > self.inputs.maxcubesize:
+        if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
             if maxcubesize < 1.4 * self.inputs.maxcubesize:
                 LOG.info('Size mitigation: Setting hm_imsize to 0.3pb')
                 size_mitigation_parameters['hm_imsize'] = '0.3pb'
@@ -117,7 +117,7 @@ class CheckProductSizeHeuristics(object):
             LOG.info('hm_imsize mitigation leads to a maximum cube size of %s GB' % (maxcubesize))
 
         # If still too large, try changing pixperbeam setting
-        if maxcubesize > self.inputs.maxcubesize:
+        if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
             size_mitigation_parameters['hm_cell'] = '3ppb'
             LOG.info('Size mitigation: Setting hm_cell to 3ppb')
 
@@ -132,7 +132,7 @@ class CheckProductSizeHeuristics(object):
         cube_mitigated_productsize = productsize
 
         # If still too large, stop with an error
-        if maxcubesize > self.inputs.maxcubesize:
+        if (self.inputs.maxcubesize != -1.0) and (maxcubesize > self.inputs.maxcubesize):
             LOG.error('Maximum cube size cannot be mitigated. Remaining factor: %.4f' % (maxcubesize / self.inputs.maxcubesize))
             return size_mitigation_parameters, \
                    original_maxcubesize, original_productsize, \
@@ -143,7 +143,7 @@ class CheckProductSizeHeuristics(object):
                     'shortmsg': 'Cube size mitigation error'}
 
         # If product size too large, try reducing number of fields
-        if productsize > self.inputs.maxproductsize:
+        if (self.inputs.maxproductsize != -1.0) and (productsize > self.inputs.maxproductsize):
             # If product size is exceeded with single field, stop with an error
             if productsize / self.inputs.maxproductsize / len(fields) > 1:
                 LOG.error('Product size cannot be mitigated. Remaining factor: %.4f.' % (productsize / self.inputs.maxproductsize / len(fields)))
