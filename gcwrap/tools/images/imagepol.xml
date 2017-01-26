@@ -284,11 +284,11 @@ anchor="images:imagepol.fourierrotationmeasure.function">fourierrotationmeasure<
 
 The constructor takes an image as its input.  This can be specified as
 either the name of a disk file, or you can give a pre-existing Image
-\tool.   If you give a disk file name, the disk image file may
-be in \casa, \fits\ or Miriad format.  
+tool.   If you give a disk file name, the disk image file may
+be in casa, fits or Miriad format.  
 
 The input image must have a Stokes axis.  The exact collection of Stokes
-that the image has, determines what the Imagepol \tool\ can compute. 
+that the image has, determines what the Imagepol tool can compute. 
 Stokes I, Q, U, and V refer to total intensity, two components of linear
 polarization, and circular polatization, respectively.  Therefore, if
 you ask for linear polarization and the image only has Stokes I and V,
@@ -298,7 +298,7 @@ The input image may contain data at many frequencies.  For example, the
 image may be a 4D image with axes RA, DEC, Stokes and Frequency (order
 not important) where the Frequency axis is regularly sampled.  However,
 the image may also contain many frequencies at irregular intervals. 
-Such an image may be created with the Image \tool\ constructor called
+Such an image may be created with the Image tool constructor called
 <link anchor="images:image.imageconcat.function">imageconcat</link>.  It enables you to concatenate
 images along an axis, and it allows irregular coordinate values along that
 axis. 
@@ -306,7 +306,6 @@ axis.
 </description>
 
 <example>
-\begin{verbatim}
 """
 #
 print "\t-\t constructor Ex 1 \t-"
@@ -322,15 +321,13 @@ p1.done()
 po.open('stokes.cube')
 #
 """
-\end{verbatim}
 
-We create two Imagepol \tools, one from an Image
-\tool\ and one directly from the disk file.
+We create two Imagepol tools, one from an Image
+tool and one directly from the disk file.
 
 </example>
 
 <example>
-\begin{verbatim}
 """
 #
 print "\t-\t constructor Ex 2 \t-"
@@ -341,15 +338,14 @@ po.rotationmeasure(rm='rm', rmerr='rmerr', rmmax=500, maxpaerr=10)
 po.close()
 #
 """
-\end{verbatim}
 
 Say we have 5 images, each with axes RA, DEC, Stokes, and Frequency in
-that order.  We make an Image \tool\ which concatenates these images
+that order.  We make an Image tool which concatenates these images
 along the frequency axis - you have ordered them in increasing or
-decreasing frequency order.  Note that the Image \tool\ is virtual - it
+decreasing frequency order.  Note that the Image tool is virtual - it
 is not written to an output file.  This just means that the data are
-read from the input images as needed.  The Imagepol \tool\ is then made
-from this virtual Image \tool.   We then compute the Rotation Measure
+read from the input images as needed.  The Imagepol tool is then made
+from this virtual Image tool.   We then compute the Rotation Measure
 and Rotation Measure error images with the traditional method and
 write them out to disk.
 

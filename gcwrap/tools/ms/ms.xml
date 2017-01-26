@@ -404,7 +404,7 @@ the ms definition itself. -->
     In order to run the ms tool on a remote machine you need to
     satisfy all the following conditions.
     \begin{itemize}
-    \item It must be possible to start \casa\ on the remote machine
+    \item It must be possible to start casa on the remote machine
     \item You must be able to log onto the remote machine without
           having to type a password
     \item The CASAPATH environment variable must be defined on the
@@ -414,12 +414,12 @@ the ms definition itself. -->
           .cshrc file (for csh).
     \end{itemize}
     One quick way to check if all three conditions are met is to type, 
-    on your local machine \texttt{rsh host 'echo \$CASAPATH'}
+    on your local machine \texttt{rsh host 'echo \\$CASAPATH'}
     where host is replaced by the name of the remote machine. If the
     value of the CASAPATH variable that is printed does not contain
     something like \texttt{aips-root~architecture~site~host} and that
     all the values are correct for the remote machine you can be
-    certain that starting the ms tool, or any \casa\ server, on the
+    certain that starting the ms tool, or any casa server, on the
     remote host will not work
 
     Each ms tool can only run one function at a time. To solve this
