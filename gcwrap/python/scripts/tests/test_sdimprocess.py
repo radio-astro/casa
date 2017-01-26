@@ -465,7 +465,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
 
     def test200(self):
         """Test 200: FFT based Basket-Weaving using whole pixels"""
-        res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],maskwidth=20.0,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
                   'max': numpy.array([ 0.92714936]),
@@ -490,7 +490,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
 
     def test201(self):
         """Test 201: FFT based Basket-Weaving with certain threshold"""
-        res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,tmax=0.5,tmin=-0.1,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],maskwidth=20.0,tmax=0.5,tmin=-0.1,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
                   'max': numpy.array([ 0.99387228]),
@@ -544,7 +544,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
             mask_ref += msk
         del mask_in
         # Task execution
-        res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],maskwidth=20.0,outfile=self.outfile,overwrite=True)
         # Test results
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
@@ -577,7 +577,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
     def test203(self):
         """Test 203: test for len(infiles) > len(direction)"""
         infiles = self.rawfiles + self.rawfiles
-        res=sdimprocess(infiles=infiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=infiles,mode=self.mode,direction=[0.0,90.0],maskwidth=20.0,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
                   'max': numpy.array([ 0.92714936]),
@@ -605,7 +605,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
         for infile, outfile in zip(self.rawfiles, self.rawfilesmod):
             drop_stokes_axis(infile, outfile)
             self.assertTrue(os.path.exists(outfile))
-        res=sdimprocess(infiles=self.rawfilesmod,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfilesmod,mode=self.mode,direction=[0.0,90.0],maskwidth=20.0,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, 1.415e+09Hz',
                   'max': numpy.array([ 0.92714936]),
@@ -633,7 +633,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
         for infile, outfile in zip(self.rawfiles, self.rawfilesmod):
             drop_deg_axes(infile, outfile)
             self.assertTrue(os.path.exists(outfile))
-        res=sdimprocess(infiles=self.rawfilesmod,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfilesmod,mode=self.mode,direction=[0.0,90.0],maskwidth=20.0,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000',
                   'max': numpy.array([ 0.92714936]),

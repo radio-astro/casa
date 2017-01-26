@@ -31,7 +31,7 @@ def create_4d_image(infile, outfile):
 
 
 @sdutil.sdtask_decorator
-def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklist, tmax, tmin, outfile, overwrite):
+def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, maskwidth, tmax, tmin, outfile, overwrite):
     with sdutil.sdtask_manager(sdimprocess_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -347,14 +347,14 @@ class sdimprocess_worker(sdutil.sdtask_interface):
             for i in range(nfile):
                 dirs.append(self.direction[i%len(self.direction)])
 
-        # masklist
+        # maskwidth
         masks = []
-        if isinstance(self.masklist, int) or isinstance(self.masklist, float):
+        if isinstance(self.maskwidth, int) or isinstance(self.maskwidth, float):
             for i in range(nfile):
-                masks.append(self.masklist)
-        elif isinstance(self.masklist, list):#  and nfile != len(self.masklist):
+                masks.append(self.maskwidth)
+        elif isinstance(self.maskwidth, list):#  and nfile != len(self.maskwidth):
             for i in range(nfile):
-                masks.append(self.masklist[i%len(self.masklist)])
+                masks.append(self.maskwidth[i%len(self.maskwidth)])
         for i in range(len(masks)):
             masks[i] = 0.01 * masks[i]
         
@@ -407,10 +407,35 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         del maskedpixel
 
         # set weight factor
-        weights = numpy.ones( shape=(nfile,nx,ny), dtype=float )
+        weights = numpy.ones(shape=(nfile,nx,ny), dtype=float)
         eps = 1.0e-5
         dtor = numpy.pi / 180.0
         for i in range(nfile):
+            scan_direction = ''
+            if abs(numpy.sin(dirs[i]*dtor)) < eps: # direction is around 0 deg
+                maskw = 0.5 * nx * masks[i]
+                scan_direction = 'horizontal'
+            elif abs(numpy.cos(dirs[i]*dtor)) < eps: # direction is around 90 deg
+                maskw = 0.5 * ny * masks[i]
+                scan_direction = 'vertical'
+            else:
+                maskw = 0.5 * numpy.sqrt(nx*ny) * masks[i]
+            for ix in range(nx):
+                for iy in range(ny):
+                    if scan_direction == 'horizontal':
+                        dd = abs(float(ix) - 0.5*(nx-1))
+                    elif scan_direction == 'vertical':
+                        dd = abs(float(iy) - 0.5*(ny-1))
+                    else:
+                        tand = numpy.tan((dirs[i]-90.0)*dtor)
+                        dd = abs((float(ix) - 0.5*(nx-1)) * tand - (float(iy) - 0.5*(ny-1)))
+                        dd = dd / numpy.sqrt(1.0 + tand*tand)
+                    if dd < maskw:
+                        cosd = numpy.cos(0.5*numpy.pi*dd/maskw)
+                        weights[i][ix][iy] = 1.0 - cosd * cosd
+                    if weights[i][ix][iy] == 0.0:
+                        weights[i][ix][iy] += eps*0.01
+            """
             if abs(numpy.sin(dirs[i]*dtor)) < eps:
                 # direction is around 0 deg
                 maskw = 0.5 * nx * masks[i] 
@@ -445,6 +470,7 @@ class sdimprocess_worker(sdutil.sdtask_interface):
                             weights[i][ix][iy] = 1.0 - cosd * cosd
                         if weights[i][ix][iy] == 0.0:
                             weights[i][ix][iy] += eps*0.01 
+            """
             # shift
             xshift = -((ny-1)/2)
             yshift = -((nx-1)/2)

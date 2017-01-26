@@ -64,7 +64,7 @@ the scanning effect.
         <value type="doubleArray"></value>
     </param>
 
-    <param type="any" name="masklist" subparam="true">
+    <param type="any" name="maskwidth" subparam="true">
         <description>mask width for Basket-Weaving (on percentage)</description>
         <any type="variant" limittype="double doubleArray"/>
         <value type="double">1.0</value>
@@ -95,7 +95,7 @@ the scanning effect.
             <when param="mode">
                 <equals value="basket">
                     <default param="direction"><value type="doubleArray"></value></default>
-                    <default param="masklist"><value type="double">1.0</value></default>
+                    <default param="maskwidth"><value type="double">1.0</value></default>
                 </equals>
                 <equals value="press">
                     <default param="numpoly"><value type="int">2</value></default>
@@ -126,7 +126,7 @@ mode -- image processing mode
                 example: direction=[0.0, 90.0] means that the first image
                          has scan direction along longitude axis while the
                          second image is along latitude axis.
-        masklist -- mask width for Basket-Weaving on percentage
+        maskwidth -- mask width for Basket-Weaving on percentage
                 default: 1.0 (1.0% of map size)
         numpoly -- order of polynomial fit in Presssed-out method
                 default: 2
@@ -172,7 +172,7 @@ effect.
 For 'Basket-Weaving', scanning directions must have at least two 
 different values. Normally, the scanning direction should be 
 specified for each input image. Otherwise, specified scanning 
-directions will be used iteratively. The masklist is a width of 
+directions will be used iteratively. The maskwidth is a width of 
 masking region in the Fourier plane. It is specified as a fraction 
 (percentage) of the image size. 
 
