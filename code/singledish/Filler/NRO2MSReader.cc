@@ -344,7 +344,8 @@ void NRO2MSReader::readScanData(int const irow, sdfiller::NRODataScanData &data)
   readHeader(data.CDMY1, 136);
   readHeader(data.SFCTR0);
   readHeader(data.ADOFF0);
-  readHeader(data.LDATA, obs_header_.CHMAX * obs_header_.IBIT0 / 8);
+  // KS: use of NCH0 instead of CHMAX (2017/01/25)
+  readHeader(data.LDATA, obs_header_.NCH0 * obs_header_.IBIT0 / 8);
 }
 
 bool NRO2MSReader::checkScanArray(string const scan_array,
@@ -479,7 +480,7 @@ std::vector<double> NRO2MSReader::getSpectrum(int const irow, sdfiller::NRODataS
   // but obs_header_.NCH0 after binding
   int const nchan = obs_header_.NCH0;
   int const chmax_ = (obs_header_.SCNLEN0 - SCNLEN_HEADER_SIZE) * 8 / obs_header_.IBIT0;
-  vector<double> spec( chmax_ ) ;  // spectrum "before" binding
+  vector<double> spec( chmax_ ) ;  // spectrum "after" binding
   // DEBUG
   //cout << "NRODataset::getSpectrum()  nchan = " << nchan << " chmax_ = " << chmax_ << endl ;
 
