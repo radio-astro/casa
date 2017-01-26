@@ -421,14 +421,19 @@ class sdimprocess_worker(sdutil.sdtask_interface):
             else:
                 maskw = 0.5 * numpy.sqrt(nx*ny) * masks[i]
             for ix in range(nx):
+                halfwx = (nx-1)/2
                 for iy in range(ny):
+                    halfwy = (ny-1)/2
                     if scan_direction == 'horizontal':
-                        dd = abs(float(ix) - 0.5*(nx-1))
+                        #dd = abs(float(ix) - 0.5*(nx-1))
+                        dd = abs(float(ix) - halfwx) # for CAS-9434
                     elif scan_direction == 'vertical':
-                        dd = abs(float(iy) - 0.5*(ny-1))
+                        #dd = abs(float(iy) - 0.5*(ny-1))
+                        dd = abs(float(iy) - halfwy) # for CAS-9434
                     else:
                         tand = numpy.tan((dirs[i]-90.0)*dtor)
-                        dd = abs((float(ix) - 0.5*(nx-1)) * tand - (float(iy) - 0.5*(ny-1)))
+                        #dd = abs((float(ix) - 0.5*(nx-1)) * tand - (float(iy) - 0.5*(ny-1)))
+                        dd = abs((float(ix) - halfwx) * tand - (float(iy) - halfwy)) # for CAS-9434
                         dd = dd / numpy.sqrt(1.0 + tand*tand)
                     if dd < maskw:
                         cosd = numpy.cos(0.5*numpy.pi*dd/maskw)
