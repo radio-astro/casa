@@ -98,4 +98,9 @@ casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
   polcal_20080224_cband.py
   alma-m100-analysis.py
   alma-m100-sd.py
+  alma-m100-analysis-hpc-tclean.py
+  alma-m100-analysis-hpc.py
+  alma-ngc3256-analysis.py
+
+
 )
