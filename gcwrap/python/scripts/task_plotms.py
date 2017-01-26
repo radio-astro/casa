@@ -295,7 +295,16 @@ def plotms(vis=None,
         myframe = stack_frame_find()
         if myframe['casa']['state']['init_version'] > 0:
             from casa_system import procmgr
-            if not procmgr.running("plotms"):
+            pmsrun = procmgr.running("plotms")
+            pms = procmgr.fetch("plotms")
+            try:
+                if pmsrun and not pms.is_alive():  # crash!
+                    pms.stop()
+                    pmsrun = False
+            except AttributeError:  # fetch failed: pms=None
+                pass
+            if not pmsrun:
+                # start (or restart)
                 plotmsApp = 'casaplotms'
                 for dir in os.getenv('PATH').split(':'):
                     dd = dir + os.sep + plotmsApp
