@@ -32,7 +32,7 @@ Imports data into the interferometry pipeline
 
     <param type="string" name="asis" subparam="true">
 	<description>ASDM to convert as is</description>
-	<value>Antenna Station Receiver Source CalAtmosphere CalWVR</value>
+	<value>SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value>
     </param>
 
     <param type="bool" name="process_caldevice" subparam="true">
@@ -96,7 +96,7 @@ Imports data into the interferometry pipeline
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-		<default param="asis"><value type="string">Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
+		<default param="asis"><value type="string">SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
         <default param="ocorr_mode"><value type="string">ca</value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
@@ -105,7 +105,7 @@ Imports data into the interferometry pipeline
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
-		<default param="asis"><value type="string">Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
+		<default param="asis"><value type="string">SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
@@ -158,7 +158,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 'interactive mode'
 
 asis -- ASDM tables to convert as is
-   default: 'Antenna Station Receiver Source CalAtmosphere CalWVR'
+   default: 'SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR'
    example: 'Receiver', ''
 
 process_caldevice -- Ingest the ASDM caldevice table
@@ -179,7 +179,7 @@ lazy -- Use the lazy filter import
    default: False
 
 dbservice -- Use online flux catalog on import
-   default: False
+   default: True
 
 ocorr_mode -- Read in cross- and auto-correlation data(ca), cross-
    correlation data oonly (co), or autocorrelation data only (ao).
