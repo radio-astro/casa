@@ -60,6 +60,7 @@ ImageAnalysis/ImageProfileFitter.cc
 ImageAnalysis/ImageRegridder.cc
 ImageAnalysis/ImageRotator.cc
 ImageAnalysis/ImageStatsCalculator.cc
+ImageAnalysis/ImageStatsConfigurator.cc
 ImageAnalysis/ImageTransposer.cc
 ImageAnalysis/PeakIntensityFluxDensityConverter.cc
 ImageAnalysis/PixelValueManipulatorData.cc
@@ -67,6 +68,7 @@ ImageAnalysis/ProfileFitResults.cc
 ImageAnalysis/PVGenerator.cc
 ImageAnalysis/SpectralCollapser.cc
 ImageAnalysis/SpectralFitter.cc
+ImageAnalysis/StatImageCreator.cc
 
 IO/AsciiAnnotationFileLine.cc
 IO/FitterEstimatesFileParser.cc
@@ -209,6 +211,7 @@ install (FILES
 	ImageAnalysis/ImageSourceFinder.h
 	ImageAnalysis/ImageSourceFinder.tcc
 	ImageAnalysis/ImageStatsCalculator.h
+	ImageAnalysis/ImageStatsConfigurator.h
 	ImageAnalysis/ImageTask.h
     ImageAnalysis/ImageTask.tcc
 	ImageAnalysis/ImageTransposer.h
@@ -235,6 +238,7 @@ install (FILES
 	ImageAnalysis/SepImageConvolverTask.h
     ImageAnalysis/SepImageConvolverTask.tcc
 	ImageAnalysis/SpectralCollapser.h
+    ImageAnalysis/StatImageCreator.h
 	ImageAnalysis/SubImageFactory.h
 	ImageAnalysis/SubImageFactory.tcc
 	ImageAnalysis/TwoPointCorrelator.h

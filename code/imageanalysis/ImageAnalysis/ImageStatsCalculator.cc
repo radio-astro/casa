@@ -45,15 +45,14 @@ ImageStatsCalculator::ImageStatsCalculator(
     const Record *const &regionPtr,
     const String& maskInp,
     Bool beVerboseDuringConstruction
-) : ImageTask<Float>(
-        image, "", regionPtr, "", "",
-        "", maskInp, "", false
-    ), _statistics(), _oldStatsRegion(0), _oldStatsMask(0),
+) : ImageStatsConfigurator(
+        image, regionPtr, maskInp
+    ), _oldStatsRegion(0), _oldStatsMask(0),
     _axes(), _includepix(), _excludepix(), _list(false),
-    _disk(false), _robust(false), _verbose(false), _algConf(),
-    _subImage(), _prefClassStatsAlg(AUTO) {
+    _disk(false), _robust(false), _verbose(false),
+    _subImage() {
     _construct(beVerboseDuringConstruction);
-    _algConf.algorithm = StatisticsData::CLASSICAL;
+    // _algConf.algorithm = StatisticsData::CLASSICAL;
 }
 
 ImageStatsCalculator::~ImageStatsCalculator() {}
@@ -94,77 +93,16 @@ Record ImageStatsCalculator::calculate() {
     return retval;
 }
 
-void ImageStatsCalculator::configureChauvenet(
-    Double zscore, Int maxIterations
-) {
-    if (
-        _algConf.algorithm != StatisticsData::CHAUVENETCRITERION
-        || ! near(_algConf.zs, zscore)
-        || maxIterations != _algConf.mi
-    ) {
-        _algConf.algorithm = StatisticsData::CHAUVENETCRITERION;
-        _algConf.zs = zscore;
-        _algConf.mi = maxIterations;
-        _statistics.reset();
-    }
-}
-
-void ImageStatsCalculator::configureClassical(
-    PreferredClassicalAlgorithm p
-) {
-    if (
-        _algConf.algorithm != StatisticsData::CLASSICAL
-        || p != _prefClassStatsAlg
-    ) {
-        _algConf.algorithm = StatisticsData::CLASSICAL;
-        _prefClassStatsAlg = p;
-        _statistics.reset();
-    }
-}
-
-void ImageStatsCalculator::configureFitToHalf(
-    FitToHalfStatisticsData::CENTER centerType,
-    FitToHalfStatisticsData::USE_DATA useData,
-    Double centerValue
-) {
-    if (
-        _algConf.algorithm != StatisticsData::FITTOHALF
-        || _algConf.ct != centerType
-        || _algConf.ud != useData
-        || (
-            centerType == FitToHalfStatisticsData::CVALUE
-            && ! near(_algConf.cv, centerValue)
-        )
-    ) {
-        _algConf.algorithm = StatisticsData::FITTOHALF;
-        _algConf.ct = centerType;
-        _algConf.ud = useData;
-        _algConf.cv = centerValue;
-        _statistics.reset();
-    }
-}
-
-void ImageStatsCalculator::configureHingesFences(Double f) {
-    if (
-        _algConf.algorithm != StatisticsData::HINGESFENCES
-        || ! near(_algConf.hf, f)
-    ) {
-        _algConf.algorithm = StatisticsData::HINGESFENCES;
-        _algConf.hf = f;
-        _statistics.reset();
-    }
-}
-
 void ImageStatsCalculator::setVerbose(Bool v) {
     if (_verbose != v) {
-        _statistics.reset();
+        _resetStats();
     }
     _verbose = v;
 }
 
 void ImageStatsCalculator::setDisk(Bool d) {
     if (_disk != d) {
-        _statistics.reset();
+        _resetStats();
     }
     _disk = d;
 }
@@ -302,8 +240,10 @@ void ImageStatsCalculator::_reportDetailedStats(
     GenSort<Int>::sort(axesMap);
     oss << "Npts          Sum           Mean          Rms           Std_dev       Minimum       Maximum     ";
     std::map<String, uInt> chauvIters;
-    if (_algConf.algorithm == StatisticsData::CHAUVENETCRITERION) {
-        chauvIters = _statistics->getChauvenetNiter();
+    const auto alg = _getAlgConf().algorithm;
+    const auto& stats = _getImageStats();
+    if (alg == StatisticsData::CHAUVENETCRITERION) {
+        chauvIters = stats->getChauvenetNiter();
         oss << "  N Iter";
     }
     oss << endl;
@@ -317,7 +257,7 @@ void ImageStatsCalculator::_reportDetailedStats(
     for (uInt i=0; i<7; ++i) {
         colwidth.push_back(12);
     }
-    if (_algConf.algorithm == StatisticsData::CHAUVENETCRITERION) {
+    if (alg == StatisticsData::CHAUVENETCRITERION) {
         colwidth.push_back(6);
     }
     TileStepper ts(
@@ -329,7 +269,7 @@ void ImageStatsCalculator::_reportDetailedStats(
     );
     Vector<Double> world;
     IPosition arrayIndex(axesMap.nelements(), 0);
-    IPosition blc = _statistics->getBlc();
+    IPosition blc = stats->getBlc();
     IPosition position(tempIm->ndim());
     uInt width = 13;
     Vector<Vector<String> > coords(reportAxes.size());
@@ -392,7 +332,7 @@ void ImageStatsCalculator::_reportDetailedStats(
                 << std::setw(width) << retval.asArrayDouble(SIGMA)(arrayIndex) << " "
                 << std::setw(width) << retval.asArrayDouble("min")(arrayIndex) << " "
                 << std::setw(width) << retval.asArrayDouble("max")(arrayIndex);
-            if (_algConf.algorithm == StatisticsData::CHAUVENETCRITERION) {
+            if (alg == StatisticsData::CHAUVENETCRITERION) {
                 ostringstream pos;
                 pos << position;
                 oss << std::setw(6) << " " << chauvIters[pos.str()];
@@ -459,26 +399,27 @@ Record ImageStatsCalculator::statistics(
     String blcf, trcf;
     blcf = CoordinateUtil::formatCoordinate(blc, csys, precis);
     trcf = CoordinateUtil::formatCoordinate(trc, csys, precis);
-    if (_statistics.get() == NULL) {
-        _statistics.reset(
+    auto& stats = _getImageStats();
+    if (! stats) {
+        _resetStats(
             _verbose
             ? new ImageStatistics<Float> (*_subImage, *_getLog(), true, _disk)
             : new ImageStatistics<Float> (*_subImage, true, _disk)
         );
     }
     else {
-        _statistics->resetError();
+        stats->resetError();
         if (
             _haveRegionsChanged(
                 region.get(), mask.get(),
                 _oldStatsRegion.get(), _oldStatsMask.get()
             )
         ) {
-            _statistics->setNewImage(*_subImage);
+            stats->setNewImage(*_subImage);
         }
     }
     // prevent the table of stats we no longer use from being logged
-    _statistics->setListStats(false);
+    stats->setListStats(false);
     String myAlg = _configureAlgorithm();
     if (_list) {
         *_getLog() << myOrigin << LogIO::NORMAL;
@@ -511,10 +452,10 @@ Record ImageStatsCalculator::statistics(
         }
     }
     if (messageStore != NULL) {
-        _statistics->recordMessages(true);
+        stats->recordMessages(true);
     }
-    _statistics->setPrecision(precis);
-    _statistics->setBlc(blc);
+    stats->setPrecision(precis);
+    stats->setBlc(blc);
 
     // Assign old regions to current regions
     _oldStatsMask.reset(0);
@@ -524,15 +465,15 @@ Record ImageStatsCalculator::statistics(
     //_oldStatsStorageForce = _disk;
     // Set cursor axes
     *_getLog() << myOrigin;
-    ThrowIf(! _statistics->setAxes(_axes), _statistics->errorMessage());
+    ThrowIf(! stats->setAxes(_axes), stats->errorMessage());
     ThrowIf(
-        !_statistics->setInExCludeRange(_includepix, _excludepix, false),
-        _statistics->errorMessage()
+        !stats->setInExCludeRange(_includepix, _excludepix, false),
+        stats->errorMessage()
     );
     // Tell what to list
     ThrowIf(
-        !_statistics->setList(_list),
-        _statistics->errorMessage()
+        !stats->setList(_list),
+        stats->errorMessage()
     );
     // Recover statistics
     Array<Double> npts, sum, sumsquared, min, max, mean, sigma;
@@ -555,31 +496,31 @@ Record ImageStatsCalculator::statistics(
         }
     }
     if (_robust) {
-        ok = _statistics->getStatistic(med, LatticeStatsBase::MEDIAN)
-            && _statistics->getStatistic(
+        ok = stats->getStatistic(med, LatticeStatsBase::MEDIAN)
+            && stats->getStatistic(
                 medAbsDevMed, LatticeStatsBase::MEDABSDEVMED
             )
-            && _statistics->getStatistic(
+            && stats->getStatistic(
                 quartile, LatticeStatsBase::QUARTILE
             )
-            && _statistics->getStatistic(
+            && stats->getStatistic(
                 q1, LatticeStatsBase::Q1
             )
-            && _statistics->getStatistic(
+            && stats->getStatistic(
                 q3, LatticeStatsBase::Q3
             );
     }
     if (ok) {
-        ok = _statistics->getStatistic(npts, LatticeStatsBase::NPTS)
-            && _statistics->getStatistic(sum, LatticeStatsBase::SUM)
-            && _statistics->getStatistic(sumsquared, LatticeStatsBase::SUMSQ)
-            && _statistics->getStatistic(min, LatticeStatsBase::MIN)
-            && _statistics->getStatistic(max, LatticeStatsBase::MAX)
-            && _statistics->getStatistic(mean, LatticeStatsBase::MEAN)
-            && _statistics->getStatistic(sigma, LatticeStatsBase::SIGMA)
-            && _statistics->getStatistic(rms, LatticeStatsBase::RMS);
+        ok = stats->getStatistic(npts, LatticeStatsBase::NPTS)
+            && stats->getStatistic(sum, LatticeStatsBase::SUM)
+            && stats->getStatistic(sumsquared, LatticeStatsBase::SUMSQ)
+            && stats->getStatistic(min, LatticeStatsBase::MIN)
+            && stats->getStatistic(max, LatticeStatsBase::MAX)
+            && stats->getStatistic(mean, LatticeStatsBase::MEAN)
+            && stats->getStatistic(sigma, LatticeStatsBase::SIGMA)
+            && stats->getStatistic(rms, LatticeStatsBase::RMS);
     }
-    ThrowIf(! ok, _statistics->errorMessage());
+    ThrowIf(! ok, stats->errorMessage());
     Record statsout;
     statsout.define("npts", npts);
     statsout.define("sum", sum);
@@ -598,7 +539,7 @@ Record ImageStatsCalculator::statistics(
     statsout.define("rms", rms);
     if (
         doFlux
-        && _statistics->getStatistic(
+        && stats->getStatistic(
             fluxDensity, LatticeStatsBase::FLUX
         )
     ) {
@@ -610,7 +551,7 @@ Record ImageStatsCalculator::statistics(
     statsout.define("trcf", trcf);
     String tmp;
     IPosition minPos, maxPos;
-    if (_statistics->getMinMaxPos(minPos, maxPos)) {
+    if (stats->getMinMaxPos(minPos, maxPos)) {
         if (minPos.nelements() > 0) {
             statsout.define("minpos", (blc + minPos).asVector());
             tmp = CoordinateUtil::formatCoordinate(blc + minPos, csys, precis);
@@ -623,67 +564,27 @@ Record ImageStatsCalculator::statistics(
         }
     }
     if (_list) {
-        _statistics->showRobust(_robust);
+        stats->showRobust(_robust);
         ThrowIf(
-            !_statistics->display(),
-            _statistics->errorMessage()
+            ! stats->display(),
+            stats->errorMessage()
         );
     }
     if (messageStore != 0) {
-        vector<String> messages = _statistics->getMessages();
+        vector<String> messages = stats->getMessages();
         for (
             vector<String>::const_iterator iter=messages.begin();
             iter!=messages.end(); ++iter
         ) {
             messageStore->push_back(*iter + "\n");
         }
-        _statistics->clearMessages();
+        stats->clearMessages();
     }
     return statsout;
 }
 
 void ImageStatsCalculator::setRobust(Bool b) {
     _robust = b;
-}
-
-String ImageStatsCalculator::_configureAlgorithm() {
-    String myAlg;
-    switch (_algConf.algorithm) {
-    case StatisticsData::CHAUVENETCRITERION:
-        _statistics->configureChauvenet(_algConf.zs, _algConf.mi);
-        myAlg = "Chauvenet Criterion/Z-score";
-        break;
-    case StatisticsData::CLASSICAL:
-        switch (_prefClassStatsAlg) {
-        case AUTO:
-            _statistics->configureClassical();
-            break;
-        case TILED_APPLY:
-            _statistics->configureClassical(0, 0, 1, 1);
-            break;
-        case STATS_FRAMEWORK:
-            _statistics->configureClassical(1, 1, 0, 0);
-            break;
-        default:
-            ThrowCc("Unhandled classical stats type");
-        }
-        myAlg = "Classic";
-        break;
-    case StatisticsData::FITTOHALF:
-        _statistics->configureFitToHalf(_algConf.ct, _algConf.ud, _algConf.cv);
-        myAlg = "Fit-to-Half";
-        break;
-    case StatisticsData::HINGESFENCES:
-        _statistics->configureHingesFences(_algConf.hf);
-        myAlg = "Hinges-Fences";
-        break;
-    default:
-        ThrowCc(
-            "Logic Error: Unhandled statistics algorithm "
-            + String::toString(_algConf.algorithm)
-        );
-    }
-    return myAlg;
 }
 
 Bool ImageStatsCalculator::_haveRegionsChanged(
