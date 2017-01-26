@@ -16,7 +16,7 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
                  createmms=None, ocorr_mode=None, clearcals=None):
         self._init_properties(vars())
 
-    asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
+    asis = basetask.property_with_default('asis', 'SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
     dbservice = basetask.property_with_default('dbservice', True)
 
 
