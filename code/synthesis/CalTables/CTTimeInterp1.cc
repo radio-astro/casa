@@ -83,7 +83,13 @@ CTTimeInterp1::CTTimeInterp1(NewCalTable& ct,
   mcols_p->time().getColumn(dtime);
   domain_(0)=min(dtime);
   domain_(1)=max(dtime);
-  timeRef_=86400.0*floor(dtime(0)/86400.0);
+
+  // NB: time is rendered as Vector<Float> for processing
+  //     because Interpolate1D doesn't work if it is V<Double>...
+  //timeRef_=86400.0*floor(dtime(0)/86400.0);
+  // 2016Aug22 (gmoellen): use ~current time (not prior midnight)
+  //   as timeRef_ to ~minimize loss of precision for faster sampling
+  timeRef_=floor(dtime(0)-1.0f);
   dtime-=timeRef_;  // Relative to reference time
   timelist_.resize(dtime.shape());
   convertArray(timelist_,dtime);  // store referenced times as Floats
