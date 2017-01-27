@@ -787,6 +787,9 @@ def flagdata(vis,
            else:
                summary_stats_list = {}  
                
+        elif mode == 'rflag' and action == 'calculate':
+            # keep the dictionary of rflag intact and return it
+            pass
         else:
              summary_stats_list = {} 
                    

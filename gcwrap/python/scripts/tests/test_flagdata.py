@@ -511,6 +511,32 @@ class test_rflag(test_base):
         self.assertTrue(abs(res1['flagged']-res2['flagged'])<10000)
         self.assertTrue(abs(res1['flagged']-39504.0)<10000)
 
+    def test_rflag3_dict(self):
+        '''flagdata:: mode = rflag : output/input via returned dictionary and cmd'''
+        # (1) Test input/output files, through the task, mode='rflag'
+        # Files tdevfile.txt and fdevfile.txt are created in this step
+        rdict = flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', 
+                      freqdev='', action='calculate', extendflags=False)
+        
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=rdict['report0']['timedev'], 
+                      freqdev=rdict['report0']['freqdev'], action='apply', flagbackup=False, 
+                      extendflags=False)
+        res1 = flagdata(vis=self.vis, mode='summary', spw='9,10')
+        # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
+        #      and then read back in via list mode. 
+        #      Also test the 'savepars' when timedev and freqdev are specified differently...
+#        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
+        self.unflag_ms()
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
+                      freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt',
+                      extendflags=False);
+        flagdata(vis=self.vis, mode='list', inpfile='outcmd.txt', flagbackup=False)
+        res2 = flagdata(vis=self.vis, mode='summary', spw='9,10')
+
+        #print res1['flagged'], res2['flagged']
+        self.assertTrue(abs(res1['flagged']-res2['flagged'])<10000)
+        self.assertTrue(abs(res1['flagged']-39504.0)<10000)
+
     def test_rflag4(self):
         '''flagdata:: mode = rflag : correlation selection'''
         flagdata(vis=self.vis, mode='rflag', spw='9,10', correlation='rr,ll', flagbackup=False,
@@ -525,6 +551,17 @@ class test_rflag(test_base):
         '''flagdata:: Use provided value for time stats, but automatically computed value for freq. stats'''
         flagdata(vis=self.vis, mode='rflag', field = '1', spw='10', timedev=0.1, \
                  timedevscale=5.0, freqdevscale=5.0, action='calculate', flagbackup=False)
+
+    def test_rflag_return_dict1(self):
+        '''flagdata:: Use provided value for time stats, but automatically computed value for freq. stats'''
+        rflag_dict = flagdata(vis=self.vis, mode='rflag', field = '1', spw='10', timedev=0.1, \
+                 timedevscale=5.0, freqdevscale=5.0, action='calculate', flagbackup=False)
+        
+        fd = rflag_dict['report0']['freqdev']
+
+        self.assertEqual(fd.ndim,2)
+        self.assertEqual(fd.max(),10.0)
+        self.assertGreater(fd.min(),0.07068)
 
     def test_rflag_extendflags(self):
         '''flagdata: automatically extend the flags after rflag'''    
