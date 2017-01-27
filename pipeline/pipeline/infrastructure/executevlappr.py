@@ -448,7 +448,7 @@ def _getCommands (pprObject, requestId, numRequests):
         ppr_cmds = pprObject.SciPipeRequest.ProcessingRequests.ProcessingRequest[requestId].ProcessingProcedure
 
     try:
-        procedureName = ppr_cmds.ProcedureTitle 
+        procedureName = ppr_cmds.ProcedureTitle.getValue() 
     except Exception, e:
         procedureName = "Undefined"
     commandsList = []
