@@ -144,8 +144,8 @@ class SingleDishPointingChart(object):
         else:
             return None
         
-    def plot(self):
-        if os.path.exists(self.figfile):
+    def plot(self, revise_plot=False):
+        if revise_plot == False and os.path.exists(self.figfile):
             return self._get_plot_object()
         
         ms = self.ms
