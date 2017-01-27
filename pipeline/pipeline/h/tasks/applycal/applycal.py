@@ -239,6 +239,12 @@ class Applycal(basetask.StandardTaskTemplate):
     antenna_to_apply = '*&*'
 
     def prepare(self):
+
+        result = self.applycal_run()
+
+        return result
+
+    def applycal_run(self):
         inputs = self.inputs
 
         # Get the calibration state for the user's target data selection. This
@@ -267,22 +273,23 @@ class Applycal(basetask.StandardTaskTemplate):
 
             args = inputs.to_casa_args()
             # Do this a different way ?
-            args.pop('flagsum', None)  #Flagsum is not a CASA applycal task argument
-            args.pop('flagdetailedsum', None)  #Flagdetailedsum is not a CASA applycal task argument
+            args.pop('flagsum', None)  # Flagsum is not a CASA applycal task argument
+            args.pop('flagdetailedsum', None)  # Flagdetailedsum is not a CASA applycal task argument
 
-            # set the on-the-fly calibration state for the data selection.  
+            # set the on-the-fly calibration state for the data selection.
             calapp = callibrary.CalApplication(calto, calfroms)
             ### Note this is a temporary workaround ###
             args['antenna'] = self.antenna_to_apply
             ### Note this is a temporary workaround ###
             args['gaintable'] = calapp.gaintable
             args['gainfield'] = calapp.gainfield
-            args['spwmap']    = calapp.spwmap
-            args['interp']    = calapp.interp
-            args['calwt']     = calapp.calwt
+            args['spwmap'] = calapp.spwmap
+            args['interp'] = calapp.interp
+            args['calwt'] = calapp.calwt
             args['applymode'] = inputs.applymode
 
             jobs.append(casa_tasks.applycal(**args))
+
 
         # execute the jobs
         for job in jobs:
@@ -294,15 +301,15 @@ class Applycal(basetask.StandardTaskTemplate):
             stats_after = self._executor.execute(flagdata_summary_job)
             stats_after['name'] = 'applycal'
 
-        applied = [callibrary.CalApplication(calto, calfroms) 
+        applied = [callibrary.CalApplication(calto, calfroms)
                    for calto, calfroms in merged.items()]
 
         result = ApplycalResults(applied)
-        
+
         if inputs.flagsum:
             result.summaries = [stats_before, stats_after]
 
-        #Flagging stats by spw and antenna
+        # Flagging stats by spw and antenna
 
         if inputs.flagsum and inputs.flagdetailedsum:
             ms = self.inputs.context.observing_run.get_ms(inputs.vis)
@@ -311,7 +318,7 @@ class Applycal(basetask.StandardTaskTemplate):
 
             # Note should intent be set to inputs.intent as shown below or is there
             # a reason not to do this.
-            #fields = ms.get_fields(intent=inputs.intent)
+            # fields = ms.get_fields(intent=inputs.intent)
             fields = ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
             flagsummary = {}
             flagkwargs = []
@@ -323,22 +330,22 @@ class Applycal(basetask.StandardTaskTemplate):
                 flagline = "spw='" + str(spwid) + "' fieldcnt=True mode='summary' name='AntSpw" + str(spwid).zfill(3)
                 flagkwargs.append(flagline)
 
-            #BRK note - Added kwarg fieldcnt based on Justo's changes, July 2015
+            # BRK note - Added kwarg fieldcnt based on Justo's changes, July 2015
             # Need to have fieldcnt in the flagline above
             flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs, flagbackup=False)
             flagdicts = self._executor.execute(flaggingjob)
 
-            #BRK note - for Justo's new flagging scheme, need to rearrrange
+            # BRK note - for Justo's new flagging scheme, need to rearrrange
             # the dictionary keys in the order of field, spw report, antenna, with added name and type keys
             #   on the third dictionary level.
 
-            #Set into single dictionary report (single spw) if only one dict returned
-            if len(flagkwargs) == 1 :
+            # Set into single dictionary report (single spw) if only one dict returned
+            if len(flagkwargs) == 1:
                 flagdictssingle = flagdicts
                 flagdicts = {}
                 flagdicts['report0'] = flagdictssingle
 
-            for key in flagdicts.keys():  #report level
+            for key in flagdicts.keys():  # report level
                 fieldnames = flagdicts[key].keys()
                 fieldnames.remove('name')
                 fieldnames.remove('type')
@@ -346,12 +353,13 @@ class Applycal(basetask.StandardTaskTemplate):
                     try:
                         flagsummary[fieldname][key] = flagdicts[key][fieldname]
                         spwid = flagdicts[key][fieldname]['spw'].keys()[0]
-                        flagsummary[fieldname][key]['name'] = 'AntSpw'+str(spwid).zfill(3)+'Field_'+str(fieldname)
+                        flagsummary[fieldname][key]['name'] = 'AntSpw' + str(spwid).zfill(3) + 'Field_' + str(fieldname)
                         flagsummary[fieldname][key]['type'] = 'summary'
                     except:
-                        LOG.debug("No flags to report for "+str(key))
+                        LOG.debug("No flags to report for " + str(key))
 
             result.flagsummary = flagsummary
+
 
         return result
 
