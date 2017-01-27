@@ -70,6 +70,7 @@ CasaTaskDict = {
     'hifa_wvrgcal': 'Wvrgcal',
     'hifa_wvrgcalflag': 'Wvrgcalflag',
     # VLA tasks -----------------------------------------------------------------
+    'hifv_circfeedpolcal': 'Circfeedpolcal',
     'hifv_importdata': 'VLAImportData',
     'hifv_exportdata': 'VLAExportData',
     'hifv_hanning': 'Hanning',
