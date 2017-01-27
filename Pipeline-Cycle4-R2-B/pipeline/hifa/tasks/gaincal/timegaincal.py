@@ -263,9 +263,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
             'combine'     : combine,
             'refant'      : inputs.refant,
             'minblperant' : inputs.minblperant,
-            'solnorm'     : inputs.solnorm,
-            'to_intent'   : 'PHASE,CHECK,TARGET,AMPLITUDE,BANDPASS',
-            'to_field'    : None
+            'solnorm'     : inputs.solnorm
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
                                                       **task_args)
@@ -294,8 +292,6 @@ class TimeGaincal(gaincalworker.GaincalWorker):
             'refant'      : inputs.refant,
             'minblperant' : inputs.minblperant,
             'solnorm'     : inputs.solnorm,
-            'to_intent'   : 'PHASE,CHECK,TARGET,AMPLITUDE,BANDPASS',
-            'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
                                                       **task_args)
@@ -323,8 +319,6 @@ class TimeGaincal(gaincalworker.GaincalWorker):
             'refant'      : inputs.refant,
             'minblperant' : inputs.minblperant,
             'solnorm'     : inputs.solnorm,
-            'to_intent'   : 'PHASE,CHECK,TARGET',
-            'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
                                                       **task_args)
@@ -352,8 +346,6 @@ class TimeGaincal(gaincalworker.GaincalWorker):
             'refant'      : inputs.refant,
             'minblperant' : inputs.minblperant,
             'solnorm'     : inputs.solnorm,
-            'to_intent'   : 'PHASE,CHECK,TARGET,AMPLITUDE,BANDPASS',
-            'to_field'    : None
         }
         task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
                                                       **task_args)

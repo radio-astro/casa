@@ -25,9 +25,7 @@ class GaincalWorkerInputs(common.CommonGaincalInputs):
                  solnorm=None, append=None, scan=None, splinetime=None, npointaver=None,
                  phasewrap=None,
                  # preapply calibrations
-                 opacity=None, preavg=None,
-                 # calibration target
-                 to_intent=None, to_field=None):
+                 opacity=None, preavg=None):
         self._init_properties(vars())
 
 
@@ -102,8 +100,6 @@ class GaincalWorker(basetask.StandardTaskTemplate):
         # should calibrate 
         calto = callibrary.CalTo(vis=inputs.vis,
                                  spw=orig_spw)
-                                 #field=inputs.to_field,
-                                 #intent=inputs.to_intent,
                                  #antenna=orig_antenna)
 
         # create the calfrom object describing which data should be selected

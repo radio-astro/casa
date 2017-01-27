@@ -439,8 +439,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         # of dictionary of all kw argument names except self, the 
         # pipeline-specific arguments (context, output_dir, etc.) and
         # caltable.
-        skip = ['self', 'context', 'output_dir', 'ms', 
-                'to_field', 'to_intent', 'calto', 'calstate']
+        skip = ['self', 'context', 'output_dir', 'ms', 'calto', 'calstate']
         skip.extend(ignore)
         kw_names = [a for a in inspect.getargspec(self.__init__).args
                     if a not in skip]
@@ -509,10 +508,6 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         if args.get('intent', None) != None:
             args['intent'] = utils.to_CASA_intent(ms, args['intent'])
 
-        for unwanted in ('to_intent', 'to_field'):
-            if unwanted in args:
-                del args[unwanted]
-            
         for k,v in args.items():
             if v is None:
                 del args[k]        
@@ -1131,7 +1126,8 @@ class StandardTaskTemplate(api.Task):
         head = self.inputs.vis[0]
         tail = self.inputs.vis[1:]
 
-        to_split = ('to_field', 'to_intent', 'calphasetable', 'targetphasetable')
+        # CAS-9430: problems with to_intent
+        to_split = ('calphasetable', 'targetphasetable')
         split_properties = self._get_handled_headtails(to_split)
 
         for name, ht in split_properties.items():
