@@ -912,11 +912,12 @@ class ImageParamsHeuristics(object):
 
                         # Calculate averaged flagging vector keeping all unflagged
                         # channels from any baseline.
-                        for i in xrange(flag_ants['flag'].shape[2]):
-                            # Antenna selection does not work (CAS-8757)
-                            if (flag_ants['antenna1'][i] != flag_ants['antenna2'][i]):
-                                for j in xrange(flag_ants['flag'].shape[0]):
-                                     result = np.logical_and(result, flag_ants['flag'][j,:,i])
+                        if flag_ants != {}:
+                            for i in xrange(flag_ants['flag'].shape[2]):
+                                # Antenna selection does not work (CAS-8757)
+                                if (flag_ants['antenna1'][i] != flag_ants['antenna2'][i]):
+                                    for j in xrange(flag_ants['flag'].shape[0]):
+                                         result = np.logical_and(result, flag_ants['flag'][j,:,i])
 
                         iterating = msTool.iternext()
 
