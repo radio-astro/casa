@@ -2180,8 +2180,8 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_TRUE(allEQ(data_linpol, 8.0f));
 
 // Test number of polarization
-  size_t num_accum_linp = 2;
-  size_t num_seq_linp = 2;
+  constexpr size_t num_accum_linp = 2;
+  constexpr size_t num_seq_linp = 2;
   uInt expected_num_pol_linpol[num_seq_linp][num_accum_linp] = { { 1, 2 }, { 0, 2 } };
   uInt polid_order_linpol[num_seq_linp][num_accum_linp] = { { 0, 1 }, { 1, 0 } };
   record.data.assign(data2);
