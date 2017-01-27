@@ -403,7 +403,7 @@ struct FloatDataStorage {
 //    std::cout << "    index for pol " << index << std::endl;
     if (2ul <= index)
       return false;;
-    record.polno = index;
+    record.pol = index==0 ? casacore::Stokes::XX : casacore::Stokes::YY;
     tsys_value *= (casacore::Float) (index + 1) * 100.0f;
 
     record.pol_type = "linear";

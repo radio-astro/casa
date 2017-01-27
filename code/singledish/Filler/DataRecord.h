@@ -16,6 +16,7 @@
 #include <casacore/casa/BasicSL/String.h>
 #include <casacore/casa/Arrays/Matrix.h>
 #include <casacore/casa/Arrays/Vector.h>
+#include <measures/Measures/Stokes.h>
 
 namespace {
 template<class T>
@@ -72,7 +73,7 @@ struct DataRecord {
     feed_id = -1;
     scan = -1;
     subscan = -1;
-    polno = 0;
+    pol = casacore::Stokes::Undefined;
     intent = "";
     pol_type = "";
     direction = 0.0;
@@ -177,7 +178,7 @@ struct DataRecord {
     feed_id = other.feed_id;
     scan = other.scan;
     subscan = other.subscan;
-    polno = other.polno;
+    pol = other.pol;
     intent = other.intent;
     pol_type = other.pol_type;
     direction = other.direction;
@@ -226,7 +227,7 @@ public:
   casacore::Int feed_id;
   casacore::Int scan;
   casacore::Int subscan;
-  casacore::uInt polno;
+  casacore::Stokes::StokesTypes pol;
   casacore::String intent;
   casacore::String pol_type;
   casacore::Matrix<casacore::Double> direction;

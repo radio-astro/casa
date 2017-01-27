@@ -428,17 +428,16 @@ void NRO2MSReader::constructArrayTable() {
 	for (size_t i = 0; i < array_mapper_.size(); ++i) {
 		array_mapper_[i].set(obs_header_.ARRYTB[i], obs_header_.POLNAME);
 		int beam_id = array_mapper_[i].beam_id;
-		int pol_id = array_mapper_[i].pol_id;
 		int spw_id = array_mapper_[i].spw_id;
-		if (beam_id < 0 || beam_id >= obs_header_.NBEAM || pol_id < 0
-				|| pol_id >= obs_header_.NPOL || spw_id < 0
+		int stokes = array_mapper_[i].stokes_type;
+		if (beam_id < 0 || beam_id >= obs_header_.NBEAM
+				|| stokes == Stokes::Undefined || spw_id < 0
 				|| spw_id >= obs_header_.NSPWIN) {
 			throw AipsError("Internal Data ERROR: inconsistent ARRAY table");
 		}
 		os << LogIO::DEBUG1 << "- Array " << i << " : (beam, pol, spw) = ("
-				<< array_mapper_[i].beam_id << ", " << array_mapper_[i].pol_name
-				<< "(" << array_mapper_[i].pol_id << ") , "
-				<< array_mapper_[i].spw_id << ")" << LogIO::POST;
+				<< beam_id << ", " << array_mapper_[i].pol_name
+				<< ", "	<< spw_id << ")" << LogIO::POST;
 	}
 }
 
@@ -806,7 +805,7 @@ Bool NRO2MSReader::getData(size_t irow, DataRecord &record) {
   record.feed_id = (Int)0;
   record.spw_id = (Int) getNROArraySpwId(array_id);//(irow % obs_header_.NSPWIN);
 //  Int ndata_per_scan = obs_header_.NBEAM * obs_header_.NPOL * obs_header_.NSPWIN;
-  record.polno = getNROArrayPolId(array_id); //getPolNo(obs_header_.RX0[irow % ndata_per_scan]);
+  record.pol = getNROArrayPol(array_id); //getPolNo(obs_header_.RX0[irow % ndata_per_scan]);
   record.pol_type = "linear";
 
 //  std::cout << "set data size to " << num_chan_map_[record.spw_id] << " shape "

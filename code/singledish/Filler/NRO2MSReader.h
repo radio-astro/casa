@@ -10,6 +10,8 @@
 
 #define STRING2CHAR(s) const_cast<char *>((s).c_str())
 
+#include <measures/Measures/Stokes.h>
+
 #include <singledish/Filler/ReaderInterface.h>
 #include <singledish/Filler/NROData.h>
 #include <string>
@@ -104,9 +106,9 @@ public:
 //	  assert(array_id >= 0 && array_id < getNROArraySize());
     return array_mapper_[array_id].getBeamId();
   }
-  virtual int getNROArrayPolId(int array_id) {
+  virtual casacore::Stokes::StokesTypes getNROArrayPol(int array_id) {
 //	  assert(array_id >= 0 && array_id < getNROArraySize());
-    return array_mapper_[array_id].getPolId();
+    return array_mapper_[array_id].getPol();
   }
   virtual int getNROArraySpwId(int array_id) {
 //	  assert(array_id >= 0 && array_id < getNROArraySize());
@@ -165,32 +167,35 @@ private:
 
   struct NROArrayData {
 	  int beam_id=-1;
-	  int pol_id=-1;
+	  casacore::Stokes::StokesTypes stokes_type = casacore::Stokes::Undefined;
 	  string pol_name="";
 	  int spw_id=-1;
 	  void set(int16_t const arr_data, string const *pol_data) {
-		  if (arr_data < 1000) {
-			  throw "An attempt to set invalid ARRAY information to NROArrayData.\n";
-		  }
 		  // indices in NOSTAR data are 1-base
+		  if (arr_data < 1101) {
+			  throw "An attempt to set invalid ARRAY information to NROArrayData\n";
+		  }
 		  beam_id = static_cast<int>(arr_data/1000) - 1;
-		  pol_id = static_cast<int>((arr_data % 1000)/100) - 1;
+		  int pol_id = static_cast<int>((arr_data % 1000)/100) - 1;
 		  spw_id = static_cast<int>(arr_data % 100) -1;
 		  pol_name = pol_data[pol_id];
+		  stokes_type = casacore::Stokes::type(pol_name);
+		  if (stokes_type == casacore::Stokes::Undefined) {
+			  throw "Got unsupported polarization type\n";
+		  }
 	  }
 	  int getBeamId() const {
 		  if (beam_id < 0) throw "Array data is not set yet\n";
 		  return beam_id;}
-	  int getPolId() const {
-		  if (pol_id < 0) throw "Array data is not set yet\n";
-		  return pol_id;}
+	  casacore::Stokes::StokesTypes getPol() const {
+		  if (stokes_type == casacore::Stokes::Undefined) throw "Array data is not set yet\n";
+		  return stokes_type;}
 	  int getSpwId() const {
 		  if (spw_id < 0) throw "Array data is not set yet\n";
 		  return spw_id;}
 	  string getPolName() const {
 		  if (pol_name.size() == 0) throw "Array data is not set yet\n";
 		  return pol_name;}
-
   };
 
   std::vector<NROArrayData> array_mapper_;

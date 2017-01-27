@@ -17,6 +17,8 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#include <map>
+#include <vector>
 
 #include <casacore/casa/OS/Time.h>
 #include <casacore/casa/OS/File.h>
@@ -67,6 +69,13 @@ Array<T> getArrayColumn(Table const &table, String const &name) {
   ArrayColumn<T> col(table, name);
   return col.getColumn();
 }
+
+static std::map<casacore::String, std::vector<Stokes::StokesTypes>> full_stpol_map = {
+		  {"linear", {Stokes::XX, Stokes::YY, Stokes::XY, Stokes::YX} },
+		  {"circular", {Stokes::RR, Stokes::LL, Stokes::RL, Stokes::LR}},
+		  {"stokes", {Stokes::I, Stokes::Q, Stokes::U, Stokes::V}},
+		  {"linpol", {Stokes::Plinear, Stokes::Pangle}}
+};
 }
 
 class SingleDishMSFillerTestBase: public ::testing::Test {
@@ -1316,17 +1325,17 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
                                                                                                                                                                                                                 ASSERT_GT(num_chan, 0);
       Matrix<Bool> expected_flag(expected_num_pol, num_chan);
       Matrix<Float> expected_data(expected_num_pol, num_chan);
-      uInt pol_id0 = row_record0.polno;
-      uInt pol_id1 = row_record1.polno;
-      ASSERT_LT(pol_id0, 2u);
-      ASSERT_GE(pol_id0, 0u);
-      ASSERT_LT(pol_id1, 2u);
-      ASSERT_GE(pol_id1, 0u);
-      ASSERT_NE(pol_id0, pol_id1);
-      expected_flag.row(pol_id0) = row_record0.flag;
-      expected_flag.row(pol_id1) = row_record1.flag;
-      expected_data.row(pol_id0) = row_record0.data;
-      expected_data.row(pol_id1) = row_record1.data;
+//      uInt pol_id0 = row_record0.pol;
+//      uInt pol_id1 = row_record1.pol;
+//      ASSERT_LT(pol_id0, 2u);
+//      ASSERT_GE(pol_id0, 0u);
+//      ASSERT_LT(pol_id1, 2u);
+//      ASSERT_GE(pol_id1, 0u);
+//      ASSERT_NE(pol0, pol1);
+      expected_flag.row(0) = row_record0.flag;
+      expected_flag.row(1) = row_record1.flag;
+      expected_data.row(0) = row_record0.data;
+      expected_data.row(1) = row_record1.data;
       auto verifyData = [&](size_t krow) {
         EXPECT_EQ(expected_flag_row, mycolumns.flagRow()(krow));
         Vector<Float> sigma = mycolumns.sigma()(krow);
@@ -1431,10 +1440,10 @@ TEST_F(SingleDishMSFillerTestWithStub, FillerTest) {
                                                                                                                                                                                                                 ASSERT_GT(num_chan, 0);
       expected_flag.resize(expected_num_pol, num_chan);
       expected_data.resize(expected_flag.shape());
-      uInt pol_id2 = row_record2.polno;
-      ASSERT_EQ(0u, pol_id2);
-      expected_flag.row(pol_id2) = row_record2.flag;
-      expected_data.row(pol_id2) = row_record2.data;
+//      uInt pol_id2 = row_record2.pol;
+//      ASSERT_EQ(0u, pol_id2);
+      expected_flag.row(0) = row_record2.flag;
+      expected_data.row(0) = row_record2.data;
       // verify data
       verifyData(irow);
 
@@ -1669,8 +1678,7 @@ struct BasicPolarizationTester {
       Vector<Int> corr = output_record.corr_type;
       ASSERT_TRUE(allEQ(expected_corr, corr));
     } else {
-      Int corr_index = input_record[0].polno;
-      Vector<Int> expected_corr(1, corr_type_list[corr_index]);
+      Vector<Int> expected_corr(1, input_record[0].pol);
       Vector<Int> corr = output_record.corr_type;
       ASSERT_TRUE(allEQ(expected_corr, corr));
     }
@@ -1684,17 +1692,17 @@ struct BasicPolarizationTester {
     Vector<Float> out_weight = output_record.weight;
     Bool net_flag_row = false;
     for (size_t i = 0; i < num_pol; ++i) {
-      std::cout << "Verifying i " << i << " polid " << input_record[i].polno
+      std::cout << "Verifying i " << i << " pol " << input_record[i].pol
           << std::endl;
-      uInt polid = 0;
+      uInt out_polid = 0;
       if (num_pol == 2) {
-        polid = input_record[i].polno;
+     	  out_polid = input_record[i].pol == full_stpol_map[pol_type][0] ? 0 : 1;
       }
       Vector<Float> data = input_record[i].data;
       Vector<Bool> flag = input_record[i].flag;
       net_flag_row = net_flag_row || input_record[i].flag_row;
-      EXPECT_TRUE(allEQ(out_data.row(polid), data));
-      EXPECT_TRUE(allEQ(out_flag.row(polid), flag));
+      EXPECT_TRUE(allEQ(out_data.row(out_polid), data));
+      EXPECT_TRUE(allEQ(out_flag.row(out_polid), flag));
     }
     EXPECT_EQ(net_flag_row, out_flag_row);
     EXPECT_TRUE(allEQ(out_sigma, 1.0f));
@@ -1837,7 +1845,7 @@ struct StandardInitializer {
     for (size_t i = 0; i < polid_list.size(); ++i) {
       DataRecord &input_record0 = input_record[i];
       uInt polid = polid_list[i];
-      input_record0.polno = polid;
+      input_record0.pol = full_stpol_map[chunk.getPolType()][polid];
       input_record0.data.assign(data.row(polid));
       input_record0.flag.assign(flag.row(polid));
       input_record0.flag_row = flag_row(polid);
@@ -2000,7 +2008,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   DataRecord record;
   Vector<Float> data1(1);
   Vector<Bool> flag1(1);
-  record.polno = 0u;
+  record.pol = full_stpol_map[chunk.getPolType()][0];
   record.data.assign(data1);
   record.flag.assign(flag1);
   record.flag_row = false;
@@ -2029,7 +2037,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   Vector<Float> data2(2);
   Vector<Bool> flag2(2);
   chunk.initialize(1);
-  record.polno = 0u;
+  record.pol = full_stpol_map[chunk.getPolType()][0];
   record.data.assign(data2);
   record.flag.assign(flag2);
   record.flag_row = false;
@@ -2038,6 +2046,7 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_EQ(expected_status, status);
 
 // Shape mismatch between data and flag
+  record.pol = full_stpol_map[chunk.getPolType()][1];
   record.data.assign(data1);
   status = chunk.accumulate(record);
   EXPECT_EQ(expected_status, status);
@@ -2045,8 +2054,8 @@ TEST(DataChunkTest, WhiteBoxTest) {
 // Test number of polarization
   constexpr size_t num_seq = 4ul;
   constexpr size_t num_accum = 4ul;
-  uInt expected_num_pol[num_seq][num_accum] = { { 1, 2, 2, 4 }, { 1, 2, 2, 4 },
-      { 0, 0, 1, 4 }, { 1, 1, 2, 4 } };
+  uInt expected_num_pol[num_seq][num_accum] = { { 1, 2, 0, 4 }, { 1, 2, 0, 4 },
+      { 0, 0, 0, 4 }, { 1, 0, 0, 4 } };
   uInt polid_order[num_seq][num_accum] = { { 0, 1, 2, 3 }, { 1, 0, 2, 3 }, { 3,
       2, 1, 0 }, { 0, 3, 1, 2 } };
   record.data.assign(data2);
@@ -2056,45 +2065,54 @@ TEST(DataChunkTest, WhiteBoxTest) {
     chunk.initialize(2);
     EXPECT_EQ(0u, chunk.getNumPol());
     for (size_t i = 0; i < num_accum; ++i) {
-      record.polno = polid_order[j][i];
+      record.pol = full_stpol_map[chunk.getPolType()][polid_order[j][i]];
       status = chunk.accumulate(record);
       ASSERT_TRUE(status);
       EXPECT_EQ(expected_num_pol[j][i], chunk.getNumPol());
     }
   }
-
-// accumulate data to same polarization twice
-  data2 = 0.0;
+// accumulate data to same polarization twice (AipsError)
+  data2 = 1.0;
   chunk.initialize(2);
-  record.polno = 0u;
+  record.pol = full_stpol_map[chunk.getPolType()][0];
   record.data.assign(data2);
   chunk.accumulate(record);
-  data2 = 1.0;
+  data2 = 0.0;
   record.data.assign(data2);
-  status = chunk.accumulate(record);
-  ASSERT_TRUE(status);
+  EXPECT_THROW(chunk.accumulate(record), AipsError);
   status = chunk.get(output_record);
   ASSERT_TRUE(status);
   Matrix<Float> output_data = output_record.float_data;
   EXPECT_EQ(IPosition(2, 1, 2), output_data.shape());
   EXPECT_TRUE(allEQ(output_data, 1.0f));
 
-// accumulate three polarization component
-  chunk.initialize(2);
+// accumulate three polarization components  (AipsError at get)
   data2 = 3.0;
-  record.polno = 0u;
+  chunk.initialize(2);
+  EXPECT_EQ(0u, chunk.getNumPol());
+  record.pol = full_stpol_map[chunk.getPolType()][0];
   record.data.assign(data2);
   chunk.accumulate(record);
-  record.polno = 1u;
+  record.pol = full_stpol_map[chunk.getPolType()][1];
   chunk.accumulate(record);
-  record.polno = 2u;
+  record.pol = full_stpol_map[chunk.getPolType()][2];
   chunk.accumulate(record);
-  EXPECT_EQ(2u, chunk.getNumPol());
+  EXPECT_EQ(0u, chunk.getNumPol());
+  EXPECT_THROW(chunk.get(output_record), AipsError);
+
+  // accumulate four polarization components
+  record.pol = full_stpol_map[chunk.getPolType()][3];
+  chunk.accumulate(record);
+  EXPECT_EQ(4u, chunk.getNumPol());
   status = chunk.get(output_record);
   ASSERT_TRUE(status);
-  Matrix<Float> data = output_record.float_data;
-  EXPECT_EQ(IPosition(2, 2, 2), data.shape());
-  EXPECT_TRUE(allEQ(data, 3.0f));
+  Matrix<Complex> data = output_record.complex_data;
+  EXPECT_EQ(IPosition(2, 4, 2), data.shape());
+  // Expected data value in each pol is (3+0i, 3+3i, 3-3i, 3+0i)
+  for(size_t ipol = 0; ipol < data.nrow(); ++ipol) {
+	  float imag = (ipol % 3) == 0 ? 0.0f : 3.0f*std::pow(-1.0f, ipol+1.0f);
+	  EXPECT_TRUE(allEQ(data.row(ipol), Complex(3.0f, imag)));
+ }
 
 // reset poltype
   EXPECT_NE(0u, chunk.getNumPol());
@@ -2107,24 +2125,25 @@ TEST(DataChunkTest, WhiteBoxTest) {
 
   stokes_chunk.initialize(2);
   data2 = 4.0;
-  record.polno = 1u;
+  record.pol = full_stpol_map[stokes_chunk.getPolType()][1];
   record.data.assign(data2);
   stokes_chunk.accumulate(record);
   EXPECT_EQ(0u, stokes_chunk.getNumPol());
-  status = stokes_chunk.get(output_record);
-  ASSERT_FALSE(status);
-  record.polno = 0u;
+  EXPECT_THROW(stokes_chunk.get(output_record), AipsError);
+  record.pol = full_stpol_map[stokes_chunk.getPolType()][0];
   stokes_chunk.accumulate(record);
-  EXPECT_EQ(1u, stokes_chunk.getNumPol());
-  status = stokes_chunk.get(output_record);
-  ASSERT_TRUE(status);
-  Matrix<Float> data_stokes = output_record.float_data;
-  EXPECT_EQ(IPosition(2, 1, 2), data_stokes.shape());
-  EXPECT_TRUE(allEQ(data_stokes, 4.0f));
+  EXPECT_EQ(0u, stokes_chunk.getNumPol());
+  EXPECT_THROW(stokes_chunk.get(output_record), AipsError);
+////KS: BUT this should be supported in future, i.e., IQ
+//  status = stokes_chunk.get(output_record);
+//  ASSERT_TRUE(status);
+//  Matrix<Float> data_stokes = output_record.float_data;
+//  EXPECT_EQ(IPosition(2, 1, 2), data_stokes.shape());
+//  EXPECT_TRUE(allEQ(data_stokes, 4.0f));
 
 // Test number of polarization
-  uInt expected_num_pol_stokes[num_seq][num_accum] = { { 1, 1, 1, 4 }, { 0, 1,
-      1, 4 }, { 0, 0, 0, 4 }, { 1, 1, 1, 4 } };
+  uInt expected_num_pol_stokes[num_seq][num_accum] = { { 1, 0, 0, 4 }, { 0, 0,
+      0, 4 }, { 0, 0, 0, 4 }, { 1, 0, 0, 4 } };
   uInt polid_order_stokes[num_seq][num_accum] = { { 0, 1, 2, 3 },
       { 1, 0, 2, 3 }, { 3, 2, 1, 0 }, { 0, 3, 1, 2 } };
   record.data.assign(data2);
@@ -2134,29 +2153,24 @@ TEST(DataChunkTest, WhiteBoxTest) {
     stokes_chunk.initialize(2);
     EXPECT_EQ(0u, stokes_chunk.getNumPol());
     for (size_t i = 0; i < num_accum; ++i) {
-      record.polno = polid_order_stokes[j][i];
+      record.pol = full_stpol_map[stokes_chunk.getPolType()][polid_order_stokes[j][i]];
       status = stokes_chunk.accumulate(record);
       ASSERT_TRUE(status);
       EXPECT_EQ(expected_num_pol_stokes[j][i], stokes_chunk.getNumPol());
     }
   }
 
-// Linpol single pol 1 and full pols are invalid
+// Linpol single pol 1 is invalid
   DataChunk linpol_chunk("linpol");
 
   linpol_chunk.initialize(2);
   data2 = 8.0;
-  record.polno = 1u;
+  record.pol = full_stpol_map[linpol_chunk.getPolType()][1];
   record.data.assign(data2);
   linpol_chunk.accumulate(record);
   EXPECT_EQ(0u, linpol_chunk.getNumPol());
-  status = linpol_chunk.get(output_record);
-  ASSERT_FALSE(status);
-  record.polno = 0u;
-  linpol_chunk.accumulate(record);
-  record.polno = 2u;
-  linpol_chunk.accumulate(record);
-  record.polno = 4u;
+  EXPECT_THROW(linpol_chunk.get(output_record), AipsError);
+  record.pol = full_stpol_map[linpol_chunk.getPolType()][0];
   linpol_chunk.accumulate(record);
   EXPECT_EQ(2u, linpol_chunk.getNumPol());
   status = linpol_chunk.get(output_record);
@@ -2166,18 +2180,18 @@ TEST(DataChunkTest, WhiteBoxTest) {
   EXPECT_TRUE(allEQ(data_linpol, 8.0f));
 
 // Test number of polarization
-  uInt expected_num_pol_linpol[num_seq][num_accum] = { { 1, 2, 2, 2 }, { 0, 2,
-      2, 2 }, { 0, 0, 0, 2 }, { 1, 1, 2, 2 } };
-  uInt polid_order_linpol[num_seq][num_accum] = { { 0, 1, 2, 3 },
-      { 1, 0, 2, 3 }, { 3, 2, 1, 0 }, { 0, 3, 1, 2 } };
+  size_t num_accum_linp = 2;
+  size_t num_seq_linp = 2;
+  uInt expected_num_pol_linpol[num_seq_linp][num_accum_linp] = { { 1, 2 }, { 0, 2 } };
+  uInt polid_order_linpol[num_seq_linp][num_accum_linp] = { { 0, 1 }, { 1, 0 } };
   record.data.assign(data2);
   record.flag.assign(flag2);
   record.flag_row = false;
-  for (size_t j = 0; j < num_seq; ++j) {
+  for (size_t j = 0; j < num_seq_linp; ++j) {
     linpol_chunk.initialize(2);
     EXPECT_EQ(0u, linpol_chunk.getNumPol());
-    for (size_t i = 0; i < num_accum; ++i) {
-      record.polno = polid_order_linpol[j][i];
+    for (size_t i = 0; i < num_accum_linp; ++i) {
+      record.pol = full_stpol_map[linpol_chunk.getPolType()][polid_order_linpol[j][i]];
       status = linpol_chunk.accumulate(record);
       ASSERT_TRUE(status);
       EXPECT_EQ(expected_num_pol_linpol[j][i], linpol_chunk.getNumPol());
@@ -2282,7 +2296,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   flag(3, 3) = true;
   Vector<Bool> flag_row(4, false);
   flag_row[3] = true;
-  r1.polno = 0u;
+  r1.pol = full_stpol_map[r1.pol_type][0];
   r1.setDataSize(num_chan);
   r1.data = data.row(0);
   r1.flag = flag.row(0);
@@ -2325,7 +2339,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_EQ(flag_row[0], output_record.flag_row);
 
   // Accumulate more data with same meta data but different polno
-  r1.polno = 1u;
+  r1.pol = full_stpol_map[r1.pol_type][1];
   r1.data = data.row(1);
   r1.flag = flag.row(1);
   r1.flag_row = flag_row[1];
@@ -2352,14 +2366,14 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_EQ(flag_row[0] || flag_row[1], output_record.flag_row);
 
 // Accumulate cross-pol data with same meta data
-  r1.polno = 2u;
+  r1.pol = full_stpol_map[r1.pol_type][2];
   r1.data = data.row(2);
   r1.flag = flag.row(2);
   r1.flag_row = flag_row[2];
   status = a.accumulate(r1);
   ASSERT_TRUE(status);
   EXPECT_EQ(1u, a.getNumberOfChunks());
-  r1.polno = 3u;
+  r1.pol = full_stpol_map[r1.pol_type][3];
   r1.data = data.row(3);
   r1.flag = flag.row(3);
   r1.flag_row = flag_row[3];
@@ -2395,12 +2409,12 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
 // Accumulate data with another meta data
   String intent2 = "OFF_SOURCE";
   String poltype2 = "circular";
-  r1.polno = 0u;
   r1.spw_id = spw_id + 1;
   r1.field_id = field_id + 1;
   r1.feed_id = feed_id + 1;
   r1.intent = intent2;
   r1.pol_type = poltype2;
+  r1.pol = full_stpol_map[r1.pol_type][0];
   Vector<Float> data2(8, -1.0f);
   Vector<Bool> flag2(8, false);
   r1.setDataSize(8);
@@ -2432,7 +2446,7 @@ TEST(DataAccumulatorTest, WhiteBoxTest) {
   EXPECT_TRUE(allEQ(output_flag2.row(0), flag2));
 
 // Accumulate another
-  r1.polno = 1u;
+  r1.pol = full_stpol_map[r1.pol_type][1];
   data2 *= 2.0f;
   flag2 = true;
   r1.data = data2;

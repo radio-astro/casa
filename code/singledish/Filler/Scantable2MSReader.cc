@@ -18,6 +18,7 @@
 #include <casacore/casa/Arrays/ArrayMath.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
 #include <casacore/tables/Tables/Table.h>
+#include <measures/Measures/Stokes.h>
 
 using namespace casacore;
 
@@ -153,6 +154,72 @@ Int getSubscan(Int srctype) {
   }
   Int default_subscan = 1;
   return getMapValue(subscan_map, srctype, default_subscan);
+}
+
+casacore::Stokes::StokesTypes getPol(uInt const polno, casacore::String const poltype) {
+	casacore::Stokes::StokesTypes stokes = casacore::Stokes::Undefined;
+	if (poltype == "linear") {
+		switch (polno) {
+		case 0:
+			stokes = casacore::Stokes::XX;
+			break;
+		case 1:
+			stokes = casacore::Stokes::YY;
+			break;
+		case 2:
+			stokes = casacore::Stokes::XY;
+			break;
+		case 3:
+			stokes = casacore::Stokes::YX;
+		}
+	} else if (poltype == "circular") {
+		switch (polno) {
+		case 0:
+			stokes = casacore::Stokes::RR;
+			break;
+		case 1:
+			stokes = casacore::Stokes::LL;
+			break;
+		case 2:
+			stokes = casacore::Stokes::RL;
+			break;
+		case 3:
+			stokes = casacore::Stokes::LR;
+			break;
+		}
+	} else if (poltype == "stokes") {
+		switch (polno) {
+		case 0:
+			stokes = casacore::Stokes::I;
+			break;
+		case 1:
+			stokes = casacore::Stokes::Q;
+			break;
+		case 2:
+			stokes = casacore::Stokes::U;
+			break;
+		case 3:
+			stokes = casacore::Stokes::V;
+			break;
+		}
+	} else if (poltype == "linpol") {
+		switch (polno) {
+		case 0:
+			stokes = casacore::Stokes::Plinear;
+			break;
+		case 1:
+			stokes = casacore::Stokes::Pangle;
+			break;
+		}
+	} else {
+		throw casacore::AipsError(
+				casacore::String("Invalid poltype") + poltype);
+	}
+	if (stokes == casacore::Stokes::Undefined) {
+		throw casacore::AipsError(
+				casacore::String("Invalid polno for type ") + poltype);
+	}
+	return stokes;
 }
 }
 
@@ -383,7 +450,9 @@ Bool Scantable2MSReader::getData(size_t irow, DataRecord &record) {
   scanrate_column_.get(index, record.scan_rate);
   record.feed_id = (Int) beam_column_(index);
   record.spw_id = (Int) ifno_column_(index);
-  polno_column_.get(index, record.polno);
+  uInt polno;
+  polno_column_.get(index, polno);
+  record.pol = getPol(polno, pol_type_);
   record.pol_type = pol_type_;
 //  std::cout << "set data size to " << num_chan_map_[record.spw_id] << " shape "
 //      << record.data.shape() << std::endl;

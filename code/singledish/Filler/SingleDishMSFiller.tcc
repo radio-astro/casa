@@ -841,7 +841,7 @@ void SingleDishMSFiller<T>::fillNROArray() {
   for (int iarr = 0; iarr < reader_->getNROArraySize(); ++iarr) {
         arr.put(iarr, iarr);
         bea.put(iarr, reader_->getNROArrayBeamId(iarr));
-        pol.put(iarr, reader_->getNROArrayPolId(iarr));
+        pol.put(iarr, reader_->getNROArrayPol(iarr));
         spw.put(iarr, reader_->getNROArraySpwId(iarr));
   }
 

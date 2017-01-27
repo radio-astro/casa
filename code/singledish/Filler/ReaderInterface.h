@@ -24,6 +24,7 @@
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/measures/Measures/MDirection.h>
 #include <casacore/tables/Tables/TableRecord.h>
+#include <measures/Measures/Stokes.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -75,8 +76,8 @@ public:
   virtual int getNROArrayBeamId(int /* array_id */) {
     return -1;
   }
-  virtual int getNROArrayPolId(int /* array_id */) {
-    return -1;
+  virtual casacore::Stokes::StokesTypes getNROArrayPol(int /* array_id */) {
+    return casacore::Stokes::Undefined;
   }
   virtual int getNROArraySpwId(int /* array_id */) {
     return -1;
