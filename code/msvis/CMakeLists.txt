@@ -40,6 +40,7 @@ casa_add_library( msvis
   MSVis/MsRows.cc
   MSVis/Partition.cc
   MSVis/PhaseShiftTvi.cc
+  MSVis/PointingDirectionCache.cc
   MSVis/Reweighter.cc
   MSVis/SelectAverageSpw.cc
   MSVis/SimpleSubMS.cc
@@ -48,6 +49,8 @@ casa_add_library( msvis
   MSVis/StatWT.cc
   MSVis/StokesVector.cc
   MSVis/SubMS.cc
+  MSVis/TimeAveragingVii.cc
+  MSVis/TimeAveragingViiInternals.cc
   MSVis/TransformingVi2.cc
   MSVis/UtilJ.cc
   MSVis/VBContinuumSubtractor.cc
@@ -131,12 +134,14 @@ install (FILES
 	MSVis/Partition.h
 	MSVis/PhaseShiftTvi.h
 	MSVis/Reweighter.h
+	MSVis/PointingDirectionCache.h
 	MSVis/SelectAverageSpw.h
 	MSVis/SimpleSimVi2.h
 	MSVis/SimpleSubMS.h
 	MSVis/StatWT.h
 	MSVis/StokesVector.h
 	MSVis/SubMS.h
+	MSVis/TimeAveragingVii.h
 	MSVis/UtilJ.h
 	MSVis/VBContinuumSubtractor.h
 	MSVis/VBGContinuumSubtractor.h
@@ -232,8 +237,9 @@ casa_add_unit_test ( MODULES msvis SOURCES MSVis/test/VisibilityIterator_Test.cc
 # Uncomment this when that problem is resolved
 #
 
+casa_add_google_test (MODULES msvis SOURCES MSVis/test/PointingDirectionCache_Test.cc) 
 casa_add_google_test (MODULES msvis SOURCES MSVis/test/VisibilityIterator_Gtest.cc MSVis/test/MsFactory.cc) 
-casa_add_google_test (MODULES msvis SOURCES MSVis/test/MSChecker_Gtest.cc MSVis/test/MSCheckerTest.cc) 
+casa_add_google_test (NOT_ON_APPLE MODULES msvis SOURCES MSVis/test/MSChecker_Gtest.cc MSVis/test/MSCheckerTest.cc) 
 
 casa_add_google_test (MODULES msvis SOURCES MSVis/test/tSimpleSimVi2_GT.cc) 
 casa_add_google_test (MODULES msvis SOURCES MSVis/test/tViiLayerFactory_GT.cc) 

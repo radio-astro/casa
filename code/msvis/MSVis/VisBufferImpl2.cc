@@ -2269,9 +2269,9 @@ VisBufferImpl2::fillDirectionAux (Vector<MDirection>& value,
 {
     value.resize (antenna.nelements()); // could also use nRow()
 
-    const ROMSPointingColumns & mspc = getViiP()->subtableColumns ().pointing();
-    state_p->pointingTableLastRow_p = mspc.pointingIndex (antenna (0),
-                                                          time()(0), state_p->pointingTableLastRow_p);
+//    const ROMSPointingColumns & mspc = getViiP()->subtableColumns ().pointing();
+//    state_p->pointingTableLastRow_p = mspc.pointingIndex (antenna (0),
+//                                                          time()(0), state_p->pointingTableLastRow_p);
 
     if (getViiP()->allBeamOffsetsZero() && state_p->pointingTableLastRow_p < 0) {
 
@@ -2286,14 +2286,10 @@ VisBufferImpl2::fillDirectionAux (Vector<MDirection>& value,
 
         DebugAssert(antenna (row) >= 0 && feed (row) >= 0, AipsError);
 
-        Int pointIndex1 = mspc.pointingIndex(antenna (row), time()(row), state_p->pointingTableLastRow_p);
+        bool ok;
+        std::tie (ok, value (row)) = getViiP()->getPointingAngle (antenna (row), time() (row));
 
-        if (pointIndex1 >= 0) {
-
-            state_p->pointingTableLastRow_p = pointIndex1;
-            value(row) = mspc.directionMeas(pointIndex1, timeInterval()(row));
-        }
-        else {
+        if (! ok) {
 
             value(row) = phaseCenter(); // nothing found, use phase center
         }

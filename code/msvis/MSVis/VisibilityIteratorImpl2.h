@@ -64,6 +64,8 @@ class VisBuffer2;
 
 class ChannelSelector;
 class ChannelSelectorCache;
+class PointingDirectionCache;
+class PointingSource;
 class SpectralWindowChannelsCache;
 class SpectralWindowChannels;
 class SubtableColumns;
@@ -233,6 +235,7 @@ public:
     // calling this.
     virtual void setInterval (casacore::Double timeInterval);
 
+
     // Set the 'blocking' size for returning data.
     // With the default (0) only a single integration is returned at a time, this
     // is what is currently required for the calibration software. With blocking
@@ -311,6 +314,8 @@ public:
     // with antenna and is the same one as used to define the BEAM_OFFSET
     // parameter in the feed table). The cube axes are receptor, antenna, feed.
     virtual const casacore::Cube<casacore::RigidVector<casacore::Double, 2> > & getBeamOffsets () const;
+
+    virtual std::pair<bool, casacore::MDirection> getPointingAngle (int antenna, double time) const;
 
     // true if all elements of the cube returned by getBeamOffsets are zero
     virtual casacore::Bool allBeamOffsetsZero () const;
@@ -953,6 +958,8 @@ protected:
     casacore::Int                           nCorrelations_p;
     casacore::Int                           nRowBlocking_p; // suggested # of rows in a subchunk
     PendingChanges                pendingChanges_p; // holds pending changes to VI properties
+    mutable std::unique_ptr<PointingDirectionCache>  pointingDirectionCache_p;
+    mutable std::unique_ptr<PointingSource>  pointingSource_p;
     casacore::Int                           reportingFrame_p; // default frequency reporting (not selecting)
                                                     // frame of reference
     RowBounds                     rowBounds_p; // Subchunk row management object (see above)

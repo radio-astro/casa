@@ -48,6 +48,7 @@
 #include <msvis/MSVis/VisBufferComponents2.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisibilityIteratorImpl2.h>
+#include <msvis/MSVis/PointingDirectionCache.h>
 #include <msvis/MSVis/VisModelDataI.h>
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/ArrayColumn.h>
@@ -1098,6 +1099,19 @@ VisibilityIteratorImpl2::getBeamOffsets () const
     return msIter_p->getBeamOffsets ();
 }
 
+std::pair <bool, casacore::MDirection>
+VisibilityIteratorImpl2::getPointingAngle (int antenna, double time) const
+{
+  if (! pointingDirectionCache_p){
+      pointingSource_p.reset (new PointingColumns (subtableColumns_p->pointing()));
+      pointingDirectionCache_p.reset (new PointingDirectionCache (nAntennas(),
+                                                                  * pointingSource_p.get()));
+  }
+
+  return pointingDirectionCache_p->getPointingDirection (antenna, time, phaseCenter());
+}
+
+
 Vector<Double>
 VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
                                          Int spectralWindowId, Int msId) const
@@ -1730,7 +1744,6 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
                 // of the subchunk.
 
                 rowBounds_p.subchunkEnd_p = i - 1;
-
             }
         }
     }
@@ -1766,6 +1779,7 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
     Vector<Stokes::StokesTypes> correlationsSelected = getCorrelationTypesSelected();
 
     String msName = ms().tableName ();
+
     vb_p->configureNewSubchunk (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
                                 isNewSpectralWindow (), subchunk_p, rowBounds_p.subchunkNRows_p,
                                 channelSelector_p->getNFrequencies(), nCorrelations_p,
@@ -2223,6 +2237,13 @@ VisibilityIteratorImpl2::configureNewChunk ()
 
         timeFrameOfReference_p = msIter_p->msColumns().timeMeas () (0).getRef();
 
+
+
+    }
+
+    if (isNewMs ()){ // New ms so flush pointing caches (if they exist).
+        pointingDirectionCache_p.reset();
+        pointingSource_p.reset ();
     }
 
     if (msIter_p->newField () || msIterAtOrigin_p) {
@@ -2280,7 +2301,6 @@ VisibilityIteratorImpl2::setTileCache ()
         }
 
     } else {
-
         setMsCacheSizes (theMs, columnIds);
     }
 
