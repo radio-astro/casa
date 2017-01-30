@@ -7,10 +7,11 @@ import pipeline.h.cli.utils as utils
 
 def hif_editimlist(vis=None, imagename=None, intent=None, field=None,
                    spw=None, contfile=None, linesfile=None, uvrange=None,
-                   specmode=None, outframe=None, hm_imsize=None, hm_cell=None,
+                   specmode=None, outframe=None, imsize=None, cell=None,
                    calmaxpix=None, phasecenter=None,
-                   nchan=None, start=None, width=None, nbins=None,
-                   polproducts=None, parameter_file=False, mfs_nterms=None, tapersize=None,
+                   nchan=None, start=None, width=None, nbin=None,
+                   stokes=None, parameter_file=False, nterms=None,
+                   editmode=None,
                    pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

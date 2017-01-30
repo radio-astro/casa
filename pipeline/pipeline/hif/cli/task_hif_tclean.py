@@ -6,9 +6,12 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_tclean(vis=None, imagename=None, intent=None, field=None, spw=None, spwsel_lsrk=None, spwsel_topo=None,
-               uvrange=None, specmode=None, gridder=None, deconvolver=None, outframe=None, 
-	       imsize=None, cell=None, phasecenter=None, nchan=None, start=None,
-	       width=None, nbin=None, weighting=None, robust=None, noise=None, npixels=None,
+               uvrange=None, specmode=None, gridder=None, deconvolver=None,
+               nterms=None,
+               outframe=None,
+	       imsize=None, cell=None, phasecenter=None, stokes=None, nchan=None, start=None,
+	       width=None, nbin=None, weighting=None,
+           robust=None, noise=None, npixels=None,
 	       restoringbeam=None, hm_masking=None, hm_maskthreshold=None, hm_cleaning=None, mask=None,
 	       niter=None, threshold=None, tlimit=None, masklimit=None,
 	       maxncleans=None, cleancontranges=None, subcontms=None, parallel=None,

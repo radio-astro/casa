@@ -72,12 +72,27 @@ Edit a list of images to be cleaned.
        </allowed>
   </param>
 
-  <param type="stringArray" name="hm_imsize">
+  <!--<param type="string" name="gridder">-->
+      <!--<description></description>-->
+      <!--<value></value>-->
+  <!--</param>-->
+
+  <!--<param type="string" name="spwsel_lsrk">-->
+      <!--<description></description>-->
+      <!--<value></value>-->
+  <!--</param>-->
+
+  <!--<param type="string" name="spwsel_topo">-->
+      <!--<description></description>-->
+      <!--<value></value>-->
+  <!--</param>-->
+
+  <param type="stringArray" name="imsize">
     <description>Image X and Y size(s) in pixels or PB level (single fields), \'\' for default. Single value same for both. \'&lt;number&gt;pb\' for PB level.</description>
     <value></value>
   </param>
 
-  <param type="stringArray" name="hm_cell">
+  <param type="stringArray" name="cell">
     <description>Image X and Y cell size(s) with units or pixels per beam, \'\' for default. Single value same for both. \'&lt;number&gt;ppb\' for pixels per beam.</description>
     <value></value>
   </param>
@@ -110,13 +125,13 @@ Edit a list of images to be cleaned.
     <value type="string"></value>
   </param>
 
-  <param type="any" name="nbins">
+  <param type="any" name="nbin">
     <description>Channel binning factors per spw, \'\' for default.</description>
     <any type="variant"/>
     <value type="string"></value>
   </param>
 
-  <param type="string" name="polproducts">
+  <param type="string" name="stokes">
     <description></description>
     <value></value>
   </param>
@@ -126,14 +141,18 @@ Edit a list of images to be cleaned.
     <value></value>
   </param>
 
-  <param type="string" name="mfs_nterms">
+  <param type="string" name="nterms">
     <description></description>
-    <value></value>
+    <value>2</value>
   </param>
 
-  <param type="string" name="tapersize">
-    <description></description>
-    <value></value>
+  <param type="string" name="editmode">
+      <description>The edit mode of the task (e.g. add, edit)</description>
+      <value>add</value>
+      <allowed kind="enum">
+          <value>add</value>
+          <value>edit</value>
+      </allowed>
   </param>
 
   <param type="string" name="pipelinemode">
@@ -243,14 +262,14 @@ specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube'. \'\' defaults to
         mode='cube' produce an LSRK frequency cube, channels are specified
              in frequency
 
-hm_cell -- Cell size (x, y)
+cell -- Cell size (x, y)
     default '' Compute cell size based on the UV coverage of all the fields
          to be imaged and use a 5 pix per beam sampling.
          The pix per beam specification uses the above default cell size
          ('5ppb') and scales it accordingly.
     example: ['0.5arcsec', '0.5arcsec'] '3ppb'
 
-hm_imsize -- Image X and Y size in pixels or PB level for single field. The
+imsize -- Image X and Y size in pixels or PB level for single field. The
     explicit sizes must be even and divisible by 2,3,5,7 only.
     default: '' The default values are derived as follows:
          1. Determine phase center and spread of field centers around it.
@@ -273,7 +292,7 @@ width -- Output channel width.
     example: '24.2kHz'
              'pilotimage' for 15 MHz / 8 channel heuristic
 
-nbins -- Channel binning factors per spw
+nbin -- Channel binning factors per spw
     default: '' Binning factors for each spw. Format: 'spw1:nb1,spw2:nb2,...'
              Optional wildcard: '*:nb'
     example: '9:2,11:4,13:2,15:8'
@@ -329,13 +348,13 @@ start -- First channel for frequency mode images.
     default '' Starts at first input channel of the spw.
     example: '22.3GHz'
 
-polproducts --
+stokes --
 
 parameter_file --
 
-mfs_nterms --
+nterms --
 
-tapersize --
+mode --
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but

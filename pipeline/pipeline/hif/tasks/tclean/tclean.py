@@ -29,9 +29,12 @@ LOG = infrastructure.get_logger(__name__)
 class TcleanInputs(cleanbase.CleanBaseInputs):
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
                  intent=None, field=None, spw=None, spwsel_lsrk=None, spwsel_topo=None, uvrange=None, specmode=None,
-                 gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
-                 phasecenter=None, nchan=None, start=None, width=None, nbin=None,
-                 weighting=None, robust=None, noise=None, npixels=None,
+                 gridder=None, deconvolver=None,
+                 nterms=None,
+                 outframe=None, imsize=None, cell=None,
+                 phasecenter=None, stokes=None, nchan=None, start=None, width=None, nbin=None,
+                 weighting=None,
+                 robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
                  noiseimage=None, hm_masking=None, hm_maskthreshold=None, hm_cleaning=None, tlimit=None,
                  masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
@@ -96,6 +99,17 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     @deconvolver.setter
     def deconvolver(self, value):
         self._deconvolver = value
+
+    @property
+    def nterms(self):
+        if not self._nterms:
+            return 2
+        else:
+            return self._nterms
+
+    @nterms.setter
+    def nterms(self, value):
+        self._nterms = value
 
     @property
     def robust(self):
@@ -854,11 +868,13 @@ class Tclean(cleanbase.CleanBase):
                 scan='', specmode='mfs', gridder=inputs.gridder,
                 pblimit=self.pblimit_image, niter=0,
                 threshold='0.0mJy', deconvolver=inputs.deconvolver,
+                nterms=inputs.nterms,
                 interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
                 start=inputs.start, width=inputs.width, imsize=inputs.imsize,
                 cell=inputs.cell, phasecenter=inputs.phasecenter,
-                stokes='I',
-                weighting=inputs.weighting, robust=inputs.robust,
+                stokes=inputs.stokes,
+                weighting=inputs.weighting,
+                robust=inputs.robust,
                 npixels=inputs.npixels,
                 restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
                 mask='', startmodel=cont_image_name,
@@ -922,14 +938,15 @@ class Tclean(cleanbase.CleanBase):
                                                   specmode=inputs.specmode,
                                                   gridder=inputs.gridder,
                                                   deconvolver=inputs.deconvolver,
+                                                  nterms=inputs.nterms,
                                                   outframe=inputs.outframe,
                                                   imsize=inputs.imsize,
                                                   cell=inputs.cell,
                                                   phasecenter=inputs.phasecenter,
+                                                  stokes=inputs.stokes,
                                                   nchan=inputs.nchan,
                                                   start=inputs.start,
                                                   width=inputs.width,
-                                                  stokes=stokes,
                                                   weighting=inputs.weighting,
                                                   robust=inputs.robust,
                                                   noise=inputs.noise,

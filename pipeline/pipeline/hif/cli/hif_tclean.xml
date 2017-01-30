@@ -86,6 +86,11 @@ Compute a clean map.
        </allowed>
   </param>
 
+  <param type="int" name="nterms" subparam="true">
+     <description>Number of terms when deconvolver=\'mtmfs\'</description>
+     <value>2</value>
+  </param>
+
   <param type="string" name="outframe" subparam="true">
      <description>velocity frame of output image (LSRK, \'\' for default)</description>
      <value></value>
@@ -109,6 +114,11 @@ Compute a clean map.
     <description>Image center (direction or field index), \'\' for default</description>
     <any type="variant"/>
     <value type="string"></value>
+  </param>
+
+  <param type="string" name="stokes">
+     <description>Stokes Planes to make</description>
+     <value>I</value>
   </param>
 
   <param type="int" name="nchan" subparam="true">
@@ -284,10 +294,12 @@ Compute a clean map.
         <default param="uvrange"><value type="string"></value></default>
         <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
+        <default param="nterms"><value type="int">2</value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
         <default param="start"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
+        <default param="stokes"><value type="string">I</value></default>
         <default param="restoringbeam"><value type="stringArray"></value></default>
         <default param="noise"><value type="string">1.0Jy</value></default>
         <default param="npixels"><value type="int">0</value></default>
@@ -305,10 +317,12 @@ Compute a clean map.
         <default param="uvrange"><value type="string"></value></default>
         <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
+        <default param="nterms"><value type="int">2</value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
         <default param="start"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
+        <default param="stokes"><value type="sting">I</value></default>
         <default param="restoringbeam"><value type="stringArray"></value></default>
       </equals>
     </when>
@@ -509,6 +523,8 @@ phasecenter -- Direction measure or field id for the mosaic center.
        2. Derive the mean direction from the directions array.
     default: \'\'
     example: 2
+
+stokes --
 
 nchan -- Number of channels or planes in the output image, -1 for all
     default: -1

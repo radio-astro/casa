@@ -29,14 +29,18 @@ class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None, datacolumn=None,
                  intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
-                 gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
+                 gridder=None, deconvolver=None,
+                 nterms=None,
+                 outframe=None, imsize=None, cell=None,
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
-                 weighting=None, robust=None, noise=None, npixels=None,
+                 weighting=None,
+                 robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, hm_masking=None, hm_maskthreshold=None, pblimit=None, niter=None,
                  threshold=None, sensitivity=None, result=None, parallel=None):
         self._init_properties(vars())
 
     deconvolver = basetask.property_with_default('deconvolver', '')
+    nterms = basetask.property_with_default('nterms', 2)
     field = basetask.property_with_default('field', '')
     gridder = basetask.property_with_default('gridder', '')
     imagename = basetask.property_with_default('imagename', '')
@@ -194,7 +198,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                                   intent=inputs.intent,
                                   spw=inputs.spw,
                                   specmode=inputs.specmode,
-                                  multiterm=2 if inputs.deconvolver=='mtmfs' else None,
+                                  multiterm=inputs.nterms if inputs.deconvolver=='mtmfs' else None,
                                   plotdir=plotdir)
         else:
             result = inputs.result
@@ -279,6 +283,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             'niter':         inputs.niter,
             'threshold':     inputs.threshold,
             'deconvolver':   inputs.deconvolver,
+            'nterms':        inputs.nterms,
             'interactive':   0,
             'outframe':      inputs.outframe,
             'nchan':         inputs.nchan,

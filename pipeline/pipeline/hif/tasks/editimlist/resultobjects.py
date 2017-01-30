@@ -17,6 +17,7 @@ class EditimlistResult(basetask.Results):
 
     def merge_with_context(self, context):
         new_targets = self.targets
+
         new_targets_names = [x['field'] for x in self.targets]
         print 'new targets', new_targets_names
 
@@ -38,8 +39,11 @@ class EditimlistResult(basetask.Results):
                     context.clean_list_pending[indices[0]] = new_target
                 if len(indices) == 1:
                     print('Replacing ' + new_target['field'] + ' with ' + existing_targets[indices[0]]['field'])
-                    context.clean_list_pending[indices[0]] = copy.deepcopy(new_target)
-                    print(' ')
+                    tmp_new_target = copy.deepcopy(context.clean_list_pending[indices[0]])
+                    for k, v in new_target.iteritems():
+                        tmp_new_target[k] = v
+                    context.clean_list_pending[indices[0]] = copy.deepcopy(tmp_new_target)
+                    self.targets[0] = copy.deepcopy(context.clean_list_pending[indices[0]])
 
         # context.clean_list_pending = copy.deepcopy(new_list_pending)
         context.contfile = self.contfile
