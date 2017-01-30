@@ -423,7 +423,7 @@ public:
 
     virtual const casacore::Cube<casacore::RigidVector<casacore::Double, 2> > & getBeamOffsets () const = 0;
 
-    virtual std::pair<bool, casacore::MDirection> getPointingAngle (int antenna, double time) const;
+    virtual std::pair<bool, casacore::MDirection> getPointingAngle (int antenna, double time) const = 0;
 
     // Return the hour angle for the specified time
 

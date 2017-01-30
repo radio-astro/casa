@@ -236,11 +236,11 @@ ViImplementation2::doWeightScaling (Bool hasWeightScaling,
 //     vb->setFillable (fillable);
 // }
 
-pair<bool, casacore::MDirection>
-ViImplementation2::getPointingAngle (int antenna, double time) const
-{
-    throw AipsError ("Not implemented");
-}
+// pair<bool, casacore::MDirection>
+// ViImplementation2::getPointingAngle (int antenna, double time) const
+// {
+//     throw AipsError ("Not implemented");
+// }
 
 } // end namespace vi
 

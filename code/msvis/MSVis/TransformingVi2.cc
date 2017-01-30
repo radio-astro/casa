@@ -331,6 +331,12 @@ TransformingVi2::getObservatoryPosition ()  const
     return getVii()->getObservatoryPosition ();
 }
 
+std::pair<bool, casacore::MDirection> 
+TransformingVi2::getPointingAngle (int antenna, double time) const
+{
+    return getVii()->getPointingAngle (antenna, time);
+}
+
 Vector<Float>
 TransformingVi2::getReceptor0Angle ()
 {

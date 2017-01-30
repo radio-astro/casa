@@ -147,8 +147,8 @@ public:
     // the interval requires calling origin chunks before performing
     // further iterator.
 
-    virtual casacore::Double getInterval() const;
-    virtual void setInterval (casacore::Double timeInterval);
+    virtual double getInterval() const;
+    virtual void setInterval (double timeInterval);
 
     // Select the channels to be returned.  Requires calling originChunks before
     // performing additional iteration.
@@ -210,7 +210,7 @@ public:
 
     // Return actual time interval
 
-    virtual void  exposure (casacore::Vector<casacore::Double> & expo) const;
+    virtual void  exposure (casacore::Vector<double> & expo) const;
 
     // Return feed1
 
@@ -298,19 +298,19 @@ public:
 
     // Return MJD midpoint of interval.
 
-    virtual void time (casacore::Vector<casacore::Double> & t) const;
+    virtual void time (casacore::Vector<double> & t) const;
 
     // Return MJD centroid of interval.
 
-    virtual void timeCentroid (casacore::Vector<casacore::Double> & t) const;
+    virtual void timeCentroid (casacore::Vector<double> & t) const;
 
     // Return nominal time interval
 
-    virtual void timeInterval (casacore::Vector<casacore::Double> & ti) const;
+    virtual void timeInterval (casacore::Vector<double> & ti) const;
 
     // Return u,v and w (in meters)
 
-    virtual void uvw (casacore::Matrix<casacore::Double> & uvwmat) const;
+    virtual void uvw (casacore::Matrix<double> & uvwmat) const;
 
     // Return the visibilities as found in the casacore::MS, casacore::Cube (npol,nchan,nrow).
 
@@ -360,46 +360,48 @@ public:
 
     virtual casacore::Bool allBeamOffsetsZero () const;
 
+    virtual std::pair<bool, casacore::MDirection> getPointingAngle (int antenna, double time) const;
+
     // Return the antenna AZ/EL casacore::Vector (nant)
 
-    virtual casacore::MDirection azel0 (casacore::Double time) const;
-    static void azel0Calculate (casacore::Double time, casacore::MSDerivedValues & msd,
-                                casacore::MDirection & azel0, const casacore::MEpoch & mEpoch0);
+    virtual casacore::MDirection azel0 (double time) const;
+//    static void azel0Calculate (double time, MSDerivedValues & msd,
+//                                MDirection & azel0, const MEpoch & mEpoch0);
 
-    virtual const casacore::Vector<casacore::MDirection> & azel (casacore::Double time) const;
-    static void azelCalculate (casacore::Double time, casacore::MSDerivedValues & msd, casacore::Vector<casacore::MDirection> & azel,
-                               casacore::Int nAnt, const casacore::MEpoch & mEpoch0);
+    virtual const casacore::Vector<casacore::MDirection> & azel (double time) const;
+//    static void azelCalculate (double time, MSDerivedValues & msd, Vector<MDirection> & azel,
+//                               Int nAnt, const MEpoch & mEpoch0);
 
     // Return feed parallactic angles casacore::Vector (nant) (1 feed/ant)
 
-    virtual const casacore::Vector<casacore::Float> & feed_pa (casacore::Double time) const;
-    static casacore::Vector<casacore::Float> feed_paCalculate (casacore::Double time, casacore::MSDerivedValues & msd,
-                                           casacore::Int nAntennas, const casacore::MEpoch & mEpoch0,
-                                           const casacore::Vector<casacore::Float> & receptor0Angle);
+    virtual const casacore::Vector<casacore::Float> & feed_pa (double time) const;
+//    static Vector<Float> feed_paCalculate (double time, MSDerivedValues & msd,
+//                                           Int nAntennas, const MEpoch & mEpoch0,
+//                                           const Vector<Float> & receptor0Angle);
 
     // Return a cube containing pairs of coordinate offsets for each
     // receptor of each feed (values are in radians, coordinate system is fixed
     // with antenna and is the same one as used to define the BEAM_OFFSET
     // parameter in the feed table). The cube axes are receptor, antenna, feed.
 
-    virtual const casacore::Cube<casacore::RigidVector<casacore::Double, 2> > & getBeamOffsets () const;
+    virtual const casacore::Cube<casacore::RigidVector<double, 2> > & getBeamOffsets () const;
 
     // Return the hour angle for the specified time
 
-    virtual casacore::Double hourang (casacore::Double time) const;
-    static casacore::Double hourangCalculate (casacore::Double time, casacore::MSDerivedValues & msd, const casacore::MEpoch & mEpoch0);
+    virtual double hourang (double time) const;
+    static double hourangCalculate (double time, casacore::MSDerivedValues & msd, const casacore::MEpoch & mEpoch0);
 
     // Return nominal parallactic angle at specified time
     // (does not include feed position angle offset--see feed_pa)
     // A global value for all antennas (e.g., small array)
 
-    virtual const casacore::Float & parang0 (casacore::Double time) const;
-    static casacore::Float parang0Calculate (casacore::Double time, casacore::MSDerivedValues & msd, const casacore::MEpoch & epoch0);
+    virtual const casacore::Float & parang0 (double time) const;
+    static casacore::Float parang0Calculate (double time, casacore::MSDerivedValues & msd, const casacore::MEpoch & epoch0);
 
     // Per antenna:
 
-    virtual const casacore::Vector<casacore::Float> & parang (casacore::Double time) const;
-    static casacore::Vector<casacore::Float> parangCalculate (casacore::Double time, casacore::MSDerivedValues & msd,
+    virtual const casacore::Vector<casacore::Float> & parang (double time) const;
+    static casacore::Vector<casacore::Float> parangCalculate (double time, casacore::MSDerivedValues & msd,
                                           int nAntennas, const casacore::MEpoch mEpoch0);
 
     // Return the current phase center as an MDirection
@@ -413,7 +415,7 @@ public:
     // for VisBuffer in the multi-feed case. It may be worth to change the
     // interface of feed_pa to return the information for all feeds.
 
-    virtual const casacore::Cube<casacore::Double> & receptorAngles () const;
+    virtual const casacore::Cube<double> & receptorAngles () const;
 
     //   +=========================+
     //   |                         |
@@ -439,13 +441,13 @@ public:
     virtual casacore::Int getReportingFrameOfReference () const;
     virtual void setReportingFrameOfReference (casacore::Int frame);
 
-    virtual casacore::Vector<casacore::Int> getChannels (casacore::Double time, casacore::Int frameOfReference,
+    virtual casacore::Vector<casacore::Int> getChannels (double time, casacore::Int frameOfReference,
                                      casacore::Int spectralWindowId, casacore::Int msId) const;
     virtual casacore::Vector<casacore::Int> getCorrelations () const;
     virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesDefined () const;
     virtual casacore::Vector<casacore::Stokes::StokesTypes> getCorrelationTypesSelected () const;
 
-    virtual casacore::Vector<casacore::Double> getFrequencies (casacore::Double time, casacore::Int frameOfReference,
+    virtual casacore::Vector<double> getFrequencies (double time, casacore::Int frameOfReference,
                                            casacore::Int spectralWindowId, casacore::Int msId) const;
     virtual void dataDescriptionIds(casacore::Vector<casacore::Int> &) const;
 
@@ -566,6 +568,8 @@ public:
 
 protected:
 
+    //const VisBuffer2 * getVisBufferConst () const /*__attribute__((deprecated))*/ { throw casacore::AipsError ("Not implemented"); }
+    const VisBuffer2 * getVisBufferConst () const {return vb_p;}
     TransformingVi2 (ViImplementation2 * inputVi);
 
     void configureNewSubchunk ();
@@ -581,7 +585,7 @@ protected:
     VisibilityIterator2 * getVi () const;
     ViImplementation2 * getVii () const;
     void setVisBuffer (VisBuffer2 * vb);
-    VisBuffer2 * getVisBufferConst () const {return vb_p;}
+    virtual VisBuffer2 * getVisBuffer () const {return vb_p;}
 
     // jagonzal (to be reviewed by jjacobs): I need to set inputVii_p to NULL from
     // MSTransformIterator destructor because MSTransformIteratorFactory is borrowing
