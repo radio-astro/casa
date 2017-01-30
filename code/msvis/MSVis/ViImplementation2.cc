@@ -15,6 +15,14 @@ namespace casa {
 
 namespace vi {
 
+// #pragma message "Change to pure abstract method before checkin."
+// Vector<MPosition>
+// ViImplementation2::antennaPositions () const
+// {
+//     return Vector<MPosition> ();
+// }
+
+
 void
 ViImplementation2::associateVbWithVi2 (VisBuffer2 * vb, const VisibilityIterator2 * vi)
 {
@@ -120,6 +128,18 @@ ViImplementation2::createAttachedVisBuffer (VisBufferType t, VisBufferOptions op
     return VisBuffer2::factory (this, t, options);
 }
 
+// MSDerivedValues
+// ViImplementation2::makeMsd ()
+// {
+//     MSDerivedValues result;
+
+//     result.setAntennaPositions (antennaPositions());
+//     result.setAntennaMount (antennaMounts());
+//     result.setFieldCenter (phaseCenter());
+
+//     return result;
+// }
+
 
 Double
 ViImplementation2::hourangCalculate (Double time, MSDerivedValues & msd, const MEpoch & mEpoch0)
@@ -208,6 +228,19 @@ ViImplementation2::doWeightScaling (Bool hasWeightScaling,
     }
 }
 
+// void
+// ViImplementation2::setVisBufferFillable (VisBuffer2 * vb, Bool fillable)
+// {
+//     // Method to allow access to protected method of VB2
+
+//     vb->setFillable (fillable);
+// }
+
+pair<bool, casacore::MDirection>
+ViImplementation2::getPointingAngle (int antenna, double time) const
+{
+    throw AipsError ("Not implemented");
+}
 
 } // end namespace vi
 
