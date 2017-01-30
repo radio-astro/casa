@@ -1,7 +1,7 @@
 #ifndef IMAGEANALYSIS_STATIMAGECREATOR_H
 #define IMAGEANALYSIS_STATIMAGECREATOR_H
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <imageanalysis/ImageAnalysis/ImageStatsConfigurator.h>
 
 #include <casacore/scimath/Mathematics/Interpolate2D.h>
 
@@ -9,7 +9,7 @@
 
 namespace casa {
 
-class StatImageCreator : public ImageTask<Float> {
+class StatImageCreator : public ImageStatsConfigurator {
 	// <summary>
 	// Create a "statistic" image from an image.
 	// </summary>
@@ -43,7 +43,7 @@ public:
 	// destructor
 	~StatImageCreator() {}
 
-	SPIIF compute() const;
+	SPIIF compute();
 
 	String getClass() const { const static String s = "StatImageCreator"; return s; }
 
@@ -95,16 +95,16 @@ private:
     casacore::String _statName = "standard deviation";
     casacore::LatticeStatsBase::StatisticsTypes _statType
         = casacore::LatticeStatsBase::SIGMA;
-
+    casacore::Bool _doMask = casacore::False;
 
     // compute the storage lattice
     void _computeStorage(
-        Lattice<Float> *const& writeTo, SPCIIF subImage,
+        TempImage<Float> *const& writeTo, SPCIIF subImage,
         uInt nxpts, uInt nypts, Int xstart, Int ystart
-    ) const;
+    );
 
     void _doInterpolation(
-        TempImage<Float>& output, ArrayLattice<Float>& store,
+        TempImage<Float>& output, TempImage<Float>& store,
         SPCIIF subImage, uInt nxpts, uInt nypts, Int xstart, Int ystart
     ) const;
 
@@ -115,7 +115,9 @@ private:
     // corresponds to pixel (start/pointsPerCell - 1) in the storage matrix (which
     // is always negative and always greater than -1).
     void _interpolate(
-        Matrix<Float>& result, const Matrix<Float>& storage,
+        Matrix<Float>& result, Matrix<Bool>& resultMask,
+        const Matrix<Float>& storage,
+        const Matrix<Bool>& storeMask,
         const std::pair<uInt, uInt>& start
     ) const;
 
