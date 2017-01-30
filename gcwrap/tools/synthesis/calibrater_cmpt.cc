@@ -42,9 +42,12 @@ using namespace casa;
 using namespace casacore;
 namespace casac {
 
+#define USEOLDVI true
+
 calibrater::calibrater() : 
   itsMS(0),
-  oldcal_(true)  // use OldCalibrater for now...
+  oldcal_(USEOLDVI),  // use OldCalibrater by defaultfor now...
+  itsCalibrater(0)
 {
   // Default constructor
   //    itsApplyMap   SimpleOrderedMap   Cal. table apply assignments
@@ -52,7 +55,6 @@ calibrater::calibrater() :
   itsLog = new casacore::LogIO();
   itsCalibrater = casa::Calibrater::factory(oldcal_);
   LogIO os (LogOrigin ("calibrater", "ctor"));
-
 }
 
 calibrater::~calibrater()
@@ -1290,6 +1292,68 @@ calibrater::done()
  }
  return rstat;
 };
+
+
+//----------------------------------------------------------------------------
+
+bool calibrater::setvi(const bool old, const bool quiet)
+{
+
+  LogIO os(LogOrigin("calibrater", "setvi(bool,bool)"));
+  if (itsMS) {
+    os << LogIO::SEVERE
+       << "Must call setvi _before_ open!"
+       << LogIO::POST;
+    return false;
+  }
+
+  if (old) {          // OLD is requested
+
+    if (!oldcal_) {    // nominally using NEW
+      oldcal_=true;
+      if (itsCalibrater) delete itsCalibrater;
+      itsCalibrater=casa::Calibrater::factory(true);   // force OldCalibrater
+      
+      if (!quiet) {
+	os << LogIO::WARN
+	   << "Forcing use of OLD VisibilityIterator."
+	   << LogIO::POST;
+      }    
+    }
+    else {
+      if (!quiet) {
+	os << LogIO::WARN
+	   << "Already using OLD VisibilityIterator."
+	   << LogIO::POST;
+      }
+    }
+  }
+  else {  // asking for new
+
+    if (oldcal_) {     // nominally using OLD
+      oldcal_=false;
+      if (itsCalibrater) delete itsCalibrater;
+      itsCalibrater=casa::Calibrater::factory(false);   // force Calibrater
+      
+      if (!quiet) {
+	os << LogIO::WARN
+	   << "Forcing use of NEW VisibilityIterator."
+	   << LogIO::POST;
+      }    
+    }
+    else {
+      if (!quiet) {
+	os << LogIO::WARN
+	   << "Already using NEW VisibilityIterator."
+	   << LogIO::POST;
+      }
+    }
+  }
+
+  return true;
+
+}
+
 
 
 //----------------------------------------------------------------------------

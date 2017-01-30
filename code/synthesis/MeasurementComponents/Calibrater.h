@@ -42,6 +42,7 @@
 #include <ms/MSSel/MSSelection.h>
 #include <msvis/MSVis/VisibilityProcessing.h>
 #include <msvis/MSVis/ViFrequencySelection.h>
+#include <msvis/MSVis/SimpleSimVi2.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -59,8 +60,11 @@ class Calibrater
   Calibrater();
 
 
-  // Simple casacore::MS-only ctor
+  // Simple MS-only ctor
   Calibrater(casacore::String msname);
+
+  // Simple simulated-data Calibrater
+  Calibrater(const vi::SimpleSimVi2Parameters& ssvp);
 
   // Destructor
   virtual ~Calibrater();
@@ -101,7 +105,7 @@ class Calibrater
 				   const casacore::Record& applypar);
 
   // Set up apply-able calibration via a Cal Library
-  virtual casacore::Bool setcallib(casacore::Record callib) = 0;
+  virtual casacore::Bool setcallib(casacore::Record /*callib*/) { throw(casacore::AipsError("Calibrater::setcallib not implemented")); };
   virtual casacore::Bool setcallib2(casacore::Record callib);
   casacore::Bool validatecallib(casacore::Record callib);
 
@@ -167,12 +171,12 @@ class Calibrater
 
   // Apply all setapply'd calibration components to DATA and
   //  deposit in the CORRECTED_DATA column
-  virtual casacore::Bool correct(casacore::String mode="calflag") = 0;
+  virtual casacore::Bool correct(casacore::String /* mode="calflag"*/)  { throw(casacore::AipsError("Calibrater::correct not implemented")); };
   casacore::Bool correct2(casacore::String mode="calflag");
 
   // Apply all setapply'd calibration components to MODEL_DATA and
   //  deposit in the MODEL_DATA column
-  virtual casacore::Bool corrupt() = 0;
+  virtual casacore::Bool corrupt()  { throw(casacore::AipsError("Calibrater::corrupt not implemented")); };
   casacore::Bool corrupt2();
 
   // Initialize sigma/weight, and possibly weight_spectrum
@@ -186,11 +190,11 @@ class Calibrater
   virtual casacore::Bool solve();
 
   // Modelfit
-  virtual casacore::Vector<casacore::Double> modelfit(const casacore::Int& iter,
-						      const casacore::String& stype,
-						      const casacore::Vector<casacore::Double>& par,
-						      const casacore::Vector<casacore::Bool>& vary,
-						      const casacore::String& file) = 0;
+  virtual casacore::Vector<casacore::Double> modelfit(const casacore::Int& /*iter*/,
+						      const casacore::String& /*stype*/,
+						      const casacore::Vector<casacore::Double>& /*par*/,
+						      const casacore::Vector<casacore::Bool>& /*vary*/,
+						      const casacore::String& /*file*/)  { throw(casacore::AipsError("Calibrater::modelfit not implemented")); };
 
   // Fluxscale (using casacore::MSSelection syntax for fields)
   void fluxscale(const casacore::String& infile, 
@@ -228,14 +232,14 @@ class Calibrater
 			 const casacore::Bool& display);
 
   // Accumulate (using casacore::MSSelection syntax)
-  virtual void accumulate(const casacore::String& intab,
-			  const casacore::String& incrtab,
-			  const casacore::String& outtab,
-			  const casacore::String& fields,
-			  const casacore::String& calFields,
-			  const casacore::String& interp="linear",
-			  const casacore::Double& t=-1.0,
-			  const casacore::Vector<casacore::Int>& spwmap=casacore::Vector<casacore::Int>(1,-1)) = 0;
+  virtual void accumulate(const casacore::String& /*intab*/,
+			  const casacore::String& /*incrtab*/,
+			  const casacore::String& /*outtab*/,
+			  const casacore::String& /*fields*/,
+			  const casacore::String& /*calFields*/,
+			  const casacore::String& /*interp="linear"*/,
+			  const casacore::Double& /*t=-1.0*/,
+			  const casacore::Vector<casacore::Int>& /*spwmap=casacore::Vector<casacore::Int>(1,-1)*/)  { throw(casacore::AipsError("Calibrater::accumulate not implemented")); };
 
   // Generate cal table from specified values
   virtual void specifycal(const casacore::String& type,
@@ -273,7 +277,7 @@ class Calibrater
 				    casacore::Bool addScratch=true, casacore::Bool addModel=true);
 
   // Re-initialize the calibration scratch columns
-  virtual casacore::Bool initCalSet(const casacore::Int& calSet) = 0;
+  virtual casacore::Bool initCalSet(const casacore::Int& /*calSet*/)  { throw(casacore::AipsError("Calibrater::initCalSet not implemented")); };;
 
   // Report apply/solve state
   casacore::Bool state();
@@ -288,7 +292,10 @@ class Calibrater
 
   // Return access to the VisEquation
   VisEquation* ve() { return ve_p; };
-  
+ 
+  // Returns true if calibrator object is in a valid state
+  virtual casacore::Bool ok();
+ 
  protected:
 
   casacore::Bool cleanup();
@@ -325,9 +332,6 @@ class Calibrater
   // Query apply types to see if we need to calibrate the weights
   casacore::Bool calWt();
 
-  // Returns true if calibrator object is in a valid state
-  virtual casacore::Bool ok() = 0;
-
   // Given a (supplied) list of uncalibrated spws, determines and returns if there were
   // any, and if so sends them as a warning message to the logger.
   casacore::Bool summarize_uncalspws(const casacore::Vector<casacore::Bool>& uncalspw, const casacore::String& origin,
@@ -336,8 +340,8 @@ class Calibrater
   // Create a VisSet for raw phase transfer if needed
   void getRawPhaseVisSet(casacore::Vector<casacore::Int>& spwid); 
 
-  // The standard solving mechanism
-  virtual casacore::Bool genericGatherAndSolve() = 0;
+  // The standard solving mechanism (VI2/SDB version)
+  virtual casacore::Bool genericGatherAndSolve();
 
   // casacore::Input casacore::MeasurementSet and derived selected MeasurementSet
   casacore::String msname_p;
@@ -381,8 +385,9 @@ class Calibrater
   Calibrater(const Calibrater&);
   Calibrater& operator=(const Calibrater&);
 
-
-
+  // Simulated-data/testing context info
+  const bool simdata_p;
+  const vi::SimpleSimVi2Parameters ssvp_p;
 
 
 };

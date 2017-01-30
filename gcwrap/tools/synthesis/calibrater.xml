@@ -80,6 +80,7 @@ cb.open('ngc5921.ms');
 </method>
 
 
+
 <method type="function" name="selectvis">
 <shortdescription>Set the data selection for subsequent processing</shortdescription>
 
@@ -2649,8 +2650,6 @@ cb.close();
 </example>
 </method>
 
-
-
  
 <method type="function" name="done">
    <shortdescription>Destroy the calibrater tool</shortdescription>
@@ -2669,6 +2668,42 @@ cb.done();
 
 </example>
 </method>
+
+
+<method type="function" name="setvi">
+<shortdescription>TEMPORARY method to control use of new VI2 regime</shortdescription>
+
+<input>
+     <param type="bool" direction="in" name="old">
+     <description>Use old-style VI, if old=True, else use new VI2</description>
+     <value>false</value>
+     </param>
+     <param type="bool" direction="in" name="quiet">
+     <description>Warn in logger, if quiet=False</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+
+<description>
+Use this method to control whether the modern (old=False) or old-style (old=True)
+VisibilityIterator is used by the calibration application.  General users should 
+avoid use of this function unless they understand what this means. 
+
+This method will be removed from the calibrater tool in v5.1.
+
+</description>
+
+<example>
+
+cb.setvi(True)   
+cb.open('ngc5921.ms')
+
+
+</example>
+</method>
+
+
 
 </tool>
 

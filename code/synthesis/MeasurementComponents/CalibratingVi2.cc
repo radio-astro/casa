@@ -504,8 +504,7 @@ CalSolvingVi2::CalSolvingVi2( vi::ViImplementation2 * inputVii,
 CalSolvingVi2::~CalSolvingVi2()
 {
   //  cout << "   ~CalSolVi2:  " << this << endl;
-  cout << "CSVi2::calibrateCurrentVB: Is WtSpec automatic?" << endl;
-
+  //  cout << "CSVi2::calibrateCurrentVB: Is WtSpec automatic?" << endl;
   // Nothing specialized to do here (except ctor parent, above)
 }
 
@@ -529,16 +528,19 @@ void CalSolvingVi2::visibilityModel(Cube<Complex>& mod) const
 void CalSolvingVi2::calibrateCurrentVB() const
 {
 
-  //  cout << " CalSolvingVi2::calibrateCurrentVB(): " << boolalpha << visCalibrationOK_p;
+  //cout << " CalSolvingVi2::calibrateCurrentVB(): " << boolalpha << visCalibrationOK_p;
 
   // Do the correction, if not done yet
   if (!visCalibrationOK_p) {
+
+    //    cout << "********" << endl;
 
     // Get the underlying ViImpl2's VisBuffer, to munge it
     VisBuffer2 *vb = getVii()->getVisBuffer();
 
     // sense if WEIGHT_SPECTRUM exists
-    Bool doWtSp = getVii()->weightSpectrumExists();
+    //  (should be true in CalSolvingVi2!)
+    Bool doWtSp = this->weightSpectrumExists();
 
     // Fill flags
     vb->flagCube();
@@ -548,11 +550,13 @@ void CalSolvingVi2::calibrateCurrentVB() const
     //vb->visCubeModel();
 
     // Initialize the to-be-calibrated weights 
-    //   (this is smart re spec weights or not)
+    //   (this fills WS, if available from below)
     //  TBD: better semantics: vb->setCorrDataWtSpec(vb->dataWtSpec()); 
-
     vb->resetWeightsUsingSigma();
-    
+
+    // Ensure we got weightSpectrum (fill it, if not)
+    verifyWeightSpectrum(vb);
+
     // Initialize corrected data w/ data
     initCorrected(vb);
 
@@ -623,6 +627,29 @@ void CalSolvingVi2::calibrateCurrentVB() const
   //  cout << endl;
 }
 
+
+void CalSolvingVi2::verifyWeightSpectrum(casa::vi::VisBuffer2* vb) const {
+
+  // If we didn't get WS from below, populate it in the specified vb
+  if (!getVii()->weightSpectrumExists()) {
+    Cube<Bool> fl(vb->flagCube());
+    IPosition sh(fl.shape());
+    Cube<Float> wtsp(sh,0.0f);
+    Matrix<Float> wt(vb->weight());  // reference to unChan'd wt
+    for (Int irow=0;irow<sh(2);++irow) {
+      for (Int icorr=0;icorr<sh(0);++icorr) {
+	wtsp(Slice(icorr),Slice(),Slice(irow)).set(wt(icorr,irow));
+      }
+    }	
+    // Set it in the vb
+    vb->setWeightSpectrum(wtsp);
+  }
+  
+  // In all cases et flagged cells to zero
+  Cube<Float> wtsp(vb->weightSpectrum());
+  wtsp(vb->flagCube())=0.0;
+
+}
 
 CalSolvingVi2LayerFactory::CalSolvingVi2LayerFactory(const CalibratingParameters& pars)
   : CalVi2LayerFactory(pars)

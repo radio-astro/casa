@@ -868,6 +868,7 @@ casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TV
 casa_add_google_test( NOT_ON_APPLE MODULES mstransform SOURCES ../mstransform/TVI/test/tUVContSubTVI.cc  ../mstransform/TVI/test/TestUtilsTVI.cc)
 
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tCalibraterSolve_GT.cc )
+casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tCalibraterSolveSimData_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tCalSolVi2Organizer_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tRecursiveVi2LayersWithCal_GT.cc )
 casa_add_google_test( MODULES synthesis SOURCES MeasurementComponents/test/tDJones_GT.cc )

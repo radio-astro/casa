@@ -48,8 +48,10 @@
 #include <casa/sstream.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
 #include <synthesis/CalTables/CLPatchPanel.h>
+#include <synthesis/MeasurementComponents/CalSolVi2Organizer.h>
 #include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <synthesis/MeasurementComponents/VisCalSolver.h>
+#include <synthesis/MeasurementComponents/VisCalSolver2.h>
 #include <synthesis/MeasurementComponents/UVMod.h>
 #include <synthesis/MeasurementComponents/TsysGainCal.h>
 #include <msvis/MSVis/VisSetUtil.h>
@@ -88,8 +90,11 @@ Calibrater::Calibrater():
   svc_p(0),
   histLockCounter_p(), 
   hist_p(0),
-  actRec_()
+  actRec_(),
+  simdata_p(false),
+  ssvp_p()
 {
+  //  cout << "This is the NEW VI2-aware Calibrater" << endl;
 }
 
 Calibrater::Calibrater(String msname): 
@@ -104,7 +109,9 @@ Calibrater::Calibrater(String msname):
   svc_p(0),
   histLockCounter_p(), 
   hist_p(0),
-  actRec_()
+  actRec_(),
+  simdata_p(false),
+  ssvp_p()
 {
 
 
@@ -122,6 +129,39 @@ Calibrater::Calibrater(String msname):
 
   // A VisEquation
   ve_p = new VisEquation();
+
+  // Reset the apply/solve VisCals
+  reset();
+
+}
+
+Calibrater::Calibrater(const vi::SimpleSimVi2Parameters& ssvp): 
+  msname_p("<noms>"),
+  ms_p(0), 
+  mssel_p(0), 
+  mss_p(0),
+  frequencySelections_p(0),
+  msmc_p(0),
+  ve_p(0),
+  vc_p(),
+  svc_p(0),
+  histLockCounter_p(), 
+  hist_p(0),
+  actRec_(),
+  simdata_p(true),
+  ssvp_p(ssvp)
+{
+
+  logSink() << LogOrigin("Calibrater","") << LogIO::NORMAL
+	    << "Arranging SIMULATED MS data for testing!!!!"
+	    << LogIO::POST;
+  
+  // A VisEquation
+  ve_p = new VisEquation();
+
+  // Initialize the meta-info server that will be shared with VisCals
+  if (msmc_p) delete msmc_p;
+  msmc_p = new MSMetaInfoForCal(ssvp_p);
 
   // Reset the apply/solve VisCals
   reset();
@@ -162,9 +202,9 @@ Calibrater* Calibrater::factory(Bool old) {
 
   if (old)
     cal = new OldCalibrater();
-  else
-    throw(AipsError("VI2-aware Calibrater not yet available..."));
-  //cal = new Calibrater(msname);
+  else 
+    //throw(AipsError("VI2-aware Calibrater not yet available..."));
+    cal = new Calibrater();
 
   return cal;
 
@@ -2890,7 +2930,9 @@ Bool Calibrater::calWt() {
 
 Bool Calibrater::ok() {
 
-  if(ms_p && mssel_p && ve_p) {
+  if ((simdata_p || 
+       (ms_p && mssel_p))
+      && ve_p) {
     return true;
   }
   else {
@@ -2898,7 +2940,311 @@ Bool Calibrater::ok() {
     return false;
   }
 }
+// The standard solving mechanism
+casacore::Bool Calibrater::genericGatherAndSolve()  
+{
 
+  // Condition solint values so they 
+  svc_p->reParseSolintForVI2();
+
+  // Organize VI2 layers for solving:
+  CalSolVi2Organizer vi2org;
+
+  //-------------------------------------------------
+  //  NB: Populating the vi2org should probably be delegated to the svc_p
+  //      since that is where most of the required (non-data) info is,
+  //      and then some calibration types may introduce layers that are
+  //      very specific to them (e.g., SD data selection, etc.)
+  //  e.g., replace the following with something like:
+  //
+  //  svc_p->formVi2LayerFactories(vi2org,mssel_p,ve_p);
+  //                                      ssvp_p          // a simdata version
+  //
+
+  // Add the (bottom) data access layer
+  if (simdata_p)
+    // Simulated data (used for testing)
+    vi2org.addSimIO(ssvp_p);
+  else
+    // Real (selected) data in an MS (channel selection handled later...)
+    //   The iteration time-interval is the solution interval
+    vi2org.addDiskIO(mssel_p,svc_p->solTimeInterval());  
+
+  // Add ad hoc SD section layer (e.g., OTF select of raster boundaries, etc.)
+  //  if (SD)
+  //     vi2org.addSDCalSelect()
+
+  // Add pre-cal layer, using the VisEquation
+  vi2org.addCalForSolving(*ve_p);
+
+
+  // Add the freq-averaging layer, if needed
+  //cout << "svc_p->fintervalCh() = " << svc_p->fintervalCh() << endl;                                                    
+  //cout << "svc_p->fsolint() = " << svc_p->fsolint() << endl;
+  if (!svc_p->freqDepMat() ||       // entirely unchannelized cal  OR                                                       
+      (svc_p->freqDepPar() &&       // channelized par and                                                                  
+       svc_p->fsolint()!="none" &&  //  some partial channel ave                                                            
+       svc_p->fintervalCh()>0.0)) { //  specified                                                                           
+    vi2org.addChanAve(Int(svc_p->fintervalCh()));  
+  }
+
+
+  // Add the time-averaging layer, if needed
+  //  NB: There is some evidence that doing time-averaging _after_ 
+  //      channel averaging may be more expensive then doing it _before_, 
+  //      but this ensures that the meta-info (e.g. time, timeCentroid, etc.)
+  //      appear correctly in the VB2 accessed at this scope.
+  //      The problem is that AveragingTvi2 has not explicitly
+  //      implemented all of the relevant data accessors; it just
+  //      assumes---incorrectly---that you are going to use its VB2.
+  //      Making AveragingTvi2 the top layer ensures you do use it.
+  //      (Hard-wired use of AveragingTvi2 in MSTransform set it up
+  //       as the top [last] layer, and has been well-tested...)
+
+  //cout << "svc_p->solint() = " << svc_p->solint() << endl;
+  //cout << "svc_p->solTimeInterval() = " << svc_p->solTimeInterval() << endl;
+  //cout << "svc_p->preavg() = " << svc_p->preavg() << endl;
+  if (!svc_p->solint().contains("int")) {      // i.e., not "int")
+    Float avetime(svc_p->solTimeInterval());   // avetime is solint, nominally
+    // Use preavg instead, if...
+    if (svc_p->preavg()>FLT_EPSILON &&             // ...set meaningfully
+	svc_p->preavg()<svc_p->solTimeInterval())  // ...and less than solint
+      avetime=svc_p->preavg();
+    vi2org.addTimeAve(avetime);  // use min of solint and preavg here!
+  }
+
+
+  //  vi2org should be fully configured at this point
+  //-------------------------------------------------
+
+
+  // Count solutions
+  //   at the moment, this is done trivially, and doesn't
+  //   yet work right for combine='spw', etc.
+  Int nSol;
+  Vector<Int> nChunkPerSol;
+  nSol=vi2org.countSolutions(nChunkPerSol);
+  //  cout << "nSol=" << nSol << endl;                                                                                        
+  //  cout << "nChunkPerSol = " << nChunkPerSol << endl;                                                                      
+
+  // Form the VI2 to drive data iteration below
+  vi::VisibilityIterator2& vi(vi2org.makeFullVI());
+  //  cout << "VI Layers: " << vi.ViiType() << endl;
+
+  // Tell VI2 about the freq selection!
+  if (frequencySelections_p) 
+    vi.setFrequencySelection(*frequencySelections_p);
+
+  // Access to the net VB2 for forming SolveDataBuffers in the SDBList below
+  vi::VisBuffer2 *vb = vi.getImpl()->getVisBuffer();
+
+  // Data should now be ready....
+
+  // Create the output caltable                                                                                             
+  //  (this version doesn't revise frequencies)                                                                             
+  svc_p->createMemCalTable2();
+
+  //  Vector<Bool> unsolspw(msmc_p->nSpw(),False);  // this is set in old system by ve_p                                    
+  Vector<Int64> nexp(msmc_p->nSpw(),0), natt(msmc_p->nSpw(),0),nsuc(msmc_p->nSpw(),0);
+
+
+  /*  Experiment for testing chunk/solution counting with the VI2
+  {
+    cout << "Counting chunks..." << endl;
+    Int nch(0);
+    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+      ++nch;
+    }
+    cout << "...nchunks=" << nch << endl;
+  }
+  */
+
+  Int nGood(0);
+  vi.originChunks();
+  Int nGlobalChunks=0;  // counts VI chunks globally
+  for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+    // Data will accumulate here                                                                                            
+    SDBList sdbs;
+
+    // Gather the chunks/VBs for this solution                                                                              
+    //   Solution boundaries will ALWAYS occur on chunk boundaries,
+    //   though some chunk boundaries will be ignored in the 
+    //   combine='spw' or 'field' context
+
+    for (Int ichunk=0;                                // count chunks in this solution
+	 ichunk<nChunkPerSol(isol)&&vi.moreChunks();  // while more chunks needed _and_ available
+	 ++ichunk,vi.nextChunk()) {                     // advance to next chunk
+
+      // Global chunk counter
+      ++nGlobalChunks;
+
+      //  Loop over VB2s in this chunk
+      //    (we get more then one when preavg<solint)
+      Int ivb(0);
+      for (vi.origin();
+	   vi.more();
+	   ++ivb,vi.next()) {
+
+        // Add this VB to the SDBList                                                                                       
+        sdbs.add(*vb);
+
+	/*
+	cout << "isol=" << isol
+             << " ichk="<<ichunk
+             << " ivb="<<ivb
+             << " sc="<<vb->scan()(0)
+             << " fld="<<vb->fieldId()(0)
+             << " spw="<<vb->spectralWindows()(0)
+             << " nr="<<vb->nRows()
+             << " nch="<<vb->nChannels()
+             << " t="<<vb->time()(1)
+             << " tC="<<vb->timeCentroid()(1)
+             << " wt="<<vb->weightSpectrum()(0,0,0)
+	     << " nSDB=" << sdbs.nSDB() 
+	     << " gl nChks=" << nGlobalChunks
+             << endl;
+	//*/
+	/*
+	//cout << "corrdata=" << amplitude(vb->visCubeCorrected()(Slice(0),Slice(),Slice()).nonDegenerate()) << endl;
+	cout << "moddata =" << amplitude(vb->visCubeModel()(Slice(0),Slice(),Slice()).nonDegenerate()) << endl;
+	cout << "flags =" << noboolalpha<< vb->flagCube()(Slice(0),Slice(),Slice()).nonDegenerate() << endl;
+	cout << "wts =" <<  vb->weightSpectrum()(Slice(0),Slice(),Slice()).nonDegenerate() << endl;
+
+	cout << "moddata =" << amplitude(vb->visCubeModel()(Slice(3),Slice(),Slice()).nonDegenerate()) << endl;
+	cout << "flags =" << noboolalpha<< vb->flagCube()(Slice(3),Slice(),Slice()).nonDegenerate() << endl;
+	cout << "wts =" <<  vb->weightSpectrum()(Slice(3),Slice(),Slice()).nonDegenerate() << endl;
+
+
+	//	cout << "sum(mod[flag])=" << sum(vb->visCubeModel()(vb->flagCube())) << endl;
+	*/
+      }
+    }
+ 
+    //    cout << "sdbs.nSDB() = " << sdbs.nSDB()<< endl;                                                                       
+
+    // Use first spw id in the SDBList                                                                                      
+    Int thisSpw(sdbs(0).spectralWindow()(0));
+
+    // Expecting a solution                                                                                                 
+    nexp(thisSpw)+=1;
+
+    if (sdbs.Ok()) {
+
+      // Some unflagged data, so Attempting a solution                                                                      
+      natt(thisSpw)+=1;
+
+      // make phase- or amp-only, if necessary                                                                              
+      sdbs.enforceAPonData(svc_p->apmode());
+
+      // zero cross-hand weights, if necessary                                                                              
+      sdbs.enforceSolveWeights(svc_p->phandonly());
+
+      // Synchronize meta-info in SVC                                                                                       
+      svc_p->syncSolveMeta(sdbs);
+
+      // Set or verify freqs in the caltable                                                                                
+      svc_p->setOrVerifyCTFrequencies(thisSpw);                                                                     
+
+      // Size the solvePar arrays inside SVC                                                                                
+      //  (smart:  if freqDepPar()=F, uses 1)                                                                               
+      //  returns the number of channel solutions to iterate over                                                           
+      //cout << "sdbs.nChannels() = " << sdbs.nChannels() << endl;                                                          
+      Int nChanSol=svc_p->sizeSolveParCurrSpw(sdbs.nChannels());
+      //cout << "nChanSol = " << nChanSol << endl;                                                                          
+
+      if (svc_p->useGenericSolveOne()) {
+
+        // We'll use the generic solver                                                                                     
+        VisCalSolver2 vcs;
+
+        // Guess from the data                                                                                              
+        svc_p->guessPar(sdbs);
+
+
+        Bool totalGoodSol(False);  // Will be set True if any channel is good                                               
+        //for (Int ich=0;ich<nChanSol;++ich) {
+        for (Int ich=nChanSol-1;ich>-1;--ich) {
+          svc_p->markTimer();
+          svc_p->focusChan()=ich;
+
+          // Execute the solve                                                                                              
+          Bool goodsol=vcs.solve(*ve_p,*svc_p,sdbs);
+
+
+          if (goodsol) {
+            totalGoodSol=True;
+
+            svc_p->formSolveSNR();
+            svc_p->applySNRThreshold();
+          }
+          else
+            svc_p->currMetaNote();
+
+          // Record solution in its channel, good or bad                                                                    
+          if (svc_p->freqDepPar())
+            svc_p->keep1(ich);
+
+        } // ich                                                                                                            
+
+        if (totalGoodSol) {
+          // Keep this good solution, and count it                                                                          
+          svc_p->keepNCT();
+          ++nGood;
+          nsuc(thisSpw)+=1;
+        }
+
+      } // useGenericSolveOne                                                                                               
+      else {
+        // Use self-directed individual solve                                                                               
+        //   TBD: return T/F for goodness?                                                                                  
+	//cout << "Calling selfSolveOne()!!!!!!" << endl;
+        svc_p->selfSolveOne(sdbs);
+
+        // Keep this good solution, and count it                                                                            
+        svc_p->keepNCT();
+        ++nGood;
+        nsuc(thisSpw)+=1;
+      }
+
+    } // sdbs.Ok()                                                                                                          
+  } // isol                                                                                                                 
+
+  // Report nGood to logger
+  logSink() << "  Found good " 
+	    << svc_p->typeName() << " solutions in "
+	    << nGood << " solution intervals."
+	    << LogIO::POST;
+
+  // Is this needed?
+  //summarize_uncalspws(unsolspw, "solv");                                                                                  
+
+  // Fill activity record
+  //  cout << "Expected, Attempted, Succeeded (by spw) = " << nexp << ", " << natt << ", " << nsuc << endl;                 
+  actRec_=Record();
+  actRec_.define("origin","Calibrater::genericGatherAndSolve");
+  actRec_.define("nExpected",nexp);
+  actRec_.define("nAttempt",natt);
+  actRec_.define("nSucceed",nsuc);
+
+  if (nGood>0) {
+    if (svc_p->typeName()!="BPOLY") {  // needed?                                                                           
+      // apply refant, etc.                                                                                                 
+      svc_p->globalPostSolveTinker();
+
+      // write to disk                                                                                                      
+      svc_p->storeNCT();
+    }
+  }
+  else {
+    logSink() << "No output calibration table written."
+	      << LogIO::POST;
+  }
+
+  // Reach here, all is good
+  return True;
+
+}
 
 
 void Calibrater::writeHistory(LogIO& /*os*/, Bool /*cliCommand*/)
@@ -2941,6 +3287,7 @@ OldCalibrater::OldCalibrater():
   vs_p(0), 
   rawvs_p(0)
 {
+  //  cout << "This is the OLD VI2-aware Calibrater" << endl;
 }
 
 OldCalibrater::OldCalibrater(String msname): 

@@ -1176,6 +1176,10 @@ void VisMueller::applyCal2(vi::VisBuffer2& vb,
   Int* a1=&a1v(0);
   Int* a2=&a2v(0);
 
+  // Ensure VisVector for data acces has correct form
+  Int ncorr(vb.nCorrelations());
+  if (V().type() != ncorr)
+    V().setType(visType(ncorr));
 
   if (V().type()==VisVector::One) {
     M().setScalarData(true);
@@ -1756,6 +1760,12 @@ void VisJones::applyCal2(vi::VisBuffer2& vb,
     Bool* flagR=&flagRv(0);
     Int* a1=&a1v(0);
     Int* a2=&a2v(0);
+
+    // Ensure VisVector for data acces has correct form
+    Int ncorr(vb.nCorrelations());
+    if (V().type() != ncorr)
+      V().setType(visType(ncorr));
+
 
     // Alert Jones matrices to whether data is scalar or not
     //  (this is relevant only for proper handling of flags
