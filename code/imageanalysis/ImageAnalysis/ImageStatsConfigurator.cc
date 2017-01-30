@@ -32,10 +32,11 @@ namespace casa {
 ImageStatsConfigurator::ImageStatsConfigurator(
     const SPCIIF image,
     const Record *const &regionPtr,
-    const String& maskInp
+    const String& maskInp,
+    const casacore::String& outname,
+    casacore::Bool overwrite
 ) : ImageTask<Float>(
-        image, "", regionPtr, "", "",
-        "", maskInp, "", false
+        image, regionPtr, maskInp, outname, overwrite
     ), _statistics(), _algConf() , _prefClassStatsAlg(AUTO) {
     _algConf.algorithm = StatisticsData::CLASSICAL;
 }

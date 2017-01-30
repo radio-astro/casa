@@ -97,7 +97,9 @@ protected:
     ImageStatsConfigurator(
         const SPCIIF image,
         const casacore::Record *const &regionPtr,
-        const casacore::String& maskInp
+        const casacore::String& maskInp,
+        const casacore::String& outname="",
+        casacore::Bool overwrite=false
     );
 
     casacore::String _configureAlgorithm();
