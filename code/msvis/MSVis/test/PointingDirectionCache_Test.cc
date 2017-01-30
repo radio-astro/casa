@@ -292,20 +292,20 @@ TEST (PointingDirectionCache, SmallWrap)
     doTest (vector<int> ({0, 1, 2}), 100, 200, 10, 1, true);
 }
 
-TEST (PointingDirectionCache, TestMiss)
-{
-    testMiss (vector<int> ({0, 1, 2}), 100, 200, 10, 1);
-}
+// TEST (PointingDirectionCache, TestMiss)
+// {
+//     testMiss (vector<int> ({0, 1, 2}), 100, 200, 10, 1);
+// }
 
-TEST (PointingDirectionCache, TestGapMiss)
-{
-    testGapMiss (vector<int> ({0, 1, 2}), 100, 200, 10, 1);
-}
+// TEST (PointingDirectionCache, TestGapMiss)
+// {
+//     testGapMiss (vector<int> ({0, 1, 2}), 100, 200, 10, 1);
+// }
 
-TEST (PointingDirectionCache, TestBadMiss)
-{
-    testGapMiss (vector<int> ({0, 1, 2}), 100, 200, 10, 1);
-}
+// TEST (PointingDirectionCache, TestBadMiss)
+// {
+//     testGapMiss (vector<int> ({0, 1, 2}), 100, 200, 10, 1);
+// }
 
 TEST (PointingDirectionCache, BigVeryRegular)
 {
@@ -334,10 +334,10 @@ TEST (PointingDirectionCache, BigVeryRegularWrap)
     doTest (vector<int> ({0, 1, 2}), 100, 20000, 10, 1, true);
 }
 
-TEST (PointingDirectionCache, TestBigMiss)
-{
-    testMiss (vector<int> ({0, 1, 2}), 100, 20000, 10, 1);
-}
+// TEST (PointingDirectionCache, TestBigMiss)
+// {
+//     testMiss (vector<int> ({0, 1, 2}), 100, 20000, 10, 1);
+// }
 
 
 
