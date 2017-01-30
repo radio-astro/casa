@@ -415,6 +415,54 @@ void ImageInterfaceTest::testBinaryDilationIter()
     ASSERT_TRUE(outmaskimage.getAt(IPosition(4,46,58,0,4))==Float(0.0));
 } //testBinaryDilationIter
 
+void ImageInterfaceTest::testYAPruneRegions()
+{
+    cout <<" Test YAPruneRegions()"<<endl;
+
+    // 4 dim image with 5 spectral channels
+    IPosition shape(4, 100, 100, 1, 5);
+    // 4 dim image with 1 spectral channels
+    //IPosition shape(4, 100, 100, 1, 1);
+    csys=CoordinateUtil::defaultCoords4D();
+    PagedImage<Float> InImage(TiledShape(shape),csys, String("testYAPruneRegions.im"));
+    //PagedImage<Float> dummyMaskImage(TiledShape(shape),csys, String("testBDilationDummyMask.im"));
+    TempImage<Float> dummyMaskImage(TiledShape(shape),csys);
+    dummyMaskImage.set(0);
+    //PagedImage<Float> labelMap(TiledShape(shape),csys, String("testYAPruneRegions-labelmap.im"));
+    //labelMap.set(0);
+    // 1 to execlude from the binary dilation
+    dummyMaskImage.putAt(1.0, IPosition(4,0,0,0,0));
+    dummyMaskImage.putAt(1.0, IPosition(4,99,99,0,0));
+    // 1 -> false
+    dummyMaskImage.attachMask( LatticeExpr<Bool> (iif(dummyMaskImage >  0, False, True)));
+    ArrayLattice<Bool> mask(dummyMaskImage.getMask());
+    Array<Bool> chanmask(IPosition(2,1,5));
+    chanmask.set(true);
+    InImage.setUnits(Unit("Jy/pixel"));
+    InImage.set(0.0);
+    InImage.putAt(1.0, IPosition(4,40,50,0,0));
+    InImage.putAt(1.0, IPosition(4,44,54,0,0));
+    InImage.putAt(1.0, IPosition(4,45,55,0,0));
+    InImage.putAt(1.0, IPosition(4,45,56,0,0));
+    InImage.putAt(1.0, IPosition(4,46,55,0,0));
+    InImage.putAt(1.0, IPosition(4,47,55,0,0));
+    InImage.putAt(1.0, IPosition(4,47,54,0,0));
+    InImage.putAt(1.0, IPosition(4,0,0,0,0));
+    InImage.putAt(1.0, IPosition(4,0,99,0,0));
+    InImage.putAt(1.0, IPosition(4,99,99,0,0));
+    InImage.putAt(1.0, IPosition(4,46,56,0,3));
+    InImage.putAt(1.0, IPosition(4,45,56,0,4));
+    SDMaskHandler maskhandler;
+
+    Double thresh=1.0;
+    Int nmask = 1;
+    Double prunesize=2.0;
+    SHARED_PTR<ImageInterface<Float> > tempIm_ptr = maskhandler.YAPruneRegions(InImage, thresh,nmask,prunesize);
+    PagedImage<Float> outMask(InImage.shape(), InImage.coordinates(), "testYAPruneRegions-out.mask");
+    outMask.copyData(*(tempIm_ptr.get()) );
+}
+
+
 //methods in SDMaskHandler.h but no tests exist here
 //resetMask(SHARED_PTR<SIImageStore> imstore)
 //fillMask((SHARED_PTR<SIImageStore> imstore, Vector<String> maskStrings)
@@ -463,6 +511,10 @@ TEST_F(ImageInterfaceTest, testBinaryDilation) {
 
 TEST_F(ImageInterfaceTest, testBinaryDilationIter) {
   testBinaryDilationIter();
+}
+
+TEST_F(ImageInterfaceTest, testYAPruneRegions) {
+  testYAPruneRegions();
 }
 
 }//test

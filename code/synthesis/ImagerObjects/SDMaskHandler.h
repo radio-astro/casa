@@ -209,6 +209,12 @@ public:
                                                    casacore::Int nmask=0,
                                                    casacore::Double prunesize=0.0);
 
+  // Yet another Prune the mask regions per spectral plane
+  SHARED_PTR<casacore::ImageInterface<float> >  YAPruneRegions(const casacore::ImageInterface<casacore::Float>& image,
+                                                   casacore::Double& thresh,
+                                                   casacore::Int nmask=0,
+                                                   casacore::Double prunesize=0.0);
+
   // create a mask image (1/0 image) applying a different threshold for each channel plane
   void makeMaskByPerChanThreshold(const casacore::ImageInterface<casacore::Float>& image, 
                                  casacore::ImageInterface<casacore::Float>& mask, 
@@ -251,6 +257,22 @@ public:
                         const casacore::Float& smoothfactor=0.0,
                         const casacore::Float& minbeamfrac=0.0, 
                         casacore::Float pblimit=0.1);
+
+  
+  // depth-first-search algorithm for 2D 
+  // input lattice can by 3d or 4d but only search is done on the first plane 
+  void depthFirstSearch(casacore::Int x,
+                        casacore::Int y,
+                        casacore::Int cur_label,
+                        casacore::Lattice<casacore::Float>& inlat,
+                        casacore::Lattice<casacore::Float>& lablat);
+
+  // label connected regions using depth-first-search algorithm
+  void labelRegions(casacore::Lattice<casacore::Float>& inlat, casacore::Lattice<casacore::Float>& lablat); 
+
+  // find sizes of bolbs (regions) found by labelRegions 
+  casacore::Vector<casacore::Float>  findBlobSize(casacore::Lattice<casacore::Float>& lablat);
+
 
   // check if input image is a mask image with 0 or a value (if normalize=true, 1)
   casacore::Bool checkMaskImage(casacore::ImageInterface<casacore::Float>& maskiamge, casacore::Bool normalize=true);

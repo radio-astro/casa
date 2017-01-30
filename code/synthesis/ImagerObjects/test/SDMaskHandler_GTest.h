@@ -65,6 +65,7 @@ protected:
      void testMaskByPerPlaneThreshold();
      void testBinaryDilation();
      void testBinaryDilationIter();
+     void testYAPruneRegions();
 
 };
 

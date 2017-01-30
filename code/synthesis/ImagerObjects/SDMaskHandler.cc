@@ -2162,6 +2162,109 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return SHARED_PTR<ImageInterface<Float> >(fullIm);
   }
 
+  //yet another pruneRegions - using connect component labelling with depth first search alogirthm ..
+  SHARED_PTR<casacore::ImageInterface<Float> >  SDMaskHandler::YAPruneRegions(const ImageInterface<Float>& image, Double& thresh, Int nmask, Double prunesize)
+  {
+    LogIO os( LogOrigin("SDMaskHnadler", "YAPruneRegions",WHERE) );
+    Bool debug(False);
+
+    IPosition fullimShape=image.shape();
+    TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates(), memoryToUse());
+    fullIm->set(0);
+
+    if (nmask==0 && prunesize==0.0 ) {
+      //No-op
+      os<<LogIO::DEBUG1<<"Skip pruning of mask regions"<<LogIO::POST;
+      fullIm->copyData(image);
+      return SHARED_PTR<ImageInterface<Float> >(fullIm);
+    }
+    os <<LogIO::NORMAL<< "pruneRegions with size="<<prunesize<<" is applied"<<LogIO::POST;
+
+    IPosition shp = image.shape();
+    Int specaxis = CoordinateUtil::findSpectralAxis(image.coordinates());
+    uInt nchan = shp(specaxis);
+    // do a single channel plane at time
+    //  - assumes standard CASA image axis ordering (ra,dec,stokes,chan)
+    for (uInt ich = 0; ich < nchan; ich++) {
+      IPosition start(4, 0, 0, 0,ich);
+      IPosition length(4, shp(0),shp(1),shp(2),1);
+      Slicer sl(start, length);
+      //cerr<<"ich="<<ich<<" slicer sl ="<<sl<<endl;
+      AxesSpecifier aspec(False);
+      // following works if stokes axis dim = 1
+      SubImage<Float>* subIm = new SubImage<Float>(image, sl, aspec, True);
+
+      IPosition subimShape=subIm->shape();
+      uInt ndim = subimShape.nelements();
+      TempImage<Float>* tempIm = new TempImage<Float> (TiledShape(subIm->shape(), subIm->niceCursorShape()), subIm->coordinates(), memoryToUse() );
+      // to search for both positive and negative components
+      tempIm->copyData(LatticeExpr<Float> (abs(*subIm)));
+
+      TempImage<Float>* blobMap = new TempImage<Float> (TiledShape(subIm->shape(), subIm->niceCursorShape()), subIm->coordinates(), memoryToUse() );
+      blobMap->set(0);
+
+      // connected componet labelling
+      os<<LogIO::DEBUG1<<"Calling labelRegions..."<<LogIO::POST;
+      labelRegions(*tempIm, *blobMap);
+      os<<LogIO::DEBUG1<<"Calling findBlobSize..."<<LogIO::POST;
+      // get blobsizes (the vector contains each labeled region size (label # = ith element+1)
+      Vector<Float> blobsizes = findBlobSize(*blobMap);
+      //use ImageDecomposer
+      // book keeping of no of  removed components`
+      uInt removeBySize=0;
+      Bool hasMask(True);
+      //cerr<<"blobsizes.nelements()="<<blobsizes.nelements()<<endl; 
+      //removing operations
+      if (blobsizes.nelements()) {
+        if (prunesize > 0.0) {
+          for (uInt icomp = 0; icomp < blobsizes.nelements(); ++icomp) {
+            if ( blobsizes[icomp] < prunesize ) {
+              Float blobid = Float(icomp+1);
+              removeBySize++;
+              tempIm->copyData( (LatticeExpr<Float>)( iif(*blobMap == blobid, 0.0, *tempIm  ) ) );
+            }
+          }
+        }
+      }
+      else {
+        hasMask=False;
+      }
+      // log reporting ...
+      if (removeBySize>0) {
+        os <<"pruneRegions removed "<<removeBySize<<" regions from the mask image with size criterion = "<<prunesize<<LogIO::POST;
+      }
+      else {
+        if (hasMask) {
+          os <<"No regions are removed by pruning" << LogIO::POST;
+        }
+      }
+
+      // Debug
+      if (debug) {
+        PagedImage<Float> debugPrunedIm(tempIm->shape(),tempIm->coordinates(),"tmp-prunedSub.im");
+        debugPrunedIm.copyData(*tempIm);
+      }
+      PagedImage<Float> tempBlobMap(blobMap->shape(), blobMap->coordinates(), "tmp-Blob.map");
+      tempBlobMap.copyData(*blobMap);
+      Array<Float> subimData;
+      //IPosition fullimShape=image.shape();
+      //TempImage<Float>* fullIm = new TempImage<Float>(TiledShape(fullimShape, image.niceCursorShape()), image.coordinates());
+
+      //IPosition start(fullimShape.nelements(),0);
+      //IPosition stride(fullimShape.nelements(),1);
+      //IPosition substart(3,0);
+      //IPosition subshape(3,subimShape(0),subimShape(1),1);
+      //IPosition substride(3,1,1,1);
+      //tempIm->getSlice(subimData,Slicer(substart,subend),True);
+      tempIm->getSlice(subimData,IPosition(2,0), tempIm->shape(), IPosition(2,1,1));
+      fullIm->putSlice(subimData,start,IPosition(4,1,1,1,1));
+      delete tempIm; tempIm=0;
+      delete subIm; subIm=0;
+    }
+    return SHARED_PTR<ImageInterface<Float> >(fullIm);
+  }
+
+
   Float SDMaskHandler::pixelBeamArea(const GaussianBeam& beam, const CoordinateSystem& csys) 
   {
 
@@ -2205,6 +2308,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SDMaskHandler::makeMaskByPerChanThreshold(const ImageInterface<Float>& image, ImageInterface<Float>& mask, Vector<Float>& thresholds) 
   {
     IPosition imshape = image.shape();
+
     CoordinateSystem imcsys = image.coordinates();
     Vector<Int> diraxes = CoordinateUtil::findDirectionAxes(imcsys);
     Int specaxis = CoordinateUtil::findSpectralAxis(imcsys);
@@ -2386,4 +2490,91 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // else... same options as makePBMask (put it into a helper function)
   }// end of autoMaskWithinPB
 
+  //region labelling code
+  void SDMaskHandler::depthFirstSearch(Int x, 
+                                       Int y, 
+                                       Int cur_label, 
+                                       Lattice<Float>& inlat, 
+                                       Lattice<Float>& lablat)
+  {
+    Vector<Int> dx(4);
+    Vector<Int> dy(4);
+    // 4-direction connectivity
+    dx(0) = 1; dx(1)=0;dx(2)=-1;dx(3)=0;
+    dy(0) = 0; dy(1)=1;dy(2)=0;dy(3)=-1;
+    
+    IPosition inshape = inlat.shape();
+    Int nrow = inshape(0);
+    Int ncol = inshape(1);
+    // out of bound condition
+    if(x < 0 || x == nrow) return;
+    if(y < 0 || y == ncol) return;
+    IPosition loc(4,x,y,0,0);
+    // already labelled or not value 1 pixel 
+    if(lablat(loc) || !inlat(loc)) return;
+   
+    //lablat(loc) = cur_label;
+    //cerr<<"cur_label="<<cur_label<<" loc="<<loc<<endl;
+    lablat.putAt(Float(cur_label), loc);
+    //recursively check the neighbor 
+    for (uInt inc = 0; inc < 4; ++inc) 
+      depthFirstSearch(x + dx[inc], y + dy[inc], cur_label, inlat, lablat);
+  }
+
+  void SDMaskHandler::labelRegions(Lattice<Float>& inlat, Lattice<Float>& lablat) 
+  {
+    Int blobId = 0;
+    IPosition inshape = inlat.shape();
+    Int nrow = inshape(0);
+    Int ncol = inshape(1);
+    for (Int i = 0; i < nrow; ++i)
+    { 
+      for (Int j = 0; j < ncol; ++j) 
+      {
+        if (!lablat(IPosition(4,i,j,0,0)) && inlat(IPosition(4,i,j,0,0) ) ) 
+          depthFirstSearch(i, j, ++blobId, inlat, lablat);
+      }
+    }
+  }
+
+  Vector<Float> SDMaskHandler::findBlobSize(Lattice<Float>& lablat) 
+  {
+  // iterate through lablat
+  // find max label in lablat
+  // create groupsize list vector gsize(max-1)
+  // get val at each pixel in lablat (ival=lablat.get(loc)) and add 1 to gsize(ival-1) 
+  // print each labelled comp's size...
+
+    IPosition inshape = lablat.shape();
+    Int nrow = inshape(0);
+    Int ncol = inshape(1);
+    LatticeExprNode leMax=max(lablat);
+    Float maxlab = leMax.getFloat();
+    if (maxlab < 1.0) {
+      return Vector<Float>();  
+    }
+    Vector<Float> blobsizes(Int(maxlab),0);
+    for (Int i = 0; i < nrow; ++i) 
+    { 
+      for (Int j =0; j < ncol; ++j)
+      {
+        IPosition loc(4, i, j, 0, 0);
+        //cerr<<"i="<<i<<" j="<<j<<" labelat(loc)="<<lablat(loc)<<endl;
+        if (lablat(loc)) blobsizes[Int(lablat(loc))-1]+=1;
+      }
+    }
+
+    //for debug
+    for (Int k = 0;k < maxlab; ++k) 
+    {
+        cerr<<"blobsizes["<<k<<"]="<<blobsizes[k]<<endl;
+    } 
+
+    return blobsizes;
+  }
+
+
+  //     
+  // 
+     
 } //# NAMESPACE CASA - END
