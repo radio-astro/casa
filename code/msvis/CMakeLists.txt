@@ -49,8 +49,6 @@ casa_add_library( msvis
   MSVis/StatWT.cc
   MSVis/StokesVector.cc
   MSVis/SubMS.cc
-  MSVis/TimeAveragingVii.cc
-  MSVis/TimeAveragingViiInternals.cc
   MSVis/TransformingVi2.cc
   MSVis/UtilJ.cc
   MSVis/VBContinuumSubtractor.cc
@@ -141,7 +139,6 @@ install (FILES
 	MSVis/StatWT.h
 	MSVis/StokesVector.h
 	MSVis/SubMS.h
-	MSVis/TimeAveragingVii.h
 	MSVis/UtilJ.h
 	MSVis/VBContinuumSubtractor.h
 	MSVis/VBGContinuumSubtractor.h
