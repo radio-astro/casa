@@ -14,6 +14,7 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <synthesis/MeasurementEquations/LinearMosaic.h>
+#include <synthesis/MeasurementEquations/Imager.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>
 
@@ -134,23 +135,29 @@ bool linearmosaic::setlinmostype(const  string& linmostype){
         	  PagedImage<Float>tmp(weightimages[k]);
         	  wgt[k]=new casacore::TempImage<Float>(tmp.shape(), tmp.coordinates());
         	  wgt[k]->copyData((LatticeExpr<Float>)(sqrt(abs(tmp))));
+		  if(tmp.getDefaultMask() != "")
+		    casa::Imager::copyMask(*wgt[k], tmp,  tmp.getDefaultMask());
           }
-		  if(imagewgttype==1)
-			  im[k]=new casacore::PagedImage<Float>(images[k]);
-		  else if(imagewgttype==0){
-			  PagedImage<Float>tmp(images[k]);
-			  im[k]=new casacore::TempImage<Float>(tmp.shape(), tmp.coordinates());
-			  im[k]->copyData((LatticeExpr<Float>)(tmp*(*wgt[k])));
-		  }
-		  else if(imagewgttype==2){
-			  PagedImage<Float>tmp(images[k]);
-			  im[k]=new casacore::TempImage<Float>(tmp.shape(), tmp.coordinates());
-			  im[k]->copyData((LatticeExpr<Float>)(iif(*(wgt[k]) > (0.0),
-			  						       (tmp/(*wgt[k])), 0)));
-		  }
-		  else
-			  throw(AipsError("image is weighted in an unknown fashion"));
-		  //rstat=rstat && itsMos->makeMosaic(im, wgt);
+	  if(imagewgttype==1)
+	    im[k]=new casacore::PagedImage<Float>(images[k]);
+	  else if(imagewgttype==0){
+	    PagedImage<Float>tmp(images[k]);
+	    im[k]=new casacore::TempImage<Float>(tmp.shape(), tmp.coordinates());
+	    im[k]->copyData((LatticeExpr<Float>)(tmp*(*wgt[k])));
+	    if(tmp.getDefaultMask() != "")
+	      casa::Imager::copyMask(*im[k], tmp,  tmp.getDefaultMask());
+	  }
+	  else if(imagewgttype==2){
+	    PagedImage<Float>tmp(images[k]);
+	    im[k]=new casacore::TempImage<Float>(tmp.shape(), tmp.coordinates());
+	    im[k]->copyData((LatticeExpr<Float>)(iif(*(wgt[k]) > (0.0),
+						     (tmp/(*wgt[k])), 0)));
+	    if(tmp.getDefaultMask() != "")
+	      casa::Imager::copyMask(*im[k], tmp,  tmp.getDefaultMask());
+	  }
+	  else
+	    throw(AipsError("image is weighted in an unknown fashion"));
+	  //rstat=rstat && itsMos->makeMosaic(im, wgt);
 	  }
 	  rstat=rstat && itsMos->makeMosaic(im, wgt);
     
