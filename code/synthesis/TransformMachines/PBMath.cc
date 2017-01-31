@@ -666,7 +666,7 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
   } else if(telescope(0,4)=="EVLA") {
        whichPB = PBMath::EVLA;
        band = "UNKNOWN";
-  } else if(telescope(0,4)=="NGVLA") {
+  } else if(telescope(0,5)=="NGVLA") {
     whichPB = PBMath::NGVLA;
     band = "UNKNOWN";
   } else if (telescope(0,4)=="WSRT") {
@@ -1053,6 +1053,9 @@ PBMath::getMDirection(const RecordInterface& rec, const String& item,
 void PBMath::initByDiameter(Double diameter, Bool /*useSymmetricBeam*/,
 			    Double /*frequency*/){
   
+  LogIO os(LogOrigin("PBMath", "initByDiameter", WHERE));
+  os << "PBMath init to Airy scaled to diameter = "<<diameter<<LogIO::POST;
+
   // This attempts to reproduce the AIRY pattern VLA PB
   Vector<Float> vlanum(19);
   vlanum(0) = 1.000000;
@@ -1292,6 +1295,7 @@ PBMathInterface* PBMath::pbMathInterfaceForCommonPB(const PBMath::CommonPB ipb, 
     // No squint assumed here or blockage 
     thepbMath = new PBMath1DAiry( Quantity(18.0,"m"), Quantity(0.0,"m"),
 				     Quantity(1.5,"deg"), Quantity(1.0,"GHz"));
+    //    cout << "Using NGVLA PBMath = 18m dish w/o blockage" << endl;
     break;
   // These 4 cases, OVRO, GMRT, NRAO12M, and NRAO140FT, do not represent
   // well determined models (though some of them have well determined models).

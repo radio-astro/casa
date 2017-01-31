@@ -115,7 +115,7 @@ VPSkyJones::VPSkyJones(const ROMSColumns& msc, Table& tab,
 	  
 	} else {        
 	  PBMath  myPBMath( recCol(i));
-	setPBMath (telCol(i), myPBMath);
+	  setPBMath (telCol(i), myPBMath);
 	}
       }
 
@@ -159,14 +159,17 @@ VPSkyJones::VPSkyJones(const ROMSColumns& msc,
 	}
 	
 	if(whichPB != PBMath::UNKNOWN){
-	  os << "PB used " << commonPBName << LogIO::POST;
-	    PBMath  myPBMath(telescope_p, false, freq );
-	    setPBMath (telescope_p, myPBMath);
+	  String PBName;
+	  // close the circle and see if its getting the PB that was intended
+	  PBMath::nameCommonPB(whichPB,PBName);
+	  os << "PB used " << PBName << LogIO::POST;
+	  PBMath  myPBMath(telescope_p, false, freq );
+	  setPBMath (telescope_p, myPBMath);
 	}
 	else{
-	  //lets do it by diameter
-	  os << "PB used determined from dish-diameter" << LogIO::POST;
+	  // lets do it by diameter
 	  Double diam=msc.antenna().dishDiameter()(0);
+	  os << "PB determined from first dish-diameter = "<<diam << LogIO::POST;
 	  PBMath myPBMath(diam, false, freq);
 	  setPBMath(telescope_p, myPBMath);
 

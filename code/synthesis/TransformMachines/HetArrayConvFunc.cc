@@ -149,6 +149,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       }
       if(pbClass_p== PBMathInterface::AIRY){
+	LogIO os;
+	os << LogOrigin("HetArrConvFunc", "findAntennaSizes")  << LogIO::NORMAL;
 	////////We'll be using dish diameter as key
 	for (uInt k=0; k < dishDiam.nelements(); ++k){
 	  if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(String::toString(dishDiam(k)))){
@@ -164,13 +166,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Quantity qdiam(10.7, "m");
 		Quantity blockDiam(0.75, "m");
 		///For ALMA 12m dish it is effectively 10.7 m according to Todd Hunter
-	      ///@ 2011-12-06
+		///@ 2011-12-06
 		if(!((vb.msColumns().observation().telescopeName()(0) =="ALMA") 
 		     && (abs(dishDiam[k] - 12.0) < 0.5))){
 		  qdiam= Quantity (dishDiam(k),"m");	
 		  //VLA ratio of blockage to dish
 		  blockDiam= Quantity(dishDiam(k)/25.0*2.0, "m");
+		  //2017 the ACA dishes are best represented by 6.25m:
+		  if (abs(dishDiam[k] - 7.0) < 0.5) {
+		    qdiam= Quantity(6.25,"m");
+		    blockDiam = Quantity(0.75,"m");
+		  }
 		}	      
+		os << "Overriding PB with Airy of diam,blockage="<<qdiam<<","<<blockDiam<<" starting with antenna "<<k<<LogIO::POST;
 		antMath_p[diamIndex]=new PBMath1DAiry(qdiam, blockDiam,  
 						      Quantity(150,"arcsec"), 
 						      Quantity(100.0,"GHz"));

@@ -2287,7 +2287,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    os << LogIO::SEVERE << image(model) << " is unreadable" << LogIO::POST;
 	  } else {
 	    images_p[model]=0;
-	    os << "About to open model " << model+1 << " named "
+	    os << "Opening model " << model << " named "
 	       << image(model) << LogIO::POST;
 	    images_p[model]=new PagedImage<Float>(image(model));
 	    AlwaysAssert(images_p[model], AipsError);
@@ -2358,13 +2358,13 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     if((ftmachine_p=="sd")||(ftmachine_p=="both")||(ftmachine_p=="mosaic")) {
       getVPRecord( rec, kpb, telescop );
       if(!gvp_p) {
-	os << "Using default primary beams for gridding" << LogIO::POST;
 	// 2016 from SynthesisImager:
-	//VPSkyJones* gvp_p=NULL;
-	// in SynthesisImager this is passed in as a parameter
+	// in SynthesisImager rotatePAStep is passed in as a parameter
 	Float rotatePAStep(5.);
 	if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
-	  os << "Using default primary beams for gridding" << LogIO::POST;
+	  String commonPBName;
+	  PBMath::nameCommonPB(kpb, commonPBName);	  
+	  os << "Using common PB "<<commonPBName<<" for beam calculation for telescope " << telescop << LogIO::POST;
 	  gvp_p= new VPSkyJones(msc, True, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
 	}
 	else{
@@ -2378,7 +2378,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	///2016
       }
       if(ftmachine_p=="sd") {
-	os << "Single dish gridding " << LogIO::POST;
+	os << "Performing Single dish gridding " << LogIO::POST;
 	if(gridfunction_p=="pb") {
 	  ft_p = new SDGrid(*gvp_p, cache_p/2, tile_p, gridfunction_p);
 	}
@@ -2387,8 +2387,8 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	}
       }
       else if(ftmachine_p=="mosaic") {
-	os << "Performing Mosaic gridding" << LogIO::POST;
 	// RI TODO need stokesString for current spw - e.g. currSpw()?
+	os << "Performing Mosaic gridding" << LogIO::POST;
 	//2016 from SynthesisImager:
 	ft_p = new MosaicFTNew(gvp_p, mLocation_p, stokesString_p[0], cache_p/2, tile_p, true);
 	PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
@@ -2397,7 +2397,11 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	///Use Heterogenous array mode for the following
 	if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
 	   || (kpb==PBMath::ALMA)){
-	  //os << "Setting primary beams by antenna diameter" << LogIO::WARN;
+	  String PBName;
+	  PBMath::nameCommonPB(kpb,PBName);
+	  os << "Enabling Heterogeneous Array for PBMath "<<PBName<<LogIO::POST;
+	  // Will use Airys - to do something more complex we need to 
+	  // use HetArrayConvFunv::fromRecord
 	  CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, "");
 	  static_cast<MosaicFTNew &>(*ft_p).setConvFunc(mospb);
 	}
@@ -2431,7 +2435,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	ft_p = new WProjectFT(wprojPlanes_p, mLocation_p, cache_p/2, tile_p, false);
       }
       else if (ftmachine_p=="pbwproject") {
-	os << "Fourier transfroms will use specified common tangent point and PBs" 
+	os << "Fourier transforms will use specified common tangent point and PBs" 
 	   << LogIO::POST;
 	os << formatDirection(sourceDirection_p[nField-1]) << LogIO::POST;
 	
@@ -2510,7 +2514,9 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 
     se_p = new SkyEquation ( *sm_p, *vs_p, *ft_p, *cft_p );
     
-    // Now add any SkyJones that are needed
+    // Now add any SkyJones that are needed    
+    // TODO can we make the single-pointing VPskyjones heterogeneous?
+    // (vp_p is not applied if ftmachine=mosaic)
     if(doVP_p) {
       ROMSColumns msc(*ams);
       if (doDefaultVP_p) {
