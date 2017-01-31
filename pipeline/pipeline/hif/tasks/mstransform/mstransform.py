@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import types
+import operator
 import os
 
 import pipeline.infrastructure as infrastructure
@@ -78,14 +79,27 @@ class MstransformInputs(basetask.StandardInputs):
         # that do not contain data for the requested Inputs spectral
         # windows - the science spectral windows by default.
         #
-        # While we're here, also remove any fields that are not linked
-        # with a source..
-        fields = [f for f in fields if getattr(f, 'source', None) is not None]
-        # .. and then any fields that do not contain the requested
-        # spectral windows. This should prevent aborted scans from
-        # being split into the TARGET measurement set.
-        requested_spws = set(self.ms.get_spectral_windows(self.spw))
-        fields = [f for f in fields if not f.valid_spws.isdisjoint(requested_spws)]
+        if fields:
+            fields_by_id = sorted(fields, key=operator.attrgetter('id'))
+            last_field = fields_by_id[-1]
+
+            # While we're here, remove any fields that are not
+            # linked with a source. This should not occur since the
+            # CAS-9499 tablereader bug was fixed, but check anyway.
+            if getattr(last_field, 'source', None) is None:
+                fields.remove(last_field)
+                LOG.info('Truncated observation detected (no source for field): '
+                         'removing Field {!s}'.format(last_field.id))
+            else:
+                # .. and then any fields that do not contain the
+                # requested spectral windows. This should prevent
+                # aborted scans from being split into the TARGET
+                # measurement set.
+                requested_spws = set(self.ms.get_spectral_windows(self.spw))
+                if last_field.valid_spws.isdisjoint(requested_spws):
+                    LOG.info('Truncated observation detected (missing spws): '
+                             'removing Field {!s}'.format(last_field.id))
+                    fields.remove(last_field)
 
         unique_field_names = set([f.name for f in fields])
         field_ids = set([f.id for f in fields])
