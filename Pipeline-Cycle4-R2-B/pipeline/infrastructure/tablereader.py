@@ -584,11 +584,20 @@ class SourceTable(object):
 
         all_sources = zip(ids, sourcenames, directions, propermotions)
 
-        # only return sources for which scans are present
-        # create a mapping of source id to a boolean of whether any scans are present for that source
-        source_id_to_scans = {source_id: (len(msmd.scansforfield(field_id)) is not 0)
-                              for source_id in set(msmd.sourceidsfromsourcetable())
-                              for field_id in set(msmd.fieldsforsource(source_id))}
+        # Only return sources for which scans are present.
+        # Create a mapping of source id to a boolean of whether any
+        # scans are present for that source, using fields to link
+        # between sources and scans.
+        source_id_to_scans = {}
+        for source_id in set(msmd.sourceidsfromsourcetable()):
+            fields_for_source = set(msmd.fieldsforsource(source_id))
+            # Fields do not necessarily have associated scans. If only the
+            # first field is tested and gives a negative result, CAS-9499
+            # results (AttributeError: 'Field' object has no attribute
+            # 'source'). Prevent this by testing all fields for the
+            # presence of scans.
+            source_id_to_scans[source_id] = any([len(msmd.scansforfield(field_id)) is not 0
+                                                 for field_id in fields_for_source])
 
         return [row for row in all_sources if source_id_to_scans.get(row[0], False)]
 
