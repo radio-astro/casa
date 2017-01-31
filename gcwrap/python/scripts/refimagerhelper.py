@@ -1039,6 +1039,12 @@ class PyParallelCubeSynthesisImager():
             joblist.append( self.PH.runcmd("imager.restoreImages()", node) )
         self.PH.checkJobs( joblist )
 
+    def pbcorImages(self):
+        joblist=[]
+        for node in self.listOfNodes:
+            joblist.append( self.PH.runcmd("imager.pbcorImages()", node) )
+        self.PH.checkJobs( joblist )
+
     def makePB(self):
         joblist=[]
         for node in self.listOfNodes:
@@ -1047,7 +1053,7 @@ class PyParallelCubeSynthesisImager():
 
     def concatImages(self, type='virtualnomove'):
         import subprocess
-        imtypes=['image','psf','model','residual','mask','pb', 'pbcor', 'weight', 'sumwt']
+        imtypes=['image','psf','model','residual','mask','pb', 'image.pbcor', 'weight', 'sumwt']
         for immod in range(0,self.NF):
             for ext in imtypes:
                 subimliststr="'"
@@ -1134,6 +1140,10 @@ class PyParallelDeconvolver(PySynthesisImager):
 #############################################
     def restoreImages(self):
          self.PH.runcmdcheck("toolsd.restore()")
+ 
+#############################################
+    def pbcorImages(self):
+         self.PH.runcmdcheck("toolsd.pbcor()")
 
 #############################################
 #############################################
