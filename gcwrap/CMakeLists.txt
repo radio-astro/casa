@@ -240,6 +240,7 @@ endif()
 
 
 # OpenMP
+find_package( OpenMP )
 if( OPENMP_FOUND )
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
         set(DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -qopenmp")
