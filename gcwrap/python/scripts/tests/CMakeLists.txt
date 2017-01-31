@@ -83,6 +83,7 @@ casa_add_python( tools tools_tests_python lib/python${PYTHONV}/tests
   test_ia_insert.py
   test_ia_isconform.py
   test_ia_makecomplex.py
+  test_ia_makestatimage.py
   test_ia_maskhandler.py
   test_ia_modify.py
   test_ia_newimagefromimage.py

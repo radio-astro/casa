@@ -97,6 +97,7 @@
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 #include <imageanalysis/ImageAnalysis/SepImageConvolverTask.h>
+#include <imageanalysis/ImageAnalysis/StatImageCreator.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <imageanalysis/ImageAnalysis/TwoPointCorrelator.h>
 
@@ -2911,6 +2912,125 @@ bool image::makecomplex(
         RETHROW(x);
     }
     return false;
+}
+
+image* image::makestatimage(
+    const std::string& outfile, const variant& region,
+    const string& mask, bool overwrite, bool stretch,
+    const vector<int>& grid, const vector<int>& anchor,
+    const variant& xlength, const variant& ylength,
+    const string& interp, const string& stattype,
+    const string& statalg, double zscore, int maxiter
+) {
+    _log << _ORIGIN;
+    try {
+        if (detached()) {
+            return nullptr;
+        }
+        ThrowIf(
+            ! _imageF,
+            "This method only supports Float valued images"
+        );
+        ThrowIf(
+            grid.size() != 2,
+            "grid must have exactly two positive integer values"
+        );
+        ThrowIf(
+            anchor.size() != 2,
+            "anchor must have exactly two integer values"
+        );
+        ThrowIf(
+            grid[0] <= 0 || grid[1] <= 0,
+            "Both grid value(s) must be positive"
+        );
+        String mystatalg = statalg;
+        auto myreg = _getRegion(region, False);
+        auto  myxlen = xlength.type() == variant::INT
+            ? casacore::String::toString(xlength.toInt()) + "pix"
+            : xlength.toString();
+        auto myylen = ylength.type() == variant::INT
+            ? casacore::String::toString(ylength.toInt()) + "pix"
+            : ylength.toString();
+        String err;
+        QuantumHolder qh;
+        casacore::Quantity qxl, qyl;
+        ThrowIf(
+            ! qh.fromString(err, myxlen),
+            "xlength is not a valid quantity: " + err
+        );
+        qxl = qh.asQuantity();
+        if (myylen.empty()) {
+            // circle, so we need the radius, not the diameter
+            auto z = qh.asQuantity();
+            qxl = z/2;
+        }
+        else {
+            ThrowIf(
+                ! qh.fromString(err, myylen),
+                "ylength is not a valid quantity: " + err
+            );
+            qyl = qh.asQuantity();
+        }
+        String myinterp = interp;
+        myinterp.downcase();
+        Interpolate2D::Method interpAlg;
+        if (myinterp.startsWith("c")) {
+            interpAlg = Interpolate2D::CUBIC;
+        }
+        else if (myinterp.startsWith("la")) {
+            interpAlg = Interpolate2D::LANCZOS;
+        }
+        else if (myinterp.startsWith("li")) {
+            interpAlg = Interpolate2D::LINEAR;
+        }
+        else if (myinterp.startsWith("n")) {
+            interpAlg = Interpolate2D::NEAREST;
+        }
+        else {
+            ThrowCc("Interpolation algorithm " + interp + " is not supported.");
+        }
+        StatImageCreator sic(_imageF, myreg.get(), mask, outfile, overwrite);
+        mystatalg.downcase();
+        if (mystatalg.startsWith("cl")) {
+            sic.configureClassical(ImageStatsConfigurator::AUTO);
+        }
+        else if (mystatalg.startsWith("ch")) {
+            sic.configureChauvenet(zscore, maxiter);
+        }
+        else {
+            ThrowCc("Unsupported stats algorithm " + statalg);
+        }
+        sic.setAnchorPosition(anchor[0], anchor[1]);
+        sic.setGridSpacing(grid[0], grid[1]);
+        sic.setStretch(stretch);
+        sic.setStatType(stattype);
+        if (myylen.empty()) {
+            sic.setRadius(qxl);
+        }
+        else {
+            sic.setRectangle(qxl, qyl);
+        }
+        sic.setInterpAlgorithm(interpAlg);
+        vector<String> names {
+            "outfile", "region", "mask", "overwrite", "stretch",
+            "grid", "anchor", "xlength", "ylength", "interp",
+            "stattype", "statalg", "zscore", "maxiter"
+        };
+        vector<variant> values {
+            outfile, region, mask, overwrite, stretch,
+            grid, anchor, xlength, ylength, interp,
+            stattype, statalg, zscore, maxiter
+        };
+        auto msgs = _newHistory(__func__,names, values);
+        sic.addHistory(_ORIGIN, msgs);
+        return new image(sic.compute());
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+             << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
 }
 
 bool image::maketestimage(
@@ -5829,7 +5949,7 @@ SHARED_PTR<Record> image::_getRegion(
                 : new Record(
                     CasacRegionManager::regionFromString(
                         csys, region.toString(),
-                        _name(false), shape
+                        _name(false), shape, True
                     )
                 )
         );
