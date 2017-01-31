@@ -118,10 +118,12 @@ FlagAgentSummary::setAgentParameters(Record config)
     {
         *logger_p << LogIO::NORMAL << " Spw-Channel count activated " << LogIO::POST;
     }
+/*
     else
     {
         *logger_p << LogIO::NORMAL << " Spw-Channel count deactivated " << LogIO::POST;
     }
+*/
 
     exists = config.fieldNumber ("spwcorr");
     if (exists >= 0)
@@ -142,10 +144,12 @@ FlagAgentSummary::setAgentParameters(Record config)
     {
         *logger_p << LogIO::NORMAL << " Spw-Correlation count activated " << LogIO::POST;
     }
+/*
     else
     {
         *logger_p << LogIO::NORMAL << " Spw-Correlation count deactivated " << LogIO::POST;
     }
+*/
 
     exists = config.fieldNumber ("basecnt");
     if (exists >= 0)
@@ -166,10 +170,12 @@ FlagAgentSummary::setAgentParameters(Record config)
     {
         *logger_p << LogIO::NORMAL << " Baseline count activated " << LogIO::POST;
     }
+/*
     else
     {
         *logger_p << LogIO::NORMAL << " Baseline count deactivated " << LogIO::POST;
     }
+*/
 
     exists = config.fieldNumber ("fieldcnt");
     if (exists >= 0)
@@ -190,10 +196,12 @@ FlagAgentSummary::setAgentParameters(Record config)
     {
         *logger_p << LogIO::NORMAL << " Field breakdown activated " << LogIO::POST;
     }
+/*
     else
     {
         *logger_p << LogIO::NORMAL << " Field breakdown deactivated " << LogIO::POST;
     }
+*/
 
 	exists = config.fieldNumber ("display");
 	if (exists >= 0)
