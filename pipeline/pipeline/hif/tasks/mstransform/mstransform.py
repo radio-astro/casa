@@ -52,7 +52,6 @@ class MstransformInputs(basetask.StandardInputs):
             value = list(value.replace('[','').replace(']','').replace("'","").split(','))
         self._outputvis = value
 
-
     # Find all the fields with TARGET intent
     @property
     def field(self):
@@ -67,6 +66,27 @@ class MstransformInputs(basetask.StandardInputs):
         # Otherwise return each field in the current ms that has been observed
         # with the desired intent
         fields = self.ms.get_fields(intent=self.intent)
+
+        # CAS-9499: MOUS uid://A001/X88f/X128 aborts during
+        # hif_uvcontfit with AttributeError: 'Field' object has no
+        # attribute 'source'.
+        #
+        # This bug revealed a problem that occurs when an observation
+        # is terminated: the final scan can be a TARGET scan but not
+        # contain any data for the science spectral windows, only for
+        # the square law detectors. The following code removes fields
+        # that do not contain data for the requested Inputs spectral
+        # windows - the science spectral windows by default.
+        #
+        # While we're here, also remove any fields that are not linked
+        # with a source..
+        fields = [f for f in fields if getattr(f, 'source', None) is not None]
+        # .. and then any fields that do not contain the requested
+        # spectral windows. This should prevent aborted scans from
+        # being split into the TARGET measurement set.
+        requested_spws = set(self.ms.get_spectral_windows(self.spw))
+        fields = [f for f in fields if not f.valid_spws.isdisjoint(requested_spws)]
+
         unique_field_names = set([f.name for f in fields])
         field_ids = set([f.id for f in fields])
 
@@ -102,7 +122,7 @@ class MstransformInputs(basetask.StandardInputs):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('spw')
 
-        science_target_intents = set (self.intent.split(','))
+        science_target_intents = set(self.intent.split(','))
         science_target_spws = []
 
         science_spws = [spw for spw in self.ms.get_spectral_windows(self._spw)]
@@ -152,7 +172,7 @@ class Mstransform(basetask.StandardTaskTemplate):
 
         return result
 
-    def analyse (self, result):
+    def analyse(self, result):
         # Check for existence of the output vis. 
         if not os.path.exists(result.outputvis):
             LOG.debug('Error creating target MS %s' % (os.path.basename(result.outputvis)))
