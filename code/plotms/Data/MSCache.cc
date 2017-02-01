@@ -1053,25 +1053,30 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 
 	switch(axis) {
 
-	case PMS::SCAN: // assumes scan unique in VB
+	case PMS::SCAN: { // assumes scan unique in VB
 		scan_(vbnum) = vb->scan()(0);
 		break;
+    }
 
-	case PMS::FIELD: // assumes field unique in VB
+	case PMS::FIELD: { // assumes field unique in VB
 		field_(vbnum) = vb->fieldId()(0);
 		break;
+    }
 
-	case PMS::TIME: // assumes time unique in VB
+	case PMS::TIME: { // assumes time unique in VB
 		time_(vbnum) = vb->time()(0);
 		break;
+    }
 
-	case PMS::TIME_INTERVAL: // assumes timeInterval unique in VB
+	case PMS::TIME_INTERVAL: { // assumes timeInterval unique in VB
 		timeIntr_(vbnum) = vb->timeInterval()(0);
 		break;
+    }
 
-	case PMS::SPW:
+	case PMS::SPW: {
 		spw_(vbnum) = vb->spectralWindows()(0);
 		break;
+    }
 
 	case PMS::CHANNEL: {
         Vector<Int> chans = vb->getChannelNumbers(0);
@@ -1118,12 +1123,14 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		break;
     }
 
-	case PMS::ANTENNA1:
+	case PMS::ANTENNA1: {
 		*antenna1_[vbnum] = vb->antenna1();
 		break;
-	case PMS::ANTENNA2:
+	}
+	case PMS::ANTENNA2: {
 		*antenna2_[vbnum] = vb->antenna2();
 		break;
+	}
 	case PMS::BASELINE: {
 		Vector<Int> a1(vb->antenna1());
 		Vector<Int> a2(vb->antenna2());
@@ -1142,15 +1149,18 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		*uvdist_[vbnum] = sqrt(u*u+v*v);
 		break;
 	}
-	case PMS::U:
+	case PMS::U: {
 		*u_[vbnum] = vb->uvw().row(0);
 		break;
-	case PMS::V:
+	}
+	case PMS::V: {
 		*v_[vbnum] = vb->uvw().row(1);
 		break;
-	case PMS::W:
+	}
+	case PMS::W: {
 		*w_[vbnum] = vb->uvw().row(2);
 		break;
+	}
 	case PMS::UVDIST_L: {
 		Array<Double> u(vb->uvw().row(0));
 		Array<Double> v(vb->uvw().row(1));
@@ -1365,11 +1375,12 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 			*real_[vbnum] = real(vb->visCubeCorrected()) / real(vb->visCubeModel());
 			break;
 		}
-		case PMS::FLOAT_DATA:
+		case PMS::FLOAT_DATA: {
             *real_[vbnum] = vb->visCubeFloat();  // float data is real
 			break;
 		}
 		break;
+        }
 	}
 	case PMS::IMAG: {
 		switch(data) {
@@ -1407,23 +1418,25 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		break;
 	}
 
-	case PMS::FLAG:
+	case PMS::FLAG: {
 		*flag_[vbnum] = vb->flagCube();
 		break;
-	case PMS::FLAG_ROW:
+    }
+	case PMS::FLAG_ROW: {
 		*flagrow_[vbnum] = vb->flagRow();
 		break;
+	}
 
 	case PMS::WT: {
 		*wt_[vbnum] = vb->weight();
 		break;
 	}
-
 	case PMS::WTSP: {
 	        if (vb->weightSpectrum().nelements()>0)
 			*wtsp_[vbnum] = vb->weightSpectrum();
 		else
 	  		throw(AipsError("This MS does not have a valid WEIGHT_SPECTRUM column."));
+        break;
 	}
 
 	case PMS::WTxAMP: {
@@ -1458,14 +1471,17 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		for(uInt c = 0; c < nchannels; ++c) {
 			wtA.xzPlane(c) = wtA.xzPlane(c) * vb->weight();
 		}
+        break;
 	}
 
-	case PMS::SIGMA:
+	case PMS::SIGMA: {
 		*sigma_[vbnum] = vb->sigma();
 		break;
-	case PMS::SIGMASP:
+	}
+	case PMS::SIGMASP: {
 		*sigmasp_[vbnum] = vb->sigmaSpectrum();
 		break;
+	}
 
 	case PMS::AZ0:
 	case PMS::EL0: {
@@ -1476,9 +1492,10 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		break;
 	}
 
-	case PMS::HA0:
+	case PMS::HA0: {
 		ha0_(vbnum) = vb->hourang(vb->time()(0))*12/C::pi;  // in hours
 		break;
+	}
 	case PMS::PA0: {
 		pa0_(vbnum) = vb->parang0(vb->time()(0))*180.0/C::pi; // in degrees
 		if (pa0_(vbnum)<0.0) pa0_(vbnum)+=360.0;
@@ -1515,17 +1532,20 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		rho_(vbnum ) = rhoQuantity.getValue( "km");
 		break;
 	}
-	case PMS::PARANG:
+	case PMS::PARANG: {
 		*parang_[vbnum] = vb->feedPa(vb->time()(0))*(180.0/C::pi);  // in degrees
 		break;
+	}
 
-	case PMS::ROW:
+	case PMS::ROW: {
 		*row_[vbnum] = vb->rowIds();
 		break;
+	}
 
-	case PMS::OBSERVATION:
+	case PMS::OBSERVATION: {
 		*obsid_[vbnum] = vb->observationId();
 		break;
+	}
 
 	case PMS::INTENT:{
 		Vector<Int> states = vb->stateId();
@@ -1542,9 +1562,10 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		break;
 	}
 
-	default:
+	default: {
 		throw(AipsError("Axis choice not supported for MS"));
 		break;
+	}
 	}
 }
 
