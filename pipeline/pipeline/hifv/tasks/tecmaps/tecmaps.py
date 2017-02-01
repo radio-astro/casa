@@ -108,10 +108,10 @@ class TecMaps(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
-        tec_maps.create(vis=inputs.vis, doplot=True, imname='iono')
+        tec_image, tec_rms_image = tec_maps.create(vis=inputs.vis, doplot=True, imname='iono')
 
         gencal_args = inputs.to_casa_args()
-        gencal_args['infile'] = 'iono.IGS_TEC.im'
+        gencal_args['infile'] = tec_image
         gencal_job = casa_tasks.gencal(**gencal_args)
         self._executor.execute(gencal_job)
 
