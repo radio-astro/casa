@@ -55,7 +55,6 @@ LOG = infrastructure.get_logger(__name__)
 from . import manifest
 
 StdFileProducts = collections.namedtuple('StdFileProducts', 'ppr_file weblog_file casa_commands_file casa_pipescript casa_restore_script')
-AuxFileProducts = collections.namedtuple('AuxFileProducts', 'flux_file antenna_file cont_file flagtargets_list')
 
 
 class ExportDataInputs(basetask.StandardInputs):
@@ -302,14 +301,7 @@ class ExportData(basetask.StandardTaskTemplate):
         result.restorescript =os.path.basename(stdfproducts.casa_restore_script)
         result.commandslog =os.path.basename(stdfproducts.casa_commands_file)
 
-        # Export the auxiliary file products
-        #    TBD Move this routine to the ALMA interferometry pipeline
-        #    These are optional for reprocessing but informative to the user
-        #    The calibrator source fluxes file
-        #    The antenna positions file
-        #    The continuum regions file
-        #    The target flagging file
-        auxfproducts =  self._do_auxiliary_products(inputs.context, oussid, inputs.output_dir, inputs.products_dir)
+        auxfproducts = None
 
         # Make the standard ms dictionary and export per ms products
         #    Currently these are compressed tar files of per MS flagging tables and per MS text files of calibration apply instructions
@@ -433,42 +425,6 @@ class ExportData(basetask.StandardTaskTemplate):
             casa_pipescript,
             casa_restore_script)
 
-    def _do_auxiliary_products(self, context, oussid, output_dir, products_dir):
-
-        '''
-        Generate the auxliliary products
-        '''
-
-        # Export the flux.csv file
-        #    Does not need to be exported to the archive because the information
-        #    is encapsulated in the calibration tables
-        #    Relies on file name convention
-        flux_file = self._export_flux_file (context, oussid, 'flux.csv', products_dir)
-
-        # Export the antennapos.csv file.
-        #    Does not need to be exported to the archive because the information
-        #    is encapsulated in the calibration tables
-        #    Relies on file name convention
-        antenna_file = self._export_antpos_file (context, oussid, 'antennapos.csv',
-            products_dir)
-
-        # Export the cont.dat file.
-        #    May need to be exported to the archive. This is TBD
-        #    Relies on file name convention
-        cont_file = self._export_cont_file (context, oussid, 'cont.dat',
-            products_dir)
-
-        # Export the target source template flagging files
-        #    Whether or not these should be exported to the archive depends on
-        #    the final place of the target flagging step in the work flow
-        targetflags_list = self._export_targetflags_files (context, oussid,
-            '*_flagtargetstemplate.txt', products_dir)
-
-        return AuxFileProducts (flux_file,
-            antenna_file,
-            cont_file,
-            targetflags_list)
-
     def _do_standard_ms_products (self, context, vislist, products_dir):
 
         '''
@@ -569,16 +525,7 @@ class ExportData(basetask.StandardTaskTemplate):
         pipemanifest.add_restorescript (ouss, os.path.basename(stdfproducts.casa_restore_script))
 
         if auxfproducts:
-            # Add the flux.csv file
-            pipemanifest.add_flux_file (ouss, os.path.basename(auxfproducts.flux_file))
-
-            # Add the antennapos.csv file.
-            pipemanifest.add_antennapos_file (ouss, os.path.basename(auxfproducts.antenna_file))
-
-            # Add the cont.dat file.
-            #    May need to be exported to the archive. This is TBD
-            #    Relies on file name convention
-            pipemanifest.add_cont_file (ouss, os.path.basename(auxfproducts.cont_file))
+            pass
 
         # Add the calibrator images
         pipemanifest.add_images (ouss, calimages, 'calibrator')
@@ -885,103 +832,6 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return os.path.basename(out_casalog_file)
 
-    def _export_flux_file (self, context, oussid, fluxfile_name, products_dir):
-
-        """
-        Save the flux file
-        """
-
-        ps = context.project_structure
-        if ps is None:
-            flux_file = os.path.join (context.output_dir, fluxfile_name)
-            out_flux_file = os.path.join (products_dir, fluxfile_name)
-        elif ps.ousstatus_entity_id == 'unknown':
-            flux_file = os.path.join (context.output_dir, fluxfile_name)
-            out_flux_file = os.path.join (products_dir, fluxfile_name)
-        else:
-            flux_file = os.path.join (context.output_dir, fluxfile_name)
-            out_flux_file = os.path.join (products_dir, oussid + '.' + fluxfile_name)
-
-        if os.path.exists(flux_file):
-            LOG.info('Copying flux file %s to %s' % \
-                     (flux_file, out_flux_file))
-            shutil.copy (flux_file, out_flux_file)
-            return os.path.basename(out_flux_file)
-        else:
-            return 'Undefined'
-
-
-    def _export_antpos_file (self, context, oussid, antposfile_name, products_dir):
-
-        """
-        Save the antenna positions file
-        """
-
-        ps = context.project_structure
-        if ps is None:
-            antpos_file = os.path.join (context.output_dir, antposfile_name)
-            out_antpos_file = os.path.join (products_dir, antposfile_name)
-        elif ps.ousstatus_entity_id == 'unknown':
-            antpos_file = os.path.join (context.output_dir, antposfile_name)
-            out_antpos_file = os.path.join (products_dir, antposfile_name)
-        else:
-            antpos_file = os.path.join (context.output_dir, antposfile_name)
-            out_antpos_file = os.path.join (products_dir, oussid + '.' + antposfile_name)
-
-        if os.path.exists(antpos_file):
-            LOG.info('Copying antenna postions file %s to %s' % \
-                     (antpos_file, out_antpos_file))
-            shutil.copy (antpos_file, out_antpos_file)
-            return os.path.basename(out_antpos_file)
-        else:
-            return 'Undefined'
-
-    def _export_cont_file (self, context, oussid, contfile_name, products_dir):
-
-        """
-        Save the continuum regions file
-        """
-
-        ps = context.project_structure
-        if ps is None:
-            cont_file = os.path.join (context.output_dir, contfile_name)
-            out_cont_file = os.path.join (products_dir, contfile_name)
-        elif ps.ousstatus_entity_id == 'unknown':
-            cont_file = os.path.join (context.output_dir, contfile_name)
-            out_cont_file = os.path.join (products_dir, contfile_name)
-        else:
-            cont_file = os.path.join (context.output_dir, contfile_name)
-            out_cont_file = os.path.join (products_dir, oussid + '.' + contfile_name)
-
-        if os.path.exists(cont_file):
-            LOG.info('Copying continuum frequency ranges file %s to %s' % \
-                     (cont_file, out_cont_file))
-            shutil.copy (cont_file, out_cont_file)
-            return os.path.basename(out_cont_file)
-        else:
-            return 'Undefined'
-
-    def _export_targetflags_files (self, context, oussid, pattern, products_dir):
-
-        """
-        Export the target flags files
-        Remove file name dependency on oussid but leave argument in place for now
-        """
-
-        output_filelist = []
-        ps = context.project_structure
-        for file_name in glob.glob(pattern):
-            flags_file = os.path.join (context.output_dir, file_name)
-            out_flags_file = os.path.join (products_dir, file_name)
-            if os.path.exists(flags_file):
-                LOG.info('Copying science target flags file %s to %s' % \
-                     (flags_file, out_flags_file))
-                shutil.copy (flags_file, out_flags_file)
-                output_filelist.append(os.path.basename(out_flags_file))
-            else:
-                output_filelist.append('Undefined')
-
-        return output_filelist
 
     def _export_casa_restore_script (self, context, script_name, products_dir, oussid, vislist, session_list):
 
