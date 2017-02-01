@@ -107,7 +107,7 @@ macro( casa_add_executable module name )
       message ("-- Executable ${name} has WarningsAsErrors")
     endif ()
 
-    target_link_libraries( ${name} lib${module} )
+    target_link_libraries( ${name} lib${module} ${INTEL_LIBS} )
     add_dependencies( ${module}_fast ${name}_fast )
 
   endif ()

@@ -480,6 +480,7 @@ macro( casa_find package )
         try_run( ${package}_RUN ${package}_COMPILE ${CMAKE_BINARY_DIR} ${_try}
           CMAKE_FLAGS -Wdev
           "-DINCLUDE_DIRECTORIES=${${package}_INCLUDE_DIRS}"
+          "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}"
           COMPILE_DEFINITIONS ${${package}_DEFINITIONS}
           COMPILE_OUTPUT_VARIABLE _compile_out
           RUN_OUTPUT_VARIABLE _run_out )

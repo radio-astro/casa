@@ -224,18 +224,18 @@ else()
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+   ## setting intel libraries with e.g.
+   ##
+   ##    find_library( INTEL_IRNG irng HINTS ${INTEL_PATH} )
+   ##
+   ## causes CMAKE to substitute fully qualified paths which makes
+   ## python shared object unrelocatable in the case of libirng.so
+   ##
    get_filename_component(INTEL_PATH ${CMAKE_CXX_COMPILER} DIRECTORY)
-   set(INTEL_LIB_PATH "${INTEL_PATH}/../lib/intel64_lin")
-   find_library( INTEL_IMF imf HINTS ${INTEL_LIB_PATH} )
-   find_library( INTEL_SVML svml HINTS ${INTEL_LIB_PATH} )
-   find_library( INTEL_IRNG irng HINTS ${INTEL_LIB_PATH} )
-   find_library( INTEL_INTLC intlc HINTS ${INTEL_LIB_PATH} )
-   find_library( INTEL_IFPORT ifport HINTS ${INTEL_LIB_PATH} )
-   find_library( INTEL_IFCORE ifcore HINTS ${INTEL_LIB_PATH} )
-   find_library( INTEL_IOMP iomp5 HINTS ${INTEL_LIB_PATH} )
-   set(INTEL_LIBRARIES "${INTEL_IMF} ${INTEL_SVML} ${INTEL_IRNG} ${INTEL_INTLC} ${INTEL_IFPORT} ${INTEL_IFCORE} ${INTEL_IOMP}")
-   set(CMAKE_EXE_LINKER_FLAGS "-L${INTEL_LIB_PATH} ${CMAKE_EXE_LINKER_FLAGS} ${INTEL_LIBRARIES} -Wl,-rpath,${INTEL_LIB_PATH}")
-   set(CMAKE_SHARED_LINKER_FLAGS "-L${INTEL_LIB_PATH} ${CMAKE_SHARED_LINKER_FLAGS} ${INTEL_LIBRARIES} -Wl,-rpath,${INTEL_LIB_PATH}")
+   set(INTEL_LIB_PATH ${INTEL_PATH}/../lib/intel64)
+   set(INTEL_LIBS -limf -lsvml -lirng -lintlc -lifport -lifcore -liomp5)
+   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,${INTEL_LIB_PATH}")
+   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath,${INTEL_LIB_PATH}")
 endif()
 
 
@@ -437,9 +437,9 @@ if( APPLE )
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
 
     if( DEFINED ENV{LDFLAGS} )
-        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined $ENV{LDFLAGS}")
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined $ENV{LDFLAGS} -Wl,-rpath,${INTEL_LIB_PATH}")
     else( )
-        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined -Wl,-rpath,${INTEL_LIB_PATH}")
     endif( )
 
     if( CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
@@ -702,7 +702,7 @@ if( NOT SKIP_PGPLOT )
      if (APPLE)
         set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit" )
      else()
-        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error" )
+        set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-undefined -Wl,error" )
      endif()
   endif()
   casa_find( PGPLOT

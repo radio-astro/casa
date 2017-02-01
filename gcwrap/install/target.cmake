@@ -26,8 +26,8 @@
 # In CASA, it does not make sense to build without also installing
 # the build products. Therefore...
 #
-# Create a target which ensures that the install target is 
-# always run as part of all. 
+# Create a target which ensures that the install target is
+# always run as part of all.
 #
 # For this to work, all other targets must be added as dependencies
 # of this "inst" target. This is done in the macro's below using add_dependencies()
@@ -74,8 +74,8 @@ macro( casa_add_library module )
 
   # Create the target lib<module>, but set the output library
   # filename to lib<module>.<suffix> (which would have defaulted
-  # to liblib<module>.<suffix>). The target named <module> is the 
-  # umbrella target for all targets (libraries, executables, ...) 
+  # to liblib<module>.<suffix>). The target named <module> is the
+  # umbrella target for all targets (libraries, executables, ...)
   # in this subdirectory.
 
   add_library( lib${module} ${ARGN} )
@@ -111,7 +111,7 @@ macro( casa_add_executable module name )
   add_custom_target( ${name}_fast ${CMAKE_BUILD_TOOL} ${name}/fast )
   add_dependencies( ${module}_fast ${name}_fast )
 
-  target_link_libraries( ${name} lib${module} )
+  target_link_libraries( ${name} lib${module} ${INTEL_LIBS} )
 
   install( TARGETS ${name} RUNTIME DESTINATION bin )
 
@@ -164,7 +164,7 @@ endmacro()
 #     <module>_INCLUDE_DIRS
 #     <module>_DEFINITIONS
 #     <module>_LINK_TO
-# 
+#
 # Fixme: move qt4, dbus, alma special cases
 # to client code
 
@@ -174,14 +174,14 @@ macro( casa_add_module module )
 
   # Internal target to update this module including dependencies,
   # then install this module, excluding dependencies
-  add_custom_target( 
+  add_custom_target(
     ${module}_install
-    COMMAND ${CMAKE_BUILD_TOOL} install 
+    COMMAND ${CMAKE_BUILD_TOOL} install
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${module}
     )
 
   # Target to update and install this module, excluding dependencies
-  add_custom_target( 
+  add_custom_target(
     ${module}_fast
     COMMAND ${CMAKE_BUILD_TOOL} install/fast
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${module}
@@ -191,7 +191,7 @@ macro( casa_add_module module )
   # Target to update and install this module, including dependency modules
   add_custom_target( ${module} COMMENT "Updating ${module}..." )
   add_dependencies( ${module} ${module}_install )
-  
+
 
   # Include path always include code/include/
   set( ${module}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR})
@@ -207,8 +207,8 @@ macro( casa_add_module module )
         message( FATAL_ERROR "${_dep} is listed as dependency for ${module}, but both ${_dep}_INCLUDE_DIRS and ${_dep}_LIBRARIES are undefined!" )
       endif()
     endif()
-    
-    # INCLUDE_DIRS 
+
+    # INCLUDE_DIRS
     # Add each of the dependent's include dirs
     # to this module's include dirs
     # (if not already contained in _INCLUDE_DIRS)
@@ -218,14 +218,14 @@ macro( casa_add_module module )
 
     endforeach()
 
-    # DEFINITIONS 
+    # DEFINITIONS
     foreach( _def ${${_dep}_DEFINITIONS} )
 
       casa_append( ${module}_DEFINITIONS ${_def} )
 
     endforeach()
 
-    # LINK_TO 
+    # LINK_TO
     # Unlike include dirs, libraries do not have
     # to be transitively propagated.
     # E.g. if A links to (depends on) B and B links to C
@@ -237,7 +237,7 @@ macro( casa_add_module module )
 
       # External library
 
-      set( ${module}_LINK_TO 
+      set( ${module}_LINK_TO
         ${${module}_LINK_TO}
         ${${_dep}_LIBRARIES} )
 
@@ -245,8 +245,8 @@ macro( casa_add_module module )
       # Another CASA module
 
       set(
-        ${module}_LINK_TO 
-        ${${module}_LINK_TO} 
+        ${module}_LINK_TO
+        ${${module}_LINK_TO}
         lib${_dep} )
 
       add_dependencies( ${module} ${_dep}_install )
@@ -257,8 +257,8 @@ macro( casa_add_module module )
     if( ${_dep} STREQUAL "DBUS" OR
 		    ${_dep} STREQUAL "QT4" OR
 		    ${_dep} STREQUAL "TOOLS" )
-      
-      set( ${module}_INCLUDE_DIRS 
+
+      set( ${module}_INCLUDE_DIRS
         ${${module}_INCLUDE_DIRS}
         ${CMAKE_BINARY_DIR} )
 
@@ -269,7 +269,7 @@ macro( casa_add_module module )
         ${module} STREQUAL "oldalma" OR
 	${module} STREQUAL "alma_v3")
 
-      set( ${module}_INCLUDE_DIRS 
+      set( ${module}_INCLUDE_DIRS
         ${${module}_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}/include/${module}/ASDM
         ${CMAKE_SOURCE_DIR}/include/${module}/ASDMBinaries
@@ -294,7 +294,7 @@ endmacro()
 #
 # casa_add_python( module
 #                  target_name
-#                  installation_directory 
+#                  installation_directory
 #                  source1 [source2 ...]
 #                )
 #
@@ -315,7 +315,7 @@ endmacro()
 #
 #   casa_add_pymodule( module name source1 [source2 ...] )
 #
-# Creates a python module. 
+# Creates a python module.
 # The module is always linked to libxmlcasa and ${xmlcasa_LINK_TO}.
 #
 
