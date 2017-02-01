@@ -563,7 +563,9 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             ngridpars = copy.deepcopy(self.allgridpars)
             for fld in range(0,self.NF):
                 if self.NN>1:
-                    nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+                    #nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+                    nimpars[str(fld)]['imagename'] = self.PH.getpartimagename( nimpars[str(fld)]['imagename'], node )
+
 
                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) 
                                                + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
@@ -690,16 +692,14 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             normpars = copy.deepcopy( self.allnormpars[str(immod)] )
             partnames = []
             if(self.NN>1):
-#                if not shutil.os.path.exists(normpars['workdir']):
-#                    shutil.os.system('mkdir '+normpars['workdir'])
                 #### MPIInterface related changes
                 #for node in range(0,self.NN):
                 for node in self.listOfNodes:
-                    onename = self.allimpars[str(immod)]['imagename']+'.n'+str(node)
-                    partnames.append( self.PH.getpath(node) + '/' + onename  )
-##                    partnames.append( normpars['workdir'] + '/' + onename  )
-##                    partnames.append( onename  )
-                    self.PH.deletepartimages( self.PH.getpath(node), onename ) # To ensure restarts work properly.
+                    partnames.append( self.PH.getpartimagename( self.allimpars[str(immod)]['imagename'], node ) )
+                    #onename = self.allimpars[str(immod)]['imagename']+'.n'+str(node)
+                    #partnames.append( self.PH.getpath(node) + '/' + onename  )
+                    #self.PH.deletepartimages( self.PH.getpath(node), onename ) # To ensure restarts work properly.
+                    self.PH.deletepartimages( self.allimpars[str(immod)]['imagename'] ,  node ) # To ensure restarts work properly.
                 normpars['partimagenames'] = partnames
             self.PStools[immod].setupnormalizer(normpars=normpars)
 
@@ -919,7 +919,8 @@ class PyParallelCubeSynthesisImager():
                 imparsPerNode[tnode][fid] = allimagepars[fid].copy()
                 imparsPerNode[tnode][fid]['csys'] = alldataimpars[fid][nodeidx]['coordsys'].copy()
                 imparsPerNode[tnode][fid]['nchan'] = alldataimpars[fid][nodeidx]['nchan']
-                imparsPerNode[tnode][fid]['imagename'] = imparsPerNode[tnode][fid]['imagename'] + '.n'+str(tnode) 
+##                imparsPerNode[tnode][fid]['imagename'] = imparsPerNode[tnode][fid]['imagename'] + '.n'+str(tnode) 
+                imparsPerNode[tnode][fid]['imagename'] = self.PH.getpartimagename( imparsPerNode[tnode][fid]['imagename'], ipart )
 
                 # skip this for now (it is not working properly, but should not affect results without this)
                 #imparsPerNode[tnode][fid]=synu.updateimpars(imparsPerNode[tnode][fid])
@@ -1061,8 +1062,9 @@ class PyParallelCubeSynthesisImager():
                 distpath = os.getcwd()
                 fullconcatimname = distpath+'/'+concatimname
                 for node in self.listOfNodes:
-                    rootimname=self.allinimagepars[str(immod)]['imagename']+'.n'+str(node)
-                    fullimname =  self.PH.getpath(node) + '/' + rootimname 
+                    #rootimname=self.allinimagepars[str(immod)]['imagename']+'.n'+str(node)
+                    #fullimname =  self.PH.getpath(node) + '/' + rootimname 
+                    fullimname = self.PH.getpartimagename( self.allinimagepars[str(immod)]['imagename']  , node )
                     if (os.path.exists(fullimname+'.'+ext)):
                         subimliststr+=fullimname+'.'+ext+' '
                 subimliststr+="'"
@@ -1413,12 +1415,32 @@ class PyParallelImagerHelper():
         else:
             return enginepath
 #############################################
-    def deletepartimages(self, dirname, imname):
-        namelist = shutil.fnmatch.filter( os.listdir(dirname), imname+".*" )
+#    def deletepartimages(self, dirname, imname):
+#        namelist = shutil.fnmatch.filter( os.listdir(dirname), imname+".*" )
+#        #print "Deleting : ", namelist, ' from ', dirname, ' starting with ', imname
+#        for aname in namelist:
+#            shutil.rmtree( dirname + "/" + aname )
+#############################################
+    def deletepartimages(self, imagename, node):
+        namelist = shutil.fnmatch.filter( os.listdir(self.getworkdir(imagename, node)), "*" )
         #print "Deleting : ", namelist, ' from ', dirname, ' starting with ', imname
         for aname in namelist:
-            shutil.rmtree( dirname + "/" + aname )
-##########################################################################################
+              shutil.rmtree( self.getworkdir(imagename, node) + "/" + aname )
+#############################################
+    def getworkdir(self, imagename, nodeid):
+        workdir = ''
+        workdir = self.getpath(nodeid) + '/' + imagename+'.workdirectory'
+
+        if( not os.path.exists(workdir) ):
+            os.mkdir( workdir )
+
+        return workdir
+                                    
+#############################################
+    def getpartimagename(self, imagename, nodeid):
+        return self.getworkdir(imagename,nodeid) + '/' + imagename + '.n'+str(nodeid)
+
+#############################################
 
 
 
@@ -2509,7 +2531,7 @@ class TestHelpers():
                imlist=[];
                for imext in imexts:
                     for part in range(1,self.nproc+1):
-                         imlist.append( imprefix + '.n'+str(part)+'.'+imext )
+                         imlist.append( imprefix+'.workdirectory/'+imprefix + '.n'+str(part)+'.'+imext )
                #self.checkall(imexist = imlist)
 
           else:
