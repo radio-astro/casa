@@ -187,6 +187,9 @@ echo "# User defined tasks setup." >> $OUTFILE
 echo "# Generated from buildmytask." >> $OUTFILE
 echo "#" >> $OUTFILE
 echo >> $OUTFILE
+echo "import sys" >> $OUTFILE
+echo "from casa_stack_manip import stack_frame_find" >> $OUTFILE
+echo >> $OUTFILE
 echo "if sys.path[1] != '"$INSTALLDIR"':" >> $OUTFILE
 echo "  sys.path.insert(1, '"$INSTALLDIR"')" >> $OUTFILE
 echo "from odict import odict" >> $OUTFILE
@@ -199,8 +202,7 @@ echo "if not globals().has_key('task_location') :" >>$OUTFILE
 echo "  task_location = odict()" >> $OUTFILE
 echo >> $OUTFILE
 grep "^task_location" $INFOFILE >> $OUTFILE
-echo "import inspect" >> $OUTFILE
-echo "myglobals = sys._getframe(len(inspect.stack())-1).f_globals" >> $OUTFILE
+echo "myglobals = stack_frame_find( )" >> $OUTFILE
 echo "tasksum = myglobals['tasksum'] " >> $OUTFILE
 echo "for key in mytasks.keys() :" >> $OUTFILE
 echo "  tasksum[key] = mytasks[key]" >> $OUTFILE
