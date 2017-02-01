@@ -211,8 +211,6 @@ public:
 
   // Yet another Prune the mask regions per spectral plane
   SHARED_PTR<casacore::ImageInterface<float> >  YAPruneRegions(const casacore::ImageInterface<casacore::Float>& image,
-                                                   casacore::Double& thresh,
-                                                   casacore::Int nmask=0,
                                                    casacore::Double prunesize=0.0);
 
   // create a mask image (1/0 image) applying a different threshold for each channel plane
