@@ -26,6 +26,7 @@ from pipeline.hifv.tasks.opcal import Opcal
 from pipeline.hifv.tasks.rqcal import Rqcal
 from pipeline.hifv.tasks.swpowcal import Swpowcal
 from pipeline.hif.tasks.antpos import Antpos
+from pipeline.hifv.tasks.tecmaps import TecMaps
 from recipes import tec_maps
 
 LOG = infrastructure.get_logger(__name__)
@@ -220,9 +221,23 @@ def correct_ant_posns (vis_name, print_offsets=False):
 
 class PriorcalsInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, tecmaps=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+
+    @property
+    def tecmaps(self):
+        return self._tecmaps
+
+    @tecmaps.setter
+    def tecmaps(self, value):
+        if value is None:
+            value = False
+        elif value:
+            value = True
+        else:
+            value = False
+        self._tecmaps = value
 
     def to_casa_args(self):
         raise NotImplementedError
@@ -240,6 +255,7 @@ class Priorcals(basetask.StandardTaskTemplate):
         rq_result = self._do_rqcal()
         #sw_result = self._do_swpowcal()
         antpos_result, antcorrect = self._do_antpos()
+        tec_maps_result = self._do_tecmaps()
         
         #try:
         #    antpos_result.merge_withcontext(self.inputs.context)
@@ -308,6 +324,14 @@ class Priorcals(basetask.StandardTaskTemplate):
 
         return result, antcorrect
 
+    def _do_tecmaps(self):
+        """Run tec_maps function"""
+
+        inputs = TecMaps.Inputs(self.inputs.context, output_dir='')
+        task = TecMaps(inputs)
+        return self._executor.execute(task)
+
+
     def _check_tropdelay(self, antpos_caltable):
 
         # Insert value if required for testing
@@ -336,19 +360,3 @@ class Priorcals(basetask.StandardTaskTemplate):
                                       "Tropospheric delay error correction coefficient="+str(-trdelscale/1000.0)+ " (ps/m) "
                     LOG.debug("EVLA 16B Online Trop Del Corr is ON, scale=" + str(trdelscale))
                     LOG.warn(warning_message)
-
-    def _do_tec_maps(self):
-
-        #tec_image, tec_rms_image = tec_maps.create('vlass3C48.ms')
-        tec_maps.create(vis=self.vis, doplot=True, imname='iono')
-        # gencal_job = casa_tasks.gencal(**gencal_args)
-        gencal_job = casa_tasks.gencal(vis=self.vis, caltable='file.tec', caltype='tecim', infile='iono.IGS_TEC.im')
-        self._executor.execute(gencal_job)
-
-        '''
-        gencal(vis='vlass3C48.ms', caltable='vlass3C48.tec', caltype='tecim', infile=tec_image)
-        plotcal(caltable='vlass3C48.tec', yaxis='tec', figfile='vlass3C48_TEC-LOS.png', showgui=F)
-        tec_image, tec_rms_image = tec_maps.create('vlass3C286.ms')
-        gencal(vis='vlass3C286.ms', caltable='vlass3C286.tec', caltype='tecim', infile=tec_image)
-        plotcal(caltable='vlass3C286.tec', yaxis='tec', figfile='vlass3C286_TEC-LOS.png', showgui=F)
-        '''

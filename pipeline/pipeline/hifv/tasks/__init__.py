@@ -21,6 +21,7 @@ from .finalcals import Finalcals
 from .fluxscale import Fluxboot
 from .finalcals import Applycals
 from .flagging import Targetflag
+from .tecmaps import TecMaps
 from .statwt import Statwt
 from .restoredata import VLARestoreData
 from .circfeedpolcal import Circfeedpolcal

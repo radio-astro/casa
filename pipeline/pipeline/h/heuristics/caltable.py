@@ -147,6 +147,10 @@ class SwpowCaltable(CaltableNamer):
         return filenamer.SwpowCalibrationTable()
 
 
+class TecMapstable(CaltableNamer):
+    def get_namer(self):
+        return filenamer.TecMapsCalibrationTable()
+
 class TsysCaltable(CaltableNamer):
     def get_namer(self):
         return filenamer.TsysCalibrationTable()

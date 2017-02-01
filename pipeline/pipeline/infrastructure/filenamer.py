@@ -492,6 +492,11 @@ class CalibrationTable(NamingTemplate):
         '''
         return self.extension('swpow')
 
+    def tecim_cal(self):
+        '''Set the filename extension as appropriate for a tecmaps calibration.
+        '''
+        return self.extension('tecim')
+
     def wvrg_cal(self):
         '''Set the filename extension as appropriate for a wvr calibration.
         ''' 
@@ -729,6 +734,11 @@ class RqCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(RqCalibrationTable, self).__init__(other)
         self.rq_cal()
+
+class TecMapsCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(TecMapsCalibrationTable, self).__init__(other)
+        self.tecim_cal()
 
 class SwpowCalibrationTable(CalibrationTable):
     def __init__(self, other=None):

@@ -5,13 +5,18 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifv_priorcals" category="pipeline">
-<shortdescription>Runs gaincurves, opacities, and requantizer gains</shortdescription>
+<shortdescription>Runs gaincurves, opacities, requantizer gains, antenna position corrections, and tec_maps</shortdescription>
 <description>
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">
 	<description>List of input visibility data</description>
 	<value></value>
+    </param>
+
+    <param type="bool" name="tecmaps" subparam="true">
+	<description>Run tecmaps priorcal</description>
+	<value type="bool">False</value>
     </param>
 
 
@@ -41,9 +46,10 @@
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-                <default param="vis"><value type="stringArray"></value></default>
+        <default param="vis"><value type="stringArray"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
+        <default param="tecmaps"><value type="bool">False</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>

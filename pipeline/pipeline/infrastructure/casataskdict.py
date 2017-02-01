@@ -70,6 +70,7 @@ CasaTaskDict = {
     'hifa_wvrgcal': 'Wvrgcal',
     'hifa_wvrgcalflag': 'Wvrgcalflag',
     # VLA tasks -----------------------------------------------------------------
+    'hifv_tecmaps': 'TecMaps',
     'hifv_circfeedpolcal': 'Circfeedpolcal',
     'hifv_importdata': 'VLAImportData',
     'hifv_exportdata': 'VLAExportData',
@@ -152,6 +153,7 @@ classToCASATask = {
     hsd_tasks.SDMSSkyCal              : 'hsd_skycal',
     hsd_tasks.SDTsysflag              : 'hsd_tsysflag',
     # VLA tasks ----------------------------------------------------------------
+    hifv_tasks.TecMaps                : 'hifv_tecmaps',
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.VLAExportData          : 'hifv_exportdata',
     hifv_tasks.Hanning                : 'hifv_hanning',
