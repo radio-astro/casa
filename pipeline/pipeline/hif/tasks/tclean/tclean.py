@@ -140,12 +140,15 @@ class Tclean(cleanbase.CleanBase):
     def is_multi_vis_task(self):
         return True
 
-    def copy_products(self, old_pname, new_pname, iter):
+    def copy_products(self, old_pname, new_pname, iter, specmode, ptype):
         try:
             if mpihelpers.mpi_server_list:
-                num_compute_nodes = len(mpihelpers.mpi_server_list)
-                LOG.info('Copying %d node file of %s to %s' % (num_compute_nodes, old_pname, new_pname))
-                for n in xrange(1, num_compute_nodes + 1):
+                if (specmode != 'cube') and (ptype == 'pb'):
+                    num_node_files = 1
+                else:
+                    num_node_files = len(mpihelpers.mpi_server_list)
+                LOG.info('Copying %d node file%s of %s to %s' % (num_node_files, 's' if num_node_files != 1 else '', old_pname, new_pname))
+                for n in xrange(1, num_node_files + 1):
                     shutil.copytree( \
                         old_pname.replace('iter%d' % (iter - 1), \
                                           'iter%d.n%d' % (iter - 1, n)), \
@@ -558,6 +561,8 @@ class Tclean(cleanbase.CleanBase):
             ptypes = ['residual', 'sumwt', 'psf', 'pb']
             if (inputs.gridder == 'mosaic'):
                 ptypes.append('weight')
+            if (inputs.specmode != 'cube'):
+                ptypes.append('gridwt')
             for ptype in ptypes:
                 old_pname = '%s.iter%s.%s' % (rootname, iter-1, ptype)
                 new_pname = '%s.iter%s.%s' % (rootname, iter, ptype)
@@ -571,7 +576,7 @@ class Tclean(cleanbase.CleanBase):
                 else:
                     exts = ['']
                 for ext in exts:
-                    self.copy_products('%s%s' % (old_pname, ext), '%s%s' % (new_pname, ext), iter)
+                    self.copy_products('%s%s' % (old_pname, ext), '%s%s' % (new_pname, ext), iter, inputs.specmode, ptype)
 
             # Determine the cleaning threshold
             threshold = seq_result.threshold
