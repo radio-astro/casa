@@ -166,7 +166,16 @@ using namespace casa::refim;
 		qdiam= Quantity (dishDiam(k),"m");	
 		//VLA ratio of blockage to dish
 		blockDiam= Quantity(dishDiam(k)/25.0*2.0, "m");
-	      }	      
+		//2017 the ACA dishes are best represented by 6.25m:
+		if((mscol.observation().telescopeName()(0) =="ALMA") || (mscol.observation().telescopeName()(0) =="ACA")){
+		    if (abs(dishDiam[k] - 7.0) < 0.5) {
+		      qdiam= Quantity(6.25,"m");
+		      blockDiam = Quantity(0.75,"m");
+		    }
+		}
+	      }	     
+		
+	      	      
 	      antMath_p[diamIndex]=new PBMath1DAiry(qdiam, blockDiam,  
 						    Quantity(150,"arcsec"), 
 						    Quantity(100.0,"GHz"));
@@ -327,7 +336,7 @@ using namespace casa::refim;
 
   void HetArrayConvFunc::findConvFunction(const ImageInterface<Complex>& iimage, 
 					  const vi::VisBuffer2& vb,
-					  const Int& convSampling, const Vector<Double>& visFreq,
+					  const Int& convSamp, const Vector<Double>& visFreq,
 					  Array<Complex>& convFunc, 
 					  Array<Complex>& weightConvFunc, 
 					  Vector<Int>& convsize,
@@ -388,6 +397,8 @@ using namespace casa::refim;
       //cerr << "resizing DONEMAIN " <<   doneMainConv_p.shape()[0] << endl;
     	doneMainConv_p.resize(actualConvIndex_p+1, true);
     	doneMainConv_p[actualConvIndex_p]=false;
+	convFunctions_p.resize(actualConvIndex_p+1);
+	convFunctions_p[actualConvIndex_p]=nullptr;
     }
     ///// In multi ms mode ndishpair may change when meeting a new ms
     //// redo the calculation then
@@ -405,6 +416,7 @@ using namespace casa::refim;
     Int nx=nx_p;
     Int ny=ny_p;
     Int support=0;
+    Int convSampling=1;
     if(!doneMainConv_p[actualConvIndex_p]){
       for (uInt ii=0; ii < ndish; ++ii){
 	support=max((antMath_p[ii])->support(coords), support);
@@ -435,8 +447,8 @@ using namespace casa::refim;
     pixFieldDir(0)=pixFieldDir(0)- Double(nx / 2);
     pixFieldDir(1)=pixFieldDir(1)- Double(ny / 2);
     //phase gradient per pixel to apply
-    pixFieldDir(0)=-pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSampling);
-    pixFieldDir(1)=-pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSampling);
+    pixFieldDir(0)=-pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSamp);
+    pixFieldDir(1)=-pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSamp);
 
     
    
@@ -662,6 +674,7 @@ using namespace casa::refim;
       convWeights_p[actualConvIndex_p]= new Array<Complex>();
       convSupportBlock_p[actualConvIndex_p]=new Vector<Int>();
       Int newConvSize=2*(max(convSupport_p)+2)*convSampling;
+      Int newRealConvSize=newConvSize* Int(Double(convSamp)/Double(convSampling));
       Int lattSize=convFuncTemp.shape()(0);
       (*convSupportBlock_p[actualConvIndex_p])=convSupport_p;
      
@@ -672,11 +685,11 @@ using namespace casa::refim;
 		      (lattSize/2)+(newConvSize/2-1), nBeamPols-1, nBeamChans-1,ndishpair-1);
 	IPosition shp(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair);
 	
-	convFunctions_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair ));
-	convWeights_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newConvSize, newConvSize, nBeamPols, nBeamChans, ndishpair ));
-	(*convFunctions_p[actualConvIndex_p])=convFuncTemp.getSlice(blc,shp);
-	convSize_p=newConvSize;
-	(*convWeights_p[actualConvIndex_p])=weightConvFuncTemp.getSlice(blc, shp);
+	convFunctions_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newRealConvSize, newRealConvSize, nBeamPols, nBeamChans, ndishpair ));
+	convWeights_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newRealConvSize, newRealConvSize, nBeamPols, nBeamChans, ndishpair ));
+	(*convFunctions_p[actualConvIndex_p])=resample(convFuncTemp.getSlice(blc,shp),Double(convSamp)/Double(convSampling));
+	convSize_p=newRealConvSize;
+	(*convWeights_p[actualConvIndex_p])=resample(weightConvFuncTemp.getSlice(blc, shp),Double(convSamp)/Double(convSampling));
 	convFunc_p.resize();
 	weightConvFunc_p.resize();
       }
@@ -982,25 +995,27 @@ using namespace casa::refim;
     os << LogOrigin("HetArrConvFunc", "suppAndNorm")  << LogIO::NORMAL;
     // Locate support
 	Int convSupport=-1;
-	IPosition begin(5, 0, 0, 0, 0, plane);
+	///Use largest channel as highest freq thus largest conv func
+	IPosition begin(5, 0, 0, 0, convFuncLat.shape()(3)-1, plane);
 	IPosition shape(5, convFuncLat.shape()[0],  convFuncLat.shape()[1], 1, 1, 1);
 	//Int convSize=convSize_p;
 	Int convSize=shape(0);
-	Matrix<Complex> convPlane=convFuncLat.getSlice(begin, shape, true);
+	///use FT weightconvlat as it is wider 
+	Matrix<Complex> convPlane=weightConvFuncLat.getSlice(begin, shape, true);
 	Float maxAbsConvFunc=max(amplitude(convPlane));
 	Float minAbsConvFunc=min(amplitude(convPlane));
 	Bool found=false;
 	Int trial=0;
 	for (trial=convSize/2-2;trial>0;trial--) {
 	  //Searching down a diagonal
-	  if(abs(convPlane(convSize/2-trial,convSize/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+	  if(abs(convPlane(convSize/2-trial,convSize/2-trial)) >  (1.0e-3*maxAbsConvFunc)) {
 	    found=true;
 	    trial=Int(sqrt(2.0*Float(trial*trial)));
 	    break;
 	  }
 	}
 	if(!found){
-	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
+	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-3*maxAbsConvFunc)) 
 	  found=true;
 	  // if it drops by more than 2 magnitudes per pixel
 	  trial=( (10*convSampling) < convSize) ? 5*convSampling : (convSize/2 - 4*convSampling);
@@ -1205,6 +1220,82 @@ using namespace casa::refim;
 
   }
 
+  Array<Complex> HetArrayConvFunc::resample(const Array<Complex>& inarray, const Double factor){
+    
+    Double nx=Double(inarray.shape()(0));
+    Double ny=Double(inarray.shape()(1));
+    IPosition shp=inarray.shape();
+    shp(0)=Int(nx*factor);
+    shp(1)=Int(ny*factor);
+    
+    Array<Complex> out(shp);
+    ArrayIterator<Complex> inIt(inarray, 2);
+    ArrayIterator<Complex> outIt(out, 2);
+    //for (zzz=0; zzz< shp.(4); ++zzz){
+    //  for(yyy=0; yyy< shp.(3); ++yyy){
+    // for(xxx=0; xxx< shp.(2); ++xxx){
+    while(!inIt.pastEnd()){
+      Matrix<Float> leReal=real(Matrix<Complex>(inIt.array()));
+      Matrix<Float> leImag=imag(Matrix<Complex>(inIt.array()));
+      Bool leRealCopy, leImagCopy;
+      Float *realptr=leReal.getStorage(leRealCopy);
+      Float *imagptr=leImag.getStorage(leImagCopy);
+      Bool isCopy;
+      Matrix<Complex> outMat(outIt.array());
+      Complex *intPtr=outMat.getStorage(isCopy);
+      Float realval, imagval;
+#ifdef _OPENMP
+      omp_set_nested(0);
+#endif
+#pragma omp parallel for default(none) private(realval, imagval) firstprivate(intPtr, realptr, imagptr, nx, ny) shared(leReal, leImag)
+      
+      for (Int k =0; k < Int(ny*factor); ++k){
+	Double y =Double(k)/factor;
+	
+	for (Int j=0; j < Int(nx*factor); ++j){
+	  //      Interpolate2D interp(Interpolate2D::LANCZOS);
+	  Double x=Double(j)/Double(factor);
+	  //interp.interp(realval, where, leReal);
+	  realval=interpLanczos(x , y, nx, ny,   
+				realptr);
+	  imagval=interpLanczos(x , y, nx, ny,   
+				imagptr);
+	  //interp.interp(imagval, where, leImag);
+	  intPtr[k*Int(nx*factor)+j]=Complex(realval, imagval);
+	}
+	
+      }
+      out.putStorage(intPtr, isCopy);
+      leReal.putStorage(realptr, leRealCopy);
+      leImag.putStorage(imagptr, leImagCopy);
+      inIt.next();
+      outIt.next();
+    }
+    return out;
+  }
+  
+  Float HetArrayConvFunc::sinc(const Float x)  {
+    if (x == 0) {
+      return 1;
+    }
+    return sin(C::pi * x) / (C::pi * x);
+  }
+  Float HetArrayConvFunc::interpLanczos( const Double& x , const Double& y, const Double& nx, const Double& ny,   const Float* data, const Float a){
+    Double floorx = floor(x);
+    Double floory = floor(y);
+    Float result=0.0;
+    if (floorx < a || floorx >= nx - a || floory < a || floory >= ny - a) {
+      result = 0;
+      return result;
+    }
+    for (Float i = floorx - a + 1; i <= floorx + a; ++i) {
+      for (Float j = floory - a + 1; j <= floory + a; ++j) {
+	result += Float(Double(data[Int(j*nx+i)]) * sinc(x - i)*sinc((x-i)/ a) * sinc(y - j)*sinc((y-j)/ a));
+      }
+    }
+    return result;
+  }
+  
   ImageInterface<Float>&  HetArrayConvFunc::getFluxScaleImage(){
     if(!calcFluxScale_p)
       throw(AipsError("Programmer Error: flux image cannot be retrieved"));
@@ -1236,29 +1327,29 @@ using namespace casa::refim;
     
 
     return fluxScale_p;
-
+    
   }
-
-void HetArrayConvFunc::sliceFluxScale(Int npol) {
-     IPosition fshp=fluxScale_p.shape();
-     if (fshp(2)>npol){
-       npol_p=npol;
-       // use first npol planes...
-       IPosition blc(4,0,0,0,0);
-       IPosition trc(4,fluxScale_p.shape()(0)-1, fluxScale_p.shape()(1)-1,npol-1,fluxScale_p.shape()(3)-1);
-       Slicer sl=Slicer(blc, trc, Slicer::endIsLast);
-       //writeable if possible
-       SubImage<Float> fluxScaleSub = SubImage<Float> (fluxScale_p, sl, true);
-       SubImage<Float> convWeightImageSub = SubImage<Float> (*convWeightImage_p, sl, true);
-       fluxScale_p = TempImage<Float>(fluxScaleSub.shape(),fluxScaleSub.coordinates());
-       convWeightImage_p = new TempImage<Float> (convWeightImageSub.shape(),convWeightImageSub.coordinates());
-       LatticeExpr<Float> le(fluxScaleSub);
-       fluxScale_p.copyData(le);
-       LatticeExpr<Float> le2(convWeightImageSub);
-       convWeightImage_p->copyData(le2);
-     }
+  
+  void HetArrayConvFunc::sliceFluxScale(Int npol) {
+    IPosition fshp=fluxScale_p.shape();
+    if (fshp(2)>npol){
+      npol_p=npol;
+      // use first npol planes...
+      IPosition blc(4,0,0,0,0);
+      IPosition trc(4,fluxScale_p.shape()(0)-1, fluxScale_p.shape()(1)-1,npol-1,fluxScale_p.shape()(3)-1);
+      Slicer sl=Slicer(blc, trc, Slicer::endIsLast);
+      //writeable if possible
+      SubImage<Float> fluxScaleSub = SubImage<Float> (fluxScale_p, sl, true);
+      SubImage<Float> convWeightImageSub = SubImage<Float> (*convWeightImage_p, sl, true);
+      fluxScale_p = TempImage<Float>(fluxScaleSub.shape(),fluxScaleSub.coordinates());
+      convWeightImage_p = new TempImage<Float> (convWeightImageSub.shape(),convWeightImageSub.coordinates());
+      LatticeExpr<Float> le(fluxScaleSub);
+      fluxScale_p.copyData(le);
+      LatticeExpr<Float> le2(convWeightImageSub);
+      convWeightImage_p->copyData(le2);
+    }
   }
-  } // namespace refim end
+} // namespace refim end
 } //# NAMESPACE CASA - END
 
 

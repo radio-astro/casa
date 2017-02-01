@@ -91,7 +91,7 @@ namespace casa {
    virtual casacore::Bool toRecord(casacore::RecordInterface& rec);
    virtual casacore::Bool fromRecord(casacore::String& err, const casacore::RecordInterface& rec, casacore::Bool calcFluxscale=false);
    virtual void reset();
-
+   virtual casacore::String name() {return casacore::String("HetArrayConvFunc");}
     //----------------------------------------------
 
     private:
@@ -110,6 +110,9 @@ namespace casa {
 				   casacore::TempLattice<casacore::Complex>& weightConvFuncLat);
       void init(const PBMathInterface::PBClass typeToUse);
       void makerowmap(const vi::VisBuffer2& vb, casacore::Vector<casacore::Int>& rowMap);
+      casacore::Float interpLanczos( const casacore::Double& x , const casacore::Double& y, const casacore::Double& nx, const casacore::Double& ny,   const casacore::Float* data, const casacore::Float a=3);
+      casacore::Float sinc(const casacore::Float x) ;
+      casacore::Array<casacore::Complex> resample(const casacore::Array<casacore::Complex>& inarray, const casacore::Double factor);
       PBMathInterface::PBClass pbClass_p;
       //casacore::SimpleOrderedMap <casacore::String, casacore::Int> convFunctionMap_p;
       casacore::Vector<casacore::Int64> convFunctionMap_p;

@@ -173,9 +173,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  //VLA ratio of blockage to dish
 		  blockDiam= Quantity(dishDiam(k)/25.0*2.0, "m");
 		  //2017 the ACA dishes are best represented by 6.25m:
-		  if (abs(dishDiam[k] - 7.0) < 0.5) {
-		    qdiam= Quantity(6.25,"m");
-		    blockDiam = Quantity(0.75,"m");
+		  if((vb.msColumns().observation().telescopeName()(0) =="ALMA") || (vb.msColumns().observation().telescopeName()(0) =="ACA")){
+		    if (abs(dishDiam[k] - 7.0) < 0.5) {
+		      qdiam= Quantity(6.25,"m");
+		      blockDiam = Quantity(0.75,"m");
+		    }
 		  }
 		}	      
 		os << "Overriding PB with Airy of diam,blockage="<<qdiam<<","<<blockDiam<<" starting with antenna "<<k<<LogIO::POST;

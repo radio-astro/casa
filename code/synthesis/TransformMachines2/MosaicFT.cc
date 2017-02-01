@@ -278,6 +278,12 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
     pbConvFunc_p=new SimplePBConvFunc();
   if(sj_p)
     pbConvFunc_p->setSkyJones(sj_p);
+  ////TEST for HetArray only for now
+  if(pbConvFunc_p->name()=="HetArrayConvFunc"){
+    if(convSampling <10) 
+      convSampling=10;
+    AipsrcValue<Int>::find (convSampling, "mosaic.oversampling", 10);
+  }
   pbConvFunc_p->findConvFunction(iimage, vb, convSampling, interpVisFreq_p, convFunc, weightConvFunc_p, convSizePlanes_p, convSupportPlanes_p,
 		  convPolMap_p, convChanMap_p, convRowMap_p);
 
@@ -553,7 +559,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
 void MosaicFT::reset(){
 
   doneWeightImage_p=false;
-  
+  convWeightImage_p=nullptr;
   pbConvFunc_p->reset();
 }
 
@@ -669,7 +675,7 @@ void MosaicFT::finalizeToSky()
     //it can be used for rescaling or shared by other ftmachines that use
     //this pbconvfunc
     pbConvFunc_p->setWeightImage(skyCoverage_p);
-    delete convWeightImage_p;
+    if(convWeightImage_p) delete convWeightImage_p;
     convWeightImage_p=0;
     doneWeightImage_p=true;
 
@@ -1151,7 +1157,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
     
 #pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, doWeightGridding, datStorage, wgtStorage, flagstor, rowflagstor, convstor, wconvstor, pmapstor, cmapstor, gridstor,  csupp, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, convrowmapstor, convchanmapstor, convpolmapstor, nPolConv, nChanConv, nConvFunc) shared(sumwgt) num_threads(ixsub*iysub)
     {   
-#pragma omp for schedule(static, 1)      
+#pragma omp for schedule(dynamic, 1)      
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       ix= (icounter+1)-((icounter)/ixsub)*ixsub;
       iy=(icounter)/ixsub+1;
@@ -1222,7 +1228,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
     Complex *gridstor=griddedData.getStorage(gridcopy);
 #pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, doWeightGridding, datStorage, wgtStorage, flagstor, rowflagstor, convstor, wconvstor, pmapstor, cmapstor, gridstor, csupp, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, convrowmapstor, convchanmapstor, convpolmapstor, nPolConv, nChanConv, nConvFunc) shared(sumwgt) num_threads(ixsub*iysub)
     {   
-#pragma omp for schedule(static, 1)      
+#pragma omp for schedule(dynamic, 1)      
       for(icounter=0; icounter < ixsub*iysub; ++icounter){
 	ix= (icounter+1)-((icounter)/ixsub)*ixsub;
 	iy=(icounter)/ixsub+1;
@@ -1442,7 +1448,7 @@ void MosaicFT::get(vi::VisBuffer2& vb, Int row)
   Int ix=0;
 #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, csamp, csize, csupp, nvp, nvc, nvisrow, phasorstor, locstor, offstor, nPolConv, nChanConv, nConvFunc, convrowmapstor, convpolmapstor, convchanmapstor, npart)  num_threads(npart)
   {
-    #pragma omp for schedule(static,1) 
+    #pragma omp for schedule(dynamic,1) 
     for (ix=0; ix< npart; ++ix){
       rbeg=ix*(nvisrow/npart)+1;
       rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)-1+nvisrow%npart) ;
@@ -1686,7 +1692,7 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
       // Int npixCorr= max(nx,ny);
       Vector<Float> sincConvX(nx);
       for (Int ix=0;ix<nx;ix++) {
-	Float x=C::pi*Float(ix-nx/2)/(Float(nx));//*Float(convSampling));
+	Float x=C::pi*Float(ix-nx/2)/(Float(nx)*Float(convSampling));
 	if(ix==nx/2) {
 	  sincConvX(ix)=1.0;
 	}
@@ -1696,7 +1702,7 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
       }
       Vector<Float> sincConvY(ny);
       for (Int ix=0;ix<ny;ix++) {
-	Float x=C::pi*Float(ix-ny/2)/(Float(ny));//*Float(convSampling));
+	Float x=C::pi*Float(ix-ny/2)/(Float(ny)*Float(convSampling));
 	if(ix==ny/2) {
 	  sincConvY(ix)=1.0;
 	}
@@ -1871,6 +1877,7 @@ Bool MosaicFT::fromRecord(String& error,
   Bool retval = true;
   pointingToImage=0;
   doneWeightImage_p=false;
+  convWeightImage_p=nullptr;
   machineName_p="MosaicFT";
   if(!FTMachine::fromRecord(error, inRec))
     return false;
@@ -1927,6 +1934,7 @@ Bool MosaicFT::fromRecord(String& error,
   else{
     pbConvFunc_p=0;
   }
+  gridder=nullptr;
    return retval;
 }
 
