@@ -255,7 +255,7 @@ class Priorcals(basetask.StandardTaskTemplate):
         rq_result = self._do_rqcal()
         #sw_result = self._do_swpowcal()
         antpos_result, antcorrect = self._do_antpos()
-        tec_maps_result = self._do_tecmaps()
+        #tec_maps_result = self._do_tecmaps()
         
         #try:
         #    antpos_result.merge_withcontext(self.inputs.context)
