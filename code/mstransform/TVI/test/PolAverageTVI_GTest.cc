@@ -41,6 +41,7 @@
 #include <casacore/casa/Containers/Record.h>
 
 #include <msvis/MSVis/VisibilityIteratorImpl2.h>
+#include <msvis/MSVis/LayeredVi2Factory.h>
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -82,7 +83,7 @@ template<class T>
 struct Filler {
   static void FillArrayReference(MeasurementSet const &ms,
       String const &columnName, Vector<uInt> const &rowIds, Array<T> &data) {
-    cout << "Start " << __func__ << endl;
+    //cout << "Start " << __func__ << endl;
     ArrayColumn<T> col(ms, columnName);
     RefRows rows(rowIds);
     col.getColumnCells(rows, data);
@@ -164,8 +165,9 @@ void ValidatorUtil::ValidateScalar<Complex>(Complex const ref,
 template<class CollapserImpl>
 struct ValidatorBase {
   template<class T>
-  static void CollapseData(Array<T> const &baseData, Array<Bool> const &baseFlag,
-      Array<Float> const &baseWeight, Array<T> &result) {
+  static void CollapseData(Array<T> const &baseData,
+      Array<Bool> const &baseFlag, Array<Float> const &baseWeight,
+      Array<T> &result) {
     ASSERT_EQ(baseData.shape(), baseWeight.shape());
     ASSERT_EQ(baseData.ndim(), (uInt )3);
     IPosition const baseShape = baseData.shape();
@@ -377,6 +379,112 @@ struct StokesAverageValidator: public ValidatorBase<StokesAverageValidator> {
     result = 4.0f / result;
   }
 };
+
+template<class Impl>
+class Manufacturer {
+public:
+  static VisibilityIterator2 *ManufactureVI(MeasurementSet *ms,
+      String const &mode) {
+    cout << "### Manufacturer: " << endl << "###   " << Impl::GetTestPurpose()
+        << endl;
+
+    Record modeRec;
+    if (mode.size() > 0) {
+      modeRec.define("mode", mode);
+    }
+
+    // build factory object
+    std::unique_ptr<ViFactory> factory(Impl::BuildFactory(ms, modeRec));
+
+    std::unique_ptr<VisibilityIterator2> vi;
+    try {
+      vi.reset(new VisibilityIterator2(*factory.get()));
+    } catch (...) {
+      cout << "Failed to create VI at factory" << endl;
+      throw;
+    }
+
+    cout << "Created VI type \"" << vi->ViiType() << "\"" << endl;
+
+    return vi.release();
+  }
+};
+
+class BasicManufacturer1: public Manufacturer<BasicManufacturer1> {
+public:
+  static ViFactory *BuildFactory(MeasurementSet *ms, Record const &mode) {
+    // create read-only VI impl
+    Block<MeasurementSet const *> const mss(1, ms);
+    SortColumns defaultSortColumns;
+
+    std::unique_ptr<ViImplementation2> inputVii(
+        new VisibilityIteratorImpl2(mss, defaultSortColumns, 0.0, VbPlain,
+            False));
+
+    std::unique_ptr<ViFactory> factory(
+        new PolAverageVi2Factory(mode, inputVii.get()));
+
+    // vi will be responsible for releasing inputVii so unique_ptr
+    // should release the ownership here
+    inputVii.release();
+
+    return factory.release();
+  }
+
+  static String GetTestPurpose() {
+    return "Test PolAverageVi2Factory(Record const &, ViImplementation2 *)";
+  }
+};
+
+class BasicManufacturer2: public Manufacturer<BasicManufacturer2> {
+public:
+  static ViFactory *BuildFactory(MeasurementSet *ms, Record const &mode) {
+    // create factory directly from MS
+    SortColumns defaultSortColumns;
+    std::unique_ptr<ViFactory> factory(
+        new PolAverageVi2Factory(mode, ms, defaultSortColumns, 0.0, False));
+
+    return factory.release();
+  }
+
+  static String GetTestPurpose() {
+    return "Test PolAverageVi2Factory(Record const &, MeasurementSet const *, ...)";
+  }
+};
+
+class LayerManufacturer: public Manufacturer<LayerManufacturer> {
+public:
+  class LayerFactoryWrapper: public ViFactory {
+  public:
+    LayerFactoryWrapper(MeasurementSet *ms, Record const &mode) :
+        ms_(ms), mode_(mode) {
+    }
+
+    ViImplementation2 *createVi() const {
+      Vector<ViiLayerFactory *> v(1);
+      auto layer0 = VisIterImpl2LayerFactory(ms_, IteratingParameters(0.0), false);
+      auto layer1 = PolAverageTVILayerFactory(mode_);
+      v[0] = &layer0;
+      return layer1.createViImpl2(v);
+    }
+  private:
+    MeasurementSet *ms_;
+    Record const mode_;
+  };
+
+  static ViFactory *BuildFactory(MeasurementSet *ms, Record const &mode) {
+    // create read-only VI impl
+    std::unique_ptr<ViFactory> factory(
+        new LayerFactoryWrapper(ms, mode));
+
+    return factory.release();
+  }
+
+  static String GetTestPurpose() {
+    return "Test PolAverageTVILayerFactory";
+  }
+};
+
 } // anonymous namespace
 
 class PolAverageTVITest: public ::testing::Test {
@@ -392,6 +500,9 @@ public:
     copyDataFromRepository(data_path);
     ASSERT_TRUE(File(my_data_name_).exists());
     deleteTable(my_ms_name_);
+
+    // create MS
+    ms_ = MeasurementSet(my_data_name_, Table::Old);
   }
 
   virtual void TearDown() {
@@ -400,39 +511,10 @@ public:
 protected:
   std::string my_ms_name_;
   std::string my_data_name_;
+  MeasurementSet ms_;
 
-  VisibilityIterator2 *ManufactureVIAtFactory(String const &mode) {
-    // create read-only VI impl
-    Block<MeasurementSet const *> const mss(1,
-        new MeasurementSet(my_data_name_, Table::Old));
-    SortColumns defaultSortColumns;
-
-    std::unique_ptr<ViImplementation2> inputVii(
-        new VisibilityIteratorImpl2(mss, defaultSortColumns, 0.0, VbPlain,
-            False));
-
-    Record modeRec;
-    if (mode.size() > 0) {
-      modeRec.define("mode", mode);
-    }
-
-    PolAverageVi2Factory factory(modeRec, inputVii.get());
-
-    std::unique_ptr<VisibilityIterator2> vi;
-    try {
-      vi.reset(new VisibilityIterator2(factory));
-    } catch (...) {
-      cout << "Failed to create VI at factory" << endl;
-      throw;
-    }
-
-    cout << "Created VI type \"" << vi->ViiType() << "\"" << endl;
-
-    // vi will be responsible for releasing inputVii so unique_ptr
-    // should release the ownership here
-    inputVii.release();
-
-    return vi.release();
+  VisibilityIterator2 *ManufactureVI(String const &mode) {
+    return BasicManufacturer1::ManufactureVI(&ms_, mode);
   }
 
   void TestFactory(String const &mode, String const &expectedClassName) {
@@ -441,7 +523,7 @@ protected:
         << expectedClassName << "\"" << endl;
 
     if (expectedClassName.size() > 0) {
-      std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory(mode));
+      std::unique_ptr<VisibilityIterator2> vi(ManufactureVI(mode));
 
       // Verify type string
       String viiType = vi->ViiType();
@@ -450,16 +532,16 @@ protected:
       cout << "Creation of VI via factory will fail" << endl;
       // exception must be thrown
       EXPECT_THROW( {
-            std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory(mode)); //new VisibilityIterator2(factory));
+            std::unique_ptr<VisibilityIterator2> vi(ManufactureVI(mode)); //new VisibilityIterator2(factory));
           },
           AipsError)<< "The process must throw AipsError";
     }
   }
 
-  template<class Validator>
+  template<class Validator, class Manufacturer=BasicManufacturer1>
   void TestTVI() {
     // Create VI
-    std::unique_ptr<VisibilityIterator2> vi(ManufactureVIAtFactory(Validator::GetMode()));
+    std::unique_ptr<VisibilityIterator2> vi(Manufacturer::ManufactureVI(&ms_, Validator::GetMode()));
     ASSERT_TRUE(vi->ViiType().startsWith(Validator::GetTypePrefix()));
 
     // MS property
@@ -750,19 +832,23 @@ TEST_F(PolAverageTVITest, Factory) {
 }
 
 TEST_F(PolAverageTVITest, GeometricAverage) {
-  TestTVI<GeometricAverageValidator>();
+  // Use difference type of constructor to create factory
+  TestTVI<GeometricAverageValidator, BasicManufacturer1>();
+  TestTVI<GeometricAverageValidator, BasicManufacturer2>();
+  TestTVI<GeometricAverageValidator, LayerManufacturer>();
 }
 
 TEST_F(PolAverageTVITest, StokesAverage) {
-  TestTVI<StokesAverageValidator>();
+  // Use difference type of constructor to create factory
+  TestTVI<StokesAverageValidator, BasicManufacturer1>();
+  TestTVI<StokesAverageValidator, BasicManufacturer2>();
+  TestTVI<StokesAverageValidator, LayerManufacturer>();
 }
 
 // TODO: define test on not-well-behaved data
 //       such as partially flagged, contains NaN, etc.
 // TODO: define test on the data that should not average
-//       along polarization axis (IQUV or single polarization)
-// TODO: define test on another type of constructor of TVI factory
-// TODO: define test LayeredTVI factory
+//       along polarization axis (IQUV or single polarization or multi-pol but not containing XX and YY)
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
