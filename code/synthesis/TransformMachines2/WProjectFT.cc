@@ -397,18 +397,27 @@ void WProjectFT::prepGridForDegrid(){
 
   logIO() << LogIO::DEBUGGING << "Starting FFT of image" << LogIO::POST;
   
-  Int npixCorr=max(nx,ny);
-  Vector<Float> sincConv(npixCorr);
-  for (Int ix=0;ix<npixCorr;ix++) {
-    Float x=C::pi*Float(ix-npixCorr/2)/(Float(npixCorr)*Float(convSampling));
-    if(ix==npixCorr/2) {
-      sincConv(ix)=1.0;
+  
+Vector<Float> sincConvX(nx);
+  for (Int ix=0;ix<nx;ix++) {
+    Float x=C::pi*Float(ix-nx/2)/(Float(nx)*Float(convSampling));
+    if(ix==nx/2) {
+      sincConvX(ix)=1.0;
     }
     else {
-      sincConv(ix)=sin(x)/x;
+      sincConvX(ix)=sin(x)/x;
     }
   }
-
+  Vector<Float> sincConvY(ny);
+  for (Int ix=0;ix<ny;ix++) {
+    Float x=C::pi*Float(ix-ny/2)/(Float(ny)*Float(convSampling));
+    if(ix==ny/2) {
+      sincConvY(ix)=1.0;
+    }
+    else {
+      sincConvY(ix)=sin(x)/x;
+    }
+  }
 
   Vector<Complex> correction(nx);
   correction=Complex(1.0, 0.0);
@@ -421,7 +430,7 @@ void WProjectFT::prepGridForDegrid(){
     Int iy=lix.position()(1);
     gridder->correctX1D(correction,iy);
     for (Int ix=0;ix<nx;ix++) {
-      correction(ix)/=(sincConv(ix)*sincConv(iy));
+      correction(ix)/=(sincConvX(ix)*sincConvY(iy));
     }
     lix.rwVectorCursor()/=correction;
   }
@@ -439,6 +448,8 @@ void WProjectFT::prepGridForDegrid(){
 void WProjectFT::finalizeToVis()
 {
   timedegrid_p=0.0;
+  if(!arrayLattice.null()) arrayLattice=0;
+  if(!lattice.null()) lattice=0;
   griddedData.resize();
   if(isTiled) {
     

@@ -1273,6 +1273,11 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
       image->put(griddedData(blc, trc));
     }
   }
+  image->flush();
+  image->clearCache();
+
+  if(!arrayLattice) arrayLattice=nullptr;
+  if(!lattice) lattice=nullptr;
   griddedData.resize();
   return *image;
 }
