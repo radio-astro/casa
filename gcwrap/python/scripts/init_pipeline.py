@@ -5,5 +5,6 @@ if casa['flags'].pipeline:
         import pipeline
         pipeline.initcli()
     else:
+        from init_welcome_helpers import immediate_exit_with_handlers
         print "Unable to locate pipeline installation, exiting"
-        sys.exit(1)
+        immediate_exit_with_handlers( )
