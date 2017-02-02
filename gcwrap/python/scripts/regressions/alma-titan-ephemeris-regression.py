@@ -280,9 +280,10 @@ if(mystep in thesteps):
         passed = False
 
     if not passed:
+	print "Regression FAILED"
         raise Exception, 'Results are different from expectations by more than 0.5 percent.'
-
-    casalog.post( "\nAll peak and RMS values within 0.5 percent of the expectation.")
-    
+    else:
+    	casalog.post( "\nAll peak and RMS values within 0.5 percent of the expectation.")
+    	print "Regression PASSED"
 
 print 'Done.'

@@ -101,6 +101,6 @@ casa_add_python( tools tools_regressions_python lib/python${PYTHONV}/regressions
   alma-m100-analysis-hpc-tclean.py
   alma-m100-analysis-hpc.py
   alma-ngc3256-analysis.py
-
+  alma-titan-ephemeris.py
 
 )
