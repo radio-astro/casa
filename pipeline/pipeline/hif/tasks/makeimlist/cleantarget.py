@@ -16,8 +16,8 @@ class CleanTarget(dict):
          self['imagename'] = ''
          self['start'] = ''
          self['width'] = ''
-         self['nbin'] = ''
-         self['nchan'] = ''
+         self['nbin'] = -1
+         self['nchan'] = -1
          self['uvrange'] = ''
          self['stokes'] = ''
          self['nterms'] = None
