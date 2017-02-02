@@ -368,7 +368,8 @@ class CalFrom(object):
         'uvcont': 12,
         'amp': 13,
         'ps': 14,
-        'otfraster': 15
+        'otfraster': 15,
+        'tecim': 16
     }
 
     CALTYPE_TO_VISCAL = {
