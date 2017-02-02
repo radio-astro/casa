@@ -18,6 +18,7 @@ from . import hifa
 
 from .infrastructure import Pipeline, Context
 from .domain import measures
+from casa_stack_manip import stack_frame_find
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -69,7 +70,7 @@ def initcli() :
     hsdpath = mypath+"/hsd/cli/hsd.py"
     hifapath = mypath+"/hifa/cli/hifa.py"
     hifvpath = mypath+"/hifv/cli/hifv.py"
-    myglobals = sys._getframe(len(inspect.stack())-1).f_globals
+    myglobals = stack_frame_find( )
 
     execfile(hpath, myglobals)
     execfile(hifpath, myglobals)
