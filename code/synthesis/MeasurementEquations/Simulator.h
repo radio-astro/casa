@@ -329,7 +329,7 @@ public:
   casacore::Bool setoptions(const casacore::String& ftmachine, const casacore::Int cache, const casacore::Int tile,
 		  const casacore::String& gridfunction, const casacore::MPosition& mLocation,
 		  const casacore::Float padding, const casacore::Int facets,
-		  const casacore::Double maxData,const casacore::Int wprojPlanes);
+			    const casacore::Double maxData,const casacore::Int wprojPlanes, const casacore::String& vptable);
 
  
   // Set the print level

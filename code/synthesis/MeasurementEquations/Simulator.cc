@@ -2197,7 +2197,7 @@ Bool Simulator::predict(const Vector<String>& modelImage,
     LogIO os(LogOrigin("Simulator", "getVPRecord",WHERE));
 
     VPManager *vpman=VPManager::Instance();
-    if( itsVpTable != String("") ) // 20170106 no functionality to actually set itsVpTable yet
+    if( itsVpTable != String("") ) 
       {
 	os << "Loading Voltage Pattern information from " << itsVpTable << LogIO::POST;
 	vpman->loadfromtable(itsVpTable);
@@ -2228,7 +2228,8 @@ Bool Simulator::predict(const Vector<String>& modelImage,
 	kpb=PBMath::VLA;
       }
       else{
-	os << LogIO::WARN << "vpmanager does not have a beam for antenna : "+telescop <<".\n Please use the vpanager to define one (and optionally save its state as a table and supply its name via the vptable parameter.)" << LogIO::POST;
+	os << LogIO::WARN << "vpmanager does not have a beam for "+telescop <<".\n Please use the vpmanager to define one (and optionally save its state as a table and supply its name via the vptable parameter.)" << LogIO::POST;
+	kpb=PBMath::UNKNOWN;
       }
     }
     
@@ -2318,7 +2319,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 
 
 	    if(sm_p->add(*images_p[model])!=model) {
-	      os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
+	      os << LogIO::SEVERE << "Error adding model " << model << LogIO::POST;
 	      return false;
 	    }
 	    models_found++;
@@ -2361,7 +2362,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	// 2016 from SynthesisImager:
 	// in SynthesisImager rotatePAStep is passed in as a parameter
 	Float rotatePAStep(5.);
-	if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
+	if (rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
 	  String commonPBName;
 	  PBMath::nameCommonPB(kpb, commonPBName);	  
 	  os << "Using common PB "<<commonPBName<<" for beam calculation for telescope " << telescop << LogIO::POST;
@@ -2402,8 +2403,14 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	  os << "Enabling Heterogeneous Array for PBMath "<<PBName<<LogIO::POST;
 	  // Will use Airys - to do something more complex we need to 
 	  // use HetArrayConvFunv::fromRecord
+	  if ((kpb==PBMath::ACA) || (kpb==PBMath::ALMA)) {
+	    os << "Will use 10.7m Airy PB for diameter=12 dishes, and 6.25m Airy PB for diameter=7 dishes." << LogIO::POST;
+	  } else {
+	    os << "Will use Airy PB scaled to dish diameter."<<LogIO::POST;
+	  }
 	  CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, "");
 	  static_cast<MosaicFTNew &>(*ft_p).setConvFunc(mospb);
+	  doVP_p = false; // Since this FTMachine includes PB
 	}
 	///2016
       }
@@ -2629,7 +2636,7 @@ void Simulator::makeVisSet() {
 Bool Simulator::setoptions(const String& ftmachine, const Int cache, const Int tile,
 			      const String& gridfunction, const MPosition& mLocation,
 			      const Float padding, const Int facets, const Double maxData,
-			      const Int wprojPlanes)
+			   const Int wprojPlanes, const String& vptable)
 {
   LogIO os(LogOrigin("Simulator", "setoptions()", WHERE));
   
@@ -2637,6 +2644,7 @@ Bool Simulator::setoptions(const String& ftmachine, const Int cache, const Int t
   
   sim_p->setMaxData(maxData*1024.0*1024.0);
 
+  itsVpTable=vptable;
   ftmachine_p=downcase(ftmachine);
   if(cache>0) cache_p=cache;
   if(tile>0) tile_p=tile;
