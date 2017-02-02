@@ -72,21 +72,6 @@ Edit a list of images to be cleaned.
        </allowed>
   </param>
 
-  <!--<param type="string" name="gridder">-->
-      <!--<description></description>-->
-      <!--<value></value>-->
-  <!--</param>-->
-
-  <!--<param type="string" name="spwsel_lsrk">-->
-      <!--<description></description>-->
-      <!--<value></value>-->
-  <!--</param>-->
-
-  <!--<param type="string" name="spwsel_topo">-->
-      <!--<description></description>-->
-      <!--<value></value>-->
-  <!--</param>-->
-
   <param type="stringArray" name="imsize">
     <description>Image X and Y size(s) in pixels or PB level (single fields), \'\' for default. Single value same for both. \'&lt;number&gt;pb\' for PB level.</description>
     <value></value>
