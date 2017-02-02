@@ -1,18 +1,32 @@
 import sys
 
-from taskinit import casalog
-
 import pipeline.h.cli.utils as utils
 
 
-def hif_editimlist(vis=None, imagename=None, intent=None, field=None,
-                   spw=None, contfile=None, linesfile=None, uvrange=None,
-                   specmode=None, outframe=None, imsize=None, cell=None,
-                   calmaxpix=None, phasecenter=None,
-                   nchan=None, start=None, width=None, nbin=None,
-                   stokes=None, parameter_file=False, nterms=None,
+def hif_editimlist(vis=None,
+                   imagename=None,
+                   intent=None,
+                   field=None,
+                   spw=None,
+                   contfile=None,
+                   linesfile=None,
+                   uvrange=None,
+                   specmode=None,
+                   outframe=None,
+                   imsize=None,
+                   cell=None,
+                   phasecenter=None,
+                   nchan=None,
+                   start=None,
+                   width=None,
+                   nbin=None,
+                   stokes=None,
+                   parameter_file=False,
+                   nterms=None,
                    editmode=None,
-                   pipelinemode=None, dryrun=None, acceptresults=None):
+                   pipelinemode=None,
+                   dryrun=None,
+                   acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

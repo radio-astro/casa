@@ -97,11 +97,6 @@ Edit a list of images to be cleaned.
     <value></value>
   </param>
 
-  <param type="int" name="calmaxpix" subparam="true">
-    <description>Maximum X and Y size of calibrator images in pixels</description>
-    <value>300</value>
-  </param>
-
   <param type="any" name="phasecenter" subparam="true">
     <description>Image center (direction or field index, \'\' for default)</description>
     <any type="variant"/>
@@ -281,11 +276,6 @@ imsize -- Image X and Y size in pixels or PB level for single field. The
          to the specified level plus 5% padding in all directions.
     example: [120, 120], '0.3pb'
 
-calmaxpix -- Maximum image X or Y size in pixels if a calibrator is being
-    imaged ('PHASE', 'BANDPASS', 'AMPLITUDE' or 'FLUX').
-    default: 300
-    example: 300
-
 width -- Output channel width.
     default: '' Difference in frequency between first 2 selected channels.
         for frequency mode images.
@@ -379,20 +369,7 @@ Issues
 TBD
 Examples
 
-1. Edit a list of science target images to be cleaned, one image per science
-spw.
-
-    hif_editimlist()
-
-2. Edit a list of PHASE and BANDPASS calibrator targets to be imaged,
-one image per science spw.
-
-    hif_editimlist(intent='PHASE,BANDPASS')
-
-3. Edit a list of PHASE calibrator images observed in spw 1, images limited to
-50 pixels on a side.
-
-    hif_editimlist(intent='PHASE',spw='1',calmaxpix=50)
+TBD
 
 </example>
 

@@ -1,13 +1,9 @@
 from __future__ import absolute_import
-import types
 import os
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import EditimlistResult
-from pipeline.hif.heuristics import imageparams
-import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -17,10 +13,7 @@ class EditimlistInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None,
                  imagename=None, intent=None, field=None, spw=None, contfile=None,
                  linesfile=None, uvrange=None, specmode=None, outframe=None,
-
-                 # gridder=None, spwsel_lsrk=None, spwsel_topo=None,
-
-                 imsize=None, cell=None, calmaxpix=None, phasecenter=None,
+                 imsize=None, cell=None, phasecenter=None,
                  nchan=None, start=None, width=None, nbin=None,
                  stokes=None, parameter_file=False, nterms=None,
                  editmode=None):
@@ -119,16 +112,6 @@ class EditimlistInputs(basetask.StandardInputs):
     @cell.setter
     def cell(self, value):
         self._cell = value
-
-    @property
-    def calmaxpix(self):
-        return self._calmaxpix
-
-    @calmaxpix.setter
-    def calmaxpix(self, value):
-        if value is None:
-            value = 300
-        self._calmaxpix = value
 
     @property
     def phasecenter(self):
@@ -276,11 +259,3 @@ class Editimlist(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-
-# maps intent and specmode Inputs parameters to textual description of execution context.
-_DESCRIPTIONS = {
-    ('PHASE,BANDPASS,CHECK', 'mfs'): 'Set-up image parameters for calibrator imaging',
-    ('TARGET', 'mfs'): 'Set-up image parameters for target per-spw continuum imaging',
-    ('TARGET', 'cont'): 'Set-up image parameters for target aggregate continuum imaging',
-    ('TARGET', 'cube'): 'Set-up image parameters for target cube imaging',
-}
