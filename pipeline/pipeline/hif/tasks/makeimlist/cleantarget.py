@@ -2,7 +2,7 @@ class CleanTarget(dict):
 
     '''Clean target template definition.'''
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
          self['field'] = ''
          self['intent'] = ''
          self['spw'] = ''
@@ -21,3 +21,5 @@ class CleanTarget(dict):
          self['uvrange'] = ''
          self['stokes'] = ''
          self['nterms'] = None
+
+         dict.__init__(self, *args, **kwargs)
