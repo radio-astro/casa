@@ -102,10 +102,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
 
     @property
     def nterms(self):
-        if not self._nterms:
-            return 2
-        else:
-            return self._nterms
+        return self._nterms
 
     @nterms.setter
     def nterms(self, value):

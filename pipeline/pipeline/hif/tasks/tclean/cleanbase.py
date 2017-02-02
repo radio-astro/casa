@@ -40,7 +40,7 @@ class CleanBaseInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
     deconvolver = basetask.property_with_default('deconvolver', '')
-    nterms = basetask.property_with_default('nterms', 2)
+    nterms = basetask.property_with_default('nterms', None)
     field = basetask.property_with_default('field', '')
     gridder = basetask.property_with_default('gridder', '')
     imagename = basetask.property_with_default('imagename', '')
@@ -283,7 +283,6 @@ class CleanBase(basetask.StandardTaskTemplate):
             'niter':         inputs.niter,
             'threshold':     inputs.threshold,
             'deconvolver':   inputs.deconvolver,
-            'nterms':        inputs.nterms,
             'interactive':   0,
             'outframe':      inputs.outframe,
             'nchan':         inputs.nchan,
