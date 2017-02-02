@@ -74,28 +74,6 @@ logsink::logsink(const std::string &filename)
   globalsink = false;
   logname = theLogName ;
   filterMsgList.clear();
-  //version();
-   string tmpname = "" ;
-      String logfileKey="logfile.no.default";
-      String logname2;
-      if(!Aipsrc::find(logname2, logfileKey)){
-         tmpname = "casa.log";
-      } else {
-         //tmpname = logname2;
-         ACG g(7326458, 98);
-         tmpname = "/tmp/"+String::toString(g.asuInt());
-         //tmpname = "null";
-      }
-   //std::cout << "logfile.default: " << tmpname << std::endl;
-   if(tmpname != "null") {
-      casacore::File filein( tmpname ) ;
-      logname = filein.path().absoluteName() ;
-      //static_cast<TSLogSink*>(thelogsink)->setLogSink(logname);
-   }
-   else{
-      //thelogsink = new NullLogSink();
-      ;
-   }
 }
 
 std::string logsink::version(){
