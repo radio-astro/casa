@@ -18,7 +18,7 @@ class MakeImagesInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
                  weighting=None, robust=None, noise=None, npixels=None,
-                 hm_masking=None, hm_maskthreshold=None, hm_cleaning=None, tlimit=None,
+                 hm_masking=None, hm_autotest=None, hm_cleaning=None, tlimit=None,
                  masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
         self._init_properties(vars())
 
@@ -34,7 +34,7 @@ class MakeImagesInputs(basetask.StandardInputs):
 
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
-    hm_maskthreshold = basetask.property_with_default('hm_maskthreshold', '')
+    hm_autotest = basetask.property_with_default('hm_autotest', '')
     masklimit = basetask.property_with_default('masklimit', 2.0)
     maxncleans = basetask.property_with_default('maxncleans', 10)
     noise = basetask.property_with_default('noise', '1.0Jy')
@@ -201,8 +201,8 @@ class CleanTaskFactory(object):
         else:
             task_args['hm_masking'] = inputs.hm_masking
 
-        if inputs.hm_masking in ('auto', 'auto-thresh'):
-            task_args['hm_maskthreshold'] = inputs.hm_maskthreshold
+        if inputs.hm_masking == 'auto':
+            task_args['hm_autotest'] = inputs.hm_autotest
 
         if inputs.hm_cleaning == '':
             task_args['hm_cleaning'] = 'rms'

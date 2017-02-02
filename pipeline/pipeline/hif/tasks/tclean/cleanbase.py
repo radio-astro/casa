@@ -35,7 +35,7 @@ class CleanBaseInputs(basetask.StandardInputs):
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
                  weighting=None,
                  robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, hm_masking=None, hm_maskthreshold=None, pblimit=None, niter=None,
+                 restoringbeam=None, iter=None, mask=None, hm_masking=None, hm_autotest=None, pblimit=None, niter=None,
                  threshold=None, sensitivity=None, result=None, parallel=None):
         self._init_properties(vars())
 
@@ -48,7 +48,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     iter = basetask.property_with_default('iter', 0)
     mask = basetask.property_with_default('mask', '')
     hm_masking = basetask.property_with_default('hm_masking', 'centralregion')
-    hm_maskthreshold = basetask.property_with_default('hm_maskthreshold', '')
+    hm_autotest = basetask.property_with_default('hm_autotest', '')
     niter = basetask.property_with_default('niter', 5000)
     noise = basetask.property_with_default('noise', '1.0Jy')
     nchan = basetask.property_with_default('nchan', -1)
@@ -303,15 +303,28 @@ class CleanBase(basetask.StandardTaskTemplate):
             }
 
         # Set up masking parameters
-        if inputs.hm_masking in ('auto', 'auto-thresh'):
-            tclean_job_parameters['usemask'] = 'auto-thresh'
-            tclean_job_parameters['maskthreshold'] = inputs.hm_maskthreshold
-            # The following parameters are currently just for PL developer
-            # testing
-            #tclean_job_parameters['pbmask'] = 0.3
-            #qaTool = casatools.quanta
-            #maskthreshold = qaTool.mul(inputs.threshold, 3.0)
-            #tclean_job_parameters['maskthreshold'] = '%s%s' % (maskthreshold['value'], maskthreshold['unit'])
+        if inputs.hm_masking == 'auto':
+            tclean_job_parameters['usemask'] = 'auto-multithresh'
+            # Defaults for ALMA 7m / 12m
+            if 'ALMA' in context.project_summary.observatory:
+                min_diameter = 1.e9
+                for msname in inputs.vis:
+                    min_diameter = min(min_diameter, min([antenna.diameter for antenna in context.observing_run.get_ms(msname).antennas]))
+                if min_diameter == 7.0:
+                    tclean_job_parameters['sidelobethreshold'] = 2.0
+                    tclean_job_parameters['noisethreshold'] = 3.0
+                    tclean_job_parameters['lownoisethreshold'] = 2.5
+                    tclean_job_parameters['minbeamfrac'] = 0.2
+                elif min_diameter == 12.0:
+                    tclean_job_parameters['sidelobethreshold'] = 3.0
+                    tclean_job_parameters['noisethreshold'] = 5.0
+                    tclean_job_parameters['lownoisethreshold'] = 1.5
+                    tclean_job_parameters['minbeamfrac'] = 0.3
+            if inputs.hm_autotest != '':
+                hm_autotest_params = dict((key.strip(), float(value)) for key, value in [kvpair.split(':') for kvpair in inputs.hm_autotest.split(',')])
+                for key in hm_autotest_params.iterkeys():
+                    if key in ['sidelobethreshold', 'noisethreshold', 'lownoisethreshold', 'minbeamfrac']:
+                        tclean_job_parameters[key] = hm_autotest_params[key]
         else:
             tclean_job_parameters['usemask'] = 'user'
             tclean_job_parameters['mask'] = inputs.mask
