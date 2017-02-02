@@ -678,7 +678,7 @@ simulator::setoptions(const std::string& ftmachine, const int cache,
 		      const int tile, const std::string& gridfunction, 
 		      const ::casac::variant& location, const double padding,
 		      const int facets, const double maxdata, 
-		      const int wprojplanes)
+		      const int wprojplanes, const std::string& vptable)
 {
 
   Bool rstat(false);
@@ -693,7 +693,7 @@ simulator::setoptions(const std::string& ftmachine, const int cache,
 		<< location.toString() << " to a Position Measures"
 		<< LogIO::POST;
       }
-      rstat=itsSim->setoptions(ftmachine, cache, tile, gridfunction, mpos, padding, facets, maxdata, wprojplanes);
+      rstat=itsSim->setoptions(ftmachine, cache, tile, gridfunction, mpos, padding, facets, maxdata, wprojplanes,vptable);
     }
     
     

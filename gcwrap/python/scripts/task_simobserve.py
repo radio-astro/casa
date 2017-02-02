@@ -47,10 +47,6 @@ def simobserve(
         scanlength = 1  # number of integrations per scan
 
 
-
-
-
-
         # RI TODO for inbright=unchanged, need to scale input image to jy/pix
         # according to actual units in the input image
 
@@ -357,8 +353,9 @@ def simobserve(
 
         # Read antennalist
         if os.path.exists(antennalist):
-            stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
-            if len(stnx) == 1:
+            stnx, stny, stnz, stnd, padnames, telescopename, posobs = util.readantenna(antennalist)
+            nant=len(stnx)
+            if nant == 1:
                 if predict and uvmode:
                     # observe="int" but antennalist is SD
                     util.msg("antennalist contains only 1 antenna", priority="error")
@@ -835,7 +832,7 @@ def simobserve(
                 if docalibrator:
                     totalsec = totalsec + intsec # cal gets one int-time
                 totalsec = float(totaltime) * totalsec
-                msg("Total observing time = "+str(totalsec)+"s.",priority="warn")
+                msg("Total observing time = "+str(totalsec)+"s.")
             else:
                 if not qa.compare(totaltime,"1s"):
                     msg("totaltime "+totaltime+" does not appear to represent a time interval (use 's','min','h'; not 'sec','m','hr')",priority="error")
@@ -846,7 +843,7 @@ def simobserve(
                 util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
                 return False
             sm.open(msfile)
-            posobs = me.observatory(telescopename)
+
             diam = stnd;
             # WARNING: sm.setspwindow is not consistent with clean::center
             #model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
@@ -881,6 +878,8 @@ def simobserve(
             sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
             if uvmode:
                 sm.setauto(0.0)
+                if nfld>1:
+                    sm.setoptions(ftmachine="mosaic")
             else: #Single-dish
                 # auto-correlation should be unity for single dish obs.
                 sm.setauto(1.0)
@@ -1055,10 +1054,9 @@ def simobserve(
             else:
                 multi = 0
 
-
             if (grscreen or grfile):
                 util.newfig(multi=multi,show=grscreen)
-                util.ephemeris(refdate,direction=util.direction,telescope=telescopename,ms=msfile,usehourangle=usehourangle)
+                util.ephemeris(refdate,direction=util.direction,telescope=telescopename,ms=msfile,usehourangle=usehourangle,cofa=posobs)
                 casalog.origin('simobserve')
                 if uvmode:
                     util.nextfig()
@@ -1080,11 +1078,19 @@ def simobserve(
                     util.nextfig()
                     im.open(msfile)
                     # TODO spectral parms
-                    msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn",origin='simobserve')
+                    msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",origin='simobserve')
                     im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(max([minimsize,128])))
+                    # TODO trigger im.setoptions(ftmachine="mosaic")
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):
                         shutil.rmtree(fileroot+"/"+project+".quick.psf")
+
+                    # if obs is unknown, casalog will send a warning to screen - temporarily suppress that
+                    if not telescopename in me.obslist():
+                        casalog.filter("ERROR")                        
                     im.approximatepsf(psf=fileroot+"/"+project+".quick.psf")
+                    if not telescopename in me.obslist():
+                        casalog.filter() # set back to default level.
+
                     quickpsf_current = True
                     beam = im.fitpsf(psf=fileroot+"/"+project+".quick.psf")
                     im.done()
@@ -1166,7 +1172,7 @@ def simobserve(
                 msg("telescopename read from "+noisymsroot+".ms: "+telescopename)
 
             if telescopename not in knowntelescopes:
-                msg("thermal noise only works properly for ALMA/ACA, (J)VLA, and SMA",origin="simobserve",priority="warn")
+                msg("thermal noise only works properly for ALMA/ACA, (E)VLA, and SMA",origin="simobserve",priority="warn")
             eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
 
             # antenna efficiency

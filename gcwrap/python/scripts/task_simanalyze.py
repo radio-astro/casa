@@ -129,7 +129,6 @@ def simanalyze(
             skymodel_searchstring=tmpstring.replace(".image","")
             
 
-
         if image:
             # check for default measurement sets:
             default_mslist = glob.glob(fileroot+"/*ms")

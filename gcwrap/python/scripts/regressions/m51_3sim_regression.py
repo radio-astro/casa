@@ -11,13 +11,14 @@ if os.path.exists(modelname):
     shutil.rmtree(modelname)
 
 noise=False # add noise
+my_verbose=True
 
 projname = "m51c"
 
 startTime = time.time()
 startProc = time.clock()
 
-print '--Running simlation of M51 (ALMA-12m INT + ACA-7m INT + 12m TP) --'
+print '--Running simulation of M51 (ALMA-12m INT + ACA-7m INT + 12m TP) --'
 # configs are in the repository
 
 l=locals() 
@@ -77,7 +78,7 @@ if interactive:
 else:
     graphics="file"
 
-verbose=True
+verbose=my_verbose
 overwrite=True
 
 inp()
@@ -128,7 +129,7 @@ if interactive:
 else:
     graphics="file"
 
-verbose=True
+verbose=my_verbose
 overwrite=True
 
 inp()
@@ -180,7 +181,7 @@ if interactive:
 else:
     graphics="file"
 
-verbose=True
+verbose=my_verbose
 overwrite=True
 
 inp()
@@ -221,6 +222,7 @@ if interactive:
     graphics="both"
 else:
     graphics="file"
+
 
 inp()
 go()
@@ -271,7 +273,7 @@ endProc = time.clock()
 
 
 regstate=True
-verbose=True
+verbose=my_verbose
 import testhelper as th
 
 # test SD first so that we can check that indep. from INT
