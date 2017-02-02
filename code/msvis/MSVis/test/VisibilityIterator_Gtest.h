@@ -13,6 +13,8 @@
 
 #include <map>
 #include <set>
+#include <memory>
+#include <stdlib.h>
 
 namespace casacore{
 
@@ -41,9 +43,13 @@ class TestWidget : public ::testing::Test {
 
 public:
 
-    TestWidget (const casacore::String & name) : name_p (name) {}
+    TestWidget (const casacore::String & name) : name_p (name) {
+	    mkdtemp(tmpdir);
+    }
 
-    virtual ~TestWidget () {}
+    virtual ~TestWidget () {
+	    system((std::string("rm -rf ") + tmpdir).c_str());
+    }
 
     virtual casacore::String name () const = 0;
 
@@ -66,6 +72,9 @@ public:
     virtual bool usesMultipleMss () const { return false;}
     virtual void sweepMs ();
 
+protected:
+	char tmpdir[16] = "/tmp/testXXXXXX";
+
 private:
 
     casacore::String name_p;
@@ -76,8 +85,6 @@ class BasicChannelSelection : public TestWidget {
 public:
 
     BasicChannelSelection ();
-    ~BasicChannelSelection ();
-
 
     virtual std::tuple <casacore::MeasurementSet *, casacore::Int, casacore::Bool> createMs ();
     virtual casacore::String name () const { return "BasicChannelSelection";}
@@ -115,7 +122,7 @@ private:
 
     casacore::Vector< casacore::Vector <casacore::Slice> > correlationSlices_p;
     casacore::Int factor_p;
-    MsFactory * msf_p;
+	std::unique_ptr<MsFactory> msf_p;
     const casacore::Int nAntennas_p;
     const casacore::Int nFlagCategories_p;
     casacore::Int nRowsToProcess_p;
@@ -170,7 +177,7 @@ public:
 
 private:
 
-    MsFactory * msf_p;
+	std::unique_ptr<MsFactory> msf_p;
     casacore::Int nRowsToProcess_p;
 };
 

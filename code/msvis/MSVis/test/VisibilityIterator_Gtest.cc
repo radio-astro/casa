@@ -24,6 +24,8 @@
 #include <msvis/MSVis/test/MsFactory.h>
 #include <tuple>
 
+#include <memory>
+
 using namespace std;
 using namespace casacore;
 using namespace casa;
@@ -204,7 +206,7 @@ printMs (MeasurementSet * ms)
 void
 TestWidget::sweepMs()
 {
-gtestLog << "--- Starting sweepMs" << endl;
+	gtestLog << "--- Starting sweepMs" << endl;
     Block<const MeasurementSet *> mss;
     pair<Bool,Bool> result;
     Bool moreSweeps = false;
@@ -223,13 +225,19 @@ gtestLog << "--- Starting sweepMs" << endl;
         }
 
         do {
-            VisibilityIterator2 * vi = 0;
+	        std::unique_ptr<VisibilityIterator2> vi;
 
             if (usesMultipleMss()){
-                vi = new VisibilityIterator2 (mss, SortColumns (), writableVi);
+	            vi = std::move(
+		            std::unique_ptr<VisibilityIterator2>(
+			            new VisibilityIterator2(
+				            mss, SortColumns(), writableVi)));
             }
             else {
-                vi = new VisibilityIterator2 (* mss[0], SortColumns (), writableVi);
+	            vi = std::move(
+		            std::unique_ptr<VisibilityIterator2>(
+			            new VisibilityIterator2(
+				            *mss[0], SortColumns(), writableVi)));
             }
 
             VisBuffer2 * vb = vi->getVisBuffer ();
@@ -422,16 +430,10 @@ Tester::parseArgs (int nArgs, char * args []) const
 BasicChannelSelection::BasicChannelSelection ()
 : TestWidget ("BasicChannelSelection"),
   factor_p (1),
-  msf_p (0),
   nAntennas_p (4),
   nFlagCategories_p (3),
   nSweeps_p (0)
 {}
-
-BasicChannelSelection::~BasicChannelSelection ()
-{
-    delete msf_p;
-}
 
 void
 BasicChannelSelection::checkRowScalars (VisBuffer2 * vb)
@@ -559,9 +561,9 @@ BasicChannelSelection::checkUvw (VisBuffer2 * vb, Int nRows, Int rowId, Int row)
 std::tuple <MeasurementSet *, Int, Bool>
 BasicChannelSelection::createMs ()
 {
-    system ("rm -r BasicChannelSelection.ms");
-
-    msf_p = new MsFactory ("BasicChannelSelection.ms");
+	msf_p = std::move(
+		std::unique_ptr<MsFactory>(
+			new MsFactory(String::format("%s/BasicChannelSelection.ms", tmpdir))));
     msf_p->setIncludeAutocorrelations(true);
 
     pair<MeasurementSet *, Int> p = msf_p->createMs ();
@@ -1448,7 +1450,7 @@ CopyMs::doit (const String & oldMsName)
 
     String newMsName = String::format ("%s.copy", oldMsName.c_str());
 
-    system (String::format ("test -d %s && rm -r %s", newMsName.c_str(), newMsName.c_str()).c_str());
+    system (String::format ("test -d %s && rm -rf %s", newMsName.c_str(), newMsName.c_str()).c_str());
     system ("casapy --nogui -c \"execfile('/home/orion/casa/trunk/code/msvis/MSVis/test/makeEmptyCopy.py')\"");
 
 
@@ -1502,8 +1504,7 @@ MultipleMss::createMss (){
 
     for (int i = 0; i < nMss_p; i++){
 
-        String msName = String::format ("MultipleMss%d.ms", i);
-        system (String::format ("rm -r %s", msName.c_str()).c_str());
+	    String msName = String::format("%s/MultipleMss%d.ms", tmpdir, i);
         MsFactory * msf = new MsFactory (msName);
         msf->setIncludeAutocorrelations(true);
         msf->addSpectralWindow("spw", i+5, 0, 100, "LL RR RL LR");
@@ -1586,9 +1587,9 @@ MultipleMss::usesMultipleMss () const {
 std::tuple <MeasurementSet *, Int, Bool>
 Weighting::createMs ()
 {
-    system ("rm -r Weighting.ms");
-
-    msf_p = new MsFactory ("Weighting.ms");
+	msf_p = std::move(
+		std::unique_ptr<MsFactory>(
+			new MsFactory(String::format("%s/Weighting.ms", tmpdir))));
     msf_p->setIncludeAutocorrelations(true);
     msf_p->addSpectralWindow("spw", 5, 0, 100, "LL RR RL LR");
 
