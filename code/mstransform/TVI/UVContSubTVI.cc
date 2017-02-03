@@ -140,7 +140,7 @@ Bool UVContSubTVI::parseConfiguration(const Record &configuration)
 		if (nThreads_p > 1)
 		{
 #ifdef _OPENMP
-			if (omp_get_max_threads() < nThreads_p)
+			if (omp_get_max_threads() < (int)nThreads_p)
 			{
 				logger_p << LogIO::WARN << LogOrigin("UVContSubTVI", __FUNCTION__)
 						<< "Requested " <<  nThreads_p << " OMP threads but maximum possible is " << omp_get_max_threads()<< endl
