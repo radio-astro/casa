@@ -228,16 +228,12 @@ TestWidget::sweepMs()
 	        std::unique_ptr<VisibilityIterator2> vi;
 
             if (usesMultipleMss()){
-	            vi = std::move(
-		            std::unique_ptr<VisibilityIterator2>(
-			            new VisibilityIterator2(
-				            mss, SortColumns(), writableVi)));
+	            vi.reset(
+		            new VisibilityIterator2(mss, SortColumns(), writableVi));
             }
             else {
-	            vi = std::move(
-		            std::unique_ptr<VisibilityIterator2>(
-			            new VisibilityIterator2(
-				            *mss[0], SortColumns(), writableVi)));
+	            vi.reset(
+		            new VisibilityIterator2(*mss[0], SortColumns(), writableVi));
             }
 
             VisBuffer2 * vb = vi->getVisBuffer ();
