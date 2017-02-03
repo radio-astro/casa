@@ -282,13 +282,13 @@ uInt MSTransformDataHandler::dataColStrToEnums(const String& col, Vector<MS::Pre
 
 	// split name string into individual names
 	char * pch;
-	Int i = 0;
+	Int it = 0;
 	pch = strtok((char*) tmpNames.c_str(), " ,");
 	while (pch != NULL)
 	{
-		tokens.resize(i + 1, true);
-		tokens[i] = String(pch);
-		++i;
+		tokens.resize(it + 1, true);
+		tokens[it] = String(pch);
+		++it;
 		pch = strtok(NULL, " ,");
 	}
 
@@ -2888,7 +2888,6 @@ Bool MSTransformDataHandler::copyState()
 			// Therefore just copy the input state sub-table to the output state sub-table
 			else
 			{
-				const MSState& oldState = mssel_p.state();
 				MSState& newState = msOut_p.state();
 				TableCopy::copyRows(newState, oldState);
 			}

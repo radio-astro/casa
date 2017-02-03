@@ -4987,7 +4987,6 @@ void MSTransformManager::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("FLOAT_DATA,DATA"))
 	{
-		Bool mainColSet=false;
 
 		if (dataColumnAvailable_p)
 		{
@@ -5927,7 +5926,7 @@ Bool MSTransformManager::transformDDIVector(const Vector<Int> &inputVector,Vecto
 void MSTransformManager::mapAndAverageVector(	const Vector<Double> &inputVector,
 												Vector<Double> &outputVector)
 {
-	Double average = 0;
+	Double vec_average = 0;
 	vector<uInt> baselineRows;
 	uInt row, counts, absoluteIndex = 0;
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
@@ -5938,28 +5937,28 @@ void MSTransformManager::mapAndAverageVector(	const Vector<Double> &inputVector,
 		// Compute combined value from each SPW
 		counts = 0;
 
-		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		for (vector<uInt>::iterator iter_row = baselineRows.begin();iter_row != baselineRows.end(); iter_row++)
 		{
-			row = *iter;
+			row = *iter_row;
 			if (counts == 0)
 			{
-				average = inputVector(row);
+				vec_average = inputVector(row);
 			}
 			else
 			{
-				average += inputVector(row);
+				vec_average += inputVector(row);
 			}
 
 			counts += 1;
 		}
 
 		// Normalize value
-		if (counts) average /= counts;
+		if (counts) vec_average /= counts;
 
 		// Set value in output vector
 		for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
 		{
-			outputVector(absoluteIndex) = average;
+			outputVector(absoluteIndex) = vec_average;
 			absoluteIndex += 1;
 		}
 	}
@@ -5973,7 +5972,7 @@ void MSTransformManager::mapAndAverageVector(	const Vector<Double> &inputVector,
 void MSTransformManager::mapAndAverageVector(	const Vector<Bool> &inputVector,
 												Vector<Bool> &outputVector)
 {
-	Bool average = false;
+	Bool vec_average = false;
 	vector<uInt> baselineRows;
 	uInt row, counts, absoluteIndex = 0;
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
@@ -5984,23 +5983,23 @@ void MSTransformManager::mapAndAverageVector(	const Vector<Bool> &inputVector,
 		// Compute combined value from each SPW
 		counts = 0;
 
-		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		for (vector<uInt>::iterator iter_row = baselineRows.begin();iter_row != baselineRows.end(); iter_row++)
 		{
-			row = *iter;
+			row = *iter_row;
 			if (counts == 0)
 			{
-				average = inputVector(row);
+				vec_average = inputVector(row);
 			}
 			else
 			{
-				average &= inputVector(row);
+				vec_average &= inputVector(row);
 			}
 		}
 
 		// Set value in output vector
 		for (uInt spwIndex=0;spwIndex < nspws_p; spwIndex++)
 		{
-			outputVector(absoluteIndex) = average;
+			outputVector(absoluteIndex) = vec_average;
 			absoluteIndex += 1;
 		}
 	}
@@ -6040,9 +6039,9 @@ template <class T> void MSTransformManager::mapAndAverageMatrix(	const Matrix<T>
 		normalizingFactor = 0;
 
 		// Compute combined value from each SPW
-		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		for (vector<uInt>::iterator iter_row = baselineRows.begin();iter_row != baselineRows.end(); iter_row++)
 		{
-			row = *iter;
+			row = *iter_row;
 			if (convolveFlags)
 			{
 				contributionFactor = !flags(row);
@@ -7002,9 +7001,9 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 		{
 			combinationOfSPWsWithDifferentExposure = true;
 			addWeightSpectrumContribution_p = &MSTransformManager::addWeightSpectrumContribution;
-			for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+			for (vector<uInt>::iterator iter_row = baselineRows.begin();iter_row != baselineRows.end(); iter_row++)
 			{
-				row = *iter;
+				row = *iter_row;
 				spw = spws(row);
 				spwRowMap[spw]=row;
 			}
@@ -7013,9 +7012,9 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 		{
 			exposure = exposures(*baselineRows.begin());
 			combinationOfSPWsWithDifferentExposure = false;
-			for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+			for (vector<uInt>::iterator iter_row = baselineRows.begin();iter_row != baselineRows.end(); iter_row++)
 			{
-				row = *iter;
+				row = *iter_row;
 				spw = spws(row);
 				spwRowMap[spw]=row;
 

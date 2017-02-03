@@ -987,7 +987,6 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	
 	Vector<Double> invLambda=visFreq/C::c;
 	Vector<Double> phasmult(vb.nChannels(),0.0);
-	Complex elphas(1.0, 0.0);
 	for (Int k=0; k < nrows; ++k){ 
 	  if(needRot)
 	    phasmult=phasor(k)*invLambda;
@@ -2685,8 +2684,8 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   //convFunc.xyPlane(iz) = convFunc.xyPlane(iz)/Complex(pbSum);
   // }
   //cerr << "pbSum " << pbSum << endl;
-   for (Int iz=0; iz< convSupport.shape()[0]; ++iz){
-     convFunc.xyPlane(iz)= convFunc.xyPlane(iz)/pbSum;
+   for (Int iz2=0; iz2< convSupport.shape()[0]; ++iz2){
+     convFunc.xyPlane(iz2)= convFunc.xyPlane(iz2)/pbSum;
 
    }
    Int newConvSize=2*(max(convSupport)+2)*convSampling;
