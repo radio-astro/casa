@@ -34,6 +34,7 @@ direction="J2000 18h00m00.031s -22d59m59.6s"
 
 complist="star672GHz.cl"
 if os.path.exists(complist):
+    import shutil
     shutil.rmtree(complist)
 cl.done()
 cl.addcomponent(dir=direction,flux=0.0003,freq="672GHz")

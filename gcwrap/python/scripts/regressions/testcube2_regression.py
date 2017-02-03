@@ -19,6 +19,7 @@ if not l.has_key("repodir"):
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
+rmtables("testcube2")
 importfits(fitsimage=datadir+"testcube.fits",imagename="testcube2")
 
 # test
@@ -46,7 +47,7 @@ totaltime="7200s"
 
 thermalnoise=""
 verbose=True
-overwrite=False
+overwrite=True
 
 if not l.has_key('interactive'): interactive=False
 if interactive:
