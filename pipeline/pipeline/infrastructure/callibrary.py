@@ -369,7 +369,8 @@ class CalFrom(object):
         'amp': 13,
         'ps': 14,
         'otfraster': 15,
-        'tecim': 16
+        'tecim': 16,
+        'kcross': 17
     }
 
     CALTYPE_TO_VISCAL = {
