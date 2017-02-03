@@ -91,6 +91,7 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <iomanip>
 
 
 using namespace std;
@@ -216,26 +217,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///Channel selection
     {
       Matrix<Int> chanlist = thisSelection.getChanList(mss_p[mss_p.nelements()-1]);
-      
-      IPosition shape = chanlist.shape();
+      Matrix<Double> freqList=thisSelection.getChanFreqList(mss_p[mss_p.nelements()-1]);
+      //cerr << std::setprecision(12) << "FreqList " << freqList << endl;
+      IPosition shape = freqList.shape();
       uInt nSelections = shape[0];
       if(selpars.freqbeg==""){
-	vi::FrequencySelectionUsingChannels channelSelector;
+	   // Going round the problem of CAS-8829
+        /*vi::FrequencySelectionUsingChannels channelSelector;
 
-	channelSelector.add(thisSelection, mss_p[mss_p.nelements()-1]);
+        channelSelector.add(thisSelection, mss_p[mss_p.nelements()-1]);
 
-	fselections_p.add(channelSelector);
-	 
+        fselections_p.add(channelSelector);
+        */
+        ////////////////////////////
+        Double lowfreq;
+        Double topfreq;
+        MFrequency::Types freqFrame=MFrequency::castType(ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().measFreqRef()(Int(freqList(0,0))));
+        vi::FrequencySelectionUsingFrame channelSelector(freqFrame);
+    	  for(uInt k=0; k < nSelections; ++k){
+            lowfreq=freqList(k,1)-freqList(k,3)/2.0;
+            topfreq=freqList(k, 2)+freqList(k,3)/2.0;
+            channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
+          }
+    	  fselections_p.add(channelSelector);
+          //////////////////////////////////
       }
       else{
+      
     	  Quantity freq;
     	  Quantity::read(freq, selpars.freqbeg);
     	  Double lowfreq=freq.getValue("Hz");
     	  Quantity::read(freq, selpars.freqend);
     	  Double topfreq=freq.getValue("Hz");
-	  vi::FrequencySelectionUsingFrame channelSelector(selpars.freqframe);
-    	  for(uInt k=0; k < nSelections; ++k)
-    		  channelSelector.add(chanlist(k,0), lowfreq, topfreq);
+    	  //cerr << "lowFreq "<< lowfreq << " topfreq " << topfreq << endl; 
+	      vi::FrequencySelectionUsingFrame channelSelector(selpars.freqframe);
+    	  for(uInt k=0; k < nSelections; ++k){
+            lowfreq=freqList(k,1)-freqList(k,3)/2.0;
+            topfreq=freqList(k, 2)+freqList(k,3)/2.0;
+            channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
+          }
     	  fselections_p.add(channelSelector);
 
       }
@@ -725,8 +745,8 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 			  itsMappers.degrid(*vb, savevirtualmodel );
 			  if(savemodelcolumn && writeAccess_p ){
 			    //Darn not implented
-			    //vi_p->writeVisModel(vb->visCubeModel());
-			    static_cast<VisibilityIteratorImpl2 *> (vi_p->getImpl())->writeVisModel(vb->visCubeModel());
+			    vi_p->writeVisModel(vb->visCubeModel());
+			    //static_cast<VisibilityIteratorImpl2 *> (vi_p->getImpl())->writeVisModel(vb->visCubeModel());
 
 			    // Cube<Complex> tt=vb->visCubeModel();
 			    // tt = 20.0;
@@ -857,9 +877,9 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 		    itsMappers.degrid(*vb, savevirtualmodel, gmap );
 		    //itsMappers.getMapper(gmap)->degrid(*vb); //, savevirtualmodel );
 		    if(savemodelcolumn && writeAccess_p ){
-		      //vi_p->writeVisModel(vb->visCubeModel());
+		      vi_p->writeVisModel(vb->visCubeModel());
 		      //vi_p->writeBackChanges(vb);
-		      static_cast<VisibilityIteratorImpl2 *> (vi_p->getImpl())->writeVisModel(vb->visCubeModel());
+		      // static_cast<VisibilityIteratorImpl2 *> (vi_p->getImpl())->writeVisModel(vb->visCubeModel());
 		    }
 
 		  }

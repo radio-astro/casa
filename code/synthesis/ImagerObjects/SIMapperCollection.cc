@@ -509,7 +509,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      if(iscomp || itsMappers[k]->getFTMRecord(rec, modImage)){
 
 		////Darn not implemented  
-		static_cast<VisibilityIteratorImpl2 *>(viloc->getImpl())->writeModel(rec, iscomp, true);
+		//static_cast<VisibilityIteratorImpl2 *>(viloc->getImpl())->writeModel(rec, //iscomp, true);
+              viloc->writeModel(rec, iscomp, true);
 				  //				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
 			  }
 
