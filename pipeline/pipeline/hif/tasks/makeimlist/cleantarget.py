@@ -7,7 +7,7 @@ class CleanTarget(dict):
          self['intent'] = ''
          self['spw'] = ''
          self['spwsel_lsrk'] = ''
-         self['spwsel_topo'] = ''
+         self['spwsel_topo'] = []
          self['cell'] = ''
          self['imsize'] = ''
          self['phasecenter'] = ''
