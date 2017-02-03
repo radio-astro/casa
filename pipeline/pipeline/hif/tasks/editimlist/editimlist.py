@@ -4,21 +4,38 @@ import os
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import EditimlistResult
+from pipeline.hif.tasks.makeimlist.cleantarget import CleanTarget
 
 LOG = infrastructure.get_logger(__name__)
-
 
 class EditimlistInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
-                 imagename=None, intent=None, field=None, spw=None, contfile=None,
-                 linesfile=None, uvrange=None, specmode=None, outframe=None,
-                 imsize=None, cell=None, phasecenter=None,
-                 nchan=None, start=None, width=None, nbin=None,
-                 stokes=None, parameter_file=None, nterms=None,
-                 editmode=None):
+                 cell=None,
+                 editmode=None,
+                 field=None,
+                 gridder=None,
+                 imagename=None,
+                 imsize=None,
+                 intent=None,
+                 nbin=None,
+                 nchan=None,
+                 nterms=None,
+                 parameter_file=None,
+                 phasecenter=None,
+                 specmode=None,
+                 spw=None,
+                 start=None,
+                 stokes=None,
+                 uvrange=None,
+                 width=None,
+                 ):
 
         self._init_properties(vars())
+
+        gridder = basetask.property_with_default('gridder', 'standard')
+        nterms = basetask.property_with_default('nterms', 2)
+        parameter_file = basetask.property_with_default('parameter_file', ''),
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
@@ -54,25 +71,23 @@ class Editimlist(basetask.StandardTaskTemplate):
         result = EditimlistResult()
 
         if inputs.editmode == 'add':
-            target = {'field': inputs.field,
-                      'intent': inputs.intent,
-                      'spw': inputs.spw,
-                      'spwsel_lsrk': '',#inputs.spwsel_lsrk,
-                      'spwsel_topo': '',#inputs.spwsel_topo,
-                      'cell': inputs.cell,
-                      'imsize': inputs.imsize,
-                      'phasecenter': inputs.phasecenter,
-                      'specmode': inputs.specmode,
-                      'gridder': '', #inputs.gridder,
-                      'imagename': inputs.imagename,
-                      'start': inputs.start,
-                      'width': inputs.width,
-                      'nbin': inputs.nbin,
-                      'nchan': inputs.nchan,
-                      'uvrange': inputs.uvrange,
-                      'stokes': inputs.stokes,
-                      'nterms': inputs.nterms,
-                      }
+            target = CleanTarget(**{'field': inputs.field,
+                                    'intent': inputs.intent,
+                                    'spw': inputs.spw,
+                                    'cell': inputs.cell,
+                                    'imsize': inputs.imsize,
+                                    'phasecenter': inputs.phasecenter,
+                                    'specmode': inputs.specmode,
+                                    'gridder': inputs.gridder,
+                                    'imagename': inputs.imagename,
+                                    'start': inputs.start,
+                                    'width': inputs.width,
+                                    'nbin': inputs.nbin,
+                                    'nchan': inputs.nchan,
+                                    'uvrange': inputs.uvrange,
+                                    'stokes': inputs.stokes,
+                                    'nterms': inputs.nterms,
+                                    })
         elif inputs.editmode == 'edit':
             target = {}
             for parameter in keys_to_change:
@@ -80,10 +95,6 @@ class Editimlist(basetask.StandardTaskTemplate):
                     exec('target["' + parameter + '"] = inputs.' + parameter)
 
         result.add_target(target)
-
-        # Temporarily pass contfile and linefile for hif_findcont and hif_makeimages
-        result.contfile = inputs.contfile
-        result.linesfile = inputs.linesfile
 
         return result
 

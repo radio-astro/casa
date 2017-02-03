@@ -45,11 +45,6 @@ class EditimlistResult(basetask.Results):
                     context.clean_list_pending[indices[0]] = copy.deepcopy(tmp_new_target)
                     self.targets[0] = copy.deepcopy(context.clean_list_pending[indices[0]])
 
-        # context.clean_list_pending = copy.deepcopy(new_list_pending)
-        context.contfile = self.contfile
-        context.linesfile = self.linesfile
-
-
     @property
     def num_targets(self):
         return len(self.targets)
