@@ -42,10 +42,8 @@ namespace casa {
 // -----------------------------------------------------------------------
 // Default Constructor
 // -----------------------------------------------------------------------
-MSTransform::MSTransform ()
+MSTransform::MSTransform () : mdh_p(nullptr)
 {
-	mdh_p = 0;
-
 	done();
 }
 
@@ -63,7 +61,7 @@ MSTransform::done()
 {
 	if(mdh_p){
 		delete mdh_p;
-		mdh_p = 0;
+		mdh_p = nullptr;
 	}
 
 	// Default values of parameters
@@ -100,8 +98,7 @@ MSTransform::done()
 bool
 MSTransform::configure(Record config)
 {
-
-	LogIO log_p(LogOrigin("MSTransform", __FUNCTION__));
+    log_p.origin(LogOrigin("MSTransform", __func__));
 
 	if (config.empty()){
 		log_p << LogIO::SEVERE << "There is no configuration for the tool"
@@ -174,7 +171,7 @@ bool
 MSTransform::open()
 {
 
-	LogIO log_p(LogOrigin("MSTransform", __FUNCTION__));
+	log_p.origin(LogOrigin("MSTransform", __func__));
 
 	if (! isconfigured_p){
 		log_p << LogIO::SEVERE << "There is no configuration for the tool"
@@ -205,8 +202,7 @@ MSTransform::open()
 Record
 MSTransform::run()
 {
-
-	LogIO log_p(LogOrigin("MSTransform", __FUNCTION__));
+    log_p.origin(LogOrigin("MSTransform", __func__));
 
 	if (! mdh_p){
 		log_p << LogIO::SEVERE << "The tool is not configured. Please run mt.config and mt.open first."
@@ -231,7 +227,7 @@ MSTransform::run()
 
 	mdh_p->close();
 	delete mdh_p;
-	mdh_p = 0;
+	mdh_p = nullptr;
 
 	return Record();
 }

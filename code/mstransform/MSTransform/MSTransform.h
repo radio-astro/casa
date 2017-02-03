@@ -152,7 +152,7 @@ public:
 
 private:
 
-	MSTransform(const MSTransform &) {};
+	MSTransform(const MSTransform &) : mdh_p(nullptr) {};
 
 	MSTransform& operator=(const MSTransform &)  {return *this;};
 
