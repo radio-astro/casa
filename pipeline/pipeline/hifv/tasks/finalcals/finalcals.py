@@ -6,7 +6,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
 import pipeline.hif.heuristics.findrefant as findrefant
 import pipeline.infrastructure.utils as utils
-
+import pipeline.infrastructure.callibrary as callibrary
 
 import os
 import numpy as np
@@ -54,6 +54,17 @@ class FinalcalsResults(basetask.Results):
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+
+    def merge_with_context(self, context):
+        if not self.final:
+            LOG.error('No results to merge')
+            return
+
+        for calapp in self.final:
+            LOG.debug('Adding calibration to callibrary:\n'
+                      '%s\n%s' % (calapp.calto, calapp.calfrom))
+            context.callibrary.add(calapp.calto, calapp.calfrom)
+
 
 
 class Finalcals(basetask.StandardTaskTemplate):
@@ -195,7 +206,21 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         finalphasegaincal_results = self._do_calibratorgaincal(calMs, basevis+'.finalphasegaincal.g', gain_solint2, 3.0, 'p', [basevis+'.finalampgaincal.g'], refAnt)
 
-        return FinalcalsResults(vis=self.inputs.vis)
+
+
+        basevis = os.path.basename(self.inputs.vis)
+        tablesToAdd = ['finaldelay.k', 'finalBPcal.b', 'averagephasegain.g', 'finalampgaincal.g', 'finalphasegaincal.g']
+        tablesToAdd = [basevis + '.' + table for table in tablesToAdd]
+
+        callist = []
+        for addcaltable in tablesToAdd:
+            print addcaltable
+            calto = callibrary.CalTo(self.inputs.vis)
+            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False, caltype='finalcal')
+            calapp = callibrary.CalApplication(calto, calfrom)
+            callist.append(calapp)
+
+        return FinalcalsResults(vis=self.inputs.vis, pool=callist, final=callist)
 
     def analyse(self, results):
         return results

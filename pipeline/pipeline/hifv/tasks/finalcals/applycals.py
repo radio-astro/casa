@@ -1,17 +1,10 @@
 from __future__ import absolute_import
 
-import os
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.callibrary as callibrary
-
-
 
 from pipeline.hif.tasks import applycal
 
-
-
-#from pipeline.h.tasks import applycal
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -56,18 +49,6 @@ class Applycals(applycal.IFApplycal):
         return results
     
     def _do_applycal(self):
-
-        basevis = os.path.basename(self.inputs.vis)
-        
-        tablesToAdd = ['finaldelay.k', 'finalBPcal.b', 'averagephasegain.g', 'finalampgaincal.g', 'finalphasegaincal.g']
-        
-        tablesToAdd = [basevis + '.' + table for table in tablesToAdd]
-        
-        for addcaltable in tablesToAdd:
-            print addcaltable
-            calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False, caltype='finalcal')
-            self.inputs.context.callibrary.add(calto, calfrom)
 
         result = self.applycal_run()
 
