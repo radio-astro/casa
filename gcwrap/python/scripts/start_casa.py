@@ -44,14 +44,18 @@ try:
     __parse = argparse.ArgumentParser(description='CASA bootstrap')
     __parse.add_argument( '--rcdir',dest='rcdir',default=casa['dirs']['rc'],
                           help='location for startup files' )
+    __parse.add_argument( '--pipeline',dest='backend',default='tk',
+                          const=None,action='store_const',
+                          help='location for startup files' )
     __defaults,__trash = __parse.parse_known_args( )
 
     __configs = Config( )
     __configs.TerminalInteractiveShell.ipython_dir = __defaults.rcdir.decode('unicode-escape') + "/ipython"
     __configs.HistoryManager.hist_file = __configs.TerminalInteractiveShell.ipython_dir + "/history.sqlite"
+    __configs.TerminalIPythonApp.matplotlib = __defaults.backend
 
     # '-nomessages', '-nobanner','-logfile',ipythonlog,
-    start_ipython( config=__configs, argv=['--ipython-dir='+__defaults.rcdir+"/ipython", '--autocall=2', "-c", "for i in " + str(__startup_scripts) + ": execfile( i )\n%matplotlib", "-i" ] )
+    start_ipython( config=__configs, argv=['--ipython-dir='+__defaults.rcdir+"/ipython", '--autocall=2', "-c", "for i in " + str(__startup_scripts) + ": execfile( i )"+("\n%matplotlib" if __defaults.backend is not None else ""), "-i" ] )
 
 except:
     print "Unexpected error:", sys.exc_info()[0]
