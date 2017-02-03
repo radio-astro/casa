@@ -28,7 +28,7 @@ refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest
 
 ## List to be run
 def suite():
-     return [test_cont]
+     return [test_cont,test_cube]
 
 ###################################################
 ## Base Test class with Utility functions
@@ -167,13 +167,43 @@ class test_cont(testref_base_parallel):
 ###################################################
 class test_cube(testref_base_parallel):
 
-     def test_cube_1(self):
-          """ [cube] Test_cube_1 : Data and image parallelization """
-
+     def test_cube_niter10(self):
+          """ [cube] Test_cube_niter10 : Data and image parallelization, fixed niter per channel. """
+          
           if self.th.checkMPI() == True:
+               
+               self.prepData('refim_point.ms')
+               
+               # Non-parallel run
+               ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',
+                            interactive=0,niter=10,deconvolver='hogbom',specmode='cube',
+                            pbcor=True, parallel=False)
 
-               print "This test is currently empty"
-               ## Fill test here
+               report1 = self.th.checkall(ret=ret, 
+                                          peakres=0.241, modflux=0.527, iterdone=200, nmajordone=2,
+                                          imexist=[self.img+'.psf', self.img+'.residual', 
+                                                   self.img+'.image',self.img+'.model', 
+                                                   self.img+'.pb',  self.img+'.image.pbcor' ], 
+                                          imval=[(self.img+'.image',1.2,[50,50,0,5]),
+                                                 (self.img+'.sumwt',2949.775,[0,0,0,0]) ])
+
+               # Parallel run
+               imgpar = self.img+'.par'
+               retpar = tclean(vis=self.msfile,imagename=imgpar,imsize=100,cell='8.0arcsec',
+                               interactive=0,niter=10,deconvolver='hogbom',specmode='cube',
+                               pbcor=True,parallel=True)
+               
+               checkims =self.th.getNParts( imprefix=imgpar, imexts=['residual','psf','model']) 
+               report2 = self.th.checkall(ret=retpar['node1'][1], 
+#                                          peakres=0.241, modflux=0.527, iterdone=200, nmajordone=2,
+                                          imexist=[self.img+'.psf', self.img+'.residual', 
+                                                   self.img+'.image',self.img+'.model', 
+                                                   self.img+'.pb',  self.img+'.image.pbcor' ], 
+                                          imval=[(self.img+'.image',1.2,[50,50,0,5]),
+                                                 (self.img+'.sumwt',2949.775,[0,0,0,0]) ])
+
+               ## Pass or Fail (and why) ?
+               self.checkfinal(report1+report2)
 
           else:
                print "MPI is not enabled. This test will be skipped"
