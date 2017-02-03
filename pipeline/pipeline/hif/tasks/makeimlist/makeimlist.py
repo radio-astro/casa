@@ -6,6 +6,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import MakeImListResult
+from .cleantarget import CleanTarget
 from pipeline.hif.heuristics import imageparams 
 import pipeline.infrastructure.casatools as casatools
 
@@ -541,22 +542,22 @@ class MakeImList(basetask.StandardTaskTemplate):
                       cells[spwspec], imsizes[(field_intent[0],spwspec)],
                       phasecenters[field_intent[0]]))
 
-                    target = {'field': field_intent[0],
-                              'intent': field_intent[1],
-                              'spw': new_spwspec,
-                              'spwsel_lsrk': spwsel,
-                              'spwsel_topo': [],
-                              'cell': cells[spwspec],
-                              'imsize': imsizes[(field_intent[0], spwspec)],
-                              'phasecenter': phasecenters[field_intent[0]],
-                              'specmode': inputs.specmode,
-                              'gridder': self.heuristics.gridder(field_intent[1], field_intent[0]),
-                              'imagename': imagenames[(field_intent, spwspec)],
-                              'start': inputs.start,
-                              'width': widths[(field_intent[0], spwspec)],
-                              'nbin': nbin,
-                              'nchan': nchans[(field_intent[0], spwspec)],
-                              'uvrange': inputs.uvrange}
+                    target = CleanTarget(**{'field': field_intent[0],
+                                            'intent': field_intent[1],
+                                            'spw': new_spwspec,
+                                            'spwsel_lsrk': spwsel,
+                                            'cell': cells[spwspec],
+                                            'imsize': imsizes[(field_intent[0], spwspec)],
+                                            'phasecenter': phasecenters[field_intent[0]],
+                                            'specmode': inputs.specmode,
+                                            'gridder': self.heuristics.gridder(field_intent[1], field_intent[0]),
+                                            'imagename': imagenames[(field_intent, spwspec)],
+                                            'start': inputs.start,
+                                            'width': widths[(field_intent[0], spwspec)],
+                                            'nbin': nbin,
+                                            'nchan': nchans[(field_intent[0], spwspec)],
+                                            'uvrange': inputs.uvrange,
+                                            'stokes': 'I'})
 
                     result.add_target(target)
 
