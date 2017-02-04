@@ -748,7 +748,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       }
       else {
 	os << "Convolution function is misbehaved - support seems to be zero\n"
-	   << "Reasons can be: \n(1)The image definition not covering one or more of the pointings selected"
+	   << "Reasons can be: \n(1)The image definition not covering one or more of the pointings selected\n"
            << "(2) No unflagged data in a given pointing\n"
 	   << "(3) The entries in the POINTING subtable do not match the field being imaged."
 	   << "Please check, and try again with an empty POINTING subtable.)\n"

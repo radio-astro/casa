@@ -2209,7 +2209,7 @@ Bool Simulator::predict(const Vector<String>& modelImage,
 	vpman->reset();
       }
 
-    os << "Temporary alert : The state of the vpmanager tool has been modified by loading these primary beam models. If any of your scripts rely on the vpmanager state being preserved throughout your CASA session, please use vp.saveastable() and vp.loadfromtable() as needed. This 'feature'/warning will hopefully go away by the 4.7 release." << LogIO::POST;
+    os << "Temporary alert : The state of the vpmanager tool has been modified by loading these primary beam models. If any of your scripts rely on the vpmanager state being preserved throughout your CASA session, please use vp.saveastable() and vp.loadfromtable() as needed. "<< LogIO::POST;
     
 
     //    PBMath::CommonPB kpb;
@@ -2527,7 +2527,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     if(doVP_p) {
       ROMSColumns msc(*ams);
       if (doDefaultVP_p) {
-	os << "Using default primary beams for mosaicing (use setvp to change)" << LogIO::POST;
+	os << "Using default primary beams in SkyEquation (use setvp to change)" << LogIO::POST;
 	vp_p=new VPSkyJones(msc, true, parAngleInc_p, squintType_p, skyPosThreshold_p);
       } else {
 	Table vpTable( vpTableStr_p );
