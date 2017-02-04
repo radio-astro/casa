@@ -44,7 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   PBMath1DEVLA::PBMath1DEVLA(Quantity maxRad, Bool useSymmetricBeam, Double freqToUse): pbMathPoly_p(0), maxRad_p(maxRad), useSymmetric_p(useSymmetricBeam){
     wideFit_p=True;
     init();
-    nearestVPArray(freqToUse);
+    nearestVPArray(freqToUse, False);
   }
 
   PBMathInterface::PBClass PBMath1DEVLA::whichPBClass(){
@@ -57,11 +57,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void PBMath1DEVLA::fillPBArray(){
     ///This is a dummy to make compiler happy
     ///as in this class we recalculate vp_p when needed
-    nearestVPArray(1.425e9);
+    nearestVPArray(1.425e9, False);
     
   }
 
-  void PBMath1DEVLA::nearestVPArray(Double freq){
+  void PBMath1DEVLA::nearestVPArray(Double freq, bool printINFO){
     LogIO os(LogOrigin("PBMATH1DEVLA", "nearestVPArray"));
     String band=feed(freq);
     auto confiter=feedConf_p.find(band);
@@ -107,7 +107,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       
     }
-    os << LogIO::NORMAL1 << "Using EVLA beam model of frequency  " << freqUsed << " MHz " << LogIO::POST;
+    if(printINFO)
+        os << LogIO::NORMAL1 << "Using EVLA beam model of frequency  " << freqUsed << " MHz " << LogIO::POST;
     pbMathPoly_p= new PBMath1DPoly(coeff, maxRad_p, Quantity(1.0, "GHz"), False,  squint_p, useSymmetric_p);
     (this->vp_p).resize();
     (this->vp_p)=pbMathPoly_p->vp_p;

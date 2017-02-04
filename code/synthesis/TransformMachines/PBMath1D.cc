@@ -1121,12 +1121,16 @@ void PBMath1D::viewPB(Vector<Float>& r, Vector<Float>& pb, Int n_pb, const Doubl
   }
 
 };
-void PBMath1D::nearestVPArray(Double freq){
-  Int ifit=0;
+void PBMath1D::nearestVPArray(Double freq, bool printINFO){
+    LogIO os(LogOrigin("PBMATH1D", "nearestVPArray"));
+    Int ifit=0;
+  
   Int nFreq=wFreqs_p.nelements();
   for (ifit=0; ifit<nFreq; ifit++) {
     if (freq <=wFreqs_p(ifit)) break;
   }
+  if(printINFO)
+        os << LogIO::NORMAL1 << "Using beam model of frequency  " << ((ifit==nFreq) ? wFreqs_p(nFreq-1) : wFreqs_p(ifit)) << " MHz " << LogIO::POST;
   if (ifit==0) {
     vp_p = wbvp_p.column(0);
   } else if (ifit==nFreq) {

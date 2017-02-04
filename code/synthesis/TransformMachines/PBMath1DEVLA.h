@@ -50,7 +50,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual PBMathInterface::PBClass whichPBClass();
 
   protected:
-    virtual void nearestVPArray(double freq);
+    virtual void nearestVPArray(double freq, bool printINFO=true);
     virtual void fillPBArray();
   private:
     std::map<double, std::vector<double> > coeffmap_p;

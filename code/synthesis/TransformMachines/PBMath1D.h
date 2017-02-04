@@ -270,7 +270,7 @@ protected:
 
   //// For wideband beams fill the tabulated vp_p by the interpolated beam at the freq
   
-  virtual void nearestVPArray(double freq);
+  virtual void nearestVPArray(double freq, bool printINFO=true);
 
 
   // Helper method to fit a circularly symmetric beam to the
