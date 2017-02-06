@@ -26,8 +26,6 @@
 #include <flagging/Flagging/FlagAgentBase.h>
 #include <unordered_map>
 
-// class FlagDataHandler;
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 /**

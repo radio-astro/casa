@@ -106,27 +106,17 @@ FlagAgentAntennaIntegrations::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
     row.assign(channelsCnt, false);
   }
 
-  const casacore::Vector<casacore::Int> ant1 = visBuffer.antenna1();
-  const casacore::Vector<casacore::Int> ant2 = visBuffer.antenna2();
   const casacore::Cube<casacore::Bool> polChanRowFlags = visBuffer.flagCube();
   casacore::Double currentTime = time_p[0];
   casacore::uInt baselineIdx = 0;
   for (casacore::uInt rowIdx = 0; rowIdx < rowCnt; ++rowIdx) {
     casacore::Double rowTime = visBuffer.time()[rowIdx];
-
-    *logger_p << casacore::LogIO::DEBUG2 << " iteration, ant1 id:: " << ant1[rowIdx] << ", ant 2 id: " << ant2[rowIdx] << casacore::LogIO::POST;  
-
-    // updateNextRowTime
     rowTime = time_p[rowIdx];
     if (rowTime != currentTime) {
       doPreProcessingTimePoint(doFlagTime_p, currentTime, flagPerBaselinePerChannel);
       currentTime = rowTime;
       baselineIdx = 0;
     }
-
-    // This is selected already in the generic selection of FlagAgentBase
-    //if (ant1[rowIdx] != antId_p and ant2[rowIdx] != antId_p)
-    //  continue;
 
     checkAnyPolarizationFlagged(polChanRowFlags, flagPerBaselinePerChannel, rowIdx, baselineIdx++);
 
@@ -155,15 +145,12 @@ void FlagAgentAntennaIntegrations::checkAnyPolarizationFlagged(const casacore::C
     for (casacore::uInt polIdx = 0; polIdx < polCnt; ++polIdx) {
       // assume that all polarization products must be unflagged for a baseline to be
       // deemed unflagged
-      //if (polChanRowFlags.at(polIdx, chanIdx, row)) {
       if (polChanRowFlags(polIdx, chanIdx, row)) {
 	  flagPerBaselinePerChannel[baselineIdx][chanIdx] = true;
 	  break;
       }
     }
   }
-  
-  *logger_p << casacore::LogIO::DEBUG1 << "checkAnyPolarizationFlagged: finished with FLAG ON! baselineIdx: "  << baselineIdx << casacore::LogIO::POST;
 }
 
 /**

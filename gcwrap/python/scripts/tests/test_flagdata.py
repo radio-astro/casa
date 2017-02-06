@@ -2048,6 +2048,7 @@ class test_antint(test_base):
     """flagdata:: Test of mode = 'antint'"""
     
     def setUp(self):
+        # TODO: we need a more appropriate input MS for this.
         self.setUp_data4tfcrop()
         
     def test_antint_spw3_high_threshold(self):
