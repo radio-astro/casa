@@ -2044,6 +2044,57 @@ class test_clip(test_base):
         self.assertEqual(res['flagged'], 274944*2)
 
 
+class test_antint(test_base):
+    """flagdata:: Test of mode = 'antint'"""
+    
+    def setUp(self):
+        self.setUp_data4tfcrop()
+        
+    def test_antint_spw3_high_threshold(self):
+    	'''flagdata: mode = antint, spw = 3, minchanfrac = 0.6'''
+
+        flagdata(vis=self.vis, mode='antint', spw='3', antenna='ea01', minchanfrac=0.6)
+        res = flagdata(vis=self.vis, mode='summary', spw='3')
+
+        self.assertEqual(res['flagged'], 0)
+        self.assertEqual(res['antenna']['ea01']['flagged'], 0)
+        self.assertEqual(res['spw']['3']['total'], 274944)
+        self.assertEqual(res['spw']['3']['flagged'], 0)
+
+    def test_antint_spw3_low_threshold(self):
+    	'''flagdata: mode = antint, spw = 3, minchanfrac = -.1'''
+
+        flagdata(vis=self.vis, mode='antint', spw='3', antenna='ea01', minchanfrac=-.1)
+        res = flagdata(vis=self.vis, mode='summary', spw='3')
+
+        self.assertEqual(res['flagged'], 137472)
+        self.assertEqual(res['antenna']['ea01']['flagged'], 137472)
+        self.assertEqual(res['spw']['3']['total'], 274944)
+        self.assertEqual(res['spw']['3']['flagged'], 137472)
+
+    def test_antint_spw0_high_threshold(self):
+    	'''flagdata: mode = antint, spw = 0, minchanfrac = 0.45'''
+
+        flagdata(vis=self.vis, mode='antint', spw='0', antenna='ea01', minchanfrac=0.45)
+        res = flagdata(vis=self.vis, mode='summary', spw='0')
+
+        self.assertEqual(res['flagged'], 0)
+        self.assertEqual(res['antenna']['ea01']['flagged'], 0)
+        self.assertEqual(res['spw']['0']['total'], 274944)
+        self.assertEqual(res['spw']['0']['flagged'], 0)
+
+    def test_antint_spw0_low_threshold(self):
+    	'''flagdata: mode = antint, spw = 0, minchanfrac = 0.05'''
+
+        flagdata(vis=self.vis, mode='antint', spw='3', antenna='ea01', minchanfrac=0.05)
+        res = flagdata(vis=self.vis, mode='summary', spw='0')
+
+        self.assertEqual(res['flagged'], 0)
+        self.assertEqual(res['antenna']['ea01']['flagged'], 0)
+        self.assertEqual(res['spw']['0']['total'], 274944)
+        self.assertEqual(res['spw']['0']['flagged'], 0)
+
+
 class test_CASA_4_0_bug_fix(test_base):
     """flagdata:: Regression test for the fixes introduced during the CASA 4.0 bug fix season"""
 
@@ -3473,7 +3524,8 @@ class test_preaveraging(test_base):
 
 
 def suite():
-    return [test_rflag,
+    return [test_antint,
+            test_rflag,
             test_tfcrop,
             test_shadow,
             test_selections,

@@ -66,6 +66,7 @@
     elevation   = remove data below/above given elevations
     tfcrop      = automatic identification of outliers on the time-freq plane
     rflag       = automatic detection of outliers based on sliding-window RMS filters
+    antint      = flag integrations if all baselines to a specified antenna are flagged
     extend      = extend and/or grow flags beyond what the basic algorithms detect
     summary     = report the amount of flagged data
     unflag      = unflag the specified data
@@ -91,9 +92,10 @@
                     <value>elevation</value>
                     <value>tfcrop</value>
                     <value>rflag</value>
+                    <value>antint</value>
                     <value>extend</value>
-                    <value>unflag</value>
                     <value>summary</value>
+                    <value>unflag</value>
                 </allowed>
             </param>
 
@@ -334,6 +336,15 @@
                 <value>0.0</value>
             </param>
 
+            <!-- ANTINT parameters -->
+            <param type="double" name="minchanfrac" subparam="true">
+                <description>Minimum fraction of flagged channels required for a baseline to be deemed as flagged</description>
+                <value>0.6</value>
+            </param>
+            <param type="bool" name="verbose" subparam="true">
+                <description>Print timestamps of flagged integrations to the log</description>
+                <value type="bool">False</value>
+            </param>
 
             <!-- EXTEND parameters -->
             <param type="any" name="extendpols" subparam="true">
@@ -603,6 +614,14 @@
                         <default param="timeavg"> <value type="bool">False</value></default>
                         <default param="timebin"> <value type="string"></value></default>                        
                     </equals>
+                    <equals value="antint">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="datacolumn"><value type="string">DATA</value></default>
+                        <default param="minchanfrac"><value type="double">.6</value></default>
+                        <default param="verbose"><value type="bool">False</value></default>
+                    </equals>
                     <equals value="extend">
                         <default param="field"><value type="string"></value></default>
                         <default param="spw"><value type="string"></value></default>
@@ -784,8 +803,8 @@
 
 
     mode -- Mode of operation.
-        options: 'list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'extend',
-                 'unflag', 'summary'
+        options: 'list', 'manual','clip','quack','shadow','elevation', 'tfcrop', 'antint',
+                 'extend', 'unflag', 'summary'
         default: 'manual'
 
         
@@ -1412,6 +1431,49 @@
                           
                timebin -- Bin width for time average in seconds.
                     default: '0s'                                                   
+
+    ------------------------------------- ANTINT MODE -----------------------------------------------    
+    
+        antint -- Flag integrations if all baselines to a specified antenna are flagged
+
+                 This mode flag all integrations in which a specified antenna is flagged.
+                 This mode operates for an spectral window. It flags any integration in
+                 which all baselines to a specified antenna are flagged, but only if this
+                 condition is satisfied in a fraction of channels within the spectral
+                 window of interest greater than a nominated fraction. For simplicity, it
+                 assumes that all polarization products must be unflagged for a baseline to
+                 be deemed unflagged. The antint mode implements the flagging approach
+                 introduced in 'antintflag' (https://doi.org/10.5281/zenodo.163546)
+
+                 The motivating application for introducing this mode is removal of data
+                 that will otherwise lead to changes in reference antenna during gain
+                 calibration, which will in turn lead to corrupted polarization
+                 calibration. 
+
+               antenna -- Select and antenna and check all baselines to this antenna
+
+               minchanfrac -- Minimum fraction of flagged channels required for a baseline
+                              to be deemed as flagged. Takes values between 0-1 (float).
+                              In this mode flagdata does the following for every point in
+                              time. It checks the fraction of channels flagged for any of
+                              the polarization products and for every baseline to the antenna
+                              of interest. If the fraction is higher than this 'minchanfrac'
+                              threshold then the data are flagged for this pont in time.
+                              This parameter will be ignored if spw specifies a channel.
+
+               verbose -- Print timestamps of flagged integrations to the log
+
+                    Example1:
+
+                        flagdata(..., spw='9', antenna='ea01')
+
+                    Example2:
+
+                        Here we reduce the fraction of channels that are required to be
+                        flagged, and print information for every integratino that is
+                        flagged.
+
+                        flagdata(..., spw='9', antenna='ea01', minchanfrac=0.3, verbose=True)
 
     ------------------------------------- EXTEND MODE -----------------------------------------------   
      

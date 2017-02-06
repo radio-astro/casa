@@ -944,7 +944,7 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
         myrows --> selected rows to apply/unapply flags
         apply --> a boolean to control whether to apply or unapply the flags
         writeflags --> used by mode=rflag only
-        display --> used by mode='rflag only
+        display --> used by mode='rflag' only
         
         The original flagdict dictionary is not modified '''
     
@@ -3848,6 +3848,7 @@ def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
     tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin',
                   'extendflags']
+    antintpars = ['minchanfrac','verbose']
     extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
                   'flagneartime','flagnearfreq']
     rflagpars = ['winsize','timedev','freqdev','timedevscale','freqdevscale','spectralmax',
@@ -3917,6 +3918,9 @@ def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
             elif cmdline.__contains__('tfcrop'):
                 mode = 'tfcrop'
                 modepars = getLinePars(cmdline,tfcroppars)
+            elif cmdline.__contains__('antint'):
+                mode = 'antint'
+                modepars = getLinePars(cmdline,antintpars)
             elif cmdline.__contains__('extend') and cmdline.__contains__('extendpols'):
                 # Necessary to avoid matching the extenflags parameter of rflag/tfcrop
                 mode = 'extend'
