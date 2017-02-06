@@ -106,7 +106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // the agent will loop through only that portion of the data.
 //
 // // This method will check if the requested agent (mode) is known from the following list
-// // (manual, clip, quack, shadow, elevation, tfcrop, rflag, extend, unflag and summary). If
+// // (manual, clip, quack, shadow, elevation, tfcrop, rflag, extend, unflag, summary, and antint). If
 // // empty or unknown, it will give a warning and return.
 //
 // // If any tfcrop, rflag or extend mode is present, this method will calculate the maximum value
@@ -325,6 +325,15 @@ public:
        	    casacore::String freqfit, casacore::Int maxnpieces, casacore::String flagdimension, casacore::String usewindowstats,
        	    casacore::Int halfwin, casacore::Bool extendflags, casacore::Bool apply, casacore::Bool channelavg, casac::variant chanbin, casacore::Bool timeavg,
        	    casacore::String timebin);
+
+	// Parse parameters for the 'antint' mode (antenna integrations)
+	bool parseAntIntParameters(casacore::String field, casacore::String spw,
+				   casacore::String array, casacore::String feed,
+				   casacore::String scan, casacore::String antenna,
+				   casacore::String uvrange, casacore::String timerange, 
+				   casacore::String correlation, casacore::String intent,
+				   casacore::String observation, casacore::Double minchanfrac,
+				   casacore::Bool verbose, casacore::Bool apply);
 
 	// Parse parameters for extend
 	bool parseExtendParameters(casacore::String field="", casacore::String spw="", casacore::String array="", casacore::String feed="",

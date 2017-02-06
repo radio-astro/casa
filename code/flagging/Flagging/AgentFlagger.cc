@@ -321,7 +321,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 	String mode = "";
 	String agent_name = "";
 	Bool apply = true;
-    String datacolumn = "DATA";
+	String datacolumn = "DATA";
 
 	// create a temporary vector of agents
 	std::vector<Record> listOfAgents;
@@ -365,7 +365,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 
 	// Validate datacolumn
 	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0 or mode.compare("rflag") == 0
-			or mode.compare("display") == 0){
+			or mode.compare("antint") == 0 or mode.compare("display") == 0){
 
 		if (agentParams_p.isDefined("datacolumn"))
 			agentParams_p.get("datacolumn", datacolumn);
@@ -560,7 +560,7 @@ AgentFlagger::initAgents()
 	os<< LogIO::DEBUG1<< "There are initially "<< agents_config_list_p.size()<<
 			" agents in the list"<<LogIO::POST;
 
-    size_t list_size = agents_config_list_p.size();
+	size_t list_size = agents_config_list_p.size();
 
 	// Send the logging of the re-applying agents to the debug
 	// as we are only interested in seeing the unapply action (flagcmd)
@@ -628,7 +628,8 @@ AgentFlagger::initAgents()
 			// CAS-3943 (flagdata seg-faults when non-existent data column is to be read)
 			Bool createAgent = true;
 			if (((mode.compare("tfcrop") == 0 or mode.compare("rflag") == 0
-					or mode.compare("clip") == 0 or mode.compare("display") == 0))
+					or mode.compare("clip") == 0 or mode.compare("display") == 0 or
+			      mode.compare("antint") == 0))
 					and (agent_rec.fieldNumber ("datacolumn") >= 0))
 			{
 				String datacolumn;
@@ -1039,8 +1040,10 @@ AgentFlagger::isModeValid(String mode)
 	if (isMS_p) {
 		if (mode.compare("manual") == 0 or mode.compare("clip") == 0 or
 				mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
-				mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
+				mode.compare("elevation") == 0 or 
+				mode.compare("tfcrop") == 0 or 
 				mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
+				mode.compare("antint") == 0 or 
 				mode.compare("unflag") == 0 or mode.compare("summary") == 0
 				or mode.compare("display") == 0) {
 
@@ -1390,6 +1393,51 @@ AgentFlagger::parseTfcropParameters(String field, String spw, String array, Stri
 }
 
 // ---------------------------------------------------------------------
+// AgentFlagger::parseAntIntParameters
+// Parse data selection parameters and specific antint parameters
+//
+// ---------------------------------------------------------------------
+bool
+AgentFlagger::parseAntIntParameters(String field, String spw, String array, 
+				    String feed, String scan, String antenna,
+				    String uvrange, String timerange, 
+				    String correlation, String intent,
+				    String observation, Double minchanfrac,
+				    Bool verbose, Bool apply)
+{
+
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
+
+	// Mode specific values for some general parameters
+	String mode = "antint";
+	String agent_name = "AntennaIntegrations";
+
+	// Create a record with the parameters for this mode
+	Record agent_record = Record();
+
+	agent_record.define("mode", mode);
+	agent_record.define("agentname", agent_name);
+	agent_record.define("field", field);
+	agent_record.define("spw", spw);
+
+	agent_record.define("scan", scan);
+	agent_record.define("antenna", antenna);
+	agent_record.define("uvrange", uvrange);
+	agent_record.define("timerange", timerange);
+	agent_record.define("correlation", correlation);
+	agent_record.define("intent", intent);
+	agent_record.define("observation", observation);
+	agent_record.define("minchanfrac", minchanfrac);
+	agent_record.define("verbose", verbose);
+	agent_record.define("apply", apply);
+
+	// Call the main method
+	parseAgentParameters(agent_record);
+
+	return true;
+}
+
+// ---------------------------------------------------------------------
 // AgentFlagger::parseExtendParameters
 // Parse data selection parameters and specific extend parameters
 //
@@ -1493,7 +1541,4 @@ AgentFlagger::parseSummaryParameters(String field, String spw, String array,
 }
 
 
-
 } //#end casa namespace
-
-

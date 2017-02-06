@@ -56,7 +56,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // There are various methods (virtual) that must be re-implemented by the specific derived
 // classes, depending on the implemented algorithm. Here we find three categories:
 //
-// - Iteration approach methods:
+// -# Iteration approach methods:
 //
 //   - computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, casacore::uInt row)
 //     - For agents that only depend on meta-data for their flagging operations (for FlagAgentManual,FlagAgentElevation,FlagAgentShadow,FlagAgentQuack)
@@ -72,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     - For agents that have to look into the visibility points grouped by baseline, allowing user-driven navigation (FlagAgentDisplay)
 //     - NOTE: This method has to be used in combination with iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
 //
-// - Configuration methods:
+// -# Configuration methods:
 //
 //   - FlagAgentBase::FlagAgentBase
 //     - Even though each derived agent has its specific constructor, it is necessary to call the base class constructor to set:
@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //        - correlation: To specify the correlation to be inspected for flagging (this also includes visibility expressions)
 //        - meta-data selection parameters (field, spw, scan, baseline, etc): To feed the agent-level data selection engine (row filtering)
 //
-// - Information methods
+// -# Information methods
 //
 //   - FlagReport getReport()
 //     - To return a specific report to be shown by the display agent, or containing accumulated information (e.g.: summaries, rflag tresholds)

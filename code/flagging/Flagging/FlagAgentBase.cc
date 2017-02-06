@@ -33,6 +33,7 @@
 #include <flagging/Flagging/FlagAgentExtension.h>
 #include <flagging/Flagging/FlagAgentRFlag.h>
 #include <flagging/Flagging/FlagAgentDisplay.h>
+#include <flagging/Flagging/FlagAgentAntennaIntegrations.h>
 
 using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -303,6 +304,12 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	else if (mode.compare("rflag")==0)
 	{
 		FlagAgentRFlag* agent = new FlagAgentRFlag(dh,config);
+		return agent;
+	}
+	// Antint
+	else if (mode.compare("antint")==0)
+	{
+		FlagAgentAntennaIntegrations* agent = new FlagAgentAntennaIntegrations(dh,config,writePrivateFlags, true);
 		return agent;
 	}
 	// Display
@@ -1135,7 +1142,7 @@ FlagAgentBase::sanitizeCorrExpression(String corrExpression, std::vector<String>
 void
 FlagAgentBase::setAgentParameters(Record config)
 {
-	// NOTE: This class must be re-implemented in the derived classes for
+	// NOTE: This method must be re-implemented in the derived classes for
 	// the specific parameters although here we handle the common ones
 
 	int exists;
