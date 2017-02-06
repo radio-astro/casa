@@ -58,10 +58,12 @@ public:
   PlotMSIndexer();
     
   // Constructor which takes parent PlotMSCache, x and y axes (non-iteration)
-  PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis, int index);
+  PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, 
+    PMS::DataColumn xData, PMS::Axis yAxis, PMS::DataColumn yData, int index);
   // Constructor which supports iteration
-  PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis,
-                PMS::Axis iterAxis, casacore::Int iterValue, int index);
+  PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, 
+    PMS::DataColumn xData, PMS::Axis yAxis, PMS::DataColumn yData,
+    PMS::Axis iterAxis, casacore::Int iterValue, int index);
   
   // Destructor
   ~PlotMSIndexer();
@@ -168,8 +170,9 @@ private:
   // Forbid copy for now
   PlotMSIndexer(const PlotMSIndexer& mc);
 
-  void setMethod(CacheMemPtr& getmethod, PMS::Axis axis);
-  void setIndexer(IndexerMethPtr& indexmethod, PMS::Axis axis);
+  // get method for data axes depends on column
+  void setMethod(CacheMemPtr& getmethod, PMS::Axis axis, PMS::DataColumn data);
+  void setIndexer(IndexerMethPtr& indexmethod, PMS::Axis axis); 
   //  void setCollapser(CollapseMethPtr& collmethod, PMS::Axis axis);
 
   // Generate collapsed versions of the plmask 
@@ -246,6 +249,7 @@ private:
   
   // Current setup/state.
   PMS::Axis currentX_, currentY_;
+  PMS::DataColumn currentXdata_, currentYdata_;
   bool indexerReady_;
 
   // Indexing parameters

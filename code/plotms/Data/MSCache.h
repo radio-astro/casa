@@ -90,21 +90,29 @@ private:
   // Forbid copy for now
   MSCache(const MSCache&);
 
-  // Set up
+  // Set up:
+  // DataColumn
   casacore::String getDataColumn(vector<PMS::Axis>& loadAxes, 
                        vector<PMS::DataColumn>& loadData);
   PMS::DataColumn checkReqDataColumn(PMS::DataColumn reqDataCol);
+  void adjustCurrentAxes(PMS::Axis axis, PMS::DataColumn olddata, 
+    PMS::DataColumn newdata);
   casacore::String checkLoadedAxesDatacol();
   casacore::String normalizeColumnName(casacore::String plotmscol);
+  // MS String names
   void getNamesFromMS(casacore::MeasurementSet& ms);
+  // VisIter
   void setUpVisIter(PlotMSSelection& selection,
 		    PlotMSCalibration& calibration,
 		    casacore::String dataColumn,
+            vector<PMS::Axis>& loadAxes,
+		    vector<PMS::DataColumn>& loadData, 
             casacore::Bool interactive=false,
 		    casacore::Bool estimateMemory=false,
             ThreadCommunication* thread=NULL);
   vi::VisibilityIterator2* setUpVisIter(casacore::MeasurementSet& selectedMS,
-	casacore::Vector<casacore::Vector<casacore::Slice> > chansel, casacore::Vector<casacore::Vector<casacore::Slice> > corrsel);
+	casacore::Vector<casacore::Vector<casacore::Slice> > chansel, 
+    casacore::Vector<casacore::Vector<casacore::Slice> > corrsel);
   void setUpFrequencySelectionChannels(vi::FrequencySelectionUsingChannels fs,
 	casacore::Vector<casacore::Vector<casacore::Slice> > chansel);
 
@@ -114,8 +122,11 @@ private:
   void loadError(casacore::String mesg);
 
   // Estimate cache size for averaging
-  bool countChunks(vi::VisibilityIterator2& vi, casacore::Vector<casacore::Int>& nIterPerAve, 
-                   /*PlotMSCacheThread**/ThreadCommunication* thread);
+  bool countChunks(vi::VisibilityIterator2& vi, 
+    casacore::Vector<casacore::Int>& nIterPerAve, 
+    vector<PMS::Axis>& loadAxes,
+	vector<PMS::DataColumn>& loadData, 
+    /*PlotMSCacheThread**/ThreadCommunication* thread);
   void updateEstimateProgress(ThreadCommunication* thread);
 
   // Trap attempt to use to much memory (too many points)

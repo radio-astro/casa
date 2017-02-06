@@ -99,7 +99,10 @@ private:
 		    casacore::Bool corrselect=true);
 
   // Count the chunks required in the cache
-  void countChunks(ROCTIter& ci,ThreadCommunication* thread);  // old
+  void countChunks(ROCTIter& ci,
+            vector<PMS::Axis>& loadAxes,
+		    vector<PMS::DataColumn>& loadData,
+            ThreadCommunication* thread);  // old
 
   // Trap attempt to use to much memory (too many points)
   //  void trapExcessVolume(map<PMS::Axis,casacore::Bool> pendingLoadAxes);

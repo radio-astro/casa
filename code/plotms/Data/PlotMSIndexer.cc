@@ -82,7 +82,8 @@ PlotMSIndexer::PlotMSIndexer():
 	}
 
 PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
-		PMS::Axis yAxis, int index ):
+        PMS::DataColumn xData, PMS::Axis yAxis, PMS::DataColumn yData,
+        int index ):
 		  plotmscache_(parent),
 		  currChunk_(0),
 		  irel_(0),
@@ -93,6 +94,8 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
 		  nSegPoints_(),nCumulPoints_(),cacheChunk_(),cacheOffset_(),
 		  currentX_(xAxis),
 		  currentY_(yAxis),
+		  currentXdata_(xData),
+		  currentYdata_(yData),
 		  indexerReady_(false),
 		  icorrmax_(),
 		  ichanmax_(),
@@ -126,8 +129,10 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
 	setUpIndexing();
 }
 
-PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
-		PMS::Axis yAxis, PMS::Axis iterAxis, Int iterValue, int index ):
+PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent,
+        PMS::Axis xAxis, PMS::DataColumn xDataColumn, 
+        PMS::Axis yAxis, PMS::DataColumn yDataColumn, 
+        PMS::Axis iterAxis, Int iterValue, int index ):
 		plotmscache_(parent),
 		currChunk_(0),
 		irel_(0),
@@ -138,6 +143,8 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis,
 		nSegPoints_(),nCumulPoints_(),cacheChunk_(),cacheOffset_(),
 		currentX_(xAxis),
 		currentY_(yAxis),
+        currentXdata_(xDataColumn),
+        currentYdata_(yDataColumn),
 		indexerReady_(false),
 		icorrmax_(),
 		ichanmax_(),
@@ -389,7 +396,8 @@ bool PlotMSIndexer::colorize(bool doColorize, PMS::Axis colorizeAxis) {
 	itsColorizeAxis_ = colorizeAxis;
 
 	if (itsColorize_) {
-		setMethod(getColFromCache_,itsColorizeAxis_);
+        // None of the coloraxis options have a datacolumn so doesn't matter
+		setMethod(getColFromCache_,itsColorizeAxis_, PMS::DEFAULT_DATACOLUMN);
 		setIndexer(ColIndexer_,itsColorizeAxis_);
 	}
 
@@ -444,8 +452,8 @@ void PlotMSIndexer::setUpIndexing() {
 */
 
 	// Set up method pointers for the chosen axes
-	setMethod(getXFromCache_, currentX_);
-	setMethod(getYFromCache_, currentY_);
+	setMethod(getXFromCache_, currentX_, currentXdata_);
+	setMethod(getYFromCache_, currentY_, currentYdata_);
 
 	// And the indexers
 	setIndexer(XIndexer_, currentX_);
@@ -721,11 +729,12 @@ void PlotMSIndexer::setChunk(uInt i) const {
 
 }
 
-void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
+void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis,
+        PMS::DataColumn datacol) {
 
 	// Set axis-specific get methods
 	switch(axis) {
-	// Degenerate ones
+    // Metadata
 	case PMS::SCAN:
 		getmethod = &PlotMSCacheBase::getScan;
 		break;
@@ -741,16 +750,14 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 	case PMS::SPW:
 		getmethod = &PlotMSCacheBase::getSpw;
 		break;
-
-		// Partial shapes
+	case PMS::CHANNEL:
+		getmethod = &PlotMSCacheBase::getChan;
+		break;
 	case PMS::FREQUENCY:
 		getmethod = &PlotMSCacheBase::getFreq;
 		break;
 	case PMS::VELOCITY:
 		getmethod = &PlotMSCacheBase::getVel;
-		break;
-	case PMS::CHANNEL:
-		getmethod = &PlotMSCacheBase::getChan;
 		break;
 	case PMS::CORR:
 		getmethod = &PlotMSCacheBase::getCorr;
@@ -764,9 +771,192 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 	case PMS::BASELINE:
 		getmethod = &PlotMSCacheBase::getBsln;
 		break;
+	case PMS::ROW:
+		getmethod = &PlotMSCacheBase::getRow;
+		break;
+	case PMS::OBSERVATION:
+		getmethod = &PlotMSCacheBase::getObsid;
+		break;
+	case PMS::INTENT:
+		getmethod = &PlotMSCacheBase::getIntent;
+		break;
+	case PMS::FEED1:
+		getmethod = &PlotMSCacheBase::getFeed1;
+		break;
+	case PMS::FEED2:
+		getmethod = &PlotMSCacheBase::getFeed2;
+		break;
+
+    // Data
+	case PMS::AMP: {
+        switch(datacol) {
+            case PMS::DATA:
+                getmethod = &PlotMSCacheBase::getAmp;
+                break;
+            case PMS::CORRECTED:
+                getmethod = &PlotMSCacheBase::getAmpCorr;
+                break;
+            case PMS::MODEL:
+                getmethod = &PlotMSCacheBase::getAmpModel;
+                break;
+            case PMS::CORRMODEL:
+                getmethod = &PlotMSCacheBase::getAmpCorrMod;
+                break;
+            case PMS::DATAMODEL:
+                getmethod = &PlotMSCacheBase::getAmpDataMod;
+                break;
+            case PMS::DATA_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getAmpDataDivMod;
+                break;
+            case PMS::CORRECTED_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getAmpCorrDivMod;
+                break;
+            case PMS::FLOAT_DATA:
+                getmethod = &PlotMSCacheBase::getAmpFloat;
+                break;
+            }
+        }
+		break;
+	case PMS::PHASE: {
+        switch(datacol) {
+            case PMS::DATA:
+		        getmethod = &PlotMSCacheBase::getPha;
+                break;
+            case PMS::CORRECTED:
+                getmethod = &PlotMSCacheBase::getPhaCorr;
+                break;
+            case PMS::MODEL:
+                getmethod = &PlotMSCacheBase::getPhaModel;
+                break;
+            case PMS::CORRMODEL:
+                getmethod = &PlotMSCacheBase::getPhaCorrMod;
+                break;
+            case PMS::DATAMODEL:
+                getmethod = &PlotMSCacheBase::getPhaDataMod;
+                break;
+            case PMS::DATA_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getPhaDataDivMod;
+                break;
+            case PMS::CORRECTED_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getPhaCorrDivMod;
+                break;
+            case PMS::FLOAT_DATA:
+                break;
+            }
+        }
+		break;
+	case PMS::REAL: {
+        switch(datacol) {
+            case PMS::DATA:
+		        getmethod = &PlotMSCacheBase::getReal;
+                break;
+            case PMS::CORRECTED:
+                getmethod = &PlotMSCacheBase::getRealCorr;
+                break;
+            case PMS::MODEL:
+                getmethod = &PlotMSCacheBase::getRealModel;
+                break;
+            case PMS::CORRMODEL:
+                getmethod = &PlotMSCacheBase::getRealCorrMod;
+                break;
+            case PMS::DATAMODEL:
+                getmethod = &PlotMSCacheBase::getRealDataMod;
+                break;
+            case PMS::DATA_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getRealDataDivMod;
+                break;
+            case PMS::CORRECTED_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getRealCorrDivMod;
+                break;
+            case PMS::FLOAT_DATA:
+                getmethod = &PlotMSCacheBase::getReal;
+                break;
+            }
+        }
+		break;
+	case PMS::IMAG: {
+        switch(datacol) {
+            case PMS::DATA:
+		        getmethod = &PlotMSCacheBase::getImag;
+                break;
+            case PMS::CORRECTED:
+                getmethod = &PlotMSCacheBase::getImagCorr;
+                break;
+            case PMS::MODEL:
+                getmethod = &PlotMSCacheBase::getImagModel;
+                break;
+            case PMS::CORRMODEL:
+                getmethod = &PlotMSCacheBase::getImagCorrMod;
+                break;
+            case PMS::DATAMODEL:
+                getmethod = &PlotMSCacheBase::getImagDataMod;
+                break;
+            case PMS::DATA_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getImagDataDivMod;
+                break;
+            case PMS::CORRECTED_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getImagCorrDivMod;
+                break;
+            case PMS::FLOAT_DATA:
+                break;
+            }
+        }
+		break;
+	case PMS::WTxAMP: {
+        switch(datacol) {
+            case PMS::DATA:
+		        getmethod = &PlotMSCacheBase::getWtxAmp;
+                break;
+            case PMS::CORRECTED:
+                getmethod = &PlotMSCacheBase::getWtxAmpCorr;
+                break;
+            case PMS::MODEL:
+                getmethod = &PlotMSCacheBase::getWtxAmpModel;
+                break;
+            case PMS::CORRMODEL:
+                getmethod = &PlotMSCacheBase::getWtxAmpCorrMod;
+                break;
+            case PMS::DATAMODEL:
+                getmethod = &PlotMSCacheBase::getWtxAmpDataMod;
+                break;
+            case PMS::DATA_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getWtxAmpDataDivMod;
+                break;
+            case PMS::CORRECTED_DIVIDE_MODEL:
+                getmethod = &PlotMSCacheBase::getWtxAmpCorrDivMod;
+                break;
+            case PMS::FLOAT_DATA:
+                getmethod = &PlotMSCacheBase::getWtxAmpFloat;
+                break;
+            }
+        }
+		break;
+
+	case PMS::WT:
+		getmethod = &PlotMSCacheBase::getWt;
+		break;
+	case PMS::WTSP:
+		getmethod = &PlotMSCacheBase::getWtSp;
+		break;
+	case PMS::SIGMA:
+		getmethod = &PlotMSCacheBase::getSigma;
+		break;
+	case PMS::SIGMASP:
+		getmethod = &PlotMSCacheBase::getSigmaSp;
+		break;
+
+	case PMS::FLAG:
+		getmethod = &PlotMSCacheBase::getFlag;
+		break;
+	case PMS::FLAG_ROW:
+		getmethod = &PlotMSCacheBase::getFlagRow;
+		break;
 
 	case PMS::UVDIST:
 		getmethod = &PlotMSCacheBase::getUVDist;
+		break;
+	case PMS::UVDIST_L:
+		getmethod = &PlotMSCacheBase::getUVDistL;
 		break;
 	case PMS::U:
 		getmethod = &PlotMSCacheBase::getU;
@@ -776,9 +966,6 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 		break;
 	case PMS::W:
 		getmethod = &PlotMSCacheBase::getW;
-		break;
-	case PMS::UVDIST_L:
-		getmethod = &PlotMSCacheBase::getUVDistL;
 		break;
 	case PMS::UWAVE:
 		getmethod = &PlotMSCacheBase::getUwave;
@@ -790,60 +977,11 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 		getmethod = &PlotMSCacheBase::getWwave;
 		break;
 
-		// Data
-	case PMS::AMP:
-	case PMS::GAMP:
-		getmethod = &PlotMSCacheBase::getAmp;
-		break;
-	case PMS::PHASE:
-	case PMS::GPHASE:
-		getmethod = &PlotMSCacheBase::getPha;
-		break;
-	case PMS::REAL:
-	case PMS::GREAL:
-		getmethod = &PlotMSCacheBase::getReal;
-		break;
-	case PMS::IMAG:
-	case PMS::GIMAG:
-		getmethod = &PlotMSCacheBase::getImag;
-		break;
-	case PMS::FLAG:
-		getmethod = &PlotMSCacheBase::getFlag;
-		break;
-	case PMS::FLAG_ROW:
-		getmethod = &PlotMSCacheBase::getFlagRow;
-		break;
-
-	case PMS::WT:
-		getmethod = &PlotMSCacheBase::getWt;
-		break;
-
-	case PMS::WTxAMP:
-		getmethod = &PlotMSCacheBase::getWtxAmp;
-		break;
-
-	case PMS::WTSP:
-		getmethod = &PlotMSCacheBase::getWtSp;
-		break;
-
-	case PMS::SIGMA:
-		getmethod = &PlotMSCacheBase::getSigma;
-		break;
-	case PMS::SIGMASP:
-		getmethod = &PlotMSCacheBase::getSigmaSp;
-		break;
-
 	case PMS::AZ0:
 		getmethod = &PlotMSCacheBase::getAz0;
 		break;
 	case PMS::EL0:
 		getmethod = &PlotMSCacheBase::getEl0;
-		break;
-	case PMS::RADIAL_VELOCITY:
-		getmethod = &PlotMSCacheBase::getRadialVelocity0;
-		break;
-	case PMS::RHO:
-		getmethod = &PlotMSCacheBase::getRHO0;
 		break;
 	case PMS::HA0:
 		getmethod = &PlotMSCacheBase::getHA0;
@@ -851,7 +989,6 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 	case PMS::PA0:
 		getmethod = &PlotMSCacheBase::getPA0;
 		break;
-
 	case PMS::ANTENNA:
 		getmethod = &PlotMSCacheBase::getAntenna;
 		break;
@@ -864,24 +1001,20 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 	case PMS::PARANG:
 		getmethod = &PlotMSCacheBase::getParAng;
 		break;
-	case PMS::ROW:
-		getmethod = &PlotMSCacheBase::getRow;
-		break;
 
-	case PMS::OBSERVATION:
-		getmethod = &PlotMSCacheBase::getObsid;
+    // Calibration tables
+	case PMS::GAMP:
+		getmethod = &PlotMSCacheBase::getAmp;
 		break;
-	case PMS::INTENT:
-		getmethod = &PlotMSCacheBase::getIntent;
+	case PMS::GPHASE:
+		getmethod = &PlotMSCacheBase::getPha;
 		break;
-
-	case PMS::FEED1:
-		getmethod = &PlotMSCacheBase::getFeed1;
+	case PMS::GREAL:
+		getmethod = &PlotMSCacheBase::getReal;
 		break;
-	case PMS::FEED2:
-		getmethod = &PlotMSCacheBase::getFeed2;
+	case PMS::GIMAG:
+		getmethod = &PlotMSCacheBase::getImag;
 		break;
-
 	case PMS::DELAY:
 	case PMS::SWP:
 	case PMS::TSYS:
@@ -891,6 +1024,12 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 		break;
 	case PMS::SNR:
 		getmethod = &PlotMSCacheBase::getSnr;
+		break;
+	case PMS::RADIAL_VELOCITY:
+		getmethod = &PlotMSCacheBase::getRadialVelocity0;
+		break;
+	case PMS::RHO:
+		getmethod = &PlotMSCacheBase::getRHO0;
 		break;
 	default:
 		throw(AipsError("Can't find get method for "+PMS::axis(axis)+"."));

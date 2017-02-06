@@ -47,11 +47,11 @@ void ActionCacheRelease::setUpWorkParameters(CacheThread* cacheThread,
 	}
 }
 
-bool ActionCacheRelease::isAxesValid( vector<pair<PMS::Axis,unsigned int > > cacheAxes, int vectorIndex, int axisIndex ) const {
+bool ActionCacheRelease::isAxesValid( vector<PMS::Axis> cacheAxes, int vectorIndex, int axisIndex ) const {
 	bool valid = false;
 	int cacheCount = cacheAxes.size();
 	for(int j = 0;  j < cacheCount; j++){
-		if(cacheAxes[j].first == axes[vectorIndex][axisIndex]){
+		if(cacheAxes[j] == axes[vectorIndex][axisIndex]){
 			valid = true;
 			break;
 		}

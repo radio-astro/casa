@@ -137,7 +137,7 @@ public:
   // Also includes the size (number of points) for each axis (which will
   // eventually be used for a cache manager to let the user know the
   // relative memory use of each axis).
-  std::vector<pair<PMS::Axis, unsigned int> > loadedAxes() const;
+  std::vector<PMS::Axis> loadedAxes() const;
 
   // Access to averaging state in the cache:
   PlotMSAveraging& averaging() { return averaging_; }
@@ -199,14 +199,51 @@ public:
   inline casacore::Double getFeed2(casacore::Int chnk,casacore::Int irel) { return *(feed2_[chnk]->data()+irel); };
 
   inline casacore::Double getAmp(casacore::Int chnk,casacore::Int irel)  { return *(amp_[chnk]->data()+irel); };
+  inline casacore::Double getAmpCorr(casacore::Int chnk,casacore::Int irel)  { return *(ampCorr_[chnk]->data()+irel); };
+  inline casacore::Double getAmpModel(casacore::Int chnk,casacore::Int irel)  { return *(ampModel_[chnk]->data()+irel); };
+  inline casacore::Double getAmpCorrMod(casacore::Int chnk,casacore::Int irel)  { return *(ampCorrModel_[chnk]->data()+irel); };
+  inline casacore::Double getAmpDataMod(casacore::Int chnk,casacore::Int irel)  { return *(ampDataModel_[chnk]->data()+irel); };
+  inline casacore::Double getAmpDataDivMod(casacore::Int chnk,casacore::Int irel)  { return *(ampDataDivModel_[chnk]->data()+irel); };
+  inline casacore::Double getAmpCorrDivMod(casacore::Int chnk,casacore::Int irel)  { return *(ampCorrDivModel_[chnk]->data()+irel); };
+  inline casacore::Double getAmpFloat(casacore::Int chnk,casacore::Int irel)  { return *(ampFloat_[chnk]->data()+irel); };
+
   inline casacore::Double getPha(casacore::Int chnk,casacore::Int irel)  { return *(pha_[chnk]->data()+irel); };
+  inline casacore::Double getPhaCorr(casacore::Int chnk,casacore::Int irel)  { return *(phaCorr_[chnk]->data()+irel); };
+  inline casacore::Double getPhaModel(casacore::Int chnk,casacore::Int irel)  { return *(phaModel_[chnk]->data()+irel); };
+  inline casacore::Double getPhaCorrMod(casacore::Int chnk,casacore::Int irel)  { return *(phaCorrModel_[chnk]->data()+irel); };
+  inline casacore::Double getPhaDataMod(casacore::Int chnk,casacore::Int irel)  { return *(phaDataModel_[chnk]->data()+irel); };
+  inline casacore::Double getPhaDataDivMod(casacore::Int chnk,casacore::Int irel)  { return *(phaDataDivModel_[chnk]->data()+irel); };
+  inline casacore::Double getPhaCorrDivMod(casacore::Int chnk,casacore::Int irel)  { return *(phaCorrDivModel_[chnk]->data()+irel); };
+
   inline casacore::Double getReal(casacore::Int chnk,casacore::Int irel) { return *(real_[chnk]->data()+irel); };
+  inline casacore::Double getRealCorr(casacore::Int chnk,casacore::Int irel)  { return *(realCorr_[chnk]->data()+irel); };
+  inline casacore::Double getRealModel(casacore::Int chnk,casacore::Int irel)  { return *(realModel_[chnk]->data()+irel); };
+  inline casacore::Double getRealCorrMod(casacore::Int chnk,casacore::Int irel)  { return *(realCorrModel_[chnk]->data()+irel); };
+  inline casacore::Double getRealDataMod(casacore::Int chnk,casacore::Int irel)  { return *(realDataModel_[chnk]->data()+irel); };
+  inline casacore::Double getRealDataDivMod(casacore::Int chnk,casacore::Int irel)  { return *(realDataDivModel_[chnk]->data()+irel); };
+  inline casacore::Double getRealCorrDivMod(casacore::Int chnk,casacore::Int irel)  { return *(realCorrDivModel_[chnk]->data()+irel); };
+
   inline casacore::Double getImag(casacore::Int chnk,casacore::Int irel) { return *(imag_[chnk]->data()+irel); };
+  inline casacore::Double getImagCorr(casacore::Int chnk,casacore::Int irel)  { return *(imagCorr_[chnk]->data()+irel); };
+  inline casacore::Double getImagModel(casacore::Int chnk,casacore::Int irel)  { return *(imagModel_[chnk]->data()+irel); };
+  inline casacore::Double getImagCorrMod(casacore::Int chnk,casacore::Int irel)  { return *(imagCorrModel_[chnk]->data()+irel); };
+  inline casacore::Double getImagDataMod(casacore::Int chnk,casacore::Int irel)  { return *(imagDataModel_[chnk]->data()+irel); };
+  inline casacore::Double getImagDataDivMod(casacore::Int chnk,casacore::Int irel)  { return *(imagDataDivModel_[chnk]->data()+irel); };
+  inline casacore::Double getImagCorrDivMod(casacore::Int chnk,casacore::Int irel)  { return *(imagCorrDivModel_[chnk]->data()+irel); };
+
+  inline casacore::Double getWtxAmp(casacore::Int chnk, casacore::Int irel) { return *(wtxamp_[chnk]->data()+irel); }
+  inline casacore::Double getWtxAmpCorr(casacore::Int chnk,casacore::Int irel)  { return *(wtxampCorr_[chnk]->data()+irel); };
+  inline casacore::Double getWtxAmpModel(casacore::Int chnk,casacore::Int irel)  { return *(wtxampModel_[chnk]->data()+irel); };
+  inline casacore::Double getWtxAmpCorrMod(casacore::Int chnk,casacore::Int irel)  { return *(wtxampCorrModel_[chnk]->data()+irel); };
+  inline casacore::Double getWtxAmpDataMod(casacore::Int chnk,casacore::Int irel)  { return *(wtxampDataModel_[chnk]->data()+irel); };
+  inline casacore::Double getWtxAmpDataDivMod(casacore::Int chnk,casacore::Int irel)  { return *(wtxampDataDivModel_[chnk]->data()+irel); };
+  inline casacore::Double getWtxAmpCorrDivMod(casacore::Int chnk,casacore::Int irel)  { return *(wtxampCorrDivModel_[chnk]->data()+irel); };
+  inline casacore::Double getWtxAmpFloat(casacore::Int chnk,casacore::Int irel)  { return *(wtxampFloat_[chnk]->data()+irel); };
+
   inline casacore::Double getFlag(casacore::Int chnk,casacore::Int irel) { return *(flag_[chnk]->data()+irel); };
   inline casacore::Double getFlagRow(casacore::Int chnk,casacore::Int irel) { return *(flagrow_[chnk]->data()+irel); };
 
   inline casacore::Double getWt(casacore::Int chnk,casacore::Int irel) { return *(wt_[chnk]->data()+irel); };
-  inline casacore::Double getWtxAmp(casacore::Int chnk, casacore::Int irel) { return *(wtxamp_[chnk]->data()+irel); }
   inline casacore::Double getWtSp(casacore::Int chnk,casacore::Int irel) { return *(wtsp_[chnk]->data()+irel); };
   inline casacore::Double getSigma(casacore::Int chnk,casacore::Int irel) { return *(sigma_[chnk]->data()+irel); };
   inline casacore::Double getSigmaSp(casacore::Int chnk,casacore::Int irel) { return *(sigmasp_[chnk]->data()+irel); };
@@ -263,8 +300,15 @@ protected:
   // Forbid copy for now
   PlotMSCacheBase(const PlotMSCacheBase&);
 
-  // Increase the number of chunks
-  void increaseChunks(casacore::Int nc=0);
+  // Resize storage for the number of chunks
+  void setCache(casacore::Int newnChunk, const vector<PMS::Axis>& loadAxes,
+    const vector<PMS::DataColumn>& loadData);
+  template<typename T> void addArrays(
+    casacore::PtrBlock<casacore::Array<T>*>& input);
+  template<typename T> void addMatrices(
+    casacore::PtrBlock<casacore::Matrix<T>*>& input);
+  template<typename T> void addVectors(
+    casacore::PtrBlock<casacore::Vector<T>*>& input);
 
   // Specialized method for loading the cache
   //  (pure virtual: implemented specifically in child classes)
@@ -300,7 +344,8 @@ protected:
   void deletePlotMask();
 
   // Returns the number of points loaded for the given axis or 0 if not loaded.
-  unsigned int nPointsForAxis(PMS::Axis axis) const;
+  // Only used for PlotMSCacheTab, no longer used in plotms
+  //unsigned int nPointsForAxis(PMS::Axis axis) const;
   
   // Convenience methods that call log() with the given method name and the
   // appropriate event type.
@@ -378,7 +423,22 @@ protected:
   casacore::PtrBlock<casacore::Vector<casacore::Float>*> pa_;
 
   // casacore::Data (the heavy part)
-  casacore::PtrBlock<casacore::Array<casacore::Float>*> amp_, pha_, real_, imag_, wtxamp_;
+  casacore::PtrBlock<casacore::Array<casacore::Float>*> amp_, 
+      ampCorr_, ampModel_, ampCorrModel_, ampDataModel_, 
+      ampDataDivModel_, ampCorrDivModel_, ampFloat_;
+  casacore::PtrBlock<casacore::Array<casacore::Float>*> pha_, 
+      phaCorr_, phaModel_, phaCorrModel_, phaDataModel_, 
+      phaDataDivModel_, phaCorrDivModel_;  // no phase for FLOAT_DATA
+  casacore::PtrBlock<casacore::Array<casacore::Float>*> real_, 
+      realCorr_, realModel_, realCorrModel_, realDataModel_,
+      realDataDivModel_, realCorrDivModel_;  // use real_ for FLOAT_DATA
+  casacore::PtrBlock<casacore::Array<casacore::Float>*> imag_,
+      imagCorr_, imagModel_, imagCorrModel_, imagDataModel_,
+      imagDataDivModel_, imagCorrDivModel_;  // no imag for FLOAT_DATA
+  casacore::PtrBlock<casacore::Array<casacore::Float>*> wtxamp_,
+      wtxampCorr_, wtxampModel_, wtxampCorrModel_, wtxampDataModel_, 
+      wtxampDataDivModel_, wtxampCorrDivModel_, wtxampFloat_;
+
   casacore::PtrBlock<casacore::Array<casacore::Bool>*> flag_;
   casacore::PtrBlock<casacore::Vector<casacore::Bool>*> flagrow_;
   
@@ -389,19 +449,20 @@ protected:
   casacore::PtrBlock<casacore::Vector<casacore::Int>*> antenna_;
   casacore::PtrBlock<casacore::Vector<casacore::Double>*> az_,el_;
 
-
   casacore::Vector<casacore::Double> radialVelocity_, rho_;
   casacore::Vector<casacore::Double> az0_,el0_,ha0_,pa0_;
 
-  casacore::PtrBlock<casacore::Array<casacore::Float>*> par_, snr_, tsys_;
+  casacore::PtrBlock<casacore::Array<casacore::Float>*> par_, snr_;
 
   // Current setup/state.
   bool dataLoaded_;
   bool userCanceled_;
   std::vector<PMS::Axis> currentX_;
   std::vector<PMS::Axis> currentY_;
+  std::vector<PMS::DataColumn> currentXData_;
+  std::vector<PMS::DataColumn> currentYData_;
   map<PMS::Axis, bool> loadedAxes_;
-  map<PMS::Axis, PMS::DataColumn> loadedAxesData_;
+  map<PMS::Axis, std::set<PMS::DataColumn>> loadedAxesData_;
   map<PMS::Axis, bool> pendingLoadAxes_;
 
   // Global ranges

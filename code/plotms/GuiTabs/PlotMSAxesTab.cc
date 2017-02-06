@@ -222,7 +222,7 @@ void PlotMSAxesTab::setValue(const PlotMSPlotParameters& params) {
     const PMS_PP_Axes* a = params.typedGroup<PMS_PP_Axes>();
     if(c == NULL || a == NULL) return; // shouldn't happen
 
-    PMS::Axis cacheAxis = c->xAxis();     
+    PMS::Axis cacheAxis = c->xAxis();    
     PlotAxis axesAxis = a->xAxis();
     PMS::DataColumn cacheColumn =  c->xDataColumn();
     bool axesXRangeSet = a->xRangeSet();
@@ -265,10 +265,10 @@ void PlotMSAxesTab::update(const PlotMSPlot& plot) {
     if(d == NULL || c == NULL || c2 == NULL || a == NULL || a2 == NULL) return;
 
     // Update "in cache" for widgets.
-    vector<pair<PMS::Axis,unsigned int> > laxes = plot.cache().loadedAxes();
+    vector<PMS::Axis> laxes = plot.cache().loadedAxes();
     bool found = false;
     for(unsigned int i = 0; !found && i < laxes.size(); i++){
-        if(laxes[i].first == c2->xAxis()){
+        if(laxes[i] == c2->xAxis()){
         	found = true;
         	break;
         }
@@ -280,7 +280,7 @@ void PlotMSAxesTab::update(const PlotMSPlot& plot) {
     	found = false;
     	PMS::Axis yData = c2->yAxis(j);
     	for(unsigned int i = 0; !found && i < laxes.size(); i++){
-    		if(laxes[i].first == yData){
+    		if(laxes[i] == yData){
     			found = true;
     			break;
     		}

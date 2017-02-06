@@ -75,7 +75,7 @@ bool ActionCache::doActionSpecific( PlotMSApp* plotms ){
 				// Remove any duplicates or axes.  If loading, also make sure that the
 				// given axes are not already loaded.  If releasing, make sure that the
 				// axes are loaded.
-				vector<pair<PMS::Axis, unsigned int> > loaded = cache.loadedAxes();
+				vector<PMS::Axis> loaded = cache.loadedAxes();
 				int axisCount = axes[k].size();
 
 				for(int i = 0; i < axisCount; i++) {

@@ -41,7 +41,7 @@ public:
 	virtual ~ActionCache();
 protected:
 	bool doWork();
-	virtual bool isAxesValid( std::vector<std::pair<PMS::Axis,unsigned int > > cacheAxes, int plotIndex, int axisIndex ) const = 0;
+	virtual bool isAxesValid( std::vector<PMS::Axis> cacheAxes, int plotIndex, int axisIndex ) const = 0;
 	virtual bool loadParameters();
 	virtual bool loadAxes() = 0;
 	virtual void checkFeasibility(PlotMSApp* plotms, int plotIndex, std::vector<PMS::Axis>& a ) const;

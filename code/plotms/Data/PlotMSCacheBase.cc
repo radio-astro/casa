@@ -112,6 +112,8 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 	int dataCount = 1;
 	currentX_.resize(dataCount, PMS::DEFAULT_XAXIS);
 	currentY_.resize(dataCount, PMS::DEFAULT_YAXIS);
+	currentXData_.resize(dataCount, PMS::DEFAULT_DATACOLUMN);
+	currentYData_.resize(dataCount, PMS::DEFAULT_DATACOLUMN);
 	indexer0_ = new PlotMSIndexer();
 	indexer_.resize(dataCount);
 	netAxesMask_.resize( dataCount );
@@ -127,9 +129,10 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 	const vector<PMS::Axis>& axes = PMS::axes();
 	for(unsigned int i = 0; i < axes.size(); i++) {
 		loadedAxes_[axes[i]] = false;
-		if(PMS::axisIsData(axes[i]))
-			loadedAxesData_[axes[i]]= PMS::DEFAULT_DATACOLUMN;
+		//if(PMS::axisIsData(axes[i]))
+		//	loadedAxesData_[axes[i]]= PMS::DEFAULT_DATACOLUMN;
 	}
+    loadedAxesData_.clear();
 	this->iterAxis = PMS::NONE;
 
     // Default frequency frame
@@ -159,17 +162,16 @@ Int PlotMSCacheBase::nIter( int dataIndex ) const {
 	  return iterationCount;
  };
 
-vector<pair<PMS::Axis, unsigned int> > PlotMSCacheBase::loadedAxes() const {    
+vector<PMS::Axis> PlotMSCacheBase::loadedAxes() const {    
 	// have to const-cast loaded axes because the [] operator is not const,
 	// even though we're not changing it.
 	map<PMS::Axis, bool>& la = const_cast<map<PMS::Axis, bool>& >(loadedAxes_);
 
-	vector<pair<PMS::Axis, unsigned int> > v;
+	vector<PMS::Axis> v;
 	const vector<PMS::Axis>& axes = PMS::axes();
 	for(unsigned int i = 0; i < axes.size(); i++)
 		if(la[axes[i]])
-			v.push_back(pair<PMS::Axis, unsigned int>(
-					axes[i], nPointsForAxis(axes[i])));
+			v.push_back(axes[i]);
 
 	return v;
 }
@@ -286,16 +288,24 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	// Remember the axes that we will load for plotting:
 	currentX_.clear();
 	currentY_.clear();
+	currentXData_.clear();
+	currentYData_.clear();
 	int dataCount = axes.size() / 2;
 	for ( int i = 0; i < dataCount; i++ ){
-		currentX_.push_back( axes[i] );
-		currentY_.push_back( axes[dataCount+i] );
+		currentX_.push_back(axes[i]);
+        currentXData_.push_back(data[i]);
+		currentY_.push_back(axes[dataCount+i]);
+        currentYData_.push_back(data[dataCount+i]);
 	}
 
 	// Maintain access to this msname, selection, & averager, because we'll
 	// use it if/when we flag, etc.
 	if ( filename_ != filename ){
 		ephemerisInitialized = false;
+	    const vector<PMS::Axis>& axes = PMS::axes();
+	    for(unsigned int i = 0; i < axes.size(); i++) 
+		    loadedAxes_[axes[i]] = false;
+        loadedAxesData_.clear();
 	}
 	filename_ = filename;
 	selection_ = selection;
@@ -370,12 +380,16 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 
 	}
 
-	// TBD:  move down to where we are surer something good will happen?
 	stringstream ss;
 	ss << "Caching for the new plot: ";
 	for ( int i = 0; i < dataCount; i++ ){
-		ss << PMS::axis(currentY_[i]) << "(" << currentY_[i] << ") vs. ";
-		ss << PMS::axis(currentX_[i]) << "(" << currentX_[i] << ")...\n";
+		ss << PMS::axis(currentY_[i]) << "(" << currentY_[i] << ")";  
+        if (PMS::axisIsData(currentY_[i]))
+            ss << ":" << PMS::dataColumn(currentYData_[i]);
+        ss << " vs. " << PMS::axis(currentX_[i]) << "(" << currentX_[i] << ")";
+        if (PMS::axisIsData(currentX_[i]))
+            ss << ":" << PMS::dataColumn(currentXData_[i]);
+        ss << "...\n";
 	}
 	logLoad(ss.str());
 
@@ -423,7 +437,7 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 
 		// 1)  already in the load list? (loadAxes)
 		for(unsigned int j = 0; !found && j < loadAxes.size(); j++)
-			if(loadAxes[j] == axis) found = true;
+			if(loadAxes[j]==axis && loadData[j]==dc) found = true;
 		if(found) continue;
 
 		//If ephemeris data is not available we should not load axes 
@@ -441,11 +455,15 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 			loadData.push_back(dc);
 		}
 
-		// 3)  a data column, already loaded, but wrong data column
-		else if(PMS::axisIsData(axis) && dc != loadedAxesData_[axis]) {
-			loadAxes.push_back(axis);
-			loadData.push_back(dc);
-		}
+		// 3)  data axis is loaded; check if data column loaded
+		else if(PMS::axisIsData(axis)) {
+            // see if datacol is loaded for axis
+            std::set<PMS::DataColumn> datacols = loadedAxesData_[axis];
+            if (datacols.find(dc) == datacols.end()) {
+			    loadAxes.push_back(axis);
+			    loadData.push_back(dc);
+            }
+        }
 	}
 
 	if (false) {
@@ -479,7 +497,8 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
             for(unsigned int i = 0; i < loadAxes.size(); i++) {
                 axis = loadAxes[i];
                 loadedAxes_[axis] = true;
-                if(PMS::axisIsData(axis)) loadedAxesData_[axis] = loadData[i];
+                if(PMS::axisIsData(axis)) 
+                    loadedAxesData_[axis].insert(loadData[i]);
             }
         }
 
@@ -599,79 +618,159 @@ void PlotMSCacheBase::clear() {
 
 
 void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
-
-	//  uInt premem=HostInfo::memoryFree();
-
-	{
 		for(unsigned int i = 0; i < axes.size(); i++) {
-
 			switch(axes[i]) {
-			case PMS::SCAN: scan_.resize(0); break;
-			case PMS::FIELD: field_.resize(0); break;
-			case PMS::TIME: time_.resize(0); break;
-			case PMS::TIME_INTERVAL: timeIntr_.resize(0); break;
-			case PMS::SPW: spw_.resize(0); break;
-			case PMS::CHANNEL: 
+			case PMS::SCAN: scan_.resize(0);
+                break;
+			case PMS::FIELD: field_.resize(0);
+                break;
+			case PMS::TIME: time_.resize(0);
+                break;
+			case PMS::TIME_INTERVAL: timeIntr_.resize(0);
+                break;
+			case PMS::SPW: spw_.resize(0);
+                break;
+			case PMS::CHANNEL: { 
                 PMSC_DELETE(chan_)
                 PMSC_DELETE(chansPerBin_)
+                }
                 break;
-			case PMS::FREQUENCY: PMSC_DELETE(freq_) break;
-			case PMS::VELOCITY: PMSC_DELETE(vel_) break;
-			case PMS::CORR: PMSC_DELETE(corr_) break;
-			case PMS::ANTENNA1: PMSC_DELETE(antenna1_) break;
-			case PMS::ANTENNA2: PMSC_DELETE(antenna2_) break;
-			case PMS::BASELINE: PMSC_DELETE(baseline_) break;
-			case PMS::UVDIST: PMSC_DELETE(uvdist_) break;
-			case PMS::UVDIST_L: PMSC_DELETE(uvdistL_) break;
-			case PMS::U: PMSC_DELETE(u_) break;
-			case PMS::V: PMSC_DELETE(v_) break;
-			case PMS::W: PMSC_DELETE(w_) break;
-			case PMS::UWAVE: PMSC_DELETE(uwave_) break;
-			case PMS::VWAVE: PMSC_DELETE(vwave_) break;
-			case PMS::WWAVE: PMSC_DELETE(wwave_) break;
+			case PMS::FREQUENCY: PMSC_DELETE(freq_)
+                break;
+			case PMS::VELOCITY: PMSC_DELETE(vel_)
+                break;
+			case PMS::CORR: PMSC_DELETE(corr_)
+                break;
+			case PMS::ANTENNA1: PMSC_DELETE(antenna1_)
+                break;
+			case PMS::ANTENNA2: PMSC_DELETE(antenna2_)
+                break;
+			case PMS::BASELINE: PMSC_DELETE(baseline_)
+                break;
+			case PMS::ROW: PMSC_DELETE(row_)
+                break;
+			case PMS::OBSERVATION: PMSC_DELETE(obsid_)
+                break;
+			case PMS::INTENT: PMSC_DELETE(intent_)
+                break;
+			case PMS::FEED1: PMSC_DELETE(feed1_)
+                break;
+			case PMS::FEED2: PMSC_DELETE(feed2_)
+                break;
 			case PMS::AMP:
-			case PMS::GAMP: PMSC_DELETE(amp_) break;
+			case PMS::GAMP: {
+                PMSC_DELETE(amp_)
+                PMSC_DELETE(ampCorr_)
+                PMSC_DELETE(ampModel_)
+                PMSC_DELETE(ampCorrModel_)
+                PMSC_DELETE(ampDataModel_)
+                PMSC_DELETE(ampDataDivModel_)
+                PMSC_DELETE(ampCorrDivModel_)
+                PMSC_DELETE(ampFloat_)
+                }
+                break;
 			case PMS::PHASE:
-			case PMS::GPHASE: PMSC_DELETE(pha_) break;
+			case PMS::GPHASE: {
+                PMSC_DELETE(pha_)
+                PMSC_DELETE(phaCorr_)
+                PMSC_DELETE(phaModel_)
+                PMSC_DELETE(phaCorrModel_)
+                PMSC_DELETE(phaDataModel_)
+                PMSC_DELETE(phaDataDivModel_)
+                PMSC_DELETE(phaCorrDivModel_)
+                }
+                break;
 			case PMS::REAL:
-			case PMS::GREAL: PMSC_DELETE(real_) break;
+			case PMS::GREAL: {
+                PMSC_DELETE(real_)
+                PMSC_DELETE(realCorr_)
+                PMSC_DELETE(realModel_)
+                PMSC_DELETE(realCorrModel_)
+                PMSC_DELETE(realDataModel_)
+                PMSC_DELETE(realDataDivModel_)
+                PMSC_DELETE(realCorrDivModel_)
+                }
+                break;
 			case PMS::IMAG:
-			case PMS::GIMAG: PMSC_DELETE(imag_) break;
-			case PMS::FLAG: PMSC_DELETE(flag_) break;
-			case PMS::FLAG_ROW: PMSC_DELETE(flagrow_) break;
-
-			case PMS::WT: PMSC_DELETE(wt_) break;
-			case PMS::WTxAMP: PMSC_DELETE(wtxamp_) break;
-
-			case PMS::WTSP: PMSC_DELETE(wtsp_) break;
-
-			case PMS::SIGMA: PMSC_DELETE(sigma_) break;
-			case PMS::SIGMASP: PMSC_DELETE(sigmasp_) break;
-
-			case PMS::AZ0: az0_.resize(0); break;
-			case PMS::EL0: el0_.resize(0); break;
-			case PMS::RADIAL_VELOCITY: radialVelocity_.resize(0); break;
-			case PMS::RHO: rho_.resize(0); break;
-			case PMS::HA0: ha0_.resize(0); break;
-			case PMS::PA0: pa0_.resize(0); break;
-
-			case PMS::ANTENNA: PMSC_DELETE(antenna_) break;
-			case PMS::AZIMUTH: PMSC_DELETE(az_) break;
-			case PMS::ELEVATION: PMSC_DELETE(el_) break;
-			case PMS::PARANG: PMSC_DELETE(parang_) break;
-			case PMS::ROW: PMSC_DELETE(row_) break;
+			case PMS::GIMAG: {
+                PMSC_DELETE(imag_)
+                PMSC_DELETE(imagCorr_)
+                PMSC_DELETE(imagModel_)
+                PMSC_DELETE(imagCorrModel_)
+                PMSC_DELETE(imagDataModel_)
+                PMSC_DELETE(imagDataDivModel_)
+                PMSC_DELETE(imagCorrDivModel_)
+                }
+                break;
+			case PMS::WTxAMP: {
+                PMSC_DELETE(wtxamp_)
+                PMSC_DELETE(wtxampCorr_)
+                PMSC_DELETE(wtxampModel_)
+                PMSC_DELETE(wtxampCorrModel_)
+                PMSC_DELETE(wtxampDataModel_)
+                PMSC_DELETE(wtxampDataDivModel_)
+                PMSC_DELETE(wtxampCorrDivModel_)
+                PMSC_DELETE(wtxampFloat_)
+                }
+                break;
+			case PMS::WT: PMSC_DELETE(wt_)
+                break;
+			case PMS::WTSP: PMSC_DELETE(wtsp_)
+                break;
+			case PMS::SIGMA: PMSC_DELETE(sigma_)
+                break;
+			case PMS::SIGMASP: PMSC_DELETE(sigmasp_)
+                break;
+			case PMS::FLAG: PMSC_DELETE(flag_)
+                break;
+			case PMS::FLAG_ROW: PMSC_DELETE(flagrow_)
+                break;
+			case PMS::UVDIST: PMSC_DELETE(uvdist_)
+                break;
+			case PMS::UVDIST_L: PMSC_DELETE(uvdistL_)
+                break;
+			case PMS::U: PMSC_DELETE(u_)
+                break;
+			case PMS::V: PMSC_DELETE(v_)
+                break;
+			case PMS::W: PMSC_DELETE(w_)
+                break;
+			case PMS::UWAVE: PMSC_DELETE(uwave_)
+                break;
+			case PMS::VWAVE: PMSC_DELETE(vwave_)
+                break;
+			case PMS::WWAVE: PMSC_DELETE(wwave_)
+                break;
+			case PMS::AZ0: az0_.resize(0);
+                break;
+			case PMS::EL0: el0_.resize(0);
+                break;
+			case PMS::HA0: ha0_.resize(0);
+                break;
+			case PMS::PA0: pa0_.resize(0);
+                break;
+			case PMS::ANTENNA: PMSC_DELETE(antenna_)
+                break;
+			case PMS::AZIMUTH: PMSC_DELETE(az_)
+                break;
+			case PMS::ELEVATION: PMSC_DELETE(el_)
+                break;
+			case PMS::PARANG: PMSC_DELETE(parang_)
+                break;
 			case PMS::DELAY:
 			case PMS::SWP:
 			case PMS::TSYS:
 			case PMS::OPAC:
-			case PMS::TEC: PMSC_DELETE(par_) break;
-			case PMS::SNR: PMSC_DELETE(snr_) break;
-			case PMS::OBSERVATION: PMSC_DELETE(obsid_) break;
-			case PMS::INTENT: PMSC_DELETE(intent_) break;
-			case PMS::FEED1: PMSC_DELETE(feed1_) break;
-			case PMS::FEED2: PMSC_DELETE(feed2_) break;
-
-			case PMS::NONE: break;
+			case PMS::TEC: PMSC_DELETE(par_)
+                break;
+			case PMS::SNR: PMSC_DELETE(snr_)
+                break;
+			case PMS::RADIAL_VELOCITY: radialVelocity_.resize(0);
+                break;
+			case PMS::RHO: rho_.resize(0);
+                break;
+			case PMS::NONE:
+                break;
 			}
 
 			loadedAxes_[axes[i]] = false;
@@ -687,7 +786,6 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
 				}
 			}
 		}
-	}
 	//    uInt postmem=HostInfo::memoryFree();
 	//    cout << "memoryFree = " << premem << " " << postmem << " " << premem-postmem << endl;
 	if(!dataLoaded_) nChunk_ = 0;
@@ -1013,8 +1111,10 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 	indexer_[dataIndex].set( NULL );
 
 	for (Int iter=0;iter<nIter;++iter){
-		indexer_[dataIndex][iter] = new PlotMSIndexer(this,currentX_[dataIndex],currentY_[dataIndex],
-				iteraxis,iterValues(iter), dataIndex);
+		indexer_[dataIndex][iter] = new PlotMSIndexer(this, 
+            currentX_[dataIndex], currentXData_[dataIndex], 
+            currentY_[dataIndex], currentYData_[dataIndex],
+            iteraxis, iterValues(iter), dataIndex);
 	}
 	// Extract global ranges from the indexers
 	// Initialize limits
@@ -1043,12 +1143,16 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 	{
 		stringstream ss;
 		ss << "Global ranges:" << endl
-				<< PMS::axis(currentX_[dataIndex]) << ": "
-				<< xminG_ << "-" << xmaxG_ << " (unflagged); "
-				<< xflminG_ << "-" << xflmaxG_ << " (flagged)." << endl
-				<< PMS::axis(currentY_[dataIndex]) << ": "
-				<< yminG_ << "-" << ymaxG_ << " (unflagged); "
-				<< yflminG_ << "-" << yflmaxG_ << "(flagged).";
+		   << PMS::axis(currentX_[dataIndex]);
+        if (PMS::axisIsData(currentX_[dataIndex])) 
+            ss << ":" << PMS::dataColumn(currentXData_[dataIndex]);
+        ss << ": " << xminG_ << "-" << xmaxG_ << " (unflagged); "
+		   << xflminG_ << "-" << xflmaxG_ << " (flagged)." << endl
+		   << PMS::axis(currentY_[dataIndex]);
+        if (PMS::axisIsData(currentY_[dataIndex])) 
+            ss << ":" << PMS::dataColumn(currentYData_[dataIndex]);
+        ss << ": " << yminG_ << "-" << ymaxG_ << " (unflagged); "
+		   << yflminG_ << "-" << yflmaxG_ << "(flagged).";
 		logLoad(ss.str());
 
 		//  cout << "Use global ranges? : " << boolalpha << globalXRange << " " << globalYRange << endl;
@@ -1083,121 +1187,357 @@ void PlotMSCacheBase::_updateAntennaMask( Int a, Vector<Bool>& antMask,
 
 
 
-// increase the number of chunks we can store
-void PlotMSCacheBase::increaseChunks(Int nc) {
+// set the number of chunks we can store
+void PlotMSCacheBase::setCache(Int newnChunk, 
+    const vector<PMS::Axis>& loadAxes, 
+    const vector<PMS::DataColumn>& loadData) {
 
-	Int oldnChunk=nChunk_;
+    nChunk_ = newnChunk;
 
-	if (nc==0) {   // no guidance
-		if (nChunk_<1) // currently empty
-			nChunk_=32;
-		else
-			// Double it
-			nChunk_*=2;
+    // Resize axes we will load
+    for (uInt i=0; i<loadAxes.size(); ++i) {
+	    // Resize, copying existing contents
+        switch(loadAxes[i]) {
+            case PMS::SCAN: {
+	            scan_.resize(nChunk_,true);
+                }
+                break;
+            case PMS::FIELD: {
+                field_.resize(nChunk_,true);
+                }
+                break;
+            case PMS::TIME: {
+                time_.resize(nChunk_,true);
+                }
+                break;
+            case PMS::TIME_INTERVAL: {
+                timeIntr_.resize(nChunk_,true);
+                }
+                break;
+	        case PMS::SPW: {
+                spw_.resize(nChunk_,true);
+                }
+                break;
+            case PMS::CHANNEL: {
+		        addVectors(chan_);
+		        addArrays(chansPerBin_);
+                }
+                break;
+            case PMS::FREQUENCY:
+		        addVectors(freq_);
+                break;
+            case PMS::VELOCITY:
+		        addVectors(vel_);
+                break;
+            case PMS::CORR:
+		        addVectors(corr_);
+                break;
+	        case PMS::ANTENNA1:
+		        addVectors(antenna1_);
+                break;
+            case PMS::ANTENNA2:
+		        addVectors(antenna2_);
+                break;
+            case PMS::BASELINE:
+		        addVectors(baseline_);
+                break;
+            case PMS::ROW:
+                addVectors(row_);
+                break;
+            case PMS::OBSERVATION:
+		        addVectors(obsid_);
+                break;
+            case PMS::INTENT:
+		        addVectors(intent_);
+                break;
+            case PMS::FEED1:
+		        addVectors(feed1_);
+                break;
+            case PMS::FEED2:
+		        addVectors(feed2_);
+                break;
+	        case PMS::AMP: 
+            case PMS::GAMP: {
+                switch(loadData[i]) {
+                    case PMS::DATA:
+		                addArrays(amp_);
+                        break;
+                    case PMS::CORRECTED:
+		                addArrays(ampCorr_);
+                        break;
+                    case PMS::MODEL:
+		                addArrays(ampModel_);
+                        break;
+                    case PMS::CORRMODEL:
+		                addArrays(ampCorrModel_);
+                        break;
+                    case PMS::DATAMODEL:
+		                addArrays(ampDataModel_);
+                        break;
+                    case PMS::DATA_DIVIDE_MODEL:
+		                addArrays(ampDataDivModel_);
+                        break;
+                    case PMS::CORRECTED_DIVIDE_MODEL:
+		                addArrays(ampCorrDivModel_);
+                        break;
+                    case PMS::FLOAT_DATA:
+		                addArrays(ampFloat_);
+                        break;
+                    }
+                }
+                break;
+            case PMS::PHASE:
+            case PMS::GPHASE: {
+                switch(loadData[i]) {
+                    case PMS::DATA:
+		                addArrays(pha_);
+                        break;
+                    case PMS::CORRECTED:
+		                addArrays(phaCorr_);
+                        break;
+                    case PMS::MODEL:
+		                addArrays(phaModel_);
+                        break;
+                    case PMS::CORRMODEL:
+		                addArrays(phaCorrModel_);
+                        break;
+                    case PMS::DATAMODEL:
+		                addArrays(phaDataModel_);
+                        break;
+                    case PMS::DATA_DIVIDE_MODEL:
+		                addArrays(phaDataDivModel_);
+                        break;
+                    case PMS::CORRECTED_DIVIDE_MODEL:
+		                addArrays(phaCorrDivModel_);
+                        break;
+                    case PMS::FLOAT_DATA:
+                        break;
+                    }
+                }
+                break;
+            case PMS::REAL:
+            case PMS::GREAL: {
+                switch(loadData[i]) {
+                    case PMS::DATA:
+		                addArrays(real_);
+                        break;
+                    case PMS::CORRECTED:
+		                addArrays(realCorr_);
+                        break;
+                    case PMS::MODEL:
+		                addArrays(realModel_);
+                        break;
+                    case PMS::CORRMODEL:
+		                addArrays(realCorrModel_);
+                        break;
+                    case PMS::DATAMODEL:
+		                addArrays(realDataModel_);
+                        break;
+                    case PMS::DATA_DIVIDE_MODEL:
+		                addArrays(realDataDivModel_);
+                        break;
+                    case PMS::CORRECTED_DIVIDE_MODEL:
+		                addArrays(realCorrDivModel_);
+                        break;
+                    case PMS::FLOAT_DATA:
+		                addArrays(real_);
+                        break;
+                    }
+                }
+                break;
+            case PMS::IMAG:
+            case PMS::GIMAG: {
+                switch(loadData[i]) {
+                    case PMS::DATA:
+		                addArrays(imag_);
+                        break;
+                    case PMS::CORRECTED:
+		                addArrays(imagCorr_);
+                        break;
+                    case PMS::MODEL: 
+		                addArrays(imagModel_);
+                        break;
+                    case PMS::CORRMODEL:
+		                addArrays(imagCorrModel_);
+                        break;
+                    case PMS::DATAMODEL:
+		                addArrays(imagDataModel_);
+                        break;
+                    case PMS::DATA_DIVIDE_MODEL: 
+		                addArrays(imagDataDivModel_);
+                        break;
+                    case PMS::CORRECTED_DIVIDE_MODEL:
+		                addArrays(imagCorrDivModel_);
+                        break;
+                    case PMS::FLOAT_DATA:
+                        break;
+                    }
+                }
+                break;
+            case PMS::WTxAMP: {
+                switch(loadData[i]) {
+                    case PMS::DATA:
+		                addArrays(wtxamp_);
+                        break;
+                    case PMS::CORRECTED:
+		                addArrays(wtxampCorr_);
+                        break;
+                    case PMS::MODEL:
+		                addArrays(wtxampModel_);
+                        break;
+                    case PMS::CORRMODEL:
+		                addArrays(wtxampCorrModel_);
+                        break;
+                    case PMS::DATAMODEL:
+		                addArrays(wtxampDataModel_);
+                        break;
+                    case PMS::DATA_DIVIDE_MODEL:
+		                addArrays(wtxampDataDivModel_);
+                        break;
+                    case PMS::CORRECTED_DIVIDE_MODEL:
+		                addArrays(wtxampCorrDivModel_);
+                        break;
+                    case PMS::FLOAT_DATA:
+		                addArrays(wtxampFloat_);
+                        break;
+                    }
+                }
+                break;
+            case PMS::WT:
+		        addArrays(wt_);
+                break;
+            case PMS::WTSP:
+		        addArrays(wtsp_);
+                break;
+            case PMS::SIGMA:
+		        addArrays(sigma_);
+                break;
+            case PMS::SIGMASP:
+		        addArrays(sigmasp_);
+                break;
+            case PMS::FLAG:
+            case PMS::FLAG_ROW: {
+		        addArrays(flag_);
+		        addVectors(flagrow_);
+                break;
+            }
+	        case PMS::UVDIST:
+		        addVectors(uvdist_);
+                break;
+	        case PMS::UVDIST_L:
+		        addMatrices(uvdistL_);
+                break;
+            case PMS::U:
+		        addVectors(u_);
+                break;
+            case PMS::V:
+		        addVectors(v_);
+                break;
+            case PMS::W:
+		        addVectors(w_);
+                break;
+            case PMS::UWAVE:
+		        addMatrices(uwave_);
+                break;
+            case PMS::VWAVE:
+		        addMatrices(vwave_);
+                break;
+            case PMS::WWAVE:
+		        addMatrices(wwave_);
+                break;
+	        case PMS::AZ0:
+            case PMS::EL0: {
+                az0_.resize(nChunk_,true);
+                el0_.resize(nChunk_,true);
+                break;
+            }
+            case PMS::HA0:
+                ha0_.resize(nChunk_,true);
+                break;
+            case PMS::PA0:
+                pa0_.resize(nChunk_,true);
+                break;
+	        case PMS::ANTENNA:
+		        addVectors(antenna_);
+                break;
+            case PMS::AZIMUTH:
+            case PMS::ELEVATION: {
+		        addVectors(az_);
+		        addVectors(el_);
+                break;
+            }
+	        case PMS::PARANG:
+		        addVectors(parang_);
+                break;
+	        case PMS::DELAY:
+		        addArrays(par_);
+                break;
+            case PMS::SWP:
+		        addArrays(par_);
+                break;
+            case PMS::TSYS:
+		        addArrays(par_);
+                break;
+            case PMS::OPAC:
+		        addArrays(par_);
+                break;
+            case PMS::SNR:
+		        addArrays(snr_);
+                break;
+            case PMS::TEC:
+		        addArrays(par_);
+                break;
+	        case PMS::RADIAL_VELOCITY: {
+                radialVelocity_.resize(nChunk_,true);
+                }
+                break;
+            case PMS::RHO: {
+                rho_.resize(nChunk_,true);
+                }
+                break;
+            case PMS::NONE:
+                break;
+        }
 	}
-	else
-		// Add requested number
-		nChunk_+=nc;
+}
 
-	// Resize, copying existing contents
-	scan_.resize(nChunk_,true);
-	time_.resize(nChunk_,true);
-	timeIntr_.resize(nChunk_,true);
-	field_.resize(nChunk_,true);
-	spw_.resize(nChunk_,true);
-	chan_.resize(nChunk_,false,true);
-	chansPerBin_.resize(nChunk_,false,true);
-	freq_.resize(nChunk_,false,true);
-	vel_.resize(nChunk_,false,true);
-	corr_.resize(nChunk_,false,true);
-	antenna1_.resize(nChunk_,false,true);
-	antenna2_.resize(nChunk_,false,true);
-	baseline_.resize(nChunk_,false,true);
-	row_.resize(nChunk_,false,true);
-	obsid_.resize(nChunk_,false,true);
-	intent_.resize(nChunk_,false,true);
-	feed1_.resize(nChunk_,false,true);
-	feed2_.resize(nChunk_,false,true);
+template<typename T>
+void PlotMSCacheBase::addArrays(PtrBlock<Array<T>*>& input) {
+    Int oldsize = input.size();
+    if (nChunk_ > oldsize) {
+        input.resize(nChunk_, false, true);
+	    // Construct (empty) pointed-to Vectors
+	    for (Int ic=oldsize; ic<nChunk_; ++ic) 
+            input[ic] = new Array<T>();
+    } else {
+        input.resize(nChunk_, true, false);
+    }
+}
 
-	uvdist_.resize(nChunk_,false,true);
-	uvdistL_.resize(nChunk_,false,true);
-	u_.resize(nChunk_,false,true);
-	v_.resize(nChunk_,false,true);
-	w_.resize(nChunk_,false,true);
-	uwave_.resize(nChunk_,false,true);
-	vwave_.resize(nChunk_,false,true);
-	wwave_.resize(nChunk_,false,true);
+template<typename T>
+void PlotMSCacheBase::addMatrices(PtrBlock<Matrix<T>*>& input) {
+    Int oldsize = input.size();
+    if (nChunk_ > oldsize) {
+        input.resize(nChunk_, false, true);
+	    // Construct (empty) pointed-to Vectors
+	    for (Int ic=oldsize; ic<nChunk_; ++ic) 
+            input[ic] = new Matrix<T>();
+    } else {
+        input.resize(nChunk_, true, false);
+    }
+}
 
-	amp_.resize(nChunk_,false,true);
-	pha_.resize(nChunk_,false,true);
-	real_.resize(nChunk_,false,true);
-	imag_.resize(nChunk_,false,true);
-	flag_.resize(nChunk_,false,true);
-	flagrow_.resize(nChunk_,false,true);
-
-	wt_.resize(nChunk_,false,true);
-	wtxamp_.resize(nChunk_,false,true);
-	wtsp_.resize(nChunk_,false,true);
-	sigma_.resize(nChunk_,false,true);
-	sigmasp_.resize(nChunk_,false,true);
-
-	az0_.resize(nChunk_,true);
-	el0_.resize(nChunk_,true);
-	radialVelocity_.resize(nChunk_,true);
-	rho_.resize(nChunk_,true);
-	ha0_.resize(nChunk_,true);
-	pa0_.resize(nChunk_,true);
-
-	antenna_.resize(nChunk_,false,true);
-	az_.resize(nChunk_,false,true);
-	el_.resize(nChunk_,false,true);
-	parang_.resize(nChunk_,false,true);
-
-	par_.resize(nChunk_,false,true);
-	snr_.resize(nChunk_,false,true);
-
-
-	// Construct (empty) pointed-to Vectors/Arrays
-	for (Int ic=oldnChunk;ic<nChunk_;++ic) {
-		row_[ic] = new Vector<uInt>();
-		antenna1_[ic] = new Vector<Int>();
-		antenna2_[ic] = new Vector<Int>();
-		baseline_[ic] = new Vector<Int>();
-		uvdist_[ic] = new Vector<Double>();
-		uvdistL_[ic] = new Matrix<Double>();
-		u_[ic] = new Vector<Double>();
-		v_[ic] = new Vector<Double>();
-		w_[ic] = new Vector<Double>();
-		uwave_[ic] = new Matrix<Double>();
-		vwave_[ic] = new Matrix<Double>();
-		wwave_[ic] = new Matrix<Double>();
-		freq_[ic] = new Vector<Double>();
-		vel_[ic] = new Vector<Double>();
-		chan_[ic] = new Vector<Int>();
-		chansPerBin_[ic] = new Array<Int>();
-		corr_[ic] = new Vector<Int>();
-		amp_[ic] = new Array<Float>();
-		pha_[ic] = new Array<Float>();
-		real_[ic] = new Array<Float>();
-		imag_[ic] = new Array<Float>();
-		flag_[ic] = new Array<Bool>();
-		flagrow_[ic] = new Vector<Bool>();
-		wt_[ic] = new Matrix<Float>();
-		wtxamp_[ic] = new Array<Float>();
-		wtsp_[ic] = new Array<Float>();
-		sigma_[ic] = new Array<Float>();
-		sigmasp_[ic] = new Array<Float>();
-		antenna_[ic] = new Vector<Int>();
-		az_[ic] = new Vector<Double>();
-		el_[ic] = new Vector<Double>();
-		parang_[ic] = new Vector<Float>();
-		par_[ic] = new Array<Float>();
-		snr_[ic] = new Array<Float>();
-		obsid_[ic] = new Vector<Int>();
-		intent_[ic] = new Vector<Int>();
-		feed1_[ic] = new Vector<Int>();
-		feed2_[ic] = new Vector<Int>();
-	}
+template<typename T>
+void PlotMSCacheBase::addVectors(PtrBlock<Vector<T>*>& input) {
+    Int oldsize = input.size();
+    if (nChunk_ > oldsize) {
+        input.resize(nChunk_, false, true);
+	    // Construct (empty) pointed-to Vectors
+	    for (Int ic=oldsize; ic<nChunk_; ++ic) 
+            input[ic] = new Vector<T>();
+    } else {
+        input.resize(nChunk_, true, false);
+    }
 }
 
 void PlotMSCacheBase::deleteCache() {
@@ -1337,7 +1677,6 @@ void PlotMSCacheBase::setPlotMask( int dataIndex ) {
 		// create a collapsed version of the flags for this chunk
 		setPlotMask(dataIndex, ichk);
 	}
-
 }
 
 
@@ -1389,123 +1728,7 @@ void PlotMSCacheBase::deletePlotMask() {
 
 }
 
-unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
-	switch(axis) {
-	case PMS::FREQUENCY:
-	case PMS::VELOCITY:
-	case PMS::CHANNEL:
-	case PMS::CORR:
-	case PMS::AMP:
-	case PMS::PHASE:
-	case PMS::REAL:
-	case PMS::IMAG:
-	case PMS::ANTENNA1:
-	case PMS::ANTENNA2:
-	case PMS::BASELINE:
-	case PMS::UVDIST:
-	case PMS::UVDIST_L:
-	case PMS::U:
-	case PMS::V:
-	case PMS::W:
-	case PMS::UWAVE:
-	case PMS::VWAVE:
-	case PMS::WWAVE:
-	case PMS::FLAG:
-	case PMS::WT:
-	case PMS::WTxAMP:
-	case PMS::WTSP:
-	case PMS::SIGMA:
-	case PMS::SIGMASP:
-	case PMS::ANTENNA:
-	case PMS::AZIMUTH:
-	case PMS::ELEVATION:
-	case PMS::PARANG:
-	case PMS::ROW:
-	case PMS::FLAG_ROW:
-	case PMS::GAMP:
-	case PMS::GPHASE:
-	case PMS::GREAL:
-	case PMS::GIMAG:
-	case PMS::DELAY:
-	case PMS::SWP:
-	case PMS::TSYS:
-	case PMS::OPAC:
-	case PMS::SNR:
-	case PMS::TEC:
-	case PMS::OBSERVATION:
-	case PMS::INTENT:
-	case PMS::FEED1:
-	case PMS::FEED2:
-	{
-		unsigned int n = 0;
-		for(Int i = 0; i < nChunk_; ++i) {
-			if(axis == PMS::FREQUENCY)     n += freq_[i]->size();
-			else if(axis == PMS::VELOCITY) n += vel_[i]->size();
-			else if(axis == PMS::CHANNEL)  n += chan_[i]->size();
-			else if(axis == PMS::CORR)     n += corr_[i]->size();
-			else if(axis == PMS::AMP ||
-				axis == PMS::GAMP)     n += amp_[i]->size();
-			else if(axis == PMS::PHASE ||
-					axis == PMS::GPHASE)   n += pha_[i]->size();
-			else if(axis == PMS::REAL ||
-					axis == PMS::GREAL)    n += real_[i]->size();
-			else if(axis == PMS::IMAG ||
-					axis == PMS::GIMAG)    n += imag_[i]->size();
-			else if(axis == PMS::ROW)      n += row_[i]->size();
-			else if(axis == PMS::ANTENNA1) n += antenna1_[i]->size();
-			else if(axis == PMS::ANTENNA2) n += antenna2_[i]->size();
-			else if(axis == PMS::BASELINE) n += antenna2_[i]->size();
-			else if(axis == PMS::UVDIST)   n += uvdist_[i]->size();
-			else if(axis == PMS::UVDIST_L) n += uvdistL_[i]->size();
-			else if(axis == PMS::U)        n += u_[i]->size();
-			else if(axis == PMS::V)        n += v_[i]->size();
-			else if(axis == PMS::W)        n += w_[i]->size();
-			else if(axis == PMS::UWAVE)    n += uwave_[i]->size();
-			else if(axis == PMS::VWAVE)    n += vwave_[i]->size();
-			else if(axis == PMS::WWAVE)    n += wwave_[i]->size();
-			else if(axis == PMS::FLAG)     n += flag_[i]->size();
-			else if(axis == PMS::WT)       n += wt_[i]->size();
-			else if(axis == PMS::WTxAMP)   n += wtxamp_[i]->size();
-			else if(axis == PMS::WTSP)     n += wtsp_[i]->size();
-			else if(axis == PMS::SIGMA)    n += sigma_[i]->size();
-			else if(axis == PMS::SIGMASP)  n += sigmasp_[i]->size();
-			else if(axis == PMS::ANTENNA)  n += antenna_[i]->size();
-			else if(axis == PMS::AZIMUTH)  n += az_[i]->size();
-			else if(axis == PMS::ELEVATION)n += el_[i]->size();
-			else if(axis == PMS::PARANG)   n += parang_[i]->size();
-			else if(axis == PMS::FLAG_ROW) n += flagrow_[i]->size();
-			else if(axis == PMS::DELAY ||
-					axis == PMS::SWP ||
-					axis == PMS::TSYS ||
-					axis == PMS::OPAC ||
-					axis == PMS::TEC)       n += par_[i]->size();
-			else if(axis == PMS::SNR)       n += snr_[i]->size();
-			else if(axis == PMS::OBSERVATION)  n += obsid_[i]->size();
-			else if(axis == PMS::INTENT)  n += intent_[i]->size();
-			else if(axis == PMS::FEED1)  n += feed1_[i]->size();
-			else if(axis == PMS::FEED2)  n += feed2_[i]->size();
-		}
-		return n;
-	}
 
-	case PMS::TIME:          return time_.size();
-	case PMS::TIME_INTERVAL: return timeIntr_.size();
-	case PMS::FIELD:         return field_.size();
-	case PMS::SCAN:          return scan_.size();
-	case PMS::SPW:           return spw_.size();
-
-	case PMS::AZ0:           return az0_.size();
-	case PMS::EL0:           return el0_.size();
-	case PMS::RADIAL_VELOCITY:  return radialVelocity_.size();
-	case PMS::RHO: 			 return rho_.size();
-	case PMS::HA0:           return ha0_.size();
-	case PMS::PA0:           return pa0_.size();
-
-	case PMS::NONE: return 0;
-
-	}
-	return 0;
-}
 
 void PlotMSCacheBase::log(const String& method, const String& message,
 		int eventType) {

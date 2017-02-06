@@ -119,11 +119,14 @@ void CalCache::loadIt(vector<PMS::Axis>& loadAxes,
     nAnt_ = ctCol.antenna().nrow();
      
   } 	
- 
-  setUpCalIter(filename_,selection_,True,True,True);
+
+  setUpCalIter(filename_,selection_, True,True,True);
     
   // supports only channel averaging...    
-  countChunks(*ci_p,thread);
+  vector<PMS::DataColumn> loadData(loadAxes.size());
+  for (uInt i=0; i<loadData.size(); ++i) 
+    loadData[i] = PMS::DEFAULT_DATACOLUMN;
+  countChunks(*ci_p, loadAxes, loadData, thread);
   //    trapExcessVolume(pendingLoadAxes);
   loadCalChunks(*ci_p,loadAxes,thread);
 
@@ -187,6 +190,8 @@ void CalCache::setUpCalIter(const String& ctname,
 }
       
 void CalCache::countChunks(ROCTIter& ci,
+               vector<PMS::Axis>& loadAxes,
+		       vector<PMS::DataColumn>& loadData,
 			   ThreadCommunication* thread) {
 
   if (thread!=NULL) {
@@ -202,7 +207,7 @@ void CalCache::countChunks(ROCTIter& ci,
     ci.next0();
   }
 
-  if(chunk != nChunk_) increaseChunks(chunk);
+  setCache(chunk, loadAxes, loadData);
   //  cout << " Found " << nChunk_ << " chunks." << endl;
 }
 

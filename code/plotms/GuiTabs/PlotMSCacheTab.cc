@@ -70,11 +70,13 @@ void PlotMSCacheTab::update(const PlotMSPlot& plot) {
     availableTable->sortItems(0);
     availableTable->resizeRowsToContents();
     
-    vector<pair<PMS::Axis, unsigned int> > laxes = plot.cache().loadedAxes();
+    vector<PMS::Axis> laxes = plot.cache().loadedAxes();
     unsigned int nmeta = 0, nloaded = 0;
     for(unsigned int i = 0; i < laxes.size(); i++) {
-        if(PlotMSCacheBase::axisIsMetaData(laxes[i].first)) nmeta++;
-        else                                            nloaded++;
+        if(PlotMSCacheBase::axisIsMetaData(laxes[i])) 
+            nmeta++;
+        else
+            nloaded++;
     }
     metaTable->setRowCount(nmeta);
     loadedTable->setRowCount(nloaded);
@@ -83,13 +85,13 @@ void PlotMSCacheTab::update(const PlotMSPlot& plot) {
     QString qaxis;
     unsigned int imeta = 0, iloaded = 0;
     for(unsigned int i = 0; i < laxes.size(); i++) {
-        if(PlotMSCacheBase::axisIsMetaData(laxes[i].first)) {
+        if(PlotMSCacheBase::axisIsMetaData(laxes[i])) {
             tw = metaTable;   ti = imeta;   imeta++;
         } else {
             tw = loadedTable; ti = iloaded; iloaded++;
         }
         
-        qaxis = PMS::axis(laxes[i].first).c_str();
+        qaxis = PMS::axis(laxes[i]).c_str();
         
         // move from available table
         for(int r = 0; r < availableTable->rowCount(); r++) {
@@ -98,7 +100,12 @@ void PlotMSCacheTab::update(const PlotMSPlot& plot) {
                 availableTable->takeItem(r, 0);
                 tw->setItem(ti, 0, twi);
                 
-                twi = new QTableWidgetItem(QString("%1").arg(laxes[i].second));
+                // This tab is no longer used.
+                // Not worth effort of keeping up number of points 
+                // per axis (nAxes keeps growing!)
+                // Just use 1 so will compile
+                //twi = new QTableWidgetItem(QString("%1").arg(laxes[i].second));
+                twi = new QTableWidgetItem(QString("%1").arg(1));
                 tw->setItem(ti, 1, twi);
                 
                 twi = availableTable->takeItem(r, 1);

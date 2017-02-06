@@ -38,7 +38,7 @@ public:
 	virtual ~ActionCacheRelease();
 protected:
 	virtual bool loadAxes();
-	virtual bool isAxesValid( std::vector<std::pair<PMS::Axis,unsigned int > > cacheAxes, int vectorIndex, int axisIndex ) const;
+	virtual bool isAxesValid( std::vector<PMS::Axis> cacheAxes, int vectorIndex, int axisIndex ) const;
 	virtual void setUpWorkParameters( CacheThread* cacheThread, int plotIndex, std::vector<PMS::Axis>& axes );
 };
 
