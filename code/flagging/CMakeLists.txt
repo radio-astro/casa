@@ -35,21 +35,22 @@ casa_add_library( flagging
   Flagging/RFFlagCube.cc
   Flagging/RFRowClipper.cc
   Flagging/RFFloatLattice.cc
+  Flagging/FlagAgentAntennaIntegrations.cc
+  Flagging/FlagAgentBase.cc
+  Flagging/FlagAgentClipping.cc
+  Flagging/FlagAgentDisplay.cc
+  Flagging/FlagAgentElevation.cc
+  Flagging/FlagAgentExtension.cc
+  Flagging/FlagAgentManual.cc
+  Flagging/FlagAgentQuack.cc
+  Flagging/FlagAgentRFlag.cc
+  Flagging/FlagAgentShadow.cc
+  Flagging/FlagAgentSummary.cc
+  Flagging/FlagAgentTimeFreqCrop.cc
+  Flagging/FlagCalTableHandler.cc
   Flagging/FlagDataHandler.cc
   Flagging/FlagMSHandler.cc
-  Flagging/FlagCalTableHandler.cc
   Flagging/FlagReport.cc
-  Flagging/FlagAgentBase.cc
-  Flagging/FlagAgentTimeFreqCrop.cc
-  Flagging/FlagAgentClipping.cc
-  Flagging/FlagAgentSummary.cc
-  Flagging/FlagAgentDisplay.cc
-  Flagging/FlagAgentManual.cc
-  Flagging/FlagAgentElevation.cc
-  Flagging/FlagAgentQuack.cc
-  Flagging/FlagAgentShadow.cc
-  Flagging/FlagAgentExtension.cc
-  Flagging/FlagAgentRFlag.cc
   Flagging/FlagVersion.cc
   Flagging/SLog.cc
    )
@@ -57,6 +58,7 @@ casa_add_library( flagging
 install (FILES
 	Flagging/DDMapper.h
 	Flagging/ExtendFlagger.h
+	Flagging/FlagAgentAntennaIntegrations.h
 	Flagging/FlagAgentBase.h
 	Flagging/FlagAgentClipping.h
 	Flagging/FlagAgentDisplay.h
