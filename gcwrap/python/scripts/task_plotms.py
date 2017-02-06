@@ -394,7 +394,7 @@ def plotms(vis=None,
                         yDataColumn = ydatacolumn[i]
                     yAxisLocation = 'left'
                     if i < yLocationCount:
-                        yAxisLocation = yaxislocation[i] 
+                        yAxisLocation = yaxislocation[i]
                     pm.setPlotAxes(xaxis, yaxis[i], xdatacolumn, yDataColumn, yAxisLocation, False, plotindex, i)
             else :
                 raise Exception, 'Please remove duplicate y-axes.'
@@ -705,8 +705,8 @@ def plotms(vis=None,
             casalog.post( "There was a problem updating the plot.")
         else:
             # write file if requested
-            casalog.post("Plot file " + plotfile, 'NORMAL')
             if(plotfile != ""):
+                casalog.post("Plot file " + plotfile, 'NORMAL')
                 time.sleep(0.5)
                 if (pm.isDrawing()):
                     casalog.post("Will wait until drawing of the plot has completed before exporting it",'NORMAL')

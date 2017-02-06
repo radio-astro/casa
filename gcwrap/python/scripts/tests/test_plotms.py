@@ -408,15 +408,10 @@ class plotms_test_axis(plotms_test_base):
                      yaxislocation=['left','right'],xaxis='time',
                      plotfile=self.plotfile_jpg, expformat='jpg',
                      highres=True)
-        
         self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 247000)      
-        # A single plot with two y-axes using identical data returns false.
-        # Plot amp vs time and amp vs time. 
-        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg',
-                     overwrite=True, showgui=False, yaxis=['amp','amp'], 
-                     yaxislocation=['left','right'], xaxis='time', highres=True)
-        self.assertFalse(res)  
+        self.checkPlotfile(self.plotfile_jpg, 247000)
+        self.removePlotfile()
+        
         print
 
     def test_axis_wtamp(self):
@@ -552,6 +547,44 @@ class plotms_test_axis(plotms_test_base):
             self.assertTrue(res)
             self.checkPlotfile(plotfile, 50000) 
             self.removePlotfile(plotfile)
+        print
+
+    def test_axis_twoDataAxes(self):
+        '''test_axis_twoDataAxes: Single plot with two y data axes.'''
+        self.plotfile_jpg = os.path.join(self.outputDir, "testAxis11.jpg")
+        self.removePlotfile()
+        time.sleep(5)
+        # cannot plot with duplicate y-axes (same axis, same data)
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg',
+                     overwrite=True, showgui=False, yaxis=['amp','amp'], 
+                     yaxislocation=['left','right'], xaxis='time', highres=True)
+        self.assertFalse(res) 
+        # Plot amp:data vs time and amp:model vs time. 
+        res = plotms(vis=self.ms, gridrows=1, gridcols=1, 
+                     showgui=False, yaxis=['amp','amp'],
+                     ydatacolumn=['data','model'],
+                     yaxislocation=['left','right'],xaxis='time',
+                     showlegend=True, legendposition='lowerRight',
+                     customsymbol=[True,True], symbolshape=['diamond','circle'], 
+                     symbolsize=[5,5], symbolcolor=['ff0000','00ff00'], 
+                     symbolfill=['mesh3','mesh3'], 
+                     plotfile=self.plotfile_jpg, expformat='jpg',
+                     highres=True)
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 247000)      
+        self.removePlotfile()
+        # test ms has no corrected data, should revert to data
+        # Plot amp:corrected(->data) vs time and amp:model vs time. 
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg',
+                     overwrite=True, showgui=False, yaxis=['amp','amp'], 
+                     ydatacolumn=['corrected','model'],
+                     yaxislocation=['left','right'], xaxis='time', 
+                     showlegend=True, legendposition='lowerRight',
+                     customsymbol=[True,True], symbolshape=['diamond','circle'], 
+                     symbolsize=[5,5], symbolcolor=['ff0000','00ff00'], 
+                     symbolfill=['mesh3','mesh3'], highres=True)
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 247000)      
         print
 
 # ------------------------------------------------------------------------------
@@ -1111,7 +1144,7 @@ class plotms_test_iteration(plotms_test_base):
         self.tearDowndata()
     
     def test_iteration_scan(self):
-        '''test_iteraxis_scan: Iterate by scan and export all'''
+        '''test_iteration_scan: Iterate by scan and export all'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration01.jpg")
         plotFiles = [os.path.join(self.outputDir, "testIteration01_Scan1.jpg"),
                      os.path.join(self.outputDir, "testIteration01_Scan2_2.jpg"),
@@ -1134,7 +1167,7 @@ class plotms_test_iteration(plotms_test_base):
         print
 
     def test_iteration_antenna(self):
-        '''test_iteraxis_antenna: Iterate by antenna and export all'''
+        '''test_iteration_antenna: Iterate by antenna and export all'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration02.jpg")
         # Create the plot and check that there are 27 iterations
         res = plotms(vis=self.ms, plotfile = plotfile_jpg, exprange='all',
@@ -1148,7 +1181,7 @@ class plotms_test_iteration(plotms_test_base):
         print
 
     def test_iteration_time(self):
-        '''test_iteraxis_time: Iterate over time'''
+        '''test_iteration_time: Iterate over time'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration03.jpg")
         plotfile1_jpg = os.path.join(self.outputDir, "testIteration03_Time09:18:59.9998.jpg")
         self.removePlotfile(plotfile1_jpg)
@@ -1163,7 +1196,7 @@ class plotms_test_iteration(plotms_test_base):
         print
 
     def test_iteration_timeavg(self):
-        '''test_iteraxis_time: Iterate over averaged time'''
+        '''test_iteration_time: Iterate over averaged time'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration04.jpg")
         plotfile1_jpg = os.path.join(self.outputDir, "testIteration04_Time09:19:15.0000.jpg")
         self.removePlotfile(plotfile1_jpg)
@@ -1177,7 +1210,7 @@ class plotms_test_iteration(plotms_test_base):
         print
 
     def test_iteration_grid(self):
-        '''test_iteraxis_grid: Iterate by scan on square grid.'''
+        '''test_iteration_grid: Iterate by scan on square grid.'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration05.jpg")
         plotfile1_jpg = os.path.join(self.outputDir, "testIteration05_Scan1,2,3,4.jpg")
         plotfile2_jpg = os.path.join(self.outputDir, "testIteration05_Scan5,6,7_2.jpg")
@@ -1196,7 +1229,7 @@ class plotms_test_iteration(plotms_test_base):
         print    
         
     def test_iteration_grid2(self):
-        '''test_iteraxis_grid2: Iterate by scan with right axis and non-square grid.'''
+        '''test_iteration_grid2: Iterate by scan with right axis and non-square grid.'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration06.jpg")
         plotfile1_jpg = os.path.join(self.outputDir, "testIteration06_Scan1,2,3,4,5,6.jpg")
         plotfile2_jpg = os.path.join(self.outputDir, "testIteration06_Scan7_2.jpg")
@@ -1217,7 +1250,7 @@ class plotms_test_iteration(plotms_test_base):
 
 
     def test_iteration_selection( self ):
-        '''test_iteraxis_selection: CAS-7050:(Pipeline) Iteration with selection'''
+        '''test_iteration_selection: CAS-7050:(Pipeline) Iteration with selection'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration07.jpg")
         plotfile1_jpg = os.path.join(self.outputDir, "testIteration07_Antenna1@VLA:N7.jpg")
         plotfile2_jpg = os.path.join(self.outputDir, "testIteration07_Antenna2@VLA:W1_2.jpg")
@@ -1242,7 +1275,7 @@ class plotms_test_iteration(plotms_test_base):
         print
         
     def test_iteration_select1( self ):
-        '''test_iteraxis_select1: CAS-7050 (Pipeline) Iteration with selection of 1'''
+        '''test_iteration_select1: CAS-7050 (Pipeline) Iteration with selection of 1'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration08.jpg")
         plotfile1_jpg = os.path.join(self.outputDir, "testIteration08_Antenna28@VLA:W7.jpg")
         self.removePlotfile(plotfile1_jpg)
@@ -1259,7 +1292,7 @@ class plotms_test_iteration(plotms_test_base):
         print
        
     def test_iteration_select0( self ):
-        '''test_iteraxis_select0: CAS-7050 (Pipeline) Iteration with empty selection'''
+        '''test_iteration_select0: CAS-7050 (Pipeline) Iteration with empty selection'''
         self.plotfile_jpg = os.path.join(self.outputDir, "testIteration09.jpg")
         self.removePlotfile()
         time.sleep(5)
@@ -1271,7 +1304,7 @@ class plotms_test_iteration(plotms_test_base):
         print
 
     def test_iteration_badselection( self ):
-        '''test_iteraxis_badselection:  CAS-7050:  (Pipeline) Iteration with bad selection, you should be able to tell what plots are skipped.'''
+        '''test_iteration_badselection:  CAS-7050:  (Pipeline) Iteration with bad selection, you should be able to tell what plots are skipped.'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration10.jpg")
         plotFiles = [os.path.join(self.outputDir, "testIteration10_Scan1.jpg"),
                      os.path.join(self.outputDir, "testIteration10_Scan2_2.jpg"),
@@ -1293,7 +1326,7 @@ class plotms_test_iteration(plotms_test_base):
         print
 
     def test_iteration_corr(self):
-        '''test_iteraxis_corr: Iterate by correlation and export all'''
+        '''test_iteration_corr: Iterate by correlation and export all'''
         plotfile_jpg = os.path.join(self.outputDir, "testIteration11.jpg")
         plotfile1_jpg = os.path.join(self.outputDir, "testIteration11_CorrRR.jpg")
         plotfile2_jpg = os.path.join(self.outputDir, "testIteration11_CorrLL_2.jpg")
