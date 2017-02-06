@@ -27,7 +27,7 @@ import os
 from casac import *
 import string
 import time
-import inspect
+from casa_stack_manip import stack_frame_find
 import gc
 import numpy
 from odict import odict
@@ -48,13 +48,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
     def __call__<xsl:text>(self, </xsl:text><xsl:apply-templates select="aps:input"/>
 
 <xsl:text disable-output-escaping="yes">
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
+        myf=stack_frame_find( )
         myf['__last_task'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         myf['taskname'] = '</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">'
         ###
@@ -184,13 +178,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 #        """
 #        import paramgui
 #
-#        a=inspect.stack()
-#        stacklevel=0
-#        for k in range(len(a)):
-#          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-#            stacklevel=k
-#            break
-#        myf = sys._getframe(stacklevel).f_globals
+#        myf = stack_frame_find( )
 #
 #        if useGlobals:
 #            paramgui.setGlobals(myf)
@@ -204,13 +192,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 #
 #
     def defaults(self, param=None):
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-                stacklevel=k
-                break
-        myf=sys._getframe(stacklevel).f_globals
+        myf=stack_frame_find( )
         a = odict()
 </xsl:text>
 <xsl:for-each select="aps:input">
@@ -239,13 +221,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 #
 #
     def check_params(self, param=None, value=None):
-      a=inspect.stack() 
-      stacklevel=0
-      for k in range(len(a)):
-        if (string.find(a[k][1], &apos;ipython console&apos;) &gt; 0) or (string.find(a[k][1], &apos;&lt;string&gt;&apos;) &gt;= 0):
-	    stacklevel=k
-	    break
-      myf=sys._getframe(stacklevel).f_globals
+      myf=stack_frame_find( )
 
 #      print 'param:', param, 'value:', value
       try :
