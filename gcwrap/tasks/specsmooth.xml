@@ -25,27 +25,27 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>outfile='mysmoothed.im'</example>
     </param>
     <param type="string" direction="in" name="box" subparam="true">
-        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <description>Rectangular region to select in direction plane. Default is to use the entire direction plane.</description>
         <value/>
         <example>box="4,4,10,10"</example>
     </param>
     <param type="string" direction="in" name="chans" subparam="true">
-        <description>Channels to use. See "help par.chans" for details. Channels must be contiguous. Default is to use all channels.</description>
+        <description>Channels to use. Channels must be contiguous. Default is to use all channels.</description>
         <value/>
     </param>
     <param type="string" direction="in" name="stokes" subparam="true">
-        <description>Stokes planes to use. See "help par.stokes" for details. Planes specified must be contiguous. Default is to use all Stokes planes.</description>
+        <description>Stokes planes to use. Planes specified must be contiguous. Default is to use all Stokes planes.</description>
         <value/>
         <example>stokes="I"</example>
     </param>
     <param type="any" direction="in" name="region">
         <any type="variant"/>
-        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <description>Region selection. Default is to use the full image.</description>
         <value type="string"/>
         <example>region="myregion.rgn"</example>
     </param>
     <param type="string" direction="in" name="mask">
-        <description>Mask to use. See help par.mask. Default is none..</description>
+        <description>Mask to use. Default is none..</description>
         <value></value>
     </param>
     <param type="bool"  name="overwrite" subparam="true">
@@ -53,7 +53,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>False</value>
     </param>
     <param type="bool"  name="stretch" subparam="true">
-        <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+        <description>Stretch the mask if necessary and possible? Default False</description>
         <value>False</value>
     </param>
     
@@ -128,17 +128,17 @@ Smooth an image region in one dimension.
 
 ARAMETER SUMMARY
 imagename       Name of the input (CASA, FITS, MIRIAD) image
-box             Rectangular region to select in direction plane. See "help par.box" for details.
+box             Rectangular region to select in direction plane. 
                 Default is to use the entire direction plane. Only a single box may be specified.
-chans           Channels to use. See "help par.chans" for details. Channels must be contiguous.
+chans           Channels to use. Channels must be contiguous.
                 Default is to use all channels.
-stokes          Stokes planes to use. See "help par.stokes" for details. Planes specified must be
+stokes          Stokes planes to use. Planes specified must be
                 contiguous. Default is to use all Stokes planes.
-region          Region selection. See "help par.region" for details. Default is to use the full image.
-mask            Mask to use. See help par.mask. Default is none.
+region          Region selection. Default is to use the full image.
+mask            Mask to use. Default is none.
 overwrite       If the specified outfile already exists, overwrite it if True.
 stretch         Stretch the input mask if necessary and possible? Only used if a mask is specified.
-                See help par.stretch.
+                
 axis            Pixel axis along which to do the convolution &lt;0 means use the spectral axis.
 function        Convolution function to use. Supported values are "boxcar" and "hanning". Minimum
                 match is supported.

@@ -32,30 +32,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="region">
-        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <description>Region selection. Default is to use the full image.</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     </param>
 
     <param type="string" name="box">
-        <description>Rectangular region(s) to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <description>Rectangular region(s) to select in direction plane. Default is to use the entire direction plane.</description>
         <value/>
     </param>
 
     <param type="string" name="chans" >
-	<description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+	<description>Channels to use. Default is to use all channels.</description>
     	<value/>
     </param>
 
     <param type="string" name="stokes">
-	    <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+	    <description>Stokes planes to use. Default is to use all Stokes planes.</description>
 	    <value/>
 	    <example>stokes=&quot;IQ&quot;</example>
 	    <example>stokes=&quot;RR,LL&quot;</example>
     </param>
 
     <param type="string" name="mask">
-	    <description>Mask to use. See help par.mask. Default is none.</description>
+	    <description>Mask to use. Default is none.</description>
 	    <any type="variant"/>
 	    <value type="stringArray"></value>
     </param>
@@ -125,18 +125,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
    axis         The moment axis
                 default: (spectral axis); example: axis=spec
                 options: ra, dec, lattitude, longitude, spectral, stokes
-   mask         Mask to use. See help par.mask. Default is none.  
+   mask         Mask to use. Default is none.  
    stretch      Stretch the input mask if necessary and possible. See below.
-   region       Region selection. See "help par.region" for details. Default
+   region       Region selection. Default
                 is to use the full image.
     box         Rectangular region to select in direction plane. See
-                "help par.box" for details. Default is to use the entire direction plane.
+                Default is to use the entire direction plane.
                 Example: box=&quot;10,10,50,50&quot;
                 box = &quot;10,10,30,30,35,35,50,50&quot; (two boxes)
-    chans       Channels to use. See "help par.chans" for details. Default is to use
+    chans       Channels to use. Default is to use
                 all channels.
-                See "help par.chans" for examples. 
-    stokes      Stokes planes to use. See "help par.stokes" for details. Default is to
+                 
+    stokes      Stokes planes to use. Default is to
                 use all Stokes planes.
                 Example: stokes=&quot;IQUV&quot;;  
                 Example:stokes=&quot;I,Q&quot;

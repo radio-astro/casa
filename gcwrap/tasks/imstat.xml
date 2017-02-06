@@ -25,19 +25,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>[0, 1]</example> 
     </param>
     <param type="string" name="region">
-        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <description>Region selection. Default is to use the full image.</description>
         <value/>
     </param>
     <param type="string" name="box">
-        <description>Rectangular region(s) to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <description>Rectangular region(s) to select in direction plane. Default is to use the entire direction plane.</description>
         <value/>
     </param>
     <param type="string" name="chans" >
-	<description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+	<description>Channels to use. Default is to use all channels.</description>
     	<value/>
     </param>
     <param type="string" name="stokes">
-	    <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+	    <description>Stokes planes to use. Default is to use all Stokes planes.</description>
 	    <value/>
 	    <example>stokes=&quot;IQ&quot;</example>
 	    <example>stokes=&quot;RR,LL&quot;</example>
@@ -51,11 +51,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>True</value>
     </param>
     <param type="string" direction="in" name="mask">
-        <description>Mask to use. See help par.mask. Default is none.</description>
+        <description>Mask to use. Default is none.</description>
         <value/>
     </param>
     <param type="bool" direction="in" name="stretch" subparam="true">
-        <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+        <description>Stretch the mask if necessary and possible? </description>
         <value>False</value>
     </param>
     <param type="string" name="logfile">
@@ -157,21 +157,21 @@ Keyword arguments:
 imagename    Name of input image
 		     Default: none; Example: imagename='ngc5921_task.im'
 axes         axes to compute statistics over. -1 => all axes.
-region       Region selection. See "help par.region" for details. Default is
+region       Region selection. Default is
              to use the full image.
 box          Rectangular region(s) to select in direction plane. See
-             "help par.box" for details. Default is to use the entire direction plane.
+             Default is to use the entire direction plane.
              Example: box='10,10,50,50'
              box = '10,10,30,30,35,35,50,50' (two boxes)
-chans        Channels to use. See "help par.chans" for details. Default is to use all channels.
+chans        Channels to use. Default is to use all channels.
 	         Example: chans='3~20'    
-stokes       Stokes planes to use. See "help par.stokes" for details. Default is to
+stokes       Stokes planes to use. Default is to
              use all Stokes planes.
              Example:stokes='I,Q'
 listit       Print stats and bounding box to logger? 
 verbose      Print additional messages to logger?
-mask         Mask to use. See help par.mask. Default is none.
-stretch      Stretch the mask if necessary and possible? See help par.stretch 
+mask         Mask to use. Default is none.
+stretch      Stretch the mask if necessary and possible? 
 logfile      Name of file to write fit results.
 append       If logfile exists, append to it (True) or overwrite it (False).
 alogortihm   Algorithm to use to compute statistics. Supported values are "classic"

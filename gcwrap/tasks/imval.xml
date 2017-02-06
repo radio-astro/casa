@@ -19,23 +19,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="region">
-        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <description>Region selection. Default is to use the full image.</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     </param>
 
     <param type="string" name="box">
-        <description>Rectangular region(s) to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <description>Rectangular region(s) to select in direction plane. Default is to use the entire direction plane.</description>
         <value/>
     </param>
 
     <param type="string" name="chans" >
-	<description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+	<description>Channels to use. Default is to use all channels.</description>
     	<value/>
     </param>
 
     <param type="string" name="stokes">
-	    <description>Stokes planes to use. See "help par.stokes" for details. Planes specified must be contiguous. Default is to use all Stokes planes.</description>
+	    <description>Stokes planes to use. Planes specified must be contiguous. Default is to use all Stokes planes.</description>
 	    <value/>
 	    <example>stokes=&quot;IQ&quot;</example>
 	    <example>stokes=&quot;RR,LL&quot;</example>
@@ -87,7 +87,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
      The data point(s) to be retrieved are those found in the specified
      region, which may be:
-        1. A region file or text string (see help par.region), with the following caveat:
+        1. A region file or text string, with the following caveat:
            * If the specified region is complex (eg, a union or intersection of multiple regions,
              only the first simple region in this set is used.
            * If the region is not rectangular, then the rectangular region that circumscribes the
@@ -106,15 +106,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	Keyword arguments:
 	imagename -- Name of input image
 		Default: none; Example: imagename='ngc5921_task.im'
-        region -- Region selection. See "help par.region" for details. Default is to use the full image.
+        region -- Region selection. Default is to use the full image.
                 Example: region='myimage.im.rgn'
                          region='region1'
-	box --  Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.
+	box --  Rectangular region to select in direction plane. Default is to use the entire direction plane.
 		Default: '' (referencepixel values for the Directional coord); 
                 Example: box='10,10,50,50'
                          box = '10,10,30,30,35,35,50,50' (two boxes)
-	chans -- Channels to use. See "help par.chans" for details. Default is to use all channels.
-	stokes -- Stokes planes to use. See "help par.stokes" for details. Planes specified must be contiguous. Default is to use all Stokes planes.
+	chans -- Channels to use. Default is to use all channels.
+	stokes -- Stokes planes to use. Planes specified must be contiguous. Default is to use all Stokes planes.
 	         Example: stokes='IQUV';  
                       stokes='I,Q'
 

@@ -38,26 +38,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>outfile='collapsed.im'</example>
     </param>
     <param type="string" name="box">
-        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <description>Rectangular region to select in direction plane. Default is to use the entire direction plane.</description>
         <value/>
         <example>box="100,100,200,200"</example>
     </param>
     <param type="string" name="region" subparam="true">
-        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <description>Region selection. Default is to use the full image.</description>
         <value/>
         <example>region="my.rgn"</example>
     </param>
     <param type="string" name="chans">
-        <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+        <description>Channels to use. Default is to use all channels.</description>
         <value/>
     </param>
     <param type="string" name="stokes">
-        <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+        <description>Stokes planes to use. Default is to use all Stokes planes.</description>
         <value/>
         <example>stokes="iq"</example>
     </param>
     <param type="string" name="mask">
-        <description>Mask to use. See help par.mask. Default is none.</description>
+        <description>Mask to use. Default is none.</description>
         <value type="string"/>
     </param>
     <param type="bool" name="overwrite" subparam="true">
@@ -66,7 +66,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>overwrite=true</example>
     </param>
     <param type="bool" direction="in" name="stretch">
-        <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+        <description>Stretch the mask if necessary and possible? </description>
         <value>False</value>
     </param>
     
@@ -108,17 +108,17 @@ outfile          Name of output CASA image. Must be specified.
 overwrite        Controls if an already existing file by the
                  same name can be overwritten. If true, the user is not prompted, the file
                  if it exists is automatically overwritten.
-box              Rectangular region to select in direction plane. See "help par.box"
+box              Rectangular region to select in direction plane. 
                  for details. Default is to use the entire direction plane.
-region           Region selection. See "help par.region" for details. Default is to use
+region           Region selection. Default is to use
                  the full image.
-chans            Channels to use. See "help par.chans" for details. Default is to use
+chans            Channels to use. Default is to use
                  all channels.
-stokes           Stokes planes to use. See "help par.stokes" for details. Default is to use
+stokes           Stokes planes to use. Default is to use
                  all Stokes planes.
-mask             Mask to use. See help par.mask. Default is none.
+mask             Mask to use. Default is none.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
-                 See help par.stretch.
+                 
 
 This task collapses an image along a specified axis or set of axes of N pixels to a single pixel on each
 specified axis. Both float valued and complex valued images are supported. It computes the specified

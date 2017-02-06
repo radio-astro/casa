@@ -35,24 +35,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
         <param type="string" direction="in" name="box">
             <value/>
-            <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+            <description>Rectangular region to select in direction plane. Default is to use the entire direction plane.</description>
         </param>
         <param type="any" direction="in" name="region" subparam="true">
             <any type="variant"/>
-            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+            <description>Region selection. Default is to use the full image.</description>
             <value type="string"/>
         </param>
         <param type="string" direction="in" name="chans">
-            <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+            <description>Channels to use. Default is to use all channels.</description>
             <value/>
         </param>
         
         <param type="string" direction="in" name="stokes">
-            <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+            <description>Stokes planes to use. Default is to use all Stokes planes.</description>
             <value/>
         </param>
         <param type="string" direction="in" name="mask">
-            <description>Mask to use. See help par.mask. Default is none.</description>
+            <description>Mask to use. Default is none.</description>
             <value/>
         </param>
         <param type="string" direction="in" name="mode">
@@ -64,7 +64,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>-1.0</value>
         </param>
         <param type="bool" direction="in" name="stretch" subparam="true">
-            <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+            <description>Stretch the mask if necessary and possible? </description>
             <value>False</value>
         </param>
         <constraints>
@@ -98,13 +98,13 @@ outfile          Name of output CASA image. Must be specified.
 overwrite        If output file is specified, controls if an already existing file by the
                  same name can be overwritten. If true, the user is not prompted, the file
                  if it exists is automatically overwritten.
-box              Rectangular region to select in direction plane. See "help par.box" for details. Default
+box              Rectangular region to select in direction plane. Default
                  is to use the entire direction plane.
-region           Region selection. See "help par.region" for details. Default is to use the full image.
-chans            Channels to use. See "help par.chans" for details. Default is to use all channels.
-stokes           Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.
-mask             Mask to use. See help par.mask. Default is none.
-stretch          Stretch the input mask if necessary and possible. See help par.mask.
+region           Region selection. Default is to use the full image.
+chans            Channels to use. Default is to use all channels.
+stokes           Stokes planes to use. Default is to use all Stokes planes.
+mask             Mask to use. Default is none.
+stretch          Stretch the input mask if necessary and possible. 
 mode             Divide or multiply the image by the primary beam image. Minimal match supported. Default "divide"
 cutoff           PB cutoff. If mode is "d", all values less than this will be masked. If "m", all values greater will be masked. Less than 0, no cutoff. Default no cutoff
 

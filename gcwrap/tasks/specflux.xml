@@ -19,30 +19,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     <param type="any" name="region">
         <any type="variant"/>
-        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <description>Region selection. Default is to use the full image.</description>
         <value type="string"/>
         <example>region="my.rgn"</example>
     </param>
     <param type="string" name="box">
-        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <description>Rectangular region to select in direction plane. Default is to use the entire direction plane.</description>
         <value/>
         <example>box="100,100,200,200"</example>
     </param>
     <param type="string" name="chans">
-        <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+        <description>Channels to use. Default is to use all channels.</description>
         <value/>
     </param>
     <param type="string" name="stokes">
-        <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+        <description>Stokes planes to use. Default is to use all Stokes planes.</description>
         <value/>
         <example>stokes="iq"</example>
     </param>
     <param type="string" name="mask">
-        <description>Mask to use. See help par.mask. Default is none.</description>
+        <description>Mask to use. Default is none.</description>
         <value/>
     </param>
     <param type="bool" direction="in" name="stretch" subparam="true">
-        <description>Stretch the mask if necessary and possible? See help par.stretch </description>
+        <description>Stretch the mask if necessary and possible? </description>
         <value>False</value>
     </param>
     <param type="string" name="function">
@@ -97,17 +97,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
-region           Region selection. See "help par.region" for details. Default is to use
+region           Region selection. Default is to use
                  the full image.
-box              Rectangular region to select in direction plane. See "help par.box"
+box              Rectangular region to select in direction plane. 
                  for details. Default is to use the entire direction plane.
-chans            Channels to use. See "help par.chans" for details. Default is to use
+chans            Channels to use. Default is to use
                  all channels.
-stokes           Stokes planes to use. See "help par.stokes" for details. Default is to use
+stokes           Stokes planes to use. Default is to use
                  all Stokes planes.
-mask             Mask to use. See help par.mask. Default is none.
+mask             Mask to use. Default is none.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
-                 See help par.stretch.
+                 
 function         Aggregate function to use for computing per channel values. Supported values are
                  "flux density", "mean", "median", "sum". Minimal match supported.
 unit             Unit to use for the spectral flux calculation. Must be conformant with a typical

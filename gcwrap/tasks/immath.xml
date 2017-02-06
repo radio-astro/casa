@@ -68,23 +68,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value type="string"/>
     </param>
     <param type="string" name="mask">
-        <description>Mask to use. See help par.mask. Default is none.</description>
+        <description>Mask to use. Default is none.</description>
         <value/>
     </param>
     <param type="string" name="region">
-        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <description>Region selection. Default is to use the full image.</description>
         <value/>
     </param>
     <param type="string" name="box">
-        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <description>Rectangular region to select in direction plane. Default is to use the entire direction plane.</description>
         <value/>
     </param>
     <param type="string" name="chans" >
-        <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+        <description>Channels to use. Default is to use all channels.</description>
         <value/>
     </param >
     <param type="string" name="stokes">
-        <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+        <description>Stokes planes to use. Default is to use all Stokes planes.</description>
 	    <value/>
 	    <example>stokes='IQ'</example>
 	    <example>stokes='RR,LL'</example>
@@ -202,14 +202,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           the names in this array to represent the input images.
     outfile    The output image. Overwriting an existing outfile is not permitted.
 	           Default: immath_results.im;  Example: outfile='results.im'
-    mask       Mask to use. See help par.mask. Default is none. Also see polithresh.
+    mask       Mask to use. Default is none. Also see polithresh.
     stretch    Stretch the input mask if necessary and possible. See below.
-    region     Region selection. See "help par.region" for details. Default is to use the full image.
-    box        Rectangular region to select in direction plane. See "help par.box" for details. Default
+    region     Region selection. Default is to use the full image.
+    box        Rectangular region to select in direction plane. Default
                is to use the entire direction plane.
                Example: box='10,10,50,50'
-    chans      Channels to use. See "help par.chans" for details. Default is to use all channels.
-    stokes     Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.
+    chans      Channels to use. Default is to use all channels.
+    stokes     Stokes planes to use. Default is to use all Stokes planes.
                Not used in for cases of mode='poli' or mode='pola'
     imagemd    The image from which metadata should be copied to the output. Default means no guarantee from
                 which image is used. The image must exist and should conform to the output image spec.

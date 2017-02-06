@@ -42,20 +42,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>fitorder=2</example>
     </param>
     <param type="string" name="region">
-        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <description>Region selection. Default is to use the full image.</description>
         <value/>
     </param>
     <param type="any" name="box">
-        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <description>Rectangular region to select in direction plane. Default is to use the entire direction plane.</description>
         <any type="variant" limittypes="string intArray stringArray"/>
         <value type="string"/>
     </param>
     <param type="string" name="chans" >
-	<description>Channels to use for fitting. See "help par.chans" for details. Default is to use all channels.</description>
+	<description>Channels to use for fitting. Default is to use all channels.</description>
     	<value/>
     </param>
     <param type="string" name="stokes">
-	    <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+	    <description>Stokes planes to use. Default is to use all Stokes planes.</description>
 	    <value/>
     </param>
 
@@ -88,14 +88,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     Default: none; Example: contfile='ngc5921_cont.im'
   fitorder -- Polynomial order for the continuum estimation.
     Default: 0; Example fitorder=2
-  region -- Region selection. See "help par.region" for details. Default is
+  region -- Region selection. Default is
             to use the full image.
-  box --  Rectangular region to select in direction plane. See "help par.box"
+  box --  Rectangular region to select in direction plane. 
           for details. Default is to use the entire direction plane.
-  chans -- Channels to use for fitting. See "help par.chans" for details.
+  chans -- Channels to use for fitting. 
            Default is to use all channels.
            Example: chans='3~6;>40'
-  stokes -- Stokes planes to use. See "help par.stokes" for details. Default is
+  stokes -- Stokes planes to use. Default is
             to use all Stokes planes.
   
 Fit a second order polynomial (fitorder=2) to channels 3-8 and 54-60 

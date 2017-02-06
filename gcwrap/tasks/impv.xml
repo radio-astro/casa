@@ -69,11 +69,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
         <param type="any"  name="region" subparam="true">
             <any type="variant" limittypes="string record"/>
-            <description>Region selection. Default is entire image. No selection is permitted in the direction plane. See help par.region.</description>
+            <description>Region selection. Default is entire image. No selection is permitted in the direction plane.</description>
             <value>""</value>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
+            <description>Channels to use.  Channels must be contiguous. Default is to use all channels.</description>
             <value/>
         </param>
         <param type="string"  name="stokes">
@@ -82,11 +82,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
         <param type="string"  name="mask">
             <any type="variant"/>
-            <description>Mask to use. See help par.mask. Default is none.</description>
+            <description>Mask to use. Default is none.</description>
             <value type="string"/>
         </param>
         <param type="bool"  name="stretch" subparam="true">
-            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+            <description>Stretch the mask if necessary and possible? Default False</description>
             <value>False</value>
         </param>
         <constraints>
@@ -170,14 +170,14 @@ unit             Allows the user to set the unit for the angular offset axis. Mu
 overwrite        If output file is specified, this parameter controls if an already existing file by the
                  same name can be overwritten. If true, the user is not prompted, the file
                  if it exists is automatically overwritten.
-region           Region specification. See help par.region. Default is to not use a region. If specified,
+region           Region specification. Default is to not use a region. If specified,
                  the entire direction plane must be specified. If specified do not specify chans or stokes.
 chans            Optional contiguous frequency channel number specification. Default is all channels.
-                 If specified, do not specify region. See "help par.chans" for examples. 
+                 If specified, do not specify region.  
 stokes           Contiguous stokes planes specification. If specified, do not specify region.
-mask             Mask to use. See help par.mask. Default is none.
+mask             Mask to use. Default is none.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
-                 See help par.stretch.
+                 
 
 Create a position-velocity image. The way the slice is specified is controlled by the mode parameter. When
 mode="coords", start end end are used to specified the points between which a slice is taken in the direction
