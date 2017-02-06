@@ -1142,7 +1142,10 @@ try:
 	        raise Exception, 'Results are different from expectations by more than 0.5 percent.'
 	
 	    casalog.post( "\nAll peak and RMS values within 0.5 percent of the expectation.")
-	    
+	    if passed:
+	        print "Regression PASSED"
+	    else:
+	        print "Regression FAILED"    
 	    print 'Done.'
 	    
 except:

@@ -228,3 +228,7 @@ def main():
 if __name__ == "__main__":
     main()
     print "Regstate:" , regstate
+    if regstate:
+    	print "Regression PASSED"
+    else:
+    	print "Regression FAILED"

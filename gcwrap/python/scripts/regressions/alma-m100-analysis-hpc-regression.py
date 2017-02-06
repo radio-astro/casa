@@ -981,5 +981,8 @@ if(mystep in thesteps):
 
     casalog.post( "\nAll peak and RMS values within 0.5 percent of the expectation.")
     
-
+if passed:
+    print "Regression PASSED"
+else:
+    print "Regression FAILED"
 print 'Done.'
