@@ -77,7 +77,6 @@ scripts/predictcomp_helper.py
 scripts/regression.py
 scripts/regressframe.py
 scripts/regression_utility.py
-scripts/refimagerhelper.py
 scripts/sdbeamutil.py
 scripts/sdutil.py
 scripts/setjy_helper.py
@@ -255,3 +254,4 @@ add_subdirectory( scripts/demos )
 add_subdirectory( scripts/recipes )
 add_subdirectory( scripts/parallel )
 add_subdirectory( scripts/mpi4casa )
+add_subdirectory( scripts/imagerhelpers )

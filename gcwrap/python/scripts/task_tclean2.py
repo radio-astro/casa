@@ -14,7 +14,8 @@ from taskinit import *
 import copy
 import time;
 
-from refimagerhelper import ImagerParameters
+#from refimagerhelper import ImagerParameters
+from imagerhelpers.imager_base import PySynthesisImager
 
 def tclean2(
     ####### Data Selection

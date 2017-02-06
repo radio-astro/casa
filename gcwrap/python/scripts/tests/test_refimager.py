@@ -60,7 +60,7 @@ import inspect
 _ia = iatool( )
 _vp = vptool( )
 
-from refimagerhelper import TestHelpers
+from imagerhelpers.test_imager_helper import TestHelpers
 
 ## List to be run
 def suite():

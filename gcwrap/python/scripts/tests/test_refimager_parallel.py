@@ -2,6 +2,10 @@
 #
 # Test programs for the refactored imager's parallel runs:  test_refimager_parallel
 #
+#  Add tests for 
+#     - cube/cont parallel with multiple MSs, MMS, w/wo model writes, restarts 
+#     - mosaic, AWProj cont and cube
+#
 ##########################################################################
 
 
@@ -207,6 +211,6 @@ class test_cube(testref_base_parallel):
 
           else:
                print "MPI is not enabled. This test will be skipped"
- 
+
 ###################################################
 

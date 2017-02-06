@@ -14,9 +14,16 @@ from taskinit import *
 import copy
 import time;
 
-from refimagerhelper import PySynthesisImager
-from refimagerhelper import PyParallelContSynthesisImager,PyParallelCubeSynthesisImager
-from refimagerhelper import ImagerParameters, PerformanceMeasure
+#from refimagerhelper import PySynthesisImager
+#from refimagerhelper import PyParallelContSynthesisImager,PyParallelCubeSynthesisImager
+#from refimagerhelper import ImagerParameters
+
+from imagerhelpers.imager_base import PySynthesisImager
+from imagerhelpers.imager_parallel_continuum import PyParallelContSynthesisImager
+from imagerhelpers.imager_parallel_cube import PyParallelCubeSynthesisImager
+from imagerhelpers.input_parameters import ImagerParameters
+
+
 
 def tclean(
     ####### Data Selection
@@ -272,8 +279,6 @@ def tclean(
         casalog.post( "Interactive mode is not currently supported with parallel cube CLEANing, please restart by setting interactive=F", "WARN", "task_tclean" )
         return False
    
-    ## Performance Measures
-    perf = PerformanceMeasure()
 
     ## Setup Imager objects, for different parallelization schemes.
     if parallel==False and pcube==False:
@@ -343,7 +348,6 @@ def tclean(
                 imager.runMajorCycle()
                 t1=time.time();
                 casalog.post("***Time for major cycle (calcres=T): "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
-                #casalog.post("RESOURCE : " + perf.getresource("MajCycle"), "INFO")
 
             ## In case of no deconvolution iterations....
             if niter==0 and calcres==False:
