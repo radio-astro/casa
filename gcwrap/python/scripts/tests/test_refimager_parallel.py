@@ -20,7 +20,7 @@ from taskinit import *
 import unittest
 import inspect
 
-from refimagerhelper import TestHelpers
+from imagerhelpers.test_imager_helper import TestHelpers
 
 
 refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/refimager/'
