@@ -535,7 +535,7 @@ for the manual mode. Data selection follows the MS Selection syntax.
      </param>
     
      <param type="string" name="feed">
-     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Example: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
@@ -620,7 +620,7 @@ for the clip mode. Data selection follows the MS Selection syntax.
      </param>
     
      <param type="string" name="feed">
-     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Example: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
@@ -756,7 +756,7 @@ for the quack mode. Data selection follows the MS Selection syntax.
      </param>
     
      <param type="string" name="feed">
-     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Example: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
@@ -851,7 +851,7 @@ for the elevation mode. Data selection follows the MS Selection syntax.
      </param>
     
      <param type="string" name="feed">
-     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Example: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
@@ -944,7 +944,7 @@ for the time and frequency mode. Data selection follows the MS Selection syntax.
      </param>
     
      <param type="string" name="feed">
-     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Example: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
@@ -1086,6 +1086,97 @@ af.parsetfcropparameters(spw='9', ntime=10.0, combinescans=True, correlation='AB
 
 <!-- ********************************************************************** -->
 
+   <method type="function" name="parseantintparameters">
+   <shortdescription>Parse data selection parameters and specific parameters
+for the antint mode. Data selection follows the MS Selection syntax.
+    </shortdescription>
+
+<input>
+
+<!-- Selection parameters : start -->
+     <param type="string" name="field">
+     <description>Field indices or source names. Example: '2,3C48' </description>
+     <value></value>
+     </param>
+     
+     <param type="string" name="spw">
+     <description>Spectral Window Indices or names. Example: '1,2' </description>
+     <value></value>
+     </param>
+    
+     <param type="string" name="array">
+     <description>Array Indices or names. Example: 'VLAA' </description>
+     <value></value>
+     </param>
+    
+     <param type="string" name="feed">
+     <description>Feed index or name. Example: '1,2' (not supported yet) </description>
+     <value></value>
+     </param>
+    
+     <param type="string" name="scan">
+     <description>Scan number. Example: '1,2,3' </description>
+     <value></value>
+     </param>   
+
+     <param type="string" name="antenna">
+     <description>Baseline number. Example: '2,3,4,5' </description>
+     <value></value>
+     </param>
+    
+     <param type="string" name="uvrange">
+     <description>UV-distance range, with a unit. Example: '2.0-3000.0 m'</description>
+     <value></value>
+     </param>
+    
+     <param type="string" name="time">
+     <description>Time range, as MJDs or date strings. Example: 'xx.x.x.x.x~yy.y.y.y.y'</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="correlation">
+     <description>Correlations/polarizations. Example: 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="intent">
+     <description>Scan intent. Example: '*CAL*, *BAND*' </description>
+     <value></value>
+     </param>
+     
+     <param type="string" name="observation">
+     <description>Observation Id. Example: '2~4' </description>
+     <value></value>
+     </param>
+
+    <param type="double" name="minchanfrac">
+        <description>Minimum fraction of flagged channels required for a baseline to be deemed as flagged. Default: </description>
+        <value>0.6</value>
+    </param>
+
+    <param type="bool" name="verbose">
+        <description>Print timestamps of flagged integrations to the log. Default: </description>
+        <value>false</value>
+    </param>
+
+    <param type="bool" name="apply">
+       <description>Parameter to flag or unflag the data. Default: </description>
+       <value>true</value>
+   </param>
+
+<!-- Selection parameters : end -->
+     
+</input>
+<example>
+af.parseantintparameters(minchanfrac=0.45, verbose=True)
+</example>
+
+<returns type="bool"/> 
+</method>
+
+
+<!-- ********************************************************************** -->
+
    <method type="function" name="parseextendparameters">
    <shortdescription>Parse data selection parameters and specific parameters
 for the extend mode. Data selection follows the MS Selection syntax.
@@ -1110,7 +1201,7 @@ for the extend mode. Data selection follows the MS Selection syntax.
      </param>
     
      <param type="string" name="feed">
-     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Example: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     
@@ -1225,7 +1316,7 @@ for the summary mode. Data selection follows the MS Selection syntax.
      </param>
     
      <param type="string" name="feed">
-     <description>Feed index or name. Eexample: '1,2' (not supported yet) </description>
+     <description>Feed index or name. Example: '1,2' (not supported yet) </description>
      <value></value>
      </param>
     

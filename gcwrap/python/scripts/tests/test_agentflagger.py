@@ -708,6 +708,29 @@ class test_bpass(test_base):
         assert abs(summary['report1']['flagged'] - 2*30427) <= 10
         assert abs(summary['report1']['correlation']['Sol2']['flagged'] - 30427) <= 5        
 
+    def test_antint_simple_for_bpass_CalTable(self):
+        '''Test the antenna integrations flagging mode on a bpass-based CalTable
+        using MSSelection for antenna'''
+
+        aflocal = aftool()
+        aflocal.open(self.vis)
+        aflocal.selectdata({'antenna':'ea01'})
+        agentAntInt = {'apply':True, 'mode': 'antint', 'spw': '0', 
+                       'minchanfrac': 0.7, 'verbose': True}
+        aflocal.parseagentparameters(agentAntInt)
+        aflocal.parsesummaryparameters()
+        aflocal.init()
+        summary = aflocal.run(writeflags=True)
+        aflocal.done()
+
+        self.assertEqual(summary['report0']['flagged'], 0)
+        self.assertEqual(summary['report0']['total'], 48000)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 24000)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 24000)
+
+
 class test_MS(test_base):
 
     def setUp(self):

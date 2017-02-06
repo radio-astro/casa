@@ -425,6 +425,8 @@ agentflagger::parsequackparameters(
 	}
 }
 
+// TODO: wrapper here for parseAntInt?
+
 bool
 agentflagger::parseelevationparameters(
 		const std::string& field,
@@ -557,6 +559,44 @@ agentflagger::parseextendparameters(
 					String(intent), String(observation), ntime, Bool(combinescans),
 					Bool(extendpols), growtime, growfreq, Bool(growaround),
 					Bool(flagneartime), Bool(flagnearfreq), Bool(apply));
+
+		}
+
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+bool
+agentflagger::parseantintparameters(
+		const std::string& field,
+		const std::string& spw,
+		const std::string& array,
+		const std::string& feed,
+		const std::string& scan,
+		const std::string& antenna,
+		const std::string& uvrange,
+		const std::string& timerange,
+		const std::string& correlation,
+		const std::string& intent,
+		const std::string& observation,
+		const double minchanfrac,
+		const bool verbose,
+		const bool apply)
+{
+
+	try {
+
+		if (agentflagger_p) {
+
+			// Parse the 'antint' parameters
+			return agentflagger_p->parseAntIntParameters(
+					String(field),String(spw),String(array),
+					String(feed),String(scan),String(antenna),
+					String(uvrange),String(timerange),String(correlation),
+					String(intent), String(observation), minchanfrac, Bool(verbose), Bool(apply));
 
 		}
 
