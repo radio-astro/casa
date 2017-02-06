@@ -83,6 +83,8 @@ protected:
 
 private:
 
+    static const casacore::Double PHI;
+
     Quantity _xlen = Quantity(1, "pix");
     Quantity _ylen = Quantity(1, "pix");
     std::pair<uInt, uInt> _grid = std::make_pair(1,1);
@@ -96,6 +98,7 @@ private:
     casacore::LatticeStatsBase::StatisticsTypes _statType
         = casacore::LatticeStatsBase::SIGMA;
     casacore::Bool _doMask = casacore::False;
+    casacore::Bool _doPhi = casacore::False;
 
     // compute the storage lattice
     void _computeStorage(

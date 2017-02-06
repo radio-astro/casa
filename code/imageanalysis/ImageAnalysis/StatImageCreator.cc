@@ -4,12 +4,15 @@
 
 #include <imageanalysis/Annotations/AnnCenterBox.h>
 #include <imageanalysis/Annotations/AnnCircle.h>
+#include <casacore/lattices/LEL/LatticeExpr.h>
 
 // debug
 #include <components/ComponentModels/C11Timer.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
 #include <casacore/casa/BasicSL/STLIO.h>
 namespace casa {
+
+const Double StatImageCreator::PHI = 1.482602218505602;
 
 StatImageCreator::StatImageCreator(
     const SPCIIF image, const Record *const region,
@@ -111,6 +114,9 @@ SPIIF StatImageCreator::compute() {
         writeTo, subImage, nxpts, nypts,
         xstart, ystart
     );
+    if (_doPhi) {
+        writeTo->copyData((LatticeExpr<Float>)(*writeTo * PHI));
+    }
     if (interpolate) {
         _doInterpolation(
             output, *store,
@@ -318,7 +324,7 @@ void StatImageCreator::setStatType(const String& s) {
     else if (m.startsWith("mea")) {
         stat = LatticeStatsBase::MEAN;
     }
-    else if (m.startsWith("meda") || m.startsWith("mad")) {
+    else if (m.startsWith("meda") || m.startsWith("mad") || m.startsWith("x")) {
         stat = LatticeStatsBase::MEDABSDEVMED;
     }
     else if (m.startsWith("medi")) {
@@ -354,6 +360,7 @@ void StatImageCreator::setStatType(const String& s) {
     else {
         ThrowCc("Statistic " + s + " not supported.");
     }
+    _doPhi = m.startsWith("x");
     setStatType(stat);
 }
 
