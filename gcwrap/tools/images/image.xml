@@ -2179,9 +2179,12 @@ ia.close()             # close to unlock disk image
     sumsq                 sum of squares
     sum                   sum
     var                   variance
+    xmadm                 median absolute deviation from the median multipied by x, where x is the reciprocal of Phi^-1(3/4),
+                          where Phi^-1 is the reciprocal of the quantile function. Numerically, x = 1.482602218505602. See, eg,
+                          https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     
-    Using the statalg parameter, one may also select whether to use the Classical or Chauvenet/ZScore
-    statistics algorithm to compute the desired statistic (see the help for ia.statistics() or imstat for a full description of these algorithms).
+    Using the statalg parameter, one may also select whether to use the Classical or Chauvenet/ZScore statistics algorithm to
+    compute the desired statistic (see the help for ia.statistics() or imstat for a full description of these algorithms).
 
     </description>
     <example>
