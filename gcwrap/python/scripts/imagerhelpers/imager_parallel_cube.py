@@ -123,7 +123,8 @@ class PyParallelCubeSynthesisImager():
         #### MPIInterface related changes
         #for node in range(0,self.NN):
         for node in self.listOfNodes:
-            joblist.append( self.PH.runcmd("from refimagerhelper import ImagerParameters, PySynthesisImager", node) )
+            joblist.append( self.PH.runcmd("from imagerhelpers.input_parameters import ImagerParameters", node) )
+            joblist.append( self.PH.runcmd("from imagerhelpers.imager_base import PySynthesisImager", node) )
         self.PH.checkJobs( joblist )
 
         joblist=[]
