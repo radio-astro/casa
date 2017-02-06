@@ -205,7 +205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    */
                     // another non-convergent condition: diverging (relative increase is more than 5 times across one major cycle)
                     else if ( itsIterDone > 0 && 
-			      fabs(itsPeakResidualNoMask-itsPrevPeakResidualNoMask)/fabs(itsPrevPeakResidualNoMask)  > 5.0) 
+			      fabs(itsPeakResidualNoMask-itsPrevPeakResidualNoMask)/fabs(itsPrevPeakResidualNoMask)  > 3.0) 
                       {
 			cout << "(5) Peak res (no mask) : " << itsPeakResidualNoMask 
 			     << "  Dev from prev peak res " << itsPrevPeakResidualNoMask << endl; 
@@ -213,7 +213,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		    // divergence check, 5 times increase from the minimum peak residual so far (across all previous major cycles).
 		    else if ( itsIterDone > 0 && 
-			      (fabs(itsPeakResidualNoMask)-itsMinPeakResidualNoMask)/itsMinPeakResidualNoMask  > 5.0 )
+			      (fabs(itsPeakResidualNoMask)-itsMinPeakResidualNoMask)/itsMinPeakResidualNoMask  > 3.0 )
                       {
 			cout << "(6) Peak res (no mask): " << itsPeakResidualNoMask 
 			     <<  "    Dev from min peak res " << itsMinPeakResidualNoMask << endl; 
