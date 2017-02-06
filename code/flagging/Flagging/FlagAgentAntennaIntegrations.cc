@@ -128,12 +128,6 @@ FlagAgentAntennaIntegrations::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
     //if (ant1[rowIdx] != antId_p and ant2[rowIdx] != antId_p)
     //  continue;
 
-    // We found a baseline to the antenna of interest
-    // decide; spw + channel modes
-   
-    // count if there are any polarizations flagged per channel
-    // once all the rows for a time point are scanned, doPreProcessingTimePoint will
-    // decide whether to flag all the integrations of the antenna of interest
     checkAnyPolarizationFlagged(polChanRowFlags, flagPerBaselinePerChannel, rowIdx, baselineIdx++);
 
   }
@@ -142,13 +136,13 @@ FlagAgentAntennaIntegrations::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 }
 
 /**
- *
- * Checks channel by channel.
- *
+ * Checks channel by channel. Count if there are any polarizations flagged per channel
+ * once all the rows for a time point are scanned, doPreProcessingTimePoint() will
+ * decide whether to flag all the integrations of the antenna of interest
  *
  * @param polChanRowFlags flag cube from a row, with [polarizations, channels, rows]
  * @param flagPerBaselinePerChannel
- * @param row
+ * @param row row index for 
  * @param baselineIdx index for the table of baseline-channel flags. Counting from 0.
  */
 void FlagAgentAntennaIntegrations::checkAnyPolarizationFlagged(const casacore::Cube<casacore::Bool> &polChanRowFlags, 
@@ -157,9 +151,6 @@ void FlagAgentAntennaIntegrations::checkAnyPolarizationFlagged(const casacore::C
 
   const casacore::uInt channelCnt = polChanRowFlags.ncolumn();
   const casacore::uInt polCnt = polChanRowFlags.nrow();
-  *logger_p << casacore::LogIO::DEBUG1 << " cube nrow: " << polChanRowFlags.nrow() << ", cube ncolumn: " << polChanRowFlags.ncolumn() << casacore::LogIO::POST;  
-
-
   for (casacore::uInt chanIdx = 0; chanIdx < channelCnt; ++chanIdx) {
     for (casacore::uInt polIdx = 0; polIdx < polCnt; ++polIdx) {
       // assume that all polarization products must be unflagged for a baseline to be
@@ -181,7 +172,7 @@ void FlagAgentAntennaIntegrations::checkAnyPolarizationFlagged(const casacore::C
  * baselines are flagged, note down that all integrations for this
  * point in time should be flagged.
  *
- * @param flaggedTimes 
+ * @param flaggedTimes Structure to record what times must be flagged
  * @param rowTime value of the TIME column
  * @param flagPerBaselinePerChannel table with flag values of every baseline for the
  *        different channels
@@ -205,10 +196,16 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePoint(FlaggedTimesMap &flaggedT
   }
 }
 
+/**
+ * Pre-process with multiple channels (requires calculating the
+ * fraction of channels flagged).
+ *
+ * Same parameters as doPreProcessingTimePoint()
+ */
 void
 FlagAgentAntennaIntegrations::doPreProcessingTimePointMultiChannel(FlaggedTimesMap &flaggedTimes,
-						       casacore::Double rowTime,
-						       const TableFlagPerBaselinePerChannel &flagPerBaselinePerChannel)
+								   casacore::Double rowTime,
+								   const TableFlagPerBaselinePerChannel &flagPerBaselinePerChannel)
 {
 
   const casacore::uInt baseCnt = flagPerBaselinePerChannel.size();
@@ -252,6 +249,8 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePointMultiChannel(FlaggedTimesM
  * This method Is not exactly the same as the MultiChannel version. When minchanfrac=1
  * MultiChannel would never flag, as the comparison requires that the 'fraction of channels
  * flagged' be > minchanfrac.
+ *
+ * Same parameters as doPreProcessingTimePoint()
  */
 void
 FlagAgentAntennaIntegrations::doPreProcessingTimePointSingleChannel(FlaggedTimesMap &flaggedTimes, 
