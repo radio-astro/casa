@@ -415,7 +415,7 @@ class test_unapply(test_base):
         selectedtb.close()
         self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
-        # Flag using tfcrop agent from file
+        # Flag using clip agent from file
         myinput = "scan='4' mode=clip "
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
@@ -430,7 +430,7 @@ class test_unapply(test_base):
         selectedtb.close()
         self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
-        # Unapply only the tfcrop line
+        # Unapply only the clip line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
        
         # Check FLAG_ROW is now all set to false
@@ -441,6 +441,42 @@ class test_unapply(test_base):
         mytb.close()        
         selectedtb.close()
         self.assertEqual(FLAG_ROW.sum(), 0)
+
+    def test_unapply_antint(self):
+        '''flagcmd: unapply antint agent'''
+        # Remove any cmd from table
+        flagcmd(vis=self.vis, action='clear', clearall=True)
+
+        ant_name = 'VA01'
+        # Flag with antint
+        in_cmd = "antenna={0} spw='0' minchanfrac=0.8".format(ant_name)
+        filename = create_input(in_cmd)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply',
+                savepars=True, flagbackup=False)
+
+        res = flagdata(vis=self.vis, mode='summary')
+        antint_flagged = res['antenna'][ant_name]['flagged']
+
+        # Flag using manual agent
+        in_manual = "scan='1'"
+        filename = create_input(in_manual)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply',
+                savepars=True, flagbackup=False)
+        result = flagdata(vis=self.vis,mode='summary')
+        man_flagged = result['antenna'][ant_name]['flagged']
+        
+        # Unapply only the antint line
+        flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0,
+                savepars=True)
+        unapplied_res = flagdata(vis=self.vis, mode='summary')
+        unapplied_flagged = unapplied_res['antenna'][ant_name]['flagged']
+
+        self.assertEqual(unapplied_res['total'], 2854278)
+        self.assertEqual(unapplied_res['flagged'], 528948)
+        self.assertEqual(man_flagged, 197946)
+        self.assertEqual(antint_flagged, 196434)
+        self.assertEqual(unapplied_flagged, 1512)
+        self.assertEqual(unapplied_res['antenna'][ant_name]['flagged'], 1512)
 
     def test_uquack(self):
         '''flagcmd: unapply quack agent'''
@@ -528,8 +564,9 @@ class test_unapply(test_base):
         self.assertEqual(res['scan']['7']['flagged'], 190512, "It should not unapply tablerows=7")
         self.assertEqual(res['flagged'], 285768)
 
+
 class test_savepars(test_base):
-    # Action unapply
+    # Action apply, with savepars=True/False
     def setUp(self):
         self.setUp_ngc5921()
 
@@ -754,6 +791,52 @@ class test_shadow(test_base):
         self.assertEqual(res['antenna']['VLA3']['flagged'], 3752)
         self.assertEqual(res['antenna']['VLA4']['flagged'], 1320)
         self.assertEqual(res['antenna']['VLA5']['flagged'], 1104)        
+
+
+class test_antint(test_base):
+    ''' For antint mode with inputs from files'''
+
+    def setUp(self):
+        self.setUp_evla()
+
+    def test_antint_defaults(self):
+        '''flagcmd:: Test of antint with defaults'''
+
+        ant_name = 'ea01'
+        spw_spec = '0'
+        flagdata(vis=self.vis, mode='unflag');
+        flagcmd(vis=self.vis, inpmode='list',
+                inpfile=["mode=antint antenna='{0}' spw='{1}'".format(ant_name, spw_spec),
+                         "mode=summary spw='{0}'".format(spw_spec)],
+                action='apply', flagbackup=False)
+
+        res = flagdata(vis=self.vis, mode='summary')
+
+        self.assertEqual(res['total'], 832000)
+        self.assertEqual(res['flagged'], 0)
+        self.assertEqual(res['antenna'][ant_name]['total'], 64000)
+        self.assertEqual(res['antenna'][ant_name]['flagged'], 0)
+
+    def test_antint_inputs(self):
+        '''flagcmd: test of inputs to flagcmd in antint mode'''
+
+        antenna_spec = 'ea01'
+        threshold_spec = '-0.1'
+        spw_spec = '2'
+
+        # Unflag
+        flagdata(vis=self.vis,mode='unflag', flagbackup=False);
+        # Flag passing parameter values in the command string
+        flagcmd(vis=self.vis, inpmode='list', 
+                inpfile=["mode=antint antenna='{0}' spw='{1}' minchanfrac={2} verbose=True".
+                         format(antenna_spec, spw_spec, threshold_spec)], action='apply',
+                flagbackup=False)
+        res_str = flagdata(vis=self.vis, mode='summary') 
+
+        self.assertEqual(res_str['total'], 832000)
+        self.assertEqual(res_str['flagged'], 32000)
+        self.assertEqual(res_str['antenna'][antenna_spec]['total'], 64000)
+        self.assertEqual(res_str['antenna'][antenna_spec]['flagged'], 32000)
 
 
 # Test rflag inputs with filenames, as well as inline thresholds.
@@ -1223,6 +1306,7 @@ def suite():
             test_savepars,
             test_XML,
             test_shadow,
+            test_antint,
             test_rflag,
             test_actions,
             test_cmdbandpass,
