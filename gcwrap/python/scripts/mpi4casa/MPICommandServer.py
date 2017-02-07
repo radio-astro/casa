@@ -25,6 +25,12 @@ import tempfile
 import uuid
 import os
 
+##
+## toplevel frame marker
+##
+_casa_top_frame_ = True
+__last_taskname = None
+
 
 class MPICommandServer: 
     

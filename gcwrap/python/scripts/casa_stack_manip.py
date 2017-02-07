@@ -54,6 +54,7 @@ def stack_frame_find(level='stack') :
                string.find(a[k][1], 'ipython console') > 0 or \
                string.find(a[k][1],"/casapy.py") > 0 or \
                string.find(a[k][1],"/casa.py") > 0 or \
+               string.find(a[k][1],'/MPICommandServer.py') > 0 or \
                string.find(a[k][1],"mpi4casapy.py") > 0:
                 stacklevel=k
                 # jagonzal: Take the first level that matches the requirement
