@@ -284,6 +284,67 @@ Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data,
     freqMin=freqStart;
     freqMax=freqEnd;
   }
+
+  void VisBufferUtil::getFreqRangeFromRange(casacore::Double& outfreqMin, casacore::Double& outfreqMax,  const casacore::MFrequency::Types inFreqFrame, const casacore::Double infreqMin, const casacore::Double infreqMax, vi::VisibilityIterator2& vi, casacore::MFrequency::Types outFreqFrame){
+
+
+    if(inFreqFrame==outFreqFrame){
+      outfreqMin=infreqMin;
+      outfreqMax=infreqMax;
+      return;
+    }
+
+    vi.originChunks();
+    vi.origin();
+
+    outfreqMin=C::dbl_max;
+    outfreqMax=0;
+    vi::VisBuffer2* vb=vi.getVisBuffer();
+    ROMSColumns msc(vi.ms());
+  // The nominal epoch
+    MEpoch ep=msc.timeMeas()(0);
+    
+    // The nominal position
+    String observatory;
+    MPosition pos;
+    if (msc.observation().nrow() > 0) {
+      observatory = msc.observation().telescopeName()
+	(msc.observationId()(0));
+    }
+    if (observatory.length() == 0 ||
+	!MeasTable::Observatory(pos,observatory)) {
+      // unknown observatory, use first antenna
+      pos=msc.antenna().positionMeas()(0);
+    }
+
+  // The nominal direction
+  MDirection dir=vb->phaseCenter();
+  MeasFrame mFrame(ep, pos, dir);
+   // The conversion engine:
+     MFrequency::Convert toNewFrame(inFreqFrame, 
+				    MFrequency::Ref(outFreqFrame, mFrame));
+  
+      for (vi.originChunks(); vi.moreChunks();vi.nextChunk())
+    	{
+	  for (vi.origin(); vi.more();vi.next()){
+	    //assuming time is fixed in visbuffer
+	    mFrame.resetEpoch(vb->time()(0)/86400.0);
+
+	    // Reset the direction (ASSUMES phaseCenter is constant in the VisBuffer)
+	    mFrame.resetDirection(vb->phaseCenter());
+	    Double temp=toNewFrame(infreqMin).getValue().getValue();
+	    if(temp < outfreqMin)
+	      outfreqMin = temp;
+	    
+	    temp=toNewFrame(infreqMax).getValue().getValue();
+	    if(temp > outfreqMax)
+	      outfreqMax = temp;	      
+	  }
+	}
+      //cerr << "min " << outfreqMin << " max " << outfreqMax << endl;
+
+  }
+
 void VisBufferUtil::convertFrequency(Vector<Double>& outFreq, 
 				     const VisBuffer& vb, 
 				     const MFrequency::Types freqFrame){

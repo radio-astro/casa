@@ -237,20 +237,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  for(uInt k=0; k < nSelections; ++k){
             lowfreq=freqList(k,1)-freqList(k,3)/2.0;
             topfreq=freqList(k, 2)+freqList(k,3)/2.0;
+	    //cerr << "Dat lowFreq "<< lowfreq << " topfreq " << topfreq << endl; 
             channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
           }
     	  fselections_p.add(channelSelector);
           //////////////////////////////////
       }
       else{
-      
+
+	//////More workaroung CAS-8829
+	MFrequency::Types freqFrame=MFrequency::castType(ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().measFreqRef()(Int(freqList(0,0))));
+	
     	  Quantity freq;
     	  Quantity::read(freq, selpars.freqbeg);
     	  Double lowfreq=freq.getValue("Hz");
     	  Quantity::read(freq, selpars.freqend);
     	  Double topfreq=freq.getValue("Hz");
-    	  //cerr << "lowFreq "<< lowfreq << " topfreq " << topfreq << endl; 
-	      vi::FrequencySelectionUsingFrame channelSelector(selpars.freqframe);
+    	  //cerr << "lowFreq "<< lowfreq << " topfreq " << topfreq << endl;
+	  ////Work aroun CAS-8829
+	  if(vi_p) 
+	    VisBufferUtil::getFreqRangeFromRange(lowfreq, topfreq,  selpars.freqframe, lowfreq,  topfreq, *vi_p, freqFrame);
+	  vi::FrequencySelectionUsingFrame channelSelector((vi_p ? freqFrame :selpars.freqframe));
     	  for(uInt k=0; k < nSelections; ++k){
             lowfreq=freqList(k,1)-freqList(k,3)/2.0;
             topfreq=freqList(k, 2)+freqList(k,3)/2.0;
