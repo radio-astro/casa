@@ -20,13 +20,14 @@ LOG = infrastructure.get_logger(__name__)
 
 class FluxbootInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, caltable=None):
+    def __init__(self, context, vis=None, caltable=None, refantignore=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
         self.spix = 0.0
         self.sources = []
         self.flux_densities = []
         self.spws = []
+        self._refantignore = refantignore
 
         @property
         def caltable(self):
@@ -41,6 +42,18 @@ class FluxbootInputs(basetask.StandardInputs):
             if value is None:
                 value = None
             self._caltable = value
+
+        @property
+        def refantignore(self):
+            return self._refantignore
+
+        @refantignore.setter
+        def refantignore(self, value):
+
+            if self._refantignore is None:
+                self._refantignore = []
+
+            self._refantignore = value
 
 
 class FluxbootResults(basetask.Results):
@@ -147,11 +160,10 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
             refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
             refantobj = findrefant.RefAntHeuristics(vis=calMs,field=refantfield,
-                                                    geometry=True,flagging=True, intent='', spw='')
+                                                    geometry=True,flagging=True, intent='',
+                                                    spw='', refantignore = self.inputs.refantignore)
 
             RefAntOutput = refantobj.calculate()
-
-            #refAnt = str(RefAntOutput[0])+','+str(RefAntOutput[1])+','+str(RefAntOutput[2])+','+str(RefAntOutput[3])
 
             refAnt = ','.join([str(i) for i in RefAntOutput[0:4]])
 

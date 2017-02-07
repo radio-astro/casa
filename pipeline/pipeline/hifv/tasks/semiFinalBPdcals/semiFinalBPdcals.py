@@ -19,11 +19,12 @@ LOG = infrastructure.get_logger(__name__)
 
 class semiFinalBPdcalsInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, weakbp=None):
+    def __init__(self, context, vis=None, weakbp=None, refantignore=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
         self._weakbp = weakbp
+        self._refantignore = refantignore
 
     @property
     def weakbp(self):
@@ -36,6 +37,18 @@ class semiFinalBPdcalsInputs(basetask.StandardInputs):
             self._weakbp = False
 
         self._weakbp = value
+
+    @property
+    def refantignore(self):
+        return self._refantignore
+
+    @refantignore.setter
+    def refantignore(self, value):
+
+        if self._refantignore is None:
+            self._refantignore = []
+
+        self._refantignore = value
 
 
 class semiFinalBPdcalsResults(basetask.Results):
@@ -72,7 +85,9 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         context = self.inputs.context
         refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis,field=refantfield,geometry=True,flagging=True, intent='', spw='')
+        refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis, field=refantfield,
+                                                geometry=True, flagging=True, intent='',
+                                                spw='', refantignore=self.inputs.refantignore)
         
         RefAntOutput=refantobj.calculate()
         
