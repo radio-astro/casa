@@ -18,7 +18,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="imagename" mustexist="true">
     	<description>Name of the input image</description>
     	<value/>
-        <example>imagenam='ngc5921.im'</example>
+        <example>imagename='ngc5921.im'</example>
     </param>
     <param type="string" name="function">
         <description>Aggregate function to apply. This can be set one of flux, max, mean, median, min, rms, stdev, sum, variance. Must be specified.</description>

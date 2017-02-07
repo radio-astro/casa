@@ -18,7 +18,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="imagename" mustexist="true" >
     	<description>Name of the input image</description>
     	<value></value>
-        <example>imagenam='ngc5921.im'</example>
+        <example>imagename='ngc5921.im'</example>
     </param>
     <param type="string" name="box">
         <description>Rectangular region(s) to select in direction plane. Default is to use the entire direction plane.</description>

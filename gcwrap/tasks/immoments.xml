@@ -17,7 +17,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="imagename" kind="image" mustexist="true" >
     	<description>Name of the input image</description>
     	<value></value>
-        <example>imagenam=ngc5921_task.image</example>
+        <example>imagename=ngc5921_task.image</example>
     </param>
 
     <param type="intArray" name="moments">

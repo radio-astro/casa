@@ -17,7 +17,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     	<value/>
-        <example>imagenam='ngc5921.im'</example>
+        <example>imagename='ngc5921.im'</example>
     </param>
     <param type="string" direction="in" name="rm">
         <description>Output rotation measure image name. If not specified, no image is written.</description>
