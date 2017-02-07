@@ -35,9 +35,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  * @param flag Flag for the base class
  */
 FlagAgentAntennaIntegrations::FlagAgentAntennaIntegrations(
-                             FlagDataHandler *dh, casacore::Record config, 
-			     casacore::Bool writePrivateFlagCube, 
-			     casacore::Bool flag):
+                              FlagDataHandler *dh, casacore::Record config,
+                              casacore::Bool writePrivateFlagCube, 
+                              casacore::Bool flag):
   FlagAgentBase(dh, config, FlagAgentBase::ROWS_PREPROCESS_BUFFER, writePrivateFlagCube,
 		flag)
 {
@@ -56,21 +56,21 @@ FlagAgentAntennaIntegrations::FlagAgentAntennaIntegrations(
  */
 void FlagAgentAntennaIntegrations::setAgentParameters(casacore::Record config)
 {
-  const casacore::uInt fields = config.nfields();
+  const auto fields = config.nfields();
   *logger_p << casacore::LogIO::NORMAL << "The configuration received by this agent has " 
 	    << fields << " fields with the following values:" << casacore::LogIO::POST;
-  ostringstream os;
-  config.print(os);
-  *logger_p << casacore::LogIO::NORMAL << os.str() << casacore::LogIO::POST;
+  ostringstream ostr;
+  config.print(ostr);
+  *logger_p << casacore::LogIO::NORMAL << ostr.str() << casacore::LogIO::POST;
 
 
-  const std::string minChanOpt = "minchanfrac";
+  const auto minChanOpt = "minchanfrac";
   int found = config.fieldNumber(minChanOpt);
   if (found >= 0) {
     minChanThreshold_p = config.asDouble(minChanOpt);
   }
 
-  const std::string verboseOpt = "verbose";
+  const auto verboseOpt = "verbose";
   found = config.fieldNumber(verboseOpt);
   if (found >= 0) {
     verbose_p = config.asBool(verboseOpt);
@@ -86,13 +86,13 @@ void FlagAgentAntennaIntegrations::setAgentParameters(casacore::Record config)
 void
 FlagAgentAntennaIntegrations::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 {
-  const casacore::Vector<casacore::Double> time_p = visBuffer.time();
-  casacore::uInt rowCnt = time_p.size();
+  const auto &time_p = visBuffer.time();
+  auto rowCnt = time_p.size();
   if (rowCnt <= 0)
     return;
 
-  casacore::uInt antennasCnt = visBuffer.nAntennas();
-  casacore::uInt channelsCnt = visBuffer.nChannels();
+  auto antennasCnt = visBuffer.nAntennas();
+  auto channelsCnt = visBuffer.nChannels();
   *logger_p << casacore::LogIO::DEBUG1 << "Pre-processing visibility buffer, with "
 	    << " nRows: " << visBuffer.nRows()
 	    << " nCorrelations: " << visBuffer.nCorrelations()
@@ -106,12 +106,11 @@ FlagAgentAntennaIntegrations::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
     row.assign(channelsCnt, false);
   }
 
-  const casacore::Cube<casacore::Bool> polChanRowFlags = visBuffer.flagCube();
-  casacore::Double currentTime = time_p[0];
-  casacore::uInt baselineIdx = 0;
+  const auto &polChanRowFlags = visBuffer.flagCube();
+  auto currentTime = time_p[0];
+  auto baselineIdx = 0;
   for (casacore::uInt rowIdx = 0; rowIdx < rowCnt; ++rowIdx) {
-    casacore::Double rowTime = visBuffer.time()[rowIdx];
-    rowTime = time_p[rowIdx];
+    auto rowTime = time_p[rowIdx];
     if (rowTime != currentTime) {
       doPreProcessingTimePoint(doFlagTime_p, currentTime, flagPerBaselinePerChannel);
       currentTime = rowTime;
@@ -139,8 +138,8 @@ void FlagAgentAntennaIntegrations::checkAnyPolarizationFlagged(const casacore::C
 							       TableFlagPerBaselinePerChannel &flagPerBaselinePerChannel,
 							       casacore::uInt row, casacore::uInt baselineIdx) {
 
-  const casacore::uInt channelCnt = polChanRowFlags.ncolumn();
-  const casacore::uInt polCnt = polChanRowFlags.nrow();
+  const auto channelCnt = polChanRowFlags.ncolumn();
+  const auto polCnt = polChanRowFlags.nrow();
   for (casacore::uInt chanIdx = 0; chanIdx < channelCnt; ++chanIdx) {
     for (casacore::uInt polIdx = 0; polIdx < polCnt; ++polIdx) {
       // assume that all polarization products must be unflagged for a baseline to be
@@ -170,7 +169,7 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePoint(FlaggedTimesMap &flaggedT
 						       TableFlagPerBaselinePerChannel &flagPerBaselinePerChannel)
 {
 
-  const casacore::uInt channelCnt = flagPerBaselinePerChannel.front().size();
+  const auto channelCnt = flagPerBaselinePerChannel.front().size();
   if (1 == channelCnt) {
     doPreProcessingTimePointSingleChannel(flaggedTimes, rowTime, flagPerBaselinePerChannel);
   } else {
@@ -195,10 +194,10 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePointMultiChannel(FlaggedTimesM
 								   const TableFlagPerBaselinePerChannel &flagPerBaselinePerChannel)
 {
 
-  const casacore::uInt baseCnt = flagPerBaselinePerChannel.size();
-  const casacore::uInt channelCnt = flagPerBaselinePerChannel.front().size();
-  float frac = .0;
-  float totalFlaggedCount = 0;
+  const auto baseCnt = flagPerBaselinePerChannel.size();
+  const auto channelCnt = flagPerBaselinePerChannel.front().size();
+  casacore::Double frac = .0;
+  casacore::uInt totalFlaggedCount = 0;
   for (casacore::uInt baseIdx = 0; baseIdx < baseCnt; ++baseIdx) {
     casacore::uInt flaggedChannelsCnt = 0;
     for (casacore::uInt chanIdx = 0; chanIdx < channelCnt; ++chanIdx) {
@@ -210,7 +209,7 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePointMultiChannel(FlaggedTimesM
 
     // A baseline will be considered flagged if a fraction greater than a nominated fraction
     // of channels is flagged.
-    frac = static_cast<float>(flaggedChannelsCnt) / channelCnt;
+    frac = static_cast<double>(flaggedChannelsCnt) / channelCnt;
     if (frac <= minChanThreshold_p) {
       // found a baseline that is not to be flagged
       return;
@@ -221,7 +220,7 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePointMultiChannel(FlaggedTimesM
   flaggedTimes[rowTime] = true;
   if (verbose_p) {
     casacore::MVTime time(rowTime/casacore::C::day);
-    float fracAlreadyFlagged = static_cast<float>(totalFlaggedCount) / (baseCnt * channelCnt);
+    auto fracAlreadyFlagged = static_cast<float>(totalFlaggedCount) / (baseCnt * channelCnt);
     *logger_p << casacore::LogIO::NORMAL << "Flagging time:"
 	      << time.string(casacore::MVTime::YMD,7) 
 	      << " (fraction of flagged channels found: " << fracAlreadyFlagged << ")"
@@ -245,7 +244,7 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePointSingleChannel(FlaggedTimes
 								    const TableFlagPerBaselinePerChannel &flagPerBaselinePerChannel)
 {
 
-  const casacore::uInt baseCnt = flagPerBaselinePerChannel.size();
+  const auto baseCnt = flagPerBaselinePerChannel.size();
   for (casacore::uInt baseIdx = 0; baseIdx < baseCnt; ++baseIdx) {
     // A baseline is flagged if the only channel selected is flagged
     // Found a baseline that is not flagged:
@@ -263,11 +262,12 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePointSingleChannel(FlaggedTimes
 }
 
 bool
-FlagAgentAntennaIntegrations::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, casacore::uInt row)
+FlagAgentAntennaIntegrations::computeRowFlags(const vi::VisBuffer2 &visBuffer,
+					      FlagMapper &flags, casacore::uInt row)
 {
-  bool flag = false;
+  auto flag = false;
   // As per preprocessBuffer(), all rows for this point in time have to be flagged
-  const casacore::Double rowTime = visBuffer.time()[row];
+  const auto rowTime = visBuffer.time()[row];
   if (doFlagTime_p.cend() != doFlagTime_p.find(rowTime)) {
     flag = true;
   }
