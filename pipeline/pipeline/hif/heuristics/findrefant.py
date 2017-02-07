@@ -134,7 +134,7 @@ class RefAntHeuristics( api.Heuristic ):
 
 # ------------------------------------------------------------------------------
 
-    def __init__( self, vis, field, spw, intent, geometry, flagging, refantignore=[] ):
+    def __init__( self, vis, field, spw, intent, geometry, flagging, refantignore='' ):
 
         # Initialize the public member variables of this class
 
@@ -291,7 +291,7 @@ class RefAntHeuristics( api.Heuristic ):
         # Remove ignored antennae
         if self.refantignore:
             LOG.info('Antennae to be ignored: {0}'.format(self.refantignore))
-            names = [antenna for antenna in names if antenna not in self.refantignore]
+            names = [antenna for antenna in names if antenna not in self.refantignore.split(',')]
 
 
         # Return the antenna names

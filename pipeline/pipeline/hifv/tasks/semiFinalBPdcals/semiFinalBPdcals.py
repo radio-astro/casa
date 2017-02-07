@@ -46,7 +46,7 @@ class semiFinalBPdcalsInputs(basetask.StandardInputs):
     def refantignore(self, value):
 
         if self._refantignore is None:
-            self._refantignore = []
+            self._refantignore = ''
 
         self._refantignore = value
 
