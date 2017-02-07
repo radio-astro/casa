@@ -129,8 +129,10 @@ private:
   //for constructors
   void init();
 
-  void storeHeader();
-  void storeATCAHeader();
+  // When storing header items skip irrelevant items for the last (empty) scan,
+  // it is just there to capture caobs commands and comments
+  void storeHeader(Bool last=False);
+  void storeATCAHeader(Bool last=False);
   void storeSysCal();
 
   // fill a single input file

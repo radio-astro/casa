@@ -870,7 +870,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
     case 3:
       if (jstat == 3) {  // because of the break suppression in case 1
         if (!skipScan_p && !skipData_p && !storedHeader_p) {
-          storeHeader(); // store sole header at end of file
+          storeHeader(True); // store sole header at end of file
           scanNo_p++;    // to capture last commands & log messages
           storedHeader_p=true;
         }
@@ -1028,7 +1028,7 @@ ATCAFiller & ATCAFiller::edge(float edge)
   return *this;
 }
 
-void ATCAFiller::storeHeader() {
+void ATCAFiller::storeHeader(bool last) {
   //  Bool skip=false;
   Regex trailing(" *$"); // trailing blanks
 
@@ -1102,19 +1102,19 @@ void ATCAFiller::storeHeader() {
   }
 
   // Check if current if_no already in SpW Table, add it if not.
-  checkSpW(if_no);
+  if (!last) checkSpW(if_no);
   
   // Check if current Observation info already stored, add it if not
   checkObservation();
   
   // Store the ATCA header cards
-  storeATCAHeader();
+  storeATCAHeader(last);
 
   // Check if we've seen current source before, if not add to table
-  checkField();
+  if (!last) checkField();
 }
 
-void ATCAFiller::storeATCAHeader() {
+void ATCAFiller::storeATCAHeader(Bool last) {
   uInt ncard = abs(param_.ncard);
   //cout<<" #cards = "<<ncard<<endl;
   String cards = String(names_.card,ncard*80);
@@ -1273,7 +1273,7 @@ void ATCAFiller::storeATCAHeader() {
   Int index=tmp.nelements()-1;
   tmp(index)+=obsLog;
   msc_p->observation().log().put(obsId_p,tmp);
-  if ((nAnt*nIF)==0) return;
+  if ((nAnt*nIF)==0 || last) return;
 
   // find out spectral window index of IFs
   Vector<Int> spwId(nIF,-1);
@@ -2317,8 +2317,10 @@ void ATCAFiller::unlock()
 Bool ATCAFiller::selected(Int ifNum)
 {
   Bool select=true;
-  // check if we want this frequency
-  //if (spws_p.nelements()>0 && spws_p(0)>=0 && !anyEQ(spws_p,if_.if_chain[ifNum]))
+  //Check for rotten eggs
+  if (if_.if_nfreq[ifNum]==0) 
+    select=false;
+  // check if we want this frequency 
   if (spws_p.nelements()>0 && spws_p(0)>=0 && !anyEQ(spws_p,ifNum)) {
     select=false;
   } else {
