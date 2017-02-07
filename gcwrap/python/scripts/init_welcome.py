@@ -35,4 +35,4 @@ else:
     register_builtin(["viewer", "imview", "msview"])
 
     enable_builtin_protection()
-    print "CASA Version " + casa['build']['version'] + "\n  Compiled on: " + casa['build']['time']
+    #print "CASA Version " + casa['build']['version'] + "\n  Compiled on: " + casa['build']['time']

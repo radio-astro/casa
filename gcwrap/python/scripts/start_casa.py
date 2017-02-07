@@ -21,7 +21,6 @@ __init_scripts = [
     "init_asap.py",
     "init_pipeline.py",
     "init_mpi.py",
-    "init_testing.py",
     "init_docs.py",
     "init_user_post.py",
     "init_crashrpt.py",
@@ -48,9 +47,12 @@ try:
                           const=None,action='store_const',
                           help='location for startup files' )
     __defaults,__trash = __parse.parse_known_args( )
+    from IPython import __version__ as _ipython_version_
 
     __configs = Config( )
     __configs.TerminalInteractiveShell.ipython_dir = __defaults.rcdir.decode('unicode-escape') + "/ipython"
+    __configs.TerminalInteractiveShell.banner1 = 'IPython %s -- An enhanced Interactive Python.\n\n' % _ipython_version_
+    __configs.TerminalInteractiveShell.banner2 = ''
     __configs.HistoryManager.hist_file = __configs.TerminalInteractiveShell.ipython_dir + "/history.sqlite"
     __configs.TerminalIPythonApp.matplotlib = __defaults.backend
 

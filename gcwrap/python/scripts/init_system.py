@@ -12,7 +12,6 @@ except ImportError, e:
 
 try:
     import matplotlib
-    matplotlib.use('TkAgg')
 except ImportError, e:
     print "failed to load matplotlib:\n", e
     print "sys.path =", "\n\t".join(sys.path)
@@ -213,3 +212,5 @@ casa['dirs']['rc'] = casa['flags'].rcdir
 #### would affect the ability to set the backend...
 if casa['flags'].pipeline:
     matplotlib.use('Agg')
+
+print "CASA %s -- Common Astronomy Software Applications\n" % casa['build']['version']

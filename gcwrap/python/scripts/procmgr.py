@@ -34,7 +34,7 @@ class procmgr(Thread):
             if self.__running:
                 self.__running = False
                 if self.__proc and self.__proc.poll( ) == None:
-                    print "%s => proc %s is being stopped" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
+                    #print "%s => proc %s is being stopped" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
                     try:
                         self.__proc.terminate()
                         self.__watchdog.terminate()
@@ -52,7 +52,7 @@ class procmgr(Thread):
             """ run( ) -> None
             start the process"""
             self.stop( )
-            print "%s => proc %s is being started" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
+            #print "%s => proc %s is being started" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
             out = PIPE if self.__with_output else file(os.devnull,'a')
             self.__proc = Popen( self.__cmd, stderr=out , stdout=out, stdin=PIPE )
             self.__watchdog = Popen( [ '/bin/bash','-c', 
