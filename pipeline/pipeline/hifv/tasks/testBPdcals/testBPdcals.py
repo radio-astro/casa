@@ -24,7 +24,6 @@ class testBPdcalsInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
         self._weakbp = weakbp
-        self._refantignore = refantignore
 
         self.gain_solint1 = 'int'
         self.gain_solint2 = 'int'
@@ -47,10 +46,8 @@ class testBPdcalsInputs(basetask.StandardInputs):
 
     @refantignore.setter
     def refantignore(self, value):
-
-        if self._refantignore is None:
-            self._refantignore = ''
-
+        if value is None:
+            value = ''
         self._refantignore = value
 
 

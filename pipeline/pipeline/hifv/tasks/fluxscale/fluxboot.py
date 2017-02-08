@@ -27,7 +27,6 @@ class FluxbootInputs(basetask.StandardInputs):
         self.sources = []
         self.flux_densities = []
         self.spws = []
-        self._refantignore = refantignore
 
         @property
         def caltable(self):
@@ -49,10 +48,8 @@ class FluxbootInputs(basetask.StandardInputs):
 
         @refantignore.setter
         def refantignore(self, value):
-
-            if self._refantignore is None:
-                self._refantignore = ''
-
+            if value is None:
+                value = ''
             self._refantignore = value
 
 

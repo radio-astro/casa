@@ -20,7 +20,6 @@ class SolintInputs(basetask.StandardInputs):
         
         self.gain_solint1 = 'int'
         self.gain_solint2 = 'int'
-        self._refantignore = refantignore
 
     @property
     def refantignore(self):
@@ -28,9 +27,8 @@ class SolintInputs(basetask.StandardInputs):
 
     @refantignore.setter
     def refantignore(self, value):
-        if self._refantignore is None:
-            self._refantignore = ''
-
+        if value is None:
+            value = ''
         self._refantignore = value
 
 
