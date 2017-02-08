@@ -315,25 +315,29 @@ vector<PMS::Axis> PlotMSPlot::getCachedAxes() {
 	int yAxisCount = c->numYAxes();
 	int count = xAxisCount + yAxisCount;
 	vector<PMS::Axis> axes( count );
-    PMS::Axis axis, defaultAxis;
+    PMS::Axis axis;
 	for(int i = 0; i < xAxisCount; i++){
         axis = c->xAxis(i);
         if (axis == PMS::NONE) {
-            String caltype = itsCache_->calType();
-            defaultAxis = getDefaultXAxis(caltype);
-            axes[i] = defaultAxis;
-            c->setXAxis(defaultAxis, i);
-        } else
-		    axes[i] = axis;
+            axis = getDefaultXAxis();
+            c->setXAxis(axis, i);
+        }
+		axes[i] = axis;
 	}
 	for(int i = xAxisCount; i < count; i++){
 		uInt yIndex = i - xAxisCount;
-	    axes[i] = c->yAxis(yIndex);
+        axis = c->yAxis(yIndex);
+        if (axis == PMS::NONE) {
+            axis = PMS::DEFAULT_YAXIS;
+            c->setYAxis(axis, yIndex);
+        }
+	    axes[i] = axis;
 	}
 	return axes;
 }
 
-PMS::Axis PlotMSPlot::getDefaultXAxis(String caltype) {
+PMS::Axis PlotMSPlot::getDefaultXAxis() {
+    String caltype = itsCache_->calType();
     PMS::Axis xaxis = PMS::TIME;
     if (itsCache_->cacheType() == PlotMSCacheBase::CAL) {
         if (caltype.contains("BPOLY"))
@@ -1678,10 +1682,18 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 
 	// Set axes scales
 	PMS::Axis x = cacheParams->xAxis();
+    if (x==PMS::NONE) {
+        x = getDefaultXAxis();
+        cacheParams->setXAxis(x);
+    }
     if (isCalTable && PMS::axisIsData(x)) x = getCalAxis(calType, x);
 	canvas->setAxisScale(cx, PMS::axisScale(x));
 	for ( int i = 0; i < yAxisCount; i++ ){
 		PMS::Axis y = cacheParams->yAxis( i );
+        if (y==PMS::NONE) {
+            y = PMS::DEFAULT_YAXIS;
+            cacheParams->setYAxis(y, i);
+        }
         if (isCalTable && PMS::axisIsData(y)) y = getCalAxis(calType, y);
 	    canvas->setAxisScale(cx, PMS::axisScale(x));
 		PlotAxis cy = axesParams->yAxis( i );
@@ -1919,8 +1931,12 @@ bool PlotMSPlot::axisIsAveraged(PMS::Axis axis, PlotMSAveraging averaging) {
 }
 
 String PlotMSPlot::addFreqFrame(String freqLabel) {
-    String freqType = MFrequency::showType(itsCache_->getFreqFrame());
-    return freqLabel + " " + freqType;
+    if (itsCache_->cacheType() == PlotMSCacheBase::MS) {
+        String freqType = MFrequency::showType(itsCache_->getFreqFrame());
+        return freqLabel + " " + freqType;
+    } else {
+        return freqLabel;
+    }
 }
 
 PMS::Axis PlotMSPlot::getCalAxis(String calType, PMS::Axis axis) {
