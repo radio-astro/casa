@@ -103,174 +103,186 @@ LOG = infrastructure.get_logger(__name__)
 # ------------------------------------------------------------------------------
 
 class RefAntInputs(basetask.StandardInputs):
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    # RefAnt::__init__
 
-# RefAnt::__init__
+    # Description:
+    # ------------
+    # This public member function constructs an instance of the RefAntInputs()
+    # class.
 
-# Description:
-# ------------
-# This public member function constructs an instance of the RefAntInputs()
-# class.
+    # The primary purpose of this class is to initialize the public member
+    # variables.  The defaults for all parameters (except context) are None.
 
-# The primary purpose of this class is to initialize the public member
-# variables.  The defaults for all parameters (except context) are None.
+    # Inputs:
+    # -------
+    # context    - This python dictionary contains the pipeline context (state).
+    #
+    # vis        - This python string contains the MS name.
+    #
+    # output_dir - This python string contains the output directory name.
+    #
+    # field      - This python string or list of strings contains the field numbers
+    #              or IDs.  Presently it is used only for the flagging heuristic.
+    # spw        - This python string or list of strings contains the spectral
+    #              window numbers of IDs.  Presently it is used only for the
+    #              flagging heuristic.
+    # intent     - This python string or list of strings contains the intent(s).
+    #              Presently it is used only for the flagging heuristic.
+    #
+    # hm_refant    - This python string contains the heuristics method or mode.  It must be either 'manual'
+    #              or 'automatic'.
+    #
+    # refant     - This python list of strings contains an ordered list of reference
+    #              antennas used for manual mode (i.e., no heuristics).
+    # geometry   - This python boolean determines whether the geometry heuristic
+    #              will be used in automatic mode.
+    # flagging   - This python boolean determines whether the flagging heuristic
+    #              will be used in automatic mode.
 
-# Inputs:
-# -------
-# context    - This python dictionary contains the pipeline context (state).
-#
-# vis        - This python string contains the MS name.
-#
-# output_dir - This python string contains the output directory name.
-#
-# field      - This python string or list of strings contains the field numbers
-#              or IDs.  Presently it is used only for the flagging heuristic.
-# spw        - This python string or list of strings contains the spectral
-#              window numbers of IDs.  Presently it is used only for the
-#              flagging heuristic.
-# intent     - This python string or list of strings contains the intent(s).
-#              Presently it is used only for the flagging heuristic.
-#
-# hm_refant    - This python string contains the heuristics method or mode.  It must be either 'manual'
-#              or 'automatic'.
-#
-# refant     - This python list of strings contains an ordered list of reference
-#              antennas used for manual mode (i.e., no heuristics).
-# geometry   - This python boolean determines whether the geometry heuristic
-#              will be used in automatic mode.
-# flagging   - This python boolean determines whether the flagging heuristic
-#              will be used in automatic mode.
+    # Outputs:
+    # --------
+    # None, returned via the function value.
 
-# Outputs:
-# --------
-# None, returned via the function value.
+    # Modification history:
+    # ---------------------
+    # 2012 May 21 - Nick Elias, NRAO
+    #               Initial version.
 
-# Modification history:
-# ---------------------
-# 2012 May 21 - Nick Elias, NRAO
-#               Initial version.
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    @basetask.log_equivalent_CASA_call
+    def __init__(self, context, vis=None, output_dir=None, field=None,
+                 spw=None, intent=None, hm_refant=None, refant=None,
+                 geometry=None, flagging=None, refantignore=None):
 
-	@basetask.log_equivalent_CASA_call
-	def __init__( self, context, vis=None, output_dir=None, field=None,
-                      spw=None, intent=None, hm_refant=None, refant=None,
-		      geometry=None, flagging=None ):
+        # set MandatoryInputsMixin parameters
+        # self.context = context
+        # self.output_dir = output_dir
+        # self.vis = vis
 
-                # set MandatoryInputsMixin parameters
-		#self.context = context
-		#self.output_dir = output_dir
-		#self.vis = vis 
+        # Other parameters
+        # self.field = field
+        # self.intent = intent
+        # self.spw = spw
+        # self.hm_refant = hm_refant
+        # self.refant = refant
+        # self.geometry = geometry
+        # self.flagging = flagging
+        # self._refantignore = refantignore
 
-		# Other parameters
-		#self.field = field
-		#self.intent = intent
-		#self.spw = spw
-		#self.hm_refant = hm_refant
-		#self.refant = refant
-		#self.geometry = geometry
-		#self.flagging = flagging
-		self._init_properties(vars())
+        self._init_properties(vars())
 
-        @property
-        def field(self):
-                return self._field
+    @property
+    def field(self):
+        return self._field
 
-        @field.setter
-        def field(self, value):
-                if value is None:
-                        value = ''
-                self._field = value
+    @field.setter
+    def field(self, value):
+        if value is None:
+            value = ''
+        self._field = value
 
-        @property
-        def intent(self):
-                return self._intent
+    @property
+    def intent(self):
+        return self._intent
 
-        @intent.setter
-        def intent(self, value):
-                if value is None:
-                        value = ''
-                self._intent = value
+    @intent.setter
+    def intent(self, value):
+        if value is None:
+            value = ''
+        self._intent = value
 
-        @property
-        def spw(self):
-                return self._spw
+    @property
+    def spw(self):
+        return self._spw
 
-        @spw.setter
-        def spw(self, value):
-                if value is None:
-                        value = ''
-                self._spw = value
+    @spw.setter
+    def spw(self, value):
+        if value is None:
+            value = ''
+        self._spw = value
 
-        @property
-        def hm_refant(self):
-                return self._hm_refant
+    @property
+    def hm_refant(self):
+        return self._hm_refant
 
-        @hm_refant.setter
-        def hm_refant(self, value):
-                if value is None:
-                        value = 'automatic'
-                if value in 'automatic | manual':
-                    self._hm_refant = value
-                else:
-                    self._hm_refant = 'automatic'
-        @property
-        def refant(self):
-                return self._refant
+    @hm_refant.setter
+    def hm_refant(self, value):
+        if value is None:
+            value = 'automatic'
+        if value in 'automatic | manual':
+            self._hm_refant = value
+        else:
+            self._hm_refant = 'automatic'
 
-        @refant.setter
-        def refant(self, value):
-                if value is None:
-                        value = ''
-                self._refant = value
+    @property
+    def refant(self):
+        return self._refant
 
-        @property
-        def geometry(self):
-                return self._geometry
+    @refant.setter
+    def refant(self, value):
+        if value is None:
+            value = ''
+        self._refant = value
 
-        @geometry.setter
-        def geometry(self, value):
-                if value is None:
-                        value = True
-                self._geometry = value
+    @property
+    def geometry(self):
+        return self._geometry
 
-        @property
-        def flagging(self):
-                return self._flagging
+    @geometry.setter
+    def geometry(self, value):
+        if value is None:
+            value = True
+        self._geometry = value
 
-        @flagging.setter
-        def flagging(self, value):
-                if value is None:
-                        value = True
-                self._flagging = value
+    @property
+    def flagging(self):
+        return self._flagging
 
+    @flagging.setter
+    def flagging(self, value):
+        if value is None:
+            value = True
+        self._flagging = value
 
+    @property
+    def refantignore(self):
+        return self._refantignore
 
-# ------------------------------------------------------------------------------
-# RefAntInputs::to_casa_args
+    @refantignore.setter
+    def refantignore(self, value):
+        if value is None:
+            value = ''
+        self._refantignore = value
 
-# Description:
-# ------------
-# This public member function translates the input parameters of this class.  It
-# is not used presently.
+    # ------------------------------------------------------------------------------
+    # RefAntInputs::to_casa_args
 
-# Inputs:
-# -------
-# None.
+    # Description:
+    # ------------
+    # This public member function translates the input parameters of this class.  It
+    # is not used presently.
 
-# Outputs:
-# --------
-# The empty python dictionary, returned via the function value.
+    # Inputs:
+    # -------
+    # None.
 
-# Modification history:
-# ---------------------
-# 2012 May 21 - Nick Elias, NRAO
-#               Initial stub version.
+    # Outputs:
+    # --------
+    # The empty python dictionary, returned via the function value.
 
-# ------------------------------------------------------------------------------
+    # Modification history:
+    # ---------------------
+    # 2012 May 21 - Nick Elias, NRAO
+    #               Initial stub version.
 
-	def to_casa_args( self ): return {}
+    # ------------------------------------------------------------------------------
+
+    def to_casa_args(self):
+        return {}
+
 
 # ------------------------------------------------------------------------------
 # class RefAntResults
@@ -302,98 +314,97 @@ class RefAntInputs(basetask.StandardInputs):
 
 # ------------------------------------------------------------------------------
 
-class RefAntResults( basetask.Results ):
+class RefAntResults(basetask.Results):
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    # RefAntResults::__init__
 
-# RefAntResults::__init__
+    # Description:
+    # ------------
+    # This public member function constructs an instance of the RefAntResults()
+    # class.
 
-# Description:
-# ------------
-# This public member function constructs an instance of the RefAntResults()
-# class.
+    # Inputs:
+    # -------
+    # vis    - This python string contains the MS name.
+    # refant - This python list of strings contains an ordered list of reference
+    #          antennas used for manual mode (i.e., no heuristics).
 
-# Inputs:
-# -------
-# vis    - This python string contains the MS name.
-# refant - This python list of strings contains an ordered list of reference
-#          antennas used for manual mode (i.e., no heuristics).
+    # Outputs:
+    # --------
+    # None, returned via the function value.
 
-# Outputs:
-# --------
-# None, returned via the function value.
+    # Modification history:
+    # ---------------------
+    # 2012 May 21 - Nick Elias, NRAO
+    #               Initial version.
 
-# Modification history:
-# ---------------------
-# 2012 May 21 - Nick Elias, NRAO
-#               Initial version.
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-
-    def __init__( self, vis, refant ):
+    def __init__(self, vis, refant):
         super(RefAntResults, self).__init__()
 
         # Initialize the private member variables
         self._vis = vis
         self._refant = ','.join([str(ant) for ant in refant])
 
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    # RefAntResults::merge_with_context
 
-# RefAntResults::merge_with_context
+    # Description:
+    # ------------
+    # This public member function merges the reference antenna list with the
+    # pipeline context.
 
-# Description:
-# ------------
-# This public member function merges the reference antenna list with the
-# pipeline context.
+    # Inputs:
+    # -------
+    # context - This python dictionary contains the context.
 
-# Inputs:
-# -------
-# context - This python dictionary contains the context.
+    # Outputs:
+    # --------
+    # None, returned via the function value.
 
-# Outputs:
-# --------
-# None, returned via the function value.
+    # Modification history:
+    # ---------------------
+    # 2012 May 21 - Nick Elias, NRAO
+    #               Initial version.
 
-# Modification history:
-# ---------------------
-# 2012 May 21 - Nick Elias, NRAO
-#               Initial version.
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-
-    def merge_with_context( self, context ):
+    def merge_with_context(self, context):
         if self._vis is None or self._refant is None:
-            LOG.error ( 'No results to merge' )
+            LOG.error('No results to merge')
             return
 
         # Do we also need to locate the antenna in the measurement set?
         # This might become necessary when using different sessions
 
-        ms = context.observing_run.get_ms( name=self._vis )
+        ms = context.observing_run.get_ms(name=self._vis)
 
         if ms:
             LOG.debug('Setting refant for {0} to \'{1}\''
-                ''.format(ms.basename, self._refant))
-                #''.format(self._refant.identifier, ms.name))
+                      ''.format(ms.basename, self._refant))
+            # ''.format(self._refant.identifier, ms.name))
             ms.reference_antenna = self._refant
 
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 
-# RefAntResults::__repr__
+        # RefAntResults::__repr__
 
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 
-    def __repr__( self ):
+    def __repr__(self):
         if self._vis is None or self._refant is None:
             return ('Reference antenna results:\n'
-                '\tNo reference antenna selected')
+                    '\tNo reference antenna selected')
         else:
             return ('Reference antenna results:\n'
-                '{ms}: refant=\'{refant}\''
-                ''.format(ms=os.path.basename(self._vis),
-                refant=self._refant))
-                #refant=self._refant.identifier))
+                    '{ms}: refant=\'{refant}\''
+                    ''.format(ms=os.path.basename(self._vis),
+                              refant=self._refant))
+            # refant=self._refant.identifier))
+
 
 # ------------------------------------------------------------------------------
 # class RefAnt
@@ -430,83 +441,82 @@ class RefAntResults( basetask.Results ):
 
 # ------------------------------------------------------------------------------
 
-class RefAnt( basetask.StandardTaskTemplate ):
+class RefAnt(basetask.StandardTaskTemplate):
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    # Make the member functions of the RefAntInputs() class member functions
+    # of this class
 
-	# Make the member functions of the RefAntInputs() class member functions
-	# of this class
+    Inputs = RefAntInputs
 
-	Inputs = RefAntInputs
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    # RefAnt::prepare
 
-# RefAnt::prepare
+    # Description:
+    # ------------
+    # This public member function organizes preparatory jobs.
 
-# Description:
-# ------------
-# This public member function organizes preparatory jobs.
+    # NB: This public member function is trivial in this particular class.
 
-# NB: This public member function is trivial in this particular class.
+    # Inputs:
+    # -------
+    # ** parameters - This python dictionary contains the parameters.
 
-# Inputs:
-# -------
-# ** parameters - This python dictionary contains the parameters.
+    # Outputs:
+    # --------
+    # An empty python list, returned via the function value.
 
-# Outputs:
-# --------
-# An empty python list, returned via the function value.
+    # Modification history:
+    # ---------------------
+    # 2012 May 21 - Nick Elias, NRAO
+    #               Initial version.
 
-# Modification history:
-# ---------------------
-# 2012 May 21 - Nick Elias, NRAO
-#               Initial version.
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    def prepare(self, **parameters):
 
-	def prepare( self, ** parameters):
+        inputs = self.inputs
 
-	        inputs = self.inputs
+        # Get the reference antenna list
+        if inputs.hm_refant == 'manual':
+            refant = string.split(inputs.refant, ',')
+        elif inputs.hm_refant == 'automatic':
+            heuristics = findrefant.RefAntHeuristics(
+                vis=inputs.vis, field=inputs.field,
+                spw=inputs.spw, intent=inputs.intent,
+                geometry=inputs.geometry,
+                flagging=inputs.flagging, refantignore=inputs.refantignore)
+            refant = heuristics.calculate()
+        else:
+            pass
 
-		# Get the reference antenna list
-		if inputs.hm_refant == 'manual':
-			refant = string.split(inputs.refant, ',')
-		elif inputs.hm_refant == 'automatic':
-			heuristics = findrefant.RefAntHeuristics(
-			    vis=inputs.vis, field=inputs.field,
-			    spw=inputs.spw, intent=inputs.intent,
-			    geometry=inputs.geometry,
-			    flagging=inputs.flagging )
-			refant = heuristics.calculate()
-		else:
-		    pass
+        return RefAntResults(inputs.vis, refant)
 
-		return RefAntResults( inputs.vis, refant )
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    # RefAnt::analyse
 
-# RefAnt::analyse
+    # Description:
+    # ------------
+    # This public member function invokes the reference antenna heuristics.
 
-# Description:
-# ------------
-# This public member function invokes the reference antenna heuristics.
+    # Inputs:
+    # -------
+    # jobs - This python list contains the jobs.  It is unused now.
 
-# Inputs:
-# -------
-# jobs - This python list contains the jobs.  It is unused now.
+    # Outputs:
+    # --------
+    # The python list containing the list of jobs to execute, returned via the
+    # function value.  It is empty now.
 
-# Outputs:
-# --------
-# The python list containing the list of jobs to execute, returned via the
-# function value.  It is empty now.
+    # Modification history:
+    # ---------------------
+    # 2012 May 21 - Nick Elias, NRAO
+    #               Initial version.
 
-# Modification history:
-# ---------------------
-# 2012 May 21 - Nick Elias, NRAO
-#               Initial version.
+    # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+    def analyse(self, results):
 
-	def analyse( self, results):
-
-		return results
+        return results

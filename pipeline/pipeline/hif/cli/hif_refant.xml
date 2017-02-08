@@ -72,6 +72,11 @@
 	    <description>Add the results into the pipeline context</description>
 	    <value>True</value>
 	</param>
+
+	<param type="string" name="refantignore">
+	<description>String list of antennae to ignore</description>
+	<value></value>
+    </param>
 	
 	<constraints>
 	    <when param="pipelinemode">
@@ -84,12 +89,14 @@
 		    <default param="spw"><value type="string"></value></default>
 		    <default param="dryrun"><value type="bool">False</value></default>
 		    <default param="acceptresults"><value type="bool">True</value></default>
+			<default param="refantignore"><value type="string"></value></default>
 		</equals>
 		<equals type="string" value="getinputs"> 
 		    <default param="vis"><value type="stringArray"></value></default>
 		    <default param="field"><value type="string"></value></default>
 		    <default param="intents"><value type="string"></value></default>
 		    <default param="spw"><value type="string"></value></default>
+			<default param="refantignore"><value type="string"></value></default>
 		</equals>
 	    </when>
 
