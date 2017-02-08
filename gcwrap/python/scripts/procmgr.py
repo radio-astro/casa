@@ -1,9 +1,17 @@
+from enum import Enum
 from time import sleep, localtime, strftime
 from subprocess import Popen, PIPE
 from threading import Thread
+import sys
 import os
 
 from casa_shutdown import add_shutdown_hook
+
+class output_option(Enum):
+    PIPE = 1
+    STDOUT = 2
+    DISCARD = 3
+
 
 ##
 ##  dgtool's pylot class was a useful reference for creating this class:
@@ -11,11 +19,13 @@ from casa_shutdown import add_shutdown_hook
 ##
 class procmgr(Thread):
 
+    from procmgr import output_option
+
     class proc(Thread):
-        def __init__(self, tag, cmd, with_output=False):
+        def __init__(self, tag, cmd, output=output_option.DISCARD):
             """ tag: identification for this process
             cmd: list of strings representing the command followed by the arguments
-            with_output: output should be collected (default is to discard output)"""
+            output: disposition of output STDOUT, PIPE, DISCARD (default is to discard output)"""
             Thread.__init__(self)
             self.tag = tag
             self.pid = None
@@ -23,7 +33,7 @@ class procmgr(Thread):
             self.stdout = None
             self.stdin  = None
             self.__cmd = cmd
-            self.__with_output = with_output
+            self.__output_option = output
             self.__running = False
             self.__proc = None
             self.__watchdog = None
@@ -53,7 +63,12 @@ class procmgr(Thread):
             start the process"""
             self.stop( )
             #print "%s => proc %s is being started" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
-            out = PIPE if self.__with_output else file(os.devnull,'a')
+            if self.__output_option is output_option.PIPE:
+                out = PIPE
+            elif self.__output_option is output_option.STDOUT:
+                out = os.fdopen(sys.stdout.fileno(), 'a', 0)
+            else:
+                out = file(os.devnull,'a')
             self.__proc = Popen( self.__cmd, stderr=out , stdout=out, stdin=PIPE )
             self.__watchdog = Popen( [ '/bin/bash','-c', 
                                        'while kill -0 %d > /dev/null 2>&1; do sleep 1; kill -0 %d > /dev/null 2>&1 || kill -9 %d > /dev/null 2>&1; done' % \
@@ -62,7 +77,7 @@ class procmgr(Thread):
             self.stdin = self.__proc.stdin
             self.pid = self.__proc.pid
       
-            if self.__with_output:
+            if self.__output_option is output_option.PIPE:
                 self.stdout = self.__proc.stdout
                 self.stderr = self.__proc.stderr
 

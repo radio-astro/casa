@@ -148,13 +148,13 @@ class viewertool(object):
 	if (os.uname()[0]=='Darwin'):
             if myf['casa']['state']['init_version'] > 0:
                 from casa_system import procmgr
-                procmgr.create(self.__state['dbus name'],args)
+                procmgr.create(self.__state['dbus name'],args,procmgr.output_option.STDOUT)
             else:
 		vwrpid=os.spawnvp( os.P_NOWAIT, viewer_path, args )
 	elif (os.uname()[0]=='Linux'):
             if myf['casa']['state']['init_version'] > 0:
                 from casa_system import procmgr
-                procmgr.create(self.__state['dbus name'],args)
+                procmgr.create(self.__state['dbus name'],args,procmgr.output_option.STDOUT)
             else:
 		vwrpid=os.spawnlp( os.P_NOWAIT, viewer_path, *args )
 	else:
