@@ -252,8 +252,8 @@ public:
 	DataChunk(casacore::String const &poltype) :
 			num_pol_max_(4), num_chan_(0), data_(), flag_(), flag_row_(
 					num_pol_max_, false), tsys_(), tcal_(), weight_(
-					num_pol_max_, 1.0f), sigma_(weight_), poltype_(poltype), valid_pcorr_(), get_chunk_(
-					nullptr), get_num_pol_(nullptr), pcorr_type_() {
+					num_pol_max_, 1.0f), sigma_(weight_), poltype_(poltype), valid_pcorr_(), pcorr_type_(), 
+			  get_chunk_(nullptr), get_num_pol_(nullptr) {
 		POST_START;
 
 		setPolType(poltype);
@@ -463,7 +463,8 @@ private:
 
 	casacore::String poltype_;casacore::Vector<casacore::Int> valid_pcorr_;
 	std::vector<casacore::Stokes::StokesTypes> pcorr_type_;
-	bool (DataChunk::*get_chunk_)(MSDataRecord &record);casacore::uInt (DataChunk::*get_num_pol_)() const;
+	bool (DataChunk::*get_chunk_)(MSDataRecord &record);
+	casacore::uInt (DataChunk::*get_num_pol_)() const;
 
 	// Tsys and Tcal assignment for 2 & 4 pols. Auto-correlation components of pol should be used.
 	void setTsys2(MSDataRecord &record, casacore::Vector<size_t> order = { }) {
