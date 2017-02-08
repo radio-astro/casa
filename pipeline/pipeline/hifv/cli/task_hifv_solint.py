@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_solint(vis=None, pipelinemode=None, dryrun=None, acceptresults=None):
+def hifv_solint(vis=None, pipelinemode=None, dryrun=None, acceptresults=None, refantignore=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

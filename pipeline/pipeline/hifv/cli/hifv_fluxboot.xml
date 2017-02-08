@@ -17,9 +17,7 @@
     <param type="string" name="caltable" subparam="true">
         <description>String name of the flagged caltable</description>
         <value></value>
-            </param>
-
-
+    </param>
 
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
@@ -41,14 +39,20 @@
 	<value>True</value>
     </param>
 
+    <param type="string" name="refantignore">
+	<description>String list of antennae to ignore</description>
+	<value></value>
+    </param>
+
     <constraints>
 	<when param="pipelinemode">
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-                <default param="vis"><value type="stringArray"></value></default>
+        <default param="vis"><value type="stringArray"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
+        <default param="refantignore"><value type="string"></value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>

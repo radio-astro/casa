@@ -16,6 +16,9 @@
 
 
 
+
+
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -36,6 +39,11 @@
 	<value>True</value>
     </param>
 
+    <param type="string" name="refantignore">
+	<description>String list of antennae to ignore</description>
+	<value></value>
+    </param>
+
     <constraints>
 	<when param="pipelinemode">
 	    <equals type="string" value="automatic">
@@ -44,6 +52,7 @@
                 <default param="vis"><value type="stringArray"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
+        <default param="refantignore"><value type="string"></value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
                 <default param="vis"><value type="stringArray"></value></default>
