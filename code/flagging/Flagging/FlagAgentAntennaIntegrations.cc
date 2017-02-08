@@ -196,32 +196,33 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePointMultiChannel(FlaggedTimesM
 
   const auto baseCnt = flagPerBaselinePerChannel.size();
   const auto channelCnt = flagPerBaselinePerChannel.front().size();
-  casacore::Double frac = .0;
-  casacore::uInt totalFlaggedCount = 0;
-  for (casacore::uInt baseIdx = 0; baseIdx < baseCnt; ++baseIdx) {
-    casacore::uInt flaggedChannelsCnt = 0;
-    for (casacore::uInt chanIdx = 0; chanIdx < channelCnt; ++chanIdx) {
-      if (flagPerBaselinePerChannel[baseIdx][chanIdx]) {
-	++flaggedChannelsCnt;
+
+  casacore::uInt flaggedChannelsCnt = 0;
+  for (casacore::uInt chanIdx = 0; chanIdx < channelCnt; ++chanIdx) {
+    auto allBaselinesFlagged = true;
+    for (casacore::uInt baseIdx = 0; baseIdx < baseCnt; ++baseIdx) {
+      if (!flagPerBaselinePerChannel[baseIdx][chanIdx]) {
+	allBaselinesFlagged = false;
+	break;
       }
     }
-    totalFlaggedCount += flaggedChannelsCnt;
 
-    // A baseline will be considered flagged if a fraction greater than a nominated fraction
-    // of channels is flagged.
-    frac = static_cast<double>(flaggedChannelsCnt) / channelCnt;
-    if (frac <= minChanThreshold_p) {
-      // found a baseline that is not to be flagged
-      return;
-    }
+    if (allBaselinesFlagged)
+      flaggedChannelsCnt++;
+  }
+  // Baselines will be considered flagged if a fraction greater than a nominated fraction
+  // of channels is flagged.
+  auto frac = static_cast<double>(flaggedChannelsCnt) / channelCnt;
+  if (frac <= minChanThreshold_p) {
+    return;
   }
 
   // all baselines are flagged for a fraction of channels greater than the threshold
   flaggedTimes[rowTime] = true;
   if (verbose_p) {
     casacore::MVTime time(rowTime/casacore::C::day);
-    auto fracAlreadyFlagged = static_cast<float>(totalFlaggedCount) / (baseCnt * channelCnt);
-    *logger_p << casacore::LogIO::NORMAL << "Flagging time:"
+    auto fracAlreadyFlagged = static_cast<float>(flaggedChannelsCnt) / channelCnt;
+    *logger_p << casacore::LogIO::NORMAL << "Flagging integration at time: "
 	      << time.string(casacore::MVTime::YMD,7) 
 	      << " (fraction of flagged channels found: " << fracAlreadyFlagged << ")"
 	      << casacore::LogIO::POST;  
@@ -256,7 +257,7 @@ FlagAgentAntennaIntegrations::doPreProcessingTimePointSingleChannel(FlaggedTimes
   flaggedTimes[rowTime] = true;
   if (verbose_p) {
     casacore::MVTime time(rowTime/casacore::C::day);
-    *logger_p << casacore::LogIO::NORMAL << "Flagging time:"
+    *logger_p << casacore::LogIO::NORMAL << "Flagging integration at time:"
 	      << time.string(casacore::MVTime::YMD,7) << casacore::LogIO::POST;
   }
 }
