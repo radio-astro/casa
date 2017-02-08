@@ -197,6 +197,8 @@ argparser.add_argument( "--nogui",dest='nogui',action='store_const',const=True,d
                         help='avoid starting GUI tools' )
 argparser.add_argument( '--colors', dest='prompt', default='NoColor',
                         help='prompt color', choices=['NoColor', 'Linux', 'LightBG'] )
+argparser.add_argument( "--trace",dest='trace',action='store_const',const=True,default=False,
+                        help='list imported modules' )
 argparser.add_argument( "--pipeline",dest='pipeline',action='store_const',const=True,default=False,
                         help='start CASA pipeline run' )
 argparser.add_argument( "-c",dest='execute',default=[],nargs=argparse.REMAINDER,
@@ -212,5 +214,19 @@ casa['dirs']['rc'] = casa['flags'].rcdir
 #### would affect the ability to set the backend...
 if casa['flags'].pipeline:
     matplotlib.use('Agg')
+
+if casa['flags'].trace:
+    import inspect
+    import __builtin__
+    _savimp = __builtin__.__import__
+
+    def _newimp(name, *x):
+        caller = inspect.currentframe( ).f_back
+        print "%s => %s" % (caller.f_globals.get('__name__'), name)
+        result = _savimp(name, *x)
+        print "---> %s: %s" % (name, result.__file__ if hasattr(result,'__file__') else '?')
+        return result
+
+    __builtin__.__import__ = _newimp
 
 print "CASA %s -- Common Astronomy Software Applications\n" % casa['build']['version']
