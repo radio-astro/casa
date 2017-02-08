@@ -39,7 +39,7 @@
 	<value>True</value>
     </param>
 
-    <param type="string" name="refantignore">
+    <param type="string" name="refantignore" subparam="true">
 	<description>String list of antennae to ignore</description>
 	<value></value>
     </param>
