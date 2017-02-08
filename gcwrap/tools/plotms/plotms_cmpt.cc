@@ -586,12 +586,16 @@ void plotms::setPlotAxes(const string& xAxis, const string& yAxis,
     Record params;
     if(!xAxis.empty()){
     	params.define(PlotMSDBusApp::PARAM_AXIS_X, xAxis);
+    } else if (!yAxis.empty()) { 
+    	params.define(PlotMSDBusApp::PARAM_AXIS_X, "None");
     }
     if(!xdc.empty()){
         params.define(PlotMSDBusApp::PARAM_DATACOLUMN_X, xdc);
     }
     if(!yAxis.empty()){
     	params.define(PlotMSDBusApp::PARAM_AXIS_Y, yAxis);
+    } else if (!xAxis.empty()) { 
+    	params.define(PlotMSDBusApp::PARAM_AXIS_Y, "None");
     }
     if(!ydc.empty()){
         params.define(PlotMSDBusApp::PARAM_DATACOLUMN_Y, ydc);

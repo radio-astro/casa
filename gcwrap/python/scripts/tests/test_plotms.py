@@ -121,8 +121,21 @@ class plotms_test_basic(plotms_test_base):
         self.plotfile_jpg = os.path.join(self.outputDir, "testBasic01.jpg")
         self.removePlotfile()
         time.sleep(5)
+        # default axes
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat="jpg", 
                      showgui=False, highres=True)   
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 60000)
+        self.removePlotfile()
+        # default xaxis only
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat="jpg", 
+                     yaxis='freq', showgui=False, highres=True)   
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 60000)
+        self.removePlotfile()
+        # default yaxis only
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat="jpg", 
+                     xaxis='scan', showgui=False, highres=True)   
         self.assertTrue(res)
         self.checkPlotfile(self.plotfile_jpg, 60000)
         print
@@ -512,6 +525,11 @@ class plotms_test_axis(plotms_test_base):
             self.assertTrue(res)
             self.checkPlotfile(plotfile, 40000) 
             self.removePlotfile(plotfile)
+        # test when yaxis is list
+        res = plotms(vis=self.ms, plotfile=plotfile, highres=True,
+            showgui=False, yaxis=['chan','freq'])
+        self.checkPlotfile(plotfile, 40000) 
+        self.removePlotfile(plotfile)
         print
 
     def test_axis_syn_bad(self):
@@ -578,13 +596,21 @@ class plotms_test_axis(plotms_test_base):
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg',
                      overwrite=True, showgui=False, yaxis=['amp','amp'], 
                      ydatacolumn=['corrected','model'],
-                     yaxislocation=['left','right'], xaxis='time', 
+                     yaxislocation=['left','right'], xaxis='freq', 
                      showlegend=True, legendposition='lowerRight',
                      customsymbol=[True,True], symbolshape=['diamond','circle'], 
                      symbolsize=[5,5], symbolcolor=['ff0000','00ff00'], 
                      symbolfill=['mesh3','mesh3'], highres=True)
         self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 247000)      
+        self.checkPlotfile(self.plotfile_jpg, 150000)
+        self.removePlotfile()
+        # test two y-axes with default x-axis
+        res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg',
+                     overwrite=True, showgui=False, yaxis=['amp','amp'], 
+                     ydatacolumn=['corrected','model'],
+                     yaxislocation=['left','right']) 
+        self.assertTrue(res)
+        self.checkPlotfile(self.plotfile_jpg, 247000)
         print
 
 # ------------------------------------------------------------------------------

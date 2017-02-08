@@ -270,6 +270,9 @@ def plotms(vis=None,
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if type(yaxis) is str:
             if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]
+        elif type(yaxis) is list:
+            for index,axis in enumerate(yaxis):
+                if (synonyms.has_key(axis)): yaxis[index] = synonyms[axis]
         if type(coloraxis) is str:
             if(synonyms.has_key(coloraxis)): coloraxis = synonyms[coloraxis]
         
