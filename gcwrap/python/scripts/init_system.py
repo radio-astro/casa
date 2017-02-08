@@ -215,6 +215,16 @@ casa['dirs']['rc'] = casa['flags'].rcdir
 if casa['flags'].pipeline:
     matplotlib.use('Agg')
 
+### provide details about what is being imported:
+### before the module is imported:
+###
+###      importer => importee
+###
+### is printed. After the module has been imported:
+###
+###      ---> importee: <path to importee>
+###
+### is printed...
 if casa['flags'].trace:
     import inspect
     import __builtin__
