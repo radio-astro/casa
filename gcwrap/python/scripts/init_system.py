@@ -201,6 +201,8 @@ argparser.add_argument( "--trace",dest='trace',action='store_const',const=True,d
                         help='list imported modules' )
 argparser.add_argument( "--pipeline",dest='pipeline',action='store_const',const=True,default=False,
                         help='start CASA pipeline run' )
+argparser.add_argument( "--agg",dest='agg',action='store_const',const=True,default=False,
+                        help='startup without tkagg' )
 argparser.add_argument( "-c",dest='execute',default=[],nargs=argparse.REMAINDER,
                         help='python eval string or python script to execute' )
 
@@ -212,7 +214,7 @@ casa['dirs']['rc'] = casa['flags'].rcdir
 #### pipeline requires the Agg backend; any use of
 #### matplotlib before 'init_pipeline.py' is loaded
 #### would affect the ability to set the backend...
-if casa['flags'].pipeline:
+if casa['flags'].pipeline or casa['flags'].agg:
     matplotlib.use('Agg')
 
 ### provide details about what is being imported:

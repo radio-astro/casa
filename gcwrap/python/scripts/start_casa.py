@@ -40,12 +40,15 @@ casa_shutdown_handlers = [ ]
 try:
     __startup_scripts = filter( os.path.isfile, map(lambda f: __pylib + '/' + f, __init_scripts ) )
 
-    __parse = argparse.ArgumentParser(description='CASA bootstrap')
+    __parse = argparse.ArgumentParser(description='CASA bootstrap',add_help=False)
     __parse.add_argument( '--rcdir',dest='rcdir',default=casa['dirs']['rc'],
                           help='location for startup files' )
     __parse.add_argument( '--pipeline',dest='backend',default='tk',
                           const=None,action='store_const',
-                          help='location for startup files' )
+                          help='startup with pipeline context' )
+    __parse.add_argument( '--agg',dest='backend',default='tk',
+                          const=None,action='store_const',
+                          help='startup without tkagg' )
     __defaults,__trash = __parse.parse_known_args( )
     from IPython import __version__ as _ipython_version_
 
