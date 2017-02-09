@@ -14,10 +14,10 @@ class EditimlistInputs(basetask.StandardInputs):
                  cell=None,
                  editmode=None,
                  field=None,
-                 gridder=None,
                  imagename=None,
                  imsize=None,
                  intent=None,
+                 gridder=None,
                  nbin=None,
                  nchan=None,
                  nterms=None,
@@ -33,9 +33,15 @@ class EditimlistInputs(basetask.StandardInputs):
 
         self._init_properties(vars())
 
-        gridder = basetask.property_with_default('gridder', 'standard')
-        nterms = basetask.property_with_default('nterms', 2)
-        parameter_file = basetask.property_with_default('parameter_file', ''),
+        keys_to_consider = ('field', 'intent', 'spw', 'cell', 'imsize',
+                            'phasecenter', 'specmode', 'gridder', 'imagename', 'start', 'width',
+                            'nbin', 'nchan', 'uvrange', 'stokes', 'nterms')
+        self.keys_to_change = []
+        for key in keys_to_consider:
+            # print key, eval(key)
+            if self.__dict__[key] is not None:
+                self.keys_to_change.append(key)
+
 
 # tell the infrastructure to give us mstransformed data when possible by
 # registering our preference for imaging measurement sets
@@ -54,7 +60,6 @@ class Editimlist(basetask.StandardTaskTemplate):
         inputs = self.inputs
 
         # if a file is given, read whatever parameters are defined in the file
-        keys_to_change = []
         if inputs.parameter_file and os.access(inputs.parameter_file, os.R_OK):
             with open(inputs.parameter_file) as parfile:
                 for line in parfile:
@@ -64,34 +69,24 @@ class Editimlist(basetask.StandardTaskTemplate):
                     parameter = parameter.strip()
                     value = value.strip()
                     exec ('inputs.' + parameter + '=' + value)
-                    keys_to_change.append(parameter)
+                    inputs.keys_to_change.append(parameter)
 
         # now construct the list of imaging command parameter lists that must
         # be run to obtain the required images
         result = EditimlistResult()
 
+        target = dict()
         if inputs.editmode == 'add':
-            target = CleanTarget(**{'field': inputs.field,
-                                    'intent': inputs.intent,
-                                    'spw': inputs.spw,
-                                    'cell': inputs.cell,
-                                    'imsize': inputs.imsize,
-                                    'phasecenter': inputs.phasecenter,
-                                    'specmode': inputs.specmode,
-                                    'gridder': inputs.gridder,
-                                    'imagename': inputs.imagename,
-                                    'start': inputs.start,
-                                    'width': inputs.width,
-                                    'nbin': inputs.nbin,
-                                    'nchan': inputs.nchan,
-                                    'uvrange': inputs.uvrange,
-                                    'stokes': inputs.stokes,
-                                    'nterms': inputs.nterms,
-                                    })
+            target = CleanTarget()
+            inputsdict = inputs.__dict__
+            for parameter in inputsdict.keys():
+                if inputsdict[parameter] and not parameter.startswith('_') and (parameter in target):
+                    cmd = "target['" + parameter + "'] = inputs." + parameter
+                    # print(cmd)
+                    exec(cmd)
         elif inputs.editmode == 'edit':
-            target = {}
-            for parameter in keys_to_change:
-                if parameter != 'editmode':
+            for parameter in inputs.keys_to_change:
+                if parameter not in ('editmode'):
                     exec('target["' + parameter + '"] = inputs.' + parameter)
 
         result.add_target(target)

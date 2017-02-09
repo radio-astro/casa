@@ -52,8 +52,9 @@
 
             <param type="string" name="gridder">
                 <description>Name of the gridder to use with tclean</description>
-                <value>standard</value>
+                <value></value>
                 <allowed kind="enum">
+                    <value></value>
                     <value>standard</value>
                     <value>wproject</value>
                     <value>widefield</value>
@@ -68,14 +69,14 @@
                 <value type="string"></value>
             </param>
 
-            <param type="int" name="nchan" subparam="true">
+            <param type="string" name="nchan">
                 <description>Number of channels, -1 = all</description>
-                <value>-1</value>
+                <value></value>
             </param>
 
             <param type="string" name="nterms">
                 <description></description>
-                <value>2</value>
+                <value></value>
             </param>
 
             <param type="string" name="parameter_file">
@@ -83,7 +84,7 @@
                 <value></value>
             </param>
 
-            <param type="any" name="phasecenter" subparam="true">
+            <param type="any" name="phasecenter">
                 <description>Image center (direction or field index, \'\' for default)</description>
                 <any type="variant"/>
                 <value type="string"></value>
@@ -100,12 +101,12 @@
                 </allowed>
             </param>
 
-            <param type="string" name="spw" subparam="true">
+            <param type="string" name="spw">
                 <description>Set of data selection spectral window/channels, \'\' for all</description>
                 <value></value>
             </param>
 
-            <param type="any" name="start" subparam="true">
+            <param type="any" name="start">
                 <description>Channel start, \'\' for default</description>
                 <any type="variant"/>
                 <value type="string"></value>
@@ -116,7 +117,7 @@
                 <value></value>
             </param>
 
-            <param type="string" name="uvrange" subparam="true">
+            <param type="string" name="uvrange">
                 <description>Set of data selection uv ranges, \'\' for all.</description>
                 <any type="variant" limittypes="string stringArray"/>
                 <value type="string"></value>
