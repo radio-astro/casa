@@ -160,8 +160,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							const casacore::Bool wTermOn,
 							const casacore::Bool mTermOn,
 							const casacore::Bool wBAWP,
-							const casacore::Int cfBufferSize=-1,
-							const casacore::Int cfOverSampling=-1);
+							const casacore::Bool conjBeams);
     AWProjectFT();
     
     // Constructor: cachesize is the size of the cache in words
@@ -555,6 +554,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     PolOuterProduct::MuellerType muellerType_p;
 
+    casacore::Int previousSPWID_p;
 #include "AWProjectFT.FORTRANSTUFF.INC"
   };
 } //# NAMESPACE CASA - END

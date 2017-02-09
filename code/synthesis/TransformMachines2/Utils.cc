@@ -776,6 +776,8 @@ namespace casa{
   }
   template 
   Int SynthesisUtils::getenv(const char *name, const Int defaultVal);
+template 
+  Bool SynthesisUtils::getenv(const char *name, const Bool defaultVal);
 
   Float SynthesisUtils::libreSpheroidal(Float nu) 
   {
@@ -1141,7 +1143,105 @@ namespace casa{
     csList = cs.list(log_l,MDoppler::RADIO,dummy,dummy);
     os << csList << std::endl;
   }
+ const casacore::Array<Complex> SynthesisUtils::getCFPixels(const casacore::String& Dir,
+							     const casacore::String& fileName)
+  {
+    try
+      {
+	casacore::PagedImage<casacore::Complex> thisCF(Dir+'/'+fileName);
+	return thisCF.get();
+      }
+    catch (AipsError &x)
+      {
+	LogIO log_l(LogOrigin("SynthesisUtils","getCFPixels"));
+	log_l << x.getMesg() << LogIO::EXCEPTION;
+      }
+    return casacore::Array<Complex>(); // Just to keep the complier happy.  Program control should never get here.
+  }
+  
+  casacore::TableRecord SynthesisUtils::getCFParams(const casacore::String& Dir,
+						    const casacore::String& fileName,
+						    casacore::Array<Complex>& pixelBuffer,
+						    casacore::CoordinateSystem& coordSys, 
+						    casacore::Double& sampling,
+						    casacore::Double& paVal,
+						    casacore::Int& xSupport, casacore::Int& ySupport,
+						    casacore::Double& fVal, casacore::Double& wVal, casacore::Int& mVal,
+						    casacore::Double& conjFreq, casacore::Int& conjPoln,
+						    casacore::Bool loadPixels,
+						    casacore::Bool loadMiscInfo)
+  {
+    try
+      {
+	casacore::PagedImage<casacore::Complex> thisCF(Dir+'/'+fileName);
+	if (loadPixels) pixelBuffer.assign(thisCF.get());
+	casacore::TableRecord miscinfo;
+	if (loadMiscInfo)
+	  {
+	    miscinfo= thisCF.miscInfo();
 
+	    miscinfo.get("ParallacticAngle", paVal);
+	    miscinfo.get("MuellerElement", mVal);
+	    miscinfo.get("WValue", wVal);
+	    miscinfo.get("Xsupport", xSupport);
+	    miscinfo.get("Ysupport", ySupport);
+	    miscinfo.get("Sampling", sampling);
+	    miscinfo.get("ConjFreq", conjFreq);
+	    miscinfo.get("ConjPoln", conjPoln);
+	    casacore::Int index= thisCF.coordinates().findCoordinate(casacore::Coordinate::SPECTRAL);
+	    coordSys = thisCF.coordinates();
+	    casacore::SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
+	    fVal=static_cast<Float>(spCS.referenceValue()(0));
+	  }
+	return miscinfo;
+      }
+    catch(AipsError& x)
+      {
+	throw(AipsError(String("Error in SynthesisUtils::getCFParams(): ")
+				      +x.getMesg()));
+      }
+  };
+
+
+  void SynthesisUtils::rotate2(const double& actualPA, CFCell& baseCFC, CFCell& cfc, const double& rotAngleIncr)
+    {
+      LogIO log_l(LogOrigin("SynthesisUtils", "rotate2"));
+
+      // // If the A-Term is a No-Op, the resulting CF is rotationally
+      // // symmetric.
+      // if (isNoOp()) return;
+
+      (void)baseCFC;
+
+      //double actualPA = getPA(vb);
+      double currentCFPA = cfc.pa_p.getValue("rad");
+      //Double baseCFCPA=baseCFC.pa_p.getValue("rad");
+
+      double dPA = currentCFPA-actualPA;
+
+      if (fabs(dPA) > fabs(rotAngleIncr))
+	{
+	  casacore::Array<TT> inData;
+	  //inData.assign(*baseCFC.getStorage());
+	  //dPA = baseCFCPA-actualPA;
+	  dPA = currentCFPA-actualPA;
+	  inData.assign(*cfc.getStorage());
+	  try
+	    {
+	      SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
+						 *cfc.getStorage(),
+						 dPA);//,"LINEAR");
+	      // currentCFPA-actualPA);//,"LINEAR");
+	    }
+	  catch (AipsError &x)
+	    {
+	      log_l << x.getMesg() << LogIO::EXCEPTION;
+	    }
+	  cfc.pa_p=Quantity(actualPA, "rad");
+	}
+    };
+  
+  
   template
   std::vector<Double>::iterator SynthesisUtils::Unique(std::vector<Double>::iterator first, std::vector<Double>::iterator last);
   template
@@ -1157,7 +1257,7 @@ namespace casa{
   Int SynthesisUtils::stdNearestValue(const vector<Int>& list, const Int& val, Int& index);
 
 
-  };
-
-using namespace casacore;
-} // namespace casa
+  }  
+   
+    //using namespace casacore;
+  } // namespace casa

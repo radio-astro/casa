@@ -151,7 +151,7 @@ public:
 
   //clone copy
   //should make it pure virtual forcing every ftm to have a cloner
-  virtual FTMachine* cloneFTM(){return NULL;};
+  virtual FTMachine* cloneFTM();
   // Initialize transform to Visibility plane
   virtual void initializeToVis(casacore::ImageInterface<casacore::Complex>& image, const vi::VisBuffer2& vb) = 0;
 
@@ -272,6 +272,11 @@ public:
   // desired phase center.
   void rotateUVW(casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase,
   		 const vi::VisBuffer2& vb);
+
+  //rotate with facetting style rephasing..for multifield mosaic
+  void girarUVW(casacore::Matrix<casacore::Double>& uvw, casacore::Vector<casacore::Double>& dphase,
+  		const vi::VisBuffer2& vb);
+
   // Refocus on a finite distance
   void refocus(casacore::Matrix<casacore::Double>& uvw, const casacore::Vector<casacore::Int>& ant1,
   	       const casacore::Vector<casacore::Int>& ant2,
@@ -373,6 +378,7 @@ protected:
   casacore::ImageInterface<casacore::Complex>* image;
 
   casacore::UVWMachine* uvwMachine_p;
+  casacore::CountedPtr<casacore::UVWMachine> phaseShifter_p;
 
   casacore::MeasFrame mFrame_p;
 

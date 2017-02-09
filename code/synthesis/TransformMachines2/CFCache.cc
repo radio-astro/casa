@@ -207,6 +207,16 @@ namespace casa{
     //summarize(memCacheWt2_p, "WTCFS", false);
   }
 
+    void CFCache::setLazyFill(const Bool& lazyFill)
+  {
+    loadPixBuf_p=!lazyFill;
+    if (lazyFill)
+      {
+	LogIO os( LogOrigin("CFCache","setLazyFill",WHERE));
+	os << "Lazy fill is On" << LogIO::POST;
+      }
+  }
+
   void CFCache::initCache2(Bool verbose, Float selectedPA, Float dPA)
   {
     LogOrigin logOrigin("CFCache2", "initCache2");
@@ -252,7 +262,8 @@ namespace casa{
     summarize(memCache2_p,   "CFS",   True);
     summarize(memCacheWt2_p, "WTCFS", False);
 
-    log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") " << memUnit << LogIO::POST;
+    if (memUsed0+memUsed1 > 0)
+      log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") " << memUnit << LogIO::POST;
 
     // memCache2_p[0].makePersistent("./junk.cf");
     // memCacheWt2_p[0].makePersistent("./junk.cf","","WT");
@@ -272,7 +283,8 @@ namespace casa{
     try
       {
 	if (memStore.nelements() == 0) memStore.resize(1,true);
-
+	memStore[0].setLazyFill(!loadPixBuf_p);
+	memStore[0].setCFCacheDir(getCacheDir());
 	CFCacheTableType cfCacheTable_l;
 	// Regex regex(Regex::fromPattern(pattern));
 	// Vector<String> fileNames(dirObj.find(regex));
@@ -340,7 +352,7 @@ namespace casa{
 		  Double paVal, wVal, fVal, sampling, conjFreq; Int mVal, xSupport, ySupport, conjPoln;
 		  CoordinateSystem coordSys;
 
-		  miscInfo = getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
+		  miscInfo = SynthesisUtils::getCFParams(Dir, fileNames[i], pixBuf, coordSys,  sampling, paVal, 
 			      xSupport, ySupport, fVal, wVal, mVal,conjFreq, conjPoln,false);
 		
 		  Bool pickThisCF=true;
@@ -401,7 +413,7 @@ namespace casa{
 		cfb->resize(wIncr,0.0,wList,fList,
 			    muellerElements,muellerElements,muellerElements,muellerElements);
 		cfb->setPA(paList_p[ipa]);
-
+		cfb->setDir(Dir);
 		//
 		// Now go over the list of fileNames corresponding to
 		// the current PA value and them the current CFBuffer.
@@ -414,21 +426,23 @@ namespace casa{
 		    //
 		    // Get the parameters from the CF file
 		    //
-		    TableRecord miscInfo = getCFParams(fileNames[nf], pixBuf, coordSys,  sampling, paVal, 
-				xSupport, ySupport, fVal, wVal, mVal, conjFreq, conjPoln);
+		    TableRecord miscInfo = SynthesisUtils::getCFParams(Dir,fileNames[nf], pixBuf, coordSys,  sampling, paVal, 
+								       xSupport, ySupport, fVal, wVal, mVal, conjFreq, conjPoln,loadPixBuf_p,True);
 		    //
 		    // Get the storage buffer from the CFBuffer and
 		    // fill it in what we got from the getCFParams
 		    // call above.
 		    //
-    		    Array<Complex> &cfBuf=(*(cfb->getCFCellPtr(fVal, wVal,mVal)->storage_p));
+		    if (loadPixBuf_p)
+		      {
+			Array<Complex> &cfBuf=(*(cfb->getCFCellPtr(fVal, wVal,mVal)->storage_p));
 		    //
 		    // Fill the cfBuf with the pixel array from the
 		    // disk file.  Add it, along with the extracted CF
 		    // parameters to the CFBuffer.
 		    //
 		    cfBuf.assign(pixBuf);
-
+		      }
 
 		    //cfb->addCF(&cfBuf,coordSys,fsampling,xSupport,ySupport,fVal,wVal,mVal);
 		    Int fndx,wndx, mndx;
@@ -443,21 +457,18 @@ namespace casa{
 		    // determined inside using mVal (why this
 		    // treatment for mndx, please don't ask.  Not just
 		    // yet (SB)).
-		    String telescopeName;miscInfo.get("TelescopeName",telescopeName);
-		    Float diameter; miscInfo.get("Diameter",diameter);
-		    cfb->setParams(fndx, wndx, 0,0, coordSys, fsampling, xSupport, ySupport, 
-		    		   fVal, wVal, mVal,fileNames[nf],conjFreq, conjPoln,
-				   telescopeName, diameter);
+		    // String telescopeName;miscInfo.get("TelescopeName",telescopeName);
+		    //Float diameter; miscInfo.get("Diameter",diameter);
+		    //cfb->setParams(fndx, wndx, 0,0, coordSys, fsampling, xSupport, ySupport, 
+		    //		   fVal, wVal, mVal,fileNames[nf],conjFreq, conjPoln,
+		    //		   telescopeName, diameter);
 
 		    // cfb->setParams(fndx, wndx, mVal, miscInfo);
-
-		    // if (nf==0)
-		    //   {
-		    // 	log_l << " " << fList.size() << " " << mList.size() << " " << wList.size() << " " 
-		    // 	      << cfCacheTable_l[ipa].cfNameList.size()  << LogIO::POST;
-		    // 	log_l << "F: " << fList << endl << "M: " << mList << endl << "W: " << wList << endl << LogIO::POST;
-		    //   }
-		    if (verbose > 0) log_l << cfCacheTable_l[ipa].cfNameList[nf] << "[" << fndx << "," << wndx << "," << mndx << "] "  << paList_p[ipa] << " " << xSupport << LogIO::POST;
+		    cfb->setParams(fndx, wndx, 0,0, fVal, wVal, mVal, coordSys,miscInfo);
+		    
+		    if (verbose > 0) log_l << cfCacheTable_l[ipa].cfNameList[nf]
+					   << "[" << fndx << "," << wndx << "," << mndx << "] "
+					   << paList_p[ipa] << " " << xSupport << LogIO::POST;
 		  }
 		// cfb->show("cfb: ");
 
@@ -568,6 +579,7 @@ namespace casa{
 	memCacheWt_p = other.memCacheWt_p;
 	cfCacheTable_p = other.cfCacheTable_p;
 	OTODone_p = other.OTODone_p;
+	loadPixBuf_p=other.loadPixBuf_p;
       }
     return *this;
   };

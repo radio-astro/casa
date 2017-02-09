@@ -63,6 +63,7 @@ namespace casa{
     for(uInt i=0;i<freqNdxMap_p.nelements();i++) freqNdxMap_p[i].assign(other.freqNdxMap_p[i]);
     conjFreqNdxMap_p.assign(other.conjFreqNdxMap_p);
     for(uInt i=0;i<conjFreqNdxMap_p.nelements();i++) conjFreqNdxMap_p[i].assign(other.conjFreqNdxMap_p[i]);
+    cfCacheDirName_p = other.cfCacheDirName_p;
   }
   //---------------------------------------------------------------
   //
@@ -102,6 +103,19 @@ namespace casa{
     //   for(Int j=0;j<muellerElements(i).nelements();j++)
     // 	if (muellerElements(i)(j) > n) n=muellerElements(i)(j);
     // return n;
+  }
+  //
+  //---------------------------------------------------------------
+  //
+   void CFBuffer::clear()
+  {
+    IPosition shp(cfCells_p.shape());
+    for (Int i=0;i < shp[0]; i++)
+      for (Int j=0; j < shp[1]; j++)
+	for (Int k=0; k < shp[2]; k++)
+	  {
+	    cfCells_p(i,j,k)->clear();
+	  }
   }
   //
   //---------------------------------------------------------------
@@ -179,11 +193,38 @@ namespace casa{
   //---------------------------------------------------------------
   //
   //  template <class T>  void CFBuffer<T>
-  RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& /*ipx*/, const Int& /*ipy*/,
-					  CoordinateSystem& cs, Float& sampling,
-					  Int& xSupport, Int& ySupport, 
-					  const Double& freqValue, const Double& wValue,
+  RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& ipx, const Int& ipy,
+					  const Double& freqValue,
+					  const Double& wValue,
 					  const Int& muellerElement,
+					  CoordinateSystem& cs,
+					  const TableRecord& miscInfo)
+  {
+    float sampling; miscInfo.get("Sampling",sampling);
+    int xSupport, ySupport; miscInfo.get("Xsupport",xSupport);miscInfo.get("Ysupport",ySupport);
+    String fileName; miscInfo.get("Name",fileName);
+    double conjFreq; miscInfo.get("ConjFreq", conjFreq);
+    int conjPoln; miscInfo.get("ConjPoln", conjPoln);
+    String telescopeName; miscInfo.get("TelescopeName", telescopeName);
+    float diameter; miscInfo.get("Diameter", diameter);
+    bool isRotationallySymmetric; miscInfo.get("OpCode",isRotationallySymmetric);
+
+    RigidVector<Int,3> ndx=setParams(inu, iw, ipx, ipy, freqValue, wValue, muellerElement, cs, miscInfo,
+				     sampling, xSupport, ySupport, fileName, conjFreq, conjPoln, telescopeName,
+				     diameter);
+    cfCells_p(ndx(0),ndx(1),ndx(2))->isRotationallySymmetric_p = isRotationallySymmetric;
+    return ndx;
+  }
+  RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& /*ipx*/, const Int& /*ipy*/,
+					  const Double& freqValue,
+					  const Double& wValue,
+
+					  const Int& muellerElement,
+
+					  CoordinateSystem& cs,
+					  const TableRecord& miscInfo,
+					  Float& sampling,
+					  Int& xSupport, Int& ySupport, 
 					  const String& fileName,
 					  const Double& conjFreq,
 					  const Int& conjPoln,

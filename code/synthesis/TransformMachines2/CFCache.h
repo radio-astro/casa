@@ -155,7 +155,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfCacheTable_p(), XSup(), YSup(), paList(), 
       paList_p(), key2IndexMap(),
       Dir(""), WtImagePrefix(""), cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(false),
-      avgPBReadyQualifier_p(""), OTODone_p(false)
+      avgPBReadyQualifier_p(""), OTODone_p(false), loadPixBuf_p(casacore::True)
     {};
     CFCache& operator=(const CFCache& other);
     ~CFCache();
@@ -163,10 +163,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Method to set the disk cache directory name
     //
     void setCacheDir(const char *dir) {Dir = casacore::String(dir);}
-    casacore::String getCacheDir() {return Dir;};
+    casacore::String getCacheDir(CFCDirType dirType=USERDIR) {(void)dirType; return Dir;};
 
     void setWtImagePrefix(const char *prefix) {WtImagePrefix = prefix;}
     casacore::String getWtImagePrefix() {return WtImagePrefix;};
+    
+    void setLazyFill(const casacore::Bool& val);
+    casacore::Bool isLazyFillOn() {return loadPixBuf_p;};
     //
     // Method to initialize the internal memory cache.
     //
@@ -330,7 +333,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     casacore::Bool avgPBReady_p;
     casacore::String avgPBReadyQualifier_p;
-    casacore::Bool OTODone_p;
+    casacore::Bool OTODone_p, loadPixBuf_p;
   };
 }
 }

@@ -61,6 +61,28 @@ namespace casa{
   namespace refim{
 using namespace casacore;
 using namespace casa::vi;
+
+AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
+			 const casacore::CountedPtr<PSTerm> psTerm,
+			 const casacore::CountedPtr<WTerm> wTerm,
+			 const casacore::Bool wbAWP,
+			 const casacore::Bool conjPB):
+    ConvolutionFunction(),aTerm_p(aTerm),psTerm_p(psTerm), wTerm_p(wTerm), pixFieldGrad_p(), 
+    wbAWP_p(wbAWP), conjPB_p(conjPB), baseCFB_p()
+  {
+    LogIO log_l(LogOrigin("AWConvFunc", "AWConvFunc"));
+    if (psTerm->isNoOp() && aTerm->isNoOp())
+      log_l << "Both, psterm and aterm cannot be set to NoOp. " << LogIO::EXCEPTION;
+    
+    if (wbAWP && aTerm->isNoOp())
+      {
+	//log_l << "wbawp=True is ineffective when aterm is OFF.  Setting wbawp to False." << LogIO::NORMAL1;
+	wbAWP_p=false;
+      }
+    
+    pixFieldGrad_p.resize(2);pixFieldGrad_p=0.0;
+  }
+
   //
   //----------------------------------------------------------------------
   //
@@ -247,7 +269,9 @@ using namespace casa::vi;
 		    //   storeImg(name,ftATerm_l);
 		    // }
 		    //tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
-		    aTerm.applySky(ftATermSq_l, vb, doSquint, 0,me,conjFreq);
+		    if (conjPB_p) aTerm.applySky(ftATermSq_l, vb, doSquint, 0,me,conjFreq);
+		    else aTerm.applySky(ftATermSq_l, vb, doSquint, 0,me,freqValues(inu));
+		   
 		  }
 
 		//tt=max(ftATermSq_l.get()); ftATermSq_l.put(abs(ftATermSq_l.get()/tt));
@@ -315,8 +339,11 @@ using namespace casa::vi;
 		      cfBufMat = cfWtBufMat = 1.0;
 		    else
 		      {
-			psTerm.applySky(cfBufMat, false);   // Assign (psScale set in psTerm.init()
-			psTerm.applySky(cfWtBufMat, false); // Assign
+			//psTerm.applySky(cfBufMat, false);   // Assign (psScale set in psTerm.init()
+			//psTerm.applySky(cfWtBufMat, false); // Assign
+			psTerm.applySky(cfBufMat, s, cfBufMat.shape()(0)/s(0));   // Assign (psScale set in psTerm.init()
+	    psTerm.applySky(cfWtBufMat, s, cfWtBufMat.shape()(0)/s(0)); // Assign
+
 			cfWtBuf *= cfWtBuf;
 		      }
 		    //tim.show("PSTerm*2: ");
@@ -442,7 +469,7 @@ using namespace casa::vi;
 		    // support sizes.
 		    //
 		    //tim.mark();
-		    Int supportBuffer = (Int)(getOversampling(psTerm, wTerm, aTerm)*1.5);
+		    Int supportBuffer = (Int)(getOversampling(psTerm, wTerm, aTerm)*2.0);
 		    if (!isDryRun)
 		      {
 			if (iw==0) wtcpeak = max(cfWtBuf);
@@ -465,16 +492,19 @@ using namespace casa::vi;
 		    CoordinateSystem ftCoords=cs_l;
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 		    CountedPtr<CFCell> cfCellPtr;
-
+		    TableRecord dummyMiscInfo;
 		    cfWtb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-				    ftCoords, samplingWt, xSupportWt, ySupportWt,
+
 				    freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				    ftCoords, dummyMiscInfo, samplingWt, xSupportWt, ySupportWt,
 				    String(""), // Default ==> don't set it in the CFCell
 				    conjFreq, conjPol[0]);
+		    
 		    cfCellPtr = cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
 						   muellerElements(imx)(imy));
 		    cfCellPtr->pa_p=Quantity(vbPA,"rad");
 		    cfCellPtr->telescopeName_p = aTerm.getTelescopeName();
+		    cfCellPtr->isRotationallySymmetric_p = aTerm.isNoOp();
 		    //cerr << "AWConvFunc: Telescope name = " << cfCellPtr->telescopeName_p << " " << aTerm.getTelescopeName() << endl;
 		    //tim.show("CSStuff:");
 		    // setUpCFSupport(cfBuf, xSupport, ySupport, sampling);
@@ -513,6 +543,7 @@ using namespace casa::vi;
 		    //if ((iw == 0) && (!isDryRun))
 		    if (!isDryRun)
 		      {
+			cfNorm=0; cfWtNorm=0;
 			cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);
 			cfWtNorm = AWConvFunc::cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
 		      }
@@ -527,17 +558,17 @@ using namespace casa::vi;
 		    //tim.mark();
 		    ftCoords=cs_l;
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
-
 		    cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-				  ftCoords, sampling, xSupport, ySupport,
+
 				  freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				  ftCoords, dummyMiscInfo, sampling, xSupport, ySupport,
 				  String(""), // Default ==> Don't set in the CFCell
 				  conjFreq, conjPol[0]);
 		    cfCellPtr=cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
 					       muellerElements(imx)(imy));
 		    cfCellPtr->pa_p=Quantity(vbPA,"rad");
 		    cfCellPtr->telescopeName_p = aTerm.getTelescopeName();
-
+		    cfCellPtr->isRotationallySymmetric_p = aTerm.isNoOp();
 		    //
 		    // Now tha the CFs have been computed, cache its
 		    // paramters in CFCell for quick access in tight
@@ -572,8 +603,12 @@ using namespace casa::vi;
     for(ndx(1)=0;ndx(1)<cf.shape()(1);ndx(1)++)
       for(ndx(0)=0;ndx(0)<cf.shape()(0);ndx(0)++)
 	if (abs(cf(ndx)) > peak) {peakPix = ndx;peak=abs(cf(ndx));}
-    origin = peakPix(0);
-    
+    // origin = peakPix(0);
+   if (origin != peakPix(0))
+      {
+	log_l << "Peak not at the center " << origin << " " << cf(IPosition(4,origin,origin,0,0)) << " " << peakPix << " " << peak << LogIO::NORMAL1;
+	//	peakNIC=1e7;
+      }
     for (Int ix=-xSupport;ix<xSupport;ix++)
       for (int iy=-ySupport;iy<ySupport;iy++)
 	{
@@ -940,14 +975,15 @@ using namespace casa::vi;
 	//   (coords.increment()(0)*screen.shape()(0));
 
 	Float psScale = (2.0*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
-	  innerQuaterFraction=0.25;
+	  innerQuaterFraction=1.0;
 	// psScale when using SynthesisUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
 
 	// by the sky-image and is equal to convSize/convSampling.
 	psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
-	psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
+	Vector<Double> uvOffset_cf(3,0); uvOffset_cf(0)=uvOffset_cf(2)=convSize/2;
+	psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset_cf,psScale);
 
 	MuellerElementType muellerElement(0,0);
 	CoordinateSystem cfb_cs=coords;
@@ -962,6 +998,8 @@ using namespace casa::vi;
 	      {
 		Int npol=0;
 		for (uInt ipolx=0;ipolx<polMap.nelements();ipolx++)
+		  {
+		    npol=0;
 		  for (uInt ipoly=0;ipoly<polMap(ipolx).nelements();ipoly++)
 		    {
 		      // Now make a CS with a single appropriate
@@ -991,14 +1029,17 @@ using namespace casa::vi;
 		      // cfwtb_p->setParams(convSize,convSize,cfb_cs,s,
 		      // 			 convSize, convSize, 
 		      // 			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
+		      TableRecord dummyMiscInfo;
 		      cfb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
-				       cfb_cs,s, convSize, convSize, 
-		      		       freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
+				       
+		      		       freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
+				       cfb_cs, dummyMiscInfo, s, convSize, convSize );
 		      cfwtb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
-					 cfb_cs,s, convSize, convSize, 
-		      			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
+		      			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
+					 cfb_cs,dummyMiscInfo, s, convSize, convSize );
 		      pm.update((Double)cfDone++);
 		    }
+		  }
 		} // End of loop over Mueller elements.
 	  } // End of loop over w
 	//
@@ -1086,7 +1127,7 @@ using namespace casa::vi;
     // will show up when gridding the data or weights.  It will not
     // show up when making the avgPB since the gridding for that is
     // always centered on the center of the image.
-    if (xSupport*sampling + int(sampling/2.0+0.5) > convFuncOrigin)
+    if ((xSupport*sampling + int(sampling/2.0+0.5)) > convFuncOrigin)
       {
 	log_l << "Convolution function support size > N/2.  Limiting it to N/2 "
 	      << "(threshold = " << threshold << ")."
@@ -1501,8 +1542,10 @@ using namespace casa::vi;
 		    // Call this for every VB.  Any optimization
 		    // (e.g. rotating at some increment only) is
 		    // implemented in the ATerm::rotate().
-		    //		    if (rotateCF_p) 
-		    aTerm_l->rotate2(vb,*baseCFC, *cfc,rotateCFOTFAngleRad_p);
+		    //		    if (rotateCF_p)
+		    // Rotate the cell only if it has been loaded.
+		    if (cfc->getShape().product() > 0)
+		      aTerm_l->rotate2(vb,*baseCFC, *cfc,rotateCFOTFAngleRad_p);
 		  }
     }
 	  }
@@ -1576,7 +1619,8 @@ using namespace casa::vi;
       // cerr << "#########$$$$$$ " << pbshp << " " << nx << " " << freq_l << " " << conjFreq << endl;
       {
 	aTerm.applySky(ftATerm_l, vbPA, doSquint, 0, miscInfo.muellerElement,freq_l);//freqHi);
-	aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,miscInfo.muellerElement,conjFreq);
+	if (conjBeams) aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0, miscInfo.muellerElement, conjFreq);//freqHi);
+	else aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,miscInfo.muellerElement,freq_l);
       }
 
       Vector<Double> cellSize;
@@ -1633,8 +1677,8 @@ using namespace casa::vi;
 	  {
 	    // psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
 	    // psTerm.applySky(cfWtBufMat, False); // Assign
-	    psTerm.applySky(cfBufMat, s, cfBufMat.shape()(0)/2);   // Assign (psScale set in psTerm.init()
-	    psTerm.applySky(cfWtBufMat, s, cfWtBufMat.shape()(0)/2); // Assign
+	    psTerm.applySky(cfBufMat, s, cfBufMat.shape()(0)/s(0));   // Assign (psScale set in psTerm.init()
+	    psTerm.applySky(cfWtBufMat, s, cfWtBufMat.shape()(0)/s(0)); // Assign
 	    cfWtBuf *= cfWtBuf;
 	  }
 
@@ -1660,11 +1704,9 @@ using namespace casa::vi;
 	TempImage<Complex> twoDPBSq_l(pbShape,cs_l);
 	//-------------------------------------------------------------		    
 	// WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
-	if (conjBeams)
+
 	  cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
-	else
-	  cfWtBuf *= ftATerm_l.get()*conj(ftATerm_l.get());
-	
+
 	//tim.mark();
 	cfBuf *= ftATerm_l.get();
 	//tim.show("W*A*2: ");
@@ -1727,8 +1769,7 @@ using namespace casa::vi;
 
 	//tim.mark();
 	// if (!isDryRun)
-	Int supportBuffer = (Int)(getOversampling(psTerm, wTerm, aTerm)*1.5);
-
+	Int supportBuffer = (Int)(AWConvFunc::getOversampling(psTerm, wTerm, aTerm)*2.0);
 	AWConvFunc::resizeCF(cfWtBuf, xSupportWt, ySupportWt, supportBuffer, samplingWt,0.0);
 	//tim.show("Resize:");
 
@@ -1740,10 +1781,11 @@ using namespace casa::vi;
 	SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 	
 	thisCell=cfWtb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
+	thisCell->pa_p=Quantity(vbPA,"rad");
 	thisCell->coordSys_p = ftCoords;
 	thisCell->xSupport_p = xSupportWt;
 	thisCell->ySupport_p = ySupportWt;
-
+	thisCell->isRotationallySymmetric_p = aTerm.isNoOp();
 	//tim.show("CSStuff:");
 
 	//tim.mark();
@@ -1782,12 +1824,12 @@ using namespace casa::vi;
 	ftCoords=cs_l;
 	SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
 
-	CountedPtr<CFCell> thisCell=cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
+	thisCell=cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
 	thisCell->pa_p=Quantity(vbPA,"rad");
 	thisCell->coordSys_p = ftCoords;
 	thisCell->xSupport_p = xSupport;
 	thisCell->ySupport_p = ySupport;
-
+	thisCell->isRotationallySymmetric_p = aTerm.isNoOp();
 	(cfWtb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement))->initCache();
 	(cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement))->initCache();
 	//tim.show("End*2:");
@@ -1879,7 +1921,7 @@ using namespace casa::vi;
 			 
 			 Int inner=convSize/(convSampling);
 			 //Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0));
-			 Float innerQuaterFraction=0.25;
+			 Float innerQuaterFraction=1.0;
 			 
 			 Float psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
 			 ((static_cast<AWConvFunc &>(*awCF)).psTerm_p)->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);

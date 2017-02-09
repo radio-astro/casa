@@ -130,12 +130,12 @@ using namespace casa::vi;
     //------------------------------------------------------------------
     //
     CFBuffer(): wValues_p(), maxXSupport_p(-1), maxYSupport_p(-1), pointingOffset_p(), cfHitsStats(),
-		freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p()
+		freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p(), cfCacheDirName_p()
     {};
     
     CFBuffer(casacore::Int maxXSup, casacore::Int maxYSup):
       wValues_p(), maxXSupport_p(maxXSup), maxYSupport_p(maxYSup), pointingOffset_p(), cfHitsStats(),
-      freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p()
+      freqNdxMapsReady_p(false), freqNdxMap_p(), conjFreqNdxMap_p(), cfCacheDirName_p()
     {
       // storage_p.resize(1,1,1); 
       // storage_p(0,0,0) = new casacore::Array<TT>(dataPtr);
@@ -303,11 +303,21 @@ using namespace casa::vi;
     //-------------------------------------------------------------------------
     // Set only the CF parameters.  Return to index of the CF that was set.
     //
+    casacore::RigidVector<casacore::Int, 3> setParams(const casacore::Int& inu, const casacore::Int& iw, const casacore::Int& ipx, const casacore::Int& ipy,
+					    const casacore::Double& freqValue,
+					    const casacore::Double& wValue,
+					    const casacore::Int& muellerElement,
+					    casacore::CoordinateSystem& cs,
+					    const casacore::TableRecord& miscInfo);
+
+
     casacore::RigidVector<casacore::Int, 3> setParams(const casacore::Int& i, const casacore::Int& j, const casacore::Int& ipx, const casacore::Int& ipy,
-				  casacore::CoordinateSystem& cs, casacore::Float& sampling,
-				  casacore::Int& xSupport, casacore::Int& ySupport,
 				  const casacore::Double& freqValue, const casacore::Double& wValue, 
 				  const casacore::Int& muellerElement,
+				  casacore::CoordinateSystem& cs,
+				   const casacore::TableRecord& miscInfo,
+						      casacore::Float& sampling,
+						      casacore::Int& xSupport, casacore::Int& ySupport,
 				  const casacore::String& fileName=casacore::String(),
 				  const casacore::Double& conjFreq=0.0,
 				  const casacore::Int& conjPol=-1,
@@ -327,6 +337,10 @@ using namespace casa::vi;
 		   const casacore::Int& muellerElement,
 		   const casacore::String& fileName);
     void setPA(casacore::Float& pa);
+    void setDir(const casacore::String& Dir) {cfCacheDirName_p=Dir;}
+    void clear();
+    const casacore::String& getCFCacheDir() {return cfCacheDirName_p;};
+
     casacore::RigidVector<casacore::Int,3> getIndex(const casacore::Double& freqVal, const casacore::Double& wValue, 
 				const casacore::Int& muellerElement);
     //-------------------------------------------------------------------------
@@ -411,6 +425,7 @@ using namespace casa::vi;
     casacore::Bool freqNdxMapsReady_p;
     casacore::Vector<casacore::Vector<casacore::Int> > freqNdxMap_p, conjFreqNdxMap_p;
     void ASSIGNVVofI(casacore::Int** &target,casacore::Vector<casacore::Vector<casacore::Int> >& source, casacore::Bool& doAlloc);
+    casacore::String cfCacheDirName_p;
   };
 
   // declare a commonly used template extern

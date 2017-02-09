@@ -63,10 +63,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWConvFunc(const casacore::CountedPtr<ATerm> ATerm,
 	       const casacore::CountedPtr<PSTerm> psTerm,
 	       const casacore::CountedPtr<WTerm> wTerm,
-	       const casacore::Bool wbAWP=false):
-      ConvolutionFunction(),aTerm_p(ATerm),psTerm_p(psTerm), wTerm_p(wTerm), pixFieldGrad_p(), 
-      wbAWP_p(wbAWP), baseCFB_p()
-    {pixFieldGrad_p.resize(2);pixFieldGrad_p=0.0;}
+	       const casacore::Bool wbAWP=false,
+	       const casacore::Bool conjPB=casacore::True);
 
     ~AWConvFunc() {};
     AWConvFunc& operator=(const AWConvFunc& other);
@@ -165,7 +163,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     casacore::Vector<casacore::Double> thePix_p, pixFieldGrad_p;
     casacore::Double imRefFreq_p;
-    casacore::Bool wbAWP_p;
+    casacore::Bool wbAWP_p, conjPB_p;
     casacore::CountedPtr<CFBuffer> baseCFB_p;
   };
   //

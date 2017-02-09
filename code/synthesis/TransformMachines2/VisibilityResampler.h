@@ -95,6 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convFuncStore_p = cfs;
     };
     virtual void setCFMaps(const casacore::Vector<casacore::Int>& cfMap, const casacore::Vector<casacore::Int>& conjCFMap) {(void)cfMap;(void)conjCFMap;};
+    virtual void setPATolerance(const double& dPA) {paTolerance_p = dPA;};
     //
     //------------------------------------------------------------------------------
     //
