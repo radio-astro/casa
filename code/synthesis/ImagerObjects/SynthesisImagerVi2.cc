@@ -1252,7 +1252,8 @@ void SynthesisImagerVi2::unlockMSs()
     String telescopeName=msoc.telescopeName()(0);
     CountedPtr<refim::ConvolutionFunction> awConvFunc = refim::AWProjectFT::makeCFObject(telescopeName, 
 									   aTermOn,
-									   psTermOn, true, mTermOn, wbAWP);
+									   psTermOn, (wprojPlane > 1),
+									   mTermOn, wbAWP, conjBeams);
     //
     // Construct the appropriate re-sampler.
     //
