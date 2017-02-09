@@ -230,7 +230,7 @@ if (UseCrashReporter)
     # to a later breakpad release
 
     set (Breakpad_Timestamp "160426")
-    set (Breakpad_Url_At_Casa "https://svn.cv.nrao.edu/casa/devel/breakpad")
+    set (Breakpad_Url_At_Casa "https://casa.nrao.edu/download/devel/breakpad/")
 
     ################################
 
