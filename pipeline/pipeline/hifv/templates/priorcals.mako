@@ -116,3 +116,20 @@ using the CASA task <b>gencal</b>.</p>
 	%for single_result in result:
 	    <p><b>${single_result.rq_result[0].inputs['caltable']}</b></p>
         %endfor
+
+    %if single_result.tecmaps_result:
+
+        <h2>TEC Maps</h2>
+	    TEC Caltable written to:
+
+	    %for single_result in result:
+	        <p><b>${single_result.tecmaps_result[0].inputs['caltable']}</b></p>
+        %endfor
+        <br>
+        TEC Images written to:
+        %for single_result in result:
+	        <p><b>${single_result.tecmaps_result[0].tec_image}</b></p>
+	        <p><b>${single_result.tecmaps_result[0].tec_rms_image}</b></p>
+        %endfor
+
+    %endif

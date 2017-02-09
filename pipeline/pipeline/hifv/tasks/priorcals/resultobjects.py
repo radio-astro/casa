@@ -9,7 +9,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class PriorcalsResults(basetask.Results):
     def __init__(self, final=[], pool=[], preceding=[], gc_result=None, oc_result=None, 
-        rq_result=None,  antpos_result=None, antcorrect=None):
+        rq_result=None,  antpos_result=None, antcorrect=None, tecmaps_result=None):
 
         super(PriorcalsResults, self).__init__()
         
@@ -25,6 +25,7 @@ class PriorcalsResults(basetask.Results):
         #self.sw_result = sw_result
         self.antpos_result = antpos_result
         self.antcorrect = antcorrect
+        self.tecmaps_result = tecmaps_result
         #print self.antcorrect
         
     def merge_with_context(self, context):
@@ -59,6 +60,13 @@ class PriorcalsResults(basetask.Results):
                 LOG.info("Priorcals: Antenna positions corrections.")
             except:
                 LOG.warn('No antenna position corrections.')
+
+        if self.tecmaps_result:
+            try:
+                self.tecmaps_result.merge_with_context(context)
+                LOG.info("Priorcals: TEC Maps.")
+            except:
+                LOG.warn('No TEC Maps table written.')
                 
         
                 

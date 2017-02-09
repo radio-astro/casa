@@ -49,16 +49,6 @@ class TecMapsInputs(basetask.StandardInputs):
             value = []
         self._parameter = value
 
-    @property
-    def spw(self):
-        return self._spw
-
-    @spw.setter
-    def spw(self, value):
-        if value is None:
-            value = ''
-        self._spw = value
-
     # Avoids circular dependency on caltable.
     # NOT SURE WHY THIS IS NECESSARY.
     def _get_partial_task_args(self):
@@ -74,7 +64,7 @@ class TecMapsInputs(basetask.StandardInputs):
 
 
 class TecMapsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=[], pool=[], preceding=[], tec_image=None, tec_rms_image=None):
         super(TecMapsResults, self).__init__()
 
         self.vis = None
@@ -82,6 +72,8 @@ class TecMapsResults(basetask.Results):
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+        self.tec_image = tec_image
+        self.tec_rms_image = tec_rms_image
 
     def merge_with_context(self, context):
         if not self.final:
@@ -108,6 +100,8 @@ class TecMaps(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
+        tec_image = None
+        tec_rms_image = None
         tec_image, tec_rms_image = tec_maps.create(vis=inputs.vis, doplot=True, imname='iono')
 
         gencal_args = inputs.to_casa_args()
@@ -121,7 +115,7 @@ class TecMaps(basetask.StandardTaskTemplate):
         calapp = callibrary.CalApplication(calto, calfrom)
         callist.append(calapp)
 
-        return TecMapsResults(pool=callist)
+        return TecMapsResults(pool=callist, final=callist, tec_image=tec_image, tec_rms_image=tec_rms_image)
 
     def analyse(self, result):
         # double-check that the caltable was actually generated

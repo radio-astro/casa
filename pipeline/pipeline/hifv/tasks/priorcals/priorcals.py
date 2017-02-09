@@ -255,7 +255,8 @@ class Priorcals(basetask.StandardTaskTemplate):
         rq_result = self._do_rqcal()
         #sw_result = self._do_swpowcal()
         antpos_result, antcorrect = self._do_antpos()
-        #tec_maps_result = self._do_tecmaps()
+        tecmaps_result = None
+        if self.inputs.tecmaps: tecmaps_result = self._do_tecmaps()
         
         #try:
         #    antpos_result.merge_withcontext(self.inputs.context)
@@ -264,7 +265,8 @@ class Priorcals(basetask.StandardTaskTemplate):
             
         return resultobjects.PriorcalsResults(pool=callist, gc_result=gc_result,
                                               oc_result=oc_result, rq_result=rq_result,
-                                              antpos_result=antpos_result, antcorrect=antcorrect)
+                                              antpos_result=antpos_result, antcorrect=antcorrect,
+                                              tecmaps_result=tecmaps_result)
 
     def analyse(self, results):
 	    return results
