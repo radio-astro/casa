@@ -602,7 +602,7 @@ class plotms_test_axis(plotms_test_base):
                      symbolsize=[5,5], symbolcolor=['ff0000','00ff00'], 
                      symbolfill=['mesh3','mesh3'], highres=True)
         self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 150000)
+        self.checkPlotfile(self.plotfile_jpg, 130000)
         self.removePlotfile()
         # test two y-axes with default x-axis
         res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg',
@@ -610,7 +610,7 @@ class plotms_test_axis(plotms_test_base):
                      ydatacolumn=['corrected','model'],
                      yaxislocation=['left','right']) 
         self.assertTrue(res)
-        self.checkPlotfile(self.plotfile_jpg, 247000)
+        self.checkPlotfile(self.plotfile_jpg, 200000)
         print
 
 # ------------------------------------------------------------------------------
