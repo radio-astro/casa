@@ -438,16 +438,15 @@ class mstool_test_select(mstool_test_base):
 
         # average into 3 channels
         self.assertTrue(self.ms.selectchannel2(3,2,5,8))
-        #rec = self.ms.getdata2(["data", "axis_info"])
-        rec = self.ms.getdata2(["axis_info"])
+        rec = self.ms.getdata2(["data", "axis_info"])
         # check chan_freq
         chan_freqs = rec["axis_info"]["freq_axis"]["chan_freq"]
         self.assertEqual(len(chan_freqs), 3)
         exp_freqs = array([[1.41276273e+09], [1.41295804e+09], [1.41315336e+09]])
         testing.assert_array_almost_equal(chan_freqs, exp_freqs, -1)
         # check channel-averaged data
-        #self.assertEqual(rec['data'].shape[1], 3)
-        #self.assertAlmostEqual(rec['data'][0][0][0], (62.093727111816406+0j))
+        self.assertEqual(rec['data'].shape[1], 3)
+        self.assertAlmostEqual(rec['data'][0][2][0], (70.219131469726562+0j))
 
         # test invalid selection
         print "\nTest invalid channel selection:"

@@ -5594,7 +5594,7 @@ ms::iterinit2(const std::vector<std::string>& columns, const double interval,
 
                 // Apply in-row selections with FrequencySelection class
                 // If chanavg, chan selection handled in chanavg layer;
-                if (polnSelection || (chanSelection && !chanAverage)) {
+                if (polnSelection || (chanSelection)) {
                     vi::FrequencySelectionUsingChannels freqSel = vi::FrequencySelectionUsingChannels();
                     if (polnSelection) {
                         Vector<Vector<Slice>> corrslices, chanslices;
