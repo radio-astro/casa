@@ -13,7 +13,7 @@
 # The source code will come from the breakpad site (part of Google's chromium project)
 # and then require some manual work (see below) to create zipped tar file.  This
 # tar file will reside on a CASA server and be downloaded into the user's build tree
-# during the cmake process.  After download, the archive will be exploded, the 
+# during the cmake process.  After download, the archive will be exploded, the
 # package build configured, made and the library of interest copied.  These operations
 # will only occur when the expected artifacts are not present.
 #
@@ -38,15 +38,15 @@
 #
 # --> PATH=../depot_tools:$PATH fetch --nohooks breakpad
 #
-# 3) Now change the name of the top-level breakpad directory (it will contain 
+# 3) Now change the name of the top-level breakpad directory (it will contain
 #    "configure") to "breakpad-distro".  Probably --> mv breakpad breakpad-distro
-#  
+#
 # 4) Tar it up leaving out the .git tree
 #
 # --> tar czf breakpad-from-google-yymmdd breakpad-distro --exclude=.git
 #
 #     # yymmdd is the date of this operation (e.g., 160531)
-#     # be sure to change the name timestamp in the lower part of this 
+#     # be sure to change the name timestamp in the lower part of this
 #     # CMakeLists.txt file.
 
 
@@ -95,6 +95,13 @@ macro (configure_breakpad Breakpad_Root)
         if (NOT ${status} EQUAL 0)
 	        message (SEND_ERROR "*** Failed to make breakpad: ${Breakpad_Root}")
         endif ()
+        message ("Building dump_syms on Mac")
+        execute_process (COMMAND xcodebuild -sdk macosx GCC_VERSION=com.apple.compilers.llvm.clang.1_0 OTHER_CFLAGS=-stdlib=libc++ "OTHER_LDFLAGS=-stdlib=libc++ -headerpad_max_install_names"
+        WORKING_DIRECTORY "breakpad/breakpad-distro/src/tools/mac/dump_syms"
+        RESULT_VARIABLE status)
+        if (NOT ${status} EQUAL 0)
+            message (SEND_ERROR "*** Failed to make breakpad: ${Breakpad_Root}")
+        endif ()
     else ()
         execute_process (COMMAND "make"
 	    WORKING_DIRECTORY "breakpad/breakpad-distro"
@@ -111,12 +118,12 @@ macro (configure_breakpad Breakpad_Root)
     else ()
 	set (OS "linux")
     endif ()
-    
+
     if (APPLE)
 	    message ("Building on and Mac, not trying to copy the breakpad client")
 	    message ("Extracting full paths for Mac libraries")
 	    message ("Project binary directory: ${PROJECT_BINARY_DIR}")
-        execute_process (COMMAND perl fixbreakpadframeworkrefs.pl ${PROJECT_BINARY_DIR} 
+        execute_process (COMMAND perl fixbreakpadframeworkrefs.pl ${PROJECT_BINARY_DIR}
 	    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/install"
 	    OUTPUT_VARIABLE error_message
 	    ERROR_VARIABLE error_message
@@ -178,7 +185,7 @@ macro (install_breakpad Breakpad_Root Breakpad_ArchiveFile Breakpad_ArchiveUrl)
 	message ("-- ... Downloaded source archive.")
 
 	message ("-- ... Exploding source archive")
-	
+
 	# Explode the archive
 
 	if( APPLE )
@@ -190,13 +197,13 @@ macro (install_breakpad Breakpad_Root Breakpad_ArchiveFile Breakpad_ArchiveUrl)
     		WORKING_DIRECTORY ${Breakpad_Root}
     		RESULT_VARIABLE status)
 	endif ()
-	
+
 	if (NOT ${status} EQUAL 0)
 	    message (SEND_ERROR "*** Failed to explode Breakpad tar file (${Breakpad_Root}/${Breakpad_ArchiveFile})")
 	else ()
 	    set (rebuild TRUE)
 	endif ()
-	
+
     else ()
 	message ("-- ... Using existing source archive.")
     endif ()
@@ -236,7 +243,7 @@ if (UseCrashReporter)
 
     set (Breakpad_Root ${CMAKE_BINARY_DIR}/breakpad) # Root of breakpad within the build tree.
     set (Breakpad_ArchiveFile "breakpad-from-google-${Breakpad_Timestamp}-patch1.tgz")
-    set (Breakpad_ArchiveUrl 
+    set (Breakpad_ArchiveUrl
 	"${Breakpad_Url_At_Casa}/${Breakpad_ArchiveFile}")
 
     ######################
@@ -246,7 +253,7 @@ if (UseCrashReporter)
     ######################
 
     install_breakpad (${Breakpad_Root} ${Breakpad_ArchiveFile} ${Breakpad_ArchiveUrl})
-    if ( APPLE ) 
+    if ( APPLE )
             #set (Breakpad_Library "${Breakpad_Root}/breakpad-distro/src/client/mac/build/Release/Breakpad.framework/Versions/A/Resources/breakpadUtilities.dylib" CACHE STRING "Full filespec for breakpadUtilities.dylib")
             set (Breakpad_Library "${Breakpad_Root}/breakpad-distro/src/client/mac/build/Release/Breakpad.framework/Versions/Current/Breakpad" CACHE STRING "Full filespec for breakpad")
             set (Breakpad_IncludeRoot "${Breakpad_Root}/breakpad-distro/src" CACHE STRING "Location of breakpad include file root")
@@ -255,9 +262,3 @@ if (UseCrashReporter)
         set (Breakpad_IncludeRoot "${Breakpad_Root}/breakpad-distro/src" CACHE STRING "Location of breakpad include file root")
     endif ()
 endif ()
-
-
- 
-
-
-
