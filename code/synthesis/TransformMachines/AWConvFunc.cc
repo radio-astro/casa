@@ -488,12 +488,11 @@ namespace casa{
 		    CoordinateSystem ftCoords=cs_l;
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 		    CountedPtr<CFCell> cfCellPtr;
-		    TableRecord dummyMiscInfo;
 		    cfWtb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-				    freqValues(inu), wValues(iw), muellerElements(imx)(imy),
-				    ftCoords, dummyMiscInfo, samplingWt, xSupportWt, ySupportWt,
-				    String(""), // Default ==> don't set it in the CFCell
-				    conjFreq, conjPol[0]);
+		                    freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+		                    ftCoords, samplingWt, xSupportWt, ySupportWt,
+		                    String(""), // Default ==> don't set it in the CFCell
+		                    conjFreq, conjPol[0]);
 		    cfCellPtr = cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
 						   muellerElements(imx)(imy));
 		    cfCellPtr->pa_p=Quantity(vbPA,"rad");
@@ -555,7 +554,7 @@ namespace casa{
 
 		    cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
 				  freqValues(inu), wValues(iw), muellerElements(imx)(imy),
-				  ftCoords, dummyMiscInfo, sampling, xSupport, ySupport,
+				  ftCoords, sampling, xSupport, ySupport,
 				  String(""), // Default ==> Don't set in the CFCell
 				  conjFreq, conjPol[0]);
 		    cfCellPtr=cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
@@ -1027,13 +1026,12 @@ namespace casa{
 		      // cfwtb_p->setParams(convSize,convSize,cfb_cs,s,
 		      // 			 convSize, convSize, 
 		      // 			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
-		      TableRecord dummyMiscInfo;
 		      cfb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
 		      		       freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
-				       cfb_cs, dummyMiscInfo, s, convSize, convSize);
+				       cfb_cs, s, convSize, convSize);
 		      cfwtb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
 					 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
-					 cfb_cs, dummyMiscInfo, s, convSize, convSize);
+					 cfb_cs, s, convSize, convSize);
 		      pm.update((Double)cfDone++);
 		    }
 	      }

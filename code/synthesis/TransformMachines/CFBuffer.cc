@@ -206,7 +206,7 @@ namespace casa{
     float diameter; miscInfo.get("Diameter", diameter);
     bool isRotationallySymmetric; miscInfo.get("OpCode",isRotationallySymmetric);
 
-    RigidVector<Int,3> ndx=setParams(inu, iw, ipx, ipy, freqValue, wValue, muellerElement, cs, miscInfo,
+    RigidVector<Int,3> ndx=setParams(inu, iw, ipx, ipy, freqValue, wValue, muellerElement, cs,
 				     sampling, xSupport, ySupport, fileName, conjFreq, conjPoln, telescopeName,
 				     diameter);
     cfCells_p(ndx(0),ndx(1),ndx(2))->isRotationallySymmetric_p = isRotationallySymmetric;
@@ -216,9 +216,7 @@ namespace casa{
 					  const Double& freqValue,
 					  const Double& wValue,
 					  const Int& muellerElement,
-
 					  CoordinateSystem& cs,
-					  const TableRecord& miscInfo,
 					  Float& sampling,
 					  Int& xSupport, Int& ySupport, 
 					  const String& fileName,

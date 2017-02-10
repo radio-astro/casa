@@ -307,8 +307,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						      const casacore::Double& freqValue, const casacore::Double& wValue, 
 						      const casacore::Int& muellerElement,
 						      casacore::CoordinateSystem& cs,
-						      const casacore::TableRecord& miscInfo,
-
 						      casacore::Float& sampling,
 						      casacore::Int& xSupport, casacore::Int& ySupport,
 						      const casacore::String& fileName=casacore::String(),
