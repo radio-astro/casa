@@ -2261,6 +2261,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       fullIm->putSlice(subimData,start,IPosition(4,1,1,1,1));
       delete tempIm; tempIm=0;
       delete subIm; subIm=0;
+      delete blobMap; blobMap=0;
     }
     return SHARED_PTR<ImageInterface<Float> >(fullIm);
   }
@@ -2510,7 +2511,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // out of bound condition
     if(x < 0 || x == nrow) return;
     if(y < 0 || y == ncol) return;
-    IPosition loc(4,x,y,0,0);
+    //2d lattice is assumed
+    //IPosition loc(4,x,y,0,0);
+    IPosition loc(2,x,y);
     // already labelled or not value 1 pixel 
     if(lablat(loc) || !inlat(loc)) return;
    
@@ -2532,7 +2535,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     { 
       for (Int j = 0; j < ncol; ++j) 
       {
-        if (!lablat(IPosition(4,i,j,0,0)) && inlat(IPosition(4,i,j,0,0) ) ) 
+        //if (!lablat(IPosition(4,i,j,0,0)) && inlat(IPosition(4,i,j,0,0) ) ) 
+        if (!lablat(IPosition(2,i,j)) && inlat(IPosition(2,i,j) ) ) 
           depthFirstSearch(i, j, ++blobId, inlat, lablat);
       }
     }
@@ -2540,7 +2544,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Vector<Float> SDMaskHandler::findBlobSize(Lattice<Float>& lablat) 
   {
-  // iterate through lablat
+  // iterate through lablat (2D)
   // find max label in lablat
   // create groupsize list vector gsize(max-1)
   // get val at each pixel in lablat (ival=lablat.get(loc)) and add 1 to gsize(ival-1) 
@@ -2560,7 +2564,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     { 
       for (Int j =0; j < ncol; ++j)
       {
-        IPosition loc(4, i, j, 0, 0);
+        //IPosition loc(4, i, j, 0, 0);
+        IPosition loc(2, i, j);
         //cerr<<"i="<<i<<" j="<<j<<" labelat(loc)="<<lablat(loc)<<endl;
         if (lablat(loc)) blobsizes[Int(lablat(loc))-1]+=1;
       }

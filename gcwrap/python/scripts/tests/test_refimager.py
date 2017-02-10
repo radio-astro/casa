@@ -1489,10 +1489,19 @@ class test_mask(testref_base):
           self.checkfinal(report)
 
      def test_mask_autobox_multithresh(self):
-          """ [mask] test_mask__autobox_multithresh :  multi-threshold Autobox """
+          """ [mask] test_mask__autobox_multithresh :  multi-threshold Autobox (default)"""
           self.prepData('refim_twochan.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,usemask='auto-multithresh')
           report=self.th.checkall(imexist=[self.img+'.mask'], imval=[(self.img+'.mask',1.0,[50,50,0,0]),(self.img+'.mask',0.0,[50,85,0,0])])
+          self.checkfinal(report)
+
+     def test_mask_autobox_multithresh_with_prune(self):
+          """ [mask] test_mask__autobox_multithresh :  multi-threshold Autobox (minbeamfrac=0.3)"""
+          # also test for a bug fix to the new pruneRegions (only caused the failure when image size large
+          self.prepData('refim_twochan.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=1000,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,usemask='auto-multithresh',
+          minbeamfrac=0.3)
+          report=self.th.checkall(imexist=[self.img+'.mask'], imval=[(self.img+'.mask',1.0,[500,500,0,0]),(self.img+'.mask',0.0,[500,510,0,0])])
           self.checkfinal(report)
 
 #     def test_mask_outregion(self):
