@@ -108,7 +108,7 @@ void createAWPFTMachine(CountedPtr<refim::FTMachine>& theFT, CountedPtr<refim::F
   CountedPtr<refim::ConvolutionFunction> awConvFunc = AWProjectFT::makeCFObject(telescopeName, 
 									 aTermOn,
 									 psTermOn, true, mTermOn, wbAWP,
-									 cfBufferSize, cfOversampling);
+									 false);
   //
   // Construct the appropriate re-sampler.
   //
