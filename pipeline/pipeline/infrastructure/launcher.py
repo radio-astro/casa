@@ -11,7 +11,7 @@ except:
     import pickle
 import pprint
 
-import casadef
+#import casadef
 
 from . import callibrary
 from . import casatools
@@ -24,8 +24,10 @@ LOG = logging.get_logger(__name__)
 
 
 # minimum allowed CASA revision. Set to 0 or None to disable
-MIN_CASA_REVISION = 38788
+#MIN_CASA_REVISION = 38788
+MIN_CASA_REVISION = [5,0,0,0]
 # maximum allowed CASA revision. Set to 0 or None to disable
+#MAX_CASA_REVISION = None
 MAX_CASA_REVISION = None
 
 
@@ -234,21 +236,27 @@ class Pipeline(object):
         # versions of CASA by comparing the CASA subversion revision against
         # our expected minimum and maximum
         if casa_version_check is True:
-            revision = int(casadef.subversion_revision)
-            if MIN_CASA_REVISION and MIN_CASA_REVISION > revision:
-                msg = ('Minimum CASA revision for the pipeline is r%s, '
-                       'got CASA %s (r%s).' % (MIN_CASA_REVISION, 
-                                               casadef.casa_version,
-                                               casadef.subversion_revision))
+            #revision = int(casadef.subversion_revision)
+            #if MIN_CASA_REVISION and MIN_CASA_REVISION > revision:
+            if MIN_CASA_REVISION and casatools.utils.compare_version('<', MIN_CASA_REVISION) is True:
+                #msg = ('Minimum CASA revision for the pipeline is r%s, '
+                       #'got CASA %s (r%s).' % (MIN_CASA_REVISION, 
+                                               #casadef.casa_version,
+                                               #casadef.subversion_revision))
+                msg = ('Minimum CASA revision for the pipeline is %s, '
+                       'got CASA %s.' % (MIN_CASA_REVISION, casatools.utils.version()))
                 LOG.critical(msg)
-                raise EnvironmentError(msg)
-            if MAX_CASA_REVISION and MAX_CASA_REVISION < revision:
-                msg = ('Maximum CASA revision for the pipeline is r%s, '
-                       'got CASA %s (r%s).' % (MAX_CASA_REVISION, 
-                                               casadef.casa_version,
-                                               casadef.subversion_revision))
+                #raise EnvironmentError(msg)
+            #if MAX_CASA_REVISION and MAX_CASA_REVISION < revision:
+            if MAX_CASA_REVISION and casatools.utils.compare_version('>', MAX_CASA_REVISION) is True:
+                #msg = ('Maximum CASA revision for the pipeline is r%s, '
+                       #'got CASA %s (r%s).' % (MAX_CASA_REVISION, 
+                                               #casadef.casa_version,
+                                               #casadef.subversion_revision))
+                msg = ('Maximum CASA revision for the pipeline is %s, '
+                       'got CASA %s.' % (MAX_CASA_REVISION, casatools.utils.version()))
                 LOG.critical(msg)
-                raise EnvironmentError(msg)
+                #raise EnvironmentError(msg)
 
         # if no previous context was specified, create a new context for the
         # given measurement set
