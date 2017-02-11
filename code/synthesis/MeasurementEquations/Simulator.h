@@ -326,10 +326,15 @@ public:
   casacore::Bool reset();
 
   // Set the processing options
-  casacore::Bool setoptions(const casacore::String& ftmachine, const casacore::Int cache, const casacore::Int tile,
-		  const casacore::String& gridfunction, const casacore::MPosition& mLocation,
-		  const casacore::Float padding, const casacore::Int facets,
-			    const casacore::Double maxData,const casacore::Int wprojPlanes, const casacore::String& vptable);
+  casacore::Bool setoptions(const casacore::String& ftmachine, 
+			    const casacore::Int cache, 
+			    const casacore::Int tile,
+			    const casacore::String& gridfunction, 
+			    const casacore::MPosition& mLocation,
+			    const casacore::Float padding, 
+			    const casacore::Int facets,
+			    const casacore::Double maxData,
+			    const casacore::Int wprojPlanes);
 
  
   // Set the print level
@@ -515,9 +520,6 @@ private:
   // </group>
   
   casacore::Int prtlev_;
-
-  casacore::String itsVpTable;
-  bool itsMakeVP;
 
 };
 
