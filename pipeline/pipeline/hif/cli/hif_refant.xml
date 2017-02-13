@@ -15,18 +15,18 @@
 	</param>			
 
 	<param type="string" name="field" subparam="true">
-	    <description>Set of data selection field names or ids</description>
+	    <description>List of field names or ids</description>
 	    <value></value>
 	</param>
 
 	<param type="string" name="spw" subparam="true">
-	    <description>Set of data selection spectral windows / channels </description>
+	    <description>List of spectral windows ids </description>
 	    <value></value>
 	</param>
 
 	<param type="string" name="intent" subparam="true">
-	    <description>Set of data selection intents</description>
-	    <value></value>
+	    <description>List of data selection intents</description>
+	    <value>AMPLITUDE,BANDPASS,PHASE</value>
 	</param>
 
 	<param type="string" name="hm_refant">
@@ -85,7 +85,7 @@
 		<equals type="string" value="interactive"> 
 		    <default param="vis"><value type="stringArray"></value></default>
 		    <default param="field"><value type="string"></value></default>
-		    <default param="intents"><value type="string"></value></default>
+		    <default param="intents"><value type="string">AMPLITUDE,BANDPASS,PHASE</value></default>
 		    <default param="spw"><value type="string"></value></default>
 		    <default param="dryrun"><value type="bool">False</value></default>
 		    <default param="acceptresults"><value type="bool">True</value></default>
@@ -94,7 +94,7 @@
 		<equals type="string" value="getinputs"> 
 		    <default param="vis"><value type="stringArray"></value></default>
 		    <default param="field"><value type="string"></value></default>
-		    <default param="intents"><value type="string"></value></default>
+		    <default param="intents"><value type="string">AMPLITUDE,BANDPASS,PHASE</value></default>
 		    <default param="spw"><value type="string"></value></default>
 			<default param="refantignore"><value type="string"></value></default>
 		</equals>
@@ -169,20 +169,20 @@ vis -- The list of input measurement sets. Defaults to the list of measurement
    default: ''
    example: ['M31.ms']
 
-field -- The list of field names or field ids for which flagging scores
-   are computed if hm_refant='automatic' and  flagging = True
-   default: ''
-   example: '3C279', '3C279, M82'
+field -- The comma delimited list of field names or field ids for which flagging
+   scores are computed if hm_refant='automatic' and  flagging = True
+   default: '' (Default to fields with the specified intents)
+   example: '3C279', '3C279,M82'
 
 intent -- A string containing a comma delimited list of intents against
     which the the selected fields are matched. Defaults to all supported
     intents.
-    default: ''
-    example: '*BANDPASS*'
+    default: 'AMPLI,BANDPASS,PHASE'
+    example: 'BANDPASS'
 
-spw -- The list of spectral windows and channels for which flagging scores
-    are computed if hm_refant='automatic' and  flagging = True.
-    default: ''
+spw -- A string containing the comma delimited list of spectral window ids for
+    which flagging scores are computed if hm_refant='automatic' and  flagging = True.
+    default: '' (all spws observed with the specified intents)
     example: '11,13,15,17'
 
 
