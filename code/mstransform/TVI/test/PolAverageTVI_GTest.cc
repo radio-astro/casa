@@ -39,6 +39,7 @@
 #include <casacore/casa/Arrays/ArrayMath.h>
 #include <casacore/casa/iomanip.h>
 #include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Utilities/GenSort.h>
 
 #include <msvis/MSVis/VisibilityIteratorImpl2.h>
 #include <msvis/MSVis/LayeredVi2Factory.h>
@@ -46,6 +47,8 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <typeinfo>
+#include <limits>
+#include <cmath>
 
 using namespace std;
 using namespace casa;
@@ -162,8 +165,10 @@ void ValidatorUtil::ValidateScalar<Complex>(Complex const ref,
   EXPECT_FLOAT_EQ(ref.imag(), result.imag());
 }
 
+// Base class for validating polarization average
 template<class CollapserImpl>
 struct ValidatorBase {
+private:
   template<class T>
   static void CollapseData(Array<T> const &baseData,
       Array<Bool> const &baseFlag, Array<Float> const &baseWeight,
@@ -204,7 +209,19 @@ struct ValidatorBase {
       weight.freeStorage(p_w, b4);
       fSlice.freeStorage(p_f, b5);
     }
-    result /= weightSum;
+//    std::cout << "DEBUG: result = " << result.nonDegenerate()
+//        << " weightSum = " << weightSum.nonDegenerate() << std::endl;
+    Bool b1, b2;
+    T *p_r = result.getStorage(b1);
+    Float const *p_s = weightSum.getStorage(b2);
+    for (ssize_t i = 0; i < result.shape().product(); ++i) {
+      if (p_s[i] > 0.0f) {
+        p_r[i] /= p_s[i];
+      }
+    }
+    result.putStorage(p_r, b1);
+    weightSum.freeStorage(p_s, b2);
+//    std::cout << "DEBUG: r/w = " << result << std::endl;
   }
 
   static void CollapseWeight(Array<Float> const &baseWeight,
@@ -222,7 +239,8 @@ struct ValidatorBase {
       end -= 1;
       end[0] = i;
       auto wslice = baseWeight(start, end);
-      CollapserImpl::AccumulateWeight(wslice, result);
+      //CollapserImpl::AccumulateWeight(wslice, result);
+      CollapserImpl::AccumulateWeight(start, end, baseWeight, result);
     }
     CollapserImpl::NormalizeWeight(result);
   }
@@ -231,6 +249,7 @@ struct ValidatorBase {
   static void ValidateDataColumn(Array<T> const &data, MeasurementSet const &ms,
       String const &columnName, Vector<uInt> const &rowIds) {
     cout << "Start " << __func__ << endl;
+    ASSERT_EQ(data.shape()[0], (ssize_t )1);
     Array<T> baseData;
     Array<Float> baseWeight;
     Array<Bool> baseFlag;
@@ -246,6 +265,7 @@ struct ValidatorBase {
   static void ValidateWeightColumn(Array<Float> const &weight,
       MeasurementSet const &ms, String const &columnName,
       Vector<uInt> const &rowIds) {
+    ASSERT_EQ(weight.shape()[0], (ssize_t )1);
     Array<Float> baseWeight;
     Filler<Float>::FillArrayReference(ms, columnName, rowIds, baseWeight);
     Array<Float> ref;
@@ -253,6 +273,12 @@ struct ValidatorBase {
     ValidatorUtil::ValidateArray(ref, weight);
   }
 
+public:
+  static void ValidatePolarization(Vector<Int> const &corrType) {
+    // correlation type is always I
+    ASSERT_EQ((size_t )1, corrType.size());
+    ASSERT_TRUE(allEQ(corrType, (Int )Stokes::I));
+  }
   static void ValidateData(Array<Complex> const &data, MeasurementSet const &ms,
       Vector<uInt> const &rowIds) {
     ValidateDataColumn(data, ms, "DATA", rowIds);
@@ -296,6 +322,7 @@ struct ValidatorBase {
 
   static void ValidateFlagRow(Vector<Bool> const &flag,
       MeasurementSet const &ms, Vector<uInt> const &rowIds) {
+    ASSERT_EQ(flag.size(), rowIds.size());
     Vector<Bool> ref;
     Filler<Bool>::FillScalarReference(ms, "FLAG_ROW", rowIds, ref);
     ASSERT_EQ(flag.shape(), ref.shape());
@@ -333,7 +360,76 @@ struct ValidatorBase {
   }
 };
 
-struct GeometricAverageValidator: public ValidatorBase<GeometricAverageValidator> {
+// Base class for validating polarization average being skipped
+struct IdenticalValidator {
+public:
+  static void ValidatePolarization(Vector<Int> const &corrType) {
+    Int possibleTypes[] = { Stokes::I, Stokes::Q, Stokes::U, Stokes::V,
+        Stokes::XY, Stokes::YX };
+    size_t len = sizeof(possibleTypes) / sizeof(Int);
+    Vector<Int> possibleTypesV(IPosition(1, len), possibleTypes, SHARE);
+    auto iterend = corrType.end();
+    for (auto iter = corrType.begin(); iter != iterend; ++iter) {
+      ASSERT_TRUE(anyEQ(possibleTypesV, *iter));
+    }
+  }
+  static void ValidateData(Array<Complex> const &data, MeasurementSet const &ms,
+      Vector<uInt> const &rowIds) {
+    ValidateArrayColumn(data, ms, "DATA", rowIds);
+  }
+  static void ValidateCorrected(Cube<Complex> const &data,
+      MeasurementSet const &ms, Vector<uInt> const &rowIds) {
+    ValidateArrayColumn(data, ms, "CORRECTED_DATA", rowIds);
+  }
+  static void ValidateModel(Cube<Complex> const &data, MeasurementSet const &ms,
+      Vector<uInt> const &rowIds) {
+    ValidateArrayColumn(data, ms, "MODEL_DATA", rowIds);
+  }
+  static void ValidateFloat(Cube<Float> const &data, MeasurementSet const &ms,
+      Vector<uInt> const &rowIds) {
+    ValidateArrayColumn(data, ms, "FLOAT_DATA", rowIds);
+  }
+  static void ValidateFlag(Cube<Bool> const &flag, MeasurementSet const &ms,
+      Vector<uInt> const &rowIds) {
+    ValidateArrayColumn(flag, ms, "FLAG", rowIds);
+  }
+  static void ValidateFlagRow(Vector<Bool> const &flag,
+      MeasurementSet const &ms, Vector<uInt> const &rowIds) {
+    ValidateScalarColumn(flag, ms, "FLAG_ROW", rowIds);
+  }
+  static void ValidateWeight(Matrix<Float> const &weight,
+      MeasurementSet const &ms, Vector<uInt> const &rowIds) {
+    ValidateArrayColumn(weight, ms, "WEIGHT", rowIds);
+  }
+  static void ValidateWeightSp(Cube<Float> const &weight,
+      MeasurementSet const &ms, Vector<uInt> const &rowIds) {
+    if (ms.tableDesc().isColumn("WEIGHT_SPECTRUM")) {
+      ValidateArrayColumn(weight, ms, "WEIGHT_SPECTRUM", rowIds);
+    }
+  }
+private:
+  template<class T>
+  static void ValidateArrayColumn(Array<T> const &data,
+      MeasurementSet const &ms, String const &columnName,
+      Vector<uInt> const &rowIds) {
+    Array<T> ref;
+    Filler<T>::FillArrayReference(ms, columnName, rowIds, ref);
+    EXPECT_EQ(data.shape(), ref.shape());
+    EXPECT_TRUE(allEQ(data, ref));
+  }
+  template<class T>
+  static void ValidateScalarColumn(Array<T> const &data,
+      MeasurementSet const &ms, String const &columnName,
+      Vector<uInt> const &rowIds) {
+    Vector<T> ref;
+    Filler<T>::FillScalarReference(ms, columnName, rowIds, ref);
+    EXPECT_EQ(data.shape(), ref.shape());
+    EXPECT_TRUE(allEQ(data, ref));
+  }
+};
+
+// Base class for Geometric type validator
+struct GeometricValidatorBase {
   static String GetMode() {
     return "geometric";
   }
@@ -341,22 +437,10 @@ struct GeometricAverageValidator: public ValidatorBase<GeometricAverageValidator
   static String GetTypePrefix() {
     return "GeometricPolAverage(";
   }
-
-  static void SetWeight(IPosition const &start, IPosition const &end,
-      Array<Float> const &baseWeight, Array<Float> &weight) {
-    weight = baseWeight(start, end);
-  }
-
-  static void AccumulateWeight(Array<Float> const &weight,
-      Array<Float> &result) {
-    result += weight;
-  }
-
-  static void NormalizeWeight(Array<Float> &/*result*/) {
-  }
 };
 
-struct StokesAverageValidator: public ValidatorBase<StokesAverageValidator> {
+// Base class for Stokes type validator
+struct StokesValidatorBase {
   static String GetMode() {
     return "stokes";
   }
@@ -364,15 +448,36 @@ struct StokesAverageValidator: public ValidatorBase<StokesAverageValidator> {
   static String GetTypePrefix() {
     return "StokesPolAverage(";
   }
+};
 
+// Validator for Geometric polarization average
+struct GeometricAverageValidator: public GeometricValidatorBase,
+    public ValidatorBase<GeometricAverageValidator> {
+  static void SetWeight(IPosition const &start, IPosition const &end,
+      Array<Float> const &baseWeight, Array<Float> &weight) {
+    weight = baseWeight(start, end);
+  }
+
+  static void AccumulateWeight(IPosition const &start, IPosition const &end,
+      Array<Float> const &weight, Array<Float> &result) {
+    result += weight(start, end);
+  }
+
+  static void NormalizeWeight(Array<Float> &/*result*/) {
+  }
+};
+
+// Validator for Stokes polarization average
+struct StokesAverageValidator: public StokesValidatorBase, public ValidatorBase<
+    StokesAverageValidator> {
   static void SetWeight(IPosition const &/*start*/, IPosition const &/*end*/,
       Array<Float> const &/*baseWeight*/, Array<Float> &weight) {
     weight = 1.0f;
   }
 
-  static void AccumulateWeight(Array<Float> const &weight,
-      Array<Float> &result) {
-    result += 1.0f / weight;
+  static void AccumulateWeight(IPosition const &start, IPosition const &end,
+      Array<Float> const &weight, Array<Float> &result) {
+    result += 1.0f / weight(start, end);
   }
 
   static void NormalizeWeight(Array<Float> &result) {
@@ -380,9 +485,82 @@ struct StokesAverageValidator: public ValidatorBase<StokesAverageValidator> {
   }
 };
 
+// Validator for Geometric polarization average including cross-polarization
+struct GeometricAverageCrossPolarizationValidator: public GeometricValidatorBase,
+    public ValidatorBase<GeometricAverageCrossPolarizationValidator> {
+  static void SetWeight(IPosition const &start, IPosition const &end,
+      Array<Float> const &baseWeight, Array<Float> &weight) {
+    // Here it is assumed that polarization order is 0: XX (RR), 1: XY (RL), 2: YX (LR), 3: YY (LL)
+    ASSERT_EQ(start[0], end[0]);
+    if (start[0] == 1 || start[0] == 2) {
+      // set weight for cross-polarization component to exclude it from the average
+      weight = 0.0f;
+    } else {
+      weight = baseWeight(start, end);
+    }
+  }
+
+  static void AccumulateWeight(IPosition const &start, IPosition const &end,
+      Array<Float> const &weight, Array<Float> &result) {
+    // Here it is assumed that polarization order is 0: XX (RR), 1: XY (RL), 2: YX (LR), 3: YY (LL)
+    ASSERT_EQ(start[0], end[0]);
+    if (start[0] != 1 && start[0] != 2) {
+      result += weight(start, end);
+    }
+  }
+
+  static void NormalizeWeight(Array<Float> &/*result*/) {
+  }
+};
+
+// Validator for Stokes polarization average including cross-polarization
+struct StokesAverageCrossPolarizationValidator: public StokesValidatorBase,
+    public ValidatorBase<StokesAverageCrossPolarizationValidator> {
+  static void SetWeight(IPosition const &start, IPosition const &end,
+      Array<Float> const &/*baseWeight*/, Array<Float> &weight) {
+    // Here it is assumed that polarization order is 0: XX (RR), 1: XY (RL), 2: YX (LR), 3: YY (LL)
+    ASSERT_EQ(start[0], end[0]);
+    if (start[0] == 1 || start[0] == 2) {
+      // set weight for cross-polarization component to exclude it from the average
+      weight = 0.0f;
+    } else {
+      weight = 1.0f;
+    }
+  }
+
+  static void AccumulateWeight(IPosition const &start, IPosition const &end,
+      Array<Float> const &weight, Array<Float> &result) {
+    // Here it is assumed that polarization order is 0: XX (RR), 1: XY (RL), 2: YX (LR), 3: YY (LL)
+    ASSERT_EQ(start[0], end[0]);
+    if (start[0] != 1 && start[0] != 2) {
+      result += 1.0f / weight(start, end);
+    }
+  }
+
+  static void NormalizeWeight(Array<Float> &result) {
+    result = 4.0f / result;
+  }
+};
+
+// Validator for Geometric polarization average (identical case = skip)
+struct GeometricIdenticalValidator: public GeometricValidatorBase,
+    public IdenticalValidator {
+
+};
+
+// Validator for Stokes polarization average (identical case = skip)
+struct StokesIdenticalValidator: public StokesValidatorBase,
+    public IdenticalValidator {
+
+};
+
 template<class Impl>
 class Manufacturer {
 public:
+  struct Product {
+    ViFactory *factory;
+    ViImplementation2 *vii;
+  };
   static VisibilityIterator2 *ManufactureVI(MeasurementSet *ms,
       String const &mode) {
     cout << "### Manufacturer: " << endl << "###   " << Impl::GetTestPurpose()
@@ -394,13 +572,18 @@ public:
     }
 
     // build factory object
-    std::unique_ptr<ViFactory> factory(Impl::BuildFactory(ms, modeRec));
+    Product p = Impl::BuildFactory(ms, modeRec);
+    std::unique_ptr < ViFactory > factory(p.factory);
 
-    std::unique_ptr<VisibilityIterator2> vi;
+    std::unique_ptr < VisibilityIterator2 > vi;
     try {
       vi.reset(new VisibilityIterator2(*factory.get()));
     } catch (...) {
       cout << "Failed to create VI at factory" << endl;
+      // vii must be deleted since it is never managed by vi
+      if (p.vii) {
+        delete p.vii;
+      }
       throw;
     }
 
@@ -412,7 +595,7 @@ public:
 
 class BasicManufacturer1: public Manufacturer<BasicManufacturer1> {
 public:
-  static ViFactory *BuildFactory(MeasurementSet *ms, Record const &mode) {
+  static Product BuildFactory(MeasurementSet *ms, Record const &mode) {
     // create read-only VI impl
     Block<MeasurementSet const *> const mss(1, ms);
     SortColumns defaultSortColumns;
@@ -424,11 +607,14 @@ public:
     std::unique_ptr<ViFactory> factory(
         new PolAverageVi2Factory(mode, inputVii.get()));
 
+    Product p;
+
     // vi will be responsible for releasing inputVii so unique_ptr
     // should release the ownership here
-    inputVii.release();
+    p.vii = inputVii.release();
+    p.factory = factory.release();
 
-    return factory.release();
+    return p;
   }
 
   static String GetTestPurpose() {
@@ -438,13 +624,16 @@ public:
 
 class BasicManufacturer2: public Manufacturer<BasicManufacturer2> {
 public:
-  static ViFactory *BuildFactory(MeasurementSet *ms, Record const &mode) {
+  static Product BuildFactory(MeasurementSet *ms, Record const &mode) {
     // create factory directly from MS
     SortColumns defaultSortColumns;
     std::unique_ptr<ViFactory> factory(
         new PolAverageVi2Factory(mode, ms, defaultSortColumns, 0.0, False));
 
-    return factory.release();
+    Product p;
+    p.vii = nullptr;
+    p.factory = factory.release();
+    return p;
   }
 
   static String GetTestPurpose() {
@@ -462,7 +651,8 @@ public:
 
     ViImplementation2 *createVi() const {
       Vector<ViiLayerFactory *> v(1);
-      auto layer0 = VisIterImpl2LayerFactory(ms_, IteratingParameters(0.0), false);
+      auto layer0 = VisIterImpl2LayerFactory(ms_, IteratingParameters(0.0),
+          false);
       auto layer1 = PolAverageTVILayerFactory(mode_);
       v[0] = &layer0;
       return layer1.createViImpl2(v);
@@ -472,12 +662,14 @@ public:
     Record const mode_;
   };
 
-  static ViFactory *BuildFactory(MeasurementSet *ms, Record const &mode) {
+  static Product BuildFactory(MeasurementSet *ms, Record const &mode) {
     // create read-only VI impl
-    std::unique_ptr<ViFactory> factory(
-        new LayerFactoryWrapper(ms, mode));
+    std::unique_ptr<ViFactory> factory(new LayerFactoryWrapper(ms, mode));
 
-    return factory.release();
+    Product p;
+    p.vii = nullptr;
+    p.factory = factory.release();
+    return p;
   }
 
   static String GetTestPurpose() {
@@ -487,61 +679,57 @@ public:
 
 } // anonymous namespace
 
-class PolAverageTVITest: public ::testing::Test {
+class PolAverageTVITestBase: public ::testing::Test {
 public:
+  PolAverageTVITestBase() :
+      my_ms_name_("polaverage_test.ms"), my_data_name_(), ms_(nullptr) {
+  }
+
   virtual void SetUp() {
 //    my_data_name_ = "analytic_spectra.ms";
-    my_data_name_ = "analytic_type1.bl.ms";
-    my_ms_name_ = "polaverage_test.ms";
-    std::string const data_path = ::GetCasaDataPath()
-        + "/regression/unittest/tsdbaseline/";
+    my_data_name_ = GetDataName(); //"analytic_type1.bl.ms";
+    std::string const data_path = ::GetCasaDataPath() + "/regression/unittest/"
+        + GetRelativeDataPath() + "/";
+//        + "/regression/unittest/tsdbaseline/";
 //    + "/regression/unittest/singledish/";
 
+    ASSERT_TRUE(Directory(data_path).exists());
     copyDataFromRepository(data_path);
     ASSERT_TRUE(File(my_data_name_).exists());
     deleteTable(my_ms_name_);
 
     // create MS
-    ms_ = MeasurementSet(my_data_name_, Table::Old);
+    ms_ = new MeasurementSet(my_data_name_, Table::Update);
   }
 
   virtual void TearDown() {
+    // delete MS explicitly to detach from MS on disk
+    delete ms_;
+
+    // just to make sure all locks are effectively released
+    Table::relinquishAutoLocks();
+
     cleanup();
   }
+
 protected:
-  std::string my_ms_name_;
+  std::string const my_ms_name_;
   std::string my_data_name_;
-  MeasurementSet ms_;
+  MeasurementSet *ms_;
 
-  VisibilityIterator2 *ManufactureVI(String const &mode) {
-    return BasicManufacturer1::ManufactureVI(&ms_, mode);
+  virtual std::string GetDataName() {
+    return "";
   }
 
-  void TestFactory(String const &mode, String const &expectedClassName) {
-
-    cout << "Mode \"" << mode << "\" expected class name \""
-        << expectedClassName << "\"" << endl;
-
-    if (expectedClassName.size() > 0) {
-      std::unique_ptr<VisibilityIterator2> vi(ManufactureVI(mode));
-
-      // Verify type string
-      String viiType = vi->ViiType();
-      EXPECT_TRUE(viiType.startsWith(expectedClassName));
-    } else {
-      cout << "Creation of VI via factory will fail" << endl;
-      // exception must be thrown
-      EXPECT_THROW( {
-            std::unique_ptr<VisibilityIterator2> vi(ManufactureVI(mode)); //new VisibilityIterator2(factory));
-          },
-          AipsError)<< "The process must throw AipsError";
-    }
+  virtual std::string GetRelativeDataPath() {
+    return "";
   }
 
-  template<class Validator, class Manufacturer=BasicManufacturer1>
+  template<class Validator, class Manufacturer = BasicManufacturer1>
   void TestTVI() {
     // Create VI
-    std::unique_ptr<VisibilityIterator2> vi(Manufacturer::ManufactureVI(&ms_, Validator::GetMode()));
+    std::unique_ptr < VisibilityIterator2
+        > vi(Manufacturer::ManufactureVI(ms_, Validator::GetMode()));
     ASSERT_TRUE(vi->ViiType().startsWith(Validator::GetTypePrefix()));
 
     // MS property
@@ -561,11 +749,11 @@ protected:
     cout << "\tNumber of Polarizations: " << vi->nPolarizationIds() << endl;
     cout << "\tNumber of DataDescs: " << vi->nDataDescriptionIds() << endl;
     cout << "\tChannelized Weight Exists? "
-    << (vi->weightSpectrumExists() ? "True" : "False") << endl;
+        << (vi->weightSpectrumExists() ? "True" : "False") << endl;
     //cout << "\tChannelized Sigma Exists? " << (vi->sigmaSpectrumExists() ? "True" : "False") << endl;
 
     // mv-VI consistency check
-    EXPECT_EQ(nRowPolarizationTable + 1, (uInt)vi->nPolarizationIds());
+    EXPECT_EQ(nRowPolarizationTable + 1, (uInt )vi->nPolarizationIds());
 
     // VI iteration
     Vector<uInt> swept(nRowMs, 0);
@@ -585,7 +773,8 @@ protected:
 
       while (vi->more()) {
         auto subchunk = vi->getSubchunkId();
-        cout << "=== Start loop on subchunk " << subchunk.subchunk() << " ===" << endl;
+        cout << "=== Start loop on subchunk " << subchunk.subchunk() << " ==="
+            << endl;
 
         // cannot use getInterval due to the error
         // "undefined reference to VisibilityIterator2::getInterval"
@@ -610,7 +799,14 @@ protected:
         cout << "Time Centroid: " << vb->timeCentroid() << endl;
         cout << "Time Interval: " << vb->timeInterval() << endl;
         auto const corrTypes = vb->correlationTypes();
-        cout << "Correlation Types: " << corrTypes << endl;
+        auto toStokes = [](Vector<Int> const &corrTypes) {
+          Vector<String> typeNames(corrTypes.size());
+          for (size_t i = 0; i < corrTypes.size(); ++i) {
+            typeNames[i] = Stokes::name((Stokes::StokesTypes)corrTypes[i]);
+          }
+          return typeNames;
+        };
+        cout << "Correlation Types: " << toStokes(corrTypes) << endl;
         //cout << "UVW: " << vb->uvw() << endl;
 
         cout << "---" << endl;
@@ -670,28 +866,21 @@ protected:
         if (!visCubeFloat.empty()) {
           EXPECT_EQ(visShape, visCubeFloat.shape());
         }
-        EXPECT_EQ((uInt)1, flagRow.size());
-        EXPECT_EQ((ssize_t)1, weight.shape()[0]);
-        EXPECT_EQ((ssize_t)nRowSubchunk, weight.shape()[1]);
+        EXPECT_EQ((ssize_t )nRowSubchunk, weight.shape()[1]);
         // NB: weight spectrum is created on-the-fly based on WEIGHT
         //     so that weightSp is always non-empty.
         //     see VisBufferImpl2::fillWeightSpectrum.
         //EXPECT_EQ(!weightSpExists, weightSp.empty());
         EXPECT_FALSE(weightSp.empty());
         if (!weightSp.empty()) {
-          EXPECT_EQ((ssize_t)1, weightSp.shape()[0]);
-          EXPECT_EQ((ssize_t)nChan, weightSp.shape()[1]);
-          EXPECT_EQ((ssize_t)nRowSubchunk, weightSp.shape()[2]);
+          EXPECT_EQ((ssize_t )nChan, weightSp.shape()[1]);
+          EXPECT_EQ((ssize_t )nRowSubchunk, weightSp.shape()[2]);
         }
 
         // polarization averaging specific check
-        // length of the correlation (polarization) axis must be 1
-        ASSERT_EQ((ssize_t)1, visShape[0]);
         // polarization id always points to the row to be appended
-        ASSERT_EQ(nRowPolarizationTable, (uInt)vb->polarizationId());
-        // correlation type is always I
-        ASSERT_EQ((size_t)1, corrTypes.size());
-        ASSERT_TRUE(allEQ(corrTypes, (Int)Stokes::I));
+        ASSERT_EQ(nRowPolarizationTable, (uInt )vb->polarizationId());
+        Validator::ValidatePolarization(corrTypes);
 
         // validation of polarization average
         if (!visCube.empty()) {
@@ -729,7 +918,7 @@ protected:
     EXPECT_EQ(nRowMs, nRowChunkSum);
 
     // iteration check
-    EXPECT_TRUE(allEQ(swept, (uInt)1));
+    EXPECT_TRUE(allEQ(swept, (uInt )1));
 
   }
 
@@ -793,14 +982,7 @@ private:
   }
   void cleanup() {
     if (my_data_name_.size() > 0) {
-      File f(my_data_name_);
-      if (f.isRegular()) {
-        RegularFile r(my_data_name_);
-        r.remove();
-      } else if (f.isDirectory()) {
-        Directory d(my_data_name_);
-        d.removeRecursive();
-      }
+      deleteTable(my_data_name_);
     }
     deleteTable(my_ms_name_);
   }
@@ -809,6 +991,191 @@ private:
     if (file.exists()) {
       std::cout << "Removing " << name << std::endl;
       Table::deleteTable(name, true);
+    }
+  }
+};
+
+// Fixture class for standard test
+class PolAverageTVITest: public PolAverageTVITestBase {
+protected:
+  virtual std::string GetDataName() {
+    return "analytic_type1.bl.ms";
+  }
+
+  virtual std::string GetRelativeDataPath() {
+    return "tsdbaseline";
+  }
+
+  VisibilityIterator2 *ManufactureVI(String const &mode) {
+    return BasicManufacturer1::ManufactureVI(ms_, mode);
+  }
+
+  void TestFactory(String const &mode, String const &expectedClassName) {
+
+    cout << "Mode \"" << mode << "\" expected class name \""
+        << expectedClassName << "\"" << endl;
+
+    if (expectedClassName.size() > 0) {
+      std::unique_ptr < VisibilityIterator2 > vi(ManufactureVI(mode));
+
+      // Verify type string
+      String viiType = vi->ViiType();
+      EXPECT_TRUE(viiType.startsWith(expectedClassName));
+    } else {
+      cout << "Creation of VI via factory will fail" << endl;
+      // exception must be thrown
+      EXPECT_THROW( {
+            std::unique_ptr<VisibilityIterator2> vi(ManufactureVI(mode)); //new VisibilityIterator2(factory));
+          },
+          AipsError)<< "The process must throw AipsError";
+    }
+  }
+
+};
+
+// Fixture class for testing four polarization (cross-pol, stokes IQUV)
+class PolAverageTVIFourPolarizationTest: public PolAverageTVITestBase {
+protected:
+  virtual std::string GetDataName() {
+    return "crosspoltest.ms";
+  }
+
+  virtual std::string GetRelativeDataPath() {
+    return "sdsave";
+  }
+
+  void SetCorrTypeToStokes() {
+    ScalarColumn<Int> dataDescIdColumn(*ms_, "DATA_DESC_ID");
+    Vector<Int> dataDescIdList = dataDescIdColumn.getColumn();
+    ScalarColumn<Int> polarizationIdColumn(ms_->dataDescription(),
+        "POLARIZATION_ID");
+    Vector<Int> polarizationIdList(dataDescIdList.size());
+    for (size_t i = 0; i < dataDescIdList.size(); ++i) {
+      polarizationIdList[i] = polarizationIdColumn(dataDescIdList[i]);
+    }
+    std::cout << "polarizationIdList = " << polarizationIdList << std::endl;
+    uInt n = GenSort<Int>::sort(polarizationIdList, Sort::Ascending,
+        Sort::HeapSort | Sort::NoDuplicates);
+    std::cout << "polarizationIdList (sorted n = " << n << ") = "
+        << polarizationIdList << std::endl;
+
+    ArrayColumn<Int> corrTypeColumn(ms_->polarization(), "CORR_TYPE");
+    Int const newCorrTypes[] = { Stokes::I, Stokes::Q, Stokes::U, Stokes::V };
+    for (uInt i = 0; i < n; ++i) {
+      auto row = polarizationIdList[i];
+      std::cout << "row = " << row << std::endl;
+      Vector<Int> corrType = corrTypeColumn(row);
+      std::cout << "corrType = " << corrType << std::endl;
+      ASSERT_LE(corrType.size(), sizeof(newCorrTypes) / sizeof(Int));
+      for (size_t j = 0; j < corrType.size(); ++j) {
+        corrType[j] = newCorrTypes[j];
+      }
+      std::cout << "new corrType = " << corrType << std::endl;
+      corrTypeColumn.put(row, corrType);
+    }
+  }
+};
+
+// Fixture class for testing dirty (partially flagged) data
+// NB: use same data as PolAverageTVITest
+class PolAverageTVIDirtyDataTest: public PolAverageTVITest {
+public:
+  virtual void SetUp() {
+    // call parent's SetUp method
+    PolAverageTVITestBase::SetUp();
+
+    // corrupt data
+    CorruptData();
+  }
+
+private:
+  // Make input data dirty
+  void CorruptData() {
+    // Accessor to FLAG column
+    ArrayColumn<Bool> flagColumn(*ms_, "FLAG");
+    Cube<Bool> flag = flagColumn.getColumn();
+
+    // Accessor to DATA columns
+    Cube<Float> floatData;
+    Cube<Complex> complexData, correctedData;
+    if (ms_->tableDesc().isColumn("DATA")) {
+      ArrayColumn<Complex> dataColumn(*ms_, "DATA");
+      dataColumn.getColumn(complexData);
+      ASSERT_EQ(flag.shape(), complexData.shape());
+    }
+    if (ms_->tableDesc().isColumn("FLOAT_DATA")) {
+      ArrayColumn<Float> dataColumn(*ms_, "FLOAT_DATA");
+      dataColumn.getColumn(floatData);
+      ASSERT_EQ(flag.shape(), floatData.shape());
+    }
+    if (ms_->tableDesc().isColumn("CORRECTED_DATA")) {
+      ArrayColumn<Complex> dataColumn(*ms_, "CORRECTED_DATA");
+      dataColumn.getColumn(correctedData);
+      ASSERT_EQ(flag.shape(), correctedData.shape());
+    }
+
+    // corrupt row 0, channel 10, pol 1
+    size_t row = 0;
+    size_t chan = 10;
+    size_t pol = 1;
+    ASSERT_GT((size_t )flag.nplane(), row);
+    ASSERT_GT((size_t )flag.ncolumn(), chan);
+    ASSERT_GT((size_t )flag.nrow(), pol);
+    Float corruptValue = std::numeric_limits<float>::quiet_NaN();
+    flag(pol, chan, row) = True;
+    ASSERT_EQ(flag(pol, chan, row), True);
+    if (!floatData.empty()) {
+      floatData(pol, chan, row) = corruptValue;
+      ASSERT_TRUE(std::isnan(floatData(pol, chan, row)));
+    }
+    if (!complexData.empty()) {
+      complexData(pol, chan, row) = corruptValue;
+      ASSERT_TRUE(std::isnan(complexData(pol, chan, row).real()));
+    }
+    if (!correctedData.empty()) {
+      correctedData(pol, chan, row) = corruptValue;
+      ASSERT_TRUE(std::isnan(correctedData(pol, chan, row).real()));
+    }
+
+    // corrupt row 1, channel 100, all pols
+    row = 1;
+    chan = 100;
+    ASSERT_GT((size_t )flag.nplane(), row);
+    ASSERT_GT((size_t )flag.ncolumn(), chan);
+    IPosition blc(3, 0, chan, row);
+    IPosition trc(3, flag.nrow() - 1, chan, row);
+    flag(blc, trc) = True;
+    ASSERT_EQ(flag(0, chan, row), True);
+    ASSERT_EQ(flag(1, chan, row), True);
+    if (!floatData.empty()) {
+      floatData(blc, trc) = corruptValue;
+      ASSERT_TRUE(std::isnan(floatData(0, chan, row)));
+      ASSERT_TRUE(std::isnan(floatData(1, chan, row)));
+    }
+    if (!complexData.empty()) {
+      complexData(blc, trc) = corruptValue;
+      ASSERT_TRUE(std::isnan(complexData(0, chan, row).real()));
+      ASSERT_TRUE(std::isnan(complexData(1, chan, row).real()));
+    }
+    if (!correctedData.empty()) {
+      correctedData(blc, trc) = corruptValue;
+      ASSERT_TRUE(std::isnan(correctedData(0, chan, row).real()));
+      ASSERT_TRUE(std::isnan(correctedData(1, chan, row).real()));
+    }
+
+    // write back to MS
+    flagColumn.putColumn(flag);
+    if (ms_->tableDesc().isColumn("DATA")) {
+      ArrayColumn<Complex> dataColumn(*ms_, "DATA");
+      dataColumn.putColumn(complexData);
+    }
+    if (ms_->tableDesc().isColumn("FLOAT_DATA")) {
+      ArrayColumn<Float> dataColumn(*ms_, "FLOAT_DATA");
+      dataColumn.putColumn(floatData);
+    }
+    if (ms_->tableDesc().isColumn("CORRECTED_DATA")) {
+      ArrayColumn<Complex> dataColumn(*ms_, "CORRECTED_DATA");
+      dataColumn.putColumn(correctedData);
     }
   }
 
@@ -832,23 +1199,48 @@ TEST_F(PolAverageTVITest, Factory) {
 }
 
 TEST_F(PolAverageTVITest, GeometricAverage) {
-  // Use difference type of constructor to create factory
+  // Use different types of constructor to create factory
   TestTVI<GeometricAverageValidator, BasicManufacturer1>();
   TestTVI<GeometricAverageValidator, BasicManufacturer2>();
   TestTVI<GeometricAverageValidator, LayerManufacturer>();
 }
 
 TEST_F(PolAverageTVITest, StokesAverage) {
-  // Use difference type of constructor to create factory
+  // Use different types of constructor to create factory
   TestTVI<StokesAverageValidator, BasicManufacturer1>();
   TestTVI<StokesAverageValidator, BasicManufacturer2>();
   TestTVI<StokesAverageValidator, LayerManufacturer>();
 }
 
-// TODO: define test on not-well-behaved data
-//       such as partially flagged, contains NaN, etc.
-// TODO: define test on the data that should not average
-//       along polarization axis (IQUV or single polarization or multi-pol but not containing XX and YY)
+TEST_F(PolAverageTVIDirtyDataTest, GeometricAverageCorrupted) {
+  TestTVI<GeometricAverageValidator, BasicManufacturer1>();
+}
+
+TEST_F(PolAverageTVIDirtyDataTest, StokesAverageCorrupted) {
+  TestTVI<StokesAverageValidator, BasicManufacturer1>();
+}
+
+TEST_F(PolAverageTVIFourPolarizationTest, GeometricAverageSkipped) {
+  // Edit CORR_TYPE to be IQUV
+  SetCorrTypeToStokes();
+
+  TestTVI<GeometricIdenticalValidator, BasicManufacturer1>();
+}
+
+TEST_F(PolAverageTVIFourPolarizationTest, StokesAverageSkipped) {
+  // Edit CORR_TYPE to be IQUV
+  SetCorrTypeToStokes();
+
+  TestTVI<StokesIdenticalValidator, BasicManufacturer1>();
+}
+
+TEST_F(PolAverageTVIFourPolarizationTest, GeometricAverageCrossPol) {
+  TestTVI<GeometricAverageCrossPolarizationValidator, BasicManufacturer1>();
+}
+
+TEST_F(PolAverageTVIFourPolarizationTest, StokesAverageCrossPol) {
+  TestTVI<StokesAverageCrossPolarizationValidator, BasicManufacturer1>();
+}
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -547,6 +547,10 @@ void PolAverageTVI::configurePolAverage() {
       }
     }
     doTransform_[idd] = (polId0_[idd] >= 0 && polId1_[idd] >= 0);
+    cout << "corrType = " << corrType
+        << " polId0_[" << idd << "] = " << polId0_[idd]
+        << " polId1_[" << idd << "] = " << polId1_[idd]
+        << " doTransform[" << idd << "] = " << doTransform_[idd] << endl;
   }
 }
 

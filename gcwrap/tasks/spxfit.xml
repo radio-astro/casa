@@ -131,8 +131,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </notequals>
         </when>
         <when param="multifit">
-            <!-- the false case must be explicitly specified first in order for the desired default value (False) to be presented -->
-            <equals type="bool" value="False"/>
             <equals type="bool" value="True">
                 <default param="spxsol">
                     <value>""</value>
