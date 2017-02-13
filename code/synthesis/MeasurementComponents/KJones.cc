@@ -1399,7 +1399,10 @@ void KMBDJones::setApply(const Record& apply) {
 KAntPosJones::KAntPosJones(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
-  KJones(vs)             // immediate parent
+  KJones(vs),             // immediate parent
+  doTrDelCorr_(false),
+  userEterm_(0.0),
+  eterm_(0.0)
 {
   if (prtlev()>2) cout << "Kap::Kap(vs)" << endl;
 
@@ -1410,7 +1413,10 @@ KAntPosJones::KAntPosJones(VisSet& vs) :
 KAntPosJones::KAntPosJones(String msname,Int MSnAnt,Int MSnSpw) :
   VisCal(msname,MSnAnt,MSnSpw),             // virtual base
   VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
-  KJones(msname,MSnAnt,MSnSpw)              // immediate parent
+  KJones(msname,MSnAnt,MSnSpw),              // immediate parent
+  doTrDelCorr_(false),
+  userEterm_(0.0),
+  eterm_(0.0)
 {
   if (prtlev()>2) cout << "Kap::Kap(msname,MSnAnt,MSnSpw)" << endl;
 
@@ -1421,7 +1427,10 @@ KAntPosJones::KAntPosJones(String msname,Int MSnAnt,Int MSnSpw) :
 KAntPosJones::KAntPosJones(const MSMetaInfoForCal& msmc) :
   VisCal(msmc),             // virtual base
   VisMueller(msmc),         // virtual base
-  KJones(msmc)              // immediate parent
+  KJones(msmc),              // immediate parent
+  doTrDelCorr_(false),
+  userEterm_(0.0),
+  eterm_(0.0)
 {
   if (prtlev()>2) cout << "Kap::Kap(msmc)" << endl;
 
@@ -1433,7 +1442,10 @@ KAntPosJones::KAntPosJones(const MSMetaInfoForCal& msmc) :
 KAntPosJones::KAntPosJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
-  KJones(nAnt)
+  KJones(nAnt),
+  doTrDelCorr_(false),
+  userEterm_(0.0),
+  eterm_(0.0)
 {
   if (prtlev()>2) cout << "Kap::Kap(nAnt)" << endl;
 }
@@ -1464,7 +1476,7 @@ void KAntPosJones::setApply(const Record& apply) {
   // Call parent to do conventional things
   KJones::setApply(newapply);
 
-  // Arrange for TrDelError correction, if applicable
+  // Arrange for Trop Del correction, if applicable
   //   (force check for CalTable keyword
   if (vlaTrDelCorrApplicable(true))
     initTrDelCorr();
@@ -1512,7 +1524,7 @@ void KAntPosJones::setCallib(const Record& callib,
 	KrefFreqs_(ispw)=tmpfreqs(spwMap()(ispw));
   }
 
-  // Arrange for TrDelError correction, if applicable
+  // Arrange for Trop Del correction, if applicable
   //   (force check for CalTable keyword
   if (vlaTrDelCorrApplicable(true))
     initTrDelCorr();
@@ -1627,7 +1639,7 @@ void KAntPosJones::specify(const Record& specify) {
   //  (currSpw()=0 is the only one we need)
   keepNCT();
 
-  // Detect if TrDelError correction applicable
+  // Detect if Trop Del correction applicable
   if (vlaTrDelCorrApplicable()) {
     markCalTableForTrDelCorr();
   }
@@ -1819,7 +1831,7 @@ bool KAntPosJones::vlaTrDelCorrApplicable(bool checkCalTable) {
   }
 
   if (doTrDelCorr_)
-    logSink() << "A correction for the online tropopspheric delay model error WILL BE APPLIED!"
+    logSink() << "A correction for the online tropospheric delay model error WILL BE APPLIED!"
 	      << LogIO::WARN << LogIO::POST;
 
   return doTrDelCorr_;
