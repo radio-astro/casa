@@ -91,7 +91,13 @@ vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
 
+limit_short_solint -- string keyword argument in units of seconds to limit the short solution interval.
+    Can be set to a string value of 'int'.
+    default: ''
 
+refantignore -- string list to be ignored as reference antennae.
+    default: ''
+    Example:  refantignore='ea02,ea03'
 
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline

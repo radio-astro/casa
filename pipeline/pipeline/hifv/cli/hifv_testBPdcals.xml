@@ -90,6 +90,9 @@ vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
    example: vis=['X227.ms', 'asdms.tar.gz']
 
 
+refantignore -- string list to be ignored as reference antennae.
+    default: ''
+    Example:  refantignore='ea02,ea03'
 
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
