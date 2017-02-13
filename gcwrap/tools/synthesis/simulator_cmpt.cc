@@ -441,30 +441,6 @@ simulator::setconfig(const std::string& telescopename, const std::vector<double>
 }
 
 bool
-simulator::setknownconfig(const std::string& /*arrayname*/)
-{
-
-  Bool rstat(false);
-  try {
-    
-    if(itsSim !=0){
-      //      rstat=itsSim->setknownconfig(arrayname);
-      //NEED TO IMPLEMENT known config from glish
-    }
-    
-    
-  } catch  (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-	    << LogIO::POST;
-    RETHROW(x);
-  }
-  
-  return rstat;
-
-
-}
-
-bool
 simulator::setfeed(const std::string& mode, const std::vector<double>& x, const std::vector<double>& y, const std::vector<std::string>& pol)
 {
 
