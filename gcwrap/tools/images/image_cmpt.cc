@@ -2948,7 +2948,8 @@ image* image::makestatimage(
         auto  myxlen = xlength.type() == variant::INT
             ? casacore::String::toString(xlength.toInt()) + "pix"
             : xlength.toString();
-        auto myylen = ylength.type() == variant::INT
+        auto myylen = ylength.type() == variant::BOOLVEC
+            ? "" : variant::INT
             ? casacore::String::toString(ylength.toInt()) + "pix"
             : ylength.toString();
         String err;
