@@ -28,6 +28,7 @@
 # -------
 import os
 import string
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -157,31 +158,34 @@ class RefAntInputs(basetask.StandardInputs):
                  spw=None, intent=None, hm_refant=None, refant=None,
                  geometry=None, flagging=None, refantignore=None):
 
-        # set MandatoryInputsMixin parameters
-        # self.context = context
-        # self.output_dir = output_dir
-        # self.vis = vis
-
-        # Other parameters
-        # self.field = field
-        # self.intent = intent
-        # self.spw = spw
-        # self.hm_refant = hm_refant
-        # self.refant = refant
-        # self.geometry = geometry
-        # self.flagging = flagging
-        # self._refantignore = refantignore
-
         self._init_properties(vars())
 
     @property
     def field(self):
-        return self._field
+        # If field was explicitly set, return that value
+        if self._field is not None:
+            return self._field
+
+        # If invoked with multiple mses, return a list of fields
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('field')
+
+        # Otherwise return each field in the current ms that has been observed
+        # with the desired intent
+        fields = self.ms.get_fields(intent=self.intent)
+
+        unique_field_names = set([f.name for f in fields])
+        field_ids = set([f.id for f in fields])
+
+        # Fields with different intents may have the same name. Check for this
+        # and return the IDs if necessary
+        if len(unique_field_names) is len(field_ids):
+            return ','.join(unique_field_names)
+        else:
+            return ','.join([str(i) for i in field_ids])
 
     @field.setter
     def field(self, value):
-        if value is None:
-            value = ''
         self._field = value
 
     @property
@@ -191,17 +195,28 @@ class RefAntInputs(basetask.StandardInputs):
     @intent.setter
     def intent(self, value):
         if value is None:
-            value = ''
+            value = 'AMPLITUDE,BANDPASS,PHASE'
         self._intent = value
 
     @property
     def spw(self):
-        return self._spw
+        if self._spw is not None:
+            return self._spw
+
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('spw')
+
+        science_target_intents = set(self.intent.split(','))
+        science_target_spws = []
+
+        science_spws = [spw for spw in self.ms.get_spectral_windows(self._spw)]
+        for spw in science_spws:
+            if spw.intents.intersection(science_target_intents):
+                science_target_spws.append(spw)
+        return ','.join([str(spw.id) for spw in science_target_spws])
 
     @spw.setter
     def spw(self, value):
-        if value is None:
-            value = ''
         self._spw = value
 
     @property
@@ -281,7 +296,9 @@ class RefAntInputs(basetask.StandardInputs):
     # ------------------------------------------------------------------------------
 
     def to_casa_args(self):
-        return {}
+        d = super(RefAntInputs, self).to_casa_args()
+
+        return d
 
 
 # ------------------------------------------------------------------------------
@@ -482,11 +499,15 @@ class RefAnt(basetask.StandardTaskTemplate):
         if inputs.hm_refant == 'manual':
             refant = string.split(inputs.refant, ',')
         elif inputs.hm_refant == 'automatic':
-            heuristics = findrefant.RefAntHeuristics(
-                vis=inputs.vis, field=inputs.field,
-                spw=inputs.spw, intent=inputs.intent,
-                geometry=inputs.geometry,
-                flagging=inputs.flagging, refantignore=inputs.refantignore)
+            casa_args = inputs.to_casa_args()
+            #heuristics = findrefant.RefAntHeuristics(
+                #vis=inputs.vis, field=inputs.field,
+                #spw=inputs.spw, intent=inputs.intent,
+                #geometry=inputs.geometry,
+                #flagging=inputs.flagging, refantignore=inputs.refantignore)
+            heuristics = findrefant.RefAntHeuristics(vis=inputs.vis,
+                field=casa_args['field'], spw=casa_args['spw'], intent=casa_args['intent'],
+                geometry=inputs.geometry, flagging=inputs.flagging, refantignore=inputs.refantignore)
             refant = heuristics.calculate()
         else:
             pass
