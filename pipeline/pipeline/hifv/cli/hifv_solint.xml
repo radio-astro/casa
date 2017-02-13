@@ -39,6 +39,11 @@
 	<value>True</value>
     </param>
 
+    <param type="string" name="limit_short_solint">
+	<description>Limiting solint value</description>
+	<value></value>
+    </param>
+
     <param type="string" name="refantignore">
 	<description>String list of antennae to ignore</description>
 	<value></value>
@@ -52,6 +57,7 @@
                 <default param="vis"><value type="stringArray"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
+        <default param="limit_short_solint"><value type="string"></value></default>
         <default param="refantignore"><value type="string"></value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
@@ -109,6 +115,14 @@ dryrun -- Run the commands (True) or generate the commands to be run but
 acceptresults -- Add the results of the task to the pipeline context (True) or
    reject them (False).
    default: True
+
+limit_short_solint -- string keyword argument in units of seconds to limit the short solution interval.
+    Can be set to a string value of 'int'.
+    default: ''
+
+refantignore -- string list to be ignored as reference antennae.
+    default: ''
+    Example:  refantignore='ea02,ea03'
 
 Output:
 

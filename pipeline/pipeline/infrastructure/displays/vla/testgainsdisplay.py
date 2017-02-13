@@ -124,7 +124,7 @@ class testgainsPerAntennaChart(object):
         if ((numAntenna%3)>0):
             nplots = nplots + 1
 	
-	with casatools.TableReader('testgaincal.g') as tb:
+	with casatools.TableReader(result.bpdgain_touse) as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
@@ -163,7 +163,7 @@ class testgainsPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
-	            casa.plotcal(caltable='testgaincal.g',  xaxis='time', yaxis=self.yaxis, poln='', field='', antenna=antPlot, spw='', timerange='',       subplot=111,  overplot=False, clearpanel='Auto',  iteration='antenna',  plotrange=plotrange,  showflags=False, plotsymbol=plotsymbol,        plotcolor='blue', markersize=5.0,  fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable=result.bpdgain_touse,  xaxis='time', yaxis=self.yaxis, poln='', field='', antenna=antPlot, spw='', timerange='',       subplot=111,  overplot=False, clearpanel='Auto',  iteration='antenna',  plotrange=plotrange,  showflags=False, plotsymbol=plotsymbol,        plotcolor='blue', markersize=5.0,  fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:

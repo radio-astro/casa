@@ -14,12 +14,22 @@ LOG = infrastructure.get_logger(__name__)
 
 class SolintInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, refantignore=None):
+    def __init__(self, context, vis=None, limit_short_solint=None, refantignore=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
         
         self.gain_solint1 = 'int'
         self.gain_solint2 = 'int'
+
+    @property
+    def limit_short_solint(self):
+        return self._limit_short_solint
+
+    @limit_short_solint.setter
+    def limit_short_solint(self, value):
+        if value is None:
+            value = ''
+        self._limit_short_solint = value
 
     @property
     def refantignore(self):
@@ -34,7 +44,8 @@ class SolintInputs(basetask.StandardInputs):
 
 class SolintResults(basetask.Results):
     def __init__(self, final=[], pool=[], preceding=[], longsolint=None, gain_solint2=None,
-                 shortsol2=None, short_solint=None, new_gain_solint1=None, vis=None):
+                 shortsol2=None, short_solint=None, new_gain_solint1=None, vis=None,
+                 bpdgain_touse=None):
         super(SolintResults, self).__init__()
 
         self.vis = vis
@@ -48,6 +59,7 @@ class SolintResults(basetask.Results):
         self.shortsol2 = shortsol2
         self.short_solint = short_solint
         self.new_gain_solint1 = new_gain_solint1
+        self.bpdgain_touse = bpdgain_touse
         
     def merge_with_context(self, context):    
         m = context.observing_run.get_ms(self.vis)
@@ -173,11 +185,26 @@ class Solint(basetask.StandardTaskTemplate):
         
         short_solint=max(shortsol1,shortsol2)
         new_gain_solint1=str(short_solint)+'s'
+
+        if self.inputs.limit_short_solint:
+            limit_short_solint = self.inputs.limit_short_solint
+            if limit_short_solint == 'int': limit_short_solint='0'
+
+            if (float(limit_short_solint) < short_solint):
+                short_solint = float(limit_short_solint)
+                new_gain_solint1 = str(short_solint) + 's'
+
+            testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
+                                                        context=context, combtime=combtime, refAnt=refAnt)
+            bpdgain_touse = 'testgaincallimit.g'
+            LOG.warn("Short Solint limited by user keyword input to "+new_gain_solint1)
+
         
         LOG.info("Using short solint = " + new_gain_solint1)
         
         return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
-                             short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis)
+                             short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
+                             bpdgain_touse=bpdgain_touse)
     
     def analyse(self, results):
         return results
