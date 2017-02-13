@@ -631,21 +631,21 @@
     # for historical reasons under "alma" even though this includes all
     # known observatories:
     configdir=casa.values()[0]['data']+"/alma/simmos/"
-    # please look in that directory if your observator is already present.
+
+    # please look in that directory if your observatory is present.
     # if so, simutil can be used to read the file:
     from simutil import simutil
     # a simutil must be instantiated to use most methods
     u=simutil()
     x,y,z,d,padnames,telescope,posobs = u.readantenna(configdir+"vla.a.cfg")
+
     # note that readantenna converts the positions to earth-centered 
     # global, from whatever format is in the configuration file, so 
     # coordsystem="global" should be used in setconfig
-
     sm.setconfig(telescopename=telescope, x=x, y=y, z=z, 
                  dishdiameter=d.tolist(), 
                  mount=['alt-az'], antname=padnames,
                  coordsystem='global', referencelocation=pospbs);
-    
   </example>
 </method>
 
