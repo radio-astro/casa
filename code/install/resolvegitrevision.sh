@@ -43,7 +43,7 @@ if [ $branch == "HEAD" ];then
     #echo "${headTag##*-};$CASA_VERSION_DESC"
     # --curr #echo "${headTag##*-}; "
     if [ "$param" == "--pretty-print" ];then
-        if [ -n CASA_VERSION_DESC ] && [[ $CASA_VERSION_DESC != *"-mas-"* ]]; then
+        if [ -n "$CASA_VERSION_DESC" ] && [[ "$CASA_VERSION_DESC" != *"-mas-"* ]]; then
             #echo "${headTag%-mas*}-${headTag##*-}+"
             echo "${headTag}+"
         else
@@ -69,11 +69,11 @@ elif [ $branch == "master" ];then
         CASA_VERSION_DESC="ID $headCommit "
     fi
     if [ "$param" == "--pretty-print" ];then
-        if [ -n CASA_VERSION_DESC ]; then
+        if [ -n "$CASA_VERSION_DESC" ] && [[ "$CASA_VERSION_DESC" != *"-mas-"* ]]; then
             #echo "${masterTag%-mas*}-${masterTag##*-}+"
             echo "${masterTag}+"
         else
-            echo "${masterTag%-mas*}-${masterTag##*-}"
+            #echo "${masterTag%-mas*}-${masterTag##*-}"
             echo "${masterTag}"
         fi
     else
