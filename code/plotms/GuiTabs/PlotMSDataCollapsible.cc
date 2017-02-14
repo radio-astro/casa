@@ -295,9 +295,11 @@ String PlotMSDataCollapsible::getFile() const {
 }
 
 PlotMSDataCollapsible::~PlotMSDataCollapsible(){
-	if ( nameLabel->parent() == NULL ){
-		delete nameLabel;
-	}
+    if ( nameLabel->parent() == NULL ){
+        delete nameLabel;
+    }
+    if ( plotTab)
+        delete plotTab;
 }
 
 }

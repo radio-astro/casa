@@ -51,7 +51,7 @@ namespace casa {
 PlotMSPlotSubtab::PlotMSPlotSubtab(PlotMSPlotTab* plotTab,
         PlotMSPlotter* parent) : PlotMSTab(parent), itsPlotTab_(plotTab) { }
 
-PlotMSPlotSubtab::~PlotMSPlotSubtab() { }
+PlotMSPlotSubtab::~PlotMSPlotSubtab() {}
 
 PlotMSPlotParameters PlotMSPlotSubtab::currentlySetParameters() const {
     return itsPlotTab_->currentlySetParameters();
@@ -121,7 +121,12 @@ bool PlotMSPlotTab::isPlottable() const {
 
 
 
-PlotMSPlotTab::~PlotMSPlotTab() { }
+PlotMSPlotTab::~PlotMSPlotTab() {
+    if (itsCurrentPlot_) {
+        PlotMSPlotParameters& params = itsCurrentPlot_->parameters();
+        params.removeWatcher(this);
+    }
+}
 
 
 QList<QToolButton*> PlotMSPlotTab::toolButtons() const {

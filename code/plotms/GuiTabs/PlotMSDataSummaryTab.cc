@@ -106,20 +106,26 @@ void PlotMSDataSummaryTab::emptyLayout(){
 
 void PlotMSDataSummaryTab::setGridSize( int rowCount, int colCount ){
 
-	//Store the maximum number of plots we can support.
-	rowLimit = rowCount;
-	colLimit = colCount;
+    //Store the maximum number of plots we can support.
+    rowLimit = rowCount;
+    colLimit = colCount;
 
 
-	//Tell everyone to update their grid size, disabling any whose location
-	//exceeds the current limits.
-	int dataCount = dataList.size();
-	for ( int i = 0; i < dataCount; i++ ){
-		dataList[i]->setGridSize( rowCount, colCount );
-	}
+    //Tell everyone to update their grid size, deleting any whose location
+    //exceeds the current limits.
+    int dataCount = dataList.size();
+    for ( int i = dataCount-1; i >=0; --i ){
+        if (i >= rowCount*colCount) {
+            close(dataList[i]);
+        } else {
+            dataList[i]->setGridSize( rowCount, colCount );
+            if (dataList[i]->isMinimized())
+                dataList[i]->maximizeDisplay();
+        }
+    }
 
-	//Generate new plots.
-	//plot( true );
+    //Generate new plots.
+    //plot( true );
 }
 
 void PlotMSDataSummaryTab::fillLayout(){

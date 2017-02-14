@@ -99,6 +99,8 @@ public:
 
     //Change to a compact display
     void minimizeDisplay();
+    //Change to an expanded display
+	void maximizeDisplay();
 
     //Returns whether or not the display is compact (minimized) or expanded.
     bool isMinimized() const;
@@ -122,7 +124,6 @@ private slots:
 
 private:
 
-	void maximizeDisplay();
 
     QAction minimizeAction;
     QAction maximizeAction;
