@@ -2,6 +2,7 @@ import os
 import datetime
 import webbrowser
 import subprocess
+import sys
 
 def doc(remote=False):
     if remote:
@@ -33,7 +34,13 @@ def doc_fetch( ):
     print "do not hit ^C ..."
     print "do not expect output..."
     url = "https://casa.nrao.edu/casadocs/stable"
-    return subprocess.call( [ "wget", "--no-parent", "--no-check-certificate", "--html-extension", "--convert-links", "--recursive",
+    
+    wgetcmd = "wget"
+    
+    if sys.platform == "darwin":
+        wgetcmd = casa['dirs']['root'] + "/Resources/wget"      
+
+    return subprocess.call( [ wgetcmd, "--no-parent", "--no-check-certificate", "--html-extension", "--convert-links", "--recursive",
                               "--level=inf", "--page-requisites", "-e", "robots=off", "--wait=0", "--quota=inf", "--reject",
                               '*_form,RSS,*login*,logged_in,*logout*,logged_out,createObject*,select_default_page,selectViewTemplate*,object_cut,object_copy,object_rename,delete_confirmation,content_status_*,addtoFavorites,pdf.html,print.html',
                               "--exclude-directories='search,*com_mailto*'", "--directory-prefix=" + casa['dirs']['doc'],
