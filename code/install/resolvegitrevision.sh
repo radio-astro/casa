@@ -109,7 +109,17 @@ else
     fi
     masterTag=`git describe --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*-mas-[0-9]*' $(git rev-parse $CASAFORKPOINTHINT)`
     #masterTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`
-    echo "${masterTag##*-};$CASA_VERSION_DESC"
+    if [ "$param" == "--pretty-print" ];then
+        if [ -n CASA_VERSION_DESC ]; then
+            #echo "${masterTag%-mas*}-${masterTag##*-}+"
+            echo "${masterTag}+"
+        else
+            echo "${masterTag%-mas*}-${masterTag##*-}"
+            echo "${masterTag}"
+        fi
+    else
+        echo "${masterTag##*-};$CASA_VERSION_DESC"
+    fi
     # Remove the feature/release information
     # and return a simple version number
     #mTag=${branchTag%-feature-*}
