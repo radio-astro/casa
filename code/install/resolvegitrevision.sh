@@ -1,5 +1,7 @@
 #!/bin/bash
 
+param=$1
+
 # Get the hint from an environment variable. This is used for detached head builds
 # Default grep is master
 headGrep="\\\-mas-"
@@ -39,7 +41,18 @@ if [ $branch == "HEAD" ];then
     fi
     headTag=`git describe --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*-mas-[0-9]*' $(git rev-parse $CASAFORKPOINTHINT)`
     #echo "${headTag##*-};$CASA_VERSION_DESC"
-    echo "${headTag##*-}; "
+    # --curr #echo "${headTag##*-}; "
+    if [ "$param" == "--pretty-print" ];then
+        if [ -n CASA_VERSION_DESC ]; then
+            #echo "${headTag%-mas*}-${headTag##*-}+"
+            echo "${headTag}+"
+        else
+            echo "${headTag}"
+            #echo "${headTag%-mas*}-${headTag##*-}"
+        fi
+    else
+        echo "${headTag##*-}; "
+    fi
 # Master
 elif [ $branch == "master" ];then
     #echo "Resolving master"
@@ -50,8 +63,18 @@ elif [ $branch == "master" ];then
         masterTag=`git describe --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*-mas-[0-9]*' $(git rev-parse $CASAFORKPOINTHINT)`
         CASA_VERSION_DESC="ID $headCommit "
     fi
-    # Return only the revision number
-    echo "${masterTag##*-};$CASA_VERSION_DESC"
+    if [ "$param" == "--pretty-print" ];then
+        if [ -n CASA_VERSION_DESC ]; then
+            #echo "${masterTag%-mas*}-${masterTag##*-}+"
+            echo "${masterTag}+"
+        else
+            echo "${masterTag%-mas*}-${masterTag##*-}"
+            echo "${masterTag}"
+        fi
+    else
+        # Return only the revision number
+        echo "${masterTag##*-};$CASA_VERSION_DESC"
+    fi
 elif [[ $branch =~ .*\..*\..*-release.* ]];then
     #echo "Resolving release"
     masterTag=`git tag --points-at HEAD | grep \\\-rel- | xargs`
