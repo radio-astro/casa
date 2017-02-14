@@ -37,7 +37,7 @@ if [ $branch == "HEAD" ];then
     # You can obtain this by executing  "git merge-base --fork-point master"
     # while in the branch, but before detaching the HEAD
     if [ -z $CASAFORKPOINTHINT ]; then
-        CASAFORKPOINTHINT=`git merge-base origin/master $branch`
+        CASAFORKPOINTHINT=`git merge-base master $branch`
     fi
     headTag=`git describe --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*-mas-[0-9]*' $(git rev-parse $CASAFORKPOINTHINT)`
     #echo "${headTag##*-};$CASA_VERSION_DESC"
@@ -51,7 +51,12 @@ if [ $branch == "HEAD" ];then
             #echo "${headTag%-mas*}-${headTag##*-}"
         fi
     else
-        echo "${headTag##*-}; "
+            # Don't include version desc for master
+            if [[ $CASA_VERSION_DESC == *"-mas-"* ]];then
+                echo "${headTag##*-};"
+            else
+                echo "${headTag##*-};$CASA_VERSION_DESC"
+            fi
     fi
 # Master
 elif [ $branch == "master" ];then
