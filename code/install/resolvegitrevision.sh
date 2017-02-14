@@ -43,7 +43,7 @@ if [ $branch == "HEAD" ];then
     #echo "${headTag##*-};$CASA_VERSION_DESC"
     # --curr #echo "${headTag##*-}; "
     if [ "$param" == "--pretty-print" ];then
-        if [ -n CASA_VERSION_DESC ]; then
+        if [ -n CASA_VERSION_DESC ] && [[ $CASA_VERSION_DESC != *"-mas-"* ]]; then
             #echo "${headTag%-mas*}-${headTag##*-}+"
             echo "${headTag}+"
         else
