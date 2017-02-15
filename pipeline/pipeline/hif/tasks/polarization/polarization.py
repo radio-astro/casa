@@ -53,7 +53,7 @@ class Polarization(basetask.StandardTaskTemplate):
     def analyse(self, results):
         return results
 
-    def do_gaincal(self, caltable, RefAntOutput):
+    def do_gaincal(self, caltable):
         inputs = self.inputs
 
         #Similar inputs to linpolcal.py

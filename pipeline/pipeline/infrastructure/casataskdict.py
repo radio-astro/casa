@@ -154,6 +154,7 @@ classToCASATask = {
     hsd_tasks.SDTsysflag              : 'hsd_tsysflag',
     # VLA tasks ----------------------------------------------------------------
     hifv_tasks.TecMaps                : 'hifv_tecmaps',
+    hifv_tasks.Circfeedpolcal         : 'hifv_circfeedpolcal',
     hifv_tasks.VLAImportData          : 'hifv_importdata',
     hifv_tasks.VLAExportData          : 'hifv_exportdata',
     hifv_tasks.Hanning                : 'hifv_hanning',

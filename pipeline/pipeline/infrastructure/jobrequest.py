@@ -11,6 +11,7 @@ import bandpass_cli
 import calstat_cli
 import clean_cli
 import clearcal_cli
+import delmod_cli
 import exportfits_cli
 import flagcmd_cli
 import flagdata_cli
@@ -299,6 +300,9 @@ class CASATaskJobGenerator(object):
 
     def clearcal(self, *v, **k):
         return self._get_job(clearcal_cli.clearcal_cli, *v, **k)
+
+    def delmod(self, *v, **k):
+        return self._get_job(delmod_cli.delmod_cli, *v, **k)
 
     def exportfits(self, *v, **k):
         return self._get_job(exportfits_cli.exportfits_cli, *v, **k)
