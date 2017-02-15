@@ -81,7 +81,7 @@ class Circfeedpolcal(polarization.Polarization):
                        solint='inf,10MHz')
 
         # 2MHz pieces
-        self.do_polcal(tablesToAdd[2][0], field=fluxcal, intent='',
+        self.do_polcal(tablesToAdd[2][0], 'Xf', field=fluxcal, intent='',
                        gainfield=[''], spwmap=[],
                        solint='inf,2MHz')
 
