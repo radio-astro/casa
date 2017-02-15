@@ -188,10 +188,16 @@ class Solint(basetask.StandardTaskTemplate):
 
         if self.inputs.limit_short_solint:
             limit_short_solint = self.inputs.limit_short_solint
-            if limit_short_solint == 'int': limit_short_solint='0'
+            if limit_short_solint == 'int':
+                limit_short_solint = '0'
+                combtime = 'scan'
+
+            if limit_short_solint == 'inf':
+                limit_short_solint = context.evla['msinfo'][m.name].longsolint
+                combtime = ''
 
             if (float(limit_short_solint) < short_solint):
-                short_solint = float(limit_short_solint)
+                short_solint = float(self.inputs.limit_short_solint)
                 new_gain_solint1 = str(short_solint) + 's'
 
             testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
