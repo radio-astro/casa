@@ -302,8 +302,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
         weblog_results = []
         spindex_results = []
         
-        print 'fluxscale result: ', fluxscale_result
-        print 'unique_sources: ', unique_sources
+        #print 'fluxscale result: ', fluxscale_result
+        #print 'unique_sources: ', unique_sources
 
         for source in unique_sources:
             indices = []
