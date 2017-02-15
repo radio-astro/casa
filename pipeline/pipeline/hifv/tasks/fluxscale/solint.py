@@ -187,6 +187,7 @@ class Solint(basetask.StandardTaskTemplate):
         new_gain_solint1=str(short_solint)+'s'
 
         if self.inputs.limit_short_solint:
+            LOG.warn("Short Solint limited by user keyword input to " + self.inputs.limit_short_solint)
             limit_short_solint = self.inputs.limit_short_solint
             if limit_short_solint == 'int':
                 limit_short_solint = '0'
@@ -195,15 +196,18 @@ class Solint(basetask.StandardTaskTemplate):
             if limit_short_solint == 'inf':
                 limit_short_solint = context.evla['msinfo'][m.name].longsolint
                 combtime = ''
+                LOG.warn("  'inf' was specified, using longsolint value of " + str(limit_short_solint) +
+                         " and combine=''")
 
             if (float(limit_short_solint) < short_solint):
                 short_solint = float(self.inputs.limit_short_solint)
                 new_gain_solint1 = str(short_solint) + 's'
+                combtime = 'scan'
 
             testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
                                                         context=context, combtime=combtime, refAnt=refAnt)
             bpdgain_touse = 'testgaincallimit.g'
-            LOG.warn("Short Solint limited by user keyword input to "+new_gain_solint1)
+
 
         
         LOG.info("Using short solint = " + new_gain_solint1)
