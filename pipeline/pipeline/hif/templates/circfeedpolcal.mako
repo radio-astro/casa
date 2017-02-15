@@ -45,5 +45,17 @@ $(document).ready(function() {
 });
 </script>
 
-<p>Circfeedpolcal</p>
+Pol Cal Tables written to disk and added to the pipeline callibrary:
+
+<ul>
+%for single_result in result:
+    %for calapp in single_result.final:
+        %for calfrom in calapp.calfrom:
+            <li>${os.path.basename(calfrom.gaintable)}</li>
+        %endfor
+    %endfor
+%endfor
+</ul>
+
+
 
