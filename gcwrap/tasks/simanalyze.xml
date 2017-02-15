@@ -28,11 +28,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       * the "vis" parameter:
         - example: single MS: vis="mysim.alma.out03.ms"
         - example: multiple MSs: vis="mysim.alma.out03.ms,mysim.aca.tp.ms"
-        - one can use '$project' and let the task automatically replace it with
+        - one can use "$project" and let the task automatically replace it with
           the project name, e.g., vis="$project.noisy.ms,$project.noisy.sd.ms".
           However, note that if you created measurement set(s) using simobserve,
           MS names will include the configuration, e.g. 
-          $project.alma_out20.noisy.ms
+          "$project.alma_out20.noisy.ms"
         - setting "vis" to "default" will find and attempt to image
           all measurement sets (interferometric and single dish) in the 
           project directory
