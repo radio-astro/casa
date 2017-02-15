@@ -85,6 +85,13 @@ class compositenumber:
 
 
 class simutil:
+    """
+    simutil contains methods to facilitate simulation. 
+    To use these, create a simutil instance e.g.
+     CASA> from simutil import simutil
+     CASA> u=simutil()
+     CASA> x,y,z,d,padnames,telescope,posobs = u.readantenna("myconfig.cfg")
+    """
     def __init__(self, direction="",
                  centerfreq=qa.quantity("245GHz"),
                  bandwidth=qa.quantity("1GHz"),

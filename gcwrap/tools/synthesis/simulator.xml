@@ -93,21 +93,23 @@
   <shortdescription>Construct a simulator tool and create a new MeasurementSet</shortdescription>
   <description>
     A simulator tool can either operate on an existing MeasurementSet,
-    predicting and/or corrupting data on the existing uvw coordinates
-    - to do that open the MS with sm.openfromms(msname)    
-    or it can be used to create a new MeasurementSet from descriptions of
-    the array configuration and the observational parameters.
-    - to create a new MS, use this method sm.open(msname).
-    
-    You will also need to run setconfig, setfield, setspw, setspwindow,
+    predicting and/or corrupting data on the existing uvw coordinates 
+
+    -- to do that open the MS with sm.openfromms(msname). 
+
+    or it can be used to create a new MeasurementSet from descriptions of 
+    the array configuration and the observational parameters 
+
+    -- to create a new MS, use this method sm.open(msname).
+
+    You will also need to run setconfig, setfield, setspw, setspwindow, 
     setfeed, and settimes.
-    
+
     Creating the actual (empty) MS is accomplished with sm.observe.  
-    
     Data can be subsequently sm.predict-ed and sm.corrupt-ed.  
-    
-    NOTE: sm.predict assumes the model image units are Jy/pixel, and in
-      fact will overwrite the brightness units of the image itself!
+
+    NOTE: sm.predict assumes the model image units are Jy/pixel, and 
+      in fact will overwrite the brightness units of the image itself!
   </description>
   <input>    
     <param type="string" name="ms">
@@ -178,8 +180,7 @@
 
  
 <method type="function" name="openfromms">
-  <shortdescription>Construct a simulator tool using an already existing  MS</shortdescription>
-  
+  <shortdescription>Construct a simulator tool using an already existing  MS</shortdescription> 
   <description>
     A simulator tool can either operate on an existing MeasurementSet,
     predicting and/or corrupting data on the existing uvw coordinates
@@ -250,8 +251,7 @@
 
 
 <method type="function" name="type">
-  <shortdescription>Return the type of this tool</shortdescription>
-  
+  <shortdescription>Return the type of this tool</shortdescription>  
   <returns type="string">String or fail</returns>
   <description>
     This function returns the string `Simulator'.  It is used so that in a
@@ -263,8 +263,8 @@
 
 <method type="function" name="settimes">
   <shortdescription>Set integration time, etc.</shortdescription>
-  
-  <description>This method sets values to be used in sm.observe.  
+  <description>
+    This method sets values to be used in sm.observe.  
     
     If usehourangle=False, the start and stop times in sm.observe are
     referenced to referencetime.

@@ -35,9 +35,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     release of CASA, the user can control the process by modifying the calls
     to the other CASA tasks.
 
-    More information is available at 
-     http://casaguides.nrao.edu/index.php?title=Simulating_Observations_in_CASA
-    Please contact the CASA helpdesk with any questions.
 </description>
 <example>  
     -------------------------------
@@ -46,6 +43,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     project -- root filename for all output files.  A subdirectory will be 
          created, and all created files will be placed in that subdirectory
          including the informational report.
+
     -------------------------------
     skymodel -- input image (used as a model of the sky)
        * simalma requires a CASA or fits image. If you merely have a grid of 
@@ -65,15 +63,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
        * You can manipulate an image header manually with the "imhead" task.
 
-    inbright -- peak brightness in Jy/pixel, or "" for unchanged
+    inbright -- peak brightness to scale the image to in Jy/pixel, 
+         or "" for unchanged
        * NOTE: "unchanged" will take the numerical values in your image 
          and assume they are in Jy/pixel, even if it says some other unit 
          in the header. 
-    indirection -- central direction, or "" for unchanged
-    incell -- spatial pixel size, or "" for unchanged
-    incenter -- frequency of center channel e.g. "89GHz", or "" for unchanged
-    inwidth -- width of channels, or "" for unchanged - this should be a 
-         string representing a quantity with units e.g. "10MHz"
+
+    indirection -- central direction to place the sky model image, 
+         or "" to use whatever is in the image already
+
+    incell -- spatial pixel size to scale the skymodel image, 
+         or "" to use whatever is in the image already.
+
+    incenter -- frequency to use for the center channel (or only channel, 
+         if the skymodel is 2D)  e.g. "89GHz", 
+         or "" to use what is in the header.
+
+    inwidth -- width of channels to use, or "" to use what is in the image
+         should be a string representing a quantity with units e.g. "10MHz"
        * NOTE: only works reliably with frequencies, not velocities
        * NOTE: it is not possible to change the number of spectral planes
          of the sky model, only to relabel them with different frequencies
@@ -81,20 +88,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     -------------------------------
     complist -- component list model of the sky, added to or instead of skymodel
+         see http://casaguides.nrao.edu/index.php?title=Simulation_Guide_Component_Lists_%28CASA_4.1%29
+
     compwidth -- bandwidth of components; if simulating from components only, 
          this defines the bandwidth of the MS and output images
 
     -------------------------------
-    setpointings -- calculate a map of pointings, or if false, the user should
-         provide a ptgfile
+    setpointings -- if true, calculate a map of pointings and write ptgfile.
        * if graphics are on, display the pointings shown on the model image
-       * if a list of directions is not specified, observations with the 
-         ALMA 12m and ACA 7m arrays will observe a region of size "mapsize" 
-         using the same hexagonal algorithm as the ALMA OT, with Nyquist 
-         sampling.
+       * observations with the ALMA 12m and ACA 7m arrays will observe a 
+         region of size "mapsize" using the same hexagonal algorithm as 
+         the ALMA OT, with Nyquist sampling.
        * The total power array maps a slightly (+1 primary beam) larger area 
          than the 12m array does, to improve later image combination. 
          It samples the region with lattice grids of spacing 0.33 lambda/D.
+       * if setpointings=false, read pointings from ptgfile.
 
     ptgfile -- a text file specifying directions in the same 
          format as the example, and optional integration times, e.g.
@@ -104,17 +112,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          "integration" for all pointings.
        * NOTE: at this time the file should contain only science pointings:
          simalma will observe these until totaltime is used up. 
+
     integration --- Time interval for each integration e.g '10s'
        * NOTE: to simulate a "scan" longer than one integration, use 
          setpointings to generate a pointing file, and then edit the 
          file to increase the time at each point to be larger than 
          the parameter integration time.
+
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
-       * can optionally be a list of pointings
-       * otherwise simalma will pack mapsize with grids proper for the
-         array (see below).
-    mapsize -- angular size of map e.g. '40arcsec' or ['1arcmin','30arcsec']
-       * set to "" to span the model image
+         if unset, will use the center of the skymodel image.
+       * can optionally be a list of pointings, otherwise
+       * simobserve will cover a region of size mapsize according to maptype
+
+    mapsize -- angular size of mosaic map to simulate.
+       * set to "" to cover the model image
+
     -------------------------------
     antennalist -- vector of ascii files containing antenna positions, 
          one for each configuration of 7m or 12m dishes.
@@ -125,8 +137,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          12m ALMA configuration - see casaguides.nrao.edu
        * examples: ['alma.cycle2.5.cfg','aca.cycle2.i.cfg']
               ['alma.cycle1;0.3arcsec','alma.cycle1.1.cfg','aca.i.cfg']
+
     hourangle -- hour angle of observation e.g. '-3h'
        * note that if you don't add a unit, it will assume seconds.
+
     totaltime --- total time of observations. This should either be a scalar
          time quantity expressed as a string e.g. '1h', '3600sec', '10min', 
          or a vector of such quantities, corresponding to the elements of 
@@ -137,12 +151,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          will have observing times relative to totaltime of 0.5, 2,and 4, 
          respectively.
     -------------------------------
+
     tpnant -- the number of total power antennas to use in simulation.
+
     tptime -- if tpnant&gt;0, the user must specify the observing time for 
          total power as a CASA quantity e.g. '4h'.  
-       * NOTE: in CASA 4.2 this is not broken up among multiple days - 
+       * NOTE: this is not broken up among multiple days - 
          a 20h track will include observations below the horizon, 
          which is probably not what is desired.
+
     -------------------------------
     pwv -- precipitable water vapor if constructing an atmospheric model.
          Set 0 for noise-free simulation. When pwv&gt;0, thermal noise is
@@ -153,7 +170,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          a water layer of pwv at altitude of 2km,
          the sky brightness temperature returned by ATM, and internally
          tabulated receiver temperatures.
-       See the documents of simobserve for more details.
+       See the documentation of simobserve for more details.
+
     -------------------------------
     image -- option to invert and deconvolve the simulated measurement set(s)
        * NOTE: interactive clean or more parameters than the subset visible
@@ -161,12 +179,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        * if graphics turned on, display the clean image and residual image
        * uses Cotton-Schwab clean for single fields and Mosaic gridding
          for multiple fields (with Clark PSF calculation in minor cycles).
+
     imsize -- image size in spatial pixels (x,y)
        0 or -1 will use the model image size; example: imsize=[500,500]
+
     imdirection -- phase center for synthesized image.  default is to 
        center on the sky model.
+
     cell -- cell size e.g '10arcsec'.  "" defaults to the skymodel cell
+
     niter -- number of clean/deconvolution iterations, 0 for no cleaning
+
     threshold -- flux level to stop cleaning
     -------------------------------
     graphics -- view plots on the screen, saved to file, both, or neither
@@ -176,7 +199,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     Please see the documents of simobserve and simanalyze for
     the list of outputs produced.
-
   </example>
   
   <input>

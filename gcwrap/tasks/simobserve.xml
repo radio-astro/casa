@@ -35,90 +35,117 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     project -- the root filename for all output files.
     -------------------------------
     skymodel -- input image (used as a model of the sky)
-       * simalma requires a CASA or fits image. If you merely have a grid of 
+       * simobserve uses a CASA or fits image. If you merely have a grid of 
          numbers, you will need to write them out as fits or write a 
          CASA script to read them in and use the ia tool to create an image 
          and insert the data.
        
-       * simalma does NOT require a coordinate system in the header. If the
+       * simobserve does NOT require a coordinate system in the header. If the
          coordinate information is incomplete, missing, or you would like to
          override it, set the appropriate "in" parameters. NOTE that setting 
          those parameters simply changes the header values, ignoring
          any values already in the image. No regridding is performed.
+
+       * You can also manipulate an image header manually with the "imhead" task.
     
-       * If you have a proper Coordinate System, simalma will do its best to
-         generate visibilities from that, and then create a synthesis image
-         according to the specified user parameters. 
+       * If you have a proper Coordinate System, simobserve will do its best to
+         generate visibilities from that.    
     
-       * You can manipulate an image header manually with the "imhead" task.
-    
-    inbright -- peak brightness in Jy/pixel, or "" for unchanged
+    inbright -- peak brightness to scale the image to in Jy/pixel, 
+         or "" for unchanged
        * NOTE: "unchanged" will take the numerical values in your image 
          and assume they are in Jy/pixel, even if it says some other unit 
          in the header. 
-    indirection -- central direction, or "" for unchanged
-    incell -- spatial pixel size, or "" for unchanged
-    incenter -- frequency of center channel e.g. "89GHz", or "" for unchanged
-    inwidth -- width of channels, or "" for unchanged - this should be a 
-         string representing a quantity with units e.g. "10MHz"
+
+    indirection -- central direction to place the sky model image, 
+         or "" to use whatever is in the image already
+
+    incell -- spatial pixel size to scale the skymodel image, 
+         or "" to use whatever is in the image already.
+
+    incenter -- frequency to use for the center channel (or only channel, 
+         if the skymodel is 2D)  e.g. "89GHz", 
+         or "" to use what is in the header.
+
+    inwidth -- width of channels to use, or "" to use what is in the image
+         should be a string representing a quantity with units e.g. "10MHz"
        * NOTE: only works reliably with frequencies, not velocities
        * NOTE: it is not possible to change the number of spectral planes
          of the sky model, only to relabel them with different frequencies
          That kind of regridding can be accomplished with the CASA toolkit.
+
     -------------------------------
     complist -- component list model of the sky, added to or instead of skymodel
          see http://casaguides.nrao.edu/index.php?title=Simulation_Guide_Component_Lists_%28CASA_4.1%29
+
     compwidth -- bandwidth of components; if simulating from components only, 
          this defines the bandwidth of the MS and output images
+
     -------------------------------
-    setpointings -- calculate a map of pointings, or if false, provide ptgfile
+    setpointings -- if true, calculate a map of pointings and write ptgfile.
+         if false, read pointings from ptgfile.
        * if graphics are on, display the pointings shown on the model image
+
     ptgfile -- a text file specifying directions in the following
          format, with optional integration times, e.g.
          #Epoch     RA          DEC      TIME(optional)
          J2000 23h59m28.10 -019d52m12.35 10.0
+
        * if the time column is not present in the file, it will use
          "integration" for all pointings.
+
        * NOTE: at this time the file should contain only science pointings:
          simobserve will observe these, then optionally the calibrator, 
          then the list of science pointings again, etc, until totaltime
          is used up. 
+
     integration --- Time interval for each integration e.g '10s'
        * NOTE: to simulate a "scan" longer than one integration, use 
          setpointings to generate a pointing file, and then edit the 
          file to increase the time at each point to be larger than 
          the parameter integration time.
+
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
-       * can optionally be a list of pointings
-       * otherwise simobserve will pack mapsize according to maptype
-    mapsize -- angular size of map 
-       * set to "" to span the model image
-    maptype -- hexagonal, square (rectangular raster), 
+         if unset, will use the center of the skymodel image.
+       * can optionally be a list of pointings, otherwise
+       * simobserve will cover a region of size mapsize according to maptype
+
+    mapsize -- angular size of mosaic map to simulate.
+       * set to "" to cover the model image
+
+    maptype -- how to calculate the pointings for the mosaic observation.
+         hexagonal, square (rectangular raster), 
          "ALMA" for the same hex algorithm as the ALMA Cycle 1 OT 
          or "ALMA2012" for the algorithm used in the Cycle 0 OT
-    pointingspacing -- spacing in between beams e.g '1arcsec'
+
+    pointingspacing -- spacing in between primary beams e.g '10arcsec'
          "0.25PB" to use 1/4 of the primary beam FWHM, 
          "nyquist" will use lambda/d/2,
          "" will use lambda/d/sqrt(3) for INT, lambda/d/3 for SD
+
     -------------------------------
     obsmode -- observation mode to calculate visibilities from a skymodel image
          (which may have been modified above), an optional component list, 
          and a pointing file (which also may have been generated above)
        * this parameter takes two possible values:
-         - interferometer (or i)
-         - singledish (or s)
+         - interferometer (or int)
+         - singledish (or sd)
        * if graphics are on, this observe step will display the array 
          (similar to plotants), the uv coverage, the synthesized (dirty) beam, 
          and ephemeris information
-       * if simulating from component list, you should specify "compwidth", 
+       * if simulating from a component list, you should specify "compwidth", 
          the desired bandwidth.  There is not currently a way to specify the 
          spectrum of a component, so simulations from a componentlist only 
          will be continuum (1 chan)
+
     refdate -- date of simulated observation eg: '2014/05/21'
+
     hourangle -- hour angle of observation e.g. '-3h'
        * note that if you don't add a unit, it will assume hours
+
     totaltime --- total time of observation e.g '7200s' or if a number without
-         units, interpreted as the number of times to repeat the map
+         units, interpreted as the number of times to repeat the mosaic.
+
     antennalist -- ascii file containing antenna positions.
          each row has x y z coordinates and antenna diameter; 
          header lines are required to specify the observatory name
@@ -131,15 +158,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
        * if "", simobserve will not not produce an interferometric MS
        * a string of the form "alma;0.5arcsec" will be parsed into a full 
-         12m ALMA configuration.  This only works for full ALMA and may fail 
-         to find the standard configuration files on some systems 
-         - see casaguides.nrao.edu for more information.
+         12m ALMA configuration.  
+
     caldirection -- an unresolved calibrator can be observed 
          interleaved with the science pointings.  
        * The calibrator is implemented as a point source clean component 
          with this specified direction and flux=calflux
     sdant -- the index of the antenna in the list to use for total 
          power.  defaults to the first antenna on the list. 
+
     -------------------------------
     thermalnoise -- add thermal noise 
        * this parameter takes two possible values:
@@ -168,15 +195,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                212.,310.,383.,660. GHz
        * These are only approximate numbers and do not take into account 
          performance at edges of receiver bands, neither are they guaranteed
-         to reflect the most recent measurements.  Caveat emptor and use the 
-         sm tool to add noise if you want more precise control.
+         to reflect the most recent measurements.  Caveat emptor. Use the 
+         sm tool to add noise if you want more precise control, and use
+         the ALMA exposure time calculator for sensitivity numbers in proposals.
+
     t_ground -- ground/spillover temperature in K 
+
     user_pwv -- precipitable water vapor if constructing an atmospheric model
+
     t_sky -- atmospheric temperature in K [for tsys-manual]
+
     tau0 -- zenith opacity at observing frequency [for tsys-manual]
-       * see casaguides.nrao.edu for more information on noise, 
+       * see https://casaguides.nrao.edu/index.php/Corrupt 
+         for more information on noise, 
          in particular how to add a phase screen using the toolkit
+
     seed -- random number seed for noise generation
+
     -------------------------------
     leakage -- add cross polarization corruption of this fractional magnitude
     
