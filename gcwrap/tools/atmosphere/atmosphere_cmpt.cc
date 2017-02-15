@@ -494,7 +494,7 @@ atmosphere::initSpectralWindow(int nbands, const Quantity& fCenter,
 	  numChan[i] = 1;
 	} else {
 	  numChan[i] = (int)ceil((casacore::Quantity(fW[i],ufW) /
-				  casacore::Quantity(fR[i],ufR)).getValue());
+				  casacore::Quantity(fR[i],ufR)).getValue(ufW));
 	}
 	refChan[i] = numChan[i]/2;  // assume center channel is ref chan
 	refFreq[i] = Frequency(fC[i],fCenter.units);
@@ -543,7 +543,7 @@ atmosphere::addSpectralWindow(const Quantity& fCenter,
 	return rstat;
       }	
       int numChan = (int)ceil((casacore::Quantity(fWidth.value[0],ufW) /
-			       casacore::Quantity(fRes.value[0],ufR)).getValue());
+			       casacore::Quantity(fRes.value[0],ufR)).getValue(ufW));
       int refChan = numChan/2;  // assume center channel is ref chan
       Frequency refFreq = Frequency(fCenter.value[0],fCenter.units);
       Frequency chanSep = Frequency(fRes.value[0],fRes.units);
