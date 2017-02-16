@@ -878,15 +878,6 @@ def simobserve(
             sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
             if uvmode:
                 sm.setauto(0.0)
-                # only use mosaic gridding for Het arrays for now - 
-                # the standard gridding with a VPSkyJones is less susceptible
-                # to issues if the image is too small which can happen a lot
-                # in Simulation.
-                if len(pl.unique(diam))>1:
-                    if nfld>1:
-                        sm.setoptions(ftmachine="mosaic")
-                    else:
-                        msg("Heterogeneous array only supported for mosaics (nfld>1), and make sure that your image is larger than the primary beam or results may be unstable",priority="error")
             else: #Single-dish
                 # auto-correlation should be unity for single dish obs.
                 sm.setauto(1.0)
@@ -982,7 +973,17 @@ def simobserve(
 
             sm.setdata(fieldid=range(0,nfld))
             if uvmode or components_only: #Interferometer only
-                sm.setvp()
+                sm.setvp(dovp=True,usedefaultvp=False)
+                # only use mosaic gridding for Het arrays for now - 
+                # the standard gridding with a VPSkyJones is less susceptible
+                # to issues if the image is too small which can happen a lot
+                # in Simulation.
+                if len(pl.unique(diam))>1:
+                    if nfld>1:
+                        sm.setoptions(ftmachine="mosaic")
+                    else:
+                        msg("Heterogeneous array only supported for mosaics (nfld>1), and make sure that your image is larger than the primary beam or results may be unstable",priority="error")
+
 
             msg("done setting up observations (blank visibilities)",origin='simobserve')
             if verbose: sm.summary()

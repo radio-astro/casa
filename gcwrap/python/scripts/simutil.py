@@ -1444,8 +1444,8 @@ class simutil:
             time['m0']['value']+=timeinc
     
 #        self.msg(" ref="+date,origin='ephemeris')
-        self.msg("rise="+qa.time(rise['m0'],form='dmy')[0],origin='ephemeris')
-        self.msg(" set="+qa.time(settime['m0'],form='dmy')[0],origin='ephemeris')
+#        self.msg("rise="+qa.time(rise['m0'],form='dmy')[0],origin='ephemeris')
+#        self.msg(" set="+qa.time(settime['m0'],form='dmy')[0],origin='ephemeris')
     
         pl.plot((pl.array(times)-reftime_floor)*24,el)
 #        peak=(rise['m0']['value']+settime['m0']['value'])/2        
@@ -2214,9 +2214,9 @@ class simutil:
 
     def locxyz2itrf(self, lat, longitude, alt, locx=0.0, locy=0.0, locz=0.0):
         """
-        Returns the nominal ITRF (X, Y, Z) coordinates [m] for a point at "local"
-        (x, y, z) [m] measured at geodetic latitude lat and longitude longitude
-        (degrees) and altitude of the reference point of alt.  
+        Returns the nominal ITRF (X, Y, Z) coordinates [m] for a point at 
+        "local" (x, y, z) [m] measured at geodetic latitude lat and longitude 
+        longitude (degrees) and altitude of the reference point of alt.  
         The ITRF frame used is not the official ITRF, just a right
         handed Cartesian system with X going through 0 latitude and 0 longitude,
         and Z going through the north pole.  The "local" (x, y, z) are measured

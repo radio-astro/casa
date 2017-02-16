@@ -256,7 +256,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <!-- all parms default to keep what's in the image, if the param=="" -->
 
     <param type="string" name="skymodel">
-      <description>model image to observe</description>
+      <shortdescription>model image to observe</shortdescription>
+      <description>
+       * simobserve uses a CASA or fits image. If you merely have a grid of 
+         numbers, you will need to write them out as fits or write a 
+         CASA script to read them in and use the ia tool to create an image 
+         and insert the data.
+       
+       * simobserve does NOT require a coordinate system in the header. If the
+         coordinate information is incomplete, missing, or you would like to
+         override it, set the appropriate "in" parameters. NOTE that setting 
+         those parameters simply changes the header values, ignoring
+         any values already in the image. No regridding is performed.
+
+       * You can also manipulate an image header manually with the "imhead" task.
+    
+       * If you have a proper Coordinate System, simobserve will do its best to
+         generate visibilities from that.    
+      </description>
       <value type="string"></value>
     </param>
 
