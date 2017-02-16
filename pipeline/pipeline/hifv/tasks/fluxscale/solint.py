@@ -189,24 +189,55 @@ class Solint(basetask.StandardTaskTemplate):
         if self.inputs.limit_short_solint:
             LOG.warn("Short Solint limited by user keyword input to " + self.inputs.limit_short_solint)
             limit_short_solint = self.inputs.limit_short_solint
+
             if limit_short_solint == 'int':
                 limit_short_solint = '0'
                 combtime = 'scan'
+                short_solint = float(limit_short_solint)
+                new_gain_solint1 = str(short_solint) + 's'
+
+                testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
+                                                            context=context, combtime=combtime, refAnt=refAnt)
+                bpdgain_touse = 'testgaincallimit.g'
+
+                LOG.info("Using short solint = " + new_gain_solint1)
+
+                return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
+                                     short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
+                                     bpdgain_touse=bpdgain_touse)
+
 
             if limit_short_solint == 'inf':
-                limit_short_solint = context.evla['msinfo'][m.name].longsolint
                 combtime = ''
-                LOG.warn("  'inf' was specified, using longsolint value of " + str(limit_short_solint) +
-                         " and combine=''")
+                short_solint = limit_short_solint
+                new_gain_solint1 = short_solint
+                LOG.warn("   Note that since 'inf' was specified then combine='' for gaincal.")
+
+                testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
+                                                            context=context, combtime=combtime, refAnt=refAnt)
+                bpdgain_touse = 'testgaincallimit.g'
+
+                LOG.info("Using short solint = " + new_gain_solint1)
+
+                return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
+                                     short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
+                                     bpdgain_touse=bpdgain_touse)
+
 
             if (float(limit_short_solint) < short_solint):
-                short_solint = float(self.inputs.limit_short_solint)
+                short_solint = float(limit_short_solint)
                 new_gain_solint1 = str(short_solint) + 's'
                 combtime = 'scan'
 
-            testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
+                testgains_result = self._do_gtype_testgains(calMs, 'testgaincallimit.g', solint=new_gain_solint1,
                                                         context=context, combtime=combtime, refAnt=refAnt)
-            bpdgain_touse = 'testgaincallimit.g'
+                bpdgain_touse = 'testgaincallimit.g'
+
+                LOG.info("Using short solint = " + new_gain_solint1)
+
+                return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
+                                     short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
+                                     bpdgain_touse=bpdgain_touse)
 
 
         
