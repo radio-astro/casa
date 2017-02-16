@@ -495,9 +495,13 @@ atmosphere::initSpectralWindow(int nbands, const Quantity& fCenter,
 	} else {
 	  numChan[i] = (int)ceil((casacore::Quantity(fW[i],ufW).getValue(ufR) / fR[i]));
 	}
-	refChan[i] = numChan[i]/2;  // assume center channel is ref chan
+	refChan[i] = (numChan[i] - 1)/2;
 	refFreq[i] = Frequency(fC[i],fCenter.units);
 	chanSep[i] = Frequency(fR[i],fRes.units);
+	if (numChan[i] % 2 == 0) {
+		// in case of even number of channels, the band center becomes channel boundary
+		refFreq[i] = refFreq[i] - chanSep[i]*0.5;
+	}
       }
       if (pSpectralGrid != 0) delete pSpectralGrid;
       pSpectralGrid = new SpectralGrid(numChan[0],refChan[0],
@@ -542,9 +546,13 @@ atmosphere::addSpectralWindow(const Quantity& fCenter,
 	return rstat;
       }	
       int numChan = (int)ceil((casacore::Quantity(fWidth.value[0],ufW).getValue(ufR) / fRes.value[0]));
-      int refChan = numChan/2;  // assume center channel is ref chan
+      int refChan = (numChan - 1)/2;
       Frequency refFreq = Frequency(fCenter.value[0],fCenter.units);
       Frequency chanSep = Frequency(fRes.value[0],fRes.units);
+      if (numChan % 2 == 0) {
+  		// in case of even number of channels, the band center becomes channel boundary
+  		refFreq = refFreq - chanSep*0.5;
+      }
       pSpectralGrid->add(numChan,refChan,refFreq,chanSep);
       if (pRefractiveIndexProfile != 0)	delete pRefractiveIndexProfile;
       pRefractiveIndexProfile = new RefractiveIndexProfile(*pSpectralGrid,*pAtmProfile);
