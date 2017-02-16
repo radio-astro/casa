@@ -21,6 +21,7 @@ LOG = infrastructure.get_logger(__name__)
 class MeasurementSet(object):    
     def __init__(self, name, session=None):
         self.name = name
+        self.array_name = None
         self.antenna_array = None
         self.data_descriptions = []
         self.spectral_windows = []
