@@ -318,7 +318,7 @@ void QPRectangle::draw_(QPainter* painter, const QwtScaleMap& xMap,
     logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid()) {
-        const QRectF r = paintRect(xMap, yMap);
+        const QRectF r = QwtScaleMap::transform(xMap, yMap, rect);
 #else
 void QPRectangle::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
