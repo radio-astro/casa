@@ -276,8 +276,11 @@ class MeasurementSetReader(object):
             ms.data_descriptions = DataDescriptionTable.get_descriptions(msmd, ms)
 
             # No MSMD functions to help populating pols yet
+            # Likewise for the ASDM_EXECBLOCK table
             LOG.info('Populating ms.polarizations...')
             ms.polarizations = PolarizationTable.get_polarizations(ms)
+            LOG.info('Populating ms.array_name ...')
+            ms.array_name = ExecblockTable.get_execblock_info(ms)
 
             with casatools.MSReader(ms.name) as openms:
                 for dd in ms.data_descriptions:
@@ -471,6 +474,46 @@ class DataDescriptionTable(object):
 
         return zip(dd_ids, spw_ids, pol_ids)
 
+
+class ExecblockTable(object):
+    @staticmethod
+    def get_execblock_info(ms):
+        try:
+            execblock_info = [ExecblockTable._create_execblock_info(*row) 
+               for row in ExecblockTable._read_table(ms)]
+            if execblock_info[0][0] == 'ALMA':
+                if execblock_info[0][1] == 'A':
+                    return None
+                else:
+                    return execblock_info[0][1]             
+            else:
+                return execblock_info[0][1]             
+        except:
+            return None
+           
+    @staticmethod
+    def _create_execblock_info(telescopeName, configName):
+       return (telescopeName, configName) 
+
+    @staticmethod
+    def _read_table(ms):
+        """
+        Read the ASDM_EXECBLOCK table
+        For all practical purposes this table consists of a single row
+        but handle the more general case
+        """
+        LOG.debug('Analysing ASDM_EXECBLOCK table')
+        msname = _get_ms_name(ms)
+        execblock_table = os.path.join(msname, 'ASDM_EXECBLOCK')        
+        with casatools.TableReader(execblock_table) as table:
+            telescopeNames = table.getcol('telescopeName')
+            configNames = table.getcol('configName')
+
+        # In case multiple columns are extracted at some point
+        # in which case rows would be constructed from the zipped
+        # columns
+        rows = zip(telescopeNames, configNames)
+        return rows
 
 class PolarizationTable(object):
     @staticmethod
