@@ -72,6 +72,7 @@ public:
    vb0->setScan(Vector<Int>(nRow,1));             // scan #1
    vb0->setFieldId(Vector<Int>(nRow,1));          // fieldid=0
    vb0->setTime(Vector<Double>(nRow,1e9));        // time
+   vb0->setTimeCentroid(Vector<Double>(nRow,1e9));        // time
    vb0->setDataDescriptionIds(Vector<int>(nRow,0));  // ddid=0
    vb0->setSpectralWindows(Vector<int>(nRow,0));  // spw=0
    Int irow(0);
