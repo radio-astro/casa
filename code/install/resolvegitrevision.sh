@@ -110,7 +110,7 @@ else
     # Do our best to resolve the master tag for revision even when we have
     # Branch tag
     if [ -z $CASAFORKPOINTHINT ]; then
-        CASAFORKPOINTHINT=`git merge-base origin/master origin/$branch`
+        CASAFORKPOINTHINT=`git merge-base master $branch`
     fi
     masterTag=`git describe --abbrev=0 --match='[0-9]*.[0-9]*.[0-9]*-mas-[0-9]*' $(git rev-parse $CASAFORKPOINTHINT)`
     #masterTag=`git describe --tags $(git rev-parse $CASAFORKPOINTHINT)`

@@ -7,7 +7,7 @@ import task_sdcalold as task_sdcalold
 import task_sdaverageold as task_sdaverageold
 import task_sdbaselineold as task_sdbaselineold
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdreduceold(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, timerange, scan, pol, calmode, fraction, noff, width, elongated, markonly, plotpointings, tau, average, timeaverage, tweight, scanaverage, averageall, polaverage, pweight, kernel, kwidth, chanwidth, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdreduce_worker, locals()) as worker:
         worker.initialize()

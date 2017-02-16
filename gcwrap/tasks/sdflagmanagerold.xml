@@ -7,9 +7,15 @@
 
 
 <task type="function" name="sdflagmanagerold" startup="false" category="single dish">
-  <shortdescription>ASAP SD task to manipulate flag version files</shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: manipulate flag version files</shortdescription>
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+The functionality of this task with MeasurementSet format is replicated
+with flagmanager.
+#########################################################################
+
 Task sdflagmanagerold enables users to save the current flag information 
 (both channel and row flags) in the given SD dataset out to a separate 
 'flag version file'. In the current implementation, sdflagmanagerold calls 

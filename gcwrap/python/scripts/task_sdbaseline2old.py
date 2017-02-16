@@ -7,7 +7,7 @@ from taskinit import casalog
 import asap as sd
 from asap.scantable import is_scantable
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdbaseline2old(infile, antenna, row, field, spw, restfreq, frame, doppler, timerange, scan, pol, blmode, blparam, bltable, outfile, overwrite, keeprows):
     with sdutil.sdtask_manager(sdbaseline2_worker, locals()) as worker:
         worker.initialize()

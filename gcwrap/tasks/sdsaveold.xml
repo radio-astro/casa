@@ -10,9 +10,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdsaveold" startup="false" category="single dish">
 
-  <shortdescription>Save the sd spectra in various format</shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: Save the sd spectra in various format</shortdescription>
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+Import of single dish data to MeasurementSet is supported by importasap 
+(Scantable), importatca (ATCA RPFITS), and importnro (NRO NOSTAR).
+However, there is no facility to export from MeasurementSet to these
+formats (see plotms for export to ASCII).
+#########################################################################
+
 Task sdsaveold writes the single dish data to a disk file in 
 specified format (ASAP, MS2, SDFITS, ASCII). It is possible to 
 save the subset of the data by selecting field names, spw ids,

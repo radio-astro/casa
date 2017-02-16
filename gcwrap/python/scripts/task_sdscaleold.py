@@ -4,7 +4,7 @@ import asap as sd
 from asap.scantable import is_scantable, is_ms
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdscaleold(infile, antenna, factor, scaletsys, outfile, overwrite, verbose):
     with sdutil.sdtask_manager(sdscale_worker, locals()) as worker:
         worker.initialize()

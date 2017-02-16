@@ -10,9 +10,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdreduceold" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD task: do sdcal, sdaverage, and sdbaseline in one task</shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: do sdcal, sdaverage, and sdbaseline in one task</shortdescription>
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+The functionality of this task with MeasurementSet format is replicated
+with sdcal, sdbaseline, sdsmooth, and mstransform.
+#########################################################################
+
 Task sdreduceold performs data selection, calibration, spectral averaging
 and/or baseline fitting for single-dish spectra. This task internally
 calls the tasks, sdcal, sdaverage, and sdbaseline and it can be used to

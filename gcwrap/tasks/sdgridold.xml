@@ -10,9 +10,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdgridold" startup="false" category="single dish">
 
-  <shortdescription>SD gridding task</shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: SD gridding task</shortdescription>
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+The functionality of this task with MeasurementSet format is replicated
+with sdimaging.
+#########################################################################
+
 Task sdgridold performs spatial gridding according to the user 
 specification of spatial grid, convolution function, etc.
 For grid configuration, the task supplements necessary information 

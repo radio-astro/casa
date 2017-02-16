@@ -10,9 +10,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdaverageold" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD task: averaging and smoothing of spectra</shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: averaging and smoothing of spectra</shortdescription>
 
 <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+To a very great extent, the functionality of this task with MeasurementSet
+format is replicated with sdsmooth and mstransform.
+#########################################################################
+
 Task sdaverageold performs averaging in time/polarization and smoothing
 of the single-dish spectra. When timeaverage=True, spectra are averaged
 in time. Spectra within each scan ID are averaged when scanaverage=True.

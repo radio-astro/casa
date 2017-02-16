@@ -44,6 +44,36 @@ def table_selector(table, taql, *args, **kwargs):
         finally:
             tsel.close()
 
+def asaptask_decorator(func):
+    """
+    This is a decorator function for sd tasks. 
+    Currently the decorator does:
+
+       1) set origin to the logger
+       2) deprecation warning of ASAP task
+       3) handle exception
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # set origin
+        casalog.origin(func.__name__)
+        casalog.post("### DEPRECATION WARNING: task %s will be removed from CASA 5.1. Please refer to documentation for current task information and update your script ###" % func.__name__,'WARN')
+
+        retval = None
+        # Any errors are handled outside the task.
+        # however, the implementation below is effectively 
+        # equivalent to handling it inside the task.
+        try:
+            # execute task 
+            retval = func(*args, **kwargs)
+        except Exception, e:
+            traceback_info = format_trace(traceback.format_exc())
+            casalog.post(traceback_info,'SEVERE')
+            casalog.post(str(e),'ERROR')
+            raise Exception, e
+        return retval
+    return wrapper
+
 def sdtask_decorator(func):
     """
     This is a decorator function for sd tasks. 

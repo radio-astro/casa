@@ -9,9 +9,15 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
 <task type="function" name="sdbaselineold" startup="false" category="single dish">
 
-  <shortdescription>Fit/subtract a spectral baseline </shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: Fit/subtract a spectral baseline </shortdescription>
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+The functionality of this task with MeasurementSet format is replicated
+with sdbaseline.
+#########################################################################
+
 Task sdbaselineold performs baseline fitting/removal for single-dish spectra.
 The fit parameters, terms and rms of base-line are saved to an ascii 
 file, '&lt;outfile&gt;_blparam.txt'. 

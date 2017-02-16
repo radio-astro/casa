@@ -8,7 +8,7 @@ import asap as sd
 from asap.scantable import is_scantable
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdcal2old(infile, calmode, fraction, noff, width, elongated, tsysavg, tsysspw, applytable, interp, spwmap, field, spw, scan, pol, outfile, overwrite):
     casalog.post(str(locals()))
     with sdutil.sdtask_manager(sdcal2_worker, locals()) as worker: 

@@ -10,10 +10,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdflagold" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD spectral spectral/row flagging task </shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: spectral/row flagging</shortdescription>
 
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+The functionality of this task with MeasurementSet format is replicated
+with flagdata.
+#########################################################################
+
 Task sdflagold performs either interactive or non-interactive channel/row 
 based flagging on spectra. 
 

@@ -5,7 +5,7 @@ from asap._asap import Scantable
 from asap.scantable import is_scantable
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdcalold(infile, antenna, fluxunit, telescopeparam, field, spw, scan, pol, calmode, fraction, noff, width, elongated, markonly, plotpointings, tau, verify, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdcal_worker, locals()) as worker:
         worker.initialize()

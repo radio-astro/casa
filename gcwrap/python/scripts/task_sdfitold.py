@@ -5,7 +5,7 @@ from numpy import ma, array, logical_not, logical_and
 import asap as sd
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdfitold(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, scan, pol, timeaverage, tweight, scanaverage, polaverage, pweight, fitfunc, fitmode, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdfit_worker, locals()) as worker:
         worker.initialize()

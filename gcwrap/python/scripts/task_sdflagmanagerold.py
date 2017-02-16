@@ -6,7 +6,7 @@ import asap as sd
 import task_flagmanager
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdflagmanagerold(infile, mode, versionname, oldname, comment, merge):
     with sdutil.sdtask_manager(sdflagmanager_worker, locals()) as worker:
         worker.initialize()

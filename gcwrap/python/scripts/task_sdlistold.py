@@ -2,7 +2,7 @@ import asap as sd
 import sdutil
 from taskinit import casalog
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdlistold(infile, antenna, outfile, overwrite):
     with sdutil.sdtask_manager(sdlist_worker, locals()) as worker:
         worker.initialize()

@@ -7,7 +7,7 @@ import asap as sd
 from asap.scantable import is_scantable, is_ms
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdsaveold(infile, splitant, antenna, getpt, field, spw, timerange, scan, pol, beam, restfreq, outfile, outform, fillweight, overwrite):
     with sdutil.sdtask_manager(sdsave_worker, locals()) as worker:
         worker.initialize()

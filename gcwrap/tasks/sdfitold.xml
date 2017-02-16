@@ -10,9 +10,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdfitold" startup="false" category="single dish">
 
-  <shortdescription>Fit a spectral line</shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: Fit a spectral line</shortdescription>
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+The functionality of this task with MeasurementSet format is replicated
+with sdfit.
+#########################################################################
+
 Task sdfitold is a basic line-fitter for single-dish spectra.
 It assumes that the spectra have been calibrated in sdcal
 or sdreduce.

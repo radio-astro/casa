@@ -6,7 +6,7 @@ from taskinit import casalog
 import asap as sd
 from asap.scantable import is_scantable
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdbaselineold(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, timerange, scan, pol, tau, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdbaseline_worker, locals()) as worker:
         worker.initialize()

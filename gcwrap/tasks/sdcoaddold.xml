@@ -10,9 +10,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdcoaddold" startup="false" category="single dish">
 
-  <shortdescription>Coadd multiple scantables into one</shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: Coadd multiple scantables into one</shortdescription>
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+The functionality of this task with MeasurementSet format is replicated
+with mstransform.
+#########################################################################
+
 Task sdcoaddold performs co-add multiple single dish spectral data given
 by a list of spectral data file names in any of the following formats,
 ASAP, MS2,SDFITS, and ASCII.

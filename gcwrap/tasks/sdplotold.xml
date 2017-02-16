@@ -10,9 +10,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdplotold" startup="false" category="single dish">
 
-  <shortdescription>ASAP SD plotting task</shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: plot spectra</shortdescription>
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+To a very great extent, the functionality of this task with MeasurementSet
+format is replicated with plotms.
+#########################################################################
+
 Task sdplotold displays single-dish spectra, total power,
 or pointing direction of input data.
 It assumes that the spectra have been calibrated.

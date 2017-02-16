@@ -5,7 +5,7 @@ from asap._asap import Scantable
 from asap.scantable import is_scantable
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdaverageold(infile, antenna, field, spw, scan, pol, timeaverage, tweight, scanaverage, averageall, polaverage, pweight, kernel, kwidth, chanwidth, verify, plotlevel, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdaverage_worker, locals()) as worker:
         worker.initialize()

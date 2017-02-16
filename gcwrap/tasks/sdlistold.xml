@@ -10,9 +10,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="sdlistold" startup="false" category="single dish">
 
-  <shortdescription>list summary of single dish data</shortdescription>
+  <shortdescription>ASAP SD task [DEPRECATED]: list summary of single dish data</shortdescription>
 
   <description>
+### DEPRECATION WARNING #################################################
+This task will be removed in CASA 5.1.
+The functionality of this task with MeasurementSet format is replicated
+with listobs.
+#########################################################################
+
 Task sdlistold lists the scan summary of the dataset after importing
 as a scantable into ASAP.  It will optionally output this summary
 as file.

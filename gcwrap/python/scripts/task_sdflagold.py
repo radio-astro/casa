@@ -8,6 +8,7 @@ from asap.scantable import is_scantable, is_ms
 from asap.flagplotter import flagplotter
 import sdutil
 
+@sdutil.asaptask_decorator
 def sdflagold(infile, antenna, mode, unflag, field, spw, timerange, scan, pol, beam, restfreq, frame, doppler, clipminmax, clipoutside, showflagged, row, rasterrow, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdflag_worker, locals()) as worker:
         worker.initialize()

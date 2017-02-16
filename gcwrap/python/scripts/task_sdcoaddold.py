@@ -3,7 +3,7 @@ from taskinit import casalog
 import asap as sd
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdcoaddold(infiles, antenna, freqtol, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdcoadd_worker, locals()) as worker:
         worker.initialize()

@@ -4,7 +4,7 @@ from taskinit import casalog
 import asap as sd
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdgridold(infiles, antenna, spw, scan, pol, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
     with sdutil.sdtask_manager(sdgrid_worker, locals()) as worker:
         worker.initialize()

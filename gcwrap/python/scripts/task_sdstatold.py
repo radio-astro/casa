@@ -9,7 +9,7 @@ import asap as sd
 from asap.scantable import is_scantable
 import sdutil
 
-@sdutil.sdtask_decorator
+@sdutil.asaptask_decorator
 def sdstatold(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, timerange, scan, pol, beam, timeaverage, tweight, scanaverage, polaverage, pweight, interactive, outfile, format, overwrite):
     with sdutil.sdtask_manager(sdstat_worker, locals()) as worker:
         worker.initialize()
