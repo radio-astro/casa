@@ -29,6 +29,7 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayPartMath.h>
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Containers/Block.h>
@@ -300,6 +301,7 @@ void SolveDataBuffer::initFromVB(const vi::VisBuffer2& vb)
 				    VisBufferComponent2::Antenna1,
 				    VisBufferComponent2::Antenna2,
 				    VisBufferComponent2::Time,
+				    VisBufferComponent2::TimeCentroid,
 				    VisBufferComponent2::NCorrelations,
 				    VisBufferComponent2::NChannels,
 				    VisBufferComponent2::NRows,
@@ -311,6 +313,10 @@ void SolveDataBuffer::initFromVB(const vi::VisBuffer2& vb)
 
   // Copy required components from the supplied VB2:
   vb_->copyComponents(vb,comps,True,True);   // will fetch things, if needed
+
+  // Set weights for flagged data to zero
+  Cube<Float> wtsp(vb_->weightSpectrum());
+  wtsp(vb_->flagCube())=0.0;
 
   // Store the frequeny info
   //  TBD: also need bandwidth info....
@@ -352,7 +358,8 @@ void SolveDataBuffer::cleanUp()
 
 SDBList::SDBList() :
   nSDB_(0),
-  SDB_()
+  SDB_(),
+  freqs_()
 {}
 
 SDBList::~SDBList() 
@@ -375,6 +382,9 @@ void SDBList::add(const vi::VisBuffer2& vb)
 
   // increment the count
   nSDB_++;
+
+  // Clear the freqs_ info (forces recalculation)
+  freqs_.resize(0);
 
 }
 
@@ -427,6 +437,33 @@ Double SDBList::aggregateTime() const {
     return aTime;
   }
   else
+    throw(AipsError("SDBList::aggregateTime(): No SDBs in this SDBList yet."));
+}
+
+Double SDBList::aggregateTimeCentroid() const {
+
+  // Weighted average of SDBs' timeCentroids
+  if (nSDB_>0) {
+    Double aTime(0.0);
+    Double aWt(0.0);
+    Vector<Double> wtvD;
+    for (Int isdb=0;isdb<nSDB_;++isdb) {
+      SolveDataBuffer& sdb(*SDB_[isdb]);
+      Vector<Float> wtv(partialSums(sdb.weightSpectrum(),IPosition(2,0,1)));
+      wtvD.resize(wtv.nelements());
+      convertArray(wtvD,wtv);
+      aTime+=sum(wtvD*sdb.timeCentroid());
+      aWt+=sum(wtvD);
+    }
+    if (aWt>0.0)
+      aTime/=aWt;
+    else
+      // Use aggregateTime if no unflagged data
+      aTime=aggregateTime();
+
+    return aTime;
+  }
+  else
     throw(AipsError("SDBList::aggregateFld(): No SDBs in this SDBList yet."));
 }
 
@@ -451,14 +488,47 @@ Int SDBList::nChannels() const {
 
 const Vector<Double>& SDBList::freqs() const {
 
-  const Vector<Double>& f(SDB_[0]->freqs());  // from first SDB
+  if (nSDB_==0)
+    throw(AipsError("SDBList::freqs(): No SDBs in this SDBList yet."));
   
-  // Trap non-uniformity, for now
-  for (Int isdb=1;isdb<nSDB_;++isdb)
-    AlwaysAssert(allEQ(SDB_[isdb]->freqs(),f),AipsError);
-  
-  // Reach here, then ok
-  return f;
+
+  if (nSDB_==1) {
+    // Only one SDB, just return that one's freqs
+    const Vector<Double>& f(SDB_[0]->freqs());  // from first SDB
+    return f;
+  }
+
+  // Reach here, more than one SDB, need to gather info
+  if (freqs_.nelements()==0) {
+    // Haven't accumumlated yet
+    
+    // How many channels in aggregate?
+    //  (This will insist on uniformity over SDBs)
+    Int nchan(this->nChannels());   
+    
+    // Will accumulate mean freqs here
+    freqs_.resize(nchan);
+    freqs_.set(0.0);
+    
+    // Average over SDBs, counting each spw exactly _once_
+    // Map to keep track of unique spws
+    std::set<Int> spws;
+    Int nSpw(0); 
+    for (Int isdb=0;isdb<nSDB_;++isdb) {
+      Int ispw=SDB_[isdb]->spectralWindow()(0);
+      if (spws.count(ispw)<1) {
+	freqs_+=SDB_[isdb]->freqs();
+	spws.insert(ispw);  // Record that we got this spw
+	++nSpw;
+      }
+    }
+    // Divide by nSpw
+    freqs_/=Double(nSpw);
+    
+  }
+  // else:  freqs_ already filled previously...
+
+  return freqs_;
   
 }
 

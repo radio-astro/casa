@@ -60,7 +60,10 @@ public:
   int countSolutions(casacore::Vector<int>& nChunkPerSolve);
 
   // Add disk-accesing layer factory
-  void addDiskIO(casacore::MeasurementSet* ms,float interval);
+  void addDiskIO(casacore::MeasurementSet* ms,float interval,
+		 casacore::Bool combobs=false,casacore::Bool combscan=false,
+		 casacore::Bool combfld=false,casacore::Bool combspw=false,
+		 casacore::Bool useMSIter2=true);
 
   // Add spoofed data layer factory
   void addSimIO();
@@ -87,7 +90,7 @@ private:
   void cleanUp();
 
   // Derive MS iteration sort order, based on comb*
-  void deriveVI2Sort(casacore::Block<int>& sortcols, // Double& iterInterval
+  void deriveVI2Sort(casacore::Block<int>& sortcols,
 		     bool combobs,bool combscan,
 		     bool combfld,bool combspw);
 

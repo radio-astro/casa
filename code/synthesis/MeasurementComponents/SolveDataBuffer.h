@@ -117,6 +117,7 @@ public:
   const casacore::Vector<casacore::Int>& spectralWindow() const { return vb_->spectralWindows(); };
   const casacore::Vector<casacore::Int>& scan() const { return vb_->scan(); };
   const casacore::Vector<casacore::Double>& time() const { return vb_->time(); };
+  const casacore::Vector<casacore::Double>& timeCentroid() const { return vb_->timeCentroid(); };
   const casacore::Vector<casacore::Int>& fieldId() const { return vb_->fieldId(); };
   casacore::Int nChannels() const { return vb_->nChannels(); };
   const casacore::Vector<casacore::Double>& freqs() const { return freqs_; };
@@ -228,6 +229,7 @@ public:
   int aggregateSpw() const;
   int aggregateFld() const;
   double aggregateTime() const;
+  double aggregateTimeCentroid() const;
 
   // How man correlations
   //   Currently, this insists on uniformity over all SDBs
@@ -262,6 +264,9 @@ private:
 
   // Keep SDBs as a list of pointers
   casacore::PtrBlock<SolveDataBuffer*> SDB_;
+
+  // Aggregate frequency storage (so we can return a reference)
+  mutable casacore::Vector<double> freqs_;
 
 };
 

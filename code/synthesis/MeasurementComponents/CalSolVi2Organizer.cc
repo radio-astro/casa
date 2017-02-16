@@ -108,14 +108,21 @@ int CalSolVi2Organizer::countSolutions(casacore::Vector<int>& nChunkPerSolve) {
 }
 
 
-void CalSolVi2Organizer::addDiskIO(MeasurementSet* ms,Float interval) {
+void CalSolVi2Organizer::addDiskIO(MeasurementSet* ms,Float interval,
+				   Bool combobs,Bool combscan,
+				   Bool combfld,Bool combspw,
+				   Bool useMSIter2) 
+{
 
   //  Must be first specified layer
   AlwaysAssert(factories_.nelements()==0, AipsError);
 
-  IteratingParameters iterpar(interval);
 
-  data_=new VisIterImpl2LayerFactory(ms,iterpar,True);
+  Block<Int> sc;
+  deriveVI2Sort(sc,combobs,combscan,combfld,combspw);
+  IteratingParameters iterpar(interval,SortColumns(sc));
+
+  data_=new VisIterImpl2LayerFactory(ms,iterpar,True,useMSIter2);
 
   factories_.resize(1);
   factories_[0]=data_;
@@ -253,7 +260,7 @@ void CalSolVi2Organizer::barf() {
 
 }
 
-void CalSolVi2Organizer::deriveVI2Sort(Block<Int>& sortcols,  // Double& iterInterval,
+void CalSolVi2Organizer::deriveVI2Sort(Block<Int>& sortcols, 
 				       Bool combobs,Bool combscan,
 				       Bool combfld,Bool combspw) 
 {
@@ -287,13 +294,10 @@ void CalSolVi2Organizer::deriveVI2Sort(Block<Int>& sortcols,  // Double& iterInt
   if (!combfld) sortcols[i++]=MS::FIELD_ID;      // force field boundaries
   if (!combspw) sortcols[i++]=MS::DATA_DESC_ID;  // force spw boundaries
   sortcols[i++]=MS::TIME;
-  //if (combspw() || combfld()) iterInterval=DBL_MIN;  // force per-timestamp chunks
   if (combfld) sortcols[i++]=MS::FIELD_ID;      // effectively ignore field boundaries
   if (combspw) sortcols[i++]=MS::DATA_DESC_ID;  // effectively ignore spw boundaries
-  
-  if (verbose) {
-    cout << " sort sortcols: " << Vector<Int>(sortcols) << endl;
-    //    cout << "iterInterval = " << iterInterval << endl;
+  if (true || verbose) {
+    //    cout << " sort sortcols: " << Vector<Int>(sortcols) << endl;
   }
   
 }

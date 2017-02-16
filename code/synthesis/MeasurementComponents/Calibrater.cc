@@ -2944,7 +2944,7 @@ Bool Calibrater::ok() {
 casacore::Bool Calibrater::genericGatherAndSolve()  
 {
 
-  // Condition solint values so they 
+  // Condition solint values 
   svc_p->reParseSolintForVI2();
 
   // Organize VI2 layers for solving:
@@ -2968,7 +2968,10 @@ casacore::Bool Calibrater::genericGatherAndSolve()
   else
     // Real (selected) data in an MS (channel selection handled later...)
     //   The iteration time-interval is the solution interval
-    vi2org.addDiskIO(mssel_p,svc_p->solTimeInterval());  
+    vi2org.addDiskIO(mssel_p,svc_p->solTimeInterval(),
+		     svc_p->combobs(),svc_p->combscan(),
+		     svc_p->combfld(),svc_p->combspw(),
+		     true);   // use MSIter2
 
   // Add ad hoc SD section layer (e.g., OTF select of raster boundaries, etc.)
   //  if (SD)
@@ -2987,7 +2990,6 @@ casacore::Bool Calibrater::genericGatherAndSolve()
        svc_p->fintervalCh()>0.0)) { //  specified                                                                           
     vi2org.addChanAve(Int(svc_p->fintervalCh()));  
   }
-
 
   // Add the time-averaging layer, if needed
   //  NB: There is some evidence that doing time-averaging _after_ 
@@ -3018,27 +3020,79 @@ casacore::Bool Calibrater::genericGatherAndSolve()
   //-------------------------------------------------
 
 
-  // Count solutions
-  //   at the moment, this is done trivially, and doesn't
-  //   yet work right for combine='spw', etc.
-  Int nSol;
-  Vector<Int> nChunkPerSol;
-  nSol=vi2org.countSolutions(nChunkPerSol);
-  //  cout << "nSol=" << nSol << endl;                                                                                        
-  //  cout << "nChunkPerSol = " << nChunkPerSol << endl;                                                                      
-
   // Form the VI2 to drive data iteration below
   vi::VisibilityIterator2& vi(vi2org.makeFullVI());
-  //  cout << "VI Layers: " << vi.ViiType() << endl;
+  cout << "VI Layers: " << vi.ViiType() << endl;
 
   // Tell VI2 about the freq selection!
   if (frequencySelections_p) 
     vi.setFrequencySelection(*frequencySelections_p);
 
   // Access to the net VB2 for forming SolveDataBuffers in the SDBList below
+  //  NB: this assumes that the internal address of the VI2's VB2 will never change!
   vi::VisBuffer2 *vb = vi.getImpl()->getVisBuffer();
 
-  // Data should now be ready....
+  // VI2 should now be ready....
+
+  // Discern number of Solutions and how many VI2 chunks per each
+  Int nSol(0);
+  Vector<Int> nChPSol(10,0);  // nominal size; will enlarge as needed, and trim at end
+  {
+    //cout << "Counting chunks and solutions..." << endl;
+    uInt isol(0);
+    //cout << "sol counting: " << isol << " " << nChPSol << endl;
+    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+
+      if (isol>nChPSol.nelements()-1) {
+	//cout << "   ...At isol=" << isol << ", resizing nchPSol: " << nChPSol.nelements() << "-->";
+	nChPSol.resize(isol*2,True);        // double length, copy existing elements
+	nChPSol(Slice(isol,isol,1)).set(0); // init new elements
+	//cout << nChPSol.nelements() << endl;
+	//cout << "sol counting: " << isol << " " << nChPSol << " (" << ntrue(nChPSol>0) << "/" << nChPSol.nelements() << ")" << endl;
+      }
+
+
+      ++nChPSol(isol);  // incr chunk counter for current solution
+      //cout << "sol counting: " << isol << " " << nChPSol(Slice(0,min(isol+2,nChPSol.nelements()),1))
+      //   << " (" << ntrue(nChPSol>0) << "/" << nChPSol.nelements() << ")" 
+      //	   << "  keyCh=" << vi.keyChange()
+      //	   << endl;
+
+      ++isol;           // next chunk is nominally next solution
+
+      //      cout << vi.keyChange() << endl;
+
+      // If combining spw or field, and the next chunk changes by
+      //   DATA_DESC_ID or FIELD_ID (and _not_ TIME, which is
+      //   changing slower than these when combine is on),
+      //   then the next chunk should be counted in the same soln
+      if ( (svc_p->combspw() && vi.keyChange()=="DATA_DESC_ID") ||
+	   (svc_p->combfld() && vi.keyChange()=="FIELD_ID") )
+	--isol; // next one is the same solution interval
+
+    }
+    nSol=ntrue(nChPSol>0);
+    nChPSol.resize(nSol,true);
+    //cout << "nSol   =" << nSol << endl;
+    //    cout << "nChPSol=" << nChPSol << endl;
+
+    /*  from SVC...
+    if (svc_p->combobs())
+      logSink() << "Combining observation Ids." << LogIO::POST;
+    if (svc_p->combscan())
+      logSink() << "Combining scans." << LogIO::POST;
+    if (svc_p->combspw()) 
+      logSink() << "Combining spws: " << spwlist << " -> " << spwlab << LogIO::POST;
+    if (svc_p->combfld()) 
+      logSink() << "Combining fields." << LogIO::POST;
+    */
+
+    logSink() << "For solint = " << svc_p->solint() << ", found "
+	      <<  nSol << " solution intervals."
+	      << LogIO::POST;
+  }
+
+  //  throw(AipsError("EARLY ESCAPE!!"));
 
   // Create the output caltable                                                                                             
   //  (this version doesn't revise frequencies)                                                                             
@@ -3046,19 +3100,7 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 
   //  Vector<Bool> unsolspw(msmc_p->nSpw(),False);  // this is set in old system by ve_p                                    
   Vector<Int64> nexp(msmc_p->nSpw(),0), natt(msmc_p->nSpw(),0),nsuc(msmc_p->nSpw(),0);
-
-
-  /*  Experiment for testing chunk/solution counting with the VI2
-  {
-    cout << "Counting chunks..." << endl;
-    Int nch(0);
-    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-      ++nch;
-    }
-    cout << "...nchunks=" << nch << endl;
-  }
-  */
-
+ 
   Int nGood(0);
   vi.originChunks();
   Int nGlobalChunks=0;  // counts VI chunks globally
@@ -3073,11 +3115,15 @@ casacore::Bool Calibrater::genericGatherAndSolve()
     //   combine='spw' or 'field' context
 
     for (Int ichunk=0;                                // count chunks in this solution
-	 ichunk<nChunkPerSol(isol)&&vi.moreChunks();  // while more chunks needed _and_ available
+	 ichunk<nChPSol(isol)&&vi.moreChunks();  // while more chunks needed _and_ available
 	 ++ichunk,vi.nextChunk()) {                     // advance to next chunk
 
       // Global chunk counter
       ++nGlobalChunks;
+
+      //cout << "           keyCh = " << vi.keyChange() 
+	//	   << " ncol = " << vi.getSortColumns().getColumnIds().nelements()
+      //<< endl;
 
       //  Loop over VB2s in this chunk
       //    (we get more then one when preavg<solint)
@@ -3090,6 +3136,8 @@ casacore::Bool Calibrater::genericGatherAndSolve()
         sdbs.add(*vb);
 
 	/*
+	Double modv(86400.0);
+	cout.precision(7);
 	cout << "isol=" << isol
              << " ichk="<<ichunk
              << " ivb="<<ivb
@@ -3098,13 +3146,19 @@ casacore::Bool Calibrater::genericGatherAndSolve()
              << " spw="<<vb->spectralWindows()(0)
              << " nr="<<vb->nRows()
              << " nch="<<vb->nChannels()
-             << " t="<<vb->time()(1)
-             << " tC="<<vb->timeCentroid()(1)
-             << " wt="<<vb->weightSpectrum()(0,0,0)
+	     << " f="<<mean(vb->getFrequencies(0))/1e9
+	     << "->"<< mean(sdbs.freqs())/1e9
+             << " t="<<fmod(mean(vb->time()),modv)
+	     << "->"<< fmod(sdbs.aggregateTime(),modv)
+             << " tC="<<fmod(mean(vb->timeCentroid()),modv)
+	     << "->"<< fmod(sdbs.aggregateTimeCentroid(),modv)
+             << " wt="<<sum(vb->weightSpectrum())
 	     << " nSDB=" << sdbs.nSDB() 
-	     << " gl nChks=" << nGlobalChunks
+	     << " nGlChks=" << nGlobalChunks
+	     << " (keych=" << vi.keyChange() << ")"
              << endl;
 	//*/
+
 	/*
 	//cout << "corrdata=" << amplitude(vb->visCubeCorrected()(Slice(0),Slice(),Slice()).nonDegenerate()) << endl;
 	cout << "moddata =" << amplitude(vb->visCubeModel()(Slice(0),Slice(),Slice()).nonDegenerate()) << endl;
@@ -3120,8 +3174,13 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 	*/
       }
     }
- 
-    //    cout << "sdbs.nSDB() = " << sdbs.nSDB()<< endl;                                                                       
+
+
+    if (false) {
+    cout << "***BEGINNING Solution: isol= " << isol << " sdbs.nSDB() = " << sdbs.nSDB()<< endl;                                                                       
+    Vector<Double> f(sdbs.freqs());
+    cout << "    Freqs= " << f << endl;
+    }
 
     // Use first spw id in the SDBList                                                                                      
     Int thisSpw(sdbs(0).spectralWindow()(0));
@@ -3161,7 +3220,6 @@ casacore::Bool Calibrater::genericGatherAndSolve()
         // Guess from the data                                                                                              
         svc_p->guessPar(sdbs);
 
-
         Bool totalGoodSol(False);  // Will be set True if any channel is good                                               
         //for (Int ich=0;ich<nChanSol;++ich) {
         for (Int ich=nChanSol-1;ich>-1;--ich) {
@@ -3179,7 +3237,7 @@ casacore::Bool Calibrater::genericGatherAndSolve()
             svc_p->applySNRThreshold();
           }
           else
-            svc_p->currMetaNote();
+	    svc_p->currMetaNote();
 
           // Record solution in its channel, good or bad                                                                    
           if (svc_p->freqDepPar())
@@ -3207,7 +3265,8 @@ casacore::Bool Calibrater::genericGatherAndSolve()
         nsuc(thisSpw)+=1;
       }
 
-    } // sdbs.Ok()                                                                                                          
+    } // sdbs.Ok()
+    //cout << endl;
   } // isol                                                                                                                 
 
   // Report nGood to logger
@@ -3215,6 +3274,7 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 	    << svc_p->typeName() << " solutions in "
 	    << nGood << " solution intervals."
 	    << LogIO::POST;
+
 
   // Is this needed?
   //summarize_uncalspws(unsolspw, "solv");                                                                                  
@@ -3226,6 +3286,8 @@ casacore::Bool Calibrater::genericGatherAndSolve()
   actRec_.define("nExpected",nexp);
   actRec_.define("nAttempt",natt);
   actRec_.define("nSucceed",nsuc);
+
+  //  throw(AipsError("EARLY ESCAPE!!"));
 
   if (nGood>0) {
     if (svc_p->typeName()!="BPOLY") {  // needed?                                                                           
@@ -3240,6 +3302,7 @@ casacore::Bool Calibrater::genericGatherAndSolve()
     logSink() << "No output calibration table written."
 	      << LogIO::POST;
   }
+  cout << "VI Layers: " << vi.ViiType() << endl;
 
   // Reach here, all is good
   return True;
