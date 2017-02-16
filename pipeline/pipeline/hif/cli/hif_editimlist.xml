@@ -21,10 +21,31 @@
                 <value></value>
             </param>
 
+            <param type="string" name="cyclefactor">
+                <description>Controls the depth of clean in minor cycles based on PSF. </description>
+                <value></value>
+            </param>
+
+            <param type="string" name="cycleniter">
+                <description>Controls max number of minor cycle iterations in a single major cycle.</description>
+                <value></value>
+            </param>
+
+            <param type="string" name="deconvolver" subparam="true">
+                <description>Minor cycle algorithm (multiscale or mtmfs)</description>
+                <value></value>
+                <allowed kind="enum">
+                    <value></value>
+                    <value>multiscale</value>
+                    <value>mtmfs</value>
+                </allowed>
+            </param>
+
             <param type="string" name="editmode">
                 <description>The edit mode of the task (e.g. add, edit)</description>
-                <value>add</value>
+                <value></value>
                 <allowed kind="enum">
+                    <value></value>
                     <value>add</value>
                     <value>edit</value>
                 </allowed>
@@ -55,12 +76,14 @@
                 <value></value>
                 <allowed kind="enum">
                     <value></value>
-                    <value>standard</value>
-                    <value>wproject</value>
-                    <value>widefield</value>
                     <value>mosaic</value>
                     <value>awproject</value>
                 </allowed>
+            </param>
+
+            <param type="string" name="mask">
+                <description>Used to declare whether to use a predefined mask for tclean.</description>
+                <value></value>
             </param>
 
             <param type="any" name="nbin">
@@ -71,6 +94,11 @@
 
             <param type="string" name="nchan">
                 <description>Number of channels, -1 = all</description>
+                <value></value>
+            </param>
+
+            <param type="string" name="niter">
+                <description>Maximum number of clean iterations</description>
                 <value></value>
             </param>
 
@@ -88,6 +116,16 @@
                 <description>Image center (direction or field index, \'\' for default)</description>
                 <any type="variant"/>
                 <value type="string"></value>
+            </param>
+
+            <param type="string" name="robust">
+                <description>Set the Briggs robustness factor for weighting.</description>
+                <value></value>
+            </param>
+
+            <param type="string" name="scales">
+                <description>The scales for multi-scale imaging.</description>
+                <value></value>
             </param>
 
             <param type="string" name="specmode">
@@ -114,6 +152,11 @@
 
             <param type="string" name="stokes">
                 <description></description>
+                <value></value>
+            </param>
+
+            <param type="string" name="taper">
+                <description>Used to set a uv-taper during clean.</description>
                 <value></value>
             </param>
 
@@ -191,6 +234,13 @@
             ('5ppb') and scales it accordingly.
             example: ['0.5arcsec', '0.5arcsec'] '3ppb'
 
+            cyclefactor -- Controls the depth of clean in minor cycles based on PSF.
+
+            cycleniter -- Controls max number of minor cycle iterations in a single major cycle.
+
+            deconvolver -- Minor cycle algorithm e.g. 'multiscale' or 'mtmfs'.
+            default: 'multiscale'
+
             <!--TODO: add description-->
             editmode --
 
@@ -200,6 +250,12 @@
             will be selected from measurement sets in 'vis'.
             default: '' Fields matching matching intent, one image per target source.
             example: '3C279', 'Centaurus*', '3C279,J1427-421'
+
+            <!--TODO: add description-->
+            gridder --
+
+            mask -- Used to declare whether to use a predefined mask for tclean,
+            or to use internal auto-masking, or to not mask at all.
 
             <!--TODO: add description-->
             imagename --
@@ -231,6 +287,8 @@
             spw consistent with start and width.
             example: 100
 
+            niter -- The maximum total number of minor cycle iterations allowed for tclean.
+
             <!--TODO: add description-->
             nterms --
 
@@ -241,6 +299,13 @@
             default: '' The default phase center is set to the mean of the field
             directions of all fields that are to be image together.
             example: 0, 'J2000 19h30m00 -40d00m00'
+
+            robust -- Set the Briggs robustness factor for weighting. In general,
+            we choose a value that gives suitable PSF size (~2.5? for the
+            untapered images) and reasonable sensitivity. Tuning might be needed
+            in certain regions.
+
+            scales -- The scales for multi-scale imaging.
 
             specmode -- Frequency imaging mode, 'mfs', 'cont', 'cube'. \'\' defaults to
             'cube' if intent parameter includes 'TARGET' otherwise 'mfs'.
@@ -261,6 +326,12 @@
             start -- First channel for frequency mode images.
             default '' Starts at first input channel of the spw.
             example: '22.3GHz'
+
+            taper -- Used to set a uv-taper during clean. At mid-declinations and
+            reasonable elevations, not required for the full-resolution images
+            and in the QLIP. Needed when making the tapered Images for other BDPs
+            (SEIP, CIP). May be useful in QLIP to control PSF at low elevations
+            or in hybrid.
 
             <!--TODO: add description-->
             stokes --

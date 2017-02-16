@@ -17,6 +17,7 @@ class EditimlistResult(basetask.Results):
         new_targets = self.targets
 
         new_targets_names = [x['field'] for x in self.targets]
+        # new_targets_keys = [(targ['phasecenter', targ['imsize'], targ['cell']) for targ in self.targets]
         # print 'new targets', new_targets_names
 
         if not hasattr(context, 'clean_list_pending'):
