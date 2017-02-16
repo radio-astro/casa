@@ -33,6 +33,7 @@ casa_add_library( msvis
   MSVis/MSCalEnums.cc
   MSVis/MSChecker.cc
   MSVis/MSContinuumSubtractor.cc
+  MSVis/MSIter2.cc
   MSVis/MSUVWGenerator.cc
   MSVis/MSUtil.cc
   MSVis/MeasurementSet2.cc
@@ -126,6 +127,7 @@ install (FILES
 	MSVis/MSCalEnums.h
 	MSVis/MSChecker.h
 	MSVis/MSContinuumSubtractor.h
+	MSVis/MSIter2.h
 	MSVis/MSUVWGenerator.h
 	MSVis/MSUtil.h
 	MSVis/MsAverager.h

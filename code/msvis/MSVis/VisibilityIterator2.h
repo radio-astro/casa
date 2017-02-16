@@ -526,6 +526,9 @@ public:
   void nextChunk();
   casacore::Bool moreChunks() const;
 
+  // Report Name of slowest column that changes at end of current iteration
+  virtual casacore::String keyChange() const;
+
   // Returns the pair (chunk,subchunk) for the current position of the VI.  Only
   // valid after origin has been called.
 

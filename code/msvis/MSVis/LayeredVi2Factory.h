@@ -183,7 +183,8 @@ class VisIterImpl2LayerFactory : public ViiLayerFactory {
   
   VisIterImpl2LayerFactory(casacore::MeasurementSet* ms,
                            const IteratingParameters& pars,
-                           bool writable);
+                           bool writable,
+			   bool useMSIter2=false);
 
   virtual ~VisIterImpl2LayerFactory () {}
 
@@ -203,6 +204,9 @@ class VisIterImpl2LayerFactory : public ViiLayerFactory {
   
   // Should VisibilityIteratorImpl2 be generated w/ write-permission
   bool writable_;
+
+  // Control use of ~experimental MSIter2, which has smarter time iteration
+  bool useMSIter2_;
   
 };
 

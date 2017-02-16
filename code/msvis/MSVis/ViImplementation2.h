@@ -167,6 +167,9 @@ public:
     virtual casacore::Bool moreChunks () const = 0;
     virtual void nextChunk () = 0;
 
+    // Report Name of slowest column that changes at end of current iteration
+    virtual casacore::String keyChange() const = 0;
+
     virtual casacore::Bool isWritable () const = 0;
 
     // Return the time interval (in seconds) used for iteration.

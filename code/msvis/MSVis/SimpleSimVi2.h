@@ -165,7 +165,10 @@ public:
   virtual void originChunks (casacore::Bool forceRewind = false);
   virtual casacore::Bool moreChunks () const;
   virtual void nextChunk ();
-  
+
+  // Detecting the key change isn't possible (yet?)  
+  virtual casacore::String keyChange() const { SSVi2NotPossible() };
+
   virtual casacore::Bool isWritable () const { return false; };
 
   // Return the time interval (in seconds) used for iteration.

@@ -201,7 +201,8 @@ public:
                              const SortColumns & sortColumns,
                              casacore::Double timeInterval,
                              VisBufferType vbType,
-                             casacore::Bool isWritable);
+                             casacore::Bool isWritable,
+			     casacore::Bool useMSIter2=false);
 
 //    // Copy construct. This calls the assigment operator.
 //    VisibilityIteratorImpl2 (const VisibilityIteratorImpl2 & other,
@@ -282,6 +283,9 @@ public:
 
     // Advance to the next Chunk of data
     virtual void nextChunk ();
+
+    // Report Name of slowest column that changes at end of current iteration
+    virtual casacore::String keyChange() const { return msIter_p->keyChange(); };
 
     // Return antenna1
     virtual void antenna1 (casacore::Vector<casacore::Int> & ant1) const;
@@ -695,7 +699,8 @@ protected:
 
     // Ctor auxiliary method
 
-    virtual void initialize (const casacore::Block<const casacore::MeasurementSet *> & mss);
+    virtual void initialize (const casacore::Block<const casacore::MeasurementSet *> & mss,
+			     casacore::Bool useMSIter2=false);
 
     // Returns true if casacore::MS Iterator is currently pointing to a selected
     // spectral window

@@ -279,6 +279,16 @@ VisibilityIterator2::nextChunk ()
     impl_p->nextChunk ();
 }
 
+// Report Name of slowest column that changes at end of current iteration
+String VisibilityIterator2::keyChange() const 
+{ 
+  return impl_p->keyChange(); 
+}
+
+
+
+
+
 Int
 VisibilityIterator2::nDataDescriptionIds () const
 {
