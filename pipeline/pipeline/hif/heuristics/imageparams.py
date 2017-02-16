@@ -159,8 +159,7 @@ class ImageParamsHeuristics(object):
                         for char in '()+?.^$[]{}|':
                             re_field = re_field.replace(char, '\%s' % char)
                         re_field = re_field.replace('*', '.*')
-                        temp_result.update([fir for fir in field_intent_result
-                          if re.search(pattern=re_field, string=fir[0])])
+                        temp_result.update([fir for fir in field_intent_result if fir[0] == re_field])
                     field_intent_result = temp_result
 
             else:
@@ -169,8 +168,7 @@ class ImageParamsHeuristics(object):
                         for char in '()+?.^$[]{}|':
                             f = f.replace(char, '\%s' % char)
                         f = f.replace('*', '.*')
-                        fintents_list = [fld.intents for fld in fields if 
-                          re.search(pattern=f, string=fld.name)]
+                        fintents_list = [fld.intents for fld in fields if fld.name == f]
                         for fintents in fintents_list:
                             for fintent in fintents:
                                 field_intent_result.update((f, fintent))
@@ -199,7 +197,7 @@ class ImageParamsHeuristics(object):
 
                 scanids = [scan.id for scan in ms.scans if
                   intent in scan.intents and
-                  re.search(pattern=re_field, string=str(scan.fields))]
+                  re_field in [utils.dequote(f.name) for f in scan.fields]]
                 scanids.sort()
 
                 vis_scanids[vis] = scanids
@@ -514,8 +512,7 @@ class ImageParamsHeuristics(object):
                 # pattern matching to allow intents of form *TARGET* to work
                 re_intent = intent.replace('*', '.*')
                 field_list = [fld.id for fld in fields if
-                  fld.id in field_list and re.search(pattern=re_intent,
-                  string=str(fld.intents))]
+                  fld.id in field_list and re_intent in fld.intents]
 
             # this will be a mosaic if there is more than 1 field_id for any 
             # measurement set - probably needs more work, what if want to

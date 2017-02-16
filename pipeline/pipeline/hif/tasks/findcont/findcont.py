@@ -124,7 +124,7 @@ class FindCont(basetask.StandardTaskTemplate):
                         ms = inputs.context.observing_run.get_ms(name=vis)
                         scanids = [scan.id for scan in ms.scans if
                                    target['intent'] in scan.intents and
-                                   re.search(pattern=re_field, string=str(scan.fields))]
+                                   re_field in [utils.dequote(f.name) for f in scan.fields]]
                         if not scanids:
                             LOG.warning('No data for Field %s SPW %s' % (target['field'], spwid))
                             continue

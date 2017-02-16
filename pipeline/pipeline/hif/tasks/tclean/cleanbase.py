@@ -178,7 +178,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             ms = inputs.context.observing_run.get_ms(name=inputs.vis[i])
             scanids = [scan.id for scan in ms.scans if
                        inputs.intent in scan.intents and
-                       re.search(pattern=re_field, string=str(scan.fields))]
+                       re_field in [utils.dequote(f.name) for f in scan.fields]]
             if not scanids:
                 continue
             scanids = str(scanids)
