@@ -194,7 +194,8 @@ public:
   inline casacore::Double getBsln(casacore::Int chnk,casacore::Int irel) { return *(baseline_[chnk]->data()+irel); };
   inline casacore::Double getRow(casacore::Int chnk,casacore::Int irel) { return *(row_[chnk]->data()+irel); };
   inline casacore::Double getObsid(casacore::Int chnk,casacore::Int irel) { return *(obsid_[chnk]->data()+irel); };
-  inline casacore::Double getIntent(casacore::Int chnk,casacore::Int irel) { return *(intent_[chnk]->data()+irel); };
+  // this metadata axis is "loaded" for cal tables so check for empty array
+  inline casacore::Double getIntent(casacore::Int chnk,casacore::Int irel) { return ((*intent_[chnk]).empty() ? -1 : *(intent_[chnk]->data()+irel)); };
   inline casacore::Double getFeed1(casacore::Int chnk,casacore::Int irel) { return *(feed1_[chnk]->data()+irel); };
   inline casacore::Double getFeed2(casacore::Int chnk,casacore::Int irel) { return *(feed2_[chnk]->data()+irel); };
 
