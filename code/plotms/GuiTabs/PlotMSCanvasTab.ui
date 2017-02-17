@@ -182,16 +182,16 @@
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="xAxisSection">
-     <property name="text">
-      <string>X Axis</string>
+    <widget class="Line" name="line_4">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="Line" name="line_4">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+    <widget class="QLabel" name="xAxisSection">
+     <property name="text">
+      <string>X Axis</string>
      </property>
     </widget>
    </item>
