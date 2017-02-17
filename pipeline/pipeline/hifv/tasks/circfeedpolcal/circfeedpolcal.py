@@ -168,13 +168,16 @@ class Circfeedpolcal(polarization.Polarization):
 
         fluxcal = ''
         for field in fluxfieldnames:
-            if fluxcal == '' and field == '3C286':
+            if fluxcal == '' and (field == '3C286' or field == '1331+305=3C286'):
                 fluxcal = field
-            elif fluxcal == '' and field == '3C48':
+            elif fluxcal == '' and (field == '3C48' or field == '0137+331=3C48'):
                 fluxcal = field
-            elif fluxcal != '' and (field == '3C48' or field == '3C286'):
+            elif fluxcal != '' and (field == '3C48' or field == '3C286' or field == '1331+305=3C286' or field == '0137+331=3C48'):
                 LOG.info("Two flux calibrators found, selecting 3C286!")
-                fluxcal = '3C286'
+                if '1331+305=3C286' in fluxfieldnames:
+                    fluxcal='1331+305=3C286'
+                if '3C286' in fluxfieldnames:
+                    fluxcal = '3C286'
 
         delmodjob = casa_tasks.delmod(vis=self.inputs.vis, field='')
         self._executor.execute(delmodjob)
