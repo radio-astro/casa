@@ -106,14 +106,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     # TODO: move this to a heuristics to avoid duplicated code (see tclean)
 
                     # Construct regex for string matching - escape likely problem
-                    # chars. Simpler way to do this ?
-                    re_field = target['field'].replace('*', '.*')
-                    re_field = re_field.replace('[', '\[')
-                    re_field = re_field.replace(']', '\]')
-                    re_field = re_field.replace('(', '\(')
-                    re_field = re_field.replace(')', '\)')
-                    re_field = re_field.replace('+', '\+')
-                    re_field = utils.dequote(re_field)
+                    re_field = utils.dequote(target['field'])
 
                     # Use scanids to select data with the specified intent
                     # Not CASA clean now supports intent selectin but leave
