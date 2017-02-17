@@ -155,20 +155,14 @@ class ImageParamsHeuristics(object):
                     # consistent with the fields in field_list
                     temp_result = set()
                     for eachfield in field_list:
-                        re_field = eachfield
-                        for char in '()+?.^$[]{}|':
-                            re_field = re_field.replace(char, '\%s' % char)
-                        re_field = re_field.replace('*', '.*')
-                        temp_result.update([fir for fir in field_intent_result if fir[0] == re_field])
+                        re_field = utils.dequote(eachfield)
+                        temp_result.update([fir for fir in field_intent_result if utils.dequote(fir[0]) == re_field])
                     field_intent_result = temp_result
 
             else:
                 if field.strip() is not '':
                     for f in field_list:
-                        for char in '()+?.^$[]{}|':
-                            f = f.replace(char, '\%s' % char)
-                        f = f.replace('*', '.*')
-                        fintents_list = [fld.intents for fld in fields if fld.name == f]
+                        fintents_list = [fld.intents for fld in fields if utils.dequote(fld.name) == utils.dequote(f)]
                         for fintents in fintents_list:
                             for fintent in fintents:
                                 field_intent_result.update((f, fintent))
@@ -182,14 +176,7 @@ class ImageParamsHeuristics(object):
             field = field_intent[0]
             intent = field_intent[1]
  
-            # regex for string matching - escape likely problem chars.
-            re_field = field.replace('*', '.*')
-            re_field = re_field.replace('[', '\[')
-            re_field = re_field.replace(']', '\]')
-            re_field = re_field.replace('(', '\(')
-            re_field = re_field.replace(')', '\)')
-            re_field = re_field.replace('+', '\+')
-            re_field = utils.dequote(re_field)
+            re_field = utils.dequote(field)
 
             vis_scanids = {}
             for vis in self.vislist:

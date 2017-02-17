@@ -157,15 +157,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             else:
                 inputs.datacolumn = 'corrected'
 
-        # Construct regex for string matching - escape likely problem
-        # chars. Simpler way to do this ?
-        re_field = inputs.field.replace('*', '.*')
-        re_field = re_field.replace('[', '\[')
-        re_field = re_field.replace(']', '\]')
-        re_field = re_field.replace('(', '\(')
-        re_field = re_field.replace(')', '\)')
-        re_field = re_field.replace('+', '\+')
-        re_field = utils.dequote(re_field)
+        re_field = utils.dequote(inputs.field)
 
         # Use scanids to select data with the specified intent
         # Note CASA clean now supports intent selectin but leave
