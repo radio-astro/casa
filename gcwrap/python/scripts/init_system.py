@@ -46,12 +46,13 @@ if os.environ.has_key('CASAPATH') :
     else :
         casa['dirs']['root'] = __casapath__
         casa['dirs']['data'] = __casapath__ + "/data"
-        if os.path.exists(__casapath__ + "/" + __casaarch__ + "/python/2.7/assignmentFilter.py"):
-            casa['dirs']['python'] = __casapath__ + "/" + __casaarch__ + "/python/2.7"
-        elif os.path.exists(__casapath__ + "/lib/python2.7/assignmentFilter.py"):
+
+        if os.path.exists(__casapath__ + "/lib/python2.7/start_casa.py"):
             casa['dirs']['python'] = __casapath__ + "/lib/python2.7"
-        elif os.path.exists(__casapath__ + "/Resources/python/assignmentFilter.py"):
+        elif os.path.exists(__casapath__ + "/Resources/python/start_casa.py"):
             casa['dirs']['python'] = __casapath__ + "/Resources/python"
+        elif os.path.exists(__casapath__ + "/" + __casaarch__ + "/lib/python2.7/start_casa.py"):
+            casa['dirs']['python'] = __casapath__ + "/" + __casaarch__ + "/lib/python2.7"
 
         if casa['dirs']['python'] is not None:
             casa['dirs']['recipes'] = casa['dirs']['python'] + "/recipes"

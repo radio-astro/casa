@@ -39,7 +39,7 @@ class __doc(object):
                     return webbrowser.open("https://casa.nrao.edu/casadocs/stable/" + self.remote_toc[sec]['path'])
                 else:
                     print "Sorry '%s' is not a recognized section..." % sec
-                    print "-------------------------------------------------------------"
+                    print "------------------------------------------------------------------------------"
                     show_toc( )
         else:
             path = casa['dirs']['doc'] + "/casa.nrao.edu/casadocs/stable.html"

@@ -7,11 +7,20 @@ from init_welcome_helpers import redirect_argv, immediate_exit_with_handlers
 if casa['flags'].execute:
     import os.path
 
-    if os.path.isfile(casa['flags'].execute[0]):
+    if '/' in casa['flags'].execute[0]:
+        ## qualified path
+        __paths_to_check = [ '' ]
+    else:
+        ## non-qualified path
+        __paths_to_check = [ "./", casa['dirs']['python'] + '/' ]
+
+    __candidates = filter( os.path.isfile, map(lambda dir: dir + casa['flags'].execute[0], __paths_to_check) )
+
+    if len(__candidates) > 0:
         # Run file with filename given in the command line
         try:
             with redirect_argv(casa['flags'].execute):
-                execfile(casa['flags'].execute[0])
+                execfile(__candidates[0])
         except Exception, err:
             traceback.print_exc()
             immediate_exit_with_handlers(1)
