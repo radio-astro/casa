@@ -42,6 +42,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
          # self.allcflist = self.PH.partitionCFCacheList(self.cfcachepars['cflist']);
          # self.allcflist = self.PH.partitionCFCacheList(self.allgridpars['0']);
          self.listOfNodes = self.PH.getNodeList();
+         self.coordsyspars = {};
 
 #############################################
     def initializeImagersBase(self,thisSelPars,partialSelPars):
@@ -74,8 +75,25 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         #
         # Call defineimage at each node.
         #
+
+        # do the first node only first to set csys and distributed it to other nodes
+        nimpars = copy.deepcopy(self.allimpars)
+        ngridpars = copy.deepcopy(self.allgridpars)
+        for fld in range(0,self.NF):
+            joblist=[]
+            if self.NN>1:
+                nimpars[str(fld)]['imagename'] = self.PH.getpartimagename( nimpars[str(fld)]['imagename'], nodes[0] )
+            joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) 
+                                               + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", nodes[0] ) )
+            #joblist.append( self.PH.runcmdcheck("fullcoords = toolsi.getcsys()") ) 
+            self.PH.checkJobs(joblist);
+            self.PH.runcmdcheck("fullcoords = toolsi.getcsys()")
+            fullcoords = self.PH.pullval("fullcoords", nodes[0] )
+            self.coordsyspars[str(fld)] = fullcoords[1]
+         
+        # do for the rest of nodes
         joblist=[];
-        for node in nodes:
+        for node in nodes[1:]:
             ## For each image-field, define imaging parameters
             nimpars = copy.deepcopy(self.allimpars)
             #print "nimpars = ",nimpars;
@@ -116,6 +134,8 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         # This is required only for node-1 though (for dryGridding
         # later).
         self.initializeImagersBase(self.selpars,False);
+        for fld in range(0, self.NF):
+            self.allimpars[str(fld)]['csys']=self.coordsyspars[str(fld)]['coordsys'].copy()
 
         if (not cfcExists):
             self.dryGridding();
