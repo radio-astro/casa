@@ -427,6 +427,7 @@ class OldCalibrater : public Calibrater
 			 const casacore::String& msSelect="");
 
   // Uses *vs_p to ctor VisCals
+  using Calibrater::setapply;
   virtual casacore::Bool setapply (const casacore::String& type, 
 				   const casacore::Record& applypar);
 

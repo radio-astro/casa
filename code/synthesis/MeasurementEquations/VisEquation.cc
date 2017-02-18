@@ -374,6 +374,15 @@ void VisEquation::collapse2(vi::VisBuffer2& vb) {
 
   if (prtlev()>0) cout << "VE::collapse2(VB2)" << endl;
 
+  // Trap case of unavailable calibration in any vc we intend to apply below
+  //   In the solve context, if we can't pre-cal, we flag it
+  //    NB: this assumes only one spw in the VB2!
+  if (!this->spwOK(vb.spectralWindows()(0))) {
+    Cube<Bool> fl(vb.flagCube());          fl.set(true);
+    Cube<Float> wtsp(vb.weightSpectrum()); wtsp.set(0.0f);
+    Matrix<Float> wt(vb.weight());         wt.set(0.0f);
+    return;
+  }    
 
   // Handle origin of model data here:
   if (useInternalModel_)

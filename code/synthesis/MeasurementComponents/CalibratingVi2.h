@@ -180,6 +180,9 @@ private:
   // specialized cal application for solving
   virtual void calibrateCurrentVB() const;
 
+  // Flag all corrs if any one is flagged (OLD style)
+  virtual void corrIndepFlags(casa::vi::VisBuffer2* vb) const;
+
   // Ensure weightSpectrum is populated
   virtual void verifyWeightSpectrum(casa::vi::VisBuffer2* vb) const;
 

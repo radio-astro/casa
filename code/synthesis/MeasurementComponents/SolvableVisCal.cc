@@ -2449,7 +2449,7 @@ void SolvableVisCal::setOrVerifyCTFrequencies(Int spw) {
     spwcol.chanWidth().put(spw,chwid);
     spwcol.resolution().put(spw,chres);
     spwcol.effectiveBW().put(spw,cheff);
-    spwcol.numChan().put(spw,nChan);
+    spwcol.numChan().put(spw,(freqDepPar()?nChan:1)); // handles unchan'd par case
     spwcol.totalBandwidth().put(spw,totbw);
     spwcol.flagRow().put(spw,False);
 
@@ -2738,10 +2738,12 @@ void SolvableVisCal::syncSolveMeta(SDBList& sdbs) {  // VI2
   
   //  cout << "spwMap() = " << spwMap() << endl;
   
+  
+
   // Ask the sdbs
   setMeta(sdbs.aggregateObsId(),
 	  sdbs.aggregateScan(),
-	  sdbs.aggregateTime(),
+	  sdbs.aggregateTime(),   // TBD:  Use aggreateTimeCentroid()
 	  sdbs.aggregateSpw(),
 	  sdbs.freqs(),
 	  sdbs.aggregateFld());

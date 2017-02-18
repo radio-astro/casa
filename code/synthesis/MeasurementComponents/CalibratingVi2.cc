@@ -533,8 +533,6 @@ void CalSolvingVi2::calibrateCurrentVB() const
   // Do the correction, if not done yet
   if (!visCalibrationOK_p) {
 
-    //    cout << "********" << endl;
-
     // Get the underlying ViImpl2's VisBuffer, to munge it
     VisBuffer2 *vb = getVii()->getVisBuffer();
 
@@ -554,6 +552,9 @@ void CalSolvingVi2::calibrateCurrentVB() const
     //  TBD: better semantics: vb->setCorrDataWtSpec(vb->dataWtSpec()); 
     vb->resetWeightsUsingSigma();
 
+    // Set old-style flags, FOR NOW
+    corrIndepFlags(vb);
+
     // Ensure we got weightSpectrum (fill it, if not)
     verifyWeightSpectrum(vb);
 
@@ -562,6 +563,7 @@ void CalSolvingVi2::calibrateCurrentVB() const
 
     // If the VisEquation is set, use it, otherwise use the corrFactor_p
     if (ve_p) {
+      
       // Apply calibration via the VisEquation
       ve_p->collapse2(*vb);   // ,False,doWtSp);
 
@@ -621,12 +623,28 @@ void CalSolvingVi2::calibrateCurrentVB() const
     // Signal that we have applied the correction, to avoid unnecessary redundancy
     visCalibrationOK_p=True;
 
-    //    cout << "-->" << visCalibrationOK_p;
-
   }    
   //  cout << endl;
 }
 
+void CalSolvingVi2::corrIndepFlags(casa::vi::VisBuffer2* vb) const {
+
+  if (vb->nCorrelations()==1)
+    // Nothing to do if only one correlation
+    return;
+
+  // If more than one correlation, if any is flagged, all are (per row, chan)
+  Int nrow=vb->nRows();
+  Int nchan=vb->nChannels();
+  for (Int irow=0;irow<nrow;++irow) {
+    for (Int ichan=0;ichan<nchan;++ichan) {
+      Vector<Bool> corrfl(vb->flagCube()(Slice(),Slice(ichan,1,1),Slice(irow,1,1)).nonDegenerate(1));
+      if (ntrue(corrfl)>0)
+	corrfl.set(true);
+    }
+  }
+  return;
+}
 
 void CalSolvingVi2::verifyWeightSpectrum(casa::vi::VisBuffer2* vb) const {
 
@@ -645,7 +663,8 @@ void CalSolvingVi2::verifyWeightSpectrum(casa::vi::VisBuffer2* vb) const {
     vb->setWeightSpectrum(wtsp);
   }
   
-  // In all cases et flagged cells to zero
+  // In all cases set flagged cells' weights to zero
+  //  (This is ok in solving context.)
   Cube<Float> wtsp(vb->weightSpectrum());
   wtsp(vb->flagCube())=0.0;
 

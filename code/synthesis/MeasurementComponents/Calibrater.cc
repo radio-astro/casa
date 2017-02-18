@@ -3022,7 +3022,7 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 
   // Form the VI2 to drive data iteration below
   vi::VisibilityIterator2& vi(vi2org.makeFullVI());
-  cout << "VI Layers: " << vi.ViiType() << endl;
+  //cout << "VI Layers: " << vi.ViiType() << endl;
 
   // Tell VI2 about the freq selection!
   if (frequencySelections_p) 
@@ -3036,13 +3036,16 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 
   // Discern number of Solutions and how many VI2 chunks per each
   Int nSol(0);
-  Vector<Int> nChPSol(10,0);  // nominal size; will enlarge as needed, and trim at end
+  Vector<Int> nChPSol(1000,0);  // nominal size; will enlarge as needed, and trim at end
+
   {
     //cout << "Counting chunks and solutions..." << endl;
     uInt isol(0);
-    //cout << "sol counting: " << isol << " " << nChPSol << endl;
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+      // NB: this loop NEVER touches the the subChunks, since
+      //     this would cause data I/O, cal, averaging, etc.
 
+      // Enlarge nChPSol Vector, if necessary
       if (isol>nChPSol.nelements()-1) {
 	//cout << "   ...At isol=" << isol << ", resizing nchPSol: " << nChPSol.nelements() << "-->";
 	nChPSol.resize(isol*2,True);        // double length, copy existing elements
@@ -3051,16 +3054,15 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 	//cout << "sol counting: " << isol << " " << nChPSol << " (" << ntrue(nChPSol>0) << "/" << nChPSol.nelements() << ")" << endl;
       }
 
-
-      ++nChPSol(isol);  // incr chunk counter for current solution
+      // incr chunk counter for current solution
+      ++nChPSol(isol);  
       //cout << "sol counting: " << isol << " " << nChPSol(Slice(0,min(isol+2,nChPSol.nelements()),1))
-      //   << " (" << ntrue(nChPSol>0) << "/" << nChPSol.nelements() << ")" 
-      //	   << "  keyCh=" << vi.keyChange()
-      //	   << endl;
+      //     << " (" << ntrue(nChPSol>0) << "/" << nChPSol.nelements() << ")" 
+      //     << "  keyCh=" << vi.keyChange()
+      //     << endl;
 
-      ++isol;           // next chunk is nominally next solution
-
-      //      cout << vi.keyChange() << endl;
+      // next chunk is nominally next solution
+      ++isol;           
 
       // If combining spw or field, and the next chunk changes by
       //   DATA_DESC_ID or FIELD_ID (and _not_ TIME, which is
@@ -3071,10 +3073,12 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 	--isol; // next one is the same solution interval
 
     }
+    // Trim list to realized length, which is the number of solutions we'll 
+    //   attempt below
     nSol=ntrue(nChPSol>0);
     nChPSol.resize(nSol,true);
     //cout << "nSol   =" << nSol << endl;
-    //    cout << "nChPSol=" << nChPSol << endl;
+    //cout << "nChPSol=" << nChPSol << endl;
 
     /*  from SVC...
     if (svc_p->combobs())
@@ -3098,7 +3102,7 @@ casacore::Bool Calibrater::genericGatherAndSolve()
   //  (this version doesn't revise frequencies)                                                                             
   svc_p->createMemCalTable2();
 
-  //  Vector<Bool> unsolspw(msmc_p->nSpw(),False);  // this is set in old system by ve_p                                    
+  Vector<Float> spwwts(msmc_p->nSpw(),-1.0);
   Vector<Int64> nexp(msmc_p->nSpw(),0), natt(msmc_p->nSpw(),0),nsuc(msmc_p->nSpw(),0);
  
   Int nGood(0);
@@ -3121,10 +3125,6 @@ casacore::Bool Calibrater::genericGatherAndSolve()
       // Global chunk counter
       ++nGlobalChunks;
 
-      //cout << "           keyCh = " << vi.keyChange() 
-	//	   << " ncol = " << vi.getSortColumns().getColumnIds().nelements()
-      //<< endl;
-
       //  Loop over VB2s in this chunk
       //    (we get more then one when preavg<solint)
       Int ivb(0);
@@ -3132,8 +3132,13 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 	   vi.more();
 	   ++ivb,vi.next()) {
 
-        // Add this VB to the SDBList                                                                                       
-        sdbs.add(*vb);
+	// Add this VB to the SDBList                                                                                       
+	sdbs.add(*vb);
+
+	// Keep track of spws seen but not included in solving
+	Int ispw=vb->spectralWindows()(0);
+	if (spwwts(ispw)<0) spwwts(ispw)=0.0f;
+	spwwts(ispw)+=sum(vb->weightSpectrum());
 
 	/*
 	Double modv(86400.0);
@@ -3145,8 +3150,8 @@ casacore::Bool Calibrater::genericGatherAndSolve()
              << " fld="<<vb->fieldId()(0)
              << " spw="<<vb->spectralWindows()(0)
              << " nr="<<vb->nRows()
-             << " nch="<<vb->nChannels()
-	     << " f="<<mean(vb->getFrequencies(0))/1e9
+             << " nch="<<vb->nChannels() << flush;
+	cout << " f="<<mean(vb->getFrequencies(0))/1e9
 	     << "->"<< mean(sdbs.freqs())/1e9
              << " t="<<fmod(mean(vb->time()),modv)
 	     << "->"<< fmod(sdbs.aggregateTime(),modv)
@@ -3159,31 +3164,11 @@ casacore::Bool Calibrater::genericGatherAndSolve()
              << endl;
 	//*/
 
-	/*
-	//cout << "corrdata=" << amplitude(vb->visCubeCorrected()(Slice(0),Slice(),Slice()).nonDegenerate()) << endl;
-	cout << "moddata =" << amplitude(vb->visCubeModel()(Slice(0),Slice(),Slice()).nonDegenerate()) << endl;
-	cout << "flags =" << noboolalpha<< vb->flagCube()(Slice(0),Slice(),Slice()).nonDegenerate() << endl;
-	cout << "wts =" <<  vb->weightSpectrum()(Slice(0),Slice(),Slice()).nonDegenerate() << endl;
+      }  // VI2 subchunks (VB2s)
+    } // VI2 chunks
 
-	cout << "moddata =" << amplitude(vb->visCubeModel()(Slice(3),Slice(),Slice()).nonDegenerate()) << endl;
-	cout << "flags =" << noboolalpha<< vb->flagCube()(Slice(3),Slice(),Slice()).nonDegenerate() << endl;
-	cout << "wts =" <<  vb->weightSpectrum()(Slice(3),Slice(),Slice()).nonDegenerate() << endl;
-
-
-	//	cout << "sum(mod[flag])=" << sum(vb->visCubeModel()(vb->flagCube())) << endl;
-	*/
-      }
-    }
-
-
-    if (false) {
-    cout << "***BEGINNING Solution: isol= " << isol << " sdbs.nSDB() = " << sdbs.nSDB()<< endl;                                                                       
-    Vector<Double> f(sdbs.freqs());
-    cout << "    Freqs= " << f << endl;
-    }
-
-    // Use first spw id in the SDBList                                                                                      
-    Int thisSpw(sdbs(0).spectralWindow()(0));
+    // Which spw is this?
+    Int thisSpw(sdbs.aggregateSpw());
 
     // Expecting a solution                                                                                                 
     nexp(thisSpw)+=1;
@@ -3208,9 +3193,7 @@ casacore::Bool Calibrater::genericGatherAndSolve()
       // Size the solvePar arrays inside SVC                                                                                
       //  (smart:  if freqDepPar()=F, uses 1)                                                                               
       //  returns the number of channel solutions to iterate over                                                           
-      //cout << "sdbs.nChannels() = " << sdbs.nChannels() << endl;                                                          
       Int nChanSol=svc_p->sizeSolveParCurrSpw(sdbs.nChannels());
-      //cout << "nChanSol = " << nChanSol << endl;                                                                          
 
       if (svc_p->useGenericSolveOne()) {
 
@@ -3267,6 +3250,10 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 
     } // sdbs.Ok()
     //cout << endl;
+
+    //    throw(AipsError("EARLY ESCAPE!!"));
+
+
   } // isol                                                                                                                 
 
   // Report nGood to logger
@@ -3276,8 +3263,9 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 	    << LogIO::POST;
 
 
-  // Is this needed?
-  //summarize_uncalspws(unsolspw, "solv");                                                                                  
+  // Report spws that were seen but not solved
+  Vector<Bool> unsolspw=(spwwts==0.0f); 
+  summarize_uncalspws(unsolspw, "solv");                                                                                  
 
   // Fill activity record
   //  cout << "Expected, Attempted, Succeeded (by spw) = " << nexp << ", " << natt << ", " << nsuc << endl;                 
@@ -3302,7 +3290,6 @@ casacore::Bool Calibrater::genericGatherAndSolve()
     logSink() << "No output calibration table written."
 	      << LogIO::POST;
   }
-  cout << "VI Layers: " << vi.ViiType() << endl;
 
   // Reach here, all is good
   return True;

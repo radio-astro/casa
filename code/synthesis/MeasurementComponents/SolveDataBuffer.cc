@@ -109,8 +109,12 @@ SolveDataBuffer::~SolveDataBuffer()
   
 Bool SolveDataBuffer::Ok() {
   // Ok if net unflagged weight is positive
-  Float wtsum=sum(weightSpectrum()(!flagCube()));
-  return (wtsum>0.0f);
+  if (nfalse(flagCube())>0) {
+    Float wtsum=sum(weightSpectrum()(!flagCube()));
+    return (wtsum>0.0f);
+  }
+  else
+    return false;
 }
 
 /*
