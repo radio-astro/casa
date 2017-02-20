@@ -91,10 +91,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
 
     @property
     def deconvolver(self):
-        if not self._deconvolver:
-            return self.image_heuristics.deconvolver(self.specmode, self.spw)
-        else:
-            return self._deconvolver
+        return self._deconvolver
 
     @deconvolver.setter
     def deconvolver(self, value):
@@ -195,8 +192,17 @@ class Tclean(cleanbase.CleanBase):
         if inputs.gridder in ('', None):
             inputs.gridder = self.image_heuristics.gridder(inputs.intent, inputs.field)
 
+        # Determine deconvolver
+        if inputs.deconvolver in ('', None):
+            inputs.deconvolver = self.image_heuristics.deconvolver(inputs.specmode, inputs.spw)
 
-        # Determine the phase center.
+        # Determine nterms
+        if inputs.nterms in ('', None):
+            if inputs.deconvolver == 'mtmfs':
+                # ALMA heuristics
+                inputs.nterms = 2
+
+        # Determine the phase center
         if inputs.phasecenter in ('', None):
             field_id = self.image_heuristics.field(inputs.intent, inputs.field)
             inputs.phasecenter = self.image_heuristics.phasecenter(field_id)
