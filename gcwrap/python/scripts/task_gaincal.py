@@ -20,6 +20,11 @@ def gaincal(vis=None,caltable=None,
 
 	try: 
                 mycb = cbtool()
+
+                # Revert to old VI for GSPLINE
+                if (gaintype=='GSPLINE'):
+                        mycb.setvi(old=True,quiet=False);
+
                 if ((type(vis)==str) & (os.path.exists(vis))):
                         mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:

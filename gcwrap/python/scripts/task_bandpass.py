@@ -23,6 +23,10 @@ def bandpass(vis=None,caltable=None,
 	try:
 		mycb=cbtool()
 		
+		# Revert to old VI for BPOLY
+		if (bandtype=='BPOLY'):
+			mycb.setvi(old=True,quiet=False);
+
                 if ((type(vis)==str) & (os.path.exists(vis))):    
                         mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:

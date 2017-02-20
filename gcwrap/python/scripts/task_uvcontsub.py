@@ -222,6 +222,7 @@ def uvcontsub(vis, field, fitspw, excludechans, combine, solint, fitorder, spw, 
                       casalog)
 
         if (type(csvis) == str) and os.path.isdir(csvis):
+            mycb.setvi(old=True,quiet=False);   # old VI, for now
             mycb.open(csvis)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'

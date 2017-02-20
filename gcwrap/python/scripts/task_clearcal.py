@@ -39,6 +39,7 @@ def clearcal(
                 casalog.post('Need to create scratch columns; ignoring selection.'
                              )
 
+            cblocal.setvi(old=True,quiet=False);  # Old VI for now
             cblocal.open(vis, addmodel=addmodel)
         else:
             raise Exception, \

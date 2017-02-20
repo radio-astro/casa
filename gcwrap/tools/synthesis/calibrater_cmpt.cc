@@ -42,6 +42,7 @@ using namespace casa;
 using namespace casacore;
 namespace casac {
 
+// Hardwire which VI to use
 #define USEOLDVI true
 
 calibrater::calibrater() : 
@@ -49,9 +50,16 @@ calibrater::calibrater() :
   oldcal_(USEOLDVI),  // use OldCalibrater by defaultfor now...
   itsCalibrater(0)
 {
+
   // Default constructor
-  //    itsApplyMap   SimpleOrderedMap   Cal. table apply assignments
-  //    itsSolveMap   SimpleOrderedMap   Cal. table solve assignments
+
+  //  The following doesn't work yet...
+  // User can override to use old VI by setting the VI1 variable (to anything)
+  //  cout << "getenv(VI1) = " << getenv("VI1") <<endl;
+  //  bool forceOldVIByEnv = (getenv("VI1")!=NULL);
+  //  cout << "Found VI1 env var; forcing use of old VI!" << endl;
+  //  oldcal_ |= forceOldVIByEnv;
+
   itsLog = new casacore::LogIO();
   itsCalibrater = casa::Calibrater::factory(oldcal_);
   LogIO os (LogOrigin ("calibrater", "ctor"));
@@ -692,7 +700,7 @@ calibrater::corrupt()
      //itsCalibrater->writeHistory(os);
 
      // Apply the calibration solutions to the uv-data
-     retval = itsCalibrater->corrupt();
+     retval = itsCalibrater->corrupt2();
      //     AlwaysAssert (retval, AipsError);
 
      os << "Finished corrupting." << LogIO::POST;

@@ -10,6 +10,7 @@ def uvmodelfit(vis=None,
 	try:
 		casalog.origin('uvmodelfit')
                 if ((type(vis)==str) & (os.path.exists(vis))):
+                        mycb.setvi(old=True,quiet=False);  # old VI for now
                         cb.open(vis)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
