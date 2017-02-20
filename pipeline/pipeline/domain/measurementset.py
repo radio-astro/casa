@@ -22,6 +22,7 @@ class MeasurementSet(object):
     def __init__(self, name, session=None):
         self.name = name
         self.array_name = None
+        self.representative_target = None
         self.antenna_array = None
         self.data_descriptions = []
         self.spectral_windows = []
@@ -129,6 +130,80 @@ class MeasurementSet(object):
         else:
             return None
     
+    def get_representative_source_spw(self, source_name=None, direction_tolerance='200uarcsec', source_frequency=None):
+        qa = casatools.quanta
+        cme = casatools.measures
+
+        # Get the representative target source object
+        #   Use name if source_name is supplied
+        #   Otherwise use the representative coordinates from the SBSummary table, the source coordinates, and a matching
+        #   tolerance.
+        if source_name:
+            target_sources = [source for source in self.sources if source.name == source_name and 'TARGET' in source.intents] 
+            if len(target_sources) > 0:
+                target_source = target_sources[0]
+            else:
+                target_source = None
+        elif self.representative_target:
+            target_source = None
+            max_separation = qa.quantity(direction_tolerance)
+            target_direction = self.representative_target[0]
+            target_sources = [source for source in self.sources if 'TARGET' in source.intents] 
+            for source in target_sources:
+                separation = cme.separation(source.direction, target_direction)
+                if qa.gt (separation, max_separation):
+                    continue
+                target_source = source
+                break
+        else:
+            target_source = None
+
+
+        # Target source not found
+        if not target_source:
+            return (None, None)
+
+        # Get the representative target spw object
+        #    Use source_frequency if it is supplied and convert to TOPO
+        #    Otherwise use the representative frequency from the SBSummary table and convert to TOPO.
+        if source_frequency:
+           target_frequency = cme.frequency('LSRK', qa.quantity(qa.getvalue(source_frequency), qa.getunit(source_frequency)))
+        else:
+           target_frequency = cme.frequency('LSRK', qa.quantity(qa.getvalue(self.representative_target[1]),
+               qa.getunit(self.representative_target[1])))
+
+        # Convert LSRK frequency to TOPO
+        #    Use the start time of the first target source scan
+        cme.doframe (cme.observatory(self.antenna_array.name))
+        cme.doframe (target_source.direction)
+        target_scans = [scan for scan in self.get_scans(scan_intent='TARGET') if target_source.name in [f.name for f in scan.fields]]
+        if len(target_scans) > 0:
+            cme.doframe (target_scans[0].start_time)
+            target_frequency_topo = cme.measure (target_frequency, 'TOPO')
+        else:
+            target_frequency_topo = None
+        cme.done()
+
+        # No target data
+        if not target_frequency_topo:
+            return (None, None)
+        target_source_name = target_source.name
+
+        # Find the science spw whose central frequency most closely matches the
+        # representative frequency.
+        #    This algorithm needs input from the PWG and more work
+        target_spwid = None
+        maxdiff = numpy.finfo('d').max
+        for spw in self.get_spectral_windows():
+            if 'TARGET' not in spw.intents:
+                continue
+            diff = abs (float(spw.centre_frequency.value) - target_frequency['m0']['value'])
+            if diff < maxdiff:
+                target_spwid = spw.id
+                maxdiff = diff
+
+        return (target_source_name, target_spwid)
+
     def get_fields(self, task_arg=None, field_id=None, name=None, intent=None):
         """
         Get Fields from this MeasurementSet matching the given criteria. If no
