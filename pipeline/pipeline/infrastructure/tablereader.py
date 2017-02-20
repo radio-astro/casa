@@ -33,6 +33,15 @@ def find_EVLA_band(frequency, bandlimits=None, BBAND='?4PLSCXUKAQ?'):
 def _get_ms_name(ms):
     return ms.name if isinstance(ms, domain.MeasurementSet) else ms
 
+def _get_science_goal_value(science_goals, goal_keyword):
+    value = None
+    for science_goal in science_goals:
+        keyword = science_goal.split('=')[0].replace(' ', '')
+        if keyword != goal_keyword:
+            continue
+        value = science_goal.split('=')[1].replace(' ', '')
+        return value
+
 
 class ObservingRunReader(object):
     @staticmethod
@@ -279,6 +288,8 @@ class MeasurementSetReader(object):
             # Likewise for the ASDM_EXECBLOCK table
             LOG.info('Populating ms.polarizations...')
             ms.polarizations = PolarizationTable.get_polarizations(ms)
+            LOG.info('Populating ms.representative_target ...')
+            ms.representative_target = SBSummaryTable.get_sbsummary_info(ms)
             LOG.info('Populating ms.array_name ...')
             ms.array_name = ExecblockTable.get_execblock_info(ms)
 
@@ -474,6 +485,57 @@ class DataDescriptionTable(object):
 
         return zip(dd_ids, spw_ids, pol_ids)
 
+
+class SBSummaryTable(object):
+    @staticmethod
+    def get_sbsummary_info(ms):
+        try:
+            sbsummary_info = [SBSummaryTable._create_sbsummary_info(*row) 
+               for row in SBSummaryTable._read_table(ms)]
+            return sbsummary_info[0]
+        except:
+            return (None, None, None)
+
+    @staticmethod
+    def _create_sbsummary_info(repDirection, repFrequency, repBandwidth):
+       return (repDirection, repFrequency, repBandwidth) 
+
+    @staticmethod
+    def _read_table(ms):
+        """
+        Read the ASDM_SBSummary table
+        For all practical purposes this table consists of a single row
+        but handle the more general case
+        """
+        LOG.debug('Analysing ASDM_SBSummary table')
+        me = casatools.measures
+        qa = casatools.quanta
+        msname = _get_ms_name(ms)
+        sbsummary_table = os.path.join(msname, 'ASDM_SBSUMMARY')        
+        with casatools.TableReader(sbsummary_table) as table:
+            centerDirections = table.getcol('centerDirection')
+            centerDirectionCodes = table.getcol('centerDirectionCode')
+            scienceGoals = table.getcol('scienceGoal')
+            numScienceGoals = table.getcol('numScienceGoal')
+
+            repDirections = []
+            repFrequencies = []
+            repBandWidths = []
+            for i in range(table.nrows()):
+                # Create direction
+                direction = me.direction(centerDirectionCodes[i], qa.quantity(centerDirections[0,i], 'rad'),
+                    qa.quantity(centerDirections[1,i], 'rad'))
+                repDirections.append(direction)
+                # Create frequency
+                repFrequency = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                    'representativeFrequency'))
+                repFrequencies.append(repFrequency)
+                repBandWidth = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                    'representativeBandwidth'))
+                repBandWidths.append(repBandWidth)
+
+        rows = zip(repDirections, repFrequencies, repBandWidths)
+        return rows
 
 class ExecblockTable(object):
     @staticmethod
