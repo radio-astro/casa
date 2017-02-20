@@ -31,6 +31,10 @@ class Source(object):
         return casatools.quanta.formxxx(self.latitude, format='dms', prec=2)
 
     @property
+    def direction(self):
+        return self._direction
+
+    @property
     def frame(self):
         return self._direction['refer']
 
