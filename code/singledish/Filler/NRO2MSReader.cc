@@ -739,13 +739,22 @@ Bool NRO2MSReader::getSpectralWindowRowImpl(
   record.meas_freq_ref = frame_type;
 
   NRODataScanData scan_data;
-  readScanData(spw_id_counter_, scan_data);
-  double freq_offset = scan_data.FRQ00 - obs_header_.F0CAL0[spw_id_counter_];
+  int spw_id_array = obs_header_.NSPWIN;
+  for (size_t iarr = 0; iarr < obs_header_.ARYNM0 ; ++iarr) {
+	  if (spw_id_counter_ == array_mapper_[iarr].spw_id) {
+		  spw_id_array = iarr;
+		  break;
+	  }
+  }
+  if (spw_id_array == obs_header_.NSPWIN)
+	  throw AipsError("Internal ERROR: Could not find array ID corresponds to an SPW ID");
+  readScanData(spw_id_array, scan_data);
+  double freq_offset = scan_data.FRQ00 - obs_header_.F0CAL0[spw_id_array];
   std::vector<double> freqs(2, freq_offset);
   std::vector<double> chcal(2);
   for (size_t i = 0; i < 2; ++i) {
-    freqs[i] += obs_header_.FQCAL0[spw_id_counter_][i];
-    chcal[i]  = obs_header_.CHCAL0[spw_id_counter_][i];
+    freqs[i] += obs_header_.FQCAL0[spw_id_array][i];
+    chcal[i]  = obs_header_.CHCAL0[spw_id_array][i];
   }
   //-------------(change 2016/9/23)---------
   shiftFrequency(obs_header_.VDEF0, obs_header_.VEL0, freqs);
