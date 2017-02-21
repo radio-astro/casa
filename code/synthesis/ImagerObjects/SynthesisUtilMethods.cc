@@ -61,8 +61,7 @@
 #include <msvis/MSVis/SubMS.h>
 #include <mstransform/MSTransform/MSTransformRegridder.h>
 #include <msvis/MSVis/MSUtil.h>
-
-#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisibilityIteratorImpl2.h>
 #include <msvis/MSVis/VisBufferUtil.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -1859,8 +1858,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /// This version uses the new vi2/vb2
     // get the first ms for multiple MSes
     MeasurementSet msobj=vi2.ms();
-    Vector<Int> spwids;
-    vi2.getImpl()->spectralWindows( spwids );
+    
+    //vi2.getImpl()->spectralWindows( spwids );
+    //The above is not right
+    //////////// ///Kludge to find all spw selected
+    std::vector<Int> pushspw;
+    vi::VisBuffer2* vb=vi2.getVisBuffer();
+    for (vi2.originChunks(); vi2.moreChunks();vi2.nextChunk())
+    	{
+	  for (vi2.origin(); vi2.more();vi2.next())
+    		{
+		  Int a=vb->spectralWindows()(0);
+		  if(std::find(pushspw.begin(), pushspw.end(), a) == pushspw.end()) {
+		    
+		    pushspw.push_back(a);
+		  }
+
+
+
+		}
+	}
+    Vector<Int> spwids(pushspw);
+    //////////////////
     Vector<Int> flds;
     vi2.getImpl()->fieldIds( flds );
     AlwaysAssert( flds.nelements()>0 , AipsError );
@@ -2017,6 +2036,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     std::vector<std::vector<Int> > averageWhichChan;
     std::vector<std::vector<Int> > averageWhichSPW;
     std::vector<std::vector<Double> > averageChanFrac;
+    
     if(spwids.nelements()==1)
       {
         dataChanFreq=msc.spectralWindow().chanFreq()(spwids[0]);
@@ -2026,6 +2046,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
         //SubMS thems(msobj);
         //if(!thems.combineSpws(spwids,true,dataChanFreq,dataChanWidth))
+	
 	if(!MSTransformRegridder::combineSpwsCore(os,msobj, spwids,dataChanFreq,dataChanWidth,
 											  averageWhichChan,averageWhichSPW,averageChanFrac))
           {
