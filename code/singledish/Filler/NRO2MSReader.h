@@ -202,6 +202,17 @@ private:
 
   void constructArrayTable();
   bool checkScanArray(string const scan_array, NROArrayData const *header_array);
+  // Returns the first array ID whose SPW ID is spwid.
+  int getFirstArrayIdWithSpwID(int spwid) {
+	  int spw_id_array = obs_header_.NSPWIN;
+	  for (int iarr = 0; iarr < obs_header_.ARYNM0 ; ++iarr) {
+	    if (spwid == array_mapper_[iarr].spw_id) {
+	      return iarr;
+	    }
+	  }
+	  // no array with spwid found
+	  throw "Internal ERROR: Could not find array ID corresponds to an SPW ID\n";
+  }
 
   int beam_id_counter_;
   int source_spw_id_counter_;

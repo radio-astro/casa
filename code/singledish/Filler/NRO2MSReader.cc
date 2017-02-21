@@ -414,7 +414,7 @@ double NRO2MSReader::getMiddleOfTimeRangeSec() {
 }
 
 double NRO2MSReader::getRestFrequency(int const spwno) {
-  fseek(fp_, len_obs_header_ + spwno * obs_header_.SCNLEN0 + 184, SEEK_SET);
+  fseek(fp_, len_obs_header_ + getFirstArrayIdWithSpwID(spwno) * obs_header_.SCNLEN0 + 184, SEEK_SET);
   double restfreq_header;
   readHeader(restfreq_header);
   return restfreq_header;
@@ -739,15 +739,7 @@ Bool NRO2MSReader::getSpectralWindowRowImpl(
   record.meas_freq_ref = frame_type;
 
   NRODataScanData scan_data;
-  int spw_id_array = obs_header_.NSPWIN;
-  for (size_t iarr = 0; iarr < obs_header_.ARYNM0 ; ++iarr) {
-	  if (spw_id_counter_ == array_mapper_[iarr].spw_id) {
-		  spw_id_array = iarr;
-		  break;
-	  }
-  }
-  if (spw_id_array == obs_header_.NSPWIN)
-	  throw AipsError("Internal ERROR: Could not find array ID corresponds to an SPW ID");
+  int spw_id_array = getFirstArrayIdWithSpwID(spw_id_counter_);
   readScanData(spw_id_array, scan_data);
   double freq_offset = scan_data.FRQ00 - obs_header_.F0CAL0[spw_id_array];
   std::vector<double> freqs(2, freq_offset);
