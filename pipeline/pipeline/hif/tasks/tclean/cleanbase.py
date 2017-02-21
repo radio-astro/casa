@@ -266,6 +266,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             'vis':           inputs.vis,
             'imagename':     '%s.%s.iter%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
             'datacolumn':    inputs.datacolumn,
+            'field':         inputs.field,
             'spw':           inputs.spwsel,
             'intent':        utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             'scan':          scanidlist,
