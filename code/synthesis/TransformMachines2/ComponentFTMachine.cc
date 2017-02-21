@@ -99,7 +99,7 @@ void ComponentFTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
   // We also add an MPosition as well so that for compact arrays we
   // can specify images in e.g. AZEL or HADEC.
   
-  ROMSColumns msc(vb.getVi()->ms());
+  ROMSColumns msc(vb.ms());
   MeasFrame mFrame((MEpoch(Quantity(vb.time()(0), 
 				    msc.timeQuant()(0).getUnit() ),
 			   msc.timeMeas()(0).getRef())),
@@ -134,7 +134,7 @@ void ComponentFTMachine::rotateUVW(Double*& uvw, Double*& dphase, const Int nrow
   // the Sun on the specified epoch, expressed in J2000 coordinates.
   // We also add an MPosition as well so that for compact arrays we
   // can specify images in e.g. AZEL or HADEC.
-  ROMSColumns msc(vb.getVi()->ms());
+  ROMSColumns msc(vb.ms());
   MeasFrame mFrame((MEpoch(Quantity(vb.time()(0), msc.timeQuant()(0).getUnit()), msc.timeMeas()(0).getRef())), msc.antenna().positionMeas()(0));
 
 

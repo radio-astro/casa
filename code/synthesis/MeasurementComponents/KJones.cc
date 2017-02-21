@@ -1667,8 +1667,8 @@ void KAntPosJones::syncMeta2(const vi::VisBuffer2& vb) {
   // Call parent (sets currTime())
   KJones::syncMeta2(vb);
 
-  phasedir_p=vb.getVi()->subtableColumns().field().phaseDirMeas(currField());
-  antpos0_p=vb.getVi()->subtableColumns().antenna().positionMeas()(0);
+  phasedir_p=vb.subtableColumns().field().phaseDirMeas(currField());
+  antpos0_p=vb.subtableColumns().antenna().positionMeas()(0);
 
 
   if (doTrDelCorr_)

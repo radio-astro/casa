@@ -494,8 +494,8 @@ void FJones::syncMeta2(const vi::VisBuffer2& vb) {
   else if (vb.correlationTypes()(0)==9)    // Linears
     pjonestype_=Jones::General;
 
-  phasedir_p=vb.getVi()->subtableColumns().field().phaseDirMeas(currField());
-  antpos_p.reference(vb.getVi()->subtableColumns().antenna().positionMeas());
+  phasedir_p=vb.subtableColumns().field().phaseDirMeas(currField());
+  antpos_p.reference(vb.subtableColumns().antenna().positionMeas());
 
 }
 
