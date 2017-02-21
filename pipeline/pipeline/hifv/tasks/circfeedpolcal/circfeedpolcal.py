@@ -168,14 +168,14 @@ class Circfeedpolcal(polarization.Polarization):
 
         fluxcal = ''
         for field in fluxfieldnames:
-            if fluxcal == '' and (field == '3C286' or field == '1331+305=3C286'):
+            if fluxcal == '' and ('3C286' in field):
                 fluxcal = field
-            elif fluxcal == '' and (field == '3C48' or field == '0137+331=3C48'):
+            elif fluxcal == '' and ('3C48' in field):
                 fluxcal = field
-            elif fluxcal != '' and (field == '3C48' or field == '3C286' or field == '1331+305=3C286' or field == '0137+331=3C48'):
+            elif fluxcal != '' and ('3C48' in field or '3C286' in field):
                 LOG.info("Two flux calibrators found, selecting 3C286!")
-                if '1331+305=3C286' in fluxfieldnames:
-                    fluxcal='1331+305=3C286'
+                if '"1331+305=3C286"' in fluxfieldnames:
+                    fluxcal='"1331+305=3C286"'
                 if '3C286' in fluxfieldnames:
                     fluxcal = '3C286'
 
@@ -183,7 +183,7 @@ class Circfeedpolcal(polarization.Polarization):
         self._executor.execute(delmodjob)
 
         try:
-            if fluxcal == '3C286':
+            if '3C286' in fluxcal:
                 d0 = 33.0 * math.pi / 180.0
                 task_args = {'vis'           : self.inputs.vis,
                              'field'         : fluxcal,
@@ -198,7 +198,7 @@ class Circfeedpolcal(polarization.Polarization):
                              'scalebychan'   : True,
                              'usescratch'    : False}
 
-            elif fluxcal == '3C48':
+            elif '3C48' in fluxcal:
                 task_args = {'vis'           : self.inputs.vis,
                              'field'         : fluxcal,
                              'spw'           : '',
