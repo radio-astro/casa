@@ -125,10 +125,10 @@ class SDMSExportData(h_exportdata.ExportData):
             with tarfile.open(os.path.join(products_dir, tarfilename), 'w:gz') as tar:
                 # Tar the session list.
                 for table in caltables:
-                    tar.add(table)
+                    tar.add(table, arcname=os.path.basename(table))
                     
                 for table in bl_caltables:
-                    tar.add(table)
+                    tar.add(table, arcname=os.path.basename(table))
 
             return tarfilename
 
