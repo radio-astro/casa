@@ -1451,6 +1451,18 @@ VisBufferImpl2::initSigmaSpectrum(const Cube<Float>& wtspec)
     rwvi->initSigmaSpectrum(wtspec);
 }
 
+
+const casacore::MeasurementSet& 
+VisBufferImpl2::ms() const {
+  return getViiP()->ms();
+}
+
+const vi::SubtableColumns& 
+VisBufferImpl2::subtableColumns () const {
+  return getViiP()->subtableColumns();
+}  
+
+
 //      +---------------+
 //      |               |
 //      |  Calculators  |

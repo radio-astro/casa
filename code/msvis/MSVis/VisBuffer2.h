@@ -51,6 +51,7 @@ template <typename T> class Matrix;
 class MDirection;
 template <typename T, Int N> class SquareMatrix;
 template <typename T> class Vector;
+class MeasurementSet;
 }
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -70,6 +71,7 @@ class Subchunk;
 class ViImplementation2;
 class VisibilityIterator2;
 class WeightScaling;
+class SubtableColumns;
 
 enum VisBufferType : int {VbPlain, VbAsynchronous};
 
@@ -218,6 +220,9 @@ public:
 
     virtual const VisibilityIterator2 * getVi () const;
 
+    virtual const casacore::MeasurementSet& ms() const { ThrowCc ("Should be overridden"); } // Kluge
+    virtual const vi::SubtableColumns & subtableColumns () const { ThrowCc ("Should be overridden"); } // Kluge
+    
     virtual casacore::Bool isAttached () const = 0;
     virtual casacore::Bool isFillable () const = 0;
 

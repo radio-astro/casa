@@ -187,6 +187,10 @@ public:
     virtual void initWeightSpectrum (const casacore::Cube<casacore::Float>& wtspec);
     virtual void initSigmaSpectrum (const casacore::Cube<casacore::Float>& sigspec);
 
+    // Reference to underlying MS, via the Vii
+    virtual const casacore::MeasurementSet& ms() const;
+    virtual const vi::SubtableColumns & subtableColumns () const;
+
     //--> This needs to be removed: virtual casacore::Bool fetch(const asyncio::PrefetchColumns *pfc);
 
     // feed1_pa() and feed2_pa() return an array of parallactic angles
