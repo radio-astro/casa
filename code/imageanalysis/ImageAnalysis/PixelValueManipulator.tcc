@@ -265,7 +265,7 @@ template<class T> casacore::Record PixelValueManipulator<T>::getProfile(
 template<class T> casacore::Vector<casacore::uInt> PixelValueManipulator<T>::_npts(casacore::uInt axis) const {
     auto subim = SubImageFactory<T>::createSubImageRO(
         *this->_getImage(), *this->_getRegion(), this->_getMask(),
-        this->_getLog().get()
+        this->_getLog().get(), AxesSpecifier(), this->_getStretch()
     );
     auto shape = subim->shape();
     casacore::uInt nvals = shape[axis];
