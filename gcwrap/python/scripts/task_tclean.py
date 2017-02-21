@@ -121,7 +121,6 @@ def tclean(
     maskthreshold,#='',
     maskresolution,#='',
     nmask,#=0,
-    autoadjust,#=False
 
     ##### automask by multithresh
     sidelobethreshold,#=5.0,
@@ -253,7 +252,6 @@ def tclean(
         maskthreshold=maskthreshold,
         maskresolution=maskresolution,
         nmask=nmask,
-        autoadjust=autoadjust,
 
         ### automask multithresh params
         sidelobethreshold=sidelobethreshold,

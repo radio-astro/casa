@@ -112,7 +112,7 @@ class ImagerParameters():
                  maskthreshold='',
                  maskresolution='',
                  nmask=0,
-                 autoadjust=False,
+#                 autoadjust=False,
 
                  sidelobethreshold=5.0,
                  noisethreshold=3.0,
@@ -176,7 +176,8 @@ class ImagerParameters():
         self.alldecpars = { self.defaultKey: { 'id':0, 'deconvolver':deconvolver, 'nterms':nterms, 
                                     'scales':scales, 'scalebias':scalebias, 'restoringbeam':restoringbeam, 'usemask':usemask, 
                                     'mask':mask, 'pbmask':pbmask, 'maskthreshold':maskthreshold,
-                                    'maskresolution':maskresolution, 'nmask':nmask,'autoadjust':autoadjust,
+                                    'maskresolution':maskresolution, 'nmask':nmask,
+                                    #'maskresolution':maskresolution, 'nmask':nmask,'autoadjust':autoadjust,
                                     'sidelobethreshold':sidelobethreshold, 'noisethreshold':noisethreshold,
                                     'lownoisethreshold':lownoisethreshold, 'smoothfactor':smoothfactor,
                                     'minbeamfrac':minbeamfrac, 'cutthreshold':cutthreshold,

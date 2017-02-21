@@ -179,7 +179,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         itsMaskResolution = decpars.maskResolution;
         itsMaskResByBeam = decpars.maskResByBeam;
         itsNMask = decpars.nMask;
-        itsAutoAdjust = decpars.autoAdjust;
+        //itsAutoAdjust = decpars.autoAdjust;
+        //desable autoadjust 
+        itsAutoAdjust = false;
         itsSidelobeThreshold = decpars.sidelobeThreshold;
         itsNoiseThreshold = decpars.noiseThreshold;
         itsLowNoiseThreshold = decpars.lowNoiseThreshold;
