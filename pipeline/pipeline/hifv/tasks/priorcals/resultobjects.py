@@ -8,8 +8,8 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class PriorcalsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], gc_result=None, oc_result=None, 
-        rq_result=None,  antpos_result=None, antcorrect=None, tecmaps_result=None):
+    def __init__(self, final=[], pool=[], preceding=[], gc_result=None, oc_result=None,
+                 rq_result=None,  antpos_result=None, antcorrect=None, tecmaps_result=None, sw_result=None):
 
         super(PriorcalsResults, self).__init__()
         
@@ -22,7 +22,7 @@ class PriorcalsResults(basetask.Results):
         self.gc_result = gc_result
         self.oc_result = oc_result
         self.rq_result = rq_result
-        #self.sw_result = sw_result
+        self.sw_result = sw_result
         self.antpos_result = antpos_result
         self.antcorrect = antcorrect
         self.tecmaps_result = tecmaps_result
@@ -49,10 +49,6 @@ class PriorcalsResults(basetask.Results):
                 LOG.info("Priorcals:  Requantizer gains")
             except:
                 LOG.warn("No rq gains table written.")
-            
-        #if self.sw_result:
-        #    self.sw_result.merge_with_context(context)
-        #    LOG.info("Priorcals:  Switched Power gains")
 
         if self.antpos_result:
             try:
@@ -67,6 +63,13 @@ class PriorcalsResults(basetask.Results):
                 LOG.info("Priorcals: TEC Maps.")
             except:
                 LOG.warn('No TEC Maps table written.')
+
+        if self.sw_result:
+            try:
+                #self.sw_result.merge_with_context(context)
+                LOG.info("Priorcals: Switched Power caltable written to disk but not merged with context callibrary")
+            except:
+                LOG.warn('No Switched Power table written.')
                 
         
                 
@@ -82,10 +85,10 @@ class PriorcalsResults(basetask.Results):
 
     def __repr__(self):
 
-	# Format the Priorcal results text output.
+        # Format the Priorcal results text output.
         s = 'Priorcal Results:\n'
         for calapplication in self.final:
             s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
                 spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
                 name=calapplication.gaintable)
-	return s
+        return s

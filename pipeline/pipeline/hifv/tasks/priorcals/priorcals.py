@@ -253,7 +253,7 @@ class Priorcals(basetask.StandardTaskTemplate):
         gc_result = self._do_gaincurves()
         oc_result = self._do_opcal()
         rq_result = self._do_rqcal()
-        #sw_result = self._do_swpowcal()
+        sw_result = self._do_swpowcal()
         antpos_result, antcorrect = self._do_antpos()
         tecmaps_result = None
         if self.inputs.tecmaps: tecmaps_result = self._do_tecmaps()
@@ -266,7 +266,7 @@ class Priorcals(basetask.StandardTaskTemplate):
         return resultobjects.PriorcalsResults(pool=callist, gc_result=gc_result,
                                               oc_result=oc_result, rq_result=rq_result,
                                               antpos_result=antpos_result, antcorrect=antcorrect,
-                                              tecmaps_result=tecmaps_result)
+                                              tecmaps_result=tecmaps_result, sw_result=sw_result)
 
     def analyse(self, results):
 	    return results

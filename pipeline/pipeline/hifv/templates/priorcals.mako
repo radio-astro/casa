@@ -1,5 +1,7 @@
 <%!
 rsc_path = ""
+import os
+import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
@@ -7,7 +9,7 @@ rsc_path = ""
 
 <%block name="title">Prior calibrations</%block>
 
-<p>Gain curves, opacities, antenna position corrections, and requantizer gains
+<p>Gain curves, opacities, antenna position corrections, requantizer gains, TEC maps, and switched power plots
 using the CASA task <b>gencal</b>.</p>
 
 	<h2>Gain Curves</h2>
@@ -115,7 +117,8 @@ using the CASA task <b>gencal</b>.</p>
 	
 	%for single_result in result:
 	    <p><b>${single_result.rq_result[0].inputs['caltable']}</b></p>
-        %endfor
+    %endfor
+
 
     %if single_result.tecmaps_result:
 
@@ -132,4 +135,23 @@ using the CASA task <b>gencal</b>.</p>
 	        <p><b>${single_result.tecmaps_result[0].tec_rms_image}</b></p>
         %endfor
 
+    %endif
+
+    %if swpowspgain_subpages:
+
+        <h2>Switched Power plots</h2>
+        Switched Power table written to:
+        %for single_result in result:
+	        <p><b>${single_result.sw_result[0].inputs['caltable']}</b></p>
+        %endfor
+        This table is NOT applied or added to the pipeline context callibrary.
+
+        %for ms in summary_plots.keys():
+
+            <h4>Switched Power Plots:
+                <a class="replace" href="${os.path.relpath(os.path.join(dirname, swpowspgain_subpages[ms]), pcontext.report_dir)}">SwPower SPgain plots</a> |
+                <a class="replace" href="${os.path.relpath(os.path.join(dirname, swpowtsys_subpages[ms]), pcontext.report_dir)}">SwPower Tsys plots</a>
+            </h4>
+
+        %endfor
     %endif
