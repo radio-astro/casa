@@ -39,119 +39,119 @@ namespace casa {
 template<class T> const casacore::String PixelValueManipulator<T>::_className = "PixelValueManipulator";
 
 template<class T> PixelValueManipulator<T>::PixelValueManipulator(
-	const SPCIIT image,
-	const casacore::Record *const regionRec,
-	const casacore::String& mask, casacore::Bool verboseDuringConstruction
+    const SPCIIT image,
+    const casacore::Record *const regionRec,
+    const casacore::String& mask, casacore::Bool verboseDuringConstruction
 ) : ImageTask<T>(
-	image, "", regionRec, "", "", "",
-	mask, "", false
+    image, "", regionRec, "", "", "",
+    mask, "", false
 ), _axes() {
-	this->_construct(verboseDuringConstruction);
+    this->_construct(verboseDuringConstruction);
 }
 
 template<class T> void PixelValueManipulator<T>::addNoise(
-	SPIIT image, const casacore::String& type, const casacore::Record& region, const casacore::Vector<casacore::Double>& pars,
-	casacore::Bool zeroIt, const std::pair<casacore::Int, casacore::Int> *const &seeds
+    SPIIT image, const casacore::String& type, const casacore::Record& region, const casacore::Vector<casacore::Double>& pars,
+    casacore::Bool zeroIt, const std::pair<casacore::Int, casacore::Int> *const &seeds
 ) {
-	casacore::String mask;
-	auto subImage = SubImageFactory<T>::createSubImageRW(
-		*image, region, mask, nullptr
-	);
-	if (zeroIt) {
-		subImage->set(0.0);
-	}
-	casacore::Random::Types typeNoise = casacore::Random::asType(type);
-	SHARED_PTR<casacore::LatticeAddNoise> lan(
-		seeds
-		? new casacore::LatticeAddNoise(typeNoise, pars, seeds->first, seeds->second)
-		: new casacore::LatticeAddNoise(typeNoise, pars)
-	);
-	lan->add(*subImage);
+    casacore::String mask;
+    auto subImage = SubImageFactory<T>::createSubImageRW(
+        *image, region, mask, nullptr
+    );
+    if (zeroIt) {
+        subImage->set(0.0);
+    }
+    casacore::Random::Types typeNoise = casacore::Random::asType(type);
+    SHARED_PTR<casacore::LatticeAddNoise> lan(
+        seeds
+        ? new casacore::LatticeAddNoise(typeNoise, pars, seeds->first, seeds->second)
+        : new casacore::LatticeAddNoise(typeNoise, pars)
+    );
+    lan->add(*subImage);
 }
 
 template<class T> casacore::Record* PixelValueManipulator<T>::coordMeasures(
-	casacore::Quantum<T>& intensity, casacore::Record& direction,
-	casacore::Record& frequency, casacore::Record& velocity,
-	SPCIIT image, const casacore::Vector<casacore::Double>& pixel,
-	const casacore::String& dirFrame, const casacore::String& freqFrame
+    casacore::Quantum<T>& intensity, casacore::Record& direction,
+    casacore::Record& frequency, casacore::Record& velocity,
+    SPCIIT image, const casacore::Vector<casacore::Double>& pixel,
+    const casacore::String& dirFrame, const casacore::String& freqFrame
 ) {
-	casacore::Record *r = nullptr;
+    casacore::Record *r = nullptr;
 
-	const auto& cSys = image->coordinates();
+    const auto& cSys = image->coordinates();
 
-	casacore::Vector<casacore::Double> vpixel = pixel.empty() ? cSys.referencePixel() : pixel;
+    casacore::Vector<casacore::Double> vpixel = pixel.empty() ? cSys.referencePixel() : pixel;
 
-	casacore::String format("m");
-	ImageMetaData imd(image);
-	r = new casacore::Record(imd.toWorld(vpixel, format, true, dirFrame, freqFrame));
+    casacore::String format("m");
+    ImageMetaData imd(image);
+    r = new casacore::Record(imd.toWorld(vpixel, format, true, dirFrame, freqFrame));
 
-	casacore::Vector<casacore::Int> ipixel(vpixel.size());
-	convertArray(ipixel, vpixel);
+    casacore::Vector<casacore::Int> ipixel(vpixel.size());
+    convertArray(ipixel, vpixel);
 
-	casacore::Bool offImage;
-	casacore::Quantum<casacore::Double> value;
-	casacore::Bool mask = false;
-	PixelValueManipulator<T> pvm(image, nullptr, "");
-	pvm.pixelValue(offImage, intensity, mask, ipixel);
-	if (offImage) {
-		return r;
-	}
+    casacore::Bool offImage;
+    casacore::Quantum<casacore::Double> value;
+    casacore::Bool mask = false;
+    PixelValueManipulator<T> pvm(image, nullptr, "");
+    pvm.pixelValue(offImage, intensity, mask, ipixel);
+    if (offImage) {
+        return r;
+    }
 
-	r->define(casacore::RecordFieldId("mask"), mask);
+    r->define(casacore::RecordFieldId("mask"), mask);
 
-	if (r->isDefined("direction")) {
-		direction = r->asRecord("direction");
-	}
-	if (r->isDefined("spectral")) {
-		casacore::Record specRec = r->asRecord("spectral");
-		if (specRec.isDefined("frequency")) {
-			frequency = specRec.asRecord("frequency");
-		}
-		if (specRec.isDefined("radiovelocity")) {
-			velocity = specRec.asRecord("radiovelocity");
-		}
-	}
-	return r;
+    if (r->isDefined("direction")) {
+        direction = r->asRecord("direction");
+    }
+    if (r->isDefined("spectral")) {
+        casacore::Record specRec = r->asRecord("spectral");
+        if (specRec.isDefined("frequency")) {
+            frequency = specRec.asRecord("frequency");
+        }
+        if (specRec.isDefined("radiovelocity")) {
+            velocity = specRec.asRecord("radiovelocity");
+        }
+    }
+    return r;
 }
 
 template<class T> void PixelValueManipulator<T>::setAxes(
-	const casacore::IPosition& axes, casacore::Bool invert
+    const casacore::IPosition& axes, casacore::Bool invert
 ) {
-	casacore::uInt ndim = this->_getImage()->ndim();
-	ThrowIf(
-		axes.nelements() > ndim,
-		"Too many axes, image only has "
-		+ casacore::String::toString(ndim)
-		+ " dimensions"
-	);
-	if (! axes.empty()) {
-		casacore::Vector<casacore::Int> t = axes.asVector();
-		ThrowIf(
-			max(t) >= (casacore::Int)ndim,
-			"image does not have axis " + casacore::String::toString(max(t))
-		);
-		ThrowIf(
-			min(t) < 0, "Axis cannot be negative"
-		);
-	}
-	_axes = invert
-		? casacore::IPosition::otherAxes(ndim, axes)
-		: axes;
+    casacore::uInt ndim = this->_getImage()->ndim();
+    ThrowIf(
+        axes.nelements() > ndim,
+        "Too many axes, image only has "
+        + casacore::String::toString(ndim)
+        + " dimensions"
+    );
+    if (! axes.empty()) {
+        casacore::Vector<casacore::Int> t = axes.asVector();
+        ThrowIf(
+            max(t) >= (casacore::Int)ndim,
+            "image does not have axis " + casacore::String::toString(max(t))
+        );
+        ThrowIf(
+            min(t) < 0, "Axis cannot be negative"
+        );
+    }
+    _axes = invert
+        ? casacore::IPosition::otherAxes(ndim, axes)
+        : axes;
 }
 
 template<class T> casacore::Record PixelValueManipulator<T>::get() const {
-	SPCIIT subImage = SubImageFactory<T>::createSubImageRO(
-		*this->_getImage(), *this->_getRegion(), this->_getMask(),
-		(this->_getVerbosity() > ImageTask<T>::QUIET ? this->_getLog().get() : 0),
-		casacore::AxesSpecifier(), this->_getStretch()
-	);
+    SPCIIT subImage = SubImageFactory<T>::createSubImageRO(
+        *this->_getImage(), *this->_getRegion(), this->_getMask(),
+        (this->_getVerbosity() > ImageTask<T>::QUIET ? this->_getLog().get() : 0),
+        casacore::AxesSpecifier(), this->_getStretch()
+    );
     if (! _axes.empty()) {
-		ImageCollapser<T> collapser(
-			subImage, _axes, false, ImageCollapserData::MEAN,
-			"", false
-		);
-		subImage = collapser.collapse();
-	}
+        ImageCollapser<T> collapser(
+            subImage, _axes, false, ImageCollapserData::MEAN,
+            "", false
+        );
+        subImage = collapser.collapse();
+    }
     casacore::Array<T> values = subImage->get(this->_getDropDegen());
     casacore::Array<casacore::Bool> mask = casacore::Array<casacore::Bool>(values.shape(), true);
     if (subImage->isMasked()) {
@@ -164,102 +164,102 @@ template<class T> casacore::Record PixelValueManipulator<T>::get() const {
 }
 
 template<class T> casacore::Record PixelValueManipulator<T>::getProfile(
-	casacore::uInt axis, ImageCollapserData::AggregateType function,
-	const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
-	const casacore::Quantity *const restFreq, const casacore::String& frame
+    casacore::uInt axis, ImageCollapserData::AggregateType function,
+    const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
+    const casacore::Quantity *const restFreq, const casacore::String& frame
 ) {
-	return getProfile(
-		axis, ImageCollapserData::minMatchMap()->find((casacore::uInt)function)->second,
-		unit,  specType, restFreq,  frame
-	);
+    return getProfile(
+        axis, ImageCollapserData::minMatchMap()->find((casacore::uInt)function)->second,
+        unit,  specType, restFreq,  frame
+    );
 }
 
 template<class T> casacore::Record PixelValueManipulator<T>::getProfile(
-	casacore::uInt axis, const casacore::String& function,
-	const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
-	const casacore::Quantity *const restFreq, const casacore::String& frame
+    casacore::uInt axis, const casacore::String& function,
+    const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
+    const casacore::Quantity *const restFreq, const casacore::String& frame
 ) {
-	ImageCollapser<T> collapser(
-		function, this->_getImage(), this->_getRegion(),
-		this->_getMask(), casacore::IPosition(1, axis), true, "", ""
-	);
-	collapser.setStretch(this->_getStretch());
-	SPIIT collapsed = collapser.collapse();
-	casacore::Record ret;
-	casacore::Array<T> values = collapsed->get(true);
-	ret.define("values", values);
-	casacore::Array<casacore::Bool> mask(values.shape(), true);
-	if (collapsed->isMasked()) {
-		mask = mask && collapsed->getMask(true);
-	}
-	if (collapsed->hasPixelMask()) {
-		mask = mask && collapsed->pixelMask().get(true);
-	}
-	ret.define("mask", mask);
-	ret.define("yUnit", collapsed->units().getName());
-	ret.define("npix", _npts(axis));
-	casacore::String tunit = unit;
-	tunit.downcase();
-	casacore::Vector<casacore::Double> pix(collapsed->ndim(), 0);
-	auto outputRef = collapsed->coordinates().toWorld(pix);
-	auto inputRef = this->_getImage()->coordinates().referenceValue();
-	inputRef[axis] = outputRef[axis];
-	auto inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
-	casacore::Double count = floor(inputPixel[axis] + 0.5);
-	auto length = values.shape()[0];
-	casacore::Vector<casacore::Double> coords = indgen(length, count, 1.0);
-	ret.define("planes", coords);
-	if (tunit.startsWith("pix")) {
-		ret.define("coords", coords);
-		ret.define("xUnit", "pixel");
-	}
-	else {
-		ret.merge(
-			_doWorld(
-				collapsed, unit, specType,
-				restFreq, frame, axis
-			)
-		);
-	}
-	if (this->_getLogFile()) {
-		auto axisName = this->_getImage()->coordinates().worldAxisNames()[axis];
-		auto cAxis = axisName;
-		cAxis.downcase();
-		casacore::Quantity xunit(1, ret.asString("xUnit"));
-		if (
-			cAxis.startsWith("freq")
-			&& xunit.isConform(casacore::Unit("m/s"))
-		) {
-			axisName = "Velocity";
-		}
-		auto imageName = this->_getImage()->name();
-		ostringstream oss;
-		oss << "#title: " << axisName
-			<< " profile - " << imageName << endl;
-		if (! _regionName.empty()) {
-			oss << "#region : " << _regionName << endl;
-		}
-		oss << "#xUnit " << xunit.getUnit() << endl;
-		oss << "#yUnit " << ret.asString("yUnit") << endl;
-		oss << "# " << imageName << endl << endl;
-		casacore::Vector<T> data;
-		ret.get("values", data);
+    ImageCollapser<T> collapser(
+        function, this->_getImage(), this->_getRegion(),
+        this->_getMask(), casacore::IPosition(1, axis), true, "", ""
+    );
+    collapser.setStretch(this->_getStretch());
+    SPIIT collapsed = collapser.collapse();
+    casacore::Record ret;
+    casacore::Array<T> values = collapsed->get(true);
+    ret.define("values", values);
+    casacore::Array<casacore::Bool> mask(values.shape(), true);
+    if (collapsed->isMasked()) {
+        mask = mask && collapsed->getMask(true);
+    }
+    if (collapsed->hasPixelMask()) {
+        mask = mask && collapsed->pixelMask().get(true);
+    }
+    ret.define("mask", mask);
+    ret.define("yUnit", collapsed->units().getName());
+    ret.define("npix", _npts(axis));
+    casacore::String tunit = unit;
+    tunit.downcase();
+    casacore::Vector<casacore::Double> pix(collapsed->ndim(), 0);
+    auto outputRef = collapsed->coordinates().toWorld(pix);
+    auto inputRef = this->_getImage()->coordinates().referenceValue();
+    inputRef[axis] = outputRef[axis];
+    auto inputPixel = this->_getImage()->coordinates().toPixel(inputRef);
+    casacore::Double count = floor(inputPixel[axis] + 0.5);
+    auto length = values.shape()[0];
+    casacore::Vector<casacore::Double> coords = indgen(length, count, 1.0);
+    ret.define("planes", coords);
+    if (tunit.startsWith("pix")) {
+        ret.define("coords", coords);
+        ret.define("xUnit", "pixel");
+    }
+    else {
+        ret.merge(
+            _doWorld(
+                collapsed, unit, specType,
+                restFreq, frame, axis
+            )
+        );
+    }
+    if (this->_getLogFile()) {
+        auto axisName = this->_getImage()->coordinates().worldAxisNames()[axis];
+        auto cAxis = axisName;
+        cAxis.downcase();
+        casacore::Quantity xunit(1, ret.asString("xUnit"));
+        if (
+            cAxis.startsWith("freq")
+            && xunit.isConform(casacore::Unit("m/s"))
+        ) {
+            axisName = "Velocity";
+        }
+        auto imageName = this->_getImage()->name();
+        ostringstream oss;
+        oss << "#title: " << axisName
+            << " profile - " << imageName << endl;
+        if (! _regionName.empty()) {
+            oss << "#region : " << _regionName << endl;
+        }
+        oss << "#xUnit " << xunit.getUnit() << endl;
+        oss << "#yUnit " << ret.asString("yUnit") << endl;
+        oss << "# " << imageName << endl << endl;
+        casacore::Vector<T> data;
+        ret.get("values", data);
         casacore::Vector<casacore::Bool> mask;
-		ret.get("mask", mask);
-		casacore::Vector<casacore::Double> xvals = ret.asArrayDouble("coords");
-		auto diter = std::begin(data);
-		auto dend = std::end(data);
-		auto citer = xvals.begin();
+        ret.get("mask", mask);
+        casacore::Vector<casacore::Double> xvals = ret.asArrayDouble("coords");
+        auto diter = std::begin(data);
+        auto dend = std::end(data);
+        auto citer = xvals.begin();
         auto miter = mask.begin();
-		for ( ; diter != dend; ++diter, ++citer, ++miter) {
+        for ( ; diter != dend; ++diter, ++citer, ++miter) {
             if (*miter) {
-			    oss << fixed << setprecision(7) << *citer
-				    << " " << setw(10) << *diter << endl;
+                oss << fixed << setprecision(7) << *citer
+                    << " " << setw(10) << *diter << endl;
             }
-		}
-		this->_writeLogfile(oss.str());
-	}
-	return ret;
+        }
+        this->_writeLogfile(oss.str());
+    }
+    return ret;
 }
 
 template<class T> casacore::Vector<casacore::uInt> PixelValueManipulator<T>::_npts(casacore::uInt axis) const {
@@ -287,310 +287,310 @@ template<class T> casacore::Vector<casacore::uInt> PixelValueManipulator<T>::_np
 
 
 template<class T> casacore::Record* PixelValueManipulator<T>::getSlice(
-	SPCIIT image, const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y,
-	const casacore::Vector<casacore::Int>& axes, const casacore::Vector<casacore::Int>& coord, casacore::Int npts,
-	const casacore::String& method
+    SPCIIT image, const casacore::Vector<casacore::Double>& x, const casacore::Vector<casacore::Double>& y,
+    const casacore::Vector<casacore::Int>& axes, const casacore::Vector<casacore::Int>& coord, casacore::Int npts,
+    const casacore::String& method
 ) {
-	casacore::Vector<casacore::Float> xPos;
-	casacore::Vector<casacore::Float> yPos;
-	casacore::Vector<casacore::Float> distance;
-	casacore::Vector<T> pixels;
-	casacore::Vector<casacore::Bool> pixelMask;
+    casacore::Vector<casacore::Float> xPos;
+    casacore::Vector<casacore::Float> yPos;
+    casacore::Vector<casacore::Float> distance;
+    casacore::Vector<T> pixels;
+    casacore::Vector<casacore::Bool> pixelMask;
 
-	// Construct PixelCurve.  FIll in defaults for x, y vectors
-	casacore::PixelCurve1D curve(x, y, npts);
+    // Construct PixelCurve.  FIll in defaults for x, y vectors
+    casacore::PixelCurve1D curve(x, y, npts);
 
-	// Set coordinates
-	casacore::IPosition iCoord(coord);
-	casacore::IPosition iAxes(axes);
+    // Set coordinates
+    casacore::IPosition iCoord(coord);
+    casacore::IPosition iAxes(axes);
 
-	// Get the Slice
-	auto method2 = casacore::LatticeSlice1D<T>::stringToMethod(method);
-	casacore::LatticeSlice1D<T> slicer(*image, method2);
-	slicer.getSlice(pixels, pixelMask, curve, iAxes(0), iAxes(1), iCoord);
+    // Get the Slice
+    auto method2 = casacore::LatticeSlice1D<T>::stringToMethod(method);
+    casacore::LatticeSlice1D<T> slicer(*image, method2);
+    slicer.getSlice(pixels, pixelMask, curve, iAxes(0), iAxes(1), iCoord);
 
-	// Get slice locations
-	casacore::uInt axis0, axis1;
-	slicer.getPosition(axis0, axis1, xPos, yPos, distance);
+    // Get slice locations
+    casacore::uInt axis0, axis1;
+    slicer.getPosition(axis0, axis1, xPos, yPos, distance);
 
-	casacore::RecordDesc outRecDesc;
-	outRecDesc.addField("pixel", TpArrayFloat);
-	outRecDesc.addField("mask", TpArrayBool);
-	outRecDesc.addField("xpos", TpArrayFloat);
-	outRecDesc.addField("ypos", TpArrayFloat);
-	outRecDesc.addField("distance", TpArrayFloat);
-	outRecDesc.addField("axes", TpArrayInt);
-	casacore::Record *outRec = new casacore::Record(outRecDesc);
-	outRec->define("pixel", pixels);
-	outRec->define("mask", pixelMask);
-	outRec->define("xpos", xPos);
-	outRec->define("ypos", yPos);
-	outRec->define("distance", distance);
-	outRec->define("axes", casacore::Vector<casacore::Int>(vector<casacore::uInt> {axis0, axis1}));
-	return outRec;
+    casacore::RecordDesc outRecDesc;
+    outRecDesc.addField("pixel", TpArrayFloat);
+    outRecDesc.addField("mask", TpArrayBool);
+    outRecDesc.addField("xpos", TpArrayFloat);
+    outRecDesc.addField("ypos", TpArrayFloat);
+    outRecDesc.addField("distance", TpArrayFloat);
+    outRecDesc.addField("axes", TpArrayInt);
+    casacore::Record *outRec = new casacore::Record(outRecDesc);
+    outRec->define("pixel", pixels);
+    outRec->define("mask", pixelMask);
+    outRec->define("xpos", xPos);
+    outRec->define("ypos", yPos);
+    outRec->define("distance", distance);
+    outRec->define("axes", casacore::Vector<casacore::Int>(vector<casacore::uInt> {axis0, axis1}));
+    return outRec;
 }
 
 template<class T> void PixelValueManipulator<T>::insert(
-	casacore::ImageInterface<T>& target, const casacore::ImageInterface<T>& infile, const casacore::Record& region,
-	const casacore::Vector<double>& locatePixel, casacore::Bool verbose
+    casacore::ImageInterface<T>& target, const casacore::ImageInterface<T>& infile, const casacore::Record& region,
+    const casacore::Vector<double>& locatePixel, casacore::Bool verbose
 ) {
-	auto doRef = locatePixel.empty();
-	casacore::Int dbg = 0;
-	auto inSub = SubImageFactory<T>::createSubImageRO(
-		infile, region, "",
-		verbose ? std::unique_ptr<casacore::LogIO>(new casacore::LogIO()).get() : nullptr
-	);
+    auto doRef = locatePixel.empty();
+    casacore::Int dbg = 0;
+    auto inSub = SubImageFactory<T>::createSubImageRO(
+        infile, region, "",
+        verbose ? std::unique_ptr<casacore::LogIO>(new casacore::LogIO()).get() : nullptr
+    );
 
-	// Generate output pixel location
-	const auto inShape = inSub->shape();
-	const auto outShape = target.shape();
-	const auto nDim = target.ndim();
-	casacore::Vector<casacore::Double> outPix(doRef ? 0 : nDim);
-	const auto nDim2 = locatePixel.size();
+    // Generate output pixel location
+    const auto inShape = inSub->shape();
+    const auto outShape = target.shape();
+    const auto nDim = target.ndim();
+    casacore::Vector<casacore::Double> outPix(doRef ? 0 : nDim);
+    const auto nDim2 = locatePixel.size();
 
-	if (! doRef) {
-		for (casacore::uInt i = 0; i < nDim; ++i) {
-			outPix[i] = i < nDim2 ? locatePixel[i]
-				: (outShape(i) - inShape(i)) / 2.0; // Centrally located
-		}
-	}
-	casacore::ImageRegrid<T> ir;
-	ir.showDebugInfo(dbg);
-	ir.insert(target, outPix, *inSub);
+    if (! doRef) {
+        for (casacore::uInt i = 0; i < nDim; ++i) {
+            outPix[i] = i < nDim2 ? locatePixel[i]
+                : (outShape(i) - inShape(i)) / 2.0; // Centrally located
+        }
+    }
+    casacore::ImageRegrid<T> ir;
+    ir.showDebugInfo(dbg);
+    ir.insert(target, outPix, *inSub);
 }
 
 template<class T> casacore::Record PixelValueManipulator<T>::_doWorld(
-	SPIIT collapsed, const casacore::String& unit,
-	PixelValueManipulatorData::SpectralType specType,
-	const casacore::Quantity *const restFreq, const casacore::String& frame,
-	casacore::uInt axis
+    SPIIT collapsed, const casacore::String& unit,
+    PixelValueManipulatorData::SpectralType specType,
+    const casacore::Quantity *const restFreq, const casacore::String& frame,
+    casacore::uInt axis
 ) const {
-	// drop degenerate axes
-	SPIIT tmp = SubImageFactory<T>::createImage(
-		*collapsed, "", casacore::Record(), "", casacore::AxesSpecifier(casacore::IPosition(1, axis)),
-		false, false, false
-	);
-	const casacore::CoordinateSystem csys = tmp->coordinates();
-	casacore::Quantity t(0, unit);
-	casacore::String axisUnit = csys.worldAxisUnits()[0];
-	if (! unit.empty()) {
-		_checkUnit(unit, csys, specType);
-	}
-	casacore::uInt length = tmp->shape()[0];
-	casacore::Vector<casacore::Double> coords(length);
-	casacore::Matrix<casacore::Double> pixel;
-	casacore::Matrix<casacore::Double> world;
-	casacore::Vector<casacore::Bool> failures;
-	if (
-		! frame.empty() && csys.hasSpectralAxis()
-		&& casacore::MFrequency::typeFromString(frame)
-		!= csys.spectralCoordinate().frequencySystem(true)
-	) {
-		// We need to use the original coordinate system because we need
-		// the direction coordinate to be able to set the spectral
-		// conversion frame
-		casacore::CoordinateSystem mycsys(this->_getImage()->coordinates());
-		pixel.resize(casacore::IPosition(2, mycsys.nPixelAxes(), length));
-		pixel.set(0);
-		pixel.row(axis) = indgen(length, 0.0, 1.0);
-		casacore::SpectralCoordinate spCoord = mycsys.spectralCoordinate();
-		mycsys.setSpectralConversion(frame);
-		ThrowIf (!
-			mycsys.toWorldMany(world, pixel, failures),
-			"Unable to convert spectral coordinates to " + frame
-		);
-		coords = world.row(axis);
-	}
-	else {
-		pixel.resize(casacore::IPosition(2, 1, length));
-		pixel.set(0);
-		pixel.row(0) = indgen(length, 0.0, 1.0);
-		ThrowIf(
-			! csys.toWorldMany(world, pixel, failures),
-			"Unable to convert to world coordinates"
-		);
-		coords = world.row(0);
-	}
-	if (! unit.empty() && unit != axisUnit) {
-		if (t.isConform(axisUnit)) {
-			casacore::Quantum<casacore::Vector<casacore::Double> > q(coords, axisUnit);
-			coords = q.getValue(unit);
-		}
-		else {
-			_doNoncomformantUnit(
-				coords, csys, unit, specType, restFreq, axisUnit
-			);
-		}
-	}
-	casacore::Record ret;
-	ret.define("coords", coords);
-	ret.define("xUnit", unit.empty() ? axisUnit : unit);
-	return ret;
+    // drop degenerate axes
+    SPIIT tmp = SubImageFactory<T>::createImage(
+        *collapsed, "", casacore::Record(), "", casacore::AxesSpecifier(casacore::IPosition(1, axis)),
+        false, false, false
+    );
+    const casacore::CoordinateSystem csys = tmp->coordinates();
+    casacore::Quantity t(0, unit);
+    casacore::String axisUnit = csys.worldAxisUnits()[0];
+    if (! unit.empty()) {
+        _checkUnit(unit, csys, specType);
+    }
+    casacore::uInt length = tmp->shape()[0];
+    casacore::Vector<casacore::Double> coords(length);
+    casacore::Matrix<casacore::Double> pixel;
+    casacore::Matrix<casacore::Double> world;
+    casacore::Vector<casacore::Bool> failures;
+    if (
+        ! frame.empty() && csys.hasSpectralAxis()
+        && casacore::MFrequency::typeFromString(frame)
+        != csys.spectralCoordinate().frequencySystem(true)
+    ) {
+        // We need to use the original coordinate system because we need
+        // the direction coordinate to be able to set the spectral
+        // conversion frame
+        casacore::CoordinateSystem mycsys(this->_getImage()->coordinates());
+        pixel.resize(casacore::IPosition(2, mycsys.nPixelAxes(), length));
+        pixel.set(0);
+        pixel.row(axis) = indgen(length, 0.0, 1.0);
+        casacore::SpectralCoordinate spCoord = mycsys.spectralCoordinate();
+        mycsys.setSpectralConversion(frame);
+        ThrowIf (!
+            mycsys.toWorldMany(world, pixel, failures),
+            "Unable to convert spectral coordinates to " + frame
+        );
+        coords = world.row(axis);
+    }
+    else {
+        pixel.resize(casacore::IPosition(2, 1, length));
+        pixel.set(0);
+        pixel.row(0) = indgen(length, 0.0, 1.0);
+        ThrowIf(
+            ! csys.toWorldMany(world, pixel, failures),
+            "Unable to convert to world coordinates"
+        );
+        coords = world.row(0);
+    }
+    if (! unit.empty() && unit != axisUnit) {
+        if (t.isConform(axisUnit)) {
+            casacore::Quantum<casacore::Vector<casacore::Double> > q(coords, axisUnit);
+            coords = q.getValue(unit);
+        }
+        else {
+            _doNoncomformantUnit(
+                coords, csys, unit, specType, restFreq, axisUnit
+            );
+        }
+    }
+    casacore::Record ret;
+    ret.define("coords", coords);
+    ret.define("xUnit", unit.empty() ? axisUnit : unit);
+    return ret;
 }
 
 template<class T> void PixelValueManipulator<T>::_doNoncomformantUnit(
-	casacore::Vector<casacore::Double>& coords, const casacore::CoordinateSystem& csys,
-	const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
-	const casacore::Quantity *const restFreq, const casacore::String& axisUnit
+    casacore::Vector<casacore::Double>& coords, const casacore::CoordinateSystem& csys,
+    const casacore::String& unit, PixelValueManipulatorData::SpectralType specType,
+    const casacore::Quantity *const restFreq, const casacore::String& axisUnit
 ) const {
-	ThrowIf(
-		! csys.hasSpectralAxis(),
-		"Units must be conformant with" + axisUnit
-	);
-	casacore::SpectralCoordinate sp = csys.spectralCoordinate();
-	if (restFreq) {
-		casacore::Double value = restFreq->getValue(axisUnit);
-		sp.setRestFrequency(value, false);
-		sp.selectRestFrequency(value);
-	}
-	casacore::Quantity t(0, unit);
-	if (t.isConform("m/s")) {
-		casacore::MDoppler::Types doppler;
-		if (
-			specType == PixelValueManipulatorData::DEFAULT
-			|| specType == PixelValueManipulatorData::RELATIVISTIC
-		) {
-			doppler = casacore::MDoppler::RELATIVISTIC;
-		}
-		else if (specType == PixelValueManipulatorData::RADIO_VELOCITY) {
-			doppler = casacore::MDoppler::RADIO;
-		}
-		else if (specType == PixelValueManipulatorData::OPTICAL_VELOCITY) {
-			doppler = casacore::MDoppler::OPTICAL;
-		}
-		else {
-			ThrowCc("Spectral type not compatible with velocity units");
-		}
-		sp.setVelocity(unit ,doppler);
-		sp.frequencyToVelocity(coords, coords);
-	}
-	else {
-		// unit must be conformant with meters
-		sp.setWavelengthUnit(unit);
-		if (
-			specType == PixelValueManipulatorData::DEFAULT
-			|| specType == PixelValueManipulatorData::WAVELENGTH
-		) {
-			sp.frequencyToWavelength(coords, coords);
-		}
-		else if (specType == PixelValueManipulatorData::AIR_WAVELENGTH) {
-			sp.frequencyToAirWavelength(coords, coords);
-		}
-	}
+    ThrowIf(
+        ! csys.hasSpectralAxis(),
+        "Units must be conformant with" + axisUnit
+    );
+    casacore::SpectralCoordinate sp = csys.spectralCoordinate();
+    if (restFreq) {
+        casacore::Double value = restFreq->getValue(axisUnit);
+        sp.setRestFrequency(value, false);
+        sp.selectRestFrequency(value);
+    }
+    casacore::Quantity t(0, unit);
+    if (t.isConform("m/s")) {
+        casacore::MDoppler::Types doppler;
+        if (
+            specType == PixelValueManipulatorData::DEFAULT
+            || specType == PixelValueManipulatorData::RELATIVISTIC
+        ) {
+            doppler = casacore::MDoppler::RELATIVISTIC;
+        }
+        else if (specType == PixelValueManipulatorData::RADIO_VELOCITY) {
+            doppler = casacore::MDoppler::RADIO;
+        }
+        else if (specType == PixelValueManipulatorData::OPTICAL_VELOCITY) {
+            doppler = casacore::MDoppler::OPTICAL;
+        }
+        else {
+            ThrowCc("Spectral type not compatible with velocity units");
+        }
+        sp.setVelocity(unit ,doppler);
+        sp.frequencyToVelocity(coords, coords);
+    }
+    else {
+        // unit must be conformant with meters
+        sp.setWavelengthUnit(unit);
+        if (
+            specType == PixelValueManipulatorData::DEFAULT
+            || specType == PixelValueManipulatorData::WAVELENGTH
+        ) {
+            sp.frequencyToWavelength(coords, coords);
+        }
+        else if (specType == PixelValueManipulatorData::AIR_WAVELENGTH) {
+            sp.frequencyToAirWavelength(coords, coords);
+        }
+    }
 }
 
 template<class T> void PixelValueManipulator<T>::_checkUnit(
-	const casacore::String& unit, const casacore::CoordinateSystem& csys,
-	PixelValueManipulatorData::SpectralType specType
+    const casacore::String& unit, const casacore::CoordinateSystem& csys,
+    PixelValueManipulatorData::SpectralType specType
 ) const {
-	casacore::Quantity t(0, unit);
-	casacore::String axisUnit = csys.worldAxisUnits()[0];
-	if (! t.isConform(axisUnit)) {
-		if (csys.hasSpectralAxis()) {
-			ThrowIf(
-				! (t.isConform("m/s") || t.isConform("m")),
-				"Invalid spectral conversion unit " + unit
-			);
-			ThrowIf(
-				t.isConform("m/s")
-				&& (
-					specType == PixelValueManipulatorData::WAVELENGTH
-					|| specType == PixelValueManipulatorData::AIR_WAVELENGTH
-				),
-				"Inconsistent spectral type used for velocity units"
-			);
-			ThrowIf(
-				t.isConform("m")
-				&& (
-					specType == PixelValueManipulatorData::OPTICAL_VELOCITY
-					|| specType == PixelValueManipulatorData::RADIO_VELOCITY
-				),
-				"Inconsistent spectral type used for wavelength units"
-			);
-		}
-		else {
-			ThrowCc(
-				"Unit " + unit
-				+ " does not conform to corresponding axis unit "
-				+ axisUnit
-			);
-		}
-	}
+    casacore::Quantity t(0, unit);
+    casacore::String axisUnit = csys.worldAxisUnits()[0];
+    if (! t.isConform(axisUnit)) {
+        if (csys.hasSpectralAxis()) {
+            ThrowIf(
+                ! (t.isConform("m/s") || t.isConform("m")),
+                "Invalid spectral conversion unit " + unit
+            );
+            ThrowIf(
+                t.isConform("m/s")
+                && (
+                    specType == PixelValueManipulatorData::WAVELENGTH
+                    || specType == PixelValueManipulatorData::AIR_WAVELENGTH
+                ),
+                "Inconsistent spectral type used for velocity units"
+            );
+            ThrowIf(
+                t.isConform("m")
+                && (
+                    specType == PixelValueManipulatorData::OPTICAL_VELOCITY
+                    || specType == PixelValueManipulatorData::RADIO_VELOCITY
+                ),
+                "Inconsistent spectral type used for wavelength units"
+            );
+        }
+        else {
+            ThrowCc(
+                "Unit " + unit
+                + " does not conform to corresponding axis unit "
+                + axisUnit
+            );
+        }
+    }
 }
 
 template<class T> void PixelValueManipulator<T>::put(
-	SPIIT image, const casacore::Array<T>& pixelsArray, const casacore::Vector<casacore::Int>& blc,
-	const casacore::Vector<casacore::Int>& inc, casacore::Bool list, casacore::Bool locking, casacore::Bool replicate
+    SPIIT image, const casacore::Array<T>& pixelsArray, const casacore::Vector<casacore::Int>& blc,
+    const casacore::Vector<casacore::Int>& inc, casacore::Bool list, casacore::Bool locking, casacore::Bool replicate
 ) {
-	casacore::IPosition imageShape = image->shape();
-	casacore::uInt ndim = imageShape.nelements();
-	ThrowIf(
-		pixelsArray.ndim() > ndim,
-		"Pixel array cannot have more dimensions than the image!"
-	);
+    casacore::IPosition imageShape = image->shape();
+    casacore::uInt ndim = imageShape.nelements();
+    ThrowIf(
+        pixelsArray.ndim() > ndim,
+        "Pixel array cannot have more dimensions than the image!"
+    );
 
-	// Verify blc value. Fill in values for blc and inc.  trc set to shape-1
-	casacore::IPosition iblc = casacore::IPosition(blc);
-	casacore::IPosition itrc = imageShape - 1;
-	casacore::IPosition iinc(inc.size());
-	for (casacore::uInt i = 0; i < inc.size(); i++) {
-		iinc(i) = inc[i];
-	}
-	casacore::LCBox::verify(iblc, itrc, iinc, imageShape);
+    // Verify blc value. Fill in values for blc and inc.  trc set to shape-1
+    casacore::IPosition iblc = casacore::IPosition(blc);
+    casacore::IPosition itrc = imageShape - 1;
+    casacore::IPosition iinc(inc.size());
+    for (casacore::uInt i = 0; i < inc.size(); i++) {
+        iinc(i) = inc[i];
+    }
+    casacore::LCBox::verify(iblc, itrc, iinc, imageShape);
 
-	// Create two slicers; one describing the region defined by blc + shape-1
-	// with extra axes given length 1. The other we extend with the shape
-	casacore::IPosition len = pixelsArray.shape();
-	len.resize(ndim, true);
-	for (casacore::uInt i = pixelsArray.shape().nelements(); i < ndim; i++) {
-		len(i) = 1;
-		itrc(i) = imageShape(i) - 1;
-	}
-	casacore::Slicer sl(iblc, len, iinc, casacore::Slicer::endIsLength);
-	ThrowIf(
-		sl.end() + 1 > imageShape,
-		"Pixels array, including inc, extends beyond edge of image."
-	);
-	casacore::Slicer sl2(iblc, itrc, iinc, casacore::Slicer::endIsLast);
+    // Create two slicers; one describing the region defined by blc + shape-1
+    // with extra axes given length 1. The other we extend with the shape
+    casacore::IPosition len = pixelsArray.shape();
+    len.resize(ndim, true);
+    for (casacore::uInt i = pixelsArray.shape().nelements(); i < ndim; i++) {
+        len(i) = 1;
+        itrc(i) = imageShape(i) - 1;
+    }
+    casacore::Slicer sl(iblc, len, iinc, casacore::Slicer::endIsLength);
+    ThrowIf(
+        sl.end() + 1 > imageShape,
+        "Pixels array, including inc, extends beyond edge of image."
+    );
+    casacore::Slicer sl2(iblc, itrc, iinc, casacore::Slicer::endIsLast);
 
-	if (list) {
-		casacore::LogIO log;
-		log << casacore::LogOrigin("PixelValueManipulator", __func__)
-			<< casacore::LogIO::NORMAL << "Selected bounding box " << sl.start()
-			<< " to " << sl.end() << casacore::LogIO::POST;
-	}
+    if (list) {
+        casacore::LogIO log;
+        log << casacore::LogOrigin("PixelValueManipulator", __func__)
+            << casacore::LogIO::NORMAL << "Selected bounding box " << sl.start()
+            << " to " << sl.end() << casacore::LogIO::POST;
+    }
 
-	// Put the pixels
-	if (pixelsArray.ndim() == ndim) {
-		// _setCache(pixelsArray.shape());
-		if (replicate) {
-			casacore::LatticeUtilities::replicate(*image, sl2, pixelsArray);
-		}
-		else {
-			image->putSlice(pixelsArray, iblc, iinc);
-		}
-	}
-	else {
-		// Pad with extra degenerate axes if necessary (since it is somewhat
-		// costly).
-		casacore::Array<T> pixelsref(
-			pixelsArray.addDegenerate(
-				ndim - pixelsArray.ndim()
-			)
-		);
-		// _setCache(pixelsref.shape());
-		if (replicate) {
-			casacore::LatticeUtilities::replicate(*image, sl2, pixelsref);
-		}
-		else {
-			image->putSlice(pixelsref, iblc, iinc);
-		}
-	}
-	// Ensure that we reconstruct the  histograms objects
-	// now that the data have changed
-	if (locking) {
-		image->unlock();
-	}
+    // Put the pixels
+    if (pixelsArray.ndim() == ndim) {
+        // _setCache(pixelsArray.shape());
+        if (replicate) {
+            casacore::LatticeUtilities::replicate(*image, sl2, pixelsArray);
+        }
+        else {
+            image->putSlice(pixelsArray, iblc, iinc);
+        }
+    }
+    else {
+        // Pad with extra degenerate axes if necessary (since it is somewhat
+        // costly).
+        casacore::Array<T> pixelsref(
+            pixelsArray.addDegenerate(
+                ndim - pixelsArray.ndim()
+            )
+        );
+        // _setCache(pixelsref.shape());
+        if (replicate) {
+            casacore::LatticeUtilities::replicate(*image, sl2, pixelsref);
+        }
+        else {
+            image->putSlice(pixelsref, iblc, iinc);
+        }
+    }
+    // Ensure that we reconstruct the  histograms objects
+    // now that the data have changed
+    if (locking) {
+        image->unlock();
+    }
 }
 
 template<class T> casacore::Bool PixelValueManipulator<T>::putRegion(
