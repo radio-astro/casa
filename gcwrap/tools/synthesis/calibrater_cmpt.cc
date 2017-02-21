@@ -700,7 +700,7 @@ calibrater::corrupt()
      //itsCalibrater->writeHistory(os);
 
      // Apply the calibration solutions to the uv-data
-     retval = itsCalibrater->corrupt2();
+     retval = itsCalibrater->corrupt();
      //     AlwaysAssert (retval, AipsError);
 
      os << "Finished corrupting." << LogIO::POST;
