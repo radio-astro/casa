@@ -61,7 +61,7 @@ class Circfeedpolcal(polarization.Polarization):
             self.do_prepare()
 
 
-        return CircfeedpolcalResults(vis=self.inputs.vis, pool=callist, final=callist)
+        return CircfeedpolcalResults(vis=self.inputs.vis, pool=self.callist, final=self.callist)
 
     def analyse(self, results):
         return results
