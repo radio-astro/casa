@@ -90,6 +90,8 @@ class swpowPerAntennaChart(object):
 
         nplots = numAntenna
 
+
+
         for ii in range(nplots):
 
             filename = 'swpow_' + self.yaxis + str(ii) + '.png'
@@ -101,11 +103,21 @@ class swpowPerAntennaChart(object):
 
             figfile = os.path.join(stage_dir, filename)
 
+            plotrange = []
+            if self.yaxis == 'spgain':
+                plotrange = []
+            if self.yaxis == 'tsys':
+                plotrange = [0,0,0,100]
+                spws = m.get_all_spectral_windows()
+                freqs = sorted(set([spw.max_frequency.value for spw in spws]))
+                if float(max(freqs)) >= 18000000000.00:
+                    plotrange = [0,0,0,200]
+
             if not os.path.exists(figfile):
                 try:
                     casa.plotcal(caltable=self.caltable, xaxis='time', yaxis=self.yaxis, poln='', field='',
                                  antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto',
-                                 iteration='antenna', plotrange=[], showflags=False, plotsymbol='o',
+                                 iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
                                  plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
                     # plots.append(figfile)
 
