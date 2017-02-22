@@ -52,13 +52,29 @@ class Circfeedpolcal(polarization.Polarization):
 
     def prepare(self):
 
+        self.callist = []
+
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        intents = list(m.intents)
+
+        if [intent for intent in intents if 'POL' in intent]:
+            self.do_prepare()
+
+
+        return CircfeedpolcalResults(vis=self.inputs.vis, pool=callist, final=callist)
+
+    def analyse(self, results):
+        return results
+
+    def do_prepare(self):
+
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         refantfield = self.inputs.context.evla['msinfo'][m.name].calibrator_field_select_string
         refantobj = findrefant.RefAntHeuristics(vis=self.inputs.vis, field=refantfield,
                                                 geometry=True, flagging=True, intent='', spw='')
         self.RefAntOutput = refantobj.calculate()
 
-        #setjy for amplitude/flux calibrator (VLASS 3C286 or 3C48)
+        # setjy for amplitude/flux calibrator (VLASS 3C286 or 3C48)
         fluxcal = self._do_setjy()
 
         tablesToAdd = ((self.inputs.vis + '.kcross', 'kcross'),
@@ -66,7 +82,7 @@ class Circfeedpolcal(polarization.Polarization):
                        (self.inputs.vis + '.X1', 'polarization'))
 
         # D - terms
-        #self.do_polcal(self.inputs.vis+'.D1', 'D+QU',field='',
+        # self.do_polcal(self.inputs.vis+'.D1', 'D+QU',field='',
         #               intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
         #               gainfield=[''], spwmap=[],
         #               solint='inf')
@@ -85,17 +101,12 @@ class Circfeedpolcal(polarization.Polarization):
                        gainfield=[''], spwmap=[],
                        solint='inf,2MHz')
 
-        callist = []
-        for (addcaltable,caltype) in tablesToAdd:
+        for (addcaltable, caltype) in tablesToAdd:
             calto = callibrary.CalTo(self.inputs.vis)
             calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False, caltype=caltype)
             calapp = callibrary.CalApplication(calto, calfrom)
-            callist.append(calapp)
+            self.callist.append(calapp)
 
-        return CircfeedpolcalResults(vis=self.inputs.vis, pool=callist, final=callist)
-
-    def analyse(self, results):
-        return results
 
     def do_gaincal(self, caltable, field=''):
 
