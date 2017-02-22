@@ -60,6 +60,7 @@ imreframe.xml
 imregrid.xml
 imsmooth.xml
 imstat.xml
+imstatimage.xml
 imsubimage.xml
 imtrans.xml
 imval.xml
