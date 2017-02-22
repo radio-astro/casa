@@ -199,6 +199,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     job = casa_tasks.tclean(vis=inputs.vis, imagename=findcont_basename,
                         datacolumn=datacolumn,
                         spw=spwid, intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
+                        field=target['field'],
                         start=start, width=width, nchan=nchan, outframe='LSRK',
                         scan=scanidlist, specmode='cube', gridder=gridder, pblimit=0.2,
                         niter=0, threshold='0mJy', deconvolver='hogbom',
