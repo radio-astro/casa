@@ -102,7 +102,7 @@ namespace casa{
 
   void EVLAAperture::cacheVBInfo(const VisBuffer2& vb)
   {
-    const Vector<String> telescopeNames=vb.getVi()->subtableColumns()
+    const Vector<String> telescopeNames=vb.subtableColumns()
       .observation().telescopeName().getColumn();
     for(uInt nt=0;nt<telescopeNames.nelements();nt++)
       {
@@ -126,11 +126,11 @@ namespace casa{
     //    ROMSSpWindowColumns mssp(vb.msColumns().spectralWindow());
     //Freq = vb.msColumns().spectralWindow().refFrequency()(0);
     Diameter_p=0;
-    Nant_p     = vb.getVi()->subtableColumns().antenna().nrow();
+    Nant_p     = vb.subtableColumns().antenna().nrow();
     for (Int i=0; i < Nant_p; i++)
-      if (!vb.getVi()->subtableColumns().antenna().flagRow()(i))
+      if (!vb.subtableColumns().antenna().flagRow()(i))
 	{
-	  Diameter_p = vb.getVi()->subtableColumns().antenna().dishDiameter().getColumn()(i);
+	  Diameter_p = vb.subtableColumns().antenna().dishDiameter().getColumn()(i);
 	  break;
 	}
     if (Diameter_p == 0)
@@ -159,7 +159,7 @@ namespace casa{
     Double Freq;
     cacheVBInfo(vb);
     
-    Freq = vb.getVi()->subtableColumns().spectralWindow().refFrequency()(0);
+    Freq = vb.subtableColumns().spectralWindow().refFrequency()(0);
     Double Lambda=C::c/Freq;
     HPBW = Lambda/(Diameter_p*sqrt(log(2.0)));
     sigma = 1.0/(HPBW*HPBW);

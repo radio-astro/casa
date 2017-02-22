@@ -538,7 +538,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // ...now make an object to hold the observatory position info...
     //
     MPosition pos;
-    String ObsName=(vb.getVi()->subtableColumns()).observation().telescopeName()(vb.arrayId()(0));
+    String ObsName=(vb.subtableColumns()).observation().telescopeName()(vb.arrayId()(0));
     
     if (!MeasTable::Observatory(pos,ObsName))
       log_l << "Observatory position for "+ ObsName + " not found"
@@ -614,7 +614,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // An array of shape [2,1,1]!
     //
-    Array<Double> phaseDir = vb.getVi()->subtableColumns().field().phaseDir().getColumn();
+    Array<Double> phaseDir = vb.subtableColumns().field().phaseDir().getColumn();
     Double RA0   = phaseDir(IPosition(3,0,0,0));
     Double Dec0  = phaseDir(IPosition(3,1,0,0));
     //  
@@ -740,7 +740,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // An array of shape [2,1,1]!
     //
-    Array<Double> phaseDir = vb.getVi()->subtableColumns().field().phaseDir().getColumn();
+    Array<Double> phaseDir = vb.subtableColumns().field().phaseDir().getColumn();
     Double RA0   = phaseDir(IPosition(3,0,0,0));
     Double Dec0  = phaseDir(IPosition(3,1,0,0));
     //  
@@ -1004,7 +1004,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // have the same pol. setup.
     //
     Int polID=polIDs(0);
-    Array<Int> stokesForAllIFs = (vb.getVi()->subtableColumns()).polarization().corrType().get(polID);
+    Array<Int> stokesForAllIFs = (vb.subtableColumns()).polarization().corrType().get(polID);
     IPosition stokesShape(stokesForAllIFs.shape());
     IPosition firstIFStart(stokesShape),firstIFLength(stokesShape);
     //
@@ -1688,7 +1688,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     if (isDryRun) return;
 
-    Nant_p     = vb.getVi()->subtableColumns().antenna().nrow();
+    Nant_p     = vb.subtableColumns().antenna().nrow();
 
     const Matrix<Float> *imagingweight;
     imagingweight=&(vb.imagingWeight());
@@ -1825,7 +1825,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     findConvFunction(*image, vb);
     
-    Nant_p     = vb.getVi()->subtableColumns().antenna().nrow();
+    Nant_p     = vb.subtableColumns().antenna().nrow();
     Int NAnt=0;
     if (doPointing)   NAnt = findPointingOffsets(vb,l_offsets,m_offsets,true);
     NAnt=NAnt;  // Dummy statement to supress complier warnings and will be used when pointing offsets are used.
@@ -2531,7 +2531,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     findConvFunction(*image, vb);
     Int NAnt=0;
-    Nant_p     = vb.getVi()->subtableColumns().antenna().nrow();
+    Nant_p     = vb.subtableColumns().antenna().nrow();
     if (doPointing)   
       NAnt = findPointingOffsets(vb,l_offsets,m_offsets,false);
 
@@ -2708,7 +2708,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     findConvFunction(*image, vb);
 
-    Nant_p     = vb.getVi()->subtableColumns().antenna().nrow();
+    Nant_p     = vb.subtableColumns().antenna().nrow();
     Int NAnt=0;
     if (doPointing)   
       NAnt = findPointingOffsets(vb,pointingOffsets,l_offsets,m_offsets,false);

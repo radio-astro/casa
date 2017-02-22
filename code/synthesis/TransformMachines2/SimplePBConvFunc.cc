@@ -121,7 +121,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       ObsInfo imInfo=csys_p.obsInfo();
       String tel= imInfo.telescope();
       MPosition pos;
-      ROMSColumns mscol(vb.getVi()->ms());
+      ROMSColumns mscol(vb.ms());
       if (mscol.observation().nrow() > 0) {
 	tel =mscol.observation().telescopeName()(mscol.observationId()(0));
       }
@@ -175,7 +175,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     		//use first antenna as direction1_p is used to calculate pointing
     		// as only VLA uses observatory pos for calculations
     	    	  Int ant1=vb.antenna1()(0);
-    	    	  MPosition pos=ROMSColumns(vb.getVi()->ms()).antenna().positionMeas()(ant1);
+    	    	  MPosition pos=ROMSColumns(vb.ms()).antenna().positionMeas()(ant1);
     	    	  pointFrame_p.resetPosition(pos);
     	}
       MEpoch timenow(Quantity(vb.time()(0), timeUnit_p), timeMType_p);

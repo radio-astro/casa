@@ -259,8 +259,8 @@ using namespace casa::vi;
       AlwaysAssert(image, AipsError);
 
       // Set the frame for the UVWMachine
-      if(vb.getVi())
-	mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.getVi()->ms()).timeMeas()(0).getRef()), mLocation_p);
+      if(vb.isAttached())
+	mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.ms()).timeMeas()(0).getRef()), mLocation_p);
       else
 	throw(AipsError("Cannot define some frame as no Visiter/MS is attached"));
       // First get the CoordinateSystem for the image and then find
@@ -323,8 +323,8 @@ using namespace casa::vi;
       // Set up the UVWMachine.
       if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
       String observatory;
-      if(vb.getVi())
-	observatory=ROMSColumns(vb.getVi()->ms()).observation().telescopeName()(0);
+      if(vb.isAttached())
+	observatory=ROMSColumns(vb.ms()).observation().telescopeName()(0);
       else
 	throw(AipsError("Cannot define frame because of no access to OBSERVATION table")); 
       if(observatory.contains("ATCA") || observatory.contains("DRAO")
@@ -816,7 +816,7 @@ using namespace casa::vi;
     //image center is different from the phasecenter
     // UVrotation is false only if field never changes
   
-   ROMSColumns mscol(vb.getVi()->ms());
+   ROMSColumns mscol(vb.ms());
    if((vb.fieldId()(0)!=lastFieldId_p) || (vb.msId()!=lastMSId_p))
       doUVWRotation_p=true;
     if(doUVWRotation_p ||  fixMovingSource_p){
@@ -926,7 +926,7 @@ using namespace casa::vi;
         mFrame_p.epoch() != 0 ?
 	  mFrame_p.resetEpoch(MEpoch(Quantity(vb.time()(0), "s"))):
 	 
-	  mFrame_p.set(mLocation_p, MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.getVi()->ms()).timeMeas()(0).getRef()));
+	  mFrame_p.set(mLocation_p, MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.ms()).timeMeas()(0).getRef()));
 
         MDirection phasecenter=mImage_p;
         if(fixMovingSource_p){
@@ -947,7 +947,7 @@ using namespace casa::vi;
         // will reproject to that plane iso the image plane
         if((vb.fieldId()(0)!=lastFieldId_p) || (vb.msId()!=lastMSId_p) || fixMovingSource_p) {
 
-  	String observatory=ROMSColumns(vb.getVi()->ms()).observation().telescopeName()(0);
+  	String observatory=ROMSColumns(vb.ms()).observation().telescopeName()(0);
   	if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
   	if(observatory.contains("ATCA") || observatory.contains("WSRT")){
   		//Tangent specified is being wrongly used...it should be for a

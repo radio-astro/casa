@@ -289,7 +289,7 @@ void BeamSkyJones::update(const vi::VisBuffer2& vb, Int row)
   MDirection pointingDirection2_p = vb.direction2()(row);
     
   // Look up correct telescope
-  const ROMSObservationColumns& msoc=ROMSColumns(vb.getVi()->ms()).observation();
+  const ROMSObservationColumns& msoc=ROMSColumns(vb.ms()).observation();
   telescope_p = msoc.telescopeName()(vb.arrayId()(0));
 
   updatePBMathIndices(vb,row); // lastUpdateIndex?_p are now valid

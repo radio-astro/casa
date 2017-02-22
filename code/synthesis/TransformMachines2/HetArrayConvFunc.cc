@@ -122,7 +122,7 @@ using namespace casa::refim;
 
     if(msId_p != vb.msId()){
       msId_p=vb.msId();
-      ROMSColumns mscol(vb.getVi()->ms());
+      ROMSColumns mscol(vb.ms());
       const ROMSAntennaColumns& ac=mscol.antenna();
       antIndexToDiamIndex_p.resize(ac.nrow());
       antIndexToDiamIndex_p.set(-1);

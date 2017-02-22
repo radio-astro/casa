@@ -643,7 +643,7 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
     //
     Cube<Double> fminmax;
     Double fMax=0, fMin=MAX_FREQ;
-    ROArrayColumn<Double> spwCol=vb.getVi()->subtableColumns().spectralWindow().chanFreq();
+    ROArrayColumn<Double> spwCol=vb.subtableColumns().spectralWindow().chanFreq();
     fminmax.resize(spwChanSelFlag_p.shape()(0),spwChanSelFlag_p.shape()(1),2);
     fminmax=0;
     for (uInt ims=0; ims<spwChanSelFlag_p.shape()(0); ims++)

@@ -156,15 +156,15 @@ namespace casa{
       ObsInfo imInfo=csys_p.obsInfo();
       String tel= imInfo.telescope();
       MPosition pos;
-      ROMSColumns mscol(vb.getVi()->ms());
-      if (vb.getVi()->subtableColumns().observation().nrow() > 0) {
-	tel = vb.getVi()->subtableColumns().observation().telescopeName()
+      ROMSColumns mscol(vb.ms());
+      if (vb.subtableColumns().observation().nrow() > 0) {
+	tel = vb.subtableColumns().observation().telescopeName()
 	  (mscol.observationId()(0));
       }
       if (tel.length() == 0 || 
 	  !MeasTable::Observatory(pos,tel)) {
 	// unknown observatory, use first antenna
-	pos=vb.getVi()->subtableColumns().antenna().positionMeas()(0);
+	pos=vb.subtableColumns().antenna().positionMeas()(0);
       }
       //cout << "TELESCOPE " << tel << endl;
       //Store this to build epochs via the time access of visbuffer later

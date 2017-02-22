@@ -2011,7 +2011,7 @@ void MosaicFT::makeImage(FTMachine::Type type,
 
 Bool MosaicFT::getXYPos(const vi::VisBuffer2& vb, Int row) {
   
-  ROMSColumns mscol(vb.getVi()->ms());
+  ROMSColumns mscol(vb.ms());
   const ROMSPointingColumns& act_mspc=mscol.pointing();
   Int pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
   if((pointIndex<0)||pointIndex>=Int(act_mspc.time().nrow())) {

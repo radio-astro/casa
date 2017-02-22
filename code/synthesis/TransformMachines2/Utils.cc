@@ -1009,10 +1009,10 @@ template
   {
     Vector<Int> ddidList;
     //Int nDDRows = vb.msColumns().dataDescription().nrow();
-    Int nDDRows = (vb.getVi()->ms()).dataDescription().nrow();
+    Int nDDRows = (vb.ms()).dataDescription().nrow();
     for (Int i=0; i<nDDRows; i++)
       {
-	if((vb.getVi()->subtableColumns()).dataDescription().spectralWindowId().get(i) == spwID)
+	if((vb.subtableColumns()).dataDescription().spectralWindowId().get(i) == spwID)
 	  {
 	    Int n=ddidList.nelements();
 	    ddidList.resize(n+1,true);
@@ -1029,7 +1029,7 @@ template
     Int n=ddIDList.nelements();
     polIDList.resize(n);
     for (Int i=0; i<n; i++)
-      polIDList(i) = (vb.getVi()->subtableColumns()).dataDescription().polarizationId().get(ddIDList(i));
+      polIDList(i) = (vb.subtableColumns()).dataDescription().polarizationId().get(ddIDList(i));
       
     return polIDList;
   }

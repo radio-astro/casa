@@ -791,7 +791,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     String theposs=(subPathname[nw-1]);
     ///String msname=vb.msName(false);
     ///As the above does not work ..returns some bogus reference table
-    String msname=(vb.getVi()->ms()).antenna().tableName();
+    String msname=(vb.ms()).antenna().tableName();
     msname.erase(msname.length()-8);
     for (uInt i=nw-2 ; i>0; --i){ 
       if(File(msname+"/"+theposs).exists()){

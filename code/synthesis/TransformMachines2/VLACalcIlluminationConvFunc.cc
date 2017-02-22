@@ -431,7 +431,7 @@ namespace casa{
     Vector<Double> chanFreq = vb.getFrequencies(0);
     
     const ROMSSpWindowColumns& spwCol = 
-      vb.getVi()->subtableColumns().spectralWindow();
+      vb.subtableColumns().spectralWindow();
     ROArrayColumn<Double> chanfreq = spwCol.chanFreq();
     ROScalarColumn<Double> reffreq = spwCol.refFrequency();
     //    Freq = sum(chanFreq)/chanFreq.nelements();
