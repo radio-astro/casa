@@ -37,6 +37,7 @@ def uvcontfit (vis=None, caltable=None, field=None, intent=None, spw=None,
         locfitspw = spw
 
         if (type(vis) == str) and os.path.isdir(vis):
+            mycb.setvi(old=True, quiet=False)
             mycb.open(filename=vis, compress=False, addcorr=False, addmodel=False)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
