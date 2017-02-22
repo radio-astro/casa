@@ -45,7 +45,7 @@ if not os.access(TESTS_DIR, os.F_OK):
     if os.access(CASA_DIR+'/lib64', os.F_OK):
         TESTS_DIR = CASA_DIR+'/lib64/python' + PYVER + '/tests/'
     elif os.access(CASA_DIR+'/lib', os.F_OK):
-        TESTS_DIR = CASA_DIR+'/lib/python/tests/'
+        TESTS_DIR = CASA_DIR+'/lib/python'+ PYVER +'/tests/'
     else:            #Mac release
         TESTS_DIR = CASA_DIR+'/Resources/python/tests/'
 
