@@ -302,7 +302,9 @@ void NRO2MSReader::readObsHeader() {
 }
 
 void NRO2MSReader::readScanData(int const irow, sdfiller::NRODataScanData &data) {
-  fseek(fp_, len_obs_header_ + irow * obs_header_.SCNLEN0, SEEK_SET);
+  if (irow < 0) throw AipsError("Negative row number");
+  size_t offset = len_obs_header_ + static_cast<size_t>(irow) * obs_header_.SCNLEN0;
+  fseek(fp_, offset, SEEK_SET);
 
   readHeader(data.LSFIL0, 4);
   readHeader(data.ISCN0);
@@ -390,7 +392,9 @@ double NRO2MSReader::getIntMiddleTimeSec(sdfiller::NRODataScanData const &data) 
 }
 
 double NRO2MSReader::getIntStartTimeSec(int const scanno) {
-  fseek(fp_, len_obs_header_ + scanno * obs_header_.ARYNM0 * obs_header_.SCNLEN0 + 8, SEEK_SET);
+  if (scanno < 0) throw AipsError("Negative scan number");
+  size_t offset = len_obs_header_ + static_cast<size_t>(scanno) * obs_header_.ARYNM0 * obs_header_.SCNLEN0 + 8;
+  fseek(fp_, offset, SEEK_SET);
   string time_header;
   readHeader(time_header, 24);
   return getMJD(time_header) * kDay2Sec;
@@ -414,7 +418,8 @@ double NRO2MSReader::getMiddleOfTimeRangeSec() {
 }
 
 double NRO2MSReader::getRestFrequency(int const spwno) {
-  fseek(fp_, len_obs_header_ + getFirstArrayIdWithSpwID(spwno) * obs_header_.SCNLEN0 + 184, SEEK_SET);
+  size_t offset = len_obs_header_ + static_cast<size_t>(getFirstArrayIdWithSpwID(spwno)) * obs_header_.SCNLEN0 + 184;
+  fseek(fp_, offset, SEEK_SET);
   double restfreq_header;
   readHeader(restfreq_header);
   return restfreq_header;
