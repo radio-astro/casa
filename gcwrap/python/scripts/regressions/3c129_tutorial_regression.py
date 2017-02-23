@@ -226,7 +226,7 @@ setjy(vis=msnameB,field='0518+165',spw='1',scalebychan=False,standard='manual',f
 #=====================================================================
 # Solve for polarization position angle on 0518+165 
 print "--Polcal (X)--"
-polcal(vis='at166B.ms',caltable='at166B.xcal',field='0518+165',refant='VA12',poltype='X',gaintable=['at166B.fcal', 'at166B.dcal'],gainfield=['0518+165','0420+417']); 
+polcal(vis='at166B.ms',caltable='at166B.xcal',field='0518+165',refant='VA12',poltype='Xf',gaintable=['at166B.fcal', 'at166B.dcal'],gainfield=['0518+165','0420+417']); 
  
 # --> 2/2 good solutions 
 # --> 0518:  2.7deg  / 41.8deg  (I need to check these numbers) 
@@ -392,7 +392,7 @@ setjy(vis=msnameC,field='0518+165',spw='1',scalebychan=False,standard='manual',f
 #=====================================================================
 # Solve for polarization position angle on 0518+165 
 print "--Polcal (X)--"
-polcal(vis='at166C.ms',caltable='at166C.xcal',field='0518+165',refant='VA12',poltype='X',gaintable=['at166C.fcal', 'at166C.dcal'],gainfield=['0518+165','0420+417']); 
+polcal(vis='at166C.ms',caltable='at166C.xcal',field='0518+165',refant='VA12',poltype='Xf',gaintable=['at166C.fcal', 'at166C.dcal'],gainfield=['0518+165','0420+417']); 
 # --> 2/2 good solutions 
 # --> 0518:  77.0deg  / -42.0deg  
  
