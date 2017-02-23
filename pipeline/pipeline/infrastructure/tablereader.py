@@ -494,6 +494,7 @@ class SBSummaryTable(object):
                for row in SBSummaryTable._read_table(ms)]
             return sbsummary_info[0]
         except:
+            LOG.warn('Unable to identify the representative source for %s' % (ms.basename))
             return (None, None, None)
 
     @staticmethod
@@ -513,15 +514,22 @@ class SBSummaryTable(object):
         msname = _get_ms_name(ms)
         sbsummary_table = os.path.join(msname, 'ASDM_SBSUMMARY')        
         with casatools.TableReader(sbsummary_table) as table:
-            centerDirections = table.getcol('centerDirection')
-            centerDirectionCodes = table.getcol('centerDirectionCode')
-            scienceGoals = table.getcol('scienceGoal')
-            numScienceGoals = table.getcol('numScienceGoal')
+            try:
+                centerDirections = table.getcol('centerDirection')
+                centerDirectionCodes = table.getcol('centerDirectionCode')
+                scienceGoals = table.getcol('scienceGoal')
+                numScienceGoals = table.getcol('numScienceGoal')
+            except:
+                LOG.warn('Error reading representative source information for %s' % (ms.basename))
+                raise 
 
             repDirections = []
             repFrequencies = []
             repBandWidths = []
             for i in range(table.nrows()):
+                # Direction check
+                if centerDirectionCodes[i] == '':
+                    continue
                 # Create direction
                 direction = me.direction(centerDirectionCodes[i], qa.quantity(centerDirections[0,i], 'rad'),
                     qa.quantity(centerDirections[1,i], 'rad'))
