@@ -117,6 +117,40 @@ GJonesSpline::GJonesSpline (VisSet& vs) :
 
 };
 
+GJonesSpline::GJonesSpline (const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),
+  VisMueller(msmc),
+  GJones(msmc),
+  vs_p(NULL),
+  solveAmp_p(false),
+  solvePhase_p(true),
+  splinetime_p(7200.0),
+  cacheTimeValid_p(0),
+  calBuffer_p(NULL),
+  rawPhaseRemoval_p(false),
+  timeValueMap_p(0),
+  solTimeStamp_p(0.0)
+{
+// Construct from a MSMetaInfoForCal
+// Input:
+//    msmc              MSMetaInfoForCal&  MS Meta info server
+// Output to private data:
+//    solveAmp_p        Bool               true if mode_p includes amp. soln.
+//    solvePhase_p      Bool               true if mode_p includes phase soln.
+//    cacheTimeValid_p  Double             Time for which the current
+//                                         calibration cache is valid
+//    calBuffer_p       GJonesSplineMBuf*  Ptr to the applied cal. buffer
+//
+
+  if (prtlev()>2) cout << "GSpline::GSpline(msmc)" << endl;
+
+  // Mark the Jones matrix as neither solved for nor applied,
+  // pending initialization by setSolver() or setInterpolation()
+  setSolved(false);
+  setApplied(false);
+
+};
+
 //----------------------------------------------------------------------------
 
 GJonesSpline::~GJonesSpline () 
@@ -1158,7 +1192,7 @@ void GJonesSpline::plotsolve(const Vector<Double>& x,
   Vector<Float> soly1(numplotpoints);
   Vector<Double> y, weight;
   Double err;
-  Int num_ant = vs_p->numberAnt();
+  Int num_ant = nAnt();
   Vector<Double> ant1coeff, ant2coeff; 
 
   //  Float max_data, min_data, max_err;
@@ -1302,6 +1336,8 @@ Vector<Int> GJonesSpline::fieldIdRange()
 //    fieldIdRange      Vector<Int>        All FIELD_ID's in the MS
 //
   // Open the FIELD sub-table
+
+  if (!vs_p) throw(AipsError("Error in GJonesSpline::fieldIdRange()"));
 
   const ROMSColumns& mscol(vs_p->iter().msColumns());
   const ROMSFieldColumns& fldCol(mscol.field());

@@ -26,12 +26,14 @@
 //# $Id: BJonesPoly.cc,v 19.18 2006/02/03 00:29:52 gmoellen Exp $
 
 #include <synthesis/MeasurementComponents/BPoly.h>
+#include <synthesis/MeasurementComponents/MSMetaInfoForCal.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <ms/MSOper/MSMetaData.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <msvis/MSVis/VisBuffGroupAcc.h>
@@ -119,6 +121,50 @@ BJonesPoly::BJonesPoly (VisSet& vs) :
 
 //----------------------------------------------------------------------------
 
+  
+
+BJonesPoly::BJonesPoly (const MSMetaInfoForCal& msmc) :
+  VisCal(msmc),             // virtual base
+  VisMueller(msmc),         // virtual base
+  BJones(msmc),             // immediate base
+  vs_p(NULL),
+  degamp_p(3),
+  degphase_p(3),
+  visnorm_p(false),
+  maskcenter_p(1),
+  maskedge_p(5.0),
+  maskcenterHalf_p(0),
+  maskedgeFrac_p(0.05),
+  solTimeStamp(0.0),
+  solSpwId(-1),
+  solFldId(-1)
+{
+// Construct from a visibility set
+// Input:
+//    msmc              MSMetaInfoForCal&  MS Meta info server
+// Output to private data:
+//    vs_p              VisSet&            Visibility set pointer (needed locally)
+//    degamp_p          Int                Polynomial degree in amplitude
+//    degphase_p        Int                Polynomial degree in phase
+//    visnorm           const Bool&        true if pre-normalization of the 
+//                                         visibility data over frequency is
+//                                         required before solving.
+//    maskcenter        const Int&         No. of central channels to mask
+//                                         during the solution
+//    maskedge          const Float&       Fraction of spectrum to mask at
+//                                         either edge during solution
+//    maskcenterHalf_p  Int                Central mask half-width
+//    maskedgeFrac_p    Float              Fractional edge mask
+
+  // Neither solved nor applied at this point
+  setSolved(false);
+  setApplied(false);
+};
+
+
+
+
+
 void BJonesPoly::setSolve(const Record& solvepar)
 {
 // Set the solver parameters
@@ -175,11 +221,10 @@ void BJonesPoly::setApply(const Record& applypar)
 {
 // Set the applypar parameters
 
-// Call parent (loadMemCalTable is no overloaded)
+// Call parent (loadMemCalTable is now overloaded)
 
-
-  nChanParList()=vs_p->numberChan();
-  startChanList()=vs_p->startChan();
+//  nChanParList()=vs_p->numberChan();
+//  startChanList()=vs_p->startChan();
 
   BJones::setApply(applypar);
 
@@ -1011,6 +1056,7 @@ Bool BJonesPoly::maskedChannel (const Int& chan, const Int& nChan)
     
 void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
 {
+
 // Load and cache the polynomial bandpass corrections
 // Input:
 //    applyTable      const String&            Cal. table to be applied
@@ -1060,10 +1106,13 @@ void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
 
     currSpw()=spwId(0);
     Vector<Double> freq = freqAxis(currSpw());
+    
+    startChan()=0;
+    nChanPar()=freq.nelements(); // currSpw
 
     // Set SPW subtable freqs
-    IPosition blc(1,startChan()), trc(1,startChan()+nChanPar()-1);
-    ct_->setSpwFreqs(currSpw(),freq(blc,trc));
+    //IPosition blc(1,startChan()), trc(1,startChan()+nChanPar()-1);
+    ct_->setSpwFreqs(currSpw(),freq); // (blc,trc));
 
   }
   
@@ -1077,7 +1126,6 @@ void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
     invalidateP();
     invalidateCalMat();      
   }
-
 
   // Inflate the solve arrays, so we can fill them
   initSolvePar();
@@ -1140,7 +1188,8 @@ void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
 
       
     Vector<Double> freq = freqAxis(currSpw());
-    
+    Int nChan=freq.nelements();
+
     Double x1 = freqDomain(0);
     Double x2 = freqDomain(1);
     
@@ -1154,11 +1203,11 @@ void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
 	  anyNE(pc,Double(0.0)) ) {
 	
 	// Loop over frequency channel
-	for (Int chan=0; chan < nChanPar(); chan++) {
+	for (Int chan=0; chan < nChan; ++chan) {
 	  
 	  Double ampval(1.0),phaseval(0.0);
 	  // only if in domain, calculate Cheby
-	  Double thisfreq(freq(chan+startChan()));
+	  Double thisfreq(freq(chan));
 	  if (thisfreq >=x1 && thisfreq <= x2) {
 	    ampval = getChebVal(ac, x1, x2, thisfreq);
 	    phaseval = getChebVal(pc, x1, x2, thisfreq);
@@ -1217,6 +1266,8 @@ Double BJonesPoly::meanFrequency (const Vector<Int>& spwid)
 //    meanFrequency   Double                   Mean frequency (as Double)
 //
 
+  if (!vs_p) throw(AipsError("Error in BJonesPoly::meanFrequency"));
+
   const ROMSColumns& mscol(vs_p->iter().msColumns());
   const ROMSSpWindowColumns& spwcol(mscol.spectralWindow());
   const ROArrayColumn<Double>& frequencies(spwcol.chanFreq());
@@ -1250,6 +1301,8 @@ String BJonesPoly::freqGrpName (const Int& spwId)
 //    freqGrpName     String                   Frequency group name
 //
 
+  if (!vs_p) throw(AipsError("Error in BJonesPoly::freqGrpName"));
+
   const ROMSColumns& mscol(vs_p->iter().msColumns());
   const ROMSSpWindowColumns& spwCol(mscol.spectralWindow());
 
@@ -1269,6 +1322,7 @@ Vector<Int> BJonesPoly::spwIdsInGroup (const String& freqGrpName)
 //    spwIdsInGroup   Vector<Int>              Spw. id.'s in freq. group
 //
   // Open a SPECTRAL_WINDOW sub-table index
+  if (!vs_p) throw(AipsError("Error in BJones::spwIdsInGroup"));
   MeasurementSet ms(vs_p->msName().before("/SELECTED"));
   MSSpWindowIndex spwIndex(ms.spectralWindow());
   return spwIndex.matchFreqGrpName(freqGrpName);
@@ -1287,11 +1341,20 @@ Vector<Double> BJonesPoly::freqAxis (const Int& spwId)
 //    freqAxis        Vector<Double>           Frequency axis values
 //
 
-  const ROMSColumns& mscol(vs_p->iter().msColumns());
-  const ROMSSpWindowColumns& spwCol(mscol.spectralWindow());
-
   Vector<Double> freqVal;
-  spwCol.chanFreq().get(spwId, freqVal);
+  if (vs_p) {
+    const ROMSColumns& mscol(vs_p->iter().msColumns());
+    const ROMSSpWindowColumns& spwCol(mscol.spectralWindow());
+    
+    spwCol.chanFreq().get(spwId, freqVal);
+  }
+  else {
+    // Try msmc...
+    const ROMSColumns& mscol(*(msmc().msmd().getMS()));
+    const ROMSSpWindowColumns& spwCol(mscol.spectralWindow());
+    spwCol.chanFreq().get(spwId, freqVal);
+  }
+
   return freqVal;
 }
 

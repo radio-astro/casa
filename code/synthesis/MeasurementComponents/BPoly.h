@@ -76,6 +76,9 @@ public:
   // Construct from a visibility data set
   BJonesPoly (VisSet& vs);
 
+  // Construct from a MSMetaInfoForCal
+  BJonesPoly (const MSMetaInfoForCal& msmc);
+
   // Destructor
   virtual ~BJonesPoly() {};
 

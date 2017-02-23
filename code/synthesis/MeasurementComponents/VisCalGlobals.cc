@@ -263,7 +263,7 @@ SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnA
 
   else if (uptype=="GSPLINE") 
     throw(AipsError(uptype+" not yet supported via GJonesSpline(msname,MSnAnt,MSnSpw)"));
-  //    return new GJonesSpline(msname,MSnAnt,MSnSpw);
+  //return new GJonesSpline(msname,MSnAnt,MSnSpw);
   
   else if (uptype=="TF" || uptype=="TF JONES" || uptype=="TF NOISE") 
     return new TfJones(msname,MSnAnt,MSnSpw);
@@ -402,15 +402,15 @@ SolvableVisCal* createSolvableVisCal(const String& type, const MSMetaInfoForCal&
     return new BJones(msmc);
 
   else if (uptype=="BPOLY") 
-    throw(AipsError(uptype+" not yet supported via BJonesPoly(msmc)"));
-  //    return new BJonesPoly(msmc);
+    //throw(AipsError(uptype+" not yet supported via BJonesPoly(msmc)"));
+    return new BJonesPoly(msmc);
 
   else if (uptype=="G" || uptype=="G JONES") 
     return new GJones(msmc);
 
   else if (uptype=="GSPLINE") 
-    throw(AipsError(uptype+" not yet supported via GJonesSpline(msmc)"));
-  //    return new GJonesSpline(msmc);
+    //throw(AipsError(uptype+" not yet supported via GJonesSpline(msmc)"))
+    return new GJonesSpline(msmc);
   
   else if (uptype=="TF" || uptype=="TF JONES" || uptype=="TF NOISE") 
     return new TfJones(msmc);

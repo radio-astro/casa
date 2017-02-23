@@ -78,6 +78,9 @@ public:
   // Construct from a visibility data set
   GJonesSpline (VisSet& vs);
 
+  // Construct from a MSMetaInfoForCal
+  GJonesSpline (const MSMetaInfoForCal& msmc);
+
   // Destructor
   virtual ~GJonesSpline();
 
