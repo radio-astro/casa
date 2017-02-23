@@ -46,8 +46,8 @@ class __doc(object):
                     print "------------------------------------------------------------------------------"
                     show_toc(self.remote_toc)
         else:
+            path = casa['dirs']['doc'] + "/casa.nrao.edu/casadocs"
             if sec is None:
-                path = casa['dirs']['doc'] + "/casa.nrao.edu/casadocs"
                 homepage = path + "/stable.html"
                 if os.path.exists(path):
                     return webbrowser.open("file://" + homepage)
@@ -64,7 +64,7 @@ class __doc(object):
                 if sec == 'toc':
                     show_toc(self.local_toc)
                 elif self.local_toc.has_key(sec):
-                    return webbrowser.open(path + "/stable/" + self.remote_toc[sec]['path'])
+                    return webbrowser.open(path + "/stable/" + self.local_toc[sec]['path'])
                 else:
                     print "Sorry '%s' is not a recognized section..." % sec
                     print "------------------------------------------------------------------------------"
