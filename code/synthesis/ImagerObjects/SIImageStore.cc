@@ -1418,6 +1418,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
 		
 		LatticeExpr<Float> deno;
+		Float scalepb=1.0;
 		if( normtype=="flatnoise"){
 		  deno = LatticeExpr<Float> ( sqrt( abs(*(wtsubim)) ) * itsPBScaleFactor );
 		  os << LogIO::NORMAL1 ;
@@ -1425,7 +1426,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  os << "Dividing " << itsImageName+String(".residual") ;
 		  os << " by [ sqrt(weightimage) * " << itsPBScaleFactor ;
 		  os << " ] to get flat noise with unit pb peak."<< LogIO::POST;
-		  
+		  scalepb=fabs(pblimit)*itsPBScaleFactor*itsPBScaleFactor;
 		}
 		if( normtype=="flatsky") {
 		  deno = LatticeExpr<Float> ( *(wtsubim) );
@@ -1433,12 +1434,12 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
 		  os << "Dividing " << itsImageName+String(".residual") ;
 		  os << " by [ weight ] to get flat sky"<< LogIO::POST;
+		  scalepb=fabs(pblimit*pblimit)*itsPBScaleFactor*itsPBScaleFactor;
 		}
 
 		//		IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
 		//Float resval = ressubim->getAt(ip);
 
-		Float scalepb = fabs(pblimit) * itsPBScaleFactor * itsPBScaleFactor ;
 		LatticeExpr<Float> mask( iif( (deno) > scalepb , 1.0, 0.0 ) );
 		LatticeExpr<Float> maskinv( iif( (deno) > scalepb , 0.0, 1.0 ) );
 		LatticeExpr<Float> ratio( ( (*(ressubim)) * mask ) / ( deno + maskinv ) );
@@ -1473,14 +1474,12 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
 
         if(itsUseWeight // only when needed
-       	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+	   && weight() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
 
 	if( normtype=="flatsky") {
-	  Array<Float> arrmod;
-	  model()->get( arrmod, True );
-
-	  os << LogIO::NORMAL1 << "Model is already flat sky with peak flux : " << max(arrmod);
+	  LatticeExprNode LEN = max( *model());
+	  os << LogIO::NORMAL1 << "Model is already flat sky with peak flux : " << LEN.getFloat();
 	  os << ". No need to divide before prediction" << LogIO::POST;
 	  
 	  return;
@@ -1546,7 +1545,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
    LogIO os( LogOrigin("SIImageStore","multiplyModelByWeight",WHERE) );
 
         if(itsUseWeight // only when needed
-    	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+	   && weight() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
       {
 	if( normtype=="flatsky") {
 	  os << "Model is already flat sky. No need to multiply back after prediction" << LogIO::POST;
