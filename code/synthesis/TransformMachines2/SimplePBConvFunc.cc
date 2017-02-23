@@ -236,7 +236,10 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
   }
 
   const MDirection& SimplePBConvFunc::pointingDirAnt1(const vi::VisBuffer2& vb){
+   
+    
     std::ostringstream oss;
+    
     oss << vb.msId() << "_" << vb.antenna1()(0) << "_";
     oss.precision(13);
     oss << vb.time()(0);
@@ -273,6 +276,10 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
 
   Int convSamp=2*convSampling;
+  /////////////////////////
+  LogIO os1;
+  os1<< "msID " << vb.msId()  <<  " ANT1 id" << vb.antenna1()(0) << " direction " << vb.direction1()(0).toString() <<  " ANT2 id" << vb.antenna2()(0) << " direction " << vb.direction2()(0).toString() << LogIO::DEBUG1 << LogIO::POST ; 
+    //////////////////////
   storeImageParams(iimage, vb);
   convFuncChanMap.resize(vb.nChannels());
   Vector<Double> beamFreqs;
@@ -639,11 +646,13 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       */
       //cerr << "twoDPB shape " << twoDPB.shape() << " slice shape " << IPosition(4, tempConvSize, tempConvSize, 1, 1) << endl;
       convFunc_p=twoDPB.getSlice(IPosition(4,0,0,0,0), IPosition(4, tempConvSize, tempConvSize, 1, 1), true);
-      
+      weightConvFunc_p.resize();
+      weightConvFunc_p=twoDPB2.getSlice(IPosition(4,0,0,0,nBeamChans-1), IPosition(4, tempConvSize, tempConvSize, 1, 1), true);
       //convFunc/=max(abs(convFunc));
-      Float maxAbsConvFunc=max(amplitude(convFunc_p));
+      Float maxAbsConvFunc=max(amplitude(weightConvFunc_p));
       
-      Float minAbsConvFunc=min(amplitude(convFunc_p));
+      Float minAbsConvFunc=min(amplitude(weightConvFunc_p));
+      //cerr << "min max " << minAbsConvFunc << "  " <<  maxAbsConvFunc << endl;
       convSupport_p=-1;
       Bool found=false;
       //Bool found2=true;
@@ -651,14 +660,14 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       Int trial=0;
       for (trial=tempConvSize/2-2;trial>0;trial--) {
 	//Searching down a diagonal
-	if(abs(convFunc_p(tempConvSize/2-trial, tempConvSize/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+	if(abs(weightConvFunc_p(tempConvSize/2-trial, tempConvSize/2-trial)) >  (1.0e-3*maxAbsConvFunc)) {
 	  found=true;
 	  trial=Int(sqrt(2.0*Float(trial*trial)));
 	  break;
 	}
       }
       if(!found){
-	if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
+	if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-3*maxAbsConvFunc)) 
 	  found=true;
 	// if it drops by more than 2 magnitudes per pixel
 	trial=( tempConvSize > (10*convSampling)) ? 5*convSampling : (tempConvSize/2 - 4*convSampling);
@@ -672,7 +681,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       }
       else {
 	os << "Convolution function is misbehaved - support seems to be zero\n"
-	   << "Reasons can be: \n(1)The image definition not covering one or more of the pointings selected"
+	   << "Reasons can be: \n(1)The image definition not covering one or more of the pointings selected\n"
            << "(2) No unflagged data in a given pointing\n"
 	   << "(3) The entries in the POINTING subtable do not match the field being imaged."
 	   << "Please check, and try again with an empty POINTING subtable.)\n"
@@ -988,7 +997,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
      
      try{
        if(!rec.isDefined("name") || rec.asString("name") != "SimplePBConvFunc"){
-	 throw(AipsError("Wrong record to recover HetArray from"));
+	 throw(AipsError("Wrong record to recover SimplePBConvFunc from"));
 	}
        rec.get("numconv", numConv);
        convFunctions_p.resize(numConv, true, false);
@@ -1031,6 +1040,11 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
   }
   void SimplePBConvFunc::addPBToFlux(const vi::VisBuffer2& vb){
     if(calcFluxScale_p){
+      if(fluxScale_p.shape().nelements()==0)
+	{ //cerr << "nx_p " << nx_p << endl;
+	calcFluxScale_p=False;
+	return;
+      }
       Vector<Int> pixdepoint(2, -100000);
       convertArray(pixdepoint, thePix_p);
       if((pixdepoint(0) >=0) && (pixdepoint(0) < pointingPix_p.shape()[0]) && (pixdepoint(1) >=0) && (pixdepoint(1) < pointingPix_p.shape()[1])  && !pointingPix_p(pixdepoint(0), pixdepoint(1))){

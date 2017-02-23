@@ -1349,14 +1349,22 @@ void SynthesisImagerVi2::unlockMSs()
    
     ROMSColumns msc(vi_p->ms());
     String telescop=msc.observation().telescopeName()(0);
-    // Hack...start
-    //    if(telescop=="EVLA"){os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; telescop="VLA";}
-    // Hack...stop
- 
+    Bool multiTel=False;
+    Int msid=0;
+     for(vi_p->originChunks(); vi_p->moreChunks(); vi_p->nextChunk()){
+       if(((vi_p->getVisBuffer())->msId() != msid) && telescop !=  ROMSColumns(vi_p->ms()).observation().telescopeName()(0)){
+	 msid=(vi_p->getVisBuffer())->msId();
+	 multiTel=True;
+       }
+     }
+    vi_p->originChunks();
+  
+  
 
     PBMath::CommonPB kpb;
     Record rec;
     getVPRecord( rec, kpb, telescop );
+   
 
     if(rec.empty()){os << LogIO::SEVERE << "Cannot proceed with mosaicft gridder without a valid PB model" << LogIO::POST; }
     
@@ -1376,15 +1384,24 @@ void SynthesisImagerVi2::unlockMSs()
       ////vps.setThreshold(minPB);
       
     }
+    else{
+      PBMath myPB(rec);
+      String whichPBMath;
+      PBMathInterface::namePBClass(myPB.whichPBClass(), whichPBMath);
+      os  << "Using the PB defined by " << whichPBMath << " for beam calculation for telescope " << telescop << LogIO::POST;
+      vps= new refim::VPSkyJones(telescop, myPB, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
+      kpb=PBMath::DEFAULT;
+    }
+   
     
     theFT = new refim::MosaicFTNew(vps, mLocation_p, stokes, 1000000000, 16, useAutoCorr, 
 		      useDoublePrec);
-    PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
+    PBMathInterface::PBClass pbtype=((kpb==PBMath::EVLA) || multiTel)? PBMathInterface::COMMONPB: PBMathInterface::AIRY;
     if(rec.asString("name")=="IMAGE")
        pbtype=PBMathInterface::IMAGE;
     ///Use Heterogenous array mode for the following
     if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
-       || (kpb==PBMath::ALMA)){
+       || (kpb==PBMath::ALMA) || (kpb==PBMath::EVLA) || multiTel){
       CountedPtr<refim::SimplePBConvFunc> mospb=new refim::HetArrayConvFunc(pbtype, "");
       static_cast<refim::MosaicFTNew &>(*theFT).setConvFunc(mospb);
     }

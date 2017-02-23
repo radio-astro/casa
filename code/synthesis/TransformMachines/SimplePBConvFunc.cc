@@ -274,7 +274,10 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 					  ){
 
 
-
+/////////////////////////
+  LogIO os1;
+  os1<< "msID " << vb.msId()  <<  " ANT1 id" << vb.antenna1()(0) << " direction " << vb.direction1()(0).toString() <<  " ANT2 id" << vb.antenna2()(0) << " direction " << vb.direction2()(0).toString() << LogIO::DEBUG1 << LogIO::POST ; 
+    //////////////////////
   Int convSamp=2*convSampling;
   storeImageParams(iimage, vb);
   convFuncChanMap.resize(vb.nChannel());

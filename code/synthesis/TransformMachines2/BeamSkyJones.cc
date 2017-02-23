@@ -38,7 +38,7 @@
 #include <measures/Measures/MeasConvert.h>
 
 #include <casa/BasicSL/Constants.h>
-
+#include <measures/Measures/MeasTable.h>
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/ComponentShape.h>
 
@@ -52,24 +52,25 @@
 #include <images/Regions/ImageRegion.h>
 
 #include <casa/Utilities/Assert.h>
-/*
-// temporary, for debugging
-#include <casa/Quanta/MVAngle.h>
-void printDirection(std::ostream &os,const casa::MDirection &dir) throw (casa::AipsError) {
-  double lngbuf=dir.getValue().getLong("deg").getValue();
-  if (lngbuf<0) lngbuf+=360.;
-  os<<(dir.getRefString()!="GALACTIC"?casa::MVAngle::Format(casa::MVAngle::TIME):
-  casa::MVAngle::Format(casa::MVAngle::ANGLE))<<casa::MVAngle(casa::Quantity(lngbuf,"deg"))<<" "
-    <<casa::MVAngle(dir.getValue().getLat("deg"))<<
-    " ("<<dir.getRefString()<<")";
-}
-//
-*/
+
+
 using namespace casacore;
 namespace casa{
 
 
 namespace refim{
+// temporary, for debugging
+/*#include <casa/Quanta/MVAngle.h>
+void printDirection(std::ostream &os,const MDirection &dir) throw (AipsError) {
+  double lngbuf=dir.getValue().getLong("deg").getValue();
+  if (lngbuf<0) lngbuf+=360.;
+  os<<(dir.getRefString()!="GALACTIC"?MVAngle::Format(MVAngle::TIME):
+  MVAngle::Format(MVAngle::ANGLE))<<MVAngle(Quantity(lngbuf,"deg"))<<" "
+    <<MVAngle(dir.getValue().getLat("deg"))<<
+    " ("<<dir.getRefString()<<")";
+}
+*/
+//
 
 using namespace casa;
 using namespace casa::refim;
@@ -287,7 +288,8 @@ void BeamSkyJones::update(const vi::VisBuffer2& vb, Int row)
   // The pointing direction depends on feed, antenna, pointing errors, etc  
   MDirection pointingDirection1_p = vb.direction1()(row);
   MDirection pointingDirection2_p = vb.direction2()(row);
-    
+
+  //cerr << "DIR1 " << pointingDirection1_p.toString() << "   " <<  pointingDirection2_p.toString() << endl; 
   // Look up correct telescope
   const ROMSObservationColumns& msoc=ROMSColumns(vb.ms()).observation();
   telescope_p = msoc.telescopeName()(vb.arrayId()(0));
@@ -322,9 +324,9 @@ void BeamSkyJones::update(const vi::VisBuffer2& vb, Int row)
   
   if (lastUpdateIndex1_p!=-1)
       lastDirections_p[lastUpdateIndex1_p]=pointingDirection1_p;
-
-  if (lastUpdateIndex2_p!=-1)
-      lastDirections_p[lastUpdateIndex2_p]=pointingDirection2_p;
+  ////CAS-6688 using antenna1 only for now
+  // if (lastUpdateIndex2_p!=-1)
+  //    lastDirections_p[lastUpdateIndex2_p]=pointingDirection2_p;
   
   // Obtaining a reference on parallactic angles is a fast operation as
   // caching is implemented inside VisBuffer.
@@ -374,9 +376,12 @@ BeamSkyJones::apply(const ImageInterface<Complex>& in,
     // cout<<endl<<"BeamSkyJones::apply(Image...) index="<<lastUpdateIndex1_p<<" feed="<<vb.feed1()(0)<<" direction=";
     // printDirection(cout,lastDirections_p[lastUpdateIndex1_p]); cout<<endl<<endl;
     //
+    CoordinateSystem cs=in.coordinates();
+    Int coordIndex=cs.findCoordinate(Coordinate::DIRECTION);
+    MDirection::Types dirType=cs.directionCoordinate(coordIndex).directionType();
     PBMath myPBMath;    
     if (getPBMath(lastUpdateIndex1_p, myPBMath)) 
-      return myPBMath.applyPB(in, out, lastDirections_p[lastUpdateIndex1_p], 
+      return myPBMath.applyPB(in, out, convertDir(vb, lastDirections_p[lastUpdateIndex1_p], dirType), 
 	      Quantity(lastParallacticAngles_p[lastUpdateIndex1_p],"rad"),
               doSquint_p, false, threshold(), forward);
     else 
@@ -397,8 +402,11 @@ BeamSkyJones::apply(const ImageInterface<Float>& in,
     throw(AipsError("BeamSkyJones::apply(Image...) - can only treat homogeneous PB case"));
   else {
     PBMath myPBMath; 
+    CoordinateSystem cs=in.coordinates();
+    Int coordIndex=cs.findCoordinate(Coordinate::DIRECTION);
+    MDirection::Types dirType=cs.directionCoordinate(coordIndex).directionType();
     if (getPBMath(lastUpdateIndex1_p, myPBMath)) 
-      return myPBMath.applyPB(in, out, lastDirections_p[lastUpdateIndex1_p], 
+      return myPBMath.applyPB(in, out,convertDir(vb, lastDirections_p[lastUpdateIndex1_p], dirType), 
 			      Quantity(lastParallacticAngles_p[lastUpdateIndex1_p],"rad"),
 			      doSquint_p, threshold());
     else 
@@ -419,12 +427,15 @@ BeamSkyJones::applySquare(const ImageInterface<Float>& in,
     throw(AipsError("BeamSkyJones::applySquare(Image...) - can only treat homogeneous PB case"));
   else {
     // for debug
-    // cout<<endl<<"BeamSkyJones::applySquare(Image...) index="<<lastUpdateIndex1_p<<" feed="<<vb.feed1()(0)<<" direction=";
-    // printDirection(cout,lastDirections_p[lastUpdateIndex1_p]); cout<<endl<<endl;
+    //cout<<endl<<"BeamSkyJones::applySquare(Image...) index="<<lastUpdateIndex1_p<<" feed="<<vb.feed1()(0)<<" direction=";
+     //printDirection(cout,lastDirections_p[lastUpdateIndex1_p]); cout<<endl<<endl;
     //
     PBMath myPBMath;
+    CoordinateSystem cs=in.coordinates();
+    Int coordIndex=cs.findCoordinate(Coordinate::DIRECTION);
+    MDirection::Types dirType=cs.directionCoordinate(coordIndex).directionType();
     if (getPBMath(lastUpdateIndex1_p, myPBMath)) 
-      return myPBMath.applyPB2(in, out, lastDirections_p[lastUpdateIndex1_p],
+      return myPBMath.applyPB2(in, out, convertDir(vb, lastDirections_p[lastUpdateIndex1_p], dirType), 
            lastParallacticAngles_p[lastUpdateIndex1_p], doSquint_p, threshold()*threshold());
     else 
       throw(AipsError("BeamSkyJones::applySquare(Image...) - PBMath not found"));    
@@ -450,8 +461,10 @@ BeamSkyJones::apply(SkyComponent& in,
     // printDirection(cout,lastDirections_p[lastUpdateIndex1_p]); cout<<endl<<endl;
     //
     PBMath myPBMath;
+    MDirection compdir=in.shape().refDirection();
+    MDirection::Types dirType=MDirection::castType(compdir.getRef().getType());
     if (getPBMath(lastUpdateIndex1_p, myPBMath)) 
-      return myPBMath.applyPB(in, out, lastDirections_p[lastUpdateIndex1_p], 
+      return myPBMath.applyPB(in, out,convertDir(vb, lastDirections_p[lastUpdateIndex1_p], dirType) , 
 			      Quantity(vb.getFrequency(0,0), "Hz"),
 			      lastParallacticAngles_p[lastUpdateIndex1_p],
 			      doSquint_p, false, threshold(), forward);
@@ -474,8 +487,10 @@ BeamSkyJones::applySquare(SkyComponent& in,
     throw(AipsError("BeamSkyJones::applySquare(SkyComponent,...) - can only treat homogeneous PB case"));
   else { 
     PBMath myPBMath;
+    MDirection compdir=in.shape().refDirection();
+    MDirection::Types dirType=MDirection::castType(compdir.getRef().getType());
     if (getPBMath(lastUpdateIndex1_p, myPBMath))
-      return myPBMath.applyPB2(in, out, lastDirections_p[lastUpdateIndex1_p], 
+      return myPBMath.applyPB2(in, out, convertDir(vb, lastDirections_p[lastUpdateIndex1_p], dirType), 
 			       Quantity(vb.getFrequency(0,0), "Hz"),
 			       lastParallacticAngles_p[lastUpdateIndex1_p],
 			       doSquint_p);
@@ -696,6 +711,32 @@ void BeamSkyJones::setPBMath(const String &telescope, PBMath &myPBMath,
       lastParallacticAngles_p[ind]=1000.; // to force
                                           // recalculation (it is >> 2pi)
 };
+MDirection BeamSkyJones::convertDir(const vi::VisBuffer2& vb, const MDirection& inDir, const MDirection::Types outType){
+
+
+  if(MDirection::castType(inDir.getRef().getType())==outType){
+    return inDir;
+  }
+   MPosition pos;
+   String tel("");
+   ROMSColumns msc(vb.ms());
+   if (msc.observation().nrow() > 0) {
+     tel = msc.observation().telescopeName()(msc.observationId()(0));
+   }
+   if (tel.length() == 0 || !tel.contains("VLA") ||
+       !MeasTable::Observatory(pos,tel)) {
+     // unknown observatory, use first antenna
+     Int ant1=vb.antenna1()(0);
+     pos=msc.antenna().positionMeas()(ant1);
+   }
+   MEpoch::Types timeMType=MEpoch::castType(msc.timeMeas()(0).getRef().getType());
+   Unit timeUnit=Unit(msc.timeMeas().measDesc().getUnits()(0).getName());
+   MEpoch timenow(Quantity(msc.time()(0), timeUnit), timeMType);
+    MeasFrame mFrame(timenow, pos);
+    MDirection::Ref elRef(outType, mFrame);
+    return MDirection::Convert(inDir, elRef)();
+}
+
 
 
 Bool BeamSkyJones::isHomogeneous() const

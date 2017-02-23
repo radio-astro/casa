@@ -351,7 +351,8 @@ protected:
   casacore::Int indexTelescope(const casacore::String & compareTelescope,
                      const casacore::Int &compareAntenna=-1,
 		     const casacore::Int &compareFeed=-1) const;
-
+  casacore::MDirection convertDir(const vi::VisBuffer2& vb, const casacore::MDirection& inDir, const casacore::MDirection::Types outType);
+  
 };
  
 } //# end of namespace refim
