@@ -137,6 +137,8 @@ class SDImaging(basetask.StandardTaskTemplate):
         ms_list = [context.observing_run.measurement_sets[idx] for idx in inputs.msid_list]
         ms_names = [msobj.name for msobj in ms_list]
         in_spw = inputs.spw
+        # in_field is comma-separated list of target field names that are 
+        # extracted from all input MSs
         in_field = inputs.field
 #         antennalist = inputs.antennalist
         imagemode = inputs.mode.upper()
@@ -169,7 +171,26 @@ class SDImaging(basetask.StandardTaskTemplate):
                           (os.path.basename(m.ms.work_data), m.antenna_id,
                            m.antenna_name, m.spw_id, m.field_id, m.field_name))
             # Which group in group_desc list should be processed
-            member_list = list(common.get_valid_ms_members(group_desc, ms_names, inputs.antenna, in_field, in_spw))
+            
+            # fix for CAS-9747
+            # There may be the case that observation didn't complete so that some of 
+            # target fields are missing in MS. In this case, directly pass in_field 
+            # to get_valid_ms_members causes trouble. As a workaround, ad hoc pre-selection 
+            # of field name is applied here.
+            # 2017/02/23 TN
+            field_sel = ''
+            if len(in_field) == 0:
+                # fine, just go ahead
+                field_sel = in_field
+            elif group_desc.field_name in map(lambda x: x.strip('"'), in_field.split(',')):
+                # pre-selection of the field name
+                field_sel = group_desc.field_name
+            else:
+                # no field name is included in in_field, skip
+                LOG.info('Skip reduction group %d'%(group_id))
+                continue
+                
+            member_list = list(common.get_valid_ms_members(group_desc, ms_names, inputs.antenna, field_sel, in_spw))
             LOG.trace('group %s: member_list=%s'%(group_id, member_list))
             
             # skip this group if valid member list is empty

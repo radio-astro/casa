@@ -279,8 +279,13 @@ def get_valid_ms_members(group_desc, msname_filter, ant_selection, field_selecti
         ant_id = member.antenna_id
         msobj = member.ms
         if msobj.name in [os.path.abspath(name) for name in msname_filter]:
-            mssel = casatools.ms.msseltoindex(vis=msobj.name, spw=spw_selection,
-                                              field=field_selection, baseline=ant_selection)
+            try:
+                mssel = casatools.ms.msseltoindex(vis=msobj.name, spw=spw_selection,
+                                                  field=field_selection, baseline=ant_selection)
+            except RuntimeError, e:
+                LOG.trace('RuntimeError: {0}'.format(str(e)))
+                LOG.trace('vis="{0}" field_selection: "{1}"'.format(msobj.name, field_selection))
+                continue
             spwsel = mssel['spw']
             fieldsel = mssel['field']
             antsel = mssel['antenna1']
