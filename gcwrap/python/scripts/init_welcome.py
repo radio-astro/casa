@@ -3,7 +3,6 @@ import traceback
 
 from init_welcome_helpers import redirect_argv, immediate_exit_with_handlers
 
-
 if casa['flags'].execute:
     import os.path
 
@@ -37,6 +36,38 @@ if casa['flags'].execute:
         immediate_exit_with_handlers()
 
 else:
+
+    ###
+    ### Revisit if we ever get rid of plotcal al a matplotlib...
+    ###
+    ### ----------------------------------------------------------------------
+    ### without this we get errors when our customized TkInter backend
+    ### is being used in an open matplotlib window like:
+    ### ----------------------------------------------------------------------
+    ### Error in sys.exitfunc:
+    ### Traceback (most recent call last):
+    ###  File "/opt/casa/02/lib/python2.7/atexit.py", line 24, in _run_exitfuncs
+    ###    func(*targs, **kargs)
+    ###  File "/opt/casa/02/lib/python2.7/site-packages/matplotlib/_pylab_helpers.py", line 82, in destroy_all
+    ###    manager.destroy()
+    ###  File "/opt/casa/02/lib/python2.7/site-packages/matplotlib/backends/backend_tkagg.py", line 453, in destroy
+    ###    self.window.destroy()
+    ###  File "/opt/casa/02/lib/python2.7/lib-tk/Tkinter.py", line 1860, in destroy
+    ###    self.tk.call('destroy', self._w)
+    ###_tkinter.TclError: can't invoke "destroy" command:  application has been destroyed
+    class ___protect_exit(object):
+        "direct shutdown errors to /dev/null"
+        def __init__( self, handler ):
+            self.__handler = handler
+
+        def __call__( self ):
+            try:
+                self.handler( )
+            except:
+                pass
+
+    sys.exitfunc = ___protect_exit(sys.exitfunc)
+
     from casa_builtin import enable_builtin_protection, register_builtin
 
     register_builtin("casa")
