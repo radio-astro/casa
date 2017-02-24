@@ -45,7 +45,7 @@
     </param>
 
     <param type="string" name="refantignore">
-	<description>String list of antennae to ignore</description>
+	<description>String list of antennas to ignore</description>
 	<value></value>
     </param>
 
@@ -126,7 +126,7 @@ limit_short_solint -- string keyword argument in units of seconds to limit the s
     Can be set to a string value of 'int'.
     default: ''
 
-refantignore -- string list to be ignored as reference antennae.
+refantignore -- string list to be ignored as reference antennas.
     default: ''
     Example:  refantignore='ea02,ea03'
 

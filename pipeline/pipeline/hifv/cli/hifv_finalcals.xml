@@ -42,7 +42,7 @@
     </param>
 
     <param type="string" name="refantignore">
-	<description>String list of antennae to ignore</description>
+	<description>String list of antennas to ignore</description>
 	<value></value>
     </param>
 
@@ -89,7 +89,7 @@ vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
    example: vis=['X227.ms', 'asdms.tar.gz']
 
 
-refantignore -- string list to be ignored as reference antennae.
+refantignore -- string list to be ignored as reference antennas.
     default: ''
     Example:  refantignore='ea02,ea03'
 

@@ -288,9 +288,9 @@ class RefAntHeuristics( api.Heuristic ):
         tbLoc.close()
         del tbLoc
 
-        # Remove ignored antennae
+        # Remove ignored antennas
         if self.refantignore:
-            LOG.warn('Antennae to be ignored: {0}'.format(self.refantignore))
+            LOG.warn('Antennas to be ignored: {0}'.format(self.refantignore))
             names = [antenna for antenna in names if antenna not in self.refantignore.split(',')]
 
 
