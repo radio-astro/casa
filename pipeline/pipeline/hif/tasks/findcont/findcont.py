@@ -105,7 +105,6 @@ class FindCont(basetask.StandardTaskTemplate):
                     # need scan id list for multiple target case
                     # TODO: move this to a heuristics to avoid duplicated code (see tclean)
 
-                    # Construct regex for string matching - escape likely problem
                     re_field = utils.dequote(target['field'])
 
                     # Use scanids to select data with the specified intent
