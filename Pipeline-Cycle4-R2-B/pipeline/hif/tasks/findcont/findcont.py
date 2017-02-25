@@ -106,15 +106,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     # need scan id list for multiple target case
                     # TODO: move this to a heuristics to avoid duplicated code (see tclean)
 
-                    # Construct regex for string matching - escape likely problem
-                    # chars. Simpler way to do this ?
-                    re_field = target['field'].replace('*', '.*')
-                    re_field = re_field.replace('[', '\[')
-                    re_field = re_field.replace(']', '\]')
-                    re_field = re_field.replace('(', '\(')
-                    re_field = re_field.replace(')', '\)')
-                    re_field = re_field.replace('+', '\+')
-                    re_field = utils.dequote(re_field)
+                    re_field = utils.dequote(target['field'])
 
                     # Use scanids to select data with the specified intent
                     # Not CASA clean now supports intent selectin but leave
@@ -125,7 +117,7 @@ class FindCont(basetask.StandardTaskTemplate):
                         ms = inputs.context.observing_run.get_ms(name=vis)
                         scanids = [scan.id for scan in ms.scans if
                                    target['intent'] in scan.intents and
-                                   re.search(pattern=re_field, string=str(scan.fields))]
+                                   re_field in [utils.dequote(f.name) for f in scan.fields]]
                         if not scanids:
                             LOG.warning('No data for Field %s SPW %s' % (target['field'], spwid))
                             continue

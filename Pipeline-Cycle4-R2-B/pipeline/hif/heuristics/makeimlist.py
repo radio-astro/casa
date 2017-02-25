@@ -151,22 +151,16 @@ class MakeImListHeuristics(object):
                     # consistent with the fields in field_list
                     temp_result = set()
                     for eachfield in field_list:
-                        re_field = eachfield
-                        for char in '()+?.^$[]{}|':
-                            re_field = re_field.replace(char, '\%s' % char)
-                        re_field = re_field.replace('*', '.*')
+                        re_field = utils.dequote(eachfield)
                         temp_result.update([fir for fir in field_intent_result
-                          if re.search(pattern=re_field, string=fir[0])])
+                          if utils.dequote(fir[0]) == re_field])
                     field_intent_result = temp_result
 
             else:
                 if field.strip() is not '':
                     for f in field_list:
-                        for char in '()+?.^$[]{}|':
-                            f = f.replace(char, '\%s' % char)
-                        f = f.replace('*', '.*')
                         fintents_list = [fld.intents for fld in fields if 
-                          re.search(pattern=f, string=fld.name)]
+                          utils.dequote(fld.name) == utils.dequote(f)]
                         for fintents in fintents_list:
                             for fintent in fintents:
                                 field_intent_result.update((f, fintent))
@@ -180,14 +174,7 @@ class MakeImListHeuristics(object):
             field = field_intent[0]
             intent = field_intent[1]
  
-            # regex for string matching - escape likely problem chars.
-            re_field = field.replace('*', '.*')
-            re_field = re_field.replace('[', '\[')
-            re_field = re_field.replace(']', '\]')
-            re_field = re_field.replace('(', '\(')
-            re_field = re_field.replace(')', '\)')
-            re_field = re_field.replace('+', '\+')
-            re_field = utils.dequote(re_field)
+            re_field = utils.dequote(field)
 
             vis_scanids = {}
             for vis in self.vislist:
@@ -195,7 +182,7 @@ class MakeImListHeuristics(object):
 
                 scanids = [scan.id for scan in ms.scans if
                   intent in scan.intents and
-                  re.search(pattern=re_field, string=str(scan.fields))]
+                  re_field in [utils.dequote(f.name) for f in scan.fields]]
                 scanids.sort()
 
                 vis_scanids[vis] = scanids
