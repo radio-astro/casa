@@ -62,7 +62,7 @@ public:
 
 private:
 
-    mutable casacore::MDirection * direction_p; // own
+    mutable std::unique_ptr<casacore::MDirection> direction_p; // own
     int    row_p;
     double timeCenter_p;
     const TimeLevelCache * timeLevelCache_p;
@@ -82,7 +82,7 @@ public:
 
     TimeLevelCache (int minTimes, int maxTimes, const AntennaLevelCache * );
 
-    void addEntry (const Pointing & pointing);
+    void addEntry (Pointing & pointing);
     void flush ();
     std::pair<CacheAccessStatus, const casacore::MDirection *> getPointingDirection (double time);
     const PointingSource * getPointingSource () const;
@@ -107,7 +107,7 @@ public:
 
     AntennaLevelCache & operator= (const AntennaLevelCache & other) = delete;
 
-    void addEntry (const Pointing & pointing);
+    void addEntry (Pointing & pointing);
     void flushTimes ();
     std::pair<CacheAccessStatus, const casacore::MDirection *> getPointingDirection (int antenna, double time);
     const PointingSource * getPointingSource () const;
@@ -127,15 +127,23 @@ struct Pointing {
     // The direction and interval components are only usable if
     // "valid" is set to true.
 
-    Pointing () : antennaId (0), interval (0), row (0), source (nullptr), time (0), valid (false) {}
+    Pointing () : antennaId (0), direction (nullptr), interval (0), row (0), source (nullptr), time (0) {}
+    Pointing (const Pointing & other)
+    : antennaId (other.antennaId),
+      direction (std::move (other.direction)),
+      interval (other.interval),
+      row (other.row),
+      source (other.source),
+      time (other.time)
+    {}
+
 
     int antennaId;
-    casacore::MDirection direction;
+    mutable std::unique_ptr<casacore::MDirection> direction;
     double interval;
     int row;
     const PointingSource * source;
     double time;
-    bool valid;
 };
 
 class PointingSource {

@@ -26,7 +26,7 @@ PointingColumns::PointingColumns (const ROMSPointingColumns & pointingColumns)
 {}
 
 Pointing
-PointingColumns::getPointingRow (int row, double targetTime, bool asMeasure) const
+PointingColumns::getPointingRow (int row, double /*targetTime*/, bool asMeasure) const
 {
     Pointing pointing;
 
@@ -37,7 +37,6 @@ PointingColumns::getPointingRow (int row, double targetTime, bool asMeasure) con
     pointing.time = pointingColumns_p.time () (row);
     pointing.interval = pointingColumns_p.interval () (row);
     pointing.antennaId = pointingColumns_p.antennaId() (row);
-    pointing.valid = pointing.time >= targetTime - 300;
     pointing.row = row;
     pointing.source = this;
 
@@ -45,7 +44,7 @@ PointingColumns::getPointingRow (int row, double targetTime, bool asMeasure) con
 
         // Pointing is likely to be useful so get all the data.
 
-        pointing.direction = pointingColumns_p.directionMeas (row);
+        pointing.direction.reset (new MDirection (pointingColumns_p.directionMeas (row)));
     }
 
     return pointing;
@@ -186,6 +185,11 @@ PointingDirectionCache::getPointingDirection (int antenna, double time, const MD
         }
     }
 
+bool northPole = result.toString() == "00:00:00.000000 90.00.00.00000 J2000";
+if (northPole){
+    printf ("Returning north pole: ant=%d, t=%f\n", antenna, time);
+}
+
     return std::make_pair (true, result);
 }
 
@@ -245,7 +249,7 @@ AntennaLevelCache::AntennaLevelCache (int minTimes, int maxTimes, int nAntennas,
 
 
 void
-AntennaLevelCache::addEntry (const Pointing & pointing)
+AntennaLevelCache::addEntry (Pointing & pointing)
 {
     timeLevelCache_p [pointing.antennaId].addEntry (pointing);
 }
@@ -275,27 +279,28 @@ AntennaLevelCache::getPointingSource () const
 
 TimeLevelEntry::TimeLevelEntry (const Pointing & pointing,
                                 const TimeLevelCache * tlCache)
-: direction_p (pointing.valid ? new MDirection (pointing.direction)
-                              : nullptr),
+: direction_p (std::move (pointing.direction)),
   row_p (pointing.row),
   timeCenter_p (pointing.time),
   timeLevelCache_p (tlCache),
   interval_p (pointing.interval)
-{}
+{
+bool northPole = direction_p && direction_p->toString() == "00:00:00.000000 90.00.00.00000 J2000";
+if (northPole){
+    printf ("Returning north pole: ant=%d, t=%f\n", pointing.antennaId, pointing.time);
+}
+}
 
 TimeLevelEntry::TimeLevelEntry (const TimeLevelEntry & other)
- : direction_p (other.direction_p),
+ : direction_p (std::move (other.direction_p)),
    row_p (other.row_p),
    timeCenter_p (other.timeCenter_p),
    timeLevelCache_p (other.timeLevelCache_p),
    interval_p (other.interval_p)
-{
-    other.direction_p = nullptr;
-}
+{}
 
 TimeLevelEntry::~TimeLevelEntry ()
 {
-    delete direction_p;
 }
 
 TimeLevelEntry &
@@ -303,7 +308,7 @@ TimeLevelEntry::operator= (const TimeLevelEntry & other)
 {
     if (& other != this){
 
-        direction_p = other.direction_p;
+        direction_p = std::move (other.direction_p);
         other.direction_p = nullptr;
 
         row_p = other.row_p;
@@ -319,17 +324,17 @@ TimeLevelEntry::getDirection () const{
 
     // If the direction measure is actually cached, then simply return it.
 
-    if (direction_p){
-        return direction_p;
+    if (! direction_p){
+
+        // Refetch the row and actually get the direction this time.  Put it in
+        // the cache and return a pointer to it.
+
+        Pointing p = timeLevelCache_p->getPointingSource()->getPointingRow (row_p, timeCenter_p, true);
+        direction_p.reset (new MDirection (* p.direction.get()));
+
     }
 
-    // Refetch the row and actually get the direction this time.  Put it in
-    // the cache and return a pointer to it.
-
-    Pointing p = timeLevelCache_p->getPointingSource()->getPointingRow (row_p, timeCenter_p, true);
-    direction_p = new MDirection (p.direction);
-
-    return direction_p;
+    return direction_p.get();
 }
 
 double
@@ -378,7 +383,7 @@ TimeLevelCache::TimeLevelCache (int minTimes, int maxTimes, const AntennaLevelCa
 
 
 void
-TimeLevelCache::addEntry (const Pointing & pointing)
+TimeLevelCache::addEntry (Pointing & pointing)
 {
     if (cache_p.size() + 1 > (uint) maxTimes_p){
 
@@ -390,9 +395,14 @@ TimeLevelCache::addEntry (const Pointing & pointing)
 
     // Add in the new entry on the end.
 
-    ThrowIf (! cache_p.empty() && pointing.time < cache_p.back().getTime(),
-             "Pointing entries not monotonically increasing in time "
-             "for antenna.");
+    if (! cache_p.empty() && pointing.time < cache_p.back().getTime()){
+
+        // The pointing table is not increasing monotonically for this antenna.
+        // As a kluge, flush the cache and continue.  This could behave badly
+        // in some situations.
+
+        cache_p.clear();
+    }
 
     cache_p.push_back (TimeLevelEntry (pointing, this));
 }

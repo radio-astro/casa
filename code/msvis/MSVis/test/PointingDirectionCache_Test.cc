@@ -20,6 +20,7 @@ using namespace casa;
 using namespace casa::vi;
 using namespace casa::vi::pd_cache;
 using casacore::String;
+using casacore::MDirection;
 
 #define TestErrorIf(c,m) {if (c) ThrowTestError (m);}
 
@@ -111,7 +112,16 @@ TestPointingSource::getPointingRow (int row, double, bool asMeasure) const
 
     if (asMeasure){
 //printf (".................................. ant=%d, t=%f (1)\n", pointings_p[row].antennaId, pointings_p[row].time);
-        return pointings_p [row];
+        Pointing p;
+        Pointing & p0 = pointings_p [row];
+        p.antennaId = p0.antennaId;
+        p.interval = p0.interval;
+        p.row = p0.row;
+        p.source = nullptr;
+        p.time = p0.time;
+        p.direction.reset (new MDirection (* p0.direction.get()));
+
+        return p;
     }
 
     if (row == 0){
@@ -155,18 +165,17 @@ TestPointingSource::getPointingRow (int row, double, bool asMeasure) const
 
     double a1 = (pointing.time - timeMin_p) / (timeMax_p - timeMin_p); // [0,1]
     double a2 = (pointing.antennaId / (antennas_p.size() * 1.0));    
-    pointing.direction = casacore::MDirection (casacore::Quantity (a1, "rad"),
-                                               casacore::Quantity (a2, "rad"));
+    pointing.direction.reset (new MDirection (casacore::MDirection (casacore::Quantity (a1, "rad"),
+                                                                    casacore::Quantity (a2, "rad"))));
 
     pointings_p.push_back (pointing);
+
 //printf (".................................. ant=%d, t=%f (2)\n", pointings_p[row].antennaId, pointings_p[row].time);
 
 
 //    printf ("Generating pointing[%d]: t=%f, int=%f ant=%d, a1=%f, a2=%f\n",
 //            row, pointing.time, pointing.interval, pointing.antennaId, a1, a2);
 
-    pointing.direction = casacore::MDirection ();  // dummy
-    pointing.valid = false;
     return pointing;
 }
 
