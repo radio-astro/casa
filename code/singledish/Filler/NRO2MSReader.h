@@ -10,7 +10,7 @@
 
 #define STRING2CHAR(s) const_cast<char *>((s).c_str())
 
-#include <measures/Measures/Stokes.h>
+#include <casacore/measures/Measures/Stokes.h>
 
 #include <singledish/Filler/ReaderInterface.h>
 #include <singledish/Filler/NROData.h>

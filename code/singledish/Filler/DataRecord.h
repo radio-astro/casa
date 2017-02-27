@@ -16,7 +16,7 @@
 #include <casacore/casa/BasicSL/String.h>
 #include <casacore/casa/Arrays/Matrix.h>
 #include <casacore/casa/Arrays/Vector.h>
-#include <measures/Measures/Stokes.h>
+#include <casacore/measures/Measures/Stokes.h>
 
 namespace {
 template<class T>

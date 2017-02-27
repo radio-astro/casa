@@ -28,7 +28,7 @@
 #include <casacore/casa/Utilities/Regex.h>
 #include <casacore/casa/Utilities/Sort.h>
 
-#include<casacore/measures/Measures/Stokes.h>
+#include <casacore/measures/Measures/Stokes.h>
 
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <casacore/ms/MeasurementSets/MSDataDescColumns.h>

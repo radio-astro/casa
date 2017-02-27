@@ -92,7 +92,7 @@ struct SpectralWindowRecord {
 
     columns.numChan().put(spw_id, num_chan);
     columns.measFreqRef().put(spw_id, meas_freq_ref);
-    casacore::Double tot_bw = num_chan * abs(increment);
+    casacore::Double tot_bw = num_chan * fabs(increment);
     columns.totalBandwidth().put(spw_id, tot_bw);
     casacore::Double ref_frequency = refval - refpix * increment;
     columns.refFrequency().put(spw_id, ref_frequency);

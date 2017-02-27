@@ -24,7 +24,7 @@
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/measures/Measures/MDirection.h>
 #include <casacore/tables/Tables/TableRecord.h>
-#include <measures/Measures/Stokes.h>
+#include <casacore/measures/Measures/Stokes.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
