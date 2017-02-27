@@ -84,6 +84,21 @@ SPIIF StatImageCreator::compute() {
     // subimage of the lower left corner of the grid,
     // ie they are the pixel location of the grid point
     // with the smallest non-negative x and y values
+    if (xanchor < 0 || yanchor < 0) {
+        // ugh, mod of a negative number in C++ doesn't do what I want it to,
+        // need to make xanchor and yanchor positive the hard way. There
+        // must be a better way
+        uInt f = 1;
+        while (xanchor < 0) {
+            xanchor += f*_grid.first;
+            f *= 10;
+        }
+        f = 1;
+        while (yanchor < 0) {
+            yanchor += f*_grid.second;
+            f *= 10;
+        }
+    }
     Int xstart = xanchor % _grid.first;
     Int ystart = yanchor % _grid.second;
     if (xstart < 0) {
