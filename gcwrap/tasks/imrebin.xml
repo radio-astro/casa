@@ -49,7 +49,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Drop degenerate axes?</description>
             <value>False</value>
         </param>
-        <param type="bool" direction="in" name="overwrite" subparam="true">
+        <param type="bool" direction="in" name="overwrite">
             <description>Overwrite the output if it exists? Default False</description>
             <value>False</value>
         </param>
@@ -63,13 +63,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>True</value>
         </param>
         <constraints>
-            <when param="outfile">
-                <notequals type="string" value="">
-                    <default param="overwrite">
-                        <value>False</value>
-                    </default>
-                </notequals>
-            </when>
             <when param="mask">
                 <notequals type="string" value="">
                    <default param="stretch"><value type="bool">False</value></default>
