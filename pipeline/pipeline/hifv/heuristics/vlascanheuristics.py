@@ -1106,7 +1106,7 @@ class VLAScanHeuristics(object):
                     buildSelectionString(msmd.fieldsforintent("CALIBRATE_FLUX*"))
 
             if (self.flux_field_select_string == ''):
-                raise Exception("No flux density calibration fields found")
+                LOG.warn("No flux density calibration fields found")
 
             # Bandpass Cal Intent
             self.bandpass_scan_select_string = \
@@ -1145,7 +1145,7 @@ class VLAScanHeuristics(object):
                 buildSelectionString(msmd.fieldsforintent("CALIBRATE_PHASE*"))
             if (self.phase_scan_select_string == '' or
                 self.phase_field_select_string == ''):
-                raise Exception("No gain calibration scans found")
+                LOG.warn("No gain calibration scans found")
 
             # Find all calibrator scans and fields
             self.calibrator_scan_select_string = \
