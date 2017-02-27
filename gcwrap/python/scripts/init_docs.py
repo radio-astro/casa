@@ -18,6 +18,7 @@ class __doc(object):
     def __call__( self, sec=None ):
         "open browser with documentation, try \"doc('toc')\""
 
+        ## for now, access to the plone site is turned off
         remote=False
         def show_toc( toc_dict ):
             width = max(len(key) for key in toc_dict.keys( ))+3
