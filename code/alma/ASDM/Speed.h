@@ -22,7 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File Speed.h
+ * File Speed.h
  */
 #ifndef Speed_CLASS
 #define Speed_CLASS
@@ -115,7 +115,7 @@ public:
 	 */
 	static double fromString(const string& s);
 	/**
-	 * casacore::Conversion into string.
+	 * Conversion into string.
 	 * The resulting string contains the representation of the value of this Speed.
 	 *
 	 * @return string
@@ -277,11 +277,11 @@ public:
 	 */
 	bool isZero() const;
 	/**
-	 * casacore::Unary operator. Opposite.
+	 * Unary operator. Opposite.
 	 */
 	Speed operator - () const;
 	/**
-	 * casacore::Unary operator. casacore::Unary plus.
+	 * Unary operator. Unary plus.
 	 */
 	Speed operator + () const;
 	/**
@@ -294,7 +294,7 @@ public:
 	 */
 	string toStringI() const;
 	/**
-	 * casacore::Conversion operator.
+	 * Conversion operator.
 	 * Converts into a string.
 	 */
 	operator string () const;
@@ -414,7 +414,7 @@ inline Speed Speed::operator + () const {
     tmp.value = value;
 	return tmp;
 }
-// casacore::Conversion functions
+// Conversion functions
 inline Speed::operator string () const {
 	return toString();
 }

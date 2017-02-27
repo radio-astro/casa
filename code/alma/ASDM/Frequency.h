@@ -22,7 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File Frequency.h
+ * File Frequency.h
  */
 #ifndef Frequency_CLASS
 #define Frequency_CLASS
@@ -115,7 +115,7 @@ public:
 	 */
 	static double fromString(const string& s);
 	/**
-	 * casacore::Conversion into string.
+	 * Conversion into string.
 	 * The resulting string contains the representation of the value of this Frequency.
 	 *
 	 * @return string
@@ -277,11 +277,11 @@ public:
 	 */
 	bool isZero() const;
 	/**
-	 * casacore::Unary operator. Opposite.
+	 * Unary operator. Opposite.
 	 */
 	Frequency operator - () const;
 	/**
-	 * casacore::Unary operator. casacore::Unary plus.
+	 * Unary operator. Unary plus.
 	 */
 	Frequency operator + () const;
 	/**
@@ -294,7 +294,7 @@ public:
 	 */
 	string toStringI() const;
 	/**
-	 * casacore::Conversion operator.
+	 * Conversion operator.
 	 * Converts into a string.
 	 */
 	operator string () const;
@@ -414,7 +414,7 @@ inline Frequency Frequency::operator + () const {
     tmp.value = value;
 	return tmp;
 }
-// casacore::Conversion functions
+// Conversion functions
 inline Frequency::operator string () const {
 	return toString();
 }

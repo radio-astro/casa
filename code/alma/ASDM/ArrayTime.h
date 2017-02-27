@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File ArrayTime.h
+ * File ArrayTime.h
  */
 
 #ifndef ArrayTime_CLASS
@@ -59,18 +59,18 @@ namespace asdm {
  * <p>
  * Internally the time is kept in units of nanoseconds (10<sup>-9</sup> seconds).
  * The base time is 17 November 1858 00:00:00 UTC, and the maximum time is to the
- * year 2151 (2151-02-25T23:47:16.854775807).  This differs from the OMG casacore::Time service 
+ * year 2151 (2151-02-25T23:47:16.854775807).  This differs from the OMG Time service 
  * The OMG time is in units of 100 nanoseconds using the beginning of the Gregorian
  * calandar,15 October 1582 00:00:00 UTC, as the base time.
  * The reason for this increased accuracy is that the Control system is capable of 
  * measuring time to an accuracy of 40 nanoseconds.  Therefore, by adhering to the 
- * representation of time used in the OMG casacore::Time Serivce we would be losing precision.
+ * representation of time used in the OMG Time Serivce we would be losing precision.
  * <p>
- * The casacore::Time class is an extension of the Interval class, since all times
+ * The Time class is an extension of the Interval class, since all times
  * are intervals since 17 November 1858 00:00:00 UTC.
  * <p>
  * All times in this class are assumed to be International 
- * Atomic casacore::Time (TAI).  A specific TAI time differs from the corresponding 
+ * Atomic Time (TAI).  A specific TAI time differs from the corresponding 
  * UTC time by an offset that is an integral number of seconds.  
  * <p>
  * In the methods that give various quantities associated with

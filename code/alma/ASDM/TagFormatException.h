@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File TagFormatException.h
+ * File TagFormatException.h
  */
 
 #ifndef TagFormatException_CLASS
@@ -33,7 +33,7 @@ using std::string;
 namespace asdm {
 	
 /**
- * The TagFormatException occurs when a Tag is built from a casacore::String which does not represent
+ * The TagFormatException occurs when a Tag is built from a String which does not represent
  * correctly the content of a Tag.
  *  
  * @author caillat

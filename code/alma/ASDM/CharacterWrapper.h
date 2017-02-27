@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File Character.h
+ * File Character.h
  */
 # ifndef Character_CLASS
 # define Character_CLASS

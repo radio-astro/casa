@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File Float.h
+ * File Float.h
  */
 # ifndef Float_CLASS
 # define Float_CLASS

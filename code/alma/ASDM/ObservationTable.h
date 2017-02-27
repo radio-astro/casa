@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * casacore::File ObservationTable.h
+ * File ObservationTable.h
  */
  
 #ifndef ObservationTable_CLASS
@@ -192,7 +192,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// casacore::Conversion Methods
+	// Conversion Methods
 	/**
 	 * Convert this table into a ObservationTableIDL CORBA structure.
 	 *

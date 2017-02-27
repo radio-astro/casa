@@ -474,8 +474,8 @@ namespace asdmbinaries {
      * Writes water vapour radiometer (WVR) data in a  MIME message conform 
      * with the BDF V2 format.
      *
-     * @param execBlockUID the archive uid of the exec casacore::Block,
-     * @param execBlockNum the index of the exec casacore::Block,
+     * @param execBlockUID the archive uid of the exec Block,
+     * @param execBlockNum the index of the exec Block,
      * @param scanNum the number of the scan,
      * @param subscanNum the number of the subscan,
      * @param numTimes the number of time stamps (i.e. size along the TIM axis), 

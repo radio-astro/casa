@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File Double.h
+ * File Double.h
  */
 # ifndef Double_CLASS
 # define Double_CLASS

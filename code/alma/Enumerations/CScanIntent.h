@@ -3,7 +3,7 @@
 #define CScanIntent_H
 
 /*
- * ALMA - Atacama Large Millimeter casacore::Array
+ * ALMA - Atacama Large Millimeter Array
  * (c) European Southern Observatory, 2002
  * (c) Associated Universities Inc., 2002
  * Copyright by ESO (in the framework of the ALMA collaboration),
@@ -33,7 +33,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * casacore::File CScanIntent.h
+ * File CScanIntent.h
  */
 
 #ifndef __cplusplus
@@ -85,13 +85,13 @@ namespace ScanIntentMod
      ,
     CALIBRATE_SIDEBAND_RATIO /*!< measure relative gains of sidebands. */
      ,
-    CALIBRATE_WVR /*!< casacore::Data from the water vapor radiometers (and correlation data) are used to derive their calibration parameters. */
+    CALIBRATE_WVR /*!< Data from the water vapor radiometers (and correlation data) are used to derive their calibration parameters. */
      ,
     DO_SKYDIP /*!< Skydip calibration scan */
      ,
     MAP_ANTENNA_SURFACE /*!< Holography calibration scan */
      ,
-    MAP_PRIMARY_BEAM /*!< casacore::Data on a celestial calibration source are used to derive a map of the primary beam. */
+    MAP_PRIMARY_BEAM /*!< Data on a celestial calibration source are used to derive a map of the primary beam. */
      ,
     OBSERVE_TARGET /*!< Target source scan */
      ,

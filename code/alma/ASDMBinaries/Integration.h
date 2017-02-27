@@ -508,7 +508,7 @@ namespace sdmbin {
     using the operator + then the destructor delete this allocated memory. More
     generally, any data imported by the client will be deleted by this destructor. 
 
-    casacore::List of methods which create DataDump objects by allocating memory to floatData:
+    List of methods which create DataDump objects by allocating memory to floatData:
     - copy constructor
     - assignement operator =
     - operators -, -, * and /

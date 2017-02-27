@@ -30,7 +30,7 @@
  * //  ---------------------------------------------------------  //
  * /////////////////////////////////////////////////////////////////
  *
- * casacore::File CEnumerationParser.h
+ * File CEnumerationParser.h
  */
  #include <string>
  #include <ConversionException.h>

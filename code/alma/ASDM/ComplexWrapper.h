@@ -21,7 +21,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307  USA
  *
- * casacore::File ComplexWrapper.h
+ * File ComplexWrapper.h
  */
 
 #ifndef Complex_CLASS
@@ -53,7 +53,7 @@ using asdm::EndianIStream;
 namespace asdm {
 
 /**
- * The casacore::Complex class extends the casacore::Complex class in the C++ standard library.
+ * The Complex class extends the Complex class in the C++ standard library.
  * 
  * @version 1.00 Jan. 7, 2005
  * @author Allen Farris

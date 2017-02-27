@@ -28,7 +28,7 @@
  * | If you do, all changes will be lost when the file is re-generated. |
  *  --------------------------------------------------------------------
  *
- * casacore::File SpectralWindowTable.h
+ * File SpectralWindowTable.h
  */
  
 #ifndef SpectralWindowTable_CLASS
@@ -259,7 +259,7 @@ class SpectralWindowRow;
  * <TD> chanWidthArray </TD> 
  * <TD> vector<Frequency > </TD>
  * <TD>  numChan  </TD>
- * <TD>&nbsp; casacore::Array of channel widths </TD>
+ * <TD>&nbsp; Array of channel widths </TD>
  * </TR>
 	
  * <TR>
@@ -480,7 +480,7 @@ public:
 	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
-	// casacore::Conversion Methods
+	// Conversion Methods
 	/**
 	 * Convert this table into a SpectralWindowTableIDL CORBA structure.
 	 *
