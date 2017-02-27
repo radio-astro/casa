@@ -15,7 +15,10 @@ class __doc(object):
         self.remote_toc_url = 'https://casa.nrao.edu/PloneResource/stable/toc.xml'
         self.local_toc_url = None if casa['dirs']['doc'] is None else casa['dirs']['doc'] + '/casa.nrao.edu/casadocs/toc.xml'
 
-    def __call__( self, sec=None, remote=False ):
+    def __call__( self, sec=None ):
+        "open browser with documentation, try \"doc('toc')\""
+
+        remote=False
         def show_toc( toc_dict ):
             width = max(len(key) for key in toc_dict.keys( ))+3
             for i in sorted(toc_dict.iterkeys( )):
