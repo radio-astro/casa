@@ -39,6 +39,12 @@ def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation
     tel = tb.getcol('TELESCOPE_NAME')[0]
     tb.close()
 
+    tb.open(vis+'/SPECTRAL_WINDOW')
+    mfreqref = tb.getcol('MEAS_FREQ_REF')[0]
+    tb.close()
+    if mfreqref == 64:
+       print 'MAKEPB : This function is using old imager tool, Undefined frame may not be handled properly.'
+
     print 'MAKEPB : Making PB for ', tel
 
     ia.open(imtemplate)
@@ -69,9 +75,17 @@ def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation
     im.makeimage(type='pb',image=outimage+'.tmp')
     im.close()
 
-    print 'MAKEPB : Regrid to desired coordinate system'
+    if mfreqref == 64: # skip this step if the frame is 'Undefined'
+ 
+        shutil.copytree(outimage+'.tmp', outimage)
+   
+    else:
     
-    imregrid(imagename=outimage+'.tmp', template=imtemplate,output=outimage,overwrite=True,asvelocity=False)
+        print 'MAKEPB : Regrid to desired coordinate system'
+    
+        imregrid(imagename=outimage+'.tmp', template=imtemplate,output=outimage,overwrite=True,asvelocity=False)
+
+    
 
     shutil.rmtree(outimage+'.tmp')
 
