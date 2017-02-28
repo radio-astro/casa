@@ -1,6 +1,6 @@
 import os
 from taskinit import *
-
+im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms=gentools(['im','cb','ms','tb','me','ia','po','sm','cl','cs','rg','sl','dc','vp','msmd','fi','fn','imd','sdms'])
 def ft(vis=None,field=None,spw=None,model=None,nterms=None,reffreq=None,complist=None,incremental=None, usescratch=None):
        """ Insert a source model into the MODEL_DATA column of a visibility set:
 
