@@ -1265,7 +1265,7 @@ using namespace casa::refim;
 	}
 	
       }
-      out.putStorage(intPtr, isCopy);
+      outMat.putStorage(intPtr, isCopy);
       leReal.putStorage(realptr, leRealCopy);
       leImag.putStorage(imagptr, leImagCopy);
       inIt.next();
