@@ -253,14 +253,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  Double lowfreq=freq.getValue("Hz");
     	  Quantity::read(freq, selpars.freqend);
     	  Double topfreq=freq.getValue("Hz");
-    	  //cerr << "lowFreq "<< lowfreq << " topfreq " << topfreq << endl;
+    	 
 	  ////Work aroun CAS-8829
 	  if(vi_p) 
 	    VisBufferUtil::getFreqRangeFromRange(lowfreq, topfreq,  selpars.freqframe, lowfreq,  topfreq, *vi_p, freqFrame);
+	  //cerr << "lowFreq "<< lowfreq << " topfreq " << topfreq << endl;
 	  vi::FrequencySelectionUsingFrame channelSelector((vi_p ? freqFrame :selpars.freqframe));
     	  for(uInt k=0; k < nSelections; ++k){
-            lowfreq=freqList(k,1)-freqList(k,3)/2.0;
-            topfreq=freqList(k, 2)+freqList(k,3)/2.0;
+	    //cerr << "lowFreq "<< lowfreq << " topfreq " << topfreq << endl;
             channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
           }
     	  fselections_p.add(channelSelector);
