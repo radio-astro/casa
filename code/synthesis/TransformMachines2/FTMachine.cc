@@ -2037,10 +2037,10 @@ using namespace casa::vi;
 	Matrix<Float> sumWeightStokes( (imstore->sumwt())->shape()[2], (imstore->sumwt())->shape()[3]   );
 	StokesImageUtil::ToStokesSumWt( sumWeightStokes, sumWeights );
 
-	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
-		      ((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
+	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeightStokes.shape()[0] ) && 
+		      ((imstore->sumwt())->shape()[3] == sumWeightStokes.shape()[1] ) , AipsError );
 
-	(imstore->sumwt())->put( sumWeights.reform((imstore->sumwt())->shape()) );
+	(imstore->sumwt())->put( sumWeightStokes.reform((imstore->sumwt())->shape()) );
 	
       }
     //------------------------------------------------------------------------------------
