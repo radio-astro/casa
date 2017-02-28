@@ -21,15 +21,15 @@ Unit tests for task ia.makestatimage().
 
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/ia_makestatimage/'
 
-input0 = datapath + "/100x100x2.im"
-ref0 = datapath + "/ref0.im"
-ref1 = datapath + "/ref1.im"
-ref2 = datapath + "/ref2.im"
-ref3 = datapath + "/ref3.im"
-ref4 = datapath + "/ref4.im"
-ref5 = datapath + "/ref5.im"
-ref6 = datapath + "/ref6.im"
-ref7 = datapath + "/ref7.im"
+input0 = datapath + "100x100x2.im"
+ref0 = datapath + "ref0.im"
+ref1 = datapath + "ref1.im"
+ref2 = datapath + "ref2.im"
+ref3 = datapath + "ref3.im"
+ref4 = datapath + "ref4.im"
+ref5 = datapath + "ref5.im"
+ref6 = datapath + "ref6.im"
+ref7 = datapath + "ref7.im"
 
 class ia_makestatimage_test(unittest.TestCase):
 
@@ -152,17 +152,42 @@ class ia_makestatimage_test(unittest.TestCase):
         for anchor in [[2,2], [17,11]]:
             zz = self._myia.makestatimage(
                 "", grid=grid, xlength="4pix", ylength="4pix", stattype="npts",
-                interp="cub",anchor=anchor, statalg="cl"
+                interp="cub", anchor=anchor, statalg="cl"
             )
             self._myia.open(ref4)
-            self._compare(self._myia.getchunk(), zz.getchunk(), "test001 compare")
+            self._compare(self._myia.getchunk(), zz.getchunk(), "test005 compare")
             zz = self._myia.makestatimage(
                 "", grid=grid, xlength="4pix", ylength="4pix", stattype="sigma",
-                interp="cub",anchor=anchor, statalg="cl"
+                interp="cub", anchor=anchor, statalg="cl"
             )
             self._myia.open(ref5)
         self._myia.done()
         zz.done()
+
+    def test006(self):
+        """Test that regions work as expected"""
+        self._myia.open(input0)
+        myrg = rgtool()
+        reg = myrg.box([5,5,0],[85,85,1])
+        anchor = [1,1]
+        grid = [13,13]
+        length = "10.001pix"
+        zz = self._myia.makestatimage(
+            grid=grid, xlength=length, ylength=length, stattype="sigma",
+            interp="cub", anchor=anchor, statalg="cl"
+        )
+        yy = self._myia.makestatimage(
+            grid=grid, xlength=length, ylength=length, stattype="sigma",
+            interp="cub", anchor=anchor, statalg="cl", region=reg
+        )
+        self._myia.done()
+        sub0 = zz.subimage(region=myrg.box([27,27,0],[66,66,0]))
+        zz.done()
+        sub1 = yy.subimage(region=myrg.box([22,22,0],[61,61,0]))
+        yy.done()
+        self._compare(sub0.getchunk(), sub1.getchunk(), "test006 compare")
+        sub0.done()
+        sub1.done()
 
 def suite():
     return [ia_makestatimage_test]
