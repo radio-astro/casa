@@ -526,7 +526,7 @@ class StandardInputs(api.Inputs):
 
         return d
 
-    def to_casa_args(self, ignore=None):
+    def to_casa_args(self):
         """
         Express these inputs as a dictionary of CASA arguments. The values
         in the dictionary are in a format suitable for CASA and can be 
@@ -534,7 +534,7 @@ class StandardInputs(api.Inputs):
         
         :rtype: a dictionary of string/??? kw/val pairs
         """        
-        args = self._get_task_args(ignore)
+        args = self._get_task_args()
 
         # spw needs to be a string and not a number
         if 'spw' in args:
