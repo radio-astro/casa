@@ -215,7 +215,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <!-- SPW COMBINATION parameters -->
     <param type="bool" name="combinespws">
-        <description>Combine the input spws into a new output spw.</description>
+        <description>Combine the input spws into a new output spw. Only supported when the number of channels is the same for all the spw's.</description>
         <value>False</value>
     </param>
     
@@ -669,6 +669,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 --- SPW combination parameters ---
     combinespws -- Combine the input spws into a new output spw.
         default: False
+
+            NOTE: This option is only supported when the number of channels is the same for
+                  all the spws. Using this option with different numbers of channels for
+                  different spws will result in an error.
 
             NOTE: Whenever the data to be combined has different EXPOSURE values 
                   in the spectral windows, mstransform will use the WEIGHT_SPECTRUM 
