@@ -215,7 +215,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <!-- SPW COMBINATION parameters -->
     <param type="bool" name="combinespws">
-        <description>Combine the input spws into a new output spw. Only supported when the number of channels is the same for all the spw's.</description>
+        <description>Combine the input spw\'s into a new output spw. Only supported when the number of channels is the same for all the spw\'s.</description>
         <value>False</value>
     </param>
     
