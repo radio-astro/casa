@@ -33,10 +33,12 @@ class RefAntInputs(vdp.StandardInputs):
         self.vis = vis
         self.output_dir = output_dir
 
+        # data selection parameters
         self.field = field
         self.spw = spw
         self.intent = intent
 
+        # override and heuristic parameters
         self.hm_refant = hm_refant
         self.refant = refant
         self.geometry = geometry
