@@ -52,7 +52,7 @@ import pipeline.infrastructure.imagelibrary as imagelibrary
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
 
-from . import manifest
+from .. common  import manifest
 
 StdFileProducts = collections.namedtuple('StdFileProducts', 'ppr_file weblog_file casa_commands_file casa_pipescript casa_restore_script')
 
