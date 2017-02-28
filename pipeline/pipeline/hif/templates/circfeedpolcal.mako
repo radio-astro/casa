@@ -5,7 +5,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<%block name="title">Circfeedpolcal</%block>
+<%block name="title">Circular Feed Polarization Calibration</%block>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
