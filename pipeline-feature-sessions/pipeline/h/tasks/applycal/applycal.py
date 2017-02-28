@@ -8,7 +8,6 @@ from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
 
-#from pipeline.hif.heuristics import fieldnames
 from pipeline.h.heuristics import fieldnames
 
 LOG = infrastructure.get_logger(__name__)
@@ -49,17 +48,6 @@ class ApplycalInputs(basetask.StandardInputs,
         self._antenna = value
 
     @property
-    def calstate(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('calstate')
-        
-        # The default calstate property implementation merges states that are 
-        # identical apart from calwt. As applycal is a task that can handle
-        # calwt, request that jobs not be merged when calwt differs by supplying
-        # a null 'ignore' argument - or as in this case - omitting it.   
-        return self.context.callibrary.get_calstate(self.calto)
-
-    @property
     def flagbackup(self):
         return self._flagbackup
 
@@ -73,20 +61,20 @@ class ApplycalInputs(basetask.StandardInputs,
             value = False
         self._flagbackup = value
 
-    @property
-    def calwt(self):
-        return self._calwt
-
-    @calwt.setter
-    def calwt(self, value):
-        if value is None:
-            value = True
-        elif value:
-            value = True
-        else:
-            value = False
-        self._calwt = value
-
+    # @property
+    # def calwt(self):
+    #     return self._calwt
+    #
+    # @calwt.setter
+    # def calwt(self, value):
+    #     if value is None:
+    #         value = True
+    #     elif value:
+    #         value = True
+    #     else:
+    #         value = False
+    #     self._calwt = value
+    #
     @property
     def field(self):
         if not callable(self._field):
@@ -175,6 +163,7 @@ class ApplycalInputs(basetask.StandardInputs,
             value = False
         self._flagdetailedsum = value
 
+
 class ApplycalResults(basetask.Results):
     """
     ApplycalResults is the results class for the pipeline Applycal task.     
@@ -251,7 +240,11 @@ class Applycal(basetask.StandardTaskTemplate):
         # dictionary of CalTo:CalFroms gives us which calibrations should be
         # applied and how.
         calto = callibrary.get_calto_from_inputs(inputs)
-        calstate = inputs.context.callibrary.get_calstate(calto, ignore=('calwt',))
+
+        # As Applycal is a task that can handle calwt, request that
+        # jobs not be merged when calwt differs by supplying a null
+        # 'ignore' argument - or as in this case - omitting it.
+        calstate = inputs.context.callibrary.get_calstate(calto)
         merged = calstate.merged()
 
         # run a flagdata job to find the flagged state before applycal
