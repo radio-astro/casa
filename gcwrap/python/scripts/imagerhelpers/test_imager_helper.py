@@ -81,6 +81,16 @@ class TestHelpers():
           else:
                return apos['value']['value']
 
+     def get_pixmask(self,imname,pos):
+          """Get Image Mask val"""
+          _ia.open(imname)
+          apos = _ia.pixelvalue(pos)
+          _ia.close()
+          if apos == {}:
+               return None
+          else:
+               return apos['mask']
+
      def exists(self,imname):
           """ Image exists """
           return os.path.exists(imname)
@@ -169,6 +179,7 @@ class TestHelpers():
                   imexist=None,  # list of image names
                   imexistnot=None, # list of image names
                   imval=None,  # list of tuples of (imagename,val,pos)
+                  immask=None,
                   tabcache=True
                   ):
           pstr = ""
@@ -206,6 +217,12 @@ class TestHelpers():
                     for ii in imval:
                          if type(ii)==tuple and len(ii)==3:
                               pstr += self.checkpixval(ii[0],ii[1],ii[2])
+
+          if immask != None:
+               if type(immask)==list:
+                    for ii in immask:
+                         if type(ii)==tuple and len(ii)==3:
+                              pstr += self.checkpixmask(ii[0],ii[1],ii[2])
 
           if tabcache==True:
                opentabs = tb.showcache()
@@ -312,6 +329,30 @@ class TestHelpers():
                        res = True
                
           pstr =  "[" + testname + "] " + imname + ": Value is " + str(readval) + " at " + str(thepos) + " (" + self.verdict(res) +" : should be " + str(theval) + " )"
+          print pstr
+          pstr=pstr+"\n"
+#          if res==False:
+#               self.fail(pstr)
+          return pstr
+
+     def checkpixmask(self,imname,theval=True, thepos=[0,0,0,0]):
+          testname = inspect.stack()[2][3]
+          readval = self.get_pixmask(imname,thepos)
+
+          res=True
+
+          if readval==None:
+               res=False
+          elif numpy.isnan(readval) or numpy.isinf(readval) or type(readval)!=bool:
+               res=False
+          else:
+
+              if readval == theval:
+                  res = True
+              else:
+                  res = False
+              
+          pstr =  "[" + testname + "] " + imname + ": Mask is " + str(readval) + " at " + str(thepos) + " (" + self.verdict(res) +" : should be " + str(theval) + " )"
           print pstr
           pstr=pstr+"\n"
 #          if res==False:
