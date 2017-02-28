@@ -37,10 +37,14 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-#import pipeline.h.tasks.applycal.applycal as applycal
 from .. import applycal
-#import pipeline.h.tasks.importdata.importdata as importdata
 from .. import importdata
+
+# Note:
+#    manifest.py should probably be moved to the common
+#    subdirectory once the workflow is proofed
+#from pipeline.h.tasks.exportdata import manifest
+from .. common import manifest
 
 from pipeline.infrastructure import casa_tasks
 
@@ -297,10 +301,18 @@ class RestoreData(basetask.StandardTaskTemplate):
         # Download ASDMs from the archive or products_dir to rawdata_dir.
         #   TBD: Currently assumed done somehow
 
-        # Copy the required calibration products from someplace on disK
-        #   default ../products to ../rawdata
+        # Copy the required calibration products from "someplace" on disk
+        #   (default ../products) to ../rawdata. The pipeline manifest file
+        #   if present is used to determine which files to copy. Otherwise   
+        #   a file naming scheme is used. The latter is deprecated as it
+        #   requires the exportdata / restoredata tasks to be synchronized
+        #   but it is maintained for testing purposes.
         if inputs.copytoraw:
-            self._do_copytoraw()
+            self._do_copy_manifest_toraw ('*pipeline_manifest.xml')
+            pipemanifest = self._do_get_manifest ('*pipeline_manifest.xml') 
+            self._do_copytoraw(pipemanifest)
+        else:
+            pipemanifest = self.get_manifest ('*pipeline_manifest.xml') 
 
         # Convert ASDMS assumed to be on disk in rawdata_dir. After this step
         # has been completed the MS and MS.flagversions directories will exist
@@ -311,7 +323,7 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Restore final MS.flagversions and flags
         flag_version_name = 'Pipeline_Final'
-        flag_version_list = self._do_restore_flags(\
+        flag_version_list = self._do_restore_flags(pipemanifest,
             flag_version_name=flag_version_name)
 
         # Get the session list and the visibility files associated with
@@ -319,11 +331,11 @@ class RestoreData(basetask.StandardTaskTemplate):
         session_names, session_vislists = self._get_sessions()
 
         # Restore calibration tables
-        self._do_restore_caltables(session_names=session_names,
+        self._do_restore_caltables(pipemanifest, session_names=session_names,
             session_vislists=session_vislists)
 
         # Import calibration apply lists
-        self._do_restore_calstate()
+        self._do_restore_calstate(pipemanifest)
 
         # Apply the calibrations.
         apply_results = self._do_applycal()
@@ -343,14 +355,58 @@ class RestoreData(basetask.StandardTaskTemplate):
         """
         return results
 
-    def _do_copytoraw (self):
+    def _do_copy_manifest_toraw (self, template):
+
+        """
+        Get the pipeline manifest
+        """
 
         inputs = self.inputs
 
+        # Download the pipeline manifest file from the archive or
+        #     products_dir to rawdata_dir
+        manifestfiles = glob.glob(os.path.join(inputs.products_dir, template))
+        for manifestfile in manifestfiles:
+            LOG.info('Copying %s to %s' % (manifestfile, inputs.rawdata_dir))
+            shutil.copy(manifestfile, os.path.join(inputs.rawdata_dir,
+                os.path.basename(manifestfile)))
+
+    def _do_get_manifest (self, template):
+
+        """
+        Get the pipeline manifest object
+        """
+
+        inputs = self.inputs
+
+        # Get the list of files in the rawdata directory
+        manifestfiles = glob.glob(os.path.join(inputs.rawdata_dir, template))
+
+        # Parse manifest file if it exists.
+        if len(manifestfiles) > 0:
+            # Parse manifest file
+            #    There should be only one of these so pick one
+            pipemanifest = manifest.PipelineManifest('')
+            pipemanifest.import_xml(manifestfiles[0])
+        else:
+            pipemanifest = None
+
+        return pipemanifest
+
+    def _do_copytoraw (self, pipemanifest):
+
+        inputs = self.inputs
+
+        ouss = pipemanifest.get_ous()
+
         # Download flag versions
         #   Download from the archive or products_dir to rawdata_dir.
-        inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
-            '*.flagversions.tgz'))
+        if pipemanifest is not None:
+            inflagfiles = [os.path.join(inputs.products_dir, flagfile) for flagkey, \
+                flagfile in pipemanifest.get_final_flagversions(ouss).iteritems()]
+        else:
+            inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
+                '*.flagversions.tgz'))
         for flagfile in inflagfiles:
             LOG.info('Copying %s to %s' % (flagfile, inputs.rawdata_dir))
             shutil.copy(flagfile, os.path.join(inputs.rawdata_dir,
@@ -358,8 +414,12 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Download calibration tables
         #   Download calibration files from the archive or products_dir to
-        incaltables = glob.glob(os.path.join(inputs.products_dir, \
-            '*.caltables.tgz'))
+        if pipemanifest is not None:
+            incaltables = [os.path.join(inputs.products_dir, caltable) for caltablekey, \
+                caltable in pipemanifest.get_caltables(ouss).iteritems()]
+        else:
+            incaltables = glob.glob(os.path.join(inputs.products_dir, \
+                '*.caltables.tgz'))
         for caltable in incaltables:
             LOG.info('Copying %s to %s' % (caltable, inputs.rawdata_dir))
             shutil.copy(caltable, os.path.join(inputs.rawdata_dir,
@@ -368,8 +428,12 @@ class RestoreData(basetask.StandardTaskTemplate):
         # Download calibration apply lists
         #   Download from the archive or products_dir to rawdata_dir.
         #   TBD: Currently assumed done somehow
-        inapplycals = glob.glob(os.path.join(inputs.products_dir, \
-            '*.calapply.txt'))
+        if pipemanifest is not None:
+            inapplycals = [os.path.join(inputs.products_dir, applycals) for applycalskey, \
+                applycals in pipemanifest.get_applycals(ouss).iteritems()]
+        else:
+            inapplycals = glob.glob(os.path.join(inputs.products_dir, \
+                '*.calapply.txt'))
         for applycal in inapplycals:
             LOG.info('Copying %s to %s' % (applycal, inputs.rawdata_dir))
             shutil.copy(applycal, os.path.join(inputs.rawdata_dir,
@@ -386,9 +450,13 @@ class RestoreData(basetask.StandardTaskTemplate):
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
 
-    def  _do_restore_flags(self, flag_version_name='Pipeline_Final'):
+    def  _do_restore_flags(self, pipemanifest, flag_version_name='Pipeline_Final'):
         inputs = self.inputs
         flagversionlist = []
+        if pipemanifest is not None:
+            ouss = pipemanifest.get_ous()
+        else:
+            ouss = None
 
         # Loop over MS list in working directory
         for ms in inputs.context.observing_run.measurement_sets:
@@ -402,8 +470,12 @@ class RestoreData(basetask.StandardTaskTemplate):
                     shutil.rmtree(flagversionpath)
 
             # Untar MS.flagversions file in rawdata_dir to output_dir
-            tarfilename = os.path.join(inputs.rawdata_dir,
-                ms.basename + '.flagversions.tgz')
+            if ouss is not None:
+                tarfilename = os.path.join(inputs.rawdata_dir,
+                    pipemanifest.get_final_flagversions(ouss)[ms.basename])
+            else:
+                tarfilename = os.path.join(inputs.rawdata_dir,
+                    ms.basename + '.flagversions.tgz')
             LOG.info('Extracting %s' % flagversion)
             LOG.info('    From %s' % tarfilename)
             LOG.info('    Into %s' % inputs.output_dir)
@@ -424,14 +496,22 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         return flagversionlist
 
-    def _do_restore_calstate(self):
+    def _do_restore_calstate(self, pipemanifest):
         inputs = self.inputs
+        if pipemanifest is not None:
+            ouss = pipemanifest.get_ous()
+        else:
+            ouss = None
 
         # Loop over MS list in working directory
         append = False
         for ms in inputs.context.observing_run.measurement_sets:
-            applyfile_name = os.path.join(inputs.rawdata_dir,
-                                          ms.basename + '.calapply.txt')
+            if ouss is not None:
+                applyfile_name = os.path.join(inputs.rawdata_dir,
+                    pipemanifest.get_applycals(ouss)[ms.basename])
+            else:
+                applyfile_name = os.path.join(inputs.rawdata_dir,
+                    ms.basename + '.calapply.txt')
             LOG.info('Restoring calibration state for %s from %s'
                      '' % (ms.basename, applyfile_name))
 
@@ -472,8 +552,12 @@ class RestoreData(basetask.StandardTaskTemplate):
         with open(applyfile, 'r') as f:
             return unix_path.sub(repfn, f.read())
 
-    def _do_restore_caltables(self, session_names=None, session_vislists=None):
+    def _do_restore_caltables(self, pipemanifest, session_names=None, session_vislists=None):
         inputs = self.inputs
+        if pipemanifest is not None:
+            ouss = pipemanifest.get_ous()
+        else:
+            ouss = None
 
         # Determine the OUS uid
         ps = inputs.context.project_structure
@@ -492,12 +576,15 @@ class RestoreData(basetask.StandardTaskTemplate):
             vislist = session_vislists[index]
 
             # Open the tarfile and get the names
-            if ousid == '':
+            if ouss is not None:
+                tarfilename = os.path.join(inputs.rawdata_dir,
+                    pipemanifest.get_caltables(ouss)[session])
+            elif ousid == '':
                 tarfilename = glob.glob(os.path.join(inputs.rawdata_dir, '*' + session +
                     '.caltables.tgz'))[0]
             else:
                 tarfilename = os.path.join(inputs.rawdata_dir,
-                                           ousid + session + '.caltables.tgz')
+                    ousid + session + '.caltables.tgz')
 
             with tarfile.open(tarfilename, 'r:gz') as tar:
                 tarmembers = tar.getmembers()
