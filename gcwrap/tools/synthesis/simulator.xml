@@ -1247,8 +1247,12 @@ to use.
   <description>
     Add errors specified by the set* functions (such as noise, gains,
     polarization leakage, bandpass, etc) to the visibility data.  The
-    errors are applied to the MODEL_DATA, and written to the DATA and
-    CORRECTED_DATA columns.  Note that corrupt handles only
+    errors are applied to the DATA and CORRECTED_DATA columns.
+<!--
+MODEL_DATA, and written to the DATA and
+    CORRECTED_DATA columns.  
+-->
+    Note that corrupt handles only
     visibility-plane effects, not image-plane effects such as pointing
     errors and voltage patterns, which get applied in predict.  Note, the
     function applies errors to both cross- and auto-correlation data; The
