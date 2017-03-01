@@ -29,8 +29,8 @@ class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None, datacolumn=None,
                  intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
-                 gridder=None, deconvolver=None,
-                 nterms=None,
+                 gridder=None, deconvolver=None, uvtaper=None,
+                 nterms=None, cycleniter=None, cyclefactor=None, scales=None,
                  outframe=None, imsize=None, cell=None,
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
                  weighting=None,
@@ -40,7 +40,11 @@ class CleanBaseInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
     deconvolver = basetask.property_with_default('deconvolver', '')
+    uvtaper = basetask.property_with_default('uvtaper', None)
     nterms = basetask.property_with_default('nterms', None)
+    cycleniter = basetask.property_with_default('cycleniter', None)
+    cyclefactor = basetask.property_with_default('cyclefactor', None)
+    scales = basetask.property_with_default('scales', None)
     field = basetask.property_with_default('field', '')
     gridder = basetask.property_with_default('gridder', '')
     imagename = basetask.property_with_default('imagename', '')

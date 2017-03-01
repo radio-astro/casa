@@ -155,7 +155,7 @@
                 <value></value>
             </param>
 
-            <param type="string" name="taper">
+            <param type="string" name="uvtaper">
                 <description>Used to set a uv-taper during clean.</description>
                 <value></value>
             </param>
@@ -327,7 +327,7 @@
             default '' Starts at first input channel of the spw.
             example: '22.3GHz'
 
-            taper -- Used to set a uv-taper during clean. At mid-declinations and
+            uvtaper -- Used to set a uv-taper during clean. At mid-declinations and
             reasonable elevations, not required for the full-resolution images
             and in the QLIP. Needed when making the tapered Images for other BDPs
             (SEIP, CIP). May be useful in QLIP to control PSF at low elevations
