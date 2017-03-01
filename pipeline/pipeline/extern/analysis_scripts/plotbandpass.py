@@ -1938,7 +1938,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             if (showimage):
                 returnValue = au.getLOs(msName, verbose=False)
                 if (returnValue == []):
-                    if (lo1 == None):
+                    if (lo1 is None):
                         print "Since you do not have the ASDM_RECEIVER table, you must specify the LO1 frequency with lo1=."
                         return(vm)
                     LO1 = lo1
@@ -1954,7 +1954,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
 #                    print "LOs[spws.index(originalSpw[ispw])] = ", LOs[spws.index(originalSpw[ispw])]
                     LO1 = LOs[spws.index(originalSpw[ispw])][0] * 1e-9
                     print "Found LO1 = %.6f GHz" % (LO1)
-            if (LO1 != None):
+            if (LO1 is not None):
 #              print "Computing image frequencies (LO1=%f) ***********************************"%(LO1)
               xfrequenciesImage = list(2*LO1 - np.array(pfrequencies[0]))
               yfrequenciesImage = list(2*LO1 - np.array(pfrequencies[1]))
@@ -2653,7 +2653,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                    mysize, TebbSky, plotrange, xaxis, atmchan,
                                    atmfreq, transmission, subplotCols,
                                    showatmPoints=showatmPoints, xframe=xframe)
-                    if (LO1 != None):
+                    if (LO1 is not None):
                         DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
                            mysize, TebbSkyImage, plotrange, xaxis, atmchanImage,
                            atmfreqImage, transmissionImage, subplotCols,
@@ -3184,7 +3184,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                    mysize, TebbSky, plotrange, xaxis, atmchan,
                                    atmfreq, transmission, subplotCols,
                                    showatmPoints=showatmPoints, xframe=xframe)
-                    if (LO1 != None):
+                    if (LO1 is not None):
                         DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
                            mysize, TebbSkyImage, plotrange, xaxis, atmchanImage,
                            atmfreqImage, transmissionImage, subplotCols,
@@ -3592,7 +3592,7 @@ def RescaleTrans(trans, lim, subplotRows, lo1=None, xframe=0):
 
     debug=False
     yrange = lim[1]-lim[0]
-    if (lo1 == None):
+    if (lo1 is None):
         labelgap = 0.6 # Use this fraction of the margin for the PWV ATM label
     else:
         labelgap = 0.5 # Use this fraction of the margin to separate the top
@@ -3862,7 +3862,7 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
     yrange = ylim[1]-ylim[0]
     #
     ystartPolLabel = 1.0-0.04*subplotRows
-    if (lo1 == None):
+    if (lo1 is None):
         transmissionColor = 'm'
         tskyColor = 'm'
     else:
@@ -3899,7 +3899,7 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
                 tindex = -1
             else:
                 tindex = 0
-        if (lo1 == None):
+        if (lo1 is None):
               xEdgeLabel = 1.01
         else:
             if (xframe == firstFrame):
@@ -3910,7 +3910,7 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
         SetNewYLimits(ylim)
         # Now draw the percentage on right edge of plot
         if (showtsky):
-            if (lo1 == None):
+            if (lo1 is None):
 #                pb.text(xEdgeLabel, edgeYvalue,'%.0fK'%(edgeT),color=atmcolor,
 #                        size=mysize, transform=pb.gca().transAxes)
 #                pb.text(1.01, zeroYValue,'%.0fK'%(zeroValue), color=atmcolor,
@@ -3932,7 +3932,7 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
                         size=mysize, transform=pb.gca().transAxes)
         else:
             # showatm=True
-            if (lo1 == None):
+            if (lo1 is None):
 #                pb.text(xEdgeLabel, edgeYvalue,'%.0f%%'%(edgeT*100),
 #                       color=atmcolor,size=mysize,transform=pb.gca().transAxes)
 #                pb.text(1.01, zeroYValue,'%.0f%%'%(zeroValue*100),
@@ -3952,7 +3952,7 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
                 pb.text(xEdgeLabel, zeroYValue,'%.0f%%'%(zeroValue*100),
                         color=atmcolor,
                         size=mysize, transform=pb.gca().transAxes)
-        if (lo1 != None):
+        if (lo1 is not None):
             if (xframe == firstFrame):
                 pb.text(+0.96-0.08*subplotCols, -0.07*subplotRows,
                         'Signal Sideband', color='m', size=mysize,

@@ -11,9 +11,11 @@ import pipeline.infrastructure.renderer.logger as logger
 from . import common
 from . import utils
 
+
 # Scantable-based tasks are gone so input data should always be in MS
 def is_ms(filename):
     return True
+
 
 class WeatherAxesManager(common.TimeAxesManager):
     def __init__(self):
@@ -49,14 +51,14 @@ class WeatherAxesManager(common.TimeAxesManager):
 
     def __temp(self):
         a = pl.subplot(211)
-        #a.set_xlabel('MJD')
-        #a.set_xlabel('Time (UT)')
+        # a.set_xlabel('MJD')
+        # a.set_xlabel('Time (UT)')
         a.set_ylabel('Temperature (degC)', color='r')
-        #a.set_title('Weather (Temperature & Humidity) versus MJD')
-        #a.set_title('Weather (Temperature & Humidity) versus Time (UT)')
+        # a.set_title('Weather (Temperature & Humidity) versus MJD')
+        # a.set_title('Weather (Temperature & Humidity) versus Time (UT)')
         a.set_title('Weather versus Time\nTop: Temperature & Humidity\nBottom: Pressure & Wind Speed')
         a.xaxis.set_major_locator(self.locator)
-        #a.xaxis.set_major_formatter(utils.utc_formatter())
+        # a.xaxis.set_major_formatter(utils.utc_formatter())
         a.xaxis.set_major_formatter(NullFormatter())
         for tl in a.get_yticklabels():
             tl.set_color('r')
@@ -77,7 +79,7 @@ class WeatherAxesManager(common.TimeAxesManager):
         a = self._temp.twinx()
         a.set_ylabel('Humidity (%)', color='b')
         a.xaxis.set_major_locator(self.locator)
-        #a.xaxis.set_major_formatter(utils.utc_formatter())
+        # a.xaxis.set_major_formatter(utils.utc_formatter())
         a.xaxis.set_major_formatter(NullFormatter())
         for tl in a.get_yticklabels():
             tl.set_color('b')
@@ -85,11 +87,11 @@ class WeatherAxesManager(common.TimeAxesManager):
 
     def __pres(self):
         a = pl.subplot(212)
-        #a.set_xlabel('MJD')
+        # a.set_xlabel('MJD')
         a.set_xlabel('Time (UT)')
         a.set_ylabel('Pressure (hPa)', color='r')
-        #a.set_title('Weather (Pressure & Wind Speed) versus MJD')
-        #a.set_title('Weather (Pressure & Wind Speed) versus Time (UT)')
+        # a.set_title('Weather (Pressure & Wind Speed) versus MJD')
+        # a.set_title('Weather (Pressure & Wind Speed) versus Time (UT)')
         a.xaxis.set_major_locator(self.locator)
         a.xaxis.set_major_formatter(utils.utc_formatter())
         for tl in a.get_yticklabels():
@@ -318,7 +320,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
                     dpos = numpy.array(antpos) - numpy.array(wxpos[id])
                     dist = numpy.sqrt((numpy.square(dpos)).sum())
                     #self.LogMessage( 'DEBUG', Origin=origin, Msg='wxid[%s]=%s: dist = %s'%(id,wxids[id],dist) )
-                    if sep == None or dist < sep:
+                    if sep is None or dist < sep:
                         sep = dist
                         nearest = wxids[id]
                 #self.LogMessage( 'DEBUG', Origin=origin, Msg='nearest = %s'%(nearest) )

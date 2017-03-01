@@ -232,7 +232,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
             casalogPost("Could not find image = %s" % (img))
             return
         result = getImageInfo(img, header)
-        if (result == None): 
+        if (result is None):
             return result
         imageInfo, header = result
         bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = imageInfo
@@ -399,7 +399,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                               regressionTest=regressionTest, quadraticFit=quadraticFit,
                               megapixels=npixels*1e-6, triangularPatternSeen=triangularPatternSeen,
                               maxMemory=maxMemory, negativeThresholdFactor=negativeThresholdFactor)
-    if result == None:
+    if result is None:
         return
     selection, png, slope, channelWidth, nchan, useLowBaseline = result
     mytest = False
@@ -442,7 +442,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                                       regressionTest=regressionTest, quadraticFit=quadraticFit,
                                       megapixels=npixels*1e-6, triangularPatternSeen=triangularPatternSeen,
                                       maxMemory=maxMemory, negativeThresholdFactor=negativeThresholdFactor)
-        if result == None:
+        if result is None:
             return
         selection, png, slope, channelWidth, nchan, useLowBaseline = result
     aggregateBandwidth = computeBandwidth(selection, channelWidth, 0)
@@ -903,7 +903,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
                               centralArcsec, imageInfo, chanInfo, mask,
                               meanSpectrumMethod, peakFilterFWHM, iteration)
         casalogPost("C) Current memory usage: %.3f GB, resident: %.3f GB" % (memoryUsage(), residentMemoryUsage()))
-        if result == None:
+        if result is None:
             return
         avgspectrum, avgSpectrumNansRemoved, avgSpectrumNansReplaced, meanSpectrumThreshold,\
           edgesUsed, nchan, nanmin, percentagePixelsNotMasked = result
@@ -912,7 +912,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     else:
         if (fitsTable):
             result = readMeanSpectrumFITSFile(meanSpectrumFile)
-            if (result == None):
+            if (result is None):
                 casalogPost("FITS table is not valid.")
                 return
             avgspectrum, avgSpectrumNansReplaced, meanSpectrumThreshold, edgesUsed, nchan, nanmin, firstFreq, lastFreq = result
@@ -921,7 +921,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             # An ASCII file was specified as the spectrum to process
             casalogPost("Running readPreviousMeanSpectrum('%s')" % (meanSpectrumFile))
             result = readPreviousMeanSpectrum(meanSpectrumFile, verbose, invert)
-            if (result == None):
+            if (result is None):
                 casalogPost("ASCII file is not valid, re-run with overwrite=True")
                 return
             avgspectrum, avgSpectrumNansReplaced, meanSpectrumThreshold, edgesUsed, nchan, nanmin, firstFreq, lastFreq, previousCentralArcsec, previousMask, percentagePixelsNotMasked = result
@@ -1191,7 +1191,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
     channelSelections = []
     casalogPost('Drawing positive threshold at %g' % (threshold))
     pl.plot(pl.xlim(), [threshold,threshold], 'k:')
-    if (negativeThreshold != None):
+    if (negativeThreshold is not None):
         pl.plot(pl.xlim(), [negativeThreshold,negativeThreshold], 'k:')
         casalogPost('Drawing negative threshold at %g' % (negativeThreshold))
     casalogPost('Drawing observed median at %g' % (median))
@@ -1288,7 +1288,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
         i += 1
         pl.text(0.5,0.99-i*inc,'chans>median: %d (sum=%.4f), chans<median: %d (sum=%.4f), ratio: %.2f (%.2f)'%(channelsAboveMedian,sumAboveMedian,channelsBelowMedian,sumBelowMedian,channelRatio,sumRatio),
                 transform=ax1.transAxes, ha='center', size=fontsize-1)
-    if (negativeThreshold != None):
+    if (negativeThreshold is not None):
         pl.text(0.5,0.99-i*inc,'mad: %.3f; thresholds: %.3f, %.3f (dotted); median: %.3f (solid), meanmin: %.3f (dashed)'%(mad, threshold,negativeThreshold,medianTrue,median), transform=ax1.transAxes, ha='center', size=fontsize-1)
     else:
         pl.text(0.5,0.99-i*inc,'mad: %.3f; threshold: %.3f (dotted); median: %.3f (solid), meanmin: %.3f (dashed)'%(mad,threshold,medianTrue,median), 
@@ -1314,7 +1314,7 @@ def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselin
             finalLine += 'mask=%s (%.2f%% pixels); ' % (os.path.basename(mask), percentagePixelsNotMasked)
         else:
             finalLine += 'mask=%s; ' % (os.path.basename(mask))
-    if (slope != None):
+    if (slope is not None):
         if discardSlopeResult:
             discarded = ' (result discarded)'
         elif slopeRemoved:
@@ -1765,7 +1765,7 @@ def findContinuumChannels(spectrum, nBaselineChannels=16, sigmaFindContinuum=3,
     casalogPost("MAD = %f, median = %f, trueMedian=%f, signalRatio=%f" % (mad, median, medianTrue, signalRatio))
     casalogPost("findContinuumChannels: computed threshold = %f" % (threshold))
     channels = np.where(spectrum < threshold)[0]
-    if (negativeThreshold != None):
+    if (negativeThreshold is not None):
         channels2 = np.where(spectrum > negativeThreshold)[0]
         channels = np.intersect1d(channels,channels2)
 
@@ -2040,7 +2040,7 @@ def pickNarrowString(narrow, length, narrowValueModified=None):
     """
     if (narrow=='auto'):
         myNarrow = pickNarrow(length)
-        if (narrowValueModified == None or myNarrow == narrowValueModified):
+        if (narrowValueModified is None or myNarrow == narrowValueModified):
             narrowString = 'auto=%g' % myNarrow
         else:
             narrowString = 'auto=%g' % narrowValueModified
@@ -2104,7 +2104,7 @@ def headerToArcsec(mydict, unit=None):
     Converts an angle quantity dictionary to the angle
     in arcsec.
     """
-    if (unit == None):
+    if (unit is None):
         value = mydict['value']
     else:
         value = mydict
@@ -2136,7 +2136,7 @@ def getImageInfo(img, header=''):
             header = imhead(img)  # needed to prevent crash in early CASA 4.6 builds (see CAS-8214)
             print "imhead",
             header = imhead(img, mode = 'list')
-        if (header == None):
+        if (header is None):
             print "imhead returned NoneType. This image header is not sufficiently standard."
             return
     if ('beammajor' in header.keys()):
@@ -2210,13 +2210,13 @@ def numberOfChannelsInCube(img, returnFreqs=False, returnChannelWidth=False,
     verbose: if True, then print the frequencies of first and last channel
     -Todd Hunter
     """
-    if (header == None):
+    if (header is None):
         print "imhead", # the comma prevents the newline so that ...10...20 will be on same line
         if faster:
             header = imheadlist(img, omitBeam=True)
         else:
             header = imhead(img,mode='list')
-    if (header == None):
+    if (header is None):
         print "imhead failed -- this may not be a CASA or FITS image cube."
         return
     nchan = 1
@@ -2418,7 +2418,7 @@ def avgOverCube(pixels, useAbsoluteValue=False, threshold=None, median=False, ma
         if (median):
             pixels = nanmedian(pixels, axis=0)
         else:
-            if (threshold != None):
+            if (threshold is not None):
                 idx = np.where(pixels < threshold)
                 if len(idx[0]) > 0:
                     pixels[idx] = np.nan
@@ -2568,7 +2568,7 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
     if mask != '':
         if not (np.array(np.shape(pixels)) == np.array(np.shape(usermaskdata))).all():
             casalogPost("Mismatch in shape between image (%s) and mask (%s)" % (np.shape(pixels),np.shape(usermaskdata)))
-            if myrg != None: myrg.done()
+            if myrg is not None: myrg.done()
             return
     if (meanSpectrumMethod.find('OverRms') > 0 or meanSpectrumMethod.find('OverMad') > 0):
         # compute myrms, ignoring masked values and usermasked values
@@ -2684,7 +2684,7 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
         nansReplaced,nanmin = removeNaNs(avgspectrum, replaceWithMin=True, 
                                          nanBufferChannels=nanBufferChannels, verbose=True)
     elif (meanSpectrumMethod.find('meanAboveThreshold') == 0):
-        if (continuumThreshold != None):
+        if (continuumThreshold is not None):
             belowThreshold = np.where(pixels < continuumThreshold)
             if verbose:
                 print "shape of belowThreshold = ", np.shape(belowThreshold)
@@ -2823,7 +2823,7 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
         print "Running writeMeanSpectrum"
     writeMeanSpectrum(meanSpectrumFile, frequency, avgspectrum, nansReplaced, threshold,
                       edgesUsed, nchan, nanmin, centralArcsec, mask, iteration)
-    if (myrg != None): myrg.done()
+    if (myrg is not None): myrg.done()
     return(avgspectrum, nansRemoved, nansReplaced, threshold, 
            edgesUsed, nchan, nanmin, percentagePixelsNotMasked)
 
@@ -2955,7 +2955,7 @@ def splitListIntoContiguousListsAndRejectZeroStd(channels, values, nanmin=None, 
     for i,mylist in enumerate(mylists):
         mystd = np.std(values[mylist])
         if (mystd > 1e-17):  # avoid blocks of identically-zero values
-            if (nanmin != None):
+            if (nanmin is not None):
                 minvalues = len(np.where(values[i] == nanmin)[0])
                 if (float(minvalues)/len(mylist) > 0.1 and minvalues > 3):
                     print "Rejecting list %d with multiple min values (%d)" % (i,minvalues)
@@ -3303,7 +3303,7 @@ if False:
     -Todd Hunter
     """
     mjdsec = getObservationStart(vis, obsid)
-    if (mjdsec == None):
+    if (mjdsec is None):
         return
     obsdateString = mjdToUT(mjdsec/86400.)
     if (delimiter != '-'):
@@ -3872,7 +3872,7 @@ def imheadlist(vis, omitBeam=False):
         singleBeam = imhead(vis, mode='get', hdkey='beammajor')
         if (singleBeam == False):
             header = imhead(vis, mode='list')
-            if (header == None):
+            if (header is None):
                 print "No beam found.  Re-run with omitBeam=True."
                 return -1
             if ('perplanebeams' not in header.keys()):

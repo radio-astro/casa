@@ -320,9 +320,8 @@ class VisDependentProperty(object):
 #         return [inputs.context.observing_run.get_ms(v) for v in vis]
     
 
-
 class StandardInputs(api.Inputs):
-    #- standard non-vis-dependent properties ---------------------------------
+    # - standard non-vis-dependent properties ---------------------------------
 
     def __deepcopy__(self, memo):
         return selective_deepcopy(self, memo, shallow_copy=('_context',))
@@ -378,7 +377,7 @@ class StandardInputs(api.Inputs):
 #             value = [value,]
         self._vis = value
 
-    #- vis-dependent properties ---------------------------------------------- 
+    # - vis-dependent properties ----------------------------------------------
 
     @VisDependentProperty(readonly=True)
     def ms(self):
@@ -393,7 +392,7 @@ class StandardInputs(api.Inputs):
     def output_dir(self):
         return self.context.output_dir
 
-    #- code for getting and setting pickle state -----------------------------
+    # - code for getting and setting pickle state -----------------------------
 
     def __getstate__(self):
         # The state for each VisDependentProperty is held outside the Inputs
@@ -410,7 +409,7 @@ class StandardInputs(api.Inputs):
         self.__dict__.update(obj_state)
         set_state(self, vdp_state)
 
-    #- utility functions added to base class ---------------------------------
+    # - utility functions added to base class ---------------------------------
 
     def _init_properties(self, properties=None, kw_ignore=None):
         """
@@ -495,10 +494,10 @@ class StandardInputs(api.Inputs):
             # intent, so must remove the intent from the task call
             args['intent'] = None
 
-        if args.get('intent', None) != None:
+        if args.get('intent', None) is not None:
             args['intent'] = utils.to_CASA_intent(ms, args['intent'])
 
-        for k,v in args.items():
+        for k, v in args.items():
             if v is None:
                 del args[k]        
         return args
@@ -536,7 +535,7 @@ class OnTheFlyCalibrationMixin(object):
     @VisDependentProperty
     def calstate(self):
         return self.context.callibrary.get_calstate(self.calto, 
-                                                    ignore=['calwt',])
+                                                    ignore=['calwt', ])
 
     opacity = VisDependentProperty(default='')
 
@@ -634,7 +633,7 @@ class ModeInputs(api.Inputs):
         for d in self._delegates.values():
             if hasattr(d, name):
                 LOG.trace('Setting \'{0}\' attribute to \'{1}\' on \'{2}'
-                    '\' object'.format(name, val, d.__class__.__name__))
+                          '\' object'.format(name, val, d.__class__.__name__))
                 setattr(d, name, val)
     
     @property

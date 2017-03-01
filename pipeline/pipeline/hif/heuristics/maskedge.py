@@ -12,7 +12,7 @@ class BandpassEdgeFlagger(object):
     """Class to detect band edges."""
 
     def _add_flag_description(self, new_flags, flag, y2flag,
-     data_description, stageDescription, rule):
+                              data_description, stageDescription, rule):
         """Utility method to add a dictionary description of flags to be set
         to the total list.
         """
@@ -166,12 +166,12 @@ class BandpassEdgeFlagger(object):
 
         for i in range(len(data)):
             if not flag[i]:
-                if prev_data == None:
+                if prev_data is None:
                     prev_data = data[i]
                 else:
                     diff = data[i] - prev_data
                     prev_data = data[i]
-                    if first_diff == None:
+                    if first_diff is None:
                         first_diff = diff
                         if first_diff == 0:
                             turnover = i
@@ -183,7 +183,7 @@ class BandpassEdgeFlagger(object):
         return turnover
 
     def _flagData(self, x, data_in, data_mad_in, flag_in, data_description,
-     stageDescription):
+                  stageDescription):
         """Utility method to apply the flag rules to the data.
         """
         data = data_in[0]
@@ -370,7 +370,6 @@ class BandpassEdgeFlagger(object):
                 raise Exception, 'bad rule: %s' % rule['rule']
 
         return new_flags
-
 
     def operate(self, stageDescription, dataView):
         """Public method to apply the flag rules to the data 'view'.

@@ -157,9 +157,9 @@ class _XmlObject:
         self.elementsList = elementsList
         
     def __call__(self, number=None, text=None, **keywords):
-        if keywords == {} and text == None:
+        if keywords == {} and text is None:
             if len(self.elementsList) > 1:
-                if number == None:
+                if number is None:
                     msg = 'More than one XmlElement of type ' + \
                         str(self.elementsList[0]._0elementName)+'. '
                     msg = msg + 'Select one py passing a number (0 - ' + \
@@ -177,7 +177,7 @@ class _XmlObject:
             matches = 0
             matchList = []
             for element in self.elementsList:
-                if text != None:
+                if text is not None:
                     for item in element.childNodes:
                         if item.nodeType == 3:
                             if str(item.data) == str(text):

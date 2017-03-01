@@ -16,17 +16,22 @@ import pipeline.infrastructure.renderer.logger as logger
 LOG = infrastructure.get_logger(__name__)
 
 _valid_chars = "_.%s%s" % (string.ascii_letters, string.digits)
+
+
 def _char_replacer(s):
-    '''A small utility function that echoes the argument or returns '_' if the
+    """
+    A small utility function that echoes the argument or returns '_' if the
     argument is in a list of forbidden characters.
-    '''
+    """
     if s not in _valid_chars:
         return '_'
     return s
 
+
 def sanitize(text):
     filename = ''.join(_char_replacer(c) for c in text)
     return filename
+
 
 flag_color = {'edges':'lightblue',
               'high outlier':'orange',
@@ -314,7 +319,7 @@ class SliceDisplay(object):
         else:
             plt.xlabel('%s (%s)' % (xtitle, xunits), fontsize=10)
         if plotnumber == 1:
-            if dataunits != None:
+            if dataunits is not None:
                 plt.ylabel('%s (%s)' % (datatype, dataunits), fontsize=10)
             else:
                 plt.ylabel(datatype, fontsize=10)
@@ -337,14 +342,14 @@ class SliceDisplay(object):
                 for item in bad_x:
                     temp.append(datetime.datetime.utcfromtimestamp(item))
                 bad_x = temp
-                if datemin == None:
+                if datemin is None:
                     datemin = min(bad_x)
                     datemax = max(bad_x)
                 else:
                     datemin = min(datemin, min(bad_x))
                     datemax = max(datemax, max(bad_x))
             plt.errorbar(bad_x, bad_data, linestyle='None', marker='o',
-              markersize=5, markerfacecolor='blue', markeredgecolor='blue')
+                         markersize=5, markerfacecolor='blue', markeredgecolor='blue')
 
         # fix the y-scale at the current values, defined by the data we want
         # to be sure of seeing

@@ -11,6 +11,7 @@ from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class SDK2JyCalWorkerInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir, vis, caltable, factors):
         # set the properties to the values given as input arguments
@@ -26,19 +27,21 @@ class SDK2JyCalWorkerInputs(basetask.StandardInputs):
                 'caltable' : self.caltable,
                 'caltype'  : self.caltype}
 
+
 class SDK2JyCalWorkerResults(basetask.Results):
     def __init__(self, vis, calapp=None, factors={}):
         super(SDK2JyCalWorkerResults, self).__init__()
         self.calapp = calapp
         self.vis = vis
         self.ms_factors = factors
-        self.factors_ok = (calapp != None)
+        self.factors_ok = (calapp is not None)
 
     def merge_with_context(self, context):
         if not os.path.exists(self.vis):
             LOG.error("Invalid MS name passed to Result class")
         if self.calapp is None:
             LOG.error("caltable generation failed")
+
 
 class SDK2JyCalWorker(basetask.StandardTaskTemplate):
     """
@@ -74,14 +77,14 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
                 factors_used[spw][ant] = {}
                 # map polarization
                 pol_list = ant_factor.keys()
-                pols=str(',').join(map(polmap.get, pol_list))
+                pols = str(',').join(map(polmap.get, pol_list))
                 for pol in pol_list:
                     factors_used[spw][ant][pol] = ant_factor[pol]
                     LOG.debug("%s, SPW %d, %s, %s: factor=%f" % \
                               (vis, spw, ant, pol, factors_used[spw][ant][pol]))
                 # handle anonymous antenna
                 ant_sel = '' if ant.upper()=='ANONYMOUS' else ant
-                gain_factor = [ 1./sqrt(ant_factor[pol]) for pol in pol_list ]
+                gain_factor = [1./sqrt(ant_factor[pol]) for pol in pol_list]
                 gencal_args = dict(spw=str(spw), antenna=ant_sel, pol=pols,
                                    parameter=gain_factor)
                 gencal_args.update(common_params)

@@ -616,7 +616,7 @@ class FrequencyRange(object):
         frequency2
             the other endpoint of this range.
         """
-        if frequency1 == frequency2 == None:
+        if frequency1 == frequency2 is None:
             frequency2 = Frequency(decimal.Decimal('Infinity'))
         self.set(frequency1, frequency2)
             
@@ -716,7 +716,7 @@ class FrequencyRange(object):
         Returns:
             the frequency gap between this range and other.
         """
-        if other == None or self.overlaps(other):
+        if other is None or self.overlaps(other):
             return None
 
         if self.low > other.low:
@@ -773,9 +773,9 @@ class FrequencyRange(object):
         frequency2
             the other endpoint of this range.
         """
-        if frequency1 == None:
+        if frequency1 is None:
             frequency1 = Frequency()
-        if frequency2 == None:
+        if frequency2 is None:
             frequency2 = Frequency()
 
         if frequency1 > frequency2:
@@ -1095,7 +1095,7 @@ class TemporalCollection(object):
         """A list of all the dates where the value changed, returned in order
         latest first
         """
-        if (self.__milestoneCache == None):
+        if (self.__milestoneCache is None):
             self.__calculateMilestones()
         return self.__milestoneCache
 
