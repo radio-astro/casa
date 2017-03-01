@@ -80,7 +80,7 @@ elif [ $branch == "master" ];then
         # Return only the revision number
         echo "${masterTag##*-};$CASA_VERSION_DESC"
     fi
-elif [[ $branch =~ .*\..*\..*-release.* ]];then
+elif [[ $branch =~ ^release\/.* ]];then
     #echo "Resolving release"
     masterTag=`git tag --points-at HEAD | grep \\\-rel- | xargs`
     if [[ -z "${masterTag// }" ]]; then
