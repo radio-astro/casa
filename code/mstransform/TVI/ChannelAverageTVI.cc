@@ -161,6 +161,12 @@ void ChannelAverageTVI::initialize()
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::flag(Cube<Bool>& flagCube) const
 {
+        // Pass-thru for single-channel case
+        if (getVii()->visibilityShape()[1]==1) {
+	  getVii()->flag(flagCube);
+	  return;
+	}
+    
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
@@ -195,6 +201,13 @@ void ChannelAverageTVI::flag(Cube<Bool>& flagCube) const
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::floatData (Cube<Float> & vis) const
 {
+
+        // Pass-thru for single-channel case
+        if (getVii()->visibilityShape()[1]==1) {
+	  getVii()->floatData(vis);
+	  return;
+	}
+
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
@@ -232,6 +245,13 @@ void ChannelAverageTVI::floatData (Cube<Float> & vis) const
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::visibilityObserved (Cube<Complex> & vis) const
 {
+
+        // Pass-thru for single-channel case
+        if (getVii()->visibilityShape()[1]==1) {
+	  getVii()->visibilityObserved(vis);
+	  return;
+	}
+
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
@@ -275,6 +295,13 @@ void ChannelAverageTVI::visibilityObserved (Cube<Complex> & vis) const
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::visibilityCorrected (Cube<Complex> & vis) const
 {
+
+        // Pass-thru for single-channel case
+        if (getVii()->visibilityShape()[1]==1) {
+	  getVii()->visibilityCorrected(vis);
+	  return;
+	}
+
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
@@ -312,6 +339,13 @@ void ChannelAverageTVI::visibilityCorrected (Cube<Complex> & vis) const
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::visibilityModel (Cube<Complex> & vis) const
 {
+
+        // Pass-thru for single-channel case
+        if (getVii()->visibilityShape()[1]==1) {
+	  getVii()->visibilityModel(vis);
+	  return;
+	}
+
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
@@ -349,6 +383,13 @@ void ChannelAverageTVI::visibilityModel (Cube<Complex> & vis) const
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::weightSpectrum(Cube<Float> &weightSp) const
 {
+
+        // Pass-thru for single-channel case
+        if (getVii()->visibilityShape()[1]==1) {
+	  getVii()->weightSpectrum(weightSp);
+	  return;
+	}
+
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
@@ -384,6 +425,12 @@ void ChannelAverageTVI::weightSpectrum(Cube<Float> &weightSp) const
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 {
+        // Pass-thru for single-channel case
+        if (getVii()->visibilityShape()[1]==1) {
+	  getVii()->sigmaSpectrum(sigmaSp);
+	  return;
+	}
+
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
 	Int inputSPW = vb->spectralWindows()(0);
@@ -431,6 +478,12 @@ Vector<Double> ChannelAverageTVI::getFrequencies (	Double time,
 													Int spectralWindowId,
 													Int msId) const
 {
+
+        // Pass-thru for single-channel case
+        if (getVii()->visibilityShape()[1]==1) {
+	  return getVii()->getFrequencies(time,frameOfReference,spectralWindowId,msId);
+	}
+
 	// Get frequencies from input VI
 	Vector<Double> inputFrequencies = getVii()->getFrequencies(time,frameOfReference,
 																spectralWindowId,msId);
