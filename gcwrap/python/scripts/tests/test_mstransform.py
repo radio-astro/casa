@@ -510,6 +510,59 @@ class test_Combspw1(test_base):
         os.system('rm -rf cvel2overlap-sorted.ms cvel2overlap.ms')
 
 
+class test_combinespws_diff_channels(test_base):
+    '''Tests for combinespws option when the spw's have different numbers of channels'''
+      
+    def setUp(self):
+        self.setUp_CAS_4983()
+
+    def test_combinespws_not_supported_all(self):
+        '''mstransform: combinespws does not currently work when the spw's have
+        different numbers of channels. An error should be produced.'''
+        self.outputms = "combinespws_fail_all_spws_test.ms"
+        res = mstransform(vis=self.vis, outputvis=self.outputms, combinespws=True)
+        self.assertFalse(res)
+        self.assertFalse(os.path.exists(self.outputms))
+
+    def test_combinespws_not_supported_n23(self):
+        '''mstransform: combinespws does not currently work when the spw's have
+        different numbers of channels. An error should be produced. spw 2 has 128
+        channels but the other spw's have 3840 channels.'''
+        self.outputms = "combinespws_fail_bad_spws_test.ms"
+        res = mstransform(vis=self.vis, outputvis=self.outputms, combinespws=True, spw='2,3')
+        self.assertFalse(res)
+        self.assertFalse(os.path.exists(self.outputms))
+
+    def test_combinespws_not_supported_n321(self):
+        '''mstransform: combinespws does not currently work when the spw's have
+        different numbers of channels. An error should be produced.'''
+        self.outputms = "combinespws_fail_bad_spws_test.ms"
+        res = mstransform(vis=self.vis, outputvis=self.outputms, combinespws=True,
+                          spw='3,2,1')
+        self.assertFalse(res)
+        self.assertFalse(os.path.exists(self.outputms))
+
+    def test_combinespws_not_supported_n0123(self):
+        '''mstransform: combinespws does not currently work when the spw's have
+        different numbers of channels. An error should be produced. All spw's are 
+        selected here.'''
+        self.outputms = "combinespws_fail_bad_spws_test.ms"
+        res = mstransform(vis=self.vis, outputvis=self.outputms, combinespws=True,
+                          spw='0,1,2,3')
+        self.assertFalse(res)
+        self.assertFalse(os.path.exists(self.outputms))
+
+    def test_combinespws_ok(self):
+        '''No error should be produced because the spw's selected have the
+        same number of channels, even though other spw's have different 
+        numbers of channels.'''
+        self.outputms = "combinespws_fail_spws_ok_test.ms"
+        res = mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data',
+                          combinespws=True, spw='1,0')
+        self.assertTrue(res)
+        self.assertTrue(os.path.exists(self.outputms))
+
+
 class test_Regridms1(test_base):
     '''Tests for regridms parameter using Four_ants_3C286.ms'''
 
@@ -5555,6 +5608,7 @@ class Cleanup(test_base):
 def suite():
     return [
             test_Combspw1,
+            test_combinespws_diff_channels,
             test_Regridms1,
             test_Regridms3,
             test_Hanning,
