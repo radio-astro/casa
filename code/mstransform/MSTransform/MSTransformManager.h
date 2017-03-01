@@ -53,12 +53,6 @@
 // THis is needed just because of vi::AveragingTvi2::weightToSigma
 #include <msvis/MSVis/AveragingTvi2.h>
 
-// To get observatory position from observatory name
-#include <measures/Measures/MeasTable.h>
-
-// To post formatted msgs via ostringstream
-#include <iomanip>
-
 // To apply hanning smooth
 #include <scimath/Mathematics/Smooth.h>
 
@@ -68,13 +62,10 @@
 // To apply 1D interpolations
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
-// to compute partial medians
-#include <casa/Arrays/ArrayPartMath.h>
-
 // single dish specific
-#include <map>
 #include <scimath/Mathematics/Convolver.h>
-#include <cmath>
+
+#include <map>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -472,6 +463,7 @@ protected:
 	void checkDataColumnsAvailable();
 	void checkDataColumnsToFill();
 	void colCheckInfo(const casacore::String& inputColName, const casacore::String& outputColName);
+	void checkSPWChannelsKnownLimitation();
 
 	// Iterator set-up
 	virtual void setIterationApproach();
@@ -1325,7 +1317,7 @@ protected:
 	casacore::Bool uvcontsub_p;
 	casacore::Record uvcontsubRec_p;
 
-	// Spw avergain parameters
+	// Spw averaging parameters
 	casacore::Bool spwAverage_p;
 
 	// Polarization transformation parameters
@@ -1439,6 +1431,10 @@ protected:
 
 	// Logging
 	casacore::LogIO logger_p;
+
+private:
+	void createOutputMSStructure();
+
 };
 
 } //# NAMESPACE CASA - END
