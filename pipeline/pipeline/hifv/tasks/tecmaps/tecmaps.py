@@ -64,7 +64,15 @@ class TecMapsInputs(basetask.StandardInputs):
 
 
 class TecMapsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], tec_image=None, tec_rms_image=None):
+    def __init__(self, final=None, pool=None, preceding=None, tec_image=None, tec_rms_image=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(TecMapsResults, self).__init__()
 
         self.vis = None

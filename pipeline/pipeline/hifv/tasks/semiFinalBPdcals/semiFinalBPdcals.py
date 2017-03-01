@@ -49,7 +49,15 @@ class semiFinalBPdcalsInputs(basetask.StandardInputs):
 
 
 class semiFinalBPdcalsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], bpdgain_touse=None):
+    def __init__(self, final=None, pool=None, preceding=None, bpdgain_touse=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(semiFinalBPdcalsResults, self).__init__()
 
         # self.vis = None

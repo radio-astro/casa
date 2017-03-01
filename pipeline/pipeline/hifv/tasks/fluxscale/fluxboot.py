@@ -28,36 +28,53 @@ class FluxbootInputs(basetask.StandardInputs):
         self.flux_densities = []
         self.spws = []
 
-        @property
-        def caltable(self):
-            return self._caltable
+    @property
+    def caltable(self):
+        return self._caltable
 
-        @caltable.setter
-        def caltable(self, value):
-            """
-            If a caltable is specified, then the fluxgains stage from the scripted pipeline is skipped
-            and we proceed directly to the flux density bootstrapping.
-            """
-            if value is None:
-                value = None
-            self._caltable = value
+    @caltable.setter
+    def caltable(self, value):
+        """
+        If a caltable is specified, then the fluxgains stage from the scripted pipeline is skipped
+        and we proceed directly to the flux density bootstrapping.
+        """
+        if value is None:
+            value = None
+        self._caltable = value
 
-        @property
-        def refantignore(self):
-            return self._refantignore
+    @property
+    def refantignore(self):
+        return self._refantignore
 
-        @refantignore.setter
-        def refantignore(self, value):
-            if value is None:
-                value = ''
-            self._refantignore = value
+    @refantignore.setter
+    def refantignore(self, value):
+        if value is None:
+            value = ''
+        self._refantignore = value
 
 
 class FluxbootResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], sources=[],
-                 flux_densities=[], spws=[], weblog_results=[],spindex_results=[], vis=None):
-        super(FluxbootResults, self).__init__()
+    def __init__(self, final=None, pool=None, preceding=None, sources=None,
+                 flux_densities=None, spws=None, weblog_results=None, spindex_results=None, vis=None):
 
+        if sources is None:
+            sources = []
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+        if flux_densities is None:
+            flux_densities = []
+        if spws is None:
+            spws = []
+        if weblog_results is None:
+            weblog_results = []
+        if spindex_results is None:
+            spindex_results = []
+
+        super(FluxbootResults, self).__init__()
         self.vis = vis
         self.pool = pool[:]
         self.final = final[:]

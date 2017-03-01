@@ -52,7 +52,15 @@ class testBPdcalsInputs(basetask.StandardInputs):
 
 
 class testBPdcalsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], gain_solint1=None, shortsol1=None, vis=None, bpdgain_touse=None):
+    def __init__(self, final=None, pool=None, preceding=None, gain_solint1=None, shortsol1=None, vis=None, bpdgain_touse=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(testBPdcalsResults, self).__init__()
 
         self.vis = vis

@@ -40,10 +40,14 @@ class TargetflagInputs(basetask.StandardInputs):
 
 
 class TargetflagResults(basetask.Results):
-    def __init__(self, jobs=[]):
+    def __init__(self, jobs=None):
+
+        if jobs is None:
+            jobs = []
+
         super(TargetflagResults, self).__init__()
 
-        self.jobs=jobs
+        self.jobs = jobs
         
     def __repr__(self):
         s = 'Targetflag (rflag mode) results:\n'

@@ -43,9 +43,17 @@ class SolintInputs(basetask.StandardInputs):
 
 
 class SolintResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], longsolint=None, gain_solint2=None,
+    def __init__(self, final=None, pool=None, preceding=None, longsolint=None, gain_solint2=None,
                  shortsol2=None, short_solint=None, new_gain_solint1=None, vis=None,
                  bpdgain_touse=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(SolintResults, self).__init__()
 
         self.vis = vis
