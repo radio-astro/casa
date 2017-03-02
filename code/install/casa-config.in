@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+use File::Path;
 
 if ( exists $ENV{CASA_INSTALLATION_TYPE} && $ENV{CASA_INSTALLATION_TYPE} eq "rpm-installation" && exists $ENV{CASAPATH} ) {
     my @path = split(/\s+/,$ENV{CASAPATH});
