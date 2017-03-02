@@ -125,51 +125,51 @@
             
             <!-- SELECTION parameters -->
             <param type="any" name="spw" subparam="true">
-                <description>Spectral-window/frequency/channel: \'\' ==> all, spw=\'0:17~19\'</description>
+                <description>Spectral-window/frequency/channel: "" == \&gt; all, spw="0:17~19"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="field" subparam="true">
-                <description>Field names or field index numbers: \'\' ==> all, field=\'0~2,3C286\'</description>
+                <description>Field names or field index numbers: "" ==&amp; all, field="0~2,3C286"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="antenna" subparam="true">
-                <description>Antenna/baselines: \'\' ==> all, antenna =\'3,VA04\'</description>
+                <description>Antenna/baselines: "" ==> all, antenna ="3,VA04"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="uvrange" subparam="true">
-                <description>UV range: \'\' ==> all; uvrange =\'0~100klambda\', default units=meters</description>
+                <description>UV range: "" ==> all; uvrange ="0~100klambda", default units=meters</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
-            <param type="any" name="timerange" subparam="true"><description>Time range: \'\' ==> all,timerange=\'09:14:0~09:54:0\'</description>
+            <param type="any" name="timerange" subparam="true"><description>Time range: "" ==> all,timerange="09:14:0~09:54:0"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="correlation" subparam="true">
-                <description>Correlation: \'\' ==> all, correlation=\'XX,YY\'</description>
+                <description>Correlation: "" ==> all, correlation="XX,YY"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="scan" subparam="true">
-                <description>Scan numbers: \'\' ==> all</description>
+                <description>Scan numbers: "" ==> all</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="intent" subparam="true">
-                <description>Scan intent: \'\' ==> all, intent=\'CAL*POINT*\'</description>
+                <description>Scan intent: "" ==> all, intent="CAL*POINT*"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="array" subparam="true">
-                <description>(Sub)array numbers: \'\' ==> all</description>
+                <description>(Sub)array numbers: "" ==> all</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="observation" subparam="true">
-                <description>Observation ID: \'\' ==> all</description>
+                <description>Observation ID: "" ==> all</description>
                 <any type="variant" limittypes="string int" />
                 <value type="string" />
             </param>
@@ -284,7 +284,7 @@
                 <value>poly</value>
             </param>
             <param type="int" name="maxnpieces" subparam="true">
-                <description>Number of pieces in the polynomial-fits (for \'freqfit\' or \'timefit\' = \'poly\')</description>
+                <description>Number of pieces in the polynomial-fits (for "freqfit" or "timefit" = "poly")</description>
                 <value>7</value>
             </param>
             <param type="string" name="flagdimension" subparam="true">
@@ -296,7 +296,7 @@
                 <value>none</value>
             </param>
             <param type="int" name="halfwin" subparam="true">
-                <description>Half-width of sliding window to use with \'usewindowstats\' (1,2,3).</description>
+                <description>Half-width of sliding window to use with "usewindowstats" (1,2,3).</description>
                 <value>1</value>
             </param>
             <param type="bool" name="extendflags" subparam="true">
@@ -352,7 +352,7 @@
                 <value type="bool">True</value>
             </param>
            <param type="double" name="growtime" subparam="true">
-                <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
+                <description>Flag all "ntime" integrations if more than X% of the timerange is flagged (0-100)</description>
                 <value>50.0</value>
             </param>
             <param type="double" name="growfreq" subparam="true">
@@ -1761,7 +1761,7 @@
         
         flagdata('my.ms', mode='list', inpfile='flags.txt', reason='MYREASON')
 
-    10b) The same result of 10a can be achieved using the task flagcmd.
+    10b) The same as above but using task flagcmd.
 
         flagcmd('my.ms', inpmode='file', inpfile='flags.txt', action='apply', reason='MYREASON')
             
