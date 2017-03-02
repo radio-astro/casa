@@ -185,8 +185,14 @@ struct GeometricTransformation {
         arrayContTransform(fslice, weight, [&w](Bool b) {
           return ((b) ? 0.0f: w);
         });
-        transformedData += weightedData;
-        weightSum += weight;
+        IPosition tstart(3, 0, 0, j);
+        IPosition tend(3, 0, nchan - 1, j);
+        Array<T> tdSlice = transformedData(tstart, tend);
+        Array<Float> twSlice = weightSum(tstart, tend);
+        AlwaysAssert(tdSlice.conform(weightedData), AipsError);
+        AlwaysAssert(twSlice.conform(weight), AipsError);
+        tdSlice += weightedData;
+        twSlice += weight;
       }
     }
 

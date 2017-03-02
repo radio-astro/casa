@@ -1226,6 +1226,9 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
         test_polaverage_default   -- test default average mode (=stokes)
         test_polaverage_stokes    -- test stokes average mode
         test_polaverage_geometric -- test geometric average mode 
+        --- The following tests are defined to verify fix for CAS-9778 --- 
+        test_polaverage_stokes_chunk -- test stokes average mode against different access pattern 
+        test_polaverage_geometric_chunk -- test geometric average mode against different access pattern
     """
     infile = "gaussian.ms"
     
@@ -1241,23 +1244,45 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
             shutil.rmtree(self.infile)
 
     def edit_weight(self):
-        (myms, mytb,) = gentools(['ms', 'tb'])
-        sel = myms.msseltoindex(vis=self.infile, spw='0')
-        ddid = sel['dd'][0]
+        (mytb,) = gentools(['tb'])
         mytb.open(self.infile, nomodify=False)
-        tsel = mytb.query('DATA_DESC_ID=={}'.format(ddid))
         try:
-            # weight for XX is two times larger than YY
             print 'Editing weight'
-            weight = tsel.getcell('WEIGHT', 0)
-            print '    weight (before)', weight
-            weight[1] *= 2.0
-            print '    weight (after)', weight
-            tsel.putcell('WEIGHT', 0, weight)
+            for irow in xrange(mytb.nrows()):
+                # weight for XX is two times larger than YY
+                print '    irow = {}'.format(irow)
+                weight = mytb.getcell('WEIGHT', irow)
+                print '    weight (before)', weight
+                weight[1] *= 2.0
+                print '    weight (after)', weight
+                mytb.putcell('WEIGHT', irow, weight)
         finally:
-            tsel.close()
             mytb.close()
-
+            
+    def edit_meta(self):
+        """
+        Edit DATA_DESC_ID and TIME (TIME_CENTROID) so taht VI/VB2 takes more than 
+        one row in one (sub)chunk
+        """
+        (mytb) = gentools(['tb'])
+        tb.open(self.infile, nomodify=False)
+        try:
+            ddid = tb.getcol('DATA_DESC_ID')
+            time = tb.getcol('TIME')
+            interval = tb.getcol('INTERVAL')
+            ddid[0] = 0
+            ddid[1] = 0
+            ddid[2] = 1
+            ddid[3] = 1
+            time[1] = time[0] + interval[0]
+            time[2] = time[0]
+            time[3] = time[0] + interval[0]
+            tb.putcol('DATA_DESC_ID', ddid)
+            tb.putcol('TIME', time)
+            tb.putcol('TIME_CENTROID', time)
+        finally:
+            tb.close()
+            
     def scale_expected_peak(self, mode, peak):
         scaled = numpy.copy(peak)
         if mode == 'default' or mode == 'stokes':
@@ -1278,7 +1303,7 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
 
         return scaled
             
-    def verify(self, mode, result):
+    def verify(self, mode, result, where=[0,1]):
         print 'mode=\'{}\''.format(mode)
         print 'result=\'{}\''.format(result)
         
@@ -1302,7 +1327,9 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
         cent = numpy.asarray(result['cent'])
         cent_result = cent[0,:,0]
         cent_err = cent[0,:,1]
-        cent_expected = numpy.asarray(self.answer['cent'])[:2].squeeze()
+        cent_expected = numpy.asarray(self.answer['cent'])[where].squeeze()
+        sort_index = numpy.argsort(cent_expected)
+        cent_expected = cent_expected[sort_index]
         print 'cent (result)={}\ncent (expected)={}'.format(cent_result, 
                                                             cent_expected) 
         err_factor = 2.0
@@ -1315,7 +1342,8 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
         fwhm = numpy.asarray(result['fwhm'])
         fwhm_result = fwhm[0,:,0]
         fwhm_err = fwhm[0,:,1]
-        fwhm_expected = numpy.asarray(self.answer['fwhm'])[:2].squeeze()
+        fwhm_expected = numpy.asarray(self.answer['fwhm'])[where].squeeze()
+        fwhm_expected = fwhm_expected[sort_index]
         print 'fwhm (result)={}\nfwhm (expected)={}'.format(fwhm_result, 
                                                             fwhm_expected) 
         err_factor = 2.0
@@ -1328,8 +1356,9 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
         peak = numpy.asarray(result['peak'])
         peak_result = peak[0,:,0]
         peak_err = peak[0,:,1]
-        peak_expected = numpy.asarray(self.answer['peak'])[:2].squeeze()
+        peak_expected = numpy.asarray(self.answer['peak'])[where].squeeze()
         peak_expected_scaled = self.scale_expected_peak(mode, peak_expected)
+        peak_expected_scaled = peak_expected_scaled[sort_index]
         print 'peak (result)={}\npeak (expected)={}'.format(peak_result, 
                                                             peak_expected_scaled) 
         err_factor = 2.0
@@ -1340,8 +1369,24 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
     def run_test(self, mode):
         # only spw 0 is processed
         result = sdfit(infile=self.infile, datacolumn='float_data', fitfunc='gaussian', 
-                       nfit=[2], spw='0', polaverage=mode)
+                       nfit=[2], spw='0', fitmode='auto', polaverage=mode)
         self.verify(mode, result)        
+    
+    def run_test2(self, mode):
+        """
+        run_test2 is test function that should be used for tests including edit_meta 
+        """
+        # only spw 0 is processed
+        # since edit_meta, effectively it corresponds to process both spw 0 and 1
+        result = sdfit(infile=self.infile, datacolumn='float_data', fitfunc='gaussian', 
+                       nfit=[2], spw='0', fitmode='auto', polaverage=mode)
+        for i in xrange(len(result['nfit'])):
+            subresult = {}
+            subresult['nfit'] = [result['nfit'][i]]
+            subresult['cent'] = [result['cent'][i]]
+            subresult['fwhm'] = [result['fwhm'][i]]
+            subresult['peak'] = [result['peak'][i]]
+            self.verify(mode, subresult, where=[2*i, 2*i+1])        
     
     def test_polaverage_default(self):
         """ test_polaverage_default: test default case (no averaging) """
@@ -1354,6 +1399,16 @@ class sdfit_polaverage(sdfit_unittest_base,unittest.TestCase):
     def test_polaverage_geometric(self):
         """ test_polaverage_geometric: test geometric average mode """
         self.run_test(mode='geometric')
+        
+    def test_polaverage_stokes_chunk(self):
+        """ test_polaverage_stokes_chunk: test stokes average mode against different access pattern """
+        self.edit_meta()
+        self.run_test2(mode='stokes')
+        
+    def test_polaverage_geometric_chunk(self):
+        """ test_polaverage_geometric_chunk: test geometric average mode against different access pattern """
+        self.edit_meta()
+        self.run_test2(mode='geometric')
 
 def suite():
     return [sdfit_basicTest, 
