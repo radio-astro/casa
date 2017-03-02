@@ -51,7 +51,7 @@
                 </allowed>
             </param>
 
-            <param type="string" name="field" subparam="true">
+            <param type="stringArray" name="field" subparam="true">
                 <description>Set of data selection field names or ids, \'\' for all</description>
                 <value></value>
             </param>
@@ -248,8 +248,8 @@
             are assumed to have common source / field names. If intent is specified
             only fields with data matching the intent will be selected. The fields
             will be selected from measurement sets in 'vis'.
-            default: '' Fields matching matching intent, one image per target source.
-            example: '3C279', 'Centaurus*', '3C279,J1427-421'
+            default: [''] Fields matching matching intent, one image per target source.
+            example: ['3C279'], ['Centaurus*'], ['3C279' ,'J1427-421']
 
             <!--TODO: add description-->
             gridder --
