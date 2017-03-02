@@ -882,6 +882,11 @@ def simobserve(
                 # auto-correlation should be unity for single dish obs.
                 sm.setauto(1.0)
 
+            mereftime = me.epoch('UTC', refdate)
+            # integration is a scalar quantity, etime is a vector of seconds
+            sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
+                        referencetime=mereftime)
+
             for k in xrange(0,nfld):
                 src = project + '_%d' % k
                 sm.setfield(sourcename=src, sourcedirection=pointings[k],
@@ -894,11 +899,6 @@ def simobserve(
                 sm.setfield(sourcename="phase calibrator", 
                             sourcedirection=caldirection,calcode='C',
                             distance='0m')
-
-            mereftime = me.epoch('TAI', refdate)
-            # integration is a scalar quantity, etime is a vector of seconds
-            sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
-                        referencetime=mereftime)
 
             # time required to observe all planned scanes in etime array:
             totalscansec = sum(etime)
