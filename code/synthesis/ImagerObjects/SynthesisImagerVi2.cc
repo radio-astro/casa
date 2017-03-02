@@ -232,11 +232,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         ////////////////////////////
         Double lowfreq;
         Double topfreq;
-        MFrequency::Types freqFrame=MFrequency::castType(ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().measFreqRef()(Int(freqList(0,0))));
+	//cerr << "chanlist " << chanlist << "\n freqlis " << freqList << endl;
+        MFrequency::Types freqFrame=MFrequency::castType(ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().measFreqRef()(Int(chanlist(0,0))));
         vi::FrequencySelectionUsingFrame channelSelector(freqFrame);
     	  for(uInt k=0; k < nSelections; ++k){
-            lowfreq=freqList(k,1)-freqList(k,3)/2.0;
-            topfreq=freqList(k, 2)+freqList(k,3)/2.0;
+	    //The getChanfreqList is wrong for beg and end..going round that too.
+	    Vector<Double> freqies=ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().chanFreq()(Int(chanlist(k,0)));
+	    Vector<Double> reso=ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().resolution()(Int(chanlist(k,0)));
+            //lowfreq=freqList(k,1)-freqList(k,3)/2.0;
+            //topfreq=freqList(k, 2)+freqList(k,3)/2.0;
+	    lowfreq=freqies(chanlist(k,1));
+            topfreq=freqies(chanlist(k,2));
 	    //cerr << "Dat lowFreq "<< lowfreq << " topfreq " << topfreq << endl; 
             channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
           }
