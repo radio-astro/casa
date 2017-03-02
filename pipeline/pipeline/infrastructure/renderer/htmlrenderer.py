@@ -248,7 +248,17 @@ class T1_1Renderer(RendererBase):
             time_end = utils.format_datetime(time_end)
 
             target_scans = [s for s in ms.scans if 'TARGET' in s.intents]
-            time_on_source = utils.total_time_on_source(target_scans)
+            # check for REFERENCE (OFF-source) in TARGET scans
+            has_reference_scan = False
+            for s in target_scans:
+                if 'REFERENCE' in s.intents:
+                    has_reference_scan = True
+                    break
+            if has_reference_scan:
+                # target scan has OFF-source need to go harder way
+                time_on_source =  utils.total_time_on_target_on_source(ms)
+            else:
+                time_on_source = utils.total_time_on_source(target_scans)
             time_on_source = utils.format_timedelta(time_on_source)
            
             baseline_min = ms.antenna_array.min_baseline.length
