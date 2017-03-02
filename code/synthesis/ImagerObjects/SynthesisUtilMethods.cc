@@ -1885,11 +1885,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert( flds.nelements()>0 , AipsError );
     Int fld = flds[0];
     Double freqmin=0, freqmax=0;
-    freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
-    VisBufferUtil::getFreqRange(freqmin,freqmax, vi2, freqFrameValid? freqFrame:MFrequency::REST );
+    freqFrameValid=(freqFrame != MFrequency::REST );
     MFrequency::Types dataFrame=(MFrequency::Types)vi2.subtableColumns().spectralWindow().measFreqRef()(spwids[0]);
     Double datafstart, datafend;
     VisBufferUtil::getFreqRange(datafstart, datafend, vi2, dataFrame );
+    if (mode=="cubedata") {
+       freqmin = datafstart;
+       freqmax = datafend;
+    }
+    else {
+       VisBufferUtil::getFreqRange(freqmin,freqmax, vi2, freqFrameValid? freqFrame:MFrequency::REST );
+    }
+    
 
     return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax, datafstart, datafend );
   }
@@ -1906,13 +1913,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int fld = rvi->fieldId();
     Double freqmin=0, freqmax=0;
     Double datafstart, datafend;
-    freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
-    rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
-    // Following three lines are  kind of redundant but need to get freq range in the data frame to be used
-    // to select channel range for default start 
+    //freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
+    freqFrameValid=(freqFrame != MFrequency::REST );
     ROMSColumns msc(msobj);
     MFrequency::Types dataFrame=(MFrequency::Types)msc.spectralWindow().measFreqRef()(spwids[0]);
     rvi->getFreqInSpwRange(datafstart, datafend, dataFrame );
+    if (mode=="cubedata") {
+       freqmin = datafstart;
+       freqmax = datafend;
+    }
+    else { 
+       rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
+    }
+    // Following three lines are  kind of redundant but need to get freq range in the data frame to be used
+    // to select channel range for default start 
     //cerr<<"freqmin="<<freqmin<<" datafstart="<<datafstart<<" freqmax="<<freqmax<<" datafend="<<datafend<<endl;
     return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax, datafstart, datafend );
   }
