@@ -125,51 +125,51 @@
             
             <!-- SELECTION parameters -->
             <param type="any" name="spw" subparam="true">
-                <description>Spectral-window/frequency/channel: "" == \&gt; all, spw="0:17~19"</description>
+                <description>Spectral-window/frequency/channel: '' ==&gt; all, spw="0:17~19"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="field" subparam="true">
-                <description>Field names or field index numbers: "" ==&amp; all, field="0~2,3C286"</description>
+                <description>Field names or field index numbers: '' ==&gt; all, field="0~2,3C286"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="antenna" subparam="true">
-                <description>Antenna/baselines: "" ==> all, antenna ="3,VA04"</description>
+                <description>Antenna/baselines: '' ==> all, antenna ="3,VA04"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="uvrange" subparam="true">
-                <description>UV range: "" ==> all; uvrange ="0~100klambda", default units=meters</description>
+                <description>UV range: '' ==> all; uvrange ="0~100klambda", default units=meters</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
-            <param type="any" name="timerange" subparam="true"><description>Time range: "" ==> all,timerange="09:14:0~09:54:0"</description>
+            <param type="any" name="timerange" subparam="true"><description>Time range: '' ==> all,timerange="09:14:0~09:54:0"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="correlation" subparam="true">
-                <description>Correlation: "" ==> all, correlation="XX,YY"</description>
+                <description>Correlation: '' ==> all, correlation="XX,YY"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="scan" subparam="true">
-                <description>Scan numbers: "" ==> all</description>
+                <description>Scan numbers: '' ==> all</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="intent" subparam="true">
-                <description>Scan intent: "" ==> all, intent="CAL*POINT*"</description>
+                <description>Scan intent: '' ==> all, intent="CAL*POINT*"</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="array" subparam="true">
-                <description>(Sub)array numbers: "" ==> all</description>
+                <description>(Sub)array numbers: '' ==> all</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="observation" subparam="true">
-                <description>Observation ID: "" ==> all</description>
+                <description>Observation ID: '' ==> all</description>
                 <any type="variant" limittypes="string int" />
                 <value type="string" />
             </param>
