@@ -1652,8 +1652,15 @@ MODEL_DATA, and written to the DATA and
     Set various system parameters from which the thermal (ie, random
     additive) noise level will be calculated.
     
-    For mode=simplenoise, one specifies the standard deviation for the
-    noise to be added to real and imaginary parts of the visibility.
+    For mode=simplenoise, one specifies the standard deviation "sigma"
+    for the noise to be added to real and imaginary parts of the visibility.
+    The noise in amplitude per visibility is approximately "sigma" although 
+      it is not Gaussian (see Thompson, Moran, and Swenson fig. 6.9)
+    and the point source noise in a Stokes I image will be 
+      ~sigma/sqrt(n_pol)/sqrt(n_baselines)/sqrt(n_integrations), 
+    where n_pol are the number of polarizations in the MS (typically 2),
+    and n_integrations are the number of correlator integration times 
+    in the MS (~ track time / int. time)
     
     For mode=tsys-atm or tsys-atm, the noise will vary with dish
     diameter, antenna efficiency, system temperature, opacity, sky
@@ -1683,13 +1690,13 @@ MODEL_DATA, and written to the DATA and
     </param>
     
     <param type="string" name="table">
-      <description>Name of optional cal table to write</description>
+      <description>Name of optional cal table to write (if OTF=False)</description>
       <value></value>
       <choice>''</choice>
     </param>
     
     <param type="any" name="simplenoise" >
-      <description>Level of noise if not calculated</description>
+      <description>Level of noise if not calculated by amt</description>
       <any type="variant" />
       <value>0.1Jy</value>
     </param>
