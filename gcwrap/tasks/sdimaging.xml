@@ -473,10 +473,22 @@ phasecenter -- image phase center: direction measure or field ID
                  'AZEL -123d48m29 15d41m41'
 ephemsrcname -- ephemeris source name for moving source (solar sytem objects)
         default: '' (none)
-        if the source name in the data matches one of the solar system
-        objects known by CASA, the imaging realigns the data by
-        correcting shifts of the source during observation,
-        so that the source appears to be fixed in the image.
+        If specified source name matches one of the solar system 
+        objects known by CASA (see examples below), the task realigns 
+        the data by correcting spatial shifts of the source during 
+        observation, so that the source appears to be fixed in the 
+        image. If specified name doesn't match, the task will fail. 
+        When moving source correction is applied, the source is fixed 
+        to the position at the beginning of the on-source observation 
+        in the data. Direction reference frame of output image refers 
+        phasecenter (it is 'J2000' if phasecenter is empty). Note that 
+        moving source correction is not applied unless the user 
+        explicitly set ephemsrcname even if target field is one of 
+        the solar system objects known by CASA. Note also that setting 
+        'pointing_offset' or 'source_offset' to directioncolumn 
+        disables moving source correction so that these values should 
+        not be used when the user wants to activate moving source 
+        correction. 
         examples: 'MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN',
                   'URANUS', 'NEPUTUNE', 'PLUTO', 'SUN', 'MOON'
 pointingcolumn -- pointing data column to use
