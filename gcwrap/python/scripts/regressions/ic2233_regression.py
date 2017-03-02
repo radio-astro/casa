@@ -26,7 +26,7 @@ IMAGE     = "imIC2233."+FTMACHINE;
 REUSEREPOS = False;
 INTERACTIVE = False;
 TIMERANGE = "";"*+0:30:0";
-###EPS       = 1e-5;  # Logical "zero"
+EPS       = 1e-5;  # Logical "zero"
 
 
 #--------------------------------------------------------------
