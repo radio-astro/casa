@@ -119,13 +119,13 @@
 		</param>
 
 		<param type="bool" name="listmodels" subparam="true">
-		  <description>List the available modimages for VLA calibrators or Tb models for Solar System objects</description>
+		  <description>List the available models for VLA calibrators or Tb models for Solar System objects</description>
 		  <value>False</value>
 		</param>
 
 		<param type="any" name="fluxdensity" subparam="true">
 			<any type="variant" limittypes="int intArray doubleArray"/>
-			<description>Specified flux density [I,Q,U,V]; (-1 will lookup values)</description>
+			<description>Specified flux density in Jy [I,Q,U,V]; (-1 will lookup values)</description>
 			<value type="int">-1</value>
 		</param>
                 <param type="any" name="spix" subparam="true">
@@ -144,7 +144,7 @@
 			<value></value>
 		</param>
 		<param type="doubleArray" name="polangle" subparam="true">
-			<description>Coefficients of an expansion of frequency-dependent polarization angle expression</description>
+			<description>Coefficients of an expansion of frequency-dependent polarization angle expression (in radians) </description>
 			<value></value>
 		</param>
 		<param type="double" name="rotmeas" subparam="true">
