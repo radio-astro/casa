@@ -511,16 +511,6 @@ class Finalcals(basetask.StandardTaskTemplate):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         
-        applycal_inputs = applycal.IFApplycal.Inputs(context,
-            vis = self.inputs.vis,
-            field = '',
-            spw = '',
-            #scan = calibrator_scan_select_string,
-            intent = '',
-            flagbackup = False,
-            calwt = False,
-            flagsum = False)
-
         AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
         AllCalTables.append(ktypecaltable)
         AllCalTables.append(bpcaltable)
@@ -543,9 +533,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                               'parang'     :self.parang,
                               'applymode'  :'calflagstrict',
                               'flagbackup' :False}
-        
-        #applycal_task = applycal.IFApplycal(applycal_inputs)
-        
+
         job = casa_tasks.applycal(**applycal_task_args)
 
         return self._executor.execute(job)

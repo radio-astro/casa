@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" ?>
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
-file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="h_applycal" category="pipeline">
 <shortdescription>Apply the calibration(s) to the data</shortdescription>
@@ -50,11 +49,6 @@ Apply the calibration to the data.
         </allowed>
     </param>
 
-    <param type="boolArray" name="calwt" subparam="true">
-	<description>Calibrate the weights as well as the data</description>
-	<value>True</value>
-    </param>
-
     <param type="bool" name="flagbackup" subparam="true">
 	<description>Backup the flags before the apply</description>
 	<value type="bool">True</value>
@@ -99,7 +93,6 @@ Apply the calibration to the data.
 	        <default param="intent"><value type="string"></value></default>
 	        <default param="spw"><value type="string"></value></default>
 		<default param="antenna"><value type="string"></value></default>
-	        <default param="calwt"><value type="boolArray">True</value></default>
 	        <default param="flagbackup"><value type="bool">True</value></default>
 	        <default param="dryrun"><value type="bool">False</value></default>
 	        <default param="acceptresults"><value type="bool">True</value></default>
@@ -110,7 +103,6 @@ Apply the calibration to the data.
 	        <default param="intent"><value type="string"></value></default>
 	        <default param="spw"><value type="string"></value></default>
 		<default param="antenna"><value type="string"></value></default>
-	        <default param="calwt"><value type="boolArray">True</value></default>
 	        <default param="flagbackup"><value type="bool">True</value></default>
 	    </equals>
         </when>

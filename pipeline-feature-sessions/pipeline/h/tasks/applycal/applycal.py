@@ -1,167 +1,96 @@
 from __future__ import absolute_import
+
+import collections
+import copy
 import os
 import types
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.vdp as vdp
 
-from pipeline.h.heuristics import fieldnames
+from ...heuristics.fieldnames import IntentFieldnames
+
+__all__ = [
+    'Applycal',
+    'ApplycalInputs',
+    'ApplycalResults'
+]
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class ApplycalInputs(basetask.StandardInputs,
-                     basetask.OnTheFlyCalibrationMixin):
+class ApplycalInputs(vdp.StandardInputs):
     """
     ApplycalInputs defines the inputs for the Applycal pipeline task.
     """
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None,
-                 # 
-                 vis=None, 
-                 # data selection arguments
-                 field=None, spw=None, antenna=None, intent=None,
-                 # preapply calibrations
-                 opacity=None, parang=None, applymode=None, calwt=None,
-                 #flagbackup=None, scan=None, flagsum=None, flagdetailedsum=None):
-                 flagbackup=None, flagsum=None, flagdetailedsum=None):
-        self._init_properties(vars())
-
-    @property
+    @vdp.VisDependentProperty
     def antenna(self):
-        if self._antenna is not None:
-            return self._antenna
-        
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('antenna')
+        return ''
 
-        antennas = self.ms.get_antenna(self._antenna)
-        return ','.join([str(a.id) for a in antennas])
-
-    @antenna.setter
+    @antenna.convert
     def antenna(self, value):
-        if value is None:
-            value = ''
-        self._antenna = value
+        antennas = self.ms.get_antenna(value)
+        # if all antennas are selected, return ''
+        if len(antennas) == len(self.ms.antennas):
+            return ''
+        return utils.find_ranges([a.id for a in antennas])
 
-    @property
-    def flagbackup(self):
-        return self._flagbackup
+    applymode = vdp.VisDependentProperty(default='calflagstrict')
 
-    @flagbackup.setter
-    def flagbackup(self, value):
-        if value is None:
-            value = True
-        elif value:
-            value = True
-        else:
-            value = False
-        self._flagbackup = value
-
-    # @property
-    # def calwt(self):
-    #     return self._calwt
-    #
-    # @calwt.setter
-    # def calwt(self, value):
-    #     if value is None:
-    #         value = True
-    #     elif value:
-    #         value = True
-    #     else:
-    #         value = False
-    #     self._calwt = value
-    #
-    @property
+    @vdp.VisDependentProperty
     def field(self):
-        if not callable(self._field):
-            return self._field
-
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('field')
-
         # this will give something like '0542+3243,0343+242'
-        intent_fields = self._field(self.ms, self.intent)
+        field_finder = IntentFieldnames()
+        intent_fields = field_finder.calculate(self.ms, self.intent)
 
         # run the answer through a set, just in case there are duplicates
         fields = set()
         fields.update(utils.safe_split(intent_fields))
-        
+
         return ','.join(fields)
 
-    @field.setter
-    def field(self, value):
-        if value is None:
-            value = fieldnames.IntentFieldnames()
-        self._field = value
+    flagbackup = vdp.VisDependentProperty(default=True)
+    flagdetailedsum = vdp.VisDependentProperty(default=False)
+    flagsum = vdp.VisDependentProperty(default=True)
+    intent = vdp.VisDependentProperty(default='TARGET,PHASE,BANDPASS,AMPLITUDE,CHECK')
 
-    @property
-    def intent(self):
-        return self._intent
-
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'TARGET,PHASE,BANDPASS,AMPLITUDE,CHECK'
-        self._intent = value.replace('*', '')
-
-    @property
+    @vdp.VisDependentProperty
     def spw(self):
-        if self._spw is not None:
-            return self._spw
-        
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('spw')
-
-        science_spws = self.ms.get_spectral_windows(self._spw, with_channels=True)
+        science_spws = self.ms.get_spectral_windows(with_channels=True)
         return ','.join([str(spw.id) for spw in science_spws])
 
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
+    @basetask.log_equivalent_CASA_call
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
+                 opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
+        # pipeline inputs
+        self.context = context
+        # vis must be set first, as other properties may depend on it
+        self.vis = vis
+        self.output_dir = output_dir
 
-    @property
-    def applymode(self):
-        return self._applymode
+        # data selection arguments
+        self.field = field
+        self.spw = spw
+        self.antenna = antenna
+        self.intent = intent
 
-    @applymode.setter
-    def applymode(self, value):
-        if value is None:
-            value = 'calflagstrict'
-        elif value == '':
-            value = 'calflagstrict'
-        self._applymode = value
-        
-    @property
-    def flagsum(self):
-        return self._flagsum
+        # solution parameters
+        self.opacity = opacity
+        self.parang = parang
+        self.applymode = applymode
+        self.flagbackup = flagbackup
+        self.flagsum = flagsum
+        self.flagdetailedsum = flagdetailedsum
 
-    @flagsum.setter
-    def flagsum(self, value):
-        if value is None:
-            value = True
-        elif value:
-            value = True
-        else:
-            value = False
-        self._flagsum = value
-
-    @property
-    def flagdetailedsum(self):
-        return self._flagdetailedsum
-
-    @flagdetailedsum.setter
-    def flagdetailedsum(self, value):
-        if value is None:
-            value = True
-        elif value:
-            value = True
-        else:
-            value = False
-        self._flagdetailedsum = value
+    def to_casa_args(self):
+        casa_args = super(ApplycalInputs, self).to_casa_args()
+        del casa_args['flagsum']
+        del casa_args['flagdetailedsum']
+        return casa_args
 
 
 class ApplycalResults(basetask.Results):
@@ -169,7 +98,7 @@ class ApplycalResults(basetask.Results):
     ApplycalResults is the results class for the pipeline Applycal task.     
     """
     
-    def __init__(self, applied=[]):
+    def __init__(self, applied=None):
         """
         Construct and return a new ApplycalResults.
         
@@ -179,6 +108,9 @@ class ApplycalResults(basetask.Results):
         :param applied: caltables applied by this task
         :type applied: list of :class:`~pipeline.domain.caltable.CalibrationTable`
         """
+        if applied is None:
+            applied = []
+
         super(ApplycalResults, self).__init__()
         self.applied = set()
         self.applied.update(applied)
@@ -215,48 +147,37 @@ class ApplycalResults(basetask.Results):
 
 class Applycal(basetask.StandardTaskTemplate):
     """
-    Applycal executes CASA applycal tasks for the current context state,
-    applying calibrations registered with the pipeline context to the target
-    measurement set.
+    Applycal executes CASA applycal tasks for the current active context
+    state, applying calibrations registered with the pipeline context to the
+    target measurement set.
     
     Applying the results from this task to the context marks the referred
     tables as applied. As a result, they will not be included in future
     on-the-fly calibration arguments.
     """
     Inputs = ApplycalInputs
-    ### Note this is a temporary workaround ###
-    antenna_to_apply = '*&*'
 
     def prepare(self):
-
-        result = self.applycal_run()
-
-        return result
-
-    def applycal_run(self):
         inputs = self.inputs
 
-        # Get the calibration state for the user's target data selection. This
-        # dictionary of CalTo:CalFroms gives us which calibrations should be
-        # applied and how.
+        # Get the target data selection for this task as a CalTo object
         calto = callibrary.get_calto_from_inputs(inputs)
 
-        # As Applycal is a task that can handle calwt, request that
-        # jobs not be merged when calwt differs by supplying a null
-        # 'ignore' argument - or as in this case - omitting it.
+        # Now get the calibration state for that CalTo data selection. The
+        # returned dictionary of CalTo:CalFroms specifies the calibrations to
+        # be applied and the data selection to apply them to.
+        #
+        # Note that no 'ignore' argument is given to get_calstate
+        # (specifically, we don't say ignore=['calwt'] like many other tasks)
+        # as applycal is a task that can handle calwt and so different values
+        # of calwt should in this case result in different tasks.
         calstate = inputs.context.callibrary.get_calstate(calto)
         merged = calstate.merged()
-
-        # run a flagdata job to find the flagged state before applycal
-        if inputs.flagsum:
-            flagdata_summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
-            stats_before = self._executor.execute(flagdata_summary_job)
-            stats_before['name'] = 'before'
 
         merged = callibrary.fix_cycle0_data_selection(inputs.context, merged)
 
         jobs = []
-        for calto, calfroms in merged.items():
+        for calto, calfroms in merged.iteritems():
             # if there's nothing to apply for this data selection, continue
             if not calfroms:
                 continue
@@ -266,97 +187,77 @@ class Applycal(basetask.StandardTaskTemplate):
             inputs.field = calto.field
             inputs.intent = calto.intent
 
-            args = inputs.to_casa_args()
-            # Do this a different way ?
-            args.pop('flagsum', None)  # Flagsum is not a CASA applycal task argument
-            args.pop('flagdetailedsum', None)  # Flagdetailedsum is not a CASA applycal task argument
+            task_args = inputs.to_casa_args()
 
             # set the on-the-fly calibration state for the data selection.
             calapp = callibrary.CalApplication(calto, calfroms)
+            task_args['gaintable'] = calapp.gaintable
+            task_args['gainfield'] = calapp.gainfield
+            task_args['spwmap'] = calapp.spwmap
+            task_args['interp'] = calapp.interp
+            task_args['calwt'] = calapp.calwt
+            task_args['applymode'] = inputs.applymode
+
             ### Note this is a temporary workaround ###
-            args['antenna'] = self.antenna_to_apply
-            ### Note this is a temporary workaround ###
-            args['gaintable'] = calapp.gaintable
-            args['gainfield'] = calapp.gainfield
-            args['spwmap'] = calapp.spwmap
-            args['interp'] = calapp.interp
-            args['calwt'] = calapp.calwt
-            args['applymode'] = inputs.applymode
+            task_args['antenna'] = '*&*'
 
-            jobs.append(casa_tasks.applycal(**args))
+            jobs.append(casa_tasks.applycal(**task_args))
 
-
-        # execute the jobs
-        for job in jobs:
-            self._executor.execute(job)
-
-        # run a final flagdata job to get the flagging statistics after
-        # application of the potentially flagged caltables
+        # if requested, schedule additional flagging tasks to determine
+        # statistics
         if inputs.flagsum:
-            stats_after = self._executor.execute(flagdata_summary_job)
-            stats_after['name'] = 'applycal'
+            # schedule a flagdata summary jobs either side of the applycal jobs
+            jobs.insert(0, casa_tasks.flagdata(vis=inputs.vis, mode='summary', name='before'))
+            jobs.append(casa_tasks.flagdata(vis=inputs.vis, mode='summary', name='applycal'))
 
-        applied = [callibrary.CalApplication(calto, calfroms)
-                   for calto, calfroms in merged.items()]
+            if inputs.flagdetailedsum:
+                # Schedule a flagdata job to determine flagging stats per spw
+                # and per field
+                ms = inputs.context.observing_run.get_ms(inputs.vis)
+                flagkwargs = ['spw="{!s}" fieldcnt=True mode="summary" name="AntSpw{:0>3}"'.format(spw.id, spw.id)
+                              for spw in ms.get_spectral_windows()]
+                jobs.append(casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs, flagbackup=False))
 
-        result = ApplycalResults(applied)
+        # execute the jobs and capture the output
+        job_results = [self._executor.execute(job) for job in jobs]
+        flagdata_results = [job_result for job, job_result in zip(jobs, job_results) if job.fn.__name__ == 'flagdata']
 
+        applied_calapps = [callibrary.CalApplication(calto, calfroms) for calto, calfroms in merged.iteritems()]
+        result = ApplycalResults(applied_calapps)
+
+        # extract the flagging results if required
         if inputs.flagsum:
-            result.summaries = [stats_before, stats_after]
-
-        # Flagging stats by spw and antenna
-
-        if inputs.flagsum and inputs.flagdetailedsum:
-            ms = self.inputs.context.observing_run.get_ms(inputs.vis)
-            spws = ms.get_spectral_windows()
-            spwids = [spw.id for spw in spws]
-
-            # Note should intent be set to inputs.intent as shown below or is there
-            # a reason not to do this.
-            # fields = ms.get_fields(intent=inputs.intent)
-            fields = ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
-            flagsummary = {}
-            flagkwargs = []
-
-            for field in fields:
-                flagsummary[field.name.strip('"')] = {}
-
-            for spwid in spwids:
-                flagline = "spw='" + str(spwid) + "' fieldcnt=True mode='summary' name='AntSpw" + str(spwid).zfill(3)
-                flagkwargs.append(flagline)
-
-            # BRK note - Added kwarg fieldcnt based on Justo's changes, July 2015
-            # Need to have fieldcnt in the flagline above
-            flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs, flagbackup=False)
-            flagdicts = self._executor.execute(flaggingjob)
-
-            # BRK note - for Justo's new flagging scheme, need to rearrrange
-            # the dictionary keys in the order of field, spw report, antenna, with added name and type keys
-            #   on the third dictionary level.
-
-            # Set into single dictionary report (single spw) if only one dict returned
-            if len(flagkwargs) == 1:
-                flagdictssingle = flagdicts
-                flagdicts = {}
-                flagdicts['report0'] = flagdictssingle
-
-            for key in flagdicts.keys():  # report level
-                fieldnames = flagdicts[key].keys()
-                fieldnames.remove('name')
-                fieldnames.remove('type')
-                for fieldname in fieldnames:
-                    try:
-                        flagsummary[fieldname][key] = flagdicts[key][fieldname]
-                        spwid = flagdicts[key][fieldname]['spw'].keys()[0]
-                        flagsummary[fieldname][key]['name'] = 'AntSpw' + str(spwid).zfill(3) + 'Field_' + str(fieldname)
-                        flagsummary[fieldname][key]['type'] = 'summary'
-                    except:
-                        LOG.debug("No flags to report for " + str(key))
-
-            result.flagsummary = flagsummary
-
+            result.summaries = [flagdata_results[0], flagdata_results[1]]
+            if inputs.flagdetailedsum:
+                result.flagsummary = reshape_flagdata_summary(flagdata_results[2])
 
         return result
 
     def analyse(self, result):
         return result
+
+
+def reshape_flagdata_summary(flagdata_result):
+    """
+    Reshape a flagdata result so that results are grouped by field.
+
+    :param flagdata_result:
+    :return:
+    """
+    # Set into single dictionary report (single spw) if only one dict returned
+    if not all([key.startswith('report') for key in flagdata_result]):
+        flagdata_result = {'report0': flagdata_result}
+
+    flagsummary = collections.defaultdict(dict)
+    for report_level, report in flagdata_result.iteritems():
+        report_name = report['name']
+        report_type = report['type']
+        # report keys are all fieldnames with the exception of 'name' and
+        # 'type', which are in there too.
+        for field_name in [key for key in report if key not in ('name', 'type')]:
+            # deepcopy to avoid modifying the results dict
+            flagsummary[field_name][report_level] = copy.deepcopy(report[field_name])
+            flagsummary[field_name][report_level]['name'] = '{!s}Field_{!s}'.format(report_name, field_name)
+            flagsummary[field_name][report_level]['type'] = report_type
+
+    return flagsummary

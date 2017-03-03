@@ -2,15 +2,12 @@ from __future__ import absolute_import
 
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 
 import numpy as np
 
 from pipeline.hif.tasks import gaincal
-from pipeline.hif.tasks import bandpass
-from pipeline.hif.tasks import applycal
-from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
+from pipeline.hifv.heuristics import getCalFlaggedSoln
 import pipeline.hif.heuristics.findrefant as findrefant
 from pipeline.hifv.heuristics import weakbp, do_bandpass
 
@@ -428,16 +425,6 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         
         LOG.info("Applying semi-final delay and BP calibrations to all calibrators")
 
-        applycal_inputs = applycal.IFApplycal.Inputs(context,
-            vis = self.inputs.vis,
-            field = '',
-            spw = '',
-            #scan = calibrator_scan_select_string,
-            intent = '',
-            flagbackup = False,
-            calwt = False,
-            flagsum = False)
-
         AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
         AllCalTables.append(ktypecaltable)
         #AllCalTables.append(bpdgain_touse)
@@ -460,8 +447,6 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
                               'parang'     :self.parang,
                               'applymode'  :'calflagstrict',
                               'flagbackup' :False}
-        
-        #applycal_task = applycal.IFApplycal(applycal_inputs)
 
         job = casa_tasks.applycal(**applycal_task_args)
 
