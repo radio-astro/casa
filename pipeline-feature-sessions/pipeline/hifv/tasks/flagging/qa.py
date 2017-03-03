@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-
+import collections
 import os
 
 import pipeline.infrastructure.logging as logging
@@ -36,7 +36,7 @@ class FlagBadDeformattersListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing FlagBadDeformattersResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = flagbaddeformatters.FlagBadDeformattersResults
     generating_task = flagbaddeformatters.FlagBadDeformatters
 
@@ -76,7 +76,7 @@ class CheckflagListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing CheckflagResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = checkflag.CheckflagResults
     generating_task = checkflag.Checkflag
 
@@ -115,7 +115,7 @@ class TargetflagListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing TargetflagResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = targetflag.TargetflagResults
     generating_task = targetflag.Targetflag
 

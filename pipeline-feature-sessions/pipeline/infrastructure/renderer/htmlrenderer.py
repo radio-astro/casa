@@ -428,20 +428,20 @@ class T1_3MRenderer(RendererBase):
                         vis = os.path.basename(resultitem.inputs['vis'])
                         ms = context.observing_run.get_ms(vis)
                         flagtable = {}
-                        for field in resultitem.flagsummary.keys():
-                            #each field
-                            intents = ','.join([f.intents for f in ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET') if field in f.name][0])
+                        for field in resultitem.flagsummary:
+                            intents = ','.join([f.intents for f in ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
+                                                if field in f.name][0])
                             
                             flagsummary = resultitem.flagsummary[field]
                         
                             fieldtable = {}
-                            for _,v in flagsummary.iteritems():
+                            for _, v in flagsummary.iteritems():
                                 myname = v['name']
                                 myspw = v['spw']
                                 myant = v['antenna']
                                 spwkey = myspw.keys()[0]
                             
-                                fieldtable.update({myname:{spwkey:myant}})
+                                fieldtable[myname] = {spwkey: myant}
                                 
                             flagtable['Source name: '+ field + ', Intents: ' + intents] = fieldtable
                         

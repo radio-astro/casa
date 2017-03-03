@@ -8,7 +8,6 @@ from . import common
 LOG = infrastructure.get_logger(__name__)
 
 
-
 class BandpassWorkerInputs(common.CommonBandpassInputs):
     """
     BandpassInputs defines the inputs required by the :class:`Bandpass`

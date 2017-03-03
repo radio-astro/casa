@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
@@ -81,7 +82,7 @@ class SetjyListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing FluxCalibrationResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = commonfluxresults.FluxCalibrationResults
     generating_task = setjy.Setjy
 
@@ -101,7 +102,7 @@ class SetModelsListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing FluxCalibrationResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = commonfluxresults.FluxCalibrationResults
     generating_task = setmodel.SetModels
 

@@ -79,7 +79,6 @@ from . import utils
 
 __all__ = ['VisDependentProperty',
            'StandardInputs',
-           'OnTheFlyCalibrationMixin',
            'ModeInputs']
 
 LOG = logging.get_logger(__name__)
@@ -426,8 +425,10 @@ class StandardInputs(api.Inputs):
             imaging_preferred = isinstance(self, api.ImagingMeasurementSetsPreferred)
             mses = self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)
             value = [ms.name for ms in mses]
-        if isinstance(value, list) and len(value) is 1:
-            value = value[0]
+
+        # for compatibility with the old implementation, single-value lists
+        # should be kept as lists
+
         self._vis = value
 
     #- vis-dependent properties ----------------------------------------------

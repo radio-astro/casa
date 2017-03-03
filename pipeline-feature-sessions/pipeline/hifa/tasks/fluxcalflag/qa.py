@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -54,7 +55,7 @@ class FluxcalflagListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing FluxcalflagResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = fluxcalflag.FluxcalFlagResults
 
     def handle(self, context, result):

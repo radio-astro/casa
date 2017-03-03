@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import collections
 import os
 
 import pipeline.infrastructure.logging as logging
@@ -103,7 +104,7 @@ class TimegaincalListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing TimegaincalResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = common.GaincalResults
 
     def handle(self, context, result):
