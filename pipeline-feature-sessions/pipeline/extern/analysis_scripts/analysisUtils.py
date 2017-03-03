@@ -408,13 +408,13 @@ def onedgaussfit(xax,data,err=None,params=[0,1,0,1,0],fixed=[False,False,False,F
     """
 
     def mpfitfun(x,y,err):
-        if err == None:
+        if err is None:
             def f(p,fjac=None): return [0,(y-onedgaussianplus(x,*p))]
         else:
             def f(p,fjac=None): return [0,(y-onedgaussianplus(x,*p))/err]
         return f
 
-    if xax == None:
+    if xax is None:
         xax = np.arange(len(data))
 
     parinfo = [ {'n':0,'value':params[0],'limits':[minpars[0],maxpars[0]],'limited':[limitedmin[0],limitedmax[0]],'fixed':fixed[0],'parname':"HEIGHT",'error':0} ,
@@ -552,10 +552,10 @@ plotOption = {'0-1' : 'b.', '0-2' : 'r.'}
 
 def getAllanVariance(vis,antenna1=None,antenna2=None,spwID=None,param='phase',scan=None,state=None,doPlot=True) :
     if param not in ['phase','real','imag'] : return 'you are a dumb fuck.'
-    if spwID == None : spwID = getChanAverSpwIDBaseBand0(vis)
-    if antenna2 == None : antenna2 = getAntennaNames(vis)
+    if spwID is None : spwID = getChanAverSpwIDBaseBand0(vis)
+    if antenna2 is None : antenna2 = getAntennaNames(vis)
     else : antenna2 = makeList(antenna2)
-    if antenna1 == None : antenna1 = getAntennaNames(vis)
+    if antenna1 is None : antenna1 = getAntennaNames(vis)
     else : antenna1 = makeList(antenna1)
     data = Visibility(vis,antenna1=antenna1[0],antenna2=antenna2[0],spwID=spwID,scan=scan,state=state)
     aV = {}
@@ -630,7 +630,7 @@ class StuffToLieAbout:
     def tsysInSpectralWindow(self,badSpw,goodSpw=None,setValue=False) :
         inputMs  = self.calTableExplorer.inputMs
         badRaw   = Visibility(inputMs,spwID=badSpw, correctedData = False)
-        if ((goodSpw == None) and (not setValue)) :
+        if ((goodSpw is None) and (not setValue)) :
            goodSpw = list(self.calTableExplorer.getSpwID())
            goodSpw.remove(badSpw)[0]
            goodCorr = Visibility(inputMs,spwID=goodSpw,correctedData = True)
@@ -642,13 +642,13 @@ class StuffToLieAbout:
         self.stuffVisInDataset(badCorr,badSpw)
 
     def TFBOffset(self,offsetFromOT,inputMs=None,spwIds=None) :
-        if inputMs == None and self.calTable == none :
+        if inputMs is None and self.calTable is None :
             return "Please identify a visibility dataset."
-        elif inputMs == None :
+        elif inputMs is None :
             inputMs = self.calTableExplorer.intputMs
         if offsetFromOT < 1000.0 : return "Please input your offsetFromOT in MHz."        
         vm = ValueMapping(inputMs)
-        if spwIds == None :
+        if spwIds is None :
             spwIds = []
             print "I am assuming you want to fix all FDM modes by the same amount."
             for i in vm.spwInfo.keys() :
@@ -1293,11 +1293,11 @@ class TsysExplorer:
         if autoSubtableQuery==False and queryString=='' : return 'Must either automatically generate the (autoSubtableQuery=True) or provide a subtable query string (queryString)'
         self.inputMs = inputMs
         self.valueMapping = ValueMapping(inputMs)
-        if antenna == None :
+        if antenna is None :
             antenna = self.valueMapping.getAntennaNamesForAntennaId(0)
         self.antenna = antenna
         self.checkAntenna()
-        if spwID == None :
+        if spwID is None :
             spwID = getChanAverSpwIDBaseBand0(inputMs)
         self.spwID = spwID
         self.elevation = None
@@ -1432,7 +1432,7 @@ class TsysExplorer:
         
 class SysCal:
     def __init__(self,inputMs,antenna=None,spwID=None,scan=None):
-        if spwID == None :
+        if spwID is None :
             spwID = getChanAverSpwIDBaseBand0(inputMs)
         self.inputMs = inputMs
         self.spwID = spwID
@@ -1607,7 +1607,7 @@ class CalTableExplorer:
         self.field        = field
         self.checkField()
         self.getCalDescSpwIDMapping()
-        if spwID == None : self.spwID = self.calDescSpwIDMapping[0]
+        if spwID is None : self.spwID = self.calDescSpwIDMapping[0]
         self.autoSubtableQuery = autoSubtableQuery
         self.queryString  = queryString
         if self.autoSubtableQuery == True :
@@ -1939,7 +1939,7 @@ class ScaleGainsClass(CalTableExplorer):
     def scaleGains(self,phasediff,newTable=None) :
         
         # Define table name
-        if newTable == None :
+        if newTable is None :
             self.newTable = '%s.scaled' % self.calTable
         else :
             self.newTable = newTable
@@ -2031,7 +2031,7 @@ class ScaleGainsClass(CalTableExplorer):
 
     def reconstructRow(self,rowVals,tableName,tableRow=None) :
         tb.open(tableName,nomodify=False)
-        if tableRow == None :
+        if tableRow is None :
             tb.addrows()
             rownum = tb.nrows()-1L
         else :
@@ -2124,7 +2124,7 @@ class InterpolateTsys(CalTableExplorer):
         linesToRemove = []
         for i in range(tb.nrows()):
             _scan = self.vm.getScansForTime(times[i],5e-6)
-            if _scan != None:
+            if _scan is not None:
                   fieldId[i] = self.vm.getFieldsForScan(_scan,False)
                   scans[i] = _scan
             else:
@@ -2191,7 +2191,7 @@ class InterpolateTsys(CalTableExplorer):
             
     def interpolateTsys(self,newTable=None,interpType='linear') :
         self.badRows = []
-        if newTable == None :
+        if newTable is None :
             self.newTable = '%s.fdm' % self.calTable
         else :
             self.newTable = newTable
@@ -2354,7 +2354,7 @@ class InterpolateTsys(CalTableExplorer):
 
     def reconstructRow1(self,tableName,tableRow=None) :
         tb.open(tableName,nomodify=False)
-        if tableRow == None : tb.addrows()
+        if tableRow is None : tb.addrows()
         else :
             self.badRows.append(tableRow)
         tb.close()
@@ -2407,7 +2407,7 @@ class InterpolateTsys(CalTableExplorer):
 
     def reconstructRow(self,rowVals,tableName,tableRow=None) :
         tb.open(tableName,nomodify=False)
-        if tableRow == None :
+        if tableRow is None :
             tb.addrows()
             rownum = tb.nrows()-1L
         else :
@@ -2469,7 +2469,7 @@ class Visibility:
     
     def __init__(self,inputMs,antenna1=0,antenna2=0,spwID=None,field=None,state=None,scan=None,autoSubtableQuery=True,queryString='',cross_auto_all='all',correctedData=False):
         if autoSubtableQuery==False and queryString=='' : return 'Must either automatically generate the (autoSubtableQuery=True) or provide a subtable query string (queryString)'
-        if spwID == None :
+        if spwID is None :
             spwID = getChanAverSpwIDBaseBand0(inputMs)
         self.inputMs = inputMs
         self.valueMap = ValueMapping(self.inputMs)
@@ -2734,7 +2734,7 @@ def parseTrx(antennaSel,polSel=0,bandNumberSel=3,filename='/data/checkTrx.txt') 
     return jdTime[indexVal],elev[indexVal],recTime[indexVal],chan[indexVal],trx[indexVal],errtrx[indexVal],gain[indexVal],errgain[indexVal],freq[indexVal],tsys[indexVal]
 
 def parseTrxInfo(antennaList=['DV01','DV02','DV03','DV04','DV05','PM02','PM03'],polList=[0,1],bandList=[3,6],filename=None) :
-    if filename == None : filename='/data/checkTrx.txt'
+    if filename is None : filename='/data/checkTrx.txt'
     info = {}
     for i in antennaList :
         info[i] = {}
@@ -2747,7 +2747,7 @@ def parseTrxInfo(antennaList=['DV01','DV02','DV03','DV04','DV05','PM02','PM03'],
 
 
 def plotTrxInfo(antennaList=['DV01','DV02','DV03','DV04','DV05','PM02','PM03'],polList=[0,1],bandList=[3,6],filename=None) :
-    if filename == None : filename='/data/checkTrx.txt'
+    if filename is None : filename='/data/checkTrx.txt'
     antennaList = makeList(antennaList)
     polList = makeList(polList)
     bandList = makeList(bandList)
@@ -2810,7 +2810,7 @@ def makeSpecTrx(freq,band) :
     return newSpec
                      
 def plotTrxFreq(antennaList=['DV01','DV02','DV03','DV04','DV05','PM02','PM03'],polList=[0,1],bandList=[3,6],filename=None) :
-    if filename == None : filename='/data/checkTrx.txt'
+    if filename is None : filename='/data/checkTrx.txt'
     
     antennaList = makeList(antennaList)
     polList = makeList(polList)
@@ -3063,7 +3063,7 @@ def getSpectralWindowId(inputMs,dataDesId) :
     return spectralWindows[dataDesId]
     
 def getFlux(inputMs,spwID=None,jyPerK=33,badAntennas=[],useCorrected=False) :
-    if spwID == None :
+    if spwID is None :
         spwID = getChanAverSpwIDBaseBand0(inputMs)
     sourceIds,sourceNames = getSourceFieldMapping(inputMs)
     antennas = getAntennaNames(inputMs)
@@ -3105,7 +3105,7 @@ def getFlux(inputMs,spwID=None,jyPerK=33,badAntennas=[],useCorrected=False) :
 
 class Tsys(Weather):
     def __init__(self,inputMs,spwID=None,tau=0.05,etaF=0.99,doRefSub=False):
-        if spwID == None :
+        if spwID is None :
             spwID = getChanAverSpwIDBaseBand0(inputMs)
         Weather.__init__(self,inputMs)
         self.inputMs = inputMs
@@ -3208,10 +3208,10 @@ def solveTsys(tAtm,pHot,pAmb,pSky,tCmb,alpha,pRef,doRefSub=False) :
 
 def calcTrxGain(pHot,pAmb,pSky,tHot,tAmb,pRef=0,eHot=0,eAmb=0,eSky=0,eRef=0,etHot=0,etAmb=0,Gain=None,dGain=None,Trx=None,dTrx=None,doRefSub=False) :
     if not doRefSub : pRef = pRef-pRef
-    if Gain == None  : Gain  = (pHot-pAmb)/(tHot-tAmb)
-    if dGain == None : dGain = (((eHot**2.0+eAmb**2.0)/(tHot-tAmb)**2.0)+((pHot-pAmb)**2.0/(tHot-tAmb)**4.0)*(etHot**2.0+etAmb**2.0))**0.5
-    if Trx == None   : Trx   = ((pHot-pRef)/Gain)-tHot
-    if dTrx == None  : dTrx  = ((eHot/Gain)**2.0+(eRef/Gain)**2.0+((pHot-pRef)*dGain/Gain**2.0)**2.0 + etHot**2.0)**0.5
+    if Gain is None  : Gain  = (pHot-pAmb)/(tHot-tAmb)
+    if dGain is None : dGain = (((eHot**2.0+eAmb**2.0)/(tHot-tAmb)**2.0)+((pHot-pAmb)**2.0/(tHot-tAmb)**4.0)*(etHot**2.0+etAmb**2.0))**0.5
+    if Trx is None   : Trx   = ((pHot-pRef)/Gain)-tHot
+    if dTrx is None  : dTrx  = ((eHot/Gain)**2.0+(eRef/Gain)**2.0+((pHot-pRef)*dGain/Gain**2.0)**2.0 + etHot**2.0)**0.5
     Tsky  = tAmb-(pAmb-pSky)/Gain
     dTsky = ((eAmb/Gain)**2.0+(eSky/Gain)**2.0+((pAmb-pSky)*dGain/Gain**2.0)**2.0+etAmb**2.0)**0.5
     y     = (pHot-pRef)/(pAmb-pRef)
@@ -3400,13 +3400,13 @@ def fixMyDelays(asdm,caltableName=None,vis=None,doImport=True,sign=1) :
     if (len(asdm) > 0):
         [asdm,dir] = locate(asdm)
         print "asdm = %s" % (asdm)
-    if (vis == None):
+    if (vis is None):
         vis = "%s.ms" % asdm.split('/')[-1]
         print "vis = %s" % (vis)
     elif (len(vis) < 1):
         vis = "%s.ms" % asdm.split('/')[-1]
         print "vis = %s" % (vis)
-    if (caltableName == None) or (len(caltableName) < 1):
+    if (caltableName is None) or (len(caltableName) < 1):
         if (len(asdm) == 0):
             caltableName = "%s.delaycal" % (vis)
         else:
@@ -3871,10 +3871,10 @@ def fixMyDelaysOneReceiver(asdm,caltableName=None,vis=None,doImport=True) :
     if (len(asdm) > 0):
         [asdm,dir] = locate(asdm)
         print "asdm = %s" % (asdm)
-    if vis == None :
+    if vis is None :
         vis = "%s.ms" % asdm.split('/')[-1]
         print "vis = %s" % (vis)
-    if caltableName == None:
+    if caltableName is None:
         caltableName = "%s.delaycal" % asdm.split('/')[-1]
     if doImport : importasdm(asdm=asdm,asis=asis,vis=vis,overwrite=True)
     antennaIds = getAntennaNames(vis)
@@ -5429,7 +5429,7 @@ def listazel(vis, scan=None, antenna='0', vm=0, verbose=True, value='mean'):
         if (vm==0):
             vm = ValueMapping(vis)
         scans = vm.uniqueScans
-    if (scan == None):
+    if (scan is None):
         scan = scans
     if (type(scan) == str):
         scan = [int(k) for k in scan.split(',')]
@@ -5450,7 +5450,7 @@ def listazel(vis, scan=None, antenna='0', vm=0, verbose=True, value='mean'):
                     return([0,0])
 #            print "Appending times for scan ", sc
             myTimes.append(list(newTimes)) #  = np.concatenate((myTimes,newTimes))
-    elif (scan != None):
+    elif (scan is not None):
         if (casadef.casa_version >= casaVersionWithMSMD):
             with casatools.MSMDReader(vis) as mymsmd:
                 if (scan not in mymsmd.scannumbers()):
@@ -5595,9 +5595,9 @@ def plotPosition(vis, azel, antenna='0', xrange=None, yrange=None):
         ylim([0,90])
     else:
         ylabel('Azimuth (deg)')
-    if (yrange != None):
+    if (yrange is not None):
         ylim(yrange)
-    if (xrange != None):
+    if (xrange is not None):
         xlim(xrange)
     (mjd, datestring) = mjdSecondsToMJDandUT(mjdsec[0])
     xlabel('UT hour on %s'%(datestring[0:10]))
@@ -5673,7 +5673,7 @@ def angularSeparationOfPlanets(planet1='Saturn', planet2='Titan',date='',
     Todd Hunter
     """
     data1 = planet(planet1, date=date, observatory=observatory, useJPL=useJPL)
-    if (target == None):
+    if (target is None):
         data2 = planet(planet2, date=date, observatory=observatory, useJPL=useJPL)
     else:
         results = target.split()
@@ -7134,14 +7134,14 @@ def estimateOpacity(pwvmean=1.0,reffreq=230,conditions=None,verbose=True,
    # default P,H,T are set to ALMA typical, but should get this from observatory
    if (airmass >= 1.0):
        elevation = math.asin(1./airmass)*180/math.pi
-   if (conditions != None):
+   if (conditions is not None):
      if (conditions['pressure'] > 1e-10):
        angle = conditions['solarangle']
        P = conditions['pressure']
        T = conditions['temperature'] + 273.15
        H = conditions['humidity']
        elevation = conditions['elevation']
-   elif (telescope != None):
+   elif (telescope is not None):
        if (telescope == 'SMA'):
            P = 629.5
            altitude = 4072
@@ -8280,21 +8280,21 @@ def planetFlux(body='', date=None, mjd=55600, frequency=345e9, bandwidth=1e6,
         frequency = [[frequency[0][0]-0.5*bandwidth,frequency[0][0]+0.5*bandwidth]]
     if (verbose):
         print "frequency = ", frequency
-    if (date != None):
+    if (date is not None):
         if (type(date) == list):
             mjd1 = dateStringToMJD(date[0])
-            if (mjd1 == None):
+            if (mjd1 is None):
                 return
             if (len(date) > 1):
                 mjd2 = dateStringToMJD(date[1])
-                if (mjd2 == None):
+                if (mjd2 is None):
                     return
                 mjd = [mjd1,mjd2]
             else:
                 mjd = [mjd1]
         else:
             mjd = dateStringToMJD(date)
-            if (mjd == None):
+            if (mjd is None):
                 return
     if (type(mjd) != list):
         mjd = [mjd]
@@ -8335,7 +8335,7 @@ def planetFlux(body='', date=None, mjd=55600, frequency=345e9, bandwidth=1e6,
             pb.ylabel('Major axis (arcsec)')
             adesc.xaxis.grid(True,which='major')
             adesc.yaxis.grid(True,which='major')
-            if (plotfile == None):
+            if (plotfile is None):
                 plotfile = body+'.fluxvstime.%d-%d.png'%(mjd[0],mjd[-1])
             pb.savefig(plotfile)
             print "Plot left in ", plotfile
@@ -8361,7 +8361,7 @@ def planetFlux(body='', date=None, mjd=55600, frequency=345e9, bandwidth=1e6,
         adesc.xaxis.grid(True,which='major')
         adesc.yaxis.grid(True,which='major')
         pb.title(body+' at MJD=%.1f (%s)'%(mjd[0], mjdToUT(mjd[0])))
-        if (plotfile == None):
+        if (plotfile is None):
             plotfile = body+'.fluxvsfreq.%d-%dGHz.png'%(int(freq[0]*1e-9),int(freq[-1]*1e-9))
         pb.savefig(plotfile)
         print "Plot left in ", plotfile
@@ -8464,7 +8464,7 @@ def planet(body='',date='',observatory=JPL_HORIZONS_ID['ALMA'],
             print "For a list of codes, see http://ssd.jpl.nasa.gov/horizons.cgi#top"
             return
     if (len(date) < 1):
-        if (mjd == None):
+        if (mjd is None):
             date = datetime.date.today().strftime('%Y-%m-%d')
             print "No date/time specified, assuming today=%s at UT 0:00" % (date)
         else:
@@ -8576,7 +8576,7 @@ def buildConfigurationFile(vis='', simmospath=None):
     if (vis == ''):
         print "Usage: buildConfigurationFile(vis=myvis)"
         return
-    if (simmospath == None or simmospath == ''):
+    if (simmospath is None or simmospath == ''):
         repotable = os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"
     else:
         repotable = simmospath
@@ -9002,7 +9002,7 @@ def antennaPosition(vis, vis2=None, ant=''):
     names = tb.getcol('NAME')
     tb.close()
 
-    if (vis2 != None):
+    if (vis2 is not None):
       try:
           antTable2 = vis2+'/ANTENNA'
           tb.open(antTable2)
@@ -9016,7 +9016,7 @@ def antennaPosition(vis, vis2=None, ant=''):
 
     antennas = len(station)
     axis = ['X','Y','Z']
-    if (vis2 == None):
+    if (vis2 is None):
         print "           vis1"
     else:
         print "           vis1              vis2        Difference (m)"
@@ -9025,7 +9025,7 @@ def antennaPosition(vis, vis2=None, ant=''):
         print "Antenna %02d = %4s on %s: " % (antenna,names[antenna],station[antenna])
         for component in range(3):
             comp = position[component][antenna]
-            if (vis2 == None):
+            if (vis2 is None):
                 print "  %s: %+.6f" % (axis[component],comp)
             elif (names[antenna] in names2):
                 index2 = list(names2).index(names[antenna])
@@ -9036,7 +9036,7 @@ def antennaPosition(vis, vis2=None, ant=''):
                     print "  %s: %+.6f   %+.6f    %.6f" % (axis[component],comp,comp2,comp-comp2)
             else:
                 print "  %s: %+.6f" % (axis[component],comp)
-    if (vis2 != None):
+    if (vis2 is not None):
         for antenna in range(len(names2)):
           if (ant == '' or names2[antenna] == ant):
             if (names2[antenna] not in names):
@@ -9075,7 +9075,7 @@ def antennaPositionASDM(vis, vis2=None, ant='', itrf=False, verbose=False):
     padStationId = tb.getcol('stationId')
     tb.close()
 
-    if (vis2 != None):
+    if (vis2 is not None):
       try:
           antTable2 = vis2+'/ASDM_ANTENNA'
           tb.open(antTable2)
@@ -9100,13 +9100,13 @@ def antennaPositionASDM(vis, vis2=None, ant='', itrf=False, verbose=False):
     if (itrf):
         axis = ['    X','    Y','    Z']
         cx,cy,cz,long,lat = getCOFA(vis)
-        if (vis2 == None):
+        if (vis2 is None):
             print "           vis1"
         else:
             print "           vis1            vis2            Difference (m)  (vis1-vis2)"
     else:
         axis = ['East ','North','Up   ']
-        if (vis2 == None):
+        if (vis2 is None):
             print "       vis1"
         else:
             print "       vis1        vis2        Difference (m)  (vis1-vis2)"
@@ -9159,7 +9159,7 @@ def antennaPositionASDM(vis, vis2=None, ant='', itrf=False, verbose=False):
                 comp = itrf_correction[component]
             else:
                 comp = position[component][antenna]
-            if (vis2 == None):
+            if (vis2 is None):
                 print "%s: %+.6f" % (axis[component], comp)
             elif (names[antenna] in names2):
                 if (itrf):
@@ -9176,7 +9176,7 @@ def antennaPositionASDM(vis, vis2=None, ant='', itrf=False, verbose=False):
                     print "%s: %+.6f   %+.6f    %+.6f" % (axis[component],comp,comp2,comp-comp2)
             else:
                 print "%s: %+.6f" % (axis[component],comp)
-    if (vis2 != None):
+    if (vis2 is not None):
         for antenna in range(len(names2)):
           if (itrf):
               # compute antenna XYZ from pad XYZ and ENU correction
@@ -9235,7 +9235,7 @@ def padPositionASDM(vis, vis2=None, ant=''):
     position = tb.getcol('position')
     tb.close()
 
-    if (vis2 != None):
+    if (vis2 is not None):
       try:
           antTable2 = vis2+'/ASDM_ANTENNA'
           tb.open(antTable2)
@@ -9256,7 +9256,7 @@ def padPositionASDM(vis, vis2=None, ant=''):
 
     antennas = len(station)
     axis = ['X','Y','Z']
-    if (vis2 == None):
+    if (vis2 is None):
         print "       vis1"
     else:
         print "       vis1        vis2        Difference (m)  (vis1-vis2)"
@@ -9265,7 +9265,7 @@ def padPositionASDM(vis, vis2=None, ant=''):
         print "Antenna %02d = %4s on %s: " % (antenna,names[antenna],station[antenna])
         for component in range(3):
             comp = position[component][antenna] 
-            if (vis2 == None):
+            if (vis2 is None):
                 print "  %s: %+.6f" % (axis[component],comp)
             elif (names[antenna] in names2):
                 index2 = list(names2).index(names[antenna])
@@ -9276,7 +9276,7 @@ def padPositionASDM(vis, vis2=None, ant=''):
                     print "  %s: %+.6f   %+.6f    %+.6f" % (axis[component],comp,comp2,comp-comp2)
             else:
                 print "  %s: %+.6f" % (axis[component],comp)
-    if (vis2 != None):
+    if (vis2 is not None):
         for antenna in range(len(names2)):
           if (ant == '' or names2[antenna] == ant):
             if (names2[antenna] not in names):
@@ -9315,7 +9315,7 @@ def smoothbandpass(caltable='',window_len=20, window='flat', method='ri' ,
   ggr = 0
 
   tb.open(caltable)
-  if (outputname == None):
+  if (outputname is None):
       smooth_table = caltable+'_smooth%d%s_%s' % (window_len,window,method)
   else:
       smooth_table = outputname
@@ -10232,7 +10232,7 @@ class stuffForScienceDataReduction():
 
         obsModes1 = []
         for i in range(len(obsModes)):
-            if re.search(intent, obsModes[i]) != None:
+            if re.search(intent, obsModes[i]) is not None:
                 obsModes1.append(i)
 
         if len(obsModes1) == 0: sys.exit('ERROR: Intent not found.')
@@ -10295,7 +10295,7 @@ class stuffForScienceDataReduction():
         #casaCmd = 'print "# Generation of the Tsys cal table."\n\n'
         casaCmd = ''
 
-	if re.search('^3.3', casadef.casa_version) != None:
+	if re.search('^3.3', casadef.casa_version) is not None:
             es = stuffForScienceDataReduction()
             sciSpwInfo = es.getSpwInfo(msName)
             tsysSpwInfo = es.getSpwInfo(msName, intent='CALIBRATE_ATMOSPHERE')
@@ -10311,20 +10311,20 @@ class stuffForScienceDataReduction():
             if len(tsysNumChans) != 1: sys.exit('ERROR: Configuration not supported.')
 
         casaCmd = casaCmd + "os.system('rm -rf %s.tsys') \n"%(msName)  # Added by CLB
-        if re.search('^3.3', casadef.casa_version) != None:
+        if re.search('^3.3', casadef.casa_version) is not None:
 	    casaCmd = casaCmd + "os.system('rm -rf %s.tsys.fdm') \n\n"%(msName)  # Added by CLB
         casaCmd = casaCmd + "gencal(vis = '"+msName+"',\n"
         casaCmd = casaCmd + "  caltable = '"+msName+".tsys',\n"
         casaCmd = casaCmd + "  caltype = 'tsys')\n\n"
 
-	if re.search('^3.3', casadef.casa_version) != None:
+	if re.search('^3.3', casadef.casa_version) is not None:
             casaCmd = casaCmd + "interTsys = aU.InterpolateTsys('"+msName+".tsys')\n"
             casaCmd = casaCmd + "interTsys.correctBadTimes(force=True)\n"
             casaCmd = casaCmd + "interTsys.assignFieldAndScanToSolution()\n"
 
 	calTableName1 = msName+'.tsys'
 
-	if re.search('^3.3', casadef.casa_version) != None:
+	if re.search('^3.3', casadef.casa_version) is not None:
             if tsysNumChans < sciNumChans:
                 casaCmd = casaCmd + "interTsys.getTdmFdmSpw()\n"
                 casaCmd = casaCmd + "interTsys.interpolateTsys()\n"
@@ -10340,7 +10340,7 @@ class stuffForScienceDataReduction():
         casaCmd = casaCmd + "  showatm=True,pwv='auto',chanrange='5~122',showfdm=True, \n"
         casaCmd = casaCmd + "  field='', figfile='%s') \n\n" %(calTableName1+'.plots.overlayTime/'+calTableName1.split('/')[-1])
 
-	if re.search('^3.3', casadef.casa_version) != None:
+	if re.search('^3.3', casadef.casa_version) is not None:
             if tsysNumChans < sciNumChans:   # CLB added
                 calTableName1 += '.fdm'      # CLB added .fdm for following plot
         calTableName.append(calTableName1)
@@ -10549,12 +10549,12 @@ class stuffForScienceDataReduction():
         plotwidth = max(xmax-xmin, ymax-ymin) * 6./10. # extra 1/10 is the margin
         (xcenter, ycenter) = ((xmin+xmax)/2., (ymin+ymax)/2.)
 	#print 'center ', xcenter, ycenter, 'plotwidth ', plotwidth
-        if xlimit == None:
+        if xlimit is None:
             #subpl.set_xlim(xcenter-plotwidth, xcenter+plotwidth)
             subpl.set_xlim(xcenter[0]-plotwidth[0], xcenter[0]+plotwidth[0])
         else:
             subpl.set_xlim(xlimit[0], xlimit[1])
-        if ylimit == None:
+        if ylimit is None:
             #subpl.set_ylim(ycenter-plotwidth, ycenter+plotwidth)
             subpl.set_ylim(ycenter[0]-plotwidth[0], ycenter[0]+plotwidth[0])
         else:
@@ -10585,7 +10585,7 @@ class stuffForScienceDataReduction():
             msName = msName+'.temp'
 
             fixplanets(vis = msName, field = '0', fixuvw = True)
-	    if re.search('^3.3', casadef.casa_version) == None:
+	    if re.search('^3.3', casadef.casa_version) is None:
                 setjy(vis = msName, field = '0', standard = 'Butler-JPL-Horizons 2010', usescratch = True)
 	    else:
 	        setjy(vis = msName, field = '0', standard = 'Butler-JPL-Horizons 2010')
@@ -10717,7 +10717,7 @@ class stuffForScienceDataReduction():
 
         if calType in ['G Jones', 'T Jones']:
 
-	    if re.search('^3.3', casadef.casa_version) != None:
+	    if re.search('^3.3', casadef.casa_version) is not None:
                 calStats = {}
                 calStats['GAIN_amp'] = (tb.statistics(column='GAIN', complex_value='amp'))['GAIN']
                 calStats['GAIN_phase'] = (tb.statistics(column='GAIN', complex_value='phase'))['GAIN']
@@ -10979,7 +10979,7 @@ class stuffForScienceDataReduction():
             casaCmd = casaCmd + "\n\napplycal(vis = '"+msName+"',\n"
             casaCmd = casaCmd + "  spw = '"+spwIds1+"',\n"
             casaCmd = casaCmd + "  gaintable = "+str(gainTable)+",\n"
-            if re.search('^3.3', casadef.casa_version) == None:
+            if re.search('^3.3', casadef.casa_version) is None:
 	        casaCmd = casaCmd + "  interp = 'linear,linear',\n"
 	    else:
 	        casaCmd = casaCmd + "  interp = 'linear',\n"
@@ -10988,7 +10988,7 @@ class stuffForScienceDataReduction():
 
         else:
 
-	    if re.search('^3.3', casadef.casa_version) == None:
+	    if re.search('^3.3', casadef.casa_version) is None:
 	        casaCmd = casaCmd + "\n\nfrom recipes.almahelpers import tsysspwmap\n"
 	        casaCmd = casaCmd + "tsysmap = tsysspwmap(vis = '"+msName+"', tsystable = '"+tsys+"')\n\n"
 
@@ -11059,11 +11059,11 @@ class stuffForScienceDataReduction():
                 casaCmd = casaCmd + "  spw = '"+spwIds1+"',\n"
                 casaCmd = casaCmd + "  gaintable = "+str(gainTable)+",\n"
                 casaCmd = casaCmd + "  gainfield = "+str(gainField)+",\n"
-                if re.search('^3.3', casadef.casa_version) == None:
+                if re.search('^3.3', casadef.casa_version) is None:
 	            casaCmd = casaCmd + "  interp = 'linear,linear',\n"
 	        else:
 	            casaCmd = casaCmd + "  interp = 'linear',\n"
-	        if re.search('^3.3', casadef.casa_version) == None: casaCmd = casaCmd + "  spwmap = ["+gainSpwMap+"],\n"
+	        if re.search('^3.3', casadef.casa_version) is None: casaCmd = casaCmd + "  spwmap = ["+gainSpwMap+"],\n"
                 casaCmd = casaCmd + "  calwt = T,\n"
                 casaCmd = casaCmd + "  flagbackup = F)\n\n"
 
@@ -11102,7 +11102,7 @@ class stuffForScienceDataReduction():
 
             obsModes1 = []
             for j in range(len(obsModes)):
-                if re.search(intentsToSearch[i], obsModes[j]) != None:
+                if re.search(intentsToSearch[i], obsModes[j]) is not None:
                     obsModes1.append(j)
 
             obsModes1 = sorted(dict.fromkeys(obsModes1).keys())
@@ -11248,7 +11248,7 @@ class stuffForScienceDataReduction():
         scanIntentList = []
         for i in intentsToFlag:
             for j in fullIntentList:
-                if re.search(i, j) != None:
+                if re.search(i, j) is not None:
                     scanIntentList.append('*'+i+'*')
                     break
 
@@ -11278,13 +11278,13 @@ class stuffForScienceDataReduction():
         scanIntentList = []
         for i in intentsToFlag:
             for j in fullIntentList:
-                if re.search(i, j) != None:
+                if re.search(i, j) is not None:
                     scanIntentList.append('*'+i+'*')
                     break
 
         scanIntentList = ','.join(scanIntentList)
 
-	if re.search('^3.3', casadef.casa_version) == None:
+	if re.search('^3.3', casadef.casa_version) is None:
             casaCmd = casaCmd + "tflagdata(vis = '"+msName+"',\n"
             casaCmd = casaCmd + "  mode = 'manual',\n"
             casaCmd = casaCmd + "  autocorr = T,\n"
@@ -11315,7 +11315,7 @@ class stuffForScienceDataReduction():
 
             if nFlagRows != 0:
 
-	        if re.search('^3.3', casadef.casa_version) == None:
+	        if re.search('^3.3', casadef.casa_version) is None:
                     casaCmd = casaCmd + "\nflagcmd(vis = '"+msName+"',\n"
                     casaCmd = casaCmd + "  inpmode = 'table',\n"
                     casaCmd = casaCmd + "  action = 'plot')\n\n"
@@ -11342,7 +11342,7 @@ class stuffForScienceDataReduction():
         #casaCmd = 'print "# Initial flagging."\n\n'
         casaCmd = ''
 
-	if re.search('^3.3', casadef.casa_version) != None:
+	if re.search('^3.3', casadef.casa_version) is not None:
             casaCmd = casaCmd + "# Flagging shadowed data\n\n"
             casaCmd = casaCmd + "flagdata(vis = '"+msName1+"',\n"
             casaCmd = casaCmd + "  mode = 'shadow',\n"
@@ -11370,7 +11370,7 @@ class stuffForScienceDataReduction():
                 if spwSpec != '': spwSpec = spwSpec+','
                 spwSpec = spwSpec+str(i)+':0~'+str(long(sciNumChans*chanEdge-1))+';'+str(long(sciNumChans-sciNumChans*chanEdge))+'~'+str(sciNumChans-1)
 
-	    if re.search('^3.3', casadef.casa_version) != None:
+	    if re.search('^3.3', casadef.casa_version) is not None:
                 casaCmd = casaCmd + "# Flagging edge channels\n\n"
                 casaCmd = casaCmd + "flagdata(vis = '"+msName1+"',\n"
                 casaCmd = casaCmd + "  mode = 'manualflag',\n"
@@ -11397,7 +11397,7 @@ class stuffForScienceDataReduction():
                         if (chanRange[1]-chanRange[0]) / (spwInfo[spwId1]['numChans']*1.) > thresh: print '# Warning: more than '+str(thresh*100)+'% of spw '+str(spwIds[k])+' on '+calFieldNames[i]+' will be flagged due to atmospheric line.'
                         spwSpec = str(spwIds[k])+':'+str(chanRange[0])+'~'+str(chanRange[1])
 
-			if re.search('^3.3', casadef.casa_version) != None:
+			if re.search('^3.3', casadef.casa_version) is not None:
                             casaCmd = casaCmd + "# Flagging atmospheric line(s)\n\n"
                             casaCmd = casaCmd + "flagdata(vis = '"+msName1+"',\n"
                             casaCmd = casaCmd + "  mode = 'manualflag',\n"
@@ -11438,7 +11438,7 @@ class stuffForScienceDataReduction():
         tb.close()
         cmAntList = []
         for i in antNames:
-              if re.search('CM[0-9]{2}', i) != None: cmAntList.append(i)
+              if re.search('CM[0-9]{2}', i) is not None: cmAntList.append(i)
 
         casaCmd = casaCmd + "os.system(" + '"' + "wvrgcal --ms "+msName+" --output "+msName+".wvr --toffset -1 --statsource '"+sciSourceName+"' --segsource --tie '"+str(phaOnlySourceId)+","+str(sciSourceId)+"'"
         if len(cmAntList) != 0:
@@ -11483,7 +11483,7 @@ class stuffForScienceDataReduction():
 
         casaCmd = casaCmd + "os.system('rm -rf %s.wvr') \n\n"%(msName)
 
-	if re.search('^3.3', casadef.casa_version) != None:
+	if re.search('^3.3', casadef.casa_version) is not None:
             casaCmd = casaCmd + "os.system(" + '"' + "wvrgcal --ms "+msName+" --output "+msName+".wvr --toffset -1 --statsource '"+sciSourceName+"' --segsource"
             if len(phaseCal) == 1:
                 casaCmd = casaCmd + " --tie '"+str(phaseCal[sciSourceName]['phaseCalId'])+","+str(sciSourceId)+"'"
@@ -11551,7 +11551,7 @@ class stuffForScienceDataReduction():
         fieldIds = []
         for i in range(len(ampSourceNames)):
               for j in setjyModels:
-                    if re.search(j, ampSourceNames[i], re.IGNORECASE) != None: fieldIds.append(ampSourceIds[i])
+                    if re.search(j, ampSourceNames[i], re.IGNORECASE) is not None: fieldIds.append(ampSourceIds[i])
 
         return fieldIds
 
@@ -11931,8 +11931,8 @@ class stuffForScienceDataReduction():
 
                   casaCmd = casaCmd + "for phaseCalName in "+str(list(set(phaseCalNames)))+":\n"
                   casaCmd = casaCmd + "  for i in range(len(fc)):\n"
-                  #casaCmd = casaCmd + "    if re.search('Flux density for '+phaseCalName+' in SpW=[0-9]+ is: [0-9]+\.[0-9]+', fc[i]) != None:\n"
-                  casaCmd = casaCmd + "    if fc[i].find('Flux density for '+phaseCalName) != -1 and re.search('in SpW=[0-9]+( \(ref SpW=[0-9]+\))? is: [0-9]+\.[0-9]+', fc[i]) != None:\n"
+                  #casaCmd = casaCmd + "    if re.search('Flux density for '+phaseCalName+' in SpW=[0-9]+ is: [0-9]+\.[0-9]+', fc[i]) is not None:\n"
+                  casaCmd = casaCmd + "    if fc[i].find('Flux density for '+phaseCalName) != -1 and re.search('in SpW=[0-9]+( \(ref SpW=[0-9]+\))? is: [0-9]+\.[0-9]+', fc[i]) is not None:\n"
                   #casaCmd = casaCmd + "      line = (re.findall('in SpW=[0-9]+ is: [0-9]+\.[0-9]+', fc[i]))[0]\n"
                   casaCmd = casaCmd + "      line = (re.search('in SpW=[0-9]+( \(ref SpW=[0-9]+\))? is: [0-9]+\.[0-9]+', fc[i])).group(0)\n"
                   casaCmd = casaCmd + "      spwId = (line.split('='))[1].split()[0]\n"
@@ -12013,7 +12013,7 @@ class stuffForScienceDataReduction():
         maxLen = 100000.
 
         for i in antInfo:
-            if re.search('CM[0-9]{2}', i) != None: continue
+            if re.search('CM[0-9]{2}', i) is not None: continue
             if antInfo[i]['minLen'] < 12. / sin(radians(minEl)): continue
             if antInfo[i]['maxLen'] < maxLen:
                 refAnt = i
@@ -12053,7 +12053,7 @@ class stuffForScienceDataReduction():
         maxLen = 100000.
 
         for i in antInfo:
-            #if re.search('CM[0-9]{2}', i) != None: continue
+            #if re.search('CM[0-9]{2}', i) is not None: continue
             diam1 = []
             diam1.append(antDiam[antList.index(i)])
             diam1.append(antDiam[antList.index(antInfo[i]['otherAntOnMinLen'])])
@@ -12107,7 +12107,7 @@ class stuffForScienceDataReduction():
             casaCmd = casaCmd + "    field = i,\n"
             casaCmd = casaCmd + "    gaintable = "+str(gainTable)+",\n"
             casaCmd = casaCmd + "    gainfield = ['', i, i],\n"
-            if re.search('^3.3', casadef.casa_version) == None:
+            if re.search('^3.3', casadef.casa_version) is None:
                 casaCmd = casaCmd + "    interp = 'linear,linear',\n"
             else:
                 casaCmd = casaCmd + "    interp = 'linear',\n"
@@ -12119,7 +12119,7 @@ class stuffForScienceDataReduction():
                 casaCmd = casaCmd + "  field = '"+str(i)+"', # "+fieldNames[i]+"\n"
                 casaCmd = casaCmd + "  gaintable = "+str(gainTable)+",\n"
                 casaCmd = casaCmd + "  gainfield = ['', '"+str(i)+"', '"+str(i)+"'],\n"
-                if re.search('^3.3', casadef.casa_version) == None:
+                if re.search('^3.3', casadef.casa_version) is None:
                     casaCmd = casaCmd + "  interp = 'linear,linear',\n"
                 else:
                     casaCmd = casaCmd + "  interp = 'linear',\n"
@@ -12159,7 +12159,7 @@ class stuffForScienceDataReduction():
             casaCmd = casaCmd + "  field = '"+str(i)+","+sciFieldIds1+"', # "+sciFieldNames+"\n"
             casaCmd = casaCmd + "  gaintable = "+str(gainTable)+",\n"
             casaCmd = casaCmd + "  gainfield = ['', '"+str(i)+"', '"+str(i)+"'], # "+fieldNames[i]+"\n"
-            if re.search('^3.3', casadef.casa_version) == None:
+            if re.search('^3.3', casadef.casa_version) is None:
                 casaCmd = casaCmd + "  interp = 'linear,linear',\n"
             else:
                 casaCmd = casaCmd + "  interp = 'linear',\n"
@@ -12179,7 +12179,7 @@ class stuffForScienceDataReduction():
             isPhaseOnlyScan = 1
             for j in scanIntents:
                 scanIntent = (j.split('#'))[0]
-                if re.search('^CALIBRATE_((PHASE)|(WVR))$', scanIntent) == None:
+                if re.search('^CALIBRATE_((PHASE)|(WVR))$', scanIntent) is None:
                     isPhaseOnlyScan = 0
                     break
             if isPhaseOnlyScan == 1: phaseOnlyScanList.append(i)
@@ -12369,7 +12369,7 @@ class stuffForScienceDataReduction():
             f.close()
 
             for j in range(len(fc)):
-                if re.search('Flux density for .+ in SpW=[0-9]+ is: [0-9]+\.[0-9]+ \+/- [0-9]+\.[0-9]+', fc[j], re.IGNORECASE) != None:
+                if re.search('Flux density for .+ in SpW=[0-9]+ is: [0-9]+\.[0-9]+ \+/- [0-9]+\.[0-9]+', fc[j], re.IGNORECASE) is not None:
                     line = (re.findall('Flux density for .+ in SpW=[0-9]+ is: [0-9]+\.[0-9]+ \+/- [0-9]+\.[0-9]+', fc[j], re.IGNORECASE))[0]
                     fieldName = (re.findall('for .+ in', line, re.IGNORECASE))[0]
                     fieldName = fieldName[4:len(fieldName)-3]
@@ -13018,7 +13018,7 @@ class stuffForScienceDataReduction():
 
         for i in range(len(msNames)):
             msName = re.search('uid___[a-zA-Z0-9]+_[a-zA-Z0-9]+_[a-zA-Z0-9]+\.ms', msNames[i])
-            if msName == None: sys.exit('ERROR: '+msNames[i]+' does not seem to be a standard ms.')
+            if msName is None: sys.exit('ERROR: '+msNames[i]+' does not seem to be a standard ms.')
             msName = msName.group(0)
             if os.path.exists(msName) == False: sys.exit('ERROR: '+msNames[i]+' does not seem to exist in the current directory.')
             msNames[i] = msName
@@ -13169,7 +13169,7 @@ class stuffForScienceDataReduction():
             for msName in msNames:
 
                 #msName = re.search('uid___[a-zA-Z0-9]+_[a-zA-Z0-9]+_[a-zA-Z0-9]+\.ms', msNames[i])
-                #if msName == None: sys.exit('ERROR: '+msNames[i]+' does not seem to be a standard ms.')
+                #if msName is None: sys.exit('ERROR: '+msNames[i]+' does not seem to be a standard ms.')
                 #msName = msName.group(0)
                 #if os.path.exists(msName) == False: sys.exit('ERROR: '+msNames[i]+' does not seem to exist in the current directory.')
 
@@ -13235,7 +13235,7 @@ class stuffForScienceDataReduction():
 
     def generateReducScript(self, msNames, step='calib', corrAntPos=True, timeBinForFinalData=6.048, refant='', chanWid=1, angScale=0):
 
-	if re.search('^3.3', casadef.casa_version) == None:
+	if re.search('^3.3', casadef.casa_version) is None:
 	    print 'WARNING: You are currently running another version of CASA than 3.3. Probably 3.4.'
 	    print 'WARNING: The scripts have been ported, but for a bit of time, please be careful with the output.'
 	    print 'WARNING: If you observe any issue or strange behavior, please send an email to Eric V.'
@@ -13283,7 +13283,7 @@ class stuffForScienceDataReduction():
             for msName in msNames:
 
                 #msName = re.search('uid___[a-zA-Z0-9]+_[a-zA-Z0-9]+_[a-zA-Z0-9]+\.ms', msNames[i])
-                #if msName == None: sys.exit('ERROR: '+msNames[i]+' does not seem to be a standard ms.')
+                #if msName is None: sys.exit('ERROR: '+msNames[i]+' does not seem to be a standard ms.')
                 #msName = msName.group(0)
                 #if os.path.exists(msName) == False: sys.exit('ERROR: '+msNames[i]+' does not seem to exist in the current directory.')
 
@@ -13297,7 +13297,7 @@ class stuffForScienceDataReduction():
 
                 print >> f1, 'print "# A priori calibration"\n'
                 stext = self.runFixPlanets(msName)
-                if stext != None: self.addReducScriptStep(f1, mystepdict, "Running fixplanets on fields with 0,0 coordinates", stext, mystepindent)
+                if stext is not None: self.addReducScriptStep(f1, mystepdict, "Running fixplanets on fields with 0,0 coordinates", stext, mystepindent)
 
                 stext = "os.system('rm -rf %s.listobs')\n" %(msName) # Added by CLB
                 stext += "listobs(vis = '"+msName+"',\n  listfile = '"+msName+".listobs')\n\n" # Modified by CLB
@@ -16659,7 +16659,7 @@ def uvplot(msfile, field='', plotrange=[0,0,0,0], figfile=False, markersize=2,
           fieldid = int(fieldid)
           vm = ValueMapping(msfile)
           fieldname = vm.getFieldNamesForFieldId(fieldid)
-          if (fieldname == None):
+          if (fieldname is None):
               print "No such field in the ms."
               return
           print "Showing field id = %d = %s" % (fieldid, fieldname)
@@ -16674,7 +16674,7 @@ def uvplot(msfile, field='', plotrange=[0,0,0,0], figfile=False, markersize=2,
       tb1 = tb.query('FIELD_ID == '+str(fieldid))
       vm = ValueMapping(msfile)
       fieldname = vm.getFieldNamesForFieldId(fieldid)
-      if (fieldname == None):
+      if (fieldname is None):
           print "No such field in the ms."
           return
       print "Showing field id = %d = %s" % (fieldid, fieldname)
@@ -16894,14 +16894,14 @@ class getNearestFlux:
         searching function
         """
         
-        if catalogues == None:
+        if catalogues is None:
             catalogues=self.catalogues
         elif isinstance(catalogues,list) == False :
             print "Catalgues must be a list of integers ([1,2,3]. Try again. Available catalogues are:"
             print self.catalogList
             sys.exit()
         
-        if types == None:
+        if types is None:
             types=self.types
         elif isinstance(catalogues,list) == False :
             print "Types must be a list of integers ([1,2,3]. Try again. Available types are:"
@@ -17001,13 +17001,13 @@ class getNearestFlux:
         frequency in GHz (default is 100)
         """
         sourceID = self.getSourceIdFromSourceName(sourcename)
-        if sourceID == None:
+        if sourceID is None:
             #print "Source Name not found in Catalog. Please check spelling. If you are sure, please contact Tim (tkempen@alma.cl) for info"
             return
 #            sys.exit()
 
         # check Frequencies and generate fupper
-        if frequency == None:
+        if frequency is None:
             print " No Frequency given, returning nearest Band 3 flux"
             frequency = 100
         self.getBandfromfreq(frequency)
@@ -18499,7 +18499,7 @@ def computeAzElFromRADecMJD(raDec, mjd, observatory='ALMA', verbose=False,
             print "RA Dec in radians = ", raDec
     if (type(mjd) == str):
         mjd = dateStringToMJD(mjd)
-        if (mjd == None):
+        if (mjd is None):
             #print "Invalid date string"
             return
         #print "MJD = ", mjd
@@ -20006,7 +20006,7 @@ def sensitivity(freq, bandwidth, etime, elevation=None, pwv=None,
         print "This function does not yet work in %s due to the cal table format" % casaVersionString
         print "change, unless tsys_only=True."
         return
-    if (tau != None and tau0 != None):
+    if (tau is not None and tau0 is not None):
         print "You can only specify one of: tau and tau0 (zenith)"
         return
     if (pwv==None and mode != 'tsys-manual'):
@@ -20014,9 +20014,9 @@ def sensitivity(freq, bandwidth, etime, elevation=None, pwv=None,
         return
     if (elevation==None and airmass==None):
         elevation = 90
-    if (elevation != None):
+    if (elevation is not None):
         elevation = float(str(elevation).split('deg')[0])
-        if (airmass != None):
+        if (airmass is not None):
             print "Ignoring airmass because elevation was specified"
         airmass = 1/np.sin(elevation*np.pi/180.)
     else:
@@ -20026,7 +20026,7 @@ def sensitivity(freq, bandwidth, etime, elevation=None, pwv=None,
         elevation = 180*math.asin(1/airmass)/np.pi
     print "elevation = %.2f, airmass = %.3f" % (elevation,airmass)
     elevation = '%fdeg' % elevation
-    if (antennalist != None):
+    if (antennalist is not None):
         if (antennalist.find('.cfg') < 0):
             antennalist += '.cfg'
         if (os.path.exists(antennalist) == False):
@@ -20069,7 +20069,7 @@ def sensitivity(freq, bandwidth, etime, elevation=None, pwv=None,
                                              antennalist, doimnoise, integration,
                                              debug, mode, tau0, t_amb)
         else:
-            if (tau0 != None or mode != 'tsys-atm'):
+            if (tau0 is not None or mode != 'tsys-atm'):
                 print "The tau0 and mode options only work for casa version >= 20186"
                 return
             jansky = simutil.simutil.sensitivity(su, freq, bandwidth, etime, elevation,
@@ -20077,7 +20077,7 @@ def sensitivity(freq, bandwidth, etime, elevation=None, pwv=None,
                                              antennalist, doimnoise, integration,
                                              debug)
 
-    if (antennalist == None):
+    if (antennalist is None):
         thisIsAlma = False
     else:
         thisIsAlma = (antennalist.lower().split('/')[-1].find('alma') >= 0) \
@@ -20128,7 +20128,7 @@ def sensitivity(freq, bandwidth, etime, elevation=None, pwv=None,
             g = 1
         else:
             g = 0
-        if (t_rx != None):
+        if (t_rx is not None):
             print "Using user-specified receiver temperature: T_rx = %.1fK" % (t_rx)
         else:
             print "T_rx is unknown. You must specify either the value or the telescope (via the antennalist parameter)."
@@ -20141,10 +20141,10 @@ def sensitivity(freq, bandwidth, etime, elevation=None, pwv=None,
             my_tau, my_t_sky, my_t_sky_RJ = estimateALMAOpacity(pwv,frequencyGHz,airmass,h0,verbose=False)
             print "Computed tau=%f, tau0=%f, t_sky=%f (airmass=%f)" % (my_tau, my_tau/airmass, 
                                                                    my_t_sky,airmass)
-        if (tau == None and tau0 == None):
+        if (tau is None and tau0 is None):
             tau = my_tau
             tau0 = my_tau/airmass
-        elif (tau == None):
+        elif (tau is None):
             tau = tau0*airmass
         else:
             tau0 = tau/airmass
@@ -20221,54 +20221,54 @@ def plotAtmosphere(pwv=None,frequency=[0,1000],bandwidth=None,telescope='ALMA',
         elevation = 180*math.asin(1/airmass)/np.pi
     tropical = 1
     midLatitudeWinter = 3
-    if (latitudeClass == None):
+    if (latitudeClass is None):
         latitudeClass = midLatitudeWinter
     if (telescope == 'ALMA'):
-        if (temperature == None):
+        if (temperature is None):
             temperature = 270
-        if (altitude == None):
+        if (altitude is None):
             altitude = 5059
-        if (pressure == None):
+        if (pressure is None):
             pressure = 563
-        if (humidity == None):
+        if (humidity is None):
             humidity = 20
-        if (pwv == None):
+        if (pwv is None):
             pwv = 1.0
-        if (h0 == None):
+        if (h0 is None):
             h0 = 2.0
     elif (telescope.find('VLA') >= 0):
-        if (temperature == None):
+        if (temperature is None):
             temperature = 280
-        if (altitude == None):
+        if (altitude is None):
             altitude = 2124
-        if (pressure == None):
+        if (pressure is None):
             pressure = 785.5
-        if (humidity == None):
+        if (humidity is None):
             humidity = 20
-        if (pwv == None):
+        if (pwv is None):
             pwv = 5.0
-        if (h0 == None):
+        if (h0 is None):
             h0 = 2.0
     elif (telescope.find('SMA') >= 0):
         latitudeClass = tropical
-        if (temperature == None):
+        if (temperature is None):
             temperature = 280
-        if (altitude == None):
+        if (altitude is None):
             altitude = 4072
-        if (pressure == None):
+        if (pressure is None):
             pressure = 629.5
-        if (humidity == None):
+        if (humidity is None):
             humidity = 20
-        if (pwv == None):
+        if (pwv is None):
             pwv = 1.0
-        if (h0 == None):
+        if (h0 is None):
             h0 = 2.0
     else:
-        if (temperature == None or altitude==None or pressure==None or humidity == None):
+        if (temperature is None or altitude==None or pressure==None or humidity is None):
             print "If telescope is not specified, then you must specify pwv, temperature,"
             print " altitude, barometric pressure and relative humidity."
             return
-        if (h0 == None):
+        if (h0 is None):
             h0 = 2.0
 
     if (type(frequency) == list):
@@ -20325,7 +20325,7 @@ def plotAtmosphere(pwv=None,frequency=[0,1000],bandwidth=None,telescope='ALMA',
         else:
             pb.plot(freqs, opacity, 'bo')
         pb.ylabel('Opacity')
-        if (plotrange != None):
+        if (plotrange is not None):
             pb.ylim(plotrange) 
         else:
             pb.plot(freqs, opacity, 'bo')
@@ -20335,7 +20335,7 @@ def plotAtmosphere(pwv=None,frequency=[0,1000],bandwidth=None,telescope='ALMA',
         else:
             pb.plot(freqs, transmission, 'bo')
         pb.ylabel('Transmission')
-        if (plotrange == None):
+        if (plotrange is None):
             plotrange = [0,1]
         pb.ylim(plotrange)
     elif (quantity == 'tsky'):
@@ -20344,7 +20344,7 @@ def plotAtmosphere(pwv=None,frequency=[0,1000],bandwidth=None,telescope='ALMA',
         else:
             pb.plot(freqs, TebbSky, 'bo')
         pb.ylabel('Sky temperature (K)')
-        if (plotrange != None):
+        if (plotrange is not None):
             pb.ylim(plotrange)
     else:
         print "Unrecognized quantity: %s" % (quantity)

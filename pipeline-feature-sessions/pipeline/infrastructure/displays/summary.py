@@ -71,7 +71,7 @@ class AzElChart(object):
             'clearplots': True,
             'showgui': False,
             'customflaggedsymbol': True,
-            'flaggedsymbolshape': 'autoscaling' }
+            'flaggedsymbolshape': 'autoscaling'}
 
         task = casa_tasks.plotms(**task_args)
 
@@ -188,7 +188,7 @@ class ElVsTimeChart(object):
         return logger.Plot(self.figfile,
                            x_axis='Time',
                            y_axis='Elevation',
-                           parameters={'vis' : self.ms.basename},
+                           parameters={'vis': self.ms.basename},
                            command=str(task))
 
 
@@ -224,7 +224,7 @@ class FieldVsTimeChart(object):
                        'SIDEBAND'   : 'orange',
                        'TARGET'     : 'blue',
                        'WVR'        : 'lime',
-                       'UNKNOWN'    : 'grey',  }
+                       'UNKNOWN'    : 'grey',}
     
     def __init__(self, inputs):
         self.inputs = inputs
@@ -240,12 +240,12 @@ class FieldVsTimeChart(object):
             plot = logger.Plot(filename,
                                x_axis='Time',
                                y_axis='Field',
-                               parameters={'vis' : ms.basename})
+                               parameters={'vis': ms.basename})
             return plot
         
         f = pylab.figure()
         pylab.clf()
-        pylab.axes([0.1,0.15,0.8,0.7])
+        pylab.axes([0.1, 0.15, 0.8, 0.7])
         ax = pylab.gca()
 
         for nfield, field in enumerate(ms.fields):
@@ -298,12 +298,12 @@ class FieldVsTimeChart(object):
         plot = logger.Plot(filename,
                            x_axis='Time',
                            y_axis='Field',
-                           parameters={ 'vis' : ms.basename })
+                           parameters={'vis': ms.basename})
         
         return plot
 
     def _plot_key(self):
-        pylab.axes([0.1,0.8,0.8,0.2])
+        pylab.axes([0.1, 0.8, 0.8, 0.2])
         lims = pylab.axis()
         pylab.axis('off')
 
@@ -412,7 +412,7 @@ class IntentVsTimeChart(object):
         if os.path.exists(self.inputs.output):
             return self._get_plot_object()
 
-        fig = pyplot.figure(figsize=(14,9))
+        fig = pyplot.figure(figsize=(14, 9))
         ax = fig.add_subplot(111)
     
         ms = self.inputs.ms        
@@ -433,9 +433,10 @@ class IntentVsTimeChart(object):
                 ax.annotate('%s' % scan.id, (scan_start, scan_y+6))
     
         ax.set_ylim(0, 42.5)
-        ax.set_yticks([2.5,7.5,12.5,17.5,22.5,27.5,32.5,37.5,42.5])
-        ax.set_yticklabels(['SCIENCE', 'PHASE', 'CHECK', 'BANDPASS', 'AMPLITUDE',
-          'ATMOSPHERE', 'POINTING', 'SIDEBAND', 'WVR'])
+        ax.set_yticks([2.5, 7.5, 12.5, 17.5, 22.5, 27.5, 32.5, 37.5, 42.5])
+        ax.set_yticklabels(['SCIENCE', 'PHASE', 'CHECK', 'BANDPASS',
+                            'AMPLITUDE', 'ATMOSPHERE', 'POINTING', 'SIDEBAND',
+                            'WVR'])
 
         # set the labelling of the time axis
         FieldVsTimeChart._set_time_axis(figure=fig, ax=ax, datemin=obs_start,
@@ -459,7 +460,7 @@ class IntentVsTimeChart(object):
         return logger.Plot(filename,
                            x_axis='Time',
                            y_axis='Intent',
-                           parameters={'vis' : self.inputs.ms.basename})
+                           parameters={'vis': self.inputs.ms.basename})
 
 
 class PWVChart(object):
@@ -491,7 +492,7 @@ class PWVChart(object):
         return logger.Plot(self.figfile,
                            x_axis='Time',
                            y_axis='PWV',
-                           parameters={'vis' : self.ms.basename})
+                           parameters={'vis': self.ms.basename})
 
 
 class MosaicChart(object):
@@ -535,7 +536,7 @@ class MosaicChart(object):
         return logger.Plot(self.figfile,
                            x_axis='RA Offset',
                            y_axis='Dec Offset',
-                           parameters={'vis' : self.ms.basename})
+                           parameters={'vis': self.ms.basename})
 
 
 class PlotAntsChart(object):
@@ -577,7 +578,7 @@ class PlotAntsChart(object):
         return logger.Plot(self.figfile,
                            x_axis='Antenna Longitude',
                            y_axis='Antenna Latitude',
-                           parameters={'vis' : self.ms.basename})
+                           parameters={'vis': self.ms.basename})
 
     def draw_pad_map_in_subplot(self, plf, antennas, xlimit=None, 
                                 ylimit=None, showemptypads=True):
@@ -620,22 +621,22 @@ class PlotAntsChart(object):
         subpl.set_ylabel('Y [m]')
         plotwidth = max(xmax-xmin, ymax-ymin) * 6./10. # extra 1/10 is the margin
         (xcenter, ycenter) = ((xmin+xmax)/2., (ymin+ymax)/2.)
-        if xlimit == None:
-            #subpl.set_xlim(xcenter-plotwidth, xcenter+plotwidth)
+        if xlimit is None:
+            # subpl.set_xlim(xcenter-plotwidth, xcenter+plotwidth)
             subpl.set_xlim(xcenter[0]-plotwidth[0], xcenter[0]+plotwidth[0])
         else:
             subpl.set_xlim(xlimit[0], xlimit[1])
-        if ylimit == None:
-            #subpl.set_ylim(ycenter-plotwidth, ycenter+plotwidth)
+        if ylimit is None:
+            # subpl.set_ylim(ycenter-plotwidth, ycenter+plotwidth)
             subpl.set_ylim(ycenter[0]-plotwidth[0], ycenter[0]+plotwidth[0])
         else:
             subpl.set_ylim(ylimit[0], ylimit[1])
 
     def get_position(self, antenna):
-#        if self.ms.antenna_array.name == 'ALMA':
-#            # Arbitrarily shift ALMA coord so that central cluster comes 
-#            # around (0, 0).
-#            pos = (pos[0]+480., pos[1]-14380., pos[2])
+        # if self.ms.antenna_array.name == 'ALMA':
+        #    # Arbitrarily shift ALMA coord so that central cluster comes
+        #    # around (0, 0).
+        #    pos = (pos[0]+480., pos[1]-14380., pos[2])
 
         pos = [[antenna.offset['longitude offset']['value']],
                [antenna.offset['latitude offset']['value']],

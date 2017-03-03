@@ -8,8 +8,15 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class PriorcalsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], gc_result=None, oc_result=None,
+    def __init__(self, final=None, pool=None, preceding=None, gc_result=None, oc_result=None,
                  rq_result=None,  antpos_result=None, antcorrect=None, tecmaps_result=None, sw_result=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
 
         super(PriorcalsResults, self).__init__()
         

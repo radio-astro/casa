@@ -150,6 +150,42 @@ def mjd_seconds_to_datetime(mjd_secs):
     unix_offset = 40587 * 86400
     return unix_seconds_to_datetime(mjd_secs - unix_offset)
 
+def total_time_on_target_on_source(ms):
+    '''
+    Return the nominal total time on target source for the given MeasurementSet
+    excluding OFF-source integrations (REFERENCE). The flag is not taken into account.
+    
+    Background of development: ALMA-TP observations have integrations of both TARGET
+    and REFERENCE intents in one scan. Scan.time_on_source does not return appropriate
+    exposure time in the case.
+    
+    ms -- an MeasurementSet domain object
+    return -- a datetime.timedelta object set to the total time on source
+    '''
+    science_spws = ms.get_spectral_windows(science_windows_only=True)
+    state_ids = [s.id for s in ms.states if 'TARGET' in s.intents]
+    max_time = 0.0
+    ddids = []
+    with casatools.MSMDReader(ms.name) as msmd:
+        ant_ids = msmd.antennaids()
+        baseline_mask = msmd.baselines()
+        for spw in science_spws:
+            ddids.extend(msmd.datadescids(spw=spw.id))
+        science_dds = np.unique(ddids)
+    with casatools.TableReader(ms.name) as tb:
+        for dd in science_dds:
+            for a1 in ant_ids:
+                for a2 in ant_ids:
+                    if not baseline_mask[a1, a2]: continue
+                    seltb = tb.query('DATA_DESC_ID == %d AND ANTENNA1 == %d AND ANTENNA2 == %d AND STATE_ID IN %s' % (dd, a1, a2, state_ids))
+                    try:
+                        target_exposures = seltb.getcol('EXPOSURE').sum()
+                        LOG.debug("Selected %d ON-source rows for DD=%d, Ant1=%d, Ant2=%d: total exposure time = %f sec" % (seltb.nrows(), dd, a1, a2, target_exposures))
+                        max_time = max(max_time, target_exposures)
+                    finally:
+                        seltb.close()
+    LOG.debug("Max ON-source exposure time = %f sec" % max_time)
+    return datetime.timedelta(int(max_time/86400), int(max_time % 86400), int((max_time % 1)*1e6))
 
 def total_time_on_source(scans):
     '''

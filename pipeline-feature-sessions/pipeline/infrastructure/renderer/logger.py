@@ -1,4 +1,4 @@
-#*******************************************************************************
+# *****************************************************************************
 # ALMA - Atacama Large Millimeter Array
 # Copyright (c) ATC - Astronomy Technology Center - Royal Observatory Edinburgh, 2011
 # (in the framework of the ALMA collaboration).
@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
-#*******************************************************************************
+# *****************************************************************************
 import collections
 import distutils.spawn as spawn
 import itertools
@@ -66,6 +66,7 @@ else:
     else:
         LOG.warning('ImageMagick is not installed. Thumbnails will not be '
                     'generated, leading to slower web logs.')
+
 
 def getPath(filename):
     path = os.path.join(os.path.dirname(__file__), filename)
@@ -121,7 +122,7 @@ class Parameters(object):
         Get the plain English description of this parameter.
         """
         t = Parameters.descriptions.get(parameter)
-        if t == None:
+        if t is None:
             return str(parameter) + ' (unknown parameter)' 
         else:
             return t
@@ -308,7 +309,7 @@ class Plot(object):
         names, parameter names etc.) of this plot.
         """
         field = ''
-        if self.field != None and len(self.field) > 0:
+        if self.field is not None and len(self.field) > 0:
             # eg. 'M31: '
             field = string.strip(str(self.field)) + ': '
 

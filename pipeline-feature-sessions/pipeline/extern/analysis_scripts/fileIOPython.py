@@ -9,7 +9,7 @@ def fileToTable(fileName,splitVal=None,ignoreEmpty=False,keepType=False,commentC
     for line in f:
         if len(line.split()) == 0 and ignoreEmpty==True : continue
         if (line[0] == commentChar and commentCar <> None) : continue
-        if splitVal == None : linesInFile.append(line.split())
+        if splitVal is None : linesInFile.append(line.split())
         else : linesInFile.append(line.split(splitVal))
     if not keepType : return linesInFile
     else :

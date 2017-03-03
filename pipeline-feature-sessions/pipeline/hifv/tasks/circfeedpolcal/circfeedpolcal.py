@@ -14,12 +14,19 @@ LOG = infrastructure.get_logger(__name__)
 
 class CircfeedpolcalResults(polarization.PolarizationResults):
     def __init__(self, final=[], pool=[], preceding=[], vis=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(CircfeedpolcalResults, self).__init__()
         self.vis = vis
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
-        self.error = set()
 
     def merge_with_context(self, context):
         """

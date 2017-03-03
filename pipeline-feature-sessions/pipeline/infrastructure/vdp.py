@@ -371,7 +371,6 @@ class VisDependentProperty(object):
 #         return [inputs.context.observing_run.get_ms(v) for v in vis]
     
 
-
 class StandardInputs(api.Inputs):
     #- standard non-vis-dependent properties ---------------------------------
 
@@ -551,7 +550,7 @@ class StandardInputs(api.Inputs):
         if args.get('intent', None) is not None:
             args['intent'] = utils.to_CASA_intent(ms, args['intent'])
 
-        for k,v in args.items():
+        for k, v in args.items():
             if v is None:
                 del args[k]        
         return args

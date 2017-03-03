@@ -18,7 +18,15 @@ class HanningInputs(basetask.StandardInputs):
 
 
 class HanningResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=None, pool=None, preceding=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(HanningResults, self).__init__()
 
         self.vis = None

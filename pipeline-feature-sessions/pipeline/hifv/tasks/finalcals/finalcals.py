@@ -56,14 +56,21 @@ class FinalcalsInputs(basetask.StandardInputs):
 
 
 class FinalcalsResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[], vis=None):
+    def __init__(self, final=None, pool=None, preceding=None, vis=None):
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+
         super(FinalcalsResults, self).__init__()
 
         self.vis = vis
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
-        self.error = set()
 
     def merge_with_context(self, context):
         if not self.final:

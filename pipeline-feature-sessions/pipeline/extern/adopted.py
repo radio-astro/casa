@@ -320,7 +320,7 @@ def plotAtmosphere(vis=None, spw=-1, scan=0, intent='OBSERVE_TARGET',
     Note: uses the global physical constants: h and k
     --Todd Hunter
     """
-    if (vis != None):
+    if (vis is not None):
         if (not os.path.exists(vis)):
             print "Could not find measurement set"
             return
@@ -377,7 +377,7 @@ def plotAtmosphere(vis=None, spw=-1, scan=0, intent='OBSERVE_TARGET',
     tropical = 1
     midLatitudeSummer = 2
     midLatitudeWinter = 3
-    if (latitudeClass == None):
+    if (latitudeClass is None):
         latitudeClass = tropical
     elif (latitudeClass == 'tropical'):
         latitudeClass = tropical
@@ -391,51 +391,51 @@ def plotAtmosphere(vis=None, spw=-1, scan=0, intent='OBSERVE_TARGET',
 
     # Apply default weather conditions, if not specified
     if (telescope == 'ALMA'):
-        if (temperature == None):
+        if (temperature is None):
             temperature = 270
-        if (altitude == None):
+        if (altitude is None):
             altitude = 5059
-        if (pressure == None):
+        if (pressure is None):
             pressure = 563
-        if (humidity == None):
+        if (humidity is None):
             humidity = 20
-        if (pwv == None):
+        if (pwv is None):
             pwv = 1.0
-        if (h0 == None):
+        if (h0 is None):
             h0 = 1.0
     elif (telescope.find('VLA') >= 0):
-        if (temperature == None):
+        if (temperature is None):
             temperature = 280
-        if (altitude == None):
+        if (altitude is None):
             altitude = 2124
-        if (pressure == None):
+        if (pressure is None):
             pressure = 785.5
-        if (humidity == None):
+        if (humidity is None):
             humidity = 20
-        if (pwv == None):
+        if (pwv is None):
             pwv = 5.0
-        if (h0 == None):
+        if (h0 is None):
             h0 = 2.0
     elif (telescope.find('SMA') >= 0):
         latitudeClass = tropical
-        if (temperature == None):
+        if (temperature is None):
             temperature = 280
-        if (altitude == None):
+        if (altitude is None):
             altitude = 4072
-        if (pressure == None):
+        if (pressure is None):
             pressure = 629.5
-        if (humidity == None):
+        if (humidity is None):
             humidity = 20
-        if (pwv == None):
+        if (pwv is None):
             pwv = 1.0
-        if (h0 == None):
+        if (h0 is None):
             h0 = 2.0
     else:
-        if (temperature == None or altitude == None or pressure == None or humidity == None):
+        if (temperature is None or altitude is None or pressure is None or humidity is None):
             print "If telescope is not specified, then you must specify pwv, temperature,"
             print " altitude, barometric pressure and relative humidity."
             return
-        if (h0 == None):
+        if (h0 is None):
             h0 = 2.0
 
     if (type(frequency) == list):
@@ -502,7 +502,7 @@ def plotAtmosphere(vis=None, spw=-1, scan=0, intent='OBSERVE_TARGET',
         else:
             pyplot.plot(freqs, opacity, 'bo')
         ylabel = 'Opacity'
-        if (plotrange != None):
+        if (plotrange is not None):
             pyplot.ylim(plotrange)
     elif (quantity.find('transmission') >= 0):
         if (numchan > 1):
@@ -514,7 +514,7 @@ def plotAtmosphere(vis=None, spw=-1, scan=0, intent='OBSERVE_TARGET',
         else:
             pyplot.plot(freqs, transmission, 'bo')
         ylabel = 'Transmission'
-        if (plotrange == None):
+        if (plotrange is None):
             if (quantity == 'transmissionPercent'):
                 plotrange = [0, 105]
             else:
@@ -526,7 +526,7 @@ def plotAtmosphere(vis=None, spw=-1, scan=0, intent='OBSERVE_TARGET',
         else:
             pyplot.plot(freqs, TebbSky, 'bo')
         ylabel = 'Sky temperature (K)'
-        if (plotrange != None):
+        if (plotrange is not None):
             pyplot.ylim(plotrange)
     else:
         print "Unrecognized quantity: %s" % (quantity)
@@ -824,7 +824,7 @@ def getWeather(vis, scan='', antenna='0', verbose=False, vm=0, mymsmd='', debug=
                 if (needToClose_mymsmd): mymsmd.close()
                 return ([conditions, [], vm])
             myTimes = np.concatenate((myTimes, newTimes))
-    elif (scan != None):
+    elif (scan is not None):
         try:
             if (mymsmd != '' and casadef.casa_version >= casaVersionWithMSMD):
                 if debug: print "2) Calling mymsmd.timesforscan(%d)" % (scan)
@@ -1814,10 +1814,10 @@ def ComputeLST(mjdsec=None, longitude=ALMA_LONGITUDE, ut=None, hms=False,
     If mjdsec, ut and date are all None, then it uses the current date+time.
     -- Todd Hunter
     """
-    if (mjdsec == None and ut == None and date == None):
+    if (mjdsec is None and ut is None and date is None):
         mjdsec = getCurrentMJDSec()
-    elif (ut != None):
-        if (date == None):
+    elif (ut is not None):
+        if (date is None):
             datestring = getCurrentDate()
         else:
             datestring = date
@@ -1827,7 +1827,7 @@ def ComputeLST(mjdsec=None, longitude=ALMA_LONGITUDE, ut=None, hms=False,
             minutes = int(60 * (ut - int(ut)))
             datestring += ' %02d:%02d:%02.0f' % (int(ut), minutes, 3600 * (ut - int(ut) - minutes / 60.))
         mjdsec = dateStringToMJDSec(datestring, verbose=False)
-    elif (date != None):
+    elif (date is not None):
         mjdsec = dateStringToMJDSec(date, verbose=False)
     if verbose: print "MJD seconds = ", mjdsec
     JD = mjdToJD(mjdsec / 86400.)
@@ -1835,9 +1835,9 @@ def ComputeLST(mjdsec=None, longitude=ALMA_LONGITUDE, ut=None, hms=False,
     sidereal = 280.46061837 + 360.98564736629 * (JD - 2451545.0) + 0.000387933 * T * T - T * T * T / 38710000.
 
     # now we have LST in Greenwich, need to scale back to site
-    if (observatory != None):
+    if (observatory is not None):
         longitude = getObservatoryLongitude(observatory)
-        if (longitude == None): return
+        if (longitude is None): return
     sidereal += longitude
     sidereal /= 360.
     sidereal -= np.floor(sidereal)

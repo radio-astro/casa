@@ -83,25 +83,14 @@ baseline subtraction and imaging. Grouping is performed based on field and spect
         </tr>
     </thead>
     <tbody>
-    % for (group_id, group_desc) in pcontext.observing_run.ms_reduction_group.items():
-        <tr>
-            <td rowspan="${len(group_desc)}">${group_id}</td>
-            % for f in group_desc.frequency_range:
-                <td rowspan="${len(group_desc)}">${'%7.1f'%(f/1.e6)}</td>
-            % endfor
-            <td rowspan="${len(group_desc)}">${group_desc.field_name}</td>
-            % for m in group_desc:
-                <td>${m.ms.basename}</td>
-                <td>${m.ms.antennas[m.antenna_id].name}</td>
-                <td>${m.ms.spectral_windows[m.spw_id].id}</td>
-                <td>${m.ms.spectral_windows[m.spw_id].num_channels}</td>
-                % if len(group_desc) > 1:
-                    </tr><tr>
-                % endif
-            % endfor
-        </tr>
-    % endfor
-    </tbody>
+	% for tr in reduction_group_rows:
+		<tr>
+		% for td in tr:
+			${td}
+		% endfor
+		</tr>
+	%endfor
+	</tbody>
 </table>
 
 <h4>Calibration Strategy</h4>
@@ -133,7 +122,7 @@ and mapping information on reference and target fields.</p>
         %>
         <tr>
             <td rowspan="${num_content}">${ms.basename}</td>
-            <td rowspan="${num_content}">${','.join(map(lambda x: x.name, ms.antennas))}</td>
+            <td rowspan="${num_content}">${', '.join(map(lambda x: x.name, ms.antennas))}</td>
             <td rowspan="${num_content}">${ms.calibration_strategy['calmode']}</td>
             % for items in content:
                 % for item in items:

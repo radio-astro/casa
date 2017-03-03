@@ -16,4 +16,4 @@ from . import editimlist
 
 
 weblog.add_renderer(Editimlist, basetemplates.T2_4MDetailsDefaultRenderer(uri='editimlist.mako',
-                    description='Editimlist'), group_by=weblog.UNGROUPED)
+                    description='Editimlist', always_rerender=False), group_by=weblog.UNGROUPED)

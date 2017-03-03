@@ -28,8 +28,8 @@ LOG = infrastructure.get_logger(__name__)
 class TcleanInputs(cleanbase.CleanBaseInputs):
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
                  intent=None, field=None, spw=None, spwsel_lsrk=None, spwsel_topo=None, uvrange=None, specmode=None,
-                 gridder=None, deconvolver=None,
-                 nterms=None,
+                 gridder=None, deconvolver=None, uvtaper=None,
+                 nterms=None, cycleniter=None, cyclefactor=None, scales=None,
                  outframe=None, imsize=None, cell=None,
                  phasecenter=None, stokes=None, nchan=None, start=None, width=None, nbin=None,
                  weighting=None,
@@ -97,12 +97,44 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
         self._deconvolver = value
 
     @property
+    def uvtaper(self):
+        return self._uvtaper
+
+    @uvtaper.setter
+    def uvtaper(self, value):
+        self._uvtaper = value
+
+    @property
     def nterms(self):
         return self._nterms
 
     @nterms.setter
     def nterms(self, value):
         self._nterms = value
+
+    @property
+    def cycleniter(self):
+        return self._cycleniter
+
+    @cycleniter.setter
+    def cycleniter(self, value):
+        self._cycleniter = value
+
+    @property
+    def cyclefactor(self):
+        return self._cyclefactor
+
+    @cyclefactor.setter
+    def cyclefactor(self, value):
+        self._cyclefactor = value
+
+    @property
+    def scales(self):
+        return self._scales
+
+    @scales.setter
+    def scales(self, value):
+        self._scales = value
 
     @property
     def robust(self):
@@ -877,7 +909,11 @@ class Tclean(cleanbase.CleanBase):
                 scan='', specmode='mfs', gridder=inputs.gridder,
                 pblimit=self.pblimit_image, niter=0,
                 threshold='0.0mJy', deconvolver=inputs.deconvolver,
+                uvtaper=inputs.uvtaper,
                 nterms=inputs.nterms,
+                cycleniter=inputs.cycleniter,
+                cyclefactor=inputs.cyclefactor,
+                scales=inputs.scales,
                 interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
                 start=inputs.start, width=inputs.width, imsize=inputs.imsize,
                 cell=inputs.cell, phasecenter=inputs.phasecenter,
@@ -947,7 +983,11 @@ class Tclean(cleanbase.CleanBase):
                                                   specmode=inputs.specmode,
                                                   gridder=inputs.gridder,
                                                   deconvolver=inputs.deconvolver,
+                                                  uvtaper=inputs.uvtaper,
                                                   nterms=inputs.nterms,
+                                                  cycleniter=inputs.cycleniter,
+                                                  cyclefactor=inputs.cyclefactor,
+                                                  scales=inputs.scales,
                                                   outframe=inputs.outframe,
                                                   imsize=inputs.imsize,
                                                   cell=inputs.cell,

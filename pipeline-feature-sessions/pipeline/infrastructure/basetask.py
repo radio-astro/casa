@@ -34,7 +34,6 @@ import pipeline.extern.decorator as decorator
 
 LOG = logging.get_logger(__name__)
 
-
 # control generation of the weblog
 DISABLE_WEBLOG = False
 VISLIST_RESET_KEY = '_do_not_reset_vislist'
@@ -72,7 +71,7 @@ def result_finaliser(method):
             result.stage_number = inputs.context.task_counter
             try:
                 result.pipeline_casa_task = inputs._pipeline_casa_task
-            except AttributeError :
+            except AttributeError:
                 # sub-tasks may not have pipeline_casa_task, but we only need
                 # it for the top-level task
                 pass
@@ -283,10 +282,10 @@ class MandatoryInputsMixin(object):
     def vis(self, value):
         if value is None:
             imaging_preferred = get_imaging_preferred(self)
-            vislist =[ms.name for ms in
-                      self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)]
+            vislist = [ms.name for ms in
+                       self.context.observing_run.get_measurement_sets(imaging_preferred=imaging_preferred)]
         else:
-            vislist = value if type(value) is types.ListType else [value,]
+            vislist = value if type(value) is types.ListType else [value, ]
 
             # check that the context holds each vis specified by the user
             for vis in vislist:
@@ -454,10 +453,10 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
             # intent, so must remove the intent from the task call
             args['intent'] = None
 
-        if args.get('intent', None) != None:
+        if args.get('intent', None) is not None:
             args['intent'] = utils.to_CASA_intent(ms, args['intent'])
 
-        for k,v in args.items():
+        for k, v in args.items():
             if v is None:
                 del args[k]        
         return args
@@ -568,7 +567,8 @@ class ModeInputs(api.Inputs):
         # Inputs present with all their previously set parameters.
         for d in self._delegates.values():
             if hasattr(d, name):
-                LOG.trace('Setting \'{0}\' attribute to \'{1}\' on \'{2}'
+                LOG.trace(
+                    'Setting \'{0}\' attribute to \'{1}\' on \'{2}'
                     '\' object'.format(name, val, d.__class__.__name__))
                 setattr(d, name, val)
     
@@ -608,7 +608,7 @@ class ModeInputs(api.Inputs):
         return pprint.pformat(self.as_dict())
 
     @classmethod
-    def get_constructor_args(cls, ignore=('self','context')):
+    def get_constructor_args(cls, ignore=('self', 'context')):
         """
         Get the union of all arguments accepted by this class's constructor.
         """
@@ -817,7 +817,9 @@ class ResultsProxy(object):
         self._context = context
 
     def write(self, result):
-        """Write the pickled result to disk."""
+        """
+        Write the pickled result to disk.
+        """
         # adopt the result's UUID protecting against repeated addition to the
         # context
         self.uuid = result.uuid
@@ -837,7 +839,9 @@ class ResultsProxy(object):
             pickle.dump(result, outfile, -1)
 
     def read(self):
-        """Read the pickle from disk, returning the unpickled object."""
+        """
+        Read the pickle from disk, returning the unpickled object.
+        """
         path = os.path.join(self._context.output_dir,
                             self._context.name, 
                             'saved_state',
@@ -909,7 +913,7 @@ class ResultsList(Results):
     def merge_with_context(self, context):
         for result in self.__results:
             result.merge_with_context(context)
-    
+
 
 class StandardTaskTemplate(api.Task):
     """
@@ -1257,15 +1261,17 @@ def _log_task(task, dry_run):
 
 
 def property_with_default(name, default, doc=None):
-    '''
+    """
     Return a property whose value is reset to a default value when setting the
     property value to None.
-    '''
+    """
     # our standard name for the private property backing the public property 
     # is a prefix of one underscore
     varname = '_' + name 
+
     def getx(self):
         return object.__getattribute__(self, varname)
+
     def setx(self, value):
         if value is None:
             value = default

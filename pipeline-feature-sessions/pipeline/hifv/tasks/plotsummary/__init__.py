@@ -14,15 +14,7 @@ from . import qa
 #pipelineqa.registry.add_handler(qa.PlotSummaryListQAHandler())
 #qaadapter.registry.register_to_dataset_topic(plotsummary.PlotSummaryResults)
 
-
-'''
-from .hanning import Hanning
-from . import hanning
-
-
-weblog.add_renderer(PlotSummary,  basetemplates.T2_4MDetailsDefaultRenderer(uri='plotsummary.mako',
-                                      description='VLA Plot Summary'), group_by=weblog.UNGROUPED)
-'''
-
-weblog.add_renderer(PlotSummary, renderer.T2_4MDetailsplotsummaryRenderer(always_rerender=False, uri='plotsummary.mako'), group_by=weblog.UNGROUPED)
+weblog.add_renderer(PlotSummary,
+                    renderer.T2_4MDetailsplotsummaryRenderer(always_rerender=False,
+                                                             uri='plotsummary.mako'), group_by=weblog.UNGROUPED)
 

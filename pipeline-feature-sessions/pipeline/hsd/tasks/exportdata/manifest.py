@@ -3,7 +3,8 @@ import xml.etree.cElementTree as eltree
 from xml.dom import minidom
 
 #import pipeline.hif.tasks.exportdata.manifest as manifest
-import pipeline.h.tasks.exportdata.manifest as manifest
+#import pipeline.h.tasks.exportdata.manifest as manifest
+import pipeline.h.tasks.common.manifest as manifest
 
 class SingleDishPipelineManifest(manifest.PipelineManifest):
     def __init__(self, ouss_id):

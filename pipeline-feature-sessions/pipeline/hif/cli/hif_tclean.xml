@@ -119,6 +119,12 @@ Compute a clean map.
   <param type="string" name="stokes">
      <description>Stokes Planes to make</description>
      <value>I</value>
+       <allowed kind="enum">
+         <value>I</value>
+         <value>Q</value>
+         <value>U</value>
+         <value>V</value>
+       </allowed>
   </param>
 
   <param type="int" name="nchan" subparam="true">
@@ -321,7 +327,7 @@ Compute a clean map.
         <default param="nchan"><value>-1</value></default>
         <default param="start"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
-        <default param="stokes"><value type="sting">I</value></default>
+        <default param="stokes"><value type="string">I</value></default>
         <default param="restoringbeam"><value type="stringArray"></value></default>
       </equals>
     </when>

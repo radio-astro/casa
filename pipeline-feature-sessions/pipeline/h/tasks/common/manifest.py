@@ -1,5 +1,6 @@
 import xml.etree.cElementTree as eltree
 from xml.dom import minidom
+import collections
 
 class PipelineManifest(object):
     """
@@ -9,11 +10,26 @@ class PipelineManifest(object):
         self.ouss_id = ouss_id
 	self.piperesults = eltree.Element("piperesults", name=ouss_id)
 
+    def import_xml(self, xmlfile):
+        """
+        Import the manifest from an existing manifest file
+        """
+        with open(xmlfile, 'r') as f:
+            lines = map(lambda x: x.replace('\n', '').strip(), f.readlines())
+            self.piperesults = eltree.fromstring(''.join(lines))
+
     def set_ous(self, ous_name):
-	"""
+        """
         Set an OUS element and return it 
 	"""
         return eltree.SubElement(self.piperesults, "ous", name=ous_name)
+
+    def get_ous(self):
+        """
+        Currently this assumes there is only one ous as is the case
+        for member ous processing
+        """
+        return self.piperesults.getchildren()[0]
 
     def set_session (self, ous, session_name):
 	"""
@@ -24,6 +40,13 @@ class PipelineManifest(object):
     def add_caltables (self, session, caltables_file):
         eltree.SubElement(session, "caltables", name=caltables_file)
 
+    def get_caltables (self, ous):
+        caltables_dict = collections.OrderedDict()
+        for session in ous.iter('session'):
+            for caltable in session.iter('caltables'):
+                caltables_dict[session.attrib['name']] = caltable.attrib['name']
+        return caltables_dict
+
     def add_asdm (self, session, asdm_name, flags_file, calapply_file):
 	"""
         Add an ASDM element to a SESSION element
@@ -31,6 +54,28 @@ class PipelineManifest(object):
         asdm = eltree.SubElement (session, "asdm", name=asdm_name)
 	eltree.SubElement(asdm, "finalflags", name=flags_file)
 	eltree.SubElement(asdm, "applycmds", name=calapply_file)
+
+    def get_final_flagversions (self, ous):
+        """
+        Get a list of the final flag versions
+        """
+        finalflags_dict = collections.OrderedDict()
+        for session in ous.iter('session'):
+            for asdm in session.iter('asdm'):
+                for finalflags in asdm.iter('finalflags'): 
+                    finalflags_dict[asdm.attrib['name']] = finalflags.attrib['name']
+        return finalflags_dict
+
+    def get_applycals (self, ous):
+        """
+        Get a list of the final applycal instructions
+        """
+        applycmds_dict = collections.OrderedDict()
+        for session in ous.iter('session'):
+            for asdm in session.iter('asdm'):
+                for applycmds in asdm.iter('applycmds'): 
+                    applycmds_dict[asdm.attrib['name']] = applycmds.attrib['name']
+        return applycmds_dict
 
     def add_pprfile(self, ous, ppr_file):
 	"""

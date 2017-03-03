@@ -20,15 +20,23 @@ class FlagBadDeformattersInputs(basetask.StandardInputs):
 
 
 class FlagBadDeformattersResults(basetask.Results):
-    def __init__(self, jobs=[], result_amp=[], result_phase=[], 
+    def __init__(self, jobs=None, result_amp=None, result_phase=None,
                  amp_collection=collections.defaultdict(list), phase_collection=collections.defaultdict(list)):
+
+        if jobs is None:
+            jobs = []
+        if result_amp is None:
+            result_amp = []
+        if result_phase is None:
+            result_phase = []
+
         super(FlagBadDeformattersResults, self).__init__()
 
-        self.jobs=jobs
-        self.result_amp=result_amp
-        self.result_phase=result_phase
-        self.amp_collection=amp_collection
-        self.phase_collection=phase_collection
+        self.jobs = jobs
+        self.result_amp = result_amp
+        self.result_phase = result_phase
+        self.amp_collection = amp_collection
+        self.phase_collection = phase_collection
         
     def __repr__(self):
         s = 'Bad deformatter results:\n'

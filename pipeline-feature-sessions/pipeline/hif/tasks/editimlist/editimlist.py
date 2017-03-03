@@ -35,7 +35,7 @@ class EditimlistInputs(basetask.StandardInputs):
                  spw=None,
                  start=None,
                  stokes=None,
-                 taper=None,
+                 uvtaper=None,
                  uvrange=None,
                  width=None,
                  ):
@@ -45,7 +45,7 @@ class EditimlistInputs(basetask.StandardInputs):
         keys_to_consider = ('field', 'intent', 'spw', 'cell', 'deconvolver', 'imsize',
                             'phasecenter', 'specmode', 'gridder', 'imagename', 'scales',
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
-                            'robust', 'taper', 'niter', 'cyclefactor', 'cycleniter', 'mask')
+                            'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -69,16 +69,19 @@ class Editimlist(basetask.StandardTaskTemplate):
         inputs = self.inputs
 
         # if a file is given, read whatever parameters are defined in the file
-        if inputs.parameter_file and os.access(inputs.parameter_file, os.R_OK):
-            with open(inputs.parameter_file) as parfile:
-                for line in parfile:
-                    if line.startswith('#') or '=' not in line:
-                        continue
-                    parameter, value = line.partition('=')[::2]
-                    parameter = parameter.strip()
-                    value = value.strip()
-                    exec ('inputs.' + parameter + '=' + value)
-                    inputs.keys_to_change.append(parameter)
+        if inputs.parameter_file:
+            if os.access(inputs.parameter_file, os.R_OK):
+                with open(inputs.parameter_file) as parfile:
+                    for line in parfile:
+                        if line.startswith('#') or '=' not in line:
+                            continue
+                        parameter, value = line.partition('=')[::2]
+                        parameter = parameter.strip()
+                        value = value.strip()
+                        exec ('inputs.' + parameter + '=' + value)
+                        inputs.keys_to_change.append(parameter)
+            else:
+                LOG.error('Input parameter file is not readable: {fname}'.format(fname=inputs.parameter_file))
 
         # now construct the list of imaging command parameter lists that must
         # be run to obtain the required images
@@ -86,34 +89,52 @@ class Editimlist(basetask.StandardTaskTemplate):
 
         target = dict()
         inputs.editmode = 'add' if not inputs.editmode else inputs.editmode
-        if inputs.editmode == 'add':
-            target = CleanTarget()
-            target['deconvolver'] = '' if not inputs.deconvolver else None
-            target['scales'] = [0] if not inputs.scales else None
-            target['robust'] = 1.0 if not inputs.robust else None
-            target['taper'] = [] if not inputs.taper else None
-            target['niter'] = 20000 if not inputs.niter else None
-            target['cycleniter'] = -1 if not inputs.cycleniter else None
-            target['cyclefactor'] = 3.0 if not inputs.cyclefactor else None
-            target['mask'] = '' if not inputs.mask else None
-            inputsdict = inputs.__dict__
-            for parameter in inputsdict.keys():
-                if inputsdict[parameter] and not parameter.startswith('_') and (parameter in target):
-                    inputspar_value = eval('inputs.' + parameter)
-                    # print(parameter + '=' + str(inputspar_value))
-                    cmd = "target['" + parameter + "'] = inputs." + parameter
-                    # print(cmd)
-                    exec(cmd)
-        elif inputs.editmode == 'edit':
-            for parameter in inputs.keys_to_change:
-                if parameter is not None and parameter not in ('editmode'):
-                    inputspar_value = eval('inputs.' + parameter)
-                    # print(parameter + '=' + str(inputspar_value))
-                    cmd = 'target["' + parameter + '"] = inputs.' + parameter
-                    # print(cmd)
-                    exec(cmd)
 
-        result.add_target(target)
+        if not isinstance(inputs.field, list):
+            LOG.error('field type for hif_editimlist is not a list.')
+
+        ms = self.inputs.context.observing_run.get_ms(inputs.vis[0])
+        fieldnames = []
+        for fid in inputs.field:
+            if isinstance(fid, int):
+                fieldobj = ms.get_fields(field_id=int(fid))
+                fieldnames.append(fieldobj[0].name)
+            else:
+                fieldnames.append(fid)
+
+        for targetname in fieldnames:
+            if inputs.editmode == 'add':
+                target = CleanTarget()
+                target['deconvolver'] = '' if not inputs.deconvolver else None
+                target['scales'] = [0] if not inputs.scales else None
+                target['robust'] = 1.0 if not inputs.robust else None
+                target['uvtaper'] = [] if not inputs.uvtaper else None
+                target['niter'] = 20000 if not inputs.niter else None
+                target['cycleniter'] = -1 if not inputs.cycleniter else None
+                target['cyclefactor'] = 3.0 if not inputs.cyclefactor else None
+                target['mask'] = '' if not inputs.mask else None
+                target['specmode'] = 'cont' if not inputs.specmode else None
+                target['field'] = targetname
+                target['imagename'] = targetname
+                inputsdict = inputs.__dict__
+                for parameter in inputsdict.keys():
+                    if inputsdict[parameter] and parameter not in ('field', 'imagename') and \
+                            not parameter.startswith('_') and (parameter in target):
+                        inputspar_value = eval('inputs.' + parameter)
+                        # print(parameter + '=' + str(inputspar_value))
+                        cmd = "target['" + parameter + "'] = inputs." + parameter
+                        # print(cmd)
+                        exec cmd
+            elif inputs.editmode == 'edit':
+                for parameter in inputs.keys_to_change:
+                    if parameter is not None and parameter not in ('editmode', 'field', 'imagename'):
+                        # inputspar_value = eval('inputs.' + parameter)
+                        # print(parameter + '=' + str(inputspar_value))
+                        cmd = 'target["' + parameter + '"] = inputs.' + parameter
+                        # print(cmd)
+                        exec cmd
+
+            result.add_target(target)
 
         return result
 

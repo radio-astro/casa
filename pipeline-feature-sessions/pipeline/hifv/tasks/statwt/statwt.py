@@ -20,10 +20,14 @@ class StatwtInputs(basetask.StandardInputs):
 
 
 class StatwtResults(basetask.Results):
-    def __init__(self, jobs=[]):
+    def __init__(self, jobs=None):
+
+        if jobs is None:
+            jobs = []
+
         super(StatwtResults, self).__init__()
 
-        self.jobs=jobs
+        self.jobs = jobs
         
     def __repr__(self):
         s = 'Statwt results:\n'

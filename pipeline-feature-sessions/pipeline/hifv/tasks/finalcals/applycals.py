@@ -32,5 +32,5 @@ class ApplycalsInputs(ifapplycal.IFApplycalInputs):
         return d
 
 
-class Applycals(ifapplycal.Applycal):
+class Applycals(ifapplycal.IFApplycal):
     Inputs = ApplycalsInputs

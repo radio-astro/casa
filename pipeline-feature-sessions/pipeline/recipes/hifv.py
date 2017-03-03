@@ -39,6 +39,7 @@ from hifv_semiFinalBPdcals_cli import hifv_semiFinalBPdcals_cli as hifv_semiFina
 from hifv_solint_cli import hifv_solint_cli as hifv_solint
 from hifv_fluxboot_cli import hifv_fluxboot_cli as hifv_fluxboot
 from hifv_finalcals_cli import hifv_finalcals_cli as hifv_finalcals
+from hifv_circfeedpolcal_cli import hifv_circfeedpolcal_cli as hifv_circfeedpolcal
 from hifv_applycals_cli import hifv_applycals_cli as hifv_applycals
 from hifv_targetflag_cli import hifv_targetflag_cli as hifv_targetflag
 from hifv_statwt_cli import hifv_statwt_cli as hifv_statwt
@@ -120,6 +121,9 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
     
         # Make the final calibration tables
         hifv_finalcals (pipelinemode=pipelinemode)
+
+        # Polarization calibration
+        hifv_circfeedpolcal (pipelinemode=pipelinemode)
     
         # Apply all the calibrations and check the calibrated data
         hifv_applycals (pipelinemode=pipelinemode)
