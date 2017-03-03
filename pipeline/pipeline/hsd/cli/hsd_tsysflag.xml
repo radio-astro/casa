@@ -146,7 +146,7 @@ sequence of flagging subtasks, each looking for a different type of possible err
         <when param="flag_nmedian">
             <equals type="bool" value="True">
                 <default param="fnm_limit"><value>2.0</value></default>
-                <default param="fnm_byfield"><value>False</value></default>
+                <default param="fnm_byfield"><value>True</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
