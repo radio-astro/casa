@@ -14,15 +14,14 @@ from imagerhelpers.parallel_imager_helper import PyParallelImagerHelper
 '''
 An implementation of parallel cube imaging, using synthesisxxxx tools.
 
-Major and minor cycles are parallelized across frequency, with a single 'iterbot'
-to synchronize iteration control. Reference concatenation of the residual and
-mask images is done for interactive cleaning so that the viewer can be
-used, as well as at the end for all the image products.
+Major and minor cycles are parallelized across frequency, by running separate
+PySynthesisImagers independently per frequency chunk.
+Iteration control is not synchronized,  interactive mask drawing can't be done.
+Reference concatenation of all the image products is done at the end.
 
-There are N synthesisimager objects
-There N normalizers and deconvolvers (per field)
-There is 1 iterbot.
-    
+There are N PySynthesisImager objects, each with their own 
+synthesisimager, deconvolvers, normalizers and iterbot. 
+   
 '''
 
 #############################################
@@ -120,79 +119,46 @@ class PyParallelCubeSynthesisImager():
         #print "****** SELPARS in init **********", self.allselpars
         #print "****** SELIMPARS in init **********", self.allimpars
         
-
-#        joblist=[]
-#        #### MPIInterface related changes
-#        #for node in range(0,self.NN):
-#        for node in self.listOfNodes:
-#            joblist.append( self.PH.runcmd("from refimagerhelper import ImagerParameters, PySynthesisImager", node) )
-#        self.PH.checkJobs( joblist )
-#
-#        joblist=[]
-#        #### MPIInterface related changes
-#        #for node in range(0,self.NN):
-#        for node in self.listOfNodes:
-#
-#            joblist.append( self.PH.runcmd("paramList = ImagerParameters()", node) )
-#            joblist.append( self.PH.runcmd("paramList.setSelPars("+str(self.allselpars[str(node)])+")", node) )
-#            joblist.append( self.PH.runcmd("paramList.setImagePars("+str(self.allimpars[str(node)])+")", node) )
-#
-#            joblist.append( self.PH.runcmd("paramList.setGridPars("+str(self.allgridpars)+")", node) )
-#            joblist.append( self.PH.runcmd("paramList.setWeightPars("+str(self.weightpars)+")", node) )
-#            joblist.append( self.PH.runcmd("paramList.setDecPars("+str(self.decpars)+")", node) )
-#            joblist.append( self.PH.runcmd("paramList.setIterPars("+str(self.iterpars)+")", node) )
-#            joblist.append( self.PH.runcmd("paramList.setNormPars("+str(self.allnormpars)+")", node) )
-#
-#            joblist.append( self.PH.runcmd("paramList.checkParameters()", node) )
-#
-#            joblist.append( self.PH.runcmd("imager = PySynthesisImager(params=paramList)", node) )
-#
-#        self.PH.checkJobs( joblist )
-
         joblist=[]
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
         for node in self.listOfNodes:
-            joblist.append( self.PH.runcmd("SDtools=[];PStools=[]", node) )
+            joblist.append( self.PH.runcmd("from refimagerhelper import ImagerParameters, PySynthesisImager", node) )
         self.PH.checkJobs( joblist )
 
+        joblist=[]
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
+
+            joblist.append( self.PH.runcmd("paramList = ImagerParameters()", node) )
+            joblist.append( self.PH.runcmd("paramList.setSelPars("+str(self.allselpars[str(node)])+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setImagePars("+str(self.allimpars[str(node)])+")", node) )
+
+            joblist.append( self.PH.runcmd("paramList.setGridPars("+str(self.allgridpars)+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setWeightPars("+str(self.weightpars)+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setDecPars("+str(self.decpars)+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setIterPars("+str(self.iterpars)+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setNormPars("+str(self.allnormpars)+")", node) )
+
+            joblist.append( self.PH.runcmd("paramList.checkParameters()", node) )
+
+            joblist.append( self.PH.runcmd("imager = PySynthesisImager(params=paramList)", node) )
+
+        self.PH.checkJobs( joblist )
+
+        IBtool = None
+
     def initializeImagers(self):
-        #
-        # Start the imagers on all nodes.
-        #
         joblist=[]
         for node in self.listOfNodes:
-            joblist.append( self.PH.runcmd("toolsi = casac.synthesisimager()", node) );
-        self.PH.checkJobs(joblist);
-
-        #
-        # Select data. Use the node-specific selection parameters from __init__
-        #
-        joblist=[];
-        for node in self.listOfNodes:
-            for mss in sorted( (self.allselpars[str(node)]).keys() ):
-                selStr=str(self.allselpars[str(node)][mss]);
-                joblist.append( self.PH.runcmd("toolsi.selectdata( "+selStr+")", node) )
-        self.PH.checkJobs(joblist);
-
-        #
-        # Call defineimage at each node. Use the node-specific image coordinates from __init__
-        #
-        joblist=[];
-        for node in nodes:
-            ## For each image-field, define imaging parameters
-            nimpars = copy.deepcopy(self.allimpars[str(node)])
-            #print "nimpars = ",nimpars;
-            ngridpars = copy.deepcopy(self.allgridpars)
-            for fld in range(0,self.NF):
-                joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) 
-                                               + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
-        self.PH.checkJobs(joblist);
-        
+            joblist.append( self.PH.runcmd("imager.initializeImagers()", node) )
+        self.PH.checkJobs( joblist )
 
     def initializeDeconvolvers(self):
         joblist=[]
         for node in self.listOfNodes:
-            joblist.append( self.PH.runcmd("SDtools.append(casac.synthesisdeconvolver())", node) )
-            joblist.append( self.PH.runcmd("SDtools[immod].setupdeconvolution(decpars=self.alldecpars[str(immod)])", node) )
+            joblist.append( self.PH.runcmd("imager.initializeDeconvolvers()", node) )
         self.PH.checkJobs( joblist )
 
     def initializeNormalizers(self):
@@ -211,6 +177,12 @@ class PyParallelCubeSynthesisImager():
 
 
     def initializeIterationControl(self):
+
+        ## Master iterbot.
+        self.IBtool = casac.synthesisiterbot()
+        itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
+
+        ## Iterbots per frequency chunk.
         joblist=[]
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.initializeIterationControl()", node) )
@@ -231,26 +203,126 @@ class PyParallelCubeSynthesisImager():
     def runMajorCycle(self):
         joblist=[]
         for node in self.listOfNodes:
-            joblist.append( self.PH.runcmd("imager.runMajorCycle()", node) )
+            joblist.append( self.PH.runcmd("for immod in range(0,imager.NF):imager.PStools[immod].dividemodelbyweight();imager.PStools[immod].scattermodel()", node) )   # scattermodel is a no-op here. Ignore ? 
         self.PH.checkJobs( joblist )
 
-    def runMinorCycle(self):
+        if self.IBtool != None:
+            lastcycle = (self.IBtool.cleanComplete(lastcyclecheck=True) > 0)
+        else:
+            lastcycle = True
+
         joblist=[]
         for node in self.listOfNodes:
-            joblist.append( self.PH.runcmd("imager.runMinorCycle()", node) )
+            joblist.append( self.PH.runcmd("imager.runMajorCycleCore("+str(lastcycle)+")", node) )
         self.PH.checkJobs( joblist )
+
+        if self.IBtool != None:
+            self.IBtool.endmajorcycle()
+
+        joblist=[]
+        for node in self.listOfNodes:
+            joblist.append( self.PH.runcmd("for immod in range(0,imager.NF):imager.PStools[immod].gatherresidual();imager.PStools[immod].divideresidualbyweight();imager.PStools[immod].multiplemodelbyweight()", node) )   # gathermodel is a no-op here. Ignore ? 
+        self.PH.checkJobs( joblist )
+
+
+
+    def runMinorCycle(self):
+
+        # Get iteration control parameters
+        iterbotrec = self.IBtool.getminorcyclecontrols()
+
+        #Push this iterbotrec to all nodes ( CHECK SYNTAX HERE )
+        for node in self.listOfNodes:
+             inrecs[str(node)] = self.PH.pushval("iterbotrec", iterbotrec, node ) ## self.iterbotrec?
+
+        # Exec minor cycle on all nodes
+        joblist=[]
+        for node in self.listOfNodes:
+            joblist.append( self.PH.runcmd("execrecs=[]", node) )
+            joblist.append( self.PH.runcmd("for immod in range(0,imager.NF):execrecs.append(imager.SDtools[immod].executeminorcycle(iterbotrecord=iterbotrec))", node) )
+        self.PH.checkJobs( joblist )
+
+
+        # Gather all the execrecs here and merge into local IBtool
+        exrecs={}
+        for node in self.listOfNodes:
+             exrecs[str(node)] = self.PH.pullval("execrecs", node )
+
+        # Merge into local IBtool
+        for node in self.listOfNodes:
+            for arec in exrecs[str(node)]:
+                self.IBtool.mergexecrecord(arec)
+
+
+        for immod in range(0,self.NF):
+                if os.environ.has_key('SAVE_ALL_AUTOMASKS') and os.environ['SAVE_ALL_AUTOMASKS']=="true":
+                    maskname = self.allimpars[str(immod)]['imagename']+'.mask'
+                    tempmaskname = self.allimpars[str(immod)]['imagename']+'.autothresh'+str(self.ncycle)
+                    if os.path.isdir(maskname):
+                        shutil.copytree(maskname, tempmaskname)
+                
+                # Some what duplicated as above but keep a copy of the previous mask
+                # for interactive automask to revert to it if the current mask
+                # is not used (i.e. reached deconvolution stopping condition).
+                if self.iterpars['interactive'] and self.alldecpars[str(immod)]['usemask']=='auto-thresh':
+                    maskname = self.allimpars[str(immod)]['imagename']+'.mask'
+                    prevmaskname=self.allimpars[str(immod)]['imagename']+'.prev.mask'
+                    if os.path.isdir(maskname):
+                        if os.path.isdir(prevmaskname):
+                            shutil.rmtree(prevmaskname)
+                        shutil.copytree(maskname, prevmaskname)
+
 
     ## Merge the results from all pieces. Maintain an 'active' list of nodes...
     def hasConverged(self):
-        self.PH.runcmdcheck("rest = imager.hasConverged()")
 
-        retval = True
+        # Make initrecs from all deconvolvers
+        joblist=[]
         for node in self.listOfNodes:
-             rest = self.PH.pullval("rest", node )
-             retval = retval and rest[node]
-             print "Node " , node , " converged : ", rest[node];
+            joblist.append( self.PH.runcmd("initrecs=[]", node) )
+            joblist.append( self.PH.runcmd("for immod in range(0,imager.NF):imager.initrecs.append(imager.SDtools[immod].initminorcycle())", node) )
+        self.PH.checkJobs( joblist )
 
-        return retval
+
+        # Gather all the initrecs here and merge into local IBtool
+        inrecs={}
+        for node in self.listOfNodes:
+             inrecs[str(node)] = self.PH.pullval("initrecs", node )
+
+        # Merge into local IBtool
+        for node in self.listOfNodes:
+            for arec in inrecs[str(node)]:
+                self.IBtool.mergeinitrecord(arec)
+
+        # Virtual concatenation or residual (and mask?)
+        self.concatimages(type='virtualcopy', imtypes=['residual','mask'])
+                
+        # Run interactive GUI
+        self.runInteractiveGUI2()
+
+        # Send modified mask back to individual nodes (reverse of concatimages...)
+
+        # Check with the iteration controller about convergence.
+        stopflag = self.IBtool.cleanComplete()
+        #print 'Converged : ', stopflag
+
+
+        if( stopflag>0 ):
+             #stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles']
+             stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'peak residual increased by more than 5 times from the previous major cycle','peak residual increased by more than 5 times from the minimum reached']
+             casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
+
+             # revert the current automask to the previous one 
+             if self.iterpars['interactive']:
+                 for immod in range(0,self.NF):
+                     if self.alldecpars[str(immod)]['usemask']=='auto-thresh':
+                        prevmask = self.allimpars[str(immod)]['imagename']+'.prev.mask'
+                        if os.path.isdir(prevmask):
+                          shutil.rmtree(self.allimpars[str(immod)]['imagename']+'.mask')
+                          #shutil.copytree(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
+                          shutil.move(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
+
+        return (stopflag>0)
 
     def predictModel(self):
         joblist=[]
@@ -276,9 +348,10 @@ class PyParallelCubeSynthesisImager():
             joblist.append( self.PH.runcmd("imager.makePB()", node) )
         self.PH.checkJobs( joblist )
 
-    def concatImages(self, type='virtualnomove'):
+    def concatImages(self, type='virtualnomove',imtypes=[]):
         import subprocess
-        imtypes=['image','psf','model','residual','mask','pb', 'image.pbcor', 'weight', 'sumwt']
+        if len(imtypes)==0:
+            imtypes=['image','psf','model','residual','mask','pb', 'image.pbcor', 'weight', 'sumwt']
         for immod in range(0,self.NF):
             for ext in imtypes:
                 subimliststr="'"
@@ -327,5 +400,9 @@ class PyParallelCubeSynthesisImager():
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.deleteTools()", node) )
         self.PH.checkJobs( joblist )
+
+        ## Delete Master iterbot
+        if self.IBtool != None:
+            self.IBtool.done()
 
 #############################################

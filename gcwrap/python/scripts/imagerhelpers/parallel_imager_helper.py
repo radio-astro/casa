@@ -224,6 +224,10 @@ class PyParallelImagerHelper():
          return self.CL.pull( varname , node )
 
 #############################################
+    def pushval(self, varname="", val=None, node=0):
+         return self.CL.push( varname , val, node )
+
+#############################################
     def getpath(self, node=0):
         enginepath = self.sc.get_engine_store(node)
         if enginepath==None:
