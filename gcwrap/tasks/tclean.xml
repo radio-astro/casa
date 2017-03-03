@@ -1776,7 +1776,7 @@ HPX HEALPix grid.  -->
     <!-- top level mask type selection -->
    
     <param type="string" name="usemask">
-           <shortdescription>Type of mask(s) for deconvolution (user,pb,auto-thresh)</shortdescription>
+           <shortdescription>Type of mask(s) for deconvolution (user, pb, auto-thresh, auto-thresh2, or auto-multithresh)</shortdescription>
 <description>Type of mask(s) to be used for deconvolution
 
                        user: (default) mask image(s) or user specified region file(s) or string CRTF expression(s)
@@ -1812,7 +1812,7 @@ HPX HEALPix grid.  -->
 
                        auto-multithresh: automask by multiple thresholds for deconvolution 
                           subparameters : sidelobethreshold, noisethreshold, lownoisethreshold, smoothfactor,
-                                          minbeamfrac, cutthreshold  
+                                          minbeamfrac, cutthreshold, pbmask  
 </description>
       <value type="string">user</value>
 	    <allowed kind="enum">
@@ -1902,7 +1902,7 @@ HPX HEALPix grid.  -->
 
     <param type="double" name="pbmask" subparam="true">
 	   <shortdescription>primary beam mask</shortdescription>
-<description>primary beam mask 
+<description>Sub-parameter for usemask='auto-thresh','auto-thresh2',or 'auto-multithresh': primary beam mask 
 
           	       Examples : pbmask=0.0 (default, no pb mask)
           	                  pbmask=0.2 (construct a mask at the 0.2 pb gain level) 
@@ -1912,7 +1912,7 @@ HPX HEALPix grid.  -->
     </param>
     <param type="any" name="maskthreshold" subparam="true">
 	   <shortdescription>threshold for automasking (string with unit, e.g. "1.0mJy", sigma,  or fraction of peak ,e.g. 0.1)</shortdescription>
-<description>threshold for automasking 
+<description>Sub-parameter for "auto-thresh" and "auto-thresh2": threshold for automasking 
                        Threshold value in a string with a unit, sigma (e.g. 3.0)  or fraction of peak (e.g, 0.05)
                        For a float value, if it is &gt;= 1.0, it is interpreted as sigma (i.e. sigma*rms for threshold). If it is &lt; 1.0, it is interpreted as
                        the fraction of peak. 
@@ -1926,7 +1926,7 @@ HPX HEALPix grid.  -->
     </param>
     <param type="any" name="maskresolution" subparam="true">
 	   <shortdescription>resolution for automasking (string, e.g. "10arcsec", or a float value as multiplicative factor of the beam)</shortdescription>
-<description>resolution for automasking
+<description>Sub-parameter for "auto-thresh" and "auto-thresh2": resolution for automasking
                        The residual image is binned (npix x npix), where npix is maskresolution converted in the number of pixels 
                        Examples : maskresolution='10arcsec'
                                   maskresolution=2.0 (2 x bmaj)
@@ -1936,7 +1936,7 @@ HPX HEALPix grid.  -->
     </param>
     <param type="int" name="nmask" subparam="true">
 	   <shortdescription>the maximum number of masks to be added by automasking</shortdescription>
-<description>Maximum number of mask regions to be added by automasking at the beginning each minor cycles run
+<description>Sub-parameter for "auto-thresh" and "auto-thresh2": Maximum number of mask regions to be added by automasking at the beginning each minor cycles run
                        Examples : nmask=2 
                                   nmask=0  (default, set no limit on the number of mask regions to be added)
 </description>
@@ -1947,37 +1947,41 @@ HPX HEALPix grid.  -->
     <param type="double" name="sidelobethreshold" subparam="true">
            <shortdescription>sidelobethreshold *  the max sidelobe level</shortdescription>
            <value type="double">3.0</value>
-<description> mask threshold based on sidelobe levels:  sidelobethreshold * max_sidelobe_level
+<description>Sub-parameter for "auto-multithresh":  mask threshold based on sidelobe levels:  sidelobethreshold * max_sidelobe_level
+
+              The rms is calculated from MAD with rms = 1.4826*MAD.
 </description>
     </param>
     <param type="double" name="noisethreshold" subparam="true">
     <shortdescription>noisethreshold * rms in residual image</shortdescription>
            <value type="double">3.0</value>
-<description> mask threshold based on the noise level: noisethreshold * rms
+<description>Sub-parameter for "auto-multithresh":  mask threshold based on the noise level: noisethreshold * rms
 </description>
     </param>
     <param type="double" name="lownoisethreshold" subparam="true">
     <shortdescription>lownoisethreshold * rms in residual image</shortdescription>
            <value type="double">3.0</value>
-<description> mask threshold to grow previously masked regions via binary dilation:   lownoisethreshold * rms in residual image
+<description>Sub-parameter for "auto-multithresh":  mask threshold to grow previously masked regions via binary dilation:   lownoisethreshold * rms in residual image
 </description>
     </param>
     <param type="double" name="smoothfactor" subparam="true">
            <shortdescription>smoothing factor in a unit of the beam</shortdescription>
            <value type="double">1.0</value>
-<description> smoothing factor in a unit of the beam
+<description>Sub-parameter for "auto-multithresh":  smoothing factor in a unit of the beam
 </description>
     </param>
     <param type="double" name="minbeamfrac" subparam="true">
-           <shortdescription> minimum beam fraction for pruning</shortdescription>
+           <shortdescription>minimum beam fraction for pruning</shortdescription>
            <value type="double">-1.0</value>
-<description> minimum beam fraction in size to prune masks smaller than mimbeamfrac * beam
+<description>Sub-parameter for "auto-multithresh":  minimum beam fraction in size to prune masks smaller than mimbeamfrac * beam
+
+           The default, -1: No pruning
 </description>
     </param>
     <param type="double" name="cutthreshold" subparam="true">
            <shortdescription>threshold to cut the smoothed mask to create a final mask</shortdescription>
            <value type="double">0.01</value>
-<description> threshold to cut the smoothed mask to create a final mask: cutthreshold * peak of the smoothed mask
+<description>Sub-parameter for "auto-multithresh": threshold to cut the smoothed mask to create a final mask: cutthreshold * peak of the smoothed mask
 </description>
     </param>
 
