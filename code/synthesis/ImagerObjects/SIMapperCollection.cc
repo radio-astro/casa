@@ -723,11 +723,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // If any one Mapper has a valid and nonzero model, return true.
     for (Int model=0;model<nMappers(); ++model) 
       { 
-	//	validmodel = ((itsMappers[model])->imageStore())->hasModel() && 
-	//	                        ( ! ( ((itsMappers[model])->imageStore())->isModelEmpty() ));
-	validmodel =  ! ( ((itsMappers[model])->imageStore())->isModelEmpty() );
+	validmodel |= (! ( ((itsMappers[model])->imageStore())->isModelEmpty() ));
       }
-    //    cout << "anyNonZeroModel : " << validmodel << endl;
+    //cout << "anyNonZeroModel : " << validmodel << endl;
     return validmodel;
   }
   //////////////////////////////////////////////////////////////////////////////////////////////////////
