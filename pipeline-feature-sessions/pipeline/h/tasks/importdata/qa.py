@@ -2,14 +2,12 @@ from __future__ import absolute_import
 import collections
 import datetime
 import os
-import numpy
 
 from pipeline.infrastructure import casa_tasks, casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.qa.scorecalculator as qacalc
-import pipeline.infrastructure.mpihelpers as mpihelpers
 
 LOG = logging.get_logger(__name__)
 from . import importdata
@@ -166,7 +164,7 @@ class ImportDataQAHandler(pqa.QAResultHandler):
 
 
 class ImportDataListQAHandler(pqa.QAResultHandler):
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = importdata.ImportDataResults
 
     def handle(self, context, result):

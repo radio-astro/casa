@@ -21,10 +21,8 @@ import types
 import uuid
 
 from . import api
-from . import adapters
 from . import argmapper
 from . import casatools
-from . import callibrary
 from . import filenamer
 from . import jobrequest
 from . import launcher
@@ -41,6 +39,7 @@ LOG = logging.get_logger(__name__)
 DISABLE_WEBLOG = False
 VISLIST_RESET_KEY = '_do_not_reset_vislist'
 
+
 def timestamp(method):
     def attach_timestamp_to_results(self, *args, **kw):
         start = datetime.datetime.utcnow()
@@ -53,6 +52,7 @@ def timestamp(method):
         return result
 
     return attach_timestamp_to_results
+
 
 def result_finaliser(method):
     """
@@ -80,6 +80,7 @@ def result_finaliser(method):
 
     return finalise_pipeline_result
 
+
 def capture_log(method):
     def capture(self, *args, **kw):
         # get the size of the CASA log before task execution
@@ -100,8 +101,17 @@ def capture_log(method):
             except:
                 LOG.trace('Could not set casalog property on result of type '
                           '%s' % result.__class__)
+
+        # To save space in the pickle, delete any inner CASA logs. The web
+        # log will only write the outer CASA log to disk
+        if isinstance(result, collections.Iterable):
+            for r in result:
+                if hasattr(r, 'casalog'):
+                    del r.casalog
+
         return result
     return capture
+
 
 def log_equivalent_CASA_call(func):
     """
@@ -109,6 +119,7 @@ def log_equivalent_CASA_call(func):
     calls.
     """
     return decorator.decorator(_record_constructor_args, func)
+
 
 def _record_constructor_args(func, *args, **kwargs):
     """
@@ -320,60 +331,6 @@ class OnTheFlyCalibrationMixin(object):
     Getting and setting any of these on-the-fly parameters will then use the
     shared functionality defined here. 
     """
-    # @property
-    # def calto(self):
-    #     if type(self.vis) is types.ListType:
-    #         return self._handle_multiple_vis('calto')
-    #
-    #     return callibrary.CalTo(vis=self.vis,
-    #                             field=self.field,
-    #                             spw=self.spw,
-    #                             intent=self.intent,
-    #                             antenna=self.antenna)
-    #
-    # @property
-    # def calstate(self):
-    #     if type(self.vis) is types.ListType:
-    #         return self._handle_multiple_vis('calstate')
-    #
-    #     return self.context.callibrary.get_calstate(self.calto,
-    #                                                 ignore=['calwt',])
-    #
-    # @property
-    # def gaincurve(self):
-    #     """
-    #     Get the value of gaincurve.
-    #
-    #     Unless overridden, the measurement set will be examined to determine
-    #     the appropriate value.
-    #     """
-    #     # gaincurve is ms-dependent. Return a list of gaincurve results if vis
-    #     # refers to multiple measurement sets.
-    #     if type(self.vis) is types.ListType:
-    #         return self._handle_multiple_vis('gaincurve')
-    #
-    #     # call the heuristic to determine the correct value of gaincurve -
-    #     # unless the user has overridden the heuristic with a fixed value.
-    #     if callable(self._gaincurve) and self.ms:
-    #         adapted = adapters.GaincurveAdapter(self._gaincurve)
-    #         return adapted(self.ms)
-    #     return self._gaincurve
-    #
-    # @gaincurve.setter
-    # def gaincurve(self, value):
-    #     """
-    #     Set the value of gaincurve.
-    #
-    #     Setting gaincurve to None allows the pipeline to determine the
-    #     appropriate value.
-    #     """
-    #     if value not in (None, True, False):
-    #         raise TypeError, 'gaincurve must be one of None, True or False'
-    #     if value is None:
-    #         import pipeline.hif
-    #         value = pipeline.hif.heuristics.Gaincurve()
-    #     self._gaincurve = value
-
     @property
     def opacity(self):
         return self._opacity
@@ -739,6 +696,10 @@ class Results(api.Results):
         # destined for the weblog. Currently a dict, but could change.
         self._metadata = {}
 
+        # self.stage_number = None
+        # self.casalog = None
+        # self.timestamps = None
+
     @property
     def uuid(self):
         """
@@ -771,7 +732,7 @@ class Results(api.Results):
         LOG.debug('Null implementation of merge_with_context used for %s'
                   '' % self.__class__.__name__)
 
-    def accept(self, context=None, **other_parameters):
+    def accept(self, context=None):
         """
         Accept these results, registering objects with the context and incrementing
         stage counters as necessary in preparation for the next task.
@@ -779,14 +740,14 @@ class Results(api.Results):
         if context is None:
             # context will be none when called from a CASA interactive 
             # session. When this happens, we need to locate the global context
-            # from the             
+            # from the stack
             import pipeline.h.cli.utils
             context = pipeline.h.cli.utils.get_context()
 
         self._check_for_remerge(context)
 
         # execute our template function
-        self.merge_with_context(context, **other_parameters)
+        self.merge_with_context(context)
 
         # find whether this result is being accepted as part of a task 
         # execution or whether it's being accepted after task completion
@@ -856,9 +817,7 @@ class ResultsProxy(object):
         self._context = context
 
     def write(self, result):
-        '''
-        Write the pickled result to disk.
-        '''
+        """Write the pickled result to disk."""
         # adopt the result's UUID protecting against repeated addition to the
         # context
         self.uuid = result.uuid
@@ -878,9 +837,7 @@ class ResultsProxy(object):
             pickle.dump(result, outfile, -1)
 
     def read(self):
-        '''
-        Read the pickle from disk, returning the unpickled object.
-        '''
+        """Read the pickle from disk, returning the unpickled object."""
         path = os.path.join(self._context.output_dir,
                             self._context.name, 
                             'saved_state',
@@ -917,17 +874,42 @@ class ResultsProxy(object):
         delattr(result, 'casalog')
 
 
-class ResultsList(Results, list):
-    def __init__(self):
+class ResultsList(Results):
+    def __init__(self, results=None):
         super(ResultsList, self).__init__()
+        self.__results = []
+        if results:
+            self.__results.extend(results)
+
+    def __getitem__(self, item):
+        return self.__results[item]
+
+    def __iter__(self):
+        return self.__results.__iter__()
+
+    def __len__(self):
+        return len(self.__results)
+
+    def __str__(self):
+        return 'ResultsList({!s})'.format(str(self.__results))
+
+    def __repr__(self):
+        return 'ResultsList({!s})'.format(repr(self.__results))
+
+    def append(self, other):
+        self.__results.append(other)
+
+    def accept(self, context=None):
+        return super(ResultsList, self).accept(context)
+
+    def extend(self, other):
+        for o in other:
+            self.append(o)
 
     def merge_with_context(self, context):
-        for result in self:
+        for result in self.__results:
             result.merge_with_context(context)
     
-    def accept(self, context=None, **kwargs):
-        return super(ResultsList, self).accept(context, **kwargs)
-
 
 class StandardTaskTemplate(api.Task):
     """
@@ -1045,8 +1027,8 @@ class StandardTaskTemplate(api.Task):
             # if this task does not handle multiple input mses but was 
             # invoked with multiple mses in its inputs, call our utility
             # function to invoke the task once per ms.
-            if (self.is_multi_vis_task() is False 
-                and type(self.inputs.vis) is types.ListType):
+            if all([self.is_multi_vis_task() is False,
+                    isinstance(self.inputs.vis, list)]):
                 return self._handle_multiple_vis(dry_run, **parameters)
 
             # We should not pass unused parameters to prepare(), so first
@@ -1091,7 +1073,6 @@ class StandardTaskTemplate(api.Task):
             # result, remove the capturing logging handler from all loggers
             if handler:
                 logging.remove_handler(handler)
-
 
     def _handle_multiple_vis(self, dry_run, **parameters):
         """
@@ -1160,21 +1141,19 @@ class StandardTaskTemplate(api.Task):
 
             self.inputs.vis = tail
             tail_result = self.execute(dry_run=dry_run, **parameters)
-            if isinstance(tail_result, list):
+            if isinstance(tail_result, ResultsList):
                 results.extend(tail_result)
             else:
                 results.append(tail_result)
 
-        # Delete the capture log for subtasks as the log will be attached to the
-        # outer ResultList.
-        for r in results:
-            if hasattr(r, 'casalog'):
-                del r.casalog
-
         return results
 
-    def _get_handled_headtails(self, names=[]):
+    def _get_handled_headtails(self, names=None):
         handled = collections.OrderedDict()
+
+        if names is None:
+            # no names to get so return empty dict
+            return handled
 
         for name in names:
             if hasattr(self.inputs, name):

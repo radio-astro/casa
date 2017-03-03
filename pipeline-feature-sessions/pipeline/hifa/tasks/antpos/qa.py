@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
@@ -40,7 +41,7 @@ class ALMAAntposListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing AntResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = antpos.AntposResults
     generating_task = almaantpos.ALMAAntpos
 

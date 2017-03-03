@@ -72,7 +72,7 @@ class Topic(object):
             return True
         
         # list containing handled results (not necessarily of the same class)
-        if isinstance(result, list) \
+        if isinstance(result, collections.Iterable) \
                 and all([o.__class__ in self._registered_classes for o in result]):
             return True
 

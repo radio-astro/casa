@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+import collections
+
 import pipeline.qa.scorecalculator as qacalc
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -39,7 +41,7 @@ class ApplycalQAHandler(pqa.QAResultHandler):
 
 
 class ApplycalListQAHandler(pqa.QAResultHandler):
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = applycal.ApplycalResults
 
     def handle(self, context, result):

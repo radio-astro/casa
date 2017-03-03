@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+import collections
+
 import pipeline.qa.scorecalculator as qacalc
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -9,7 +11,7 @@ from .renderer import accumulate_flag_per_source_spw
 LOG = logging.get_logger(__name__)
 
 class SDBLFlagListQAHandler(pqa.QAResultHandler):
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = baselineflag.SDBLFlagResults
 
     def handle(self, context, result):

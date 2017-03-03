@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-
+import collections
 import os
 
 import pipeline.infrastructure.logging as logging
@@ -36,7 +36,7 @@ class SolintListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing SolintResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = solint.SolintResults
     generating_task = solint.Solint
 
@@ -79,7 +79,7 @@ class FluxbootListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing FluxbootResults.
     """
-    result_cls = list
+    result_cls = collections.Iterable
     child_cls = fluxboot.FluxbootResults
     generating_task = fluxboot.Fluxboot
 
