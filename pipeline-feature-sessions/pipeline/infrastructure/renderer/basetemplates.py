@@ -118,7 +118,7 @@ class CommonRenderer(object):
         # when the calling context is rendering a page of plots for all MSes,
         # the constructor is given a list of results rather than a single
         # result
-        if isinstance(result, collections.Iterable):
+        if isinstance(result, list):
             stage_number = result[0].stage_number
         else:
             stage_number = result.stage_number

@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import collections
 import os
 import shutil
 
@@ -37,7 +36,7 @@ class BandpassFlagChansListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing BandpassflagResults.
     """
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = resultobjects.BandpassflagResults
 
     def handle(self, context, result):
@@ -156,7 +155,7 @@ class BandpassListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing BandpassResults.
     """
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = resultobjects.BandpassflagResults
 
     def handle(self, context, result):

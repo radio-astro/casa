@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
@@ -40,7 +39,7 @@ class VLASetjyListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing FluxCalibrationResults.
     """
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = commonfluxresults.FluxCalibrationResults
 
     def handle(self, context, result):

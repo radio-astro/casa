@@ -1,6 +1,5 @@
 from __future__ import absolute_import
-import collections
-
+import pipeline.qa.scorecalculator as qacalc
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
@@ -24,7 +23,7 @@ class SDK2JyCalQAHandler(pqa.QAResultHandler):
         #result.qa.pool[:] = scores
 
 class SDK2JyCalListQAHandler(pqa.QAResultHandler):
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = k2jycal.SDK2JyCalResults
 
     def handle(self, context, result):

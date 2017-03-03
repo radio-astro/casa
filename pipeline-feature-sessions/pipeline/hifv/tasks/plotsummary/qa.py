@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import collections
+
 import os
 
 import pipeline.infrastructure.logging as logging
@@ -35,7 +35,7 @@ class PlotSummaryListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing PlotSummaryResults.
     """
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = plotsummary.PlotSummaryResults
     generating_task = plotsummary.PlotSummary
 

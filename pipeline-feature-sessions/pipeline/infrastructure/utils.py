@@ -562,9 +562,10 @@ def get_logrecords(result, loglevel):
     :param loglevel: the loglevel to match
     :return:
     """
-    if isinstance(result, collections.Iterable):
+    if isinstance(result, list):
         # note that flatten returns a generator, which empties after
         # traversal. we convert to a list to allow multiple traversals
+        #
         g = flatten([get_logrecords(r, loglevel) for r in result])
         records = list(g)
     else:
@@ -577,7 +578,7 @@ def get_logrecords(result, loglevel):
     try: 
         target = os.path.basename(result.inputs['vis'])
         for r in records:
-            r.target = {'vis': target}
+            r.target = {'vis':target}
     except:
         pass
 
@@ -654,7 +655,7 @@ def _convert_arg_to_id(arg_name, ms_path, arg_val):
 
 
 def get_qascores(result, lo=None, hi=None):
-    if isinstance(result, collections.Iterable):
+    if isinstance(result, list):
         scores = flatten([get_qascores(r, lo, hi) for r in result])
     else:
         scores = [s for s in result.qa.pool

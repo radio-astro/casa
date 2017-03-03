@@ -1,6 +1,4 @@
 from __future__ import absolute_import
-import collections
-
 import pipeline.qa.scorecalculator as qacalc
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -41,7 +39,7 @@ class LowgainflagQAHandler(pqa.QAResultHandler):
 
 
 class LowgainflagListQAHandler(pqa.QAResultHandler):
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = resultobjects.LowgainflagResults
 
     def handle(self, context, result):

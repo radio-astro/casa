@@ -1,6 +1,4 @@
 from __future__ import absolute_import
-import collections
-
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
@@ -37,7 +35,7 @@ class RefantQAHandler(pqa.QAResultHandler):
 
 
 class RefantListQAHandler(pqa.QAResultHandler):
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = referenceantenna.RefAntResults
 
     def handle(self, context, result):

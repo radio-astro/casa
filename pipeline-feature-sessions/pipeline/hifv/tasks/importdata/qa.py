@@ -2,8 +2,12 @@ from __future__ import absolute_import
 import collections
 import datetime
 import os
+import numpy
 
 from pipeline.infrastructure import casa_tasks, casatools
+
+
+import os
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
@@ -161,7 +165,7 @@ class VLAImportDataQAHandler(pqa.QAResultHandler):
 
 
 class VLAImportDataListQAHandler(pqa.QAResultHandler):
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = importdata.VLAImportDataResults
 
     def handle(self, context, result):

@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -30,7 +29,7 @@ class TsyscalListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing TsyscalResults.
     """
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = resultobjects.TsyscalResults
 
     def handle(self, context, result):

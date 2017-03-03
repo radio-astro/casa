@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import collections
 import os
 
 import pipeline.infrastructure.logging as logging
@@ -50,7 +49,7 @@ class WvrgcalflagListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing WvrgcalflagResults.
     """
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = resultobjects.WvrgcalflagResult
 
     def handle(self, context, result):

@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import collections
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -49,7 +48,7 @@ class GainflagListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing GainflagResults.
     """
-    result_cls = collections.Iterable
+    result_cls = list
     child_cls = resultobjects.GainflagResults
 
     def handle(self, context, result):
