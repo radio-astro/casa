@@ -517,6 +517,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {    if( thisms.tableDesc().isColumn("DATA") ) { datacol_p = FTMachine::OBSERVED; }
            else { os << LogIO::SEVERE <<"DATA column does not exist" << LogIO::EXCEPTION;}
       }
+    else if( selpars.datacolumn.contains("corr") ) { datacol_p = FTMachine::CORRECTED; }
+    else { os << LogIO::WARN << "Invalid data column : " << selpars.datacolumn << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p =  FTMachine::CORRECTED;}
+
+    /*
     else if( selpars.datacolumn.contains("corr") ) {    
       if( thisms.tableDesc().isColumn("CORRECTED_DATA") ) { datacol_p = FTMachine::CORRECTED; } 
       else 
@@ -531,19 +535,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	
       }
-    /*
-    else if( selpars.datacolumn.contains("model") ) {
-      datacol_p = FTMachine::MODEL;
-    }
-    else if( selpars.datacolumn.contains("residual") ) {
-      datacol_p = FTMachine::RESIDUAL;
-    }
-    else if( selpars.datacolumn.contains("psf") ) {
-      datacol_p = FTMachine::PSF;
-    }
-    */
-    else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
-
+     else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
+*/
     dataSel_p.resize(dataSel_p.nelements()+1, true);
 
     dataSel_p[dataSel_p.nelements()-1]=selpars;

@@ -59,6 +59,7 @@ import inspect
 
 _ia = iatool( )
 _vp = vptool( )
+_cb = cbtool( )
 
 from imagerhelpers.test_imager_helper import TestHelpers
 
@@ -182,6 +183,23 @@ class test_onefield(testref_base):
 #          self.assertTrue(correct)
           ## This run should go smoothly.
           ret = tclean(vis=[ms1,ms2],field='0',spw=['0','0'], imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='hogbom',niter=10,datacolumn='data')
+          report=self.th.checkall(imexist=[self.img+'.psf',self.img+'.residual'])
+          self.delData(ms1)
+          self.delData(ms2)
+          self.checkfinal(pstr=report)
+
+     def test_onefield_twoMS_diffcolumns(self):
+          """ [onefield] Test_Onefield_twoMS_diffcolumns : One field, two input MSs, one with data and one with data and corrected """
+          ms1 = 'refim_point_onespw0.ms'
+          ms2 = 'refim_point_onespw1.ms'
+          self.prepData(ms1)
+          self.prepData(ms2)
+
+          ## Make corrected_data column for one of them
+          _cb.open(ms2)
+          _cb.close()
+
+          ret = tclean(vis=[ms1,ms2],field='0',spw=['0','0'], imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='hogbom',niter=10,datacolumn='corrected')
           report=self.th.checkall(imexist=[self.img+'.psf',self.img+'.residual'])
           self.delData(ms1)
           self.delData(ms2)

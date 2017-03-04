@@ -287,22 +287,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {    if( thisms.tableDesc().isColumn("DATA") ) { datacol_p = FTMachine::OBSERVED; }
            else { os << LogIO::SEVERE <<"DATA column does not exist" << LogIO::EXCEPTION;}
       }
-    else if( selpars.datacolumn.contains("corr") ) {    
-      if( thisms.tableDesc().isColumn("CORRECTED_DATA") ) { datacol_p = FTMachine::CORRECTED; } 
-      else 
-	{
-	  if( thisms.tableDesc().isColumn("DATA") ) { 
-	    datacol_p = FTMachine::OBSERVED;
-	    os << "CORRECTED_DATA column does not exist. Using DATA column instead" << LogIO::POST; 
-	  }
-	  else { 
-	    os << LogIO::SEVERE <<"Neither CORRECTED_DATA nor DATA columns exist" << LogIO::EXCEPTION;
-	  }
-	}
-	
-      }
-   
-    else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
+    else if( selpars.datacolumn.contains("corr") ) { datacol_p = FTMachine::CORRECTED; }
+    else { os << LogIO::WARN << "Invalid data column : " << selpars.datacolumn << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p =  FTMachine::CORRECTED;}
+
 
     dataSel_p.resize(dataSel_p.nelements()+1, true);
 
