@@ -63,11 +63,11 @@ class SDK2JyCalInputs(basetask.StandardInputs):
 
 
 class SDK2JyCalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], reffile=None, factors={},
+    def __init__(self, vis=None, final=[], pool=[], reffile=None, factors={},
                  all_ok=False):
         super(SDK2JyCalResults, self).__init__()
 
-        self.vis = None
+        self.vis = vis
         self.pool = pool[:]
         self.final = final[:]
         self.error = set()
@@ -133,7 +133,7 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
         valid_factors[k2jycal_result.vis] = k2jycal_result.ms_factors
         all_factors_ok &= k2jycal_result.factors_ok
 
-        return SDK2JyCalResults(pool=callist, reffile=reffile,
+        return SDK2JyCalResults(vis=k2jycal_result.vis, pool=callist, reffile=reffile,
                                 factors=valid_factors, all_ok=all_factors_ok)
 
     def analyse(self, result):
