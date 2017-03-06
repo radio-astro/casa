@@ -125,6 +125,7 @@ scripts/task_hanningsmooth.py
 scripts/task_help.py
 scripts/task_imcollapse.py
 scripts/task_imcontsub.py
+scripts/task_imdev.py
 scripts/task_imfit.py
 scripts/task_imhead.py
 scripts/task_imhistory.py
@@ -148,7 +149,6 @@ scripts/task_imreframe.py
 scripts/task_imregrid.py
 scripts/task_imsmooth.py
 scripts/task_imstat.py
-scripts/task_imstatimage.py
 scripts/task_imsubimage.py
 scripts/task_imtrans.py
 scripts/task_imval.py

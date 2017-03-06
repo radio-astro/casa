@@ -38,6 +38,7 @@ hanningsmooth.xml
 #hanningsmooth2.xml
 imcollapse.xml
 imcontsub.xml
+imdev.xml
 imfit.xml
 imhead.xml
 imhistory.xml
@@ -60,7 +61,6 @@ imreframe.xml
 imregrid.xml
 imsmooth.xml
 imstat.xml
-imstatimage.xml
 imsubimage.xml
 imtrans.xml
 imval.xml

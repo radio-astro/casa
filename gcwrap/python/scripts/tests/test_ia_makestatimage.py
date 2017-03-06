@@ -95,7 +95,7 @@ class ia_makestatimage_test(unittest.TestCase):
 
         # now the task
         outname = "out0.im"
-        imstatimage(
+        imdev(
             input0, outname, grid=[1,1], xlength="4pix", ylength="4pix",
             stattype="npts", interp="cub",anchor=[0,0], statalg="cl"
         )

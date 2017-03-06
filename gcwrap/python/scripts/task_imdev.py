@@ -1,6 +1,6 @@
 from taskinit import *
 
-def imstatimage(
+def imdev(
     imagename, outfile, region, box, chans,
     stokes, mask, overwrite, stretch,
     grid, anchor, xlength, ylength, interp, stattype, statalg,
@@ -10,7 +10,7 @@ def imstatimage(
     _myrg = rgtool()
     _mycs = cstool()
     try:
-        casalog.origin('imstatimage')
+        casalog.origin('imdev')
         _myia.open(imagename)
         _mycs = _myia.coordsys()
         csrec = _mycs.torecord()
