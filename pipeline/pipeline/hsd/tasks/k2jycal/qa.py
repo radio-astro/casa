@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import pipeline.qa.scorecalculator as qacalc
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
@@ -15,8 +14,8 @@ class SDK2JyCalQAHandler(pqa.QAResultHandler):
     def handle(self, context, result):
         is_missing_factor = (not result.all_ok)
         
-        shortmsg = ("Missing Jy/K factors for some data" if is_missing_factor else "Jy/K factors are found for all data") +  (" in "+result.vis if result.vis is not None else "") + "."
-        longmsg = shortmsg + (" Those data will remain in the unit of Kelvin after applying the calibration tables." if is_missing_factor else "")
+        shortmsg = "Missing Jy/K factors for some data" if is_missing_factor else "Jy/K factors are found for all data"
+        longmsg = shortmsg + (" in "+result.vis if result.vis is not None else "") + (". Those data will remain in the unit of Kelvin after applying the calibration tables." if is_missing_factor else "")
         score = 0.0 if is_missing_factor else 1.0
         scores = [ pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg) ]
         result.qa.pool.extend(scores)
