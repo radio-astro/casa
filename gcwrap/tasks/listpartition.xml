@@ -14,17 +14,17 @@
 	</description>
 	<input>
 		<param type="string" name="vis" mustexist="true">
-			<description>Name of multi-MS or normal MS.</description>
+			<description>Name of Multi-MS or normal MS.</description>
 			<value></value>
 		</param>
 
         <param type="bool" name="createdict">
-            <description>Create and return a dictionary with sub-MS information</description>
+            <description>Create and return a dictionary with Sub-MS information</description>
             <value>False</value>
         </param>
 		
 		<param type="string" name="listfile">
-			<description>Name of ASCII file to save output: \'\'==>to terminal</description>
+			<description>Name of ASCII file to save output: ''==>to terminal</description>
 			<value></value>
 		</param>
             

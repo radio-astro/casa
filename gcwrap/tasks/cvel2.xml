@@ -93,7 +93,7 @@ NOTE:
     </param>
     
     <param type="any" name="correlation">
-        <description>Correlation: \'\' ==> all, correlation=\'XX,YY\'.</description>
+        <description>Correlation: '' ==> all, correlation="XX,YY".</description>
         <any type="variant" limittypes="string stringArray" />
         <value type="string" />
     </param>
@@ -202,7 +202,7 @@ NOTE:
         </param>
 	
 	<param type="string" name="outframe" ignorecase="True">
-		<description>Output reference frame (\'\'=keep input frame).</description>
+		<description>Output reference frame (''=keep input frame).</description>
 		<value></value>
 		<allowed kind="enum">
 			<value>topo</value>

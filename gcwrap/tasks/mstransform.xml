@@ -141,7 +141,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     
     <param type="any" name="correlation">
-        <description>Correlation: \'\' ==> all, correlation=\'XX,YY\'.</description>
+        <description>Correlation: '' ==> all, correlation="XX,YY".</description>
         <any type="variant" limittypes="string stringArray" />
         <value type="string" />
     </param>
@@ -215,7 +215,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <!-- SPW COMBINATION parameters -->
     <param type="bool" name="combinespws">
-        <description>Combine the input spw\'s into a new output spw. Only supported when the number of channels is the same for all the spw\'s.</description>
+        <description>Combine the input spws into a new output spw. Only supported when the number of channels is the same for all the spws.</description>
         <value>False</value>
     </param>
     
@@ -301,7 +301,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
     
         <param type="string" name="outframe" subparam="true" ignorecase="True">
-            <description>Output reference frame (\'\'=keep input frame).</description>
+            <description>Output reference frame (''=keep input frame).</description>
             <value></value>
             <allowed kind="enum">
             <value>topo</value>

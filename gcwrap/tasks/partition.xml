@@ -136,7 +136,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     
     <param type="any" name="correlation">
-        <description>Correlation: \'\' ==> all, correlation=\'XX,YY\'.</description>
+        <description>Correlation: '' ==> all, correlation="XX,YY".</description>
         <any type="variant" limittypes="string stringArray" />
         <value type="string" />
     </param>
