@@ -19,7 +19,7 @@ def imdev(
             csrec, shape,
             box, chans, stokes, "a", region
         )
-        zz = _myia.makestatimage(
+        zz = _myia.deviation(
             outfile=outfile, region=reg, mask=mask,
             overwrite=overwrite, stretch=stretch, grid=grid,
             anchor=anchor, xlength=xlength, ylength=ylength,

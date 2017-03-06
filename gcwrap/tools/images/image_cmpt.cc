@@ -2914,7 +2914,7 @@ bool image::makecomplex(
     return false;
 }
 
-image* image::makestatimage(
+image* image::deviation(
     const std::string& outfile, const variant& region,
     const string& mask, bool overwrite, bool stretch,
     const vector<int>& grid, const vector<int>& anchor,

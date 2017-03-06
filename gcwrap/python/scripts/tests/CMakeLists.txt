@@ -68,6 +68,7 @@ casa_add_python( tools tools_tests_python lib/python${PYTHONV}/tests
   test_ia_decompose.py
   test_ia_deconvolvecomponentlist.py
   test_ia_deconvolvefrombeam.py
+  test_ia_deviation.py
   test_ia_fft.py
   test_ia_findsources.py
   test_ia_fromarray.py
@@ -83,7 +84,6 @@ casa_add_python( tools tools_tests_python lib/python${PYTHONV}/tests
   test_ia_insert.py
   test_ia_isconform.py
   test_ia_makecomplex.py
-  test_ia_makestatimage.py
   test_ia_maskhandler.py
   test_ia_modify.py
   test_ia_newimagefromimage.py
