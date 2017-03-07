@@ -37,7 +37,56 @@ def cvel2(
     """ This task used the MSTransform framework. It needs to use the ParallelDataHelper
         class, implemented in parallel.parallel_data_helper.py. 
     """
-    
+
+    def check_do_preaveraging(vis, spw, field, mode, nchan, start, width, phasecenter,
+                              restfreq, outframe, veltype):
+        """Returns whether this task is going to perform pre-averaging before
+        regridding. Introduced to quick-fix CAS-9798. The aim is to do
+        the same checks done in task_cvel. All parameters as specified in the task.
+        """
+
+        # Reproduce as closely as possible the checks done in task_cevel. But note
+        # there is not 'newphasecenter' here as MSTransformManager seems to handle
+        # that issue in a different way.
+        dopreaverage=False
+        
+        ms = casac.ms()
+        ms.open(vis)
+        thespwsel = ms.msseltoindex(vis=vis, spw=spw)['spw']
+        thefieldsel = ms.msseltoindex(vis=vis, field=field)['field']
+        outgrid =  ms.cvelfreqs(spwids=thespwsel, fieldids=thefieldsel,
+                                mode=mode, nchan=nchan, start=start, width=width,
+                                phasec=phasecenter, restfreq=restfreq,
+                                outframe=outframe, veltype=veltype, verbose=False)
+        if(len(outgrid)>1):
+            tmpavwidth = []
+            for thespw in thespwsel:
+                outgridw1 =  ms.cvelfreqs(spwids=[thespw], fieldids=thefieldsel,
+                                          mode='channel', nchan=-1, start=0, width=1,
+                                          # native width
+                                          phasec=phasecenter, restfreq=restfreq,
+                                          outframe=outframe, veltype=veltype,
+                                          verbose=False)
+                if(len(outgridw1)>1):
+                    widthratio = abs((outgrid[1]-outgrid[0])/(outgridw1[1]-outgridw1[0]))                    
+                    if(widthratio>=2.0): # do preaverage
+                        tmpavwidth.append( int(widthratio+0.001) )
+                        dopreaverage=True
+                else:
+                    tmpavwidth.append(1)
+
+                if dopreaverage:
+                    preavwidth = tmpavwidth
+                
+        ms.close()
+
+        if(dopreaverage and (mode=='channel' or mode=='channel_b')):
+            if(max(preavwidth)==1):
+                dopreaverage = False
+
+        return dopreaverage
+
+
     # Initialize the helper class  
     pdh = ParallelDataHelper("cvel2", locals()) 
 
@@ -86,6 +135,14 @@ def cvel2(
                     uvrange=uvrange,timerange=timerange, intent=intent, observation=observation,
                     feed=feed)
 
+        # Ad-hoc fix for CAS-9798
+        if check_do_preaveraging(vis, spw, field, mode, nchan, start, width, phasecenter,
+                                 restfreq, outframe, veltype):
+            raise RuntimeError('ERROR: cvel2 (and cvel) do not regrid properly for channel '
+                               'widths > or = 2 x the native channel width, please use '
+                               'clean  or tclean for larger regridding. A fix is expected '
+                               'for CASA 5.0, all earlier versions also have this issue.')
+
         config['datacolumn'] = datacolumn
         casalog.post('Will work on datacolumn = %s'%datacolumn.upper())
         
@@ -97,7 +154,7 @@ def cvel2(
         
         # Set the regridms parameter in mstransform
         config['regridms'] = True
-        
+
         if passall == True:
             casalog.post('Parameter passall=True is not supported in cvel2','WARN')
         

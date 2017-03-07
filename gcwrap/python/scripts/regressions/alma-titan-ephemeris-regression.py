@@ -150,11 +150,20 @@ if(mystep in thesteps):
 
     name = "titan.ms"
     os.system('rm -rf cvel_'+name)
-    cvel(vis=name,
-         outputvis='cvel_'+name,
-         outframe='SOURCE',
-         mode = 'velocity', width = '0.3km/s',
-         restfreq = '354.50547GHz') # HCN(4-3)v=0
+    # CAS-9798: cvel raising exception when pre-averaging
+    # so use the equivalent mstransform instead
+    # cvel(vis=name,
+    #      outputvis='cvel_'+name,
+    #      outframe='SOURCE',
+    #      mode = 'velocity', width = '0.3km/s',
+    #      restfreq = '354.50547GHz') # HCN(4-3)v=0
+    mstransform(vis=name,
+                outputvis='cvel_'+name,
+                combinespws=True,
+                regridms=True,
+                outframe='SOURCE',
+                mode = 'velocity', width = '0.3km/s',
+                restfreq = '354.50547GHz')
 
     timing()
 
