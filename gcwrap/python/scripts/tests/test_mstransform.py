@@ -1383,6 +1383,7 @@ class test_channelAverageByDefault(test_base_compare):
     def tearDown(self):
         super(test_channelAverageByDefault,self).tearDown()
 
+    @unittest.skip('Skip, cvel produces an exception since release 4.7.2 as per CAS-9798')
     def test_channelAverageByDefaultInVelocityMode(self):
         self.outvis = 'test_channelAverageByDefaultInVelocityMode.ms'
 
@@ -1810,7 +1811,8 @@ class test_regridms_multiple_spws(test_base_compare):
         
     def tearDown(self):
         super(test_regridms_multiple_spws,self).tearDown()
-        
+
+    @unittest.skip('Skip, cvel produces an exception since release 4.7.2 as per CAS-9798')
     def test_combine_regrid_fftshift(self):
         '''mstransform: Combine 2 SPWs and change ref. frame to LSRK using fftshift''' 
         
@@ -2400,6 +2402,7 @@ class test_radial_velocity_correction_largetimerange(test_base_compare):
         self.refvis_sorted = "test-CAS-7382-cvel-sorted.ms"
         os.system("rm -rf test-CAS-7382*")
 
+    @unittest.skip('Skip, cvel produces an exception since release 4.7.2 as per CAS-9798')
     def test_ascending_freq(self):
         cvel(vis=self.vis, outputvis=self.refvis, spw='1', field='Titan',
              mode='velocity', width='0.5km/s', interpolation='linear',
@@ -2421,6 +2424,7 @@ class test_radial_velocity_correction_largetimerange(test_base_compare):
         self.assertFalse(os.path.isdir(self.outvis + '/EPHEM0_Titan.tab'), 'Ephemerides table copied to MAIN')
         
 
+    @unittest.skip('Skip, cvel produces an exception since release 4.7.2 as per CAS-9798')
     def test_descending_freq(self):
         cvel(vis=self.vis, outputvis=self.refvis, spw='0', field='Titan',
              mode='velocity', width='0.5km/s', interpolation='linear',
