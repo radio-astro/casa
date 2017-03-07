@@ -123,6 +123,3 @@ private:
 #include <imageanalysis/ImageAnalysis/SepImageConvolverTask.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
-
-
-
