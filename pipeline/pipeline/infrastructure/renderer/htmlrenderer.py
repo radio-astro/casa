@@ -10,7 +10,8 @@ import re
 import shutil
 import zipfile
 
-import casadef
+#import casadef
+from casa_system import casa as casasys
 import mako
 
 import pipeline as pipeline
@@ -134,6 +135,10 @@ def is_singledish_ms(context):
         result_repr = str(importdata_result)
     return result_repr.find('SDImportDataResults') != -1
 
+def get_casa_version():
+    casa_version = casatools.utils.version()
+    casa_version_str = "%d.%d.%d-%d" % (casa_version[0], casa_version[1], casa_version[2], casa_version[3])
+    return casa_version_str
 
 class Session(object):
     def __init__(self, mses=None, name='Unnamed Session'):
@@ -299,8 +304,10 @@ class T1_1Renderer(RendererBase):
 
         return {
             'pcontext': context,
-            'casa_version': casadef.casa_version,
-            'casa_revision': casadef.subversion_revision,
+            #'casa_version': get_casa_version(),
+            'casa_version': casasys['build']['version'],
+            #'casa_revision': casadef.subversion_revision,
+            'casa_revision': casasys['build']['number'],
             'pipeline_revision': pipeline.revision,
             'pipeline_doclink': pipeline_doclink,
             'obs_start': obs_start.strftime(out_fmt),
