@@ -239,11 +239,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //The getChanfreqList is wrong for beg and end..going round that too.
 	    Vector<Double> freqies=ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().chanFreq()(Int(chanlist(k,0)));
 	    Vector<Double> reso=ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().resolution()(Int(chanlist(k,0)));
-            //lowfreq=freqList(k,1)-freqList(k,3)/2.0;
-            //topfreq=freqList(k, 2)+freqList(k,3)/2.0;
-	    lowfreq=freqies(chanlist(k,1));
-            topfreq=freqies(chanlist(k,2));
-	    //cerr << "Dat lowFreq "<< lowfreq << " topfreq " << topfreq << endl; 
+            
+	    if(freqList(k,3) < 0.0){
+	      topfreq=freqies(chanlist(k,1));
+	      lowfreq=freqies(chanlist(k,2));
+	      //lowfreq=freqList(k,2); //+freqList(k,3)/2.0;
+	      //topfreq=freqList(k, 1); //-freqList(k,3)/2.0;
+	    }
+	    else{
+	      lowfreq=freqies(chanlist(k,1));
+	      topfreq=freqies(chanlist(k,2));
+	      //lowfreq=freqList(k,1); //-freqList(k,3)/2.0;
+	      //topfreq=freqList(k, 2); //+freqList(k,3)/2.0;
+	    }
+	    //cerr << std::setprecision(12) << "Dat lowFreq "<< lowfreq << " topfreq " << topfreq << endl; 
             channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
           }
     	  fselections_p.add(channelSelector);
@@ -1102,7 +1111,7 @@ void SynthesisImagerVi2::unlockMSs()
      Double minW=-1.0;
      Double rmsW=-1.0;
      if(wprojplane <1)
-       casa::WProjectFT::wStat(*rvi_p, minW, maxW, rmsW);
+       casa::refim::WProjectFT::wStat(*vi_p, minW, maxW, rmsW);
     if(facets >1){
       theFT=new refim::WProjectFT(wprojplane,  phaseCenter_p, mLocation_p,
 			   cache/2, tile, useAutocorr, padding, useDoublePrec, minW, maxW, rmsW);
