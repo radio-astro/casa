@@ -345,6 +345,14 @@ def cvel(vis, outputvis,
                          +"a large width parameter which makes pre-averaging necessary.\n"
                          +"The Hanning-smoothing may be redundant in this context.\n", 'WARN')
 
+        if dopreaverage:
+            # Past this point we know we are going to 'dopreaverage'
+            # CAS-9798
+            raise RuntimeError('ERROR: cvel (and cvel2) do not regrid properly for channel '
+                               'widths > or = 2 x the native channel width, please use '
+                               'clean  or tclean for larger regridding. A fix is expected '
+                               'for CASA 5.0, all earlier versions also have this issue.')
+            
         # determine parameter "datacolumn"
         tb.open(vis)
         allcols = tb.colnames()

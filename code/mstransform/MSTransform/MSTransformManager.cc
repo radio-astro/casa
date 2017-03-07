@@ -2922,6 +2922,12 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 
 		if ((width >= 2) and  2*width <= originalCHAN_WIDTH.size())
 		{
+			logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+				 << "mstransform with regridms does not regrid properly for channel widths "
+				    "> or = 2 x the native channel width, please use clean or tclean for larger regridding. "
+				    "A fix is expected for CASA 5.0, all earlier versions also have this issue."
+				 << LogIO::POST;
+
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 	        					<< "Ratio between input and output width is " << avgRegriddedWidth/avgCombinedWidth
 	        					<< ", setting pre-channel average width to " << width << LogIO::POST;
@@ -2942,7 +2948,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 	            				<< std::setprecision(9) << std::setw(14) << std::scientific
 	            				<< inputCHAN_FREQ(inputCHAN_WIDTH.size() -1) << " Hz";
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-	            				<< oss.str() << LogIO::POST;
+				 << oss.str() << LogIO::POST;
 		}
 	}
 

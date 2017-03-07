@@ -430,7 +430,27 @@ class cvel_test(unittest.TestCase):
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])
-    
+
+        
+    def test_preaveraging_exception(self):
+        ''' Cvel pre-averaging exception: check the exception introduced for CAS-9798'''
+        myvis = vis_d
+        os.system('ln -sf ' + myvis + ' myinput.ms')
+        # This will require pre-averaging
+        rval = cvel(
+            vis = 'myinput.ms',
+            outputvis = outfile,
+            mode='channel',
+            nchan = 10,
+            start = 100,
+            width = 2,
+            phasecenter = "J2000 18h25m56.09 -12d04m28.20"
+        )
+        self.assertFalse(rval)
+        with self.assertRaises(RuntimeError):
+            ret = verify_ms(outfile, 1, 10, 0)
+        
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test19(self):
         '''Cvel 19: SMA input MS, 24 spws to combine, channel mode, 10 output channels'''
         myvis = vis_d
@@ -447,7 +467,8 @@ class cvel_test(unittest.TestCase):
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])
-    
+
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test20(self):
         '''Cvel 20: SMA input MS, 24 spws to combine, channel mode, 111 output channels'''
         myvis = vis_d
@@ -481,7 +502,8 @@ class cvel_test(unittest.TestCase):
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 21, 0)
         self.assertTrue(ret[0],ret[1])
-    
+
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test22(self):
         '''Cvel 22: SMA input MS, 24 spws to combine, frequency mode, 210 output channels, negative width'''
         myvis = vis_d
@@ -521,7 +543,8 @@ class cvel_test(unittest.TestCase):
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 30, 0)
         self.assertTrue(ret[0],ret[1])
-    
+
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test24(self):
         '''Cvel 24: SMA input MS, 24 spws to combine, radio velocity mode, 35 output channels'''
         myvis = vis_d
@@ -607,6 +630,7 @@ class cvel_test(unittest.TestCase):
         ret = verify_ms(outfile, 1, 2440, 0)
         self.assertTrue(ret[0],ret[1])
     
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test28(self):
         '''Cvel 28: SMA input MS, 24 spws to combine, scratch columns, channel mode, 30 channels'''
         myvis = vis_d
@@ -622,7 +646,8 @@ class cvel_test(unittest.TestCase):
         self.assertNotEqual(rval,False)
         ret = verify_ms(outfile, 1, 30, 0)
         self.assertTrue(ret[0],ret[1])
-            
+
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test29(self):
         '''Cvel 29: SMA input MS, 24 spws to combine, scratch columns, channel mode, 31 channels'''
         myvis = vis_d
@@ -916,6 +941,7 @@ class cvel_test(unittest.TestCase):
         ret = verify_ms(outfile, 1, 3, 0, b)
         self.assertTrue(ret[0],ret[1])
 
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test43(self):
         '''Cvel 43: SMA input MS, 1 spw, channel mode, nchan not set'''
         myvis = vis_d
@@ -933,6 +959,7 @@ class cvel_test(unittest.TestCase):
         ret = verify_ms(outfile, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])
 
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test44(self):
         '''Cvel 44: SMA input MS, 2 spws to combine, channel mode, nchan not set'''
         myvis = vis_d
@@ -950,6 +977,7 @@ class cvel_test(unittest.TestCase):
         ret = verify_ms(outfile, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])
 
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test45(self):
         '''Cvel 45: SMA input MS, 1 spw, channel mode, nchan not set, negative width'''
         myvis = vis_d
@@ -983,6 +1011,7 @@ class cvel_test(unittest.TestCase):
         ret = verify_ms(outfile, 1, 100, 0)
         self.assertTrue(ret[0],ret[1])
 
+    @unittest.skip('Skip, this produces an exception since release 4.7.2 as per CAS-9798')
     def test47(self):
         '''Cvel 47: SMA input MS with descending freq, 1 spw, nchan not set'''
         myvis = vis_f
