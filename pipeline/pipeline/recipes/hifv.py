@@ -123,7 +123,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_finalcals (pipelinemode=pipelinemode)
 
         # Polarization calibration
-        hifv_circfeedpolcal (pipelinemode=pipelinemode)
+        #hifv_circfeedpolcal (pipelinemode=pipelinemode)
     
         # Apply all the calibrations and check the calibrated data
         hifv_applycals (pipelinemode=pipelinemode)
