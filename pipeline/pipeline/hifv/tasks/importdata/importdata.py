@@ -26,7 +26,7 @@ class VLAImportDataInputs(importdata.ImportDataInputs):
     dbservice = basetask.property_with_default('dbservice', False)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
     bdfflags = basetask.property_with_default('bdfflags', False)
-
+    process_caldevice = basetask.property_with_default('process_caldevice', True)
 
 class VLAImportDataResults(basetask.Results):
     def __init__(self, mses=[], setjy_results=None):
