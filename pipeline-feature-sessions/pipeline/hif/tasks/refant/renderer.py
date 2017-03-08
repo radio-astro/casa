@@ -36,7 +36,7 @@ def make_refant_table(results):
     rows = []
 
     for result in results:
-        vis_cell = os.path.basename(result._vis)
+        vis_cell = os.path.basename(result.inputs['vis'])
         # insert spaces in refant list to allow browser to break string if it wants
         refant_cell = result._refant.replace(',', ', ')
         tr = RefantTR(vis_cell, refant_cell)

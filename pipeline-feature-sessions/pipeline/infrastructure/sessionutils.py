@@ -1,9 +1,11 @@
 from __future__ import absolute_import
+import abc
 import collections
 import itertools
 import os
 import tempfile
 
+from pipeline.infrastructure import basetask
 from . import mpihelpers
 from . import utils
 from . import vdp
@@ -12,10 +14,11 @@ __all__ = [
     'as_list'
     'group_into_sessions',
     'parallel_inputs_impl',
+    'ParallelTemplate'
     'remap_spw_int',
     'remap_spw_str',
     'VDPTaskFactory',
-    'VisResultTuple',
+    'VisResultTuple'
 ]
 
 # VisResultTuple is a data structure used by VDPTaskFactor to group
@@ -284,3 +287,61 @@ def remap_spw_str(source_ms, target_ms, spws):
     spw_ints = [int(i) for i in spws.split(',')]
     l = remap_spw_int(source_ms, target_ms, spw_ints)
     return ','.join([str(i) for i in l])
+
+
+class ParallelTemplate(basetask.StandardTaskTemplate):
+    @abc.abstractproperty
+    def Task(self):
+        """
+        A reference to the :class:`Task` class containing the implementation
+        for this pipeline stage.
+        """
+        raise NotImplementedError
+
+    def __init__(self, inputs):
+        super(ParallelTemplate, self).__init__(inputs)
+
+    def is_multi_vis_task(self):
+        return True
+
+    def get_result_for_exception(self, vis, result):
+        raise NotImplementedError
+
+    def prepare(self):
+        inputs = self.inputs
+
+        vis_list = as_list(inputs.vis)
+        with VDPTaskFactory(inputs, self._executor, self.Task) as factory:
+            task_queue = [(vis, factory.get_task(vis)) for vis in vis_list]
+
+        assessed = []
+        for (vis, (task_args, task)) in task_queue:
+            try:
+                worker_result = task.get_result()
+            except mpihelpers.PipelineError as e:
+                assessed.append((vis, task_args, e))
+            else:
+                assessed.append((vis, task_args, worker_result))
+
+        return assessed
+
+    def analyse(self, assessed):
+        # all results will be added to this object
+        final_result = basetask.ResultsList()
+
+        context = self.inputs.context
+        session_groups = group_into_sessions(context, assessed)
+        for session_id, session_results in session_groups.iteritems():
+            for vis, task_args, vis_result in session_results:
+                if isinstance(vis_result, Exception):
+                    fake_result = self.get_result_for_exception(vis, vis_result)
+                    fake_result.inputs = task_args
+                    final_result.append(fake_result)
+
+                else:
+                    if isinstance(vis_result, collections.Iterable):
+                        final_result.extend(vis_result)
+                    else:
+                        final_result.append(vis_result)
+
+        return final_result

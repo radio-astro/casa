@@ -10,6 +10,8 @@ CasaTaskDict = {
     'session_bandpass': 'SessionALMAPhcorBandpass',
     'session_gfluxscale': 'SessionGcorFluxscale',
     'session_refant': 'SessionRefAnt',
+    'session_hifa_applycal': 'SessionIFApplycal',
+    'session_h_applycal': 'SessionApplycal',
     # General Tasks ----------------------------------------------------------
     'h_applycal': 'Applycal',
     'h_importdata': 'ImportData',
@@ -97,9 +99,11 @@ CasaTaskDict = {
 
 
 classToCASATask = {
-    hifa_tasks.SessionALMAPhcorBandpass : 'session_bandpass',
-    hifa_tasks.SessionGcorFluxscale : 'session_gfluxscale',
-    hif_tasks.SessionRefAnt : 'session_refant',
+    h_tasks.SessionApplycal: 'session_h_applycal',
+    hif_tasks.SessionIFApplycal: 'session_hifa_applycal',
+    hifa_tasks.SessionALMAPhcorBandpass: 'session_bandpass',
+    hifa_tasks.SessionGcorFluxscale: 'session_gfluxscale',
+    hif_tasks.SessionRefAnt: 'session_refant',
     # ALMA interferometry tasks ---------------------------------------------
     hifa_tasks.ALMAImportData         : 'hifa_importdata',
     hifa_tasks.ALMAPhcorBandpass      : 'hifa_bandpass',

@@ -223,22 +223,6 @@ class Task(object):
         """
         raise NotImplementedError
 
-    def __init__(self, inputs):
-        """
-        Create a new Task with an initial state based on the given inputs.
-
-        :param Inputs inputs: inputs required for this Task.
-        """
-        # complain if we were given the wrong type of inputs
-        if not isinstance(inputs, self.Inputs):
-            msg = '{0} requires inputs of type {1} but got {2}.'.format(
-                self.__class__.__name__,
-                self.Inputs.__name__,  
-                inputs.__class__.__name__)
-            raise TypeError, msg
-
-        self.inputs = inputs
-
     @abc.abstractmethod
     def execute(self, dry_run=False, **parameters):
         """

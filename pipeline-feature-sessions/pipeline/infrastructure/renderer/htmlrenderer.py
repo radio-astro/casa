@@ -88,24 +88,31 @@ def _get_task_description_for_class(task_cls):
 
 
 def get_task_name(result_obj, include_stage=True):
-    if not isinstance(result_obj, (list, basetask.ResultsList)):
-        return get_task_name([result_obj, ])
-
-    if len(result_obj) is 0:
-        msg = 'Cannot get task name for zero-length results list'
-        LOG.error(msg)
-        return msg
-
-    task_cls = result_obj[0].task
-    if task_cls is None:
-        results_cls = result_obj[0].__class__.__name__
-        msg = 'No task registered on results of type %s' % results_cls
-        LOG.warning(msg)
-        return msg
-    
     stage = '%s. ' % get_stage_number(result_obj) if include_stage else ''
-    return '%s%s' % (stage,
-                     casataskdict.classToCASATask.get(task_cls, task_cls.__name__))
+
+    if hasattr(result_obj, 'task'):
+        task = result_obj.task
+        return '%s%s' % (stage,
+                         casataskdict.classToCASATask.get(task, task.__name__))
+
+    else:
+        if not isinstance(result_obj, (list, basetask.ResultsList)):
+            return get_task_name([result_obj, ])
+
+        if len(result_obj) is 0:
+            msg = 'Cannot get task name for zero-length results list'
+            LOG.error(msg)
+            return msg
+
+        task_cls = result_obj[0].task
+        if task_cls is None:
+            results_cls = result_obj[0].__class__.__name__
+            msg = 'No task registered on results of type %s' % results_cls
+            LOG.warning(msg)
+            return msg
+
+        return '%s%s' % (stage,
+                         casataskdict.classToCASATask.get(task_cls, task_cls.__name__))
 
 
 def get_stage_number(result_obj):

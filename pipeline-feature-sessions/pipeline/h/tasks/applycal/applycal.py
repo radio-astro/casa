@@ -9,6 +9,7 @@ import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.sessionutils as sessionutils
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.vdp as vdp
 
@@ -17,7 +18,9 @@ from ...heuristics.fieldnames import IntentFieldnames
 __all__ = [
     'Applycal',
     'ApplycalInputs',
-    'ApplycalResults'
+    'ApplycalResults',
+    'SessionApplycal',
+    'SessionApplycalInputs'
 ]
 
 LOG = infrastructure.get_logger(__name__)
@@ -131,8 +134,8 @@ class ApplycalResults(basetask.Results):
             context.callibrary.mark_as_applied(calapp.calto, calapp.calfrom)
 
     def __repr__(self):
+        s = 'ApplycalResults:\n'
         for caltable in self.applied:
-            s = 'ApplycalResults:\n'
             if type(caltable.gaintable) is types.ListType:
                 basenames = [os.path.basename(x) for x in caltable.gaintable]
                 s += '\t{name} applied to {vis} spw #{spw}\n'.format(
@@ -156,6 +159,9 @@ class Applycal(basetask.StandardTaskTemplate):
     on-the-fly calibration arguments.
     """
     Inputs = ApplycalInputs
+
+    def __init__(self, inputs):
+        super(Applycal, self).__init__(inputs)
 
     def prepare(self):
         inputs = self.inputs
@@ -198,7 +204,7 @@ class Applycal(basetask.StandardTaskTemplate):
             task_args['calwt'] = calapp.calwt
             task_args['applymode'] = inputs.applymode
 
-            ### Note this is a temporary workaround ###
+            # This is a temporary workaround
             task_args['antenna'] = '*&*'
 
             jobs.append(casa_tasks.applycal(**task_args))
@@ -225,7 +231,7 @@ class Applycal(basetask.StandardTaskTemplate):
         applied_calapps = [callibrary.CalApplication(calto, calfroms) for calto, calfroms in merged.iteritems()]
         result = ApplycalResults(applied_calapps)
 
-        # extract the flagging results if required
+        # add and reshape the flagdata results if required
         if inputs.flagsum:
             result.summaries = [flagdata_results[0], flagdata_results[1]]
             if inputs.flagdetailedsum:
@@ -261,3 +267,30 @@ def reshape_flagdata_summary(flagdata_result):
             flagsummary[field_name][report_level]['type'] = report_type
 
     return flagsummary
+
+
+class SessionApplycalInputs(ApplycalInputs):
+    # use common implementation for parallel inputs argument
+    parallel = sessionutils.parallel_inputs_impl()
+
+    @basetask.log_equivalent_CASA_call
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
+                 opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None,
+                 parallel=None):
+        super(SessionApplycalInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
+                                                    antenna=antenna, intent=intent, opacity=opacity, parang=parang,
+                                                    applymode=applymode, flagbackup=flagbackup, flagsum=flagsum,
+                                                    flagdetailedsum=flagdetailedsum)
+        self.parallel = parallel
+
+
+class SessionApplycal(sessionutils.ParallelTemplate):
+    Inputs = SessionApplycalInputs
+    Task = Applycal
+
+    def __init__(self, inputs):
+        super(SessionApplycal, self).__init__(inputs)
+
+    def get_result_for_exception(self, vis, result):
+        LOG.error('Error applying calibrations for {!s}'.format(os.path.basename(vis)))
+        return ApplycalResults()

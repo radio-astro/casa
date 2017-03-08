@@ -4,7 +4,6 @@ import string
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.sessionutils as sessionutils
 import pipeline.infrastructure.vdp as vdp
@@ -43,10 +42,11 @@ class RefAntInputs(vdp.StandardInputs):
     geometry = vdp.VisDependentProperty(default=True)
     intent = vdp.VisDependentProperty(default='AMPLITUDE,BANDPASS,PHASE')
     refant = vdp.VisDependentProperty(default='')
-    refantignore= vdp.VisDependentProperty(default='')
+    refantignore = vdp.VisDependentProperty(default='')
     spw = vdp.VisDependentProperty(default='')
 
     hm_refant = vdp.VisDependentProperty(default='automatic')
+
     @hm_refant.convert
     def hm_refant(self, value):
         return 'manual' if value == 'manual' else 'automatic'
@@ -113,6 +113,9 @@ class RefAntResults(basetask.Results):
 class RefAnt(basetask.StandardTaskTemplate):
     Inputs = RefAntInputs
 
+    def __init__(self, inputs):
+        super(RefAnt, self).__init__(inputs)
+
     def prepare(self, **parameters):
         inputs = self.inputs
 
@@ -140,6 +143,11 @@ class RefAnt(basetask.StandardTaskTemplate):
 class SessionRefAntInputs(RefAntInputs):
     parallel = sessionutils.parallel_inputs_impl()
 
+    def to_casa_args(self):
+        # Session tasks don't implement to_casa_args; it's the individual tasks
+        # that do so
+        raise NotImplementedError
+
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, field=None, spw=None, intent=None, hm_refant=None,
                  refant=None, geometry=None, flagging=None, refantignore=None, parallel=None):
@@ -149,47 +157,13 @@ class SessionRefAntInputs(RefAntInputs):
         self.parallel = parallel
 
 
-class SessionRefAnt(basetask.StandardTaskTemplate):
+class SessionRefAnt(sessionutils.ParallelTemplate):
     Inputs = SessionRefAntInputs
+    Task = RefAnt
 
-    def is_multi_vis_task(self):
-        return True
+    def __init__(self, inputs):
+        super(SessionRefAnt, self).__init__(inputs)
 
-    def prepare(self):
-        inputs = self.inputs
-
-        vis_list = sessionutils.as_list(inputs.vis)
-        with sessionutils.VDPTaskFactory(inputs, self._executor, RefAnt) as factory:
-            task_queue = [(vis, factory.get_task(vis)) for vis in vis_list]
-
-        assessed = []
-        for (vis, (task_args, task)) in task_queue:
-            try:
-                worker_result = task.get_result()
-            except mpihelpers.PipelineError as e:
-                assessed.append((vis, task_args, e))
-            else:
-                assessed.append((vis, task_args, worker_result))
-
-        return assessed
-
-    def analyse(self, assessed):
-        # all results will be added to this object
-        final_result = basetask.ResultsList()
-
-        context = self.inputs.context
-        session_groups = sessionutils.group_into_sessions(context, assessed)
-        for session_id, session_results in session_groups.iteritems():
-            for vis, task_args, vis_result in session_results:
-                if isinstance(vis_result, Exception):
-                    LOG.error('No reference antenna selected for {!s}'.format(os.path.basename(vis)))
-
-                    fake_result = RefAntResults(vis=vis, refant='')
-                    fake_result.inputs = task_args
-                    final_result.append(fake_result)
-                    pass
-
-                else:
-                    final_result.append(vis_result)
-
-        return final_result
+    def get_result_for_exception(self, vis, result):
+        LOG.error('No reference antenna selected for {!s}'.format(os.path.basename(vis)))
+        return RefAntResults(vis=vis, refant='')
