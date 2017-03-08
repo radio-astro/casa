@@ -451,7 +451,7 @@ class T1_3MRenderer(RendererBase):
                             
                             flagsummary = resultitem.flagsummary[field]
                         
-                            fieldtable = {}
+                            fieldtable = collections.OrderedDict()
                             for _,v in flagsummary.iteritems():
                                 myname = v['name']
                                 myspw = v['spw']

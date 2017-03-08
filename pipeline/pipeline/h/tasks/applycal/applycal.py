@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 import types
+import collections
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -320,7 +321,20 @@ class Applycal(basetask.StandardTaskTemplate):
             # a reason not to do this.
             # fields = ms.get_fields(intent=inputs.intent)
             fields = ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
-            flagsummary = {}
+
+            if 'VLA' in self.inputs.context.project_summary.telescope:
+                calfields = ms.get_fields(intent='AMPLITUDE,PHASE,BANDPASS')
+                alltargetfields = ms.get_fields(intent='TARGET')
+
+                fields = calfields
+
+                Nplots = (len(alltargetfields) / 30) + 1
+
+                targetfields = [field for field in alltargetfields[0:len(alltargetfields):Nplots]]
+
+                fields.extend(targetfields)
+
+            flagsummary = collections.OrderedDict()
             flagkwargs = []
 
             for field in fields:

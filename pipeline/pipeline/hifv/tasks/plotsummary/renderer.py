@@ -313,9 +313,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                                       applycal.AmpVsUVBasebandSummaryChart,
                                                       [field.id], correlation=correlation)
                 amp_vs_uv_summary_plots[vis][field.id] = plots
-            '''
 
-            '''
             for source_id, brightest_field in brightest_fields.items()[0:len(brightest_fields.items()):Nplots]:
                 plots = self.science_plots_for_result(context,
                                                       result,
@@ -397,7 +395,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             # the field is resolved to a list of all field IDs
             overrides['field'] = field
 
-            LOG.info("APPLYCALPLOTTING: " + 'Field ' + str(field) + ', ' + str(m.get_fields(field_id=field)[0].name))
+            LOG.info("PlotSummary Plotting: " + 'Field ' + str(field) + ', ' + str(m.get_fields(field_id=field)[0].name))
 
             plotter = plotter_cls(context, result, ['TARGET'], **overrides)
             plots.extend(plotter.plot())
