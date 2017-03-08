@@ -1300,6 +1300,9 @@ protected:
 	casacore::Bool phaseShifting_p;
 	casacore::Double dx_p, dy_p;
 
+    // For scalar averaging, use "timebin" for iter interval but don't average
+	casacore::Bool scalarAverage_p;
+
 	// casacore::Time transformation parameters
 	casacore::Bool timeAverage_p;
 	casacore::Double timeBin_p;

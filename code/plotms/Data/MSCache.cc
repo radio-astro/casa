@@ -112,6 +112,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
     // only use scalarAve if other averaging enabled
     bool useScalarAve = averaging_.scalarAve() && (averaging_.time() ||
         averaging_.baseline() || averaging_.antenna() ||  averaging_.spw());
+    averaging_.setScalarAve(useScalarAve);
 
 	if ( averaging_.baseline() || averaging_.antenna() || useScalarAve) {
         // Averaging with PlotMSVBAverager
@@ -419,14 +420,18 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 
 	// Apply averaging
 	if (averaging_.time()){
-		configuration.define("timeaverage", true);
+        if (averaging_.scalarAve()) {
+		    configuration.define("scalaraverage", true);
+        } else {
+		    configuration.define("timeaverage", true);
+		    String timespanStr = "state";
+		    if (averaging_.field())
+			    timespanStr += ",scan,field";
+		    else if (averaging_.scan())
+			    timespanStr += ",scan";
+		    configuration.define("timespan", timespanStr);
+        }
 		configuration.define("timebin", averaging_.timeStr());
-		String timespanStr = "state";
-		if (averaging_.field())
-			timespanStr += ",scan,field";
-		else if (averaging_.scan())
-			timespanStr += ",scan";
-		configuration.define("timespan", timespanStr);
 	}
 	if (averaging_.channel()) {
         int chanBin;
@@ -544,11 +549,11 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 		vector<PMS::DataColumn>& loadData, 
         ThreadCommunication* thread) {
     // Let plotms count the chunks for memory estimation 
-    //   when baseline/antenna/spw averaging
+    //   when baseline/antenna/spw/scalar averaging
     if (thread != NULL)
         updateEstimateProgress(thread);
 
-    Bool verby(false);
+    Bool verby(False);
     stringstream ss;
 
     Bool combscan(averaging_.scan());
@@ -559,15 +564,19 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
     vi.originChunks();
     vi.origin();
 
-    Double thistime(-1),avetime1(-1);
+    // Keeping time
+    Double time1(0.0), avetime1(-1.0);
+    Double interval(0.0);
+    if (averaging_.time())
+        interval = averaging_.timeValue();
+    // Keep track of other boundaries
     Int thisscan(-1),lastscan(-1);
     Int thisfld(-1), lastfld(-1);
     Int thisspw(-1),lastspw(-1);
     Int thisddid(-1),lastddid(-1);
     Int thisobsid(-1),lastobsid(-1);
-    Int chunk(0), subchunk(0);
-
     // Averaging stats
+    Int chunk(0), subchunk(0);
     Int maxAveNRows(0);
     nIterPerAve.resize(100);
     nIterPerAve = 0;
@@ -589,7 +598,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
                 }
             }
 
-            thistime = vb->time()(0);
+            time1 = vb->time()(0); // first timestamp in this vb
             thisscan = vb->scan()(0);
             thisfld = vb->fieldId()(0);
             thisspw = vb->spectralWindows()(0);
@@ -597,7 +606,8 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
             thisobsid = vb->observationId()(0);
 
             // New ave interval if:
-            if ( ((thistime - avetime1) != 0.0) ||         // new timestamp
+            if ( ((time1-avetime1) > interval) ||          // exceeded time interval
+                 ((time1-avetime1) < 0.0) ||               // negative timestep
                  (!combscan && (thisscan != lastscan)) ||  // not combing scans, and new scan encountered OR
                  (!combfld && (thisfld != lastfld)) ||     // not combing fields, and new field encountered OR
                  (!combspw && (thisspw != lastspw)) ||     // not combing spws, and new spw encountered  OR
@@ -606,8 +616,9 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 
                 if (verby) {
                     ss << "--------------------------------\n";
-                    ss << "New ave interval: "
-                       << (thistime - avetime1) << " "
+                    ss << boolalpha << interval << " "
+                       << ((time1 - avetime1)>interval) << " "
+                       << ((time1 - avetime1)<0.0) << " "
                        << (!combscan && (thisscan!=lastscan)) << " "
                        << (!combspw && (thisspw!=lastspw)) << " "
                        << (!combfld && (thisfld!=lastfld)) << " "
@@ -631,7 +642,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
                     nIterPerAve.resize(nIterPerAve.nelements()+100, true);
                 // initialize next ave interval
                 nIterPerAve(nAveInterval) = 0;
-                avetime1 = thistime;
+                avetime1 = time1;  // first timestamp in this averaging interval
             }
 
             // Keep track of the maximum # of rows that might get averaged
@@ -641,7 +652,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 
             if (verby) {
                 ss << "     chunk=" << chunk << " subchunk " << subchunk << "\n";
-                ss << "         time=" << thistime << " ";
+                ss << "         time=" << vb->time()(0) << " ";
                 ss << "arrayId=" << vb->arrayId()(0) << " ";
                 ss << "scan" << thisscan << " ";
                 ss << "fieldId=" << thisfld << " ";
@@ -660,7 +671,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
     vm_->add(lastddid,maxAveNRows);
 
     Int nAve(nAveInterval+1);
-    nIterPerAve.resize(nAve, true);
+    nIterPerAve.resize(nAve, True);
     setCache(nAve, loadAxes, loadData);  // sets nChunk_
 
     if (verby) {
@@ -1026,23 +1037,19 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 		case PMS::IMAG: {
 			switch(loadData[i]) {
 			case PMS::DATA: {
-				// cout << "Arranging to load VC." << endl;
 				vba.setDoVC();
 				break;
 			}
 			case PMS::MODEL: {
-				// cout << "Arranging to load MVC." << endl;
 				vba.setDoMVC();
 				break;
 			}
 			case PMS::CORRECTED: {
-				// cout << "Arranging to load CVC." << endl;
 				vba.setDoCVC();
 				break;
 			}
 			case PMS::CORRECTED_DIVIDE_MODEL:
 			case PMS::CORRMODEL: {
-				// cout << "Arranging to load CVC & MVC." << endl;
 				vba.setDoCVC();
 				vba.setDoMVC();
 				break;
@@ -1254,7 +1261,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 			//CAS-5730.  For single dish data, absolute value of
 			//points should not be plotted.
 			MeasurementSet ms( filename_);
-			if ( ms.isColumn( MS::FLOAT_DATA ) ){
+			if ( ms.isColumn( MS::FLOAT_DATA ) || averaging_.scalarAve()){
 				*amp_[vbnum]=real(vb->visCube());
 			}
 			else {
@@ -1311,30 +1318,52 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 			break;
 		}
 		case PMS::MODEL: {
-			*ampModel_[vbnum] = amplitude(vb->visCubeModel());
+            if (averaging_.scalarAve()) 
+			    *ampModel_[vbnum] = real(vb->visCubeModel());
+            else
+			    *ampModel_[vbnum] = amplitude(vb->visCubeModel());
 			break;
 		}
 		case PMS::CORRECTED: {
-			*ampCorr_[vbnum] = amplitude(vb->visCubeCorrected());
+            if (averaging_.scalarAve()) 
+			    *ampCorr_[vbnum] = real(vb->visCubeCorrected());
+            else
+			    *ampCorr_[vbnum] = amplitude(vb->visCubeCorrected());
 			break;
 		}
 		case PMS::CORRMODEL: {
-			*ampCorrModel_[vbnum] = 
+            if (averaging_.scalarAve()) 
+			  *ampCorrModel_[vbnum] = 
+                real(vb->visCubeCorrected() - vb->visCubeModel());
+            else
+			  *ampCorrModel_[vbnum] = 
                 amplitude(vb->visCubeCorrected() - vb->visCubeModel());
 			break;
 		}
 		case PMS::DATAMODEL: {
-			*ampDataModel_[vbnum] = 
+            if (averaging_.scalarAve()) 
+			  *ampDataModel_[vbnum] = 
+                real(vb->visCube() - vb->visCubeModel());
+            else
+			  *ampDataModel_[vbnum] = 
                 amplitude(vb->visCube() - vb->visCubeModel());
 			break;
 		}
 		case PMS::DATA_DIVIDE_MODEL: {
-			*ampDataDivModel_[vbnum] = 
+            if (averaging_.scalarAve()) 
+			  *ampDataDivModel_[vbnum] = 
+                real( vb->visCube() / vb->visCubeModel());
+            else
+			  *ampDataDivModel_[vbnum] = 
                 amplitude( vb->visCube() / vb->visCubeModel());
 			break;
 		}
 		case PMS::CORRECTED_DIVIDE_MODEL: {
-			*ampCorrDivModel_[vbnum] = 
+            if (averaging_.scalarAve()) 
+			  *ampCorrDivModel_[vbnum] = 
+                real( vb->visCubeCorrected() / vb->visCubeModel());
+            else
+			  *ampCorrDivModel_[vbnum] = 
                 amplitude( vb->visCubeCorrected() / vb->visCubeModel());
 			break;
 		}
@@ -1348,35 +1377,60 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 	case PMS::PHASE: {
 		switch(data) {
 		case PMS::DATA: {
-			*pha_[vbnum] = phase(vb->visCube()) * 180.0 / C::pi;
+            if (averaging_.scalarAve()) 
+                *pha_[vbnum]=imag(vb->visCube()) * 180.0 / C::pi;
+            else
+			    *pha_[vbnum] = phase(vb->visCube()) * 180.0 / C::pi;
 			break;
 		}
 		case PMS::MODEL: {
-			*phaModel_[vbnum] = phase(vb->visCubeModel()) * 180.0 / C::pi;
+            if (averaging_.scalarAve()) 
+			    *phaModel_[vbnum] = imag(vb->visCubeModel()) * 180.0 / C::pi;
+            else
+			    *phaModel_[vbnum] = phase(vb->visCubeModel()) * 180.0 / C::pi;
 			break;
 		}
 		case PMS::CORRECTED: {
-			*phaCorr_[vbnum] = phase(vb->visCubeCorrected()) * 180.0 / C::pi;
+            if (averaging_.scalarAve()) 
+                *phaCorr_[vbnum]=imag(vb->visCubeCorrected()) * 180.0 / C::pi;
+            else
+			    *phaCorr_[vbnum] = phase(vb->visCubeCorrected()) * 180.0 / C::pi;
 			break;
 		}
 		case PMS::CORRMODEL: {
+            if (averaging_.scalarAve()) 
+			*phaCorrModel_[vbnum] = 
+                imag(vb->visCubeCorrected() - vb->visCubeModel()) * 180.0 / C::pi;
+            else
 			*phaCorrModel_[vbnum] = 
                 phase(vb->visCubeCorrected() - vb->visCubeModel()) * 180.0 / C::pi;
 			break;
 		}
 		case PMS::DATAMODEL: {
-			*phaDataModel_[vbnum] = 
-                phase(vb->visCube() - vb->visCubeModel()) * 180 / C::pi;
+            if (averaging_.scalarAve()) 
+			    *phaDataModel_[vbnum] = 
+                    imag(vb->visCube() - vb->visCubeModel()) * 180.0 / C::pi;
+            else
+			    *phaDataModel_[vbnum] = 
+                    phase(vb->visCube() - vb->visCubeModel()) * 180.0 / C::pi;
 			break;
 		}
 		case PMS::DATA_DIVIDE_MODEL: {
-			*phaDataDivModel_[vbnum] = 
-                phase(vb->visCube() / vb->visCubeModel()) * 180 / C::pi;
+            if (averaging_.scalarAve()) 
+			    *phaDataDivModel_[vbnum] = 
+                    imag(vb->visCube() / vb->visCubeModel()) * 180.0 / C::pi;
+            else
+			    *phaDataDivModel_[vbnum] = 
+                    phase(vb->visCube() / vb->visCubeModel()) * 180.0 / C::pi;
 			break;
 		}
 		case PMS::CORRECTED_DIVIDE_MODEL: {
-			*phaCorrDivModel_[vbnum] = 
-                phase(vb->visCubeCorrected() / vb->visCubeModel()) * 180 / C::pi;
+            if (averaging_.scalarAve()) 
+			    *phaCorrDivModel_[vbnum] = 
+                  imag(vb->visCubeCorrected() / vb->visCubeModel()) * 180.0 / C::pi;
+            else
+			    *phaCorrDivModel_[vbnum] = 
+                  phase(vb->visCubeCorrected() / vb->visCubeModel()) * 180.0 / C::pi;
 			break;
 		}
 		case PMS::FLOAT_DATA:  // should have caught this already
