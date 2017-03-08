@@ -12,5 +12,6 @@ from . import renderer
 pipelineqa.registry.add_handler(qa.SDImportDataQAHandler())
 pipelineqa.registry.add_handler(qa.SDImportDataListQAHandler())
 
-# use the standard ImportData renderer to render ALMAImportData results
-weblog.add_renderer(SDImportData, super_renderer.T2_4MDetailsImportDataRenderer(uri='hsd_importdata.mako'), group_by=weblog.UNGROUPED)
+# # use the standard ImportData renderer to render ALMAImportData results
+# weblog.add_renderer(SDImportData, super_renderer.T2_4MDetailsImportDataRenderer(uri='hsd_importdata.mako'), group_by=weblog.UNGROUPED)
+weblog.add_renderer(SDImportData, renderer.T2_4MDetailsSingleDishImportDataRenderer(uri='hsd_importdata.mako'), group_by=weblog.UNGROUPED)
