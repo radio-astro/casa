@@ -164,7 +164,7 @@ vi::ViImplementation2 * LayeredVi2Factory::createVi () const
   }
 
   // Must be at the last layer now
-  Assert((nlayer_p-ilayer)==1)
+  Assert((nlayer_p-ilayer)==1);
   Assert(viis[nlayer_p-1]);
 
   // Return outermost ViImplementation2 layer
