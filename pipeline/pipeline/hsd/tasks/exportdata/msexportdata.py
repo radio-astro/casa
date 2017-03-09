@@ -174,3 +174,18 @@ class SDMSExportData(h_exportdata.ExportData):
         ous = pipemanifest.get_ous()
         pipemanifest.add_jyperk(ous, os.path.basename(jyperk))
         pipemanifest.write(manifest_file)
+        
+    def _save_final_flagversion (self, vis, flag_version_name):
+
+        """
+        Save the final flags to a final flag version.
+        Save flags for baseline-subtracted MS as well as calibrated (original) MS.
+        """
+        super(SDMSExportData, self)._save_final_flagversion(vis, flag_version_name)
+        ms = self.inputs.context.observing_run.get_ms(vis)
+        work_data = ms.work_data
+        if work_data is None:
+            work_data = vis.split('/') + '_bl'
+        if os.path.exists(work_data):
+            super(SDMSExportData, self)._save_final_flagversion(work_data, flag_version_name)
+        
