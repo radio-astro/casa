@@ -28,6 +28,7 @@ class VLAImportDataInputs(importdata.ImportDataInputs):
     bdfflags = basetask.property_with_default('bdfflags', False)
     process_caldevice = basetask.property_with_default('process_caldevice', True)
 
+
 class VLAImportDataResults(basetask.Results):
     def __init__(self, mses=[], setjy_results=None):
         super(VLAImportDataResults, self).__init__()
@@ -42,15 +43,15 @@ class VLAImportDataResults(basetask.Results):
             LOG.info('Adding {0} to context'.format(ms.name))
             target.add_measurement_set(ms)
 
-        if ms.antenna_array.name in ('EVLA', 'VLA', 'JVLA'):
-            if not hasattr(context, 'evla'):
-                context.evla = collections.defaultdict(dict)
+            if ms.antenna_array.name in ('EVLA', 'VLA', 'JVLA'):
+                if not hasattr(context, 'evla'):
+                    context.evla = collections.defaultdict(dict)
 
-            msinfos = dict((ms.name, self._do_msinfo_heuristics(ms.name, context)) for ms in self.mses)
-            context.evla['msinfo'].update(msinfos)
-            context.project_summary.telescope = 'EVLA'
-            context.project_summary.observatory = 'Karl G. Jansky Very Large Array'
-            # context.evla['msinfo'] = { m.name : msinfo }
+                msinfos = dict((ms.name, self._do_msinfo_heuristics(ms.name, context)) for ms in self.mses)
+                context.evla['msinfo'].update(msinfos)
+                context.project_summary.telescope = 'EVLA'
+                context.project_summary.observatory = 'Karl G. Jansky Very Large Array'
+                # context.evla['msinfo'] = { m.name : msinfo }
 
         if self.setjy_results:
             for result in self.setjy_results:
@@ -62,7 +63,7 @@ class VLAImportDataResults(basetask.Results):
 
         msinfo = VLAScanHeuristics(ms)
         msinfo.makescandict()
-        msinfo.calibratorIntents()
+        msinfo.calibratorIntentsOld()
         msinfo.determine3C84()
 
         with casatools.TableReader(ms) as table:
