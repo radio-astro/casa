@@ -196,6 +196,47 @@ size_t DataCubeMap::nelements()
 }
 
 
+// Methods controlling iteration
+// gmoellen (2017Mar06)
+void DataCubeMap::setupVecIter() 
+{
+  for (dataCubeMapIter_p = dataCubeMap_p.begin();
+       dataCubeMapIter_p!= dataCubeMap_p.end();
+       dataCubeMapIter_p++)
+    {
+      dataCubeMapIter_p->second->setupVecIter();
+    }
+  return;
+}
+void DataCubeMap::reset() 
+{
+  for (dataCubeMapIter_p = dataCubeMap_p.begin();
+       dataCubeMapIter_p!= dataCubeMap_p.end();
+       dataCubeMapIter_p++)
+    {
+      dataCubeMapIter_p->second->reset();
+    }
+  return;
+}
+
+void DataCubeMap::next()
+{
+  for (dataCubeMapIter_p = dataCubeMap_p.begin();
+       dataCubeMapIter_p!= dataCubeMap_p.end();
+       dataCubeMapIter_p++)
+    {
+      dataCubeMapIter_p->second->next();
+    }
+  return;
+}
+
+casacore::Bool DataCubeMap::pastEnd()
+{
+  // All elements in the map are sync'd, so just ask the first one
+  return dataCubeMap_p.begin()->second->pastEnd();
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // Convenience methods
 //////////////////////////////////////////////////////////////////////////

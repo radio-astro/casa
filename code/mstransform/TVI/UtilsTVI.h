@@ -27,6 +27,7 @@
 #include <casacore/casa/Arrays/Cube.h>
 #include <casacore/casa/Arrays/Matrix.h>
 #include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/VectorIter.h>
 #include <casacore/casa/Containers/Record.h>
 
 // Measurement Set
@@ -64,6 +65,13 @@ public:
 	casacore::IPosition & getMatrixShape();
 	casacore::IPosition & getVectorShape();
 
+  // Methods controlling internal iteration
+  // gmoellen (2017Mar06)
+  virtual void setupVecIter() = 0;
+  virtual void reset() = 0;
+  virtual void next() = 0;
+  virtual casacore::Bool pastEnd() = 0;
+
 protected:
 
 	casacore::uInt matrixIndex_p;
@@ -82,41 +90,55 @@ template <class T> class DataCubeHolder : public DataCubeHolderBase
 
 public:
 
-	DataCubeHolder(casacore::Cube<T> &dataCube)
+        DataCubeHolder(casacore::Cube<T> &dataCube) 
+	  : veciter_p(0)
 	{
 		cube_p.reference(dataCube);
 		cubeShape_p = cube_p.shape();
 	}
 
 	DataCubeHolder(const casacore::Cube<T> &dataCube)
+	  : veciter_p(0)
 	{
 		cube_p.reference(dataCube);
 		cubeShape_p = cube_p.shape();
 	}
 
 	DataCubeHolder(casacore::Matrix<T> &dataMatrix)
+	  : veciter_p(0)
 	{
 		matrix_p.reference(dataMatrix);
 		matrixShape_p = matrix_p.shape();
 	}
 
 	DataCubeHolder(const casacore::Matrix<T> &dataMatrix)
+	  : veciter_p(0)
 	{
 		matrix_p.reference(dataMatrix);
 		matrixShape_p = matrix_p.shape();
 	}
 
 	DataCubeHolder(casacore::Vector<T> &dataVector)
+	  : veciter_p(0)
 	{
 		vector_p.reference(dataVector);
 		vectorShape_p = vector_p.shape();
 	}
 
 	DataCubeHolder(const casacore::Vector<T> &dataVector)
+	  : veciter_p(0)
 	{
 		vector_p.reference(dataVector);
 		vectorShape_p = vector_p.shape();
 	}
+
+  // Destructor must delete the iterator
+  // gmoellen (2017Mar06)
+virtual ~DataCubeHolder()
+  {
+    if (veciter_p) delete veciter_p;
+  }
+
 
 	casacore::Matrix<T> & getMatrix() {return matrix_p;}
 	casacore::Vector<T> & getVector() {return vector_p;}
@@ -148,11 +170,33 @@ public:
 	}
 
 
+  // Methods controlling internal iteration
+  // gmoellen (2017Mar06)
+  virtual void setupVecIter() {
+    // Construct the iterator, selecting the channel axis cursor
+    if (veciter_p) delete veciter_p;
+    veciter_p = new casacore::VectorIterator<T>(cube_p,1);  // normally deleted in dtor
+    // refer vector_p to the iterator's vector; this will stay sync'd
+    vector_p.reference(veciter_p->vector());
+    vectorShape_p = vector_p.shape(); 
+    // NB: matrix_p refers to nothing (forever, in this context)
+  }
+  // NB: the reference calls below can be avoided if vector_p is a _c++_ reference
+  //     initialzed in the DCH ctor to reference veciter_p's internal Vector
+  virtual void reset() {veciter_p->reset(); vector_p.reference(veciter_p->vector());}
+  virtual void next() {veciter_p->next(); vector_p.reference(veciter_p->vector());}
+  virtual casacore::Bool pastEnd() {return veciter_p->pastEnd(); }
+
 protected:
 
 	casacore::Cube<T> cube_p;
 	casacore::Matrix<T> matrix_p;
 	casacore::Vector<T> vector_p;
+
+  // Iterator for cube_p
+  // gmoellen (2017Mar06)
+  casacore::VectorIterator<T> *veciter_p;
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -166,7 +210,7 @@ public:
 
 	DataCubeMap();
 	DataCubeMap(DataCubeMap& other);
-	~DataCubeMap();
+        virtual ~DataCubeMap();
 
 	void add(casacore::MS::PredefinedColumns key,DataCubeHolderBase* dataCubeHolder);
 	void add(casacore::MS::PredefinedColumns key,DataCubeHolderBase &dataCubeHolder);
@@ -193,6 +237,13 @@ public:
 	casacore::IPosition & getVectorShape();
 
 	size_t nelements();
+
+  // Methods controlling iteration
+  // gmoellen (2017Mar06)
+  virtual void setupVecIter(); 
+  void reset();
+  void next();
+  casacore::Bool pastEnd();
 
 
 protected:

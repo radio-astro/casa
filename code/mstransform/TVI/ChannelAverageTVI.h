@@ -26,6 +26,7 @@
 // Base class
 #include <mstransform/TVI/FreqAxisTVI.h>
 
+//#define REPORT_TIMING
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -44,6 +45,22 @@ public:
 	// Report the the ViImplementation type
 	virtual casacore::String ViiType() const { return casacore::String("ChannelAverage( ")+getVii()->ViiType()+" )"; };
 
+#ifdef _OPENMP
+  virtual void originChunks(casacore::Bool forceRewind) {  
+    Tfl_=Tws_=Tss_=Tcd_=Tmd_=Tchave_=0.0;  getVii()->originChunks(forceRewind); } 
+ #ifdef REPORT_TIMING
+  virtual ~ChannelAverageTVI() {
+    cout << "ChannelAverageTVI: " << endl
+	 << " T_flagCube            =" << Tfl_ << endl 
+	 << " T_weightSpectrum      =" << Tws_ << endl
+	 << " T_sigmaSpectrum       =" << Tss_ << endl
+	 << " T_visibilityCorrected =" << Tcd_ << endl
+	 << " T_visibilityModel     =" << Tmd_ << endl
+	 << " T_total               =" << Tfl_+Tws_+Tss_+Tcd_+Tmd_
+	 << endl;
+  }
+ #endif
+#endif
 
     void flag(casacore::Cube<casacore::Bool>& flagCube) const;
     void floatData (casacore::Cube<casacore::Float> & vis) const;
@@ -70,6 +87,10 @@ protected:
 
 	casacore::Vector<casacore::Int> chanbin_p;
 	mutable map<casacore::Int,casacore::uInt > spwChanbinMap_p; // Must be accessed from const methods
+
+#ifdef _OPENMP
+  mutable casacore::Double Tfl_,Tws_,Tcd_,Tmd_,Tss_,Tchave_;
+#endif
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -134,6 +155,10 @@ public:
 										DataCubeMap *outputData,
 										casacore::uInt width);
 
+  // package transformation of all corr,row spectra in the in/outputData_p
+  // gmoellen (2017Mar06)
+  void transformAll();
+
 	void transform();
 
 protected:
@@ -163,6 +188,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 // PlainChannelAverageKernel class
+//   (numerical averaging, ignoring flags)
 //////////////////////////////////////////////////////////////////////////
 
 template<class T> class PlainChannelAverageKernel : public ChannelAverageKernel<T>
@@ -179,7 +205,25 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
+// FlaggedChannelAverageKernel class
+//   (numerical averaging, respecting flags)
+//////////////////////////////////////////////////////////////////////////
+
+template<class T> class FlaggedChannelAverageKernel : public ChannelAverageKernel<T>
+{
+
+public:
+
+	void kernel(DataCubeMap *inputData,
+				DataCubeMap *outputData,
+				casacore::uInt startInputPos,
+				casacore::uInt outputPos,
+				casacore::uInt width);
+};
+
+//////////////////////////////////////////////////////////////////////////
 // WeightedChannelAverageKernel class
+//   (weighted averaging, respecting flags)
 //////////////////////////////////////////////////////////////////////////
 
 template<class T> class WeightedChannelAverageKernel : public ChannelAverageKernel<T>
@@ -212,6 +256,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 // ChannelAccumulationKernel class
+//   (numerical accumulation, respecting flags)
 //////////////////////////////////////////////////////////////////////////
 
 template<class T> class ChannelAccumulationKernel : public ChannelAverageKernel<T>

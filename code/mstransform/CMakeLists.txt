@@ -81,3 +81,4 @@ casa_add_executable( mstransform fixspwbackport apps/fixspwbackport/fixspwbackpo
 
 casa_add_google_test( MODULES mstransform SOURCES TVI/test/tRecursiveVi2Layers_GT.cc )
 casa_add_google_test( MODULES mstransform SOURCES TVI/test/PolAverageTVI_GTest.cc )
+casa_add_google_test( MODULES mstransform SOURCES TVI/test/tChannelAverageTransformEngine_GT.cc )

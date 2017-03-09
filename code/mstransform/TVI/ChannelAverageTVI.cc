@@ -21,6 +21,12 @@
 //# $Id: $
 
 #include <mstransform/TVI/ChannelAverageTVI.h>
+#include <casa/Arrays/VectorIter.h>
+
+#ifdef _OPENMP
+ #include <omp.h>
+#endif
+
 
 using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -156,11 +162,13 @@ void ChannelAverageTVI::initialize()
 	return;
 }
 
+#define DOJUSTO false
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
 void ChannelAverageTVI::flag(Cube<Bool>& flagCube) const
 {
+
         // Pass-thru for single-channel case
         if (getVii()->visibilityShape()[1]==1) {
 	  getVii()->flag(flagCube);
@@ -169,6 +177,13 @@ void ChannelAverageTVI::flag(Cube<Bool>& flagCube) const
     
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
+
+#ifdef _OPENMP
+	// Pre-load relevant input info and start clock
+	vb->flagCube();
+	Double time0=omp_get_wtime();
+#endif
+
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
@@ -190,10 +205,18 @@ void ChannelAverageTVI::flag(Cube<Bool>& flagCube) const
 	ChannelAverageTransformEngine<Bool> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis2(vb->getShape(),transformer);
+	if (DOJUSTO) {
+	  transformFreqAxis2(vb->getShape(),transformer);
+	} else {
+	  transformer.transformAll();
+	}
 
-
-	return;
+#ifdef _OPENMP
+	// Accumulate elapsed time
+	Tfl_+=omp_get_wtime()-time0;
+#endif
+	  
+	  return;
 }
 
 // -----------------------------------------------------------------------
@@ -235,7 +258,11 @@ void ChannelAverageTVI::floatData (Cube<Float> & vis) const
 	ChannelAverageTransformEngine<Float> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis2(vb->getShape(),transformer);
+	if (DOJUSTO) {
+	  transformFreqAxis2(vb->getShape(),transformer);
+	} else {
+	  transformer.transformAll();
+	}
 
 	return;
 }
@@ -285,7 +312,12 @@ void ChannelAverageTVI::visibilityObserved (Cube<Complex> & vis) const
 	ChannelAverageTransformEngine<Complex> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis2(vb->getShape(),transformer);
+	if (DOJUSTO) {
+	  transformFreqAxis2(vb->getShape(),transformer);
+	}
+	else {
+	  transformer.transformAll();
+	}
 
 	return;
 }
@@ -304,6 +336,15 @@ void ChannelAverageTVI::visibilityCorrected (Cube<Complex> & vis) const
 
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
+
+#ifdef _OPENMP
+	// Pre-load relevant input info and start clock
+	vb->visCubeCorrected();
+	vb->flagCube();
+	vb->weightSpectrum();
+	Double time0=omp_get_wtime();
+#endif
+
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
@@ -329,7 +370,60 @@ void ChannelAverageTVI::visibilityCorrected (Cube<Complex> & vis) const
 	ChannelAverageTransformEngine<Complex> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis2(vb->getShape(),transformer);
+	if (DOJUSTO) {
+	  transformFreqAxis2(vb->getShape(),transformer);
+	} else {
+	  transformer.transformAll();
+
+	  /*
+	  // Demo version upon which upgrades to DataCubeHolder/Map (in UtilsTVI.h)
+	  //  and ChannelAverageTransformEngine::transformAll() are based
+	  // As written here, it averages _all_ channels (no 
+	  //  partial binning is supported). 
+	  // NB: This is a bit faster than transformAll
+	  //     (due mainly to fewer function calls? E.g. kernel.kernel()? )
+	  vis.set(0.0f);  // initialize the output cube
+	  Cube<Complex> ivis(vb->visCubeCorrected());
+	  Cube<Float> iwtsp(vb->weightSpectrum());
+	  Cube<Bool> ifl(vb->flagCube());
+	  VectorIterator<Complex> vi(ivis,1);
+	  VectorIterator<Float> wi(iwtsp,1);
+	  VectorIterator<Bool> fi(ifl,1);
+	  VectorIterator<Complex> vo(vis,1);
+	  
+	  Vector<Complex>& viv = vi.vector();
+	  Vector<Float>& wiv = wi.vector();
+	  Vector<Bool>& fiv = fi.vector();
+	  Vector<Complex>& vov = vo.vector();
+	  
+	  Int nchan=viv.nelements();
+	  
+	  while (!vi.pastEnd()) {
+	    
+	    Float swt(0.0f);
+	    for (Int ich=0;ich<nchan;++ich) {
+	      if (!fiv(ich)) {
+		vov(0)+=(viv(ich)*wiv(ich));
+		swt+=wiv(ich);
+	      }
+	    }
+	    if (swt>0.0f)
+	      vov(0)/=swt;
+	    else
+	      vov(0)=0.0;
+	    
+	    vi.next();
+	    wi.next();
+	    fi.next();
+	    vo.next();
+	  }
+	  */
+	}
+
+#ifdef _OPENMP
+	// Accumulate elapsed time
+	Tcd_+=omp_get_wtime()-time0;
+#endif
 
 	return;
 }
@@ -348,6 +442,15 @@ void ChannelAverageTVI::visibilityModel (Cube<Complex> & vis) const
 
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
+
+#ifdef _OPENMP
+	// Pre-load relevant input info and start clock
+	vb->visCubeModel();
+	vb->flagCube();
+	vb->weightSpectrum();
+	Double time0=omp_get_wtime();
+#endif
+
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
@@ -357,10 +460,8 @@ void ChannelAverageTVI::visibilityModel (Cube<Complex> & vis) const
 	DataCubeMap inputData;
 	DataCubeHolder<Complex> inputVisCubeHolder(vb->visCubeModel());
 	DataCubeHolder<Bool> inputFlagCubeHolder(vb->flagCube());
-	DataCubeHolder<Float> weightCubeHolder(vb->weightSpectrum());
 	inputData.add(MS::DATA,inputVisCubeHolder);
 	inputData.add(MS::FLAG,inputFlagCubeHolder);
-	inputData.add(MS::WEIGHT_SPECTRUM,weightCubeHolder);
 
 	// Gather output data
 	DataCubeMap outputData;
@@ -369,11 +470,20 @@ void ChannelAverageTVI::visibilityModel (Cube<Complex> & vis) const
 
 	// Configure Transformation Engine
 	uInt width = spwChanbinMap_p[inputSPW];
-	WeightedChannelAverageKernel<Complex> kernel;
+	FlaggedChannelAverageKernel<Complex> kernel;
 	ChannelAverageTransformEngine<Complex> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis2(vb->getShape(),transformer);
+	if (DOJUSTO) {
+	  transformFreqAxis2(vb->getShape(),transformer);
+	} else {
+	  transformer.transformAll();
+	}
+
+#ifdef _OPENMP
+	// Accumulate elapsed time
+	Tmd_+=omp_get_wtime()-time0;
+#endif
 
 	return;
 }
@@ -392,6 +502,14 @@ void ChannelAverageTVI::weightSpectrum(Cube<Float> &weightSp) const
 
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
+
+#ifdef _OPENMP
+	// Pre-load relevant input info and start clock
+	vb->weightSpectrum();
+	vb->flagCube();
+	Double time0=omp_get_wtime();
+#endif
+
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
@@ -415,7 +533,16 @@ void ChannelAverageTVI::weightSpectrum(Cube<Float> &weightSp) const
 	ChannelAverageTransformEngine<Float> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis2(vb->getShape(),transformer);
+	if (DOJUSTO) {
+	  transformFreqAxis2(vb->getShape(),transformer);
+	} else {
+	  transformer.transformAll();
+	}
+
+#ifdef _OPENMP
+	// Accumulate elapsed time
+	Tws_+=omp_get_wtime()-time0;
+#endif
 
 	return;
 }
@@ -433,6 +560,14 @@ void ChannelAverageTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 
 	// Get input VisBuffer and SPW
 	VisBuffer2 *vb = getVii()->getVisBuffer();
+
+#ifdef _OPENMP
+	// Pre-load relevant input info and start clock
+	vb->sigmaSpectrum();
+	vb->flagCube();
+	Double time0=omp_get_wtime();
+#endif
+
 	Int inputSPW = vb->spectralWindows()(0);
 
 	// Reshape output data before passing it to the DataCubeHolder
@@ -462,10 +597,19 @@ void ChannelAverageTVI::sigmaSpectrum(Cube<Float> &sigmaSp) const
 	ChannelAverageTransformEngine<Float> transformer(&kernel,&inputData,&outputData,width);
 
 	// Transform data
-	transformFreqAxis2(vb->getShape(),transformer);
+	if (DOJUSTO) {
+	  transformFreqAxis2(vb->getShape(),transformer);
+	} else {
+	  transformer.transformAll();
+	}
 
 	// Transform back from weight format to sigma format
 	arrayTransformInPlace (sigmaSp,weightToSigma);
+
+#ifdef _OPENMP
+	// Accumulate elapsed time
+	Tss_+=omp_get_wtime()-time0;
+#endif
 
 	return;
 }
@@ -657,6 +801,27 @@ template<class T> ChannelAverageTransformEngine<T>::ChannelAverageTransformEngin
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+template<class T> void ChannelAverageTransformEngine<T>::transformAll()
+{
+  // NB: Does NOT implement "parallelCorrAxis" option 
+  //  (see, e.g., FreqAxisTVI::transformFreqAxis2(...))
+
+  // Set up the VectorIterators inside the DataCubeMap/Holders
+  inputData_p->setupVecIter();
+  outputData_p->setupVecIter();
+
+  // Iterate implicitly over row and correlation
+  while (!inputData_p->pastEnd()) {
+    this->transform();   // processes the current channel axis
+    inputData_p->next();
+    outputData_p->next();
+  }
+}
+
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 template<class T> void ChannelAverageTransformEngine<T>::transform()
 {
 	uInt startChan = 0;
@@ -684,6 +849,7 @@ template<class T> void ChannelAverageTransformEngine<T>::transform()
 
 //////////////////////////////////////////////////////////////////////////
 // PlainChannelAverageKernel class
+//   (numerical averaging, ignoring flags)
 //////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
@@ -719,7 +885,68 @@ template<class T> void PlainChannelAverageKernel<T>::kernel(	DataCubeMap *inputD
 }
 
 //////////////////////////////////////////////////////////////////////////
+// FlaggedChannelAverageKernel class
+//   (numerical averaging, respecting flags)
+//////////////////////////////////////////////////////////////////////////
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template<class T> void FlaggedChannelAverageKernel<T>::kernel(DataCubeMap *inputData,
+																DataCubeMap *outputData,
+																uInt startInputPos,
+																uInt outputPos,
+																uInt width)
+{
+	T avg = 0;
+	T normalization = 0;
+	uInt inputPos = 0;
+	Vector<T> &inputVector = inputData->getVector<T>(MS::DATA);
+	Vector<Bool> &inputFlagVector = inputData->getVector<Bool>(MS::FLAG);
+	Vector<T> &outputVector = outputData->getVector<T>(MS::DATA);
+	Bool accumulatorFlag = inputFlagVector(startInputPos);
+
+	for (uInt sample_i=0;sample_i<width;sample_i++)
+	{
+		// Get input index
+		inputPos = startInputPos + sample_i;
+
+		// true/true or false/false
+		if (accumulatorFlag == inputFlagVector(inputPos))
+		{
+		        normalization += 1.0f;
+		        avg += inputVector(inputPos);
+		}
+		// true/false: Reset accumulation when accumulator switches from flagged to unflag
+		else if ( (accumulatorFlag == true) and (inputFlagVector(inputPos) == false) )
+		{
+			accumulatorFlag = false;
+			normalization = 1.0f;
+			avg = inputVector(inputPos);
+		}
+
+	}
+
+
+	// Apply normalization factor
+	if (normalization > 0)
+	{
+		avg /= normalization;
+		outputVector(outputPos) = avg;
+	}
+	// If all weights are zero set accumulatorFlag to true
+	else
+	{
+		accumulatorFlag = true;
+		outputVector(outputPos) = 0; // If all weights are zero then the avg is 0 too
+	}
+
+	return;
+}
+
+//////////////////////////////////////////////////////////////////////////
 // WeightedChannelAverageKernel class
+//   (weighted averaging, respecting flags)
 //////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
@@ -745,11 +972,13 @@ template<class T> void WeightedChannelAverageKernel<T>::kernel(	DataCubeMap *inp
 		// Get input index
 		inputPos = startInputPos + sample_i;
 
+		Float& wt=inputWeightVector(inputPos);
+
 		// true/true or false/false
 		if (accumulatorFlag == inputFlagVector(inputPos))
 		{
-			normalization += inputWeightVector(inputPos);
-			avg += inputVector(inputPos)*inputWeightVector(inputPos);
+		        normalization += wt;
+		        avg += inputVector(inputPos)*wt;
 		}
 		// true/false: Reset accumulation when accumulator switches from flagged to unflag
 		else if ( (accumulatorFlag == true) and (inputFlagVector(inputPos) == false) )
@@ -810,6 +1039,7 @@ template<class T> void LogicalANDKernel<T>::kernel(	DataCubeMap *inputData,
 
 //////////////////////////////////////////////////////////////////////////
 // ChannelAccumulationKernel class
+//   (numerical accumulation, respecting flags)
 //////////////////////////////////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
