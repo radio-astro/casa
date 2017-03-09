@@ -88,7 +88,7 @@ class Circfeedpolcal(polarization.Polarization):
                        (self.inputs.vis + '.D2', 'polarization'),
                        (self.inputs.vis + '.X1', 'polarization'))
 
-        # D - terms
+        # D-terms   - do we need this?
         # self.do_polcal(self.inputs.vis+'.D1', 'D+QU',field='',
         #               intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
         #               gainfield=[''], spwmap=[],
@@ -188,6 +188,8 @@ class Circfeedpolcal(polarization.Polarization):
         for field in fluxfieldnames:
             if fluxcal == '' and ('3C286' in field):
                 fluxcal = field
+            elif fluxcal == '' and ('1331+3030' in field):
+                fluxcal = field
             elif fluxcal == '' and ('3C48' in field):
                 fluxcal = field
             elif fluxcal != '' and ('3C48' in field or '3C286' in field):
@@ -196,12 +198,14 @@ class Circfeedpolcal(polarization.Polarization):
                     fluxcal='"1331+305=3C286"'
                 if '3C286' in fluxfieldnames:
                     fluxcal = '3C286'
+                if '1331+3030' in fluxfieldnames:
+                    fluxcal = '1331+3030'
 
         delmodjob = casa_tasks.delmod(vis=self.inputs.vis, field='')
         self._executor.execute(delmodjob)
 
         try:
-            if '3C286' in fluxcal:
+            if '3C286' or '1331+3030' in fluxcal:
                 d0 = 33.0 * math.pi / 180.0
                 task_args = {'vis'           : self.inputs.vis,
                              'field'         : fluxcal,
