@@ -143,6 +143,7 @@ void QtFileWidget::trimFileName() {
     }
     file->setText(itsFile_.c_str());
     blockSignals(false);
+    emit this->editDone();
     emit this->changed();
 }
 

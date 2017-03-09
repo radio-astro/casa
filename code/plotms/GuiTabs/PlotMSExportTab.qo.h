@@ -64,6 +64,7 @@ private slots:
 	void insertMSNames();
     void dpiChanged();
     void sizeChanged();
+    void fileSelected();
 
 private:
     casacore::String getMsNameFromPath(casacore::String msfilepath);

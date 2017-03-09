@@ -66,6 +66,7 @@ PlotMSExportTab::PlotMSExportTab(QWidget* parent):
     connect(ui.dpi, SIGNAL(toggled(bool)), this, SLOT(dpiChanged()));
     connect(ui.dpiSpinner, SIGNAL(valueChanged(int)), this, SLOT(dpiChanged()));
     connect(ui.ExportTab::size, SIGNAL(toggled(bool)), this, SLOT(sizeChanged()));
+    connect(itsFileWidget_, SIGNAL(editDone()), this, SLOT(fileSelected()));
 }
 
 PlotMSExportTab::~PlotMSExportTab() { }
@@ -109,6 +110,7 @@ void PlotMSExportTab::setExportFormat(PlotExportFormat format)
 {
     itsFileWidget_->setFile(format.location);
     ui.dpiSpinner->setValue(format.dpi);
+    if (!format.location.empty()) fileSelected();
 }
 
 PlotExportFormat PlotMSExportTab::currentlySetExportFormat() const {
@@ -136,6 +138,10 @@ void PlotMSExportTab::closeDialog(){
 
 void PlotMSExportTab::doExport(){
 	done( 1);
+}
+
+void PlotMSExportTab::fileSelected(){
+    ui.exportButton->setFocus();
 }
 
 }

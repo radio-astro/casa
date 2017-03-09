@@ -57,6 +57,9 @@ signals:
     // This signal should be emitted when the user changes any value settings
     // in the GUI AND the new value is different from the last set value.
     void differentFromSet();
+
+    // to change widget focus when editing done
+    void editDone();
 };
 
 
