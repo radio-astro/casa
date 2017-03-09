@@ -337,7 +337,7 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 			logError("load", "Cannot average negative number of channels");
             throw(AipsError("Invalid avgchannel"));
         }
-		if ( averaging_.baseline() || averaging_.antenna() || averaging_.spw() )
+		if ( averaging_.baseline() || averaging_.antenna() || averaging_.spw() || averaging_.scalarAve())
 		{
 			int axesCount = axes.size();
 			for ( int j = 0; j < axesCount; j++ ){
