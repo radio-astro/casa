@@ -155,7 +155,7 @@ struct GeometricTransformation {
   inline static void transformData(Cube<T> const &dataIn,
       Cube<Bool> const &flagIn, Matrix<Float> const &weightIn, Int pid0,
       Int pid1, Cube<T> &dataOut) {
-    cout << "start " << __func__ << endl;
+//    cout << "start " << __func__ << endl;
     if (dataIn.empty()) {
       dataOut.resize();
       return;
@@ -207,7 +207,7 @@ struct GeometricTransformation {
     }
 
     dataOut.reference(transformedData);
-    cout << "end " << __func__ << endl;
+//    cout << "end " << __func__ << endl;
   }
 
   static inline void AccumulateWeight(Float const wt, Double &wtsum) {
@@ -226,9 +226,9 @@ inline Float weight2Sigma(Float x) {
 template<class WeightHandler>
 inline void transformWeight(Array<Float> const &weightIn, Int pid0, Int pid1,
     Array<Float> &weightOut) {
-  cout << "start " << __func__ << endl;
+//  cout << "start " << __func__ << endl;
   if (weightIn.empty()) {
-    cout << "input weight is empty" << endl;
+//    cout << "input weight is empty" << endl;
     weightOut.resize();
     return;
   }
@@ -236,7 +236,7 @@ inline void transformWeight(Array<Float> const &weightIn, Int pid0, Int pid1,
   IPosition shapeOut(shapeIn);
   // set length of polarization axis to 1
   shapeOut[0] = 1;
-  cout << "shapeIn = " << shapeIn << " shapeOut = " << shapeOut << endl;
+//  cout << "shapeIn = " << shapeIn << " shapeOut = " << shapeOut << endl;
 
   // initialization
   weightOut.resize(shapeOut);
@@ -244,8 +244,8 @@ inline void transformWeight(Array<Float> const &weightIn, Int pid0, Int pid1,
 
   ssize_t numPol = shapeIn[0];
   Int64 numElemPerPol = shapeOut.product();
-  cout << "numElemPerPol = " << numElemPerPol << endl;
-  cout << "numPol = " << numPol << endl;
+//  cout << "numElemPerPol = " << numElemPerPol << endl;
+//  cout << "numPol = " << numPol << endl;
 
   Bool b;
   Float const *p_wIn = weightIn.getStorage(b);
