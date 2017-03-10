@@ -1555,6 +1555,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     PagedImage<Float> tempthemask(TiledShape(tempIm_ptr.get()->shape()), tempIm_ptr.get()->coordinates(),"tempthemask.Im");
     tempthemask.copyData(themask);
     ***/
+    // In the initial iteration, if no mask is created (all spectral planes) by automask it will fall back to full clean mask
+    if (!iterdone) {
+      Array<Float> maskdata; 
+      IPosition maskshape = thenewmask.shape();
+      Int naxis = maskshape.size();
+      IPosition blc(naxis,0);
+      IPosition trc=maskshape-1;
+      Slicer sl(blc,trc,Slicer::endIsLast);
+      thenewmask.doGetSlice(maskdata,sl);
+      if (sum(maskdata)==0.0) {
+         mask.set(1);
+         os<<LogIO::WARN<<"No mask was created by automask, set a clean mask to the entire image."<<LogIO::POST;
+      }
+    }
     if (res.hasPixelMask()) {
       LatticeExpr<Bool>  pixmask(res.pixelMask()); 
       //mask.copyData( (LatticeExpr<Float>)( iif((mask + thenewmask) > 0.0 && pixmask, 1.0, 0.0  ) ) );
