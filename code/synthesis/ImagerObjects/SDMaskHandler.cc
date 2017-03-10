@@ -1402,7 +1402,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else {
         chindx(1) = ich;
       }
-      sidelobeThreshold = sidelobeLevel * sidelobeThresholdFactor * (Float)maxs(chindx); 
+      
+      //sidelobeThreshold = sidelobeLevel * sidelobeThresholdFactor * (Float)maxs(chindx); 
+      // add a factor modification in the case of high sidelobe level
+      Float modfactor = min(sidelobeThresholdFactor*sidelobeLevel, 0.5*(sidelobeLevel+1.0));
+      if (modfactor != sidelobeThresholdFactor*sidelobeLevel) os<<LogIO::DEBUG1<<" sidelobethreshld*sidelobeLevel ="<<sidelobeThresholdFactor*sidelobeLevel<<" appears to be high for automasking, adjusting this factor to "<<modfactor<<LogIO::POST;
+      sidelobeThreshold = modfactor * (Float)maxs(chindx); 
       noiseThreshold = noiseThresholdFactor * (Float)resRmss(chindx);
       lowNoiseThreshold = lowNoiseThresholdFactor * (Float)resRmss(chindx); 
       maskThreshold(ich) = max(sidelobeThreshold, noiseThreshold);
