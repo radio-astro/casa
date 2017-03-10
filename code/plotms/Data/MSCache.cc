@@ -1054,13 +1054,11 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 				vba.setDoMVC();
 				break;
 			}
-			case PMS::DATAMODEL: {
-				vba.setDoVC();
-				vba.setDoMVC();
-			}
+			case PMS::DATAMODEL:
 			case PMS::DATA_DIVIDE_MODEL: {
 				vba.setDoVC();
 				vba.setDoMVC();
+                break;
 			}
 			case PMS::FLOAT_DATA:
 				vba.setDoFC();
@@ -1080,6 +1078,7 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 		case PMS::WWAVE: {
 			//  cout << "Arranging to load UVW
 			vba.setDoUVW();
+            break;
 		}
 		default:
 			break;
