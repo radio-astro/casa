@@ -61,10 +61,8 @@ template <class T> void BeamManipulator<T>::rotate(
 ) {
    	ImageInfo ii = _image->imageInfo();
     ImageBeamSet oBeams = ii.getBeamSet();
-    cout << "orig " << oBeams.getMinAreaBeam() << endl;
     rotate(angle);
     ImageBeamSet beams = _image->imageInfo().getBeamSet();
-    cout << "final " << beams.getMinAreaBeam() << endl;
     vector<String> msgs;
     ostringstream oss;
     auto name = _image->name();
