@@ -103,7 +103,7 @@ class testref_base(unittest.TestCase):
           os.system('rm -rf ' + self.img+'*')
 
      def checkfinal(self,pstr=""):
-          pstr += "["+inspect.stack()[1][3]+"] : To re-run this test :  runUnitTest.main(['test_refimager["+ inspect.stack()[1][3] +"]']) "
+          pstr += "["+inspect.stack()[1][3]+"] : To re-run this test :  casa -c `echo $CASAPATH | awk '{print $1}'`/gcwrap/python/scripts/regressions/admin/runUnitTest.py test_refimager["+ inspect.stack()[1][3] +"]"
           casalog.post(pstr,'INFO')
           if( pstr.count("(Fail") > 0 ):
                self.fail("\n"+pstr)

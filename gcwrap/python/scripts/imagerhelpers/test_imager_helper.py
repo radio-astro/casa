@@ -179,7 +179,7 @@ class TestHelpers():
                   imexist=None,  # list of image names
                   imexistnot=None, # list of image names
                   imval=None,  # list of tuples of (imagename,val,pos)
-                  immask=None,
+                  immask=None,  #list of tuples to check mask value
                   tabcache=True
                   ):
           pstr = ""
