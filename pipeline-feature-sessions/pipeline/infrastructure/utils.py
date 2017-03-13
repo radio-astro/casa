@@ -598,15 +598,20 @@ def get_logrecords(result, loglevel):
     :param loglevel: the loglevel to match
     :return:
     """
-    if isinstance(result, collections.Iterable):
+    try:
+        # WeakProxy is registered as an Iterable (and a Container, Hashable, etc.)
+        # so we can't check for isinstance(result, collections.Iterable)
+        # see https://bugs.python.org/issue24067
+        _ = iter(result)
+    except TypeError:
+        if not hasattr(result, 'logrecords'):
+            return []
+        records = [l for l in result.logrecords if l.levelno is loglevel]
+    else:
         # note that flatten returns a generator, which empties after
         # traversal. we convert to a list to allow multiple traversals
         g = flatten([get_logrecords(r, loglevel) for r in result])
         records = list(g)
-    else:
-        if not hasattr(result, 'logrecords'):
-            return []
-        records = [l for l in result.logrecords if l.levelno is loglevel]
 
     # append the message target to the LogRecord so we can link to the
     # matching page in the web log

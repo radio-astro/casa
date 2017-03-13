@@ -173,7 +173,7 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                                 % if data_tsysspw:
                                    data-tsys_spw="${plot.parameters['tsys_spw']}"
                                 % endif
-                                % if data_baseband:
+                                % if data_baseband and 'baseband' in plot.parameters:
                                    data-baseband="${plot.parameters['baseband']}"
                                 % endif
                                 % if data_vis:
