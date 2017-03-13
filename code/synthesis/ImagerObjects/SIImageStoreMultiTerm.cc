@@ -1193,9 +1193,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-    Double fbw = calcFractionalBandwidth();
-    os << "Fractional Bandwidth : " << fbw << " %." << LogIO::POST;
-
+    calcFractionalBandwidth();
   }
  
   Double SIImageStoreMultiTerm::calcFractionalBandwidth()
@@ -1216,8 +1214,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  speccoord.toWorld(endfreq,endpixel);
 	  Double midfreq = (endfreq+startfreq)/2.0;
 	  fbw = ((endfreq - startfreq)/midfreq) * 100.0;
-	  //os << "MFS frequency range : " << startfreq << " -> " << endfreq; 
-	  //os << ". Fractional Bandwidth : " << itsFractionalBandwidth << " %." << LogIO::POST;
+	  os << "MFS frequency range : " << startfreq/1.0e+9 << " GHz -> " << endfreq/1.0e+9 << "GHz."; 
+	  os << "Fractional Bandwidth : " << fbw << " %.";
+	  os << "Reference Frequency for Taylor Expansion : "<< getReferenceFrequency()/1.0e+9 << "GHz." << LogIO::POST;
 	}
     }
     return fbw;
