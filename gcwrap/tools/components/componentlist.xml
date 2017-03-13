@@ -775,7 +775,7 @@ have chosen to represent these as actual sizes.
     with the specified name when the componentlist is closed
     
     NOTE: that by just using rename the componentlist is not ensured
-    to be on disk; to be sure use close after rename}
+    to be on disk; to be sure use close after rename
 
     If the componentlist is created using the open() constructor then
     this function will rename the table associated with the list to
