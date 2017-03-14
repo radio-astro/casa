@@ -1553,7 +1553,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::MODEL: {
 			*wtxampModel_[vbnum] = amplitude(vb->visCubeModel());
-		    Cube<Float> wtA(*wtxamp_[vbnum]);
+		    Cube<Float> wtA(*wtxampModel_[vbnum]);
 		    for(uInt c = 0; c < nchannels; ++c) {
 			    wtA.xzPlane(c) = wtA.xzPlane(c) * vb->weight();
 		    }
@@ -1561,7 +1561,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::CORRECTED: {
 			*wtxampCorr_[vbnum] = amplitude(vb->visCubeCorrected());
-		    Cube<Float> wtA(*wtxamp_[vbnum]);
+		    Cube<Float> wtA(*wtxampCorr_[vbnum]);
 		    for(uInt c = 0; c < nchannels; ++c) {
 			    wtA.xzPlane(c) = wtA.xzPlane(c) * vb->weight();
 		    }
@@ -1570,7 +1570,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		case PMS::CORRMODEL: {
 			*wtxampCorrModel_[vbnum] = 
                 amplitude(vb->visCubeCorrected() - vb->visCube());
-		    Cube<Float> wtA(*wtxamp_[vbnum]);
+		    Cube<Float> wtA(*wtxampCorrModel_[vbnum]);
 		    for(uInt c = 0; c < nchannels; ++c) {
 			    wtA.xzPlane(c) = wtA.xzPlane(c) * vb->weight();
 		    }
@@ -1579,7 +1579,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		case PMS::DATAMODEL: {
 			*wtxampDataModel_[vbnum] = 
                 amplitude(vb->visCube() - vb->visCubeModel());
-		    Cube<Float> wtA(*wtxamp_[vbnum]);
+		    Cube<Float> wtA(*wtxampDataModel_[vbnum]);
 		    for(uInt c = 0; c < nchannels; ++c) {
 			    wtA.xzPlane(c) = wtA.xzPlane(c) * vb->weight();
 		    }
@@ -1588,7 +1588,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		case PMS::DATA_DIVIDE_MODEL: {
 			*wtxampDataDivModel_[vbnum] = 
                 amplitude(vb->visCube() / vb->visCubeModel());
-		    Cube<Float> wtA(*wtxamp_[vbnum]);
+		    Cube<Float> wtA(*wtxampDataDivModel_[vbnum]);
 		    for(uInt c = 0; c < nchannels; ++c) {
 			    wtA.xzPlane(c) = wtA.xzPlane(c) * vb->weight();
 		    }
@@ -1597,7 +1597,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		case PMS::CORRECTED_DIVIDE_MODEL: {
 			*wtxampCorrDivModel_[vbnum] = 
                 amplitude(vb->visCubeCorrected() / vb->visCubeModel());
-		    Cube<Float> wtA(*wtxamp_[vbnum]);
+		    Cube<Float> wtA(*wtxampCorrDivModel_[vbnum]);
 		    for(uInt c = 0; c < nchannels; ++c) {
 			    wtA.xzPlane(c) = wtA.xzPlane(c) * vb->weight();
 		    }
@@ -1605,7 +1605,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		}
 		case PMS::FLOAT_DATA: {
 			*wtxampFloat_[vbnum] = vb->visCubeFloat();
-		    Cube<Float> wtA(*wtxamp_[vbnum]);
+		    Cube<Float> wtA(*wtxampFloat_[vbnum]);
 		    for(uInt c = 0; c < nchannels; ++c) {
 			    wtA.xzPlane(c) = wtA.xzPlane(c) * vb->weight();
 		    }
