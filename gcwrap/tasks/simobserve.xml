@@ -446,6 +446,11 @@ it'll do them for the same amount of time -->
       <value>0</value>
     </param>
 
+    <param type="string" name="outframe">
+      <description>spectral frame of MS to create</description>
+      <value>LSRK</value>
+    </param>
+
 
 
 

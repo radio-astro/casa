@@ -20,6 +20,7 @@ def simobserve(
     totaltime=None, antennalist=None, 
     sdantlist=None,
     sdant=None,
+    outframe=None,
     thermalnoise=None,
     user_pwv=None, t_ground=None, t_sky=None, tau0=None, seed=None,
     leakage=None,
@@ -188,7 +189,7 @@ def simobserve(
                 return False
 
             (model_refdir,model_cell,model_size,
-             model_nchan,model_center,model_width,
+             model_nchan,model_specrefval,model_specrefpix,model_width,
              model_stokes) = returnpars
 
             modelflat = fileroot + "/" + project + ".skymodel.flat"
@@ -225,7 +226,8 @@ def simobserve(
                 compdirs.append(util.dir_m2s(cl.getrefdir(i)))
 
             model_refdir, coffs = util.average_direction(compdirs)
-            model_center = cl.getspectrum(0)['frequency']['m0']
+            model_specrefval = cl.getspectrum(0)['frequency']['m0']
+            model_specrefpix = 0. # components-only doesn't do cube
             # components don't yet support spectrum
             if util.isquantity(compwidth,halt=False):
                 model_width = compwidth
@@ -294,7 +296,7 @@ def simobserve(
                 if util.isquantity(tail,halt=False):
                     resl = qa.convert(tail,"arcsec")['value']
                     if os.path.exists(repodir):
-                        confnum = (1.044-6.733*pl.log10(resl*qa.convert(model_center,"GHz")['value']/345.))
+                        confnum = (1.044-6.733*pl.log10(resl*qa.convert(model_specrefval,"GHz")['value']/345.))
                         confnum = max(1,min(6,confnum))
                         conf = str(int(round(confnum)))
                         antennalist = repodir + "alma.cycle1." + conf + ".cfg"
@@ -312,7 +314,7 @@ def simobserve(
                     if util.isquantity(tail,halt=False):
                         resl = qa.convert(tail,"arcsec")['value']
                         if os.path.exists(repodir):
-                            confnum = 10.**(0.91-0.74*(resl*qa.convert(model_center,"GHz")['value']/345.))
+                            confnum = 10.**(0.91-0.74*(resl*qa.convert(model_specrefval,"GHz")['value']/345.))
                             confnum = max(1,min(7,confnum))
                             conf = str(int(round(confnum)))
                             antennalist = repodir + "alma.cycle2." + conf + ".cfg"
@@ -326,7 +328,7 @@ def simobserve(
                 if util.isquantity(tail,halt=False):
                     resl = qa.convert(tail,"arcsec")['value']
                     if os.path.exists(repodir):
-                        confnum = (2.867-pl.log10(resl*1000*qa.convert(model_center,"GHz")['value']/672.))/0.0721
+                        confnum = (2.867-pl.log10(resl*1000*qa.convert(model_specrefval,"GHz")['value']/672.))/0.0721
                         confnum = max(1,min(28,confnum))
                         conf = str(int(round(confnum)))
                         if len(conf) < 2: conf = '0' + conf
@@ -381,12 +383,12 @@ def simobserve(
             for k in xrange(0,nant): antnames.append('A%02d'%k)
             aveant = stnd.mean()
             # TODO use max ant = min PB instead?
-            pb = pbcoeff*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
+            pb = pbcoeff*0.29979/qa.convert(qa.quantity(model_specrefval),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
             # PSF size
             if uvmode:
                 # approx beam, to compare with model_cell:
-                psfsize = util.approxBeam(antennalist,qa.convert(qa.quantity(model_center),'GHz')['value'])
+                psfsize = util.approxBeam(antennalist,qa.convert(qa.quantity(model_specrefval),'GHz')['value'])
             else: # Single-dish
                 psfsize = pb
                 # check for model size
@@ -459,8 +461,9 @@ def simobserve(
                                        refval=[qa.tos(newlat),qa.tos(newlon)],
                                        refcode=newepoch)
                 modelcsys.setincrement([-cell0_rad,cell1_rad],'direction')
-                modelcsys.setreferencevalue(type="spectral",value=qa.tos(model_center))
-                modelcsys.setrestfrequency(qa.tos(model_center))
+                modelcsys.setreferencevalue(type="spectral",value=model_specrefval)
+                modelcsys.setreferencepixel(type="spectral",value=model_specrefpix)
+                modelcsys.setrestfrequency(model_specrefval)
                 modelcsys.setincrement(type="spectral",value=compwidth)
                 csmodel.setcoordsys(modelcsys.torecord())
                 modelcsys.done()
@@ -776,7 +779,7 @@ def simobserve(
                 msg(message,origin="simobserve")
 
             nbands = 1;
-            fband  = util.bandname(qa.convert(model_center, 'GHz')['value'])
+            fband  = util.bandname(qa.convert(model_specrefval, 'GHz')['value'])
 
             ############################################
             # predict observation
@@ -846,9 +849,8 @@ def simobserve(
 
             diam = stnd;
             # WARNING: sm.setspwindow is not consistent with clean::center
-            #model_start=qa.sub(model_center,qa.mul(model_width,0.5*model_nchan))
             # but the "start" is the center of the first channel:
-            model_start = qa.sub(model_center,qa.mul(model_width,0.5*(model_nchan-1)))
+            model_start = qa.sub(model_specrefval,qa.mul(model_width,model_specrefpix))
 
             mounttype = 'alt-az'
             if telescopename in ['DRAO', 'WSRT']:
@@ -863,18 +865,18 @@ def simobserve(
                 sm.setspwindow(spwname=fband, freq=qa.tos(model_start),
                                deltafreq=qa.tos(model_width),
                                freqresolution=qa.tos(model_width),
-                               nchannels=model_nchan, refcode="LSRK",
+                               nchannels=model_nchan, refcode=outframe,
                                stokes='RR LL')
                 sm.setfeed(mode='perfect R L',pol=[''])
             else:
                 sm.setspwindow(spwname=fband, freq=qa.tos(model_start),
                                deltafreq=qa.tos(model_width),
                                freqresolution=qa.tos(model_width), 
-                               nchannels=model_nchan, refcode="LSRK",
+                               nchannels=model_nchan, refcode=outframe,
                                stokes='XX YY')
                 sm.setfeed(mode='perfect X Y',pol=[''])
 
-            if verbose: msg(" spectral window set at %s" % qa.tos(model_center),origin='simobserve')
+            if verbose: msg(" spectral window set at %s" % qa.tos(model_specrefval),origin='simobserve')
             sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
             if uvmode:
                 sm.setauto(0.0)
@@ -1046,7 +1048,7 @@ def simobserve(
                 # TODO make this use the 90% baseline as in aU.getBaselineStats
                 maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
                 if maxbase > 0.:
-                    psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
+                    psfsize = 0.3/qa.convert(qa.quantity(model_specrefval),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
                     if not uvmode:
                         msg("An single observation is requested but CROSS-correlation in "+msfile,priority="error")
                 else: #Single-dish (zero-spacing)
@@ -1072,7 +1074,7 @@ def simobserve(
 
                     # uv coverage
                     util.nextfig()
-                    klam_m = 300/qa.convert(model_center,'GHz')['value']
+                    klam_m = 300/qa.convert(model_specrefval,'GHz')['value']
                     pl.box()
                     pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
                     pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
@@ -1181,7 +1183,7 @@ def simobserve(
 
             if telescopename not in knowntelescopes:
                 msg("thermal noise only works properly for ALMA/ACA, (E)VLA, and SMA",origin="simobserve",priority="warn")
-            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_center)
+            eta_p, eta_s, eta_b, eta_t, eta_q, t_rx = util.noisetemp(telescope=telescopename,freq=model_specrefval)
 
             # antenna efficiency
             eta_a = eta_p * eta_s * eta_b * eta_t
