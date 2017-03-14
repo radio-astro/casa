@@ -2743,7 +2743,8 @@ void SolvableVisCal::syncSolveMeta(SDBList& sdbs) {  // VI2
   // Ask the sdbs
   setMeta(sdbs.aggregateObsId(),
 	  sdbs.aggregateScan(),
-	  sdbs.aggregateTime(),   // TBD:  Use aggreateTimeCentroid()
+	  //sdbs.aggregateTime(),   
+	  sdbs.aggregateTimeCentroid(),
 	  sdbs.aggregateSpw(),
 	  sdbs.freqs(),
 	  sdbs.aggregateFld());

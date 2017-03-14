@@ -149,7 +149,8 @@ try:
 
     Ginttable = prefix + '.int.gcal'
     gaincal(vis=msfile,caltable=Ginttable,
-            field='0', gaintype='G',solint='int',combine='',refant='VA02')
+            field='0',uvrange='>0.0',
+            gaintype='G',solint='int',combine='',refant='VA02')
 
 
     # gaincal calibration completion time
@@ -166,7 +167,8 @@ try:
 
     Gscantable = prefix + '.scan.gcal'
     gaincal(vis=msfile,caltable=Gscantable,
-            field='0', gaintype='G',solint='inf',combine='',refant='VA02')
+            field='0',uvrange='>0.0',
+            gaintype='G',solint='inf',combine='',refant='VA02')
 
 
     # gaincal calibration completion time
@@ -182,7 +184,8 @@ try:
     default('gaincal')
 
     Grinttable = prefix + '.rint.gcal'
-    gaincal(vis=msfile,caltable=Grinttable,field='0', gaintype='G',gaintable=Gscantable,
+    gaincal(vis=msfile,caltable=Grinttable,field='0', gaintype='G',
+            uvrange='>0.0',gaintable=Gscantable,
             solint='int',combine='',interp='nearest',refant='VA02')
 
 
