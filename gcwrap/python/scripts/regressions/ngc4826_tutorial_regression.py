@@ -581,10 +581,17 @@ print 'Gain calibration for fields 0,1 and spw 0~11'
 print 'Using solint=inf combining over spw'
 print 'Output table ngc4826.tutorial.16apr98.gcal'
 
+# spws 0-3  (as 0)
 gaincal(vis='ngc4826.tutorial.ms', caltable='ngc4826.tutorial.16apr98.gcal',
-	field='0,1', spw='0~11', gaintype='G', minsnr=2.0,
+	field='0,1', spw='0~3', gaintype='G', minsnr=2.0,
 	refant='ANT5',
 	solint='inf', combine='spw')
+
+# append spws 4-11  (as 4) 
+gaincal(vis='ngc4826.tutorial.ms', caltable='ngc4826.tutorial.16apr98.gcal',
+	field='0,1', spw='4~11', gaintype='G', minsnr=2.0,
+	refant='ANT5',
+	solint='inf', combine='spw',append=True)
 
 if benchmarking:
     gaincal2time=time.time()
@@ -601,9 +608,11 @@ print ''
 print 'Transferring flux of 3C273 to sources: 1310+323'
 print 'Output table ngc4826.tutorial.16apr98.fcal'
 
+# refer spw 4 to spw 0
+
 fluxscale(vis='ngc4826.tutorial.ms', caltable='ngc4826.tutorial.16apr98.gcal',
 	  fluxtable='ngc4826.tutorial.16apr98.fcal',
-	  reference='3C273', transfer=['1310+323'])
+	  reference='3C273', transfer=['1310+323'],refspwmap=[0,0,0,0,0])
 
 # Flux density for 1310+323 is: 1.48 +/- 0.016 (SNR = 90.6, nAnt= 8)
 
@@ -662,7 +671,7 @@ print 'Applying calibration table ngc4826.tutorial.16apr98.fcal to data'
 applycal(vis='ngc4826.tutorial.ms',
 	 field='', spw='',
          gaintable='ngc4826.tutorial.16apr98.fcal',
-	 spwmap=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+	 spwmap=[0,0,0,0,4,4,4,4,4,4,4,4,4,4,4,4])
 
 if benchmarking:
     correct2time=time.time()

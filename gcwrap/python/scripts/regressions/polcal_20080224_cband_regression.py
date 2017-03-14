@@ -9,7 +9,10 @@
 # Updated      STM 2008-06-18 (Beta Patch 2.0) Format as regression      #
 # Updated      STM 2008-09-17 (Beta Patch 3.0) Use imval task            #
 # Updated      GAM 2013-05-15 Removed redundant gaincurve/opacity refs   #
-# Updated      GAM 2013-11-25 Removed (deprecated) plotxy clause
+# Updated      GAM 2013-11-25 Removed (deprecated) plotxy clause         #
+# Update       GAM 2017-02-24 Use task command syntax throughout         #
+#                             removed flagmanager calls(flagdata does it)#
+#                             various fixes to bring up-to-date          #
 #                                                                        #
 ##########################################################################
 
@@ -114,6 +117,7 @@ targets = []
 
 # Assemble field strings from lists
 fieldgain = ','.join(gaincalfield)
+transgain = ','.join(gaincalfield[1:])    # gain transfer to all but 0137+331
 fieldtargets = ','.join(targets)
 
 #
@@ -282,43 +286,34 @@ if ( importmode == 'vla' ):
     # Import the data from VLA Export to MS
     #
     print '--ImportVLA--'
-    default('importvla')
-    
     print "Use importvla to read VLA Export and make an MS"
     
-    archivefiles = datafile
-    vis = msfile
-    bandname = exportband
-    autocorr = False
-    antnamescheme = 'new'
-    project = exportproject
+    importvla(archivefiles=datafile,
+              vis=msfile,
+              bandname=exportband,
+              autocorr=False,
+              antnamescheme='new',
+              project=exportproject)
     
-    saveinputs('importvla',prefix+'.importvla.saved')
-    importvla()
 elif ( importmode == 'fits' ):
     #
     # Import the data from VLA Export to MS
     #
     print '--ImportUVFITS--'
-    default('importuvfits')
-    
     print "Use importuvfits to read UVFITS and make an MS"
-    
-    fitsfile = datafile
-    vis = msfile
-    async = False
-    
-    saveinputs('importuvfits',prefix+'.importuvfits.saved')
-    importuvfits()
+
+    importuvfits(fitsfile=datafile,
+                 vis=msfile,
+                 async=False)
+
 else:
     #
     # Copy from msfile
     #
     print '--MS Copy--'
     print "Copying "+datafile+" to "+msfile
-    
     os.system('cp -r '+datafile+' '+msfile)
-    vis = msfile
+    
 
 if benchmarking:
     import2time=time.time()
@@ -330,7 +325,7 @@ print '--Listobs--'
 
 print "List summary of MS"
 
-listobs()
+listobs(vis=msfile)
 
 ###############################################
 ###  Begin Task: listobs  ###
@@ -445,105 +440,41 @@ if ( myquackinterval > 0.0 ):
     # First quack the data
     #
     print '--Flagdata (scan starts)--'
-    default('flagdata')
-    
     print "Quacking scan beginnings using interval "+str(myquackinterval)
+    flagdata(vis=msfile,
+             correlation='',
+             field='',
+             antenna='',
+             spw=usespw,
+             mode='quack',
+             quackinterval=myquackinterval)
     
-    vis = msfile
-    correlation = ''
-    field = ''
-    antenna = ''
-    spw = usespw
-    mode = 'quack'
-    quackinterval = myquackinterval
-    
-    saveinputs('flagdata',prefix+'.flagdata.quack.saved')
-    flagdata()
-    
-    #
-    # Use Flagmanager to save a copy of the flags so far
-    #
-    default('flagmanager')
-    
-    print "Now will use flagmanager to save the flags"
-    
-    vis = msfile
-    mode = 'save'
-    versionname = 'quack'
-    comment = 'Quack '+str(myquackinterval)
-    merge = 'replace'
-    
-    saveinputs('flagmanager',prefix+'.flagmanager.quack.saved')
-    flagmanager()
-
 #
 if (flagants != '' and not flagants.isspace() ):
     print '--Flagdata (antennas)--'
-    default('flagdata')
-    
     print "Flag all data to AN "+flagants
     
-    vis = msfile
-    correlation = ''
-    field = ''
-    spw = usespw
-    mode = 'manual'
-    antenna = flagants
-    
-    saveinputs('flagdata',prefix+'.flagdata.ants.saved')
-    flagdata()
-    
-    #
-    # Use Flagmanager to save a copy of the flags so far
-    #
-    default('flagmanager')
-    
-    print "Now will use flagmanager to save the flags"
-    
-    vis = msfile
-    mode = 'save'
-    versionname = 'antflags'
-    comment = 'flag AN '+flagants
-    merge = 'replace'
-    
-    saveinputs('flagmanager',prefix+'.flagmanager.ants.saved')
-    flagmanager()
+    flagdata(vis=msfile,
+             correlation='',
+             field='',
+             spw=usespw,
+             mode='manual',
+             antenna=flagants)
 
 flagtimes = '19:06:50~19:06:57,19:21:17~19:21:20'
 #
 if (flagtimes != '' and not flagtimes.isspace() ):
     print '--Flagdata (timerange)--'
-    default('flagdata')
-    
     print "Flag timeranges "+flagtimes
     
-    vis = msfile
-    correlation = ''
-    field = ''
-    spw = usespw
-    mode = 'manual'
-    antenna = ''
-    timerange = flagtimes
+    flagdata(vis=msfile,
+             correlation='',
+             field='',
+             spw=usespw,
+             mode='manual',
+             antenna='',
+             timerange=flagtimes)
     
-    saveinputs('flagdata',prefix+'.flagdata.times.saved')
-    flagdata()
-    
-    #
-    # Use Flagmanager to save a copy of the flags so far
-    #
-    default('flagmanager')
-    
-    print "Now will use flagmanager to save the flags"
-    
-    vis = msfile
-    mode = 'save'
-    versionname = 'timeflags'
-    comment = 'flag '+flagtimes
-    merge = 'replace'
-    
-    saveinputs('flagmanager',prefix+'.flagmanager.times.saved')
-    flagmanager()
-
 if benchmarking:
     flag2time=time.time()
 
@@ -556,63 +487,44 @@ if benchmarking:
 #
 if ( setjymode == 'flux' ):
     print '--Setjy--'
-    default('setjy')
-    
-    vis = msfile
-    
+
     print "Use setjy to set flux of "+fluxcalfield+" to point model"
-    field = fluxcalfield
-    spw = usespw
-
-    # If we need a model for flux calibrator then put this here
-    modimage = fluxcaldir + fluxcalmodel
-
-    # enforce older standard
-    standard='Perley-Taylor 99'  
-
-    # old default
-    scalebychan=False
-
+    
     # Loop over spw
     for spw in usespwlist:
-        fluxdensity = fcalmodel[fluxcalfield][spw]
         print "Setting SPW "+spw+" to "+str(fluxdensity)
-        saveinputs('setjy',prefix+'.setjy.'+spw+'.saved')
-        setjy()
+        setjy(vis=msfile,    
+              field=fluxcalfield,
+              spw=usespw,
+              modimage=fluxcaldir+fluxcalmodel,  # If we need a model then put this here
+              standard='Perley-Taylor 99',        # enforce older standard
+              scalebychan=False,                  # old default
+              fluxdensity=fcalmodel[fluxcalfield][spw])
+
 
 elif ( setjymode == 'ft' ):
     print '--FT--'
 
-    default('ft')
-    vis = msfile
-    field = fluxcalfield
-
     for spw in usespwlist:
         model = fluxcaldir + fluxcalmodel+'_'+spw+'_IQUV.model'
-        print "Use FT to set model"+model
-        saveinputs('ft',prefix+'.ft.0.saved')
-        ft()
+        print "Use FT to set model "+model
+        ft(vis=msfile,
+           field=fluxcalfield,
+           model=model)
     
 else:
     print '--Setjy--'
     default('setjy')
     
-    vis = msfile
-    
     print "Use setjy to set flux of "+fluxcalfield
-    field = fluxcalfield
-    spw = usespw
+    
+    setjy(vis=msfile,
+          field=fluxcalfield,
+          spw=usespw,
+          modimage=fluxcaldir+fluxcalmodel,
+          standard='Perley-Taylor 99',
+          scalebychan=False)
 
-    # If we need a model or fluxdensities then put those here
-    modimage = fluxcaldir + fluxcalmodel
-
-    # enforce older standard
-    standard='Perley-Taylor 99'  
-
-    scalebychan=False
-
-    saveinputs('setjy',prefix+'.setjy.saved')
-    setjy()
     #
     # You should see something like this in the logger and casa.log file:
     #
@@ -633,43 +545,22 @@ if benchmarking:
 # Initial gain calibration
 #
 print '--Gaincal--'
-default('gaincal')
 
 print "Solve for antenna gains on sources "+gaincalfield
 print "We have 2 single-channel continuum spw"
-
-vis = msfile
-
-# set the name for the output gain caltable
 print "Output gain table name is "+gtable
-caltable = gtable
-
-# All fields are calibrators
-# We have 2 IFs (SPW 0,1) with one channel each
-
-# Assemble field string from gaincalfield list
-field = fieldgain
 print "Calibrating using fields "+field
 
-# Calibrate these spw
-spw = usespw
-
-# do not apply parallactic angle correction
-parang = False
-
-# G solutions for both amplitude and phase using gainsolint
-gaintype = 'G'
-solint = gainsolint
-calmode = 'ap'
-
-# reference antenna
-refant = calrefant
-
-# minimum SNR 3
-minsnr = 3
-
-saveinputs('gaincal',prefix+'.gaincal.saved')
-gaincal()
+gaincal(vis=msfile,
+        caltable=gtable,
+        field=fieldgain,
+        spw=usespw,
+        parang=False,
+        gaintype='G',
+        solint=gainsolint,
+        calmode='ap',
+        refant=calrefant,
+        minsnr=3)
 
 # use plotcal to view or listcal to list
 
@@ -682,11 +573,12 @@ if benchmarking:
 #
 print '--Listcal--'
 
-listfile = caltable + '.list'
-
+listfile=caltable + '.list'
 print "Listing calibration to file "+listfile
 
-listcal()
+listcal(vis=msfile,
+        caltable=gtable,
+        listfile=listfile)
 
 if benchmarking:
     listgcal2time=time.time()
@@ -697,30 +589,16 @@ if benchmarking:
 # Bootstrap flux scale
 #
 print '--Fluxscale--'
-default('fluxscale')
-
 print "Use fluxscale to rescale gain table to make new one"
 
-vis = msfile
-
-# set the name for the output rescaled caltable
 ftable = prefix + '.fluxscale'
-fluxtable = ftable
-
 print "Output scaled gain cal table is "+ftable
 
-# point to our first gain cal table
-caltable = gtable
-
-# use the source we did setjy on as our flux standard reference
-reference = fluxcalfield
-
-# transfer the flux to all our other sources
-# to bring amplitues in line with the absolute scale
-transfer = fieldgain
-
-saveinputs('fluxscale',prefix+'.fluxscale.saved')
-fluxscale()
+fluxscale(vis=msfile,
+          fluxtable=ftable,
+          caltable=gtable,
+          reference=fluxcalfield,
+          transfer=transgain)
 
 # You should see in the logger something like:
 # Found reference field(s): 0137+331
@@ -752,13 +630,11 @@ if benchmarking:
 # List fluxscale table
 #
 print '--Listcal--'
-
-caltable = ftable
-listfile = caltable + '.list'
-
 print "Listing calibration to file "+listfile
 
-listcal()
+listcal(vis=msfile,
+        caltable=ftable,
+        listfile=caltable + '.list')
 
 if benchmarking:
     listfcal2time=time.time()
@@ -769,29 +645,32 @@ if benchmarking:
 #
 print '--Plotcal--'
 
-iteration = ''
-showgui = False
-
-xaxis = 'time'
-yaxis = 'amp'
 figfile = caltable + '.plot.amp.png'
 print "Plotting calibration to file "+figfile
-saveinputs('plotcal',prefix+'.plotcal.fluxscale.amp.saved')
-plotcal()
 
-xaxis = 'time'
-yaxis = 'phase'
+plotcal(caltable=ftable,
+        xaxis='time',
+        yaxis='amp',
+        showgui=False,
+        figfile=figfile)
+
 figfile = caltable + '.plot.phase.png'
 print "Plotting calibration to file "+figfile
-saveinputs('plotcal',prefix+'.plotcal.fluxscale.phase.saved')
-plotcal()
 
-xaxis = 'antenna'
-yaxis = 'amp'
+plotcal(caltable=ftable,
+        xaxis='time',
+        yaxis='phase',
+        showgui=False,
+        figfile=figfile)
+
 figfile = caltable + '.plot.antamp.png'
 print "Plotting calibration to file "+figfile
-saveinputs('plotcal',prefix+'.plotcal.fluxscale.antamp.saved')
-plotcal()
+
+plotcal(caltable=ftable,
+        xaxis='antenna',
+        yaxis='amp',
+        showgui=False,
+        figfile=figfile)
 
 if benchmarking:
     plotcal2time=time.time()
@@ -807,19 +686,14 @@ if ( setpolmodel and polcalmode.count('X') > 0 ):
     print '--Setjy--'
     default('setjy')
 
-    vis = msfile
-    
     print "Use setjy to set IQU fluxes of "+polxfield
-    field = polxfield
-
-    scalebychan=False
 
     for spw in usespwlist:
-        fluxdensity = polmodel[field][spw]['flux']
-    
-        saveinputs('setjy',prefix+'.setjy.polspw.'+spw+'.saved')
-        setjy()
-    
+        setjy(vis=msfile,
+              field=polxfield,
+              scalebychan=False,
+              fluxdensity=polmodel[field][spw]['flux'])
+        
 if benchmarking:
     setpoljy2time=time.time()
 
@@ -832,36 +706,20 @@ default('polcal')
 
 print "Polarization D-term Calibration (linear approx) on "+polcalfield
 
-vis = msfile
-
-# Start with the un-fluxscaled gain table
-gaintable = gtable
-
-# Output table
 ptable = prefix + '.pcal'
-caltable = ptable
 
-# Use an unpolarized source or a source tracked through a range of PA
-field = polcalfield
-spw = usespw
-
-selectdata=True
-uvrange = polduvrange
-
-# Polcal mode
-poltype = polcalmode
-
-# Currently 1-day timescale is hardwired
-solint = 86400.
-
-# reference antenna
-refant = calrefant
-
-# minimum SNR 3
-minsnr = 3
-
-saveinputs('polcal',prefix+'.polcal.saved')
-polcal()
+polcal(vis=msfile,
+       caltable=ptable,
+       field=polcalfield,
+       spw=usespw,
+       selectdata=True,
+       uvrange=polduvrange,
+       poltype=polcalmode,
+       solint='inf',
+       refant=calrefant,
+       minsnr=3,
+       gaintable=gtable,
+       gainfield='nearest')
 
 # You should see something like:
 # Fractional polarization solution for 2202+422 (spw = 0):
@@ -878,11 +736,12 @@ if benchmarking:
 #
 print '--Listcal--'
 
-listfile = caltable + '.list'
-
+listfile = caltable+'.list'
 print "Listing calibration to file "+listfile
 
-listcal()
+listcal(vis=msfile,
+        caltable=ptable,
+        listfile=listfile)
 
 if benchmarking:
    listpcal2time=time.time()
@@ -893,36 +752,37 @@ if benchmarking:
 #
 print '--Plotcal--'
 
-iteration = ''
-showgui = False
-
-xaxis = 'real'
-yaxis = 'imag'
 figfile = caltable + '.plot.reim.png'
 print "Plotting calibration to file "+figfile
-saveinputs('plotcal',prefix+'.plotcal.polcal.d.reim.saved')
-plotcal()
+plotcal(caltable=ptable,
+        xaxis='real',
+        yaxis='imag',
+        showgui=False,
+        figfile=figfile)
 
-xaxis = 'antenna'
-yaxis = 'amp'
 figfile = caltable + '.plot.antamp.png'
 print "Plotting calibration to file "+figfile
-saveinputs('plotcal',prefix+'.plotcal.polcal.d.antamp.saved')
-plotcal()
+plotcal(caltable=ptable,
+        xaxis='antenna',
+        yaxis='amp',
+        showgui=False,
+        figfile=figfile)
 
-xaxis = 'antenna'
-yaxis = 'phase'
 figfile = caltable + '.plot.antphase.png'
 print "Plotting calibration to file "+figfile
-saveinputs('plotcal',prefix+'.plotcal.polcal.d.antphase.saved')
-plotcal()
+plotcal(caltable=ptable,
+        xaxis='antenna',
+        yaxis='phase',
+        showgui=False,
+        figfile=figfile)
 
-xaxis = 'antenna'
-yaxis = 'snr'
 figfile = caltable + '.plot.antsnr.png'
 print "Plotting calibration to file "+figfile
-saveinputs('plotcal',prefix+'.plotcal.polcal.d.antsnr.saved')
-plotcal()
+plotcal(caltable=ptable,
+        xaxis='antenna',
+        yaxis='snr',
+        showgui=False,
+        figfile=figfile)
 
 if benchmarking:
     plotpcal2time=time.time()
@@ -943,24 +803,15 @@ if ( pcalmodel.has_key(polxfield) ):
         #
     
         print '--Setjy--'
-        default('setjy')
-        
-        vis = msfile
-        
         print "Use setjy to set IQU fluxes of "+polxfield
-        field = polxfield
-
-        scalebychan=False
-
-        standard='manual'
         
         for spw in usespwlist:
-            fluxdensity = polmodel[field][spw]['flux']
+            setjy(vis=msfile,
+                  field=polxfield,
+                  scalebychan=False,
+                  standard='manual',
+                  fluxdensity=polmodel[polxfield][spw]['flux'])
             
-            saveinputs('setjy',prefix+'.setjy.polspw.'+spw+'.saved')
-            setjy()
-        
-    
     if benchmarking:
         setxjy2time=time.time()
 
@@ -973,35 +824,20 @@ if ( pcalmodel.has_key(polxfield) ):
     default('polcal')
     
     print "Polarization R-L Phase Calibration (linear approx)"
-    
-    vis = msfile
-    
-    # Start with the G and D tables
-    gaintable = [gtable,ptable]
-    
-    # Output table
     xtable = prefix + '.polx'
-    caltable = xtable
-
-    # previously set with setjy
-    field = polxfield
-    spw = usespw
     
-    selectdata=True
-    uvrange = polxuvrange
-    
-    # Solve for Chi
-    poltype = 'Xf'
-    solint = 86400.
-    
-    # reference antenna
-    refant = calrefant
-    
-    # minimum SNR 3
-    minsnr = 3
-
-    saveinputs('polcal',prefix+'.polcal.X.saved')
-    polcal()
+    polcal(vis=msfile,
+           caltable=xtable,
+           field=polxfield,
+           spw=usespw,
+           selectdata=True,
+           uvrange=polxuvrange,
+           poltype='Xf',
+           solint='inf',
+           refant=calrefant,
+           minsnr=3,
+           gaintable=[gtable,ptable],
+           gainfield=['nearest',''])
     
     # You should get something like:
     # Position angle offset solution for 0137+331 (spw = 0) = 72.437 deg.
@@ -1029,17 +865,16 @@ if ( pcalmodel.has_key(polxfield) ):
     # Plot polcal solutions
     #
     print '--Plotcal--'
-    
-    xaxis = 'antenna'
-    yaxis = 'phase'
-    iteration = ''
-    
-    showgui = False
+
     figfile = caltable + '.plot.png'
-    
     print "Plotting calibration to file "+figfile
-    saveinputs('plotcal',prefix+'.plotcal.polcal.x.antphase.saved')
-    plotcal()
+    
+    plotcal(caltable=xtable,
+            xaxis='antenna',
+            yaxis='phase',
+            showgui=False,
+            figfile=figfile)
+            
 
     if benchmarking:
         plotxcal2time=time.time()
@@ -1068,39 +903,18 @@ default('applycal')
 print "This will apply the calibration to the DATA"
 print "Fills CORRECTED_DATA"
 
-vis = msfile
-
 # Start with the fluxscaled G table, the D table, and the X table
 if (dopolx):
     gaintable = [ftable,ptable,xtable]
 else:
     gaintable = [ftable,ptable]
 
-# select all the data
-spw = usespw
-selectdata = False
+print "Applying calibration to all fields."
 
-# IMPORTANT set parang=True for polarization
-parang = True
-
-# use the list of gain calibrators, apply to themselves
-field = fieldgain
-gainselect = field
-print "Applying calibration to gain calibrators "+field
-
-saveinputs('applycal',prefix+'.applycal.saved')
-applycal()
-
-if ( len(targets) > 0 ):
-    #
-    # Now with targets if any (transfer from gaincalfield)
-    #
-    # Assemble field string from target list
-    field = fieldtargets
-    print "Applying calibration to targets "+field
-    
-    saveinputs('applycal',prefix+'.applycal.targets.saved')
-    applycal()
+applycal(vis=msfile,
+         parang=True,
+         gaintable=gaintable,
+         gainfield=['nearest','',''])
 
 if benchmarking:
     correct2time=time.time()
@@ -1113,27 +927,12 @@ if benchmarking:
 print '--Split--'
 default('split')
 
-vis = msfile
-
-# Now we write out the corrected data to a new MS
-
-# Make an output vis file
-srcsplitms = prefix + '.split.ms'
-outputvis = srcsplitms
-
-# Select all data
-field = ''
-
-# Have to split all spw to preserve numbering
-spw = ''
-
-# pick off the CORRECTED_DATA column
-datacolumn = 'corrected'
-
+srcsplitms=prefix + '.split.ms'
 print "Split CORRECTED_DATA into DATA in new ms "+srcsplitms
 
-saveinputs('split',prefix+'.split.saved')
-split()
+split(vis=msfile,
+      outputvis=srcsplitms,
+      datacolumn='corrected')
 
 if benchmarking:
     split2time=time.time()
@@ -1150,6 +949,11 @@ clnmodel = {}
 # Loop over sources and spw
 # Set up for new clean in patch 2
 #
+
+imagermode=''
+if usecsclean:
+    imagermode='csclean'
+
 for src in srclist:
     
     srcmodel = {}
@@ -1158,56 +962,26 @@ for src in srclist:
 
         print '-- Clean '+src+' spw '+spwid+' --'
         default('clean')
-    
-        field = src
-        spw = spwid
-    
-        # Pick up our split source data
-        vis = srcsplitms
-        
-        # Make an image root file name
-        imname1 = prefix + '.' + src + '.' + spwid + '.clean'
-        imagename = imname1
-        
-        print "  Output images will be prefixed with "+imname1
-        
-        # Set up the output continuum image (single plane mfs)
-        mode = 'mfs'
-        
-        # All polarizations
-        stokes = 'IQUV'
 
-        # Use chose clean style
-        psfmode = clnalg
-        csclean = usecsclean
-        imagermode=''
-        if csclean:
-          imagermode='csclean'
-        
-        
-        imsize = [clnimsize,clnimsize]
-        cell = [clncell,clncell]
-    
-        # Standard gain factor 0.1
-        gain = 0.1
-        
-        niter = clniter
-        
-        threshold = clthreshold
-        
-        # Set up the weighting
-        # Use Briggs weighting (a moderate value, on the uniform side)
-        weighting = 'briggs'
-        robust = 0.5
-        # Use natural weighting
-        weighting = 'natural'
-        
-        # Use the cleanbox
-        mask = myclnbox
-    
-        saveinputs('clean',prefix+'.clean.'+src+'.'+spwid+'.saved')
-        clean()
-        
+        imname1 = prefix + '.' + src + '.' + spwid + '.clean'
+        print "  Output images will be prefixed with "+imname1
+
+        clean(vis=srcsplitms,
+              imagename=imname1,
+              field=src,
+              spw=spwid,
+              mode='mfs',
+              stokes='IQUV',
+              psfmode=clnalg,
+              imagermode=imagermode,
+              imsize=[clnimsize,clnimsize],
+              cell=[clncell,clncell],
+              gain=0.1,
+              niter=clniter,
+              threshold=clthreshold,
+              weighting='natural',
+              mask=myclnbox)
+
         # Set up variables
         clnimage1 = imname1+'.image'
         clnmodel1 = imname1+'.model'
@@ -1221,7 +995,6 @@ for src in srclist:
         #
         # Get some statistics of the clean image
         #
-        default('imstat')
 
         field = src
         spw = spwid
@@ -1239,14 +1012,12 @@ for src in srclist:
         for stokes in ['I','Q','U','V']:
 
             # Use the clean image
-            imagename = clnimage1
-            box = mybox
-            
-            saveinputs('imstat',prefix+'.imstat.'+src+'.'+spwid+'.'+stokes+'.saved')
-            xstat = imstat()
+            xstat=imstat(imagename=clnimage1,
+                         box=mybox,
+                         stokes=stokes)
 
             spwstats[stokes] = xstat
-
+                         
             # Peak (max or min) in box
             xmax = xstat['max'][0]
             xmin = xstat['min'][0]
@@ -1262,11 +1033,10 @@ for src in srclist:
             spwsum[stokes]= xsum
         
             # Use the clean model and no box
-            imagename = clnmodel1
-            box = ''
+            xstat=imstat(imagename=clnmodel1,
+                         box='',
+                         stokes=stokes)
 
-            saveinputs('imstat',prefix+'.imstat.'+src+'.'+spwid+'.'+stokes+'.model.saved')
-            xstat = imstat()
             # Integrated flux in image
             xmod = xstat['sum'][0]
             spwmod[stokes]= xmod

@@ -53,12 +53,20 @@ calibrater::calibrater() :
 
   // Default constructor
 
-  //  The following doesn't work yet...
-  // User can override to use old VI by setting the VI1 variable (to anything)
-  //  cout << "getenv(VI1) = " << getenv("VI1") <<endl;
-  //  bool forceOldVIByEnv = (getenv("VI1")!=NULL);
-  //  cout << "Found VI1 env var; forcing use of old VI!" << endl;
-  //  oldcal_ |= forceOldVIByEnv;
+  // User can override to use old VI in CALIBRATION 
+  //  by setting the VI1CAL variable (to anything) in the shell
+  bool forceOldVIByEnv(false);
+  forceOldVIByEnv = (getenv("VI1CAL")!=NULL);
+  bool forceNewVIByEnv(false);
+  forceNewVIByEnv = (getenv("VI2CAL")!=NULL);
+  //cout << "forceOldVIByEnv = " << boolalpha << forceOldVIByEnv << endl;
+  if (forceOldVIByEnv) {
+    cout << "Found VI1CAL env var; forcing default use of old VI!" << endl;
+    oldcal_ = true;
+  } else if (forceNewVIByEnv) {
+    cout << "Found VI2CAL env var; forcing default use of NEW VI2!" << endl;
+    oldcal_ = false;
+  }
 
   itsLog = new casacore::LogIO();
   itsCalibrater = casa::Calibrater::factory(oldcal_);

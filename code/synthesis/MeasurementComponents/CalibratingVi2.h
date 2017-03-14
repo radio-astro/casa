@@ -163,6 +163,12 @@ public:
 
   ~CalSolvingVi2();
 
+
+  // Iterating management
+  virtual void originChunks(casacore::Bool forceRewind = false);
+  virtual void origin ();
+  virtual void next ();
+
   // Report the the ViImplementation type
   virtual casacore::String ViiType() const {
       return casacore::String("CalForSolve( ")+getVii()->ViiType()+" )";
@@ -185,6 +191,12 @@ private:
 
   // Ensure weightSpectrum is populated
   virtual void verifyWeightSpectrum(casa::vi::VisBuffer2* vb) const;
+
+  // Sample counters
+  mutable casacore::Int64 ntotal_,nflagged_,nskipped_;
+  mutable casacore::Int64 nVB_,nVB0_;
+  mutable casacore::Double Tio_,Tcalws_,Tcalfl_,Tcal2_;
+  
 
 };
 

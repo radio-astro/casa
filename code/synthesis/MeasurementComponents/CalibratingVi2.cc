@@ -26,6 +26,10 @@
 #include <casa/Arrays/ArrayPartMath.h>
 #include <casa/Arrays/MaskArrMath.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -498,6 +502,8 @@ CalSolvingVi2::CalSolvingVi2( vi::ViImplementation2 * inputVii,
   // Nothing specialized to do here (except ctor parent, above)
 }
 
+//#define REPORTTIMING
+
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
@@ -506,7 +512,144 @@ CalSolvingVi2::~CalSolvingVi2()
   //  cout << "   ~CalSolVi2:  " << this << endl;
   //  cout << "CSVi2::calibrateCurrentVB: Is WtSpec automatic?" << endl;
   // Nothing specialized to do here (except ctor parent, above)
+
+#ifdef REPORTTIMEING
+  cout << "CalSolvingVi2 stats: " << endl;
+  cout << " nVB_=" << nVB_
+       << " nVB0_=" << nVB0_ << endl;
+
+  cout << " Tcal_=" 
+       << Tcalws_ 
+       << "+" << Tcalfl_ 
+       << "+" << Tcal2_ 
+       << "=" << Tcalws_+Tcalfl_+Tcal2_
+       << endl;
+
+  cout << " Tio_=" << Tio_ 
+       << endl;
+  cout << "  Samples=" 
+       << " total=" << ntotal_ 
+       << " flagged=" << nflagged_ << " (" << Double(nflagged_)/Double(ntotal_) << " of total)"
+       << " skippable=" << nskipped_ << " (" << Double(nskipped_)/Double(nflagged_) << " of flagged)"
+       << endl;
+  cout << " spurious fraction=" << Double(nflagged_-nskipped_)/Double(ntotal_-nskipped_) << endl;
+  cout << " good     fraction=" << Double(ntotal_-nflagged_)/Double(ntotal_-nskipped_) << endl;
+#endif
+
+
 }
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void
+CalSolvingVi2::originChunks(casacore::Bool forceRewind) 
+{
+
+  // Zero counters/timers
+  ntotal_=nflagged_=nskipped_=nVB_=nVB0_=0;
+  Tio_=Tcalws_=Tcalfl_=Tcal2_=0.0;
+
+  // Call next layer
+  getVii()->originChunks(forceRewind);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void
+CalSolvingVi2::origin() 
+{
+
+  // Drive underlying VII2
+  getVii()->origin();
+
+  //ntotal_+=getVii()->getVisBuffer()->flagCube().nelements();
+  //nflagged_+=ntrue(getVii()->getVisBuffer()->flagCube());
+
+  //  if (nfalse(getVii()->getVisBuffer()->flagCube())==0) {
+  //    cout << "Using (origin)..." << endl;
+  //  }
+
+  /*
+
+  // Step over completely flagged VB2s in the current chunk
+  // NB: last one will be used in any case
+  if (getVii()->more()) {  // not already the last VB2 in this chunk
+    while (getVii()->more()) { 
+      if (nfalse(getVii()->getVisBuffer()->flagCube())==0) {
+	// This VB2 is entirely flagged, step to next one
+	getVii()->next();
+	cout << "skipping (origin)..." << endl;
+      }
+      else
+	// This VB2 has some unflagged data, so use it
+	break;
+    }
+  }
+  */
+  /*
+  cout << "Samples (origin) =" 
+       << " total=" << ntotal_ 
+       << " flagged=" << nflagged_ 
+       << " skipped=" << nskipped_ 
+       << endl;
+  */
+  // Keep my VB2 happily synchronized
+  //  (this comes from TransformingVi2)
+  configureNewSubchunk();
+
+  // Data/wts not yet corrected
+  visCalibrationOK_p=False;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void CalSolvingVi2::next() 
+{
+
+  // Drive underlying VII2
+  getVii()->next();
+
+  /*
+
+  // Step over completely flagged VB2s in the current chunk
+  // NB: last one will be used in any case
+  if (getVii()->more()) {  // not already the last VB2 in this chunk
+    while (getVii()->more()) { 
+      if (nfalse(getVii()->getVisBuffer()->flagCube())==0) {
+	// This VB2 is entirely flagged, step to next one
+	ntotal_+=getVii()->getVisBuffer()->flagCube().nelements();
+	nflagged_+=ntrue(getVii()->getVisBuffer()->flagCube());
+	nskipped_+=ntrue(getVii()->getVisBuffer()->flagCube());
+	getVii()->next();
+      }
+      else
+	// This VB2 has some unflagged data, so use it
+	break;
+    }
+  }
+  */
+
+  // Keep my VB2 happily synchronized
+  //  (this comes from TransformingVi2)
+  configureNewSubchunk();
+
+  // Data/wts not yet corrected
+  visCalibrationOK_p=False;
+
+  /*
+  cout << "Samples (next)   =" 
+       << " total=" << ntotal_ 
+       << " flagged=" << nflagged_ 
+       << " skipped=" << nskipped_ 
+       << endl;
+  */
+
+}
+
+
 
 // -----------------------------------------------------------------------
 void CalSolvingVi2::visibilityModel(Cube<Complex>& mod) const
@@ -530,8 +673,16 @@ void CalSolvingVi2::calibrateCurrentVB() const
 
   //cout << " CalSolvingVi2::calibrateCurrentVB(): " << boolalpha << visCalibrationOK_p;
 
+
   // Do the correction, if not done yet
   if (!visCalibrationOK_p) {
+
+#ifdef _OPENMP
+    Double time0=omp_get_wtime();
+#endif
+
+    // Count the VBs that we are processing
+    ++nVB_;
 
     // Get the underlying ViImpl2's VisBuffer, to munge it
     VisBuffer2 *vb = getVii()->getVisBuffer();
@@ -541,25 +692,46 @@ void CalSolvingVi2::calibrateCurrentVB() const
     Bool doWtSp = this->weightSpectrumExists();
 
     // Fill flags
-    vb->flagCube();
+    Cube<Bool> fl(vb->flagCube());
 
     // Fill model
     // NB:  model-filling handled below, in ve_p (or on-demand)
-    //vb->visCubeModel();
+    vb->visCubeModel();
 
     // Initialize the to-be-calibrated weights 
     //   (this fills WS, if available from below)
     //  TBD: better semantics: vb->setCorrDataWtSpec(vb->dataWtSpec()); 
     vb->resetWeightsUsingSigma();
 
-    // Set old-style flags, FOR NOW
-    corrIndepFlags(vb);
+    // Initialize corrected data w/ data
+    initCorrected(vb);
+
+    // Counting
+    Int64 nsamp=fl.nelements();
+    if (nfalse(fl)==0) {
+      nskipped_+=nsamp;
+      ++nVB0_;
+    }
+    ntotal_+=nsamp;
+    nflagged_+=ntrue(fl);
+
+#ifdef _OPENMP
+    Double time1a=omp_get_wtime();
+#endif
 
     // Ensure we got weightSpectrum (fill it, if not)
     verifyWeightSpectrum(vb);
 
-    // Initialize corrected data w/ data
-    initCorrected(vb);
+#ifdef _OPENMP
+    Double time1b=omp_get_wtime();
+#endif
+
+    // Set old-style flags, FOR NOW
+    corrIndepFlags(vb);
+
+#ifdef _OPENMP
+    Double time2=omp_get_wtime();
+#endif
 
     // If the VisEquation is set, use it, otherwise use the corrFactor_p
     if (ve_p) {
@@ -568,8 +740,8 @@ void CalSolvingVi2::calibrateCurrentVB() const
       ve_p->collapse2(*vb);   // ,False,doWtSp);
 
       // Set unchan'd weights, in case they are requested
-      if (doWtSp)
-	vb->setWeight(partialMedians(vb->weightSpectrum(),IPosition(1,1)));
+      //if (doWtSp)
+      //  vb->setWeight(partialMedians(vb->weightSpectrum(),IPosition(1,1)));
 	
     }
     else {
@@ -622,8 +794,34 @@ void CalSolvingVi2::calibrateCurrentVB() const
 
     // Signal that we have applied the correction, to avoid unnecessary redundancy
     visCalibrationOK_p=True;
+    
+#ifdef _OPENMP
+    Double time3=omp_get_wtime();
 
-  }    
+    Double dTio=time1a-time0;
+    Double dTcalws=time1b-time1a;
+    Double dTcalfl=time2-time1b;
+    Double dTcal2=time3-time2;
+    Tio_+=dTio;
+    Tcalws_+=dTcalws;
+    Tcalfl_+=dTcalfl;
+    Tcal2_+=dTcal2;
+#endif
+    
+    /*
+    cout << "nVB_=" << nVB_
+	 << " dTio = " << dTio
+	 << " dTcal1 = " << dTcal1
+	 << " dTcal2 = " << dTcal2
+	 << " Tio_ = " << Tio_ 
+	 << " Tcal = " << Tcal1 
+	 << "+" << Tcal2_ 
+	 << "=" << Tcal1_+Tcal2_
+	 << endl;
+    */
+
+  }
+  
   //  cout << endl;
 }
 
@@ -634,15 +832,21 @@ void CalSolvingVi2::corrIndepFlags(casa::vi::VisBuffer2* vb) const {
     return;
 
   // If more than one correlation, if any is flagged, all are (per row, chan)
-  Int nrow=vb->nRows();
-  Int nchan=vb->nChannels();
-  for (Int irow=0;irow<nrow;++irow) {
-    for (Int ichan=0;ichan<nchan;++ichan) {
-      Vector<Bool> corrfl(vb->flagCube()(Slice(),Slice(ichan,1,1),Slice(irow,1,1)).nonDegenerate(1));
-      if (ntrue(corrfl)>0)
-	corrfl.set(true);
+  Cube<Bool> flc(vb->flagCube());
+
+  VectorIterator<Bool> fvi(flc,0);
+  Vector<Bool>& fviv(fvi.vector());  // stays sync'd!
+  Int nCor=fviv.nelements();
+  while (!fvi.pastEnd()) {
+    for (Int icor=0;icor<nCor;++icor) {
+      if (fviv(icor)) {
+	fviv.set(true);
+	continue;  // jump out of icor loop if flag=T found
+      }
     }
+    fvi.next();
   }
+
   return;
 }
 
@@ -650,15 +854,23 @@ void CalSolvingVi2::verifyWeightSpectrum(casa::vi::VisBuffer2* vb) const {
 
   // If we didn't get WS from below, populate it in the specified vb
   if (!getVii()->weightSpectrumExists()) {
-    Cube<Bool> fl(vb->flagCube());
-    IPosition sh(fl.shape());
+    IPosition sh=vb->getShape();
     Cube<Float> wtsp(sh,0.0f);
-    Matrix<Float> wt(vb->weight());  // reference to unChan'd wt
-    for (Int irow=0;irow<sh(2);++irow) {
-      for (Int icorr=0;icorr<sh(0);++icorr) {
-	wtsp(Slice(icorr),Slice(),Slice(irow)).set(wt(icorr,irow));
-      }
-    }	
+
+    // Unchan'd weight as Cube w/ degenerate chan axis
+    Cube<Float> wtsp0(vb->weight().reform(IPosition(3,sh(0),1,sh(2))));
+    
+    VectorIterator<Float> ivi(wtsp0,1);
+    Vector<Float>& iviv(ivi.vector());   // stays sync'd!
+    VectorIterator<Float> ovi(wtsp,1);
+    Vector<Float>& oviv(ovi.vector());   // stays sync'd!
+    
+    while (!ivi.pastEnd()) {
+      oviv.set(iviv(0));
+      ivi.next();
+      ovi.next();
+    }
+    
     // Set it in the vb
     vb->setWeightSpectrum(wtsp);
   }

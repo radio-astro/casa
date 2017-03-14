@@ -430,6 +430,8 @@ void VisEquation::divideCorrByModel(vi::VisBuffer2& vb) {
   Cube<Bool> fl(vb.flagCube());
   Cube<Float> w(vb.weightSpectrum());
 
+  Complex cOne(1.0);
+
   for (Int irow=0;irow<vb.nRows();++irow) {
     if (vb.flagRow()(irow)) {
       // Row flagged, make sure cube also flagged, weight/data zeroed
@@ -438,20 +440,36 @@ void VisEquation::divideCorrByModel(vi::VisBuffer2& vb) {
       fl(Slice(),Slice(),Slice(irow,1,1))=True;
     }
     else {
+      Bool *flp=&fl(0,0,irow);
+      Float *wtp=&w(0,0,irow);
+      Complex *cvp=&c(0,0,irow);
+      Complex *mvp=&m(0,0,irow);
+
       for (Int ichan=0;ichan<vb.nChannels();++ichan) {
 	for (Int icorr=0;icorr<vb.nCorrelations();++icorr) {
-	  Bool& Fl(fl(icorr,ichan,irow));
-	  Float& W(w(icorr,ichan,irow));
+	  Bool& Fl(*flp);
+	  Float& W(*wtp);
+	  //Bool& Fl(fl(icorr,ichan,irow));
+	  //Float& W(w(icorr,ichan,irow));
 	  if (!Fl) {
 	    // Not flagged...
-	    Float A=abs(m(icorr,ichan,irow));
+	    Float A=abs(*mvp);
+	    //Float A=abs(m(icorr,ichan,irow));
 	    if (A >0.0f) {
 	      // ...and model non-zero
-	      Complex& C(c(icorr,ichan,irow));
-	      Complex& M(m(icorr,ichan,irow));
-	      C=Complex(DComplex(C)/DComplex(M));  // divide corr data by model
+	      Complex& C(*cvp);
+	      Complex& M(*mvp);
+	      //Complex& C(c(icorr,ichan,irow));
+	      //Complex& M(m(icorr,ichan,irow));
+
+	      // divide corr data by model
+	      // NB: Use of DComplex here increased cost of this calculation by ~33%
+	      C=Complex(DComplex(C)/DComplex(M));  
+	      //C=C/M;  
+
 	      W*=square(A);                        // multiply weight by model**2
-	      M=Complex(1.0f);                     // divide model by itself
+	      M=cOne;                              // divide model by itself
+
 	    }
 	  }
 	  else {
@@ -459,13 +477,22 @@ void VisEquation::divideCorrByModel(vi::VisBuffer2& vb) {
 	    Fl=True;
 	    W=0.0f;
 	  }
+	  ++cvp;
+	  ++mvp;
+	  ++flp;
+	  ++wtp;
 	} // icorr
       }	// ichan  
     } // !flagRow
   } // irow
   
   // Set unchan'd weight, in case someone wants it
+  // NB: Use of median increases cost by ~100%
+  // NB: use of mean increases cost by ~50%
+  //  ...but both are inaccurate if some channels flagged,
+  //  and it should not be necessary to do this here
   vb.setWeight(partialMedians(vb.weightSpectrum(),IPosition(1,1),True));
+  //vb.setWeight(partialMeans(vb.weightSpectrum(),IPosition(1,1)));
 
 }
 
