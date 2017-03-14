@@ -64,7 +64,13 @@ def merge_dict(d1, d2):
     d12 = d1.copy()
     d12.update(d2)
     return d12
-    
+
+def get_table_cache():
+    (mytb,) = gentools(['tb'])
+    cache = mytb.showcache()
+    #print 'cache = {}'.format(cache)
+    return cache
+
 ###
 # Base class for sdimaging unit test
 ###
@@ -315,6 +321,8 @@ class sdimaging_test0(sdimaging_unittest_base):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+        
+        self.assertEqual(len(get_table_cache()), 0)
 
     def test000(self):
         """Test 000: Default parameters"""
@@ -518,6 +526,8 @@ class sdimaging_test1(sdimaging_unittest_base):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+
+        self.assertEqual(len(get_table_cache()), 0)
 
     def test100(self):
         """Test 100: Integrated image"""
@@ -837,6 +847,8 @@ class sdimaging_test2(sdimaging_unittest_base):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
+        self.assertEqual(len(get_table_cache()), 0)
+
     def test200(self):
         """Test 200: Integrated image"""
         nchan = 1
@@ -962,6 +974,8 @@ class sdimaging_test3(sdimaging_unittest_base):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+
+        self.assertEqual(len(get_table_cache()), 0)
 
     def test300(self):
         """Test 300: Integrated image"""
@@ -1090,6 +1104,8 @@ class sdimaging_autocoord(sdimaging_unittest_base):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
+
+        self.assertEqual(len(get_table_cache()), 0)
 
     def run_test(self, task_param, shape, dirax):
         """
@@ -1235,6 +1251,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,sdimaging_un
             if (os.path.exists(name)):
                 shutil.rmtree(name)
         os.system( 'rm -rf '+self.prefix+'*' )
+        
+        self.assertEqual(len(get_table_cache()), 0)
 
     def run_test(self, task_param, refstats, shape,
                  atol=1.e-8, rtol=1.e-5, box=None):
@@ -1684,7 +1702,7 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,sdimaging_un
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
         # Tests
         self.run_test(self.task_param,refstats,out_shape,box=region,atol=1.e-3,rtol=1.e-3)
-       
+        
     @unittest.expectedFailure
     def test_spw_id_default_velocity(self):
         """test spw selection w/ channel selection (spw='X~Ykm/s') NOT SUPPORTED YET"""
@@ -1784,7 +1802,7 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,sdimaging_un
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
         # Tests
         self.run_test(self.task_param,refstats,out_shape,box=region,atol=1.e-3,rtol=1.e-3)
-        
+ 
     @unittest.expectedFailure
     def test_spw_id_pattern_velocity(self):
         """test spw selection w/ channel selection (spw='*:X~Ykm/s') NOT SUPPORTED YET"""
@@ -2035,6 +2053,8 @@ class sdimaging_test_flag(sdimaging_unittest_base):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
+        self.assertEqual(len(get_table_cache()), 0)
+
     def testFlag01(self):
         """testFlag01: """
         res=sdimaging(infiles=self.rawfile,outfile=self.outfile,intent="",gridfunction=self.gridfunction,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,minweight=self.minweight0)
@@ -2198,7 +2218,20 @@ class sdimaging_test_polflag(sdimaging_unittest_base):
     def tearDown(self):
         if os.path.exists(self.infiles):
             shutil.rmtree(self.infiles)
-        #os.system( 'rm -rf '+self.prefix+'*' )
+        # Since the data is flagged by flagdata, flagversions directory 
+        # is automatically created. This must be removed
+        flagversions = self.infiles + '.flagversions'
+        if os.path.exists(flagversions):
+            shutil.rmtree(flagversions)
+        # By executing flagdata task, flagdata.last is created automatically
+        # This must also be removed
+        flagdata_last = 'flagdata.last'
+        if os.path.exists(flagdata_last):
+            os.remove(flagdata_last)
+        # Remove test image and its weight image
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+        self.assertEqual(len(get_table_cache()), 0)
 
     def run_test(self, task_param, refstats, shape,
                  atol=1.e-8, rtol=1.e-5, box=None):
@@ -2321,6 +2354,8 @@ class sdimaging_test_mslist(sdimaging_unittest_base):
                 if os.path.exists(name):
                     shutil.rmtree(name)
                     
+        self.assertEqual(len(get_table_cache()), 0)
+
     def run_test(self, task_param=None,refstats=None):
         if task_param is None:
             task_param = self.default_param
@@ -2398,6 +2433,9 @@ class sdimaging_test_restfreq(sdimaging_unittest_base):
     def tearDown(self):
         if os.path.exists(self.infiles):
             shutil.rmtree(self.infiles)
+        os.system('rm -rf {0}*'.format(self.outfile))
+
+        self.assertEqual(len(get_table_cache()), 0)
 
     def run_test(self, restfreq_ref, beam_ref, cell_ref, stats, **kwargs):
         self.param.update(**kwargs)
@@ -2508,6 +2546,8 @@ class sdimaging_test_mapextent(unittest.TestCase):
         #self.__remove_table(self.outfile)
         os.system('rm -rf %s*'%(self.outfile))
         
+        self.assertEqual(len(get_table_cache()), 0)
+
     def run_test(self, **kwargs):
         self.param.update(**kwargs)
         status = sdimaging(**self.param)
@@ -2632,6 +2672,8 @@ class sdimaging_test_interp(unittest.TestCase):
             self.__remove_table(infile)
         os.system('rm -rf %s*'%(self.outfile))
         
+        self.assertEqual(len(get_table_cache()), 0)
+
     def run_test(self, **kwargs):
         self.params.update(**kwargs)
         status = sdimaging(**self.params)
@@ -2706,6 +2748,8 @@ class sdimaging_test_clipping(sdimaging_unittest_base):
         # remove test data
         self.__clear_up()
         
+        self.assertEqual(len(get_table_cache()), 0)
+
     def __clear_up(self):
         for data in self.data_list:
             if os.path.exists(data):

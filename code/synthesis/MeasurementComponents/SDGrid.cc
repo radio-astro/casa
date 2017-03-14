@@ -357,12 +357,12 @@ void SDGrid::init() {
       }
     }
 
-    String outfile = convType + ".dat";
-    ofstream ofs(outfile.c_str());
-    for (Int i = 0 ; i < convSize ; i++) {
-      ofs << i << " " << convFunc[i] << endl; 
-    }
-    ofs.close();
+//    String outfile = convType + ".dat";
+//    ofstream ofs(outfile.c_str());
+//    for (Int i = 0 ; i < convSize ; i++) {
+//      ofs << i << " " << convFunc[i] << endl;
+//    }
+//    ofs.close();
   }
   else {
     logIO_p << "Unknown convolution function " << convType << LogIO::EXCEPTION;
