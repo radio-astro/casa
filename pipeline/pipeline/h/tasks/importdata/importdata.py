@@ -40,7 +40,7 @@ class ImportDataInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
     # This are ALMA specific settings. Make them generic at some point.
-    #asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
+    # asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
     asis = basetask.property_with_default('asis', '')
     bdfflags = basetask.property_with_default('bdfflags', True)
     createmms = basetask.property_with_default('createmms', 'automatic')
@@ -57,7 +57,7 @@ class ImportDataInputs(basetask.StandardInputs):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('session')
 
-        # if vis is a scalar but session is a list, return the session for this vis        
+        # if vis is a scalar but session is a list, return the session for this vis
         if not isinstance(self.vis, list) and isinstance(self._session, list):
             idx = self._my_vislist.index(self.vis)
             return self._session[idx]
@@ -77,7 +77,7 @@ class ImportDataInputs(basetask.StandardInputs):
 
     # MandatoryPipelineInputs raises an exception if vis has not been
     # registered with the context. For an import task however, the vis is never
-    # registered. To avoid the exception, we override the vis getter and 
+    # registered. To avoid the exception, we override the vis getter and
     # setter.
     @property
     def vis(self):
@@ -85,7 +85,7 @@ class ImportDataInputs(basetask.StandardInputs):
 
     @vis.setter
     def vis(self, value):
-        vislist = value if type(value) is types.ListType else [value,]
+        vislist = value if type(value) is types.ListType else [value, ]
 
         # VISLIST_RESET_KEY is present when vis is set by handle_multivis.
         # In this case we do not want to reset my_vislist, as handle_multivis is
@@ -103,7 +103,7 @@ class ImportDataInputs(basetask.StandardInputs):
 class ImportDataResults(basetask.Results):
     """
     ImportDataResults holds the results of the ImportData task. It contains
-    the resulting MeasurementSet domain objects and optionally the additional 
+    the resulting MeasurementSet domain objects and optionally the additional
     SetJy results generated from flux entries in Source.xml.
     """
 
@@ -241,7 +241,7 @@ class ImportData(basetask.StandardTaskTemplate):
         for old_file in to_clearcal:
             self._do_clearcal(old_file)
 
-        # launch an import job for each ASDM we need to convert 
+        # launch an import job for each ASDM we need to convert
         for asdm in to_convert:
             self._do_importasdm(asdm)
 
@@ -253,7 +253,7 @@ class ImportData(basetask.StandardTaskTemplate):
         to_import.extend(converted_asdms)
 
         # get the path to the MS for the converted ASDMs, which we'll later
-        # compare to ms.name in order to calculate the origin of each MS   
+        # compare to ms.name in order to calculate the origin of each MS
         converted_asdm_abspaths = [os.path.abspath(f) for f in converted_asdms]
 
         LOG.info('Creating pipeline objects for measurement set(s) {0}'
@@ -274,11 +274,11 @@ class ImportData(basetask.StandardTaskTemplate):
             results.origin[ms.basename] = ms_origin
 
         # get the flux measurements from Source.xml for each MS
-        #print inputs.dbservice
+        # print inputs.dbservice
         xml_results = get_setjy_results(observing_run.measurement_sets, dbservice=inputs.dbservice)
         # write/append them to flux.csv
 
-        # Cycle 1 hack for exporting the field intents to the CSV file: 
+        # Cycle 1 hack for exporting the field intents to the CSV file:
         # export_flux_from_result queries the context, so we pseudo-register
         # the mses with the context by replacing the original observing run
         orig_observing_run = inputs.context.observing_run
@@ -336,17 +336,19 @@ class ImportData(basetask.StandardTaskTemplate):
         if inputs.save_flagonline:
             # Create the standard calibration flagging template file
             template_flagsfile = os.path.join(inputs.output_dir,
-                os.path.basename(asdm) + "_flagtemplate.txt")
-            self._make_template_flagfile(asdm, template_flagsfile, 'User flagging commands file for the calibration pipeline')
+                                              os.path.basename(asdm) + "_flagtemplate.txt")
+            self._make_template_flagfile(asdm, template_flagsfile,
+                                         'User flagging commands file for the calibration pipeline')
             # Create the imaging targets file
             template_flagsfile = os.path.join(inputs.output_dir,
-                os.path.basename(asdm) + "_flagtargetstemplate.txt")
-            self._make_template_flagfile(asdm, template_flagsfile, 'User flagging commands file for the imaging pipeline')
+                                              os.path.basename(asdm) + "_flagtargetstemplate.txt")
+            self._make_template_flagfile(asdm, template_flagsfile,
+                                         'User flagging commands file for the imaging pipeline')
 
         createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
 
         with_pointing_correction = getattr(inputs, 'with_pointing_correction', False)
-        #ocorr_mode = getattr(inputs, 'ocorr_mode', 'ca')
+        # ocorr_mode = getattr(inputs, 'ocorr_mode', 'ca')
 
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
@@ -383,9 +385,11 @@ class ImportData(basetask.StandardTaskTemplate):
                 f.writelines(['# Examples\n'])
                 f.writelines(['# Note: Do not put spaces inside the reason string !\n'])
                 f.writelines(['#\n'])
-                f.writelines(["# mode='manual' correlation='YY' antenna='DV01;DV08;DA43;DA48&DV23' spw='21:1920~2880' autocorr=False reason='bad_channels'\n"])
+                f.writelines([
+                                 "# mode='manual' correlation='YY' antenna='DV01;DV08;DA43;DA48&DV23' spw='21:1920~2880' autocorr=False reason='bad_channels'\n"])
                 f.writelines(["# mode='manual' spw='25:0~3;122~127' reason='stage8_2'\n"])
-                f.writelines(["# mode='manual' antenna='DV07' timerange='2013/01/31/08:09:55.248~2013/01/31/08:10:01.296' reason='quack'\n"])
+                f.writelines([
+                                 "# mode='manual' antenna='DV07' timerange='2013/01/31/08:09:55.248~2013/01/31/08:10:01.296' reason='quack'\n"])
                 f.writelines(['#\n'])
 
 
@@ -398,7 +402,7 @@ def get_setjy_results(mses, dbservice=True):
         for source, measurements in read_fluxes(ms, dbservice=dbservice).items():
             m = [m for m in measurements if int(m.spw_id) in science_spw_ids]
 
-            # import flux values for all fields and intents so that we can 
+            # import flux values for all fields and intents so that we can
             # compare them to the fluxscale-derived values later in the run
             #            for field in [f for f in source.fields if 'AMPLITUDE' in f.intents]:
             for field in source.fields:
@@ -500,10 +504,10 @@ def read_fluxes(ms, dbservice=True):
             if len(joint_closest) > 1:
                 LOG.trace('Averaging {!s} equally close measurements: {!s}'.format(len(joint_closest), joint_closest))
 
-            # calculate the mean of these equally distant measurements.
+            # calculate the mean of these equally distant  measurements.
             # joint_closest has at least one item, so we don't need to prime
             # the reduce function with an empty accumulator
-            mean_iquv = [reduce(lambda x, y: x + y, stokes)/len(joint_closest) for stokes in zip(*joint_closest)]
+            mean_iquv = [reduce(lambda x, y: x + y, stokes) / len(joint_closest) for stokes in zip(*joint_closest)]
 
             LOG.info('Closest flux measurement for {!s} spw {!s} found {!s} '
                      'distant from centre of spw)'.format(ms.basename, spw_id, min_delta))
@@ -525,41 +529,59 @@ def read_fluxes(ms, dbservice=True):
         #  and spectral index
         if dbservice:
             source_name = source.name
-
+            asdmmessage = ''
             try:
                 fluxdict = fluxservice(ms, frequency, source_name)
                 f = fluxdict['fluxdensity']
                 spix = fluxdict['spectralindex']
+
                 try:
-                    iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
+                    fluxvalue = measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY)
+                    if float(f) == 0.0 or str(f) == 'Infinity' or str(spix) == '-1000':
+                        fluxvalue = iquv[0]
+                    iquv_db = (fluxvalue,
                                iquv[1], iquv[2], iquv[3])
                     if int(spw_id) in science_spw_ids:
-                        #LOG.info("Source: "+source_name +" spw: "+spw_id+"    ASDM Flux: "+str(iquv[0])+"    Online catalog Flux: "+str(f) +" Jy")
-                        LOG.info("Source: "+source_name +" spw: "+str(spw_id)+"    ASDM Flux: "+str(iquv[0])+"    Online catalog Flux: "+str(f) +" Jy")
-                        LOG.info("         Online catalog Spectral Index: " + str(spix))
+                        asdmmessage = "   ASDM Flux: {!s}".format(str(iquv[0]))
                 except:
-                    #No flux values from Source.xml
-                    iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
-                               measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY),
-                               measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY),
-                               measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY))
-                    if (int(spw_id) in science_spw_ids):
-                        #LOG.info("Source: "+source_name +" spw: "+spw_id+"    No ASDM Flux, Online Catalog Flux: "+str(f))
-                        LOG.info("Source: "+source_name +" spw: "+str(spw_id)+"    No ASDM Flux, Online Catalog Flux: "+str(f))
-                        LOG.info("         Online catalog Spectral Index: " + str(spix))
+                    # No flux values from Source.xml
+                    iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
+                               measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
+                               measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
+                               measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY))
+                    if int(spw_id) in science_spw_ids:
+                        asdmmessage = "  No ASDM Flux"
+
+                    # No flux values from Source.xml OR unusable online catalog info
+                    if float(f) == 0.0 or str(f) == 'Infinity' or str(spix) == '-1000':
+                        LOG.info("Source: {!s} spw: {!s} {!s}    Online catalog Flux: {!s} Jy"
+                                 "".format(source_name, spw_id, asdmmessage, f))
+                        LOG.info("         Online catalog Spectral Index: {!s}".format(str(spix)))
+                        LOG.info("         Unusable online catalog information.")
+                        LOG.info("---------------------------------------------")
+                        continue
+
+                LOG.info("Source: {!s} spw: {!s} {!s}    Online catalog Flux: {!s} Jy"
+                         "".format(source_name, spw_id, asdmmessage, f))
+                LOG.info("         Online catalog Spectral Index: {!s}".format(str(spix)))
+                if float(f) == 0.0 or str(f) == 'Infinity' or str(spix) == '-1000':
+                    LOG.info("         Unusable online catalog information.")
+                    LOG.info("---------------------------------------------")
+
                 m = domain.FluxMeasurement(spw_id, *iquv_db)
+
 
             except:
 
                 if None in (flux_text, frequency_text, source_id, spw_id):
-                    #If Source.xml AND online flux were a no-go then continue
+                    # If Source.xml AND online flux were a no-go then continue
                     continue
                 else:
-                    #Use Source.xml values since nothing was returned from the online database
+                    # Use Source.xml values since nothing was returned from the online database
                     m = domain.FluxMeasurement(spw_id, *iquv)
                     if (int(spw_id) in science_spw_ids):
-                        LOG.info("Source: "+source_name +" spw: "+str(spw_id)+"    ASDM Flux: "+str(iquv[0]) +"     No online catalog information.")
-
+                        LOG.info("Source: " + source_name + " spw: " + str(spw_id) + "    ASDM Flux: " + str(
+                            iquv[0]) + "     No online catalog information.")
         result[source].append(m)
 
     return result
@@ -578,22 +600,22 @@ def flux_nosourcexml(ms, dbservice=True):
         for source in ms.sources:
             for spw in spws:
                 sourcename = source.name
-                frequency= str(spw.centre_frequency.value)
+                frequency = str(spw.centre_frequency.value)
                 spw_id = spw.id
-                LOG.info('freq/sourcename:  '+str(frequency) + str(sourcename))
+                LOG.info('freq/sourcename:  ' + str(frequency) + str(sourcename))
 
                 try:
 
                     fluxdict = fluxservice(ms, frequency, sourcename)
                     f = fluxdict['fluxdensity']
-                    iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
-                               measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY),
-                               measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY),
-                               measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY))
+                    iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
+                               measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
+                               measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
+                               measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY))
                     m = domain.FluxMeasurement(spw_id, *iquv_db)
                     result[source].append(m)
                 except:
-                    LOG.debug("    No flux catalog values for source " + str(source.name)+"  spw:"+str(spw_id))
+                    LOG.debug("    No flux catalog values for source " + str(source.name) + "  spw:" + str(spw_id))
 
     return result
 
@@ -605,10 +627,9 @@ def fluxservice(ms, frequency, sourcename):
          - frequency_text - we will get the frequency out of this in Hz
          - source - we will get source.name from this object
     """
-    #serviceurl = 'http://bender.csrg.cl:2121/bfs-0.2/ssap'
-    #serviceurl =  'http://asa-test.alma.cl/bfs/'
-    serviceurl =  'https://almascience.eso.org/sc/flux'
-
+    # serviceurl = 'http://bender.csrg.cl:2121/bfs-0.2/ssap'
+    # serviceurl =  'http://asa-test.alma.cl/bfs/'
+    serviceurl = 'https://almascience.eso.org/sc/flux'
 
     qt = casatools.quanta
     mt = casatools.measures
@@ -623,7 +644,7 @@ def fluxservice(ms, frequency, sourcename):
 
     urlparams = buildparams(sourcename, date, frequency)
     try:
-        dom =  minidom.parse(urllib2.urlopen(serviceurl + '?%s' % urlparams, timeout=10.0))
+        dom = minidom.parse(urllib2.urlopen(serviceurl + '?%s' % urlparams, timeout=10.0))
     except:
         LOG.warn('DB flux service timeout/connection problem...')
 
@@ -635,20 +656,20 @@ def fluxservice(ms, frequency, sourcename):
 
     for node in domtable:
         row = node.getElementsByTagName('TD')
-        rowdict['sourcename']         = row[0].childNodes[0].nodeValue
-        rowdict['dbfrequency']        = row[1].childNodes[0].nodeValue
-        rowdict['date']               = row[2].childNodes[0].nodeValue
-        rowdict['fluxdensity']        = row[3].childNodes[0].nodeValue
-        rowdict['fluxdensityerror']   = row[4].childNodes[0].nodeValue
-        rowdict['spectralindex']      = row[5].childNodes[0].nodeValue
+        rowdict['sourcename'] = row[0].childNodes[0].nodeValue
+        rowdict['dbfrequency'] = row[1].childNodes[0].nodeValue
+        rowdict['date'] = row[2].childNodes[0].nodeValue
+        rowdict['fluxdensity'] = row[3].childNodes[0].nodeValue
+        rowdict['fluxdensityerror'] = row[4].childNodes[0].nodeValue
+        rowdict['spectralindex'] = row[5].childNodes[0].nodeValue
         rowdict['spectralindexerror'] = row[6].childNodes[0].nodeValue
-        rowdict['error2']             = row[7].childNodes[0].nodeValue
-        rowdict['error3']             = row[8].childNodes[0].nodeValue
-        rowdict['error4']             = row[9].childNodes[0].nodeValue
-        rowdict['warning']            = row[10].childNodes[0].nodeValue
-        rowdict['notms']              = row[11].childNodes[0].nodeValue
-        rowdict['verbose']            = row[12].childNodes[0].nodeValue
-        rowdict['url']                = serviceurl + '?%s' % urlparams
+        rowdict['error2'] = row[7].childNodes[0].nodeValue
+        rowdict['error3'] = row[8].childNodes[0].nodeValue
+        rowdict['error4'] = row[9].childNodes[0].nodeValue
+        rowdict['warning'] = row[10].childNodes[0].nodeValue
+        rowdict['notms'] = row[11].childNodes[0].nodeValue
+        rowdict['verbose'] = row[12].childNodes[0].nodeValue
+        rowdict['url'] = serviceurl + '?%s' % urlparams
 
     return rowdict
 
@@ -665,6 +686,7 @@ def buildparams(sourcename, date, frequency):
     urlparams = urllib.urlencode(params)
 
     return urlparams
+
 
 def sanitize_string(name):
     """
@@ -686,51 +708,51 @@ def get_flux_density(frequency_text, flux_text):
 
 def to_jansky(flux_text):
     """
-    Convert a string extracted from an ASDM XML element to FluxDensity domain 
+    Convert a string extracted from an ASDM XML element to FluxDensity domain
     objects.
     """
-    flux_fn = lambda f : measures.FluxDensity(float(f),
-                                              measures.FluxDensityUnits.JANSKY)
+    flux_fn = lambda f: measures.FluxDensity(float(f),
+                                             measures.FluxDensityUnits.JANSKY)
     return get_atoms(flux_text, flux_fn)
 
 
 def to_hertz(freq_text):
     """
-    Convert a string extracted from an ASDM XML element to Frequency domain 
+    Convert a string extracted from an ASDM XML element to Frequency domain
     objects.
     """
-    freq_fn = lambda f : measures.Frequency(float(f),
-                                            measures.FrequencyUnits.HERTZ)
+    freq_fn = lambda f: measures.Frequency(float(f),
+                                           measures.FrequencyUnits.HERTZ)
     return get_atoms(freq_text, freq_fn)
 
 
 def get_atoms(text, conv_fn=lambda x: x):
     """
     Get the individual measurements from an ASDM element.
-    
+
     This function converts a CASA record from a linear space-separated string
     into a multidimensional list, using the dimension headers given at the
     start of the CASA record to determine the number and size of each
     dimension.
-    
+
     text - text from an ASDM element, with space-separated values
     fn - optional function converting a string to a user-defined type
     """
     values = string.split(text)
     # syntax is <num dimensions> <size dimension 1> <size dimension 2> etc.
     num_dimensions = int(values[0])
-    dimension_sizes = map(int, values[1:num_dimensions+1])
+    dimension_sizes = map(int, values[1:num_dimensions + 1])
 
     # find how may values are needed to form one complete 'entity'
     step_size = reduce(operator.mul, dimension_sizes)
-    # idx holds the index of the first value for each entity    
-    idx = len(dimension_sizes)+1
+    # idx holds the index of the first value for each entity
+    idx = len(dimension_sizes) + 1
 
     results = []
     while idx < len(values):
-        # get our complete entity as a linear list of strings, ready to be 
+        # get our complete entity as a linear list of strings, ready to be
         # parcelled up into dimensions
-        data = values[idx:idx+step_size]
+        data = values[idx:idx + step_size]
         # convert the values using the given function, eg. from string to Jy
         data = map(conv_fn, data)
         # group the values into dimensions using the sizes in the header
@@ -740,6 +762,7 @@ def get_atoms(text, conv_fn=lambda x: x):
         idx = idx + step_size
 
     return results
+
 
 def grouper(n, iterable, fillvalue=None):
     """
@@ -778,7 +801,7 @@ def export_flux_from_result(results, context, filename='flux.csv'):
     Export flux densities from a set of results to a CSV file.
     """
     if type(results) is not types.ListType:
-        results = [results,]
+        results = [results, ]
     abspath = os.path.join(context.output_dir, filename)
 
     columns = ['ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'spix', 'comment']
