@@ -2700,7 +2700,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         descendingoutfreq = true;
       }
 
-      if (descendingfreq && !descendingoutfreq) {
+       //if (descendingfreq && !descendingoutfreq) {
+      if ((specmode=="channel" && descendingfreq==1) 
+          || (specmode!="channel" && (descendingfreq != descendingoutfreq))) { 
         // reverse the freq vector if necessary so the first element can be
         // used to set spectralCoordinates in all the cases.
         //
