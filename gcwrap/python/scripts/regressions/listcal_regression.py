@@ -770,7 +770,7 @@ prefix = regressionDir+'/test'+str(testNum)+'/'
 msname = prefix+"ngc4826.tutorial.ms"
 caltableName = prefix+"ngc4826.tutorial.16apr98.gcal"
 outputFilename = prefix+'listcal.ngc4826.default.out'
-standardFileName = localData + 'listcal.default.out'
+standardFileName = localData + 'listcal.default.out2'
 
 # Use existing data or load data from scratch?
 if (not lt.resetData([msname,caltableName], automate)):
@@ -820,7 +820,7 @@ print """
 prefix = regressionDir+'/test'+str(testNum)+'/'
 tstutl.maketestdir(prefix)
 outputFilename = prefix+'listcal.ngc4826.nondefault.out'
-standardFileName = localData + 'listcal.nondefault.out'
+standardFileName = localData + 'listcal.nondefault.out2'
 compareFilename = prefix + 'compare'
 
 default(listcal)
@@ -828,7 +828,7 @@ vis                 =     msname        #  Name of input visibility file
 caltable            = caltableName      #  Input calibration table to list
 field               = '1310+323'        #  Field name or index; ''==>all
 antenna             =   '3~5,10'        #  Antenna name or index; ''==>all; antenna='3'
-spw                 =        '0'        #  Spectral window and channel: ''==>all; spw='5:0~10'
+spw                 =        '4'        #  Spectral window and channel: ''==>all; spw='5:0~10'
 listfile            = outputFilename    #  Disk file to write output: ''==>to terminal
 pagerows            =          9        #  Rows per page
 go(listcal)

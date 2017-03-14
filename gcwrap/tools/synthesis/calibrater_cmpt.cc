@@ -43,7 +43,7 @@ using namespace casacore;
 namespace casac {
 
 // Hardwire which VI to use
-#define USEOLDVI true
+#define USEOLDVI false
 
 calibrater::calibrater() : 
   itsMS(0),
