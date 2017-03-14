@@ -1,4 +1,4 @@
-//# VisibilityIterator2.cc: Step through MeasurementEquation by visibility
+///# VisibilityIterator2.cc: Step through MeasurementEquation by visibility
 //# Copyright (C) 1996-2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -694,48 +694,120 @@ operator> (Double frequency, const SpectralWindowChannel & swc){
 class SpectralWindowChannels : public std::vector <SpectralWindowChannel>{
 public:
 
-    SpectralWindowChannels (size_t size)
-    : std::vector <SpectralWindowChannel> (size)
-    {}
-
-    const_iterator
-    lower_bound (Double frequency) const
+    SpectralWindowChannels (const Vector<Double> & frequencies,
+                            const Vector<Double> widths)
+    : std::vector <SpectralWindowChannel> ()
     {
-        const_iterator result = end();
+        reserve (frequencies.nelements());
 
-        for (const_iterator i = begin(); i != end(); i++){
+        // Use the passed frequencies and widths to fill out the values.
+        // The first indices of frequency are the channel numbers.
 
-            if (frequency <= i->getFrequency() + 0.5 * i->getWidth() &&
-                i->getFrequency() - 0.5 * i->getWidth() <= frequency){
-                result = i;
-                break;
+        int channel = 0;
+        iterator dst = begin();
+        Array<Double>::const_iterator frequency = frequencies.begin();
+        Array<Double>::const_iterator width = widths.begin ();
+        int nChannels = frequencies.size();
 
-            }
+        for (; channel < nChannels; ++ channel, ++ frequency, ++ width){
+            push_back (SpectralWindowChannel (channel, * frequency, * width));
         }
+
+        // Remember the positions of the highest and lowest entries and
+        // whether the channels are in order of increasing frequency.
+
+        increasingOrder_p = begin()->getFrequency() < rbegin()->getFrequency();
+
+        if (increasingOrder_p){
+            lowest_p =  0;
+            highest_p = ((int) size()) - 1;
+        } else {
+            lowest_p =  ((int) size()) - 1;
+            highest_p = 0;
+        }
+    }
+
+    double
+    getFrequency (int channel) const
+    {
+
+        ThrowIf (channel < 0 || channel >= (int) size(),
+                 String::format("Channel %d not in range [0,%d])", channel, size()-1));
+
+        double result = at (channel).getFrequency();
 
         return result;
     }
 
-    const_iterator
-    upper_bound (Double frequency) const
+    Slice
+    getIntersection (double lowerFrequency, double upperFrequency) const
     {
-        const_iterator result = end();
+        bool noIntersection =
+            at (lowest_p).getFrequency() - 0.5 * at(lowest_p).getWidth() > upperFrequency ||
+            at (highest_p).getFrequency() + 0.5 * at(highest_p).getWidth() < lowerFrequency;
 
-        for (const_iterator i = end() - 1; i >= begin(); i --){
-
-            if (frequency >= i->getFrequency() - 0.5 * i->getWidth() &&
-                frequency <= i->getFrequency() + 0.5 * i->getWidth()){
-                result = i;
-                break;
-
-            }
+        if (noIntersection){
+            return Slice (0,0); // sentinel value
         }
 
-        return result;
-    }
+        // Search for the left and right ends of the intersection which need to run.
+        // The above check for intersection should guarantee that one will be found so
+        // there's no need to check the iterator limits.
 
+        int increment = increasingOrder_p ? 1 : -1;
+
+        int left, right;
+
+        for (left = lowest_p;
+             at(left).getFrequency() + 0.5 * at(left).getWidth() < lowerFrequency;
+             left += increment){
+        }
+
+        for (right = highest_p;
+             at(right).getFrequency() - 0.5 * at(right).getWidth() > upperFrequency;
+             right -= increment){
+        }
+
+        // Slices can only go from upward so if the channel frequencies are in reverse
+        // order, swap them (i.e., (128, 1) --> (1, 128))
+
+        int a, b;
+        if (increasingOrder_p){
+            a = at (left).getChannel();
+            b = at (right).getChannel();
+        } else {
+            a = at (right).getChannel();
+            b = at (left).getChannel();
+        }
+
+        Slice s (a, b - a + 1); // (start, length)
+
+        return s;
+    }
 
 private:
+
+    int highest_p;
+    bool increasingOrder_p;
+    int lowest_p;
+
+//    const_iterator
+//    getExtreme (bool lowest) const {
+//
+//        const_iterator a = begin();
+//        const_iterator b = rbegin ();
+//
+//        if (! lowest){
+//            std::swap (a, b);
+//        }
+//
+//        if (a->getFrequency() < b->getFrequency()){
+//            return a;
+//        }
+//        else{
+//            return b;
+//        }
+//    }
 
 };
 
@@ -790,15 +862,6 @@ public:
         return result;
     }
 
-private:
-
-    typedef map<Int, const SpectralWindowChannels *> Map;
-        // spectralWindowId->SpectralWindowChannels *
-
-    Map map_p;
-    Int msId_p;
-    Int nBytes_p;
-
     void flush ()
     {
         // Delete all of the contained SpectralWindowChannels objects
@@ -809,6 +872,17 @@ private:
 
         map_p.clear();
     }
+
+
+private:
+
+    typedef map<Int, const SpectralWindowChannels *> Map;
+        // spectralWindowId->SpectralWindowChannels *
+
+    Map map_p;
+    Int msId_p;
+    Int nBytes_p;
+
 
 };
 
@@ -1158,7 +1232,7 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
 
             Int channelNumber = channels [i];
 
-            frequencies [i] = spectralWindowChannels [channelNumber].getFrequency ();
+            frequencies [i] = spectralWindowChannels.getFrequency (channelNumber);
         }
 
         return frequencies;
@@ -1178,7 +1252,7 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
 
         Int channelNumber = channels [i];
 
-        Double fO = spectralWindowChannels [channelNumber].getFrequency ();
+        Double fO = spectralWindowChannels.getFrequency (channelNumber);
             // Observed frequency
 
         Double fF = fromObserved (fO).getValue();
@@ -2092,48 +2166,7 @@ VisibilityIteratorImpl2::findChannelsInRange (Double lowerFrequency, Double uppe
              String::format ("No spectral window channel info for window=%d, ms=%d",
                             spectralWindow(), msId ()));
 
-    typedef SpectralWindowChannels::const_iterator Iterator;
-
-    Iterator first = spectralWindowChannels.begin();
-    Iterator last = spectralWindowChannels.end() - 1;
-
-    if (first->getFrequency() - 0.5 * first->getWidth() > upperFrequency ||
-        last->getFrequency() + 0.5 * last->getWidth() < lowerFrequency){
-
-        return Slice (0, 0); // value indicating no slice
-    }
-
-    // Find the first and last channels to include in the Slice.
-
-    Iterator lower = spectralWindowChannels.lower_bound (lowerFrequency);
-
-    if (lower ==  spectralWindowChannels.end()){
-
-        // The lower frequency is below the window so choose the lowest
-        // frequency as the start.
-
-        lower = spectralWindowChannels.begin();
-    }
-
-    Iterator upper = spectralWindowChannels.upper_bound (upperFrequency);
-
-    if (upper == spectralWindowChannels.end() && upper >= lower){
-
-        // The upper frequency is above the window so choose the highest
-        // freuqency as the end.
-
-        upper = spectralWindowChannels.end() - 1;
-    }
-
-    // Create a slice.  If the frequencies are running high to low then
-    // the increment needs to be -1; also length calculation needs to
-    // adjust.
-
-    Int increment = upper->getChannel() >= lower->getChannel() ? 1 : -1;
-    Int length = increment * (upper->getChannel() - lower->getChannel()) + 1;
-    Slice result (lower->getChannel(), length, increment);
-
-    return result;
+    return spectralWindowChannels.getIntersection(lowerFrequency, upperFrequency);
 }
 
 Int
@@ -2189,22 +2222,15 @@ VisibilityIteratorImpl2::getSpectralWindowChannels (Int msId, Int spectralWindow
     // Use the frequencies and widths to fill out a vector of SpectralWindowChannel
     // objects. (No: This array needs to be in order of increasing frequency.)  N.B.: If
     // frequencies are in random order (i.e., rather than reverse order) then all
-    // sorts of things will break elsewhere.
+    // sorts of things will break elsewhere.  Width also needs to be positive.
 
-    SpectralWindowChannels * result = new SpectralWindowChannels (frequencies.size());
+    SpectralWindowChannels * result = new SpectralWindowChannels (frequencies, widths);
     bool inOrder = true;
 
     for (Int i = 0; i < (int) frequencies.nelements(); i++){
-        (* result) [i] = SpectralWindowChannel (i, frequencies [i], widths [i]);
+        (* result) [i] = SpectralWindowChannel (i, frequencies [i], abs (widths [i]));
         inOrder = inOrder && (i == 0 || frequencies [i] > frequencies [i - 1]);
     }
-
-//    Don't try and do this; although it would be nice if the data was always ordered
-//    with increaing frequency, it causes lots of problems to try to transform the data.
-//
-//    if (! inOrder){
-//        sort (result->begin(), result->end());
-//    }
 
     // Sanity check for frequencies that aren't monotonically increasing/decreasing.
 
@@ -3159,6 +3185,7 @@ VisibilityIteratorImpl2::setFrequencySelections (FrequencySelections const& freq
     pendingChanges_p.setFrequencySelections (frequencySelections.clone ());
 
     channelSelectorCache_p->flush();
+    spectralWindowChannelsCache_p->flush();
 }
 
 void
