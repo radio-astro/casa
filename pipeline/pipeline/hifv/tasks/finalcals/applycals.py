@@ -26,6 +26,11 @@ class ApplycalsInputs(applycal.IFApplycalInputs):
 
     flagdetailedsum = basetask.property_with_default('flagdetailedsum', True)
     parang = basetask.property_with_default('parang', True)
+    field = basetask.property_with_default('field', '')
+    spw = basetask.property_with_default('spw', '')
+    intent = basetask.property_with_default('intent', '')
+    flagbackup = basetask.property_with_default('flagbackup', False)
+    calwt = basetask.property_with_default('calwt', False)
 
     def to_casa_args(self):
         d = super(ApplycalsInputs, self).to_casa_args()
