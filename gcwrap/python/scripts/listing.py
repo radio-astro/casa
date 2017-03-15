@@ -401,7 +401,8 @@ def resetData(msname, automate=True):
 
 def listcalFix(listcalOut):
     os.system('mv ' + listcalOut + ' ' + listcalOut + '.tmp')
-    os.system('tail -n +2 ' + listcalOut + '.tmp > ' + listcalOut)
+    #os.system('tail -n +2 ' + listcalOut + '.tmp > ' + listcalOut)
+    os.system('grep -v ^SpwID ' + listcalOut + '.tmp > ' + listcalOut)
     os.system('rm -f ' + listcalOut + '.tmp')
     return
 #=============================================================================
