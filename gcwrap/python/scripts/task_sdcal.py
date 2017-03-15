@@ -34,6 +34,7 @@ def sdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 
         if isinstance(infile,str) and os.path.exists(infile):
             # don't need scr col for this
+            cb.setvi(old=True)
             cb.open(filename=infile,compress=False,addcorr=True,addmodel=False)
             cb.selectvis(spw=spw, scan=scan, field=field)
         else:

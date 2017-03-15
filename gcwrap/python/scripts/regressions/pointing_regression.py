@@ -37,6 +37,7 @@ def pointing_reg():
         os.system("cp -r " + REPOSNAME+MODELIMAGE + " " + MYIMAGE);
         os.system("cp -r " + REPOSNAME+TEMPLATEEPJ + " " + MYTEMPLATEEPJ);
 
+    cb.setvi(old=True)  # force old VI2
     cb.open(MYMS);
 
     cb.selectvis(time=TOTALTIME);
