@@ -69,6 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        itsMaskType(""),
                                        itsPBMask(0.0),
 				       //itsMaskString(String("")),
+                                       itsIterDone(0.0),
 				       itsIsMaskLoaded(false)
   {
   }
@@ -220,7 +221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       setStartingModel();
 
       // Set up the mask too.
-      itsIterDone = itsLoopController.getIterDone();
+      itsIterDone += itsLoopController.getIterDone();
       setupMask();
 
  
