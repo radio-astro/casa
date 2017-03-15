@@ -94,7 +94,7 @@ class gaincal1_test(test_base):
         '''Gaincal 1a: Default values to create a gain table'''
         msgcal = self.msfile + '.gcal'
         reference = self.reffile + '.ref1a.gcal'
-        gaincal(vis=self.msfile, caltable=msgcal)
+        gaincal(vis=self.msfile, caltable=msgcal,uvrange='>0.0')
         self.assertTrue(os.path.exists(msgcal))
         
         # Compare the calibration table with a reference
@@ -106,7 +106,8 @@ class gaincal1_test(test_base):
         
         msgcal = self.msfile + '.field0.gcal'
         reference = self.reffile + '.ref2a.gcal'
-        gaincal(vis=self.msfile, caltable=msgcal, field='0', gaintype='G',solint='int',
+        gaincal(vis=self.msfile, caltable=msgcal, 
+                uvrange='>0.0',field='0', gaintype='G',solint='int',
                 combine='',refant='VA02')
         self.assertTrue(os.path.exists(msgcal))
 
@@ -131,7 +132,8 @@ class gaincal2_test(test_base):
         '''Gaincal 1b: Create a gain table for an MS with many spws'''
         msgcal = self.msfile + '.gcal'
         reference = self.reffile + '.ref1b.gcal'
-        gaincal(vis=self.msfile, caltable=msgcal, field='0,1',spw='0', gaintype='G',minsnr=2.0,
+        gaincal(vis=self.msfile, caltable=msgcal, 
+                uvrange='>0.0',field='0,1',spw='0', gaintype='G',minsnr=2.0,
                 refant='ANT5', solint='inf',combine='')
         self.assertTrue(os.path.exists(msgcal))
 
