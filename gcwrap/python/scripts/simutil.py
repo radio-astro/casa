@@ -2672,7 +2672,7 @@ class simutil:
             if qa.compare(incenter,"1Hz"): 
                 if (qa.quantity(incenter))['value']>=0:
                     model_specrefval=incenter
-                    model_specrefpix=floor(model_nchan*0.5)
+                    model_specrefpix=pl.floor(model_nchan*0.5)
                     model_restfreq=incenter
                     specref_replaced=True
                     if self.verbose: self.msg("setting central frequency to "+incenter,origin="setup model")
@@ -2683,8 +2683,6 @@ class simutil:
                     valid_modspec=True
             if not valid_modspec:
                 in_ia.close()
-                import pdb
-                pdb.set_trace()
                 self.msg("Unable to determine model frequency.  Valid 'incenter' parameter must be provided.",priority="error")
                 return False
 
@@ -2807,7 +2805,7 @@ class simutil:
         modelcsys.setreferencepixel(model_refpix,"direction")
         if self.verbose: 
             self.msg("sky model image direction = "+model_refdir,origin="setup model")
-            self.msg("sky model image increment = "+str(model_cell),origin="setup model")
+            self.msg("sky model image increment = "+str(model_cell[0]),origin="setup model")
 
         modelcsys.setspectral(refcode="LSRK",restfreq=model_restfreq)
         modelcsys.setreferencevalue(qa.convert(model_specrefval,modelcsys.units()[3])['value'],type="spectral")

@@ -228,7 +228,7 @@ def simobserve(
             model_refdir, coffs = util.average_direction(compdirs)
             model_specrefval = cl.getspectrum(0)['frequency']['m0']
             model_specrefpix = 0. # components-only doesn't do cube
-            # components don't yet support spectrum
+
             if util.isquantity(compwidth,halt=False):
                 model_width = compwidth
             else:
@@ -461,11 +461,12 @@ def simobserve(
                                        refval=[qa.tos(newlat),qa.tos(newlon)],
                                        refcode=newepoch)
                 modelcsys.setincrement([-cell0_rad,cell1_rad],'direction')
-                modelcsys.setreferencevalue(type="spectral",value=model_specrefval)
+                modelcsys.setreferencevalue(type="spectral",value=qa.convert(model_specrefval,'Hz')['value'])
                 modelcsys.setreferencepixel(type="spectral",value=model_specrefpix)
                 modelcsys.setrestfrequency(model_specrefval)
                 modelcsys.setincrement(type="spectral",value=compwidth)
                 csmodel.setcoordsys(modelcsys.torecord())
+
                 modelcsys.done()
                 cl.open(complist)
                 csmodel.setbrightnessunit("Jy/pixel")

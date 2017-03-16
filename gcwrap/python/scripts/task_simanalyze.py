@@ -292,13 +292,12 @@ def simanalyze(
             
             # modifymodel just collects info if skymodel==newmodel
             (model_refdir,model_cell,model_size,
-             model_nchan,model_center,model_width,
+             model_nchan,model_specrefval,model_specrefpix,model_width,
              model_stokes) = myutil.modifymodel(skymodel,skymodel,
                                               "","","","","",-1,
                                               flatimage=False)
             
             cell_asec=qa.convert(model_cell[0],'arcsec')['value']
-
 
         #####################################################################
         # clean if desired, use noisy image for further calculation if present
@@ -363,7 +362,7 @@ def simanalyze(
                         rawdata = tb.getcol("UVW")
                         tb.done()
                         maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                        psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
+                        psfsize = 0.3/qa.convert(qa.quantity(model_specrefval),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
                         minimsize = 8* int(psfsize/cell_asec)
                     elif dryrun:
                         minimsize = min(imsize)
@@ -410,10 +409,10 @@ def simanalyze(
                     aveant = pl.mean(diams)
                     # theoretical antenna beam size
                     import sdbeamutil
-                    pb_asec = sdbeamutil.primaryBeamArcsec(qa.tos(qa.convert(qa.quantity(model_center),'GHz')),aveant,(0.75 if aveant==12.0 else 0.0),10.0)
+                    pb_asec = sdbeamutil.primaryBeamArcsec(qa.tos(qa.convert(qa.quantity(model_specrefval),'GHz')),aveant,(0.75 if aveant==12.0 else 0.0),10.0)
                 elif dryrun:
                     aveant = 12.0
-                    pb_asec = pbcoeff*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
+                    pb_asec = pbcoeff*0.29979/qa.convert(qa.quantity(model_specrefval),'GHz')['value']/aveant*3600.*180/pl.pi
                 else:
                     raise Exception, tpmstoimage+" not found."
 
@@ -873,7 +872,7 @@ def simanalyze(
                     tb.done()
                     pl.box()
                     maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                    klam_m = 300/qa.convert(model_center,'GHz')['value']
+                    klam_m = 300/qa.convert(model_specrefval,'GHz')['value']
                     pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
                     pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
                     ax = pl.gca()
