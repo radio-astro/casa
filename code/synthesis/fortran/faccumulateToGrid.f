@@ -44,11 +44,13 @@ c      norm=0.0
       l_phaseGradOriginX=phNX/2 + 1
       l_phaseGradOriginY=phNY/2 + 1
 
+c     Currently returns 1.0
       cfArea = fGetCFArea(convFuncV, wVal, scaledSupport, 
      $     scaledSampling, off, convOrigin, cfShape,
      $     cfNX, cfNY, cfNP, cfNC)
 
-      cfArea=1.0 
+c      cfArea=complex(1.0, imag(cfArea))
+c      cfArea=1.0
       do iy=-scaledSupport(2),scaledSupport(2) 
          iloc(2)=nint(scaledSampling(2)*iy+off(2)-1)
          iCFPos(2)=iloc(2)+convOrigin(2)+1
@@ -182,11 +184,12 @@ c      norm=0.0
       l_phaseGradOriginX=phNX/2 + 1
       l_phaseGradOriginY=phNY/2 + 1
       
+c     Currently return 1.0
       cfArea = fGetCFArea(convFuncV, wVal, scaledSupport, 
      $     scaledSampling, off, convOrigin, cfShape,
      $     cfNX, cfNY, cfNP, cfNC)
 
-      cfArea=1.0
+c      cfArea=1.0
 c$$$!$OMP PARALLEL 
 c$$$!$OMP& DEFAULT(NONE) 
 c$$$!$OMP& FIRSTPRIVATE(grid)
@@ -237,6 +240,13 @@ c$$$            endif
             
             norm = norm + (wt)
 
+c$$$            if ((finitePointingOffset .eq. 1) .and.
+c$$$     $           (doPSFOnly .eq. 0)) then
+            if (finitePointingOffset .eq. 1) then
+               wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX,
+     $              iloc(2) + l_phaseGradOriginY)
+            endif
+
 c$$$            if (isnan(abs(wt))) then
 c$$$               write(*,*) iCFPos(1), iCFPos(2), iCFPos(3), iCFPos(4),
 c$$$     $              cfArea,norm
@@ -244,12 +254,6 @@ c$$$               return
 c$$$            endif
             
             
-c$$$            if ((finitePointingOffset .eq. 1) .and.
-c$$$     $           (doPSFOnly .eq. 0)) then
-            if (finitePointingOffset .eq. 1) then
-               wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX,
-     $              iloc(2) + l_phaseGradOriginY)
-            endif
             
             grid(l_igrdpos(1), l_igrdpos(2), l_igrdpos(3), l_igrdpos(4)) 
      $           =grid(l_igrdpos(1), l_igrdpos(2), 
@@ -279,6 +283,8 @@ c$$$!$OMP END PARALLEL
       integer ix,iy
       data iloc/1,1,1,1/, iCFPos/1,1,1,1/
       
+      fGetCFArea = 1.0
+      return
       area=0.0
 
       do iy=-support(2), support(2)

@@ -114,7 +114,6 @@ namespace casa{
     casacore::Int getConvSize() {return 0;};
     casacore::Int getOversampling() {return 4;};
     void setConvSize(const casacore::Int) {};
-    void setOversampling(const casacore::Int) {};
     casacore::Float getConvWeightSizeFactor() {return 1.0;};
   };
   };

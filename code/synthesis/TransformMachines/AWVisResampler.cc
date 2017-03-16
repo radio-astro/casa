@@ -169,8 +169,8 @@ namespace casa{
 
     if (wVal > 0.0) 
       {
-    	cfcell=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])));
-    	CFCell& cfO=cfb(fndx,wndx,mNdx[ipol][mRow]);
+	cfcell=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])));
+	CFCell& cfO=cfb(fndx,wndx,mNdx[ipol][mRow]);
 	convFuncV = &(*cfO.getStorage());
 	support(0)=support(1)=cfO.xSupport_p;
     	//	convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
@@ -179,8 +179,8 @@ namespace casa{
       }
     else
       {
-    	cfcell=&(*(cfb.getCFCellPtr(fndx,wndx,conjMNdx[ipol][mRow])));
-    	CFCell& cfO=cfb(fndx,wndx,conjMNdx[ipol][mRow]);
+	cfcell=&(*(cfb.getCFCellPtr(fndx,wndx,conjMNdx[ipol][mRow])));
+	CFCell& cfO=cfb(fndx,wndx,conjMNdx[ipol][mRow]);
 	convFuncV = &(*cfO.getStorage());
 	support(0)=support(1)=cfO.xSupport_p;
     	//	convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,conjMNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
@@ -203,7 +203,7 @@ namespace casa{
 	Array<Complex>  tt=SynthesisUtils::getCFPixels(cfb.getCFCacheDir(), cfcell->fileName_p);
 	cfcell->setStorage(tt);
 
-	cerr << (cfcell->isRotationallySymmetric_p?"o":"+");
+	//cerr << (cfcell->isRotationallySymmetric_p?"o":"+");
 
 	// No rotation necessary if the CF is rotationally symmetric
 	if (!(cfcell->isRotationallySymmetric_p))
@@ -213,6 +213,7 @@ namespace casa{
 	    // is greater than paTolerance.
 	    SynthesisUtils::rotate2(vbPA, *baseCFC, *cfcell, paTolerance_p);
 	  }
+	convFuncV = &(*cfcell->getStorage());
       }
 
     //cfShape.reference(cfcell->cfShape_p);
@@ -395,7 +396,7 @@ namespace casa{
 	log_l << "Computing phase gradiant for pointing offset " 
 	      << pointingOffset << cfShape << " " << cached_phaseGrad_p.shape() 
 	      << "(SPW: " << spwID << " Field: " << fieldId << ")"
-	      << LogIO::POST;
+	      << LogIO::DEBUGGING << LogIO::POST;
 	Int nx=cfShape(0), ny=cfShape(1);
 	Double grad;
 	Complex phx,phy;
@@ -637,7 +638,8 @@ namespace casa{
 					      convFuncV=getConvFunc_p(vbs.paQuant_p.getValue("rad"),
 								      cfShape, support,muellerElement,
 								      cfb, dataWVal, cfFreqNdx,
-								      wndx, mNdx, conjMNdx, ipol,  mCols);
+								      wndx, mNdx, conjMNdx,
+								      ipol,  mCols);
 					    }
 					  catch (SynthesisFTMachineError& x)
 					    {
@@ -824,8 +826,10 @@ namespace casa{
 			  {
 			    convFuncV = getConvFunc_p(vbs.paQuant_p.getValue("rad"),
 						      cfShape, support, muellerElement,
-						      cfb, dataWVal, fndx, wndx, mNdx,
-						      conjMNdx, ipol, mCol);
+						      cfb, dataWVal, fndx, wndx,
+						      //mNdx,conjMNdx,
+						      conjMNdx, mNdx,
+						      ipol, mCol);
 			  }
 			catch (SynthesisFTMachineError& x)
 			  {
@@ -859,7 +863,8 @@ namespace casa{
 #include <synthesis/TransformMachines/FortranizedLoopsFromGrid.cc>
 
 		      }
-		    visCube(ipol,ichan,irow)=nvalue/norm[ipol]; // Goes with FortranizedLoopsFromGrid.cc
+		    // Zero divided by zero is NaN (IEEE standard)
+		    if (norm[ipol] != Complex(0.0)) visCube(ipol,ichan,irow)=nvalue/norm[ipol]; // Goes with FortranizedLoopsFromGrid.cc
 		    //		    visCube(ipol,ichan,irow)=nvalue; // Goes with FortranizedLoopsFromGrid.cc
 		    //if (casa::isNaN(nvalue))
 		      // {

@@ -111,7 +111,6 @@ namespace casa{
     virtual casacore::Int getConvSize() = 0;
     virtual void setConvSize(const casacore::Int val) = 0;
     virtual casacore::Int getOversampling() = 0;
-    virtual void setOversampling(const casacore::Int val) = 0;
 
     virtual casacore::Float getConvWeightSizeFactor() = 0;
     virtual casacore::Float getSupportThreshold() = 0;

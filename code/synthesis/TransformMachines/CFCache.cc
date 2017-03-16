@@ -395,7 +395,11 @@ namespace casa{
 		    muellerElements[ii].resize(1);
 		    muellerElements[ii][0]=mList[ii];
 		  }
-		Double wIncr; miscInfo.get("WIncr", wIncr);
+		
+		// In the absense of evidence, assume that the CFs are
+		// have no wterm.
+		Double wIncr=0;
+		if (miscInfo.isDefined("WIncr")) miscInfo.get("WIncr", wIncr);
 		cfb->resize(wIncr,0.0,wList,fList,
 			    muellerElements,muellerElements,muellerElements,muellerElements);
 		cfb->setPA(paList_p[ipa]);

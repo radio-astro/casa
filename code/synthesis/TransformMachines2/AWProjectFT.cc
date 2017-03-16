@@ -144,7 +144,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
     //if (cfBufferSize > 0) apertureFunction->setConvSize(cfBufferSize);
-    //if (cfOversampling > 0) apertureFunction->setOversampling(cfOversampling);
     //
     // Selectively switch off CFTerms.
     //

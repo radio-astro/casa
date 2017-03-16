@@ -59,7 +59,7 @@ C geometric effects like the w-term)
 C
             wt = convFuncV(iCFPos(1), iCFPos(2), 
      $           iCFPos(3), iCFPos(4))
-            if (wVal > 0.0)  wt = conjg(wt)
+            if (wVal .le. 0.0)  wt = conjg(wt)
             
             norm = norm + (wt)
 C
@@ -89,6 +89,7 @@ c$$$            endif
 
             nvalue = nvalue + wt * grid(l_igrdpos(1), l_igrdpos(2), 
      $           l_igrdpos(3), l_igrdpos(4))
+
 c$$$            write (*,*) (nvalue), 
 c$$$     $           (wt),
 c$$$     $           (grid(l_igrdpos(1), l_igrdpos(2), 

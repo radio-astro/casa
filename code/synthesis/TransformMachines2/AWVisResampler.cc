@@ -214,6 +214,7 @@ namespace casa{
 	    // is greater than paTolerance.
 	    SynthesisUtils::rotate2(vbPA, *baseCFC, *cfcell, paTolerance_p);
 	  }
+	convFuncV = &(*cfcell->getStorage());
       }
 
     //cfShape.reference(cfcell->cfShape_p);
@@ -397,7 +398,7 @@ namespace casa{
 	log_l << "Computing phase gradiant for pointing offset " 
 	      << pointingOffset << cfShape << " " << cached_phaseGrad_p.shape() 
 	      << "(SPW: " << spwID << " Field: " << fieldId << ")"
-	      << LogIO::POST;
+	      << LogIO::DEBUGGING << LogIO::POST;
 	Int nx=cfShape(0), ny=cfShape(1);
 	Double grad;
 	Complex phx,phy;
@@ -439,6 +440,15 @@ namespace casa{
 
   //   return *this;
   // }
+
+  // CFB::initPolMaps(polMap,conjPolMap) sets the internal maps of CFB
+  //
+  // AWP::findCF() --> cfCache->initPolMap(...,...) --> cfb->initPolMaps(...,...)
+  //
+  // AWVR extracts polMap from CFB.
+  // Same CF is extracted for gridding and de-gridding.  CF* used in the gridding loops.
+  // getConvFunc_p() ensures the jugglery needed for AW CFs
+
   //
   //-----------------------------------------------------------------------------------
   // Template implementation for DataToGrid
@@ -579,8 +589,6 @@ namespace casa{
 		      // else  cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan);
 		      Int cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan,vbs.conjBeams_p);
 
-		      //		      cerr << "G: " << cfFreqNdx << " " << wndx << " " << ichan << " " << vbSpw << " " << freq[ichan] << endl;
-
 		      runTimeG3_p += timer_p.real();
 		      
 		      Float s;
@@ -640,7 +648,7 @@ namespace casa{
 				      norm = 0.0;
 				      // Loop over all relevant elements of the Mueller matrix for the polarization
 				      // ipol.
-				      				      Vector<int> conjMRow = conjMNdx[ipol];
+				      Vector<int> conjMRow = conjMNdx[ipol];
 				      //for (uInt mCols=0;mCols<conjMNdx[ipol].nelements(); mCols++)
 
 				      // ipol determines the targetIMPol.  Each targetIMPol gets a row of CFs (mRow).
@@ -860,8 +868,10 @@ runTimeG7_p += timer_p.real();
 			  {
 			    convFuncV = getConvFunc_p(vbs.paQuant_p.getValue("rad"),
 						      cfShape, support, muellerElement,
-						      cfb, dataWVal, fndx, wndx, mNdx,
-						      conjMNdx, ipol, mCol);
+						      cfb, dataWVal, fndx, wndx,
+						      //mNdx,conjMNdx,
+						      conjMNdx,mNdx,
+						      ipol, mCol);
 			  }
 			catch (SynthesisFTMachineError& x)
 			  {
@@ -937,30 +947,16 @@ runTimeG7_p += timer_p.real();
 			 //       }
 			 //   }
 			 // //--------------------------------------------------------------------------------
-
-			 //		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
 		      }
-		    visCube(ipol,ichan,irow)=nvalue/norm[ipol]; // Goes with FortranizedLoopsFromGrid.cc
-		    //if (casa::isNaN(nvalue))
-		      // {
-		      // 	cout << ipol << "," << ichan << "," << irow << "," << nvalue << "," << nDataChan << "," << nGridChan << "," << achan << endl;
-		      // 	//exit(0);
-		      // }
-		    
-		    //visCube(ipol,ichan,irow)=nvalue*conj(phasor)/norm(apol); // Goes with C++ loops
-		    // cerr << ipol << " " << ichan << " " << irow << " " << nvalue << " " << norm(apol) << " " << pointingOffset 
-		    // 	 << " " << qualifier_p << " " << ttt << " " << scaledSupport << endl;
+		    if (norm[ipol] != Complex(0.0)) visCube(ipol,ichan,irow)=nvalue/norm[ipol]; // Goes with FortranizedLoopsFromGrid.cc
 		}
 	      }
 	    }
 	  }
 	}
       }
-      //	junk++;
     }
   } // End row-loop
-    // cerr << endl;
-    // if (junk==20) exit(0);
 }
 //
 //-----------------------------------------------------------------------------------

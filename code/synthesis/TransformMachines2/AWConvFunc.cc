@@ -492,11 +492,9 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 		    CoordinateSystem ftCoords=cs_l;
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 		    CountedPtr<CFCell> cfCellPtr;
-		    TableRecord dummyMiscInfo;
 		    cfWtb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-
 				    freqValues(inu), wValues(iw), muellerElements(imx)(imy),
-				    ftCoords, dummyMiscInfo, samplingWt, xSupportWt, ySupportWt,
+				    ftCoords, samplingWt, xSupportWt, ySupportWt,
 				    String(""), // Default ==> don't set it in the CFCell
 				    conjFreq, conjPol[0]);
 		    
@@ -539,7 +537,7 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 		    ftRef(1)=cfBuf.shape()(1)/2.0;
 
 		    //tim.mark();
-		    cfNorm=cfWtNorm=0.0;
+		    cfNorm=cfWtNorm=1.0;
 		    //if ((iw == 0) && (!isDryRun))
 		    if (!isDryRun)
 		      {
@@ -559,9 +557,8 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 		    ftCoords=cs_l;
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
 		    cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-
 				  freqValues(inu), wValues(iw), muellerElements(imx)(imy),
-				  ftCoords, dummyMiscInfo, sampling, xSupport, ySupport,
+				  ftCoords, sampling, xSupport, ySupport,
 				  String(""), // Default ==> Don't set in the CFCell
 				  conjFreq, conjPol[0]);
 		    cfCellPtr=cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
@@ -1029,14 +1026,12 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 		      // cfwtb_p->setParams(convSize,convSize,cfb_cs,s,
 		      // 			 convSize, convSize, 
 		      // 			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
-		      TableRecord dummyMiscInfo;
 		      cfb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
-				       
 		      		       freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
-				       cfb_cs, dummyMiscInfo, s, convSize, convSize );
+				       cfb_cs, s, convSize, convSize);
 		      cfwtb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
 		      			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
-					 cfb_cs,dummyMiscInfo, s, convSize, convSize );
+					 cfb_cs, s, convSize, convSize);
 		      pm.update((Double)cfDone++);
 		    }
 		  }
@@ -1084,7 +1079,7 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
   //
   //----------------------------------------------------------------------
   //
-  Bool AWConvFunc::setUpCFSupport(Array<Complex>& func, Int& xSupport, Int& ySupport,
+  Bool AWConvFunc::setUpCFSupport(Array<Complex>& cffunc, Int& xSupport, Int& ySupport,
 				  const Float& sampling, const Complex& peak)
   {
     LogIO log_l(LogOrigin("AWConvFunc2", "setUpCFSupport[R&D]"));
@@ -1094,13 +1089,13 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
     // they are same for all poln. planes).
     //
     xSupport = ySupport = -1;
-    Int convFuncOrigin=func.shape()[0]/2, R; 
+    Int convFuncOrigin=cffunc.shape()[0]/2, R; 
     Bool found=false;
     Float threshold;
     // Threshold as a fraction of the peak (presumed to be the center pixel).
     if (abs(peak) != 0) threshold = real(abs(peak));
     else 
-      threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
+      threshold   = real(abs(cffunc(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
     //threshold *= aTerm_p->getSupportThreshold();
     threshold *= 1e-3;
@@ -1114,7 +1109,7 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
     //
     // Timer tim;
     // tim.mark();
-    if ((found = AWConvFunc::awFindSupport(func,threshold,convFuncOrigin,R)))
+    if ((found = AWConvFunc::awFindSupport(cffunc,threshold,convFuncOrigin,R)))
       xSupport=ySupport=Int(0.5+Float(R)/sampling)+1;
     // tim.show("findSupport:");
 
@@ -1683,14 +1678,8 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 	  }
 
 	//tim.mark();
-	// if (!isDryRun)
-	  {
-	    if (miscInfo.wValue > 0)
-	      {
-		wTerm.applySky(cfBufMat, cellSize, miscInfo.wValue, cfBuf.shape()(0));///4);
-		//cerr << cellSize << " " << wValue << endl;
-	      }
-	  }
+	if (miscInfo.wValue > 0)
+	  wTerm.applySky(cfBufMat, cellSize, miscInfo.wValue, cfBuf.shape()(0));///4);
 
 	IPosition PolnPlane(4,0,0,0,0),
 	  pbShape(4, cfBuf.shape()(0), cfBuf.shape()(1), 1, 1);

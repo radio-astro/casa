@@ -73,7 +73,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nx=screen.shape()(0), ny=screen.shape()(1);
     Int convOrig=nx/2;
     Float xpart, psScale_local=psScale_p;
-    psScale_local = 0.001;
 #ifdef _OPENMP
     Int Nth=max(omp_get_max_threads()-2,1);
 #endif

@@ -153,7 +153,6 @@ namespace casa{
     //   return defaultConvSize;
     // };
 
-    void setOversampling(const casacore::Int os) {cachedOverSampling_p=os;};
     virtual casacore::Int getOversampling() {return cachedOverSampling_p;}
     // {
     //   casacore::Int defaultOverSampling=OVERSAMPLING;

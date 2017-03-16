@@ -207,9 +207,16 @@ namespace casa{
     int conjPoln; miscInfo.get("ConjPoln", conjPoln);
     String telescopeName; miscInfo.get("TelescopeName", telescopeName);
     float diameter; miscInfo.get("Diameter", diameter);
-    bool isRotationallySymmetric; miscInfo.get("OpCode",isRotationallySymmetric);
+    // In the absense of evidence, assume that users are sensible and
+    // are using AWProjection where it is really need it and not for
+    // using it as a replacement for rotatially symmetric stuff.  So
+    // by default, the CFs are assumed to be rotationally asymmetric.
+    bool isRotationallySymmetric=True; 
+    
+    if (miscInfo.isDefined("OpCode"))
+	miscInfo.get("OpCode",isRotationallySymmetric);
 
-    RigidVector<Int,3> ndx=setParams(inu, iw, ipx, ipy, freqValue, wValue, muellerElement, cs, miscInfo,
+    RigidVector<Int,3> ndx=setParams(inu, iw, ipx, ipy, freqValue, wValue, muellerElement, cs,
 				     sampling, xSupport, ySupport, fileName, conjFreq, conjPoln, telescopeName,
 				     diameter);
     cfCells_p(ndx(0),ndx(1),ndx(2))->isRotationallySymmetric_p = isRotationallySymmetric;
@@ -218,11 +225,8 @@ namespace casa{
   RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& /*ipx*/, const Int& /*ipy*/,
 					  const Double& freqValue,
 					  const Double& wValue,
-
 					  const Int& muellerElement,
-
 					  CoordinateSystem& cs,
-					  const TableRecord& miscInfo,
 					  Float& sampling,
 					  Int& xSupport, Int& ySupport, 
 					  const String& fileName,
@@ -453,7 +457,8 @@ namespace casa{
     LogIO log_l(LogOrigin("CFBuffer","show[R&D]"));
 
     if (Mesg != NULL) os << Mesg << endl;
-    os << "Shapes: " << cfCells_p.shape() << endl;
+    os << "---------------------------------------------------------" << endl
+       << "Shapes: " << cfCells_p.shape() << endl;
     for (Int i=0;i<cfCells_p.shape()(0);i++)
       for (Int j=0;j<cfCells_p.shape()(1);j++)
 	for (Int k=0;k<cfCells_p.shape()(2);k++)
@@ -462,6 +467,7 @@ namespace casa{
 	    cfCells_p(i,j,k)->show(Mesg, os);
 	    os << "Pointing offset: " << pointingOffset_p << endl;
 	  }
+    os << "---------------------------------------------------------" << endl;
   }
 
   void CFBuffer::makePersistent(const char *dir, const char *cfName)
