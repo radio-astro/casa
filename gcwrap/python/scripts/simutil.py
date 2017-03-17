@@ -1697,6 +1697,7 @@ class simutil:
         Transverse Mercator Projection
         conversion of grid coords n,e to geodetic coords
         revised subroutine of t. vincenty  feb. 25, 1985
+        orig. source: https://www.ngs.noaa.gov/TOOLS/program_descriptions.html
         converted from Fortran R Indebetouw Jan 2009
         ********** symbols and definitions ***********************
         latitude positive north, longitude positive west.
@@ -1918,6 +1919,7 @@ class simutil:
         longitude and latitude (in radians)
 
         converted from Fortran by R. Indebetouw Jan 2009.
+        orig. source: https://www.ngs.noaa.gov/TOOLS/program_descriptions.html
         ri also added other datums and ellipsoids in a helper function
         
         header from original UTMS fortran program:
@@ -2073,6 +2075,7 @@ class simutil:
         The ITRF frame used is not the official ITRF, just a right
         handed Cartesian system with X going through 0 latitude and 0 longitude,
         and Z going through the north pole.  
+        orig. source: http://www.oc.nps.edu/oc2902w/coord/llhxyz.htm
         """
 
         # geodesy/NGS/XYZWIN/
@@ -2104,6 +2107,7 @@ class simutil:
         Elevation is measured relative to the closest point to 
         the (latitude, longitude) on the WGS84 reference
         ellipsoid.
+        orig. source: http://www.iausofa.org/2013_1202_C/sofa/gc2gde.html
         """
         # http://www.iausofa.org/
         # http://www.iausofa.org/2013_1202_C/sofa/gc2gde.html
