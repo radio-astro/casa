@@ -142,6 +142,7 @@ def pointcal(vis=None,model=None,caltable=None,
 	#Python script
 	#parameter_printvalues(arg_names,arg_values,arg_types)
 	try:
+		cb.setvi(old=True,quiet=True)
 		cb.open(vis)
 		cb.reset()
 

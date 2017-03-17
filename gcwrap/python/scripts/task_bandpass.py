@@ -34,7 +34,13 @@ def bandpass(vis=None,caltable=None,
 		mycb.reset()
 
 		# Do data selection according to selectdata
+		casalog.post("NB: bandpass automatically excludes auto-correlations.")
 		if (selectdata):
+			# insist no ACs
+			if len(msselect)>0:
+				msselect='('+msselect+') && ANTENNA1!=ANTENNA2'
+			else:
+				msselect='ANTENNA1!=ANTENNA2'
 			# pass all data selection parameters in as specified
 			mycb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
 				       intent=intent, observation=str(observation),
@@ -43,9 +49,10 @@ def bandpass(vis=None,caltable=None,
 		else:
 			# selectdata=F, so time,scan,baseline,uvrange,msselect=''
 			# using spw and field specifications only
+			# also insist no ACs
 			mycb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
 				       observation='', baseline='',uvrange='',chanmode='none',
-				       msselect='');
+				       msselect='ANTENNA1!=ANTENNA2');
 
 
 		# set the model, if specified

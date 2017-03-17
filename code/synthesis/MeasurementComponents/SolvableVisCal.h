@@ -444,6 +444,9 @@ protected:
   // Set matrix channelization according to a VisSet
   virtual void setSolveChannelization(VisSet& vs);
 
+  // Convert Hz to Ch in fsolint
+  virtual void convertHzToCh();
+
   // Calculate chan averaging bounds
   virtual void setFracChanAve();
 
