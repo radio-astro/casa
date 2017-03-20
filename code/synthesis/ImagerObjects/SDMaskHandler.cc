@@ -1419,9 +1419,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     // Below corresponds to createThresholdMask in Amanda's Python code.
-    // branch out if just need to grow mask, obviously no 'grow' mask for the beginning of the first iteration
-    // but how should detect if it is the first iteration... the original python prototype code has
-    // a seperate createThresholdMask... save a state in iterBot or get ncycle info from there?
     LatticeExpr<Float> themask; 
     if (minBeamFrac > 0.0 ) {
         // do pruning...
@@ -1534,7 +1531,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        Int niter=100; 
        if(debug2) {
          PagedImage<Float> beforeBinaryDilationIm(res.shape(), res.coordinates(),"tmpBeforeBinaryDilation-"+String::toString(iterdone)+".im");
-         beforeBinaryDilationIm.copyData(constraintMaskImage);
+         //beforeBinaryDilationIm.copyData(constraintMaskImage);
+         beforeBinaryDilationIm.copyData(mask);
        }
        binaryDilation(mask, se, niter, constraintMask, dogrow, prevmask); 
        if(debug2) {
