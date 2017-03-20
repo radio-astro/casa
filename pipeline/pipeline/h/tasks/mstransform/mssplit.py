@@ -201,11 +201,8 @@ class MsSplit(basetask.StandardTaskTemplate):
 
         inputs = self.inputs
 
-        # If replace is enabled then delete the original MS, rename the
-        # the new MS to the old name and reset the output name to the
-        # originalname.
-        # There seems to be a rerendering issue with replace. Remove the
-        # original file instead.
+        # There seems to be a rerendering issue with replace. Fir now just
+        # remove the old file.
         if inputs.replace:
             shutil.rmtree(result.vis)
             #shutil.move (result.outputvis, result.vis)
@@ -219,7 +216,6 @@ class MsSplit(basetask.StandardTaskTemplate):
         for ms in observing_run.measurement_sets:
             LOG.debug('Setting session to %s for %s', self.inputs.ms.session, ms.basename)
             ms.session = self.inputs.ms.session
-            #ms.is_imaging_ms = True
 
         # Note there will be only 1 MS in the temporary observing run structure
         result.ms = observing_run.measurement_sets[0]
@@ -254,25 +250,12 @@ class MsSplitResults(basetask.Results):
         if self.ms:
             if parentms is not None:
                 LOG.info('Replace {} in context'.format(self.ms.name))
-                print 'BEFORE MSES ', len(target.measurement_sets)
                 del target.measurement_sets[parentms]
-                print 'AFTER MSES ', len(target.measurement_sets)
                 target.add_measurement_set(self.ms)
-                print 'FINAL MSES ', len(target.measurement_sets)
-                #try:
-                    #del context.callibrary.active[self.ms.name]
-                #except:
-                    #pass
-                #calto = callibrary.CalTo(vis=self.ms.name)
-                #LOG.info('Reregistering {} with callibrary'.format(self.ms.name))
-                #context.callibrary.add(calto, [])
 
             else:
                 LOG.info('Adding {} to context'.format(self.ms.name))
                 target.add_measurement_set(self.ms)
-                #calto = callibrary.CalTo(vis=self.ms.name)
-                #LOG.info('Registering {} with callibrary'.format(self.ms.name))
-                #context.callibrary.add(calto, [])
 
     def __str__(self):
         # Format the MsSplit results.
