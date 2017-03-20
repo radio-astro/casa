@@ -41,8 +41,6 @@
 
 namespace casa {
 
-template<class T> map<casacore::uInt, T ( *)(const casacore::Array<T>&)> ImageCollapser<T>::_funcMap;
-
 template<class T> ImageCollapser<T>::ImageCollapser(
     const casacore::String & aggString, const SPCIIT image,
     const casacore::Record * const regionRec,
@@ -341,7 +339,6 @@ template<class T> void ImageCollapser<T>::_doLowPerf(
         );
         auto mCopy = reorderArray(maskCopy, newOrder);
         tmpIm.attachMask(ArrayLattice<Bool>(mCopy));
-        
     }
 }
 
@@ -390,17 +387,16 @@ template<class T> LatticeStatsBase::StatisticsTypes ImageCollapser<T>::_getStats
     return lattStatType;
 }
 
-template<class T> void ImageCollapser<T>::_zeroNegatives(casacore::Array<T>& arr) {
-    typename casacore::Array<T>::iterator iter = arr.begin();
+template<class T> void ImageCollapser<T>::_zeroNegatives(Array<T>& arr) {
+    auto iter = arr.begin();
     if (isComplex(whatType(&(*iter))) || allGE(arr, (T)0)) {
         return;
     }
-    typename casacore::Array<T>::iterator end = arr.end();
-    while (iter != end) {
+    auto end = arr.end();
+    for (; iter != end; ++iter) {
         if (*iter < 0) {
             *iter = 0;
         }
-        iter++;
     }
 }
 
@@ -487,25 +483,6 @@ template<class T> void ImageCollapser<T>::_doMedian(
     if (outMask) {
         outImage.attachMask(ArrayLattice<Bool>(*outMask));
     }
-}
-
-template<class T>
-const map<uInt, T ( *)(const Array<T>&)>&
-ImageCollapser<T>::_getFuncMap() {
-    if (_funcMap.size() == 0) {
-        _funcMap[(casacore::uInt)ImageCollapserData::MAX] = casacore::max;
-        _funcMap[(casacore::uInt)ImageCollapserData::MEAN] = casacore::mean;
-        _funcMap[(casacore::uInt)ImageCollapserData::MEDIAN] = casacore::median;
-        _funcMap[(casacore::uInt)ImageCollapserData::MIN] = casacore::min;
-        _funcMap[(casacore::uInt)ImageCollapserData::RMS] = casacore::rms;
-        _funcMap[(casacore::uInt)ImageCollapserData::SQRTSUM] = casacore::sum;
-        _funcMap[(casacore::uInt)ImageCollapserData::SQRTSUM_NPIX] = casacore::sum;
-        _funcMap[(casacore::uInt)ImageCollapserData::SQRTSUM_NPIX_BEAM] = casacore::sum;
-        _funcMap[(casacore::uInt)ImageCollapserData::STDDEV] = casacore::stddev;
-        _funcMap[(casacore::uInt)ImageCollapserData::SUM] = casacore::sum;
-        _funcMap[(casacore::uInt)ImageCollapserData::VARIANCE] = casacore::variance;
-    }
-    return _funcMap;
 }
 
 }

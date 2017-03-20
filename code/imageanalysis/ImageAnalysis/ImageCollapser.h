@@ -72,8 +72,6 @@ public:
     // perform the collapse and return the resulting image.
     SPIIT collapse() const;
 
-	static const map<casacore::uInt, T (*)(const casacore::Array<T>&)>* funcMap();
-
 	casacore::String getClass() const { const static casacore::String name = "ImageCollapser"; return name; }
 
 protected:
@@ -91,8 +89,6 @@ private:
 	casacore::Bool _invertAxesSelection;
 	casacore::IPosition _axes;
     ImageCollapserData::AggregateType _aggType;
-
-	static map<casacore::uInt, T (*)(const casacore::Array<T>&)> _funcMap;
 
     // disallow default constructor
     ImageCollapser();
@@ -123,9 +119,8 @@ private:
 
     LatticeStatsBase::StatisticsTypes _getStatsType() const;
 
-	static void _zeroNegatives(casacore::Array<T>& arr);
+    static void _zeroNegatives(casacore::Array<T>& arr);
 
-	static const map<casacore::uInt, T (*)(const casacore::Array<T>&)>& _getFuncMap();
 };
 }
 
