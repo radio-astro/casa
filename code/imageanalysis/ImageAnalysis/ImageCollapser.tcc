@@ -80,7 +80,7 @@ template<class T> ImageCollapser<T>::ImageCollapser(
 }
 
 template<class T> SPIIT ImageCollapser<T>::collapse() const {
-    SPCIIT subImage = SubImageFactory<T>::createSubImageRO(
+    auto subImage = SubImageFactory<T>::createSubImageRO(
         *this->_getImage(), *this->_getRegion(), this->_getMask(),
         this->_getLog().get(), casacore::AxesSpecifier(), this->_getStretch()
     );
@@ -89,28 +89,28 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
         ImageMask::isAllMaskFalse(*subImage),
         "All selected pixels are masked"
     );
-    casacore::CoordinateSystem outCoords = subImage->coordinates();
-    casacore::Bool hasDir = outCoords.hasDirectionCoordinate();
-    casacore::IPosition inShape = subImage->shape();
+    auto outCoords = subImage->coordinates();
+    auto hasDir = outCoords.hasDirectionCoordinate();
+    auto inShape = subImage->shape();
     if (_aggType == ImageCollapserData::FLUX) {
         _checkFlux(subImage);
     }
     // Set the compressed axis reference pixel and reference value
     casacore::Vector<casacore::Double> blc, trc;
     casacore::IPosition pixblc(inShape.nelements(), 0);
-    casacore::IPosition pixtrc = inShape - 1;
+    auto pixtrc = inShape - 1;
     ThrowIf(
         ! outCoords.toWorld(blc, pixblc)
         || ! outCoords.toWorld(trc, pixtrc),
         "Could not set new coordinate values"
     );
-    casacore::Vector<casacore::Double> refValues = outCoords.referenceValue();
-    casacore::Vector<casacore::Double> refPixels = outCoords.referencePixel();
-    casacore::IPosition outShape = inShape;
-    casacore::IPosition shape(outShape.nelements(), 1);
+    auto refValues = outCoords.referenceValue();
+    auto refPixels = outCoords.referencePixel();
+    auto outShape = inShape;
+    IPosition shape(outShape.nelements(), 1);
+    auto end = _axes.end();
     for (
-        casacore::IPosition::const_iterator iter = _axes.begin();
-        iter != _axes.end(); iter++
+        auto iter = _axes.begin(); iter != end; ++iter
     ) {
         casacore::uInt i = *iter;
         refValues[i] = (blc[i] + trc[i]) / 2;
@@ -136,11 +136,11 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
     else {
         _doOtherStats(tmpIm, subImage);
     }
-    casacore::Bool copied = subImage->imageInfo().hasMultipleBeams()
-                  ? _doMultipleBeams(tmpIm, subImage, hasDir, outCoords)
-                  : false;
+    auto copied = subImage->imageInfo().hasMultipleBeams()
+        ? _doMultipleBeams(tmpIm, subImage, hasDir, outCoords)
+        : false;
     if (! copied) {
-        casacore::ImageUtilities::copyMiscellaneous(tmpIm, *subImage, true);
+        ImageUtilities::copyMiscellaneous(tmpIm, *subImage, true);
     }
     if (_aggType == ImageCollapserData::FLUX) {
         // get the flux units right
@@ -175,7 +175,7 @@ template<class T> void ImageCollapser<T>::_checkFlux(
         subImage->units().getName().contains("beam") && ! subImage->imageInfo().hasBeam(),
         "Image has no beam." + cant
     );
-    casacore::Vector<casacore::Int> dirAxes = outCoords.directionAxesNumbers();
+    auto dirAxes = outCoords.directionAxesNumbers();
     for (casacore::uInt i = 0; i < _axes.nelements(); i++) {
         casacore::Int axis = _axes[i];
         ThrowIf(
@@ -191,21 +191,21 @@ template<class T> casacore::Bool ImageCollapser<T>::_doMultipleBeams(
     casacore::TempImage<T>& tmpIm, SPCIIT subImage, casacore::Bool hasDir,
     const casacore::CoordinateSystem & outCoords
 ) const {
-    casacore::Int naxes = _axes.size();
-    casacore::Bool dirAxesOnlyCollapse = hasDir && naxes == 2;
+    auto naxes = _axes.size();
+    auto dirAxesOnlyCollapse = hasDir && naxes == 2;
     if (dirAxesOnlyCollapse) {
-        casacore::Vector<casacore::Int>dirAxes = outCoords.directionAxesNumbers();
+        auto dirAxes = outCoords.directionAxesNumbers();
         dirAxesOnlyCollapse = (_axes[0] == dirAxes[0] && _axes[1] == dirAxes[1])
                               || (_axes[1] == dirAxes[0] && _axes[0] == dirAxes[1]);
     }
     if (! dirAxesOnlyCollapse) {
         // check for degeneracy of spectral or polarization axes
-        casacore::Int specAxis = outCoords.spectralAxisNumber(false);
-        casacore::Int polAxis = outCoords.polarizationAxisNumber(false);
+        auto specAxis = outCoords.spectralAxisNumber(false);
+        auto polAxis = outCoords.polarizationAxisNumber(false);
         dirAxesOnlyCollapse = true;
-        casacore::IPosition shape = subImage->shape();
-        for (casacore::Int i = 0; i < naxes; ++i) {
-            casacore::Int axis = _axes[i];
+        auto shape = subImage->shape();
+        for (uInt i = 0; i < naxes; ++i) {
+            auto axis = _axes[i];
             if (
                 (axis == specAxis || axis == polAxis)
                 && shape[axis] > 1
@@ -225,10 +225,10 @@ template<class T> casacore::Bool ImageCollapser<T>::_doMultipleBeams(
             << "then run the task imsmooth or the tool method ia.convolve2d() first, "
             << "and use the output image of that as the input for collapsing."
             << casacore::LogIO::POST;
-        casacore::ImageUtilities::copyMiscellaneous(tmpIm, *subImage, false);
-        casacore::ImageInfo info = subImage->imageInfo();
-        vector<casacore::Vector<casacore::Quantity> > out;
-        casacore::GaussianBeam beam = *(info.getBeamSet().getBeams().begin());
+        ImageUtilities::copyMiscellaneous(tmpIm, *subImage, false);
+        auto info = subImage->imageInfo();
+        vector<Vector<Quantity>> out;
+        auto beam = *(info.getBeamSet().getBeams().begin());
         info.removeRestoringBeam();
         info.setRestoringBeam(beam);
         tmpIm.setImageInfo(info);
