@@ -11,7 +11,7 @@ CasaTaskDict = {
     'h_applycal': 'Applycal',
     'h_importdata': 'ImportData',
     'h_exportdata': 'ExportData',
-    'h_split': 'MsSplit',
+    'h_mssplit': 'MsSplit',
     'h_restoredata': 'RestoreData',
     'h_tsyscal': 'Tsyscal',
     # Interferometry tasks ---------------------------------------------------
@@ -179,7 +179,7 @@ classToCASATask = {
     h_tasks.ImportData                : 'h_importdata',
     h_tasks.ExportData                : 'h_exportdata',
     h_tasks.RestoreData               : 'h_restoredata',
-    h_tasks.MsSplit                   : 'h_split',
+    h_tasks.MsSplit                   : 'h_mssplit',
     h_tasks.Tsyscal                   : 'h_tsyscal'
 }
 
