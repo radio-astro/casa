@@ -4,6 +4,7 @@ import glob
 import numpy
 import operator
 import decimal
+import commands
 
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import imageparams
@@ -166,25 +167,18 @@ class Tclean(cleanbase.CleanBase):
     def is_multi_vis_task(self):
         return True
 
-    def copy_products(self, old_pname, new_pname, iter, specmode, ptype):
-        try:
-            if mpihelpers.mpi_server_list:
-                if (specmode != 'cube') and (ptype == 'pb'):
-                    num_node_files = 1
-                else:
-                    num_node_files = len(mpihelpers.mpi_server_list)
-                LOG.info('Copying %d node file%s of %s to %s' % (num_node_files, 's' if num_node_files != 1 else '', old_pname, new_pname))
-                for n in xrange(1, num_node_files + 1):
-                    shutil.copytree( \
-                        old_pname.replace('iter%d' % (iter - 1), \
-                                          'iter%d.n%d' % (iter - 1, n)), \
-                        new_pname.replace('iter%d' % (iter), \
-                                          'iter%d.n%d' % (iter, n)))
+    def copy_products(self, old_pname, new_pname):
+        imlist = commands.getoutput('ls -d '+old_pname+'.*')
+        imlist = imlist.split('\n')
+        for image_name in imlist:
+            newname = image_name.replace(old_pname, new_pname)
+            if image_name == old_pname + '.workdirectory':
+                mkcmd = 'mkdir '+ newname
+                os.system(mkcmd)
+                self.copy_products(os.path.join(image_name, old_pname), os.path.join(newname, new_pname))
             else:
-                LOG.info('Copying %s to %s' % (old_pname, new_pname))
-                shutil.copytree(old_pname, new_pname)
-        except Exception as e:
-            LOG.warning('Exception copying %s: %s' % (old_pname, e))
+                LOG.info('Copying %s to %s' % (image_name, newname))
+                shutil.copytree(image_name, newname)
 
     def prepare(self):
         context = self.inputs.context
@@ -593,27 +587,9 @@ class Tclean(cleanbase.CleanBase):
                 break
 
             # Use previous iterations's products as starting point
-            ptypes = ['residual', 'sumwt', 'psf', 'pb']
-            if (inputs.gridder == 'mosaic'):
-                ptypes.append('weight')
-            # This seems to be needed for parallel runs, but details are
-            # to be iterated.
-            #if (inputs.specmode != 'cube'):
-            #    ptypes.append('gridwt')
-            for ptype in ptypes:
-                old_pname = '%s.iter%s.%s' % (rootname, iter-1, ptype)
-                new_pname = '%s.iter%s.%s' % (rootname, iter, ptype)
-                if (inputs.deconvolver == 'mtmfs'):
-                    if (ptype in ['sumwt', 'psf', 'weight']):
-                        exts = ['.tt0', '.tt1', '.tt2']
-                    elif (ptype in ['residual']):
-                        exts = ['.tt0', '.tt1']
-                    else:
-                        exts = ['.tt0']
-                else:
-                    exts = ['']
-                for ext in exts:
-                    self.copy_products('%s%s' % (old_pname, ext), '%s%s' % (new_pname, ext), iter, inputs.specmode, ptype)
+            old_pname = '%s.iter%s' % (rootname, iter-1)
+            new_pname = '%s.iter%s' % (rootname, iter)
+            self.copy_products(os.path.basename(old_pname), os.path.basename(new_pname))
 
             # Determine the cleaning threshold
             threshold = seq_result.threshold
