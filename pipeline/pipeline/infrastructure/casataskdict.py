@@ -11,6 +11,7 @@ CasaTaskDict = {
     'h_applycal': 'Applycal',
     'h_importdata': 'ImportData',
     'h_exportdata': 'ExportData',
+    'h_split': 'MsSplit',
     'h_restoredata': 'RestoreData',
     'h_tsyscal': 'Tsyscal',
     # Interferometry tasks ---------------------------------------------------
@@ -178,6 +179,7 @@ classToCASATask = {
     h_tasks.ImportData                : 'h_importdata',
     h_tasks.ExportData                : 'h_exportdata',
     h_tasks.RestoreData               : 'h_restoredata',
+    h_tasks.MsSplit                   : 'h_split',
     h_tasks.Tsyscal                   : 'h_tsyscal'
 }
 
@@ -298,6 +300,10 @@ TASK_COMMENTS = {
     ),
     (hif_tasks.MakeImages,): (
         'A list of target sources is cleaned. '
+    ),
+    (h_tasks.MsSplit,): (
+        'The parent MS is split by field, intent, or spw '
+        'and / or averaged by channel and time. '
     ),
     (hif_tasks.Tclean,): (
         'A single target source is cleaned. '
