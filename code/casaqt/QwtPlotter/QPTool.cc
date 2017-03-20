@@ -188,8 +188,8 @@ void QPTrackerTool::handleMouseEvent(const PlotEvent& e) {
         if(c.system() != m_coordSystem)
             c = m_canvas->convertCoordinate(c, m_coordSystem);
         m_annotation->setCoordinate(c);
-        m_annotation->setText(formattedString(c.x(), c.y()));
-        notifyWatchers();
+        QwtDoublePoint point = QwtDoublePoint(c.x(), c.y());
+        m_tracker->trackerText(point);
     }
 }
 
@@ -201,6 +201,15 @@ void QPTrackerTool::setDrawText(bool draw) {
                                                      QwtPlotPicker::AlwaysOff);
 }
 
+casacore::String QPTrackerTool::formattedString(double x, double y) {
+    casacore::String trackerText = PlotTrackerTool::formattedString(m_format,
+            x, y, m_canvas, m_xAxis, m_yAxis);
+    if (trackerText != m_annotation->text()) {
+        m_annotation->setText(trackerText);
+        notifyWatchers();
+    }
+    return trackerText;
+}
 
 // Protected Methods //
 

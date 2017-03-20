@@ -150,6 +150,10 @@ public:
     // Overrides PlotTrackerTool::setDrawText().
     void setDrawText(bool draw = true);
     
+    // Overrides PlotTrackerTool::formattedString()
+    // to keep tool and tracker in sync.
+    casacore::String formattedString(double x, double y);
+
 protected:
     // PlotTool Methods //
 
