@@ -132,8 +132,13 @@ StokesIPeakPos      = [942,1130,0,0]; #Pixels
 # Change to this from the above after the change in 3rd party pkgs
 # around Jan. 1st week, 2017.  Also using tclean now for the imaging
 # instead of the old imager (im-tool).
-StokesVPeak         =  0.00061497
-StokesVRMS          =  0.00012994
+# StokesVPeak         =  0.00061497
+# StokesVRMS          =  0.00012994
+
+# Changes after fixing the w-term in prediction.  Stokes-V looks OK,
+# but the peak and therefore the RMS has changed.
+StokesVPeak         = 0.00143313
+StokesVRMS          = 0.00019522
 
 StokesVPeakPosWorld = '08:11:29.219, +45.48.26.199'; #J2000
 StokesVPeakPos      = [1415,1008,1,0]; #Pixels
