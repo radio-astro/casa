@@ -234,11 +234,12 @@ class PySynthesisImager:
                     all2 = all2 and self.stopMinor[akey]==2
 
                 if all2==True:
-                    if self.iterpars['savemodel'] == "modelcolumn":
-                        wstr = "Saving model column"
-                    else:
-                        wstr = "Saving virtual model"
-                    casalog.post("Model visibilities may not have been saved in the MS even though you have asked for it. Please check the logger for the phrases 'Run (Last) Major Cycle'  and  '" + wstr +"'. If these do not appear, then please save the model via a separate tclean run with niter=0,calcres=F,calcpsf=F. It will pick up the existing model from disk and save/predict it.   Reason for this : For performance reasons model visibilities are saved only in the last major cycle. If the X button on the interactive GUI is used to terminate a run before this automatically detected 'last' major cycle, the model isn't written. However, a subsequent tclean run as described above will predict and save the model. ","WARN")
+                    self.predictModel()
+                    #if self.iterpars['savemodel'] == "modelcolumn":
+                    #    wstr = "Saving model column"
+                    #else:
+                    #    wstr = "Saving virtual model"
+                    #casalog.post("Model visibilities may not have been saved in the MS even though you have asked for it. Please check the logger for the phrases 'Run (Last) Major Cycle'  and  '" + wstr +"'. If these do not appear, then please save the model via a separate tclean run with niter=0,calcres=F,calcpsf=F. It will pick up the existing model from disk and save/predict it.   Reason for this : For performance reasons model visibilities are saved only in the last major cycle. If the X button on the interactive GUI is used to terminate a run before this automatically detected 'last' major cycle, the model isn't written. However, a subsequent tclean run as described above will predict and save the model. ","WARN")
                 
 
 #############################################
