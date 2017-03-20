@@ -66,7 +66,7 @@ if ( $using_svn ) {
 } else {
     die "could not find version number script" unless -x "$installpath/code/install/resolvegitrevision.sh";
     $version = `$installpath/code/install/resolvegitrevision.sh --pretty-print`;
-    die "version format error ($version)" unless $version =~ m|^(\d+\.\d+\.\d+)-[^-]*-?(\d+)$|;
+    die "version format error ($version)" unless $version =~ m|^(\d+\.\d+\.\d+)-[^-]*-?(\d+)+?$|;
     $version = "$1-$2";
 }
 die "failed to find version number (got $version instead)" unless $version =~ m|\d+\.\d+\.\d+-\d+|g;
