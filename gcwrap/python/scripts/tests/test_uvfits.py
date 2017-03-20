@@ -114,7 +114,6 @@ class uvfits_test(unittest.TestCase):
         fitsname = datapath + "1331+305_I.UVFITS"
         self.assertRaises(Exception, myms.fromfits, msname, fitsname)
 
-
     def test_receptor_angle(self):
         """CAS-7081: Test receptor angle is preserved"""
         myms = mstool()
@@ -128,13 +127,18 @@ class uvfits_test(unittest.TestCase):
         rec_ang = "RECEPTOR_ANGLE"
         expec = tb.getcol(rec_ang)
         tb.done()
-        importname = "ke.ms"
-        self.assertTrue(myms.fromfits(importname, uvfits), "Failed uvfits import")
-        myms.done()
-        tb.open(importname + feed)
-        got = tb.getcol(rec_ang)
-        tb.done()
-        self.assertTrue(np.max(np.abs(got -expec)) < 1e-7, "Receptor angles not preserved")
+        for i in [0, 1]:
+            if i == 0:
+                importname = "ke.ms"
+                self.assertTrue(myms.fromfits(importname, uvfits), "Failed uvfits import")
+                myms.done()
+            else:
+                importname = "kf.ms"
+                importuvfits(fitsfile=uvfits, vis=importname)
+            tb.open(importname + feed)
+            got = tb.getcol(rec_ang)
+            tb.done()
+            self.assertTrue(np.max(np.abs(got-expec)) < 1e-7, "Receptor angles not preserved")
 
     def test_diameters(self):
         """CAS-5818: Verify bogus dish diameters in AN table are not used but normal algorithm is used instead"""
