@@ -126,7 +126,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
         ! outCoords.setReferencePixel(refPixels),
         "Unable to set reference pixel"
     );
-    casacore::TempImage<T> tmpIm(outShape, outCoords);
+    TempImage<T> tmpIm(outShape, outCoords);
     if (_aggType == ImageCollapserData::ZERO) {
         tmpIm.set(0.0);
     }
@@ -145,7 +145,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
     if (_aggType == ImageCollapserData::FLUX) {
         // get the flux units right
         auto sbunit = subImage->units().getName();
-        casacore::String unit;
+        String unit;
         if (sbunit.contains("K")) {
             casacore::String areaUnit = "arcsec2";
             unit = sbunit + "." + areaUnit;
@@ -153,7 +153,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
         else {
             unit = "Jy";
             if (sbunit.contains("/beam")) {
-                casacore::uInt iBeam = sbunit.find("/beam");
+                uInt iBeam = sbunit.find("/beam");
                 unit = sbunit.substr(0, iBeam) + sbunit.substr(iBeam + 5);
             }
         }
@@ -165,23 +165,25 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 template<class T> void ImageCollapser<T>::_checkFlux(
     SPCIIT subImage
 ) const {
-    casacore::String cant = " Cannot do flux density calculation";
+    String cant = " Cannot do flux density calculation";
     const auto& outCoords = subImage->coordinates();
     ThrowIf(
         ! outCoords.hasDirectionCoordinate(),
         "Image has no direction coordinate." + cant
     );
     ThrowIf(
-        subImage->units().getName().contains("beam") && ! subImage->imageInfo().hasBeam(),
+        subImage->units().getName().contains("beam")
+        && ! subImage->imageInfo().hasBeam(),
         "Image has no beam." + cant
     );
     auto dirAxes = outCoords.directionAxesNumbers();
-    for (casacore::uInt i = 0; i < _axes.nelements(); i++) {
-        casacore::Int axis = _axes[i];
+    const auto naxes = _axes.size();
+    for (uInt i = 0; i < naxes; ++i) {
+        Int axis = _axes[i];
         ThrowIf(
             ! anyTrue(dirAxes == axis)
             && subImage->shape()[axis] > 1,
-            "Specified axis " + casacore::String::toString(axis)
+            "Specified axis " + String::toString(axis)
             + " is not a direction axis but has length > 1." + cant
         );
     }
@@ -238,11 +240,11 @@ template<class T> casacore::Bool ImageCollapser<T>::_doMultipleBeams(
 }
 
 template<class T> void ImageCollapser<T>::_doOtherStats(
-    casacore::TempImage<T>& tmpIm, SPCIIT subImage
+    TempImage<T>& tmpIm, SPCIIT subImage
 ) const {
     T npixPerBeam = 1;
     if (_aggType == ImageCollapserData::SQRTSUM_NPIX_BEAM) {
-        casacore::ImageInfo info = subImage->imageInfo();
+        const auto& info = subImage->imageInfo();
         if (! info.hasBeam()) {
             *this->_getLog() << casacore::LogIO::WARN
                 << "Image has no beam, will use sqrtsum method"
@@ -300,7 +302,7 @@ template<class T> void ImageCollapser<T>::_doLowPerf(
                 auto npts = data.copy();
                 LatticeMathUtil::collapse(
                     npts, mask, _axes, *subImage, false,
-                    true, true, casacore::LatticeStatsBase::NPTS
+                    true, true, LatticeStatsBase::NPTS
                 );
                 data /= npts;
             }
