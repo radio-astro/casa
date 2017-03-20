@@ -128,8 +128,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
     );
     casacore::TempImage<T> tmpIm(outShape, outCoords);
     if (_aggType == ImageCollapserData::ZERO) {
-        casacore::Array<T> zeros(outShape, 0.0);
-        tmpIm.put(zeros);
+        tmpIm.set(0.0);
     }
     else if (_aggType == ImageCollapserData::MEDIAN) {
         _doMedian(subImage, tmpIm);
