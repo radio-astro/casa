@@ -350,14 +350,20 @@ class CleanBase(basetask.StandardTaskTemplate):
         pbcor_image_name = '%s.%s.iter%s.image.pbcor' % (inputs.imagename, inputs.stokes, iter)
 
         if (inputs.niter > 0):
-            LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
-            if ((tclean_result['stopcode'] == 1) and (tclean_result['iterdone'] >= tclean_result['niter'])):
-                result.error = CleanBaseError('tclean reached niter limit. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Reached niter limit')
-                LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_result['niter'], utils.dequote(inputs.field), inputs.spw))
+            try:
+                LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
+            except:
+                LOG.warning('Cannot determine number of tclean iterations')
+            try:
+                if ((tclean_result['stopcode'] == 1) and (tclean_result['iterdone'] >= tclean_result['niter'])):
+                    result.error = CleanBaseError('tclean reached niter limit. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Reached niter limit')
+                    LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_result['niter'], utils.dequote(inputs.field), inputs.spw))
 
-            if (tclean_result['stopcode'] == 5):
-                result.error = CleanBaseError('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean stopped to prevent divergence.')
-                LOG.warning('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw))
+                if (tclean_result['stopcode'] == 5):
+                    result.error = CleanBaseError('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean stopped to prevent divergence.')
+                    LOG.warning('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw))
+            except:
+                LOG.warning('Cannot determine tclean stopcode')
 
         if (iter > 0):
             # Store the model.
