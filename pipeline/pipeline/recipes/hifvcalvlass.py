@@ -53,7 +53,7 @@ IMPORT_ONLY = ''
 
 
 # Run the procedure
-def hifv_vlasscal(vislist, importonly=False, pipelinemode='automatic', interactive=True):
+def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactive=True):
     echo_to_screen = interactive
     casatools.post_to_log("Beginning VLA Sky Survey pipeline run ...")
 

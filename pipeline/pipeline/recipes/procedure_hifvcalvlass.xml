@@ -159,6 +159,14 @@
     <ProcessingCommand>
         <Command xmlns="">hifv_applycals</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">flagsum</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flagdetailedsum</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
