@@ -13,7 +13,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class CircfeedpolcalResults(polarization.PolarizationResults):
-    def __init__(self, final=[], pool=[], preceding=[], vis=None):
+    def __init__(self, final=None, pool=None, preceding=None, vis=None):
 
         if final is None:
             final = []
@@ -97,14 +97,31 @@ class Circfeedpolcal(polarization.Polarization):
         # First pass R-L delay
         self.do_gaincal(tablesToAdd[0][0], field=fluxcal)
 
+        #Determine number of scans with POLLEAKGE intent
+        polleakagescans = []
+        poltype = 'Df+QU' #Default
+        for scan in m.scans:
+            if 'POLLEAKGE' in scan.intents:
+                polleakagescans.append((scan.id, scan.intents))
+
+        #Calibration Strategies
+        LOG.info("Number of POL_LEAKAGE scans: {!s}".format(len(polleakagescans)))
+        if len(polleakagescans) >= 3:
+            poltype = 'Df+QU'   # C4
+            LOG.info("Using Calibration Strategy C4: 3 slices CALIBRATE_POL_LEAKAGE, KCROSS, Df+QU, Xf")
+        if len(polleakagescans) == 1:
+            poltype = 'Df'      # C1
+            LOG.info("Using Calibration Strategy C1: 1 slices CALIBRATE_POL_LEAKAGE, KCROSS, Df, Xf")
+
+
         # D-terms in 10MHz pieces
-        self.do_polcal(tablesToAdd[1][0], 'Df+QU', field='',
+        self.do_polcal(tablesToAdd[1][0], poltype=poltype, field='',
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
                        gainfield=[''], spwmap=[],
                        solint='inf,10MHz')
 
         # 2MHz pieces
-        self.do_polcal(tablesToAdd[2][0], 'Xf', field=fluxcal, intent='',
+        self.do_polcal(tablesToAdd[2][0], poltype='Xf', field=fluxcal, intent='',
                        gainfield=[''], spwmap=[],
                        solint='inf,2MHz')
 
@@ -138,7 +155,7 @@ class Circfeedpolcal(polarization.Polarization):
 
         return result
 
-    def do_polcal(self, caltable, poltype, field='', intent='', gainfield=[''], spwmap=[], solint='inf'):
+    def do_polcal(self, caltable, poltype='', field='', intent='', gainfield=[''], spwmap=[], solint='inf'):
 
         GainTables = []
 
@@ -178,6 +195,13 @@ class Circfeedpolcal(polarization.Polarization):
         return result
 
     def _do_setjy(self):
+        '''
+        The code in this private class method are (for now) specific to VLASS
+        requirements and heuristics.
+
+        Returns: string name of the amplitude flux calibrator
+
+        '''
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
 
@@ -205,6 +229,7 @@ class Circfeedpolcal(polarization.Polarization):
         self._executor.execute(delmodjob)
 
         try:
+            task_args = {}
             if '3C286' or '1331+3030' in fluxcal:
                 d0 = 33.0 * math.pi / 180.0
                 task_args = {'vis'           : self.inputs.vis,
