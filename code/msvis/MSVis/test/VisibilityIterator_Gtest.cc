@@ -22,6 +22,8 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/SubMS.h>
 #include <msvis/MSVis/test/MsFactory.h>
+#include <algorithm>
+#include <iterator>
 #include <tuple>
 
 #include <memory>
@@ -1164,6 +1166,67 @@ FrequencyChannelSelection::noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 
     return false;
 }
 
+void
+FrequencyRefinedChannelSelection::startOfData (casa::vi::VisibilityIterator2 & vi, casa::vi::VisBuffer2 * /*vb*/)
+{
+    // Apply channel selections
+    //
+    // This tests the selection refinement feature.  First a channel selection
+    // is generated (in reality via an MSSelection object).  Later a frequency
+    // based selection is applied.  The net result is to be only channels
+    // selected by both methods (an intersection).
+
+    FrequencySelectionUsingChannels channelSelection;
+    channelSelection.add (0, 0, 10);   // all channels
+    channelSelection.add (1, 0, 11);   // all channels
+    channelSelection.add (2, 0, 12);   // all channels
+    channelSelection.add (3, 1, 11);   // channels [1,11]
+
+    FrequencySelectionUsingFrame frequencySelection (MFrequency::TOPO);
+
+    frequencySelection.add (0, 0.8e9, 1.1e9); // all of them
+    frequencySelection.add (1, 2.001E9, 2.01e9); // should be [0,5]
+    frequencySelection.add (2, 3.018e9, 3.033e9); // should be [6,11]
+    frequencySelection.add (3, 4.008e9, 4.04E9); // should be [2,11]
+
+    channelSelection.refine (frequencySelection);
+
+    vi.setFrequencySelection (channelSelection);
+}
+
+void
+FrequencyRefinedChannelSelection::nextSubchunk (casa::vi::VisibilityIterator2 & /*vi*/, casa::vi::VisBuffer2 * vb)
+{
+    Vector<int> channels = vb->getChannelNumbers (0);
+    int spectralWindow = vb->spectralWindows () [0];
+
+    vector <vector<int>> expectedBySpectralWindow = { {0, 10}, {0, 6}, {6, 6}, {2, 9} };
+        // One pair per spectral window; pair is first channel, nChannels.
+
+    int first = expectedBySpectralWindow [spectralWindow][0];
+    int n = expectedBySpectralWindow [spectralWindow][1];
+
+    vector<int> expected;
+    std::generate_n (std::back_inserter (expected), n, [& first] { return first++;});
+
+    TestErrorIf (expected.size() != channels.size(),
+                 String::format ("Spw=%d: expected %d channels, got %d channels\n",
+                                 spectralWindow, expected.size(), channels.size()));
+
+    for (int i = 0; i < (int) channels.size(); i++){
+        TestErrorIf (channels[i] != expected[i],
+                     String::format ("Spw=%d, i=%d: expected %d but got %d\n",
+                                     spectralWindow, i, expected[i], channels[i]));
+    }
+
+}
+
+casacore::Bool
+FrequencyRefinedChannelSelection::noMoreData (casa::vi::VisibilityIterator2 & /*vi*/, casa::vi::VisBuffer2 * /*vb*/,
+                                              int /*nRowsProcessed*/)
+{
+    return false;
+}
 
 
 ////////////////  Template for new TestWidget Subclasses //////////////////
@@ -1676,6 +1739,11 @@ TEST_F (BasicMutation, DoBasicMutation)
 }
 
 TEST_F (FrequencyChannelSelection, DoFrequencyChannelSelection)
+{
+    sweepMs ();
+}
+
+TEST_F (FrequencyRefinedChannelSelection, DoFrequencyRefinedChannelSelection)
 {
     sweepMs ();
 }

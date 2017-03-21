@@ -33,7 +33,7 @@
 #include <casa/Arrays/Slicer.h>
 #include <measures/Measures/MFrequency.h>
 
-
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -107,6 +107,69 @@ private:
 
 ///////////////////////////////////////////////////////////////////
 //
+// FrequencySelectionUsingFrame class
+//
+// Selects sets of channels from a single MS.  The selection is created
+// by specifying a sequence of frame-related frequencies in a single MS.
+// By adding multiple selections, the user can select any arbitrary collecton
+// of channels.  The frequencies are related to the specified frame of reference
+// and the actual selected can be a function of time as the telescope moves through
+// space.
+
+class FrequencySelectionUsingFrame : public FrequencySelection {
+
+public:
+
+    class Element {
+    public:
+
+        Element (casacore::Int spectralWindow = -1, double beginFrequency = 0,
+                 double endFrequency = 0, double increment = 0)
+        : beginFrequency_p (beginFrequency),
+          endFrequency_p (endFrequency),
+          increment_p (increment),
+          spectralWindow_p (spectralWindow)
+          {}
+
+        double getBeginFrequency () const;
+        double getEndFrequency () const;
+        std::pair<int, int> getChannelRange (const casacore::MeasurementSet * ms) const;
+        int getSpectralWindow () const;
+
+    private:
+
+        friend class FrequencySelectionUsingFrame;
+
+        double beginFrequency_p;
+        double endFrequency_p;
+        double increment_p;
+        int spectralWindow_p;
+    };
+
+    typedef std::vector<Element> Elements;
+    typedef Elements::const_iterator const_iterator;
+
+    FrequencySelectionUsingFrame (casacore::MFrequency::Types frameOfReference);
+
+    void add (casacore::Int spectralWindow, double bottomFrequency, double topFrequency);
+    //void add (casacore::Int spectralWindow, double bottomFrequency, double topFrequency, double increment);
+    const_iterator begin () const;
+    FrequencySelection * clone () const;
+    casacore::Bool empty () const;
+    const_iterator end () const;
+    set<int> getSelectedWindows () const;
+    casacore::String toString () const;
+
+private:
+
+    Elements elements_p;
+    mutable Elements filtered_p;
+};
+
+class SpectralWindowChannels;
+
+///////////////////////////////////////////////////////////////////
+//
 // FrequencySelectionUsingChannels class
 //
 // Selects sets of channels from a single MS.  The selection is created
@@ -114,6 +177,20 @@ private:
 // selections, the user can select any arbitrary collecton of channels.
 //
 // The order of the "add" operations are unimportant.
+//
+// Imaging finds it convenient to double specify the frequency ranges, first
+// using an MSSelection object and later with a series of frequency ranges.
+// The intent is that only channels which match up with both criteria should
+// be a part of the VisBuffer.  To accomplish this, first create a selection
+// using a FrequencySelectionUsingChannels object (using method "add" with
+// either an MSSelection or a channel range).  When that is complete build
+// up a FrequencySelectionUsingFrequency object to represent the various
+// frequency ranges desired.  Then use FrequencySelectionUsingChannels::refine
+// passing in the FrequencySelectionUsingFrame object created before.  The
+// refinement process will remove any of the originalchannels which are not
+// within the specified frequency bands.  The refinement operation is delayed
+// until the first time selection is actually used (usually after a call to
+// VisibilityIterator2::origin.
 
 class FrequencySelectionUsingChannels : public FrequencySelection {
 
@@ -140,16 +217,21 @@ public:
     typedef std::vector<Element> Elements;
     typedef Elements::const_iterator const_iterator;
 
-    FrequencySelectionUsingChannels () : FrequencySelection (ByChannel) {}
+    FrequencySelectionUsingChannels () : FrequencySelection (ByChannel){}
+    FrequencySelectionUsingChannels (const FrequencySelectionUsingChannels & other);
 
-    void add (casacore::Int spectralWindow, casacore::Int firstChannel, casacore::Int nChannels, casacore::Int increment = 1);
+    void add (casacore::Int spectralWindow, casacore::Int firstChannel, casacore::Int nChannels,
+              casacore::Int increment = 1);
     void add (const casacore::MSSelection & msSelection, const casacore::MeasurementSet * ms);
+    void applyRefinement (std::function <casacore::Slice (int, double, double)>) const;
     const_iterator begin () const;
     FrequencySelection * clone () const;
     casacore::Bool empty () const;
     const_iterator end () const;
     casacore::Int getNChannels (casacore::Int spectralWindowId) const;
     set<int> getSelectedWindows () const;
+    void refine (const FrequencySelectionUsingFrame & frequencySelection);
+    bool refinementNeeded () const;
     size_t size () const;
     casacore::String toString () const;
 
@@ -159,68 +241,17 @@ public:
 
 private:
 
-    Elements elements_p;
+    mutable Elements elements_p;
     mutable Elements filtered_p;
+    mutable std::unique_ptr<FrequencySelectionUsingFrame> refinements_p;
 
-};
+//    std::pair<int, int> getChannelRange (const SpectralWindowChannels & spwChannels,
+//                                         double beginFrequency, double endFrequency);
 
-///////////////////////////////////////////////////////////////////
-//
-// FrequencySelectionUsingFrame class
-//
-// Selects sets of channels from a single MS.  The selection is created
-// by specifying a sequence of frame-related frequencies in a single MS.
-// By adding multiple selections, the user can select any arbitrary collecton
-// of channels.  The frequencies are related to the specified frame of reference
-// and the actual selected can be a function of time as the telescope moves through
-// space.
+    void refineSelection (FrequencySelectionUsingChannels::Element & originalElement,
+                          int firstRefiningChannel, int lastRefiningChannel) const;
 
-class FrequencySelectionUsingFrame : public FrequencySelection {
 
-public:
-
-    class Element {
-    public:
-
-        Element (casacore::Int spectralWindow = -1, casacore::Double beginFrequency = 0,
-                 casacore::Double endFrequency = 0, casacore::Double increment = 0)
-        : beginFrequency_p (beginFrequency),
-          endFrequency_p (endFrequency),
-          increment_p (increment),
-          spectralWindow_p (spectralWindow)
-          {}
-
-        casacore::Double getBeginFrequency () const;
-        casacore::Double getEndFrequency () const;
-
-    private:
-
-        friend class FrequencySelectionUsingFrame;
-
-        casacore::Double beginFrequency_p;
-        casacore::Double endFrequency_p;
-        casacore::Double increment_p;
-        casacore::Int spectralWindow_p;
-    };
-
-    typedef std::vector<Element> Elements;
-    typedef Elements::const_iterator const_iterator;
-
-    FrequencySelectionUsingFrame (casacore::MFrequency::Types frameOfReference);
-
-    void add (casacore::Int spectralWindow, casacore::Double bottomFrequency, casacore::Double topFrequency);
-    //void add (casacore::Int spectralWindow, casacore::Double bottomFrequency, casacore::Double topFrequency, casacore::Double increment);
-    const_iterator begin () const;
-    FrequencySelection * clone () const;
-    casacore::Bool empty () const;
-    const_iterator end () const;
-    set<int> getSelectedWindows () const;
-    casacore::String toString () const;
-
-private:
-
-    Elements elements_p;
-    mutable Elements filtered_p;
 };
 
 

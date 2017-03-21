@@ -1980,6 +1980,17 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
     const FrequencySelectionUsingChannels & selection =
         dynamic_cast<const FrequencySelectionUsingChannels &> (selectionIn);
 
+    if (selection.refinementNeeded ()){
+        auto spwcFetcher =
+            [this, msId]
+            (int spectralWindowId, double lowerFrequency, double upperFrequency)
+            {
+                const SpectralWindowChannels & spwChannels = getSpectralWindowChannels (msId, spectralWindowId);
+                return spwChannels.getIntersection (lowerFrequency, upperFrequency);
+            };
+        selection.applyRefinement (spwcFetcher);
+    }
+
     vector<Slice> frequencySlices;
 
     // Iterate over all of the frequency selections for
