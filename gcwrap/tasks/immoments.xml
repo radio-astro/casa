@@ -23,63 +23,72 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="intArray" name="moments">
         <description>List of moments you would like to compute</description>
         <value>0</value>
+        <example>moments=1</example>
     </param>
 
     <param type="any" name="axis" >
 	<description>The momement axis: ra, dec, lat, long, spectral, or stokes</description>
  	<any type='variant' limmittype='string int'/>
     	<value type='string'>spectral</value>
+        <example>axis=&quot;ra&quot;</example>
     </param>
 
     <param type="any" name="region">
         <description>Region selection. Default is to use the full image.</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
+        <example>region=&quot;myregion.crtf&quot;</example>
     </param>
 
     <param type="string" name="box">
         <description>Rectangular region(s) to select in direction plane. Default is to use the entire direction plane.</description>
         <value/>
+        <example>box=&quot;40,40,120,120&quot;</example>
     </param>
 
     <param type="string" name="chans" >
 	<description>Channels to use. Default is to use all channels.</description>
     	<value/>
+        <example>chans=&quot;1~4&quot;</example>
     </param>
 
     <param type="string" name="stokes">
 	    <description>Stokes planes to use. Default is to use all Stokes planes.</description>
 	    <value/>
 	    <example>stokes=&quot;IQ&quot;</example>
-	    <example>stokes=&quot;RR,LL&quot;</example>
     </param>
 
     <param type="string" name="mask">
 	    <description>Mask to use. Default is none.</description>
 	    <any type="variant"/>
 	    <value type="stringArray"></value>
+        <example>mask=&quot;my.im > 5&quot;</example>
     </param>
 
     <param type="any" name="includepix">
     	<description>Range of pixel values to include</description>
 	<any type="variant" limittypes="int doubleArray intArray"/>
 	<value type="int">-1</value>
+    <example>includepix=[4, 5]</example>
     </param>
 
     <param type="any" name="excludepix">
     	<description>Range of pixel values to exclude</description>
 	<any type="variant" limittypes="int doubleArray intArray"/>
 	<value type="int">-1</value>
+    <example>excludepix=[-10, 0]</example>
     </param>
 
     <param type="string" name="outfile">
 	    <description>Output image file name (or root for multiple moments) </description>
-	<value></value>
+	<value/>
+    <example>outfile=&quot;mymoments.im&quot;</example>
     </param>
     
     <param type="bool" direction="in" name="stretch" subparam="true">
         <description>Stretch the mask if necessary and possible? </description>
         <value>False</value>
+        <example>stretch=true</example>
     </param>
     <constraints>
         <when param="mask">
