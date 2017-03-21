@@ -8,7 +8,6 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.utils as utils
-#from pipeline.hif.heuristics import fieldnames
 from pipeline.h.heuristics import fieldnames
 from pipeline.domain import DataTable
 from . import gridding
@@ -21,17 +20,25 @@ from ..baseline import msbaseline
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class SDImagingInputs(basetask.StandardInputs):
     """
     Inputs for imaging
     """
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, mode=None, infiles=None,
-                 field=None, spw=None):
-        self._init_properties(vars())
-        self.vis = infiles
+    def __init__(self, context, mode=None, infiles=None, field=None, spw=None):
+        super(SDImagingInputs, self).__init__(context, vis=infiles)
+
+        if mode is None:
+            mode = 'line'
+
+        self.field = field
+        self.mode = mode
+        self.spw = spw
+
+        # SJW any subsequent redefinition of vis will not be reflected in
+        # infiles. This should probably be fixed.
         self.infiles = self.vis
-        if self.mode is None: self.mode='line'
 
     @property
     def msid_list(self):
@@ -39,23 +46,11 @@ class SDImagingInputs(basetask.StandardInputs):
         Returns MS index in context observing run specified as infiles.
         """
         ms_names = [ms.name for ms in self.context.observing_run.measurement_sets]
-        return map(ms_names.index, map(os.path.abspath, self.infiles))
+        return map(ms_names.index, map(os.path.abspath, self.vis))
 
     @property
     def antenna(self):
         return ''
-#         if self._antenna is not None:
-#             return self._antenna
-#   
-#         antennas = self.ms.get_antenna(self._antenna)
-#         return ','.join([str(a.id) for a in antennas])
-#   
-#     @antenna.setter
-#     def antenna(self, value):
-#         if value is None:
-#             # use all antenna by default
-#             value = ''
-#         self._antenna = value
 
     @property
     def field(self):
@@ -80,7 +75,7 @@ class SDImagingInputs(basetask.StandardInputs):
 
     @property
     def intent(self):
-        return "TARGET"
+        return 'TARGET'
 
     @property
     def spw(self):
@@ -576,4 +571,3 @@ class SDImaging(basetask.StandardTaskTemplate):
     
     def analyse(self, result):
         return result
-    

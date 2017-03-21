@@ -351,6 +351,14 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
     """
     __metaclass__ = abc.ABCMeta
 
+    def __init__(self, context, vis=None, output_dir=None):
+        super(StandardInputs, self).__init__()
+
+        # set MandatoryInputs properties
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+
     def _init_properties(self, properties=None, kw_ignore=None):
         """
         Set the instance properties using a dictionary of keyword/value pairs.

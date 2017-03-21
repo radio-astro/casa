@@ -12,9 +12,8 @@ from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class SDMSSkyCalInputs(basetask.StandardInputs):
-    """
-    """
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, calmode=None, fraction=None, noff=None,
                  width=None, elongated=None, output_dir=None,
@@ -35,56 +34,46 @@ class SDMSSkyCalInputs(basetask.StandardInputs):
         args = self._get_task_args()
         
         # if value is None, replace it with ''
-        if args['spw'] is None:
-            args['spw']= ''
-            
-        if args['field'] is None:
-            args['field'] = ''
-            
-        if args['scan'] is None:
-            args['scan'] = ''
-            
-        if args['infiles'] is None:
-            args['infiles'] = ''    
-        
-        if args['outfile'] is None:
-            args['outfile'] = ''
-            
+        for s in ('spw', 'field', 'scan', 'infiles', 'outfile'):
+            if args[s] is None:
+                args[s] = ''
+
         # overwrite is always True
         args['overwrite'] = True
         
         # parameter name for input data is 'infile'
-        assert args.has_key('infiles')
         args['infile'] = args.pop('infiles')
         
         # vis is not necessary
-        args.pop('vis')
+        del args['vis']
         
         return args
-    
+
+
 class SDMSSkyCalResults(common.SingleDishResults):
-    """
-    """
     def __init__(self, task=None, success=None, outcome=None):
         super(SDMSSkyCalResults, self).__init__(task, success, outcome)
         self.final = self.outcome
 
     def merge_with_context(self, context):
         super(SDMSSkyCalResults, self).merge_with_context(context)
-        calapps = self.outcome
-        if calapps is not None:
-            for calapp in calapps:
-                context.callibrary.add(calapp.calto, calapp.calfrom)
+
+        if self.outcome is None:
+            return
+
+        for calapp in self.outcome:
+            context.callibrary.add(calapp.calto, calapp.calfrom)
         
     def _outcome_name(self):
         return str(self.outcome)
-        
+
+
 class SDMSSkyCal(basetask.StandardTaskTemplate):
     Inputs = SDMSSkyCalInputs
     
     def prepare(self):
         args = self.inputs.to_casa_args()
-        LOG.trace('args: %s'%(args))
+        LOG.trace('args: %s' % args)
         
         # retrieve ms domain object
         ms = self.inputs.ms
@@ -159,7 +148,6 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             calfrom = callibrary.CalFrom(gaintable=myargs['outfile'],
                                          gainfield=str(reference_id),
                                          interp='linear,linear',
-#                                          interp='linear,nearest',
                                          caltype=myargs['calmode'])
 
             # create CalApplication object

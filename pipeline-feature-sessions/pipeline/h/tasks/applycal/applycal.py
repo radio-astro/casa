@@ -69,6 +69,8 @@ class ApplycalInputs(vdp.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
                  opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
+        super(ApplycalInputs, self).__init__()
+
         # pipeline inputs
         self.context = context
         # vis must be set first, as other properties may depend on it
@@ -163,6 +165,10 @@ class Applycal(basetask.StandardTaskTemplate):
     def __init__(self, inputs):
         super(Applycal, self).__init__(inputs)
 
+    def modify_task_args(self, task_args):
+        task_args['antenna'] = '*&*'
+        return task_args
+
     def prepare(self):
         inputs = self.inputs
 
@@ -204,8 +210,7 @@ class Applycal(basetask.StandardTaskTemplate):
             task_args['calwt'] = calapp.calwt
             task_args['applymode'] = inputs.applymode
 
-            # This is a temporary workaround
-            task_args['antenna'] = '*&*'
+            task_args = self.modify_task_args(task_args)
 
             jobs.append(casa_tasks.applycal(**task_args))
 
@@ -235,12 +240,25 @@ class Applycal(basetask.StandardTaskTemplate):
         if inputs.flagsum:
             result.summaries = [flagdata_results[0], flagdata_results[1]]
             if inputs.flagdetailedsum:
-                result.flagsummary = reshape_flagdata_summary(flagdata_results[2])
+                reshaped_flagsummary = reshape_flagdata_summary(flagdata_results[2])
+                processed_flagsummary = self.process_flagsummary(reshaped_flagsummary)
+                result.flagsummary = processed_flagsummary
 
         return result
 
     def analyse(self, result):
         return result
+
+    def process_flagsummary(self, flagsummary):
+        """
+        Template entry point for processing flagdata summary dicts. Override
+        this function to filter or otherwise process the flagdata summary
+        results.
+
+        :param flagsummary: the unfiltered, unprocessed flagsummary dict
+        :return:
+        """
+        return flagsummary
 
 
 def reshape_flagdata_summary(flagdata_result):
@@ -291,6 +309,6 @@ class SessionApplycal(sessionutils.ParallelTemplate):
     def __init__(self, inputs):
         super(SessionApplycal, self).__init__(inputs)
 
-    def get_result_for_exception(self, vis, result):
+    def get_result_for_exception(self, vis, exception):
         LOG.error('Error applying calibrations for {!s}'.format(os.path.basename(vis)))
         return ApplycalResults()

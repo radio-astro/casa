@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
-import os
+import copy
 import math
 import numpy
+import os
 import time
-import copy
 
 from taskinit import gentools
 
@@ -19,20 +19,39 @@ from pipeline.domain.datatable import OnlineFlagIndex
 
 from .flagsummary import _get_iteration
 from .. import common
+from .SDFlagRule import INVALID_STAT
+
 
 LOG = infrastructure.get_logger(__name__)
 
-from .SDFlagRule import INVALID_STAT
 
 class SDBLFlagWorkerInputs(basetask.StandardInputs):
     """
     Inputs for imaging worker
     NOTE: infile should be a complete list of MSes 
     """
-    def __init__(self, context, clip_niteration,
-                 ms_list, antenna_list, fieldid_list, spwid_list, pols_list,
-                 nchan, flagRule, userFlag=[], edge=(0,0), rowmap=None):
-        self._init_properties(vars())
+
+    def __init__(self, context, clip_niteration, ms_list, antenna_list, fieldid_list, spwid_list, pols_list, nchan,
+                 flagRule, userFlag=None, edge=None, rowmap=None):
+        super(SDBLFlagWorkerInputs, self).__init__(context, vis=None, output_dir=None)
+
+        if userFlag is None:
+            userFlag = []
+        if edge is None:
+            edge = (0, 0)
+
+        self.clip_niteration = clip_niteration
+        self.ms_list = ms_list
+        self.antenna_list = antenna_list
+        self.fieldid_list = fieldid_list
+        self.spwid_list = spwid_list
+        self.pols_list = pols_list
+        self.flagRule = flagRule
+        self.nchan = nchan
+        self.userFlag = userFlag
+        self.edge = edge
+        self.rowmap = rowmap
+
 
 class SDBLFlagWorkerResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -44,11 +63,12 @@ class SDBLFlagWorkerResults(common.SingleDishResults):
     def _outcome_name(self):
         return ''
 
-class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
-    '''
+
+class SDBLFlagWorker(basetask.StandardTaskTemplate):
+    """
     The worker class of single dish flagging task.
     This class defines per spwid flagging operation.
-    '''
+    """
     Inputs = SDBLFlagWorkerInputs
     
     def is_multi_vis_task(self):

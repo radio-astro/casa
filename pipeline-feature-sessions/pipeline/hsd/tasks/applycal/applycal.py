@@ -1,57 +1,33 @@
 from __future__ import absolute_import
 import os
 
+from pipeline.domain import DataTable
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.domain import DataTable
+import pipeline.infrastructure.vdp as vdp
 
-#from pipeline.hif.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
-from pipeline.h.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
+from pipeline.h.tasks.applycal.applycal import Applycal, ApplycalInputs
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDMSApplycalInputs(ApplycalInputs,basetask.StandardInputs,
-                         basetask.OnTheFlyCalibrationMixin):
+class SDMSApplycalInputs(ApplycalInputs):
     """
     ApplycalInputs defines the inputs for the Applycal pipeline task.
     """
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None,
-                 # 
-                 vis=None, 
-                 # data selection arguments
-                 field=None, spw=None, antenna=None, intent=None,
-                 # preapply calibrations
-                 opacity=None, parang=None, applymode=None, calwt=None,
-                 flagbackup=None, flagsum=None, flagdetailedsum=None):
-        self._init_properties(vars())
-
     flagdetailedsum = basetask.property_with_default('flagdetailedsum', True)
+    intent = vdp.VisDependentProperty(default='TARGET')
 
-    @property
-    def intent(self):
-        return self._intent
+    @basetask.log_equivalent_CASA_call
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
+                 opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
+        super(SDMSApplycalInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
+                                                 antenna=antenna, intent=intent, opacity=opacity, parang=parang,
+                                                 applymode=applymode, flagbackup=flagbackup, flagsum=flagsum,
+                                                 flagdetailedsum=flagdetailedsum)
 
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'TARGET'
-        self._intent = value.replace('*', '')
 
-    @property
-    def applymode(self):
-        return self._applymode
-
-    @applymode.setter
-    def applymode(self, value):
-        if value is None:
-            value = 'calflagstrict'
-        elif value == '':
-            value = 'calflagstrict'
-        self._applymode = value
-
-class SDMSApplycal(Applycal, basetask.StandardTaskTemplate):
+class SDMSApplycal(Applycal):
     """
     Applycal executes CASA applycal tasks for the current context state,
     applying calibrations registered with the pipeline context to the target
@@ -62,12 +38,17 @@ class SDMSApplycal(Applycal, basetask.StandardTaskTemplate):
     on-the-fly calibration arguments.
     """
     Inputs = SDMSApplycalInputs
-    ### Note this is a temporary workaround ###
-    antenna_to_apply = '*&&&'
-    
+
+    def modify_task_args(self, task_args):
+        # override template fn in Applycal with our SD-specific antenna
+        # selection arguments
+        task_args['antenna'] = '*&&&'
+        return task_args
+
     def prepare(self):
         # execute Applycal
         results = super(SDMSApplycal, self).prepare()
+
         # Update Tsys in datatable
         context = self.inputs.context
         datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
@@ -83,8 +64,8 @@ class SDMSApplycal(Applycal, basetask.StandardTaskTemplate):
                     spwmap = _calfrom.spwmap
                     gainfield= _calfrom.gainfield
                     datatable._update_tsys(context, filename, tsystable, spwmap, fieldids, gainfield)
+
         # here, full export is necessary
         datatable.exportdata(minimal=False)
 
         return results
-    

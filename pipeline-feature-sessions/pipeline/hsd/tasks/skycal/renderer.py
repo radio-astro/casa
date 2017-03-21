@@ -1,12 +1,14 @@
 import os
 import collections
 
-import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.displays.singledish.skycal as skycal_display
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.displays.singledish.skycal as skycal_display
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.renderer.basetemplates as basetemplates
+import pipeline.infrastructure.utils as utils
 
 LOG = logging.get_logger(__name__)
+
 
 class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='skycal.mako',
@@ -70,7 +72,7 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
                 
                 # reference coordinates
                 LOG.debug('calapp=%s'%(calapp))
-                calmode = calapp.origin.inputs['calmode']
+                calmode = utils.get_origin_input_arg(calapp, 'calmode')
                 LOG.debug('calmode=\'%s\''%(calmode))
                 field_domain = ms.get_fields(gainfield)[0]
                 if calmode == 'ps':
@@ -129,7 +131,7 @@ class T2_4MDetailsSingleDishSkyCalRenderer(basetemplates.T2_4MDetailsDefaultRend
         
         calapps = result.outcome
         for calapp in calapps:
-            caltype = calmode_map[calapp.origin.inputs['calmode']]
+            caltype = calmode_map[utils.get_origin_input_arg(calapp, 'calmode')]
             gaintable = os.path.basename(calapp.gaintable)
             spw = calapp.spw.replace(',', ', ')
             intent = calapp.intent.replace(',', ', ')

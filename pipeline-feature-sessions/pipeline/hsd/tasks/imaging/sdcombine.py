@@ -10,12 +10,17 @@ from .worker import SDImagingWorkerResults
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class SDImageCombineInputs(basetask.StandardInputs):
     """
     Inputs for image plane combination
     """
     def __init__(self, context, inimages, outfile):
-        self._init_properties(vars())
+        super(SDImageCombineInputs, self).__init__(context)
+
+        self.inimages = inimages
+        self.outfile = outfile
+
 
 class SDImageCombine(basetask.StandardTaskTemplate):
     Inputs = SDImageCombineInputs
