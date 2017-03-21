@@ -17,7 +17,6 @@ class PlotSummaryInputs(basetask.StandardInputs):
 
 class PlotSummaryResults(basetask.Results):
     def __init__(self, final=None, pool=None, preceding=None):
-
         if final is None:
             final = []
         if pool is None:
@@ -32,9 +31,6 @@ class PlotSummaryResults(basetask.Results):
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
-
-    def merge_with_context(self, context):
-        m = context.observing_run.measurement_sets[0]
 
 
 class PlotSummary(basetask.StandardTaskTemplate):
@@ -57,7 +53,7 @@ class PlotSummary(basetask.StandardTaskTemplate):
                                                      spw='',
                                                      intent='',
                                                      flagbackup=False,
-                                                     calwt=False, flagsum=False, flagdetailedsum=False)
+                                                     flagsum=False, flagdetailedsum=False)
 
         applycal_task = applycal.IFApplycal(applycal_inputs)
 

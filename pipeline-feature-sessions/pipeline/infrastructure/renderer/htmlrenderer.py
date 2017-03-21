@@ -451,7 +451,7 @@ class T1_3MRenderer(RendererBase):
                     for resultitem in result:
                         vis = os.path.basename(resultitem.inputs['vis'])
                         ms = context.observing_run.get_ms(vis)
-                        flagtable = {}
+                        flagtable = collections.OrderedDict()
                         for field in resultitem.flagsummary:
                             intents = ','.join([f.intents for f in ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
                                                 if field in f.name][0])

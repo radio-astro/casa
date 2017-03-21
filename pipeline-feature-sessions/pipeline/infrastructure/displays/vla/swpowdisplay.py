@@ -86,7 +86,7 @@ class swpowPerAntennaChart(object):
 
         plots = []
 
-        LOG.info("Plotting swpowcal charts")
+        LOG.info("Plotting swpowcal charts for " + self.yaxis)
 
         nplots = numAntenna
 
@@ -104,14 +104,16 @@ class swpowPerAntennaChart(object):
             figfile = os.path.join(stage_dir, filename)
 
             plotrange = []
+
             if self.yaxis == 'spgain':
-                plotrange = []
+                plotrange = [0,0,0,1.0]
             if self.yaxis == 'tsys':
                 plotrange = [0,0,0,100]
                 spws = m.get_all_spectral_windows()
                 freqs = sorted(set([spw.max_frequency.value for spw in spws]))
-                if float(max(freqs)) >= 18000000000.00:
+                if float(max(freqs)) >= 18000000000.0:
                     plotrange = [0,0,0,200]
+
 
             if not os.path.exists(figfile):
                 try:

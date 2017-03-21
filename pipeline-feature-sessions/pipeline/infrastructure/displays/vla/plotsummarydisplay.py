@@ -14,23 +14,15 @@ class plotsummarySummaryChart(object):
         self.context = context
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
-        #self.caltable = result.final[0].gaintable
+        # self.caltable = result.final[0].gaintable
 
     def plot(self):
         plots = []
         context = self.context
-        result = self.result
 
         m = context.observing_run.measurement_sets[0]
-        numAntenna = len(m.antennas)
-        bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
-        bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = m.get_vla_corrstring()
-        delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
-        field_ids = m.get_vla_field_ids()
-        field_names = m.get_vla_field_names()
         channels = m.get_vla_numchan()
 
         ms_active=m.name
@@ -69,16 +61,11 @@ class plotsummarySummaryChart(object):
 
         plotfields = calfields
 
-        # Nplots = 30
-        # if len(alltargetfields) > 100 and len(alltargetfields) < 1000: Nplots = 30
-        # if len(alltargetfields) > 1000: Nplots = 1000
-
         Nplots = (len(alltargetfields)/30)+1
 
         targetfields = [field for field in alltargetfields[0:len(alltargetfields):Nplots]]
 
         plotfields.extend(targetfields)
-
 
         for field in plotfields:
             figfile = self.get_figfile('field'+str(field.id)+'_amp_uvdist')

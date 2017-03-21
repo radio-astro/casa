@@ -99,12 +99,6 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hifv_circfeedpolcal</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
         <Command xmlns="">hifv_applycals</Command>
         <ParameterSet>
         </ParameterSet>

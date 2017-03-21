@@ -174,3 +174,76 @@ class SDMSExportData(h_exportdata.ExportData):
         ous = pipemanifest.get_ous()
         pipemanifest.add_jyperk(ous, os.path.basename(jyperk))
         pipemanifest.write(manifest_file)
+        
+    def _save_final_flagversion (self, vis, flag_version_name):
+
+        """
+        Save the final flags to a final flag version.
+        Save flags for baseline-subtracted MS as well as calibrated (original) MS.
+        """
+        super(SDMSExportData, self)._save_final_flagversion(vis, flag_version_name)
+        ms = self.inputs.context.observing_run.get_ms(vis)
+        work_data = ms.work_data
+        if (work_data != vis) and (os.path.exists(work_data)):
+            super(SDMSExportData, self)._save_final_flagversion(work_data, flag_version_name)
+
+    def _export_final_flagversion (self, context, vis, flag_version_name,
+                                   products_dir):
+
+        """
+        Save the final flags version to a compressed tarfile in products.
+        Include flags for baseline-subtracted MS as well as calibrated (original) MS.
+        """
+
+        # Save the current working directory and move to the pipeline
+        # working directory. This is required for tarfile IO
+        cwd = os.getcwd()
+        os.chdir (context.output_dir)
+
+        ms = self.inputs.context.observing_run.get_ms(vis)
+        work_data = ms.work_data
+        if (work_data != vis) and (os.path.exists(work_data)):
+            vislist = [vis, work_data]
+        else:
+            vislist = [vis]
+            
+
+        flagsname_list = []
+        ti_list = []
+        tarfilename = os.path.basename(vis) + '.flagversions.tgz'
+        for _vis in vislist:
+            # Define the name of the output tarfile
+            visname = os.path.basename(_vis)
+            LOG.info('Storing final flags for %s in %s' % (visname, tarfilename))
+    
+            # Define the directory to be saved
+            flagsname = os.path.join (visname + '.flagversions',
+                                      'flags.' + flag_version_name)
+            LOG.info('Saving flag version %s' % (flag_version_name))
+    
+            # Define the versions list file to be saved
+            flag_version_list = os.path.join (visname + '.flagversions',
+                                              'FLAG_VERSION_LIST')
+            ti = tarfile.TarInfo(flag_version_list)
+            #line = "Pipeline_Final : Final pipeline flags\n"
+            line = "%s : Final pipeline flags\n" % flag_version_name
+            ti.size = len (line)
+            LOG.info('Saving flag version list')
+            
+            flagsname_list.append(flagsname)
+            ti_list.append(ti)
+
+        # Create the tar file
+        if not self._executor._dry_run:
+            tar = tarfile.open (os.path.join(products_dir, tarfilename), "w:gz")
+            for flagsname in flagsname_list:
+                tar.add (flagsname)
+            for ti in ti_list:
+                tar.addfile (ti, StringIO.StringIO(line))
+            tar.close()
+
+        # Restore the original current working directory
+        os.chdir(cwd)
+
+        return tarfilename
+        

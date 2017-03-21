@@ -243,8 +243,11 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         flag_totals = {}
         for r in result:
-            flag_totals = utils.dict_merge(flag_totals, 
-                                           self.flags_for_result(r, context))
+            try:
+                flag_totals = utils.dict_merge(flag_totals,
+                                               self.flags_for_result(r, context))
+            except:
+                LOG.info("No flagging summaries.")
 
         calapps = {}
         for r in result:
