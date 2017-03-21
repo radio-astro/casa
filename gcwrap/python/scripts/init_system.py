@@ -204,6 +204,9 @@ argparser.add_argument( "--pipeline",dest='pipeline',action='store_const',const=
                         help='start CASA pipeline run' )
 argparser.add_argument( "--agg",dest='agg',action='store_const',const=True,default=False,
                         help='startup without tkagg' )
+argparser.add_argument( '--iplog',dest='ipython_log',default=False,
+                          const=True,action='store_const',
+                          help='create ipython log' )
 argparser.add_argument( "-c",dest='execute',default=[],nargs=argparse.REMAINDER,
                         help='python eval string or python script to execute' )
 

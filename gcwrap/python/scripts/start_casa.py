@@ -49,6 +49,9 @@ try:
     __parse.add_argument( '--agg',dest='backend',default='tk',
                           const=None,action='store_const',
                           help='startup without tkagg' )
+    __parse.add_argument( '--iplog',dest='ipython_log',default=False,
+                          const=True,action='store_const',
+                          help='create ipython log' )
     __defaults,__trash = __parse.parse_known_args( )
     from IPython import __version__ as _ipython_version_
 
@@ -59,8 +62,7 @@ try:
     __configs.HistoryManager.hist_file = __configs.TerminalInteractiveShell.ipython_dir + "/history.sqlite"
     __configs.TerminalIPythonApp.matplotlib = __defaults.backend
 
-    # '-nomessages', '-nobanner','-logfile',ipythonlog,
-    start_ipython( config=__configs, argv=['--ipython-dir='+__defaults.rcdir+"/ipython", '--autocall=2', "-c", "for i in " + str(__startup_scripts) + ": execfile( i )"+("\n%matplotlib" if __defaults.backend is not None else ""), "-i" ] )
+    start_ipython( config=__configs, argv= (['--logfile='+casa['files']['iplogfile']] if __defaults.ipython_log else []) + ['--ipython-dir='+__defaults.rcdir+"/ipython", '--autocall=2', "-c", "for i in " + str(__startup_scripts) + ": execfile( i )"+("\n%matplotlib" if __defaults.backend is not None else ""), "-i" ] )
 
 except:
     print "Unexpected error:", sys.exc_info()[0]

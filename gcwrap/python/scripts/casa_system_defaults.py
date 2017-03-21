@@ -7,6 +7,7 @@ if _homedir == None :
    print "Environment variable HOME is not set, please set it"
    sys.exit(1)
 
+__curtime = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
 ###
 ### global casa state
 ###
@@ -30,7 +31,8 @@ casa = { 'helpers': {
          },
          'flags': { },
          'files': { 
-             'logfile': os.getcwd( ) + '/casa-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
+             'logfile': os.getcwd( ) + '/casa-'+__curtime+'.log',
+             'iplogfile': os.getcwd( ) + '/ipython-'+__curtime+'.log'
          },
          'state' : {
              'init_version': 1,
