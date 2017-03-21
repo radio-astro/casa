@@ -56,6 +56,7 @@ from tasks import *
 from taskinit import *
 import unittest
 import inspect
+import numpy as np
 
 _ia = iatool( )
 _vp = vptool( )
@@ -1230,6 +1231,7 @@ class test_cube(testref_base):
           """ [cube] Test_Cube_21  """
           # data sel with channel gap (10,11 excluded) 4~9, 12~14
           testid=21
+          self.testList[testid]['interpolation']='nearest'
           print " : " , self.testList[testid]['desc']
           self.prepData('refim_point.ms')
           ret = self.run_cubetclean(testid)
@@ -1237,8 +1239,8 @@ class test_cube(testref_base):
           self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
           report=self.th.checkall(imexist=[self.img+self.testList[testid]['imagename']+'.image'],
           imval=[(self.img+self.testList[testid]['imagename']+'.image',1.250001562, [50,50,0,0]),
-                 (self.img+self.testList[testid]['imagename']+'.image',0.0, [50,50,0,5]),
-                 (self.img+self.testList[testid]['imagename']+'.image',0.0, [50,50,0,6])])
+                 (self.img+self.testList[testid]['imagename']+'.image',0.0, [50,50,0,6]),
+                 (self.img+self.testList[testid]['imagename']+'.image',0.0, [50,50,0,7])])
           report2 = self.th.checkspecframe(self.img+self.testList[testid]['imagename']+'.image','LSRK',1.199986500e9)
           self.checkfinal(report+report2)
 
@@ -1846,7 +1848,8 @@ class test_modelvis(testref_base):
           delmod(self.msfile);self.th.delmodels(msname=self.msfile,modcol='delete')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec', spw='0:0~8;12~19',niter=10,savemodel='modelcolumn')
           self.assertTrue(self.th.exists(self.img+'.model') )
-          self.assertTrue( self.th.checkmodelchan(self.msfile,10) == 0.0 and self.th.checkmodelchan(self.msfile,3) > 0.0 )
+          ###vi2 leave unselected channel as is so it will be 1.0
+          self.assertTrue( (self.th.checkmodelchan(self.msfile,10) == 0.0) or (np.abs(self.th.checkmodelchan(self.msfile,10)-1) < 1.0e-12)   and self.th.checkmodelchan(self.msfile,3) > 0.0 )
 
           delmod(self.msfile);self.th.delmodels(msname=self.msfile,modcol='delete')
           ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=self.img+'.model', spw='0',niter=0,savemodel='modelcolumn')
