@@ -260,6 +260,9 @@ Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data,
                   IPosition localmaxpos(1,0); 
                   IPosition localminpos(1,0);
 		  Vector<Double> freqs=vb->getFrequencies(0, freqFrame);
+		  if(freqs.nelements() ==0){
+		    throw(AipsError("Frequency selection error" ));
+		  }
                   minMax(localmin,localmax,localminpos, localmaxpos, freqs);
 		  //localmax=max(freqs);
 		  //localmin=min(freqs);
@@ -278,7 +281,8 @@ Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data,
                   else {
 		    freqEnd=max(freqEnd, localmax+chanWidths[localmaxpos[0]]/2.0);
 		    freqStart=min(freqStart, localmin-chanWidths[localminpos[0]]/2.0);
-                  } 
+                  }
+		   
 		}
 	}
     freqMin=freqStart;
@@ -666,7 +670,68 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
 
 
  }
+  MDirection VisBufferUtil::getPointingDir(const vi::VisBuffer2& vb, const Int antid, const Int vbrow){
+	 Timer tim;
+	 tim.mark();
+	 ROMSColumns msc(vb.ms());
+	 //MDirection outdir;
+	 if(oldMSId_p != vb.msId()){
+		 tim.mark();
+		 cerr << "MSID: "<< oldMSId_p <<  "    " << vb.msId() << endl;
+		 oldMSId_p=vb.msId();
+		 if(timeAntIndex_p.shape()(0) < (oldMSId_p+1)){
+			 timeAntIndex_p.resize(oldMSId_p+1, true);
+		 	 cachedPointingDir_p.resize(oldMSId_p+1, true);
+		 }
+		 if(  timeAntIndex_p[oldMSId_p].empty()){
+			 Vector<Double> tOrig;
+			 msc.time().getColumn(tOrig);
+			 Vector<Double> t;
+			 rejectConsecutive(tOrig, t);
+			 Vector<uInt>  uniqIndx;
+			 uInt nTimes=GenSortIndirect<Double>::sort (uniqIndx, t, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
+			 uInt nAnt=msc.antenna().nrow();
+			 const ROMSPointingColumns& mspc=msc.pointing();
+			 Int guessIndex=0;
+			 for (uInt k=0; k <nTimes; ++k){
+				 for (uInt a=0; a < nAnt; ++a){
+					 std::ostringstream oss;
+					 oss.precision(13);
+					 oss << t[uniqIndx[k]] << "_" << a;
+					 String key=oss.str();
+					 //String key=String::toString(t[uniqIndx[k]])+String("_")+String::toString(a);
+					 Int row=mspc.pointingIndex(a, t[uniqIndx[k]], guessIndex);
+					 //cerr << "String "<< key << " pointing row "<< row << endl;
+					 timeAntIndex_p[oldMSId_p][key]=row > -1 ? cachedPointingDir_p[oldMSId_p].shape()[0] : -1;
+					 guessIndex=row;
+					 if(row >-1){
+						 cachedPointingDir_p[oldMSId_p].resize(cachedPointingDir_p[oldMSId_p].nelements()+1, true);
+						 cachedPointingDir_p[oldMSId_p][cachedPointingDir_p[oldMSId_p].nelements()-1]=mspc.directionMeas(row);
+					 }
 
+				 }
+			 }
+
+		 }
+		 tim.show("After caching all ant pointings");
+	 }
+
+	 /////
+	 //	 String index=String::toString(vb.time()(vbrow))+String("_")+String::toString(antid);
+	 std::ostringstream oss;
+	 oss.precision(13);
+	 oss << vb.time()(vbrow) << "_" << antid  ;
+	 String index=oss.str();
+	 Int rowincache=timeAntIndex_p[oldMSId_p][index];
+	 //cerr << "key "<< index << " index " << rowincache << endl;
+	 tim.show("retrieved cache");
+	 if(rowincache <0)
+		 return vb.phaseCenter();
+	 return cachedPointingDir_p[oldMSId_p][rowincache];
+
+
+
+ }
  //utility to reject consecutive similar value for sorting
  void VisBufferUtil::rejectConsecutive(const Vector<Double>& t, Vector<Double>& retval){
      uInt n=t.nelements();

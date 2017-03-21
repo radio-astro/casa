@@ -99,9 +99,9 @@ using namespace std;
 using namespace casacore;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  SynthesisImagerVi2::SynthesisImagerVi2() : SynthesisImager(), mss_p(0), vi_p(0) {
+  SynthesisImagerVi2::SynthesisImagerVi2() : SynthesisImager(), vi_p(0), fselections_p(nullptr) {
 
-
+    mss_p.resize(0);
   }
 
   SynthesisImagerVi2::~SynthesisImagerVi2(){
@@ -216,6 +216,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     ///Channel selection
     {
+      if(!fselections_p) fselections_p=new FrequencySelections();
       Matrix<Int> chanlist = thisSelection.getChanList(mss_p[mss_p.nelements()-1]);
       Matrix<Double> freqList=thisSelection.getChanFreqList(mss_p[mss_p.nelements()-1]);
       //cerr << std::setprecision(12) << "FreqList " << freqList << endl;
@@ -235,6 +236,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//cerr << "chanlist " << chanlist << "\n freqlis " << freqList << endl;
         MFrequency::Types freqFrame=MFrequency::castType(ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().measFreqRef()(Int(chanlist(0,0))));
         vi::FrequencySelectionUsingFrame channelSelector(freqFrame);
+
     	  for(uInt k=0; k < nSelections; ++k){
 	    //The getChanfreqList is wrong for beg and end..going round that too.
 	    Vector<Double> freqies=ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().chanFreq()(Int(chanlist(k,0)));
@@ -253,9 +255,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      //topfreq=freqList(k, 2); //+freqList(k,3)/2.0;
 	    }
 	    //cerr << std::setprecision(12) << "Dat lowFreq "<< lowfreq << " topfreq " << topfreq << endl; 
-            channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
+            //channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
+	    andFreqSelection(mss_p.nelements()-1, Int(freqList(k,0)), lowfreq, topfreq, freqFrame);
           }
-    	  fselections_p.add(channelSelector);
+    	  //fselections_p->add(channelSelector);
           //////////////////////////////////
       }
       else{
@@ -276,9 +279,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  vi::FrequencySelectionUsingFrame channelSelector((vi_p ? freqFrame :selpars.freqframe));
     	  for(uInt k=0; k < nSelections; ++k){
 	    //cerr << "lowFreq "<< lowfreq << " topfreq " << topfreq << endl;
-            channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
+            //channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
+	    andFreqSelection((mss_p.nelements()-1), Int(freqList(k,0)), lowfreq, topfreq, vi_p ?freqFrame : selpars.freqframe);
           }
-    	  fselections_p.add(channelSelector);
+    	  //fselections_p->add(channelSelector);
 
       }
     }
@@ -316,6 +320,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return true;
 
 
+
+  }
+
+  void SynthesisImagerVi2::andFreqSelection(const Int msId, const Int spwId,  const Double freqBeg, const Double freqEnd, const MFrequency::Types frame){
+    
+   
+    Int key=msId;
+   
+    Bool isDefined=False;
+    FrequencySelectionUsingFrame frameSel(frame);
+    for (uInt k =0; k<freqBegs_p.size(); ++k){ 
+      // cerr <<freqBegs_p[k].first  << " == " << key << " && " << freqSpws_p[k].second<< " == " << spwId << " && " << freqBeg << " < " << freqEnds_p[k].second<< " && " << freqEnd << " > " << freqBegs_p[k].second << endl;
+	if((freqBegs_p[k].first == key) && (freqSpws_p[k].second==spwId)  && (freqBeg < freqEnds_p[k].second) && (freqEnd > freqBegs_p[k].second)){
+	isDefined=True;
+	//cerr << k << " inside freqBegs " << freqBegs_p[k].second << "  " << freqBeg << endl;  
+	if(freqBegs_p[k].second < freqBeg)
+	  freqBegs_p[k].second=freqBeg;
+	if(freqEnds_p[k].second > freqEnd)
+	  freqEnds_p[k].second=freqEnd;
+	//cerr << "modified " <<  freqBegs_p[k].second << "   "  <<  freqEnds_p[k].second << endl;
+      }
+	//cerr << "added " << k << " freqBegs " << freqBegs_p[k].second << "  " << freqEnds_p[k].second << endl;  
+      frameSel.add(spwId,  freqBegs_p[k].second, freqEnds_p[k].second);
+    }
+    if(!isDefined && key >=0){
+      //cerr << "undefined " << key << " freqBegs "  << freqBeg << "  " << freqEnd << endl;  
+      freqBegs_p.push_back(make_pair(key, freqBeg));
+      freqEnds_p.push_back(make_pair(key, freqEnd));
+      freqSpws_p.push_back(make_pair(key, spwId));
+      frameSel.add(spwId,  freqBeg, freqEnd);
+    }
+    CountedPtr<vi::FrequencySelections> copyFsels=fselections_p->clone();
+    uInt nMSs=copyFsels->size() <=msId ? msId+1 : copyFsels->size();
+    fselections_p=new FrequencySelections();
+    for (uInt k=0;  k < nMSs ; ++k){
+      if(k==uInt(msId)){
+	fselections_p->add(frameSel);
+	//cerr <<"framesel " << frameSel.toString() << endl;
+      }
+      else{
+	const FrequencySelectionUsingFrame& thissel= static_cast<const FrequencySelectionUsingFrame &> (copyFsels->get(k));
+	fselections_p->add(thissel);
+
+      }
+    }
+    
+ 
 
   }
 
@@ -1463,12 +1514,12 @@ void SynthesisImagerVi2::unlockMSs()
   void SynthesisImagerVi2::createVisSet(const Bool /*writeAccess*/)
   {
     LogIO os( LogOrigin("SynthesisImagerVi2","createVisSet",WHERE) );
-    if(mss_p.nelements() != uInt(fselections_p.size()) && (fselections_p.size() !=0)){
+    if(mss_p.nelements() != uInt(fselections_p->size()) && (fselections_p->size() !=0)){
       throw(AipsError("Discrepancy between Number of MSs and Frequency selections"));
     }
     vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), true); //writeAccess);
-    if(fselections_p.size() !=0)
-      vi_p->setFrequencySelection (fselections_p);
+    if(fselections_p->size() !=0)
+      vi_p->setFrequencySelection (*fselections_p);
     //
     vi_p->originChunks();
     vi_p->origin();

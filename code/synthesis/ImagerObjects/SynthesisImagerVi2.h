@@ -165,13 +165,14 @@ public:
 
   bool makePB();
   bool makePrimaryBeam(PBMath& pbMath);
- 
+  void  andFreqSelection(const casacore::Int msId, const casacore::Int spwId,  const casacore::Double freqBeg, const casacore::Double freqEnd, const casacore::MFrequency::Types frame);
    // Other Options
-  casacore::Block<const casacore::MeasurementSet *> mss_p;
-  vi::FrequencySelections fselections_p;
+  //casacore::Block<const casacore::MeasurementSet *> mss_p;
   casacore::CountedPtr<vi::VisibilityIterator2>  vi_p;
-
-
+  casacore::CountedPtr<vi::FrequencySelections> fselections_p;
+  std::vector<std::pair<casacore::Int, casacore::Double> >freqBegs_p;
+  std::vector<std::pair<casacore::Int, casacore::Double> > freqEnds_p;
+  std::vector<std::pair<casacore::Int, casacore::Double> > freqSpws_p;
 };
 } //# NAMESPACE CASA - END
 

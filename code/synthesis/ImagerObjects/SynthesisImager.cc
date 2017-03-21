@@ -852,6 +852,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   //Record outRec=SynthesisUtilMethods::cubeDataPartition(selpars, 1, freq1, freq2);
 	   //Record partRec=outRec.asRecord("0");
 
+	   if(mss_p.nelements() >0){
+	     for (uInt k=0; k < mss_p.nelements(); ++k){
+	       if(mss_p[k])
+		 delete mss_p[k];
+	     }
+	     mss_p.resize(0, true, false);
+	   }
 	   ///resetting the block ms
 	   mss4vi_p.resize(0,true, false);
 	   //resetting data selection stored

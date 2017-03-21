@@ -360,8 +360,8 @@ protected:
 
   ///Vi2 stuff
   casacore::Block<const casacore::MeasurementSet *> mss_p;
-  vi::FrequencySelections fselections_p;
-  casacore::CountedPtr<vi::VisibilityIterator2>  vi_p;
+  //vi::FrequencySelections fselections_p;
+  //casacore::CountedPtr<vi::VisibilityIterator2>  vi_p;
 
   // Other Options
   ////////////////////////////////////Till VisibilityIterator2 works as advertised
