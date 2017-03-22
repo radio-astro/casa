@@ -1954,13 +1954,13 @@ HPX HEALPix grid.  -->
     </param>
     <param type="double" name="noisethreshold" subparam="true">
     <shortdescription>noisethreshold * rms in residual image</shortdescription>
-           <value type="double">3.0</value>
+           <value type="double">5.0</value>
 <description>Sub-parameter for "auto-multithresh":  mask threshold based on the noise level: noisethreshold * rms
 </description>
     </param>
     <param type="double" name="lownoisethreshold" subparam="true">
     <shortdescription>lownoisethreshold * rms in residual image</shortdescription>
-           <value type="double">3.0</value>
+           <value type="double">1.5</value>
 <description>Sub-parameter for "auto-multithresh":  mask threshold to grow previously masked regions via binary dilation:   lownoisethreshold * rms in residual image
 </description>
     </param>
@@ -1972,10 +1972,9 @@ HPX HEALPix grid.  -->
     </param>
     <param type="double" name="minbeamfrac" subparam="true">
            <shortdescription>minimum beam fraction for pruning</shortdescription>
-           <value type="double">-1.0</value>
+           <value type="double">0.3</value>
 <description>Sub-parameter for "auto-multithresh":  minimum beam fraction in size to prune masks smaller than mimbeamfrac * beam
-
-           The default, -1: No pruning
+                       &lt;=0.0 : No pruning
 </description>
     </param>
     <param type="double" name="cutthreshold" subparam="true">
@@ -2519,10 +2518,10 @@ HPX HEALPix grid.  -->
        <equals type="string" value="auto-multithresh">
          <default param="pbmask"><value>0.2</value></default>
          <default param="sidelobethreshold"><value>3.0</value></default>
-         <default param="noisethreshold"><value>3.0</value></default>
-         <default param="lownoisethreshold"><value>1.0</value></default>
+         <default param="noisethreshold"><value>5.0</value></default>
+         <default param="lownoisethreshold"><value>1.5</value></default>
          <default param="smoothfactor"><value>1.0</value></default>
-         <default param="minbeamfrac"><value type="double">-1.0</value></default>
+         <default param="minbeamfrac"><value type="double">0.3</value></default>
          <default param="cutthreshold"><value>0.01</value></default>
        </equals>
    </when>
