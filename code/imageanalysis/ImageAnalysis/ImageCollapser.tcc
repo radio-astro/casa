@@ -439,39 +439,40 @@ template<class T> void ImageCollapser<T>::_doMedian(
     }
     LatticeStepper stepper(image->shape(), cursorShape);
     std::unique_ptr<Array<Bool>> outMask;
+    // accumtype being the same precision as the input data type is ok here,
+    // since we are only computing the median and not actually accumulating
     ClassicalStatistics<
-        typename NumericTraits<T>::PrecisionType,
-        typename Array<T>::const_iterator, Array<Bool>::const_iterator
+        T, typename Array<T>::const_iterator, Array<Bool>::const_iterator
     > stats;
     auto hasMaskedPixels = ! ImageMask::isAllMaskTrue(*image);
-    T median = 0;
     for (stepper.reset(); !stepper.atEnd(); stepper++) {
         Slicer slicer(
             stepper.position(), stepper.endPosition(), casacore::Slicer::endIsLast
         );
         auto data = image->getSlice(slicer);
-        auto medianDone = False;
+        Bool isMasked = False;
+        Array<Bool> maskSlice;
         if (hasMaskedPixels) {
-            auto maskSlice = image->getMaskSlice(slicer);
+            maskSlice = image->getMaskSlice(slicer);
+            isMasked = ! allTrue(maskSlice);
+        }
+        if (isMasked) {
             if (! anyTrue(maskSlice)) {
                 if (! outMask) {
                     outMask.reset(new Array<Bool>(outImage.shape(), true));
                 }
                 (*outMask)(stepper.position()) = false;
-                median = 0;
-                medianDone = True;
+                outImage.putAt(T(0), stepper.position());
             }
             else if (! allTrue(maskSlice)) {
                 stats.setData(data.begin(), maskSlice.begin(), data.size());
-                median = stats.getMedian();
-                medianDone = True;
+                outImage.putAt(stats.getMedian(), stepper.position());
             }
         }
-        if (! medianDone) {
+        else {
             stats.setData(data.begin(), data.size());
-            median = stats.getMedian();
+            outImage.putAt(stats.getMedian(), stepper.position());
         }
-        outImage.putAt(median, stepper.position());
     }
     if (outMask) {
         outImage.attachMask(ArrayLattice<Bool>(*outMask));
