@@ -29,6 +29,8 @@
 
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/BasicSL/STLIO.h>
+#include <casacore/scimath/Mathematics/ClassicalStatistics.h>
+#include <casacore/scimath/Mathematics/NumericTraits.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
@@ -437,48 +439,39 @@ template<class T> void ImageCollapser<T>::_doMedian(
     }
     LatticeStepper stepper(image->shape(), cursorShape);
     std::unique_ptr<Array<Bool>> outMask;
+    ClassicalStatistics<
+        typename NumericTraits<T>::PrecisionType,
+        typename Array<T>::const_iterator, Array<Bool>::const_iterator
+    > stats;
     auto hasMaskedPixels = ! ImageMask::isAllMaskTrue(*image);
+    T median = 0;
     for (stepper.reset(); !stepper.atEnd(); stepper++) {
         Slicer slicer(
             stepper.position(), stepper.endPosition(), casacore::Slicer::endIsLast
         );
-        auto data = image->getSlice(slicer).tovector();
+        auto data = image->getSlice(slicer);
+        auto medianDone = False;
         if (hasMaskedPixels) {
-            Vector<Bool> maskSlice(image->getMaskSlice(slicer).tovector());
+            auto maskSlice = image->getMaskSlice(slicer);
             if (! anyTrue(maskSlice)) {
                 if (! outMask) {
                     outMask.reset(new Array<Bool>(outImage.shape(), true));
                 }
                 (*outMask)(stepper.position()) = false;
-                data.resize(0);
+                median = 0;
+                medianDone = True;
             }
             else if (! allTrue(maskSlice)) {
-                auto diter = data.begin();
-                auto miter = maskSlice.begin();
-                while (diter != data.end()) {
-                    if (! *miter) {
-                        data.erase(diter);
-                        if (diter == data.end()) {
-                            break;
-                        }
-                    }
-                    else {
-                        ++diter;
-                    }
-                    ++miter;
-                }
+                stats.setData(data.begin(), maskSlice.begin(), data.size());
+                median = stats.getMedian();
+                medianDone = True;
             }
         }
-        casacore::uInt s = data.size();
-        if (s > 0) {
-            sort(data.begin(), data.end());
+        if (! medianDone) {
+            stats.setData(data.begin(), data.size());
+            median = stats.getMedian();
         }
-        outImage.putAt(
-            s == 0 ? 0
-              : s % 2 == 1 ? data[s / 2]
-                : (data[s / 2] + data[s / 2 - 1]) / 2,
-            stepper.position()
-        );
+        outImage.putAt(median, stepper.position());
     }
     if (outMask) {
         outImage.attachMask(ArrayLattice<Bool>(*outMask));
