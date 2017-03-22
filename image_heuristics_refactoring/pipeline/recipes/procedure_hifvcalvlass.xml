@@ -1,0 +1,218 @@
+<ProcessingProcedure>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_importdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_hanning</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_flagdata</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intents</Keyword>
+                <Value xmlns="">*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flagbackup</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">scan</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">baseband</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">clip</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">autocorr</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">hm_tbuff</Keyword>
+                <Value xmlns="">manual</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">template</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">online</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">tbuff</Keyword>
+                <Value xmlns="">0.225</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">fracspw</Keyword>
+                <Value xmlns="">0.05</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">shadow</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">quack</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">edgespw</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_vlasetjy</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_priorcals</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">tecmaps</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_testBPdcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_flagbaddef</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_checkflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_semiFinalBPdcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_checkflag</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">checkflagmode</Keyword>
+                <Value xmlns="">semi</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_semiFinalBPdcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_solint</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_fluxboot</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_finalcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_circfeedpolcal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_applycals</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">flagsum</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flagdetailedsum</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_targetflag</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intents</Keyword>
+                <Value xmlns="">*CALIBRATE*,*TARGET*</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_statwt</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_plotsummary</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimlist</Command>
+        <ParameterSet>
+	    <Parameter>
+		<Keyword xmlns="">intent</Keyword>
+		    <Value xmlns="">PHASE,BANDPASS</Value>
+	    </Parameter>
+	</ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimages</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_exportdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+
+</ProcessingProcedure>
