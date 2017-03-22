@@ -116,7 +116,8 @@ def read_fluxes_db(ms):
         source_name = source.name
         asdmmessage = ''
         try:
-            fluxdict = fluxservice(ms, frequency, source_name)
+            serviceurl = 'https://almascience.eso.org/sc/flux'
+            fluxdict = fluxservice(serviceurl, ms, frequency, source_name)
             f = fluxdict['fluxdensity']
             spix = fluxdict['spectralindex']
 
@@ -188,7 +189,8 @@ def flux_nosourcexml(ms):
 
             try:
 
-                fluxdict = fluxservice(ms, frequency, sourcename)
+                serviceurl = 'https://almascience.eso.org/sc/flux'
+                fluxdict = fluxservice(serviceurl, ms, frequency, sourcename)
                 f = fluxdict['fluxdensity']
                 iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
                        measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
@@ -202,16 +204,17 @@ def flux_nosourcexml(ms):
     return result
 
 
-def fluxservice (ms, frequency, sourcename):
+def fluxservice (serviceurl, ms, frequency, sourcename):
     """
     Usage of this online service requires:
+        - serviceurl - url for the db service
         - ms - for getting the date
         - frequency_text - we will get the frequency out of this in Hz
         - source - we will get source.name from this object
     """
     # serviceurl = 'http://bender.csrg.cl:2121/bfs-0.2/ssap'
     # serviceurl =  'http://asa-test.alma.cl/bfs/'
-    serviceurl = 'https://almascience.eso.org/sc/flux'
+    # serviceurl = 'https://almascience.eso.org/sc/flux'
 
     qt = casatools.quanta
     mt = casatools.measures
