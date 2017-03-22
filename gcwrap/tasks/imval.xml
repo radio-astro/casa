@@ -70,13 +70,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       </param>
 
       <param type="any" name="data">
-    	<description>The mask values found at the give point(s).</description>
+    	<description>The pixel values found at the given point(s).</description>
 	<any type="variant"/>
 	<value>{}</value>
       </param>
 
       <param type="any" name="mask">
-    	<description>The mask values found at the give point(s).</description>
+    	<description>The mask values found at the given point(s).</description>
 	<any type="variant"/>
 	<value>{}</value>
       </param>
