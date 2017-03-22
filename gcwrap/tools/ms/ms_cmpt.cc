@@ -1438,8 +1438,9 @@ class ChunkStatisticsAccumulator
 	: public Vi2ChunkStatisticsIteratee<D,W,M>
 {
 	std::map<double, A> quantileToValue;
-	const double quartile = 0.75;
-	std::set<double> quantiles = {quartile};
+	const double quartile1 = 0.25;
+	const double quartile3 = 0.75;
+	std::set<double> quantiles = {quartile1, quartile3};
 
 	Record &acc;
 	vector<Int> &sortColumnIds;
@@ -1468,7 +1469,8 @@ public:
 		quantileToValue.clear();
 		A median = statistics.getMedianAndQuantiles(quantileToValue, quantiles);
 		stats.define("median", median);
-		stats.define("quartile", quantileToValue[quartile]);
+		stats.define("firstquartile", quantileToValue[quartile1]);
+		stats.define("thirdquartile", quantileToValue[quartile3]);
 		A medianAbsDevMed = statistics.getMedianAbsDevMed();
 		stats.define("medabsdevmed", medianAbsDevMed);
 

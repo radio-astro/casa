@@ -88,7 +88,8 @@ def visstat2(vis=None,
                 casalog.post("        -- Root mean square [rms]:                    " + str(s[stats]['rms']), "NORMAL")
                 casalog.post("        -- Median of the pixel values [median]:       " + str(s[stats]['median']), "NORMAL")
                 casalog.post("        -- Median of the deviations [medabsdevmed]:   " + str(s[stats]['medabsdevmed']), "NORMAL")
-                casalog.post("        -- Quartile [quartile]:                       " + str(s[stats]['quartile']), "NORMAL")
+                casalog.post("        -- First quartile [firstquartile]:            " + str(s[stats]['firstquartile']), "NORMAL")
+                casalog.post("        -- Third quartile [thirdquartile]:            " + str(s[stats]['thirdquartile']), "NORMAL")
         else:
             casalog.post(stats + " -- No valid points found", "WARN")
 

@@ -208,9 +208,10 @@
       This task returns statistical information about data in a Measurement
       Set or Multi-MS.
 
-      The following values are computed: mean value, sum of values,
-      sum of squared values, median, median absolute deviation, quartile,
-      minimum, maximum, variance, standard deviation, and root mean square.
+      The following values are computed: mean value, sum of values, sum of
+      squared values, median, median absolute deviation, first and third
+      quartiles, minimum, maximum, variance, standard deviation, and root mean
+      square.
 
       The following axes are supported: uvw, flag, weight, sigma, antenna1,
       antenna2, feed1, feed2, field_id, array_id, data_desc_id, flag_row,

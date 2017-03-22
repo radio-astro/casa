@@ -88,7 +88,8 @@ class visstat2_test(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         expected = {self.msfile:
-                    {'DATA_DESC_ID=0': {'isMasked': True,
+                    {'DATA_DESC_ID=0': {'firstquartile': 0.024146264419,
+                                        'isMasked': True,
                                         'isWeighted': False,
                                         'max': 73.75,
                                         'maxDatasetIndex': 12,
@@ -100,7 +101,7 @@ class visstat2_test(unittest.TestCase):
                                         'minDatasetIndex': 54,
                                         'minIndex': 8692,
                                         'npts': 2660994.0,
-                                        'quartile': 0.3291134536266327,
+                                        'thirdquartile': 0.3291134536266327,
                                         'rms': 17.081207832906546,
                                         'stddev': 16.382008276126726,
                                         'sum': 12871502.415939873,
@@ -176,7 +177,8 @@ class visstat2_test(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         expected = {self.msfile:
-                    {'DATA_DESC_ID=0': {'isMasked': True,
+                    {'DATA_DESC_ID=0': {'firstquartile': 1.0,
+                                        'isMasked': True,
                                         'isWeighted': False,
                                         'max': 1.0,
                                         'maxDatasetIndex': 0,
@@ -188,7 +190,7 @@ class visstat2_test(unittest.TestCase):
                                         'minDatasetIndex': 0,
                                         'minIndex': 0,
                                         'npts': 2660994.0,
-                                        'quartile': 1.0,
+                                        'thirdquartile': 1.0,
                                         'rms': 1.0,
                                         'stddev': 0.0,
                                         'sum': 2660994.0,
@@ -354,7 +356,8 @@ class visstat2_test(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         expected = {self.msfile:
-                    {'DATA_DESC_ID=0': {'isMasked': True,
+                    {'DATA_DESC_ID=0': {'firstquartile': 0.024146264419,
+                                        'isMasked': True,
                                         'isWeighted': False,
                                         'max': 73.75,
                                         'maxDatasetIndex': 12,
@@ -366,7 +369,7 @@ class visstat2_test(unittest.TestCase):
                                         'minDatasetIndex': 54,
                                         'minIndex': 8692,
                                         'npts': 2660994.0,
-                                        'quartile': 0.3291134536266327,
+                                        'thirdquartile': 0.3291134536266327,
                                         'rms': 17.081207832906546,
                                         'stddev': 16.382008276126726,
                                         'sum': 12871502.415939873,
