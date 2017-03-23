@@ -114,11 +114,9 @@ class FlagCmd(object):
     """
 
     def __init__(self, filename=None, rulename=None, ruleaxis=None, spw=None,
-      antenna=None, intent=None, pol=None, axisnames=None,
-      flagcoords=None, channel_axis=None, reason=None,
-      extendfields=None, antenna_id_to_name=None):
-        # print 'FlagCmd intent=%s spw=%s antenna=%s axisnames=%s flagcoords=%s pol=%s reason=%s' % (
-        #   intent, spw, antenna, axisnames, flagcoords, pol, reason)
+                 antenna=None, intent=None, pol=None, time=None,
+                 axisnames=None, flagcoords=None, channel_axis=None,
+                 reason=None, extendfields=None, antenna_id_to_name=None):
 
         self.filename = filename
         self.rulename = rulename
@@ -127,6 +125,7 @@ class FlagCmd(object):
         self.antenna = antenna
         self.intent = intent
         self.pol = pol
+        self.time = time
         self.axisnames = axisnames
         self.flagcoords = flagcoords
         self.channel_axis = channel_axis
@@ -246,6 +245,17 @@ class FlagCmd(object):
                   in str(self.antenna).split('&')])
                 flagcmd += " antenna='%s'" % (antenna_name)
 
+        # Add time to flagging command, unless it was already added
+        # as part of flagcoords.
+        if self.time is not None and 'timerange' not in flagcmd:
+            self.start_time = self.time - 0.5
+            start = casatools.quanta.quantity(self.start_time, 's')
+            start = casatools.quanta.time(start, form=['ymd'])
+            self.end_time = self.time + 0.5
+            end = casatools.quanta.quantity(self.end_time + 0.5, 's')
+            end = casatools.quanta.time(end, form=['ymd'])
+            flagcmd += " timerange='%s~%s'" % (start[0], end[0])
+
         flagcmd += " reason='%s'" % reason
 
         flagcmd = flagcmd.strip()
@@ -261,7 +271,6 @@ class FlagCmd(object):
                         break
             flagcmd = ' '. join(specifiers)
 
-#        print 'flagcmd', flagcmd
         self.flagcmd = flagcmd
 
     @property

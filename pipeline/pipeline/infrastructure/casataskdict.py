@@ -23,6 +23,7 @@ CasaTaskDict = {
     'hif_applycal': 'IFApplycal',
     'hif_bandpass': 'Bandpass',
     'hif_bpflagchans': 'Bandpassflagchans',
+    'hif_correctedampflag': 'Correctedampflag',
     'hif_checkproductsize': 'CheckProductSize',
     'hif_rawflagchans': 'Rawflagchans',
     'hif_findcont': 'FindCont',
@@ -122,6 +123,7 @@ classToCASATask = {
     hif_tasks.Atmflag                 : 'hif_atmflag',
     hif_tasks.Bandpass                : 'hif_bandpass',
     hif_tasks.Bandpassflagchans       : 'hif_bpflagchans',
+    hif_tasks.Correctedampflag        : 'hif_correctedampflag',
     hif_tasks.CheckProductSize        : 'hif_checkproductsize',
     hif_tasks.FindCont                : 'hif_findcont',
     hif_tasks.Flagcorrected           : 'hif_flagcorrected',
@@ -269,6 +271,12 @@ TASK_COMMENTS = {
         'is used to calculate a short solint phase and short solint amplitude '
         'solution.'
     ),
+    (hif_tasks.Correctedampflag,): (
+        'This task identifies baselines and antennas with a significant '
+        'fraction of outlier integrations, based on a comparison of the '
+        'calibrated (corrected) amplitudes with the model amplitudes for one '
+        'or more specified calibrator sources.'
+    ),
     (hif_tasks.Setjy,): (
         'If the amplitude calibrator is a resolved solar system source, this '
         'uses a subset of antennas with short baselines (where the resolved '
@@ -292,7 +300,7 @@ TASK_COMMENTS = {
         'Time dependent gain calibrations are computed. '
     ),
     (h_tasks.Applycal, hif_tasks.IFApplycal, hsd_tasks.SDMSApplycal): (
-        'Calibrations are applied  to the data. Final flagging summaries '
+        'Calibrations are applied to the data. Final flagging summaries '
         'are computed'
     ),
     (hif_tasks.MakeImList,): (

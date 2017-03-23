@@ -5,6 +5,7 @@ from .applycal import IFApplycal
 from .atmflag import Atmflag
 from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .bpflagchans import Bandpassflagchans
+from .correctedampflag import Correctedampflag
 from .checkproductsize import CheckProductSize
 from .findcont import FindCont
 from .flagcorrected import Flagcorrected

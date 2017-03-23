@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_correctedampflag" category="pipeline">
+
+<shortdescription>Flag corrected - model amplitudes based on calibrators.</shortdescription>
+
+<description>
+Flag corrected - model amplitudes based on calibrators.
+</description>
+
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input measurement sets</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="intent" subparam="true">
+        <description>Data intent to use in selecting data to evaluate for flagging</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="field" subparam="true">
+        <description>Field ids to use in selecting data to evaluate for flagging</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="spw" subparam="true">
+        <description>Spectral windows to use in selecting data to evaluate for flagging, \'\' for all</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="antnegsig" subparam="true">
+        <description>Lower sigma threshold for identifying outliers as a result of bad antennas within individual timestamps</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="antpossig" subparam="true">
+        <description>Upper sigma threshold for identifying outliers as a result of bad antennas within individual timestamps</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="toomanyantbasedintfracthr" subparam="true">
+        <description>Threshold for maximum fraction of timestamps that are allowed to contain outliers</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="toomanyintfracthr" subparam="true">
+        <description>Initial threshold for maximum fraction of "outlier timestamps" over "total timestamps" that a baseline may be a part of</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="toomanyblfracthr" subparam="true">
+        <description>Initial threshold for maximum fraction of "bad baselines" over "all timestamps" that an antenna may be a part of</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="antblnegsig" subparam="true">
+        <description>Lower sigma threshold for identifying outliers as a result of "bad baselines" and/or "bad antennas" within baselines (across all timestamps)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="antblpossig" subparam="true">
+        <description>Upper sigma threshold for identifying outliers as a result of "bad baselines" and/or "bad antennas" within baselines (across all timestamps)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="relaxed_factor" subparam="true">
+        <description>Relaxed value to set the threshold scaling factor to under certain conditions (see task description)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operations mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or list commands(True)</description>
+       <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically apply results to context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="intent"><value type="string"></value></default>
+                <default param="field"><value type="string"></value></default>
+                <default param="spw"><value type="string"></value></default>
+                <default param="antnegsig"><value>8.0</value></default>
+                <default param="antpossig"><value>5.8</value></default>
+                <default param="toomanyantbasedintfracthr"><value>0.06</value></default>
+                <default param="toomanyintfracthr"><value>0.09</value></default>
+                <default param="toomanyblfracthr"><value>0.18</value></default>
+                <default param="antblnegsig"><value>3.7</value></default>
+                <default param="antblpossig"><value>3.0</value></default>
+                <default param="relaxed_factor"><value>2.0</value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="vis"><value type="stringArray"></value></default>
+            </equals>
+        </when>
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+
+<example>
+
+TBD
+
+</example>
+
+</task>
+</casaxml>
