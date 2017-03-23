@@ -64,6 +64,7 @@
 
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/MeasurementEquations/VPManager.h>
+#include <imageanalysis/Utilities/SpectralImageUtil.h>
 #include <msvis/MSVis/MSUtil.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
@@ -236,7 +237,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//cerr << "chanlist " << chanlist << "\n freqlis " << freqList << endl;
         MFrequency::Types freqFrame=MFrequency::castType(ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().measFreqRef()(Int(chanlist(0,0))));
         vi::FrequencySelectionUsingFrame channelSelector(freqFrame);
-
+	///temporary variable as we carry that for tunechunk
+	selFreqFrame_p=freqFrame;
     	  for(uInt k=0; k < nSelections; ++k){
 	    //The getChanfreqList is wrong for beg and end..going round that too.
 	    Vector<Double> freqies=ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().chanFreq()(Int(chanlist(k,0)));
@@ -332,19 +334,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     FrequencySelectionUsingFrame frameSel(frame);
     for (uInt k =0; k<freqBegs_p.size(); ++k){ 
       // cerr <<freqBegs_p[k].first  << " == " << key << " && " << freqSpws_p[k].second<< " == " << spwId << " && " << freqBeg << " < " << freqEnds_p[k].second<< " && " << freqEnd << " > " << freqBegs_p[k].second << endl;
-	if((freqBegs_p[k].first == key) && (freqSpws_p[k].second==spwId)  && (freqBeg < freqEnds_p[k].second) && (freqEnd > freqBegs_p[k].second)){
+	if((freqBegs_p[k].first == key || key <0 ) && (freqSpws_p[k].second==spwId || spwId <0)  && (freqBeg < freqEnds_p[k].second) && (freqEnd > freqBegs_p[k].second)){
 	isDefined=True;
 	//cerr << k << " inside freqBegs " << freqBegs_p[k].second << "  " << freqBeg << endl;  
 	if(freqBegs_p[k].second < freqBeg)
 	  freqBegs_p[k].second=freqBeg;
 	if(freqEnds_p[k].second > freqEnd)
 	  freqEnds_p[k].second=freqEnd;
+	if(msId < 0) key=freqBegs_p[k].first;
 	//cerr << "modified " <<  freqBegs_p[k].second << "   "  <<  freqEnds_p[k].second << endl;
       }
 	//cerr << "added " << k << " freqBegs " << freqBegs_p[k].second << "  " << freqEnds_p[k].second << endl;  
-      frameSel.add(spwId,  freqBegs_p[k].second, freqEnds_p[k].second);
+	frameSel.add(freqSpws_p[k].second ,  freqBegs_p[k].second, freqEnds_p[k].second);
     }
-    if(!isDefined && key >=0){
+    if(!isDefined && msId >=0){
       //cerr << "undefined " << key << " freqBegs "  << freqBeg << "  " << freqEnd << endl;  
       freqBegs_p.push_back(make_pair(key, freqBeg));
       freqEnds_p.push_back(make_pair(key, freqEnd));
@@ -355,7 +358,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uInt nMSs=copyFsels->size() <=msId ? msId+1 : copyFsels->size();
     fselections_p=new FrequencySelections();
     for (uInt k=0;  k < nMSs ; ++k){
-      if(k==uInt(msId)){
+      if(k==uInt(key)){
 	fselections_p->add(frameSel);
 	//cerr <<"framesel " << frameSel.toString() << endl;
       }
@@ -369,6 +372,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  
 
   }
+
+  void SynthesisImagerVi2::tuneChunk(const Int gmap){
+    
+
+    CoordinateSystem cs=itsMappers.imageStore(gmap)->getCSys();
+    IPosition imshape=itsMappers.imageStore(gmap)->getShape();
+    Double minFreq=SpectralImageUtil::worldFreq(cs, 0.0);
+    Double maxFreq=SpectralImageUtil::worldFreq(cs,imshape(3)-1);
+    if(maxFreq < minFreq){
+      Double tmp=minFreq;
+      minFreq=maxFreq;
+      maxFreq=tmp;
+    }
+    Int spectralIndex=cs.findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate spectralCoord=cs.spectralCoordinate(spectralIndex);
+    MFrequency::Types intype=spectralCoord.frequencySystem(True);
+    VisBufferUtil::getFreqRangeFromRange(minFreq, maxFreq,  intype, minFreq,  maxFreq, *vi_p, selFreqFrame_p);
+    maxFreq+=fabs(spectralCoord.increment()(0))/2.0;
+    minFreq-=fabs(spectralCoord.increment()(0))/2.0;
+    if(minFreq < 0.0) minFreq=0.0;
+    
+    auto copyFreqBegs=freqBegs_p;
+    auto copyFreqEnds=freqEnds_p;
+    auto copyFreqSpws=  freqSpws_p;
+    andFreqSelection(-1, -1, minFreq, maxFreq, selFreqFrame_p);
+    vi_p->setFrequencySelection (*fselections_p);
+
+    freqBegs_p=copyFreqBegs;
+    freqEnds_p=copyFreqEnds;
+    freqSpws_p=copyFreqSpws;
+    
+
+
+
+  }
+
 
 Bool SynthesisImagerVi2::defineImage(SynthesisParamsImage& impars, 
 			   const SynthesisParamsGrid& gridpars)
@@ -830,6 +869,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 			  }
     			}
     			itsMappers.grid(*vb, dopsf, (refim::FTMachine::Type)datacol_p);
+			
 			cohDone += vb->nRows();
 			pm.update(Double(cohDone));
 		    }
@@ -915,7 +955,8 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 	 os << "Running major cycle for chunk : " << gmap << LogIO::POST;
 
 	 SynthesisUtilMethods::getResource("Start Major Cycle for mapper"+String::toString(gmap));
-
+	 CountedPtr<vi::FrequencySelections> copyFsels=fselections_p->clone();
+	 tuneChunk(gmap);
 	 vi::VisBuffer2* vb=vi_p->getVisBuffer();
 	 vi_p->originChunks();
 	 vi_p->origin();
@@ -989,7 +1030,9 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 	itsMappers.getMapper(gmap)->imageStore()->releaseComplexGrids();        
 	
 	SynthesisUtilMethods::getResource("End Major Cycle for mapper"+String::toString(gmap));
+	fselections_p=copyFsels;
        }// end of mapper loop
+    vi_p->setFrequencySelection(*fselections_p);
 
     itsMappers.checkOverlappingModels("restore");
 
