@@ -350,20 +350,25 @@ class CleanBase(basetask.StandardTaskTemplate):
         pbcor_image_name = '%s.%s.iter%s.image.pbcor' % (inputs.imagename, inputs.stokes, iter)
 
         if (inputs.niter > 0):
-            try:
-                LOG.info('tclean used %d iterations' % (tclean_result['iterdone']))
-            except:
-                LOG.warning('Cannot determine number of tclean iterations')
-            try:
-                if ((tclean_result['stopcode'] == 1) and (tclean_result['iterdone'] >= tclean_result['niter'])):
-                    result.error = CleanBaseError('tclean reached niter limit. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Reached niter limit')
-                    LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_result['niter'], utils.dequote(inputs.field), inputs.spw))
+            if tclean_result.has_key('stopcode'):
+                # Serial tclean result
+                tclean_stopcode = tclean_result['stopcode']
+                tclean_iterdone = tclean_result['iterdone']
+                tclean_niter = tclean_result['niter']
+            else:
+                # Parallel tclean result structure is currently (2017-03) different
+                tclean_stopcode = max([tclean_result[key][int(key.replace('node',''))]['stopcode'] for key in tclean_result.keys()])
+                tclean_iterdone = sum([tclean_result[key][int(key.replace('node',''))]['iterdone'] for key in tclean_result.keys()])
+                tclean_niter = max([tclean_result[key][int(key.replace('node',''))]['niter'] for key in tclean_result.keys()])
 
-                if (tclean_result['stopcode'] == 5):
-                    result.error = CleanBaseError('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean stopped to prevent divergence.')
-                    LOG.warning('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw))
-            except:
-                LOG.warning('Cannot determine tclean stopcode')
+            LOG.info('tclean used %d iterations' % (tclean_iterdone))
+            if ((tclean_stopcode == 1) and (tclean_iterdone >= tclean_niter)):
+                result.error = CleanBaseError('tclean reached niter limit. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'Reached niter limit')
+                LOG.warning('tclean reached niter limit of %d for %s / spw%s !' % (tclean_niter, utils.dequote(inputs.field), inputs.spw))
+
+            if (tclean_stopcode == 5):
+                result.error = CleanBaseError('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw), 'tclean stopped to prevent divergence.')
+                LOG.warning('tclean stopped to prevent divergence. Field: %s SPW: %s' % (inputs.field, inputs.spw))
 
         if (iter > 0):
             # Store the model.
