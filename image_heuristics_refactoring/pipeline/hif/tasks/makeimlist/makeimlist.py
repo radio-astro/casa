@@ -7,7 +7,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import MakeImListResult
 from .cleantarget import CleanTarget
-from pipeline.hif.heuristics import imageparams 
+from pipeline.hif.heuristics import imageparams_factory
 import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
@@ -305,8 +305,9 @@ class MakeImList(basetask.StandardTaskTemplate):
 
         # instantiate the heuristics classes needed, some sorting out needed
         # here to remove duplicated code
-        self.heuristics = imageparams.ImageParamsHeuristics(
-          context=inputs.context, vislist=inputs.vis, spw=spw, contfile=inputs.contfile, linesfile=inputs.linesfile)
+        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
+        self.heuristics = image_heuristics_factory.getHeuristics(
+            context=inputs.context, vislist=inputs.vis, spw=spw, contfile=inputs.contfile, linesfile=inputs.linesfile, imaging_mode='ALMA')
 
         # get list of field_ids/intents to be cleaned
         field_intent_list = self.heuristics.field_intent_list(

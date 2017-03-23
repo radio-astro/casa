@@ -7,7 +7,7 @@ import decimal
 import commands
 
 import pipeline.domain.measures as measures
-from pipeline.hif.heuristics import imageparams
+from pipeline.hif.heuristics import imageparams_factory
 from pipeline.hif.heuristics import mosaicoverlap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -37,10 +37,11 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  weighting=None,
                  robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
-                 noiseimage=None, hm_masking=None, hm_autotest=None, hm_cleaning=None, tlimit=None,
+                 hm_masking=None, hm_autotest=None, hm_cleaning=None, tlimit=None,
                  masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
         self._init_properties(vars())
-        self.image_heuristics = imageparams.ImageParamsHeuristics(self.context, self.vis, self.spw)
+        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
+        self.image_heuristics = image_heuristics_factory.getHeuristics(self.context, self.vis, self.spw, imaging_mode='ALMA')
 
     # Add extra getters and setters here
     spwsel_lsrk = basetask.property_with_default('spwsel_lsrk', {})
@@ -63,21 +64,6 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
             self._imagename = ''
         else:
             self._imagename = value.replace('STAGENUMBER', str(self.context.stage))
-
-    @property
-    def noiseimage(self):
-        return self._noiseimage
-
-    @noiseimage.setter
-    def noiseimage(self, value):
-        if value is None:
-            ms = self.context.observing_run.get_ms(name=self.vis[0])
-            observatory = ms.antenna_array.name
-            if 'VLA' in observatory:
-                value = 'V'
-            else:
-                value = 'Q'
-        self._noiseimage = value
 
     @property
     def maxncleans(self):
@@ -202,11 +188,12 @@ class Tclean(cleanbase.CleanBase):
         inputs.pblimit = self.pblimit_image
 
         # Instantiate the image parameter heuristics class
-        self.image_heuristics = imageparams.ImageParamsHeuristics(context=context,
-                                    vislist=inputs.vis,
-                                    spw=inputs.spw,
-                                    contfile=context.contfile,
-                                    linesfile=context.linesfile)
+        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
+        self.image_heuristics = image_heuristics_factory.getHeuristics(context=context,
+                                                                       vislist=inputs.vis,
+                                                                       spw=inputs.spw,
+                                                                       contfile=context.contfile,
+                                                                       linesfile=context.linesfile)
 
         # Generate the image name if one is not supplied.
         if inputs.imagename in ('', None):

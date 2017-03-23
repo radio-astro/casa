@@ -21,6 +21,8 @@ LOG = infrastructure.get_logger(__name__)
 class ImageParamsHeuristics(object):
 
     def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
+        self.imaging_mode = 'BASE'
+
         self.context = context
 
         cqa = casatools.quanta
