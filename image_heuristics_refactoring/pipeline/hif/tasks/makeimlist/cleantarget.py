@@ -21,5 +21,6 @@ class CleanTarget(dict):
          self['uvrange'] = ''
          self['stokes'] = ''
          self['nterms'] = None
+         self['heuristics'] = None
 
          dict.__init__(self, *args, **kwargs)

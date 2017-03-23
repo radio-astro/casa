@@ -9,7 +9,6 @@ import pipeline.infrastructure.mpihelpers as mpihelpers
 from ..tclean import Tclean
 from ..tclean.resultobjects import TcleanResult
 from .resultobjects import MakeImagesResult
-from pipeline.hif.heuristics import imageparams_factory
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -180,10 +179,7 @@ class CleanTaskFactory(object):
         })
 
         # set the imager mode here (temporarily ...)
-        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
-        image_heuristics = image_heuristics_factory.getHeuristics(
-                context=inputs.context, vislist=inputs.vis,
-                spw=task_args['spw'], imaging_mode='ALMA')
+        image_heuristics = target['heuristics']
         task_args['gridder'] = image_heuristics.gridder(
                 task_args['intent'], task_args['field'])
         # Let the image heuristics determine the deconvolver

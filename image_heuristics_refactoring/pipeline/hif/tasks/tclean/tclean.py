@@ -38,10 +38,10 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
                  hm_masking=None, hm_autotest=None, hm_cleaning=None, tlimit=None,
-                 masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
+                 masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None,
+                 heuristics=None):
         self._init_properties(vars())
-        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
-        self.image_heuristics = image_heuristics_factory.getHeuristics(self.context, self.vis, self.spw, imaging_mode='ALMA')
+        self.image_heuristics = heuristics
 
     # Add extra getters and setters here
     spwsel_lsrk = basetask.property_with_default('spwsel_lsrk', {})
@@ -187,13 +187,8 @@ class Tclean(cleanbase.CleanBase):
         self.pblimit_cleanmask = 0.3
         inputs.pblimit = self.pblimit_image
 
-        # Instantiate the image parameter heuristics class
-        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
-        self.image_heuristics = image_heuristics_factory.getHeuristics(context=context,
-                                                                       vislist=inputs.vis,
-                                                                       spw=inputs.spw,
-                                                                       contfile=context.contfile,
-                                                                       linesfile=context.linesfile)
+        # Get the image parameter heuristics
+        self.image_heuristics = inputs.heuristics
 
         # Generate the image name if one is not supplied.
         if inputs.imagename in ('', None):

@@ -558,7 +558,8 @@ class MakeImList(basetask.StandardTaskTemplate):
                                             'nbin': nbin,
                                             'nchan': nchans[(field_intent[0], spwspec)],
                                             'uvrange': inputs.uvrange,
-                                            'stokes': 'I'})
+                                            'stokes': 'I',
+                                            'heuristics': self.heuristics})
 
                     result.add_target(target)
 
