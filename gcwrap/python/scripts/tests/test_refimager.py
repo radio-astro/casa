@@ -1019,6 +1019,7 @@ class test_cube(testref_base):
      def test_cube_7(self):
           """ [cube] Test_Cube_7  """
           # start 1.1GHz(TOPO)=chan5 spw=4~19
+          ##as of 03/23/2017 it is  not.... chan2 = 1.1e9 (in refim_point.ms)  
           testid=7
           print " : " , self.testList[testid]['desc']
           self.prepData('refim_point.ms')
@@ -1026,8 +1027,9 @@ class test_cube(testref_base):
 
           self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
           report=self.th.checkall(imexist=[self.img+self.testList[testid]['imagename']+'.image'],
-          imval=[(self.img+self.testList[testid]['imagename']+'.image',1.36365354,
-          [50,50,0,0])])
+          imval=[(self.img+self.testList[testid]['imagename']+'.image',0.0,
+          [50,50,0,0]),(self.img+self.testList[testid]['imagename']+'.image',1.2000,
+          [50,50,0,3])])
           report2 = self.th.checkspecframe(self.img+self.testList[testid]['imagename']+'.image','TOPO',1.1e9)
           self.checkfinal(report+report2)
 
@@ -1648,7 +1650,7 @@ class test_widefield(testref_base):
           """ [widefield] Test_Widefield_mosaicft_mtmfs : MT-MFS with mosaicft  stokes I, alpha """
           self.prepData("refim_mawproject.ms")
           ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=60,gridder='mosaicft',deconvolver='mtmfs')
-          report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.9413,[256,256,0,0]),(self.img+'.weight.tt0',0.50546,[256,256,0,0]),(self.img+'.alpha',0.07786,[256,256,0,0]) ] )
+          report=self.th.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.9413,[256,256,0,0]),(self.img+'.weight.tt0',0.50546,[256,256,0,0]),(self.img+'.alpha',0.0851330086589,[256,256,0,0]) ] )
           ## alpha should represent that of the mosaic PB (twice)... and should then converge to zero
           self.checkfinal(report)
           
