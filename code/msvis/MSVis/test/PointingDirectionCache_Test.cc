@@ -218,7 +218,7 @@ doTest (const vector<int> & antennas, double timeMin, double timeMax, double tim
                 double delta1 = (expected1 - angle1);
                 double delta2 = (expected2 - angle2);
 
-                TestErrorIf (abs(delta1) > 1e-6 || abs(delta2) > 1e-6,
+                TestErrorIf (std::abs(delta1) > 1e-6 || std::abs(delta2) > 1e-6,
                              String::format ("Error: expected %f != %f or expected %f != %f; t=%f, ant=%d",
                                              expected1, angle1, expected2, angle2, time, antenna));
             }

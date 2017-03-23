@@ -513,8 +513,8 @@ template <class T> void MomentsBase<T>::_setIncludeExclude(
     }
     else if (include.size() == 1) {
         range.resize(2);
-        range(0) = -abs(include(0));
-        range(1) =  abs(include(0));
+        range(0) = -std::abs(include(0));
+        range(1) =  std::abs(include(0));
          noInclude = false;
     }
     else if (include.nelements() == 2) {
@@ -532,8 +532,8 @@ template <class T> void MomentsBase<T>::_setIncludeExclude(
     }
     else if (exclude.nelements() == 1) {
         range.resize(2);
-        range(0) = -abs(exclude(0));
-        range(1) =  abs(exclude(0));
+        range(0) = -std::abs(exclude(0));
+        range(1) =  std::abs(exclude(0));
         noExclude = false;
     }
     else if (exclude.nelements() == 2) {
