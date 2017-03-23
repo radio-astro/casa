@@ -1736,219 +1736,200 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 		Vector<Int>& flchunks, Vector<Int>& flrelids,
 		Bool setFlag, PlotMSIndexer* indexer, int dataIndex) {
 
-	// Sort the flags by chunk:
+	// Sort the flags by chunk and relative index:
 	Sort sorter;
 	sorter.sortKey(flchunks.data(),TpInt);
 	sorter.sortKey(flrelids.data(),TpInt);
-	Vector<uInt> order;
-	uInt nflag;
-	nflag = sorter.sort(order,flchunks.nelements());
 
-	stringstream ss;
+	Vector<uInt> order;  // holds the sort order (indices) for flchunks
+	uInt nflag = sorter.sort(order, flchunks.nelements());
+    uInt iflag(0);  // index into 'order' array
 
-	// Establish a scope in which the VisBuffer is properly created/destroyed
-	{
-        //map<PMS::Axis, bool> loadedAxes_;
-        //map<PMS::Axis, vector<PMS::DataColumn>> loadedAxesData_;
-        vector<PMS::Axis> loadedAxes;
-		vector<PMS::DataColumn> loadedData;
-        for (std::map<PMS::Axis, bool>::iterator mapit=loadedAxes_.begin(); 
-                mapit!=loadedAxes_.end(); ++mapit) {
-            if (mapit->second) {
-                PMS::Axis loadedAxis = mapit->first;
-                if (loadedAxesData_.find(loadedAxis) != loadedAxesData_.end()) {
-                    std::set<PMS::DataColumn> datacols=loadedAxesData_[loadedAxis];
-                    for (auto it=datacols.begin(); it!=datacols.end(); ++it) {
-                        loadedAxes.push_back(loadedAxis);
-                        loadedData.push_back(*it);
-                    }
-                } else {
+    bool pmsavg = averaging_.baseline() || averaging_.antenna() || 
+        averaging_.spw() || averaging_.scalarAve();
+    // check if extending flags and subset selected
+    bool extendcorr = flagging.corr() && !selection_.corr().empty();
+    bool extendchan = flagging.channel() && !selection_.spw().empty();
+
+    // get loadedAxes and loadedData for setting up vis iter
+    vector<PMS::Axis> loadedAxes;
+	vector<PMS::DataColumn> loadedData;
+    for (std::map<PMS::Axis, bool>::iterator mapit=loadedAxes_.begin(); 
+            mapit!=loadedAxes_.end(); ++mapit) {
+        if (mapit->second) {
+            PMS::Axis loadedAxis = mapit->first;
+            if (loadedAxesData_.find(loadedAxis) != loadedAxesData_.end()) {
+                std::set<PMS::DataColumn> datacols=loadedAxesData_[loadedAxis];
+                for (auto it=datacols.begin(); it!=datacols.end(); ++it) {
                     loadedAxes.push_back(loadedAxis);
-                    loadedData.push_back(PMS::DATA);
+                    loadedData.push_back(*it);
                 }
+            } else {
+                loadedAxes.push_back(loadedAxis);
+                loadedData.push_back(PMS::DATA);
             }
         }
-        // CAS-8325: use same datacolumn that was plotted (e.g. Float)
-		setUpVisIter(selection_, calibration_, dataColumn_, loadedAxes,
-            loadedData, true, false);
+    }
 
-		vi_p->originChunks();
-		vi_p->origin();
-		vi::VisBuffer2* vb = vi_p->getVisBuffer();
+    // If extending flags, select all correlations or channels in vis iter
+    PlotMSSelection flagSel = selection_;
+    if (extendcorr) {
+        // select all corrs
+        flagSel.setCorr("");
+    }
+    if (extendchan) {
+        // select spws only (all channels per spw)
+        MeasurementSet ms(filename_);
+        MSSelection mssel(ms);
+        mssel.setSpwExpr(selection_.spw());
+        Vector<Int> spws = mssel.getSpwList();
+        String spwExpr = casacore::String::toString(spws(0));
+        for (uInt spw=1; spw<spws.size(); ++spw) 
+            spwExpr += "," + casacore::String::toString(spws(spw));
+        flagSel.setSpw(spwExpr);
+    }
 
-		Int iflag(0);
-		for (Int ichk=0; ichk<nChunk_; ++ichk) {
+    setUpVisIter(flagSel, calibration_, dataColumn_, loadedAxes,
+        loadedData, true, false);
+    vi_p->originChunks();
+    vi_p->origin();
+    vi::VisBuffer2* vb = vi_p->getVisBuffer();
 
-			if (ichk != flchunks(order[iflag])) {
-				// Step over current chunk
-				for (Int i=0;i<nVBPerAve_(ichk);++i) {
-					vi_p->next();
-					if (!vi_p->more() && vi_p->moreChunks()) {
-						vi_p->nextChunk();
-						vi_p->origin();
-					}
-				}
-			}
-			else if ( averaging_.baseline() ||
-				  averaging_.antenna() ||
-				  averaging_.spw() ) {
-
-				// This chunk requires flag-setting
-
-				// For each VB in this cache chunk
-				Int ifl(iflag);
-				for (Int i=0; i<nVBPerAve_(ichk); ++i) {
-
-					// Refer to VB pieces we need
-					Cube<Bool> vbflag(vb->flagCube());
-					Vector<Bool> vbflagrow(vb->flagRow());
-					Vector<Int> a1(vb->antenna1());
-					Vector<Int> a2(vb->antenna2());
-					Int ncorr = vb->nCorrelations();
-					Int nchan = vb->nChannels();
-					Int nrow  = vb->nRows();
-
-					if (false) {
-						Int currChunk = flchunks(order[iflag]);
-						Double time = getTime(currChunk,0);
-						Int spw = Int(getSpw(currChunk,0));
-						Int field = Int(getField(currChunk,0));
-						ss << "Time diff: " << time - vb->time()(0) << " "  << time << " " << vb->time()(0) << "\n";
-						ss << "Spw diff:  " << spw - vb->spectralWindows()(0) << " " << spw << " " << vb->spectralWindows()(0) << "\n";
-						ss << "Field diff:  " << field - vb->fieldId()(0) << " " << field << " " << vb->fieldId()(0) << "\n";
-					}
-
-					// Apply all flags in this chunk to this VB
-					ifl=iflag;
-					while (ifl<Int(nflag) && flchunks(order[ifl])==ichk) {
-
-						Int currChunk=flchunks(order[ifl]);
-						Int irel=flrelids(order[ifl]);
-
-						Slice corr,chan,bsln;
-
-						// Set flag range on correlation axis:
-						if (netAxesMask_[dataIndex](0) && !flagging.corrAll()) {
-							// A specific single correlation
-							Int icorr=indexer->getIndex1000(currChunk,irel);
-							corr=Slice(icorr,1,1);
-						}
-						else
-							corr=Slice(0,ncorr,1);
-
-						// Set Flag range on channel axis:
-						if (netAxesMask_[dataIndex](1) && !flagging.channel()) {
-							Int ichan=indexer->getIndex0100(currChunk,irel);
-							// A single specific channel
-							chan=Slice(ichan,1,1);
-						}
-						else
-							// Extend to all channels
-							chan=Slice(0,nchan,1);
-
-						// Set Flags on the baseline axis:
-						Int thisA1=Int(getAnt1(currChunk,indexer->getIndex0010(currChunk,irel)));
-						Int thisA2=Int(getAnt2(currChunk,indexer->getIndex0010(currChunk,irel)));
-						if (netAxesMask_[dataIndex](2) &&
-								!flagging.antennaBaselinesBased() &&
-								thisA1>-1 ) {
-							// i.e., if baseline is an explicit data axis,
-							//       full baseline extension is OFF
-							//       and the first antenna in the selected point is > -1
-
-							// Do some variety of detailed per-baseline flagging
-							for (Int irow=0;irow<nrow;++irow) {
-
-								if (thisA2>-1) {
-									// match a baseline exactly
-									if (a1(irow)==thisA1 &&
-											a2(irow)==thisA2) {
-										vbflag(corr,chan,Slice(irow,1,1)) = setFlag;
-										if (!setFlag) vbflagrow(irow) = false;   // unset flag_row when unflagging
-
-										break;  // found the one baseline, escape from for loop
-									}
-								}
-								else {
-									// either antenna matches the one specified antenna
-									//  (don't break because there will be more than one)
-									//  TBD: this doesn't get cross-hands quite right when
-									//    averaging 'by antenna'...
-									if (a1(irow)==thisA1 ||
-											a2(irow)==thisA1) {
-										vbflag(corr,chan,Slice(irow,1,1)) = setFlag;
-										if (!setFlag) vbflagrow(irow) = false;   // unset flag_row when unflagging
-									}
-								}
-							}
-						}
-						else {
-							// Set flags for all baselines, because the plot
-							//  is ordinarily implicit in baseline, we've turned on baseline
-							//  extension, or we've avaraged over all baselines
-							bsln=Slice(0,nrow,1);
-							vbflag(corr,chan,bsln) = setFlag;
-							if (!setFlag) vbflagrow(bsln) = false;   // unset flag_row when unflagging
-						}
-
-						++ifl;
-					}
-
-					// Put the flags back into the MS
-					vi_p->writeFlag(vbflag);
-					// This is now done by MSTransformIterator
-					// when writeFlag is called
-					//if (!setFlag) vi_p->writeFlagRow(vbflagrow);
-
-					// Advance to the next vb
-					vi_p->next();
-					if (!vi_p->more() && vi_p->moreChunks()) {
-						vi_p->nextChunk();
-						vi_p->origin();
-					}
-				}  // VBs in this averaging chunk
-
-				// step over the flags we've just done
-				iflag=ifl;
-
-				// Escape if we are already finished
-				if (uInt(iflag)>=nflag) break;
-
-			} // flaggable VB with averaging handled by plotms
-			else {
-				vi_p->writeFlag(flag(ichk));
-				// This is now done by MSTransformIterator
-				// when writeFlag is called
-				//if (!setFlag) vi_p->writeFlagRow(flagrow(ichk));
-
-				// Advance to the next vb
-				vi_p->next();
-				if (!vi_p->more() && vi_p->moreChunks()) {
-					vi_p->nextChunk();
-					vi_p->origin();
-				}
-				// Advance to the next flagged chunk
-				++iflag;
-                while ((uInt(iflag) < nflag) && 
-                       (flchunks(order[iflag]) == flchunks(order[iflag-1]))) {
-                    ++iflag;
+    // iterate through chunks and find the ones that need flags changed
+    for (Int ichk=0; ichk<nChunk_; ++ichk) {
+        if (ichk != flchunks(order[iflag])) {
+            // Step over current chunk if not in flchunks
+            for (Int i=0;i<nVBPerAve_(ichk);++i) {
+                vi_p->next();
+                if (!vi_p->more() && vi_p->moreChunks()) {
+                    vi_p->nextChunk();
+                    vi_p->origin();
                 }
+            }
+        } else if ( pmsavg || extendcorr || extendchan) {
+            // This chunk requires flag-setting but have to handle chunks
+            // (shape has changed: VBs averaged together or extending flags)
+            for (Int i=0; i<nVBPerAve_(ichk); ++i) {
 
-				// Escape if we are finished
-				if (uInt(iflag) >= nflag) break;
+                // Refer to VB pieces we need
+                Cube<Bool> vbflag(vb->flagCube());
+                Vector<Bool> vbflagrow(vb->flagRow());
+                Vector<Int> a1(vb->antenna1());
+                Vector<Int> a2(vb->antenna2());
+                Int ncorr = vb->nCorrelations();
+                Int nchan = vb->nChannels();
+                Int nrow  = vb->nRows();
 
-			} // flaggable VB with averaging handled by MSTransformIterator
+                // Apply all flags in this chunk to this VB
+                while (iflag<nflag && flchunks(order[iflag])==ichk) {
 
-		} // ichk
+                    Int currChunk = flchunks(order[iflag]);
+                    Int irel = flrelids(order[iflag]);
+                    Slice corr,chan,bsln;
 
-		// Close the scope that holds the VisBuffer used above
-	}
+                    // Set flag range on correlation axis:
+                    if (netAxesMask_[dataIndex](0) && !flagging.corrAll()) {
+                        // A specific single correlation
+                        Int icorr = indexer->getIndex1000(currChunk, irel);
+                        corr = Slice(icorr, 1, 1);
+                    } else {
+                        // Extend to all correlations
+                        corr=Slice(0, ncorr, 1);
+                    }
 
+                    // Set Flag range on channel axis:
+                    if (netAxesMask_[dataIndex](1) && !flagging.channel()) {
+                        // A single specific channel
+                        Int ichan = indexer->getIndex0100(currChunk, irel);
+                        chan = Slice(ichan, 1, 1);
+                    } else {
+                        // Extend to all channels
+                        chan = Slice(0, nchan, 1);
+                    }
+
+                    // Set Flags on the baseline axis:
+                    Int thisAnt1 = Int(getAnt1(currChunk,
+                        indexer->getIndex0010(currChunk, irel)));
+                    Int thisAnt2 = Int(getAnt2(currChunk,
+                        indexer->getIndex0010(currChunk, irel)));
+                    if (netAxesMask_[dataIndex](2) &&
+                        !flagging.antennaBaselinesBased() && (thisAnt1 > -1) ) {
+                        // i.e., if baseline is an explicit data axis,
+                        //       full baseline extension is OFF
+                        //       and the first antenna in the selected point is > -1
+                        // Do some variety of detailed per-baseline flagging
+                        for (Int irow=0; irow<nrow; ++irow) {
+                            if (thisAnt2 > -1) {
+                                // match a baseline exactly
+                                if ((a1(irow)==thisAnt1) &&
+                                    (a2(irow)==thisAnt2)) {
+                                    vbflag(corr, chan, Slice(irow,1,1)) = setFlag;
+                                    // unset flag_row when unflagging
+                                    if (!setFlag) vbflagrow(irow) = false;
+                                    break;  // found the one baseline, escape from for loop
+                                }
+                            } else {
+                                // either antenna matches the one specified antenna
+                                //  (don't break because there will be more than one)
+                                //  TBD: this doesn't get cross-hands quite right when
+                                //    averaging 'by antenna'...
+                                if ((a1(irow) == thisAnt1) ||
+                                    (a2(irow)==thisAnt1)) {
+                                    vbflag(corr, chan, Slice(irow,1,1)) = setFlag;
+                                    // unset flag_row when unflagging
+                                    if (!setFlag) vbflagrow(irow) = false;
+                                }
+                            }
+                        }
+                    } else {
+                        // Set flags for all baselines, because the plot
+                        //  is ordinarily implicit in baseline, we've turned on baseline
+                        //  extension, or we've averaged over all baselines
+                        bsln = Slice(0, nrow, 1);
+                        vbflag(corr, chan, bsln) = setFlag;
+                        // unset flag_row when unflagging
+                        if (!setFlag) vbflagrow(bsln) = false;
+                    }
+                    ++iflag;
+                } // done with this flchunk
+
+                // Put the flags back into the MS
+                vi_p->writeFlag(vbflag);
+                // Advance to the next vb
+                vi_p->next();
+                if (!vi_p->more() && vi_p->moreChunks()) {
+                    vi_p->nextChunk();
+                    vi_p->origin();
+                }
+            }  // VBs in this averaging chunk
+
+            // Escape if we are already finished
+            if (iflag >= nflag) break;
+
+        } else {
+            // same shape (possibly averaging handled by MSTransformIterator)
+            // just write out flag chunk
+            vi_p->writeFlag(flag(ichk));
+
+            // Advance to the next vb
+            vi_p->next();
+            if (!vi_p->more() && vi_p->moreChunks()) {
+                vi_p->nextChunk();
+                vi_p->origin();
+            }
+            // Advance to the next flagged chunk
+            ++iflag;
+            while ((iflag < nflag) && 
+                   (flchunks(order[iflag]) == flchunks(order[iflag-1]))) {
+                ++iflag;
+            }
+
+            // Escape if we are finished
+            if (iflag >= nflag) break;
+        } 
+    }
 	// Delete the VisIter so lock is released
 	deleteVi();
-
-	logFlag(ss.str());
-
 }
 
 void MSCache::mapIntentNamesToIds() {
