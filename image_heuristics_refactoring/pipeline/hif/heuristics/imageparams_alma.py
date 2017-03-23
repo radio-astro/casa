@@ -22,5 +22,5 @@ LOG = infrastructure.get_logger(__name__)
 class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
     def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
-        ImageParamsHeuristics.__init__(self, context, vislist, spw, contfile=None, linesfile=None)
+        ImageParamsHeuristics.__init__(self, context, vislist, spw, contfile, linesfile)
         self.imaging_mode = 'ALMA'
