@@ -54,11 +54,6 @@
 	<value>False</value>
     </param>
     
-    <param type="bool" name="dbservice">
-	<description>Use the online flux catalog</description>
-	<value>True</value>
-    </param>
-
     <param type="string" name="createmms">
 	<description>Create a MMS</description>
     <value>automatic</value>
@@ -163,9 +158,6 @@ bdfflags -- Apply BDF flags on import
    default: True
    
 lazy -- Use the lazy import option
-   default: False
-
-dbservice -- Use online flux catalog on import
    default: False
 
 createmms -- Create a multi-measurement set ('true') ready for parallel
