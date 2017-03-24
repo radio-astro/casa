@@ -307,7 +307,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                 fluxscale_result = self._do_fluxscale(caltable,
                                                       refspwmap=refspwmap)
 
-                importdata.importdata.export_flux_from_result(fluxscale_result,
+                importdata.fluxes.export_flux_from_result(fluxscale_result,
                                                               inputs.context,
                                                               reffile)
 
