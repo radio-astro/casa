@@ -36,8 +36,10 @@ class CleanBaseInputs(basetask.StandardInputs):
                  weighting=None,
                  robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, hm_masking=None, hm_autotest=None, pblimit=None, niter=None,
-                 threshold=None, sensitivity=None, result=None, parallel=None):
+                 threshold=None, sensitivity=None, result=None, parallel=None,
+                 heuristics=None):
         self._init_properties(vars())
+        self.heuristics = heuristics
 
     deconvolver = basetask.property_with_default('deconvolver', '')
     uvtaper = basetask.property_with_default('uvtaper', None)
@@ -343,6 +345,43 @@ class CleanBase(basetask.StandardTaskTemplate):
             tclean_job_parameters['restart'] = True
             tclean_job_parameters['calcpsf'] = False
             tclean_job_parameters['calcres'] = False
+
+        # Additional heuristics or task parameters
+        if inputs.cyclefactor:
+            tclean_job_parameters['cyclefactor'] = inputs.cyclefactor
+        else:
+            # Call first and assign to variable to avoid calling slow methods twice
+            cyclefactor = inputs.heuristics.cyclefactor()
+            if cyclefactor:
+                tclean_job_parameters['cyclefactor'] = cyclefactor
+
+        if inputs.cycleniter:
+            tclean_job_parameters['cycleniter'] = inputs.cycleniter
+        else:
+            cycleniter = inputs.heuristics.cycleniter()
+            if cycleniter:
+                tclean_job_parameters['cycleniter'] = cycleniter
+
+        if inputs.scales:
+            tclean_job_parameters['scales'] = inputs.scales
+        else:
+            scales = inputs.heuristics.scales()
+            if scales:
+                tclean_job_parameters['scales'] = scales
+
+        if inputs.scales:
+            tclean_job_parameters['uvrange'] = inputs.uvrange
+        else:
+            uvrange = inputs.heuristics.uvrange()
+            if uvrange:
+                tclean_job_parameters['uvrange'] = uvrange
+
+        if inputs.uvtaper:
+            tclean_job_parameters['uvtaper'] = inputs.uvtaper
+        else:
+            uvtaper = inputs.heuristics.uvtaper()
+            if uvtaper:
+                tclean_job_parameters['uvtaper'] = uvtaper
 
         job = casa_tasks.tclean(**tclean_job_parameters)
         tclean_result = self._executor.execute(job)

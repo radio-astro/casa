@@ -20,6 +20,10 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristics(object):
 
+    '''Image parameters heuristics base class. One instance is made per imaging
+       target. There are subclasses for different imaging modes such as ALMA
+       or VLASS.'''
+
     def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
         self.imaging_mode = 'BASE'
 
@@ -934,3 +938,23 @@ class ImageParamsHeuristics(object):
             return if0, if1, max(lsrk_channel_widths)
         else:
             return -1, -1, 0
+
+
+    def cyclefactor(self):
+        return None
+
+
+    def cycleniter(self):
+        return None
+
+
+    def scales(self):
+        return None
+
+
+    def uvtaper(self):
+        return None
+
+
+    def uvrange(self):
+        return None

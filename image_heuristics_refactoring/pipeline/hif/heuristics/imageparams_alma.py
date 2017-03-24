@@ -14,7 +14,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.contfilehandler as contfilehandler
 import pipeline.domain.measures as measures
-from .imageparams import ImageParamsHeuristics
+from .imageparams_base import ImageParamsHeuristics
 
 LOG = infrastructure.get_logger(__name__)
 

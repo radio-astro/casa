@@ -969,7 +969,8 @@ class Tclean(cleanbase.CleanBase):
                                                   sensitivity=sensitivity,
                                                   pblimit=inputs.pblimit,
                                                   result=result,
-                                                  parallel=parallel)
+                                                  parallel=parallel,
+                                                  heuristics=inputs.heuristics)
         clean_task = cleanbase.CleanBase(clean_inputs)
 
         return self._executor.execute(clean_task)
