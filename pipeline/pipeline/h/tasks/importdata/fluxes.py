@@ -116,7 +116,7 @@ def read_fluxes_nodb(ms):
 
     return result
 
-def get_measurement (ms, spw_id, frequency_text, flux_test):
+def get_measurement (ms, spw_id, frequency_text, flux_text):
 
     '''
     Construct the measurement

@@ -105,7 +105,8 @@ def read_fluxes_db(ms):
             except:
                 continue
 
-        m = fluxes.get_measurement (ms, spw_id, frequency_text, flux_test)
+        else:
+            m = fluxes.get_measurement (ms, spw_id, frequency_text, flux_text)
 
         # At this point we take:
         #  - the frequency of the spw_id in Hz
