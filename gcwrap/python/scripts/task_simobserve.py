@@ -1035,13 +1035,13 @@ def simobserve(
             # rest freqs are hardcoded to the first freq in the spw in core
             tb.open(msfile+"/SPECTRAL_WINDOW/",nomodify=False)
             restfreq=tb.getcol("REF_FREQUENCY")
-            for i in len(restfreq):
+            for i in range(len(restfreq)):
                 restfreq[i]=qa.convert(qa.quantity(model_specrefval),'Hz')['value']
             tb.putcol("REF_FREQUENCY",restfreq)
             tb.done()
             tb.open(msfile+"/SOURCE/",nomodify=False)
             restfreq=tb.getcol("REST_FREQUENCY")
-            for i in len(restfreq):
+            for i in range(len(restfreq)):
                 restfreq[i]=qa.convert(qa.quantity(model_specrefval),'Hz')['value']
             tb.putcol("REST_FREQUENCY",restfreq)
             tb.done()

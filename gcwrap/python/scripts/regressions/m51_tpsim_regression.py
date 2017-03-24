@@ -1,4 +1,4 @@
-import os, time
+import os, time, shutil
 
 modelname = "m51ha.model"
 if os.path.exists(modelname):
