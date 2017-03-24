@@ -108,8 +108,8 @@ class Circfeedpolcal(polarization.Polarization):
         LOG.info("Number of POL_LEAKAGE scans: {!s}".format(len(polleakagescans)))
         if len(polleakagescans) >= 3:
             poltype = 'Df+QU'   # C4
-            LOG.info("Using Calibration Strategy C4: 3 slices CALIBRATE_POL_LEAKAGE, KCROSS, Df+QU, Xf")
-        if len(polleakagescans) == 1:
+            LOG.info("Using Calibration Strategy C4: 3 or more slices CALIBRATE_POL_LEAKAGE, KCROSS, Df+QU, Xf")
+        if len(polleakagescans) < 3:
             poltype = 'Df'      # C1
             LOG.info("Using Calibration Strategy C1: 1 slices CALIBRATE_POL_LEAKAGE, KCROSS, Df, Xf")
 
@@ -117,13 +117,12 @@ class Circfeedpolcal(polarization.Polarization):
         # D-terms in 10MHz pieces
         self.do_polcal(tablesToAdd[1][0], poltype=poltype, field='',
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
-                       gainfield=[''], spwmap=[],
-                       solint='inf,10MHz')
+                       gainfield=[''], spwmap=[], solint='inf,10MHz')
 
         # 2MHz pieces
-        self.do_polcal(tablesToAdd[2][0], poltype='Xf', field=fluxcal, intent='',
-                       gainfield=[''], spwmap=[],
-                       solint='inf,2MHz')
+        self.do_polcal(tablesToAdd[2][0], poltype='Xf', field=fluxcal,
+                       intent='',
+                       gainfield=[''], spwmap=[], solint='inf,2MHz')
 
         for (addcaltable, caltype) in tablesToAdd:
             calto = callibrary.CalTo(self.inputs.vis)
