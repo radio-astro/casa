@@ -95,13 +95,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     findcont_basename = '%s.I.findcont' % (os.path.basename(target['imagename']).replace('spw%s' % (target['spw'].replace(',','_')), 'spw%s' % (spwid)).replace('STAGENUMBER', str(context.stage)))
 
                     # determine the gridder mode here (temporarily ...)
-                    image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
-                    image_heuristics = image_heuristics_factory.getHeuristics(context=context,
-                                                                              vislist=inputs.vis,
-                                                                              spw=spwid,
-                                                                              contfile=context.contfile,
-                                                                              linesfile=context.linesfile,
-                                                                              imaging_mode='ALMA')
+                    image_heuristics = target['heuristics']
                     gridder = image_heuristics.gridder(target['intent'], target['field'])
 
                     # need scan id list for multiple target case
