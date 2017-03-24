@@ -348,6 +348,7 @@ using namespace casa::vi;
       
       spectralCoord_p=coords.spectralCoordinate(spectralIndex);
 
+     
       //Store the image/grid channels freq values
       {
         Int chanNumbre=image->shape()(3);
@@ -402,7 +403,7 @@ using namespace casa::vi;
         //logIO() << LogIO::DEBUGGING << "Channel Map: " << chanMap << LogIO::POST;
       }
       // Should never get here
-      if(max(chanMap)>=nchan||min(chanMap)<-1) {
+      if(max(chanMap)>=nchan||min(chanMap)<-2) {
         logIO() << "Illegal Channel Map: " << chanMap << LogIO::EXCEPTION;
       }
 
@@ -795,7 +796,7 @@ using namespace casa::vi;
       //Vector<Int> mychanmap=multiChanMap_p[vb.spectralWindows()[0]];
       copyOfFlag.assign(vb.flagCube());
       for (uInt k=0; k< chanMap.nelements(); ++ k)
-	if(chanMap(k) < 0)
+	if(chanMap(k) == -1)
 	  copyOfFlag.xzPlane(k).set(true);
       flipgrid.resize();
       swapyz(flipgrid, copyOfFlag, flipdata);
@@ -1533,7 +1534,7 @@ using namespace casa::vi;
         f(0)=lsrFreq[chan];
         if(spectralCoord_p.toPixel(c, f)) {
   	Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center
-  	//cerr << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+  	//cerr << " chan " << chan << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
   	/////////////
   	//c(0)=pixel;
   	//spectralCoord_p.toWorld(f, c);
@@ -1551,9 +1552,32 @@ using namespace casa::vi;
   	    */
   	  }
   	}
+	else{
+	  
+	  if(nvischan > 1){
+	    Double fwidth=lsrFreq[1]-lsrFreq[0];
+	    Double limit=0;
+	    Double where=c(0)*fabs(spectralCoord_p.increment()(0));
+	    if( freqInterpMethod_p==InterpolateArray1D<Double,Complex>::linear)
+	      limit=1;
+	    else if( freqInterpMethod_p==InterpolateArray1D<Double,Complex>::cubic ||  freqInterpMethod_p==InterpolateArray1D<Double,Complex>::spline)
+	      limit=2;
+	    if(((pixel<0) && (where >= (0-limit*fabs(fwidth)))) )
+	      chanMap(chan)=-2;
+	    if((pixel>=nchan) ) {
+	      where=f(0);
+	      Double fend;
+	      spectralCoord_p.toWorld(fend, Double(nchan));
+	      if( ( (fwidth >0) &&where < (fend+limit*fwidth))  || ( (fwidth <0) &&where > (fend+limit*fwidth)) )
+		chanMap(chan)=-2;
+	    }
+	  }
+
+
+	}
         }
       }
-
+      //cerr << "chanmap " << chanMap << endl;
       /* if(multiChanMap_p.nelements() < uInt(spw+1))
     	  multiChanMap_p.resize(spw+1);
       multiChanMap_p[spw].resize();
