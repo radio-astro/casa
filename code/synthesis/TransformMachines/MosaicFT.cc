@@ -315,8 +315,9 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   //make sure we rotate the first field too
   lastFieldId_p=-1;
   phaseShifter_p=new UVWMachine(*uvwMachine_p);
-  //findConvFunction(*image, vb);
-  prepGridForDegrid();
+   //This is needed here as we need to know the grid correction before FFTing 
+  findConvFunction(*image, vb);
+ prepGridForDegrid();
 
 }
 
