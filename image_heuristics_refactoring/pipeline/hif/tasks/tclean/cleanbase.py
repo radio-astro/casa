@@ -369,7 +369,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             if scales:
                 tclean_job_parameters['scales'] = scales
 
-        if inputs.scales:
+        if inputs.uvrange:
             tclean_job_parameters['uvrange'] = inputs.uvrange
         else:
             uvrange = inputs.heuristics.uvrange()
