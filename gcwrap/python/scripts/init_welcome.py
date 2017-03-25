@@ -70,6 +70,18 @@ else:
 
     from casa_builtin import enable_builtin_protection, register_builtin
 
+    ###
+    ### backward compatibility at the command line...
+    ###
+    T = True
+    F = False
+    true = True
+    false = False
+    register_builtin("T")
+    register_builtin("F")
+    register_builtin("true")
+    register_builtin("false")
+
     register_builtin("casa")
     register_builtin("cu")
     register_builtin(["viewer", "imview", "msview"])
