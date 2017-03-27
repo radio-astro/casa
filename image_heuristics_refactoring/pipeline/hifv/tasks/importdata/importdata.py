@@ -63,7 +63,7 @@ class VLAImportDataResults(basetask.Results):
 
         msinfo = VLAScanHeuristics(ms)
         msinfo.makescandict()
-        msinfo.calibratorIntentsOld()
+        msinfo.calibratorIntents()
         msinfo.determine3C84()
 
         with casatools.TableReader(ms) as table:
