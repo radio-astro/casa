@@ -3267,9 +3267,7 @@ Date/Time:                         RR:                      RL:                 
     
 ms.open("3C273XC1.MS")
 ms.selectinit(datadescid=0)
-# The following line causes an EXCEPTION
-# d = ms.getdata(["amplitude","axis_info","ha"],ifraxis=True)
-# so we settle for MJDseconds rather than HA in seconds
+# Get amplitude and MJDseconds
 d = ms.getdata(["amplitude","axis_info"],ifraxis=True)
 tstart = min(d["axis_info"]["time_axis"]["MJDseconds"])
 tstop  = max(d["axis_info"]["time_axis"]["MJDseconds"])
@@ -3477,10 +3475,8 @@ for i in range(len(tcoord)):
     
 ms.open("3C273XC1.MS")
 ms.selectinit2(datadescid=0)
-# The following line causes an EXCEPTION
-# d = ms.getdata2(["amplitude","axis_info","ha"],ifraxis=True)
-# so we settle for MJDseconds rather than HA in seconds
-d = ms.getdata2(["amplitude","axis_info"],ifraxis=True)
+# Get amplitude and MJDseconds
+d = ms.getdata2(["amplitude","axis_info"], ifraxis=True)
 tstart = min(d["axis_info"]["time_axis"]["MJDseconds"])
 tstop  = max(d["axis_info"]["time_axis"]["MJDseconds"])
 maxamp = max(max(d["amplitude"][:,0,0,0]),max(d["amplitude"][0,:,0,0]),
