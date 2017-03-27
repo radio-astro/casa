@@ -285,7 +285,8 @@ class mstool_test_summary(mstool_test_base):
         self.assertAlmostEqual(stats['rms'], 16.47888, 5)
         self.assertAlmostEqual(stats['stddev'], 15.9185447)
         self.assertAlmostEqual(stats['variance'], 253.4000652)
-        self.assertAlmostEqual(stats['quartile'], 0.0418118)
+        self.assertAlmostEqual(stats['firstquartile'], 0.0163202)
+        self.assertAlmostEqual(stats['thirdquartile'], 0.0418118)
         print
 
     def test_range2(self): 
