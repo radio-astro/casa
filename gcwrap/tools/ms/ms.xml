@@ -2326,8 +2326,9 @@ Date/Time:                         RR:                      RL:                 
       ms.selectinit(datadescid=0)
       ms.select({'antenna1':[1,3,5],'uvdist':[1200.,1900.]})
       ms.select({'time':[4121629420.,4121638290.]})
-      start = qa.getvalue(qa.convert(qa.quantity('1989/06/27/01:03:40'),'s'))
-      stop = qa.getvalue(qa.convert(qa.quantity('1989/06/27/03:31:30'),'s'))
+      # Or, convert time strings to seconds:
+      start = qa.getvalue(qa.convert(qa.quantity('1989/06/27/01:03:40'),'s'))[0]
+      stop = qa.getvalue(qa.convert(qa.quantity('1989/06/27/03:31:30'),'s'))[0]
       rec = {}
       rec['time'] = [start, stop]
       ms.select(items=rec)
@@ -2394,8 +2395,9 @@ Date/Time:                         RR:                      RL:                 
       ms.selectinit2(datadescid=0)
       ms.select2({'antenna1':[1,3,5],'uvdist':[1200.,1900.]})
       ms.select2({'time':[4121629420.,4121638290.]})
-      start = qa.getvalue(qa.convert(qa.quantity('1989/06/27/01:03:40'),'s'))
-      stop = qa.getvalue(qa.convert(qa.quantity('1989/06/27/03:31:30'),'s'))
+      # Or, convert time strings to seconds:
+      start = qa.getvalue(qa.convert(qa.quantity('1989/06/27/01:03:40'),'s'))[0]
+      stop = qa.getvalue(qa.convert(qa.quantity('1989/06/27/03:31:30'),'s'))[0]
       rec = {}
       rec['time'] = [start, stop]
       ms.select2(items=rec)
