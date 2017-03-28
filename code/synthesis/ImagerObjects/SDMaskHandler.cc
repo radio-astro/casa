@@ -1469,6 +1469,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //clean up (appy cutThreshold to convolved mask image)
     LatticeExpr<Float> thenewmask( iif( *(outmask.get()) > cutThreshold, 1.0, 0.0 ));
 
+    if (debug) {
+        String tmpnewmask="tmp-thenewmask-"+String::toString(iterdone)+".im";
+        PagedImage<Float> savedthenewmask(res.shape(), res.coordinates(), tmpnewmask);
+        savedthenewmask.copyData(thenewmask);
+    }
+
     // take stats on the current mask for setting flags for grow mask : if max < 1 for any spectral plane it will grow the previous mask
     String lelmask("");
     Record maskstats = calcImageStatistics(tempmask, tempmask, lelmask, 0, false);
@@ -1571,6 +1577,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          mask.set(1);
          os<<LogIO::WARN<<"No mask was created by automask, set a clean mask to the entire image."<<LogIO::POST;
       }
+    }
+    if (debug) {
+        //saved prev unmodified mask
+        PagedImage<Float> tmpUntouchedPrevMask(res.shape(), res.coordinates(),"tmpPrevMask"+String::toString(iterdone)+".im");
+        tmpUntouchedPrevMask.copyData(mask);
     }
     if (res.hasPixelMask()) {
       LatticeExpr<Bool>  pixmask(res.pixelMask()); 
@@ -2513,8 +2524,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SDMaskHandler::depthFirstSearch(Int x, 
                                        Int y, 
                                        Int cur_label, 
-                                       Lattice<Float>& inlat, 
-                                       Lattice<Float>& lablat)
+                                       Array<Float>& inlatarr,
+                                       Array<Float>& lablatarr)
   {
     Vector<Int> dx(4);
     Vector<Int> dy(4);
@@ -2522,24 +2533,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dx(0) = 1; dx(1)=0;dx(2)=-1;dx(3)=0;
     dy(0) = 0; dy(1)=1;dy(2)=0;dy(3)=-1;
     
-    IPosition inshape = inlat.shape();
+    //IPosition inshape = inlat.shape();
+    IPosition inshape = inlatarr.shape();
     Int nrow = inshape(0);
     Int ncol = inshape(1);
     // out of bound condition
     if(x < 0 || x == nrow) return;
     if(y < 0 || y == ncol) return;
     //2d lattice is assumed
-    //IPosition loc(4,x,y,0,0);
     IPosition loc(2,x,y);
     // already labelled or not value 1 pixel 
-    if(lablat(loc) || !inlat(loc)) return;
+    //if(lablat(loc) || !inlat(loc)) return;
+    if(lablatarr(loc) || !inlatarr(loc)) return;
    
     //lablat(loc) = cur_label;
     //cerr<<"cur_label="<<cur_label<<" loc="<<loc<<endl;
-    lablat.putAt(Float(cur_label), loc);
+
+    lablatarr(loc) = cur_label;
+    //lablat.putAt(Float(cur_label), loc);
+    //
+    //
     //recursively check the neighbor 
     for (uInt inc = 0; inc < 4; ++inc) 
-      depthFirstSearch(x + dx[inc], y + dy[inc], cur_label, inlat, lablat);
+      depthFirstSearch(x + dx[inc], y + dy[inc], cur_label, inlatarr, lablatarr);
   }
 
   void SDMaskHandler::labelRegions(Lattice<Float>& inlat, Lattice<Float>& lablat) 
@@ -2548,13 +2564,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition inshape = inlat.shape();
     Int nrow = inshape(0);
     Int ncol = inshape(1);
+    Array<Float> inlatarr;
+    Array<Float> lablatarr;
+    inlat.get(inlatarr);
+    lablat.get(lablatarr);
+
     for (Int i = 0; i < nrow; ++i)
     { 
       for (Int j = 0; j < ncol; ++j) 
       {
-        //if (!lablat(IPosition(4,i,j,0,0)) && inlat(IPosition(4,i,j,0,0) ) ) 
-        if (!lablat(IPosition(2,i,j)) && inlat(IPosition(2,i,j) ) ) 
-          depthFirstSearch(i, j, ++blobId, inlat, lablat);
+        // evaluating elements with lattice seems to be very slow... 
+        // changed to use Arrarys
+        //if (!lablat(IPosition(2,i,j)) && inlat(IPosition(2,i,j) ) ) 
+        if (!lablatarr(IPosition(2,i,j)) && inlatarr(IPosition(2,i,j) ) ) 
+          depthFirstSearch(i, j, ++blobId, inlatarr, lablatarr);
       }
     }
   }

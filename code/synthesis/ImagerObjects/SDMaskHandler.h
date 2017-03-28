@@ -258,12 +258,12 @@ public:
 
   
   // depth-first-search algorithm for 2D 
-  // input lattice can by 3d or 4d but only search is done on the first plane 
   void depthFirstSearch(casacore::Int x,
                         casacore::Int y,
                         casacore::Int cur_label,
-                        casacore::Lattice<casacore::Float>& inlat,
-                        casacore::Lattice<casacore::Float>& lablat);
+                        casacore::Array<casacore::Float>& inlatarr,
+                        casacore::Array<casacore::Float>& lablatarr);
+
 
   // label connected regions using depth-first-search algorithm
   void labelRegions(casacore::Lattice<casacore::Float>& inlat, casacore::Lattice<casacore::Float>& lablat); 
