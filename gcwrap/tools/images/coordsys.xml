@@ -381,7 +381,7 @@ There are no events emitted or acted upon by this \tool.
 """
 #
 print "\t----\t Intro Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, linear=2)
+csys = cs.newcoordsys(direction=True, linear=2)
 csys.summary()
 #
 """
@@ -494,7 +494,7 @@ print 'ncoordinates =',cs1.ncoordinates()
 #0
 cs1.done()
 #True
-cs2=cs.newcoordsys(direction=T,stokes=['I','V'])
+cs2=cs.newcoordsys(direction=True,stokes=['I','V'])
 print 'ncoordinates =',cs2.ncoordinates()
 #2L
 print cs2.coordinatetype()
@@ -568,7 +568,7 @@ Use only for assay tests.
 #
 print "\t----\t addcoordinate Ex 1 \t----"
 mycs=cs.newcoordsys()
-mycs.addcoordinate(direction=T)
+mycs.addcoordinate(direction=True)
 mycs.done()
 #
 """
@@ -604,7 +604,7 @@ ordering.  Generally they will be in the same order.
 """
 #
 print "\t----\t axesmap Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 csys.axesmap(T);
 #[1L, 2L, 3L]
 csys.axesmap(F);
@@ -644,7 +644,7 @@ ordering.
 """
 #
 print "\t----\t axiscoordinatetypes Ex 1 \t----"
-csys=cs.newcoordsys(direction=T,spectral=T)
+csys=cs.newcoordsys(direction=True,spectral=True)
 csys.axiscoordinatetypes()
 #['Direction', 'Direction', 'Spectral']
 #
@@ -688,7 +688,7 @@ conversion layer has been set, you get back the native reference types.
 """
 #
 print "\t----\t conversiontype Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 print csys.conversiontype (type='direction'), ' ', csys.conversiontype (type='spectral')
 #J2000   LSRK
 csys.setconversiontype (direction='GALACTIC', spectral='BARY')
@@ -778,7 +778,7 @@ to a mixture of pixel/world and abs/rel.
 """
 #
 print "\t----\t convert Ex 1 \t----"
-csys=cs.newcoordsys(direction=T, spectral=T)    # 3 axes
+csys=cs.newcoordsys(direction=True, spectral=True)    # 3 axes
 cout=csys.convert(coordin=[10,20,30],absin=[T,T,T],
                   unitsin=["pix","pix","pix"],
                   absout=[T,F,T], dopplerout='optical',
@@ -887,7 +887,7 @@ and a matrix of many converted coordinates is returned.
 """
 #
 print "\t----\t convertmany Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)    # 3 axes
+csys = cs.newcoordsys(direction=True, spectral=True)    # 3 axes
 # absolute pixel coordinates; 10 conversions each of length 3; spectral
 cin=[(15, 15, 15, 15, 15, 15, 15, 15, 15, 15),  # pixel runs from 1 to 10
      (20, 20, 20, 20, 20, 20, 20, 20, 20, 20),
@@ -943,7 +943,7 @@ Possible output values are 'Direction', 'Spectral', 'Stokes', 'Linear', and
 """
 #
 print "\t----\t coordinatetype Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 csys.coordinatetype(0)
 #'Direction'
 cs.coordinatetype()
@@ -975,7 +975,7 @@ on the new \tool.
 """
 #
 print "\t----\t copy Ex 1 \t----"
-cs1 = cs.newcoordsys(direction=T, spectral=T)
+cs1 = cs.newcoordsys(direction=True, spectral=True)
 cs2 = cs1         # Reference
 print cs1, cs2
 cs1.summary()
@@ -983,7 +983,7 @@ cs2.summary()
 cs1.done()        # done invokes default coordsys tool
 cs1.summary()
 cs2.summary()     # cs2 gets doned when cs1 does
-cs1 = cs.newcoordsys(direction=T, spectral=T)
+cs1 = cs.newcoordsys(direction=True, spectral=True)
 cs2 = cs1.copy()  # Copy
 cs1.done()
 cs1.summary()     # cs1 is default coordsys tool
@@ -1014,7 +1014,7 @@ longer call any functions on the \tool\ after it has been {\stff done}. -->
 """
 #
 print "\t----\t done Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 csys.done()
 print csys.torecord()            # default tool
 #
@@ -1083,7 +1083,7 @@ the Coordinate System. If the axis does not exist, it throws an exception.
 """
 #
 print "\t----\t findaxis Ex 1 \t----"
-csys=cs.newcoordsys(direction=T, linear=2)          # RA/DEC/Lin1/Lin2
+csys=cs.newcoordsys(direction=True, linear=2)          # RA/DEC/Lin1/Lin2
 rtn=csys.findaxis(T,1)                              # DEC
 rtn
 #{'axisincoordinate': 1L, 'coordinate': 0L}
@@ -1185,7 +1185,7 @@ which returns the mapping between pixel and world axes.
 """
 #
 print "\t----\t findcoordinate Ex 1 \t----"
-csys=cs.newcoordsys(direction=T)
+csys=cs.newcoordsys(direction=True)
 rtn=cs.findcoordinate('direction')
 print rtn
 #{'world': [0L, 1L], 'pixel': [0L, 1L]}
@@ -1381,7 +1381,7 @@ contents.
 """
 #
 print "\t----\t fromrecord Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, stokes="I Q")
+csys = cs.newcoordsys(direction=True, stokes="I Q")
 print csys.ncoordinates()
 #2
 r = csys.torecord()
@@ -1442,7 +1442,7 @@ You can set the increment with function
 """
 #
 print "\t----\t increment Ex 1 \t----"
-csys=cs.newcoordsys(direction=T,spectral=T)
+csys=cs.newcoordsys(direction=True,spectral=True)
 print csys.increment(format='q')
 #{'quantity': {'*1': {'unit': "'", 'value': -1.0},
 #              '*2': {'unit': "'", 'value': 1.0},
@@ -1482,7 +1482,7 @@ You can set the linear transform with function
 """
 #
 print "\t----\t lineartransform Ex 1 \t----"
-csys=cs.newcoordsys(direction=T,linear=3)
+csys=cs.newcoordsys(direction=True,linear=3)
 csys.lineartransform('dir')                             # 2 x 2
 # [(1.0, 0.0), (0.0, 1.0)]
 csys.lineartransform('lin')                             # 3 x 3
@@ -1528,7 +1528,7 @@ You can set the names with function
 """
 #
 print "\t----\t names Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 n = csys.names()
 print n[0]
 #Right Ascension 
@@ -1574,7 +1574,7 @@ ordering.
 """
 #
 print "\t----\t naxes Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 n = csys.naxes(T)
 print n
 #3                          # 2 direction axes, 1 spectral
@@ -1605,7 +1605,7 @@ coordinates in the Coordinate System.
 """
 #
 print "\t----\t ncoordinates Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 print csys.ncoordinates()
 #2
 cs2 = cs.newcoordsys(linear=4)
@@ -1701,7 +1701,7 @@ an exception is generated.
 """
 #
 print "\t----\t projection Ex 1 \t----"
-csys = cs.newcoordsys(direction=T)
+csys = cs.newcoordsys(direction=True)
 print csys.projection()
 #{'type': 'SIN', 'parameters': [0.0, 0.0]}
 print csys.projection('all')
@@ -1777,7 +1777,7 @@ You can set the reference code with
 """
 #
 print "\t----\t referencecode Ex 1 \t----"
-csys = cs.newcoordsys(direction=T)
+csys = cs.newcoordsys(direction=True)
 clist = csys.referencecode('dir', T)
 print clist
 #['J2000', 'JMEAN', 'JTRUE', 'APP', 'B1950', 'BMEAN', 'BTRUE',
@@ -1834,7 +1834,7 @@ You can set the reference pixel with function
 """
 #
 print "\t----\t referencepixel Ex 1 \t----"
-csys = cs.newcoordsys(spectral=T, linear=2)
+csys = cs.newcoordsys(spectral=True, linear=2)
 csys.setreferencepixel([1.0, 2.0, 3.0])
 print csys.referencepixel()
 #{'ar_type': 'absolute', 'pw_type': 'pixel', 'numeric': array([ 1.,  2.,  3.])}
@@ -1889,7 +1889,7 @@ You can set the reference value with function
 """
 #
 print "\t----\t referencevalue Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 print csys.referencevalue(format='q')
 #{'ar_type': 'absolute',
 # 'pw_type': 'world',
@@ -1935,7 +1935,7 @@ order.
 """
 #
 print "\t----\t reorder Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T, linear=2)
+csys = cs.newcoordsys(direction=True, spectral=True, linear=2)
 print csys.coordinatetype()
 #['Direction', 'Spectral', 'Linear']
 csys.reorder([1,2,0]);
@@ -1974,7 +1974,7 @@ second axis.
 csys = cstool()
 
 # Create a coordinate system with axes, RA, Dec, Stokes, and Frequency
-csys.newcoordsys(direction=T, spectral=T, stokes=["I","Q"])
+csys.newcoordsys(direction=True, spectral=True, stokes=["I","Q"])
 
 # transpose the axes so that the order is RA, Dec, Frequency, and Stokes
 csys.transpose(order=[0, 1, 3, 2])
@@ -2015,10 +2015,10 @@ coordinates must have the same number of axes.
 """
 #
 print "\t----\t replace Ex 1 \t----"
-cs1 = cs.newcoordsys(direction=T, linear=1)
+cs1 = cs.newcoordsys(direction=True, linear=1)
 print cs1.coordinatetype()
 #['Direction', 'Linear']
-cs2 = cs.newcoordsys(spectral=T)
+cs2 = cs.newcoordsys(spectral=True)
 cs1.replace (cs2.torecord(),0,1)
 print cs1.coordinatetype()
 #['Direction', 'Spectral']
@@ -2058,10 +2058,10 @@ an exception is generated.
 """
 #
 print "\t----\t restfrequency Ex 1 \t----"
-csys = cs.newcoordsys(spectral=T)
+csys = cs.newcoordsys(spectral=True)
 print csys.restfrequency()
 #{'value': [1420405751.7860003], 'unit': 'Hz'}
-csys.setrestfrequency (value=qa.quantity([1.2e9, 1.3e9],'Hz'), which=1, append=F)
+csys.setrestfrequency (value=qa.quantity([1.2e9, 1.3e9],'Hz'), which=1, append=False)
 print csys.restfrequency()
 #{'value': [1300000000.0, 1200000000.0], 'unit': 'Hz'}
 #
@@ -2141,7 +2141,7 @@ some pixel coordinates to barycentric velocities (reference code BARY).
 """
 #
 print "\t----\t setconversiontype Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T); # Create coordinate system
+csys = cs.newcoordsys(direction=True, spectral=True); # Create coordinate system
 rtn=csys.findcoordinate('spectral')             # Find spectral coordinate
 wa=rtn['world']
 pa=rtn['pixel']
@@ -2316,7 +2316,7 @@ the reference pixel is special and you should not change it.
 """
 #
 print "\t----\t setdirection Ex 1 \t----"
-csys = cs.newcoordsys(direction=T);
+csys = cs.newcoordsys(direction=True);
 csys.setdirection (refcode='GALACTIC', proj='SIN', projpar=[0,0],
                    refpix=[-10,20], refval="10deg -20deg");
 print csys.projection()
@@ -2422,7 +2422,7 @@ You can recover the current increments with function
 """
 #
 print "\t----\t setincrement Ex 1 \t----"
-csys=cs.newcoordsys(direction=T, spectral=T)
+csys=cs.newcoordsys(direction=True, spectral=True)
 rv = csys.increment(format='q')
 print rv
 # {'ar_type': 'absolute', 'pw_type': 'world',
@@ -2498,7 +2498,7 @@ You can recover the current linear transform with function
 """
 #
 print "\t----\t setlineartransform Ex 1 \t----"
-csys = cs.newcoordsys(spectral=T, linear=3)
+csys = cs.newcoordsys(spectral=True, linear=3)
 xf = csys.lineartransform('lin')
 print xf
 #[(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)]
@@ -2551,7 +2551,7 @@ You can recover the current axis names with function
 """
 #
 print "\t----\t setnames Ex 1 \t----"
-csys = cs.newcoordsys(spectral=T, linear=2)
+csys = cs.newcoordsys(spectral=True, linear=2)
 csys.setnames(value="a b c")
 print csys.names()
 #['a', 'b', 'c']
@@ -2734,7 +2734,7 @@ then the reference code is simply overwritten; do this very carefully.
 """
 #
 print "\t----\t Ex setreferencecode 1 \t----"
-csys = cs.newcoordsys(direction=T)
+csys = cs.newcoordsys(direction=True)
 clist = csys.referencecode('dir', T)      # See possibilities
 print clist
 #['J2000', 'JMEAN', 'JTRUE', 'APP', 'B1950', 'BMEAN', 'BTRUE', 'GALACTIC',
@@ -2891,7 +2891,7 @@ You can recover the current reference pixel with function
 """
 #
 print "\t----\t setreferencepixel Ex 1 \t----"
-csys = cs.newcoordsys(spectral=T, linear=2)
+csys = cs.newcoordsys(spectral=True, linear=2)
 csys.setreferencepixel(value=[1.0, 2.0, 3.0])
 print csys.referencepixel()
 #[1.0, 2.0, 3.0]
@@ -2949,7 +2949,7 @@ record.
 """
 #
 print "\t----\t setreferencevalue Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 rv = csys.referencevalue(format='q')
 print rv
 #{'quantity': {'*1': {'value': 0.0, 'unit': "'"},
@@ -3041,7 +3041,7 @@ an exception is generated.
 """
 #
 print "\t----\t setrestfrequency Ex 1 \t----"
-csys = cs.newcoordsys(spectral=T)
+csys = cs.newcoordsys(spectral=True)
 print csys.restfrequency()
 #{'value': array([  1.42040575e+09]), 'unit': 'Hz'}
 csys.setrestfrequency(qa.quantity('1.4GHz'))
@@ -3053,7 +3053,7 @@ print csys.restfrequency()
 csys.setrestfrequency (value=[1.2e9, 1.3e9], which=1)
 print csys.restfrequency()
 #{'value': array([  1.30000000e+09,   1.20000000e+09]), 'unit': 'Hz'}
-csys.setrestfrequency (qa.quantity([1,2],'GHz'), which=3, append=T)
+csys.setrestfrequency (qa.quantity([1,2],'GHz'), which=3, append=True)
 print csys.restfrequency()
 #{'value': array([  2.00000000e+09,   1.20000000e+09,   1.30000000e+09,
 #         1.00000000e+09]), 'unit': 'Hz'}
@@ -3129,7 +3129,7 @@ of Spectral Coordinate used).
 <example>
 
 print "\t----\t setspectral Ex 1 \t----"
-csys = cs.newcoordsys(spectral=T);
+csys = cs.newcoordsys(spectral=True);
 f1 = [1,1.01,1.03,1.4]
 fq = qa.quantity(f1, 'GHz')
 csys.setspectral(frequencies=fq)
@@ -3248,7 +3248,7 @@ If you have more than one Tabular Coordinate, use argument
 """
 #
 print "\t----\t settabular Ex 1 \t----"
-csys = cs.newcoordsys(tabular=T);
+csys = cs.newcoordsys(tabular=True);
 print csys.settabular (pixel=[1,10,15,20,100], world=[10,20,50,100,500])
 #True
 #
@@ -3367,7 +3367,7 @@ You can recover the current axis units with function
 """
 #
 print "\t----\t setunits Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 csys.summary()
 csys.setunits(value="deg rad mHz");
 csys.summary()
@@ -3474,8 +3474,8 @@ print "\t----\t summary Ex 1 \t----"
 d = me.doppler('beta')
 print me.listcodes(d)
 #[normal=RADIO Z RATIO BETA GAMMA OPTICAL TRUE RELATIVISTIC, extra=] 
-csys = cs.newcoordsys(direction=T, spectral=T)
-print csys.summary(list=F)
+csys = cs.newcoordsys(direction=True, spectral=True)
+print csys.summary(list=False)
 #
 #Direction reference : J2000
 #Spectral  reference : LSRK
@@ -3586,7 +3586,7 @@ world or pixel coordinate via the {\stfaf isworld} argument.
 """
 #
 print "\t----\t toabs Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 aw = csys.toworld([100,100,24], 's')
 rw = csys.torel(aw)
 aw2 = csys.toabs(rw)
@@ -3614,7 +3614,7 @@ This example uses world coordinates.
 """
 #
 print "\t----\t toabs Ex 2 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 ap = csys.topixel()           # Reference value
 rp = csys.torel(ap)
 ap2 = csys.toabs(rp)
@@ -3670,7 +3670,7 @@ values must be the native units, given by function
 """
 #
 print "\t----\t toabsmany Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)    # 3 axes
+csys = cs.newcoordsys(direction=True, spectral=True)    # 3 axes
 rv = csys.referencevalue();                 # reference value
 w = csys.torel(rv)                          # make relative
 inc = csys.increment();                     # increment
@@ -3730,7 +3730,7 @@ the \htmlref{formatting}{COORDSYS:FORMATTING} discussion.
 """
 #
 print "\t----\t topixel Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T, stokes="I V", linear=2)
+csys = cs.newcoordsys(direction=True, spectral=True, stokes="I V", linear=2)
 w = csys.toworld([-2,2,1,2,23,24], 'n')
 print csys.topixel(w)
 #{'ar_type': 'absolute', 'pw_type': 'pixel',
@@ -3786,7 +3786,7 @@ print csys.toworld([0,1,2], 'q')
 """
 #
 print "\t----\t topixel Ex 3 \t----"
-csys = cs.newcoordsys (spectral=T, linear=1)
+csys = cs.newcoordsys (spectral=True, linear=1)
 print csys.toworld([0,1,2], 'q')
 #{'ar_type': 'absolute', 'pw_type': 'world',
 # 'quantity': {'*1': {'value': 1415000000.0, 'unit': 'Hz'},
@@ -3829,7 +3829,7 @@ function <link anchor="images:coordsys.units.function">units</link>.
 """
 #
 print "\t----\t topixelmany Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)    # 3 axes
+csys = cs.newcoordsys(direction=True, spectral=True)    # 3 axes
 rv = csys.referencevalue();                 # reference value
 inc = csys.increment();                     # increment
 off = []
@@ -3874,7 +3874,7 @@ Coordsys \tools\ to be used as parameters in the methods of other tools.
 """
 #
 print "\t----\t torecord Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, stokes="I Q")
+csys = cs.newcoordsys(direction=True, stokes="I Q")
 rec = csys.torecord();
 cs2 = cs.newcoordsys();
 print cs2.ncoordinates()
@@ -3985,7 +3985,7 @@ world or pixel coordinate via the {\stfaf isworld} argument.
 """
 #
 print "\t----\t torel Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 aw = csys.toworld([99,99,23], 's')
 rw = csys.torel(aw)
 aw2 = csys.toabs(rw)
@@ -4011,7 +4011,7 @@ This example uses world coordinates.
 """
 #
 print "\t----\t torel Ex 2 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 ap = csys.topixel()           # Reference value
 rp = csys.torel(ap)
 ap2 = csys.toabs(rp)
@@ -4066,7 +4066,7 @@ values must be the native units, given by function
 """
 #
 print "\t----\t torelmany Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)    # 3 axes
+csys = cs.newcoordsys(direction=True, spectral=True)    # 3 axes
 w = csys.referencevalue();                  # reference value
 inc = csys.increment();                     # increment
 off = []
@@ -4129,7 +4129,7 @@ formatting possibilities available via argument {\stfaf format}.
 """
 #
 print "\t----\t toworld Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 print csys.toworld([-3,1,1], 'n')
 #{'ar_type': 'absolute', 'pw_type': 'world',
 # 'numeric': array([  3.00000051e+00,   1.00000001e+00,   1.41500100e+09])}
@@ -4185,7 +4185,7 @@ print csys.toworld([0,1,2], 'q')
 """
 #
 print "\t----\t toworld Ex 3 \t----"
-csys = cs.newcoordsys (spectral=T, linear=1)
+csys = cs.newcoordsys (spectral=True, linear=1)
 print cs.toworld([0,1,2], 'q')
 #{'ar_type': 'absolute', 'pw_type': 'world',
 # 'quantity': {'*1': {'value': 1415000000.0, 'unit': 'Hz'},
@@ -4227,7 +4227,7 @@ function <link anchor="images:coordsys.units.function">units</link>.
 """
 #
 print "\t----\t toworldmany Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)    # 3 axes
+csys = cs.newcoordsys(direction=True, spectral=True)    # 3 axes
 rp = csys.referencepixel()['numeric'];            # reference pixel
 pabs = ia.makearray(0,[3,100])              # 100 conversions each of length 3
 for i in range(3):
@@ -4293,7 +4293,7 @@ You can set the units with function
 """
 #
 print "\t----\t units Ex 1 \t----"
-csys = cs.newcoordsys(direction=T, spectral=T)
+csys = cs.newcoordsys(direction=True, spectral=True)
 print csys.units()
 #["'", "'", 'Hz']
 print csys.units('spec')

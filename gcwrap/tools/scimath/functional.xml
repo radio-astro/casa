@@ -1694,7 +1694,7 @@ argument is true.
 T 
 - dfs.done()
 F 
-- dfs.done(kill=T)
+- dfs.done(kill=True)
 NORMAL: Successfully closed empty server: functionals
 T 
 

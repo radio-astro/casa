@@ -1443,18 +1443,18 @@ of that tool (eg the image it references) will not be changed.
 
 """
 # Create three images to concatenate together.
-ia.fromshape('im.1',[10,10,10],overwrite=T)
-ia.fromshape('im.2',[10,10,10],overwrite=T)
-ia.fromshape('im.3',[10,10,10],overwrite=T)
+ia.fromshape('im.1',[10,10,10],overwrite=True)
+ia.fromshape('im.2',[10,10,10],overwrite=True)
+ia.fromshape('im.3',[10,10,10],overwrite=True)
 ia.done()
 # now concatenate.
 # The three images have the same shape along the axes not to be
-# concatenated as they must. relax=T means that the contiguity
+# concatenated as they must. relax=True means that the contiguity
 # constraint along the concatenated axis is not imposed (if it were
 # the call would fail because the spectral axes of the input images
 # are not contiguous).
 bigim = ia.imageconcat(outfile='bigimage', infiles='im.1 im.2 im.3',
-                       axis=2, relax=T, tempclose=F, overwrite=T)
+                       axis=2, relax=True, tempclose=False, overwrite=True)
 # be sure to call done() on the return tool to free up system resources.
 bigim.done()
 """
@@ -1472,7 +1472,7 @@ bigim.done()
 # result.  Because an oufile is not specified, the returned image analysis
 # tool captured in the variable named bigim just references the input images;
 # this call does not create a persistent result image.
-bigim = ia.imageconcat(infiles="im.*",relax=T)
+bigim = ia.imageconcat(infiles="im.*",relax=True)
 bigim.done()
 """
 </example>
@@ -2289,7 +2289,7 @@ mycs=ia.coordsys()
 print mycs.axiscoordinatetypes()
 #['Direction', 'Direction']
 mycs.done()
-im2 = ia.adddegaxes(spectral=T)
+im2 = ia.adddegaxes(spectral=True)
 print im2.shape()
 #[113L, 76L, 1L]
 mycs=im2.coordsys()
@@ -2423,7 +2423,7 @@ where MJD is the Modidfied Julian Day.
 
 """
 ia.maketestimage()
-ia.addnoise(type='normal', pars=[0.5, 1], zero=T, seeds=[1,2]) 
+ia.addnoise(type='normal', pars=[0.5, 1], zero=True, seeds=[1,2]) 
 ia.statistics()
 ia.close()
 """
@@ -3175,8 +3175,8 @@ Gaussian component.  The image must hold a restoring beam.
 print "\t----\t convertflux Ex 1 \t----"
 ia.maketestimage('in.im', overwrite=true);
 p1 = qa.quantity('1mJy/beam')
-i1 = ia.convertflux(p1, major='30arcsec', minor='10arcsec', topeak=F);
-p2 = ia.convertflux(i1, major='30arcsec', minor='10arcsec', topeak=T)
+i1 = ia.convertflux(p1, major='30arcsec', minor='10arcsec', topeak=False);
+p2 = ia.convertflux(i1, major='30arcsec', minor='10arcsec', topeak=True)
 print 'peak, integral, peak = ', p1, i1, p2
 #peak, integral, peak =  {'value': 1.0, 'unit': 'mJy/beam'}
 #                        {'value': 0.00016396129551656742, 'unit': 'Jy'}
@@ -3940,7 +3940,7 @@ beam = ia.beamforconvolvedsize(source=["1arcsec", "1arcsec", "0deg"], convolved=
     ia.open("mymultibeamimage.im")
     cb = ia.commonbeam()
     # convolve all the planes in the image with that beam
-    ia.convolve2d(outfile="myconvolvedimage.im", major=cb["major], minor=cb["minor"], pa=cb["pa"], targetres=T)
+    ia.convolve2d(outfile="myconvolvedimage.im", major=cb["major], minor=cb["minor"], pa=cb["pa"], targetres=True)
 
 </example>
 </method>
@@ -4572,7 +4572,7 @@ that the zeroth axis should be used.
 
 MINIMUM NUMBER OF PIXELS
 The minpts parameter indicates the minimum number of unmasked pixels that must be present in order for a fit
-to be attempted. When multifit=T, positions with too few good points will be masked in any output images.
+to be attempted. When multifit=True, positions with too few good points will be masked in any output images.
 
 ONE FIT OF REGION AVERAGE OR PIXEL BY PIXEL FIT
 The multifit parameter indicates if profiles should be fit at each pixel in the selected region (true), or if the profiles in that region should be
@@ -4779,7 +4779,7 @@ The weight of a pixel is the usual
 
 weight = 1/(sigma*sigma)
 
-In the case of multifit=F, the sigma values at each pixel along the fit axis in the hyperplane perpendicular to the fit axis which includes
+In the case of multifit=False, the sigma values at each pixel along the fit axis in the hyperplane perpendicular to the fit axis which includes
 that pixel are averaged and the resultant averaged standard deviation spectrum is the one used in the fit. Internally, sigma values are normalized
 such that the maximum value is 1. This mitigates a known overflow issue.
 
@@ -5363,7 +5363,7 @@ retrieves the pixels or \pixelmask\ from a potentially more complex
 and therefore preferable for repeated operation in loops if the
 \pixelmask\ is not required and the region is a simple box.
 
-If you set getmask=T, the return value is the 'pixelmask' rather than
+If you set getmask=True, the return value is the 'pixelmask' rather than
 the 'pixel' image.
 
 </description>
@@ -5380,7 +5380,7 @@ ia.calcmask('T')                         # give image a mask
 pix = ia.getchunk([1,1,1], [10,10,1])    # 10 by 10 section of plane # 1
 pix = ia.getchunk([1,1], [1,1])          # first spectrum
 pix = ia.getchunk(inc=[1,5])             # all planes, decimated by 5 in y
-mask = ia.getchunk(getmask=T)            # Get pixelmask
+mask = ia.getchunk(getmask=True)            # Get pixelmask
 ia.close()
 #
 """
@@ -5491,7 +5491,7 @@ ia.close()
 print "\t----\t getregion Ex 2 \t----"
 ia.fromshape('cube', [64,64,64], overwrite=true)
 pixels = ia.getregion()
-pixelmask = ia.getregion(getmask=T)  
+pixelmask = ia.getregion(getmask=True)  
 #
 """
 
@@ -5865,7 +5865,7 @@ file is being shared between more than one process.  See also functions
 #
 print "\t----\t haslock Ex 1 \t----"
 ia.maketestimage('xx',overwrite=true)
-ia.lock(writelock=T)
+ia.lock(writelock=True)
 print ia.haslock()
 #[True, True]
 ia.unlock()
@@ -5988,7 +5988,7 @@ ia.close()
 # the cumulative number of data points in the current bin and in
 # bins less than the current bin.
 ia.open("myimage.im")
-r = ia.histograms(axes=[0,2],nbins=30,includepix=1e-3,cumu=T)
+r = ia.histograms(axes=[0,2],nbins=30,includepix=1e-3,cumu=True)
 ia.close()
 
 </example>
@@ -6036,8 +6036,8 @@ from \fits\ file conversions is also stored and listable here.
 print "\t----\t history Ex 1 \t----"
 ia.maketestimage()
 ia.history()                       # List history to logger
-h = ia.history(list=F)             # Recover history in variable h
-ia.history(list=T, browse=F)       # List history to logger
+h = ia.history(list=False)             # Recover history in variable h
+ia.history(list=True, browse=False)       # List history to logger
 #
 """
 
@@ -6225,9 +6225,9 @@ file is being shared between more than one process.  See also functions
 #
 print "\t----\t lock Ex 1 \t----"
 ia.maketestimage('xx', overwrite=true)
-ia.lock(writelock=T)
+ia.lock(writelock=True)
 ia.unlock()
-ia.lock(writelock=F)
+ia.lock(writelock=False)
 ia.close(remove=true)
 #
 """
@@ -7103,9 +7103,9 @@ just recover the \imagefile\ name itself.
 #
 print "\t----\t name Ex 1 \t----"
 ia.maketestimage('g1.app', overwrite=true)
-print ia.name(strippath=F)
+print ia.name(strippath=False)
 #/casa/code/xmlcasa/implement/images/scripts/g1.app
-print ia.name(strippath=T)
+print ia.name(strippath=True)
 #g1.app
 ia.close()
 #
@@ -7621,7 +7621,7 @@ mycs = ia.coordsys()
 r1 = rg.wpolygon(x,y,csys=mycs.torecord()) # Create polygonal world region
 mycs.done()
 pixels = ia.getregion(r1)                  # Recover pixels
-pixelmask = ia.getregion(r1, getmask=T)    # and mask
+pixelmask = ia.getregion(r1, getmask=True)    # and mask
 for i in range(len(pixels)):
   pixels[i] = list(pixels[i])              # convert tuple to list for mods
   for j in range(len(pixels[i])):
@@ -7949,7 +7949,7 @@ You may also have to reduce the decimation factor if the number of pixels
 in the output image along an axis to be regridded is less than about 50, or
 the output image may be completely masked.
 
-If one of the axes to be regridded is a spectral axis and asvelocity=T,
+If one of the axes to be regridded is a spectral axis and asvelocity=True,
 the axis will be regridded to match the velocity, not the frequency,
 description of the template coordinate system. Thus the output pixel
 values will correspond only to the velocity, not the frequency, of the
@@ -8032,7 +8032,7 @@ ia.maketestimage('radio.image',overwrite=true)
 mycs = ia.coordsys();
 print mycs.referencecode('dir')
 #J2000
-mycs.setreferencecode(value='B1950', type='dir', adjust=T)
+mycs.setreferencecode(value='B1950', type='dir', adjust=True)
 im3 = ia.regrid(outfile='radio.regridded', csys=mycs.torecord(),
                 shape=ia.shape(), overwrite=true)
 mycs.done()
@@ -8347,16 +8347,16 @@ result.
 Example:
 #
 print ' ---- rename Ex 1, rename a new image ----'
-ia.maketestimage('myimage',overwrite=T)
-print ia.name(strippath=T)
+ia.maketestimage('myimage',overwrite=True)
+print ia.name(strippath=True)
 #myimage
-ia.rename('newimage', overwrite=T)
-print ia.name(strippath=T)
+ia.rename('newimage', overwrite=True)
+print ia.name(strippath=True)
 #newimage
 #
 print ' ---- rename Ex 2, rename an existing image ----'
-ia.open('originalimage',overwrite=T)
-ia.rename('newimage', overwrite=T)
+ia.open('originalimage',overwrite=True)
+ia.rename('newimage', overwrite=True)
 ia.close()
 #
 """
@@ -8508,7 +8508,7 @@ ia.calcmask('zz1&lt;0')
 im2 = ia.subimage(outfile='zz2',overwrite=true)
 # r = rg.quarter()
 r=rg.box([0.25,0.25],[0.75,0.75],frac=true)
-ia.replacemaskedpixels(0.0, region=r, mask=im2.name(strippath=T)+'\&gt;0')
+ia.replacemaskedpixels(0.0, region=r, mask=im2.name(strippath=True)+'\&gt;0')
 # same as ia.replacemaskedpixels(0.0, region=r, mask='zz2\&gt;0')
 im2.done()
 ia.close()
@@ -8859,9 +8859,9 @@ ia.set(pixels=1.0)               # Set all pixels to 1
 ia.set(pixels='2.0', region=r1)  # Set all pixels to 2 in the region
 ia.set(pixels='min(yy)')         # Set all pixels to minimum of image yy
                                  # Set pixels in region to minimum of image xx
-ia.set(pixels='min('+ia.name(strippath=T)+')', region=r1)
-ia.set(pixelmask=T)              # Set mask to all T
-ia.set(pixels=0, pixelmask=F, region=r1)  #Set pixels and mask in region
+ia.set(pixels='min('+ia.name(strippath=True)+')', region=r1)
+ia.set(pixelmask=True)              # Set mask to all T
+ia.set(pixels=0, pixelmask=False, region=r1)  #Set pixels and mask in region
 ia.close()
 #
 """
@@ -9542,7 +9542,7 @@ Several types of statistical algorithms are supported:
   closer to forming a normal distribution. Iterating stops when no additional points lie beyond the
   specified zscore value, or, if zscore is negative, when Chauvenet's criterion is met (see below).
   The parameter maxiter can be set to a non-negative value to prematurely abort this iterative
-  process. When verbose=T, the "N iter" column in the table that is logged represents the number
+  process. When verbose=True, the "N iter" column in the table that is logged represents the number
   of iterations that were executed.
   
   Chauvenet's criterion allows the target z-score to decrease as the number of points in the
@@ -9654,7 +9654,7 @@ entire image. <!-- No plotting is available under these conditions.-->
 print "\t----\t statistics Ex 2 \t----"
 ia.maketestimage()
 stats = ia.statistics(axes=[1],plotstats=["sigma","rms"],
-                      includepix=[0,100],list=F)
+                      includepix=[0,100],list=False)
 #
 """
  
@@ -9989,7 +9989,7 @@ beams, verbose is not used.
 print "\t----\t summary Ex 1 \t----"
 ia.maketestimage('myim1', overwrite=true)
 ia.summary()                 # summarize to logging only
-s = ia.summary(list=F)       # store header in record
+s = ia.summary(list=False)       # store header in record
 if s['header']['ndim'] == 2: # program using header values
   print s['header']['axisnames']
 ia.close()

@@ -392,8 +392,8 @@ function (at some point this function will move from the \regionmanager\
 [blc=[90 90] , trc=[129 98] , regionShape=[40 9] , imageShape=[155 178] ] 
 - 
 - s1 = ia.statistics(region=r1, list=False)
-- s2 = ia.statistics(region=r2, list=F)
-- s3 = ia.statistics(region=r3, list=F)
+- s2 = ia.statistics(region=r2, list=False)
+- s3 = ia.statistics(region=r3, list=False)
 -
 - np = (bb['trc'][0]-bb['blc'][0]+1)*(bb['trc'][1]-bb['blc'][1]+1)
 - print 'No. pts in r1, r2, r3, bb(r3) = ', s1['npts'][0], s2['npts'][0], s3['npts'][0], np
@@ -600,7 +600,7 @@ torecord=&lt;function&gt;, type=&lt;function&gt;]
 - r1.torecord()
 [name=LCSlicer, isRegion=3, blc=[10 20] , trc=[30 40] , inc=, 
 fracblc=[F F] , fractrc=[F F] , fracinc=, 
-arblc=[1 1] , artrc=[1 1] , oneRel=T, comment=] 
+arblc=[1 1] , artrc=[1 1] , oneRel=True, comment=] 
 
 
 First we make a simple pixel-box region.  We then try and print it out. 
@@ -1946,7 +1946,7 @@ names of the regions in the Table.
 <example>
 
 - img = ia.open('hcn')
-- rec = rg.fromtabletorecord(img, numberfields=T)
+- rec = rg.fromtabletorecord(img, numberfields=True)
 - print is_region(rec[0])
 
 

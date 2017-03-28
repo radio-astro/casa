@@ -745,7 +745,7 @@ have chosen to represent these as actual sizes.
     
       include 'componentlist.g'
       include 'measures.g'
-      cl := componentlist('crux.cl', readonly=T);
+      cl := componentlist('crux.cl', readonly=True);
       dir := dm.direction('J2000', '12h26m35.9', '-63d5m56');
       pixelsize := dm.quantity('1arcsec');
       flux := cl.sample(dir, pixelsize);
@@ -2920,8 +2920,8 @@ list in the second argument</description>
   <example>
     
       include 'componentlist.g'
-      newcl := componentlist('core', readonly=F);
-      othercl := componentlist('centarusA.cl', readonly=T);
+      newcl := componentlist('core', readonly=False);
+      othercl := componentlist('centarusA.cl', readonly=True);
       newcl.replace(1:2, othercl, [10,13]);
     
   </example>
