@@ -1809,13 +1809,17 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
         } else if ( pmsavg || extendcorr || extendchan) {
             // This chunk requires flag-setting but have to handle chunks
             // (shape has changed: VBs averaged together or extending flags)
+            Cube<Bool> vbflag;
+            Vector<Bool> vbflagrow;
+            Vector<Int> a1, a2;
+
             for (Int i=0; i<nVBPerAve_(ichk); ++i) {
 
                 // Refer to VB pieces we need
-                Cube<Bool> vbflag(vb->flagCube());
-                Vector<Bool> vbflagrow(vb->flagRow());
-                Vector<Int> a1(vb->antenna1());
-                Vector<Int> a2(vb->antenna2());
+                vbflag = vb->flagCube();
+                vbflagrow = vb->flagRow();
+                a1 = vb->antenna1();
+                a2 = vb->antenna2();
                 Int ncorr = vb->nCorrelations();
                 Int nchan = vb->nChannels();
                 Int nrow  = vb->nRows();
