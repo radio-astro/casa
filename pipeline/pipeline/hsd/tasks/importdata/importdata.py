@@ -3,26 +3,23 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.domain as domain
 from pipeline.domain.datatable import absolute_path
 from . import inspection
 
 #import pipeline.hif.tasks.importdata.importdata as importdata
 import pipeline.h.tasks.importdata.importdata as importdata
-import pipeline.hifa.tasks.importdata.almaimportdata as almaimportdata
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDImportDataInputs(almaimportdata.ALMAImportDataInputs):
+class SDImportDataInputs(importdata.ImportDataInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None, session=None, overwrite=None, 
-                 bdfflags=None, save_flagonline=None, lazy=None, dbservice=None,
+                 bdfflags=None, save_flagonline=None, lazy=None, 
                  with_pointing_correction=None, createmms=None, ocorr_mode=None):
         self._init_properties(vars())
 
-    asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere CalWVR')
-    dbservice = basetask.property_with_default('dbservice', False)
+    asis = basetask.property_with_default('asis', 'SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
     with_pointing_correction = basetask.property_with_default('with_pointing_correction', True)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'ao')
 
