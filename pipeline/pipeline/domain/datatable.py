@@ -580,8 +580,8 @@ class DataTableImpl( object ):
             max_chan = numpy.where(abs(atm_freqs-float(science_spw.max_frequency.value))==min(abs(atm_freqs-float(science_spw.max_frequency.value))))[0][-1]
             start_atmchan = min(min_chan, max_chan)
             end_atmchan = max(min_chan, max_chan)
-            LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
-            LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
+            #LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
+            #LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
             if end_atmchan == start_atmchan:
                 end_atmchan = start_atmchan + 1
             return start_atmchan, end_atmchan
@@ -590,7 +590,7 @@ class DataTableImpl( object ):
             atm_spw = msobj.get_spectral_window(spw_from)
             science_spw = msobj.get_spectral_window(spw_to)
             start_atmchan, end_atmchan = map_spwchans(atm_spw, science_spw)
-            LOG.trace("Transfer Tsys from spw %d (chans: %d~%d) to %d" % (spw_from, start_atmchan, end_atmchan, spw_to))
+            #LOG.trace("Transfer Tsys from spw %d (chans: %d~%d) to %d" % (spw_from, start_atmchan, end_atmchan, spw_to))
             for ant_to in to_antids:
                 # select caltable row id by SPW and ANT
                 cal_idxs = numpy.where(numpy.logical_and(spws==spw_from, antids==ant_to))[0]
@@ -612,8 +612,8 @@ class DataTableImpl( object ):
                         continue
                     # the array, atsys, is in shape of len(cal_field_idxs) x npol unlike the other arrays.
                     atsys = numpy.array([tsys_masked[i][:,start_atmchan:end_atmchan+1].mean(axis=1).data for i in cal_field_idxs])
-                    LOG.trace("cal_field_ids=%s" % cal_field_idxs)
-                    LOG.trace('atsys = %s' % str(atsys))
+                    #LOG.trace("cal_field_ids=%s" % cal_field_idxs)
+                    #LOG.trace('atsys = %s' % str(atsys))
                     if atsys.shape[0] == 1: #only one Tsys measurement selected
                         self.tb1.putcell('TSYS', dt_id, atsys[0,:])
                     else:
