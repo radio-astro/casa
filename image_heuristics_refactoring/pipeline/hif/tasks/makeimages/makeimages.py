@@ -180,11 +180,11 @@ class CleanTaskFactory(object):
 
         # set the imager mode here (temporarily ...)
         image_heuristics = target['heuristics']
-        task_args['gridder'] = image_heuristics.gridder(
-                task_args['intent'], task_args['field'])
-        # Let the image heuristics determine the deconvolver
-        #task_args['deconvolver'] = image_heuristics.deconvolver(
-        #        task_args['intent'], task_args['field'])
+        if target['gridder'] is not None:
+            task_args['gridder'] = target['gridder']
+        else:
+            task_args['gridder'] = image_heuristics.gridder(
+                    task_args['intent'], task_args['field'])
 
         if inputs.hm_masking == '':
             if 'TARGET' in task_args['intent']:

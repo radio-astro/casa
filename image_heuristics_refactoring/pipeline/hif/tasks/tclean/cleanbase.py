@@ -163,7 +163,6 @@ class CleanBase(basetask.StandardTaskTemplate):
             else:
                 inputs.datacolumn = 'corrected'
 
-        re_field = utils.dequote(inputs.field)
 
         # Use scanids to select data with the specified intent
         # Note CASA clean now supports intent selectin but leave
@@ -172,21 +171,24 @@ class CleanBase(basetask.StandardTaskTemplate):
         scanidlist = []
         vislist = []
         spwsellist = []
-        for i in xrange(len(inputs.vis)):
-            ms = inputs.context.observing_run.get_ms(name=inputs.vis[i])
-            scanids = [scan.id for scan in ms.scans if
-                       inputs.intent in scan.intents and
-                       re_field in [utils.dequote(f.name) for f in scan.fields]]
-            if not scanids:
-                continue
-            scanids = str(scanids)
-            scanids = scanids.replace('[', '')
-            scanids = scanids.replace(']', '')
-            scanidlist.append(scanids)
-            vislist.append(inputs.vis[i])
-            spwsellist.append(inputs.spwsel[i])
-        inputs.vis=vislist
-        inputs.spwsel=spwsellist
+        # TODO: Compute scan list in heuristics
+        if inputs.field.find(',') == -1:
+            re_field = utils.dequote(inputs.field)
+            for i in xrange(len(inputs.vis)):
+                ms = inputs.context.observing_run.get_ms(name=inputs.vis[i])
+                scanids = [scan.id for scan in ms.scans if
+                           inputs.intent in scan.intents and
+                           re_field in [utils.dequote(f.name) for f in scan.fields]]
+                if not scanids:
+                    continue
+                scanids = str(scanids)
+                scanids = scanids.replace('[', '')
+                scanids = scanids.replace(']', '')
+                scanidlist.append(scanids)
+                vislist.append(inputs.vis[i])
+                spwsellist.append(inputs.spwsel[i])
+            inputs.vis=vislist
+            inputs.spwsel=spwsellist
 
         # Initialize imaging results structure
         if not inputs.result:
@@ -275,7 +277,6 @@ class CleanBase(basetask.StandardTaskTemplate):
             'field':         inputs.field,
             'spw':           inputs.spwsel,
             'intent':        utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-            'scan':          scanidlist,
             'specmode':      inputs.specmode if inputs.specmode != 'cont' else 'mfs',
             'gridder':       inputs.gridder,
             'pblimit':       inputs.pblimit,
@@ -300,6 +301,9 @@ class CleanBase(basetask.StandardTaskTemplate):
             'chanchunks':    chanchunks,
             'parallel':      parallel
             }
+
+        if scanidlist not in [[], None]:
+            tclean_job_parameters['scan'] = scanidlist
 
         # Set up masking parameters
         if inputs.hm_masking == 'auto':
@@ -477,7 +481,9 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
             if spw:
                 info['spw'] = spw
             if field:
-                info['field'] = field
+                # TODO: Find common key calculation. Long VLASS lists cause trouble downstream.
+                #       Truncated list may cause duplicates.
+                info['field'] = field.split(',')[0]
             if type:
                 info['type'] = type
             if iter is not None:

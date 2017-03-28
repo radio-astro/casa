@@ -5,6 +5,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import EditimlistResult
 from pipeline.hif.tasks.makeimlist.cleantarget import CleanTarget
+from pipeline.hif.heuristics import imageparams_factory
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -114,7 +115,9 @@ class Editimlist(basetask.StandardTaskTemplate):
                 target['mask'] = '' if not inputs.mask else None
                 target['specmode'] = 'cont' if not inputs.specmode else None
                 target['field'] = targetname
-                target['imagename'] = targetname
+                target['imagename'] = targetname.split(',')[0].replace('+','_')+'_sSTAGENUMBER'
+                iph = imageparams_factory.ImageParamsHeuristicsFactory()
+                target['heuristics'] = iph.getHeuristics(context=inputs.context, vislist=inputs.vis, spw=inputs.spw, imaging_mode='VLASS')
                 inputsdict = inputs.__dict__
                 for parameter in inputsdict.keys():
                     if inputsdict[parameter] and parameter not in ('field', 'imagename') and \
