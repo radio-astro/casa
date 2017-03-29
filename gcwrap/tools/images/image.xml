@@ -5114,9 +5114,10 @@ in pixel coordinates. The major and minor axes and the position angle are the co
 parameters if the image has been convolved with a clean beam and are specified as quantities.
 The fixed parameter is optional and is a string. It may contain any combination of the
 following characters 'f' (peak intensity), 'x' (peak x position), 'y' (peak y position),
-'a' (major axis), 'b' (axial ratio), 'p' (position angle). NOTE: One cannot hold
-the minor axis fixed without holding the major axis fixed. If the major axis is not fixed,
-specifying "b" in the fixed string will hold the axial ratio fixed during the fit.
+'a' (major axis), 'b' (axial ratio, R = (major axis FWHM)/(minor axis FWHM)),
+'p' (position angle). NOTE: One cannot hold the minor axis fixed without holding the major
+axis fixed. If the major axis is not fixed, specifying "b" in the fixed string will hold
+the axial ratio fixed during the fit.
 
 In addition, lines in the file starting with a \# are considered comments.
 
