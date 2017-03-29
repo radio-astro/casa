@@ -186,7 +186,7 @@ void CalSolVi2Organizer::addCalForSolving(VisEquation& ve) {
 }
 
 
-void CalSolVi2Organizer::addChanAve(Int chanbin) {
+void CalSolVi2Organizer::addChanAve(Vector<Int> chanbin) {
 
   // Must not have added one already!
   AlwaysAssert(!chanave_, AipsError);

@@ -70,6 +70,12 @@
 using std::vector;
 #include <msvis/MSVis/UtilJ.h>
 
+#ifdef _OPENMP
+ #include <omp.h>
+#endif
+
+//#define REPORT_CAL_TIMING
+
 using namespace casacore;
 using namespace casa::utilj;
 
@@ -2944,6 +2950,11 @@ Bool Calibrater::ok() {
 casacore::Bool Calibrater::genericGatherAndSolve()  
 {
 
+#ifdef _OPENMP
+  Double Tsetup(0.0),Tgather(0.0),Tsolve(0.0),Tadd(0.0);
+  Double time0=omp_get_wtime();
+#endif
+
   // Condition solint values 
   svc_p->reParseSolintForVI2();
 
@@ -2982,13 +2993,17 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 
 
   // Add the freq-averaging layer, if needed
-  //cout << "svc_p->fintervalCh() = " << svc_p->fintervalCh() << endl;                                                    
+  //cout << "svc_p->fintervalChV() = " << svc_p->fintervalChV() << endl;                                                    
   //cout << "svc_p->fsolint() = " << svc_p->fsolint() << endl;
-  if (!svc_p->freqDepMat() ||       // entirely unchannelized cal  OR                                                       
-      (svc_p->freqDepPar() &&       // channelized par and                                                                  
-       svc_p->fsolint()!="none" &&  //  some partial channel ave                                                            
-       svc_p->fintervalCh()>0.0)) { //  specified                                                                           
-    vi2org.addChanAve(Int(svc_p->fintervalCh()));  
+  // TBD: improve the following logic with new method in SVC...
+  if (!svc_p->freqDepMat() ||       // entirely unchannelized cal  OR
+      (svc_p->freqDepPar() &&            // channelized par and
+       svc_p->fsolint()!="none" &&       // some partial channel averaging
+       anyGT(svc_p->fintervalChV(),1.0)) // explicity specified (non-trivially)
+      ) { 
+    Vector<Int> chanbin(svc_p->fintervalChV().nelements());
+    convertArray(chanbin,svc_p->fintervalChV());
+    vi2org.addChanAve(chanbin);  
   }
 
   // Add the time-averaging layer, if needed
@@ -3014,7 +3029,6 @@ casacore::Bool Calibrater::genericGatherAndSolve()
       avetime=svc_p->preavg();
     vi2org.addTimeAve(avetime);  // use min of solint and preavg here!
   }
-
 
   //  vi2org should be fully configured at this point
   //-------------------------------------------------
@@ -3104,11 +3118,19 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 
   Vector<Float> spwwts(msmc_p->nSpw(),-1.0);
   Vector<Int64> nexp(msmc_p->nSpw(),0), natt(msmc_p->nSpw(),0),nsuc(msmc_p->nSpw(),0);
- 
+
+#ifdef _OPENMP
+  Tsetup+=(omp_get_wtime()-time0);
+#endif
+
   Int nGood(0);
   vi.originChunks();
   Int nGlobalChunks=0;  // counts VI chunks globally
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+#ifdef _OPENMP
+    time0=omp_get_wtime();
+#endif
 
     // Data will accumulate here                                                                                            
     SDBList sdbs;
@@ -3133,7 +3155,15 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 	   ++ivb,vi.next()) {
 
 	// Add this VB to the SDBList                                                                                       
+#ifdef _OPENMP
+	Double Tadd0=omp_get_wtime();
+#endif
+
 	sdbs.add(*vb);
+
+#ifdef _OPENMP
+	Tadd+=(omp_get_wtime()-Tadd0);
+#endif
 
 	// Keep track of spws seen but not included in solving
 	Int ispw=vb->spectralWindows()(0);
@@ -3172,6 +3202,11 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 
     // Expecting a solution                                                                                                 
     nexp(thisSpw)+=1;
+
+#ifdef _OPENMP
+    Tgather+=(omp_get_wtime()-time0);
+    time0=omp_get_wtime();
+#endif
 
     if (sdbs.Ok()) {
 
@@ -3251,6 +3286,10 @@ casacore::Bool Calibrater::genericGatherAndSolve()
     } // sdbs.Ok()
     //cout << endl;
 
+#ifdef _OPENMP
+    Tsolve+=(omp_get_wtime()-time0);
+#endif    
+    
     //    throw(AipsError("EARLY ESCAPE!!"));
 
 
@@ -3262,13 +3301,26 @@ casacore::Bool Calibrater::genericGatherAndSolve()
 	    << nGood << " solution intervals."
 	    << LogIO::POST;
 
+#ifdef _OPENMP
+ #ifdef REPORT_CAL_TIMING
+  cout << "Calibrater::genericGatherAndSolve Timing: " << endl;
+  cout << " setup=" << Tsetup
+       << " gather=" << Tgather 
+       << " (SDBadd=" << Tadd << ")"
+       << " solve=" << Tsolve 
+       << " total=" << Tsetup+Tgather+Tsolve
+    //       << " tick=" << omp_get_wtick()
+       << endl;
+ #endif
+#endif
 
   // Report spws that were seen but not solved
   Vector<Bool> unsolspw=(spwwts==0.0f); 
   summarize_uncalspws(unsolspw, "solv");                                                                                  
 
   // Fill activity record
-  //  cout << "Expected, Attempted, Succeeded (by spw) = " << nexp << ", " << natt << ", " << nsuc << endl;                 
+  //  cout << "  Expected, Attempted, Succeeded (by spw) = " << nexp << ", " << natt << ", " << nsuc << endl;                 
+  //  cout << " Expected, Attempted, Succeeded = " << sum(nexp) << ", " << sum(natt) << ", " << sum(nsuc) << endl;
   actRec_=Record();
   actRec_.define("origin","Calibrater::genericGatherAndSolve");
   actRec_.define("nExpected",nexp);
@@ -5474,6 +5526,11 @@ Bool OldCalibrater::ok() {
 
 Bool OldCalibrater::genericGatherAndSolve() {
 
+#ifdef _OPENMP
+  Double Tsetup(0.0),Tgather(0.0),Tsolve(0.0);
+  Double time0=omp_get_wtime();
+#endif
+
   //cout << "Generic gather and solve." << endl;
 
   // Create the solver
@@ -5506,9 +5563,17 @@ Bool OldCalibrater::genericGatherAndSolve() {
 
   Vector<Int64> nexp(vi.numberSpw(),0), natt(vi.numberSpw(),0),nsuc(vi.numberSpw(),0);
 
+#ifdef _OPENMP
+  Tsetup+=(omp_get_wtime()-time0);
+#endif
+
   Int nGood(0);
   vi.originChunks();
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
+
+#ifdef _OPENMP
+    time0=omp_get_wtime();
+#endif
 
     nexp(vi.spectralWindow())+=1;
 
@@ -5597,6 +5662,11 @@ Bool OldCalibrater::genericGatherAndSolve() {
     Bool vbOk=(vbga.nBuf()>0 && svc_p->syncSolveMeta(vbga));
 
     svc_p->overrideObsScan(solobs,solscan);
+
+#ifdef _OPENMP
+    Tgather+=(omp_get_wtime()-time0);
+    time0=omp_get_wtime();
+#endif
 
     if (vbOk) {
 
@@ -5692,12 +5762,26 @@ Bool OldCalibrater::genericGatherAndSolve() {
 	
     } // vbOK
 
+#ifdef _OPENMP
+    Tsolve+=(omp_get_wtime()-time0);
+#endif
+
   } // isol
 
   logSink() << "  Found good " 
 	    << svc_p->typeName() << " solutions in "
 	    << nGood << " slots."
 	    << LogIO::POST;
+#ifdef _OPENMP
+ #ifdef REPORT_CAL_TIMING
+  cout << "OldCalibrater::genericGatherAndSolve Timing: " << endl;
+  cout << " setup=" << Tsetup
+       << " gather=" << Tgather 
+       << " solve=" << Tsolve 
+       << " total=" << Tsetup+Tgather+Tsolve
+       << endl;
+ #endif
+#endif
 
   summarize_uncalspws(unsolspw, "solv");
   

@@ -74,7 +74,7 @@ public:
   void addCalForSolving(VisEquation& ve);
 
   // Add chan-averaging layer factory
-  void addChanAve(int chanbin);
+  void addChanAve(casacore::Vector<int> chanbin);
 
   // Add time-averaging layer factory
   void addTimeAve(float timebin);

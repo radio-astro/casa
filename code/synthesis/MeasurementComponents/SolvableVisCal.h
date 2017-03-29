@@ -217,9 +217,10 @@ public:
   // Time-dep solution interval  (VI2)
   inline double solTimeInterval() const { return solTimeInterval_; };
 
-  // Freq-dep solint values 
+  // Freq-dep solint values (const?!)
   inline casacore::Double& fintervalHz() { return fintervalHz_; };
   inline casacore::Double& fintervalCh() { return fintervalCh_(currSpw()); };  // for current Spw
+  const inline casacore::Vector<casacore::Double>& fintervalChV() { return fintervalCh_; };  // all spws
   casacore::Matrix<casacore::Int> chanAveBounds()  { return chanAveBounds_(currSpw()); }; // for current Spw
   casacore::Matrix<casacore::Int> chanAveBounds(casacore::Int spw)  { return chanAveBounds_(spw); }; 
 

@@ -2293,10 +2293,11 @@ void SolvableVisCal::reParseSolintForVI2() {
   // Maybe should just parse it, and then work out logic re freqDepPar, etc.
 
   // Handle fsolint format
-  if (upcase(fsolint()).contains("NONE") ||   // unspecified  OR  (should be AND?)
+  // TBD:  compare to logic in Calibrater::genericGatherAndSolve (line ~2298)
+  if (upcase(fsolint()).contains("NONE") ||   // unspecified  OR  
       !freqDepMat()) {                        // cal is entirely unchannelizedb 
     fsolint()="none";
-    fintervalCh_.set(1);    // signals full averaging (this is different from old way)
+    fintervalCh_.set(0.0);    // signals full averaging (this is different from old way)
     fintervalHz_=-1.0;      // don't care
   }
   else {
@@ -2340,7 +2341,7 @@ void SolvableVisCal::reParseSolintForVI2() {
 	 << " Ch=" << fintervalCh_ 
 	 << " Hz=" << fintervalHz() 
 	 << endl;
-    */
+    //*/
   } // user set something
 
 }

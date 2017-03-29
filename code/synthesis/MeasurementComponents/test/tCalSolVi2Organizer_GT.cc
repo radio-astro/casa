@@ -688,7 +688,7 @@ TEST( CalSolVi2Organizer , PartialTimeFreqAvedCalSolveTest ) {
 
   // The averaging
   Int pAveFactor(4);
-  Int chanbin(nchan/pAveFactor);
+  Vector<Int> chanbin(1,nchan/pAveFactor);
   Float timebin(ntime);
 
 
