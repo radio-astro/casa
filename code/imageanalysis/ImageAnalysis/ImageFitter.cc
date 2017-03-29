@@ -626,15 +626,15 @@ void ImageFitter::_calculateErrors() {
     _fluxDensityErrors.resize(ncomps);
     _peakIntensities.resize(ncomps);
     _peakIntensityErrors.resize(ncomps);
-    Double rms = _getRMS();
-    Quantity pixelWidth = _pixelWidth();
+    auto rms = _getRMS();
+    auto pixelWidth = _pixelWidth();
 
     PeakIntensityFluxDensityConverter converter(_getImage());
     converter.setVerbosity(ImageTask<Float>::NORMAL);
     converter.setShape(ComponentType::GAUSSIAN);
     converter.setBeam(_chanPixNumber, _stokesPixNumber);
     if (_useBeamForNoise) {
-        GaussianBeam beam = _getCurrentBeam();
+        auto beam = _getCurrentBeam();
         _noiseFWHM.reset(
             new Quantity(
                 sqrt(beam.getMajor()*beam.getMinor()).get("arcsec")
@@ -649,8 +649,8 @@ void ImageFitter::_calculateErrors() {
             */
     }
     Double signalToNoise = 0;
-    for (uInt i=0; i<ncomps; i++) {
-        const GaussianShape* gShape = static_cast<const GaussianShape *>(
+    for (uInt i=0; i<ncomps; ++i) {
+        const auto* gShape = static_cast<const GaussianShape *>(
             _curConvolvedList.getShape(i)
         );
         _majorAxes[i] = gShape->majorAxis();
@@ -659,9 +659,9 @@ void ImageFitter::_calculateErrors() {
         Vector<Quantity> fluxQuant;
         _curConvolvedList.getFlux(fluxQuant, i);
         // TODO there is probably a better way to get the flux component we want...
-        Vector<String> polarization = _curConvolvedList.getStokes(i);
+        auto polarization = _curConvolvedList.getStokes(i);
         uInt polnum = 0;
-        for (uInt j=0; j<polarization.size(); j++) {
+        for (uInt j=0; j<polarization.size(); ++j) {
             if (polarization[j] == _kludgedStokes) {
                 _fluxDensities[i] = fluxQuant[j];
                 polnum = j;
@@ -688,7 +688,7 @@ void ImageFitter::_calculateErrors() {
                 // same baseFac used for all uncorrelated noise parameter
                 // error calculations
                 Quantity fac2 = fac/pixelWidth;
-                Double overallSNR = (
+                auto overallSNR = (
                     fac2*signalToNoise*sqrt(_majorAxes[i]*_minorAxes[i])
                 ).getValue("");
                 baseFac = C::sqrt2/overallSNR;
@@ -728,7 +728,7 @@ void ImageFitter::_calculateErrors() {
                 }
                 _majorAxisErrors[i] = baseFac*_majorAxes[i];
             }
-
+            // b means keep the *axial ratio* fixed
             if (_fixed[i].contains("b")) {
                 _minorAxisErrors[i] = Quantity(0, _minorAxes[i].getUnit());
             }
@@ -1300,9 +1300,6 @@ SPIIF ImageFitter::_createImageTemplate() const {
     return x;
 }
 
-// TODO From here until the end of the file is code extracted directly
-// from ImageAnalysis. It is in great need of attention.
-
 void ImageFitter::_fitsky(
     Fit2D& fitter, Array<Float>& pixels, Array<Bool>& pixelMask,
     Bool& converged, Double& zeroLevelOffsetSolution,
@@ -1397,7 +1394,7 @@ void ImageFitter::_fitsky(
     // Recover just single component estimate if desired and bug out
     // Must use subImage in calls as converting positions to absolute
     // pixel and vice versa
-    if (!fitIt) {
+    if (! fitIt) {
         Vector<Double> parameters;
         parameters = _singleParameterEstimate(
             fitter, Fit2D::GAUSSIAN, maskedPixels,
@@ -1416,31 +1413,31 @@ void ImageFitter::_fitsky(
         _curConvolvedList.add(result(0));
     }
     // For ease of use, make each model have a mask string
-    Vector<String> fixedParameters(_fixed.copy());
+    Vector<String> fixedParameters = _fixed.copy();
     fixedParameters.resize(nModels, true);
-    for (uInt j=0; j<nModels; j++) {
+    for (uInt j=0; j<nModels; ++j) {
         if (j >= nMasks) {
             fixedParameters(j) = String("");
         }
     }
     // Add models
-    Vector<String> modelTypes(models.copy());
+    Vector<String> modelTypes = models.copy();
     ThrowIf(
         nEstimates == 0 && nGauss > 1,
         "Can only auto estimate for a gaussian model"
     );
-    for (uInt i = 0; i < nModels; i++) {
+    for (uInt i = 0; i < nModels; ++i) {
         // If we ask to fit a POINT component, that really means a
         // Gaussian of shape the restoring beam.  So fix the shape
         // parameters and make it Gaussian
         Fit2D::Types modelType;
         if (ComponentType::shape(models(i)) == ComponentType::POINT) {
-            modelTypes(i) = "GAUSSIAN";
-            fixedParameters(i) += "abp";
+            modelTypes[i] = "GAUSSIAN";
+            fixedParameters[i] += "abp";
         }
         modelType = Fit2D::type(modelTypes(i));
-        Vector<Bool> parameterMask = Fit2D::convertMask(
-            fixedParameters(i),
+        auto parameterMask = Fit2D::convertMask(
+            fixedParameters[i],
             modelType
         );
         Vector<Double> parameters;
@@ -1463,7 +1460,7 @@ void ImageFitter::_fitsky(
 
             if (modelType == Fit2D::GAUSSIAN) {
                 parameters = SkyComponentFactory::decodeSkyComponent(
-                    estimate(i), imageInfo, cSys,
+                    estimate[i], imageInfo, cSys,
                     _bUnit, stokes, xIsLong
                 );
             }
