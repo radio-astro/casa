@@ -20,6 +20,18 @@ if casa['flags'].execute:
         try:
             with redirect_argv(casa['flags'].execute):
                 execfile(__candidates[0])
+
+        except NameError, err:
+            if str(err) == "name 'T' is not defined" or \
+               str(err) == "name 'F' is not defined" or \
+               str(err) == "name 'true' is not defined" or \
+               str(err) == "name 'false' is not defined" :
+                print "------------------------------------------------------------------------------"
+                print "Warning: CASA no longer defines T/true and F/false as synonyms for True/False"
+                print "------------------------------------------------------------------------------"
+                traceback.print_exc()
+                immediate_exit_with_handlers(1)
+
         except Exception, err:
             traceback.print_exc()
             immediate_exit_with_handlers(1)
@@ -72,15 +84,16 @@ else:
 
     ###
     ### backward compatibility at the command line...
+    ### removed because we now create casa specific error messages about T/F removal...
     ###
-    T = True
-    F = False
-    true = True
-    false = False
-    register_builtin("T")
-    register_builtin("F")
-    register_builtin("true")
-    register_builtin("false")
+    #T = True
+    #F = False
+    #true = True
+    #false = False
+    #register_builtin("T")
+    #register_builtin("F")
+    #register_builtin("true")
+    #register_builtin("false")
 
     register_builtin("casa")
     register_builtin("cu")

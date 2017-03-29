@@ -28,6 +28,23 @@ class _Prompt(Prompts):
 _ip = get_ipython()
 _ip.prompts = _Prompt(_ip)
 
+###
+### provide extra context for T/F errors...
+###
+def true_false_handler(self, etype, value, tb, tb_offset=None):
+    if type(etype) is type(NameError):
+        if str(value) == "name 'T' is not defined" or \
+           str(value) == "name 'F' is not defined" or \
+           str(value) == "name 'true' is not defined" or \
+           str(value) == "name 'false' is not defined" :
+            print "------------------------------------------------------------------------------"
+            print "Warning: CASA no longer defines T/true and F/false as synonyms for True/False"
+            print "------------------------------------------------------------------------------"
+    return self.showtraceback()
+
+_ip.set_custom_exc((BaseException,), true_false_handler)
+
+
 ##
 ## toplevel frame marker
 ##
