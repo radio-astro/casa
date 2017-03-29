@@ -19,6 +19,8 @@ TESTS_DIR = CASA_DIR + "/" + os.environ["CASAPATH"].split()[1] + '/lib/python' +
 _potential_data_directories = ( "/opt/casa/data",
                                 "/home/casa/data",
                                 "/home/casa/data/trunk",
+                                "/home/casa/data/master",
+                                "/opt/casa/data/master",
                                 "/export/data/casa" )
 
 REGRESSION_DATA = filter(lambda x: os.access(x,os.F_OK),map(lambda y: y+"/regression",_potential_data_directories))
