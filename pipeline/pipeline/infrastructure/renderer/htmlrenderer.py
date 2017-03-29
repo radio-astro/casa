@@ -643,16 +643,19 @@ class T2_1DetailsRenderer(object):
         vla_basebands = ''
 
         if context.project_summary.telescope != 'ALMA':
-        #All VLA basebands
+        # All VLA basebands
 
             vla_basebands = []
 
             banddict = collections.defaultdict(lambda: collections.defaultdict(list))
 
             for spw in ms.get_spectral_windows():
-                band = spw.name.split('#')[0].split('_')[1]
-                baseband = spw.name.split('#')[1]
-                banddict[band][baseband].append({str(spw.id):(spw.min_frequency,spw.max_frequency)})
+                try:
+                    band = spw.name.split('#')[0].split('_')[1]
+                    baseband = spw.name.split('#')[1]
+                    banddict[band][baseband].append({str(spw.id):(spw.min_frequency,spw.max_frequency)})
+                except:
+                    LOG.debug("Baseband name cannot be parsed and will not appear in the weblog.")
 
             for band in banddict.keys():
                 basebands = banddict[band].keys()

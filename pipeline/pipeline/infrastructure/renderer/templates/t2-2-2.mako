@@ -57,8 +57,11 @@ import pipeline.domain.measures as measures
 					  <%
 						basebanditem=''
 						if pcontext.project_summary.telescope != 'ALMA':
-						     basebandstring = spw.name.split('#')[1]
-						     basebanditem = '<td>'+basebandstring+'</td>'
+						    try:
+						        basebandstring = spw.name.split('#')[1]
+						        basebanditem = '<td>'+basebandstring+'</td>'
+						    except:
+						        basebanditem = '<td></td>'
 						endif
 					  %>
 					  ${basebanditem}
@@ -121,8 +124,11 @@ import pipeline.domain.measures as measures
 						<%
 						    basebanditem=''
 						    if pcontext.project_summary.telescope != 'ALMA':
-						        basebandstring = spw.name.split('#')[1]
-						        basebanditem = '<td>'+basebandstring+'</td>'
+						        try:
+						            basebandstring = spw.name.split('#')[1]
+						            basebanditem = '<td>'+basebandstring+'</td>'
+						        except:
+						            basebanditem = '<td></td>'
 						    endif
 					     %>
 					     ${basebanditem}
