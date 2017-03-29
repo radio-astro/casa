@@ -705,10 +705,12 @@ void ImageFitter::_calculateErrors() {
             : C::sqrt2/_correlatedOverallSNR(
                 i, 2.5, 0.5, signalToNoise
             );
+        // the only way for the minor axis to be fixed is if both the major axis
+        // and the axial ratio (b) are fixed
         Double cor2 = ! _correlatedNoise
             || (
-                _fixed[i].contains("b") && _fixed[i].contains("y")
-                && _fixed[i].contains("p")
+                _fixed[i].contains("a") && _fixed[i].contains("b")
+                && _fixed[i].contains("y") && _fixed[i].contains("p")
             )
             ? 0
             : C::sqrt2/_correlatedOverallSNR(
@@ -729,7 +731,8 @@ void ImageFitter::_calculateErrors() {
                 _majorAxisErrors[i] = baseFac*_majorAxes[i];
             }
             // b means keep the *axial ratio* fixed
-            if (_fixed[i].contains("b")) {
+            if (_fixed[i].contains("b") && _fixed[i].contains("a")) {
+                // both major and minor axes fixed
                 _minorAxisErrors[i] = Quantity(0, _minorAxes[i].getUnit());
             }
             else {
@@ -751,7 +754,6 @@ void ImageFitter::_calculateErrors() {
                     ? QC::qTurn
                     :  Quantity(baseFac*C::sqrt2*(ma*mi/(ma*ma - mi*mi)), "rad");
             }
-
             _positionAngleErrors[i].convert(_positionAngles[i]);
             newShape->setErrors(
                 _majorAxisErrors[i], _minorAxisErrors[i],
@@ -1244,6 +1246,12 @@ String ImageFitter::_sizeToString(const uInt compNumber) const {
         size << " (convolved with beam)";
     }
     size << " ---" << endl;
+    if (
+        _fixed[compNumber].contains("b")
+        && ! _fixed[compNumber].contains("a")
+    ) {
+        size << "       AXIAL RATIO WAS HELD FIXED DURING THE FIT" << endl;
+    }
     size << compShape->sizeToString() << endl;
     if (hasBeam) {
         GaussianBeam beam = _getImage()->imageInfo().restoringBeam(
