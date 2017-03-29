@@ -527,7 +527,7 @@ class CaltableWrapperFactory(object):
             return CaltableWrapperFactory.create_param_wrapper(filename, 'FPARAM')            
         if caltype == 'bandpass':
             return CaltableWrapperFactory.create_param_wrapper(filename, 'CPARAM')   
-        if caltype == 'sdsky':
+        if caltype in ('ps', 'otf', 'otfraster',):
             return CaltableWrapperFactory.create_param_wrapper(filename, 'FPARAM')         
         raise NotImplementedError('Unhandled caltype: %s' % viscal)
     
