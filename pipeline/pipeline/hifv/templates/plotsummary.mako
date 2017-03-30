@@ -189,7 +189,7 @@ def space_comma(s):
 
 
 
-% if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_uv_plots or phase_vs_time_plots:
+% if amp_vs_freq_plots or phase_vs_freq_plots or  amp_vs_time_plots or amp_vs_uv_plots or phase_vs_uv_plots or phase_vs_time_plots:
 
 <%self:plot_group plot_dict="${amp_vs_freq_plots}"
 				  url_fn="${lambda x: 'amp_vs_freq_%s.html' % sanitise(x)}"
@@ -504,6 +504,50 @@ def space_comma(s):
 	<%def name="caption_text(plot, source_id)">
 		Source #${source_id}
 		(${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}).
+	</%def>
+
+</%self:plot_group>
+
+%endif
+
+
+%if use_pol_plots:
+
+<%self:plot_group plot_dict="${phase_vs_freq_polarization_plots}"
+				  url_fn="${lambda x: 'phase_vs_freq_polarization_%s.html' % sanitise(x)}"
+				  data_field="${True}"
+				  data_spw="${True}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+
+	<%def name="title()">
+		Calibrated phase vs frequency, intent='POLANGLE, POLLEAKAGE'
+	</%def>
+
+	<%def name="preamble()">
+		Plots of calibrated phase vs frequency for all antennas and
+		correlation='RL,LR', intent=POLANGLE, POLLEAKAGE.
+	</%def>
+
+
+	<%def name="mouseover(plot)">Click to show phase vs frequency for baseband ${utils.commafy(plot.parameters['receiver'], False)}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
+		Fields: ${cgi.escape(plot.parameters['field'], True)}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		${spws_for_baseband(plot)}
+	</%def>
+
+	<%def name="caption_text(plot, intent)">
+		${intent.capitalize()} calibrator:
+		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}.
 	</%def>
 
 </%self:plot_group>

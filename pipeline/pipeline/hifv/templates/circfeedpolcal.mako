@@ -47,16 +47,66 @@ $(document).ready(function() {
 
 
 
-Pol Cal Tables written to disk and added to the pipeline callibrary:
-
 <ul>
 %for single_result in result:
-    %for calapp in single_result.final:
-        %for calfrom in calapp.calfrom:
-            <li>${os.path.basename(calfrom.gaintable)}</li>
+
+    %if single_result.final:
+        Polarization Cal Tables written to disk and added to the pipeline callibrary:
+        %for calapp in single_result.final:
+            %for calfrom in calapp.calfrom:
+                <li>${os.path.basename(calfrom.gaintable)}</li>
+            %endfor
         %endfor
-    %endfor
+
+        <li>${single_result.calstrategy}</li>
+
+    %else:
+        No polarization intents present - polarization calibration not performed.
+    %endif
+
 %endfor
 </ul>
+
+
+
+<hr>
+
+%for single_result in result:
+
+    %if single_result.final:
+
+    <%self:plot_group plot_dict="${polarization_plotcal_plots}"
+                                  url_fn="${lambda ms:  'noop'}">
+
+        <%def name="title()">
+            Polarization Plotcal Plots
+        </%def>
+
+        <%def name="preamble()">
+           Plots resulting from polarization calibration.
+        </%def>
+
+
+        <%def name="mouseover(plot)">Summary window </%def>
+
+
+
+        <%def name="fancybox_caption(plot)">
+          Plot of ${plot.y_axis} vs. ${plot.x_axis}  ${plot.parameters['type']}
+        </%def>
+
+
+        <%def name="caption_title(plot)">
+           ${plot.y_axis} vs. ${plot.x_axis} ${plot.parameters['type']}
+        </%def>
+
+    </%self:plot_group>
+
+    %else:
+        <br>
+    %endif
+
+%endfor
+
 
 
