@@ -356,6 +356,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     CountedPtr<vi::FrequencySelections> copyFsels=fselections_p->clone();
     uInt nMSs=copyFsels->size() <=msId ? msId+1 : copyFsels->size();
+    //cerr << "nms " << nMSs << endl;
     fselections_p=new FrequencySelections();
     for (uInt k=0;  k < nMSs ; ++k){
       if(k==uInt(key)){
@@ -364,6 +365,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       else{
 	const FrequencySelectionUsingFrame& thissel= static_cast<const FrequencySelectionUsingFrame &> (copyFsels->get(k));
+	//cerr <<"framesel orig " << thissel.toString() << endl;
 	fselections_p->add(thissel);
 
       }
@@ -1557,12 +1559,27 @@ void SynthesisImagerVi2::unlockMSs()
   void SynthesisImagerVi2::createVisSet(const Bool /*writeAccess*/)
   {
     LogIO os( LogOrigin("SynthesisImagerVi2","createVisSet",WHERE) );
-    if(mss_p.nelements() != uInt(fselections_p->size()) && (fselections_p->size() !=0)){
+    //cerr << "mss_p num" << mss_p.nelements() <<  " sel  " << fselections_p->size() << endl;
+    if(mss_p.nelements() > uInt(fselections_p->size()) && (fselections_p->size() !=0)){
       throw(AipsError("Discrepancy between Number of MSs and Frequency selections"));
     }
     vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), true); //writeAccess);
-    if(fselections_p->size() !=0)
-      vi_p->setFrequencySelection (*fselections_p);
+
+    if(fselections_p->size() !=0){
+      CountedPtr<vi::FrequencySelections> tmpfselections=new FrequencySelections();
+      //Temporary fix till we get rid of old vi and we can get rid of tuneSelect
+      if(uInt(fselections_p->size()) > mss_p.nelements()){
+	for(uInt k=0 ; k <  mss_p.nelements(); ++k){
+	  tmpfselections->add(fselections_p->get(k));
+	}
+      }
+      else{
+	tmpfselections=fselections_p;
+      }
+      ////end of fix for tuneSelectdata 
+      vi_p->setFrequencySelection (*tmpfselections);
+
+    }
     //
     vi_p->originChunks();
     vi_p->origin();
