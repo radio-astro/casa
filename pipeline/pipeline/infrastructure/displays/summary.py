@@ -215,16 +215,20 @@ class FieldVsTimeChartInputs(basetask.StandardInputs):
 class FieldVsTimeChart(object):
     Inputs = FieldVsTimeChartInputs
 
-    _intent_colours = {'AMPLITUDE'  : 'green',
-                       'ATMOSPHERE' : 'magenta',
-                       'BANDPASS'   : 'red',
-                       'CHECK'      : 'purple',
-                       'PHASE'      : 'cyan',
-                       'POINTING'   : 'yellow',
-                       'SIDEBAND'   : 'orange',
-                       'TARGET'     : 'blue',
-                       'WVR'        : 'lime',
-                       'UNKNOWN'    : 'grey',}
+    # http://matplotlib.org/examples/color/named_colors.html
+    _intent_colours = {'AMPLITUDE'   : 'green',
+                       'ATMOSPHERE'  : 'magenta',
+                       'BANDPASS'    : 'red',
+                       'CHECK'       : 'purple',
+                       'PHASE'       : 'cyan',
+                       'POINTING'    : 'yellow',
+                       'SIDEBAND'    : 'orange',
+                       'TARGET'      : 'blue',
+                       'WVR'         : 'lime',
+                       'POLARIZATION': 'navy',
+                       'POLANGLE'    : 'mediumslateblue',
+                       'POLLEAKAGE'  : 'plum',
+                       'UNKNOWN'     : 'grey',}
     
     def __init__(self, inputs):
         self.inputs = inputs
@@ -395,15 +399,20 @@ class IntentVsTimeChartInputs(basetask.StandardInputs):
 class IntentVsTimeChart(object):
     Inputs = IntentVsTimeChartInputs
 
-    _intent_colours = {'AMPLITUDE'  : ('green', 20),
-                       'ATMOSPHERE' : ('magenta', 25),
-                       'BANDPASS'   : ('red', 15),
-                       'CHECK'      : ('purple',10),
-                       'PHASE'      : ('cyan', 5),
-                       'POINTING'   : ('yellow', 30),
-                       'SIDEBAND'   : ('orange', 35),
-                       'TARGET'     : ('blue', 0),
-                       'WVR'        : ('lime', 40)}
+    # http://matplotlib.org/examples/color/named_colors.html
+    _intent_colours = {'AMPLITUDE'    : ('green', 20),
+                       'ATMOSPHERE'   : ('magenta', 25),
+                       'BANDPASS'     : ('red', 15),
+                       'CHECK'        : ('purple',10),
+                       'PHASE'        : ('cyan', 5),
+                       'POINTING'     : ('yellow', 30),
+                       'SIDEBAND'     : ('orange', 35),
+                       'TARGET'       : ('blue', 0),
+                       'WVR'          : ('lime', 40),
+                       'POLARIZATION' : ('navy', 45),
+                       'POLANGLE'     : ('mediumslateblue', 50),
+                       'POLLEAKAGE'   : ('plum', 55),
+                       }
     
     def __init__(self, inputs):
         self.inputs = inputs
@@ -432,11 +441,11 @@ class IntentVsTimeChart(object):
 
                 ax.annotate('%s' % scan.id, (scan_start, scan_y+6))
     
-        ax.set_ylim(0, 42.5)
-        ax.set_yticks([2.5, 7.5, 12.5, 17.5, 22.5, 27.5, 32.5, 37.5, 42.5])
+        ax.set_ylim(0, 57.5)
+        ax.set_yticks([2.5, 7.5, 12.5, 17.5, 22.5, 27.5, 32.5, 37.5, 42.5, 47.5, 52.5, 57.5])
         ax.set_yticklabels(['SCIENCE', 'PHASE', 'CHECK', 'BANDPASS',
                             'AMPLITUDE', 'ATMOSPHERE', 'POINTING', 'SIDEBAND',
-                            'WVR'])
+                            'WVR', 'POLARIZATION', 'POLANGLE', 'POLLEAKAGE'])
 
         # set the labelling of the time axis
         FieldVsTimeChart._set_time_axis(figure=fig, ax=ax, datemin=obs_start,
