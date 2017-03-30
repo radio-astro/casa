@@ -162,6 +162,8 @@ public:
     static bool axisNeedsCalSlice(Axis axis);
     // Need datacolumn for averaging weight axes          
     static bool axisIsWeight(Axis axis);
+    // for loading conjugates and setting axis ranges
+    static bool axisIsUV(Axis axis);
               
     // Enum for different axes types.  Currently only used to display this
     // information to the user in the GUI's cache tab.

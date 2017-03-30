@@ -75,6 +75,13 @@ bool PMS::axisIsWeight(Axis axis) {
     }
 }
 
+bool PMS::axisIsUV(Axis axis) {
+    switch(axis) {
+    case U: case V: return true;
+    default: return false;
+    }
+}
+
 PMS::AxisType PMS::axisType(Axis axis) {
     switch(axis) {
     case FLAG:

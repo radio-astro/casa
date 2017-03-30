@@ -516,6 +516,7 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
         double tempx, tempy;
         
         if(!m_maskedData.null()) {
+            unsigned int ptsToDraw = ( m_maskedData->plotConjugates() ? 2 : 1 );
             bool mask;
             
             const QPen& pen = m_symbol.drawPen(),
@@ -523,21 +524,6 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
             const QBrush& brush = m_symbol.drawBrush(),
                         & mbrush = m_maskedSymbol.drawBrush();
             bool samePen = pen == mpen, sameBrush = brush == mbrush;
-            
-            /*
-            QList<QBrush> brushes;
-            if(diffColor) {
-                bool allSame = true;
-                for(unsigned int i = 0; i < m_coloredData->numBins(); i++) {
-                    brushes << brush;
-                    if((int)i < m_colors.size() && m_colors[i] != NULL) {
-                        brushes[i].setColor(m_colors[i]->asQColor());
-                        allSame &= brushes[i].color() == brush.color();
-                    }
-                }
-                if(allSame) diffColor = false;
-            }
-            */
             
             // set the painter's pen/brush only once if possible
             if(!drawMaskedSymbol || samePen) p->setPen(pen);
@@ -553,50 +539,65 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
             for(unsigned int i = drawIndex; i < n; i++) {
                 m_maskedData->xyAndMaskAt(i, tempx, tempy, mask);
                 if(drawSymbol && !mask) {
-                    rect.moveCenter(QPoint(xMap.transform(tempx),
+                    for (unsigned int pt=0; pt<ptsToDraw; ++pt) {
+                        if (pt==0) {
+                            rect.moveCenter(QPoint(xMap.transform(tempx),
                                            yMap.transform(tempy)));
-                    if(!brect.intersects(rect)) continue;
-                    if(drawMaskedSymbol) {
-                        if(!samePen) p->setPen(pen);
-                        if(!sameBrush) p->setBrush(brush);
-                    }
-                    if(diffColor) {
-                        QBrush coloredBrush = m_coloredBrushes[m_coloredData->binAt(i)];
-                        QColor brushColor = coloredBrush.color();
-                        p->setBrush(coloredBrush);
-                        p->setPen(brushColor);
+                        } else {
+                            rect.moveCenter(QPoint(xMap.transform(-tempx),
+                                           yMap.transform(-tempy)));
+                        }
+
+                        if(!brect.intersects(rect)) continue;
+                        if(drawMaskedSymbol) {
+                            if(!samePen) p->setPen(pen);
+                            if(!sameBrush) p->setBrush(brush);
+                        }
+                        if(diffColor) {
+                            QBrush coloredBrush = m_coloredBrushes[m_coloredData->binAt(i)];
+                            QColor brushColor = coloredBrush.color();
+                            p->setBrush(coloredBrush);
+                            p->setPen(brushColor);
 #if QWT_VERSION >= 0x060000
-                        QPSymbol* coloredSym = coloredSymbol(brushColor);
-                        coloredSym->draw(p, rect);
-                        delete coloredSym;
-                    } else
+                            QPSymbol* coloredSym = coloredSymbol(brushColor);
+                            coloredSym->draw(p, rect);
+                            delete coloredSym;
+                        } else
+                            m_symbol.draw(p, rect);
+#else
+                        }
                         m_symbol.draw(p, rect);
-#else
-                    }
-                    m_symbol.draw(p, rect);
 #endif
+                    }
                 } else if(drawMaskedSymbol && mask) {
-                    mRect.moveCenter(QPoint(xMap.transform(tempx),
+                    for (unsigned int pt=0; pt<ptsToDraw; ++pt) {
+                        if (pt==0) {
+                            mRect.moveCenter(QPoint(xMap.transform(tempx),
                                             yMap.transform(tempy)));
-                    if(!brect.intersects(mRect)) continue;
-                    if(drawMaskedSymbol) {
-                        if(!samePen) p->setPen(mpen);
-                        if(!sameBrush) p->setBrush(mbrush);
-                    }
-                    if(diffColor) {
-                        QBrush coloredBrush = m_coloredBrushes[m_coloredData->binAt(i)];
-                        QColor brushColor = coloredBrush.color();
-                        p->setBrush(coloredBrush);
-                        p->setPen(brushColor);
+                        } else {
+                            mRect.moveCenter(QPoint(xMap.transform(-tempx),
+                                            yMap.transform(-tempy)));
+                        }
+                        if(!brect.intersects(mRect)) continue;
+                        if(drawMaskedSymbol) {
+                            if(!samePen) p->setPen(mpen);
+                            if(!sameBrush) p->setBrush(mbrush);
+                        }
+                        if(diffColor) {
+                            QBrush coloredBrush = m_coloredBrushes[m_coloredData->binAt(i)];
+                            QColor brushColor = coloredBrush.color();
+                            p->setBrush(coloredBrush);
+                            p->setPen(brushColor);
 #if QWT_VERSION >= 0x060000
-                        QPSymbol* coloredSym = coloredSymbol(brushColor);
-                        coloredSym->draw(p, mRect);
-                    } else
-                        m_maskedSymbol.draw(p, mRect);
+                            QPSymbol* coloredSym = coloredSymbol(brushColor);
+                            coloredSym->draw(p, mRect);
+                        } else
+                            m_maskedSymbol.draw(p, mRect);
 #else
-                    }
-                    m_maskedSymbol.draw(p, mRect);
+                        }
+                        m_maskedSymbol.draw(p, mRect);
 #endif
+                    }
                 }
             }
 
@@ -605,21 +606,6 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
             const QBrush& brush = m_symbol.drawBrush();
             p->setPen(m_symbol.drawPen());
             p->setBrush(brush);
-            
-            /*
-            QList<QBrush> brushes;
-            if(diffColor) {
-                bool allSame = true;
-                for(unsigned int i = 0; i < m_coloredData->numBins(); i++) {
-                    brushes << brush;
-                    if((int)i < m_colors.size() && m_colors[i] != NULL) {
-                        brushes[i].setColor(m_colors[i]->asQColor());
-                        allSame &= brushes[i].color() == brush.color();
-                    }
-                }
-                if(allSame) diffColor = false;
-            }
-            */
             
             QSize size = ((QwtSymbol&)m_symbol).size();
             QRect rect(0, 0, size.width(), size.height());
@@ -638,7 +624,6 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
     }
 
     p->restore();
-    //logMethod("draw_", false);
 }
 
 

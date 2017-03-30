@@ -162,9 +162,9 @@ public:
   // 
   bool colorize(bool doColorize, PMS::Axis colorizeAxis);
 
-
+  bool plotConjugates() const { return (PMS::axisIsUV(currentX_) && 
+          PMS::axisIsUV(currentY_)); }
   
-
 private:
     
   // Forbid copy for now

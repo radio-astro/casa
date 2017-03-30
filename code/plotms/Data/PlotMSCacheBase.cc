@@ -1146,16 +1146,28 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 		   << PMS::axis(currentX_[dataIndex]);
         if (PMS::axisIsData(currentX_[dataIndex])) 
             ss << ":" << PMS::dataColumn(currentXData_[dataIndex]);
-        ss << ": " << xminG_ << "-" << xmaxG_ << " (unflagged); "
-		   << xflminG_ << "-" << xflmaxG_ << " (flagged)." << endl
-		   << PMS::axis(currentY_[dataIndex]);
+        ss << ": " << xminG_ << " to " << xmaxG_ << " (unflagged); ";
+        if (xflminG_ == DBL_MAX)
+            ss << "(no flagged data)" << endl;
+        else 
+		   ss << "; " << xflminG_ << " to " << xflmaxG_ << " (flagged)." << endl;
+		ss << PMS::axis(currentY_[dataIndex]);
         if (PMS::axisIsData(currentY_[dataIndex])) 
             ss << ":" << PMS::dataColumn(currentYData_[dataIndex]);
-        ss << ": " << yminG_ << "-" << ymaxG_ << " (unflagged); "
-		   << yflminG_ << "-" << yflmaxG_ << "(flagged).";
+        ss << ": " << yminG_ << " to " << ymaxG_ << " (unflagged); ";
+        if (yflminG_ == DBL_MAX)
+            ss << "(no flagged data)";
+        else
+		    ss << yflminG_ << " to " << yflmaxG_ << "(flagged).";
 		logLoad(ss.str());
-
-		//  cout << "Use global ranges? : " << boolalpha << globalXRange << " " << globalYRange << endl;
+    
+        if (indexer_[dataIndex][0]->plotConjugates()) {
+            stringstream ss;
+            ss << "For a UV plot, plotms will plot the conjugates of the points in the MS." << endl;
+            ss << "However, the Locate and Flag functions will not work for these conjugate points!" << endl;
+            ss << "The global ranges above do not include the conjugates.";
+            logWarn("load_cache", ss.str());
+        } 
 	}
 }
 

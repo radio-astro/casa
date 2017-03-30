@@ -157,6 +157,9 @@ public:
     // Gets the mins/maxes for just the unmasked points.
     virtual bool unmaskedMinsMaxes(double& xMin, double& xMax, double& yMin,
                                    double& yMax) = 0;
+
+    // Returns whether to plot conjugate data (e.g. UV plots)
+    virtual bool plotConjugates() const = 0;
     
     
     // IMPLEMENTED METHODS //
@@ -603,6 +606,8 @@ public:
         }
     }
     
+    virtual bool plotConjugates() const { return false; };
+
     // Overrides PlotPointDataImpl::willDeleteData().
     bool willDeleteData() const {
         return PlotPointDataImpl<T>::willDeleteData() && m_shouldDeleteMask; }

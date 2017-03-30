@@ -1365,6 +1365,8 @@ PlotLogMessage* PlotMSIndexer::locateRange(const Vector<PlotRegion>& regions,
 	if (showFlagged) ss << nFoundMasked << " flagged";
 	ss << ") among " << n << " in "
 			<< locatetimer.all_usec()/1.0e6 << "s.";
+    if (plotConjugates())
+        ss << "\nNote: only points in the original MS can be located, not the plotted conjugate points.";
 
 	return new PlotLogMessage(PMS::LOG_ORIGIN,PMS::LOG_ORIGIN_LOCATE,ss.str(),PMS::LOG_EVENT_LOCATE);
 }
@@ -1556,6 +1558,8 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
 	ss << (flag ? "FLAGGED " : "UNFLAGGED ") << nFound
 			<< " points among " << n << " in "
 			<< flagtimer.all_usec()/1.0e6 << "s.";
+    if (plotConjugates())
+        ss << "\nNote: only points in the original MS can be flagged, not the plotted conjugate points.";
 
 	return new PlotLogMessage(PMS::LOG_ORIGIN,
 			flag ? PMS::LOG_ORIGIN_FLAG : PMS::LOG_ORIGIN_UNFLAG,
