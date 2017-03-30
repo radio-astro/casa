@@ -606,42 +606,44 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
-                spws = field_spws[myfield]
-                #spws = [1,2,3]
-                jobs = []
-                for myspw in spws:
-                    reference_frequency = center_frequencies[myspw]
-                    try:
-                        EVLA_band = spw2band[myspw]
-                    except:
-                        LOG.info('Unable to get band from spw id - using reference frequency instead')
-                        EVLA_band = find_EVLA_band(reference_frequency)
-                    
-                    LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
-                    
-                    model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
-                    
-                    LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
+                domainfield = m.get_fields(myfield)[0]
+                if 'AMPLITUDE' in domainfield.intents:
+                    spws = field_spws[myfield]
+                    #spws = [1,2,3]
+                    jobs = []
+                    for myspw in spws:
+                        reference_frequency = center_frequencies[myspw]
+                        try:
+                            EVLA_band = spw2band[myspw]
+                        except:
+                            LOG.info('Unable to get band from spw id - using reference frequency instead')
+                            EVLA_band = find_EVLA_band(reference_frequency)
 
-                    # Double check, but the fluxdensity=-1 should not matter since
-                    #  the model image take precedence
-                    try:
-                        job = self._do_setjy(calMs, str(myfield), str(myspw), model_image, -1)
-                        jobs.append(job)
-                        # result.measurements.update(setjy_result.measurements)
-                    except Exception, e:
-                        # something has gone wrong, return an empty result
-                        LOG.warn("SetJy issue with field id=" + str(job.kw['field']) + " and spw=" + str(job.kw['spw']))
-                        # LOG.exception(e)
+                        LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
 
-                LOG.info("Merging flux scaling operation for setjy jobs for "+self.inputs.vis)
-                jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
-                for job, _ in jobs_and_components:
-                    try:
-                        self._executor.execute(job)
-                    except Exception, e:
-                        LOG.warn("SetJy issue with field id=" + str(job.kw['field']) + " and spw=" + str(job.kw['spw']))
-                        # LOG.exception(e)
+                        model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
+
+                        LOG.info("Setting model for field "+str(myfield)+" spw "+str(myspw)+" using "+model_image)
+
+                        # Double check, but the fluxdensity=-1 should not matter since
+                        #  the model image take precedence
+                        try:
+                            job = self._do_setjy(calMs, str(myfield), str(myspw), model_image, -1)
+                            jobs.append(job)
+                            # result.measurements.update(setjy_result.measurements)
+                        except Exception, e:
+                            # something has gone wrong, return an empty result
+                            LOG.warn("SetJy issue with field id=" + str(job.kw['field']) + " and spw=" + str(job.kw['spw']))
+                            # LOG.exception(e)
+
+                    LOG.info("Merging flux scaling operation for setjy jobs for "+self.inputs.vis)
+                    jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+                    for job, _ in jobs_and_components:
+                        try:
+                            self._executor.execute(job)
+                        except Exception, e:
+                            LOG.warn("SetJy issue with field id=" + str(job.kw['field']) + " and spw=" + str(job.kw['spw']))
+                            # LOG.exception(e)
                         
         
         return True
