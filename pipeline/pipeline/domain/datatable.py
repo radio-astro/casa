@@ -637,24 +637,71 @@ class DataTableImpl( object ):
             if msobj == context.observing_run.measurement_sets[i]:
                 msidx = i
                 break
-        LOG.info('MS idx=%d)'%(msidx))
-        msidcol = self.tb1.getcol('MS')
-        rows = self.tb1.getcol('ROW')
-        flag_permanent = self.tb2.getcol('FLAG_PERMANENT')
-        online_flag = flag_permanent[:,OnlineFlagIndex,:]           
-        index = numpy.where(msidcol == msidx)
-        with casatools.TableReader(infile) as tb:
-            for dt_row in index[0]:
-                ms_row = rows[dt_row]
-                flag = tb.getcell('FLAG', ms_row)
-                rowflag = tb.getcell('FLAG_ROW', ms_row)
-                if rowflag == True:
-                    online_flag[:,dt_row] = 0
-                else:
-                    for ipol in range(online_flag.shape[0]):
-                        online_flag[ipol, dt_row] = 0 if flag[ipol].all() else 1
-        self.tb2.putcol('FLAG_PERMANENT', flag_permanent)
+        LOG.info('MS idx=%d'%(msidx))
+            
+#         # current implementation
+#         start = time.time()
+#         msidcol = self.tb1.getcol('MS')
+#         rows = self.tb1.getcol('ROW')
+#         flag_permanent = self.tb2.getcol('FLAG_PERMANENT')
+#         online_flag = flag_permanent[:,OnlineFlagIndex,:]
+#         index = numpy.where(msidcol == msidx)
+#         irow = 0
+#         with casatools.TableReader(infile) as tb:
+#             for dt_row in index[0]:
+#                 ms_row = rows[dt_row]
+#                 flag = tb.getcell('FLAG', ms_row)
+#                 rowflag = tb.getcell('FLAG_ROW', ms_row)
+#                 irow += 1
+#                 if rowflag == True:
+#                     online_flag[:,dt_row] = 0
+#                 else:
+#                     for ipol in range(online_flag.shape[0]):
+#                         online_flag[ipol, dt_row] = 0 if flag[ipol].all() else 1
+#         self.tb2.putcol('FLAG_PERMANENT', flag_permanent)
+#         end = time.time()
+#         LOG.info('current implementation: {0} sec'.format(end-start))
+                   
+        # new implementation
+#         start = time.time()
+        tb = self.tb1
+        taql = 'SELECT ROWID() AS ROWID FROM "{dt}" WHERE MS == {msid} ORDER BY ROWID()'.format(dt=self.get_rotable_name(self.plaintable),
+                                                                                                msid=msidx)
+        indextable = tb.taql(taql)
+        try:
+            dt_rows = indextable.getcol('ROWID')  
+        finally:
+            indextable.close()
+            del indextable
+ 
+        taql = ' '.join(['SELECT IIF(FLAG_ROW || ALLS(FLAG,2), 0, 1) AS IFLAG FROM "{vis}"'.format(vis=infile),
+                         'WHERE ROWID() IN [SELECT ROW FROM "{dt}" WHERE MS == {msid}]'.format(dt=self.get_rotable_name(self.plaintable),
+                                                                                               msid=msidx),
+                         'ORDER BY ROWID()'])
+        collapsed = tb.taql(taql)
+        try:
+            assert len(dt_rows) == collapsed.nrows()
+#             assert numpy.all(dt_rows == index[0])
+            for (irow, dt_row) in enumerate(dt_rows):
+                _online_flag = self.tb2.getcell('FLAG_PERMANENT', dt_row)
+                _iflag = collapsed.getcell('IFLAG', irow)
+                _online_flag[:, OnlineFlagIndex] = _iflag
+                # CAS-2799: dt_row must be casted to Python int since tb.putcell 
+                #           doesn't accept numpy int
+                self.tb2.putcell('FLAG_PERMANENT', int(dt_row), _online_flag)
+        finally:
+            collapsed.close()
+            del collapsed 
+             
+#         end = time.time()
+#         LOG.info('taql implementation: {0} sec'.format(end-start))
         
+#         new_flag = self.tb2.getcol('FLAG_PERMANENT')
+#         for i in xrange(new_flag.shape[2]):
+#             assert numpy.all(flag_permanent[:,OnlineFlagIndex,i] == new_flag[:,OnlineFlagIndex,i]), \
+#             '{0}: current impl: {1}, new impl: {2}'.format(i, flag_permanent[:,OnlineFlagIndex,i], new_flag[:,OnlineFlagIndex,i])
+
+
 # def map_spwchans(atm_spw, science_spw):
 #     atm_nchan = atm_spw.nchan
 #     atm_freq_min, atm_freq_max, atm_incr = atm_spw.freq_min, atm_spw.freq_max, atm_spw.increment
