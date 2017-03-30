@@ -24,24 +24,38 @@ class TsysflagResults(resultobjects.TsyscalResults):
         # task completion status / reason for incompleteness
         self.task_incomplete_reason = ''
 
+        # list of antennas that should be moved to the end
+        # of the refant list
+        self.refants_to_demote = set()
+
         # list of entirely flagged antennas that should be removed from refants
         self.refants_to_remove = set()
 
     def merge_with_context(self, context):
-        # If any antennas were found to be fully flagged,
-        # remove them from the list of reference antennas.
-        if self.refants_to_remove:
+
+        # Update refant list if necessary.
+        if self.refants_to_remove or self.refants_to_demote:
 
             # Get the MS
             ms = context.observing_run.get_ms(name=self.vis)
 
-            # Create list of current refants
-            refant = ms.reference_antenna.split(',')
+            # Fetch list of current refants
+            refants = ms.reference_antenna.split(',')
 
-            # Remove fully flagged ants from refants, and store back in MS
-            for antenna in self.refants_to_remove:
-                refant.remove(antenna)
-            ms.reference_antenna = ','.join(refant)
+            # Create updated refant list.
+            updated_refants = []
+            refants_to_move = []
+            for ant in refants:
+                if ant in self.refants_to_remove:
+                    pass
+                elif ant in self.refants_to_demote:
+                    refants_to_move.append(ant)
+                else:
+                    updated_refants.append(ant)
+            updated_refants.extend(refants_to_move)
+
+            # Update MS with new refant list.
+            ms.reference_antenna = ','.join(updated_refants)
 
     def add(self, name, result):
         self.components[name] = result

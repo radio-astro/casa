@@ -414,7 +414,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
             # Initialize flagging state
             flagging_state = collections.defaultdict(list)
             
-            # Go through each view product for the specified metric.
+            # Create a summary of the flagging state by going through
+            # each view product for the specified metric.
             for description in result.components[metric_to_test].descriptions():
                 
                 # Get final view.
@@ -440,7 +441,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
                         if intent in intents_of_interest:
                             flagging_state[(intent, field_scan, spwid)].append(list(flag_per_scan))
             
-            # After summarizing all available views, check if any antennas
+            # After summarizing all available views, identify antennas that
             # are fully flagged for all available timestamps for one or more 
             # fields belonging to one or more of the intents of interest in 
             # one or more of the spws.
@@ -456,28 +457,28 @@ class Tsysflag(basetask.StandardTaskTemplate):
                         for iant, flag_for_ant in enumerate(flags_per_ant):
                             if flag_for_ant.all():
                                 ants_fully_flagged[(intent, field, spwid)].update([iant])
-            
-            # Check if any antennas were found to be fully flagged in all 
-            # scans (timestamps) for a given intent, field, and spwid:
+
+            # For each combination of intent, field, and spw that were found
+            # to have antennas fully flagged in all timestamps, raise a
+            # warning.
             sorted_keys = sorted(
                 sorted(ants_fully_flagged.keys(), key=lambda keys: keys[2]),
                 key=lambda keys: keys[0])
             for (intent, field, spwid) in sorted_keys:
-                
                 ants_flagged = ants_fully_flagged[(intent, field, spwid)]
-                
+
                 # Convert antenna IDs to names and create a string.
-                ants_str = ", ".join(map(str, [antenna_id_to_name[iant] for iant in ants_flagged])) 
-                
+                ants_str = ", ".join(map(str, [antenna_id_to_name[iant] for iant in ants_flagged]))
+
                 # Log a warning.
                 LOG.warning(
-                    "{msname} - for intent {intent} (field {fieldid}:"
-                    " {fieldname}) and spw {spw}, the following antennas"
-                    " are fully flagged: {ants}".format(
+                    "{msname} - for intent {intent} (field {fieldid}: "
+                    "{fieldname}) and spw {spw}, the following antennas "
+                    "are fully flagged: {ants}".format(
                         msname=ms.basename, intent=intent, fieldid=field,
                         fieldname=field_name_for_id[field], spw=spwid,
                         ants=ants_str))
-            
+
             # Check if any antennas were found to be fully flagged in all
             # scans (timestamps) and all spws, for any intent.
             #
@@ -516,62 +517,147 @@ class Tsysflag(basetask.StandardTaskTemplate):
                     # and/or updating of refant.
                     ants_fully_flagged_in_all_spws_any_intent.update(
                       set.intersection(*ants_fully_flagged_for_intent_field))
-               
+
+            # For the antennas that were found to be fully flagged in all
+            # spws for all timestamps for one or more fields belonging to
+            # one or more of the intents, raise a warning.
+
+            if ants_fully_flagged_in_all_spws_any_intent:
+                # Convert antenna IDs to names and create a string.
+                ants_str = ", ".join(
+                    map(str, [antenna_id_to_name[iant]
+                              for iant in ants_fully_flagged_in_all_spws_any_intent]))
+
+                # Log a warning.
+                LOG.warning(
+                    '{0} - the following antennas are fully flagged in all Tsys '
+                    'spws for one or more fields with the intent "BANDPASS", '
+                    '"PHASE", and/or "AMPLITUDE": {1}'.format(ms.basename, ants_str))
+
+            # The following will assess if/how the list of reference antennas
+            # needs to be updated based on antennas that were found to be
+            # fully flagged.
+
+            # Store the set of antennas that are fully flagged for all Tsys
+            # spws in any of the intents in the result as a list of antenna
+            # names.
+            ants_to_remove_as_refant = {
+                antenna_id_to_name[iant]
+                for iant in ants_fully_flagged_in_all_spws_any_intent}
+
+            # Store the set of antennas that were fully flagged in at least
+            # one Tsys spw, for any of the fields for any of the intents.
+            ants_to_demote_as_refant = {
+                antenna_id_to_name[iant]
+                for iants in ants_fully_flagged.values()
+                for iant in iants}
+
+            # If any reference antennas were found to be candidates for
+            # removal or demotion (move to end of list), then proceed...
+            if ants_to_remove_as_refant or ants_to_demote_as_refant:
+
+                # If a list of reference antennas was registered with the MS..
+                if (hasattr(ms, 'reference_antenna') and
+                        isinstance(ms.reference_antenna, str)):
+
+                    # Create list of current refants
+                    refant = ms.reference_antenna.split(',')
+
+                    # Identify intersection between refants and fully flagged
+                    # and store in result.
+                    result.refants_to_remove = {
+                        ant for ant in refant
+                        if ant in ants_to_remove_as_refant}
+
+                    # If any refants were found to be removed...
+                    if result.refants_to_remove:
+
+                        # Create string for log message.
+                        ant_msg = utils.commafy(result.refants_to_remove, quotes=False)
+
+                        # Check if removal of refants would result in an empty refant list,
+                        # in which case the refant update is skipped.
+                        if result.refants_to_remove == set(refant):
+
+                            # Log warning that refant list should have been updated, but
+                            # will not be updated so as to avoid an empty refant list.
+                            LOG.warning(
+                                '{0} - the following reference antennas are fully flagged '
+                                'in all Tsys spws in the "BANDPASS", "PHASE", and/or '
+                                '"AMPLITUDE" intents, but are *NOT* removed from the '
+                                'refant list because doing so would result in an '
+                                'empty refant list: {1}'.format(ms.basename, ant_msg))
+
+                            # Reset the refant removal list in the result to be empty.
+                            result.refants_to_remove = set()
+                        else:
+                            # Log a warning if any antennas are to be removed from
+                            # the refant list.
+                            LOG.warning(
+                                '{0} - the following reference antennas are '
+                                'removed from the refant list because they are '
+                                'fully flagged in all Tsys spws in the '
+                                '"BANDPASS", "PHASE", and/or "AMPLITUDE" '
+                                'intents: {1}'.format(ms.basename, ant_msg))
+
+                    # Identify intersection between refants and candidate
+                    # antennas to demote, skipping those that are to be
+                    # removed entirely, and store this list in the result.
+                    # These antennas should be moved to the end of the refant
+                    # list (demoted) upon merging the result into the context.
+                    result.refants_to_demote = {
+                        ant for ant in refant
+                        if ant in ants_to_demote_as_refant
+                        and ant not in result.refants_to_remove}
+
+                    # If any refants were found to be demoted...
+                    if result.refants_to_demote:
+
+                        # Create string for log message.
+                        ant_msg = utils.commafy(result.refants_to_demote, quotes=False)
+
+                        # Check if the list of refants-to-demote comprises all
+                        # refants, in which case the re-ordering of refants is
+                        # skipped.
+                        if result.refants_to_demote == set(refant):
+
+                            # Log warning that refant list should have been updated, but
+                            # will not be updated due to  as to avoid an empty refant list.
+                            LOG.warning(
+                                '{0} - the following antennas are fully flagged '
+                                'for one or more Tsys spws, in one or more fields '
+                                'with intent "BANDPASS", "PHASE", and/or '
+                                '"AMPLITUDE", but since these comprise all '
+                                'refants, the refant list is *NOT* updated to '
+                                're-order these to the end of the refant list: '
+                                '{1}'.format(ms.basename, ant_msg))
+
+                            # Reset the refant demotion list in the result to be empty.
+                            result.refants_to_demote = set()
+                        else:
+                            # Log a warning if any antennas are to be demoted from
+                            # the refant list.
+                            LOG.warning(
+                                '{0} - the following antennas are moved to the end '
+                                'of the refant list because they are fully '
+                                'flagged for one or more Tsys spws, in one or more '
+                                'fields with intent "BANDPASS", "PHASE", and/or '
+                                '"AMPLITUDE": {1}'.format(ms.basename, ant_msg))
+
+                # If no list of reference antennas was registered with the MS,
+                # raise a warning.
+                else:
+                    LOG.warning(
+                        '{0} - no reference antennas found in MS, cannot update '
+                        'the reference antenna list.'.format(ms.basename))
+
+        # If no testable metrics were completed, then raise a warning that
+        # no evaluation of fully flagged antennas was performed.
         else:
             LOG.trace("Cannot test if any antennas were entirely flagged "
                       "since none of the following flagging metrics were evaluated: "
                       "{0}".format(', '.join(testable_metrics)))
-        
-        # Store the set of antennas that are fully flagged for all Tsys spws
-        # in any of the intents in the result as a list of antenna names.
-        bad_antennas = [antenna_id_to_name[iant] for iant in ants_fully_flagged_in_all_spws_any_intent]
 
-        # Determine a list of reference antennas that are found to be 
-        # fully flagged. These antennas should be removed from the 
-        # refant list upon merging the result into the context.
-        if (bad_antennas
-                and hasattr(ms, 'reference_antenna')
-                and isinstance(ms.reference_antenna, str)):
-
-            # Create list of current refants
-            refant = ms.reference_antenna.split(',')
-                
-            # Find intersection between refants and fully flagged antennas
-            # and store in result.
-            result.refants_to_remove = set(bad_antennas).intersection(refant)
-
-            # If refants were found to be flagged and in need of removal...
-            if result.refants_to_remove:
-
-                # Create string for log message.            
-                ant_msg = utils.commafy(result.refants_to_remove, quotes=False)
-    
-                # Check if removal of refants would result in an empty refant list,
-                # in which case the refant update is skipped.
-                if result.refants_to_remove == set(refant):
-                    
-                    # Log warning that refant list should have been updated, but 
-                    # will not be updated so as to avoid an empty refant list.
-                    LOG.warning(
-                        '{0} - the following antennas are fully flagged'
-                        ' in all Tsys spws in the "BANDPASS", "PHASE", and/or'
-                        ' "AMPLITUDE" intents, but are *NOT* removed from the'
-                        ' refant list because doing so would result in an'
-                        ' empty refant list: {1}'.format(ms.basename, ant_msg))
-                    
-                    # Reset the refant removal list in the result to be empty.
-                    result.refants_to_remove = []
-                else:
-                    # Log a warning if any antennas are to be removed from 
-                    # the refant list.
-                        # Log warning
-                        LOG.warning(
-                            '{0} - the following antennas are removed from'
-                            ' the refant list because they are fully flagged'
-                            ' in all Tsys spws in the "BANDPASS", "PHASE",'
-                            ' and/or "AMPLITUDE" intents: {1}'.format(
-                                ms.basename, ant_msg))
-        
         return result
 
     def _run_flagger(self, metric, caltable_to_assess):
