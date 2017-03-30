@@ -1756,7 +1756,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 
 	//x-axis label
 	if(set && showX) {
-		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
+	    // data col may have been changed during loading if no col
+        PMS::DataColumn xDataColumn = itsCache_->getXDataColumn();
 		String xLabelSingle = canvParams->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn, polnRatio);
         if (x == PMS::FREQUENCY)
             xLabelSingle = addFreqFrame(xLabelSingle);
@@ -1789,7 +1790,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 				PlotAxis cy = plotAxisParams->yAxis( i );
 				bool yref = itsCache_->hasReferenceValue(y);
 				double yrefval = itsCache_->referenceValue(y);
-				PMS::DataColumn yDataColumn = plotCacheParams->yDataColumn(i);
+				// data col may have been changed during loading if no col
+                PMS::DataColumn yDataColumn = itsCache_->getYDataColumn(i);
 				String yLabelSingle = canvParams->yLabelFormat( ).getLabel(y, yref, yrefval, yDataColumn, polnRatio );
                 if (y == PMS::FREQUENCY)
                     yLabelSingle = addFreqFrame(yLabelSingle);
@@ -1884,7 +1886,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	}
 	String title = "";
 	if(resetTitle) {
-		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
+        PMS::DataColumn xDataColumn = itsCache_->getXDataColumn();
 		vector<PMS::Axis> yAxes;
 		vector<bool> yRefs;
 		vector<double> yRefVals;
@@ -1904,7 +1906,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 				yAxes.push_back(y);
 				yRefs.push_back(plotCacheBase.hasReferenceValue(yAxes[i]));
 				yRefVals.push_back(plotCacheBase.referenceValue(yAxes[i]));
-				yDatas.push_back(plotCacheParams->yDataColumn( i ) );
+				yDatas.push_back(itsCache_->getYDataColumn(i));
 			}
 		}
 		title = canvParams->titleFormat().getLabel(x, yAxes, xref,

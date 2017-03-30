@@ -167,7 +167,7 @@ String PlotMSLabelFormat::getLabel(const String& format, PMS::Axis axis,
             }
             else if(PMS::strEq(token, TAG_XAXIS(), true)){
             	tag=PMS::axis(xAxis);
-            	//addDataToTag( tag, xAxis, xData );
+            	addDataToTag( tag, xAxis, xData );
                 if (polnRatio) addPolnRatioToTag(tag, xAxis);
             }
             else if(PMS::strEq(token, TAG_YAXIS(), true)){
@@ -248,7 +248,6 @@ String PlotMSLabelFormat::getLabel(const String& format, PMS::Axis axis,
             ss << tag;
         }
     }
-    
     return ss.str();
 }
 

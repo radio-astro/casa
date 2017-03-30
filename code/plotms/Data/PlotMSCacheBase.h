@@ -296,6 +296,9 @@ public:
   pair<casacore::Double,casacore::Double> getXAxisBounds() const;
   pair<casacore::Double,casacore::Double> getYAxisBounds() const;
 
+  inline PMS::DataColumn getXDataColumn() { return currentXData_[0]; };
+  inline PMS::DataColumn getYDataColumn(int index) { return currentYData_[index]; };
+
 protected:
     
   // Forbid copy for now
