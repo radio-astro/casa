@@ -2617,14 +2617,12 @@ void SolvableVisCal::convertHzToCh() {
     // Calculate channel increment from Hz
     if (fintervalCh()<0.0 && fintervalHz()>0.0) {
       // Assumes constant chan width in each spw!
-      Double datawidth=chanwidths[ispw][0].get("Hz").getValue();   //abs(spwcol.chanWidth()(ispw)(IPosition(1,0)));
-      //cout << "ispw=" << ispw << " datawidth=" << datawidth << flush;
-      fintervalCh()=floor(fintervalHz()/datawidth);
-      if (fintervalCh()<1.0) fintervalCh()=1.0;
-      //cout << " dHz=" << fintervalHz() << " --> " << fintervalCh() << " channels." << endl;
+      Double datawidthHz=abs(chanwidths[ispw][0].get("Hz").getValue()); 
+      fintervalCh()=floor(fintervalHz()/datawidthHz);
+      if (fintervalCh()<1.0) fintervalCh()=1.0;  // nothing fractional <1.0
 
       logSink() << ".  Spw " << ispw << ": "
-		<< " (freq solint: " << fintervalHz() << " Hz) / (data width: " << datawidth << " Hz)"
+		<< " (freq solint: " << fintervalHz() << " Hz) / (data width: " << datawidthHz << " Hz)"
 		<< " = " << fintervalCh() << " data channels per solution channel."
 		<< LogIO::POST;
     }

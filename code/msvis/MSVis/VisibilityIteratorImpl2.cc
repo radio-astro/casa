@@ -1120,7 +1120,7 @@ VisibilityIteratorImpl2::initialize (const Block<const MeasurementSet *> &mss,
 
     if (useMSIter2) {
 
-      cout << "Using MSIter2......................................." << endl;
+      //cout << "Using MSIter2......................................." << endl;
 
       // This version uses the MSSmartInterval for time comparisons
       //   in the Table sort/iteration

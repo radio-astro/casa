@@ -90,6 +90,10 @@ Bool ChannelAverageTVI::parseConfiguration(const Record &configuration)
 
 		logger_p << LogIO::NORMAL << LogOrigin("ChannelAverageTVI", __FUNCTION__)
 				<< "Channel bin is " << chanbin_p << LogIO::POST;
+		if (anyEQ(chanbin_p,0)) {
+		  logger_p << LogIO::NORMAL << LogOrigin("ChannelAverageTVI", __FUNCTION__)
+			   << "  NB: Channel bin '0' means no channel averaging for the corresponding spw." << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -124,10 +128,19 @@ void ChannelAverageTVI::initialize()
 	{
 		spw = iter->first;
 
-		// Make sure that chanbin is greater than or equal to 1
-		if ((uInt)chanbin_p(spw_idx) < 1)
+		// No averaging when user specifies 0
+		if (chanbin_p(spw_idx)==0) {
+		  logger_p << LogIO::DEBUG1 << LogOrigin("ChannelAverageTVI", __FUNCTION__)
+			   << "Specified chanbin for spw " << spw
+			   << " of 0 means no averaging."
+			   << LogIO::POST;
+		  
+		  spwChanbinMap_p[spw] = 1;
+		}
+		// Make sure that chanbin is greater than 1
+		else if ((uInt)chanbin_p(spw_idx) <= 1)
 		{
-			logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
+			logger_p << LogIO::DEBUG1 << LogOrigin("ChannelAverageTVI", __FUNCTION__)
 					<< "Specified chanbin for spw " << spw
 					<< " less than 1 falls back to the default number of"
 					<< " existing/selected channels: " << iter->second.size()
@@ -138,7 +151,7 @@ void ChannelAverageTVI::initialize()
 		// Make sure that chanbin does not exceed number of selected channels
 		else if ((uInt)chanbin_p(spw_idx) > iter->second.size())
 		{
-			logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+			logger_p << LogIO::WARN << LogOrigin("ChannelAverageTVI", __FUNCTION__)
 					<< "Number of selected channels " << iter->second.size()
 					<< " for SPW " << spw
 					<< " is smaller than specified chanbin " << chanbin_p(spw_idx) << endl
