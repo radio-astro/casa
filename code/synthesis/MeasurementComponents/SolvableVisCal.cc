@@ -2297,7 +2297,7 @@ void SolvableVisCal::reParseSolintForVI2() {
   if (upcase(fsolint()).contains("NONE") ||   // unspecified  OR  
       !freqDepMat()) {                        // cal is entirely unchannelizedb 
     fsolint()="none";
-    fintervalCh_.set(0.0);    // signals full averaging (this is different from old way)
+    fintervalCh_.set(-1.0);    // signals full averaging (this is different from old way)
     fintervalHz_=-1.0;      // don't care
   }
   else {
