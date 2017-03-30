@@ -141,6 +141,10 @@ public:
     return nPolarizationIds() - 1;
   }
 
+  // Return row flag
+
+  virtual void flagRow (casacore::Vector<casacore::Bool> & rowflags) const;
+
   // Return flag for each polarization, channel and row
 
   virtual void flag(casacore::Cube<casacore::Bool> & flags) const;

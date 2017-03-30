@@ -41,6 +41,11 @@
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/casa/Utilities/GenSort.h>
 
+#include <casacore/tables/Tables/ArrColData.h>
+#include <casacore/tables/DataMan/TiledShapeStMan.h>
+
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+
 #include <msvis/MSVis/VisibilityIteratorImpl2.h>
 #include <msvis/MSVis/LayeredVi2Factory.h>
 
@@ -677,6 +682,95 @@ public:
   }
 };
 
+// copy & paste from Calibrater::initWeights
+void initWeights(MeasurementSet *ms) {
+  // add columns
+  TableDesc mstd = ms->actualTableDesc();
+  String colWtSp=MS::columnName(MS::WEIGHT_SPECTRUM);
+  Bool wtspexists=mstd.isColumn(colWtSp);
+  String colSigSp=MS::columnName(MS::SIGMA_SPECTRUM);
+  Bool sigspexists=mstd.isColumn(colSigSp);
+
+  if (!wtspexists) {
+    // Nominal defaulttileshape
+    IPosition dts(3, 4, 32, 1024);
+
+    // Discern DATA's default tile shape and use it
+    const Record dminfo = ms->dataManagerInfo();
+    for (uInt i = 0; i < dminfo.nfields(); ++i) {
+        Record col = dminfo.asRecord(i);
+        //if (upcase(col.asString("NAME"))=="TILEDDATA") {
+        if (anyEQ(col.asArrayString("COLUMNS"), String("DATA"))) {
+            dts = IPosition(
+                    col.asRecord("SPEC").asArrayInt(
+                            "DEFAULTTILESHAPE"));
+            //cout << "Found DATA's default tile: " << dts << endl;
+            break;
+        }
+    }
+
+    // Add the column
+    String colWtSp = MS::columnName(MS::WEIGHT_SPECTRUM);
+    TableDesc tdWtSp;
+    tdWtSp.addColumn(
+            ArrayColumnDesc<Float>(colWtSp, "weight spectrum", 2));
+    TiledShapeStMan wtSpStMan("TiledWgtSpectrum", dts);
+    ms->addColumn(tdWtSp, wtSpStMan);
+  }
+
+  if (!sigspexists) {
+    // Nominal defaulttileshape
+    IPosition dts(3, 4, 32, 1024);
+
+    // Discern DATA's default tile shape and use it
+    const Record dminfo = ms->dataManagerInfo();
+    for (uInt i = 0; i < dminfo.nfields(); ++i) {
+        Record col = dminfo.asRecord(i);
+        //if (upcase(col.asString("NAME"))=="TILEDDATA") {
+        if (anyEQ(col.asArrayString("COLUMNS"), String("DATA"))) {
+            dts = IPosition(
+                    col.asRecord("SPEC").asArrayInt(
+                            "DEFAULTTILESHAPE"));
+            //cout << "Found DATA's default tile: " << dts << endl;
+            break;
+        }
+    }
+
+    // Add the column
+    String colSigSp = MS::columnName(MS::SIGMA_SPECTRUM);
+    TableDesc tdSigSp;
+    tdSigSp.addColumn(
+            ArrayColumnDesc<Float>(colSigSp, "sigma spectrum", 2));
+    TiledShapeStMan sigSpStMan("TiledSigtSpectrum", dts);
+    ms->addColumn(tdSigSp, sigSpStMan);
+    {
+      TableDesc loctd = ms->actualTableDesc();
+      String loccolSigSp = MS::columnName(MS::SIGMA_SPECTRUM);
+      AlwaysAssert(loctd.isColumn(loccolSigSp),AipsError);
+    }
+
+    ArrayColumn<Float> weightColumn(*ms, "WEIGHT");
+    ArrayColumn<Float> sigmaColumn(*ms, "SIGMA");
+    ArrayColumn<Float> weightSpColumn(*ms, "WEIGHT_SPECTRUM");
+    ArrayColumn<Float> sigmaSpColumn(*ms, "SIGMA_SPECTRUM");
+    ArrayColumn<Bool> const flagColumn(*ms, "FLAG");
+    ROScalarColumn<Double> exposureColumn(*ms, "EXPOSURE");
+    for (size_t i = 0; i < ms->nrow(); ++i) {
+      IPosition const cellShape = flagColumn.shape(i);
+      Double const exposure = exposureColumn(i);
+      Matrix<Float> weightSp(cellShape, exposure);
+      Vector<Float> weight(cellShape[0], exposure);
+      Matrix<Float> sigmaSp = 1.0f / sqrt(weightSp);
+      Vector<Float> sigma = 1.0f / sqrt(weight);
+      weightColumn.put(i, weight);
+      sigmaColumn.put(i, sigma);
+      weightSpColumn.put(i, weightSp);
+      sigmaSpColumn.put(i, sigmaSp);
+    }
+
+  }
+}
+
 } // anonymous namespace
 
 class PolAverageTVITestBase: public ::testing::Test {
@@ -1210,6 +1304,18 @@ TEST_F(PolAverageTVITest, StokesAverage) {
   TestTVI<StokesAverageValidator, BasicManufacturer1>();
   TestTVI<StokesAverageValidator, BasicManufacturer2>();
   TestTVI<StokesAverageValidator, LayerManufacturer>();
+}
+
+TEST_F(PolAverageTVITest, SpectralWeightTest) {
+  // add SIGMA_SPECTRUM and WEIGHT_SPECTRUM columns and
+  // initialize them using EXPOSURE value.
+  initWeights(ms_);
+  ASSERT_TRUE(ms_->tableDesc().isColumn("WEIGHT_SPECTRUM"));
+  ASSERT_TRUE(ms_->tableDesc().isColumn("SIGMA_SPECTRUM"));
+
+  // test
+  TestTVI<GeometricAverageValidator, BasicManufacturer1>();
+  TestTVI<StokesAverageValidator, BasicManufacturer1>();
 }
 
 TEST_F(PolAverageTVIDirtyDataTest, GeometricAverageCorrupted) {
