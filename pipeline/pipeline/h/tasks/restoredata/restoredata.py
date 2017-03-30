@@ -597,7 +597,8 @@ class RestoreData(basetask.StandardTaskTemplate):
                     for member in tarmembers:
                         if member.name.startswith(os.path.basename(vis)):
                             extractlist.append(member)
-                            if member.name.endswith('.tbl/'):
+                            # it is uncertain whether or not slash (/) exists at the end
+                            if member.name.endswith('.tbl/') or member.name.endswith('.tbl'):
                                 LOG.info('    Extracting caltable %s' % member.name)
                     if not self._executor._dry_run:
                         if len(extractlist) == len(tarmembers):
