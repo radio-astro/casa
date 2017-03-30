@@ -128,11 +128,17 @@ def get_plot_dir(context, stage_number):
 
 def is_singledish_ms(context):
     # importdata results
-    importdata_result = context.results[0]
-    if isinstance(importdata_result, basetask.ResultsProxy):
-        result_repr = str(importdata_result.read())
-    else:
-        result_repr = str(importdata_result)
+    result0 = context.results[0]
+    
+    # if ResultsProxy, read pickled result
+    if isinstance(result0, basetask.ResultsProxy):
+        result0 = result0.read()
+                
+    # if RestoreDataResults, get importdata_results
+    if hasattr(result0, 'importdata_results'):
+        result0 = result0.importdata_results[0]
+    
+    result_repr = str(result0)
     return result_repr.find('SDImportDataResults') != -1
 
 def get_casa_version():
