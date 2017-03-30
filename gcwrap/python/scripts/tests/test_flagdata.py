@@ -2124,7 +2124,6 @@ class test_antint(test_base):
                    "mode='summary' spw='2'"]
 
         # Run antint mode with flagdata in list mode
-        flagdata(vis=self.vis, mode=list, inpfile=in_list, flagbackup=False)
         res_flagdata = flagdata(vis=self.vis, mode='list', inpfile=in_list)
 
         # Re-run antint mode with flagcmd
