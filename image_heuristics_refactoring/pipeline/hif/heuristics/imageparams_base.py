@@ -20,8 +20,8 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristics(object):
 
-    '''Image parameters heuristics base class. One instance is made per imaging
-       target. There are subclasses for different imaging modes such as ALMA
+    '''Image parameters heuristics base class. One instance is made per make/editimlist
+       call. There are subclasses for different imaging modes such as ALMA
        or VLASS.'''
 
     def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
@@ -29,12 +29,14 @@ class ImageParamsHeuristics(object):
 
         self.context = context
 
-        cqa = casatools.quanta
-
         if type(vislist) is types.ListType:
             self.vislist = vislist
         else:
             self.vislist = [vislist]
+
+        self.spw = spw
+        self.contfile = contfile
+        self.linesfile = linesfile
 
         # split spw into list of spw parameters for 'clean' 
         spwlist = spw.replace('[','').replace(']','').strip()
@@ -44,14 +46,19 @@ class ImageParamsHeuristics(object):
 
         # find all the spwids present in the list
         p=re.compile(r"[ ,]+(\d+)")
-        spwids = set()
+        self.spwids = set()
         for spwclean in spwlist:
             spwidsclean = p.findall(' %s' % spwclean)
             spwidsclean = map(int, spwidsclean)
-            spwids.update(spwidsclean)
+            self.spwids.update(spwidsclean)
 
-        # calculate beam radius for all spwids, saves repetition later 
-        self.beam_radius = {}
+    def beam_radius(self):
+
+        '''Calculate beam radius for all spwids'''
+
+        cqa = casatools.quanta
+
+        beam_radius = {}
 
         # get the diameter of the smallest antenna used among all vis sets
         diameters = []
@@ -65,7 +72,7 @@ class ImageParamsHeuristics(object):
         # get spw info from first vis set, assume spws uniform
         # across datasets
         ms = self.context.observing_run.get_ms(name=self.vislist[0])
-        for spwid in spwids:
+        for spwid in self.spwids:
             spw = ms.get_spectral_window(spwid)
             ref_frequency = float(
               spw.ref_frequency.to_units(measures.FrequencyUnits.HERTZ))
@@ -73,24 +80,26 @@ class ImageParamsHeuristics(object):
             # use the smallest antenna diameter and the reference frequency
             # to estimate the primary beam radius -
             # radius of first null in arcsec = 1.22*lambda/D
-            self.beam_radius[spwid] = \
+            beam_radius[spwid] = \
               (1.22 * (cqa.constants('c')['value'] / ref_frequency) / smallest_diameter) * \
               (180.0 * 3600.0 / math.pi)
 
-        # determine spw selection parameters to exclude lines for mfs and cont images
+        return beam_radius
+
+    def cont_ranges_spwsel(self):
+
+        '''Determine spw selection parameters to exclude lines for mfs and cont images.'''
 
         # initialize lookup dictionary for all possible source names
-        self.cont_ranges_spwsel = {}
+        cont_ranges_spwsel = {}
         for ms_ref in self.context.observing_run.get_measurement_sets():
             for source_name in [s.name for s in ms_ref.sources]:
-                self.cont_ranges_spwsel[source_name] = {}
-                for spwid in spwids:
-                    self.cont_ranges_spwsel[source_name][str(spwid)] = ''
+                cont_ranges_spwsel[source_name] = {}
+                for spwid in self.spwids:
+                    cont_ranges_spwsel[source_name][str(spwid)] = ''
 
-        if (contfile is None):
-            contfile = ''
-        if (linesfile is None):
-            linesfile = ''
+        contfile = self.contfile if self.contfile is not None else ''
+        linesfile = self.linesfile if self.linesfile is not None else ''
 
         # read and merge continuum regions if contfile exists
         if (os.path.isfile(contfile)):
@@ -99,9 +108,9 @@ class ImageParamsHeuristics(object):
             contfile_handler = contfilehandler.ContFileHandler(contfile, warn_nonexist=True)
 
             # Collect the merged the ranges
-            for field_name in self.cont_ranges_spwsel.iterkeys():
-                for spw_id in self.cont_ranges_spwsel[field_name].iterkeys():
-                    self.cont_ranges_spwsel[field_name][spw_id] = contfile_handler.get_merged_selection(field_name, spw_id)
+            for field_name in cont_ranges_spwsel.iterkeys():
+                for spw_id in cont_ranges_spwsel[field_name].iterkeys():
+                    cont_ranges_spwsel[field_name][spw_id] = contfile_handler.get_merged_selection(field_name, spw_id)
 
         # alternatively read and merge line regions and calculate continuum regions
         elif (os.path.isfile(linesfile)):
@@ -124,7 +133,7 @@ class ImageParamsHeuristics(object):
 
             # get source and spw info from first vis set, assume spws uniform
             # across datasets
-            for spwid in spwids:
+            for spwid in self.spwids:
                 spw = ms.get_spectral_window(spwid)
                 # assemble continuum spw selection
                 min_frequency = float(spw.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
@@ -137,7 +146,9 @@ class ImageParamsHeuristics(object):
                     spw_selection = ''
 
                 for source_name in [s.name for s in ms.sources]:
-                    self.cont_ranges_spwsel[source_name][str(spwid)] = '%s LSRK' % (spw_selection)
+                    cont_ranges_spwsel[source_name][str(spwid)] = '%s LSRK' % (spw_selection)
+
+        return cont_ranges_spwsel
 
     def field_intent_list(self, intent, field):
         intent_list = intent.split(',')
@@ -218,7 +229,7 @@ class ImageParamsHeuristics(object):
         # find largest beam among spws in spwspec
         beam = 0.0
         for spwid in spwids:
-            beam = max(beam, self.beam_radius[spwid])
+            beam = max(beam, self.beam_radius()[spwid])
 
         return beam
 
@@ -767,7 +778,7 @@ class ImageParamsHeuristics(object):
                 ref_field_ids.append(-1)
 
         # Get a cont file handler for the conversion to TOPO
-        contfile_handler = contfilehandler.ContFileHandler(self.context.contfile)
+        contfile_handler = contfilehandler.ContFileHandler(self.contfile)
 
         aggregate_lsrk_bw = '0.0GHz'
 

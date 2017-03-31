@@ -78,6 +78,8 @@ class MakeImListInputs(basetask.StandardInputs):
     def contfile(self, value=None):
         if value in (None, ''):
             value = os.path.join(self.context.output_dir, 'cont.dat')
+        else:
+            value = os.path.join(self.context.output_dir, value)
         self._contfile = value
 
     @property
@@ -88,6 +90,8 @@ class MakeImListInputs(basetask.StandardInputs):
     def linesfile(self, value=None):
         if value in (None, ''):
             value = os.path.join(self.context.output_dir, 'lines.dat')
+        else:
+            value = os.path.join(self.context.output_dir, value)
         self._linesfile = value
 
     @property
@@ -494,7 +498,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 new_spwspec = []
                 spwsel = {}
                 for spwid in spwspec.split(','):
-                    spwsel_spwid = self.heuristics.cont_ranges_spwsel[utils.dequote(field_intent[0])][spwid]
+                    spwsel_spwid = self.heuristics.cont_ranges_spwsel()[utils.dequote(field_intent[0])][spwid]
                     if (field_intent[1] == 'TARGET'):
                         if (spwsel_spwid == 'NONE'):
                             LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (field_intent[0], spwid))
