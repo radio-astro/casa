@@ -94,32 +94,13 @@ class FindCont(basetask.StandardTaskTemplate):
 
                     findcont_basename = '%s.I.findcont' % (os.path.basename(target['imagename']).replace('spw%s' % (target['spw'].replace(',','_')), 'spw%s' % (spwid)).replace('STAGENUMBER', str(context.stage)))
 
-                    # determine the gridder mode here (temporarily ...)
+                    # Determine the gridder mode
                     image_heuristics = target['heuristics']
                     gridder = image_heuristics.gridder(target['intent'], target['field'])
 
-                    # need scan id list for multiple target case
-                    # TODO: move this to a heuristics to avoid duplicated code (see tclean)
-
-                    re_field = utils.dequote(target['field'])
-
-                    # Use scanids to select data with the specified intent
-                    # Not CASA clean now supports intent selectin but leave
-                    # this logic in place and use it to eliminate vis that
-                    # don't contain the requested data.
-                    scanidlist = []
-                    for vis in inputs.vis:
-                        ms = inputs.context.observing_run.get_ms(name=vis)
-                        scanids = [scan.id for scan in ms.scans if
-                                   target['intent'] in scan.intents and
-                                   re_field in [utils.dequote(f.name) for f in scan.fields]]
-                        if not scanids:
-                            LOG.warning('No data for Field %s SPW %s' % (target['field'], spwid))
-                            continue
-                        scanids = str(scanids)
-                        scanids = scanids.replace('[', '')
-                        scanids = scanids.replace(']', '')
-                        scanidlist.append(scanids)
+                    # Remove MSs that do not contain data for the given field(s)
+                    scanidlist, visindexlist = image_heuristics.get_scanidlist(inputs.vis, target['field'], target['intent'])
+                    vislist = [inputs.vis[i] for i in visindexlist]
 
                     # To avoid noisy edge channels, use only the LSRK frequency
                     # intersection and skip one channel on either end.
@@ -191,7 +172,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     # Need to make an LSRK cube to get the real ranges in the source
                     # frame. The LSRK ranges will need to be translated to the
                     # individual TOPO ranges for the involved MSs.
-                    job = casa_tasks.tclean(vis=inputs.vis, imagename=findcont_basename,
+                    job = casa_tasks.tclean(vis=vislist, imagename=findcont_basename,
                         datacolumn=datacolumn,
                         spw=spwid, intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                         field=target['field'],

@@ -216,6 +216,32 @@ class ImageParamsHeuristics(object):
 
         return field_intent_result
 
+    def get_scanidlist(self, vis, field, intent):
+        # Use scanids to select data with the specified intent
+        # Note CASA clean now supports intent selectin but leave
+        # this logic in place and use it to eliminate vis that
+        # don't contain the requested data.
+        scanidlist = []
+        visindexlist = []
+
+        for i in xrange(len(vis)):
+            allscanids = []
+            for fieldname in field.split(','):
+                re_field = utils.dequote(fieldname)
+                ms = self.context.observing_run.get_ms(name=vis[i])
+                scanids = [scan.id for scan in ms.scans if
+                           intent in scan.intents and
+                           re_field in [utils.dequote(f.name) for f in scan.fields]]
+                if scanids == []:
+                    continue
+                allscanids.extend(scanids)
+            if allscanids != []:
+                allscanids = ','.join(map(str, list(set(allscanids))))
+                scanidlist.append(allscanids)
+                visindexlist.append(i)
+
+        return scanidlist, visindexlist
+
     def beam(self, spwspec):
         # reset state of imager
         casatools.imager.done()

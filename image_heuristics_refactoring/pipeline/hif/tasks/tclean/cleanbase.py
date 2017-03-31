@@ -163,32 +163,10 @@ class CleanBase(basetask.StandardTaskTemplate):
             else:
                 inputs.datacolumn = 'corrected'
 
-
-        # Use scanids to select data with the specified intent
-        # Note CASA clean now supports intent selectin but leave
-        # this logic in place and use it to eliminate vis that
-        # don't contain the requested data.
-        scanidlist = []
-        vislist = []
-        spwsellist = []
-        # TODO: Compute scan list in heuristics
-        if inputs.field.find(',') == -1:
-            re_field = utils.dequote(inputs.field)
-            for i in xrange(len(inputs.vis)):
-                ms = inputs.context.observing_run.get_ms(name=inputs.vis[i])
-                scanids = [scan.id for scan in ms.scans if
-                           inputs.intent in scan.intents and
-                           re_field in [utils.dequote(f.name) for f in scan.fields]]
-                if not scanids:
-                    continue
-                scanids = str(scanids)
-                scanids = scanids.replace('[', '')
-                scanids = scanids.replace(']', '')
-                scanidlist.append(scanids)
-                vislist.append(inputs.vis[i])
-                spwsellist.append(inputs.spwsel[i])
-            inputs.vis=vislist
-            inputs.spwsel=spwsellist
+        # Remove MSs that do not contain data for the given field(s)
+        scanidlist, visindexlist = inputs.heuristics.get_scanidlist(inputs.vis, inputs.field, inputs.intent)
+        inputs.vis = [inputs.vis[i] for i in visindexlist]
+        inputs.spwsel = [inputs.spwsel[i] for i in visindexlist]
 
         # Initialize imaging results structure
         if not inputs.result:

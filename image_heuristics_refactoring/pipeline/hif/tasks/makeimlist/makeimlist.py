@@ -567,7 +567,8 @@ class MakeImList(basetask.StandardTaskTemplate):
 
                     result.add_target(target)
 
-        # Temporarily pass contfile and linefile for hif_findcont and hif_makeimages
+        # Pass contfile and linefile names to context (via resultobjects)
+        # for hif_findcont and hif_makeimages
         result.contfile = inputs.contfile
         result.linesfile = inputs.linesfile
 
