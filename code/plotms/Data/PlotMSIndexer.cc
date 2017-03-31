@@ -1415,7 +1415,9 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 		ss << plotmscache_->antstanames_(ant1);
 	if (!plotmscache_->netAxesMask_[dataIndex](2))
 		ss << " & * ";
-	else if (ant2>0)
+    else if (ant1==ant2)
+		ss << " && " << plotmscache_->antstanames_(ant2);
+	else if (ant2>=0)
 		ss << " & " << plotmscache_->antstanames_(ant2);
 	// Antenna indices
 	if (showindices) {
@@ -1426,7 +1428,9 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 			ss << ant1;
 		if (!plotmscache_->netAxesMask_[dataIndex](2))
 			ss << "&*";
-		else if (ant2>0)
+        else if (ant1==ant2)
+			ss << "&&" << ant2;
+		else if (ant2>=0)
 			ss << "&" << ant2;
 		ss << "]";
 	}
