@@ -87,7 +87,7 @@ PlotMSPlot::PlotMSPlot(PlotMSApp* parent) :
   itsParams_(itsFactory_),
   itsCache_(NULL),
   iter_(0),
-  iterStep_(1) { 
+  iterStep_(1) {
   
   itsCache_ = new MSCache(itsParent_);
   cacheUpdating = false;
@@ -1832,7 +1832,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
     }
 
 	// Custom axes ranges set by user
-    // OR CAS-3263 points near zero are not plotted so add margin to the lower bound 
+    // OR CAS-3263 points near zero are not plotted so add margin to the lower bound
+    bool makeSquare(false);  // true if uv plot
 	canvas->setAxesAutoRescale(true);
 	if ( set ){
 	    PMS_PP_Display *display = itsParams_.typedGroup<PMS_PP_Display>();
@@ -1866,7 +1867,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
             PMS::Axis x = cacheParams->xAxis();
             if (PMS::axisIsUV(x)) {
                 xIsUV = true;
-                maxval = round(max(abs(xmin),xmax)) + 1.0;
+                maxval = round(max(abs(xmin),xmax)) + 10.0;
                 xmin = -maxval;
                 xmax = maxval;
                 xymax = max(xymax, maxval);
@@ -1890,13 +1891,14 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
                 // make scales symmetrical for u and v
                 PMS::Axis y = cacheParams->yAxis(i);
                 if (PMS::axisIsUV(y)) {
-                    maxval = round(max(abs(ymin),ymax)) + 1.0;
+                    maxval = round(max(abs(ymin),ymax)) + 10.0;
                     if (xIsUV) {
                         // set x and y ranges equally
                         xymax = max(xymax, maxval);
-                        pair<double, double> xybounds = make_pair(xymax, xymax);
+                        pair<double, double> xybounds = make_pair(-xymax, xymax);
                         canvas->setAxisRange(cx, xybounds);
                         canvas->setAxisRange(cy, xybounds);
+                        makeSquare = true;
                     } else {
                         // just set yrange equally
                         ymin = -maxval;
@@ -1908,6 +1910,9 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 		    }
         }
 	}
+
+    // make square plot, or revert back to rectangular
+    itsParent_->getPlotter()->makeSquarePlot(makeSquare);
 
 	// Title
 	bool resetTitle = set || (iter->iterationAxis() != PMS::NONE);

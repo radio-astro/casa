@@ -219,6 +219,10 @@ public:
     
     // Overrides QWidget::minimumSizeHint() to return an invalid size.
     QSize minimumSizeHint() const;
+
+    // Implements Plotter::makeSquarePlot to set width=height
+    virtual void makeSquarePlot(bool square);
+    bool isSquarePlot() { return (m_sizeRatio != 1.0); }
     
     virtual bool exportPlot(const PlotExportFormat& format );
 
@@ -261,6 +265,10 @@ private:
     // </group>
     
     QList<QPAxis*> externalAxes;
+
+    // For restoring rectangular plot after square one;
+    // ratio of width/height
+    double m_sizeRatio;
     
     // Sets up the canvas QFrame for the current layout.
     void setupCanvasFrame();

@@ -86,7 +86,7 @@ bool QPPlotter::initColors() {
 // Constructors/Destructors //
 
 QPPlotter::QPPlotter(QPCanvas* canvas, int logEventFlags, QWidget* parent) :
-        QWidget(parent), m_layout(), m_emitResize(true) {
+        QWidget(parent), m_layout(), m_emitResize(true), m_sizeRatio(1.0) {
     setLogFilterEventFlags(logEventFlags);
     logObject(CLASS_NAME, this, true);
     
@@ -100,7 +100,7 @@ QPPlotter::QPPlotter(QPCanvas* canvas, int logEventFlags, QWidget* parent) :
 
 QPPlotter::QPPlotter(PlotCanvasLayoutPtr layout, int logEventFlags,
         QWidget* parent) : QWidget(parent), m_layout(layout),
-        m_emitResize(true) {
+        m_emitResize(true), m_sizeRatio(1.0) {
     setLogFilterEventFlags(logEventFlags);
     logObject(CLASS_NAME, this, true);
     
@@ -146,6 +146,25 @@ pair<int, int> QPPlotter::size() const {
     return pair<int, int>(s.width(), s.height());
 }
 void QPPlotter::setSize(int width, int height) { resize(width, height); }
+
+void QPPlotter::makeSquarePlot(bool square) {
+    if (square) {  // make square plot width=height
+        pair<int, int> rectSize = size();
+        // save rectangle ratio of width to height
+        m_sizeRatio = double(rectSize.first) / double(rectSize.second);
+        setSize(rectSize.second, rectSize.second);
+        if (isGuiShown())
+            setCanvasSize(rectSize.second, rectSize.second);
+    } else if (m_sizeRatio != 1.0) { // restore rect plot after square
+        pair<int, int> rectSize = size();
+        // set width to correct ratio to height
+        int newWidth = int(rectSize.first * m_sizeRatio);
+        setSize(newWidth, rectSize.second);
+        if (isGuiShown())  // this undoes fixed size
+            setCanvasSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+        m_sizeRatio = 1.0;  // next time, keep width the same
+    }
+}
 
 String QPPlotter::windowTitle() const {
     return QWidget::windowTitle().toStdString(); }

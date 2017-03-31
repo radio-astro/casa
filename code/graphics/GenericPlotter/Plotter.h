@@ -97,7 +97,10 @@ public:
     
     // Sets the plotter GUI size in pixels
     virtual void setSize(int width, int height) = 0;
-    
+
+    // Sets width=height but saves rectangular ratio
+    virtual void makeSquarePlot(bool square) = 0;
+
     //Set the size of cached axes stack image
     virtual void setCanvasCachedAxesStackImageSize( int width, int height );
 

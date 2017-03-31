@@ -46,7 +46,10 @@ void QPExporter::findGridProperties( QPExportCanvas* grabCanvas, QPPlotter* grab
 	//Figure out the grid size
 	width = 0;
 	if ( grabPlotter != NULL ){
-		width = grabPlotter->width();
+        if (grabPlotter->isSquarePlot())
+            width = grabPlotter->height();
+        else
+            width = grabPlotter->width();
 	}
 	else if( grabCanvas != NULL ){
 	    width = grabCanvas->canvasWidth();
