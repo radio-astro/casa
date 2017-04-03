@@ -1149,7 +1149,12 @@ for the antint mode. Data selection follows the MS Selection syntax.
      <value></value>
      </param>
 
-    <param type="double" name="minchanfrac">
+     <param type="string" name="antint_ref_antenna">
+     <description>Antenna for which the fractions of channels flagged will be checked.</description>
+     <value></value>
+     </param>
+
+     <param type="double" name="minchanfrac">
         <description>Minimum fraction of flagged channels required for a baseline to be deemed as flagged. Default: </description>
         <value>0.6</value>
     </param>
@@ -1168,7 +1173,7 @@ for the antint mode. Data selection follows the MS Selection syntax.
      
 </input>
 <example>
-af.parseantintparameters(minchanfrac=0.45, verbose=True)
+af.parseantintparameters(antint_ref_antenna='ea10', minchanfrac=0.45, verbose=True)
 </example>
 
 <returns type="bool"/> 

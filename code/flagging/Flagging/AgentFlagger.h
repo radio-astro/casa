@@ -332,7 +332,9 @@ public:
 				   casacore::String scan, casacore::String antenna,
 				   casacore::String uvrange, casacore::String timerange, 
 				   casacore::String correlation, casacore::String intent,
-				   casacore::String observation, casacore::Double minchanfrac,
+				   casacore::String observation,
+				   casacore::String antint_ref_antenna,
+				   casacore::Double minchanfrac,
 				   casacore::Bool verbose, casacore::Bool apply);
 
 	// Parse parameters for extend

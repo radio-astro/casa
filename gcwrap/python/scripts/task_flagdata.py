@@ -121,7 +121,8 @@ def flagdata(vis,
              freqdevscale,
              spectralmax,
              spectralmin,
-             minchanfrac,   # mode antint
+             antint_ref_antenna,  # mode antint
+             minchanfrac,   
              verbose,
              extendpols,    # mode extend
              growtime,
@@ -515,6 +516,7 @@ def flagdata(vis,
             casalog.post('Rflag mode is active')
 
         elif mode == 'antint':
+            agent_pars['antint_ref_antenna'] = antint_ref_antenna
             agent_pars['minchanfrac'] = minchanfrac
             agent_pars['verbose'] = verbose
 

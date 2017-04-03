@@ -56,7 +56,8 @@ class FlagAgentAntennaIntegrations : public FlagAgentBase {
 
   private:
 
-    void setAgentParameters(casacore::Record config);
+    void setAgentParameters(casacore::Record config,
+			    casacore::Vector<casacore::String> *antennaNames);
 
     // To use iteration approach FlagAgentBase::ROWS_PREPROCESS_BUFFER
     void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
@@ -84,9 +85,16 @@ class FlagAgentAntennaIntegrations : public FlagAgentBase {
 				     TableFlagPerBaselinePerChannel &flagPerBaselinePerChannel,
 				     casacore::uInt row, casacore::uInt baselineIdx);
 
+
+    casacore::uInt
+    findAntennaID(const casacore::String &name,
+		  const casacore::Vector<casacore::String> *antennaNames);
+
     // Time points that should be flagged
     FlaggedTimesMap doFlagTime_p;
 
+    // The antenna of interest. Pairs with this one are checked against the flag-threshold
+    casacore::Int antIdx_p;
     // what fraction of channels need to be flagged to consider a
     // polarization product flagged
     casacore::Double minChanThreshold_p = 0.6;

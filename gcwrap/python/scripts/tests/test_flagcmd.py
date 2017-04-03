@@ -449,7 +449,7 @@ class test_unapply(test_base):
 
         ant_name = 'VA01'
         # Flag with antint
-        in_cmd = "antenna={0} spw='0' minchanfrac=0.8".format(ant_name)
+        in_cmd = "antint_ref_antenna={0} spw='0' minchanfrac=0.8".format(ant_name)
         filename = create_input(in_cmd)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply',
                 savepars=True, flagbackup=False)
@@ -472,11 +472,11 @@ class test_unapply(test_base):
         unapplied_flagged = unapplied_res['antenna'][ant_name]['flagged']
 
         self.assertEqual(unapplied_res['total'], 2854278)
-        self.assertEqual(unapplied_res['flagged'], 528948)
-        self.assertEqual(man_flagged, 197946)
-        self.assertEqual(antint_flagged, 196434)
-        self.assertEqual(unapplied_flagged, 1512)
-        self.assertEqual(unapplied_res['antenna'][ant_name]['flagged'], 1512)
+        self.assertEqual(unapplied_res['flagged'], 0)
+        self.assertEqual(man_flagged, 203994)
+        self.assertEqual(antint_flagged, 203994)
+        self.assertEqual(unapplied_flagged, 0)
+        self.assertEqual(unapplied_res['antenna'][ant_name]['flagged'], 0)
 
     def test_uquack(self):
         '''flagcmd: unapply quack agent'''
@@ -806,7 +806,8 @@ class test_antint(test_base):
         spw_spec = '0'
         flagdata(vis=self.vis, mode='unflag');
         flagcmd(vis=self.vis, inpmode='list',
-                inpfile=["mode=antint antenna='{0}' spw='{1}'".format(ant_name, spw_spec),
+                inpfile=["mode=antint antint_ref_antenna='{0}' spw='{1}'".format(ant_name,
+                                                                             spw_spec),
                          "mode=summary spw='{0}'".format(spw_spec)],
                 action='apply', flagbackup=False)
 
@@ -828,13 +829,13 @@ class test_antint(test_base):
         flagdata(vis=self.vis,mode='unflag', flagbackup=False);
         # Flag passing parameter values in the command string
         flagcmd(vis=self.vis, inpmode='list', 
-                inpfile=["mode=antint antenna='{0}' spw='{1}' minchanfrac={2} verbose=True".
+                inpfile=["mode=antint antint_ref_antenna='{0}' spw='{1}' minchanfrac={2} verbose=True".
                          format(antenna_spec, spw_spec, threshold_spec)], action='apply',
                 flagbackup=False)
         res_str = flagdata(vis=self.vis, mode='summary') 
 
         self.assertEqual(res_str['total'], 832000)
-        self.assertEqual(res_str['flagged'], 32000)
+        self.assertEqual(res_str['flagged'], 416000)
         self.assertEqual(res_str['antenna'][antenna_spec]['total'], 64000)
         self.assertEqual(res_str['antenna'][antenna_spec]['flagged'], 32000)
 

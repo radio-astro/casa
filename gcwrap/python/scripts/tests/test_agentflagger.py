@@ -714,21 +714,29 @@ class test_bpass(test_base):
 
         aflocal = aftool()
         aflocal.open(self.vis)
-        aflocal.selectdata({'antenna':'ea01'})
-        agentAntInt = {'apply':True, 'mode': 'antint', 'spw': '0', 
+        aflocal.selectdata()
+        
+        agentUnflag = {'apply':True, 'mode':'unflag'}
+        agentAntInt = {'apply': True, 'mode': 'antint', 'datacolumn': 'CPARAM',
+                       'antint_ref_antenna': 'ea01', 'spw': '0', 'field': '0',
                        'minchanfrac': 0.7, 'verbose': True}
+        agentSummary={'apply':True,'mode':'summary'}
+
+        aflocal.parseagentparameters(agentUnflag)
         aflocal.parseagentparameters(agentAntInt)
         aflocal.parsesummaryparameters()
+        aflocal.parseagentparameters(agentSummary)
+
         aflocal.init()
         summary = aflocal.run(writeflags=True)
         aflocal.done()
 
         self.assertEqual(summary['report0']['flagged'], 0)
-        self.assertEqual(summary['report0']['total'], 48000)
+        self.assertEqual(summary['report0']['total'], 1248000)
         self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 24000)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000)
         self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 24000)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000)
 
 
 class test_MS(test_base):

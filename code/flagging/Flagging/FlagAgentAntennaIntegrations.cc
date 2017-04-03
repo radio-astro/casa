@@ -43,7 +43,7 @@ FlagAgentAntennaIntegrations::FlagAgentAntennaIntegrations(
 {
   logger_p->origin(casacore::LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
-  setAgentParameters(config);
+  setAgentParameters(config, flagDataHandler_p->antennaNames_p);
 }
 
 /**
@@ -54,7 +54,8 @@ FlagAgentAntennaIntegrations::FlagAgentAntennaIntegrations(
  *
  * @param config A flagdata configuration/parameters object
  */
-void FlagAgentAntennaIntegrations::setAgentParameters(casacore::Record config)
+void FlagAgentAntennaIntegrations::setAgentParameters(casacore::Record config,
+						      casacore::Vector<casacore::String> *antennaNames)
 {
   const auto fields = config.nfields();
   *logger_p << casacore::LogIO::NORMAL << "The configuration received by this agent has " 
@@ -70,6 +71,19 @@ void FlagAgentAntennaIntegrations::setAgentParameters(casacore::Record config)
     minChanThreshold_p = config.asDouble(minChanOpt);
   }
 
+  const auto antOpt = "antint_ref_antenna";
+  found = config.fieldNumber(antOpt);
+  if (found >= 0) {
+    casacore::String antintAnt = config.asString(antOpt);
+    antIdx_p = findAntennaID(antintAnt, antennaNames);
+    *logger_p << casacore::LogIO::NORMAL << "Found requested antenna of interest, with "
+      "name: " << antintAnt << ", and index: " << antIdx_p << casacore::LogIO::POST;
+
+  } else {
+    throw casacore::AipsError(casacore::String("The parameter ") + antOpt + " was not "
+			      "given. This parameter is mandatory in this flagging mode.");
+  }
+
   const auto verboseOpt = "verbose";
   found = config.fieldNumber(verboseOpt);
   if (found >= 0) {
@@ -77,6 +91,33 @@ void FlagAgentAntennaIntegrations::setAgentParameters(casacore::Record config)
   }
 }
 
+/**
+ * Find the antenna ID for an antenna name
+ *
+ * @param name the name of an antenna 
+ * @param antennaNames gives antena names by idx
+ *
+ * @return the antenna id if found for the given name
+ *
+ * @throws AipsError if no antenna is found by the name given..
+ */
+casacore::uInt
+FlagAgentAntennaIntegrations::findAntennaID(const casacore::String &name,
+					    const casacore::Vector<casacore::String> *antennaNames) {
+  casacore::uInt idx = 0;
+  for( ; idx < antennaNames->nelements(); ++idx) {
+    if (name == antennaNames->operator()(idx)) {
+	break;
+    }
+  }
+
+  if (idx >= antennaNames->nelements()) {
+    throw casacore::AipsError("The antenna requested (" + name + ") could not be found in "
+			      "the input dataset");
+  }
+  return idx;
+}
+  
 /*
  * Processes blocks of rows by every point in time, 
  * Checking all the baselines to the antenna of interest
@@ -106,10 +147,15 @@ FlagAgentAntennaIntegrations::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
     row.assign(channelsCnt, false);
   }
 
+  const auto ant1 = visBuffer.antenna1();
+  const auto ant2 = visBuffer.antenna2(); 
   const auto &polChanRowFlags = visBuffer.flagCube();
   auto currentTime = time_p[0];
   auto baselineIdx = 0;
   for (casacore::uInt rowIdx = 0; rowIdx < rowCnt; ++rowIdx) {
+    if (ant1[rowIdx] != antIdx_p and ant2[rowIdx] != antIdx_p)
+      continue;
+
     auto rowTime = time_p[rowIdx];
     if (rowTime != currentTime) {
       doPreProcessingTimePoint(doFlagTime_p, currentTime, flagPerBaselinePerChannel);
@@ -117,7 +163,8 @@ FlagAgentAntennaIntegrations::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
       baselineIdx = 0;
     }
 
-    checkAnyPolarizationFlagged(polChanRowFlags, flagPerBaselinePerChannel, rowIdx, baselineIdx++);
+    checkAnyPolarizationFlagged(polChanRowFlags, flagPerBaselinePerChannel,
+				rowIdx, baselineIdx++);
 
   }
   // last time

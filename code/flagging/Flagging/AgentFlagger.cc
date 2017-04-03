@@ -1056,6 +1056,7 @@ AgentFlagger::isModeValid(String mode)
 		if (mode.compare("manual") == 0 or mode.compare("clip") == 0 or
 				mode.compare("quack") == 0 or mode.compare("tfcrop") == 0 or
 				mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
+				mode.compare("antint") == 0 or 
 				mode.compare("unflag") == 0 or mode.compare("summary") == 0
 				or mode.compare("display") == 0) {
 
@@ -1402,7 +1403,8 @@ AgentFlagger::parseAntIntParameters(String field, String spw, String array,
 				    String feed, String scan, String antenna,
 				    String uvrange, String timerange, 
 				    String correlation, String intent,
-				    String observation, Double minchanfrac,
+				    String observation, String antint_ref_antenna,
+				    Double minchanfrac,
 				    Bool verbose, Bool apply)
 {
 
@@ -1427,6 +1429,7 @@ AgentFlagger::parseAntIntParameters(String field, String spw, String array,
 	agent_record.define("correlation", correlation);
 	agent_record.define("intent", intent);
 	agent_record.define("observation", observation);
+	agent_record.define("antint_ref_antenna", antint_ref_antenna);
 	agent_record.define("minchanfrac", minchanfrac);
 	agent_record.define("verbose", verbose);
 	agent_record.define("apply", apply);

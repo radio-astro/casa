@@ -3848,7 +3848,7 @@ def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
     tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
                   'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin',
                   'extendflags']
-    antintpars = ['minchanfrac','verbose']
+    antintpars = ['antint_ref_antenna','minchanfrac','verbose']
     extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
                   'flagneartime','flagnearfreq']
     rflagpars = ['winsize','timedev','freqdev','timedevscale','freqdevscale','spectralmax',

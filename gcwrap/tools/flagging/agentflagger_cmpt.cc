@@ -582,6 +582,7 @@ agentflagger::parseantintparameters(
 		const std::string& correlation,
 		const std::string& intent,
 		const std::string& observation,
+		const std::string& antint_ref_antenna,
 		const double minchanfrac,
 		const bool verbose,
 		const bool apply)
@@ -593,10 +594,13 @@ agentflagger::parseantintparameters(
 
 			// Parse the 'antint' parameters
 			return agentflagger_p->parseAntIntParameters(
-					String(field),String(spw),String(array),
-					String(feed),String(scan),String(antenna),
-					String(uvrange),String(timerange),String(correlation),
-					String(intent), String(observation), minchanfrac, Bool(verbose), Bool(apply));
+					String(field), String(spw), String(array),
+					String(feed), String(scan), String(antenna),
+					String(uvrange), String(timerange),
+					String(correlation),
+					String(intent), String(observation),
+					String(antint_ref_antenna),
+					minchanfrac, Bool(verbose), Bool(apply));
 
 		}
 
