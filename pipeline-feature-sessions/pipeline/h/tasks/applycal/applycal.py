@@ -225,7 +225,7 @@ class Applycal(basetask.StandardTaskTemplate):
                 # Schedule a flagdata job to determine flagging stats per spw
                 # and per field
                 ms = inputs.context.observing_run.get_ms(inputs.vis)
-                flagkwargs = ['spw="{!s}" fieldcnt=True mode="summary" name="AntSpw{:0>3}"'.format(spw.id, spw.id)
+                flagkwargs = ["spw='{!s}' fieldcnt=True mode='summary' name='AntSpw{:0>3}'".format(spw.id, spw.id)
                               for spw in ms.get_spectral_windows()]
                 jobs.append(casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs, flagbackup=False))
 

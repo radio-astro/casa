@@ -245,7 +245,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             try:
                 fluxscale_result = self._do_fluxscale(caltable, refspwmap=refspwmap)
 
-                importdata.importdata.export_flux_from_result(fluxscale_result, inputs.context, reffile)
+                importdata.fluxes.export_flux_from_result(fluxscale_result, inputs.context, reffile)
 
                 # and finally, do a setjy, add its setjy_settings
                 # to the main result

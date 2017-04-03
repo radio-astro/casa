@@ -289,7 +289,7 @@ class MeasurementSetReader(object):
             LOG.info('Populating ms.polarizations...')
             ms.polarizations = PolarizationTable.get_polarizations(ms)
             LOG.info('Populating ms.representative_target ...')
-            ms.representative_target = SBSummaryTable.get_sbsummary_info(ms)
+            ms.representative_target = SBSummaryTable.get_sbsummary_info(ms, msmd.observatorynames())
             LOG.info('Populating ms.array_name ...')
             ms.array_name = ExecblockTable.get_execblock_info(ms)
 
@@ -488,13 +488,14 @@ class DataDescriptionTable(object):
 
 class SBSummaryTable(object):
     @staticmethod
-    def get_sbsummary_info(ms):
+    def get_sbsummary_info(ms, obsnames):
         try:
             sbsummary_info = [SBSummaryTable._create_sbsummary_info(*row) 
                for row in SBSummaryTable._read_table(ms)]
             return sbsummary_info[0]
         except:
-            LOG.warn('Unable to identify the representative source for %s' % (ms.basename))
+            if 'ALMA' in obsnames:
+                LOG.warn('Unable to identify the representative source for %s' % (ms.basename))
             return (None, None, None)
 
     @staticmethod

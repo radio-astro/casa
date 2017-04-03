@@ -5,6 +5,7 @@ from .applycal import IFApplycal, SessionIFApplycal
 from .atmflag import Atmflag
 from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .bpflagchans import Bandpassflagchans
+from .correctedampflag import Correctedampflag
 from .checkproductsize import CheckProductSize
 from .findcont import FindCont
 from .flagcorrected import Flagcorrected
@@ -25,7 +26,6 @@ from .tclean import Tclean
 from .uvcontsub import UVcontFit, UVcontSub
 from .polarization import Polarization
 from .linfeedpolcal import Linfeedpolcal
-from .circfeedpolcal import Circfeedpolcal
 from .editimlist import Editimlist
 
 # set default tasks for tasks with several implementations to our desired

@@ -16,14 +16,13 @@ class VLAImportDataInputs(importdata.ImportDataInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, asis=None,
                  process_caldevice=None, session=None, overwrite=None,
-                 bdfflags=None, lazy=None, save_flagonline=None, dbservice=None,
+                 bdfflags=None, lazy=None, save_flagonline=None,
                  createmms=None, ocorr_mode=None, clearcals=None):
         self._init_properties(vars())
 
     overwrite = basetask.property_with_default('overwrite', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
     asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
-    dbservice = basetask.property_with_default('dbservice', False)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
     bdfflags = basetask.property_with_default('bdfflags', False)
     process_caldevice = basetask.property_with_default('process_caldevice', True)
