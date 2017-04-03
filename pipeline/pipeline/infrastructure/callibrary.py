@@ -8,6 +8,7 @@ import operator
 import os
 import string
 import types
+import uuid
 import weakref
 
 import pipeline.extern
@@ -1805,6 +1806,14 @@ class IntervalCalState(object):
         """
         calstate = IntervalCalState()
 
+        # ensure that the other calstate is not considered equal to this
+        # calstate, even if they the values they hold are identical. This step
+        # is required so that all entries are added to the in the union
+        # (my_root | other_root) operation, and ensures that arithmetic like
+        # 'calstate_x - calstate_x = 0' holds true.
+        marker = uuid.uuid4()
+        other_marked = set_calstate_marker(other, marker)
+
         # copy the ID mapping and shape data across.
         calstate.id_to_intent = self.id_to_intent
         calstate.id_to_field = self.id_to_field
@@ -1812,13 +1821,13 @@ class IntervalCalState(object):
 
         for vis, my_root in self.data.iteritems():
             # adopt IntervalTrees present in just this object
-            if vis not in other.data:
+            if vis not in other_marked.data:
                 # TODO think: does this need to be a deep copy?
                 calstate.data[vis] = copy.deepcopy(self.data[vis])
                 continue
 
             # get the union of IntervalTrees for MSes present in both objects
-            other_root = other.data[vis]
+            other_root = other_marked.data[vis]
             union = my_root | other_root
             union.split_overlaps()
             union.merge_equals(data_reducer=combine_fn)
@@ -1827,7 +1836,10 @@ class IntervalCalState(object):
 
         calstate.data = trim_to_valid_data_selection(calstate)
 
-        return calstate
+        # Unmark the result calstate, thus eliminating any residual uuids
+        unmarked = set_calstate_marker(calstate, None)
+
+        return unmarked
 
     def __add__(self, other):
         calstate = self._combine(other, ant_add)
@@ -2055,11 +2067,11 @@ CalState = IntervalCalState
 CalLibrary = IntervalCalLibrary
 
 
-class TimestampedData(collections.namedtuple('TimestampedDataBase', ['time', 'data'])):
+class TimestampedData(collections.namedtuple('TimestampedDataBase', ['time', 'data', 'marker'])):
     __slots__ = ()  # Saves memory, avoiding the need to create __dict__ for each interval
 
-    def __new__(cls, time, data):
-        return super(TimestampedData, cls).__new__(cls, time, data)
+    def __new__(cls, time, data, marker=None):
+        return super(TimestampedData, cls).__new__(cls, time, data, marker)
 
     def __cmp__(self, other):
         """
@@ -2113,10 +2125,17 @@ class TimestampedData(collections.namedtuple('TimestampedDataBase', ['time', 'da
         :return: string representation
         :rtype: str
         """
-        return "TSD({0})".format(repr(self.data))
-        # return "TSD({0}, {1})".format(self.time, repr(self.data))
+        if self.marker is None:
+            return 'TSD({0}, {1})'.format(self.time, repr(self.data))
+        return 'TSD({0}, {1}, {2})'.format(self.time, repr(self.data), self.marker)
 
-    __str__ = __repr__
+    def __str__(self):
+        """
+        String representation of this Interval.
+        :return: string representation
+        :rtype: str
+        """
+        return 'TSD({0})'.format(repr(self.data))
 
     def __eq__(self, other):
         """
@@ -2128,7 +2147,8 @@ class TimestampedData(collections.namedtuple('TimestampedDataBase', ['time', 'da
         """
         return (
             self.time == other.time and
-            self.data == other.data
+            self.data == other.data and
+            self.marker == other.marker
         )
 
 
@@ -2210,5 +2230,91 @@ def _print_dimensions(calstate):
                     for intent_interval in field_interval.data.data:
                         intent_ranges = (intent_interval.begin, intent_interval.end)
 
-                        tree_intervals = (antenna_ranges, spw_ranges, field_ranges, intent_ranges)
+                        tree_intervals = (os.path.basename(vis), antenna_ranges, spw_ranges, field_ranges, intent_ranges)
                         print '{!r}'.format(tree_intervals)
+
+
+def get_calto_from_inputs(inputs):
+    """
+    Get a CalTo data selection object based on the state of an Inputs object
+    """
+    return CalTo(vis=inputs.vis, field=inputs.field, spw=inputs.spw, intent=inputs.intent, antenna=inputs.antenna)
+
+
+def copy_calfrom(calfrom, gaintable=None, gainfield=None, interp=None, spwmap=None, caltype=None,
+                 calwt=None):
+    """
+    Return a copy of a CalFrom object, optionally overriding the copy's
+    properties with the given function arguments.
+
+    :param calfrom: the CalFrom to copy
+    :type calfrom: CalFrom
+    :param gaintable: new gaintable value, or None to adopt from the CalFrom
+    :param gainfield: new gainfield value, or None to adopt from the CalFrom
+    :param interp: new interp value, or None to adopt from the CalFrom
+    :param spwmap: new spwmap value, or None to adopt from the CalFrom
+    :param caltype: new caltype value, or None to adopt from the CalFrom
+    :param calwt: new calwt value, or None to adopt from the CalFrom
+    :return: new CalFrom object
+    :rtype: CalFrom
+    """
+    if gaintable is None:
+        gaintable = calfrom.gaintable
+    if gainfield is None:
+        gainfield = calfrom.gainfield
+    if interp is None:
+        interp = calfrom.interp
+    if spwmap is None:
+        spwmap = calfrom.spwmap
+    if caltype is None:
+        caltype = calfrom.caltype
+    if calwt is None:
+        calwt = calfrom.calwt
+
+    return CalFrom(gaintable=gaintable, gainfield=gainfield, interp=interp, spwmap=spwmap, caltype=caltype, calwt=calwt)
+
+
+def set_calstate_marker(calstate, marker):
+    """
+    Return a copy of a calstate, modified so that TimeStampedData objects in 
+    the final leaf node are annotated with the given marker object.
+     
+    Technical details:
+        
+    CalFroms are flyweight objects, so two identical CalFroms have the same 
+    hash. Identical hashes stop the IntervalTree union function from working 
+    as expected: IntervalTrees are based on sets, and as such adding two 
+    lists of CalFrom with identical hashes results in just one CalFrom list in 
+    the final IntervalTree, when we actually *wanted* the duplicate to be 
+    added.
+    
+    This function is used to ensure that CalState arithmetic works as 
+    expected. By changing the TimeStampedData marker and thus making the 
+    hashes different, 'identical' calibrations can indeed be duplicated in the
+    IntervalTree union operation, and subsequently operated on in a 
+    merge_equals step.
+    
+    :param calstate: the calstate to modify
+    :param marker: the object to annotate calstates with
+    :return: annotated calstate 
+    """
+    calstate_copy = copy.deepcopy(calstate)
+
+    for vis, antenna_tree in calstate_copy.data.iteritems():
+        for antenna_interval in antenna_tree.items():
+            for spw_interval in antenna_interval.data.data:
+                for field_interval in spw_interval.data.data:
+
+                    to_remove = [i for i in field_interval.data.data]
+                    to_add = []
+
+                    intent_intervaltree = field_interval.data.data
+                    for intent_interval in intent_intervaltree:
+                        old_tsd = intent_interval.data
+                        new_tsd = TimestampedData(time=old_tsd.time, data=old_tsd.data, marker=marker)
+                        to_add.append(intervaltree.Interval(intent_interval.begin, intent_interval.end, new_tsd))
+
+                    map(intent_intervaltree.remove, to_remove)
+                    map(intent_intervaltree.add, to_add)
+
+    return calstate_copy
