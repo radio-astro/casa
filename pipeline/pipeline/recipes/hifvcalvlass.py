@@ -71,10 +71,8 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         hifv_hanning(pipelinemode=pipelinemode)
 
         # Flag known bad data
-        hifv_flagdata(pipelinemode=pipelinemode,
-                      intents='*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*',
-                      flagbackup=False, scan=True, baseband=True, clip=True, autocorr=True, hm_tbuff='manual',
-                      template=True, online=True, tbuff=0.225, fracspw=0.05, shadow=True, quack=False, edgespw=True)
+        hifv_flagdata(pipelinemode=pipelinemode, scan=True, quack=False, hm_tbuff='manual', tbuff=0.225,
+                      intents='*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*')
 
         # Fill model columns for primary calibrators
         hifv_vlasetjy(pipelinemode=pipelinemode)
