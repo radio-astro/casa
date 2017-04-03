@@ -2172,7 +2172,8 @@ Bool MSTransformDataHandler::fillSPWTable()
 						chanWidthOut[outChan] = chanWidthIn[inpChan];
 						effBWOut[outChan] = effBWIn[inpChan];
 					}
-					totalBW += effBWOut[outChan];
+					// Use CHAN_WIDTH instead of EFFECTIVE_BW
+					totalBW += abs(chanWidthOut[outChan]);
 					++outChan;
 				}
 			}
