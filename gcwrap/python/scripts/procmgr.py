@@ -47,9 +47,12 @@ class procmgr(Thread):
                     #print "%s => proc %s is being stopped" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
                     try:
                         self.__proc.terminate()
-                        self.__watchdog.terminate()
-                        self.__proc.kill()
-                        self.__watchdog.kill()
+                        sleep(0.5)
+                        if self.__proc.poll( ) is None:
+                            print "%s => proc %s is being killed" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
+                            self.__proc.kill()
+                        if self.__watchdog.poll( ) is None:
+                            self.__watchdog.kill()
                     except OSError:
                         pass
 
