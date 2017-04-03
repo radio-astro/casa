@@ -192,7 +192,7 @@ CrashReportPoster::captureAdditionalInformation ()
     captureOne ("sysctl -a machdep", "machdep.txt");
     captureOne ("vm_stat", "meminfo.txt");
     captureOne ("mount", "mountinfo.txt");
-    captureOne ("lsb_release -a", "lsbinfo.txt");
+    //captureOne ("lsb_release -a", "lsbinfo.txt");
     captureOne ("uname -a", "unameinfo.txt");
     if (logFile_p.size() > 0){
         captureOne ("cat " + logFile_p, "casa.log");

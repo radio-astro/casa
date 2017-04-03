@@ -133,11 +133,13 @@ crashCallbackCommon (const char * dumpPath,
 
 #if defined (__APPLE__)
 bool crashCallback (const char * dumpPath,
-                    const char * /*minidump_id*/,
+                    const char * minidump_id,
                     void * /*context*/,
                     bool succeeded)
 {
-    return crashCallbackCommon (dumpPath, succeeded);
+    string fullpath = dumpPath;
+    fullpath = fullpath + "/" + minidump_id + ".dmp";
+    return crashCallbackCommon (fullpath.c_str() , succeeded);
 }
 
 #else // Linux
@@ -310,5 +312,3 @@ using namespace casacore;
 } // end namespace casa
 
 #endif
-
-
