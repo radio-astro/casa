@@ -1302,6 +1302,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    imstor->setModelImage( startmodel );
 	  }
 
+	imstor->releaseLocks();
+
       }
     catch(AipsError &x)
       {

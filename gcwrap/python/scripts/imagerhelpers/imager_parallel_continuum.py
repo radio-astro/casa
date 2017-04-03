@@ -43,74 +43,95 @@ class PyParallelContSynthesisImager(PySynthesisImager):
          # self.allcflist = self.PH.partitionCFCacheList(self.allgridpars['0']);
          self.listOfNodes = self.PH.getNodeList();
          self.coordsyspars = {};
+         self.toolsi=None
 
 #############################################
-    def initializeImagersBase(self,thisSelPars,partialSelPars):
-        #
-        # Start the imagers on all nodes.
-        #
-        joblist=[]
-        for node in self.listOfNodes:
-            joblist.append( self.PH.runcmd("toolsi = casac.synthesisimager()", node) );
-        self.PH.checkJobs(joblist);
+    ##
+    ### TEMPORARY switch for CAS-9977.
+    ##
+    def initializeImagers(self):
+        ### Init all imagers only with 'csys'. 
+        ## There is no coord system mismatch
+        ## There is startmodel confusion. Non 'startmodel' runs are all OK.
+        #self.initializeImagers_Old()
 
-        #
-        # Select data.  If partialSelPars is True, use the thisSelPars
-        # data structure as a list of partitioned selections.
-        #
-        joblist=[];
-        nodes=self.listOfNodes;#[1];
-        if (not partialSelPars):
-            nodes = [1];
-        for node in nodes:
+        ### Drygridding, and Coordsys comes from a single imager on MAIN node.
+        ### There is a coord system mismatch at scatter/gather, if the MAIN version already
+        ###   exists on disk. With startmodel, it's xxx.model.  With aproject, it's xxx.residual.
+        ### No startmodel confusion. It's created only once and then scattered.
+        self.initializeImagers_New()
+
+#############################################
+    def initializeImagersBase_New(self,thisSelPars,partialSelPars):
+
+        if partialSelPars==False: ## Init only on the zero'th node
+
+            #
+            # Use the already-created imager on MAIN node
+            #
+            ##self.toolsi = casac.synthesisimager()
+
+            #
+            # Select data. 
+            #
             for mss in sorted( self.selpars.keys() ):
-                if (partialSelPars):
-                    selStr=str(thisSelPars[str(node-1)][mss]);
-                else:
-                    #joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(thisSelPars[mss])+")", node) )
-                    selStr=str(thisSelPars[mss]);
-                joblist.append( self.PH.runcmd("toolsi.selectdata( "+selStr+")", node) )
-        self.PH.checkJobs(joblist);
+                self.toolsi.selectdata( thisSelPars[mss] )
 
-        #
-        # Call defineimage at each node.
-        #
-
-        # do the first node only first to set csys and distributed it to other nodes
-        nimpars = copy.deepcopy(self.allimpars)
-        ngridpars = copy.deepcopy(self.allgridpars)
-        for fld in range(0,self.NF):
-            joblist=[]
-            if self.NN>1:
-                nimpars[str(fld)]['imagename'] = self.PH.getpartimagename( nimpars[str(fld)]['imagename'], nodes[0] )
-            joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) 
-                                               + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", nodes[0] ) )
-            #joblist.append( self.PH.runcmdcheck("fullcoords = toolsi.getcsys()") ) 
-            self.PH.checkJobs(joblist);
-            self.PH.runcmdcheck("fullcoords = toolsi.getcsys()")
-            fullcoords = self.PH.pullval("fullcoords", nodes[0] )
-            self.coordsyspars[str(fld)] = fullcoords[1]
-         
-        # do for the rest of nodes
-        joblist=[];
-        for node in nodes[1:]:
-            ## For each image-field, define imaging parameters
-            nimpars = copy.deepcopy(self.allimpars)
-            #print "nimpars = ",nimpars;
-            ngridpars = copy.deepcopy(self.allgridpars)
+            # Defineimage. 
+            # This makes the global csys. Get csys to distribute to other nodes
+            # It also sets 'startmodel' if available (this is later scattered to nodes)
             for fld in range(0,self.NF):
-                if self.NN>1:
-                    #nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
-                    nimpars[str(fld)]['imagename'] = self.PH.getpartimagename( nimpars[str(fld)]['imagename'], node )
+                self.toolsi.defineimage( impars=self.allimpars[str(fld)], gridpars = self.allgridpars[str(fld)] )
+                fullcoords = self.toolsi.getcsys()
+                self.coordsyspars[str(fld)] = fullcoords
 
+        else: ## partialSelPars==True , The actual initialization on all nodes.
 
-                joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) 
-                                               + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
-        self.PH.checkJobs(joblist);
+            #
+            # Start the imagers on all nodes.
+            #
+            joblist=[]
+            for node in self.listOfNodes:
+                joblist.append( self.PH.runcmd("toolsi = casac.synthesisimager()", node) );
+            self.PH.checkJobs(joblist);
+
+            #
+            # Select data.  If partialSelPars is True, use the thisSelPars
+            # data structure as a list of partitioned selections.
+            #
+            joblist=[];
+            nodes=self.listOfNodes;#[1];
+            for node in nodes:
+                for mss in sorted( self.selpars.keys() ):
+                    selStr=str(thisSelPars[str(node-1)][mss]);
+                    joblist.append( self.PH.runcmd("toolsi.selectdata( "+selStr+")", node) )
+            self.PH.checkJobs(joblist);
+
+            #
+            # Call defineimage at each node.
+            #
+            joblist=[];
+            for node in nodes:
+                ## For each image-field, define imaging parameters
+                nimpars = copy.deepcopy(self.allimpars)
+                #print "nimpars = ",nimpars;
+                ngridpars = copy.deepcopy(self.allgridpars)
+                for fld in range(0,self.NF):
+                    if self.NN>1:
+                        nimpars[str(fld)]['imagename'] = self.PH.getpartimagename( nimpars[str(fld)]['imagename'], node )
+
+                    ## Pop out the startmodel, as it would already have been created on the main node,.
+                    tmpimpars = nimpars[str(fld)]
+                    if tmpimpars.has_key('startmodel'):
+                        tmpimpars.pop('startmodel')
+
+                    joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) 
+                                                   + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
+            self.PH.checkJobs(joblist);
         
 #############################################
 
-    def initializeImagers(self):
+    def initializeImagers_New(self):
 
         #---------------------------------------
         #  Check if cfcache exists.
@@ -130,24 +151,32 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         # print "CFCACHE = ",cfCacheName,cfcExists;
         # print "##########################################"
 
-        # Initialize imagers with full data selection at each node.
-        # This is required only for node-1 though (for dryGridding
-        # later).
-        self.initializeImagersBase(self.selpars,False);
+       
+        # Start one imager on MAIN node
+        self.toolsi = casac.synthesisimager()
+
+        # Init one SI tool ( it records the csys per field in self.coordsyspars )
+        self.initializeImagersBase_New(self.selpars,False);
+
+        # Modify the coordsys inputs
         for fld in range(0, self.NF):
             self.allimpars[str(fld)]['csys']=self.coordsyspars[str(fld)]['coordsys'].copy()
 
+        # Dry Gridding on the MAIN node ( i.e. on self.toolsi)
         if (not cfcExists):
-            self.dryGridding();
+            self.dryGridding_New();
+
+        # Clean up the single imager (MAIN node)
+        self.toolsi.done()
+        self.toolsi = None
+
+        # Do the second round, initializing imagers on ALL nodes
+        self.initializeImagersBase_New(self.allselpars,True);
+
+        # Fill CFCache - it uses all nodes.
+        if (not cfcExists):
             self.fillCFCache();
-#        self.reloadCFCache();
 
-        # TRY: Start all over again!  This time do partial data
-        # selection at each node using the allselpars data structure
-        # which has the partitioned selection.
-        self.deleteImagers();
-
-        self.initializeImagersBase(self.allselpars,True);
 
 ######################################################################################################################################
         #---------------------------------------
@@ -225,6 +254,120 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
 #############################################
 
+#############################################
+    def initializeImagersBase_Old(self,thisSelPars,partialSelPars):
+        #
+        # Start the imagers on all nodes.
+        #
+        joblist=[]
+        for node in self.listOfNodes:
+            joblist.append( self.PH.runcmd("toolsi = casac.synthesisimager()", node) );
+        self.PH.checkJobs(joblist);
+
+        #
+        # Select data.  If partialSelPars is True, use the thisSelPars
+        # data structure as a list of partitioned selections.
+        #
+        joblist=[];
+        nodes=self.listOfNodes;#[1];
+        if (not partialSelPars):
+            nodes = [1];
+        for node in nodes:
+            for mss in sorted( self.selpars.keys() ):
+                if (partialSelPars):
+                    selStr=str(thisSelPars[str(node-1)][mss]);
+                else:
+                    #joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(thisSelPars[mss])+")", node) )
+                    selStr=str(thisSelPars[mss]);
+                joblist.append( self.PH.runcmd("toolsi.selectdata( "+selStr+")", node) )
+        self.PH.checkJobs(joblist);
+
+        #
+        # Call defineimage at each node.
+        #
+
+        # do the first node only first to set csys and distributed it to other nodes
+        nimpars = copy.deepcopy(self.allimpars)
+        ngridpars = copy.deepcopy(self.allgridpars)
+        for fld in range(0,self.NF):
+            joblist=[]
+            if self.NN>1:
+                nimpars[str(fld)]['imagename'] = self.PH.getpartimagename( nimpars[str(fld)]['imagename'], nodes[0] )
+            tmpimpars = nimpars[str(fld)]
+            if partialSelPars==False and tmpimpars.has_key('startmodel'):
+                tmpimpars.pop('startmodel')
+            joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( tmpimpars ) 
+                                               + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", nodes[0] ) )
+            #joblist.append( self.PH.runcmdcheck("fullcoords = toolsi.getcsys()") ) 
+            self.PH.checkJobs(joblist);
+            self.PH.runcmdcheck("fullcoords = toolsi.getcsys()")
+            fullcoords = self.PH.pullval("fullcoords", nodes[0] )
+            self.coordsyspars[str(fld)] = fullcoords[1]
+         
+        # do for the rest of nodes
+        joblist=[];
+        for node in nodes[1:]:
+            ## For each image-field, define imaging parameters
+            nimpars = copy.deepcopy(self.allimpars)
+            #print "nimpars = ",nimpars;
+            ngridpars = copy.deepcopy(self.allgridpars)
+            for fld in range(0,self.NF):
+                if self.NN>1:
+                    #nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+                    nimpars[str(fld)]['imagename'] = self.PH.getpartimagename( nimpars[str(fld)]['imagename'], node )
+
+
+                tmpimpars = nimpars[str(fld)]
+                if partialSelPars==False and tmpimpars.has_key('startmodel'):
+                    tmpimpars.pop('startmodel')
+                joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( tmpimpars ) 
+                                               + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
+        self.PH.checkJobs(joblist);
+        
+#############################################
+
+    def initializeImagers_Old(self):
+
+        #---------------------------------------
+        #  Check if cfcache exists.
+        #
+        cfCacheName=self.allgridpars['0']['cfcache'];
+        cfcExists=False;
+        if (not (cfCacheName == '')):
+            cfcExists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
+
+            if (cfcExists):
+                nCFs = len(os.listdir(cfCacheName));
+                if (nCFs == 0):
+                    casalog.post(cfCacheName + " exists, but is empty.  Attempt is being made to fill it now.","WARN")
+                    cfcExists = False;
+
+        # print "##########################################"
+        # print "CFCACHE = ",cfCacheName,cfcExists;
+        # print "##########################################"
+
+        # Initialize imagers with full data selection at each node.
+        # This is required only for node-1 though (for dryGridding
+        # later).
+        self.initializeImagersBase_Old(self.selpars,False);
+        for fld in range(0, self.NF):
+            self.allimpars[str(fld)]['csys']=self.coordsyspars[str(fld)]['coordsys'].copy()
+
+        if (not cfcExists):
+            self.dryGridding_Old();
+            self.fillCFCache();
+#        self.reloadCFCache();
+
+        # TRY: Start all over again!  This time do partial data
+        # selection at each node using the allselpars data structure
+        # which has the partitioned selection.
+        self.deleteImagers();
+
+        self.initializeImagersBase_Old(self.allselpars,True);
+
+
+#############################################
+
     def initializeNormalizers(self):
         for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisnormalizer())
@@ -289,7 +432,11 @@ class PyParallelContSynthesisImager(PySynthesisImager):
          self.PH.takedownCluster()
     
 # #############################################
-    def dryGridding(self):
+    def dryGridding_New(self):
+        dummy=['']
+        self.toolsi.drygridding(dummy)
+
+    def dryGridding_Old(self):
         nodes=[1];
         joblist=[];
         for node in nodes:
