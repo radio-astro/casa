@@ -37,6 +37,7 @@ def sdgaincal(infile=None, calmode=None, radius=None, smooth=None,
         
         # open MS
         if isinstance(infile, str) and os.path.exists(infile):
+            mycb.setvi(old=True)
             mycb.open(filename=infile, compress=False, addcorr=False, addmodel=False)
         else:
             raise RuntimeError, 'infile not found - please verify the name'
