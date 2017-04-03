@@ -53,13 +53,13 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         ### Init all imagers only with 'csys'. 
         ## There is no coord system mismatch
         ## There is startmodel confusion. Non 'startmodel' runs are all OK.
-        #self.initializeImagers_Old()
+        self.initializeImagers_Old()
 
         ### Drygridding, and Coordsys comes from a single imager on MAIN node.
         ### There is a coord system mismatch at scatter/gather, if the MAIN version already
         ###   exists on disk. With startmodel, it's xxx.model.  With aproject, it's xxx.residual.
         ### No startmodel confusion. It's created only once and then scattered.
-        self.initializeImagers_New()
+        #self.initializeImagers_New()
 
 #############################################
     def initializeImagersBase_New(self,thisSelPars,partialSelPars):
