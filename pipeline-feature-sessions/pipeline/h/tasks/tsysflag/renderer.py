@@ -43,6 +43,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         subpages = {}
         eb_plots = []
         last_results = []
+        updated_refants = {}
 
         standard_plots = create_plot_detail_page(std_renderer_mapping, context, results)
         extra_plots = create_plot_detail_page(extra_renderer_mapping, context, results)
@@ -99,7 +100,13 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             eb_plots.extend(per_antenna_plots)
             last_results.append(lastresult)
 
-        # If there were any valid results, then additionally render plots 
+            # If the reference antenna list was updated, retrieve new refant
+            # list.
+            if result.refants_to_remove or result.refants_to_demote:
+                ms = context.observing_run.get_ms(name=vis)
+                updated_refants[vis] = ms.reference_antenna
+
+        # If there were any valid results, then additionally render plots
         # for all EBs in one page
         if last_results:
             renderer = tsyscalrenderer.TsyscalPlotRenderer(context, last_results, eb_plots)
@@ -127,7 +134,8 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             'stdplots': standard_plots,
             'summary_plots': summary_plots,
             'summary_subpage': subpages,
-            'task_incomplete_msg': task_incomplete_msg
+            'task_incomplete_msg': task_incomplete_msg,
+            'updated_refants': updated_refants
         })
 
     def _get_htmlreports(self, context, results, components):

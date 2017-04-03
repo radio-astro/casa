@@ -80,6 +80,9 @@ $(document).ready(function() {
 
 <h2>Contents</h2>
 <ul>
+% if updated_refants:
+    <li><a href="#refants">Reference antenna update</a></li>
+% endif
 <li><a href="#plots">T<sub>sys</sub> after flagging</a></li>
 <li><a href="#summarytable">Flagged data summary</a></li>
 <li>Flag step details</li>
@@ -91,6 +94,38 @@ $(document).ready(function() {
     % endfor
     </ul>
 </ul>
+
+% if updated_refants:
+<h2 id="refants" class="jumptarget">Reference Antenna update</h2>
+
+<p>For the measurement set(s) listed below, the reference antenna
+    list was updated due to significant flagging (antennas moved to
+    end and/or removed). See warnings in task notifications
+    for details. Shown below are the updated reference antenna lists,
+    only for those measurement sets where it was modified.</p>
+
+<table class="table table-bordered table-striped"
+	   summary="Reference Antennas">
+	<caption>Updated reference antenna selection per measurement set. Antennas are
+	listed in order of highest to lowest priority.</caption>
+	<thead>
+		<tr>
+			<th>Measurement Set</th>
+			<th>Reference Antennas (Highest to Lowest)</th>
+		</tr>
+	</thead>
+	<tbody>
+%for vis in updated_refants:
+		<tr>
+			<td>${os.path.basename(vis)}</td>
+			## insert spaces in refant list to allow browser to break string
+			## if it wants
+			<td>${updated_refants[vis].replace(',', ', ')}</td>
+		</tr>
+%endfor
+	</tbody>
+</table>
+% endif
 
 <%self:plot_group plot_dict="${summary_plots}"
 				  url_fn="${lambda x: summary_subpage[x]}"

@@ -135,11 +135,17 @@ def get_plot_dir(context, stage_number):
 
 def is_singledish_ms(context):
     # importdata results
-    importdata_result = context.results[0]
-    if isinstance(importdata_result, basetask.ResultsProxy):
-        result_repr = str(importdata_result.read())
-    else:
-        result_repr = str(importdata_result)
+    result0 = context.results[0]
+    
+    # if ResultsProxy, read pickled result
+    if isinstance(result0, basetask.ResultsProxy):
+        result0 = result0.read()
+                
+    # if RestoreDataResults, get importdata_results
+    if hasattr(result0, 'importdata_results'):
+        result0 = result0.importdata_results[0]
+    
+    result_repr = str(result0)
     return result_repr.find('SDImportDataResults') != -1
 
 def get_casa_version():
@@ -650,16 +656,19 @@ class T2_1DetailsRenderer(object):
         vla_basebands = ''
 
         if context.project_summary.telescope != 'ALMA':
-        #All VLA basebands
+        # All VLA basebands
 
             vla_basebands = []
 
             banddict = collections.defaultdict(lambda: collections.defaultdict(list))
 
             for spw in ms.get_spectral_windows():
-                band = spw.name.split('#')[0].split('_')[1]
-                baseband = spw.name.split('#')[1]
-                banddict[band][baseband].append({str(spw.id):(spw.min_frequency,spw.max_frequency)})
+                try:
+                    band = spw.name.split('#')[0].split('_')[1]
+                    baseband = spw.name.split('#')[1]
+                    banddict[band][baseband].append({str(spw.id):(spw.min_frequency,spw.max_frequency)})
+                except:
+                    LOG.debug("Baseband name cannot be parsed and will not appear in the weblog.")
 
             for band in banddict.keys():
                 basebands = banddict[band].keys()

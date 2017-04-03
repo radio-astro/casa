@@ -105,3 +105,6 @@ class plotsummarySummaryChart(object):
         return os.path.join(self.context.report_dir, 
                             'stage%s' % self.result.stage_number, 
                             prefix+'-%s-summary.png' % self.ms.basename)
+
+
+

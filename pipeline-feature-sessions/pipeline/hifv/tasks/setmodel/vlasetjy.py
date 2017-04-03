@@ -403,65 +403,67 @@ class VLASetjy(basetask.StandardTaskTemplate):
 
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
-                inputs.field = myfield
-                # Use the domain object to get the actual field id, ***NOT*** the index
-                # setjyfield = m.get_fields()[myfield].id
+                domainfield = m.get_fields(myfield)[0]
+                if 'AMPLITUDE' in domainfield.intents:
+                    inputs.field = myfield
+                    # Use the domain object to get the actual field id, ***NOT*** the index
+                    # setjyfield = m.get_fields()[myfield].id
 
-                jobs = []
-                VLAspws = field_spws[myfield]
-                #print 'VLAspws: ', VLAspws, type(VLAspws)
-                strlistVLAspws = ','.join(str(spw) for spw in VLAspws)
-                spws = [spw for spw in inputs.ms.get_spectral_windows(strlistVLAspws)]
-                
-                for spw in spws:
-                    inputs.spw = spw.id
-                    reference_frequency = center_frequencies[spw.id]
-                    try:
-                        EVLA_band = spw2band[spw.id]
-                    except:
-                        LOG.info('Unable to get band from spw id - using reference frequency instead')
-                        EVLA_band = find_EVLA_band(reference_frequency)
-                    
-                    LOG.info("Center freq for spw "+str(spw.id)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
-                    
-                    model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
-        
-                    LOG.info("Setting model for field "+str(m.get_fields()[myfield].id)+" spw "+str(spw.id)+" using "+model_image)
-        
-                    task_args = {'vis'            : inputs.vis,
-                                 'field'          : str(myfield),
-                                 'spw'            : str(spw.id),
-                                 'selectdata'     : False,
-                                 'model'          : model_image,
-                                 'intent'         : '',
-                                 'listmodels'     : False,
-                                 'scalebychan'    : inputs.scalebychan,
-                                 'fluxdensity'    : inputs.fluxdensity,
-                                 'standard'       : inputs.standard,
-                                 'usescratch'     : True}
-                    
-                    jobs.append(casa_tasks.setjy(**task_args))
-                    
-                    # Flux densities coming from a non-lookup are added to the
-                    # results so that user-provided calibrator fluxes are
-                    # committed back to the domain objects
-                    
-                    if inputs.fluxdensity is not -1:
+                    jobs = []
+                    VLAspws = field_spws[myfield]
+                    #print 'VLAspws: ', VLAspws, type(VLAspws)
+                    strlistVLAspws = ','.join(str(spw) for spw in VLAspws)
+                    spws = [spw for spw in inputs.ms.get_spectral_windows(strlistVLAspws)]
+
+                    for spw in spws:
+                        inputs.spw = spw.id
+                        reference_frequency = center_frequencies[spw.id]
                         try:
-                            (I,Q,U,V) = inputs.fluxdensity
-                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
+                            EVLA_band = spw2band[spw.id]
                         except:
-                            I = inputs.fluxdensity
-                            flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
-                        result.measurements[myfield].append(flux)
-                
-                # merge identical jobs into one job with a multi-spw argument
-                jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
-                for job, _ in jobs_and_components:
-                    try:
-                        setjy_dicts.append(self._executor.execute(job))
-                    except:
-                        LOG.warn("SetJy issue with field id="+str(job.kw['field']) + " and spw=" +str(job.kw['spw']))
+                            LOG.info('Unable to get band from spw id - using reference frequency instead')
+                            EVLA_band = find_EVLA_band(reference_frequency)
+
+                        LOG.info("Center freq for spw "+str(spw.id)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
+
+                        model_image = standard_source_names[i] + '_' + EVLA_band + '.im'
+
+                        LOG.info("Setting model for field "+str(m.get_fields()[myfield].id)+" spw "+str(spw.id)+" using "+model_image)
+
+                        task_args = {'vis'            : inputs.vis,
+                                     'field'          : str(myfield),
+                                     'spw'            : str(spw.id),
+                                     'selectdata'     : False,
+                                     'model'          : model_image,
+                                     'intent'         : '',
+                                     'listmodels'     : False,
+                                     'scalebychan'    : inputs.scalebychan,
+                                     'fluxdensity'    : inputs.fluxdensity,
+                                     'standard'       : inputs.standard,
+                                     'usescratch'     : True}
+
+                        jobs.append(casa_tasks.setjy(**task_args))
+
+                        # Flux densities coming from a non-lookup are added to the
+                        # results so that user-provided calibrator fluxes are
+                        # committed back to the domain objects
+
+                        if inputs.fluxdensity is not -1:
+                            try:
+                                (I,Q,U,V) = inputs.fluxdensity
+                                flux = domain.FluxMeasurement(spw_id=spw.id, I=I, Q=Q, U=U, V=V)
+                            except:
+                                I = inputs.fluxdensity
+                                flux = domain.FluxMeasurement(spw_id=spw.id, I=I)
+                            result.measurements[myfield].append(flux)
+
+                    # merge identical jobs into one job with a multi-spw argument
+                    jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+                    for job, _ in jobs_and_components:
+                        try:
+                            setjy_dicts.append(self._executor.execute(job))
+                        except:
+                            LOG.warn("SetJy issue with field id="+str(job.kw['field']) + " and spw=" +str(job.kw['spw']))
 
 
         spw_seen = set()

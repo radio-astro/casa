@@ -18,52 +18,15 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.displays.applycal as applycal
 
-
-
-
 LOG = logging.get_logger(__name__)
-
 
 FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 
-
-'''
 class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='plotsummary.mako',
                  description='VLA Plot Summary', always_rerender=False):
         super(T2_4MDetailsplotsummaryRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
-    
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsplotsummaryRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-        
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-        
-        summary_plots = {}
-
-        for result in results:
-            
-            plotter = plotsummarydisplay.plotsummarySummaryChart(context, result)
-            plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
-            
-        ctx.update({'summary_plots'   : summary_plots,
-                    'dirname'         : weblog_dir})
-                
-        return ctx
-'''
-
-
-
-class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self, uri='plotsummary.mako',
-                 description='VLA Plot Summary', always_rerender=False):
-        super(T2_4MDetailsplotsummaryRenderer, self).__init__(uri=uri,
-                description=description, always_rerender=always_rerender)
-
 
 
     def update_mako_context(self, ctx, context, results_list):
@@ -178,6 +141,26 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             for vis, vis_plots in plots.items():
                 phase_vs_freq_summary_plots[vis][key] = vis_plots
 
+        # Polarization plots
+        phase_vs_freq_polarization_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
+        for intents in [['POLANGLE'], ['POLLEAKAGE']]:
+            plots = self.create_plots(context,
+                                      result,
+                                      applycal.PhaseVsFrequencyPerBasebandSummaryChart,
+                                      intents, correlation='RL,LR', coloraxis='corr', avgtime='60',
+                                      avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
+            self.sort_plots_by_baseband(plots)
+
+            key = utils.commafy(intents, quotes=False)
+            use_pol_plots = False
+            for vis, vis_plots in plots.items():
+                print ""
+                print "PLOT ITEM:", vis, vis_plots
+                print ""
+                phase_vs_freq_polarization_plots[vis][key] = vis_plots
+                if vis_plots:
+                    use_pol_plots = True
+
         # Removed for CAS-8737
         ##amp_vs_uv_summary_plots = self.create_plots(context,
         ##                                            result,
@@ -188,6 +171,9 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                                       results_list,
                                                       applycal.PhaseVsUVSummaryChart,
                                                       ['AMPLITUDE'], correlation=corrstring)
+
+
+
 
         # CAS-5970: add science target plots to the applycal page
         (science_amp_vs_freq_summary_plots,
@@ -235,6 +221,9 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                                   ['AMPLITUDE', 'PHASE', 'BANDPASS', 'TARGET'],
                                   ApplycalPhaseVsTimePlotRenderer, correlation=corrstring)
 
+        print "PHASE FREQ POL PLOTS"
+        print phase_vs_freq_polarization_plots
+
         ctx.update({'amp_vs_freq_plots': amp_vs_freq_summary_plots,
                     'phase_vs_freq_plots': phase_vs_freq_summary_plots,
                     # 'amp_vs_time_plots'   : amp_vs_time_summary_plots,
@@ -242,6 +231,8 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     'phase_vs_uv_plots': phase_vs_uv_summary_plots,
                     # 'phase_vs_time_plots' : phase_vs_time_summary_plots,
                     'science_amp_vs_freq_plots': science_amp_vs_freq_summary_plots,
+                    'phase_vs_freq_polarization_plots': phase_vs_freq_polarization_plots,
+                    'use_pol_plots' : use_pol_plots,
                     # 'science_phase_vs_freq_plots' : science_phase_vs_freq_summary_plots,
                     # 'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,
                     'uv_max': uv_max})

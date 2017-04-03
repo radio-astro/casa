@@ -54,11 +54,6 @@
     <value>False</value>
     </param>
     
-    <param type="bool" name="dbservice">
-	<description>Use the online flux catalog</description>
-	<value>False</value>
-    </param>
-
     <param type="bool" name="with_pointing_correction">
 	<description>Apply pointing correction to DIRECTION</description>
 	<value>True</value>
@@ -163,9 +158,6 @@ bdfflags -- Apply BDF flags on line
    default: True
    
 lazy -- Use the lazy filter import
-   default: False
-
-dbservice -- Use online flux catalog on import
    default: False
 
 with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) 

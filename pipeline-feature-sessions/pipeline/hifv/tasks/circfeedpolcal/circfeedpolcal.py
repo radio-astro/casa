@@ -13,7 +13,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class CircfeedpolcalResults(polarization.PolarizationResults):
-    def __init__(self, final=None, pool=None, preceding=None, vis=None):
+    def __init__(self, final=None, pool=None, preceding=None, vis=None, refant=None, calstrategy=None):
 
         if final is None:
             final = []
@@ -21,12 +21,18 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
             pool = []
         if preceding is None:
             preceding = []
+        if refant is None:
+            refant = ''
+        if calstrategy is None:
+            calstrategy = ''
 
         super(CircfeedpolcalResults, self).__init__()
         self.vis = vis
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
+        self.refant = refant
+        self.calstrategy = calstrategy
 
     def merge_with_context(self, context):
         """
@@ -64,11 +70,14 @@ class Circfeedpolcal(polarization.Polarization):
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
         intents = list(m.intents)
 
+        self.RefAntOutput = ['']
+        self.calstrategy = ''
+
         if [intent for intent in intents if 'POL' in intent]:
             self.do_prepare()
 
-
-        return CircfeedpolcalResults(vis=self.inputs.vis, pool=self.callist, final=self.callist)
+        return CircfeedpolcalResults(vis=self.inputs.vis, pool=self.callist, final=self.callist,
+                                     refant=self.RefAntOutput[0].lower(), calstrategy=self.calstrategy)
 
     def analyse(self, results):
         return results
@@ -97,32 +106,33 @@ class Circfeedpolcal(polarization.Polarization):
         # First pass R-L delay
         self.do_gaincal(tablesToAdd[0][0], field=fluxcal)
 
-        #Determine number of scans with POLLEAKGE intent
+        # Determine number of scans with POLLEAKGE intent
         polleakagescans = []
-        poltype = 'Df+QU' #Default
+        poltype = 'Df+QU'  # Default
         for scan in m.scans:
-            if 'POLLEAKGE' in scan.intents:
+            if 'POLLEAKAGE' in scan.intents:
                 polleakagescans.append((scan.id, scan.intents))
 
-        #Calibration Strategies
+        # Calibration Strategies
         LOG.info("Number of POL_LEAKAGE scans: {!s}".format(len(polleakagescans)))
+        self.calstrategy = ''
         if len(polleakagescans) >= 3:
             poltype = 'Df+QU'   # C4
-            LOG.info("Using Calibration Strategy C4: 3 or more slices CALIBRATE_POL_LEAKAGE, KCROSS, Df+QU, Xf")
+            self.calstrategy = "Using Calibration Strategy C4: 3 or more slices CALIBRATE_POL_LEAKAGE, KCROSS, Df+QU, Xf."
         if len(polleakagescans) < 3:
             poltype = 'Df'      # C1
-            LOG.info("Using Calibration Strategy C1: 1 slices CALIBRATE_POL_LEAKAGE, KCROSS, Df, Xf")
+            self.calstrategy = "Using Calibration Strategy C1: Less than 3 slices CALIBRATE_POL_LEAKAGE, KCROSS, Df, Xf."
+        LOG.info(self.calstrategy)
 
-
-        # D-terms in 10MHz pieces
+        # D-terms in 16MHz pieces, minsnr of 5.0
         self.do_polcal(tablesToAdd[1][0], poltype=poltype, field='',
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
-                       gainfield=[''], spwmap=[], solint='inf,10MHz')
+                       gainfield=[''], spwmap=[], solint='inf,16MHz', minsnr=5.0)
 
-        # 2MHz pieces
+        # 2MHz pieces, minsnr of 3.0
         self.do_polcal(tablesToAdd[2][0], poltype='Xf', field=fluxcal,
                        intent='',
-                       gainfield=[''], spwmap=[], solint='inf,2MHz')
+                       gainfield=[''], spwmap=[], solint='inf,2MHz', minsnr=3.0)
 
         for (addcaltable, caltype) in tablesToAdd:
             calto = callibrary.CalTo(self.inputs.vis)
@@ -133,7 +143,7 @@ class Circfeedpolcal(polarization.Polarization):
 
     def do_gaincal(self, caltable, field=''):
 
-        #Similar inputs to hifa/linpolcal.py
+        # Similar inputs to hifa/linpolcal.py
         task_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context,
                                                   output_dir='',
                                                   vis=self.inputs.vis,
@@ -154,7 +164,8 @@ class Circfeedpolcal(polarization.Polarization):
 
         return result
 
-    def do_polcal(self, caltable, poltype='', field='', intent='', gainfield=[''], spwmap=[], solint='inf'):
+    def do_polcal(self, caltable, poltype='', field='', intent='',
+                  gainfield=[''], spwmap=[], solint='inf', minsnr=5.0):
 
         GainTables = []
 
@@ -166,21 +177,25 @@ class Circfeedpolcal(polarization.Polarization):
             GainTables.append(calapp.gaintable)
 
         GainTables = GainTables[0]
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        minBL_for_cal = m.vla_minbaselineforcal()
 
-        #import pdb
-        #pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
 
         task_args = {'vis': self.inputs.vis,
-                     'caltable'  : caltable,
-                     'field'     : field,
-                     'intent'    : intent,
-                     'refant'    : self.RefAntOutput[0].lower(),
-                     'gaintable' : GainTables,
-                     'poltype'   : poltype,
-                     'gainfield' : gainfield,
-                     'combine'   : 'scan',
-                     'spwmap'    : spwmap,
-                     'solint'    : solint}
+                     'caltable'   : caltable,
+                     'field'      : field,
+                     'intent'     : intent,
+                     'refant'     : self.RefAntOutput[0].lower(),
+                     'gaintable'  : GainTables,
+                     'poltype'    : poltype,
+                     'gainfield'  : gainfield,
+                     'minsnr'     : minsnr,
+                     'minblperant': minBL_for_cal,
+                     'combine'    : 'scan',
+                     'spwmap'     : spwmap,
+                     'solint'     : solint}
 
         task = casa_tasks.polcal(**task_args)
 
