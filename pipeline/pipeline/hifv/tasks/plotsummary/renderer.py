@@ -3,15 +3,10 @@ import os
 import itertools
 import operator
 
-
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.displays.vla.plotsummarydisplay as plotsummarydisplay
 
-
-
-import contextlib
-import pipeline.infrastructure.renderer.weblog as weblog
 import pipeline.infrastructure
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
@@ -22,12 +17,12 @@ LOG = logging.get_logger(__name__)
 
 FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 
+
 class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='plotsummary.mako',
                  description='VLA Plot Summary', always_rerender=False):
         super(T2_4MDetailsplotsummaryRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
-
 
     def update_mako_context(self, ctx, context, result):
         weblog_dir = os.path.join(context.report_dir,
@@ -55,8 +50,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             filesizes[os.path.basename(vis)] = ms._calc_filesize()
             # LOG.info("FILESIZE::"+str(filesizes[os.path.basename(vis)]))
 
-
-        #original plot summary plots
+        # original plot summary plots
         summary_plots = {}
 
         for r in result:
@@ -64,7 +58,6 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             plots = plotter.plot()
             ms = os.path.basename(r.inputs['vis'])
             summary_plots[ms] = plots
-
 
         # return all agents so we get ticks and crosses against each one
         agents = ['before', 'applycal']
@@ -81,16 +74,16 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     'filesizes': filesizes})
 
         # Amp vs time removed for CAS-8737
-        ##amp_vs_time_summary_plots = self.create_plots(context,
-        ##                                              result,
-        ##                                              applycal.AmpVsTimeSummaryChart,
-        ##                                              ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
+        # amp_vs_time_summary_plots = self.create_plots(context,
+        #                                               result,
+        #                                               applycal.AmpVsTimeSummaryChart,
+        #                                               ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
 
         # Phase vs time removed for CAS-8737
-        ##phase_vs_time_summary_plots = self.create_plots(context,
-        ##                                              result,
-        ##                                              applycal.PhaseVsTimeSummaryChart,
-        ##                                              ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
+        # phase_vs_time_summary_plots = self.create_plots(context,
+        #                                               result,
+        #                                               applycal.PhaseVsTimeSummaryChart,
+        #                                               ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
 
         #         amp_vs_freq_phase_summary_plots = self.create_plots(context,
         #                                                             result,
@@ -154,9 +147,6 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             key = utils.commafy(intents, quotes=False)
             use_pol_plots = False
             for vis, vis_plots in plots.items():
-                print ""
-                print "PLOT ITEM:", vis, vis_plots
-                print ""
                 phase_vs_freq_polarization_plots[vis][key] = vis_plots
                 if vis_plots:
                     use_pol_plots = True
@@ -219,9 +209,6 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                               applycal.PhaseVsTimeDetailChart,
                               ['AMPLITUDE', 'PHASE', 'BANDPASS', 'TARGET'],
                               ApplycalPhaseVsTimePlotRenderer, correlation=corrstring)
-
-        print "PHASE FREQ POL PLOTS"
-        print phase_vs_freq_polarization_plots
 
         ctx.update({'amp_vs_freq_plots': amp_vs_freq_summary_plots,
                     'phase_vs_freq_plots': phase_vs_freq_summary_plots,
