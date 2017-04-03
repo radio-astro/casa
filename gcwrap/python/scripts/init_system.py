@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import argparse
+import multiprocessing
 from IPython.terminal.prompts import Prompts, Token
 
 try:
@@ -18,6 +19,10 @@ except ImportError, e:
 
 from asap_init import *
 from casa_system import casa
+
+if not os.environ.has_key('OMP_NUM_THREADS'):
+    # if OMP_NUM_THREADS is not set, set it to max(1,N_CPU-2)
+    os.environ['OMP_NUM_THREADS'] = str(max(1,multiprocessing.cpu_count()-2))
 
 class _Prompt(Prompts):
      def in_prompt_tokens(self, cli=None):
