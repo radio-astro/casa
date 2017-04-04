@@ -8,7 +8,7 @@ import pipeline.infrastructure.utils as utils
 
 LOG = logging.get_logger(__name__)
 
-JyperKTR = collections.namedtuple('JyperKTR', 'msname spw antenna pol factor')
+JyperKTR = collections.namedtuple('JyperKTR', 'spw msname antenna pol factor')
 
 class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='hsd_k2jycal.mako', 
@@ -22,30 +22,32 @@ class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRen
                                          lambda: collections.defaultdict(
                                          lambda: collections.defaultdict(lambda: 'N/A (1.0)'))))
         reffile = None
-        row_values = []
+        spw_factors = collections.defaultdict(lambda: [])
         for r in results:
             # rearrange jyperk factors
-            for ms in context.observing_run.measurement_sets:
-                vis = ms.basename
-                for spw in ms.get_spectral_windows(science_windows_only=True):
-                    spwid = spw.id
-                    ddid = ms.get_data_description(spw=spwid)
-                    for ant in ms.get_antenna():
-                        ant_name = ant.name
-                        corrs = map(ddid.get_polarization_label, range(ddid.num_polarizations))
-#                         # an attempt to collapse pol rows
-#                         # corr_collector[factor] = [corr0, corr1, ...]
-#                         corr_collector = collections.defaultdict(lambda: [])
-                        for corr in corrs:
-                            factor = self.__get_factor(r.factors, vis, spwid, ant_name, corr)
-#                             corr_collector[factor].append(corr)
-#                         for factor, corrlist in corr_collector.items():
-#                             corr = str(', ').join(corrlist)
-                            if factor is not None:
-                                jyperk[vis][spwid][ant_name][corr] = factor
-                            tr = JyperKTR(vis, spwid, ant_name, corr,
-                                          jyperk[vis][spwid][ant_name][corr])
-                            row_values.append(tr)
+            ms = context.observing_run.get_ms(name=r.vis)
+            vis = ms.basename
+            for spw in ms.get_spectral_windows(science_windows_only=True):
+                spwid = spw.id
+                ddid = ms.get_data_description(spw=spwid)
+                for ant in ms.get_antenna():
+                    ant_name = ant.name
+                    corrs = map(ddid.get_polarization_label, range(ddid.num_polarizations))
+#                     # an attempt to collapse pol rows
+#                     # corr_collector[factor] = [corr0, corr1, ...]
+#                     corr_collector = collections.defaultdict(lambda: [])
+                    for corr in corrs:
+                        factor = self.__get_factor(r.factors, vis, spwid, ant_name, corr)
+#                         corr_collector[factor].append(corr)
+#                     for factor, corrlist in corr_collector.items():
+#                         corr = str(', ').join(corrlist)
+                        if factor is not None:
+                            jyperk[vis][spwid][ant_name][corr] = factor
+#                         tr = JyperKTR(vis, spwid, ant_name, corr,
+#                                       jyperk[vis][spwid][ant_name][corr])
+                        tr = JyperKTR(spwid, vis, ant_name, corr,
+                                      jyperk[vis][spwid][ant_name][corr])
+                        spw_factors[spwid].append(tr)
             reffile = r.reffile
         reffile_copied = None
         if reffile is not None and os.path.exists(reffile):
@@ -53,6 +55,10 @@ class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRen
             LOG.debug('copying %s to %s'%(reffile, stage_dir))
             shutil.copy2(reffile, stage_dir)
             reffile_copied = os.path.join(stage_dir, os.path.basename(reffile))
+        # order table rows so that spw comes first
+        row_values = []
+        for factor_list in spw_factors.itervalues():
+            row_values += list(factor_list)
         ctx.update({'jyperk_rows': utils.merge_td_columns(row_values),
                     'reffile': reffile_copied})
 
