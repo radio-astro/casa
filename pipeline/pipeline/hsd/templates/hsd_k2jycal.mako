@@ -24,7 +24,7 @@ No Jy/K factors file is specified.
 % endif
 <table class="table table-bordered table-striped" summary="Jy/K factors">
     <thead>
-	<tr><th>MS</th><th>Spw</th><th>Antenna</th><th>Pol</th><th>Factor</th></tr>
+	<tr><th>Spw</th><th>MS</th><th>Antenna</th><th>Pol</th><th>Factor</th></tr>
     </thead>
 	<tbody>
 	% for tr in jyperk_rows:
