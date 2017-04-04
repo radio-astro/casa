@@ -1,7 +1,6 @@
 <%!
 rsc_path = "../"
 import os
-import collections
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
@@ -11,20 +10,6 @@ import collections
 
 <%
 stage_dir = os.path.join(pcontext.report_dir, 'stage%s'%(result.stage_number))
-rowspans_ms = collections.defaultdict(lambda: 0)
-rowspans_spw = collections.defaultdict(lambda: collections.defaultdict(lambda: 0))
-rowspans_ant = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(lambda: 0)))
-for ms in pcontext.observing_run.measurement_sets:
-    vis = ms.basename
-    for spw in ms.get_spectral_windows(science_windows_only=True):
-        spwid = spw.id
-        ddid = ms.get_data_description(spw=spwid)
-        num_factors = ddid.num_polarizations
-        for ant in ms.get_antenna():
-            ant_name = ant.name
-            rowspans_ms[vis] += num_factors
-            rowspans_spw[vis][spwid] += num_factors
-            rowspans_ant[vis][spwid][ant_name] += num_factors
 %>
 
 <p>This task generates single dish images per source per spectral window. 
@@ -37,40 +22,18 @@ Input file is <a class="replace-pre" href="${os.path.relpath(reffile, pcontext.r
 % else:
 No Jy/K factors file is specified. 
 % endif
-<table border width="100%">
-<tr><th>MS</th><th>Spw</th><th>Antenna</th><th>Pol</th><th>Factor</th></tr>
-% for ms in pcontext.observing_run.measurement_sets:
-    <% vis_first_row = 1 %>
-    <% vis = ms.basename %>
-    % for spw in ms.get_spectral_windows(science_windows_only=True):
-        <% spwid = spw.id %>
-        <% spw_first_row = 1 %>
-        <% ddid = ms.get_data_description(spw=spwid) %>
-        % for ant in ms.get_antenna():
-            <% ant_first_row = 1 %>
-            <% ant_name = ant.name %>
-            <% jyperk_corr = jyperk[ms.basename][spwid][ant_name] %>
-            <% corr_list = map(ddid.get_polarization_label, range(ddid.num_polarizations)) %>
-            % for corr in corr_list:
-                <% factor = jyperk_corr[corr] %>
-                % if vis_first_row == 1:
-                    <tr><td rowspan="${rowspans_ms[vis]}">${vis}</td><td rowspan="${rowspans_spw[vis][spwid]}">${spwid}</td><td rowspan="${rowspans_ant[vis][spwid][ant_name]}">${ant_name}</td><td>${corr}</td><td>${factor}</td></tr>
-                    <% vis_first_row = 0 %>
-                    <% spw_first_row = 0 %>
-                    <% ant_first_row = 0 %>
-                % elif spw_first_row == 1:
-                    <tr><td rowspan="${rowspans_spw[vis][spwid]}">${spwid}</td><td rowspan="${rowspans_ant[vis][spwid][ant_name]}">${ant_name}</td><td>${corr}</td><td>${factor}</td></tr>
-                    <% spw_first_row = 0 %>
-                    <% ant_first_row = 0 %>
-                % elif ant_first_row == 1:
-                    <tr><td rowspan="${rowspans_ant[vis][spwid][ant_name]}">${ant_name}</td><td>${corr}</td><td>${factor}</td></tr>
-                    <% ant_first_row = 0 %>
-                % else:
-                    <tr><td>${corr}</td><td>${factor}</td></tr>
-                % endif
-            % endfor
-        % endfor
-    % endfor
-% endfor
+<table class="table table-bordered table-striped" summary="Jy/K factors">
+    <thead>
+	<tr><th>MS</th><th>Spw</th><th>Antenna</th><th>Pol</th><th>Factor</th></tr>
+    </thead>
+	<tbody>
+	% for tr in jyperk_rows:
+		<tr>
+		% for td in tr:
+			${td}
+		% endfor
+		</tr>
+	%endfor
+	</tbody>
 </table>
 <p/>
