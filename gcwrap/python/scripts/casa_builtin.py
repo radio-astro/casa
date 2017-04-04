@@ -1,3 +1,4 @@
+import traceback
 from IPython.core.error import InputRejected
 from casa_stack_manip import stack_find
 
@@ -33,13 +34,30 @@ if __casa.has_key('state') and __casa['state'].has_key('init_version') and __cas
         def visit_FunctionDef(self, node):
             return node
         def visit_Assign(self, node):
-            for n in node.targets:
-                if not isinstance(n,ast.Attribute) and \
-                   not isinstance(n,ast.Subscript):
-                    if __builtins__.has_key(n.id):
-                        raise InputRejected("attempt to modify a python builtin value")
-                    if self.casa_builtins.has_key(n.id):
-                        raise InputRejected("attempt to modify a casa builtin value")
+            try:
+                for n in node.targets:
+                    # CASA <1>: def foobar( ): return (1,2,3)
+                    # CASA <2>: True,b,c = foobar( )
+                    #
+                    #           generates a [<ast.Tuple>] for 'node'
+                    #           and tuple.elts provides access to the
+                    #           strings/names within the ast.Tuple
+                    #
+                    tgts = n.elts if isinstance(n,ast.Tuple) else [n]
+                    for t in tgts:
+                        if not isinstance(t,ast.Attribute) and \
+                           not isinstance(t,ast.Subscript):
+                            if __builtins__.has_key(t.id):
+                                raise InputRejected("attempt to modify a python builtin value")
+                            if self.casa_builtins.has_key(t.id):
+                                raise InputRejected("attempt to modify a casa builtin value")
+            except InputRejected as ir:
+                raise ir
+            except:
+                print "-----------------------------------------------------------------"
+                print "internal error in CASA assignment filter..."
+                print traceback.format_exc()
+                print "-----------------------------------------------------------------"
             return node
         def visit_Lambda(self, node):
             return node
