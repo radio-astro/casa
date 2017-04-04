@@ -307,19 +307,33 @@ namespace casa{
 
   Int BeamCalc::getBandID(Double freq, // in Hz 
 			  const String& obsName,
+			  const String& bandName,
 			  const String& antType,
 			  const MEpoch& obsTime,
 			  const String& otherAntRayPath){
 
     setBeamCalcGeometries(obsName, antType, obsTime, otherAntRayPath); 
 
+    // Check against bandName if it is a non-NULL string.  Otherwise
+    // check against frequency range.  The latter method is only for
+    // backward compatibility reasons and for older MSes which did not
+    // have correct band names in the SPW sub-table.
+    if (bandName != "")
+      for(uInt i=0; i<BeamCalcGeometries_p.nelements(); i++)
+    	  if(String(BeamCalcGeometries_p[i].bandName)==bandName) return i;
+
+    // If the control flow gets here, the given bandName did not match
+    // in SPW names in the MS.  So use the fall-back option of using
+    // the reference frequency to get the band ID (this will lead to
+    // incorrect ID for the edge SPWs which might overlap in frequecy
+    // with the adjecent band).
     for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
       if((bandMinFreq_p[i]<=freq)&&(freq<=bandMaxFreq_p[i])){
 	return i;
       }
     }
     ostringstream mesg;
-    mesg << obsName << "/" << antType << "/" << freq << "(Hz) combination not recognized.";
+    mesg << obsName << "/" << bandName << "/" << antType << "/" << freq << "(Hz) combination not recognized.";
     throw(SynthesisError(mesg.str()));
     
   }
@@ -590,8 +604,10 @@ namespace casa{
     Int i;
     Double x, freq, df;
     
+    //LogIO os;
     if((0<=ap->band) && (ap->band<(Int)BeamCalcGeometries_p.size())){
       geom = &(BeamCalcGeometries_p[ap->band]);
+      //os << "Using antenna parameters for " << geom->bandName << " band" << LogIO::POST;
     }
     else{
       SynthesisError err(String("Internal Error: attempt to access beam geometry for non-existing band."));
@@ -1396,6 +1412,7 @@ namespace casa{
 
   void BeamCalc::copyBeamCalcGeometry(BeamCalcGeometry* to, BeamCalcGeometry* from){
     sprintf(to->name, "%s", from->name);
+    sprintf(to->bandName, "%s", from->bandName);
     to->sub_h = from->sub_h;
     for(uInt j=0; j<3;j++){
       to->feedpos[j] = from->feedpos[j];
@@ -1512,15 +1529,15 @@ namespace casa{
     // cerr << "max threads " << omp_get_max_threads() 
     // 	 << " threads available " << omp_get_num_threads() 
     // 	 << endl;
-    Int Nth=1;
-#ifdef _OPENMP
-    Nth=max(omp_get_max_threads()-2,1);
-#endif
+    //Int Nth=1;
+    //#ifdef _OPENMP
+    //Nth=max(omp_get_max_threads()-2,1);
+    //#endif
     // Timer tim;
     // tim.mark();
-#pragma omp parallel default(none) firstprivate(Er, El, nx, ny)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
+    //#pragma omp parallel default(none) firstprivate(Er, El, nx, ny)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
     {
-#pragma omp for
+      //#pragma omp for
     for(j = 0; j < ny; j++)
       {
 	for(i = 0; i < nx; i++)
@@ -1780,19 +1797,20 @@ namespace casa{
     // cerr << "max threads " << omp_get_max_threads() 
     // 	 << " threads available " << omp_get_num_threads() 
     // 	 << endl;
-    Int Nth=1, localWhichPoln=whichPoln;
-#ifdef _OPENMP
-    Nth=max(omp_get_max_threads()-2,1);
-#endif
+    // Int Nth=1, localWhichPoln=whichPoln;
+    Int localWhichPoln=whichPoln;
+    //#ifdef _OPENMP
+    //Nth=max(omp_get_max_threads()-2,1);
+    //#endif
     // Timer tim;
     // tim.mark();
-#if GCC44x
-#pragma omp parallel default(none) firstprivate(Er, El, nx, ny, localWhichPoln)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
-#else
-#pragma omp parallel default(none) firstprivate(Er, El, nx, ny, localWhichPoln)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
-#endif
+    //#if GCC44x
+    //#pragma omp parallel default(none) firstprivate(Er, El, nx, ny, localWhichPoln)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
+    //#else
+    //#pragma omp parallel default(none) firstprivate(Er, El, nx, ny, localWhichPoln)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
+    //#endif
     {
-#pragma omp for
+      //#pragma omp for
     for(j = 0; j < ny; j++)
       {
 	for(i = 0; i < nx; i++)

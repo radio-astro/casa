@@ -177,7 +177,7 @@ namespace casa{
 
     virtual void cacheVBInfo(const VisBuffer& vb) = 0;
     virtual void cacheVBInfo(const casacore::String& telescopeName, const casacore::Float& diameter)=0;
-    virtual casacore::Int getBandID(const casacore::Double& freq, const casacore::String& telescopeName) = 0;
+    virtual casacore::Int getBandID(const casacore::Double& freq, const casacore::String& telescopeName, const casacore::String& bandName) = 0;
     virtual int getVisParams(const VisBuffer& vb, const casacore::CoordinateSystem& skyCoord=casacore::CoordinateSystem()) = 0;
     //
     // The mapping from VisBuffer polarizations map to the Image plane

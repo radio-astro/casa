@@ -209,16 +209,18 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 		Float sampling, samplingWt;
 		Int xSupport, ySupport, xSupportWt, ySupportWt;
 		CoordinateSystem cs_l;
+		String bandName;
 		// Extract the parameters index by (MuellerElement, Freq, W)
-		cfWtb.getParams(cs_l, samplingWt, xSupportWt, ySupportWt, 
+		cfWtb.getParams(cs_l, samplingWt, xSupportWt, ySupportWt, bandName,
 				freqValues(inu), 
 				//				wValues(iw), 
 				wValues(0), 
 				muellerElements(imx)(imy));
-		cfb.getParams(cs_l, sampling, xSupport, ySupport, 
+		cfb.getParams(cs_l, sampling, xSupport, ySupport, bandName,
 			      freqValues(inu), 
 			      wValues(0), 
 			      muellerElements(imx)(imy));
+		aTerm.setBandName(bandName);
 		IPosition pbshp(4,nx,ny,1,1);
 		//
 		// Cache the A-Term for this polarization and frequency
@@ -493,7 +495,7 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 		    CountedPtr<CFCell> cfCellPtr;
 		    cfWtb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-				    freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				    freqValues(inu), String(""), wValues(iw), muellerElements(imx)(imy),
 				    ftCoords, samplingWt, xSupportWt, ySupportWt,
 				    String(""), // Default ==> don't set it in the CFCell
 				    conjFreq, conjPol[0]);
@@ -557,7 +559,7 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 		    ftCoords=cs_l;
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
 		    cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-				  freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				  freqValues(inu), String(""), wValues(iw), muellerElements(imx)(imy),
 				  ftCoords, sampling, xSupport, ySupport,
 				  String(""), // Default ==> Don't set in the CFCell
 				  conjFreq, conjPol[0]);
@@ -692,46 +694,36 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
   // 1/Cellsize, this expression translates to deltaNU<FMin/Nx (!)
   Vector<Double> AWConvFunc::makeFreqValList(Double &dNU,
 					     const VisBuffer2& vb, 
-					     const ImageInterface<Complex>& uvGrid)
+					     const ImageInterface<Complex>& uvGrid,
+					     Vector<String>& bandNames)
   {
     (void)uvGrid; (void)dNU; (void)vb;
     Vector<Double> fValues;
+    Int nSpw = spwFreqSelection_p.shape()(0);
     if (wbAWP_p==false)
       {
 	// Return the sky-image ref. freq.
 	fValues.resize(1);
 	fValues[0]=imRefFreq_p;
-
-	// // Return the max. freq. from the list of selected SPWs
-	// fValues.resize(1);
-	// Double maxFreq=0.0;
-	// for (Int i=0;i<spwFreqSelection_p.shape()(0);i++)
-	//   if (spwFreqSelection_p(i,2) > maxFreq) maxFreq=spwFreqSelection_p(i,2);
-	// fValues[0]=maxFreq;
       }
     else
       {
-	Int nSpw;
-
-	// USEFUL DEBUG MESSAGE
-	//cerr << "##### Min. Max. Freq. per Spw: " << spwFreqSelection_p << " " << spwFreqSelection_p.shape() <<endl;
-
-	nSpw = spwFreqSelection_p.shape()(0);
 	fValues.resize(nSpw);
-	//	dNU = (spwFreqSelection_p(0,1) - spwFreqSelection_p(0,2));
 	for(Int i=0;i<nSpw;i++) 
-	  {
-	    fValues(i)=spwFreqSelection_p(i,2);
-	    // Int j=0;
-	    // while (j*dNU+spwFreqSelection_p(i,1) <= spwFreqSelection_p(i,2))
-	    //   {
-	    //     fValues.resize(j+1,true); 
-	    //     //	fValues(j)=spwFreqSelection_p(i,2); // Pick up the max. freq. for each selected SPW
-	    //     fValues(j)=j*dNU+spwFreqSelection_p(i,1);
-	    //     j=fValues.nelements();
-	    //   }
-	  }
-	//    cerr << "Max. freq. per SPW = " << fValues << endl;
+	  fValues(i)=spwFreqSelection_p(i,2);
+      }
+    
+    bandNames.resize(nSpw);
+    ROScalarColumn<String> spwNames=vb.subtableColumns().spectralWindow().name();
+    for(Int i=0;i<nSpw;i++) 
+      {
+	int s=spwFreqSelection_p(i,0);
+	// LogIO os;
+	// os << "Spw"<<s<<": " << spwNames.getColumn()[s]
+	//    << " " << s << " " << nSpw
+	//    << LogIO::WARN;
+
+	bandNames(i)=spwNames.getColumn()[s];
       }
     return fValues;
   }
@@ -744,7 +736,8 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 				    const CountedPtr<PolOuterProduct>& pop,
 				    const Float pa,
 				    const Float dpa,
-				    const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
+				    const Vector<Double>& uvScale,
+				    const Vector<Double>& ,//uvOffset,
 				    const Matrix<Double>& ,//vbFreqSelection,
 				    CFStore2& cfs2,
 				    CFStore2& cfwts2,
@@ -879,7 +872,7 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
     // Stokes.  
     //
     // The code below still assume a diagonally dominant
-    // outer-product.  This probably OK for antena arrays. After the
+    // outer-product.  This is probably OK for antenna arrays. After the
     // debugging phase is over, the
     // Vector<PolOuterProduct::CrossCircular> should become
     // Matrix<PolOuterProduct> and PolOuterProduct should be
@@ -903,7 +896,8 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
     // const Matrix<Int> muellerMatrix=pOP.getPolMap();
     
     Vector<Double> wValues    = makeWValList(wScale, wConvSize);
-    Vector<Double> freqValues = makeFreqValList(freqScale,vb,image);
+    Vector<String> bandNames;
+    Vector<Double> freqValues = makeFreqValList(freqScale,vb,image,bandNames);
     log_l << "Making " << wValues.nelements() << " w plane(s). " << LogIO::POST;
     log_l << "Making " << freqValues.nelements() << " frequency plane(s)." << LogIO::POST;
     //
@@ -1027,10 +1021,10 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 		      // 			 convSize, convSize, 
 		      // 			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
 		      cfb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
-		      		       freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
+		      		       freqValues(inu), bandNames(inu), wValues(iw), polMap(ipolx)(ipoly),
 				       cfb_cs, s, convSize, convSize);
 		      cfwtb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
-		      			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
+		      			 freqValues(inu), bandNames(inu), wValues(iw), polMap(ipolx)(ipoly),
 					 cfb_cs, s, convSize, convSize);
 		      pm.update((Double)cfDone++);
 		    }
@@ -1575,16 +1569,15 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
       Float sampling, samplingWt;
       Int xSupport, ySupport, xSupportWt, ySupportWt;
       CoordinateSystem cs_l;
+      String bandName;
       // Extract the parameters index by (MuellerElement, Freq, W)
-      cfWtb.getParams(cs_l, samplingWt, xSupportWt, ySupportWt, 
-		      miscInfo.freqValue,
-		      //				wValues(iw), 
-		      miscInfo.wValue, 
+      cfWtb.getParams(cs_l, samplingWt, xSupportWt, ySupportWt, bandName,
+		      miscInfo.freqValue, miscInfo.wValue, //The address of CFCell as physical co-ords
 		      miscInfo.muellerElement);
-      cfb.getParams(cs_l, sampling, xSupport, ySupport, 
-		    miscInfo.freqValue,
-		    miscInfo.wValue, 
+      cfb.getParams(cs_l, sampling, xSupport, ySupport, bandName,
+		    miscInfo.freqValue,miscInfo.wValue, //The address of CFCell as physical co-ords
 		    miscInfo.muellerElement);
+      aTerm.setBandName(bandName);
       //
       // Cache the A-Term for this polarization and frequency
       //
@@ -1890,7 +1883,8 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
 			 (static_cast<AWConvFunc &>(*awCF)).aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 			 //aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 
-			 cfb_p->getParams(cs_l, sampling, xSupport, ySupport,iNu,iW,iPol);
+			 String bandName;
+			 cfb_p->getParams(cs_l, sampling, xSupport, ySupport,bandName,iNu,iW,iPol);
 			 convSampling=miscInfo.sampling;
 
 			 //convSize=miscInfo.shape[0];

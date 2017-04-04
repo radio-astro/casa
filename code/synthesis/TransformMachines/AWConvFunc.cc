@@ -489,7 +489,7 @@ namespace casa{
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 		    CountedPtr<CFCell> cfCellPtr;
 		    cfWtb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-		                    freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+		                    freqValues(inu), String(""), wValues(iw), muellerElements(imx)(imy),
 		                    ftCoords, samplingWt, xSupportWt, ySupportWt,
 		                    String(""), // Default ==> don't set it in the CFCell
 		                    conjFreq, conjPol[0]);
@@ -553,7 +553,7 @@ namespace casa{
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
 
 		    cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-				  freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				  freqValues(inu), String(""), wValues(iw), muellerElements(imx)(imy),
 				  ftCoords, sampling, xSupport, ySupport,
 				  String(""), // Default ==> Don't set in the CFCell
 				  conjFreq, conjPol[0]);
@@ -692,7 +692,8 @@ namespace casa{
   // 1/Cellsize, this expression translates to deltaNU<FMin/Nx (!)
   Vector<Double> AWConvFunc::makeFreqValList(Double &dNU,
 					     const VisBuffer& vb, 
-					     const ImageInterface<Complex>& uvGrid)
+					     const ImageInterface<Complex>& uvGrid,
+					     Vector<String>& bandNames)
   {
     (void)uvGrid; (void)dNU; (void)vb;
     Vector<Double> fValues;
@@ -718,9 +719,15 @@ namespace casa{
 
 	nSpw = spwFreqSelection_p.shape()(0);
 	fValues.resize(nSpw);
+	bandNames.resize(nSpw);
 	//	dNU = (spwFreqSelection_p(0,1) - spwFreqSelection_p(0,2));
+	ROScalarColumn<String> spwNames=vb.msColumns().spectralWindow().name();
 	for(Int i=0;i<nSpw;i++) 
 	  {
+	    int s=spwFreqSelection_p(i,0);
+	    cerr << "Spw"<<s<<": " << spwNames.getColumn()[s] << endl;
+	    
+	    bandNames(i)=spwNames.getColumn()[s];
 	    fValues(i)=spwFreqSelection_p(i,2);
 	    // Int j=0;
 	    // while (j*dNU+spwFreqSelection_p(i,1) <= spwFreqSelection_p(i,2))
@@ -903,7 +910,8 @@ namespace casa{
     // const Matrix<Int> muellerMatrix=pOP.getPolMap();
     
     Vector<Double> wValues    = makeWValList(wScale, wConvSize);
-    Vector<Double> freqValues = makeFreqValList(freqScale,vb,image);
+    Vector<String> bandNames;
+    Vector<Double> freqValues = makeFreqValList(freqScale,vb,image,bandNames);
     log_l << "Making " << wValues.nelements() << " w plane(s). " << LogIO::POST;
     log_l << "Making " << freqValues.nelements() << " frequency plane(s)." << LogIO::POST;
     //
@@ -1027,10 +1035,10 @@ namespace casa{
 		      // 			 convSize, convSize, 
 		      // 			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
 		      cfb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
-		      		       freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
+		      		       freqValues(inu), bandNames(inu), wValues(iw), polMap(ipolx)(ipoly),
 				       cfb_cs, s, convSize, convSize);
 		      cfwtb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
-					 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly),
+					 freqValues(inu), bandNames(inu), wValues(iw), polMap(ipolx)(ipoly),
 					 cfb_cs, s, convSize, convSize);
 		      pm.update((Double)cfDone++);
 		    }

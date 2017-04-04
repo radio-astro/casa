@@ -124,8 +124,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::Int mapAntIDToAntType(const casacore::Int& ant) {return aTerm_p->mapAntIDToAntType(ant);};
 
     virtual casacore::Vector<casacore::Double> makeFreqValList(casacore::Double& freqScale,
-					   const VisBuffer2& vb, 
-					   const casacore::ImageInterface<casacore::Complex>& uvGrid);
+							       const VisBuffer2& vb, 
+							       const casacore::ImageInterface<casacore::Complex>& uvGrid,
+							       casacore::Vector<casacore::String>& bandNames);
     virtual casacore::Vector<casacore::Double> makeWValList(const casacore::Double &dW, const casacore::Int &nW);
 
     virtual void setMiscInfo(const casacore::RecordInterface& params);

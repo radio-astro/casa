@@ -169,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::Int muellerElement_p;
     casacore::Quantity pa_p;
     casacore::Vector<casacore::Int> cfShape_p;
-    casacore::String fileName_p,telescopeName_p;
+    casacore::String fileName_p,telescopeName_p, bandName_p;
     bool isRotationallySymmetric_p;
   };
 } //# NAMESPACE CASA - END

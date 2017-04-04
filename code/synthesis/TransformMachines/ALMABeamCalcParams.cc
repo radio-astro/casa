@@ -37,6 +37,7 @@ namespace casa{
       /* BeamCalc_ALMA_1 */
       {
 	"ALMA",
+	"ALMA_1",
 	6.177, // distance surface subreflector to surface of primary reflector
 	{0.0,0.0,-1.377}, // feed position (m), assume centered
 	7.16, // angular diameter (deg) of subreflector from 6.177 m distance
@@ -52,6 +53,7 @@ namespace casa{
       /* BeamCalc_ALMA_2 */
       {
 	"ALMA",
+	"ALMA_2",
 	6.177, 
 	{0.0,0.0,-1.377}, 
 	7.16, 
@@ -65,6 +67,7 @@ namespace casa{
       /* BeamCalc_ALMA_3 */
       {
 	"ALMA",
+	"ALMA_3",
 	6.177, 
 	{0.0,0.0,-1.377}, 
 	7.16, 
@@ -78,6 +81,7 @@ namespace casa{
       /* BeamCalc_ALMA_4 */
       {
 	"ALMA",
+	"ALMA_4",
 	6.177, 
 	{0.0,0.0,-1.377}, 
 	7.16, 
@@ -91,6 +95,7 @@ namespace casa{
       /* BeamCalc_ALMA_5 */
       {
 	"ALMA",
+	"ALMA_5",
 	6.177, 
 	{0.0,0.0,-1.377}, 
 	7.16, 
@@ -104,6 +109,7 @@ namespace casa{
       /* BeamCalc_ALMA_6 */
       {
 	"ALMA",
+	"ALMA_6",
 	6.177, 
 	{0.0,0.0,-1.377}, 
 	7.16, 
@@ -117,6 +123,7 @@ namespace casa{
       /* BeamCalc_ALMA_7 */
       {
 	"ALMA",
+	"ALMA_7",
 	6.177, 
 	{0.0,0.0,-1.377}, 
 	7.16, 
@@ -125,11 +132,12 @@ namespace casa{
 	6.0, 
 	275.0,
 	{4.5, 0.0, 0.0, 0.0, 0.0}, 1,
-	0.,0. 
+	0.,0.
       },
       /* BeamCalc_ALMA_8 */
       {
 	"ALMA",
+	"ALMA_8",
 	6.177, 
 	{0.0,0.0,-1.377}, 
 	7.16, 
@@ -138,11 +146,12 @@ namespace casa{
 	6.0, 
 	385.0,
 	{4.5, 0.0, 0.0, 0.0, 0.0}, 1,
-	0.,0. 
+	0.,0.
       },
       /* BeamCalc_ALMA_9 */
       {
 	"ALMA",
+	"ALMA_9",
 	6.177, 
 	{0.0,0.0,-1.377}, 
 	7.16, 
@@ -151,11 +160,12 @@ namespace casa{
 	6.0, 
 	602.0,
 	{4.5, 0.0, 0.0, 0.0, 0.0}, 1,
-	0.,0. 
+	0.,0.
       },
       /* BeamCalc_ALMA_10 */
       {
 	"ALMA",
+	"ALMA_10",
 	6.177, 
 	{0.0,0.0,-1.377}, 
 	7.16, 

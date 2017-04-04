@@ -209,19 +209,20 @@ using namespace casa::vi;
     // required, use the version without the co-ordinate system below.
     //
     void getParams(casacore::CoordinateSystem& cs, casacore::Float& sampling, 
-		   casacore::Int& xSupport, casacore::Int& ySupport, 
+		   casacore::Int& xSupport, casacore::Int& ySupport, casacore::String& bandName,
 		   const casacore::Double& freqVal, const casacore::Double& wValue, 
 		   const casacore::Int& muellerElement);
     //-------------------------------------------------------------------------
     // Get CF by directly indexing in the list of CFs (data vector)
     inline void getParams(casacore::CoordinateSystem& cs, casacore::Float& sampling, 
-			  casacore::Int& xSupport, casacore::Int& ySupport, 
+			  casacore::Int& xSupport, casacore::Int& ySupport, casacore::String& bandName,
 			  const casacore::Int& i, const casacore::Int& j, const casacore::Int& k)
     {
       cs = cfCells_p(i,j,k)->coordSys_p;
       sampling = cfCells_p(i,j,k)->sampling_p;
       xSupport = cfCells_p(i,j,k)->xSupport_p;
       ySupport = cfCells_p(i,j,k)->ySupport_p;
+      bandName = cfCells_p(i,j,k)->bandName_p;
     }
     void getParams(casacore::Double& freqVal, casacore::Float& sampling, 
 		   casacore::Int& xSupport, casacore::Int& ySupport, 
@@ -312,7 +313,8 @@ using namespace casa::vi;
 
 
     casacore::RigidVector<casacore::Int, 3> setParams(const casacore::Int& i, const casacore::Int& j, const casacore::Int& ipx, const casacore::Int& ipy,
-						      const casacore::Double& freqValue, const casacore::Double& wValue, 
+						      const casacore::Double& freqValue, const casacore::String& bandName,
+						      const casacore::Double& wValue, 
 						      const casacore::Int& muellerElement,
 						      casacore::CoordinateSystem& cs,
 						      casacore::Float& sampling,

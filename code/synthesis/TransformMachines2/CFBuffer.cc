@@ -206,6 +206,9 @@ namespace casa{
     double conjFreq; miscInfo.get("ConjFreq", conjFreq);
     int conjPoln; miscInfo.get("ConjPoln", conjPoln);
     String telescopeName; miscInfo.get("TelescopeName", telescopeName);
+    String bandName;
+    if (miscInfo.isDefined("BandName")) miscInfo.get("BandName", bandName);
+    else bandName="UNKNOWABLE";
     float diameter; miscInfo.get("Diameter", diameter);
     // In the absense of evidence, assume that users are sensible and
     // are using AWProjection where it is really need it and not for
@@ -216,7 +219,7 @@ namespace casa{
     if (miscInfo.isDefined("OpCode"))
 	miscInfo.get("OpCode",isRotationallySymmetric);
 
-    RigidVector<Int,3> ndx=setParams(inu, iw, ipx, ipy, freqValue, wValue, muellerElement, cs,
+    RigidVector<Int,3> ndx=setParams(inu, iw, ipx, ipy, freqValue, bandName, wValue, muellerElement, cs,
 				     sampling, xSupport, ySupport, fileName, conjFreq, conjPoln, telescopeName,
 				     diameter);
     cfCells_p(ndx(0),ndx(1),ndx(2))->isRotationallySymmetric_p = isRotationallySymmetric;
@@ -224,6 +227,7 @@ namespace casa{
   }
   RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& /*ipx*/, const Int& /*ipy*/,
 					  const Double& freqValue,
+					  const String& bandName,
 					  const Double& wValue,
 					  const Int& muellerElement,
 					  CoordinateSystem& cs,
@@ -247,6 +251,7 @@ namespace casa{
       cfCells_p(ndx(0),ndx(1),ndx(2))->fileName_p = fileName;
     cfCells_p(ndx(0),ndx(1),ndx(2))->telescopeName_p = telescopeName;//String("EVLA");
     cfCells_p(ndx(0),ndx(1),ndx(2))->diameter_p = diameter;//25.0;
+    if (bandName != "") cfCells_p(ndx(0),ndx(1),ndx(2))->bandName_p = bandName;
 
     Int index=cs.findCoordinate(Coordinate::SPECTRAL);
     SpectralCoordinate spCS = cs.spectralCoordinate(index);
@@ -412,11 +417,12 @@ namespace casa{
   //
   void CFBuffer::getParams(CoordinateSystem& cs, Float& sampling, 
 			   Int& xSupport, Int& ySupport, 
+			   String& bandName,
 			   const Double& freqVal, const Double& wValue, 
 			   const Int& muellerElement)
   {
     RigidVector<Int,3> ndx=getIndex(freqVal, wValue, muellerElement);
-    getParams(cs, sampling, xSupport, ySupport, ndx(0), ndx(1), ndx(2));
+    getParams(cs, sampling, xSupport, ySupport, bandName, ndx(0), ndx(1), ndx(2));
   }
   //
   //---------------------------------------------------------------

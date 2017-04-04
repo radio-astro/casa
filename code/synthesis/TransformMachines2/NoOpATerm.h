@@ -99,8 +99,9 @@ namespace casa{
     {};
 
     casacore::Int getBandID(const casacore::Double&, //freq 
-		  const casacore::String& //telescopeName
-		  )
+			    const casacore::String&, //telescopeName
+			    const casacore::String& //bandName
+			    )
     {return 0;};
 
     void cacheVBInfo(const casacore::String& /*telescopeName*/, const casacore::Float& /*diameter*/) {};

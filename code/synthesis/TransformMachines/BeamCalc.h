@@ -42,6 +42,7 @@ namespace casa
   typedef struct 	/* all dimensions in meters, GHz */
   {
     char name[16];	/* name of antenna, e.g., VLA */
+    char bandName[16];
     casacore::Double sub_h;	/* subreflector vertex height above primary vertex */
     casacore::Double feedpos[3];	/* position of feed */
     casacore::Double subangle;	/* angle subtended by the subreflector */
@@ -136,7 +137,6 @@ namespace casa
     casacore::Double feed[3];             /* feed x, y, z */
   } Ray;
 
-
   enum VLABeamCalcBandCode{
     BeamCalc_VLA_L = 0,
     BeamCalc_VLA_C,
@@ -162,6 +162,7 @@ namespace casa
     
     EVLABeamCalc_NumBandCodes	/* this line last */
   };
+
 
   enum ALMABeamCalcBandCode{
     BeamCalc_ALMA_1 = 0,
@@ -201,10 +202,11 @@ namespace casa
 			       const casacore::String& otherAntRayPath=""); // override the AntennaResponses casacore::Table in Observatories
 
     casacore::Int getBandID(const casacore::Double freq, // in Hz 
-		  const casacore::String& obsname,
-		  const casacore::String& antennaType="STANDARD",
-		  const casacore::MEpoch& obsTime = casacore::MEpoch(casacore::Quantity(50000., "d")),
-		  const casacore::String& otherAntRayPath=""); // override the AntennaResponses casacore::Table in Observatories 
+			    const casacore::String& obsname,
+			    const casacore::String& bandName,
+			    const casacore::String& antennaType="STANDARD",
+			    const casacore::MEpoch& obsTime = casacore::MEpoch(casacore::Quantity(50000., "d")),
+			    const casacore::String& otherAntRayPath=""); // override the AntennaResponses casacore::Table in Observatories 
 
     casacore::Int calculateAperture(ApertureCalcParams *ap);
     casacore::Int calculateAperture(ApertureCalcParams *ap, const casacore::Int& whichStokes);

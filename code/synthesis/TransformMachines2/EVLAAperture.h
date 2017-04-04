@@ -85,7 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void cacheVBInfo(const casacore::String& telescopeName, const casacore::Float& diameter);
     void cacheVBInfo(const VisBuffer2& vb);
-    casacore::Int getBandID(const casacore::Double& freq, const casacore::String& telescopeName);
+    casacore::Int getBandID(const casacore::Double& freq, const casacore::String& telescopeName, const casacore::String& bandName="");
 
     virtual casacore::Vector<casacore::Int> vbRow2CFKeyMap(const VisBuffer2& vb, casacore::Int& nUnique)
     {casacore::Vector<casacore::Int> tmp; tmp.resize(vb.nRows()); tmp=0; nUnique=1; return tmp;}

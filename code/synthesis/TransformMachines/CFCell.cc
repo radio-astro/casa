@@ -132,6 +132,7 @@ namespace casa{
     miscinfo.define("ConjFreq", conjFreq_p);
     miscinfo.define("ConjPoln", conjPoln_p);
     miscinfo.define("TelescopeName", telescopeName_p);
+    miscinfo.define("BandName", bandName_p);
     miscinfo.define("Diameter", diameter_p);
     miscinfo.define("OpCode",isRotationallySymmetric_p);
     thisCF.setMiscInfo(miscinfo);

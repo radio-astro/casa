@@ -304,7 +304,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					    const casacore::TableRecord& miscInfo);
 
     casacore::RigidVector<casacore::Int, 3> setParams(const casacore::Int& i, const casacore::Int& j, const casacore::Int& ipx, const casacore::Int& ipy,
-						      const casacore::Double& freqValue, const casacore::Double& wValue, 
+						      const casacore::Double& freqValue, const casacore::String& bandName,
+						      const casacore::Double& wValue, 
 						      const casacore::Int& muellerElement,
 						      casacore::CoordinateSystem& cs,
 						      casacore::Float& sampling,
