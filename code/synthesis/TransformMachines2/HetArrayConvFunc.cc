@@ -690,15 +690,19 @@ using namespace casa::refim;
 	(*convFunctions_p[actualConvIndex_p])=resample(convFuncTemp.getSlice(blc,shp),Double(convSamp)/Double(convSampling));
 	convSize_p=newRealConvSize;
 	(*convWeights_p[actualConvIndex_p])=resample(weightConvFuncTemp.getSlice(blc, shp),Double(convSamp)/Double(convSampling));
-	convFunc_p.resize();
-	weightConvFunc_p.resize();
+
       }
       else{
-	(*convFunctions_p[actualConvIndex_p])=convFuncTemp.get();
-	(*convWeights_p[actualConvIndex_p])=weightConvFuncTemp.get();
-	convSize_p=convFuncTemp.shape()(0);
+	newRealConvSize=lattSize* Int(Double(convSamp)/Double(convSampling));
+	convFunctions_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newRealConvSize, newRealConvSize, nBeamPols, nBeamChans, ndishpair ));
+	convWeights_p[actualConvIndex_p]= new Array<Complex>(IPosition(5, newRealConvSize, newRealConvSize, nBeamPols, nBeamChans, ndishpair ));
+	
+	(*convFunctions_p[actualConvIndex_p])=resample(convFuncTemp.get(),  Double(convSamp)/Double(convSampling));
+	(*convWeights_p[actualConvIndex_p])=resample(weightConvFuncTemp.get(),  Double(convSamp)/Double(convSampling));
+	convSize_p=newRealConvSize;
       }
-      
+      convFunc_p.resize();
+      weightConvFunc_p.resize();
 
     }
     else{
