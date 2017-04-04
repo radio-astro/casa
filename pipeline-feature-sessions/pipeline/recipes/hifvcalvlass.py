@@ -71,17 +71,16 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         hifv_hanning(pipelinemode=pipelinemode)
 
         # Flag known bad data
-        hifv_flagdata(pipelinemode=pipelinemode,
-                      intents='*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*',
-                      flagbackup=False, scan=True, baseband=True, clip=True, autocorr=True, hm_tbuff='manual',
-                      template=True, online=True, tbuff=0.225, fracspw=0.05, shadow=True, quack=False, edgespw=True)
+        hifv_flagdata(pipelinemode=pipelinemode, scan=True, quack=False, hm_tbuff='manual', tbuff=0.225,
+                      intents='*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*, *UNKNOWN*, *SYSTEM_CONFIGURATION*, *UNSPECIFIED#UNSPECIFIED*')
 
         # Fill model columns for primary calibrators
         hifv_vlasetjy(pipelinemode=pipelinemode)
 
         # Gain curves, opacities, antenna position corrections,
         # requantizer gains (NB: requires CASA 4.1!)
-        hifv_priorcals(tecmaps=True)
+        # tecmaps default is False
+        hifv_priorcals(pipelinemode=pipelinemode)
 
         # Initial test calibrations using bandpass and delay calibrators
         hifv_testBPdcals(pipelinemode=pipelinemode)
@@ -129,10 +128,10 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         hifv_plotsummary(pipelinemode=pipelinemode)
 
         # Make a list of expected point source calibrators to be cleaned
-        hif_makeimlist(intent='PHASE,BANDPASS', pipelinemode=pipelinemode)
+        # hif_makeimlist(intent='PHASE,BANDPASS', pipelinemode=pipelinemode)
 
         # Make clean images for the selected calibrators
-        hif_makeimages(pipelinemode=pipelinemode)
+        # hif_makeimages(pipelinemode=pipelinemode)
 
         # Export the data
         # hifv_exportdata(pipelinemode=pipelinemode)

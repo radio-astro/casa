@@ -192,27 +192,5 @@
         </ParameterSet>
     </ProcessingCommand>
 
-    <ProcessingCommand>
-        <Command xmlns="">hif_makeimlist</Command>
-        <ParameterSet>
-	    <Parameter>
-		<Keyword xmlns="">intent</Keyword>
-		    <Value xmlns="">PHASE,BANDPASS</Value>
-	    </Parameter>
-	</ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
-        <Command xmlns="">hif_makeimages</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
-        <Command xmlns="">hifv_exportdata</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
 
 </ProcessingProcedure>
