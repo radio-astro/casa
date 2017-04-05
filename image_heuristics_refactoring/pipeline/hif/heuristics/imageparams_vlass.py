@@ -24,3 +24,12 @@ class ImageParamsHeuristicsVLASS(ImageParamsHeuristics):
     def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
         ImageParamsHeuristics.__init__(self, context, vislist, spw, contfile, linesfile)
         self.imaging_mode = 'VLASS'
+
+
+    def niter_correction(self, niter, cell, imsize, residual_max, threshold):
+
+        '''Adjustment of number of cleaning iterations due to mask size.'''
+
+        new_niter = 1000
+
+        return new_niter

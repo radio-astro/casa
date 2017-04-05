@@ -1164,6 +1164,24 @@ class ImageParamsHeuristics(object):
             return 0.0, effectiveBW_of_1chan
 
 
+    def dr_correction(self, threshold, dirty_dynamic_range, intent, tlimit):
+
+        '''Adjustment of cleaning threshold due to dynamic range limitations.'''
+
+        DR_correction_factor = 1.0
+        maxEDR_used = False
+
+        return threshold, DR_correction_factor, maxEDR_used
+
+
+    def niter_correction(self, niter, cell, imsize, residual_max, threshold):
+        # TODO: parameter should be clean mask to be able to count the pixels
+
+        '''Adjustment of number of cleaning iterations due to mask size.'''
+
+        return niter
+
+
     def cyclefactor(self):
         return None
 

@@ -1,7 +1,6 @@
 import os
 import shutil
 import glob
-import numpy
 import operator
 import decimal
 import commands
@@ -466,91 +465,18 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('    Residual max: %s', residual_max)
         LOG.info('    Residual min: %s', residual_min)
 
-        # Adjust threshold and niter based on the dirty image statistics
-
-        # Check dynamic range and adjust threshold
-        qaTool = casatools.quanta
+        # Adjust threshold based on the dirty image statistics
         dirty_dynamic_range = residual_max / sequence_manager.sensitivity
-        maxEDR_used = False
-        DR_correction_factor = 1.0
+        new_threshold, DR_correction_factor, maxEDR_used = \
+            self.image_heuristics.dr_correction(sequence_manager.threshold, \
+                                                dirty_dynamic_range, \
+                                                inputs.intent, \
+                                                inputs.tlimit)
+        sequence_manager.threshold = new_threshold
 
-        observatory = context.observing_run.measurement_sets[0].antenna_array.name
-        if ('ALMA' in observatory):
-            old_threshold = qaTool.convert(sequence_manager.threshold, 'Jy')['value']
-            if (inputs.intent == 'TARGET' ) or (inputs.intent == 'CHECK'):
-                n_dr_max = 2.5
-                if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
-                    if (dirty_dynamic_range > 150.):
-                        maxSciEDR = 150.0
-                        new_threshold = max(n_dr_max * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
-                        LOG.info('DR heuristic: Applying maxSciEDR(Main array)=%s' % (maxSciEDR))
-                        maxEDR_used = True
-                    else:
-                        if (dirty_dynamic_range > 100.):
-                            n_dr = 2.5
-                        elif (50. < dirty_dynamic_range <= 100.):
-                            n_dr = 2.0
-                        elif (20. < dirty_dynamic_range <= 50.):
-                            n_dr = 1.5
-                        elif (dirty_dynamic_range <= 20.):
-                            n_dr = 1.0
-                        LOG.info('DR heuristic: N_DR=%s' % (n_dr))
-                        new_threshold = old_threshold * n_dr
-                else:
-                    if (dirty_dynamic_range > 30.):
-                        maxSciEDR = 30.0
-                        new_threshold = max(n_dr_max * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
-                        LOG.info('DR heuristic: Applying maxSciEDR(ACA)=%s' % (maxSciEDR))
-                        maxEDR_used = True
-                    else:
-                        if (dirty_dynamic_range > 20.):
-                            n_dr = 2.5
-                        elif (10. < dirty_dynamic_range <= 20.):
-                            n_dr = 2.0
-                        elif (4. < dirty_dynamic_range <= 10.):
-                            n_dr = 1.5
-                        elif (dirty_dynamic_range <= 4.):
-                            n_dr = 1.0
-                        LOG.info('DR heuristic: N_DR=%s' % (n_dr))
-                        new_threshold = old_threshold * n_dr
-            else:
-                # Calibrators are usually dynamic range limited. The sensitivity from apparentsens
-                # is not a valid estimate for the threshold. Use a heuristic based on the dirty peak
-                # and some maximum expected dynamic range (EDR) values.
-                if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
-                    maxCalEDR = 1000.0
-                else:
-                    maxCalEDR = 200.0
-                LOG.info('DR heuristic: Applying maxCalEDR=%s' % (maxCalEDR))
-                new_threshold = max(old_threshold, residual_max / maxCalEDR * inputs.tlimit)
-                maxEDR_used = True
-
-            if (new_threshold != old_threshold):
-                sequence_manager.threshold = '%sJy' % (new_threshold)
-                LOG.info('DR heuristic: Modified threshold from %s Jy to %s Jy based on dirty dynamic range calculated from dirty peak / final theoretical sensitivity: %.1f' % (old_threshold, new_threshold, dirty_dynamic_range))
-                DR_correction_factor = new_threshold / old_threshold
-
-            # Compute automatic niter estimate
-            old_niter = sequence_manager.niter
-            kappa = 5
-            loop_gain = 0.1
-            r_mask = 0.45 * max(inputs.imsize[0], inputs.imsize[1]) * qaTool.convert(inputs.cell[0], 'arcsec')['value']
-            beam = qaTool.convert(inputs.cell[0], 'arcsec')['value'] * 5.0
-            new_niter_f = int(kappa / loop_gain * (r_mask / beam) ** 2 * residual_max / new_threshold)
-            new_niter = int(round(new_niter_f, -int(numpy.log10(new_niter_f))))
-            if (new_niter != old_niter):
-                sequence_manager.niter = new_niter
-                LOG.info('niter heuristic: Modified niter from %d to %d based on mask vs. beam size heuristic' % (old_niter, new_niter))
-
-        elif ('VLA' in observatory):
-            old_niter = sequence_manager.niter
-            new_niter = 1000
-            if (new_niter != old_niter):
-                sequence_manager.niter = new_niter
-                LOG.info('niter heuristic: Modified niter from %d to %d for the VLA' % (old_niter, new_niter))
-
-        else:
-            LOG.warning('Did not recognize observatory %s. Will not adjust threshold and niter.' % (observatory))
+        # Adjust niter based on the dirty image statistics
+        new_niter = self.image_heuristics.niter_correction(sequence_manager.niter, inputs.cell, inputs.imsize, residual_max, new_threshold)
+        sequence_manager.niter = new_niter
 
         iterating = True
         iter = 1
