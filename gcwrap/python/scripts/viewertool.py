@@ -5,6 +5,7 @@ import time
 import base64
 import string
 from casa_stack_manip import stack_frame_find
+import __casac__
 
 try:
     import dbus
@@ -97,7 +98,7 @@ class viewertool(object):
             raise Exception, "dbus is not available; cannot script the viewer"
 
         myf=stack_frame_find( )
-        self.__rgm = myf['casac'].regionmanager()
+        self.__rgm = __casac__.regionmanager.regionmanager( )
 
         viewer_path = None
         if type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == dict :

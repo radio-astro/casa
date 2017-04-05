@@ -1,9 +1,10 @@
+import os
+import sys
+import subprocess
+from subprocess import Popen
 from enum import Enum
 from time import sleep, localtime, strftime
-from subprocess import Popen, PIPE
 from threading import Thread
-import sys
-import os
 
 from casa_shutdown import add_shutdown_hook
 
@@ -67,12 +68,17 @@ class procmgr(Thread):
             self.stop( )
             #print "%s => proc %s is being started" % (strftime("%y-%m-%d %H:%M:%S", localtime()), self.tag)
             if self.__output_option is output_option.PIPE:
-                out = PIPE
+                out = subprocess.PIPE
             elif self.__output_option is output_option.STDOUT:
-                out = os.fdopen(sys.stdout.fileno(), 'a', 0)
+                try:
+                    out = os.fdopen(sys.stdout.fileno(), 'a', 0)
+                except:
+                    # nose likes to wedge their own "nose.plugins.xunit.Tee" object into
+                    # sys.stdout... unfortunately, it does not have 'fileno( )' et al.
+                    out = os.fdopen(1,'a',0)
             else:
                 out = file(os.devnull,'a')
-            self.__proc = Popen( self.__cmd, stderr=out , stdout=out, stdin=PIPE )
+            self.__proc = Popen( self.__cmd, stderr=out, stdout=out, stdin=subprocess.PIPE )
             self.__watchdog = Popen( [ '/bin/bash','-c', 
                                        'while kill -0 %d > /dev/null 2>&1; do sleep 1; kill -0 %d > /dev/null 2>&1 || kill -9 %d > /dev/null 2>&1; done' % \
                                      (self.__proc.pid, os.getpid( ), self.__proc.pid) ] )

@@ -2,7 +2,7 @@ import sys
 import os
 import string
 import time
-import viewertool
+from viewertool import viewertool
 from taskinit import casalog
 from casa_stack_manip import stack_frame_find
 ###
@@ -101,7 +101,7 @@ class __imview_class(object):
                 vwr = vi if gui else ving
 
                 if type(vwr) == type(None) or type(vwr.cwd( )) != str:
-                    vwr = viewertool.viewertool( gui, True, (type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == type(os)) )
+                    vwr = viewertool( gui, True, (type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == type(os)) )
             except:
                 vwr = None
 
