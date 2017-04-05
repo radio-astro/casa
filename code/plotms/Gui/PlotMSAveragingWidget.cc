@@ -121,15 +121,21 @@ void PlotMSAveragingWidget::setValue(const PlotMSAveraging& val) {
     itsValue_ = val;
     bool oldFlag = itsFlag_;
     itsFlag_ = false;
+    bool averaging (false);
     
     const vector<PlotMSAveraging::Field>& f = PlotMSAveraging::fields();
     for(unsigned int i = 0; i < f.size(); i++) {
         if(!itsFlags_.contains(f[i])) continue;
-        itsFlags_.value(f[i])->setChecked(val.getFlag(f[i]));
+        bool flag = val.getFlag(f[i]);
+        if (flag) averaging = true;
+        itsFlags_.value(f[i])->setChecked(flag);
         if(itsValues_.contains(f[i]) && PlotMSAveraging::fieldHasValue(f[i]))
             itsValues_.value(f[i])->setText(
                     QString::number(val.getValue(f[i])));
     }
+    vectorRadio->setEnabled(averaging);
+    scalarRadio->setEnabled(averaging);
+
     bool scalar = val.scalarAve();
     vectorRadio->setChecked(!scalar);
     scalarRadio->setChecked(scalar);
@@ -140,6 +146,18 @@ void PlotMSAveragingWidget::setValue(const PlotMSAveraging& val) {
 
 void PlotMSAveragingWidget::averagingChanged() {
     if(!itsFlag_) return;
+
+    // Only enable vector/scalar radio buttons if averaging is on
+    bool averaging(false);
+    foreach(QCheckBox* w, itsFlags_) {
+        if (w->isChecked()) {
+            averaging = true;
+            break;
+        }
+    }
+    vectorRadio->setEnabled(averaging);
+    scalarRadio->setEnabled(averaging);
+
     emit changed();
     PlotMSAveraging val = getValue();
     if(val != itsValue_) emit differentFromSet();

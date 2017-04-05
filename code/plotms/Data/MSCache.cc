@@ -109,9 +109,16 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
     delete selMS;
     Vector<Int> nIterPerAve;
 
+    // make sure user set avgtime value, else get AveragingTVI error
+    if (averaging_.time() && averaging_.timeValue()==0.0) {
+        averaging_.setTime(false);
+        logWarn(PMS::LOG_ORIGIN_LOAD_CACHE, "Time averaging disabled: value is zero."); 
+    }
     // only use scalarAve if other averaging enabled
     bool useScalarAve = averaging_.scalarAve() && (averaging_.time() ||
         averaging_.baseline() || averaging_.antenna() ||  averaging_.spw());
+    if (averaging_.scalarAve() && !useScalarAve)
+        logWarn(PMS::LOG_ORIGIN_LOAD_CACHE, "Scalar averaging ignored: no other averaging is enabled.");
     averaging_.setScalarAve(useScalarAve);
 
 	if ( averaging_.baseline() || averaging_.antenna() || useScalarAve) {

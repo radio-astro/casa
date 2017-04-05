@@ -200,6 +200,9 @@
      <property name="text">
       <string>Scalar</string>
      </property>
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
     </widget>
    </item>
    <item row="5" column="0">
@@ -209,6 +212,9 @@
      </property>
      <property name="checked">
       <bool>true</bool>
+     </property>
+     <property name="enabled">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
