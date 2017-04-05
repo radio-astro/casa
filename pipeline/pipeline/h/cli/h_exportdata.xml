@@ -142,6 +142,8 @@ session -- List of sessions one per visibility file. Currently defaults
 
 exportmses -- Export measurements sets defined in vis instead of flags,
    caltables, and calibration instructions.
+   default: False
+   example: exportmses = True
 
 pprfile -- Name of the pipeline processing request to be exported. Defaults
    to a file matching the template 'PPR_*.xml'.
