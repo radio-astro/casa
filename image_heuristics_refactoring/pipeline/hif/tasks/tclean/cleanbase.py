@@ -286,21 +286,17 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Set up masking parameters
         if inputs.hm_masking == 'auto':
             tclean_job_parameters['usemask'] = 'auto-multithresh'
-            # Defaults for ALMA 7m / 12m
-            if 'ALMA' in context.project_summary.observatory:
-                min_diameter = 1.e9
-                for msname in inputs.vis:
-                    min_diameter = min(min_diameter, min([antenna.diameter for antenna in context.observing_run.get_ms(msname).antennas]))
-                if min_diameter == 7.0:
-                    tclean_job_parameters['sidelobethreshold'] = 2.0
-                    tclean_job_parameters['noisethreshold'] = 3.0
-                    tclean_job_parameters['lownoisethreshold'] = 2.5
-                    tclean_job_parameters['minbeamfrac'] = 0.2
-                elif min_diameter == 12.0:
-                    tclean_job_parameters['sidelobethreshold'] = 3.0
-                    tclean_job_parameters['noisethreshold'] = 5.0
-                    tclean_job_parameters['lownoisethreshold'] = 1.5
-                    tclean_job_parameters['minbeamfrac'] = 0.3
+            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac = inputs.heuristics.get_autobox_params()
+            if sidelobethreshold is not None:
+                tclean_job_parameters['sidelobethreshold'] = sidelobethreshold
+            if noisethreshold is not None:
+                tclean_job_parameters['noisethreshold'] = noisethreshold
+            if lownoisethreshold is not None:
+                tclean_job_parameters['lownoisethreshold'] = lownoisethreshold
+            if minbeamfrac is not None:
+                tclean_job_parameters['minbeamfrac'] = minbeamfrac
+
+            # Override with any manual test parameters
             if inputs.hm_autotest != '':
                 hm_autotest_params = dict((key.strip(), float(value)) for key, value in [kvpair.split(':') for kvpair in inputs.hm_autotest.split(',')])
                 for key in hm_autotest_params.iterkeys():

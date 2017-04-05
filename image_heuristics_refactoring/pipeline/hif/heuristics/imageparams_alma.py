@@ -26,7 +26,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         self.imaging_mode = 'ALMA'
 
 
-    def dr_correction(self, threshold, dirty_dynamic_range, intent, tlimit):
+    def dr_correction(self, threshold, dirty_dynamic_range, residual_max, intent, tlimit):
 
         '''Adjustment of cleaning threshold due to dynamic range limitations.'''
 
@@ -112,3 +112,29 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
             LOG.info('niter heuristic: Modified niter from %d to %d based on mask vs. beam size heuristic' % (old_niter, new_niter))
 
         return new_niter
+
+
+    def get_autobox_params(self):
+
+        '''Default auto-boxing parameters for ALMA main array and ACA.'''
+
+        min_diameter = 1.e9
+        for msname in self.vislist:
+            min_diameter = min(min_diameter, min([antenna.diameter for antenna in self.context.observing_run.get_ms(msname).antennas]))
+        if min_diameter == 7.0:
+            sidelobethreshold = 2.0
+            noisethreshold = 3.0
+            lownoisethreshold = 2.5
+            minbeamfrac = 0.2
+        elif min_diameter == 12.0:
+            sidelobethreshold = 3.0
+            noisethreshold = 5.0
+            lownoisethreshold = 1.5
+            minbeamfrac = 0.3
+        else:
+            sidelobethreshold = None
+            noisethreshold = None
+            lownoisethreshold = None
+            minbeamfrac = None
+
+        return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac

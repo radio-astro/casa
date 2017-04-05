@@ -1164,7 +1164,7 @@ class ImageParamsHeuristics(object):
             return 0.0, effectiveBW_of_1chan
 
 
-    def dr_correction(self, threshold, dirty_dynamic_range, intent, tlimit):
+    def dr_correction(self, threshold, dirty_dynamic_range, residual_max, intent, tlimit):
 
         '''Adjustment of cleaning threshold due to dynamic range limitations.'''
 
@@ -1180,6 +1180,18 @@ class ImageParamsHeuristics(object):
         '''Adjustment of number of cleaning iterations due to mask size.'''
 
         return niter
+
+
+    def get_autobox_params(self):
+
+        '''Default auto-boxing parameters.'''
+
+        sidelobethreshold = None
+        noisethreshold = None
+        lownoisethreshold = None
+        minbeamfrac = None
+
+        return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac
 
 
     def cyclefactor(self):
