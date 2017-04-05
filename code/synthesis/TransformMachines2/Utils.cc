@@ -1244,7 +1244,9 @@ template
 
     //
     // Parser for parsing the NAME field of the SPECTRAL_WINDOW sub-table.
-    // 
+    // Returns a vector of string containing tokens separated by "#"
+    // in the supplied band name string.
+    //
     casacore::Vector<casacore::String> SynthesisUtils::parseBandName(const casacore::String& bandName)
     {
       casacore::Vector<casacore::String> tokens;
