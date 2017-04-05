@@ -11,7 +11,7 @@ import os
 
 <h4>Summary Documents, Scripts, and Logs</h4>
 
-<p>Pipeline processing request, results, script, and logs</p>
+<p>Pipeline processing request, scripts, and logs</p>
 
 <table class="table table-bordered table-striped" summary="Processing documents, scripts, and logs">
     <caption>Pipeline processing documents, scripts, and logs</caption>
@@ -47,6 +47,22 @@ import os
     </tbody>
 </table>
 
+%if result[0].inputs['exportmses']:
+
+<h4>Final Measurement Sets</h4>
+
+<p>Per ASDM, compressed tar file of final measurement set </p>
+
+<table class="table table-bordered table-striped" summary="Per ASDM Measurement Set Tarfile">
+    <caption>Final measurement set</caption>
+    <thead>
+	<tr>
+	    <th scope="col">Measurement Set</th>
+	    <th scope="col">Session</th>
+	    <th scope="col">Final Tarfile</th>
+	</tr>
+    </thead>
+%else:
 <h4>Calibration Instructions and Final Flags</h4>
 
 <p>Per ASDM, text file of applycal instructions and compressed tar file of final flags </p>
@@ -61,7 +77,23 @@ import os
 	    <th scope="col">Final Flags</th>
 	</tr>
     </thead>
+%endif
+
     <tbody>
+
+%if result[0].inputs['exportmses']:
+%for r in result:
+    %for session in r.sessiondict:
+        %for vis in r.sessiondict[session][0]:
+      <tr>
+          <td>${vis}</td>
+          <td>${session}</td>
+          <td>${r.visdict[vis]}</td>
+      </tr>
+        %endfor
+    %endfor
+%endfor
+%else:
 %for r in result:
     %for session in r.sessiondict:
         %for vis in r.sessiondict[session][0]:
@@ -74,8 +106,11 @@ import os
         %endfor
     %endfor
 %endfor
+% endif
     </tbody>
 </table>
+
+% if not result[0].inputs['exportmses']:
 
 <h4>Calibration Tables</h4>
 
@@ -100,6 +135,7 @@ import os
 %endfor
    </tbody>
 </table>
+% endif
 
 <h4>Calibrator Source Images</h4>
 
