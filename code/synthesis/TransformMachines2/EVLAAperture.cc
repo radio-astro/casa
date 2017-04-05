@@ -33,6 +33,7 @@
 #include <synthesis/TransformMachines/BeamCalc.h>
 #include <synthesis/TransformMachines2/WTerm.h>
 #include <synthesis/TransformMachines2/VLACalcIlluminationConvFunc.h>
+#include <synthesis/TransformMachines2/Utils.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
@@ -45,6 +46,7 @@ using namespace casacore;
 namespace casa{
   using namespace vi;
   using namespace refim;
+  using namespace SynthesisUtils;
   EVLAAperture& EVLAAperture::operator=(const EVLAAperture& other)
   {
     if(this!=&other) 
@@ -149,13 +151,18 @@ namespace casa{
   {
     Int bandID=0;
     if (!isNoOp())
-      bandID = BeamCalc::Instance()->getBandID(freq,telescopeName,bandName);
+      {
+	// First #-separated token in bandName_p is the name of the band used
+	Vector<String> tokens = SynthesisUtils::parseBandName(bandName);
+	bandID = BeamCalc::Instance()->getBandID(freq,telescopeName,tokens(0));
+      }
     
     return bandID;
   };
 
   int EVLAAperture::getVisParams(const VisBuffer2& vb,const CoordinateSystem& /*im*/)
   {
+    throw(AipsError("EVLAAperture::getVisParams() called"));
     Double Freq;
     cacheVBInfo(vb);
     
@@ -163,8 +170,7 @@ namespace casa{
     Double Lambda=C::c/Freq;
     HPBW = Lambda/(Diameter_p*sqrt(log(2.0)));
     sigma = 1.0/(HPBW*HPBW);
-    //    awEij.setSigma(sigma);
-    //    Int bandID = getVLABandID(Freq,telescopeNames(0),im);
+
     return getBandID(Freq, telescopeName_p,bandName_p);
     // Int bandID=0;
     // if (!isNoOp())
@@ -277,7 +283,6 @@ namespace casa{
 	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 	vlaPB.setMaximumCacheSize(cachesize);
 	bandID = getBandID(freqVal,telescopeName_p,bandName_p);
-	//bandID=getVisParams(vb,pbImage.coordinates());
 	vlaPB.makeFullJones(pbImage,vb, doSquint, bandID, freqVal);
       }
   }
@@ -295,7 +300,6 @@ namespace casa{
 // 	VLACalcIlluminationConvFunc vlaPB;
 // 	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 // 	vlaPB.setMaximumCacheSize(cachesize);
-// 	Int bandID;//=getVisParams(vb,outImages.coordinates());
 // 	bandID = getBandID(freqVal,telescopeName_p);
 // //	cout<<"EVLAAperture : muellerTerm"<<muellerTerm <<"\n";
 // 	//vlaPB.applyPB(outImages, doSquint,bandID,muellerTerm,freqVal);
@@ -322,10 +326,8 @@ namespace casa{
 	VLACalcIlluminationConvFunc vlaPB;
 	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 	vlaPB.setMaximumCacheSize(cachesize);
-	Int bandID;//=getVisParams(vb,outImages.coordinates());
-	//cout<<"EVLAAperture : muellerTerm"<<muellerTerm <<" " << telescopeName_p << endl;
-	String onlyBandName = std::strtok((char *)bandName_p.c_str(),"#");
-	bandID = getBandID(freqVal,telescopeName_p,onlyBandName);
+	Int bandID;
+	bandID = getBandID(freqVal,telescopeName_p,bandName_p);
 	//vlaPB.applyPB(outImages, doSquint,bandID,muellerTerm,freqVal);
 	Double pa_l=pa;  // Due to goofup in making sure complier type checking does not come in the way!
 	vlaPB.applyPB(outImages, pa_l, doSquint,bandID,muellerTerm,freqVal);
@@ -347,8 +349,9 @@ namespace casa{
 	VLACalcIlluminationConvFunc vlaPB;
 	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 	vlaPB.setMaximumCacheSize(cachesize);
-	Int bandID;//=getVisParams(vb,outImages.coordinates());
+	Int bandID;
 	bandID = getBandID(freqVal,telescopeName_p,bandName_p);
+
 	Double pa=getPA(vb);
 	vlaPB.applyPB(outImages, pa, bandID, doSquint,freqVal);
       }

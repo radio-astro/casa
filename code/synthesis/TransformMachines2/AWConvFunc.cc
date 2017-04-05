@@ -745,14 +745,13 @@ AWConvFunc::AWConvFunc(const casacore::CountedPtr<ATerm> aTerm,
   {
     LogIO log_l(LogOrigin("AWConvFunc2", "makeConvFunction[R&D]"));
     Int convSize, convSampling, polInUse;
-    Double wScale=0.0; Int bandID_l=-1;
+    Double wScale=0.0;
     Array<Complex> convFunc_l, convWeights_l;
     Double cfRefFreq=-1, freqScale=1e8;
     Quantity paQuant(pa,"rad");
 
     
     Int nx=image.shape()(0);//, ny=image.shape()(1);
-    if (bandID_l == -1) bandID_l=getVisParams(vb,image.coordinates());
     
     log_l << "Making a new convolution function for PA="
 	  << pa*(180/C::pi) << "deg"

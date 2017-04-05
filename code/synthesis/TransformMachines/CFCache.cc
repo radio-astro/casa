@@ -398,6 +398,8 @@ namespace casa{
 		
 		// In the absense of evidence, assume that the CFs are
 		// have no wterm.
+		//
+		//CFB::resize() below also sets the supplied value for all CFCells
 		Double wIncr=0;
 		if (miscInfo.isDefined("WIncr")) miscInfo.get("WIncr", wIncr);
 		cfb->resize(wIncr,0.0,wList,fList,

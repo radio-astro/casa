@@ -1240,6 +1240,49 @@ template
 	  cfc.pa_p=Quantity(actualPA, "rad");
 	}
     };
+
+
+    //
+    // Parser for parsing the NAME field of the SPECTRAL_WINDOW sub-table.
+    // 
+    casacore::Vector<casacore::String> SynthesisUtils::parseBandName(const casacore::String& bandName)
+    {
+      casacore::Vector<casacore::String> tokens;
+
+      // Allow a blank band name for older MSes where this is sometimes left blank.
+      if (bandName == "")
+	{
+	  tokens.resize(1);tokens="";
+	  return tokens;
+	}
+
+      char *tok, *name;
+      int i=0;
+
+      name = (char *)bandName.c_str();
+      if ((tok = std::strtok(name,"#"))!=NULL)
+	{
+	  tokens.resize(i+1,true); tokens(i)="";
+	  tokens(i++).assign(tok);
+	}
+
+      while ((tok = std::strtok(NULL,"#"))!=NULL)
+	{
+	  tokens.resize(i+1,true); tokens(i)="";
+	  tokens(i++).assign(tok);
+	}
+      if (tokens(0)=="")
+	{
+	  LogIO log_l(LogOrigin("SynthesisUtils", "parseBandName"));
+	  log_l << "Error while parsing band name \"" << bandName << "\"" << LogIO::EXCEPTION;
+	}
+
+      // for (i=0;i<3;i++)
+      // 	if (tokens(i)=="") log_l << "Error while parsing band name \"" << bandName << LogIO::EXCEPTION;
+      return tokens;
+    }
+
+
   
   
   template
