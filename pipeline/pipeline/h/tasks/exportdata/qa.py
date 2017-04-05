@@ -24,17 +24,22 @@ class ExportDataQAHandler(pqa.QAResultHandler):
 	    result.weblog)
         score3 = self._pipescript_exists(result.inputs['products_dir'],
 	    result.pipescript)
-        score4 = self._restorescript_exists(result.inputs['products_dir'],
-	    result.restorescript)
-        score5 = self._commandslog_exists(result.inputs['products_dir'],
+        score4 = self._commandslog_exists(result.inputs['products_dir'],
 	    result.commandslog)
-	score6 = self._flags_exist (result.inputs['products_dir'],
-	    result.visdict)
-	score7 = self._applycmds_exist (result.inputs['products_dir'],
-	    result.visdict)
-	score8 = self._caltables_exist (result.inputs['products_dir'],
-	    result.sessiondict)
-        scores = [score1, score2, score3, score4, score5, score6, score7, score8]
+
+        if result.inputs['exportmses']:
+	    score5 = self._mses_exist (result.inputs['products_dir'], result.visdict)
+            scores = [score1, score2, score3, score4, score5]
+        else:
+            score5 = self._restorescript_exists(result.inputs['products_dir'],
+	        result.restorescript)
+	    score6 = self._flags_exist (result.inputs['products_dir'],
+	        result.visdict)
+	    score7 = self._applycmds_exist (result.inputs['products_dir'],
+	        result.visdict)
+	    score8 = self._caltables_exist (result.inputs['products_dir'],
+	        result.sessiondict)
+            scores = [score1, score2, score3, score4, score5, score6, score7, score8]
 	    
         result.qa.pool[:] = scores
 	result.qa.all_unity_longmsg = \
@@ -80,6 +85,13 @@ class ExportDataQAHandler(pqa.QAResultHandler):
         Check for the existence of the final flagging version files
         '''
         return qacalc.score_flags_exist(products_dir, visdict)
+
+    def _mses_exist(self, products_dir, visdict):
+        '''
+        Check for the existence of the final mses
+        '''
+        return qacalc.score_mses_exist(products_dir, visdict)
+
 
     def _applycmds_exist(self, products_dir, visdict):
         '''

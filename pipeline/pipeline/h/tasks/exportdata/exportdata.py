@@ -111,7 +111,7 @@ class ExportDataInputs(basetask.StandardInputs):
      """
 
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, session=None, vis=None,
+    def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
                  pprfile=None, calintents=None, calimages=None, targetimages=None,
                  products_dir=None ):
 
@@ -175,6 +175,16 @@ class ExportDataInputs(basetask.StandardInputs):
     @products_dir.setter
     def products_dir(self, value):
         self._products_dir = value
+
+    @property
+    def exportmses (self):
+        if self._exportmses is None:
+            self._exportmses = False
+        return self._exportmses
+
+    @exportmses.setter
+    def exportmses(self, value):
+        self._exportmses = value
 
     @property
     def pprfile(self):
@@ -290,22 +300,28 @@ class ExportData(basetask.StandardTaskTemplate):
         #    The pipeline processing request
         #    A compressed tarfile of the weblog
         #    The pipeline processing script
-        #    The pipeline restore script
+        #    The pipeline restore script (if exportmses = False)
         #    The CASA commands log
-        stdfproducts = self._do_standard_ous_products(inputs.context, oussid, inputs.pprfile, 
-            session_list, vislist, inputs.output_dir, inputs.products_dir)
+        stdfproducts = self._do_standard_ous_products(inputs.context, inputs.exportmses,
+            oussid, inputs.pprfile, session_list, vislist, inputs.output_dir, inputs.products_dir)
         if stdfproducts.ppr_file:
             result.pprequest = os.path.basename(stdfproducts.ppr_file) 
-        result.weblog =os.path.basename(stdfproducts.weblog_file)
-        result.pipescript =os.path.basename(stdfproducts.casa_pipescript)
-        result.restorescript =os.path.basename(stdfproducts.casa_restore_script)
-        result.commandslog =os.path.basename(stdfproducts.casa_commands_file)
+        result.weblog = os.path.basename(stdfproducts.weblog_file)
+        result.pipescript = os.path.basename(stdfproducts.casa_pipescript)
+        if inputs.exportmses:
+            result.restorescript = 'Undefined'
+        else:
+            result.restorescript = os.path.basename(stdfproducts.casa_restore_script)
+        result.commandslog = os.path.basename(stdfproducts.casa_commands_file)
 
         auxfproducts = None
 
         # Make the standard ms dictionary and export per ms products
         #    Currently these are compressed tar files of per MS flagging tables and per MS text files of calibration apply instructions
-        visdict = self._do_standard_ms_products (inputs.context, vislist, inputs.products_dir)
+        if inputs.exportmses:
+            visdict = self._do_ms_products (inputs.context, vislist, inputs.products_dir)
+        else:
+            visdict = self._do_standard_ms_products (inputs.context, vislist, inputs.products_dir)
         result.visdict=visdict
 
         # Make the standard sessions dictionary and export per session products
@@ -329,6 +345,7 @@ class ExportData(basetask.StandardTaskTemplate):
         # Export the pipeline manifest file
         #    TBD Remove support for auxiliary data products to the individual pipelines
         pipemanifest = self._make_pipe_manifest (oussid, stdfproducts, auxfproducts, sessiondict, visdict,
+            inputs.exportmses,
             [os.path.basename(image) for image in calimages_fitslist], 
             [os.path.basename(image) for image in targetimages_fitslist])
         casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
@@ -388,7 +405,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return session_list, session_names, session_vislists, vislist
 
-    def _do_standard_ous_products(self, context, oussid, pprfile, session_list, vislist, output_dir, products_dir):
+    def _do_standard_ous_products(self, context, exportmses, oussid, pprfile, session_list, vislist, output_dir, products_dir):
 
         '''
         Generate the per ous standard products
@@ -415,15 +432,42 @@ class ExportData(basetask.StandardTaskTemplate):
             context.logs['pipeline_script'], products_dir, oussid)
 
         # Export the restore script independently of the web log
-        casa_restore_script = self._export_casa_restore_script (context,
-            context.logs['pipeline_restore_script'], products_dir,
-            oussid, vislist, session_list)
+        if exportmses:
+            casa_restore_script = 'Undefined'
+        else:
+            casa_restore_script = self._export_casa_restore_script (context,
+                context.logs['pipeline_restore_script'], products_dir,
+                oussid, vislist, session_list)
 
         return StdFileProducts (ppr_file,
             weblog_file,
             casa_commands_file,
             casa_pipescript,
             casa_restore_script)
+
+    def _do_ms_products(self, context, vislist, products_dir):
+        '''
+        Tar up the final calibrated mses and put them in the products
+        directory.
+        Used for reprocessing applications
+        '''
+
+        # Loop over the measurements sets in the working directory and tar
+        # them up.
+        mslist = []
+        for visfile in vislist:
+            ms_file = self._export_final_ms ( context, visfile, products_dir)
+            mslist.append(ms_file)
+
+        # Create the ordered vis dictionary
+        #    The keys are the base vis names
+        #    The values are the ms files
+        visdict = collections.OrderedDict()
+        for i in range(len(vislist)):
+            visdict[os.path.basename(vislist[i])] = \
+                 os.path.basename(mslist[i])
+
+        return visdict
 
     def _do_standard_ms_products (self, context, vislist, products_dir):
 
@@ -490,7 +534,7 @@ class ExportData(basetask.StandardTaskTemplate):
         return sessiondict
 
     def _make_pipe_manifest (self, oussid, stdfproducts, auxfproducts, sessiondict,
-        visdict, calimages, targetimages):
+        visdict, exportmses, calimages, targetimages):
 
         '''
         Generate the manifest file
@@ -508,8 +552,11 @@ class ExportData(basetask.StandardTaskTemplate):
             session = pipemanifest.set_session(ouss, session_name)
             pipemanifest.add_caltables(session, sessiondict[session_name][1])
             for vis_name in sessiondict[session_name][0]:
-                pipemanifest.add_asdm (session, vis_name, visdict[vis_name][0],
-                    visdict[vis_name][1])
+                if exportmses:
+                    pipemanifest.add_ms (session, vis_name, visdict[vis_name])
+                else:
+                    pipemanifest.add_asdm (session, vis_name, visdict[vis_name][0],
+                        visdict[vis_name][1])
 
         # Add a tar file of the web log
         pipemanifest.add_weblog (ouss, os.path.basename(stdfproducts.weblog_file))
@@ -522,7 +569,10 @@ class ExportData(basetask.StandardTaskTemplate):
         pipemanifest.add_pipescript (ouss, os.path.basename(stdfproducts.casa_pipescript))
 
         # Add the restore script independently of the web log
-        pipemanifest.add_restorescript (ouss, os.path.basename(stdfproducts.casa_restore_script))
+        if exportmses:
+            pipemanifest.add_restorescript (ouss, '')
+        else:
+            pipemanifest.add_restorescript (ouss, os.path.basename(stdfproducts.casa_restore_script))
 
         if auxfproducts:
             pass
@@ -580,6 +630,38 @@ class ExportData(basetask.StandardTaskTemplate):
                 shutil.copy (file, products_dir)
 
         return pprmatches
+
+    def _export_final_ms (self, context, vis, products_dir):
+
+        """
+        Save the ms to a compressed tarfile in products.
+        """
+
+        # Save the current working directory and move to the pipeline
+        # working directory. This is required for tarfile IO
+        cwd = os.getcwd()
+        try:
+            os.chdir (context.output_dir)
+
+            # Define the name of the output tarfile
+            visname = os.path.basename(vis)
+            tarfilename = visname + '.tgz'
+            LOG.info('Storing final ms %s in %s' % (visname, tarfilename))
+
+            # Create the tar file
+            if self._executor._dry_run:
+                return tarfilename
+
+            tar = tarfile.open (os.path.join(products_dir, tarfilename), "w:gz")
+            tar.add (visname)
+            tar.close()
+
+        finally:
+            # Restore the original current working directory
+             os.chdir(cwd)
+
+        return tarfilename
+
 
     def _save_final_flagversion (self, vis, flag_version_name):
 
