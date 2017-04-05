@@ -111,7 +111,7 @@ class SDK2JyCal(basetask.StandardTaskTemplate):
 
         if self.inputs.reffile is None or not os.path.exists(self.inputs.reffile):
             LOG.error('No scaling factors available')
-            return SDK2JyCalResults(pool=[])
+            return SDK2JyCalResults(vis=inputs.vis, pool=[])
         # read scaling factor list
         reffile = os.path.abspath(os.path.expandvars(os.path.expanduser(inputs.reffile)))
         factors_list = jyperkreader.read(inputs.context, reffile)

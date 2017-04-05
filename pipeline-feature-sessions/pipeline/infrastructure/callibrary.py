@@ -375,7 +375,8 @@ class CalFrom(object):
         'ps': 14,
         'otfraster': 15,
         'tecim': 16,
-        'kcross': 17
+        'kcross': 17,
+        'otf': 18,
     }
 
     CALTYPE_TO_VISCAL = {
@@ -385,7 +386,9 @@ class CalFrom(object):
         'antpos': ('KANTPOS JONES',),
         'uvcont': ('A MUELLER',),
         'amp': ('G JONES',),
-        'sdsky': ('SDSKY_PS', 'SDSKY_OTF', 'SDSKY_RASTER')
+        'ps': ('SDSKY_PS',),
+        'otfraster': ('SDSKY_RASTER',),
+        'otf': ('SDSKY_OTF',),
     }
 
     VISCAL = {

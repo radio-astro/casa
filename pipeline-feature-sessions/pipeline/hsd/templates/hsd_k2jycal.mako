@@ -12,8 +12,7 @@ import os
 stage_dir = os.path.join(pcontext.report_dir, 'stage%s'%(result.stage_number))
 %>
 
-<p>This task generates single dish images per source per spectral window. 
-It generates an image combined spectral data from whole antenna as well as images per antenna.</p>
+<p>This task generates calibtation tables to convert the unit of single dish spectra from Kelvin to Jansky.</p>
 
 <h3>Jy/K Conversion Factor</h3>
 The following table lists the Jy/K factor.
