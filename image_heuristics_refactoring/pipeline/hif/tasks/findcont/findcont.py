@@ -141,7 +141,7 @@ class FindCont(basetask.StandardTaskTemplate):
                         LOG.info('Applying binning factor %d' % (target['nbin']))
                         channel_width *= target['nbin']
 
-                    if target['nchan'] != -1:
+                    if target['nchan'] not in (None, -1):
                         if1 = if0 + channel_width * target['nchan']
                         if if1 > if1_auto:
                             LOG.error('Calculated stop frequency %s GHz > f_high_native for Field %s SPW %s' % (if1, target['field'], target['spw']))
@@ -159,7 +159,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     width = '%sMHz' % ((channel_width) / 1e6)
 
                     # Skip edge channels if no nchan is supplied
-                    if target['nchan'] == -1:
+                    if target['nchan'] not in (None, -1):
                         nchan = int(round((if1 - if0 ) / channel_width - 2))
                     else:
                         nchan = target['nchan']

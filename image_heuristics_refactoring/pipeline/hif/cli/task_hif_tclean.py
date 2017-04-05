@@ -5,16 +5,18 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_tclean(vis=None, imagename=None, intent=None, field=None, spw=None, spwsel_lsrk=None, spwsel_topo=None,
+def hif_tclean(vis=None, imagename=None, intent=None, field=None, spw=None,
+               spwsel_lsrk=None, spwsel_topo=None,
                uvrange=None, specmode=None, gridder=None, deconvolver=None,
-               nterms=None,
-               outframe=None,
-	       imsize=None, cell=None, phasecenter=None, stokes=None, nchan=None, start=None,
+               nterms=None, outframe=None, imsize=None, cell=None,
+               phasecenter=None, stokes=None, nchan=None, start=None,
 	       width=None, nbin=None, weighting=None,
-           robust=None, noise=None, npixels=None,
-	       restoringbeam=None, hm_masking=None, hm_autotest=None, hm_cleaning=None, mask=None,
+               robust=None, noise=None, npixels=None,
+	       restoringbeam=None, hm_masking=None,
+               hm_autotest=None, hm_cleaning=None, mask=None,
 	       niter=None, threshold=None, tlimit=None, masklimit=None,
-	       maxncleans=None, cleancontranges=None, subcontms=None, parallel=None,
+	       maxncleans=None, cleancontranges=None, subcontms=None,
+               parallel=None,
 	       pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

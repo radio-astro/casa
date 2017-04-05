@@ -27,17 +27,23 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class TcleanInputs(cleanbase.CleanBaseInputs):
-    def __init__(self, context, output_dir=None, vis=None, imagename=None,
-                 intent=None, field=None, spw=None, spwsel_lsrk=None, spwsel_topo=None, uvrange=None, specmode=None,
-                 gridder=None, deconvolver=None, uvtaper=None,
-                 nterms=None, cycleniter=None, cyclefactor=None, scales=None,
-                 outframe=None, imsize=None, cell=None,
-                 phasecenter=None, stokes=None, nchan=None, start=None, width=None, nbin=None,
-                 weighting=None,
+    def __init__(self, context, output_dir=None,
+                 vis=None, imagename=None, intent=None, field=None, spw=None,
+                 spwsel_lsrk=None, spwsel_topo=None,
+                 uvrange=None, specmode=None, gridder=None, deconvolver=None,
+                 nterms=None, outframe=None, imsize=None, cell=None,
+                 phasecenter=None, stokes=None, nchan=None, start=None,
+                 width=None, nbin=None, weighting=None,
                  robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
-                 hm_masking=None, hm_autotest=None, hm_cleaning=None, tlimit=None,
-                 masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None,
+                 restoringbeam=None, hm_masking=None,
+                 hm_autotest=None, hm_cleaning=None, mask=None,
+                 niter=None, threshold=None, tlimit=None, masklimit=None,
+                 maxncleans=None, cleancontranges=None, subcontms=None,
+                 parallel=None,
+                 # Extra parameters not in the CLI task interface
+                 uvtaper=None, scales=None,
+                 cycleniter=None, cyclefactor=None, sensitivity=None,
+                 # End of extra parameters
                  heuristics=None):
         self._init_properties(vars())
         self.image_heuristics = heuristics
@@ -84,44 +90,12 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
         self._deconvolver = value
 
     @property
-    def uvtaper(self):
-        return self._uvtaper
-
-    @uvtaper.setter
-    def uvtaper(self, value):
-        self._uvtaper = value
-
-    @property
     def nterms(self):
         return self._nterms
 
     @nterms.setter
     def nterms(self, value):
         self._nterms = value
-
-    @property
-    def cycleniter(self):
-        return self._cycleniter
-
-    @cycleniter.setter
-    def cycleniter(self, value):
-        self._cycleniter = value
-
-    @property
-    def cyclefactor(self):
-        return self._cyclefactor
-
-    @cyclefactor.setter
-    def cyclefactor(self, value):
-        self._cyclefactor = value
-
-    @property
-    def scales(self):
-        return self._scales
-
-    @scales.setter
-    def scales(self, value):
-        self._scales = value
 
     @property
     def robust(self):
@@ -260,7 +234,7 @@ class Tclean(cleanbase.CleanBase):
                     return result
                 LOG.info('Using supplied start frequency %s' % (inputs.start))
 
-            if (inputs.width != '') and (inputs.nbin != -1):
+            if (inputs.width != '') and (inputs.nbin not in (None, -1)):
                 LOG.error('Field %s SPW %s: width and nbin are mutually exclusive' % (inputs.field, inputs.spw))
                 result.error = '%s/%s/spw%s clean error: width and nbin are mutually exclusive' % (inputs.field, inputs.intent, inputs.spw)
                 return result
@@ -276,11 +250,11 @@ class Tclean(cleanbase.CleanBase):
                 channel_width = channel_width_manual
                 if channel_width > channel_width_auto:
                     inputs.nbin = int(round(channel_width / channel_width_auto) + 0.5)
-            elif inputs.nbin != -1:
+            elif inputs.nbin not in (None, -1):
                 LOG.info('Applying binning factor %d' % (inputs.nbin))
                 channel_width *= inputs.nbin
 
-            if inputs.nchan != -1:
+            if inputs.nchan not in (None, -1):
                 if1 = if0 + channel_width * inputs.nchan
                 if if1 > if1_auto:
                     LOG.error('Calculated stop frequency %s GHz > f_high_native for Field %s SPW %s' % (if1, inputs.field, inputs.spw))
@@ -298,7 +272,7 @@ class Tclean(cleanbase.CleanBase):
             inputs.width = '%sMHz' % ((channel_width) / 1e6)
 
             # Skip edge channels if no nchan is supplied
-            if inputs.nchan == -1:
+            if inputs.nchan in (None, -1):
                inputs.nchan = int(round((if1 - if0) / channel_width - 2))
 
         # Get TOPO frequency ranges for all MSs
@@ -311,26 +285,36 @@ class Tclean(cleanbase.CleanBase):
         aggregate_lsrk_bw = \
             self.image_heuristics.calc_topo_ranges(inputs)
 
-        # Get a noise estimate from the CASA sensitivity calculator
-        sensitivity, \
-        min_sensitivity, \
-        max_sensitivity, \
-        min_field_id, \
-        max_field_id, \
-        eff_ch_bw = \
-            self.image_heuristics.calc_sensitivities(inputs.vis, \
-                                                     inputs.field, \
-                                                     inputs.intent, \
-                                                     inputs.spw, \
-                                                     inputs.nbin, \
-                                                     spw_topo_chan_param_dict, \
-                                                     inputs.specmode, \
-                                                     inputs.gridder, \
-                                                     inputs.cell, \
-                                                     inputs.imsize, \
-                                                     inputs.weighting, \
-                                                     inputs.robust)
-            #self._do_sensitivity(spw_topo_chan_param_dict)
+        # Get sensitivity
+        if inputs.sensitivity is not None:
+            # Override with manually set value
+            sensitivity = qaTool.convert(inputs.sensitivity, 'Jy')['value']
+            # Dummies for weblog
+            min_sensitivity = sensitivity
+            max_sensitivity = sensitivity
+            min_field_id = 0
+            max_field_id = 0
+            eff_ch_bw = 1.0
+        else:
+            # Get a noise estimate from the CASA sensitivity calculator
+            sensitivity, \
+            min_sensitivity, \
+            max_sensitivity, \
+            min_field_id, \
+            max_field_id, \
+            eff_ch_bw = \
+                self.image_heuristics.calc_sensitivities(inputs.vis, \
+                                                         inputs.field, \
+                                                         inputs.intent, \
+                                                         inputs.spw, \
+                                                         inputs.nbin, \
+                                                         spw_topo_chan_param_dict, \
+                                                         inputs.specmode, \
+                                                         inputs.gridder, \
+                                                         inputs.cell, \
+                                                         inputs.imsize, \
+                                                         inputs.weighting, \
+                                                         inputs.robust)
         LOG.info('Sensitivity estimate: %s Jy', sensitivity)
 
         # Choose TOPO frequency selections
@@ -356,7 +340,7 @@ class Tclean(cleanbase.CleanBase):
                     gridder = inputs.gridder, threshold=threshold,
                     sensitivity = sensitivity, niter=inputs.niter)
             # Auto-boxing
-            elif inputs.hm_masking in ('auto', 'auto-thresh'):
+            elif inputs.hm_masking == 'auto':
                 sequence_manager = AutoMaskThresholdSequence(
                     gridder = inputs.gridder, threshold=threshold,
                     sensitivity = sensitivity, niter=inputs.niter)
