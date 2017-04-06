@@ -245,6 +245,13 @@ class Applycal(basetask.StandardTaskTemplate):
 
         return result
 
+    def _get_flagsum_arg(self, vis):
+        return {'vis': vis,
+                'mode': 'summary'}
+        
+    def _tweak_flagkwargs(self, template):
+        return template
+    
     def applycal_run(self):
         inputs = self.inputs
 
@@ -255,7 +262,10 @@ class Applycal(basetask.StandardTaskTemplate):
 
         # run a flagdata job to find the flagged state before applycal
         if inputs.flagsum:
-            flagdata_summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+            # 20170406 TN
+            # flagdata task arguments are indirectly given so that sd applycal task is 
+            # able to edit them
+            flagdata_summary_job = casa_tasks.flagdata(**self._get_flagsum_arg(vis=inputs.vis))
             stats_before = self._executor.execute(flagdata_summary_job)
             stats_before['name'] = 'before'
 
@@ -343,6 +353,10 @@ class Applycal(basetask.StandardTaskTemplate):
             for spwid in spwids:
                 flagline = "spw='" + str(spwid) + "' fieldcnt=True mode='summary' name='AntSpw" + str(spwid).zfill(3)
                 flagkwargs.append(flagline)
+                
+            # 20170406 TN
+            # Tweak flagkwargs (default is do nothing)
+            flagkwargs = self._tweak_flagkwargs(flagkwargs)
 
             # BRK note - Added kwarg fieldcnt based on Justo's changes, July 2015
             # Need to have fieldcnt in the flagline above

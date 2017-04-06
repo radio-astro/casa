@@ -286,3 +286,13 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
         if isinstance(self.inputs.fracspw, str) and spw.bandwidth.value <= self.bandwidth_limit:
             raise ValueError('Skipping edge flagging for spw %s' % spw.id)
 
+    def _get_flag_commands(self):
+        """
+        Edit flag commands so that all summaries are based on target data instead of total.
+        """
+        flag_cmds = super(FlagDeterALMASingleDish, self)._get_flag_commands()
+        for i in xrange(len(flag_cmds)):
+            if flag_cmds[i].startswith("mode='summary'"):
+                flag_cmds[i] += " intent='OBSERVE_TARGET#ON_SOURCE'"
+        
+        return flag_cmds

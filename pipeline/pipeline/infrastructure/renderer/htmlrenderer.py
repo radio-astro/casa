@@ -456,6 +456,9 @@ class T1_3MRenderer(RendererBase):
                             intents = ','.join([f.intents for f in ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET') if field in f.name][0])
                             
                             flagsummary = resultitem.flagsummary[field]
+                            
+                            if len(flagsummary) == 0:
+                                continue
                         
                             fieldtable = {}
                             for _,v in flagsummary.iteritems():
