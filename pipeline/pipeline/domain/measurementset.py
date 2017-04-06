@@ -130,15 +130,16 @@ class MeasurementSet(object):
         else:
             return None
     
-    def get_representative_source_spw(self, source_name=None, direction_tolerance='200uarcsec', source_frequency=None):
+    def get_representative_source_spw(self, source_name=None, source_frequency=None):
         qa = casatools.quanta
         cme = casatools.measures
 
         # Get the representative target source object
-        #   Use name if source_name is supplied
-        #   Otherwise use the representative coordinates from the SBSummary
-        #   table, the source coordinates, and a matching tolerance.
+        #   Use user name if source_name is supplied by user.
+        #   Otherwise use the source defined in the ASDM SBSummary table.
+        #   Otherwise use the first source in the list
         if source_name:
+            # Use the first target source that matches the user defined name
             target_sources = [source for source in self.sources
                               if source.name == source_name
                               and 'TARGET' in source.intents]
@@ -147,18 +148,22 @@ class MeasurementSet(object):
             else:
                 target_source = None
         elif self.representative_target:
-            target_source = None
-            max_separation = qa.quantity(direction_tolerance)
-            target_direction = self.representative_target[0]
-            target_sources = [source for source in self.sources if 'TARGET' in source.intents] 
-            for source in target_sources:
-                separation = cme.separation(source.direction, target_direction)
-                if qa.gt(separation, max_separation):
-                    continue
-                target_source = source
-                break
+            # Use representative source in the ASDM
+            source_name = self.representative_target[0]
+            target_sources = [source for source in self.sources
+                              if source.name == source_name 
+                              and 'TARGET' in source.intents] 
+            if len(target_sources) > 0:
+                target_source = target_sources[0]
+            else:
+                target_source = None
         else:
-            target_source = None
+            # Use first target source no matter what it is
+            target_sources = [source for source in self.sources if 'TARGET' in source.intents] 
+            if len(target_sources) > 0:
+                target_source = target_sources[0]
+            else:
+                target_source = None
 
         # Target source not found
         if not target_source:
@@ -168,15 +173,15 @@ class MeasurementSet(object):
         #    Use source_frequency if it is supplied and convert to TOPO
         #    Otherwise use the representative frequency from the SBSummary table and convert to TOPO.
         if source_frequency:
-            target_frequency = cme.frequency('LSRK',
+            target_frequency = cme.frequency('BARY',
                                              qa.quantity(qa.getvalue(source_frequency),
                                                          qa.getunit(source_frequency)))
         else:
-            target_frequency = cme.frequency('LSRK',
+            target_frequency = cme.frequency('BARY',
                                              qa.quantity(qa.getvalue(self.representative_target[1]),
                                                          qa.getunit(self.representative_target[1])))
 
-        # Convert LSRK frequency to TOPO
+        # Convert BARY frequency to TOPO
         #    Use the start time of the first target source scan
         cme.doframe(cme.observatory(self.antenna_array.name))
         cme.doframe(target_source.direction)
