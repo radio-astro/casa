@@ -536,6 +536,16 @@ the ms definition itself. -->
     This function returns True if it successfully attachs the ms tool
     to a newly created Measurement Set or False if something went
     wrong, like an error in a file name.
+
+    NOTE ON WEIGHTS
+
+    ms.fromfits() will generate a WEIGHT_SPECTRUM column in which it will
+    fill the absolute value of the weight associated with each visibility
+    in the uvfits file.  Negative weights will have the associated FLAGs
+    set to True. It will compute the associated WEIGHT value for that MS
+    row to be the sum of the absolute values of the associated WEIGHT_SPECTRUM
+    values.
+
   </description>
   <example>
     
@@ -1266,6 +1276,13 @@ the ms definition itself. -->
 
     One may overwrite the specified output file if it exists by specifying
     overwrite=True.
+
+    NOTE ON WEIGHTS
+
+    If the MS has no WEIGHT_SPECTRUM column, or if it does, but that column does not
+    contain any data, ms.tofits() will compute the associated weight it writes to the
+    uvfits file by taking the associated WEIGHT column value in the MS and dividing it
+    by the number of channels associated with the spectral window of that visibility.
 
   </description>
 
