@@ -41,14 +41,14 @@ QPExporter::QPExporter() {
 
 }
 
-void QPExporter::findGridProperties( QPExportCanvas* grabCanvas, QPPlotter* grabPlotter,
-		Int& width, Int& height, Int& gridRows, Int& gridCols) {
+void QPExporter::findGridProperties( QPExportCanvas* grabCanvas,
+        QPPlotter* grabPlotter, Int& width, Int& height, 
+        Int& gridRows, Int& gridCols) {
 	//Figure out the grid size
 	width = 0;
 	if ( grabPlotter != NULL ){
-        if (grabPlotter->isSquarePlot())
-            width = grabPlotter->height();
-        else
+        width = grabPlotter->squareHeight();  // width=height in square
+        if (width==0) // not a square
             width = grabPlotter->width();
 	}
 	else if( grabCanvas != NULL ){
@@ -57,11 +57,14 @@ void QPExporter::findGridProperties( QPExportCanvas* grabCanvas, QPPlotter* grab
 
 	height = 0;
 	if ( grabPlotter != NULL ){
-	   height = grabPlotter->height();
+        height = grabPlotter->squareHeight();
+        if (height==0)  // not a square
+	        height = grabPlotter->height();
 	}
-	if (grabCanvas != NULL ){
+    else if (grabCanvas != NULL ){
 	   height = grabCanvas->canvasHeight();
 	}
+
 	gridRows = 1;
 	gridCols = 1;
 	if ( grabPlotter != NULL ){

@@ -91,6 +91,7 @@ QPPlotter::QPPlotter(QPCanvas* canvas, int logEventFlags, QWidget* parent) :
     logObject(CLASS_NAME, this, true);
     
     initialize();
+    m_squareHeight = 0;  // assume rectangular plot
     
     if(canvas != NULL) {    
         m_layout = new PlotLayoutSingle(canvas);
@@ -105,6 +106,7 @@ QPPlotter::QPPlotter(PlotCanvasLayoutPtr layout, int logEventFlags,
     logObject(CLASS_NAME, this, true);
     
     initialize();
+    m_squareHeight = 0;  // assume rectangular plot
     
     if(!m_layout.null()) {
         bool valid = m_layout->isValid();
@@ -149,12 +151,18 @@ void QPPlotter::setSize(int width, int height) { resize(width, height); }
 
 void QPPlotter::makeSquarePlot(bool square) {
     if (square) {  // make square plot width=height
-        pair<int, int> rectSize = size();
-        // save rectangle ratio of width to height
-        m_sizeRatio = double(rectSize.first) / double(rectSize.second);
-        setSize(rectSize.second, rectSize.second);
+        // save rectangle ratio of width to height and new square size
+        // (only first time if exporting iterated plots else ratio=1!)
+        if (m_sizeRatio == 1.0) {
+            pair<int, int> rectSize = size();
+            m_sizeRatio = double(rectSize.first) / double(rectSize.second);
+            // save this dimension, size gets reset to 0: 
+            // resize event causes setGeometry to be called
+            m_squareHeight = rectSize.second;
+        }
+        setSize(m_squareHeight, m_squareHeight);
         if (isGuiShown())
-            setCanvasSize(rectSize.second, rectSize.second);
+            setCanvasSize(m_squareHeight, m_squareHeight);
     } else if (m_sizeRatio != 1.0) { // restore rect plot after square
         pair<int, int> rectSize = size();
         // set width to correct ratio to height
@@ -163,6 +171,7 @@ void QPPlotter::makeSquarePlot(bool square) {
         if (isGuiShown())  // this undoes fixed size
             setCanvasSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
         m_sizeRatio = 1.0;  // next time, keep width the same
+        m_squareHeight = 0;
     }
 }
 
