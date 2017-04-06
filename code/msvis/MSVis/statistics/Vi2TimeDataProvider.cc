@@ -25,17 +25,17 @@
 //
 // Data provider for time column
 //
-#include <msvis/MSVis/statistics/Vi2ChunkTimeDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2TimeDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkTimeDataProvider::Vi2ChunkTimeDataProvider(
+Vi2TimeDataProvider::Vi2TimeDataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::Time,
@@ -43,7 +43,7 @@ Vi2ChunkTimeDataProvider::Vi2ChunkTimeDataProvider(
 		false) {}
 
 const Vector<Double>&
-Vi2ChunkTimeDataProvider::dataArray() {
+Vi2TimeDataProvider::dataArray() {
 	return vi2->getVisBuffer()->time();
 }
 

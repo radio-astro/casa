@@ -25,17 +25,17 @@
 //
 // Data provider for uvrange.
 //
-#include <msvis/MSVis/statistics/Vi2ChunkUVRangeDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2UVRangeDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkUVRangeDataProvider::Vi2ChunkUVRangeDataProvider(
+Vi2UVRangeDataProvider::Vi2UVRangeDataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::Uvw,
@@ -43,7 +43,7 @@ Vi2ChunkUVRangeDataProvider::Vi2ChunkUVRangeDataProvider(
 		false) {}
 
 const Matrix<Double>&
-Vi2ChunkUVRangeDataProvider::dataArray() {
+Vi2UVRangeDataProvider::dataArray() {
 	return vi2->getVisBuffer()->uvw();
 }
 

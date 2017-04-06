@@ -26,25 +26,25 @@
 //
 // casacore::Data providers for real part of visibilities.
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_VIS_REAL_PROVIDER_H_
-#define MSVIS_STATISTICS_VI2_CHUNK_VIS_REAL_PROVIDER_H_
+#ifndef MSVIS_STATISTICS_VI2_VIS_REAL_PROVIDER_H_
+#define MSVIS_STATISTICS_VI2_VIS_REAL_PROVIDER_H_
 
 #include <msvis/MSVis/statistics/Vi2StatsRealIterator.h>
-#include <msvis/MSVis/statistics/Vi2ChunkObservedVisDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkModelVisDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkCorrectedVisDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2ObservedVisDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2ModelVisDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2CorrectedVisDataProvider.h>
 
 namespace casa {
 
-typedef Vi2ChunkObservedVisDataProvider<Vi2StatsRealIterator>
-Vi2ChunkObservedVisRealProvider;
+typedef Vi2ObservedVisDataProvider<Vi2StatsRealIterator>
+Vi2ObservedVisRealProvider;
 
-typedef Vi2ChunkModelVisDataProvider<Vi2StatsRealIterator>
-Vi2ChunkModelVisRealProvider;
+typedef Vi2ModelVisDataProvider<Vi2StatsRealIterator>
+Vi2ModelVisRealProvider;
 
-typedef Vi2ChunkCorrectedVisDataProvider<Vi2StatsRealIterator>
-Vi2ChunkCorrectedVisRealProvider;
+typedef Vi2CorrectedVisDataProvider<Vi2StatsRealIterator>
+Vi2CorrectedVisRealProvider;
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_VIS_REAL_PROVIDER_H_
+#endif // MSVIS_STATISTICS_VI2_VIS_REAL_PROVIDER_H_

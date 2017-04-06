@@ -26,22 +26,22 @@
 //
 // casacore::Data provider for flag cube column
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_FLAG_CUBE_DATA_PROVIDER_H_
-#define MSVIS_STATISTICS_VI2_CHUNK_FLAG_CUBE_DATA_PROVIDER_H_
+#ifndef MSVIS_STATISTICS_VI2_FLAG_CUBE_DATA_PROVIDER_H_
+#define MSVIS_STATISTICS_VI2_FLAG_CUBE_DATA_PROVIDER_H_
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Cube.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataProvider.h>
 #include <msvis/MSVis/statistics/Vi2StatsBoolIterator.h>
 
 namespace casa {
 
-class Vi2ChunkFlagCubeDataProvider final
-	: public Vi2ChunkWeightsCubeDataProvider<Vi2StatsBoolIterator> {
+class Vi2FlagCubeDataProvider final
+	: public Vi2WeightsCubeDataProvider<Vi2StatsBoolIterator> {
 
 public:
-	Vi2ChunkFlagCubeDataProvider(
+	Vi2FlagCubeDataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
@@ -51,4 +51,4 @@ public:
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_FLAG_CUBE_DATA_PROVIDER_H_
+#endif // MSVIS_STATISTICS_VI2_FLAG_CUBE_DATA_PROVIDER_H_

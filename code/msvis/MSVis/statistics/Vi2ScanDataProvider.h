@@ -26,24 +26,24 @@
 //
 // casacore::Data provider for scan column
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_SCAN_DATA_PROVIDER_H_
-#define MSVIS_STATISTICS_VI2_CHUNK_SCAN_DATA_PROVIDER_H_
+#ifndef MSVIS_STATISTICS_VI2_SCAN_DATA_PROVIDER_H_
+#define MSVIS_STATISTICS_VI2_SCAN_DATA_PROVIDER_H_
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Vector.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataProvider.h>
 #include <msvis/MSVis/statistics/Vi2StatsDataIterator.h>
 #include <msvis/MSVis/statistics/Vi2StatsFlagsIterator.h>
 #include <msvis/MSVis/statistics/Vi2StatsWeightsIterator.h>
 
 namespace casa {
 
-class Vi2ChunkScanDataProvider final
-	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsIntIterator> {
+class Vi2ScanDataProvider final
+	: public Vi2WeightsRowDataProvider<Vi2StatsIntIterator> {
 
 public:
-	Vi2ChunkScanDataProvider(
+	Vi2ScanDataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
@@ -53,4 +53,4 @@ public:
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_SCAN_DATA_PROVIDER_H_
+#endif // MSVIS_STATISTICS_VI2_SCAN_DATA_PROVIDER_H_

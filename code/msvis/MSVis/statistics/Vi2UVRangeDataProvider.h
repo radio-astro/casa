@@ -26,26 +26,26 @@
 //
 // casacore::Data provider for uvrange.
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_UV_RANGE_DATA_PROVIDER_H_
-#define MSVIS_STATISTICS_VI2_CHUNK_UV_RANGE_DATA_PROVIDER_H_
+#ifndef MSVIS_STATISTICS_VI2_UV_RANGE_DATA_PROVIDER_H_
+#define MSVIS_STATISTICS_VI2_UV_RANGE_DATA_PROVIDER_H_
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Vector.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataProvider.h>
 #include <msvis/MSVis/statistics/Vi2StatsUVRangeIterator.h>
 
 namespace casa {
 
 //
-// The Vi2ChunkUVRangeDataProvider iterates over the uvw column, providing
+// The Vi2UVRangeDataProvider iterates over the uvw column, providing
 // hypot(u, v) as sample data to the statistics algorithm.
 //
-class Vi2ChunkUVRangeDataProvider final
-	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsUVRangeIterator> {
+class Vi2UVRangeDataProvider final
+	: public Vi2WeightsRowDataProvider<Vi2StatsUVRangeIterator> {
 
 public:
-	Vi2ChunkUVRangeDataProvider(
+	Vi2UVRangeDataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
@@ -55,4 +55,4 @@ public:
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_UV_RANGE_DATA_PROVIDER_H_
+#endif // MSVIS_STATISTICS_VI2_UV_RANGE_DATA_PROVIDER_H_

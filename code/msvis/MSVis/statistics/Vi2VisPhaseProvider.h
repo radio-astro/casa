@@ -26,25 +26,25 @@
 //
 // casacore::Data providers for visibility phases.
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_VIS_PHASE_PROVIDER_H_
-#define MSVIS_STATISTICS_VI2_CHUNK_VIS_PHASE_PROVIDER_H_
+#ifndef MSVIS_STATISTICS_VI2_VIS_PHASE_PROVIDER_H_
+#define MSVIS_STATISTICS_VI2_VIS_PHASE_PROVIDER_H_
 
 #include <msvis/MSVis/statistics/Vi2StatsPhaseIterator.h>
-#include <msvis/MSVis/statistics/Vi2ChunkObservedVisDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkModelVisDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkCorrectedVisDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2ObservedVisDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2ModelVisDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2CorrectedVisDataProvider.h>
 
 namespace casa {
 
-typedef Vi2ChunkObservedVisDataProvider<Vi2StatsPhaseIterator>
-Vi2ChunkObservedVisPhaseProvider;
+typedef Vi2ObservedVisDataProvider<Vi2StatsPhaseIterator>
+Vi2ObservedVisPhaseProvider;
 
-typedef Vi2ChunkModelVisDataProvider<Vi2StatsPhaseIterator>
-Vi2ChunkModelVisPhaseProvider;
+typedef Vi2ModelVisDataProvider<Vi2StatsPhaseIterator>
+Vi2ModelVisPhaseProvider;
 
-typedef Vi2ChunkCorrectedVisDataProvider<Vi2StatsPhaseIterator>
-Vi2ChunkCorrectedVisPhaseProvider;
+typedef Vi2CorrectedVisDataProvider<Vi2StatsPhaseIterator>
+Vi2CorrectedVisPhaseProvider;
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_VIS_PHASE_PROVIDER_H_
+#endif // MSVIS_STATISTICS_VI2_VIS_PHASE_PROVIDER_H_

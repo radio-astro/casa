@@ -26,25 +26,25 @@
 //
 // casacore::Float visibilities column data provider
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_FLOAT_VIS_DATA_PROVIDER_H
-#define MSVIS_STATISTICS_VI2_CHUNK_FLOAT_VIS_DATA_PROVIDER_H
+#ifndef MSVIS_STATISTICS_VI2_FLOAT_VIS_DATA_PROVIDER_H
+#define MSVIS_STATISTICS_VI2_FLOAT_VIS_DATA_PROVIDER_H
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Cube.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataProvider.h>
 #include <msvis/MSVis/statistics/Vi2StatsDataIterator.h>
 
 namespace casa {
 
-// Note that, contrary to Vi2ChunkCorrectedVisDataProvider and friends, this
+// Note that, contrary to Vi2CorrectedVisDataProvider and friends, this
 // class does not support transformations of the visibility data as that data is
 // handed off to the statistics algorithm.
-class Vi2ChunkFloatVisDataProvider final
-	: public Vi2ChunkSigmasCubeDataProvider<Vi2StatsFloatIterator> {
+class Vi2FloatVisDataProvider final
+	: public Vi2SigmasCubeDataProvider<Vi2StatsFloatIterator> {
 
 public:
-	Vi2ChunkFloatVisDataProvider(
+	Vi2FloatVisDataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data,
@@ -55,4 +55,4 @@ public:
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_FLOAT_VIS_DATA_PROVIDER_H
+#endif // MSVIS_STATISTICS_VI2_FLOAT_VIS_DATA_PROVIDER_H

@@ -25,17 +25,17 @@
 //
 // Data provider for weight spectrum column.
 //
-#include <msvis/MSVis/statistics/Vi2ChunkWeightSpectrumDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2WeightSpectrumDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkWeightSpectrumDataProvider::Vi2ChunkWeightSpectrumDataProvider(
+Vi2WeightSpectrumDataProvider::Vi2WeightSpectrumDataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::WeightSpectrum,
@@ -43,7 +43,7 @@ Vi2ChunkWeightSpectrumDataProvider::Vi2ChunkWeightSpectrumDataProvider(
 		false) {}
 
 const Cube<Float>&
-Vi2ChunkWeightSpectrumDataProvider::dataArray() {
+Vi2WeightSpectrumDataProvider::dataArray() {
 	return vi2->getVisBuffer()->weightSpectrum();
 }
 

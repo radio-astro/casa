@@ -25,17 +25,17 @@
 //
 // Data provider for scan column
 //
-#include <msvis/MSVis/statistics/Vi2ChunkScanDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2ScanDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkScanDataProvider::Vi2ChunkScanDataProvider(
+Vi2ScanDataProvider::Vi2ScanDataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::Scan,
@@ -43,7 +43,7 @@ Vi2ChunkScanDataProvider::Vi2ChunkScanDataProvider(
 		false) {}
 
 const Vector<Int>&
-Vi2ChunkScanDataProvider::dataArray() {
+Vi2ScanDataProvider::dataArray() {
 	return vi2->getVisBuffer()->scan();
 }
 

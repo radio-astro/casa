@@ -26,17 +26,17 @@
 #include <casacore/casa/Arrays/Cube.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
-#include <msvis/MSVis/statistics/Vi2ChunkFloatVisDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2FloatVisDataProvider.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkFloatVisDataProvider::Vi2ChunkFloatVisDataProvider(
+Vi2FloatVisDataProvider::Vi2FloatVisDataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data,
 	Bool use_data_weights)
-	: Vi2ChunkSigmasCubeDataProvider<Vi2StatsFloatIterator>(
+	: Vi2SigmasCubeDataProvider<Vi2StatsFloatIterator>(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::VisibilityCubeFloat,
@@ -44,7 +44,7 @@ Vi2ChunkFloatVisDataProvider::Vi2ChunkFloatVisDataProvider(
 		use_data_weights) {}
 
 const Cube<Float>&
-Vi2ChunkFloatVisDataProvider::dataArray() {
+Vi2FloatVisDataProvider::dataArray() {
 	return vi2->getVisBuffer()->visCubeFloat();
 }
 

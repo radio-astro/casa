@@ -26,14 +26,14 @@
 //
 // Observed visibilities data provider template
 //
-#ifndef MSVIS_STATISTICS_OBSERVED_VIS_DATA_PROVIDER_H
-#define MSVIS_STATISTICS_OBSERVED_VIS_DATA_PROVIDER_H
+#ifndef MSVIS_STATISTICS_VI2_OBSERVED_VIS_DATA_PROVIDER_H
+#define MSVIS_STATISTICS_VI2_OBSERVED_VIS_DATA_PROVIDER_H
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Cube.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataProvider.h>
 
 namespace casa {
 
@@ -44,16 +44,16 @@ namespace casa {
 // Vi2StatsPhaseIterator, etc).
 //
 template <class DataIterator>
-class Vi2ChunkObservedVisDataProvider final
-	: public Vi2ChunkSigmasCubeDataProvider<DataIterator> {
+class Vi2ObservedVisDataProvider final
+	: public Vi2SigmasCubeDataProvider<DataIterator> {
 
 public:
-	Vi2ChunkObservedVisDataProvider(
+	Vi2ObservedVisDataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data,
 		casacore::Bool use_data_weights)
-		: Vi2ChunkSigmasCubeDataProvider<DataIterator>(
+		: Vi2SigmasCubeDataProvider<DataIterator>(
 			vi2,
 			mergedColumns,
 			vi::VisBufferComponent2::VisibilityCubeObserved,
@@ -61,11 +61,11 @@ public:
 			use_data_weights) {}
 
 	const casacore::Cube<casacore::Complex>& dataArray() {
-		return Vi2ChunkSigmasCubeDataProvider<DataIterator>::
+		return Vi2SigmasCubeDataProvider<DataIterator>::
 			vi2->getVisBuffer()->visCube();
 	}
 };
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_OBSERVED_VIS_DATA_PROVIDER_H
+#endif // MSVIS_STATISTICS_VI2_OBSERVED_VIS_DATA_PROVIDER_H

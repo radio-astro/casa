@@ -26,22 +26,22 @@
 //
 // casacore::Data provider for flag row column
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_FLAG_ROW_DATA_PROVIDER_H_
-#define MSVIS_STATISTICS_VI2_CHUNK_FLAG_ROW_DATA_PROVIDER_H_
+#ifndef MSVIS_STATISTICS_VI2_FLAG_ROW_DATA_PROVIDER_H_
+#define MSVIS_STATISTICS_VI2_FLAG_ROW_DATA_PROVIDER_H_
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Vector.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataProvider.h>
 #include <msvis/MSVis/statistics/Vi2StatsBoolIterator.h>
 
 namespace casa {
 
-class Vi2ChunkFlagRowDataProvider final
-	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsBoolIterator> {
+class Vi2FlagRowDataProvider final
+	: public Vi2WeightsRowDataProvider<Vi2StatsBoolIterator> {
 
 public:
-	Vi2ChunkFlagRowDataProvider(
+	Vi2FlagRowDataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
@@ -51,4 +51,4 @@ public:
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_FLAG_ROW_DATA_PROVIDER_H_
+#endif // MSVIS_STATISTICS_VI2_FLAG_ROW_DATA_PROVIDER_H_

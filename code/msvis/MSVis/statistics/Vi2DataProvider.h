@@ -27,8 +27,8 @@
 // Base class of data providers based on casacore::StatsDataProvider, backed by a
 // VisibilityIterator2 instances.
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_DATA_PROVIDER_H_
-#define MSVIS_STATISTICS_VI2_CHUNK_DATA_PROVIDER_H_
+#ifndef MSVIS_STATISTICS_VI2_DATA_PROVIDER_H_
+#define MSVIS_STATISTICS_VI2_DATA_PROVIDER_H_
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Array.h>
@@ -38,7 +38,7 @@
 #include <msvis/MSVis/statistics/Vi2StatsFlagsIterator.h>
 #include <msvis/MSVis/statistics/Vi2StatsWeightsIterator.h>
 #include <msvis/MSVis/statistics/Vi2StatsSigmasIterator.h>
-#include <msvis/MSVis/statistics/Vi2ChunkStatisticsIteratee.h>
+#include <msvis/MSVis/statistics/Vi2StatisticsIteratee.h>
 #include <casacore/scimath/Mathematics/StatisticsAlgorithm.h>
 #include <casacore/scimath/Mathematics/StatsDataProvider.h>
 #include <memory>
@@ -50,21 +50,22 @@
 
 namespace casa {
 
-// casacore::Data provider template class backed by VisibilityIterator2
+// casacore::StatsDataProvider template class backed by VisibilityIterator2
 // instances. These data providers operate on a single casacore::MS column over
 // all vi2 sub-chunks in a dataset composed of one or more chunks selected when
 // the data provider is instantiated. In other words, the data sample for
-// statistics generated with a Vi2ChunkDataProvider instance is the data from a
+// statistics generated with a Vi2DataProvider instance is the data from a
 // single column in a single dataset of consecutive vi2 chunks. It is intended
 // that the user set up the VisibilityIterator2 appropriately to select the
 // desired data sample for computing statistics. Consecutive chunks produced by
 // an iterator may be merged by the data provider to produce a single
 // dataset. The iteration over an MS, and the computation of statistics on each
-// dataset driven using a Vi2ChunkStatisticsIteratee instance, as follows:
+// dataset driven using a Vi2StatisticsIteratee instance, may be done as
+// follows:
 //
-// Vi2ChunkDataProvider *dp; // given
+// Vi2DataProvider *dp; // given
 // casacore::StatisticsAlgorithm statistics; // given
-// class DoStuff : public Vi2ChunkStatisticsIteratee {
+// class DoStuff : public Vi2StatisticsIteratee {
 //   ... // constructor, probably needs some sort of accumulator
 //   void nextDataset(casacore::StatisticsAlgorithm stats,
 //                    const std::unordered_map<int,std::string> *colVals) {
@@ -80,7 +81,7 @@ namespace casa {
 // DataIterator.
 //
 template <class DataIterator, class MaskIterator, class WeightsIterator>
-class Vi2ChunkDataProvider
+class Vi2DataProvider
 	: public casacore::StatsDataProvider<typename DataIterator::AccumType,
 	                                     DataIterator,
 	                                     MaskIterator,
@@ -96,7 +97,7 @@ public:
 	typedef MaskIterator MaskIteratorType;
 	typedef WeightsIterator WeightsIteratorType;
 
-	Vi2ChunkDataProvider(
+	Vi2DataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns>
 		    &mergedColumns_,
@@ -119,7 +120,7 @@ public:
 			mergedColumns.insert(columnNames.at(i));
 	}
 
-	Vi2ChunkDataProvider(Vi2ChunkDataProvider&& other)
+	Vi2DataProvider(Vi2DataProvider&& other)
 		: vi2(other.vi2)
 		, mergedColumns(other.mergedColumns)
 		, datasetIndex(other.datasetIndex)
@@ -135,7 +136,7 @@ public:
 		other.vi2 = nullptr;
 	}
 
-	Vi2ChunkDataProvider& operator=(Vi2ChunkDataProvider&& other) {
+	Vi2DataProvider& operator=(Vi2DataProvider&& other) {
 		vi2 = other.vi2;
 		mergedColumns = other.mergedColumns;
 		datasetIndex = other.datasetIndex;
@@ -256,7 +257,7 @@ public:
 
 	void foreachDataset(
 		casacore::StatisticsAlgorithm<AccumType,DataIteratorType,MaskIteratorType,WeightsIteratorType>& statistics,
-		Vi2ChunkStatisticsIteratee<DataIterator,WeightsIterator,MaskIterator>& iteratee) {
+		Vi2StatisticsIteratee<DataIterator,WeightsIterator,MaskIterator>& iteratee) {
 
 		datasetIndex = -1;
 		followingChunkDatasetIndex = 0;
@@ -378,36 +379,36 @@ private:
 
 // casacore::Data provider template for row-based casacore::MS columns (i.e, not visibilities) using
 // the 'weights' column for data weights. In most instances, you would not
-// weight the data in these columns, but the Vi2ChunkDataProvider template
+// weight the data in these columns, but the Vi2DataProvider template
 // requires that a WeightsIterator be provided.
 template<class DataIterator>
-using Vi2ChunkWeightsRowDataProvider =
-	Vi2ChunkDataProvider<
+using Vi2WeightsRowDataProvider =
+	Vi2DataProvider<
 	DataIterator,Vi2StatsFlagsRowIterator,Vi2StatsWeightsRowIterator>;
 
 // casacore::Data provider template for row-based casacore::MS columns (i.e, not visibilities) using
 // the 'sigma' column for data weights (appropriately transformed). In most
 // instances, you would not weight the data in these columns, but the
-// Vi2ChunkDataProvider template requires that a WeightsIterator be provided.
+// Vi2DataProvider template requires that a WeightsIterator be provided.
 template<class DataIterator>
-using Vi2ChunkSigmasRowDataProvider =
-	Vi2ChunkDataProvider<
+using Vi2SigmasRowDataProvider =
+	Vi2DataProvider<
 	DataIterator,Vi2StatsFlagsRowIterator,Vi2StatsSigmasRowIterator>;
 
 // casacore::Data provider template for cube-based casacore::MS columns (i.e, the visibilities)
 // using the 'weights' column for data weights.
 template<class DataIterator>
-using Vi2ChunkWeightsCubeDataProvider =
-	Vi2ChunkDataProvider<
+using Vi2WeightsCubeDataProvider =
+	Vi2DataProvider<
 	DataIterator,Vi2StatsFlagsCubeIterator,Vi2StatsWeightsCubeIterator>;
 
 // casacore::Data provider template for cube-based casacore::MS columns (i.e, the visibilities)
 // using the 'sigma' column for data weights (appropriately transformed).
 template<class DataIterator>
-using Vi2ChunkSigmasCubeDataProvider =
-	Vi2ChunkDataProvider<
+using Vi2SigmasCubeDataProvider =
+	Vi2DataProvider<
 	DataIterator,Vi2StatsFlagsCubeIterator,Vi2StatsSigmasCubeIterator>;
 
 } // end namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_DATA_PROVIDER_H_
+#endif // MSVIS_STATISTICS_VI2_DATA_PROVIDER_H_

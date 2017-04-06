@@ -25,17 +25,17 @@
 //
 // Antenna column data providers
 //
-#include <msvis/MSVis/statistics/Vi2ChunkAntennaDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2AntennaDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkAntenna1DataProvider::Vi2ChunkAntenna1DataProvider(
+Vi2Antenna1DataProvider::Vi2Antenna1DataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::Antenna1,
@@ -43,15 +43,15 @@ Vi2ChunkAntenna1DataProvider::Vi2ChunkAntenna1DataProvider(
 		false) {}
 
 const Vector<Int>&
-Vi2ChunkAntenna1DataProvider::dataArray() {
+Vi2Antenna1DataProvider::dataArray() {
 	return vi2->getVisBuffer()->antenna1();
 }
 
-Vi2ChunkAntenna2DataProvider::Vi2ChunkAntenna2DataProvider(
+Vi2Antenna2DataProvider::Vi2Antenna2DataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::Antenna2,
@@ -59,7 +59,7 @@ Vi2ChunkAntenna2DataProvider::Vi2ChunkAntenna2DataProvider(
 		false) {}
 
 const Vector<Int>&
-Vi2ChunkAntenna2DataProvider::dataArray() {
+Vi2Antenna2DataProvider::dataArray() {
 	return vi2->getVisBuffer()->antenna2();
 }
 

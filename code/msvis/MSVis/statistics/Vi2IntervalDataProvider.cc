@@ -25,17 +25,17 @@
 //
 // Data provider for interval column
 //
-#include <msvis/MSVis/statistics/Vi2ChunkIntervalDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2IntervalDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkIntervalDataProvider::Vi2ChunkIntervalDataProvider(
+Vi2IntervalDataProvider::Vi2IntervalDataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::TimeInterval,
@@ -43,7 +43,7 @@ Vi2ChunkIntervalDataProvider::Vi2ChunkIntervalDataProvider(
 		false) {}
 
 const Vector<Double>&
-Vi2ChunkIntervalDataProvider::dataArray() {
+Vi2IntervalDataProvider::dataArray() {
 	return vi2->getVisBuffer()->timeInterval();
 }
 

@@ -26,24 +26,24 @@
 //
 // casacore::Data providers for feed id columns.
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_FEED_DATA_PROVIDER_H_
-#define MSVIS_STATISTICS_VI2_CHUNK_FEED_DATA_PROVIDER_H_
+#ifndef MSVIS_STATISTICS_VI2_FEED_DATA_PROVIDER_H_
+#define MSVIS_STATISTICS_VI2_FEED_DATA_PROVIDER_H_
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Vector.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataProvider.h>
 #include <msvis/MSVis/statistics/Vi2StatsDataIterator.h>
 
 namespace casa {
 
 // casacore::Data provider for feed1 column
 //
-class Vi2ChunkFeed1DataProvider final
-	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsIntIterator> {
+class Vi2Feed1DataProvider final
+	: public Vi2WeightsRowDataProvider<Vi2StatsIntIterator> {
 
 public:
-	Vi2ChunkFeed1DataProvider(
+	Vi2Feed1DataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
@@ -52,11 +52,11 @@ public:
 };
 
 // casacore::Data provider for feed2 column
-class Vi2ChunkFeed2DataProvider final
-	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsIntIterator> {
+class Vi2Feed2DataProvider final
+	: public Vi2WeightsRowDataProvider<Vi2StatsIntIterator> {
 
 public:
-	Vi2ChunkFeed2DataProvider(
+	Vi2Feed2DataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
@@ -66,4 +66,4 @@ public:
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_FEED_DATA_PROVIDER_H_
+#endif // MSVIS_STATISTICS_VI2_FEED_DATA_PROVIDER_H_

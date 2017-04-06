@@ -26,22 +26,22 @@
 //
 // casacore::Array id column data provider
 //
-#ifndef MSVIS_STATISTICS_VI2_CHUNK_ARRAY_ID_DATA_PROVIDER_H_
-#define MSVIS_STATISTICS_VI2_CHUNK_ARRAY_ID_DATA_PROVIDER_H_
+#ifndef MSVIS_STATISTICS_VI2_ARRAY_ID_DATA_PROVIDER_H_
+#define MSVIS_STATISTICS_VI2_ARRAY_ID_DATA_PROVIDER_H_
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Vector.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataProvider.h>
 #include <msvis/MSVis/statistics/Vi2StatsDataIterator.h>
 
 namespace casa {
 
-class Vi2ChunkArrayIdDataProvider final
-	: public Vi2ChunkWeightsRowDataProvider<Vi2StatsIntIterator> {
+class Vi2ArrayIdDataProvider final
+	: public Vi2WeightsRowDataProvider<Vi2StatsIntIterator> {
 
 public:
-	Vi2ChunkArrayIdDataProvider(
+	Vi2ArrayIdDataProvider(
 		vi::VisibilityIterator2 *vi2,
 		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
@@ -51,4 +51,4 @@ public:
 
 } // namespace casa
 
-#endif // MSVIS_STATISTICS_VI2_CHUNK_ARRAY_ID_DATA_PROVIDER_H_
+#endif // MSVIS_STATISTICS_VI2_ARRAY_ID_DATA_PROVIDER_H_

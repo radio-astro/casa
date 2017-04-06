@@ -25,17 +25,17 @@
 //
 // Data description id column data provider
 //
-#include <msvis/MSVis/statistics/Vi2ChunkDataDescriptionIdsDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataDescriptionIdsDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkDataDescriptionIdsDataProvider::Vi2ChunkDataDescriptionIdsDataProvider(
+Vi2DataDescriptionIdsDataProvider::Vi2DataDescriptionIdsDataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::DataDescriptionIds,
@@ -43,7 +43,7 @@ Vi2ChunkDataDescriptionIdsDataProvider::Vi2ChunkDataDescriptionIdsDataProvider(
 		false) {}
 
 const Vector<Int>&
-Vi2ChunkDataDescriptionIdsDataProvider::dataArray() {
+Vi2DataDescriptionIdsDataProvider::dataArray() {
 	return vi2->getVisBuffer()->dataDescriptionIds();
 }
 

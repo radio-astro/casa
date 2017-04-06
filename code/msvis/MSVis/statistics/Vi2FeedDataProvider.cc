@@ -25,17 +25,17 @@
 //
 // Data providers for feed id columns
 //
-#include <msvis/MSVis/statistics/Vi2ChunkFeedDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2FeedDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkFeed1DataProvider::Vi2ChunkFeed1DataProvider(
+Vi2Feed1DataProvider::Vi2Feed1DataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::Feed1,
@@ -43,15 +43,15 @@ Vi2ChunkFeed1DataProvider::Vi2ChunkFeed1DataProvider(
 		false) {}
 
 const Vector<Int>&
-Vi2ChunkFeed1DataProvider::dataArray() {
+Vi2Feed1DataProvider::dataArray() {
 	return vi2->getVisBuffer()->feed1();
 }
 
-Vi2ChunkFeed2DataProvider::Vi2ChunkFeed2DataProvider(
+Vi2Feed2DataProvider::Vi2Feed2DataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::Feed2,
@@ -59,7 +59,7 @@ Vi2ChunkFeed2DataProvider::Vi2ChunkFeed2DataProvider(
 		false) {}
 
 const Vector<Int>&
-Vi2ChunkFeed2DataProvider::dataArray() {
+Vi2Feed2DataProvider::dataArray() {
 	return vi2->getVisBuffer()->feed2();
 }
 

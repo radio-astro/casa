@@ -25,24 +25,24 @@
 //
 // Data provider for flag row column
 //
-#include <msvis/MSVis/statistics/Vi2ChunkFlagRowDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2FlagRowDataProvider.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 
 using namespace casacore;
 namespace casa {
 
-Vi2ChunkFlagRowDataProvider::Vi2ChunkFlagRowDataProvider(
+Vi2FlagRowDataProvider::Vi2FlagRowDataProvider(
 	vi::VisibilityIterator2 *vi2,
 	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
-	: Vi2ChunkDataProvider(
+	: Vi2DataProvider(
 		vi2,
 		mergedColumns,
 		vi::VisBufferComponent2::FlagRow,
 		omit_flagged_data,
 		false) {}
 
-const Vector<Bool>& Vi2ChunkFlagRowDataProvider::dataArray() {
+const Vector<Bool>& Vi2FlagRowDataProvider::dataArray() {
 	return vi2->getVisBuffer()->flagRow();
 }
 
