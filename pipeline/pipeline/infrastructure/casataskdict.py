@@ -51,6 +51,7 @@ CasaTaskDict = {
     'hsd_k2jycal': 'SDK2JyCal',
     'hsd_skycal': 'SDMSSkyCal',
     'hsd_tsysflag': 'SDTsysflag',
+    'hsd_restoredata': 'SDRestoreData',
     # ALMA interferometry tasks ---------------------------------------------
     'hifa_importdata': 'ALMAImportData',
     'hifa_antpos': 'ALMAAntpos',
@@ -153,6 +154,7 @@ classToCASATask = {
     hsd_tasks.SDK2JyCal               : 'hsd_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsd_skycal',
     hsd_tasks.SDTsysflag              : 'hsd_tsysflag',
+    hsd_tasks.SDRestoreData       : 'hsd_restoredata',
     # VLA tasks ----------------------------------------------------------------
     hifv_tasks.TecMaps                : 'hifv_tecmaps',
     hifv_tasks.Circfeedpolcal         : 'hifv_circfeedpolcal',

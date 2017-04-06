@@ -10,3 +10,4 @@ from .baseline import SDMSBaseline
 from .imaging import SDMSImaging
 from .exportdata import SDMSExportData
 from .tsysflag import Tsysflag as SDTsysflag
+from .restoredata import SDRestoreData
