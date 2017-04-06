@@ -3,23 +3,33 @@ class CleanTarget(dict):
     '''Clean target template definition.'''
 
     def __init__(self, *args, **kwargs):
-         self['field'] = ''
-         self['intent'] = ''
-         self['spw'] = ''
-         self['spwsel_lsrk'] = ''
-         self['spwsel_topo'] = []
-         self['cell'] = ''
-         self['imsize'] = ''
-         self['phasecenter'] = ''
-         self['specmode'] = ''
-         self['gridder'] = ''
-         self['imagename'] = ''
-         self['start'] = ''
-         self['width'] = ''
-         self['nbin'] = -1
-         self['nchan'] = -1
-         self['uvrange'] = ''
-         self['stokes'] = ''
-         self['nterms'] = None
+         self['field'] = None           # string
+         self['intent'] = None          # string
+         self['spw'] = None             # string
+         self['spwsel_lsrk'] = None     # dictionary
+         self['spwsel_topo'] = None     # list
+         self['cell'] = None            # string
+         self['imsize'] = None          # string / list
+         self['phasecenter'] = None     # string
+         self['specmode'] = None        # string
+         self['gridder'] = None         # string
+         self['deconvolver'] = None     # string
+         self['imagename'] = None       # string
+         self['start'] = None           # string
+         self['width'] = None           # string
+         self['nbin'] = None            # int
+         self['nchan'] = None           # int
+         self['stokes'] = None          # string
+         self['nterms'] = None          # int
+         self['robust'] = None          # float
+         self['uvrange'] = None         # string / list
+         self['uvtaper'] = None         # list
+         self['scales'] = None          # list
+         self['niter'] = None           # int
+         self['cycleniter'] = None      # int
+         self['cyclefactor'] = None     # int
+         self['sensitivity'] = None     # string
+         self['threshold'] = None       # string
+         self['heuristics'] = None      # object
 
          dict.__init__(self, *args, **kwargs)

@@ -1,13 +1,12 @@
 import os
 import shutil
 import glob
-import numpy
 import operator
 import decimal
 import commands
 
 import pipeline.domain.measures as measures
-from pipeline.hif.heuristics import imageparams
+from pipeline.hif.heuristics import imageparams_factory
 from pipeline.hif.heuristics import mosaicoverlap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -28,19 +27,26 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class TcleanInputs(cleanbase.CleanBaseInputs):
-    def __init__(self, context, output_dir=None, vis=None, imagename=None,
-                 intent=None, field=None, spw=None, spwsel_lsrk=None, spwsel_topo=None, uvrange=None, specmode=None,
-                 gridder=None, deconvolver=None, uvtaper=None,
-                 nterms=None, cycleniter=None, cyclefactor=None, scales=None,
-                 outframe=None, imsize=None, cell=None,
-                 phasecenter=None, stokes=None, nchan=None, start=None, width=None, nbin=None,
-                 weighting=None,
+    def __init__(self, context, output_dir=None,
+                 vis=None, imagename=None, intent=None, field=None, spw=None,
+                 spwsel_lsrk=None, spwsel_topo=None,
+                 uvrange=None, specmode=None, gridder=None, deconvolver=None,
+                 nterms=None, outframe=None, imsize=None, cell=None,
+                 phasecenter=None, stokes=None, nchan=None, start=None,
+                 width=None, nbin=None, weighting=None,
                  robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
-                 noiseimage=None, hm_masking=None, hm_autotest=None, hm_cleaning=None, tlimit=None,
-                 masklimit=None, maxncleans=None, cleancontranges=None, subcontms=None, parallel=None):
+                 restoringbeam=None, hm_masking=None,
+                 hm_autotest=None, hm_cleaning=None, mask=None,
+                 niter=None, threshold=None, tlimit=None, masklimit=None,
+                 maxncleans=None, cleancontranges=None, subcontms=None,
+                 parallel=None,
+                 # Extra parameters not in the CLI task interface
+                 uvtaper=None, scales=None,
+                 cycleniter=None, cyclefactor=None, sensitivity=None,
+                 # End of extra parameters
+                 heuristics=None):
         self._init_properties(vars())
-        self.image_heuristics = imageparams.ImageParamsHeuristics(self.context, self.vis, self.spw)
+        self.image_heuristics = heuristics
 
     # Add extra getters and setters here
     spwsel_lsrk = basetask.property_with_default('spwsel_lsrk', {})
@@ -65,21 +71,6 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
             self._imagename = value.replace('STAGENUMBER', str(self.context.stage))
 
     @property
-    def noiseimage(self):
-        return self._noiseimage
-
-    @noiseimage.setter
-    def noiseimage(self, value):
-        if value is None:
-            ms = self.context.observing_run.get_ms(name=self.vis[0])
-            observatory = ms.antenna_array.name
-            if 'VLA' in observatory:
-                value = 'V'
-            else:
-                value = 'Q'
-        self._noiseimage = value
-
-    @property
     def maxncleans(self):
         if self._maxncleans is None:
             return 10
@@ -99,44 +90,12 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
         self._deconvolver = value
 
     @property
-    def uvtaper(self):
-        return self._uvtaper
-
-    @uvtaper.setter
-    def uvtaper(self, value):
-        self._uvtaper = value
-
-    @property
     def nterms(self):
         return self._nterms
 
     @nterms.setter
     def nterms(self, value):
         self._nterms = value
-
-    @property
-    def cycleniter(self):
-        return self._cycleniter
-
-    @cycleniter.setter
-    def cycleniter(self, value):
-        self._cycleniter = value
-
-    @property
-    def cyclefactor(self):
-        return self._cyclefactor
-
-    @cyclefactor.setter
-    def cyclefactor(self, value):
-        self._cyclefactor = value
-
-    @property
-    def scales(self):
-        return self._scales
-
-    @scales.setter
-    def scales(self, value):
-        self._scales = value
 
     @property
     def robust(self):
@@ -201,12 +160,8 @@ class Tclean(cleanbase.CleanBase):
         self.pblimit_cleanmask = 0.3
         inputs.pblimit = self.pblimit_image
 
-        # Instantiate the image parameter heuristics class
-        self.image_heuristics = imageparams.ImageParamsHeuristics(context=context,
-                                    vislist=inputs.vis,
-                                    spw=inputs.spw,
-                                    contfile=context.contfile,
-                                    linesfile=context.linesfile)
+        # Get the image parameter heuristics
+        self.image_heuristics = inputs.heuristics
 
         # Generate the image name if one is not supplied.
         if inputs.imagename in ('', None):
@@ -279,7 +234,7 @@ class Tclean(cleanbase.CleanBase):
                     return result
                 LOG.info('Using supplied start frequency %s' % (inputs.start))
 
-            if (inputs.width != '') and (inputs.nbin != -1):
+            if (inputs.width != '') and (inputs.nbin not in (None, -1)):
                 LOG.error('Field %s SPW %s: width and nbin are mutually exclusive' % (inputs.field, inputs.spw))
                 result.error = '%s/%s/spw%s clean error: width and nbin are mutually exclusive' % (inputs.field, inputs.intent, inputs.spw)
                 return result
@@ -295,11 +250,11 @@ class Tclean(cleanbase.CleanBase):
                 channel_width = channel_width_manual
                 if channel_width > channel_width_auto:
                     inputs.nbin = int(round(channel_width / channel_width_auto) + 0.5)
-            elif inputs.nbin != -1:
+            elif inputs.nbin not in (None, -1):
                 LOG.info('Applying binning factor %d' % (inputs.nbin))
                 channel_width *= inputs.nbin
 
-            if inputs.nchan != -1:
+            if inputs.nchan not in (None, -1):
                 if1 = if0 + channel_width * inputs.nchan
                 if if1 > if1_auto:
                     LOG.error('Calculated stop frequency %s GHz > f_high_native for Field %s SPW %s' % (if1, inputs.field, inputs.spw))
@@ -317,24 +272,49 @@ class Tclean(cleanbase.CleanBase):
             inputs.width = '%sMHz' % ((channel_width) / 1e6)
 
             # Skip edge channels if no nchan is supplied
-            if inputs.nchan == -1:
+            if inputs.nchan in (None, -1):
                inputs.nchan = int(round((if1 - if0) / channel_width - 2))
 
-        # Get a noise estimate from the CASA sensitivity calculator
-        sensitivity, \
-        min_sensitivity, \
-        max_sensitivity, \
-        min_field_id, \
-        max_field_id, \
+        # Get TOPO frequency ranges for all MSs
         spw_topo_freq_param, \
         spw_topo_chan_param, \
         spw_topo_freq_param_dict, \
         spw_topo_chan_param_dict, \
         total_topo_bw, \
         aggregate_topo_bw, \
-        aggregate_lsrk_bw, \
-        eff_ch_bw = \
-            self._do_sensitivity()
+        aggregate_lsrk_bw = \
+            self.image_heuristics.calc_topo_ranges(inputs)
+
+        # Get sensitivity
+        if inputs.sensitivity is not None:
+            # Override with manually set value
+            sensitivity = qaTool.convert(inputs.sensitivity, 'Jy')['value']
+            # Dummies for weblog
+            min_sensitivity = sensitivity
+            max_sensitivity = sensitivity
+            min_field_id = 0
+            max_field_id = 0
+            eff_ch_bw = 1.0
+        else:
+            # Get a noise estimate from the CASA sensitivity calculator
+            sensitivity, \
+            min_sensitivity, \
+            max_sensitivity, \
+            min_field_id, \
+            max_field_id, \
+            eff_ch_bw = \
+                self.image_heuristics.calc_sensitivities(inputs.vis, \
+                                                         inputs.field, \
+                                                         inputs.intent, \
+                                                         inputs.spw, \
+                                                         inputs.nbin, \
+                                                         spw_topo_chan_param_dict, \
+                                                         inputs.specmode, \
+                                                         inputs.gridder, \
+                                                         inputs.cell, \
+                                                         inputs.imsize, \
+                                                         inputs.weighting, \
+                                                         inputs.robust)
         LOG.info('Sensitivity estimate: %s Jy', sensitivity)
 
         # Choose TOPO frequency selections
@@ -360,7 +340,7 @@ class Tclean(cleanbase.CleanBase):
                     gridder = inputs.gridder, threshold=threshold,
                     sensitivity = sensitivity, niter=inputs.niter)
             # Auto-boxing
-            elif inputs.hm_masking in ('auto', 'auto-thresh'):
+            elif inputs.hm_masking == 'auto':
                 sequence_manager = AutoMaskThresholdSequence(
                     gridder = inputs.gridder, threshold=threshold,
                     sensitivity = sensitivity, niter=inputs.niter)
@@ -469,91 +449,19 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('    Residual max: %s', residual_max)
         LOG.info('    Residual min: %s', residual_min)
 
-        # Adjust threshold and niter based on the dirty image statistics
-
-        # Check dynamic range and adjust threshold
-        qaTool = casatools.quanta
+        # Adjust threshold based on the dirty image statistics
         dirty_dynamic_range = residual_max / sequence_manager.sensitivity
-        maxEDR_used = False
-        DR_correction_factor = 1.0
+        new_threshold, DR_correction_factor, maxEDR_used = \
+            self.image_heuristics.dr_correction(sequence_manager.threshold, \
+                                                dirty_dynamic_range, \
+                                                residual_max, \
+                                                inputs.intent, \
+                                                inputs.tlimit)
+        sequence_manager.threshold = new_threshold
 
-        observatory = context.observing_run.measurement_sets[0].antenna_array.name
-        if ('ALMA' in observatory):
-            old_threshold = qaTool.convert(sequence_manager.threshold, 'Jy')['value']
-            if (inputs.intent == 'TARGET' ) or (inputs.intent == 'CHECK'):
-                n_dr_max = 2.5
-                if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
-                    if (dirty_dynamic_range > 150.):
-                        maxSciEDR = 150.0
-                        new_threshold = max(n_dr_max * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
-                        LOG.info('DR heuristic: Applying maxSciEDR(Main array)=%s' % (maxSciEDR))
-                        maxEDR_used = True
-                    else:
-                        if (dirty_dynamic_range > 100.):
-                            n_dr = 2.5
-                        elif (50. < dirty_dynamic_range <= 100.):
-                            n_dr = 2.0
-                        elif (20. < dirty_dynamic_range <= 50.):
-                            n_dr = 1.5
-                        elif (dirty_dynamic_range <= 20.):
-                            n_dr = 1.0
-                        LOG.info('DR heuristic: N_DR=%s' % (n_dr))
-                        new_threshold = old_threshold * n_dr
-                else:
-                    if (dirty_dynamic_range > 30.):
-                        maxSciEDR = 30.0
-                        new_threshold = max(n_dr_max * old_threshold, residual_max / maxSciEDR * inputs.tlimit)
-                        LOG.info('DR heuristic: Applying maxSciEDR(ACA)=%s' % (maxSciEDR))
-                        maxEDR_used = True
-                    else:
-                        if (dirty_dynamic_range > 20.):
-                            n_dr = 2.5
-                        elif (10. < dirty_dynamic_range <= 20.):
-                            n_dr = 2.0
-                        elif (4. < dirty_dynamic_range <= 10.):
-                            n_dr = 1.5
-                        elif (dirty_dynamic_range <= 4.):
-                            n_dr = 1.0
-                        LOG.info('DR heuristic: N_DR=%s' % (n_dr))
-                        new_threshold = old_threshold * n_dr
-            else:
-                # Calibrators are usually dynamic range limited. The sensitivity from apparentsens
-                # is not a valid estimate for the threshold. Use a heuristic based on the dirty peak
-                # and some maximum expected dynamic range (EDR) values.
-                if (context.observing_run.get_measurement_sets()[0].antennas[0].diameter == 12.0):
-                    maxCalEDR = 1000.0
-                else:
-                    maxCalEDR = 200.0
-                LOG.info('DR heuristic: Applying maxCalEDR=%s' % (maxCalEDR))
-                new_threshold = max(old_threshold, residual_max / maxCalEDR * inputs.tlimit)
-                maxEDR_used = True
-
-            if (new_threshold != old_threshold):
-                sequence_manager.threshold = '%sJy' % (new_threshold)
-                LOG.info('DR heuristic: Modified threshold from %s Jy to %s Jy based on dirty dynamic range calculated from dirty peak / final theoretical sensitivity: %.1f' % (old_threshold, new_threshold, dirty_dynamic_range))
-                DR_correction_factor = new_threshold / old_threshold
-
-            # Compute automatic niter estimate
-            old_niter = sequence_manager.niter
-            kappa = 5
-            loop_gain = 0.1
-            r_mask = 0.45 * max(inputs.imsize[0], inputs.imsize[1]) * qaTool.convert(inputs.cell[0], 'arcsec')['value']
-            beam = qaTool.convert(inputs.cell[0], 'arcsec')['value'] * 5.0
-            new_niter_f = int(kappa / loop_gain * (r_mask / beam) ** 2 * residual_max / new_threshold)
-            new_niter = int(round(new_niter_f, -int(numpy.log10(new_niter_f))))
-            if (new_niter != old_niter):
-                sequence_manager.niter = new_niter
-                LOG.info('niter heuristic: Modified niter from %d to %d based on mask vs. beam size heuristic' % (old_niter, new_niter))
-
-        elif ('VLA' in observatory):
-            old_niter = sequence_manager.niter
-            new_niter = 1000
-            if (new_niter != old_niter):
-                sequence_manager.niter = new_niter
-                LOG.info('niter heuristic: Modified niter from %d to %d for the VLA' % (old_niter, new_niter))
-
-        else:
-            LOG.warning('Did not recognize observatory %s. Will not adjust threshold and niter.' % (observatory))
+        # Adjust niter based on the dirty image statistics
+        new_niter = self.image_heuristics.niter_correction(sequence_manager.niter, inputs.cell, inputs.imsize, residual_max, new_threshold)
+        sequence_manager.niter = new_niter
 
         iterating = True
         iter = 1
@@ -652,211 +560,6 @@ class Tclean(cleanbase.CleanBase):
             self._calc_mom0_fc(result)
 
         return result
-
-    def _do_sensitivity(self):
-        """Compute sensitivity estimate using CASA."""
-
-        context = self.inputs.context
-        inputs = self.inputs
-        field = inputs.field
-        spw = inputs.spw
-
-        # Calculate sensitivities
-        sensitivities = []
-        if inputs.specmode in ['mfs','cont']:
-            specmode = 'mfs'
-        elif inputs.specmode == 'cube':
-            specmode = 'cube'
-        else:
-            raise Exception, 'Unknown specmode "%s"' % (inputs.specmode)
-
-        targetmslist = [ms_do for ms_do in [context.observing_run.get_ms(name=ms) for ms in inputs.vis] if ms_do.is_imaging_ms]
-        if (targetmslist == []):
-            targetmslist = [context.observing_run.get_ms(name=ms) for ms in inputs.vis]
-
-        # Convert LSRK ranges to TOPO
-        spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, aggregate_lsrk_bw = self.image_heuristics.calc_topo_ranges(inputs)
-
-        detailed_field_sensitivities = {}
-        min_sensitivities = []
-        max_sensitivities = []
-        min_field_ids = []
-        max_field_ids = []
-        eff_ch_bw = 0.0
-        for ms in targetmslist:
-            detailed_field_sensitivities[os.path.basename(ms.name)] = {}
-            for intSpw in [int(s) for s in spw.split(',')]:
-                spw_do = ms.get_spectral_window(intSpw)
-                detailed_field_sensitivities[os.path.basename(ms.name)][intSpw] = {}
-                try:
-                    if (inputs.specmode == 'cube'):
-                        # Use the center channel selection
-                        if inputs.nbin != -1:
-                            chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0) + inputs.nbin - 1)
-                        else:
-                            chansel = '%d~%d' % (int(spw_do.num_channels / 2.0), int(spw_do.num_channels / 2.0))
-                    else:
-                        if (spw_topo_chan_param_dict[os.path.basename(ms.name)][str(intSpw)] != ''):
-                            # Use continuum frequency selection
-                            chansel = spw_topo_chan_param_dict[os.path.basename(ms.name)][str(intSpw)]
-                        else:
-                            # Use full spw
-                            chansel = '0~%d' % (spw_do.num_channels - 1)
-
-                    if (inputs.gridder == 'mosaic'):
-                        field_sensitivities = []
-                        for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
-                            try:
-                                field_sensitivity, eff_ch_bw = self._get_sensitivity(ms, field_id, intSpw, chansel)
-                                if (field_sensitivity > 0.0):
-                                    field_sensitivities.append(field_sensitivity)
-                                    detailed_field_sensitivities[os.path.basename(ms.name)][intSpw][field_id] = field_sensitivity
-                            except Exception as e:
-                                LOG.warning('Could not calculate sensitivity for MS %s Field %s (ID %d) SPW %d ChanSel %s' % (os.path.basename(ms.name), utils.dequote(field), field_id, intSpw, chansel))
-
-                        median_sensitivity = numpy.median(field_sensitivities)
-                        min_field_id, min_sensitivity = min(detailed_field_sensitivities[os.path.basename(ms.name)][intSpw].iteritems(), key=operator.itemgetter(1))
-                        max_field_id, max_sensitivity = max(detailed_field_sensitivities[os.path.basename(ms.name)][intSpw].iteritems(), key=operator.itemgetter(1))
-
-                        # Correct for mosaic overlap factor
-                        source_name = [f.source.name for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)][0]
-                        diameter = numpy.median([a.diameter for a in ms.antennas])
-                        overlap_factor = mosaicoverlap.mosaicOverlapFactorMS(ms, source_name, intSpw, diameter)
-                        LOG.info('Dividing by mosaic overlap improvement factor of %s.' % (overlap_factor))
-                        median_sensitivity /= overlap_factor
-                        min_sensitivity /= overlap_factor
-                        max_sensitivity /= overlap_factor
-
-                        # Final values
-                        sensitivities.append(median_sensitivity)
-                        min_sensitivities.append(min_sensitivity)
-                        max_sensitivities.append(max_sensitivity)
-                        min_field_ids.append(min_field_id)
-                        max_field_ids.append(max_field_id)
-                        LOG.info('Using median of all mosaic field sensitivities for MS %s, Field %s, SPW %s: %s Jy' % (os.path.basename(ms.name), field, str(intSpw), median_sensitivity))
-                        LOG.info('Minimum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, min_field_id, str(intSpw), min_sensitivity))
-                        LOG.info('Maximum mosaic field sensitivity for MS %s, Field %s (ID: %s), SPW %s: %s Jy' % (os.path.basename(ms.name), field, max_field_id, str(intSpw), max_sensitivity))
-                    else:
-                        # Still need to loop over field ID with proper intent for single field case
-                        field_sensitivities = []
-                        for field_id in [f.id for f in ms.fields if (utils.dequote(f.name) == utils.dequote(field) and inputs.intent in f.intents)]:
-                            field_sensitivity, eff_ch_bw = self._get_sensitivity(ms, field_id, intSpw, chansel)
-                            if (field_sensitivity > 0.0):
-                                field_sensitivities.append(field_sensitivity)
-                        # Check if we have anything
-                        if (len(field_sensitivities) > 0):
-                            # If there is more than one result (shouldn't be), combine them to one number
-                            field_sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(field_sensitivities)**2))
-                            sensitivities.append(field_sensitivity)
-                            detailed_field_sensitivities[os.path.basename(ms.name)][intSpw][field] = field_sensitivity
-                except Exception as e:
-                    # Simply pass as this could be a case of a source not
-                    # being present in the MS.
-                    pass
-
-        if (len(sensitivities) > 0):
-            sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
-            if (inputs.gridder == 'mosaic'):
-                min_sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(min_sensitivities)**2))
-                max_sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(max_sensitivities)**2))
-                min_field_id = int(numpy.median(min_field_ids))
-                max_field_id = int(numpy.median(max_field_ids))
-            else:
-                min_sensitivity = None
-                max_sensitivity = None
-                min_field_id = None
-                max_field_id = None
-        else:
-            defaultSensitivity = 0.1
-            if (inputs.specmode == 'cube'):
-                LOG.warning('Exception in calculating sensitivity. Cube center channel seems to be flagged. Assuming default value of %g Jy/beam.' % (defaultSensitivity))
-            else:
-                LOG.warning('Exception in calculating sensitivity. Assuming default value of %g Jy/beam.' % (defaultSensitivity))
-            sensitivity = defaultSensitivity
-            min_sensitivity = None
-            max_sensitivity = None
-            min_field_id = None
-            max_field_id = None
-
-        return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, aggregate_lsrk_bw, eff_ch_bw
-
-    def _get_sensitivity(self, ms_do, field, spw, chansel):
-        """
-        Get sensitivity for a field / spw / chansel combination from CASA's
-        apparentsens method and a correction for effective channel widths
-        in case of online smoothing.
-
-        This heuristic is currently optimized for ALMA data only.
-        """
-
-        context = self.inputs.context
-        inputs = self.inputs
-
-        spw_do = ms_do.get_spectral_window(spw)
-        spwchan = spw_do.num_channels
-        physicalBW_of_1chan = float(spw_do.channels[0].getWidth().convert_to(measures.FrequencyUnits.HERTZ).value)
-        effectiveBW_of_1chan = float(spw_do.channels[0].effective_bw.convert_to(measures.FrequencyUnits.HERTZ).value)
-
-        BW_ratio = effectiveBW_of_1chan / physicalBW_of_1chan
-
-        if (BW_ratio <= 1.0):
-            N_smooth = 0
-        elif (utils.approx_equal(BW_ratio, 2.667, 4)):
-            N_smooth = 1
-        elif (utils.approx_equal(BW_ratio, 1.600, 4)):
-            N_smooth = 2
-        elif (utils.approx_equal(BW_ratio, 1.231, 4)):
-            N_smooth = 4
-        elif (utils.approx_equal(BW_ratio, 1.104, 4)):
-            N_smooth = 8
-        elif (utils.approx_equal(BW_ratio, 1.049, 4)):
-            N_smooth = 16
-        else:
-            LOG.warning('Could not evaluate channel bandwidths ratio. Physical: %s Effective: %s Ratio: %s' % (physicalBW_of_1chan, effectiveBW_of_1chan, BW_ratio))
-            N_smooth = 0
-
-        chansel_sensitivities = []
-        for chanrange in chansel.split(';'):
-
-            try:
-                with casatools.ImagerReader(ms_do.name) as imTool:
-                    imTool.selectvis(spw='%s:%s' % (spw, chanrange), field=field)
-                    # TODO: Add scan selection ?
-                    imTool.defineimage(mode=inputs.specmode if inputs.specmode=='cube' else 'mfs', spw=spw,
-                                       cellx=inputs.cell[0], celly=inputs.cell[0],
-                                       nx=inputs.imsize[0], ny=inputs.imsize[1])
-                    imTool.weight(type=inputs.weighting, robust=inputs.robust)
-                    result = imTool.apparentsens()
-
-                if (result[1] == 0.0):
-                    raise Exception('Empty selection')
-
-                apparentsens_value = result[1]
-                LOG.info('apparentsens result for MS %s Field %s SPW %s ChanRange %s: %s Jy/beam' % (os.path.basename(ms_do.name), field, spw, chanrange, apparentsens_value))
-                if (N_smooth > 0):
-                    cstart, cstop = map(int, chanrange.split('~'))
-                    nchan = cstop - cstart + 1
-                    if (nchan > 1):
-                        optimisticBW = nchan * float(effectiveBW_of_1chan)
-                        approximateEffectiveBW = (nchan + 1.12 * (spwchan - nchan) / spwchan / N_smooth) * float(physicalBW_of_1chan)
-                        SCF = (optimisticBW / approximateEffectiveBW)**0.5
-                        corrected_apparentsens_value = apparentsens_value * SCF
-                        LOG.info('Effective BW heuristic: Correcting apparentsens result by %s from %s Jy/beam to %s Jy/beam' % (SCF, apparentsens_value, corrected_apparentsens_value))
-                    else:
-                        corrected_apparentsens_value = apparentsens_value
-                else:
-                    corrected_apparentsens_value = apparentsens_value 
-
-                chansel_sensitivities.append(corrected_apparentsens_value)
-
-            except Exception as e:
-                if (str(e) != 'Empty selection'):
-                    LOG.info('Could not calculate sensitivity for MS %s Field %s SPW %s ChanRange %s: %s' % (os.path.basename(ms_do.name), field, spw, chanrange, e))
-
-        if (len(chansel_sensitivities) > 0):
-            return 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(chansel_sensitivities)**2)), effectiveBW_of_1chan
-        else:
-            return 0.0, effectiveBW_of_1chan
 
     def _do_continuum(self, cont_image_name, mode):
         """
@@ -987,7 +690,8 @@ class Tclean(cleanbase.CleanBase):
                                                   sensitivity=sensitivity,
                                                   pblimit=inputs.pblimit,
                                                   result=result,
-                                                  parallel=parallel)
+                                                  parallel=parallel,
+                                                  heuristics=inputs.heuristics)
         clean_task = cleanbase.CleanBase(clean_inputs)
 
         return self._executor.execute(clean_task)

@@ -7,7 +7,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import MakeImListResult
 from .cleantarget import CleanTarget
-from pipeline.hif.heuristics import imageparams 
+from pipeline.hif.heuristics import imageparams_factory
 import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
@@ -78,6 +78,8 @@ class MakeImListInputs(basetask.StandardInputs):
     def contfile(self, value=None):
         if value in (None, ''):
             value = os.path.join(self.context.output_dir, 'cont.dat')
+        else:
+            value = os.path.join(self.context.output_dir, value)
         self._contfile = value
 
     @property
@@ -88,6 +90,8 @@ class MakeImListInputs(basetask.StandardInputs):
     def linesfile(self, value=None):
         if value in (None, ''):
             value = os.path.join(self.context.output_dir, 'lines.dat')
+        else:
+            value = os.path.join(self.context.output_dir, value)
         self._linesfile = value
 
     @property
@@ -305,8 +309,9 @@ class MakeImList(basetask.StandardTaskTemplate):
 
         # instantiate the heuristics classes needed, some sorting out needed
         # here to remove duplicated code
-        self.heuristics = imageparams.ImageParamsHeuristics(
-          context=inputs.context, vislist=inputs.vis, spw=spw, contfile=inputs.contfile, linesfile=inputs.linesfile)
+        image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
+        self.heuristics = image_heuristics_factory.getHeuristics(
+            context=inputs.context, vislist=inputs.vis, spw=spw, contfile=inputs.contfile, linesfile=inputs.linesfile, imaging_mode='ALMA')
 
         # get list of field_ids/intents to be cleaned
         field_intent_list = self.heuristics.field_intent_list(
@@ -493,7 +498,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 new_spwspec = []
                 spwsel = {}
                 for spwid in spwspec.split(','):
-                    spwsel_spwid = self.heuristics.cont_ranges_spwsel[utils.dequote(field_intent[0])][spwid]
+                    spwsel_spwid = self.heuristics.cont_ranges_spwsel()[utils.dequote(field_intent[0])][spwid]
                     if (field_intent[1] == 'TARGET'):
                         if (spwsel_spwid == 'NONE'):
                             LOG.warn('No continuum frequency range information detected for %s, spw %s.' % (field_intent[0], spwid))
@@ -557,11 +562,13 @@ class MakeImList(basetask.StandardTaskTemplate):
                                             'nbin': nbin,
                                             'nchan': nchans[(field_intent[0], spwspec)],
                                             'uvrange': inputs.uvrange,
-                                            'stokes': 'I'})
+                                            'stokes': 'I',
+                                            'heuristics': self.heuristics})
 
                     result.add_target(target)
 
-        # Temporarily pass contfile and linefile for hif_findcont and hif_makeimages
+        # Pass contfile and linefile names to context (via resultobjects)
+        # for hif_findcont and hif_makeimages
         result.contfile = inputs.contfile
         result.linesfile = inputs.linesfile
 
