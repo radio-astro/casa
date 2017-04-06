@@ -43,6 +43,7 @@ class Vi2ChunkArrayIdDataProvider final
 public:
 	Vi2ChunkArrayIdDataProvider(
 		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
 
 	const casacore::Vector<casacore::Int>& dataArray();

@@ -45,6 +45,7 @@ class Vi2ChunkScanDataProvider final
 public:
 	Vi2ChunkScanDataProvider(
 		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
 
 	const casacore::Vector<casacore::Int>& dataArray();

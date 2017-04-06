@@ -44,7 +44,9 @@ class Vi2ChunkFeed1DataProvider final
 
 public:
 	Vi2ChunkFeed1DataProvider(
-		vi::VisibilityIterator2 *vi2, casacore::Bool omit_flagged_data);
+		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
+		casacore::Bool omit_flagged_data);
 
 	const casacore::Vector<casacore::Int>& dataArray();
 };
@@ -55,7 +57,9 @@ class Vi2ChunkFeed2DataProvider final
 
 public:
 	Vi2ChunkFeed2DataProvider(
-		vi::VisibilityIterator2 *vi2, casacore::Bool omit_flagged_data);
+		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
+		casacore::Bool omit_flagged_data);
 
 	const casacore::Vector<casacore::Int>& dataArray();
 };

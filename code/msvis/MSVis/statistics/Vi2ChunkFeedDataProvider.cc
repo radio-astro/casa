@@ -32,9 +32,12 @@ using namespace casacore;
 namespace casa {
 
 Vi2ChunkFeed1DataProvider::Vi2ChunkFeed1DataProvider(
-	vi::VisibilityIterator2 *vi2, Bool omit_flagged_data)
+	vi::VisibilityIterator2 *vi2,
+	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
+	Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
+		mergedColumns,
 		vi::VisBufferComponent2::Feed1,
 		omit_flagged_data,
 		false) {}
@@ -45,9 +48,12 @@ Vi2ChunkFeed1DataProvider::dataArray() {
 }
 
 Vi2ChunkFeed2DataProvider::Vi2ChunkFeed2DataProvider(
-	vi::VisibilityIterator2 *vi2, Bool omit_flagged_data)
+	vi::VisibilityIterator2 *vi2,
+	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
+	Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
+		mergedColumns,
 		vi::VisBufferComponent2::Feed2,
 		omit_flagged_data,
 		false) {}

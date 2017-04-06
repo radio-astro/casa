@@ -46,6 +46,7 @@ class Vi2ChunkFloatVisDataProvider final
 public:
 	Vi2ChunkFloatVisDataProvider(
 		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data,
 		casacore::Bool use_data_weights);
 

@@ -33,10 +33,12 @@ namespace casa {
 
 Vi2ChunkFloatVisDataProvider::Vi2ChunkFloatVisDataProvider(
 	vi::VisibilityIterator2 *vi2,
+	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data,
 	Bool use_data_weights)
 	: Vi2ChunkSigmasCubeDataProvider<Vi2StatsFloatIterator>(
 		vi2,
+		mergedColumns,
 		vi::VisBufferComponent2::VisibilityCubeFloat,
 		omit_flagged_data,
 		use_data_weights) {}

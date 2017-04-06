@@ -33,9 +33,11 @@ namespace casa {
 
 Vi2ChunkUVRangeDataProvider::Vi2ChunkUVRangeDataProvider(
 	vi::VisibilityIterator2 *vi2,
+	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
+		mergedColumns,
 		vi::VisBufferComponent2::Uvw,
 		omit_flagged_data,
 		false) {}

@@ -43,6 +43,7 @@ class Vi2ChunkWeightSpectrumDataProvider final
 public:
 	Vi2ChunkWeightSpectrumDataProvider(
 		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
 
 	const casacore::Cube<casacore::Float>& dataArray();

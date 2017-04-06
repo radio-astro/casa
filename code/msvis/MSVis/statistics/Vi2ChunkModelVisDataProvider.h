@@ -49,10 +49,12 @@ class Vi2ChunkModelVisDataProvider final
 public:
 	Vi2ChunkModelVisDataProvider(
 		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data,
 		casacore::Bool use_data_weights)
 		: Vi2ChunkWeightsCubeDataProvider<DataIterator>(
 			vi2,
+			mergedColumns,
 			vi::VisBufferComponent2::VisibilityCubeModel,
 			omit_flagged_data,
 			use_data_weights) {}

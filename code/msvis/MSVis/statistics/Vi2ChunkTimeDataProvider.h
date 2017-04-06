@@ -42,7 +42,9 @@ class Vi2ChunkTimeDataProvider final
 
 public:
 	Vi2ChunkTimeDataProvider(
-		vi::VisibilityIterator2 *vi2, casacore::Bool omit_flagged_data);
+		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
+		casacore::Bool omit_flagged_data);
 
 	const casacore::Vector<casacore::Double>& dataArray();
 };

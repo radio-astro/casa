@@ -32,9 +32,12 @@ using namespace casacore;
 namespace casa {
 
 Vi2ChunkAntenna1DataProvider::Vi2ChunkAntenna1DataProvider(
-	vi::VisibilityIterator2 *vi2, Bool omit_flagged_data)
+	vi::VisibilityIterator2 *vi2,
+	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
+	Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
+		mergedColumns,
 		vi::VisBufferComponent2::Antenna1,
 		omit_flagged_data,
 		false) {}
@@ -45,9 +48,12 @@ Vi2ChunkAntenna1DataProvider::dataArray() {
 }
 
 Vi2ChunkAntenna2DataProvider::Vi2ChunkAntenna2DataProvider(
-	vi::VisibilityIterator2 *vi2, Bool omit_flagged_data)
+	vi::VisibilityIterator2 *vi2,
+	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
+	Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
+		mergedColumns,
 		vi::VisBufferComponent2::Antenna2,
 		omit_flagged_data,
 		false) {}

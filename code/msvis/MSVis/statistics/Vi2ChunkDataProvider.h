@@ -32,6 +32,7 @@
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/Array.h>
+#include <casacore/ms/MeasurementSets/MSMainEnums.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 #include <msvis/MSVis/statistics/Vi2StatsFlagsIterator.h>
@@ -42,58 +43,48 @@
 #include <casacore/scimath/Mathematics/StatsDataProvider.h>
 #include <memory>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
+#include <set>
+#include <cassert>
 
 namespace casa {
 
-//
-// casacore::Data provider template class backed by VisibilityIterator2 instances. These
-// data providers operate on a single casacore::MS column over all vi2 sub-chunks in the
-// chunk selected when the data provider is instantiated. In other words, the
-// data sample for statistics generated with a Vi2ChunkDataProvider instance is
-// the data from a single column in a single vi2 chunk. It is intended that the
-// user set up the VisibilityIterator2 appropriately to select the desired data
-// sample for computing statistics. The user may then iterate through the
-// VisibilityIterator2 chunks, calling reset() on the Vi2ChunkDataProvider
-// instance before supplying the instance to the Statistics::setDataProvider()
-// call to compute statistics for that chunk's data. In outline:
-//
-// Vi2ChunkDataProvider *dp; // given
-// casacore::StatisticsAlgorithm statistics; // given
-// for (dp->vi2->originChunks(); dp->vi2->moreChunks(); dp->vi2->nextChunk()) {
-//  // Prepare the data provider
-//  dp->vi2->origin();
-//  dp->reset();
-//  // Compute statistics for this chunk
-//  statistics.setDataProvider(dp);
-//  doStuff(statistics);  // do something with the statistics;
-//                        // maybe call statistics.getStatistics()
-// }
-//
-// The above pattern is encapsulated by the Vi2ChunkDataProvider::foreachChunk()
-// method and Vi2ChunkStatisticsIteratee. The above can be implemented as
-// follows (but with template parameters where needed):
+// casacore::Data provider template class backed by VisibilityIterator2
+// instances. These data providers operate on a single casacore::MS column over
+// all vi2 sub-chunks in a dataset composed of one or more chunks selected when
+// the data provider is instantiated. In other words, the data sample for
+// statistics generated with a Vi2ChunkDataProvider instance is the data from a
+// single column in a single dataset of consecutive vi2 chunks. It is intended
+// that the user set up the VisibilityIterator2 appropriately to select the
+// desired data sample for computing statistics. Consecutive chunks produced by
+// an iterator may be merged by the data provider to produce a single
+// dataset. The iteration over an MS, and the computation of statistics on each
+// dataset driven using a Vi2ChunkStatisticsIteratee instance, as follows:
 //
 // Vi2ChunkDataProvider *dp; // given
 // casacore::StatisticsAlgorithm statistics; // given
 // class DoStuff : public Vi2ChunkStatisticsIteratee {
 //   ... // constructor, probably needs some sort of accumulator
-//   void nextChunk(casacore::StatisticsAlgorithm stats, const * VisBuffer2 vb) {
+//   void nextDataset(casacore::StatisticsAlgorithm stats,
+//                    const std::unordered_map<int,std::string> *colVals) {
 //     stats.getStatistics()...;
 //   }
 // }
 // DoStuff doStuff;
-// dp->foreachChunk(statistics, doStuff);
+// dp->foreachDataset(statistics, doStuff);
 //
-// Note that the AccumType template parameter value of casacore::StatsDataProvider is
-// derived from the DataIterator parameter value of this template, imposing a
-// constraint on the classes that can be used for DataIterator.
+// Note that the AccumType template parameter value of
+// casacore::StatsDataProvider is derived from the DataIterator parameter value
+// of this template, imposing a constraint on the classes that can be used for
+// DataIterator.
 //
 template <class DataIterator, class MaskIterator, class WeightsIterator>
 class Vi2ChunkDataProvider
 	: public casacore::StatsDataProvider<typename DataIterator::AccumType,
-	                           DataIterator,
-	                           MaskIterator,
-	                           WeightsIterator> {
+	                                     DataIterator,
+	                                     MaskIterator,
+	                                     WeightsIterator> {
 
 public:
 	// Define typedefs for some template parameters. This is primarily to
@@ -107,6 +98,8 @@ public:
 
 	Vi2ChunkDataProvider(
 		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns>
+		    &mergedColumns_,
 		vi::VisBufferComponent2 component,
 		casacore::Bool omit_flagged_data,
 		casacore::Bool use_data_weights)
@@ -115,16 +108,24 @@ public:
 		, use_data_weights(use_data_weights)
 		, omit_flagged_data(omit_flagged_data) {
 
-		// Attach the casacore::MS columns to vi2 by calling originChunks(). Not the most
-		// direct method, but attaching the columns is required in many cases to
-		// pass existsColumn() test.
+		// Attach the casacore::MS columns to vi2 by calling originChunks(). Not
+		// the most direct method, but attaching the columns is required in many
+		// cases to pass existsColumn() test.
 		vi2->originChunks();
 		if (!vi2->existsColumn(component))
 			throw casacore::AipsError("Column is not present");
+
+		for (auto &&i : mergedColumns_)
+			mergedColumns.insert(columnNames.at(i));
 	}
 
 	Vi2ChunkDataProvider(Vi2ChunkDataProvider&& other)
 		: vi2(other.vi2)
+		, mergedColumns(other.mergedColumns)
+		, datasetIndex(other.datasetIndex)
+		, datasetChunkOrigin(other.datasetChunkOrigin)
+		, followingChunkDatasetIndex(other.followingChunkDatasetIndex)
+		, currentChunk(other.currentChunk)
 		, component(other.component)
 		, use_data_weights(other.use_data_weights)
 		, omit_flagged_data(other.omit_flagged_data)
@@ -136,6 +137,11 @@ public:
 
 	Vi2ChunkDataProvider& operator=(Vi2ChunkDataProvider&& other) {
 		vi2 = other.vi2;
+		mergedColumns = other.mergedColumns;
+		datasetIndex = other.datasetIndex;
+		datasetChunkOrigin = other.datasetChunkOrigin;
+		followingChunkDatasetIndex = other.followingChunkDatasetIndex;
+		currentChunk = other.currentChunk;
 		component = other.component;
 		use_data_weights = other.use_data_weights;
 		omit_flagged_data = other.omit_flagged_data;
@@ -146,15 +152,20 @@ public:
 		return *this;
 	}
 
-	// Increment the data provider to the next sub-chunk.
+	// Increment the data provider to the sub-chunk within the dataset.
 	void operator++() {
-		reset_iterators();
+		if (atEnd())
+			throw casacore::AipsError(
+				"Data provider increment beyond end of dataset");
 		vi2->next();
+		reset_iterators();
+		if (!vi2->more() && followingChunkDatasetIndex == datasetIndex)
+			nextDatasetChunk();
 	}
 
-	// Are there any sub-chunks left to provide?
+	// Is this the last sub-chunk within the dataset?
 	casacore::Bool atEnd() const {
-		return !vi2->more();
+		return followingChunkDatasetIndex != datasetIndex && !vi2->more();
 	}
 
 	// Take any actions necessary to finalize the provider. This will be called
@@ -228,26 +239,38 @@ public:
 		return false;
 	};
 
-	// Reset the provider to point to the first sub-chunk.
+	// Reset the provider to point to the first sub-chunk of the dataset.
 	void reset() {
-		reset_iterators();
-		vi2->origin();
-	}
-
-	std::unique_ptr<vi::VisibilityIterator2> vi2;
-
-	void foreachChunk(
-		casacore::StatisticsAlgorithm<AccumType,DataIteratorType,MaskIteratorType,WeightsIteratorType>& statistics,
-		Vi2ChunkStatisticsIteratee<DataIterator,WeightsIterator,MaskIterator>& iteratee) {
-
-		for (vi2->originChunks(); vi2->moreChunks(); vi2->nextChunk()) {
-			reset();
-			statistics.setDataProvider(this);
-			iteratee.nextChunk(statistics, vi2->getVisBuffer());
+		if (currentChunk != datasetChunkOrigin) {
+			vi2->originChunks();
+			currentChunk = 0;
+			initChunk();
+			updateFollowingChunkDatasetIndex();
+			while (currentChunk != datasetChunkOrigin)
+				nextDatasetChunk();
+		} else {
+			initChunk();
+			updateFollowingChunkDatasetIndex();
 		}
 	}
 
+	void foreachDataset(
+		casacore::StatisticsAlgorithm<AccumType,DataIteratorType,MaskIteratorType,WeightsIteratorType>& statistics,
+		Vi2ChunkStatisticsIteratee<DataIterator,WeightsIterator,MaskIterator>& iteratee) {
+
+		datasetIndex = -1;
+		followingChunkDatasetIndex = 0;
+		while (nextDataset()) {
+			std::unique_ptr<std::unordered_map<int,std::string> >
+				columnValues(mkColumnValues());
+			statistics.setDataProvider(this);
+			iteratee.nextDataset(statistics, columnValues.get());
+		};
+	}
+
 protected:
+
+	std::unique_ptr<vi::VisibilityIterator2> vi2;
 
 	vi::VisBufferComponent2 component;
 
@@ -261,15 +284,96 @@ protected:
 
 	std::unique_ptr<const MaskIterator> mask_iterator;
 
+	int datasetIndex;
+
+	unsigned datasetChunkOrigin;
+
+	int followingChunkDatasetIndex;
+
+	unsigned currentChunk;
+
+	std::unordered_set<string> mergedColumns;
+
 private:
 
-	void reset_iterators() {
+	void
+	reset_iterators() {
 		data_iterator.reset();
 		weights_iterator.reset();
 		mask_iterator.reset();
 	}
 
+	void
+	nextDatasetChunk() {
+		vi2->nextChunk();
+		++currentChunk;
+		if (vi2->moreChunks())
+			initChunk();
+		updateFollowingChunkDatasetIndex();
+	}
+
+	bool
+	nextDataset() {
+		++datasetIndex;
+		assert(followingChunkDatasetIndex == datasetIndex);
+		if (datasetIndex == 0) {
+			vi2->originChunks();
+			currentChunk = 0;
+
+		} else {
+			vi2->nextChunk();
+			++currentChunk;
+		}
+		if (vi2->moreChunks())
+			initChunk();
+		updateFollowingChunkDatasetIndex();
+		datasetChunkOrigin = currentChunk;
+		return vi2->moreChunks();
+	}
+
+	void
+	initChunk() {
+		vi2->origin();
+		reset_iterators();
+	}
+
 	virtual const casacore::Array<typename DataIterator::DataType>& dataArray() = 0;
+
+	void
+	updateFollowingChunkDatasetIndex() {
+		if (!vi2->moreChunks() || mergedColumns.count(vi2->keyChange()) == 0)
+			followingChunkDatasetIndex = datasetIndex + 1;
+		else
+			followingChunkDatasetIndex = datasetIndex;
+	}
+
+	std::unique_ptr<std::unordered_map<int,std::string> >
+	mkColumnValues() {
+		const vi::VisBuffer2 *vb = vi2->getVisBuffer();
+		return std::unique_ptr<std::unordered_map<int,std::string> >(
+			new std::unordered_map<int,std::string> {
+				{casacore::MSMainEnums::PredefinedColumns::ARRAY_ID,
+						"ARRAY_ID=" + std::to_string(vb->arrayId()[0])},
+				{casacore::MSMainEnums::PredefinedColumns::FIELD_ID,
+						"FIELD_ID=" + std::to_string(vb->fieldId()[0])},
+				{casacore::MSMainEnums::PredefinedColumns::DATA_DESC_ID,
+						"DATA_DESC_ID="
+						+ std::to_string(vb->dataDescriptionIds()[0])},
+				{casacore::MSMainEnums::PredefinedColumns::TIME,
+						"TIME="
+						+ std::to_string(vb->time()[0] - vb->timeInterval()[0] / 2)},
+				{casacore::MSMainEnums::PredefinedColumns::SCAN_NUMBER,
+						"SCAN_NUMBER=" + std::to_string(vb->scan()[0])},
+				{casacore::MSMainEnums::PredefinedColumns::STATE_ID,
+						"STATE_ID=" + std::to_string(vb->stateId()[0])}
+			});
+	}
+
+	std::map<casacore::MSMainEnums::PredefinedColumns,std::string> columnNames = {
+		{casacore::MSMainEnums::PredefinedColumns::ARRAY_ID, "ARRAY_ID"},
+		{casacore::MSMainEnums::PredefinedColumns::FIELD_ID, "FIELD_ID"},
+		{casacore::MSMainEnums::PredefinedColumns::DATA_DESC_ID, "DATA_DESC_ID"},
+		{casacore::MSMainEnums::PredefinedColumns::TIME, "TIME"}};
 };
 
 // casacore::Data provider template for row-based casacore::MS columns (i.e, not visibilities) using

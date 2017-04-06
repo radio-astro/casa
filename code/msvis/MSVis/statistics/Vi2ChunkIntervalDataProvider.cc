@@ -33,9 +33,11 @@ namespace casa {
 
 Vi2ChunkIntervalDataProvider::Vi2ChunkIntervalDataProvider(
 	vi::VisibilityIterator2 *vi2,
+	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
 	Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
+		mergedColumns,
 		vi::VisBufferComponent2::TimeInterval,
 		omit_flagged_data,
 		false) {}

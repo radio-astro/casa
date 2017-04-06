@@ -43,6 +43,7 @@ class Vi2ChunkFlagRowDataProvider final
 public:
 	Vi2ChunkFlagRowDataProvider(
 		vi::VisibilityIterator2 *vi2,
+		const std::set<casacore::MSMainEnums::PredefinedColumns> &mergedColumns,
 		casacore::Bool omit_flagged_data);
 
 	const casacore::Vector<casacore::Bool>& dataArray();

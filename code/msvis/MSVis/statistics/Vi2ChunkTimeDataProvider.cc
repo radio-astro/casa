@@ -32,9 +32,12 @@ using namespace casacore;
 namespace casa {
 
 Vi2ChunkTimeDataProvider::Vi2ChunkTimeDataProvider(
-	vi::VisibilityIterator2 *vi2, Bool omit_flagged_data)
+	vi::VisibilityIterator2 *vi2,
+	const std::set<MSMainEnums::PredefinedColumns> &mergedColumns,
+	Bool omit_flagged_data)
 	: Vi2ChunkDataProvider(
 		vi2,
+		mergedColumns,
 		vi::VisBufferComponent2::Time,
 		omit_flagged_data,
 		false) {}
