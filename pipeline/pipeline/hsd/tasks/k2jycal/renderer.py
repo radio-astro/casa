@@ -14,7 +14,7 @@ JyperKTR = collections.namedtuple('JyperKTR', 'spw msname antenna pol factor')
 class T2_4MDetailsSingleDishK2JyCalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='hsd_k2jycal.mako', 
                  description='Generate Kelvin to Jy calibration table.',
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsSingleDishK2JyCalRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
     

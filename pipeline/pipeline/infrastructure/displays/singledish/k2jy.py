@@ -71,6 +71,7 @@ class K2JyHistDisplay(object):
         pl.xlabel('Jy/K factor', fontsize=11)
         pl.ylabel('Numbers', fontsize=11)
         pl.title('Jy/K factors (SPW %d)' % self.spw, fontsize=11)
+        pl.legend(loc=1)
 
         plotfile = os.path.join(self.stage_dir,
                                 'jyperk_spw%s.png'%(self.spw))
