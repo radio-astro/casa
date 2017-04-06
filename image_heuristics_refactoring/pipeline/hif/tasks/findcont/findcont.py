@@ -159,7 +159,7 @@ class FindCont(basetask.StandardTaskTemplate):
                     width = '%sMHz' % ((channel_width) / 1e6)
 
                     # Skip edge channels if no nchan is supplied
-                    if target['nchan'] not in (None, -1):
+                    if target['nchan'] in (None, -1):
                         nchan = int(round((if1 - if0 ) / channel_width - 2))
                     else:
                         nchan = target['nchan']
