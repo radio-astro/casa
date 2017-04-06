@@ -66,25 +66,25 @@
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/ViFrequencySelection.h>
 
-#include <msvis/MSVis/statistics/Vi2ChunkStatisticsIteratee.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkVisAmplitudeProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkVisPhaseProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkVisRealProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkVisImaginaryProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkFloatVisDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkUVRangeDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkFlagCubeDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkAntennaDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkFeedDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkFieldIdDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkArrayIdDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkDataDescriptionIdsDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkFlagRowDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkIntervalDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkScanDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkTimeDataProvider.h>
-#include <msvis/MSVis/statistics/Vi2ChunkWeightSpectrumDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2StatisticsIteratee.h>
+#include <msvis/MSVis/statistics/Vi2DataProvider.h>
+#include <msvis/MSVis/statistics/Vi2VisAmplitudeProvider.h>
+#include <msvis/MSVis/statistics/Vi2VisPhaseProvider.h>
+#include <msvis/MSVis/statistics/Vi2VisRealProvider.h>
+#include <msvis/MSVis/statistics/Vi2VisImaginaryProvider.h>
+#include <msvis/MSVis/statistics/Vi2FloatVisDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2UVRangeDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2FlagCubeDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2AntennaDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2FeedDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2FieldIdDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2ArrayIdDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2DataDescriptionIdsDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2FlagRowDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2IntervalDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2ScanDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2TimeDataProvider.h>
+#include <msvis/MSVis/statistics/Vi2WeightSpectrumDataProvider.h>
 
 #include <ms_cmpt.h>
 #include <msmetadata_cmpt.h>
@@ -1397,12 +1397,12 @@ ms::statistics(const std::string& column,
 	return retval;
 }
 
-// Class used by doStatistics to accumulate the statistics for each chunk
-// provided by a VisibilityIterator2 instance (through a Vi2ChunkDataProvider
+// Class used by doStatistics to accumulate the statistics for each dataset
+// provided by a VisibilityIterator2 instance (through a Vi2DataProvider
 // instance.)
 template <class A, class D, class W, class M>
-class ChunkStatisticsAccumulator
-	: public Vi2ChunkStatisticsIteratee<D,W,M>
+class StatisticsAccumulator
+	: public Vi2StatisticsIteratee<D,W,M>
 {
 	std::map<double, A> quantileToValue;
 	const double quartile1 = 0.25;
@@ -1415,7 +1415,7 @@ class ChunkStatisticsAccumulator
 	bool hideTimeAxis;
 
 public:
-	ChunkStatisticsAccumulator(
+	StatisticsAccumulator(
 		Record &acc, const vector<Int> &sortColumnIds,
 		const set<MSMainEnums::PredefinedColumns> &mergedColumns,
 		bool hideTimeAxis)
@@ -1476,14 +1476,14 @@ doStatistics(
 	           typename DataProvider::WeightsIteratorType>
 		statistics;
 
-	ChunkStatisticsAccumulator<typename DataProvider::AccumType,
-	                           typename DataProvider::DataIteratorType,
-	                           typename DataProvider::WeightsIteratorType,
-	                           typename DataProvider::MaskIteratorType>
-		accumulateChunkStatistics(result, sortColumnIds, mergedColumns,
-		                          hideTimeAxis);
+	StatisticsAccumulator<typename DataProvider::AccumType,
+	                      typename DataProvider::DataIteratorType,
+	                      typename DataProvider::WeightsIteratorType,
+	                      typename DataProvider::MaskIteratorType>
+		accumulateStatistics(result, sortColumnIds, mergedColumns,
+		                     hideTimeAxis);
 
-	dp->foreachDataset(statistics, accumulateChunkStatistics);
+	dp->foreachDataset(statistics, accumulateStatistics);
 	return fromRecord(result);
 }
 
@@ -1900,7 +1900,7 @@ ms::statistics2(const std::string& column,
 			//
 			// Most of the remaining code in this function effectively acts as a
 			// lookup table to get an instance of the appropriate sub-class of
-			// Vi2ChunkDataProvider for the requested MS column (and data
+			// Vi2DataProvider for the requested MS column (and data
 			// transformation for visibilities), followed by a call to
 			// doStatistics().
 			if (mycolumn == "DATA") {
@@ -1909,7 +1909,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkObservedVisAmplitudeProvider(
+						new Vi2ObservedVisAmplitudeProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 				else if (complex_value == "phase")
@@ -1917,7 +1917,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkObservedVisPhaseProvider(
+						new Vi2ObservedVisPhaseProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 				else if (complex_value == "imaginary" || complex_value == "imag")
@@ -1925,7 +1925,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkObservedVisImaginaryProvider(
+						new Vi2ObservedVisImaginaryProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 				else if (complex_value == "real")
@@ -1933,7 +1933,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkObservedVisRealProvider(
+						new Vi2ObservedVisRealProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 			} else if (mycolumn == "CORRECTED") {
@@ -1942,7 +1942,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkCorrectedVisAmplitudeProvider(
+						new Vi2CorrectedVisAmplitudeProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 				else if (complex_value == "phase")
@@ -1950,7 +1950,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkCorrectedVisPhaseProvider(
+						new Vi2CorrectedVisPhaseProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 				else if (complex_value == "imaginary" || complex_value == "imag")
@@ -1958,7 +1958,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkCorrectedVisImaginaryProvider(
+						new Vi2CorrectedVisImaginaryProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 				else if (complex_value == "real")
@@ -1966,7 +1966,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkCorrectedVisRealProvider(
+						new Vi2CorrectedVisRealProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 			} else if (mycolumn == "MODEL") {
@@ -1975,7 +1975,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkModelVisAmplitudeProvider(
+						new Vi2ModelVisAmplitudeProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 				else if (complex_value == "phase")
@@ -1983,7 +1983,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkModelVisPhaseProvider(
+						new Vi2ModelVisPhaseProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 				else if (complex_value == "imaginary" || complex_value == "imag")
@@ -1991,7 +1991,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkModelVisImaginaryProvider(
+						new Vi2ModelVisImaginaryProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 				else if (complex_value == "real")
@@ -1999,7 +1999,7 @@ ms::statistics2(const std::string& column,
 						sortColumnIds,
 						mergedColumnIds,
 						hideTimeAxis,
-						new Vi2ChunkModelVisRealProvider(
+						new Vi2ModelVisRealProvider(
 							vi2, mergedColumnIds, useflags, useweights));
 
 			} else if (mycolumn == "FLOAT") {
@@ -2007,7 +2007,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkFloatVisDataProvider(
+					new Vi2FloatVisDataProvider(
 						vi2, mergedColumnIds, useflags, useweights));
 				// } else if (mycolumn == "UVW") {
 
@@ -2016,7 +2016,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkUVRangeDataProvider(
+					new Vi2UVRangeDataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "FLAG") {
@@ -2024,7 +2024,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkFlagCubeDataProvider(
+					new Vi2FlagCubeDataProvider(
 						vi2, mergedColumnIds, useflags));
 				// } else if (mycolumn == "WEIGHT") {
 				// } else if (mycolumn == "SIGMA") {
@@ -2034,7 +2034,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkAntenna1DataProvider(
+					new Vi2Antenna1DataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "ANTENNA2") {
@@ -2042,7 +2042,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkAntenna2DataProvider(
+					new Vi2Antenna2DataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "FEED1") {
@@ -2050,7 +2050,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkFeed1DataProvider(
+					new Vi2Feed1DataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "FEED2") {
@@ -2058,7 +2058,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkFeed2DataProvider(
+					new Vi2Feed2DataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "FIELD_ID") {
@@ -2066,7 +2066,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkFieldIdDataProvider(
+					new Vi2FieldIdDataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "ARRAY_ID") {
@@ -2074,7 +2074,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkArrayIdDataProvider(
+					new Vi2ArrayIdDataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "DATA_DESC_ID") {
@@ -2082,7 +2082,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkDataDescriptionIdsDataProvider(
+					new Vi2DataDescriptionIdsDataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "FLAG_ROW") {
@@ -2090,7 +2090,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkFlagRowDataProvider(
+					new Vi2FlagRowDataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "INTERVAL") {
@@ -2098,7 +2098,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkIntervalDataProvider(
+					new Vi2IntervalDataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "SCAN_NUMBER" || mycolumn == "SCAN") {
@@ -2106,7 +2106,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkScanDataProvider(
+					new Vi2ScanDataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "TIME") {
@@ -2114,7 +2114,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkTimeDataProvider(
+					new Vi2TimeDataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else if (mycolumn == "WEIGHT_SPECTRUM") {
@@ -2122,7 +2122,7 @@ ms::statistics2(const std::string& column,
 					sortColumnIds,
 					mergedColumnIds,
 					hideTimeAxis,
-					new Vi2ChunkWeightSpectrumDataProvider(
+					new Vi2WeightSpectrumDataProvider(
 						vi2, mergedColumnIds, useflags));
 
 			} else {
