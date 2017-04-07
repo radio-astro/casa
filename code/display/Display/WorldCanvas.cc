@@ -1693,9 +1693,14 @@ void WorldCanvas::drawImage(const Vector<Double> &blc,
 		void* drawObj) {
 
 	ColorIndexedImage_* im = makeColorIndexedImage( blc, trc, data, usePixelEdges, drawObj);
-	mapToColorAndDrawImage(im->blc, im->data);
-	if(drawObj==0) delete im;
-	// discard indexed image if caching not desired.
+	if ( im ) {
+		mapToColorAndDrawImage(im->blc, im->data);
+		if(drawObj==0) delete im;
+		// discard indexed image if caching not desired.
+	} else {
+		// viewer need a Display Panel GUI aware error reporting system...
+		fprintf( stderr, "Error creating image: %s\n", errorMessage( ).c_str() );
+    }
 }
 
 WorldCanvas::ColorIndexedImage_* WorldCanvas::makeColorIndexedImage(const Vector<Double> &blc,
