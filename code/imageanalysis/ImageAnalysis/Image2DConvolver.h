@@ -128,7 +128,7 @@ public:
 
     casacore::String getClass() const { return CLASS_NAME; }
 
-    // if true, do not log certain warning messages which would normally
+    // if true, do not log certain info/warning messages which would normally
     // be logged during convolution
     void setSuppressWarnings(casacore::Bool b) { _suppressWarnings = b; }
 

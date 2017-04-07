@@ -271,7 +271,9 @@ template <class T> void Image2DConvolver<T>::_logBeamInfo(
     auto msg = oss.str();
     LogOrigin lor(getClass(), __func__);
     this->addHistory(lor, msg);
-    *this->_getLog() << LogIO::NORMAL << msg << LogIO::POST;
+    if (! _suppressWarnings) {
+        *this->_getLog() << LogIO::NORMAL << msg << LogIO::POST;
+    }
 }
 
 template <class T> void Image2DConvolver<T>::_doSingleBeam(
@@ -285,10 +287,12 @@ template <class T> void Image2DConvolver<T>::_doSingleBeam(
         kernelParms = _getConvolvingBeamForTargetResolution(
             originalParms, inputBeam
         );
-        os << casacore::LogIO::NORMAL << "Convolving image that has a beam of "
-            << inputBeam << " with a Gaussian of "
-            << casacore::GaussianBeam(kernelParms) << " to reach a target resolution of "
-            << casacore::GaussianBeam(originalParms) << casacore::LogIO::POST;
+        if (! _suppressWarnings) {
+            os << LogIO::NORMAL << "Convolving image that has a beam of "
+                << inputBeam << " with a Gaussian of "
+                << GaussianBeam(kernelParms) << " to reach a target resolution of "
+                << GaussianBeam(originalParms) << LogIO::POST;
+        }
         kernelVolume = _makeKernel(
             kernel, kernelType, kernelParms, imageIn
         );
@@ -299,17 +303,23 @@ template <class T> void Image2DConvolver<T>::_doSingleBeam(
         kernelType, kernelParms, cSys, inputBeam,
         imageIn.units(), true
     );
-    os << casacore::LogIO::NORMAL << "Scaling pixel values by ";
+    if (! _suppressWarnings) {
+        os << LogIO::NORMAL << "Scaling pixel values by ";
+    }
     if (logFactors) {
         if (_targetres) {
-            casacore::GaussianBeam kernelBeam(kernelParms);
+            GaussianBeam kernelBeam(kernelParms);
             factor1 = pixelArea/kernelBeam.getArea("arcsec*arcsec");
         }
-        casacore::Double factor2 = beamOut.getArea("arcsec*arcsec")/inputBeam.getArea("arcsec*arcsec");
-        os << "inverse of area of convolution kernel in pixels (" << factor1
-            << ") times the ratio of the beam areas (" << factor2 << ") = ";
+        Double factor2 = beamOut.getArea("arcsec*arcsec")/inputBeam.getArea("arcsec*arcsec");
+        if (! _suppressWarnings) {
+            os << "inverse of area of convolution kernel in pixels (" << factor1
+                << ") times the ratio of the beam areas (" << factor2 << ") = ";
+        }
     }
-    os << scaleFactor << casacore::LogIO::POST;
+    if (! _suppressWarnings) {
+        os << scaleFactor << LogIO::POST;
+    }
     if (_targetres && near(beamOut.getMajor(), beamOut.getMinor(), 1e-7)) {
         // circular beam should have same PA as given by user if
         // targetres
@@ -325,7 +335,7 @@ template <class T> void Image2DConvolver<T>::_doSingleBeam(
     // Overwrite some bits and pieces in the output image to do with the
     // restoring beam  and image units
     casacore::Bool holdsOneSkyAxis;
-    casacore::Bool hasSky = casacore::CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, _axes.asVector());
+    casacore::Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, _axes.asVector());
     if (hasSky && ! beamOut.isNull()) {
         iiOut.setRestoringBeam(beamOut);
     }
@@ -333,8 +343,10 @@ template <class T> void Image2DConvolver<T>::_doSingleBeam(
         // If one of the axes is in the sky plane, we must
         // delete the restoring beam as it is no longer meaningful
         if (holdsOneSkyAxis) {
-            os << casacore::LogIO::WARN << "Because you convolved just one of the sky axes" << endl;
-            os << "The output image does not have a valid spatial restoring beam" << casacore::LogIO::POST;
+            if (! _suppressWarnings) {
+                os << LogIO::WARN << "Because you convolved just one of the sky axes" << endl;
+                os << "The output image does not have a valid spatial restoring beam" << LogIO::POST;
+            }
             iiOut.removeRestoringBeam();
         }
     }
@@ -602,7 +614,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
             }
         }
     }
-    if (emitMessage) {
+    if (emitMessage && ! _suppressWarnings) {
         os << "You are " << (hasSky ? "" : " not ") << "convolving the sky" << casacore::LogIO::POST;
     }
     beamOut = casacore::GaussianBeam();
