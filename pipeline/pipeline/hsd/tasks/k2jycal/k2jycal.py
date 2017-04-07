@@ -63,7 +63,7 @@ class SDK2JyCalInputs(basetask.StandardInputs):
 
 
 class SDK2JyCalResults(basetask.Results):
-    def __init__(self, vis=None, final=[], pool=[], reffile=None, valid_factors={},
+    def __init__(self, vis=None, final=[], pool=[], reffile=None, factors={},
                  all_ok=False):
         super(SDK2JyCalResults, self).__init__()
 
@@ -72,7 +72,7 @@ class SDK2JyCalResults(basetask.Results):
         self.final = final[:]
         self.error = set()
         self.reffile = reffile
-        self.factors = valid_factors
+        self.factors = factors
         self.all_ok = all_ok
 
     def merge_with_context(self, context):
