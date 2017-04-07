@@ -10,6 +10,7 @@ import re
 import shutil
 import zipfile
 
+#import casadef
 from casa_system import casa as casasys
 import mako
 
@@ -145,7 +146,6 @@ def get_casa_version():
     casa_version_str = "%d.%d.%d-%d" % (casa_version[0], casa_version[1], casa_version[2], casa_version[3])
     return casa_version_str
 
-
 class Session(object):
     def __init__(self, mses=None, name='Unnamed Session'):
         self.mses = [] if mses is None else mses
@@ -153,30 +153,11 @@ class Session(object):
 
     @staticmethod
     def get_sessions(context):
-        # eventually we will need to sort by OUS ID too, but at the moment data
-        # is all registered against a single OUS ID.
-
         d = {}
         for ms in get_mses_by_time(context):
             d.setdefault(ms.session, []).append(ms)
 
-        session_names = []
-        for session_name, session_mses in d.iteritems():
-            oldest_ms = min(session_mses, key=lambda ms: utils.get_epoch_as_datetime(ms.start_time))
-            session_names.append((utils.get_epoch_as_datetime(oldest_ms.start_time), session_name, session_mses))
-
-        # primary sort sessions by their start time then by session name
-        def mycmp(t1, t2):
-            if t1[0] != t2[0]:
-                return cmp(t1[0], t2[0])
-            elif t1[1] != t2[1]:
-                # natural sort so that session9 comes before session10
-                name_sorted = sorted((t1[1], t2[1]), key=utils.natural_sort)
-                return -1 if name_sorted[0] == t1[1] else 1
-            else:
-                return 0
-
-        return [Session(mses, name) for _, name, mses in sorted(session_names, cmp=mycmp)]
+        return [Session(v, k) for k, v in d.items()]
 
 
 class RendererBase(object):
@@ -273,7 +254,9 @@ class T1_1Renderer(RendererBase):
             num_antennas = len(ms.antennas)
             # times should be passed as Python datetimes
             time_start = utils.get_epoch_as_datetime(ms.start_time)
+            time_start = utils.format_datetime(time_start)
             time_end = utils.get_epoch_as_datetime(ms.end_time)
+            time_end = utils.format_datetime(time_end)
 
             target_scans = [s for s in ms.scans if 'TARGET' in s.intents]
             # check for REFERENCE (OFF-source) in TARGET scans
@@ -327,9 +310,9 @@ class T1_1Renderer(RendererBase):
 
         return {
             'pcontext': context,
-            # 'casa_version': get_casa_version(),
+            #'casa_version': get_casa_version(),
             'casa_version': casasys['build']['version'],
-            # 'casa_revision': casadef.subversion_revision,
+            #'casa_revision': casadef.subversion_revision,
             'casa_revision': casasys['build']['number'],
             'pipeline_revision': pipeline.revision,
             'pipeline_doclink': pipeline_doclink,
@@ -346,7 +329,8 @@ class T1_1Renderer(RendererBase):
             'ousstatus_entity_id': context.project_structure.ousstatus_entity_id,
             'ppr_uid': None,
             'observers': observers,
-            'ms_summary_rows': ms_summary_rows
+            #                 'qaadapter'        : qaresults,
+            'ms_summary_rows'   : ms_summary_rows
         }
 
 
