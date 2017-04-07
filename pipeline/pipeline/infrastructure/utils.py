@@ -701,10 +701,14 @@ def get_qascores(result, lo=None, hi=None):
     return [s for s in scores if matches(s)]
 
 
-def natural_sort(l): 
-    convert = lambda text: int(text) if text.isdigit() else text.lower() 
-    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
-    return sorted(l, key = alphanum_key)
+def natural_sort(s, _nsre=re.compile('([0-9]+)')):
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(_nsre, s)]
+
+# def natural_sort(l):
+#     convert = lambda text: int(text) if text.isdigit() else text.lower()
+#     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+#     return sorted(l, key=alphanum_key)
 
 
 class OrderedDefaultdict(collections.OrderedDict):
