@@ -455,7 +455,8 @@ void ImageInterfaceTest::testYAPruneRegions()
     SDMaskHandler maskhandler;
 
     Double prunesize=2.0;
-    SHARED_PTR<ImageInterface<Float> > tempIm_ptr = maskhandler.YAPruneRegions(InImage,prunesize);
+    Vector<Bool> pruned; 
+    SHARED_PTR<ImageInterface<Float> > tempIm_ptr = maskhandler.YAPruneRegions(InImage,pruned,prunesize);
     PagedImage<Float> outMask(InImage.shape(), InImage.coordinates(), "testYAPruneRegions-out.mask");
     outMask.copyData(*(tempIm_ptr.get()) );
 }
