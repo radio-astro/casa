@@ -4,6 +4,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_editimlist(vis=None,
+                   search_radius_arcsec=None,
                    cell=None,
                    cyclefactor=None,
                    cycleniter=None,

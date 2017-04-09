@@ -13,6 +13,7 @@ LOG = infrastructure.get_logger(__name__)
 class EditimlistInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
+                 search_radius_arcsec=None,
                  cell=None,
                  cyclefactor=None,
                  cycleniter=None,
@@ -46,7 +47,8 @@ class EditimlistInputs(basetask.StandardInputs):
         keys_to_consider = ('field', 'intent', 'spw', 'cell', 'deconvolver', 'imsize',
                             'phasecenter', 'specmode', 'gridder', 'imagename', 'scales',
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
-                            'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask')
+                            'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
+                            'search_radius_arcsec')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -105,15 +107,16 @@ class Editimlist(basetask.StandardTaskTemplate):
                 fieldnames = [','.join(fieldnames)]
 
         target = CleanTarget()
-        target['deconvolver'] = '' if not inputs.deconvolver else None
-        target['scales'] = [0] if not inputs.scales else None
-        target['robust'] = 1.0 if not inputs.robust else None
-        target['uvtaper'] = [] if not inputs.uvtaper else None
-        target['niter'] = 20000 if not inputs.niter else None
-        target['cycleniter'] = -1 if not inputs.cycleniter else None
-        target['cyclefactor'] = 3.0 if not inputs.cyclefactor else None
-        target['mask'] = '' if not inputs.mask else None
-        target['specmode'] = 'cont' if not inputs.specmode else None
+        target['deconvolver'] = '' if not inputs.deconvolver else inputs.deconvolver
+        target['scales'] = [0] if not inputs.scales else inputs.scales
+        target['robust'] = 1.0 if not inputs.robust else inputs.robust
+        target['uvtaper'] = [] if not inputs.uvtaper else inputs.uvtaper
+        target['niter'] = 20000 if not inputs.niter else inputs.niter
+        target['cycleniter'] = -1 if not inputs.cycleniter else inputs.cycleniter
+        target['cyclefactor'] = 3.0 if not inputs.cyclefactor else inputs.cyclefactor
+        target['mask'] = '' if not inputs.mask else inputs.mask
+        target['specmode'] = 'cont' if not inputs.specmode else inputs.specmode
+        buffer_arcsec = 1000. if not inputs.search_radius_arcsec else inputs.search_radius_arcsec
         inputsdict = inputs.__dict__
         for parameter in inputsdict.keys():
             if inputsdict[parameter] and not parameter.startswith('_') and (parameter in target):
@@ -135,10 +138,8 @@ class Editimlist(basetask.StandardTaskTemplate):
             target['field'] = fieldnames[0]
         else:
             if type(target['phasecenter']) is not type(None):
-                found_fields = None
-                buffer_arcsec = 1000.
                 cellsize_arcsec = float(target['cell'].strip('arcsec'))
-                dist = ((target['imsize'][0] / 2.) * cellsize_arcsec) + buffer_arcsec
+                dist = ((target['imsize'][0] / 2.) * cellsize_arcsec) + float(buffer_arcsec)
                 dist_arcsec = str(dist) + 'arcsec'
                 found_fields = target['heuristics'].find_fields(distance=dist_arcsec, phase_center=target['phasecenter'])
                 fieldnames = []
