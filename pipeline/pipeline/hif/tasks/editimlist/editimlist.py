@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import print_function  # get python 3 print function
 import os
 
 import pipeline.infrastructure as infrastructure
@@ -90,53 +91,70 @@ class Editimlist(basetask.StandardTaskTemplate):
         target = dict()
         inputs.editmode = 'add' if not inputs.editmode else inputs.editmode
 
-        if not isinstance(inputs.field, list):
-            LOG.error('field type for hif_editimlist is not a list.')
-
         ms = self.inputs.context.observing_run.get_ms(inputs.vis[0])
         fieldnames = []
-        for fid in inputs.field:
-            if isinstance(fid, int):
-                fieldobj = ms.get_fields(field_id=int(fid))
-                fieldnames.append(fieldobj[0].name)
-            else:
-                fieldnames.append(fid)
+        if type(inputs.field) is not type(None):
+            for fid in inputs.field:
+                if isinstance(fid, int):
+                    fieldobj = ms.get_fields(field_id=fid)
+                    fieldnames.append(fieldobj[0].name)
+                else:
+                    fieldnames.append(fid)
 
-        for targetname in fieldnames:
-            if inputs.editmode == 'add':
-                target = CleanTarget()
-                target['deconvolver'] = '' if not inputs.deconvolver else None
-                target['scales'] = [0] if not inputs.scales else None
-                target['robust'] = 1.0 if not inputs.robust else None
-                target['uvtaper'] = [] if not inputs.uvtaper else None
-                target['niter'] = 20000 if not inputs.niter else None
-                target['cycleniter'] = -1 if not inputs.cycleniter else None
-                target['cyclefactor'] = 3.0 if not inputs.cyclefactor else None
-                target['mask'] = '' if not inputs.mask else None
-                target['specmode'] = 'cont' if not inputs.specmode else None
-                target['field'] = targetname
-                target['imagename'] = targetname.split(',')[0].replace('+','_')+'_sSTAGENUMBER'
-                iph = imageparams_factory.ImageParamsHeuristicsFactory()
-                target['heuristics'] = iph.getHeuristics(context=inputs.context, vislist=inputs.vis, spw=inputs.spw, imaging_mode='VLASS')
-                inputsdict = inputs.__dict__
-                for parameter in inputsdict.keys():
-                    if inputsdict[parameter] and parameter not in ('field', 'imagename') and \
-                            not parameter.startswith('_') and (parameter in target):
-                        inputspar_value = eval('inputs.' + parameter)
-                        # print(parameter + '=' + str(inputspar_value))
-                        cmd = "target['" + parameter + "'] = inputs." + parameter
-                        # print(cmd)
-                        exec cmd
-            elif inputs.editmode == 'edit':
-                for parameter in inputs.keys_to_change:
-                    if parameter is not None and parameter not in ('editmode', 'field', 'imagename'):
-                        # inputspar_value = eval('inputs.' + parameter)
-                        # print(parameter + '=' + str(inputspar_value))
-                        cmd = 'target["' + parameter + '"] = inputs.' + parameter
-                        # print(cmd)
-                        exec cmd
+            if len(fieldnames) > 1:
+                fieldnames = [','.join(fieldnames)]
 
-            result.add_target(target)
+        target = CleanTarget()
+        target['deconvolver'] = '' if not inputs.deconvolver else None
+        target['scales'] = [0] if not inputs.scales else None
+        target['robust'] = 1.0 if not inputs.robust else None
+        target['uvtaper'] = [] if not inputs.uvtaper else None
+        target['niter'] = 20000 if not inputs.niter else None
+        target['cycleniter'] = -1 if not inputs.cycleniter else None
+        target['cyclefactor'] = 3.0 if not inputs.cyclefactor else None
+        target['mask'] = '' if not inputs.mask else None
+        target['specmode'] = 'cont' if not inputs.specmode else None
+        inputsdict = inputs.__dict__
+        for parameter in inputsdict.keys():
+            if inputsdict[parameter] and not parameter.startswith('_') and (parameter in target):
+                inputspar_value = eval('inputs.' + parameter)
+                # print(parameter + '=' + str(inputspar_value))
+                cmd = "target['" + parameter + "'] = inputs." + parameter
+                # print(cmd)
+                exec cmd
+
+        iph = imageparams_factory.ImageParamsHeuristicsFactory()
+        target['heuristics'] = iph.getHeuristics(context=inputs.context, vislist=inputs.vis, spw=inputs.spw,
+                                                 imaging_mode='VLASS')
+        # if len(target['cell']) == 1:
+        #     target['cell'] = [target['cell'][0], target['cell'][0]]
+        # if len(target['imsize']) == 1:
+        #     target['imsize'] = [target['imsize'][0], target['imsize'][0]]
+
+        if fieldnames:
+            target['field'] = fieldnames[0]
+        else:
+            if type(target['phasecenter']) is not type(None):
+                found_fields = None
+                buffer_arcsec = 1000.
+                cellsize_arcsec = float(target['cell'].strip('arcsec'))
+                dist = ((target['imsize'][0] / 2.) * cellsize_arcsec) + buffer_arcsec
+                dist_arcsec = str(dist) + 'arcsec'
+                found_fields = target['heuristics'].find_fields(distance=dist_arcsec, phase_center=target['phasecenter'])
+                fieldnames = []
+                if type(found_fields) is not type(None):
+                    for fid in found_fields:
+                        fieldobj = ms.get_fields(field_id=fid)
+                        fieldnames.append(fieldobj[0].name)
+
+                    if len(fieldnames) > 1:
+                        fieldnames = [','.join(fieldnames)]
+
+                    target['field'] = fieldnames[0]
+
+        # import pprint
+        # pprint.pprint(target)
+        result.add_target(target)
 
         return result
 
