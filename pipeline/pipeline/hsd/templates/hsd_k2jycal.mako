@@ -18,6 +18,8 @@ stage_dir = os.path.join(pcontext.report_dir, 'stage%s'%(result.stage_number))
 
 
 <h3>Summay of Jy/K Conversion Factor</h3>
+Numbers in histograms show that of MS, antenna, spectral window, and polarization
+combination whose conversion factor is in each bin.
 % for plot in jyperk_hist:
 	% if plot is not None:
     <div class="col-md-3 col-sm-4">
