@@ -106,7 +106,14 @@ class Circfeedpolcal(polarization.Polarization):
         # First pass R-L delay
         self.do_gaincal(tablesToAdd[0][0], field=fluxcal)
 
-        # Determine number of scans with POLLEAKGE intent
+        # Determine number of scans with POLLEAKGE intent and use the first POLLEAKAGE FIELD
+        polfield = ''
+        polleakagefields = m.get_fields(intent='POLLEAKAGE')
+        if len(polleakagefields) > 1:
+            # Use the first pol leakage field
+            polfield = polleakagefields[0].name
+            LOG.info("More than one field with intent of POLLEAKGE.  Using field {!s}".format(polfield))
+
         polleakagescans = []
         poltype = 'Df+QU'  # Default
         for scan in m.scans:
@@ -125,7 +132,9 @@ class Circfeedpolcal(polarization.Polarization):
         LOG.info(self.calstrategy)
 
         # D-terms in 16MHz pieces, minsnr of 5.0
-        self.do_polcal(tablesToAdd[1][0], poltype=poltype, field='',
+
+
+        self.do_polcal(tablesToAdd[1][0], poltype=poltype, field=polfield,
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
                        gainfield=[''], spwmap=[], solint='inf,16MHz', minsnr=5.0)
 
@@ -143,6 +152,9 @@ class Circfeedpolcal(polarization.Polarization):
 
     def do_gaincal(self, caltable, field=''):
 
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        minBL_for_cal = m.vla_minbaselineforcal()
+
         # Similar inputs to hifa/linpolcal.py
         task_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context,
                                                   output_dir='',
@@ -156,6 +168,7 @@ class Circfeedpolcal(polarization.Polarization):
                                                   gaintype='KCROSS',
                                                   combine='scan',
                                                   refant=self.RefAntOutput[0].lower(),
+                                                  minblperant=minBL_for_cal,
                                                   parang=True,
                                                   append=False)
 
@@ -182,6 +195,8 @@ class Circfeedpolcal(polarization.Polarization):
 
         # import pdb
         # pdb.set_trace()
+
+
 
         task_args = {'vis': self.inputs.vis,
                      'caltable'   : caltable,
@@ -230,6 +245,8 @@ class Circfeedpolcal(polarization.Polarization):
                 fluxcal = field
             elif fluxcal == '' and ('3C48' in field):
                 fluxcal = field
+            elif fluxcal == '' and ('0137+3309' in field):
+                fluxcal = field
             elif fluxcal != '' and ('3C48' in field or '3C286' in field):
                 LOG.info("Two flux calibrators found, selecting 3C286!")
                 if '"1331+305=3C286"' in fluxfieldnames:
@@ -239,8 +256,8 @@ class Circfeedpolcal(polarization.Polarization):
                 if '1331+3030' in fluxfieldnames:
                     fluxcal = '1331+3030'
 
-        delmodjob = casa_tasks.delmod(vis=self.inputs.vis, field='')
-        self._executor.execute(delmodjob)
+        #delmodjob = casa_tasks.delmod(vis=self.inputs.vis, field='')
+        #self._executor.execute(delmodjob)
 
         try:
             task_args = {}
@@ -257,9 +274,9 @@ class Circfeedpolcal(polarization.Polarization):
                              'polangle'      : [d0,0],
                              'rotmeas'       : 0,
                              'scalebychan'   : True,
-                             'usescratch'    : False}
+                             'usescratch'    : True}
 
-            elif '3C48' in fluxcal:
+            elif '3C48' or '0137+3309' in fluxcal:
                 task_args = {'vis'           : self.inputs.vis,
                              'field'         : fluxcal,
                              'spw'           : '',
@@ -282,7 +299,7 @@ class Circfeedpolcal(polarization.Polarization):
                              'fluxdict'      : {},
                              'useephemdir'   : False,
                              'interpolation' : 'nearest',
-                             'usescratch'    : False}
+                             'usescratch'    : True}
             else:
                 LOG.error("No known flux calibrator found - please check the data.")
 

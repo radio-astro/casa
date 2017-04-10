@@ -549,7 +549,7 @@ class MeasurementSet(object):
 
     def vla_minbaselineforcal(self):
 
-        return max(3, int(len(self.antennas) / 2.0))
+        return max(4, int(len(self.antennas) / 2.0))
 
     def vla_spws_for_field(self, field):
         """VLA spws for field"""
