@@ -2336,13 +2336,13 @@ void SolvableVisCal::reParseSolintForVI2() {
 	} // Hz vs. Ch via Quantum
       } // parse by Quantum
     } // freqDepPar
-    /*
-    cout << "Freq-dep solint: " << fsolint() 
-	 << " Ch=" << fintervalCh_ 
-	 << " Hz=" << fintervalHz() 
-	 << endl;
-    //*/
   } // user set something
+  /*
+  cout << "Freq-dep solint: " << fsolint() 
+       << " Ch=" << fintervalCh_ 
+       << " Hz=" << fintervalHz() 
+       << endl;
+  //*/
 
 }
 
@@ -2371,9 +2371,34 @@ void SolvableVisCal::createMemCalTable2() {
   // Flag all SPW subtable rows; we'll set them OTF
   CTColumns ncc(*ct_);
 
+  // Set FLAG_ROW in SPW subtable
   Vector<Bool> flr=ncc.spectralWindow().flagRow().getColumn();
   flr.set(True);
   ncc.spectralWindow().flagRow().putColumn(flr);
+
+  // Collapse channel axis info in all rows for unchan'd 
+  //  calibration, so columns are "clean" (uniform shape)
+  // NB: some of this info will be revised during data iteration
+  CTSpWindowColumns& spwcol(ncc.spectralWindow());
+  if (!freqDepPar()) {
+    Int nspw=ncc.spectralWindow().nrow();
+    for (Int ispw=0;ispw<nspw;++ispw) {
+      Vector<Double> chfr,chwid,chres,cheff;
+
+      spwcol.chanFreq().get(ispw,chfr);
+      spwcol.chanWidth().get(ispw,chwid);
+      spwcol.resolution().get(ispw,chres);
+      spwcol.effectiveBW().get(ispw,cheff);
+
+      spwcol.chanFreq().put(ispw,Vector<Double>(1,mean(chfr)));
+      spwcol.chanWidth().put(ispw,Vector<Double>(1,sum(chwid)));
+      spwcol.resolution().put(ispw,Vector<Double>(1,sum(chres)));
+      spwcol.effectiveBW().put(ispw,Vector<Double>(1,sum(cheff)));
+    }
+    
+    // One channel per spw
+    spwcol.numChan().putColumn(Vector<Int>(nspw,1));
+  }
 
 }
 

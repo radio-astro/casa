@@ -41,6 +41,7 @@
 #include <casacore/measures/Measures/MeasTable.h>
 #include <casacore/measures/Measures/MPosition.h>
 #include <casacore/measures/Measures/MEpoch.h>
+#include <casa/Quanta/MVTime.h>
 #include <casacore/measures/Measures/Stokes.h>
 #include <casacore/tables/Tables/TableRecord.h>
 #include <casacore/casa/Logging/LogIO.h>
@@ -282,34 +283,21 @@ void MSIter2::construct2(const Block<Int>& sortColumns,
   Block<CountedPtr<BaseCompare> > objComp(columns.nelements());
   Block<Int> sortOrd(columns.nelements());
   timeComp_p = 0;
+  Bool fieldBounded(false);
+  Bool scanBounded=scanSeen;
   for (uInt i=0; i<columns.nelements(); i++) {
+    
+    // Meaningful if this occurs before TIME
+    if (columns[i]==MS::columnName(MS::FIELD_ID)) fieldBounded=true;
+
     if (columns[i]==MS::columnName(MS::TIME)) {
 
-      ScalarColumn<Double> timecol;
-      std::map<Int,Double> scanmap;
-      Int nscan(0);
-      for (Int iMS=0; iMS<nMS_p; iMS++) {
-	TableIterator ti(bms_p[iMS],String("SCAN_NUMBER"));
-	if (scanSeen) {
-	  while (!ti.pastEnd()) {
-	    timecol.attach(ti.table(),MS::columnName(MS::TIME));
-	    scanmap[nscan++]=timecol(0)-0.001;
-	    ti.next();
-	  }
-	}
-	else {
-	  // first time in the scan
-	  timecol.attach(ti.table(),MS::columnName(MS::TIME));
-	  scanmap[nscan++]=timecol(0)-0.001;
-	}
-      }
-      Vector<Double> scanbounds(nscan,0.0);
-      for (Int iscan=0;iscan<nscan;++iscan) 
-	scanbounds[iscan]=scanmap[iscan];
+      Vector<Double> timebounds(0);
+      //this->discernEnforcedTimeBounds(timebounds,scanBounded);
+      //this->discernEnforcedTimeBounds(timebounds,scanBounded,fieldBounded);
+      this->discernEnforcedTimeBounds(timebounds,scanBounded,fieldBounded,interval_p);
 
-      //cout << "scanbounds = " << scanbounds-86400.0*floor(scanbounds(0)/86400.0) << endl;
-
-      timeComp_p = new MSSmartInterval(interval_p,scanbounds);
+      timeComp_p = new MSSmartInterval(interval_p,timebounds);
       //timeComp_p = new MSInterval(interval_p);
       objComp[i] = timeComp_p;
     }
@@ -390,9 +378,9 @@ void MSIter2::construct2(const Block<Int>& sortColumns,
 
 }
 
-MSIter2::MSIter2(const MSIter2& other)
+MSIter2::MSIter2(const MSIter2& other) 
 {
-    operator=(other);
+  operator=(other);
 }
 
 MSIter2::~MSIter2() 
@@ -462,6 +450,147 @@ void MSIter2::setState()
   //      timeComp_p->setOffset(0.0);
   //  }
 }
+
+
+void MSIter2::discernEnforcedTimeBounds(Vector<Double>& timebounds,
+					Bool scanBounded) {
+
+  ScalarColumn<Double> timecol;
+  std::map<Int,Double> scanmap;
+  Int nscan(0);
+  for (Int iMS=0; iMS<nMS_p; iMS++) {
+    TableIterator ti(bms_p[iMS],String("SCAN_NUMBER"));
+
+    if (scanBounded) {
+      while (!ti.pastEnd()) {
+	timecol.attach(ti.table(),MS::columnName(MS::TIME));
+	scanmap[nscan++]=timecol(0)-0.001;
+	ti.next();
+      }
+    }
+    else {
+      // first time in the scan
+      timecol.attach(ti.table(),MS::columnName(MS::TIME));
+      scanmap[nscan++]=timecol(0)-0.001;
+    }
+  }
+  
+  timebounds.resize(nscan);
+  for (Int iscan=0;iscan<nscan;++iscan) 
+    timebounds[iscan]=scanmap[iscan];
+  
+  //cout << "timebounds = " << timebounds-86400.0*floor(timebounds(0)/86400.0) << endl;
+}
+
+
+void MSIter2::discernEnforcedTimeBounds(Vector<Double>& timebounds,
+					Bool scanBounded,
+					Bool fieldBounded) {
+
+  Int nsort(1+(fieldBounded?1:0));
+  Block<String> cols(nsort);
+  cols[0]="SCAN_NUMBER";
+  if (fieldBounded) cols[1]="FIELD_ID";
+  ScalarColumn<Double> timecol,expcol;
+  ScalarColumn<Int> fieldcol,scancol;
+  std::map<Int,Double> timemap;
+  Int nscan(0);
+  for (Int iMS=0; iMS<nMS_p; iMS++) {
+    TableIterator ti(bms_p[iMS],cols);
+    Int thisScan(-1),thisField(-1),lastScan(-1),lastField(-1);
+    while (!ti.pastEnd()) {
+      timecol.attach(ti.table(),MS::columnName(MS::TIME));
+      expcol.attach(ti.table(),MS::columnName(MS::EXPOSURE));
+      scancol.attach(ti.table(),MS::columnName(MS::SCAN_NUMBER));
+      fieldcol.attach(ti.table(),MS::columnName(MS::FIELD_ID));
+      thisScan=scancol(0);
+      thisField=fieldcol(0);
+      
+      if (nscan==0                                    ||  // first iteration
+	  (scanBounded && (thisScan!=lastScan))       ||  // per-scan and scan change
+	  (fieldBounded && ( (thisField!=lastField) ||    // per-field and field change
+			     ((thisScan-lastScan)>1) ) )  //               or scan discont
+	  ) {
+
+	/*
+	cout << nscan << " " 
+	     << thisScan << " "
+	     << thisField << " "
+	     << MVTime((timecol(0)-expcol(0)/2.0)/C::day).string(MVTime::YMD,7)
+	     << endl;
+	*/
+
+	timemap[nscan++]=timecol(0)-0.001;
+
+      }
+      lastScan=thisScan;
+      lastField=thisField;
+      ti.next();
+    }
+  }
+
+  timebounds.resize(nscan);
+  for (Int iscan=0;iscan<nscan;++iscan) 
+    timebounds[iscan]=timemap[iscan];
+  
+}
+
+
+void MSIter2::discernEnforcedTimeBounds(Vector<Double>& timebounds,
+					Bool scanBounded,
+					Bool fieldBounded,
+					Double dt) {
+
+  Int nsort(1+(fieldBounded?1:0));
+  Block<String> cols(nsort);
+  cols[0]="SCAN_NUMBER";
+  if (fieldBounded) cols[1]="FIELD_ID";
+  ScalarColumn<Double> timecol,expcol;
+  ScalarColumn<Int> fieldcol,scancol;
+  std::map<Int,Double> timemap;
+  Int nscan(0);
+  cout.precision(12);
+  for (Int iMS=0; iMS<nMS_p; iMS++) {
+    TableIterator ti(bms_p[iMS],cols);
+    Int thisScan(-1),thisField(-1),lastScan(-1),lastField(-1);
+    while (!ti.pastEnd()) {
+      timecol.attach(ti.table(),MS::columnName(MS::TIME));
+      expcol.attach(ti.table(),MS::columnName(MS::EXPOSURE));
+      scancol.attach(ti.table(),MS::columnName(MS::SCAN_NUMBER));
+      fieldcol.attach(ti.table(),MS::columnName(MS::FIELD_ID));
+      thisScan=scancol(0);
+      thisField=fieldcol(0);
+      
+      if (nscan==0                                    ||  // first iteration
+	  (scanBounded && (thisScan!=lastScan))       ||  // per-scan and scan change
+	  (fieldBounded && (thisField!=lastField))    ||  // per-field and field change
+	  ( (thisScan-lastScan)>1  &&                     // scan discontinuity _and_
+	    (timecol(0)-timemap[nscan-1])>dt )            //   previous interval expired
+	  ) {
+
+	/*
+	cout << nscan << " " 
+	     << thisScan << " "
+	     << thisField << " "
+	     << MVTime((timecol(0)-expcol(0)/2.0)/C::day).string(MVTime::YMD,7)
+	     << endl;
+	*/
+
+	timemap[nscan++]=(timecol(0)-0.01);
+
+      }
+      lastScan=thisScan;
+      lastField=thisField;
+      ti.next();
+    }
+  }
+
+  timebounds.resize(nscan);
+  for (Int iscan=0;iscan<nscan;++iscan) 
+    timebounds[iscan]=timemap[iscan];
+  
+}
+
 
 } //# NAMESPACE VI - END
 } //# NAMESPACE CASA - END

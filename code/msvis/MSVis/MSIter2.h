@@ -204,6 +204,14 @@ protected:
   // set the iteration state
   virtual void setState();
 
+  virtual void discernEnforcedTimeBounds(casacore::Vector<casacore::Double>& solbounds,
+					 casacore::Bool scanBounded);
+  virtual void discernEnforcedTimeBounds(casacore::Vector<casacore::Double>& solbounds,
+					 casacore::Bool scanBounded,casacore::Bool fieldBounded);
+  virtual void discernEnforcedTimeBounds(casacore::Vector<casacore::Double>& solbounds,
+					 casacore::Bool scanBounded,casacore::Bool fieldBounded,
+					 casacore::Double dt);
+
 };
 
 } //# NAMESPACE VI - END
