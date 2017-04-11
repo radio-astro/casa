@@ -151,10 +151,10 @@ void ChannelAverageTVI::initialize()
 		// Make sure that chanbin does not exceed number of selected channels
 		else if ((uInt)chanbin_p(spw_idx) > iter->second.size())
 		{
-			logger_p << LogIO::WARN << LogOrigin("ChannelAverageTVI", __FUNCTION__)
+			logger_p << LogIO::DEBUG1 << LogOrigin("ChannelAverageTVI", __FUNCTION__)
 					<< "Number of selected channels " << iter->second.size()
 					<< " for SPW " << spw
-					<< " is smaller than specified chanbin " << chanbin_p(spw_idx) << endl
+				        << " is smaller than specified chanbin " << (uInt)chanbin_p(spw_idx) << endl
 					<< "Setting chanbin to " << iter->second.size()
 					<< " for SPW " << spw
 					<< LogIO::POST;
