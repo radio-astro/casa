@@ -104,6 +104,7 @@ test_partition                  scastro@eso.org
 test_plotants                   jkern@nrao.edu
 test_plotms                     pford@nrao.edu
 test_plotuv                     jkern@nrao.edu
+test_plotweather                pford@nrao.edu
 test_po_complexfraclinpol       dmehring@nrao.edu
 test_po_complexlinpol           dmehring@nrao.edu
 test_po_depolratio              dmehring@nrao.edu

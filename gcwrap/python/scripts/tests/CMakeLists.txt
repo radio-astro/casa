@@ -148,6 +148,7 @@ casa_add_python( tools tools_tests_python lib/python${PYTHONV}/tests
   test_plotants.py
   test_plotms.py
   test_plotuv.py
+  test_plotweather.py
   test_po_complexfraclinpol.py
   test_po_complexlinpol.py  
   test_po_depolratio.py
