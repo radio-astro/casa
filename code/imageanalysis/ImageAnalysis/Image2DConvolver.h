@@ -31,7 +31,6 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
 #include <casa/aips.h>
-#include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Array.h>
 #include <scimath/Mathematics/VectorKernel.h>
 #include <casa/Quanta/Quantum.h>
@@ -149,7 +148,8 @@ private:
     casacore::Double _scale;
     casacore::Quantity _major, _minor, _pa;
     casacore::IPosition _axes;
-    casacore::Bool _targetres, _suppressWarnings;
+    casacore::Bool _targetres = casacore::False;
+    casacore::Bool _suppressWarnings = casacore::False;
 
     void _checkKernelParameters(
         casacore::VectorKernel::KernelTypes kernelType,
@@ -157,13 +157,13 @@ private:
     ) const;
 
     void _convolve(
-        casacore::LogIO& os, SPIIT imageOut, const casacore::ImageInterface<T>& imageIn,
+        SPIIT imageOut, const casacore::ImageInterface<T>& imageIn,
         casacore::VectorKernel::KernelTypes kernelType
     ) const;
 
     // returns the value by which pixel values will be scaled
     T _dealWithRestoringBeam (
-        casacore::LogIO& os, casacore::String& brightnessUnitOut, casacore::GaussianBeam& beamOut,
+        casacore::String& brightnessUnitOut, casacore::GaussianBeam& beamOut,
         const casacore::Array<T>& kernelArray, const T kernelVolume,
         const casacore::VectorKernel::KernelTypes kernelType,
         const casacore::Vector<casacore::Quantity>& parameters,
@@ -173,7 +173,7 @@ private:
     ) const;
 
     void _doMultipleBeams(
-        LogIO& os, ImageInfo& iiOut, T& kernelVolume, SPIIT imageOut, String& brightnessUnitOut,
+        ImageInfo& iiOut, T& kernelVolume, SPIIT imageOut, String& brightnessUnitOut,
         GaussianBeam& beamOut, Double factor1, const ImageInterface<T>& imageIn,
         const vector<Quantity>& originalParms, vector<Quantity>& kernelParms,
         Array<T>& kernel, VectorKernel::KernelTypes kernelType, Bool logFactors,
@@ -181,7 +181,7 @@ private:
     ) const;
 
     void _doSingleBeam(
-        LogIO& os, ImageInfo& iiOut, T& kernelVolume, vector<Quantity>& kernelParms, Array<T>& kernel,
+        ImageInfo& iiOut, T& kernelVolume, vector<Quantity>& kernelParms, Array<T>& kernel,
         String& brightnessUnitOut, GaussianBeam& beamOut, SPIIT imageOut,
         const ImageInterface<T>& imageIn, const vector<Quantity>& originalParms,
         VectorKernel::KernelTypes kernelType, Bool logFactors, Double factor1,
@@ -224,6 +224,8 @@ private:
     void _logBeamInfo(
         const ImageInfo& imageInfo, const String& desc
     ) const;
+
+    void _log(const String& msg, LogIO::Command priority) const;
 };
 
 }
