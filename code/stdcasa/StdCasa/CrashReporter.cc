@@ -6,6 +6,7 @@
  */
 
 #include "CrashReporter.h"
+#include <casacore/casa/OS/EnvVar.h>
 
 //#warning "Defining UseCrashReport to compile main code"
 //#define UseCrashReporter
@@ -171,8 +172,17 @@ CrashReporter::initialize (const string & crashDumpDirectory,
                            const string & crashPostingUrl,
                            const string & theLogFile)
 {
+    // If the Casa settings contain a value for UseCrashReporter, then act on that;
+    // otherwise see if there's an environment variable set and if so use that value.
+
+    static const String CasaUseCrashReporter = "CasaUseCrashReporter";
     bool useCrashReporter = false;
-    AipsrcValue<Bool>::find (useCrashReporter, String ("UseCrashReporter"), false);
+    bool foundIt = AipsrcValue<Bool>::find (useCrashReporter, String ("UseCrashReporter"));
+
+    if (! foundIt && casacore::EnvironmentVariable::isDefined (CasaUseCrashReporter)){
+        String s = casacore::EnvironmentVariable::get (CasaUseCrashReporter);
+        useCrashReporter = (s == "True" || s == "true");
+    }
 
     if (! useCrashReporter){
         return "";
