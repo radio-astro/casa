@@ -102,6 +102,7 @@ test_mstransform                jagonzal@eso.org
 test_mstransform_mms            scastro@eso.org
 test_partition                  scastro@eso.org
 test_plotants                   jkern@nrao.edu
+test_plotcal                    pford@nrao.edu
 test_plotms                     pford@nrao.edu
 test_plotuv                     jkern@nrao.edu
 test_plotweather                pford@nrao.edu
