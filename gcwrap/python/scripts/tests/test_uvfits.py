@@ -179,18 +179,6 @@ class uvfits_test(unittest.TestCase):
         self.assertFalse(exportuvfits(msname, fitsname, overwrite=False))
         self.assertTrue(exportuvfits(msname, fitsname, overwrite=True))
             
-    def test_varying_receptor_angles(self):
-        """CAS-8744 Test that selected spws with varying receptor angles will not be written"""
-        vis = datapath + "receptor_angle_test.ms"
-        myms = mstool()
-        myms.open(vis)
-        fitsfile = "blah.fits"
-        self.assertRaises(myms.tofits, fitsfile=fitsfile, overwrite=True)
-        self.assertTrue(myms.tofits(fitsfile=fitsfile, spw="1,2", overwrite=True))
-        for i in (0,1,2):
-            self.assertTrue(myms.tofits(fitsfile=fitsfile, spw=str(i), overwrite=True))
-        myms.done()
-
     def test_badscan(self):
         """CAS-10054: Tests intermittent incorrect scan number in last row of single-scan dataset"""
         myms = mstool()
