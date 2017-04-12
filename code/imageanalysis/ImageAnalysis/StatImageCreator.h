@@ -88,12 +88,6 @@ private:
 
     Quantity _xlen = Quantity(1, "pix");
     Quantity _ylen = Quantity(1, "pix");
-    // blc of the data chunk offset from the grid point, in pixels
-    uInt _xoff = 0;
-    uInt _yoff = 0;
-    // x,y chunksize, in pixels
-    uInt _xsize = 1;
-    uInt _ysize = 1;
 
     std::pair<uInt, uInt> _grid = std::make_pair(1,1);
     // _anchor pixel world coordinates
