@@ -74,6 +74,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     casacore::Int interactivemask(const casacore::String& image, const casacore::String& mask, 
 			casacore::Int& niter, casacore::Int& cycleniter, casacore::String& thresh, casacore::String& cyclethresh, 
 			const casacore::Bool forceReload=false);
+
+    casacore::Float maskSum(const casacore::String& maskname);
+
   private:
     ViewerProxy *viewer_p;
     int clean_panel_p;

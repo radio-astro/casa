@@ -180,7 +180,8 @@ class TestHelpers():
                   imexistnot=None, # list of image names
                   imval=None,  # list of tuples of (imagename,val,pos)
                   immask=None,  #list of tuples to check mask value
-                  tabcache=True
+                  tabcache=True,
+                  stopcode=None
                   ):
           pstr = ""
 
@@ -228,6 +229,12 @@ class TestHelpers():
                opentabs = tb.showcache()
                if len(opentabs)>0 : 
                     pstr += "["+inspect.stack()[1][3]+"] "+self.verdict(False) + ": Found open tables after run "
+
+          if stopcode != None:
+              if type(stopcode)==int:
+                  stopstr = "["+inspect.stack()[1][3]+"] Stopcode is " + str(ret['stopcode']) + " (" + self.verdict(ret['stopcode']==stopcode)  +  " : should be " + str(stopcode) + ")\n"
+                  print stopstr
+                  pstr += stopstr
           
           return pstr
           #self.checkfinal(pstr)

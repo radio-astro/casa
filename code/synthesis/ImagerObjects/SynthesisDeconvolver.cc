@@ -70,7 +70,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        itsPBMask(0.0),
 				       //itsMaskString(String("")),
                                        itsIterDone(0.0),
-				       itsIsMaskLoaded(false)
+				       itsIsMaskLoaded(false),
+				       itsMaskSum(-1e+9)
   {
   }
   
@@ -205,40 +206,55 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record returnRecord;
 
     try {
-      // Do the Gather if/when needed and check that images exist on disk. Normalize by Weights too.
-      //gatherImages();
-
-      /*
-      if( itsDeconvolver->getAlgorithmName() == "msmfs" )
-	{  itsImages = new SIImageStoreMultiTerm( itsImageName, itsDeconvolver->getNTaylorTerms() ); }
-      else
-	{  itsImages = new SIImageStore( itsImageName ); }
-      */
+      
+      //os << "---------------------------------------------------- Init (?) Minor Cycles ---------------------------------------------" << LogIO::POST;
 
       itsImages = makeImageStore( itsImageName );
 
       // If a starting model exists, this will initialize the ImageStore with it. Will do this only once.
       setStartingModel();
 
-      // Set up the mask too.
       itsIterDone += itsLoopController.getIterDone();
-      setupMask();
 
- 
-      // Normalize by the weight image.
-      ///divideResidualByWeight();
+      //      setupMask();
 
-      Bool validMask = ( itsImages->getMaskSum() > 0 );
+      Float masksum;
+      if( ! itsImages->hasMask() ) // i.e. if there is no existing mask to re-use...
+	{ masksum = -1.0;}
+      else 
+	{
+	  masksum = itsImages->getMaskSum();
+	  itsImages->mask()->unlock();
+	}
+      Bool validMask = ( masksum > 0 );
 
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
-      itsLoopController.setPeakResidual( validMask ? itsImages->getPeakResidualWithinMask() : itsImages->getPeakResidual() );
-      itsLoopController.setPeakResidualNoMask( itsImages->getPeakResidual() );
+      Float peakresnomask = itsImages->getPeakResidual();
+      itsLoopController.setPeakResidual( validMask ? itsImages->getPeakResidualWithinMask() : peakresnomask );
+      itsLoopController.setPeakResidualNoMask( peakresnomask );
       itsLoopController.setMaxPsfSidelobe( itsImages->getPSFSidelobeLevel() );
+
+      /*
+      Array<Double> rmss = itsImages->calcRobustRMS();
+      AlwaysAssert( rmss.shape()[0]>0 , AipsError);
+      cout  << "madRMS : " << rmss << "  with shape : " << rmss.shape() << endl;
+      //itsLoopController.setMadRMS( rmss[0] );
+      */
+
+      if( itsMaskSum != masksum ) // i.e. mask has changed. 
+	{ 
+	  itsMaskSum = masksum; 
+	  itsLoopController.setMaskSum( masksum );
+	}
+      else // mask has not changed...
+	{
+	  itsLoopController.setMaskSum( -1.0 );
+	}
+      
+
       returnRecord = itsLoopController.getCycleInitializationRecord();
 
-    os << "---------------------------------------------------- Start Minor Cycles ---------------------------------------------" << LogIO::POST;
-      itsImages->printImageStats();
-      itsImages->mask()->unlock();
+      itsImages->printImageStats(); 
 
       os << LogIO::DEBUG2 << "Initialized minor cycle. Returning returnRec" << LogIO::POST;
 
@@ -315,10 +331,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisDeconvolver","executeMinorCycle",WHERE) );
     Record returnRecord;
 
+    //    itsImages->printImageStats();
+
+    os << "---------------------------------------------------- Run Minor Cycle Iterations  ---------------------------------------------" << LogIO::POST;
+
     SynthesisUtilMethods::getResource("Start Deconvolver");
 
     try {
-      if ( !itsIsInteractive ) setAutoMask();
+      //      if ( !itsIsInteractive ) setAutoMask();
       itsLoopController.setCycleControls(minorCycleControlRec);
 
       itsDeconvolver->deconvolve( itsLoopController, itsImages, itsDeconvolverId );
@@ -420,14 +440,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Set mask
-  void SynthesisDeconvolver::setupMask()
+  Bool SynthesisDeconvolver::setupMask()
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setupMask",WHERE) );
+    Bool maskchanged=False;
     if( itsIsMaskLoaded==false ) {
       // use mask(s) 
       if(  itsMaskList[0] != "" || itsMaskType == "pb" || itsAutoMaskAlgorithm != "" ) {
         // Skip automask for non-interactive mode. 
-        if ( itsAutoMaskAlgorithm != "" && itsIsInteractive) {
+        if ( itsAutoMaskAlgorithm != "") { // && itsIsInteractive) {
+	  os << "[" << itsImages->getName() << "] Setting up an auto-mask"<<  ((itsPBMask>0.0)?" within PB mask limit ":"") << LogIO::POST;
+
           setAutoMask();
           /***
           if ( itsPBMask > 0.0 ) {
@@ -441,36 +464,55 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
         //else if( itsMaskType=="user" && itsMaskList[0] != "" ) {
         if( itsMaskType=="user" && itsMaskList[0] != "" ) {
+	  os << "[" << itsImages->getName() << "] Setting up a mask from " << itsMaskList  <<  ((itsPBMask>0.0)?" within PB mask limit ":"") << LogIO::POST;
+
           itsMaskHandler->fillMask( itsImages, itsMaskList);
           if( itsPBMask > 0.0 ) {  
             itsMaskHandler->makePBMask(itsImages, itsPBMask);
           }
         }
         else if( itsMaskType=="pb") {
+	  os << "[" << itsImages->getName() << "] Setting up a PB based mask" << LogIO::POST;
           itsMaskHandler->makePBMask(itsImages, itsPBMask);
         }
+
+	os << "----------------------------------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+
       } else {
 
-        if( ! itsImages->hasMask() ) // i.e. if there is no existing mask to re-use...
-          {
+	if( ! itsImages->hasMask() ) // i.e. if there is no existing mask to re-use...
+	  {
 	    if( itsIsInteractive ) itsImages->mask()->set(0.0);
 	    else itsImages->mask()->set(1.0);
-	 }
+	    os << "[" << itsImages->getName() << "] Initializing new mask to " << (itsIsInteractive?"0.0 for interactive drawing":"1.0 for the full image") << LogIO::POST;
+	  }
+	else {
+	  os << "[" << itsImages->getName() << "] Initializing to existing mask" << LogIO::POST;
+	}
+
       }
 	
       // If anything other than automasking, don't re-make the mask here.
       if ( itsAutoMaskAlgorithm == "" )
         {	itsIsMaskLoaded=true; }
+   
+      maskchanged=True;
     }
     else {
     }
 
-  }
+    itsImages->mask()->unlock();
+    return maskchanged;
+}
 
   void SynthesisDeconvolver::setAutoMask()
   {
      //modify mask using automask otherwise no-op
      if ( itsAutoMaskAlgorithm != "" )  {
+
+       LogIO os( LogOrigin("SynthesisDeconvolver","setAutoMask",WHERE) );
+       os << "Generating AutoMask" << LogIO::POST;
+
        if ( itsPBMask > 0.0 ) {
          itsMaskHandler->autoMaskWithinPB( itsImages, itsIterDone, itsAutoMaskAlgorithm, itsMaskThreshold, itsFracOfPeak, itsMaskResolution, itsMaskResByBeam, itsNMask, itsAutoAdjust,  itsSidelobeThreshold, itsNoiseThreshold, itsLowNoiseThreshold, itsCutThreshold, itsSmoothFactor, itsMinBeamFrac, itsPBMask);
        }

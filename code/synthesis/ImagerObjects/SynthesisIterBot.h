@@ -82,6 +82,7 @@ class SynthesisIterBot
   void endMinorCycle(casacore::Record& executionRecord);
 
   void endMajorCycle();
+  void resetMinorCycleInfo();
 
   void changeStopFlag( casacore::Bool stopflag );
 

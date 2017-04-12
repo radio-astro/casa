@@ -217,6 +217,17 @@ class PyParallelCubeSynthesisImager():
 
         return retval
 
+    def updateMask(self):
+        self.PH.runcmdcheck("maskchanged = imager.updateMask()")
+
+        retval = False
+        for node in self.listOfNodes:
+             rest = self.PH.pullval("maskchanged", node )
+             retval = retval or rest[node]
+             print "Node " , node , " maskchanged : ", rest[node];
+
+        return retval
+
     def predictModel(self):
         joblist=[]
         for node in self.listOfNodes:

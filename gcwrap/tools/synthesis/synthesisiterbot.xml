@@ -93,6 +93,16 @@ This is used to construct {\tt synthesisiterbot} tool.
 </method>
 
 <!-- ===================================== -->
+   <method type="function" name="resetminorcycleinfo">
+   <shortdescription>Reset info about peak residual and masks, before start minor cycles</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
 
    <method type="function" name="getminorcyclecontrols">
    <shortdescription>Get the controller for a minor cycle</shortdescription>

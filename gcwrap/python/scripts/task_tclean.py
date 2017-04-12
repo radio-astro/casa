@@ -359,6 +359,11 @@ def tclean(
             ## Do deconvolution and iterations
             if niter>0 :
                 while ( not imager.hasConverged() ):
+
+                    maskchanged = imager.updateMask()
+                    if maskchanged and imager.hasConverged() :
+                        break;
+
                     t0=time.time();
                     imager.runMinorCycle()
                     t1=time.time();
@@ -368,6 +373,7 @@ def tclean(
                     imager.runMajorCycle()
                     t1=time.time();
                     casalog.post("***Time for major cycle: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+
                 ## Get summary from iterbot
                 if type(interactive) != bool:
                     retrec=imager.getSummary();

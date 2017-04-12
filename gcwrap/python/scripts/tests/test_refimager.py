@@ -104,7 +104,8 @@ class testref_base(unittest.TestCase):
           os.system('rm -rf ' + self.img+'*')
 
      def checkfinal(self,pstr=""):
-          pstr += "["+inspect.stack()[1][3]+"] : To re-run this test :  casa -c `echo $CASAPATH | awk '{print $1}'`/gcwrap/python/scripts/regressions/admin/runUnitTest.py test_refimager["+ inspect.stack()[1][3] +"]"
+          #pstr += "["+inspect.stack()[1][3]+"] : To re-run this test :  casa -c `echo $CASAPATH | awk '{print $1}'`/gcwrap/python/scripts/regressions/admin/runUnitTest.py test_refimager["+ inspect.stack()[1][3] +"]"
+          pstr += "["+inspect.stack()[1][3]+"] : To re-run this test :  runUnitTest.main(['test_refimager["+ inspect.stack()[1][3] +"]'])"
           casalog.post(pstr,'INFO')
           if( pstr.count("(Fail") > 0 ):
                self.fail("\n"+pstr)
@@ -1533,6 +1534,23 @@ class test_mask(testref_base):
 #          mstr = 'circle[[50pix,110pix],20pix]'
 #          ret2 = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0,usemask='user',mask=mstr)
 #          report=self.th.checkall(imexist=[self.img+'2.mask'], imval=[(self.img+'2.mask',0.0,[50,50,0,0]),(self.img+'2.mask',1.0,[50,95,0,0])])
+
+     def test_mask_zerostart(self):
+          """ [mask] test_mask_zerostart : Test that a zero starting mask is caught  """
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='10.0arcsec',niter=0,interactive=0)
+          os.system('cp -r ' + self.img + '.residual '+ self.img+'2.inpmask')
+          _ia.open(self.img+'2.inpmask')
+          pix =_ia.getchunk()
+          pix.fill(0.0)
+          _ia.putchunk(pix)
+          _ia.close()
+
+          ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='10.0arcsec',niter=10,interactive=0,mask=self.img+'2.inpmask')
+
+          report=self.th.checkall(ret=ret, imexist=[self.img+'2.mask'], imval=[(self.img+'2.model',0.0,[50,50,0,0]),(self.img+'2.mask',0.0,[50,50,0,0])], stopcode=7)
+
+          self.checkfinal(report)
 
 
 ##############################################

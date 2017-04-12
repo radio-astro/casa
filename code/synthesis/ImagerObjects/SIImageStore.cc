@@ -55,6 +55,7 @@
 #include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <images/Images/ImageRegrid.h>
+#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 
 //#include <imageanalysis/ImageAnalysis/ImageMaskedPixelReplacer.h>
 
@@ -677,13 +678,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool SIImageStore::releaseLocks() 
   {
-    LogIO os( LogOrigin("SIImageStore","releaseLocks",WHERE) );
+    //LogIO os( LogOrigin("SIImageStore","releaseLocks",WHERE) );
 
     //    String fname( itsImageName+String(".info") );
     //    makePersistent( fname );
 
     if( itsPsf ) releaseImage( itsPsf );
-    if( itsModel ) releaseImage( itsModel );
+    if( itsModel ) { releaseImage( itsModel ); }
     if( itsResidual ) releaseImage( itsResidual );
     if( itsImage ) releaseImage( itsImage );
     if( itsWeight ) releaseImage( itsWeight );
@@ -698,7 +699,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool SIImageStore::releaseComplexGrids() 
   {
-    LogIO os( LogOrigin("SIImageStore","releaseComplexGrids",WHERE) );
+    //LogIO os( LogOrigin("SIImageStore","releaseComplexGrids",WHERE) );
 
     if( itsForwardGrid ) releaseImage( itsForwardGrid );
     if( itsBackwardGrid ) releaseImage( itsBackwardGrid );
@@ -708,13 +709,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > &im )
   {
-    //im->flush();
+    //LogIO os( LogOrigin("SIImageStore","releaseLocks",WHERE) );
+    im->flush();
+    //os << LogIO::WARN << "clear cache" << LogIO::POST;
     im->clearCache();
+    //os << LogIO::WARN << "unlock" << LogIO::POST;
     im->unlock();
+    //os << LogIO::WARN << "tempClose" << LogIO::POST;
     im->tempClose();
+    //os << LogIO::WARN << "NULL" << LogIO::POST;
     im = NULL;  // This was added to allow modification by modules independently
   }
-
+  
   void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Complex> > &im )
   {
     im->tempClose();
@@ -2536,14 +2542,50 @@ Bool SIImageStore::isModelEmpty()
     minMax( minVal, maxVal, posmin, posmax, lattice );
   }
 
+Array<Double> SIImageStore::calcRobustRMS()
+{    
+  LogIO os( LogOrigin("SIImageStore","calcRobustRMS",WHERE) );
+  Record*  regionPtr=0;
+  String LELmask("");
+ 
+  ImageStatsCalculator imcalc( residual(), regionPtr, LELmask, False); 
+
+  Vector<Int> axes(2);
+  axes[0] = 0;
+  axes[1] = 1;
+  imcalc.setAxes(axes);
+  imcalc.setRobust(True);
+  Record thestats = imcalc.statistics();
+  //cout<<"thestats="<<thestats<<endl;
+
+  Array<Double> maxs, rmss, mads;
+  thestats.get(RecordFieldId("max"), maxs);
+  thestats.get(RecordFieldId("rms"), rmss);
+  thestats.get(RecordFieldId("medabsdevmed"), mads);
+  
+  os << "Max : " << maxs << LogIO::POST;
+  os << "RMS : " << rmss << LogIO::POST;
+  os << "MAD : " << mads << LogIO::POST;
+  
+  return mads*1.4826;
+}
+
   void SIImageStore::printImageStats()
   {
     LogIO os( LogOrigin("SIImageStore","printImageStats",WHERE) );
-    Float minresmask, maxresmask, minres, maxres;
+    Float minresmask=0, maxresmask=0, minres=0, maxres=0;
     //    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
-
-    findMinMaxLattice(*residual(), *mask() , maxres,maxresmask, minres, minresmask);
-
+    if(hasMask())
+      {
+	findMinMaxLattice(*residual(), *mask() , maxres,maxresmask, minres, minresmask);
+      }
+    else
+      {
+	LatticeExprNode pres( max( *residual() ) );
+	maxres = pres.getFloat();
+	LatticeExprNode pres2( min( *residual() ) );
+	minres = pres2.getFloat();
+      }
 
     os << "[" << itsImageName << "]" ;
     os << " Peak residual (max,min) " ;
@@ -2553,7 +2595,7 @@ Bool SIImageStore::isModelEmpty()
 
     os << "[" << itsImageName << "] Total Model Flux : " << getModelFlux() << LogIO::POST; 
 
-
+    
   }
 
   // Calculate the total model flux

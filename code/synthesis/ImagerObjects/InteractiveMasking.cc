@@ -30,6 +30,9 @@
 #include <images/Images/PagedImage.h>
 #include <tables/Tables/Table.h>
 
+#include <images/Images/PagedImage.h>
+#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
+
 using namespace casacore;
 namespace casa{
   Bool clone(const String& imageName, const String& newImageName)
@@ -251,6 +254,8 @@ namespace casa{
     
     //os << "Loading image: " << image << " mask: " << mask << LogIO::POST;
 
+    Double startmask = maskSum(mask);
+
     if ( viewer_p == 0 ) {
       std::list<std::string> args;
       args.push_back("--oldregions");
@@ -322,7 +327,7 @@ namespace casa{
     delete mycb;
     
     
-    int result = 0;
+    int result = 1;
     if ( interact_result.type() == dbus::variant::RECORD ) {
       const dbus::record  &rec = interact_result.getRecord( );
       for ( dbus::record::const_iterator iter = rec.begin(); iter != rec.end(); ++iter ) {
@@ -333,11 +338,11 @@ namespace casa{
 	  } else {
 	    const std::string &action = iter->second.getString( );
 	    if ( action == "stop" )
-	      result = 2;
+	      result = 3;
 	    else if ( action == "no more" )
-	      result = 1;
+	      result = 2;
 	    else if ( action == "continue" )
-	      result = 0;
+	      result = 1;
 	    else {
 	      os << "ill-formed action result" << LogIO::WARN << LogIO::POST;
 	      return false;
@@ -382,14 +387,14 @@ namespace casa{
     prev_image_id_p=image_id_p;
     prev_mask_id_p=mask_id_p;
     
-    if(result==1){
+    if(result==2){
       //Keep the image up but clear the next time called
       image_id_p=0;
       mask_id_p=0;
     }
 
     /*
-    if(result==2){
+    if(result==3){
       //clean up
       //viewer_p->close(clean_panel_p);
       //viewer_p->done();
@@ -412,12 +417,62 @@ namespace casa{
     //    viewer_p->unload(mask_id_p);
     image_id_p=0;
     mask_id_p=0;
+
+
+    Double endmask = maskSum(mask);
+
     
-    // return 0 if "continue"
-    // return 1 if "no more interaction"
-    // return 2 if "stop"
+    if( startmask != endmask)
+      {
+	result = -1*result;
+	//cout << "Mask changed. Result  : " << result << endl;
+      }
+    //    else
+      //cout << " Mask did not change. Result :  " << result << endl;
+    
+
+    // return 1 if "continue"
+    // return 2 if "no more interaction"
+    // return 3 if "stop"
     return result;
   }
 
+
+  Float InteractiveMasking::maskSum(const String & maskname)
+  {
+
+    PagedImage<Float> *mask = new PagedImage<Float> (maskname);
+
+    LatticeExprNode msum( sum( *mask ) );
+    Float maskSum = msum.getFloat();
+
+    mask->unlock();
+    mask->tempClose();
+
+    delete mask;
+    mask = NULL;
+
+    //cout << "Mask Sum : " << maskSum << endl;
+
+    return maskSum;
+
+    /*
+    Record*  regionPtr=0;
+    String LELmask("");
+
+    ImageStatsCalculator imcalc( imask, regionPtr, LELmask, False);
+    Record thestats = imcalc.statistics();
+
+    Array<Double> msum;
+    thestats.get(RecordFieldId("sum"), msum);
+
+    cout << "mask sum : " << msum << endl;
+
+    AlwaysAssert( msum.nelements()>0, AipsError );
+    
+    return sum(msum);
+    */
+
+  }
 
 };

@@ -72,6 +72,17 @@ casac::record* synthesisdeconvolver::initminorcycle()
   return rstat;
 }
 
+bool synthesisdeconvolver::setupmask()
+{
+  bool rstat(false);
+  try {
+    rstat = itsDeconvolver->setupMask( );
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
 casac::record* synthesisdeconvolver::interactivegui(const casac::record& iterbot)
 {
   casac::record* rstat(0);

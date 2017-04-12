@@ -1244,7 +1244,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float minresmask, maxresmask, minres, maxres;
     //    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
 
-    findMinMaxLattice(*residual(), *mask() , maxres,maxresmask, minres, minresmask);
+    if (hasMask())
+      {
+	findMinMaxLattice(*residual(), *mask() , maxres,maxresmask, minres, minresmask);
+      }
+    else
+      {
+	LatticeExprNode pres( max( *residual() ) );
+	maxres = pres.getFloat();
+	LatticeExprNode pres2( min( *residual() ) );
+	minres = pres2.getFloat();
+      }
 
     os << "[" << itsImageName << "]" ;
     os << " Peak residual (max,min) " ;

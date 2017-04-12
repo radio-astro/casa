@@ -97,7 +97,7 @@ class SynthesisDeconvolver
   void setMask( casacore::TempImage<casacore::Float> &/*mask*/ );
 
   void setStartingModel();
-  void setupMask();
+  casacore::Bool setupMask();
   void setAutoMask();
 
 protected:
@@ -171,6 +171,8 @@ protected:
   
   casacore::Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
   casacore::Bool itsIsInteractive;
+
+  casacore::Float itsMaskSum;
  
 };
 

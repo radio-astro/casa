@@ -150,6 +150,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			/* Note:  Incrementing the Major cycle will reset the cycleIterDone */
 			void incrementMajorCycleCount();
+	                void resetMinorCycleInitInfo();
 
 			casacore::Int getMajorCycleCount();
 
@@ -231,7 +232,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			casacore::Float itsPeakResidualNoMask;
 			casacore::Float itsPrevPeakResidualNoMask;
 			casacore::Float itsMinPeakResidualNoMask;
-
+	  
+	                casacore::Float itsMadRMS;
+	                casacore::Float itsMaskSum;
+	  
+ 	                casacore::Int itsPrevMajorCycleCount;
 
 			/* The number of Controllers Currently Connected */
 			int    itsControllerCount;
@@ -253,6 +258,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			casacore::Float itsInteractiveThreshold;
 	  
 	        casacore::Bool itsIsCycleThresholdAuto;
+	  casacore::Bool itsIsThresholdAuto;
 
 			casacore::Float itsCycleFactor;
 			casacore::Float itsLoopGain;

@@ -68,7 +68,8 @@ class testref_base_parallel(unittest.TestCase):
           os.system('rm -rf ' + self.img+'*')
 
      def checkfinal(self,pstr=""):
-          pstr += "["+inspect.stack()[1][3]+"] : To re-run this test :  mpirun -n 4 -xterm 0 `which casa` -c `echo $CASAPATH | awk '{print $1}'`/gcwrap/python/scripts/regressions/admin/runUnitTest.py test_refimager_parallel["+ inspect.stack()[1][3] +"]"
+          #pstr += "["+inspect.stack()[1][3]+"] : To re-run this test :  mpirun -n 4 -xterm 0 `which casa` -c `echo $CASAPATH | awk '{print $1}'`/gcwrap/python/scripts/regressions/admin/runUnitTest.py test_refimager_parallel["+ inspect.stack()[1][3] +"]"
+          pstr += "["+inspect.stack()[1][3]+"] : To re-run this test :  runUnitTest.main(['test_refimager_parallel["+ inspect.stack()[1][3] +"]'])"
           casalog.post(pstr,'INFO')
           if( pstr.count("(Fail") > 0 ):
                self.fail("\n"+pstr)

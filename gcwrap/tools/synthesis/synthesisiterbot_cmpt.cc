@@ -165,6 +165,22 @@ bool synthesisiterbot::endmajorcycle()
   return rstat;
 }
 
+bool synthesisiterbot::resetminorcycleinfo()
+{
+  Bool rstat(false);
+  
+  try 
+    {
+      itsIterBot->resetMinorCycleInfo();
+     } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+
 
 
   casac::record* synthesisiterbot::getminorcyclecontrols()

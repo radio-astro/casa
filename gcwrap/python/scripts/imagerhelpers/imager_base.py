@@ -41,7 +41,7 @@ class PySynthesisImager:
         self.NF = len(self.allimpars.keys())
         self.stopMinor = {}  ##[0]*self.NF
         for immod in range(0,self.NF):
-            self.stopMinor[str(immod)]=0
+            self.stopMinor[str(immod)]=1.0
         ## Number of nodes. This gets set for parallel runs
         ## It can also be used serially to process the major cycle in pieces.
         self.NN = 1 
@@ -167,7 +167,7 @@ class PySynthesisImager:
     def initDefaults(self):
         # Reset globals/members
          self.NF=1
-         self.stopMinor={'0':0}  # Flag to call minor cycle for this field or not.
+         self.stopMinor={'0':1.0}  # Flag to call minor cycle for this field or not.
          self.NN=1
          self.SItool=None
          self.SDtools=[]
@@ -188,42 +188,59 @@ class PySynthesisImager:
 
     def hasConverged(self):
         # Merge peak-res info from all fields to decide iteration parameters
+         self.IBtool.resetminorcycleinfo() 
          for immod in range(0,self.NF):
-              #
               initrec =  self.SDtools[immod].initminorcycle() 
-              
               self.IBtool.mergeinitrecord( initrec );
-#              print "Peak res of field ",immod, " : " ,initrec['peakresidual']
-#              casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
 
-         self.runInteractiveGUI2()
+#         # Run interactive masking (and threshold/niter editors)
+#         self.runInteractiveGUI2()
 
-        # Check with the iteration controller about convergence.
+         # Check with the iteration controller about convergence.
          #print "check convergence"
          stopflag = self.IBtool.cleanComplete()
          #print 'Converged : ', stopflag
          if( stopflag>0 ):
              #stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles']
-             stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'peak residual increased by more than 5 times from the previous major cycle','peak residual increased by more than 5 times from the minimum reached']
+             stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'peak residual increased by more than 5 times from the previous major cycle','peak residual increased by more than 5 times from the minimum reached','zero mask']
              casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
 
-             # revert the current automask to the previous one 
-             if self.iterpars['interactive']:
-                 for immod in range(0,self.NF):
-                     if self.alldecpars[str(immod)]['usemask']=='auto-thresh':
-                        prevmask = self.allimpars[str(immod)]['imagename']+'.prev.mask'
-                        if os.path.isdir(prevmask):
-                          shutil.rmtree(self.allimpars[str(immod)]['imagename']+'.mask')
-                          #shutil.copytree(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
-                          shutil.move(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
+#             # revert the current automask to the previous one 
+#             if self.iterpars['interactive']:
+#                 for immod in range(0,self.NF):
+#                     if self.alldecpars[str(immod)]['usemask']=='auto-thresh':
+#                        prevmask = self.allimpars[str(immod)]['imagename']+'.prev.mask'
+#                        if os.path.isdir(prevmask):
+#                          shutil.rmtree(self.allimpars[str(immod)]['imagename']+'.mask')
+#                          #shutil.copytree(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
+#                          shutil.move(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
 
          return (stopflag>0)
 
 #############################################
+    def updateMask(self):
+        # Setup mask for each field ( input mask, and automask )
+        maskchanged = False
+        for immod in range(0,self.NF):
+            maskchanged = maskchanged | self.SDtools[immod].setupmask() 
+        
+        # Run interactive masking (and threshold/niter editors), if interactive=True
+        maskchanged = maskchanged | self.runInteractiveGUI2()
+
+        ## Return a flag to say that the mask has changed or not.
+        return maskchanged
+
+#############################################
     def runInteractiveGUI2(self):
+        maskchanged = False
         if self.iterpars['interactive'] == True:
             self.stopMinor = self.IBtool.pauseforinteraction()
             #print "Actioncodes in python : " , self.stopMinor
+
+            for akey in self.stopMinor:
+                if self.stopMinor[akey] < 0:
+                    maskchanged = True
+                    self.stopMinor[akey] = abs( self.stopMinor[akey] )
 
             #Check if force-stop has happened while savemodel != "none".
             # If so, warn the user that unless the Last major cycle has happened,
@@ -231,7 +248,7 @@ class PySynthesisImager:
             if self.iterpars['savemodel'] != "none":
                 all2=True;
                 for akey in self.stopMinor:
-                    all2 = all2 and self.stopMinor[akey]==2
+                    all2 = all2 and self.stopMinor[akey]==3
 
                 if all2==True:
                     self.predictModel()
@@ -240,31 +257,9 @@ class PySynthesisImager:
                     #else:
                     #    wstr = "Saving virtual model"
                     #casalog.post("Model visibilities may not have been saved in the MS even though you have asked for it. Please check the logger for the phrases 'Run (Last) Major Cycle'  and  '" + wstr +"'. If these do not appear, then please save the model via a separate tclean run with niter=0,calcres=F,calcpsf=F. It will pick up the existing model from disk and save/predict it.   Reason for this : For performance reasons model visibilities are saved only in the last major cycle. If the X button on the interactive GUI is used to terminate a run before this automatically detected 'last' major cycle, the model isn't written. However, a subsequent tclean run as described above will predict and save the model. ","WARN")
-                
 
-#############################################
-    def runInteractiveGUI(self):
-        if self.iterpars['interactive'] == True:
-            iterdetails = self.IBtool.getiterationdetails()
-            for immod in range(0,self.NF):
-                if self.stopMinor[str(immod)]==0 :
-                    iterparsmod =  self.SDtools[immod].interactivegui( iterdetails ) 
-                    #print 'Input iterpars : ', iterdetails['niter'], iterdetails['cycleniter'], iterdetails['threshold']
-                    self.iterpars.update(iterparsmod) 
-                    #print 'Output iterpars : ', self.iterpars['niter'],self.iterpars['cycleniter'],self.iterpars['threshold']
-                    itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
-
-                    if iterparsmod.has_key('actioncode') :
-                        self.stopMinor[str(immod)] = iterparsmod['actioncode']  # 0 or 1 or 2 ( old interactive viewer )
-
-            alldone=True
-            for immod in range(0,self.NF):
-                alldone = alldone and (self.stopMinor[str(immod)]==2)
-            if alldone==True:
-                self.IBtool.changestopflag( True )
-#            if self.stopMinor==[2]*self.NF:
-#                self.IBtool.changestopflag( True )
-             #itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
+        #print 'Mask changed during interaction  : ', maskchanged
+        return maskchanged
 
 #############################################
     def makePSF(self):
@@ -382,7 +377,7 @@ class PySynthesisImager:
         # Run minor cycle
         self.ncycle+=1
         for immod in range(0,self.NF):  
-            if self.stopMinor[str(immod)]<2 :
+            if self.stopMinor[str(immod)]<3 :
                 exrec = self.SDtools[immod].executeminorcycle( iterbotrecord = iterbotrec )
                 #print '.... iterdone for ', immod, ' : ' , exrec['iterdone']
                 self.IBtool.mergeexecrecord( exrec )

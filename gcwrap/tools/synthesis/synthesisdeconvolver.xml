@@ -78,6 +78,18 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 
 <!-- ===================================== -->
 
+   <method type="function" name="setupmask">
+   <shortdescription>Create an input or auto mask</shortdescription>
+
+<description>
+</description>
+<input>
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
    <method type="function" name="interactivegui">
    <shortdescription>Run interactive GUI</shortdescription>
 

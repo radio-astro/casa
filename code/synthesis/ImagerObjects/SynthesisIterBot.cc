@@ -179,6 +179,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}    
 	}
 
+	void SynthesisIterBot::resetMinorCycleInfo() {
+		LogIO os( LogOrigin("SynthesisIterBot","resetMinorCycleInfo",WHERE) );
+
+		try {
+			if ( itsLoopController ) {
+				itsLoopController->resetMinorCycleInitInfo();
+			}
+		} catch(AipsError &x) {
+			throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
+		}    
+	}
+
   
 	Record SynthesisIterBot::getSubIterBot() {
 		Record returnRecord;
@@ -319,11 +331,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
 		  
 		  uInt nIm = itsImageList.nelements();
-		  if( itsActionCodes.nelements() != nIm ) { itsActionCodes.resize(nIm); itsActionCodes.set(0); }
+		  if( itsActionCodes.nelements() != nIm ) { itsActionCodes.resize(nIm); itsActionCodes.set(1.0); }
 		  
 		  for (uInt ind=0;ind<nIm;ind++)
 		    {
-		      if ( itsActionCodes[ind] ==0 )
+		      if ( fabs(itsActionCodes[ind]) ==1.0 )
 			{
 			  String imageName = itsImageList[ind]+".residual"+(itsMultiTermList[ind]?".tt0":"");
 			  String maskName = itsImageList[ind] + ".mask";
@@ -331,10 +343,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  itsActionCodes[ind] = itsInteractiveMasker->interactivemask(imageName, maskName,
 										      iterleft, cycleniter, strthresh, strcycthresh);
 			  //cout << "After interaction : niter : " << niter << " cycleniter : " << cycleniter << " thresh : " << strthresh << " cyclethresh : " << strcycthresh << "  ------ ret : " << itsActionCodes[ind] << endl;
+			  if( itsActionCodes[ind] < 0 ) os << "[" << itsImageList[ind] <<"] Mask changed interactively." << LogIO::POST;
 			}
 		    }
 		  
-		  //cout << "ActionCodes : " << itsActionCodes << endl;
+		  //		  cout << "ActionCodes : " << itsActionCodes << endl;
 		  
 		  Quantity qa;
 		  casacore::Quantity::read(qa,strthresh);
@@ -352,7 +365,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Bool alldone=true;
 		  for(uInt ind=0;ind<nIm;ind++)
 		    {
-		      alldone = alldone & ( itsActionCodes[ind]==2 );
+		      alldone = alldone & ( fabs(itsActionCodes[ind])==3 );
 		    }
 		  if( alldone==true ) changeStopFlag( true );
 

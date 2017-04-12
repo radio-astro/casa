@@ -74,6 +74,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsPeakResidualNoMask(0.0),
 						itsPrevPeakResidualNoMask(-1.0),
 						itsMinPeakResidualNoMask(1e+9),
+						itsMadRMS(0.0),
+						itsMaskSum(-1.0),
+						itsPrevMajorCycleCount(0),
 						itsControllerCount(0),
 						itsNiter(0),
 						itsCycleNiter(0),
@@ -82,6 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsCycleThreshold(0.0),
 						itsInteractiveThreshold(0.0),
 						itsIsCycleThresholdAuto(true),
+						itsIsThresholdAuto(false),
 						itsCycleFactor(1.0),
 						itsLoopGain(0.1),
 						itsStopFlag(false),
@@ -160,7 +164,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if( itsPeakResidual>0 && itsPrevPeakResidual>0 && 
 		    fabs(itsPeakResidual - itsPrevPeakResidual)/fabs(itsPrevPeakResidual) > 2.0 )
 		  {
-		    os << "[WARN] Peak residual increased from " << itsPrevPeakResidual << " to " << itsPeakResidual << LogIO::POST;
+		    os << "[WARN] Peak residual (within the mask) increased from " << itsPrevPeakResidual << " to " << itsPeakResidual << LogIO::POST;
 		  }
 
 		/// This may interfere with some other criterion... check.
@@ -183,42 +187,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  }
 		else // not converged yet... but....if nothing has changed in this round... also stop
 		  {
-		    if( itsIterDone>0 && fabs(itsPrevPeakResidual - itsPeakResidual)<1e-10) 
-		     {stopCode = 4;}
-
-		    /*
-                    // another non-convergent condition: diverging (relative increase is more than 5 times across one major cycle)
-                    else if ( itsIterDone > 0 && 
-			      fabs(itsPeakResidual-itsPrevPeakResidual)/fabs(itsPrevPeakResidual)  > 5.0) 
-                      {
-			cout << "(5) Peak res : " << itsPeakResidual 
-			     << "  Dev from prev peak res " << itsPrevPeakResidual << endl; 
-			stopCode = 5;}
-
-		    // divergence check, 5 times increase from the minimum peak residual so far (across all previous major cycles).
-		    else if ( itsIterDone > 0 && 
-			      (fabs(itsPeakResidual)-itsMinPeakResidual)/itsMinPeakResidual  > 5.0 )
-                      {
-			cout << "(6) Peak res : " << itsPeakResidual 
-			     <<  "    Dev from min peak res " << itsMinPeakResidual << endl; 
-			stopCode = 6;}
-		    */
+		    
+		    if (itsMaskSum==0.0)
+		      {
+			//cout << "(7) Mask is all zero.Stopping" << endl;
+			stopCode = 7;
+		      }
+		    // Nothing has changed across the last set of minor cycle iterations and major cycle.
+		    else if( itsIterDone>0 && 
+			     //itsMaskSum>0.0 &&
+			     			     (itsMajorDone>itsPrevMajorCycleCount) && 
+			     fabs(itsPrevPeakResidual - itsPeakResidual)<1e-10) 
+		      {stopCode = 4;}
+		    
                     // another non-convergent condition: diverging (relative increase is more than 5 times across one major cycle)
                     else if ( itsIterDone > 0 && 
 			      fabs(itsPeakResidualNoMask-itsPrevPeakResidualNoMask)/fabs(itsPrevPeakResidualNoMask)  > 3.0) 
                       {
-			cout << "(5) Peak res (no mask) : " << itsPeakResidualNoMask 
-			     << "  Dev from prev peak res " << itsPrevPeakResidualNoMask << endl; 
+			//cout << "(5) Peak res (no mask) : " << itsPeakResidualNoMask 
+			//     << "  Dev from prev peak res " << itsPrevPeakResidualNoMask << endl; 
 			stopCode = 5;}
 
 		    // divergence check, 5 times increase from the minimum peak residual so far (across all previous major cycles).
 		    else if ( itsIterDone > 0 && 
 			      (fabs(itsPeakResidualNoMask)-itsMinPeakResidualNoMask)/itsMinPeakResidualNoMask  > 3.0 )
                       {
-			cout << "(6) Peak res (no mask): " << itsPeakResidualNoMask 
-			     <<  "    Dev from min peak res " << itsMinPeakResidualNoMask << endl; 
-			stopCode = 6;}
-
+			//cout << "(6) Peak res (no mask): " << itsPeakResidualNoMask 
+			//    <<  "    Dev from min peak res " << itsMinPeakResidualNoMask << endl; 
+			stopCode = 6;
+		      }
+		    
 		  }
 
 		/*
@@ -248,6 +246,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      {itsMinPeakResidualNoMask = fabs(itsPeakResidualNoMask);}
 		    
 		    itsPrevPeakResidualNoMask = itsPeakResidualNoMask;
+
+		    itsPrevMajorCycleCount = itsMajorDone;
 
 		  }
 		
@@ -307,6 +307,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsMaxPsfSidelobe =  max( itsMaxPsfSidelobe, initRecord.asFloat(RecordFieldId("maxpsfsidelobe")) );
 
 		itsPeakResidualNoMask = max( itsPeakResidualNoMask, initRecord.asFloat(RecordFieldId("peakresidualnomask")));
+		itsMadRMS = max( itsMadRMS, initRecord.asFloat(RecordFieldId("madrms")) );
+		
+		///itsMaskSum += initRecord.asFloat(RecordFieldId("masksum"));
+		/*
+		  It has been reset to -1.0.
+		  If no masks have changed, it should remain at -1.0
+		  If any mask has changed, the sum will come in, and should be added to this.
+		 */
+		Float thismasksum = initRecord.asFloat(RecordFieldId("masksum"));
+		if( thismasksum != -1.0 )
+		  {
+		    if ( itsMaskSum == -1.0 ) itsMaskSum = thismasksum;
+		    else itsMaskSum += thismasksum;
+		  }
 
 		if ( itsPrevPeakResidual == -1.0 ) itsPrevPeakResidual = itsPeakResidual;
 		if ( itsPrevPeakResidualNoMask == -1.0 ) itsPrevPeakResidualNoMask = itsPeakResidualNoMask;
@@ -438,16 +452,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void SIIterBot_state::incrementMajorCycleCount( ) {
 		std::lock_guard<std::recursive_mutex> guard(recordMutex);
+		itsPrevMajorCycleCount = itsMajorDone;
 		itsMajorDone++;
 
 		/* Interactive iteractions update */ 
 		itsInteractiveIterDone += itsMaxCycleIterDone;
+		
+		resetMinorCycleInitInfo();
+	}
 
+	void SIIterBot_state::resetMinorCycleInitInfo( ) {
 		/* Get ready to do the minor cycle */
 		itsPeakResidual = 0;
 		itsPeakResidualNoMask = 0;
 		itsMaxPsfSidelobe = 0;
 		itsMaxCycleIterDone = 0;
+		itsMaskSum = -1.0;
 	}
 
 	Int SIIterBot_state::getMajorCycleCount( ) {
@@ -586,7 +606,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void SIIterBot_state::changeThreshold( Float threshold ) {
 		std::lock_guard<std::recursive_mutex> guard(recordMutex);    
-		itsThreshold = threshold;
+
+		if( threshold == -1.0 ) {
+		  itsThreshold = 0.0;
+		  itsIsThresholdAuto = true;
+		}
+		else { 
+		  itsThreshold = threshold; 
+		  itsIsThresholdAuto = false;
+		}
 	}
 
 	void SIIterBot_state::changeCycleThreshold( Float cyclethreshold ) {

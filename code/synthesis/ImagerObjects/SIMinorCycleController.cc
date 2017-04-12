@@ -142,6 +142,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  void SIMinorCycleController::setMadRMS(Float madRMS)
+  {
+    itsMadRMS = madRMS;
+  }
+
+  void SIMinorCycleController::setMaskSum(Float maskSum)
+  {
+    itsMaskSum = maskSum;
+  }
+
   void SIMinorCycleController::resetMinResidual()
   {
     itsMinResidual = itsPeakResidual;
@@ -210,6 +220,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     returnRecord.define(RecordFieldId("peakresidual"), itsPeakResidual);
     returnRecord.define(RecordFieldId("maxpsfsidelobe"), itsMaxPsfSidelobe);
     returnRecord.define( RecordFieldId("peakresidualnomask"), itsPeakResidualNoMask);
+    returnRecord.define( RecordFieldId("madrms"), itsMadRMS);
+    returnRecord.define( RecordFieldId("masksum"), itsMaskSum);
 
     /* Reset Counters and summary for the current set of minorcycle iterations */
     itsIterDone = 0;
