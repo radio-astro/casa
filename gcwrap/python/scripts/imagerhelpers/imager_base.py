@@ -233,6 +233,7 @@ class PySynthesisImager:
 #############################################
     def runInteractiveGUI2(self):
         maskchanged = False
+        forcestop = True
         if self.iterpars['interactive'] == True:
             self.stopMinor = self.IBtool.pauseforinteraction()
             #print "Actioncodes in python : " , self.stopMinor
@@ -245,12 +246,12 @@ class PySynthesisImager:
             #Check if force-stop has happened while savemodel != "none".
             # If so, warn the user that unless the Last major cycle has happened,
             # the model won't have been written into the MS, and to do a 'predict' run.
-            if self.iterpars['savemodel'] != "none":
-                all2=True;
-                for akey in self.stopMinor:
-                    all2 = all2 and self.stopMinor[akey]==3
+            forcestop=True;
+            for akey in self.stopMinor:
+                forcestop = forcestop and self.stopMinor[akey]==3
 
-                if all2==True:
+            if self.iterpars['savemodel'] != "none":
+                if forcestop==True:
                     self.predictModel()
                     #if self.iterpars['savemodel'] == "modelcolumn":
                     #    wstr = "Saving model column"
@@ -259,7 +260,7 @@ class PySynthesisImager:
                     #casalog.post("Model visibilities may not have been saved in the MS even though you have asked for it. Please check the logger for the phrases 'Run (Last) Major Cycle'  and  '" + wstr +"'. If these do not appear, then please save the model via a separate tclean run with niter=0,calcres=F,calcpsf=F. It will pick up the existing model from disk and save/predict it.   Reason for this : For performance reasons model visibilities are saved only in the last major cycle. If the X button on the interactive GUI is used to terminate a run before this automatically detected 'last' major cycle, the model isn't written. However, a subsequent tclean run as described above will predict and save the model. ","WARN")
 
         #print 'Mask changed during interaction  : ', maskchanged
-        return maskchanged
+        return ( maskchanged or forcestop )
 
 #############################################
     def makePSF(self):
@@ -373,6 +374,9 @@ class PySynthesisImager:
         # Get iteration control parameters
         iterbotrec = self.IBtool.getminorcyclecontrols()
         ##print "Minor Cycle controls : ", iterbotrec
+
+        self.IBtool.resetminorcycleinfo() 
+
         #
         # Run minor cycle
         self.ncycle+=1
@@ -390,7 +394,8 @@ class PySynthesisImager:
                 # Some what duplicated as above but keep a copy of the previous mask
                 # for interactive automask to revert to it if the current mask
                 # is not used (i.e. reached deconvolution stopping condition).
-                if self.iterpars['interactive'] and self.alldecpars[str(immod)]['usemask']=='auto-thresh':
+                #if self.iterpars['interactive'] and self.alldecpars[str(immod)]['usemask']=='auto-thresh':
+                if self.alldecpars[str(immod)]['usemask']=='auto-thresh':
                     maskname = self.allimpars[str(immod)]['imagename']+'.mask'
                     prevmaskname=self.allimpars[str(immod)]['imagename']+'.prev.mask'
                     if os.path.isdir(maskname):
