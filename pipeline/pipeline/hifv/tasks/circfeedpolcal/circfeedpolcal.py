@@ -132,8 +132,6 @@ class Circfeedpolcal(polarization.Polarization):
         LOG.info(self.calstrategy)
 
         # D-terms in 16MHz pieces, minsnr of 5.0
-
-
         self.do_polcal(tablesToAdd[1][0], poltype=poltype, field=polfield,
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
                        gainfield=[''], spwmap=[], solint='inf,16MHz', minsnr=5.0)
@@ -148,7 +146,6 @@ class Circfeedpolcal(polarization.Polarization):
             calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False, caltype=caltype)
             calapp = callibrary.CalApplication(calto, calfrom)
             self.callist.append(calapp)
-
 
     def do_gaincal(self, caltable, field=''):
 
@@ -196,8 +193,6 @@ class Circfeedpolcal(polarization.Polarization):
         # import pdb
         # pdb.set_trace()
 
-
-
         task_args = {'vis': self.inputs.vis,
                      'caltable'   : caltable,
                      'field'      : field,
@@ -224,13 +219,13 @@ class Circfeedpolcal(polarization.Polarization):
         return result
 
     def _do_setjy(self):
-        '''
+        """
         The code in this private class method are (for now) specific to VLASS
         requirements and heuristics.
 
         Returns: string name of the amplitude flux calibrator
 
-        '''
+        """
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
 
@@ -255,9 +250,11 @@ class Circfeedpolcal(polarization.Polarization):
                     fluxcal = '3C286'
                 if '1331+3030' in fluxfieldnames:
                     fluxcal = '1331+3030'
+                if '"0137+331=3C48"' in fluxfieldnames:
+                    fluxcal = '"0137+331=3C48"'
 
-        #delmodjob = casa_tasks.delmod(vis=self.inputs.vis, field='')
-        #self._executor.execute(delmodjob)
+        # delmodjob = casa_tasks.delmod(vis=self.inputs.vis, field='')
+        # self._executor.execute(delmodjob)
 
         try:
             task_args = {}
@@ -276,7 +273,7 @@ class Circfeedpolcal(polarization.Polarization):
                              'scalebychan'   : True,
                              'usescratch'    : True}
 
-            elif fluxcal in ('3C48', 'J0137+3309', '0137+3309'):
+            elif fluxcal in ('3C48', 'J0137+3309', '0137+3309', '"0137+331=3C48"'):
                 task_args = {'vis'           : self.inputs.vis,
                              'field'         : fluxcal,
                              'spw'           : '',
