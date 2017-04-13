@@ -275,12 +275,12 @@ Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data,
                   Vector<Double> chanWidths = vi.subtableColumns().spectralWindow().chanWidth()(curspws[0]);  
                   // freqs are in channel center freq so add the half the width to the values to return the edge frequencies 
                   if (nfreq==1) {
-		    freqEnd=max(freqEnd, localmax+chanWidths[0]/2.0);
-		    freqStart=min(freqStart, localmin-chanWidths[0]/2.0);
+		    freqEnd=max(freqEnd, localmax+fabs(chanWidths[0]/2.0));
+		    freqStart=min(freqStart, localmin-fabs(chanWidths[0]/2.0));
                   }
                   else {
-		    freqEnd=max(freqEnd, localmax+chanWidths[localmaxpos[0]]/2.0);
-		    freqStart=min(freqStart, localmin-chanWidths[localminpos[0]]/2.0);
+		    freqEnd=max(freqEnd, localmax+fabs(chanWidths[localmaxpos[0]]/2.0));
+		    freqStart=min(freqStart, localmin-fabs(chanWidths[localminpos[0]]/2.0));
                   }
 		   
 		}
