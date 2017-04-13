@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import os
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 #from pipeline.hif.tasks.applycal import applycal
@@ -48,6 +50,14 @@ basetask.ImagingMeasurementSetsPreferred.register(UVcontSubInputs)
 class UVcontSub(applycal.Applycal):
     Inputs = UVcontSubInputs
 
+    # Override prepare method with one which sets and unsets the VI1CAL
+    # environment variable.
+    def prepare(self):
+        os.environ['VI1CAL'] = '1'
+        results = super(UVcontSub, self).prepare()
+        del os.environ['VI1CAL']
+
+        return results
 
 # May need this in the future
 #
