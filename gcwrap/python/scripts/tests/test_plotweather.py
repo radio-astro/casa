@@ -17,22 +17,39 @@ Unit tests for task plotweather. It tests the following parameters:
     return value:       [opacity] (type='list')
 '''
 
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
+
+# Read the data sets from another directory
+if os.environ.has_key('TEST_DATADIR'):  
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/listobs/'
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR
+    else:
+        print 'WARN: directory '+DATADIR+' does not exist'
+
+print 'plotweather tests will use data from '+datapath
+
 class plotweather_test(unittest.TestCase):
+
     # Input MS, must have WEATHER table
-    datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
-    msfile = datapath + 'nep2-shrunk.ms'
-    msNoWeatherfile = datapath + 'ngc5921_ut.ms'
+    msfile = 'nep2-shrunk.ms'
+    msNoWeatherfile = 'ngc5921_ut.ms'
     # output plots
     fig = '/tmp/plotweathertest.png'
     defaultFig = msfile + ".plotweather.png"
 
     def setUp(self):
         default(plotweather)
+        if (os.path.exists(self.msfile)):
+            shutil.rmtree(self.msfile)
+        shutil.copytree(datapath+self.msfile, self.msfile)
     
     def tearDown(self):
-        if os.path.exists(self.fig):
+        if (os.path.exists(self.msfile)):
+            shutil.rmtree(self.msfile)
+        if (os.path.exists(self.fig)):
             os.remove(self.fig)
-        if os.path.exists(self.defaultFig):
+        if (os.path.exists(self.defaultFig)):
             os.remove(self.defaultFig)
         
     def test0(self):
@@ -48,10 +65,16 @@ class plotweather_test(unittest.TestCase):
         
     def test2(self):
         '''Test 2: ms with no weather, no plot '''
+        if (os.path.exists(self.msNoWeatherfile)):
+            shutil.rmtree(self.msNoWeatherfile)
+        shutil.copytree(datapath+self.msNoWeatherfile, self.msNoWeatherfile)
+
         opac = plotweather(vis=self.msNoWeatherfile, plotName=self.fig)
         self.assertIsNotNone(opac)
         self.assertAlmostEqual(opac[0], 0.0055838)
         self.assertFalse(os.path.exists(self.fig))
+        if (os.path.exists(self.msNoWeatherfile)):
+            shutil.rmtree(self.msNoWeatherfile)
         
     def test2(self):
         '''Test 2: Good input file and output exists'''
