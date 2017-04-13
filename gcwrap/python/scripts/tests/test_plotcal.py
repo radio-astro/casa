@@ -309,7 +309,7 @@ class test_formats(plotcal_test_base):
         '''test svg export'''
         format = "/tmp/testplotcal.svg"
         plotcal(caltable=self.Gtable, showgui=False, figfile=format) 
-        self.checkPlotfile(format, 120000)
+        self.checkPlotfile(format, 110000)
         self.removePlotfile(format)
 
     def test_svgz(self):

@@ -989,7 +989,7 @@ Bool PlotCal::doPlot(){
       
       tp_p->setTableT(vt,tabnames,dummysel);
       tp_p->checkInputs(itsPlotOptions,plotTaQL_p,iterAxes_p);
-      if(tp_p->iterMultiPlotStart( itsPlotOptions, plotTaQL_p,iterAxes_p)==-1){
+      if(!tp_p->iterMultiPlotStart( itsPlotOptions, plotTaQL_p,iterAxes_p)){
 	cout << "Error in iteration plot initialization." << endl;
 	return false;
       }
@@ -1503,7 +1503,8 @@ Int PlotCal::multiTables(const Table& tablein,
 
   }
 
-  void PlotCal::subplotToPanel(const Int&subplot, Int& nrows, Int& ncols, Int& panel){
+  void PlotCal::subplotToPanel(const casacore::Int&subplot, 
+        casacore::Int& nrows, casacore::Int& ncols, casacore::Int& panel){
     
     LogIO os(LogOrigin("plotcal", "subplotToPanel", WHERE));
     nrows=0;
@@ -1517,10 +1518,10 @@ Int PlotCal::multiTables(const Table& tablein,
 	 << LogIO::POST;
       return;
     }
-    String threeChars = String::toString( subplot ); 
-    nrows = atoi((threeChars.at(0,1)).chars());
-    ncols = atoi((threeChars.at(1,1)).chars());
-    panel = atoi((threeChars.at(2,1)).chars());
+    casacore::String threeChars = casacore::String::toString( subplot ); 
+    nrows = atoi((threeChars.substr(0,1)).c_str());
+    ncols = atoi((threeChars.substr(1,1)).c_str());
+    panel = atoi((threeChars.substr(2,1)).c_str());
 
   }
 
