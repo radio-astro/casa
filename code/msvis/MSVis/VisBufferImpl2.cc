@@ -2476,7 +2476,8 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
 
     value.resize (IPosition (2, nChannels(), nRows()));
 
-    Matrix<Bool> flagMat = flagCube().yzPlane(0);
+    Matrix<Bool> flagMat;
+    flagMat.assign(flagCube().yzPlane(0));
     std::logical_and<Bool> andOp;
 
     /*

@@ -99,7 +99,7 @@ using namespace casa::vi;
                            numthreads_p(-1), pbLimit_p(0.05),sj_p(0), cmplxImage_p( )
   {
     spectralCoord_p=SpectralCoordinate();
-    isIOnly=false;
+    isPseudoI_p=false;
     spwChanSelFlag_p=0;
     polInUse_p=0;
     pop_p = new PolOuterProduct;
@@ -118,7 +118,7 @@ using namespace casa::vi;
     pbLimit_p(0.05),sj_p(0), cmplxImage_p( )
   {
     spectralCoord_p=SpectralCoordinate();
-    isIOnly=false;
+    isPseudoI_p=false;
     spwChanSelFlag_p=0;
     polInUse_p=0;
     pop_p = new PolOuterProduct;
@@ -416,7 +416,6 @@ using namespace casa::vi;
       AlwaysAssert(nvispol>0, AipsError);
       polMap.resize(nvispol);
       polMap=-1;
-      isIOnly=false;
       Int pol=0;
       Bool found=false;
       // First we try matching Stokes in the visibilities to
@@ -459,7 +458,7 @@ using namespace casa::vi;
     					<< visPolMap << LogIO::EXCEPTION;
     		}
     	else {
-    		isIOnly=true;
+    		
     		//logIO() << LogIO::DEBUGGING << "Transforming I only" << LogIO::POST;
     	}
     	  };
@@ -492,6 +491,8 @@ using namespace casa::vi;
   					     FTMachine::Type type){
       Cube<Complex> origdata;
       Cube<Bool> modflagCube;
+      // Read flags from the vb.
+      setSpectralFlag(vb,modflagCube);
       Vector<Double> visFreq(vb.getFrequencies(0).nelements());
       //if(doConversion_p[vb.spectralWindows()[0]]){
       if(freqFrameValid_p){
@@ -525,13 +526,14 @@ using namespace casa::vi;
         data.reference(origdata);
         // do something here for apply flag based on spw chan sels
         // e.g.
-        // setSpecFlag(vb, chansels_p) -> newflag cube
-        setSpectralFlag(vb,modflagCube);
-        //flags.resize(vb.flagCube().shape());
+        
+        
         flags.resize(modflagCube.shape());
         flags=0;
         //flags(vb.flagCube())=true;
-        flags(modflagCube)=true;
+	
+	flags(modflagCube)=true;
+	
         weight.reference(wt);
         interpVisFreq_p.resize();
         interpVisFreq_p=lsrFreq_p;
@@ -612,8 +614,7 @@ using namespace casa::vi;
         indgen(chanMap);
       }
 
-      // Read flags from the vb.
-      setSpectralFlag(vb,modflagCube);
+      
 
       if(type != FTMachine::PSF){ // Interpolating the data
    	//Need to get  new interpolate functions that interpolate explicitly on the 2nd axis
@@ -704,7 +705,8 @@ using namespace casa::vi;
       if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)||  (vb.nChannels()==1)){
         Cube<Bool> modflagCube;
         setSpectralFlag(vb,modflagCube);
-        data.reference(vb.visCubeModel());
+	
+	 data.reference(vb.visCubeModel());
         //flags.resize(vb.flagCube().shape());
         flags.resize(modflagCube.shape());
         flags=0;
@@ -1777,6 +1779,14 @@ using namespace casa::vi;
 
       modflagcube.resize(vb.flagCube().shape());
       modflagcube=vb.flagCube();
+      if(!isPseudoI_p){
+	ArrayIterator<Bool> from(modflagcube, IPosition(1, 0));
+	while(!from.pastEnd()){
+	  if(anyTrue(from.array()))
+	    from.array().set(True);
+	  from.next();
+	}
+      }
       uInt nchan = vb.nChannels();
       uInt msid = vb.msId();
       uInt selspw = vb.spectralWindows()[0];

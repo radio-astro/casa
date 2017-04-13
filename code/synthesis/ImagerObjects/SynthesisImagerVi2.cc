@@ -245,16 +245,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Vector<Double> reso=ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().resolution()(Int(chanlist(k,0)));
             
 	    if(freqList(k,3) < 0.0){
-	      topfreq=freqies(chanlist(k,1));
-	      lowfreq=freqies(chanlist(k,2));
-	      //lowfreq=freqList(k,2); //+freqList(k,3)/2.0;
-	      //topfreq=freqList(k, 1); //-freqList(k,3)/2.0;
+	      //topfreq=freqies(chanlist(k,1));
+	      //lowfreq=freqies(chanlist(k,2));
+	      lowfreq=freqList(k,2)+freqList(k,3)/2.0;
+	      topfreq=freqList(k, 1)-freqList(k,3)/2.0;
 	    }
 	    else{
-	      lowfreq=freqies(chanlist(k,1));
-	      topfreq=freqies(chanlist(k,2));
-	      //lowfreq=freqList(k,1); //-freqList(k,3)/2.0;
-	      //topfreq=freqList(k, 2); //+freqList(k,3)/2.0;
+	      //lowfreq=freqies(chanlist(k,1));
+	      //topfreq=freqies(chanlist(k,2));
+	      lowfreq=freqList(k,1)-freqList(k,3)/2.0;
+	      topfreq=freqList(k, 2)+freqList(k,3)/2.0;
 	    }
 	    //cerr << std::setprecision(12) << "Dat lowFreq "<< lowfreq << " topfreq " << topfreq << endl; 
             //channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);

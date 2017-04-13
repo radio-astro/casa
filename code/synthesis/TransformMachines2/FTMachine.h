@@ -365,6 +365,7 @@ public:
     return (cfCache_p.nrefs()!=0);
   }
   casacore::Bool isDryRun;
+  void setPseudoIStokes(casacore::Bool pseudoI){isPseudoI_p=pseudoI;};
 
 protected:
 
@@ -415,8 +416,8 @@ protected:
   // Maps of channels and polarization
   casacore::Vector<casacore::Int> chanMap, polMap;
 
-  // Is casacore::Stokes I only? iso XX,XY,YX,YY or LL,LR,RL,RR.
-  casacore::Bool isIOnly;
+  // Stokes pseudo I only? single parallel flagged will be allowed.
+  casacore::Bool isPseudoI_p;
 
   // Default Position used for phase rotations
   casacore::MPosition mLocation_p;
