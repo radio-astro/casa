@@ -497,7 +497,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                     ny = ia.shape()[dircoords[1]]
                 validsps = []
                 rmss = []
-                observing_pattern =  ref_ms.observing_pattern[antids[0]][spwids[0]][fieldids[0]]
+                observing_pattern =  ref_ms.observing_pattern[combined_antids[0]][combined_spws[0]][combined_fieldids[0]]
                 grid_task_class = gridding.gridding_factory(observing_pattern)
                 grid_tables = []
                 grid_input_dict = {}
