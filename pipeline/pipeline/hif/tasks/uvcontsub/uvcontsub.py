@@ -53,9 +53,15 @@ class UVcontSub(applycal.Applycal):
     # Override prepare method with one which sets and unsets the VI1CAL
     # environment variable.
     def prepare(self):
-        os.environ['VI1CAL'] = '1'
+        try:
+            vi1cal =  os.environ['VI1CAL']
+            vi1cal_was_unset = False
+        except:
+            os.environ['VI1CAL'] = '1'
+            vi1cal_was_unset = True
         results = super(UVcontSub, self).prepare()
-        del os.environ['VI1CAL']
+        if vi1cal_was_unset:
+            del os.environ['VI1CAL']
 
         return results
 
