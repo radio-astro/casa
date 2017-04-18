@@ -106,10 +106,8 @@ class MeasurementSet(object):
             pool = [s for s in pool if not s.intents.isdisjoint(scan_intent)]
 
         if field is not None:
-            if type(field) in types.StringTypes:
-                field = string.split(field, ',')
-            field = set(field)
-            pool = [s for s in pool if s.fields in field]
+            fields_with_name = frozenset(self.get_fields(task_arg=field))
+            pool = [s for s in pool if not fields_with_name.isdisjoint(s.fields)]
 
         return pool
 
