@@ -660,7 +660,7 @@ class Tclean(cleanbase.CleanBase):
                                                   field=inputs.field,
                                                   spw=inputs.spw,
                                                   spwsel=inputs.spwsel_topo,
-                                                  reffreq=reffreq,
+                                                  reffreq=inputs.reffreq,
                                                   uvrange=inputs.uvrange,
                                                   specmode=inputs.specmode,
                                                   gridder=inputs.gridder,
