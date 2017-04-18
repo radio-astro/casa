@@ -43,6 +43,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  # Extra parameters not in the CLI task interface
                  uvtaper=None, scales=None,
                  cycleniter=None, cyclefactor=None, sensitivity=None,
+                 reffreq=None,
                  # End of extra parameters
                  heuristics=None):
         self._init_properties(vars())
@@ -659,6 +660,7 @@ class Tclean(cleanbase.CleanBase):
                                                   field=inputs.field,
                                                   spw=inputs.spw,
                                                   spwsel=inputs.spwsel_topo,
+                                                  reffreq=reffreq,
                                                   uvrange=inputs.uvrange,
                                                   specmode=inputs.specmode,
                                                   gridder=inputs.gridder,

@@ -1212,3 +1212,7 @@ class ImageParamsHeuristics(object):
 
     def uvrange(self):
         return None
+
+
+    def reffreq(self):
+        return None

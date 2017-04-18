@@ -30,6 +30,7 @@ class CleanTarget(dict):
          self['cyclefactor'] = None     # int
          self['sensitivity'] = None     # string
          self['threshold'] = None       # string
+         self['reffreq'] = None         # string
          self['heuristics'] = None      # object
 
          dict.__init__(self, *args, **kwargs)

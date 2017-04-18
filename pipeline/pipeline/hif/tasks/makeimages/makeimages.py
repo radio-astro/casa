@@ -167,7 +167,6 @@ class CleanTaskFactory(object):
             'vis': inputs.vis,
             # set the weighting values.
             'weighting': inputs.weighting,
-            'robust': inputs.robust,
             'noise': inputs.noise,
             'npixels': inputs.npixels,
             # other vals
@@ -177,6 +176,11 @@ class CleanTaskFactory(object):
             'subcontms': inputs.subcontms,
             'parallel': parallel,
         })
+
+        if target['robust']:
+            task_args['robust'] = target['robust']
+        else:
+            task_args['robust'] = inputs.robust
 
         # set the imager mode here (temporarily ...)
         image_heuristics = target['heuristics']

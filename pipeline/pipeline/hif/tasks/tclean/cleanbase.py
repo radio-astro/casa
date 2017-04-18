@@ -36,7 +36,7 @@ class CleanBaseInputs(basetask.StandardInputs):
                  weighting=None,
                  robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, hm_masking=None, hm_autotest=None, pblimit=None, niter=None,
-                 threshold=None, sensitivity=None, result=None, parallel=None,
+                 threshold=None, sensitivity=None, reffreq=None, result=None, parallel=None,
                  heuristics=None):
         self._init_properties(vars())
         self.heuristics = heuristics
@@ -360,6 +360,13 @@ class CleanBase(basetask.StandardTaskTemplate):
             uvtaper = inputs.heuristics.uvtaper()
             if uvtaper:
                 tclean_job_parameters['uvtaper'] = uvtaper
+
+        if inputs.reffreq:
+            tclean_job_parameters['reffreq'] = inputs.reffreq
+        else:
+            reffreq = inputs.heuristics.reffreq()
+            if reffreq:
+                tclean_job_parameters['reffreq'] = reffreq
 
         job = casa_tasks.tclean(**tclean_job_parameters)
         tclean_result = self._executor.execute(job)
