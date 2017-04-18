@@ -23,7 +23,7 @@ def tablerow_cmp(tr1, tr2):
 ##         return cmp(tr1.ousstatus_entity_id, tr2.ousstatus_entity_id)
     if tr1.time_start != tr2.time_start:
         # use MS time as a proxy for session time
-        return cmp(dt1, dt2)
+        return cmp(tr1.time_start, tr2.time_start)
     if tr1.session != tr2.session:
         # natural sort so that session9 comes before session10
         name_sorted = sorted((tr1.session, tr2.session), key=utils.natural_sort)
