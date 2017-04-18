@@ -483,7 +483,7 @@ template <class	T, class R, class RFilter>
   asdm::ASDM			asdm;
   static xmlSAXHandler	myHandler; 
   static xmlSAXHandler        initSAXHandler() {
-    xmlSAXHandler		handler = { 0 };
+    xmlSAXHandler		handler = {};
     handler.startElement		= start_element_callback; 
     handler.endElement		= end_element_callback; 
     handler.characters		= characters_callback;
