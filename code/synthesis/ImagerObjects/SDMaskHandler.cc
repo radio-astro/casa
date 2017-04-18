@@ -1939,7 +1939,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   SHARED_PTR<casacore::ImageInterface<Float> >  SDMaskHandler::pruneRegions(const ImageInterface<Float>& image, Double& thresh, Int nmask, Int npix)
   {
-    LogIO os( LogOrigin("SDMaskHnadler", "pruneRegions",WHERE) );
+    LogIO os( LogOrigin("SDMaskHandler", "pruneRegions",WHERE) );
     Bool debug(False);
 
     IPosition fullimShape=image.shape();
@@ -2129,7 +2129,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    
   SHARED_PTR<casacore::ImageInterface<Float> >  SDMaskHandler::pruneRegions2(const ImageInterface<Float>& image, Double& thresh, Int nmask, Double prunesize)
   {
-    LogIO os( LogOrigin("SDMaskHnadler", "pruneRegions2",WHERE) );
+    LogIO os( LogOrigin("SDMaskHandler", "pruneRegions2",WHERE) );
     Bool debug(False);
 
     IPosition fullimShape=image.shape();
@@ -2326,7 +2326,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //yet another pruneRegions - using connect component labelling with depth first search alogirthm ..
   SHARED_PTR<casacore::ImageInterface<Float> >  SDMaskHandler::YAPruneRegions(const ImageInterface<Float>& image, Vector<Bool>& allpruned, Double prunesize)
   {
-    LogIO os( LogOrigin("SDMaskHnadler", "YAPruneRegions",WHERE) );
+    LogIO os( LogOrigin("SDMaskHandler", "YAPruneRegions",WHERE) );
     Bool debug(False);
     Bool recordPruned(False);
     if (allpruned.nelements()>0) {
