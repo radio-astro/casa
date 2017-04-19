@@ -461,8 +461,9 @@ class Tclean(cleanbase.CleanBase):
         sequence_manager.threshold = new_threshold
 
         # Adjust niter based on the dirty image statistics
-        new_niter = self.image_heuristics.niter_correction(sequence_manager.niter, inputs.cell, inputs.imsize, residual_max, new_threshold)
-        sequence_manager.niter = new_niter
+        if sequence_manager.niter in (0, None):
+            new_niter = self.image_heuristics.niter_correction(sequence_manager.niter, inputs.cell, inputs.imsize, residual_max, new_threshold)
+            sequence_manager.niter = new_niter
 
         iterating = True
         iter = 1
