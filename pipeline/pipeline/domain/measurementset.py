@@ -22,7 +22,7 @@ class MeasurementSet(object):
     def __init__(self, name, session=None):
         self.name = name
         self.array_name = None
-        self.representative_target = None
+        self.representative_target = (None, None, None)
         self.antenna_array = None
         self.data_descriptions = []
         self.spectral_windows = []
@@ -128,88 +128,197 @@ class MeasurementSet(object):
         else:
             return None
     
-    def get_representative_source_spw(self, source_name=None, source_frequency=None):
+    def get_representative_source_spw(self, source_name=None, source_spwid=None):
         qa = casatools.quanta
         cme = casatools.measures
 
         # Get the representative target source object
-        #   Use user name if source_name is supplied by user.
-        #   Otherwise use the source defined in the ASDM SBSummary table.
-        #   Otherwise use the first source in the list
+        #   Use user name if source_name is supplied by user and it has TARGET intent.
+        #   Otherwise use the source defined in the ASDM SBSummary table if it has TARGET intent.
+        #   Otherwise use the first source in the source list with TARGET intent
         if source_name:
             # Use the first target source that matches the user defined name
             target_sources = [source for source in self.sources
                               if source.name == source_name
                               and 'TARGET' in source.intents]
             if len(target_sources) > 0:
+                LOG.info('Selecting user defined representative target source %s for data set %s' % \
+                    (source_name, self.basename))
                 target_source = target_sources[0]
             else:
+                LOG.warn('User defined representative target source %s not found in data set %s' % \
+                    (source_name, self.basename))
                 target_source = None
-        elif self.representative_target:
-            # Use representative source in the ASDM
+        elif self.representative_target[0]:
+            # Use the first target source that matches the representative source name in the ASDM
+            # SBSummary table
             source_name = self.representative_target[0]
             target_sources = [source for source in self.sources
                               if source.name == source_name 
                               and 'TARGET' in source.intents] 
             if len(target_sources) > 0:
+                LOG.info('Selecting representative target source %s for data set %s' % \
+                    (self.representative_target[0], self.basename))
                 target_source = target_sources[0]
             else:
+                LOG.warn('Representative target source %s not found in data set %s' % \
+                    (self.representative_target[0], self.basename))
                 target_source = None
         else:
             # Use first target source no matter what it is
-            target_sources = [source for source in self.sources if 'TARGET' in source.intents] 
+            target_sources = [source for source in self.sources
+                              if 'TARGET' in source.intents] 
             if len(target_sources) > 0:
                 target_source = target_sources[0]
+                LOG.info('Undefined representative target source, defaulting to source %s for data set %s' % \
+                    (target_source.name, self.basename))
             else:
+                LOG.error('No target sources observed for data set %s' % (self.basename))
                 target_source = None
 
         # Target source not found
         if not target_source:
             return (None, None)
 
-        # Get the representative target spw object
-        #    Use source_frequency if it is supplied and convert to TOPO
-        #    Otherwise use the representative frequency from the SBSummary table and convert to TOPO.
-        if source_frequency:
-            target_frequency = cme.frequency('BARY',
-                                             qa.quantity(qa.getvalue(source_frequency),
-                                                         qa.getunit(source_frequency)))
+        # Target source name
+        target_source_name = target_source.name
+
+        # Check the user defined spw and return it if it was observed for the
+        # representative source. If it was not observed quit.
+        if source_spwid:
+            found = False
+            for f in target_source.fields:
+                valid_spwids = [spw.id for spw in list(f.valid_spws)]
+                if source_spwid in valid_spwids:
+                    found = True
+                    break
+            if found:
+                LOG.info('Selecting user defined representative spw %s for data set %s' % \
+                    (str(source_spwid), self.basename))
+                return (target_source_name, source_spwid)
+            else:
+                LOG.error('No target source data for representative spw %s in data set %s' % \
+                    (str(source_spwid), self.basename))
+                return (target_source_name, None)
+
+        # Get the representative bandwidth
+        #     Return if there isn't one
+        if self.representative_target[2]:
+            target_bw = cme.frequency('TOPO',
+                qa.quantity(qa.getvalue(self.representative_target[2]),
+                qa.getunit(self.representative_target[2])))
         else:
+            LOG.error('Undefined representative bandwidth for data set %s' % (self.basename))
+            return (target_source_name, None)
+
+        # Get the representative frequency
+        #     Return if there isn't one
+        if self.representative_target[1]:
             target_frequency = cme.frequency('BARY',
-                                             qa.quantity(qa.getvalue(self.representative_target[1]),
-                                                         qa.getunit(self.representative_target[1])))
+                qa.quantity(qa.getvalue(self.representative_target[1]),
+                qa.getunit(self.representative_target[1])))
+        else:
+            LOG.error('Undefined representative frequency for data set %s' % (self.basename))
+            return (target_source_name, None)
 
         # Convert BARY frequency to TOPO
         #    Use the start time of the first target source scan
+        #    Note some funny business with source and field names
         cme.doframe(cme.observatory(self.antenna_array.name))
         cme.doframe(target_source.direction)
         target_scans = [
             scan for scan in self.get_scans(scan_intent='TARGET')
-            if target_source.name in [f.name for f in scan.fields]]
+            if target_source.id in [f.source_id for f in scan.fields]]
         if len(target_scans) > 0:
             cme.doframe(target_scans[0].start_time)
             target_frequency_topo = cme.measure(target_frequency, 'TOPO')
         else:
+            LOG.error('Unable to convert representaitve frequency to TOPO for data set %s' % \
+                (self.basename))
             target_frequency_topo = None
         cme.done()
 
-        # No target data
+        # No representative frequency
         if not target_frequency_topo:
-            return (None, None)
-        target_source_name = target_source.name
+            return (target_source_name, None)
 
-        # Find the science spw whose central frequency most closely matches the
-        # representative frequency.
-        #    This algorithm needs input from the PWG and more work
+        # Find the science spw 
         target_spwid = None
-        maxdiff = numpy.finfo('d').max
-        for spw in self.get_spectral_windows():
-            if 'TARGET' not in spw.intents:
-                continue
-            diff = abs(float(spw.centre_frequency.value) - target_frequency['m0']['value'])
-            if diff < maxdiff:
-                target_spwid = spw.id
-                maxdiff = diff
+
+        # Get the science spw ids
+        science_spw_ids = [spw.id for spw in self.get_spectral_windows()]
+
+        # Get the target science spws observed for the target source
+        target_spw_ids = []
+        for f in target_source.fields:
+            target_spw_ids.extend([spw.id for spw in f.valid_spws if spw.id in science_spw_ids])
+        target_spw_ids = set(science_spw_ids)
+        target_spws = [self.get_spectral_window(spwid) for spwid in target_spw_ids]
+
+        # Now find all the target_spws that have a channel width less than
+        # or equal to the representative bandwidth
+        target_spws_bw = [spw for spw in target_spws
+                          if spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ) <= target_bw['m0']['value']]
+
+        if len(target_spws_bw) <= 0:
+            LOG.warn('No target spws have channel width <= representative bandwidth in data set %s' % \
+                (self.basename))
+
+            # Now find all the taret spws that contain the representative frequency.
+            target_spws_freq = [spw for spw in target_spws
+                                if target_frequency_topo['m0']['value'] >= spw.min_frequency.value and
+                                target_frequency_topo['m0']['value'] <= spw.max_frequency.value]
+
+            if len(target_spws_freq) <= 0:
+                LOG.warn('No target spws overlap the representative frequency in data set %s' % \
+                    (self.basename))
+
+                # Now find the closest match to the center frequency
+                max_freqdiff = numpy.finfo('d').max
+                for spw in target_spws:
+                    freqdiff = abs(float(spw.centre_frequency.value) - target_frequency_topo['m0']['value'])
+                    if freqdiff < max_freqdiff:
+                        target_spwid = spw.id
+                        max_freqdiff = freqdiff
+                LOG.info('Selecting spw %s which is closest to the representative frequency in data set %s' % \
+                    (str(target_spwid), self.basename))
+            else:
+                min_chanwidth = None
+                for spw in target_spws_freq:
+                    chanwidth = spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ)
+                    if not min_chanwidth or chanwidth < min_chanwidth:
+                        target_spwid = spw.id
+                LOG.info('Selecting the narrowest chanwidth spw id %s which overlaps the representative frequency in data set %s' % \
+                    (str(target_spwid), self.basename))
+
+            return (target_source_name, target_spwid)
+
+        # Now find all the spw that contain the representative frequency
+        target_spws_freq = [spw for spw in target_spws_bw if target_frequency_topo['m0']['value'] >= spw.min_frequency.value and \
+            target_frequency_topo['m0']['value'] <= spw.max_frequency.value]
+        if len(target_spws_freq) <= 0:
+            LOG.warn('No target spws with channel spacing <= representative bandwith overlap the representative frequency in data set %s' % (self.basename))
+            max_chanwidth = None
+            for spw in target_spws_bw:
+               chanwidth = spw.channels[0].getWidth().to_units(measures.FrequencyUnits.HERTZ)
+               if not_max_chanwidth or chanwidth > max_chanwidth:
+                    target_spwid = spw.id
+            LOG.info('Selecting widest channel width spw id %s with channel width <= rerpesentative bandwidth in data set %s' % \
+                (str(target_spwid), self.basename))
+
+            return (target_source_name, target_spwid)
+
+        # For all the spws with channel width less than or equal
+        # to the representative bandwidth which contain the
+        # representative frequency select the one with the spw
+        # with the greatest bandwidth.
+        bestspw = None
+        for spw in target_spws_freq:
+            if not target_spwid:
+                bestspw = spw
+            elif spw.bandwidth.value > bestspw.bandwidth.value: 
+                best_spw = spw
+        target_spwid = best_spw.id
 
         return (target_source_name, target_spwid)
 
