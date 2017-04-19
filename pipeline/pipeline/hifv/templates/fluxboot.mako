@@ -52,7 +52,7 @@ $(document).ready(function() {
                                   url_fn="${lambda ms:  'noop'}">
 
         <%def name="title()">
-            Fluxboot summary plot
+            Fluxboot summary plots
         </%def>
 
         <%def name="preamble()">
@@ -66,12 +66,12 @@ $(document).ready(function() {
         
         
         <%def name="fancybox_caption(plot)">
-          Model calibrator flux densities. Plot of amp vs. freq
+          ${plot.parameters['figurecaption']}. Plot of amp vs. freq
         </%def>
         
         
         <%def name="caption_title(plot)">
-           Model calibrator
+           ${plot.parameters['figurecaption']}
         </%def>
 </%self:plot_group>
     
@@ -119,6 +119,7 @@ $(document).ready(function() {
 	        <th scope="col" rowspan="2">Data</th>
 		    <th scope="col" rowspan="2">Error</th>
 		    <th scope="col" rowspan="2">Fitted Data</th>
+		    <th scope="col" rowspan="2">Residual: Data-Fitted Data</th>
 	    </tr>
 
 	</thead>
@@ -133,8 +134,9 @@ $(document).ready(function() {
 			    <td>${row['data']}</td>
 			    <td>${row['error']}</td>
 			    <td>${row['fitteddata']}</td>
+			    <td>${float(row['data']) - float(row['fitteddata'])}</td>
 		</tr>
-            % endfor
+                % endfor
     % endfor
 	</tbody>
     </table>
