@@ -31,12 +31,14 @@ class EditimlistInputs(basetask.StandardInputs):
                  nterms=None,
                  parameter_file=None,
                  phasecenter=None,
+                 reffreq=None,
                  robust=None,
                  scales=None,
                  specmode=None,
                  spw=None,
                  start=None,
                  stokes=None,
+                 threshold=None,
                  uvtaper=None,
                  uvrange=None,
                  width=None,
@@ -48,7 +50,7 @@ class EditimlistInputs(basetask.StandardInputs):
                             'phasecenter', 'specmode', 'gridder', 'imagename', 'scales',
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
                             'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
-                            'search_radius_arcsec')
+                            'search_radius_arcsec', 'threshold', 'reffreq')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -107,15 +109,17 @@ class Editimlist(basetask.StandardTaskTemplate):
                 fieldnames = [','.join(fieldnames)]
 
         target = CleanTarget()
-        target['deconvolver'] = '' if not inputs.deconvolver else inputs.deconvolver
+        target['threshold'] = '1.0mJy' if not inputs.threshold else inputs.threshold
+        target['reffreq'] = '3.0GHz' if not inputs.reffreq else inputs.reffreq
+        target['deconvolver'] = 'mtmfs' if not inputs.deconvolver else inputs.deconvolver
         target['scales'] = [0] if not inputs.scales else inputs.scales
-        target['robust'] = 1.0 if not inputs.robust else inputs.robust
+        target['robust'] = 2.0 if not inputs.robust else inputs.robust
         target['uvtaper'] = [] if not inputs.uvtaper else inputs.uvtaper
-        target['niter'] = 20000 if not inputs.niter else inputs.niter
+        target['niter'] = 10000 if not inputs.niter else inputs.niter
         target['cycleniter'] = -1 if not inputs.cycleniter else inputs.cycleniter
         target['cyclefactor'] = 3.0 if not inputs.cyclefactor else inputs.cyclefactor
         target['mask'] = '' if not inputs.mask else inputs.mask
-        target['specmode'] = 'cont' if not inputs.specmode else inputs.specmode
+        target['specmode'] = 'mfs' if not inputs.specmode else inputs.specmode
         buffer_arcsec = 1000. if not inputs.search_radius_arcsec else inputs.search_radius_arcsec
         inputsdict = inputs.__dict__
         for parameter in inputsdict.keys():

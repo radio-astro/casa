@@ -122,6 +122,11 @@
                 <value type="string"></value>
             </param>
 
+            <param type="string" name="reffreq">
+                <description></description>
+                <value></value>
+            </param>
+
             <param type="string" name="robust">
                 <description>Set the Briggs robustness factor for weighting.</description>
                 <value></value>
@@ -158,6 +163,11 @@
                 <description></description>
                 <value></value>
             </param>
+
+	    <param type="string" name="threshold">
+	        <description></description>
+                <value></value>
+	    </param>
 
             <param type="string" name="uvtaper">
                 <description>Used to set a uv-taper during clean.</description>
