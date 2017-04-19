@@ -82,7 +82,7 @@ ${'is' if num_mses == 1 else 'are'} summarised below.</p>
 	    </tr>
 	</thead>
 	<tbody>
-	% for tr in table_rows:
+	% for tr in flux_table_rows:
 		<tr>
 		% for td in tr:
 			${td}
@@ -93,4 +93,39 @@ ${'is' if num_mses == 1 else 'are'} summarised below.</p>
 </table>
 % else:
 <p>No flux densities were imported.</p>
+% endif
+
+% if repsource_defined:
+<h3>Representative Target Sources</h3>
+<p>The following representative target sources and spws are defined</p>
+<table class="table table-bordered table-striped table-condensed"
+	   summary="Representative target source">
+	<caption>Representative target sources. These are imported from the context or derived from the ASDM .</caption>
+    <thead>
+	    <tr>
+	        <th scope="col" rowspan="2">Measurement Set</th>
+	        <th scope="col" colspan="3">Representative Source</th>
+	        <th scope="col" colspan="3">Best spw</th>
+	    </tr>
+	    <tr>
+	        <th scope="col">Name</th>
+	        <th scope="col">Frequency (BARY)</th>
+	        <th scope="col">Chanwidth</th>
+	        <th scope="col">Id</th>
+	        <th scope="col">Frequency (TOPO)</th>
+	        <th scope="col">Chanwidth</th>
+	    </tr>
+    </thead>
+    <tbody>
+	% for tr in repsource_table_rows:
+		<tr>
+		% for td in tr:
+			${td}
+		% endfor
+		</tr>
+	%endfor
+    </tbody>
+</table>
+% else:
+<p>No representative target source is defined</p>
 % endif
