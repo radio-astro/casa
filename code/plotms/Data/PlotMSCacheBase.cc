@@ -457,11 +457,22 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 
 		// 3)  data axis is loaded; check if data column loaded
 		else if(PMS::axisIsData(axis)) {
-            // see if datacol is loaded for axis
-            std::set<PMS::DataColumn> datacols = loadedAxesData_[axis];
-            if (datacols.find(dc) == datacols.end()) {
+            // Reload if averaging, else see if datacol is already loaded
+            //std::set<PMS::DataColumn> datacols = loadedAxesData_[axis];
+            String datacolStr = PMS::dataColumn(dc);
+            Bool datacolLoaded = loadedAxesData_[axis].isDefined(datacolStr);
+            if (!datacolLoaded) { 
 			    loadAxes.push_back(axis);
 			    loadData.push_back(dc);
+            } else {
+              // check if averaging changed since loading
+              Record datacolRec = loadedAxesData_[axis].subRecord(datacolStr);
+              PlotMSAveraging datacolAvg;
+              datacolAvg.fromRecord(datacolRec);
+              if (datacolAvg != averaging) {
+			    loadAxes.push_back(axis);
+			    loadData.push_back(dc);
+              }
             }
         }
 	}
@@ -497,8 +508,9 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
             for(unsigned int i = 0; i < loadAxes.size(); i++) {
                 axis = loadAxes[i];
                 loadedAxes_[axis] = true;
+                String datacol = PMS::dataColumn(loadData[i]);
                 if(PMS::axisIsData(axis)) 
-                    loadedAxesData_[axis].insert(loadData[i]);
+                    loadedAxesData_[axis].defineRecord(datacol, averaging.toRecord());
             }
         }
 

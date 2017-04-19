@@ -1766,10 +1766,11 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
         if (mapit->second) {
             PMS::Axis loadedAxis = mapit->first;
             if (loadedAxesData_.find(loadedAxis) != loadedAxesData_.end()) {
-                std::set<PMS::DataColumn> datacols=loadedAxesData_[loadedAxis];
-                for (auto it=datacols.begin(); it!=datacols.end(); ++it) {
+                uInt ndatacols = loadedAxesData_[loadedAxis].nfields();
+                for (uInt i=0; i<ndatacols; ++i) {
                     loadedAxes.push_back(loadedAxis);
-                    loadedData.push_back(*it);
+                    String datacolStr = loadedAxesData_[loadedAxis].name(i);
+                    loadedData.push_back(PMS::dataColumn(datacolStr));
                 }
             } else {
                 loadedAxes.push_back(loadedAxis);
