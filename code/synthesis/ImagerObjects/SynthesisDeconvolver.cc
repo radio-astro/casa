@@ -496,6 +496,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if ( itsAutoMaskAlgorithm == "" )
         {	itsIsMaskLoaded=true; }
    
+
+      // Get the number of mask pixels (sum) and send to the logger.
+      Float masksum = itsImages->getMaskSum();
+      Int npix = (itsImages->getShape()).product();
+      os << "[" << itsImages->getName() << "] Number of pixels in the clean mask : " << masksum << " out of a total of " << npix << " pixels. [ " << 100.0 * masksum/npix << " % ]" << LogIO::POST;
+
       maskchanged=True;
     }
     else {

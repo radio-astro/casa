@@ -32,6 +32,7 @@
 
 #include <images/Images/PagedImage.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
+#include <casa/Logging/LogIO.h>
 
 using namespace casacore;
 namespace casa{
@@ -425,7 +426,8 @@ namespace casa{
     if( startmask != endmask)
       {
 	result = -1*result;
-	//cout << "Mask changed. Result  : " << result << endl;
+        LogIO os( LogOrigin("InteractiveMasking","interactivemask",WHERE) );
+	os << "[" << mask << "] Mask modified from " << startmask << " pixels to " << endmask << " pixels " << LogIO::POST;
       }
     //    else
       //cout << " Mask did not change. Result :  " << result << endl;
