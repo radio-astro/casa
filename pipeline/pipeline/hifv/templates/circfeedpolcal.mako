@@ -57,15 +57,29 @@ $(document).ready(function() {
                 <li>${os.path.basename(calfrom.gaintable)}</li>
             %endfor
         %endfor
-
-        <li>${single_result.calstrategy}</li>
-
     %else:
         No polarization intents present - polarization calibration not performed.
     %endif
 
 %endfor
 </ul>
+
+
+<ul>
+%for single_result in result:
+
+    %if single_result.final:
+        ${single_result.calstrategy}
+        <li>Using standard calibrator ${single_result.caldictionary['fluxcal']}:
+            Field name = ${single_result.caldictionary['fluxcalfieldname']},
+            Field ID = ${str(single_result.caldictionary['fluxcalfieldid'])}</li>
+        <li>POLANGLE Field = ${single_result.caldictionary['polanglefield']}</li>
+        <li>POLLEAKAGE Field = ${single_result.caldictionary['polleakagefield']}</li>
+    %endif
+
+%endfor
+</ul>
+
 
 
 
