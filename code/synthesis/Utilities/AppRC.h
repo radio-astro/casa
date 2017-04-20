@@ -31,7 +31,8 @@
 #include <casa/aips.h>
 #include <casa/System/Casarc.h>
 #include <casa/sstream.h>
-#include <iostream.h>
+#include <iostream>
+#include <unistd.h>
 
 using namespace std;
 
@@ -40,18 +41,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public:
     AppRC()
-      :rc_p(NULL), rcCleanup(),addPID_p(false), deleteFile_p(true),
+      :rc_p(NULL), addPID_p(false), deleteFile_p(false),
        id_p()
-    {};
+    {init("", addPID_p, deleteFile_p);};
     
     AppRC(const string& filename, 
 	  const casacore::Bool addPID=false,
-	  const casacore::Bool deleteFile=true)
-      :rc_p(NULL), rcCleanup(), deleteFile_p(deleteFile), id_p()
+	  const casacore::Bool deleteFile=false)
+      :rc_p(NULL), deleteFile_p(deleteFile), id_p()
     {init(filename,addPID,deleteFile_p);};
     
     ~AppRC();
-    
+ 
+    ///The environment variable is assumed  in MB if that is used
+    //returns Bytes available (reason why it is a double)
+    static casacore::Double getMemoryAvailable(string envVarName="CASA_MAX_MEMORY");
     void setID(const string& id) {id_p=id;};
     void init(const string& filename, const casacore::Bool addPID=false, 
 	      const casacore::Bool deleteFile=true);
@@ -67,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   private:
     casacore::Casarc *rc_p;
-    CasarcCleanup rcCleanup;
+    casacore::CasarcCleanup rcCleanup;
     pid_t myPID_p, myTID_p;
     casacore::Bool addPID_p,deleteFile_p;
     string fileName_p, id_p;

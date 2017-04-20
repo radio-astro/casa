@@ -771,7 +771,8 @@ namespace casa{
   Int SynthesisUtils::getenv(const char *name, const Int defaultVal);
   template 
   Bool SynthesisUtils::getenv(const char *name, const Bool defaultVal);
-
+template 
+  Double SynthesisUtils::getenv(const char *name, const Double defaultVal);
   Float SynthesisUtils::libreSpheroidal(Float nu) 
   {
     Double top, bot, nuend, delnusq;

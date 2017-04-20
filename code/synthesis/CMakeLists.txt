@@ -333,6 +333,7 @@ casa_add_library( synthesis
  Parallel/MPITransport.cc
  Parallel/PabloIO.cc
  Parallel/SerialTransport.cc
+ Utilities/AppRC.cc		
  Utilities/FFT2D.cc	
  Utilities/FixVis.cc
  Utilities/SigHandler.cc

@@ -27,6 +27,8 @@
 //# $Id$
 #include <synthesis/Utilities/AppRC.h>
 #include <casa/OS/RegularFile.h>
+#include <casa/OS/HostInfo.h>
+#include <synthesis/TransformMachines/Utils.h>
 using namespace casacore;
 namespace casa{
   //
@@ -69,8 +71,14 @@ namespace casa{
 	    tt << "_" << myPID_p;
 	  }
 	fileName_p=tt.str();
-	Casarc::setDefaultPath(fileName_p);
-	rc_p = &Casarc::instance();
+	//cerr << fileName_p <<endl; 
+	if(fileName_p.size() >0){
+	  Casarc::setDefaultPath(fileName_p);
+	  rc_p = &Casarc::instance(fileName_p);
+	}
+	else
+	  rc_p = &Casarc::instance();
+	//cerr << rc_p->path() << endl;
       }
   };
   //
@@ -136,6 +144,31 @@ namespace casa{
   {
     ostringstream tt; tt << val;
     put(name,tt.str());
+ 
+ }
+ 
+  Double AppRC::getMemoryAvailable(string envVarName)
+  {
+    AppRC myRC;
+    string def_rc_val=myRC.get("system.resources.memory");
+    Double memval=-1.0;
+    if(def_rc_val.size() >0){
+      //This is in MB usually
+      stringstream(def_rc_val) >> memval;     
+      memval*=1e6;
+    }
+    if(memval < 0.0){
+      //This is in KB
+      memval=HostInfo::memoryTotal(true);
+      memval*=1e3;
+    }
+    Double valfromenv=-1.0;
+    //Assuming it is in MB
+    valfromenv=SynthesisUtils::getenv(envVarName.c_str(), valfromenv);
+    valfromenv *=1e6;
+    if(valfromenv <0.0)
+      return memval;
+    return valfromenv;
   }
 
 };
