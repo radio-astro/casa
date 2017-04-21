@@ -14,13 +14,63 @@ class ImageParamsHeuristicsVLASS(ImageParamsHeuristics):
         ImageParamsHeuristics.__init__(self, context, vislist, spw, contfile, linesfile)
         self.imaging_mode = 'VLASS'
 
+    # niter
     def niter_correction(self, niter, cell, imsize, residual_max, threshold):
+        return 10000
 
-        '''Adjustment of number of cleaning iterations due to mask size.'''
+    def deconvolver(self, specmode, spwspec):
+        return 'mtmfs'
 
-        new_niter = 1000
+    def robust(self, spw):
+        return 2.0
 
-        return new_niter
+    def gridder(self, intent, field):
+        return 'mosaic'
+
+    def cell(self, field_intent_list, spwspec, oversample):
+        return '1.0arcsec'
+
+    def imsize(self, fields, cell, beam, sfpblimit, max_pixels):
+        return [6480, 6480]
+
+    def threshold(self):
+        return '1.0mJy'
+
+    def reffreq(self):
+        return '3.0GHz'
+    
+    def cyclefactor(self):
+        return 2.0
+
+    def cycleniter(self):
+        return -1
+
+    def scales(self):
+        return [0]
+
+    def uvtaper(self):
+        return []
+
+    def uvrange(self):
+        return None
+
+    def mask(self):
+        return ''
+
+    def buffer_radius(self):
+        return 1000.
+
+    def specmode(self):
+        return 'mfs'
+
+    def intent(self):
+        return 'TARGET'
+
+    def nterms(self):
+        return 2
+
+    def stokes(self):
+        return 'I'
 
     def find_fields(self, distance='0deg', phase_center=None, matchregex=''):
 

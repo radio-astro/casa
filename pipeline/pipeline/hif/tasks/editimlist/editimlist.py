@@ -109,35 +109,49 @@ class Editimlist(basetask.StandardTaskTemplate):
                 fieldnames = [','.join(fieldnames)]
 
         target = CleanTarget()
-        target['threshold'] = '1.0mJy' if not inputs.threshold else inputs.threshold
-        target['reffreq'] = '3.0GHz' if not inputs.reffreq else inputs.reffreq
-        target['deconvolver'] = 'mtmfs' if not inputs.deconvolver else inputs.deconvolver
-        target['scales'] = [0] if not inputs.scales else inputs.scales
-        target['robust'] = 2.0 if not inputs.robust else inputs.robust
-        target['uvtaper'] = [] if not inputs.uvtaper else inputs.uvtaper
-        target['niter'] = 10000 if not inputs.niter else inputs.niter
-        target['cycleniter'] = -1 if not inputs.cycleniter else inputs.cycleniter
-        target['cyclefactor'] = 3.0 if not inputs.cyclefactor else inputs.cyclefactor
-        target['mask'] = '' if not inputs.mask else inputs.mask
-        target['specmode'] = 'mfs' if not inputs.specmode else inputs.specmode
-        buffer_arcsec = 1000. if not inputs.search_radius_arcsec else inputs.search_radius_arcsec
-        inputsdict = inputs.__dict__
-        for parameter in inputsdict.keys():
-            if inputsdict[parameter] and not parameter.startswith('_') and (parameter in target):
-                inputspar_value = eval('inputs.' + parameter)
-                # print(parameter + '=' + str(inputspar_value))
-                cmd = "target['" + parameter + "'] = inputs." + parameter
-                # print(cmd)
-                exec cmd
-
         iph = imageparams_factory.ImageParamsHeuristicsFactory()
-        target['heuristics'] = iph.getHeuristics(context=inputs.context, vislist=inputs.vis, spw=inputs.spw,
-                                                 imaging_mode='VLASS')
-        # if len(target['cell']) == 1:
-        #     target['cell'] = [target['cell'][0], target['cell'][0]]
-        # if len(target['imsize']) == 1:
-        #     target['imsize'] = [target['imsize'][0], target['imsize'][0]]
+        # The default spw range for VLASS is 2~17. hif_makeimages() needs an csv list.
+        # We set the target spw before the heuristics object because the heursitics class
+        # uses it in initialization.
+        target['spw'] = '2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17' if not inputs.spw else inputs.spw
+        target['phasecenter'] = inputs.phasecenter
+        th = target['heuristics'] = iph.getHeuristics(context=inputs.context, vislist=inputs.vis, spw=inputs.spw, imaging_mode='VLASS')
+        target['threshold'] = th.threshold() if not inputs.threshold else inputs.threshold
+        target['reffreq'] = th.reffreq() if not inputs.reffreq else inputs.reffreq
+        target['niter'] = th.niter_correction(None, None, None, None, None) if not inputs.niter else inputs.niter
+        target['cyclefactor'] = th.cyclefactor() if not inputs.cyclefactor else inputs.cyclefactor
+        target['cycleniter'] = th.cycleniter() if not inputs.cycleniter else inputs.cycleniter
+        target['scales'] = th.scales() if not inputs.scales else inputs.scales
+        target['uvtaper'] = th.uvtaper() if not inputs.uvtaper else inputs.uvtaper
+        target['uvrange'] = th.uvrange() if not inputs.uvrange else inputs.uvrange
+        target['deconvolver'] = th.deconvolver(None, None) if not inputs.deconvolver else inputs.deconvolver
+        target['robust'] = th.robust(None) if not inputs.robust else inputs.robust
+        target['mask'] = th.mask() if not inputs.mask else inputs.mask
+        target['specmode'] = th.specmode() if not inputs.specmode else inputs.specmode
+        target['gridder'] = th.gridder() if not inputs.gridder else inputs.gridder
+        buffer_arcsec = th.buffer_radius() if not inputs.search_radius_arcsec else inputs.search_radius_arcsec
+        target['cell'] = th.cell(None, None, None) if not inputs.cell else inputs.cell
+        target['imsize'] = th.imsize(None, None, None, None, None) if not inputs.imsize else inputs.imsize
+        target['intent'] = th.inent() if not inputs.intent else inputs.intent
+        target['nterms'] = th.nterms() if not inputs.nterms else inputs.nterms
+        target['stokes'] = th.stokes() if not inputs.stokes else inputs.stokes
+        #------------------------------
+        target['nchan'] = inputs.nchan
+        target['nbin'] = inputs.nbin
+        target['start'] = inputs.start
+        target['width'] = inputs.width
+        target['imagename'] = inputs.imagename
 
+#        inputsdict = inputs.__dict__
+#        for parameter in inputsdict.keys():
+#            if inputsdict[parameter] and not parameter.startswith('_') and (parameter in target):
+#                inputspar_value = eval('inputs.' + parameter)
+#                # print(parameter + '=' + str(inputspar_value))
+#                cmd = "target['" + parameter + "'] = inputs." + parameter
+#                # print(cmd)
+#                exec cmd
+
+        # set the field name list in the image list target
         if fieldnames:
             target['field'] = fieldnames[0]
         else:
@@ -157,9 +171,17 @@ class Editimlist(basetask.StandardTaskTemplate):
 
                     target['field'] = fieldnames[0]
 
-        # import pprint
-        # pprint.pprint(target)
-        result.add_target(target)
+        # import pprint; pprint.pprint(target)
+        try:
+            if len(target['field']) > 0:
+                result.add_target(target)
+            else:
+                raise
+        except TypeError:
+            LOG.error('No fields to image.')
+
+        if not target['imagename']:
+            LOG.error('No imagename provided.')
 
         return result
 
