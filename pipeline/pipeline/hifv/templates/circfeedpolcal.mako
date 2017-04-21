@@ -135,7 +135,7 @@ $(document).ready(function() {
         <h2>Amplitude vs. Frequency Plots</h2>
         Cal table used:
         %for single_result in result:
-	        <p><b>${single_result.final[1].gaintable}</b></p>
+	        <p><b>${os.path.basename(single_result.final[1].gaintable)}</b></p>
         %endfor
 
         %for ms in polarization_plotcal_plots.keys():
