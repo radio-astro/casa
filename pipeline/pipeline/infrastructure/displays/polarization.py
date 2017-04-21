@@ -65,3 +65,83 @@ class PolarizationPlotCalChart(object):
                 return None
 
         return wrapper
+
+
+
+
+class ampfreqPerAntennaChart(object):
+    def __init__(self, context, result, caltable):
+        self.context = context
+        self.result = result
+        self.ms = context.observing_run.get_ms(result.inputs['vis'][0])
+        ms = self.ms
+        self.caltable = caltable
+
+        self.json = {}
+        self.json_filename = os.path.join(context.report_dir,
+                                          'stage%s' % result.stage_number,
+                                          'ampfreq-%s.json' % ms)
+
+    def plot(self):
+        context = self.context
+        result = self.result
+        m = context.observing_run.measurement_sets[0]
+
+        numAntenna = len(m.antennas)
+
+        plots = []
+
+        LOG.info("Plotting amp vs. freq charts for " + self.caltable)
+
+        nplots = numAntenna
+
+
+
+        for ii in range(nplots):
+
+            filename = 'ampfreq_'  + str(ii) + '.png'
+            antPlot = str(ii)
+
+            stage = 'stage%s' % result.stage_number
+            stage_dir = os.path.join(context.report_dir, stage)
+            # construct the relative filename, eg. 'stageX/testdelay0.png'
+
+            figfile = os.path.join(stage_dir, filename)
+
+            plotrange = []
+
+            if not os.path.exists(figfile):
+                try:
+                    casa.plotcal(caltable=self.caltable, xaxis='freq', yaxis='amp', poln='', field='',
+                                 antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto',
+                                 iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
+                                 plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+                    # plots.append(figfile)
+
+                except:
+                    LOG.warn("Unable to plot " + filename)
+            else:
+                LOG.debug('Using existing ' + filename + ' plot.')
+
+            try:
+
+                # Get antenna name
+                antName = antPlot
+                if antPlot != '':
+                    domain_antennas = self.ms.get_antenna(antPlot)
+                    idents = [a.name if a.name else a.id for a in domain_antennas]
+                    antName = ','.join(idents)
+
+                plot = logger.Plot(figfile, x_axis='Frequency', y_axis='Amplitude',
+                                   field='',
+                                   parameters={'spw': '',
+                                               'pol': '',
+                                               'ant': antName,
+                                               'type': 'ampfreq',
+                                               'file': os.path.basename(figfile)})
+                plots.append(plot)
+            except:
+                LOG.warn("Unable to add plot to stack")
+                plots.append(None)
+
+        return [p for p in plots if p is not None]

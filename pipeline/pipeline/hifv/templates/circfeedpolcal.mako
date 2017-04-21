@@ -3,6 +3,11 @@ rsc_path = ""
 import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
+
+<link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
+<link href="${self.attr.rsc_path}resources/css/select2-bootstrap.css" rel="stylesheet"/>
+<script src="${self.attr.rsc_path}resources/js/select2.min.js"></script>
+
 <%inherit file="t2-4m_details-base.mako"/>
 
 <%block name="title">Circular Feed Polarization Calibration</%block>
@@ -121,6 +126,28 @@ $(document).ready(function() {
     %endif
 
 %endfor
+
+
+
+
+%if ampfreq_subpages:
+
+        <h2>Amplitude vs. Frequency Plots</h2>
+        Cal table used:
+        %for single_result in result:
+	        <p><b>${single_result.final[1].gaintable}</b></p>
+        %endfor
+
+        %for ms in polarization_plotcal_plots.keys():
+
+            <h4>
+            <a class="replace" href="${os.path.relpath(os.path.join(dirname, ampfreq_subpages[ms]), pcontext.report_dir)}">Amplitude vs. Frequency (per antenna plots)</a>
+            </h4>
+
+        %endfor
+%endif
+
+
 
 
 
