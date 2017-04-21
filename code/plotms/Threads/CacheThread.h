@@ -53,6 +53,8 @@ public:
 	void setAveraging( PlotMSAveraging averaging );
 	void setTransformations( PlotMSTransformations transforms );
 	void setCalibration( PlotMSCalibration calibration );
+	void setIteration( PMS::Axis iteraxis );
+	void setColorize( PMS::Axis coloraxis );
 	virtual ~CacheThread();
 protected:
 	virtual bool doWork();
@@ -75,6 +77,8 @@ private:
 	PlotMSAveraging itsAveraging;
 	PlotMSTransformations itsTransformations;
 	PlotMSCalibration itsCalibration;
+    PMS::Axis itsIterAxis;
+    PMS::Axis itsColorAxis;
 	PlotMSPlot* itsPlot;
 };
 

@@ -470,10 +470,14 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
             if (thread != NULL)
                 updateEstimateProgress(thread);
 			visBufferShapes_ = factory->getVisBufferStructure();
+            // now put filter back
+            LogSink().globalSink().filter(oldFilter);
+			trapExcessVolume(pendingLoadAxes_);
 			Int chunks = visBufferShapes_.size();
 			setCache(chunks, loadAxes, loadData);
-			trapExcessVolume(pendingLoadAxes_);
 		} else {
+            // now put filter back
+            LogSink().globalSink().filter(oldFilter);
             visBufferShapes_.clear();
         }
 		vi_p = new vi::VisibilityIterator2(*factory);
@@ -485,8 +489,6 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		} catch(AipsError ae) {}
 		throw(AipsError(log.getMesg()));
 	}
-    // now put filter back
-    LogSink().globalSink().filter(oldFilter);
 	if (factory) delete factory;
 }
 
@@ -691,10 +693,10 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 
 void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 	try {
-		String s;
+        String s;
 		if (visBufferShapes_.size() > 0) {
-			s = vm_->evalVolume(visBufferShapes_, pendingLoadAxes); }
-		else {
+			s = vm_->evalVolume(visBufferShapes_, pendingLoadAxes);
+        } else {
 			Vector<Bool> mask(4, false);
 			int dataCount = getDataCount();
 
@@ -704,16 +706,15 @@ void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 			}
 			s = vm_->evalVolume(pendingLoadAxes, mask);
 		}
-		logLoad(s);
-
+        logLoad(s);
 	} catch(AipsError& log) {
 		// catch detected volume excess, clear the existing cache, and rethrow
 		logLoad(log.getMesg());
 		deleteVm();
 		stringstream ss;
-		ss << "Please try selecting less data or averaging and/or" << endl
-		   << " 'force reload' (to clear unneeded cache items) and/or" << endl
-		   << " letting other memory-intensive processes finish.";
+		ss << "Please try using data selection, averaging," << endl
+           << "'force reload' (to clear unneeded cache items)," << endl
+		   << "or letting other memory-intensive processes finish.";
 		throw(AipsError(ss.str()));
 	}
 }

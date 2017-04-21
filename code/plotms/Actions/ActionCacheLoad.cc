@@ -118,6 +118,9 @@ void ActionCacheLoad::setUpWorkParameters(CacheThread* cacheThread, int plotInde
 
 	PlotMSPlotParameters& params = plots[plotIndex]->parameters();
 	PMS_PP_MSData* paramsData = params.typedGroup<PMS_PP_MSData>();
+	PMS_PP_Iteration* paramsIter = params.typedGroup<PMS_PP_Iteration>();
+	PMS_PP_Display* paramsDisplay = params.typedGroup<PMS_PP_Display>();
+
 	if ( cacheThread != NULL ){
 		cacheThread->setLoad(true);
 		cacheThread->setCacheBase(&plots[plotIndex]->cache());
@@ -134,6 +137,8 @@ void ActionCacheLoad::setUpWorkParameters(CacheThread* cacheThread, int plotInde
 		cacheThread->setAveraging( paramsData->averaging() );
 		cacheThread->setTransformations(paramsData->transformations());
 		cacheThread->setCalibration(paramsData->calibration());
+        cacheThread->setIteration(paramsIter->iterationAxis());
+        cacheThread->setColorize(paramsDisplay->colorizeAxis());
 		cacheThread->setSetupPlot( setupPlot );
 	}
 }

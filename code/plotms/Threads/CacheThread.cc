@@ -83,6 +83,14 @@ void CacheThread::setCalibration( PlotMSCalibration calibration ){
 	itsCalibration = calibration;
 }
 
+void CacheThread::setIteration( PMS::Axis iteraxis ){
+	itsIterAxis = iteraxis;
+}
+
+void CacheThread::setColorize( PMS::Axis coloraxis ){
+	itsColorAxis = coloraxis;
+}
+
 void CacheThread::setPlot( PlotMSPlot* plot ){
 	itsPlot = plot;
 }
@@ -104,8 +112,8 @@ bool CacheThread::doWork(){
 			if ( itsCache ){
 				itsCache->load(workAxes, itsAxesData, itsMSName, 
 					itsSelection, itsAveraging,
-					itsTransformations, itsCalibration,
-					threadController );
+					itsTransformations, itsCalibration, itsIterAxis,
+                    itsColorAxis, threadController );
 			}
 			else {
 				throw(AipsError("Problem in Cache Thread::run A"));
