@@ -15,6 +15,7 @@ CasaTaskDict = {
     'h_restoredata': 'RestoreData',
     'h_tsyscal': 'Tsyscal',
     # Interferometry tasks ---------------------------------------------------
+    'hif_transformimagedata': 'Transformimagedata',
     'hif_editimlist': 'Editimlist',
     'hif_linfeedpolcal': 'Linfeedpolcal',
     'hif_antpos': 'Antpos',
@@ -141,6 +142,7 @@ classToCASATask = {
     hif_tasks.Setjy                   : 'hif_setjy',
     hif_tasks.SetModels               : 'hif_setmodels',
     hif_tasks.Tclean                  : 'hif_tclean',
+    hif_tasks.Transformimagedata      : 'hif_transformimagedata',
     hif_tasks.UVcontFit               : 'hif_uvcontfit',
     hif_tasks.UVcontSub               : 'hif_uvcontsub',
     # Single dish tasks ------------------------------------------------------
