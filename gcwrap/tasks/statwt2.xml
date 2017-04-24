@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="statwt2">
+    <shortdescription>THIS APPLICATION IS CURRENTLY FOR TESTING ONLY! USE AT YOUR OWN RISK! Compute and set weights based on variance of data.</shortdescription>
+
+    <input>
+	    <param type="string" name="vis" mustexist="true">
+		    <description>Name of measurement set</description>
+		    <value/>
+	    </param>
+    </input>
+    <example>
+        THIS APPLICATION IS CURRENTLY FOR TESTING ONLY! USE AT YOUR OWN RISK!
+
+        THIS APPLICATION MODIFIES THE WEIGHT, WEIGHT SPECTRUM, FLAG, AND FLAG_ROW COLUMNS OF THE INPUT
+        MS. IF YOU WANT A PRISTINE COPY OF THE INPUT MS TO BE PRESERVED, MAKE A COPY OF IT BEFORE
+        RUNNING THIS APPLICATION.
+
+        This application computes weights in the WEIGHT and WEIGHT_SPECTRUM (if present) columns
+        based on the variance of values in the CORRECTED_DATA column. If the MS has no CORRECTED_DATA
+        column, the application will fail. The weights are computed on a row by row and correlation 
+        by correlation basis. The following algorithm is used:
+
+        1. For unflagged data, create two sets of values, one set is composed solely of the real part
+           of the data values, the other set is composed solely of the imaginary part of the data
+           values.
+        2. Compute the variance of each of these sets, vr and vi.
+        3. Compute veq = (vr + vi)/2.
+        4. The associated weight is just the reciprocal of veq. The weight will have unit
+           of (data unit)^(-2), eg Jy^(-2).
+
+        All values in the WEIGHT_SPECTRUM (if present) and the WEIGHT column for each row/correlation
+        pair are updated according to this algortihm. Although flagged values are not used in computing
+        the weights, the associated weights of these values are updated.
+
+        If the variance for a set of data is 0, all data in that selection are flagged, and the corresponding
+        weights are set to 0.
+
+        EXAMPLE 
+        
+        # update the weights of an MS
+        statwt2("my.ms")
+    </example> 
+</task>
+</casaxml>
