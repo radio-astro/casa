@@ -86,6 +86,8 @@
 #include <msvis/MSVis/statistics/Vi2TimeDataProvider.h>
 #include <msvis/MSVis/statistics/Vi2WeightSpectrumDataProvider.h>
 
+#include <mstransform/MSTransform/StatWt.h>
+
 #include <ms_cmpt.h>
 #include <msmetadata_cmpt.h>
 #include <tools/ms/Statistics.h>
@@ -380,6 +382,7 @@ ms::open(const std::string& thems, bool nomodify, bool lock, bool check)
         chansel_p.clear();
         chanselExpr_p = "";
         initSel_p = False;
+        _nomodify = nomodify;
 	} catch (const AipsError& x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
@@ -5663,6 +5666,30 @@ ms::iterinit2(const std::vector<std::string>& columns, const double interval,
 	Table::relinquishAutoLocks(true);
 	return rstat;
 }
+
+bool ms::statwt2() {
+    *itsLog << LogOrigin("ms", __func__);
+    try {
+        if(! detached()) {
+            ThrowIf(
+                _nomodify, 
+                "This MS was opened with nomodify=True. This "
+                "application modifies data, so open with nomodify=False"
+            );
+            StatWt statwt(itsMS);
+            statwt.writeWeights();
+            return True;
+        }
+    }
+    catch (const AipsError& x) {
+        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+        Table::relinquishAutoLocks(true);
+        RETHROW(x);
+    }
+    Table::relinquishAutoLocks(true);
+    return False;
+}
+
 
 bool
 ms::iterorigin()
