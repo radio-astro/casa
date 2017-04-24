@@ -27,6 +27,7 @@ casa_add_library( mstransform
  MSTransform/MSTransformIterator.cc
  MSTransform/MSTransformIteratorFactory.cc
  MSTransform/MSUVBin.cc
+ MSTransform/StatWt.cc
  TVI/UtilsTVI.cc 
  TVI/DenoisingLib.cc 
  TVI/FreqAxisTVI.cc 
@@ -37,6 +38,8 @@ casa_add_library( mstransform
  TVI/RegriddingTVI.cc  
  TVI/UVContSubTVI.cc
  TVI/PolAverageTVI.cc
+ TVI/StatWtTVI.cc
+ TVI/StatWtTVIFactory.cc
 )
 
 install (FILES
@@ -48,6 +51,7 @@ install (FILES
 	MSTransform/MSTransformIterator.h
 	MSTransform/MSTransformIteratorFactory.h
 	MSTransform/MSUVBin.h
+	MSTransform/StatWt.h
 	DESTINATION include/casacode/mstransform/MSTransform
 	)
 	
@@ -67,6 +71,8 @@ install (FILES
  	TVI/RegriddingTVI.h
  	TVI/UVContSubTVI.h 	
  	TVI/PolAverageTVI.h
+    TVI/StatWtTVI.h
+    TVI/StatWtTVIFactory.h
 	DESTINATION include/casacode/mstransform/TVI
 	)
 	
@@ -76,6 +82,7 @@ install (FILES
 	)	
 
 casa_add_assay( mstransform MSTransform/test/tMSBin.cc )
+casa_add_assay( mstransform MSTransform/test/tStatWt.cc )
 casa_add_executable( mstransform msuvbin apps/msuvbin/msuvbin.cc )
 casa_add_executable( mstransform fixspwbackport apps/fixspwbackport/fixspwbackport.cc )
 
