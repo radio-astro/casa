@@ -405,9 +405,12 @@ class CleanBase(basetask.StandardTaskTemplate):
                          type='image', iter=iter, multiterm=result.multiterm)
 
             # Store the PB corrected image.
-            set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
-                         type='pbcorimage', iter=iter, multiterm=result.multiterm)
-            result.set_image(iter=iter, image=pbcor_image_name)
+            if os.path.exists(pbcor_image_name):
+                set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
+                             type='pbcorimage', iter=iter, multiterm=result.multiterm)
+                result.set_image(iter=iter, image=pbcor_image_name)
+            else:
+                result.set_image(iter=iter, image=image_name)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
