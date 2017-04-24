@@ -310,8 +310,15 @@ class MakeImList(basetask.StandardTaskTemplate):
         # instantiate the heuristics classes needed, some sorting out needed
         # here to remove duplicated code
         image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
-        self.heuristics = image_heuristics_factory.getHeuristics(
-            context=inputs.context, vislist=inputs.vis, spw=spw, contfile=inputs.contfile, linesfile=inputs.linesfile, imaging_mode='ALMA')
+        self.heuristics = image_heuristics_factory.getHeuristics( \
+            vislist = inputs.vis, \
+            spw = spw, \
+            observing_run = inputs.context.observing_run, \
+            imagename_prefix = inputs.context.project_structure.ousstatus_entity_id, \
+            science_goals = inputs.context.project_performance_parameters, \
+            contfile = inputs.contfile, \
+            linesfile = inputs.linesfile, \
+            imaging_mode = 'ALMA')
 
         # get list of field_ids/intents to be cleaned
         field_intent_list = self.heuristics.field_intent_list(

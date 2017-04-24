@@ -21,10 +21,48 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
-    def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
-        ImageParamsHeuristics.__init__(self, context, vislist, spw, contfile, linesfile)
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
+        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
         self.imaging_mode = 'ALMA'
 
+    def robust(self, spw):
+        # Check if there is a non-zero desired angular resolution
+        cqa = casatools.quanta
+        desired_angular_resolution = cqa.convert(self.science_goals.desired_angular_resolution, '')['value']
+        if (desired_angular_resolution == 0.0):
+            LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
+            return 0.5
+
+        # Get maximum baseline length in metres
+        bmax = 0.0
+        for ms in self.observing_run.get_measurement_sets():
+            if (ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE) > bmax):
+                bmax = float(ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE))
+
+        if (bmax == 0.0):
+            LOG.warning('Bmax is zero. Setting "robust" parameter to 0.5.')
+            return 0.5
+
+        # Get spw center wavelength
+
+        # get the spw from the first vis set, assume all others the same for now
+        ms = self.observing_run.get_ms(name=self.vislist[0])
+        spw = ms.get_spectral_window(spw)
+
+        centre_frequency = float(spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ))
+        centre_lambda = cqa.constants('c')['value'] / centre_frequency
+
+        # Smallest spatial scale
+        smallest_spatial_scale = 1.2 * centre_lambda / bmax
+
+        if (desired_angular_resolution > 1.2 * smallest_spatial_scale):
+            robust = 1.0
+        elif (desired_angular_resolution < 0.8 * smallest_spatial_scale):
+            robust = 0.0
+        else:
+            robust = 0.5
+
+        return robust
 
     def dr_correction(self, threshold, dirty_dynamic_range, residual_max, intent, tlimit):
 
@@ -34,7 +72,7 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         maxEDR_used = False
         DR_correction_factor = 1.0
 
-        diameter = self.context.observing_run.get_measurement_sets()[0].antennas[0].diameter
+        diameter = self.observing_run.get_measurement_sets()[0].antennas[0].diameter
         old_threshold = qaTool.convert(threshold, 'Jy')['value']
         if (intent == 'TARGET' ) or (intent == 'CHECK'):
             n_dr_max = 2.5
@@ -90,7 +128,6 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         return '%sJy' % (new_threshold), DR_correction_factor, maxEDR_used
 
-
     def niter_correction(self, niter, cell, imsize, residual_max, threshold):
 
         '''Adjustment of number of cleaning iterations due to mask size.'''
@@ -113,14 +150,13 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         return new_niter
 
-
     def get_autobox_params(self):
 
         '''Default auto-boxing parameters for ALMA main array and ACA.'''
 
         min_diameter = 1.e9
         for msname in self.vislist:
-            min_diameter = min(min_diameter, min([antenna.diameter for antenna in self.context.observing_run.get_ms(msname).antennas]))
+            min_diameter = min(min_diameter, min([antenna.diameter for antenna in self.observing_run.get_ms(msname).antennas]))
         if min_diameter == 7.0:
             sidelobethreshold = 2.0
             noisethreshold = 3.0

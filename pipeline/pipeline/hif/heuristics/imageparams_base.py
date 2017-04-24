@@ -24,10 +24,12 @@ class ImageParamsHeuristics(object):
        call. There are subclasses for different imaging modes such as ALMA
        or VLASS.'''
 
-    def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
         self.imaging_mode = 'BASE'
 
-        self.context = context
+        self.observing_run = observing_run
+        self.imagename_prefix = imagename_prefix
+        self.science_goals = science_goals
 
         if type(vislist) is types.ListType:
             self.vislist = vislist
@@ -63,7 +65,7 @@ class ImageParamsHeuristics(object):
         # get the diameter of the smallest antenna used among all vis sets
         diameters = []
         for vis in self.vislist:
-            ms = self.context.observing_run.get_ms(name=vis)
+            ms = self.observing_run.get_ms(name=vis)
             antennas = ms.antennas
             for antenna in antennas:
                 diameters.append(antenna.diameter)
@@ -71,7 +73,7 @@ class ImageParamsHeuristics(object):
 
         # get spw info from first vis set, assume spws uniform
         # across datasets
-        ms = self.context.observing_run.get_ms(name=self.vislist[0])
+        ms = self.observing_run.get_ms(name=self.vislist[0])
         for spwid in self.spwids:
             spw = ms.get_spectral_window(spwid)
             ref_frequency = float(
@@ -92,7 +94,7 @@ class ImageParamsHeuristics(object):
 
         # initialize lookup dictionary for all possible source names
         cont_ranges_spwsel = {}
-        for ms_ref in self.context.observing_run.get_measurement_sets():
+        for ms_ref in self.observing_run.get_measurement_sets():
             for source_name in [s.name for s in ms_ref.sources]:
                 cont_ranges_spwsel[source_name] = {}
                 for spwid in self.spwids:
@@ -157,7 +159,7 @@ class ImageParamsHeuristics(object):
         field_intent_result = set()
 
         for vis in self.vislist:
-            ms = self.context.observing_run.get_ms(name=vis)
+            ms = self.observing_run.get_ms(name=vis)
             fields = ms.fields
 
             if intent.strip() is not '':
@@ -197,7 +199,7 @@ class ImageParamsHeuristics(object):
 
             vis_scanids = {}
             for vis in self.vislist:
-                ms = self.context.observing_run.get_ms(name=vis)
+                ms = self.observing_run.get_ms(name=vis)
 
                 scanids = [scan.id for scan in ms.scans if
                   intent in scan.intents and
@@ -228,7 +230,7 @@ class ImageParamsHeuristics(object):
             allscanids = []
             for fieldname in field.split(','):
                 re_field = utils.dequote(fieldname)
-                ms = self.context.observing_run.get_ms(name=vis[i])
+                ms = self.observing_run.get_ms(name=vis[i])
                 scanids = [scan.id for scan in ms.scans if
                            intent in scan.intents and
                            re_field in [utils.dequote(f.name) for f in scan.fields]]
@@ -283,7 +285,7 @@ class ImageParamsHeuristics(object):
                 # select data to be imaged
                 valid_data[(field, intent)] = False
                 for vis in self.vislist:
-                    ms = self.context.observing_run.get_ms(name=vis)
+                    ms = self.observing_run.get_ms(name=vis)
                     ms.get_scans()
                     scanids = [str(scan.id) for scan in ms.scans
                                if intent in scan.intents
@@ -345,7 +347,7 @@ class ImageParamsHeuristics(object):
             spwids = p.findall(' %s' % spwspec)
             spwids = map(int, spwids)
             spwids = list(set(spwids))
-            ms = self.context.observing_run.get_ms(name=self.vislist[0])
+            ms = self.observing_run.get_ms(name=self.vislist[0])
             # Use the first spw for the time being. TBD if this needs to be
             # improved.
             spw = ms.get_spectral_window(spwids[0])
@@ -392,7 +394,7 @@ class ImageParamsHeuristics(object):
             for field_intent in field_intent_list:
                 valid_data[field_intent] = False
                 for vis in self.vislist:
-                    ms = self.context.observing_run.get_ms(name=vis)
+                    ms = self.observing_run.get_ms(name=vis)
                     scanids = [scan.id for scan in ms.scans if
                       field_intent[1] in scan.intents and 
                       field_intent[0] in [fld.name for fld in scan.fields]]
@@ -434,7 +436,7 @@ class ImageParamsHeuristics(object):
         for ivis, vis in enumerate(self.vislist):
 
 	    # Get the visibilities
-            ms = self.context.observing_run.get_ms(name=vis)
+            ms = self.observing_run.get_ms(name=vis)
             visfields = fields[ivis]
             if visfields == '':
                 continue
@@ -522,7 +524,7 @@ class ImageParamsHeuristics(object):
         result = []
 
         for vis in self.vislist:
-            ms = self.context.observing_run.get_ms(name=vis)
+            ms = self.observing_run.get_ms(name=vis)
             fields = ms.fields
 
             field_list = []
@@ -605,7 +607,7 @@ class ImageParamsHeuristics(object):
 
     def imagename(self, output_dir=None, intent=None, field=None, spwspec=None, specmode=None):
         try:
-            nameroot = self.context.project_structure.ousstatus_entity_id
+            nameroot = self.imagename_prefix
 	    if nameroot == 'unknown':
 	        nameroot = 'oussid'
             # need to sanitize the nameroot here because when it's added
@@ -645,7 +647,7 @@ class ImageParamsHeuristics(object):
     def width(self, spw):
         # get the spw from the first vis set, assume all others the same for
         # now
-        ms = self.context.observing_run.get_ms(name=self.vislist[0])
+        ms = self.observing_run.get_ms(name=self.vislist[0])
         spw = ms.get_spectral_window(spw)
         # negative widths appear to confuse clean,
         if spw.channels[1].high > spw.channels[0].high:
@@ -664,7 +666,7 @@ class ImageParamsHeuristics(object):
     def ncorr (self, spw):
         # get the spw from the first vis set, assume all others the same for
         # now
-        ms = self.context.observing_run.get_ms(name=self.vislist[0])
+        ms = self.observing_run.get_ms(name=self.vislist[0])
         spw = ms.get_spectral_window(spw)
 
         # Get the data description for this spw
@@ -714,7 +716,7 @@ class ImageParamsHeuristics(object):
         if (specmode == 'cont'):
             abs_min_frequency = 1.0e15
             abs_max_frequency = 0.0
-            ms = self.context.observing_run.get_ms(name=self.vislist[0])
+            ms = self.observing_run.get_ms(name=self.vislist[0])
             for spwid in spwspec.split(','):
                 spw = ms.get_spectral_window(spwid)
                 min_frequency = float(spw.min_frequency.to_units(measures.FrequencyUnits.HERTZ))
@@ -731,43 +733,10 @@ class ImageParamsHeuristics(object):
             return 'hogbom'
 
     def robust(self, spw):
-        # Check if there is a non-zero desired angular resolution
-        cqa = casatools.quanta
-        desired_angular_resolution = cqa.convert(self.context.project_performance_parameters.desired_angular_resolution, '')['value']
-        if (desired_angular_resolution == 0.0):
-            LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
-            return 0.5
 
-        # Get maximum baseline length in metres
-        bmax = 0.0
-        for ms in self.context.observing_run.get_measurement_sets():
-            if (ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE) > bmax):
-                bmax = float(ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE))
+        '''Default robust value.'''
 
-        if (bmax == 0.0):
-            LOG.warning('Bmax is zero. Setting "robust" parameter to 0.5.')
-            return 0.5
-
-        # Get spw center wavelength
-
-        # get the spw from the first vis set, assume all others the same for now
-        ms = self.context.observing_run.get_ms(name=self.vislist[0])
-        spw = ms.get_spectral_window(spw)
-
-        centre_frequency = float(spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ))
-        centre_lambda = cqa.constants('c')['value'] / centre_frequency
-
-        # Smallest spatial scale
-        smallest_spatial_scale = 1.2 * centre_lambda / bmax
-
-        if (desired_angular_resolution > 1.2 * smallest_spatial_scale):
-            robust = 1.0
-        elif (desired_angular_resolution < 0.8 * smallest_spatial_scale):
-            robust = 0.0
-        else:
-            robust = 0.5
-
-        return robust
+        return 0.5
 
     def calc_topo_ranges(self, inputs):
 
@@ -784,7 +753,7 @@ class ImageParamsHeuristics(object):
 
         # get spw info from first vis set, assume spws uniform
         # across datasets
-        ms = self.context.observing_run.get_ms(name=inputs.vis[0])
+        ms = self.observing_run.get_ms(name=inputs.vis[0])
 
         # Get ID of field closest to the phase center
         meTool = casatools.measures
@@ -796,7 +765,7 @@ class ImageParamsHeuristics(object):
 
         for msname in inputs.vis:
             try:
-                ms_obj = self.context.observing_run.get_ms(msname)
+                ms_obj = self.observing_run.get_ms(msname)
                 field_ids = [f.id for f in ms_obj.fields if (f.name == inputs.field) and (inputs.intent in f.intents)]
                 separations = [meTool.separation(pc_direc, f.mdirection)['value'] for f in ms_obj.fields if f.id in field_ids]
                 ref_field_ids.append(field_ids[separations.index(min(separations))])
@@ -888,7 +857,6 @@ class ImageParamsHeuristics(object):
 
         return spw_topo_freq_param, spw_topo_chan_param, spw_topo_freq_param_dict, spw_topo_chan_param_dict, total_topo_bw, aggregate_topo_bw, aggregate_lsrk_bw
 
-
     def lsrk_freq_intersection(self, vis, field, spw):
         """
         Calculate LSRK frequency intersection of a list of MSs for a
@@ -910,7 +878,7 @@ class ImageParamsHeuristics(object):
             #
             # TODO refactor method signature to include data description ID
             #
-            msDO = self.context.observing_run.get_ms(msname)
+            msDO = self.observing_run.get_ms(msname)
             spwDO = msDO.get_spectral_window(spw)
             data_description_ids = {dd.id for dd in msDO.data_descriptions if dd.spw is spwDO}
             if len(data_description_ids) == 1:
@@ -976,7 +944,6 @@ class ImageParamsHeuristics(object):
         else:
             return -1, -1, 0
 
-
     def calc_sensitivities(self, vis, field, intent, spw, nbin, spw_topo_chan_param_dict, specmode, gridder, cell, imsize, weighting, robust):
         """Compute sensitivity estimate using CASA."""
 
@@ -990,7 +957,7 @@ class ImageParamsHeuristics(object):
         max_field_ids = []
         eff_ch_bw = 0.0
         for msname in vis:
-            ms = self.context.observing_run.get_ms(name=msname)
+            ms = self.observing_run.get_ms(name=msname)
             detailed_field_sensitivities[os.path.basename(msname)] = {}
             for intSpw in [int(s) for s in spw.split(',')]:
                 spw_do = ms.get_spectral_window(intSpw)
@@ -1087,7 +1054,6 @@ class ImageParamsHeuristics(object):
 
         return sensitivity, min_sensitivity, max_sensitivity, min_field_id, max_field_id, eff_ch_bw
 
-
     def get_sensitivity(self, ms_do, field, spw, chansel, specmode, cell, imsize, weighting, robust):
         """
         Get sensitivity for a field / spw / chansel combination from CASA's
@@ -1163,7 +1129,6 @@ class ImageParamsHeuristics(object):
         else:
             return 0.0, effectiveBW_of_1chan
 
-
     def dr_correction(self, threshold, dirty_dynamic_range, residual_max, intent, tlimit):
 
         '''Adjustment of cleaning threshold due to dynamic range limitations.'''
@@ -1173,14 +1138,12 @@ class ImageParamsHeuristics(object):
 
         return threshold, DR_correction_factor, maxEDR_used
 
-
     def niter_correction(self, niter, cell, imsize, residual_max, threshold):
         # TODO: parameter should be clean mask to be able to count the pixels
 
         '''Adjustment of number of cleaning iterations due to mask size.'''
 
         return niter
-
 
     def get_autobox_params(self):
 
@@ -1192,7 +1155,6 @@ class ImageParamsHeuristics(object):
         minbeamfrac = None
 
         return sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac
-
 
     def cyclefactor(self):
         return None

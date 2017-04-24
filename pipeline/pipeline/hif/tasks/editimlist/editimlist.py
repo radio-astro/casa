@@ -115,7 +115,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         # uses it in initialization.
         target['spw'] = '2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17' if not inputs.spw else inputs.spw
         target['phasecenter'] = inputs.phasecenter
-        th = target['heuristics'] = iph.getHeuristics(context=inputs.context, vislist=inputs.vis, spw=inputs.spw, imaging_mode='VLASS')
+        th = target['heuristics'] = iph.getHeuristics(vislist=inputs.vis, spw=inputs.spw, observing_run=inputs.context.observing_run, imaging_mode='VLASS')
         target['threshold'] = th.threshold() if not inputs.threshold else inputs.threshold
         target['reffreq'] = th.reffreq() if not inputs.reffreq else inputs.reffreq
         target['niter'] = th.niter_correction(None, None, None, None, None) if not inputs.niter else inputs.niter

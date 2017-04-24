@@ -10,8 +10,8 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageParamsHeuristicsVLASS(ImageParamsHeuristics):
 
-    def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
-        ImageParamsHeuristics.__init__(self, context, vislist, spw, contfile, linesfile)
+    def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
+        ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
         self.imaging_mode = 'VLASS'
 
     # niter
