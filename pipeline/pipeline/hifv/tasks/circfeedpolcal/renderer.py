@@ -91,17 +91,20 @@ class T2_4MDetailsCircfeedpolcalRenderer(basetemplates.T2_4MDetailsDefaultRender
 
                 plotter = polarization.PolarizationPlotCalChart(context, r,
                                                                 caltable=ktable,
-                                                                yaxis='delay', xaxis='freq', antenna=r.refant)
+                                                                yaxis='delay', xaxis='freq', antenna=r.refant,
+                                                                caption='RL delay vs. freq. ')
                 plots = plotter.plot()
                 # -------------
                 plotter = polarization.PolarizationPlotCalChart(context, r,
                                                                 caltable=Xtable,
-                                                                yaxis='phase', xaxis='freq', antenna=r.refant)
+                                                                yaxis='phase', xaxis='freq', antenna=r.refant,
+                                                                caption='RL phase offset vs. freq. ')
                 plots.extend(plotter.plot())
                 # -------------
                 plotter = polarization.PolarizationPlotCalChart(context, r,
                                                                 caltable=Dtable,
-                                                                yaxis='amp', xaxis='antenna', antenna='')
+                                                                yaxis='amp', xaxis='antenna', antenna='',
+                                                                caption='Inst. pol. amp vs. antenna')
                 plots.extend(plotter.plot())
                 # -------------
 

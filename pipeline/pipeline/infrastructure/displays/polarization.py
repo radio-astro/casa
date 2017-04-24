@@ -10,7 +10,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class PolarizationPlotCalChart(object):
-    def __init__(self, context, result, caltable='', yaxis='delay', xaxis='freq', antenna=''):
+    def __init__(self, context, result, caltable='', yaxis='delay', xaxis='freq', antenna='', caption=''):
         self.context = context
         self.result = result
         self.ms = context.observing_run.measurement_sets[0]
@@ -18,6 +18,7 @@ class PolarizationPlotCalChart(object):
         self.xaxis = xaxis
         self.antenna = antenna
         self.caltable = caltable
+        self.caption = caption
 
         # self.caltable = result.final[0].gaintable
 
@@ -53,7 +54,8 @@ class PolarizationPlotCalChart(object):
                                           'type': typeentry,
                                           'antenna': self.antenna,
                                           'spw': '',
-                                          'figfile': figfile})
+                                          'figfile': figfile,
+                                          'caption': self.caption+typeentry})
 
         if not os.path.exists(figfile):
             LOG.trace('plotsummary Plotcal plot not found. Creating new plot.')

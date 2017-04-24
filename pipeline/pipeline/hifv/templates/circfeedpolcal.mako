@@ -111,12 +111,12 @@ $(document).ready(function() {
 
 
         <%def name="fancybox_caption(plot)">
-          Plot of ${plot.y_axis} vs. ${plot.x_axis}  ${plot.parameters['type']}
+          ${plot.parameters['caption']}
         </%def>
 
 
         <%def name="caption_title(plot)">
-           ${plot.y_axis} vs. ${plot.x_axis} ${plot.parameters['type']}
+           ${plot.parameters['caption']}
         </%def>
 
     </%self:plot_group>
@@ -132,7 +132,7 @@ $(document).ready(function() {
 
 %if ampfreq_subpages:
 
-        <h2>Amplitude vs. Frequency Plots</h2>
+        <h2>D-term Amplitude vs. Frequency Plots</h2>
         Cal table used:
         %for single_result in result:
 	        <p><b>${os.path.basename(single_result.final[1].gaintable)}</b></p>
