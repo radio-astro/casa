@@ -32,44 +32,59 @@ using namespace casacore;
 using namespace casa::vi;
 
 StatWtTVITest::StatWtTVITest(): FreqAxisTVITest () {
+    cout << __FILE__ << " " << __LINE__ << endl;
     inpFile_p = "ngc5921.split.ms";
     testFile_p = "ngc5921.split.ms.test";
     referenceFile_p = "ngc5921.split.ms.ref";
     Record configuration;
 	init(configuration);
+    cout << __FILE__ << " " << __LINE__ << endl;
 }
 
 StatWtTVITest::StatWtTVITest(Record configuration): FreqAxisTVITest(configuration) {
+    cout << __FILE__ << " " << __LINE__ << endl;
 	init(configuration);
+    cout << __FILE__ << " " << __LINE__ << endl;
 }
 
 void StatWtTVITest::generateTestFile() {
+    cout << __FILE__ << " " << __LINE__ << endl;
     String path = autoMode_p ? "/data/regression/unittest/simplecluster" : "";
     ASSERT_TRUE(copyTestFile(path, inpFile_p, testFile_p));
+    cout << __FILE__ << " " << __LINE__ << endl;
 }
 
 void StatWtTVITest::generateReferenceFile() {
+    cout << __FILE__ << " " << __LINE__ << endl;
     String path = autoMode_p ? "/data/regression/unittest/statwt" : "";
     ASSERT_TRUE(copyTestFile(path, referenceFile_p, referenceFile_p));
+    cout << __FILE__ << " " << __LINE__ << endl;
 }
 
 void StatWtTVITest::initTestConfiguration(Record &configuration) {
+    cout << __FILE__ << " " << __LINE__ << endl;
     testConfiguration_p = configuration;
     testConfiguration_p.define("inputms", testFile_p);
+    cout << __FILE__ << " " << __LINE__ << endl;
 }
 
 void StatWtTVITest::initReferenceConfiguration(Record &configuration) {
+    cout << __FILE__ << " " << __LINE__ << endl;
     refConfiguration_p = configuration;
     refConfiguration_p.define ("inputms", referenceFile_p);
+    cout << __FILE__ << " " << __LINE__ << endl;
 }
 
 void StatWtTVITest::TestBody() {
+    cout << __FILE__ << " " << __LINE__ << endl;
     SetUp();
     testCompareTransformedData();
     TearDown();
+    cout << __FILE__ << " " << __LINE__ << endl;
 }
 
 void StatWtTVITest::testCompareTransformedData() {
+    cout << __FILE__ << " " << __LINE__ << endl;
 	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
 
 	// Create MSTransformIterator pointing to reference file
@@ -79,7 +94,9 @@ void StatWtTVITest::testCompareTransformedData() {
 
 	// Use MSTransformFactory to create a plain input VII
 	testConfiguration_p.define("factory",True);
+    cout << __FILE__ << " " << __LINE__ << endl;
 	MSTransformIteratorFactory plainVIFactory(testConfiguration_p);
+    cout << __FILE__ << " " << __LINE__ << endl;
 	ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
 /*
     Block<int> sort(5);
@@ -99,6 +116,7 @@ void StatWtTVITest::testCompareTransformedData() {
 
 	// Determine columns to check
 	VisBufferComponents2 columns;
+    cout << __FILE__ << " " << __LINE__ << endl;
 	columns += VisBufferComponent2::NRows;
 //	columns += VisBufferComponent2::NChannels;
 //	columns += VisBufferComponent2::NCorrelations;
