@@ -169,8 +169,8 @@ class Applycal(basetask.StandardTaskTemplate):
         task_args['antenna'] = '*&*'
         return task_args
 
-    def _get_flagsum_arg(self, **kwargs):
-        return kwargs
+    def _get_flagsum_arg(self, args):
+        return args
 
     def _tweak_flagkwargs(self, template):
         return template
@@ -226,10 +226,11 @@ class Applycal(basetask.StandardTaskTemplate):
             # 20170406 TN
             # flagdata task arguments are indirectly given so that sd applycal task is
             # able to edit them
-            flagsum_args = self._get_flagsum_arg(vis=inputs.vis, mode='summary')
+            summary_args = dict(vis=inputs.vis, mode='summary')
+            self._get_flagsum_arg(summary_args)
             # schedule a flagdata summary jobs either side of the applycal jobs
-            jobs.insert(0, casa_tasks.flagdata(name='before', **flagsum_args))
-            jobs.append(casa_tasks.flagdata(name='applycal', **flagsum_args))
+            jobs.insert(0, casa_tasks.flagdata(name='before', **summary_args))
+            jobs.append(casa_tasks.flagdata(name='applycal', **summary_args))
 
             if inputs.flagdetailedsum:
                 # Schedule a flagdata job to determine flagging stats per spw

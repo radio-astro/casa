@@ -45,19 +45,16 @@ class SDMSApplycal(Applycal):
         task_args['antenna'] = '*&&&'
         return task_args
 
-    def _get_flagsum_arg(self, vis):
+    def _get_flagsum_arg(self, args):
         # CAS-8813 flag fraction should be based on target instead of total
-        task_args = super(SDMSApplycal, self)._get_flagsum_arg(vis=vis)
-        task_args.update({'intent': 'OBSERVE_TARGET#ON_SOURCE'})
+        task_args = super(SDMSApplycal, self)._get_flagsum_arg(args)
+        task_args['intent'] = 'OBSERVE_TARGET#ON_SOURCE'
         return task_args
         
     def _tweak_flagkwargs(self, template):
         # CAS-8813 flag fraction should be based on target instead of total
-        flagkwargs = []
-        for t in template:
-            flagkwargs.append(t + " intent='OBSERVE_TARGET#ON_SOURCE'")
-        return flagkwargs
-        
+        return [row + ' intent="OBSERVE_TARGET#ON_SOURCE"' for row in template]
+
     def prepare(self):
         # execute Applycal
         results = super(SDMSApplycal, self).prepare()
