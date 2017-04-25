@@ -45,9 +45,10 @@ def true_false_handler(self, etype, value, tb, tb_offset=None):
             print "------------------------------------------------------------------------------"
             print "Warning: CASA no longer defines T/true and F/false as synonyms for True/False"
             print "------------------------------------------------------------------------------"
-    return self.showtraceback()
+    self.showtraceback()
+    return None
 
-_ip.set_custom_exc((BaseException,), true_false_handler)
+#_ip.set_custom_exc((BaseException,), true_false_handler)
 
 
 ##
