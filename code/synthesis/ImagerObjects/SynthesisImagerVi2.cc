@@ -223,6 +223,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //cerr << std::setprecision(12) << "FreqList " << freqList << endl;
       IPosition shape = freqList.shape();
       uInt nSelections = shape[0];
+      ///temporary variable as we carry that for tunechunk...till we get rid of it
+      selFreqFrame_p=selpars.freqframe;
+      Bool ignoreframe=False;
+      MFrequency::Types freqFrame=MFrequency::castType(ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().measFreqRef()(Int(chanlist(0,0))));
+  
+      if(selpars.freqframe == MFrequency::REST ||selpars.freqframe == MFrequency::Undefined){	
+	selFreqFrame_p=freqFrame;
+	ignoreframe=True;
+      }
       if(selpars.freqbeg==""){
 	   // Going round the problem of CAS-8829
         /*vi::FrequencySelectionUsingChannels channelSelector;
@@ -236,10 +245,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         Double topfreq;
 
 	//cerr << "chanlist " << chanlist << "\n freqlis " << freqList << endl;
-        MFrequency::Types freqFrame=MFrequency::castType(ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().measFreqRef()(Int(chanlist(0,0))));
-        vi::FrequencySelectionUsingFrame channelSelector(selpars.freqframe);
+        
+	//cerr << "selpars.freqframe " << selpars.freqframe << endl;
+        vi::FrequencySelectionUsingFrame channelSelector(selFreqFrame_p);
 	///temporary variable as we carry that for tunechunk
-	selFreqFrame_p=selpars.freqframe;
     	  for(uInt k=0; k < nSelections; ++k){
 	    //The getChanfreqList is wrong for beg and end..going round that too.
 	    Vector<Double> freqies=ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().chanFreq()(Int(chanlist(k,0)));
@@ -258,12 +267,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      //topfreq=freqList(k, 2);//+freqList(k,3)/2.0;
 	    }
 	    
-	    
-	    vi::VisibilityIterator2 tmpvi(mss_p, vi::SortColumns(), false); 
-	    VisBufferUtil::getFreqRangeFromRange(lowfreq, topfreq,  freqFrame, lowfreq,  topfreq, tmpvi, selpars.freqframe);
+	    if(!ignoreframe){
+	      vi::VisibilityIterator2 tmpvi(mss_p, vi::SortColumns(), false); 
+	      VisBufferUtil::getFreqRangeFromRange(lowfreq, topfreq,  freqFrame, lowfreq,  topfreq, tmpvi, selFreqFrame_p);
+	    }
 	    //cerr << std::setprecision(12) << "Dat lowFreq "<< lowfreq << " topfreq " << topfreq << endl; 
             //channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
-	    andFreqSelection(mss_p.nelements()-1, Int(freqList(k,0)), lowfreq, topfreq, selpars.freqframe);
+	    andFreqSelection(mss_p.nelements()-1, Int(freqList(k,0)), lowfreq, topfreq, selFreqFrame_p);
           }
     	  //fselections_p->add(channelSelector);
           //////////////////////////////////
@@ -272,7 +282,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	//////More workaroung CAS-8829
 	//MFrequency::Types freqFrame=MFrequency::castType(ROMSColumns(*mss_p[mss_p.nelements()-1]).spectralWindow().measFreqRef()(Int(freqList(0,0))));
-	
     	  Quantity freq;
     	  Quantity::read(freq, selpars.freqbeg);
     	  Double lowfreq=freq.getValue("Hz");
@@ -289,7 +298,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //cerr << "lowFreq "<< lowfreq << " topfreq " << topfreq << endl;
             //channelSelector.add(Int(freqList(k,0)), lowfreq, topfreq);
 	    //andFreqSelection((mss_p.nelements()-1), Int(freqList(k,0)), lowfreq, topfreq, vi_p ?freqFrame : selpars.freqframe);
-	    andFreqSelection((mss_p.nelements()-1), Int(freqList(k,0)), lowfreq, topfreq, selpars.freqframe);
+	    andFreqSelection((mss_p.nelements()-1), Int(freqList(k,0)), lowfreq, topfreq, selFreqFrame_p);
           }
     	  //fselections_p->add(channelSelector);
 
