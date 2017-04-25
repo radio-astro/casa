@@ -1196,7 +1196,14 @@ void KcrossJones::solveOneVB(const VisBuffer& vb) {
       slsumvis(ich)/=sumwt(ich);
     else
       slsumvis(ich)=Complex(0.0);
-  
+
+  /*
+  cout << "slsumvis.nelements() = " << slsumvis.nelements() << endl;
+  cout << "sumwt = " << sumwt/sumwt(0) << endl;
+  cout << "amp   = " << amplitude(slsumvis) << endl;
+  cout << "phase = " << phase(slsumvis)*180.0/C::pi << endl;
+  */
+
   // Do the FFT
   ArrayLattice<Complex> c(sumvis);
   LatticeFFT::cfft(c,true);        
@@ -1246,7 +1253,7 @@ void KcrossJones::solveOneSDB(SolveDataBuffer& sdb) {
   solveRPar()=0.0;
   solveParOK()=false;
 
-  Int fact(16);
+  Int fact(8);
   Int nChan=sdb.nChannels();
   Int nPadChan=nChan*fact;
 
@@ -1282,7 +1289,14 @@ void KcrossJones::solveOneSDB(SolveDataBuffer& sdb) {
       slsumvis(ich)/=sumwt(ich);
     else
       slsumvis(ich)=Complex(0.0);
-  
+
+  /*  
+  cout << "slsumvis.nelements() = " << slsumvis.nelements() << endl;
+  cout << "amp   = " << amplitude(slsumvis) << endl;
+  cout << "phase = " << phase(slsumvis)*180.0/C::pi << endl;
+  cout << "sumwt = " << sumwt/sumwt(0) << endl;
+  */
+
   // Do the FFT
   ArrayLattice<Complex> c(sumvis);
   LatticeFFT::cfft(c,true);        

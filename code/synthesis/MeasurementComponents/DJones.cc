@@ -334,15 +334,14 @@ void DJones::guessPar(SDBList& sdbs) {
   solveCPar()=0.0;
   solveParOK()=true;
 
-  /*   TBD******************
-
   if (jonesType()==Jones::GenLinear) {
-    vb.weightMat().row(0)=0.0;
-    vb.weightMat().row(3)=0.0;
+    // Zero p-hand weights
+    for (int isdb=0;isdb<sdbs.nSDB();++isdb) {
+      SolveDataBuffer& sdb(sdbs(isdb));
+      Cube<Float> wtS(sdb.weightSpectrum());
+      wtS(Slice(0,2,3),Slice(),Slice())=0.0;
+    }
   }
-
-  */
-
 
   if (solvePol()) {
 

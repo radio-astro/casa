@@ -220,6 +220,10 @@ void SolveDataBuffer::enforceSolveWeights(const Bool phandonly)
   // Set flagged weights to zero, ensuring they don't get used in accumulations
   this->weightSpectrum()(this->flagCube())=0.0f;
 
+  // Set flagged data to zero (some solve types don't look at flags)
+  Cube<Complex> vCC(this->visCubeCorrected());
+  vCC(this->flagCube())=Complex(0.0f);
+
 }
 
 

@@ -58,7 +58,8 @@ public:
  
   // Allowed types of VisCal matrices - 'correct' order
   //  enum Type{UVMOD,Mf,M,K,B,G,D,C,E,P,T,EP,F};
-  enum Type{Test=0,ANoise,M,KAntPos,K,B,G,J,D,X,C,P,E,T,F,A,ALL};
+  //  enum Type{Test=0,ANoise,M,KAntPos,K,B,G,J,D,X,C,P,E,T,F,A,ALL};
+  enum Type{Test=0,ANoise,M,KAntPos,B,K,G,J,D,X,C,P,E,T,F,A,ALL};
 
   // Enumeration of parameter types (casacore::Complex, Real, or Both)
   enum ParType{Co,Re,CoRe};
