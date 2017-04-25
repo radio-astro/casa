@@ -1139,6 +1139,10 @@ the ms definition itself. -->
 
             If the variance for a set of data is 0, all data in that selection are flagged, and the corresponding
             weights are set to 0.
+
+            Because data are modified in the input MS, the nomodify parameter must be set to False when opening
+            the associated MS tool
+
         </description>
         <example>
             # update the weights of an MS
