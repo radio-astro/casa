@@ -460,6 +460,47 @@ void ImageInterfaceTest::testYAPruneRegions()
     PagedImage<Float> outMask(InImage.shape(), InImage.coordinates(), "testYAPruneRegions-out.mask");
     outMask.copyData(*(tempIm_ptr.get()) );
 }
+void ImageInterfaceTest::testYAPruneRegionsBigImage()
+{
+    cout <<" Test YAPruneRegionsBigImage()"<<endl;
+
+    // 4 dim image with 1 spectral channels
+    IPosition shape(4, 1500,1500, 1, 1);
+    // 4 dim image with 1 spectral channels
+    //IPosition shape(4, 100, 100, 1, 1);
+    csys=CoordinateUtil::defaultCoords4D();
+    PagedImage<Float> InImage(TiledShape(shape),csys, String("testYAPruneRegions.im"));
+    //PagedImage<Float> dummyMaskImage(TiledShape(shape),csys, String("testBDilationDummyMask.im"));
+    TempImage<Float> dummyMaskImage(TiledShape(shape),csys);
+    dummyMaskImage.set(0);
+    //PagedImage<Float> labelMap(TiledShape(shape),csys, String("testYAPruneRegions-labelmap.im"));
+    //labelMap.set(0);
+    // 1 to execlude from the binary dilation
+    //dummyMaskImage.putAt(1.0, IPosition(4,0,0,0,0));
+    //dummyMaskImage.putAt(1.0, IPosition(4,99,99,0,0));
+    // 1 -> false
+    //dummyMaskImage.attachMask( LatticeExpr<Bool> (iif(dummyMaskImage >  0, False, True)));
+    //ArrayLattice<Bool> mask(dummyMaskImage.getMask());
+    //Array<Bool> chanmask(IPosition(2,1,5));
+    //chanmask.set(true);
+    InImage.setUnits(Unit("Jy/pixel"));
+    InImage.set(0.0);
+    InImage.putAt(1.0, IPosition(4,45,55,0,0));
+    InImage.putAt(1.0, IPosition(4,45,56,0,0));
+    InImage.putAt(1.0, IPosition(4,46,55,0,0));
+    InImage.putAt(1.0, IPosition(4,47,55,0,0));
+    InImage.putAt(1.0, IPosition(4,47,54,0,0));
+    SDMaskHandler maskhandler;
+
+    Double prunesize=2.0;
+    Vector<Bool> pruned; 
+    SHARED_PTR<ImageInterface<Float> > tempIm_ptr = maskhandler.YAPruneRegions(InImage,pruned,prunesize);
+    PagedImage<Float> outMask(InImage.shape(), InImage.coordinates(), "testYAPruneRegions2-out.mask");
+    outMask.copyData(*(tempIm_ptr.get()) );
+}
+
+
+//methods in SDMaskHandler.h but no tests exist here
 
 
 //methods in SDMaskHandler.h but no tests exist here
@@ -516,6 +557,9 @@ TEST_F(ImageInterfaceTest, testYAPruneRegions) {
   testYAPruneRegions();
 }
 
+TEST_F(ImageInterfaceTest, testYAPruneRegionsBigImage) {
+  testYAPruneRegionsBigImage();
+}
 }//test
 
 int main(int argc, char **argv) {

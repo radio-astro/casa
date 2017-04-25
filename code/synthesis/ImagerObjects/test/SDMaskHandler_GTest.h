@@ -66,6 +66,7 @@ protected:
      void testBinaryDilation();
      void testBinaryDilationIter();
      void testYAPruneRegions();
+     void testYAPruneRegionsBigImage();
 
 };
 
