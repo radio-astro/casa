@@ -499,8 +499,8 @@ class SBSummaryTable(object):
             return (None, None, None)
 
     @staticmethod
-    def _create_sbsummary_info(repDirection, repFrequency, repBandwidth):
-       return (repDirection, repFrequency, repBandwidth) 
+    def _create_sbsummary_info(repSource, repFrequency, repBandwidth):
+       return (repSource, repFrequency, repBandwidth) 
 
     @staticmethod
     def _read_table(ms):
@@ -516,34 +516,30 @@ class SBSummaryTable(object):
         sbsummary_table = os.path.join(msname, 'ASDM_SBSUMMARY')        
         with casatools.TableReader(sbsummary_table) as table:
             try:
-                centerDirections = table.getcol('centerDirection')
-                centerDirectionCodes = table.getcol('centerDirectionCode')
                 scienceGoals = table.getcol('scienceGoal')
                 numScienceGoals = table.getcol('numScienceGoal')
             except:
                 LOG.warn('Error reading representative source information for %s' % (ms.basename))
                 raise 
 
-            repDirections = []
+            repSources = []
             repFrequencies = []
             repBandWidths = []
             for i in range(table.nrows()):
-                # Direction check
-                if centerDirectionCodes[i] == '':
-                    continue
-                # Create direction
-                direction = me.direction(centerDirectionCodes[i], qa.quantity(centerDirections[0,i], 'rad'),
-                    qa.quantity(centerDirections[1,i], 'rad'))
-                repDirections.append(direction)
+                # Create source
+                repSource = _get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                    'representativeSource')
+                repSources.append(repSource)
                 # Create frequency
                 repFrequency = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
                     'representativeFrequency'))
                 repFrequencies.append(repFrequency)
+                # Create representative bandwidth
                 repBandWidth = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
                     'representativeBandwidth'))
                 repBandWidths.append(repBandWidth)
 
-        rows = zip(repDirections, repFrequencies, repBandWidths)
+        rows = zip(repSources, repFrequencies, repBandWidths)
         return rows
 
 class ExecblockTable(object):

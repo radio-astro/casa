@@ -47,16 +47,18 @@ def generate_detail_plots(result=None):
         return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['default']
     
     task = getattr(result, 'pipeline_casa_task', '')
-    task_cls_name = result.task.__name__
+    # task_cls_name = result.task.__name__
+
     if task.startswith('hif_applycal'):
         return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['hif_applycal']
+
     elif task.startswith('hifv_applycals'):
         LOG.info('Using plot level for the VLA as: '+str(_PLOT_DETAIL_THRESHOLDS['hifv_applycals']))
         return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['hifv_applycals']
+
     elif task.startswith('hifv_plotsummary'):
         LOG.info('Using plot level for the VLA as: ' + str(_PLOT_DETAIL_THRESHOLDS['hifv_plotsummary']))
         return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['hifv_plotsummary']
-    elif task_cls_name in ('IFApplycal', 'Applycal'):
-        return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['hif_applycal']
+
     else:
         return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['default']

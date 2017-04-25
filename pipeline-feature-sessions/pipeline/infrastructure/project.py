@@ -69,9 +69,11 @@ class PerformanceParameters (object):
         #desired_sensitivity = '0.0Jy',
         #desired_dynamic_range = 1.0,
 
-        representative_source = '',
+        # Note: Remove frequency and bandwidth settings.
         representative_frequency = '0.0GHz',
         representative_bandwidth = '0.0MHz',
+        representative_source = '',
+        representative_spwid = '',
 
         max_cube_size = -1.0,
         max_product_size = -1.0
@@ -89,6 +91,7 @@ class PerformanceParameters (object):
         self.representative_source = representative_source
         self.representative_frequency = representative_frequency
         self.representative_bandwidth = representative_bandwidth
+        self.representative_spwid = representative_spwid
 
         # Product size parameters
         self.max_cube_size = max_cube_size

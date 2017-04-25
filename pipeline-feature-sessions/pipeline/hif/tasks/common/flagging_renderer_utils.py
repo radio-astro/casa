@@ -42,6 +42,9 @@ def flags_by_intent(ms, summaries):
             totalcount = 0
 
             for i in scan_ids:
+                if not summary['scan'].has_key(i):
+                    continue
+                
                 flagcount += int(summary['scan'][i]['flagged'])
                 totalcount += int(summary['scan'][i]['total'])
     

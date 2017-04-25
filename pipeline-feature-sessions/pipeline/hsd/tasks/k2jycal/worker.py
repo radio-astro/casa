@@ -58,7 +58,7 @@ class SDK2JyCalWorker(basetask.StandardTaskTemplate):
 
         if not os.path.exists(vis):
             LOG.error("Could not find MS '%s'" % vis)
-            return SDK2JyCalWorkerResults(vis)
+            return SDK2JyCalWorkerResults(os.path.basename(vis))
         vis = os.path.basename(vis)
         if not factors.has_key(vis):
             return SDK2JyCalWorkerResults(vis)

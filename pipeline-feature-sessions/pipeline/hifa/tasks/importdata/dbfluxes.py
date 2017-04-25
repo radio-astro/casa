@@ -180,7 +180,7 @@ def read_fluxes_db(ms):
                 m = msource
                 if (int(spw_id) in science_spw_ids):
                     LOG.info("Source: " + source_name + " spw: " + str(spw_id) + "    ASDM Flux: " + str(
-                        m.source.I.value) + "     No online catalog information.")
+                        msource.I.value) + "     No online catalog information.")
 
         result[source].append(m)
 

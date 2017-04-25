@@ -116,7 +116,9 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             reference_field_name = ms.get_fields(reference_id)[0].clean_name
             if myargs['outfile'] is None or len(myargs['outfile']) == 0:
                 namer = filenamer.SkyCalibrationTable()
-                asdm = common.asdm_name_from_ms(ms)
+                # caltable name should be <ASDM uid>.ms.<FIELD>.skycal.tbl
+                #asdm = common.asdm_name_from_ms(ms)
+                asdm = ms.basename
                 namer.asdm(asdm)
                 namer.field(reference_field_name)
                 myargs['outfile'] = os.path.join(self.inputs.output_dir, namer.get_filename())
@@ -142,6 +144,7 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             calto = callibrary.CalTo(vis=myargs['infile'],
                                      spw=myargs['spw'],
                                      field=str(target_id),
+                                     antenna='*&&&',
                                      intent='TARGET')
     
             # create SDCalFrom object

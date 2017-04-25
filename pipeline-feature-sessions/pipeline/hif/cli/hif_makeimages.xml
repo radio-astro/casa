@@ -76,6 +76,7 @@ Compute clean results from a list of specified targets.
          <value>rms</value>
          <value>sensitivity</value>
          <value>timesmask</value>
+         <value>manual</value>
        </allowed>
   </param>
 

@@ -19,6 +19,8 @@ import pipeline.infrastructure.utils as utils
 
 from pipeline.hifv.heuristics import find_EVLA_band
 
+# Paper
+# http://iopscience.iop.org/article/10.1088/0067-0049/204/2/19/pdf
 
 LOG = infrastructure.get_logger(__name__)
 

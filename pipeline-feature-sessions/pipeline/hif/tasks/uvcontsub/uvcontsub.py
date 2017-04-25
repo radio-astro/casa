@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import os
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
@@ -49,6 +51,32 @@ api.ImagingMeasurementSetsPreferred.register(UVcontSubInputs)
 class UVcontSub(applycal.Applycal):
     Inputs = UVcontSubInputs
 
+    # Override prepare method with one which sets and unsets the VI1CAL
+    # environment variable.
+    def prepare(self):
+
+        try:
+            vi1cal =  os.environ['VI1CAL']
+            vi1cal_was_unset = False
+        except:
+            os.environ['VI1CAL'] = '1'
+            vi1cal_was_unset = True
+
+        # Set cluster to serial mode for this applycal
+        if infrastructure.mpihelpers.is_mpi_ready():
+            from parallel.parallel_task_helper import ParallelTaskHelper
+            ParallelTaskHelper.bypassParallelProcessing(1)
+
+        results = super(UVcontSub, self).prepare()
+
+        # Reset cluster to parallel mode
+        if infrastructure.mpihelpers.is_mpi_ready():
+           ParallelTaskHelper.bypassParallelProcessing(0)
+
+        if vi1cal_was_unset:
+            del os.environ['VI1CAL']
+
+        return results
 
 # May need this in the future
 #

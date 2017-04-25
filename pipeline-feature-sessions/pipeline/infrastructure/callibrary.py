@@ -385,7 +385,7 @@ class CalFrom(object):
         'tsys': ('B TSYS',),
         'antpos': ('KANTPOS JONES',),
         'uvcont': ('A MUELLER',),
-        'amp': ('G JONES',),
+        #'amp': ('G JONES',),
         'ps': ('SDSKY_PS',),
         'otfraster': ('SDSKY_RASTER',),
         'otf': ('SDSKY_OTF',),

@@ -20,7 +20,7 @@ AuxFileProducts = collections.namedtuple('AuxFileProducts', 'flux_file antenna_f
 class ALMAExportDataInputs(exportdata.ExportDataInputs):
 
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, session=None, vis=None,
+    def __init__(self, context, output_dir=None, session=None, vis=None, exportmses=None,
                  pprfile=None, calintents=None, calimages=None, targetimages=None,
                  products_dir=None ):
         # set the properties to the values given as input arguments

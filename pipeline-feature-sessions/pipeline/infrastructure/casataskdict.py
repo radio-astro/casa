@@ -20,6 +20,7 @@ CasaTaskDict = {
     'h_restoredata': 'RestoreData',
     'h_tsyscal': 'Tsyscal',
     # Interferometry tasks ---------------------------------------------------
+    'hif_transformimagedata': 'Transformimagedata',
     'hif_editimlist': 'Editimlist',
     'hif_linfeedpolcal': 'Linfeedpolcal',
     'hif_antpos': 'Antpos',
@@ -56,6 +57,7 @@ CasaTaskDict = {
     'hsd_k2jycal': 'SDK2JyCal',
     'hsd_skycal': 'SDMSSkyCal',
     'hsd_tsysflag': 'SDTsysflag',
+    'hsd_restoredata': 'SDRestoreData',
     # ALMA interferometry tasks ---------------------------------------------
     'hifa_importdata': 'ALMAImportData',
     'hifa_antpos': 'ALMAAntpos',
@@ -150,6 +152,7 @@ classToCASATask = {
     hif_tasks.Setjy                   : 'hif_setjy',
     hif_tasks.SetModels               : 'hif_setmodels',
     hif_tasks.Tclean                  : 'hif_tclean',
+    hif_tasks.Transformimagedata      : 'hif_transformimagedata',
     hif_tasks.UVcontFit               : 'hif_uvcontfit',
     hif_tasks.UVcontSub               : 'hif_uvcontsub',
     # Single dish tasks ------------------------------------------------------
@@ -163,6 +166,7 @@ classToCASATask = {
     hsd_tasks.SDK2JyCal               : 'hsd_k2jycal',
     hsd_tasks.SDMSSkyCal              : 'hsd_skycal',
     hsd_tasks.SDTsysflag              : 'hsd_tsysflag',
+    hsd_tasks.SDRestoreData       : 'hsd_restoredata',
     # VLA tasks ----------------------------------------------------------------
     hifv_tasks.TecMaps                : 'hifv_tecmaps',
     hifv_tasks.Circfeedpolcal         : 'hifv_circfeedpolcal',

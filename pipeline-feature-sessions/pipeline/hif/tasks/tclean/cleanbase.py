@@ -36,8 +36,10 @@ class CleanBaseInputs(basetask.StandardInputs):
                  weighting=None,
                  robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, hm_masking=None, hm_autotest=None, pblimit=None, niter=None,
-                 threshold=None, sensitivity=None, result=None, parallel=None):
+                 threshold=None, sensitivity=None, reffreq=None, result=None, parallel=None,
+                 heuristics=None):
         self._init_properties(vars())
+        self.heuristics = heuristics
 
     deconvolver = basetask.property_with_default('deconvolver', '')
     uvtaper = basetask.property_with_default('uvtaper', None)
@@ -63,11 +65,11 @@ class CleanBaseInputs(basetask.StandardInputs):
     pblimit = basetask.property_with_default('pblimit', 0.2)
     restoringbeam = basetask.property_with_default('restoringbeam', 'common')
     robust = basetask.property_with_default('robust', -999.0)
-    sensitivity = basetask.property_with_default('sensitivity', 0.0)
+    sensitivity = basetask.property_with_default('sensitivity', None)
     spwsel = basetask.property_with_default('spwsel', [])
     start = basetask.property_with_default('start', '')
     stokes = basetask.property_with_default('stokes', 'I')
-    threshold = basetask.property_with_default('threshold', '0.0mJy')
+    threshold = basetask.property_with_default('threshold', None)
     uvrange = basetask.property_with_default('uvrange', '')
     weighting = basetask.property_with_default('weighting', 'briggs')
     width = basetask.property_with_default('width', '')
@@ -161,30 +163,10 @@ class CleanBase(basetask.StandardTaskTemplate):
             else:
                 inputs.datacolumn = 'corrected'
 
-        re_field = utils.dequote(inputs.field)
-
-        # Use scanids to select data with the specified intent
-        # Note CASA clean now supports intent selectin but leave
-        # this logic in place and use it to eliminate vis that
-        # don't contain the requested data.
-        scanidlist = []
-        vislist = []
-        spwsellist = []
-        for i in xrange(len(inputs.vis)):
-            ms = inputs.context.observing_run.get_ms(name=inputs.vis[i])
-            scanids = [scan.id for scan in ms.scans if
-                       inputs.intent in scan.intents and
-                       re_field in [utils.dequote(f.name) for f in scan.fields]]
-            if not scanids:
-                continue
-            scanids = str(scanids)
-            scanids = scanids.replace('[', '')
-            scanids = scanids.replace(']', '')
-            scanidlist.append(scanids)
-            vislist.append(inputs.vis[i])
-            spwsellist.append(inputs.spwsel[i])
-        inputs.vis=vislist
-        inputs.spwsel=spwsellist
+        # Remove MSs that do not contain data for the given field(s)
+        scanidlist, visindexlist = inputs.heuristics.get_scanidlist(inputs.vis, inputs.field, inputs.intent)
+        inputs.vis = [inputs.vis[i] for i in visindexlist]
+        inputs.spwsel = [inputs.spwsel[i] for i in visindexlist]
 
         # Initialize imaging results structure
         if not inputs.result:
@@ -273,7 +255,6 @@ class CleanBase(basetask.StandardTaskTemplate):
             'field':         inputs.field,
             'spw':           inputs.spwsel,
             'intent':        utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-            'scan':          scanidlist,
             'specmode':      inputs.specmode if inputs.specmode != 'cont' else 'mfs',
             'gridder':       inputs.gridder,
             'pblimit':       inputs.pblimit,
@@ -299,24 +280,23 @@ class CleanBase(basetask.StandardTaskTemplate):
             'parallel':      parallel
             }
 
+        if scanidlist not in [[], None]:
+            tclean_job_parameters['scan'] = scanidlist
+
         # Set up masking parameters
         if inputs.hm_masking == 'auto':
             tclean_job_parameters['usemask'] = 'auto-multithresh'
-            # Defaults for ALMA 7m / 12m
-            if 'ALMA' in context.project_summary.observatory:
-                min_diameter = 1.e9
-                for msname in inputs.vis:
-                    min_diameter = min(min_diameter, min([antenna.diameter for antenna in context.observing_run.get_ms(msname).antennas]))
-                if min_diameter == 7.0:
-                    tclean_job_parameters['sidelobethreshold'] = 2.0
-                    tclean_job_parameters['noisethreshold'] = 3.0
-                    tclean_job_parameters['lownoisethreshold'] = 2.5
-                    tclean_job_parameters['minbeamfrac'] = 0.2
-                elif min_diameter == 12.0:
-                    tclean_job_parameters['sidelobethreshold'] = 3.0
-                    tclean_job_parameters['noisethreshold'] = 5.0
-                    tclean_job_parameters['lownoisethreshold'] = 1.5
-                    tclean_job_parameters['minbeamfrac'] = 0.3
+            sidelobethreshold, noisethreshold, lownoisethreshold, minbeamfrac = inputs.heuristics.get_autobox_params()
+            if sidelobethreshold is not None:
+                tclean_job_parameters['sidelobethreshold'] = sidelobethreshold
+            if noisethreshold is not None:
+                tclean_job_parameters['noisethreshold'] = noisethreshold
+            if lownoisethreshold is not None:
+                tclean_job_parameters['lownoisethreshold'] = lownoisethreshold
+            if minbeamfrac is not None:
+                tclean_job_parameters['minbeamfrac'] = minbeamfrac
+
+            # Override with any manual test parameters
             if inputs.hm_autotest != '':
                 hm_autotest_params = dict((key.strip(), float(value)) for key, value in [kvpair.split(':') for kvpair in inputs.hm_autotest.split(',')])
                 for key in hm_autotest_params.iterkeys():
@@ -343,6 +323,50 @@ class CleanBase(basetask.StandardTaskTemplate):
             tclean_job_parameters['restart'] = True
             tclean_job_parameters['calcpsf'] = False
             tclean_job_parameters['calcres'] = False
+
+        # Additional heuristics or task parameters
+        if inputs.cyclefactor:
+            tclean_job_parameters['cyclefactor'] = inputs.cyclefactor
+        else:
+            # Call first and assign to variable to avoid calling slow methods twice
+            cyclefactor = inputs.heuristics.cyclefactor()
+            if cyclefactor:
+                tclean_job_parameters['cyclefactor'] = cyclefactor
+
+        if inputs.cycleniter:
+            tclean_job_parameters['cycleniter'] = inputs.cycleniter
+        else:
+            cycleniter = inputs.heuristics.cycleniter()
+            if cycleniter:
+                tclean_job_parameters['cycleniter'] = cycleniter
+
+        if inputs.scales:
+            tclean_job_parameters['scales'] = inputs.scales
+        else:
+            scales = inputs.heuristics.scales()
+            if scales:
+                tclean_job_parameters['scales'] = scales
+
+        if inputs.uvrange:
+            tclean_job_parameters['uvrange'] = inputs.uvrange
+        else:
+            uvrange = inputs.heuristics.uvrange()
+            if uvrange:
+                tclean_job_parameters['uvrange'] = uvrange
+
+        if inputs.uvtaper:
+            tclean_job_parameters['uvtaper'] = inputs.uvtaper
+        else:
+            uvtaper = inputs.heuristics.uvtaper()
+            if uvtaper:
+                tclean_job_parameters['uvtaper'] = uvtaper
+
+        if inputs.reffreq:
+            tclean_job_parameters['reffreq'] = inputs.reffreq
+        else:
+            reffreq = inputs.heuristics.reffreq()
+            if reffreq:
+                tclean_job_parameters['reffreq'] = reffreq
 
         job = casa_tasks.tclean(**tclean_job_parameters)
         tclean_result = self._executor.execute(job)
@@ -381,9 +405,12 @@ class CleanBase(basetask.StandardTaskTemplate):
                          type='image', iter=iter, multiterm=result.multiterm)
 
             # Store the PB corrected image.
-            set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
-                         type='pbcorimage', iter=iter, multiterm=result.multiterm)
-            result.set_image(iter=iter, image=pbcor_image_name)
+            if os.path.exists(pbcor_image_name):
+                set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
+                             type='pbcorimage', iter=iter, multiterm=result.multiterm)
+                result.set_image(iter=iter, image=pbcor_image_name)
+            else:
+                result.set_image(iter=iter, image=image_name)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
@@ -438,7 +465,9 @@ def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=Non
             if spw:
                 info['spw'] = spw
             if field:
-                info['field'] = field
+                # TODO: Find common key calculation. Long VLASS lists cause trouble downstream.
+                #       Truncated list may cause duplicates.
+                info['field'] = field.split(',')[0]
             if type:
                 info['type'] = type
             if iter is not None:

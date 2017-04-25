@@ -213,13 +213,16 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
             # Generate flag command file
             filename = ("%s_ant%d_field%d_spw%d_blflag.txt" % \
                         (os.path.basename(msobj.work_data), antid, fieldid, spwid))
-            self.generateFlagCommandFile(datatable, msobj, antid, fieldid, spwid,
+            do_flag = self.generateFlagCommandFile(datatable, msobj, antid, fieldid, spwid,
                                          pollist, filename)
             if not os.path.exists(filename):
                 raise RuntimeError, 'Failed to create flag command file %s' % filename
-            flagdata_apply_job = casa_tasks.flagdata(vis=filename_out, mode='list',
-                                                     inpfile=filename, action='apply')
-            self._executor.execute(flagdata_apply_job)
+            if do_flag:
+                flagdata_apply_job = casa_tasks.flagdata(vis=filename_out, mode='list',
+                                                         inpfile=filename, action='apply')
+                self._executor.execute(flagdata_apply_job)
+            else:
+                LOG.info("No flag command in %s. Skip flagging." % filename)
 
 
         end_time = time.time()
@@ -745,6 +748,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
             msobj: MS instance to summarize flag
             antid, fieldid, spwid: ANTENNA, FIELD_ID and IF to summarize
             filename: output flag command file name
+        Returns if there is any valid flag command in file.
         """
         dt_ids = common.get_index_list_for_ms(datatable, [msobj.name],
                                               [antid], [fieldid], [spwid])
@@ -753,6 +757,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
         polids = [ddobj.get_polarization_id(pol) for pol in pollist]
         base_selection = "antenna='%s&&&' spw='%d' field='%d'" % (ant_name, spwid, fieldid)
         time_unit = datatable.tb1.getcolkeyword('TIME', 'UNIT')
+        valid_flag_commands = False
         with open(filename, "w") as fout:
             # header part
             fout.write("#"*60+"\n")
@@ -794,6 +799,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                         flagged_pols.append(pollist[idx])
                 if (len(flagged_pols)==0): # no flag in selcted pols
                     continue
+                valid_flag_commands = True
                 if len(flagged_pols)!=len(pollist):
                     line.append("correlation='%s'" % ','.join(flagged_pols))
                 timeval = datatable.getcell('TIME', ID)
@@ -804,3 +810,4 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate):
                                                 casatools.quanta.time(qtime_e, prec=9, form="ymd")[0]),
                          "reason='blflag'"]
                 fout.write(str(" ").join(line)+"\n")
+        return valid_flag_commands

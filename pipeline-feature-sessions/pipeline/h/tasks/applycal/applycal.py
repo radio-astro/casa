@@ -169,6 +169,12 @@ class Applycal(basetask.StandardTaskTemplate):
         task_args['antenna'] = '*&*'
         return task_args
 
+    def _get_flagsum_arg(self, **kwargs):
+        return kwargs
+
+    def _tweak_flagkwargs(self, template):
+        return template
+
     def prepare(self):
         inputs = self.inputs
 
@@ -217,9 +223,13 @@ class Applycal(basetask.StandardTaskTemplate):
         # if requested, schedule additional flagging tasks to determine
         # statistics
         if inputs.flagsum:
+            # 20170406 TN
+            # flagdata task arguments are indirectly given so that sd applycal task is
+            # able to edit them
+            flagsum_args = self._get_flagsum_arg(vis=inputs.vis, mode='summary')
             # schedule a flagdata summary jobs either side of the applycal jobs
-            jobs.insert(0, casa_tasks.flagdata(vis=inputs.vis, mode='summary', name='before'))
-            jobs.append(casa_tasks.flagdata(vis=inputs.vis, mode='summary', name='applycal'))
+            jobs.insert(0, casa_tasks.flagdata(name='before', **flagsum_args))
+            jobs.append(casa_tasks.flagdata(name='applycal', **flagsum_args))
 
             if inputs.flagdetailedsum:
                 # Schedule a flagdata job to determine flagging stats per spw
@@ -227,6 +237,11 @@ class Applycal(basetask.StandardTaskTemplate):
                 ms = inputs.context.observing_run.get_ms(inputs.vis)
                 flagkwargs = ["spw='{!s}' fieldcnt=True mode='summary' name='AntSpw{:0>3}'".format(spw.id, spw.id)
                               for spw in ms.get_spectral_windows()]
+
+                # 20170406 TN
+                # Tweak flagkwargs (default is do nothing)
+                flagkwargs = self._tweak_flagkwargs(flagkwargs)
+
                 jobs.append(casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs, flagbackup=False))
 
         # execute the jobs and capture the output

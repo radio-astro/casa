@@ -47,6 +47,13 @@ class PipelineManifest(object):
                 caltables_dict[session.attrib['name']] = caltable.attrib['name']
         return caltables_dict
 
+    def add_ms (self, session, asdm_name, ms_file):
+	"""
+        Add an alternative ASDM element to a SESSION element
+	"""
+        asdm = eltree.SubElement (session, "asdm", name=asdm_name)
+	eltree.SubElement(asdm, "finalms", name=ms_file)
+
     def add_asdm (self, session, asdm_name, flags_file, calapply_file):
 	"""
         Add an ASDM element to a SESSION element

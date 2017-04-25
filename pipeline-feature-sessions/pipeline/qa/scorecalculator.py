@@ -39,6 +39,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_file_exists',
            'score_path_exists',
            'score_flags_exist',
+           'score_mses_exist',
            'score_applycmds_exist',
            'score_caltables_exist',
            'score_setjy_measurements',
@@ -1338,6 +1339,44 @@ def score_file_exists(filedir, filename, filetype):
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
+@log_qa
+def score_mses_exist(filedir, visdict):
+    """
+    Score the existence of the flagging products files 
+        1.0 if they all exist
+        n / nexpected if some of them exist
+        0.0 if none exist
+    """
+
+    nexpected = len(visdict)
+    nfiles = 0
+    missing = []
+
+    for visname in visdict:
+        file_path = os.path.join(filedir, os.path.basename(visdict[visname]))
+        if os.path.exists(file_path):
+            nfiles += 1
+        else:
+            missing.append(os.path.basename(visdict[visname]))
+
+    if nfiles <= 0:
+        score = 0.0
+        longmsg = 'Final ms files %s are missing' % (','.join(missing))
+        shortmsg = 'Missing final ms files'
+    elif nfiles < nexpected:
+        score = float(nfiles) / float(nexpected)
+        longmsg = 'Final ms files %s are missing' % (','.join(missing))
+        shortmsg = 'Missing final ms files'
+    else:
+        score = 1.0
+        longmsg = 'No missing final ms  files'
+        shortmsg = 'No missing final ms files'
+
+    origin = pqa.QAOrigin(metric_name='score_mses_exist',
+                          metric_score=len(missing),
+                          metric_units='Number of missing ms product files')
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
 
 @log_qa
 def score_flags_exist(filedir, visdict):

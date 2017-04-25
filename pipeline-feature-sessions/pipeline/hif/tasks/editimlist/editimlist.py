@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import print_function  # get python 3 print function
 import os
 
 import pipeline.infrastructure as infrastructure
@@ -6,12 +7,14 @@ import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from .resultobjects import EditimlistResult
 from pipeline.hif.tasks.makeimlist.cleantarget import CleanTarget
+from pipeline.hif.heuristics import imageparams_factory
 
 LOG = infrastructure.get_logger(__name__)
 
 class EditimlistInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None,
+                 search_radius_arcsec=None,
                  cell=None,
                  cyclefactor=None,
                  cycleniter=None,
@@ -29,12 +32,14 @@ class EditimlistInputs(basetask.StandardInputs):
                  nterms=None,
                  parameter_file=None,
                  phasecenter=None,
+                 reffreq=None,
                  robust=None,
                  scales=None,
                  specmode=None,
                  spw=None,
                  start=None,
                  stokes=None,
+                 threshold=None,
                  uvtaper=None,
                  uvrange=None,
                  width=None,
@@ -45,7 +50,8 @@ class EditimlistInputs(basetask.StandardInputs):
         keys_to_consider = ('field', 'intent', 'spw', 'cell', 'deconvolver', 'imsize',
                             'phasecenter', 'specmode', 'gridder', 'imagename', 'scales',
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
-                            'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask')
+                            'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
+                            'search_radius_arcsec', 'threshold', 'reffreq')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -90,51 +96,93 @@ class Editimlist(basetask.StandardTaskTemplate):
         target = dict()
         inputs.editmode = 'add' if not inputs.editmode else inputs.editmode
 
-        if not isinstance(inputs.field, list):
-            LOG.error('field type for hif_editimlist is not a list.')
-
         ms = self.inputs.context.observing_run.get_ms(inputs.vis[0])
         fieldnames = []
-        for fid in inputs.field:
-            if isinstance(fid, int):
-                fieldobj = ms.get_fields(field_id=int(fid))
-                fieldnames.append(fieldobj[0].name)
+        if type(inputs.field) is not type(None):
+            for fid in inputs.field:
+                if isinstance(fid, int):
+                    fieldobj = ms.get_fields(field_id=fid)
+                    fieldnames.append(fieldobj[0].name)
+                else:
+                    fieldnames.append(fid)
+
+            if len(fieldnames) > 1:
+                fieldnames = [','.join(fieldnames)]
+
+        target = CleanTarget()
+        iph = imageparams_factory.ImageParamsHeuristicsFactory()
+        # The default spw range for VLASS is 2~17. hif_makeimages() needs an csv list.
+        # We set the target spw before the heuristics object because the heursitics class
+        # uses it in initialization.
+        target['spw'] = '2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17' if not inputs.spw else inputs.spw
+        target['phasecenter'] = inputs.phasecenter
+        th = target['heuristics'] = iph.getHeuristics(vislist=inputs.vis, spw=inputs.spw, observing_run=inputs.context.observing_run, imaging_mode='VLASS')
+        target['threshold'] = th.threshold() if not inputs.threshold else inputs.threshold
+        target['reffreq'] = th.reffreq() if not inputs.reffreq else inputs.reffreq
+        target['niter'] = th.niter_correction(None, None, None, None, None) if not inputs.niter else inputs.niter
+        target['cyclefactor'] = th.cyclefactor() if not inputs.cyclefactor else inputs.cyclefactor
+        target['cycleniter'] = th.cycleniter() if not inputs.cycleniter else inputs.cycleniter
+        target['scales'] = th.scales() if not inputs.scales else inputs.scales
+        target['uvtaper'] = th.uvtaper() if not inputs.uvtaper else inputs.uvtaper
+        target['uvrange'] = th.uvrange() if not inputs.uvrange else inputs.uvrange
+        target['deconvolver'] = th.deconvolver(None, None) if not inputs.deconvolver else inputs.deconvolver
+        target['robust'] = th.robust(None) if not inputs.robust else inputs.robust
+        target['mask'] = th.mask() if not inputs.mask else inputs.mask
+        target['specmode'] = th.specmode() if not inputs.specmode else inputs.specmode
+        target['gridder'] = th.gridder() if not inputs.gridder else inputs.gridder
+        buffer_arcsec = th.buffer_radius() if not inputs.search_radius_arcsec else inputs.search_radius_arcsec
+        target['cell'] = th.cell(None, None, None) if not inputs.cell else inputs.cell
+        target['imsize'] = th.imsize(None, None, None, None, None) if not inputs.imsize else inputs.imsize
+        target['intent'] = th.inent() if not inputs.intent else inputs.intent
+        target['nterms'] = th.nterms() if not inputs.nterms else inputs.nterms
+        target['stokes'] = th.stokes() if not inputs.stokes else inputs.stokes
+        #------------------------------
+        target['nchan'] = inputs.nchan
+        target['nbin'] = inputs.nbin
+        target['start'] = inputs.start
+        target['width'] = inputs.width
+        target['imagename'] = inputs.imagename
+
+#        inputsdict = inputs.__dict__
+#        for parameter in inputsdict.keys():
+#            if inputsdict[parameter] and not parameter.startswith('_') and (parameter in target):
+#                inputspar_value = eval('inputs.' + parameter)
+#                # print(parameter + '=' + str(inputspar_value))
+#                cmd = "target['" + parameter + "'] = inputs." + parameter
+#                # print(cmd)
+#                exec cmd
+
+        # set the field name list in the image list target
+        if fieldnames:
+            target['field'] = fieldnames[0]
+        else:
+            if type(target['phasecenter']) is not type(None):
+                cellsize_arcsec = float(target['cell'].strip('arcsec'))
+                dist = ((target['imsize'][0] / 2.) * cellsize_arcsec) + float(buffer_arcsec)
+                dist_arcsec = str(dist) + 'arcsec'
+                found_fields = target['heuristics'].find_fields(distance=dist_arcsec, phase_center=target['phasecenter'])
+                fieldnames = []
+                if type(found_fields) is not type(None):
+                    for fid in found_fields:
+                        fieldobj = ms.get_fields(field_id=fid)
+                        fieldnames.append(fieldobj[0].name)
+
+                    if len(fieldnames) > 1:
+                        fieldnames = [','.join(fieldnames)]
+
+                    target['field'] = fieldnames[0]
+
+        # import pprint; pprint.pprint(target)
+        try:
+            if len(target['field']) > 0:
+                result.add_target(target)
             else:
-                fieldnames.append(fid)
+                raise
+        except TypeError:
+            LOG.error('No fields to image.')
 
-        for targetname in fieldnames:
-            if inputs.editmode == 'add':
-                target = CleanTarget()
-                target['deconvolver'] = '' if not inputs.deconvolver else None
-                target['scales'] = [0] if not inputs.scales else None
-                target['robust'] = 1.0 if not inputs.robust else None
-                target['uvtaper'] = [] if not inputs.uvtaper else None
-                target['niter'] = 20000 if not inputs.niter else None
-                target['cycleniter'] = -1 if not inputs.cycleniter else None
-                target['cyclefactor'] = 3.0 if not inputs.cyclefactor else None
-                target['mask'] = '' if not inputs.mask else None
-                target['specmode'] = 'cont' if not inputs.specmode else None
-                target['field'] = targetname
-                target['imagename'] = targetname
-                inputsdict = inputs.__dict__
-                for parameter in inputsdict.keys():
-                    if inputsdict[parameter] and parameter not in ('field', 'imagename') and \
-                            not parameter.startswith('_') and (parameter in target):
-                        inputspar_value = eval('inputs.' + parameter)
-                        # print(parameter + '=' + str(inputspar_value))
-                        cmd = "target['" + parameter + "'] = inputs." + parameter
-                        # print(cmd)
-                        exec cmd
-            elif inputs.editmode == 'edit':
-                for parameter in inputs.keys_to_change:
-                    if parameter is not None and parameter not in ('editmode', 'field', 'imagename'):
-                        # inputspar_value = eval('inputs.' + parameter)
-                        # print(parameter + '=' + str(inputspar_value))
-                        cmd = 'target["' + parameter + '"] = inputs.' + parameter
-                        # print(cmd)
-                        exec cmd
-
-            result.add_target(target)
+        if not target['imagename']:
+            LOG.error('No imagename provided.')
 
         return result
 

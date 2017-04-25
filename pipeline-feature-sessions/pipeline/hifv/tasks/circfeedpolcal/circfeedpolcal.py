@@ -8,12 +8,14 @@ from pipeline.hif.tasks.polarization import polarization
 import pipeline.hif.tasks.gaincal as gaincal
 import pipeline.hif.heuristics.findrefant as findrefant
 import pipeline.infrastructure.callibrary as callibrary
+from pipeline.hifv.tasks.setmodel.setmodel import find_standards, standard_sources
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class CircfeedpolcalResults(polarization.PolarizationResults):
-    def __init__(self, final=None, pool=None, preceding=None, vis=None, refant=None, calstrategy=None):
+    def __init__(self, final=None, pool=None, preceding=None, vis=None,
+                 refant=None, calstrategy=None, caldictionary=None):
 
         if final is None:
             final = []
@@ -25,6 +27,8 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
             refant = ''
         if calstrategy is None:
             calstrategy = ''
+        if caldictionary is None:
+            caldictionary = {}
 
         super(CircfeedpolcalResults, self).__init__()
         self.vis = vis
@@ -33,6 +37,7 @@ class CircfeedpolcalResults(polarization.PolarizationResults):
         self.preceding = preceding[:]
         self.refant = refant
         self.calstrategy = calstrategy
+        self.caldictionary = caldictionary
 
     def merge_with_context(self, context):
         """
@@ -72,12 +77,14 @@ class Circfeedpolcal(polarization.Polarization):
 
         self.RefAntOutput = ['']
         self.calstrategy = ''
+        self.caldictionary = {}
 
         if [intent for intent in intents if 'POL' in intent]:
             self.do_prepare()
 
         return CircfeedpolcalResults(vis=self.inputs.vis, pool=self.callist, final=self.callist,
-                                     refant=self.RefAntOutput[0].lower(), calstrategy=self.calstrategy)
+                                     refant=self.RefAntOutput[0].lower(), calstrategy=self.calstrategy,
+                                     caldictionary=self.caldictionary)
 
     def analyse(self, results):
         return results
@@ -91,7 +98,7 @@ class Circfeedpolcal(polarization.Polarization):
         self.RefAntOutput = refantobj.calculate()
 
         # setjy for amplitude/flux calibrator (VLASS 3C286 or 3C48)
-        fluxcal = self._do_setjy()
+        fluxcalfieldname, fluxcalfieldid, fluxcal = self._do_setjy()
 
         tablesToAdd = ((self.inputs.vis + '.kcross', 'kcross'),
                        (self.inputs.vis + '.D2', 'polarization'),
@@ -104,12 +111,25 @@ class Circfeedpolcal(polarization.Polarization):
         #               solint='inf')
 
         # First pass R-L delay
-        self.do_gaincal(tablesToAdd[0][0], field=fluxcal)
+        self.do_gaincal(tablesToAdd[0][0], field=fluxcalfieldname)
 
-        # Determine number of scans with POLLEAKGE intent
+        # Determine number of scans with POLLEAKGE intent and use the first POLLEAKAGE FIELD
+        polleakagefield = ''
+        polleakagefields = m.get_fields(intent='POLLEAKAGE')
+        try:
+            polleakagefield = polleakagefields[0].name
+        except:
+            # If no POLLEAKAGE intent is associated with a field, then use the flux calibrator
+            polleakagefield = fluxcalfieldname
+            LOG.warning("No POLLEAKGE intents found.")
+        if len(polleakagefields) > 1:
+            # Use the first pol leakage field
+            polleakagefield = polleakagefields[0].name
+            LOG.info("More than one field with intent of POLLEAKGE.  Using field {!s}".format(polleakagefield))
+
         polleakagescans = []
         poltype = 'Df+QU'  # Default
-        for scan in m.scans:
+        for scan in m.get_scans(field=polleakagefield):
             if 'POLLEAKAGE' in scan.intents:
                 polleakagescans.append((scan.id, scan.intents))
 
@@ -124,14 +144,30 @@ class Circfeedpolcal(polarization.Polarization):
             self.calstrategy = "Using Calibration Strategy C1: Less than 3 slices CALIBRATE_POL_LEAKAGE, KCROSS, Df, Xf."
         LOG.info(self.calstrategy)
 
+        # Determine the first POLANGLE FIELD
+        polanglefield = ''
+        polanglefields = m.get_fields(intent='POLANGLE')
+        try:
+            polanglefield = polanglefields[0].name
+        except:
+            # If no POLANGLE intent is associated with a field, then use the flux calibrator
+            polanglefield = fluxcalfieldname
+            LOG.warning("No POLANGLE intents found.")
+        if len(polanglefields) > 1:
+            # Use the first pol angle field
+            polanglefield = polanglefields[0].name
+            LOG.info("More than one field with intent of POLANGLE.  Using field {!s}".format(polanglefield))
+
+
+
         # D-terms in 16MHz pieces, minsnr of 5.0
-        self.do_polcal(tablesToAdd[1][0], poltype=poltype, field='',
+        self.do_polcal(tablesToAdd[1][0], poltype=poltype, field=polleakagefield,
                        intent='CALIBRATE_POL_LEAKAGE#UNSPECIFIED',
                        gainfield=[''], spwmap=[], solint='inf,16MHz', minsnr=5.0)
 
         # 2MHz pieces, minsnr of 3.0
-        self.do_polcal(tablesToAdd[2][0], poltype='Xf', field=fluxcal,
-                       intent='',
+        self.do_polcal(tablesToAdd[2][0], poltype='Xf', field=polanglefield,
+                       intent='CALIBRATE_POL_ANGLE#UNSPECIFIED',
                        gainfield=[''], spwmap=[], solint='inf,2MHz', minsnr=3.0)
 
         for (addcaltable, caltype) in tablesToAdd:
@@ -140,8 +176,16 @@ class Circfeedpolcal(polarization.Polarization):
             calapp = callibrary.CalApplication(calto, calfrom)
             self.callist.append(calapp)
 
+        self.caldictionary = {'fluxcalfieldname' : fluxcalfieldname,
+                              'fluxcalfieldid'   : fluxcalfieldid,
+                              'fluxcal'          : fluxcal,
+                              'polanglefield'    : polanglefield,
+                              'polleakagefield'  : polleakagefield}
 
     def do_gaincal(self, caltable, field=''):
+
+        m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
+        minBL_for_cal = m.vla_minbaselineforcal()
 
         # Similar inputs to hifa/linpolcal.py
         task_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context,
@@ -156,6 +200,7 @@ class Circfeedpolcal(polarization.Polarization):
                                                   gaintype='KCROSS',
                                                   combine='scan',
                                                   refant=self.RefAntOutput[0].lower(),
+                                                  minblperant=minBL_for_cal,
                                                   parang=True,
                                                   append=False)
 
@@ -209,26 +254,41 @@ class Circfeedpolcal(polarization.Polarization):
         return result
 
     def _do_setjy(self):
-        '''
+        """
         The code in this private class method are (for now) specific to VLASS
         requirements and heuristics.
 
         Returns: string name of the amplitude flux calibrator
 
-        '''
+        """
 
         m = self.inputs.context.observing_run.get_ms(self.inputs.vis)
 
-        fluxfields = m.get_fields(intent='AMPLITUDE')
-        fluxfieldnames = [amp.name for amp in fluxfields]
+        # fluxfields = m.get_fields(intent='AMPLITUDE')
+        # fluxfieldnames = [amp.name for amp in fluxfields]
+
+        standard_source_names, standard_source_fields = standard_sources(self.inputs.vis)
 
         fluxcal = ''
+        fluxcalfieldid = None
+        fluxcalfieldname = ''
+        for i, fields in enumerate(standard_source_fields):
+            for myfield in fields:
+                if standard_source_names[i] in ('3C48','3C286') and 'AMPLITUDE' in m.get_fields(field_id=myfield)[0].intents:
+                    fluxcalfieldid = myfield
+                    fluxcalfieldname = m.get_fields(field_id=myfield)[0].name
+                    fluxcal = standard_source_names[i]
+
+
+        """
         for field in fluxfieldnames:
             if fluxcal == '' and ('3C286' in field):
                 fluxcal = field
             elif fluxcal == '' and ('1331+3030' in field):
                 fluxcal = field
             elif fluxcal == '' and ('3C48' in field):
+                fluxcal = field
+            elif fluxcal == '' and ('J0137+3309' in field):
                 fluxcal = field
             elif fluxcal != '' and ('3C48' in field or '3C286' in field):
                 LOG.info("Two flux calibrators found, selecting 3C286!")
@@ -238,16 +298,19 @@ class Circfeedpolcal(polarization.Polarization):
                     fluxcal = '3C286'
                 if '1331+3030' in fluxfieldnames:
                     fluxcal = '1331+3030'
+                if '"0137+331=3C48"' in fluxfieldnames:
+                    fluxcal = '"0137+331=3C48"'
+        """
 
-        delmodjob = casa_tasks.delmod(vis=self.inputs.vis, field='')
-        self._executor.execute(delmodjob)
+        # delmodjob = casa_tasks.delmod(vis=self.inputs.vis, field='')
+        # self._executor.execute(delmodjob)
 
         try:
             task_args = {}
-            if '3C286' or '1331+3030' in fluxcal:
+            if fluxcal in ('3C286', '1331+3030', '"1331+305=3C286"', 'J1331+3030'):
                 d0 = 33.0 * math.pi / 180.0
                 task_args = {'vis'           : self.inputs.vis,
-                             'field'         : fluxcal,
+                             'field'         : fluxcalfieldname,
                              'standard'      : 'manual',
                              'spw'           : '',
                              'fluxdensity'   : [8.30468,0,0,0],
@@ -257,11 +320,11 @@ class Circfeedpolcal(polarization.Polarization):
                              'polangle'      : [d0,0],
                              'rotmeas'       : 0,
                              'scalebychan'   : True,
-                             'usescratch'    : False}
+                             'usescratch'    : True}
 
-            elif '3C48' in fluxcal:
+            elif fluxcal in ('3C48', 'J0137+3309', '0137+3309', '"0137+331=3C48"'):
                 task_args = {'vis'           : self.inputs.vis,
-                             'field'         : fluxcal,
+                             'field'         : fluxcalfieldname,
                              'spw'           : '',
                              'selectdata'    : False,
                              'timerange'     : '',
@@ -282,7 +345,7 @@ class Circfeedpolcal(polarization.Polarization):
                              'fluxdict'      : {},
                              'useephemdir'   : False,
                              'interpolation' : 'nearest',
-                             'usescratch'    : False}
+                             'usescratch'    : True}
             else:
                 LOG.error("No known flux calibrator found - please check the data.")
 
@@ -293,5 +356,5 @@ class Circfeedpolcal(polarization.Polarization):
             print(e)
             return None
 
-        return fluxcal
+        return fluxcalfieldname, fluxcalfieldid, fluxcal
 
