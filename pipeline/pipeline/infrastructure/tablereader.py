@@ -41,6 +41,7 @@ def _get_science_goal_value(science_goals, goal_keyword):
             continue
         value = science_goal.split('=')[1].replace(' ', '')
         return value
+    return value
 
 
 class ObservingRunReader(object):
@@ -288,8 +289,19 @@ class MeasurementSetReader(object):
             # Likewise for the ASDM_EXECBLOCK table
             LOG.info('Populating ms.polarizations...')
             ms.polarizations = PolarizationTable.get_polarizations(ms)
-            LOG.info('Populating ms.representative_target ...')
-            ms.representative_target = SBSummaryTable.get_sbsummary_info(ms, msmd.observatorynames())
+            # For now the SBSummary table is ALMA specific
+            if 'ALMA' in msmd.observatorynames():
+                sbinfo = SBSummaryTable.get_sbsummary_info(ms, msmd.observatorynames())
+                if not sbinfo[0]:
+                    LOG.warn('Unable to identify representative target for %s' % (ms.basename))
+                else:
+                    LOG.info('Populating ms.representative_target ...')
+                    ms.representative_target = (sbinfo[0], sbinfo[1], sbinfo[2])
+                if not sbinfo[3] or sbinfo[4]:
+                    LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
+                else:
+                    LOG.info('Populating ms.science_goals ...')
+                    ms.science_goals = (sbinfo[3], sbinfo[4])
             LOG.info('Populating ms.array_name ...')
             ms.array_name = ExecblockTable.get_execblock_info(ms)
 
@@ -495,12 +507,12 @@ class SBSummaryTable(object):
             return sbsummary_info[0]
         except:
             if 'ALMA' in obsnames:
-                LOG.warn('Unable to identify the representative source for %s' % (ms.basename))
+                LOG.warn('Error reading science goals for %s' % (ms.basename))
             return (None, None, None)
 
     @staticmethod
-    def _create_sbsummary_info(repSource, repFrequency, repBandwidth):
-       return (repSource, repFrequency, repBandwidth) 
+    def _create_sbsummary_info(repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution):
+       return (repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution) 
 
     @staticmethod
     def _read_table(ms):
@@ -519,27 +531,50 @@ class SBSummaryTable(object):
                 scienceGoals = table.getcol('scienceGoal')
                 numScienceGoals = table.getcol('numScienceGoal')
             except:
-                LOG.warn('Error reading representative source information for %s' % (ms.basename))
+                #LOG.warn('Error reading science goals for %s' % (ms.basename))
                 raise 
 
             repSources = []
             repFrequencies = []
             repBandWidths = []
+            minAngResolutions = []
+            maxAngResolutions = []
             for i in range(table.nrows()):
+
                 # Create source
                 repSource = _get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
                     'representativeSource')
                 repSources.append(repSource)
+
                 # Create frequency
                 repFrequency = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
                     'representativeFrequency'))
+                if repFrequency['value'] <= 0.0 or repFrequency['unit'] == '':
+                    repFrequency = None
                 repFrequencies.append(repFrequency)
+
                 # Create representative bandwidth
                 repBandWidth = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
                     'representativeBandwidth'))
+                if repBandWidth['value'] <= 0.0 or repBandWidth['unit'] == '':
+                    repBandWidth = None
                 repBandWidths.append(repBandWidth)
 
-        rows = zip(repSources, repFrequencies, repBandWidths)
+                # Create minimum angular resolution
+                minAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                    'minAcceptableAngResolution'))
+                if minAngResolution['value'] <= 0.0 or minAngResolution['unit'] == '':
+                    minAngResolution = None
+                minAngResolutions.append(minAngResolution)
+
+                # Create minimum angular resolution
+                maxAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
+                    'maxAcceptableAngResolution'))
+                if maxAngResolution['value'] <= 0.0 or maxAngResolution['unit'] == '':
+                    maxAngResolution = None
+                maxAngResolutions.append(maxAngResolution)
+
+        rows = zip(repSources, repFrequencies, repBandWidths, minAngResolutions, maxAngResolutions)
         return rows
 
 class ExecblockTable(object):
