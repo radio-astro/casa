@@ -352,6 +352,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Quantity qa;
 		  casacore::Quantity::read(qa,strthresh);
 		  threshold = qa.getValue(Unit("Jy"));
+
+
+		  Float oldcyclethreshold = cyclethreshold;
 		  casacore::Quantity::read(qa,strcycthresh);
 		  cyclethreshold = qa.getValue(Unit("Jy"));
 
@@ -359,7 +362,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    itsLoopController->changeNiter( iterdone+iterleft );
 		    itsLoopController->changeCycleNiter( cycleniter );
 		    itsLoopController->changeThreshold( threshold );
-		    itsLoopController->changeCycleThreshold( cyclethreshold );
+		    if( fabs( cyclethreshold - oldcyclethreshold ) > 1e-06)
+		      itsLoopController->changeCycleThreshold( cyclethreshold );
 		    }
 
 		  Bool alldone=true;
