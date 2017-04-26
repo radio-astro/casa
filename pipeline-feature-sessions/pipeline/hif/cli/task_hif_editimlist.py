@@ -3,7 +3,7 @@ import sys
 import pipeline.h.cli.utils as utils
 
 
-def hif_editimlist(vis=None,
+def hif_editimlist(imagename=None,
                    search_radius_arcsec=None,
                    cell=None,
                    cyclefactor=None,
@@ -11,7 +11,6 @@ def hif_editimlist(vis=None,
                    deconvolver=None,
                    editmode=None,
                    field=None,
-                   imagename=None,
                    imsize=None,
                    intent=None,
                    gridder=None,

@@ -181,7 +181,7 @@ def flagcolortable(flagpct):
 		<%
 		    Nplots = 1
 		    if pcontext.project_summary.telescope == 'VLA' or pcontext.project_summary.telescope == 'EVLA':
-                Nplots = (len(flagtable.keys())/30)+1
+                Nplots = 1
 		    endif
 
 		%>

@@ -5,14 +5,15 @@
          xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <task type="function" name="hif_editimlist" category="pipeline">
-        <shortdescription>Edit list of clean images to be produced</shortdescription>
+        <shortdescription>Add to a list of images to be produced with hif_makeimages()</shortdescription>
         <description>
-            Edit a list of images to be cleaned.
+            Add to a list of images to be produced with hif_makeimages(), which uses hif_tclean() to invoke CASA tclean.  
+	    Many of the hif_editimlist() inputs map directly to tclean parameters.
         </description>
         <input>
 
-            <param type="stringArray" name="vis" subparam="true">
-                <description>List of input measurement sets</description>
+            <param type="string" name="imagename">
+                <description>Prefix for output image names.</description>
                 <value></value>
             </param>
 
@@ -35,33 +36,18 @@
                 <value></value>
             </param>
 
-            <param type="string" name="deconvolver" subparam="true">
+            <param type="string" name="deconvolver">
                 <description>Minor cycle algorithm (multiscale or mtmfs)</description>
                 <value></value>
-                <allowed kind="enum">
-                    <value></value>
-                    <value>multiscale</value>
-                    <value>mtmfs</value>
-                </allowed>
             </param>
 
             <param type="string" name="editmode">
                 <description>The edit mode of the task (e.g. add, edit)</description>
                 <value></value>
-                <allowed kind="enum">
-                    <value></value>
-                    <value>add</value>
-                    <value>edit</value>
-                </allowed>
             </param>
 
-            <param type="stringArray" name="field" subparam="true">
+            <param type="stringArray" name="field">
                 <description>Set of data selection field names or ids, \'\' for all</description>
-                <value></value>
-            </param>
-
-            <param type="string" name="imagename" subparam="true">
-                <description>Prefix for output image names, \'\' for default.</description>
                 <value></value>
             </param>
 
@@ -70,7 +56,7 @@
                 <value></value>
             </param>
 
-            <param type="string" name="intent" subparam="true">
+            <param type="string" name="intent">
                 <description>Set of data selection intents</description>
                 <value></value>
             </param>
@@ -78,11 +64,6 @@
             <param type="string" name="gridder">
                 <description>Name of the gridder to use with tclean</description>
                 <value></value>
-                <allowed kind="enum">
-                    <value></value>
-                    <value>mosaic</value>
-                    <value>awproject</value>
-                </allowed>
             </param>
 
             <param type="string" name="mask">
@@ -140,12 +121,6 @@
             <param type="string" name="specmode">
                 <description>Spectral gridding type (mfs, cont, cube, \'\' for default)</description>
                 <value></value>
-                <allowed kind="enum">
-                    <value></value>
-                    <value>mfs</value>
-                    <value>cont</value>
-                    <value>cube</value>
-                </allowed>
             </param>
 
             <param type="string" name="spw">
@@ -196,12 +171,12 @@
                 </allowed>
             </param>
 
-            <param type="bool" name="dryrun" subparam="true">
+            <param type="bool" name="dryrun">
                 <description>Run the task (False) or display the command(True)</description>
                 <value>False</value>
             </param>
 
-            <param type="bool" name="acceptresults" subparam="true">
+            <param type="bool" name="acceptresults">
                 <description>Add the results to the pipeline context</description>
                 <value>True</value>
             </param>
@@ -229,17 +204,8 @@
 
             Keyword Arguments
 
-            pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
-            determines the values of all context defined pipeline inputs automatically.
-            In 'interactive' mode the user can set the pipeline context defined
-            parameters manually. In 'getinputs' mode the user can check the settings
-            of all pipeline parameters without running the task.
-            default: 'automatic'.
-
-            vis -- The list of input measurement sets. Defaults to the list of measurement
-            sets specified in the h_init or hif_importdata sets.
-            default '': use all measurement sets in the context
-            example: 'ngc5921.ms', ['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
+            <!--TODO: add description-->
+            imagename --
 
             cell -- Cell size (x, y)
             default '' Compute cell size based on the UV coverage of all the fields
@@ -265,15 +231,6 @@
             default: [''] Fields matching matching intent, one image per target source.
             example: ['3C279'], ['Centaurus*'], ['3C279' ,'J1427-421']
 
-            <!--TODO: add description-->
-            gridder --
-
-            mask -- Used to declare whether to use a predefined mask for tclean,
-            or to use internal auto-masking, or to not mask at all.
-
-            <!--TODO: add description-->
-            imagename --
-
             imsize -- Image X and Y size in pixels or PB level for single field. The
             explicit sizes must be even and divisible by 2,3,5,7 only.
             default: '' The default values are derived as follows:
@@ -289,6 +246,12 @@
             intent -- Select intents for which associated fields will be imaged.
             default: 'TARGET'
             example: 'PHASE,BANDPASS'
+
+            <!--TODO: add description-->
+            gridder --
+
+            mask -- Used to declare whether to use a predefined mask for tclean,
+            or to use internal auto-masking, or to not mask at all.
 
             nbin -- Channel binning factors per spw
             default: '' Binning factors for each spw. Format: 'spw1:nb1,spw2:nb2,...'
@@ -313,6 +276,10 @@
             default: '' The default phase center is set to the mean of the field
             directions of all fields that are to be image together.
             example: 0, 'J2000 19h30m00 -40d00m00'
+
+	    <!-- TODO: add description-->
+	    reffreq --
+
 
             robust -- Set the Briggs robustness factor for weighting. In general,
             we choose a value that gives suitable PSF size (~2.5? for the
@@ -341,14 +308,17 @@
             default '' Starts at first input channel of the spw.
             example: '22.3GHz'
 
+            <!--TODO: add description-->
+            stokes --
+
+            <!--TODO: add description-->
+            threshold --
+
             uvtaper -- Used to set a uv-taper during clean. At mid-declinations and
             reasonable elevations, not required for the full-resolution images
             and in the QLIP. Needed when making the tapered Images for other BDPs
             (SEIP, CIP). May be useful in QLIP to control PSF at low elevations
             or in hybrid.
-
-            <!--TODO: add description-->
-            stokes --
 
             uvrange -- Select a set of uv ranges to image.
             default: '' All uv data is included
@@ -361,6 +331,13 @@
             'pilotimage' for 15 MHz / 8 channel heuristic
 
             --- pipeline task execution modes
+
+            pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+            determines the values of all context defined pipeline inputs automatically.
+            In 'interactive' mode the user can set the pipeline context defined
+            parameters manually. In 'getinputs' mode the user can check the settings
+            of all pipeline parameters without running the task.
+            default: 'automatic'.
 
             dryrun -- Run the commands (True) or generate the commands to be run but
             do not execute (False).
