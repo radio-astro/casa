@@ -45,10 +45,19 @@ def true_false_handler(self, etype, value, tb, tb_offset=None):
             print "------------------------------------------------------------------------------"
             print "Warning: CASA no longer defines T/true and F/false as synonyms for True/False"
             print "------------------------------------------------------------------------------"
-    self.showtraceback()
-    return None
+    ###
+    ### without incrementing the execution_count, you get:
+    ###
+    ###    ERROR! Session/line number was not unique in database. History logging moved to new session 51
+    ###
+    ### on the second syntax error in a row... presumably this will eventually
+    ### be fixed in ipython and then this will need to be removed... but such
+    ### is the current state of affairs in ipython 5.1.0...
+    ###
+    self.execution_count += 1
+    self.showtraceback((etype, value, tb), tb_offset=tb_offset)
 
-#_ip.set_custom_exc((BaseException,), true_false_handler)
+_ip.set_custom_exc((BaseException,), true_false_handler)
 
 
 ##
