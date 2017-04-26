@@ -64,16 +64,18 @@ class PerformanceParameters (object):
     def __init__ (self,
 
         desired_angular_resolution = '0.0arcsec',
+        min_angular_resolution = '0.0arcsec',
+        max_angular_resolution = '0.0arcsec',
         #desired_largest_scale = '0.0arcsec',
         #desired_spectral_resolution = '0.0MHz',
         #desired_sensitivity = '0.0Jy',
         #desired_dynamic_range = 1.0,
 
-        # Note: Remove frequency and bandwidth settings.
-        representative_frequency = '0.0GHz',
-        representative_bandwidth = '0.0MHz',
+        # Note: Remove frequency and bandwidth settings?
         representative_source = '',
         representative_spwid = '',
+        representative_frequency = '0.0GHz',
+        representative_bandwidth = '0.0MHz',
 
         max_cube_size = -1.0,
         max_product_size = -1.0
@@ -82,16 +84,19 @@ class PerformanceParameters (object):
 
         # QA goals
         self.desired_angular_resolution = desired_angular_resolution
+        self.min_angular_resolution = min_angular_resolution
+        self.max_angular_resolution = min_angular_resolution
         #self.desired_largest_scale = desired_largest_scale
         #self.desired_spectral_resolution = desired_spectral_resolution
         #self.desired_sensitivity = desired_sensitivity
         #self.desired_dynamic_range = desired_dynamic_range
 
         # Representative source parameters
+        # Note: Remove frequency and bandwidth settings?
+        self.representative_spwid = representative_spwid
         self.representative_source = representative_source
         self.representative_frequency = representative_frequency
         self.representative_bandwidth = representative_bandwidth
-        self.representative_spwid = representative_spwid
 
         # Product size parameters
         self.max_cube_size = max_cube_size
