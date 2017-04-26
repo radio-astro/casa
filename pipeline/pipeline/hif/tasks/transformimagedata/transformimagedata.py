@@ -21,7 +21,7 @@ class TransformimagedataResults(basetask.Results):
     def merge_with_context(self, context):
         # Check for an output vis
         if not self.ms:
-            LOG.error('No h_mssplit results to merge')
+            LOG.error('No hif_transformimagedata results to merge')
             return
 
         target = context.observing_run
