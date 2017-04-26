@@ -23,6 +23,7 @@ class MeasurementSet(object):
         self.name = name
         self.array_name = None
         self.representative_target = (None, None, None)
+        self.science_goals = (None, None)
         self.antenna_array = None
         self.data_descriptions = []
         self.spectral_windows = []
