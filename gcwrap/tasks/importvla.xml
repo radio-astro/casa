@@ -158,7 +158,7 @@ importvla(archivefiles=None,vis=None,
               be filled in the visibility data set.
       evlabands -- Use the EVLA's center frequency and bandwidths for frequencies
               specified via wavelength or band. 
-	      default =&gt; True. 
+	      default =&gt; False. 
       async --  Run asynchronously
               default = False; do not run asychronously
       </example>
