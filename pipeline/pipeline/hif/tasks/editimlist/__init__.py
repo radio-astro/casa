@@ -15,5 +15,8 @@ from . import editimlist
 #qaadapter.registry.register_to_dataset_topic(editimlist.EditimlistResults)
 
 
-weblog.add_renderer(Editimlist, basetemplates.T2_4MDetailsDefaultRenderer(uri='editimlist.mako',
-                    description='Editimlist', always_rerender=False), group_by=weblog.UNGROUPED)
+weblog.add_renderer(Editimlist,
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='editimlist.mako',
+                                                              description='Editimlist',
+                                                              always_rerender=False),
+                    group_by=weblog.UNGROUPED,)

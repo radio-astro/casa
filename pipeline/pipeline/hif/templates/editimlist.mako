@@ -1,49 +1,50 @@
 <%!
-rsc_path = ""
+rsc_path = "../"
 import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.mako"/>
 
-<%block name="title">Editimlist</%block>
+<%block name="header" />
 
-<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+<%block name="title">Edit image list</%block>
 
-<script>
-$(document).ready(function() {
-    // return a function that sets the SPW text field to the given spw
-    var createSpwSetter = function(spw) {
-        return function() {
-            // trigger a change event, otherwise the filters are not changed
-            $("#select-spw").select2("val", [spw]).trigger("change");
-        };
-    };
+<h2>Image list settings used for clean target</h2>
 
-    // create a callback function for each overview plot that will select the
-    // appropriate spw once the page has loaded
-    $(".thumbnail a").each(function (i, v) {
-        var o = $(v);
-        var spw = o.data("spw");
-        o.data("callback", createSpwSetter(spw));
-    });
-
-    $(".fancybox").fancybox({
-        type: 'image',
-        prevEffect: 'none',
-        nextEffect: 'none',
-        loop: false,
-        helpers: {
-            title: {
-                type: 'outside'
-            },
-            thumbs: {
-                width: 50,
-                height: 50,
-            }
-        }
-    });
-});
-</script>
-
-<p>Editimlist</p>
-
+%if not len(result[0].targets):
+    <p>There are no clean targets.</p>
+%else:
+    <%
+      target = result[0].targets[0]
+    %>
+    <table class="table">
+        <tr>
+            <td><strong>Image name</strong></td>
+            <td>${os.path.basename(target['imagename'])}</td>
+        </tr>
+        <tr>
+            <td><strong>Phase center</strong></td>
+            <td>${target['phasecenter']}</td>
+        </tr>
+        <tr>
+            <td><strong>Cell size</strong></td>
+            <td>${target['cell']}</td>
+        </tr>
+        <tr>
+            <td><strong>Image size</strong></td>
+            <td>${target['imsize']}</td>
+        </tr>
+        <tr>
+            <td><strong>Number of fields</strong></td>
+            <td>${len(target['field'].split(','))}</td>
+        </tr>
+        %for key in target.keys():
+            %if key in target.keys() and key not in ('imagename', 'phasecenter', 'cell', 'imsize', 'field'):
+                <tr>
+                    <td><strong>${key}</strong></td>
+                    <td>${target[key]}</td>
+                </tr>
+            %endif
+        %endfor
+    </table>
+%endif
