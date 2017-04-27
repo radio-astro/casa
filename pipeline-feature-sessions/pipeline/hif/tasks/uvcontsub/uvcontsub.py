@@ -2,51 +2,34 @@ from __future__ import absolute_import
 
 import os
 
+from parallel.parallel_task_helper import ParallelTaskHelper
+
+import pipeline.h.tasks.applycal.applycal as applycal
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
-#from pipeline.hif.tasks.applycal import applycal
-from pipeline.h.tasks.applycal import applycal
+import pipeline.infrastructure.vdp as vdp
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class UVcontSubInputs(applycal.ApplycalInputs):
+    applymode = vdp.VisDependentProperty(default='calflag')
+    flagsum = vdp.VisDependentProperty(default='flagsum')
+    intent = vdp.VisDependentProperty(default='TARGET')
 
-    # Property overrides
-    applymode = basetask.property_with_default('applymode','calflag')
-
-    # Would like to set this to False in future but this causes
-    # an issue with the results handling.
-    flagsum = basetask.property_with_default('flagsum', False)
-    #flagbackup = basetask.property_with_default('flagbackup', False)
-
-    """
-    Input for the UVcontSub task
-    """
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None,
-                 #
-                 vis=None,
-                 # data selection arguments
-                 field=None, spw=None, antenna=None, intent=None,
-                 # preapply calibrations
-                 opacity=None, parang=None, applymode=None, calwt=None,
-                 flagbackup=None, flagsum=None, flagdetailedsum=None):
-        self._init_properties(vars())
-
-    @property
-    def intent(self):
-        return self._intent
-
-    @intent.setter
-    def intent(self, value):
-        if value is None:
-            value = 'TARGET'
-        self._intent = value.replace('*', '')
+    def __init__(self, context, output_dir=None, vis=None, field=None, spw=None, antenna=None, intent=None,
+                 opacity=None, parang=None, applymode=None, flagbackup=None, flagsum=None, flagdetailedsum=None):
+        super(UVcontSubInputs, self).__init__(context, output_dir=output_dir, vis=vis, field=field, spw=spw,
+                                              antenna=antenna, intent=intent, opacity=opacity, parang=parang,
+                                              applymode=applymode, flagbackup=flagbackup, flagsum=flagsum,
+                                              flagdetailedsum=flagdetailedsum)
 
 
 # Register this as an imaging MS(s) preferred task
 api.ImagingMeasurementSetsPreferred.register(UVcontSubInputs)
+
 
 class UVcontSub(applycal.Applycal):
     Inputs = UVcontSubInputs
@@ -54,29 +37,26 @@ class UVcontSub(applycal.Applycal):
     # Override prepare method with one which sets and unsets the VI1CAL
     # environment variable.
     def prepare(self):
+        remove_vi1cal = False
+        if 'VI1CAL' not in os.environ:
+            os.environ['VI1CAL'] = '1'
+            remove_vi1cal = True
 
         try:
-            vi1cal =  os.environ['VI1CAL']
-            vi1cal_was_unset = False
-        except:
-            os.environ['VI1CAL'] = '1'
-            vi1cal_was_unset = True
+            # Set cluster to serial mode for this applycal
+            if infrastructure.mpihelpers.is_mpi_ready():
+                ParallelTaskHelper.bypassParallelProcessing(1)
 
-        # Set cluster to serial mode for this applycal
-        if infrastructure.mpihelpers.is_mpi_ready():
-            from parallel.parallel_task_helper import ParallelTaskHelper
-            ParallelTaskHelper.bypassParallelProcessing(1)
+            return super(UVcontSub, self).prepare()
 
-        results = super(UVcontSub, self).prepare()
+        finally:
+            # Reset cluster to parallel mode
+            if infrastructure.mpihelpers.is_mpi_ready():
+               ParallelTaskHelper.bypassParallelProcessing(0)
 
-        # Reset cluster to parallel mode
-        if infrastructure.mpihelpers.is_mpi_ready():
-           ParallelTaskHelper.bypassParallelProcessing(0)
+            if remove_vi1cal:
+                del os.environ['VI1CAL']
 
-        if vi1cal_was_unset:
-            del os.environ['VI1CAL']
-
-        return results
 
 # May need this in the future
 #
