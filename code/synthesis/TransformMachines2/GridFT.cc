@@ -397,7 +397,8 @@ void GridFT::finalizeToVis()
 {
   timedegrid_p=0.0;
 
- 
+ if(!arrayLattice) arrayLattice=nullptr;
+  if(!lattice) lattice=nullptr;
   griddedData.resize();
   if(isTiled) {
 

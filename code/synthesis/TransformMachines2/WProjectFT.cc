@@ -1438,6 +1438,8 @@ ImageInterface<Complex>& WProjectFT::getImage(Matrix<Float>& weights,
       griddedData.resize(IPosition(1,0));
     }
   }
+  if(!lattice.null()) lattice=nullptr;
+  if(!arrayLattice.null()) lattice=nullptr;
   griddedData.resize();
   return *image;
 }
