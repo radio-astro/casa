@@ -397,8 +397,8 @@ void GridFT::finalizeToVis()
 {
   timedegrid_p=0.0;
 
- if(!arrayLattice) arrayLattice=nullptr;
-  if(!lattice) lattice=nullptr;
+ if(arrayLattice) arrayLattice=nullptr;
+  if(lattice) lattice=nullptr;
   griddedData.resize();
   if(isTiled) {
 
@@ -1277,8 +1277,8 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
   image->flush();
   image->clearCache();
 
-  if(!arrayLattice) arrayLattice=nullptr;
-  if(!lattice) lattice=nullptr;
+  if(arrayLattice) arrayLattice=nullptr;
+  if(lattice) lattice=nullptr;
   griddedData.resize();
   return *image;
 }
