@@ -38,6 +38,10 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
             <td><strong>Number of fields</strong></td>
             <td>${len(target['field'].split(','))}</td>
         </tr>
+        <tr>
+            <td><strong>Search buffer radius (arcsec)</strong></td>
+            <td>${result[0].buffer_size_arcsec}</td>
+        </tr>
         %for key in target.keys():
             %if key in target.keys() and key not in ('imagename', 'phasecenter', 'cell', 'imsize', 'field'):
                 <tr>

@@ -9,9 +9,13 @@ class EditimlistResult(basetask.Results):
         super(EditimlistResult, self).__init__()
         self.targets = []
         self._max_num_targets = 0
+        self.buffer_size_arcsec = 0
 
     def add_target(self, target):
         self.targets.append(target)
+
+    def capture_buffer_size(self, buffsize):
+        self.buffer_size_arcsec = buffsize
 
     def merge_with_context(self, context):
         if not hasattr(context, 'clean_list_pending'):

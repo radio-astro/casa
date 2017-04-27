@@ -129,6 +129,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['specmode'] = th.specmode() if not inputs.specmode else inputs.specmode
         target['gridder'] = th.gridder() if not inputs.gridder else inputs.gridder
         buffer_arcsec = th.buffer_radius() if not inputs.search_radius_arcsec else inputs.search_radius_arcsec
+        result.capture_buffer_size(buffer_arcsec)
         target['cell'] = th.cell(None, None, None) if not inputs.cell else inputs.cell
         target['imsize'] = th.imsize(None, None, None, None, None) if not inputs.imsize else inputs.imsize
         target['intent'] = th.inent() if not inputs.intent else inputs.intent
