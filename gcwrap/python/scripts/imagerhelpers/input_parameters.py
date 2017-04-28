@@ -256,6 +256,10 @@ class ImagerParameters():
         errs += self.checkAndFixIterationPars()
         errs += self.checkAndFixNormPars()
 
+        for mss in sorted( self.allselpars.keys() ):
+            if(self.allimpars['0']['specmode']=='cubedata'):
+                self.allselpars[mss]['outframe']='Undefined'
+
         ### MOVE this segment of code to the constructor so that it's clear which parameters go where ! 
         ### Copy them from 'impars' to 'normpars' and 'decpars'
         self.iterpars['allimages']={}
@@ -294,7 +298,7 @@ class ImagerParameters():
                 ok=False
 
         if ok==True:
-            print "Already in correct format"
+            #print "Already in correct format"
             return errs
 
         # msname, field, spw, etc must all be equal-length lists of strings, or all except msname must be of length 1.

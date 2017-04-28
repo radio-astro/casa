@@ -58,8 +58,8 @@ class PyParallelCubeSynthesisImager():
         self.SItool = casac.synthesisimager()
         #print "allselpars=",allselpars
         for mss in sorted( allselpars.keys() ):
-            if(self.allimpars['0']['specmode']=='cubedata'):
-                self.allselpars[mss]['outframe']='Undefined'
+#            if(self.allimpars['0']['specmode']=='cubedata'):
+#                self.allselpars[mss]['outframe']='Undefined'
             self.SItool.selectdata( allselpars[mss] )
         for fid in sorted( allimagepars.keys() ):
             self.SItool.defineimage( allimagepars[fid], self.allgridpars[fid] )

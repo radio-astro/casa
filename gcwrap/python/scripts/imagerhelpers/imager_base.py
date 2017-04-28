@@ -79,8 +79,8 @@ class PySynthesisImager:
         ##print 'impars ', self.allimpars['0']['specmode'], 'frame', self.allimpars['0']['outframe']
         ## Send in selection parameters for all MSs in the list.
         for mss in sorted( (self.allselpars).keys() ):
-            if(self.allimpars['0']['specmode']=='cubedata'):
-                self.allselpars[mss]['outframe']='Undefined'
+#            if(self.allimpars['0']['specmode']=='cubedata'):
+#                self.allselpars[mss]['outframe']='Undefined'
             self.SItool.selectdata( self.allselpars[mss] )
 #            self.SItool.selectdata( **(self.allselpars[mss]) )
 
