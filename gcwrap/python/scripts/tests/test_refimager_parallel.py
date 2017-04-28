@@ -275,4 +275,47 @@ class test_cube(testref_base_parallel):
                print "MPI is not enabled. This test will be skipped"
 
 ###################################################
+     def test_cube_highthreshold(self):
+          """ [cube] Test_cube_highthreshold : Some channel chunks finish before others.  """
+          
+          if self.th.checkMPI() == True:
+               
+               self.prepData('refim_point.ms')
+               
+               # Non-parallel run
+               ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',
+                            interactive=0,niter=500,threshold='1.3Jy', 
+                            deconvolver='hogbom',specmode='cube',
+                            pbcor=True, parallel=False)
 
+               report1 = self.th.checkall(ret=ret, 
+                                          peakres=1.173, modflux=0.134, iterdone=5, nmajordone=2,
+                                          imexist=[self.img+'.psf', self.img+'.residual', 
+                                                   self.img+'.image',self.img+'.model', 
+                                                   self.img+'.pb',  self.img+'.image.pbcor' ], 
+                                          imval=[(self.img+'.image',1.2,[50,50,0,5]),
+                                                 (self.img+'.sumwt',2949.775,[0,0,0,0]) ])
+
+               # Parallel run
+               imgpar = self.img+'.par'
+               retpar = tclean(vis=self.msfile,imagename=imgpar,imsize=100,cell='8.0arcsec',
+                               interactive=0,niter=500, threshold='1.3Jy',
+                               deconvolver='hogbom',specmode='cube',
+                               pbcor=True,parallel=True)
+               
+               checkims =self.th.getNParts( imprefix=imgpar, imexts=['residual','psf','model']) 
+               report2 = self.th.checkall(ret=retpar['node1'][1], 
+#                                          peakres=0.241, modflux=0.527, iterdone=200, nmajordone=2,
+                                          imexist=[self.img+'.psf', self.img+'.residual', 
+                                                   self.img+'.image',self.img+'.model', 
+                                                   self.img+'.pb',  self.img+'.image.pbcor' ], 
+                                          imval=[(self.img+'.image',1.2,[50,50,0,5]),
+                                                 (self.img+'.sumwt',2949.775,[0,0,0,0]) ])
+
+               ## Pass or Fail (and why) ?
+               self.checkfinal(report1+report2)
+
+          else:
+               print "MPI is not enabled. This test will be skipped"
+
+###################################################
