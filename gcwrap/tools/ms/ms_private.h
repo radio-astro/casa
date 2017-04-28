@@ -56,7 +56,6 @@ casacore::LogIO *itsLog;
 casacore::MSSelection *itsMSS;
 casa::VisibilityIterator *itsVI;
 casa::vi::VisibilityIterator2 *itsVI2;
-casacore::Bool _nomodify;
 
 casacore::Bool doingIterations_p;
 casacore::Bool doingAveraging_p;

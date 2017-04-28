@@ -382,7 +382,6 @@ ms::open(const std::string& thems, bool nomodify, bool lock, bool check)
         chansel_p.clear();
         chanselExpr_p = "";
         initSel_p = False;
-        _nomodify = nomodify;
 	} catch (const AipsError& x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		Table::relinquishAutoLocks(true);
@@ -5671,11 +5670,6 @@ bool ms::statwt2() {
     *itsLog << LogOrigin("ms", __func__);
     try {
         if(! detached()) {
-            ThrowIf(
-                _nomodify, 
-                "This MS was opened with nomodify=True. This "
-                "application modifies data, so open with nomodify=False"
-            );
             StatWt statwt(itsMS);
             statwt.writeWeights();
             return True;
