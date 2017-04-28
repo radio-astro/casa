@@ -22,10 +22,11 @@
 #include <casacore/tables/Tables/TableProxy.h>
 
 #include <mstransform/MSTransform/StatWt.h>
-#include <mstransform/MSTransform/MSTransformIteratorFactory.h>
 #include <mstransform/TVI/StatWtTVI.h>
-#include <mstransform/TVI/StatWtTVIFactory.h>
+#include <mstransform/TVI/StatWtTVILayerFactory.h>
 #include <msvis/MSVis/ViImplementation2.h>
+#include <msvis/MSVis/IteratingParameters.h>
+#include <msvis/MSVis/LayeredVi2Factory.h>
 
 using namespace casacore;
 
@@ -43,12 +44,14 @@ void StatWt::setOutputMS(const casacore::String& outname) {
 
 void StatWt::writeWeights() const {
     Record config;
-    config.define("inputms", _ms->tableName());
-    config.define("factory", True);
-    MSTransformIteratorFactory plainVIFactory(config);
-    vi::ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
-    vi::StatWtTVIFactory statWtFactory(config, inputVI);
-    vi::VisibilityIterator2 vi(statWtFactory);
+    vi::IteratingParameters ipar(200); // seconds
+    vi::VisIterImpl2LayerFactory data(_ms, ipar, True/*,useMSIter2*/);
+    vi::StatWtTVILayerFactory statWtLayerFactory(config);
+    Vector<vi::ViiLayerFactory*> facts(2);
+    facts[0] = &data;
+    facts[1] = &statWtLayerFactory;
+    vi::VisibilityIterator2 vi(facts);
+
     vi::VisBuffer2 *vb = vi.getVisBuffer();
     TableProxy tp(*_ms);
     Slice defaultSlice;

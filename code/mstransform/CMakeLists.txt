@@ -40,6 +40,7 @@ casa_add_library( mstransform
  TVI/PolAverageTVI.cc
  TVI/StatWtTVI.cc
  TVI/StatWtTVIFactory.cc
+ TVI/StatWtTVILayerFactory.cc
 )
 
 install (FILES
@@ -73,6 +74,7 @@ install (FILES
  	TVI/PolAverageTVI.h
     TVI/StatWtTVI.h
     TVI/StatWtTVIFactory.h
+    TVI/StatWtTVILayerFactory.h
 	DESTINATION include/casacode/mstransform/TVI
 	)
 	

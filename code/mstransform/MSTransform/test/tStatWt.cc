@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 	    exit(1);
 	}
 	String msname(argv[1]);
-    MeasurementSet ms(msname);
+    MeasurementSet ms(msname, Table::Update);
     StatWt statwt(&ms);
     statwt.writeWeights();
 	return 0;
