@@ -133,7 +133,8 @@ class test_cont(testref_base_parallel):
                                                    self.img+'.image.tt0',self.img+'.model.tt0'], 
                                           imval=[(self.img+'.alpha',-1.032,[50,50,0,0]),
                                                  (self.img+'.sumwt.tt0', 34390852.0,[0,0,0,0]) ,
-                                                 (self.img+'.sumwt.tt1',350.618,[0,0,0,0]) ])
+                                                 (self.img+'.sumwt.tt1',-8.2289,[0,0,0,0]) ], 
+                                          reffreq= [(self.img+'.image.tt0',1474984983.07)] )
 
                # Parallel run
                imgpar = self.img+'.par'
@@ -148,7 +149,8 @@ class test_cont(testref_base_parallel):
                                           imexist=checkims, 
                                           imval=[(imgpar+'.alpha',-1.032,[50,50,0,0]),
                                                  (imgpar+'.sumwt.tt0',34390852.0,[0,0,0,0]),
-                                                 (imgpar+'.sumwt.tt1',350.618,[0,0,0,0]) ])
+                                                 (imgpar+'.sumwt.tt1',-8.2289,[0,0,0,0]) ], 
+                                          reffreq=[ (imgpar+'.image.tt0',1474984983.07)] )
 
                ## Pass or Fail (and why) ?
                self.checkfinal(report1+report2)
@@ -178,8 +180,9 @@ class test_cont(testref_base_parallel):
                                                    self.img+'.image.tt0',self.img+'.model.tt0'], 
                                           imval=[(self.img+'.alpha',-2.0,[50,50,0,0]),
                                                  (self.img+'.sumwt.tt0', 94050.05,[0,0,0,0]) ,
-                                                 (self.img+'.sumwt.tt1',0.986736,[0,0,0,0]) ])
-
+                                                 (self.img+'.sumwt.tt1', 0.006198,[0,0,0,0]) ], 
+                                          reffreq= [(self.img+'.image.tt0',1489984775.68)] )
+               
                # Parallel run
                imgpar = self.img+'.par'
                retpar = tclean(vis=[ms1,ms2],imagename=imgpar,imsize=100,cell='8.0arcsec',
@@ -193,21 +196,22 @@ class test_cont(testref_base_parallel):
                                           imexist=checkims, 
                                           imval=[(imgpar+'.alpha',-2.0,[50,50,0,0]),
                                                  (imgpar+'.sumwt.tt0',94050.05,[0,0,0,0]),
-                                                 (imgpar+'.sumwt.tt1',0.986736,[0,0,0,0]) ])
+                                                 (imgpar+'.sumwt.tt1', 0.006198,[0,0,0,0]) ],
+                                          reffreq= [(imgpar+'.image.tt0',1489984775.68)] )
 
                ## Check the reference frequency of the coordinate system of the parallel run.
-               _ia.open(imgpar+'.image.tt0')
-               csys = _ia.coordsys()
-               _ia.close()
-               reffreq = csys.referencevalue()['numeric'][3]
-               correctfreq = 1489984780.68491
-               if  abs(reffreq - correctfreq)/correctfreq > self.epsilon :
-                    retres=False
-               else:
-                    retres=True
-
-               pstr = "[" +  inspect.stack()[0][3]+ "] Ref-Freq is " + str(reffreq) + " ("+self.th.verdict(retres)+" : should be " + str(correctfreq) + ")\n"
-               report2 = report2 + pstr
+#               _ia.open(imgpar+'.image.tt0')
+#               csys = _ia.coordsys()
+#               _ia.close()
+#               reffreq = csys.referencevalue()['numeric'][3]
+#               correctfreq = 1489984780.68491
+#               if  abs(reffreq - correctfreq)/correctfreq > self.epsilon :
+#                    retres=False
+#               else:
+#                    retres=True
+#
+#               pstr = "[" +  inspect.stack()[0][3]+ "] Ref-Freq is " + str(reffreq) + " ("+self.th.verdict(retres)+" : should be " + str(correctfreq) + ")\n"
+#               report2 = report2 + pstr
 
                ## Pass or Fail (and why) ?
                self.checkfinal(report1+report2)
