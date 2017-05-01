@@ -520,6 +520,7 @@ if( NOT RE_CMAKE )
         set( CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "casa architecture directory" FORCE )
 	set( casaroot ${CMAKE_INSTALL_PREFIX}/.. CACHE PATH "toplevel casa directory" FORCE )
    endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+   file(MAKE_DIRECTORY ${casaroot}/share/doc)
 endif()
 
 dump( casaroot )
