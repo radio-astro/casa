@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 import re
 
 import pipeline.infrastructure.casatools as casatools
@@ -27,10 +27,10 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
     def gridder(self, intent, field):
         return 'mosaic'
 
-    def cell(self, field_intent_list, spwspec, oversample):
+    def cell(self, field_intent_list, spwspec, oversample=None):
         return '0.6arcsec'
 
-    def imsize(self, fields, cell, beam, sfpblimit, max_pixels):
+    def imsize(self, fields, cell, beam, sfpblimit=None, max_pixels=None):
         return [11520, 11520]
 
     def threshold(self):
@@ -142,10 +142,10 @@ class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
             dd_ra = dd['m0']['value']
             dd_dec = dd['m1']['value']
             sep_ra = abs(dd_ra - center_ra)
-            if sep_ra > np.pi:
-                sep_ra = 2.0 * np.pi - sep_ra
+            if sep_ra > numpy.pi:
+                sep_ra = 2.0 * numpy.pi - sep_ra
             # change the following to use dd_dec 2017-02-06
-            sep_ra_sky = sep_ra * np.cos(dd_dec)
+            sep_ra_sky = sep_ra * numpy.cos(dd_dec)
 
             sep_dec = abs(dd_dec - center_dec)
 
