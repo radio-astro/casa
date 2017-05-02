@@ -19,7 +19,7 @@
 	<input>
 		<param type="string" name="vis" mustexist="true">
 			<description>Name of input visibility file (MS)</description>
-			<value></value>
+			<value/>
 		</param>
 
             <param type="bool" name="selectdata">
@@ -28,67 +28,74 @@
             </param>
 
             <param type="any" name="spw" subparam="true">
-                <description>spectral-window/frequency/channel</description>
+                <description>Selection based on spectral-window/frequency/channel.</description>
                 <any type="variant" limittypes="string stringArray" />
-                <value type="string" />
+                <value type="string"/>
+                <example>"1~3"</example>
             </param>
             <param type="any" name="field" subparam="true">
-                <description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
+                <description>Selection based on field names or field index numbers. Default is all.</description>
                 <any type="variant" limittypes="string stringArray" />
-                <value type="string" />
+                <value type="string"/>
+                <example>"0~2", or "3C286"</example>
             </param>
             <param type="any" name="antenna" subparam="true">
-                <description>antenna/baselines: \'\'==>all, antenna =\'3,VA04\'</description>
+                <description>Selection based on antenna/baselines. Default is all.</description>
                 <any type="variant" limittypes="string stringArray" />
-                <value type="string" />
+                <value type="string"/>
+                <example>["3, VA04"]</example>
             </param>
             <param type="any" name="uvrange" subparam="true">
-                <description>uv range: \'\'==>all; uvrange =\'0~100klambda\', default units=meters</description>
+                <description>Selection based on uv range. Default: entire range. default units=meters</description>
                 <any type="variant" limittypes="string stringArray" />
-                <value type="string" />
+                <value type="string"/>
+                <example>"0~100klambda"</example>
             </param>
-            <param type="any" name="timerange" subparam="true"><description>time range: \'\'==>all,timerange=\'09:14:0~09:54:0\'</description>
+            <param type="any" name="timerange" subparam="true">
+                <description>Selection based on time range. Default is entire range.</description>
                 <any type="variant" limittypes="string stringArray" />
-                <value type="string" />
+                <value type="string"/>
+                <example>"09:14:0~09:54:0"</example>
             </param>
             <param type="any" name="correlation" subparam="true">
-                <description>Select data based on correlation</description>
+                <description>Selection based on correlation. Default is all.</description>
                 <any type="variant" limittypes="string stringArray" />
-                <value type="string" />
+                <value type="string"/>
+                <example>"RR,LL"</example>
             </param>
             <param type="any" name="scan" subparam="true">
-                <description>scan numbers: \'\'==>all</description>
+                <description>Selection based on scan numbers. Default is all.</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="intent" subparam="true">
-                <description>Select data based on observation intent: \'\'==>all</description>
+                <description>Selection based on observation intent. Default is all.</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="feed" subparam="true">
-                <description>multi-feed numbers: Not yet implemented</description>
+                <description>Selection based on multi-feed numbers: Not yet implemented</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="array" subparam="true">
-                <description>(sub)array numbers: \'\'==>all</description>
+                <description>Selection based on (sub)array numbers. Default is all.</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
             <param type="any" name="observation" subparam="true">
-                <description>Select data based on observation ID: \'\'==>all</description>
+                <description>Selection based on observation ID. Default is all.</description>
                 <any type="variant" limittypes="string int" />
                 <value type="string" />
             </param>
 
 		<param type="bool" name="verbose">
-			<description></description>
+			<description>Controls level of information detail reported. True reports less than False.</description>
 			<value>True</value>
 		</param>
 		
 		<param type="string" name="listfile">
-			<description>Name of disk file to write output: \'\'==>to terminal</description>
+			<description>Name of disk file to write output. Default is none (output is written to logger only).</description>
 			<value></value>
 		</param>
         <param type="bool" direction="in" name="listunfl">
