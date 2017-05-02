@@ -10,6 +10,7 @@ class EditimlistResult(basetask.Results):
         self.targets = []
         self._max_num_targets = 0
         self.buffer_size_arcsec = 0
+        self.img_mode = ''
 
     def add_target(self, target):
         self.targets.append(target)

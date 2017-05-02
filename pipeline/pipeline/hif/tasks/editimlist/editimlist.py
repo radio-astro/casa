@@ -20,6 +20,7 @@ class EditimlistInputs(basetask.StandardInputs):
                  deconvolver=None,
                  editmode=None,
                  field=None,
+                 imaging_mode=None,
                  imagename=None,
                  imsize=None,
                  intent=None,
@@ -50,7 +51,7 @@ class EditimlistInputs(basetask.StandardInputs):
                             'phasecenter', 'specmode', 'gridder', 'imagename', 'scales',
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
                             'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
-                            'search_radius_arcsec', 'threshold', 'reffreq')
+                            'search_radius_arcsec', 'threshold', 'imaging_mode', 'reffreq')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -109,12 +110,23 @@ class Editimlist(basetask.StandardTaskTemplate):
 
         target = CleanTarget()
         iph = imageparams_factory.ImageParamsHeuristicsFactory()
+
+        img_mode = 'VLASS' if not inputs.imaging_mode else inputs.imaging_mode
+        result.img_mode = img_mode
+
         # The default spw range for VLASS is 2~17. hif_makeimages() needs an csv list.
         # We set the target spw before the heuristics object because the heursitics class
         # uses it in initialization.
-        target['spw'] = '2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17' if not inputs.spw else inputs.spw
+        if 'VLASS' == img_mode:
+            if not inputs.spw:
+                target['spw'] = ','.join([str(x) for x in range(2,18)])
+            else:
+                target['spw'] = inputs.spw
+        else:
+            target['spw'] = inputs.spw
+
         target['phasecenter'] = inputs.phasecenter
-        th = target['heuristics'] = iph.getHeuristics(vislist=inputs.vis, spw=inputs.spw, observing_run=inputs.context.observing_run, imaging_mode='VLASS')
+        th = target['heuristics'] = iph.getHeuristics(vislist=inputs.vis, spw=inputs.spw, observing_run=inputs.context.observing_run, imaging_mode=img_mode)
         target['threshold'] = th.threshold() if not inputs.threshold else inputs.threshold
         target['reffreq'] = th.reffreq() if not inputs.reffreq else inputs.reffreq
         target['niter'] = th.niter_correction(None, None, None, None, None) if not inputs.niter else inputs.niter

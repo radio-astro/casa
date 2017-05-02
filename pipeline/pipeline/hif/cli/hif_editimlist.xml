@@ -51,6 +51,11 @@
                 <value></value>
             </param>
 
+            <param type="string" name="imaging_mode">
+                <description>Identity of product type (e.g. VLASS quick look) desired.  This will determine the heuristics used.</description>
+                <value></value>
+            </param>
+
             <param type="stringArray" name="imsize">
                 <description>Image X and Y size(s) in pixels or PB level (single fields), \'\' for default. Single value same for both. \'&lt;number&gt;pb\' for PB level.</description>
                 <value></value>
