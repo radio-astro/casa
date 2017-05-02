@@ -93,7 +93,6 @@ class Editimlist(basetask.StandardTaskTemplate):
         # be run to obtain the required images
         result = EditimlistResult()
 
-        target = dict()
         inputs.editmode = 'add' if not inputs.editmode else inputs.editmode
 
         ms = self.inputs.context.observing_run.get_ms(inputs.vis[0])
@@ -142,15 +141,6 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['start'] = inputs.start
         target['width'] = inputs.width
         target['imagename'] = inputs.imagename
-
-#        inputsdict = inputs.__dict__
-#        for parameter in inputsdict.keys():
-#            if inputsdict[parameter] and not parameter.startswith('_') and (parameter in target):
-#                inputspar_value = eval('inputs.' + parameter)
-#                # print(parameter + '=' + str(inputspar_value))
-#                cmd = "target['" + parameter + "'] = inputs." + parameter
-#                # print(cmd)
-#                exec cmd
 
         # set the field name list in the image list target
         if fieldnames:
