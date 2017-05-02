@@ -225,14 +225,18 @@ class Finalcals(basetask.StandardTaskTemplate):
 
 
         basevis = os.path.basename(self.inputs.vis)
-        tablesToAdd = ['finaldelay.k', 'finalBPcal.b', 'averagephasegain.g', 'finalampgaincal.g', 'finalphasegaincal.g']
-        tablesToAdd = [basevis + '.' + table for table in tablesToAdd]
+        tablesToAdd = [('finaldelay.k','', ''), ('finalBPcal.b','linear,freqflag',''),
+                       ('averagephasegain.g','',''), ('finalampgaincal.g','', ''),
+                       ('finalphasegaincal.g','','')]
+        tablesToAdd = [(basevis + '.' + table,interp, gainfield) for table,interp, gainfield in tablesToAdd]
+
 
         callist = []
-        for addcaltable in tablesToAdd:
-            print addcaltable
+        for addcaltable, interp, gainfield in tablesToAdd:
+            LOG.info("Finalcals stage:  Adding " + addcaltable + " to callibrary.")
             calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False, caltype='finalcal')
+            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp=interp, calwt=False,
+                                         caltype='finalcal', gainfield=gainfield)
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
 

@@ -312,6 +312,16 @@ class testBPdcals(basetask.StandardTaskTemplate):
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
             self._executor.execute(bandpass_job)
 
+            AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
+            AllCalTables.append(ktypecaltable)
+            AllCalTables.append(bpdgain_touse)
+            AllCalTables.append(bpcaltable)
+            ntables = len(AllCalTables)
+            interp = [''] * ntables
+            LOG.info("Using 'linear,freqflag' for bandpass table")
+            interp[-1] = 'linear,freqflag'
+
+
         LOG.info("Test bandpass calibration complete")
 
         # print context.callibrary.active
@@ -330,6 +340,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         LOG.info("Median fraction of flagged solutions per antenna = "+str(flaggedSolnResult['antmedian']['fraction']))
         
         LOG.info("Applying test calibrations to BP and delay calibrators")
+
+
         
         applycal_result = self._do_applycal(context=context, ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse,
                                             bpcaltable=bpcaltable, interp=interp)
@@ -597,7 +609,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                               'docallib'   :False,
                               'gaintable'  :AllCalTables,
                               'gainfield'  :[''],
-                              'interp'     :[interp],
+                              'interp'     :interp,
                               'spwmap'     :[],
                               'calwt'      :[False]*ntables,
                               'parang'     :self.parang,
