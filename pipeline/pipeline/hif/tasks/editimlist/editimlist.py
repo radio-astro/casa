@@ -111,7 +111,7 @@ class Editimlist(basetask.StandardTaskTemplate):
         target = CleanTarget()
         iph = imageparams_factory.ImageParamsHeuristicsFactory()
 
-        img_mode = 'VLASS' if not inputs.imaging_mode else inputs.imaging_mode
+        img_mode = 'VLASS-QL' if not inputs.imaging_mode else inputs.imaging_mode
         result.img_mode = img_mode
 
         # The default spw range for VLASS is 2~17. hif_makeimages() needs an csv list.
