@@ -284,7 +284,6 @@ model\_imaginary\ddag &amp; \bul  &amp; \none &amp; \bul    &amp; \none   &amp; 
 ratio\_imaginary\ddag &amp; \none &amp; \none &amp; \bul    &amp; \none   &amp; imag part of corrected/model \\
 residual\_imaginary\ddag&amp;\none  &amp;\none &amp; \bul    &amp; \none   &amp; imag part of residual data\\
 obs\_residual\_imaginary\ddag&amp;\none  &amp;\none&amp;\bul &amp; \none   &amp; imag part of obs residual data\\
-imaging\_weight\ddag  &amp; \bul  &amp; \none &amp; \bul    &amp; \bul    &amp; weights used for imaging\\
 last                 &amp; \none &amp; \none  &amp; \bul    &amp; \none   &amp; add LAST to axis\_info\\
 num\_corr            &amp; \bul  &amp; \none  &amp; \none   &amp; \none   &amp; number of polarizations\\
 num\_chan            &amp; \bul  &amp; \none  &amp; \none   &amp; \none   &amp; number of freq channels\\
@@ -1839,9 +1838,9 @@ the ms definition itself. -->
     For some items, you need to call selectinit to select a portion of
     the data with a unique shape prior to calling this function.
 
-    Items prefixed with corrected, model, residual or obs_residual and
-    the imaging_weight item are not available unless your measurement
-    set has been processed either with the imager or calibrator tools.
+    Items prefixed with corrected, model, residual or obs_residual 
+    are not available unless your measurement set has been processed either
+    with the imager or calibrator tools.
   </description>
   <example>
     
@@ -1919,9 +1918,9 @@ the ms definition itself. -->
     For some items, you need to call selectinit2 to select a portion of
     the data with a unique shape prior to calling this function.
 
-    Items prefixed with corrected, model, residual or obs_residual and
-    the imaging_weight item are not available unless your measurement
-    set has been processed either with the imager or calibrator tools.
+    Items prefixed with corrected, model, residual or obs_residual 
+    are not available unless your measurement set has been processed either
+    with the imager or calibrator tools.
   </description>
   <example>
     
@@ -2081,7 +2080,7 @@ F           \&amp; Flag: `F' = flagged datum; ` ' = unflagged \\
       ms.open('AZ136.ms')
       ms.lister()
     
-    These commands yeild the following listing: 
+    These commands yield the following listing: 
     
 Date/Time:                         RR:                      RL:                      LR:                      LL:                     
 2001/12/01/  Intrf UVDist Fld SpW      Amp   Phs       Wt F     Amp   Phs       Wt F     Amp   Phs       Wt F     Amp   Phs       Wt F
@@ -2188,8 +2187,9 @@ Date/Time:                         RR:                      RL:                 
     
 
     In this example we display the range of uv distances for the data
-    in the specified measurement set. The first print statement will
-    only use data where the DATA_DESC_ID column is 0. This will
+    in the specified measurement set (the range 'items' argument is a list of
+    strings, even if only one item is requested). The first print statement
+    will only use data where the DATA_DESC_ID column is 0. This will
     correspond to a specific spectral window and polarization
     setup. The second print statement will print the range of uv
     distances for all the data in the measurement set (which is the
@@ -2255,8 +2255,9 @@ Date/Time:                         RR:                      RL:                 
       print ms.range2("uvdist")
     
     In this example we display the range of uv distances for the data
-    in the specified measurement set. The first print statement will
-    only use data where the DATA_DESC_ID column is 0. This will
+    in the specified measurement set (the range 'items' argument is a list of
+    strings, even if only one item is requested). The first print statement
+    will only use data where the DATA_DESC_ID column is 0. This will
     correspond to a specific spectral window and polarization
     setup. The second print statement will print the range of uv
     distances for all the data in the measurement set (which is the
@@ -3239,20 +3240,19 @@ Date/Time:                         RR:                      RL:                 
     residual_data, obs_residual_data, feed1, feed2, field_id, flag,
     flag_row, flag_sum, ha (added to axis_info), ifr_number, imaginary,
     corrected_imaginary, model_imaginary, ratio_imaginary,
-    residual_imaginary, obs_residual_imaginary, imaging_weight, last
-    (added to axis_info), phase, corrected_phase, model_phase,
-    ratio_phase, residual_phase, obs_residual_phase, real,
-    corrected_real, ratio_real, residual_real, obs_residual_real,
-    scan_number, sigma, data_desc_id, time, ut (added to axis_info),
-    uvw, u, v, w, uvdist, and weight. Unrecognized items will result in
-    a warning being sent to the logger.  Duplicate items are silently
-    ignored.
+    residual_imaginary, obs_residual_imaginary, last (added to axis_info),
+    phase, corrected_phase, model_phase, ratio_phase, residual_phase,
+    obs_residual_phase, real, corrected_real, ratio_real, residual_real,
+    obs_residual_real, scan_number, sigma, data_desc_id, time, ut (added to
+    axis_info), uvw, u, v, w, uvdist, and weight. Unrecognized items will
+    result in a warning being sent to the logger.  Duplicate items are
+    silently ignored.
 
     The record that is returned contains fields that correspond to
     each of the specified items. Most fields will contain an
     array. The array may be one, two or three dimensional depending on
     whether the corresponding row in the measurement set is a scalar,
-    one or two dimensional. Unless the ifraxis argument is set to T
+    one or two dimensional. Unless the ifraxis argument is set to True
     the length of the last axis on these arrays will correspond to the
     number of rows in the selected measurement set.
 
@@ -3323,10 +3323,9 @@ Date/Time:                         RR:                      RL:                 
     calling this function. If you haven't then selectinit will be
     called for you with default arguments.
 
-    Items prefixed with either; corrected, model, residual or
-    obs_residual and the imaging_weight item are not available unless
-    your measurement set has been processed either with the imager or
-    calibrator tools.
+    Items prefixed with corrected, model, residual or obs_residual are not
+    available unless your measurement set has been processed either with the
+    imager or calibrator tools.
   </description>
   <example>
     
@@ -3447,14 +3446,13 @@ for i in range(len(tcoord)):
     residual_data, obs_residual_data, feed1, feed2, field_id, flag,
     flag_row, flag_sum, ha (added to axis_info), ifr_number, imaginary,
     corrected_imaginary, model_imaginary, ratio_imaginary,
-    residual_imaginary, obs_residual_imaginary, imaging_weight, last
-    (added to axis_info), phase, corrected_phase, model_phase,
-    ratio_phase, residual_phase, obs_residual_phase, real,
-    corrected_real, ratio_real, residual_real, obs_residual_real,
-    scan_number, sigma, data_desc_id, time, ut (added to axis_info),
-    uvw, u, v, w, uvdist, and weight. Unrecognized items will result in
-    a warning being sent to the logger.  Duplicate items are silently
-    ignored.
+    residual_imaginary, obs_residual_imaginary, last (added to axis_info),
+    phase, corrected_phase, model_phase, ratio_phase, residual_phase,
+    obs_residual_phase, real, corrected_real, ratio_real, residual_real,
+    obs_residual_real, scan_number, sigma, data_desc_id, time, ut (added to
+    axis_info), uvw, u, v, w, uvdist, and weight. Unrecognized items will
+    result in a warning being sent to the logger.  Duplicate items are
+    silently ignored.
 
     The record that is returned contains fields that correspond to
     each of the specified items. Most fields will contain an
@@ -3531,10 +3529,9 @@ for i in range(len(tcoord)):
     calling this function. If you haven't then selectinit2 will be
     called for you with default arguments.
 
-    Items prefixed with either; corrected, model, residual or
-    obs_residual and the imaging_weight item are not available unless
-    your measurement set has been processed either with the imager or
-    calibrator tools.
+    Items prefixed with corrected, model, residual or obs_residual are not
+    available unless your measurement set has been processed either with the
+    imager or calibrator tools.
   </description>
   <example>
     
@@ -3632,7 +3629,7 @@ for i in range(len(tcoord)):
     ignored when writing the modified values back using this function.
 
     Allowable items include:  data, corrected_data, model_data, flag,
-    flag_row, imaging_weight, sigma, and weight.
+    flag_row, sigma, and weight.
 
     The measurement set has to be opened for read/write access to be
     able to use this function.
@@ -3641,10 +3638,9 @@ for i in range(len(tcoord)):
     calling this function. If you haven't then selectinit will be
     called for you with default arguments.
 
-    Items prefixed with either; corrected, model, residual or
-    obs_residual and the imaging_weight item are not available unless
-    your measurement set has been processed either with the imager or
-    calibrator tools.
+    Items prefixed with corrected, model, residual or obs_residual are not
+    available unless your measurement set has been processed either with the
+    imager or calibrator tools.
   </description>
   <example>
     
@@ -3704,7 +3700,7 @@ for i in range(len(tcoord)):
     ignored when writing the modified values back using this function.
 
     Allowable items include:  data, corrected_data, model_data, flag,
-    flag_row, imaging_weight, sigma, and weight.
+    flag_row, sigma, and weight.
 
     The measurement set has to be opened for read/write access to be
     able to use this function.
@@ -3713,10 +3709,9 @@ for i in range(len(tcoord)):
     calling this function. If you haven't then selectinit2 will be
     called for you with default arguments.
 
-    Items prefixed with either; corrected, model, residual or
-    obs_residual and the imaging_weight item are not available unless
-    your measurement set has been processed either with the imager or
-    calibrator tools.
+    Items prefixed with corrected, model, residual or obs_residual are not
+    available unless your measurement set has been processed either with the
+    imager or calibrator tools.
   </description>
   <example>
     

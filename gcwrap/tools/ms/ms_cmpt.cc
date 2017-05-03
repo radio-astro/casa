@@ -2385,6 +2385,15 @@ ms::select2(const ::casac::record& items)
                         retval = false;
                     }
                 }
+                else if (fieldStr == "TIMES") {
+                    String column = MS::columnName(MS::TIME);
+                    Vector<Double> time = selRecord->asArrayDouble(RecordFieldId(field));
+                    MeasurementSet selms = (*itsSelectedMS)((itsSelectedMS->col(column)).in(time));
+                    *itsSelectedMS = selms;
+                    if (nrow2(true)==0) {
+                        *itsLog << LogIO::WARN << "Zero rows selected; input precision may be too small to select times exactly.  Reset selection and select time range with {'time':[start,stop]} instead" << LogIO::POST;
+                    }
+                }
                 else
                   *itsLog << LogIO::WARN << "Unrecognized field in input ignored: "+fieldStr << LogIO::POST;
                      
@@ -3575,39 +3584,46 @@ ms::getdata2(const std::vector<std::string>& items, const bool ifraxis, const in
                 }
 
                 // check data columns
+                bool datacolOk(true);
                 // model
                 if (noModelCol &&
                     ((name.find("model")!=string::npos) ||
                      (name.find("ratio")!=string::npos) ||
+                     (name.find("obs_residual")!=string::npos) ||
                      (name.find("residual")!=string::npos))) { 
-		                *itsLog << LogIO::WARN << "Requested column doesn't exist: " + itemnames(it) <<  LogIO::POST;
+		                *itsLog << LogIO::WARN << "Cannot get requested column: " + itemnames(it) << ". Model column does not exist" << LogIO::POST;
+                        // return empty array
                         if (name.find("data")!=string::npos) {
                             out.define(itemnames(it), Array<Complex>());
-                        } else {
+                        } else {  // amp, phase, real, imag
                             out.define(itemnames(it), Array<Float>());
                         }
-                        itemnames(it)="";
+                        datacolOk = false;
                 }
                 // corrected
                 if (noCorrectedCol &&
                     ((name.find("corrected")!=string::npos) ||
                      (name.find("ratio")!=string::npos) ||
-                     (name.find("residual")!=string::npos))) {
-		                *itsLog << LogIO::WARN << "Requested column doesn't exist: " + itemnames(it) <<  LogIO::POST;
+                     (name.find("residual")!=string::npos && name.find("obs")==string::npos))) {
+		                *itsLog << LogIO::WARN << "Cannot get requested column: " + itemnames(it) << ". Corrected column does not exist" << LogIO::POST;
+                        // return empty array
                         if (name.find("data")!=string::npos) {
                             out.define(itemnames(it), Array<Complex>());
                         } else {
                             out.define(itemnames(it), Array<Float>());
                         }
-                        itemnames(it)="";
+                        datacolOk = false;
                 }
                 // float
                 if (noFloatCol &&
                     name.find("float")!=string::npos) {
-		                *itsLog << LogIO::WARN << "Requested column doesn't exist: " + itemnames(it) <<  LogIO::POST;
+		                *itsLog << LogIO::WARN << "Requested column does not exist: " + itemnames(it) <<  LogIO::POST;
+                        // return empty array
                         out.define(itemnames(it), Array<Float>());
-                        itemnames(it)="";
+                        datacolOk = false;
                 }
+                // Don't need to "get" this now
+                if (!datacolOk) itemnames(it)="";
             } // for loop (itemnames)
 
             if (ifraxis && do_axis_info && !do_time) {
