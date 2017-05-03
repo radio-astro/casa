@@ -77,7 +77,7 @@ bool PMS::axisIsWeight(Axis axis) {
 
 bool PMS::axisIsUV(Axis axis) {
     switch(axis) {
-    case U: case V: return true;
+    case U: case V: case UWAVE: case VWAVE: return true;
     default: return false;
     }
 }
