@@ -120,6 +120,7 @@ casa_add_python( tools tools_tests_python lib/python${PYTHONV}/tests
   test_importevla.py
   test_importfitsidi.py
   test_importnro.py
+  test_importvla.py
   test_imregrid.py
   test_imsmooth.py
   test_imstat.py
