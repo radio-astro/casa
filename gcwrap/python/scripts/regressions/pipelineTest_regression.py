@@ -140,7 +140,8 @@ def stats():
         #value_compare = 0.716367318068  #CASA 4.5
         #value_compare = 0.717857716108  #CASA 4.6
         #value_compare = 0.716364780148  #CASA 4.6.144 r36095, pipeline r36209 (trunk)
-        value_compare = 0.718457023749  #CASA-test 5.0.11-DEV (r38177) 
+        #value_compare = 0.718457023749  #CASA-test 5.0.11-DEV (r38177) 
+        value_compare = 0.71857779577  #CASA-prerelease 5.0.0-187, pipeline r40156
         
         #result_bool = np.isclose(fluxlist[0][0], standard_fluxlist[0][0], rtol=rtol, atol=atol, equal_nan=False)
         result_bool = np.isclose(fluxlist[0][0], value_compare, rtol=rtol, atol=atol, equal_nan=False)
