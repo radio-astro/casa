@@ -986,6 +986,21 @@ def simobserve(
                         sm.setoptions(ftmachine="mosaic")
                     else:
                         msg("Heterogeneous array only supported for mosaics (nfld>1), and make sure that your image is larger than the primary beam or results may be unstable",priority="error")
+                else:
+                    # checks have to be manual since there's no way to 
+                    # get the "diam" out of PBMath AFAIK
+                    if telescopename=="ALMA":
+                        if (diam[0]<10)|(diam[0]>13):
+                            msg("Diameter = %f is inconsistent with telescope=ALMA in the configuration file.  *12m ALMA PB will be used*"%diam[0],priority="warn")
+                            n=len(diam)
+                            diam=12.+pl.zeros(n)
+                    elif telescopename=="ACA":
+                        if (diam[0]<6)|(diam[0]>7.5):
+                            msg("Diameter = %f is inconsistent with telescope=ALMA in the configuration file.  *7m ACA PB will be used*"%diam[0],priority="warn")
+                            n=len(diam)
+                            diam=7.+pl.zeros(n)
+                    else:
+                        msg("Note: diameters in configuration file will not be used - PB for "+telescopename+" will be used",priority="info")
 
 
             msg("done setting up observations (blank visibilities)",origin='simobserve')
