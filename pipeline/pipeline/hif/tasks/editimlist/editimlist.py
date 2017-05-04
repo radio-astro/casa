@@ -165,15 +165,18 @@ class Editimlist(basetask.StandardTaskTemplate):
                 dist_arcsec = str(dist) + 'arcsec'
                 found_fields = target['heuristics'].find_fields(distance=dist_arcsec, phase_center=target['phasecenter'])
                 fieldnames = []
-                if type(found_fields) is not type(None):
+                if found_fields:
                     for fid in found_fields:
                         fieldobj = ms.get_fields(field_id=fid)
                         fieldnames.append(fieldobj[0].name)
 
                     if len(fieldnames) > 1:
                         fieldnames = [','.join(fieldnames)]
-
-                    target['field'] = fieldnames[0]
+                    try:
+                        target['field'] = fieldnames[0]
+                    except:
+                        print('found_fields', found_fields)
+                        print('fieldnames', fieldnames)
 
         for key, value in target.items():
             LOG.info("{k} = {v}".format(k=key, v=value))
