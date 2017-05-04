@@ -14,27 +14,29 @@ def blcal(vis=None,caltable=None,
 
 	try:
 
+		mycb = cbtool()
+
                 casalog.origin('blcal')
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        cb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
+                        mycb.open(filename=vis,compress=False,addcorr=False,addmodel=False)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
-		cb.reset()
+		mycb.reset()
 
 		# Do data selection according to selectdata
 		if (selectdata):
 			# pass all data selection parameters in as specified
-			cb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
-				     intent=intent, observation=str(observation),
-				     baseline=antenna,uvrange=uvrange,chanmode='none',
-				     msselect=msselect);
+			mycb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
+				       intent=intent, observation=str(observation),
+				       baseline=antenna,uvrange=uvrange,chanmode='none',
+				       msselect=msselect);
 		else:
 			# selectdata=F, so time,scan,baseline,uvrange,msselect=''
 			# using spw and field specifications only
-			cb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
-				     baseline='',uvrange='',chanmode='none',
-				     observation='', msselect='')
+			mycb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
+				       baseline='',uvrange='',chanmode='none',
+				       observation='', msselect='')
 
 
                 # Arrange apply of existing other calibrations
@@ -74,24 +76,24 @@ def blcal(vis=None,caltable=None,
 						interp[igt]=thisinterp
 					thisinterp=interp[igt]
 					
-				cb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
-					    calwt=True,spwmap=thisspwmap,interp=thisinterp)
+				mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
+					      calwt=True,spwmap=thisspwmap,interp=thisinterp)
 
                 # ...and now the specialized terms
                 # (BTW, interp irrelevant for these, since they are evaluated)
 
 		# Apply parallactic angle, if requested
-		if parang: cb.setapply(type='P')
+		if parang: mycb.setapply(type='P')
 
 		# Set up the solve
 		if freqdep:
-			cb.setsolve(type='MF',t=solint,combine=combine,refant='',table=caltable,apmode=calmode,solnorm=solnorm)
+			mycb.setsolve(type='MF',t=solint,combine=combine,refant='',table=caltable,apmode=calmode,solnorm=solnorm)
 		else:
-			cb.setsolve(type='M',t=solint,combine=combine,refant='',table=caltable,apmode=calmode,solnorm=solnorm)
+			mycb.setsolve(type='M',t=solint,combine=combine,refant='',table=caltable,apmode=calmode,solnorm=solnorm)
 
-		cb.solve()
-		cb.close()
+		mycb.solve()
+		mycb.close()
 	except Exception, instance:
 		print '*** Error ***',instance
-		cb.close()
+		mycb.close()
 		raise Exception, instance

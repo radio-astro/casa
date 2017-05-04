@@ -140,10 +140,10 @@ def importevla(
             visover = viso
             viso = visover.replace('.ms','.compressed.ms')
         if flagbackup:
-            ok = af.open(viso)
-            ok = af.saveflagversion('Original',
+            ok = aflocal.open(viso)
+            ok = aflocal.saveflagversion('Original',
                     comment='Original flags on import', merge='save')
-            ok = af.done()
+            ok = aflocal.done()
             print 'Backed up original flag column to ' + viso \
                 + '.flagversions'
             casalog.post('Backed up original flag column to ' + viso
