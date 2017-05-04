@@ -314,12 +314,13 @@ class MeasurementSet(object):
         # representative frequency select the one with the spw
         # with the greatest bandwidth.
         bestspw = None
+        target_spwid = None
         for spw in target_spws_freq:
-            if not target_spwid:
+            if not bestspw:
                 bestspw = spw
             elif spw.bandwidth.value > bestspw.bandwidth.value: 
-                best_spw = spw
-        target_spwid = best_spw.id
+                bestspw = spw
+        target_spwid = bestspw.id
 
         return (target_source_name, target_spwid)
 
