@@ -117,16 +117,17 @@ class Editimlist(basetask.StandardTaskTemplate):
         # The default spw range for VLASS is 2~17. hif_makeimages() needs an csv list.
         # We set the target spw before the heuristics object because the heursitics class
         # uses it in initialization.
-        if 'VLASS' == img_mode:
+        if 'VLASS-QL' == img_mode:
             if not inputs.spw:
                 target['spw'] = ','.join([str(x) for x in range(2,18)])
+                inputs.spw = target['spw']
             else:
                 target['spw'] = inputs.spw
         else:
             target['spw'] = inputs.spw
 
         target['phasecenter'] = inputs.phasecenter
-        th = target['heuristics'] = iph.getHeuristics(vislist=inputs.vis, spw=inputs.spw, observing_run=inputs.context.observing_run, imaging_mode=img_mode)
+        th = target['heuristics'] = iph.getHeuristics(vislist=inputs.vis, spw=target['spw'], observing_run=inputs.context.observing_run, imaging_mode=img_mode)
         target['threshold'] = th.threshold() if not inputs.threshold else inputs.threshold
         target['reffreq'] = th.reffreq() if not inputs.reffreq else inputs.reffreq
         target['niter'] = th.niter_correction(None, None, None, None, None) if not inputs.niter else inputs.niter
@@ -139,12 +140,12 @@ class Editimlist(basetask.StandardTaskTemplate):
         target['robust'] = th.robust(None) if not inputs.robust else inputs.robust
         target['mask'] = th.mask() if not inputs.mask else inputs.mask
         target['specmode'] = th.specmode() if not inputs.specmode else inputs.specmode
-        target['gridder'] = th.gridder() if not inputs.gridder else inputs.gridder
+        target['gridder'] = th.gridder(None, None) if not inputs.gridder else inputs.gridder
         buffer_arcsec = th.buffer_radius() if not inputs.search_radius_arcsec else inputs.search_radius_arcsec
         result.capture_buffer_size(buffer_arcsec)
         target['cell'] = th.cell(None, None, None) if not inputs.cell else inputs.cell
         target['imsize'] = th.imsize(None, None, None, None, None) if not inputs.imsize else inputs.imsize
-        target['intent'] = th.inent() if not inputs.intent else inputs.intent
+        target['intent'] = th.intent() if not inputs.intent else inputs.intent
         target['nterms'] = th.nterms() if not inputs.nterms else inputs.nterms
         target['stokes'] = th.stokes() if not inputs.stokes else inputs.stokes
         #------------------------------
@@ -174,7 +175,9 @@ class Editimlist(basetask.StandardTaskTemplate):
 
                     target['field'] = fieldnames[0]
 
-        # import pprint; pprint.pprint(target)
+        for key, value in target.items():
+            LOG.info("{k} = {v}".format(k=key, v=value))
+
         try:
             if len(target['field']) > 0:
                 result.add_target(target)
