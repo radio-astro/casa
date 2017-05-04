@@ -31,9 +31,14 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayPartMath.h>
 #include <casa/Arrays/MaskArrMath.h>
+#include <casa/Arrays/ArrayIO.h>
+#include <casa/iomanip.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/BasicSL/Constants.h>
+
 using namespace casacore;
 using namespace casa::vi;
 
@@ -293,6 +298,65 @@ void SolveDataBuffer::finalizeResiduals()
 
   // TBD: zero flagged samples here?
 
+}
+
+void SolveDataBuffer::reportData()
+{
+
+  Slice corrs(0,2,3), sl;  // p-hands only 
+
+  Vector<Int> a1(this->antenna1()), a2(this->antenna2());
+  Cube<Complex> vCC(this->visCubeCorrected()(corrs,sl,sl));
+  Cube<Complex> vCM(this->visCubeModel()(corrs,sl,sl));
+  Cube<Float> wtS(this->weightSpectrum()(corrs,sl,sl));
+  Cube<Bool> flg(this->flagCube()(corrs,sl,sl));
+
+  /*
+  cout << "******Making weights globally uniform!!!!!!!!!!!!!!!!" << endl;
+    // this makes VI2 match VI1
+  wtS.set(1.0f);
+  //*/
+
+  /*
+  cout << "*******Zeroing zero-wt data (for K solutions)!!!!!!!!!!!!!" << endl;
+    // this makes VI2 match VI1 solint='int' when some channels flagged
+  vCC(wtS==0.0f)=Complex(0.0);
+  //*/
+
+
+  /*
+  cout << "*******making weights uniform (for K solution testing)!!!!!!!!!!!!!" << endl;
+  wtS.set(max(wtS));
+  //*/
+
+  /*
+  cout << "*******zero off-wt data (for K solution testing)!!!!!!!!!!!!!" << endl;
+  vCC(wtS!=max(wtS))=0.0f;
+  wtS(wtS!=max(wtS))=0.0f;
+  //*/
+
+  /*
+    // this makes VI2 match VI1 for  solint='inf' (and > 'int')
+    cout << "*******renormalizing off-wt data (for K solution testing)!!!!!!!!!!!!!" << endl;
+  vCC*=wtS;
+  vCC/=max(wtS);
+  //*/
+
+
+  cout << "Time=" << MVTime(time()(0)/C::day).string(MVTime::YMD,7) << endl;
+  cout.precision(8);
+  for (Int irow=0;irow<nRows();++irow) {
+    for (Int ich=0;ich<nChannels();++ich) {
+      cout << std::setw(2) << a1(irow) << "-" << std::setw(2) << a2(irow) << " ";
+      if (nChannels()>1) cout << "ich=" << ich << " ";
+      cout << "fl=" << flg(Slice(),Slice(ich),Slice(irow)).nonDegenerate() << " ";
+      cout << "wt=" << wtS(Slice(),Slice(ich),Slice(irow)).nonDegenerate() << " ";
+      cout << "cM=" << vCM(Slice(),Slice(ich),Slice(irow)).nonDegenerate() << " ";
+      cout << "cC=" << vCC(Slice(),Slice(ich),Slice(irow)).nonDegenerate() << " ";
+      cout << endl;
+    }
+  }
+  cout << "*****************************************************************************" << endl;
 }
 
 void SolveDataBuffer::initFromVB(const vi::VisBuffer2& vb) 
@@ -602,6 +666,15 @@ void SDBList::finalizeResiduals()
 {
   for (Int i=0;i<nSDB_;++i)
     SDB_[i]->finalizeResiduals();
+}
+
+void SDBList::reportData()
+{
+  cout << "nSDB=" << nSDB_ << endl;
+  for (Int i=0;i<nSDB_;++i) {
+    cout << "isdb=" << i << endl;
+    SDB_[i]->reportData();
+  }
 }
 
 

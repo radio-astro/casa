@@ -164,6 +164,9 @@ public:
 
   //</group>
 
+  // Print out data, weights, flags for debugging purposes
+  void reportData();
+
 protected:
 
   // Handle copy from the input VB2
@@ -256,6 +259,9 @@ public:
   void finalizeResiduals();
   //  NB: disable for now, may not be needed...
   //  void divideCorrByModel();
+
+  // Print out data, weights, flags for debugging purposes
+  void reportData();
 
 private:
 

@@ -30,6 +30,8 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/Quanta/MVTime.h>
+#include <casa/iomanip.h>
 
 #define PRTLEV_VBA 0
 
@@ -476,6 +478,38 @@ void VisBuffAccumulator::throw_err(const String& origin, const String &msg)
   LogOrigin("VisBuffAccumulator", origin);
   throw(AipsError(msg));
 }
+
+void VisBuffAccumulator::reportData() {
+
+  CalVisBuffer& cvb(aveCalVisBuff());
+  Slice corrs(0,2,3), sl;
+
+  Vector<Int> a1(cvb.antenna1()), a2(cvb.antenna2());
+  Cube<Complex> vCC(cvb.visCube()(corrs,sl,sl));
+  Cube<Complex> vCM(cvb.modelVisCube()(corrs,sl,sl));
+  Matrix<Float> wtS(cvb.weightMat()(corrs,sl));
+  Matrix<Bool> flg(cvb.flag()(sl,sl));
+
+  cout << "Time=" << MVTime(timeStamp()/C::day).string(MVTime::YMD,7) << endl;
+  cout.precision(8);
+  for (Int irow=0;irow<cvb.nRow();++irow) {
+    for (Int ich=0;ich<cvb.nChannel();++ich) {
+      if (flg(ich,irow)) continue;
+      cout << std::setw(2) << a1(irow) << "-" << std::setw(2) << a2(irow) << " ";
+      if (cvb.nChannel()>1) cout << "ich=" << ich << " ";
+      cout << "fl=" << flg(Slice(ich),Slice(irow)).nonDegenerate() << " ";
+      cout << "wt=" << wtS(Slice(),Slice(irow)).nonDegenerate() << " ";
+      cout << "cM=" << vCM(Slice(),Slice(),Slice(irow)).nonDegenerate() << " ";
+      cout << "cC=" << vCC(Slice(),Slice(),Slice(irow)).nonDegenerate() << " ";
+      cout << endl;
+    }
+  }
+
+
+
+}
+
+
 
 } //# NAMESPACE CASA - END
 

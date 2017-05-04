@@ -275,5 +275,15 @@ const Vector<Int>& VisBuffGroupAcc::outToInRow(const Int spw,
         "VisBuffGroupAcc outToInRow: (spw, fld) index out of range."));
 }
 
+void VisBuffGroupAcc::reportData()
+{
+  cout << "nBuf=" << nBuf_p << endl;
+  for(Int ibuf = 0; ibuf < nBuf_p; ++ibuf) {
+    cout << "iBuf=" << ibuf << endl;
+    if (VBA_p[ibuf]) VBA_p[ibuf]->reportData();
+  }
+
+}
+
 } //# NAMESPACE CASA - END
 

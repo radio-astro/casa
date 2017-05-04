@@ -118,6 +118,8 @@ public:
 
   void setTVIDebug(bool debug) {tvi_debug = debug;}
 
+  void reportData();
+
 protected:
   // Averaging buffer
   CalVisBuffer avBuf_p;

@@ -2457,7 +2457,7 @@ void MMueller::solveOne(SDBList& sdbs) {
 	// Accumulate
 	sol+=(vis*wt);
 	swt+=wt;
-	solok&=!fl;
+	solok|=!fl;
       }
     }
   }

@@ -627,7 +627,12 @@ public:
   virtual void setApply(const casacore::Record& apply);
 
   // M gathers/solves for itself under self-determined conditions
+  //  Initialization:  VI1: False ; VI2: True
   virtual casacore::Bool useGenericGatherForSolve() { return useGenGathSolve_p; };
+
+  // When generically gathering (VI2 only!), _don't_ use generic solveOne
+  //   (use selfSolveOne below, which is just copy from averaged data)
+  virtual casacore::Bool useGenericSolveOne() { return !useGenGathSolve_p; };
 
   // M solves for itself (by copying averaged data)
   virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };

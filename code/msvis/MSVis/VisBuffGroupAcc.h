@@ -144,6 +144,8 @@ public:
 
   void setTVIDebug(bool debug) {tvi_debug = debug;}
 
+  void reportData();
+
 private:
 
   // Prohibit in-public null constructor, copy constructor and assignment
