@@ -39,12 +39,14 @@ class StatWtTVI : public TransformingVi2 {
 
 public:
 
-	// Lifecycle
-	StatWtTVI(ViImplementation2 * inputVii, const casacore::Record &configuration);
-	~StatWtTVI();
+    using Baseline=std::pair<casacore::uInt, casacore::uInt>;
 
-	// Navigation methods
+	StatWtTVI(ViImplementation2 * inputVii, const casacore::Record &configuration);
+
+	virtual ~StatWtTVI();
+
 	void origin();
+
 	void next();
 
     virtual void weightSpectrum(casacore::Cube<casacore::Float>& wtsp) const;
@@ -55,34 +57,15 @@ public:
 
     virtual void flagRow (casacore::Vector<casacore::Bool> & flagRow) const;
 
-    // virtual void scan (casacore::Vector<casacore::Int>& scans) const;
-    // General TVI info (common for all sub-classes)
-    //casacore::Bool existsColumn (VisBufferComponent2 id) const;
-    //casacore::Bool flagCategoryExists() const {return false;}
+    // Override unimplemented TransformingVi2 version
+    void writeBackChanges(VisBuffer2* vb);
 
-	// casacore::List of methods that should be implemented by derived classes
-    // virtual void floatData (casacore::Cube<casacore::Float> & vis) const = 0;
-    // virtual void visibilityObserved (casacore::Cube<casacore::Complex> & vis) const = 0;
-    // virtual void visibilityCorrected (casacore::Cube<casacore::Complex> & vis) const = 0;
-    // virtual void visibilityModel (casacore::Cube<casacore::Complex> & vis) const = 0;
-    // virtual void sigmaSpectrum (casacore::Cube<casacore::Float> &sigmaSp) const = 0;
-    // virtual casacore::Vector<casacore::Double> getFrequencies (	casacore::Double time, casacore::Int frameOfReference,casacore::Int spectralWindowId, casacore::Int msId) const = 0;
-    // virtual void writeFlag (const casacore::Cube<casacore::Bool> & flagCube) = 0;
+protected:
 
-    // Common transformation for all sub-classes
-    /*
-    void writeFlagRow (const casacore::Vector<casacore::Bool>& flag);
+    void originChunks(casacore::Bool forceRewind);
 
-    casacore::Vector<casacore::Int> getChannels(
-        casacore::Double time, casacore::Int frameOfReference,
-    	casacore::Int spectralWindowId, casacore::Int msId
-    ) const;
+    void nextChunk();
     
-    
-    void weight (casacore::Matrix<casacore::Float> & weight) const;
-    
-    void sigma (casacore::Matrix<casacore::Float> & sigma) const;
-*/
 private:
 
     mutable casacore::Bool _weightsComputed = false;
@@ -91,20 +74,29 @@ private:
     mutable casacore::Matrix<casacore::Float> _newWt;
     mutable casacore::Cube<casacore::Bool> _newFlag;
     mutable casacore::Vector<casacore::Bool> _newFlagRow;
-
+    mutable casacore::Vector<casacore::uInt> _newRowIDs;
+    mutable std::map<StatWtTVI::Baseline, casacore::Double> _weights;
+/*
     casacore::String spwSelection_p;
     mutable casacore::LogIO logger_p;
     mutable map<casacore::Int,casacore::uInt > spwOutChanNumMap_p; // Must be accessed from const methods
     mutable map<casacore::Int,vector<casacore::Int> > spwInpChanIdxMap_p; // Must be accessed from const methods
-
+*/
     void _computeNewWeights() const;
+
+    void _gatherAndComputeWeights() const;
+
+    void _computeWeights(
+        const map<Baseline, casacore::Cube<casacore::Complex>>& data,
+        const map<Baseline, casacore::Cube<casacore::Bool>>& flags
+    ) const;
 
     casacore::Bool _parseConfiguration(const casacore::Record &configuration);
 	
     void _initialize();
 
-	// Form spwInpChanIdxMap_p via calls to underlying Vii
-	void _formSelectedChanMap();
+    // swaps ant1/ant2 if necessary
+    static Baseline _baseline(casacore::uInt ant1, casacore::uInt ant2);
 
 };
 

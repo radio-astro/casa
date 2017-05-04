@@ -23,6 +23,8 @@
 #ifndef STATWT_H_
 #define STATWT_H_
 
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Logging/LogIO.h>
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 
 namespace casa {
@@ -40,12 +42,28 @@ public:
 
     void setOutputMS(const casacore::String& outname);
 
+    void setTimeBinWidth(const casacore::Quantity& binWidth);
+
+    // binWidth must be in seconds
+    void setTimeBinWidth(casacore::Double binWidth);
+
+    // set the time bin width using an integral number of integration time.
+    // For this purpose, the integration time is defined as the median value
+    // of the INTERVAL column. If either extrema in this column is more than
+    // 25% different from the median, an exception will be thrown because
+    // there is no single representative value of the integration time.
+    void setTimeBinWidthUsingInterval(casacore::uInt n);
+
+    //void writeWeights() const;
+
     void writeWeights() const;
 
 private:
     casacore::MeasurementSet* _ms;
-    //casacore::String _msname = "";
     casacore::String _outname = "";
+    // time bin width in seconds
+    casacore::Double _timeBinWidth = 1;
+    casacore::LogIO _log;
 
 };
 

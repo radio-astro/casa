@@ -57,7 +57,7 @@ StatWtTVI::~StatWtTVI() {
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-Bool StatWtTVI::_parseConfiguration(const Record &configuration)
+Bool StatWtTVI::_parseConfiguration(const Record& /*configuration*/)
 {
     /*
     int exists = -1;
@@ -125,88 +125,26 @@ void StatWtTVI::_initialize()
 	return;
     */
 }
-/*
-// Method implementing main loop  (with auxiliary data)
-template <class T> void StatWtTVI::_transformStatWt(
-    casacore::Cube<T> const &inputDataCube, casacore::Cube<T> &outputDataCube,
-    StatWtTransformEngine<T> &transformer
-) const {
-		// Re-shape output data cube
-		outputDataCube.resize(getVisBufferConst()->getShape(),false);
-
-		// Get data shape for iteration
-		const casacore::IPosition &inputShape = inputDataCube.shape();
-		casacore::uInt nRows = inputShape(2);
-		casacore::uInt nCorrs = inputShape(0);
-
-		// Initialize input-output planes
-		casacore::Matrix<T> inputDataPlane;
-		casacore::Matrix<T> outputDataPlane;
-
-		// Initialize input-output vectors
-		casacore::Vector<T> inputDataVector;
-		casacore::Vector<T> outputDataVector;
-
-		for (casacore::uInt row=0; row < nRows; row++)
-		{
-			// Assign input-output planes by reference
-			transformer.setRowIndex(row);
-			inputDataPlane.reference(inputDataCube.xyPlane(row));
-			outputDataPlane.reference(outputDataCube.xyPlane(row));
-
-			for (casacore::uInt corr=0; corr < nCorrs; corr++)
-			{
-				// Assign input-output vectors by reference
-				transformer.setCorrIndex(corr);
-				inputDataVector.reference(inputDataPlane.row(corr));
-				outputDataVector.reference(outputDataPlane.row(corr));
-
-				// Transform data
-				transformer.transform(inputDataVector,outputDataVector);
-			}
-		}
-
-		return;
-	}
-*/
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-void StatWtTVI::_formSelectedChanMap()
-{
-	// This triggers realization of the channel selection
-	inputVii_p->originChunks();
-
-    // Refresh map
-	spwInpChanIdxMap_p.clear();
-
-	for (Int ispw = 0; ispw < inputVii_p->nSpectralWindows(); ++ispw)
-	{
-
-		// TBD trap unselected spws with a continue
-
-		Vector<Int> chansV;
-		chansV.reference(inputVii_p->getChannels(0.0, -1, ispw, 0));
-
-		Int nChan = chansV.nelements();
-		if (nChan > 0)
-		{
-			spwInpChanIdxMap_p[ispw].clear(); // creates ispw's map
-			for (Int ich = 0; ich < nChan; ++ich)
-			{
-				spwInpChanIdxMap_p[ispw].push_back(chansV[ich]); // accum into map
-			}
-		}
-	} // ispw
-
-	return;
-}
 
 void StatWtTVI::weightSpectrum(Cube<Float> & newWtsp) const {
     _wtSpExists = weightSpectrumExists();
     if (_wtSpExists) {
-        _computeNewWeights();
-        newWtsp = _newWtSp.copy();
+        // _computeNewWeights();
+        getVii()->weightSpectrum(newWtsp);
+        Vector<Int> ant1, ant2;
+        antenna1(ant1);
+        antenna2(ant2);
+        IPosition blc(3, 0);
+        auto trc = newWtsp.shape() - 1;
+        auto nrows = nRows();
+        Vector<uInt> rowIDs;
+        getRowIds(rowIDs);
+        for (Int i=0; i<nrows; ++i) {
+            blc[2] = i;
+            trc[2] = i;
+            auto baseline = _baseline(ant1[i], ant2[i]);
+            newWtsp(blc, trc) = _weights.find(baseline)->second;
+        }
     }
     else {
         newWtsp.resize(IPosition(3, 0));
@@ -214,19 +152,215 @@ void StatWtTVI::weightSpectrum(Cube<Float> & newWtsp) const {
 }
 
 void StatWtTVI::weight(Matrix<Float> & wtmat) const {
-    _wtSpExists = weightSpectrumExists();
-    _computeNewWeights();
-    wtmat = _newWt.copy();
+    // _wtSpExists = weightSpectrumExists();
+    // _computeNewWeights();
+    getVii()->weight(wtmat);
+    Vector<Int> ant1, ant2;
+    antenna1(ant1);
+    antenna2(ant2);
+    auto nrows = nRows();
+    for (Int i=0; i<nrows; ++i) {
+        auto baseline = _baseline(ant1[i], ant2[i]);
+        wtmat.column(i) = _weights.find(baseline)->second;
+    }
 }
 
 void StatWtTVI::flag(Cube<Bool>& flagCube) const {
-    _computeNewWeights();
-    flagCube = _newFlag.copy();
+    // _computeNewWeights();
+    // flagCube = _newFlag.copy();
+    getVii()->flag(flagCube);
+    Vector<Int> ant1, ant2;
+    antenna1(ant1);
+    antenna2(ant2);
+    auto nrows = nRows();
+    IPosition blc(3, 0);
+    auto trc = flagCube.shape() - 1;
+    for (Int i=0; i<nrows; ++i) {
+        auto baseline = _baseline(ant1[i], ant2[i]);
+        if (_weights.find(baseline)->second == 0) {
+            blc[2] = i;
+            trc[2] = i;
+            flagCube(blc, trc) = True;
+        }
+    }
 }
 
-void StatWtTVI::flagRow (casacore::Vector<casacore::Bool> & flagRow) const {
-    _computeNewWeights();
-    flagRow = _newFlagRow.copy();
+void StatWtTVI::flagRow (Vector<Bool>& flagRow) const {
+    getVii()->flagRow(flagRow);
+    Vector<Int> ant1, ant2;
+    antenna1(ant1);
+    antenna2(ant2);
+    auto nrows = nRows();
+    for (Int i=0; i<nrows; ++i) {
+        auto baseline = _baseline(ant1[i], ant2[i]);
+        flagRow[i] = _weights.find(baseline)->second == 0;
+    }
+}
+
+void StatWtTVI::originChunks(Bool forceRewind) {
+    // Drive next lower layer
+    getVii()->originChunks(forceRewind);
+    _weightsComputed = False;
+    _gatherAndComputeWeights();
+    _weightsComputed = True;
+
+    // Weights not yet ready in this chunk
+    // weightsReady_p=false;
+
+    // Do calculation for current chunk
+    //  NB: this drives lower-layer sub-chunks, in general
+    // this->gatherAndCalculateWts();
+
+    // Weights now ready in this chunk
+    // weightsReady_p=true;
+
+    // re-origin this chunk in next layer
+    //  (ensures wider scopes see start of the this chunk)
+    getVii()->origin();
+}
+
+void StatWtTVI::nextChunk() {
+    // Drive next lower layer
+    getVii()->nextChunk();
+    _weightsComputed = False;
+    _gatherAndComputeWeights();
+    _weightsComputed = True;
+    // Weights not yet ready in this chunk
+    //weightsReady_p=false;
+
+    // Do calculation for current chunk
+    //  NB: this drives lower-layer sub-chunks, in general
+    //this->gatherAndCalculateWts();
+
+    // Weights now ready in this chunk
+    //weightsReady_p=true;
+
+    // re-origin this chunk next layer
+    //  (ensures wider scopes see start of the this chunk)
+    getVii()->origin();
+}
+
+void StatWtTVI::_gatherAndComputeWeights() const {
+    // Shape this to enable gather of
+    //   all sub-chunks on all baselines,corrs,channels
+    //   probably has a time axis, too
+    //Array<Complex> allvis;
+
+    // Drive NEXT LOWER layer's ViImpl to gather data into allvis:
+    //  Assumes all sub-chunks in the current chunk are to be used
+    //   for the variance calculation
+    //  Essentially, we are sorting the incoming data into
+    //   allvis, to enable a convenient variance calculation
+    ViImplementation2* vii = getVii();
+    VisBuffer2* vb = vii->getVisBuffer();
+    _newRowIDs.resize(vii->nRowsInChunk());
+    // baseline to visibility, flag maps
+    std::map<Baseline, Cube<Complex>> data;
+    std::map<Baseline, Cube<Bool>> flags;
+    IPosition blc, trc;
+   // vector<Baseline> baselines;
+    //cout << "BEGIN" << endl;
+    for (vii->origin();vii->more();vii->next()) {
+        const auto rowIDs = vb->rowIds();
+        const auto ant1 = vb->antenna1();
+        const auto ant2 = vb->antenna2();
+        // [nC,nF,nR)
+        const auto dataCube = vb->visCubeCorrected();
+        IPosition dataCubeBLC(3, 0);
+        auto dataCubeTRC = dataCube.shape() - 1;
+        dataCubeTRC[2] = 0;
+        const auto flagCube = vb->flagCube();
+        const auto nrows = vb->nRows();
+        const auto npol = dataCube.nrow();
+        const auto nchan = dataCube.ncolumn();
+        // debug
+        // const auto times = vb->time();
+        blc = dataCubeBLC;
+        trc = dataCubeTRC;
+        for (Int i=0; i<nrows; ++i) {
+            dataCubeBLC[2] = i;
+            dataCubeTRC[2] = i;
+            auto baseline = _baseline(ant1[i], ant2[i]);
+            if (data.find(baseline) == data.end()) {
+                data[baseline] = dataCube(dataCubeBLC, dataCubeTRC);
+                flags[baseline] = flagCube(dataCubeBLC, dataCubeTRC);
+            }
+            else {
+                const auto nplane = data[baseline].nplane();
+                blc[2] = nplane;
+                trc[2] = nplane;
+                data[baseline].resize(npol, nchan, nplane+1, True);
+                flags[baseline].resize(npol, nchan, nplane+1, True);
+                data[baseline](blc, trc) = dataCube(dataCubeBLC, dataCubeTRC);
+                flags[baseline](blc, trc) = flagCube(dataCubeBLC, dataCubeTRC);
+            }
+        }
+    }
+    // data has been gathered, now compute weights
+    _computeWeights(data, flags);
+}
+
+void StatWtTVI::writeBackChanges(VisBuffer2 * vb) {
+    // Pass to next layer down
+    getVii()->writeBackChanges(vb);
+}
+
+StatWtTVI::Baseline StatWtTVI::_baseline(uInt ant1, uInt ant2) {
+    Baseline baseline;
+    if (ant1 < ant2) {
+        // this may always be the case, but I'm not certain,
+        baseline.first = ant1;
+        baseline.second = ant2;
+    }
+    else {
+        baseline.first = ant2;
+        baseline.second = ant1;
+    }
+    return baseline;
+}
+
+void StatWtTVI::_computeWeights(
+    const map<Baseline, Cube<Complex>>& data,
+    const map<Baseline, Cube<Bool>>& flags
+) const {
+    ClassicalStatistics<Double, Array<Float>::const_iterator, Array<Bool>::const_iterator> csReal, csImag;
+    std::set<StatisticsData::STATS> stats;
+    stats.insert(StatisticsData::VARIANCE);
+    csReal.setStatsToCalculate(stats);
+    csImag.setStatsToCalculate(stats);
+    auto diter = data.begin();
+    auto dend = data.end();
+    auto fiter = flags.begin();
+    for (; diter!=dend; ++diter, ++fiter) {
+        auto baseline = diter->first;
+        auto dataForBaseline = diter->second;
+        const auto npts = dataForBaseline.size();
+        if (npts == 1) {
+            // one data point, trivial
+            _weights[baseline] = 0;
+        }
+        else {
+            auto flagsForBaseline = fiter->second;
+            if (allTrue(flagsForBaseline)) {
+                // all data flagged, trivial
+                _weights[baseline] = 0;
+            }
+            else {
+                // some data not flagged
+                const auto realPart = real(dataForBaseline);
+                const auto imagPart = imag(dataForBaseline);
+                const auto mask = ! flagsForBaseline;
+                const auto riter = realPart.begin();
+                const auto iiter = imagPart.begin();
+                const auto miter = mask.begin();
+                csReal.setData(riter, miter, npts);
+                csImag.setData(iiter, miter, npts);
+                auto varSum = csReal.getStatistic(StatisticsData::VARIANCE)
+                    + csImag.getStatistic(StatisticsData::VARIANCE);
+                _weights[baseline] = varSum == 0 ? 0 : 2/varSum;
+            }
+        }
+    }
 }
 
 void StatWtTVI::_computeNewWeights() const {
@@ -327,52 +461,6 @@ void StatWtTVI::next() {
     _weightsComputed = False;
 }
 
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-/*
-Bool StatWtTVI::existsColumn (VisBufferComponent2 id) const
-{
-
-	Bool ret;
-	switch (id)
-	{
-		case VisBufferComponent2::WeightSpectrum:
-		{
-			ret = true;
-			break;
-		}
-		case VisBufferComponent2::SigmaSpectrum:
-		{
-			ret = true;
-			break;
-		}
-		default:
-		{
-			ret = getVii()->existsColumn(id);
-			break;
-		}
-	}
-
-	return ret;
-}
-*/
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-/*
-Vector<Int> StatWtTVI::getChannels (Double,Int,Int spectralWindowId,Int) const
-{
-	Vector<Int> ret(spwOutChanNumMap_p[spectralWindowId]);
-
-	for (uInt chanIdx = 0; chanIdx<spwOutChanNumMap_p[spectralWindowId];chanIdx++)
-	{
-		ret(chanIdx) = chanIdx;
-	}
-
-	return ret;
-}
-*/
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------

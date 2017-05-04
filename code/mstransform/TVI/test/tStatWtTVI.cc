@@ -25,6 +25,7 @@
 
 #include <mstransform/MSTransform/MSTransformIteratorFactory.h>
 #include <mstransform/TVI/StatWtTVIFactory.h>
+#include <mstransform/TVI/StatWtTVILayerFactory.h>
 
 using namespace std;
 using namespace casa;
@@ -73,54 +74,44 @@ void StatWtTVITest::testCompareTransformedData() {
 	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
 
 	// Create MSTransformIterator pointing to reference file
+	/*
 	refConfiguration_p.define("factory",False);
 	MSTransformIteratorFactory refFactory(refConfiguration_p);
 	VisibilityIterator2 refTVI(refFactory);
-
+	*/
+    /*
 	// Use MSTransformFactory to create a plain input VII
 	testConfiguration_p.define("factory",True);
-	MSTransformIteratorFactory plainVIFactory(testConfiguration_p);
+    testConfiguration_p.define ("timebin", "1s");
+    MSTransformIteratorFactory plainVIFactory(testConfiguration_p);
 	ViImplementation2 *inputVI = plainVIFactory.getInputVI()->getImpl();
-/*
-    Block<int> sort(5);
-    Int icol(0);
-    sort[icol++] = MS::ARRAY_ID;
-    sort[icol++] = MS::SCAN_NUMBER;
-    sort[icol++] = MS::FIELD_ID;
-    sort[icol++] = MS::DATA_DESC_ID;
-    sort[icol++] = MS::TIME;
-    SortColumns sc(sort);
-*/
 
-	// Generate TVI to test
+    // Generate TVI to test
 	StatWtTVIFactory testFactory(testConfiguration_p, inputVI);
     VisibilityIterator2 testTVI(testFactory);
+    */
+    // no binning
+    vi::IteratingParameters ipar(0.001);
+	MeasurementSet msref(referenceFile_p);
+	vi::VisIterImpl2LayerFactory dataRef(&msref, ipar, True);
+	Vector<vi::ViiLayerFactory*> factsRef(1, &dataRef);
+	vi::VisibilityIterator2 refTVI(factsRef);
 
+    MeasurementSet mstest(testFile_p);
+    vi::VisIterImpl2LayerFactory data(&mstest, ipar, True);
+    Record config;
+    vi::StatWtTVILayerFactory statWtLayerFactory(config);
+    Vector<vi::ViiLayerFactory*> factsTest(2);
+    factsTest[0] = &data;
+    factsTest[1] = &statWtLayerFactory;
+    vi::VisibilityIterator2 testTVI(factsTest);
 	// Determine columns to check
 	VisBufferComponents2 columns;
 	columns += VisBufferComponent2::NRows;
-//	columns += VisBufferComponent2::NChannels;
-//	columns += VisBufferComponent2::NCorrelations;
-//	columns += VisBufferComponent2::FlagRow;
-//	columns += VisBufferComponent2::FlagCube;
-//	columns += VisBufferComponent2::VisibilityCubeObserved;
-//	columns += VisBufferComponent2::VisibilityCubeCorrected;
-//	columns += VisBufferComponent2::VisibilityCubeModel;
+	columns += VisBufferComponent2::FlagRow;
+	columns += VisBufferComponent2::FlagCube;
 	columns += VisBufferComponent2::WeightSpectrum;
-//	columns += VisBufferComponent2::SigmaSpectrum;
 	columns += VisBufferComponent2::Weight;
-//	columns += VisBufferComponent2::Sigma;
-//    columns += VisBufferComponent2::Scan;
-    /*
-    vi::VisBuffer2 *vb = vi2.getVisBuffer();
-    Int iChunk(0);
-    for(vi2.originChunks(); vi2.moreChunks(); ++iChunk, vi2.nextChunk()) {
-        Int iIter(0);
-        for (vi2.origin(); vi2.more(); ++iIter, vi2.next()) {
-            auto x = vb->weightSpectrum();
-        }
-    }
-*/
     // Compare
 	Bool res = compareVisibilityIterators(testTVI,refTVI,columns,tolerance);
 
