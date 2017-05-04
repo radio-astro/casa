@@ -18,7 +18,7 @@
 # An ALMA Science Verification Data Analysis Regression
 # using observations of M100 from September 2011 and _parallelisation_
 import os, traceback
-from mpi4casa.MPICommandClient import MPICommandClient
+from mpi4casa.MPICommandClient import MPICommandClient, MPIEnvironment
 
 step_title = { 0 : 'Data import',
 	       1 : 'Generate antenna position cal tables',
@@ -60,9 +60,14 @@ print "Make plots?", makeplots
 therefant = 'DV01'
 mynumsubmss = 4
 
+mms = False
+parallelImaging = False
+
 # Parallelization control
-mms = True
-parallelImaging = True
+if MPIEnvironment.is_mpi_enabled:
+    casalog.post('MPI environment detected')
+    mms = True
+    parallelImaging = True
 
 # clean - tclean options
 withtclean = True
@@ -313,8 +318,8 @@ try:
 	    print 'Step ', mystep, step_title[mystep]
 	
 	    for name in basename:
-	        os.system('rm -rf '+name+'-line.ms')
-	        split2(vis=name+'.ms',
+	        os.system('rm -rf '+name+'-line.ms*')
+	        split(vis=name+'.ms',
 	              outputvis=name+'-line.ms',
 	              spw='1,3,5,7',
 	              datacolumn='corrected',
@@ -332,7 +337,7 @@ try:
 	    print 'Step ', mystep, step_title[mystep]
 	
 	    # Create flagcmd input list (could also call flagdata twice alternatively)
-	    flagcmd = ["mode='manual' field='' spw='0~3:0~10;3800~3839'",
+	    myflagcmd = ["mode='manual' field='' spw='0~3:0~10;3800~3839'",
 	              "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'"]
 	              
 	    for name in basename:
@@ -340,7 +345,7 @@ try:
 	        flagmanager(vis=name + '-line.ms', mode='restore',
 	                    versionname='apriori')
 	        
-	        flagdata(vis=name + '-line.ms', mode='list', inpfile=flagcmd, flagbackup=False)
+	        flagdata(vis=name + '-line.ms', mode='list', inpfile=myflagcmd, flagbackup=False)
 	
 	    # some integrations are off
 	    flagdata(vis='X220-line.ms', mode='manual',
@@ -366,8 +371,8 @@ try:
 	    print 'Step ', mystep, step_title[mystep]
 	
 	    for name in basename:
-	        os.system('rm -rf '+name+'-line-vs.ms')
-	        split2(vis=name+'-line.ms',
+	        os.system('rm -rf '+name+'-line-vs.ms*')
+	        split(vis=name+'-line.ms',
 	              outputvis=name+'-line-vs.ms',
 	              datacolumn='data',
 	              width='8',
@@ -765,7 +770,7 @@ try:
 	
 	    for name in basename:
 	        os.system('rm -rf '+name+'-calibrated.ms*')
-	        split2(vis=name+'-line-vs.ms',field='M100',
+	        split(vis=name+'-line-vs.ms',field='M100',
 	          outputvis=name+'-calibrated.ms',
 	          datacolumn = 'corrected',
 	          keepflags=False,
@@ -795,7 +800,7 @@ try:
 	    print 'Step ', mystep, step_title[mystep]
 	
 	    os.system('rm -rf M100all_lores.ms*')
-	    split2(vis='M100all.ms', outputvis='M100all_lores.ms',
+	    split(vis='M100all.ms', outputvis='M100all_lores.ms',
 	          datacolumn='data',
 	          timebin='60s',
 	          keepmms=parallelImaging 
@@ -1116,7 +1121,7 @@ try:
 	            passed = False
 	
 	        rmsdev = abs(resrms[i]-exprms[i])/exprms[i]*100.
-	        if (rmsdev > 0.5):
+	        if (rmsdev > 1.5):
 	            casalog.post( 'ERROR: RMS in primary phase calibrator image '+str(i)+' deviates from expectation by '+str(rmsdev)+' percent.','WARN')
 	            passed = False
 	
@@ -1126,7 +1131,7 @@ try:
 	        passed = False
 	
 	    rmsmdev = abs(resrmsm-exprmsm)/exprmsm*100.
-	    if (rmsmdev > 1):
+	    if (rmsmdev > 2.5):
 	        casalog.post( 'ERROR: RMS in M100 central field image '+str(i)+' deviates from expectation by '+str(rmsmdev)+' percent.','WARN')
 	        passed = False
 	
@@ -1139,9 +1144,9 @@ try:
 	        passed = False
 	        
 	    if not passed:
-	        raise Exception, 'Results are different from expectations by more than 0.5 percent.'
+	        raise Exception, 'Results are different from expectations by more than 1.0 percent.'
 	
-	    casalog.post( "\nAll peak and RMS values within 0.5 percent of the expectation.")
+	    casalog.post( "\nAll peak and RMS values are within the expectation.")
 	    if passed:
 	        print "Regression PASSED"
 	    else:
