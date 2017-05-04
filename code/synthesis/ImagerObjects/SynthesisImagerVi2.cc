@@ -878,8 +878,7 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 			    vb->setVisCubeModel(mod); 
 			  }
 			  itsMappers.degrid(*vb, savevirtualmodel );
-			  if(savemodelcolumn && writeAccess_p ){
-			    //Darn not implented
+			  if(savemodelcolumn && writeAccess_p ){			    
 			    vi_p->writeVisModel(vb->visCubeModel());
 			    //static_cast<VisibilityIteratorImpl2 *> (vi_p->getImpl())->writeVisModel(vb->visCubeModel());
 
@@ -1100,10 +1099,12 @@ void SynthesisImagerVi2::appendToMapperList(String imagename,
 	      //if !usescratch ...just save
 	      vb->setVisCubeModel(Complex(0.0, 0.0));
 	      itsMappers.degrid(*vb, savevirtualmodel);
-	      if(savemodelcolumn && writeAccess_p )
-		vb->setVisCubeModel(vb->visCubeModel());
 
-	      //	      cout << "nRows "<< vb->nRow() << "   " << max(vb->modelVisCube()) <<  endl;
+	      if(savemodelcolumn && writeAccess_p )
+		vi_p->writeVisModel(vb->visCubeModel());
+
+	      //cerr << "nRows "<< vb->nRows() << "   " << max(vb->visCubeModel()) <<  endl;
+
 	      cohDone += vb->nRows();
 	      pm.update(Double(cohDone));
 
