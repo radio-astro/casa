@@ -5682,14 +5682,32 @@ ms::iterinit2(const std::vector<std::string>& columns, const double interval,
 	return rstat;
 }
 
-bool ms::statwt2() {
+bool ms::statwt2(const variant& timebin) {
     *itsLog << LogOrigin("ms", __func__);
     try {
-        if(! detached()) {
-            StatWt statwt(itsMS);
-            statwt.writeWeights();
-            return True;
+        if (detached()) {
+            return False;
         }
+        StatWt statwt(itsMS);
+        if (timebin.type() == variant::INT) {
+            auto n = timebin.toInt();
+            ThrowIf(
+                n <= 0, "timebin must be positive"
+            );
+            statwt.setTimeBinWidthUsingInterval(timebin.touInt());
+        }
+        else {
+            casacore::Quantity myTimeBin = casaQuantity(timebin);
+            if (myTimeBin.getUnit().empty()) {
+                myTimeBin.setUnit("s");
+            }
+            if (myTimeBin.getValue() <= 0) {
+                myTimeBin.setValue(1e-5);
+            }
+            statwt.setTimeBinWidth(myTimeBin);
+        }
+        statwt.writeWeights();
+        return True;
     }
     catch (const AipsError& x) {
         *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -5699,7 +5717,6 @@ bool ms::statwt2() {
     Table::relinquishAutoLocks(true);
     return False;
 }
-
 
 bool
 ms::iterorigin()

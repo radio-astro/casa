@@ -1110,19 +1110,26 @@ the ms definition itself. -->
 
     <method type="function" name="statwt2">
         <shortdescription>THIS APPLICATION IS CURRENTLY FOR TESTING ONLY! USE AT YOUR OWN RISK! Compute and set weights based on variance of data.</shortdescription>
-        <input/>
+        <input>
+            <param type="any" direction="in" name="timebin">
+                <description>Length for binning in time to determine statistics. Can either be integer to be multiplied by the representative integration time, a quantity (string) in time units.</description>
+                <any type="variant" limittypes="string int"/>
+                <value type="int">1</value>
+                <example>4</example>
+                <example>"300s"</example>
+            </param>
+        </input>
         <returns type="bool"/>
         <description>
-            THIS APPLICATION IS CURRENTLY FOR TESTING ONLY! USE AT YOUR OWN RISK!
+            THIS APPLICATION IS UNDER DEVELOPMENT AND CURRENTLY FOR TESTING ONLY! USE AT YOUR OWN RISK!
 
             THIS APPLICATION MODIFIES THE WEIGHT, WEIGHT SPECTRUM, FLAG, AND FLAG_ROW COLUMNS OF THE INPUT
             MS. IF YOU WANT A PRISTINE COPY OF THE INPUT MS TO BE PRESERVED, MAKE A COPY OF IT BEFORE
             RUNNING THIS APPLICATION.
 
-            This application computes weights in the WEIGHT and WEIGHT_SPECTRUM (if present) columns
+            This application computes weights for the WEIGHT and WEIGHT_SPECTRUM (if present) columns
             based on the variance of values in the CORRECTED_DATA column. If the MS has no CORRECTED_DATA
-            column, the application will fail. The weights are computed on a row by row and correlation 
-            by correlation basis. The following algorithm is used:
+            column, the application will fail.  The following algorithm is used:
  
             1. For unflagged data, create two sets of values, one set is composed solely of the real part
                of the data values, the other set is composed solely of the imaginary part of the data
@@ -1132,21 +1139,41 @@ the ms definition itself. -->
             4. The associated weight is just the reciprocal of veq. The weight will have unit
                of (data unit)^(-2), eg Jy^(-2).
 
-            All values in the WEIGHT_SPECTRUM (if present) and the WEIGHT column for each row/correlation
-            pair are updated according to this algortihm. Although flagged values are not used in computing
-            the weights, the associated weights of these values are updated.
+            Data are aggregated on a per-baseline basis. Data are aggregated in bins determined by the
+            specified value of the timebin parameter. If the value of timebin is an integer, it means
+            that that value should be multiplied by the representative integration time in the MS. This
+            integration is the median value of all the values in the INTERVAL column. Flags are not
+            considered in the integration time computation. If either extrema in the INTERVAL column
+            differs from the median by more than 25%, the application will fail because the values vary
+            too much for there to be a single, representative, integration time. The timebin parameter
+            can also be specified as a quantity (string) that must have time conformant units.
+            
+            The time bins are not necessarily contiguous and are not necessarily the same width. The start
+            of a bin is always coincident with a value from the TIME column, So for example, if values
+            from the time column are [20, 60, 100, 140, 180, 230], and the width of the bins is chosen to be 110s,
+            the first bin would start at 20s and run to 130s, so that data from timestamps 20, 60,
+            and 100 will be included in the first bin. The second bin would start
+            at 140s, so that data for timestamps 140, 180, and 230 would be included in the second bin.
+            Also, time binning does not span scan boundaries, so that data associated with different
+            scan numbers will always be binned separately; changes in SCAN_NUMBER will cause a new time
+            bin to be created, with its starting value coincident with the time of the new SCAN_NUMBER.
+            Similar behavior can be expected for changes in FIELD_ID and ARRAY_ID.
+            
+            Flagged values are not used in computing the weights, although the associated weights of
+            these values are updated.
 
-            If the variance for a set of data is 0, all data in that selection are flagged, and the corresponding
-            weights are set to 0.
+            If the variance for a set of data is 0, all associated flags for that data are set to True,
+            and the corresponding weights are set to 0.
 
             Because data are modified in the input MS, the nomodify parameter must be set to False when opening
-            the associated MS tool
+            the associated MS tool.
 
         </description>
         <example>
             # update the weights of an MS
             ms.open("my.ms", nomodify=False)
-            if ms.statwt():
+            # compute weights, using time bins of 300s
+            if ms.statwt(timebin=("300s")):
                 print "Successfully updated weights"
             else:
                 print "Updating weights failed"
