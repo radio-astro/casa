@@ -57,6 +57,7 @@ CasaTaskDict = {
     'hifa_importdata': 'ALMAImportData',
     'hifa_antpos': 'ALMAAntpos',
     'hifa_bandpass': 'ALMAPhcorBandpass',
+    'hifa_bandpassflag': 'ALMABandpassflag',
     'hifa_bpsolint': 'BpSolint',
     'hifa_flagdata': 'FlagDeterALMA',
     'hifa_exportdata': 'ALMAExportData',
@@ -100,6 +101,7 @@ classToCASATask = {
     # ALMA interferometry tasks ---------------------------------------------
     hifa_tasks.ALMAImportData         : 'hifa_importdata',
     hifa_tasks.ALMAPhcorBandpass      : 'hifa_bandpass',
+    hifa_tasks.ALMABandpassflag       : 'hifa_bandpassflag',
     hifa_tasks.ALMAAntpos             : 'hifa_antpos',
     hifa_tasks.BpSolint               : 'hifa_bpsolint',
     hifa_tasks.ALMAExportData         : 'hifa_exportdata',
@@ -221,6 +223,13 @@ TASK_COMMENTS = {
         'The spectral response of each antenna is calibrated. A short-solint '
         'phase gain is calculated to remove decorrelation of the bandpass '
         'calibrator before the bandpass is calculated.'
+    ),
+    (hifa_tasks.ALMABandpassflag,): (
+        'The spectral response of each antenna is calibrated. A short-solint '
+        'phase gain is calculated to remove decorrelation of the bandpass '
+        'calibrator before the bandpass is calculated. Outliers are flagged '
+        'based on a comparison of the calibrated (corrected) amplitudes with '
+        'the model amplitudes for the bandpass calibrator source.'
     ),
     (hifa_tasks.BpSolint,): (
         'Compute the best per spw bandpass solution intervals.'

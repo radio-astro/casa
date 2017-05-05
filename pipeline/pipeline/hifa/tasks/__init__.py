@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from .antpos import ALMAAntpos
 from .bandpass import ALMAPhcorBandpass
+from .bandpassflag import Bandpassflag as ALMABandpassflag
 from .bpsolint import BpSolint
 from .dbservice import Fluxdb
 from .exportdata import ALMAExportData
