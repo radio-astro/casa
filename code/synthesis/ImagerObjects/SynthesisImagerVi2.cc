@@ -399,8 +399,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     CoordinateSystem cs=itsMappers.imageStore(gmap)->getCSys();
     IPosition imshape=itsMappers.imageStore(gmap)->getShape();
+    /////For some reason imagestore returns 0 channel image sometimes
+    ////
+    if(imshape(3) < 1) 
+      return;
     Double minFreq=SpectralImageUtil::worldFreq(cs, 0.0);
     Double maxFreq=SpectralImageUtil::worldFreq(cs,imshape(3)-1);
+   
     if(maxFreq < minFreq){
       Double tmp=minFreq;
       minFreq=maxFreq;
@@ -417,7 +422,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     auto copyFreqBegs=freqBegs_p;
     auto copyFreqEnds=freqEnds_p;
     auto copyFreqSpws=  freqSpws_p;
+    
     andFreqSelection(-1, -1, minFreq, maxFreq, selFreqFrame_p);
+    
     vi_p->setFrequencySelection (*fselections_p);
 
     freqBegs_p=copyFreqBegs;
