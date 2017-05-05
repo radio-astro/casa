@@ -2090,9 +2090,11 @@ ia.close()             # close to unlock disk image
             <description>x,y grid spacing. Array of exactly two positive integers.</description>
             <value type="vector"><value>1</value><value>1</value></value>
         </param>
-        <param type="intarray" name="anchor">
-            <description>x,y anchor pixel location. Array of exactly two integers.</description>
-            <value type="vector"><value>0</value><value>0</value></value>
+        <param type="variant" name="anchor">
+            <any type="variant" limittypes="string intArray"/>
+            <description>x,y anchor pixel location. Either "ref" to use the image reference pixel, or an array of exactly two integers.</description>
+            <!-- <value type="vector"><value>0</value><value>0</value></value> -->
+            <value type="string">ref</value>
         </param>
         <param type="variant" name="xlength">
             <any type="variant" limittypes="string int"/>
@@ -2158,7 +2160,9 @@ ia.close()             # close to unlock disk image
     is exactly the same grid that would be produced if the user specified anchor=[4,4] or anchor=[20,44].
     If the user specifies anchor=[1, 2] and grid=[4,4], then the grid points will be at pixels [1,2], [5,2],
     [9,2]... [5,2], [5,6], etc. and the resulting grid is the same as it would be if the user specified eg
-    anchor=[9,10] or anchor=[21, 18].
+    anchor=[9,10] or anchor=[21, 18]. The value "ref", which is the default, indicates that the reference
+    pixel of the input image should be used to anchor the grid. The x and y values of this pixel will be
+    rounded to the nearest integer if necessary.
     
     SUPPORTED STATISTICS AND STATISTICS ALGORITHMS
     

@@ -188,5 +188,21 @@ class ia_deviation_test(unittest.TestCase):
         sub0.done()
         sub1.done()
 
+    def test_refpix(self):
+        """Test using reference pixel"""
+        self._myia.fromshape("", [20,20])
+        self._myia.addnoise()
+        xlen = "4pix"
+        ylen = "4pix"
+        grid = [4, 4]
+        res = self._myia.deviation("", grid=grid, xlength=xlen, ylength=ylen, anchor=[10,10])
+        expec = res.getchunk()
+        res.done()
+        res = self._myia.deviation("", grid=grid, xlength=xlen, ylength=ylen, anchor="ref")
+        got = res.getchunk()
+        res.done()
+        self._myia.done()
+        self.assertTrue(numpy.all(numpy.isclose(got, expec)), "ref val as anchor compare") 
+
 def suite():
     return [ia_deviation_test]
