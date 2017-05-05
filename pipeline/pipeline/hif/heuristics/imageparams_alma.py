@@ -26,12 +26,25 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         self.imaging_mode = 'ALMA'
 
     def robust(self, spw):
-        # Check if there is a non-zero desired angular resolution
+
+        '''Adjustment of robust parameter based on desired resolutions.'''
+
+        # Check if there is a non-zero min/max angular resolution
         cqa = casatools.quanta
-        desired_angular_resolution = cqa.convert(self.science_goals.desired_angular_resolution, '')['value']
-        if (desired_angular_resolution == 0.0):
-            LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
-            return 0.5
+        minAcceptableAngResolution = cqa.convert(self.science_goals.min_angular_resolution, 'rad')['value']
+        maxAcceptableAngResolution = cqa.convert(self.science_goals.max_angular_resolution, 'rad')['value']
+        if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
+            desired_angular_resolution = cqa.convert(self.science_goals.desired_angular_resolution, 'rad')['value']
+            if (desired_angular_resolution != 0.0):
+                minAcceptableAngResolution = 0.8 * desired_angular_resolution
+                maxAcceptableAngResolution = 1.2 * desired_angular_resolution
+            else:
+                science_goals = self.observing_run.get_measurement_sets()[0].science_goals
+                minAcceptableAngResolution = cqa.convert(science_goals['minAcceptableAngResolution'], 'rad')['value']
+                maxAcceptableAngResolution = cqa.convert(science_goals['maxAcceptableAngResolution'], 'rad')['value']
+                if (minAcceptableAngResolution == 0.0) or (maxAcceptableAngResolution == 0.0):
+                    LOG.info('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
+                    return 0.5
 
         # Get maximum baseline length in metres
         bmax = 0.0
@@ -53,12 +66,13 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         centre_lambda = cqa.constants('c')['value'] / centre_frequency
 
         # Smallest spatial scale
-        smallest_spatial_scale = 1.2 * centre_lambda / bmax
+        # TODO: Use actual beam sizes from CASA ?
+        native_resolution = 1.2 * centre_lambda / bmax
 
-        if (desired_angular_resolution > 1.2 * smallest_spatial_scale):
+        if (native_resolution > maxAcceptableAngResolution):
+            robust = -0.5
+        elif (native_resolution < minAcceptableAngResolution):
             robust = 1.0
-        elif (desired_angular_resolution < 0.8 * smallest_spatial_scale):
-            robust = 0.0
         else:
             robust = 0.5
 
