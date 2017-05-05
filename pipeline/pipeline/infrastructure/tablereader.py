@@ -299,6 +299,7 @@ class MeasurementSetReader(object):
                     ms.representative_target = (sbinfo[0], sbinfo[1], sbinfo[2])
                 if not (sbinfo[3] and sbinfo[4]):
                     LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
+                    ms.science_goals = {'minAcceptableAngResolution': None, 'maxAcceptableAngResolution': None}
                 else:
                     LOG.info('Populating ms.science_goals ...')
                     ms.science_goals = {'minAcceptableAngResolution': sbinfo[3], 'maxAcceptableAngResolution': sbinfo[4]}
