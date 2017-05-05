@@ -297,11 +297,11 @@ class MeasurementSetReader(object):
                 else:
                     LOG.info('Populating ms.representative_target ...')
                     ms.representative_target = (sbinfo[0], sbinfo[1], sbinfo[2])
-                if not sbinfo[3] or sbinfo[4]:
+                if not (sbinfo[3] and sbinfo[4]):
                     LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
                 else:
                     LOG.info('Populating ms.science_goals ...')
-                    ms.science_goals = (sbinfo[3], sbinfo[4])
+                    ms.science_goals = {'minAcceptableAngResolution': sbinfo[3], 'maxAcceptableAngResolution': sbinfo[4]}
             LOG.info('Populating ms.array_name ...')
             ms.array_name = ExecblockTable.get_execblock_info(ms)
 
@@ -567,7 +567,7 @@ class SBSummaryTable(object):
                     minAngResolution = None
                 minAngResolutions.append(minAngResolution)
 
-                # Create minimum angular resolution
+                # Create maximum angular resolution
                 maxAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
                     'maxAcceptableAngResolution'))
                 if maxAngResolution['value'] <= 0.0 or maxAngResolution['unit'] == '':
