@@ -173,7 +173,7 @@ class T2_4MDetailsfluxbootRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             plotter = fluxbootdisplay.fluxbootSummaryChart(context, result)
             plots = plotter.plot()
 
-            plotter = fluxbootdisplay.fluxgaincalSummaryChart(context, result, 'fluxgaincal.g')
+            plotter = fluxbootdisplay.fluxgaincalSummaryChart(context, result, result.caltable)
             plots.extend(plotter.plot())
             ms = os.path.basename(result.inputs['vis'])
             summary_plots[ms] = plots
