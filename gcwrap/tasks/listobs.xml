@@ -46,7 +46,7 @@
                 <example>["3, VA04"]</example>
             </param>
             <param type="any" name="uvrange" subparam="true">
-                <description>Selection based on uv range. Default: entire range. default units=meters</description>
+                <description>Selection based on uv range. Default: entire range. Default units: meters.</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string"/>
                 <example>"0~100klambda"</example>
@@ -90,7 +90,7 @@
             </param>
 
 		<param type="bool" name="verbose">
-			<description>Controls level of information detail reported. True reports less than False.</description>
+			<description>Controls level of information detail reported. True reports more than False.</description>
 			<value>True</value>
 		</param>
 		
