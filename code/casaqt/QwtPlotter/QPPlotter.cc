@@ -149,7 +149,7 @@ pair<int, int> QPPlotter::size() const {
 }
 void QPPlotter::setSize(int width, int height) { resize(width, height); }
 
-void QPPlotter::makeSquarePlot(bool square) {
+void QPPlotter::makeSquarePlot(bool square, bool waveplot) {
     if (square) {  // make square plot width=height
         // save rectangle ratio of width to height and new square size
         // (only first time if exporting iterated plots else ratio=1!)
@@ -160,9 +160,21 @@ void QPPlotter::makeSquarePlot(bool square) {
             // resize event causes setGeometry to be called
             m_squareHeight = rectSize.second;
         }
-        setSize(m_squareHeight, m_squareHeight);
-        if (isGuiShown())
-            setCanvasSize(m_squareHeight, m_squareHeight);
+        // for exported plots
+        if (waveplot) {
+            // uwave/vwave plots have larger values which make yaxis 
+            // label wider and scrunches xaxis, so inc width by 10%
+            setSize(m_squareHeight*1.1, m_squareHeight);
+        } else {
+            setSize(m_squareHeight, m_squareHeight);
+        }
+        // for gui plots
+        if (isGuiShown()) {
+            if (waveplot)
+                setCanvasSize(m_squareHeight*1.07, m_squareHeight);
+            else
+                setCanvasSize(m_squareHeight, m_squareHeight);
+        }
     } else if (m_sizeRatio != 1.0) { // restore rect plot after square
         pair<int, int> rectSize = size();
         // set width to correct ratio to height

@@ -1833,13 +1833,13 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 
 	// Custom axes ranges set by user
     // OR CAS-3263 points near zero are not plotted so add margin to the lower bound
-    bool makeSquare(false);  // true if uv plot
+    bool makeSquare(false), waveplot(false);  // true if uv / uvwave plot
 	canvas->setAxesAutoRescale(true);
 	if ( set ){
 	    PMS_PP_Display *display = itsParams_.typedGroup<PMS_PP_Display>();
         double xmin, xmax, ymin, ymax;
         double maxval, xymax(0);
-        bool xIsUV(false);
+        bool xIsUV(false), xIsUVwave(false);
         bool displayUnflagged = (display->unflaggedSymbol()->symbol() != PlotSymbol::NOSYMBOL);
         bool displayFlagged = (display->flaggedSymbol()->symbol() != PlotSymbol::NOSYMBOL);
         if (displayUnflagged && !displayFlagged) {
@@ -1867,6 +1867,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
             PMS::Axis x = cacheParams->xAxis();
             if (PMS::axisIsUV(x)) {
                 xIsUV = true;
+                if (x==PMS::UWAVE || x==PMS::VWAVE) xIsUVwave=true;
                 maxval = round(max(abs(xmin),xmax)) + 10.0;
                 xmin = -maxval;
                 xmax = maxval;
@@ -1899,6 +1900,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
                         canvas->setAxisRange(cx, xybounds);
                         canvas->setAxisRange(cy, xybounds);
                         makeSquare = true;
+                        if (xIsUVwave && (y==PMS::UWAVE || y==PMS::VWAVE))
+                            waveplot=true;
                     } else {
                         // just set yrange equally
                         ymin = -maxval;
@@ -1912,7 +1915,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	}
 
     // make square plot, or revert back to rectangular
-    itsParent_->getPlotter()->makeSquarePlot(makeSquare);
+    itsParent_->getPlotter()->makeSquarePlot(makeSquare, waveplot);
 
 	// Title
 	bool resetTitle = set || (iter->iterationAxis() != PMS::NONE);

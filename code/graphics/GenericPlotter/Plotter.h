@@ -99,7 +99,7 @@ public:
     virtual void setSize(int width, int height) = 0;
 
     // Sets width=height but saves rectangular ratio
-    virtual void makeSquarePlot(bool square) = 0;
+    virtual void makeSquarePlot(bool square, bool wave) = 0;
 
     //Set the size of cached axes stack image
     virtual void setCanvasCachedAxesStackImageSize( int width, int height );

@@ -221,7 +221,7 @@ public:
     QSize minimumSizeHint() const;
 
     // Implements Plotter::makeSquarePlot to set width=height
-    virtual void makeSquarePlot(bool square);
+    virtual void makeSquarePlot(bool square, bool waveplot=false);
     bool isSquarePlot() { return (m_sizeRatio != 1.0); }
     // For iteration plot exports
     int squareHeight() { return m_squareHeight; }
