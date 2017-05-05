@@ -51,6 +51,9 @@ public:
 	// not the resulting subimage if a region was also specified.
 	void setAnchorPosition(Int x, Int y);
 
+    // rounds reference pixel to nearest ints, if necessary
+    void useReferencePixelAsAnchor();
+
 	// set spacing between grid pixels.
 	void setGridSpacing(uInt x, uInt y);
 

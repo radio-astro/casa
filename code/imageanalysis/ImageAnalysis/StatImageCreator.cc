@@ -52,6 +52,16 @@ void StatImageCreator::setAnchorPosition(Int x, Int y) {
     _anchor = _getImage()->coordinates().toWorld(anchorPixel);
 }
 
+void StatImageCreator::useReferencePixelAsAnchor() {
+    const auto refPix = _getImage()->coordinates().referencePixel();
+    Int x = round(refPix[_dirAxes[0]]);
+    Int y = round(refPix[_dirAxes[1]]);
+    *_getLog() << LogIO::NORMAL << LogOrigin("StatImageCreator", __func__)
+        << "Anchor being set at pixel [" << x << "," << y
+        << "], at/near image reference pixel." << LogIO::POST;
+    setAnchorPosition(x, y);
+}
+
 void StatImageCreator::setGridSpacing(uInt x, uInt y) {
     _grid.first = x;
     _grid.second = y;
