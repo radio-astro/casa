@@ -1308,7 +1308,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool debug(false); // create additional temp masks for debugging
     Bool debug2(true); // debug2 saves masks before/after prune and binary dilation
 
+    // tempmsk: working image for the curret mask
     TempImage<Float> tempmask(mask.shape(), mask.coordinates(), memoryToUse());
+    // prevmask: mask from previous iter.
     TempImage<Float> prevmask(mask.shape(), mask.coordinates(), memoryToUse());
     prevmask.copyData(LatticeExpr<Float>(mask) );
     // taking account for beam or input resolution
@@ -1550,19 +1552,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          PagedImage<Float> beforepruneconstIm(res.shape(), res.coordinates(),"tmpBeforePruneConstraint-"+String::toString(iterdone)+".im");
          beforepruneconstIm.copyData(constraintMaskImage);
        }
+       // 2017.05.05: should done after multiply by binary dilation 
+       //
        // prune the constraintImage
-       if (minBeamFrac > 0.0 ) {
-         //Double thethresh=0.1;
-	 os<<LogIO::NORMAL << "Pruning the constraint mask "<<LogIO::POST;
-	 //SHARED_PTR<ImageInterface<Float> > tempPrunedMask_ptr = pruneRegions2(constraintMaskImage, thethresh,  -1, pruneSize);
-         Vector<Bool> dummy(0);
-         SHARED_PTR<ImageInterface<Float> > tempPrunedMask_ptr = YAPruneRegions(constraintMaskImage, dummy, pruneSize);
-         constraintMaskImage.copyData( *(tempPrunedMask_ptr.get()) );
-       }
-       if(debug2) {
-         PagedImage<Float> afterpruneconstIm(res.shape(), res.coordinates(),"tmpAfterPruneConstraint-"+String::toString(iterdone)+".im");
-         afterpruneconstIm.copyData(constraintMaskImage);
-       }
+       //if (minBeamFrac > 0.0 ) {
+       //  //Double thethresh=0.1;
+       // os<<LogIO::NORMAL << "Pruning the constraint mask "<<LogIO::POST;
+       // //SHARED_PTR<ImageInterface<Float> > tempPrunedMask_ptr = pruneRegions2(constraintMaskImage, thethresh,  -1, pruneSize);
+       //  Vector<Bool> dummy(0);
+       //  SHARED_PTR<ImageInterface<Float> > tempPrunedMask_ptr = YAPruneRegions(constraintMaskImage, dummy, pruneSize);
+       //  constraintMaskImage.copyData( *(tempPrunedMask_ptr.get()) );
+       //}
+       //if(debug2) {
+       //  PagedImage<Float> afterpruneconstIm(res.shape(), res.coordinates(),"tmpAfterPruneConstraint-"+String::toString(iterdone)+".im");
+       //  afterpruneconstIm.copyData(constraintMaskImage);
+       //}
+
        // for mask in binaryDilation, translate it to T/F (if T it will grow the mask region (NOTE currently binary dilation 
        // does opposite T/F interpretation NEED to CHANGE)
        TempImage<Bool> constraintMask(res.shape(),res.coordinates(), memoryToUse());
@@ -1598,9 +1603,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          prevmask.copyData( *(tempPrunedMask_ptr.get()) );
        }
        ***/
-       if (debug) {
-         PagedImage<Float> preSmoothGrowedMask(res.shape(), res.coordinates(),"tmpPreSmoothGrowMask-"+String::toString(iterdone)+".im");
-         preSmoothGrowedMask.copyData(prevmask);
+       if (minBeamFrac > 0.0 ) {
+         os<<LogIO::NORMAL << "Pruning the growed previous mask "<<LogIO::POST;
+         Vector<Bool> dummy(0);
+         SHARED_PTR<ImageInterface<Float> > tempPrunedMask_ptr = YAPruneRegions(prevmask, dummy, pruneSize);
+         prevmask.copyData( *(tempPrunedMask_ptr.get()) );
+       }
+       if(debug2) {
+         PagedImage<Float> afterpruneconstIm(res.shape(), res.coordinates(),"tmpAfterPruneGrowMask-"+String::toString(iterdone)+".im");
+         afterpruneconstIm.copyData(constraintMaskImage);
        }
        SPIIF outprevmask = convolveMask( prevmask, modbeam);
        if (debug) {
@@ -2395,7 +2406,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       os<<LogIO::DEBUG1<<"Calling findBlobSize..."<<LogIO::POST;
       // get blobsizes (the vector contains each labeled region size (label # = ith element+1)
       Vector<Float> blobsizes = findBlobSize(*blobMap);
-      cerr<<"blobsizes="<<blobsizes<<endl;
+      //cerr<<"blobsizes="<<blobsizes<<endl;
       //use ImageDecomposer
       // book keeping of no of  removed components`
       uInt removeBySize=0;
