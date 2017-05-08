@@ -55,7 +55,14 @@ MSMetaInfoForCal::MSMetaInfoForCal(String msname) :
       Table::tableInfo(msname_).type()=="Measurement Set") {
 
     ms_ = new MeasurementSet(msname_);
-    msmd_ = new MSMetaData(ms_,50.0f);
+
+    // 95% of the size of an Int column, or 50 MB (whichever smaller)
+    //  This ensures that smallish time-to-Id maps will get cached
+    //   (instead of one-off column info needed to calculate them)
+    //  This is appropriate for the the calibration context
+    Float msmdcache=0.95*4.0f*Float(ms_->nrow())/1e6;
+    msmdcache=min(msmdcache,50.0);
+    msmd_ = new MSMetaData(ms_,msmdcache);
 
     // MS seems to be available
     msOk_=True;
@@ -78,9 +85,9 @@ MSMetaInfoForCal::MSMetaInfoForCal(const MeasurementSet& ms) :
   nSpw_(0),
   nFld_(0),
   ms_(NULL),        // ... but we won't have our own MS pointer
-  msmd_(new MSMetaData(&ms,50.0f))  // Form MSMetaData directly
+  msmd_(new MSMetaData(&ms,  // Form MSMetaData directly (not more than 50MB)
+		       min(50.0,0.95f*4.0f*Float(ms.nrow())/1e6)))  
 {
-
   // Fill counters from msmd
   nAnt_=msmd_->nAntennas();
   nSpw_=msmd_->nSpw(True);
