@@ -8,6 +8,16 @@ Think of it as a place for a new team member to look for useful bits of informat
 
 ### Context
 
+How to restore a pipeline context:
+
+context = h_resume(filename='last')
+
+or
+
+import pipeline
+
+context = pipeline.Pipeline(context='last').context
+
 ### Imaging
 
 ### Task interface
