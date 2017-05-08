@@ -30,6 +30,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
         if isinstance(self.vis, list):
             return self._handle_multiple_vis('intent')
 
+        # FIXME: change to *BANDPASS* to ensure it can be used in flagging commands?
         if not self._intent:
             self._intent = 'BANDPASS'
 
@@ -282,7 +283,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
                     # Extract data from MS.
                     data = openms.getdata(
-                        ['corrected_data', 'model_data', 'uvdist', 'antenna1',
+                        ['corrected_data', 'model_data', 'antenna1',
                          'antenna2', 'flag', 'time'])
 
                 # Remove the channel dimension (should be of length 1 as we asked
@@ -570,6 +571,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                         pol=icorr,
                                         reason='outlier'))
 
+        # TODO: add consolidation of flagging commands?
+
         if newflags:
             LOG.warning('Evaluation of {0} raised {1} flagging '
                         'command(s)'.format(os.path.basename(inputs.vis),
@@ -584,13 +587,4 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         return result
 
     def analyse(self, result):
-
-        # If the flagging task was called for more than one intent,
-        # presumably FLUX + PHASE, then we need to propagate the newly
-        # found flags to the science target intent.
-        # TODO: maybe this logic is best put inside the "analyse" method
-        # of hifa_gfluxscale, assuming it can analyse the flagging
-        # commands stored in the results returned by calls to
-        # Correctedampflag.
-
         return result

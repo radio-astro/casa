@@ -17,6 +17,8 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class BandpassflagInputs(basetask.StandardInputs):
+
+    # FIXME: propagate more bandpass parameters
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, field=None,
                  spw=None, refant=None, hm_phaseup=None, phaseupbw=None,
@@ -304,20 +306,23 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         result.plots = dict()
 
         # Make "before calibration" plots for the weblog
+        LOG.info('Creating "before calibration" plots')
         result.plots['raw'] = self.create_plots('raw')
 
         # Create back-up of flags.
+        LOG.info('Creating back-up of flagging state')
         flag_backup_name = 'before_bpflag'
         task = casa_tasks.flagmanager(
             vis=inputs.vis, mode='save', versionname=flag_backup_name)
         self._executor.execute(task)
 
         # Export the current calstate.
+        LOG.info('Creating back-up of calibration state')
         calstate_backup_name = 'before_bpflag.calstate'
-        if not self._executor._dry_run:
-            inputs.context.callibrary.export(calstate_backup_name)
+        inputs.context.callibrary.export(calstate_backup_name)
 
         # Do standard phaseup and bandpass calibration.
+        LOG.info('Creating initial phased-up bandpass calibration.')
         bpinputs = bandpass.ALMAPhcorBandpass.Inputs(
             context=inputs.context, vis=inputs.vis,
             hm_phaseup=inputs.hm_phaseup, phaseupbw=inputs.phaseupbw,
@@ -330,13 +335,17 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         bpresult = self._executor.execute(bptask)
 
         # Add the phase-up table produced by the bandpass task to the callibrary.
+        LOG.debug('Adding phase-up and bandpass table to temporary context.')
         for prev_result in bpresult.preceding:
             for calapp in prev_result:
                 inputs.context.callibrary.add(calapp.calto, calapp.calfrom)
         # Accept the bandpass result to add the bandpass table to the callibrary.
+        # FIXME: is this ok to do, or should it just be a manual add of caltable to
+        # FIXME: callibrary? (does accept also cause QA to be created?)
         bpresult.accept(inputs.context)
 
         # Do amplitude solve on scan interval.
+        LOG.info('Create amplitude gaincal table.')
         gacalinputs = gaincal.GTypeGaincal.Inputs(
             context=inputs.context, vis=inputs.vis, intent='BANDPASS',
             gaintype='T', antenna='', calmode='a', solint='inf')
@@ -345,7 +354,9 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
         # Ensure that flags that may be set by applycal are restored, even in
         # case of exceptions.
+        LOG.info('Applying phase-up, bandpass, and amplitude cal tables.')
         try:
+            # TODO: compare input pars with those in proposed recipe.
             # Apply the calibrations.
             acinputs = applycal.IFApplycalInputs(
                 context=inputs.context, vis=inputs.vis, field='',
@@ -355,16 +366,19 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
         finally:
             # Restore flags that may have come from applycal.
+            LOG.info('Restoring back-up of flagging state.')
             task = casa_tasks.flagmanager(
                 vis=inputs.vis, mode='restore', versionname=flag_backup_name)
             self._executor.execute(task)
 
         # Make "after calibration, before flagging" plots for the weblog
+        LOG.info('Creating "after calibration, before flagging" plots')
         result.plots['before'] = self.create_plots('before')
 
         # Find amplitude outliers and flag data
+        LOG.info('Run correctedampflag to identify outliers to flag.')
         cafinputs = correctedampflag.Correctedampflag.Inputs(
-            context=inputs.context, vis=inputs.vis, intent='BANDPASS',
+            context=inputs.context, vis=inputs.vis, intent='*BANDPASS*',
             field=inputs.field, spw=inputs.spw, antnegsig=inputs.antnegsig,
             antpossig=inputs.antpossig,
             toomanyantbasedintfracthr=inputs.toomanyantbasedintfracthr,
@@ -380,6 +394,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # TODO: add before/after summary?
         cafflags = cafresult.flagcmds()
         if cafflags:
+            LOG.info('Applying newly found flags.')
             fsinputs = FlagdataSetter.Inputs(
                 context=inputs.context, vis=inputs.vis, table=inputs.vis,
                 inpfile=[])
@@ -388,13 +403,16 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             fsresult = self._executor.execute(fstask)
 
         # Make "after calibration, after flagging" plots for the weblog
+        LOG.info('Creating "after calibration, after flagging" plots')
         result.plots['after'] = self.create_plots('after')
 
         # Import the calstate before BPFLAG
+        LOG.info('Restoring back-up of calibration state.')
         inputs.context.callibrary.import_state(calstate_backup_name)
 
         # If flags were found in the bandpass calibrator.
         if cafflags:
+            LOG.info('Creating final phased-up bandpass calibration.')
             # TODO: does this preserve the previous table?
             # Recompute the phase-up and bandpass calibration table.
             bpinputs = bandpass.ALMAPhcorBandpass.Inputs(
@@ -411,6 +429,8 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # TODO: decide what to add to result.
         #  - plots
         #  - before/after flagging summary ?
+        #  - store entire bpresult as child?
+        #  - store both initial and final bpresult?
         result.import_bpresult(bpresult)
         result.import_cafresult(cafresult)
 
