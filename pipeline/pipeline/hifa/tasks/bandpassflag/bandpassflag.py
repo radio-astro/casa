@@ -307,7 +307,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
         # Make "before calibration" plots for the weblog
         LOG.info('Creating "before calibration" plots')
-        result.plots['raw'] = self.create_plots('raw')
+        result.plots['raw'] = self.create_plots('raw', 'data')
 
         # Create back-up of flags.
         LOG.info('Creating back-up of flagging state')
@@ -373,7 +373,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
         # Make "after calibration, before flagging" plots for the weblog
         LOG.info('Creating "after calibration, before flagging" plots')
-        result.plots['before'] = self.create_plots('before')
+        result.plots['before'] = self.create_plots('before', 'corrected')
 
         # Find amplitude outliers and flag data
         LOG.info('Run correctedampflag to identify outliers to flag.')
@@ -391,7 +391,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         cafresult = self._executor.execute(caftask)
 
         # If flags were found in the bandpass calibrator, apply these.
-        # TODO: add before/after summary?
+        # TODO: add before/after summary
         cafflags = cafresult.flagcmds()
         if cafflags:
             LOG.info('Applying newly found flags.')
@@ -404,7 +404,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
         # Make "after calibration, after flagging" plots for the weblog
         LOG.info('Creating "after calibration, after flagging" plots')
-        result.plots['after'] = self.create_plots('after')
+        result.plots['after'] = self.create_plots('after', 'corrected')
 
         # Import the calstate before BPFLAG
         LOG.info('Restoring back-up of calibration state.')
@@ -429,17 +429,21 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # TODO: decide what to add to result.
         #  - plots
         #  - before/after flagging summary ?
-        #  - store entire bpresult as child?
         #  - store both initial and final bpresult?
-        result.import_bpresult(bpresult)
+        result.bpresult = bpresult
+
+        # TODO: move to result.cafresult?
         result.import_cafresult(cafresult)
+
+        # FIXME: remove this, once weblog renderer and context merger can use result.bpresult
+        result.import_bpresult(bpresult)
 
         return result
 
     def analyse(self, result):
         return result
 
-    def create_plots(self, prefix):
+    def create_plots(self, prefix, type):
 
         plots = {'time': [],
                  'uvdist': []}
@@ -460,7 +464,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 'showgui': False,
                 'clearplots': True,
                 'avgbaseline': False,
-                'ydatacolumn': 'data',
+                'ydatacolumn': type,
                 'intent': 'CALIBRATE_BANDPASS#ON_SOURCE',
                 'spw': spw,
                 'correlation': 'XX,YY',
@@ -492,7 +496,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 'showgui': False,
                 'clearplots': True,
                 'avgbaseline': False,
-                'ydatacolumn': 'data',
+                'ydatacolumn': type,
                 'intent': 'CALIBRATE_BANDPASS#ON_SOURCE',
                 'spw': spw,
                 'correlation': 'XX,YY',
