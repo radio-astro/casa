@@ -1111,12 +1111,19 @@ the ms definition itself. -->
     <method type="function" name="statwt2">
         <shortdescription>THIS APPLICATION IS CURRENTLY FOR TESTING ONLY! USE AT YOUR OWN RISK! Compute and set weights based on variance of data.</shortdescription>
         <input>
-            <param type="any" direction="in" name="timebin">
+            <param type="any" name="timebin">
                 <description>Length for binning in time to determine statistics. Can either be integer to be multiplied by the representative integration time, a quantity (string) in time units.</description>
                 <any type="variant" limittypes="string int"/>
                 <value type="int">1</value>
                 <example>4</example>
                 <example>"300s"</example>
+            </param>
+            <param type="any" name="chanbin">
+                <any type="variant" limittypes="string int"/>
+                <description>Channel bin width for computing weights. Can either be integer, in which case it is interpreted as number of channels to include in each bin, or a string "spw" or quantity with frequency units.</description>
+                <value type="string">spw</value>
+                <example>5</example>
+                <example>1.5MHz</example>
             </param>
         </input>
         <returns type="bool"/>
@@ -1139,26 +1146,55 @@ the ms definition itself. -->
             4. The associated weight is just the reciprocal of veq. The weight will have unit
                of (data unit)^(-2), eg Jy^(-2).
 
-            Data are aggregated on a per-baseline basis. Data are aggregated in bins determined by the
-            specified value of the timebin parameter. If the value of timebin is an integer, it means
-            that that value should be multiplied by the representative integration time in the MS. This
-            integration is the median value of all the values in the INTERVAL column. Flags are not
-            considered in the integration time computation. If either extrema in the INTERVAL column
-            differs from the median by more than 25%, the application will fail because the values vary
-            too much for there to be a single, representative, integration time. The timebin parameter
-            can also be specified as a quantity (string) that must have time conformant units.
+            Data are aggregated on a per-baseline, per-data description ID basis. Data are aggregated
+            in bins determined by the specified values of the timebin and chanbin parameters.
+            
+            TIME BINNING
+            
+            If the value of timebin is an integer, it means that the specified value should be
+            multiplied by the representative integration time in the MS. This integration is the
+            median value of all the values in the INTERVAL column. Flags are not considered in
+            the integration time computation. If either extrema in the INTERVAL column differs from
+            the median by more than 25%, the application will fail because the values vary too much
+            for there to be a single, representative, integration time. The timebin parameter can
+            also be specified as a quantity (string) that must have time conformant units.
             
             The time bins are not necessarily contiguous and are not necessarily the same width. The start
             of a bin is always coincident with a value from the TIME column, So for example, if values
-            from the time column are [20, 60, 100, 140, 180, 230], and the width of the bins is chosen to be 110s,
-            the first bin would start at 20s and run to 130s, so that data from timestamps 20, 60,
-            and 100 will be included in the first bin. The second bin would start
-            at 140s, so that data for timestamps 140, 180, and 230 would be included in the second bin.
-            Also, time binning does not span scan boundaries, so that data associated with different
-            scan numbers will always be binned separately; changes in SCAN_NUMBER will cause a new time
-            bin to be created, with its starting value coincident with the time of the new SCAN_NUMBER.
-            Similar behavior can be expected for changes in FIELD_ID and ARRAY_ID.
+            from the time column are [20, 60, 100, 140, 180, 230], and the width of the bins is chosen
+            to be 110s, the first bin would start at 20s and run to 130s, so that data from timestamps
+            20, 60, and 100 will be included in the first bin. The second bin would start at 140s, so that
+            data for timestamps 140, 180, and 230 would be included in the second bin. Also, time binning
+            does not span scan boundaries, so that data associated with different scan numbers will
+            always be binned separately; changes in SCAN_NUMBER will cause a new time bin to be created,
+            with its starting value coincident with the time of the new SCAN_NUMBER. Similar behavior can
+            be expected for changes in FIELD_ID and ARRAY_ID.
             
+            CHANNEL BINNING
+            
+            The width of channel bins is specified via the chanbin parameter. Channel binning occurs within
+            individual spectral windows; bins never span multiple spectral windows. Each channel will
+            be included in exactly one bin.
+            
+            The default value "spw" indicates that all channels in each spectral window are to be
+            included in a single bin.
+            
+            Any other string value is interpreted as a quantity, and so should have frequency units, eg
+            "1MHz". In this case, the channel frequencies from the CHAN_FREQ column of the SPECTRAL_WINDOW
+            subtable of the MS are used to determine the bins. The first bin starts at the channel frequency
+            of the 0th channel in the spectral window. Channels with frequencies that differ by less than
+            the value specified by the chanbin parameter are included in this bin. The next bin starts at
+            the frequency of the first channel outside the first bin, and the process is repeated until all
+            channels have been binned.
+            
+            If specified as an integer, the value is interpreted as the number of channels to include in
+            each bin. The final bin in the spectral window may not necessarily contain this number of
+            channels. For example, if a spectral window has 15 channels, and chanbin is specified to be 6,
+            then channels 0-5 will comprise the first bin, channels 6-11 the second, and channels 12-14 the
+            third, so that only three channels will comprise the final bin.
+            
+            OTHER CONSIDERATIONS
+
             Flagged values are not used in computing the weights, although the associated weights of
             these values are updated.
 

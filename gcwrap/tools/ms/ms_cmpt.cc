@@ -5682,7 +5682,7 @@ ms::iterinit2(const std::vector<std::string>& columns, const double interval,
 	return rstat;
 }
 
-bool ms::statwt2(const variant& timebin) {
+bool ms::statwt2(const variant& timebin, const variant& chanbin) {
     *itsLog << LogOrigin("ms", __func__);
     try {
         if (detached()) {
@@ -5691,9 +5691,7 @@ bool ms::statwt2(const variant& timebin) {
         StatWt statwt(itsMS);
         if (timebin.type() == variant::INT) {
             auto n = timebin.toInt();
-            ThrowIf(
-                n <= 0, "timebin must be positive"
-            );
+            ThrowIf(n <= 0, "timebin must be positive");
             statwt.setTimeBinWidthUsingInterval(timebin.touInt());
         }
         else {
@@ -5705,6 +5703,30 @@ bool ms::statwt2(const variant& timebin) {
                 myTimeBin.setValue(1e-5);
             }
             statwt.setTimeBinWidth(myTimeBin);
+        }
+        auto chanbinType = chanbin.type();
+        switch(chanbinType) {
+        case variant::INT:
+        {
+            auto n = chanbin.toInt();
+            ThrowIf(n <= 2, "timebin must be >= 2");
+            statwt.setChanBinWidth(n);
+            break;
+        }
+        case variant::STRING:
+            if (chanbin.toString() == "spw") {
+                break;
+            }
+            else {
+                statwt.setChanBinWidth(casaQuantity(chanbin));
+            }
+            break;
+        case variant::BOOLVEC:
+            // because this is the default no matter what
+            // is specified in the XML
+            break;
+        default:
+            statwt.setChanBinWidth(casaQuantity(chanbin));
         }
         statwt.writeWeights();
         return True;
