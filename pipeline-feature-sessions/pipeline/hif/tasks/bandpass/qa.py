@@ -1,7 +1,9 @@
 from __future__ import absolute_import
 import collections
+import contextlib
 import os
 import shutil
+import tempfile
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -101,28 +103,29 @@ class BandpassQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
         if result.final and not result.applies_adopted:
-            qa_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number, 'qa')
+            qa_dir = tempfile.mkdtemp()
+            try:
+                for calapp in result.final:
+                    (root, _) = os.path.splitext(os.path.basename(calapp.gaintable))
+                    qa_file = os.path.join(qa_dir, root + '.bpcal.stats')
+                    if os.path.exists(qa_file):
+                        LOG.info('Removing existing QA statistics table from %s' % qa_file)
+                        shutil.rmtree(qa_file)
 
-            if not os.path.exists(qa_dir):
-                os.makedirs(qa_dir)
+                    try:
+                        qa_results = bpcal.bpcal(calapp.gaintable, qa_dir)
+                        result.qa = BandpassQAPool(qa_results, calapp.gaintable)
+                        result.qa.update_scores(ms)
 
-            for calapp in result.final:
-                (root, _) = os.path.splitext(os.path.basename(calapp.gaintable))
-                qa_file = os.path.join(qa_dir, root + '.bpcal.stats')
-                if os.path.exists(qa_file):
-                    LOG.info('Removing existing QA statistics table from %s' % qa_file)
-                    shutil.rmtree(qa_file)
+                    except Exception as e:
+                        result.qa = pqa.QAScorePool()
+                        result.qa.pool[:] = [pqa.QAScore(0.0, longmsg=str(e), shortmsg='QA exception', vis=vis)]
+                        LOG.error('Problem occurred running QA analysis. QA results will not be available for this task')
+                        LOG.exception(e)
+            finally:
+                if os.path.exists(qa_dir):
+                    shutil.rmtree(qa_dir)
 
-                try:
-                    qa_results = bpcal.bpcal(calapp.gaintable, qa_dir)
-                    result.qa = BandpassQAPool(qa_results, calapp.gaintable)
-                    result.qa.update_scores(ms)
-
-                except Exception as e:
-                    result.qa = pqa.QAScorePool()
-                    result.qa.pool[:] = [pqa.QAScore(0.0, longmsg=str(e), shortmsg='QA exception', vis=vis)]
-                    LOG.error('Problem occurred running QA analysis. QA results will not be available for this task')
-                    LOG.exception(e)
         else:
             result.qa = pqa.QAScorePool()
             result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='No bandpass solution', shortmsg='No solution', vis=vis)]
