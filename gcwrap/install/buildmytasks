@@ -150,7 +150,7 @@ verbose "Saxon command: $SAXON"
 
 if [[ `uname -s` = "Darwin" ]]; then
    INFOFILE=`mktemp bmt`
-else 
+else
    INFOFILE=`mktemp`
 fi
 verbose "intermediate task file: $INFOFILE"
@@ -164,9 +164,9 @@ for FILE in $XMLFILES; do
 	  verbose "generating `basename -- "$XMLFILE"` task ... "
 	  xmlgenpy "$XMLFILE"
 	  $SAXON "$XMLFILE.xml" "$XMLROOT/casa2tsum3.xsl" >> $INFOFILE
-	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "$XMLFILE.py"
-	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_cli.py"
-	  [ -e "${XMLFILE}_pg.py" ] && sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_pg.py"
+	  sed -i -e 's+pathname=.*$+pathname="file://'"${INSTALLDIR}"'/"+' "$XMLFILE.py"
+	  sed -i -e 's+pathname=.*$+pathname="file://'"${INSTALLDIR}"'/"+' "${XMLFILE}_cli.py"
+	  [ -e "${XMLFILE}_pg.py" ] && sed -i -e 's+pathname=.*$+pathname="file://'"${INSTALLDIR}"'/"+' "${XMLFILE}_pg.py"
 	  if [[ "${INSTALLDIR}" != "${WORKDIR}" ]]; then
 	    mv -f "${XMLFILE}.py" "${INSTALLDIR}"
 	    mv -f "${XMLFILE}_cli.py" "${INSTALLDIR}"
@@ -181,33 +181,32 @@ verbose "generating `basename -- "$OUTFILE"` file ... "
 sed -i -e 's/^tasksum/mytasks/g' "$INFOFILE"
 sed -i -e "s^\(task_location.*\) \(''\)^\1 \'${INSTALLDIR}\'^g" "$INFOFILE"
 
-cat /dev/null > $OUTFILE
-echo "#" >> $OUTFILE
-echo "# User defined tasks setup." >> $OUTFILE
-echo "# Generated from buildmytask." >> $OUTFILE
-echo "#" >> $OUTFILE
-echo >> $OUTFILE
-echo "import sys" >> $OUTFILE
-echo "from casa_stack_manip import stack_frame_find" >> $OUTFILE
-echo >> $OUTFILE
-echo "if sys.path[1] != '"$INSTALLDIR"':" >> $OUTFILE
-echo "  sys.path.insert(1, '"$INSTALLDIR"')" >> $OUTFILE
-echo "from odict import odict" >> $OUTFILE
-echo "if not globals().has_key('mytasks') :" >> $OUTFILE
-echo "  mytasks = odict()" >> $OUTFILE
-echo >> $OUTFILE
-grep "^mytasks" $INFOFILE >> $OUTFILE
-echo >> $OUTFILE
-echo "if not globals().has_key('task_location') :" >>$OUTFILE
-echo "  task_location = odict()" >> $OUTFILE
-echo >> $OUTFILE
-grep "^task_location" $INFOFILE >> $OUTFILE
-echo "myglobals = stack_frame_find( )" >> $OUTFILE
-echo "tasksum = myglobals['tasksum'] " >> $OUTFILE
-echo "for key in mytasks.keys() :" >> $OUTFILE
-echo "  tasksum[key] = mytasks[key]" >> $OUTFILE
-echo >> $OUTFILE
-grep "^from" $INFOFILE >> $OUTFILE
+cat /dev/null > "$OUTFILE"
+echo "#" >> "$OUTFILE"
+echo "# User defined tasks setup." >> "$OUTFILE"
+echo "# Generated from buildmytask." >> "$OUTFILE"
+echo "#" >> "$OUTFILE"
+echo >> "$OUTFILE"
+echo "import sys" >> "$OUTFILE"
+echo "from casa_stack_manip import stack_frame_find" >> "$OUTFILE"
+echo >> "$OUTFILE"
+echo "if sys.path[1] != '"$INSTALLDIR"':" >> "$OUTFILE"
+echo "  sys.path.insert(1, '"$INSTALLDIR"')" >> "$OUTFILE"
+echo "from odict import odict" >> "$OUTFILE"
+echo "if not globals().has_key('mytasks') :" >> "$OUTFILE"
+echo "  mytasks = odict()" >> "$OUTFILE"
+echo >> "$OUTFILE"
+grep "^mytasks" $INFOFILE >> "$OUTFILE"
+echo >> "$OUTFILE"
+echo "if not globals().has_key('task_location') :" >>"$OUTFILE"
+echo "  task_location = odict()" >> "$OUTFILE"
+echo >> "$OUTFILE"
+grep "^task_location" $INFOFILE >> "$OUTFILE"
+echo "myglobals = stack_frame_find( )" >> "$OUTFILE"
+echo "tasksum = myglobals['tasksum'] " >> "$OUTFILE"
+echo "for key in mytasks.keys() :" >> "$OUTFILE"
+echo "  tasksum[key] = mytasks[key]" >> "$OUTFILE"
+echo >> "$OUTFILE"
+grep "^from" $INFOFILE >> "$OUTFILE"
 
 rm -f "$INFOFILE"
-
