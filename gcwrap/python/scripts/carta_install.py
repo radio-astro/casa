@@ -178,7 +178,7 @@ if curr_os.startswith("osx"):
     print "Package dir: " + package_dir
 
     # Copy to the right place here
-    check_output(["cp", "-r", package_dir + "/Carta.app", installation_directory])
+    check_output(["cp", "-pR", package_dir + "/Carta.app", installation_directory])
 
     out = check_output(["hdiutil", "detach", package_dir])
     print out
