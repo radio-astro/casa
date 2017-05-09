@@ -19,6 +19,7 @@
 //#  MA 02111-1307  USA
 
 #include <casacore/casa/Containers/ValueHolder.h>
+#include <casacore/casa/Quanta/QuantumHolder.h>
 #include <casacore/ms/MSOper/MSMetaData.h>
 #include <casacore/tables/Tables/TableProxy.h>
 
@@ -74,17 +75,35 @@ void StatWt::setTimeBinWidthUsingInterval(uInt n) {
     setTimeBinWidth(width);
 }
 
+void StatWt::setChanBinWidth(uInt w) {
+    ThrowIf(w < 2, "channel bin width must be >= 2");
+    _chanBinWidthInt.reset(new uInt(w));
+    _chanBinWidthQ.reset();
+}
+
+void StatWt::setChanBinWidth(const casacore::Quantity& w) {
+    QuantumHolder qh(w);
+    _chanBinWidthQ.reset(new Record(qh.toRecord()));
+    _chanBinWidthInt.reset();
+}
+
+
 void StatWt::writeWeights() const {
     vi::IteratingParameters ipar(_timeBinWidth);
     vi::VisIterImpl2LayerFactory data(_ms, ipar, True);
     Record config;
+    if (_chanBinWidthInt) {
+        config.define("chanbin", *_chanBinWidthInt);
+    }
+    else if (_chanBinWidthQ) {
+        config.defineRecord("chanbin", *_chanBinWidthQ);
+    }
     vi::StatWtTVILayerFactory statWtLayerFactory(config);
     Vector<vi::ViiLayerFactory*> facts(2);
     facts[0] = &data;
     facts[1] = &statWtLayerFactory;
     vi::VisibilityIterator2 vi(facts);
     vi::VisBuffer2 *vb = vi.getVisBuffer();
-    // TableProxy tp(*_ms);
     Slice defaultSlice;
     Vector<Int> vr(1);
     static const String WEIGHT = "WEIGHT";
@@ -100,15 +119,6 @@ void StatWt::writeWeights() const {
             if (doWtSp) {
                 Cube<Float> wtsp = vb->weightSpectrum();
                 vb->setWeightSpectrum(wtsp);
-                /*
-                for (auto riter=rownr.begin(); riter!=rend; ++riter, ++i) {
-                    *vr.begin() = *riter;
-                    auto wtSpSlice = wtsp(defaultSlice, defaultSlice, i);
-                    auto sliceShape = wtSpSlice.shape();
-                    auto newCell = wtSpSlice.reform(IPosition(2, sliceShape[0], sliceShape[1]));
-                    tp.putCell(WEIGHT_SPECTRUM, vr, ValueHolder(newCell));
-                }
-                */
             }
             Matrix<Float> wt = vb->weight();
             vb->setWeight(wt);
@@ -123,22 +133,6 @@ void StatWt::writeWeights() const {
                 vb->setFlagRow(flagRow);
             }
             vb->writeChangesBack();
-            /*
-            i = 0;
-            for (auto riter=rownr.begin(); riter!=rend; ++riter, ++i) {
-                *vr.begin() = *riter;
-                auto wtSlice = wt(defaultSlice, i);
-                auto newCell = wtSlice.reform(IPosition(1, wtSlice.size()));
-                tp.putCell(WEIGHT, vr, ValueHolder(newCell));
-                if (updateFlags) {
-                    auto flagSlice = flag(defaultSlice, defaultSlice, i);
-                    auto sliceShape = flagSlice.shape();
-                    Array<Bool> flagCell = flagSlice.reform(IPosition(2, sliceShape[0], sliceShape[1]));
-                    tp.putCell(FLAG, vr, ValueHolder(flagCell));
-                    tp.putCell(FLAG_ROW, vr, ValueHolder(flagRow[i]));
-                }
-            }
-            */
         }
     }
 }

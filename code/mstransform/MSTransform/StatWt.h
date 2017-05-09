@@ -27,6 +27,8 @@
 #include <casacore/casa/Logging/LogIO.h>
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 
+#include <memory>
+
 namespace casa {
 
 // This class implements reweighting of visibilities based on the statwt
@@ -39,6 +41,12 @@ public:
 	StatWt(casacore::MeasurementSet* ms);
 
     ~StatWt();
+
+    // width of channel bins specified as integral number of channels
+    void setChanBinWidth(casacore::uInt w);
+
+    // width of channel bins specified as frequency width
+    void setChanBinWidth(const casacore::Quantity& w);
 
     void setOutputMS(const casacore::String& outname);
 
@@ -54,8 +62,6 @@ public:
     // there is no single representative value of the integration time.
     void setTimeBinWidthUsingInterval(casacore::uInt n);
 
-    //void writeWeights() const;
-
     void writeWeights() const;
 
 private:
@@ -64,6 +70,8 @@ private:
     // time bin width in seconds
     casacore::Double _timeBinWidth = 1;
     casacore::LogIO _log;
+    std::unique_ptr<casacore::uInt> _chanBinWidthInt = nullptr;
+    std::unique_ptr<casacore::Record> _chanBinWidthQ = nullptr;
 
 };
 
