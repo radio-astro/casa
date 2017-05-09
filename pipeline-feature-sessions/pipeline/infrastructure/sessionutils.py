@@ -28,7 +28,7 @@ VisResultTuple = collections.namedtuple('VisResultTuple', 'vis inputs result')
 
 def parallel_inputs_impl():
     """
-    Get a vid independent property implementation for a parallel
+    Get a vis-independent property implementation for a parallel
     Inputs argument.
 
     :return: Inputs property implementation
@@ -310,18 +310,22 @@ class ParallelTemplate(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
+        # this will hold the tuples of ms, jobs and results
+        assessed = []
+
         vis_list = as_list(inputs.vis)
         with VDPTaskFactory(inputs, self._executor, self.Task) as factory:
             task_queue = [(vis, factory.get_task(vis)) for vis in vis_list]
 
-        assessed = []
-        for (vis, (task_args, task)) in task_queue:
-            try:
-                worker_result = task.get_result()
-            except mpihelpers.PipelineError as e:
-                assessed.append((vis, task_args, e))
-            else:
-                assessed.append((vis, task_args, worker_result))
+            # Jobs must complete within the scope of the VDPTaskFactory as the
+            # context copies used by the MPI clients are removed on __exit__.
+            for (vis, (task_args, task)) in task_queue:
+                try:
+                    worker_result = task.get_result()
+                except mpihelpers.PipelineError as e:
+                    assessed.append((vis, task_args, e))
+                else:
+                    assessed.append((vis, task_args, worker_result))
 
         return assessed
 

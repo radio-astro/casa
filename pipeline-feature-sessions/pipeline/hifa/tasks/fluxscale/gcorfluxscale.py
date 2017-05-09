@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import collections
 import operator
 import os
+import uuid
 
 import scipy.stats as stats
 
@@ -240,7 +241,8 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # We need to write the fluxscale-derived flux densities to a file,
             # which can then be used as input for the subsequent setjy task.
             # This is the name of that file.
-            reffile = os.path.join(inputs.context.output_dir, 'fluxscale_s%s.csv' % inputs.context.stage)
+            # use UUID so that parallel MPI processes do not unlink the same file
+            reffile = os.path.join(inputs.context.output_dir, 'fluxscale_{!s}.csv'.format(uuid.uuid4()))
 
             try:
                 fluxscale_result = self._do_fluxscale(caltable, refspwmap=refspwmap)
