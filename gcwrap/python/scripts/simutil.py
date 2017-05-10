@@ -190,7 +190,7 @@ class simutil:
             elif priority.count("WARN")>0:
                 clr="\x1b[35m"                
                 #toterm=True
-                #priority="INFO" # otherwise casalog will spew to term also.
+                if self.verbose: priority="INFO" # otherwise casalog will spew to term also.
             elif priority=="ERROR":                
                 clr="\x1b[31m"
                 toterm=False  # casalog spews severe to term already

@@ -196,13 +196,13 @@ def simalma(
         # Either skymodel or complist should exist
         if is_array_type(skymodel):
             if len(skymodel)>1:
-                msg("You have given more than one skymodel - simalma will only use the first one, "+skymodel[0],priority="WARNING")
+                msg("You have given more than one skymodel - simalma will only use the first one, "+skymodel[0],priority="INFO")
             skymodel = skymodel[0]
         skymodel = skymodel.replace('$project',project)
 
         if is_array_type(complist):
             if len(complist)>1:
-                msg("You have given more than one componentlist - simalma will only use the first one, "+componentlist[0],priority="WARNING")
+                msg("You have given more than one componentlist - simalma will only use the first one, "+componentlist[0],priority="INFO")
             complist = complist[0]
 
         if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
@@ -401,13 +401,13 @@ def simalma(
                    # Now make sure the configfile exists
                     if not os.path.exists(configfile):
                         msg("Couldn't find configfile: %s" % configfile, priority="error")
-                    stnx, stny, stnz, stnd, padnames, nant, telescopename = myutil.readantenna(configfile)
+                    stnx, stny, stnz, stnd, padnames, telescopename, posobs = myutil.readantenna(configfile)
                     if telescopename=="ALMASD":
                         resols.append(qa.convert(PB12,'arcsec')['value'])
                     else:
                         psfsize = myutil.approxBeam(configfile,qa.convert(qa.quantity(model_center),'GHz')['value'])
                         resols.append(psfsize) # FWHM in arcsec
-
+            
             q = re.compile('CYCLE\d?\d')
             isCycle = q.search(configfile_short.upper())
             if isCycle:
@@ -415,7 +415,6 @@ def simalma(
                 cycles.append(whatCycle)
             else:
                 cycles.append(-1) # -1 is unknown; defaults to full ALMA
-
 
             if configfile_short.upper().find("ALMA") >= 0:
                 if telescopename=="ALMA" or telescopename=="BYRES":
@@ -445,7 +444,6 @@ def simalma(
                 msg(s,origin="simalma",priority="error")
 #                raise ValueError,s
             
-
         #-----------------------------
         # total power parameter:
         tptime_min=0.
