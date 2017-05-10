@@ -1855,9 +1855,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(vi::VisibilityIterator2& vi2) 
   {
-    /// This version uses the new vi2/vb2
-    // get the first ms for multiple MSes
-    MeasurementSet msobj=vi2.ms();
+    
     
     //vi2.getImpl()->spectralWindows( spwids );
     //The above is not right
@@ -1866,20 +1864,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vi::VisBuffer2* vb=vi2.getVisBuffer();
     vi2.originChunks();
     vi2.origin();
+    /// This version uses the new vi2/vb2
+    // get the first ms for multiple MSes
+    MeasurementSet msobj=vi2.ms();
     Int fld=vb->fieldId()(0);
     for (vi2.originChunks(); vi2.moreChunks();vi2.nextChunk())
     	{
 	  for (vi2.origin(); vi2.more();vi2.next())
-    		{
-		  Int a=vb->spectralWindows()(0);
-		  if(std::find(pushspw.begin(), pushspw.end(), a) == pushspw.end()) {
-		    
-		    pushspw.push_back(a);
-		  }
-
-
-
+	    {
+	      //Collect info on first ms only
+	      if(vb->msId() == 0){
+		Int a=vb->spectralWindows()(0);
+		if(std::find(pushspw.begin(), pushspw.end(), a) == pushspw.end()) {
+		  
+		  pushspw.push_back(a);
 		}
+	      }
+	      
+
+
+	    }
 	}
     Vector<Int> spwids(pushspw);
     //////////////////This returns junk for multiple ms CAS-9994..so kludged up along with spw kludge
