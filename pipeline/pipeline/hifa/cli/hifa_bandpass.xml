@@ -13,7 +13,7 @@ window in each measurement set.
 <input>
 
   <param type="stringArray" name="vis" subparam="true">
-    <description>List of input measurment sets</description>
+    <description>List of input measurement sets</description>
     <value></value>
   </param>
 
@@ -72,7 +72,6 @@ window in each measurement set.
     <description>Minimum number of phaseup gain solutions</description>
     <value>2</value>
   </param>
-
 
   <param type="string" name="hm_bandpass">
      <description>Bandpass solution heuristics</description>
