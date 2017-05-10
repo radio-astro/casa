@@ -555,11 +555,11 @@ class Tclean(cleanbase.CleanBase):
             #else:
                 #LOG.warn('Not re-adding continuum model. MS is modified !')
 
-        # If specmode is "cube", create from the non-pbcorrected cube 
-        # after continuum subtraction an image of the moment 0 integrated 
+        # If specmode is "cube", create from the non-pbcorrected cube
+        # after continuum subtraction an image of the moment 0 / 8 integrated
         # intensity for the line-free channels.
         if inputs.specmode == 'cube':
-            self._calc_mom0_fc(result)
+            self._calc_mom0_8_fc(result)
 
         return result
 
@@ -724,14 +724,14 @@ class Tclean(cleanbase.CleanBase):
                 original = table.copy('%s/POINTING' % vis, valuecopy=True)
                 original.done()
     
-    # Calculate a "mom0_fc" image: this is a moment 0 integration over the 
-    # line-free channels of the non-primary-beam corrected image-cube, 
-    # after continuum subtraction; where the "line-free" channels are taken 
-    # from those identified as continuum channels. 
+    # Calculate a "mom0_fc" and "mom8_fc" image: this is a moment 0 and 8
+    # integration over the line-free channels of the non-primary-beam
+    # corrected image-cube, after continuum subtraction; where the "line-free"
+    # channels are taken from those identified as continuum channels. 
     # This is a diagnostic plot representing the residual emission 
     # in the line-free (aka continuum) channels. If the continuum subtraction
     # worked well, then this image should just contain noise.
-    def _calc_mom0_fc(self, result):
+    def _calc_mom0_8_fc(self, result):
         
         # Find max iteration that was performed.
         maxiter = max(result.iterations.keys())
@@ -742,6 +742,9 @@ class Tclean(cleanbase.CleanBase):
         
         # Set output filename for MOM0_FC image.
         mom0_name = '%s.mom0_fc' % (imagename)
+        
+        # Set output filename for MOM8_FC image.
+        mom8_name = '%s.mom8_fc' % (imagename)
         
         # Get continuum frequency ranges.
         if self.inputs.spwsel_lsrk['spw%s' % (self.inputs.spw)] not in (None, 'NONE', ''):
@@ -769,7 +772,19 @@ class Tclean(cleanbase.CleanBase):
             
             # Update the result.
             result.set_mom0_fc(maxiter, mom0_name)
+            
+            # Execute job to create the MOM8_FC image.
+            job = casa_tasks.immoments(imagename=imagename, moments=[8], outfile=mom8_name, chans=cont_chan_ranges_str)
+            job.execute(dry_run=False)
+            assert os.path.exists(mom8_name)
+            
+            # Update the metadata in the MOM8_FC image.
+            cleanbase.set_miscinfo(name=mom8_name, spw=self.inputs.spw, 
+              field=self.inputs.field, iter=maxiter, type='mom8_fc')
+            
+            # Update the result.
+            result.set_mom8_fc(maxiter, mom8_name)
         else:
-            LOG.warning('Cannot create MOM0_FC image for intent "%s", '
+            LOG.warning('Cannot create MOM0_FC / MOM8_FC images for intent "%s", '
               'field %s, spw %s, no continuum ranges found.' %
               (self.inputs.intent, self.inputs.field, self.inputs.spw))

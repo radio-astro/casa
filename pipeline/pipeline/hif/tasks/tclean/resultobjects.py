@@ -130,6 +130,14 @@ class TcleanResult(basetask.Results):
         self.iterations[iter]['mom0_fc'] = image
 
     @property
+    def mom8_fc(self):
+        iters = sorted(self.iterations.keys())
+        return self.iterations[iters[-1]].get('mom8_fc')
+
+    def set_mom8_fc(self, iter, image):
+        self.iterations[iter]['mom8_fc'] = image
+
+    @property
     def psf(self):
         return self._psf
 

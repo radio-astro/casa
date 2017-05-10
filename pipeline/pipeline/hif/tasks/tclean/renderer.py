@@ -203,12 +203,13 @@ class TCleanPlotsRenderer(basetemplates.CommonRenderer):
         self.path = os.path.join(self.dirname, filenamer.sanitize(outfile))
                 
         # Determine whether any of targets were run with specmode = 'cube',
-        # in which case the weblog will need to show the MOM0_FC column.
-        show_mom0_fc = 'cube' in [item['specmode'] for item in 
+        # in which case the weblog will need to show the MOM0_FC and
+        # MOM8_FC columns.
+        show_mom0_8_fc = 'cube' in [item['specmode'] for item in 
           result[0].inputs['target_list']]
         
-        if show_mom0_fc:
-            colorder = ['pbcorimage', 'residual', 'cleanmask', 'mom0_fc']
+        if show_mom0_8_fc:
+            colorder = ['pbcorimage', 'residual', 'cleanmask', 'mom0_fc', 'mom8_fc']
         else:
             colorder = ['pbcorimage', 'residual', 'cleanmask']
         

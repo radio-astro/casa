@@ -107,6 +107,12 @@ class CleanSummary(object):
                         displays.SkyDisplay().plot(self.context, iteration['mom0_fc'] + extension, reportdir=stage_dir,
                                                    intent=r.intent))
 
+                # MOM8_FC for this iteration (currently only last but allow for others in future).
+                if 'mom8_fc' in iteration and os.path.exists(iteration['mom8_fc'] + extension):
+                    plot_wrappers.append(
+                        displays.SkyDisplay().plot(self.context, iteration['mom8_fc'] + extension, reportdir=stage_dir,
+                                                   intent=r.intent))
+
                 # cleanmask for this iteration - not for iter 0
                 if i > 0:
                     collapse_function = 'max' if 'cube' in iteration['cleanmask'] else 'mean'
