@@ -208,15 +208,16 @@ class PySynthesisImager:
              stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles', 'peak residual increased by more than 5 times from the previous major cycle','peak residual increased by more than 5 times from the minimum reached','zero mask']
              casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
 
-#             # revert the current automask to the previous one 
-#             if self.iterpars['interactive']:
-#                 for immod in range(0,self.NF):
-#                     if self.alldecpars[str(immod)]['usemask']=='auto-thresh':
-#                        prevmask = self.allimpars[str(immod)]['imagename']+'.prev.mask'
-#                        if os.path.isdir(prevmask):
-#                          shutil.rmtree(self.allimpars[str(immod)]['imagename']+'.mask')
-#                          #shutil.copytree(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
-#                          shutil.move(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
+             # revert the current automask to the previous one 
+             #if self.iterpars['interactive']:
+             for immod in range(0,self.NF):
+                     if self.alldecpars[str(immod)]['usemask'].count('auto')>0:
+                        prevmask = self.allimpars[str(immod)]['imagename']+'.prev.mask'
+                        if os.path.isdir(prevmask):
+                          shutil.rmtree(self.allimpars[str(immod)]['imagename']+'.mask')
+                          #shutil.copytree(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
+                          shutil.move(prevmask,self.allimpars[str(immod)]['imagename']+'.mask')
+                          casalog.post("[" + str(self.allimpars[str(immod)]['imagename']) + "] : Reverting output mask to one that was last used ", "INFO")
 
          return (stopflag>0)
 
@@ -398,7 +399,7 @@ class PySynthesisImager:
                 # for interactive automask to revert to it if the current mask
                 # is not used (i.e. reached deconvolution stopping condition).
                 #if self.iterpars['interactive'] and self.alldecpars[str(immod)]['usemask']=='auto-thresh':
-                if self.alldecpars[str(immod)]['usemask']=='auto-thresh':
+                if self.alldecpars[str(immod)]['usemask'].count('auto')>0:
                     maskname = self.allimpars[str(immod)]['imagename']+'.mask'
                     prevmaskname=self.allimpars[str(immod)]['imagename']+'.prev.mask'
                     if os.path.isdir(maskname):
