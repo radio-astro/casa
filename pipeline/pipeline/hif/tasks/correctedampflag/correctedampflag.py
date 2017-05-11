@@ -11,6 +11,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.common.arrayflaggerbase import FlagCmd
+from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import CorrectedampflagResults
 
 LOG = infrastructure.get_logger(__name__)
@@ -412,7 +413,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                                 filename=ms.name,
                                                 spw=spwid,
                                                 antenna=ant_in_most_bad_timestamps,
-                                                intent=inputs.intent,
+                                                intent=utils.to_CASA_intent(ms, inputs.intent),
                                                 pol=icorr,
                                                 time=timestamp,
                                                 reason='outlier'))
@@ -431,7 +432,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                                 FlagCmd(
                                                     filename=ms.name,
                                                     spw=spwid,
-                                                    intent=inputs.intent,
+                                                    intent=utils.to_CASA_intent(ms, inputs.intent),
                                                     pol=icorr,
                                                     time=timestamp,
                                                     reason='outlier'))
@@ -535,7 +536,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                     filename=ms.name,
                                     spw=spwid,
                                     antenna=bad_ant,
-                                    intent=inputs.intent,
+                                    intent=utils.to_CASA_intent(ms, inputs.intent),
                                     pol=icorr,
                                     reason='outlier'))
 
@@ -567,22 +568,50 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                         filename=ms.name,
                                         spw=spwid,
                                         antenna="%s&%s" % bl,
-                                        intent=inputs.intent,
+                                        intent=utils.to_CASA_intent(ms, inputs.intent),
                                         pol=icorr,
                                         reason='outlier'))
 
         # TODO: add consolidation of flagging commands?
 
+        # Apply newly found flags.
+        stats_before, stats_after = {}, {}
         if newflags:
             LOG.warning('Evaluation of {0} raised {1} flagging '
                         'command(s)'.format(os.path.basename(inputs.vis),
                                             len(newflags)))
+
+            LOG.info('Applying newly found flags.')
+
+            # Add before/after summary:
+            allflagcmds = ["mode='summary' name='before'"]
+            allflagcmds.extend(newflags)
+            allflagcmds.append("mode='summary' name='after'")
+
+            # Run flag setting.
+            fsinputs = FlagdataSetter.Inputs(
+                context=inputs.context, vis=inputs.vis, table=inputs.vis,
+                inpfile=[])
+            fstask = FlagdataSetter(fsinputs)
+            fstask.flags_to_set(allflagcmds)
+            fsresult = self._executor.execute(fstask)
+
+            # Extract "before" and/or "after" summary
+            # Go through dictionary of reports...
+            for report in fsresult.results[0].keys():
+                if fsresult.results[0][report]['name'] == 'before':
+                    stats_before = fsresult.results[0][report]
+                if fsresult.results[0][report]['name'] == 'after':
+                    stats_after = fsresult.results[0][report]
         else:
             LOG.info('Evaluation of {0} raised 0 flagging commands'.format(
                 os.path.basename(inputs.vis)))
 
         # Store newly identified flags in result.
         result.addflags(newflags)
+
+        # Attach flagging summaries to result
+        result.summaries = [stats_before, stats_after]
 
         return result
 
