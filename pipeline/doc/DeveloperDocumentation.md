@@ -23,3 +23,17 @@ CASA <2>: context = pipeline.Pipeline(context='last').context
 ### Imaging
 
 ### Task interface
+
+### Domain Object
+
+```
+CASA <1>: import pipeline
+CASA <2>: context = pipeline.Pipeline(context='last').context
+
+CASA <3>: vis = 'myvis.ms'
+CASA <4>: m = context.observing_run.get_ms(vis)
+```
+and then use the domain object to get an Spectral Window object
+```
+CASA <5>: spws=m.get_spectral_windows()
+```
