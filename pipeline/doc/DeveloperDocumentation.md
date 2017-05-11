@@ -10,13 +10,15 @@ Think of it as a place for a new team member to look for useful bits of informat
 
 How to restore a pipeline context:
 
-context = h_resume(filename='last')
-
+```
+CASA <1>: context = h_resume(filename='last')
+```
 or
 
-import pipeline
-
-context = pipeline.Pipeline(context='last').context
+```
+CASA <1>: import pipeline
+CASA <2>: context = pipeline.Pipeline(context='last').context
+```
 
 ### Imaging
 
