@@ -1,35 +1,38 @@
 from __future__ import absolute_import
 
-import copy
+import os
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 from pipeline.hif.tasks.bandpass import common
+from pipeline.hif.tasks.correctedampflag import resultobjects
 
 LOG = infrastructure.get_logger(__name__)
 
 
-class BandpassflagResults(common.BandpassResults):
+class BandpassflagResults(basetask.Results):
 
     def __init__(self):
         super(BandpassflagResults, self).__init__()
-        self.flagging = []
+        self.bpresult = common.BandpassResults()
+        self.cafresult = resultobjects.CorrectedampflagResults()
 
-    def import_bpresult(self, bpresult):
-        self.final = copy.deepcopy(bpresult.final)
-        self.preceding = copy.deepcopy(bpresult.preceding)
-        self.pool = copy.deepcopy(bpresult.pool)
-        self.error = copy.deepcopy(bpresult.error)
-        self.qa = copy.deepcopy(bpresult.qa)
+    def merge_with_context(self, context):
+        """
+        See :method:`~pipeline.api.Results.merge_with_context`
+        """
+        if not self.bpresult.final:
+            LOG.error('No results to merge')
+            return
 
-    def import_cafresult(self, cafresult):
-        self.flagging = cafresult.flagcmds()
-
-    def flagcmds(self):
-        return copy.deepcopy(self.flagging)
+        for calapp in self.bpresult.final:
+            LOG.debug('Adding calibration to callibrary:\n'
+                      '%s\n%s' % (calapp.calto, calapp.calfrom))
+            context.callibrary.add(calapp.calto, calapp.calfrom)
 
     def __repr__(self):
         s = 'BandpassflagResults'
-        for calapplication in self.final:
+        for calapplication in self.bpresult.final:
             s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
                 spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
                 name=calapplication.gaintable)

@@ -20,6 +20,10 @@ class BandpassflagQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
 
+        # Run bandpass QA on bandpass result
+        pqa.registry.do_qa(context, result.bpresult)
+
+        # Run bandpassflag specific QA.
         # FIXME: Placeholder QA score is always 1.
         qa_score = 1.0
         longmsg = 'No QA heuristic for Bandpassflag, defaulting to score of 1.'

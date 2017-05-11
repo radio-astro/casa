@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
+import collections
 import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.renderer.logger as logger
-from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
 from pipeline.hif.tasks import gaincal
@@ -390,21 +390,12 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         caftask = correctedampflag.Correctedampflag(cafinputs)
         cafresult = self._executor.execute(caftask)
 
-        # If flags were found in the bandpass calibrator, apply these.
-        # TODO: add before/after summary
+        # If flags were found in the bandpass calibrator, create the
+        # "after calibration, after flagging" plots for the weblog
         cafflags = cafresult.flagcmds()
         if cafflags:
-            LOG.info('Applying newly found flags.')
-            fsinputs = FlagdataSetter.Inputs(
-                context=inputs.context, vis=inputs.vis, table=inputs.vis,
-                inpfile=[])
-            fstask = FlagdataSetter(fsinputs)
-            fstask.flags_to_set(cafflags)
-            fsresult = self._executor.execute(fstask)
-
-        # Make "after calibration, after flagging" plots for the weblog
-        LOG.info('Creating "after calibration, after flagging" plots')
-        result.plots['after'] = self.create_plots('after', 'corrected')
+            LOG.info('Creating "after calibration, after flagging" plots')
+            result.plots['after'] = self.create_plots('after', 'corrected')
 
         # Import the calstate before BPFLAG
         LOG.info('Restoring back-up of calibration state.')
@@ -413,7 +404,6 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # If flags were found in the bandpass calibrator.
         if cafflags:
             LOG.info('Creating final phased-up bandpass calibration.')
-            # TODO: does this preserve the previous table?
             # Recompute the phase-up and bandpass calibration table.
             bpinputs = bandpass.ALMAPhcorBandpass.Inputs(
                 context=inputs.context, vis=inputs.vis,
@@ -428,15 +418,13 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
         # TODO: decide what to add to result.
         #  - plots
-        #  - before/after flagging summary ?
         #  - store both initial and final bpresult?
+
+        # Store bandpass task result.
         result.bpresult = bpresult
 
-        # TODO: move to result.cafresult?
-        result.import_cafresult(cafresult)
-
-        # FIXME: remove this, once weblog renderer and context merger can use result.bpresult
-        result.import_bpresult(bpresult)
+        # # Store flagging task result.
+        result.cafresult = cafresult
 
         return result
 
@@ -445,8 +433,13 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
     def create_plots(self, prefix, type):
 
-        plots = {'time': [],
-                 'uvdist': []}
+        # Initialize output.
+        plots = collections.defaultdict(list)
+
+        # Exit early if weblog generation has been disabled,
+        # returning empty plot dictionary.
+        if basetask.DISABLE_WEBLOG:
+            return plots
 
         for spw in self.inputs.spw.split(','):
             title = 'BANDPASS-amp_vs_uvdist_' + prefix + '_spw' + spw

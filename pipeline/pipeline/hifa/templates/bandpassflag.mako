@@ -1,5 +1,17 @@
 <%!
+rsc_path = ""
 import os
+import pipeline.infrastructure.utils as utils
+
+# method to output flagging percentages neatly
+def percent_flagged(flagsummary):
+    flagged = flagsummary.flagged
+    total = flagsummary.total
+
+    if total is 0:
+        return 'N/A'
+    else:
+        return '%0.1f%%' % (100.0 * flagged / total)
 %>
 
 <%
@@ -11,6 +23,7 @@ def num_lines(relpath):
 	else:
 		return 'N/A'
 %>
+
 
 <%inherit file="t2-4m_details-base.mako"/>
 <%block name="header" />
@@ -45,6 +58,41 @@ def num_lines(relpath):
         </tbody>
     </table>
 % endif
+
+
+<h2>Flagged data summary</h2>
+
+% for ms in flags.keys():
+<h4>Measurement Set: ${ms}</h4>
+<table class="table table-bordered table-striped ">
+	<caption>Summary of flagged data. Each cell states the amount of data
+		flagged as a fraction of the specified data selection.
+	</caption>
+	<thead>
+		<tr>
+			<th rowspan="2">Data Selection</th>
+			<!-- flags before task is always first agent -->
+			<th rowspan="2">flagged before</th>
+			<th rowspan="2">flagged after</th>
+		</tr>
+	</thead>
+	<tbody>
+		% for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET','ATMOSPHERE']:
+		<tr>
+			<th>${k}</th>
+			% for step in ['before','after']:
+			% if flags[ms].get(step) is not None:
+				<td>${percent_flagged(flags[ms][step]['Summary'][k])}</td>
+			% else:
+				<td>0.0%</td>
+			% endif
+			% endfor
+		</tr>
+		% endfor
+	</tbody>
+</table>
+
+% endfor
 
 
 <h2>Bandpass results</h2>
