@@ -70,7 +70,7 @@ CASA <7>: exit
 
 ```
 casa
-CASA <1>: context = h_resume()
+CASA <1>: context = h_resume(filename='last')
 ```
 
 Alternatively
