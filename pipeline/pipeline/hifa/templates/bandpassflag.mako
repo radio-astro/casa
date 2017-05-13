@@ -63,7 +63,7 @@ def num_lines(relpath):
 <h2>Flagged data summary</h2>
 
 % for ms in flags.keys():
-<h4>Measurement Set: ${ms}</h4>
+<h4>Measurement Set: ${os.path.basename(ms)}</h4>
 <table class="table table-bordered table-striped ">
 	<caption>Summary of flagged data. Each cell states the amount of data
 		flagged as a fraction of the specified data selection.
