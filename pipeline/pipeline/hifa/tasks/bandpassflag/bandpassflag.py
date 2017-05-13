@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import collections
 import os
+import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -331,6 +332,12 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             solint=inputs.solint, maxchannels=inputs.maxchannels,
             evenbpints=inputs.evenbpints, bpsnr=inputs.bpsnr,
             bpnsols=inputs.bpnsols)
+        # Modify output table filename to append "prelim".
+        if bpinputs.caltable.endswith('.tbl'):
+            bpinputs.caltable = bpinputs.caltable[:-4] + '.prelim.tbl'
+        else:
+            bpinputs.caltable += '.prelim'
+        # Create and execute task.
         bptask = bandpass.ALMAPhcorBandpass(bpinputs)
         bpresult = self._executor.execute(bptask)
 
@@ -401,10 +408,10 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         LOG.info('Restoring back-up of calibration state.')
         inputs.context.callibrary.import_state(calstate_backup_name)
 
-        # If flags were found in the bandpass calibrator.
         if cafflags:
+            # If flags were found in the bandpass calibrator,
+            # recompute the phase-up and bandpass calibration table.
             LOG.info('Creating final phased-up bandpass calibration.')
-            # Recompute the phase-up and bandpass calibration table.
             bpinputs = bandpass.ALMAPhcorBandpass.Inputs(
                 context=inputs.context, vis=inputs.vis,
                 hm_phaseup=inputs.hm_phaseup, phaseupbw=inputs.phaseupbw,
@@ -413,8 +420,27 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 solint=inputs.solint, maxchannels=inputs.maxchannels,
                 evenbpints=inputs.evenbpints, bpsnr=inputs.bpsnr,
                 bpnsols=inputs.bpnsols)
+            # Modify output table filename to append "prelim".
+            if bpinputs.caltable.endswith('.tbl'):
+                bpinputs.caltable = bpinputs.caltable[:-4] + '.final.tbl'
+            else:
+                bpinputs.caltable += '.final'
+            # Create and execute task.
             bptask = bandpass.ALMAPhcorBandpass(bpinputs)
             bpresult = self._executor.execute(bptask)
+        else:
+            # If no flags were found in the bandpass calibrator,
+            # create a copy of preliminary table and label it
+            # as final.
+            fn_bp_prelim = bpresult.final[0].gaintable
+            if '.prelim' in fn_bp_prelim:
+                fn_bp_final = '.final'.join(fn_bp_prelim.rpartition('.prelim')[0::2])
+            else:
+                fn_bp_final = fn_bp_prelim + '.final'
+            shutil.copytree(fn_bp_prelim, fn_bp_final)
+            LOG.info('No new flags found, created copy of preliminary '
+                     'phased-up bandpass table as final version: '
+                     '{0}'.format(fn_bp_final))
 
         # TODO: decide what to add to result.
         #  - plots
