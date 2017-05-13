@@ -50,7 +50,8 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_total_data_flagged',
            'score_ms_model_data_column_present',
            'score_ms_history_entries_present',
-           'score_contiguous_session']
+           'score_contiguous_session',
+           'score_multiply']
 
 LOG = logging.get_logger(__name__)
 
@@ -1672,5 +1673,18 @@ def score_checksources(mses, fieldname, spwid, imagename):
     origin = pqa.QAOrigin(metric_name='score_checksources',
                           metric_score=metric_score,
                           metric_units=metric_units)
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
+
+
+@log_qa
+def score_multiply(scores_list):
+
+    score = reduce(operator.mul, scores_list, 1.0)
+    longmsg = 'Multiplication of scores.'
+    shortmsg = 'Multiplication of scores.'
+    origin = pqa.QAOrigin(metric_name='score_multiply',
+                          metric_score=len(scores_list),
+                          metric_units='Number of multiplied scores.')
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, origin=origin)
