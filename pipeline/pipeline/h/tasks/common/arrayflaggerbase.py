@@ -114,7 +114,7 @@ class FlagCmd(object):
     """
 
     def __init__(self, filename=None, rulename=None, ruleaxis=None, spw=None,
-                 antenna=None, intent=None, pol=None, time=None,
+                 antenna=None, intent=None, pol=None, time=None, field=None,
                  axisnames=None, flagcoords=None, channel_axis=None,
                  reason=None, extendfields=None, antenna_id_to_name=None):
 
@@ -126,6 +126,7 @@ class FlagCmd(object):
         self.intent = intent
         self.pol = pol
         self.time = time
+        self.field = field
         self.axisnames = axisnames
         self.flagcoords = flagcoords
         self.channel_axis = channel_axis
@@ -256,8 +257,19 @@ class FlagCmd(object):
             end = casatools.quanta.time(end, form=['ymd'])
             flagcmd += " timerange='%s~%s'" % (start[0], end[0])
 
+        # Add field to flagging command.
+        if self.field is not None:
+            # If field is a list of multiple fields, create a comma-separated
+            # string out of them
+            if isinstance(field, list):
+                flagcmd += " field='%s'" % ",".join(str(f) for f in field)
+            else:
+                flagcmd += " field='%s'" % field
+
+        # Add reason to flagging command.
         flagcmd += " reason='%s'" % reason
 
+        # Remove empty leading/trailing spaces.
         flagcmd = flagcmd.strip()
 
         # lastly, remove any 'extend' fields requested, done to extend the effect
