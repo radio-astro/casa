@@ -416,7 +416,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                                 intent=utils.to_CASA_intent(ms, inputs.intent),
                                                 pol=icorr,
                                                 time=timestamp,
-                                                reason='outlier'))
+                                                field=fieldid,
+                                                reason='bad antenna'))
                                     # If there was not a single antenna that was involved
                                     # in more than the threshold fraction of outlier baseline
                                     # scans, then continue checking whether a significant fraction of
@@ -435,7 +436,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                                     intent=utils.to_CASA_intent(ms, inputs.intent),
                                                     pol=icorr,
                                                     time=timestamp,
-                                                    reason='outlier'))
+                                                    field=fieldid,
+                                                    reason='bad timestamp'))
                             # If all outliers were not concentrated within a small number
                             # of timestamps...
                             else:
@@ -538,7 +540,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                     antenna=bad_ant,
                                     intent=utils.to_CASA_intent(ms, inputs.intent),
                                     pol=icorr,
-                                    reason='outlier'))
+                                    field=fieldid,
+                                    reason='bad antenna'))
 
                         # Compute final outlier timestamps per baseline threshold,
                         # forcibly always using the relaxed threshold scale factor,
@@ -570,7 +573,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                         antenna="%s&%s" % bl,
                                         intent=utils.to_CASA_intent(ms, inputs.intent),
                                         pol=icorr,
-                                        reason='outlier'))
+                                        field=fieldid,
+                                        reason='bad baseline'))
 
         # TODO: add consolidation of flagging commands?
 
