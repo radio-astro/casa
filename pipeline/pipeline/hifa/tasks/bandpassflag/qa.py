@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
+import pipeline.qa.scorecalculator as qacalc
 
 from . import resultobjects
 
@@ -20,22 +21,32 @@ class BandpassflagQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
 
-        # Run bandpass QA on bandpass result
+        # Run correctedampflag QA on correctedampflag result.
+        pqa.registry.do_qa(context, result.cafresult)
+
+        # Run bandpass QA on bandpass result.
         pqa.registry.do_qa(context, result.bpresult)
 
-        # Run bandpassflag specific QA.
-        # FIXME: Placeholder QA score is always 1.
-        qa_score = 1.0
-        longmsg = 'No QA heuristic for Bandpassflag, defaulting to score of 1.'
-        shortmsg = 'No QA heuristic'
-        origin = pqa.QAOrigin(
+        # Create bandpassflag specific score, set to a multiplication of
+        # the representative score in correctedampflag QA pool and the
+        # representative score in the bandpass QA pool.
+        score = qacalc.score_multiply(
+            [result.cafresult.qa.representative.score,
+             result.bpresult.qa.representative.score])
+
+        # Update score.
+        longmsg = 'Combined score, based on flagging score and bandpass score'
+        shortmsg = 'Combined score'
+        new_origin = pqa.QAOrigin(
             metric_name='BandpassflagQAHandler',
-            metric_score=bool(qa_score),
-            metric_units='No QA heuristic')
-        score = pqa.QAScore(qa_score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+            metric_score=bool(score),
+            metric_units='Presence of combined score.')
+        score.longmsg = longmsg
+        score.shortmsg = shortmsg
+        score.origin = new_origin
 
         # Gather scores, store in result.
-        scores = [score]
+        scores = [score] + result.bpresult.qa.pool + result.cafresult.qa.pool
         result.qa.pool[:] = scores
 
 

@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
+import pipeline.qa.scorecalculator as qacalc
 
 from . import resultobjects
 
@@ -20,19 +21,19 @@ class CorrectedampflagQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
 
-        # FIXME: Placeholder QA score is always 1.
-        qa_score = 1.0
-        longmsg = 'No QA heuristic for Correctedampflag, defaulting to score of 1.'
-        shortmsg = 'No QA heuristic'
-        origin = pqa.QAOrigin(
+        score = qacalc.linear_score_fraction_newly_flagged(
+            ms.basename, result.summaries, ms.basename)
+        new_origin = pqa.QAOrigin(
             metric_name='CorrectedampflagQAHandler',
-            metric_score=bool(qa_score),
-            metric_units='No QA heuristic')
-        score = pqa.QAScore(qa_score, longmsg=longmsg, shortmsg=shortmsg, vis=ms.basename, origin=origin)
+            metric_score=score.origin.metric_score,
+            metric_units='Percentage of newly flagged data')
+        score.origin = new_origin
 
         # Gather scores, store in result.
         scores = [score]
         result.qa.pool[:] = scores
+
+        result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis
 
 
 class CorrectedampflagListQAHandler(pqa.QAResultHandler):
