@@ -155,7 +155,6 @@ class SDMSSkyCal(basetask.StandardTaskTemplate):
             calto = callibrary.CalTo(vis=myargs['infile'],
                                      spw=myargs['spw'],
                                      field=str(target_id),
-                                     antenna='*&&&',
                                      intent='TARGET')
     
             # create SDCalFrom object
