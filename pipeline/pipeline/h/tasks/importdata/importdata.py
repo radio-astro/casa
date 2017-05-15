@@ -37,7 +37,8 @@ class ImportDataInputs(basetask.StandardInputs):
                  asis=None, process_caldevice=None,
                  session=None, overwrite=None, save_flagonline=None,
                  bdfflags=None, lazy=None, createmms=None,
-                 ocorr_mode=None, clearcals=None):
+                 ocorr_mode=None):
+                 #ocorr_mode=None, clearcals=None):
         self._init_properties(vars())
 
     # This are ALMA specific settings. Make them generic at some point.
@@ -50,7 +51,7 @@ class ImportDataInputs(basetask.StandardInputs):
     process_caldevice = basetask.property_with_default('process_caldevice', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
-    clearcals = basetask.property_with_default('clearcals', True)
+    #clearcals = basetask.property_with_default('clearcals', True)
 
     @property
     def session(self):
@@ -175,7 +176,7 @@ class ImportData(basetask.StandardTaskTemplate):
         results = ImportDataResults()
         to_import = set()
         to_convert = set()
-        to_clearcal = set()
+        #to_clearcal = set()
 
         # if this is a tar, get the names of the files and directories inside
         # the tar and calculate which can be directly imported (filenames with
@@ -225,11 +226,11 @@ class ImportData(basetask.StandardTaskTemplate):
                 if os.path.exists(dst):
                     LOG.warning('%s already in %s. Will import existing data.'
                                 '' % (os.path.basename(src), inputs.output_dir))
-                    if inputs.clearcals:
-                        LOG.info('Pipeline clearcal enabled for %s' % (dst))
-                        to_clearcal.add(dst)
-                    else:
-                        LOG.info('Pipeline clearcal disabled for %s' % (dst))
+                    #if inputs.clearcals:
+                        #LOG.info('Pipeline clearcal enabled for %s' % (dst))
+                        #to_clearcal.add(dst)
+                    #else:
+                        #LOG.info('Pipeline clearcal disabled for %s' % (dst))
                     continue
 
                 if not self._executor._dry_run:
@@ -238,8 +239,8 @@ class ImportData(basetask.StandardTaskTemplate):
 
         # clear the calibration of any stale file that exists in the working
         # directory
-        for old_file in to_clearcal:
-            self._do_clearcal(old_file)
+        #for old_file in to_clearcal:
+            #self._do_clearcal(old_file)
 
         # launch an import job for each ASDM we need to convert
         for asdm in to_convert:
@@ -329,9 +330,9 @@ class ImportData(basetask.StandardTaskTemplate):
         return '{0}.ms'.format(os.path.join(self.inputs.output_dir,
                                             os.path.basename(asdm)))
 
-    def _do_clearcal(self, vis):
-        task = casa_tasks.clearcal(vis=vis, addmodel=False)
-        self._executor.execute(task)
+    #def _do_clearcal(self, vis):
+        #task = casa_tasks.clearcal(vis=vis, addmodel=False)
+        #self._executor.execute(task)
 
     def _do_importasdm(self, asdm):
         inputs = self.inputs
@@ -354,7 +355,6 @@ class ImportData(basetask.StandardTaskTemplate):
         createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
 
         with_pointing_correction = getattr(inputs, 'with_pointing_correction', False)
-        # ocorr_mode = getattr(inputs, 'ocorr_mode', 'ca')
 
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
