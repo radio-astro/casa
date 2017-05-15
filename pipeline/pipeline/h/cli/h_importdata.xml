@@ -30,7 +30,7 @@
     </param>
 
     <param type="string" name="asis" subparam="true">
-	<description>ASDM to convert as is</description>
+	<description>Extra ASDM tables to convert as is</description>
 	<value></value>
     </param>
 
@@ -53,7 +53,12 @@
 	<description>Use the lazy import option</description>
 	<value>False</value>
     </param>
-    
+
+    <param type="string" name="ocorr_mode" subparam="true">
+        <description>ALMA default set to ca</description>
+        <value>ca</value>
+    </param>
+
     <param type="string" name="createmms">
 	<description>Create a MMS</description>
     <value>automatic</value>
@@ -62,11 +67,6 @@
 	    <value>true</value>
 	    <value>false</value>
 	</allowed>
-    </param>
-
-    <param type="bool" name="clearcals">
-	<description>Reinitialize pipeline calibrations as needed</description>
-	<value>True</value>
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
@@ -85,6 +85,7 @@
 	    </equals>
 	    <equals type="string" value="interactive">
 		<default param="asis"><value type="string"></value></default>
+                <default param="ocorr_mode"><value type="string">ca</value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
@@ -93,6 +94,7 @@
 	    </equals>
 	    <equals type="string" value="getinputs">
 		<default param="asis"><value type="string"></value></default>
+                <default param="ocorr_mode"><value type="string">ca</value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
@@ -156,7 +158,11 @@ overwrite -- Overwrite existing MSs on output.
 
 bdfflags -- Apply BDF flags on import
    default: True
-   
+
+ocorr_mode -- Read in cross- and auto-correlation data(ca), cross-
+   correlation data oonly (co), or autocorrelation data only (ao).
+   default: ca
+
 lazy -- Use the lazy import option
    default: False
 
@@ -164,13 +170,6 @@ createmms -- Create a multi-measurement set ('true') ready for parallel
     processing, or a standard measurement set ('false'). The default setting
     ('automatic') creates an MMS if running in a cluster environment.
     default: automatic
-
-clearcals -- Clear pipeline calibrations as needed by resetting the corrected
-    data column to the data column and setting the model column to unity. For
-    normal pipeline operations clearclas should be left on, and the pipeline
-    will choose when it needs to reset the calibrations. In some reprocessing
-    applications clearcals should be turned off.
-    default: True
 
 --- pipeline task execution modes
 
