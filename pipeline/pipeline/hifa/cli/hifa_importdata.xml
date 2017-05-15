@@ -31,7 +31,7 @@ Imports data into the interferometry pipeline
     </param>
 
     <param type="string" name="asis" subparam="true">
-	<description>ASDM to convert as is</description>
+	<description>Extra ASDM tables to convert as is</description>
 	<value>SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value>
     </param>
 
@@ -60,7 +60,7 @@ Imports data into the interferometry pipeline
 	<value>True</value>
     </param>
 
-    <param type="string" name="ocorr_mode">
+    <param type="string" name="ocorr_mode" subparam="true">
 	<description>ALMA default set to ca</description>
 	<value>ca</value>
     </param>
@@ -73,11 +73,6 @@ Imports data into the interferometry pipeline
             <value>true</value>
             <value>false</value>
         </allowed>
-    </param>
-
-    <param type="bool" name="clearcals">
-	<description>Reinitialize pipeline calibrations as needed</description>
-	<value>True</value>
     </param>
 
 
@@ -189,13 +184,6 @@ createmms -- Create a multi-measurement set ('true') ready for parallel
     processing, or a standard measurement set ('false'). The default setting
     ('automatic') creates an MMS if running in a cluster environment.
     default: automatic
-
-clearcals -- Clear pipeline calibrations as needed by resetting the corrected
-    data column to the data column and setting the model column to unity. For
-    normal pipeline operations clearclas should be left on, and the pipeline
-    will choose when it needs to reset the calibrations. In some reprocessing
-    applications clearcals should be turned off.
-    default: True
 
 --- pipeline task execution modes
 
