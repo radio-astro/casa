@@ -509,7 +509,7 @@ class SBSummaryTable(object):
         except:
             if 'ALMA' in obsnames:
                 LOG.warn('Error reading science goals for %s' % (ms.basename))
-            return (None, None, None)
+            return (None, None, None, None, None)
 
     @staticmethod
     def _create_sbsummary_info(repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution):
