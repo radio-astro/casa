@@ -29,6 +29,8 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
 
         '''Adjustment of robust parameter based on desired resolutions.'''
 
+        return 0.5
+
         # Check if there is a non-zero min/max angular resolution
         cqa = casatools.quanta
         minAcceptableAngResolution = cqa.convert(self.science_goals.min_angular_resolution, 'rad')['value']
