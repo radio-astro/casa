@@ -233,7 +233,8 @@ class ImageParamsHeuristics(object):
                 ms = self.observing_run.get_ms(name=vis[i])
                 scanids = [scan.id for scan in ms.scans if
                            intent in scan.intents and
-                           re_field in [utils.dequote(f.name) for f in scan.fields]]
+                           ((re_field in [utils.dequote(f.name) for f in scan.fields]) or
+                            (re_field in [str(f.id) for f in scan.fields]))]
                 if scanids == []:
                     continue
                 allscanids.extend(scanids)
