@@ -7,7 +7,6 @@ import commands
 
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import imageparams_factory
-from pipeline.hif.heuristics import mosaicoverlap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools

@@ -14,6 +14,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.contfilehandler as contfilehandler
 import pipeline.domain.measures as measures
+from pipeline.hif.heuristics import mosaicoverlap
 
 LOG = infrastructure.get_logger(__name__)
 
