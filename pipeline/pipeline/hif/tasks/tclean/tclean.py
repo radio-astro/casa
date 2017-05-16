@@ -332,7 +332,10 @@ class Tclean(cleanbase.CleanBase):
             elif inputs.hm_cleaning == 'sensitivity':
                 raise Exception, 'sensitivity threshold not yet implemented'
             elif inputs.hm_cleaning == 'rms':
-                threshold = '%sJy' % (inputs.tlimit * sensitivity)
+                if inputs.threshold not in (None, ''):
+                    threshold = inputs.threshold
+                else:
+                    threshold = '%sJy' % (inputs.tlimit * sensitivity)
 
             # Choose sequence manager
             # Central mask based on PB
