@@ -151,6 +151,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hifv_flagcal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hifv_circfeedpolcal</Command>
         <ParameterSet>
         </ParameterSet>
