@@ -51,7 +51,7 @@
 
     <param type="string" name="asis">
 	<description>List of tables to import asis</description>
-	<value>Antenna Station Receiver Source CalAtmosphere CalWVR</value>
+	<value>SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -149,7 +149,7 @@ ocorr_mode -- Set ocorr_mode
    example: ocorr_mode='ca'
 
 asis -- Set list of tables to import as is
-   default: 'Antenna Station Receiver Source CalAtmosphere CalWVR'
+   default: 'SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR'
    example: asis='Source Receiver'
 
 
