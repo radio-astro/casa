@@ -70,7 +70,7 @@ class TransformimagedataInputs(mssplit.MsSplitInputs):
         self._init_properties(vars())
 
     replace = basetask.property_with_default('replace', False)
-    datacolumn = basetask.property_with_default('datacolumn', 'data')
+    datacolumn = basetask.property_with_default('datacolumn', 'corrected')
 
 
 class Transformimagedata(mssplit.MsSplit):
@@ -96,15 +96,24 @@ class Transformimagedata(mssplit.MsSplit):
         #    Does this need a try / except block
 
         visfields = []
+        visspws = []
         for imageparam in inputs.context.clean_list_pending:
             visfields.extend(imageparam['field'].split(','))
+            visspws.extend(imageparam['spw'].split(','))
+
         visfields = set(visfields)
         visfields = list(visfields)
         visfields = ','.join(visfields)
 
+        visspws = set(visspws)
+        visspws = list(visspws)
+        visspws.sort()
+        visspws = ','.join(visspws)
+
         mstransform_args = inputs.to_casa_args()
         mstransform_args['field'] = visfields
         mstransform_args['reindex'] = False
+        mstransform_args['spw'] = visspws
         mstransform_job = casa_tasks.mstransform(**mstransform_args)
 
         self._executor.execute(mstransform_job)
@@ -118,7 +127,7 @@ class Transformimagedata(mssplit.MsSplit):
 
         inputs = self.inputs
 
-        # There seems to be a rerendering issue with replace. Fir now just
+        # There seems to be a rerendering issue with replace. For now just
         # remove the old file.
         if inputs.replace:
             shutil.rmtree(result.vis)
