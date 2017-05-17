@@ -5,6 +5,7 @@ import numpy as np
 import re
 import types
 import collections
+import operator
 
 import cleanhelper
 

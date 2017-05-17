@@ -1,7 +1,6 @@
 import os
 import shutil
 import glob
-import operator
 import decimal
 import commands
 
