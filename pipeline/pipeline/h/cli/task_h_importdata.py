@@ -5,11 +5,9 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def h_importdata(vis=None, session=None, pipelinemode=None, asis=None,
-                   process_caldevice=None, overwrite=None, bdfflags=None,
-                   lazy=None, ocorr_mode=None, createmms=None, dryrun=None,
-                   acceptresults=None):
-
+def h_importdata(vis=None, session=None, pipelinemode=None, asis=None, process_caldevice=None, overwrite=None,
+                 nocopy=None, bdfflags=None, lazy=None, ocorr_mode=None, createmms=None, dryrun=None,
+                 acceptresults=None):
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()

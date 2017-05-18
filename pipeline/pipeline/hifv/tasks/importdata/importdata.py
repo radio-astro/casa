@@ -1,27 +1,30 @@
 from __future__ import absolute_import
-
 import collections
-import pipeline.infrastructure.casatools as casatools
+
 import numpy
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.hifv.heuristics.vlascanheuristics import VLAScanHeuristics
+import pipeline.infrastructure.casatools as casatools
 
 import pipeline.h.tasks.importdata.importdata as importdata
+from pipeline.hifv.heuristics.vlascanheuristics import VLAScanHeuristics
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class VLAImportDataInputs(importdata.ImportDataInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, output_dir=None, asis=None,
-                 process_caldevice=None, session=None, overwrite=None,
-                 bdfflags=None, lazy=None, save_flagonline=None,
-                 createmms=None, ocorr_mode=None):
-        self._init_properties(vars())
+    def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
+                 overwrite=None, nocopy=None, bdfflags=None, lazy=None, save_flagonline=None, createmms=None,
+                 ocorr_mode=None):
+        super(VLAImportDataInputs, self).__init__(context=context, vis=vis, output_dir=output_dir, asis=asis,
+                                                  process_caldevice=process_caldevice, session=session,
+                                                  overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
+                                                  save_flagonline=save_flagonline, createmms=createmms,
+                                                  ocorr_mode=ocorr_mode)
 
-    overwrite = basetask.property_with_default('overwrite', False)
-    save_flagonline = basetask.property_with_default('save_flagonline', True)
+    # Override defaults in ImportDataInputs
     asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
     bdfflags = basetask.property_with_default('bdfflags', False)
@@ -29,9 +32,11 @@ class VLAImportDataInputs(importdata.ImportDataInputs):
 
 
 class VLAImportDataResults(basetask.Results):
-    def __init__(self, mses=[], setjy_results=None):
+    def __init__(self, mses=None, setjy_results=None):
         super(VLAImportDataResults, self).__init__()
 
+        if mses is None:
+            mses = []
         self.mses = mses
         self.setjy_results = setjy_results
         self.origin = {}
