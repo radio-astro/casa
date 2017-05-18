@@ -12,6 +12,7 @@ import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.displays.applycal as applycal
+import pipeline.h.tasks.applycal.renderer as applycal_renderer
 
 LOG = logging.get_logger(__name__)
 
@@ -368,6 +369,9 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         m = context.observing_run.measurement_sets[0]
 
         plots = []
+        plot_output_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number)
+        calto, _ = applycal_renderer._get_data_selection_for_plot(context, result, ['TARGET'])
+
         for field in fields:
             # override field when plotting amp/phase vs frequency, as otherwise
             # the field is resolved to a list of all field IDs
@@ -375,7 +379,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
             LOG.info("PlotSummary Plotting: " + 'Field ' + str(field) + ', ' + str(m.get_fields(field_id=field)[0].name))
 
-            plotter = plotter_cls(context, result, ['TARGET'], **overrides)
+            plotter = plotter_cls(context, plot_output_dir, calto, 'TARGET', **overrides)
             plots.extend(plotter.plot())
 
         for plot in plots:
@@ -488,8 +492,10 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
     def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None, **kwargs):
         vis = os.path.basename(result.inputs['vis'])
+        output_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number)
+        calto, str_intents = applycal_renderer._get_data_selection_for_plot(context, result, intents)
 
-        plotter = plotter_cls(context, result, intents, **kwargs)
+        plotter = plotter_cls(context, output_dir, calto, str_intents, **kwargs)
         plots = plotter.plot()
         for plot in plots:
             plot.parameters['intent'] = intents

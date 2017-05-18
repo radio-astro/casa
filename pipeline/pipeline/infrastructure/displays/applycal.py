@@ -4,13 +4,11 @@ import os
 import string
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks
 from . import common
-
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -21,10 +19,12 @@ class PlotmsLeaf(object):
     ant arguments through to plotms without further manipulation, creating
     exactly one plot. 
     """
-    def __init__(self, context, result, calto, xaxis, yaxis,  
-                 spw='', ant='', field='', scan='', intent='', uvrange='', correlation='', **plot_args):
+
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, spw='', ant='', field='', scan='', intent='',
+                 uvrange='', correlation='', suffix='', **plot_args):
         self._context = context
-        self._result = result
+        self._output_dir = output_dir
+        self._suffix = suffix
 
         self._vis = calto.vis
         self._ms = context.observing_run.get_ms(self._vis)
@@ -53,14 +53,14 @@ class PlotmsLeaf(object):
                 raise NotImplementedError('Could not expand correlation for observatory: {!s}'.format(observatory))
         self._correlation = correlation
 
-#         # convert intent to scan selection
-#         if intent != '':
-#             domain_fields = self._ms.get_fields(field)
-#             domain_spws = self._ms.get_spectral_windows(spw)
-#             scans = [s for s in self._ms.get_scans(scan_intent=intent)
-#                      if s.fields.intersection(domain_fields)
-#                      and s.spws.intersection(domain_spws)]
-#             scan = ','.join([str(s.id) for s in scans])
+        #         # convert intent to scan selection
+        #         if intent != '':
+        #             domain_fields = self._ms.get_fields(field)
+        #             domain_spws = self._ms.get_spectral_windows(spw)
+        #             scans = [s for s in self._ms.get_scans(scan_intent=intent)
+        #                      if s.fields.intersection(domain_fields)
+        #                      and s.spws.intersection(domain_spws)]
+        #             scan = ','.join([str(s.id) for s in scans])
         self._scan = scan
 
         # use field name rather than ID where possible
@@ -96,7 +96,7 @@ class PlotmsLeaf(object):
 
         self._field = str(field)
         self._field_label = str(field_label)
-        
+
         # use antenna name rather than ID if possible
         if ant != '':
             domain_antennas = self._ms.get_antenna(ant)
@@ -121,17 +121,18 @@ class PlotmsLeaf(object):
     def plot(self):
         task = self._get_plot_task()
         return [(task, self._get_plot_wrapper(task))]
-            
+
     def _get_plotfile(self):
         fileparts = {
-            'vis'      : os.path.basename(self._vis),
-            'x'        : self._xaxis,
-            'y'        : self._yaxis,
-            'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
-            'field'    : '' if self._field_label == '' else '-%s' % self._field_label.replace(',','_'),
-            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_'),
-            'uvrange'  : '' if self._uvrange == '' else 'uvrange%s-' % self._uvrange.replace(',','_'),
-            'receiver' : '' if self._receiver == '' else '%s-' % self._receiver.replace(',','_')
+            'vis': os.path.basename(self._vis),
+            'x': self._xaxis,
+            'y': self._yaxis,
+            'ant': '' if self._ant == '' else 'ant%s-' % self._ant.replace(',', '_'),
+            'field': '' if self._field_label == '' else '-%s' % self._field_label.replace(',', '_'),
+            'intent': '' if self._intent == '' else '%s-' % self._intent.replace(',', '_'),
+            'uvrange': '' if self._uvrange == '' else 'uvrange%s-' % self._uvrange.replace(',', '_'),
+            'receiver': '' if self._receiver == '' else '%s-' % self._receiver.replace(',', '_'),
+            'suffix': '' if self._suffix == '' else '-%s' % self._suffix
         }
 
         if self._spw == '':
@@ -144,26 +145,24 @@ class PlotmsLeaf(object):
         if self._baseband:
             fileparts['spw'] = 'bb%s-' % self._baseband
 
-        png = '{vis}{field}-{receiver}{spw}{ant}{intent}{uvrange}{y}_vs_{x}.png'.format(**fileparts)
+        png = '{vis}{field}-{receiver}{spw}{ant}{intent}{uvrange}{y}_vs_{x}{suffix}.png'.format(**fileparts)
         png = filenamer.sanitize(png)
 
         # Maximum filename size for Lustre filesystems is 255 bytes. Mosaics
         # can exceed this limit due to including the names of all the field.
         # Truncate over-long field components while keeping them unique by
         # replacing them with the hash of the component          
-        if len(png) > 251: # 255 - '.png'
-            png_hash = str(hash(png)) 
+        if len(png) > 251:  # 255 - '.png'
+            png_hash = str(hash(png))
             LOG.info('Truncating plot filename to avoid filesystem limit.\n'
                      'Old: %s\nNew: %s', png, png_hash)
             png = '%s.png' % png_hash
 
-        return os.path.join(self._context.report_dir, 
-                            'stage%s' % self._result.stage_number,
-                            png)
+        return os.path.join(self._output_dir, png)
 
     def _get_plot_wrapper(self, task):
         parameters = {'vis': os.path.basename(self._vis)}
-        
+
         domain_spws = self._ms.get_spectral_windows(self._spw)
         parameters['receiver'] = sorted(set(spw.band for spw in domain_spws))
 
@@ -176,8 +175,8 @@ class PlotmsLeaf(object):
         for attr in ['spw', 'ant', 'intent', 'scan']:
             val = getattr(self, '_%s' % attr)
             if val != '':
-                parameters[attr] = val 
-            
+                parameters[attr] = val
+
         wrapper = logger.Plot(self._plotfile,
                               x_axis=self._xaxis,
                               y_axis=self._yaxis,
@@ -205,7 +204,7 @@ class PlotmsLeaf(object):
         }
 
         task_args.update(**self._plot_args)
-        
+
         task = casa_tasks.plotms(**task_args)
         return task
 
@@ -217,26 +216,24 @@ class SpwComposite(common.LeafComposite):
     # reference to the PlotLeaf class to call
     leaf_class = None
 
-    def __init__(self, context, result, calto, xaxis, yaxis, ant='', field='',
-                 intent='', **kwargs):
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, ant='', field='', intent='', **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
-        
+
         children = []
         for spw in ms.get_spectral_windows(calto.spw):
+            # only create plots for spws with the desired intent
             if intent != '':
                 wanted = set(intent.split(','))
                 if spw.intents.isdisjoint(wanted):
                     continue
 
             kwargs_copy = dict(kwargs)
-            kwargs_copy['avgchannel'] = kwargs.get('avgchannel', 
-                                                   str(spw.num_channels))
+            kwargs_copy['avgchannel'] = kwargs.get('avgchannel', str(spw.num_channels))
 
-            leaf_obj = self.leaf_class(context, result, calto, xaxis, yaxis,
-                                       spw=spw.id, ant=ant, field=field, 
+            leaf_obj = self.leaf_class(context, output_dir, calto, xaxis, yaxis, spw=spw.id, ant=ant, field=field,
                                        intent=intent, **kwargs_copy)
             children.append(leaf_obj)
-                 
+
         super(SpwComposite, self).__init__(children)
 
 
@@ -247,8 +244,8 @@ class BasebandComposite(common.LeafComposite):
     # reference to the PlotLeaf class to call
     leaf_class = None
 
-    def __init__(self, context, result, calto, xaxis, yaxis, ant='', field='',
-                 intent='', overplot_receivers=False, **kwargs):
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, ant='', field='', intent='', overplot_receivers=False,
+                 **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
 
         receivers = collections.defaultdict(lambda: utils.OrderedDefaultdict(list))
@@ -272,10 +269,8 @@ class BasebandComposite(common.LeafComposite):
 
             for baseband_id, spw_ids in basebands.items():
                 spws = ','.join([str(i) for i in spw_ids])
-                leaf_obj = self.leaf_class(context, result, calto, xaxis,
-                        yaxis, spw=spws, ant=ant, field=field, intent=intent,
-                        baseband=str(baseband_id), receiver=receiver_id,
-                        **kwargs)
+                leaf_obj = self.leaf_class(context, output_dir, calto, xaxis, yaxis, spw=spws, ant=ant, field=field,
+                                           intent=intent, baseband=str(baseband_id), receiver=receiver_id, **kwargs)
                 children.append(leaf_obj)
 
         super(BasebandComposite, self).__init__(children)
@@ -288,14 +283,12 @@ class AntComposite(common.LeafComposite):
     # reference to the PlotLeaf class to call
     leaf_class = None
 
-    def __init__(self, context, result, calto, xaxis, yaxis, spw='', field='',
-                 intent='', **kwargs):
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, spw='', field='', intent='', **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
         antennas = [int(a.id) for a in ms.get_antenna(calto.antenna)]
-        
-        children = [self.leaf_class(context, result, calto, xaxis, yaxis,
-                                    ant=ant, spw=spw, field=field,
-                                    intent=intent, **kwargs)
+
+        children = [self.leaf_class(context, output_dir, calto, xaxis, yaxis,
+                                    ant=ant, spw=spw, field=field, intent=intent, **kwargs)
                     for ant in antennas]
         super(AntComposite, self).__init__(children)
 
@@ -307,10 +300,10 @@ class FieldComposite(common.LeafComposite):
     # reference to the PlotLeaf class to call
     leaf_class = None
 
-    def __init__(self, context, result, calto, xaxis, yaxis, spw='', ant='',
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, spw='', ant='',
                  intent='', **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
-        
+
         children = []
         for field in ms.get_fields(calto.field):
             wanted = set(intent.split(','))
@@ -318,10 +311,10 @@ class FieldComposite(common.LeafComposite):
             if not intersection:
                 continue
 
-            leaf_obj = self.leaf_class(context, result, calto, xaxis, yaxis,
-                                        ant=ant, spw=spw, 
-                                        intent=','.join(intersection), 
-                                        field=str(field.id), **kwargs)
+            leaf_obj = self.leaf_class(context, output_dir, calto, xaxis, yaxis,
+                                       ant=ant, spw=spw,
+                                       intent=','.join(intersection),
+                                       field=str(field.id), **kwargs)
             children.append(leaf_obj)
 
         super(FieldComposite, self).__init__(children)
@@ -333,7 +326,7 @@ class FieldSpwComposite(common.LeafComposite):
     """
     leaf_class = None
 
-    def __init__(self, context, result, calto, xaxis, yaxis, intent='', **kwargs):
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, intent='', **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
 
         wanted = set(intent.split(','))
@@ -342,12 +335,12 @@ class FieldSpwComposite(common.LeafComposite):
             intersection = field.intents.intersection(wanted)
             if not intersection:
                 continue
-                             
-            leaf_obj = self.leaf_class(context, result, calto, xaxis, yaxis,
-                                        intent=','.join(intersection), 
-                                        field=str(field.id), **kwargs)
+
+            leaf_obj = self.leaf_class(context, output_dir, calto, xaxis, yaxis,
+                                       intent=','.join(intersection),
+                                       field=str(field.id), **kwargs)
             children.append(leaf_obj)
-        
+
         super(FieldSpwComposite, self).__init__(children)
 
 
@@ -357,16 +350,16 @@ class SpwAntComposite(common.LeafComposite):
     """
     leaf_class = None
 
-    def __init__(self, context, result, calto, xaxis, yaxis, intent='', **kwargs):
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, intent='', **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
 
         children = []
         for spw in ms.get_spectral_windows(calto.spw):
-            leaf_obj = self.leaf_class(context, result, calto, xaxis, yaxis,
+            leaf_obj = self.leaf_class(context, output_dir, calto, xaxis, yaxis,
                                        intent=intent, spw=spw.id,
                                        **kwargs)
             children.append(leaf_obj)
-        
+
         super(SpwAntComposite, self).__init__(children)
 
 
@@ -376,7 +369,7 @@ class FieldSpwAntComposite(common.LeafComposite):
     """
     leaf_class = None
 
-    def __init__(self, context, result, calto, xaxis, yaxis, intent='', **kwargs):
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, intent='', **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
 
         wanted = set(intent.split(','))
@@ -385,49 +378,21 @@ class FieldSpwAntComposite(common.LeafComposite):
             intersection = field.intents.intersection(wanted)
             if not intersection:
                 continue
-                             
-            leaf_obj = self.leaf_class(context, result, calto, xaxis, yaxis,
-                                        intent=','.join(intersection), 
-                                        field=str(field.id), **kwargs)
+
+            leaf_obj = self.leaf_class(context, output_dir, calto, xaxis, yaxis,
+                                       intent=','.join(intersection),
+                                       field=str(field.id), **kwargs)
             children.append(leaf_obj)
-        
+
         super(FieldSpwAntComposite, self).__init__(children)
-
-
-class CalappComposite(common.LeafComposite):
-    """
-    Create a PlotLeaf for each applied calibration
-    """
-    leaf_class = None
-
-    def __init__(self, context, result, xaxis, yaxis, ant='', spw='', 
-                 field='', intent='', **kwargs):
-        children = [self.leaf_class(context, result, calapp.calto, xaxis, 
-                                    yaxis, ant=ant, spw=spw, field=field,
-                                    intent=intent, **kwargs)
-                    for calapp in result.applied]
-        super(CalappComposite, self).__init__(children)
-
-
-class CalappFieldSpwComposite(common.LeafComposite):
-    """
-    Create a PlotLeaf for each field and spw in the applied calibration
-    """
-    leaf_class = None
-
-    def __init__(self, context, result, xaxis, yaxis, intent='', **kwargs):
-        children = [self.leaf_class(context, result, calapp.calto, xaxis, 
-                                    yaxis, intent=intent, **kwargs)
-                    for calapp in result.applied]
-        super(CalappFieldSpwComposite, self).__init__(children)
 
 
 class PlotmsAntComposite(AntComposite):
     leaf_class = PlotmsLeaf
-    
+
     def plot(self):
         # merge separate ant jobs into one job using plotms iterator
-        jobs_and_wrappers = super(PlotmsAntComposite, self).plot()        
+        jobs_and_wrappers = super(PlotmsAntComposite, self).plot()
         successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'antenna')
         return successful_wrappers
 
@@ -437,7 +402,7 @@ class PlotmsSpwComposite(SpwComposite):
 
     def plot(self):
         # merge separate spw jobs into one job using plotms iterator
-        jobs_and_wrappers = super(PlotmsSpwComposite, self).plot()        
+        jobs_and_wrappers = super(PlotmsSpwComposite, self).plot()
         successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'spw')
         return successful_wrappers
 
@@ -447,7 +412,7 @@ class PlotmsBasebandComposite(BasebandComposite):
 
     def plot(self):
         # merge separate spw jobs into one job using plotms iterator
-        jobs_and_wrappers = super(PlotmsBasebandComposite, self).plot()        
+        jobs_and_wrappers = super(PlotmsBasebandComposite, self).plot()
         successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'spw')
         return successful_wrappers
 
@@ -457,21 +422,13 @@ class PlotmsFieldComposite(FieldComposite):
 
     def plot(self):
         # merge separate spw jobs into one job using plotms iterator
-        jobs_and_wrappers = super(PlotmsFieldComposite, self).plot()        
+        jobs_and_wrappers = super(PlotmsFieldComposite, self).plot()
         successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'field')
         return successful_wrappers
 
 
-class PlotmsCalappComposite(CalappComposite):
-    leaf_class = PlotmsLeaf
-
-
 class PlotmsFieldSpwComposite(FieldSpwComposite):
     leaf_class = PlotmsSpwComposite
-
-
-class PlotmsCalappFieldSpwComposite(CalappFieldSpwComposite):
-    leaf_class = PlotmsFieldSpwComposite
 
 
 class PlotmsSpwAntComposite(SpwAntComposite):
@@ -482,42 +439,13 @@ class PlotmsFieldSpwAntComposite(FieldSpwAntComposite):
     leaf_class = PlotmsSpwAntComposite
 
 
-def _get_summary_args(context, result, intent, **kwargs):
-    spw = _get_calapp_arg(result, 'spw')
-    field = _get_calapp_arg(result, 'field')
-    antenna = _get_calapp_arg(result, 'antenna')
-    intent = ','.join(intent)
-
-    vis = set([calapp.vis for calapp in result.applied])
-    assert(len(vis) is 1)
-    vis = vis.pop()
-
-    wanted = set(intent.split(','))
-    fields_with_intent = set()
-    for f in context.observing_run.get_ms(vis).get_fields(field):
-        intersection = f.intents.intersection(wanted)
-        if not intersection:
-            continue
-        fields_with_intent.add(f.name)
-    field = ','.join(fields_with_intent)
-
-    calto = callibrary.CalTo(vis, field, spw, antenna, intent)
-
-    return (calto, intent)
-
-def _get_calapp_arg(result, arg):
-    s = set()
-    for calapp in result.applied:
-        s.update(utils.safe_split(getattr(calapp, arg)))
-    return ','.join(s)
-
-
 class SpwSummaryChart(PlotmsSpwComposite):
     """
     Base class for executing plotms per calibrator field and spw
     """
-    def __init__(self, context, result, xaxis, yaxis, intent, **kwargs):
-        (calto, intent) = _get_summary_args(context, result, intent)
+
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, intent, **kwargs):
+        # (calto, intent) = _get_summary_args(context, result, intent)
         LOG.info('%s vs %s plot: %s' % (yaxis, xaxis, calto))
 
         if 'field' in kwargs:
@@ -528,17 +456,17 @@ class SpwSummaryChart(PlotmsSpwComposite):
             field = calto.field
 
         # request plots per spw, overlaying all antennas
-        super(SpwSummaryChart, self).__init__(
-                context, result, calto, xaxis, yaxis, intent=intent, 
-                field=field, **kwargs)
+        super(SpwSummaryChart, self).__init__(context, output_dir, calto, xaxis, yaxis, intent=intent, field=field,
+                                              **kwargs)
 
 
 class BasebandSummaryChart(PlotmsBasebandComposite):
     """
     Base class for executing plotms per baseband
     """
-    def __init__(self, context, result, xaxis, yaxis, intent, **kwargs):
-        (calto, intent) = _get_summary_args(context, result, intent)
+
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, intent, **kwargs):
+        # (calto, intent) = _get_summary_args(context, result, intent)
         LOG.info('%s vs %s plot: %s' % (yaxis, xaxis, calto))
 
         if 'field' in kwargs:
@@ -551,116 +479,123 @@ class BasebandSummaryChart(PlotmsBasebandComposite):
         # request plots per spw, overlaying all antennas
         # if field is specified in kwargs, it will override the calto.field
         # selection
-        super(BasebandSummaryChart, self).__init__(
-                context, result, calto, xaxis, yaxis, intent=intent, 
-                field=field, **kwargs)
+        super(BasebandSummaryChart, self).__init__(context, output_dir, calto, xaxis, yaxis, intent=intent, field=field, **kwargs)
 
 
 class AmpVsUVSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs UV distance plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgbaseline' : False,
-                     'avgchannel'  : '9000',
-                     'plotrange'   : [0, 0, 0, 0],
-                     'coloraxis'   : 'corr',
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgbaseline': False,
+            'avgchannel': '9000',
+            'plotrange': [0, 0, 0, 0],
+            'coloraxis': 'corr',
+            'overwrite': True
+        }
         plot_args.update(**overrides)
-        
-        super(AmpVsUVSummaryChart, self).__init__(
-                context, result, xaxis='uvdist', yaxis='amp', intent=intent, 
-                **plot_args)
+
+        super(AmpVsUVSummaryChart, self).__init__(context, output_dir, calto, xaxis='uvdist', yaxis='amp',
+                                                  intent=intent, **plot_args)
 
 
 class AmpVsUVBasebandSummaryChart(BasebandSummaryChart):
     """
     Create an amplitude vs UV distance plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected',
-                 **kwargs):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgbaseline' : False,
-                     'avgchannel'  : '9000',
-                     'plotrange'   : [0, 0, 0, 0],
-                     'coloraxis'   : 'corr',
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **kwargs):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgbaseline': False,
+            'avgchannel': '9000',
+            'plotrange': [0, 0, 0, 0],
+            'coloraxis': 'corr',
+            'overwrite': True
+        }
         plot_args.update(kwargs)
 
-        super(AmpVsUVBasebandSummaryChart, self).__init__(
-                context, result, xaxis='uvdist', yaxis='amp', intent=intent, 
-                **plot_args)
+        super(AmpVsUVBasebandSummaryChart, self).__init__(context, output_dir, calto, xaxis='uvdist', yaxis='amp',
+                                                          intent=intent, **plot_args)
 
 
 class PhaseVsUVSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs UV distance plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgbaseline' : False,
-                     'avgchannel'  : '9000',
-                     'coloraxis'   : 'corr',
-                     'plotrange'   : [0, 0, -90, 90],
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgbaseline': False,
+            'avgchannel': '9000',
+            'coloraxis': 'corr',
+            'plotrange': [0, 0, -90, 90],
+            'overwrite': True
+        }
         plot_args.update(**overrides)
-        
-        super(PhaseVsUVSummaryChart, self).__init__(
-                context, result, xaxis='uvdist', yaxis='phase', intent=intent, 
-                **plot_args)
+
+        super(PhaseVsUVSummaryChart, self).__init__(context, output_dir, calto, xaxis='uvdist', yaxis='phase',
+                                                    intent=intent, **plot_args)
 
 
 class AmpVsTimeSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgbaseline' : False,
-                     'plotrange'   : [0, 0, 0, 0],
-                     'coloraxis'   : 'field',
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgbaseline': False,
+            'plotrange': [0, 0, 0, 0],
+            'coloraxis': 'field',
+            'overwrite': True
+        }
         plot_args.update(**overrides)
-        
-        super(AmpVsTimeSummaryChart, self).__init__(
-                context, result, xaxis='time', yaxis='amp', intent=intent,
-                **plot_args)
+
+        super(AmpVsTimeSummaryChart, self).__init__(context, output_dir, calto, xaxis='time', yaxis='amp',
+                                                    intent=intent, **plot_args)
 
 
 class PhaseVsTimeSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgbaseline' : False,
-                     'coloraxis'   : 'field',
-                     'plotrange'   : [0, 0, -90, 90],
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgbaseline': False,
+            'coloraxis': 'field',
+            'plotrange': [0, 0, -90, 90],
+            'overwrite': True
+        }
         plot_args.update(**overrides)
-        
-        super(PhaseVsTimeSummaryChart, self).__init__(
-                context, result, xaxis='time', yaxis='phase', intent=intent,
-                **plot_args)
+
+        super(PhaseVsTimeSummaryChart, self).__init__(context, output_dir, calto, xaxis='time', yaxis='phase',
+                                                      intent=intent, **plot_args)
 
 
 class AmpVsFrequencySummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', 
-                 **kwargs):
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **kwargs):
         plot_args = {
             'ydatacolumn': ydatacolumn,
             'avgchannel': '',
@@ -673,18 +608,17 @@ class AmpVsFrequencySummaryChart(SpwSummaryChart):
             'overwrite': True
         }
         plot_args.update(kwargs)
-        
-        super(AmpVsFrequencySummaryChart, self).__init__(
-                context, result, xaxis='freq', yaxis='amp', intent=intent, 
-                **plot_args)
+
+        super(AmpVsFrequencySummaryChart, self).__init__(context, output_dir, calto, xaxis='freq', yaxis='amp',
+                                                         intent=intent, **plot_args)
 
 
 class VLAAmpVsFrequencySummaryChart(BasebandSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected',
-                 **kwargs):
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **kwargs):
         plot_args = {
             'ydatacolumn': ydatacolumn,
             'avgchannel': '',
@@ -698,31 +632,31 @@ class VLAAmpVsFrequencySummaryChart(BasebandSummaryChart):
         }
         plot_args.update(kwargs)
 
-        super(VLAAmpVsFrequencySummaryChart, self).__init__(
-                context, result, xaxis='freq', yaxis='amp', intent=intent,
-                **plot_args)
+        super(VLAAmpVsFrequencySummaryChart, self).__init__(context, output_dir, calto, xaxis='freq', yaxis='amp',
+                                                            intent=intent, **plot_args)
 
 
 class PhaseVsFrequencyPerSpwSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected',
-                 **kwargs):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgchannel'  : '',
-                     'avgtime'     : '1e8',
-                     'avgscan'     : True,
-                     'avgantenna'  : True,
-                     'plotrange'   : [0, 0, -90, 90],
-                     'correlation' : '',
-                     'coloraxis'   : 'antenna1',
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **kwargs):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgchannel': '',
+            'avgtime': '1e8',
+            'avgscan': True,
+            'avgantenna': True,
+            'plotrange': [0, 0, -90, 90],
+            'correlation': '',
+            'coloraxis': 'antenna1',
+            'overwrite': True
+        }
         plot_args.update(kwargs)
-        
-        super(PhaseVsFrequencyPerSpwSummaryChart, self).__init__(
-                context, result, xaxis='freq', yaxis='phase', intent=intent, 
-                **plot_args)
+
+        super(PhaseVsFrequencyPerSpwSummaryChart, self).__init__(context, output_dir, calto, xaxis='freq',
+                                                                 yaxis='phase', intent=intent, **plot_args)
 
 
 class PhaseVsFrequencyPerBasebandSummaryChart(BasebandSummaryChart):
@@ -730,8 +664,7 @@ class PhaseVsFrequencyPerBasebandSummaryChart(BasebandSummaryChart):
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
 
-    def __init__(self, context, result, intent='', ydatacolumn='corrected',
-                 **kwargs):
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **kwargs):
         plot_args = {'ydatacolumn': ydatacolumn,
                      'avgchannel': '',
                      'avgtime': '1e8',
@@ -743,37 +676,33 @@ class PhaseVsFrequencyPerBasebandSummaryChart(BasebandSummaryChart):
                      'overwrite': True}
         plot_args.update(kwargs)
 
-        super(PhaseVsFrequencyPerBasebandSummaryChart, self).__init__(
-            context, result, xaxis='freq', yaxis='phase', intent=intent,
-            **plot_args)
+        super(PhaseVsFrequencyPerBasebandSummaryChart, self).__init__(context, output_dir, calto, xaxis='freq', yaxis='phase', intent=intent, **plot_args)
 
 
 class SpwAntDetailChart(PlotmsSpwAntComposite):
     """
     Base class for executing plotms per calibrator field and spw
     """
-    def __init__(self, context, result, xaxis, yaxis, intent, **kwargs):
-        (calto, intent) = _get_summary_args(context, result, intent)
+
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, intent, **kwargs):
+        # (calto, intent) = _get_summary_args(context, result, intent)
         LOG.info('%s vs %s plot: %s' % (yaxis, xaxis, calto))
 
         # request plots per spw, overlaying all antennas
-        super(SpwAntDetailChart, self).__init__(
-                context, result, calto, xaxis, yaxis, intent=intent, 
-                field=calto.field, **kwargs)
+        super(SpwAntDetailChart, self).__init__(context, output_dir, calto, xaxis, yaxis, intent=intent, field=calto.field, **kwargs)
 
 
 class FieldSpwAntDetailChart(PlotmsFieldSpwAntComposite):
     """
     Base class for executing plotms per calibrator field, spw and antenna
     """
-    def __init__(self, context, result, xaxis, yaxis, intent, **kwargs):
-        (calto, intent) = _get_summary_args(context, result, intent)
+
+    def __init__(self, context, output_dir, calto, xaxis, yaxis, intent, **kwargs):
+        # (calto, intent) = _get_summary_args(context, result, intent)
         LOG.info('%s vs %s plot: %s' % (yaxis, xaxis, calto))
 
         # request plots per spw, overlaying all antennas
-        super(FieldSpwAntDetailChart, self).__init__(
-                context, result, calto, xaxis, yaxis, intent=intent, 
-                **kwargs)
+        super(FieldSpwAntDetailChart, self).__init__(context, output_dir, calto, xaxis, yaxis, intent=intent, **kwargs)
 
 
 class AmpVsFrequencyDetailChart(FieldSpwAntDetailChart):
@@ -781,21 +710,22 @@ class AmpVsFrequencyDetailChart(FieldSpwAntDetailChart):
     Create an amplitude vs frequency plot for each spw and antenna, 
     overplotting by field.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', 
-                 **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgchannel'  : '',
-                     'avgtime'     : '1e8',
-                     'avgscan'     : True,
-                     'avgantenna'  : False,
-                     'plotrange'   : [0, 0, 0, 0],
-                     'coloraxis'   : 'corr',
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgchannel': '',
+            'avgtime': '1e8',
+            'avgscan': True,
+            'avgantenna': False,
+            'plotrange': [0, 0, 0, 0],
+            'coloraxis': 'corr',
+            'overwrite': True
+        }
         plot_args.update(**overrides)
-        
-        super(AmpVsFrequencyDetailChart, self).__init__(
-                context, result, xaxis='freq', yaxis='amp', intent=intent, 
-                **plot_args)
+
+        super(AmpVsFrequencyDetailChart, self).__init__(context, output_dir, calto, xaxis='freq', yaxis='amp',
+                                                        intent=intent, **plot_args)
 
 
 class PhaseVsFrequencyDetailChart(FieldSpwAntDetailChart):
@@ -803,42 +733,44 @@ class PhaseVsFrequencyDetailChart(FieldSpwAntDetailChart):
     Create a phase vs frequency plot for each spw and antenna, overplotting
     by field.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected',
-                 **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgchannel'  : '',
-                     'avgtime'     : '1e8',
-                     'avgscan'     : True,
-                     'avgantenna'  : False,
-                     'plotrange'   : [0, 0, -180, 180],
-                     'coloraxis'   : 'corr',
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgchannel': '',
+            'avgtime': '1e8',
+            'avgscan': True,
+            'avgantenna': False,
+            'plotrange': [0, 0, -180, 180],
+            'coloraxis': 'corr',
+            'overwrite': True
+        }
         plot_args.update(**overrides)
-        
-        super(PhaseVsFrequencyDetailChart, self).__init__(
-                context, result, xaxis='freq', yaxis='phase', intent=intent, 
-                **plot_args)
+
+        super(PhaseVsFrequencyDetailChart, self).__init__(context, output_dir, calto, xaxis='freq', yaxis='phase',
+                                                          intent=intent, **plot_args)
 
 
 class AmpVsUVDetailChart(FieldSpwAntDetailChart):
     """
     Create an amplitude vs UV distance plot for each field, spw and antenna
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected',
-                 **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgbaseline' : False,
-                     'avgchannel'  : '9000',
-                     'plotrange'   : [0, 0, 0, 0],
-                     'coloraxis'   : 'corr',
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgbaseline': False,
+            'avgchannel': '9000',
+            'plotrange': [0, 0, 0, 0],
+            'coloraxis': 'corr',
+            'overwrite': True
+        }
         plot_args.update(**overrides)
-        
-        super(AmpVsUVDetailChart, self).__init__(
-                context, result, xaxis='uvdist', yaxis='amp', intent=intent, 
-                **plot_args)
+
+        super(AmpVsUVDetailChart, self).__init__(context, output_dir, calto, xaxis='uvdist', yaxis='amp', intent=intent,
+                                                 **plot_args)
 
 
 class CAS9216AmpVsUVDetailChart(FieldSpwAntDetailChart):
@@ -846,7 +778,7 @@ class CAS9216AmpVsUVDetailChart(FieldSpwAntDetailChart):
     Create an amplitude vs UV distance plot per spw and antenna.
     """
 
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {
             'ydatacolumn': ydatacolumn,
             'avgtime': '',
@@ -862,28 +794,30 @@ class CAS9216AmpVsUVDetailChart(FieldSpwAntDetailChart):
         }
         plot_args.update(**overrides)
 
-        super(CAS9216AmpVsUVDetailChart, self).__init__(context, result, xaxis='uvdist', yaxis='amp', intent=intent,
-                                                 **plot_args)
+        super(CAS9216AmpVsUVDetailChart, self).__init__(context, output_dir, calto, xaxis='uvdist', yaxis='amp', intent=intent,
+                                                        **plot_args)
 
 
 class PhaseVsUVDetailChart(SpwAntDetailChart):
     """
     Create an amplitude vs UV distance plot for each spw and antenna
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgbaseline' : False,
-                     'avgchannel'  : '9000',
-                     'coloraxis'   : 'corr',
-                     'plotrange'   : [0, 0, -180, 180],
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgbaseline': False,
+            'avgchannel': '9000',
+            'coloraxis': 'corr',
+            'plotrange': [0, 0, -180, 180],
+            'overwrite': True
+        }
         plot_args.update(**overrides)
-        
-        super(PhaseVsUVDetailChart, self).__init__(
-                context, result, xaxis='uvdist', yaxis='phase', intent=intent, 
-                **plot_args)
+
+        super(PhaseVsUVDetailChart, self).__init__(context, output_dir, calto, xaxis='uvdist', yaxis='phase', intent=intent,
+                                                   **plot_args)
 
 
 class AmpVsTimeDetailChart(FieldSpwAntDetailChart):
@@ -891,19 +825,21 @@ class AmpVsTimeDetailChart(FieldSpwAntDetailChart):
     Create an amplitude vs time plot for each field, spw and antenna, 
     overplotting by correlation.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgantenna'  : False,
-                     'plotrange'   : [0, 0, 0, 0],
-                     'coloraxis'   : 'corr',
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgantenna': False,
+            'plotrange': [0, 0, 0, 0],
+            'coloraxis': 'corr',
+            'overwrite': True
+        }
         plot_args.update(**overrides)
 
-        super(AmpVsTimeDetailChart, self).__init__(
-                context, result, xaxis='time', yaxis='amp', intent=intent,
-                **plot_args)
+        super(AmpVsTimeDetailChart, self).__init__(context, output_dir, calto, xaxis='time', yaxis='amp', intent=intent,
+                                                   **plot_args)
 
 
 class CAS9154AmpVsTimeDetailChart(SpwAntDetailChart):
@@ -914,7 +850,8 @@ class CAS9154AmpVsTimeDetailChart(SpwAntDetailChart):
     The fields in this plot are already delineated because this plot is
     against the time axis, hence we can overplot by correlation.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {
             'ydatacolumn': ydatacolumn,
             'avgantenna': False,
@@ -929,7 +866,7 @@ class CAS9154AmpVsTimeDetailChart(SpwAntDetailChart):
         }
         plot_args.update(**overrides)
 
-        super(CAS9154AmpVsTimeDetailChart, self).__init__(context, result, xaxis='time', yaxis='amp', intent=intent,
+        super(CAS9154AmpVsTimeDetailChart, self).__init__(context, output_dir, calto, xaxis='time', yaxis='amp', intent=intent,
                                                           **plot_args)
 
 
@@ -938,29 +875,30 @@ class PhaseVsTimeDetailChart(FieldSpwAntDetailChart):
     Create an phase vs time plot for each field, spw and antenna, 
     overplotting by correlation.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
-        plot_args = {'ydatacolumn' : ydatacolumn,
-                     'avgtime'     : '',
-                     'avgscan'     : False,
-                     'avgantenna'  : False,
-                     'plotrange'   : [0, 0, -180, 180],
-                     'coloraxis'   : 'corr',
-                     'overwrite'   : True}
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgantenna': False,
+            'plotrange': [0, 0, -180, 180],
+            'coloraxis': 'corr',
+            'overwrite': True
+        }
         plot_args.update(**overrides)
-        
-        super(PhaseVsTimeDetailChart, self).__init__(
-                context, result, xaxis='time', yaxis='phase', intent=intent, 
-                **plot_args)
+
+        super(PhaseVsTimeDetailChart, self).__init__(context, output_dir, calto, xaxis='time', yaxis='phase', intent=intent,
+                                                     **plot_args)
 
 
 class CorrectedToModelRatioVsAntenna1SummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent, ydatacolumn='corrected/model',
-                 **kwargs):
+    def __init__(self, context, output_dir, calto, intent, ydatacolumn='corrected/model', **kwargs):
         plot_args = {
-            'ydatacolumn' : ydatacolumn,
+            'ydatacolumn': ydatacolumn,
             'avgantenna': True,
             'avgchannel': '1e8',
             'coloraxis': 'antenna1',
@@ -968,35 +906,34 @@ class CorrectedToModelRatioVsAntenna1SummaryChart(SpwSummaryChart):
         }
         plot_args.update(kwargs)
 
-        super(CorrectedToModelRatioVsAntenna1SummaryChart, self).__init__(
-                context, result, xaxis='antenna1', yaxis='amp', intent=intent,
-                **plot_args)
+        super(CorrectedToModelRatioVsAntenna1SummaryChart, self).__init__(context, output_dir, calto, xaxis='antenna1',
+                                                                          yaxis='amp', intent=intent, **plot_args)
 
 
 class CorrectedToModelRatioVsUVDistanceSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent, ydatacolumn='corrected/model',
-                 **kwargs):
+
+    def __init__(self, context, output_dir, calto, intent, ydatacolumn='corrected/model', **kwargs):
         plot_args = {
-            'ydatacolumn' : ydatacolumn,
+            'ydatacolumn': ydatacolumn,
             'avgchannel': '1e8',
             'coloraxis': 'antenna1',
             'overwrite': True
         }
         plot_args.update(kwargs)
 
-        super(CorrectedToModelRatioVsUVDistanceSummaryChart, self).__init__(
-                context, result, xaxis='uvdist', yaxis='amp', intent=intent,
-                **plot_args)
+        super(CorrectedToModelRatioVsUVDistanceSummaryChart, self).__init__(context, output_dir, calto, xaxis='uvdist',
+                                                                            yaxis='amp', intent=intent, **plot_args)
+
 
 class RealVsFrequencySummaryChart(SpwSummaryChart):
     """
     Create a real vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', 
-                 **kwargs):
+
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='corrected', **kwargs):
         plot_args = {
             'ydatacolumn': ydatacolumn,
             'avgchannel': '',
@@ -1009,7 +946,6 @@ class RealVsFrequencySummaryChart(SpwSummaryChart):
             'overwrite': True
         }
         plot_args.update(kwargs)
-        
-        super(RealVsFrequencySummaryChart, self).__init__(
-                context, result, xaxis='freq', yaxis='real', intent=intent, 
-                **plot_args)
+
+        super(RealVsFrequencySummaryChart, self).__init__(context, output_dir, calto, xaxis='freq', yaxis='real',
+                                                          intent=intent, **plot_args)

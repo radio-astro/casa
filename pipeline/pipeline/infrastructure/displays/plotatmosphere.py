@@ -20,10 +20,9 @@ class PlotAtmosphereLeaf(object):
     Class to execute plotAtmosphere and return a plot wrapper.
     """
 
-    def __init__(self, context, result, calto, yaxis, spw='', field='', intent='',
-                 scan='', **plot_args):
+    def __init__(self, context, output_dir, calto, yaxis, spw='', field='', intent='', scan='', **plot_args):
         self._context = context
-        self._result = result
+        self._output_dir = output_dir
 
         self._vis = calto.vis
         self._ms = context.observing_run.get_ms(self._vis)
@@ -134,9 +133,7 @@ class PlotAtmosphereLeaf(object):
                      'Old: %s\nNew: %s', png, png_hash)
             png = '%s.png' % png_hash
 
-        return os.path.join(self._context.report_dir,
-                            'stage%s' % self._result.stage_number,
-                            png)
+        return os.path.join(self._output_dir, png)
 
     def _get_plot_wrapper(self, task):
         parameters = {'vis': os.path.basename(self._vis)}
@@ -180,7 +177,7 @@ class SpwComposite(common.LeafComposite):
     # reference to the PlotLeaf class to call
     leaf_class = None
 
-    def __init__(self, context, result, calto, yaxis='', field='', intent='', scan='', **kwargs):
+    def __init__(self, context, output_dir, calto, yaxis='', field='', intent='', scan='', **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
 
         children = []
@@ -190,9 +187,8 @@ class SpwComposite(common.LeafComposite):
                 if spw.intents.isdisjoint(wanted):
                     continue
 
-            leaf_obj = self.leaf_class(context, result, calto, spw=spw.id,
-                                       field=field, intent=intent, yaxis=yaxis, scan=scan,
-                                       **kwargs)
+            leaf_obj = self.leaf_class(context, output_dir, calto, spw=spw.id, field=field, intent=intent, yaxis=yaxis,
+                                       scan=scan, **kwargs)
             children.append(leaf_obj)
 
         super(SpwComposite, self).__init__(children)
@@ -246,8 +242,8 @@ class SpwSummaryChart(PlotAtmosphereSpwComposite):
     """
     Base class for executing plotatmosphere per spw
     """
-    def __init__(self, context, result, yaxis, intent, **kwargs):
-        (calto, intent) = applycal._get_summary_args(context, result, intent)
+    def __init__(self, context, output_dir, calto, yaxis, intent, **kwargs):
+        # (calto, intent) = applycal._get_summary_args(context, result, intent)
         LOG.info('%s plot: %s' % (yaxis, calto))
 
         if 'field' in kwargs:
@@ -258,15 +254,15 @@ class SpwSummaryChart(PlotAtmosphereSpwComposite):
             field = calto.field
 
         # request plots per spw
-        super(SpwSummaryChart, self).__init__(
-                context, result, calto, yaxis, intent=intent, field=field, **kwargs)
+        super(SpwSummaryChart, self).__init__(context, output_dir, calto, yaxis, intent=intent, field=field, **kwargs)
 
 
 class TransmissionSummaryChart(SpwSummaryChart):
     """
     Create a transmission plot for each spw
     """
-    def __init__(self, context, result, intent, **kwargs):
+
+    def __init__(self, context, output_dir, calto, intent, **kwargs):
         plot_args = {
             'plotrange': None,
             'overlay': False,
@@ -275,5 +271,5 @@ class TransmissionSummaryChart(SpwSummaryChart):
         }
         plot_args.update(kwargs)
 
-        super(TransmissionSummaryChart, self).__init__(
-            context, result, yaxis='transmission', intent=intent, **plot_args)
+        super(TransmissionSummaryChart, self).__init__(context, output_dir, calto, yaxis='transmission', intent=intent,
+                                                       **plot_args)

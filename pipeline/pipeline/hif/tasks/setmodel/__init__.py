@@ -5,7 +5,6 @@ import pipeline.infrastructure.renderer.weblog as weblog
 
 from .setjy import Setjy
 from .setmodel import SetModels
-#from ..common import commonfluxresults
 from pipeline.h.tasks.common import commonfluxresults
 from . import qa
 from . import renderer

@@ -8,6 +8,7 @@ import decimal
 import os
 
 import pipeline.domain.measures as measures
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.displays.gfluxscale as gfluxscale
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
@@ -89,8 +90,14 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def plots_for_result(self, context, result, plotter_cls, intents,
                          renderer_cls=None, ant='', uvrange=''):
         vis = os.path.basename(result.inputs['vis'])
-        
-        plotter = plotter_cls(context, result, intents, ant=ant, uvrange=uvrange)
+
+        output_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number)
+
+        # create a fake CalTo object so we can use the applycal class
+        fields = result.inputs['reference']
+        calto = callibrary.CalTo(result.inputs['vis'], field=fields)
+
+        plotter = plotter_cls(context, output_dir, calto, intents, ant=ant, uvrange=uvrange)
         plots = plotter.plot()
 
         d = collections.defaultdict(dict)

@@ -6,6 +6,7 @@ Created on 11 Sep 2014
 import collections
 import os
 
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.displays.setjy as setjy_display
@@ -57,7 +58,17 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return d
 
     def plots_for_result(self, context, result, plotter_cls, intents):
-        plotter = plotter_cls(context, result, intents)
+        output_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number)
+
+        # create a fake CalTo object so we can use the applycal class
+        spws = []
+        for fieldname in result.measurements.keys():
+            for fluxm in result.measurements[fieldname]:
+                spws.append(fluxm.spw_id)
+        spwlist = ','.join([str(i) for i in spws])
+        calto = callibrary.CalTo(result.inputs['vis'], spw=spwlist)
+
+        plotter = plotter_cls(context, output_dir, calto, intents)
         plots = plotter.plot()
 
         d = collections.defaultdict(dict)
