@@ -4,6 +4,7 @@ import os
 import shutil
 import collections
 import glob
+import tarfile
 
 from . import almaifaqua
 from . import manifest
@@ -14,6 +15,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.h.tasks.exportdata.exportdata as exportdata
 
 LOG = infrastructure.get_logger(__name__)
+
 
 AuxFileProducts = collections.namedtuple('AuxFileProducts', 'flux_file antenna_file cont_file flagtargets_list')
 
@@ -37,8 +39,7 @@ class ALMAExportData(exportdata.ExportData):
 
         oussid = self.get_oussid(self.inputs.context)
 
-        # Export the auxiliary file products
-        #    TBD Move this routine to the ALMA interferometry pipeline
+        # Export the auxiliary file products into a single tar file
         #    These are optional for reprocessing but informative to the user
         #    The calibrator source fluxes file
         #    The antenna positions file
@@ -46,10 +47,12 @@ class ALMAExportData(exportdata.ExportData):
         #    The target flagging file
         auxfproducts =  self._do_auxiliary_products(self.inputs.context, oussid, self.inputs.output_dir, self.inputs.products_dir)
 
+        # Export the AQUA report
         aquareport_name = 'pipeline_aquareport.xml'
         pipe_aqua_reportfile = self._export_aqua_report (self.inputs.context, oussid, aquareport_name,
             almaifaqua, self.inputs.products_dir)
 
+        # Update the manifest
         manifest = os.path.join(self.inputs.context.products_dir, results.manifest)
         if auxfproducts is not None or pipe_aqua_reportfile is not None:
             manifest = os.path.join(self.inputs.context.products_dir, results.manifest)
@@ -63,35 +66,87 @@ class ALMAExportData(exportdata.ExportData):
         Generate the auxliliary products
         '''
 
-        # Export the flux.csv file
-        #    Does not need to be exported to the archive because the information
-        #    is encapsulated in the calibration tables
-        #    Relies on file name convention
-        flux_file = self._export_flux_file (context, oussid, 'flux.csv', products_dir)
+        fluxfile_name = 'flux.csv'
+        antposfile_name = 'antennapos.csv'
+        contfile_name = 'cont.dat'
+        empty = True
 
-        # Export the antennapos.csv file.
-        #    Does not need to be exported to the archive because the information
-        #    is encapsulated in the calibration tables
-        #    Relies on file name convention
-        antenna_file = self._export_antpos_file (context, oussid, 'antennapos.csv',
-            products_dir)
-
-        # Export the cont.dat file.
-        #    May need to be exported to the archive. This is TBD
-        #    Relies on file name convention
-        cont_file = self._export_cont_file (context, oussid, 'cont.dat',
-            products_dir)
+        # Get the flux, antenna position, and continuum subtraction
+        # files and test to see if at least one of them exists
+        flux_file = os.path.join (output_dir, fluxfile_name)
+        antpos_file = os.path.join (output_dir, antposfile_name)
+        cont_file = os.path.join (output_dir, contfile_name)
+        if os.path.exists(flux_file) or os.path.exists(antpos_file) or os.path_exists(cont_file):
+            empty = False
 
         # Export the target source template flagging files
         #    Whether or not these should be exported to the archive depends on
-        #    the final place of the target flagging step in the work flow
-        targetflags_list = self._export_targetflags_files (context, oussid,
-            '*_flagtargetstemplate.txt', products_dir)
+        #    the final place of the target flagging step in the work flow and
+        #    how flags will or will not be stored back into the ASDM
 
-        return AuxFileProducts (flux_file,
-            antenna_file,
-            cont_file,
-            targetflags_list)
+        targetflags_filelist = []
+        for file_name in glob.glob('*_flagtargetstemplate.txt'):
+            flags_file = os.path.join (output_dir, file_name)
+            if os.path.exists(flags_file):
+                empty = False
+                targetflags_filelist.append(flags_file)
+            else:
+                targetflags_filelist.append('Undefined')
+
+        if empty:
+            return None
+
+        # Create the tarfile
+        cwd = os.getcwd()
+        tarfilename = 'Undefined'
+        try:
+            os.chdir(output_dir)
+
+            # Define the name of the output tarfile
+            tarfilename = '{}.auxproducts.tgz'.format(oussid)
+            LOG.info('Saving auxliary dat products in %s', tarfilename)
+
+            # Open tarfile
+            with tarfile.open(os.path.join(products_dir, tarfilename), 'w:gz') as tar:
+
+                # Save flux file
+                if os.path.exists(flux_file):
+                    tar.add(flux_file, arcname=os.path.basename(flux_file))
+                    LOG.info('Saving auxiliary data product %s in %s', os.path.basename(flux_file), tarfilename)
+                else:
+                    LOG.info('Auxiliary data product %s does not exist', os.path.basename(flux_file))
+                    flux_file = 'Undefined'
+
+                # Save antenna positions file
+                if os.path.exists(antpos_file):
+                    tar.add(antpos_file, arcname=os.path.basename(antpos_file))
+                    LOG.info('Saving auxiliary data product %s in %s', os.path.basename(antpos_file), tarfilename)
+                else:
+                    LOG.info('Auxiliary data product %s does not exist', os.path.basename(antpos_file))
+                    antpos_file = 'Undefined'
+
+                # Save continuum regions file
+                if os.path.exists(cont_file):
+                    tar.add(cont_file, arcname=os.path.basename(cont_file))
+                    LOG.info('Saving auxiliary data product %s in %s', os.path.basename(cont_file), tarfilename)
+                else:
+                    LOG.info('Auxiliary data product %s does not exist', os.path.basename(cont_file))
+                    cont_file = 'Undefined'
+
+                # Save target flag files
+                for flags_file in targetflags_filelist:
+                    if os.path.exists(cont_file):
+                        tar.add(flags_file, arcname=os.path.basename(flags_file))
+                        LOG.info('Saving auxiliary data product %s in %s', os.path.basename(flags_file), tarfilename)
+                    else:
+                        LOG.info('Auxiliary data product %s does not exist', os.path.basename(flags_file))
+
+                tar.close()
+        finally:
+            # Restore the original current working directory
+            os.chdir(cwd)
+
+        return tarfilename
 
     def _export_aqua_report (self, context, oussid, aquareport_name, aqua, products_dir):
 
@@ -122,103 +177,6 @@ class ALMAExportData(exportdata.ExportData):
             else:
                 return 'Undefined'
 
-    def _export_flux_file (self, context, oussid, fluxfile_name, products_dir):
-
-        """
-        Save the flux file
-        """
-
-        ps = context.project_structure
-        if ps is None:
-            flux_file = os.path.join (context.output_dir, fluxfile_name)
-            out_flux_file = os.path.join (products_dir, fluxfile_name)
-        elif ps.ousstatus_entity_id == 'unknown':
-            flux_file = os.path.join (context.output_dir, fluxfile_name)
-            out_flux_file = os.path.join (products_dir, fluxfile_name)
-        else:
-            flux_file = os.path.join (context.output_dir, fluxfile_name)
-            out_flux_file = os.path.join (products_dir, oussid + '.' + fluxfile_name)
-
-        if os.path.exists(flux_file):
-            LOG.info('Copying flux file %s to %s' % \
-                     (flux_file, out_flux_file))
-            shutil.copy (flux_file, out_flux_file)
-            return os.path.basename(out_flux_file)
-        else:
-            return 'Undefined'
-
-    def _export_antpos_file (self, context, oussid, antposfile_name, products_dir):
-
-        """
-        Save the antenna positions file
-        """
-
-        ps = context.project_structure
-        if ps is None:
-            antpos_file = os.path.join (context.output_dir, antposfile_name)
-            out_antpos_file = os.path.join (products_dir, antposfile_name)
-        elif ps.ousstatus_entity_id == 'unknown':
-            antpos_file = os.path.join (context.output_dir, antposfile_name)
-            out_antpos_file = os.path.join (products_dir, antposfile_name)
-        else:
-            antpos_file = os.path.join (context.output_dir, antposfile_name)
-            out_antpos_file = os.path.join (products_dir, oussid + '.' + antposfile_name)
-
-        if os.path.exists(antpos_file):
-            LOG.info('Copying antenna postions file %s to %s' % \
-                     (antpos_file, out_antpos_file))
-            shutil.copy (antpos_file, out_antpos_file)
-            return os.path.basename(out_antpos_file)
-        else:
-            return 'Undefined'
-
-    def _export_cont_file (self, context, oussid, contfile_name, products_dir):
-
-        """
-        Save the continuum regions file
-        """
-
-        ps = context.project_structure
-        if ps is None:
-            cont_file = os.path.join (context.output_dir, contfile_name)
-            out_cont_file = os.path.join (products_dir, contfile_name)
-        elif ps.ousstatus_entity_id == 'unknown':
-            cont_file = os.path.join (context.output_dir, contfile_name)
-            out_cont_file = os.path.join (products_dir, contfile_name)
-        else:
-            cont_file = os.path.join (context.output_dir, contfile_name)
-            out_cont_file = os.path.join (products_dir, oussid + '.' + contfile_name)
-
-        if os.path.exists(cont_file):
-            LOG.info('Copying continuum frequency ranges file %s to %s' % \
-                     (cont_file, out_cont_file))
-            shutil.copy (cont_file, out_cont_file)
-            return os.path.basename(out_cont_file)
-        else:
-            return 'Undefined'
-
-    def _export_targetflags_files (self, context, oussid, pattern, products_dir):
-
-        """
-        Export the target flags files
-        Remove file name dependency on oussid but leave argument in place for now
-        """
-
-        output_filelist = []
-        ps = context.project_structure
-        for file_name in glob.glob(pattern):
-            flags_file = os.path.join (context.output_dir, file_name)
-            out_flags_file = os.path.join (products_dir, file_name)
-            if os.path.exists(flags_file):
-                LOG.info('Copying science target flags file %s to %s' % \
-                     (flags_file, out_flags_file))
-                shutil.copy (flags_file, out_flags_file)
-                output_filelist.append(os.path.basename(out_flags_file))
-            else:
-                output_filelist.append('Undefined')
-
-        return output_filelist
-
     def _add_to_manifest(self, manifest_file, auxfproducts, aqua_report):
 
         pipemanifest = manifest.ALMAIfPipelineManifest('')
@@ -229,16 +187,7 @@ class ALMAExportData(exportdata.ExportData):
             pipemanifest.add_aqua_report(ouss, os.path.basename(aqua_report))
 
         if auxfproducts:
-            # Add the flux.csv file
-            pipemanifest.add_flux_file (ouss, os.path.basename(auxfproducts.flux_file))
-
-            # Add the antennapos.csv file.
-            pipemanifest.add_antennapos_file (ouss, os.path.basename(auxfproducts.antenna_file))
-
-            # Add the cont.dat file.
-            #    May need to be exported to the archive. This is TBD
-            #    Relies on file name convention
-            pipemanifest.add_cont_file (ouss, os.path.basename(auxfproducts.cont_file))
-
+            # Add auxliary data products file
+            pipemanifest.add_aux_products_file (ouss, os.path.basename(auxfproducts))
 
         pipemanifest.write(manifest_file)
