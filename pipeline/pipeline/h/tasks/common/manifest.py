@@ -124,20 +124,29 @@ class PipelineManifest(object):
     def add_flux_file (self, ous, flux_file):
 	"""
         Add the flux file to the OUS element
+        Remove at some point.
 	"""
         eltree.SubElement (ous, "flux_file", name=flux_file)
 
     def add_antennapos_file (self, ous, antennapos_file):
 	"""
         Add the antenna positions file to the OUS element
+        Remove at some point
 	"""
         eltree.SubElement (ous, "antennapos_file", name=antennapos_file)
 
     def add_cont_file (self, ous, cont_file):
 	"""
         Add the continuum frequency ranges file to the OUS element
+        Remove at some point
 	"""
         eltree.SubElement (ous, "cont_file", name=cont_file)
+
+    def add_aux_products_file (self, ous, auxproducts_file):
+	"""
+        Add the auxiliary products file. Is one enough ?
+	"""
+        eltree.SubElement (ous, "aux_products_file", name=auxproducts_file)
 
     def add_aqua_report (self, ous, aqua_report):
 	"""
