@@ -195,7 +195,7 @@ class Solint(basetask.StandardTaskTemplate):
         new_gain_solint1=str(short_solint)+'s'
 
         if self.inputs.limit_short_solint:
-            LOG.warn("Short Solint limited by user keyword input to " + self.inputs.limit_short_solint)
+            LOG.warn("Short Solint limited by user keyword input to " + str(self.inputs.limit_short_solint))
             limit_short_solint = self.inputs.limit_short_solint
 
             if limit_short_solint == 'int':
@@ -225,7 +225,7 @@ class Solint(basetask.StandardTaskTemplate):
                                                             context=context, combtime=combtime, refAnt=refAnt)
                 bpdgain_touse = 'testgaincallimit.g'
 
-                LOG.info("Using short solint = " + new_gain_solint1)
+                LOG.info("Using short solint = " + str(new_gain_solint1))
 
                 return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
                                      short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
@@ -241,7 +241,7 @@ class Solint(basetask.StandardTaskTemplate):
                                                         context=context, combtime=combtime, refAnt=refAnt)
                 bpdgain_touse = 'testgaincallimit.g'
 
-                LOG.info("Using short solint = " + new_gain_solint1)
+                LOG.info("Using short solint = " + str(new_gain_solint1))
 
                 return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
                                      short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
@@ -249,7 +249,7 @@ class Solint(basetask.StandardTaskTemplate):
 
 
         
-        LOG.info("Using short solint = " + new_gain_solint1)
+        LOG.info("Using short solint = " + str(new_gain_solint1))
         
         return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
                              short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
