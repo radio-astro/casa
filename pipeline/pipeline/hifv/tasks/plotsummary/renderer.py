@@ -137,7 +137,7 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         # Polarization plots
         phase_vs_freq_polarization_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['POLANGLE'], ['POLLEAKAGE']]:
+        for intents in [['POLANGLE'], ['POLLEAKAGE'], ['PHASE'], ['BANDPASS']]:
             plots = self.create_plots(context,
                                       result,
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,

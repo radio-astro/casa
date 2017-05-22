@@ -520,12 +520,12 @@ def space_comma(s):
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
-		Calibrated phase vs frequency, intent='POLANGLE, POLLEAKAGE'
+		Calibrated phase vs frequency, intent='POLANGLE, POLLEAKAGE, BANDPASS, PHASE'
 	</%def>
 
 	<%def name="preamble()">
 		Plots of calibrated phase vs frequency for all antennas and
-		correlation='RL,LR', intent=POLANGLE, POLLEAKAGE.
+		correlation='RL,LR', intent=POLANGLE, POLLEAKAGE, BANDPASS, PHASE.
 	</%def>
 
 
