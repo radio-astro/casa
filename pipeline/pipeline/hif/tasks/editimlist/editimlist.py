@@ -85,7 +85,8 @@ class EditimlistInputs(basetask.StandardInputs):
                             'phasecenter', 'specmode', 'gridder', 'imagename', 'scales',
                             'start', 'width', 'nbin', 'nchan', 'uvrange', 'stokes', 'nterms',
                             'robust', 'uvtaper', 'niter', 'cyclefactor', 'cycleniter', 'mask',
-                            'search_radius_arcsec', 'threshold', 'imaging_mode', 'reffreq')
+                            'search_radius_arcsec', 'threshold', 'imaging_mode', 'reffreq',
+                            'editmode')
         self.keys_to_change = []
         for key in keys_to_consider:
             # print key, eval(key)
@@ -110,6 +111,7 @@ class Editimlist(basetask.StandardTaskTemplate):
 
         # this python class will produce a list of images to be calculated.
         inp = self.inputs
+        inpdict = inp.__dict__
 
         # if a file is given, read whatever parameters are defined in the file
         if inp.parameter_file:
@@ -124,8 +126,11 @@ class Editimlist(basetask.StandardTaskTemplate):
                         # strip whitespace
                         parameter = parameter.strip()
                         value = value.strip()
+                        value = value.strip('\'')
+                        value = value.strip('"')
                         # use this information to change the values in inputs
-                        exec ('inp.' + parameter + '=' + value)
+                        print("Setting inputdict['{k}'] to {v}".format(k=parameter, v=value))
+                        inpdict[parameter] = value
                         inp.keys_to_change.append(parameter)
             else:
                 LOG.error('Input parameter file is not readable: {fname}'.format(fname=inp.parameter_file))
@@ -135,14 +140,14 @@ class Editimlist(basetask.StandardTaskTemplate):
         result = EditimlistResult()
 
         # will default to adding a new image list entry
-        inp.editmode = 'add' if not inp.editmode else inp.editmode
+        inpdict['editmode'] = 'add' if not inpdict['editmode'] else inpdict['editmode']
 
         # TODO think about how to handle multiple MSs
         # we use the ms to change field ids to fieldnames, if needed
         ms = inp.context.observing_run.get_ms(inp.vis[0])
         fieldnames = []
-        if type(inp.field) is not type(None):
-            for fid in inp.field:
+        if type(inpdict['field']) is not type(None):
+            for fid in inpdict['field']:
                 if isinstance(fid, int):
                     fieldobj = ms.get_fields(field_id=fid)
                     fieldnames.append(fieldobj[0].name)
@@ -155,54 +160,54 @@ class Editimlist(basetask.StandardTaskTemplate):
 
         target = CleanTarget()  # initialize a target structure for clean_list_pending
 
-        img_mode = 'VLASS-QL' if not inp.imaging_mode else inp.imaging_mode
+        img_mode = 'VLASS-QL' if not inpdict['imaging_mode'] else inpdict['imaging_mode']
         result.img_mode = img_mode
 
         # The default spw range for VLASS is 2~17. hif_makeimages() needs an csv list.
         # We set the target spw before the heuristics object because the heursitics class
         # uses it in initialization.
         if 'VLASS-QL' == img_mode:
-            if not inp.spw:
-                target['spw'] = ''.join([str(x) for x in range(2, 18)])
-                inp.spw = target['spw']
+            if not inpdict['spw']:
+                target['spw'] = ','.join([str(x) for x in range(2, 18)])
+                inpdict['spw'] = target['spw']
             else:
-                target['spw'] = inp.spw
+                target['spw'] = inpdict['spw']
         else:
-            target['spw'] = inp.spw
+            target['spw'] = inpdict['spw']
 
-        target['phasecenter'] = inp.phasecenter
+        target['phasecenter'] = inpdict['phasecenter']
 
         iph = imageparams_factory.ImageParamsHeuristicsFactory()
         th = target['heuristics'] = iph.getHeuristics(vislist=inp.vis, spw=target['spw'],
                                                       observing_run=inp.context.observing_run,
                                                       imaging_mode=img_mode)
 
-        target['threshold'] = th.threshold() if not inp.threshold else inp.threshold
-        target['reffreq'] = th.reffreq() if not inp.reffreq else inp.reffreq
-        target['niter'] = th.niter_correction(None, None, None, None, None) if not inp.niter else inp.niter
-        target['cyclefactor'] = th.cyclefactor() if not inp.cyclefactor else inp.cyclefactor
-        target['cycleniter'] = th.cycleniter() if not inp.cycleniter else inp.cycleniter
-        target['scales'] = th.scales() if not inp.scales else inp.scales
-        target['uvtaper'] = th.uvtaper() if not inp.uvtaper else inp.uvtaper
-        target['uvrange'] = th.uvrange() if not inp.uvrange else inp.uvrange
-        target['deconvolver'] = th.deconvolver(None, None) if not inp.deconvolver else inp.deconvolver
-        target['robust'] = th.robust(None) if not inp.robust else inp.robust
-        target['mask'] = th.mask() if not inp.mask else inp.mask
-        target['specmode'] = th.specmode() if not inp.specmode else inp.specmode
-        target['gridder'] = th.gridder(None, None) if not inp.gridder else inp.gridder
-        buffer_arcsec = th.buffer_radius() if not inp.search_radius_arcsec else inp.search_radius_arcsec
+        target['threshold'] = th.threshold() if not inpdict['threshold'] else inpdict['threshold']
+        target['reffreq'] = th.reffreq() if not inpdict['reffreq'] else inpdict['reffreq']
+        target['niter'] = th.niter_correction(None, None, None, None, None) if not inpdict['niter'] else inpdict['niter']
+        target['cyclefactor'] = th.cyclefactor() if not inpdict['cyclefactor'] else inpdict['cyclefactor']
+        target['cycleniter'] = th.cycleniter() if not inpdict['cycleniter'] else inpdict['cycleniter']
+        target['scales'] = th.scales() if not inpdict['scales'] else inpdict['scales']
+        target['uvtaper'] = th.uvtaper() if not inpdict['uvtaper'] else inpdict['uvtaper']
+        target['uvrange'] = th.uvrange() if not inpdict['uvrange'] else inpdict['uvrange']
+        target['deconvolver'] = th.deconvolver(None, None) if not inpdict['deconvolver'] else inpdict['deconvolver']
+        target['robust'] = th.robust(None) if not inpdict['robust'] else inpdict['robust']
+        target['mask'] = th.mask() if not inpdict['mask'] else inpdict['mask']
+        target['specmode'] = th.specmode() if not inpdict['specmode'] else inpdict['specmode']
+        target['gridder'] = th.gridder(None, None) if not inpdict['gridder'] else inpdict['gridder']
+        buffer_arcsec = th.buffer_radius() if not inpdict['search_radius_arcsec'] else inpdict['search_radius_arcsec']
         result.capture_buffer_size(buffer_arcsec)
-        target['cell'] = th.cell(None, None, None) if not inp.cell else inp.cell
-        target['imsize'] = th.imsize(None, None, None, None, None) if not inp.imsize else inp.imsize
-        target['intent'] = th.intent() if not inp.intent else inp.intent
-        target['nterms'] = th.nterms() if not inp.nterms else inp.nterms
-        target['stokes'] = th.stokes() if not inp.stokes else inp.stokes
+        target['cell'] = th.cell(None, None, None) if not inpdict['cell'] else inpdict['cell']
+        target['imsize'] = th.imsize(None, None, None, None, None) if not inpdict['imsize'] else inpdict['imsize']
+        target['intent'] = th.intent() if not inpdict['intent'] else inpdict['intent']
+        target['nterms'] = th.nterms() if not inpdict['nterms'] else inpdict['nterms']
+        target['stokes'] = th.stokes() if not inpdict['stokes'] else inpdict['stokes']
         #------------------------------
-        target['nchan'] = inp.nchan
-        target['nbin'] = inp.nbin
-        target['start'] = inp.start
-        target['width'] = inp.width
-        target['imagename'] = inp.imagename
+        target['nchan'] = inpdict['nchan']
+        target['nbin'] = inpdict['nbin']
+        target['start'] = inpdict['start']
+        target['width'] = inpdict['width']
+        target['imagename'] = inpdict['imagename']
 
         # set the field name list in the image list target
         if fieldnames:
@@ -211,22 +216,12 @@ class Editimlist(basetask.StandardTaskTemplate):
             if type(target['phasecenter']) is not type(None):
                 # TODO: remove the dependency on cell size being in arcsec
                 cellsize_arcsec = float(target['cell'].strip('arcsec'))
-                dist = ((target['imsize'][0] / 2.) * cellsize_arcsec) + float(buffer_arcsec)
+                mosaic_side_arcsec = 3600  # 1 degree
+                dist = ( mosaic_side_arcsec / 2.) + float(buffer_arcsec)
                 dist_arcsec = str(dist) + 'arcsec'
                 found_fields = target['heuristics'].find_fields(distance=dist_arcsec, phase_center=target['phasecenter'])
-                fieldnames = []
                 if found_fields:
-                    for fid in found_fields:
-                        fieldobj = ms.get_fields(field_id=fid)
-                        fieldnames.append(fieldobj[0].name)
-
-                    if len(fieldnames) > 1:
-                        fieldnames = [','.join(fieldnames)]
-                    try:
-                        target['field'] = fieldnames[0]
-                    except:
-                        print('found_fields', found_fields)
-                        print('fieldnames', fieldnames)
+                    target['field'] = ','.join(str(x) for x in found_fields)
 
         for key, value in target.items():
             LOG.info("{k} = {v}".format(k=key, v=value))
