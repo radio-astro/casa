@@ -5,8 +5,8 @@ import pipeline.h.cli.utils as utils
 
 def hif_correctedampflag(
         vis=None, intent=None, field=None, spw=None, antnegsig=None,
-        antpossig=None, toomanyantbasedintfracthr=None,
-        toomanyintfracthr=None, toomanyblfracthr=None, antblnegsig=None,
+        antpossig=None, tmantint=None,
+        tmint=None, tmbl=None, antblnegsig=None,
         antblpossig=None, relaxed_factor=None,
         pipelinemode=None, dryrun=None, acceptresults=None):
 

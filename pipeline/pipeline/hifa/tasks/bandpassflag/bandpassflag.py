@@ -25,11 +25,9 @@ class BandpassflagInputs(basetask.StandardInputs):
                  spw=None, refant=None, hm_phaseup=None, phaseupbw=None,
                  phaseupsolint=None, phaseupsnr=None, phaseupnsols=None,
                  hm_bandpass=None, solint=None, maxchannels=None,
-                 evenbpints=None, bpsnr=None, bpnsols=None,
-                 antnegsig=None, antpossig=None,
-                 toomanyantbasedintfracthr=None, toomanyintfracthr=None,
-                 toomanyblfracthr=None, antblnegsig=None, antblpossig=None,
-                 relaxed_factor=None):
+                 evenbpints=None, bpsnr=None, bpnsols=None, antnegsig=None,
+                 antpossig=None, tmantint=None, tmint=None, tmbl=None,
+                 antblnegsig=None, antblpossig=None, relaxed_factor=None):
         self._init_properties(vars())
 
     @property
@@ -216,40 +214,40 @@ class BandpassflagInputs(basetask.StandardInputs):
     # to contain outliers; equivalent to:
     # checkForAntennaBasedBadIntegrations
     @property
-    def toomanyantbasedintfracthr(self):
-        return self._toomanyantbasedintfracthr
+    def tmantint(self):
+        return self._tmantint
 
-    @toomanyantbasedintfracthr.setter
-    def toomanyantbasedintfracthr(self, value):
+    @tmantint.setter
+    def tmantint(self, value):
         if value is None:
             value = 0.06
-        self._toomanyantbasedintfracthr = value
+        self._tmantint = value
 
     # Initial threshold for maximum fraction of "outlier timestamps" over
     # "total timestamps" that a baseline may be a part of; equivalent to:
     # tooManyIntegrationsFraction
     @property
-    def toomanyintfracthr(self):
-        return self._toomanyintfracthr
+    def tmint(self):
+        return self._tmint
 
-    @toomanyintfracthr.setter
-    def toomanyintfracthr(self, value):
+    @tmint.setter
+    def tmint(self, value):
         if value is None:
             value = 0.09
-        self._toomanyintfracthr = value
+        self._tmint = value
 
     # Initial threshold for maximum fraction of "bad baselines" over "all
     # timestamps" that an antenna may be a part of; equivalent to:
     # tooManyBaselinesFraction
     @property
-    def toomanyblfracthr(self):
-        return self._toomanyblfracthr
+    def tmbl(self):
+        return self._tmbl
 
-    @toomanyblfracthr.setter
-    def toomanyblfracthr(self, value):
+    @tmbl.setter
+    def tmbl(self, value):
         if value is None:
             value = 0.18
-        self._toomanyblfracthr = value
+        self._tmbl = value
 
     # Lower sigma threshold for identifying outliers as a result of "bad
     # baselines" and/or "bad antennas" within baselines (across all
@@ -363,7 +361,6 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # case of exceptions.
         LOG.info('Applying phase-up, bandpass, and amplitude cal tables.')
         try:
-            # TODO: compare input pars with those in proposed recipe.
             # Apply the calibrations.
             acinputs = applycal.IFApplycalInputs(
                 context=inputs.context, vis=inputs.vis, field='',
@@ -387,10 +384,8 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         cafinputs = correctedampflag.Correctedampflag.Inputs(
             context=inputs.context, vis=inputs.vis, intent='*BANDPASS*',
             field=inputs.field, spw=inputs.spw, antnegsig=inputs.antnegsig,
-            antpossig=inputs.antpossig,
-            toomanyantbasedintfracthr=inputs.toomanyantbasedintfracthr,
-            toomanyintfracthr=inputs.toomanyintfracthr,
-            toomanyblfracthr=inputs.toomanyblfracthr,
+            antpossig=inputs.antpossig, tmantint=inputs.tmantint,
+            tmint=inputs.tmint, tmbl=inputs.tmbl,
             antblnegsig=inputs.antblnegsig,
             antblpossig=inputs.antblpossig,
             relaxed_factor=inputs.relaxed_factor)
