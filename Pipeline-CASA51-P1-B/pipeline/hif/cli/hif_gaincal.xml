@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_gaincal" category="pipeline">
+<shortdescription>Determine temporal gains from calibrator observations</shortdescription>
+<description>
+The time depednend complex gains for each antenna/spwid are determined
+from the raw data (DATA column) divided by the model (MODEL column), for the
+specified fields.  The gains are computed independently for each specified
+spectral window.
+
+Previous calibrations are applied on the fly.
+
+</description>
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+	<description>List of input measurement sets</description>
+	<value></value>
+   </param>
+
+   <param type="stringArray" name="caltable" subparam="true">
+	<description>List of output caltables</description>
+	<value type="string"></value>
+   </param>
+
+   <param type="string" name="field" subparam="true">
+	<description>Set of data selection field names or ids</description>
+	<value></value>
+   </param>
+
+   <param type="string" name="intent" subparam="true">
+	<description>Set of data selection observing intents</description>
+	<value></value>
+   </param>
+
+   <param type="string" name="spw" subparam="true">
+	<description>Set of data selection spectral window/channels</description>
+	<value></value>
+   </param>
+
+   <param type="string" name="antenna" subparam="true">
+	<description>Set of data selection antenna ids</description>
+	<value></value>
+   </param>
+
+   <param type="string" name="hm_gaintype">
+	<description>The gain solution type (gtype or gpsline)</description>
+	<value>gtype</value>
+	<allowed kind="enum">
+	    <value>gtype</value>
+	    <value>gpline</value>
+	    <value></value>
+	</allowed>
+    </param>
+
+    <param type="string" name="calmode">
+	<description>Type of solution" (ap, p, a)</description>
+	<value>ap</value>
+	<allowed kind="enum">
+	    <value>a</value>
+	    <value>p</value>
+	    <value>ap</value>
+	</allowed>
+    </param>
+
+    <param type="any" name="solint" subparam="true">
+        <description>Solution intervals</description>
+	<any type="variant"/>
+	<value type="string">inf</value>
+    </param>
+
+    <param type="string" name="combine" subparam="true">
+	<description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+	<value type="string"></value>
+    </param>
+
+    <param type="string" name="refant" subparam="true">
+	<description>Reference antenna names</description>
+	<value></value>
+    </param>
+
+    <param type="bool" name="solnorm" subparam="true">
+	<description>Normalize average solution amplitudes to 1.0</description>
+	<value>False</value>
+    </param>
+
+    <param type="int" name="minblperant" subparam="true">
+	<description>Minimum baselines per antenna required for solve</description>
+	<value>4</value>
+    </param>
+
+    <param type="double" name="minsnr" subparam="true">
+	<description>Reject solutions below this SNR</description>
+	<value>3.0</value>
+    </param>
+
+    <param type="doubleArray" name="smodel" subparam="true">
+	<description>Point source Stokes parameters for source model</description>
+	<value></value>
+    </param>
+
+    <param type="double" name="splinetime" subparam="true">
+	<description>Spline timescale(sec)</description>
+	<value>3600.0</value>
+    </param>
+
+    <param type="int" name="npointaver" subparam="true">
+	<description>The phase-unwrapping algorithm</description>
+	<value>3</value>
+    </param>
+
+    <param type="double" name="phasewrap" subparam="true">
+	<description>Wrap the phase for jumps greater than this value (degrees)</description>
+	<value>180.0</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run task (False) or display the command(True)</description>
+	<value type="bool">False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Automatically accept results into the context</description>
+	<value type="bool">True</value>
+    </param>
+
+    <constraints>
+	<when param="hm_gaintype">
+	    <equals type="string" value="gtype">
+		<default param="solint"><value type="string">inf</value></default>
+		<default param="combine"><value type="string"></value></default>
+		<default param="minblperant"><value>4</value></default>
+		<default param="minsnr"><value>3.0</value></default>
+	    </equals>
+	    <equals type="string" value="gspline">
+		<default param="splinetime"><value>3600.0</value></default>
+		<default param="npointaver"><value>3</value></default>
+		<default param="phasewrap"><value>180.0</value></default>
+	    </equals>
+	</when>
+
+        <when param="pipelinemode">
+	    <equals type="string" value="automatic" />
+	    <equals type="string" value="interactive">
+	        <default param="vis"><value type="stringArray"></value></default>
+	        <default param="caltable"><value type="stringArray"></value></default>
+	        <default param="field"><value type="string"></value></default>
+	        <default param="intent"><value type="string"></value></default>
+	        <default param="spw"><value type="string"></value></default>
+	        <default param="antenna"><value type="string"></value></default>
+	        <default param="smodel"><value type="doubleArray"></value></default>
+	        <default param="solnorm"><value type="bool">False</value></default>
+	        <default param="refant"><value type="string"></value></default>
+	        <default param="dryrun"><value type="bool">False</value></default>
+	        <default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+	        <default param="vis"><value type="stringArray"></value></default>
+	        <default param="caltable"><value type="stringArray"></value></default>
+	        <default param="field"><value type="string"></value></default>
+	        <default param="intent"><value type="string"></value></default>
+	        <default param="spw"><value type="string"></value></default>
+	        <default param="antenna"><value type="string"></value></default>
+	        <default param="smodel"><value type="doubleArray"></value></default>
+	        <default param="solnorm"><value type="bool">False</value></default>
+	        <default param="refant"><value type="string"></value></default>
+	    </equals>
+        </when>
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+<example>
+
+Compute the gain solutions.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+       determines the values of all context defined pipeline inputs
+       automatically.  In interactive mode the user can set the pipeline
+       context defined parameters manually.  In 'getinputs' mode the user
+       can check the settings of all pipeline parameters without running
+       the task.
+       default: 'automatic'.
+
+hm_gtype -- The type of gain calibration. The options are 'gtype' and
+    'gspline' for CASA gain types = 'G' and 'GSPLINE' respectively.
+
+calmode -- Type of solution, The options are 'ap' (amp and phase), 'p'
+    (phase only) and 'a' (amp only)
+    default: 'ap'
+    options: 'p','a','ap'
+
+solint --  Time solution intervals in CASA syntax. Works for hm_gtype='gtype'
+    only.
+    default: 'inf'
+    example: 'inf', 'int', '100sec'
+
+combine -- Data axes to combine for solving. Options are  '','scan','spw',field'
+    or any comma-separated combination. Works for hm_gtype='gtype' only.
+    default; ''
+    example: combine=''
+
+minblperant -- Minimum number of baselines required per antenna for each solve
+    Antennas with fewer baaselines are excluded from solutions. Works for
+    hm_gtype='gtype' only.
+    default: 4
+    example: minblperant=2
+
+minsnr -- Solutions below this SNR are rejected. Works for hm_gtype=
+    'channel' only
+    default: 3.0
+
+splinetime -- Spline timescale (sec). Used for hm_gtype='gspline'.  Typical
+    splinetime should cover about 3 to 5 calibrator scans.
+    default: 3600 (1 hour)
+    example: splinetime=1000
+
+npointaver -- Tune phase-unwrapping algorithm. Used for hm_gtype='gspline'
+    default: 3 (Keep at this value)
+
+phasewrap -- Wrap the phase for changes larger than this amount (degrees)
+    Used for hm_gtype='gspline'.
+    default: 180 (Keep at this value)
+
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurment
+    sets specified in the pipeline context
+    default: ''
+    example: ['M82A.ms', 'M82B.ms'] 
+
+caltable -- The list of output calibration tables. Defaults to the standard
+    pipeline naming convention.
+    default: ''
+    example: ['M82.gcal', 'M82B.gcal']
+
+field -- The list of field names or field ids for which gain solutions are
+    to be computed. Defaults to all fields with the standard intent.
+    default: '' 
+    example: '3C279', '3C279, M82'
+
+intent -- A string containing a comma delimited list of intents against
+    which the the selected fields are matched. Defaults to *PHASE*.
+    default: '' 
+    example: '', '*AMP*,*PHASE*'
+
+spw -- The list of spectral windows and channels for which gain solutions are
+    computed. Defaults to all science spectral windows.
+    default: '' 
+    example: '3C279', '3C279, M82'
+
+smodel -- Point source Stokes parameters for source model (experimental)
+    Defaults to using standard MODEL_DATA column data.
+    default: [] 
+    example: [1,0,0,0] (I=1, unpolarized)
+
+refant -- Reference antenna name(s) in priority order. Defaults to most recent
+    values set in the pipeline context.  If no reference antenna is defined in
+    the pipeline context use the CASA defaults.
+    default: '' 
+    example: refant='DV01', refant='DV05,DV07'
+
+solnorm -- Normalise the gain solutions
+    default: False
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned
+
+Description
+
+The complex gains  are derived from the data column (raw data) divided
+by the model column (usually set with hif_setjy). The gains are obtained for a
+specified solution interval, spw combination and field combination.
+
+Good candidate reference antennas can be determined using the hif_refant
+task.
+
+Previous calibrations that have been stored in the pipeline context are
+applied on the fly. Users can interact with these calibrations via the
+hif_export_calstate and hif_import_calstate tasks.
+
+Issues
+
+The 'gspline' (smooth) option is still under development in CASA.
+
+Examples
+
+1. Compute standard per scan gain solutions that will be used to calibrate
+the target.
+
+    hif_gaincal()
+
+
+</example> 
+
+</task>
+</casaxml>

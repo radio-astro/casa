@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="h_weblog" category="pipeline">
+<shortdescription>Open the pipeline weblog in a browser</shortdescription>
+
+<description>
+h_weblog opens the weblog for the current pipeline session in a browser
+window.
+</description>		
+
+<input>
+</input>
+
+<example>
+</example>
+</task>
+</casaxml>
