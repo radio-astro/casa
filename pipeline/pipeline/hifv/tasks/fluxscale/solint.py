@@ -232,7 +232,7 @@ class Solint(basetask.StandardTaskTemplate):
                                      bpdgain_touse=bpdgain_touse)
 
 
-            if (float(limit_short_solint) < short_solint):
+            if (float(limit_short_solint) <= short_solint):
                 short_solint = float(limit_short_solint)
                 new_gain_solint1 = str(short_solint) + 's'
                 combtime = 'scan'
