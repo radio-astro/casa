@@ -12,7 +12,8 @@ import pipeline
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
-#import pipeline.qa.scorecalculator as calcmetrics
+
+from casa_system import casa as casasys
 
 LOG = logging.get_logger(__name__)
 
@@ -203,7 +204,7 @@ class AquaReport(object):
         eltree.SubElement (ps, "ProcessingTime").text = str(exec_duration)
 
         # Software versions
-        eltree.SubElement (ps, "CasaVersion").text = casadef.casa_version
+        eltree.SubElement (ps, "CasaVersion").text = casasys['build']['version'].strip()
         eltree.SubElement (ps, "PipelineVersion").text = pipeline.revision
 
         # Score for the complete pipeline run
