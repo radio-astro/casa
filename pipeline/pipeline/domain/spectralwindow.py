@@ -207,21 +207,22 @@ class SpectralWindow(object):
     __slots__ = ('id', 'band', 'bandwidth', 'type', 'intents',
                  'ref_frequency', 'name', 'baseband', 'sideband',
                  'mean_frequency', '_min_frequency', '_max_frequency',
-                 '_centre_frequency', 'channels', '_ref_frequency_frame')
+                 '_centre_frequency', 'channels', '_ref_frequency_frame',
+                 'transitions')
 
     def __getstate__(self):
         return (self.id, self.band, self.bandwidth, self.type, self.intents,
                 self.ref_frequency, self.name, self.baseband, self.sideband,
                 self.mean_frequency, self._min_frequency, self._max_frequency,
                 self._centre_frequency, self.channels,
-                self._ref_frequency_frame)
+                self._ref_frequency_frame, self.transitions)
 
     def __setstate__(self, state):
         (self.id, self.band, self.bandwidth, self.type, self.intents,
                 self.ref_frequency, self.name, self.baseband, self.sideband,
                 self.mean_frequency, self._min_frequency, self._max_frequency,
                 self._centre_frequency, self.channels,
-                self._ref_frequency_frame) = state
+                self._ref_frequency_frame, self.transitions) = state
 
     def __repr__(self):
         chan_freqs = self.channels.chan_freqs
@@ -256,7 +257,7 @@ class SpectralWindow(object):
 
     def __init__(self, spw_id, name, spw_type, bandwidth, ref_freq, mean_freq,
                  chan_freqs, chan_widths, chan_effective_bws, sideband,
-                 baseband, band='Unknown'):
+                 baseband, band='Unknown', transitions=['Unknown']):
         self.id = spw_id
         self.bandwidth = measures.Frequency(bandwidth,
                                             measures.FrequencyUnits.HERTZ)
@@ -287,6 +288,8 @@ class SpectralWindow(object):
         self._min_frequency = min(self.channels, key=lambda r: r.low).low
         self._max_frequency = max(self.channels, key=lambda r: r.high).high
         self._centre_frequency = (self._min_frequency + self._max_frequency) / 2.0
+
+        self.transitions = transitions
 
     @property
     def centre_frequency(self):
