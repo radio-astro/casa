@@ -31,6 +31,24 @@ class PipelineManifest(object):
         """
         return self.piperesults.getchildren()[0]
 
+    def add_casa_version (self, ous, casa_version):
+        """
+        Set the CASA version
+        """
+	eltree.SubElement (ous, "casaversion", name=casa_version)
+
+    def add_pipeline_version (self, ous, pipeline_version):
+        """
+        Set the pipeline version
+        """
+	eltree.SubElement (ous, "pipeline_version", name=pipeline_version)
+
+    def add_procedure_name (self, ous, procedure_name):
+        """
+        Set the procedure name
+        """
+	eltree.SubElement (ous, "procedure_name", name=procedure_name)
+
     def set_session (self, ous, session_name):
 	"""
         Set a SESSION element in an OUS element and return it 
