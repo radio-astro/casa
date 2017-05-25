@@ -20,6 +20,7 @@ import fluxscale_cli
 import gaincal_cli
 import gencal_cli
 import hanningsmooth_cli
+import imdev_cli
 import immath_cli
 import immoments_cli
 import imregrid_pg
@@ -327,6 +328,9 @@ class CASATaskJobGenerator(object):
 
     def hanningsmooth(self, *v, **k):
         return self._get_job(hanningsmooth_cli.hanningsmooth_cli, *v, **k)
+
+    def imdev(self, *v, **k):
+        return self._get_job(imdev_cli.imdev_cli, *v, **k)
 
     def immath(self, *v, **k):
         return self._get_job(immath_cli.immath_cli, *v, **k)
