@@ -190,8 +190,11 @@ class Solint(basetask.StandardTaskTemplate):
                                 if (fracFlaggedSolnsScan > 0.05):
                                     LOG.warn("Warning, large fraction of flagged solutions, there might be something wrong with your data")
 
+        LOG.info("ShortSol1: " + str(shortsol1))
+        LOG.info("ShortSol2: " + str(shortsol2))
         
         short_solint=max(shortsol1,shortsol2)
+        LOG.info("Short_solint determined from heuristics: " + str(short_solint))
         new_gain_solint1=str(short_solint)+'s'
 
         if self.inputs.limit_short_solint:
@@ -214,7 +217,6 @@ class Solint(basetask.StandardTaskTemplate):
                                      short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
                                      bpdgain_touse=bpdgain_touse)
 
-
             if limit_short_solint == 'inf':
                 combtime = ''
                 short_solint = limit_short_solint
@@ -231,8 +233,8 @@ class Solint(basetask.StandardTaskTemplate):
                                      short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
                                      bpdgain_touse=bpdgain_touse)
 
-
-            if (float(limit_short_solint) <= short_solint):
+            short_solint_str = "{:.12f}".format(short_solint)
+            if (float(limit_short_solint) <= short_solint_str):
                 short_solint = float(limit_short_solint)
                 new_gain_solint1 = str(short_solint) + 's'
                 combtime = 'scan'
@@ -247,8 +249,6 @@ class Solint(basetask.StandardTaskTemplate):
                                      short_solint=short_solint, new_gain_solint1=new_gain_solint1, vis=self.inputs.vis,
                                      bpdgain_touse=bpdgain_touse)
 
-
-        
         LOG.info("Using short solint = " + str(new_gain_solint1))
         
         return SolintResults(longsolint=longsolint, gain_solint2=gain_solint2, shortsol2=shortsol2,
@@ -309,8 +309,16 @@ class Solint(basetask.StandardTaskTemplate):
                 ii = phase_scan_list[kk]
                 
                 try:
-                    end_time = scan_summary[str(ii)]['0']['EndTime']
-                    begin_time = scan_summary[str(ii)]['0']['BeginTime']
+                    # Collect beginning and ending times
+                    # Take max of end times and min of beginning times
+                    endtimes = [scan_summary[str(ii)][scankey]['EndTime'] for scankey in scan_summary[str(ii)].keys()]
+                    begintimes = [scan_summary[str(ii)][scankey]['BeginTime'] for scankey in scan_summary[str(ii)].keys()]
+
+                    end_time = max(endtimes)
+                    begin_time = min(begintimes)
+
+                    #end_time = scan_summary[str(ii)]['0']['EndTime']
+                    #begin_time = scan_summary[str(ii)]['0']['BeginTime']
                     new_spws = scan_summary[str(ii)]['0']['SpwIds']
                     new_field = scan_summary[str(ii)]['0']['FieldId']
                     
