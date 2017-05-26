@@ -30,7 +30,6 @@ class CorrectedampflagInputs(basetask.StandardInputs):
         if isinstance(self.vis, list):
             return self._handle_multiple_vis('intent')
 
-        # FIXME: change to *BANDPASS* to ensure it can be used in flagging commands?
         if not self._intent:
             self._intent = 'BANDPASS'
 
