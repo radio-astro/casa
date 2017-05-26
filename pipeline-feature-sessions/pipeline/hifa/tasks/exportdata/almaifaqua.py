@@ -394,6 +394,11 @@ class AlmaIfAquaReport(aqua.AquaReport):
                 scores.append(qascore)
                 scorevalues.append(qascore.score)
 
+        if not scores:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
+
         # Locate the largest metric
         qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))
 
@@ -440,6 +445,11 @@ class AlmaIfAquaReport(aqua.AquaReport):
                 scores.append(qascore)
                 scorevalues.append(qascore.score)
 
+        if not scores:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
+
         # Find the highest valued metric.
         qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
         if idx is not None:
@@ -483,6 +493,11 @@ class AlmaIfAquaReport(aqua.AquaReport):
                     continue
                 scores.append(qascore)
                 scorevalues.append(qascore.score)
+
+        if not scores:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
 
         # Locate the largest metric
         qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))
@@ -532,6 +547,11 @@ class AlmaIfAquaReport(aqua.AquaReport):
                 scores.append(qascore)
                 scorevalues.append(qascore.score)
 
+        if not scores:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
+
         # Locate the largest metric
         qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
 
@@ -558,7 +578,6 @@ class AlmaIfAquaReport(aqua.AquaReport):
         # Retrieve the flagging summaries
         results = rawflagchans_result.read()
 
-
         vis = 'Undefined'
         metric_value = 'Undefined'
         metric_name = 'Undefined'
@@ -576,6 +595,11 @@ class AlmaIfAquaReport(aqua.AquaReport):
                     continue
                 scores.append(qascore)
                 scorevalues.append(qascore.score)
+
+        if not scores:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
 
         # Locate the largest metric
         qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))
@@ -626,6 +650,11 @@ class AlmaIfAquaReport(aqua.AquaReport):
                 scores.append(qascore)
                 scorevalues.append(qascore.score)
 
+        if not scores:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
+
         # Evaluate the metrics
         qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues)) 
         if idx is not None:
@@ -671,6 +700,11 @@ class AlmaIfAquaReport(aqua.AquaReport):
                 scores.append(qascore)
                 scorevalues.append(qascore.score)
 
+        if not scores:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
+
         # Locate the largest metric
         qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))
 
@@ -715,6 +749,11 @@ class AlmaIfAquaReport(aqua.AquaReport):
                     continue
                 scores.append(qascore)
                 scorevalues.append(qascore.score)
+
+        if not scores:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
 
         # Locate the largest metric
         qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))
@@ -763,6 +802,11 @@ class AlmaIfAquaReport(aqua.AquaReport):
                     continue
                 scores.append(qascore)
                 scorevalues.append(qascore.score)
+
+        if not scores:
+            eltree.SubElement(stage_element, "Metric", Name=metric_name,
+                Value=metric_value, Asdm=vis)
+            return
 
         # Locate the largest metric
         qavalue, idx = min ((qavalue, idx) for (idx, qavalue) in enumerate(scorevalues))

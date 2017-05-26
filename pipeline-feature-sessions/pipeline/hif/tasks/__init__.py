@@ -28,6 +28,7 @@ from .polarization import Polarization
 from .linfeedpolcal import Linfeedpolcal
 from .editimlist import Editimlist
 from .transformimagedata import Transformimagedata
+from .makermsimages import Makermsimages
 
 # set default tasks for tasks with several implementations to our desired
 # specific implementation

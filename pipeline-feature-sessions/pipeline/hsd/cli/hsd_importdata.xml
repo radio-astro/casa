@@ -44,6 +44,11 @@
     <value>False</value>
     </param>
 
+    <param type="bool" name="nocopy" subparam="true">
+        <description>Disable copying of MS to working directory</description>
+        <value>False</value>
+    </param>
+
     <param type="bool" name="bdfflags" subparam="true">
     <description>Apply BDF flags on import</description>
     <value>True</value>
@@ -87,6 +92,7 @@
         <default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere CalWVR</value></default>
         <default param="process_caldevice"><value type="bool">False</value></default>
         <default param="overwrite"><value type="bool">False</value></default>
+        <default param="nocopy"><value type="bool">False</value></default>
         <default param="bdfflags"><value type="bool">True</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
@@ -95,6 +101,7 @@
         <default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere CalWVR</value></default>
         <default param="process_caldevice"><value type="bool">False</value></default>
         <default param="overwrite"><value type="bool">False</value></default>
+        <default param="nocopy"><value type="bool">False</value></default>
         <default param="bdfflags"><value type="bool">True</value></default>
         </equals>
     </when>

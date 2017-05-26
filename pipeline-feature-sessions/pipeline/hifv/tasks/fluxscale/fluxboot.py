@@ -55,7 +55,8 @@ class FluxbootInputs(basetask.StandardInputs):
 
 class FluxbootResults(basetask.Results):
     def __init__(self, final=None, pool=None, preceding=None, sources=None,
-                 flux_densities=None, spws=None, weblog_results=None, spindex_results=None, vis=None):
+                 flux_densities=None, spws=None, weblog_results=None, spindex_results=None,
+                 vis=None, caltable=None):
 
         if sources is None:
             sources = []
@@ -73,6 +74,8 @@ class FluxbootResults(basetask.Results):
             weblog_results = []
         if spindex_results is None:
             spindex_results = []
+        if caltable is None:
+            caltable = ''
 
         super(FluxbootResults, self).__init__()
         self.vis = vis
@@ -85,6 +88,7 @@ class FluxbootResults(basetask.Results):
         self.spws = spws
         self.weblog_results = weblog_results
         self.spindex_results = spindex_results
+        self.caltable = caltable
 
     def merge_with_context(self, context):
         """Add results to context for later use in the final calibration
@@ -215,7 +219,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
         return FluxbootResults(sources=self.inputs.sources, flux_densities=self.inputs.flux_densities,
                                spws=self.inputs.spws, weblog_results=weblog_results,
-                               spindex_results=spindex_results, vis=self.inputs.vis)
+                               spindex_results=spindex_results, vis=self.inputs.vis, caltable=caltable)
 
     def analyse(self, results):
         return results

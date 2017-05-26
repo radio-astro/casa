@@ -10,6 +10,7 @@ import os
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.displays.applycal as applycal
 import pipeline.infrastructure.displays.plotatmosphere as plotatmosphere
 import pipeline.infrastructure.filenamer as filenamer
@@ -427,8 +428,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return (amp_vs_freq_summary_plots, phase_vs_freq_summary_plots, 
                 amp_vs_uv_summary_plots, max_uvs)
 
-    def science_plots_for_result(self, context, result, plotter_cls, fields, 
-                                 uvrange=None, renderer_cls=None):
+    def science_plots_for_result(self, context, result, plotter_cls, fields, uvrange=None, renderer_cls=None):
         if plotter_cls is plotatmosphere.TransmissionSummaryChart:
             # remove warning message about coloraxis
             overrides = {}
@@ -443,12 +443,15 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             overrides['avgantenna'] = False
 
         plots = []
+        plot_output_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number)
+        calto, _ = _get_data_selection_for_plot(context, result, ['TARGET'])
+
         for field in fields:
             # override field when plotting amp/phase vs frequency, as otherwise
             # the field is resolved to a list of all field IDs  
             overrides['field'] = field
 
-            plotter = plotter_cls(context, result, ['TARGET'], **overrides)
+            plotter = plotter_cls(context, plot_output_dir, calto, 'TARGET', **overrides)
             plots.extend(plotter.plot())
 
         for plot in plots:
@@ -556,8 +559,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                key=lambda plot: plot.parameters['receiver'])
                 d[vis] = plots
 
-    def create_plots(self, context, results, plotter_cls, intents,
-                     renderer_cls=None, **kwargs):
+    def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None, **kwargs):
         """
         Create plots and return (dictionary of vis:[Plots], dict of vis:subpage URL).
         """
@@ -575,8 +577,10 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None, **kwargs):
         vis = os.path.basename(result.inputs['vis'])
+        output_dir = os.path.join(context.report_dir, 'stage%s' % result.stage_number)
+        calto, str_intents = _get_data_selection_for_plot(context, result, intents)
 
-        plotter = plotter_cls(context, result, intents, **kwargs)
+        plotter = plotter_cls(context, output_dir, calto, str_intents, **kwargs)
         plots = plotter.plot()
         for plot in plots:
             plot.parameters['intent'] = intents
@@ -839,3 +843,49 @@ class ApplycalPhaseVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
         super(ApplycalPhaseVsTimePlotRenderer, self).__init__(
                 'generic_x_vs_y_field_spw_ant_detail_plots.mako', context, 
                 result, plots, title, outfile)
+
+
+def _get_data_selection_for_plot(context, result, intent):
+    """
+    Inspect a result, returning a CalTo that matches the data selection of the
+    applied calibration.
+
+    Background: we don't want to create plots for an entire MS, only the data
+    selection of interest. Rather than calculate and explicitly pass in the
+    data selection of interest, this function calculates the data selection of
+    interest by inspecting the results and extracting the data selection that 
+    the calibration is applied to.
+
+    :param context: pipeline Context
+    :param result: a Result with an .applied property containing CalApplications
+    :param intent: pipeline intent
+    :return: 
+    """
+    spw = _get_calapp_arg(result, 'spw')
+    field = _get_calapp_arg(result, 'field')
+    antenna = _get_calapp_arg(result, 'antenna')
+    intent = ','.join(intent)
+
+    vis = {calapp.vis for calapp in result.applied}
+    assert (len(vis) is 1)
+    vis = vis.pop()
+
+    wanted = set(intent.split(','))
+    fields_with_intent = set()
+    for f in context.observing_run.get_ms(vis).get_fields(field):
+        intersection = f.intents.intersection(wanted)
+        if not intersection:
+            continue
+        fields_with_intent.add(f.name)
+    field = ','.join(fields_with_intent)
+
+    calto = callibrary.CalTo(vis, field, spw, antenna, intent)
+
+    return calto, intent
+
+
+def _get_calapp_arg(result, arg):
+    s = set()
+    for calapp in result.applied:
+        s.update(utils.safe_split(getattr(calapp, arg)))
+    return ','.join(s)

@@ -39,7 +39,8 @@ class ProjectStructure (object):
         ousstatus_entity_id = 'unknown',
         ppr_type = 'SciPipeRequest',
         ppr_entity_id = 'unknown',
-        ppr_file = ''):
+        ppr_file = '',
+        recipe_name = 'undefined'):
 
         self.ous_entity_type = ous_entity_type
         self.ous_entity_id = ous_entity_id
@@ -53,6 +54,7 @@ class ProjectStructure (object):
         self.ppr_type = ppr_type
         self.ppr_entity_id = ppr_entity_id
         self.ppr_file = ppr_file
+        self.recipe_name = recipe_name
 
     def __iter__(self):
         return vars(self).iteritems()

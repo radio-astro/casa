@@ -6,25 +6,30 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.domain.datatable import absolute_path
 from . import inspection
 
-#import pipeline.hif.tasks.importdata.importdata as importdata
 import pipeline.h.tasks.importdata.importdata as importdata
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class SDImportDataInputs(importdata.ImportDataInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context=None, vis=None, output_dir=None,
-                 asis=None, process_caldevice=None, session=None, overwrite=None, 
-                 bdfflags=None, save_flagonline=None, lazy=None, 
+    def __init__(self, context=None, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
+                 overwrite=None, nocopy=None, bdfflags=None, save_flagonline=None, lazy=None,
                  with_pointing_correction=None, createmms=None, ocorr_mode=None):
-        self._init_properties(vars())
+        super(SDImportDataInputs, self).__init__(context=context, vis=vis, output_dir=output_dir, asis=asis,
+                                                 process_caldevice=process_caldevice, session=session,
+                                                 overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
+                                                 save_flagonline=save_flagonline, createmms=createmms,
+                                                 ocorr_mode=ocorr_mode)
+        self.with_pointing_correction = with_pointing_correction
 
     asis = basetask.property_with_default('asis', 'SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
-    with_pointing_correction = basetask.property_with_default('with_pointing_correction', True)
     ocorr_mode = basetask.property_with_default('ocorr_mode', 'ao')
+    with_pointing_correction = basetask.property_with_default('with_pointing_correction', True)
+
 
 class SDImportDataResults(basetask.Results):
-    '''
+    """
     SDImportDataResults is an equivalent class with ImportDataResults. 
     Purpose of SDImportDataResults is to replace QA scoring associated 
     with ImportDataResults with single dish specific QA scoring, which 
@@ -33,7 +38,7 @@ class SDImportDataResults(basetask.Results):
     ImportDataResults holds the results of the ImportData task. It contains
     the resulting MeasurementSet domain objects and optionally the additional 
     SetJy results generated from flux entries in Source.xml.
-    '''
+    """
     
     def __init__(self, mses=None, reduction_group_list=None, datatable_name=None, setjy_results=None):
         super(SDImportDataResults, self).__init__()

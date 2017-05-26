@@ -297,11 +297,12 @@ class MeasurementSetReader(object):
                 else:
                     LOG.info('Populating ms.representative_target ...')
                     ms.representative_target = (sbinfo[0], sbinfo[1], sbinfo[2])
-                if not sbinfo[3] or sbinfo[4]:
+                if not (sbinfo[3] and sbinfo[4]):
                     LOG.warn('Undefined angular resolution limits for %s' % (ms.basename))
+                    ms.science_goals = {'minAcceptableAngResolution': '0.0arcsec', 'maxAcceptableAngResolution': '0.0arcsec'}
                 else:
                     LOG.info('Populating ms.science_goals ...')
-                    ms.science_goals = (sbinfo[3], sbinfo[4])
+                    ms.science_goals = {'minAcceptableAngResolution': sbinfo[3], 'maxAcceptableAngResolution': sbinfo[4]}
             LOG.info('Populating ms.array_name ...')
             ms.array_name = ExecblockTable.get_execblock_info(ms)
 
@@ -381,10 +382,18 @@ class SpectralWindowTable(object):
             except: ### For Nobeyama (TODO: how to define BBC_NO for NRO)
                 baseband = i
             ref_freq = msmd.reffreq(i)
+            try: ### TRANSITIONS column does not exist in old data
+                # TODO: Are the transitions of a given spw the same for all
+                #       source IDs ?
+                transitions = msmd.transitions(sourceid=0, spw=i)
+                if not transitions:
+                    transitions = ['Unknown']
+            except:
+                transitions = ['Unknown']
 
             spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
                     ref_freq, mean_freq, chan_freqs, chan_widths,
-                    chan_effective_bws, sideband, baseband)
+                    chan_effective_bws, sideband, baseband, transitions=transitions)
             spws.append(spw)
 
         return spws
@@ -508,7 +517,7 @@ class SBSummaryTable(object):
         except:
             if 'ALMA' in obsnames:
                 LOG.warn('Error reading science goals for %s' % (ms.basename))
-            return (None, None, None)
+            return (None, None, None, None, None)
 
     @staticmethod
     def _create_sbsummary_info(repSource, repFrequency, repBandwidth, minAngResolution, maxAngResolution):
@@ -567,7 +576,7 @@ class SBSummaryTable(object):
                     minAngResolution = None
                 minAngResolutions.append(minAngResolution)
 
-                # Create minimum angular resolution
+                # Create maximum angular resolution
                 maxAngResolution = qa.quantity(_get_science_goal_value (scienceGoals[0:numScienceGoals[i]-1,i],
                     'maxAcceptableAngResolution'))
                 if maxAngResolution['value'] <= 0.0 or maxAngResolution['unit'] == '':

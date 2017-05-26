@@ -85,7 +85,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">tecmaps</Keyword>
-                <Value xmlns="">True</Value>
+                <Value xmlns="">False</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
@@ -146,6 +146,12 @@
 
     <ProcessingCommand>
         <Command xmlns="">hifv_finalcals</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifv_flagcal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>

@@ -3,23 +3,27 @@ from __future__ import absolute_import
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 
-import pipeline.h.tasks.importdata.importdata as importdata
 import pipeline.h.tasks.importdata.fluxes as fluxes
+import pipeline.h.tasks.importdata.importdata as importdata
 from . import dbfluxes
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class ALMAImportDataInputs(importdata.ImportDataInputs):
-
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, output_dir=None, asis=None,
-                 process_caldevice=None, session=None, overwrite=None,
-                 bdfflags=None, lazy=None, save_flagonline=None, dbservice=None,
-                 createmms=None, ocorr_mode=None, clearcals=None):
-        self._init_properties(vars())
-
     asis = basetask.property_with_default('asis', 'SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR')
     dbservice = basetask.property_with_default('dbservice', True)
+
+    @basetask.log_equivalent_CASA_call
+    def __init__(self, context, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
+                 overwrite=None, nocopy=None, bdfflags=None, lazy=None, save_flagonline=None, dbservice=None,
+                 createmms=None, ocorr_mode=None):
+        super(ALMAImportDataInputs, self).__init__(context=context, vis=vis, output_dir=output_dir, asis=asis,
+                                                   process_caldevice=process_caldevice, session=session,
+                                                   overwrite=overwrite, nocopy=nocopy, bdfflags=bdfflags, lazy=lazy,
+                                                   save_flagonline=save_flagonline, createmms=createmms,
+                                                   ocorr_mode=ocorr_mode)
+        self.dbservice = dbservice
 
 
 class ALMAImportData(importdata.ImportData):
@@ -48,7 +52,3 @@ class ALMAImportData(importdata.ImportData):
         combined_results = fluxes.import_flux(context.output_dir, observing_run)
 
         return combined_results
-
-
-
-

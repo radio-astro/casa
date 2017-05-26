@@ -175,6 +175,15 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
                                             ktypecaltable=ktypecaltable, bpdgain_touse=bpdgain_touse, solint='inf', append=False)
             self._executor.execute(bandpass_job)
 
+            AllCalTables = list(self.inputs.context.callibrary.active.get_caltable())
+            AllCalTables.append(ktypecaltable)
+            # AllCalTables.append(bpdgain_touse)
+            AllCalTables.append(bpcaltable)
+            ntables = len(AllCalTables)
+            interp = [''] * ntables
+            LOG.info("Using 'linear,freqflag' for bandpass table")
+            interp[-1] = 'linear,freqflag'
+
 
         #self._executor.execute(bandpass_job)
         
@@ -449,7 +458,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
                               'docallib'   :False,
                               'gaintable'  :AllCalTables,
                               'gainfield'  :[''],
-                              'interp'     :[interp],
+                              'interp'     :interp,
                               'spwmap'     :[],
                               'calwt'      :[False]*ntables,
                               'parang'     :self.parang,

@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import numpy
-import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -12,25 +11,19 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
     """
     Create an amplitude vs UV distance plot for baseband.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='model', ant='', uvrange='', **overrides):
-    
-        #Reference fields
-        fields = result.inputs['reference']
-    
-        #Get uvdist min/max  for horizontal axis
+    def __init__(self, context, output_dir, calto, intent='', ydatacolumn='model', ant='', uvrange='', **overrides):
+        # Get uvdist min/max  for horizontal axis
         uvrangeplot = {}
         
         try:
-            with casatools.MSReader(result.vis) as msfile:
+            with casatools.MSReader(calto.vis) as msfile:
                 uvrangeplot = msfile.range(['uvdist'])
         except:
             LOG.warn("Unable to obtain plotting ranges for gfluxscale uvdist.")
             uvrangeplot["uvdist"] = numpy.array([0,0])
         
-        
-        #Get amp min/max   for vertical axis
-        #Visstat call removed for 4.2.2 release
-        
+        # Get amp min/max   for vertical axis
+        # Visstat call removed for 4.2.2 release
         '''
         try:
             visstat_args = {'vis'          : result.vis,
@@ -56,7 +49,7 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
         
         plot_args = {
             'ydatacolumn': ydatacolumn,
-            'field': fields,
+            'field': calto.field,
             'avgtime': '',
             'avgscan': False,
             'avgbaseline': False,
@@ -68,6 +61,6 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
             'overwrite': True
         }
         plot_args.update(**overrides)
-        
-        super(GFluxscaleSummaryChart, self).__init__(
-                context, result, xaxis='uvdist', yaxis='amp', intent=intent, ant=ant, **plot_args)
+
+        super(GFluxscaleSummaryChart, self).__init__(context, output_dir, calto, xaxis='uvdist', yaxis='amp',
+                                                     intent=intent, ant=ant, **plot_args)

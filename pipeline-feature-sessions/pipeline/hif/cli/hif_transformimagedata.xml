@@ -36,7 +36,7 @@
 
   <param type="string" name="datacolumn" subparam="true">
     <description>The data columns to process</description>
-    <value>data</value>
+    <value>corrected</value>
     <allowed kind="enum" ignorecase="True">
         <value>corrected</value>
         <value>data</value>
@@ -103,7 +103,7 @@
         <default param="field"><value type="string"></value></default>
         <default param="intent"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
-        <default param="datacolumn"><value type="string">data</value></default>
+        <default param="datacolumn"><value type="string">corrected</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
@@ -113,7 +113,7 @@
         <default param="field"><value type="string"></value></default>
         <default param="intent"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
-        <default param="datacolumn"><value type="string">data</value></default>
+        <default param="datacolumn"><value type="string">corrected</value></default>
       </equals>
     </when>
 

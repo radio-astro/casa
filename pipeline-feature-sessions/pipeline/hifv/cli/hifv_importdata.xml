@@ -38,7 +38,12 @@
 	<description>Overwrite existing files on import</description>
 	<value>False</value>
     </param>
-    
+
+    <param type="bool" name="nocopy" subparam="true">
+        <description>Disable copying of MS to working directory</description>
+        <value>False</value>
+    </param>
+
     <param type="string" name="createmms">
         <description>Create a MMS</description>
     <value>automatic</value>
@@ -72,6 +77,7 @@
                 <default param="asis"><value type="string">Receiver CalAtmosphere</value></default>
                 <default param="ocorr_mode"><value type="string">co</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
+		<default param="nocopy"><value type="bool">False</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>

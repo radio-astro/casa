@@ -31,6 +31,24 @@ class PipelineManifest(object):
         """
         return self.piperesults.getchildren()[0]
 
+    def add_casa_version (self, ous, casa_version):
+        """
+        Set the CASA version
+        """
+	eltree.SubElement (ous, "casaversion", name=casa_version)
+
+    def add_pipeline_version (self, ous, pipeline_version):
+        """
+        Set the pipeline version
+        """
+	eltree.SubElement (ous, "pipeline_version", name=pipeline_version)
+
+    def add_procedure_name (self, ous, procedure_name):
+        """
+        Set the procedure name
+        """
+	eltree.SubElement (ous, "procedure_name", name=procedure_name)
+
     def set_session (self, ous, session_name):
 	"""
         Set a SESSION element in an OUS element and return it 
@@ -124,20 +142,29 @@ class PipelineManifest(object):
     def add_flux_file (self, ous, flux_file):
 	"""
         Add the flux file to the OUS element
+        Remove at some point.
 	"""
         eltree.SubElement (ous, "flux_file", name=flux_file)
 
     def add_antennapos_file (self, ous, antennapos_file):
 	"""
         Add the antenna positions file to the OUS element
+        Remove at some point
 	"""
         eltree.SubElement (ous, "antennapos_file", name=antennapos_file)
 
     def add_cont_file (self, ous, cont_file):
 	"""
         Add the continuum frequency ranges file to the OUS element
+        Remove at some point
 	"""
         eltree.SubElement (ous, "cont_file", name=cont_file)
+
+    def add_aux_products_file (self, ous, auxproducts_file):
+	"""
+        Add the auxiliary products file. Is one enough ?
+	"""
+        eltree.SubElement (ous, "aux_products_file", name=auxproducts_file)
 
     def add_aqua_report (self, ous, aqua_report):
 	"""

@@ -1,132 +1,158 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" ?>
 <casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hifa_importdata" category="pipeline">
-<shortdescription>Imports data into the interferometry pipeline</shortdescription>
-<description>
-Imports data into the interferometry pipeline
-</description>
-<input>
-    <param type="stringArray" name="vis">
-	<description>List of input visibility data</description>
-	<value></value>
-    </param>
+    <task type="function" name="hifa_importdata" category="pipeline">
+        <shortdescription>Imports data into the interferometry pipeline</shortdescription>
+        <description>Imports data into the interferometry pipeline</description>
+        <input>
+            <param type="stringArray" name="vis">
+                <description>List of input visibility data</description>
+                <value></value>
+            </param>
 
-    <param type="stringArray" name="session">
-	<description>List of visibility data sessions</description>
-	<value></value>
-    </param>
+            <param type="stringArray" name="session">
+                <description>List of visibility data sessions</description>
+                <value></value>
+            </param>
 
-    <param type="string" name="pipelinemode">
-	<description>The pipeline operating mode</description>
-	<value>automatic</value>
-	<allowed kind="enum">
-	    <value>automatic</value>
-	    <value>interactive</value>
-	    <value>getinputs</value>
-	</allowed>
-    </param>
+            <param type="string" name="pipelinemode">
+                <description>The pipeline operating mode</description>
+                <value>automatic</value>
+                <allowed kind="enum">
+                    <value>automatic</value>
+                    <value>interactive</value>
+                    <value>getinputs</value>
+                </allowed>
+            </param>
 
-    <param type="string" name="asis" subparam="true">
-	<description>ASDM to convert as is</description>
-	<value>SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value>
-    </param>
+            <param type="string" name="asis" subparam="true">
+                <description>Extra ASDM tables to convert as is</description>
+                <value>SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value>
+            </param>
 
-    <param type="bool" name="process_caldevice" subparam="true">
-	<description>Import the caldevice table from the ASDM</description>
-	<value>False</value>
-    </param>
+            <param type="bool" name="process_caldevice" subparam="true">
+                <description>Import the caldevice table from the ASDM</description>
+                <value>False</value>
+            </param>
 
-    <param type="bool" name="overwrite" subparam="true">
-	<description>Overwrite existing files on import</description>
-	<value>False</value>
-    </param>
+            <param type="bool" name="overwrite" subparam="true">
+                <description>Overwrite existing files on import</description>
+                <value>False</value>
+            </param>
 
-    <param type="bool" name="bdfflags" subparam="true">
-	<description>Apply BDF flags on import</description>
-	<value>True</value>
-    </param>
+            <param type="bool" name="nocopy" subparam="true">
+                <description>Disable copying of MS to working directory</description>
+                <value>False</value>
+            </param>
 
-    <param type="bool" name="lazy">
-	<description>Use the lazy filler import</description>
-	<value>False</value>
-    </param>
-    
-    <param type="bool" name="dbservice">
-	<description>Use the online flux catalog</description>
-	<value>True</value>
-    </param>
+            <param type="bool" name="bdfflags" subparam="true">
+                <description>Apply BDF flags on import</description>
+                <value>True</value>
+            </param>
 
-    <param type="string" name="ocorr_mode">
-	<description>ALMA default set to ca</description>
-	<value>ca</value>
-    </param>
+            <param type="bool" name="lazy">
+                <description>Use the lazy filler import</description>
+                <value>False</value>
+            </param>
 
-    <param type="string" name="createmms">
-        <description>Create a MMS</description>
-    <value>automatic</value>
-        <allowed kind="enum">
-            <value>automatic</value>
-            <value>true</value>
-            <value>false</value>
-        </allowed>
-    </param>
+            <param type="bool" name="dbservice">
+                <description>Use the online flux catalog</description>
+                <value>True</value>
+            </param>
 
-    <param type="bool" name="clearcals">
-	<description>Reinitialize pipeline calibrations as needed</description>
-	<value>True</value>
-    </param>
+            <param type="string" name="ocorr_mode" subparam="true">
+                <description>ALMA default set to ca</description>
+                <value>ca</value>
+            </param>
 
+            <param type="string" name="createmms">
+                <description>Create a MMS</description>
+                <value>automatic</value>
+                <allowed kind="enum">
+                    <value>automatic</value>
+                    <value>true</value>
+                    <value>false</value>
+                </allowed>
+            </param>
 
-    <param type="bool" name="dryrun" subparam="true">
-	<description>Run the task (False) or display task command (True)</description>
-	<value>False</value>
-    </param>
+            <param type="bool" name="dryrun" subparam="true">
+                <description>Run the task (False) or display task command (True)</description>
+                <value>False</value>
+            </param>
 
-    <param type="bool" name="acceptresults" subparam="true">
-	<description>Add the results into the pipeline context</description>
-	<value>True</value>
-    </param>
+            <param type="bool" name="acceptresults" subparam="true">
+                <description>Add the results into the pipeline context</description>
+                <value>True</value>
+            </param>
 
-    <constraints>
-	<when param="pipelinemode">
-	    <equals type="string" value="automatic">
-	    </equals>
-	    <equals type="string" value="interactive">
-		<default param="asis"><value type="string">SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
-        <default param="ocorr_mode"><value type="string">ca</value></default>
-		<default param="process_caldevice"><value type="bool">False</value></default>
-		<default param="overwrite"><value type="bool">False</value></default>
-		<default param="bdfflags"><value type="bool">True</value></default>
-		<default param="dryrun"><value type="bool">False</value></default>
-		<default param="acceptresults"><value type="bool">True</value></default>
-	    </equals>
-	    <equals type="string" value="getinputs">
-		<default param="asis"><value type="string">SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
-		<default param="process_caldevice"><value type="bool">False</value></default>
-		<default param="overwrite"><value type="bool">False</value></default>
-		<default param="bdfflags"><value type="bool">True</value></default>
-        <default param="ocorr_mode"><value type="string">ca</value></default>
-	    </equals>
-	</when>
-    </constraints>
+            <constraints>
+                <when param="pipelinemode">
+                    <equals type="string" value="automatic">
+                    </equals>
+                    <equals type="string" value="interactive">
+                        <default param="asis">
+                            <value type="string">SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value>
+                        </default>
+                        <default param="ocorr_mode">
+                            <value type="string">ca</value>
+                        </default>
+                        <default param="process_caldevice">
+                            <value type="bool">False</value>
+                        </default>
+                        <default param="overwrite">
+                            <value type="bool">False</value>
+                        </default>
+                        <default param="nocopy">
+                            <value type="bool">False</value>
+                        </default>
+                        <default param="bdfflags">
+                            <value type="bool">True</value>
+                        </default>
+                        <default param="dryrun">
+                            <value type="bool">False</value>
+                        </default>
+                        <default param="acceptresults">
+                            <value type="bool">True</value>
+                        </default>
+                    </equals>
+                    <equals type="string" value="getinputs">
+                        <default param="asis">
+                            <value type="string">SBSummary ExecBlock Antenna Station Receiver Source CalAtmosphere CalWVR</value>
+                        </default>
+                        <default param="process_caldevice">
+                            <value type="bool">False</value>
+                        </default>
+                        <default param="overwrite">
+                            <value type="bool">False</value>
+                        </default>
+                        <default param="nocopy">
+                            <value type="bool">False</value>
+                        </default>
+                        <default param="bdfflags">
+                            <value type="bool">True</value>
+                        </default>
+                        <default param="ocorr_mode">
+                            <value type="string">ca</value>
+                        </default>
+                    </equals>
+                </when>
+            </constraints>
 
-</input>
+        </input>
 
-<output>
-    <param type="any" name="results">
-        <description>The output results object</description>
-        <any type="variant"/>
-        <value></value>
-    </param>
-</output>
-<returns type="void"/>
+        <output>
+            <param type="any" name="results">
+                <description>The output results object</description>
+                <any type="variant"/>
+                <value></value>
+            </param>
+        </output>
+        <returns type="void"/>
 
-
-<example>
+        <example>
 The hifa_importdata task loads the specified visibility data into the pipeline
 context unpacking and / or converting it as necessary.
 
@@ -168,6 +194,10 @@ process_caldevice -- Ingest the ASDM caldevice table
 overwrite -- Overwrite existing MSs on output.
    default: False
 
+nocopy -- When importing an MS, disable copying of the MS to the working
+    directory
+    default: False
+
 bdfflags -- Apply BDF flags on line
    default: True
 
@@ -190,13 +220,6 @@ createmms -- Create a multi-measurement set ('true') ready for parallel
     ('automatic') creates an MMS if running in a cluster environment.
     default: automatic
 
-clearcals -- Clear pipeline calibrations as needed by resetting the corrected
-    data column to the data column and setting the model column to unity. For
-    normal pipeline operations clearclas should be left on, and the pipeline
-    will choose when it needs to reset the calibrations. In some reprocessing
-    applications clearcals should be turned off.
-    default: True
-
 --- pipeline task execution modes
 
 dryrun -- Run the commands (True) or generate the commands to be run but
@@ -215,20 +238,20 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Examples
 
-1. Load an ASDM list in the ../rawdata subdirectory into the context.
+1. Load an ASDM list in the ../rawdata subdirectory into the context:
 
-   hifa_importdata (vis=['../rawdata/uid___A002_X30a93d_X43e',
-                '../rawdata/uid_A002_x30a93d_X44e'])
+   hifa_importdata(vis=['../rawdata/uid___A002_X30a93d_X43e',
+                        '../rawdata/uid_A002_x30a93d_X44e'])
 
-2. Load an MS in the current directory into the context.
+2. Load an MS in the current directory into the context:
 
-   hifa_importdata (vis=[uid___A002_X30a93d_X43e.ms])
+   hifa_importdata(vis=[uid___A002_X30a93d_X43e.ms])
 
-3. Load a tarred ASDM in ../rawdata into the context.
+3. Load a tarred ASDM in ../rawdata into the context:
 
-   hifa_importdata (vis=['../rawdata/uid___A002_X30a93d_X43e.tar.gz'])
+   hifa_importdata(vis=['../rawdata/uid___A002_X30a93d_X43e.tar.gz'])
 
-4. Check the hif_importdata inputs, then import the data
+4. Check the hif_importdata inputs, then import the data:
 
    myvislist = ['uid___A002_X30a93d_X43e.ms', 'uid_A002_x30a93d_X44e.ms']
    hifa_importdata(vis=myvislist, pipelinemode='getinputs')
@@ -236,14 +259,14 @@ Examples
 
 5. Load an ASDM but check the results before accepting them into the context.
 
-   results = hifa_importdata (vis=['uid___A002_X30a93d_X43e.ms'],
-       acceptresults=False)
+   results = hifa_importdata(vis=['uid___A002_X30a93d_X43e.ms'],
+                             acceptresults=False)
    results.accept()
 
-6. Run in  dryrun mode before running for real
-   results = hifa_importdata (vis=['uid___A002_X30a93d_X43e.ms'], dryrun=True)
-   results = hifa_importdata (vis=['uid___A002_X30a93d_X43e.ms'])
+6. Run in  dryrun mode before running for real:
 
-</example>
-</task>
+   results = hifa_importdata(vis=['uid___A002_X30a93d_X43e.ms'], dryrun=True)
+   results = hifa_importdata(vis=['uid___A002_X30a93d_X43e.ms'])
+        </example>
+    </task>
 </casaxml>

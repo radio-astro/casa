@@ -1,4 +1,4 @@
-import numpy as np
+import numpy
 import re
 
 import pipeline.infrastructure.casatools as casatools
@@ -8,42 +8,42 @@ from .imageparams_base import ImageParamsHeuristics
 LOG = infrastructure.get_logger(__name__)
 
 
-class ImageParamsHeuristicsVLASS(ImageParamsHeuristics):
+class ImageParamsHeuristicsVlassSe(ImageParamsHeuristics):
 
     def __init__(self, vislist, spw, observing_run, imagename_prefix='', science_goals=None, contfile=None, linesfile=None):
         ImageParamsHeuristics.__init__(self, vislist, spw, observing_run, imagename_prefix, science_goals, contfile, linesfile)
-        self.imaging_mode = 'VLASS'
+        self.imaging_mode = 'VLASS-SE'
 
     # niter
     def niter_correction(self, niter, cell, imsize, residual_max, threshold):
-        return 10000
+        return 20000
 
     def deconvolver(self, specmode, spwspec):
         return 'mtmfs'
 
     def robust(self, spw):
-        return 2.0
+        return 1.0
 
     def gridder(self, intent, field):
         return 'mosaic'
 
-    def cell(self, field_intent_list, spwspec, oversample):
-        return '1.0arcsec'
+    def cell(self, field_intent_list, spwspec, oversample=None):
+        return '0.6arcsec'
 
-    def imsize(self, fields, cell, beam, sfpblimit, max_pixels):
-        return [6480, 6480]
+    def imsize(self, fields, cell, beam, sfpblimit=None, max_pixels=None):
+        return [11520, 11520]
 
     def threshold(self):
-        return '1.0mJy'
+        return ''
 
     def reffreq(self):
         return '3.0GHz'
     
     def cyclefactor(self):
-        return 2.0
+        return 3.0
 
     def cycleniter(self):
-        return -1
+        return 2000
 
     def scales(self):
         return [0]
@@ -142,10 +142,10 @@ class ImageParamsHeuristicsVLASS(ImageParamsHeuristics):
             dd_ra = dd['m0']['value']
             dd_dec = dd['m1']['value']
             sep_ra = abs(dd_ra - center_ra)
-            if sep_ra > np.pi:
-                sep_ra = 2.0 * np.pi - sep_ra
+            if sep_ra > numpy.pi:
+                sep_ra = 2.0 * numpy.pi - sep_ra
             # change the following to use dd_dec 2017-02-06
-            sep_ra_sky = sep_ra * np.cos(dd_dec)
+            sep_ra_sky = sep_ra * numpy.cos(dd_dec)
 
             sep_dec = abs(dd_dec - center_dec)
 

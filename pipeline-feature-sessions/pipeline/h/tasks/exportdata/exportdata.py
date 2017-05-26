@@ -43,6 +43,9 @@ import string
 import re
 import collections
 
+from casa_system import casa as casasys
+
+import pipeline as pipeline
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
@@ -344,7 +347,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         # Export the pipeline manifest file
         #    TBD Remove support for auxiliary data products to the individual pipelines
-        pipemanifest = self._make_pipe_manifest (oussid, stdfproducts, auxfproducts, sessiondict, visdict,
+        pipemanifest = self._make_pipe_manifest (inputs.context, oussid, stdfproducts, auxfproducts, sessiondict, visdict,
             inputs.exportmses,
             [os.path.basename(image) for image in calimages_fitslist], 
             [os.path.basename(image) for image in targetimages_fitslist])
@@ -533,7 +536,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
         return sessiondict
 
-    def _make_pipe_manifest (self, oussid, stdfproducts, auxfproducts, sessiondict,
+    def _make_pipe_manifest (self, context, oussid, stdfproducts, auxfproducts, sessiondict,
         visdict, exportmses, calimages, targetimages):
 
         '''
@@ -543,6 +546,9 @@ class ExportData(basetask.StandardTaskTemplate):
         # Initialize the manifest document and the top level ous status.
         pipemanifest = self._init_pipemanifest(oussid)
         ouss = pipemanifest.set_ous(oussid)
+        pipemanifest.add_casa_version(ouss, casasys['build']['version'].strip())
+        pipemanifest.add_pipeline_version(ouss, pipeline.revision)
+        pipemanifest.add_procedure_name(ouss, context.project_structure.recipe_name)
 
         if stdfproducts.ppr_file:
             pipemanifest.add_pprfile (ouss, os.path.basename(stdfproducts.ppr_file))

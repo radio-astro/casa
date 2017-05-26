@@ -5,8 +5,8 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_importdata(vis=None, session=None, pipelinemode=None, asis=None,
-    overwrite=None, createmms=None, ocorr_mode=None, dryrun=None, acceptresults=None):
+def hifv_importdata(vis=None, session=None, pipelinemode=None, asis=None, overwrite=None, nocopy=None, createmms=None,
+                    ocorr_mode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

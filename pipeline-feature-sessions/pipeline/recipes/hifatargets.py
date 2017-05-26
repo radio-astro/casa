@@ -68,13 +68,13 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         # Subtract the continuum fit
         hif_uvcontsub(pipelinemode=pipelinemode)
 
-        # Make clean cont images for the selected targets
+        # Make clean mfs images for the selected targets
         hif_makeimages (pipelinemode=pipelinemode)
 
         # Make a list of expected targets to be cleaned in cont (aggregate over all spws) mode
         hif_makeimlist (specmode='cont', pipelinemode=pipelinemode)
  
-        # Make clean mfs images for the selected targets
+        # Make clean cont images for the selected targets
         hif_makeimages (pipelinemode=pipelinemode)
 
         # Make a list of expected targets to be cleaned in continuum subtracted cube mode

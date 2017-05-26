@@ -239,11 +239,11 @@ class BaselineSubtractionPlotManager(object):
         plotter.set_global_scaling()
         for ipol in xrange(npol):
             postfit_figfile = postfit_figfile_prefix + '_pol%s.png'%(ipol)
-            LOG.info('#TIMING# Begin SDSparseMapPlotter.plot(postfit,pol%s)'%(ipol))
+            #LOG.info('#TIMING# Begin SDSparseMapPlotter.plot(postfit,pol%s)'%(ipol))
             plotter.plot(postfit_map_data[:,:,ipol,:], 
                          postfit_integrated_data[ipol], 
                          frequency, figfile=postfit_figfile)
-            LOG.info('#TIMING# End SDSparseMapPlotter.plot(postfit,pol%s)'%(ipol))
+            #LOG.info('#TIMING# End SDSparseMapPlotter.plot(postfit,pol%s)'%(ipol))
             if os.path.exists(postfit_figfile):
                 plot_list['post_fit'][ipol] = postfit_figfile
     
@@ -274,11 +274,11 @@ class BaselineSubtractionPlotManager(object):
         plotter.unset_global_scaling()
         for ipol in xrange(npol):
             prefit_figfile = prefit_figfile_prefix + '_pol%s.png'%(ipol)
-            LOG.info('#TIMING# Begin SDSparseMapPlotter.plot(prefit,pol%s)'%(ipol))
+            #LOG.info('#TIMING# Begin SDSparseMapPlotter.plot(prefit,pol%s)'%(ipol))
             plotter.plot(prefit_map_data[:,:,ipol,:], 
                          prefit_integrated_data[ipol], 
                          frequency, fit_result=fit_result[:,:,ipol,:], figfile=prefit_figfile)
-            LOG.info('#TIMING# End SDSparseMapPlotter.plot(prefit,pol%s)'%(ipol))
+            #LOG.info('#TIMING# End SDSparseMapPlotter.plot(prefit,pol%s)'%(ipol))
             if os.path.exists(prefit_figfile):
                 plot_list['pre_fit'][ipol] = prefit_figfile
                         

@@ -59,7 +59,11 @@ class VLARestoreData(restoredata.RestoreData):
         # Copy the required calibration products from someplace on disK
         #   default ../products to ../rawdata
         if inputs.copytoraw:
-            self._do_copytoraw()
+            self._do_copy_manifest_toraw ('*pipeline_manifest.xml')
+            pipemanifest = self._do_get_manifest ('*pipeline_manifest.xml')
+            self._do_copytoraw(pipemanifest)
+        else:
+            pipemanifest = self.get_manifest ('*pipeline_manifest.xml')
 
         # Convert ASDMS assumed to be on disk in rawdata_dir. After this step
         # has been completed the MS and MS.flagversions directories will exist
@@ -73,7 +77,7 @@ class VLARestoreData(restoredata.RestoreData):
 
         # Restore final MS.flagversions and flags
         flag_version_name = 'Pipeline_Final'
-        flag_version_list = self._do_restore_flags(\
+        flag_version_list = self._do_restore_flags(pipemanifest,
             flag_version_name=flag_version_name)
 
         # Get the session list and the visibility files associated with
@@ -81,11 +85,11 @@ class VLARestoreData(restoredata.RestoreData):
         session_names, session_vislists = self._get_sessions()
 
         # Restore calibration tables
-        self._do_restore_caltables(session_names=session_names,
+        self._do_restore_caltables(pipemanifest, session_names=session_names,
             session_vislists=session_vislists)
 
         # Import calibration apply lists
-        self._do_restore_calstate()
+        self._do_restore_calstate(pipemanifest)
 
         # Apply the calibrations.
         apply_results = self._do_applycal()
@@ -99,7 +103,7 @@ class VLARestoreData(restoredata.RestoreData):
         inputs = self.inputs
         importdata_inputs = importdata.VLAImportData.Inputs(inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
-            lazy=inputs.lazy, bdfflags=inputs.bdfflags, dbservice=False,
+            lazy=inputs.lazy, bdfflags=inputs.bdfflags,
             asis=inputs.asis, ocorr_mode=inputs.ocorr_mode)
         importdata_task = importdata.VLAImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)

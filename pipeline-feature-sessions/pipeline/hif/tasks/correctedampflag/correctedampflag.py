@@ -11,6 +11,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 from pipeline.h.tasks.common import commonhelpermethods
 from pipeline.h.tasks.common.arrayflaggerbase import FlagCmd
+from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from .resultobjects import CorrectedampflagResults
 
 LOG = infrastructure.get_logger(__name__)
@@ -20,9 +21,8 @@ class CorrectedampflagInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, intent=None,
                  field=None, spw=None, antnegsig=None, antpossig=None,
-                 toomanyantbasedintfracthr=None, toomanyintfracthr=None,
-                 toomanyblfracthr=None, antblnegsig=None, antblpossig=None,
-                 relaxed_factor=None):
+                 tmantint=None, tmint=None, tmbl=None, antblnegsig=None,
+                 antblpossig=None, relaxed_factor=None):
         self._init_properties(vars())
 
     @property
@@ -30,6 +30,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
         if isinstance(self.vis, list):
             return self._handle_multiple_vis('intent')
 
+        # FIXME: change to *BANDPASS* to ensure it can be used in flagging commands?
         if not self._intent:
             self._intent = 'BANDPASS'
 
@@ -103,40 +104,40 @@ class CorrectedampflagInputs(basetask.StandardInputs):
     # to contain outliers; equivalent to:
     # checkForAntennaBasedBadIntegrations
     @property
-    def toomanyantbasedintfracthr(self):
-        return self._toomanyantbasedintfracthr
+    def tmantint(self):
+        return self._tmantint
 
-    @toomanyantbasedintfracthr.setter
-    def toomanyantbasedintfracthr(self, value):
+    @tmantint.setter
+    def tmantint(self, value):
         if value is None:
             value = 0.06
-        self._toomanyantbasedintfracthr = value
+        self._tmantint = value
 
     # Initial threshold for maximum fraction of "outlier timestamps" over
     # "total timestamps" that a baseline may be a part of; equivalent to:
     # tooManyIntegrationsFraction
     @property
-    def toomanyintfracthr(self):
-        return self._toomanyintfracthr
+    def tmint(self):
+        return self._tmint
 
-    @toomanyintfracthr.setter
-    def toomanyintfracthr(self, value):
+    @tmint.setter
+    def tmint(self, value):
         if value is None:
             value = 0.09
-        self._toomanyintfracthr = value
+        self._tmint = value
 
     # Initial threshold for maximum fraction of "bad baselines" over "all
     # timestamps" that an antenna may be a part of; equivalent to:
     # tooManyBaselinesFraction
     @property
-    def toomanyblfracthr(self):
-        return self._toomanyblfracthr
+    def tmbl(self):
+        return self._tmbl
 
-    @toomanyblfracthr.setter
-    def toomanyblfracthr(self, value):
+    @tmbl.setter
+    def tmbl(self, value):
         if value is None:
             value = 0.18
-        self._toomanyblfracthr = value
+        self._tmbl = value
 
     # Lower sigma threshold for identifying outliers as a result of "bad
     # baselines" and/or "bad antennas" within baselines (across all
@@ -187,7 +188,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         inputs = self.inputs
 
         # Set "default" scale factor by which the thresholds
-        # toomanyintfracthr and toomanyblfracthr should be scaled.
+        # tmint and tmbl should be scaled.
         thresh_scale_factor = 1.0
 
         # Set threshold for maximum fraction of outlier baseline scans that
@@ -221,7 +222,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # If there are multiple scans for this intent, then double the
         # threshold for timestamps with outliers.
         if nscans > 1:
-            inputs.toomanyantbasedintfracthr *= 2
+            inputs.tmantint *= 2
 
         # Initialize list of newly found flags.
         newflags = []
@@ -282,7 +283,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
                     # Extract data from MS.
                     data = openms.getdata(
-                        ['corrected_data', 'model_data', 'uvdist', 'antenna1',
+                        ['corrected_data', 'model_data', 'antenna1',
                          'antenna2', 'flag', 'time'])
 
                 # Remove the channel dimension (should be of length 1 as we asked
@@ -313,7 +314,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                     # to contain outliers, based on maximum fractional threshold and
                     # number of unique timestamps, while setting to a minimum of 1.
                     n_time_with_highsig_thresh_min = 1
-                    n_time_with_highsig_thresh_frac = inputs.toomanyantbasedintfracthr * len(np.unique(time))
+                    n_time_with_highsig_thresh_frac = inputs.tmantint * len(np.unique(time))
                     n_time_with_highsig_max = np.max([n_time_with_highsig_thresh_min, n_time_with_highsig_thresh_frac])
 
                     # TODO: equivalent to line 406  (remove before final commit)
@@ -343,7 +344,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                     # If an antenna based bad integrations fraction was
                     # provided, then identify both negative and positive
                     # outliers; otherwise just identify negative outliers.
-                    if inputs.toomanyantbasedintfracthr > 0:
+                    if inputs.tmantint > 0:
                         id_highsig = np.where(
                             np.logical_or(
                                 cmetric_sel < (med - mad * inputs.antnegsig),
@@ -357,7 +358,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                     if len(id_highsig) > 0:
 
                         # If not testing for positive outliers...
-                        if inputs.toomanyantbasedintfracthr <= 0:
+                        if inputs.tmantint <= 0:
                             # Set the scale factor for the maximum threshold
                             # for outlier timestamps per baseline to a
                             # relaxed value.
@@ -411,10 +412,11 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                                 filename=ms.name,
                                                 spw=spwid,
                                                 antenna=ant_in_most_bad_timestamps,
-                                                intent=inputs.intent,
+                                                intent=utils.to_CASA_intent(ms, inputs.intent),
                                                 pol=icorr,
                                                 time=timestamp,
-                                                reason='outlier'))
+                                                field=fieldid,
+                                                reason='bad antenna'))
                                     # If there was not a single antenna that was involved
                                     # in more than the threshold fraction of outlier baseline
                                     # scans, then continue checking whether a significant fraction of
@@ -430,10 +432,11 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                                 FlagCmd(
                                                     filename=ms.name,
                                                     spw=spwid,
-                                                    intent=inputs.intent,
+                                                    intent=utils.to_CASA_intent(ms, inputs.intent),
                                                     pol=icorr,
                                                     time=timestamp,
-                                                    reason='outlier'))
+                                                    field=fieldid,
+                                                    reason='bad timestamp'))
                             # If all outliers were not concentrated within a small number
                             # of timestamps...
                             else:
@@ -503,18 +506,18 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         # Compute final threshold for maximum fraction of "outlier
                         # timestamps" over "total timestamps" that a baseline can
                         # be a part of.
-                        toomanyintfracthr_scaled = inputs.toomanyintfracthr * thresh_scale_factor
+                        tmint_scaled = inputs.tmint * thresh_scale_factor
 
                         # TODO: equivalent to line 563  (remove before final commit)
                         # Identify "bad baselines" as those baselines whose number
                         # of timestamps with outliers exceeds the threshold.
                         bad_bls = [bl for bl, count in outlier_bl_counts.items()
-                                   if count > np.max([1, bl_counts[bl] * toomanyintfracthr_scaled])]
+                                   if count > np.max([1, bl_counts[bl] * tmint_scaled])]
 
                         # Compute final threshold for maximum fraction of "bad
                         # baselines" over "all baselines" that an antenna may be
                         # a part of.
-                        toomanyblfracthr_scaled = inputs.toomanyblfracthr * thresh_scale_factor
+                        tmbl_scaled = inputs.tmbl * thresh_scale_factor
 
                         # Compute for each antenna how many "bad baselines" it is
                         # a part of.
@@ -525,7 +528,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         # Identify "bad antennas" as those antennas involved in a number of
                         # "bad baselines" that equals-or-exceeds the fraction threshold
                         # of all baselines that this antenna is part of.
-                        bad_ants = np.where(ant_in_bad_bl_count >= toomanyblfracthr_scaled * (nants-1))[0]
+                        bad_ants = np.where(ant_in_bad_bl_count >= tmbl_scaled * (nants-1))[0]
 
                         # Create flagging command for each identified bad antenna.
                         for bad_ant in bad_ants:
@@ -534,18 +537,19 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                     filename=ms.name,
                                     spw=spwid,
                                     antenna=bad_ant,
-                                    intent=inputs.intent,
+                                    intent=utils.to_CASA_intent(ms, inputs.intent),
                                     pol=icorr,
-                                    reason='outlier'))
+                                    field=fieldid,
+                                    reason='bad antenna'))
 
                         # Compute final outlier timestamps per baseline threshold,
                         # forcibly always using the relaxed threshold scale factor,
                         # and setting the minimum fraction to 1, such that a
                         # baseline with 100% outlier timestamps will get flagged
                         # (even if dynamic threshold exceeded beyond 1.0).
-                        toomanyintfracthr_relaxed = np.min(
+                            tmint_relaxed = np.min(
                             [1.0,
-                             inputs.toomanyintfracthr * inputs.relaxed_factor])
+                             inputs.tmint * inputs.relaxed_factor])
 
                         # Compute fraction of outlier timestamps for each bad baseline.
                         bad_bls_timestamp_fraction = {
@@ -560,20 +564,48 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         for bl in bad_bls:
                             if (bl[0] not in bad_ants
                                     and bl[1] not in bad_ants
-                                    and bad_bls_timestamp_fraction[bl] >= toomanyintfracthr_relaxed):
+                                    and bad_bls_timestamp_fraction[bl] >= tmint_relaxed):
                                 newflags.append(
                                     FlagCmd(
                                         filename=ms.name,
                                         spw=spwid,
                                         antenna="%s&%s" % bl,
-                                        intent=inputs.intent,
+                                        intent=utils.to_CASA_intent(ms, inputs.intent),
                                         pol=icorr,
-                                        reason='outlier'))
+                                        field=fieldid,
+                                        reason='bad baseline'))
 
+        # TODO: add consolidation of flagging commands?
+
+        # Apply newly found flags.
+        stats_before, stats_after = {}, {}
         if newflags:
             LOG.warning('Evaluation of {0} raised {1} flagging '
                         'command(s)'.format(os.path.basename(inputs.vis),
                                             len(newflags)))
+
+            LOG.info('Applying newly found flags.')
+
+            # Add before/after summary:
+            allflagcmds = ["mode='summary' name='before'"]
+            allflagcmds.extend(newflags)
+            allflagcmds.append("mode='summary' name='after'")
+
+            # Run flag setting.
+            fsinputs = FlagdataSetter.Inputs(
+                context=inputs.context, vis=inputs.vis, table=inputs.vis,
+                inpfile=[])
+            fstask = FlagdataSetter(fsinputs)
+            fstask.flags_to_set(allflagcmds)
+            fsresult = self._executor.execute(fstask)
+
+            # Extract "before" and/or "after" summary
+            # Go through dictionary of reports...
+            for report in fsresult.results[0].keys():
+                if fsresult.results[0][report]['name'] == 'before':
+                    stats_before = fsresult.results[0][report]
+                if fsresult.results[0][report]['name'] == 'after':
+                    stats_after = fsresult.results[0][report]
         else:
             LOG.info('Evaluation of {0} raised 0 flagging commands'.format(
                 os.path.basename(inputs.vis)))
@@ -581,16 +613,10 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # Store newly identified flags in result.
         result.addflags(newflags)
 
+        # Attach flagging summaries to result
+        result.summaries = [stats_before, stats_after]
+
         return result
 
     def analyse(self, result):
-
-        # If the flagging task was called for more than one intent,
-        # presumably FLUX + PHASE, then we need to propagate the newly
-        # found flags to the science target intent.
-        # TODO: maybe this logic is best put inside the "analyse" method
-        # of hifa_gfluxscale, assuming it can analyse the flagging
-        # commands stored in the results returned by calls to
-        # Correctedampflag.
-
         return result

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import collections
 import json
 import os
+import shutil
 
 import numpy
 
@@ -1011,65 +1012,78 @@ class finalPhaseGainCalPerAntennaChart(object):
         
         plots = []
         
-	nplots=int(numAntenna/3)
-	
-	with casatools.TableReader(self.basevis+'.finalphasegaincal.g') as tb:
+        nplots=int(numAntenna/3)
+
+        with casatools.TableReader(self.basevis+'.finalphasegaincal.g') as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
         good=np.logical_not(flgs)
         maxamp=np.max(amps[good])
         plotmax=max(2.0,maxamp)
-		
-	if ((numAntenna%3)>0):
-	    nplots = nplots + 1
-	    
-	nplots=numAntenna
-	
-	for ii in range(nplots):
-	
-	    filename='finalphasegaincal'+str(ii)+'.png'
-	    ####syscommand='rm -rf '+filename
-	     ####os.system(syscommand)
-	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
-	    antPlot=str(ii)
+
+        if ((numAntenna%3)>0):
+            nplots = nplots + 1
+
+        nplots=numAntenna
+
+        for ii in range(nplots):
+
+            filename='finalphasegaincal'+str(ii)+'.png'
+            antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
             stage_dir = os.path.join(context.report_dir, stage)
             # construct the relative filename, eg. 'stageX/testdelay0.png'
             
             figfile = os.path.join(stage_dir, filename)
-	
-	    if not os.path.exists(figfile):
-	        try:
-	            LOG.info("Plotting final amp freqcal")
-	            casa.plotcal(caltable=self.basevis+'.finalphasegaincal.g', xaxis='time', yaxis='phase',  poln='', field='', antenna=antPlot, spw='',  timerange='',        subplot=111,  overplot=False, clearpanel='Auto',  iteration='antenna',  plotrange=[0,0,-180,180],  showflags=False,       plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
-	            #plots.append(figfile)
 
-	        except:
-	            LOG.warn("Problem with plotting " + filename)
+            if not os.path.exists(figfile):
+                try:
+                    LOG.info("Plotting final amp freqcal")
+                    casa.plotcal(caltable=self.basevis+'.finalphasegaincal.g',
+                                 xaxis='time', yaxis='phase',  poln='', field='',
+                                 antenna=antPlot, spw='',  timerange='',
+                                 subplot=111,  overplot=False, clearpanel='Auto',
+                                 iteration='antenna',  plotrange=[0,0,-180,180],
+                                 showflags=False, plotsymbol='o-', plotcolor='blue',
+                                 markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+                    # plots.append(figfile)
+
+                except:
+                    LOG.warn("Problem with plotting " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
-            
-                #Get antenna name
+                # Get antenna name
                 antName = antPlot
                 if antPlot != '':
                     domain_antennas = self.ms.get_antenna(antPlot)
                     idents = [a.name if a.name else a.id for a in domain_antennas]
                     antName = ','.join(idents)
             
-                plot = logger.Plot(figfile, x_axis='time', y_axis='phase',
-		        field='',
-                        parameters={ 'spw': '',
-                        'pol': '',
-                        'ant': antName,
-                        'type': 'Final phase gain cal',
-                        'file': os.path.basename(figfile)})
+                plot = logger.Plot(figfile, x_axis='time', y_axis='phase', field='',
+                                   parameters={ 'spw': '',
+                                                'pol': '',
+                                                'ant': antName,
+                                                'type': 'Final phase gain cal',
+                                                'file': os.path.basename(figfile)})
                 plots.append(plot)
             except:
                 LOG.warn("Unable to add plot to stack")
                 plots.append(None)
+
+        # Create a dummy plot to release the cal table
+        scratchfile = 'scratch.g'
+        shutil.copytree(self.basevis + '.finalphasegaincal.g', scratchfile)
+        casa.plotcal(caltable=scratchfile,
+                     xaxis='time', yaxis='phase', poln='', field='',
+                     antenna=str(0), spw='', timerange='',
+                     subplot=111, overplot=False, clearpanel='Auto',
+                     iteration='antenna', plotrange=[0, 0, -180, 180],
+                     showflags=False, plotsymbol='o-', plotcolor='blue',
+                     markersize=5.0, fontsize=10.0, showgui=False, figfile="scratch.png")
+        shutil.rmtree(scratchfile)
 
         return [p for p in plots if p is not None]

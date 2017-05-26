@@ -9,7 +9,6 @@ from .flagging import FlagBadDeformatters
 from .flagging import Checkflag
 from .rqcal import Rqcal
 from .swpowcal import Swpowcal
-#from .setmodel import SetModel, VLASetjy
 from .setmodel import VLASetjy
 from .priorcals import Priorcals
 from .testBPdcals import testBPdcals
@@ -25,3 +24,4 @@ from .tecmaps import TecMaps
 from .statwt import Statwt
 from .restoredata import VLARestoreData
 from .circfeedpolcal import Circfeedpolcal
+from .flagging import Flagcal

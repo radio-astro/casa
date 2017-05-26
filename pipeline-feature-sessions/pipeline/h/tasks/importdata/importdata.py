@@ -14,33 +14,49 @@ from pipeline.infrastructure import casa_tasks
 
 from . import fluxes
 
+__all__ = [
+    'ImportData',
+    'ImportDataInputs',
+    'ImportDataResults'
+]
+
 LOG = infrastructure.get_logger(__name__)
 
 
 class ImportDataInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context=None, vis=None, output_dir=None,
-                 asis=None, process_caldevice=None,
-                 session=None, overwrite=None, save_flagonline=None,
-                 bdfflags=None, lazy=None, createmms=None,
-                 ocorr_mode=None, clearcals=None):
-        self._init_properties(vars())
+    def __init__(self, context=None, vis=None, output_dir=None, asis=None, process_caldevice=None, session=None,
+                 overwrite=None, nocopy=None, save_flagonline=None, bdfflags=None, lazy=None, createmms=None,
+                 ocorr_mode=None):
+        super(ImportDataInputs, self).__init__()
 
-    # This are ALMA specific settings. Make them generic at some point.
-    # asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
+        self.context = context
+        self.vis = vis
+        self.output_dir = output_dir
+        self.asis = asis
+        self.process_caldevice = process_caldevice
+        self.session = session
+        self.overwrite = overwrite
+        self.nocopy = nocopy
+        self.save_flagonline = save_flagonline
+        self.bdfflags = bdfflags
+        self.lazy = lazy
+        self.createmms = createmms
+        self.ocorr_mode = ocorr_mode
+
     asis = basetask.property_with_default('asis', '')
     bdfflags = basetask.property_with_default('bdfflags', True)
     createmms = basetask.property_with_default('createmms', 'automatic')
     lazy = basetask.property_with_default('lazy', False)
+    nocopy = basetask.property_with_default('nocopy', False)
+    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
     overwrite = basetask.property_with_default('overwrite', False)
     process_caldevice = basetask.property_with_default('process_caldevice', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
-    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
-    clearcals = basetask.property_with_default('clearcals', True)
 
     @property
     def session(self):
-        if type(self.vis) is types.ListType:
+        if isinstance(self.vis, list):
             return self._handle_multiple_vis('session')
 
         # if vis is a scalar but session is a list, return the session for this vis
@@ -48,7 +64,7 @@ class ImportDataInputs(basetask.StandardInputs):
             idx = self._my_vislist.index(self.vis)
             return self._session[idx]
 
-        if type(self.vis) is types.StringType and type(self._session) is types.StringType:
+        if isinstance(self.vis, str) and isinstance(self._session, str):
             return self._session
 
         # current default - return all intents
@@ -71,7 +87,7 @@ class ImportDataInputs(basetask.StandardInputs):
 
     @vis.setter
     def vis(self, value):
-        vislist = value if type(value) is types.ListType else [value, ]
+        vislist = value if isinstance(value, list) else [value, ]
 
         # VISLIST_RESET_KEY is present when vis is set by handle_multivis.
         # In this case we do not want to reset my_vislist, as handle_multivis is
@@ -151,15 +167,14 @@ class ImportData(basetask.StandardTaskTemplate):
         if vis is None:
             msg = 'Empty input data set list'
             LOG.warning(msg)
-            raise ValueError, msg
+            raise ValueError(msg)
 
         if not os.path.exists(vis):
             msg = 'Input data set \'{0}\' not found'.format(vis)
             LOG.error(msg)
-            raise IOError, msg
+            raise IOError(msg)
 
         results = ImportDataResults()
-        to_clearcal = set()
 
         # if this is a tar, get the names of the files and directories inside
         # the tar and calculate which can be directly imported (filenames with
@@ -191,15 +206,16 @@ class ImportData(basetask.StandardTaskTemplate):
                                                               vis)
 
             if not to_import and not to_convert:
-                raise TypeError, '%s is neither a MS nor an ASDM' % vis
+                raise TypeError('{!s} is of unhandled type'.format(vis))
 
             # convert all paths to absolute paths for the next sequence
             to_import = map(os.path.abspath, to_import)
 
             # if the file is not in the working directory, copy it across,
             # replacing the filename with the relocated filename
-            to_copy = set([f for f in to_import
-                           if string.find(f, inputs.output_dir) != 0])
+            to_copy = {f for f in to_import
+                       if string.find(f, inputs.output_dir) != 0
+                       and inputs.nocopy is False}
             for src in to_copy:
                 dst = os.path.join(os.path.abspath(inputs.output_dir),
                                    os.path.basename(src))
@@ -209,21 +225,11 @@ class ImportData(basetask.StandardTaskTemplate):
                 if os.path.exists(dst):
                     LOG.warning('%s already in %s. Will import existing data.'
                                 '' % (os.path.basename(src), inputs.output_dir))
-                    if inputs.clearcals:
-                        LOG.info('Pipeline clearcal enabled for %s' % (dst))
-                        to_clearcal.add(dst)
-                    else:
-                        LOG.info('Pipeline clearcal disabled for %s' % (dst))
                     continue
 
                 if not self._executor._dry_run:
                     LOG.info('Copying %s to %s' % (src, inputs.output_dir))
-                    shutil.copytree(f, dst)
-
-        # clear the calibration of any stale file that exists in the working
-        # directory
-        for old_file in to_clearcal:
-            self._do_clearcal(old_file)
+                    shutil.copytree(src, dst)
 
         # launch an import job for each ASDM we need to convert
         for asdm in to_convert:
@@ -267,7 +273,7 @@ class ImportData(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _get_fluxes (self, context, observing_run):
+    def _get_fluxes(self, context, observing_run):
 
         # get the flux measurements from Source.xml for each MS
         xml_results = fluxes.get_setjy_results(observing_run.measurement_sets)
@@ -288,7 +294,6 @@ class ImportData(basetask.StandardTaskTemplate):
 
         return combined_results
 
-
     def _analyse_filenames(self, filenames, vis):
         to_import = set()
         to_convert = set()
@@ -307,38 +312,33 @@ class ImportData(basetask.StandardTaskTemplate):
                       ''.format(', '.join(asdm_dirs), vis))
             to_convert.update(asdm_dirs)
 
-        return (to_import, to_convert)
+        return to_import, to_convert
 
     def _asdm_to_vis_filename(self, asdm):
         return '{0}.ms'.format(os.path.join(self.inputs.output_dir,
                                             os.path.basename(asdm)))
 
-    def _do_clearcal(self, vis):
-        task = casa_tasks.clearcal(vis=vis, addmodel=False)
-        self._executor.execute(task)
-
     def _do_importasdm(self, asdm):
         inputs = self.inputs
         vis = self._asdm_to_vis_filename(asdm)
         outfile = os.path.join(inputs.output_dir,
-                               os.path.basename(asdm) + "_flagonline.txt")
+                               os.path.basename(asdm) + '_flagonline.txt')
 
         if inputs.save_flagonline:
             # Create the standard calibration flagging template file
             template_flagsfile = os.path.join(inputs.output_dir,
-                                              os.path.basename(asdm) + "_flagtemplate.txt")
+                                              os.path.basename(asdm) + '_flagtemplate.txt')
             self._make_template_flagfile(asdm, template_flagsfile,
                                          'User flagging commands file for the calibration pipeline')
             # Create the imaging targets file
             template_flagsfile = os.path.join(inputs.output_dir,
-                                              os.path.basename(asdm) + "_flagtargetstemplate.txt")
+                                              os.path.basename(asdm) + '_flagtargetstemplate.txt')
             self._make_template_flagfile(asdm, template_flagsfile,
                                          'User flagging commands file for the imaging pipeline')
 
         createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
 
         with_pointing_correction = getattr(inputs, 'with_pointing_correction', False)
-        # ocorr_mode = getattr(inputs, 'ocorr_mode', 'ca')
 
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
@@ -364,19 +364,23 @@ class ImportData(basetask.StandardTaskTemplate):
                 shutil.copyfile(asdm_source, vis_source)
 
     def _make_template_flagfile(self, asdm, outfile, titlestr):
-
         # Create a new file if overwrite is true and the file
         # does not already exist.
         inputs = self.inputs
         if inputs.overwrite or not os.path.exists(outfile):
+            template_text = FLAGGING_TEMPLATE_HEADER.replace('___TITLESTR___', titlestr)
             with open(outfile, 'w') as f:
-                f.writelines(['# ' + titlestr + '\n'])
-                f.writelines(['#\n'])
-                f.writelines(['# Examples\n'])
-                f.writelines(['# Note: Do not put spaces inside the reason string !\n'])
-                f.writelines(['#\n'])
-                f.writelines(["# mode='manual' correlation='YY' antenna='DV01;DV08;DA43;DA48&DV23' spw='21:1920~2880' autocorr=False reason='bad_channels'\n"])
-                f.writelines(["# mode='manual' spw='25:0~3;122~127' reason='stage8_2'\n"])
-                f.writelines([ "# mode='manual' antenna='DV07' timerange='2013/01/31/08:09:55.248~2013/01/31/08:10:01.296' reason='quack'\n"])
-                f.writelines(['#\n'])
+                f.writelines(template_text)
 
+
+FLAGGING_TEMPLATE_HEADER = '''#
+# ___TITLESTR___
+#
+# Examples
+# Note: Do not put spaces inside the reason string !
+#
+# mode='manual' correlation='YY' antenna='DV01;DV08;DA43;DA48&DV23' spw='21:1920~2880' autocorr=False reason='bad_channels'
+# mode='manual' spw='25:0~3;122~127' reason='stage8_2'
+# mode='manual' antenna='DV07' timerange='2013/01/31/08:09:55.248~2013/01/31/08:10:01.296' reason='quack'
+#
+'''
