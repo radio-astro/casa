@@ -787,8 +787,8 @@ def all_unique(o):
     if not isinstance(o, collections.Iterable):
         raise ValueError('Cannot determine uniqueness of non-iterables')
 
-    hashes = [gen_hash(e) for e in o]
-    return len(hashes) is len(set(hashes))
+    hashes = {gen_hash(e) for e in o}
+    return len(hashes) > 1
 
 
 def gen_hash(o):
