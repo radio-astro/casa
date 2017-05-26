@@ -6,6 +6,7 @@ import itertools
 import math
 import os
 import pydoc
+import pkg_resources
 import re
 import shutil
 import zipfile
@@ -1618,7 +1619,7 @@ class WebLogGenerator(object):
             shutil.rmtree(outdir)
         
         # copy all uncompressed non-python resources to output directory
-        src = os.path.dirname(resources.__file__)
+        src = pkg_resources.resource_filename(resources.__name__, '')
         dst = outdir
         ignore_fn = shutil.ignore_patterns('*.zip', '*.py', '*.pyc', 'CVS*',
                                            '.svn')

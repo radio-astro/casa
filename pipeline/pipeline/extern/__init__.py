@@ -1,17 +1,17 @@
 from __future__ import absolute_import
-import os
+import pkg_resources
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__),'Mako-1.0.0-py2.7.egg'))
+sys.path.append(pkg_resources.resource_filename(__name__, 'Mako-1.0.0-py2.7.egg'))
 import mako
 
-sys.path.append(os.path.join(os.path.dirname(__file__),'cachetools-1.0.1-py2.7.egg'))
+sys.path.append(pkg_resources.resource_filename(__name__, 'cachetools-1.0.1-py2.7.egg'))
 import cachetools
 
-sys.path.append(os.path.join(os.path.dirname(__file__),'sortedcontainers-1.4.4-py2.7.egg'))
+sys.path.append(pkg_resources.resource_filename(__name__, 'sortedcontainers-1.4.4-py2.7.egg'))
 import sortedcontainers
 
-sys.path.append(os.path.join(os.path.dirname(__file__),'intervaltree-2.1.0-py2.7.egg'))
+sys.path.append(pkg_resources.resource_filename(__name__, 'intervaltree-2.1.0-py2.7.egg'))
 import intervaltree
 
 from . import pyparsing

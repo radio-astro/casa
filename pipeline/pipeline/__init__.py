@@ -1,13 +1,11 @@
 from __future__ import absolute_import
-import inspect
 import imp
 import os
-import sys
+import pkg_resources
 import webbrowser
 
 from . import environment
 from . import infrastructure
-from . import recipes
 
 from . import h
 from . import hco
@@ -17,6 +15,7 @@ from . import hifv
 from . import hifa
 
 from .infrastructure import Pipeline, Context
+
 from .domain import measures
 from casa_stack_manip import stack_frame_find
 
@@ -64,13 +63,13 @@ def show_weblog(context):
 
 def initcli() :
     print "Initializing cli..."
-    mypath = os.path.dirname(__file__);
+    mypath = pkg_resources.resource_filename(__name__, '')
     hifpath = mypath+"/hif/cli/hif.py"
     hpath = mypath+"/h/cli/h.py"
     hsdpath = mypath+"/hsd/cli/hsd.py"
     hifapath = mypath+"/hifa/cli/hifa.py"
     hifvpath = mypath+"/hifv/cli/hifv.py"
-    myglobals = stack_frame_find( )
+    myglobals = stack_frame_find()
 
     execfile(hpath, myglobals)
     execfile(hifpath, myglobals)

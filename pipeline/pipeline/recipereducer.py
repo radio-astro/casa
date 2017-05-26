@@ -40,6 +40,7 @@ import ast
 import collections
 import gc
 import os
+import pkg_resources
 import traceback
 import xml.etree.ElementTree as ElementTree
 
@@ -49,23 +50,27 @@ import pipeline.infrastructure.launcher as launcher
 
 LOG = logging.get_logger(__name__)
 
-recipes_dir = os.path.join(os.path.dirname(__file__), 'recipes')
+recipes_dir = pkg_resources.resource_filename(__name__, 'recipes')
 
 TaskArgs = collections.namedtuple('TaskArgs', 'vis infiles session')
+
 
 def _create_context(loglevel, plotlevel, name):
     return launcher.Pipeline(loglevel=loglevel, plotlevel=plotlevel, 
                              name=name).context
 
+
 def _get_context_name(procedure):
     root, _ = os.path.splitext(os.path.basename(procedure))
     return 'pipeline-%s' % root
+
 
 def _get_task_class(cli_command):
     for k, v in casataskdict.classToCASATask.items():
         if v == cli_command:
             return k
     raise KeyError('%s not registered in casataskdict' % cli_command)
+
 
 def _get_tasks(context, args, procedure='procedure_hifa.xml'):
     # find the procedure file on disk, then fall back to the standard recipes
@@ -124,6 +129,7 @@ def _get_tasks(context, args, procedure='procedure_hifa.xml'):
         # between task executions 
         yield task
 
+
 def string_to_val(s):
     """
     Convert a string to a Python data type.
@@ -139,13 +145,16 @@ def string_to_val(s):
     except SyntaxError:
         return s
 
+
 def _format_arg_value(arg_val):
     arg, val = arg_val
     return '%s=%r' % (arg, val)
 
+
 def _as_task_call(task_class, task_args):
     kw_args = map(_format_arg_value, task_args.items())
     return '%s(%s)' % (task_class.__name__, ', '.join(kw_args))
+
 
 def reduce(vis=None, infiles=None, procedure='procedure_hifa.xml',
            context=None, name=None, loglevel='info', plotlevel='default',
