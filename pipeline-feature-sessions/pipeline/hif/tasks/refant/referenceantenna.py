@@ -14,8 +14,8 @@ __all__ = [
     'RefAnt',
     'RefAntInputs',
     'RefAntResults',
-    'SessionRefAnt',
-    'SessionRefAntInputs',
+    'HpcRefAnt',
+    'HpcRefAntInputs',
 ]
 
 LOG = infrastructure.get_logger(__name__)
@@ -140,7 +140,7 @@ class RefAnt(basetask.StandardTaskTemplate):
         return results
 
 
-class SessionRefAntInputs(RefAntInputs):
+class HpcRefAntInputs(RefAntInputs):
     parallel = sessionutils.parallel_inputs_impl()
 
     def to_casa_args(self):
@@ -151,18 +151,18 @@ class SessionRefAntInputs(RefAntInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, field=None, spw=None, intent=None, hm_refant=None,
                  refant=None, geometry=None, flagging=None, refantignore=None, parallel=None):
-        super(SessionRefAntInputs, self).__init__(context, vis=vis, output_dir=output_dir, field=field, spw=spw,
-                                                  intent=intent, hm_refant=hm_refant, refant=refant, geometry=geometry,
-                                                  flagging=flagging, refantignore=refantignore)
+        super(HpcRefAntInputs, self).__init__(context, vis=vis, output_dir=output_dir, field=field, spw=spw,
+                                              intent=intent, hm_refant=hm_refant, refant=refant, geometry=geometry,
+                                              flagging=flagging, refantignore=refantignore)
         self.parallel = parallel
 
 
-class SessionRefAnt(sessionutils.ParallelTemplate):
-    Inputs = SessionRefAntInputs
+class HpcRefAnt(sessionutils.ParallelTemplate):
+    Inputs = HpcRefAntInputs
     Task = RefAnt
 
     def __init__(self, inputs):
-        super(SessionRefAnt, self).__init__(inputs)
+        super(HpcRefAnt, self).__init__(inputs)
 
     def get_result_for_exception(self, vis, result):
         LOG.error('No reference antenna selected for {!s}'.format(os.path.basename(vis)))

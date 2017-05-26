@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from .antpos import Antpos
-from .applycal import IFApplycal, SessionIFApplycal
+from .applycal import IFApplycal, HpcIFApplycal
 from .atmflag import Atmflag
 from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .bpflagchans import Bandpassflagchans
@@ -19,7 +19,7 @@ from .makeimages import MakeImages
 from .makeimlist import MakeImList
 from .mstransform import Mstransform
 from .rawflagchans import Rawflagchans
-from .refant import RefAnt, SessionRefAnt
+from .refant import RefAnt, HpcRefAnt
 from .setmodel import Setjy
 from .setmodel import SetModels
 from .tclean import Tclean

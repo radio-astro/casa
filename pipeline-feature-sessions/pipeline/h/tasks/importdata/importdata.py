@@ -1,31 +1,17 @@
 from __future__ import absolute_import
-import collections
 import contextlib
-import csv
-import itertools
-import operator
 import os
 import shutil
 import string
 import tarfile
 import types
-import decimal
-import datetime
-import urllib
-import urllib2
-import xml.etree.ElementTree as ElementTree
-from xml.dom import minidom
 
-import pipeline.domain as domain
-import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure.tablereader as tablereader
 from pipeline.infrastructure import casa_tasks
 
-from ..common import commonfluxresults
 from . import fluxes
 
 LOG = infrastructure.get_logger(__name__)
@@ -132,11 +118,11 @@ class ImportData(basetask.StandardTaskTemplate):
     Inputs = ImportDataInputs
 
     def _ms_directories(self, names):
-        '''
+        """
         Inspect a list of file entries, finding the root directory of any
         measurement sets present via a set of characteristic files and
         directories.
-        '''
+        """
         identifiers = ('SOURCE', 'FIELD', 'ANTENNA', 'DATA_DESCRIPTION')
 
         matching = [os.path.dirname(n) for n in names
@@ -146,10 +132,10 @@ class ImportData(basetask.StandardTaskTemplate):
                     if matching.count(m) == len(identifiers)])
 
     def _asdm_directories(self, members):
-        '''
+        """
         Inspect a list of file entries, finding the root directory of any
         ASDMs present via a set of characteristic files and directories.
-        '''
+        """
         identifiers = ('ASDMBinary', 'Main.xml', 'ASDM.xml', 'Antenna.xml')
 
         matching = [os.path.dirname(m) for m in members
@@ -173,8 +159,6 @@ class ImportData(basetask.StandardTaskTemplate):
             raise IOError, msg
 
         results = ImportDataResults()
-        to_import = set()
-        to_convert = set()
         to_clearcal = set()
 
         # if this is a tar, get the names of the files and directories inside
