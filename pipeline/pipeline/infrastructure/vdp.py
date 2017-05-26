@@ -206,7 +206,7 @@ class VisDependentProperty(object):
 
     def __call__(self, fget, *args, **kwargs):
         # __call__ is executed when decorating a readonly function 
-        LOG.info('In __call__ for %s' % fget.func_name)
+        # LOG.info('In __call__ for %s' % fget.func_name)
         self.fget = fget
         return self
 
