@@ -3,6 +3,7 @@ import collections
 import os
 import string
 import datetime
+import decimal
 import urllib
 import urllib2
 import xml.etree.ElementTree as ElementTree
@@ -168,7 +169,7 @@ def read_fluxes_db(ms):
                         measures.FluxDensity(float(msource.Q.value), measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(float(msource.U.value), measures.FluxDensityUnits.JANSKY),
                         measures.FluxDensity(float(msource.V.value), measures.FluxDensityUnits.JANSKY))
-                m = domain.FluxMeasurement(spw_id, *iquv_db)
+                m = domain.FluxMeasurement(spw_id, *iquv_db, spix=decimal.Decimal('%0.3f' % float(spix)))
 
         except:
 
@@ -206,11 +207,12 @@ def flux_nosourcexml(ms):
                 serviceurl = 'https://almascience.eso.org/sc/flux'
                 fluxdict = fluxservice(serviceurl, ms, frequency, sourcename)
                 f = fluxdict['fluxdensity']
+                spix = fluxdict['spectralindex']
                 iquv_db = (measures.FluxDensity(float(f), measures.FluxDensityUnits.JANSKY),
                        measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
                        measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY),
                        measures.FluxDensity(0.0, measures.FluxDensityUnits.JANSKY))
-                m = domain.FluxMeasurement(spw_id, *iquv_db)
+                m = domain.FluxMeasurement(spw_id, *iquv_db, spix=decimal.Decimal('%0.3f' % float(spix)))
                 result[source].append(m)
             except:
                 LOG.debug("    No flux catalog values for source " + str(source.name) + "  spw:" + str(spw_id))
