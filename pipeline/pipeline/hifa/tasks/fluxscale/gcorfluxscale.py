@@ -7,8 +7,8 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.callibrary as callibrary
 
-#from pipeline.hif.tasks import importdata
 from pipeline.h.tasks import importdata
+from . import fluxes
 from pipeline.hif.tasks import gaincal
 from ... import heuristics
 from pipeline.h.tasks.common import commonfluxresults
@@ -133,12 +133,8 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
     def prepare(self, **parameters):
         inputs = self.inputs
-        #ms = inputs.ms
 
         # Initialize results.
-        #result = commonfluxresults.FluxCalibrationResults(inputs.vis,
-                #resantenna='', uvrange='')
-        print 'inputs vis ', inputs.vis
         result = GcorFluxscaleResults(inputs.vis, resantenna='', uvrange='')
 
         # Check that the measurement set does have an amplitude calibrator.
@@ -194,7 +190,6 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             exptimes = heuristics.exptimes.get_scan_exptimes(inputs.ms, fieldnamelist, 'PHASE',
                 spwidlist)
             phaseup_solint = '%0.3fs' % (min ([exptime[1] for exptime in exptimes]) / 4.0)
-            #phasesolint = 'int'
             phase_gaintype = 'T'
             phase_combine = 'spw'
             phaseup_spwmap = inputs.ms.combine_spwmap
@@ -307,15 +302,25 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                 fluxscale_result = self._do_fluxscale(caltable,
                                                       refspwmap=refspwmap)
 
-                importdata.fluxes.export_flux_from_result(fluxscale_result,
-                                                              inputs.context,
-                                                              reffile)
+                #importdata.fluxes.export_flux_from_result(fluxscale_result,
+                                                              #inputs.context,
+                                                              #reffile)
 
-                # and finally, do a setjy, add its setjy_settings
+                # Determine fields ids for which a model spix should be
+                # set along with the derived flux. For now this is
+                # restricted to BANDPASS fields 
+                fieldids_with_spix = [str(f.id) for f in inputs.ms.get_fields(task_arg=inputs.transfer, intent='BANDPASS')]
+                
+                # Store the results in a temporary file. 
+                fluxes.export_flux_from_fit_result(fluxscale_result, inputs.context,
+                                                              reffile,
+                                                              fieldids_with_spix=fieldids_with_spix)
+
+                # Finally, do a setjy, add its setjy_settings
                 # to the main result
                 self._do_setjy(reffile=reffile, field=inputs.transfer)
 
-                # use the fluxscale measurements to get the uncertainties too.
+                # Use the fluxscale measurements to get the uncertainties too.
                 # This makes the (big) assumption that setjy executed exactly
                 # what we passed in as arguments
                 result.measurements.update(fluxscale_result.measurements)
@@ -493,7 +498,6 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 class GcorFluxscaleResults(commonfluxresults.FluxCalibrationResults):
 
     def __init__(self, vis, resantenna=None, uvrange=None, measurements=None):
-        print 'vis ', vis, 'resantenna ', resantenna, 'uvrange ', uvrange, 'measurements ', measurements
         commonfluxresults.FluxCalibrationResults.__init__(self,
             vis, resantenna=resantenna, uvrange=uvrange, measurements=measurements)
 
