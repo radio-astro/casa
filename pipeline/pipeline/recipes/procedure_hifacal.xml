@@ -67,7 +67,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_setjy</Command>
+        <Command xmlns="">hif_setmodels</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
