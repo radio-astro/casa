@@ -32,7 +32,7 @@ Set calibrator source models
 
     <param type="string" name="transintent" subparam="true">
 	<description>Observing intent of transfer fields</description>
-	<value>BANDPASS,PHASE,CHECK</value>
+	<value>BANDPASS</value>
     </param>
 
     <param type="string" name="reffile">
