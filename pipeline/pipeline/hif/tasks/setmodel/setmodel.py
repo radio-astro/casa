@@ -97,7 +97,7 @@ class SetModelsInputs(basetask.StandardInputs):
     @transintent.setter
     def transintent(self, value):
         if value is None:
-            value = 'PHASE,BANDPASS,CHECK'
+            value = 'BANDPASS'
         self._transintent = value
 
     @property
