@@ -13,10 +13,9 @@ from . import resultobjects
 LOG = infrastructure.get_logger(__name__)
 
 
-
 class SwpowcalInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=[]):
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=[], spw=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
         setattr(self, 'caltype', 'swpow')
@@ -70,10 +69,11 @@ class SwpowcalInputs(basetask.StandardInputs):
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
 
-        return {'vis': self.vis,
-                'caltable': self.caltable,
-                'caltype': self.caltype,
-                'parameter': self.parameter}
+        return {'vis'       : self.vis,
+                'caltable'  : self.caltable,
+                'caltype'   : self.caltype,
+                'parameter' : self.parameter,
+                'spw'       : self.spw}
 
 
 class Swpowcal(basetask.StandardTaskTemplate):
@@ -92,18 +92,18 @@ class Swpowcal(basetask.StandardTaskTemplate):
         # pipeline, but may be used for QA and for flagging, especially at
         # S-band for fields near the geostationary satellite belt.  Only
         # relevant for data taken on 24-Feb-2011 or later.
+        callist = []
         if startdate >= 55616.6:
             gencal_args = inputs.to_casa_args()
             gencal_job = casa_tasks.gencal(**gencal_args)
             self._executor.execute(gencal_job)
 
-            callist = []
             calto = callibrary.CalTo(vis=inputs.vis)
             calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='swpow', interp='', calwt=False)
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
 
-        return resultobjects.SwpowcalResults(pool=callist)
+        return resultobjects.SwpowcalResults(pool=callist, spw=inputs.spw)
 
     def analyse(self, result):
         # With no best caltable to find, our task is simply to set the one

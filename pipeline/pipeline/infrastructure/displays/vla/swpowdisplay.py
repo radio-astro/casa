@@ -29,7 +29,8 @@ class swpowSummaryChart(object):
         plotmax = 100
 
         # Dummy plot
-        casa.plotcal(caltable=self.caltable, xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot, spw='',
+        casa.plotcal(caltable=self.caltable, xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot,
+                     spw='',
                      timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna',
                      plotrange=[0, 0, 0, plotmax], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0,
                      fontsize=10.0, showgui=False, figfile=figfile)
@@ -117,8 +118,9 @@ class swpowPerAntennaChart(object):
 
             if not os.path.exists(figfile):
                 try:
+                    LOG.info("Switched Power Plot, using antenna={!s} and spw={!s}".format(antPlot,self.result.sw_result[0].spw))
                     casa.plotcal(caltable=self.caltable, xaxis='time', yaxis=self.yaxis, poln='', field='',
-                                 antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto',
+                                 antenna=antPlot, spw=self.result.sw_result[0].spw, timerange='', subplot=111, overplot=False, clearpanel='Auto',
                                  iteration='antenna', plotrange=plotrange, showflags=False, plotsymbol='o',
                                  plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
                     # plots.append(figfile)
