@@ -525,7 +525,7 @@ def space_comma(s):
 
 	<%def name="preamble()">
 		Plots of calibrated phase vs frequency for all antennas and
-		correlation='RL,LR', intent=POLANGLE, POLLEAKAGE, BANDPASS, PHASE.
+		correlation='RL,LR', intent=POLANGLE and POLLEAKAGE, and 'RR,LL' for intent=BANDPASS and PHASE.
 	</%def>
 
 

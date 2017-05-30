@@ -137,11 +137,12 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         # Polarization plots
         phase_vs_freq_polarization_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['POLANGLE'], ['POLLEAKAGE'], ['PHASE'], ['BANDPASS']]:
+        for intents, correlation in [(['POLANGLE'], 'RL,LR'), (['POLLEAKAGE'], 'RL,LR'),
+                                     (['PHASE'], 'RR,LL'), (['BANDPASS'], 'RR,LL')]:
             plots = self.create_plots(context,
                                       result,
                                       applycal.PhaseVsFrequencyPerBasebandSummaryChart,
-                                      intents, correlation='RL,LR', coloraxis='corr', avgtime='60',
+                                      intents, correlation=correlation, coloraxis='corr', avgtime='60',
                                       avgbaseline=True, avgantenna=False, plotrange=[0, 0, -180, 180])
             self.sort_plots_by_baseband(plots)
 
@@ -149,8 +150,11 @@ class T2_4MDetailsplotsummaryRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             use_pol_plots = False
             for vis, vis_plots in plots.items():
                 phase_vs_freq_polarization_plots[vis][key] = vis_plots
-                if vis_plots:
+                if vis_plots and (('POLANGLE' in m.intents) or ('POLLEAKAGE' in m.intents)):
                     use_pol_plots = True
+
+
+
 
         # Removed for CAS-8737
         ##amp_vs_uv_summary_plots = self.create_plots(context,
