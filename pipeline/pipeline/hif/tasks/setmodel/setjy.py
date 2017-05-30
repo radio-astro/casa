@@ -288,7 +288,7 @@ class SetjyInputs(basetask.StandardInputs):
         try:
             np.testing.assert_almost_equal(d['refspectra'][2], 0.0)
         except:
-            d['reffreq'] = d['refspectra'][0].replace(" ", "")
+            d['reffreq'] = 'TOPO ' + d['refspectra'][0].replace(" ", "")
             d['spix'] = d['refspectra'][2]
 
         # Filter out reffile. Note that the , is required
