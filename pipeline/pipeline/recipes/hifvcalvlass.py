@@ -104,7 +104,7 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         hifv_semiFinalBPdcals(pipelinemode=pipelinemode)
 
         # Determine solint for scan-average equivalent
-        hifv_solint(pipelinemode=pipelinemode)
+        hifv_solint(limit_short_solint='0.45')
 
         # Do the flux density boostrapping -- fits spectral index of
         # calibrators with a power-law and puts fit in model column
@@ -113,11 +113,11 @@ def hifvcalvlass(vislist, importonly=False, pipelinemode='automatic', interactiv
         # Make the final calibration tables
         hifv_finalcals(pipelinemode=pipelinemode)
 
-        # Flag the finalampgaincal.g calibration table
-        hifv_flagcal(pipelinemode=pipelinemode)
-
         # Polarization calibration
         hifv_circfeedpolcal (pipelinemode=pipelinemode)
+
+        # Flag the finalampgaincal.g calibration table
+        hifv_flagcal(pipelinemode=pipelinemode)
 
         # Apply all the calibrations and check the calibrated data
         hifv_applycals(flagsum=False, flagdetailedsum=False)

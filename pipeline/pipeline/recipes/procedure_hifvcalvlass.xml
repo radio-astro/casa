@@ -135,6 +135,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifv_solint</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">limit_short_solint</Keyword>
+                <Value xmlns="">0.45</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -151,13 +155,13 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hifv_flagcal</Command>
+        <Command xmlns="">hifv_circfeedpolcal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hifv_circfeedpolcal</Command>
+        <Command xmlns="">hifv_flagcal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
