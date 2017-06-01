@@ -21,10 +21,9 @@ class T2_4MDetailsBandpassflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer
     """
     Renders detailed HTML output for the Bandpassflag task.
     """
-    # FIXME: set rerender to false before final commit
     def __init__(self, uri='bandpassflag.mako',
                  description='Phase-up bandpass calibration + flagging',
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsBandpassflagRenderer, self).__init__(
             uri=uri, description=description, always_rerender=always_rerender)
 
