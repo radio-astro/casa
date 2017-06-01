@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import collections
+import copy
 import os
 
 import numpy as np
@@ -576,29 +577,36 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
         # TODO: add consolidation of flagging commands?
 
-        # Apply newly found flags.
+        # Initialize flagging summaries.
         stats_before, stats_after = {}, {}
+
+        # Create a list of flagdata commands, always add the "before" summary.
+        allflagcmds = ["mode='summary' name='before'"]
+
+        # If new flags were found, apply these as part of the flagdata call,
+        # and add an "after" summary.
         if newflags:
             LOG.warning('Evaluation of {0} raised {1} flagging '
                         'command(s)'.format(os.path.basename(inputs.vis),
                                             len(newflags)))
 
             LOG.info('Applying newly found flags.')
-
-            # Add before/after summary:
-            allflagcmds = ["mode='summary' name='before'"]
             allflagcmds.extend(newflags)
             allflagcmds.append("mode='summary' name='after'")
+        else:
+            LOG.info('Evaluation of {0} raised 0 flagging commands'.format(
+                os.path.basename(inputs.vis)))
 
-            # Run flag setting.
-            fsinputs = FlagdataSetter.Inputs(
-                context=inputs.context, vis=inputs.vis, table=inputs.vis,
-                inpfile=[])
-            fstask = FlagdataSetter(fsinputs)
-            fstask.flags_to_set(allflagcmds)
-            fsresult = self._executor.execute(fstask)
+        # Run flagdata to create summaries and set flags.
+        fsinputs = FlagdataSetter.Inputs(
+            context=inputs.context, vis=inputs.vis, table=inputs.vis,
+            inpfile=[])
+        fstask = FlagdataSetter(fsinputs)
+        fstask.flags_to_set(allflagcmds)
+        fsresult = self._executor.execute(fstask)
 
-            # Extract "before" and/or "after" summary
+        # Extract "before" and/or "after" summary
+        if all(['report' in k for k in fsresult.results[0].keys()]):
             # Go through dictionary of reports...
             for report in fsresult.results[0].keys():
                 if fsresult.results[0][report]['name'] == 'before':
@@ -606,8 +614,16 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 if fsresult.results[0][report]['name'] == 'after':
                     stats_after = fsresult.results[0][report]
         else:
-            LOG.info('Evaluation of {0} raised 0 flagging commands'.format(
-                os.path.basename(inputs.vis)))
+            # Go through single report.
+            if fsresult.results[0]['name'] == 'before':
+                stats_before = fsresult.results[0]
+            if fsresult.results[0]['name'] == 'after':
+                stats_after = fsresult.results[0]
+
+        # If no new flags were found, then no "after" summary was created,
+        # so instead make a copy of the "before" summary.
+        if not newflags:
+            stats_after = copy.deepcopy(stats_before)
 
         # Store newly identified flags in result.
         result.addflags(newflags)
