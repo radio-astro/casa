@@ -216,6 +216,20 @@ class Correctedampflag(basetask.StandardTaskTemplate):
             commonhelpermethods.get_antenna_names(ms)
         nants = len(antenna_names)
 
+        # Create an antenna id-to-name translation dictionary
+        antenna_id_to_name = {ant.id: ant.name
+                              for ant in ms.antennas
+                              if ant.name.strip()}
+
+        # Check that each antenna ID is represented by a unique non-empty
+        # name, by testing that the unique set of antenna names is same
+        # length as list of IDs. If not, then unset the translation
+        # dictionary to revert back to flagging by ID
+        if len(set(antenna_id_to_name.values())) != len(ms.antennas):
+            LOG.info('No unique name available for each antenna ID:'
+                     ' flagging by antenna ID instead of by name.')
+            antenna_id_to_name = None
+
         # Get number of scans in MS for this intent.
         nscans = len(ms.get_scans(scan_intent=inputs.intent))
 
@@ -416,7 +430,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                                 pol=icorr,
                                                 time=timestamp,
                                                 field=fieldid,
-                                                reason='bad antenna'))
+                                                reason='bad antenna',
+                                                antenna_id_to_name=antenna_id_to_name))
                                     # If there was not a single antenna that was involved
                                     # in more than the threshold fraction of outlier baseline
                                     # scans, then continue checking whether a significant fraction of
@@ -540,7 +555,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                     intent=utils.to_CASA_intent(ms, inputs.intent),
                                     pol=icorr,
                                     field=fieldid,
-                                    reason='bad antenna'))
+                                    reason='bad antenna',
+                                    antenna_id_to_name=antenna_id_to_name))
 
                         # Compute final outlier timestamps per baseline threshold,
                         # forcibly always using the relaxed threshold scale factor,
@@ -573,7 +589,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                         intent=utils.to_CASA_intent(ms, inputs.intent),
                                         pol=icorr,
                                         field=fieldid,
-                                        reason='bad baseline'))
+                                        reason='bad baseline',
+                                        antenna_id_to_name=antenna_id_to_name))
 
         # TODO: add consolidation of flagging commands?
 
