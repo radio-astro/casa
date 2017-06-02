@@ -6,6 +6,7 @@ import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
 from pipeline.h.heuristics import fieldnames as fieldnames
@@ -238,6 +239,11 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                      'phased-up bandpass table as final version: '
                      '{0}'.format(fn_bp_final))
 
+            # Update CalApplication in bandpass result with a new CalFrom
+            # that points to the final bp table.
+            bpresult.final[0].calfrom[0] = self._copy_calfrom_with_gaintable(
+                bpresult.final[0].calfrom[0], fn_bp_final)
+
         # TODO: decide what to add to result.
         #  - plots
         #  - store both initial and final bpresult?
@@ -252,6 +258,15 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         return result
+
+    @staticmethod
+    def _copy_calfrom_with_gaintable(old_calfrom, gaintable):
+        return callibrary.CalFrom(gaintable=gaintable,
+                                  gainfield=old_calfrom.gainfield,
+                                  interp=old_calfrom.interp,
+                                  spwmap=old_calfrom.spwmap,
+                                  caltype=old_calfrom.caltype,
+                                  calwt=old_calfrom.calwt)
 
     def create_plots(self, prefix, type):
 
