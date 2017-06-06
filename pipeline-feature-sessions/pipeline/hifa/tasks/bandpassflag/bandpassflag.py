@@ -10,6 +10,7 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.utils as utils
 from pipeline.h.heuristics import fieldnames as fieldnames
+from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
 from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
 from pipeline.hif.tasks import gaincal
@@ -100,21 +101,37 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         result.vis = inputs.vis
         result.plots = dict()
 
-        # Make "before calibration" plots for the weblog
-        LOG.info('Creating "before calibration" plots')
-        result.plots['raw'] = self.create_plots('raw', 'data')
-
-        # Create back-up of flags.
-        LOG.info('Creating back-up of flagging state')
-        flag_backup_name = 'before_bpflag'
-        task = casa_tasks.flagmanager(
-            vis=inputs.vis, mode='save', versionname=flag_backup_name)
-        self._executor.execute(task)
-
         # Export the current calstate.
         LOG.info('Creating back-up of calibration state')
         calstate_backup_name = 'before_bpflag.calstate'
         inputs.context.callibrary.export(calstate_backup_name)
+
+        # Create back-up of flags.
+        LOG.info('Creating back-up of "pre-bandpassflag" flagging state')
+        flag_backup_name_prebpf = 'before_bpflag'
+        task = casa_tasks.flagmanager(
+            vis=inputs.vis, mode='save', versionname=flag_backup_name_prebpf)
+        self._executor.execute(task)
+
+        # Run applycal to apply pre-existing caltables and propagate their
+        # corresponding flags (should typically include Tsys, WVR, antpos).
+        LOG.info('Applying pre-existing cal tables.')
+        acinputs = applycal.IFApplycalInputs(
+            context=inputs.context, vis=inputs.vis, field=inputs.field,
+            intent=inputs.intent, flagsum=False, flagbackup=False)
+        actask = applycal.IFApplycal(acinputs)
+        acresult = self._executor.execute(actask, merge=True)
+
+        # Create back-up of "after pre-calibration" state of flags.
+        LOG.info('Creating back-up of "pre-calibrated" flagging state')
+        flag_backup_name_after_precal = 'after_precal'
+        task = casa_tasks.flagmanager(
+            vis=inputs.vis, mode='save', versionname=flag_backup_name_after_precal)
+        self._executor.execute(task)
+
+        # Make "pre-calibrated" plots for the weblog
+        LOG.info('Creating "pre-calibrated" plots')
+        result.plots['raw'] = self.create_plots('raw', 'data')
 
         # Do standard phaseup and bandpass calibration.
         LOG.info('Creating initial phased-up bandpass calibration.')
@@ -167,10 +184,10 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             acresult = self._executor.execute(actask)
 
         finally:
-            # Restore flags that may have come from applycal.
-            LOG.info('Restoring back-up of flagging state.')
+            # Restore flags that may have come from the latest applycal.
+            LOG.info('Restoring back-up of "pre-calibrated" flagging state.')
             task = casa_tasks.flagmanager(
-                vis=inputs.vis, mode='restore', versionname=flag_backup_name)
+                vis=inputs.vis, mode='restore', versionname=flag_backup_name_after_precal)
             self._executor.execute(task)
 
         # Make "after calibration, before flagging" plots for the weblog
@@ -197,11 +214,26 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             LOG.info('Creating "after calibration, after flagging" plots')
             result.plots['after'] = self.create_plots('after', 'corrected')
 
-        # Import the calstate before BPFLAG
-        LOG.info('Restoring back-up of calibration state.')
-        inputs.context.callibrary.import_state(calstate_backup_name)
+        # Restore the "pre-bandpassflag" backup of the flagging state.
+        LOG.info('Restoring back-up of "pre-bandpassflag" flagging state.')
+        task = casa_tasks.flagmanager(
+            vis=inputs.vis, mode='restore', versionname=flag_backup_name_prebpf)
+        self._executor.execute(task)
 
         if cafflags:
+            # Re-apply the newly found flags from correctedampflag.
+            LOG.info('Re-applying flags from correctedampflag.')
+            fsinputs = FlagdataSetter.Inputs(
+                context=inputs.context, vis=inputs.vis, table=inputs.vis,
+                inpfile=[])
+            fstask = FlagdataSetter(fsinputs)
+            fstask.flags_to_set(cafflags)
+            fsresult = self._executor.execute(fstask)
+
+            # Import the calstate before BPFLAG
+            LOG.info('Restoring back-up of calibration state.')
+            inputs.context.callibrary.import_state(calstate_backup_name)
+
             # If flags were found in the bandpass calibrator,
             # recompute the phase-up and bandpass calibration table.
             LOG.info('Creating final phased-up bandpass calibration.')
@@ -244,9 +276,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             bpresult.final[0].calfrom[0] = self._copy_calfrom_with_gaintable(
                 bpresult.final[0].calfrom[0], fn_bp_final)
 
-        # TODO: decide what to add to result.
-        #  - plots
-        #  - store both initial and final bpresult?
+        # TODO: add plots to result
 
         # Store bandpass task result.
         result.bpresult = bpresult
@@ -268,7 +298,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                                   caltype=old_calfrom.caltype,
                                   calwt=old_calfrom.calwt)
 
-    def create_plots(self, prefix, type):
+    def create_plots(self, prefix, plottype):
 
         # Initialize output.
         plots = collections.defaultdict(list)
@@ -294,7 +324,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 'showgui': False,
                 'clearplots': True,
                 'avgbaseline': False,
-                'ydatacolumn': type,
+                'ydatacolumn': plottype,
                 'intent': 'CALIBRATE_BANDPASS#ON_SOURCE',
                 'spw': spw,
                 'correlation': 'XX,YY',
@@ -326,7 +356,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                 'showgui': False,
                 'clearplots': True,
                 'avgbaseline': False,
-                'ydatacolumn': type,
+                'ydatacolumn': plottype,
                 'intent': 'CALIBRATE_BANDPASS#ON_SOURCE',
                 'spw': spw,
                 'correlation': 'XX,YY',

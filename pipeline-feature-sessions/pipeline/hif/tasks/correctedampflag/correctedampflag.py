@@ -407,9 +407,9 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
                                     # Get a list of antennas involved in baseline
                                     # scans matching the timestamp.
-                                    ants_in_timestamp = np.concatenate(
+                                    ants_in_timestamp = list(np.concatenate(
                                         [ant1_sel[id_highsig][id_scans_with_timestamp],
-                                         ant2_sel[id_highsig][id_scans_with_timestamp]])
+                                         ant2_sel[id_highsig][id_scans_with_timestamp]]))
 
                                     # Identify the antenna most commonly involved in
                                     # outlier baseline scans.
@@ -543,7 +543,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         # Identify "bad antennas" as those antennas involved in a number of
                         # "bad baselines" that equals-or-exceeds the fraction threshold
                         # of all baselines that this antenna is part of.
-                        bad_ants = np.where(ant_in_bad_bl_count >= tmbl_scaled * (nants-1))[0]
+                        bad_ants = [ant for ant, count in enumerate(ant_in_bad_bl_count)
+                                    if count >= tmbl_scaled * (nants-1)]
 
                         # Create flagging command for each identified bad antenna.
                         for bad_ant in bad_ants:
@@ -563,7 +564,7 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         # and setting the minimum fraction to 1, such that a
                         # baseline with 100% outlier timestamps will get flagged
                         # (even if dynamic threshold exceeded beyond 1.0).
-                            tmint_relaxed = np.min(
+                        tmint_relaxed = np.min(
                             [1.0,
                              inputs.tmint * inputs.relaxed_factor])
 
