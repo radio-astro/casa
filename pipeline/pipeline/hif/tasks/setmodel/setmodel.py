@@ -150,6 +150,8 @@ class SetModels(basetask.StandardTaskTemplate):
             refresults = self._do_setjy(
                 reference_fields, reference_intents, reffile=self.inputs.reffile,
                 normfluxes=False, scalebychan=self.inputs.scalebychan)
+            # Add measurements to the results object
+            result.measurements.update(copy.deepcopy(refresults.measurements))
 
         # Set transfer calibrator models.
         #    These models will always be assigned the lookup reference frequency,
@@ -163,11 +165,8 @@ class SetModels(basetask.StandardTaskTemplate):
             transresults = self._do_setjy(
                 transfer_fields, transfer_intents, reffile=self.inputs.reffile,
                 normfluxes=self.inputs.normfluxes, scalebychan=self.inputs.scalebychan)
-
-        # Construct the results object
-        measurements = copy.deepcopy(refresults.measurements)
-        measurements.update(copy.deepcopy(transresults.measurements))
-        result.measurements = measurements
+            # Add measurements to the results object
+            result.measurements.update(copy.deepcopy(transresults.measurements))
 
         return result
 
