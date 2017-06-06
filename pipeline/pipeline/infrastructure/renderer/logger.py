@@ -269,7 +269,7 @@ class Selector(object):
 
 class Plot(object):
     def __init__(self, filename, x_axis='Unknown', y_axis='Unknown', 
-                 field=None, parameters={}, qa_score=None, command=None):
+                 field=None, parameters=None, qa_score=None, command=None):
         """
         Plot(filename, x_axis, y_axis, field, parameters)
 
@@ -280,6 +280,9 @@ class Plot(object):
         parameters - a dictionary of parameters, eg. { 'ant' : 1, 'spw' : 2 }. These
             parameters should be known to the logging.Parameters class.
         """
+        if parameters is None:
+            parameters = {}
+
         self.basename = os.path.basename(filename)
         self.abspath = os.path.abspath(filename)
         self.field = field

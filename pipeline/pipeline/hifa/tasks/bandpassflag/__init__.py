@@ -8,6 +8,10 @@ from . import resultobjects
 from . import renderer
 from . import qa
 
+__all__ = [
+    'Bandpassflag'
+]
+
 pipelineqa.registry.add_handler(qa.BandpassflagQAHandler())
 pipelineqa.registry.add_handler(qa.BandpassflagListQAHandler())
 qaadapter.registry.register_to_calibration_topic(resultobjects.BandpassflagResults)

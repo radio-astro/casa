@@ -12,6 +12,16 @@ def percent_flagged(flagsummary):
         return 'N/A'
     else:
         return '%0.1f%%' % (100.0 * flagged / total)
+
+_types = {
+    'raw': 'Raw data',
+    'before': 'Corrected data before flagging',
+    'after': 'Corrected data after flagging'
+}
+
+def plot_type(plot):
+    return _types[plot.parameters['type']]
+
 %>
 
 <%
@@ -24,8 +34,31 @@ def num_lines(relpath):
 		return 'N/A'
 %>
 
-
 <%inherit file="t2-4m_details-base.mako"/>
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+<script>
+$(document).ready(function(){
+    $(".fancybox").fancybox({
+        type: 'image',
+        prevEffect: 'none',
+        nextEffect: 'none',
+        loop: false,
+        helpers: {
+            title: {
+                type: 'outside'
+            },
+            thumbs: {
+                width: 50,
+                height: 50,
+            }
+        },
+    	beforeShow : function() {
+        	this.title = $(this.element).attr('title');
+       	},
+    });
+});
+</script>
+
 <%block name="header" />
 
 <%block name="title">Bandpass Calibration and Flagging</%block>
@@ -346,5 +379,90 @@ def num_lines(relpath):
         % endif
 
     % endfor
-
 % endif
+
+
+<%self:plot_group plot_dict="${time_plots}"
+				  url_fn="${lambda x: 'junk'}"
+                  rel_fn="${lambda plot: 'amp_vs_time_%s_%s' % (plot.parameters['vis'], plot.parameters['spw'])}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+				  title_id="amp_vs_time">
+
+	<%def name="title()">
+		Amplitude vs time
+	</%def>
+
+	<%def name="preamble()">
+		<p>These plots show amplitude vs time for three cases: 1, the raw, uncorrected data; 2, the corrected
+            data column before application of any flags; and 3, where flagging was applied, the corrected data
+            after application of flags.</p>
+
+		<p>Data are plotted for all antennas and correlations, with different
+		correlations shown in different colours.</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show amplitude vs time for spw ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		${plot_type(plot)}<br>
+		${plot.parameters['vis']}<br>
+		Spw ${plot.parameters['spw']}<br>
+		Intents: ${utils.commafy([plot.parameters['intent']], False)}
+	</%def>
+
+    <%def name="caption_title(plot)">
+		Spectral Window ${plot.parameters['spw']}<br>
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		Intents: ${utils.commafy([plot.parameters['intent']], False)}
+	</%def>
+
+    <%def name="caption_text(plot, ptype)">
+		${plot_type(plot)}.
+	</%def>
+
+</%self:plot_group>
+
+
+<%self:plot_group plot_dict="${uvdist_plots}"
+				  url_fn="${lambda x: 'junk'}"
+                  rel_fn="${lambda plot: 'amp_vs_uvdist_%s_%s' % (plot.parameters['vis'], plot.parameters['spw'])}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}"
+				  title_id="amp_vs_uvdist">
+
+	<%def name="title()">
+		Amplitude vs UV distance
+	</%def>
+
+	<%def name="preamble()">
+		<p>These plots show amplitude vs UV distance for three cases: 1, the raw, uncorrected data; 2, the corrected
+            data column before application of any flags; and 3, where flagging was applied, the corrected data
+            after application of flags.</p>
+
+		<p>Data are plotted for all antennas and correlations, with different
+		correlations shown in different colours.</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show amplitude vs UV distance for spw ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		${plot_type(plot)}<br>
+		${plot.parameters['vis']}<br>
+		Spw ${plot.parameters['spw']}<br>
+		Intents: ${utils.commafy([plot.parameters['intent']], False)}
+	</%def>
+
+    <%def name="caption_title(plot)">
+		Spectral Window ${plot.parameters['spw']}<br>
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		Intents: ${utils.commafy([plot.parameters['intent']], False)}
+	</%def>
+
+    <%def name="caption_text(plot, ptype)">
+		${plot_type(plot)}.
+	</%def>
+
+</%self:plot_group>

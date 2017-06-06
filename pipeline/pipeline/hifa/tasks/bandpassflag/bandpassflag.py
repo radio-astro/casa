@@ -1,13 +1,11 @@
 from __future__ import absolute_import
-
-import collections
-import os
+import functools
 import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.displays.applycal as applycal_displays
 import pipeline.infrastructure.utils as utils
 from pipeline.h.heuristics import fieldnames as fieldnames
 from pipeline.h.tasks.flagging.flagdatasetter import FlagdataSetter
@@ -17,6 +15,13 @@ from pipeline.hif.tasks import gaincal
 from pipeline.hifa.tasks import bandpass
 from pipeline.infrastructure import casa_tasks
 from .resultobjects import BandpassflagResults
+
+__all__ = [
+    'BandpassflagInputs',
+    'BandpassflagResults',
+    'Bandpassflag'
+]
+
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -101,6 +106,15 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         result.vis = inputs.vis
         result.plots = dict()
 
+        # create a shortcut to the plotting function that pre-supplies the inputs and context
+        plot_fn = functools.partial(create_plots, inputs, inputs.context)
+
+        # Create back-up of flags.
+        LOG.info('Creating back-up of flagging state')
+        flag_backup_name = 'before_bpflag'
+        task = casa_tasks.flagmanager(vis=inputs.vis, mode='save', versionname=flag_backup_name)
+        self._executor.execute(task)
+
         # Export the current calstate.
         LOG.info('Creating back-up of calibration state')
         calstate_backup_name = 'before_bpflag.calstate'
@@ -129,9 +143,9 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             vis=inputs.vis, mode='save', versionname=flag_backup_name_after_precal)
         self._executor.execute(task)
 
-        # Make "pre-calibrated" plots for the weblog
-        LOG.info('Creating "pre-calibrated" plots')
-        result.plots['raw'] = self.create_plots('raw', 'data')
+        # Make "before calibration" plots for the weblog
+        LOG.info('Creating "before calibration" plots')
+        result.plots['raw'] = plot_fn('data', suffix='raw')
 
         # Do standard phaseup and bandpass calibration.
         LOG.info('Creating initial phased-up bandpass calibration.')
@@ -192,7 +206,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
         # Make "after calibration, before flagging" plots for the weblog
         LOG.info('Creating "after calibration, before flagging" plots')
-        result.plots['before'] = self.create_plots('before', 'corrected')
+        result.plots['before'] = plot_fn('corrected', suffix='before')
 
         # Find amplitude outliers and flag data
         LOG.info('Running correctedampflag to identify outliers to flag.')
@@ -212,7 +226,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         cafflags = cafresult.flagcmds()
         if cafflags:
             LOG.info('Creating "after calibration, after flagging" plots')
-            result.plots['after'] = self.create_plots('after', 'corrected')
+            result.plots['after'] = plot_fn('corrected', suffix='after')
 
         # Restore the "pre-bandpassflag" backup of the flagging state.
         LOG.info('Restoring back-up of "pre-bandpassflag" flagging state.')
@@ -276,8 +290,6 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             bpresult.final[0].calfrom[0] = self._copy_calfrom_with_gaintable(
                 bpresult.final[0].calfrom[0], fn_bp_final)
 
-        # TODO: add plots to result
-
         # Store bandpass task result.
         result.bpresult = bpresult
 
@@ -298,79 +310,49 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                                   caltype=old_calfrom.caltype,
                                   calwt=old_calfrom.calwt)
 
-    def create_plots(self, prefix, plottype):
 
-        # Initialize output.
-        plots = collections.defaultdict(list)
+def create_plots(inputs, context, column, suffix=''):
+    """
+    Return amplitude vs time and amplitude vs UV distance plots for the given
+    data column.
 
-        # Exit early if weblog generation has been disabled,
-        # returning empty plot dictionary.
-        if basetask.DISABLE_WEBLOG:
-            return plots
+    :param inputs: pipeline inputs
+    :param context: pipeline context
+    :param column: MS column to plot
+    :param suffix: optional component to add to the plot filenames
+    :return: dict of (x axis type => str, [plots,...])
+    """
+    # Exit early if weblog generation has been disabled
+    if basetask.DISABLE_WEBLOG:
+        return [], []
 
-        for spw in self.inputs.spw.split(','):
-            title = 'BANDPASS-amp_vs_uvdist_' + prefix + '_spw' + spw
-            plotfile = os.path.basename(self.inputs.vis)+'-'+title+'.png'
-            task_args = {
-                'vis': self.inputs.vis,
-                'xaxis': 'uvdist',
-                'yaxis': 'amp',
-                'field': '',
-                'title': title,
-                'plotfile': plotfile,
-                'plotrange': [0, 0, 0, 0],
-                'avgscan': False,
-                'avgchannel': '9000',
-                'showgui': False,
-                'clearplots': True,
-                'avgbaseline': False,
-                'ydatacolumn': plottype,
-                'intent': 'CALIBRATE_BANDPASS#ON_SOURCE',
-                'spw': spw,
-                'correlation': 'XX,YY',
-                'overwrite': True,
-                'coloraxis': 'corr'}
+    calto = callibrary.CalTo(vis=inputs.vis, spw=inputs.spw)
+    output_dir = context.output_dir
 
-            task = casa_tasks.plotms(**task_args)
+    amp_uvdist_plots = AmpVsXChart('uvdist', column, context, output_dir, calto, suffix=suffix).plot()
+    amp_time_plots = AmpVsXChart('time', column, context, output_dir, calto, suffix=suffix).plot()
 
-            if not os.path.exists(plotfile):
-                self._executor.execute(task)
+    return {'uvdist': amp_uvdist_plots, 'time': amp_time_plots}
 
-            plots['uvdist'].append(
-                logger.Plot(
-                    plotfile, x_axis='UV Dist', y_axis='Amp',
-                    parameters={'vis', self.inputs.vis}, command=str(task)))
 
-            title = 'BANDPASS-amp_vs_time_' + prefix + '_spw' + spw
-            plotfile = os.path.basename(self.inputs.vis)+'-'+title+'.png'
-            task_args = {
-                'vis': self.inputs.vis,
-                'xaxis': 'time',
-                'yaxis': 'amp',
-                'field': '',
-                'title': title,
-                'plotfile': plotfile,
-                'plotrange': [0, 0, 0, 0],
-                'avgscan': False,
-                'avgchannel': '9000',
-                'showgui': False,
-                'clearplots': True,
-                'avgbaseline': False,
-                'ydatacolumn': plottype,
-                'intent': 'CALIBRATE_BANDPASS#ON_SOURCE',
-                'spw': spw,
-                'correlation': 'XX,YY',
-                'overwrite': True,
-                'coloraxis': 'corr'}
+class AmpVsXChart(applycal_displays.SpwSummaryChart):
+    """
+    Plotting class that creates an amplitude vs X plot for each spw, where X
+    is given as a constructor argument.
+    """
+    def __init__(self, xaxis, ydatacolumn, context, output_dir, calto, **overrides):
+        plot_args = {
+            'ydatacolumn': ydatacolumn,
+            'avgtime': '',
+            'avgscan': False,
+            'avgbaseline': False,
+            'avgchannel': '9000',
+            'coloraxis': 'corr',
+            'correlation': 'XX,YY',
+            'overwrite': True,
+            'plotrange': [0, 0, 0, 0]
+        }
+        plot_args.update(**overrides)
 
-            task = casa_tasks.plotms(**task_args)
-
-            if not os.path.exists(plotfile):
-                self._executor.execute(task)
-
-            plots['time'].append(
-                logger.Plot(
-                    plotfile, x_axis='Time', y_axis='Amp',
-                    parameters={'vis', self.inputs.vis}, command=str(task)))
-
-        return plots
+        super(AmpVsXChart, self).__init__(context, output_dir, calto, xaxis=xaxis, yaxis='amp', intent='BANDPASS',
+                                          **plot_args)
