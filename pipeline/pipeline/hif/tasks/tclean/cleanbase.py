@@ -224,6 +224,8 @@ class CleanBase(basetask.StandardTaskTemplate):
             inputs.imagename, inputs.stokes, iter)
         flux_name = '%s.%s.iter%s.pb' % (
             inputs.imagename, inputs.stokes, iter)
+        mask_name = '%s.%s.iter%s.mask' % (
+            inputs.imagename, inputs.stokes, iter)
 
         #if (inputs.specmode == 'cube'):
             # Estimate memory usage and adjust chanchunks parameter to avoid
@@ -303,8 +305,9 @@ class CleanBase(basetask.StandardTaskTemplate):
                     if key in ['sidelobethreshold', 'noisethreshold', 'lownoisethreshold', 'minbeamfrac']:
                         tclean_job_parameters[key] = hm_autotest_params[key]
         else:
-            tclean_job_parameters['usemask'] = 'user'
-            tclean_job_parameters['mask'] = inputs.mask
+            if (inputs.hm_masking != 'none') and (inputs.mask != ''):
+                tclean_job_parameters['usemask'] = 'user'
+                tclean_job_parameters['mask'] = inputs.mask
 
         # Show nterms parameter only if it is used.
         if (result.multiterm):
@@ -431,7 +434,12 @@ class CleanBase(basetask.StandardTaskTemplate):
         if os.path.exists(inputs.mask):
             set_miscinfo(name=inputs.mask, spw=inputs.spw, field=inputs.field,
                          type='cleanmask', iter=iter)
-        result.set_cleanmask(iter=iter, image=inputs.mask)
+            result.set_cleanmask(iter=iter, image=inputs.mask)
+        elif os.path.exists(mask_name):
+            # Use mask made by tclean
+            set_miscinfo(name=mask_name, spw=inputs.spw, field=inputs.field,
+                         type='cleanmask', iter=iter)
+            result.set_cleanmask(iter=iter, image=mask_name)
 
         # Keep threshold and sensitivity for QA and weblog
         result.set_threshold(inputs.threshold)
