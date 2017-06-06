@@ -65,7 +65,10 @@ def result_finaliser(method):
     def finalise_pipeline_result(self, *args, **kw):
         result = method(self, *args, **kw)
 
-        if result is not None:
+        if isinstance(result, ResultsList) and len(result) == 0:
+            return result
+
+        elif result is not None:
             inputs = self.inputs
             result.inputs = inputs.as_dict()
             result.stage_number = inputs.context.task_counter
@@ -204,7 +207,7 @@ def _record_constructor_args(func, *args, **kwargs):
     # this means we have to take the basename of the vis argument for the
     # importdata calls
     if '_importdata' in casa_tasks[0]:
-        if remapped.has_key('vis'):
+        if 'vis' in remapped:
             key = 'vis'
         else:
             key = 'infiles'

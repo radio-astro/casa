@@ -6,6 +6,7 @@ Created on 8 Sep 2014
 import atexit
 import fnmatch
 import os
+import pkg_resources
 import shutil
 import tempfile
 
@@ -35,9 +36,8 @@ def _get_template_lookup():
     atexit.register(lambda: shutil.rmtree(tmpdir,
                                           ignore_errors=True))
 
-    templates_path = pipeline.infrastructure.renderer.templates.__file__
-    _templates_dir = os.path.dirname(templates_path)
-    lookup = mako.lookup.TemplateLookup(directories=[_templates_dir],
+    templates_path = pkg_resources.resource_filename(pipeline.infrastructure.renderer.templates.__name__, '')
+    lookup = mako.lookup.TemplateLookup(directories=[templates_path],
                                         module_directory=tmpdir)
     return lookup
 TEMPLATE_LOOKUP = _get_template_lookup()

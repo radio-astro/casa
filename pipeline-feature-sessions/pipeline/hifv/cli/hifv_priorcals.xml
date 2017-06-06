@@ -19,6 +19,11 @@
 	<value type="bool">False</value>
     </param>
 
+    <param type="any" name="swpow_spw" subparam="true">
+        <description>Spectral-window/frequency/channel: '' ==&gt; all, spw="0:17~19"</description>
+        <any type="variant" limittypes="string stringArray" />
+        <value type="string" />
+    </param>
 
 
     <param type="string" name="pipelinemode">

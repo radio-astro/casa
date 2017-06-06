@@ -4,10 +4,15 @@ import pipeline.h.cli.utils as utils
 
 
 def hifa_bandpassflag(
-        vis=None, field=None, spw=None, antnegsig=None,
-        antpossig=None, tmantint=None,
-        tmint=None, tmbl=None, antblnegsig=None,
-        antblpossig=None, relaxed_factor=None,
+        vis=None, caltable=None,
+        intent=None, field=None, spw=None, antenna=None,
+        hm_phaseup=None, phaseupsolint=None, phaseupbw=None,
+        phaseupsnr=None, phaseupnsols=None,
+        hm_bandpass=None, solint=None, maxchannels=None, evenbpints=None,
+        bpsnr=None, bpnsols=None, combine=None, refant=None, minblperant=None,
+        minsnr=None, solnorm=None,
+        antnegsig=None, antpossig=None, tmantint=None, tmint=None, tmbl=None,
+        antblnegsig=None, antblpossig=None, relaxed_factor=None,
         pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

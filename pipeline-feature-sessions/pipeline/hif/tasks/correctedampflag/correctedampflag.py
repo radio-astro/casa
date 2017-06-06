@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import collections
+import copy
 import os
 
 import numpy as np
@@ -30,7 +31,6 @@ class CorrectedampflagInputs(basetask.StandardInputs):
         if isinstance(self.vis, list):
             return self._handle_multiple_vis('intent')
 
-        # FIXME: change to *BANDPASS* to ensure it can be used in flagging commands?
         if not self._intent:
             self._intent = 'BANDPASS'
 
@@ -215,6 +215,20 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         antenna_names, antenna_ids = \
             commonhelpermethods.get_antenna_names(ms)
         nants = len(antenna_names)
+
+        # Create an antenna id-to-name translation dictionary
+        antenna_id_to_name = {ant.id: ant.name
+                              for ant in ms.antennas
+                              if ant.name.strip()}
+
+        # Check that each antenna ID is represented by a unique non-empty
+        # name, by testing that the unique set of antenna names is same
+        # length as list of IDs. If not, then unset the translation
+        # dictionary to revert back to flagging by ID
+        if len(set(antenna_id_to_name.values())) != len(ms.antennas):
+            LOG.info('No unique name available for each antenna ID:'
+                     ' flagging by antenna ID instead of by name.')
+            antenna_id_to_name = None
 
         # Get number of scans in MS for this intent.
         nscans = len(ms.get_scans(scan_intent=inputs.intent))
@@ -416,7 +430,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                                 pol=icorr,
                                                 time=timestamp,
                                                 field=fieldid,
-                                                reason='bad antenna'))
+                                                reason='bad antenna',
+                                                antenna_id_to_name=antenna_id_to_name))
                                     # If there was not a single antenna that was involved
                                     # in more than the threshold fraction of outlier baseline
                                     # scans, then continue checking whether a significant fraction of
@@ -540,7 +555,8 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                     intent=utils.to_CASA_intent(ms, inputs.intent),
                                     pol=icorr,
                                     field=fieldid,
-                                    reason='bad antenna'))
+                                    reason='bad antenna',
+                                    antenna_id_to_name=antenna_id_to_name))
 
                         # Compute final outlier timestamps per baseline threshold,
                         # forcibly always using the relaxed threshold scale factor,
@@ -573,33 +589,41 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                         intent=utils.to_CASA_intent(ms, inputs.intent),
                                         pol=icorr,
                                         field=fieldid,
-                                        reason='bad baseline'))
+                                        reason='bad baseline',
+                                        antenna_id_to_name=antenna_id_to_name))
 
         # TODO: add consolidation of flagging commands?
 
-        # Apply newly found flags.
+        # Initialize flagging summaries.
         stats_before, stats_after = {}, {}
+
+        # Create a list of flagdata commands, always add the "before" summary.
+        allflagcmds = ["mode='summary' name='before'"]
+
+        # If new flags were found, apply these as part of the flagdata call,
+        # and add an "after" summary.
         if newflags:
             LOG.warning('Evaluation of {0} raised {1} flagging '
                         'command(s)'.format(os.path.basename(inputs.vis),
                                             len(newflags)))
 
             LOG.info('Applying newly found flags.')
-
-            # Add before/after summary:
-            allflagcmds = ["mode='summary' name='before'"]
             allflagcmds.extend(newflags)
             allflagcmds.append("mode='summary' name='after'")
+        else:
+            LOG.info('Evaluation of {0} raised 0 flagging commands'.format(
+                os.path.basename(inputs.vis)))
 
-            # Run flag setting.
-            fsinputs = FlagdataSetter.Inputs(
-                context=inputs.context, vis=inputs.vis, table=inputs.vis,
-                inpfile=[])
-            fstask = FlagdataSetter(fsinputs)
-            fstask.flags_to_set(allflagcmds)
-            fsresult = self._executor.execute(fstask)
+        # Run flagdata to create summaries and set flags.
+        fsinputs = FlagdataSetter.Inputs(
+            context=inputs.context, vis=inputs.vis, table=inputs.vis,
+            inpfile=[])
+        fstask = FlagdataSetter(fsinputs)
+        fstask.flags_to_set(allflagcmds)
+        fsresult = self._executor.execute(fstask)
 
-            # Extract "before" and/or "after" summary
+        # Extract "before" and/or "after" summary
+        if all(['report' in k for k in fsresult.results[0].keys()]):
             # Go through dictionary of reports...
             for report in fsresult.results[0].keys():
                 if fsresult.results[0][report]['name'] == 'before':
@@ -607,8 +631,16 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                 if fsresult.results[0][report]['name'] == 'after':
                     stats_after = fsresult.results[0][report]
         else:
-            LOG.info('Evaluation of {0} raised 0 flagging commands'.format(
-                os.path.basename(inputs.vis)))
+            # Go through single report.
+            if fsresult.results[0]['name'] == 'before':
+                stats_before = fsresult.results[0]
+            if fsresult.results[0]['name'] == 'after':
+                stats_after = fsresult.results[0]
+
+        # If no new flags were found, then no "after" summary was created,
+        # so instead make a copy of the "before" summary.
+        if not newflags:
+            stats_after = copy.deepcopy(stats_before)
 
         # Store newly identified flags in result.
         result.addflags(newflags)

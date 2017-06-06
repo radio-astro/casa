@@ -8,7 +8,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class SwpowcalResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=[], pool=[], preceding=[], spw=None):
         super(SwpowcalResults, self).__init__()
         
         self.vis = None
@@ -16,6 +16,10 @@ class SwpowcalResults(basetask.Results):
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+        if spw is None:
+            self.spw = ''
+        else:
+            self.spw = spw
 
     def merge_with_context(self, context):
         if not self.final:

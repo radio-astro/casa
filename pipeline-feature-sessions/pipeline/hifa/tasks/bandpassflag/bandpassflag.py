@@ -6,7 +6,10 @@ import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.utils as utils
+from pipeline.h.heuristics import fieldnames as fieldnames
 from pipeline.hif.tasks import applycal
 from pipeline.hif.tasks import correctedampflag
 from pipeline.hif.tasks import gaincal
@@ -17,34 +20,54 @@ from .resultobjects import BandpassflagResults
 LOG = infrastructure.get_logger(__name__)
 
 
-class BandpassflagInputs(basetask.StandardInputs):
+class BandpassflagInputs(bandpass.ALMAPhcorBandpass.Inputs,
+                         correctedampflag.Correctedampflag.Inputs):
 
-    # FIXME: propagate more bandpass parameters
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, field=None,
-                 spw=None, refant=None, hm_phaseup=None, phaseupbw=None,
-                 phaseupsolint=None, phaseupsnr=None, phaseupnsols=None,
-                 hm_bandpass=None, solint=None, maxchannels=None,
-                 evenbpints=None, bpsnr=None, bpnsols=None, antnegsig=None,
-                 antpossig=None, tmantint=None, tmint=None, tmbl=None,
-                 antblnegsig=None, antblpossig=None, relaxed_factor=None):
-        self._init_properties(vars())
+    def __init__(self, context, output_dir=None, vis=None,
+                 intent=None, field=None, spw=None, **parameters):
+        bandpass.ALMAPhcorBandpass.Inputs.__init__(
+            self, context, output_dir=output_dir, vis=vis, intent=intent,
+            field=field, spw=spw, **parameters)
+        correctedampflag.Correctedampflag.Inputs.__init__(
+            self, context, output_dir=output_dir, vis=vis, intent=intent,
+            field=field, spw=spw, **parameters)
+
+    @property
+    def intent(self):
+        if isinstance(self.vis, list):
+            return self._handle_multiple_vis('intent')
+
+        if not self._intent:
+            self._intent = 'BANDPASS'
+
+        return self._intent
+
+    @intent.setter
+    def intent(self, value):
+        self._intent = value
 
     @property
     def field(self):
-        if self._field is not None:
+        if not callable(self._field):
             return self._field
 
         if isinstance(self.vis, list):
             return self._handle_multiple_vis('field')
 
-        # By default, return the fields corresponding to the BANDPASS intent.
-        fieldids = [str(field.id) for field in self.ms.fields
-                    if 'BANDPASS' in field.intents]
-        return ','.join(fieldids)
+        # this will give something like '0542+3243,0343+242'
+        intent_fields = self._field(self.ms, self.intent)
+
+        # run the answer through a set, just in case there are duplicates
+        fields = set()
+        fields.update(utils.safe_split(intent_fields))
+
+        return ','.join(fields)
 
     @field.setter
     def field(self, value):
+        if value is None:
+            value = fieldnames.IntentFieldnames()
         self._field = value
 
     @property
@@ -62,233 +85,6 @@ class BandpassflagInputs(basetask.StandardInputs):
     @spw.setter
     def spw(self, value):
         self._spw = value
-
-    # TODO: allow refant as parameter?
-
-    #
-    # Parameters for bandpass task.
-    #
-
-    @property
-    def hm_phaseup(self):
-        return self._hm_phaseup
-
-    @hm_phaseup.setter
-    def hm_phaseup(self, value):
-        if value is None:
-            value = 'snr'
-        self._hm_phaseup = value
-
-    @property
-    def phaseupbw(self):
-        return self._phaseupbw
-
-    @phaseupbw.setter
-    def phaseupbw(self, value):
-        if value is None:
-            value = ''
-        self._phaseupbw = value
-
-    @property
-    def phaseupsolint(self):
-        return self._phaseupsolint
-
-    @phaseupsolint.setter
-    def phaseupsolint(self, value):
-        if value is None:
-            value = 'int'
-        self._phaseupsolint = value
-
-    @property
-    def phaseupsnr(self):
-        return self._phaseupsnr
-
-    @phaseupsnr.setter
-    def phaseupsnr(self, value):
-        if value is None:
-            value = 20.0
-        self._phaseupsnr = value
-
-    @property
-    def phaseupnsols(self):
-        return self._phaseupnsols
-
-    @phaseupnsols.setter
-    def phaseupnsols(self, value):
-        if value is None:
-            value = 2
-        self._phaseupnsols = value
-
-    # Bandpass heuristics, options are 'fixed', 'smoothed', and 'snr'
-    @property
-    def hm_bandpass(self):
-        return self._hm_bandpass
-
-    @hm_bandpass.setter
-    def hm_bandpass(self, value):
-        if value is None:
-            value = 'snr'
-        self._hm_bandpass = value
-
-    @property
-    def solint(self):
-        return self._solint
-
-    @solint.setter
-    def solint(self, value):
-        if value is None:
-            value = 'inf'
-        self._solint = value
-
-    @property
-    def maxchannels(self):
-        return self._maxchannels
-
-    @maxchannels.setter
-    def maxchannels(self, value):
-        if value is None:
-            value = 240
-        self._maxchannels = value
-
-    @property
-    def evenbpints(self):
-        return self._evenbpints
-
-    @evenbpints.setter
-    def evenbpints(self, value):
-        if value is None:
-            value = True
-        self._evenbpints = value
-
-    @property
-    def bpsnr(self):
-        return self._bpsnr
-
-    @bpsnr.setter
-    def bpsnr(self, value):
-        if value is None:
-            value = 50.0
-        self._bpsnr = value
-
-    @property
-    def bpnsols(self):
-        return self._bpnsols
-
-    @bpnsols.setter
-    def bpnsols(self, value):
-        if value is None:
-            value = 8
-        self._bpnsols = value
-
-    #
-    # Parameters for correctedampflag task.
-    #
-
-    # Lower sigma threshold for identifying outliers as a result of bad
-    # antennas within individual timestamps; equivalent to:
-    # relaxationSigma
-    @property
-    def antnegsig(self):
-        return self._antnegsig
-
-    @antnegsig.setter
-    def antnegsig(self, value):
-        if value is None:
-            value = 8.0
-        self._antnegsig = value
-
-    # Upper sigma threshold for identifying outliers as a result of bad
-    # antennas within individual timestamps; equivalent to:
-    # positiveSigmaAntennaBased
-    @property
-    def antpossig(self):
-        return self._antpossig
-
-    @antpossig.setter
-    def antpossig(self, value):
-        if value is None:
-            value = 5.8
-        self._antpossig = value
-
-    # Threshold for maximum fraction of timestamps that are allowed
-    # to contain outliers; equivalent to:
-    # checkForAntennaBasedBadIntegrations
-    @property
-    def tmantint(self):
-        return self._tmantint
-
-    @tmantint.setter
-    def tmantint(self, value):
-        if value is None:
-            value = 0.06
-        self._tmantint = value
-
-    # Initial threshold for maximum fraction of "outlier timestamps" over
-    # "total timestamps" that a baseline may be a part of; equivalent to:
-    # tooManyIntegrationsFraction
-    @property
-    def tmint(self):
-        return self._tmint
-
-    @tmint.setter
-    def tmint(self, value):
-        if value is None:
-            value = 0.09
-        self._tmint = value
-
-    # Initial threshold for maximum fraction of "bad baselines" over "all
-    # timestamps" that an antenna may be a part of; equivalent to:
-    # tooManyBaselinesFraction
-    @property
-    def tmbl(self):
-        return self._tmbl
-
-    @tmbl.setter
-    def tmbl(self, value):
-        if value is None:
-            value = 0.18
-        self._tmbl = value
-
-    # Lower sigma threshold for identifying outliers as a result of "bad
-    # baselines" and/or "bad antennas" within baselines (across all
-    # timestamps); equivalent to:
-    # catchNegativeOutliers['scalardiff']
-    @property
-    def antblnegsig(self):
-        return self._antblnegsig
-
-    @antblnegsig.setter
-    def antblnegsig(self, value):
-        if value is None:
-            value = 3.7
-        self._antblnegsig = value
-
-    # Upper sigma threshold for identifying outliers as a result of "bad
-    # baselines" and/or "bad antennas" within baselines (across all
-    # timestamps); equivalent to:
-    # flag_nsigma['scalardiff']
-    @property
-    def antblpossig(self):
-        return self._antblpossig
-
-    @antblpossig.setter
-    def antblpossig(self, value):
-        if value is None:
-            value = 3.0
-        self._antblpossig = value
-
-    # Relaxed value to set the threshold scaling factor to under certain
-    # conditions; equivalent to:
-    # relaxationFactor
-    @property
-    def relaxed_factor(self):
-        return self._relaxed_factor
-
-    @relaxed_factor.setter
-    def relaxed_factor(self, value):
-        if value is None:
-            value = 2.0
-        self._relaxed_factor = value
 
 
 class Bandpassflag(basetask.StandardTaskTemplate):
@@ -323,13 +119,17 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # Do standard phaseup and bandpass calibration.
         LOG.info('Creating initial phased-up bandpass calibration.')
         bpinputs = bandpass.ALMAPhcorBandpass.Inputs(
-            context=inputs.context, vis=inputs.vis,
-            hm_phaseup=inputs.hm_phaseup, phaseupbw=inputs.phaseupbw,
-            phaseupsnr=inputs.phaseupsnr, phaseupnsols=inputs.phaseupnsols,
+            context=inputs.context, vis=inputs.vis, caltable=inputs.caltable,
+            field=inputs.field, intent=inputs.intent, spw=inputs.spw,
+            antenna=inputs.antenna, hm_phaseup=inputs.hm_phaseup,
+            phaseupbw=inputs.phaseupbw, phaseupsnr=inputs.phaseupsnr,
+            phaseupnsols=inputs.phaseupnsols,
             phaseupsolint=inputs.phaseupsolint, hm_bandpass=inputs.hm_bandpass,
             solint=inputs.solint, maxchannels=inputs.maxchannels,
             evenbpints=inputs.evenbpints, bpsnr=inputs.bpsnr,
-            bpnsols=inputs.bpnsols)
+            bpnsols=inputs.bpnsols, combine=inputs.combine,
+            refant=inputs.refant, solnorm=inputs.solnorm,
+            minblperant=inputs.minblperant, minsnr=inputs.minsnr)
         # Modify output table filename to append "prelim".
         if bpinputs.caltable.endswith('.tbl'):
             bpinputs.caltable = bpinputs.caltable[:-4] + '.prelim.tbl'
@@ -345,14 +145,12 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             for calapp in prev_result:
                 inputs.context.callibrary.add(calapp.calto, calapp.calfrom)
         # Accept the bandpass result to add the bandpass table to the callibrary.
-        # FIXME: is this ok to do, or should it just be a manual add of caltable to
-        # FIXME: callibrary? (does accept also cause QA to be created?)
         bpresult.accept(inputs.context)
 
         # Do amplitude solve on scan interval.
         LOG.info('Create amplitude gaincal table.')
         gacalinputs = gaincal.GTypeGaincal.Inputs(
-            context=inputs.context, vis=inputs.vis, intent='BANDPASS',
+            context=inputs.context, vis=inputs.vis, intent=inputs.intent,
             gaintype='T', antenna='', calmode='a', solint='inf')
         gacaltask = gaincal.GTypeGaincal(gacalinputs)
         gacalresult = self._executor.execute(gacaltask, merge=True)
@@ -363,8 +161,8 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         try:
             # Apply the calibrations.
             acinputs = applycal.IFApplycalInputs(
-                context=inputs.context, vis=inputs.vis, field='',
-                intent='BANDPASS', flagsum=False, flagbackup=False)
+                context=inputs.context, vis=inputs.vis, field=inputs.field,
+                intent=inputs.intent, flagsum=False, flagbackup=False)
             actask = applycal.IFApplycal(acinputs)
             acresult = self._executor.execute(actask)
 
@@ -380,9 +178,9 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         result.plots['before'] = self.create_plots('before', 'corrected')
 
         # Find amplitude outliers and flag data
-        LOG.info('Run correctedampflag to identify outliers to flag.')
+        LOG.info('Running correctedampflag to identify outliers to flag.')
         cafinputs = correctedampflag.Correctedampflag.Inputs(
-            context=inputs.context, vis=inputs.vis, intent='*BANDPASS*',
+            context=inputs.context, vis=inputs.vis, intent=inputs.intent,
             field=inputs.field, spw=inputs.spw, antnegsig=inputs.antnegsig,
             antpossig=inputs.antpossig, tmantint=inputs.tmantint,
             tmint=inputs.tmint, tmbl=inputs.tmbl,
@@ -408,13 +206,17 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             # recompute the phase-up and bandpass calibration table.
             LOG.info('Creating final phased-up bandpass calibration.')
             bpinputs = bandpass.ALMAPhcorBandpass.Inputs(
-                context=inputs.context, vis=inputs.vis,
-                hm_phaseup=inputs.hm_phaseup, phaseupbw=inputs.phaseupbw,
-                phaseupsnr=inputs.phaseupsnr, phaseupnsols=inputs.phaseupnsols,
+                context=inputs.context, vis=inputs.vis, caltable=inputs.caltable,
+                field=inputs.field, intent=inputs.intent, spw=inputs.spw,
+                antenna=inputs.antenna, hm_phaseup=inputs.hm_phaseup,
+                phaseupbw=inputs.phaseupbw, phaseupsnr=inputs.phaseupsnr,
+                phaseupnsols=inputs.phaseupnsols,
                 phaseupsolint=inputs.phaseupsolint, hm_bandpass=inputs.hm_bandpass,
                 solint=inputs.solint, maxchannels=inputs.maxchannels,
                 evenbpints=inputs.evenbpints, bpsnr=inputs.bpsnr,
-                bpnsols=inputs.bpnsols)
+                bpnsols=inputs.bpnsols, combine=inputs.combine,
+                refant=inputs.refant, solnorm=inputs.solnorm,
+                minblperant=inputs.minblperant, minsnr=inputs.minsnr)
             # Modify output table filename to append "prelim".
             if bpinputs.caltable.endswith('.tbl'):
                 bpinputs.caltable = bpinputs.caltable[:-4] + '.final.tbl'
@@ -437,6 +239,11 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                      'phased-up bandpass table as final version: '
                      '{0}'.format(fn_bp_final))
 
+            # Update CalApplication in bandpass result with a new CalFrom
+            # that points to the final bp table.
+            bpresult.final[0].calfrom[0] = self._copy_calfrom_with_gaintable(
+                bpresult.final[0].calfrom[0], fn_bp_final)
+
         # TODO: decide what to add to result.
         #  - plots
         #  - store both initial and final bpresult?
@@ -451,6 +258,15 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         return result
+
+    @staticmethod
+    def _copy_calfrom_with_gaintable(old_calfrom, gaintable):
+        return callibrary.CalFrom(gaintable=gaintable,
+                                  gainfield=old_calfrom.gainfield,
+                                  interp=old_calfrom.interp,
+                                  spwmap=old_calfrom.spwmap,
+                                  caltype=old_calfrom.caltype,
+                                  calwt=old_calfrom.calwt)
 
     def create_plots(self, prefix, type):
 

@@ -15,13 +15,13 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.vdp as vdp
 import pipeline.infrastructure.sessionutils as sessionutils
 
-from pipeline.h.tasks import importdata
 from pipeline.hif.tasks import gaincal
 from pipeline.infrastructure import mpihelpers
-from ... import heuristics
 from pipeline.h.tasks.common import commonfluxresults
 from pipeline.hif.tasks.fluxscale import fluxscale
 from pipeline.hif.tasks.setmodel import setjy
+from . import fluxes
+from ... import heuristics
 
 __all__ = [
     'GcorFluxscale',
@@ -40,7 +40,7 @@ class GcorFluxscaleResults(commonfluxresults.FluxCalibrationResults):
                                                    measurements=measurements)
         self.applies_adopted = applies_adopted
 
-    def merge_with_context (self, context):
+    def merge_with_context(self, context):
         ms = context.observing_run.get_ms(self.vis)
         ms.derived_fluxes = self.measurements
 
@@ -81,6 +81,9 @@ class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
 
 class GcorFluxscale(basetask.StandardTaskTemplate):
     Inputs = GcorFluxscaleInputs
+
+    def __init__(self, inputs):
+        super(GcorFluxscale, self).__init__(inputs)
 
     def prepare(self, **parameters):
         inputs = self.inputs
@@ -247,18 +250,26 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             try:
                 fluxscale_result = self._do_fluxscale(caltable, refspwmap=refspwmap)
 
-                importdata.fluxes.export_flux_from_result(fluxscale_result, inputs.context, reffile)
+                # Determine fields ids for which a model spix should be
+                # set along with the derived flux. For now this is
+                # restricted to BANDPASS fields
+                fieldids_with_spix = [str(f.id) for f in inputs.ms.get_fields(task_arg=inputs.transfer,
+                                                                              intent='BANDPASS')]
 
-                # and finally, do a setjy, add its setjy_settings
+                # Store the results in a temporary file.
+                fluxes.export_flux_from_fit_result(fluxscale_result, inputs.context, reffile,
+                                                   fieldids_with_spix=fieldids_with_spix)
+
+                # Finally, do a setjy, add its setjy_settings
                 # to the main result
                 self._do_setjy(reffile=reffile, field=inputs.transfer)
 
-                # use the fluxscale measurements to get the uncertainties too.
+                # Use the fluxscale measurements to get the uncertainties too.
                 # This makes the (big) assumption that setjy executed exactly
                 # what we passed in as arguments
                 result.measurements.update(fluxscale_result.measurements)
 
-            except Exception, e:
+            except Exception:
                 # Something has gone wrong, return an empty result
                 LOG.error('Unable to complete flux scaling operation for MS %s' % (os.path.basename(inputs.vis)))
                 return result

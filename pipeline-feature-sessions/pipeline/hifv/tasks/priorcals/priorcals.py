@@ -33,7 +33,7 @@ LOG = infrastructure.get_logger(__name__)
 
 
 def correct_ant_posns (vis_name, print_offsets=False):
-    '''
+    """
     Given an input visibility MS name (vis_name), find the antenna
     position offsets that should be applied.  This application should
     be via the gencal task, using caltype='antpos'.
@@ -72,7 +72,7 @@ def correct_ant_posns (vis_name, print_offsets=False):
     bjb
     nrao
     spring 2012
-    '''
+    """
 
     MONTHS = [ 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
                'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC' ]
@@ -82,7 +82,7 @@ def correct_ant_posns (vis_name, print_offsets=False):
     # get start date+time of observation
     #
     with casatools.TableReader(vis_name+'/OBSERVATION') as table:
-        #observation = tb.open(vis_name+'/OBSERVATION')
+        # observation = tb.open(vis_name+'/OBSERVATION')
         time_range = table.getcol('TIME_RANGE')
 
     MJD_start_time = time_range[0][0] / 86400
@@ -179,23 +179,23 @@ def correct_ant_posns (vis_name, print_offsets=False):
                 ant_ind = ii
                 break
         if ((ant_ind == -1) or (ant_num_sta[6])):
-    # the antenna in this correction isn't in the observation, or is done, 
-    # so skip it
+            # the antenna in this correction isn't in the observation, or is done,
+            # so skip it
             pass
         ant_num_sta = ant_num_stas[ant_ind]
         if (moved_time):
-    # the antenna moved
+            # the antenna moved
             if (moved_time > obs_time):
-    # we are done considering this antenna
+                # we are done considering this antenna
                 ant_num_sta[6] = True
             else:
-    # otherwise, it moved, so the offsets should be reset
+                # otherwise, it moved, so the offsets should be reset
                 ant_num_sta[3] = 0.0
                 ant_num_sta[4] = 0.0
                 ant_num_sta[5] = 0.0
         if ((put_time > obs_time) and (not ant_num_sta[6]) and \
             (pad == ant_num_sta[2])):
-    # it's the right antenna/pad; add the offsets to those already accumulated
+            # it's the right antenna/pad; add the offsets to those already accumulated
             ant_num_sta[3] += Bx
             ant_num_sta[4] += By
             ant_num_sta[5] += Bz
@@ -221,7 +221,7 @@ def correct_ant_posns (vis_name, print_offsets=False):
 
 class PriorcalsInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None, tecmaps=None):
+    def __init__(self, context, vis=None, tecmaps=None, swpow_spw=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
@@ -238,6 +238,16 @@ class PriorcalsInputs(basetask.StandardInputs):
         else:
             value = False
         self._tecmaps = value
+
+    @property
+    def swpow_spw(self):
+        return self._swpow_spw
+
+    @swpow_spw.setter
+    def swpow_spw(self, value):
+        if value is None:
+            value = ''
+        self._swpow_spw = value
 
     def to_casa_args(self):
         raise NotImplementedError
@@ -269,7 +279,7 @@ class Priorcals(basetask.StandardTaskTemplate):
                                               tecmaps_result=tecmaps_result, sw_result=sw_result)
 
     def analyse(self, results):
-	    return results
+        return results
 
     def _do_gaincurves(self):
         """Run gaincurves task"""
@@ -295,7 +305,7 @@ class Priorcals(basetask.StandardTaskTemplate):
     def _do_swpowcal(self):
         """Run switched power task"""
 
-        inputs = Swpowcal.Inputs(self.inputs.context, output_dir='')
+        inputs = Swpowcal.Inputs(self.inputs.context, output_dir='', spw=self.inputs.swpow_spw)
         task = Swpowcal(inputs)
         return self._executor.execute(task)
 
@@ -333,7 +343,6 @@ class Priorcals(basetask.StandardTaskTemplate):
         task = TecMaps(inputs)
         return self._executor.execute(task)
 
-
     def _check_tropdelay(self, antpos_caltable):
 
         # Insert value if required for testing
@@ -350,7 +359,7 @@ class Priorcals(basetask.StandardTaskTemplate):
 
         # Detect EVLA 16B Trop Del Corr
         # (Silent if required keyword absent, or has value=0.0)
-        #antpostable = 'cal.antpos'
+        # antpostable = 'cal.antpos'
         trdelkw = 'VLATrDelCorr'
         with casatools.TableReader(antpos_caltable) as tb:
             if tb.keywordnames().count(trdelkw) == 1:

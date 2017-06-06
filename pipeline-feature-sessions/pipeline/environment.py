@@ -3,6 +3,7 @@ environment.py defines functions and variables related to the execution environm
 """
 import multiprocessing
 import os
+import pkg_resources
 import platform
 import re
 import string
@@ -99,9 +100,10 @@ def _pipeline_revision():
         # get SVN revision using svnversion as it gives information when the
         # directory has been modified
         args = ['svnversion', '.']
+
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, shell=True,
-                             cwd=os.path.dirname(__file__))
+                             cwd=pkg_resources.resource_filename(__name__, ''))
         (stdout, _) = p.communicate()
 
         if p.returncode is not 0:
@@ -115,7 +117,7 @@ def _pipeline_revision():
         myenv['LC_MESSAGES'] = 'en_US.UTF_8'
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, shell=True,
-                             cwd=os.path.dirname(__file__),
+                             cwd=pkg_resources.resource_filename(__name__, ''),
                              env=myenv)
         (stdout, _) = p.communicate()
 

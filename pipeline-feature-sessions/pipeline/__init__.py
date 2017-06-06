@@ -1,13 +1,11 @@
 from __future__ import absolute_import
-import inspect
 import imp
 import os
-import sys
+import pkg_resources
 import webbrowser
 
 from . import environment
 from . import infrastructure
-from . import recipes
 
 from . import h
 from . import hco
@@ -17,6 +15,7 @@ from . import hifv
 from . import hifa
 
 from .infrastructure import Pipeline, Context
+
 from .domain import measures
 from casa_stack_manip import stack_frame_find
 
@@ -62,27 +61,22 @@ def show_weblog(context):
     webbrowser.open(index_html)
 
 
-def initcli():
-    import importlib
-    LOG.info('Initializing cli...')
-    my_globals = stack_frame_find( )
-    for package in ['h', 'hif', 'hifa', 'hifv', 'hsd']:
-        my_package = 'pipeline.{package}.cli.{package}'.format(package=package)
-        try:
-            # buildmytasks outputs to packagename.py
-            my_module = importlib.import_module(my_package)
-        except ImportError:
-            LOG.info('No tasks found for package: {!s}'.format(package))
-        else:
-            # The byte-compiled .pyc file will be located if available.
-            # However, it is the originating .py file that needs to be executed
-            path = my_module.__file__
-            if path.endswith('.pyc'):
-                path = path[0:-1]
+def initcli() :
+    print "Initializing cli..."
+    mypath = pkg_resources.resource_filename(__name__, '')
+    hifpath = mypath+"/hif/cli/hif.py"
+    hpath = mypath+"/h/cli/h.py"
+    hsdpath = mypath+"/hsd/cli/hsd.py"
+    hifapath = mypath+"/hifa/cli/hifa.py"
+    hifvpath = mypath+"/hifv/cli/hifv.py"
+    myglobals = stack_frame_find()
 
-            execfile(path, my_globals)
-            LOG.info('Loaded CASA tasks from package: {!s}'.format(package))
-
+    execfile(hpath, myglobals)
+    execfile(hifpath, myglobals)
+    execfile(hsdpath, myglobals)
+    execfile(hifapath, myglobals)
+    execfile(hifvpath, myglobals)
+    #exec('import pipeline.infrastructure.executeppr', myglobals)
 
 revision = environment.pipeline_revision
 

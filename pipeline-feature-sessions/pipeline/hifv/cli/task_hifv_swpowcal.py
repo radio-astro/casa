@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hifv_swpowcal(vis=None, caltable=None, pipelinemode=None, dryrun=None, acceptresults=None):
+def hifv_swpowcal(vis=None, caltable=None, spw=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

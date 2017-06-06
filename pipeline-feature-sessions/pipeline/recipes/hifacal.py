@@ -32,6 +32,7 @@ from hifa_wvrgcalflag_cli import hifa_wvrgcalflag_cli as hifa_wvrgcalflag
 from hif_lowgainflag_cli import hif_lowgainflag_cli as hif_lowgainflag
 from hif_gainflag_cli import hif_gainflag_cli as hif_gainflag
 from hif_setjy_cli import hif_setjy_cli as hif_setjy
+from hif_setmodels_cli import hif_setmodels_cli as hif_setmodels
 # from hif_bandpass_cli import hif_bandpass_cli as hif_bandpass
 from hifa_bandpass_cli import hifa_bandpass_cli as hifa_bandpass
 from hif_bpflagchans_cli import hif_bpflagchans_cli as hif_bpflagchans
@@ -101,7 +102,7 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
         hif_gainflag(pipelinemode=pipelinemode)
     
         # Set the flux calibrator model
-        hif_setjy(pipelinemode=pipelinemode)
+        hif_setmodels(pipelinemode=pipelinemode)
     
         # Compute the bandpass calibration
         hifa_bandpass(pipelinemode=pipelinemode)
