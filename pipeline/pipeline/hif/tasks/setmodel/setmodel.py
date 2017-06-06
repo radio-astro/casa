@@ -136,38 +136,40 @@ class SetModels(basetask.StandardTaskTemplate):
 
     def prepare(self, **parameters):
 
-         # Initialize the result.
-         result = commonfluxresults.FluxCalibrationResults(vis=self.inputs.vis)
+        # Initialize the result.
+        result = commonfluxresults.FluxCalibrationResults(vis=self.inputs.vis)
 
-         # Set reference calibrator models.
-         #    These models will always be assigned the lookup reference frequency,
-         #    Stokes parameters, and spix if they are available. If not the 
-         #    Setjy defaults (spw center frequency, [1.0, 0.0, 0.0, 0.0], 0.0)
-         #    will be assigned.
-         reference_fields = self.inputs.reference
-         reference_intents = self.inputs.refintent
-         if reference_fields not in (None, ''):
-            refresults = self._do_setjy(reference_fields, reference_intents, reffile=self.inputs.reffile,
+        # Set reference calibrator models.
+        #    These models will always be assigned the lookup reference frequency,
+        #    Stokes parameters, and spix if they are available. If not the
+        #    Setjy defaults (spw center frequency, [1.0, 0.0, 0.0, 0.0], 0.0)
+        #    will be assigned.
+        reference_fields = self.inputs.reference
+        reference_intents = self.inputs.refintent
+        if reference_fields not in (None, ''):
+            refresults = self._do_setjy(
+                reference_fields, reference_intents, reffile=self.inputs.reffile,
                 normfluxes=False, scalebychan=self.inputs.scalebychan)
 
-         # Set transfer calibrator models.
-         #    These models will always be assigned the lookup reference frequency,
-         #    Stokes parameters, and spix if they are available. If not the 
-         #    Setjy defaults (spw center frequency, [1.0, 0.0, 0.0, 0.0], 0.0)
-         #    will be assigned. If normfluxes is True then the stokes parameters
-         #    will be normalized to a value of 1
-         transfer_fields = self.inputs.transfer
-         transfer_intents = self.inputs.transintent
-         if transfer_fields not in (None, ''):
-             transresults = self._do_setjy(transfer_fields, transfer_intents, reffile=self.inputs.reffile,
-                 normfluxes=self.inputs.normfluxes, scalebychan=self.inputs.scalebychan)
+        # Set transfer calibrator models.
+        #    These models will always be assigned the lookup reference frequency,
+        #    Stokes parameters, and spix if they are available. If not the
+        #    Setjy defaults (spw center frequency, [1.0, 0.0, 0.0, 0.0], 0.0)
+        #    will be assigned. If normfluxes is True then the stokes parameters
+        #    will be normalized to a value of 1
+        transfer_fields = self.inputs.transfer
+        transfer_intents = self.inputs.transintent
+        if transfer_fields not in (None, ''):
+            transresults = self._do_setjy(
+                transfer_fields, transfer_intents, reffile=self.inputs.reffile,
+                normfluxes=self.inputs.normfluxes, scalebychan=self.inputs.scalebychan)
 
-         # Construct the results object
-         measurements = copy.deepcopy(refresults.measurements)
-         measurements.update(copy.deepcopy(transresults.measurements))
-         result.measurements = measurements
+        # Construct the results object
+        measurements = copy.deepcopy(refresults.measurements)
+        measurements.update(copy.deepcopy(transresults.measurements))
+        result.measurements = measurements
 
-         return result
+        return result
 
     def analyse(self, result):
         return result
