@@ -11,7 +11,7 @@ class FindContHeuristics(object):
     def __init__(self, context):
         self.context = context
 
-    def find_continuum(self, dirty_cube):
+    def find_continuum(self, dirty_cube, singleContinuum=False):
         with casatools.ImageReader(dirty_cube) as image:
             stats = image.statistics()
 
@@ -20,7 +20,7 @@ class FindContHeuristics(object):
             return ([{'range': 'NONE', 'refer': 'LSRK'}], 'none')
 
         # Run continuum finder on cube
-        channel_selection, png_name, aggregate_bw = findContinuum(dirty_cube)
+        channel_selection, png_name, aggregate_bw = findContinuum(dirty_cube, singleContinuum=singleContinuum)
         frequency_ranges_GHz = \
             [{'range': item, 'refer': 'LSRK'} for item in utils.chan_selection_to_frequencies(dirty_cube, channel_selection, 'GHz')]
         return (frequency_ranges_GHz, png_name)
