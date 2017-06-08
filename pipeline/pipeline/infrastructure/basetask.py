@@ -30,6 +30,7 @@ from . import jobrequest
 from . import launcher
 from . import logging
 from . import pipelineqa
+from . import project
 from . import utils
 from . import vdp
 import pipeline.extern.decorator as decorator
@@ -1330,13 +1331,19 @@ def write_pipeline_casa_tasks(context):
     # replace the working directory with ''
     task_string = re.sub('%s/' % context.output_dir, '', task_string)
 
+    state_commands = []
+    for o in (context.project_summary, context.project_structure, context.project_performance_parameters):
+        state_commands += ['context.set_state({!r}, {!r}, {!r})'.format(cls, name, value)
+                           for cls, name, value in project.get_state(o)]
+
     template = '''__rethrow_casa_exceptions = True
-h_init()
+context = h_init()
+%s
 try:
 %s
 finally:
     h_save()
-''' % task_string
+''' % ('\n'.join(state_commands), task_string)
             
     f = os.path.join(context.report_dir, context.logs['pipeline_script'])
     with open(f, 'w') as casatask_file: 

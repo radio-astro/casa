@@ -103,13 +103,7 @@ class Context(object):
         pickled state 
 
     """
-    def __init__(self, measurement_sets=None, sessions=None, output_dir=None,
-                 name=None):
-        if measurement_sets is None:
-            measurement_sets = []
-        if sessions is None:
-            sessions = []
-            
+    def __init__(self, output_dir=None, name=None):
         # initialise the context name with something reasonable: a current
         # timestamp
         now = datetime.datetime.utcnow()
@@ -123,10 +117,12 @@ class Context(object):
         self.callibrary = callibrary.CalLibrary(self)
         self.calimlist = imagelibrary.ImageLibrary()
         self.sciimlist = imagelibrary.ImageLibrary()
+
         self.project_summary = project.ProjectSummary()
         self.project_structure = project.ProjectStructure()
         self.project_performance_parameters = project.PerformanceParameters()
-        self.output_dir = output_dir 
+
+        self.output_dir = output_dir
         self.products_dir = None
         self.task_counter = 0
         self.subtask_counter = 0
@@ -200,6 +196,31 @@ class Context(object):
                 ''.format(self.name, self.output_dir,
                           pprint.pformat(ms_names)))
 
+    def set_state(self, cls, name, value):
+        """
+        Set a context property using the class name, property name and property
+        value. The class name should be one of:
+
+         1. 'ProjectSummary'
+         2. 'ProjectStructure'
+         3. 'PerformanceParameters'
+
+        Background: see CAS-9497 - add infrastructure to translate values from
+        intent.xml to setter functions in casa_pipescript.
+
+        :param cls: class identifier
+        :param name: property to set
+        :param value: value to set
+        :return:
+        """
+        m = {
+            'ProjectSummary': self.project_summary,
+            'ProjectStructure': self.project_structure,
+            'PerformanceParameters': self.project_performance_parameters
+        }
+        instance = m[cls]
+        setattr(instance, name, value)
+
 
 class Pipeline(object):
     """
@@ -240,7 +261,7 @@ class Pipeline(object):
             #if MIN_CASA_REVISION and MIN_CASA_REVISION > revision:
             if MIN_CASA_REVISION and casatools.utils.compare_version('<', MIN_CASA_REVISION) is True:
                 #msg = ('Minimum CASA revision for the pipeline is r%s, '
-                       #'got CASA %s (r%s).' % (MIN_CASA_REVISION, 
+                       #'got CASA %s (r%s).' % (MIN_CASA_REVISION,
                                                #casadef.casa_version,
                                                #casadef.subversion_revision))
                 msg = ('Minimum CASA revision for the pipeline is %s, '
