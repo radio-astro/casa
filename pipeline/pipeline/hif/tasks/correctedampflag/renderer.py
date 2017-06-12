@@ -99,35 +99,33 @@ class T2_4MDetailsCorrectedampflagRenderer(basetemplates.T2_4MDetailsDefaultRend
         return utils.dict_merge(by_intent, by_spw)
 
     def _flags_by_intent(self, ms, summaries):
-        # create a dictionary of fields per observing intent, eg. 'PHASE':['3C273']
-        intent_fields = {}
+        # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
+        intent_scans = {}
         for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET', 'ATMOSPHERE'):
-            # use _name from field as we do want the raw name here as used
-            # in the summaries dict (not sometimes enclosed in "..."). Better
-            # perhaps to fix the summaries dict.
-            intent_fields[intent] = [f._name for f in ms.fields
-                                     if intent in f.intents]
+            # convert IDs to strings as they're used as summary dictionary keys
+            intent_scans[intent] = [str(s.id) for s in ms.scans
+                                    if intent in s.intents]
 
         # while we're looping, get the total flagged by looking in all scans
-        intent_fields['TOTAL'] = [f._name for f in ms.fields]
+        intent_scans['TOTAL'] = [str(s.id) for s in ms.scans]
 
         total = collections.defaultdict(dict)
 
         previous_summary = None
         for summary in summaries:
 
-            for intent, fields in intent_fields.items():
+            for intent, scan_ids in intent_scans.items():
                 flagcount = 0
                 totalcount = 0
 
-                for field in fields:
-                    if field in summary['field'].keys():
-                        flagcount += int(summary['field'][field]['flagged'])
-                        totalcount += int(summary['field'][field]['total'])
+                for scan_id in scan_ids:
+                    if scan_id in summary['scan']:
+                        flagcount += int(summary['scan'][scan_id]['flagged'])
+                        totalcount += int(summary['scan'][scan_id]['total'])
 
                     if previous_summary:
-                        if field in previous_summary['field'].keys():
-                            flagcount -= int(previous_summary['field'][field]['flagged'])
+                        if scan_id in previous_summary['scan']:
+                            flagcount -= int(previous_summary['scan'][scan_id]['flagged'])
 
                 ft = FlagTotal(flagcount, totalcount)
                 # The individual summaries may have been named differently from
