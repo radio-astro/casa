@@ -16,6 +16,7 @@ from pipeline.infrastructure import casa_tasks
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .automaskthresholdsequence import AutoMaskThresholdSequence
 from .manualmaskthresholdsequence import ManualMaskThresholdSequence
+from .nomaskthresholdsequence import NoMaskThresholdSequence
 from .iterativesequence import IterativeSequence
 from .iterativesequence2 import IterativeSequence2
 from . import cleanbase
@@ -322,7 +323,7 @@ class Tclean(cleanbase.CleanBase):
             inputs.spwsel_topo = ['%s' % (inputs.spw)] * len(inputs.vis)
 
         # Choose cleaning method.
-        if inputs.hm_masking in ('centralregion', 'auto', 'manual'):
+        if inputs.hm_masking in ('centralregion', 'auto', 'manual', 'none'):
             # Determine threshold
             if inputs.hm_cleaning == 'manual':
                 threshold = inputs.threshold
@@ -346,11 +347,16 @@ class Tclean(cleanbase.CleanBase):
                     gridder = inputs.gridder, threshold=threshold,
                     sensitivity = sensitivity, niter=inputs.niter)
             # Manually supplied mask
-            else:
+            elif inputs.hm_masking == 'manual':
                 sequence_manager = ManualMaskThresholdSequence(
                     mask=inputs.mask,
                     gridder = inputs.gridder, threshold=threshold,
                     sensitivity = sensitivity, niter=inputs.niter)
+            # No mask
+            elif inputs.hm_masking == 'none':
+                sequence_manager = NoMaskThresholdSequence(
+                    gridder=inputs.gridder, threshold=threshold,
+                    sensitivity=sensitivity, niter=inputs.niter)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(

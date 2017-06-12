@@ -16,6 +16,7 @@ class BandpassflagResults(basetask.Results):
         super(BandpassflagResults, self).__init__()
         self.bpresult = common.BandpassResults()
         self.cafresult = resultobjects.CorrectedampflagResults()
+        self.plots = {}
 
     def merge_with_context(self, context):
         """
@@ -26,8 +27,7 @@ class BandpassflagResults(basetask.Results):
             return
 
         for calapp in self.bpresult.final:
-            LOG.debug('Adding calibration to callibrary:\n'
-                      '%s\n%s' % (calapp.calto, calapp.calfrom))
+            LOG.debug('Adding calibration to callibrary:\n%s\n%s' % (calapp.calto, calapp.calfrom))
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
     def __repr__(self):

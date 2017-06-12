@@ -7,7 +7,7 @@ import datetime
 import pylab as pl
 
 from matplotlib.dates import date2num, DateFormatter, MinuteLocator
-from matplotlib.ticker import FuncFormatter, MultipleLocator
+from matplotlib.ticker import FuncFormatter, MultipleLocator, AutoLocator
 
 import pipeline.infrastructure.casatools as casatools
 

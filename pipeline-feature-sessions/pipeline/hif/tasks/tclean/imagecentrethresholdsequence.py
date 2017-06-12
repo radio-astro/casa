@@ -80,13 +80,13 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
             self.result.cleanmask = new_cleanmask
             self.result.threshold = self.threshold
             self.result.sensitivity = self.sensitivity
-            self.result.niter =  self.niter
+            self.result.niter = self.niter
             self.result.iterating = True
         else:
             self.result.cleanmask = ''
             self.result.threshold = '0.0mJy'
             self.result.sensitivity = 0.0
-            self.result.niter =  0
+            self.result.niter = 0
             self.result.iterating = False
 
         return self.result

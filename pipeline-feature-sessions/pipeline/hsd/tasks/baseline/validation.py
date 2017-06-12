@@ -184,7 +184,8 @@ class ValidateLineSinglePointing(basetask.StandardTaskTemplate):
                 no_change = datatable.getcell('NOCHANGE',row)
                 #LOG.debug('DataTable = %s, detect_signal = %s, OldFlag = %s' % (mask_list, detect_signal[0][2], no_change))
                 if mask_list == detect_signal[0][2]:
-                    if type(no_change) != int:
+                    #if type(no_change) != int:
+                    if no_change < 0:
                         # 2013/05/17 TN
                         # Put iteration itself instead to subtract 1 since
                         # iteration counter is incremented *after* the

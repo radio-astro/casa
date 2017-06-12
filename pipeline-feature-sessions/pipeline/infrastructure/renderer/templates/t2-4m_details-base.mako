@@ -50,7 +50,9 @@ def format_notification(tr_class, alert, msg, icon_class=None):
 
 %>
 
-<%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False, data_vis=False, title_id=None, plot_accessor=lambda d: [('No Intent', d)], transmission=None)">
+<%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False,
+                       data_vis=False, title_id=None, plot_accessor=lambda d: [('No Intent', d)], transmission=None,
+                       rel_fn=None)">
 % if plot_dict:
     % if title_id:
         <h3 id="${title_id}" class="jumptarget">${caller.title()}</h3>
@@ -144,7 +146,9 @@ def format_notification(tr_class, alert, msg, icon_class=None):
                         % endif
                         <a href="${fullsize_relpath}"
                            class="fancybox"
-                           % if relurl:
+                           % if rel_fn:
+                           rel="${rel_fn(plot)}"
+                           % elif relurl:
                            rel="${relurl}"
                            % else:
                            rel="${caller.title()}"
