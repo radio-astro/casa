@@ -27,6 +27,9 @@ import time
 import numpy
 import math
 import re
+import collections
+
+#import memory_profiler
 
 from taskinit import gentools
 
@@ -622,6 +625,7 @@ class DataTableImpl( object ):
                                  for ipol in range(atsys.shape[-1]) ]
                         self.tb1.putcell('TSYS', dt_id, itsys)
 
+    #@memory_profiler.profile
     def _update_flag(self, context, infile):
         """
         Read MS and update online flag status of DataTable.
@@ -783,8 +787,8 @@ class RODataTableColumn( object ):
         return self.tb.getcell(self.name, idx)
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
-        return self.tb.getcol(self.name, startrow, nrow, rowincr).tolist()
-        #return self.tb.getcol(self.name, startrow, nrow, rowincr)
+        #return self.tb.getcol(self.name, startrow, nrow, rowincr).tolist()
+        return self.tb.getcol(self.name, startrow, nrow, rowincr)
 
     def putcell( self, idx, val ):
         self.__raise()
@@ -813,23 +817,25 @@ class DataTableColumnNoChange( RWDataTableColumn ):
     def __init__( self, table):
         super(RWDataTableColumn,self).__init__(table, "NOCHANGE", int)
 
-    def getcell( self, idx ):
-        v = self.tb.getcell(self.name, int(idx))
-        if v < 0:
-            return False
-        else:
-            return int(v)
+#     def getcell( self, idx ):
+#         v = self.tb.getcell(self.name, int(idx))
+#         #if v < 0:
+#         #    return False
+#         #else:
+#         #    return int(v)
+#         return v
 
-    def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
-        if nrow < 0:
-            nrow = self.tb.nrows()
-        ret = [0 for i in xrange(startrow,nrow,rowincr)]
-        idx = 0
-        for i in xrange(startrow,nrow,rowincr):
-            tNOCHANGE = self.tb.getcell(self.name,i)
-            ret[idx] = False if tNOCHANGE < 0 else tNOCHANGE
-            idx += 1
-        return ret
+    #def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
+        #if nrow < 0:
+        #    nrow = self.tb.nrows()
+        #ret = [0 for i in xrange(startrow,nrow,rowincr)]
+        #ret = numpy.zeros(len(xrange(startrow, nrow, rowincr)), dtype=numpy.int32)
+        #idx = 0
+        #for i in xrange(startrow,nrow,rowincr):
+        #    tNOCHANGE = self.tb.getcell(self.name,i)
+        #    ret[idx] = False if tNOCHANGE < 0 else tNOCHANGE
+        #    idx += 1
+        #return ret
 
     def putcell( self, idx, val ):
         if type(val)==bool:
@@ -838,16 +844,16 @@ class DataTableColumnNoChange( RWDataTableColumn ):
             v = val
         self.tb.putcell(self.name, int(idx), int(v))
 
-    def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
-        if nrow < 0:
-            nrow = min(startrow+len(val)*rowincr,self.tb.nrows())
-        idx = 0
-        for i in xrange(startrow,nrow,rowincr):
-            self.putcell(i,val[idx])
-            idx += 1
+#     def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
+#         if nrow < 0:
+#             nrow = min(startrow+len(val)*rowincr,self.tb.nrows())
+#         idx = 0
+#         for i in xrange(startrow,nrow,rowincr):
+#             self.putcell(i,val[idx])
+#             idx += 1
 
 class DataTableColumnMaskList( RWDataTableColumn ):
-    NoMask = [[-1,-1]]
+    NoMask = numpy.zeros((1,2), dtype=numpy.int32) - 1#[[-1,-1]]
 
     def __init__( self, table ):
         super(RWDataTableColumn,self).__init__(table, "MASKLIST", list)
@@ -855,9 +861,11 @@ class DataTableColumnMaskList( RWDataTableColumn ):
     def getcell( self, idx ):
         v = self.tb.getcell(self.name, int(idx))
         if sum(v[0]) < 0:
-            return []
+            #return []
+            return numpy.zeros(0, dtype=numpy.int32)
         else:
-            return v.tolist() 
+            #return v.tolist() 
+            return v
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
         """
@@ -867,10 +875,11 @@ class DataTableColumnMaskList( RWDataTableColumn ):
         """
         if nrow < 0:
             nrow = self.tb.nrows()
-        ret = [[] for i in xrange(startrow,nrow,rowincr)]
+        ret = collections.defaultdict(list)#[[] for i in xrange(startrow,nrow,rowincr)]
         idx=0
         for i in xrange(startrow,nrow,rowincr):
-            tMASKLIST = list(self.getcell(i))
+            #tMASKLIST = list(self.getcell(i))
+            tMASKLIST = self.getcell(i)
             if len(tMASKLIST)==1 and tMASKLIST[0][0]==0 and \
                    tMASKLIST[0][1]==0:
                 ret[idx] = tMASKLIST
@@ -882,7 +891,7 @@ class DataTableColumnMaskList( RWDataTableColumn ):
             v = self.NoMask
         else:
             v = val
-        self.tb.putcell(self.name, int(idx), numpy.array(v))
+        self.tb.putcell(self.name, int(idx), numpy.asarray(v))
 
     def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
         """
@@ -893,7 +902,7 @@ class DataTableColumnMaskList( RWDataTableColumn ):
             nrow = min(startrow+len(val)*rowincr,self.tb.nrows())
         idx = 0
         for i in xrange(startrow,nrow,rowincr):
-            self.putcell(i,numpy.array(val[idx]))
+            self.putcell(i,numpy.asarray(val[idx]))
             idx += 1
 
 def _interpolate(v, t, tref):
