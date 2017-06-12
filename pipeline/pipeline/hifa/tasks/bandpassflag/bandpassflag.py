@@ -143,9 +143,9 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             vis=inputs.vis, mode='save', versionname=flag_backup_name_after_precal)
         self._executor.execute(task)
 
-        # Make "before calibration" plots for the weblog
-        LOG.info('Creating "before calibration" plots')
-        result.plots['raw'] = plot_fn('data', suffix='raw')
+        # Make "apriori calibrations applied" plots for the weblog
+        LOG.info('Creating "apriori calibrations applied" plots')
+        result.plots['apriorical'] = plot_fn('data', suffix='apriorical')
 
         # Do standard phaseup and bandpass calibration.
         LOG.info('Creating initial phased-up bandpass calibration.')

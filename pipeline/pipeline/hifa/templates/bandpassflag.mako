@@ -14,9 +14,9 @@ def percent_flagged(flagsummary):
         return '%0.1f%%' % (100.0 * flagged / total)
 
 _types = {
-    'raw': 'Raw data',
-    'before': 'Corrected data before flagging',
-    'after': 'Corrected data after flagging'
+    'apriorical': 'Apriori calibrations applied',
+    'before': 'Calibrated data before flagging',
+    'after': 'Calibrated data after flagging'
 }
 
 def plot_type(plot):
@@ -393,9 +393,9 @@ $(document).ready(function(){
 	</%def>
 
 	<%def name="preamble()">
-		<p>These plots show amplitude vs time for three cases: 1, the raw, uncorrected data; 2, the corrected
-            data column before application of any flags; and 3, where flagging was applied, the corrected data
-            after application of flags.</p>
+		<p>These plots show amplitude vs time for three cases: 1, the data with apriori calibrations applied;
+            2, the calibrated data before application of any flags; and 3, where flagging was applied,
+            the calibrated data after application of flags.</p>
 
 		<p>Data are plotted for all antennas and correlations, with different
 		correlations shown in different colours.</p>
@@ -436,9 +436,9 @@ $(document).ready(function(){
 	</%def>
 
 	<%def name="preamble()">
-		<p>These plots show amplitude vs UV distance for three cases: 1, the raw, uncorrected data; 2, the corrected
-            data column before application of any flags; and 3, where flagging was applied, the corrected data
-            after application of flags.</p>
+		<p>These plots show amplitude vs UV distance for three cases: 1, the data with apriori calibrations applied;
+            2, the calibrated data before application of any flags; and 3, where flagging was applied,
+            the calibrated data after application of flags.</p>
 
 		<p>Data are plotted for all antennas and correlations, with different
 		correlations shown in different colours.</p>

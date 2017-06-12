@@ -82,10 +82,10 @@ def get_plot_dicts(pipeline_context, results, plot_type):
 
     for result in results:
         vis = os.path.basename(result.inputs['vis'])
-        # ordereddict as raw->before->after ordering is important
+        # ordereddict as apriorical->before->after ordering is important
         d[vis] = collections.OrderedDict()
 
-        for key in ['raw', 'before', 'after']:
+        for key in ['apriorical', 'before', 'after']:
             if key in result.plots:
                 plots = result.plots[key][plot_type]
                 relocated = relocate_plots(plots, plot_dest_dir)
