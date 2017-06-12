@@ -140,7 +140,7 @@ amplitudes for bandpass calibrator.
 
     <param type="string" name="antnegsig" subparam="true">
         <description>Lower sigma threshold for identifying outliers as a result of bad antennas within individual timestamps</description>
-        <value>8.0</value>
+        <value>6.5</value>
     </param>
 
     <param type="string" name="antpossig" subparam="true">
@@ -160,7 +160,7 @@ amplitudes for bandpass calibrator.
 
     <param type="string" name="tmbl" subparam="true">
         <description>Initial threshold for maximum fraction of "bad baselines" over "all timestamps" that an antenna may be a part of</description>
-        <value>0.18</value>
+        <value>0.175</value>
     </param>
 
     <param type="string" name="antblnegsig" subparam="true">
@@ -242,11 +242,11 @@ amplitudes for bandpass calibrator.
                 <default param="combine"><value type="string"></value>scan</default>
                 <default param="refant"><value type="string"></value></default>
                 <default param="solnorm"><value type="bool">True</value></default>
-                <default param="antnegsig"><value>8.0</value></default>
+                <default param="antnegsig"><value>6.5</value></default>
                 <default param="antpossig"><value>5.8</value></default>
                 <default param="tmantint"><value>0.06</value></default>
                 <default param="tmint"><value>0.09</value></default>
-                <default param="tmbl"><value>0.18</value></default>
+                <default param="tmbl"><value>0.175</value></default>
                 <default param="antblnegsig"><value>3.7</value></default>
                 <default param="antblpossig"><value>3.0</value></default>
                 <default param="relaxed_factor"><value>2.0</value></default>
@@ -395,7 +395,7 @@ solnorm -- Normalise the bandpass solutions
 
 antnegsig -- Lower sigma threshold for identifying outliers as a result of bad
     antennas within individual timestamps.
-    default: 8.0
+    default: 6.5
 
 antpossig -- Upper sigma threshold for identifying outliers as a result of bad
     antennas within individual timestamps.
@@ -411,7 +411,7 @@ tmint -- Initial threshold for maximum fraction of "outlier timestamps" over
 
 tmbl -- Initial threshold for maximum fraction of "bad baselines" over "all
     timestamps" that an antenna may be a part of.
-    default: 0.18
+    default: 0.175
 
 antblnegsig -- Lower sigma threshold for identifying outliers as a result of
     "bad baselines" and/or "bad antennas" within baselines, across all
