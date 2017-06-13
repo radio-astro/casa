@@ -84,7 +84,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
     @antnegsig.setter
     def antnegsig(self, value):
         if value is None:
-            value = 8.0
+            value = 6.5
         self._antnegsig = value
 
     # Upper sigma threshold for identifying outliers as a result of bad
@@ -136,7 +136,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
     @tmbl.setter
     def tmbl(self, value):
         if value is None:
-            value = 0.18
+            value = 0.175
         self._tmbl = value
 
     # Lower sigma threshold for identifying outliers as a result of "bad
