@@ -109,12 +109,6 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # create a shortcut to the plotting function that pre-supplies the inputs and context
         plot_fn = functools.partial(create_plots, inputs, inputs.context)
 
-        # Create back-up of flags.
-        LOG.info('Creating back-up of flagging state')
-        flag_backup_name = 'before_bpflag'
-        task = casa_tasks.flagmanager(vis=inputs.vis, mode='save', versionname=flag_backup_name)
-        self._executor.execute(task)
-
         # Export the current calstate.
         LOG.info('Creating back-up of calibration state')
         calstate_backup_name = 'before_bpflag.calstate'
