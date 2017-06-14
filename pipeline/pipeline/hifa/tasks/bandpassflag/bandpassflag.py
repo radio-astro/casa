@@ -139,7 +139,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
         # Make "apriori calibrations applied" plots for the weblog
         LOG.info('Creating "apriori calibrations applied" plots')
-        result.plots['apriorical'] = plot_fn('data', suffix='apriorical')
+        result.plots['apriorical'] = plot_fn(suffix='apriorical')
 
         # Do standard phaseup and bandpass calibration.
         LOG.info('Creating initial phased-up bandpass calibration.')
@@ -200,7 +200,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
 
         # Make "after calibration, before flagging" plots for the weblog
         LOG.info('Creating "after calibration, before flagging" plots')
-        result.plots['before'] = plot_fn('corrected', suffix='before')
+        result.plots['before'] = plot_fn(suffix='before')
 
         # Find amplitude outliers and flag data
         LOG.info('Running correctedampflag to identify outliers to flag.')
@@ -220,7 +220,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         cafflags = cafresult.flagcmds()
         if cafflags:
             LOG.info('Creating "after calibration, after flagging" plots')
-            result.plots['after'] = plot_fn('corrected', suffix='after')
+            result.plots['after'] = plot_fn(suffix='after')
 
         # Restore the "pre-bandpassflag" backup of the flagging state.
         LOG.info('Restoring back-up of "pre-bandpassflag" flagging state.')
@@ -305,14 +305,13 @@ class Bandpassflag(basetask.StandardTaskTemplate):
                                   calwt=old_calfrom.calwt)
 
 
-def create_plots(inputs, context, column, suffix=''):
+def create_plots(inputs, context, suffix=''):
     """
     Return amplitude vs time and amplitude vs UV distance plots for the given
     data column.
 
     :param inputs: pipeline inputs
     :param context: pipeline context
-    :param column: MS column to plot
     :param suffix: optional component to add to the plot filenames
     :return: dict of (x axis type => str, [plots,...])
     """
@@ -323,8 +322,8 @@ def create_plots(inputs, context, column, suffix=''):
     calto = callibrary.CalTo(vis=inputs.vis, spw=inputs.spw)
     output_dir = context.output_dir
 
-    amp_uvdist_plots = AmpVsXChart('uvdist', column, context, output_dir, calto, suffix=suffix).plot()
-    amp_time_plots = AmpVsXChart('time', column, context, output_dir, calto, suffix=suffix).plot()
+    amp_uvdist_plots = AmpVsXChart('uvdist', context, output_dir, calto, suffix=suffix).plot()
+    amp_time_plots = AmpVsXChart('time', context, output_dir, calto, suffix=suffix).plot()
 
     return {'uvdist': amp_uvdist_plots, 'time': amp_time_plots}
 
@@ -334,9 +333,9 @@ class AmpVsXChart(applycal_displays.SpwSummaryChart):
     Plotting class that creates an amplitude vs X plot for each spw, where X
     is given as a constructor argument.
     """
-    def __init__(self, xaxis, ydatacolumn, context, output_dir, calto, **overrides):
+    def __init__(self, xaxis, context, output_dir, calto, **overrides):
         plot_args = {
-            'ydatacolumn': ydatacolumn,
+            'ydatacolumn': 'corrected',
             'avgtime': '',
             'avgscan': False,
             'avgbaseline': False,
