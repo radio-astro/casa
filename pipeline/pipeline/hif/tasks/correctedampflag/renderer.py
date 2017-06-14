@@ -101,7 +101,7 @@ class T2_4MDetailsCorrectedampflagRenderer(basetemplates.T2_4MDetailsDefaultRend
     def _flags_by_intent(self, ms, summaries):
         # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
         intent_scans = {}
-        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET', 'ATMOSPHERE'):
+        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET'):
             # convert IDs to strings as they're used as summary dictionary keys
             intent_scans[intent] = [str(s.id) for s in ms.scans
                                     if intent in s.intents]
