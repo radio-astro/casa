@@ -45,6 +45,9 @@ class TransformimagedataResults(basetask.Results):
                 LOG.info('Adding {} to context'.format(self.ms.name))
                 target.add_measurement_set(self.ms)
 
+        # Remove original measurement set from context
+        context.observing_run.measurement_sets.pop(0)
+
         for i in range(0,len(context.clean_list_pending)):
             context.clean_list_pending[i]['heuristics'].observing_run.measurement_sets[0].name = self.outputvis
 
