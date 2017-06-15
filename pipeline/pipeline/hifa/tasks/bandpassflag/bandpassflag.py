@@ -109,7 +109,7 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # create a shortcut to the plotting function that pre-supplies the inputs and context
         plot_fn = functools.partial(create_plots, inputs, inputs.context)
 
-        # Export the current calstate.
+        # Create back-up of current calibration state.
         LOG.info('Creating back-up of calibration state')
         calstate_backup_name = 'before_bpflag.calstate'
         inputs.context.callibrary.export(calstate_backup_name)
@@ -140,6 +140,11 @@ class Bandpassflag(basetask.StandardTaskTemplate):
         # Make "apriori calibrations applied" plots for the weblog
         LOG.info('Creating "apriori calibrations applied" plots')
         result.plots['apriorical'] = plot_fn(suffix='apriorical')
+
+        # Restore the calibration state to ensure the "apriori" cal tables
+        # are included in pre-apply during creation of new caltables.
+        LOG.info('Restoring back-up of calibration state.')
+        inputs.context.callibrary.import_state(calstate_backup_name)
 
         # Do standard phaseup and bandpass calibration.
         LOG.info('Creating initial phased-up bandpass calibration.')
