@@ -6,27 +6,62 @@ import glob
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.imagelibrary as imagelibrary
 
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class MakermsimagesResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=None, pool=None, preceding=None, rmsimagelist=None, rmsimagenames=None):
         super(MakermsimagesResults, self).__init__()
+
+        if final is None:
+            final = []
+        if pool is None:
+            pool = []
+        if preceding is None:
+            preceding = []
+        if rmsimagelist is None:
+            rmsimagelist = []
+        if rmsimagenames is None:
+            rmsimagenames = []
+
+
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+        self.rmsimagelist = rmsimagelist[:]
+        self.rmsimagenames = rmsimagenames[:]
 
     def merge_with_context(self, context):
         """
         See :method:`~pipeline.infrastructure.api.Results.merge_with_context`
         """
 
-        if not self.final:
-            LOG.warn('No makermsimages results')
-            return
+        # if not self.rmsimagenames:
+        #     LOG.warn('No makermsimages results')
+        #     return
+
+        # rmsimagelist is a list of dictionaries
+        # Use the same format and information from sciimlist, save for the image name and image plot
+        for rmsitem in self.rmsimagelist:
+            try:
+                imageitem = imagelibrary.ImageItem(
+                  imagename=rmsitem['imagename'] + '.rms', sourcename=rmsitem['sourcename'],
+                  spwlist=rmsitem['spw'], specmode=rmsitem['specmode'],
+                  sourcetype=rmsitem['intent'],
+                  multiterm=rmsitem['multiterm'],
+                  imageplot=rmsitem['imageplot'])
+                import pdb
+                pdb.set_trace()
+                context.rmsimlist.add_item(imageitem)
+                if 'TARGET' in rmsitem['intent']:
+                    print 'ADDED IMAGE ITEM'
+                    context.rmsimlist.add_item(imageitem)
+            except:
+                pass
 
     def __repr__(self):
         #return 'MakermsimagesResults:\n\t{0}'.format(
@@ -53,13 +88,18 @@ class Makermsimages(basetask.StandardTaskTemplate):
             imagenames.extend(glob.glob(imageitem['imagename'] + '*'))
 
         imagenames = [im for im in imagenames if '.rms' not in im]
+        rmsimagenames = []
 
         for imagename in imagenames:
             if not os.path.exists(imagename + '.rms'):
-                LOG.info("Imagename: " + imagename + '.rms')
-                result = self._do_imdev(imagename)
+                rmsimagename = imagename + '.rms'
+                LOG.info("Imagename: " + rmsimagename)
+                taskresult = self._do_imdev(imagename)
+                rmsimagenames.append(rmsimagename)
 
-        return MakermsimagesResults()
+        LOG.info("RMS IMAGE NAMES:" + ','.join(rmsimagenames))
+
+        return MakermsimagesResults(rmsimagelist=imlist, rmsimagenames=rmsimagenames)
 
     def analyse(self, results):
         return results

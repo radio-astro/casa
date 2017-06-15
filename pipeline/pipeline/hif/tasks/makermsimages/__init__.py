@@ -7,6 +7,7 @@ import pipeline.infrastructure.renderer.weblog as weblog
 
 from .makermsimages import Makermsimages
 from . import makermsimages
+from . import renderer
 
 #from . import qa
 
@@ -15,5 +16,5 @@ from . import makermsimages
 #qaadapter.registry.register_to_dataset_topic(makermsimages.MakermsimagesResults)
 
 
-weblog.add_renderer(Makermsimages, basetemplates.T2_4MDetailsDefaultRenderer(uri='makermsimages.mako',
+weblog.add_renderer(Makermsimages, renderer.T2_4MDetailsMakermsimagesRenderer(uri='makermsimages.mako',
                          description='Makermsimages'), group_by=weblog.UNGROUPED)

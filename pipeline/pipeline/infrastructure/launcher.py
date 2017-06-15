@@ -117,6 +117,7 @@ class Context(object):
         self.callibrary = callibrary.CalLibrary(self)
         self.calimlist = imagelibrary.ImageLibrary()
         self.sciimlist = imagelibrary.ImageLibrary()
+        self.rmsimlist = imagelibrary.ImageLibrary()
 
         self.project_summary = project.ProjectSummary()
         self.project_structure = project.ProjectStructure()
