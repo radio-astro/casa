@@ -127,7 +127,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
         self._tmint = value
 
     # Initial threshold for maximum fraction of "bad baselines" over "all
-    # timestamps" that an antenna may be a part of; equivalent to:
+    # baselines" that an antenna may be a part of; equivalent to:
     # tooManyBaselinesFraction
     @property
     def tmbl(self):
@@ -198,6 +198,10 @@ class Correctedampflag(basetask.StandardTaskTemplate):
         # Set threshold for maximum fraction of antennas that can be involved
         # in outlier baseline scans.
         ants_in_outlier_baseline_scans_thresh = 0.33333
+
+        # Set threshold for minimum number of "bad baselines" than an antenna
+        # may be a part of without getting flagged.
+        tmbl_minbadnr = 4.0
 
         # Initialize results.
         result = CorrectedampflagResults()
@@ -529,22 +533,26 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         bad_bls = [bl for bl, count in outlier_bl_counts.items()
                                    if count > np.max([1, bl_counts[bl] * tmint_scaled])]
 
-                        # Compute final threshold for maximum fraction of "bad
-                        # baselines" over "all baselines" that an antenna may be
-                        # a part of.
-                        tmbl_scaled = inputs.tmbl * thresh_scale_factor
-
                         # Compute for each antenna how many "bad baselines" it is
                         # a part of.
                         ant_in_bad_bl_count = np.bincount(sum(bad_bls, ()),
                                                           minlength=nants)
 
+                        # Compute final threshold for maximum number of "bad
+                        # baselines" that an antenna may be a part of:
+                        # this is based on the scaled fractional threshold
+                        # times the number of baselines that the antenna is
+                        # part of, with a minimum number threshold set by
+                        # "tmbl_minbadnr".
+                        tmbl_nr_thresh = max(
+                            tmbl_minbadnr,
+                            inputs.tmbl * thresh_scale_factor * (nants-1))
+
                         # TODO: equivalent to line 579  (remove before final commit)
                         # Identify "bad antennas" as those antennas involved in a number of
-                        # "bad baselines" that equals-or-exceeds the fraction threshold
-                        # of all baselines that this antenna is part of.
+                        # "bad baselines" that exceeds the threshold.
                         bad_ants = [ant for ant, count in enumerate(ant_in_bad_bl_count)
-                                    if count >= tmbl_scaled * (nants-1)]
+                                    if count > tmbl_nr_thresh]
 
                         # Create flagging command for each identified bad antenna.
                         for bad_ant in bad_ants:
