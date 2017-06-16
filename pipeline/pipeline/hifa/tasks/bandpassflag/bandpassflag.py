@@ -121,74 +121,75 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             vis=inputs.vis, mode='save', versionname=flag_backup_name_prebpf)
         self._executor.execute(task)
 
-        # Run applycal to apply pre-existing caltables and propagate their
-        # corresponding flags (should typically include Tsys, WVR, antpos).
-        LOG.info('Applying pre-existing cal tables.')
-        acinputs = applycal.IFApplycalInputs(
-            context=inputs.context, vis=inputs.vis, field=inputs.field,
-            intent=inputs.intent, flagsum=False, flagbackup=False)
-        actask = applycal.IFApplycal(acinputs)
-        acresult = self._executor.execute(actask, merge=True)
-
-        # Create back-up of "after pre-calibration" state of flags.
-        LOG.info('Creating back-up of "pre-calibrated" flagging state')
-        flag_backup_name_after_precal = 'after_precal'
-        task = casa_tasks.flagmanager(
-            vis=inputs.vis, mode='save', versionname=flag_backup_name_after_precal)
-        self._executor.execute(task)
-
-        # Make "apriori calibrations applied" plots for the weblog
-        LOG.info('Creating "apriori calibrations applied" plots')
-        result.plots['apriorical'] = plot_fn(suffix='apriorical')
-
-        # Restore the calibration state to ensure the "apriori" cal tables
-        # are included in pre-apply during creation of new caltables.
-        LOG.info('Restoring back-up of calibration state.')
-        inputs.context.callibrary.import_state(calstate_backup_name)
-
-        # Do standard phaseup and bandpass calibration.
-        LOG.info('Creating initial phased-up bandpass calibration.')
-        bpinputs = bandpass.ALMAPhcorBandpass.Inputs(
-            context=inputs.context, vis=inputs.vis, caltable=inputs.caltable,
-            field=inputs.field, intent=inputs.intent, spw=inputs.spw,
-            antenna=inputs.antenna, hm_phaseup=inputs.hm_phaseup,
-            phaseupbw=inputs.phaseupbw, phaseupsnr=inputs.phaseupsnr,
-            phaseupnsols=inputs.phaseupnsols,
-            phaseupsolint=inputs.phaseupsolint, hm_bandpass=inputs.hm_bandpass,
-            solint=inputs.solint, maxchannels=inputs.maxchannels,
-            evenbpints=inputs.evenbpints, bpsnr=inputs.bpsnr,
-            bpnsols=inputs.bpnsols, combine=inputs.combine,
-            refant=inputs.refant, solnorm=inputs.solnorm,
-            minblperant=inputs.minblperant, minsnr=inputs.minsnr)
-        # Modify output table filename to append "prelim".
-        if bpinputs.caltable.endswith('.tbl'):
-            bpinputs.caltable = bpinputs.caltable[:-4] + '.prelim.tbl'
-        else:
-            bpinputs.caltable += '.prelim'
-        # Create and execute task.
-        bptask = bandpass.ALMAPhcorBandpass(bpinputs)
-        bpresult = self._executor.execute(bptask)
-
-        # Add the phase-up table produced by the bandpass task to the callibrary.
-        LOG.debug('Adding phase-up and bandpass table to temporary context.')
-        for prev_result in bpresult.preceding:
-            for calapp in prev_result:
-                inputs.context.callibrary.add(calapp.calto, calapp.calfrom)
-        # Accept the bandpass result to add the bandpass table to the callibrary.
-        bpresult.accept(inputs.context)
-
-        # Do amplitude solve on scan interval.
-        LOG.info('Create amplitude gaincal table.')
-        gacalinputs = gaincal.GTypeGaincal.Inputs(
-            context=inputs.context, vis=inputs.vis, intent=inputs.intent,
-            gaintype='T', antenna='', calmode='a', solint='inf')
-        gacaltask = gaincal.GTypeGaincal(gacalinputs)
-        gacalresult = self._executor.execute(gacaltask, merge=True)
-
-        # Ensure that flags that may be set by applycal are restored, even in
-        # case of exceptions.
-        LOG.info('Applying phase-up, bandpass, and amplitude cal tables.')
+        # Ensure that any flagging applied to the MS by this or the next
+        # applycal are reverted at the end, even in the case of exceptions.
         try:
+            # Run applycal to apply pre-existing caltables and propagate their
+            # corresponding flags (should typically include Tsys, WVR, antpos).
+            LOG.info('Applying pre-existing cal tables.')
+            acinputs = applycal.IFApplycalInputs(
+                context=inputs.context, vis=inputs.vis, field=inputs.field,
+                intent=inputs.intent, flagsum=False, flagbackup=False)
+            actask = applycal.IFApplycal(acinputs)
+            acresult = self._executor.execute(actask, merge=True)
+
+            # Create back-up of "after pre-calibration" state of flags.
+            LOG.info('Creating back-up of "pre-calibrated" flagging state')
+            flag_backup_name_after_precal = 'after_precal'
+            task = casa_tasks.flagmanager(
+                vis=inputs.vis, mode='save', versionname=flag_backup_name_after_precal)
+            self._executor.execute(task)
+
+            # Make "apriori calibrations applied" plots for the weblog
+            LOG.info('Creating "apriori calibrations applied" plots')
+            result.plots['apriorical'] = plot_fn(suffix='apriorical')
+
+            # Restore the calibration state to ensure the "apriori" cal tables
+            # are included in pre-apply during creation of new caltables.
+            LOG.info('Restoring back-up of calibration state.')
+            inputs.context.callibrary.import_state(calstate_backup_name)
+
+            # Do standard phaseup and bandpass calibration.
+            LOG.info('Creating initial phased-up bandpass calibration.')
+            bpinputs = bandpass.ALMAPhcorBandpass.Inputs(
+                context=inputs.context, vis=inputs.vis, caltable=inputs.caltable,
+                field=inputs.field, intent=inputs.intent, spw=inputs.spw,
+                antenna=inputs.antenna, hm_phaseup=inputs.hm_phaseup,
+                phaseupbw=inputs.phaseupbw, phaseupsnr=inputs.phaseupsnr,
+                phaseupnsols=inputs.phaseupnsols,
+                phaseupsolint=inputs.phaseupsolint, hm_bandpass=inputs.hm_bandpass,
+                solint=inputs.solint, maxchannels=inputs.maxchannels,
+                evenbpints=inputs.evenbpints, bpsnr=inputs.bpsnr,
+                bpnsols=inputs.bpnsols, combine=inputs.combine,
+                refant=inputs.refant, solnorm=inputs.solnorm,
+                minblperant=inputs.minblperant, minsnr=inputs.minsnr)
+            # Modify output table filename to append "prelim".
+            if bpinputs.caltable.endswith('.tbl'):
+                bpinputs.caltable = bpinputs.caltable[:-4] + '.prelim.tbl'
+            else:
+                bpinputs.caltable += '.prelim'
+            # Create and execute task.
+            bptask = bandpass.ALMAPhcorBandpass(bpinputs)
+            bpresult = self._executor.execute(bptask)
+
+            # Add the phase-up table produced by the bandpass task to the callibrary.
+            LOG.debug('Adding phase-up and bandpass table to temporary context.')
+            for prev_result in bpresult.preceding:
+                for calapp in prev_result:
+                    inputs.context.callibrary.add(calapp.calto, calapp.calfrom)
+            # Accept the bandpass result to add the bandpass table to the callibrary.
+            bpresult.accept(inputs.context)
+
+            # Do amplitude solve on scan interval.
+            LOG.info('Create amplitude gaincal table.')
+            gacalinputs = gaincal.GTypeGaincal.Inputs(
+                context=inputs.context, vis=inputs.vis, intent=inputs.intent,
+                gaintype='T', antenna='', calmode='a', solint='inf')
+            gacaltask = gaincal.GTypeGaincal(gacalinputs)
+            gacalresult = self._executor.execute(gacaltask, merge=True)
+
+            # Apply the new caltables to the MS.
+            LOG.info('Applying phase-up, bandpass, and amplitude cal tables.')
             # Apply the calibrations.
             acinputs = applycal.IFApplycalInputs(
                 context=inputs.context, vis=inputs.vis, field=inputs.field,
@@ -196,43 +197,44 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             actask = applycal.IFApplycal(acinputs)
             acresult = self._executor.execute(actask)
 
-        finally:
             # Restore flags that may have come from the latest applycal.
             LOG.info('Restoring back-up of "pre-calibrated" flagging state.')
             task = casa_tasks.flagmanager(
                 vis=inputs.vis, mode='restore', versionname=flag_backup_name_after_precal)
             self._executor.execute(task)
 
-        # Make "after calibration, before flagging" plots for the weblog
-        LOG.info('Creating "after calibration, before flagging" plots')
-        result.plots['before'] = plot_fn(suffix='before')
+            # Make "after calibration, before flagging" plots for the weblog
+            LOG.info('Creating "after calibration, before flagging" plots')
+            result.plots['before'] = plot_fn(suffix='before')
 
-        # Find amplitude outliers and flag data
-        LOG.info('Running correctedampflag to identify outliers to flag.')
-        cafinputs = correctedampflag.Correctedampflag.Inputs(
-            context=inputs.context, vis=inputs.vis, intent=inputs.intent,
-            field=inputs.field, spw=inputs.spw, antnegsig=inputs.antnegsig,
-            antpossig=inputs.antpossig, tmantint=inputs.tmantint,
-            tmint=inputs.tmint, tmbl=inputs.tmbl,
-            antblnegsig=inputs.antblnegsig,
-            antblpossig=inputs.antblpossig,
-            relaxed_factor=inputs.relaxed_factor)
-        caftask = correctedampflag.Correctedampflag(cafinputs)
-        cafresult = self._executor.execute(caftask)
+            # Find amplitude outliers and flag data
+            LOG.info('Running correctedampflag to identify outliers to flag.')
+            cafinputs = correctedampflag.Correctedampflag.Inputs(
+                context=inputs.context, vis=inputs.vis, intent=inputs.intent,
+                field=inputs.field, spw=inputs.spw, antnegsig=inputs.antnegsig,
+                antpossig=inputs.antpossig, tmantint=inputs.tmantint,
+                tmint=inputs.tmint, tmbl=inputs.tmbl,
+                antblnegsig=inputs.antblnegsig,
+                antblpossig=inputs.antblpossig,
+                relaxed_factor=inputs.relaxed_factor)
+            caftask = correctedampflag.Correctedampflag(cafinputs)
+            cafresult = self._executor.execute(caftask)
 
-        # If flags were found in the bandpass calibrator, create the
-        # "after calibration, after flagging" plots for the weblog
-        cafflags = cafresult.flagcmds()
-        if cafflags:
-            LOG.info('Creating "after calibration, after flagging" plots')
-            result.plots['after'] = plot_fn(suffix='after')
+            # If flags were found in the bandpass calibrator, create the
+            # "after calibration, after flagging" plots for the weblog
+            cafflags = cafresult.flagcmds()
+            if cafflags:
+                LOG.info('Creating "after calibration, after flagging" plots')
+                result.plots['after'] = plot_fn(suffix='after')
 
-        # Restore the "pre-bandpassflag" backup of the flagging state.
-        LOG.info('Restoring back-up of "pre-bandpassflag" flagging state.')
-        task = casa_tasks.flagmanager(
-            vis=inputs.vis, mode='restore', versionname=flag_backup_name_prebpf)
-        self._executor.execute(task)
+        finally:
+            # Restore the "pre-bandpassflag" backup of the flagging state.
+            LOG.info('Restoring back-up of "pre-bandpassflag" flagging state.')
+            task = casa_tasks.flagmanager(
+                vis=inputs.vis, mode='restore', versionname=flag_backup_name_prebpf)
+            self._executor.execute(task)
 
+        # If new outliers were identified...
         if cafflags:
             # Re-apply the newly found flags from correctedampflag.
             LOG.info('Re-applying flags from correctedampflag.')

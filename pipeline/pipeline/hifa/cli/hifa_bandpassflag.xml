@@ -159,7 +159,7 @@ amplitudes for bandpass calibrator.
     </param>
 
     <param type="string" name="tmbl" subparam="true">
-        <description>Initial threshold for maximum fraction of "bad baselines" over "all timestamps" that an antenna may be a part of</description>
+        <description>Initial threshold for maximum fraction of "bad baselines" over "all baselines" that an antenna may be a part of</description>
         <value>0.175</value>
     </param>
 
@@ -316,9 +316,8 @@ hm_bandpass -- The bandpass solution heuristics. The options are 'snr'
     the user defined parameters for all spws).
 
 solint --  Time and channel solution intervals in CASA syntax.
-    default: 'inf' Used for hm_bandpass='fixed', and as a default
-    for the 'snr' and 'smoothed' options.
-    default: 'inf,7.8125MHz'
+    default: 'inf,7.8125MHz' for hm_bandpass='fixed'
+             'inf' for hm_bandpass='snr' or 'smoothed'
     example: solint='inf,10ch', solint='inf'
 
 maxchannels --  The bandpass solution smoothing factor in channels. The
@@ -358,7 +357,7 @@ minsnr -- Solutions below this SNR are rejected. Used for hm_bandtype=
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurment
+vis -- The list of input measurement sets. Defaults to the list of measurement
     sets specified in the pipeline context.
     default: ''
     example: ['M51.ms']
@@ -410,7 +409,7 @@ tmint -- Initial threshold for maximum fraction of "outlier timestamps" over
     default: 0.09
 
 tmbl -- Initial threshold for maximum fraction of "bad baselines" over "all
-    timestamps" that an antenna may be a part of.
+    baselines" that an antenna may be a part of.
     default: 0.175
 
 antblnegsig -- Lower sigma threshold for identifying outliers as a result of
