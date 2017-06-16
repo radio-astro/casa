@@ -67,7 +67,7 @@ class CorrectedampflagInputs(basetask.StandardInputs):
             return self._handle_multiple_vis('spw')
 
         science_spws = self.ms.get_spectral_windows(
-            self._spw, with_channels=True)
+            science_windows_only=True)
         return ','.join([str(spw.id) for spw in science_spws])
 
     @spw.setter
