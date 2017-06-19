@@ -601,7 +601,9 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                         reason='bad baseline',
                                         antenna_id_to_name=antenna_id_to_name))
 
-        # TODO: add consolidation of flagging commands?
+        # Consolidate flagging commands that differ only by polarisation.
+        if newflags:
+            newflags = self._consolidate_flags_with_same_pol(newflags)
 
         # Initialize flagging summaries.
         stats_before, stats_after = {}, {}
@@ -661,3 +663,82 @@ class Correctedampflag(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         return result
+
+    @staticmethod
+    def _consolidate_flags_with_same_pol(flags):
+        """
+        Method to consolidate a list of FlagCmd objects ("flags") by removing
+        flags that differ only in polarisation.
+
+        This method belongs to correctedampflag, by making assumptions on which
+        properties of the FlagCmd it needs to compare.
+        """
+
+        # Get flag commands.
+        flagcmds = [flag.flagcmd for flag in flags]
+
+        # If all flag commands are unique, then there is nothing to
+        # consolidate.
+        if len(flagcmds) == len(set(flagcmds)):
+            cflags = flags
+
+        # If duplicate flag commands exist, go through each one, verify that
+        # the duplication is just due to difference in polaristion, and for
+        # those where this is true, replace them with a single flag.
+        else:
+            # Identify the flags that have non-unique flagging commands:
+            uval, uind, ucnt = np.unique(flagcmds, return_inverse=True,
+                                         return_counts=True)
+
+            # Build new list of flags.
+            cflags = []
+            for ind, cnt in enumerate(ucnt):
+                # For flags that appear twice...
+                if cnt == 2:
+                    # Identify which flags these were.
+                    flag1, flag2 = [flags[i]
+                                    for i, val in enumerate(uind)
+                                    if val == ind]
+                    # Check that the flag commands differ only in polarisation
+                    if (flag1.filename == flag2.filename and
+                            flag1.spw == flag2.spw and
+                            flag1.antenna == flag2.antenna and
+                            flag1.intent == flag2.intent and
+                            flag1.time == flag2.time and
+                            flag1.field == flag2.field and
+                            flag1.reason == flag2.reason and
+                            flag1.pol != flag2.pol):
+
+                        # Copy across just first flag, but set its polarisation
+                        # to empty.
+                        flag1.pol = ''
+                        cflags.append(flag1)
+                        LOG.trace('Consolidated 2 duplicate flags that '
+                                  'differed only in polarisation.')
+                    # If they differed in a non-anticipated manner, copy across
+                    # both.
+                    else:
+                        cflags.extend([flag1, flag2])
+                        LOG.trace('Unable to consolidate 2 flags with same flag '
+                                  'command, appear to differ in unanticipated '
+                                  'manner.')
+
+                # If flags do not appear twice, they either appear once
+                # (commonly expected) or more than twice (never expected).
+                # Either way, don't attempt any consolidation for these cases
+                # and just copy them to the output array.
+                else:
+                    cflags.extend([flags[i]
+                                   for i, val in enumerate(uind)
+                                   if val == ind])
+                    if cnt > 2:
+                        # If the flag appeared more than twice, something must
+                        # have gone wrong, insofar that flags differed by a
+                        # metric that is not the polarisation but that was not
+                        # included in flagging command. This should not happen,
+                        # but log it as a "trace" message for potential
+                        # debugging.
+                        LOG.trace('Unable to consolidate 3+ flags with same flag '
+                                  'command, unanticipated case.')
+
+        return cflags
