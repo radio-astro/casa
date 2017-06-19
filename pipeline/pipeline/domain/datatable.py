@@ -28,6 +28,7 @@ import numpy
 import math
 import re
 import collections
+import shutil
 
 #import memory_profiler
 
@@ -55,7 +56,7 @@ def __coldesc( vtype, option, maxlen,
 # Description for data table columns as dictionary.
 # Each value is a tuple containing:
 #
-#    (valueType,option,ndim,maxlen,comment[,unit])
+#    (valueType,option,maxlen,ndim,comment[,unit])
 #
 # dataManagerGroup and dataManagerType is always 'StandardStMan'.
 TD_DESC_RO = [
@@ -193,7 +194,7 @@ class DataTableImpl( object ):
         else:
             if readonly is None:
                 readonly = True
-            self.importdata(name=name, minimal=False, readonly=readonly)
+            self.importdata2(name=name, minimal=False, readonly=readonly)
 
     def __del__( self ):
         # make sure that table is closed
@@ -324,6 +325,17 @@ class DataTableImpl( object ):
         self.plaintable = absolute_path(name)
         self.__init_cols(readonly=readonly)
 
+    def importdata2( self, name, minimal=True, readonly=True ):
+        """
+        name -- name of DataTable to be imported
+        """
+        LOG.debug('Importing DataTable from %s...'%(name))
+
+        # copy input table to memory
+        self._copyfrom2( name, minimal )
+        self.plaintable = absolute_path(name)
+        self.__init_cols(readonly=readonly)
+
     def sync(self, minimal=True):
         """
         Sync with DataTable on disk.
@@ -357,9 +369,14 @@ class DataTableImpl( object ):
         # save
         if not minimal or not os.path.exists( os.path.join(abspath,'RO') ):
             #LOG.trace('Exporting RO table')
-            tbloc = self.tb1.copy( os.path.join(abspath,'RO'), deep=True,
+            if os.path.exists(self.tb1.name()):
+                # self.tb1 seems to be plain table, nothing to be done
+                pass
+            else:
+                # tb1 is memory table
+                tbloc = self.tb1.copy( os.path.join(abspath,'RO'), deep=True,
                                    valuecopy=True, returnobject=True )
-            tbloc.close()
+                tbloc.close()
         #LOG.trace('Exporting RW table')
         tbloc = self.tb2.copy( os.path.join(abspath,'RW'), deep=True,
                                valuecopy=True, returnobject=True )
@@ -410,6 +427,22 @@ class DataTableImpl( object ):
                 self.tb1 = tb.copy( self.memtable1, deep=True,
                                     valuecopy=True, memorytable=True,
                                     returnobject=True )
+        with casatools.TableReader(os.path.join(name,'RW')) as tb:
+            self.tb2 = tb.copy( self.memtable2, deep=True,
+                                valuecopy=True, memorytable=True,
+                                returnobject=True )
+        self.isopened = True
+
+    def _copyfrom2( self, name, minimal=True ):
+        self._close()
+        abspath = absolute_path(name)
+        if not minimal or abspath != self.plaintable:
+            #with casatools.TableReader(os.path.join(name,'RO')) as tb:
+            #    self.tb1 = tb.copy( self.memtable1, deep=True,
+            #                        valuecopy=True, memorytable=True,
+            #                        returnobject=True )
+            self.tb1 = casatools.casac.table()
+            self.tb1.open(os.path.join(name, 'RO'), nomodify=False)
         with casatools.TableReader(os.path.join(name,'RW')) as tb:
             self.tb2 = tb.copy( self.memtable2, deep=True,
                                 valuecopy=True, memorytable=True,
@@ -669,33 +702,64 @@ class DataTableImpl( object ):
         # new implementation
 #         start = time.time()
         tb = self.tb1
-        taql = 'SELECT ROWID() AS ROWID FROM "{dt}" WHERE MS == {msid} ORDER BY ROWID()'.format(dt=self.get_rotable_name(self.plaintable),
-                                                                                                msid=msidx)
-        indextable = tb.taql(taql)
-        try:
-            dt_rows = indextable.getcol('ROWID')  
-        finally:
-            indextable.close()
-            del indextable
- 
-        taql = ' '.join(['SELECT IIF(FLAG_ROW || ALLS(FLAG,2), 0, 1) AS IFLAG FROM "{vis}"'.format(vis=infile),
-                         'WHERE ROWID() IN [SELECT ROW FROM "{dt}" WHERE MS == {msid}]'.format(dt=self.get_rotable_name(self.plaintable),
-                                                                                               msid=msidx),
-                         'ORDER BY ROWID()'])
-        collapsed = tb.taql(taql)
-        try:
-            assert len(dt_rows) == collapsed.nrows()
-#             assert numpy.all(dt_rows == index[0])
-            for (irow, dt_row) in enumerate(dt_rows):
-                _online_flag = self.tb2.getcell('FLAG_PERMANENT', dt_row)
-                _iflag = collapsed.getcell('IFLAG', irow)
-                _online_flag[:, OnlineFlagIndex] = _iflag
-                # CAS-2799: dt_row must be casted to Python int since tb.putcell 
-                #           doesn't accept numpy int
-                self.tb2.putcell('FLAG_PERMANENT', int(dt_row), _online_flag)
-        finally:
-            collapsed.close()
-            del collapsed 
+#         taql = 'SELECT ROWID() AS ROWID FROM "{dt}" WHERE MS == {msid} ORDER BY ROWID()'.format(dt=self.get_rotable_name(self.plaintable),
+#                                                                                                 msid=msidx)
+#         indextable = tb.taql(taql)
+#         try:
+#             dt_rows = indextable.getcol('ROWID')  
+#         finally:
+#             indextable.close()
+#             del indextable
+            
+        # back to previous impl. with reduced memory usage
+        # (no performance verification)
+        ms_ids = self.getcol('MS')
+        dt_rows = numpy.where(ms_ids == msidx)[0]
+        del ms_ids
+        rows = self.getcol('ROW')
+        ms_rows = rows[dt_rows] 
+        with casatools.TableReader(infile) as tb:
+            #for dt_row in index[0]:
+            for dt_row, ms_row in zip(dt_rows, ms_rows):
+                #ms_row = rows[dt_row]
+                flag = tb.getcell('FLAG', ms_row)
+                rowflag = tb.getcell('FLAG_ROW', ms_row)
+                #irow += 1
+                npol = flag.shape[0]
+                online_flag = numpy.empty((npol, 1,), dtype=numpy.int32)
+                if rowflag == True:
+                    online_flag[:] = 0
+                else:
+                    for ipol in range(npol):
+                        online_flag[ipol,0] = 0 if flag[ipol].all() else 1
+                self.tb2.putcellslice('FLAG_PERMANENT', int(dt_row), online_flag,
+                                      blc=[0, OnlineFlagIndex], trc=[npol-1, OnlineFlagIndex], 
+                                      incr=[1,1])
+#         end = time.time()
+#         LOG.info('current implementation: {0} sec'.format(end-start))
+#         taql_table = '__' + os.path.basename(infile.rstrip('/'))+'.taql.collapsed'
+#         taql = ' '.join(['SELECT IIF(FLAG_ROW || ALLS(FLAG,2), 0, 1) AS IFLAG FROM "{vis}"'.format(vis=infile),
+#                          'WHERE ROWID() IN [SELECT ROW FROM "{dt}" WHERE MS == {msid}]'.format(dt=self.get_rotable_name(self.plaintable),
+#                                                                                                msid=msidx),
+#                          'ORDER BY ROWID() GIVING "{out}" AS PLAIN'.format(out=taql_table)])
+#         try:
+#             collapsed = tb.taql(taql)
+#             assert len(dt_rows) == collapsed.nrows()
+# #             assert numpy.all(dt_rows == index[0])    
+#             iflags = collapsed.getcol('IFLAG')
+#         finally:
+#             collapsed.close()
+#             del collapsed 
+#             if os.path.exists(taql_table):
+#                 shutil.rmtree(taql_table)
+#                 
+#         for (irow, dt_row) in enumerate(dt_rows):
+#             _online_flag = self.getcell('FLAG_PERMANENT', dt_row)
+#             _iflag = iflags[:, irow]#collapsed.getcell('IFLAG', irow)
+#             _online_flag[:, OnlineFlagIndex] = _iflag
+#             # CAS-2799: dt_row must be casted to Python int since tb.putcell 
+#             #           doesn't accept numpy int
+#             self.putcell('FLAG_PERMANENT', int(dt_row), _online_flag)
              
 #         end = time.time()
 #         LOG.info('taql implementation: {0} sec'.format(end-start))
