@@ -442,7 +442,7 @@ class SDSparseMapDisplay(SDImageDisplay):
                 frame = self.frequency_frame
                 if frame != 'TOPO':
                     # do conversion
-                    field_id = self.inputs.fieldid_list[0]
+                    field_id = self.inputs.fieldid_list[ms_id]
                     field = ms.fields[field_id]
                     direction_ref = field.mdirection
                     start_time = ms.start_time
