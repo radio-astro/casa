@@ -3,7 +3,8 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.domain import DataTable
+#from pipeline.domain import DataTable
+from .. import common
 
 #from pipeline.hif.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
 from pipeline.h.tasks.applycal.applycal import ApplycalInputs, Applycal, ApplycalResults
@@ -51,7 +52,7 @@ class SDMSApplycalInputs(ApplycalInputs,basetask.StandardInputs,
             value = 'calflagstrict'
         self._applymode = value
 
-class SDMSApplycal(Applycal, basetask.StandardTaskTemplate):
+class SDMSApplycal(Applycal, common.SingleDishTask):#basetask.StandardTaskTemplate):
     """
     Applycal executes CASA applycal tasks for the current context state,
     applying calibrations registered with the pipeline context to the target
@@ -83,7 +84,8 @@ class SDMSApplycal(Applycal, basetask.StandardTaskTemplate):
         results = super(SDMSApplycal, self).prepare()
         # Update Tsys in datatable
         context = self.inputs.context
-        datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
+        #datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=False)
+        datatable = self.datatable_instance
         # this task uses _handle_multiple_vis framework 
         msobj = self.inputs.ms
         datatable._update_flag(context, msobj.name)
