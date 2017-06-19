@@ -35,6 +35,7 @@ import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
 #import pipeline.hif.tasks.exportdata.exportdata as hif_exportdata
 import pipeline.h.tasks.exportdata.exportdata as h_exportdata
+import pipeline.hifa.tasks.exportdata.almaexportdata as almaexportdata
 from . import manifest
 
 # the logger for this module
@@ -46,7 +47,7 @@ class SDMSExportDataInputs(h_exportdata.ExportDataInputs):
     pass
 
 
-class SDMSExportData(h_exportdata.ExportData):
+class SDMSExportData(almaexportdata.ALMAExportData):
     """
     SDMSExportData is the base class for exporting data to the products
     subdirectory. It performs the following operations:
@@ -60,17 +61,6 @@ class SDMSExportData(h_exportdata.ExportData):
     """
     Inputs = SDMSExportDataInputs
     
-    def prepare(self):
-        results = super(SDMSExportData, self).prepare()
-        manifest = os.path.join(self.inputs.context.products_dir, results.manifest)
-        LOG.debug('manifest file is \'%s\''%(manifest))
-        
-        jyperk = self._export_jyperk(self.inputs.context, self.inputs.context.products_dir)
-        if jyperk is not None:
-            self._add_jyperk_to_manifest(manifest, jyperk)
-        
-        return results
-     
     def _export_final_calfiles(self, context, oussid, session, vislist, products_dir):
         """
         Save the final calibration tables in a tarfile one file
@@ -136,7 +126,38 @@ class SDMSExportData(h_exportdata.ExportData):
             # Restore the original current working directory
             os.chdir(cwd)
 
-    def _export_jyperk(self, context, products_dir):
+    def _do_auxiliary_products(self, context, oussid, output_dir, products_dir):
+        cwd = os.getcwd()
+        tarfilename = 'Undefined'
+        jyperk = self._detect_jyperk(context)
+        if jyperk is None:
+            return None
+
+        try:
+            os.chdir(output_dir)
+
+            # Define the name of the output tarfile
+            tarfilename = '{}.auxproducts.tgz'.format(oussid)
+            LOG.info('Saving auxliary dat products in %s', tarfilename)
+
+            # Open tarfile
+            with tarfile.open(os.path.join(products_dir, tarfilename), 'w:gz') as tar:
+
+                # Save flux file
+                if os.path.exists(jyperk):
+                    tar.add(jyperk, arcname=os.path.basename(jyperk))
+                    LOG.info('Saving auxiliary data product %s in %s', os.path.basename(jyperk), tarfilename)
+                else:
+                    LOG.info('Auxiliary data product %s does not exist', os.path.basename(jyperk))
+
+                tar.close()
+        finally:
+            # Restore the original current working directory
+            os.chdir(cwd)
+
+        return tarfilename
+    
+    def _detect_jyperk(self, context):
         reffile_list = set(self.__get_reffile(context.results))
         
         if len(reffile_list) == 0:
@@ -153,8 +174,8 @@ class SDMSExportData(h_exportdata.ExportData):
             LOG.debug('K2Jy file \'%s\' not found'%(jyperk))
             return None
         
-        shutil.copy(jyperk, products_dir)
-        return jyperk
+        LOG.info('Exporting {0} as a product'.format(jyperk))
+        return os.path.abspath(jyperk)
     
     def __get_reffile(self, results):
         for proxy in results:
