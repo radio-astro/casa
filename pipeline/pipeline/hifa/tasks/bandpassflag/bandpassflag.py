@@ -272,10 +272,11 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             # Create and execute task.
             bptask = bandpass.ALMAPhcorBandpass(bpinputs)
             bpresult = self._executor.execute(bptask)
-        else:
-            # If no flags were found in the bandpass calibrator,
-            # create a copy of preliminary table and label it
-            # as final.
+
+        # If no flags were found in the bandpass calibrator, and a
+        # preliminary bandpass table was created, then create a copy and
+        # label it as the final table.
+        elif bpresult.final:
             fn_bp_prelim = bpresult.final[0].gaintable
             if '.prelim' in fn_bp_prelim:
                 fn_bp_final = '.final'.join(fn_bp_prelim.rpartition('.prelim')[0::2])
@@ -290,6 +291,8 @@ class Bandpassflag(basetask.StandardTaskTemplate):
             # that points to the final bp table.
             bpresult.final[0].calfrom[0] = self._copy_calfrom_with_gaintable(
                 bpresult.final[0].calfrom[0], fn_bp_final)
+        else:
+            LOG.warning('No bandpass table could be created.')
 
         # Store bandpass task result.
         result.bpresult = bpresult
