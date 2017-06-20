@@ -255,8 +255,11 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                         antenna_id_to_name)
                     newflags.extend(flags_for_intent_field_spw)
 
-        # Consolidate flagging commands that differ only by polarisation.
         if newflags:
+            # Propagate PHASE 'bad baseline' flags to TARGET.
+            newflags = self._propagate_phase_flags(newflags, ms, antenna_id_to_name)
+
+            # Consolidate flagging commands that differ only by polarisation.
             newflags = self._consolidate_flags_with_same_pol(newflags)
 
         # Apply flags and get before/after summary.
@@ -789,3 +792,30 @@ class Correctedampflag(basetask.StandardTaskTemplate):
                                   'command, unanticipated case.')
 
         return cflags
+
+    @staticmethod
+    def _propagate_phase_flags(flags, ms, antenna_id_to_name):
+
+        # Propagate any "bad baseline" flag commands for intent "PHASE"
+        # to TARGET.
+        propagated_flags = []
+        for flag in flags:
+            if (flag.reason == 'bad baseline'
+                    and flag.intent == utils.to_CASA_intent(ms, "PHASE")):
+                propagated_flags.append(
+                    FlagCmd(
+                        filename=flag.filename,
+                        spw=flag.spw,
+                        antenna=flag.antenna,
+                        intent=utils.to_CASA_intent(ms, "TARGET"),
+                        pol=flag.pol,
+                        field=flag.field,
+                        reason='bad baseline propagated from PHASE',
+                        antenna_id_to_name=antenna_id_to_name))
+        if propagated_flags:
+            LOG.info('Propagated {} flagging commands with reason '
+                     '\"bad baseline\" from PHASE intent to TARGET '
+                     'intent.'.format(len(propagated_flags)))
+            flags.extend(propagated_flags)
+
+        return flags
