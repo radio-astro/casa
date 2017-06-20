@@ -15,6 +15,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
 from . import plotpwv
+from . import plotweather
 from pipeline.extern import analysis_scripts
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
@@ -109,7 +110,8 @@ class WeatherChart(object):
 
         LOG.debug('Creating new Weather plot')
         try:
-            analysisUtils.plotWeather(vis=self.ms.name, figfile=self.figfile)
+            #analysisUtils.plotWeather(vis=self.ms.name, figfile=self.figfile)
+            plotweather.plotWeather(vis=self.ms.name, figfile=self.figfile)
         except:
             return None
         finally:
