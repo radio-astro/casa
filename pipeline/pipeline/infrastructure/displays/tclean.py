@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 import collections
 import os
+import copy
+import matplotlib
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.displays as displays
@@ -99,7 +101,7 @@ class CleanSummary(object):
                 if 'model' in iteration and os.path.exists(iteration['model'] + extension):
                     plot_wrappers.append(
                         displays.SkyDisplay().plot(self.context, iteration['model'] + extension, reportdir=stage_dir,
-                                                   intent=r.intent))
+                                                   intent=r.intent, **{'cmap': copy.deepcopy(matplotlib.cm.seismic)}))
 
                 # MOM0_FC for this iteration (currently only last but allow for others in future).
                 if 'mom0_fc' in iteration and os.path.exists(iteration['mom0_fc'] + extension):
