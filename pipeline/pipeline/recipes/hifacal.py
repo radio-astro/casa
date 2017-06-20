@@ -30,11 +30,8 @@ from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
 from hifa_antpos_cli import hifa_antpos_cli as hifa_antpos
 from hifa_wvrgcalflag_cli import hifa_wvrgcalflag_cli as hifa_wvrgcalflag
 from hif_lowgainflag_cli import hif_lowgainflag_cli as hif_lowgainflag
-from hif_setjy_cli import hif_setjy_cli as hif_setjy
 from hif_setmodels_cli import hif_setmodels_cli as hif_setmodels
-# from hif_bandpass_cli import hif_bandpass_cli as hif_bandpass
-from hifa_bandpass_cli import hifa_bandpass_cli as hifa_bandpass
-from hif_bpflagchans_cli import hif_bpflagchans_cli as hif_bpflagchans
+from hifa_bandpassflag_cli import hifa_bandpassflag_cli as hifa_bandpassflag
 from hifa_spwphaseup_cli import hifa_spwphaseup_cli as hifa_spwphaseup
 from hifa_gfluxscale_cli import hifa_gfluxscale_cli as hifa_gfluxscale
 from hifa_timegaincal_cli import hifa_timegaincal_cli as hifa_timegaincal
@@ -103,9 +100,6 @@ def hifacal(vislist, importonly=True, pipelinemode='automatic',
         # Compute the bandpass calibration
         hifa_bandpassflag(pipelinemode=pipelinemode)
 
-        # Flag deviant channels in the bandpass calibration
-        hif_bpflagchans(pipelinemode=pipelinemode)
-    
         # Compute the bandpass calibration
         hifa_spwphaseup(pipelinemode=pipelinemode)
 
