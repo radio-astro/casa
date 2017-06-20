@@ -109,6 +109,7 @@ It generates an image combined spectral data from whole antenna as well as image
 % for plots in plots_list:
     <li><a href="#${plots['title'].replace(" ", "")}">${plots['title']}</a></li>
 % endfor
+<li><a href="#sensitivity">Image Sensitivity Table</a></li>
 </ul>
 
 
@@ -213,4 +214,29 @@ It generates an image combined spectral data from whole antenna as well as image
     % endfor
 	<div class="clearfix"></div><!--  flush plots, break to next row -->
 % endfor
+
+<h3 id="sensitivity" class="jumptarget">Image Sensitivity</h3>
+<table class="table table-bordered table-striped" summary="Image Sentivitity">
+	<caption>RMS of line-free channels</caption>
+    <thead>
+	    <tr>
+	        <th scope="col" rowspan="2">Name</th>
+	        <th scope="col" rowspan="2">Channel Range</th>
+	        <th scope="col" colspan="2">Native Resolution</th>
+		</tr>
+		<tr>
+	        <th scope="col">Channel width [Hz]</th>
+	        <th scope="col">RMS</th>
+	    </tr>
+	</thead>
+	<tbody>
+	% for tr in rms_table:
+		<tr>
+		% for td in tr:
+			${td}
+		% endfor
+		</tr>
+	%endfor
+	</tbody>
+</table>
 

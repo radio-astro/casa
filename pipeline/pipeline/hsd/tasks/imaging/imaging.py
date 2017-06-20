@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -8,6 +9,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.utils as utils
+from pipeline.infrastructure import casa_tasks
 #from pipeline.hif.heuristics import fieldnames
 from pipeline.h.heuristics import fieldnames
 from pipeline.domain import DataTable
@@ -205,6 +207,7 @@ class SDImaging(basetask.StandardTaskTemplate):
             fieldid_list = [group_desc[i].field_id for i in member_list]
             temp_dd_list = [ms_list[i].get_data_description(spw=spwid_list[i]) \
                             for i in xrange(len(member_list))]
+            channelmap_range_list = [ group_desc[i].channelmap_range for i in member_list ]
             # this becomes list of list [[poltypes for ms0], [poltypes for ms1], ...]
 #             polids_list = [[ddobj.get_polarization_id(corr) for corr in ddobj.corr_axis \
 #                             if corr in self.required_pols ] for ddobj in temp_dd_list]
@@ -222,9 +225,9 @@ class SDImaging(basetask.StandardTaskTemplate):
  
             # image is created per antenna (science) or per asdm and antenna (ampcal)
             image_group = {}
-            for (msobj, ant, spwid, fieldid, pollist) in zip(ms_list, antenna_list,
+            for (msobj, ant, spwid, fieldid, pollist, chanmap) in zip(ms_list, antenna_list,
                                                              spwid_list, fieldid_list,
-                                                             pols_list):
+                                                             pols_list, channelmap_range_list):
                 field_name = msobj.fields[fieldid].name
                 identifier = field_name
                 antenna = msobj.antennas[ant].name
@@ -234,9 +237,9 @@ class SDImaging(basetask.StandardTaskTemplate):
                     asdm_name = common.asdm_name_from_ms(msobj)
                     identifier += ('.'+asdm_name)
                 if identifier in image_group.keys():
-                    image_group[identifier].append([msobj, ant, spwid, fieldid, pollist])
+                    image_group[identifier].append([msobj, ant, spwid, fieldid, pollist, chanmap])
                 else:
-                    image_group[identifier] = [[msobj, ant, spwid, fieldid, pollist]]
+                    image_group[identifier] = [[msobj, ant, spwid, fieldid, pollist, chanmap]]
             LOG.debug('image_group=%s' % (image_group))
  
             # loop over antennas
@@ -246,6 +249,7 @@ class SDImaging(basetask.StandardTaskTemplate):
             combined_spws = []
             tocombine_images = []
             combined_pols = []
+            combined_rms_exclude = []
   
             coord_set = False
             for (name, _members) in image_group.items():
@@ -254,6 +258,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 spwids = map(lambda x: x[2], _members)
                 fieldids = map(lambda x: x[3], _members)
                 polslist = map(lambda x: x[4], _members)
+                chanmap_range_list = map(lambda x: x[5], _members)
                 LOG.info("Processing image group: %s" % name)
                 for idx in xrange(len(msobjs)):
                     LOG.info("\t%s: Antenna %d (%s) Spw %s Field %d (%s)" % \
@@ -373,7 +378,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                     grid_task_class = gridding.gridding_factory(observing_pattern)
                     grid_tables = []
                     grid_input_dict = {}
-                    for (msobj, antid, spwid, fieldid, poltypes) in _members:
+                    for (msobj, antid, spwid, fieldid, poltypes, _dummy) in _members:
                         msname = msobj.name # Use parent ms
                         for p in poltypes:
                             if not grid_input_dict.has_key(p):
@@ -406,7 +411,15 @@ class SDImaging(basetask.StandardTaskTemplate):
                     for i in xrange(len(grid_input_dict)):
                         validsps.append([r[6] for r in grid_tables[i]])
                         rmss.append([r[8] for r in grid_tables[i]])
-  
+                    
+                    # define RMS ranges in image
+                    with casatools.ImageReader(imager_result.outcome) as ia:
+                        cs = ia.coordsys()
+                        frequency_frame = cs.getconversiontype('spectral')
+                        rms_exclude_freq = self._get_rms_exclude_freq_range_image(frequency_frame, chanmap_range_list, edge, msobjs, antids, spwids, fieldids)
+                        LOG.info("#####FREQ RANGE IN IMAGE FRAME = %s" % str(rms_exclude_freq))
+                    combined_rms_exclude.extend(rms_exclude_freq)
+ 
                     image_item = imagelibrary.ImageItem(imagename=imagename,
                                                         sourcename=source_name,
                                                         spwlist=spwids,
@@ -534,6 +547,45 @@ class SDImaging(basetask.StandardTaskTemplate):
                 for i in xrange(len(grid_input_dict)):
                     validsps.append([r[6] for r in grid_tables[i]])
                     rmss.append([r[8] for r in grid_tables[i]])
+
+                # calculate RMS of line free frequencies in a combined image
+                with casatools.ImageReader(imager_result.outcome) as ia:
+                    cs = ia.coordsys()
+                    faxis = cs.findaxisbyname('spectral')
+                    num_chan = ia.shape()[faxis]
+                    chan_width = cs.increment()['numeric'][faxis]
+                    brightnessunit = ia.brightnessunit()
+                world = cs.referencevalue()['numeric']
+                rms_exclude_freq = self._merge_ranges(combined_rms_exclude)
+                LOG.info("#####FREQ RANGE IN IMAGE FRAME = %s" % str(rms_exclude_freq))
+                rms_exclude_chan = numpy.zeros((len(rms_exclude_freq), 2), dtype=numpy.double)
+                for i in range(len(rms_exclude_freq)):
+                    segment = rms_exclude_freq[i]
+                    world[faxis] = segment[0]
+                    start_chan = cs.topixel(world)['numeric'][faxis]
+                    world[faxis] = segment[1]
+                    end_chan = cs.topixel(world)['numeric'][faxis]
+                    # handling of LSB
+                    rms_exclude_chan[i] = [max(int(min(start_chan, end_chan)), 0),
+                                           min(int(max(start_chan, end_chan)), num_chan-1)]
+                LOG.info("#####EXCLUDE CHANNEL RANGE IN IMAGE FRAME = %s" % str(rms_exclude_chan))
+                include_channel_range = []
+                if len(rms_exclude_chan) == 0:
+                    include_channel_range = [edge[0], num_chan-1-edge[1]]
+                else:
+                    if rms_exclude_chan[0][0] > edge[0]:
+                        include_channel_range.extend([edge[0], rms_exclude_chan[0][0]-1])
+                    for j in range(len(rms_exclude_chan)-1):
+                        include_channel_range.extend([rms_exclude_chan[j][1]+1, rms_exclude_chan[j+1][0]-1])
+                    if rms_exclude_chan[-1][1] + 1 < num_chan-1-edge[1]:
+                        include_channel_range.extend([rms_exclude_chan[-1][1] + 1, num_chan-1-edge[1]])
+                LOG.info("#####RMS CHANNEL RANGE IN IMAGE FRAME = %s" % str(include_channel_range))
+                
+                stat_chans = str(';').join([ '%d~%d' % (include_channel_range[iseg], include_channel_range[iseg+1]) for iseg in range(0, len(include_channel_range), 2) ])
+                # statistics
+                imstat_job = casa_tasks.imstat(imagename=imagename, chans=stat_chans)
+                statval = self._executor.execute(imstat_job)
+                LOG.info("Statistics of line free channels (%s): RMS = %f %s, Stddev = %f %s, Mean = %f %s" % (stat_chans, statval['rms'][0], brightnessunit, statval['sigma'][0], brightnessunit, statval['mean'][0], brightnessunit))
                   
                 image_item = imagelibrary.ImageItem(imagename=imagename,
                                                     sourcename=source_name,
@@ -552,6 +604,7 @@ class SDImaging(basetask.StandardTaskTemplate):
                 outcome['assoc_antennas'] = combined_antids
                 outcome['assoc_fields'] = combined_fieldids
                 outcome['assoc_spws'] = combined_spws
+                outcome['image_sensitivity'] = {'channel_range': stat_chans, 'rms': "%f %s" % (statval['rms'][0], brightnessunit), 'channel_width': chan_width}
 #                 outcome['assoc_pols'] = pols
 
 #                 # to register exported_ms to each scantable instance
@@ -576,4 +629,116 @@ class SDImaging(basetask.StandardTaskTemplate):
     
     def analyse(self, result):
         return result
+
+    def _get_rms_exclude_freq_range_image(self, to_frame, chanmap_range_list, edge, msobjs, antids, spwids, fieldids):
+        image_rms_freq_range = []
+        channelmap_range = []
+        print("##### chanmap_range=%s" % str(chanmap_range_list))
+        for chanmap_range in chanmap_range_list:
+            for map_range in chanmap_range:
+                if map_range[2]:
+                    min_chan = int(map_range[0]-map_range[1]*0.5)
+                    max_chan = int(numpy.ceil(map_range[0]+map_range[1]*0.5))
+                    channelmap_range.append([min_chan, max_chan])
+        LOG.info("#####CHANNEL MAP RANGE = %s" % str(channelmap_range))
+        for i in range(len(msobjs)):
+            # define channel ranges of lines and deviation mask for each MS
+            msobj = msobjs[i]
+            fieldid = fieldids[i]
+            antid = antids[i]
+            spwid = spwids[i]
+            spwobj = msobj.get_spectral_window(spwid)
+            exclude_range = msobj.deviation_mask[(fieldid, antid, spwid)]
+            LOG.info("#####MS: %s" % str(msobj.basename))
+            LOG.info("#####DEVIATION MASK = %s" % str(msobj.deviation_mask[(fieldid, antid, spwid)]))
+            if len(exclude_range)==1 and exclude_range[0] == [0, spwobj.num_channels-1]:
+                # deviation mask is full channel range when all data are flagged
+                LOG.warn("Ignoring DEVIATION MASK of %s (SPW %d, FIELD %d, ANT %d). Possibly all data flagged" % (msobj.basename, spwid, antid, fieldid))
+                exclude_range = []
+            if edge[0] > 0: exclude_range.append([0, edge[0]-1])
+            if edge[1] > 0: exclude_range.append([spwobj.num_channels-edge[1], spwobj.num_channels-1])
+            if len(channelmap_range) >0:
+                exclude_range.extend(channelmap_range)
+            exclude_channel_range = self._merge_ranges(exclude_range)
+            LOG.info("#####CHANNEL MAP AND DEVIATION MASK CHANNEL RANGE = %s" % str(exclude_channel_range))
+#             # define channel ranges of RMS (1-D list for start and end channel ids)
+#             include_channel_range = []
+#             if len(exclude_channel_range) == 0:
+#                 include_channel_range = [0, spwobj.num_channels-1]
+#             else:
+#                 if exclude_channel_range[0][0] > 0:
+#                     include_channel_range.extend([0, exclude_channel_range[0][0]-1])
+#                 for j in range(len(exclude_channel_range)-1):
+#                     include_channel_range.extend([exclude_channel_range[j][1]+1, exclude_channel_range[j+1][0]-1])
+#                 if exclude_channel_range[-1][1] + 1 < spwobj.num_channels-1:
+#                     include_channel_range.extend([exclude_channel_range[-1][1] + 1, spwobj.num_channels-1])
+            # define frequency ranges of RMS
+            exclude_freq_range = numpy.zeros(2*len(exclude_channel_range))
+            for jseg in range(len(exclude_channel_range)):
+                (lfreq, rfreq) = (spwobj.channels.chan_freqs[jchan] for jchan in exclude_channel_range[jseg])
+                # handling of LSB
+                exclude_freq_range[2*jseg:2*jseg+2] = [min(lfreq, rfreq), max(lfreq, rfreq)]
+            LOG.info("#####CHANNEL MAP AND DEVIATION MASK FREQ RANGE = %s" % str(exclude_freq_range))
+            if len(exclude_freq_range)==0: continue # no ranges to add
+            # convert MS freqency ranges to image frame
+            field = msobj.fields[fieldid]
+            direction_ref = field.mdirection
+            start_time = msobj.start_time
+            end_time = msobj.end_time
+            me = casatools.measures
+            qa = casatools.quanta
+            qmid_time = qa.quantity(start_time['m0'])
+            qmid_time = qa.add(qmid_time, end_time['m0'])
+            qmid_time = qa.div(qmid_time, 2.0)
+            time_ref = me.epoch(rf=start_time['refer'], 
+                                v0=qmid_time)
+            position_ref = msobj.antennas[antid].position
+                    
+            # initialize
+            me.done()
+            me.doframe(time_ref)
+            me.doframe(direction_ref)
+            me.doframe(position_ref)
+            def _to_imageframe(x):
+                m = me.frequency(rf=spwobj.frame, v0=qa.quantity(x, 'Hz'))
+                converted = me.measure(v=m, rf=to_frame)
+                qout = qa.convert(converted['m0'], outunit='Hz')
+                return qout['value']
+            to_imageframe = numpy.vectorize(_to_imageframe)
+            image_rms_freq_range.append(to_imageframe(exclude_freq_range))
+        LOG.info("#####Overall LINE CHANNELS IN IMAGE FRAME = %s" % str(image_rms_freq_range))
+        if len(image_rms_freq_range) == 0:
+            return image_rms_freq_range
+        return self._merge_ranges(numpy.reshape(image_rms_freq_range, (len(image_rms_freq_range), 2), 'C'))
+
+    
+    def _merge_ranges(self, range_list):
+        """
+        Merge overlapping ranges in range_list = [ [min0, max0], [min1, max1], .... ]
+        """
+        LOG.info("#####Merge ranges: %s" % str(range_list))
+        num_range = len(range_list)
+        if num_range == 0:
+            return []
+        merged = [ range_list[0][0:2] ]
+        for i in range(1, num_range):
+            segment = range_list[i]
+            if len(segment) < 2:
+                raise ValueError, "segments in range list much have 2 elements"
+            overlap = -1
+            for j in range(len(merged)):
+                if segment[1]<merged[j][0] or segment[0] > merged[j][1]: # no overlap
+                    continue
+                else:
+                    overlap = j
+                    break
+            if overlap < 0:
+                merged.append(segment[0:2])
+            else:
+                merged[j][0] = min(merged[j][0], segment[0])
+                merged[j][1] = max(merged[j][1], segment[1])
+        LOG.info("#####Merged: %s" % str(merged))
+        return merged
+            
+            
     

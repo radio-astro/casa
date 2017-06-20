@@ -27,6 +27,7 @@ import imregrid_pg
 import impbcor_pg
 import importasdm_cli
 import importevla_cli
+import imstat_cli
 import listobs_cli
 import mstransform_cli
 import partition_cli
@@ -349,6 +350,9 @@ class CASATaskJobGenerator(object):
 
     def importevla(self, *v, **k):
         return self._get_job(importevla_cli.importevla_cli, *v, **k)
+
+    def imstat(self, *v, **k):
+        return self._get_job(imstat_cli.imstat_cli, *v, **k)
 
     def listobs(self, *v, **k):
         return self._get_job(listobs_cli.listobs_cli, *v, **k)

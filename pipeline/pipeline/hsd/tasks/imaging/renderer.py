@@ -1,14 +1,18 @@
 import os
+import collections
 
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.displays.singledish as displays
+import pipeline.infrastructure.utils as utils
 
 from ..common import renderer as sdsharedrenderer
 
 from . import imaging
 
 LOG = logging.get_logger(__name__)
+
+ImageRMSTR = collections.namedtuple('ImageRMSTR', 'name range width rms')
 
 class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='hsd_imaging.mako', 
@@ -19,18 +23,29 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
         
     def update_mako_context(self, ctx, context, results):
         plots = []
+        image_rms = []
         for r in results:
             if isinstance(r, imaging.SDImagingResults):
                 image_item = r.outcome['image']
                 msid_list = r.outcome['file_index']
                 imagemode = r.outcome['imagemode']
                 spwid = image_item.spwlist
-                spw_type =  'TP' if imagemode.upper()=='AMPCAL' else context.observing_run.measurement_sets[msid_list[0]].spectral_windows[spwid[0]].type 
+                ref_ms = context.observing_run.measurement_sets[msid_list[0]]
+                ref_spw = spwid[0]
+                spw_type =  'TP' if imagemode.upper()=='AMPCAL' else ref_ms.spectral_windows[ref_spw].type 
                 task_cls = displays.SDImageDisplayFactory(spw_type)
                 inputs = task_cls.Inputs(context,result=r)
                 task = task_cls(inputs)
                 plots.append(task.plot())
-            
+                # RMS of combined image
+                if r.outcome.has_key('image_sensitivity'):
+                    rms_info = r.outcome['image_sensitivity']
+                    tr = ImageRMSTR(image_item.imagename, rms_info['channel_range'], rms_info['channel_width'], rms_info['rms'])
+                    image_rms.append(tr)
+    
+        rms_table = utils.merge_td_columns(image_rms)
+
+                            
         map_types = {'sparsemap': {'type': 'sd_sparse_map',
                                    'plot_title': 'Sparse Profile Map'},
                      'profilemap': {'type': 'sd_spectral_map',
@@ -66,7 +81,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                         elif pol not in _ap[ant]:
                             _ap[ant].append(pol)
                     profilemap_entries[field] = _ap
-                ctx.update({'profilemap_entries': profilemap_entries})
+                ctx.update({'profilemap_entries': profilemap_entries, 'rms_table': rms_table})
     
     def _plots_per_field_with_type(self, plots, type_string):
         plot_group = {}
