@@ -21,7 +21,7 @@ from .. import common
 from ..common import utils as sdutils
 from ..baseline import msbaseline
 
-import memory_profiler
+#import memory_profiler
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -132,7 +132,7 @@ class SDImaging(basetask.StandardTaskTemplate):
     def is_multi_vis_task(self):
         return True
 
-    @memory_profiler.profile
+    #@memory_profiler.profile
     def prepare(self):
         inputs = self.inputs
         context = inputs.context
