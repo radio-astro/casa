@@ -7,6 +7,7 @@ agent_description = {
 	'before'   : 'Before Task',
 	'intents'  : 'Unwanted Intents',
 	'qa0'      : 'QA0',
+	'qa2'      : 'QA2',
 	'online'   : 'Online Flags',
 	'template' : 'Flagging Template',
 	'autocorr' : 'Autocorrelations',
