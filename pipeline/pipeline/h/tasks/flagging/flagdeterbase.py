@@ -346,7 +346,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         agent_summaries = dict((v['name'], v) for v in summary_dict.values())
         
-        ordered_agents = ['before', 'anos', 'intents', 'qa0', 'online',  'template', 'autocorr',
+        ordered_agents = ['before', 'anos', 'intents', 'qa0', 'qa2', 'online',  'template', 'autocorr',
                           'shadow', 'edgespw', 'clip', 'quack',
                           'baseband']
 
@@ -422,13 +422,17 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
                                                            inputs.ms.basename))
             else:
                 # QA0 flag
-                if inputs.qa0:
+                if inputs.qa0 or inputs.qa2:
                     cmdlist = self._read_flagfile(inputs.fileonline)
+
                     flag_cmds.extend([cmd for cmd in cmdlist if ('QA0' in cmd)])
                     flag_cmds.append("mode='summary' name='qa0'")
+
+                    flag_cmds.extend([cmd for cmd in cmdlist if ('QA2' in cmd)])
+                    flag_cmds.append("mode='summary' name='qa2'")
                     
                     # All other online flags
-                    flag_cmds.extend([cmd for cmd in cmdlist if not ('QA0' in cmd)])
+                    flag_cmds.extend([cmd for cmd in cmdlist if not ('QA0' in cmd) and not('QA2' in cmd)])
                     flag_cmds.append("mode='summary' name='online'")
             
                 else:
