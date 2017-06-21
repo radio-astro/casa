@@ -486,7 +486,7 @@ def score_online_shadow_template_agents(ms, summaries):
     0 < score < 1 === 60% < frac_flagged < 5%
     """
     score = score_data_flagged_by_agents(ms, summaries, 0.05, 0.6,
-                                         ['online', 'shadow', 'qa0', 'before', 'template'])
+                                         ['online', 'shadow', 'qa0', 'qa2', 'before', 'template'])
 
     new_origin = pqa.QAOrigin(metric_name='score_online_shadow_template_agents',
                               metric_score=score.origin.metric_score,
