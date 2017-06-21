@@ -21,6 +21,8 @@ from .. import common
 from ..common import utils as sdutils
 from ..baseline import msbaseline
 
+import memory_profiler
+
 LOG = infrastructure.get_logger(__name__)
 
 class SDImagingInputs(basetask.StandardInputs):
@@ -130,6 +132,7 @@ class SDImaging(basetask.StandardTaskTemplate):
     def is_multi_vis_task(self):
         return True
 
+    @memory_profiler.profile
     def prepare(self):
         inputs = self.inputs
         context = inputs.context
@@ -146,6 +149,7 @@ class SDImaging(basetask.StandardTaskTemplate):
         imagemode = inputs.mode.upper()
         datatable = DataTable(name=context.observing_run.ms_datatable_name, readonly=True)
         logrecords = []
+        cqa = casatools.quanta
          
         # task returns ResultsList
         results = basetask.ResultsList()
@@ -549,22 +553,25 @@ class SDImaging(basetask.StandardTaskTemplate):
                     rmss.append([r[8] for r in grid_tables[i]])
 
                 # calculate RMS of line free frequencies in a combined image
+                representative_bw = ref_ms.representative_target[2]
+                is_representative_spw = (ref_ms.get_representative_source_spw()[1]==combined_spws[0] and \
+                                         True) #representative_bw is not None)
                 with casatools.ImageReader(imager_result.outcome) as ia:
                     cs = ia.coordsys()
                     faxis = cs.findaxisbyname('spectral')
                     num_chan = ia.shape()[faxis]
                     chan_width = cs.increment()['numeric'][faxis]
                     brightnessunit = ia.brightnessunit()
-                world = cs.referencevalue()['numeric']
+                ref_world = cs.referencevalue()['numeric']
                 rms_exclude_freq = self._merge_ranges(combined_rms_exclude)
                 LOG.info("#####FREQ RANGE IN IMAGE FRAME = %s" % str(rms_exclude_freq))
                 rms_exclude_chan = numpy.zeros((len(rms_exclude_freq), 2), dtype=numpy.double)
                 for i in range(len(rms_exclude_freq)):
                     segment = rms_exclude_freq[i]
-                    world[faxis] = segment[0]
-                    start_chan = cs.topixel(world)['numeric'][faxis]
-                    world[faxis] = segment[1]
-                    end_chan = cs.topixel(world)['numeric'][faxis]
+                    ref_world[faxis] = segment[0]
+                    start_chan = cs.topixel(ref_world)['numeric'][faxis]
+                    ref_world[faxis] = segment[1]
+                    end_chan = cs.topixel(ref_world)['numeric'][faxis]
                     # handling of LSB
                     rms_exclude_chan[i] = [max(int(min(start_chan, end_chan)), 0),
                                            min(int(max(start_chan, end_chan)), num_chan-1)]
@@ -580,12 +587,32 @@ class SDImaging(basetask.StandardTaskTemplate):
                     if rms_exclude_chan[-1][1] + 1 < num_chan-1-edge[1]:
                         include_channel_range.extend([rms_exclude_chan[-1][1] + 1, num_chan-1-edge[1]])
                 LOG.info("#####RMS CHANNEL RANGE IN IMAGE FRAME = %s" % str(include_channel_range))
-                
+
                 stat_chans = str(';').join([ '%d~%d' % (include_channel_range[iseg], include_channel_range[iseg+1]) for iseg in range(0, len(include_channel_range), 2) ])
                 # statistics
                 imstat_job = casa_tasks.imstat(imagename=imagename, chans=stat_chans)
                 statval = self._executor.execute(imstat_job)
+                image_rms = statval['rms'][0]
                 LOG.info("Statistics of line free channels (%s): RMS = %f %s, Stddev = %f %s, Mean = %f %s" % (stat_chans, statval['rms'][0], brightnessunit, statval['sigma'][0], brightnessunit, statval['mean'][0], brightnessunit))
+
+                # estimate 
+                if is_representative_spw:
+                    if representative_bw is None: # temporal assignment
+                        representative_bw = cqa.quantity(chan_width, 'Hz')
+                    LOG.info("Estimate RMS in representative bandwidth: %fkHz (native: %fkHz)" % \
+                             (cqa.getvalue(cqa.quantity(representative_bw, 'kHz')), chan_width*1.e-3))
+                    LOG.todo("DO SOMETHING TO ESTIMATE RMS")
+                    chan_width = cqa.getvalue(cqa.quantity(representative_bw, 'Hz'))
+
+                # calculate channel and frequency ranges of line free channels
+                ref_pixel = cs.referencepixel()['numeric']
+                freqs = []
+                for ichan in include_channel_range:
+                    ref_pixel[faxis] = ichan
+                    freqs.append(cs.toworld(ref_pixel)['numeric'][faxis])
+                if len(freqs) > 1 and freqs[0] > freqs[1]: #LSB
+                    freqs.reverse()
+                stat_freqs = str(', ').join([ '%f~%fGHz' % (freqs[iseg]*1.e-9, freqs[iseg+1]*1.e-9) for iseg in range(0, len(freqs), 2) ])
                   
                 image_item = imagelibrary.ImageItem(imagename=imagename,
                                                     sourcename=source_name,
@@ -604,7 +631,8 @@ class SDImaging(basetask.StandardTaskTemplate):
                 outcome['assoc_antennas'] = combined_antids
                 outcome['assoc_fields'] = combined_fieldids
                 outcome['assoc_spws'] = combined_spws
-                outcome['image_sensitivity'] = {'channel_range': stat_chans, 'rms': "%f %s" % (statval['rms'][0], brightnessunit), 'channel_width': chan_width}
+                outcome['image_sensitivity'] = {'frequency_range': stat_freqs, 'rms': image_rms,
+                                                'channel_width': chan_width, 'representative': is_representative_spw}
 #                 outcome['assoc_pols'] = pols
 
 #                 # to register exported_ms to each scantable instance
@@ -737,6 +765,10 @@ class SDImaging(basetask.StandardTaskTemplate):
             else:
                 merged[j][0] = min(merged[j][0], segment[0])
                 merged[j][1] = max(merged[j][1], segment[1])
+        # Check if further merge is necessary
+        while len(merged) < num_range:
+            num_range = len(merged)
+            merged = self._merge_ranges(merged)
         LOG.info("#####Merged: %s" % str(merged))
         return merged
             

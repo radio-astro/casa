@@ -216,18 +216,16 @@ It generates an image combined spectral data from whole antenna as well as image
 % endfor
 
 <h3 id="sensitivity" class="jumptarget">Image Sensitivity</h3>
+<p>
+RMS of line-free channels. Estimated RMS is listed for representative images.
+</p>
 <table class="table table-bordered table-striped" summary="Image Sentivitity">
 	<caption>RMS of line-free channels</caption>
     <thead>
 	    <tr>
-	        <th scope="col" rowspan="2">Name</th>
-	        <th scope="col" rowspan="2">Channel Range</th>
-	        <th scope="col" colspan="2">Native Resolution</th>
-		</tr>
-		<tr>
-	        <th scope="col">Channel width [Hz]</th>
-	        <th scope="col">RMS</th>
+	        <th>Name</th><th>Representative (Estimate)</th><th>Frequency Ranges</th><th>Channel width [kHz]</th><th>RMS [Jy/beam]</th>
 	    </tr>
+
 	</thead>
 	<tbody>
 	% for tr in rms_table:

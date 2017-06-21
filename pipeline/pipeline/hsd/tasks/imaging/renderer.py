@@ -12,7 +12,7 @@ from . import imaging
 
 LOG = logging.get_logger(__name__)
 
-ImageRMSTR = collections.namedtuple('ImageRMSTR', 'name range width rms')
+ImageRMSTR = collections.namedtuple('ImageRMSTR', 'name estimate range width rms')
 
 class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='hsd_imaging.mako', 
@@ -40,10 +40,12 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                 # RMS of combined image
                 if r.outcome.has_key('image_sensitivity'):
                     rms_info = r.outcome['image_sensitivity']
-                    tr = ImageRMSTR(image_item.imagename, rms_info['channel_range'], rms_info['channel_width'], rms_info['rms'])
+                    icon = '<span class="glyphicon glyphicon-ok"></span>' if rms_info['representative'] else ''
+                    tr = ImageRMSTR(image_item.imagename, icon, rms_info['frequency_range'], 
+                                    rms_info['channel_width']*1.e-3, rms_info['rms'])
                     image_rms.append(tr)
-    
-        rms_table = utils.merge_td_columns(image_rms)
+   
+        rms_table = utils.merge_td_columns(image_rms, num_to_merge=1)
 
                             
         map_types = {'sparsemap': {'type': 'sd_sparse_map',
