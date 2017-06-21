@@ -95,6 +95,12 @@
         <value>True</value>
     </param>
 
+    <param type="bool" name="qa2">
+        <description>QA2 flags</description>
+        <value>True</value>
+    </param>
+
+
 	<param type="string" name="pipelinemode">
 	    <description>The pipeline operating mode</description>
 	    <value>automatic</value>
