@@ -13,9 +13,10 @@ import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
+#import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
 from . import plotpwv
 from . import plotweather
+from . import plotmosaic
 from pipeline.extern import analysis_scripts
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
@@ -111,6 +112,7 @@ class WeatherChart(object):
         LOG.debug('Creating new Weather plot')
         try:
             #analysisUtils.plotWeather(vis=self.ms.name, figfile=self.figfile)
+            # based on the analysisUtils method
             plotweather.plotWeather(vis=self.ms.name, figfile=self.figfile)
         except:
             return None
@@ -518,7 +520,12 @@ class MosaicChart(object):
             return self._get_plot_object()
 
         try:
-            analysisUtils.plotMosaic(self.ms.name, 
+            # based on the analysisUtils method
+            #analysisUtils.plotMosaic(self.ms.name, 
+                                     #sourceid=self.source.id,
+                                     #coord='rel',
+                                     #figfile=self.figfile)
+            plotmosaic.plotMosaic(self.ms.name, 
                                      sourceid=self.source.id,
                                      coord='rel',
                                      figfile=self.figfile)
