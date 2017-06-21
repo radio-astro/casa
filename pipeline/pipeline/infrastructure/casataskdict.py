@@ -67,6 +67,7 @@ CasaTaskDict = {
     'hifa_fluxdb': 'Fluxdb',
     'hifa_gaincalsnr': 'GaincalSnr',
     'hifa_gfluxscale': 'GcorFluxscale',
+    'hifa_gfluxscaleflag': 'Gfluxscaleflag',
     'hifa_linpolcal': 'Linpolcal',
     'hifa_restoredata': 'ALMARestoreData',
     'hifa_spwphaseup': 'SpwPhaseup',
@@ -113,6 +114,7 @@ classToCASATask = {
     hifa_tasks.Fluxdb                 : 'hifa_fluxdb',
     hifa_tasks.GaincalSnr             : 'hifa_gaincalsnr',
     hifa_tasks.GcorFluxscale          : 'hifa_gfluxscale',
+    hifa_tasks.Gfluxscaleflag         : 'hifa_gfluxscaleflag',
     hifa_tasks.Linpolcal              : 'hifa_linpolcal',
     hifa_tasks.ALMARestoreData        : 'hifa_restoredata',
     hifa_tasks.SpwPhaseup             : 'hifa_spwphaseup',
@@ -310,6 +312,12 @@ TASK_COMMENTS = {
     (hifa_tasks.GcorFluxscale,): (
         'The absolute flux calibration is transferred to secondary calibrator '
         'sources.'
+    ),
+    (hifa_tasks.Gfluxscaleflag,): (
+        'The absolute flux calibration is transferred to secondary calibrator '
+        'sources. Outliers are flagged based on a comparison of the '
+        'calibrated (corrected) amplitudes with the model amplitudes for the '
+        'amplitude and phase calibrator sources.'
     ),
     (hifa_tasks.TimeGaincal,): (
         'Time dependent gain calibrations are computed. '

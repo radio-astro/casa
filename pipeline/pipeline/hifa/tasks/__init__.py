@@ -12,6 +12,7 @@ from .fluxcalflag import FluxcalFlag
 from .fluxscale import GcorFluxscale
 from .gaincal import TimeGaincal
 from .gaincalsnr import GaincalSnr
+from .gfluxscaleflag import Gfluxscaleflag
 from .importdata import ALMAImportData
 from .linpolcal import Linpolcal
 from .restoredata import ALMARestoreData
