@@ -421,15 +421,19 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
                             'flagging for %s disabled.' % (inputs.fileonline, 
                                                            inputs.ms.basename))
             else:
-                # QA0 flag
+                # QA0 / QA2 flag
                 if inputs.qa0 or inputs.qa2:
                     cmdlist = self._read_flagfile(inputs.fileonline)
 
-                    flag_cmds.extend([cmd for cmd in cmdlist if ('QA0' in cmd)])
-                    flag_cmds.append("mode='summary' name='qa0'")
+                    # QA0 flag
+                    if inputs.qa0:
+                        flag_cmds.extend([cmd for cmd in cmdlist if ('QA0' in cmd)])
+                        flag_cmds.append("mode='summary' name='qa0'")
 
-                    flag_cmds.extend([cmd for cmd in cmdlist if ('QA2' in cmd)])
-                    flag_cmds.append("mode='summary' name='qa2'")
+                    # QA2 flag
+                    if inputs.qa2:
+                        flag_cmds.extend([cmd for cmd in cmdlist if ('QA2' in cmd)])
+                        flag_cmds.append("mode='summary' name='qa2'")
                     
                     # All other online flags
                     flag_cmds.extend([cmd for cmd in cmdlist if not ('QA0' in cmd) and not('QA2' in cmd)])
