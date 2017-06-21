@@ -305,7 +305,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 #Timer.count()
 
                 # Mask out line and edge channels
-                masklist = DataTable.tb2.getcell('MASKLIST',idx)
+                masklist = DataTable.getcell('MASKLIST',idx)
                 tStats = DataTable.getcell('STATISTICS',idx)
                 stats = tStats[polid]
                 # Calculate Standard Deviation (NOT RMS)
@@ -355,7 +355,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                             x = valid_indices[_x]
                             NR += 1
                             RdataOld0 += SpIn[x]
-                            masklist = DataTable.tb2.getcell('MASKLIST',chunks[1][x])
+                            masklist = DataTable.getcell('MASKLIST',chunks[1][x])
                             mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[x], deviation_mask=deviation_mask)
                             RmaskOld += mask0
                             RdataNew0 += SpOut[x]
@@ -369,7 +369,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                         RmaskNew -= mask_out
                     else:
                         box_edge = valid_indices[START + Nmean - 1]
-                        masklist = DataTable.tb2.getcell('MASKLIST',chunks[1][box_edge])
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][box_edge])
                         RdataOld0 -= (SpIn[index] - SpIn[box_edge])
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge], deviation_mask=deviation_mask)
                         RmaskOld += (mask0 - mask_in)
@@ -386,7 +386,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                     elif START <= (Nmean + 1):
                         NL += 1
                         box_edge = valid_indices[START - 2]
-                        masklist = DataTable.tb2.getcell('MASKLIST',chunks[1][box_edge])
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][box_edge])
                         LdataOld0 += SpIn[box_edge]
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge], deviation_mask=deviation_mask)
                         LmaskOld += mask0
@@ -396,14 +396,14 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                     else:
                         box_edge_right = valid_indices[START - 2]
                         box_edge_left = valid_indices[START - 2 - Nmean]
-                        masklist = DataTable.tb2.getcell('MASKLIST',chunks[1][box_edge_right])
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][box_edge_right])
                         LdataOld0 += (SpIn[box_edge_right] - SpIn[box_edge_left])
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge_right], deviation_mask=deviation_mask)
                         LmaskOld += mask0
                         LdataNew0 += (SpOut[box_edge_right] - SpOut[box_edge_left])
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_right], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN)
                         LmaskNew += mask0
-                        masklist = DataTable.tb2.getcell('MASKLIST',chunks[1][box_edge_left])
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][box_edge_left])
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge_left], deviation_mask=deviation_mask)
                         LmaskOld -= mask0
                         mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_left], deviation_mask=deviation_mask) if is_baselined else numpy.zeros(NCHAN)
@@ -441,7 +441,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 statistics_array[1,output_serial_index] = OldRMS
                 statistics_array[2,output_serial_index] = NewRMSdiff
                 statistics_array[3,output_serial_index] = OldRMSdiff
-                statistics_array[4,output_serial_index] = DataTable.tb1.getcell('TSYS', idx)[polid]
+                statistics_array[4,output_serial_index] = DataTable.getcell('TSYS', idx)[polid]
                 num_masked_array[output_serial_index] = Nmask
             del SpIn, SpOut
             output_array_index += nrow
@@ -548,8 +548,8 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
         LOG.info("Updating flags in data table")
         N = 0
         for ID in ids:
-            flags = DataTable.tb2.getcell('FLAG', ID)
-            pflags = DataTable.tb2.getcell('FLAG_PERMANENT', ID)
+            flags = DataTable.getcell('FLAG', ID)
+            pflags = DataTable.getcell('FLAG_PERMANENT', ID)
             flags[polid,1] = stat_flag[0][N]
             flags[polid,2] = stat_flag[1][N]
             flags[polid,3] = stat_flag[2][N]
@@ -603,23 +603,23 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
         spw = msobj.get_spectral_window(spwid)
         noiseEquivBW = abs(numpy.mean(spw.channels.chan_effbws)) * nebw_fact
 
-        #tEXPT = DataTable.tb1.getcol('EXPOSURE')
-        #tTSYS = DataTable.tb1.getcol('TSYS')
+        #tEXPT = DataTable.getcol('EXPOSURE')
+        #tTSYS = DataTable.getcol('TSYS')
 
         for ID in ids:
-            row = DataTable.tb1.getcell('ROW',ID)
+            row = DataTable.getcell('ROW',ID)
             # The HHT and APEX test data show the "on" time only in the CLASS
             # header. To get the total time, at least a factor of 2 is needed,
             # for OTFs and rasters with several on per off even higher, but this
             # cannot be automatically determined due to lacking meta data. We
             # thus use a manually supplied scaling factor.
-            tEXPT = DataTable.tb1.getcell('EXPOSURE', ID)
+            tEXPT = DataTable.getcell('EXPOSURE', ID)
             integTimeSec = tEXPT * integ_time_fact
             # The Tsys value can be saved for DSB or SSB mode. A scaling factor
             # may be needed. This factor was read above.
-            tTSYS = DataTable.tb1.getcell('TSYS', ID)[polid]
+            tTSYS = DataTable.getcell('TSYS', ID)[polid]
             # K->Jy factor
-            tAnt = DataTable.tb1.getcell('ANTENNA',ID)
+            tAnt = DataTable.getcell('ANTENNA',ID)
             antname = msobj.get_antenna(tAnt)[0].name
             polname = msobj.get_data_description(spw=spwid).get_polarization_label(polid)
             k2jy_fact = msobj.k2jy_factor[(spwid, antname, polname)] if (hasattr(msobj, 'k2jy_factor') and msobj.k2jy_factor.has_key((spwid, antname, polname))) else 1.0
@@ -629,14 +629,14 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
                 expectedRMS = currentTsys / math.sqrt(noiseEquivBW * integTimeSec)
                 # 2008/10/31
                 # Comparison with both pre- and post-BaselineFit RMS
-                stats = DataTable.tb2.getcell('STATISTICS',ID)
+                stats = DataTable.getcell('STATISTICS',ID)
                 PostFitRMS = stats[polid, 1]
                 PreFitRMS = stats[polid, 2]
                 LOG.debug('DEBUG_DM: Row: %d Expected RMS: %f PostFit RMS: %f PreFit RMS: %f' % (row, expectedRMS, PostFitRMS, PreFitRMS))
                 stats[polid, 5] = expectedRMS * ThreExpectedRMSPostFit if is_baselined else -1
                 stats[polid, 6] = expectedRMS * ThreExpectedRMSPreFit
                 DataTable.putcell('STATISTICS',ID,stats)
-                flags = DataTable.tb2.getcell('FLAG',ID)
+                flags = DataTable.getcell('FLAG',ID)
                 #if (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS) or PostFitRMS == INVALID_STAT:
                 if PostFitRMS != INVALID_STAT and (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS):
                     #LOG.debug("Row=%d flagged by expected RMS postfit: %f > %f (expected)" %(ID, PostFitRMS, ThreExpectedRMSPostFit * expectedRMS))
@@ -658,19 +658,19 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
             # Update User Flag 2008/6/4
             try:
                 Index = UserFlag.index(row)
-                tPFLAG = DataTable.tb2.getcell('FLAG_PERMANENT', ID)
+                tPFLAG = DataTable.getcell('FLAG_PERMANENT', ID)
                 tPFLAG[polid, 2] = 0
                 DataTable.putcell('FLAG_PERMANENT', ID, tPFLAG)
             except ValueError:
-                tPFLAG = DataTable.tb2.getcell('FLAG_PERMANENT', ID)
+                tPFLAG = DataTable.getcell('FLAG_PERMANENT', ID)
                 tPFLAG[polid, 2] = 1
                 DataTable.putcell('FLAG_PERMANENT', ID, tPFLAG)
 
     def flagSummary(self, DataTable, ids, polid, FlagRule):
         for ID in ids:
             # Check every flags to create summary flag
-            tFLAG = DataTable.tb2.getcell('FLAG', ID)[polid]
-            tPFLAG = DataTable.tb2.getcell('FLAG_PERMANENT', ID)[polid]
+            tFLAG = DataTable.getcell('FLAG', ID)[polid]
+            tPFLAG = DataTable.getcell('FLAG_PERMANENT', ID)[polid]
             tSFLAG = DataTable.getcell('FLAG_SUMMARY', ID)
             pflag = self._get_parmanent_flag_summary(tPFLAG, FlagRule)
             sflag = self._get_stat_flag_summary(tFLAG, FlagRule)
@@ -736,7 +736,7 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
         ddobj = msobj.get_data_description(spw=spwid)
         polids = [ddobj.get_polarization_id(pol) for pol in pollist]
         base_selection = "antenna='%s&&&' spw='%d' field='%d'" % (ant_name, spwid, fieldid)
-        time_unit = datatable.tb1.getcolkeyword('TIME', 'UNIT')
+        time_unit = datatable.getcolkeyword('TIME', 'UNIT')
         valid_flag_commands = False
         with open(filename, "w") as fout:
             # header part
@@ -756,9 +756,9 @@ class SDBLFlagWorker(basetask.StandardTaskTemplate): #object):
             for i in xrange(len(dt_ids)):
                 line = [base_selection]
                 ID = dt_ids[i]
-                tSFLAG = datatable.tb2.getcell('FLAG_SUMMARY', ID)
-                tFLAG = datatable.tb2.getcell('FLAG', ID)
-                tPFLAG = datatable.tb2.getcell('FLAG_PERMANENT', ID)
+                tSFLAG = datatable.getcell('FLAG_SUMMARY', ID)
+                tFLAG = datatable.getcell('FLAG', ID)
+                tPFLAG = datatable.getcell('FLAG_PERMANENT', ID)
                 flag_sum = tFLAG.sum(axis=1) + tPFLAG.sum(axis=1)
                 online = tPFLAG[:,OnlineFlagIndex]
                 # num_flag: the number of flag types.

@@ -173,9 +173,9 @@ class GriddingBase(basetask.StandardTaskTemplate):
         polids = numpy.array([self.polid[i] for i in msids])
         # TSYS and FLAG_SUMMARY cols have NPOL x nrow elements
         ttsys = table.getcol('TSYS').take(index_list, axis=1)
-        tnet_flag = datatable.tb2.getcol('FLAG_SUMMARY').take(index_list, axis=1)
+        tnet_flag = datatable.getcol('FLAG_SUMMARY').take(index_list, axis=1)
         # STATISTICS col has NPOL x 7 x nrow elements -> stats 7 x selected nrow elements
-        tstats = datatable.tb2.getcol('STATISTICS').take(index_list, axis=2)
+        tstats = datatable.getcol('STATISTICS').take(index_list, axis=2)
         # filter polid of each row
         if len(set(polids)) == 1:
             tsys = ttsys[polids[0]]
@@ -195,8 +195,8 @@ class GriddingBase(basetask.StandardTaskTemplate):
         ### test code (to check selected index_list meets selection)
         if DO_TEST:
             ants = table.getcol('ANTENNA').take(index_list)
-            fids = datatable.tb1.getcol('FIELD_ID').take(index_list)
-            ifnos = datatable.tb1.getcol('IF').take(index_list)
+            fids = datatable.getcol('FIELD_ID').take(index_list)
+            ifnos = datatable.getcol('IF').take(index_list)
             for _i in xrange(len(rows)):
                 _msid = msids[_i]
                 _ant = ants[_i]

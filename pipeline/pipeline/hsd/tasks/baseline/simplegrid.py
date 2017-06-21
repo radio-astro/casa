@@ -89,8 +89,8 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
         beam_size = reference_data.beam_sizes[reference_antenna][reference_spw]
         grid_size = casatools.quanta.convert(beam_size, 'deg')['value']
         
-        ras = datatable.tb1.getcol('RA').take(index_list)
-        decs = datatable.tb1.getcol('DEC').take(index_list)
+        ras = datatable.getcol('RA').take(index_list)
+        decs = datatable.getcol('DEC').take(index_list)
         
         # Curvature has not been taken account
         dec_corr = 1.0 / cos(decs[0] / 180.0 * 3.141592653)
@@ -166,10 +166,10 @@ class SDMSSimpleGridding(basetask.StandardTaskTemplate):
                         #             * dec_corr * dec_corr 
                         #             + (decs[index] - DEC) * (decs[index] - DEC))
                         datatable_index = index_list[index]
-                        row = datatable.tb1.getcell('ROW', datatable_index)
-                        #stat = datatable.tb2.getcell('STATISTICS', datatable_index)[0] 
-                        ant = datatable.tb1.getcell('ANTENNA', datatable_index)
-                        msid = datatable.tb1.getcell('MS', datatable_index)
+                        row = datatable.getcell('ROW', datatable_index)
+                        #stat = datatable.getcell('STATISTICS', datatable_index)[0] 
+                        ant = datatable.getcell('ANTENNA', datatable_index)
+                        msid = datatable.getcell('MS', datatable_index)
                         line[6].append([row, None, None, datatable_index, ant, msid])
                     line[6] = numpy.array(line[6])
                     grid_table.append(line)

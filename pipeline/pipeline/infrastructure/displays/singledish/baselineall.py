@@ -204,10 +204,10 @@ class SDBaselineAllDisplay(object):
 
         # fitparam: no use since 2010/6/12
 
-        rows = self.datatable.tb1.getcol('ROW').take(index_list)
-        net_flags = self.datatable.tb2.getcol('FLAG_SUMMARY').take(index_list)
-        stats = self.datatable.tb2.getcol('STATISTICS').take(index_list,axis=1)
-        nochanges = self.datatable.tb2.getcol('NOCHANGE').take(index_list)
+        rows = self.datatable.getcol('ROW').take(index_list)
+        net_flags = self.datatable.getcol('FLAG_SUMMARY').take(index_list)
+        stats = self.datatable.getcol('STATISTICS').take(index_list,axis=1)
+        nochanges = self.datatable.getcol('NOCHANGE').take(index_list)
 
         # Set edge mask region (not used?)
         EdgeL, EdgeR = edge
@@ -260,8 +260,8 @@ class SDBaselineAllDisplay(object):
             Yrange = [YMIN-(YMAX-YMIN)/10.0, YMAX+(YMAX-YMIN)/10.0]
             Mask = []
 
-            tMASKLIST = self.datatable.tb2.getcell('MASKLIST',idx)
-            if tMASKLIST[0][0] < 0:
+            tMASKLIST = self.datatable.getcell('MASKLIST',idx)
+            if len(tMASKLIST) == 0 or tMASKLIST[0][0] < 0:
                 tMASKLIST = []
 
             Mask = [[Abcissa[int(mask[0])],Abcissa[int(mask[1])]]

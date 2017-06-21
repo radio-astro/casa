@@ -75,10 +75,10 @@ def ALMAImageCoordinateUtil(context, datatable, ms_names, ant_list, spw_list, fi
     index_list.sort()
     
     # the unit of RA and DEC should be in deg
-    ra = datatable.tb1.getcol('RA').take(index_list)
-    dec = datatable.tb1.getcol('DEC').take(index_list)
-    if (datatable.tb1.getcolkeyword('RA', 'UNIT') != 'deg') or \
-        (datatable.tb1.getcolkeyword('DEC', 'UNIT') != 'deg'):
+    ra = datatable.getcol('RA').take(index_list)
+    dec = datatable.getcol('DEC').take(index_list)
+    if (datatable.getcolkeyword('RA', 'UNIT') != 'deg') or \
+        (datatable.getcolkeyword('DEC', 'UNIT') != 'deg'):
         raise RuntimeError, "Found unexpected unit of RA/DEC in DataTable. It should be in 'deg'"
     
     ra_min = min(ra)

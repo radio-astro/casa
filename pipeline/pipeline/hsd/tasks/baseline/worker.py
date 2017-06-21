@@ -242,9 +242,9 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                 # here we assume that masklist is polarization-independent
                 # (this is because that line detection/validation process accumulates 
                 # polarization components together
-                masklist = [datatable.tb2.getcell('MASKLIST',idx)
+                masklist = [datatable.getcell('MASKLIST',idx)
                             for idx in idxs]
-    #                 masklist = [datatable.tb2.getcell('MASKLIST',idxs[i]) + flaglist[i]
+    #                 masklist = [datatable.getcell('MASKLIST',idxs[i]) + flaglist[i]
     #                             for i in range(len(idxs))]
                 LOG.debug('DONE {}', y)
                 
@@ -269,7 +269,7 @@ class BaselineFitParamConfig(basetask.StandardTaskTemplate):
                         row = rows[i]
                         idx = idxs[i]
                         LOG.trace('===== Processing at row = {} =====', row)
-                        #nochange = datatable.tb2.getcell('NOCHANGE',idx)
+                        #nochange = datatable.getcell('NOCHANGE',idx)
                         #LOG.trace('row = %s, Flag = %s'%(row, nochange))
     
                         # mask lines

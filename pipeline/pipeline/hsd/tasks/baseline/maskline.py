@@ -85,8 +85,8 @@ class MaskLine(basetask.StandardTaskTemplate):
                                                              spwid_list, srctype))
 
         LOG.debug('index_list={}', index_list)
-        #LOG.trace('all(spwid == {}) ? {}', spwid_list[0], numpy.all(dt.tb1.getcol('IF').take(index_list) == spwid_list[0]))
-        #LOG.trace('all(fieldid == {}) ? {}', field_list[0], numpy.all(dt.tb1.getcol('FIELD_ID').take(index_list) == field_list[0]))
+        #LOG.trace('all(spwid == {}) ? {}', spwid_list[0], numpy.all(dt.getcol('IF').take(index_list) == spwid_list[0]))
+        #LOG.trace('all(fieldid == {}) ? {}', field_list[0], numpy.all(dt.getcol('FIELD_ID').take(index_list) == field_list[0]))
         if len(index_list) == 0:
             # No valid data 
             outcome = {'detected_lines': [],

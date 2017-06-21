@@ -161,13 +161,13 @@ class SingleDishPointingChart(object):
         beam_size = casatools.quanta.convert(ms.beam_sizes[antenna_id][spw_id], 'deg')
         beam_size_in_deg = casatools.quanta.getvalue(beam_size)
         obs_pattern = ms.observing_pattern[antenna_id][spw_id]
-        ms_ids = datatable.tb1.getcol('MS')
-        antenna_ids = datatable.tb1.getcol('ANTENNA')
-        spw_ids = datatable.tb1.getcol('IF')
+        ms_ids = datatable.getcol('MS')
+        antenna_ids = datatable.getcol('ANTENNA')
+        spw_ids = datatable.getcol('IF')
         if self.target_field is None or self.reference_field is None:
             # plot pointings regardless of field
             if self.target_only == True:
-                srctypes = datatable.tb1.getcol('SRCTYPE')
+                srctypes = datatable.getcol('SRCTYPE')
                 func = lambda i, j, k, l: i == ms_id and j == antenna_id and k == spw_id and l == 0
                 vfunc = numpy.vectorize(func)
                 dt_rows = vfunc(ms_ids, antenna_ids, spw_ids, srctypes)
@@ -176,9 +176,9 @@ class SingleDishPointingChart(object):
                 vfunc = numpy.vectorize(func)
                 dt_rows = vfunc(ms_ids, antenna_ids, spw_ids)
         else:
-            field_ids = datatable.tb1.getcol('FIELD_ID')
+            field_ids = datatable.getcol('FIELD_ID')
             if self.target_only == True:
-                srctypes = datatable.tb1.getcol('SRCTYPE')
+                srctypes = datatable.getcol('SRCTYPE')
                 field_id = [self.target_field.id]
                 func = lambda i, f, j, k, l: i == ms_id and f in field_id and j == antenna_id and k == spw_id and l == 0
                 vfunc = numpy.vectorize(func)
@@ -189,13 +189,13 @@ class SingleDishPointingChart(object):
                 vfunc = numpy.vectorize(func)
                 dt_rows = vfunc(ms_ids, field_ids, antenna_ids, spw_ids)
         
-        RA = datatable.tb1.getcol('RA')[dt_rows]
-        DEC = datatable.tb1.getcol('DEC')[dt_rows]
+        RA = datatable.getcol('RA')[dt_rows]
+        DEC = datatable.getcol('DEC')[dt_rows]
         FLAG = numpy.zeros(len(RA), dtype=int)
         rows = numpy.where(dt_rows == True)[0]
         assert len(RA) == len(rows)
         for (i, row) in enumerate(rows):
-            pflags = datatable.tb2.getcell('FLAG_PERMANENT', row)
+            pflags = datatable.getcell('FLAG_PERMANENT', row)
             # use flag for pol 0
             FLAG[i] = pflags[0][OnlineFlagIndex]
                 

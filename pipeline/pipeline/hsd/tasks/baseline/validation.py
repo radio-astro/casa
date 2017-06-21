@@ -474,12 +474,12 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
             # available, while NOCHANGE -1 indicates NOCHANGE is False.
             #tMASKLIST = datatable.getcell('MASKLIST',row)
             #tNOCHANGE = datatable.getcell('NOCHANGE',row)
-            tMASKLIST = datatable.tb2.getcell('MASKLIST',row)
-            if tMASKLIST[0][0] < 0:
+            tMASKLIST = datatable.getcell('MASKLIST',row)
+            if len(tMASKLIST) == 0 or tMASKLIST[0][0] < 0:
                 tMASKLIST = []
             else:
                 tMASKLIST=tMASKLIST.tolist()#list(tMASKLIST)
-            tNOCHANGE = datatable.tb2.getcell('NOCHANGE',row)
+            tNOCHANGE = datatable.getcell('NOCHANGE',row)
             #LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, signal))
             if tMASKLIST == signal:
                 #LOG.debug('No update on row %s: iter is %s'%(row,iteration))
@@ -489,17 +489,17 @@ class ValidateLineRaster(basetask.StandardTaskTemplate):
                     # Put iteration itself instead to subtract 1 since iteration
                     # counter is incremented *after* baseline subtraction
                     # in refactorred code.
-                    #datatable.tb2.putcell('NOCHANGE',row,iteration - 1)
-                    #datatable.tb2.putcell('NOCHANGE', row, iteration)
+                    #datatable.putcell('NOCHANGE',row,iteration - 1)
+                    #datatable.putcell('NOCHANGE', row, iteration)
                     datatable.putcell('NOCHANGE', row, iteration)
             else:
                 #datatable.putcell('NOCHANGE',row,False)
-                #datatable.tb2.putcell('MASKLIST',row,numpy.array(RealSignal[row][2]))
+                #datatable.putcell('MASKLIST',row,numpy.array(RealSignal[row][2]))
                 #LOG.debug('Updating row %s: signal=%s (type=%s, %s)'%(row,list(signal),type(signal),type(signal[0])))
-                #datatable.tb2.putcell('MASKLIST',row,numpy.array(signal))
-                #datatable.tb2.putcell('MASKLIST',row,signal)
+                #datatable.putcell('MASKLIST',row,numpy.array(signal))
+                #datatable.putcell('MASKLIST',row,signal)
                 datatable.putcell('MASKLIST',row,signal)
-                #datatable.tb2.putcell('NOCHANGE',row,-1)
+                #datatable.putcell('NOCHANGE',row,-1)
                 datatable.putcell('NOCHANGE',row,-1)
         del GridCluster, RealSignal
         ProcEndTime = time.time()

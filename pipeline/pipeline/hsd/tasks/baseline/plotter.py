@@ -196,7 +196,7 @@ class BaselineSubtractionPlotManager(object):
         postfit_data = self.postfit_data
         rowmap = self.rowmap
         
-        dtrows = self.datatable.tb1.getcol('ROW')
+        dtrows = self.datatable.getcol('ROW')
     
         num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(self.datatable, dtrows, ms, antid, spwid, plot_table)
             
@@ -458,8 +458,8 @@ def get_lines(datatable, num_ra, rowlist):
         ids = d['IDS']
         midx = d['MEDIAN_INDEX']
         if midx is not None:
-            masklist = datatable.tb2.getcell('MASKLIST', ids[midx])
-            lines_map[ix][iy] = None if numpy.all(masklist == -1) else masklist
+            masklist = datatable.getcell('MASKLIST', ids[midx])
+            lines_map[ix][iy] = None if (len(masklist) == 0 or numpy.all(masklist == -1))else masklist
         else:
             lines_map[ix][iy] = None
     return lines_map
