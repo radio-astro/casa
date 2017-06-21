@@ -17,7 +17,7 @@ import pipeline.infrastructure.casatools as casatools
 from . import plotpwv
 from . import plotweather
 from . import plotmosaic
-from pipeline.extern import analysis_scripts
+#from pipeline.extern import analysis_scripts
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
 import casa
