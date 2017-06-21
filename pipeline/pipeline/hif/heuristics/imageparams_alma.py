@@ -158,6 +158,10 @@ class ImageParamsHeuristicsALMA(ImageParamsHeuristics):
         loop_gain = 0.1
         # TODO: Replace with actual pixel counting rather than assumption about geometry
         r_mask = 0.45 * max(imsize[0], imsize[1]) * qaTool.convert(cell[0], 'arcsec')['value']
+        # TODO: Pass synthesized beam size explicitly rather than assuming a
+        #       certain ratio of beam to cell size (which can be different
+        #       if the product size is being mitigated or if a different
+        #       imaging_mode uses different heuristics).
         beam = qaTool.convert(cell[0], 'arcsec')['value'] * 5.0
         new_niter_f = int(kappa / loop_gain * (r_mask / beam) ** 2 * residual_max / threshold_value)
         new_niter = int(round(new_niter_f, -int(np.log10(new_niter_f))))

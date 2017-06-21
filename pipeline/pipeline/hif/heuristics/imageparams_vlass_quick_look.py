@@ -27,10 +27,10 @@ class ImageParamsHeuristicsVlassQl(ImageParamsHeuristics):
     def gridder(self, intent, field):
         return 'mosaic'
 
-    def cell(self, field_intent_list, spwspec, oversample=None):
-        return '1.0arcsec'
+    def cell(self, beam, pixperbeam=None):
+        return ['1.0arcsec']
 
-    def imsize(self, fields, cell, beam, sfpblimit=None, max_pixels=None):
+    def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None):
         return [7290, 7290]
 
     def threshold(self):

@@ -205,8 +205,7 @@ class TCleanPlotsRenderer(basetemplates.CommonRenderer):
         # Determine whether any of targets were run with specmode = 'cube',
         # in which case the weblog will need to show the MOM0_FC and
         # MOM8_FC columns.
-        show_mom0_8_fc = 'cube' in [item['specmode'] for item in 
-          result[0].inputs['target_list']]
+        show_mom0_8_fc = any([item.specmode == 'cube' for item in result[0].results])
         
         if show_mom0_8_fc:
             colorder = ['pbcorimage', 'residual', 'cleanmask', 'mom0_fc', 'mom8_fc']

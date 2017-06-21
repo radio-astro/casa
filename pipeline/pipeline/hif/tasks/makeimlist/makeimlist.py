@@ -332,38 +332,42 @@ class MakeImList(basetask.StandardTaskTemplate):
         else:
             pixperbeam = 5.0
 
-        # Remove bad spws in cont mode
+        # Remove bad spws
         if inputs.specmode == 'cont':
-            filtered_spwlist = []
-            for spw in spwlist[0].split(','):
-                # Can not just use "has_data" as it only sets up
-                # a selection which checks against existance of
-                # a given item (e.g. an spw).
-                hcell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw, oversample=0.5*pixperbeam)
-                # For now we consider the spw for all fields / intents.
-                # May need to handle this individually.
-                if (valid_data[list(field_intent_list)[0]]):
-                    filtered_spwlist.append(spw)
+            spwids = spwlist[0].split(',')
+        else:
+            spwids = spwlist
+        valid_data = {}
+        filtered_spwlist = []
+        for spw in spwids:
+            valid_data[str(spw)] = self.heuristics.has_data(field_intent_list=field_intent_list, spwspec=spw)
+            # For now we consider the spw for all fields / intents.
+            # May need to handle this individually.
+            if (valid_data[str(spw)][list(field_intent_list)[0]]):
+                filtered_spwlist.append(spw)
+        if inputs.specmode == 'cont':
             spwlist = [reduce(lambda x,y: x+','+y, filtered_spwlist)]
+        else:
+            spwlist = filtered_spwlist
 
-        # get beams for each spw
-        beams = {}
+        # get beams for each spwspec
+        largest_primary_beams = {}
+        synthesized_beams = {}
         for spwspec in spwlist:
-            beams[spwspec] = self.heuristics.beam(spwspec=spwspec)
+            largest_primary_beams[spwspec] = self.heuristics.largest_primary_beam_size(spwspec=spwspec)
+            synthesized_beams[spwspec] = self.heuristics.synthesized_beam(field_intent_list=field_intent_list, spwspec=spwspec, robust=0.5)
 
         # cell is a list of form [cellx, celly]. If the list has form [cell]
         # then that means the cell is the same size in x and y. If cell is
         # empty then fill it with a heuristic result
         cells = {}
-        valid_data = {}
         if cell == []:
             min_cell = ['3600arcsec']
             for spwspec in spwlist:
                 # the heuristic cell is always the same for x and y as
                 # the value derives from the single value returned by
                 # imager.advise
-                cells[spwspec], valid_data[spwspec] = self.heuristics.cell(
-                  field_intent_list=field_intent_list, spwspec=spwspec, oversample=0.5*pixperbeam)
+                cells[spwspec] = self.heuristics.cell(beam=synthesized_beams[spwspec], pixperbeam=pixperbeam)
                 if ('invalid' not in cells[spwspec]):
                     min_cell = cells[spwspec] if (qaTool.convert(cells[spwspec][0], 'arcsec')['value'] < qaTool.convert(min_cell[0], 'arcsec')['value']) else min_cell
             # Rounding to two significant figures
@@ -375,9 +379,6 @@ class MakeImList(basetask.StandardTaskTemplate):
         else:
             for spwspec in spwlist:
                 cells[spwspec] = cell
-                # TODO: "has_data" does not really check the data
-                valid_data[spwspec] = self.heuristics.has_data(
-                  field_intent_list=field_intent_list, spwspec=spwspec)
 
         # if phase center not set then use heuristic code to calculate the
         # centers for each field
@@ -409,14 +410,12 @@ class MakeImList(basetask.StandardTaskTemplate):
                 max_x_size = 1
                 max_y_size = 1
                 for spwspec in spwlist:
-                    if not valid_data[spwspec][field_intent]:
-                        continue
 
                     try:
                         field_ids = self.heuristics.field(
                           field_intent[1], field_intent[0])
                         himsize = self.heuristics.imsize(fields=field_ids,
-                          cell=cells[spwspec], beam=beams[spwspec], sfpblimit=sfpblimit)
+                          cell=cells[spwspec], primary_beam=largest_primary_beams[spwspec], sfpblimit=sfpblimit)
                         if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX', 'CHECK']:
                             himsize = [min(npix, inputs.calmaxpix) for npix in himsize]
                         imsizes[(field_intent[0],spwspec)] = himsize
@@ -431,8 +430,7 @@ class MakeImList(basetask.StandardTaskTemplate):
 
                 # Use same size for all spws (in a band (TODO))
                 for spwspec in spwlist:
-                    if valid_data[spwspec][field_intent]:
-                        imsizes[(field_intent[0],spwspec)] = [max_x_size, max_y_size]
+                    imsizes[(field_intent[0],spwspec)] = [max_x_size, max_y_size]
  
         else:
             for field_intent in field_intent_list:
@@ -450,9 +448,6 @@ class MakeImList(basetask.StandardTaskTemplate):
         if ((specmode not in ('mfs', 'cont')) and (width == 'pilotimage')):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
-                    if not valid_data[spwspec][field_intent]:
-                        continue
-
                     try:
                         nchans[(field_intent[0],spwspec)], widths[(field_intent[0],spwspec)] = \
                           self.heuristics.nchan_and_width(field_intent=field_intent[1], \
@@ -547,7 +542,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                 else:
                     nbin = -1
 
-                if spwspec_ok and valid_data[spwspec][field_intent] and imsizes.has_key((field_intent[0],spwspec)):
+                if spwspec_ok and imsizes.has_key((field_intent[0],spwspec)):
                     LOG.debug (
                       'field:%s intent:%s spw:%s cell:%s imsize:%s phasecenter:%s'
                       % (field_intent[0], field_intent[1], spwspec,

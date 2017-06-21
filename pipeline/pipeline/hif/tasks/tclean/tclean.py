@@ -46,7 +46,21 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  # End of extra parameters
                  heuristics=None):
         self._init_properties(vars())
-        self.image_heuristics = heuristics
+        if heuristics is not None:
+            self.image_heuristics = heuristics
+        else:
+            # Need a local heuristics object if called standalone
+            # TODO: imaging_mode should not be fixed
+            image_heuristics_factory = imageparams_factory.ImageParamsHeuristicsFactory()
+            self.image_heuristics = image_heuristics_factory.getHeuristics( \
+                vislist = vis, \
+                spw = spw, \
+                observing_run = self.context.observing_run, \
+                imagename_prefix = self.context.project_structure.ousstatus_entity_id, \
+                science_goals = self.context.project_performance_parameters, \
+                contfile = self.context.contfile, \
+                linesfile = self.context.linesfile, \
+                imaging_mode = 'ALMA')
 
     # Add extra getters and setters here
     spwsel_lsrk = basetask.property_with_default('spwsel_lsrk', {})
@@ -161,13 +175,14 @@ class Tclean(cleanbase.CleanBase):
         inputs.pblimit = self.pblimit_image
 
         # Get the image parameter heuristics
-        self.image_heuristics = inputs.heuristics
+        self.image_heuristics = inputs.image_heuristics
 
         # Generate the image name if one is not supplied.
         if inputs.imagename in ('', None):
             inputs.imagename = self.image_heuristics.imagename(intent=inputs.intent,
                                                       field=inputs.field,
-                                                      spwspec=inputs.spw)
+                                                      spwspec=inputs.spw,
+                                                      specmode=inputs.specmode)
 
         # Determine the default gridder
         if inputs.gridder in ('', None):
@@ -196,17 +211,23 @@ class Tclean(cleanbase.CleanBase):
 
             # The heuristics cell size  is always the same for x and y as
             # the value derives from a single value returned by imager.advise
-            cell, valid_data = self.image_heuristics.cell(field_intent_list=[(inputs.field, inputs.intent)],
-                                           spwspec=inputs.spw)
-            beam = self.image_heuristics.beam(spwspec=inputs.spw)
+            synthesized_beam = self.image_heuristics.synthesized_beam( \
+                               field_intent_list=[(inputs.field, inputs.intent)], \
+                               spwspec=inputs.spw, \
+                               robust=inputs.robust)
+            cell = self.image_heuristics.cell(beam=synthesized_beam)
 
             if inputs.cell == []:
                 inputs.cell = cell
                 LOG.info('Heuristic cell: %s' % cell)
 
             field_ids = self.image_heuristics.field(inputs.intent, inputs.field)
-            imsize = self.image_heuristics.imsize(fields=field_ids,
-                                         cell=inputs.cell, beam=beam)
+            largest_primary_beam = self.image_heuristics.largest_primary_beam_size(spwspec=inputs.spw)
+            imsize = self.image_heuristics.imsize( \
+                     fields=field_ids, \
+                     cell=inputs.cell, \
+                     primary_beam=largest_primary_beam)
+
             if inputs.imsize == []:
                 inputs.imsize = imsize
                 LOG.info('Heuristic imsize: %s', imsize)
@@ -331,7 +352,7 @@ class Tclean(cleanbase.CleanBase):
             elif inputs.hm_cleaning == 'sensitivity':
                 raise Exception, 'sensitivity threshold not yet implemented'
             elif inputs.hm_cleaning == 'rms':
-                if inputs.threshold not in (None, ''):
+                if inputs.threshold not in (None, '', 0.0):
                     threshold = inputs.threshold
                 else:
                     threshold = '%sJy' % (inputs.tlimit * sensitivity)
@@ -700,7 +721,7 @@ class Tclean(cleanbase.CleanBase):
                                                   pblimit=inputs.pblimit,
                                                   result=result,
                                                   parallel=parallel,
-                                                  heuristics=inputs.heuristics)
+                                                  heuristics=inputs.image_heuristics)
         clean_task = cleanbase.CleanBase(clean_inputs)
 
         return self._executor.execute(clean_task)
@@ -753,7 +774,7 @@ class Tclean(cleanbase.CleanBase):
         mom8_name = '%s.mom8_fc' % (imagename)
         
         # Get continuum frequency ranges.
-        if self.inputs.spwsel_lsrk['spw%s' % (self.inputs.spw)] not in (None, 'NONE', ''):
+        if self.inputs.spwsel_lsrk.get('spw%s' % (self.inputs.spw), None) not in (None, 'NONE', ''):
             cont_freq_ranges = self.inputs.spwsel_lsrk['spw%s' % (self.inputs.spw)].split()[0]
         else:
             cont_freq_ranges = ''

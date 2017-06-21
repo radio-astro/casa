@@ -61,13 +61,11 @@ class ImageParamsHeuristics(object):
             spwidsclean = map(int, spwidsclean)
             self.spwids.update(spwidsclean)
 
-    def beam_radius(self):
+    def primary_beam_size(self, spwid):
 
-        '''Calculate beam radius for all spwids'''
+        '''Calculate primary beam size in arcsec.'''
 
         cqa = casatools.quanta
-
-        beam_radius = {}
 
         # get the diameter of the smallest antenna used among all vis sets
         diameters = []
@@ -81,19 +79,21 @@ class ImageParamsHeuristics(object):
         # get spw info from first vis set, assume spws uniform
         # across datasets
         ms = self.observing_run.get_ms(name=self.vislist[0])
-        for spwid in self.spwids:
-            spw = ms.get_spectral_window(spwid)
-            ref_frequency = float(
-              spw.ref_frequency.to_units(measures.FrequencyUnits.HERTZ))
+        spw = ms.get_spectral_window(spwid)
+        ref_frequency = float(
+          spw.ref_frequency.to_units(measures.FrequencyUnits.HERTZ))
 
-            # use the smallest antenna diameter and the reference frequency
-            # to estimate the primary beam radius -
-            # radius of first null in arcsec = 1.22*lambda/D
-            beam_radius[spwid] = \
-              (1.22 * (cqa.constants('c')['value'] / ref_frequency) / smallest_diameter) * \
-              (180.0 * 3600.0 / math.pi)
+        # use the smallest antenna diameter and the reference frequency
+        # to estimate the primary beam radius -
+        # radius of first null in arcsec = 1.22*lambda/D
+        primary_beam_size = \
+          1.22 \
+          * cqa.getvalue(cqa.convert(cqa.constants('c'), 'm/s')) \
+          / ref_frequency \
+          / smallest_diameter \
+          * (180.0 * 3600.0 / math.pi)
 
-        return beam_radius
+        return primary_beam_size
 
     def cont_ranges_spwsel(self):
 
@@ -252,9 +252,7 @@ class ImageParamsHeuristics(object):
 
         return scanidlist, visindexlist
 
-    def beam(self, spwspec):
-        # reset state of imager
-        casatools.imager.done()
+    def largest_primary_beam_size(self, spwspec):
 
         # get the spwids in spwspec
         p=re.compile(r"[ ,]+(\d+)")
@@ -263,13 +261,15 @@ class ImageParamsHeuristics(object):
         spwids = list(set(spwids))
 
         # find largest beam among spws in spwspec
-        beam = 0.0
+        largest_primary_beam_size = 0.0
         for spwid in spwids:
-            beam = max(beam, self.beam_radius()[spwid])
+            largest_primary_beam_size = max(largest_primary_beam_size, self.primary_beam_size(spwid))
 
-        return beam
+        return largest_primary_beam_size
 
-    def cell(self, field_intent_list, spwspec, oversample=2.5, robust=0.5):
+    def synthesized_beam(self, field_intent_list, spwspec, robust=0.5):
+
+        '''Calculate synthesized beam for a given field / spw selection.'''
 
         qaTool = casatools.quanta
 
@@ -283,16 +283,15 @@ class ImageParamsHeuristics(object):
         spwids = map(int, spwids)
         spwids = list(set(spwids))
 
-        # find largest beam among spws in spwspec
-        beam = self.beam(spwspec)
+        # find largest primary beam size among spws in spwspec
+        largest_primary_beam_size = self.largest_primary_beam_size(spwspec)
 
         # put code in try-block to ensure that imager.done gets
         # called at the end
         cell = None
         valid_data = {}
+        makepsf_beams = []
         try:
-            advise_cellvs = []
-            makepsf_cellvs = []
             for field, intent in field_intent_list:
                 for spwid in spwids:
                     # select data to be imaged
@@ -322,7 +321,7 @@ class ImageParamsHeuristics(object):
                         continue
 
                     # use imager.advise to get the maximum cell size
-                    aipsfieldofview = '%4.1farcsec' % (2.0 * beam)
+                    aipsfieldofview = '%4.1farcsec' % (2.0 * largest_primary_beam_size)
                     rtn = casatools.imager.advise(takeadvice=False,
                       amplitudeloss=0.5, fieldofview=aipsfieldofview)
                     casatools.imager.done()
@@ -332,14 +331,11 @@ class ImageParamsHeuristics(object):
                         # record indicates success or failure
                         LOG.warning('imager.advise failed for field/intent %s/%s spw %s - no valid data?' 
                           % (field, intent, spwid))
-                        valid_data[(field, intent, spwdid)] = False
+                        valid_data[(field, intent, spwid)] = False
                     else:
                         cellv = qaTool.convert(rtn[2], 'arcsec')['value']
                         cellu = 'arcsec'
-                        cellv /= oversample
-                        advise_cellvs.append(cellv)
-                        LOG.debug('Cell (oversample %s) for %s/%s spw %s: %s' % (
-                          oversample, field, intent, spwspec, cellv))
+                        cellv /= 2.5
 
                         # Now get better estimate from makePSF
                         tmp_psf_filename = str(uuid.uuid4())
@@ -348,7 +344,7 @@ class ImageParamsHeuristics(object):
                                                      spw=str(spwid),
                                                      field=field,
                                                      imagename=tmp_psf_filename,
-                                                     imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*beam/cellv)),
+                                                     imsize=cleanhelper.cleanhelper.getOptimumSize(int(2.0*largest_primary_beam_size/cellv)),
                                                      cell='%.2g%s' % (cellv, cellu),
                                                      gridder='standard',
                                                      weighting='briggs',
@@ -365,33 +361,44 @@ class ImageParamsHeuristics(object):
 
                         with casatools.ImageReader('%s.psf' % (tmp_psf_filename)) as image:
                             restoringbeam = image.restoringbeam()
-                            bmaj = restoringbeam['major']
                             bmin = restoringbeam['minor']
+                            bmaj = restoringbeam['major']
                             bpa = restoringbeam['positionangle']
+                            makepsf_beams.append({'bmin': bmin, 'bmaj': bmaj, 'bpa': bpa})
 
                         tmp_psf_images = glob.glob('%s.*' % (tmp_psf_filename))
                         for tmp_psf_image in tmp_psf_images:
                             shutil.rmtree(tmp_psf_image)
-                        makepsf_cellv = qaTool.convert(bmin, 'arcsec')['value'] / 2.0 / oversample
-                        makepsf_cellvs.append(makepsf_cellv)
-
-            if advise_cellvs:
-                # cell that's good for all field/intents
-                cell = '%.2g%s' % (min(makepsf_cellvs), cellu)
-                LOG.debug('RESULT cell for spw %s: %s' % (spwspec, cell))
-            else:
-                cell = 'invalid'
 
         finally:
             casatools.imager.done()
 
-        # Make aggregate valid_data entries for field/intent pairs
-        for field, intent in field_intent_list:
-            valid_data[(field, intent)] = True
-            for spwid in spwids:
-                valid_data[(field, intent)] = valid_data[(field, intent)] and valid_data[(field, intent, spwid)]
+        if makepsf_beams:
+            # beam that's good for all field/intents
+            smallest_beam = {'bmin': '1e9arcsec', 'bmaj': '1e9arcsec', 'bpa': '0.0deg'}
+            for beam in makepsf_beams:
+                bmin_v = qaTool.getvalue(qaTool.convert(beam['bmin'], 'arcsec'))
+                if bmin_v < qaTool.getvalue(qaTool.convert(smallest_beam['bmin'], 'arcsec')):
+                    smallest_beam = beam
+        else:
+            smallest_beam = 'invalid'
 
-        return [cell], valid_data
+        # Make aggregate valid_data entries for field/intent pairs
+        #for field, intent in field_intent_list:
+        #    valid_data[(field, intent)] = True
+        #    for spwid in spwids:
+        #        valid_data[(field, intent)] = valid_data[(field, intent)] and valid_data[(field, intent, spwid)]
+
+        return smallest_beam
+
+    def cell(self, beam, pixperbeam=5.0):
+
+        '''Calculate cell size.'''
+
+        cqa = casatools.quanta
+        cell_size = cqa.getvalue(cqa.convert(beam['bmin'], 'arcsec')) / pixperbeam
+
+        return ['%.2garcsec' % (cell_size)]
 
     def nchan_and_width(self, field_intent, spwspec):
         if field_intent == 'TARGET':
@@ -432,13 +439,6 @@ class ImageParamsHeuristics(object):
         # reset state of imager
         casatools.imager.done()
 
-        # get the spwids in spwspec - imager tool likes these rather than 
-        # a string
-        p=re.compile(r"[ ,]+(\d+)")
-        spwids = p.findall(' %s' % spwspec)
-        spwids = map(int, spwids)
-        spwids = list(set(spwids))
-
         # put code in try-block to ensure that imager.done gets
         # called at the end
         valid_data = {}
@@ -448,23 +448,26 @@ class ImageParamsHeuristics(object):
                 valid_data[field_intent] = False
                 for vis in self.vislist:
                     ms = self.observing_run.get_ms(name=vis)
-                    scanids = [scan.id for scan in ms.scans if
+                    scanids = [str(scan.id) for scan in ms.scans if
                       field_intent[1] in scan.intents and 
                       field_intent[0] in [fld.name for fld in scan.fields]]
-                    scanids = str(scanids)
-                    scanids = scanids.replace('[', '')
-                    scanids = scanids.replace(']', '')
-                    try:
-                        casatools.imager.selectvis(vis=vis,
-                          field=field_intent[0], spw=spwids, scan=scanids,
-                          usescratch=False)
-                        valid_data[field_intent] = True
-                    except:
-                        pass
+                    if scanids != []:
+                        scanids = ','.join(scanids)
+                        try:
+                            casatools.imager.selectvis(vis=vis,
+                              field=field_intent[0], spw=spwspec, scan=scanids,
+                              usescratch=False)
+                            aipsfieldofview = '%4.1farcsec' % (2.0 * self.largest_primary_beam_size(spwspec))
+                            # Need to run advise to check if the current selection is completely flagged
+                            rtn = casatools.imager.advise(takeadvice=False, amplitudeloss=0.5, fieldofview=aipsfieldofview)
+                            if rtn[0]:
+                                valid_data[field_intent] = True
+                        except:
+                            pass
 
                 if not valid_data[field_intent]:
                     LOG.debug('No data for SpW %s field %s' %
-                      (spwids, field_intent[0]))
+                      (spwspec, field_intent[0]))
 
         finally:
             casatools.imager.done()
@@ -609,7 +612,7 @@ class ImageParamsHeuristics(object):
 
         return result
 
-    def imsize(self, fields, cell, beam, sfpblimit=None, max_pixels=None):
+    def imsize(self, fields, cell, primary_beam, sfpblimit=None, max_pixels=None):
         # get spread of beams
         ignore, xspread, yspread = self.phasecenter(fields, centreonly=False)
 
@@ -625,28 +628,20 @@ class ImageParamsHeuristics(object):
             return [0, 0]
 
         # get cell and beam sizes in arcsec
-        cellq = cqa.quantity(cellx)
-        cqa.convert(cellq, 'arcsec')
-        cellvx = cellq['value']
-
-        cellq = cqa.quantity(celly)
-        cqa.convert(cellq, 'arcsec')
-        cellvy = cellq['value']
-
-        beam_radiusq = cqa.quantity(beam)
-        cqa.convert(beam_radiusq, 'arcsec')
-        beam_radiusv = beam_radiusq['value']
+        cellx_v = cqa.getvalue(cqa.convert(cellx, 'arcsec'))
+        celly_v = cqa.getvalue(cqa.convert(celly, 'arcsec'))
+        beam_radius_v = primary_beam
 
         # set size of image to spread of field centres plus a
         # border of 0.75 * beam radius (radius is to first null)
         # wide
-        nxpix = int((1.5 * beam_radiusv + xspread) / cellvx)
-        nypix = int((1.5 * beam_radiusv + yspread) / cellvy)
+        nxpix = int((1.5 * beam_radius_v + xspread) / cellx_v)
+        nypix = int((1.5 * beam_radius_v + yspread) / celly_v)
 
         if (not self._mosaic) and (sfpblimit is not None):
-            beam_fwhp = 1.12 / 1.22 * beam_radiusv
-            nxpix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / cellvx))
-            nypix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / cellvy))
+            beam_fwhp = 1.12 / 1.22 * beam_radius_v
+            nxpix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / cellx_v))
+            nypix = int(round(1.1 * beam_fwhp * math.sqrt(-math.log(sfpblimit) / math.log(2.)) / celly_v))
 
         if max_pixels is not None:
             nxpix = min(nxpix, max_pixels)
